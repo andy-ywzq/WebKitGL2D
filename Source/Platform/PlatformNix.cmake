@@ -3,6 +3,7 @@ set(Platform_INCLUDES
     ${WEBCORE_DIR}/platform/graphics/ # For IntRect.h
     ${WTF_DIR} # For config.h
     ${CMAKE_BINARY_DIR} # For cmakeconfig.h
+    ${ICU_INCLUDE_DIRS}
 )
 
 set(Platform_HEADERS

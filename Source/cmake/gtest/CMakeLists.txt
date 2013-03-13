@@ -7,6 +7,7 @@ include_directories(${THIRDPARTY_DIR}/gtest
     ${THIRDPARTY_DIR}/gtest/include
     ${JAVASCRIPTCORE_DIR}
     ${WTF_DIR}
+    ${ICU_INCLUDE_DIRS}
 )
 
 set(GTEST_DIR "${THIRDPARTY_DIR}/gtest")

@@ -50,6 +50,7 @@ set(WebKitTestRunner_INCLUDE_DIRECTORIES
     ${CMAKE_BINARY_DIR}
     ${CMAKE_SOURCE_DIR}/Source
     ${LIBSOUP_INCLUDE_DIRS}
+    ${ICU_INCLUDE_DIRS}
 )
 
 set(WebKitTestRunnerInjectedBundle_SOURCES

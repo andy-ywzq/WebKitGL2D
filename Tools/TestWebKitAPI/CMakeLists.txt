@@ -124,7 +124,6 @@ foreach (testName ${webcoreTestList})
     target_link_libraries(test_webcore_${testName} gtest WTF WebCore)
 endforeach ()
 
-
 # Code used by almost all WebKit2 tests must be on this library to avoid recompilation.
 add_library(TestWebKitAPIBase ${TestWebKitAPIBase_SOURCES})
 add_dependencies(TestWebKitAPIBase WebKit2 ${ForwardingHeadersForTestWebKitAPI_NAME} ${ForwardingNetworkHeadersForTestWebKitAPI_NAME})
