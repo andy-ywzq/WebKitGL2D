@@ -33,9 +33,7 @@
 #include <signal.h>
 #endif
 
-#if OS(LINUX)
 #include <sys/time.h>
-#endif
 
 namespace JSC {
 

@@ -41,7 +41,7 @@
 #include <wtf/Threading.h>
 #include <wtf/Vector.h>
 
-#if (PLATFORM(QT) && !OS(DARWIN)) || PLATFORM(GTK) || PLATFORM(EFL) || PLATFORM(NIX)
+#if (PLATFORM(QT) && !OS(DARWIN)) || PLATFORM(GTK) || PLATFORM(EFL) || (PLATFORM(NIX) && !OS(DARWIN))
 #include "PlatformProcessIdentifier.h"
 #endif
 
@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 class QObject;
 class QThread;
 QT_END_NAMESPACE
-#elif PLATFORM(GTK) || PLATFORM(NIX)
+#elif PLATFORM(GTK) || (PLATFORM(NIX) && !OS(DARWIN))
 #include <wtf/gobject/GRefPtr.h>
 typedef gboolean (*GSourceFunc) (gpointer data);
 #elif PLATFORM(EFL)

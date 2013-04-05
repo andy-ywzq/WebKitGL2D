@@ -30,6 +30,7 @@
 extern "C" {
 #endif
 
+#if !PLATFORM(NIX)
 #ifdef __APPLE__
 #ifdef __OBJC__
 @class NSEvent;
@@ -39,6 +40,7 @@ class NSEvent;
 struct NSEvent;
 #endif
 typedef NSEvent *WKNativeEventPtr;
+#endif
 #elif defined(WIN32) || defined(_WIN32)
 typedef const struct tagMSG* WKNativeEventPtr;
 #elif defined(BUILDING_GTK__)

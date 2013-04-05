@@ -36,15 +36,21 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #else
-#include "Extensions3DOpenGL.h"
-#include "OpenGLShims.h"
+#if OS(DARWIN)
+#include <GL/glew.h>
+#include <OpenGL/gl.h>
+#include <OpenGL/glext.h>
+#else
 #include <GL/gl.h>
 #include <GL/glext.h>
 #if USE(GLX)
 #define GLX_GLXEXT_PROTOTYPES 1
 #include <GL/glx.h>
 #include <GL/glxext.h>
+#include "OpenGLShims.h"
 #endif
+#endif
+#include "Extensions3DOpenGL.h"
 #endif
 
 #if USE(EGL)
@@ -56,7 +62,6 @@
 namespace WebCore {
 
 typedef uint32_t PlatformBufferHandle;
-
 #if USE(GLX)
 typedef GLXContext PlatformContext;
 typedef Display* PlatformDisplay;

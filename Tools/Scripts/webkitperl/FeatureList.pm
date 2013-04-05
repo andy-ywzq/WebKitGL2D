@@ -494,8 +494,12 @@ if (isNix()) {
     my %featureIndex = ( );
     my $baseDir = __FILE__;
     $baseDir =~ s/Tools\/Scripts\/webkitperl\/FeatureList\.pm/Source\/cmake\//;
-    my $featureDescriptionFile = "${baseDir}FeaturesNix.config";
-
+    my $featureDescriptionFile;
+    if ($^O eq 'darwin') {
+        $featureDescriptionFile = "${baseDir}FeaturesNixMac.config";
+    } else {
+        $featureDescriptionFile = "${baseDir}FeaturesNix.config";
+    }
     open(FEATURE_FILE, $featureDescriptionFile) or die("Failed to open $featureDescriptionFile\n.");
     while (<FEATURE_FILE>) {
         chomp;

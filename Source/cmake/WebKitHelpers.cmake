@@ -51,6 +51,10 @@ macro(WEBKIT_SET_EXTRA_COMPILER_FLAGS _target)
             set(OLD_COMPILE_FLAGS "${OLD_COMPILE_FLAGS} -Wno-c++0x-compat")
         endif ()
 
+        if (APPLE)
+            set(OLD_COMPILE_FLAGS "${OLD_COMPILE_FLAGS} -Wno-c++11-compat -Wno-c++11-extensions")
+        endif()
+
         set_target_properties(${_target} PROPERTIES
             COMPILE_FLAGS "${OLD_COMPILE_FLAGS}")
 

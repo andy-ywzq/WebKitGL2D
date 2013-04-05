@@ -17,6 +17,10 @@ include_directories(
     ${PNG_INCLUDE_DIRS}
 )
 
+if (APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-compat -Wno-c++11-extensions")
+endif()
+
 set(test_main_SOURCES
     ${TESTWEBKITAPI_DIR}/nix/main.cpp
     ${TESTWEBKITAPI_DIR}/nix/MainLoop.cpp

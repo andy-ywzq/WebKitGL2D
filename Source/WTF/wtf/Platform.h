@@ -436,6 +436,7 @@
 /* FIXME: these are all mixes of OS, operating environment and policy choices. */
 /* PLATFORM(CHROMIUM) */
 /* PLATFORM(QT) */
+/* PLATFORM(NIX) */
 /* PLATFORM(WX) */
 /* PLATFORM(EFL) */
 /* PLATFORM(GTK) */
@@ -446,6 +447,8 @@
 #define WTF_PLATFORM_CHROMIUM 1
 #elif defined(BUILDING_QT__)
 #define WTF_PLATFORM_QT 1
+#elif defined(BUILDING_NIX__)
+#define WTF_PLATFORM_NIX 1
 #elif defined(BUILDING_WX__)
 #define WTF_PLATFORM_WX 1
 #elif defined(BUILDING_EFL__)
@@ -995,7 +998,7 @@
 #define WTF_USE_EXPORT_MACROS_FOR_TESTING 1
 #endif
 
-#if (PLATFORM(QT) && !OS(DARWIN) && !OS(WINDOWS)) || PLATFORM(GTK) || PLATFORM(EFL) || PLATFORM(NIX)
+#if (PLATFORM(QT) && !OS(DARWIN) && !OS(WINDOWS)) || PLATFORM(GTK) || PLATFORM(EFL) || (PLATFORM(NIX) && !OS(DARWIN))
 #define WTF_USE_UNIX_DOMAIN_SOCKETS 1
 #endif
 

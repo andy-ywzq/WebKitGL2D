@@ -65,6 +65,13 @@ set(test_wtf_LIBRARIES
     ${WTF_LIBRARY_NAME}
     gtest
 )
+if (APPLE)
+    list(APPEND test_wtf_LIBRARIES
+        ${CARBON_LIBRARY}
+        ${APPKIT_LIBRARY}
+        ${IOKIT_LIBRARY}
+    )
+endif ()
 
 add_executable(test_wtf
     ${test_main_SOURCES}

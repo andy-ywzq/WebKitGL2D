@@ -27,8 +27,10 @@
 #include <QSurface>
 #elif PLATFORM(NIX) && USE(OPENGL_ES_2)
 #include <GLES2/gl2.h>
+#elif OS(DARWIN)
+#include <OpenGL/gl.h>
 #else
-#include <GL/gl.h>
+#include <GL/gl/h>
 #endif
 
 #if defined(GL_ES_VERSION_2_0)

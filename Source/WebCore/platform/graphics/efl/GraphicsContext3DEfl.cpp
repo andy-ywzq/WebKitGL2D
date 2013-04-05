@@ -288,7 +288,7 @@ bool GraphicsContext3D::ImageExtractor::extractImage(bool premultiplyAlpha, bool
     if (cairo_image_surface_get_format(m_imageSurface.get()) != CAIRO_FORMAT_ARGB32)
         return false;
 
-    uint srcUnpackAlignment = 1;
+    unsigned srcUnpackAlignment = 1;
     size_t bytesPerRow = cairo_image_surface_get_stride(m_imageSurface.get());
     size_t bitsPerPixel = 32;
     unsigned padding = bytesPerRow - bitsPerPixel / 8 * m_imageWidth;

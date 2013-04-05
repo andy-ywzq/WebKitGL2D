@@ -2,13 +2,28 @@ list(APPEND WebKit2_LINK_FLAGS
     ${CAIRO_LDFLAGS}
 )
 
+if (APPLE)
 list(APPEND WebKit2_SOURCES
-    Platform/gtk/ModuleGtk.cpp
+    Platform/CoreIPC/mac/ConnectionMac.cpp
+    Platform/mac/MachUtilities.cpp
+    Platform/mac/WorkQueueMac.cpp
+    Platform/mac/SharedMemoryMac.cpp
+    )
+list(APPEND WebKit2_INCLUDE_DIRECTORIES
+    ${WEBKIT2_DIR}/platform/mac
+    ${WEBKIT2_DIR}/platform/CoreIPC/mac
+    )
+else ()
+list(APPEND WebKit2_SOURCES
     Platform/gtk/WorkQueueGtk.cpp
     Platform/unix/SharedMemoryUnix.cpp
-
     Platform/CoreIPC/unix/ConnectionUnix.cpp
     Platform/CoreIPC/unix/AttachmentUnix.cpp
+    )
+endif()
+
+list(APPEND WebKit2_SOURCES
+    Platform/gtk/ModuleGtk.cpp
 
     Shared/API/c/cairo/WKImageCairo.cpp
 

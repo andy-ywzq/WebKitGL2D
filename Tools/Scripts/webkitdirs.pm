@@ -338,6 +338,8 @@ sub determineArchitecture
             # We have a configured build tree; use it.
             $architecture = $1;
             $architecture = 'x86_64' if $architecture eq 'amd64';
+            # Recent Mac supports x86_64
+            $architecture = 'x86_64' if isDarwin();
         }
     }
 

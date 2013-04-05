@@ -104,7 +104,7 @@ static void resolveResetStatusExtension()
 
 PassOwnPtr<GLPlatformContext> GLPlatformContext::createContext(GraphicsContext3D::RenderStyle renderStyle)
 {
-#if !USE(OPENGL_ES_2)
+#if !USE(OPENGL_ES_2) && !OS(DARWIN)
     if (!initializeOpenGLShims())
         return nullptr;
 #endif
