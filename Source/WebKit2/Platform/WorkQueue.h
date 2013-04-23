@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 class QObject;
 class QThread;
 QT_END_NAMESPACE
-#elif PLATFORM(GTK)
+#elif PLATFORM(GTK) || PLATFORM(NIX)
 #include <wtf/gobject/GRefPtr.h>
 typedef gboolean (*GSourceFunc) (gpointer data);
 #elif PLATFORM(EFL)
@@ -78,11 +78,11 @@ public:
 #elif PLATFORM(QT)
     QSocketNotifier* registerSocketEventHandler(int, QSocketNotifier::Type, const Function<void()>&);
     void dispatchOnTermination(WebKit::PlatformProcessIdentifier, const Function<void()>&);
-#elif PLATFORM(GTK)
+#elif PLATFORM(GTK) || PLATFORM(NIX)
     void registerSocketEventHandler(int, int, const Function<void()>& function, const Function<void()>& closeFunction);
     void unregisterSocketEventHandler(int);
     void dispatchOnTermination(WebKit::PlatformProcessIdentifier, const Function<void()>&);
-#elif PLATFORM(EFL) || PLATFORM(NIX)
+#elif PLATFORM(EFL)
     void registerSocketEventHandler(int, const Function<void()>&);
     void unregisterSocketEventHandler(int);
 #endif
@@ -152,7 +152,7 @@ private:
     class WorkItemQt;
     QThread* m_workThread;
     friend class WorkItemQt;
-#elif PLATFORM(GTK)
+#elif PLATFORM(GTK) || PLATFORM(NIX)
     static void startWorkQueueThread(WorkQueue*);
     void workQueueThreadBody();
     void dispatchOnSource(GSource*, const Function<void()>&, GSourceFunc);
@@ -166,7 +166,7 @@ private:
     class SocketEventSource;
     HashMap<int, Vector<SocketEventSource*>> m_eventSources;
     typedef HashMap<int, Vector<SocketEventSource*>>::iterator SocketEventSourceIterator;
-#elif PLATFORM(EFL) || PLATFORM(NIX)
+#elif PLATFORM(EFL)
     class TimerWorkItem {
     public:
         static PassOwnPtr<TimerWorkItem> create(Function<void()>, double expireTime);

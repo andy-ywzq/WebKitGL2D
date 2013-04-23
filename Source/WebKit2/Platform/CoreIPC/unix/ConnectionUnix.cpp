@@ -41,7 +41,7 @@
 #if PLATFORM(QT)
 #include <QPointer>
 #include <QSocketNotifier>
-#elif PLATFORM(GTK)
+#elif PLATFORM(GTK) || PLATFORM(NIX)
 #include <glib.h>
 #endif
 
@@ -134,7 +134,7 @@ void Connection::platformInitialize(Identifier identifier)
 void Connection::platformInvalidate()
 {
     // In GTK+ platform the socket is closed by the work queue.
-#if !PLATFORM(GTK)
+#if !PLATFORM(GTK) && !PLATFORM(NIX)
     if (m_socketDescriptor != -1)
         while (close(m_socketDescriptor) == -1 && errno == EINTR) { }
 #endif
@@ -142,7 +142,7 @@ void Connection::platformInvalidate()
     if (!m_isConnected)
         return;
 
-#if PLATFORM(GTK)
+#if PLATFORM(GTK) || PLATFORM(NIX)
     m_connectionQueue->unregisterSocketEventHandler(m_socketDescriptor);
 #endif
 
@@ -151,7 +151,7 @@ void Connection::platformInvalidate()
     m_socketNotifier = 0;
 #endif
 
-#if PLATFORM(EFL) || PLATFORM(NIX)
+#if PLATFORM(EFL)
     m_connectionQueue->unregisterSocketEventHandler(m_socketDescriptor);
 #endif
 
@@ -426,9 +426,9 @@ bool Connection::open()
     m_isConnected = true;
 #if PLATFORM(QT)
     m_socketNotifier = m_connectionQueue->registerSocketEventHandler(m_socketDescriptor, QSocketNotifier::Read, WTF::bind(&Connection::readyReadHandler, this));
-#elif PLATFORM(GTK)
+#elif PLATFORM(GTK) || PLATFORM(NIX)
     m_connectionQueue->registerSocketEventHandler(m_socketDescriptor, G_IO_IN, WTF::bind(&Connection::readyReadHandler, this), WTF::bind(&Connection::connectionDidClose, this));
-#elif PLATFORM(EFL) || PLATFORM(NIX)
+#elif PLATFORM(EFL)
     m_connectionQueue->registerSocketEventHandler(m_socketDescriptor, WTF::bind(&Connection::readyReadHandler, this));
 #endif
 

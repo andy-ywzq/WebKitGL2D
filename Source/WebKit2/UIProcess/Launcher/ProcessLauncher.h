@@ -69,7 +69,7 @@ public:
         bool useXPC;
 #endif
 #endif
-#if PLATFORM(EFL) || PLATFORM(NIX)
+#if PLATFORM(EFL)
 #ifndef NDEBUG
         String processCmdPrefix;
 #endif
