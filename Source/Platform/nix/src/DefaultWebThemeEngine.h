@@ -22,6 +22,7 @@ public:
     virtual double getAnimationDurationForProgressBar() const;
     virtual void paintInnerSpinButton(WebCanvas *, State, const WebRect &, const InnerSpinButtonExtraParams&) const;
     virtual void getInnerSpinButtonPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const;
+    virtual void paintMeter(WebCanvas*, State, const WebRect&, const MeterExtraParams&) const;
 };
 
 }

@@ -267,6 +267,19 @@ void DefaultWebThemeEngine::paintInnerSpinButton(WebCanvas* canvas, State state,
     cairo_close_path(canvas);
 
     cairo_fill(canvas);
+}
+
+void DefaultWebThemeEngine::paintMeter(WebCanvas* canvas, State state, const WebRect& rect, const MeterExtraParams& params) const
+{
+    cairo_save(canvas);
+
+    // Background
+    setupBorder(canvas, state);
+    cairo_rectangle(canvas, rect.x, rect.y, rect.width, rect.height);
+    cairo_fill(canvas);
+    // Meter
+    cairo_rectangle(canvas, rect.x, rect.y, rect.width * params.valueRatio(), rect.height);
+    gradientFill(canvas, rect.y, rect.height);
 
     cairo_restore(canvas);
 }

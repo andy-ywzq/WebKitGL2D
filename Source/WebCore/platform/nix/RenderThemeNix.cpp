@@ -35,6 +35,10 @@
 #if ENABLE(PROGRESS_ELEMENT)
 #include "RenderProgress.h"
 #endif
+#if ENABLE(METER_ELEMENT)
+#include "RenderMeter.h"
+#include "HTMLMeterElement.h"
+#endif
 
 namespace WebCore {
 
@@ -241,5 +245,48 @@ bool RenderThemeNix::paintInnerSpinButton(RenderObject* o, const PaintInfo& i, c
     themeEngine()->paintInnerSpinButton(webCanvas(i), getWebThemeState(this, o), WebKit::WebRect(rect), extraParams);
     return false;
 }
+
+#if ENABLE(METER_ELEMENT)
+void RenderThemeNix::adjustMeterStyle(StyleResolver*, RenderStyle* style, Element*) const
+{
+    style->setBoxShadow(nullptr);
+}
+
+IntSize RenderThemeNix::meterSizeForBounds(const RenderMeter*, const IntRect& bounds) const
+{
+    return bounds.size();
+}
+
+bool RenderThemeNix::supportsMeter(ControlPart part) const
+{
+    switch (part) {
+    case RelevancyLevelIndicatorPart:
+    case DiscreteCapacityLevelIndicatorPart:
+    case RatingLevelIndicatorPart:
+    case MeterPart:
+    case ContinuousCapacityLevelIndicatorPart:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool RenderThemeNix::paintMeter(RenderObject* o, const PaintInfo& i, const IntRect& rect)
+{
+    RenderMeter* renderMeter = toRenderMeter(o);
+    HTMLMeterElement* e = renderMeter->meterElement();
+    WebKit::WebThemeEngine::MeterExtraParams extraParams;
+    extraParams.min = e->min();
+    extraParams.max = e->max();
+    extraParams.value = e->value();
+    extraParams.low = e->low();
+    extraParams.high = e->high();
+    extraParams.optimum = e->optimum();
+
+    themeEngine()->paintMeter(webCanvas(i), getWebThemeState(this, o), rect, extraParams);
+
+    return false;
+}
+#endif
 
 }

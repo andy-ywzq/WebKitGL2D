@@ -45,6 +45,11 @@ public:
     virtual double animationDurationForProgressBar(RenderProgress*) const;
 #endif
 
+#if ENABLE(METER_ELEMENT)
+    virtual IntSize meterSizeForBounds(const RenderMeter*, const IntRect&) const;
+    virtual bool supportsMeter(ControlPart) const;
+#endif
+
 protected:
 
     virtual bool paintButton(RenderObject*, const PaintInfo&, const IntRect&);
@@ -61,13 +66,18 @@ protected:
     virtual void adjustMenuListStyle(StyleResolver*, RenderStyle*, Element*) const;
     virtual bool paintMenuListButton(RenderObject* o, const PaintInfo& i, const IntRect& r) { return paintMenuList(o, i, r); }
 
+    virtual void adjustInnerSpinButtonStyle(StyleResolver*, RenderStyle*, Element*) const;
+    virtual bool paintInnerSpinButton(RenderObject*, const PaintInfo&, const IntRect&);
+
 #if ENABLE(PROGRESS_ELEMENT)
     virtual void adjustProgressBarStyle(StyleResolver*, RenderStyle*, Element*) const;
     virtual bool paintProgressBar(RenderObject*, const PaintInfo&, const IntRect&) OVERRIDE;
 #endif
 
-    virtual void adjustInnerSpinButtonStyle(StyleResolver*, RenderStyle*, Element*) const;
-    virtual bool paintInnerSpinButton(RenderObject*, const PaintInfo&, const IntRect&);
+#if ENABLE(METER_ELEMENT)
+    virtual void adjustMeterStyle(StyleResolver*, RenderStyle*, Element*) const;
+    virtual bool paintMeter(RenderObject*, const PaintInfo&, const IntRect&);
+#endif
 
 private:
     RenderThemeNix();

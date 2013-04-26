@@ -98,6 +98,22 @@ public:
         double animationStartTime;
     };
 
+    struct MeterExtraParams
+    {
+        double min;
+        double max;
+        double value;
+        double low;
+        double high;
+        double optimum;
+        double valueRatio() const
+        {
+            if (max <= min)
+                return 0;
+            return (value - min) / (max - min);
+        }
+    };
+
     virtual void paintButton(WebCanvas*, State, const WebRect&, const ButtonExtraParams&) const = 0;
     virtual void paintTextField(WebCanvas*, State, const WebRect&) const = 0;
     virtual WebSize getCheckboxSize() const = 0;
@@ -112,6 +128,7 @@ public:
     virtual double getAnimationDurationForProgressBar() const = 0;
     virtual void getInnerSpinButtonPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const = 0;
     virtual void paintInnerSpinButton(WebCanvas*, State, const WebRect&, const InnerSpinButtonExtraParams&) const = 0;
+    virtual void paintMeter(WebCanvas*, State, const WebRect&, const MeterExtraParams&) const = 0;
 };
 
 } // namespace WebKit
