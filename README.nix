@@ -20,7 +20,8 @@ $ sudo apt-get install gobject-introspection \
                        libgpg-error-dev \
                        libp11-kit-dev \
                        libtiff4-dev \
-                       libcroco3-dev
+                       libcroco3-dev \
+                       ruby
 
 # Fedora
 $ sudo yum install perl-version \
@@ -59,7 +60,9 @@ $ sudo apt-get install cmake \
                        libxslt1-dev \
                        libicu-dev \
                        libgl1-mesa-dev \
-                       libavcodec
+                       libavcodec-dev \
+                       libxrender-dev \
+                       libxcomposite-dev
 
 # Fedora
 $ sudo yum install cmake \
