@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2010, 2011 Apple Inc. All rights reserved.
- * Copyright (C) 2010 Brent Fulgham <bfulgham@webkit.org>
+ * Copyright (C) 2010 Apple Inc. All rights reserved.
+ * Portions Copyright (c) 2010 Motorola Mobility, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,72 +25,54 @@
  */
 
 #include "config.h"
-#include "Download.h"
+#include "WebCoreArgumentCoders.h"
 
-#include <WebCore/NotImplemented.h>
+#include "NotImplemented.h"
+#include "PlatformCertificateInfo.h"
+#include <WebCore/ResourceError.h>
+#include <WebCore/ResourceRequest.h>
+#include <WebCore/ResourceResponse.h>
+#include <wtf/text/CString.h>
 
 using namespace WebCore;
+using namespace WebKit;
 
-namespace WebKit {
+namespace CoreIPC {
 
-void Download::start()
+void ArgumentCoder<ResourceRequest>::encodePlatformData(ArgumentEncoder& encoder, const ResourceRequest& resourceRequest)
 {
     notImplemented();
 }
 
-void Download::startWithHandle(ResourceHandle*, const ResourceResponse&)
+bool ArgumentCoder<ResourceRequest>::decodePlatformData(ArgumentDecoder& decoder, ResourceRequest& resourceRequest)
+{
+    notImplemented();
+    return true;
+}
+
+
+void ArgumentCoder<ResourceResponse>::encodePlatformData(ArgumentEncoder& encoder, const ResourceResponse& resourceResponse)
 {
     notImplemented();
 }
 
-void Download::cancel()
+bool ArgumentCoder<ResourceResponse>::decodePlatformData(ArgumentDecoder& decoder, ResourceResponse& resourceResponse)
+{
+    notImplemented();
+    return true;
+}
+
+
+void ArgumentCoder<ResourceError>::encodePlatformData(ArgumentEncoder& encoder, const ResourceError& resourceError)
 {
     notImplemented();
 }
 
-void Download::platformDidFinish()
+bool ArgumentCoder<ResourceError>::decodePlatformData(ArgumentDecoder& decoder, ResourceError& resourceError)
 {
     notImplemented();
+    return true;
 }
 
-void Download::platformInvalidate()
-{
-    notImplemented();
 }
 
-void Download::didDecideDestination(const String& destination, bool allowOverwrite)
-{
-    notImplemented();
-}
-
-void Download::receivedCredential(const AuthenticationChallenge& authenticationChallenge, const Credential& credential)
-{
-    notImplemented();
-}
-
-void Download::receivedRequestToContinueWithoutCredential(const AuthenticationChallenge& authenticationChallenge)
-{
-    notImplemented();
-}
-
-void Download::receivedCancellation(const AuthenticationChallenge& authenticationChallenge)
-{
-    notImplemented();
-}
-
-void Download::useCredential(const AuthenticationChallenge&, const Credential&)
-{
-    notImplemented();
-}
-
-void Download::continueWithoutCredential(const AuthenticationChallenge&)
-{
-    notImplemented();
-}
-
-void Download::cancelAuthenticationChallenge(const AuthenticationChallenge&)
-{
-    notImplemented();
-}
-
-} // namespace WebKit
