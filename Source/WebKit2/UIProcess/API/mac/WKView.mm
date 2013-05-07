@@ -105,10 +105,6 @@ inline bool isWKContentAnchorBottom(WKContentAnchor x)
     return x == WKContentAnchorBottomLeft || x == WKContentAnchorBottomRight;
 }
 
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
-static BOOL windowOcclusionNotificationsAreRegistered = NO;
-#endif
-
 @interface NSApplication (WKNSApplicationDetails)
 - (void)speakString:(NSString *)string;
 - (void)_setCurrentEvent:(NSEvent *)event;
@@ -150,14 +146,10 @@ struct WKViewInterpretKeyEventsParameters {
 - (void)_setDrawingAreaSize:(NSSize)size;
 - (void)_setPluginComplexTextInputState:(PluginComplexTextInputState)pluginComplexTextInputState;
 - (BOOL)_shouldUseTiledDrawingArea;
-- (void)_setIsWindowOccluded:(BOOL)isWindowOccluded;
-- (void)_enableWindowOcclusionNotifications;
-- (void)_disableWindowOcclusionNotifications;
+
 #if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
-+ (BOOL)_registerWindowOcclusionNotificationHandlers;
-+ (BOOL)_unregisterWindowOcclusionNotificationHandlers;
+- (void)_setIsWindowOccluded:(BOOL)isWindowOccluded;
 #endif
-+ (Vector<WKView *>&)_allViews;
 @end
 
 @interface WKViewData : NSObject {
@@ -244,15 +236,17 @@ struct WKViewInterpretKeyEventsParameters {
     
     NSSize _intrinsicContentSize;
     BOOL _expandsToFitContentViaAutoLayout;
+
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
     BOOL _isWindowOccluded;
     BOOL _windowOcclusionDetectionEnabled;
+#endif
 }
 
 @end
 
 @implementation WKViewData
 @end
-
 
 @interface WKResponderChainSink : NSResponder {
     NSResponder *_lastResponderInChain;
@@ -296,9 +290,6 @@ struct WKViewInterpretKeyEventsParameters {
     [_data release];
     _data = nil;
 
-    Vector<WKView *>& allViews = [WKView _allViews];
-    allViews.remove(allViews.find(self));
-
     NSNotificationCenter* workspaceNotificationCenter = [[NSWorkspace sharedWorkspace] notificationCenter];
     [workspaceNotificationCenter removeObserver:self name:NSWorkspaceActiveSpaceDidChangeNotification object:nil];
 
@@ -310,7 +301,7 @@ struct WKViewInterpretKeyEventsParameters {
 - (WKBrowsingContextController *)browsingContextController
 {
     if (!_data->_browsingContextController)
-        _data->_browsingContextController.adoptNS([[WKBrowsingContextController alloc] _initWithPageRef:[self pageRef]]);
+        _data->_browsingContextController = adoptNS([[WKBrowsingContextController alloc] _initWithPageRef:[self pageRef]]);
     return _data->_browsingContextController.get();
 }
 
@@ -1889,8 +1880,6 @@ static NSString * const backingPropertyOldScaleFactorKey = @"NSBackingPropertyOl
                                                      name:NSWindowDidMoveNotification object:window];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_windowDidResize:) 
                                                      name:NSWindowDidResizeNotification object:window];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_windowWillOrderOffScreen:)
-                                                     name:@"NSWindowWillOrderOffScreenNotification" object:window];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_windowDidOrderOffScreen:) 
                                                      name:@"NSWindowDidOrderOffScreenNotification" object:window];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_windowDidOrderOnScreen:) 
@@ -1899,6 +1888,10 @@ static NSString * const backingPropertyOldScaleFactorKey = @"NSBackingPropertyOl
                                                      name:windowDidChangeBackingPropertiesNotification object:window];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_windowDidChangeScreen:)
                                                      name:NSWindowDidChangeScreenNotification object:window];
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_windowDidChangeOcclusionState:)
+                                                     name:NSWindowDidChangeOcclusionStateNotification object:window];
+#endif
     }
 }
 
@@ -1919,6 +1912,9 @@ static NSString * const backingPropertyOldScaleFactorKey = @"NSBackingPropertyOl
     [[NSNotificationCenter defaultCenter] removeObserver:self name:@"_NSWindowDidBecomeVisible" object:window];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:windowDidChangeBackingPropertiesNotification object:window];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowDidChangeScreenNotification object:window];
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowDidChangeOcclusionStateNotification object:window];
+#endif
 }
 
 - (void)viewWillMoveToWindow:(NSWindow *)window
@@ -1940,13 +1936,10 @@ static NSString * const backingPropertyOldScaleFactorKey = @"NSBackingPropertyOl
     
     [self removeWindowObservers];
     [self addWindowObserversForWindow:window];
-    [self _disableWindowOcclusionNotifications];
 }
 
 - (void)viewDidMoveToWindow
 {
-    [self _enableWindowOcclusionNotifications];
-
     // We want to make sure to update the active state while hidden, so if the view is about to become visible, we
     // update the active state first and then make it visible. If the view is about to be hidden, we hide it first and then
     // update the active state.
@@ -2051,11 +2044,6 @@ static NSString * const backingPropertyOldScaleFactorKey = @"NSBackingPropertyOl
     [self _updateWindowAndViewFrames];
 }
 
-- (void)_windowWillOrderOffScreen:(NSNotification *)notification
-{
-    [self _disableWindowOcclusionNotifications];
-}
-
 - (void)_windowDidOrderOffScreen:(NSNotification *)notification
 {
     [self _updateWindowVisibility];
@@ -2069,7 +2057,6 @@ static NSString * const backingPropertyOldScaleFactorKey = @"NSBackingPropertyOl
 - (void)_windowDidOrderOnScreen:(NSNotification *)notification
 {
     [self _updateWindowVisibility];
-    [self _enableWindowOcclusionNotifications];
 
     // We want to make sure to update the active state while hidden, so since the view is about to become visible,
     // we update the active state first and then make it visible.
@@ -2087,6 +2074,16 @@ static NSString * const backingPropertyOldScaleFactorKey = @"NSBackingPropertyOl
     _data->_windowHasValidBackingStore = NO;
     _data->_page->setIntrinsicDeviceScaleFactor(newBackingScaleFactor);
 }
+
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
+- (void)_windowDidChangeOcclusionState:(NSNotification *)notification
+{
+    if (!_data->_windowOcclusionDetectionEnabled)
+        return;
+
+    [self _setIsWindowOccluded:[self.window occlusionState] != NSWindowOcclusionStateVisible];
+}
+#endif
 
 static void drawPageBackground(CGContextRef context, WebPageProxy* page, const IntRect& rect)
 {
@@ -2314,6 +2311,7 @@ static void drawPageBackground(CGContextRef context, WebPageProxy* page, const I
 }
 #endif
 
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
 - (void)_setIsWindowOccluded:(BOOL)isWindowOccluded
 {
     if (_data->_isWindowOccluded == isWindowOccluded)
@@ -2322,125 +2320,7 @@ static void drawPageBackground(CGContextRef context, WebPageProxy* page, const I
     _data->_isWindowOccluded = isWindowOccluded;
     _data->_page->viewStateDidChange(WebPageProxy::ViewIsVisible);
 }
-
-- (void)_enableWindowOcclusionNotifications
-{
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
-    if (![self windowOcclusionDetectionEnabled])
-        return;
-
-    NSWindow *window = [self window];
-    if (!window)
-        return;
-
-    NSInteger windowID = [window windowNumber];
-    if (windowID <= 0)
-        return;
-
-    if (![WKView _registerWindowOcclusionNotificationHandlers])
-        return;
-
-    bool isWindowOccluded = false;
-    if (!WKEnableWindowOcclusionNotifications(windowID, &isWindowOccluded)) {
-        WTFLogAlways("Enabling window occlusion notifications for window %ld failed.\n", windowID);
-        return;
-    }
-
-    if (isWindowOccluded)
-        [self _setIsWindowOccluded:YES];
 #endif
-}
-
-- (void)_disableWindowOcclusionNotifications
-{
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
-    [self _setIsWindowOccluded:NO];
-
-    // Occlusion notifications for a given window might also be used else where in the
-    // application, hence unregister notification handlers instead.
-    Vector<WKView *>& allViews = [WKView _allViews];
-    if ((allViews.size() == 1) && (allViews[0] == self))
-        [WKView _unregisterWindowOcclusionNotificationHandlers];
-#endif
-}
-
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
-
-static void windowBecameVisible(uint32_t, void* data, uint32_t dataLength, void*, uint32_t)
-{
-    ASSERT(dataLength == sizeof(WKWindowID));
-    NSInteger windowID = *(WKWindowID *)data;
-
-    Vector<WKView *>& allViews = [WKView _allViews];
-    for (size_t i = 0, size = allViews.size(); i < size; ++i) {
-        WKView *view = allViews[i];
-        if ([[view window] windowNumber] == windowID)
-            [view _setIsWindowOccluded:NO];
-    }
-}
-
-static void windowBecameOccluded(uint32_t, void* data, uint32_t dataLength, void*, uint32_t)
-{
-    ASSERT(dataLength == sizeof(WKWindowID));
-    NSInteger windowID = *(WKWindowID *)data;
-
-    Vector<WKView *>& allViews = [WKView _allViews];
-    for (size_t i = 0, size = allViews.size(); i < size; ++i) {
-        WKView *view = allViews[i];
-        if ([[view window] windowNumber] == windowID && [view windowOcclusionDetectionEnabled])
-            [view _setIsWindowOccluded:YES];
-    }
-}
-
-+ (BOOL)_registerWindowOcclusionNotificationHandlers
-{
-    // Disable window occlusion notifications for App Store until <rdar://problem/13255270> is resolved.
-    static bool isAppStore = [[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.apple.appstore"];
-    if (isAppStore)
-        return NO;
-
-    if (windowOcclusionNotificationsAreRegistered)
-        return YES;
-
-    if (!WKRegisterOcclusionNotificationHandler(WKOcclusionNotificationTypeWindowBecameVisible, windowBecameVisible)) {
-        WTFLogAlways("Registeration of \"Window Became Visible\" notification handler failed.\n");
-        return NO;
-    }
-    
-    if (!WKRegisterOcclusionNotificationHandler(WKOcclusionNotificationTypeWindowBecameOccluded, windowBecameOccluded)) {
-        WTFLogAlways("Registeration of \"Window Became Occluded\" notification handler failed.\n");
-        return NO;
-    }
-
-    windowOcclusionNotificationsAreRegistered = YES;
-    return YES;
-}
-
-+ (BOOL)_unregisterWindowOcclusionNotificationHandlers
-{
-    if (!windowOcclusionNotificationsAreRegistered)
-        return YES;
-
-    if (!WKUnregisterOcclusionNotificationHandler(WKOcclusionNotificationTypeWindowBecameOccluded, windowBecameOccluded)) {
-        WTFLogAlways("Unregisteration of \"Window Became Occluded\" notification handler failed.\n");
-        return NO;
-    }
-
-    if (!WKUnregisterOcclusionNotificationHandler(WKOcclusionNotificationTypeWindowBecameVisible, windowBecameVisible)) {
-        WTFLogAlways("Unregisteration of \"Window Became Visible\" notification handler failed.\n");
-        return NO;
-    }
-
-    windowOcclusionNotificationsAreRegistered = NO;
-    return YES;
-}
-#endif
-
-+ (Vector<WKView *>&)_allViews
-{
-    DEFINE_STATIC_LOCAL(Vector<WKView *>, vector, ());
-    return vector;
-}
 
 @end
 
@@ -2742,7 +2622,7 @@ static void windowBecameOccluded(uint32_t, void* data, uint32_t dataLength, void
     if (rootLayer) {
         if (!_data->_layerHostingView) {
             // Create an NSView that will host our layer tree.
-            _data->_layerHostingView.adoptNS([[WKFlippedView alloc] initWithFrame:[self bounds]]);
+            _data->_layerHostingView = adoptNS([[WKFlippedView alloc] initWithFrame:[self bounds]]);
             [_data->_layerHostingView.get() setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
 
 
@@ -2897,7 +2777,7 @@ static bool matchesExtensionOrEquivalent(NSString *filename, NSString *extension
 
 {
     NSPasteboard *pasteboard = [NSPasteboard pasteboardWithName:pasteboardName];
-    RetainPtr<NSMutableArray> types(AdoptNS, [[NSMutableArray alloc] initWithObjects:NSFilesPromisePboardType, nil]);
+    RetainPtr<NSMutableArray> types = adoptNS([[NSMutableArray alloc] initWithObjects:NSFilesPromisePboardType, nil]);
     
     [types.get() addObjectsFromArray:archiveBuffer ? PasteboardTypes::forImagesWithArchive() : PasteboardTypes::forImages()];
     [pasteboard declareTypes:types.get() owner:self];
@@ -2979,8 +2859,8 @@ static NSString *pathWithUniqueFilenameForPath(NSString *path)
     RetainPtr<NSData> data;
     
     if (_data->_promisedImage) {
-        data.adoptNS(_data->_promisedImage->data()->createNSData());
-        wrapper.adoptNS([[NSFileWrapper alloc] initRegularFileWithContents:data.get()]);
+        data = adoptNS(_data->_promisedImage->data()->createNSData());
+        wrapper = adoptNS([[NSFileWrapper alloc] initRegularFileWithContents:data.get()]);
         [wrapper.get() setPreferredFilename:_data->_promisedFilename];
     }
     
@@ -3065,7 +2945,7 @@ static NSString *pathWithUniqueFilenameForPath(NSString *path)
 - (WKFullScreenWindowController*)fullScreenWindowController
 {
     if (!_data->_fullScreenWindowController) {
-        _data->_fullScreenWindowController.adoptNS([[WKFullScreenWindowController alloc] initWithWindow:[self createFullScreenWindow]]);
+        _data->_fullScreenWindowController = adoptNS([[WKFullScreenWindowController alloc] initWithWindow:[self createFullScreenWindow]]);
         [_data->_fullScreenWindowController.get() setWebView:self];
     }
     return _data->_fullScreenWindowController.get();
@@ -3084,7 +2964,7 @@ static NSString *pathWithUniqueFilenameForPath(NSString *path)
 {
     // The sink does two things: 1) Tells us if the responder went unhandled, and
     // 2) prevents any NSBeep; we don't ever want to beep here.
-    RetainPtr<WKResponderChainSink> sink(AdoptNS, [[WKResponderChainSink alloc] initWithResponderChain:self]);
+    RetainPtr<WKResponderChainSink> sink = adoptNS([[WKResponderChainSink alloc] initWithResponderChain:self]);
     [super doCommandBySelector:selector];
     [sink.get() detach];
     return ![sink.get() didReceiveUnhandledCommand];
@@ -3142,7 +3022,11 @@ static NSString *pathWithUniqueFilenameForPath(NSString *path)
 
 - (BOOL)_isWindowOccluded
 {
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
     return _data->_isWindowOccluded;
+#else
+    return NO;
+#endif
 }
 
 @end
@@ -3201,7 +3085,11 @@ static NSString *pathWithUniqueFilenameForPath(NSString *path)
     _data->_expandsToFitContentViaAutoLayout = NO;
 
     _data->_intrinsicContentSize = NSMakeSize(NSViewNoInstrinsicMetric, NSViewNoInstrinsicMetric);
+
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
+    _data->_isWindowOccluded = NO;
     _data->_windowOcclusionDetectionEnabled = YES;
+#endif
 
     _data->_frameOrigin = NSZeroPoint;
     _data->_contentAnchor = WKContentAnchorTopLeft;
@@ -3214,8 +3102,6 @@ static NSString *pathWithUniqueFilenameForPath(NSString *path)
         // Explicitly set the layer contents placement so AppKit will make sure that our layer has masksToBounds set to YES.
         self.layerContentsPlacement = NSViewLayerContentsPlacementTopLeft;
     }
-
-    [WKView _allViews].append(self);
 
     WebContext::statistics().wkViewCount++;
 
@@ -3272,7 +3158,7 @@ static NSString *pathWithUniqueFilenameForPath(NSString *path)
     } else {
         // FIXME: If the frame cannot be printed (e.g. if it contains an encrypted PDF that disallows
         // printing), this function should return nil.
-        RetainPtr<WKPrintingView> printingView(AdoptNS, [[WKPrintingView alloc] initWithFrameProxy:toImpl(frameRef) view:self]);
+        RetainPtr<WKPrintingView> printingView = adoptNS([[WKPrintingView alloc] initWithFrameProxy:toImpl(frameRef) view:self]);
         // NSPrintOperation takes ownership of the view.
         NSPrintOperation *printOperation = [NSPrintOperation printOperationWithView:printingView.get() printInfo:printInfo];
         [printOperation setCanSpawnSeparateThread:YES];
@@ -3439,18 +3325,32 @@ static NSString *pathWithUniqueFilenameForPath(NSString *path)
 
 - (BOOL)windowOcclusionDetectionEnabled
 {
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
     return _data->_windowOcclusionDetectionEnabled;
+#else
+    return NO;
+#endif
 }
 
 - (void)setWindowOcclusionDetectionEnabled:(BOOL)flag
 {
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
     if (_data->_windowOcclusionDetectionEnabled == flag)
         return;
+
     _data->_windowOcclusionDetectionEnabled = flag;
-    if (flag)
-        [self _enableWindowOcclusionNotifications];
-    else
-        [self _disableWindowOcclusionNotifications];
+
+    if (flag) {
+        // When enabling window occlusion detection, update the view's current occluded state
+        // immediately, as the notification only fires when it changes.
+        if (self.window)
+            [self _setIsWindowOccluded:[self.window occlusionState] != NSWindowOcclusionStateVisible];
+    } else {
+        // When disabling window occlusion detection, force the view to think it is not occluded,
+        // as it may already be occluded at the time of calling.
+        [self _setIsWindowOccluded:NO];
+    }
+#endif
 }
 
 - (void)setContentAnchor:(WKContentAnchor)contentAnchor

@@ -90,47 +90,6 @@ void NetworkResourceLoader::start()
     m_handle = ResourceHandle::create(m_networkingContext.get(), request(), this, false /* defersLoading */, contentSniffingPolicy() == SniffContent);
 }
 
-static bool performCleanupsCalled = false;
-
-static Mutex& requestsToCleanupMutex()
-{
-    DEFINE_STATIC_LOCAL(Mutex, mutex, ());
-    return mutex;
-}
-
-static HashSet<NetworkResourceLoader*>& requestsToCleanup()
-{
-    DEFINE_STATIC_LOCAL(HashSet<NetworkResourceLoader*>, requests, ());
-    return requests;
-}
-
-void NetworkResourceLoader::scheduleCleanupOnMainThread()
-{
-    MutexLocker locker(requestsToCleanupMutex());
-
-    requestsToCleanup().add(this);
-    if (!performCleanupsCalled) {
-        performCleanupsCalled = true;
-        callOnMainThread(NetworkResourceLoader::performCleanups, 0);
-    }
-}
-
-void NetworkResourceLoader::performCleanups(void*)
-{
-    ASSERT(performCleanupsCalled);
-
-    Vector<NetworkResourceLoader*> requests;
-    {
-        MutexLocker locker(requestsToCleanupMutex());
-        copyToVector(requestsToCleanup(), requests);
-        requestsToCleanup().clear();
-        performCleanupsCalled = false;
-    }
-    
-    for (size_t i = 0; i < requests.size(); ++i)
-        requests[i]->cleanup();
-}
-
 void NetworkResourceLoader::cleanup()
 {
     ASSERT(isMainThread());
@@ -158,16 +117,6 @@ void NetworkResourceLoader::connectionToWebProcessDidClose()
     if (m_handle)
         return;
 
-#if !ASSERT_DISABLED
-    // Since there's no handle, this loader should never have been started, and therefore it should never be in the
-    // set of loaders to cleanup on the main thread.
-    // Let's make sure that's true.
-    {
-        MutexLocker locker(requestsToCleanupMutex());
-        ASSERT(!requestsToCleanup().contains(this));
-    }
-#endif
-
     cleanup();
 }
 
@@ -194,21 +143,26 @@ void NetworkResourceLoader::abortInProgressLoad()
 
     m_handle->cancel();
 
-    scheduleCleanupOnMainThread();
+    cleanup();
 }
 
-void NetworkResourceLoader::didReceiveResponseAsync(ResourceHandle*, const ResourceResponse& response)
+void NetworkResourceLoader::didReceiveResponseAsync(ResourceHandle* handle, const ResourceResponse& response)
 {
+    ASSERT_UNUSED(handle, handle == m_handle);
+
     // FIXME (NetworkProcess): Cache the response.
     if (FormData* formData = request().httpBody())
         formData->removeGeneratedFilesIfNeeded();
 
-    sendAbortingOnFailure(Messages::WebResourceLoader::DidReceiveResponseWithCertificateInfo(response, PlatformCertificateInfo(response)));
+    sendAbortingOnFailure(Messages::WebResourceLoader::DidReceiveResponseWithCertificateInfo(response, PlatformCertificateInfo(response), isLoadingMainResource()));
+
+    // m_handle will be 0 if the request got aborted above.
+    if (!m_handle)
+        return;
 
     if (!isLoadingMainResource()) {
         // For main resources, the web process is responsible for sending back a NetworkResourceLoader::ContinueDidReceiveResponse message.
         m_handle->continueDidReceiveResponse();
-        return;
     }
 }
 
@@ -219,20 +173,22 @@ void NetworkResourceLoader::didReceiveData(ResourceHandle*, const char* data, in
     ASSERT_NOT_REACHED();
 }
 
-void NetworkResourceLoader::didReceiveBuffer(WebCore::ResourceHandle*, PassRefPtr<WebCore::SharedBuffer> buffer, int encodedDataLength)
+void NetworkResourceLoader::didReceiveBuffer(ResourceHandle* handle, PassRefPtr<SharedBuffer> buffer, int encodedDataLength)
 {
+    ASSERT_UNUSED(handle, handle == m_handle);
+
     // FIXME (NetworkProcess): For the memory cache we'll also need to cache the response data here.
     // Such buffering will need to be thread safe, as this callback is happening on a background thread.
     
     m_bytesReceived += buffer->size();
     
 #if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
-    ShareableResource::Handle handle;
-    tryGetShareableHandleFromSharedBuffer(handle, buffer.get());
-    if (!handle.isNull()) {
+    ShareableResource::Handle shareableResourceHandle;
+    tryGetShareableHandleFromSharedBuffer(shareableResourceHandle, buffer.get());
+    if (!shareableResourceHandle.isNull()) {
         // Since we're delivering this resource by ourselves all at once, we'll abort the resource handle since we don't need anymore callbacks from ResourceHandle.
         abortInProgressLoad();
-        send(Messages::WebResourceLoader::DidReceiveResource(handle, currentTime()));
+        send(Messages::WebResourceLoader::DidReceiveResource(shareableResourceHandle, currentTime()));
         return;
     }
 #endif // __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
@@ -241,27 +197,33 @@ void NetworkResourceLoader::didReceiveBuffer(WebCore::ResourceHandle*, PassRefPt
     sendAbortingOnFailure(Messages::WebResourceLoader::DidReceiveData(dataReference, encodedDataLength));
 }
 
-void NetworkResourceLoader::didFinishLoading(ResourceHandle*, double finishTime)
+void NetworkResourceLoader::didFinishLoading(ResourceHandle* handle, double finishTime)
 {
+    ASSERT_UNUSED(handle, handle == m_handle);
+
     // FIXME (NetworkProcess): For the memory cache we'll need to update the finished status of the cached resource here.
     // Such bookkeeping will need to be thread safe, as this callback is happening on a background thread.
     invalidateSandboxExtensions();
     send(Messages::WebResourceLoader::DidFinishResourceLoad(finishTime));
     
-    scheduleCleanupOnMainThread();
+    cleanup();
 }
 
-void NetworkResourceLoader::didFail(ResourceHandle*, const ResourceError& error)
+void NetworkResourceLoader::didFail(ResourceHandle* handle, const ResourceError& error)
 {
+    ASSERT_UNUSED(handle, handle == m_handle);
+
     // FIXME (NetworkProcess): For the memory cache we'll need to update the finished status of the cached resource here.
     // Such bookkeeping will need to be thread safe, as this callback is happening on a background thread.
     invalidateSandboxExtensions();
     send(Messages::WebResourceLoader::DidFailResourceLoad(error));
-    scheduleCleanupOnMainThread();
+    cleanup();
 }
 
-void NetworkResourceLoader::willSendRequestAsync(ResourceHandle*, const ResourceRequest& request, const ResourceResponse& redirectResponse)
+void NetworkResourceLoader::willSendRequestAsync(ResourceHandle* handle, const ResourceRequest& request, const ResourceResponse& redirectResponse)
 {
+    ASSERT_UNUSED(handle, handle == m_handle);
+
     // We only expect to get the willSendRequest callback from ResourceHandle as the result of a redirect.
     ASSERT(!redirectResponse.isNull());
     ASSERT(isMainThread());
@@ -285,11 +247,18 @@ void NetworkResourceLoader::continueWillSendRequest(const ResourceRequest& newRe
 
 void NetworkResourceLoader::continueDidReceiveResponse()
 {
+    // FIXME: Remove this check once BlobResourceHandle implements didReceiveResponseAsync correctly.
+    // Currently, it does not wait for response, so the load is likely to finish before continueDidReceiveResponse.
+    if (!m_handle)
+        return;
+
     m_handle->continueDidReceiveResponse();
 }
 
-void NetworkResourceLoader::didSendData(ResourceHandle*, unsigned long long bytesSent, unsigned long long totalBytesToBeSent)
+void NetworkResourceLoader::didSendData(ResourceHandle* handle, unsigned long long bytesSent, unsigned long long totalBytesToBeSent)
 {
+    ASSERT_UNUSED(handle, handle == m_handle);
+
     send(Messages::WebResourceLoader::DidSendData(bytesSent, totalBytesToBeSent));
 }
 
@@ -306,8 +275,10 @@ void NetworkResourceLoader::cannotShowURL(ResourceHandle*)
     notImplemented();
 }
 
-bool NetworkResourceLoader::shouldUseCredentialStorage(WebCore::ResourceHandle*)
+bool NetworkResourceLoader::shouldUseCredentialStorage(ResourceHandle* handle)
 {
+    ASSERT_UNUSED(handle, handle == m_handle || !m_handle); // m_handle will be 0 if called from ResourceHandle::start().
+
     // When the WebProcess is handling loading a client is consulted each time this shouldUseCredentialStorage question is asked.
     // In NetworkProcess mode we ask the WebProcess client up front once and then reuse the cached answer.
 
@@ -318,24 +289,39 @@ bool NetworkResourceLoader::shouldUseCredentialStorage(WebCore::ResourceHandle*)
 
 void NetworkResourceLoader::shouldUseCredentialStorageAsync(ResourceHandle* handle)
 {
+    ASSERT_UNUSED(handle, handle == m_handle);
+
     handle->continueShouldUseCredentialStorage(shouldUseCredentialStorage(handle));
 }
 
-void NetworkResourceLoader::didReceiveAuthenticationChallenge(ResourceHandle*, const AuthenticationChallenge& challenge)
+void NetworkResourceLoader::didReceiveAuthenticationChallenge(ResourceHandle* handle, const AuthenticationChallenge& challenge)
 {
+    ASSERT_UNUSED(handle, handle == m_handle);
+
+    // FIXME (http://webkit.org/b/115291): Since we go straight to the UI process for authentication we don't get WebCore's
+    // cross-origin check before asking the client for credentials.
+    // Therefore we are too permissive in the case where the ClientCredentialPolicy is DoNotAskClientForCrossOriginCredentials.
+    if (clientCredentialPolicy() == DoNotAskClientForAnyCredentials) {
+        challenge.authenticationClient()->receivedRequestToContinueWithoutCredential(challenge);
+        return;
+    }
+
     NetworkProcess::shared().authenticationManager().didReceiveAuthenticationChallenge(webPageID(), webFrameID(), challenge);
 }
 
-void NetworkResourceLoader::didCancelAuthenticationChallenge(ResourceHandle*, const AuthenticationChallenge& challenge)
+void NetworkResourceLoader::didCancelAuthenticationChallenge(ResourceHandle* handle, const AuthenticationChallenge& challenge)
 {
+    ASSERT_UNUSED(handle, handle == m_handle);
+
     // This function is probably not needed (see <rdar://problem/8960124>).
     notImplemented();
 }
 
 #if USE(PROTECTION_SPACE_AUTH_CALLBACK)
-void NetworkResourceLoader::canAuthenticateAgainstProtectionSpaceAsync(ResourceHandle*, const ProtectionSpace& protectionSpace)
+void NetworkResourceLoader::canAuthenticateAgainstProtectionSpaceAsync(ResourceHandle* handle, const ProtectionSpace& protectionSpace)
 {
     ASSERT(isMainThread());
+    ASSERT_UNUSED(handle, handle == m_handle);
 
     // This message is DispatchMessageEvenWhenWaitingForSyncReply to avoid a situation where the NetworkProcess is deadlocked
     // waiting for 6 connections to complete while the WebProcess is waiting for a 7th to complete.

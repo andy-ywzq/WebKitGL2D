@@ -1232,7 +1232,6 @@ set(WebCore_SOURCES
     dom/SelectorQuery.cpp
     dom/ShadowRoot.cpp
     dom/SpaceSplitString.cpp
-    dom/StaticHashSetNodeList.cpp
     dom/StaticNodeList.cpp
     dom/StringCallback.cpp
     dom/StyledElement.cpp
@@ -2312,7 +2311,6 @@ set(WebCore_SOURCES
     rendering/svg/SVGTextMetricsBuilder.cpp
     rendering/svg/SVGTextQuery.cpp
 
-    storage/StorageTask.cpp
     storage/StorageThread.cpp
     storage/Storage.cpp
     storage/StorageAreaImpl.cpp

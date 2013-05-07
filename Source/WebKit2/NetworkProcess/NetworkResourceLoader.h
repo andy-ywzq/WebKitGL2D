@@ -32,7 +32,6 @@
 #include "SchedulableLoader.h"
 #include "ShareableResource.h"
 #include <WebCore/ResourceHandleClient.h>
-#include <WebCore/ResourceLoaderOptions.h>
 #include <WebCore/RunLoop.h>
 
 typedef const struct _CFCachedURLResponse* CFCachedURLResponseRef;
@@ -60,7 +59,9 @@ public:
     // Used by MessageSender.
     CoreIPC::Connection* connection() const;
     uint64_t destinationID() const;
-    
+
+    WebCore::ResourceHandle* handle() const { return m_handle.get(); }
+
     virtual void start() OVERRIDE;
     virtual void connectionToWebProcessDidClose() OVERRIDE;
         
@@ -111,8 +112,6 @@ private:
     void continueCanAuthenticateAgainstProtectionSpace(bool);
 #endif
 
-    void scheduleCleanupOnMainThread();
-    static void performCleanups(void*);
     void cleanup();
     
     void platformDidReceiveResponse(const WebCore::ResourceResponse&);

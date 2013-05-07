@@ -168,9 +168,15 @@ bool WebView::showsAsSource() const
 }
 
 #if ENABLE(FULLSCREEN_API)
-void WebView::exitFullScreen()
+bool WebView::exitFullScreen()
 {
+#if PLATFORM(EFL)
+    // FIXME: Implement this for other platforms.
+    if (!m_page->fullScreenManager()->isFullScreen())
+        return false;
+#endif
     m_page->fullScreenManager()->requestExitFullScreen();
+    return true;
 }
 #endif
 
@@ -361,7 +367,7 @@ PassRefPtr<WebPopupMenuProxy> WebView::createPopupMenuProxy(WebPageProxy* page)
     return 0;
 }
 
-PassRefPtr<WebContextMenuProxy> WebView::createContextMenuProxy(WebPageProxy* page)
+PassRefPtr<WebContextMenuProxy> WebView::createContextMenuProxy(WebPageProxy*)
 {
     notImplemented();
     return 0;

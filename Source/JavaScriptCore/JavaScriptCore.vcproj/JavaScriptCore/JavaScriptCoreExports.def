@@ -126,6 +126,7 @@ EXPORTS
     ?calculatedFunctionName@DebuggerCallFrame@JSC@@QBE?AVString@WTF@@XZ
     ?call@JSC@@YA?AVJSValue@1@PAVExecState@1@V21@W4CallType@1@ABTCallData@1@1ABVArgList@1@@Z
     ?callHostFunctionAsConstructor@JSC@@YI_JPAVExecState@1@@Z
+    ?callOnMainThread@WTF@@YAXABV?$Function@$$A6AXXZ@1@@Z
     ?callOnMainThread@WTF@@YAXP6AXPAX@Z0@Z
     ?callOnMainThreadAndWait@WTF@@YAXP6AXPAX@Z0@Z
     ?canShrink@StringBuilder@WTF@@QBE_NXZ
@@ -142,6 +143,7 @@ EXPORTS
     ?charactersToUIntStrict@WTF@@YAIPB_WIPA_NH@Z
     ?charactersWithNullTermination@String@WTF@@QAEPB_WXZ
     ?checkCurrentIdentifierTable@Identifier@JSC@@CAXPAVExecState@2@@Z
+    ?checkSyntax@JSC@@YA_NAAVVM@1@ABVSourceCode@1@AAUParserError@1@@Z
     ?checkSyntax@JSC@@YA_NPAVExecState@1@ABVSourceCode@1@PAVJSValue@1@@Z
     ?checksum@MD5@WTF@@QAEXAAV?$Vector@E$0BA@VCrashOnOverflow@WTF@@@2@@Z
     ?className@JSObject@JSC@@SA?AVString@WTF@@PBV12@@Z

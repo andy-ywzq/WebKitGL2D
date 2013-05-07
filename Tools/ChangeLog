@@ -1,3 +1,306 @@
+2013-04-30  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        [EFL] Enable scaled cursors
+        https://bugs.webkit.org/show_bug.cgi?id=106242
+
+        Reviewed by Gyuyoung Kim.
+
+        Enable ENABLE_MOUSE_CURSOR_SCALE for EFL port.
+
+        * Scripts/webkitperl/FeatureList.pm:
+
+2013-04-30  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Replace "Optional" extended attribute by proper Web IDL "optional" keyword
+        https://bugs.webkit.org/show_bug.cgi?id=115380
+
+        Reviewed by Kentaro Hara.
+
+        Replace WebKit-specific [Optional] extended attribute by Web IDL "optional"
+        keyword.
+
+        * WebKitTestRunner/InjectedBundle/Bindings/EventSendingController.idl:
+        * WebKitTestRunner/InjectedBundle/Bindings/TestRunner.idl:
+
+2013-04-30  Jocelyn Turcotte  <jocelyn.turcotte@digia.com>
+
+        Fix the USE(3D_GRAPHICS) build with the standard OpenGL on Windows
+        https://bugs.webkit.org/show_bug.cgi?id=114684
+
+        Reviewed by Simon Hausmann.
+
+        Remove the ANGLE requirement for USE(3D_GRAPHICS).
+        This enables WebKit2 in the build when using a "-opengl desktop" configured Qt.
+
+        * qmake/mkspecs/features/features.prf:
+
+2013-04-29  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Disable Shadow DOM feature
+        https://bugs.webkit.org/show_bug.cgi?id=115374
+
+        Reviewed by Martin Robinson.
+
+        Disable the Shadow DOM feature on the GTK port, the feature is planned for removal.
+
+        * Scripts/webkitperl/FeatureList.pm:
+
+2013-04-29  Glenn Adams  <glenn@skynav.com>
+
+        [webkitpy] Add missing contributor email addresses
+        https://bugs.webkit.org/show_bug.cgi?id=115394
+
+        Reviewed by Ryosuke Niwa.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-04-29  Alberto Garcia  <agarcia@igalia.com>
+
+        Remove all remaining Skia code
+        https://bugs.webkit.org/show_bug.cgi?id=115263
+
+        Reviewed by Benjamin Poulain.
+
+        Remove all remaining references to Skia.
+
+        * Scripts/webkitdirs.pm:
+        (blackberryCMakeArguments):
+        * Scripts/webkitpy/common/config/contributionareas.py:
+        * Scripts/webkitpy/common/config/watchlist:
+
+2013-04-29  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        Get rid of unused options in Tools/Scripts/webkit-build-directory
+        https://bugs.webkit.org/show_bug.cgi?id=115383
+
+        Reviewed by Darin Adler.
+
+        * Scripts/webkit-build-directory:
+
+2013-04-29  Alexey Proskuryakov  <ap@apple.com>
+
+        [WK2][Mac] Test with NetworkProcess enabled.
+
+        Fix the build for non-Mac.
+
+        * WebKitTestRunner/TestController.cpp:
+        (WTR::TestController::initialize):
+
+2013-04-29  Alexey Proskuryakov  <ap@apple.com>
+
+        [WK2][Mac] Test with NetworkProcess enabled.
+
+        Reviewed by Sam Weinig.
+
+        * WebKitTestRunner/TestController.cpp:
+        (WTR::TestController::initialize):
+
+2013-04-29  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Set up the TestWebCore in TestWebKitAPI
+        https://bugs.webkit.org/show_bug.cgi?id=115237
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Set up the WebCore unit test program, consisting of the unit tests under the TestWebKitAPI/Tests/WebCore directory.
+        Again the approach of specifying libtool libraries multiple times in the TestWebCore program's LDFLAGS is used as
+        a workaround for the layer violations and circular dependencies between various static libraries. Linking against
+        either libwebkitgtk or libwebkit2gtk shared libraries is avoided due to the unit tests covering WebCore, which
+        shouldn't rely on neither of the two distributable libraries (hence the dirty workaround).
+
+        * TestWebKitAPI/GNUmakefile.am:
+
+2013-04-29  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Set up the TestJavaScriptCore in TestWebKitAPI
+        https://bugs.webkit.org/show_bug.cgi?id=115236
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Set up the TestJavaScriptCore unit test program, consisting of the unit tests
+        under the TestWebKitAPI/Tests/JavaScriptCore directory.
+
+        * TestWebKitAPI/GNUmakefile.am:
+
+2013-04-29  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Export the COLLECT_NO_DEMANGLE variable on the builders
+        https://bugs.webkit.org/show_bug.cgi?id=115323
+
+        Reviewed by Philippe Normand.
+
+        Export the COLLECT_NO_DEMANGLE environment variable on the GTK BuildBot builders.
+        Its presence enforces linkers to output mangled symbols when reporting linking failures
+        due to unresolved references. People trying to fix the build can then simply copy
+        the printed mangled symbol into the symbols.filter file instead of doing a manual build
+        or connecting to the builders to discover the mangled version of the missing symbol.
+
+        * BuildSlaveSupport/gtk/daemontools-buildbot.conf:
+
+2013-04-28  Zan Dobersek  <zdobersek@igalia.com>
+
+        Remove Chromium code from Tools/BuildSlaveSupport
+        https://bugs.webkit.org/show_bug.cgi?id=115325
+
+        Reviewed by Benjamin Poulain.
+
+        Remove the two Chromium-specific scripts and the Chromium-specific parts from the code
+        covering archiving test results and built products.
+
+        * BuildSlaveSupport/built-product-archive:
+        (archiveBuiltProduct):
+        (extractBuiltProduct):
+        * BuildSlaveSupport/chromium/output-android-device-status: Removed.
+        * BuildSlaveSupport/chromium/remove-crash-logs: Removed.
+        * BuildSlaveSupport/test-result-archive:
+        (archiveTestResults):
+
+2013-04-28  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        Remove support for Chromium from webkitdirs.pm
+        https://bugs.webkit.org/show_bug.cgi?id=115338
+
+        Reviewed by Darin Adler.
+
+        * Scripts/webkitdirs.pm:
+        (determineBaseProductDir):
+        (argumentsForConfiguration):
+        (builtDylibPathForName):
+        (determineIsQt):
+        (isAppleWebKit):
+
+2013-04-28  Zan Dobersek  <zdobersek@igalia.com>
+
+        Rename TestRunner's setAudioData to setAudioResult
+        https://bugs.webkit.org/show_bug.cgi?id=115326
+
+        Reviewed by Darin Adler.
+
+        Rename the TestRunner's setAudioData method to setAudioResult. The new name better conveys the method's purpose
+        than the previous one. The change is a simple rename, there's no change in the method's functionality. The
+        affected tests are adjusted accordingly.
+
+        * DumpRenderTree/qt/TestRunnerQt.cpp:
+        (TestRunnerQt::setAudioResult):
+        * DumpRenderTree/qt/TestRunnerQt.h:
+        (TestRunnerQt):
+        * WebKitTestRunner/InjectedBundle/Bindings/TestRunner.idl:
+        * WebKitTestRunner/InjectedBundle/TestRunner.cpp:
+        (WTR::TestRunner::setAudioResult):
+        * WebKitTestRunner/InjectedBundle/TestRunner.h:
+        (TestRunner):
+
+2013-04-28  Zan Dobersek  <zdobersek@igalia.com>
+
+        [WKTR] Tests dumping audio data shouldn't dump pixels
+        https://bugs.webkit.org/show_bug.cgi?id=115270
+
+        Reviewed by Benjamin Poulain.
+
+        Prevent dumping the pixel output when Web Audio tests are dumping output data
+        as the testing output. Pixel output in these tests has no real meaning and is
+        as such unnecessary.
+
+        * WebKitTestRunner/InjectedBundle/TestRunner.cpp:
+        (WTR::TestRunner::setAudioData):
+
+2013-04-27  Raphael Kubo da Costa  <raphael.kubo.da.costa@intel.com>
+
+        [EFL] Unreviewed Intel bots fix after r149231.
+
+        * efl/jhbuild.modules: Disable the libxml Python bindings since the
+        bots don't have Python's development files installed. libxml should
+        detect this kind of thing better.
+
+2013-04-26  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL] Build break using jhbuild on ubuntu 13.04
+        https://bugs.webkit.org/show_bug.cgi?id=115225
+
+        Reviewed by Gyuyoung Kim.
+
+        libxslt in Ubuntu 13.04 requires libxml 2.9.0 or higher and
+        libxml 2.9.0 has a bug to make regression which r138422 mentioned.
+        So this patch bumped libxml version to 2.9.1.
+
+        * efl/jhbuild.modules:
+
+2013-04-26  Jeffrey Pfau  <jpfau@apple.com>
+
+        delete-stale-build-files does not clear .d files
+        http://bugs.webkit.org/show_bug.cgi?id=115293
+
+        Reviewed by Ryosuke Niwa.
+
+        * BuildSlaveSupport/delete-stale-build-files:
+        (main): Add .d to the file type list
+
+2013-04-26  Roger Fong  <roger_fong@apple.com>
+
+        Make Apple Windows VS2010 build results into and get dependencies from __32 suffixed folders.
+        Make the DebugSuffix configuration use _debug dependencies.
+
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTree.vcxproj:
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreeApple.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreeCommon.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreeDebug.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreeDebugWinCairo.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreeLauncher.vcxproj:
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreeLauncherCommon.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreeLauncherDebug.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreeLauncherProduction.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreeLauncherRelease.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreePostBuild.cmd:
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreeProduction.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreeRelease.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreeReleaseWinCairo.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/ImageDiff/ImageDiff.vcxproj:
+        * DumpRenderTree/DumpRenderTree.vcxproj/ImageDiff/ImageDiffCommon.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/ImageDiff/ImageDiffDebug.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/ImageDiff/ImageDiffDebugWinCairo.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/ImageDiff/ImageDiffLauncher.vcxproj:
+        * DumpRenderTree/DumpRenderTree.vcxproj/ImageDiff/ImageDiffLauncherCommon.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/ImageDiff/ImageDiffLauncherDebug.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/ImageDiff/ImageDiffLauncherProduction.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/ImageDiff/ImageDiffLauncherRelease.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/ImageDiff/ImageDiffProduction.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/ImageDiff/ImageDiffRelease.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/ImageDiff/ImageDiffReleaseWinCairo.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/TestNetscapePlugin/TestNetscapePlugin.def:
+        * DumpRenderTree/DumpRenderTree.vcxproj/TestNetscapePlugin/TestNetscapePlugin.vcxproj:
+        * DumpRenderTree/DumpRenderTree.vcxproj/TestNetscapePlugin/TestNetscapePlugin.vcxproj.filters:
+        * DumpRenderTree/DumpRenderTree.vcxproj/TestNetscapePlugin/TestNetscapePluginCommon.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/TestNetscapePlugin/TestNetscapePluginDebug.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/TestNetscapePlugin/TestNetscapePluginProduction.props:
+        * DumpRenderTree/DumpRenderTree.vcxproj/TestNetscapePlugin/TestNetscapePluginRelease.props:
+        * DumpRenderTree/TestNetscapePlugIn/win/TestNetscapePlugin_debug.def: Removed.
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPI.vcxproj:
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPICommon.props:
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPICommonWinCairo.props:
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPIDebug.props:
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPIDebugWinCairo.props:
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPIProduction.props:
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPIRelease.props:
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPIReleaseWinCairo.props:
+        * WinLauncher/WinLauncher.vcxproj/WinLauncher.vcxproj:
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherCommon.props:
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherDebug.props:
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherLib.vcxproj:
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherLibCommon.props:
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherLibDebug.props:
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherLibProduction.props:
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherLibRelease.props:
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherProduction.props:
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherRelease.props:
+        * win/AssembleBuildLogs/AssembleBuildLogs.vcxproj:
+        * win/AssembleBuildLogs/AssembleLogs.cmd:
+        * win/record-memory/record-memory.vcxproj:
+        * win/record-memory/record-memoryDebug.props:
+        * win/record-memory/record-memoryDebugWinCairo.props:
+        * win/record-memory/record-memoryProduction.props:
+        * win/record-memory/record-memoryRelease.props:
+        * win/record-memory/record-memoryReleaseWinCairo.props:
+
 2013-04-26  Zan Dobersek  <zdobersek@igalia.com>
 
         [GTK] Clean up the TestWebKitAPI GNUmakefile.am

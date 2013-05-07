@@ -19,6 +19,8 @@ list(APPEND WebCore_INCLUDE_DIRECTORIES
 list(APPEND WebCore_SOURCES
     accessibility/win/AccessibilityObjectWin.cpp
 
+    html/HTMLSelectElementWin.cpp
+
     page/win/DragControllerWin.cpp
     page/win/EventHandlerWin.cpp
     page/wince/FrameWinCE.cpp
@@ -79,6 +81,7 @@ list(APPEND WebCore_SOURCES
 
     platform/graphics/opentype/OpenTypeUtilities.cpp
 
+    platform/graphics/win/DIBPixelData.cpp
     platform/graphics/win/GDIExtras.cpp
     platform/graphics/win/IconWin.cpp
     platform/graphics/win/ImageWin.cpp

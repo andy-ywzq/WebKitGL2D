@@ -1,3 +1,507 @@
+2013-04-30  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        [EFL] Enable scaled cursors
+        https://bugs.webkit.org/show_bug.cgi?id=106242
+
+        Reviewed by Gyuyoung Kim.
+
+        Unskip fast/css/cursor-parsing-image-set.html for EFL port
+        now that scaled cursors are enabled. Update expectation for
+        fast/events/mouse-cursor-image-set.html to explain the
+        reason why it is failing and set its bug URL.
+
+        * platform/efl/TestExpectations:
+
+2013-04-30  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening.
+
+        Skipping tests using unimplemented feature.
+
+        * platform/qt-5.0-wk1/TestExpectations:
+
+2013-04-30  Thiago Marcos P. Santos  <thiago.santos@intel.com>
+
+        CSSParser::parseFontFamily should allow the keyword "default" as part of a font name
+        https://bugs.webkit.org/show_bug.cgi?id=107231
+
+        Reviewed by Ryosuke Niwa.
+
+        * fast/css/font-family-parse-keyword-expected.html: Added.
+        * fast/css/font-family-parse-keyword.html: Added.
+
+2013-04-30  Zalan Bujtas  <zalan@apple.com>
+
+        Animations fail to start on http://www.google.com/insidesearch/howsearchworks/thestory/
+        https://bugs.webkit.org/show_bug.cgi?id=111244
+
+        Reviewed by David Kilzer.
+        
+        Enable performance.now() as a minimal subset of Web Timing API. 
+        It returns DOMHighResTimeStamp, a monotonically increasing value representing the 
+        number of milliseconds from the start of the navigation of the current document.
+        JS libraries use this API to check against the requestAnimationFrame() timestamp.
+        
+        We can test the monotonical behaviour of this API only. Checking whether the value
+        actually represents the navigation start requires PerformanceTiming enabled.
+        
+        * fast/dom/Window/web-timing-minimal-performance-now-expected.txt: Added.
+        * fast/dom/Window/web-timing-minimal-performance-now.html: Added.
+
+2013-04-29  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/TestExpectations: Skipping the Shadow DOM layout tests after the feature was disabled in r149352.
+
+2013-04-29  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed gardening. Rebaseline some Windows tests after disabling subpixel layout.
+
+        * platform/win/editing/selection/caret-ltr-right-expected.txt:
+        * platform/win/editing/selection/caret-rtl-2-left-expected.txt:
+        * platform/win/editing/selection/caret-rtl-right-expected.txt:
+        * platform/win/editing/selection/extend-selection-word-expected.txt: Added.
+        * platform/win/editing/selection/mixed-editability-10-expected.txt:
+        * platform/win/editing/selection/vertical-lr-ltr-extend-line-backward-br-expected.txt:
+        * platform/win/editing/selection/vertical-lr-ltr-extend-line-forward-br-expected.txt:
+        * platform/win/editing/selection/vertical-rl-ltr-extend-line-backward-br-expected.txt:
+        * platform/win/editing/selection/vertical-rl-ltr-extend-line-backward-p-expected.txt:
+        * platform/win/editing/selection/vertical-rl-ltr-extend-line-forward-br-expected.txt:
+        * platform/win/editing/selection/vertical-rl-ltr-extend-line-forward-p-expected.txt:
+        * platform/win/editing/selection/vertical-rl-rtl-extend-line-backward-br-expected.txt:
+        * platform/win/editing/selection/vertical-rl-rtl-extend-line-backward-p-expected.txt:
+        * platform/win/editing/selection/vertical-rl-rtl-extend-line-forward-br-expected.txt:
+        * platform/win/editing/selection/vertical-rl-rtl-extend-line-forward-p-expected.txt:
+        * platform/win/fast/borders/bidi-012-expected.txt:
+        * platform/win/fast/forms/fieldset-legend-padding-unclipped-fieldset-border-expected.txt:
+        * platform/win/fast/forms/file/file-input-disabled-expected.txt:
+        * platform/win/fast/forms/range: Added.
+        * platform/win/fast/forms/range/slider-mouse-events-expected.txt: Added.
+        * platform/win/fast/inline/inline-box-background-expected.txt:
+        * platform/win/fast/inline/inline-box-background-long-image-expected.txt:
+        * platform/win/fast/inline/inline-box-background-repeat-x-expected.txt:
+        * platform/win/fast/inline/inline-box-background-repeat-y-expected.txt:
+
+2013-04-29  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Windows gardening after r148987.
+
+        * platform/win/editing/deleting/delete-by-word-002-expected.txt: Added.
+        * platform/win/editing/deleting/delete-cell-contents-expected.txt: Added.
+        * platform/win/editing/execCommand: Added.
+        * platform/win/editing/execCommand/button-expected.txt: Added.
+        * platform/win/editing/execCommand/createLink-expected.txt: Added.
+        * platform/win/editing/execCommand/indent-pre-expected.txt: Added.
+        * platform/win/editing/execCommand/unlink-expected.txt: Added.
+        * platform/win/editing/inserting/insert-before-link-1-expected.txt: Added.
+        * platform/win/editing/pasteboard/display-block-on-spans-expected.txt: Added.
+        * platform/win/editing/pasteboard/merge-end-list-2-expected.txt: Added.
+        * platform/win/editing/pasteboard/merge-end-table-2-expected.txt: Added.
+        * platform/win/editing/pasteboard/page-zoom-expected.txt: Added.
+        * platform/win/editing/style: Added.
+        * platform/win/editing/style/apply-through-end-of-document-expected.txt: Added.
+        * platform/win/editing/style/remove-underline-across-paragraph-expected.txt: Added.
+        * platform/win/editing/style/remove-underline-across-paragraph-in-bold-expected.txt: Added.
+        * platform/win/editing/style/remove-underline-expected.txt: Added.
+        * platform/win/editing/style/remove-underline-from-stylesheet-expected.txt: Added.
+        * platform/win/editing/style/remove-underline-in-bold-expected.txt: Added.
+        * platform/win/editing/style/unbold-in-bold-expected.txt: Added.
+        * platform/win/editing/undo: Added.
+        * platform/win/editing/undo/replace-text-in-node-preserving-markers-crash-expected.txt: Added.
+
+2013-04-29  James Craig  <james@cookiecrook.com>
+
+        Settings.in selectionIncludesAltImageText should default to true, due to update in HTML spec.
+        https://bugs.webkit.org/show_bug.cgi?id=115283
+
+        Reviewed by Chris Fleizach.
+
+        Update test to account for the initial setting change.
+
+        * editing/pasteboard/copy-image-with-alt-text.html:
+
+2013-04-29  Alexey Proskuryakov  <ap@apple.com>
+
+        REGRESSION (r149287?): Assertion failure in fast/frames/flattening/iframe-flattening-crash.html
+        https://bugs.webkit.org/show_bug.cgi?id=115386
+
+        * platform/mac/TestExpectations: Skipping the test.
+        * platform/mac-wk2/TestExpectations: Removed it from here, as the assertion failure is not limited to wk2.
+
+2013-04-22  Jeffrey Pfau  <jpfau@apple.com>
+
+        Change approach to third-party blocking for LocalStorage
+        https://bugs.webkit.org/show_bug.cgi?id=115004
+
+        Reviewed by Maciej Stachowiak.
+
+        * http/tests/security/cross-origin-local-storage-allowed-expected.txt:
+        * http/tests/security/cross-origin-local-storage-allowed.html:
+        * http/tests/security/cross-origin-local-storage-expected.txt:
+        * http/tests/security/cross-origin-local-storage-wk1.html:
+        * http/tests/security/cross-origin-local-storage-wk1-expected.txt:
+        * http/tests/security/cross-origin-local-storage.html:
+        * http/tests/security/resources/cross-origin-iframe-for-local-storage.html:
+        * http/tests/security/resources/load-local-storage.html: Added.
+        * platform/mac-wk2/http/tests/security/cross-origin-local-storage-wk1-expected.txt:
+        * platform/mac/http/tests/security/cross-origin-local-storage-wk1-expected.txt:
+
+2013-04-29  Yi Shen  <max.hong.shen@gmail.com>
+
+        HTML Editing: Insertion point jumps when using link detection
+        https://bugs.webkit.org/show_bug.cgi?id=82198
+
+        Reviewed by Ryosuke Niwa.
+        
+        Update typing-space-to-trigger-smart-link.html to verify link detection behavior
+        when typing a link before existing text.
+
+        * editing/inserting/typing-space-to-trigger-smart-link-expected.txt:
+        * editing/inserting/typing-space-to-trigger-smart-link.html:
+
+2013-04-29  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Tests mistakenly added to general TestExpectations file moved to mac TestExpectations file.
+
+        * TestExpectations:
+        * platform/mac/TestExpectations:
+
+2013-04-29  Jeffrey Pfau  <jpfau@apple.com>
+
+        Unreviewed, added missing new line in baseline.
+
+        * fast/canvas/2d.imageDataHD-expected.txt:
+
+2013-04-29  Stephen Chenney  <schenney@chromium.org>
+
+        SVGElement destructor can use invalid iterator
+        https://bugs.webkit.org/show_bug.cgi?id=115361
+
+        Reviewed by Philip Rogers.
+
+        Test asserts in Debug and should also crash in memory checking builds.
+
+        * svg/custom/svg-element-destructor-iteration-crash-expected.txt: Added.
+        * svg/custom/svg-element-destructor-iteration-crash.html: Added.
+
+2013-04-29  Dirk Schulze  <krit@webkit.org>
+
+        Animate clip rect() between different Length types
+        https://bugs.webkit.org/show_bug.cgi?id=115336
+
+        Reviewed by Andreas Kling.
+
+        Modify test for clip animation to cover animations between
+        different Length types.
+
+        * transitions/clip-transition.html:
+
+2013-04-29  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening.
+
+        Move Qt Mac specific results to qt-mac after r149210.
+
+        * platform/qt-mac/compositing/visibility/visibility-image-layers-dynamic-expected.txt: Renamed from LayoutTests/platform/qt-5.0/compositing/visibility/visibility-image-layers-dynamic-expected.txt.
+        * platform/qt-mac/editing/selection/collapse-selection-in-bidi-expected.txt: Renamed from LayoutTests/platform/qt-5.0/editing/selection/collapse-selection-in-bidi-expected.txt.
+        * platform/qt-mac/editing/selection/drag-start-event-client-x-y-expected.txt: Renamed from LayoutTests/platform/qt-5.0/editing/selection/drag-start-event-client-x-y-expected.txt.
+        * platform/qt-mac/fast/backgrounds/size/contain-and-cover-zoomed-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/backgrounds/size/contain-and-cover-zoomed-expected.txt.
+        * platform/qt-mac/fast/block/basic/fieldset-stretch-to-legend-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/block/basic/fieldset-stretch-to-legend-expected.txt.
+        * platform/qt-mac/fast/block/positioning/replaced-inside-fixed-top-bottom-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/block/positioning/replaced-inside-fixed-top-bottom-expected.txt.
+        * platform/qt-mac/fast/borders/fieldsetBorderRadius-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/borders/fieldsetBorderRadius-expected.txt.
+        * platform/qt-mac/fast/css/absolute-child-with-percent-height-inside-relative-parent-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/css/absolute-child-with-percent-height-inside-relative-parent-expected.txt.
+        * platform/qt-mac/fast/css/bug4860-absolute-block-child-does-not-inherit-alignment-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/css/bug4860-absolute-block-child-does-not-inherit-alignment-expected.txt.
+        * platform/qt-mac/fast/css/getComputedStyle/getComputedStyle-margin-percentage-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/css/getComputedStyle/getComputedStyle-margin-percentage-expected.txt.
+        * platform/qt-mac/fast/events/document-elementFromPoint-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/events/document-elementFromPoint-expected.txt.
+        * platform/qt-mac/fast/flexbox/flex-hang-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/flexbox/flex-hang-expected.txt.
+        * platform/qt-mac/fast/images/repaint-subrect-grid-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/images/repaint-subrect-grid-expected.txt.
+        * platform/qt-mac/fast/images/zoomed-img-size-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/images/zoomed-img-size-expected.txt.
+        * platform/qt-mac/fast/multicol/break-properties-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/multicol/break-properties-expected.txt.
+        * platform/qt-mac/fast/multicol/vertical-lr/break-properties-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/multicol/vertical-lr/break-properties-expected.txt.
+        * platform/qt-mac/fast/multicol/vertical-rl/break-properties-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/multicol/vertical-rl/break-properties-expected.txt.
+        * platform/qt-mac/fast/overflow/infiniteRecursionGuard-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/overflow/infiniteRecursionGuard-expected.txt.
+        * platform/qt-mac/fast/parser/style-script-head-test-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/parser/style-script-head-test-expected.txt.
+        * platform/qt-mac/fast/reflections/reflection-with-zoom-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/reflections/reflection-with-zoom-expected.txt.
+        * platform/qt-mac/fast/transforms/rotated-transform-affects-scrolling-1-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/transforms/rotated-transform-affects-scrolling-1-expected.txt.
+        * platform/qt-mac/fast/transforms/rotated-transform-affects-scrolling-2-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/transforms/rotated-transform-affects-scrolling-2-expected.txt.
+        * platform/qt-mac/http/tests/misc/acid3-expected.txt: Renamed from LayoutTests/platform/qt-5.0/http/tests/misc/acid3-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/coords-dom-01-f-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/coords-dom-01-f-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/coords-dom-02-f-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/coords-dom-02-f-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/coords-dom-03-f-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/coords-dom-03-f-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/coords-dom-04-f-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/coords-dom-04-f-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/filters-felem-01-b-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/filters-felem-01-b-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/interact-pointer-03-t-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/interact-pointer-03-t-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/linking-uri-01-b-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/linking-uri-01-b-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/painting-marker-07-f-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/painting-marker-07-f-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/paths-dom-02-f-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/paths-dom-02-f-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/pservers-grad-17-b-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/pservers-grad-17-b-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/pservers-grad-20-b-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/pservers-grad-20-b-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/pservers-pattern-04-f-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/pservers-pattern-04-f-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/styling-pres-02-f-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/styling-pres-02-f-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/text-tref-03-b-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/text-tref-03-b-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/text-tspan-02-b-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/text-tspan-02-b-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/types-dom-01-b-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/types-dom-01-b-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/types-dom-02-f-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/types-dom-02-f-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/types-dom-03-b-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/types-dom-03-b-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/types-dom-04-b-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/types-dom-04-b-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/types-dom-06-f-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/types-dom-06-f-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/types-dom-07-f-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1-SE/types-dom-07-f-expected.txt.
+        * platform/qt-mac/svg/W3C-SVG-1.1/filters-turb-02-f-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/W3C-SVG-1.1/filters-turb-02-f-expected.txt.
+        * platform/qt-mac/svg/as-image/svg-non-integer-scaled-image-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/as-image/svg-non-integer-scaled-image-expected.txt.
+        * platform/qt-mac/svg/custom/fractional-rects-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/custom/fractional-rects-expected.txt.
+        * platform/qt-mac/svg/custom/js-update-container-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/custom/js-update-container-expected.txt.
+        * platform/qt-mac/svg/custom/object-sizing-width-50p-height-75p-on-target-svg-absolute-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/custom/object-sizing-width-50p-height-75p-on-target-svg-absolute-expected.txt.
+        * platform/qt-mac/svg/custom/object-sizing-width-50p-height-75p-on-target-svg-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/custom/object-sizing-width-50p-height-75p-on-target-svg-expected.txt.
+        * platform/qt-mac/svg/custom/object-sizing-width-75p-height-50p-on-target-svg-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/custom/object-sizing-width-75p-height-50p-on-target-svg-expected.txt.
+        * platform/qt-mac/svg/custom/svg-fonts-with-no-element-reference-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/custom/svg-fonts-with-no-element-reference-expected.txt.
+        * platform/qt-mac/svg/custom/use-css-no-effect-on-shadow-tree-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/custom/use-css-no-effect-on-shadow-tree-expected.txt.
+        * platform/qt-mac/svg/custom/viewBox-hit-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/custom/viewBox-hit-expected.txt.
+        * platform/qt-mac/svg/hixie/text/001-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/hixie/text/001-expected.txt.
+        * platform/qt-mac/svg/hixie/text/003a-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/hixie/text/003a-expected.txt.
+        * platform/qt-mac/svg/text/small-fonts-2-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/text/small-fonts-2-expected.txt.
+        * platform/qt-mac/svg/text/text-hkern-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/text/text-hkern-expected.txt.
+        * platform/qt-mac/svg/text/text-viewbox-rescale-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/text/text-viewbox-rescale-expected.txt.
+        * platform/qt-mac/svg/wicd/sizing-flakiness-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/wicd/sizing-flakiness-expected.txt.
+        * platform/qt-mac/svg/zoom/page/zoom-background-image-tiled-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/zoom/page/zoom-background-image-tiled-expected.txt.
+        * platform/qt-mac/svg/zoom/page/zoom-svg-as-background-with-relative-size-and-viewBox-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/zoom/page/zoom-svg-as-background-with-relative-size-and-viewBox-expected.txt.
+        * platform/qt-mac/svg/zoom/page/zoom-svg-as-image-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/zoom/page/zoom-svg-as-image-expected.txt.
+        * platform/qt-mac/svg/zoom/page/zoom-svg-as-object-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/zoom/page/zoom-svg-as-object-expected.txt.
+        * platform/qt-mac/svg/zoom/page/zoom-svg-as-relative-image-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/zoom/page/zoom-svg-as-relative-image-expected.txt.
+        * platform/qt-mac/svg/zoom/page/zoom-svg-through-object-with-auto-size-expected.txt: Renamed from LayoutTests/platform/qt-5.0/svg/zoom/page/zoom-svg-through-object-with-auto-size-expected.txt.
+        * platform/qt-mac/tables/mozilla/bugs/bug83786-expected.txt: Renamed from LayoutTests/platform/qt-5.0/tables/mozilla/bugs/bug83786-expected.txt.
+
+2013-04-28  Zan Dobersek  <zdobersek@igalia.com>
+
+        Rename TestRunner's setAudioData to setAudioResult
+        https://bugs.webkit.org/show_bug.cgi?id=115326
+
+        Reviewed by Darin Adler.
+
+        Adjust the testRunner.setAudioData references/callsites, the method is now named setAudioResult.
+
+        * platform/efl-wk1/TestExpectations:
+        * webaudio/resources/audio-codec-test.js:
+        (finishedLoading):
+        * webaudio/resources/audio-testing.js:
+        (finishAudioTest):
+        * webaudio/test-basic.html:
+
+2013-04-28  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        Get rid of a duplicate file from LayoutTests/TestExpectations
+        https://bugs.webkit.org/show_bug.cgi?id=115337
+
+        Unreviewed gardening.
+
+        * TestExpectations: Remove one of two svg/zoom/page/zoom-replaced-intrinsic-ratio-001.htm.
+
+2013-04-28  Dean Jackson  <dino@apple.com>
+
+        [Mac] Disable canvas backing store scaling (HIGH_DPI_CANVAS)
+        https://bugs.webkit.org/show_bug.cgi?id=115310
+
+        Reviewed by Simon Fraser.
+
+        No need for platform-specific results any more.
+
+        * fast/canvas/2d.backingStorePixelRatio-expected.txt:
+        * fast/canvas/2d.imageDataHD-expected.txt:
+        * fast/canvas/canvas-resize-reset-pixelRatio-expected.txt:
+        * platform/win/fast/canvas/2d.backingStorePixelRatio-expected.txt: Removed.
+        * platform/win/fast/canvas/canvas-resize-reset-pixelRatio-expected.txt: Removed.
+
+2013-04-28  Zan Dobersek  <zdobersek@igalia.com>
+
+        [WKTR] Tests dumping audio data shouldn't dump pixels
+        https://bugs.webkit.org/show_bug.cgi?id=115270
+
+        Reviewed by Benjamin Poulain.
+
+        Remove the now-unnecessary pixel baselines for audio tests that were used on the EFL WK2 platform.
+
+        * platform/efl-wk2/webaudio/audiobuffersource-expected.png: Removed.
+        * platform/efl-wk2/webaudio/audiobuffersource-loop-points-expected.png: Removed.
+        * platform/efl-wk2/webaudio/audiobuffersource-multi-channels-expected.png: Removed.
+        * platform/efl-wk2/webaudio/audiobuffersource-playbackrate-expected.png: Removed.
+        * platform/efl-wk2/webaudio/codec-tests/aac/vbr-128kbps-44khz-expected.png: Removed.
+        * platform/efl-wk2/webaudio/codec-tests/wav/24bit-22khz-resample-expected.png: Removed.
+        * platform/efl-wk2/webaudio/codec-tests/wav/24bit-44khz-expected.png: Removed.
+        * platform/efl-wk2/webaudio/gain-expected.png: Removed.
+        * platform/efl-wk2/webaudio/mixing-expected.png: Removed.
+        * platform/efl-wk2/webaudio/oscillator-custom-expected.png: Removed.
+        * platform/efl-wk2/webaudio/oscillator-sawtooth-expected.png: Removed.
+        * platform/efl-wk2/webaudio/oscillator-sine-expected.png: Removed.
+        * platform/efl-wk2/webaudio/oscillator-square-expected.png: Removed.
+        * platform/efl-wk2/webaudio/oscillator-triangle-expected.png: Removed.
+        * platform/efl-wk2/webaudio/up-mixing-mono-51-expected.png: Removed.
+        * platform/efl-wk2/webaudio/up-mixing-mono-stereo-expected.png: Removed.
+        * platform/efl-wk2/webaudio/up-mixing-stereo-51-expected.png: Removed.
+
+2013-04-27  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Pressing mouse button inside a dragstart event causes a crash
+        https://bugs.webkit.org/show_bug.cgi?id=115296
+
+        Reviewed by Darin Adler.
+
+        Added a regression test. While the bug report involves opening inspector and setting a breakpoint,
+        a simpler reduction that uses eventSender significantly reduces the complexity.
+
+        * fast/events/mousedown-inside-dragstart-should-not-cause-crash-expected.txt: Added.
+        * fast/events/mousedown-inside-dragstart-should-not-cause-crash.html: Added.
+
+2013-04-25  Geoffrey Garen  <ggaren@apple.com>
+
+        Cleaned up pre/post inc/dec in bytecode
+        https://bugs.webkit.org/show_bug.cgi?id=115222
+
+        Reviewed by Filip Pizlo.
+
+        * fast/js/const-expected.txt:
+        * fast/js/resources/const.js: Added tests for some const cases we used
+        to get wrong.
+
+2013-04-26  Geoffrey Garen  <ggaren@apple.com>
+
+        Re-landing <http://trac.webkit.org/changeset/148999>
+
+            Filled out more cases of branch folding in bytecode when emitting
+            expressions into a branching context
+            https://bugs.webkit.org/show_bug.cgi?id=115057
+
+            Reviewed by Phil Pizlo.
+
+        Added a more exhaustive correctness test.
+
+        * fast/js/branch-fold-correctness-expected.txt: Added.
+        * fast/js/branch-fold-correctness.html: Added.
+
+2013-04-26  Jer Noble  <jer.noble@apple.com>
+
+        Video playback has corruption on the edges of the video
+        https://bugs.webkit.org/show_bug.cgi?id=115216
+
+        Reviewed by Simon Fraser.
+
+        * media/content/test.jpg: Added.
+        * media/video-poster-background-expected.html: Added.
+        * media/video-poster-background.html: Added.
+
+2013-04-26  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Skipping some more tests that still need rebaselining after disabling subpixel layout on mac.
+        http://bugs.webkit.org/show_bug.cgi?id=115292
+
+        * TestExpectations:
+
+2013-04-26  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Skipping some tests that still need rebaselining after disabling subpixel layout on mac.
+        http://bugs.webkit.org/show_bug.cgi?id=115292
+
+        * TestExpectations:
+
+2013-04-26  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. More rebaselines for mac after disabling sub-pixel layout.
+
+        * platform/mac/compositing/visibility/visibility-image-layers-dynamic-expected.txt: Added.
+        * platform/mac/editing/selection/collapse-selection-in-bidi-expected.txt: Added.
+        * platform/mac/editing/selection/drag-start-event-client-x-y-expected.txt: Added.
+        * platform/mac/fast/backgrounds/size/contain-and-cover-zoomed-expected.txt: Added.
+        * platform/mac/fast/block/basic/fieldset-stretch-to-legend-expected.txt: Added.
+        * platform/mac/fast/block/positioning/replaced-inside-fixed-top-bottom-expected.txt: Added.
+        * platform/mac/fast/borders/fieldsetBorderRadius-expected.txt: Added.
+        * platform/mac/fast/css/absolute-child-with-percent-height-inside-relative-parent-expected.txt: Added.
+        * platform/mac/fast/css/bug4860-absolute-block-child-does-not-inherit-alignment-expected.txt: Added.
+        * platform/mac/fast/css/getComputedStyle/getComputedStyle-margin-percentage-expected.txt: Added.
+        * platform/mac/fast/events/document-elementFromPoint-expected.txt: Added.
+        * platform/mac/fast/flexbox/flex-hang-expected.txt: Added.
+        * platform/mac/fast/forms/fieldset-legend-padding-unclipped-fieldset-border-expected.txt: Added.
+        * platform/mac/fast/images/repaint-subrect-grid-expected.txt: Added.
+        * platform/mac/fast/images/zoomed-img-size-expected.txt: Added.
+        * platform/mac/fast/multicol/break-properties-expected.txt: Added.
+        * platform/mac/fast/multicol/vertical-lr/break-properties-expected.txt: Added.
+        * platform/mac/fast/multicol/vertical-rl/break-properties-expected.txt: Added.
+        * platform/mac/fast/parser/style-script-head-test-expected.txt: Added.
+        * platform/mac/fast/reflections/reflection-with-zoom-expected.txt: Added.
+        * platform/mac/fast/transforms/rotated-transform-affects-scrolling-1-expected.txt: Added.
+        * platform/mac/fast/transforms/rotated-transform-affects-scrolling-2-expected.txt: Added.
+        * platform/mac/http/tests/misc/acid3-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/coords-dom-01-f-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/coords-dom-02-f-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/coords-dom-03-f-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/coords-dom-04-f-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/filters-felem-01-b-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/interact-pointer-03-t-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/linking-uri-01-b-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/painting-marker-07-f-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/paths-dom-02-f-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/pservers-grad-17-b-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/pservers-grad-20-b-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/pservers-pattern-04-f-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/styling-pres-02-f-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/text-tref-03-b-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/text-tspan-02-b-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-01-b-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-02-f-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-03-b-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-04-b-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-06-f-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-07-f-expected.txt: Added.
+        * platform/mac/svg/W3C-SVG-1.1/filters-turb-02-f-expected.txt: Added.
+        * platform/mac/svg/as-image/svg-non-integer-scaled-image-expected.txt: Added.
+        * platform/mac/svg/custom/fractional-rects-expected.txt: Added.
+        * platform/mac/svg/custom/js-update-container-expected.txt: Added.
+        * platform/mac/svg/custom/object-sizing-width-50p-height-75p-on-target-svg-absolute-expected.txt: Added.
+        * platform/mac/svg/custom/object-sizing-width-50p-height-75p-on-target-svg-expected.txt: Added.
+        * platform/mac/svg/custom/object-sizing-width-75p-height-50p-on-target-svg-expected.txt: Added.
+        * platform/mac/svg/custom/svg-fonts-with-no-element-reference-expected.txt: Added.
+        * platform/mac/svg/custom/use-css-no-effect-on-shadow-tree-expected.txt: Added.
+        * platform/mac/svg/custom/viewBox-hit-expected.txt: Added.
+        * platform/mac/svg/hixie/text/001-expected.txt: Added.
+        * platform/mac/svg/hixie/text/003a-expected.txt:
+        * platform/mac/svg/text/small-fonts-2-expected.txt:
+        * platform/mac/svg/text/text-hkern-expected.txt: Added.
+        * platform/mac/svg/text/text-viewbox-rescale-expected.txt: Added.
+        * platform/mac/svg/wicd/sizing-flakiness-expected.txt: Added.
+        * platform/mac/svg/zoom/page/zoom-background-image-tiled-expected.txt: Added.
+        * platform/mac/svg/zoom/page/zoom-svg-as-background-with-relative-size-and-viewBox-expected.txt: Added.
+        * platform/mac/svg/zoom/page/zoom-svg-as-image-expected.txt: Added.
+        * platform/mac/svg/zoom/page/zoom-svg-as-object-expected.txt: Added.
+        * platform/mac/svg/zoom/page/zoom-svg-as-relative-image-expected.txt: Added.
+        * platform/mac/svg/zoom/page/zoom-svg-through-object-with-auto-size-expected.txt: Added.
+        * platform/mac/tables/mozilla/bugs/bug83786-expected.txt: Added.
+
+2013-04-25  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Rebaseline a bunch of tests and run optimize-baselines after disabling sub-pixel layout on mac.
+        https://bugs.webkit.org/show_bug.cgi?id=114999.
+
+2013-04-26  Konrad Piascik  <kpiascik@blackberry.com>
+
+        Web Inspector: Crash due to null items from getDOMStorageItems
+        https://bugs.webkit.org/show_bug.cgi?id=115176
+
+        Reviewed by Joseph Pecoraro.
+
+        Tests to check that if local and session storage are empty
+        that they still work corerctly.
+
+        * inspector/storage-panel-dom-storage-empty-expected.txt: Added.
+        * inspector/storage-panel-dom-storage-empty.html: Added.
+
+2013-04-26  Eric Carlson  <eric.carlson@apple.com>
+
+        [Mac] media/track/track-mode.html sometimes trigger InvalidStateError
+        https://bugs.webkit.org/show_bug.cgi?id=115045
+
+        Reviewed by Alexey Proskuryakov.
+
+        * media/track/track-mode.html: Don't assume that the video element is ready for seeking
+            after a 100ms timeout.
+
 2013-04-26  David Kilzer  <ddkilzer@apple.com>
 
         Sort jsc-test-list

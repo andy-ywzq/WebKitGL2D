@@ -429,7 +429,7 @@ DOMWindow::~DOMWindow()
         ASSERT(!m_toolbar);
         ASSERT(!m_console);
         ASSERT(!m_navigator);
-#if ENABLE(WEB_TIMING)
+#if ENABLE(WEB_TIMING) || ENABLE(WEB_TIMING_MINIMAL)
         ASSERT(!m_performance);
 #endif
         ASSERT(!m_location);
@@ -586,7 +586,7 @@ void DOMWindow::resetDOMWindowProperties()
     m_toolbar = 0;
     m_console = 0;
     m_navigator = 0;
-#if ENABLE(WEB_TIMING)
+#if ENABLE(WEB_TIMING) || ENABLE(WEB_TIMING_MINIMAL)
     m_performance = 0;
 #endif
     m_location = 0;
@@ -726,7 +726,7 @@ Navigator* DOMWindow::navigator() const
     return m_navigator.get();
 }
 
-#if ENABLE(WEB_TIMING)
+#if ENABLE(WEB_TIMING) || ENABLE(WEB_TIMING_MINIMAL)
 Performance* DOMWindow::performance() const
 {
     if (!isCurrentlyDisplayedInFrame())
@@ -791,7 +791,7 @@ Storage* DOMWindow::localStorage(ExceptionCode& ec) const
     if (!document)
         return 0;
 
-    if (!document->securityOrigin()->canAccessLocalStorage(document->topOrigin())) {
+    if (!document->securityOrigin()->canAccessLocalStorage(0)) {
         ec = SECURITY_ERR;
         return 0;
     }
@@ -811,7 +811,12 @@ Storage* DOMWindow::localStorage(ExceptionCode& ec) const
     if (!page->settings()->localStorageEnabled())
         return 0;
 
-    RefPtr<StorageArea> storageArea = page->group().localStorage()->storageArea(document->securityOrigin());
+    RefPtr<StorageArea> storageArea;
+    if (!document->securityOrigin()->canAccessLocalStorage(document->topOrigin()))
+        storageArea = page->group().transientLocalStorage(document->topOrigin())->storageArea(document->securityOrigin());
+    else
+        storageArea = page->group().localStorage()->storageArea(document->securityOrigin());
+
     if (!storageArea->canAccessStorage(m_frame)) {
         ec = SECURITY_ERR;
         return 0;

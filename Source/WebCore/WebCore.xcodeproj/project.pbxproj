@@ -1527,8 +1527,6 @@
 		510D4A38103165EE0049EA54 /* SocketStreamHandleClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 510D4A32103165EE0049EA54 /* SocketStreamHandleClient.h */; };
 		5112935F3D54B4B52FAF973F /* InspectorHeapProfilerAgent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 511293613D6DB4B52FAF973F /* InspectorHeapProfilerAgent.cpp */; };
 		511293603D60B4B52FAF973F /* InspectorHeapProfilerAgent.h in Headers */ = {isa = PBXBuildFile; fileRef = 511293623D85B4B52FAF973F /* InspectorHeapProfilerAgent.h */; };
-		511F23170DC160DA004F0032 /* StorageTask.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 511F23130DC160DA004F0032 /* StorageTask.cpp */; };
-		511F23180DC160DA004F0032 /* StorageTask.h in Headers */ = {isa = PBXBuildFile; fileRef = 511F23140DC160DA004F0032 /* StorageTask.h */; };
 		511F23190DC160DA004F0032 /* StorageThread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 511F23150DC160DA004F0032 /* StorageThread.cpp */; };
 		511F231A0DC160DA004F0032 /* StorageThread.h in Headers */ = {isa = PBXBuildFile; fileRef = 511F23160DC160DA004F0032 /* StorageThread.h */; };
 		5126E6BB0A2E3B12005C29FA /* IconDatabase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5126E6B90A2E3B12005C29FA /* IconDatabase.cpp */; };
@@ -5273,8 +5271,6 @@
 		CE7B2DB41586ABAD0098B3FA /* AlternativeTextUIController.mm in Sources */ = {isa = PBXBuildFile; fileRef = CE7B2DB01586ABAD0098B3FA /* AlternativeTextUIController.mm */; };
 		CE7B2DB51586ABAD0098B3FA /* TextAlternativeWithRange.h in Headers */ = {isa = PBXBuildFile; fileRef = CE7B2DB11586ABAD0098B3FA /* TextAlternativeWithRange.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		CE7B2DB61586ABAD0098B3FA /* TextAlternativeWithRange.mm in Sources */ = {isa = PBXBuildFile; fileRef = CE7B2DB21586ABAD0098B3FA /* TextAlternativeWithRange.mm */; };
-		CEA3949C11D45CDA003094CF /* StaticHashSetNodeList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CEA3949A11D45CDA003094CF /* StaticHashSetNodeList.cpp */; };
-		CEA3949D11D45CDA003094CF /* StaticHashSetNodeList.h in Headers */ = {isa = PBXBuildFile; fileRef = CEA3949B11D45CDA003094CF /* StaticHashSetNodeList.h */; };
 		CECADFC6153778FF00E37068 /* DictationAlternative.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CECADFC2153778FF00E37068 /* DictationAlternative.cpp */; };
 		CECADFC7153778FF00E37068 /* DictationAlternative.h in Headers */ = {isa = PBXBuildFile; fileRef = CECADFC3153778FF00E37068 /* DictationAlternative.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		CECADFC8153778FF00E37068 /* DictationCommand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CECADFC4153778FF00E37068 /* DictationCommand.cpp */; };
@@ -5589,6 +5585,8 @@
 		E4D687790ED7AE4F006EA978 /* PurgeableBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = E4D687780ED7AE4F006EA978 /* PurgeableBuffer.h */; };
 		E4F9EEF2156D9FFA00D23E7E /* StyleSheetContents.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4F9EEF0156D84C400D23E7E /* StyleSheetContents.cpp */; };
 		E4F9EEF3156DA00700D23E7E /* StyleSheetContents.h in Headers */ = {isa = PBXBuildFile; fileRef = E4F9EEF1156D84C400D23E7E /* StyleSheetContents.h */; };
+		E51A81DF17298D7700BFCA61 /* JSPerformance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E51A81DE17298D7700BFCA61 /* JSPerformance.cpp */; };
+		E526AF3F1727F8F200E41781 /* Performance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E526AF3E1727F8F200E41781 /* Performance.cpp */; };
 		E55F497A151B888000BB67DB /* LengthFunctions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E55F4979151B888000BB67DB /* LengthFunctions.cpp */; };
 		E5BA7D63151437CA00FE1E3F /* LengthFunctions.h in Headers */ = {isa = PBXBuildFile; fileRef = E5BA7D62151437CA00FE1E3F /* LengthFunctions.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		EBF5121C1696496C0056BD25 /* JSTypeConversions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBF5121A1696496C0056BD25 /* JSTypeConversions.cpp */; };
@@ -7931,8 +7929,6 @@
 		510D4A32103165EE0049EA54 /* SocketStreamHandleClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SocketStreamHandleClient.h; sourceTree = "<group>"; };
 		511293613D6DB4B52FAF973F /* InspectorHeapProfilerAgent.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InspectorHeapProfilerAgent.cpp; sourceTree = "<group>"; };
 		511293623D85B4B52FAF973F /* InspectorHeapProfilerAgent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InspectorHeapProfilerAgent.h; sourceTree = "<group>"; };
-		511F23130DC160DA004F0032 /* StorageTask.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StorageTask.cpp; sourceTree = "<group>"; };
-		511F23140DC160DA004F0032 /* StorageTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StorageTask.h; sourceTree = "<group>"; };
 		511F23150DC160DA004F0032 /* StorageThread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StorageThread.cpp; sourceTree = "<group>"; };
 		511F23160DC160DA004F0032 /* StorageThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StorageThread.h; sourceTree = "<group>"; };
 		5126E6B90A2E3B12005C29FA /* IconDatabase.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = IconDatabase.cpp; sourceTree = "<group>"; };
@@ -12062,8 +12058,6 @@
 		CE7B2DB01586ABAD0098B3FA /* AlternativeTextUIController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AlternativeTextUIController.mm; path = mac/AlternativeTextUIController.mm; sourceTree = "<group>"; };
 		CE7B2DB11586ABAD0098B3FA /* TextAlternativeWithRange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TextAlternativeWithRange.h; path = mac/TextAlternativeWithRange.h; sourceTree = "<group>"; };
 		CE7B2DB21586ABAD0098B3FA /* TextAlternativeWithRange.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TextAlternativeWithRange.mm; path = mac/TextAlternativeWithRange.mm; sourceTree = "<group>"; };
-		CEA3949A11D45CDA003094CF /* StaticHashSetNodeList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StaticHashSetNodeList.cpp; sourceTree = "<group>"; };
-		CEA3949B11D45CDA003094CF /* StaticHashSetNodeList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StaticHashSetNodeList.h; sourceTree = "<group>"; };
 		CECADFC2153778FF00E37068 /* DictationAlternative.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DictationAlternative.cpp; sourceTree = "<group>"; };
 		CECADFC3153778FF00E37068 /* DictationAlternative.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DictationAlternative.h; sourceTree = "<group>"; };
 		CECADFC4153778FF00E37068 /* DictationCommand.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DictationCommand.cpp; sourceTree = "<group>"; };
@@ -12428,6 +12422,8 @@
 		E4D687780ED7AE4F006EA978 /* PurgeableBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PurgeableBuffer.h; sourceTree = "<group>"; };
 		E4F9EEF0156D84C400D23E7E /* StyleSheetContents.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StyleSheetContents.cpp; sourceTree = "<group>"; };
 		E4F9EEF1156D84C400D23E7E /* StyleSheetContents.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StyleSheetContents.h; sourceTree = "<group>"; };
+		E51A81DE17298D7700BFCA61 /* JSPerformance.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = JSPerformance.cpp; sourceTree = "<group>"; };
+		E526AF3E1727F8F200E41781 /* Performance.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Performance.cpp; sourceTree = "<group>"; };
 		E55F4979151B888000BB67DB /* LengthFunctions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LengthFunctions.cpp; sourceTree = "<group>"; };
 		E5BA7D62151437CA00FE1E3F /* LengthFunctions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LengthFunctions.h; sourceTree = "<group>"; };
 		EB081CD81696084400553730 /* TypeConversions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TypeConversions.h; sourceTree = "<group>"; };
@@ -13470,8 +13466,6 @@
 				1AB09DB316AF5F6C008538E7 /* StorageStrategy.h */,
 				C5102D930FD9AA2D00FAFF04 /* StorageSyncManager.cpp */,
 				C5102D920FD9AA2D00FAFF04 /* StorageSyncManager.h */,
-				511F23130DC160DA004F0032 /* StorageTask.cpp */,
-				511F23140DC160DA004F0032 /* StorageTask.h */,
 				511F23150DC160DA004F0032 /* StorageThread.cpp */,
 				511F23160DC160DA004F0032 /* StorageThread.h */,
 				3AB02D2912D4F91600FBB694 /* StorageTracker.cpp */,
@@ -14838,6 +14832,7 @@
 				371E65CB13661EDC00BEEDB0 /* PageSerializer.h */,
 				FFD5B977135CC97800D5E92A /* PageVisibilityState.cpp */,
 				FFD5B978135CC97800D5E92A /* PageVisibilityState.h */,
+				E526AF3E1727F8F200E41781 /* Performance.cpp */,
 				8A844D0211D3C18E0014065C /* Performance.h */,
 				8A844D0311D3C18E0014065C /* Performance.idl */,
 				86BE33FB15058CB200CE0FD8 /* PerformanceEntry.h */,
@@ -19116,6 +19111,7 @@
 				9FFE3EA411B5A4390037874E /* JSMemoryInfo.h */,
 				A9D247F50D757E3300FDF959 /* JSNavigator.cpp */,
 				A9D247F60D757E3300FDF959 /* JSNavigator.h */,
+				E51A81DE17298D7700BFCA61 /* JSPerformance.cpp */,
 				8A9A587311E84C81008ACFD1 /* JSPerformance.h */,
 				8A9A586E11E84C35008ACFD1 /* JSPerformanceNavigation.cpp */,
 				8A9A586F11E84C36008ACFD1 /* JSPerformanceNavigation.h */,
@@ -20560,8 +20556,6 @@
 				31741AAB16635E45008A5B7E /* SimulatedClickOptions.h */,
 				D01A27AB10C9BFD800026A42 /* SpaceSplitString.cpp */,
 				D01A27AC10C9BFD800026A42 /* SpaceSplitString.h */,
-				CEA3949A11D45CDA003094CF /* StaticHashSetNodeList.cpp */,
-				CEA3949B11D45CDA003094CF /* StaticHashSetNodeList.h */,
 				BC7FA62C0D1F0EFF00DB22A9 /* StaticNodeList.cpp */,
 				BC7FA62B0D1F0EFF00DB22A9 /* StaticNodeList.h */,
 				8102C5871325BB1100DDE67A /* StringCallback.cpp */,
@@ -23507,7 +23501,6 @@
 				97BC6A5D1505F081001B74AC /* SQLTransactionSyncCallback.h in Headers */,
 				1A2E6E5A0CC55213004A2062 /* SQLValue.h in Headers */,
 				93F1996308245E59001E9ABC /* SSLKeyGenerator.h in Headers */,
-				CEA3949D11D45CDA003094CF /* StaticHashSetNodeList.h in Headers */,
 				BC7FA62D0D1F0EFF00DB22A9 /* StaticNodeList.h in Headers */,
 				A5AFB350115151A700B045CB /* StepRange.h in Headers */,
 				51BE37E00DAEE00E001085FC /* StorageArea.h in Headers */,
@@ -23520,7 +23513,6 @@
 				C55E38BF10040D5D00A56BDB /* StorageNamespaceImpl.h in Headers */,
 				1AB09DB516AF5F6C008538E7 /* StorageStrategy.h in Headers */,
 				C5102D940FD9AA2D00FAFF04 /* StorageSyncManager.h in Headers */,
-				511F23180DC160DA004F0032 /* StorageTask.h in Headers */,
 				511F231A0DC160DA004F0032 /* StorageThread.h in Headers */,
 				3AB02D2A12D4F91600FBB694 /* StorageTracker.h in Headers */,
 				3AC3680012EF7A09006A3D6F /* StorageTrackerClient.h in Headers */,
@@ -25755,6 +25747,7 @@
 				E1284BB210449FFA00EAEB52 /* JSPageTransitionEvent.cpp in Sources */,
 				FDA15EB112B03EE1003A583A /* JSPannerNode.cpp in Sources */,
 				FD8AA63E169514A700D2EA68 /* JSPannerNodeCustom.cpp in Sources */,
+				E51A81DF17298D7700BFCA61 /* JSPerformance.cpp in Sources */,
 				8A9A587011E84C36008ACFD1 /* JSPerformanceNavigation.cpp in Sources */,
 				93B70D6B09EB0C7C009D8468 /* JSPluginElementFunctions.cpp in Sources */,
 				5189F01D10B37BD900F3C739 /* JSPopStateEvent.cpp in Sources */,
@@ -26229,6 +26222,7 @@
 				A80A38FE0E50CC8200A25EBC /* PatternCG.cpp in Sources */,
 				B27535640B053814002CE64F /* PDFDocumentImage.cpp in Sources */,
 				8A7CC97012076F8A001D4588 /* PendingScript.cpp in Sources */,
+				E526AF3F1727F8F200E41781 /* Performance.cpp in Sources */,
 				86BE340315058CB200CE0FD8 /* PerformanceEntryList.cpp in Sources */,
 				8AF4E55511DC5A36000ED3DE /* PerformanceNavigation.cpp in Sources */,
 				86512EDE154A2AEF00A90426 /* PerformanceResourceTiming.cpp in Sources */,
@@ -26574,7 +26568,6 @@
 				97BC6A5A1505F081001B74AC /* SQLTransactionSync.cpp in Sources */,
 				1A2E6E590CC55213004A2062 /* SQLValue.cpp in Sources */,
 				93F19AE608245E59001E9ABC /* SSLKeyGeneratorMac.cpp in Sources */,
-				CEA3949C11D45CDA003094CF /* StaticHashSetNodeList.cpp in Sources */,
 				BC7FA62E0D1F0EFF00DB22A9 /* StaticNodeList.cpp in Sources */,
 				A5AFB34F115151A700B045CB /* StepRange.cpp in Sources */,
 				51E3F9C70DA059DC00250911 /* Storage.cpp in Sources */,
@@ -26587,7 +26580,6 @@
 				C55E38C010040D5D00A56BDB /* StorageNamespaceImpl.cpp in Sources */,
 				1AB09DB416AF5F6C008538E7 /* StorageStrategy.cpp in Sources */,
 				C5102D950FD9AA2D00FAFF04 /* StorageSyncManager.cpp in Sources */,
-				511F23170DC160DA004F0032 /* StorageTask.cpp in Sources */,
 				511F23190DC160DA004F0032 /* StorageThread.cpp in Sources */,
 				3AB02D2B12D4F91600FBB694 /* StorageTracker.cpp in Sources */,
 				8102C5881325BB1100DDE67A /* StringCallback.cpp in Sources */,

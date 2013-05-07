@@ -1,3 +1,146 @@
+2013-04-30  Zalan Bujtas  <zalan@apple.com>
+
+        Animations fail to start on http://www.google.com/insidesearch/howsearchworks/thestory/
+        https://bugs.webkit.org/show_bug.cgi?id=111244
+
+        Reviewed by David Kilzer.
+        
+        Enable performance.now() as a minimal subset of Web Timing API. 
+        It returns DOMHighResTimeStamp, a monotonically increasing value representing the 
+        number of milliseconds from the start of the navigation of the current document.
+        JS libraries use this API to check against the requestAnimationFrame() timestamp.
+
+        * wtf/FeatureDefines.h:
+
+2013-04-29  Cosmin Truta  <ctruta@blackberry.com>
+
+        [ARM] Expand the use of integer division
+        https://bugs.webkit.org/show_bug.cgi?id=115138
+
+        Reviewed by Benjamin Poulain.
+
+        * wtf/Platform.h: Added ENABLE_ARM_INTEGER_DIV.
+
+2013-04-29  Anders Carlsson  <andersca@apple.com>
+
+        It should be an error to use adoptPtr with RefCounted subclasses
+        https://bugs.webkit.org/show_bug.cgi?id=115389
+
+        Reviewed by Benjamin Poulain.
+
+        * wtf/PassOwnPtr.h:
+        (WTF::adoptPtr):
+        Add COMPILE_ASSERTs.
+
+2013-04-29  Patrick Gansterer  <paroga@webkit.org>
+
+        [WIN] Add workaround for UNUSED_PARAM()
+        https://bugs.webkit.org/show_bug.cgi?id=115350
+
+        Reviewed by Andreas Kling.
+
+        r147882 added an workaround for the MSVC compiler on Windows CE.
+        Extend this workaround to whole MSVC compiler, since the same
+        problem occurs with the Visual Studio 10 compiler too.
+
+        * wtf/UnusedParam.h:
+
+2013-04-29  Patrick Gansterer  <paroga@webkit.org>
+
+        [WIN] Add WTF_USE_IMLANG_FONT_LINK2
+        https://bugs.webkit.org/show_bug.cgi?id=115198
+
+        Reviewed by Andreas Kling.
+
+        * wtf/Platform.h:
+
+2013-04-29  Patrick Gansterer  <paroga@webkit.org>
+
+        Define USE(ICU_UNICODE) if USE(WCHAR_UNICODE) is false
+        https://bugs.webkit.org/show_bug.cgi?id=115349
+
+        Reviewed by Andreas Kling.
+
+        Since we support only ICU and WCHAR as Unicode backend (ICU is the default)
+        automatically use ICU if WCHAR was not selected via compiler defines.
+
+        * wtf/Platform.h:
+
+2013-04-29  Patrick Gansterer  <paroga@webkit.org>
+
+        Build fix for WinCE after r148888 and r149097
+        https://bugs.webkit.org/show_bug.cgi?id=115168
+
+        Reviewed by Anders Carlsson.
+
+        When using compiler intrinsics on Windows CE the compiler complains
+        about wrong linkage specification of replaced CRT functions defined
+        in math.h. This is because the compiler has intrinsics for this
+        functions defined, and requires them to have extern "C" linkage.
+
+        * wtf/MathExtras.h:
+        (wtf_atan2): Added extern "C" to function signature.
+        (wtf_fmod): Ditto.
+        (wtf_pow): Ditto.
+
+2013-04-29  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix make distcheck.
+
+        * GNUmakefile.list.am: Add missing header file to compilation.
+
+2013-04-27  Darin Adler  <darin@apple.com>
+
+        Move from constructor and member function adoptCF/NS to free function adoptCF/NS.
+        https://bugs.webkit.org/show_bug.cgi?id=115307
+
+        Reviewed by Geoffrey Garen.
+
+        * wtf/RunLoopTimerCF.cpp:
+        (WTF::RunLoopTimerBase::start):
+        * wtf/SchedulePair.h:
+        (WTF::SchedulePair::SchedulePair):
+        * wtf/SchedulePairMac.mm:
+        (WTF::SchedulePair::SchedulePair):
+        * wtf/unicode/icu/CollatorICU.cpp:
+        (WTF::Collator::userDefault):
+        Use adoptCF free function.
+
+2013-04-26  Geoffrey Garen  <ggaren@apple.com>
+
+        Filled out more cases of branch folding in bytecode when emitting expressions into a branching context
+        https://bugs.webkit.org/show_bug.cgi?id=115057
+
+        Reviewed by Filip Pizlo.
+
+        Added a helper constructor for TriState so clients can make one without
+        branching or making assumptions about the integer values of TriStates.
+
+        * wtf/TriState.h:
+        (WTF::triState):
+        (WTF):
+
+2013-04-26  Roger Fong  <roger_fong@apple.com>
+
+        Make Apple Windows VS2010 build results into and get dependencies from __32 suffixed folders.
+        Make the DebugSuffix configuration use _debug dependencies.
+
+        * WTF.vcxproj/WTF.make:
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTFCommon.props:
+        * WTF.vcxproj/WTFDebug.props:
+        * WTF.vcxproj/WTFGenerated.make:
+        * WTF.vcxproj/WTFGenerated.vcxproj:
+        * WTF.vcxproj/WTFGeneratedCommon.props:
+        * WTF.vcxproj/WTFGeneratedDebug.props:
+        * WTF.vcxproj/WTFGeneratedProduction.props:
+        * WTF.vcxproj/WTFGeneratedRelease.props:
+        * WTF.vcxproj/WTFProduction.props:
+        * WTF.vcxproj/WTFRelease.props:
+        * WTF.vcxproj/build-generated-files.sh:
+        * WTF.vcxproj/work-around-vs-dependency-tracking-bugs.py:
+        (react_to_vsprops_changes):
+
 2013-04-26  Martin Robinson  <mrobinson@igalia.com>
 
         Remove the remaining Skia #ifdefs

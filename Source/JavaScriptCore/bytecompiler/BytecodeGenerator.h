@@ -445,11 +445,9 @@ namespace JSC {
 
         RegisterID* emitMove(RegisterID* dst, RegisterID* src);
 
-        RegisterID* emitToJSNumber(RegisterID* dst, RegisterID* src) { return emitUnaryOp(op_to_jsnumber, dst, src); }
-        RegisterID* emitPreInc(RegisterID* srcDst);
-        RegisterID* emitPreDec(RegisterID* srcDst);
-        RegisterID* emitPostInc(RegisterID* dst, RegisterID* srcDst);
-        RegisterID* emitPostDec(RegisterID* dst, RegisterID* srcDst);
+        RegisterID* emitToNumber(RegisterID* dst, RegisterID* src) { return emitUnaryOp(op_to_number, dst, src); }
+        RegisterID* emitInc(RegisterID* srcDst);
+        RegisterID* emitDec(RegisterID* srcDst);
 
         void emitCheckHasInstance(RegisterID* dst, RegisterID* value, RegisterID* base, Label* target);
         RegisterID* emitInstanceOf(RegisterID* dst, RegisterID* value, RegisterID* basePrototype);
@@ -553,6 +551,7 @@ namespace JSC {
         CodeType codeType() const { return m_codeType; }
 
         bool shouldEmitProfileHooks() { return m_shouldEmitProfileHooks; }
+        bool shouldEmitDebugHooks() { return m_shouldEmitDebugHooks; }
         
         bool isStrictMode() const { return m_codeBlock->isStrictMode(); }
 
@@ -646,8 +645,6 @@ namespace JSC {
             return UnlinkedFunctionExecutable::create(m_vm, m_scopeNode->source(), body);
         }
 
-        JSString* addStringConstant(const Identifier&);
-
         void addLineInfo(unsigned lineNo)
         {
             m_codeBlock->addLineInfo(instructions().size(), lineNo - m_scopeNode->firstLine());
@@ -656,6 +653,8 @@ namespace JSC {
         RegisterID* emitInitLazyRegister(RegisterID*);
 
     public:
+        JSString* addStringConstant(const Identifier&);
+
         Vector<UnlinkedInstruction, 0, UnsafeVectorOverflow>& instructions() { return m_instructions; }
 
         SharedSymbolTable& symbolTable() { return *m_symbolTable; }

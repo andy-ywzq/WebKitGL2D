@@ -1,3 +1,403 @@
+2013-04-30  Zalan Bujtas  <zalan@apple.com>
+
+        Animations fail to start on http://www.google.com/insidesearch/howsearchworks/thestory/
+        https://bugs.webkit.org/show_bug.cgi?id=111244
+
+        Reviewed by David Kilzer.
+        
+        Enable performance.now() as a minimal subset of Web Timing API. 
+        It returns DOMHighResTimeStamp, a monotonically increasing value representing the 
+        number of milliseconds from the start of the navigation of the current document.
+        JS libraries use this API to check against the requestAnimationFrame() timestamp.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-04-30  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        Unreviewed. Speculative build fix on Qt Arm and Mips after r149349.
+
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileSoftModulo):
+
+2013-04-29  Cosmin Truta  <ctruta@blackberry.com>
+
+        [ARM] Expand the use of integer division
+        https://bugs.webkit.org/show_bug.cgi?id=115138
+
+        Reviewed by Benjamin Poulain.
+
+        If availability of hardware integer division isn't known at compile
+        time, check the CPU flags and decide at runtime whether to fall back
+        to software. Currently, this OS-specific check is implemented on QNX.
+
+        Moreover, use operator % instead of fmod() in the calculation of the
+        software modulo. Even when it's software-emulated, operator % is faster
+        than fmod(): on ARM v7 QNX, without hardware division, we noticed
+        >3% speedup on SunSpider.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * assembler/ARMv7Assembler.h:
+        (JSC::ARMv7Assembler::sdiv): Did not compile conditionally.
+        (JSC::ARMv7Assembler::udiv): Ditto.
+        * assembler/AbstractMacroAssembler.h:
+        (JSC::isARMv7s): Removed.
+        * assembler/MacroAssemblerARMv7.cpp: Added.
+        (JSC::isIntegerDivSupported): Added.
+        * assembler/MacroAssemblerARMv7.h:
+        (JSC::MacroAssemblerARMv7::supportsIntegerDiv): Added.
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode): Checked MacroAssembler::supportsIntegerDiv() in ArithDiv case.
+        * dfg/DFGOperations.cpp:
+        (JSC::DFG::operationModOnInts): Added.
+        * dfg/DFGOperations.h:
+        (JSC::DFG::Z_DFGOperation_ZZ): Added.
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileSoftModulo): Separated the X86-specific and ARM-specific codegen
+        from the common implementation; used operationModOnInts on ARM.
+        (JSC::DFG::SpeculativeJIT::compileIntegerArithDivForARM): Renamed from compileIntegerArithDivForARMv7.
+        (JSC::DFG::SpeculativeJIT::compileArithMod): Allowed run-time detection of integer div on ARM.
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::callOperation): Added overloads with Z_DFGOperation_ZZ arguments.
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile): Used compileIntegerArithDivForARM.
+
+2013-04-29  Benjamin Poulain  <benjamin@webkit.org>
+
+        Unify the data access of StringImpl members from JavaScriptCore
+        https://bugs.webkit.org/show_bug.cgi?id=115320
+
+        Reviewed by Andreas Kling.
+
+        DFG accesses the member infos by directly calling the methods on StringImpl,
+        while the baseline JIT was using helper methods on ThunkHelpers.
+
+        Cut the middle man, and use StringImpl directly everywhere.
+
+        * jit/JITInlines.h:
+        (JSC::JIT::emitLoadCharacterString):
+        * jit/JITPropertyAccess.cpp:
+        (JSC::JIT::stringGetByValStubGenerator):
+        * jit/JITPropertyAccess32_64.cpp:
+        (JSC::JIT::stringGetByValStubGenerator):
+        * jit/JSInterfaceJIT.h:
+        * jit/ThunkGenerators.cpp:
+        (JSC::stringCharLoad):
+
+2013-04-29  Benjamin Poulain  <bpoulain@apple.com>
+
+        Use push and pop for iOS math function thunks
+        https://bugs.webkit.org/show_bug.cgi?id=115215
+
+        Reviewed by Filip Pizlo.
+
+        The iOS ABI is a little different than regular ARM ABI regarding stack alignment.
+        The requirement is 4 bytes:
+        "The ARM environment uses a stack that—at the point of function calls—is 4-byte aligned,
+         grows downward, and contains local variables and a function’s parameters."
+
+        Subsequently, we can just use push and pop to preserve the link register.
+
+        * jit/ThunkGenerators.cpp:
+
+2013-04-29  Brent Fulgham  <bfulgham@webkit.org>
+
+        [Windows, WinCairo] Get rid of last few pthread include/link references.
+        https://bugs.webkit.org/show_bug.cgi?id=115375
+
+        Reviewed by Tim Horton.
+
+        * JavaScriptCore.vcproj/jsc/jscPostBuild.cmd:
+        * JavaScriptCore.vcxproj/JavaScriptCoreCommon.props:
+        * JavaScriptCore.vcxproj/LLInt/LLIntOffsetsExtractor/LLIntOffsetsExtractorCommon.props:
+        * JavaScriptCore.vcxproj/jsc/jscCommon.props:
+        * JavaScriptCore.vcxproj/testRegExp/testRegExpCommon.props:
+        * JavaScriptCore.vcxproj/testapi/testapiCommon.props:
+
+2013-04-29  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. AppleWin VS2010 build fix.
+
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExports.def.in:
+
+2013-04-26  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        ~BlockAllocator should ASSERT that it has no more Regions left
+        https://bugs.webkit.org/show_bug.cgi?id=115287
+
+        Reviewed by Andreas Kling.
+
+        * heap/BlockAllocator.cpp:
+        (JSC::BlockAllocator::~BlockAllocator):
+        (JSC::BlockAllocator::allRegionSetsAreEmpty):
+        * heap/BlockAllocator.h:
+        (RegionSet):
+        (JSC::BlockAllocator::RegionSet::isEmpty):
+        (BlockAllocator):
+
+2013-04-29  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        IndexingTypes should use hex
+        https://bugs.webkit.org/show_bug.cgi?id=115286
+
+        Decimal is kind of confusing/hard to read because they're used as bit masks. Hex seems more appropriate.
+
+        Reviewed by Geoffrey Garen.
+
+        * runtime/IndexingType.h:
+
+2013-04-29  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix make distcheck.
+
+        * GNUmakefile.list.am: Add missing headers files to compilation
+        and offlineasm/sh4.rb script.
+
+2013-04-28  Dean Jackson  <dino@apple.com>
+
+        [Mac] Disable canvas backing store scaling (HIGH_DPI_CANVAS)
+        https://bugs.webkit.org/show_bug.cgi?id=115310
+
+        Reviewed by Simon Fraser.
+
+        Remove ENABLE_HIGH_DPI_CANVAS_macosx.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-04-27  Darin Adler  <darin@apple.com>
+
+        Move from constructor and member function adoptCF/NS to free function adoptCF/NS.
+        https://bugs.webkit.org/show_bug.cgi?id=115307
+
+        Reviewed by Geoffrey Garen.
+
+        * heap/HeapTimer.cpp:
+        (JSC::HeapTimer::HeapTimer):
+        * runtime/VM.cpp:
+        (JSC::enableAssembler):
+        Use adoptCF free function.
+
+2013-04-27  Anders Carlsson  <andersca@apple.com>
+
+        Try to fix the Windows build.
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCoreExports.def:
+
+2013-04-25  Geoffrey Garen  <ggaren@apple.com>
+
+        Cleaned up pre/post inc/dec in bytecode
+        https://bugs.webkit.org/show_bug.cgi?id=115222
+
+        Reviewed by Filip Pizlo.
+
+        A few related changes here:
+
+        (*) Removed post_inc and post_dec. The two-result form was awkward to
+        reason about. Being explicit about the intermediate mov and to_number
+        reduces DFG overhead, removes some fragile ASSERTs from the DFG, and
+        fixes a const bug. Plus, we get to blow away 262 lines of code.
+
+        (*) Renamed pre_inc and pre_dec to inc and dec, since there's only one
+        version now.
+
+        (*) Renamed to_jsnumber to to_number, to match the ECMA name.
+
+        (*) Tightened up the codegen and runtime support for to_number.
+
+
+        * JavaScriptCore.order: Order!
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::dumpBytecode):
+        * bytecode/Opcode.h:
+        (JSC::padOpcodeName):
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::emitInc):
+        (JSC::BytecodeGenerator::emitDec):
+        * bytecompiler/BytecodeGenerator.h:
+        (JSC::BytecodeGenerator::emitToNumber):
+        (BytecodeGenerator): Removed post_inc and post_dec.
+
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::emitPreIncOrDec): Updated for rename.
+
+        (JSC::emitPostIncOrDec): Issue an explicit mov and to_number when needed.
+        These are rare, and they boil away in the DFG.
+
+        (JSC::PostfixNode::emitResolve):
+        (JSC::PrefixNode::emitResolve): For const, use an explicit mov instead
+        of any special forms. This fixes a bug where we would do string
+        add/subtract instead of number.
+
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        * dfg/DFGCapabilities.h:
+        (JSC::DFG::canCompileOpcode):
+        * jit/JIT.cpp:
+        (JSC::JIT::privateCompileMainPass):
+        (JSC::JIT::privateCompileSlowCases):
+        * jit/JIT.h:
+        * jit/JITArithmetic.cpp:
+        (JSC::JIT::emit_op_inc):
+        (JSC::JIT::emitSlow_op_inc):
+        (JSC::JIT::emit_op_dec):
+        (JSC::JIT::emitSlow_op_dec):
+        * jit/JITArithmetic32_64.cpp:
+        (JSC::JIT::emit_op_inc):
+        (JSC::JIT::emitSlow_op_inc):
+        (JSC::JIT::emit_op_dec):
+        (JSC::JIT::emitSlow_op_dec): Removed post_inc/dec, and updated for renames.
+
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_to_number):
+        (JSC::JIT::emitSlow_op_to_number): Removed a test for number cells. There's
+        no such thing!
+
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_to_number): Use LowestTag to avoid making assumptions
+        about the lowest valued tag.
+
+        (JSC::JIT::emitSlow_op_to_number): Updated for renames.
+
+        * jit/JITStubs.cpp:
+        (JSC::DEFINE_STUB_FUNCTION):
+        * jit/JITStubs.h:
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        * llint/LLIntSlowPaths.h:
+        * llint/LowLevelInterpreter32_64.asm:
+        * llint/LowLevelInterpreter64.asm:
+        * parser/NodeConstructors.h:
+        (JSC::UnaryPlusNode::UnaryPlusNode): Removed post_inc/dec, and updated for renames.
+
+        * runtime/Operations.cpp:
+        (JSC::jsIsObjectType): Removed a test for number cells. There's
+        no such thing!
+
+2013-04-27  Julien Brianceau  <jbrianceau@nds.com>
+
+        REGRESSION(r149114): cache flush for SH4 arch may flush an extra page.
+        https://bugs.webkit.org/show_bug.cgi?id=115305
+
+        Reviewed by Andreas Kling.
+
+        * assembler/SH4Assembler.h:
+        (JSC::SH4Assembler::cacheFlush):
+
+2013-04-26  Geoffrey Garen  <ggaren@apple.com>
+
+        Re-landing <http://trac.webkit.org/changeset/148999>
+
+            Filled out more cases of branch folding in bytecode when emitting
+            expressions into a branching context
+            https://bugs.webkit.org/show_bug.cgi?id=115057
+
+            Reviewed by Phil Pizlo.
+
+        We can't fold the number == 1 case to boolean because all non-zero numbers
+        down-cast to true, but only 1 is == to true.
+
+2013-04-26  Filip Pizlo  <fpizlo@apple.com>
+
+        Correct indentation of SymbolTable.h
+        
+        Rubber stamped by Mark Hahnenberg.
+
+        * runtime/SymbolTable.h:
+
+2013-04-26  Roger Fong  <roger_fong@apple.com>
+
+        Make Apple Windows VS2010 build results into and get dependencies from __32 suffixed folders.
+        Make the DebugSuffix configuration use _debug dependencies.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.make:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.vcxproj/JavaScriptCoreCF.props:
+        * JavaScriptCore.vcxproj/JavaScriptCoreCommon.props:
+        * JavaScriptCore.vcxproj/JavaScriptCoreDebug.props:
+        * JavaScriptCore.vcxproj/JavaScriptCoreDebugCFLite.props:
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGenerator.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGenerator.vcxproj.filters:
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGeneratorBuildCmd.cmd:
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGeneratorCommon.props:
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGeneratorDebug.props:
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGeneratorPostBuild.cmd:
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGeneratorPreBuild.cmd:
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGeneratorProduction.props:
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGeneratorRelease.props:
+        * JavaScriptCore.vcxproj/JavaScriptCoreGenerated.make:
+        * JavaScriptCore.vcxproj/JavaScriptCoreGenerated.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCoreGeneratedCommon.props:
+        * JavaScriptCore.vcxproj/JavaScriptCoreGeneratedDebug.props:
+        * JavaScriptCore.vcxproj/JavaScriptCoreGeneratedProduction.props:
+        * JavaScriptCore.vcxproj/JavaScriptCoreGeneratedRelease.props:
+        * JavaScriptCore.vcxproj/JavaScriptCorePostBuild.cmd:
+        * JavaScriptCore.vcxproj/JavaScriptCorePreLink.cmd:
+        * JavaScriptCore.vcxproj/JavaScriptCoreProduction.props:
+        * JavaScriptCore.vcxproj/JavaScriptCoreRelease.props:
+        * JavaScriptCore.vcxproj/JavaScriptCoreReleaseCFLite.props:
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/LLIntAssembly.make:
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/LLIntAssembly.vcxproj:
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/build-LLIntAssembly.sh:
+        * JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/LLIntDesiredOffsets.make:
+        * JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/LLIntDesiredOffsets.vcxproj:
+        * JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/build-LLIntDesiredOffsets.sh:
+        * JavaScriptCore.vcxproj/LLInt/LLIntOffsetsExtractor/LLIntOffsetsExtractor.vcxproj:
+        * JavaScriptCore.vcxproj/LLInt/LLIntOffsetsExtractor/LLIntOffsetsExtractorCommon.props:
+        * JavaScriptCore.vcxproj/LLInt/LLIntOffsetsExtractor/LLIntOffsetsExtractorDebug.props:
+        * JavaScriptCore.vcxproj/LLInt/LLIntOffsetsExtractor/LLIntOffsetsExtractorProduction.props:
+        * JavaScriptCore.vcxproj/LLInt/LLIntOffsetsExtractor/LLIntOffsetsExtractorRelease.props:
+        * JavaScriptCore.vcxproj/build-generated-files.sh:
+        * JavaScriptCore.vcxproj/copy-files.cmd:
+        * JavaScriptCore.vcxproj/jsc/jsc.vcxproj:
+        * JavaScriptCore.vcxproj/jsc/jscCommon.props:
+        * JavaScriptCore.vcxproj/jsc/jscDebug.props:
+        * JavaScriptCore.vcxproj/jsc/jscPostBuild.cmd:
+        * JavaScriptCore.vcxproj/jsc/jscPreLink.cmd:
+        * JavaScriptCore.vcxproj/jsc/jscProduction.props:
+        * JavaScriptCore.vcxproj/jsc/jscRelease.props:
+        * JavaScriptCore.vcxproj/testRegExp/testRegExp.vcxproj:
+        * JavaScriptCore.vcxproj/testRegExp/testRegExp.vcxproj.filters:
+        * JavaScriptCore.vcxproj/testRegExp/testRegExpCommon.props:
+        * JavaScriptCore.vcxproj/testRegExp/testRegExpDebug.props:
+        * JavaScriptCore.vcxproj/testRegExp/testRegExpPostBuild.cmd:
+        * JavaScriptCore.vcxproj/testRegExp/testRegExpPreLink.cmd:
+        * JavaScriptCore.vcxproj/testRegExp/testRegExpProduction.props:
+        * JavaScriptCore.vcxproj/testRegExp/testRegExpRelease.props:
+        * JavaScriptCore.vcxproj/testapi/testapi.vcxproj:
+        * JavaScriptCore.vcxproj/testapi/testapiCommon.props:
+        * JavaScriptCore.vcxproj/testapi/testapiCommonCFLite.props:
+        * JavaScriptCore.vcxproj/testapi/testapiDebug.props:
+        * JavaScriptCore.vcxproj/testapi/testapiDebugCFLite.props:
+        * JavaScriptCore.vcxproj/testapi/testapiPreLink.cmd:
+        * JavaScriptCore.vcxproj/testapi/testapiProduction.props:
+        * JavaScriptCore.vcxproj/testapi/testapiRelease.props:
+        * JavaScriptCore.vcxproj/testapi/testapiReleaseCFLite.props:
+
+2013-04-26  Roger Fong  <roger_fong@apple.com>
+
+        Disable sub-pixel layout on mac.
+        https://bugs.webkit.org/show_bug.cgi?id=114999.
+
+        Reviewed by Simon Fraser.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-04-26  Oliver Hunt  <oliver@apple.com>
+
+        Make stack tracing more robust
+        https://bugs.webkit.org/show_bug.cgi?id=115272
+
+        Reviewed by Geoffrey Garen.
+
+        CallFrame already handles stack walking confusion robustly,
+        so we should make sure that the actual walk handles that as well.
+
+        * interpreter/Interpreter.cpp:
+        (JSC::getCallerInfo):
+
 2013-04-26  Mark Hahnenberg  <mhahnenberg@apple.com>
 
         REGRESSION(r149165): It made many tests crash on 32 bit

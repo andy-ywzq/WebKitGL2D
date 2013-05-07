@@ -22,7 +22,6 @@ ActiveDOMObject
 CPPPureInterface
 CachedAttribute
 CallWith=ScriptExecutionContext|ScriptState|ScriptArguments|CallStack
-Callback
 CheckSecurity
 CheckSecurityForNode
 Clamp
@@ -47,6 +46,7 @@ CustomPutFunction
 CustomReturn
 CustomSetter
 CustomToJSObject
+Default=NullString|Undefined
 Deletable
 DoNotCheckConstants
 DoNotCheckSecurity
@@ -90,7 +90,6 @@ ObjCLegacyUnnamedParameters
 ObjCPolymorphic
 ObjCProtocol
 OmitConstructor
-Optional=|DefaultIsNullString|DefaultIsUndefined
 PassContext
 PassThisToCallback=*
 Reflect=*

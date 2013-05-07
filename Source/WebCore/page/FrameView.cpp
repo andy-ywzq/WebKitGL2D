@@ -198,6 +198,7 @@ FrameView::FrameView(Frame* frame)
     , m_didRunAutosize(false)
     , m_headerHeight(0)
     , m_footerHeight(0)
+    , m_milestonesPendingPaint(0)
 #if ENABLE(CSS_FILTERS)
     , m_hasSoftwareFilters(false)
 #endif
@@ -467,12 +468,35 @@ void FrameView::setFrameRect(const IntRect& newRect)
 
     updateScrollableAreaSet();
 
+    RenderView* renderView = this->renderView();
+
 #if USE(ACCELERATED_COMPOSITING)
-    if (RenderView* renderView = this->renderView()) {
+    if (renderView) {
         if (renderView->usesCompositing())
             renderView->compositor()->frameViewDidChangeSize();
     }
 #endif
+
+    // Viewport-dependent media queries may cause us to need completely different style information.
+    if (m_frame->document()->styleResolver()->affectedByViewportChange()) {
+        m_frame->document()->styleResolverChanged(DeferRecalcStyle);
+        InspectorInstrumentation::mediaQueryResultChanged(m_frame->document());
+    }
+
+    if (renderView && !renderView->printing()) {
+        IntSize currentSize;
+        if (useFixedLayout() && !fixedLayoutSize().isEmpty() && delegatesScrolling())
+            currentSize = fixedLayoutSize();
+        else
+            currentSize = visibleContentRect(IncludeScrollbars).size();
+        float currentZoomFactor = renderView->style()->zoom();
+        bool resized = !m_firstLayout && (currentSize != m_lastViewportSize || currentZoomFactor != m_lastZoomFactor);
+        m_lastViewportSize = currentSize;
+        m_lastZoomFactor = currentZoomFactor;
+        if (resized)
+            dispatchResizeEvent();
+    }
+
 }
 
 #if ENABLE(REQUEST_ANIMATION_FRAME)
@@ -1180,13 +1204,7 @@ void FrameView::layout(bool allowSubtree)
             m_inSynchronousPostLayout = false;
         }
 
-        // Viewport-dependent media queries may cause us to need completely different style information.
-        // Check that here.
-        if (document->styleResolver()->affectedByViewportChange()) {
-            document->styleResolverChanged(RecalcStyleImmediately);
-            InspectorInstrumentation::mediaQueryResultChanged(document);
-        } else
-            document->evaluateMediaQueryList();
+        document->evaluateMediaQueryList();
 
         // If there is any pagination to apply, it will affect the RenderView's style, so we should
         // take care of that now.
@@ -2761,27 +2779,13 @@ void FrameView::performPostLayoutTasks()
     scrollToAnchor();
 
     m_actionScheduler->resume();
-
-    if (renderView && !renderView->printing()) {
-        IntSize currentSize;
-        if (useFixedLayout() && !fixedLayoutSize().isEmpty() && delegatesScrolling())
-            currentSize = fixedLayoutSize();
-        else
-            currentSize = visibleContentRect(IncludeScrollbars).size();
-        float currentZoomFactor = renderView->style()->zoom();
-        bool resized = !m_firstLayout && (currentSize != m_lastViewportSize || currentZoomFactor != m_lastZoomFactor);
-        m_lastViewportSize = currentSize;
-        m_lastZoomFactor = currentZoomFactor;
-        if (resized)
-            sendResizeEvent();
-    }
 }
 
-void FrameView::sendResizeEvent()
+void FrameView::dispatchResizeEvent()
 {
     ASSERT(m_frame);
 
-    m_frame->eventHandler()->sendResizeEvent();
+    m_frame->eventHandler()->dispatchResizeEvent();
 
 #if ENABLE(INSPECTOR)
     if (InspectorInstrumentation::hasFrontends()) {
@@ -3556,6 +3560,7 @@ void FrameView::paintContents(GraphicsContext* p, const IntRect& rect)
         sCurrentPaintTimeStamp = 0;
 
     InspectorInstrumentation::didPaint(renderView, p, rect);
+    firePaintRelatedMilestones();
 }
 
 void FrameView::setPaintBehavior(PaintBehavior behavior)
@@ -4122,6 +4127,38 @@ void FrameView::willRemoveScrollbar(Scrollbar* scrollbar, ScrollbarOrientation o
     if (AXObjectCache* cache = axObjectCache()) {
         cache->remove(scrollbar);
         cache->handleScrollbarUpdate(this);
+    }
+}
+
+void FrameView::addPaintPendingMilestones(LayoutMilestones milestones)
+{
+    m_milestonesPendingPaint |= milestones;
+}
+
+void FrameView::firePaintRelatedMilestones()
+{
+    Page* page = m_frame->page();
+    if (!page)
+        return;
+
+    LayoutMilestones milestonesAchieved = 0;
+
+    // Make sure the pending paint milestones have actually been requested before we send them.
+    if (m_milestonesPendingPaint & DidFirstFlushForHeaderLayer) {
+        if (page->requestedLayoutMilestones() & DidFirstFlushForHeaderLayer)
+            milestonesAchieved |= DidFirstFlushForHeaderLayer;
+    }
+
+    if (m_milestonesPendingPaint & DidFirstPaintAfterSuppressedIncrementalRendering) {
+        if (page->requestedLayoutMilestones() & DidFirstPaintAfterSuppressedIncrementalRendering)
+            milestonesAchieved |= DidFirstPaintAfterSuppressedIncrementalRendering;
+    }
+
+    m_milestonesPendingPaint = 0;
+
+    if (milestonesAchieved) {
+        if (Frame* frame = page->mainFrame())
+            frame->loader()->didLayout(milestonesAchieved);
     }
 }
 

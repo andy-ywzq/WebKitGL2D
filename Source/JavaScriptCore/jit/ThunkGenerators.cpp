@@ -436,9 +436,9 @@ static void stringCharLoad(SpecializedThunkJIT& jit, VM* vm)
     SpecializedThunkJIT::JumpList is16Bit;
     SpecializedThunkJIT::JumpList cont8Bit;
     // Load the string flags
-    jit.loadPtr(MacroAssembler::Address(SpecializedThunkJIT::regT0, ThunkHelpers::stringImplFlagsOffset()), SpecializedThunkJIT::regT2);
-    jit.loadPtr(MacroAssembler::Address(SpecializedThunkJIT::regT0, ThunkHelpers::stringImplDataOffset()), SpecializedThunkJIT::regT0);
-    is16Bit.append(jit.branchTest32(MacroAssembler::Zero, SpecializedThunkJIT::regT2, MacroAssembler::TrustedImm32(ThunkHelpers::stringImpl8BitFlag())));
+    jit.loadPtr(MacroAssembler::Address(SpecializedThunkJIT::regT0, StringImpl::flagsOffset()), SpecializedThunkJIT::regT2);
+    jit.loadPtr(MacroAssembler::Address(SpecializedThunkJIT::regT0, StringImpl::dataOffset()), SpecializedThunkJIT::regT0);
+    is16Bit.append(jit.branchTest32(MacroAssembler::Zero, SpecializedThunkJIT::regT2, MacroAssembler::TrustedImm32(StringImpl::flagIs8Bit())));
     jit.load8(MacroAssembler::BaseIndex(SpecializedThunkJIT::regT0, SpecializedThunkJIT::regT1, MacroAssembler::TimesOne, 0), SpecializedThunkJIT::regT0);
     cont8Bit.append(jit.jump());
     is16Bit.link(&jit);
@@ -555,13 +555,11 @@ double jsRound(double d)
         ".thumb\n" \
         ".thumb_func " THUMB_FUNC_PARAM(function##Thunk) "\n" \
         SYMBOL_STRING(function##Thunk) ":" "\n" \
-        "sub sp, sp, #16\n" \
-        "str lr, [sp, #0]\n" \
+        "push {lr}\n" \
         "vmov r0, r1, d0\n" \
         "blx " GLOBAL_REFERENCE(function) "\n" \
         "vmov d0, r0, r1\n" \
-        "ldr lr, [sp, #0]\n" \
-        "add sp, sp, #16\n" \
+        "pop {lr}\n" \
         "bx lr\n" \
     ); \
     extern "C" { \

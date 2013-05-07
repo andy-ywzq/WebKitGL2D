@@ -2349,6 +2349,7 @@ webcore_sources += \
 	Source/WebCore/bindings/js/JSCSSMediaRuleCustom.cpp \
 	Source/WebCore/bindings/js/JSCSSPageRuleCustom.cpp \
 	Source/WebCore/bindings/js/JSCSSRuleCustom.cpp \
+	Source/WebCore/bindings/js/JSCSSRuleCustom.h \
 	Source/WebCore/bindings/js/JSCSSRuleListCustom.cpp \
 	Source/WebCore/bindings/js/JSCSSStyleDeclarationCustom.cpp \
 	Source/WebCore/bindings/js/JSCSSStyleDeclarationCustom.h \
@@ -2449,6 +2450,7 @@ webcore_sources += \
 	Source/WebCore/bindings/js/JSLocationCustom.h \
 	Source/WebCore/bindings/js/JSMainThreadExecState.cpp \
 	Source/WebCore/bindings/js/JSMainThreadExecState.h \
+	Source/WebCore/bindings/js/JSMediaListCustom.h \
 	Source/WebCore/bindings/js/JSMediaListCustom.cpp \
 	Source/WebCore/bindings/js/JSMemoryInfoCustom.cpp \
 	Source/WebCore/bindings/js/JSMessageChannelCustom.cpp \
@@ -2483,6 +2485,7 @@ webcore_sources += \
 	Source/WebCore/bindings/js/JSStorageCustom.cpp \
 	Source/WebCore/bindings/js/JSStorageCustom.h \
 	Source/WebCore/bindings/js/JSStyleSheetCustom.cpp \
+	Source/WebCore/bindings/js/JSStyleSheetCustom.h \
 	Source/WebCore/bindings/js/JSStyleSheetListCustom.cpp \
 	Source/WebCore/bindings/js/JSTextCustom.cpp \
 	Source/WebCore/bindings/js/JSTextTrackCueCustom.cpp \
@@ -2545,6 +2548,7 @@ webcore_sources += \
 	Source/WebCore/bindings/js/ScriptValue.cpp \
 	Source/WebCore/bindings/js/ScriptValue.h \
 	Source/WebCore/bindings/js/ScriptWrappable.h \
+	Source/WebCore/bindings/js/ScriptWrappableInlines.h \
 	Source/WebCore/bindings/js/SerializedScriptValue.cpp \
 	Source/WebCore/bindings/js/SerializedScriptValue.h \
 	Source/WebCore/bindings/js/WebCoreJSClientData.h \
@@ -2848,6 +2852,8 @@ webcore_sources += \
 	Source/WebCore/dom/ContextFeatures.cpp \
 	Source/WebCore/dom/ContextFeatures.h \
 	Source/WebCore/dom/CrossThreadTask.h \
+	Source/WebCore/dom/CustomElementConstructor.h \
+	Source/WebCore/dom/CustomElementRegistry.h \
 	Source/WebCore/dom/CustomEvent.cpp \
 	Source/WebCore/dom/CustomEvent.h \
 	Source/WebCore/dom/DatasetDOMStringMap.cpp \
@@ -3073,8 +3079,6 @@ webcore_sources += \
 	Source/WebCore/dom/SimulatedClickOptions.h \
 	Source/WebCore/dom/SpaceSplitString.cpp \
 	Source/WebCore/dom/SpaceSplitString.h \
-	Source/WebCore/dom/StaticHashSetNodeList.cpp \
-	Source/WebCore/dom/StaticHashSetNodeList.h \
 	Source/WebCore/dom/StaticNodeList.cpp \
 	Source/WebCore/dom/StaticNodeList.h \
 	Source/WebCore/dom/StringCallback.cpp \
@@ -3091,6 +3095,8 @@ webcore_sources += \
 	Source/WebCore/dom/TextEvent.h \
 	Source/WebCore/dom/TextEventInputType.h \
 	Source/WebCore/dom/Text.h \
+	Source/WebCore/dom/Touch.h \
+	Source/WebCore/dom/TouchEvent.h \
 	Source/WebCore/dom/TouchList.h \
 	Source/WebCore/dom/TransformSource.h \
 	Source/WebCore/dom/TransformSourceLibxslt.cpp \
@@ -4739,8 +4745,6 @@ webcore_sources += \
 	Source/WebCore/rendering/style/GridTrackSize.h \
 	Source/WebCore/rendering/TableLayout.h \
 	Source/WebCore/rendering/TrailingFloatsRootInlineBox.h \
-	Source/WebCore/storage/StorageTask.cpp \
-	Source/WebCore/storage/StorageTask.h \
 	Source/WebCore/storage/StorageThread.cpp \
 	Source/WebCore/storage/StorageThread.h \
 	Source/WebCore/storage/StorageArea.h \
@@ -5466,7 +5470,6 @@ webcore_platform_sources += \
 	Source/WebCore/platform/AsyncFileSystem.cpp \
 	Source/WebCore/platform/AsyncFileSystem.h \
 	Source/WebCore/platform/AsyncFileSystemCallbacks.h \
-	Source/WebCore/platform/AutodrainedPool.h \
 	Source/WebCore/platform/CalculationValue.cpp \
 	Source/WebCore/platform/CalculationValue.h \
 	Source/WebCore/platform/Clock.cpp \
@@ -5959,6 +5962,7 @@ webcore_platform_sources += \
 	Source/WebCore/platform/PopupMenuStyle.h \
 	Source/WebCore/platform/PrerenderClient.h \
 	Source/WebCore/platform/PrerenderHandle.h \
+	Source/WebCore/platform/PublicSuffix.h \
 	Source/WebCore/platform/PurgeableBuffer.h \
 	Source/WebCore/platform/PurgePriority.h \
 	Source/WebCore/platform/RefCountedSupplement.h \

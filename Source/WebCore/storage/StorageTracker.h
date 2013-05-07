@@ -55,13 +55,10 @@ public:
     void deleteAllOrigins();
     void deleteOrigin(SecurityOrigin*);
     void deleteOrigin(const String& originIdentifier);
-    bool originsLoaded() const { return m_finishedImportingOriginIdentifiers; }
     void origins(Vector<RefPtr<SecurityOrigin> >& result);
     long long diskUsageForOrigin(SecurityOrigin*);
     
     void cancelDeletingOrigin(const String& originIdentifier);
-    
-    void setClient(StorageTrackerClient*);
     
     bool isActive();
 
@@ -79,7 +76,6 @@ public:
 
 private:
     explicit StorageTracker(const String& storagePath);
-    static void scheduleTask(void*);
 
     void internalInitialize();
 
@@ -102,16 +98,16 @@ private:
     
     void setIsActive(bool);
 
-    // Guard for m_database, m_storageDirectoryPath and static Strings in syncFileSystemAndTrackerDatabase().
-    Mutex m_databaseGuard;
+    // Mutex for m_database and m_storageDirectoryPath.
+    Mutex m_databaseMutex;
     SQLiteDatabase m_database;
     String m_storageDirectoryPath;
 
-    Mutex m_clientGuard;
+    Mutex m_clientMutex;
     StorageTrackerClient* m_client;
 
     // Guard for m_originSet and m_originsBeingDeleted.
-    Mutex m_originSetGuard;
+    Mutex m_originSetMutex;
     typedef HashSet<String> OriginSet;
     OriginSet m_originSet;
     OriginSet m_originsBeingDeleted;
@@ -120,7 +116,6 @@ private:
     
     bool m_isActive;
     bool m_needsInitialization;
-    bool m_finishedImportingOriginIdentifiers;
     double m_StorageDatabaseIdleInterval;
 };
     

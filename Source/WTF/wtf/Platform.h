@@ -500,11 +500,7 @@
 
 #endif  /* OS(WINCE) && !PLATFORM(QT) */
 
-#if OS(WINCE) && !PLATFORM(QT)
-#define WTF_USE_WCHAR_UNICODE 1
-#elif PLATFORM(GTK)
-/* The GTK+ Unicode backend is configurable */
-#else
+#if !USE(WCHAR_UNICODE)
 #define WTF_USE_ICU_UNICODE 1
 #endif
 
@@ -926,8 +922,16 @@
 #define WTF_USE_UNIX_DOMAIN_SOCKETS 1
 #endif
 
+#if !defined(WTF_USE_IMLANG_FONT_LINK2) && !OS(WINCE)
+#define WTF_USE_IMLANG_FONT_LINK2 1
+#endif
+
 #if !defined(ENABLE_COMPARE_AND_SWAP) && (OS(WINDOWS) || (COMPILER(GCC) && (CPU(X86) || CPU(X86_64) || CPU(ARM_THUMB2))))
 #define ENABLE_COMPARE_AND_SWAP 1
+#endif
+
+#if CPU(APPLE_ARMV7S) || (CPU(ARM_THUMB2) && OS(QNX))
+#define ENABLE_ARM_INTEGER_DIV 1
 #endif
 
 #define ENABLE_OBJECT_MARK_LOGGING 0
