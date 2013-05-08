@@ -4,7 +4,7 @@
 #include <WebKit2/WKContext.h>
 #include <WebKit2/WKPage.h>
 #include <WebKit2/WKPreferencesPrivate.h>
-#include <NIXView.h>
+#include "NIXView.h"
 #include "NIXViewAutoPtr.h"
 
 namespace TestWebKitAPI {
@@ -45,11 +45,6 @@ TEST(WebKitNix, WebWorker)
 
     WKRetainPtr<WKContextRef> context = adoptWK(Util::createContextForInjectedBundleTest("WebWorkerTest"));
     NIXViewAutoPtr view(NIXViewCreate(context.get(), 0));
-
-    NIXViewClient viewClient;
-    memset(&viewClient, 0, sizeof(NIXViewClient));
-    viewClient.version = kNIXViewClientCurrentVersion;
-    NIXViewSetViewClient(view.get(), &viewClient);
 
     NIXViewInitialize(view.get());
 

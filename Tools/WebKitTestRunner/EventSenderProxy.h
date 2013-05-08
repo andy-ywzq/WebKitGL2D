@@ -37,7 +37,7 @@
 #include <WebKit2/EWebKit2.h>
 #include <wtf/Deque.h>
 #elif PLATFORM(NIX)
-#include <NIXView.h>
+#include "NIXView.h"
 #endif
 
 namespace WTR {
