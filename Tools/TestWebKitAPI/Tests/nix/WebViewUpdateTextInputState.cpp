@@ -29,7 +29,7 @@
 #include <WebKit2/WKContext.h>
 #include <WebKit2/WKPage.h>
 #include <WebKit2/WKRetainPtr.h>
-#include <NIXView.h>
+#include "NIXView.h"
 #include "NIXViewAutoPtr.h"
 
 namespace TestWebKitAPI {

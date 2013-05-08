@@ -26,7 +26,7 @@
 #ifndef NIXViewAutoPtr_h
 #define NIXViewAutoPtr_h
 
-#include <NIXView.h>
+#include "NIXView.h"
 
 class NIXViewAutoPtr {
 public:
