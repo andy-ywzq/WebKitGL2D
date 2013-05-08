@@ -46,11 +46,6 @@ TEST(WebKitNix, WebWorker)
     WKRetainPtr<WKContextRef> context = adoptWK(Util::createContextForInjectedBundleTest("WebWorkerTest"));
     NIXViewAutoPtr view(NIXViewCreate(context.get(), 0));
 
-    NIXViewClient viewClient;
-    memset(&viewClient, 0, sizeof(NIXViewClient));
-    viewClient.version = kNIXViewClientCurrentVersion;
-    NIXViewSetViewClient(view.get(), &viewClient);
-
     NIXViewInitialize(view.get());
 
     WKPageLoaderClient pageLoaderClient;
