@@ -79,6 +79,14 @@ protected:
     virtual bool paintMeter(RenderObject*, const PaintInfo&, const IntRect&);
 #endif
 
+    virtual bool paintSliderTrack(RenderObject*, const PaintInfo&, const IntRect&);
+    virtual void adjustSliderTrackStyle(StyleResolver*, RenderStyle*, Element*) const;
+
+    virtual bool paintSliderThumb(RenderObject*, const PaintInfo&, const IntRect&);
+    virtual void adjustSliderThumbStyle(StyleResolver*, RenderStyle*, Element*) const;
+
+    virtual void adjustSliderThumbSize(RenderStyle*, Element*) const;
+
 private:
     RenderThemeNix();
 };

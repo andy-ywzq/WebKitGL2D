@@ -284,4 +284,24 @@ void DefaultWebThemeEngine::paintMeter(WebCanvas* canvas, State state, const Web
     cairo_restore(canvas);
 }
 
+const int SLIDER_TRACK_HEIGHT = 6;
+
+void DefaultWebThemeEngine::paintSliderTrack(WebCanvas* canvas, State state, const WebRect& rect) const
+{
+    cairo_save(canvas);
+    cairo_rectangle(canvas, rect.x, rect.y + (rect.height - SLIDER_TRACK_HEIGHT) / 2.0, rect.width, SLIDER_TRACK_HEIGHT);
+    gradientFill(canvas, rect.y, rect.height, true);
+    cairo_restore(canvas);
+}
+
+void DefaultWebThemeEngine::paintSliderThumb(WebCanvas* canvas, State state, const WebRect& rect) const
+{
+    cairo_save(canvas);
+    setupBorder(canvas, state);
+    cairo_rectangle(canvas, rect.x, rect.y, rect.width, rect.height);
+    cairo_stroke_preserve(canvas);
+    gradientFill(canvas, rect.y, rect.height, state == StatePressed);
+    cairo_restore(canvas);
+}
+
 }

@@ -220,6 +220,46 @@ double RenderThemeNix::animationDurationForProgressBar(RenderProgress*) const
 }
 #endif
 
+bool RenderThemeNix::paintSliderTrack(RenderObject* object, const PaintInfo& info, const IntRect& rect)
+{
+    themeEngine()->paintSliderTrack(webCanvas(info), getWebThemeState(this, object), rect);
+
+    return false;
+}
+
+void RenderThemeNix::adjustSliderTrackStyle(StyleResolver*, RenderStyle* style, Element*) const
+{
+    style->setBoxShadow(nullptr);
+}
+
+bool RenderThemeNix::paintSliderThumb(RenderObject* object, const PaintInfo& info, const IntRect& rect)
+{
+    themeEngine()->paintSliderThumb(webCanvas(info), getWebThemeState(this, object), rect);
+
+    return false;
+}
+
+void RenderThemeNix::adjustSliderThumbStyle(StyleResolver* styleResolver, RenderStyle* style, Element* element) const
+{
+    RenderTheme::adjustSliderThumbStyle(styleResolver, style, element);
+    style->setBoxShadow(nullptr);
+}
+
+const int SLIDER_THUMB_WIDTH = 10;
+const int SLIDER_THUMB_HEIGHT = 20;
+
+void RenderThemeNix::adjustSliderThumbSize(RenderStyle* style, Element*) const
+{
+    ControlPart part = style->appearance();
+    if (part == SliderThumbVerticalPart) {
+        style->setWidth(Length(SLIDER_THUMB_WIDTH, Fixed));
+        style->setHeight(Length(SLIDER_THUMB_HEIGHT, Fixed));
+    } else if (part == SliderThumbHorizontalPart) {
+        style->setWidth(Length(SLIDER_THUMB_WIDTH, Fixed));
+        style->setHeight(Length(SLIDER_THUMB_HEIGHT, Fixed));
+    }
+}
+
 void RenderThemeNix::adjustInnerSpinButtonStyle(StyleResolver*, RenderStyle* style, Element*) const
 {
     style->resetBorder();

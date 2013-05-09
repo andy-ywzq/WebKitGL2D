@@ -129,6 +129,8 @@ public:
     virtual void getInnerSpinButtonPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const = 0;
     virtual void paintInnerSpinButton(WebCanvas*, State, const WebRect&, const InnerSpinButtonExtraParams&) const = 0;
     virtual void paintMeter(WebCanvas*, State, const WebRect&, const MeterExtraParams&) const = 0;
+    virtual void paintSliderTrack(WebCanvas*, State, const WebRect&) const = 0;
+    virtual void paintSliderThumb(WebCanvas*, State, const WebRect&) const = 0;
 };
 
 } // namespace WebKit

@@ -23,6 +23,8 @@ public:
     virtual void paintInnerSpinButton(WebCanvas *, State, const WebRect &, const InnerSpinButtonExtraParams&) const;
     virtual void getInnerSpinButtonPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const;
     virtual void paintMeter(WebCanvas*, State, const WebRect&, const MeterExtraParams&) const;
+    virtual void paintSliderTrack(WebCanvas*, State, const WebRect&) const;
+    virtual void paintSliderThumb(WebCanvas*, State, const WebRect&) const;
 };
 
 }
