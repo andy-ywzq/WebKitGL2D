@@ -7,6 +7,25 @@ namespace WebKit {
 
 class DefaultWebThemeEngine : public WebThemeEngine {
 public:
+    // Text selection colors.
+    virtual WebColor activeSelectionBackgroundColor() const;
+    virtual WebColor activeSelectionForegroundColor() const;
+    virtual WebColor inactiveSelectionBackgroundColor() const;
+    virtual WebColor inactiveSelectionForegroundColor() const;
+
+    // List box selection colors
+    virtual WebColor activeListBoxSelectionBackgroundColor() const;
+    virtual WebColor activeListBoxSelectionForegroundColor() const;
+    virtual WebColor inactiveListBoxSelectionBackgroundColor() const;
+    virtual WebColor inactiveListBoxSelectionForegroundColor() const;
+
+    virtual WebColor activeTextSearchHighlightColor() const;
+    virtual WebColor inactiveTextSearchHighlightColor() const;
+
+    virtual WebColor focusRingColor() const;
+
+    virtual WebColor tapHighlightColor() const;
+
     virtual void paintButton(WebCanvas*, State state, const WebRect&, const ButtonExtraParams&) const;
     virtual void paintTextField(WebCanvas*, State, const WebRect&) const;
     virtual void paintTextArea(WebCanvas*, State, const WebRect&) const;

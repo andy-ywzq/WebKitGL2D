@@ -33,10 +33,9 @@
 
 #include "WebSize.h"
 #include "WebCanvas.h"
+#include "WebColor.h"
 
 namespace WebKit {
-
-typedef unsigned WebColor;
 
 class WebRect;
 
@@ -117,6 +116,25 @@ public:
     virtual const char* extraDefaultStyleSheet() const { return ""; }
     virtual const char* extraQuirksStyleSheet() const { return ""; }
     virtual const char* extraPlugInsStyleSheet() const { return ""; }
+
+    // Text selection colors.
+    virtual WebColor activeSelectionBackgroundColor() const = 0;
+    virtual WebColor activeSelectionForegroundColor() const = 0;
+    virtual WebColor inactiveSelectionBackgroundColor() const = 0;
+    virtual WebColor inactiveSelectionForegroundColor() const = 0;
+
+    // List box selection colors
+    virtual WebColor activeListBoxSelectionBackgroundColor() const = 0;
+    virtual WebColor activeListBoxSelectionForegroundColor() const = 0;
+    virtual WebColor inactiveListBoxSelectionBackgroundColor() const = 0;
+    virtual WebColor inactiveListBoxSelectionForegroundColor() const = 0;
+
+    virtual WebColor activeTextSearchHighlightColor() const = 0;
+    virtual WebColor inactiveTextSearchHighlightColor() const = 0;
+
+    virtual WebColor focusRingColor() const = 0;
+
+    virtual WebColor tapHighlightColor() const = 0;
 
     virtual void paintButton(WebCanvas*, State, const WebRect&, const ButtonExtraParams&) const = 0;
     virtual void paintTextField(WebCanvas*, State, const WebRect&) const = 0;
