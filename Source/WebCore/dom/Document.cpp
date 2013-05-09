@@ -129,6 +129,7 @@
 #include "PageTransitionEvent.h"
 #include "PlatformKeyboardEvent.h"
 #include "PlatformLocale.h"
+#include "PlugInsResources.h"
 #include "PluginDocument.h"
 #include "PointerLockController.h"
 #include "PopStateEvent.h"
@@ -149,6 +150,8 @@
 #include "ScriptElement.h"
 #include "ScriptEventListener.h"
 #include "ScriptRunner.h"
+#include "ScriptSourceCode.h"
+#include "ScriptValue.h"
 #include "ScrollingCoordinator.h"
 #include "SecurityOrigin.h"
 #include "SecurityPolicy.h"
@@ -410,7 +413,7 @@ static HashSet<Document*>* documentsThatNeedStyleRecalc = 0;
 
 uint64_t Document::s_globalTreeVersion = 0;
 
-Document::Document(Frame* frame, const KURL& url, bool isXHTML, bool isHTML)
+Document::Document(Frame* frame, const KURL& url, unsigned documentClasses)
     : ContainerNode(0, CreateDocument)
     , TreeScope(this)
     , m_styleResolverThrowawayTimer(this, &Document::styleResolverThrowawayTimerFired)
@@ -448,8 +451,7 @@ Document::Document(Frame* frame, const KURL& url, bool isXHTML, bool isHTML)
     , m_createRenderers(true)
     , m_inPageCache(false)
     , m_accessKeyMapValid(false)
-    , m_isXHTML(isXHTML)
-    , m_isHTML(isHTML)
+    , m_documentClasses(documentClasses)
     , m_isViewSource(false)
     , m_sawElementsInKnownNamespaces(false)
     , m_isSrcdocDocument(false)
@@ -487,6 +489,7 @@ Document::Document(Frame* frame, const KURL& url, bool isXHTML, bool isHTML)
     , m_fontloader(0)
 #endif
     , m_didAssociateFormControlsTimer(this, &Document::didAssociateFormControlsTimerFired)
+    , m_hasInjectedPlugInsScript(false)
 {
     m_printing = false;
     m_paginatedForScreen = false;
@@ -718,7 +721,7 @@ void Document::buildAccessKeyMap(TreeScope* scope)
         if (!accessKey.isEmpty())
             m_elementsByAccessKey.set(accessKey.impl(), element);
 
-        for (ShadowRoot* root = element->youngestShadowRoot(); root; root = root->olderShadowRoot())
+        if (ShadowRoot* root = element->shadowRoot())
             buildAccessKeyMap(root);
     }
 }
@@ -824,7 +827,7 @@ PassRefPtr<Element> Document::createElement(const AtomicString& name, ExceptionC
         return 0;
     }
 
-    if (m_isXHTML)
+    if (isXHTMLDocument())
         return HTMLElementFactory::createHTMLElement(QualifiedName(nullAtom, name, xhtmlNamespaceURI), this, 0, false);
 
     return createElement(QualifiedName(nullAtom, name, nullAtom), false);
@@ -1934,14 +1937,14 @@ PassRefPtr<RenderStyle> Document::styleForElementIgnoringPendingStylesheets(Elem
 
     bool oldIgnore = m_ignorePendingStylesheets;
     m_ignorePendingStylesheets = true;
-    RefPtr<RenderStyle> style = styleResolver()->styleForElement(element, element->parentNode() ? element->parentNode()->computedStyle() : 0);
+    RefPtr<RenderStyle> style = ensureStyleResolver()->styleForElement(element, element->parentNode() ? element->parentNode()->computedStyle() : 0);
     m_ignorePendingStylesheets = oldIgnore;
     return style.release();
 }
 
 PassRefPtr<RenderStyle> Document::styleForPage(int pageIndex)
 {
-    RefPtr<RenderStyle> style = styleResolver()->styleForPage(pageIndex);
+    RefPtr<RenderStyle> style = ensureStyleResolver()->styleForPage(pageIndex);
     return style.release();
 }
 
@@ -2396,7 +2399,7 @@ void Document::implicitClose()
     Frame* f = frame();
     if (f) {
         f->loader()->icon()->startLoader();
-        f->animation()->resumeAnimationsForDocument(this);
+        f->animation()->startAnimationsIfNotSuspended(this);
     }
 
     ImageLoader::dispatchPendingBeforeLoadEvents();
@@ -2444,7 +2447,6 @@ void Document::implicitClose()
     }
 
     frame()->loader()->checkCallImplicitClose();
-    RenderObject* renderObject = renderer();
     
     // We used to force a synchronous display and flush here.  This really isn't
     // necessary and can in fact be actively harmful if pages are loading at a rate of > 60fps
@@ -2454,25 +2456,25 @@ void Document::implicitClose()
         updateStyleIfNeeded();
         
         // Always do a layout after loading if needed.
-        if (view() && renderObject && (!renderObject->firstChild() || renderObject->needsLayout()))
+        if (view() && renderer() && (!renderer()->firstChild() || renderer()->needsLayout()))
             view()->layout();
     }
 
     m_processingLoadEvent = false;
 
 #if PLATFORM(MAC)
-    if (f && renderObject && AXObjectCache::accessibilityEnabled()) {
+    if (f && renderer() && AXObjectCache::accessibilityEnabled()) {
         // The AX cache may have been cleared at this point, but we need to make sure it contains an
         // AX object to send the notification to. getOrCreate will make sure that an valid AX object
         // exists in the cache (we ignore the return value because we don't need it here). This is 
         // only safe to call when a layout is not in progress, so it can not be used in postNotification.    
-        axObjectCache()->getOrCreate(renderObject);
+        axObjectCache()->getOrCreate(renderer());
         if (this == topDocument())
-            axObjectCache()->postNotification(renderObject, AXObjectCache::AXLoadComplete, true);
+            axObjectCache()->postNotification(renderer(), AXObjectCache::AXLoadComplete, true);
         else {
             // AXLoadComplete can only be posted on the top document, so if it's a document
             // in an iframe that just finished loading, post AXLayoutComplete instead.
-            axObjectCache()->postNotification(renderObject, AXObjectCache::AXLayoutComplete, true);
+            axObjectCache()->postNotification(renderer(), AXObjectCache::AXLayoutComplete, true);
         }
     }
 #endif
@@ -4416,12 +4418,12 @@ PassRefPtr<HTMLCollection> Document::all()
 
 PassRefPtr<HTMLCollection> Document::windowNamedItems(const AtomicString& name)
 {
-    return ensureRareData()->ensureNodeLists()->addCacheWithAtomicName<HTMLNameCollection>(this, WindowNamedItems, name);
+    return ensureRareData()->ensureNodeLists()->addCacheWithAtomicName<WindowNameCollection>(this, WindowNamedItems, name);
 }
 
 PassRefPtr<HTMLCollection> Document::documentNamedItems(const AtomicString& name)
 {
-    return ensureRareData()->ensureNodeLists()->addCacheWithAtomicName<HTMLNameCollection>(this, DocumentNamedItems, name);
+    return ensureRareData()->ensureNodeLists()->addCacheWithAtomicName<DocumentNameCollection>(this, DocumentNamedItems, name);
 }
 
 void Document::finishedParsing()
@@ -4540,9 +4542,10 @@ const Vector<IconURL>& Document::iconURLs(int iconTypesMask)
 
         // Put it at the front to ensure that icons seen later take precedence as required by the spec.
         IconURL newURL(linkElement->href(), linkElement->iconSizes(), linkElement->type(), linkElement->iconType());
-        m_iconURLs.prepend(newURL);
+        m_iconURLs.append(newURL);
     }
 
+    m_iconURLs.reverse();
     return m_iconURLs;
 }
 
@@ -6047,6 +6050,21 @@ void Document::didAssociateFormControlsTimerFired(Timer<Document>* timer)
 
     frame()->page()->chrome()->client()->didAssociateFormControls(associatedFormControls);
     m_associatedFormControls.clear();
+}
+
+void Document::ensurePlugInsInjectedScript(DOMWrapperWorld* world)
+{
+    if (m_hasInjectedPlugInsScript)
+        return;
+
+    // Use the JS file provided by the Chrome client, or fallback to the default one.
+    String jsString = page()->chrome()->client()->plugInExtraScript();
+    if (!jsString)
+        jsString = plugInsJavaScript;
+
+    page()->mainFrame()->script()->evaluateInWorld(ScriptSourceCode(jsString), world);
+
+    m_hasInjectedPlugInsScript = true;
 }
 
 } // namespace WebCore

@@ -155,13 +155,7 @@ WebContext::WebContext(ProcessModel processModel, const String& injectedBundlePa
     addMessageReceiver(WebContextLegacyMessages::messageReceiverName(), this);
 
     // NOTE: These sub-objects must be initialized after m_messageReceiverMap..
-#if ENABLE(BATTERY_STATUS)
-    m_batteryManagerProxy = WebBatteryManagerProxy::create(this);
-#endif
     m_iconDatabase = WebIconDatabase::create(this);
-#if ENABLE(NETWORK_INFO)
-    m_networkInfoManagerProxy = WebNetworkInfoManagerProxy::create(this);
-#endif
 #if ENABLE(NETSCAPE_PLUGIN_API)
     m_pluginSiteDataManager = WebPluginSiteDataManager::create(this);
 #endif // ENABLE(NETSCAPE_PLUGIN_API)
@@ -178,6 +172,12 @@ WebContext::WebContext(ProcessModel processModel, const String& injectedBundlePa
 #endif
 #if USE(SOUP)
     addSupplement<WebSoupRequestManagerProxy>();
+#endif
+#if ENABLE(BATTERY_STATUS)
+    addSupplement<WebBatteryManagerProxy>();
+#endif
+#if ENABLE(NETWORK_INFO)
+    addSupplement<WebNetworkInfoManagerProxy>();
 #endif
 
     contexts().append(this);
@@ -222,19 +222,9 @@ WebContext::~WebContext()
         it->value->clearContext();
     }
 
-#if ENABLE(BATTERY_STATUS)
-    m_batteryManagerProxy->invalidate();
-    m_batteryManagerProxy->clearContext();
-#endif
-
     m_iconDatabase->invalidate();
     m_iconDatabase->clearContext();
     
-#if ENABLE(NETWORK_INFO)
-    m_networkInfoManagerProxy->invalidate();
-    m_networkInfoManagerProxy->clearContext();
-#endif
-
 #if ENABLE(NETSCAPE_PLUGIN_API)
     m_pluginSiteDataManager->invalidate();
     m_pluginSiteDataManager->clearContext();
@@ -676,13 +666,6 @@ void WebContext::disconnectProcess(WebProcessProxy* process)
     for (; it != end; ++it)
         it->value->processDidClose(process);
 
-#if ENABLE(BATTERY_STATUS)
-    m_batteryManagerProxy->invalidate();
-#endif
-#if ENABLE(NETWORK_INFO)
-    m_networkInfoManagerProxy->invalidate();
-#endif
-
     // When out of process plug-ins are enabled, we don't want to invalidate the plug-in site data
     // manager just because the web process crashes since it's not involved.
 #if ENABLE(NETSCAPE_PLUGIN_API) && !ENABLE(PLUGIN_PROCESS)
@@ -899,18 +882,6 @@ DownloadProxy* WebContext::createDownloadProxy()
 #endif
 
     return ensureSharedWebProcess()->createDownloadProxy();
-}
-
-// FIXME: This is not the ideal place for this function.
-HashSet<String, CaseFoldingHash> WebContext::pdfAndPostScriptMIMETypes()
-{
-    HashSet<String, CaseFoldingHash> mimeTypes;
-
-    mimeTypes.add("application/pdf");
-    mimeTypes.add("application/postscript");
-    mimeTypes.add("text/pdf");
-    
-    return mimeTypes;
 }
 
 void WebContext::addMessageReceiver(CoreIPC::StringReference messageReceiverName, CoreIPC::MessageReceiver* messageReceiver)

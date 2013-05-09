@@ -26,11 +26,11 @@
 #include "config.h"
 #include "Connection.h"
 
-#include "BinarySemaphore.h"
 #include <WebCore/RunLoop.h>
 #include <wtf/CurrentTime.h>
 #include <wtf/HashSet.h>
 #include <wtf/text/WTFString.h>
+#include <wtf/threads/BinarySemaphore.h>
 
 using namespace WebCore;
 
@@ -190,7 +190,7 @@ void Connection::SyncMessageState::dispatchMessages(Connection* allowedConnectio
 
     if (!messagesToPutBack.isEmpty()) {
         MutexLocker locker(m_mutex);
-        m_messagesToDispatchWhileWaitingForSyncReply.append(messagesToPutBack);
+        m_messagesToDispatchWhileWaitingForSyncReply.appendVector(messagesToPutBack);
     }
 }
 

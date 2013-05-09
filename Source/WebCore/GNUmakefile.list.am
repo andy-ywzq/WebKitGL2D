@@ -431,8 +431,6 @@ webcore_built_sources += \
 	DerivedSources/WebCore/JSHTMLScriptElement.h \
 	DerivedSources/WebCore/JSHTMLSelectElement.cpp \
 	DerivedSources/WebCore/JSHTMLSelectElement.h \
-	DerivedSources/WebCore/JSHTMLShadowElement.cpp \
-	DerivedSources/WebCore/JSHTMLShadowElement.h \
 	DerivedSources/WebCore/JSHTMLSourceElement.cpp \
 	DerivedSources/WebCore/JSHTMLSourceElement.h \
 	DerivedSources/WebCore/JSHTMLSpanElement.cpp \
@@ -893,6 +891,8 @@ webcore_built_sources += \
 	DerivedSources/WebCore/MathMLElementFactory.h \
 	DerivedSources/WebCore/MathMLNames.cpp \
 	DerivedSources/WebCore/MathMLNames.h \
+	DerivedSources/WebCore/PlugInsResourcesData.cpp \
+	DerivedSources/WebCore/PlugInsResources.h \
 	DerivedSources/WebCore/SettingsMacros.h \
 	DerivedSources/WebCore/UserAgentStyleSheetsData.cpp \
 	DerivedSources/WebCore/UserAgentStyleSheets.h \
@@ -1599,7 +1599,6 @@ dom_binding_idls += \
 	$(WebCore)/html/canvas/WebGLUniformLocation.idl \
 	$(WebCore)/html/canvas/WebGLVertexArrayObjectOES.idl \
 	$(WebCore)/html/shadow/HTMLContentElement.idl \
-	$(WebCore)/html/shadow/HTMLShadowElement.idl \
 	$(WebCore)/html/track/AudioTrack.idl \
 	$(WebCore)/html/track/AudioTrackList.idl \
 	$(WebCore)/html/track/TextTrack.idl \
@@ -2755,7 +2754,6 @@ webcore_sources += \
 	Source/WebCore/css/SelectorFilter.h \
 	Source/WebCore/css/ShadowValue.cpp \
 	Source/WebCore/css/ShadowValue.h \
-	Source/WebCore/css/SiblingTraversalStrategies.h \
 	Source/WebCore/css/StyleInvalidationAnalysis.cpp \
 	Source/WebCore/css/StyleInvalidationAnalysis.h \
 	Source/WebCore/css/StyleMedia.cpp \
@@ -3405,8 +3403,6 @@ webcore_sources += \
 	Source/WebCore/html/canvas/WebGLVertexArrayObjectOES.h \
 	Source/WebCore/html/canvas/WebGLExtension.cpp \
 	Source/WebCore/html/canvas/WebGLExtension.h \
-	Source/WebCore/html/shadow/HTMLShadowElement.cpp \
-	Source/WebCore/html/shadow/HTMLShadowElement.h \
 	Source/WebCore/html/DOMSettableTokenList.cpp \
 	Source/WebCore/html/DOMSettableTokenList.h \
 	Source/WebCore/html/DOMTokenList.cpp \
@@ -3726,8 +3722,6 @@ webcore_sources += \
 	Source/WebCore/html/shadow/ClearButtonElement.h \
 	Source/WebCore/html/shadow/ContentDistributor.cpp \
 	Source/WebCore/html/shadow/ContentDistributor.h \
-	Source/WebCore/html/shadow/ContentSelectorQuery.cpp \
-	Source/WebCore/html/shadow/ContentSelectorQuery.h \
 	Source/WebCore/html/shadow/DateTimeEditElement.cpp \
 	Source/WebCore/html/shadow/DateTimeEditElement.h \
 	Source/WebCore/html/shadow/DateTimeFieldElement.cpp \
@@ -3756,8 +3750,6 @@ webcore_sources += \
 	Source/WebCore/html/shadow/MeterShadowElement.h \
 	Source/WebCore/html/shadow/ProgressShadowElement.cpp \
 	Source/WebCore/html/shadow/ProgressShadowElement.h \
-	Source/WebCore/html/shadow/SelectRuleFeatureSet.cpp \
-	Source/WebCore/html/shadow/SelectRuleFeatureSet.h \
 	Source/WebCore/html/shadow/SliderThumbElement.cpp \
 	Source/WebCore/html/shadow/SliderThumbElement.h \
 	Source/WebCore/html/shadow/SpinButtonElement.cpp \
@@ -6090,6 +6082,9 @@ platform_sources += \
 	Source/WebCore/platform/audio/gstreamer/FFTFrameGStreamer.cpp \
 	Source/WebCore/platform/audio/gstreamer/WebKitWebAudioSourceGStreamer.cpp \
 	Source/WebCore/platform/audio/gstreamer/WebKitWebAudioSourceGStreamer.h \
+	Source/WebCore/platform/geoclue/GeolocationProviderGeoclue.h \
+	Source/WebCore/platform/geoclue/GeolocationProviderGeoclue.cpp \
+	Source/WebCore/platform/geoclue/GeolocationProviderGeoclueClient.h \
 	Source/WebCore/platform/graphics/cairo/CairoUtilities.cpp \
 	Source/WebCore/platform/graphics/cairo/CairoUtilities.h \
 	Source/WebCore/platform/graphics/cairo/IntRectCairo.cpp \
@@ -6187,9 +6182,6 @@ webcoregtk_sources += \
 	Source/WebCore/page/gtk/DragControllerGtk.cpp \
 	Source/WebCore/page/gtk/EventHandlerGtk.cpp \
 	Source/WebCore/platform/cairo/WidgetBackingStore.h \
-	Source/WebCore/platform/geoclue/GeolocationProviderGeoclue.h \
-	Source/WebCore/platform/geoclue/GeolocationProviderGeoclue.cpp \
-	Source/WebCore/platform/geoclue/GeolocationProviderGeoclueClient.h \
 	Source/WebCore/platform/graphics/cairo/GraphicsContextCairo.cpp \
 	Source/WebCore/platform/graphics/cairo/GraphicsContextPlatformPrivateCairo.h \
 	Source/WebCore/platform/graphics/freetype/FontPlatformData.h \

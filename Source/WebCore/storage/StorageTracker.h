@@ -54,7 +54,7 @@ public:
     
     void deleteAllOrigins();
     void deleteOrigin(SecurityOrigin*);
-    void deleteOrigin(const String& originIdentifier);
+    void deleteOriginWithIdentifier(const String& originIdentifier);
     void origins(Vector<RefPtr<SecurityOrigin> >& result);
     long long diskUsageForOrigin(SecurityOrigin*);
     
@@ -62,17 +62,10 @@ public:
     
     bool isActive();
 
-    // Sync to disk on background thread.
-    void syncDeleteAllOrigins();
-    void syncDeleteOrigin(const String& originIdentifier);
-    void syncSetOriginDetails(const String& originIdentifier, const String& databaseFile);
-    void syncImportOriginIdentifiers();
-    void syncFileSystemAndTrackerDatabase();
-
-    void syncLocalStorage();
-
     double storageDatabaseIdleInterval() { return m_StorageDatabaseIdleInterval; }
     void setStorageDatabaseIdleInterval(double interval) { m_StorageDatabaseIdleInterval = interval; }
+
+    void syncFileSystemAndTrackerDatabase();
 
 private:
     explicit StorageTracker(const String& storagePath);
@@ -83,7 +76,6 @@ private:
     void openTrackerDatabase(bool createIfDoesNotExist);
 
     void importOriginIdentifiers();
-    static void notifyFinishedImportingOriginIdentifiersOnMainThread(void*);
     void finishedImportingOriginIdentifiers();
     
     void deleteTrackerFiles();
@@ -92,11 +84,16 @@ private:
     bool canDeleteOrigin(const String& originIdentifier);
     void willDeleteOrigin(const String& originIdentifier);
     void willDeleteAllOrigins();
-    static void deleteOriginOnMainThread(void* originIdentifier);
 
     void originFilePaths(Vector<String>& paths);
     
     void setIsActive(bool);
+
+    // Sync to disk on background thread.
+    void syncDeleteAllOrigins();
+    void syncDeleteOrigin(const String& originIdentifier);
+    void syncSetOriginDetails(const String& originIdentifier, const String& databaseFile);
+    void syncImportOriginIdentifiers();
 
     // Mutex for m_database and m_storageDirectoryPath.
     Mutex m_databaseMutex;

@@ -89,12 +89,7 @@ public:
     ShadowRootIfShadowDOMEnabledOrNode* ensureShadowRoot(Element* host, ExceptionCode&);
     ShadowRootIfShadowDOMEnabledOrNode* createShadowRoot(Element* host, ExceptionCode&);
     ShadowRootIfShadowDOMEnabledOrNode* shadowRoot(Element* host, ExceptionCode&);
-    ShadowRootIfShadowDOMEnabledOrNode* youngestShadowRoot(Element* host, ExceptionCode&);
-    ShadowRootIfShadowDOMEnabledOrNode* oldestShadowRoot(Element* host, ExceptionCode&);
-    ShadowRootIfShadowDOMEnabledOrNode* youngerShadowRoot(Node* shadow, ExceptionCode&);
-    ShadowRootIfShadowDOMEnabledOrNode* olderShadowRoot(Node* shadow, ExceptionCode&);
     String shadowRootType(const Node*, ExceptionCode&) const;
-    bool hasShadowInsertionPoint(const Node*, ExceptionCode&) const;
     bool hasContentElement(const Node*, ExceptionCode&) const;
     size_t countElementShadow(const Node*, ExceptionCode&) const;
     Element* includerFor(Node*, ExceptionCode&);
@@ -103,6 +98,7 @@ public:
 
     // CSS Animation testing.
     unsigned numberOfActiveAnimations() const;
+    bool animationsAreSuspended(Document*, ExceptionCode&) const;
     void suspendAnimations(Document*, ExceptionCode&) const;
     void resumeAnimations(Document*, ExceptionCode&) const;
     bool pauseAnimationAtTimeOnElement(const String& animationName, double pauseTime, Element*, ExceptionCode&);
@@ -327,6 +323,8 @@ public:
     PassRefPtr<TimeRanges> createTimeRanges(Float32Array* startTimes, Float32Array* endTimes);
     double closestTimeToTimeRanges(double time, TimeRanges*);
 #endif
+
+    PassRefPtr<ClientRect> selectionBounds(ExceptionCode&);
 
 private:
     explicit Internals(Document*);

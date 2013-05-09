@@ -317,6 +317,8 @@ webkit_settings_set_user_agent
 webkit_settings_set_user_agent_with_application_details
 webkit_settings_get_enable_smooth_scrolling
 webkit_settings_set_enable_smooth_scrolling
+webkit_settings_get_enable_accelerated_2d_canvas
+webkit_settings_set_enable_accelerated_2d_canvas
 
 <SUBSECTION Standard>
 WebKitSettingsClass
@@ -804,6 +806,7 @@ webkit_uri_scheme_request_get_uri
 webkit_uri_scheme_request_get_path
 webkit_uri_scheme_request_get_web_view
 webkit_uri_scheme_request_finish
+webkit_uri_scheme_request_finish_error
 
 <SUBSECTION Standard>
 WebKitURISchemeRequestClass

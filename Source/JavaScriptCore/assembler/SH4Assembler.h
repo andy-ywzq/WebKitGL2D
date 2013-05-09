@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2013 Cisco Systems, Inc. All rights reserved.
  * Copyright (C) 2009-2011 STMicroelectronics. All rights reserved.
  * Copyright (C) 2008 Apple Inc. All rights reserved.
  *
@@ -114,7 +115,9 @@ enum {
     MOVL_READ_OFFPC_OPCODE = 0xd000,
     MOVL_READ_OFFRM_OPCODE = 0x5000,
     MOVW_WRITE_RN_OPCODE = 0x2001,
+    MOVW_WRITE_R0RN_OPCODE = 0x0005,
     MOVW_READ_RM_OPCODE = 0x6001,
+    MOVW_READ_RMINC_OPCODE = 0x6005,
     MOVW_READ_R0RM_OPCODE = 0x000d,
     MOVW_READ_OFFRM_OPCODE = 0x8500,
     MOVW_READ_OFFPC_OPCODE = 0x9000,
@@ -545,28 +548,14 @@ public:
         oneShortOp(opc);
     }
 
-    void shllRegReg(RegisterID dst, RegisterID rShift)
+    void shldRegReg(RegisterID dst, RegisterID rShift)
     {
-        uint16_t opc = getOpcodeGroup1(SHLD_OPCODE, dst, rShift);
-        oneShortOp(opc);
+        oneShortOp(getOpcodeGroup1(SHLD_OPCODE, dst, rShift));
     }
 
-    void shlrRegReg(RegisterID dst, RegisterID rShift)
+    void shadRegReg(RegisterID dst, RegisterID rShift)
     {
-        neg(rShift, rShift);
-        shllRegReg(dst, rShift);
-    }
-
-    void sharRegReg(RegisterID dst, RegisterID rShift)
-    {
-        neg(rShift, rShift);
-        shaRegReg(dst, rShift);
-    }
-
-    void shaRegReg(RegisterID dst, RegisterID rShift)
-    {
-        uint16_t opc = getOpcodeGroup1(SHAD_OPCODE, dst, rShift);
-        oneShortOp(opc);
+        oneShortOp(getOpcodeGroup1(SHAD_OPCODE, dst, rShift));
     }
 
     void shlrImm8r(int imm, RegisterID dst)
@@ -583,6 +572,28 @@ public:
             break;
         case 16:
             oneShortOp(getOpcodeGroup2(SHLR16_OPCODE, dst));
+            break;
+        default:
+            RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+
+    void shalImm8r(int imm, RegisterID dst)
+    {
+        switch (imm) {
+        case 1:
+            oneShortOp(getOpcodeGroup2(SHAL_OPCODE, dst));
+            break;
+        default:
+            RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+
+    void sharImm8r(int imm, RegisterID dst)
+    {
+        switch (imm) {
+        case 1:
+            oneShortOp(getOpcodeGroup2(SHAR_OPCODE, dst));
             break;
         default:
             RELEASE_ASSERT_NOT_REACHED();
@@ -1028,6 +1039,12 @@ public:
         oneShortOp(opc);
     }
 
+    void movwMemRegIn(RegisterID base, RegisterID dst)
+    {
+        uint16_t opc = getOpcodeGroup1(MOVW_READ_RMINC_OPCODE, dst, base);
+        oneShortOp(opc);
+    }
+
     void movwPCReg(int offset, RegisterID base, RegisterID dst)
     {
         ASSERT(base == SH4Registers::pc);
@@ -1048,6 +1065,12 @@ public:
     void movwR0mr(RegisterID src, RegisterID dst)
     {
         uint16_t opc = getOpcodeGroup1(MOVW_READ_R0RM_OPCODE, dst, src);
+        oneShortOp(opc);
+    }
+
+    void movwRegMemr0(RegisterID src, RegisterID dst)
+    {
+        uint16_t opc = getOpcodeGroup1(MOVW_WRITE_R0RN_OPCODE, dst, src);
         oneShortOp(opc);
     }
 
@@ -1114,6 +1137,18 @@ public:
     void movbMemReg(RegisterID src, RegisterID dst)
     {
         uint16_t opc = getOpcodeGroup1(MOVB_READ_RM_OPCODE, dst, src);
+        oneShortOp(opc);
+    }
+
+    void movbMemRegIn(RegisterID base, RegisterID dst)
+    {
+        uint16_t opc = getOpcodeGroup1(MOVB_READ_RMINC_OPCODE, dst, base);
+        oneShortOp(opc);
+    }
+
+    void movbRegMemr0(RegisterID src, RegisterID dst)
+    {
+        uint16_t opc = getOpcodeGroup1(MOVB_WRITE_R0RN_OPCODE, dst, src);
         oneShortOp(opc);
     }
 
@@ -1371,7 +1406,7 @@ public:
 
     static SH4Buffer::TwoShorts placeConstantPoolBarrier(int offset)
     {
-        ASSERT(((offset >> 1) <=2047) && ((offset >> 1) >= -2048));
+        ASSERT(((offset >> 1) <= 2047) && ((offset >> 1) >= -2048));
 
         SH4Buffer::TwoShorts m_barrier;
         m_barrier.high = (BRA_OPCODE | (offset >> 1));
@@ -1462,6 +1497,36 @@ public:
     }
 
     // Linking & patching
+
+    static ptrdiff_t maxJumpReplacementSize()
+    {
+        return sizeof(SH4Word) * 6;
+    }
+
+    static void replaceWithJump(void *instructionStart, void *to)
+    {
+        SH4Word* instruction = reinterpret_cast<SH4Word*>(instructionStart);
+        intptr_t difference = reinterpret_cast<intptr_t>(to) - (reinterpret_cast<intptr_t>(instruction) + 2 * sizeof(SH4Word));
+        int nbinst = 0;
+
+        if ((difference >= -4096) && (difference <= 4094)) {
+            instruction[0] = getOpcodeGroup6(BRA_OPCODE, difference >> 1);
+            instruction[1] = NOP_OPCODE;
+            cacheFlush(instruction, sizeof(SH4Word) * 2);
+            return;
+        }
+
+        instruction[nbinst++] = getOpcodeGroup3(MOVL_READ_OFFPC_OPCODE, scratchReg2, 1);
+        instruction[nbinst++] = getOpcodeGroup2(JMP_OPCODE, scratchReg2);
+        instruction[nbinst++] = NOP_OPCODE;
+
+        if (!(reinterpret_cast<unsigned>(instruction) & 3))
+            instruction[nbinst++] = NOP_OPCODE;
+
+        instruction[nbinst++] = reinterpret_cast<unsigned>(to) & 0xffff;
+        instruction[nbinst++] = reinterpret_cast<unsigned>(to) >> 16;
+        cacheFlush(instruction, sizeof(SH4Word) * nbinst);
+    }
 
     static void revertJump(void* instructionStart, SH4Word imm)
     {
@@ -1906,8 +1971,14 @@ public:
         case MOVW_READ_RM_OPCODE:
             format = "    MOV.W @R%d, R%d\n";
             break;
+        case MOVW_READ_RMINC_OPCODE:
+            format = "    MOV.W @R%d+, R%d\n";
+            break;
         case MOVW_READ_R0RM_OPCODE:
             format = "    MOV.W @(R0, R%d), R%d\n";
+            break;
+        case MOVW_WRITE_R0RN_OPCODE:
+            format = "    MOV.W R%d, @(R0, R%d)\n";
             break;
         case EXTUB_OPCODE:
             format = "    EXTU.B R%d, R%d\n";

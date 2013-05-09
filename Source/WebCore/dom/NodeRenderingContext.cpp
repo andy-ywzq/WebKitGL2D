@@ -33,7 +33,6 @@
 #include "HTMLContentElement.h"
 #include "HTMLInputElement.h"
 #include "HTMLNames.h"
-#include "HTMLShadowElement.h"
 #include "Node.h"
 #include "PseudoElement.h"
 #include "RenderFullScreen.h"
@@ -297,7 +296,7 @@ void NodeRenderingContext::createRendererForTextIfNeeded()
     Document* document = textNode->document();
 
     if (resetStyleInheritance())
-        m_style = document->styleResolver()->defaultStyleForElement();
+        m_style = document->ensureStyleResolver()->defaultStyleForElement();
     else
         m_style = parentRenderer->style();
 

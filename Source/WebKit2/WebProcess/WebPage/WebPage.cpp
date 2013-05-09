@@ -39,6 +39,7 @@
 #include "LayerTreeHost.h"
 #include "NetscapePlugin.h"
 #include "NotificationPermissionRequestManager.h"
+#include "PageBanner.h"
 #include "PageOverlay.h"
 #include "PluginProxy.h"
 #include "PluginView.h"
@@ -424,6 +425,11 @@ WebPage::~WebPage()
     for (HashSet<PluginView*>::const_iterator it = m_pluginViews.begin(), end = m_pluginViews.end(); it != end; ++it)
         (*it)->webPageDestroyed();
 
+    if (m_headerBanner)
+        m_headerBanner->detachFromPage();
+    if (m_footerBanner)
+        m_footerBanner->detachFromPage();
+
     WebProcess::shared().removeMessageReceiver(Messages::WebPage::messageReceiverName(), m_pageID);
 
     // FIXME: This should be done in the object destructors, and the objects themselves should be message receivers.
@@ -550,8 +556,7 @@ PassRefPtr<Plugin> WebPage::createPlugin(WebFrame* frame, HTMLPlugInElement* plu
     if (pluginPath.isNull()) {
 #if PLATFORM(MAC)
         String path = parameters.url.path();
-        if ((parameters.mimeType == "application/pdf" || parameters.mimeType == "application/postscript")
-            || (parameters.mimeType.isEmpty() && (path.endsWith(".pdf", false) || path.endsWith(".ps", false)))) {
+        if (MIMETypeRegistry::isPDFOrPostScriptMIMEType(parameters.mimeType) || (parameters.mimeType.isEmpty() && (path.endsWith(".pdf", false) || path.endsWith(".ps", false)))) {
 #if ENABLE(PDFKIT_PLUGIN)
             if (shouldUsePDFPlugin())
                 return PDFPlugin::create(frame);
@@ -1404,6 +1409,38 @@ void WebPage::uninstallPageOverlay(PageOverlay* pageOverlay, bool shouldFadeOut)
     m_drawingArea->didUninstallPageOverlay(pageOverlay);
 }
 
+void WebPage::setHeaderPageBanner(PassRefPtr<PageBanner> pageBanner)
+{
+    if (m_headerBanner)
+        m_headerBanner->detachFromPage();
+
+    m_headerBanner = pageBanner;
+
+    if (m_headerBanner)
+        m_headerBanner->addToPage(PageBanner::Header, this);
+}
+
+PageBanner* WebPage::headerPageBanner()
+{
+    return m_headerBanner.get();
+}
+
+void WebPage::setFooterPageBanner(PassRefPtr<PageBanner> pageBanner)
+{
+    if (m_footerBanner)
+        m_footerBanner->detachFromPage();
+
+    m_footerBanner = pageBanner;
+
+    if (m_footerBanner)
+        m_footerBanner->addToPage(PageBanner::Footer, this);
+}
+
+PageBanner* WebPage::footerPageBanner()
+{
+    return m_footerBanner.get();
+}
+
 PassRefPtr<WebImage> WebPage::scaledSnapshotWithOptions(const IntRect& rect, double scaleFactor, SnapshotOptions options)
 {
     FrameView* frameView = m_mainFrame->coreFrame()->view();
@@ -1594,6 +1631,11 @@ void WebPage::mouseEvent(const WebMouseEvent& mouseEvent)
                 break;
     }
 
+    if (!handled && m_headerBanner)
+        handled = m_headerBanner->mouseEvent(mouseEvent);
+    if (!handled && m_footerBanner)
+        handled = m_footerBanner->mouseEvent(mouseEvent);
+
     if (!handled && canHandleUserEvents()) {
         CurrentEvent currentEvent(mouseEvent);
 
@@ -1619,6 +1661,10 @@ void WebPage::mouseEventSyncForTesting(const WebMouseEvent& mouseEvent, bool& ha
             if ((handled = (*it)->mouseEvent(mouseEvent)))
                 break;
     }
+    if (!handled && m_headerBanner)
+        handled = m_headerBanner->mouseEvent(mouseEvent);
+    if (!handled && m_footerBanner)
+        handled = m_footerBanner->mouseEvent(mouseEvent);
 
     if (!handled) {
         CurrentEvent currentEvent(mouseEvent);
@@ -2660,7 +2706,7 @@ void WebPage::mayPerformUploadDragDestinationAction()
 
 WebUndoStep* WebPage::webUndoStep(uint64_t stepID)
 {
-    return m_undoStepMap.get(stepID).get();
+    return m_undoStepMap.get(stepID);
 }
 
 void WebPage::addWebUndoStep(uint64_t stepID, WebUndoStep* entry)
@@ -3723,7 +3769,7 @@ bool WebPage::canPluginHandleResponse(const ResourceResponse& response)
     String pluginPath;
     String newMIMEType;
     uint32_t pluginLoadPolicy;
-    
+
     if (!sendSync(Messages::WebPageProxy::FindPlugin(response.mimeType(), response.url().string(), response.url().string(), response.url().string()), Messages::WebPageProxy::FindPlugin::Reply(pluginPath, newMIMEType, pluginLoadPolicy)))
         return false;
 
@@ -3887,7 +3933,7 @@ void WebPage::addTextCheckingRequest(uint64_t requestID, PassRefPtr<TextChecking
 
 void WebPage::didFinishCheckingText(uint64_t requestID, const Vector<TextCheckingResult>& result)
 {
-    TextCheckingRequest* request = m_pendingTextCheckingRequestMap.get(requestID).get();
+    TextCheckingRequest* request = m_pendingTextCheckingRequestMap.get(requestID);
     if (!request)
         return;
 
@@ -3897,7 +3943,7 @@ void WebPage::didFinishCheckingText(uint64_t requestID, const Vector<TextCheckin
 
 void WebPage::didCancelCheckingText(uint64_t requestID)
 {
-    TextCheckingRequest* request = m_pendingTextCheckingRequestMap.get(requestID).get();
+    TextCheckingRequest* request = m_pendingTextCheckingRequestMap.get(requestID);
     if (!request)
         return;
 
@@ -3907,22 +3953,26 @@ void WebPage::didCancelCheckingText(uint64_t requestID)
 
 void WebPage::didCommitLoad(WebFrame* frame)
 {
+    if (!frame->isMainFrame())
+        return;
+
     // If previous URL is invalid, then it's not a real page that's being navigated away from.
     // Most likely, this is actually the first load to be committed in this page.
-    if (frame->isMainFrame() && frame->coreFrame()->loader()->previousURL().isValid())
+    if (frame->coreFrame()->loader()->previousURL().isValid())
         reportUsedFeatures();
 
     // Only restore the scale factor for standard frame loads (of the main frame).
-    if (frame->isMainFrame() && frame->coreFrame()->loader()->loadType() == FrameLoadTypeStandard) {
+    if (frame->coreFrame()->loader()->loadType() == FrameLoadTypeStandard) {
         Page* page = frame->coreFrame()->page();
         if (page && page->pageScaleFactor() != 1)
             scalePage(1, IntPoint());
     }
 
 #if ENABLE(PRIMARY_SNAPSHOTTED_PLUGIN_HEURISTIC)
-    if (frame->isMainFrame())
-        resetPrimarySnapshottedPlugIn();
+    resetPrimarySnapshottedPlugIn();
 #endif
+
+    WebProcess::shared().updateActivePages();
 }
 
 void WebPage::didFinishLoad(WebFrame* frame)
@@ -3948,7 +3998,11 @@ static int primarySnapshottedPlugInMinimumHeight = 300;
 #if ENABLE(PRIMARY_SNAPSHOTTED_PLUGIN_HEURISTIC)
 void WebPage::determinePrimarySnapshottedPlugInTimerFired()
 {
-    if (!m_page->settings()->snapshotAllPlugIns() && m_page->settings()->primaryPlugInSnapshotDetectionEnabled())
+    if (!m_page)
+        return;
+    
+    Settings* settings = m_page->settings();
+    if (!settings->snapshotAllPlugIns() && settings->primaryPlugInSnapshotDetectionEnabled())
         determinePrimarySnapshottedPlugIn();
 }
 #endif

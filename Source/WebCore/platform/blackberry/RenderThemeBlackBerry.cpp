@@ -43,6 +43,8 @@
 namespace WebCore {
 
 // Sizes (unit px)
+const float progressMinWidth = 16;
+const float progressTextureUnitWidth = 9.0;
 const float mediaControlsHeight = 44;
 const float mediaBackButtonHeight = 33;
 // Scale exit-fullscreen button size.
@@ -1076,6 +1078,73 @@ double RenderThemeBlackBerry::animationRepeatIntervalForProgressBar(RenderProgre
 double RenderThemeBlackBerry::animationDurationForProgressBar(RenderProgress* renderProgress) const
 {
     return renderProgress->isDeterminate() ? 0.0 : 2.0;
+}
+
+bool RenderThemeBlackBerry::paintProgressTrackRect(const PaintInfo& info, const IntRect& rect, Image* image)
+{
+    ASSERT(info.context);
+    info.context->save();
+    GraphicsContext* context = info.context;
+    drawThreeSliceHorizontal(context, rect, image, mediumSlice);
+    context->restore();
+    return false;
+}
+
+static void drawProgressTexture(GraphicsContext* gc, const FloatRect& rect, int n, Image* image)
+{
+    if (!image)
+        return;
+    float finalTexturePercentage = (int(rect.width()) % int(progressTextureUnitWidth)) / progressTextureUnitWidth;
+    FloatSize dstSlice(progressTextureUnitWidth, rect.height() - 2);
+    FloatRect srcRect(1, 2, image->width() - 2, image->height() - 4);
+    FloatRect dstRect(FloatPoint(rect.location().x() + 1, rect.location().y() + 1), dstSlice);
+
+    for (int i = 0; i < n; i++) {
+        gc->drawImage(image, ColorSpaceDeviceRGB, dstRect, srcRect);
+        dstRect.move(dstSlice.width(), 0);
+    }
+    if (finalTexturePercentage) {
+        srcRect.setWidth(srcRect.width() * finalTexturePercentage * finalTexturePercentage);
+        dstRect.setWidth(dstRect.width() * finalTexturePercentage * finalTexturePercentage);
+        gc->drawImage(image, ColorSpaceDeviceRGB, dstRect, srcRect);
+    }
+}
+
+bool RenderThemeBlackBerry::paintProgressBar(RenderObject* object, const PaintInfo& info, const IntRect& rect)
+{
+    if (!object->isProgress())
+        return true;
+
+    RenderProgress* renderProgress = toRenderProgress(object);
+
+    static Image* progressTrack = Image::loadPlatformResource("core_progressindicator_bg").leakRef();
+    static Image* progressBar = Image::loadPlatformResource("core_progressindicator_progress").leakRef();
+    static Image* progressPattern = Image::loadPlatformResource("core_progressindicator_pattern").leakRef();
+    static Image* progressComplete = Image::loadPlatformResource("core_progressindicator_complete").leakRef();
+
+    paintProgressTrackRect(info, rect, progressTrack);
+
+    IntRect progressRect = rect;
+    progressRect.setX(progressRect.x() + 1);
+    progressRect.setHeight(progressRect.height() - 2);
+    progressRect.setY(progressRect.y() + 1);
+
+    if (renderProgress->isDeterminate())
+        progressRect.setWidth((progressRect.width() - progressMinWidth) * renderProgress->position() + progressMinWidth - 2);
+    else {
+        // Animating
+        progressRect.setWidth(progressRect.width() - 2);
+    }
+
+    if (renderProgress->position() < 1) {
+        paintProgressTrackRect(info, progressRect, progressBar);
+        int loop = floor((progressRect.width() - 2) / progressTextureUnitWidth);
+        progressRect.setWidth(progressRect.width() - 2);
+        drawProgressTexture(info.context, progressRect, loop, progressPattern);
+    } else
+        paintProgressTrackRect(info, progressRect, progressComplete);
+
+    return false;
 }
 
 Color RenderThemeBlackBerry::platformActiveTextSearchHighlightColor() const

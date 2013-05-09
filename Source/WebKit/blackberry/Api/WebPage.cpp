@@ -671,12 +671,12 @@ private:
     }
 };
 
-void WebPagePrivate::load(const BlackBerry::Platform::String& url, const BlackBerry::Platform::String& networkToken, const BlackBerry::Platform::String& method, Platform::NetworkRequest::CachePolicy cachePolicy, const char* data, size_t dataLength, const char* const* headers, size_t headersLength, bool isInitial, bool mustHandleInternally, bool needReferer, bool forceDownload, const BlackBerry::Platform::String& overrideContentType, const BlackBerry::Platform::String& suggestedSaveName)
+void WebPagePrivate::load(const Platform::NetworkRequest& netReq, bool needReferer)
 {
     stopCurrentLoad();
     DeferredTaskLoadManualScript::finishOrCancel(this);
 
-    String urlString(url);
+    String urlString(netReq.getUrlRef());
     if (urlString.startsWith("vs:", false)) {
         urlString = urlString.substring(3);
         m_mainFrame->setInViewSourceMode(true);
@@ -693,30 +693,25 @@ void WebPagePrivate::load(const BlackBerry::Platform::String& url, const BlackBe
         return;
     }
 
-    if (isInitial)
-        NetworkManager::instance()->setInitialURL(kurl);
-
     ResourceRequest request(kurl);
-    request.setToken(networkToken);
-    if (isInitial || mustHandleInternally)
-        request.setMustHandleInternally(true);
-    request.setHTTPMethod(method);
-    request.setCachePolicy(toWebCoreCachePolicy(cachePolicy));
-    if (!overrideContentType.empty())
-        request.setOverrideContentType(overrideContentType);
+    request.setHTTPMethod(netReq.getMethodRef());
+    request.setCachePolicy(toWebCoreCachePolicy(netReq.getCachePolicy()));
+    if (!netReq.getOverrideContentType().empty())
+        request.setOverrideContentType(netReq.getOverrideContentType());
 
-    if (data)
-        request.setHTTPBody(FormData::create(data, dataLength));
+    Platform::NetworkRequest::HeaderList& list = netReq.getHeaderListRef();
+    if (!list.empty()) {
+        for (unsigned i = 0; i < list.size(); i++)
+            request.addHTTPHeaderField(list[i].first.c_str(), list[i].second.c_str());
+    }
 
-    for (unsigned i = 0; i + 1 < headersLength; i += 2)
-        request.addHTTPHeaderField(headers[i], headers[i + 1]);
     if (needReferer && focusedOrMainFrame() && focusedOrMainFrame()->document())
         request.addHTTPHeaderField("Referer", focusedOrMainFrame()->document()->url().string().utf8().data());
 
-    if (forceDownload)
+    if (Platform::NetworkRequest::TargetIsDownload == netReq.getTargetType())
         request.setForceDownload(true);
-
-    request.setSuggestedSaveName(suggestedSaveName);
+    if (!netReq.getSuggestedSaveName().empty())
+        request.setSuggestedSaveName(netReq.getSuggestedSaveName());
 
     m_mainFrame->loader()->load(FrameLoadRequest(m_mainFrame, request));
 }
@@ -729,18 +724,15 @@ void WebPage::loadFile(const BlackBerry::Platform::String& path, const BlackBerr
     else if (!fileUrl.startsWith("file:///"))
         return;
 
-    d->load(fileUrl, BlackBerry::Platform::String::emptyString(), BlackBerry::Platform::String("GET", 3), Platform::NetworkRequest::UseProtocolCachePolicy, 0, 0, 0, 0, false, false, false, false, overrideContentType.c_str());
+    Platform::NetworkRequest netRequest;
+    netRequest.setRequestUrl(path);
+    netRequest.setOverrideContentType(overrideContentType);
+    d->load(netRequest, false);
 }
 
-void WebPage::load(const Platform::NetworkRequest& request, bool needReferer, bool forceDownload)
+void WebPage::load(const Platform::NetworkRequest& request, bool needReferer)
 {
-    vector<const char*> headers;
-    Platform::NetworkRequest::HeaderList& list = request.getHeaderListRef();
-    for (unsigned i = 0; i < list.size(); i++) {
-        headers.push_back(list[i].first.c_str());
-        headers.push_back(list[i].second.c_str());
-    }
-    d->load(request.getUrlRef(), BlackBerry::Platform::String::emptyString(), "GET", Platform::NetworkRequest::UseProtocolCachePolicy, 0, 0, headers.empty() ? 0 : &headers[0], headers.size(), false, false, needReferer, forceDownload, BlackBerry::Platform::String::emptyString(), request.getSuggestedSaveName());
+    d->load(request, needReferer);
 }
 
 void WebPagePrivate::loadString(const BlackBerry::Platform::String& string, const BlackBerry::Platform::String& baseURL, const BlackBerry::Platform::String& contentType, const BlackBerry::Platform::String& failingURL)
@@ -1112,11 +1104,12 @@ void WebPagePrivate::setLoadState(LoadState state)
             } else {
                 Platform::IntSize virtualViewport = recomputeVirtualViewportFromViewportArguments();
                 m_webPage->setVirtualViewportSize(virtualViewport);
-                if (m_shouldUseFixedDesktopMode)
-                    setViewMode(FixedDesktop);
-                else
-                    setViewMode(Desktop);
             }
+
+            if (m_shouldUseFixedDesktopMode)
+                setViewMode(FixedDesktop);
+            else
+                setViewMode(Desktop);
 
 #if ENABLE(EVENT_MODE_METATAGS)
             didReceiveCursorEventMode(ProcessedCursorEvents);
@@ -1556,8 +1549,7 @@ void WebPagePrivate::overflowExceedsContentsSize()
 void WebPagePrivate::layoutFinished()
 {
     // If a layout change has occurred, we need to invalidate any current spellcheck requests and trigger a new run.
-    m_inputHandler->stopPendingSpellCheckRequests();
-    m_inputHandler->spellCheckTextBlock();
+    m_inputHandler->stopPendingSpellCheckRequests(true /* isRestartRequired */);
 
     if (!m_contentsSizeChanged && !m_overflowExceedsContentsSize)
         return;
@@ -3933,6 +3925,9 @@ bool WebPagePrivate::handleMouseEvent(PlatformMouseEvent& mouseEvent)
 
         // Fat fingers can deal with shadow content.
         node = lastFatFingersResult.node(FatFingersResult::ShadowContentNotAllowed);
+
+        // Save mouse event state for later. This allows us to know why some responses have occurred, namely selection changes.
+        m_touchEventHandler->m_userTriggeredTouchPressOnTextInput = mouseEvent.type() == WebCore::PlatformEvent::MousePressed && lastFatFingersResult.isTextInput();
     }
 
     if (!node) {
@@ -4280,11 +4275,6 @@ void WebPage::setSpellCheckingEnabled(bool enabled)
         d->m_inputHandler->stopPendingSpellCheckRequests();
 }
 
-void WebPage::spellCheckingRequestCancelled(int32_t transactionId)
-{
-    d->m_inputHandler->spellCheckingRequestCancelled(transactionId);
-}
-
 void WebPage::spellCheckingRequestProcessed(int32_t transactionId, spannable_string_t* spannableString)
 {
     d->m_inputHandler->spellCheckingRequestProcessed(transactionId, spannableString);
@@ -4430,6 +4420,11 @@ void WebPage::setParagraphExpansionPixelScrollMargin(const Platform::IntSize& sc
     // Transform from pixel to document coordinates.
     Platform::IntSize documentScrollMargin = d->m_webkitThreadViewportAccessor->roundToDocumentFromPixelContents(Platform::IntRect(Platform::IntPoint(), scrollMargin)).size();
     d->m_selectionHandler->setParagraphExpansionScrollMargin(documentScrollMargin);
+}
+
+void WebPage::setSelectionDocumentViewportSize(const Platform::IntSize& selectionDocumentViewportSize)
+{
+    d->m_selectionHandler->setSelectionViewportSize(selectionDocumentViewportSize);
 }
 
 BackingStore* WebPage::backingStore() const
@@ -5226,7 +5221,7 @@ Platform::IntPoint WebPage::adjustDocumentScrollPosition(const Platform::IntPoin
 
 Platform::IntSize WebPage::fixedElementSizeDelta()
 {
-    ASSERT(userInterfaceThreadMessageClient()->isCurrentThread());
+    ASSERT(Platform::userInterfaceThreadMessageClient()->isCurrentThread());
 
     // Traverse the layer tree and find the fixed element rect if there is one.
     IntRect fixedElementRect;
@@ -5936,6 +5931,10 @@ void WebPagePrivate::didChangeSettings(WebSettings* webSettings)
     updateBackgroundColor(webSettings->backgroundColor());
 
     m_page->setDeviceScaleFactor(webSettings->devicePixelRatio());
+
+#if ENABLE(TEXT_AUTOSIZING)
+    coreSettings->setTextAutosizingEnabled(webSettings->isTextAutosizingEnabled());
+#endif
 }
 
 BlackBerry::Platform::String WebPage::textHasAttribute(const BlackBerry::Platform::String& query) const

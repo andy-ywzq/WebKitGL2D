@@ -76,7 +76,7 @@ static const char* gPlaybinName = "playbin2";
 static const gint64 gPercentMax = 100;
 #endif
 
-GST_DEBUG_CATEGORY_STATIC(webkit_media_player_debug);
+GST_DEBUG_CATEGORY_EXTERN(webkit_media_player_debug);
 #define GST_CAT_DEFAULT webkit_media_player_debug
 
 using namespace std;
@@ -299,10 +299,6 @@ void MediaPlayerPrivateGStreamer::load(const String& url)
     m_player->readyStateChanged();
     m_volumeAndMuteInitialized = false;
 
-    // GStreamer needs to have the pipeline set to a paused state to
-    // start providing anything useful.
-    gst_element_set_state(m_playBin.get(), GST_STATE_PAUSED);
-
     if (!m_delayingLoad)
         commitLoad();
 }
@@ -318,6 +314,11 @@ void MediaPlayerPrivateGStreamer::commitLoad()
 {
     ASSERT(!m_delayingLoad);
     LOG_MEDIA_MESSAGE("Committing load.");
+
+    // GStreamer needs to have the pipeline set to a paused state to
+    // start providing anything useful.
+    gst_element_set_state(m_playBin.get(), GST_STATE_PAUSED);
+
     updateStates();
 }
 

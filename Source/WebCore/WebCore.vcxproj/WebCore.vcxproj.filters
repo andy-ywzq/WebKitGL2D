@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="DerivedSources">
@@ -4329,9 +4329,6 @@
     <ClCompile Include="..\html\shadow\ContentDistributor.cpp">
       <Filter>html\shadow</Filter>
     </ClCompile>
-    <ClCompile Include="..\html\shadow\ContentSelectorQuery.cpp">
-      <Filter>html\shadow</Filter>
-    </ClCompile>
     <ClCompile Include="..\html\shadow\DateTimeEditElement.cpp">
       <Filter>html\shadow</Filter>
     </ClCompile>
@@ -4351,9 +4348,6 @@
       <Filter>html\shadow</Filter>
     </ClCompile>
     <ClCompile Include="..\html\shadow\HTMLContentElement.cpp">
-      <Filter>html\shadow</Filter>
-    </ClCompile>
-    <ClCompile Include="..\html\shadow\HTMLShadowElement.cpp">
       <Filter>html\shadow</Filter>
     </ClCompile>
     <ClCompile Include="..\html\shadow\InsertionPoint.cpp">
@@ -5996,9 +5990,6 @@
       <Filter>DerivedSources</Filter>
     </ClCompile>
     <ClCompile Include="$(ConfigurationBuildDir)\obj32\$(ProjectName)\DerivedSources\JSHTMLSelectElement.cpp">
-      <Filter>DerivedSources</Filter>
-    </ClCompile>
-    <ClCompile Include="$(ConfigurationBuildDir)\obj32\$(ProjectName)\DerivedSources\JSHTMLShadowElement.cpp">
       <Filter>DerivedSources</Filter>
     </ClCompile>
     <ClCompile Include="$(ConfigurationBuildDir)\obj32\$(ProjectName)\DerivedSources\JSHTMLSourceElement.cpp">
@@ -9132,9 +9123,6 @@
     <ClInclude Include="..\css\ShadowValue.h">
       <Filter>css</Filter>
     </ClInclude>
-    <ClInclude Include="..\css\SiblingTraversalStrategies.h">
-      <Filter>css</Filter>
-    </ClInclude>
     <ClInclude Include="..\css\StyleInvalidationAnalysis.h">
       <Filter>css</Filter>
     </ClInclude>
@@ -11280,9 +11268,6 @@
     <ClInclude Include="..\html\shadow\ContentDistributor.h">
       <Filter>html\shadow</Filter>
     </ClInclude>
-    <ClInclude Include="..\html\shadow\ContentSelectorQuery.h">
-      <Filter>html\shadow</Filter>
-    </ClInclude>
     <ClInclude Include="..\html\shadow\DateTimeEditElement.h">
       <Filter>html\shadow</Filter>
     </ClInclude>
@@ -11302,9 +11287,6 @@
       <Filter>html\shadow</Filter>
     </ClInclude>
     <ClInclude Include="..\html\shadow\HTMLContentElement.h">
-      <Filter>html\shadow</Filter>
-    </ClInclude>
-    <ClInclude Include="..\html\shadow\HTMLShadowElement.h">
       <Filter>html\shadow</Filter>
     </ClInclude>
     <ClInclude Include="..\html\shadow\InsertionPoint.h">
@@ -13532,9 +13514,6 @@
     <ClInclude Include="$(ConfigurationBuildDir)\obj32\$(ProjectName)\DerivedSources\JSHTMLSelectElement.h">
       <Filter>DerivedSources</Filter>
     </ClInclude>
-    <ClInclude Include="$(ConfigurationBuildDir)\obj32\$(ProjectName)\DerivedSources\JSHTMLShadowElement.h">
-      <Filter>DerivedSources</Filter>
-    </ClInclude>
     <ClInclude Include="$(ConfigurationBuildDir)\obj32\$(ProjectName)\DerivedSources\JSHTMLSourceElement.h">
       <Filter>DerivedSources</Filter>
     </ClInclude>
@@ -15216,6 +15195,9 @@
     </None>
     <None Include="..\inspector\front-end\cm\xml.js">
       <Filter>inspector\front-end</Filter>
+    </None>
+    <None Include="..\Resources\plugIns.js">
+      <Filter>Resources</Filter>
     </None>
     <None Include="WebCorePostBuild.cmd" />
     <None Include="WebCorePreBuild.cmd" />

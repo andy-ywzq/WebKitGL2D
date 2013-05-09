@@ -34,6 +34,7 @@
 #include "CachedResourceLoader.h"
 #include "Chrome.h"
 #include "ChromeClient.h"
+#include "DOMWindow.h"
 #include "DocumentMarkerController.h"
 #include "EventHandler.h"
 #include "FloatRect.h"
@@ -477,10 +478,12 @@ void FrameView::setFrameRect(const IntRect& newRect)
     }
 #endif
 
+    Document* document = m_frame ? m_frame->document() : 0;
+
     // Viewport-dependent media queries may cause us to need completely different style information.
-    if (m_frame->document()->styleResolver()->affectedByViewportChange()) {
-        m_frame->document()->styleResolverChanged(DeferRecalcStyle);
-        InspectorInstrumentation::mediaQueryResultChanged(m_frame->document());
+    if (document && document->styleResolverIfExists() && document->styleResolverIfExists()->affectedByViewportChange()) {
+        document->styleResolverChanged(DeferRecalcStyle);
+        InspectorInstrumentation::mediaQueryResultChanged(document);
     }
 
     if (renderView && !renderView->printing()) {
@@ -2757,8 +2760,7 @@ void FrameView::performPostLayoutTasks()
     // with didLayout(LayoutMilestones).
     m_frame->loader()->client()->dispatchDidLayout();
 
-    RenderView* renderView = this->renderView();
-    if (renderView)
+    if (RenderView* renderView = this->renderView())
         renderView->updateWidgetPositions();
     
     for (unsigned i = 0; i < maxUpdateWidgetsIterations; i++) {
@@ -2772,8 +2774,10 @@ void FrameView::performPostLayoutTasks()
     }
 
 #if USE(ACCELERATED_COMPOSITING)
-    if (renderView && renderView->usesCompositing())
-        renderView->compositor()->frameViewDidLayout();
+    if (RenderView* renderView = this->renderView()) {
+        if (renderView->usesCompositing())
+            renderView->compositor()->frameViewDidLayout();
+    }
 #endif
 
     scrollToAnchor();
@@ -2785,16 +2789,21 @@ void FrameView::dispatchResizeEvent()
 {
     ASSERT(m_frame);
 
-    m_frame->eventHandler()->dispatchResizeEvent();
+    Page* page = m_frame->page();
+    bool isMainFrame = page && page->mainFrame() == m_frame;
+    bool canSendResizeEventSynchronously = isMainFrame && !isInLayout();
+
+    // If we resized during layout, queue up a resize event for later, otherwise fire it right away.
+    RefPtr<Event> resizeEvent = Event::create(eventNames().resizeEvent, false, false);
+    if (canSendResizeEventSynchronously)
+        m_frame->document()->dispatchWindowEvent(resizeEvent.release(), m_frame->document()->domWindow());
+    else
+        m_frame->document()->enqueueWindowEvent(resizeEvent.release());
 
 #if ENABLE(INSPECTOR)
-    if (InspectorInstrumentation::hasFrontends()) {
-        if (Page* page = m_frame->page()) {
-            if (page->mainFrame() == m_frame) {
-                if (InspectorClient* inspectorClient = page->inspectorController()->inspectorClient())
-                    inspectorClient->didResizeMainFrame(m_frame.get());
-            }
-        }
+    if (InspectorInstrumentation::hasFrontends() && isMainFrame) {
+        if (InspectorClient* inspectorClient = page ? page->inspectorController()->inspectorClient() : 0)
+            inspectorClient->didResizeMainFrame(m_frame.get());
     }
 #endif
 }

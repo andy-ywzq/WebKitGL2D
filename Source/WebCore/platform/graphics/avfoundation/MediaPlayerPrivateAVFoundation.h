@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, 2012 Apple Inc. All rights reserved.
+ * Copyright (C) 2011, 2012, 2013 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -40,9 +40,7 @@ class InbandTextTrackPrivateAVF;
 class GenericCueData;
 
 class MediaPlayerPrivateAVFoundation : public MediaPlayerPrivateInterface
-#if HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
     , public AVFInbandTrackParent
-#endif
 {
 public:
 
@@ -56,11 +54,9 @@ public:
     virtual void seekCompleted(bool);
     virtual void didEnd();
     virtual void contentsNeedsDisplay() { }
-#if HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
     virtual void configureInbandTracks();
     virtual void setCurrentTrack(InbandTextTrackPrivateAVF*) { }
-    virtual InbandTextTrackPrivateAVF* currentTrack() { return 0; }
-#endif
+    virtual InbandTextTrackPrivateAVF* currentTrack() const = 0;
 
     class Notification {
     public:
@@ -266,10 +262,8 @@ protected:
 
     virtual String engineDescription() const { return "AVFoundation"; }
 
-#if HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
     virtual void trackModeChanged() OVERRIDE;
     Vector<RefPtr<InbandTextTrackPrivateAVF> > m_textTracks;
-#endif
     
 private:
     MediaPlayer* m_player;
@@ -306,9 +300,7 @@ private:
     bool m_ignoreLoadStateChanges;
     bool m_haveReportedFirstVideoFrame;
     bool m_playWhenFramesAvailable;
-#if HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
     bool m_inbandTrackConfigurationPending;
-#endif
 };
 
 } // namespace WebCore

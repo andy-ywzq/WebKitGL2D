@@ -620,17 +620,12 @@ namespace WTF {
         template<typename U> void append(const U*, size_t);
         template<typename U> void append(const U&);
         template<typename U> void uncheckedAppend(const U& val);
-        template<size_t otherCapacity> void append(const Vector<T, otherCapacity>&);
         template<typename U, size_t otherCapacity> void appendVector(const Vector<U, otherCapacity>&);
         template<typename U> bool tryAppend(const U*, size_t);
 
         template<typename U> void insert(size_t position, const U*, size_t);
         template<typename U> void insert(size_t position, const U&);
         template<typename U, size_t c> void insert(size_t position, const Vector<U, c>&);
-
-        template<typename U> void prepend(const U*, size_t);
-        template<typename U> void prepend(const U&);
-        template<typename U, size_t c> void prepend(const Vector<U, c>&);
 
         void remove(size_t position);
         void remove(size_t position, size_t length);
@@ -1062,15 +1057,6 @@ namespace WTF {
         ++m_size;
     }
 
-    // This method should not be called append, a better name would be appendElements.
-    // It could also be eliminated entirely, and call sites could just use
-    // appendRange(val.begin(), val.end()).
-    template<typename T, size_t inlineCapacity, typename OverflowHandler> template<size_t otherCapacity>
-    inline void Vector<T, inlineCapacity, OverflowHandler>::append(const Vector<T, otherCapacity>& val)
-    {
-        append(val.begin(), val.size());
-    }
-
     template<typename T, size_t inlineCapacity, typename OverflowHandler> template<typename U, size_t otherCapacity>
     inline void Vector<T, inlineCapacity, OverflowHandler>::appendVector(const Vector<U, otherCapacity>& val)
     {
@@ -1118,24 +1104,6 @@ namespace WTF {
         insert(position, val.begin(), val.size());
     }
 
-    template<typename T, size_t inlineCapacity, typename OverflowHandler> template<typename U>
-    void Vector<T, inlineCapacity, OverflowHandler>::prepend(const U* data, size_t dataSize)
-    {
-        insert(0, data, dataSize);
-    }
-
-    template<typename T, size_t inlineCapacity, typename OverflowHandler> template<typename U>
-    inline void Vector<T, inlineCapacity, OverflowHandler>::prepend(const U& val)
-    {
-        insert(0, val);
-    }
-   
-    template<typename T, size_t inlineCapacity, typename OverflowHandler> template<typename U, size_t c>
-    inline void Vector<T, inlineCapacity, OverflowHandler>::prepend(const Vector<U, c>& val)
-    {
-        insert(0, val.begin(), val.size());
-    }
-    
     template<typename T, size_t inlineCapacity, typename OverflowHandler>
     inline void Vector<T, inlineCapacity, OverflowHandler>::remove(size_t position)
     {

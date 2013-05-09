@@ -1513,16 +1513,6 @@ webkit.org/b/115292 fast/block/float/overhanging-tall-block.html
 webkit.org/b/115292 fast/events/clientXY-in-zoom-and-scroll.html
 webkit.org/b/115292 fast/events/constructors/mouse-event-constructor.html
 webkit.org/b/115292 fast/events/constructors/wheel-event-constructor.html
-webkit.org/b/115292 fast/exclusions/shape-inside/shape-inside-circle-padding.html
-webkit.org/b/115292 fast/exclusions/shape-inside/shape-inside-circle.html
-webkit.org/b/115292 fast/exclusions/shape-inside/shape-inside-ellipse-padding.html
-webkit.org/b/115292 fast/exclusions/shape-inside/shape-inside-ellipse.html
-webkit.org/b/115292 fast/exclusions/shape-inside/shape-inside-polygon-layout.html
-webkit.org/b/115292 fast/exclusions/shape-inside/shape-inside-polygon-padding-002.html
-webkit.org/b/115292 fast/exclusions/shape-inside/shape-inside-polygon-padding-003.html
-webkit.org/b/115292 fast/exclusions/shape-inside/shape-inside-rounded-rectangle-fit-002.html
-webkit.org/b/115292 fast/exclusions/shape-outside-floats/shape-outside-floats-diamond-margin-polygon.html
-webkit.org/b/115292 fast/exclusions/shape-outside-floats/shape-outside-floats-ellipse-margin-left.html
 webkit.org/b/115292 fast/exclusions/shape-outside-floats/shape-outside-floats-non-zero-y.html
 webkit.org/b/115292 fast/exclusions/shape-outside-floats/shape-outside-floats-simple-circle.html
 webkit.org/b/115292 fast/exclusions/shape-outside-floats/shape-outside-floats-simple-ellipse.html
@@ -1547,6 +1537,3 @@ webkit.org/b/115292 fast/writing-mode/japanese-ruby-vertical-lr.html
 webkit.org/b/115292 fast/writing-mode/japanese-ruby-vertical-rl.html
 webkit.org/b/115292 fast/writing-mode/vertical-baseline-alignment.html
 webkit.org/b/115292 fast/writing-mode/vertical-font-fallback.html
-
-# REGRESSION (r149287?): Assertion failure in fast/frames/flattening/iframe-flattening-crash.html
-webkit.org/b/115386 [ Debug ] fast/frames/flattening/iframe-flattening-crash.html [ Skip ]

@@ -575,10 +575,6 @@
 			>
 		</File>
 		<File
-			RelativePath="..\wtf\AlwaysInline.h"
-			>
-		</File>
-		<File
 			RelativePath="..\wtf\ArrayBuffer.cpp"
 			>
 		</File>
@@ -819,6 +815,14 @@
 			>
 		</File>
 		<File
+			RelativePath="..\wtf\FunctionDispatcher.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\wtf\FunctionDispatcher.h"
+			>
+		</File>
+		<File
 			RelativePath="..\wtf\Functional.h"
 			>
 		</File>
@@ -884,10 +888,6 @@
 		</File>
 		<File
 			RelativePath="..\wtf\ListHashSet.h"
-			>
-		</File>
-		<File
-			RelativePath="..\wtf\ListRefPtr.h"
 			>
 		</File>
 		<File

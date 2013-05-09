@@ -86,6 +86,7 @@
 #include <wtf/text/StringHash.h>
 
 #if ENABLE(NETWORK_INFO)
+#include "WebNetworkInfoManager.h"
 #include "WebNetworkInfoManagerMessages.h"
 #endif
 
@@ -112,6 +113,10 @@
 
 #if ENABLE(SQL_DATABASE)
 #include "WebDatabaseManager.h"
+#endif
+
+#if ENABLE(BATTERY_STATUS)
+#include "WebBatteryManager.h"
 #endif
 
 #if ENABLE(NETWORK_PROCESS)
@@ -160,12 +165,6 @@ WebProcess::WebProcess()
     , m_networkAccessManager(0)
 #endif
     , m_textCheckerState()
-#if ENABLE(BATTERY_STATUS)
-    , m_batteryManager(this)
-#endif
-#if ENABLE(NETWORK_INFO)
-    , m_networkInfoManager(this)
-#endif
     , m_iconDatabaseProxy(new WebIconDatabaseProxy(this))
 #if ENABLE(NETWORK_PROCESS)
     , m_usesNetworkProcess(false)
@@ -206,6 +205,12 @@ WebProcess::WebProcess()
 #endif
 #if ENABLE(CUSTOM_PROTOCOLS)
     addSupplement<CustomProtocolManager>();
+#endif
+#if ENABLE(BATTERY_STATUS)
+    addSupplement<WebBatteryManager>();
+#endif
+#if ENABLE(NETWORK_INFO)
+    addSupplement<WebNetworkInfoManager>();
 #endif
 }
 
@@ -543,7 +548,7 @@ WebPage* WebProcess::focusedWebPage() const
     
 WebPage* WebProcess::webPage(uint64_t pageID) const
 {
-    return m_pageMap.get(pageID).get();
+    return m_pageMap.get(pageID);
 }
 
 void WebProcess::createWebPage(uint64_t pageID, const WebPageCreationParameters& parameters)
@@ -694,7 +699,7 @@ WebPageGroupProxy* WebProcess::webPageGroup(PageGroup* pageGroup)
 
 WebPageGroupProxy* WebProcess::webPageGroup(uint64_t pageGroupID)
 {
-    return m_pageGroupMap.get(pageGroupID).get();
+    return m_pageGroupMap.get(pageGroupID);
 }
 
 WebPageGroupProxy* WebProcess::webPageGroup(const WebPageGroupData& pageGroupData)
@@ -865,8 +870,12 @@ void WebProcess::resetPlugInAutoStartOriginHashes(const HashMap<unsigned, double
     m_plugInAutoStartOriginHashes.swap(const_cast<HashMap<unsigned, double>&>(hashes));
 }
 
-void WebProcess::plugInDidReceiveUserInteraction(unsigned plugInOriginHash)
+void WebProcess::plugInDidReceiveUserInteraction(const String& pageOrigin, const String& pluginOrigin, const String& mimeType)
 {
+    if (pageOrigin.isEmpty())
+        return;
+
+    unsigned plugInOriginHash = hashForPlugInOrigin(pageOrigin, pluginOrigin, mimeType);
     if (!plugInOriginHash)
         return;
 
@@ -1033,8 +1042,6 @@ NetworkProcessConnection* WebProcess::networkConnection()
 
 void WebProcess::networkProcessConnectionClosed(NetworkProcessConnection* connection)
 {
-    // FIXME (NetworkProcess): How do we handle not having the connection when the WebProcess needs it?
-    // If the NetworkProcess crashed, for example.  Do we respawn it?
     ASSERT(m_networkProcessConnection);
     ASSERT(m_networkProcessConnection == connection);
 
@@ -1123,6 +1130,11 @@ void WebProcess::initializeSandbox(const ChildProcessInitializationParameters&, 
 void WebProcess::platformInitializeProcess(const ChildProcessInitializationParameters&)
 {
 }
+
+void WebProcess::updateActivePages()
+{
+}
+
 #endif
     
 void WebProcess::pageDidEnterWindow(WebPage*)

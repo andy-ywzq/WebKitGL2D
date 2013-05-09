@@ -165,9 +165,14 @@ GraphicsContext3D::~GraphicsContext3D()
     }
 }
 
-PlatformGraphicsContext3D GraphicsContext3D::platformGraphicsContext3D()
+PlatformGraphicsContext3D GraphicsContext3D::platformGraphicsContext3D() const
 {
     return m_private->platformGraphicsContext3D();
+}
+
+Platform3DObject GraphicsContext3D::platformTexture() const
+{
+    return m_texture;
 }
 
 #if USE(ACCELERATED_COMPOSITING)

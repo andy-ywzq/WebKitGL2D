@@ -85,7 +85,6 @@
 #include "RuntimeEnabledFeatures.h"
 #include "SchemeRegistry.h"
 #include "ScrollingCoordinator.h"
-#include "SelectRuleFeatureSet.h"
 #include "SerializedScriptValue.h"
 #include "Settings.h"
 #include "ShadowRoot.h"
@@ -402,69 +401,26 @@ Node* Internals::parentTreeScope(Node* node, ExceptionCode& ec)
     return parentTreeScope ? parentTreeScope->rootNode() : 0;
 }
 
-bool Internals::hasSelectorForIdInShadow(Element* host, const String& idValue, ExceptionCode& ec)
-{
-    if (!host || !host->shadow()) {
-        ec = INVALID_ACCESS_ERR;
-        return 0;
-    }
-
-    return host->shadow()->distributor().ensureSelectFeatureSet(host->shadow()).hasSelectorForId(idValue);
-}
-
-bool Internals::hasSelectorForClassInShadow(Element* host, const String& className, ExceptionCode& ec)
-{
-    if (!host || !host->shadow()) {
-        ec = INVALID_ACCESS_ERR;
-        return 0;
-    }
-
-    return host->shadow()->distributor().ensureSelectFeatureSet(host->shadow()).hasSelectorForClass(className);
-}
-
-bool Internals::hasSelectorForAttributeInShadow(Element* host, const String& attributeName, ExceptionCode& ec)
-{
-    if (!host || !host->shadow()) {
-        ec = INVALID_ACCESS_ERR;
-        return 0;
-    }
-
-    return host->shadow()->distributor().ensureSelectFeatureSet(host->shadow()).hasSelectorForAttribute(attributeName);
-}
-
-bool Internals::hasSelectorForPseudoClassInShadow(Element* host, const String& pseudoClass, ExceptionCode& ec)
-{
-    if (!host || !host->shadow()) {
-        ec = INVALID_ACCESS_ERR;
-        return 0;
-    }
-
-    const SelectRuleFeatureSet& featureSet = host->shadow()->distributor().ensureSelectFeatureSet(host->shadow());
-    if (pseudoClass == "checked")
-        return featureSet.hasSelectorForChecked();
-    if (pseudoClass == "enabled")
-        return featureSet.hasSelectorForEnabled();
-    if (pseudoClass == "disabled")
-        return featureSet.hasSelectorForDisabled();
-    if (pseudoClass == "indeterminate")
-        return featureSet.hasSelectorForIndeterminate();
-    if (pseudoClass == "link")
-        return featureSet.hasSelectorForLink();
-    if (pseudoClass == "target")
-        return featureSet.hasSelectorForTarget();
-    if (pseudoClass == "visited")
-        return featureSet.hasSelectorForVisited();
-
-    ASSERT_NOT_REACHED();
-    return false;
-}
-
 unsigned Internals::numberOfActiveAnimations() const
 {
     Frame* contextFrame = frame();
     if (AnimationController* controller = contextFrame->animation())
         return controller->numberOfActiveAnimations(contextFrame->document());
     return 0;
+}
+
+bool Internals::animationsAreSuspended(Document* document, ExceptionCode& ec) const
+{
+    if (!document || !document->frame()) {
+        ec = INVALID_ACCESS_ERR;
+        return false;
+    }
+
+    AnimationController* controller = document->frame()->animation();
+    if (!controller)
+        return false;
+
+    return controller->isSuspended();
 }
 
 void Internals::suspendAnimations(Document* document, ExceptionCode& ec) const
@@ -555,15 +511,6 @@ bool Internals::pauseTransitionAtTimeOnPseudoElement(const String& property, dou
     }
 
     return frame()->animation()->pauseTransitionAtTime(pseudoElement->renderer(), property, pauseTime);
-}
-
-bool Internals::hasShadowInsertionPoint(const Node* root, ExceptionCode& ec) const
-{
-    if (root && root->isShadowRoot())
-        return ScopeContentDistribution::hasShadowElement(toShadowRoot(root));
-
-    ec = INVALID_ACCESS_ERR;
-    return 0;
 }
 
 bool Internals::hasContentElement(const Node* root, ExceptionCode& ec) const
@@ -698,7 +645,7 @@ Internals::ShadowRootIfShadowDOMEnabledOrNode* Internals::ensureShadowRoot(Eleme
     }
 
     if (ElementShadow* shadow = host->shadow())
-        return shadow->youngestShadowRoot();
+        return shadow->shadowRoot();
 
     return host->createShadowRoot(ec).get();
 }
@@ -714,53 +661,13 @@ Internals::ShadowRootIfShadowDOMEnabledOrNode* Internals::createShadowRoot(Eleme
 
 Internals::ShadowRootIfShadowDOMEnabledOrNode* Internals::shadowRoot(Element* host, ExceptionCode& ec)
 {
-    // FIXME: Internals::shadowRoot() in tests should be converted to youngestShadowRoot() or oldestShadowRoot().
-    // https://bugs.webkit.org/show_bug.cgi?id=78465
-    return youngestShadowRoot(host, ec);
-}
-
-Internals::ShadowRootIfShadowDOMEnabledOrNode* Internals::youngestShadowRoot(Element* host, ExceptionCode& ec)
-{
     if (!host) {
         ec = INVALID_ACCESS_ERR;
         return 0;
     }
-
     if (ElementShadow* shadow = host->shadow())
-        return shadow->youngestShadowRoot();
+        return shadow->shadowRoot();
     return 0;
-}
-
-Internals::ShadowRootIfShadowDOMEnabledOrNode* Internals::oldestShadowRoot(Element* host, ExceptionCode& ec)
-{
-    if (!host) {
-        ec = INVALID_ACCESS_ERR;
-        return 0;
-    }
-
-    if (ElementShadow* shadow = host->shadow())
-        return shadow->oldestShadowRoot();
-    return 0;
-}
-
-Internals::ShadowRootIfShadowDOMEnabledOrNode* Internals::youngerShadowRoot(Node* shadow, ExceptionCode& ec)
-{
-    if (!shadow || !shadow->isShadowRoot()) {
-        ec = INVALID_ACCESS_ERR;
-        return 0;
-    }
-
-    return toShadowRoot(shadow)->youngerShadowRoot();
-}
-
-Internals::ShadowRootIfShadowDOMEnabledOrNode* Internals::olderShadowRoot(Node* shadow, ExceptionCode& ec)
-{
-    if (!shadow || !shadow->isShadowRoot()) {
-        ec = INVALID_ACCESS_ERR;
-        return 0;
-    }
-
-    return toShadowRoot(shadow)->olderShadowRoot();
 }
 
 String Internals::shadowRootType(const Node* root, ExceptionCode& ec) const
@@ -2296,5 +2203,16 @@ double Internals::closestTimeToTimeRanges(double time, TimeRanges* ranges)
     return ranges->nearest(time);
 }
 #endif
+
+PassRefPtr<ClientRect> Internals::selectionBounds(ExceptionCode& ec)
+{
+    Document* document = contextDocument();
+    if (!document || !document->frame() || !document->frame()->selection()) {
+        ec = INVALID_ACCESS_ERR;
+        return ClientRect::create();
+    }
+
+    return ClientRect::create(document->frame()->selection()->bounds());
+}
 
 }

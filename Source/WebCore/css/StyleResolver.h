@@ -22,7 +22,6 @@
 #ifndef StyleResolver_h
 #define StyleResolver_h
 
-#include "CSSRuleList.h"
 #include "CSSToStyleMap.h"
 #include "CSSValueList.h"
 #include "DocumentRuleSets.h"
@@ -36,7 +35,6 @@
 #include "ScrollTypes.h"
 #include "SelectorChecker.h"
 #include "SelectorFilter.h"
-#include "SiblingTraversalStrategies.h"
 #include "StyleInheritedData.h"
 #include "StyleScopeResolver.h"
 #include "ViewportStyleResolver.h"
@@ -67,7 +65,6 @@ class CSSImageValue;
 class CSSPageRule;
 class CSSPrimitiveValue;
 class CSSProperty;
-class CSSRuleList;
 class CSSSelector;
 class CSSStyleSheet;
 class CSSValue;
@@ -92,7 +89,6 @@ class RenderScrollbar;
 class RuleData;
 class RuleSet;
 class Settings;
-class StaticCSSRuleList;
 class StyleCustomFilterProgramCache;
 class StyleScopeResolver;
 class StyleImage;
@@ -252,8 +248,8 @@ public:
         AllButEmptyCSSRules = UAAndUserCSSRules | AuthorCSSRules | CrossOriginCSSRules,
         AllCSSRules         = AllButEmptyCSSRules | EmptyCSSRules,
     };
-    PassRefPtr<CSSRuleList> styleRulesForElement(Element*, unsigned rulesToInclude = AllButEmptyCSSRules);
-    PassRefPtr<CSSRuleList> pseudoStyleRulesForElement(Element*, PseudoId, unsigned rulesToInclude = AllButEmptyCSSRules);
+    Vector<RefPtr<StyleRuleBase> > styleRulesForElement(Element*, unsigned rulesToInclude = AllButEmptyCSSRules);
+    Vector<RefPtr<StyleRuleBase> > pseudoStyleRulesForElement(Element*, PseudoId, unsigned rulesToInclude = AllButEmptyCSSRules);
 
     // Given a CSS keyword in the range (xx-small to -webkit-xxx-large), this function will return
     // the correct font size scaled relative to the user's default (medium).
@@ -671,7 +667,7 @@ inline bool checkRegionSelector(const CSSSelector* regionSelector, Element* regi
     for (const CSSSelector* s = regionSelector; s; s = CSSSelectorList::next(s)) {
         SelectorChecker::SelectorCheckingContext selectorCheckingContext(s, regionElement, SelectorChecker::VisitedMatchDisabled);
         PseudoId ignoreDynamicPseudo = NOPSEUDO;
-        if (selectorChecker.match(selectorCheckingContext, ignoreDynamicPseudo, DOMSiblingTraversalStrategy()) == SelectorChecker::SelectorMatches)
+        if (selectorChecker.match(selectorCheckingContext, ignoreDynamicPseudo) == SelectorChecker::SelectorMatches)
             return true;
     }
     return false;

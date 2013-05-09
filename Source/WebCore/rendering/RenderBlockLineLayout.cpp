@@ -42,7 +42,6 @@
 #include "TrailingFloatsRootInlineBox.h"
 #include "VerticalPositionCache.h"
 #include "break_lines.h"
-#include <wtf/AlwaysInline.h>
 #include <wtf/RefCountedLeakCounter.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/Vector.h>
@@ -1349,7 +1348,7 @@ static inline void constructBidiRunsForSegment(InlineBidiResolver& topResolver, 
         // If we encountered any nested isolate runs, just move them
         // to the top resolver's list for later processing.
         if (!isolatedResolver.isolatedRuns().isEmpty()) {
-            topResolver.isolatedRuns().append(isolatedResolver.isolatedRuns());
+            topResolver.isolatedRuns().appendVector(isolatedResolver.isolatedRuns());
             isolatedResolver.isolatedRuns().clear();
         }
     }

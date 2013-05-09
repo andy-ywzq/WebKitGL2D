@@ -26,7 +26,6 @@
 namespace WTF {
 
     template<typename T> class Function;
-    template<typename T> class ListRefPtr;
     template<typename T> class OwnArrayPtr;
     template<typename T> class OwnPtr;
     template<typename T> class PassOwnArrayPtr;
@@ -39,6 +38,7 @@ namespace WTF {
     class ArrayBufferView;
     class AtomicString;
     class AtomicStringImpl;
+    class BinarySemaphore;
     class CString;
     class Decoder;
     class Encoder;
@@ -59,7 +59,6 @@ namespace WTF {
 }
 
 using WTF::Function;
-using WTF::ListRefPtr;
 using WTF::OwnArrayPtr;
 using WTF::OwnPtr;
 using WTF::PassOwnArrayPtr;
@@ -72,6 +71,7 @@ using WTF::ArrayBuffer;
 using WTF::ArrayBufferView;
 using WTF::AtomicString;
 using WTF::AtomicStringImpl;
+using WTF::BinarySemaphore;
 using WTF::CString;
 using WTF::Encoder;
 using WTF::Decoder;

@@ -543,7 +543,7 @@ void CanvasRenderingContext2D::setLineDash(const Vector<float>& dash)
     // Spec requires the concatenation of two copies the dash list when the
     // number of elements is odd
     if (dash.size() % 2)
-        modifiableState().m_lineDash.append(dash);
+        modifiableState().m_lineDash.appendVector(dash);
 
     applyLineDash();
 }
@@ -2063,7 +2063,7 @@ void CanvasRenderingContext2D::setFont(const String& newFont)
     newStyle->font().update(newStyle->font().fontSelector());
 
     // Now map the font property longhands into the style.
-    StyleResolver* styleResolver = canvas()->styleResolver();
+    StyleResolver* styleResolver = canvas()->document()->ensureStyleResolver();
     styleResolver->applyPropertyToStyle(CSSPropertyFontFamily, parsedStyle->getPropertyCSSValue(CSSPropertyFontFamily).get(), newStyle.get());
     styleResolver->applyPropertyToCurrentStyle(CSSPropertyFontStyle, parsedStyle->getPropertyCSSValue(CSSPropertyFontStyle).get());
     styleResolver->applyPropertyToCurrentStyle(CSSPropertyFontVariant, parsedStyle->getPropertyCSSValue(CSSPropertyFontVariant).get());

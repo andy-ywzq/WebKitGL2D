@@ -2,7 +2,6 @@ set(WTF_HEADERS
     ASCIICType.h
     AVLTree.h
     Alignment.h
-    AlwaysInline.h
     Assertions.h
     Atomics.h
     BitArray.h
@@ -30,6 +29,8 @@ set(WTF_HEADERS
     FilePrintStream.h
     FixedArray.h
     Forward.h
+    FunctionDispatcher.h
+    Functional.h
     GetPtr.h
     GregorianDateTime.h
     HashCountedSet.h
@@ -41,7 +42,6 @@ set(WTF_HEADERS
     HashTraits.h
     HexNumber.h
     ListHashSet.h
-    ListRefPtr.h
     Locker.h
     MD5.h
     MainThread.h
@@ -159,6 +159,7 @@ set(WTF_SOURCES
     DynamicAnnotations.cpp
     FastMalloc.cpp
     FilePrintStream.cpp
+    FunctionDispatcher.cpp
     GregorianDateTime.cpp
     HashTable.cpp
     MD5.cpp

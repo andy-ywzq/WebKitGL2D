@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, 2012 Apple Inc. All rights reserved.
+ * Copyright (C) 2011, 2012, 2013 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,6 +37,7 @@
 #import "FrameView.h"
 #import "GraphicsContext.h"
 #import "InbandTextTrackPrivateAVFObjC.h"
+#import "InbandTextTrackPrivateLegacyAVFObjC.h"
 #import "KURL.h"
 #import "Logging.h"
 #import "SecurityOrigin.h"
@@ -115,7 +116,7 @@ SOFT_LINK_CONSTANT(CoreMedia, kCMTimeZero, CMTime)
 #define AVAssetImageGeneratorApertureModeCleanAperture getAVAssetImageGeneratorApertureModeCleanAperture()
 #define AVURLAssetReferenceRestrictionsKey getAVURLAssetReferenceRestrictionsKey()
 
-#if HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
 typedef AVMediaSelectionGroup AVMediaSelectionGroupType;
 typedef AVMediaSelectionOption AVMediaSelectionOptionType;
 
@@ -147,7 +148,7 @@ enum MediaPlayerAVFoundationObservationContext {
     MediaPlayerAVFoundationObservationContextPlayer
 };
 
-#if HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP) && HAVE(AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT)
 @interface WebCoreAVFMovieObserver : NSObject <AVPlayerItemLegibleOutputPushDelegate>
 #else
 @interface WebCoreAVFMovieObserver : NSObject
@@ -163,7 +164,7 @@ enum MediaPlayerAVFoundationObservationContext {
 -(void)seekCompleted:(BOOL)finished;
 -(void)didEnd:(NSNotification *)notification;
 -(void)observeValueForKeyPath:keyPath ofObject:(id)object change:(NSDictionary *)change context:(MediaPlayerAVFoundationObservationContext)context;
-#if HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
 - (void)legibleOutput:(id)output didOutputAttributedStrings:(NSArray *)strings nativeSampleBuffers:(NSArray *)nativeSamples forItemTime:(CMTime)itemTime;
 #endif
 @end
@@ -234,9 +235,7 @@ MediaPlayerPrivateAVFoundationObjC::MediaPlayerPrivateAVFoundationObjC(MediaPlay
 #if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
     , m_loaderDelegate(adoptNS([[WebCoreAVFLoaderDelegate alloc] initWithCallback:this]))
 #endif
-#if HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
     , m_currentTrack(0)
-#endif
 {
 #if ENABLE(ENCRYPTED_MEDIA_V2)
     playerToPrivateMap().set(player, this);
@@ -270,15 +269,16 @@ void MediaPlayerPrivateAVFoundationObjC::cancelLoad()
         m_avAsset = nil;
     }
 
-#if HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
     clearTextTracks();
 
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP) && HAVE(AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT)
     if (m_legibleOutput) {
         if (m_avPlayerItem)
             [m_avPlayerItem.get() removeOutput:m_legibleOutput.get()];
         m_legibleOutput = nil;
     }
 #endif
+
     if (m_avPlayerItem) {
         for (NSString *keyName in itemKVOProperties())
             [m_avPlayerItem.get() removeObserver:m_objcObserver.get() forKeyPath:keyName];
@@ -442,7 +442,7 @@ void MediaPlayerPrivateAVFoundationObjC::createAVPlayer()
     m_avPlayer = adoptNS([[AVPlayer alloc] init]);
     [m_avPlayer.get() addObserver:m_objcObserver.get() forKeyPath:@"rate" options:nil context:(void *)MediaPlayerAVFoundationObservationContextPlayer];
 
-#if HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP) && HAVE(AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT)
     [m_avPlayer.get() setAppliesMediaSelectionCriteriaAutomatically:YES];
 #endif
 
@@ -472,7 +472,7 @@ void MediaPlayerPrivateAVFoundationObjC::createAVPlayerItem()
     if (m_avPlayer)
         [m_avPlayer.get() replaceCurrentItemWithPlayerItem:m_avPlayerItem.get()];
 
-#if HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP) && HAVE(AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT)
     const NSTimeInterval legibleOutputAdvanceInterval = 2;
 
     m_legibleOutput = adoptNS([[AVPlayerItemLegibleOutput alloc] initWithMediaSubtypesForNativeRepresentation:[NSArray array]]);
@@ -638,11 +638,10 @@ void MediaPlayerPrivateAVFoundationObjC::setClosedCaptionsVisible(bool closedCap
     if (!metaDataAvailable())
         return;
 
-#if HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
     UNUSED_PARAM(closedCaptionsVisible);
 #else
     LOG(Media, "MediaPlayerPrivateAVFoundationObjC::setClosedCaptionsVisible(%p) - setting to %s", this, boolString(closedCaptionsVisible));
-    [m_avPlayer.get() setClosedCaptionDisplayEnabled:closedCaptionsVisible];
 #endif
 }
 
@@ -765,6 +764,7 @@ MediaPlayerPrivateAVFoundation::AssetStatus MediaPlayerPrivateAVFoundationObjC::
 
     for (NSString *keyName in assetMetadataKeyNames()) {
         AVKeyValueStatus keyStatus = [m_avAsset.get() statusOfValueForKey:keyName error:nil];
+
         if (keyStatus < AVKeyValueStatusLoaded)
             return MediaPlayerAVAssetStatusLoading;// At least one key is not loaded yet.
         
@@ -979,6 +979,7 @@ void MediaPlayerPrivateAVFoundationObjC::tracksChanged()
     if (!m_avAsset)
         return;
 
+    bool haveCCTrack = false;
     bool hasCaptions = false;
 
     // This is called whenever the tracks collection changes so cache hasVideo and hasAudio since we are
@@ -988,7 +989,7 @@ void MediaPlayerPrivateAVFoundationObjC::tracksChanged()
         // prior to becoming ready to play.
         setHasVideo([[m_avAsset.get() tracksWithMediaCharacteristic:AVMediaCharacteristicVisual] count]);
         setHasAudio([[m_avAsset.get() tracksWithMediaCharacteristic:AVMediaCharacteristicAudible] count]);
-#if !HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
+#if !HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
         hasCaptions = [[m_avAsset.get() tracksWithMediaType:AVMediaTypeClosedCaption] count];
 #endif
     } else {
@@ -1002,23 +1003,32 @@ void MediaPlayerPrivateAVFoundationObjC::tracksChanged()
                     hasVideo = true;
                 else if ([[assetTrack mediaType] isEqualToString:AVMediaTypeAudio])
                     hasAudio = true;
-#if !HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
-                else if ([[assetTrack mediaType] isEqualToString:AVMediaTypeClosedCaption])
+                else if ([[assetTrack mediaType] isEqualToString:AVMediaTypeClosedCaption]) {
+#if !HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
                     hasCaptions = true;
 #endif
+                    haveCCTrack = true;
+                }
             }
         }
         setHasVideo(hasVideo);
         setHasAudio(hasAudio);
     }
 
-#if HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
-    if (!hasCaptions && m_legibleOutput) {
-        AVMediaSelectionGroupType *legibleGroup = safeMediaSelectionGroupForLegibleMedia();
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
+    if (AVMediaSelectionGroupType *legibleGroup = safeMediaSelectionGroupForLegibleMedia()) {
         hasCaptions = [[AVMediaSelectionGroup playableMediaSelectionOptionsFromArray:[legibleGroup options]] count];
+        if (hasCaptions)
+            processMediaSelectionOptions();
     }
-    if (hasCaptions)
-        processTextTracks();
+#endif
+
+#if !HAVE(AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT) && HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
+    if (!hasCaptions && haveCCTrack)
+        processLegacyClosedCaptionsTracks();
+#elif !HAVE(AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT)
+    if (haveCCTrack)
+        processLegacyClosedCaptionsTracks();
 #endif
 
     setHasClosedCaptions(hasCaptions);
@@ -1174,7 +1184,6 @@ void MediaPlayerPrivateAVFoundationObjC::paintWithVideoOutput(GraphicsContext* c
         [ciContext drawImage:image.get() inRect:outputRect fromRect:imageRect];
     }
 }
-
 #endif
 
 #if ENABLE(ENCRYPTED_MEDIA) || ENABLE(ENCRYPTED_MEDIA_V2)
@@ -1318,7 +1327,6 @@ RetainPtr<AVAssetResourceLoadingRequest> MediaPlayerPrivateAVFoundationObjC::tak
 }
 #endif
 
-#if HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
 
 void MediaPlayerPrivateAVFoundationObjC::clearTextTracks()
 {
@@ -1330,22 +1338,87 @@ void MediaPlayerPrivateAVFoundationObjC::clearTextTracks()
     m_textTracks.clear();
 }
 
+#if !HAVE(AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT)
+void MediaPlayerPrivateAVFoundationObjC::processLegacyClosedCaptionsTracks()
+{
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
+    [m_avPlayerItem.get() selectMediaOption:nil inMediaSelectionGroup:safeMediaSelectionGroupForLegibleMedia()];
+#endif
+
+    Vector<RefPtr<InbandTextTrackPrivateAVF> > removedTextTracks = m_textTracks;
+    NSArray *tracks = [m_avPlayerItem.get() tracks];
+    for (AVPlayerItemTrack *playerItemTrack in tracks) {
+
+        AVAssetTrack *assetTrack = [playerItemTrack assetTrack];
+        if (![[assetTrack mediaType] isEqualToString:AVMediaTypeClosedCaption])
+            continue;
+
+        bool newCCTrack = true;
+        for (unsigned i = removedTextTracks.size(); i > 0; --i) {
+            if (!removedTextTracks[i - 1]->isLegacyClosedCaptionsTrack())
+                continue;
+
+            RefPtr<InbandTextTrackPrivateLegacyAVFObjC> track = static_cast<InbandTextTrackPrivateLegacyAVFObjC*>(m_textTracks[i - 1].get());
+            if (track->avPlayerItemTrack() == playerItemTrack) {
+                removedTextTracks.remove(i - 1);
+                newCCTrack = false;
+                break;
+            }
+        }
+
+        if (!newCCTrack)
+            continue;
+        
+        m_textTracks.append(InbandTextTrackPrivateLegacyAVFObjC::create(this, playerItemTrack));
+    }
+
+    processNewAndRemovedTextTracks(removedTextTracks);
+}
+#endif
+
+void MediaPlayerPrivateAVFoundationObjC::processNewAndRemovedTextTracks(const Vector<RefPtr<InbandTextTrackPrivateAVF> >& removedTextTracks)
+{
+    if (removedTextTracks.size()) {
+        for (unsigned i = 0; i < m_textTracks.size(); ++i) {
+            if (!removedTextTracks.contains(m_textTracks[i]))
+                continue;
+            
+            player()->removeTextTrack(removedTextTracks[i].get());
+            m_textTracks.remove(i);
+        }
+    }
+    
+    for (unsigned i = 0; i < m_textTracks.size(); ++i) {
+        RefPtr<InbandTextTrackPrivateAVF> track = m_textTracks[i];
+        
+        track->setTextTrackIndex(i);
+        if (track->hasBeenReported())
+            continue;
+        
+        track->setHasBeenReported(true);
+        player()->addTextTrack(track.get());
+    }
+    LOG(Media, "MediaPlayerPrivateAVFoundationObjC::processNewAndRemovedTextTracks(%p) - found %i text tracks", this, m_textTracks.size());
+    
+}
+
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
 AVMediaSelectionGroupType* MediaPlayerPrivateAVFoundationObjC::safeMediaSelectionGroupForLegibleMedia()
 {
     if (!m_avAsset)
         return nil;
-
+    
     if ([m_avAsset.get() statusOfValueForKey:@"availableMediaCharacteristicsWithMediaSelectionOptions" error:NULL] != AVKeyValueStatusLoaded)
         return nil;
-
+    
     return [m_avAsset.get() mediaSelectionGroupForMediaCharacteristic:AVMediaCharacteristicLegible];
 }
 
-void MediaPlayerPrivateAVFoundationObjC::processTextTracks()
+void MediaPlayerPrivateAVFoundationObjC::processMediaSelectionOptions()
 {
     AVMediaSelectionGroupType *legibleGroup = safeMediaSelectionGroupForLegibleMedia();
     if (!legibleGroup) {
-        LOG(Media, "MediaPlayerPrivateAVFoundationObjC::processTextTracks(%p) - nil mediaSelectionGroup", this);
+        LOG(Media, "MediaPlayerPrivateAVFoundationObjC::processMediaSelectionOptions(%p) - nil mediaSelectionGroup", this);
         return;
     }
 
@@ -1359,6 +1432,9 @@ void MediaPlayerPrivateAVFoundationObjC::processTextTracks()
     for (AVMediaSelectionOptionType *option in legibleOptions) {
         bool newTrack = true;
         for (unsigned i = removedTextTracks.size(); i > 0; --i) {
+             if (removedTextTracks[i - 1]->isLegacyClosedCaptionsTrack())
+                 continue;
+
             RefPtr<InbandTextTrackPrivateAVFObjC> track = static_cast<InbandTextTrackPrivateAVFObjC*>(removedTextTracks[i - 1].get());
             if ([track->mediaSelectionOption() isEqual:option]) {
                 removedTextTracks.remove(i - 1);
@@ -1372,29 +1448,7 @@ void MediaPlayerPrivateAVFoundationObjC::processTextTracks()
         m_textTracks.append(InbandTextTrackPrivateAVFObjC::create(this, option));
     }
 
-    if (removedTextTracks.size()) {
-        for (unsigned i = 0; i < m_textTracks.size(); ++i) {
-            RefPtr<InbandTextTrackPrivateAVF> track = static_cast<InbandTextTrackPrivateAVF*>(m_textTracks[i].get());
-            
-            if (!removedTextTracks.contains(track))
-                continue;
-    
-            player()->removeTextTrack(removedTextTracks[i].get());
-            m_textTracks.remove(i);
-        }
-    }
-
-    for (unsigned i = 0; i < m_textTracks.size(); ++i) {
-        RefPtr<InbandTextTrackPrivateAVF> track = static_cast<InbandTextTrackPrivateAVF*>(m_textTracks[i].get());
-
-        track->setTextTrackIndex(i);
-        if (track->hasBeenReported())
-            continue;
-
-        track->setHasBeenReported(true);
-        player()->addTextTrack(track.get());
-    }
-    LOG(Media, "MediaPlayerPrivateAVFoundationObjC::processTextTracks(%p) - found %i media selection options", this, m_textTracks.size());
+    processNewAndRemovedTextTracks(removedTextTracks);
 }
 
 void MediaPlayerPrivateAVFoundationObjC::processCue(NSArray *attributedStrings, double time)
@@ -1404,26 +1458,32 @@ void MediaPlayerPrivateAVFoundationObjC::processCue(NSArray *attributedStrings, 
 
     m_currentTrack->processCue(reinterpret_cast<CFArrayRef>(attributedStrings), time);
 }
+#endif // HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
 
 void MediaPlayerPrivateAVFoundationObjC::setCurrentTrack(InbandTextTrackPrivateAVF *track)
 {
-    InbandTextTrackPrivateAVFObjC* trackPrivate = static_cast<InbandTextTrackPrivateAVFObjC*>(track);
-    if (m_currentTrack == trackPrivate)
+    if (m_currentTrack == track)
         return;
 
-    AVMediaSelectionOptionType *mediaSelectionOption = trackPrivate ? trackPrivate->mediaSelectionOption() : 0;
+    LOG(Media, "MediaPlayerPrivateAVFoundationObjC::setCurrentTrack(%p) - selecting track %p, language = %s", this, track, track ? track->language().string().utf8().data() : "");
+        
+    m_currentTrack = track;
 
-    LOG(Media, "MediaPlayerPrivateAVFoundationObjC::setCurrentTrack(%p) - selecting media option %p, language = %s", this, mediaSelectionOption, [[[mediaSelectionOption locale] localeIdentifier] UTF8String]);
+    if (track) {
+        if (track->isLegacyClosedCaptionsTrack())
+            [m_avPlayer.get() setClosedCaptionDisplayEnabled:YES];
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
+        else
+            [m_avPlayerItem.get() selectMediaOption:static_cast<InbandTextTrackPrivateAVFObjC*>(track)->mediaSelectionOption() inMediaSelectionGroup:safeMediaSelectionGroupForLegibleMedia()];
+#endif
+    } else {
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
+        [m_avPlayerItem.get() selectMediaOption:0 inMediaSelectionGroup:safeMediaSelectionGroupForLegibleMedia()];
+#endif
+        [m_avPlayer.get() setClosedCaptionDisplayEnabled:NO];
+    }
 
-    [m_avPlayerItem.get() selectMediaOption:mediaSelectionOption inMediaSelectionGroup:safeMediaSelectionGroupForLegibleMedia()];
-    m_currentTrack = trackPrivate;
 }
-
-InbandTextTrackPrivateAVF* MediaPlayerPrivateAVFoundationObjC::currentTrack()
-{
-    return m_currentTrack;
-}
-#endif // HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
 
 String MediaPlayerPrivateAVFoundationObjC::languageOfPrimaryAudioTrack() const
 {
@@ -1433,7 +1493,7 @@ String MediaPlayerPrivateAVFoundationObjC::languageOfPrimaryAudioTrack() const
     if (!m_avPlayerItem.get())
         return emptyString();
 
-#if HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
     // If AVFoundation has an audible group, return the language of the currently selected audible option.
     AVMediaSelectionGroupType *audibleGroup = [m_avAsset.get() mediaSelectionGroupForMediaCharacteristic:AVMediaCharacteristicAudible];
     AVMediaSelectionOptionType *currentlySelectedAudibleOption = [m_avPlayerItem.get() selectedMediaOptionInMediaSelectionGroup:audibleGroup];
@@ -1443,7 +1503,7 @@ String MediaPlayerPrivateAVFoundationObjC::languageOfPrimaryAudioTrack() const
 
         return m_languageOfPrimaryAudioTrack;
     }
-#endif // HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
+#endif // HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
 
     // AVFoundation synthesizes an audible group when there is only one ungrouped audio track if there is also a legible group (one or
     // more in-band text tracks). It doesn't know about out-of-band tracks, so if there is a single audio track return its language.
@@ -1598,7 +1658,7 @@ NSArray* itemKVOProperties()
     }
 }
 
-#if HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
 - (void)legibleOutput:(id)output didOutputAttributedStrings:(NSArray *)strings nativeSampleBuffers:(NSArray *)nativeSamples forItemTime:(CMTime)itemTime
 {
     UNUSED_PARAM(output);

@@ -26,7 +26,7 @@
 #ifndef InbandTextTrackPrivateAVF_h
 #define InbandTextTrackPrivateAVF_h
 
-#if ENABLE(VIDEO) && ((USE(AVFOUNDATION) && HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)) || PLATFORM(IOS))
+#if ENABLE(VIDEO) && (USE(AVFOUNDATION) || PLATFORM(IOS))
 
 #include "InbandTextTrackPrivate.h"
 #include "InbandTextTrackPrivateClient.h"
@@ -62,6 +62,8 @@ public:
     void beginSeeking();
     void endSeeking() { m_seeking = false; }
     bool seeking() const { return m_seeking; }
+    
+    virtual bool isLegacyClosedCaptionsTrack() const = 0;
 
 protected:
     InbandTextTrackPrivateAVF(AVFInbandTrackParent*);
@@ -88,6 +90,6 @@ protected:
 
 } // namespace WebCore
 
-#endif //  ENABLE(VIDEO) && ((USE(AVFOUNDATION) && HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)) || PLATFORM(IOS))
+#endif // ENABLE(VIDEO) && (USE(AVFOUNDATION) || PLATFORM(IOS))
 
 #endif // InbandTextTrackPrivateAVF_h

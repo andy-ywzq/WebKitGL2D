@@ -23,8 +23,8 @@
 ] interface HTMLDocument : Document {
     [Custom] void open();
     void close();
-    [Custom] void write(in [Default=Undefined] optional DOMString text);
-    [Custom] void writeln(in [Default=Undefined] optional DOMString text);
+    [Custom] void write([Default=Undefined] optional DOMString text);
+    [Custom] void writeln([Default=Undefined] optional DOMString text);
 
     readonly attribute HTMLCollection embeds;
     readonly attribute HTMLCollection plugins;
@@ -34,7 +34,7 @@
 
 #if defined(LANGUAGE_JAVASCRIPT) && LANGUAGE_JAVASCRIPT
     // FIXME: This should eventually be available (if they are wanted) for all languages.
-    [Custom, Replaceable, Deletable] attribute HTMLAllCollection all;
+    [Custom, Replaceable, Deletable] readonly attribute HTMLAllCollection all;
 #endif
 
     void clear();

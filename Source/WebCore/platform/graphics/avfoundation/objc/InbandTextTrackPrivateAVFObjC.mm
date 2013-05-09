@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Apple Inc. All rights reserved.
+ * Copyright (C) 2012, 2013 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,7 +25,7 @@
 
 #import "config.h"
 
-#if ENABLE(VIDEO) && USE(AVFOUNDATION) && HAVE(AVFOUNDATION_TEXT_TRACK_SUPPORT)
+#if ENABLE(VIDEO) && USE(AVFOUNDATION) && HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
 
 #import "InbandTextTrackPrivateAVFObjC.h"
 
@@ -34,7 +34,6 @@
 #import "InbandTextTrackPrivate.h"
 #import "InbandTextTrackPrivateAVF.h"
 #import "Logging.h"
-#import "MediaPlayerPrivateAVFoundationObjC.h"
 #import "SoftLinking.h"
 #import <AVFoundation/AVFoundation.h>
 #import <objc/runtime.h>
@@ -42,6 +41,7 @@
 
 
 SOFT_LINK_FRAMEWORK_OPTIONAL(AVFoundation)
+
 #define AVPlayer getAVPlayerClass()
 #define AVPlayerItem getAVPlayerItemClass()
 
@@ -81,7 +81,7 @@ using namespace std;
 
 namespace WebCore {
 
-InbandTextTrackPrivateAVFObjC::InbandTextTrackPrivateAVFObjC(MediaPlayerPrivateAVFoundationObjC* player, AVMediaSelectionOption* selection)
+InbandTextTrackPrivateAVFObjC::InbandTextTrackPrivateAVFObjC(AVFInbandTrackParent* player, AVMediaSelectionOption *selection)
     : InbandTextTrackPrivateAVF(player)
     , m_mediaSelectionOption(selection)
 {
@@ -185,7 +185,6 @@ bool InbandTextTrackPrivateAVFObjC::isDefault() const
 {
     return false;
 }
-   
 
 } // namespace WebCore
 

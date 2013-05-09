@@ -192,25 +192,6 @@ sub AddIncludesForTypeInImpl
     my $isCallback = @_ ? shift : 0;
     
     AddIncludesForType($type, $isCallback, \%implIncludes);
-    
-    # additional includes (things needed to compile the bindings but not the header)
-    if ($type eq "CanvasRenderingContext2D") {
-        $implIncludes{"CanvasGradient.h"} = 1;
-        $implIncludes{"CanvasPattern.h"} = 1;
-        $implIncludes{"CanvasStyle.h"} = 1;
-    }
-
-    if ($type eq "CanvasGradient" or $type eq "XPathNSResolver" or $type eq "MessagePort") {
-        $implIncludes{"<wtf/text/WTFString.h>"} = 1;
-    }
-
-    if ($type eq "Document") {
-        $implIncludes{"NodeFilter.h"} = 1;
-    }
-
-    if ($type eq "MediaQueryListListener") {
-        $implIncludes{"MediaQueryListListener.h"} = 1;
-    }
 }
 
 sub AddIncludesForTypeInHeader
@@ -252,19 +233,6 @@ sub AddIncludesForType
     }
 }
 
-# FIXME: This method will go away once all SVG animated properties are converted to the new scheme.
-sub AddIncludesForSVGAnimatedType
-{
-    my $type = shift;
-    $type =~ s/SVGAnimated//;
-
-    if ($type eq "Point" or $type eq "Rect") {
-        $implIncludes{"Float$type.h"} = 1;
-    } elsif ($type eq "String") {
-        $implIncludes{"<wtf/text/WTFString.h>"} = 1;
-    }
-}
-
 sub AddToImplIncludes
 {
     my $header = shift;
@@ -297,7 +265,7 @@ sub IsScriptProfileType
 sub IsReadonly
 {
     my $attribute = shift;
-    return $attribute->type =~ /readonly/ && !$attribute->signature->extendedAttributes->{"Replaceable"};
+    return $attribute->isReadOnly && !$attribute->signature->extendedAttributes->{"Replaceable"};
 }
 
 sub AddTypedefForScriptProfileType
@@ -687,7 +655,6 @@ sub GenerateHeader
 
     if ($interface->extendedAttributes->{"JSInlineGetOwnPropertySlot"}) {
         $headerIncludes{"<runtime/Lookup.h>"} = 1;
-        $headerIncludes{"<wtf/AlwaysInline.h>"} = 1;
     }
 
     if ($hasParent && $interface->extendedAttributes->{"JSGenerateToNativeObject"}) {
@@ -1555,8 +1522,6 @@ sub GenerateImplementation
 
     # - Add default header template
     push(@implContentHeader, GenerateImplementationContentHeader($interface));
-
-    AddIncludesForSVGAnimatedType($interfaceName) if $className =~ /^JSSVGAnimated/;
 
     $implIncludes{"<wtf/GetPtr.h>"} = 1;
     $implIncludes{"<runtime/PropertyNameArray.h>"} = 1 if $interface->extendedAttributes->{"IndexedGetter"} || $interface->extendedAttributes->{"NumericIndexedGetter"};

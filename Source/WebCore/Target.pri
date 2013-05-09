@@ -761,7 +761,6 @@ SOURCES += \
     html/parser/XSSAuditorDelegate.cpp \
     html/shadow/ClearButtonElement.cpp \
     html/shadow/ContentDistributor.cpp \
-    html/shadow/ContentSelectorQuery.cpp \
     html/shadow/DateTimeEditElement.cpp \
     html/shadow/DateTimeFieldElement.cpp \
     html/shadow/DateTimeFieldElements.cpp \
@@ -769,13 +768,11 @@ SOURCES += \
     html/shadow/DateTimeSymbolicFieldElement.cpp \
     html/shadow/DetailsMarkerControl.cpp \
     html/shadow/HTMLContentElement.cpp \
-    html/shadow/HTMLShadowElement.cpp \
     html/shadow/InsertionPoint.cpp \
     html/shadow/MediaControls.cpp \
     html/shadow/MediaControlsApple.cpp \
     html/shadow/MeterShadowElement.cpp \
     html/shadow/ProgressShadowElement.cpp \
-    html/shadow/SelectRuleFeatureSet.cpp \
     html/shadow/SliderThumbElement.cpp \
     html/shadow/SpinButtonElement.cpp \
     html/shadow/TextControlInnerElements.cpp \
@@ -1567,7 +1564,6 @@ HEADERS += \
     css/RGBColor.h \
     css/SelectorChecker.h \
     css/ShadowValue.h \
-    css/SiblingTraversalStrategies.h \
     css/StyleMedia.h \
     css/StyleInvalidationAnalysis.h \
     css/StylePropertySet.h \
@@ -1951,9 +1947,7 @@ HEADERS += \
     html/parser/XSSAuditor.h \
     html/parser/XSSAuditorDelegate.h \
     html/shadow/ContentDistributor.h \
-    html/shadow/ContentSelectorQuery.h \
     html/shadow/HTMLContentElement.h \
-    html/shadow/HTMLShadowElement.h \
     html/shadow/MediaControlElementTypes.h \
     html/shadow/MediaControlElements.h \
     html/shadow/MediaControls.h \

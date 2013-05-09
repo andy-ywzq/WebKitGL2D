@@ -59,6 +59,7 @@
 #endif
 
 #if PLATFORM(MAC)
+OBJC_CLASS NSObject;
 OBJC_CLASS NSString;
 #endif
 
@@ -74,9 +75,6 @@ struct WebProcessCreationParameters;
     
 typedef GenericCallback<WKDictionaryRef> DictionaryCallback;
 
-#if ENABLE(BATTERY_STATUS)
-class WebBatteryManagerProxy;
-#endif
 #if ENABLE(NETWORK_INFO)
 class WebNetworkInfoManagerProxy;
 #endif
@@ -103,7 +101,7 @@ public:
     template <typename T>
     T* supplement()
     {
-        return static_cast<T*>(m_supplements.get(T::supplementName()).get());
+        return static_cast<T*>(m_supplements.get(T::supplementName()));
     }
 
     template <typename T>
@@ -212,15 +210,7 @@ public:
     WebHistoryClient& historyClient() { return m_historyClient; }
     WebContextClient& client() { return m_client; }
 
-    static HashSet<String, CaseFoldingHash> pdfAndPostScriptMIMETypes();
-
-#if ENABLE(BATTERY_STATUS)
-    WebBatteryManagerProxy* batteryManagerProxy() const { return m_batteryManagerProxy.get(); }
-#endif
     WebIconDatabase* iconDatabase() const { return m_iconDatabase.get(); }
-#if ENABLE(NETWORK_INFO)
-    WebNetworkInfoManagerProxy* networkInfoManagerProxy() const { return m_networkInfoManagerProxy.get(); }
-#endif
 #if ENABLE(NETSCAPE_PLUGIN_API)
     WebPluginSiteDataManager* pluginSiteDataManager() const { return m_pluginSiteDataManager.get(); }
 #endif
@@ -435,13 +425,7 @@ private:
     bool m_memorySamplerEnabled;
     double m_memorySamplerInterval;
 
-#if ENABLE(BATTERY_STATUS)
-    RefPtr<WebBatteryManagerProxy> m_batteryManagerProxy;
-#endif
     RefPtr<WebIconDatabase> m_iconDatabase;
-#if ENABLE(NETWORK_INFO)
-    RefPtr<WebNetworkInfoManagerProxy> m_networkInfoManagerProxy;
-#endif
 #if ENABLE(NETSCAPE_PLUGIN_API)
     RefPtr<WebPluginSiteDataManager> m_pluginSiteDataManager;
 #endif
@@ -456,9 +440,16 @@ private:
 #endif
 
 #if PLATFORM(MAC)
-    RetainPtr<CFTypeRef> m_enhancedAccessibilityObserver;
-    RetainPtr<CFTypeRef> m_customSchemeRegisteredObserver;
-    RetainPtr<CFTypeRef> m_customSchemeUnregisteredObserver;
+    RetainPtr<NSObject> m_enhancedAccessibilityObserver;
+    RetainPtr<NSObject> m_customSchemeRegisteredObserver;
+    RetainPtr<NSObject> m_customSchemeUnregisteredObserver;
+
+    RetainPtr<NSObject> m_automaticTextReplacementNotificationObserver;
+    RetainPtr<NSObject> m_automaticSpellingCorrectionNotificationObserver;
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
+    RetainPtr<NSObject> m_automaticQuoteSubstitutionNotificationObserver;
+    RetainPtr<NSObject> m_automaticDashSubstitutionNotificationObserver;
+#endif
 #endif
 
     String m_overrideDatabaseDirectory;

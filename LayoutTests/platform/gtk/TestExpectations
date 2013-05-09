@@ -354,9 +354,6 @@ webkit.org/b/100137 fast/media/mq-resolution-dpi-dpcm-warning.html [ Failure ]
 # CSS Device Adaptation is not enabled.
 webkit.org/b/95959 css3/device-adapt [ Skip ]
 
-# Requires HighDPI canvas support
-webkit.org/b/102180 fast/canvas/canvas-resize-reset-pixelRatio.html [ Failure ]
-
 # Opera-submitted tests to W3C for <track>, a lot of failures still.
 webkit.org/b/103926 media/track/opera/idl/media-idl-tests.html [ Skip ]
 webkit.org/b/103926 media/track/opera/interfaces/HTMLElement/HTMLMediaElement/crossOrigin.html [ Skip ]
@@ -414,12 +411,7 @@ webkit.org/b/98696 plugins/snapshotting [ Skip ]
 Bug(GTK) [ Debug ] perf [ Skip ]
 
 # Shadow DOM is disabled
-webkit.org/b/115374 fast/css/style-scoped/style-scoped-apply-author-styles.html [ Skip ]
-webkit.org/b/115374 fast/css/style-scoped/style-scoped-change-scoped-in-shadow.html [ Skip ]
-webkit.org/b/115374 fast/css/style-scoped/style-scoped-in-shadow.html [ Skip ]
-webkit.org/b/115374 fast/css/style-scoped/style-scoped-nested.html [ Skip ]
-webkit.org/b/115374 fast/css/style-scoped/style-scoped-with-important-rule.html [ Skip ]
-webkit.org/b/115374 fast/dom/HTMLTemplateElement/cycles-in-shadow.html [ Skip ]
+webkit.org/b/115374 editing/shadow [ Skip ]
 webkit.org/b/115374 fast/dom/shadow [ Skip ]
 
 #////////////////////////////////////////////////////////////////////////////////////////
@@ -646,6 +638,8 @@ webkit.org/b/114735 fast/dynamic/window-resize-scrollbars-test.html [ Failure Pa
 webkit.org/b/114735 svg/filters/filter-hidden-content.svg [ Failure Pass ]
 webkit.org/b/114735 fast/dom/rtl-scroll-to-leftmost-and-resize.html [ Failure Pass ]
 
+webkit.org/b/115630  fast/images/support-broken-image-delegate.html [ Failure Pass ]
+
 #////////////////////////////////////////////////////////////////////////////////////////
 # End of Flaky tests
 #////////////////////////////////////////////////////////////////////////////////////////
@@ -831,7 +825,6 @@ Bug(GTK) fast/encoding/idn-security.html [ Failure ]
 
 # These failures appear to be bugs in the EventSender
 webkit.org/b/53964 fast/forms/listbox-onchange.html [ Failure ]
-webkit.org/b/53964 fast/forms/listbox-selection-2.html [ Failure ]
 webkit.org/b/53964 fast/forms/option-mouseevents.html [ Failure ]
 
 # Probably failing because resizing is asynchronous.
@@ -975,10 +968,6 @@ webkit.org/b/40601 fast/events/mouseup-from-button2.html [ Failure ]
 webkit.org/b/40601 fast/events/right-click-focus.html [ Failure ]
 webkit.org/b/40601 editing/selection/5354455-1.html [ Failure ]
 
-# The middle circle on both rectangles is missing in the pixel output.
-Bug(GTK) svg/custom/circular-marker-reference-2.svg [ Failure ]
-Bug(GTK) svg/custom/non-circular-marker-reference.svg [ Failure ]
-
 # Tests that fail across all platforms.
 # Even though some platforms don't skip these tests, there are platform-specific
 # results generated that make these tests 'pass'.
@@ -1077,7 +1066,7 @@ webkit.org/b/65709 canvas/philip/tests/2d.drawImage.outsidesource.html [ Failure
 webkit.org/b/105693 http/tests/multipart/multipart-wait-before-boundary.html [ Skip ]
 
 # Does not render the rectangle as it should, even though the multiple parts seem to work
-webkit.org/b/54251 http/tests/multipart/invalid-image-data.html [ Timeout ]
+webkit.org/b/54251 http/tests/multipart/invalid-image-data.html [ Failure ]
 
 # Fails because it does not throw a couple of expected exceptions
 Bug(GTK) http/tests/local/fileapi/send-sliced-dragged-file.html [ Failure ]
@@ -1087,8 +1076,6 @@ webkit.org/b/72248 editing/spelling/spelling-unified-emulation.html [ Failure ]
 webkit.org/b/62204 svg/custom/relative-sized-use-without-attributes-on-symbol.xhtml [ Failure ]
 webkit.org/b/62204 svg/custom/use-on-symbol-inside-pattern.svg [ Failure ]
 webkit.org/b/62204 svg/W3C-SVG-1.1/animate-elem-04-t.svg [ Failure ]
-
-webkit.org/b/78673 svg/animations/animate-text-nested-transforms.html [ Failure ]
 
 webkit.org/b/73409 fast/forms/textarea/textarea-placeholder-paint-order.html [ ImageOnlyFailure ]
 webkit.org/b/73409 fast/forms/input-placeholder-paint-order.html [ ImageOnlyFailure ]
@@ -1244,8 +1231,6 @@ webkit.org/b/102776 webkit.org/b/102993 media/media-document-audio-repaint.html 
 webkit.org/b/102776 media/track/track-cue-rendering-horizontal.html [ Failure ]
 webkit.org/b/102776 media/track/track-cue-rendering-vertical.html [ Failure ]
 
-webkit.org/b/103740 editing/selection/caret-alignment-for-vertical-text.html [ Failure ]
-
 webkit.org/b/104054 svg/custom/use-href-update-crash.svg [ Failure ]
 
 webkit.org/b/104680 http/tests/security/xss-DENIED-xml-external-entity.xhtml [ Failure ]
@@ -1280,10 +1265,6 @@ webkit.org/b/107194 storage/indexeddb/dont-commit-on-blocked.html [ Failure ]
 webkit.org/b/107194 storage/indexeddb/pending-version-change-stuck-works-with-terminate.html [ Failure ]
 webkit.org/b/107194 storage/indexeddb/pending-version-change-stuck.html [ Failure ]
 webkit.org/b/107194 storage/indexeddb/transaction-abort.html [ Failure ]
-
-webkit.org/b/105574 editing/input/caret-at-the-edge-of-contenteditable.html [ Failure ]
-webkit.org/b/105574 editing/input/reveal-caret-of-multiline-input.html [ Failure ]
-webkit.org/b/105574 editing/input/reveal-caret-of-multiline-contenteditable.html [ Failure ]
 
 webkit.org/b/106563 fast/css/image-orientation/image-orientation.html [ Failure ]
 
@@ -1373,6 +1354,40 @@ webkit.org/b/105299 webaudio/javascriptaudionode.html [ Failure ]
 
 webkit.org/b/105535 inspector-protocol/nmi-webaudio.html [ Failure ]
 webkit.org/b/105535 inspector-protocol/nmi-webaudio-leak-test.html [ Timeout ]
+
+webkit.org/b/115374 accessibility/corresponding-control-deleted-crash.html [ Failure ]
+webkit.org/b/115374 editing/text-iterator/basic-iteration-shadowdom.html [ Failure ]
+webkit.org/b/115374 fast/css/style-scoped/style-scoped-apply-author-styles.html [ Failure ]
+webkit.org/b/115374 fast/css/style-scoped/style-scoped-change-scoped-in-shadow.html [ Failure ]
+webkit.org/b/115374 fast/css/style-scoped/style-scoped-in-shadow.html [ Failure ]
+webkit.org/b/115374 fast/css/style-scoped/style-scoped-nested.html [ Failure ]
+webkit.org/b/115374 fast/css/style-scoped/style-scoped-with-important-rule.html [ Failure ]
+webkit.org/b/115374 fast/dom/HTMLTemplateElement/cycles-in-shadow.html [ Failure ]
+
+webkit.org/b/115437 css3/flexbox/auto-margins.html [ ImageOnlyFailure ]
+webkit.org/b/115437 fast/css/sticky/sticky-writing-mode-vertical-lr.html [ ImageOnlyFailure ]
+webkit.org/b/115437 fast/exclusions/shape-inside/shape-inside-percentage.html [ ImageOnlyFailure ]
+webkit.org/b/115437 fast/regions/region-content-flown-into-region.html [ ImageOnlyFailure ]
+webkit.org/b/115437 fast/regions/webkit-flow-inlines-inside-regions-bounds-vertical.html [ ImageOnlyFailure ]
+webkit.org/b/115437 fast/regions/webkit-flow-inlines-inside-regions-bounds.html [ ImageOnlyFailure ]
+
+webkit.org/b/115437 fast/text/complex-initial-advance.html [ ImageOnlyFailure ]
+
+webkit.org/b/115440 svg/stroke/animated-non-scaling-stroke.html [ ImageOnlyFailure ]
+
+webkit.org/b/115441 media/video-poster-background.html [ ImageOnlyFailure ]
+
+webkit.org/b/115632 fast/exclusions/shape-inside/shape-inside-polygon-layout.html [ Failure ]
+webkit.org/b/115632 fast/exclusions/shape-outside-floats/shape-outside-floats-diamond-margin-polygon.html [ Failure ]
+webkit.org/b/115632 fast/exclusions/shape-outside-floats/shape-outside-floats-ellipse-margin-left.html [ Failure ]
+webkit.org/b/115632 fast/exclusions/shape-outside-floats/shape-outside-floats-ellipse-margin-right.html [ Failure ]
+
+webkit.org/b/115633 accessibility/meter-element.html [ Failure ]
+
+webkit.org/b/115783 fast/regions/webkit-flow-double-pagination-float-push.html [ ImageOnlyFailure ]
+webkit.org/b/115783 fast/regions/webkit-flow-float-pushed-to-last-region.html [ ImageOnlyFailure ]
+webkit.org/b/115783 fast/regions/webkit-flow-float-unable-to-push.html [ ImageOnlyFailure ]
+webkit.org/b/115783 fast/regions/webkit-flow-floats-inside-regions-bounds.html [ ImageOnlyFailure ]
 
 #////////////////////////////////////////////////////////////////////////////////////////
 # End of Tests failing

@@ -9399,62 +9399,6 @@
 				>
 			</File>
 			<File
-				RelativePath="$(ConfigurationBuildDir)\obj\$(ProjectName)\DerivedSources\JSHTMLShadowElement.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_Cairo_CFLite|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_Cairo_CFLite|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_All|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Production|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="$(ConfigurationBuildDir)\obj\$(ProjectName)\DerivedSources\JSHTMLShadowElement.h"
-				>
-			</File>
-			<File
 				RelativePath="$(ConfigurationBuildDir)\obj\$(ProjectName)\DerivedSources\JSHTMLSourceElement.cpp"
 				>
 				<FileConfiguration
@@ -38663,6 +38607,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Resources\plugIns.js"
+				>
+			</File>
+			<File
 				RelativePath="..\css\PropertySetCSSStyleDeclaration.cpp"
 				>
 			</File>
@@ -38700,10 +38648,6 @@
 			</File>
 			<File
 				RelativePath="..\css\ShadowValue.h"
-				>
-			</File>
-			<File
-				RelativePath="..\css\SiblingTraversalStrategies.h"
 				>
 			</File>
 			<File
@@ -65490,14 +65434,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\html\shadow\ContentSelectorQuery.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\html\shadow\ContentSelectorQuery.h"
-					>
-				</File>
-				<File
 					RelativePath="..\html\shadow\DateTimeEditElement.cpp"
 					>
 				</File>
@@ -65602,62 +65538,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\html\shadow\HTMLShadowElement.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug_Cairo_CFLite|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release_Cairo_CFLite|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug_All|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Production|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\html\shadow\HTMLShadowElement.h"
-					>
-				</File>
-				<File
 					RelativePath="..\html\shadow\InsertionPoint.cpp"
 					>
 				</File>
@@ -65715,14 +65595,6 @@
 				</File>
 				<File
 					RelativePath="..\html\shadow\ProgressShadowElement.h"
-					>
-				</File>
-				<File
-					RelativePath="..\html\shadow\SelectRuleFeatureSet.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\html\shadow\SelectRuleFeatureSet.h"
 					>
 				</File>
 				<File
@@ -75021,10 +74893,6 @@
 			<Filter
 				Name="wtf"
 				>
-				<File
-					RelativePath="..\ForwardingHeaders\wtf\AlwaysInline.h"
-					>
-				</File>
 				<File
 					RelativePath="..\ForwardingHeaders\wtf\Assertions.h"
 					>

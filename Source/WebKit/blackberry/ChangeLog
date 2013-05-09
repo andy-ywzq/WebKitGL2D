@@ -1,3 +1,328 @@
+2013-05-07  Xuefei Ren  <xren@blackberry.com>
+
+        Clean up load interface in WebPage
+        https://bugs.webkit.org/show_bug.cgi?id=115622
+        Reviewed by Rob Buis.
+
+        Internal PR:315535
+        Internal reviewed by  Mary Wu
+
+        * Api/WebPage.cpp:
+        (BlackBerry::WebKit::WebPagePrivate::load):
+        (BlackBerry::WebKit::WebPage::loadFile):
+        (BlackBerry::WebKit::WebPage::load):
+        * Api/WebPage.h:
+        * Api/WebPage_p.h:
+        (WebPagePrivate):
+        * WebCoreSupport/FrameLoaderClientBlackBerry.cpp:
+        (WebCore::FrameLoaderClientBlackBerry::startDownload):
+
+2013-05-07  Mike Fenton  <mifenton@rim.com>
+
+        [BlackBerry] Increase the padding size for caret based scrolling.
+        https://bugs.webkit.org/show_bug.cgi?id=115749
+
+        Reviewed by Rob Buis.
+
+        PR 322670.
+
+        Increasing the padding size for scrolling in order to optimize the
+        number of scrolls required during typing.
+
+        * WebKitSupport/InputHandler.cpp:
+        (BlackBerry::WebKit::InputHandler::ensureFocusTextElementVisible):
+
+2013-05-07  Nima Ghanavatian  <nghanavatian@blackberry.com>
+
+        [BlackBerry] Maintain touch event state throughout processing
+        https://bugs.webkit.org/show_bug.cgi?id=115663
+
+        Reviewed by Rob Buis.
+
+        Internally reviewed by Otto Cheung and Genevieve Mak.
+
+        PR 297691
+        By maintaining our touch event state, we can get a better idea
+        of what triggered an update to selection and respond appropriately.
+        On touch press we set userTouchTriggered to give the UI thread
+        some context.
+
+        * Api/WebPage.cpp:
+        (BlackBerry::WebKit::WebPagePrivate::WebPagePrivate):
+        (BlackBerry::WebKit::WebPagePrivate::handleMouseEvent):
+        (BlackBerry::WebKit::WebPage::setExtraPluginDirectory):
+        * Api/WebPage_p.h:
+        (WebPagePrivate):
+        * WebKitSupport/SelectionHandler.cpp:
+        (BlackBerry::WebKit::SelectionHandler::selectionPositionChanged):
+
+2013-05-07  Nima Ghanavatian  <nghanavatian@blackberry.com>
+
+        [BlackBerry] Read-only fields should not get keyboard focus
+        https://bugs.webkit.org/show_bug.cgi?id=115725
+
+        Reviewed by Rob Buis.
+
+        Internally reviewed by Mike Fenton.
+
+        PR332887
+        Prevent keyboard focus and FCC from displaying when the user taps on a
+        read-only field. Further, ensure form controls skip over these fields
+        with the next/previous buttons.
+
+        * WebKitSupport/DOMSupport.cpp:
+        (BlackBerry::WebKit::DOMSupport::elementIsReadOnly):
+        (DOMSupport):
+        * WebKitSupport/DOMSupport.h:
+        * WebKitSupport/InputHandler.cpp:
+        (BlackBerry::WebKit::InputHandler::focusedNodeChanged):
+        (BlackBerry::WebKit::InputHandler::setInputModeEnabled):
+        (BlackBerry::WebKit::InputHandler::notifyClientOfKeyboardVisibilityChange):
+        (BlackBerry::WebKit::InputHandler::isActiveTextEdit):
+        (WebKit):
+        * WebKitSupport/InputHandler.h:
+
+2013-05-07  Nima Ghanavatian  <nghanavatian@blackberry.com>
+
+        [BlackBerry] Expand spellcheck logging
+        https://bugs.webkit.org/show_bug.cgi?id=115482
+
+        Reviewed by Rob Buis.
+
+        Internally reviewed by Mike Fenton.
+
+        Fix some build errors when SpellingLog was turned on and expand on the debug
+        statements to be more verbose. Set up timers and print the duration of each
+        iteration as we traverse the text to create a range to send out for checking.
+
+        * WebKitSupport/InputHandler.cpp:
+        (BlackBerry::WebKit::InputHandler::spellCheckingRequestCancelled):
+        (BlackBerry::WebKit::InputHandler::spellCheckingRequestProcessed):
+        (BlackBerry::WebKit::InputHandler::setElementFocused):
+        (WebKit):
+        (BlackBerry::WebKit::InputHandler::spellCheckTextBlock):
+        * WebKitSupport/SpellingHandler.cpp:
+        (BlackBerry::WebKit::SpellingHandler::spellCheckTextBlock):
+        (BlackBerry::WebKit::SpellingHandler::parseBlockForSpellChecking):
+
+2013-05-06  Mike Lattanzio  <mlattanzio@blackberry.com>
+
+        [BlackBerry] Enable and Expose Text Autosizing through BlackBerry::WebKit::WebSettings
+        https://bugs.webkit.org/show_bug.cgi?id=113808
+
+        Reviewed by Rob Buis.
+
+        Create a WebSetting for text autosizing. The default is off.
+
+        * Api/WebPage.cpp:
+        (BlackBerry::WebKit::WebPagePrivate::didChangeSettings):
+        * Api/WebSettings.cpp:
+        (WebKit):
+        (BlackBerry::WebKit::WebSettings::standardSettings):
+        (BlackBerry::WebKit::WebSettings::isTextAutosizingEnabled):
+        (BlackBerry::WebKit::WebSettings::setTextAutosizingEnabled):
+        * Api/WebSettings.h:
+
+2013-05-06  Nima Ghanavatian  <nghanavatian@blackberry.com>
+
+        [BlackBerry] Ensure document is attached before accessing its FrameSelection
+        https://bugs.webkit.org/show_bug.cgi?id=115565
+
+        Reviewed by Rob Buis.
+
+        Internally reviewed by Mike Fenton.
+
+        PR 312101
+        We need to make sure that the node and document
+        are attached before accessing the FrameSelection. This was
+        handled earlier but not all call paths were covered.
+
+        * WebKitSupport/InputHandler.cpp:
+        (BlackBerry::WebKit::InputHandler::setElementUnfocused):
+        (BlackBerry::WebKit::InputHandler::isActiveTextEdit):
+        (WebKit):
+        * WebKitSupport/InputHandler.h:
+
+2013-05-06  Nima Ghanavatian  <nghanavatian@blackberry.com>
+
+        [BlackBerry] Do not spellcheck when composition is active.
+        https://bugs.webkit.org/show_bug.cgi?id=115562
+
+        Reviewed by Rob Buis.
+
+        Internally reviewed by Mike Fenton.
+
+        PR331344
+        Typing can trigger rechecking since layout changes. Ensure
+        extra work is only done when we need it, and that it won't
+        be triggered when composition is active. If the user hasn't
+        finished a word yet, it is likely future key events will be
+        arriving, so checking the string at this point is extraneous.
+
+        * WebKitSupport/InputHandler.cpp:
+        (BlackBerry::WebKit::InputHandler::requestCheckingOfString):
+
+2013-05-06  Nima Ghanavatian  <nghanavatian@blackberry.com>
+
+        [BlackBerry] Reduce the spellcheck checking range
+        https://bugs.webkit.org/show_bug.cgi?id=115479
+
+        Reviewed by Rob Buis.
+
+        Internally reviewed by Mike Fenton.
+
+        PR332773
+        Previously we were spellchecking the entire field on focus. If relayouting
+        occurred we rechecked this region, which is very costly. Switch to check
+        only a small region around the caret in both cases, which should alleviate
+        much of the delays experienced in very large contenteditable fields. This
+        allows for faster key input response and less time processing these requests
+        on the WebKit thread.
+
+        * WebKitSupport/InputHandler.cpp:
+        (BlackBerry::WebKit::InputHandler::requestCheckingOfString):
+        (BlackBerry::WebKit::InputHandler::spellCheckTextBlock):
+        * WebKitSupport/SpellingHandler.cpp:
+        (WebKit):
+        (BlackBerry::WebKit::SpellingHandler::spellCheckTextBlock):
+        * WebKitSupport/SpellingHandler.h:
+        (SpellingHandler):
+
+2013-05-06  Nima Ghanavatian  <nghanavatian@blackberry.com>
+
+        [BlackBerry] Use a more descriptive timer name
+        https://bugs.webkit.org/show_bug.cgi?id=115481
+
+        Reviewed by Rob Buis.
+
+        Internally reviewed by Mike Fenton.
+
+        Changing m_timer to m_iterationDelayTimer.
+
+        * WebKitSupport/SpellingHandler.cpp:
+        (BlackBerry::WebKit::SpellingHandler::SpellingHandler):
+        (BlackBerry::WebKit::SpellingHandler::spellCheckTextBlock):
+        (BlackBerry::WebKit::SpellingHandler::parseBlockForSpellChecking):
+        * WebKitSupport/SpellingHandler.h:
+        (SpellingHandler):
+
+2013-05-04  Nima Ghanavatian  <nghanavatian@blackberry.com>
+
+        [BlackBerry] Clean up unused spellcheck code
+        https://bugs.webkit.org/show_bug.cgi?id=115560
+
+        Reviewed by Benjamin Poulain.
+        Internally reviewed by Mike Lattanzio
+
+        * Api/WebPage.cpp:
+        (BlackBerry::WebKit::WebPage::setExtraPluginDirectory):
+        * Api/WebPage.h:
+        * WebKitSupport/InputHandler.cpp:
+        * WebKitSupport/InputHandler.h:
+        (InputHandler):
+
+2013-05-03  Jacky Jiang  <zhajiang@blackberry.com>
+
+        [BlackBerry] Page rendering scale is changed after go back and forward
+        https://bugs.webkit.org/show_bug.cgi?id=115573
+
+        Reviewed by Rob Buis.
+        Internally reviewed by Jeff Rogers.
+
+        PR: 326886
+        When navigating back from page A with viewport to page B without
+        viewport, we didn't call setViewMode(); therefore, we didn't change
+        the fixed layout size which was set by page A. In that case, WebCore
+        would just pick up page A's fixed layout size to layout page B which
+        caused this issue.
+        Expecting zoomToInitialScaleOnLoad() or other functions to setViewMode()
+        later is not a good way, because zoomToInitialScaleOnLoad() has never
+        been called in this case. So we should always call setViewMode() to set
+        fixed layout size when a new page is committed.
+
+        * Api/WebPage.cpp:
+        (BlackBerry::WebKit::WebPagePrivate::setLoadState):
+
+2013-05-02  Genevieve Mak  <gmak@rim.com>
+
+        [BlackBerry] Cannot touch scroll readonly text input.
+        https://bugs.webkit.org/show_bug.cgi?id=115378
+
+        Reviewed by Rob Buis.
+
+        PR #332902
+        Reviewed Internally by Mike Fenton.
+        Forgot half the patch.
+        Node::rendererIsEditable() returns false if the input element has the readonly tag set.
+        Check the node type instead.
+
+        * Api/InRegionScroller.cpp:
+        (BlackBerry::WebKit::InRegionScrollerPrivate::canScrollRenderBox):
+
+2013-05-02  Iris Wu  <shuwu@blackberry.com>
+
+        [BlackBerry] Make scroll position adjustment work with pages with fixed position elements.
+        https://bugs.webkit.org/show_bug.cgi?id=115178
+
+        Reviewed by Rob Buis.
+
+        PR 308796
+        Debug build fix.
+
+        * Api/WebPage.cpp:
+        (BlackBerry::WebKit::WebPage::fixedElementSizeDelta):
+
+2013-05-01  Iris Wu  <shuwu@blackberry.com>
+
+         [BlackBerry] Upstream smart selection
+         https://bugs.webkit.org/show_bug.cgi?id=111226
+
+        Reviewed by Rob Buis.
+
+        Calling userInterfaceViewportAccessor()->documentViewportRect() on WK thread
+        caused crash.
+        But viewport from webkitThreadViewportAccessor uses unadjusted size which is
+        wrong for email.
+        The solution here is to get actual viewport size on UI thread and then pass it
+        to WebKit::SelectionHandler.
+
+        PR 333763
+        Reviewed Internally By Jakob Petsovits.
+
+        * Api/InRegionScroller.cpp:
+        (BlackBerry::WebKit::InRegionScrollerPrivate::updateSelectionScrollView):
+        * Api/WebPage.cpp:
+        (BlackBerry::WebKit::WebPage::setSelectionDocumentViewportSize):
+        (WebKit):
+        * Api/WebPage.h:
+        * WebKitSupport/SelectionHandler.cpp:
+        (BlackBerry::WebKit::SelectionHandler::selectAtPoint):
+        (BlackBerry::WebKit::SelectionHandler::ensureSelectedTextVisible):
+        (BlackBerry::WebKit::SelectionHandler::selectionViewportRect):
+        * WebKitSupport/SelectionHandler.h:
+        (BlackBerry::WebKit::SelectionHandler::setSelectionViewportSize):
+        (BlackBerry::WebKit::SelectionHandler::setSelectionSubframeViewportRect):
+        (SelectionHandler):
+
+2013-04-30  Genevieve Mak  <gmak@rim.com>
+
+        [BlackBerry] Cannot touch scroll readonly text input.
+        https://bugs.webkit.org/show_bug.cgi?id=115378
+
+        Reviewed by Rob Buis.
+
+        PR #332902
+        Reviewed Internally by Mike Fenton.
+        Node::rendererIsEditable() returns false if the input element has the readonly tag set.
+        Check the node type instead.
+
+        * WebKitSupport/DOMSupport.cpp:
+        (BlackBerry::WebKit::DOMSupport::isShadowHostTextInputElement):
+        (DOMSupport):
+        * WebKitSupport/DOMSupport.h:
+        * WebKitSupport/InRegionScrollableArea.cpp:
+        (BlackBerry::WebKit::InRegionScrollableArea::InRegionScrollableArea):
+
 2013-04-29  Jakob Petsovits  <jpetsovits@blackberry.com>
 
         [BlackBerry] Replace disappearing fillBuffer() API with graphics context drawing

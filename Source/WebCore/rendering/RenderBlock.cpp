@@ -1517,10 +1517,11 @@ void RenderBlock::checkForPaginationLogicalHeightChange(LayoutUnit& pageLogicalH
             }
             setLogicalHeight(0);
         }
-        if (colInfo->columnHeight() != pageLogicalHeight && everHadLayout()) {
-            colInfo->setColumnHeight(pageLogicalHeight);
+
+        if (colInfo->columnHeight() != pageLogicalHeight && everHadLayout())
             pageLogicalHeightChanged = true;
-        }
+
+        colInfo->setColumnHeight(pageLogicalHeight);
         
         if (!hasSpecifiedPageLogicalHeight && !pageLogicalHeight)
             colInfo->clearForcedBreaks();
@@ -2396,10 +2397,7 @@ void RenderBlock::handleAfterSideOfBlock(LayoutUnit beforeSide, LayoutUnit after
     marginInfo.setAtAfterSideOfBlock(true);
 
     // If we can't collapse with children then go ahead and add in the bottom margin.
-    // Don't do this for ordinary anonymous blocks as only the enclosing box should add in
-    // its margin.
     if (!marginInfo.discardMargin() && (!marginInfo.canCollapseWithMarginAfter() && !marginInfo.canCollapseWithMarginBefore()
-        && (!isAnonymousBlock() || isAnonymousColumnsBlock() || isAnonymousColumnSpanBlock())
         && (!document()->inQuirksMode() || !marginInfo.quirkContainer() || !marginInfo.hasMarginAfterQuirk())))
         setLogicalHeight(logicalHeight() + marginInfo.margin());
         
@@ -2750,9 +2748,10 @@ void RenderBlock::markFixedPositionObjectForLayoutIfNeeded(RenderObject* child)
 
     RenderBox* box = toRenderBox(child);
     if (hasStaticInlinePosition) {
-        LayoutUnit oldLeft = box->logicalLeft();
-        box->updateLogicalWidth();
-        if (box->logicalLeft() != oldLeft)
+        LogicalExtentComputedValues computedValues;
+        box->computeLogicalWidthInRegion(computedValues);
+        LayoutUnit newLeft = computedValues.m_position;
+        if (newLeft != box->logicalLeft())
             child->setChildNeedsLayout(true, MarkOnlyThis);
     } else if (hasStaticBlockPosition) {
         LayoutUnit oldTop = box->logicalTop();

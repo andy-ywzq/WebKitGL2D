@@ -9,6 +9,7 @@
         "Andras Piroska": {"emails": ["pandras@inf.u-szeged.hu"], "nicks": ["andris88"]},
         "Anne van Kesteren": {"emails": ["annevk@annevk.nl"], "nicks": ["annevk"]},
         "Annie Sullivan": {"emails": ["sullivan@chromium.org"], "nicks": ["annie"]},
+        "Anton Obzhirov": {"emails": ["a.obzhirov@samsung.com"], "nicks": ["aobzhirov"]},
         "Anton Vayvod": {"emails": ["avayvod@chromium.org"], "nicks": ["avayvod"]},
         "Aryeh Gregor": {"emails": ["ayg@aryeh.name"], "nicks": ["AryehGregor"]},
         "Balazs Ankes": {"emails": ["bank@inf.u-szeged.hu"], "nicks": ["abalazs"]},
@@ -55,6 +56,7 @@
         "Peter Gal": {"emails": ["galpeter@inf.u-szeged.hu"], "nicks": ["elecro"]},
         "Peter Linss": {"emails": ["peter.linss@hp.com"], "nicks": ["plinss"]},
         "Radar WebKit Bug Importer": {"emails": ["webkit-bug-importer@group.apple.com"]},
+        "Radu Stavila": {"emails": ["stavila@adobe.com"], "nicks": ["radustavila"]},
         "Raul Hudea": {"emails": ["rhudea@adobe.com"], "nicks": ["rhudea"]},
         "Roland Takacs": {"emails": ["rtakacs@inf.u-szeged.hu"], "nicks": ["rtakacs"]},
         "Tab Atkins": {"emails": ["tabatkins@google.com", "jackalmage@gmail.com"], "nicks": ["tabatkins"]},
@@ -316,7 +318,7 @@
         "Trey Matteson": {"emails": ["trey@usa.net"], "nicks": ["trey"]},
         "Tristan O'Tierney": {"emails": ["tristan@otierney.net", "tristan@apple.com"]},
         "Vangelis Kokkevis": {"emails": ["vangelis@chromium.org"], "nicks": ["vangelis"]},
-        "Viatcheslav Ostapenko": {"emails": ["ostap73@gmail.com", "ostapenko.viatcheslav@nokia.com", "v.ostapenko@samsung.com", "v.ostapenko@sisa.samsung.com"], "nicks": ["ostap"]},
+        "Viatcheslav Ostapenko": {"emails": ["ostap73@gmail.com", "sl.ostapenko@samsung.com", "ostapenko.viatcheslav@nokia.com"], "nicks": ["ostap"]},
         "Victor Carbune": {"emails": ["vcarbune@chromium.org", "victor@rosedu.org"], "nicks": ["vcarbune"]},
         "Victor Wang": {"emails": ["victorw@chromium.org"], "nicks": ["victorw"]},
         "Victoria Kirst": {"emails": ["vrk@chromium.org", "vrk@google.com"], "nicks": ["vrk"]},
@@ -342,7 +344,7 @@
         "Zhenyao Mo": {"emails": ["zmo@google.com"], "nicks": ["zhenyao"]},
         "Zoltan Arvai": {"emails": ["zarvai@inf.u-szeged.hu"], "nicks": ["azbest_hu"]},
         "Zoltan Horvath": {"emails": ["zoltan@webkit.org", "hzoltan@inf.u-szeged.hu", "horvath.zoltan.6@stud.u-szeged.hu"], "nicks": ["zoltan"]},
-        "\u017dan Dober\u0161ek": {"emails": ["zandobersek@gmail.com", "zandobersek@igalia.com"], "nicks": ["zdobersek"]}
+        "\u017dan Dober\u0161ek": {"emails": ["zandobersek@gmail.com", "zdobersek@igalia.com"], "nicks": ["zdobersek"]}
     },
     "Reviewers": {
         "Abhishek Arya": {"emails": ["inferno@chromium.org"], "nicks": ["inferno-sec"]},

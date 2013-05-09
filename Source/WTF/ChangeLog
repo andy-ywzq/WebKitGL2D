@@ -1,3 +1,394 @@
+2013-05-08  Anders Carlsson  <andersca@apple.com>
+
+        Remove HashMap::deleteAllKeys
+        https://bugs.webkit.org/show_bug.cgi?id=115806
+
+        Reviewed by Brent Fulgham.
+
+        This function was not used anywhere so let's get rid of it.
+
+        * wtf/HashMap.h:
+
+2013-05-08  Eric Carlson  <eric.carlson@apple.com>
+
+        [Mac] Inband text tracks are not in track menu on Lion
+        https://bugs.webkit.org/show_bug.cgi?id=115740
+
+        Reviewed by Dean Jackson.
+
+        * wtf/Platform.h: AVFOUNDATION_TEXT_TRACK_SUPPORT -> AVFOUNDATION_MEDIA_SELECTION_GROUP
+
+2013-05-08  Mikhail Pozdnyakov  <mikhail.pozdnyakov@intel.com>
+
+        HashTraits<RefPtr<P> >::peek should consider empty value
+        https://bugs.webkit.org/show_bug.cgi?id=115799
+
+        Reviewed by Darin Adler.
+
+        HashTraits<RefPtr<P> >::peek() should consider passing of empty value which is
+        raw pointer equal to '0', and return it right away instead of converting it to RefPtr
+        and invoking get().
+
+        * wtf/HashTraits.h:
+
+2013-05-08  Mikhail Pozdnyakov  <mikhail.pozdnyakov@intel.com>
+
+        Avoid unnecessary arguments copying inside GenericHashTraits methods
+        https://bugs.webkit.org/show_bug.cgi?id=115733
+
+        Reviewed by Darin Adler.
+
+        Before the change both WTF::GenericHashTraits::passOut and WTF::GenericHashTraits::passOut
+        used to return the given argument always by value and that caused implicit extra
+        copying of the argument. It was OK as long as argument type T was POD, as compiler
+        could optimize it, but in case T was a class having non-trivial copy constructor the
+        extra copying of the argument could not have been obviated.
+
+        The proposed solution is to provide overloaded functions that accept non-temporary
+        values and return them by reference thus avoiding extra copying.
+
+        The proposed solution made an impact on the size of libjavascriptcore_efl.so (EFL
+        release build): the size decreased from 6554992 bytes to 6554560 bytes.
+
+        * wtf/HashTraits.h:
+        (WTF::GenericHashTraits::passOut): 
+        (WTF::GenericHashTraits::peek):
+
+2013-05-07  Anders Carlsson  <andersca@apple.com>
+
+        Remove AlwaysInline.h from WTF
+        https://bugs.webkit.org/show_bug.cgi?id=115727
+
+        Reviewed by Brent Fulgham.
+
+        The macro that used to be in AlwaysInline.h is now in Compiler.h so there's no reason
+        to keep AlwaysInline.h around anymore.
+
+        * WTF.vcproj/WTF.vcproj:
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/AlwaysInline.h: Removed.
+        * wtf/BloomFilter.h:
+        * wtf/FastMalloc.cpp:
+        * wtf/PassRefPtr.h:
+        * wtf/dtoa.cpp:
+        * wtf/gobject/GRefPtr.h:
+
+2013-05-07  Mikhail Pozdnyakov  <mikhail.pozdnyakov@intel.com>
+
+        HashTraits<RefPtr<P> >::PeekType should be raw pointer for better performance
+        https://bugs.webkit.org/show_bug.cgi?id=115646
+
+        Reviewed by Darin Adler.
+
+        HashTraits<RefPtr<P> >::PeekType should be raw pointer so that we
+        can obviate multiple RefPtr copying when invoking HashMap<.., RefPtr>::get()
+        method.
+
+        * wtf/HashTraits.h:
+
+2013-05-06  Cosmin Truta  <ctruta@blackberry.com>
+
+        Cherry-pick fixes to bignum from upstream
+        https://bugs.webkit.org/show_bug.cgi?id=115658
+
+        Reviewed by Darin Adler.
+
+        Cherry-picked the following change lists:
+
+        Fix bug in bignum implementation
+        http://codereview.chromium.org/13454019
+
+        Make VS2005 project files compile without errors
+        http://codereview.chromium.org/6286135
+
+        * wtf/dtoa/bignum.cc:
+
+2013-05-06  Mikhail Pozdnyakov  <mikhail.pozdnyakov@intel.com>
+
+        Change HashTraits<RefPtr<P> >::PassOutType to PassRefPtr for better performance
+        https://bugs.webkit.org/show_bug.cgi?id=115410
+
+        Reviewed by Darin Adler.
+
+        The type HashTraits<RefPtr<P> >::PassOutType is PassRefPtr now to
+        avoid extra ref/unrefing on return from HashMap methods that transfer
+        ownership, such as take.
+
+        * wtf/HashTable.h:
+        (WTF::IdentityHashTranslator::equal):
+        * wtf/HashTraits.h:
+
+2013-05-05  Anders Carlsson  <andersca@apple.com>
+
+        Remove Vector::prepend
+        https://bugs.webkit.org/show_bug.cgi?id=115618
+
+        Reviewed by Geoffrey Garen.
+
+        Given the performance characteristics of prepending something to a Vector, not having prepend
+        will hopefully make developers think about whether prepending is necessary at all. For example,
+        the functions in HexNumber.h were easily converted to using Vector::append and then Vector::reverse.
+
+        * wtf/HexNumber.h:
+        (WTF::appendUnsignedAsHex):
+        (WTF::appendUnsignedAsHexFixedSize):
+        * wtf/Vector.h:
+        (Vector):
+
+2013-05-05  Anders Carlsson  <andersca@apple.com>
+
+        Remove the Vector::append overload that takes a Vector
+        https://bugs.webkit.org/show_bug.cgi?id=115535
+
+        Reviewed by Andreas Kling.
+
+        The Vector::append overload that takes a Vector conflicts with rvalues in C++11, so remove it and
+        replace calls to it with calls to appendVector.
+
+        * wtf/Vector.h:
+        (Vector):
+
+2013-05-04  Andreas Kling  <akling@apple.com>
+
+        Unreviewed, rolling out r149563.
+        http://trac.webkit.org/changeset/149563
+        https://bugs.webkit.org/show_bug.cgi?id=115587
+
+        Broke LLInt build.
+
+        * wtf/text/StringImpl.h:
+        (StringImpl):
+
+2013-05-04  Xan Lopez  <xlopez@igalia.com>
+
+        No need to declare JSC::LLInt::Data as friend class of WTF::StringImpl
+        https://bugs.webkit.org/show_bug.cgi?id=115587
+
+        Reviewed by Andreas Kling.
+
+        No need to declare LLInt::Data as friend class of WTF::StringImpl,
+        it does not use any private method/data member of the latter.
+
+        * wtf/text/StringImpl.h:
+        (StringImpl):
+
+2013-05-03  Brent Fulgham  <bfulgham@webkit.org>
+
+        Make ThreadFunctionInvocation fast allocated.
+        https://bugs.webkit.org/show_bug.cgi?id=115552
+
+        Reviewed by Benjamin Poulain.
+
+        * wtf/ThreadFunctionInvocation.h:
+        (ThreadFunctionInvocation): Make Fast-allocated.
+
+2013-05-03  Mikhail Pozdnyakov  <mikhail.pozdnyakov@intel.com>
+
+        Remove WTF::ListRefPtr class
+        https://bugs.webkit.org/show_bug.cgi?id=115516
+
+        Reviewed by Anders Carlsson.
+
+        ListRefPtr was used only by FontFamily class, besides it strongly depended
+        on FontFamily class semantics which made it non-generic and inappropriate
+        for being present inside WTF.
+
+        This patch removes WTF::ListRefPtr class and moves its the functionality
+        into FontFamily class.
+
+        * GNUmakefile.list.am:
+        * WTF.pro:
+        * WTF.vcproj/WTF.vcproj:
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/Forward.h:
+        (WTF):
+        * wtf/ListRefPtr.h: Removed.
+
+2013-05-02  Brent Fulgham  <bfulgham@webkit.org>
+
+        [WinCairo] Unreviewed build fix.
+
+        * WTF.vcxproj/WTF.vcxproj: Use WinCairo FeatureDefines
+        * WTF.vcxproj/WTF.vcxproj.filters: Use WinCairo FeatureDefines
+        * WTF.vcxproj/WTFDebugWinCairo.props: Added.
+        * WTF.vcxproj/WTFReleaseWinCairo.props: Added.
+
+2013-05-02  Brent Fulgham  <bfulgham@webkit.org>
+
+        [Windows, WinCairo] Fix crash in fast/js/create-lots-of-workers.html
+        https://bugs.webkit.org/show_bug.cgi?id=115130
+
+        Reviewed by Tim Horton.
+
+        Windows is suffering from mismatched allocation/deallocation
+        between the system allocator and fastMalloc/fastFree.  By turning
+        off the global switch to fastMalloc, only classes specified to
+        honor fastMalloc/fastFree are affected, and other memory allocation
+        and freeing is done with consistent library calls.
+
+        * wtf/Platform.h: Deactivate ENABLE_GLOBAL_FASTMALLOC_NEW for
+        the Windows build.
+
+2013-05-02  Eric Carlson  <eric.carlson@apple.com>
+
+        Caption menu does not include in-band captions
+        https://bugs.webkit.org/show_bug.cgi?id=111934
+
+        Reviewed by Dean Jackson.
+
+        * wtf/Platform.h: Define HAVE_AVFOUNDATION_TEXT_TRACK_SUPPORT on 10.8 and higher. Added
+            HAVE_AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT.
+
+2013-05-02  Brent Fulgham  <bfulgham@webkit.org>
+
+        Make BloomFilter fast allocated.
+        https://bugs.webkit.org/show_bug.cgi?id=115519
+
+        Reviewed by Benjamin Poulain.
+
+        * wtf/BloomFilter.h:
+        (BloomFilter): Make BloomFilter Fast-allocated.
+
+2013-05-01  Michael Saboff  <msaboff@apple.com>
+
+        FastMalloc.cpp should use system defined page size instead of literal constant
+        https://bugs.webkit.org/show_bug.cgi?id=115502
+
+        Reviewed by Geoffrey Garen.
+
+        Updated kPageShift to be PAGE_SHIFT for Mac.  Changed kMaxSize to be fixed at 32K.
+        Updated kNumClasses for 4K and 16K page sizes.
+
+        * wtf/FastMalloc.cpp:
+        kPageShift: Changed this to be PAGE_SHIFT on mac.
+
+2013-05-01  Roger Fong  <roger_fong@apple.com>
+
+        Set Path in makefile for AppleWin.
+
+        * WTF.vcxproj/WTF.make:
+
+2013-05-01  Anders Carlsson  <andersca@apple.com>
+
+        Add FunctionDispatcher class and make RunLoop derive from it
+        https://bugs.webkit.org/show_bug.cgi?id=115480
+
+        Reviewed by Sam Weinig.
+
+        Add FunctionDispatcher files.
+
+        * WTF.pro:
+        * WTF.vcproj/WTF.vcproj:
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/FunctionDispatcher.cpp: Added.
+        (WTF::FunctionDispatcher::FunctionDispatcher):
+        (WTF::FunctionDispatcher::~FunctionDispatcher):
+        * wtf/FunctionDispatcher.h: Added.
+
+2013-05-01  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt][Win] Fix build after r149416.
+        https://bugs.webkit.org/show_bug.cgi?id=115474
+
+        Reviewed by Anders Carlsson.
+
+        * WTF.pro:
+        * wtf/threads/BinarySemaphore.h:
+        (BinarySemaphore):
+
+2013-05-01  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed buildfix after r149416.
+
+        * WTF.pro:
+
+2013-04-30  Anders Carlsson  <andersca@apple.com>
+
+        Remove the WebKit2 BinarySemaphore class
+        https://bugs.webkit.org/show_bug.cgi?id=115458
+
+        Reviewed by Benjamin Poulain.
+
+        * wtf/Forward.h:
+        Add BinarySemaphore forward declaration.
+
+        * wtf/threads/BinarySemaphore.h:
+        Add WTF_EXPORT_PRIVATE to declarations.
+
+2013-04-30  Commit Queue  <rniwa@webkit.org>
+
+        Unreviewed, rolling out r149408.
+        http://trac.webkit.org/changeset/149408
+        https://bugs.webkit.org/show_bug.cgi?id=115453
+
+        Broke Windows Build (Requested by bfulgham on #webkit).
+
+        * wtf/Platform.h:
+
+2013-04-30  Brent Fulgham  <bfulgham@webkit.org>
+
+        [Windows, WinCairo] Fix crash in fast/js/create-lots-of-workers.html
+        https://bugs.webkit.org/show_bug.cgi?id=115130
+
+        Reviewed by Tim Horton.
+
+        Windows is suffering from mismatched allocation/deallocation
+        between the system allocator and fastMalloc/fastFree.  By turning
+        off the global switch to fastMalloc, only classes specified to
+        honor fastMalloc/fastFree are affected, and other memory allocation
+        and freeing is done with consistent library calls.
+
+        * wtf/Platform.h: Deactivate ENABLE_GLOBAL_FASTMALLOC_NEW for
+        the Windows build.
+
+2013-04-30  Commit Queue  <rniwa@webkit.org>
+
+        Unreviewed, rolling out r149349 and r149354.
+        http://trac.webkit.org/changeset/149349
+        http://trac.webkit.org/changeset/149354
+        https://bugs.webkit.org/show_bug.cgi?id=115444
+
+         The Thumb version of compileSoftModulo make invalid use of
+        registers (Requested by benjaminp on #webkit).
+
+        * wtf/Platform.h:
+
+2013-04-30  Darin Adler  <darin@apple.com>
+
+        [Mac] Make adoptNS faster on platforms without garbage collection by skipping a CFRetain/NSRelease pair
+        https://bugs.webkit.org/show_bug.cgi?id=115424
+
+        Reviewed by Eric Carlson.
+
+        * wtf/RetainPtr.h:
+        (WTF::adoptNSReference): When OBJC_NO_GC is set, make this an empty function, because in that case
+        CFRetain and -[NSObject retain] are the same thing and there is no need to call CFRetain and
+        -[NSObject release] to adopt an Objective-C object.
+
+2013-04-30  Anders Carlsson  <andersca@apple.com>
+
+        String::isolatedCopy() can avoid a copy if the original is a temporary
+        https://bugs.webkit.org/show_bug.cgi?id=115425
+
+        Reviewed by Darin Adler.
+
+        * wtf/Compiler.h:
+        Add WTF_COMPILER_SUPPORTS_CXX_REFERENCE_QUALIFIED_FUNCTIONS define.
+
+        * wtf/text/WTFString.cpp:
+        (WTF::String::isolatedCopy):
+        * wtf/text/WTFString.h:
+        If COMPILER_SUPPORTS(CXX_REFERENCE_QUALIFIED_FUNCTIONS) is true, add two overloads of String::isolatedCopy().
+        One is used if *this is an lvalue, and one is used if *this is an rvalue. In the latter case, we know that the original
+        String object is a temporary and will be going away, so if it's safe to send it to another thread (if it's not an AtomicString,
+        and if it's refcount is 1), then we can just steal the StringImpl from the original and avoid a copy altogether.
+
 2013-04-30  Zalan Bujtas  <zalan@apple.com>
 
         Animations fail to start on http://www.google.com/insidesearch/howsearchworks/thestory/

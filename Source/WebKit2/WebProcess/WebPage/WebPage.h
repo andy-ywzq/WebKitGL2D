@@ -131,6 +131,7 @@ namespace WebKit {
 class DrawingArea;
 class InjectedBundleBackForwardList;
 class NotificationPermissionRequestManager;
+class PageBanner;
 class PageOverlay;
 class PluginView;
 class SessionState;
@@ -383,7 +384,13 @@ public:
     void uninstallPageOverlay(PageOverlay*, bool shouldFadeOut = false);
     bool hasPageOverlay() const { return m_pageOverlays.size(); }
     PageOverlayList& pageOverlays() { return m_pageOverlays; }
-    
+
+    void setHeaderPageBanner(PassRefPtr<PageBanner>);
+    PageBanner* headerPageBanner();
+    void setFooterPageBanner(PassRefPtr<PageBanner>);
+    PageBanner* footerPageBanner();
+
+
     WebCore::IntPoint screenToWindow(const WebCore::IntPoint&);
     WebCore::IntRect windowToScreen(const WebCore::IntRect&);
 
@@ -624,10 +631,6 @@ public:
     bool shouldUsePDFPlugin() const;
     bool pdfPluginEnabled() const { return m_pdfPluginEnabled; }
     void setPDFPluginEnabled(bool enabled) { m_pdfPluginEnabled = enabled; }
-#endif
-
-#if PLATFORM(MAC)
-    static HashSet<String, CaseFoldingHash> pdfAndPostScriptMIMETypes();
 #endif
 
     void savePDFToFileInDownloadsFolder(const String& suggestedFilename, const String& originatingURLString, const uint8_t* data, unsigned long size);
@@ -916,7 +919,10 @@ private:
     uint64_t m_nativeWindowHandle;
 #endif
 #endif
-    
+
+    RefPtr<PageBanner> m_headerBanner;
+    RefPtr<PageBanner> m_footerBanner;
+
     WebCore::RunLoop::Timer<WebPage> m_setCanStartMediaTimer;
     WebCore::RunLoop::Timer<WebPage> m_sendDidUpdateInWindowStateTimer;
     bool m_mayStartMediaWhenInWindow;

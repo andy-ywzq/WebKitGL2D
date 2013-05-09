@@ -1,3 +1,178 @@
+2013-05-07  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/13633007> WebKit and others fail to build headers due to build root dependency
+
+        Reviewed by Sam Weinig.
+
+        * Configurations/WebKit.xcconfig: Look for WebCore's headers within the SDK if we're building against one.
+
+2013-05-07  Mikhail Pozdnyakov  <mikhail.pozdnyakov@intel.com>
+
+        HashTraits<RefPtr<P> >::PeekType should be raw pointer for better performance
+        https://bugs.webkit.org/show_bug.cgi?id=115646
+
+        Reviewed by Darin Adler.
+
+        * Plugins/Hosted/NetscapePluginHostProxy.mm:
+        (WebKit::NetscapePluginHostProxy::pluginInstance):
+        * Plugins/Hosted/NetscapePluginInstanceProxy.mm:
+        (WebKit::NetscapePluginInstanceProxy::cancelStreamLoad):
+            Updated accordingly to new HashMap<.., RefPtr>::get() semantics.
+
+2013-05-04  Dean Jackson  <dino@apple.com>
+
+        Animations and Transitions should not start when globally suspended
+        https://bugs.webkit.org/show_bug.cgi?id=114915
+
+        Reviewed by Sam Weinig.
+
+        The WebView private API cssAnimationsSuspended did not necessarily
+        reflect the reality of the Frame's AnimationController value because it
+        was caching rather than asking directly. While the WebCore part of this
+        patch ensured loading the Document wouldn't resume all animations, it
+        is still better to ask directly.
+
+        * WebView/WebView.mm:
+        (-[WebView cssAnimationsSuspended]): Call into AnimationController.
+        (-[WebView setCSSAnimationsSuspended:]): Ditto.
+        * WebView/WebViewData.h: Remove cssAnimationsSuspended boolean.
+        * WebView/WebViewData.mm: Ditto.
+        (-[WebViewPrivate init]):
+
+2013-05-04  Sam Weinig  <sam@webkit.org>
+
+        Move PopupMenuMac and SearchPopupMenuMac to Source/WebKit/mac
+        matching where they are in WebKit2.
+
+        Reviewed by Anders Carlsson.
+
+        * WebCoreSupport/PopupMenuMac.h: Copied from WebCore/platform/mac/PopupMenuMac.h.
+        * WebCoreSupport/PopupMenuMac.mm: Copied from WebCore/platform/mac/PopupMenuMac.mm.
+        * WebCoreSupport/SearchPopupMenuMac.h: Copied from WebCore/platform/mac/SearchPopupMenuMac.h.
+        * WebCoreSupport/SearchPopupMenuMac.mm: Copied from WebCore/platform/mac/SearchPopupMenuMac.mm.
+        * WebCoreSupport/WebChromeClient.mm:
+
+2013-05-04  Anders Carlsson  <andersca@apple.com>
+
+        Get rid of -[NSMutableDictionary _webkit_setObject:forUncopiedKey:]
+        https://bugs.webkit.org/show_bug.cgi?id=115592
+
+        Reviewed by Beth Dakin.
+
+        Using CFDictionarySetValue to set a key without having to copy it is not supported. Use NSMapTable with strong pointers instead.
+
+        * Misc/WebNSDictionaryExtras.h:
+        * Misc/WebNSDictionaryExtras.m:
+        * Panels/WebPanelAuthenticationHandler.h:
+        (NSURLAuthenticationChallenge):
+        * Panels/WebPanelAuthenticationHandler.m:
+        (-[WebPanelAuthenticationHandler init]):
+        (-[WebPanelAuthenticationHandler enqueueChallenge:forWindow:]):
+        (-[WebPanelAuthenticationHandler tryNextChallengeForWindow:]):
+        (-[WebPanelAuthenticationHandler startAuthentication:window:]):
+        (-[WebPanelAuthenticationHandler cancelAuthentication:]):
+        * Plugins/WebNetscapePluginView.h:
+        * Plugins/WebNetscapePluginView.mm:
+        (-[WebNetscapePluginView destroyPlugin]):
+        (-[WebNetscapePluginView initWithFrame:pluginPackage:URL:baseURL:MIMEType:attributeKeys:attributeValues:loadManually:element:WebCore::]):
+        (-[WebNetscapePluginView webFrame:didFinishLoadWithReason:]):
+        (-[WebNetscapePluginView loadPluginRequest:]):
+
+2011-05-01  Ryosuke Niwa  <rniwa@webkit.org>
+
+        [Mac] WebKit doesn't enable or disable autocorrections when system preferences are changed
+        https://bugs.webkit.org/show_bug.cgi?id=115463
+
+        Reviewed by Darin Adler.
+
+        Observe the default notification center for changes to autocorrection preferences.
+        Note system preferences may also update WebAutomatic* defaults.
+
+        * WebView/WebView.mm:
+        (+[WebView initialize]):
+        (+[WebView _shouldAutomaticTextReplacementBeEnabled]):
+        (+[WebView _didChangeAutomaticTextReplacementEnabled:]):
+        (+[WebView _shouldAutomaticSpellingCorrectionBeEnabled]):
+        (+[WebView _didChangeAutomaticSpellingCorrectionEnabled:]):
+        (+[WebView _shouldAutomaticQuoteSubstitutionBeEnabled]):
+        (+[WebView _shouldAutomaticDashSubstitutionBeEnabled]):
+        (+[WebView _didChangeAutomaticQuoteSubstitutionEnabled:]):
+        (+[WebView _didChangeAutomaticDashSubstitutionEnabled:]):
+
+2013-05-01  Benjamin Poulain  <bpoulain@apple.com>
+
+        Fix the function names of r149453
+
+        Unreviewed.
+
+        I forgot to follow one of Darin's review comment. This patch
+        fixes the function names to follow CF naming conventions.
+
+        * WebView/WebHTMLRepresentation.mm:
+        (newArrayWithStrings):
+        (newArrayByConcatenatingArrays):
+        (+[WebHTMLRepresentation supportedMIMETypes]):
+        (+[WebHTMLRepresentation supportedNonImageMIMETypes]):
+        (+[WebHTMLRepresentation supportedImageMIMETypes]):
+        (+[WebHTMLRepresentation unsupportedTextMIMETypes]):
+
+2013-05-01  Benjamin Poulain  <benjamin@webkit.org>
+
+        Simplify WebHTMLRepresentation supportedMIMETypes methods
+        https://bugs.webkit.org/show_bug.cgi?id=115314
+
+        Reviewed by Darin Adler.
+
+        The initialization was surprisingly complex because of DEFINE_STATIC_LOCAL.
+        First, a new pointer was allocated on the heap with fast malloc (for RetainPtr<NSArray>).
+        Then a new NSMutableArray was allocated but immediately put on the autorelease pool.
+        Finally, that array was retained by the RetainPtr.
+
+        This patch changes the code to only leak the NSMutableArray memory. There
+        is no fastMalloc, nor any use of the autorelease pool.
+
+        * WebView/WebHTMLRepresentation.mm:
+        (createArrayWithStrings):
+        (createArrayByConcatenatingArrays):
+        (+[WebHTMLRepresentation supportedMIMETypes]):
+        (+[WebHTMLRepresentation supportedNonImageMIMETypes]):
+        (+[WebHTMLRepresentation supportedImageMIMETypes]):
+        (+[WebHTMLRepresentation unsupportedTextMIMETypes]):
+
+2013-04-30  Darin Adler  <darin@apple.com>
+
+        [Mac] Remove adoptNS/retain pairs, since the two cancel each other out
+        https://bugs.webkit.org/show_bug.cgi?id=115426
+
+        Reviewed by Anders Carlsson.
+
+        * Plugins/WebNetscapePluginStream.mm:
+        (WebNetscapePluginStream::deliverDataToFile): Remove adoptNS and release.
+
+2013-04-30  Geoffrey Garen  <ggaren@apple.com>
+
+        Objective-C JavaScriptCore API should publicly support bridging to C
+        https://bugs.webkit.org/show_bug.cgi?id=115447
+
+        Reviewed by Mark Hahnenberg.
+
+        * WebView/WebFrame.mm:
+        (-[WebFrame _javaScriptContextForScriptWorld:]):
+        * WebView/WebScriptWorld.mm:
+        (+[WebScriptWorld scriptWorldForJavaScriptContext:]):
+
+2013-04-30  Anders Carlsson  <andersca@apple.com>
+
+        More StorageTracker cleanup
+        https://bugs.webkit.org/show_bug.cgi?id=115429
+
+        Reviewed by Andreas Kling.
+
+        Call PageGroup::syncLocalStorage directly.
+
+        * Storage/WebStorageManager.mm:
+        (-[WebStorageManager syncLocalStorage]):
+
 2013-04-30  Zalan Bujtas  <zalan@apple.com>
 
         Animations fail to start on http://www.google.com/insidesearch/howsearchworks/thestory/

@@ -36,6 +36,7 @@ class WorkQueue;
 namespace WebKit {
 
 struct SecurityOriginData;
+class LocalStorageDatabaseTracker;
 class WebProcessProxy;
 
 class StorageManager : public CoreIPC::Connection::WorkQueueMessageReceiver {
@@ -69,8 +70,6 @@ private:
     void removeItem(CoreIPC::Connection*, uint64_t storageMapID, uint64_t sourceStorageAreaID, const String& key, const String& urlString);
     void clear(CoreIPC::Connection*, uint64_t storageMapID, uint64_t sourceStorageAreaID, const String& urlString);
 
-    void setLocalStorageDirectoryInternal(const String&);
-
     void createSessionStorageNamespaceInternal(uint64_t storageNamespaceID, CoreIPC::Connection* allowedConnection, unsigned quotaInBytes);
     void destroySessionStorageNamespaceInternal(uint64_t storageNamespaceID);
     void setAllowedSessionStorageNamespaceConnectionInternal(uint64_t storageNamespaceID, CoreIPC::Connection* allowedConnection);
@@ -86,8 +85,7 @@ private:
 
     RefPtr<WorkQueue> m_queue;
 
-    String m_localStorageDirectory;
-
+    RefPtr<LocalStorageDatabaseTracker> m_localStorageDatabaseTracker;
     HashMap<uint64_t, RefPtr<LocalStorageNamespace> > m_localStorageNamespaces;
 
     class SessionStorageNamespace;

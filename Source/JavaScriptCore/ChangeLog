@@ -1,3 +1,330 @@
+2013-05-07  Julien Brianceau  <jbrianceau@nds.com>
+
+        Take advantage of pre-decrement and post-increment opcodes for sh4 base JIT.
+        https://bugs.webkit.org/show_bug.cgi?id=115722
+
+        Reviewed by Oliver Hunt.
+
+        * assembler/MacroAssemblerSH4.h:
+        (JSC::MacroAssemblerSH4::load8PostInc):
+        (MacroAssemblerSH4):
+        (JSC::MacroAssemblerSH4::load16Unaligned):
+        (JSC::MacroAssemblerSH4::load16PostInc):
+        (JSC::MacroAssemblerSH4::storeDouble):
+        (JSC::MacroAssemblerSH4::load32WithUnalignedHalfWords):
+        * assembler/SH4Assembler.h:
+        (JSC::SH4Assembler::movwMemRegIn):
+        (SH4Assembler):
+        (JSC::SH4Assembler::movbMemRegIn):
+        (JSC::SH4Assembler::printInstr):
+
+2013-05-07  Anders Carlsson  <andersca@apple.com>
+
+        Remove AlwaysInline.h from WTF
+        https://bugs.webkit.org/show_bug.cgi?id=115727
+
+        Reviewed by Brent Fulgham.
+
+        The macro that used to be in AlwaysInline.h is now in Compiler.h so there's no reason
+        to keep AlwaysInline.h around anymore.
+
+        * jit/JSInterfaceJIT.h:
+        * parser/Lexer.h:
+        * runtime/JSCJSValue.h:
+        * runtime/SymbolTable.h:
+
+2013-05-07  Mikhail Pozdnyakov  <mikhail.pozdnyakov@intel.com>
+
+        HashTraits<RefPtr<P> >::PeekType should be raw pointer for better performance
+        https://bugs.webkit.org/show_bug.cgi?id=115646
+
+        Reviewed by Darin Adler.
+
+        * bytecompiler/StaticPropertyAnalyzer.h:
+        (JSC::StaticPropertyAnalyzer::putById):
+            Updated accordingly to new HashMap<.., RefPtr>::get() semantics.
+
+2013-05-06  Julien Brianceau  <jbrianceau@nds.com>
+
+        Misc bugfix and cleaning in sh4 base JIT.
+        https://bugs.webkit.org/show_bug.cgi?id=115627
+
+        Reviewed by Oliver Hunt.
+
+        Get rid of loadX(RegisterID r0, RegisterID src, RegisterID dest) functions.
+        Remove misplaced extuw() implementation from MacroAssemblerSH4.
+        Add movbRegMemr0 and movwRegMemr0 functions in SH4Assembler.
+
+        * assembler/MacroAssemblerSH4.h:
+        (JSC::MacroAssemblerSH4::add32): Skip operation when first operand is a zero immediate.
+        (JSC::MacroAssemblerSH4::sub32): Skip operation when first operand is a zero immediate.
+        (JSC::MacroAssemblerSH4::load32): Fix wrong usage of r0 register.
+        (JSC::MacroAssemblerSH4::load8Signed): Handle "base == r0" case.
+        (MacroAssemblerSH4):
+        (JSC::MacroAssemblerSH4::load16): Handle "base == r0" case.
+        (JSC::MacroAssemblerSH4::load16Unaligned): Use extuw() implementation from SH4Assembler.
+        (JSC::MacroAssemblerSH4::load16Signed): Cosmetic change.
+        (JSC::MacroAssemblerSH4::store8): Fix unhandled BaseIndex offset and handle (base == r0) case.
+        (JSC::MacroAssemblerSH4::store16): Fix unhandled BaseIndex offset and handle (base == r0) case.
+        (JSC::MacroAssemblerSH4::store32):
+        * assembler/SH4Assembler.h:
+        (JSC::SH4Assembler::movwRegMemr0):
+        (SH4Assembler):
+        (JSC::SH4Assembler::movbRegMemr0):
+        (JSC::SH4Assembler::placeConstantPoolBarrier): Cosmetic change.
+        (JSC::SH4Assembler::maxJumpReplacementSize):
+        (JSC::SH4Assembler::replaceWithJump): Correct branch range and save an opcode.
+        (JSC::SH4Assembler::printInstr):
+
+2013-05-06  Anders Carlsson  <andersca@apple.com>
+
+        Stop using WTF::deleteAllValues in JavaScriptCore
+        https://bugs.webkit.org/show_bug.cgi?id=115670
+
+        Reviewed by Oliver Hunt.
+
+        Change the Vectors used to Vectors of OwnPtrs instead.
+
+        * heap/DFGCodeBlocks.cpp:
+        (JSC::DFGCodeBlocks::~DFGCodeBlocks):
+        (JSC::DFGCodeBlocks::deleteUnmarkedJettisonedCodeBlocks):
+
+2013-05-06  Andras Becsi  <andras.becsi@digia.com>
+
+        Build with GCC 4.8 fails because of -Wmaybe-uninitialized
+        https://bugs.webkit.org/show_bug.cgi?id=115648
+
+        Reviewed by Michael Saboff.
+
+        Initialize values in Options::setOption since from
+        there we end up calling OptionRange::init with
+        uninitialized members.
+
+        * runtime/Options.cpp:
+
+2013-05-06  Gabor Rapcsanyi  <rgabor@webkit.org>
+
+        JSC ARM traditional failing on Octane NavierStokes test
+        https://bugs.webkit.org/show_bug.cgi?id=115626
+
+        Reviewed by Zoltan Herczeg.
+
+        Change the ARM traditional assembler to use double precision on value
+        conversions.
+
+        * assembler/ARMAssembler.h:
+
+2013-05-03  Michael Saboff  <msaboff@apple.com>
+
+        There should be a runtime option to constrain what functions get DFG compiled
+        https://bugs.webkit.org/show_bug.cgi?id=115576
+
+        Reviewed by Mark Hahnenberg.
+
+        Added OptionRange to Options to allow checking that something is within an option
+        or not.  The new OptionClass supports range strings in the form of [!]<low>[:<high>].
+        If only one value is given, then it will be used for both low and high.  A leading
+        '!' inverts the check.  If no range is given, then checking for a value within a range
+        will always return true.  Added the option "bytecodeRangeToDFGCompile" that takes an
+        OptionRange string to select the bytecode range of code blocks to DFG compile.
+
+        * dfg/DFGDriver.cpp:
+        (JSC::DFG::compile): Added new check for bytecode count within bytecodeRangeToDFGCompile
+        range.
+        * runtime/Options.cpp:
+        (JSC::parse): Added overloaded parse() for OptionRange.
+        (JSC::OptionRange::init): Parse range string and then initialize the range.
+        (JSC::OptionRange::isInRange): Function used by consumer to check if a value is within
+        the specified range.
+        (JSC::Options::dumpOption): Added code to dump OptionRange options.
+        * runtime/Options.h:
+        (OptionRange): New class.
+        (JSC::OptionRange::operator= ): This is really used as a default ctor for use within
+        the Option static array initialization.
+        (JSC::OptionRange::rangeString): This is used for debug.  It assumes that the char*
+        passed into OptionRange::init is valid when this function is called.
+
+2013-05-02  Oliver Hunt  <oliver@apple.com>
+
+        Fix potential bug in lookup logic
+        https://bugs.webkit.org/show_bug.cgi?id=115522
+
+        Reviewed by Mark Hahnenberg.
+
+        Though not a problem in practise, it is technically possible
+        to inject an un-proxied global object into the scope chain
+        via the C API.  This change makes sure that the scope walk
+        in BytecodeGenerator actually limits itself to scopes that
+        are statically bindable.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::resolve):
+        * runtime/JSObject.h:
+        (JSObject):
+        (JSC):
+        (JSC::JSObject::isStaticScopeObject):
+
+2013-05-01  Roger Fong  <roger_fong@apple.com>
+
+        Set Path in makefile for AppleWin.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.make:
+
+2013-05-01  Benjamin Poulain  <benjamin@webkit.org>
+
+        Remove the remaining wscript
+        https://bugs.webkit.org/show_bug.cgi?id=115459
+
+        Reviewed by Andreas Kling.
+
+        * wscript: Removed.
+
+2013-04-30  Mark Lam  <mark.lam@apple.com>
+
+        JSContextGroupSetExecutionTimeLimit() should not pass a callback to the
+        VM watchdog if its client did not pass one in.
+        https://bugs.webkit.org/show_bug.cgi?id=115461.
+
+        Reviewed by Geoffrey Garen.
+
+        * API/JSContextRef.cpp:
+        (internalScriptTimeoutCallback):
+        (JSContextGroupSetExecutionTimeLimit):
+        * API/tests/testapi.c:
+        (main):
+        - Added test case when the time limit callback is 0.
+        - Also updated a check to verify that a TerminatedExecutionException is
+          thrown when the time out is cancelled.
+        - Also fixed some cosmetic typos.
+
+2013-04-30  Geoffrey Garen  <ggaren@apple.com>
+
+        Removed op_ensure_property_exists
+        https://bugs.webkit.org/show_bug.cgi?id=115460
+
+        Reviewed by Mark Hahnenberg.
+
+        It was unused, and whatever it was once used for was not optimized.
+
+        * JavaScriptCore.order:
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::dumpBytecode):
+        * bytecode/Opcode.h:
+        (JSC::padOpcodeName):
+        * jit/JIT.cpp:
+        (JSC::JIT::privateCompileMainPass):
+        * jit/JIT.h:
+        * jit/JITOpcodes.cpp:
+        * jit/JITOpcodes32_64.cpp:
+        * jit/JITStubs.cpp:
+        * jit/JITStubs.h:
+        * llint/LLIntSlowPaths.cpp:
+        * llint/LLIntSlowPaths.h:
+        * llint/LowLevelInterpreter.asm:
+
+2013-04-30  Oliver Hunt  <oliver@apple.com>
+
+        JSC Stack walking logic craches in the face of inlined functions triggering VM re-entry
+        https://bugs.webkit.org/show_bug.cgi?id=115449
+
+        Reviewed by Geoffrey Garen.
+
+        Rename callframeishost to something that makes sense, and fix
+        getCallerInfo to correctly handle inline functions calling into
+        the VM.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::codeOriginForReturn):
+          Make this more robust in the face of incorrect stack walking
+        * interpreter/CallFrame.cpp:
+        (JSC::CallFrame::trueCallerFrame):
+          Everyone has to perform a codeblock() check before calling this
+          so we might as well just do it here.
+        * interpreter/Interpreter.cpp:
+        (JSC::getCallerInfo):
+
+2013-04-30  Julien Brianceau  <jbrianceau@nds.com>
+
+        Bug fixing in sh4 base JIT and LLINT.
+        https://bugs.webkit.org/show_bug.cgi?id=115420
+
+        Reviewed by Oliver Hunt.
+
+        * assembler/MacroAssemblerSH4.h:
+        (JSC::MacroAssemblerSH4::lshift32):
+        (JSC::MacroAssemblerSH4::rshift32):
+        (JSC::MacroAssemblerSH4::branchMul32):
+        (JSC::MacroAssemblerSH4::urshift32):
+        (JSC::MacroAssemblerSH4::replaceWithJump):
+        (JSC::MacroAssemblerSH4::maxJumpReplacementSize):
+        * assembler/SH4Assembler.h:
+        (JSC::SH4Assembler::shldRegReg):
+        (JSC::SH4Assembler::shadRegReg):
+        (JSC::SH4Assembler::shalImm8r):
+        (SH4Assembler):
+        (JSC::SH4Assembler::sharImm8r):
+        (JSC::SH4Assembler::maxJumpReplacementSize):
+        (JSC::SH4Assembler::replaceWithJump):
+        * offlineasm/sh4.rb:
+
+2013-04-30  Geoffrey Garen  <ggaren@apple.com>
+
+        Objective-C JavaScriptCore API should publicly support bridging to C
+        https://bugs.webkit.org/show_bug.cgi?id=115447
+
+        Reviewed by Mark Hahnenberg.
+
+        For consistency, I renamed
+
+            +[JSValue valueWithValue:] => +[JSValue valueWithJSValueRef]
+            +[JSContext contextWithGlobalContextRef] => +[JSContext contextWithJSGlobalContextRef]
+            -[JSContext globalContext] => -[JSContext JSGlobalContextRef]
+
+        I searched svn to verify that these functions don't have clients yet,
+        so we won't break anything.
+
+        I also exported as public API
+
+            +[JSValue valueWithJSValueRef:]
+            +[JSContext contextWithJSGlobalContextRef:]
+
+        It's hard to integrate with the C API without these.
+
+2013-04-30  Commit Queue  <rniwa@webkit.org>
+
+        Unreviewed, rolling out r149349 and r149354.
+        http://trac.webkit.org/changeset/149349
+        http://trac.webkit.org/changeset/149354
+        https://bugs.webkit.org/show_bug.cgi?id=115444
+
+         The Thumb version of compileSoftModulo make invalid use of
+        registers (Requested by benjaminp on #webkit).
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * assembler/ARMv7Assembler.h:
+        (ARMv7Assembler):
+        * assembler/AbstractMacroAssembler.h:
+        (JSC::isARMv7s):
+        (JSC):
+        * assembler/MacroAssemblerARMv7.cpp: Removed.
+        * assembler/MacroAssemblerARMv7.h:
+        (MacroAssemblerARMv7):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGOperations.cpp:
+        * dfg/DFGOperations.h:
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileSoftModulo):
+        (DFG):
+        (JSC::DFG::SpeculativeJIT::compileIntegerArithDivForARMv7s):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::callOperation):
+        (SpeculativeJIT):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
 2013-04-30  Zalan Bujtas  <zalan@apple.com>
 
         Animations fail to start on http://www.google.com/insidesearch/howsearchworks/thestory/

@@ -20,6 +20,7 @@
 #include "InRegionScroller.h"
 
 #include "BackingStoreClient.h"
+#include "DOMSupport.h"
 #include "Frame.h"
 #include "HTMLFrameOwnerElement.h"
 #include "HitTestResult.h"
@@ -306,8 +307,8 @@ void InRegionScrollerPrivate::updateSelectionScrollView(const Node* node)
     // Deleting the scrollview is handled by the client.
     Platform::ScrollViewBase* selectionScrollView = firstScrollableInRegionForNode(node);
     m_webPage->m_client->notifySelectionScrollView(selectionScrollView);
-    // if there's no subframe set an empty rect so that we default to the main frame.
-    m_webPage->m_selectionHandler->setSelectionViewportRect(selectionScrollView ? WebCore::IntRect(selectionScrollView->documentViewportRect()) : WebCore::IntRect());
+    // If there's no subframe set an empty rect so that we default to the main frame.
+    m_webPage->m_selectionHandler->setSelectionSubframeViewportRect(selectionScrollView ? WebCore::IntRect(selectionScrollView->documentViewportRect()) : WebCore::IntRect());
 }
 
 Platform::ScrollViewBase* InRegionScrollerPrivate::firstScrollableInRegionForNode(const Node* node)
@@ -456,7 +457,7 @@ bool InRegionScrollerPrivate::canScrollRenderBox(RenderBox* box)
         return true;
 
     Node* node = box->node();
-    return node && (node->rendererIsEditable() || node->isDocumentNode());
+    return node && (DOMSupport::isShadowHostTextInputElement(node) || node->isDocumentNode());
 }
 
 static RenderLayer* parentLayer(RenderLayer* layer)

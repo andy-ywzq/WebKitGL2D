@@ -197,11 +197,10 @@ bool TextureMapperLayer::shouldBlend() const
     if (m_state.preserves3D)
         return false;
 
-#if ENABLE(CSS_FILTERS)
-    if (m_currentFilters.size())
-        return true;
-#endif
-    return m_currentOpacity < 1 || m_state.maskLayer || (m_state.replicaLayer && m_state.replicaLayer->m_state.maskLayer);
+    return m_currentOpacity < 1
+        || hasFilters()
+        || m_state.maskLayer
+        || (m_state.replicaLayer && m_state.replicaLayer->m_state.maskLayer);
 }
 
 bool TextureMapperLayer::isVisible() const
@@ -249,31 +248,6 @@ TransformationMatrix TextureMapperLayer::replicaTransform()
 void TextureMapperLayer::setAnimatedFilters(const FilterOperations& filters)
 {
     m_currentFilters = filters;
-}
-
-static bool shouldKeepContentTexture(const FilterOperations& filters)
-{
-    for (size_t i = 0; i < filters.size(); ++i) {
-        switch (filters.operations().at(i)->getOperationType()) {
-        // The drop-shadow filter requires the content texture, because it needs to composite it
-        // on top of the blurred shadow color.
-        case FilterOperation::DROP_SHADOW:
-            return true;
-        default:
-            break;
-        }
-    }
-
-    return false;
-}
-
-static PassRefPtr<BitmapTexture> applyFilters(const FilterOperations& filters, TextureMapper* textureMapper, BitmapTexture* source)
-{
-    if (!filters.size())
-        return source;
-
-    RefPtr<BitmapTexture> filterSurface = shouldKeepContentTexture(filters) ? textureMapper->acquireTextureFromPool(source->size()) : source;
-    return filterSurface->applyFilters(textureMapper, *source, filters);
 }
 #endif
 
@@ -359,8 +333,16 @@ void TextureMapperLayer::paintUsingOverlapRegions(const TextureMapperPaintOption
         return;
     }
 
+    // Having both overlap and non-overlap regions carries some overhead. Avoid it if the overlap area
+    // is big anyway.
+    if (overlapRegion.bounds().size().area() > nonOverlapRegion.bounds().size().area()) {
+        overlapRegion.unite(nonOverlapRegion);
+        nonOverlapRegion = Region();
+    }
+
     nonOverlapRegion.translate(options.offset);
     Vector<IntRect> rects = nonOverlapRegion.rects();
+
     for (size_t i = 0; i < rects.size(); ++i) {
         IntRect rect = rects[i];
         if (!rect.intersects(options.textureMapper->clipBounds()))
@@ -372,6 +354,12 @@ void TextureMapperLayer::paintUsingOverlapRegions(const TextureMapperPaintOption
     }
 
     rects = overlapRegion.rects();
+    static const size_t OverlapRegionConsolidationThreshold = 4;
+    if (nonOverlapRegion.isEmpty() && rects.size() > OverlapRegionConsolidationThreshold) {
+        rects.clear();
+        rects.append(overlapRegion.bounds());
+    }
+
     IntSize maxTextureSize = options.textureMapper->maxTextureSize();
     IntRect adjustedClipBounds(options.textureMapper->clipBounds());
     adjustedClipBounds.move(-options.offset);
@@ -407,8 +395,7 @@ PassRefPtr<BitmapTexture> TextureMapperLayer::paintIntoSurface(const TextureMapp
     if (m_state.maskLayer)
         m_state.maskLayer->applyMask(options);
 #if ENABLE(CSS_FILTERS)
-    if (!m_currentFilters.isEmpty())
-        surface = applyFilters(m_currentFilters, options.textureMapper, surface.get());
+    surface = surface->applyFilters(options.textureMapper, m_currentFilters);
 #endif
     options.textureMapper->bindSurface(surface.get());
     return surface;

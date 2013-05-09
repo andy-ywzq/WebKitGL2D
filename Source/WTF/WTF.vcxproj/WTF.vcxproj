@@ -48,6 +48,7 @@
     <ClCompile Include="..\wtf\DynamicAnnotations.cpp" />
     <ClCompile Include="..\wtf\FastMalloc.cpp" />
     <ClCompile Include="..\wtf\FilePrintStream.cpp" />
+    <ClCompile Include="..\wtf\FunctionDispatcher.cpp" />
     <ClCompile Include="..\wtf\GregorianDateTime.cpp" />
     <ClCompile Include="..\wtf\HashTable.cpp" />
     <ClCompile Include="..\wtf\MainThread.cpp" />
@@ -93,7 +94,6 @@
   <ItemGroup>
     <ClInclude Include="..\WTF\config.h" />
     <ClInclude Include="..\wtf\Alignment.h" />
-    <ClInclude Include="..\wtf\AlwaysInline.h" />
     <ClInclude Include="..\wtf\ArrayBuffer.h" />
     <ClInclude Include="..\wtf\ArrayBufferView.h" />
     <ClInclude Include="..\wtf\ASCIICType.h" />
@@ -143,6 +143,7 @@
     <ClInclude Include="..\wtf\Float32Array.h" />
     <ClInclude Include="..\wtf\Float64Array.h" />
     <ClInclude Include="..\wtf\Forward.h" />
+    <ClInclude Include="..\wtf\FunctionDispatcher.h" />
     <ClInclude Include="..\wtf\Functional.h" />
     <ClInclude Include="..\wtf\GetPtr.h" />
     <ClInclude Include="..\wtf\GregorianDateTime.h" />
@@ -158,7 +159,6 @@
     <ClInclude Include="..\wtf\Int32Array.h" />
     <ClInclude Include="..\wtf\Int8Array.h" />
     <ClInclude Include="..\wtf\ListHashSet.h" />
-    <ClInclude Include="..\wtf\ListRefPtr.h" />
     <ClInclude Include="..\wtf\Locker.h" />
     <ClInclude Include="..\wtf\MainThread.h" />
     <ClInclude Include="..\wtf\MallocZoneSupport.h" />
@@ -310,7 +310,7 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="WTFDebug.props" />
+    <Import Project="WTFDebugWinCairo.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -323,7 +323,7 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="WTFRelease.props" />
+    <Import Project="WTFReleaseWinCairo.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Production|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />

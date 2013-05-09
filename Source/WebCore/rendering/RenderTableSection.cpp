@@ -339,10 +339,14 @@ int RenderTableSection::calcRowLogicalHeight()
                     if (baselinePosition > cell->borderBefore() + cell->paddingBefore()) {
                         m_grid[cellStartRow].baseline = max(m_grid[cellStartRow].baseline, baselinePosition);
                         // The descent of a cell that spans multiple rows does not affect the height of the first row it spans, so don't let it
-                        // become the baseline descent applied to the rest of the row. 
-                        if (cell->rowSpan() == 1)
+                        // become the baseline descent applied to the rest of the row. Also we don't account for the baseline descent of
+                        // non-spanning cells when computing a spanning cell's extent.
+                        int cellStartRowBaselineDescent = 0;
+                        if (cell->rowSpan() == 1) {
                             baselineDescent = max(baselineDescent, cellLogicalHeight - (baselinePosition - cell->intrinsicPaddingBefore()));
-                        m_rowPos[cellStartRow + 1] = max<int>(m_rowPos[cellStartRow + 1], m_rowPos[cellStartRow] + m_grid[cellStartRow].baseline + baselineDescent);
+                            cellStartRowBaselineDescent = baselineDescent;
+                        }
+                        m_rowPos[cellStartRow + 1] = max<int>(m_rowPos[cellStartRow + 1], m_rowPos[cellStartRow] + m_grid[cellStartRow].baseline + cellStartRowBaselineDescent);
                     }
                 }
             }
@@ -371,7 +375,7 @@ void RenderTableSection::layout()
     // can be called in a loop (e.g during parsing). Doing it now ensures we have a stable-enough structure.
     m_grid.shrinkToFit();
 
-    LayoutStateMaintainer statePusher(view(), this, locationOffset(), style()->isFlippedBlocksWritingMode());
+    LayoutStateMaintainer statePusher(view(), this, locationOffset(), hasTransform() || hasReflection() || style()->isFlippedBlocksWritingMode());
 
     const Vector<int>& columnPos = table()->columnPositions();
 
@@ -518,7 +522,7 @@ void RenderTableSection::layoutRows()
     int vspacing = table()->vBorderSpacing();
     unsigned nEffCols = table()->numEffCols();
 
-    LayoutStateMaintainer statePusher(view(), this, locationOffset(), style()->isFlippedBlocksWritingMode());
+    LayoutStateMaintainer statePusher(view(), this, locationOffset(), hasTransform() || style()->isFlippedBlocksWritingMode());
 
     for (unsigned r = 0; r < totalRows; r++) {
         // Set the row's x/y position and width/height.
@@ -1322,7 +1326,7 @@ void RenderTableSection::splitColumn(unsigned pos, unsigned first)
         Row& r = m_grid[row].row;
         r.insert(pos + 1, CellStruct());
         if (r[pos].hasCells()) {
-            r[pos + 1].cells.append(r[pos].cells);
+            r[pos + 1].cells.appendVector(r[pos].cells);
             RenderTableCell* cell = r[pos].primaryCell();
             ASSERT(cell);
             ASSERT(cell->colSpan() >= (r[pos].inColSpan ? 1u : 0));

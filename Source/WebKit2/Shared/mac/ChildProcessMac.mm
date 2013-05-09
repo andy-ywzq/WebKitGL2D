@@ -42,17 +42,15 @@
 extern "C" int sandbox_init_with_parameters(const char *profile, uint64_t flags, const char *const parameters[], char **errorbuf);
 
 #ifdef __has_include
-#if __has_include(<CoreGraphics/CGSConnection.h>)
-#include <CoreGraphics/CGSConnection.h>
-#endif
-
 #if __has_include(<HIServices/ProcessesPriv.h>)
 #include <HIServices/ProcessesPriv.h>
 #endif
 #endif
 
-#if __MAC_OS_X_VERSION_MIN_REQUIRED <= 1080 // Temporary workaround for <rdar://problem/13564588>. We should have the forward declaration on all OS X versions again eventually.
-extern "C" CGError CGSShutdownServerConnections();
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
+typedef bool (^LSServerConnectionAllowedBlock) ( CFDictionaryRef optionsRef );
+extern "C" void _LSSetApplicationLaunchServicesServerConnectionStatus(uint64_t flags, LSServerConnectionAllowedBlock block);
+extern "C" CFDictionaryRef _LSApplicationCheckIn(int sessionID, CFDictionaryRef applicationInfo);
 #endif
 
 extern "C" OSStatus SetApplicationIsDaemon(Boolean isDaemon);
@@ -67,10 +65,13 @@ void ChildProcess::setProcessSuppressionEnabled(bool processSuppressionEnabled)
     if (this->processSuppressionEnabled() == processSuppressionEnabled)
         return;
 
-    if (processSuppressionEnabled)
+    if (processSuppressionEnabled) {
+        [[NSProcessInfo processInfo] endActivity:m_processSuppressionAssertion.get()];
         m_processSuppressionAssertion.clear();
-    else
-        m_processSuppressionAssertion = [[NSProcessInfo processInfo] beginSuspensionOfSystemBehaviors:WKProcessSuppressionSystemBehaviors reason:@"Process Suppression Disabled"];
+    } else {
+        NSActivityOptions options = NSActivityUserInitiatedAllowingIdleSystemSleep & ~(NSActivitySuddenTerminationDisabled | NSActivityAutomaticTerminationDisabled);
+        m_processSuppressionAssertion = [[NSProcessInfo processInfo] beginActivityWithOptions:options reason:@"Process Suppression Disabled"];
+    }
 #else
     UNUSED_PARAM(processSuppressionEnabled);
 #endif
@@ -86,10 +87,15 @@ static void initializeTimerCoalescingPolicy()
 }
 #endif
 
-void ChildProcess::shutdownWindowServerConnection()
+void ChildProcess::setApplicationIsDaemon()
 {
-    CGSShutdownServerConnections();
-    SetApplicationIsDaemon(true);
+    OSStatus error = SetApplicationIsDaemon(true);
+    ASSERT_UNUSED(error, error == noErr);
+
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
+    _LSSetApplicationLaunchServicesServerConnectionStatus(0, 0);
+    RetainPtr<CFDictionaryRef> unused = _LSApplicationCheckIn(-2, CFBundleGetInfoDictionary(CFBundleGetMainBundle()));
+#endif
 }
 
 void ChildProcess::platformInitialize()

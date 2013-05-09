@@ -739,6 +739,33 @@ void WebPageProxy::loadWebArchiveData(const WebData* webArchiveData)
     m_process->responsivenessTimer()->start();
 }
 
+void WebPageProxy::loadFile(const String& fileURLString, const String& resourceDirectoryURLString)
+{
+    if (!isValid())
+        reattachToWebProcess();
+
+    KURL fileURL = KURL(KURL(), fileURLString);
+    if (!fileURL.isLocalFile())
+        return;
+
+    KURL resourceDirectoryURL;
+    if (resourceDirectoryURLString.isNull())
+        resourceDirectoryURL = KURL(ParsedURLString, ASCIILiteral("file:///"));
+    else {
+        resourceDirectoryURL = KURL(KURL(), resourceDirectoryURLString);
+        if (!resourceDirectoryURL.isLocalFile())
+            return;
+    }
+
+    String resourceDirectoryPath = resourceDirectoryURL.fileSystemPath();
+
+    SandboxExtension::Handle sandboxExtensionHandle;
+    SandboxExtension::createHandle(resourceDirectoryPath, SandboxExtension::ReadOnly, sandboxExtensionHandle);
+    m_process->assumeReadAccessToBaseURL(resourceDirectoryURL);
+    m_process->send(Messages::WebPage::LoadURL(fileURL, sandboxExtensionHandle), m_pageID);
+    m_process->responsivenessTimer()->start();
+}
+
 void WebPageProxy::stopLoading()
 {
     if (!isValid())
@@ -916,6 +943,13 @@ bool WebPageProxy::canShowMIMEType(const String& mimeType) const
     if (!plugin.path.isNull() && m_pageGroup->preferences()->pluginsEnabled())
         return true;
 #endif // ENABLE(NETSCAPE_PLUGIN_API)
+
+#if PLATFORM(MAC)
+    // On Mac, we can show PDFs.
+    if (MIMETypeRegistry::isPDFOrPostScriptMIMEType(mimeType) && !WebContext::omitPDFSupport())
+        return true;
+#endif // PLATFORM(MAC)
+
     return false;
 }
 
@@ -3864,6 +3898,9 @@ void WebPageProxy::processDidCrash()
 
 void WebPageProxy::resetStateAfterProcessExited()
 {
+    if (!isValid())
+        return;
+
     ASSERT(m_pageClient);
     m_process->removeMessageReceiver(Messages::WebPageProxy::messageReceiverName(), m_pageID);
 

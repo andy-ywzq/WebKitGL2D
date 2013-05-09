@@ -129,7 +129,6 @@ set(WebKit2_SOURCES
     Platform/CoreIPC/ArgumentDecoder.cpp
     Platform/CoreIPC/ArgumentEncoder.cpp
     Platform/CoreIPC/Attachment.cpp
-    Platform/CoreIPC/BinarySemaphore.cpp
     Platform/CoreIPC/Connection.cpp
     Platform/CoreIPC/DataReference.cpp
     Platform/CoreIPC/MessageDecoder.cpp
@@ -380,6 +379,9 @@ set(WebKit2_SOURCES
     UIProcess/Plugins/PluginProcessProxy.cpp
     UIProcess/Plugins/WebPluginSiteDataManager.cpp
 
+    UIProcess/Storage/LocalStorageDatabase.cpp
+    UIProcess/Storage/LocalStorageDatabaseTracker.cpp
+
     WebProcess/WebConnectionToUIProcess.cpp
     WebProcess/WebProcess.cpp
 
@@ -494,8 +496,8 @@ set(WebKit2_SOURCES
     WebProcess/WebPage/EncoderAdapter.cpp
     WebProcess/WebPage/EventDispatcher.cpp
     WebProcess/WebPage/FindController.cpp
-
     WebProcess/WebPage/LayerTreeHost.cpp
+    WebProcess/WebPage/PageBanner.cpp
     WebProcess/WebPage/PageOverlay.cpp
     WebProcess/WebPage/TapHighlightController.cpp
     WebProcess/WebPage/WebBackForwardListProxy.cpp
@@ -598,6 +600,7 @@ set(WebProcess_LIBRARIES
 )
 
 set(WebKit2_LIBRARIES
+    ${WTF_LIBRARY_NAME}
     ${WebCore_LIBRARY_NAME}
 )
 

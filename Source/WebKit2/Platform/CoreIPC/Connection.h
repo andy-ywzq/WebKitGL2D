@@ -34,6 +34,7 @@
 #include "MessageReceiver.h"
 #include "WorkQueue.h"
 #include <wtf/Deque.h>
+#include <wtf/Forward.h>
 #include <wtf/PassRefPtr.h>
 #include <wtf/OwnPtr.h>
 #include <wtf/Threading.h>
@@ -60,8 +61,6 @@ class RunLoop;
 
 namespace CoreIPC {
 
-class BinarySemaphore;
-    
 enum MessageSendFlags {
     // Whether this message should be dispatched when waiting for a sync reply.
     // This is the default for synchronous messages.
@@ -330,7 +329,7 @@ private:
     // same time zone as WTF::currentTime(). Dispatches sent (not posted) messages to the passed-in
     // set of HWNDs until the semaphore is signaled or absoluteTime is reached. Returns true if the
     // semaphore is signaled, false otherwise.
-    static bool dispatchSentMessagesUntil(const Vector<HWND>& windows, CoreIPC::BinarySemaphore& semaphore, double absoluteTime);
+    static bool dispatchSentMessagesUntil(const Vector<HWND>& windows, WTF::BinarySemaphore& semaphore, double absoluteTime);
 
     Vector<uint8_t> m_readBuffer;
     OVERLAPPED m_readState;

@@ -69,7 +69,7 @@ static bool isInitialOrInherit(const String& value)
 PassRefPtr<ImmutableStylePropertySet> ImmutableStylePropertySet::create(const CSSProperty* properties, unsigned count, CSSParserMode cssParserMode)
 {
     void* slot = WTF::fastMalloc(sizeForImmutableStylePropertySetWithPropertyCount(count));
-    return adoptRef(new (slot) ImmutableStylePropertySet(properties, count, cssParserMode));
+    return adoptRef(new (NotNull, slot) ImmutableStylePropertySet(properties, count, cssParserMode));
 }
 
 PassRefPtr<ImmutableStylePropertySet> StylePropertySet::immutableCopyIfNeeded() const
@@ -204,10 +204,6 @@ String StylePropertySet::getPropertyValue(CSSPropertyID propertyID) const
         return getLayeredShorthandValue(webkitTransitionShorthand());
     case CSSPropertyWebkitAnimation:
         return getLayeredShorthandValue(webkitAnimationShorthand());
-#if ENABLE(CSS_EXCLUSIONS)
-    case CSSPropertyWebkitWrap:
-        return getShorthandValue(webkitWrapShorthand());
-#endif
 #if ENABLE(SVG)
     case CSSPropertyMarker: {
         RefPtr<CSSValue> value = getPropertyCSSValue(CSSPropertyMarkerStart);
@@ -919,13 +915,6 @@ String StylePropertySet::asText() const
         case CSSPropertyWebkitTransitionDelay:
             shorthandPropertyID = CSSPropertyWebkitTransition;
             break;
-#if ENABLE(CSS_EXCLUSIONS)
-        case CSSPropertyWebkitWrapFlow:
-        case CSSPropertyWebkitShapeMargin:
-        case CSSPropertyWebkitShapePadding:
-            shorthandPropertyID = CSSPropertyWebkitWrap;
-            break;
-#endif
         default:
             break;
         }

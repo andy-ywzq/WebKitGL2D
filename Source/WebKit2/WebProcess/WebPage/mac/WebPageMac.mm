@@ -30,6 +30,7 @@
 #import "DataReference.h"
 #import "EditorState.h"
 #import "PDFKitImports.h"
+#import "PageBanner.h"
 #import "PluginView.h"
 #import "PrintInfo.h"
 #import "WKAccessibilityWebPageObject.h"
@@ -50,21 +51,22 @@
 #import <WebCore/Frame.h>
 #import <WebCore/FrameLoader.h>
 #import <WebCore/FrameView.h>
-#import <WebCore/HitTestResult.h>
 #import <WebCore/HTMLConverter.h>
+#import <WebCore/HitTestResult.h>
 #import <WebCore/KeyboardEvent.h>
+#import <WebCore/MIMETypeRegistry.h>
 #import <WebCore/NetworkingContext.h>
 #import <WebCore/Page.h>
 #import <WebCore/PlatformKeyboardEvent.h>
 #import <WebCore/PluginDocument.h>
-#import <WebCore/ResourceHandle.h>
 #import <WebCore/RenderObject.h>
 #import <WebCore/RenderStyle.h>
+#import <WebCore/ResourceHandle.h>
 #import <WebCore/ScrollView.h>
 #import <WebCore/StyleInheritedData.h>
 #import <WebCore/TextIterator.h>
-#import <WebCore/WindowsKeyboardCodes.h>
 #import <WebCore/VisibleUnits.h>
+#import <WebCore/WindowsKeyboardCodes.h>
 #import <WebKitSystemInterface.h>
 
 using namespace WebCore;
@@ -103,9 +105,9 @@ void WebPage::platformPreferencesDidChange(const WebPreferencesStore& store)
 
     BOOL omitPDFSupport = [[NSUserDefaults standardUserDefaults] boolForKey:@"WebKitOmitPDFSupport"];
     if (!shouldUsePDFPlugin() && !omitPDFSupport) {
-        // We want to use a PDF view in the UI process for PDF MIME types.
-        HashSet<String, CaseFoldingHash> mimeTypes = pdfAndPostScriptMIMETypes();
-        for (HashSet<String, CaseFoldingHash>::iterator it = mimeTypes.begin(); it != mimeTypes.end(); ++it)
+        // If we don't have PDFPlugin, we will use a PDF view in the UI process for PDF and PostScript MIME types.
+        HashSet<String> mimeTypes = MIMETypeRegistry::getPDFAndPostScriptMIMETypes();
+        for (HashSet<String>::iterator it = mimeTypes.begin(); it != mimeTypes.end(); ++it)
             m_mimeTypesWithCustomRepresentations.add(*it);
     }
 }
@@ -881,6 +883,11 @@ void WebPage::updateHeaderAndFooterLayersForDeviceScaleChange(float scaleFactor)
         m_footerLayer.get().contentsScale = scaleFactor;
         [m_footerLayer.get() setNeedsDisplay];
     }
+    
+    if (m_headerBanner)
+        m_headerBanner->didChangeDeviceScaleFactor(scaleFactor);
+    if (m_footerBanner)
+        m_footerBanner->didChangeDeviceScaleFactor(scaleFactor);
 }
 
 void WebPage::computePagesForPrintingPDFDocument(uint64_t frameID, const PrintInfo& printInfo, Vector<IntRect>& resultPageRects)
@@ -994,18 +1001,6 @@ void WebPage::drawPagesToPDFFromPDFDocument(CGContextRef context, PDFDocument *p
         drawPDFPage(pdfDocument, page, context, printInfo.pageSetupScaleFactor, CGSizeMake(printInfo.availablePaperWidth, printInfo.availablePaperHeight));
         CGPDFContextEndPage(context);
     }
-}
-
-// FIXME: This is not the ideal place for this function (and now it's duplicated here and in WebContextMac).
-HashSet<String, CaseFoldingHash> WebPage::pdfAndPostScriptMIMETypes()
-{
-    HashSet<String, CaseFoldingHash> mimeTypes;
-    
-    mimeTypes.add("application/pdf");
-    mimeTypes.add("application/postscript");
-    mimeTypes.add("text/pdf");
-    
-    return mimeTypes;
 }
 
 } // namespace WebKit

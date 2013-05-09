@@ -441,12 +441,12 @@ void InputHandler::focusedNodeChanged()
             return;
         }
 
-        if (DOMSupport::isTextBasedContentEditableElement(element)) {
+        if (DOMSupport::isTextBasedContentEditableElement(element) && !DOMSupport::isElementReadOnly(element)) {
             // Focused node is a text based input field, textarea or content editable field.
             setElementFocused(element);
             return;
         }
-    } else if (node && DOMSupport::isTextBasedContentEditableElement(node->parentElement())) {
+    } else if (node && DOMSupport::isTextBasedContentEditableElement(node->parentElement()) && !DOMSupport::isElementReadOnly(node->parentElement())) {
         setElementFocused(node->parentElement());
         return;
     }
@@ -623,6 +623,7 @@ void InputHandler::requestCheckingOfString(PassRefPtr<WebCore::SpellCheckRequest
 
     // Check if the field should be spellchecked.
     if (!isActiveTextEdit() || !shouldSpellCheckElement(m_currentFocusElement.get()) || requestLength < 2) {
+        SpellingLog(Platform::LogLevelWarn, "InputHandler::requestCheckingOfString request cancelled");
         spellCheckRequest->didCancel();
         return;
     }
@@ -630,16 +631,7 @@ void InputHandler::requestCheckingOfString(PassRefPtr<WebCore::SpellCheckRequest
     if (requestLength >= MaxSpellCheckingStringLength) {
         // Cancel this request and send it off in newly created chunks.
         spellCheckRequest->didCancel();
-        if (m_currentFocusElement->document() && m_currentFocusElement->document()->frame() && m_currentFocusElement->document()->frame()->selection()) {
-            VisiblePosition caretPosition = m_currentFocusElement->document()->frame()->selection()->start();
-            // Convert from position back to selection so we can expand the range to include the previous line. This should handle cases when the user hits
-            // enter to finish composing a word and create a new line. Account for word wrapping by jumping to the start of the previous line, then moving
-            // to the start of any word which might be there.
-            VisibleSelection visibleSelection = VisibleSelection(
-                startOfWord(startOfLine(previousLinePosition(caretPosition, caretPosition.lineDirectionPointForBlockDirectionNavigation()))),
-                endOfWord(endOfLine(caretPosition)));
-            m_spellingHandler->spellCheckTextBlock(visibleSelection, TextCheckingProcessIncremental);
-        }
+        m_spellingHandler->spellCheckTextBlock(m_currentFocusElement.get(), TextCheckingProcessIncremental);
         return;
     }
 
@@ -672,23 +664,12 @@ void InputHandler::requestCheckingOfString(PassRefPtr<WebCore::SpellCheckRequest
     m_request = spellCheckRequest;
 }
 
-void InputHandler::spellCheckingRequestCancelled(int32_t)
+void InputHandler::spellCheckingRequestProcessed(int32_t transactionId, spannable_string_t* spannableString)
 {
-    SpellingLog(Platform::LogLevelWarn,
-        "InputHandler::spellCheckingRequestCancelled Expected transaction id %d, received %d. %s",
-        transactionId,
-        m_processingTransactionId,
-        transactionId == m_processingTransactionId ? "" : "We are out of sync with input service.");
+#if !ENABLE_SPELLING_LOG
+    UNUSED_PARAM(transactionId)
+#endif
 
-    if (m_request) {
-        m_request->didCancel();
-        m_request = 0;
-    }
-    m_processingTransactionId = -1;
-}
-
-void InputHandler::spellCheckingRequestProcessed(int32_t, spannable_string_t* spannableString)
-{
     SpellingLog(Platform::LogLevelWarn,
         "InputHandler::spellCheckingRequestProcessed Expected transaction id %d, received %d. %s",
         m_processingTransactionId,
@@ -880,7 +861,7 @@ void InputHandler::requestSpellingCheckingOptions(imf_sp_text_t& spellCheckingOp
 
 void InputHandler::setElementUnfocused(bool refocusOccuring)
 {
-    if (isActiveTextEdit() && m_currentFocusElement->attached() && m_currentFocusElement->document()->attached()) {
+    if (isActiveTextEdit() && DOMSupport::isElementAndDocumentAttached(m_currentFocusElement.get())) {
         FocusLog(Platform::LogLevelInfo, "InputHandler::setElementUnfocused");
 
         // Pass any text into the field to IMF to learn.
@@ -941,7 +922,10 @@ void InputHandler::setInputModeEnabled(bool active)
     m_inputModeEnabled = active;
 
     // If the frame selection isn't focused, focus it.
-    if (isInputModeEnabled() && isActiveTextEdit() && !m_currentFocusElement->document()->frame()->selection()->isFocused())
+    if (isInputModeEnabled()
+        && isActiveTextEdit()
+        && DOMSupport::isElementAndDocumentAttached(m_currentFocusElement.get())
+        && !m_currentFocusElement->document()->frame()->selection()->isFocused())
         m_currentFocusElement->document()->frame()->selection()->setFocused(true);
 }
 
@@ -975,7 +959,7 @@ void InputHandler::updateFormState()
         // Previous
         for (int previousElementId = focusElementId - 1; previousElementId >= 0; previousElementId--) {
             Element* element = const_cast<HTMLElement*>(toHTMLElement(formElementList[previousElementId]));
-            if (DOMSupport::isTextBasedContentEditableElement(element)) {
+            if (DOMSupport::isTextBasedContentEditableElement(element) && !DOMSupport::isElementReadOnly(element)) {
                 m_previousFocusableTextElement = element;
                 InputLog(Platform::LogLevelInfo, "InputHandler::updateFormState found previous element");
                 break;
@@ -984,7 +968,7 @@ void InputHandler::updateFormState()
         // Next
         for (int nextElementId = focusElementId + 1; nextElementId < formElementCount; nextElementId++) {
             Element* element = const_cast<HTMLElement*>(toHTMLElement(formElementList[nextElementId]));
-            if (DOMSupport::isTextBasedContentEditableElement(element)) {
+            if (DOMSupport::isTextBasedContentEditableElement(element) && !DOMSupport::isElementReadOnly(element)) {
                 m_nextFocusableTextElement = element;
                 InputLog(Platform::LogLevelInfo, "InputHandler::updateFormState found next element");
                 break;
@@ -1063,7 +1047,7 @@ void InputHandler::setElementFocused(Element* element)
     ASSERT(DOMSupport::isTextBasedContentEditableElement(element));
     ASSERT(element && element->document() && element->document()->frame());
 
-#ifdef ENABLE_SPELLING_LOG
+#if ENABLE_SPELLING_LOG
     BlackBerry::Platform::StopWatch timer;
     timer.start();
 #endif
@@ -1129,24 +1113,22 @@ void InputHandler::setElementFocused(Element* element)
     if (!m_delayKeyboardVisibilityChange)
         notifyClientOfKeyboardVisibilityChange(true, true /* triggeredByFocusChange */);
 
-#ifdef ENABLE_SPELLING_LOG
+#if ENABLE_SPELLING_LOG
     SpellingLog(Platform::LogLevelInfo, "InputHandler::setElementFocused Focusing the field took %f seconds.", timer.elapsed());
 #endif
-
-    // Check if the field should be spellchecked.
-    if (!shouldSpellCheckElement(element) || !isActiveTextEdit())
-        return;
 
     // Spellcheck the field in its entirety.
     spellCheckTextBlock(element);
 
-#ifdef ENABLE_SPELLING_LOG
+#if ENABLE_SPELLING_LOG
     SpellingLog(Platform::LogLevelInfo, "InputHandler::setElementFocused Spellchecking the field increased the total time to focus to %f seconds.", timer.elapsed());
 #endif
 }
 
 void InputHandler::spellCheckTextBlock(Element* element)
 {
+    SpellingLog(Platform::LogLevelInfo, "InputHandler::spellCheckTextBlock");
+
     if (!element) {
         // Fall back to a valid focused element.
         if (!m_currentFocusElement)
@@ -1154,8 +1136,12 @@ void InputHandler::spellCheckTextBlock(Element* element)
 
         element = m_currentFocusElement.get();
     }
-    const VisibleSelection visibleSelection = DOMSupport::visibleSelectionForFocusedBlock(element);
-    m_spellingHandler->spellCheckTextBlock(visibleSelection, TextCheckingProcessBatch);
+
+    // Check if the field should be spellchecked.
+    if (!shouldSpellCheckElement(element) || !isActiveTextEdit())
+        return;
+
+    m_spellingHandler->spellCheckTextBlock(element, TextCheckingProcessBatch);
 }
 
 bool InputHandler::shouldSpellCheckElement(const Element* element) const
@@ -1174,14 +1160,25 @@ bool InputHandler::shouldSpellCheckElement(const Element* element) const
     return m_spellCheckStatusConfirmed ? m_globalSpellCheckStatus : true;
 }
 
-void InputHandler::stopPendingSpellCheckRequests()
+void InputHandler::stopPendingSpellCheckRequests(bool isRestartRequired)
 {
     m_spellingHandler->setSpellCheckActive(false);
-    // Prevent response from propagating through
+    // Prevent response from propagating through.
     m_processingTransactionId = 0;
+
     // Reject requests until lastRequestSequence. This helps us clear the queue of stale requests.
-    if (SpellChecker* spellChecker = getSpellChecker())
-        m_minimumSpellCheckingRequestSequence = spellChecker->lastRequestSequence();
+    if (SpellChecker* spellChecker = getSpellChecker()) {
+        if (spellChecker->lastRequestSequence() != spellChecker->lastProcessedSequence()) {
+            SpellingLog(LogLevelInfo, "InputHandler::stopPendingSpellCheckRequests will block requests up to lastRequest=%d [lastProcessed=%d]"
+                , spellChecker->lastRequestSequence(), spellChecker->lastProcessedSequence());
+            // Prevent requests in queue from executing.
+            m_minimumSpellCheckingRequestSequence = spellChecker->lastRequestSequence();
+            if (isRestartRequired && !compositionActive()) {
+                // Create new spellcheck requests to replace those that were invalidated.
+                spellCheckTextBlock();
+            }
+        }
+    }
 }
 
 void InputHandler::redrawSpellCheckDialogIfRequired(const bool shouldMoveDialog)
@@ -1370,6 +1367,14 @@ void InputHandler::ensureFocusTextElementVisible(CaretScrollType scrollType)
         }
     }
 
+    const Platform::ViewportAccessor* viewportAccessor = m_webPage->m_webkitThreadViewportAccessor;
+    if (scrollType == EdgeIfNeeded
+        && (viewportAccessor->documentViewportRect().contains(selectionFocusRect))
+        && zoomScaleRequired == m_webPage->currentScale()) {
+        // Already in view and no zoom is required, return early.
+        return;
+    }
+
     bool shouldConstrainScrollingToContentEdge = true;
     Position start = elementFrame->selection()->start();
     if (start.anchorNode() && start.anchorNode()->renderer()) {
@@ -1412,8 +1417,7 @@ void InputHandler::ensureFocusTextElementVisible(CaretScrollType scrollType)
             // Pad the rect to improve the visual appearance.
             // Convert the padding back from transformed to ensure a consistent padding regardless of
             // zoom level as controls do not zoom.
-            static const int s_focusRectPaddingSize = Graphics::Screen::primaryScreen()->heightInMMToPixels(3);
-            const Platform::ViewportAccessor* viewportAccessor = m_webPage->m_webkitThreadViewportAccessor;
+            static const int s_focusRectPaddingSize = Graphics::Screen::primaryScreen()->heightInMMToPixels(12);
             selectionFocusRect.inflate(std::ceilf(viewportAccessor->documentFromPixelContents(Platform::FloatSize(0, s_focusRectPaddingSize)).height()));
 
             WebCore::IntRect revealRect(layer->getRectToExpose(actualScreenRect, selectionFocusRect,

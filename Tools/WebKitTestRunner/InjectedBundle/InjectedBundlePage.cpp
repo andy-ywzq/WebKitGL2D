@@ -48,6 +48,10 @@
 #include <wtf/text/CString.h>
 #include <wtf/text/StringBuilder.h>
 
+#if USE(CF) && !PLATFORM(QT)
+#include "WebArchiveDumpSupport.h"
+#endif
+
 #if PLATFORM(QT)
 #include "DumpRenderTreeSupportQt.h"
 #elif PLATFORM(NIX)
@@ -374,6 +378,7 @@ InjectedBundlePage::InjectedBundlePage(WKBundlePageRef page)
         0, /*plugInStartLabelTitle*/
         0, /*plugInStartLabelSubtitle*/
         0, /*plugInExtraStyleSheet*/
+        0, /*plugInExtraScript*/
     };
     WKBundlePageSetUIClient(m_page, &uiClient);
 
@@ -840,6 +845,20 @@ void InjectedBundlePage::dumpAllFramesText(StringBuilder& stringBuilder)
     dumpDescendantFramesText(frame, stringBuilder);
 }
 
+
+void InjectedBundlePage::dumpDOMAsWebArchive(WKBundleFrameRef frame, StringBuilder& stringBuilder)
+{
+#if USE(CF) && !PLATFORM(QT)
+    WKRetainPtr<WKDataRef> wkData = adoptWK(WKBundleFrameCopyWebArchive(frame));
+    RetainPtr<CFDataRef> cfData = adoptCF(CFDataCreate(0, WKDataGetBytes(wkData.get()), WKDataGetSize(wkData.get())));
+    RetainPtr<CFStringRef> cfString = adoptCF(createXMLStringFromWebArchiveData(cfData.get()));
+    stringBuilder.append(cfString.get());
+#else
+    UNUSED_PARAM(frame);
+    UNUSED_PARAM(stringBuilder);
+#endif
+}
+
 void InjectedBundlePage::dump()
 {
     ASSERT(InjectedBundle::shared().isTestRunning());
@@ -870,6 +889,9 @@ void InjectedBundlePage::dump()
         dumpAllFramesText(stringBuilder);
         break;
     case TestRunner::Audio:
+        break;
+    case TestRunner::DOMAsWebArchive:
+        dumpDOMAsWebArchive(frame, stringBuilder);
         break;
     }
 

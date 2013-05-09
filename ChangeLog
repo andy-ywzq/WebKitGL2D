@@ -1,3 +1,80 @@
+2013-05-08  Zan Dobersek  <zdobersek@igalia.com>
+
+        [Automake] Pass --no-demangle to the linker by default to get the mangled symbols
+        https://bugs.webkit.org/show_bug.cgi?id=115732
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * GNUmakefile.am: Pass the --no-demangle option to the linker by default. This is done by appending
+        the flag to the LDFLAGS variable. While the AM_LDFLAGS variable would be more appropriate, it's not
+        at all used when linking installable libraries like libwebkitgtk and libwebkit2gtk, so the LDFLAGS
+        variable is used instead.
+
+2013-05-07  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        [CMAKE] Remove SHADOW_DOM from cmakeconfig.h.cmake
+        https://bugs.webkit.org/show_bug.cgi?id=115712
+
+        Reviewed by Andreas Kling.
+
+        Nobody uses SHADOW_DOM in cmake.
+
+        * Source/cmake/WebKitFeatures.cmake:
+        * Source/cmakeconfig.h.cmake:
+
+2013-05-06  Mike Lattanzio  <mlattanzio@blackberry.com>
+
+        [BlackBerry] Enable and Expose Text Autosizing through BlackBerry::WebKit::WebSettings
+        https://bugs.webkit.org/show_bug.cgi?id=113808
+
+        Reviewed by Rob Buis.
+
+        Set the ENABLE_TEXT_AUTOSIZING default to ON for BlackBerry.
+
+        * Source/cmake/OptionsBlackBerry.cmake:
+
+2013-05-06  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        [EFL] Shadow DOM should be disabled at compile time
+        https://bugs.webkit.org/show_bug.cgi?id=115635
+
+        Reviewed by Andreas Kling.
+
+        Disable Shadow DOM at compile time for EFL port. Shadow DOM code
+        is being removed from the tree.
+
+        * Source/cmake/OptionsEfl.cmake:
+
+2013-05-04  Dean Jackson  <dino@apple.com>
+
+        Animations and Transitions should not start when globally suspended
+        https://bugs.webkit.org/show_bug.cgi?id=114915
+
+        Reviewed by Sam Weinig.
+
+        Export AnimationController::isSuspended().
+
+        * Source/autotools/symbols.filter:
+
+2013-05-01  Benjamin Poulain  <benjamin@webkit.org>
+
+        Remove the remaining wscript
+        https://bugs.webkit.org/show_bug.cgi?id=115459
+
+        Reviewed by Andreas Kling.
+
+        * wscript: Removed.
+
+2013-05-01  Sergio Villar Senin  <svillar@igalia.com>
+
+        Show a block cursor in overtype mode
+        https://bugs.webkit.org/show_bug.cgi?id=114819
+
+        Reviewed by Ryosuke Niwa.
+
+        * Source/autotools/symbols.filter: export some extra symbols for
+        testing purposes.
+
 2013-04-30  Christophe Dumez  <ch.dumez@sisa.samsung.com>
 
         [EFL] Enable scaled cursors

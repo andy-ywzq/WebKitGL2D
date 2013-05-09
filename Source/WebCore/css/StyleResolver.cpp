@@ -1630,15 +1630,15 @@ void StyleResolver::updateFont()
     m_state.setFontDirty(false);
 }
 
-PassRefPtr<CSSRuleList> StyleResolver::styleRulesForElement(Element* e, unsigned rulesToInclude)
+Vector<RefPtr<StyleRuleBase> > StyleResolver::styleRulesForElement(Element* e, unsigned rulesToInclude)
 {
     return pseudoStyleRulesForElement(e, NOPSEUDO, rulesToInclude);
 }
 
-PassRefPtr<CSSRuleList> StyleResolver::pseudoStyleRulesForElement(Element* e, PseudoId pseudoId, unsigned rulesToInclude)
+Vector<RefPtr<StyleRuleBase> > StyleResolver::pseudoStyleRulesForElement(Element* e, PseudoId pseudoId, unsigned rulesToInclude)
 {
     if (!e || !e->document()->haveStylesheetsLoaded())
-        return 0;
+        return Vector<RefPtr<StyleRuleBase> >();
 
     initElement(e);
     m_state.initForStyleResolve(document(), e, 0);
@@ -1827,7 +1827,7 @@ void StyleResolver::addToMatchedPropertiesCache(const RenderStyle* style, const 
 
     ASSERT(hash);
     MatchedPropertiesCacheItem cacheItem;
-    cacheItem.matchedProperties.append(matchResult.matchedProperties);
+    cacheItem.matchedProperties.appendVector(matchResult.matchedProperties);
     cacheItem.ranges = matchResult.ranges;
     // Note that we don't cache the original RenderStyle instance. It may be further modified.
     // The RenderStyle in the cache is really just a holder for the substructures and never used as-is.
@@ -2356,7 +2356,7 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
         }
         if (value->isValueList()) {
             CSSValueList* list = static_cast<CSSValueList*>(value);
-            RefPtr<QuotesData> quotes = QuotesData::create();
+            Vector<std::pair<String, String> > quotes;
             for (size_t i = 0; i < list->length(); i += 2) {
                 CSSValue* first = list->itemWithoutBoundsCheck(i);
                 // item() returns null if out of bounds so this is safe.
@@ -2367,14 +2367,14 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
                 ASSERT_WITH_SECURITY_IMPLICATION(second->isPrimitiveValue());
                 String startQuote = static_cast<CSSPrimitiveValue*>(first)->getStringValue();
                 String endQuote = static_cast<CSSPrimitiveValue*>(second)->getStringValue();
-                quotes->addPair(std::make_pair(startQuote, endQuote));
+                quotes.append(std::make_pair(startQuote, endQuote));
             }
-            state.style()->setQuotes(quotes);
+            state.style()->setQuotes(QuotesData::create(quotes));
             return;
         }
         if (primitiveValue) {
             if (primitiveValue->getIdent() == CSSValueNone)
-                state.style()->setQuotes(QuotesData::create());
+                state.style()->setQuotes(QuotesData::create(Vector<std::pair<String, String> >()));
         }
         return;
     // Shorthand properties.
@@ -2473,9 +2473,6 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     case CSSPropertyWebkitTextStroke:
     case CSSPropertyWebkitTransition:
     case CSSPropertyWebkitTransformOrigin:
-#if ENABLE(CSS_EXCLUSIONS)
-    case CSSPropertyWebkitWrap:
-#endif
         ASSERT(isExpandedShorthand(id));
         ASSERT_NOT_REACHED();
         break;
@@ -3576,7 +3573,7 @@ void StyleResolver::loadPendingSVGDocuments()
         if (filterOperation->getOperationType() == FilterOperation::REFERENCE) {
             ReferenceFilterOperation* referenceFilter = static_cast<ReferenceFilterOperation*>(filterOperation.get());
 
-            WebKitCSSSVGDocumentValue* value = state.pendingSVGDocuments().get(referenceFilter).get();
+            WebKitCSSSVGDocumentValue* value = state.pendingSVGDocuments().get(referenceFilter);
             if (!value)
                 continue;
             CachedSVGDocument* cachedDocument = value->load(cachedResourceLoader);

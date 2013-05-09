@@ -432,7 +432,6 @@ BINDING_IDLS = \
     $(WebCore)/html/canvas/WebGLUniformLocation.idl \
     $(WebCore)/html/canvas/WebGLVertexArrayObjectOES.idl \
     $(WebCore)/html/shadow/HTMLContentElement.idl \
-    $(WebCore)/html/shadow/HTMLShadowElement.idl \
     $(WebCore)/html/track/AudioTrack.idl \
     $(WebCore)/html/track/AudioTrackList.idl \
     $(WebCore)/html/track/TextTrack.idl \
@@ -679,6 +678,7 @@ all : \
     HTMLEntityTable.cpp \
     HTMLNames.cpp \
     JSSVGElementWrapperFactory.cpp \
+    PlugInsResources.h \
     SVGElementFactory.cpp \
     SVGNames.cpp \
     UserAgentStyleSheets.h \
@@ -827,6 +827,15 @@ endif
 
 UserAgentStyleSheets.h : css/make-css-file-arrays.pl bindings/scripts/preprocessor.pm $(USER_AGENT_STYLE_SHEETS)
 	perl -I$(WebCore)/bindings/scripts $< --defines "$(FEATURE_DEFINES)" $@ UserAgentStyleSheetsData.cpp $(USER_AGENT_STYLE_SHEETS)
+
+# --------
+
+# plugIns resources
+
+PLUG_INS_RESOURCES = $(WebCore)/Resources/plugIns.js
+
+PlugInsResources.h : css/make-css-file-arrays.pl bindings/scripts/preprocessor.pm $(PLUG_INS_RESOURCES)
+	perl -I$(WebCore)/bindings/scripts $< --defines "$(FEATURE_DEFINES)" $@ PlugInsResourcesData.cpp $(PLUG_INS_RESOURCES)
 
 # --------
 

@@ -137,7 +137,7 @@ test('overrideJustBuildType', 4, function() {
     runExpectationsTest('Apple Lion Debug WK2 (Tests)', test, 'CRASH', 'DEBUG');
 });
 
-test('platformAndBuildType', 78, function() {
+test('platformAndBuildType', 30, function() {
     var historyInstance = new history.History(flakinessConfig);
     // FIXME(jparent): Change to use the flakiness_db's history object
     // once it exists, rather than tracking global.
@@ -150,40 +150,12 @@ test('platformAndBuildType', 78, function() {
         equal(buildInfo.platform, expectedPlatform, message);
         equal(buildInfo.buildType, expectedBuildType, message);
     }
-    runPlatformAndBuildTypeTest('WebKit Win (deps)', 'CHROMIUM_XP', 'RELEASE');
-    runPlatformAndBuildTypeTest('WebKit Win (deps)(dbg)(1)', 'CHROMIUM_XP', 'DEBUG');
-    runPlatformAndBuildTypeTest('WebKit Win (deps)(dbg)(2)', 'CHROMIUM_XP', 'DEBUG');
-    runPlatformAndBuildTypeTest('WebKit Linux (deps)', 'CHROMIUM_LUCID', 'RELEASE');
-    runPlatformAndBuildTypeTest('WebKit Linux (deps)(dbg)(1)', 'CHROMIUM_LUCID', 'DEBUG');
-    runPlatformAndBuildTypeTest('WebKit Linux (deps)(dbg)(2)', 'CHROMIUM_LUCID', 'DEBUG');
-    runPlatformAndBuildTypeTest('WebKit Mac10.6 (deps)', 'CHROMIUM_SNOWLEOPARD', 'RELEASE');
-    runPlatformAndBuildTypeTest('WebKit Mac10.6 (deps)(dbg)(1)', 'CHROMIUM_SNOWLEOPARD', 'DEBUG');
-    runPlatformAndBuildTypeTest('WebKit Mac10.6 (deps)(dbg)(2)', 'CHROMIUM_SNOWLEOPARD', 'DEBUG');
-    runPlatformAndBuildTypeTest('WebKit Win', 'CHROMIUM_XP', 'RELEASE');
-    runPlatformAndBuildTypeTest('WebKit Win7', 'CHROMIUM_WIN7', 'RELEASE');
-    runPlatformAndBuildTypeTest('WebKit Win (dbg)(1)', 'CHROMIUM_XP', 'DEBUG');
-    runPlatformAndBuildTypeTest('WebKit Win (dbg)(2)', 'CHROMIUM_XP', 'DEBUG');
-    runPlatformAndBuildTypeTest('WebKit Linux', 'CHROMIUM_LUCID', 'RELEASE');
-    runPlatformAndBuildTypeTest('WebKit Linux 32', 'CHROMIUM_LUCID', 'RELEASE');
-    runPlatformAndBuildTypeTest('WebKit Linux (dbg)(1)', 'CHROMIUM_LUCID', 'DEBUG');
-    runPlatformAndBuildTypeTest('WebKit Linux (dbg)(2)', 'CHROMIUM_LUCID', 'DEBUG');
-    runPlatformAndBuildTypeTest('WebKit Mac10.6', 'CHROMIUM_SNOWLEOPARD', 'RELEASE');
-    runPlatformAndBuildTypeTest('WebKit Mac10.6 (dbg)', 'CHROMIUM_SNOWLEOPARD', 'DEBUG');
-    runPlatformAndBuildTypeTest('XP Tests', 'CHROMIUM_XP', 'RELEASE');
-    runPlatformAndBuildTypeTest('Interactive Tests (dbg)', 'CHROMIUM_XP', 'DEBUG');
-    
-    historyInstance.crossDashboardState.group = '@ToT - webkit.org';
-    historyInstance.crossDashboardState.testType = 'layout-tests';
-    runPlatformAndBuildTypeTest('Chromium Win Release (Tests)', 'CHROMIUM_XP', 'RELEASE');
-    runPlatformAndBuildTypeTest('Chromium Linux Release (Tests)', 'CHROMIUM_LUCID', 'RELEASE');
-    runPlatformAndBuildTypeTest('Chromium Mac Release (Tests)', 'CHROMIUM_SNOWLEOPARD', 'RELEASE');
-    
     // FIXME: These platforms should match whatever we use in the TestExpectations format.
     runPlatformAndBuildTypeTest('Lion Release (Tests)', 'APPLE_MAC_LION_WK1', 'RELEASE');
     runPlatformAndBuildTypeTest('Lion Debug (Tests)', 'APPLE_MAC_LION_WK1', 'DEBUG');
-    runPlatformAndBuildTypeTest('SnowLeopard Intel Release (Tests)', 'APPLE_MAC_SNOWLEOPARD_WK1', 'RELEASE');
-    runPlatformAndBuildTypeTest('SnowLeopard Intel Leaks', 'APPLE_MAC_SNOWLEOPARD_WK1', 'RELEASE');
-    runPlatformAndBuildTypeTest('SnowLeopard Intel Debug (Tests)', 'APPLE_MAC_SNOWLEOPARD_WK1', 'DEBUG');
+    runPlatformAndBuildTypeTest('MountainLion Release (Tests)', 'APPLE_MAC_MOUNTAINLION_WK1', 'RELEASE');
+    runPlatformAndBuildTypeTest('MountainLion Leaks', 'APPLE_MAC_MOUNTAINLION_WK1', 'RELEASE');
+    runPlatformAndBuildTypeTest('MountainLion Debug (Tests)', 'APPLE_MAC_MOUNTAINLION_WK1', 'DEBUG');
     runPlatformAndBuildTypeTest('GTK Linux 32-bit Release', 'GTK_LINUX_WK1', 'RELEASE');
     runPlatformAndBuildTypeTest('GTK Linux 32-bit Debug', 'GTK_LINUX_WK1', 'DEBUG');
     runPlatformAndBuildTypeTest('GTK Linux 64-bit Debug', 'GTK_LINUX_WK1', 'DEBUG');
@@ -193,21 +165,20 @@ test('platformAndBuildType', 78, function() {
     runPlatformAndBuildTypeTest('Windows XP Debug (Tests)', 'APPLE_WIN_XP', 'DEBUG');
     
     // FIXME: Should WebKit2 be it's own platform?
-    runPlatformAndBuildTypeTest('SnowLeopard Intel Release (WebKit2 Tests)', 'APPLE_MAC_SNOWLEOPARD_WK2', 'RELEASE');
-    runPlatformAndBuildTypeTest('SnowLeopard Intel Debug (WebKit2 Tests)', 'APPLE_MAC_SNOWLEOPARD_WK2', 'DEBUG');
+    runPlatformAndBuildTypeTest('MountainLion Release (WebKit2 Tests)', 'APPLE_MAC_MOUNTAINLION_WK2', 'RELEASE');
+    runPlatformAndBuildTypeTest('MountainLion Debug (WebKit2 Tests)', 'APPLE_MAC_MOUNTAINLION_WK2', 'DEBUG');
     runPlatformAndBuildTypeTest('Windows 7 Release (WebKit2 Tests)', 'APPLE_WIN_WIN7', 'RELEASE');    
 });
 
 test('realModifiers', 3, function() {
-    equal(realModifiers('BUG(Foo) LINUX LION WIN DEBUG SLOW'), 'SLOW');
-    equal(realModifiers('BUG(Foo) LUCID MAC XP RELEASE SKIP'), 'SKIP');
+    equal(realModifiers('BUG(Foo) DEBUG SLOW'), 'SLOW');
+    equal(realModifiers('BUG(Foo) RELEASE'), '');
     equal(realModifiers('BUG(Foo)'), '');
 });
 
 test('allTestsWithSamePlatformAndBuildType', 1, function() {
     // FIXME: test that allTestsWithSamePlatformAndBuildType actually returns the right set of tests.
-    var expectedPlatformsList = ['CHROMIUM_LION', 'CHROMIUM_SNOWLEOPARD', 'CHROMIUM_XP', 'CHROMIUM_VISTA', 'CHROMIUM_WIN7', 'CHROMIUM_LUCID',
-                                 'CHROMIUM_ANDROID', 'APPLE_MAC_LION_WK1', 'APPLE_MAC_LION_WK2', 'APPLE_MAC_SNOWLEOPARD_WK1', 'APPLE_MAC_SNOWLEOPARD_WK2',
+    var expectedPlatformsList = ['APPLE_MAC_LION_WK1', 'APPLE_MAC_LION_WK2', 'APPLE_MAC_MOUNTAINLION_WK1', 'APPLE_MAC_MOUNTAINLION_WK2',
                                  'APPLE_WIN_XP', 'APPLE_WIN_WIN7',  'GTK_LINUX_WK1', 'GTK_LINUX_WK2', 'QT_LINUX', 'EFL_LINUX_WK1', 'EFL_LINUX_WK2'];
     var actualPlatformsList = Object.keys(g_allTestsByPlatformAndBuildType);
     deepEqual(expectedPlatformsList, actualPlatformsList);

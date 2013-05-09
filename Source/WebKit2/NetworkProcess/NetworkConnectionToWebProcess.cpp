@@ -98,11 +98,11 @@ void NetworkConnectionToWebProcess::didClose(CoreIPC::Connection*)
 
     HashMap<ResourceLoadIdentifier, RefPtr<NetworkResourceLoader> >::iterator end = m_networkResourceLoaders.end();
     for (HashMap<ResourceLoadIdentifier, RefPtr<NetworkResourceLoader> >::iterator i = m_networkResourceLoaders.begin(); i != end; ++i)
-        i->value->connectionToWebProcessDidClose();
+        i->value->abort();
 
     HashMap<ResourceLoadIdentifier, RefPtr<SyncNetworkResourceLoader> >::iterator syncEnd = m_syncNetworkResourceLoaders.end();
     for (HashMap<ResourceLoadIdentifier, RefPtr<SyncNetworkResourceLoader> >::iterator i = m_syncNetworkResourceLoaders.begin(); i != syncEnd; ++i)
-        i->value->connectionToWebProcessDidClose();
+        i->value->abort();
 
     NetworkBlobRegistry::shared().connectionToWebProcessDidClose(this);
 
@@ -139,7 +139,9 @@ void NetworkConnectionToWebProcess::removeLoadIdentifier(ResourceLoadIdentifier 
     if (!loader)
         return;
 
-    NetworkProcess::shared().networkResourceLoadScheduler().removeLoader(loader.get());
+    // Abort the load now, as the WebProcess won't be able to respond to messages any more which might lead
+    // to leaked loader resources (connections, threads, etc).
+    loader->abort();
 }
 
 void NetworkConnectionToWebProcess::servePendingRequests(uint32_t resourceLoadPriority)
@@ -165,11 +167,13 @@ void NetworkConnectionToWebProcess::startDownload(bool privateBrowsingEnabled, u
 
 void NetworkConnectionToWebProcess::convertMainResourceLoadToDownload(uint64_t mainResourceLoadIdentifier, uint64_t downloadID, const ResourceRequest& request, const ResourceResponse& response)
 {
-    NetworkResourceLoader* loader = m_networkResourceLoaders.get(mainResourceLoadIdentifier).get();
+    NetworkResourceLoader* loader = m_networkResourceLoaders.get(mainResourceLoadIdentifier);
     NetworkProcess::shared().downloadManager().convertHandleToDownload(downloadID, loader->handle(), request, response);
 
     // Unblock the URL connection operation queue.
     loader->handle()->continueDidReceiveResponse();
+    
+    loader->didConvertHandleToDownload();
 }
 
 void NetworkConnectionToWebProcess::cookiesForDOM(bool privateBrowsingEnabled, const KURL& firstParty, const KURL& url, String& result)

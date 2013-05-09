@@ -26,6 +26,8 @@
 #include "config.h"
 #include "StorageManager.h"
 
+#include "LocalStorageDatabase.h"
+#include "LocalStorageDatabaseTracker.h"
 #include "SecurityOriginData.h"
 #include "StorageAreaMapMessages.h"
 #include "StorageManagerMessages.h"
@@ -54,15 +56,19 @@ public:
     void removeItem(CoreIPC::Connection* sourceConnection, uint64_t sourceStorageAreaID, const String& key, const String& urlString);
     void clear(CoreIPC::Connection* sourceConnection, uint64_t sourceStorageAreaID, const String& urlString);
 
-    const HashMap<String, String>& items() const { return m_storageMap->items(); }
+    const HashMap<String, String>& items();
 
 private:
     explicit StorageArea(LocalStorageNamespace*, PassRefPtr<SecurityOrigin>, unsigned quotaInBytes);
+
+    void importItemsFromDatabase();
 
     void dispatchEvents(CoreIPC::Connection* sourceConnection, uint64_t sourceStorageAreaID, const String& key, const String& oldValue, const String& newValue, const String& urlString) const;
 
     // Will be null if the storage area belongs to a session storage namespace.
     LocalStorageNamespace* m_localStorageNamespace;
+    RefPtr<LocalStorageDatabase> m_localStorageDatabase;
+
     RefPtr<SecurityOrigin> m_securityOrigin;
     unsigned m_quotaInBytes;
 
@@ -74,6 +80,8 @@ class StorageManager::LocalStorageNamespace : public ThreadSafeRefCounted<LocalS
 public:
     static PassRefPtr<LocalStorageNamespace> create(StorageManager*, uint64_t storageManagerID);
     ~LocalStorageNamespace();
+
+    StorageManager* storageManager() const { return m_storageManager; }
 
     PassRefPtr<StorageArea> getOrCreateStorageArea(PassRefPtr<SecurityOrigin>);
     void didDestroyStorageArea(StorageArea*);
@@ -100,11 +108,16 @@ StorageManager::StorageArea::StorageArea(LocalStorageNamespace* localStorageName
     , m_quotaInBytes(quotaInBytes)
     , m_storageMap(StorageMap::create(m_quotaInBytes))
 {
+    if (m_localStorageNamespace)
+        m_localStorageDatabase = LocalStorageDatabase::create(m_localStorageNamespace->storageManager()->m_queue, m_localStorageNamespace->storageManager()->m_localStorageDatabaseTracker, m_securityOrigin.get());
 }
 
 StorageManager::StorageArea::~StorageArea()
 {
     ASSERT(m_eventListeners.isEmpty());
+
+    if (m_localStorageDatabase)
+        m_localStorageDatabase->close();
 
     if (m_localStorageNamespace)
         m_localStorageNamespace->didDestroyStorageArea(this);
@@ -134,18 +147,27 @@ PassRefPtr<StorageManager::StorageArea> StorageManager::StorageArea::clone() con
 
 void StorageManager::StorageArea::setItem(CoreIPC::Connection* sourceConnection, uint64_t sourceStorageAreaID, const String& key, const String& value, const String& urlString, bool& quotaException)
 {
+    importItemsFromDatabase();
+
     String oldValue;
 
     RefPtr<StorageMap> newStorageMap = m_storageMap->setItem(key, value, oldValue, quotaException);
     if (newStorageMap)
         m_storageMap = newStorageMap.release();
 
-    if (!quotaException)
-        dispatchEvents(sourceConnection, sourceStorageAreaID, key, oldValue, value, urlString);
+    if (quotaException)
+        return;
+
+    if (m_localStorageDatabase)
+        m_localStorageDatabase->setItem(key, value);
+
+    dispatchEvents(sourceConnection, sourceStorageAreaID, key, oldValue, value, urlString);
 }
 
 void StorageManager::StorageArea::removeItem(CoreIPC::Connection* sourceConnection, uint64_t sourceStorageAreaID, const String& key, const String& urlString)
 {
+    importItemsFromDatabase();
+
     String oldValue;
     RefPtr<StorageMap> newStorageMap = m_storageMap->removeItem(key, oldValue);
     if (newStorageMap)
@@ -154,17 +176,40 @@ void StorageManager::StorageArea::removeItem(CoreIPC::Connection* sourceConnecti
     if (oldValue.isNull())
         return;
 
+    if (m_localStorageDatabase)
+        m_localStorageDatabase->removeItem(key);
+
     dispatchEvents(sourceConnection, sourceStorageAreaID, key, oldValue, String(), urlString);
 }
 
 void StorageManager::StorageArea::clear(CoreIPC::Connection* sourceConnection, uint64_t sourceStorageAreaID, const String& urlString)
 {
+    importItemsFromDatabase();
+
     if (!m_storageMap->length())
         return;
 
     m_storageMap = StorageMap::create(m_quotaInBytes);
 
+    if (m_localStorageDatabase)
+        m_localStorageDatabase->clear();
+
     dispatchEvents(sourceConnection, sourceStorageAreaID, String(), String(), String(), urlString);
+}
+
+const HashMap<String, String>& StorageManager::StorageArea::items()
+{
+    importItemsFromDatabase();
+
+    return m_storageMap->items();
+}
+
+void StorageManager::StorageArea::importItemsFromDatabase()
+{
+    if (!m_localStorageDatabase)
+        return;
+
+    m_localStorageDatabase->importItems(*m_storageMap);
 }
 
 void StorageManager::StorageArea::dispatchEvents(CoreIPC::Connection* sourceConnection, uint64_t sourceStorageAreaID, const String& key, const String& oldValue, const String& newValue, const String& urlString) const
@@ -288,6 +333,7 @@ PassRefPtr<StorageManager> StorageManager::create()
 
 StorageManager::StorageManager()
     : m_queue(WorkQueue::create("com.apple.WebKit.StorageManager"))
+    , m_localStorageDatabaseTracker(LocalStorageDatabaseTracker::create(m_queue))
 {
 }
 
@@ -297,7 +343,7 @@ StorageManager::~StorageManager()
 
 void StorageManager::setLocalStorageDirectory(const String& localStorageDirectory)
 {
-    m_queue->dispatch(bind(&StorageManager::setLocalStorageDirectoryInternal, this, localStorageDirectory.isolatedCopy()));
+    m_localStorageDatabaseTracker->setLocalStorageDirectory(localStorageDirectory);
 }
 
 void StorageManager::createSessionStorageNamespace(uint64_t storageNamespaceID, CoreIPC::Connection* allowedConnection, unsigned quotaInBytes)
@@ -369,7 +415,7 @@ void StorageManager::createSessionStorageMap(CoreIPC::Connection* connection, ui
     ASSERT(result.isNewEntry);
 
     ASSERT((HashMap<uint64_t, RefPtr<SessionStorageNamespace> >::isValidKey(storageNamespaceID)));
-    SessionStorageNamespace* sessionStorageNamespace = m_sessionStorageNamespaces.get(storageNamespaceID).get();
+    SessionStorageNamespace* sessionStorageNamespace = m_sessionStorageNamespaces.get(storageNamespaceID);
 
     // FIXME: These should be message checks.
     ASSERT(sessionStorageNamespace);
@@ -441,11 +487,6 @@ void StorageManager::clear(CoreIPC::Connection* connection, uint64_t storageMapI
     connection->send(Messages::StorageAreaMap::DidClear(), storageMapID);
 }
 
-void StorageManager::setLocalStorageDirectoryInternal(const String& localStorageDirectory)
-{
-    m_localStorageDirectory = localStorageDirectory;
-}
-
 void StorageManager::createSessionStorageNamespaceInternal(uint64_t storageNamespaceID, CoreIPC::Connection* allowedConnection, unsigned quotaInBytes)
 {
     ASSERT(!m_sessionStorageNamespaces.contains(storageNamespaceID));
@@ -469,10 +510,10 @@ void StorageManager::setAllowedSessionStorageNamespaceConnectionInternal(uint64_
 
 void StorageManager::cloneSessionStorageNamespaceInternal(uint64_t storageNamespaceID, uint64_t newStorageNamespaceID)
 {
-    SessionStorageNamespace* sessionStorageNamespace = m_sessionStorageNamespaces.get(storageNamespaceID).get();
+    SessionStorageNamespace* sessionStorageNamespace = m_sessionStorageNamespaces.get(storageNamespaceID);
     ASSERT(sessionStorageNamespace);
 
-    SessionStorageNamespace* newSessionStorageNamespace = m_sessionStorageNamespaces.get(newStorageNamespaceID).get();
+    SessionStorageNamespace* newSessionStorageNamespace = m_sessionStorageNamespaces.get(newStorageNamespaceID);
     ASSERT(newSessionStorageNamespace);
 
     sessionStorageNamespace->cloneTo(*newSessionStorageNamespace);
@@ -500,7 +541,7 @@ StorageManager::StorageArea* StorageManager::findStorageArea(CoreIPC::Connection
     if (!HashMap<std::pair<RefPtr<CoreIPC::Connection>, uint64_t>, RefPtr<StorageArea> >::isValidKey(connectionAndStorageMapIDPair))
         return 0;
 
-    return m_storageAreasByConnection.get(connectionAndStorageMapIDPair).get();
+    return m_storageAreasByConnection.get(connectionAndStorageMapIDPair);
 }
 
 StorageManager::LocalStorageNamespace* StorageManager::getOrCreateLocalStorageNamespace(uint64_t storageNamespaceID)

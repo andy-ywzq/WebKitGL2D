@@ -415,10 +415,9 @@ public:
     ElementShadow* shadow() const;
     ElementShadow* ensureShadow();
     PassRefPtr<ShadowRoot> createShadowRoot(ExceptionCode&);
-    ShadowRoot* shadowRoot() const;
+    ShadowRoot* authorShadowRoot() const;
 
-    bool hasAuthorShadowRoot() const { return shadowRoot(); }
-    virtual void willAddAuthorShadowRoot() { }
+    bool hasAuthorShadowRoot() const { return authorShadowRoot(); }
 
     ShadowRoot* userAgentShadowRoot() const;
     ShadowRoot* ensureUserAgentShadowRoot();
@@ -588,9 +587,9 @@ public:
     };
     
     void webkitRequestFullScreen(unsigned short flags);
-    virtual bool containsFullScreenElement() const;
-    virtual void setContainsFullScreenElement(bool);
-    virtual void setContainsFullScreenElementOnAncestorsCrossingFrameBoundaries(bool);
+    bool containsFullScreenElement() const;
+    void setContainsFullScreenElement(bool);
+    void setContainsFullScreenElementOnAncestorsCrossingFrameBoundaries(bool);
 
     // W3C API
     void webkitRequestFullscreen();
@@ -639,9 +638,6 @@ protected:
     virtual void didRecalcStyle(StyleChange);
     virtual PassRefPtr<RenderStyle> customStyleForRenderer();
 
-    virtual bool shouldRegisterAsNamedItem() const { return false; }
-    virtual bool shouldRegisterAsExtraNamedItem() const { return false; }
-
     void clearTabIndexExplicitlyIfNeeded();    
     void setTabIndexExplicitly(short);
     virtual bool supportsFocus() const OVERRIDE;
@@ -680,6 +676,7 @@ private:
     void updateId(const AtomicString& oldId, const AtomicString& newId);
     void updateId(TreeScope*, const AtomicString& oldId, const AtomicString& newId);
     void updateName(const AtomicString& oldName, const AtomicString& newName);
+    void updateName(TreeScope*, const AtomicString& oldName, const AtomicString& newName);
     void updateLabel(TreeScope*, const AtomicString& oldForAttributeValue, const AtomicString& newForAttributeValue);
 
     void scrollByUnits(int units, ScrollGranularity);
@@ -725,14 +722,9 @@ private:
 
     SpellcheckAttributeState spellcheckAttributeState() const;
 
-    void updateNamedItemRegistration(const AtomicString& oldName, const AtomicString& newName);
-    void updateExtraNamedItemRegistration(const AtomicString& oldName, const AtomicString& newName);
-
     void unregisterNamedFlowContentNode();
 
     void createUniqueElementData();
-
-    bool shouldInvalidateDistributionWhenAttributeChanged(ElementShadow*, const QualifiedName&, const AtomicString&);
 
     ElementRareData* elementRareData() const;
     ElementRareData* ensureElementRareData();
