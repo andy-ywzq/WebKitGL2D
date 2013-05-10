@@ -36,6 +36,10 @@ public:
 
     virtual ~RenderThemeNix();
 
+    virtual String extraDefaultStyleSheet();
+    virtual String extraQuirksStyleSheet();
+    virtual String extraPlugInsStyleSheet();
+
     virtual void systemFont(int cssValueId, FontDescription&) const OVERRIDE;
 
 #if ENABLE(PROGRESS_ELEMENT)

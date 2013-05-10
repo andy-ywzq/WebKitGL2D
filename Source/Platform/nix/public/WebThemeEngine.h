@@ -114,6 +114,10 @@ public:
         }
     };
 
+    virtual const char* extraDefaultStyleSheet() const { return ""; }
+    virtual const char* extraQuirksStyleSheet() const { return ""; }
+    virtual const char* extraPlugInsStyleSheet() const { return ""; }
+
     virtual void paintButton(WebCanvas*, State, const WebRect&, const ButtonExtraParams&) const = 0;
     virtual void paintTextField(WebCanvas*, State, const WebRect&) const = 0;
     virtual WebSize getCheckboxSize() const = 0;

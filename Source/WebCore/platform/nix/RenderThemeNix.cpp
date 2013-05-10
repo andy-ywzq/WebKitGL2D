@@ -84,6 +84,21 @@ RenderThemeNix::~RenderThemeNix()
 
 }
 
+String RenderThemeNix::extraDefaultStyleSheet()
+{
+    return themeEngine()->extraDefaultStyleSheet();
+}
+
+String RenderThemeNix::extraQuirksStyleSheet()
+{
+    return themeEngine()->extraQuirksStyleSheet();
+}
+
+String RenderThemeNix::extraPlugInsStyleSheet()
+{
+    return themeEngine()->extraPlugInsStyleSheet();
+}
+
 void RenderThemeNix::systemFont(int, FontDescription&) const
 {
 }
