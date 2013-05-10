@@ -87,6 +87,14 @@ protected:
 
     virtual void adjustSliderThumbSize(RenderStyle*, Element*) const;
 
+#if ENABLE(DATALIST_ELEMENT)
+    virtual IntSize sliderTickSize() const;
+    virtual int sliderTickOffsetFromTrackCenter() const;
+    virtual LayoutUnit sliderTickSnappingThreshold() const;
+
+    virtual bool supportsDataListUI(const AtomicString&) const;
+#endif
+
 private:
     RenderThemeNix();
 };

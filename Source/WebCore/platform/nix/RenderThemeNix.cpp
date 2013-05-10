@@ -26,6 +26,7 @@
 #include "config.h"
 #include "RenderThemeNix.h"
 
+#include "InputTypeNames.h"
 #include "PaintInfo.h"
 #include "PlatformContextCairo.h"
 #include "public/WebCanvas.h"
@@ -223,7 +224,9 @@ double RenderThemeNix::animationDurationForProgressBar(RenderProgress*) const
 bool RenderThemeNix::paintSliderTrack(RenderObject* object, const PaintInfo& info, const IntRect& rect)
 {
     themeEngine()->paintSliderTrack(webCanvas(info), getWebThemeState(this, object), rect);
-
+#if ENABLE(DATALIST_ELEMENT)
+    paintSliderTicks(object, info, rect);
+#endif
     return false;
 }
 
@@ -259,6 +262,28 @@ void RenderThemeNix::adjustSliderThumbSize(RenderStyle* style, Element*) const
         style->setHeight(Length(SLIDER_THUMB_HEIGHT, Fixed));
     }
 }
+
+#if ENABLE(DATALIST_ELEMENT)
+IntSize RenderThemeNix::sliderTickSize() const
+{
+    return IntSize(1, 6);
+}
+
+int RenderThemeNix::sliderTickOffsetFromTrackCenter() const
+{
+    return -12;
+}
+
+LayoutUnit RenderThemeNix::sliderTickSnappingThreshold() const
+{
+    return 5;
+}
+
+bool RenderThemeNix::supportsDataListUI(const AtomicString& type) const
+{
+    return type == InputTypeNames::range();
+}
+#endif
 
 void RenderThemeNix::adjustInnerSpinButtonStyle(StyleResolver*, RenderStyle* style, Element*) const
 {
