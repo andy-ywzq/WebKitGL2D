@@ -88,13 +88,20 @@ canvas/philip/tests/2d.text.draw.space.collapse.start.html [ Skip ]
 canvas/philip/tests/2d.text.measure.width.space.html [ Skip ]
 canvas/philip/tests/type.prototype.html [ Skip ]
 
+
+compositing/geometry/bounds-ignores-hidden-dynamic-negzindex.html [ Skip ]
 compositing/geometry/limit-layer-bounds-overflow-repaint.html [ Skip ]
+compositing/layer-creation/deep-tree.html [ Skip ]
+compositing/layer-creation/fixed-position-and-transform.html [ Skip ]
+compositing/layer-creation/fixed-position-under-transform.html [ Skip ]
 compositing/layer-creation/no-compositing-for-sticky.html [ Skip ]
-compositing/rtl/rtl-overflow-scrolling.html [ Skip ]
-compositing/video/video-reflection.html [ Skip ]
 compositing/overlap-blending/nested-overlap-overflow.html [ Skip ]
 compositing/patterns/direct-pattern-compositing-cover.html [ Skip ]
 compositing/patterns/direct-pattern-compositing-size.html [ Skip ]
+compositing/rtl/rtl-absolute-overflow-scrolled.html [ Skip ]
+compositing/rtl/rtl-fixed-overflow-scrolled.html [ Skip ]
+compositing/rtl/rtl-overflow-scrolling.html [ Skip ]
+compositing/video/video-reflection.html [ Skip ]
 compositing/visible-rect/flipped-preserve-3d.html [ Skip ]
 
 css1/box_properties/acid_test.html
@@ -156,6 +163,8 @@ css3/device-adapt/viewport-at-rule-parsing.html
 css3/device-adapt/viewport-properties-validation.html
 css3/device-adapt/viewport-width-check-window-innerwidth-correct.html
 css3/device-adapt/viewport-width-not-affecting-next-page.html
+css3/filters/filtered-compositing-descendant.html
+css3/filters/null-effect-check.html
 css3/filters/should-not-have-compositing-layer.html [ Failure ]
 css3/flexbox/flex-rounding.html
 css3/selectors3/html/css3-modsel-d1.html
@@ -637,6 +646,9 @@ fast/dynamic/window-resize-scrollbars-test.html [ Skip ]
 
 fast/dom/52776.html [ Skip ]
 fast/dom/shadow/athost-apply-dynamically.html [ Skip ]
+fast/dom/shadow/element-name-in-shadow.html [ Skip ]
+fast/dom/shadow/has-elementshadow.html [ Skip ]
+fast/dom/shadow/iframe-shadow.html [ Skip ]
 fast/dom/boolean-attribute-reflection.html [ Failure ]
 fast/dom/call-a-constructor-as-a-function.html [ Failure ]
 fast/dom/constructed-objects-prototypes.html [ Failure ]
@@ -961,6 +973,7 @@ fast/events/dropzone-005.html [ Skip ]
 fast/events/frame-tab-focus.html [ Skip ]
 fast/events/media-element-focus-tab.html [ Skip ]
 fast/events/media-focus-in-standalone-media-document.html [ Skip ]
+fast/events/mousedown-inside-dragstart-should-not-cause-crash.html [ Skip ]
 fast/events/mouseover-button.html [ Skip ]
 fast/events/mouseup-from-button2.html [ Skip ]
 fast/events/node-event-anchor-lock.html [ Skip ]
