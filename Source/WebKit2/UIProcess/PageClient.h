@@ -134,9 +134,9 @@ public:
     virtual void updateTextInputState() = 0;
 #endif // PLATFORM(QT) || PLATFORM(EFL) || PLATOFRM(GTK) || PLATFORM(NIX)
 
-#if PLATFORM(QT) || PLATFORM(EFL) || PLATFORM(GTK)
+#if PLATFORM(QT) || PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(NIX)
     virtual void handleDownloadRequest(DownloadProxy*) = 0;
-#endif // PLATFORM(QT) || PLATFORM(EFL) || PLATFORM(GTK)
+#endif // PLATFORM(QT) || PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(NIX)
 
 #if PLATFORM(QT) || PLATFORM(EFL) || PLATFORM(NIX)
     virtual void didChangeContentsSize(const WebCore::IntSize&) = 0;

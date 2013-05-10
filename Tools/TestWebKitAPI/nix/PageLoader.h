@@ -34,13 +34,13 @@ namespace Util {
 
 class ForceRepaintClient {
 public:
-    ForceRepaintClient(NIXView);
+    ForceRepaintClient(WKViewRef);
     void setClearColor(int r, int g, int b, int a);
 
 private:
-    static void viewNeedsDisplay(NIXView, WKRect, const void*);
+    static void viewNeedsDisplay(WKViewRef, WKRect, const void*);
 
-    NIXView m_view;
+    WKViewRef m_view;
     int m_clearR;
     int m_clearG;
     int m_clearB;
@@ -51,13 +51,13 @@ private:
 class PageLoader
 {
 public:
-    PageLoader(NIXView);
+    PageLoader(WKViewRef);
 
     void waitForLoadURLAndRepaint(const char* resource);
     void forceRepaint();
 
 private:
-    NIXView m_view;
+    WKViewRef m_view;
     bool m_didFinishLoadAndRepaint;
     WKPageLoaderClient m_loaderClient;
 

@@ -44,13 +44,13 @@ static void clear()
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-static void viewNeedsDisplay(NIXView view, WKRect, const void*)
+static void viewNeedsDisplay(WKViewRef view, WKRect, const void*)
 {
     clear();
-    NIXViewPaintToCurrentGLContext(view);
+    WKViewPaintToCurrentGLContext(view);
 }
 
-static void didFindZoomableArea(NIXView, WKPoint target, WKRect area, const void*)
+static void didFindZoomableArea(WKViewRef, WKPoint target, WKRect area, const void*)
 {
     EXPECT_EQ(target.x, touchPoint.x);
     EXPECT_EQ(target.y, touchPoint.y);
@@ -73,18 +73,23 @@ TEST(WebKitNix, WebViewFindZoomableArea)
     ASSERT_TRUE(offscreenBuffer.makeCurrent());
 
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
-    NIXViewAutoPtr view(NIXViewCreate(context.get(), 0));
+    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
 
-    NIXViewClient viewClient;
-    memset(&viewClient, 0, sizeof(NIXViewClient));
-    viewClient.version = kNIXViewClientCurrentVersion;
+    NIXViewClient nixViewClient;
+    memset(&nixViewClient, 0, sizeof(NIXViewClient));
+    nixViewClient.version = kNIXViewClientCurrentVersion;
+    nixViewClient.didFindZoomableArea = didFindZoomableArea;
+    NIXViewSetNixViewClient(view.get(), &nixViewClient);
+
+    WKViewClient viewClient;
+    memset(&viewClient, 0, sizeof(WKViewClient));
+    viewClient.version = kWKViewClientCurrentVersion;
     viewClient.viewNeedsDisplay = viewNeedsDisplay;
-    viewClient.didFindZoomableArea = didFindZoomableArea;
-    NIXViewSetViewClient(view.get(), &viewClient);
+    WKViewSetViewClient(view.get(), &viewClient);
 
-    NIXViewInitialize(view.get());
-    WKPageSetUseFixedLayout(NIXViewGetPage(view.get()), true);
-    NIXViewSetSize(view.get(), size);
+    WKViewInitialize(view.get());
+    WKPageSetUseFixedLayout(WKViewGetPage(view.get()), true);
+    WKViewSetSize(view.get(), size);
 
     glViewport(0, 0, size.width, size.height);
     clear();

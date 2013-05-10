@@ -48,13 +48,13 @@ TEST(WebKitNix, SuspendResumeAPI)
     ASSERT_TRUE(offscreenBuffer.makeCurrent());
 
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
-    NIXViewAutoPtr view(NIXViewCreate(context.get(), 0));
+    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
 
     Util::ForceRepaintClient client(view.get());
     client.setClearColor(0, 0, 1, 1);
 
-    NIXViewInitialize(view.get());
-    NIXViewSetSize(view.get(), size);
+    WKViewInitialize(view.get());
+    WKViewSetSize(view.get(), size);
 
     glViewport(0, 0, size.width, size.height);
     glClearColor(0, 0, 1, 1);
@@ -63,20 +63,20 @@ TEST(WebKitNix, SuspendResumeAPI)
     Util::PageLoader loader(view.get());
     loader.waitForLoadURLAndRepaint("../nix/SuspendResume");
 
-    size_t bufferSize = WKStringGetMaximumUTF8CStringSize(WKPageCopyTitle(NIXViewGetPage(view.get())));
+    size_t bufferSize = WKStringGetMaximumUTF8CStringSize(WKPageCopyTitle(WKViewGetPage(view.get())));
     char firstSampleBeforeSuspend[bufferSize];
     char secondSampleBeforeSuspend[bufferSize];
     char firstSampleAfterSuspend[bufferSize];
     char secondSampleAfterSuspend[bufferSize];
     char firstSampleAfterResume[bufferSize];
 
-    WKStringGetUTF8CString(WKPageCopyTitle(NIXViewGetPage(view.get())), firstSampleBeforeSuspend, bufferSize);
+    WKStringGetUTF8CString(WKPageCopyTitle(WKViewGetPage(view.get())), firstSampleBeforeSuspend, bufferSize);
 
     // After collecting the first sample a repaint is needed to get viewport updated accordingly.
     // This proccess is repeated for each collected sample.
     Util::sleep(0.1);
     loader.forceRepaint();
-    WKStringGetUTF8CString(WKPageCopyTitle(NIXViewGetPage(view.get())), secondSampleBeforeSuspend, bufferSize);
+    WKStringGetUTF8CString(WKPageCopyTitle(WKViewGetPage(view.get())), secondSampleBeforeSuspend, bufferSize);
     // The timer is ticking - two different samples.
     EXPECT_STRNE(firstSampleBeforeSuspend, secondSampleBeforeSuspend);
 
@@ -84,23 +84,23 @@ TEST(WebKitNix, SuspendResumeAPI)
     // and the test becomes flacky.
     Util::sleep(0.1);
     loader.forceRepaint();
-    NIXViewSuspendActiveDOMObjectsAndAnimations(view.get());
+    WKViewSuspendActiveDOMObjectsAndAnimations(view.get());
     Util::sleep(0.1);
     loader.forceRepaint();
-    WKStringGetUTF8CString(WKPageCopyTitle(NIXViewGetPage(view.get())), firstSampleAfterSuspend, bufferSize);
+    WKStringGetUTF8CString(WKPageCopyTitle(WKViewGetPage(view.get())), firstSampleAfterSuspend, bufferSize);
     // The timer is paused - still two different samples.
     EXPECT_STRNE(secondSampleBeforeSuspend, firstSampleAfterSuspend);
 
     Util::sleep(0.1);
     loader.forceRepaint();
-    WKStringGetUTF8CString(WKPageCopyTitle(NIXViewGetPage(view.get())), secondSampleAfterSuspend, bufferSize);
+    WKStringGetUTF8CString(WKPageCopyTitle(WKViewGetPage(view.get())), secondSampleAfterSuspend, bufferSize);
     // The timer is paused - two samples collected while paused so they are equal.
     EXPECT_STREQ(firstSampleAfterSuspend, secondSampleAfterSuspend);
 
-    NIXViewResumeActiveDOMObjectsAndAnimations(view.get());
+    WKViewResumeActiveDOMObjectsAndAnimations(view.get());
     Util::sleep(0.1);
     loader.forceRepaint();
-    WKStringGetUTF8CString(WKPageCopyTitle(NIXViewGetPage(view.get())), firstSampleAfterResume, bufferSize);
+    WKStringGetUTF8CString(WKPageCopyTitle(WKViewGetPage(view.get())), firstSampleAfterResume, bufferSize);
     // The timer is ticking again - two different samples.
     EXPECT_STRNE(secondSampleAfterSuspend, firstSampleAfterResume);
 }

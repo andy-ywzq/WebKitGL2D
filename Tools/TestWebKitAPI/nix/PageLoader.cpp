@@ -38,7 +38,7 @@
 
 using namespace TestWebKitAPI::Util;
 
-PageLoader::PageLoader(NIXView view)
+PageLoader::PageLoader(WKViewRef view)
     : m_view(view)
     , m_didFinishLoadAndRepaint(false)
 {
@@ -46,7 +46,7 @@ PageLoader::PageLoader(NIXView view)
 
     m_loaderClient.didFinishLoadForFrame = didFinishLoadForFrame;
     m_loaderClient.clientInfo = this;
-    WKPageSetPageLoaderClient(NIXViewGetPage(m_view), &m_loaderClient);
+    WKPageSetPageLoaderClient(WKViewGetPage(m_view), &m_loaderClient);
 }
 
 void PageLoader::didForceRepaint(WKErrorRef, void* context)
@@ -62,31 +62,31 @@ void PageLoader::didFinishLoadForFrame(WKPageRef page, WKFrameRef, WKTypeRef, co
 void PageLoader::waitForLoadURLAndRepaint(const char* resource)
 {
     WKRetainPtr<WKURLRef> urlRef = adoptWK(createURLForResource(resource, "html"));
-    WKPageLoadURL(NIXViewGetPage(m_view), urlRef.get());
+    WKPageLoadURL(WKViewGetPage(m_view), urlRef.get());
     Util::run(&m_didFinishLoadAndRepaint);
     m_didFinishLoadAndRepaint = false;
 }
 
 void PageLoader::forceRepaint()
 {
-    WKPageForceRepaint(NIXViewGetPage(m_view), this, &PageLoader::didForceRepaint);
+    WKPageForceRepaint(WKViewGetPage(m_view), this, &PageLoader::didForceRepaint);
     Util::run(&m_didFinishLoadAndRepaint);
     m_didFinishLoadAndRepaint = false;
 }
 
-ForceRepaintClient::ForceRepaintClient(NIXView view)
+ForceRepaintClient::ForceRepaintClient(WKViewRef view)
     : m_view(view)
     , m_clearR(0)
     , m_clearG(0)
     , m_clearB(0)
     , m_clearA(0)
 {
-    NIXViewClient viewClient;
-    memset(&viewClient, 0, sizeof(NIXViewClient));
-    viewClient.version = kNIXViewClientCurrentVersion;
+    WKViewClient viewClient;
+    memset(&viewClient, 0, sizeof(WKViewClient));
+    viewClient.version = kWKViewClientCurrentVersion;
     viewClient.clientInfo = this;
     viewClient.viewNeedsDisplay = viewNeedsDisplay;
-    NIXViewSetViewClient(m_view, &viewClient);
+    WKViewSetViewClient(m_view, &viewClient);
 }
 
 void ForceRepaintClient::setClearColor(int r, int g, int b, int a)
@@ -97,7 +97,7 @@ void ForceRepaintClient::setClearColor(int r, int g, int b, int a)
     m_clearA = a;
 }
 
-void ForceRepaintClient::viewNeedsDisplay(NIXView, WKRect, const void* clientInfo)
+void ForceRepaintClient::viewNeedsDisplay(WKViewRef, WKRect, const void* clientInfo)
 {
     ForceRepaintClient* client = static_cast<ForceRepaintClient*>(const_cast<void*>(clientInfo));
     assert(client);
@@ -105,5 +105,5 @@ void ForceRepaintClient::viewNeedsDisplay(NIXView, WKRect, const void* clientInf
     glClearColor(client->m_clearR, client->m_clearG, client->m_clearB, client->m_clearA);
 
     glClear(GL_COLOR_BUFFER_BIT);
-    NIXViewPaintToCurrentGLContext(client->m_view);
+    WKViewPaintToCurrentGLContext(client->m_view);
 }

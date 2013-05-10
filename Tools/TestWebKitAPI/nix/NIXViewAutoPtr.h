@@ -30,21 +30,21 @@
 
 class NIXViewAutoPtr {
 public:
-    explicit NIXViewAutoPtr(NIXView view = 0) : m_view(view) { }
-    ~NIXViewAutoPtr() { NIXViewRelease(m_view); }
+    explicit NIXViewAutoPtr(WKViewRef view = 0) : m_view(view) { }
+    ~NIXViewAutoPtr() { WKRelease(m_view); }
 
-    NIXView get() const { return m_view; }
+    WKViewRef get() const { return m_view; }
     bool operator!() const { return !m_view; }
 
     // This conversion operator allows implicit conversion to bool but not to other integer types.
-    typedef NIXView NIXViewAutoPtr::*UnspecifiedBoolType;
+    typedef WKViewRef NIXViewAutoPtr::*UnspecifiedBoolType;
     operator UnspecifiedBoolType() const { return m_view ? &NIXViewAutoPtr::m_view : 0; }
 
-    void reset(NIXView view = 0) {
-        NIXView old = m_view;
+    void reset(WKViewRef view = 0) {
+        WKViewRef old = m_view;
         m_view = view;
         if (old)
-            NIXViewRelease(old);
+            WKRelease(old);
     }
 
 private:
@@ -52,7 +52,7 @@ private:
     NIXViewAutoPtr(NIXViewAutoPtr&);
     NIXViewAutoPtr& operator=(const NIXViewAutoPtr&);
 
-    NIXView m_view;
+    WKViewRef m_view;
 };
 
 #endif // NIXViewAutoPtr_h

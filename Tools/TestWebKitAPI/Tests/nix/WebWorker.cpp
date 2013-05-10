@@ -44,33 +44,33 @@ TEST(WebKitNix, WebWorker)
     // types of Workers, dedicated and shared.
 
     WKRetainPtr<WKContextRef> context = adoptWK(Util::createContextForInjectedBundleTest("WebWorkerTest"));
-    NIXViewAutoPtr view(NIXViewCreate(context.get(), 0));
+    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
 
-    NIXViewInitialize(view.get());
+    WKViewInitialize(view.get());
 
     WKPageLoaderClient pageLoaderClient;
     memset(&pageLoaderClient, 0, sizeof(WKPageLoaderClient));
     pageLoaderClient.version = kWKPageLoaderClientCurrentVersion;
     pageLoaderClient.didReceiveTitleForFrame = didReceiveTitleForFrame;
-    WKPageSetPageLoaderClient(NIXViewGetPage(view.get()), &pageLoaderClient);
+    WKPageSetPageLoaderClient(WKViewGetPage(view.get()), &pageLoaderClient);
 
     WKContextInjectedBundleClient injectedBundleClient;
     memset(&injectedBundleClient, 0, sizeof(injectedBundleClient));
     injectedBundleClient.didReceiveMessageFromInjectedBundle = didReceiveMessageFromInjectedBundle;
     WKContextSetInjectedBundleClient(context.get(), &injectedBundleClient);
 
-    WKPageGroupRef pageGroup = WKPageGetPageGroup(NIXViewGetPage(view.get()));
+    WKPageGroupRef pageGroup = WKPageGetPageGroup(WKViewGetPage(view.get()));
     WKPreferencesRef preferences = WKPageGroupGetPreferences(pageGroup);
     WKPreferencesSetFileAccessFromFileURLsAllowed(preferences, true);
 
     WKRetainPtr<WKURLRef> url = adoptWK(Util::createURLForResource("../nix/WebWorkerTest", "html"));
-    WKPageLoadURL(NIXViewGetPage(view.get()), url.get());
+    WKPageLoadURL(WKViewGetPage(view.get()), url.get());
     Util::run(&initialized);
     Util::run(&terminated);
     Util::run(&changedTitle);
 
     url = adoptWK(Util::createURLForResource("../nix/WebWorkerSharedTest", "html"));
-    WKPageLoadURL(NIXViewGetPage(view.get()), url.get());
+    WKPageLoadURL(WKViewGetPage(view.get()), url.get());
     Util::run(&initializedShared);
     Util::run(&terminatedShared);
     Util::run(&changedTitleShared);

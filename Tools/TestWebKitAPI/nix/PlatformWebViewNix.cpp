@@ -32,24 +32,24 @@ namespace TestWebKitAPI {
 
 PlatformWebView::PlatformWebView(WKContextRef context, WKPageGroupRef pageGroup)
 {
-    m_view = NIXViewCreate(context, pageGroup);
-    NIXViewInitialize(m_view);
+    m_view = WKViewCreate(context, pageGroup);
+    WKViewInitialize(m_view);
     m_window = 0;
 }
 
 PlatformWebView::~PlatformWebView()
 {
-    NIXViewRelease(m_view);
+    WKRelease(m_view);
 }
 
 void PlatformWebView::resizeTo(unsigned width, unsigned height)
 {
-    NIXViewSetSize(m_view, WKSizeMake(width, height));
+    WKViewSetSize(m_view, WKSizeMake(width, height));
 }
 
 WKPageRef PlatformWebView::page() const
 {
-    return NIXViewGetPage(m_view);
+    return WKViewGetPage(m_view);
 }
 
 } // namespace TestWebKitAPI

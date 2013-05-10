@@ -29,6 +29,7 @@
 #include "WebViewNix.h"
 #include "WebContext.h"
 #include "WebPageGroup.h"
+#include "WebViewportAttributes.h"
 
 // Included here to be visible to forwarding headers generation script.
 #include <JavaScriptCore/WebKitAvailability.h>
@@ -38,188 +39,74 @@
 
 using namespace WebKit;
 
-NIXView NIXViewCreate(WKContextRef context, WKPageGroupRef pageGroup)
+void NIXViewSetNixViewClient(WKViewRef view, const NIXViewClient* viewClient)
 {
-#if !GLIB_CHECK_VERSION(2, 35, 0)
-    g_type_init();
-#endif
-    return toAPI(new WebKit::WebView(toImpl(context), toImpl(pageGroup)));
+    static_cast<WebViewNix*>(toImpl(view))->setNixViewClient(viewClient);
 }
 
-void NIXViewRelease(NIXView view)
+WKSize NIXViewVisibleContentsSize(WKViewRef view)
 {
-    delete toImpl(view);
+    WebCore::FloatSize visibleContentsSize = toImpl(view)->visibleContentsSize();
+    return WKSizeMake(visibleContentsSize.width(), visibleContentsSize.height());
 }
 
-void NIXViewSetViewClient(NIXView view, const NIXViewClient* viewClient)
+void NIXViewFindZoomableAreaForPoint(WKViewRef view, WKPoint point, int horizontalRadius, int verticalRadius)
 {
-    toImpl(view)->setViewClient(viewClient);
+    static_cast<WebViewNix*>(toImpl(view))->findZoomableAreaForPoint(point, horizontalRadius, verticalRadius);
 }
 
-void NIXViewInitialize(NIXView view)
+void NIXViewSendMouseEvent(WKViewRef view, const NIXMouseEvent* event)
 {
-    toImpl(view)->initialize();
+    static_cast<WebViewNix*>(toImpl(view))->sendMouseEvent(*event);
 }
 
-WKSize NIXViewSize(NIXView view)
+void NIXViewSendWheelEvent(WKViewRef view, const NIXWheelEvent* event)
 {
-    return toImpl(view)->size();
+    static_cast<WebViewNix*>(toImpl(view))->sendWheelEvent(*event);
 }
 
-void NIXViewSetSize(NIXView view, WKSize size)
+void NIXViewSendKeyEvent(WKViewRef view, const NIXKeyEvent* event)
 {
-    toImpl(view)->setSize(size);
+    static_cast<WebViewNix*>(toImpl(view))->sendKeyEvent(*event);
 }
 
-WKPoint NIXViewScrollPosition(NIXView view)
+void NIXViewSendTouchEvent(WKViewRef view, const NIXTouchEvent* event)
 {
-    return toImpl(view)->scrollPosition();
+    static_cast<WebViewNix*>(toImpl(view))->sendTouchEvent(*event);
 }
 
-void NIXViewSetScrollPosition(NIXView view, WKPoint position)
+void NIXViewSendGestureEvent(WKViewRef view, const NIXGestureEvent* event)
 {
-    toImpl(view)->setScrollPosition(position);
+    static_cast<WebViewNix*>(toImpl(view))->sendGestureEvent(*event);
 }
 
-void NIXViewSetUserViewportTransformation(NIXView view, const NIXMatrix* userViewportTransformation)
+bool NIXViewIsSuspended(WKViewRef view)
 {
-    WebCore::TransformationMatrix transform(userViewportTransformation->xx, userViewportTransformation->yx,
-                                            userViewportTransformation->xy, userViewportTransformation->yy,
-                                            userViewportTransformation->x0, userViewportTransformation->y0);
-    toImpl(view)->setUserViewportTransformation(transform);
+    return static_cast<WebViewNix*>(toImpl(view))->isSuspended();
 }
 
-WKPoint NIXViewUserViewportToContents(NIXView view, WKPoint point)
+WKSize NIXViewportAttributesGetSize(WKViewportAttributesRef attributesRef)
 {
-    return toImpl(view)->userViewportToContents(point);
+    WebCore::ViewportAttributes originalAttributes = toImpl(attributesRef)->originalAttributes();
+    return WKSizeMake(originalAttributes.layoutSize.width(), originalAttributes.layoutSize.height());
 }
 
-bool NIXViewIsFocused(NIXView view)
+double NIXViewportAttributesGetMinimumScale(WKViewportAttributesRef attributesRef)
 {
-    return toImpl(view)->isFocused();
+    return toImpl(attributesRef)->originalAttributes().minimumScale;
 }
 
-void NIXViewSetFocused(NIXView view, bool focused)
+double NIXViewportAttributesGetMaximumScale(WKViewportAttributesRef attributesRef)
 {
-    toImpl(view)->setFocused(focused);
+    return toImpl(attributesRef)->originalAttributes().maximumScale;
 }
 
-bool NIXViewIsVisible(NIXView view)
+double NIXViewportAttributesGetInitialScale(WKViewportAttributesRef attributesRef)
 {
-    return toImpl(view)->isVisible();
+    return toImpl(attributesRef)->originalAttributes().initialScale;
 }
 
-void NIXViewSetVisible(NIXView view, bool visible)
+bool NIXViewportAttributesGetIsUserScalable(WKViewportAttributesRef attributesRef)
 {
-    toImpl(view)->setVisible(visible);
-}
-
-bool NIXViewIsActive(NIXView view)
-{
-    return toImpl(view)->isActive();
-}
-
-void NIXViewSetActive(NIXView view, bool active)
-{
-    toImpl(view)->setActive(active);
-}
-
-bool NIXViewTransparentBackground(NIXView view)
-{
-    return toImpl(view)->transparentBackground();
-}
-
-void NIXViewSetTransparentBackground(NIXView view, bool transparent)
-{
-    toImpl(view)->setTransparentBackground(transparent);
-}
-
-bool NIXViewDrawBackground(NIXView view)
-{
-    return toImpl(view)->drawBackground();
-}
-
-void NIXViewSetDrawBackground(NIXView view, bool drawBackground)
-{
-    toImpl(view)->setDrawBackground(drawBackground);
-}
-
-float NIXViewScale(NIXView view)
-{
-    return toImpl(view)->scale();
-}
-
-void NIXViewSetScale(NIXView view, float scale)
-{
-    toImpl(view)->setScale(scale);
-}
-
-void NIXViewSetOpacity(NIXView view, float opacity)
-{
-    toImpl(view)->setOpacity(opacity);
-}
-
-float NIXViewOpacity(NIXView view)
-{
-    return toImpl(view)->opacity();
-}
-
-WKSize NIXViewVisibleContentsSize(NIXView view)
-{
-    return toImpl(view)->visibleContentsSize();
-}
-
-void NIXViewPaintToCurrentGLContext(NIXView view)
-{
-    toImpl(view)->paintToCurrentGLContext();
-}
-
-void NIXViewFindZoomableAreaForPoint(NIXView view, WKPoint point, int horizontalRadius, int verticalRadius)
-{
-    toImpl(view)->findZoomableAreaForPoint(point, horizontalRadius, verticalRadius);
-}
-
-WKPageRef NIXViewGetPage(NIXView view)
-{
-    return toImpl(view)->pageRef();
-}
-
-void NIXViewSendMouseEvent(NIXView view, const NIXMouseEvent* event)
-{
-    toImpl(view)->sendMouseEvent(*event);
-}
-
-void NIXViewSendWheelEvent(NIXView view, const NIXWheelEvent* event)
-{
-    toImpl(view)->sendWheelEvent(*event);
-}
-
-void NIXViewSendKeyEvent(NIXView view, const NIXKeyEvent* event)
-{
-    toImpl(view)->sendKeyEvent(*event);
-}
-
-void NIXViewSendTouchEvent(NIXView view, const NIXTouchEvent* event)
-{
-    toImpl(view)->sendTouchEvent(*event);
-}
-
-void NIXViewSendGestureEvent(NIXView view, const NIXGestureEvent* event)
-{
-    toImpl(view)->sendGestureEvent(*event);
-}
-
-void NIXViewSuspendActiveDOMObjectsAndAnimations(NIXView view)
-{
-    toImpl(view)->suspendActiveDOMObjectsAndAnimations();
-}
-
-void NIXViewResumeActiveDOMObjectsAndAnimations(NIXView view)
-{
-    toImpl(view)->resumeActiveDOMObjectsAndAnimations();
-}
-
-bool NIXViewIsSuspended(NIXView view)
-{
-    return toImpl(view)->isSuspended();
+    return toImpl(attributesRef)->originalAttributes().userScalable;
 }

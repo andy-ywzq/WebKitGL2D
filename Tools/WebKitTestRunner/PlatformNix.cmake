@@ -31,6 +31,8 @@ list(APPEND WebKitTestRunner_SOURCES
 
 list(APPEND WebKitTestRunner_INCLUDE_DIRECTORIES
     ${WEBKIT2_DIR}/UIProcess/API/nix
+    ${WEBKIT2_DIR}/UIProcess/API/C/nix
+    ${WEBKIT2_DIR}/UIProcess/API/C/CoordinatedGraphics
     "${WTF_DIR}/wtf/gobject"
 
     ${CAIRO_INCLUDE_DIRS}

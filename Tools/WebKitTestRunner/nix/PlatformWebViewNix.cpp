@@ -55,12 +55,12 @@ static GLuint rgba_to_bgra(GLuint rgba)
 }
 #endif
 
-static void pageDidRequestScroll(NIXView view, WKPoint position, const void* clientInfo)
+static void pageDidRequestScroll(WKViewRef view, WKPoint position, const void* clientInfo)
 {
-    NIXViewSetScrollPosition(view, position);
+    WKViewSetContentPosition(view, position);
 }
 
-static void viewNeedsDisplay(NIXView view, WKRect area, const void* clientInfo)
+static void viewNeedsDisplay(WKViewRef view, WKRect area, const void* clientInfo)
 {
     PlatformWebView* platview = static_cast<PlatformWebView*>(const_cast<void*>(clientInfo));
     platview->scheduleDisplayUpdate();
@@ -93,12 +93,12 @@ void PlatformWebView::performDisplayUpdate()
     assert(didMakeCurrent);
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
-    NIXViewPaintToCurrentGLContext(m_view);
+    WKViewPaintToCurrentGLContext(m_view);
 }
 
 PlatformWebView::PlatformWebView(WKContextRef context, WKPageGroupRef pageGroup, WKPageRef /* relatedPage */, WKDictionaryRef options)
 {
-    m_view = NIXViewCreate(context, pageGroup);
+    m_view = WKViewCreate(context, pageGroup);
     m_window = 0;
     m_scheduledDisplayUpdateID = 0;
 
@@ -108,39 +108,45 @@ PlatformWebView::PlatformWebView(WKContextRef context, WKPageGroupRef pageGroup,
     m_offscreenBuffer->makeCurrent();
     glViewport(0, 0, size.width, size.height);
 
-    NIXViewClient viewClient;
-    memset(&viewClient, 0, sizeof(NIXViewClient));
-    viewClient.version = kNIXViewClientCurrentVersion;
-    viewClient.clientInfo = this;
-    viewClient.pageDidRequestScroll = pageDidRequestScroll;
-    viewClient.viewNeedsDisplay = viewNeedsDisplay;
-    NIXViewSetViewClient(m_view, &viewClient);
+    NIXViewClient nixViewClient;
+    memset(&nixViewClient, 0, sizeof(NIXViewClient));
+    nixViewClient.version = kNIXViewClientCurrentVersion;
+    nixViewClient.clientInfo = this;
+    NIXViewSetNixViewClient(m_view, &nixViewClient);
 
-    NIXViewInitialize(m_view);
-    NIXViewSetSize(m_view, size);
+    WKViewClient viewClient;
+    memset(&viewClient, 0, sizeof(WKViewClient));
+    viewClient.version = kWKViewClientCurrentVersion;
+    viewClient.clientInfo = this;
+    viewClient.viewNeedsDisplay = viewNeedsDisplay;
+    viewClient.didChangeContentsPosition = pageDidRequestScroll;
+    WKViewSetViewClient(m_view, &viewClient);
+
+    WKViewInitialize(m_view);
+    WKViewSetSize(m_view, size);
 }
 
 PlatformWebView::~PlatformWebView()
 {
     if (m_scheduledDisplayUpdateID)
         g_source_remove(m_scheduledDisplayUpdateID);
-    NIXViewRelease(m_view);
+    WKRelease(m_view);
     delete m_offscreenBuffer;
 }
 
 void PlatformWebView::resizeTo(unsigned width, unsigned height)
 {
-    NIXViewSetSize(m_view, WKSizeMake(width, height));
+    WKViewSetSize(m_view, WKSizeMake(width, height));
 }
 
 WKPageRef PlatformWebView::page()
 {
-    return NIXViewGetPage(m_view);
+    return WKViewGetPage(m_view);
 }
 
 void PlatformWebView::focus()
 {
-    NIXViewSetFocused(m_view, true);
+    WKViewSetIsFocused(m_view, true);
 }
 
 WKRect PlatformWebView::windowFrame()
@@ -167,8 +173,8 @@ void PlatformWebView::makeWebViewFirstResponder()
 
 WKRetainPtr<WKImageRef> PlatformWebView::windowSnapshotImage()
 {
-    int width = NIXViewSize(m_view).width;
-    int height = NIXViewSize(m_view).height;
+    int width = WKViewGetSize(m_view).width;
+    int height = WKViewGetSize(m_view).height;
     cairo_format_t format = CAIRO_FORMAT_ARGB32;
 #if USE(OPENGL_ES_2)
     GLuint pixelFormat = GL_RGBA;

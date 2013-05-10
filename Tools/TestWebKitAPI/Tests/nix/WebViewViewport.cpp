@@ -47,13 +47,13 @@ TEST(WebKitNix, WebViewViewport)
     glViewport(0, 0, size.width, size.height);
 
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
-    NIXViewAutoPtr view(NIXViewCreate(context.get(), 0));
+    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
     Util::ForceRepaintClient client(view.get());
     client.setClearColor(0, 0, 1, 1);
 
-    NIXViewInitialize(view.get());
-    WKPageSetUseFixedLayout(NIXViewGetPage(view.get()), true);
-    NIXViewSetSize(view.get(), size);
+    WKViewInitialize(view.get());
+    WKPageSetUseFixedLayout(WKViewGetPage(view.get()), true);
+    WKViewSetSize(view.get(), size);
 
     Util::PageLoader loader(view.get());
     loader.waitForLoadURLAndRepaint("../nix/WebViewViewport");
@@ -65,8 +65,8 @@ TEST(WebKitNix, WebViewViewport)
     EXPECT_EQ(ToolsNix::RGBAPixel::white(), secondDotBefore);
 
     // Scale and scroll so that the first dot be at the topleft of the view.
-    NIXViewSetScale(view.get(), 0.5);
-    NIXViewSetScrollPosition(view.get(), WKPointMake(400, 10000));
+    WKViewSetContentScaleFactor(view.get(), 0.5);
+    WKViewSetContentPosition(view.get(), WKPointMake(400, 10000));
     loader.forceRepaint();
 
     // Now check that the black dots are in the expected places.

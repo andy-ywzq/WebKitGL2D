@@ -25,12 +25,16 @@ list(APPEND WebKit2_SOURCES
     Shared/nix/WebEventFactoryNix.cpp
     Shared/efl/ProcessExecutablePathEfl.cpp
 
+    UIProcess/API/C/CoordinatedGraphics/WKView.cpp
     UIProcess/API/nix/NIXView.cpp
 
     UIProcess/cairo/BackingStoreCairo.cpp
 
-    UIProcess/nix/WebView.cpp
-    UIProcess/nix/WebViewClient.cpp
+    UIProcess/CoordinatedGraphics/WebView.cpp
+    UIProcess/CoordinatedGraphics/WebViewClient.cpp
+
+    UIProcess/nix/WebViewNix.cpp
+    UIProcess/nix/WebViewClientNix.cpp
     UIProcess/nix/TextCheckerNix.cpp
     UIProcess/nix/WebContextNix.cpp
     UIProcess/nix/WebInspectorProxyNix.cpp
@@ -56,14 +60,19 @@ list(APPEND WebKit2_SOURCES
     WebProcess/WebPage/nix/WebPageNix.cpp
 
     UIProcess/Storage/StorageManager.cpp
+
+    UIProcess/DefaultUndoController.cpp
 )
 
 list(APPEND WebKit2_INCLUDE_DIRECTORIES
     Shared/nix
-    UIProcess/nix
+    Shared/API/c/nix
     WebProcess/nix
     WebProcess/WebCoreSupport/nix
-    UIProcess/API/nix/
+    UIProcess/nix
+    UIProcess/API/nix
+    UIProcess/API/C/nix
+    UIProcess/API/C/CoordinatedGraphics
     "${JAVASCRIPTCORE_DIR}/llint"
     "${WEBCORE_DIR}/platform/nix"
     "${WEBCORE_DIR}/platform/graphics/cairo"
@@ -263,6 +272,8 @@ set(WebKitNix_WebKit2_HEADERS
     Shared/API/c/WKURLResponse.h
     Shared/API/c/WKUserContentURLPattern.h
 
+    Shared/API/c/nix/WKBaseNix.h
+
     UIProcess/API/C/WKApplicationCacheManager.h
     UIProcess/API/C/WKAuthenticationChallenge.h
     UIProcess/API/C/WKAuthenticationDecisionListener.h
@@ -315,6 +326,10 @@ set(WebKitNix_WebKit2_HEADERS
     UIProcess/API/cpp/WKRetainPtr.h
 
     UIProcess/API/CoordinatedGraphics/WKCoordinatedScene.h
+    UIProcess/API/C/CoordinatedGraphics/WKView.h
+    UIProcess/API/C/WKViewportAttributes.h
+
+    UIProcess/API/C/nix/WKAPICastNix.h
 
     WebProcess/InjectedBundle/API/c/WKBundle.h
     WebProcess/InjectedBundle/API/c/WKBundleBackForwardList.h

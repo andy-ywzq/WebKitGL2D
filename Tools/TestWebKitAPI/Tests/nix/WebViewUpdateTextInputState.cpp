@@ -55,7 +55,7 @@ static void didFinishLoadForFrame(WKPageRef page, WKFrameRef, WKTypeRef, const v
     didFinishLoad = true;
 }
 
-static void updateTextInputState(NIXView, WKStringRef, WKStringRef surroundingText, uint64_t inputMethodHints, bool isContentEditable, WKRect cursorRect, WKRect editorRect, const void*)
+static void updateTextInputState(WKViewRef, WKStringRef, WKStringRef surroundingText, uint64_t inputMethodHints, bool isContentEditable, WKRect cursorRect, WKRect editorRect, const void*)
 {
     didUpdateTextInputState = true;
     contentEditableValue = isContentEditable;
@@ -66,7 +66,7 @@ static void updateTextInputState(NIXView, WKStringRef, WKStringRef surroundingTe
     editorRectState = editorRect;
 }
 
-static void doneWithGestureEvent(NIXView, const NIXGestureEvent* event, bool, const void*)
+static void doneWithGestureEvent(WKViewRef, const NIXGestureEvent* event, bool, const void*)
 {
     isDoneWithSingleTapEvent = event->type == kNIXInputEventTypeGestureSingleTap;
 }
@@ -75,29 +75,29 @@ TEST(WebKitNix, WebViewWebProcessCrashed)
 {
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
 
-    NIXViewAutoPtr view(NIXViewCreate(context.get(), 0));
+    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
 
-    NIXViewClient viewClient;
-    memset(&viewClient, 0, sizeof(NIXViewClient));
-    viewClient.version = kNIXViewClientCurrentVersion;
-    viewClient.updateTextInputState = updateTextInputState;
-    viewClient.doneWithGestureEvent = doneWithGestureEvent;
-    NIXViewSetViewClient(view.get(), &viewClient);
+    NIXViewClient nixViewClient;
+    memset(&nixViewClient, 0, sizeof(NIXViewClient));
+    nixViewClient.version = kNIXViewClientCurrentVersion;
+    nixViewClient.updateTextInputState = updateTextInputState;
+    nixViewClient.doneWithGestureEvent = doneWithGestureEvent;
+    NIXViewSetNixViewClient(view.get(), &nixViewClient);
 
-    NIXViewInitialize(view.get());
+    WKViewInitialize(view.get());
 
     WKPageLoaderClient loaderClient;
     memset(&loaderClient, 0, sizeof(loaderClient));
 
     loaderClient.version = 0;
     loaderClient.didFinishLoadForFrame = didFinishLoadForFrame;
-    WKPageSetPageLoaderClient(NIXViewGetPage(view.get()), &loaderClient);
+    WKPageSetPageLoaderClient(WKViewGetPage(view.get()), &loaderClient);
 
     const WKSize size = WKSizeMake(100, 100);
-    NIXViewSetSize(view.get(), size);
+    WKViewSetSize(view.get(), size);
 
     WKRetainPtr<WKURLRef> editableContentUrl = adoptWK(Util::createURLForResource("../nix/single-tap-on-editable-content", "html"));
-    WKPageLoadURL(NIXViewGetPage(view.get()), editableContentUrl.get());
+    WKPageLoadURL(WKViewGetPage(view.get()), editableContentUrl.get());
     Util::run(&didFinishLoad);
 
     NIXGestureEvent tapEvent;

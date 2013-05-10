@@ -43,7 +43,7 @@ struct MockedTouchPoint : public NIXTouchPoint {
 
 class TouchMocker {
 public:
-    TouchMocker(NIXView);
+    TouchMocker(WKViewRef);
     ~TouchMocker();
 
     bool handleMousePress(const NIXMouseEvent&, const WKPoint& windowPos);
@@ -62,7 +62,7 @@ private:
 
     void loadTouchPointTexture();
 
-    NIXView m_view;
+    WKViewRef m_view;
     NIXInputEventType m_touchType;
     typedef std::map<WKEventMouseButton, MockedTouchPoint> TouchMap;
     TouchMap m_touchPoints;

@@ -47,17 +47,16 @@ TEST(WebKitNix, WebViewTranslatedScaled)
 
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
 
-    NIXViewAutoPtr view(NIXViewCreate(context.get(), 0));
+    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
     Util::ForceRepaintClient client(view.get());
     client.setClearColor(0, 0, 1, 1);
 
     const int delta = 10;
-    NIXMatrix transform = NIXMatrixMakeTranslation(delta, delta);
-    NIXViewSetUserViewportTransformation(view.get(), &transform);
+    WKViewSetUserViewportTranslation(view.get(), delta, delta);
 
-    NIXViewInitialize(view.get());
-    WKPageSetUseFixedLayout(NIXViewGetPage(view.get()), true);
-    NIXViewSetSize(view.get(), size);
+    WKViewInitialize(view.get());
+    WKPageSetUseFixedLayout(WKViewGetPage(view.get()), true);
+    WKViewSetSize(view.get(), size);
 
     glViewport(0, 0, size.width, size.height);
     glClearColor(0, 0, 1, 1);
@@ -68,7 +67,7 @@ TEST(WebKitNix, WebViewTranslatedScaled)
     loader.waitForLoadURLAndRepaint("../nix/red-square");
 
     for (double scale = 1.0; scale < 3.0; scale++) {
-        NIXViewSetScale(view.get(), scale);
+        WKViewSetContentScaleFactor(view.get(), scale);
         loader.forceRepaint();
 
         ToolsNix::RGBAPixel outsideTheContent = offscreenBuffer.readPixelAtPoint(delta - 1, delta - 1);

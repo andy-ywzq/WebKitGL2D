@@ -42,17 +42,16 @@ TEST(WebKitNix, WebViewTranslated)
 
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
 
-    const int translationDelta = 20;
-    NIXViewAutoPtr view(NIXViewCreate(context.get(), 0));
+    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
     Util::ForceRepaintClient client(view.get());
     client.setClearColor(0, 0, 1, 1);
 
-    NIXMatrix transform = NIXMatrixMakeTranslation(translationDelta, translationDelta);
-    NIXViewSetUserViewportTransformation(view.get(), &transform);
+    const int translationDelta = 20;
+    WKViewSetUserViewportTranslation(view.get(), translationDelta, translationDelta);
 
-    NIXViewInitialize(view.get());
-    WKPageSetUseFixedLayout(NIXViewGetPage(view.get()), true);
-    NIXViewSetSize(view.get(), size);
+    WKViewInitialize(view.get());
+    WKPageSetUseFixedLayout(WKViewGetPage(view.get()), true);
+    WKViewSetSize(view.get(), size);
 
     glViewport(0, 0, size.width, size.height);
     glClearColor(0, 0, 1, 1);

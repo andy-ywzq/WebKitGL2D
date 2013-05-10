@@ -41,6 +41,10 @@
 #include <WebKit2/WKBaseEfl.h>
 #endif
 
+#if defined(BUILDING_NIX__)
+#include <WebKit2/WKBaseNix.h>
+#endif
+
 #if defined(__APPLE__) && !defined(BUILDING_QT__)
 #include <WebKit2/WKBaseMac.h>
 #endif

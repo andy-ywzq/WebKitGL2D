@@ -56,8 +56,7 @@ typedef struct _Evas_Object Evas_Object;
 typedef Evas_Object* PlatformWKView;
 typedef Ecore_Evas* PlatformWindow;
 #elif PLATFORM(NIX)
-typedef struct OpaqueNIXView* NIXView;
-typedef NIXView PlatformWKView;
+typedef WKViewRef PlatformWKView;
 typedef int PlatformWindow;
 #elif PLATFORM(QT)
 QT_BEGIN_NAMESPACE

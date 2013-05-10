@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2013 Nokia Corporation and/or its subsidiary(-ies).
+ * Copyright (C) 2013 Nokia Corporation and/or its subsidiary(-ies).
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,37 +23,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WebViewClientNix_h
-#define WebViewClientNix_h
+#ifndef WKBaseNix_h
+#define WKBaseNix_h
 
-#include "NIXView.h"
-#include "IntRect.h"
-#include "wtf/text/WTFString.h"
+#ifndef WKBase_h
+#error "Please #include \"WKBase.h\" instead of this file directly."
+#endif
 
-namespace WebKit {
+#include <stdbool.h>
 
-class WebView;
+typedef const struct OpaqueWKView* WKViewRef;
 
-class WebViewClientNix {
-public:
-    WebViewClientNix()
-    {
-        initialize(0);
-    }
-
-    void initialize(const NIXViewClient* client);
-
-    const NIXViewClient& client() const { return m_client; }
-
-    void doneWithTouchEvent(WebView*, const NIXTouchEvent&, bool wasEventHandled);
-    void doneWithGestureEvent(WebView*, const NIXGestureEvent&, bool wasEventHandled);
-    void didFindZoomableArea(WebView*, WKPoint target, WKRect area);
-    void updateTextInputState(WebView*, const WTF::String& selectedText, const WTF::String& surroundingText, uint64_t inputMethodHints, bool isContentEditable, const WebCore::IntRect& cursorRect, const WebCore::IntRect& editorRect);
-
-private:
-    NIXViewClient m_client;
-};
-
-} // namespace WebKit
-
-#endif // WebViewClientNix_h
+#endif /* WKBaseNix_h */
