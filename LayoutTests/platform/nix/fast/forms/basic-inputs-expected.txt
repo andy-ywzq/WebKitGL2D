@@ -48,24 +48,24 @@ layer at (0,0) size 800x600
         RenderTextControl {INPUT} at (237,31) size 166x24 [bgcolor=#FFFFFF] [border: (2px inset #000000)]
         RenderText {#text} at (405,34) size 8x19
           text run at (405,34) width 8: "b"
-      RenderBlock {DIV} at (10,384) size 450x20 [border: (1px solid #FF0000)]
-        RenderText {#text} at (1,1) size 7x19
-          text run at (1,1) width 7: "a"
-        RenderBlock {INPUT} at (12,16) size 0x0
-        RenderText {#text} at (16,1) size 65x19
-          text run at (16,1) width 65: "checkbox "
-        RenderBlock {INPUT} at (85,16) size 0x0
-        RenderText {#text} at (89,1) size 8x19
-          text run at (89,1) width 8: "b"
-      RenderBlock {DIV} at (10,414) size 450x20 [border: (1px solid #FF0000)]
-        RenderText {#text} at (1,1) size 7x19
-          text run at (1,1) width 7: "a"
-        RenderBlock {INPUT} at (12,16) size 0x0
-        RenderText {#text} at (16,1) size 36x19
-          text run at (16,1) width 36: "radio "
-        RenderBlock {INPUT} at (56,16) size 0x0
-        RenderText {#text} at (60,1) size 8x19
-          text run at (60,1) width 8: "b"
+      RenderBlock {DIV} at (10,384) size 450x21 [border: (1px solid #FF0000)]
+        RenderText {#text} at (1,2) size 7x19
+          text run at (1,2) width 7: "a"
+        RenderBlock {INPUT} at (12,4) size 13x13
+        RenderText {#text} at (29,2) size 65x19
+          text run at (29,2) width 65: "checkbox "
+        RenderBlock {INPUT} at (98,4) size 13x13
+        RenderText {#text} at (115,2) size 8x19
+          text run at (115,2) width 8: "b"
+      RenderBlock {DIV} at (10,415) size 450x21 [border: (1px solid #FF0000)]
+        RenderText {#text} at (1,2) size 7x19
+          text run at (1,2) width 7: "a"
+        RenderBlock {INPUT} at (12,4) size 13x13
+        RenderText {#text} at (29,2) size 36x19
+          text run at (29,2) width 36: "radio "
+        RenderBlock {INPUT} at (69,4) size 13x13
+        RenderText {#text} at (86,2) size 8x19
+          text run at (86,2) width 8: "b"
 layer at (31,330) size 160x18 scrollWidth 190 scrollHeight 19
   RenderBlock {DIV} at (3,3) size 160x18
     RenderText {#text} at (0,0) size 189x19
