@@ -320,7 +320,7 @@ void WebView::didChangeViewportProperties(const WebCore::ViewportAttributes& vie
 
 void WebView::didFindZoomableArea(const IntPoint& target, const IntRect& area)
 {
-    m_viewClient.didFindZoomableArea(this, WKPointMake(target.x(), target.y()), WKRectMake(area.x(), area.y(), area.width(), area.height()));
+    m_viewClient.didFindZoomableArea(this, toAPI(target), toAPI(area));
 }
 
 void WebView::pageTransitionViewportReady()
