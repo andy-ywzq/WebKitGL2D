@@ -25,13 +25,10 @@
 #if ENABLE(INSPECTOR_SERVER)
 #include "WebInspectorServer.h"
 
-#include "FileSystem.h"
 #include "WebInspectorProxy.h"
 #include "WebPageProxy.h"
 #include <WebCore/MIMETypeRegistry.h>
-#include <gio/gio.h>
-#include <glib.h>
-#include <wtf/gobject/GOwnPtr.h>
+#include <sys/stat.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/StringBuilder.h>
 
@@ -55,24 +52,35 @@ bool WebInspectorServer::platformResourceForPath(const String& path, Vector<char
     }
 
     // Point the default path to a formatted page that queries the page list and display them.
-    CString localPath = WebCore::fileSystemRepresentation(inspectorBaseURL() + ((path == "/") ? "/inspectorPageIndex.html" : path));
-    if (localPath.isNull())
+    String localPath = inspectorBaseURL() + ((path == "/") ? ASCIILiteral("/inspectorPageIndex.html") : path);
+
+    FILE* fileHandle = fopen(localPath.utf8().data(), "r");
+    if (!fileHandle)
         return false;
 
-    GRefPtr<GFile> file = adoptGRef(g_file_new_for_path(localPath.data()));
-    GRefPtr<GFileInfo> fileInfo = adoptGRef(g_file_query_info(file.get(), G_FILE_ATTRIBUTE_STANDARD_SIZE "," G_FILE_ATTRIBUTE_STANDARD_FAST_CONTENT_TYPE, G_FILE_QUERY_INFO_NONE, 0, 0));
-    if (!fileInfo)
+    struct stat fileStat;
+    if (fstat(fileno(fileHandle), &fileStat)) {
+        fclose(fileHandle);
+        return false;
+    }
+
+    data.grow(fileStat.st_size);
+    int bytesRead = fread(data.data(), 1, fileStat.st_size, fileHandle);
+    fclose(fileHandle);
+
+    if (bytesRead < fileStat.st_size)
         return false;
 
-    GRefPtr<GFileInputStream> inputStream = adoptGRef(g_file_read(file.get(), 0, 0));
-    if (!inputStream)
+    size_t extStart = localPath.reverseFind('.');
+    if (extStart == notFound)
         return false;
 
-    data.grow(g_file_info_get_size(fileInfo.get()));
-    if (!g_input_stream_read_all(G_INPUT_STREAM(inputStream.get()), data.data(), data.size(), 0, 0, 0))
+    String ext = localPath.substring(extStart + 1);
+    if (ext.isEmpty())
         return false;
 
-    contentType = GOwnPtr<gchar>(g_file_info_get_attribute_as_string(fileInfo.get(), G_FILE_ATTRIBUTE_STANDARD_FAST_CONTENT_TYPE)).get();
+    contentType = WebCore::MIMETypeRegistry::getMIMETypeForExtension(ext);
+
     return true;
 }
 
