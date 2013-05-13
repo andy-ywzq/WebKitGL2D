@@ -36,63 +36,63 @@ public:
 
     virtual ~RenderThemeNix();
 
-    virtual void systemFont(int cssValueId, FontDescription&) const;
+    virtual void systemFont(int cssValueId, FontDescription&) const OVERRIDE;
 
 #if ENABLE(PROGRESS_ELEMENT)
     // Returns the repeat interval of the animation for the progress bar.
-    virtual double animationRepeatIntervalForProgressBar(RenderProgress*) const;
+    virtual double animationRepeatIntervalForProgressBar(RenderProgress*) const OVERRIDE;
     // Returns the duration of the animation for the progress bar.
-    virtual double animationDurationForProgressBar(RenderProgress*) const;
+    virtual double animationDurationForProgressBar(RenderProgress*) const OVERRIDE;
 #endif
 
 #if ENABLE(METER_ELEMENT)
-    virtual IntSize meterSizeForBounds(const RenderMeter*, const IntRect&) const;
-    virtual bool supportsMeter(ControlPart) const;
+    virtual IntSize meterSizeForBounds(const RenderMeter*, const IntRect&) const OVERRIDE;
+    virtual bool supportsMeter(ControlPart) const OVERRIDE;
 #endif
 
 protected:
 
-    virtual bool paintButton(RenderObject*, const PaintInfo&, const IntRect&);
-    virtual bool paintTextField(RenderObject*, const PaintInfo&, const IntRect&);
-    virtual bool paintTextArea(RenderObject*, const PaintInfo&, const IntRect&);
+    virtual bool paintButton(RenderObject*, const PaintInfo&, const IntRect&) OVERRIDE;
+    virtual bool paintTextField(RenderObject*, const PaintInfo&, const IntRect&) OVERRIDE;
+    virtual bool paintTextArea(RenderObject*, const PaintInfo&, const IntRect&) OVERRIDE;
 
-    virtual bool paintCheckbox(RenderObject*, const PaintInfo&, const IntRect&);
-    virtual void setCheckboxSize(RenderStyle*) const;
+    virtual bool paintCheckbox(RenderObject*, const PaintInfo&, const IntRect&) OVERRIDE;
+    virtual void setCheckboxSize(RenderStyle*) const OVERRIDE;
 
-    virtual bool paintRadio(RenderObject*, const PaintInfo&, const IntRect&);
-    virtual void setRadioSize(RenderStyle*) const;
+    virtual bool paintRadio(RenderObject*, const PaintInfo&, const IntRect&) OVERRIDE;
+    virtual void setRadioSize(RenderStyle*) const OVERRIDE;
 
-    virtual bool paintMenuList(RenderObject*, const PaintInfo&, const IntRect&);
-    virtual void adjustMenuListStyle(StyleResolver*, RenderStyle*, Element*) const;
-    virtual bool paintMenuListButton(RenderObject* o, const PaintInfo& i, const IntRect& r) { return paintMenuList(o, i, r); }
+    virtual bool paintMenuList(RenderObject*, const PaintInfo&, const IntRect&) OVERRIDE;
+    virtual void adjustMenuListStyle(StyleResolver*, RenderStyle*, Element*) const OVERRIDE;
+    virtual bool paintMenuListButton(RenderObject* o, const PaintInfo& i, const IntRect& r) OVERRIDE { return paintMenuList(o, i, r); }
 
-    virtual void adjustInnerSpinButtonStyle(StyleResolver*, RenderStyle*, Element*) const;
-    virtual bool paintInnerSpinButton(RenderObject*, const PaintInfo&, const IntRect&);
+    virtual void adjustInnerSpinButtonStyle(StyleResolver*, RenderStyle*, Element*) const OVERRIDE;
+    virtual bool paintInnerSpinButton(RenderObject*, const PaintInfo&, const IntRect&) OVERRIDE;
 
 #if ENABLE(PROGRESS_ELEMENT)
-    virtual void adjustProgressBarStyle(StyleResolver*, RenderStyle*, Element*) const;
+    virtual void adjustProgressBarStyle(StyleResolver*, RenderStyle*, Element*) const OVERRIDE;
     virtual bool paintProgressBar(RenderObject*, const PaintInfo&, const IntRect&) OVERRIDE;
 #endif
 
 #if ENABLE(METER_ELEMENT)
-    virtual void adjustMeterStyle(StyleResolver*, RenderStyle*, Element*) const;
-    virtual bool paintMeter(RenderObject*, const PaintInfo&, const IntRect&);
+    virtual void adjustMeterStyle(StyleResolver*, RenderStyle*, Element*) const OVERRIDE;
+    virtual bool paintMeter(RenderObject*, const PaintInfo&, const IntRect&) OVERRIDE;
 #endif
 
-    virtual bool paintSliderTrack(RenderObject*, const PaintInfo&, const IntRect&);
-    virtual void adjustSliderTrackStyle(StyleResolver*, RenderStyle*, Element*) const;
+    virtual bool paintSliderTrack(RenderObject*, const PaintInfo&, const IntRect&) OVERRIDE;
+    virtual void adjustSliderTrackStyle(StyleResolver*, RenderStyle*, Element*) const OVERRIDE;
 
-    virtual bool paintSliderThumb(RenderObject*, const PaintInfo&, const IntRect&);
-    virtual void adjustSliderThumbStyle(StyleResolver*, RenderStyle*, Element*) const;
+    virtual bool paintSliderThumb(RenderObject*, const PaintInfo&, const IntRect&) OVERRIDE;
+    virtual void adjustSliderThumbStyle(StyleResolver*, RenderStyle*, Element*) const OVERRIDE;
 
-    virtual void adjustSliderThumbSize(RenderStyle*, Element*) const;
+    virtual void adjustSliderThumbSize(RenderStyle*, Element*) const OVERRIDE;
 
 #if ENABLE(DATALIST_ELEMENT)
-    virtual IntSize sliderTickSize() const;
-    virtual int sliderTickOffsetFromTrackCenter() const;
-    virtual LayoutUnit sliderTickSnappingThreshold() const;
+    virtual IntSize sliderTickSize() const OVERRIDE;
+    virtual int sliderTickOffsetFromTrackCenter() const OVERRIDE;
+    virtual LayoutUnit sliderTickSnappingThreshold() const OVERRIDE;
 
-    virtual bool supportsDataListUI(const AtomicString&) const;
+    virtual bool supportsDataListUI(const AtomicString&) const OVERRIDE;
 #endif
 
 private:

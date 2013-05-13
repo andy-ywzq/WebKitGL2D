@@ -286,7 +286,7 @@ void DefaultWebThemeEngine::paintMeter(WebCanvas* canvas, State state, const Web
 
 const int SLIDER_TRACK_HEIGHT = 6;
 
-void DefaultWebThemeEngine::paintSliderTrack(WebCanvas* canvas, State state, const WebRect& rect) const
+void DefaultWebThemeEngine::paintSliderTrack(WebCanvas* canvas, State, const WebRect& rect) const
 {
     cairo_save(canvas);
     cairo_rectangle(canvas, rect.x, rect.y + (rect.height - SLIDER_TRACK_HEIGHT) / 2.0, rect.width, SLIDER_TRACK_HEIGHT);
