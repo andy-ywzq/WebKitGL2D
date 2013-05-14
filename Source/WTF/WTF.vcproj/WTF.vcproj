@@ -663,10 +663,6 @@
 			>
 		</File>
 		<File
-			RelativePath="..\wtf\Complex.h"
-			>
-		</File>
-		<File
 			RelativePath="..\wtf\CryptographicallyRandomNumber.cpp"
 			>
 		</File>
@@ -900,10 +896,6 @@
 		</File>
 		<File
 			RelativePath="..\wtf\MainThread.h"
-			>
-		</File>
-		<File
-			RelativePath="..\wtf\MallocZoneSupport.h"
 			>
 		</File>
 		<File
@@ -1272,10 +1264,6 @@
 		</File>
 		<File
 			RelativePath="..\wtf\UInt8Array.h"
-			>
-		</File>
-		<File
-			RelativePath="..\wtf\UnusedParam.h"
 			>
 		</File>
 		<File

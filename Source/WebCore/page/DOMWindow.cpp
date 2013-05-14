@@ -28,7 +28,7 @@
 #include "DOMWindow.h"
 
 #include "BackForwardController.h"
-#include "BarInfo.h"
+#include "BarProp.h"
 #include "BeforeUnloadEvent.h"
 #include "CSSComputedStyleDeclaration.h"
 #include "CSSRule.h"
@@ -175,20 +175,16 @@ static DOMWindowSet& windowsWithBeforeUnloadEventListeners()
 static void addUnloadEventListener(DOMWindow* domWindow)
 {
     DOMWindowSet& set = windowsWithUnloadEventListeners();
-    if (set.isEmpty())
-        disableSuddenTermination();
-    set.add(domWindow);
+    if (set.add(domWindow).isNewEntry)
+        domWindow->disableSuddenTermination();
 }
 
 static void removeUnloadEventListener(DOMWindow* domWindow)
 {
     DOMWindowSet& set = windowsWithUnloadEventListeners();
     DOMWindowSet::iterator it = set.find(domWindow);
-    if (it == set.end())
-        return;
-    set.remove(it);
-    if (set.isEmpty())
-        enableSuddenTermination();
+    if (set.remove(it))
+        domWindow->enableSuddenTermination();
 }
 
 static void removeAllUnloadEventListeners(DOMWindow* domWindow)
@@ -198,27 +194,22 @@ static void removeAllUnloadEventListeners(DOMWindow* domWindow)
     if (it == set.end())
         return;
     set.removeAll(it);
-    if (set.isEmpty())
-        enableSuddenTermination();
+    domWindow->enableSuddenTermination();
 }
 
 static void addBeforeUnloadEventListener(DOMWindow* domWindow)
 {
     DOMWindowSet& set = windowsWithBeforeUnloadEventListeners();
-    if (set.isEmpty())
-        disableSuddenTermination();
-    set.add(domWindow);
+    if (set.add(domWindow).isNewEntry)
+        domWindow->disableSuddenTermination();
 }
 
 static void removeBeforeUnloadEventListener(DOMWindow* domWindow)
 {
     DOMWindowSet& set = windowsWithBeforeUnloadEventListeners();
     DOMWindowSet::iterator it = set.find(domWindow);
-    if (it == set.end())
-        return;
-    set.remove(it);
-    if (set.isEmpty())
-        enableSuddenTermination();
+    if (set.remove(it))
+        domWindow->enableSuddenTermination();
 }
 
 static void removeAllBeforeUnloadEventListeners(DOMWindow* domWindow)
@@ -228,8 +219,7 @@ static void removeAllBeforeUnloadEventListeners(DOMWindow* domWindow)
     if (it == set.end())
         return;
     set.removeAll(it);
-    if (set.isEmpty())
-        enableSuddenTermination();
+    domWindow->enableSuddenTermination();
 }
 
 static bool allowsBeforeUnloadListeners(DOMWindow* window)
@@ -272,12 +262,11 @@ bool DOMWindow::dispatchAllPendingBeforeUnloadEvents()
 
         if (!frame->loader()->shouldClose())
             return false;
+
+        window->enableSuddenTermination();
     }
 
-    enableSuddenTermination();
-
     alreadyDispatched = true;
-
     return true;
 }
 
@@ -310,9 +299,9 @@ void DOMWindow::dispatchAllPendingUnloadEvents()
 
         window->dispatchEvent(PageTransitionEvent::create(eventNames().pagehideEvent, false), window->document());
         window->dispatchEvent(Event::create(eventNames().unloadEvent, false, false), window->document());
-    }
 
-    enableSuddenTermination();
+        window->enableSuddenTermination();
+    }
 
     alreadyDispatched = true;
 }
@@ -430,7 +419,7 @@ DOMWindow::~DOMWindow()
         ASSERT(!m_toolbar);
         ASSERT(!m_console);
         ASSERT(!m_navigator);
-#if ENABLE(WEB_TIMING) || ENABLE(WEB_TIMING_MINIMAL)
+#if ENABLE(WEB_TIMING)
         ASSERT(!m_performance);
 #endif
         ASSERT(!m_location);
@@ -587,7 +576,7 @@ void DOMWindow::resetDOMWindowProperties()
     m_toolbar = 0;
     m_console = 0;
     m_navigator = 0;
-#if ENABLE(WEB_TIMING) || ENABLE(WEB_TIMING_MINIMAL)
+#if ENABLE(WEB_TIMING)
     m_performance = 0;
 #endif
     m_location = 0;
@@ -639,57 +628,57 @@ Crypto* DOMWindow::crypto() const
     return m_crypto.get();
 }
 
-BarInfo* DOMWindow::locationbar() const
+BarProp* DOMWindow::locationbar() const
 {
     if (!isCurrentlyDisplayedInFrame())
         return 0;
     if (!m_locationbar)
-        m_locationbar = BarInfo::create(m_frame, BarInfo::Locationbar);
+        m_locationbar = BarProp::create(m_frame, BarProp::Locationbar);
     return m_locationbar.get();
 }
 
-BarInfo* DOMWindow::menubar() const
+BarProp* DOMWindow::menubar() const
 {
     if (!isCurrentlyDisplayedInFrame())
         return 0;
     if (!m_menubar)
-        m_menubar = BarInfo::create(m_frame, BarInfo::Menubar);
+        m_menubar = BarProp::create(m_frame, BarProp::Menubar);
     return m_menubar.get();
 }
 
-BarInfo* DOMWindow::personalbar() const
+BarProp* DOMWindow::personalbar() const
 {
     if (!isCurrentlyDisplayedInFrame())
         return 0;
     if (!m_personalbar)
-        m_personalbar = BarInfo::create(m_frame, BarInfo::Personalbar);
+        m_personalbar = BarProp::create(m_frame, BarProp::Personalbar);
     return m_personalbar.get();
 }
 
-BarInfo* DOMWindow::scrollbars() const
+BarProp* DOMWindow::scrollbars() const
 {
     if (!isCurrentlyDisplayedInFrame())
         return 0;
     if (!m_scrollbars)
-        m_scrollbars = BarInfo::create(m_frame, BarInfo::Scrollbars);
+        m_scrollbars = BarProp::create(m_frame, BarProp::Scrollbars);
     return m_scrollbars.get();
 }
 
-BarInfo* DOMWindow::statusbar() const
+BarProp* DOMWindow::statusbar() const
 {
     if (!isCurrentlyDisplayedInFrame())
         return 0;
     if (!m_statusbar)
-        m_statusbar = BarInfo::create(m_frame, BarInfo::Statusbar);
+        m_statusbar = BarProp::create(m_frame, BarProp::Statusbar);
     return m_statusbar.get();
 }
 
-BarInfo* DOMWindow::toolbar() const
+BarProp* DOMWindow::toolbar() const
 {
     if (!isCurrentlyDisplayedInFrame())
         return 0;
     if (!m_toolbar)
-        m_toolbar = BarInfo::create(m_frame, BarInfo::Toolbar);
+        m_toolbar = BarProp::create(m_frame, BarProp::Toolbar);
     return m_toolbar.get();
 }
 
@@ -727,7 +716,7 @@ Navigator* DOMWindow::navigator() const
     return m_navigator.get();
 }
 
-#if ENABLE(WEB_TIMING) || ENABLE(WEB_TIMING_MINIMAL)
+#if ENABLE(WEB_TIMING)
 Performance* DOMWindow::performance() const
 {
     if (!isCurrentlyDisplayedInFrame())
@@ -941,7 +930,7 @@ void DOMWindow::focus(ScriptExecutionContext* context)
     if (context) {
         ASSERT(isMainThread());
         Document* activeDocument = toDocument(context);
-        if (opener() && activeDocument->domWindow() == opener())
+        if (opener() && opener() != this && activeDocument->domWindow() == opener())
             allowFocus = true;
     }
 
@@ -2015,6 +2004,18 @@ void DOMWindow::showModalDialog(const String& urlString, const String& dialogFea
         return;
     UserGestureIndicatorDisabler disabler;
     dialogFrame->page()->chrome()->runModal();
+}
+
+void DOMWindow::enableSuddenTermination()
+{
+    if (Page* page = this->page())
+        page->chrome()->enableSuddenTermination();
+}
+
+void DOMWindow::disableSuddenTermination()
+{
+    if (Page* page = this->page())
+        page->chrome()->disableSuddenTermination();
 }
 
 } // namespace WebCore

@@ -1,3 +1,54 @@
+2013-05-14  Jocelyn Turcotte  <jocelyn.turcotte@digia.com>
+
+        [Qt] Fix a crash under ~PingLoader when the QNAM on the page has been destroyed.
+        https://bugs.webkit.org/show_bug.cgi?id=116035
+
+        Reviewed by Simon Hausmann.
+
+        * tests/qwebpage/tst_qwebpage.cpp:
+        (tst_QWebPage::networkReplyParentChanged):
+
+2013-05-12  Timothy Hatcher  <timothy@apple.com>
+
+        Add support for updating the Web Inspector toolbar height.
+
+        https://bugs.webkit.org/show_bug.cgi?id=115996
+
+        Reviewed by Joseph Pecoraro and Benjamin Poulain.
+
+        * WebCoreSupport/InspectorClientQt.cpp:
+        (WebCore::InspectorFrontendClientQt::setToolbarHeight):
+        * WebCoreSupport/InspectorClientQt.h:
+
+2013-05-13  Jocelyn Turcotte  <jocelyn.turcotte@digia.com>
+
+        [Qt] Fix a crash on startup in FrameLoaderClientQt::callPolicyFunction with MSVC
+
+        Reviewed by Allan Sandfeld Jensen.
+
+        It's not clear why it crashes, but here's my guess by looking at the generated
+        assembly code:
+        Since we're using a member function pointer to PolicyChecker, the representation
+        is not necessarily just a simple pointer and might be a bigger structure used
+        to handle virtual functions resolution.
+        For a function taking such a function "pointer" as parameter, the compiler doesn't
+        seem to have the caller and callee agree on which convention to use if the function
+        pointer's class is non-virtual and only one of the ends doesn't know about it.
+
+        Including the definition of the member function pointer's class fixes the crash.
+
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+
+2013-05-09  Andreas Kling  <akling@apple.com>
+
+        [Qt][WK1]REGRESSION(r149532) tst_qwebelement and tst_qwebframe API tests crash.
+        <http://webkit.org/b/115855>
+
+        Fix obvious off-by-one mistake.
+
+        * Api/qwebelement.cpp:
+        (QWebElement::styleProperty):
+
 2013-05-07  Allan Sandfeld Jensen  <allan.jensen@digia.com>
 
         Crash when calling QWebFrame::evaluateJavaScript

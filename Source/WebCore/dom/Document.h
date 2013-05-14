@@ -358,7 +358,7 @@ public:
     PassRefPtr<EntityReference> createEntityReference(const String& name, ExceptionCode&);
     PassRefPtr<Node> importNode(Node* importedNode, ExceptionCode& ec) { return importNode(importedNode, true, ec); }
     PassRefPtr<Node> importNode(Node* importedNode, bool deep, ExceptionCode&);
-    virtual PassRefPtr<Element> createElementNS(const String& namespaceURI, const String& qualifiedName, ExceptionCode&);
+    PassRefPtr<Element> createElementNS(const String& namespaceURI, const String& qualifiedName, ExceptionCode&);
     PassRefPtr<Element> createElement(const QualifiedName&, bool createdByParser);
 
     bool cssStickyPositionEnabled() const;
@@ -945,12 +945,12 @@ public:
 
     virtual void postTask(PassOwnPtr<Task>); // Executes the task on context's thread asynchronously.
 
-    virtual void suspendScriptedAnimationControllerCallbacks();
-    virtual void resumeScriptedAnimationControllerCallbacks();
+    void suspendScriptedAnimationControllerCallbacks();
+    void resumeScriptedAnimationControllerCallbacks();
     
     void windowScreenDidChange(PlatformDisplayID);
 
-    virtual void finishedParsing();
+    void finishedParsing();
 
     bool inPageCache() const { return m_inPageCache; }
     void setInPageCache(bool flag);
@@ -1209,7 +1209,7 @@ public:
 
     virtual void addConsoleMessage(MessageSource, MessageLevel, const String& message, unsigned long requestIdentifier = 0);
 
-    virtual const SecurityOrigin* topOrigin() const OVERRIDE;
+    virtual SecurityOrigin* topOrigin() const OVERRIDE;
 
 #if ENABLE(FONT_LOAD_EVENTS)
     PassRefPtr<FontLoader> fontloader();
@@ -1219,8 +1219,6 @@ public:
 
 protected:
     Document(Frame*, const KURL&, unsigned = DefaultDocumentClass);
-
-    virtual void didUpdateSecurityOrigin() OVERRIDE;
 
     void clearXMLVersion() { m_xmlVersion = String(); }
 
@@ -1297,9 +1295,8 @@ private:
 
     void didAssociateFormControlsTimerFired(Timer<Document>*);
 
-    void styleResolverThrowawayTimerFired(Timer<Document>*);
-    Timer<Document> m_styleResolverThrowawayTimer;
-    double m_lastStyleResolverAccessTime;
+    void styleResolverThrowawayTimerFired(DeferrableOneShotTimer<Document>*);
+    DeferrableOneShotTimer<Document> m_styleResolverThrowawayTimer;
 
     OwnPtr<StyleResolver> m_styleResolver;
     bool m_didCalculateStyleResolver;

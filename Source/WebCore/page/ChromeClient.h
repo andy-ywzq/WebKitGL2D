@@ -38,17 +38,13 @@
 #include "WebCoreKeyboardUIMode.h"
 #include <wtf/Forward.h>
 #include <wtf/PassOwnPtr.h>
-#include <wtf/UnusedParam.h>
 #include <wtf/Vector.h>
 
 #if ENABLE(SQL_DATABASE)
 #include "DatabaseDetails.h"
 #endif
 
-#ifndef __OBJC__
-class NSMenu;
-class NSResponder;
-#endif
+OBJC_CLASS NSResponder;
 
 namespace WebCore {
 
@@ -232,8 +228,6 @@ public:
 #if ENABLE(DATE_AND_TIME_INPUT_TYPES)
     // This function is used for:
     //  - Mandatory date/time choosers if !ENABLE(INPUT_MULTIPLE_FIELDS_UI)
-    //  - Date/time choosers for types for which RenderTheme::supportsCalendarPicker
-    //    returns true, if ENABLE(INPUT_MULTIPLE_FIELDS_UI)
     //  - <datalist> UI for date/time input types regardless of
     //    ENABLE(INPUT_MULTIPLE_FIELDS_UI)
     virtual PassRefPtr<DateTimeChooser> openDateTimeChooser(DateTimeChooserClient*, const DateTimeChooserParameters&) = 0;
@@ -314,8 +308,10 @@ public:
     virtual void makeFirstResponder(NSResponder *) { }
     // Focuses on the containing view associated with this page.
     virtual void makeFirstResponder() { }
-    virtual void willPopUpMenu(NSMenu *) { }
 #endif
+
+    virtual void enableSuddenTermination() { }
+    virtual void disableSuddenTermination() { }
 
 #if PLATFORM(WIN)
     virtual void setLastSetCursorToCurrentCursor() = 0;

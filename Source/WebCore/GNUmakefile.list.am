@@ -69,8 +69,10 @@ webcore_built_sources += \
 	DerivedSources/WebCore/JSAudioTrack.h \
 	DerivedSources/WebCore/JSAudioTrackList.cpp \
 	DerivedSources/WebCore/JSAudioTrackList.h \
-	DerivedSources/WebCore/JSBarInfo.cpp \
-	DerivedSources/WebCore/JSBarInfo.h \
+	DerivedSources/WebCore/JSBarProp.cpp \
+	DerivedSources/WebCore/JSBarProp.h \
+	DerivedSources/WebCore/JSBatteryManager.cpp \
+	DerivedSources/WebCore/JSBatteryManager.h \
 	DerivedSources/WebCore/JSBeforeLoadEvent.cpp \
 	DerivedSources/WebCore/JSBeforeLoadEvent.h \
 	DerivedSources/WebCore/JSBiquadFilterNode.cpp \
@@ -1214,6 +1216,8 @@ webcore_svg_built_sources += \
 	DerivedSources/WebCore/JSSVGZoomEvent.h
 
 dom_binding_idls += \
+	$(WebCore)/Modules/battery/BatteryManager.idl \
+	$(WebCore)/Modules/battery/NavigatorBattery.idl \
 	$(WebCore)/Modules/filesystem/DOMFileSystem.idl \
 	$(WebCore)/Modules/filesystem/DOMFileSystemSync.idl \
 	$(WebCore)/Modules/filesystem/DOMWindowFileSystem.idl \
@@ -1265,7 +1269,6 @@ dom_binding_idls += \
 	$(WebCore)/Modules/mediasource/MediaSource.idl \
 	$(WebCore)/Modules/mediasource/SourceBuffer.idl \
 	$(WebCore)/Modules/mediasource/SourceBufferList.idl \
-	$(WebCore)/Modules/mediastream/DOMWindowMediaStream.idl \
 	$(WebCore)/Modules/mediastream/LocalMediaStream.idl \
 	$(WebCore)/Modules/mediastream/MediaStream.idl \
 	$(WebCore)/Modules/mediastream/MediaStreamEvent.idl \
@@ -1320,7 +1323,6 @@ dom_binding_idls += \
 	$(WebCore)/Modules/webaudio/BiquadFilterNode.idl \
 	$(WebCore)/Modules/webaudio/ConvolverNode.idl \
 	$(WebCore)/Modules/webaudio/DelayNode.idl \
-	$(WebCore)/Modules/webaudio/DOMWindowWebAudio.idl \
 	$(WebCore)/Modules/webaudio/DynamicsCompressorNode.idl \
 	$(WebCore)/Modules/webaudio/ScriptProcessorNode.idl \
 	$(WebCore)/Modules/webaudio/MediaElementAudioSourceNode.idl \
@@ -1348,7 +1350,6 @@ dom_binding_idls += \
 	$(WebCore)/Modules/webdatabase/SQLTransactionSyncCallback.idl \
 	$(WebCore)/Modules/webdatabase/WorkerContextWebDatabase.idl \
 	$(WebCore)/Modules/websockets/CloseEvent.idl \
-	$(WebCore)/Modules/websockets/DOMWindowWebSocket.idl \
 	$(WebCore)/Modules/websockets/WebSocket.idl \
 	$(WebCore)/Modules/websockets/WorkerContextWebSocket.idl \
 	$(WebCore)/css/CSSCharsetRule.idl \
@@ -1614,7 +1615,7 @@ dom_binding_idls += \
 	$(WebCore)/inspector/ScriptProfile.idl \
 	$(WebCore)/inspector/ScriptProfileNode.idl \
 	$(WebCore)/loader/appcache/DOMApplicationCache.idl \
-	$(WebCore)/page/BarInfo.idl \
+	$(WebCore)/page/BarProp.idl \
 	$(WebCore)/page/Console.idl \
 	$(WebCore)/page/Crypto.idl \
 	$(WebCore)/page/DOMSecurityPolicy.idl \
@@ -1814,6 +1815,15 @@ dom_binding_idls += \
 	$(WebCore)/xml/XSLTProcessor.idl
 
 webcore_modules_sources += \
+	Source/WebCore/Modules/battery/BatteryClient.h \
+	Source/WebCore/Modules/battery/BatteryController.cpp \
+	Source/WebCore/Modules/battery/BatteryController.h \
+	Source/WebCore/Modules/battery/BatteryManager.cpp \
+	Source/WebCore/Modules/battery/BatteryManager.h \
+	Source/WebCore/Modules/battery/BatteryStatus.cpp \
+	Source/WebCore/Modules/battery/BatteryStatus.h \
+	Source/WebCore/Modules/battery/NavigatorBattery.cpp \
+	Source/WebCore/Modules/battery/NavigatorBattery.h \
 	Source/WebCore/Modules/filesystem/AsyncFileWriter.h \
 	Source/WebCore/Modules/filesystem/AsyncFileWriterClient.h \
 	Source/WebCore/Modules/filesystem/DOMFilePath.cpp \
@@ -2533,7 +2543,6 @@ webcore_sources += \
 	Source/WebCore/bindings/js/ScriptGCEvent.cpp \
 	Source/WebCore/bindings/js/ScriptGCEvent.h \
 	Source/WebCore/bindings/js/ScriptHeapSnapshot.h \
-	Source/WebCore/bindings/js/ScriptInstance.h \
 	Source/WebCore/bindings/js/ScriptObject.cpp \
 	Source/WebCore/bindings/js/ScriptObject.h \
 	Source/WebCore/bindings/js/ScriptProfile.cpp \
@@ -4185,8 +4194,8 @@ webcore_sources += \
 	Source/WebCore/page/AlternativeTextClient.h \
 	Source/WebCore/page/AutoscrollController.cpp \
 	Source/WebCore/page/AutoscrollController.h \
-	Source/WebCore/page/BarInfo.cpp \
-	Source/WebCore/page/BarInfo.h \
+	Source/WebCore/page/BarProp.cpp \
+	Source/WebCore/page/BarProp.h \
 	Source/WebCore/page/CaptionUserPreferences.cpp \
 	Source/WebCore/page/CaptionUserPreferences.h \
 	Source/WebCore/page/Chrome.cpp \
@@ -5493,8 +5502,6 @@ webcore_platform_sources += \
 	Source/WebCore/platform/DragImage.cpp \
 	Source/WebCore/platform/DragImage.h \
 	Source/WebCore/platform/EventLoop.h \
-	Source/WebCore/platform/EventTracer.cpp \
-	Source/WebCore/platform/EventTracer.h \
 	Source/WebCore/platform/PlatformInstrumentation.cpp \
 	Source/WebCore/platform/PlatformInstrumentation.h \
 	Source/WebCore/platform/FileChooser.cpp \
@@ -5672,7 +5679,6 @@ webcore_platform_sources += \
 	Source/WebCore/platform/graphics/LayoutSize.h \
 	Source/WebCore/platform/graphics/GeneratedImage.cpp \
 	Source/WebCore/platform/graphics/GeneratedImage.h \
-	Source/WebCore/platform/graphics/Generator.h \
 	Source/WebCore/platform/graphics/GeneratorGeneratedImage.cpp \
 	Source/WebCore/platform/graphics/GeneratorGeneratedImage.h \
 	Source/WebCore/platform/graphics/Glyph.h \
@@ -6135,8 +6141,6 @@ platform_sources += \
 	Source/WebCore/platform/Logging.h \
 	Source/WebCore/platform/MemoryPressureHandler.cpp \
 	Source/WebCore/platform/MemoryPressureHandler.h \
-	Source/WebCore/platform/MemoryUsageSupport.cpp \
-	Source/WebCore/platform/MemoryUsageSupport.h \
 	Source/WebCore/platform/NotImplemented.cpp \
 	Source/WebCore/platform/NotImplemented.h \
 	Source/WebCore/platform/RunLoop.cpp \

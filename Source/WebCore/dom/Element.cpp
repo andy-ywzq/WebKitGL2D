@@ -1177,7 +1177,7 @@ Node::InsertionNotificationRequest Element::insertedInto(ContainerNode* insertio
 
     const AtomicString& idValue = getIdAttribute();
     if (!idValue.isNull())
-        updateId(scope, nullAtom, idValue);
+        updateId(scope, nullAtom, idValue, AlwaysUpdateHTMLDocumentNamedItemMaps);
 
     const AtomicString& nameValue = getNameAttribute();
     if (!nameValue.isNull())
@@ -1220,7 +1220,7 @@ void Element::removedFrom(ContainerNode* insertionPoint)
     if (insertionPoint->isInTreeScope() && treeScope() == document()) {
         const AtomicString& idValue = getIdAttribute();
         if (!idValue.isNull())
-            updateId(insertionPoint->treeScope(), idValue, nullAtom);
+            updateId(insertionPoint->treeScope(), idValue, nullAtom, AlwaysUpdateHTMLDocumentNamedItemMaps);
 
         const AtomicString& nameValue = getNameAttribute();
         if (!nameValue.isNull())
@@ -1729,7 +1729,7 @@ PassRefPtr<Attr> Element::setAttributeNode(Attr* attrNode, ExceptionCode& ec)
     synchronizeAllAttributes();
     UniqueElementData* elementData = ensureUniqueElementData();
 
-    unsigned index = elementData->getAttributeItemIndex(attrNode->qualifiedName());
+    unsigned index = elementData->getAttributeItemIndexForAttributeNode(attrNode);
     if (index != ElementData::attributeNotFound) {
         if (oldAttrNode)
             detachAttrNodeFromElementWithValue(oldAttrNode.get(), elementData->attributeItem(index)->value());
@@ -1765,13 +1765,16 @@ PassRefPtr<Attr> Element::removeAttributeNode(Attr* attr, ExceptionCode& ec)
 
     synchronizeAttribute(attr->qualifiedName());
 
-    unsigned index = elementData()->getAttributeItemIndex(attr->qualifiedName());
+    unsigned index = elementData()->getAttributeItemIndexForAttributeNode(attr);
     if (index == ElementData::attributeNotFound) {
         ec = NOT_FOUND_ERR;
         return 0;
     }
 
-    return detachAttribute(index);
+    RefPtr<Attr> attrNode = attr;
+    detachAttrNodeFromElementWithValue(attr, elementData()->attributeItem(index)->value());
+    removeAttributeInternal(index, NotInSynchronizationOfLazyAttribute);
+    return attrNode.release();
 }
 
 bool Element::parseAttributeName(QualifiedName& out, const AtomicString& namespaceURI, const AtomicString& qualifiedName, ExceptionCode& ec)
@@ -2648,16 +2651,18 @@ void Element::updateName(TreeScope* scope, const AtomicString& oldName, const At
         return;
 
     if (WindowNameCollection::nodeMatchesIfNameAttributeMatch(this)) {
-        if (!oldName.isEmpty())
+        const AtomicString& id = WindowNameCollection::nodeMatchesIfIdAttributeMatch(this) ? getIdAttribute() : nullAtom;
+        if (!oldName.isEmpty() && oldName != id)
             toHTMLDocument(ownerDocument)->windowNamedItemMap().remove(oldName.impl(), this);
-        if (!newName.isEmpty())
+        if (!newName.isEmpty() && newName != id)
             toHTMLDocument(ownerDocument)->windowNamedItemMap().add(newName.impl(), this);
     }
 
     if (DocumentNameCollection::nodeMatchesIfNameAttributeMatch(this)) {
-        if (!oldName.isEmpty())
+        const AtomicString& id = DocumentNameCollection::nodeMatchesIfIdAttributeMatch(this) ? getIdAttribute() : nullAtom;
+        if (!oldName.isEmpty() && oldName != id)
             toHTMLDocument(ownerDocument)->documentNamedItemMap().remove(oldName.impl(), this);
-        if (!newName.isEmpty())
+        if (!newName.isEmpty() && newName != id)
             toHTMLDocument(ownerDocument)->documentNamedItemMap().add(newName.impl(), this);
     }
 }
@@ -2670,10 +2675,10 @@ inline void Element::updateId(const AtomicString& oldId, const AtomicString& new
     if (oldId == newId)
         return;
 
-    updateId(treeScope(), oldId, newId);
+    updateId(treeScope(), oldId, newId, UpdateHTMLDocumentNamedItemMapsOnlyIfDiffersFromNameAttribute);
 }
 
-void Element::updateId(TreeScope* scope, const AtomicString& oldId, const AtomicString& newId)
+void Element::updateId(TreeScope* scope, const AtomicString& oldId, const AtomicString& newId, HTMLDocumentNamedItemMapsUpdatingCondition condition)
 {
     ASSERT(isInTreeScope());
     ASSERT(oldId != newId);
@@ -2691,16 +2696,18 @@ void Element::updateId(TreeScope* scope, const AtomicString& oldId, const Atomic
         return;
 
     if (WindowNameCollection::nodeMatchesIfIdAttributeMatch(this)) {
-        if (!oldId.isEmpty())
+        const AtomicString& name = condition == UpdateHTMLDocumentNamedItemMapsOnlyIfDiffersFromNameAttribute && WindowNameCollection::nodeMatchesIfNameAttributeMatch(this) ? getNameAttribute() : nullAtom;
+        if (!oldId.isEmpty() && oldId != name)
             toHTMLDocument(ownerDocument)->windowNamedItemMap().remove(oldId.impl(), this);
-        if (!newId.isEmpty())
+        if (!newId.isEmpty() && newId != name)
             toHTMLDocument(ownerDocument)->windowNamedItemMap().add(newId.impl(), this);
     }
 
     if (DocumentNameCollection::nodeMatchesIfIdAttributeMatch(this)) {
-        if (!oldId.isEmpty())
+        const AtomicString& name = condition == UpdateHTMLDocumentNamedItemMapsOnlyIfDiffersFromNameAttribute && DocumentNameCollection::nodeMatchesIfNameAttributeMatch(this) ? getNameAttribute() : nullAtom;
+        if (!oldId.isEmpty() && oldId != name)
             toHTMLDocument(ownerDocument)->documentNamedItemMap().remove(oldId.impl(), this);
-        if (!newId.isEmpty())
+        if (!newId.isEmpty() && newId != name)
             toHTMLDocument(ownerDocument)->documentNamedItemMap().add(newId.impl(), this);
     }
 }
@@ -2885,6 +2892,10 @@ void Element::cloneAttributesFromElement(const Element& other)
         m_elementData.clear();
         return;
     }
+
+    // We can't update window and document's named item maps since the presence of image and object elements depend on other attributes and children.
+    // Fortunately, those named item maps are only updated when this element is in the document, which should never be the case.
+    ASSERT(!inDocument());
 
     const AtomicString& oldID = getIdAttribute();
     const AtomicString& newID = other.getIdAttribute();
@@ -3132,9 +3143,22 @@ unsigned ElementData::getAttributeItemIndexSlowCase(const AtomicString& name, bo
     return attributeNotFound;
 }
 
+unsigned ElementData::getAttributeItemIndexForAttributeNode(const Attr* attr) const
+{
+    ASSERT(attr);
+    const Attribute* attributes = attributeBase();
+    unsigned count = length();
+    for (unsigned i = 0; i < count; ++i) {
+        if (attributes[i].name() == attr->qualifiedName())
+            return i;
+    }
+    return attributeNotFound;
+}
+
 Attribute* UniqueElementData::getAttributeItem(const QualifiedName& name)
 {
-    for (unsigned i = 0; i < length(); ++i) {
+    unsigned count = length();
+    for (unsigned i = 0; i < count; ++i) {
         if (m_attributeVector.at(i).name().matches(name))
             return &m_attributeVector.at(i);
     }

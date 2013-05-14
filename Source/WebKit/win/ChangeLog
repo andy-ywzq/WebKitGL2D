@@ -1,3 +1,47 @@
+2013-05-12  Timothy Hatcher  <timothy@apple.com>
+
+        Add support for updating the Web Inspector toolbar height.
+
+        https://bugs.webkit.org/show_bug.cgi?id=115996
+
+        Reviewed by Joseph Pecoraro and Benjamin Poulain.
+
+        * WebCoreSupport/WebInspectorClient.cpp:
+        (WebInspectorFrontendClient::setToolbarHeight):
+        * WebCoreSupport/WebInspectorClient.h:
+
+2013-05-13  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. AppleWin VS2005 build fix.
+
+        * WebKit.vcproj/WebKitExports.def.in:
+
+2013-05-12  Anders Carlsson  <andersca@apple.com>
+
+        Stop including UnusedParam.h
+        https://bugs.webkit.org/show_bug.cgi?id=116003
+
+        Reviewed by Sam Weinig.
+
+        UnusedParam.h is empty now so there's no need to include it anymore.
+
+        * WebSecurityOrigin.cpp:
+
+2013-05-09  Max Feil  <mfeil@rim.com>
+
+        shouldUsePluginDocument() needs to be respected when a document is created
+        https://bugs.webkit.org/show_bug.cgi?id=110308
+
+        Reviewed by Rob Buis.
+
+        Renaming shouldUsePluginDocument() to shouldAlwaysUsePluginDocument()
+        for clarity.
+
+        * WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebFrameLoaderClient::shouldAlwaysUsePluginDocument):
+        * WebCoreSupport/WebFrameLoaderClient.h:
+        (WebFrameLoaderClient):
+
 2013-05-06  Darin Adler  <darin@apple.com>
 
         Use adoptCF and adoptNS in more places

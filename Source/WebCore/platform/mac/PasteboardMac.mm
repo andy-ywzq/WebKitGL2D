@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2013 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -57,7 +57,6 @@
 #import "markup.h"
 #import <wtf/StdLibExtras.h>
 #import <wtf/RetainPtr.h>
-#import <wtf/UnusedParam.h>
 #import <wtf/text/StringBuilder.h>
 #import <wtf/unicode/CharacterNames.h>
 
@@ -126,8 +125,14 @@ Pasteboard* Pasteboard::generalPasteboard()
 
 Pasteboard::Pasteboard(const String& pasteboardName)
     : m_pasteboardName(pasteboardName)
+    , m_changeCount(platformStrategies()->pasteboardStrategy()->changeCount(m_pasteboardName))
 {
     ASSERT(pasteboardName);
+}
+
+PassOwnPtr<Pasteboard> Pasteboard::create(const String& pasteboardName)
+{
+    return adoptPtr(new Pasteboard(pasteboardName));
 }
 
 void Pasteboard::clear()
@@ -582,6 +587,230 @@ PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame* frame, PassRefP
     }
 
     return 0;
+}
+
+bool Pasteboard::hasData()
+{
+    Vector<String> types;
+    platformStrategies()->pasteboardStrategy()->getTypes(types, m_pasteboardName);
+    return !types.isEmpty();
+}
+
+static String cocoaTypeFromHTMLClipboardType(const String& type)
+{
+    // http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#dom-datatransfer-setdata
+    String qType = type.lower();
+
+    if (qType == "text")
+        qType = "text/plain";
+    if (qType == "url")
+        qType = "text/uri-list";
+
+    // Ignore any trailing charset - JS strings are Unicode, which encapsulates the charset issue
+    if (qType == "text/plain" || qType.startsWith("text/plain;"))
+        return String(NSStringPboardType);
+    if (qType == "text/uri-list")
+        // special case because UTI doesn't work with Cocoa's URL type
+        return String(NSURLPboardType); // note special case in getData to read NSFilenamesType
+
+    // Blacklist types that might contain subframe information
+    if (qType == "text/rtf" || qType == "public.rtf" || qType == "com.apple.traditional-mac-plain-text")
+        return String();
+
+    // Try UTI now
+    String mimeType = qType;
+    if (RetainPtr<CFStringRef> utiType = adoptCF(UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, mimeType.createCFString().get(), NULL))) {
+        RetainPtr<CFStringRef> pbType = adoptCF(UTTypeCopyPreferredTagWithClass(utiType.get(), kUTTagClassNSPboardType));
+        if (pbType)
+            return pbType.get();
+    }
+
+    // No mapping, just pass the whole string though
+    return qType;
+}
+
+void Pasteboard::clear(const String& type)
+{
+    String cocoaType = cocoaTypeFromHTMLClipboardType(type);
+    if (!cocoaType.isEmpty())
+        platformStrategies()->pasteboardStrategy()->setStringForType("", cocoaType, m_pasteboardName);
+}
+
+static Vector<String> absoluteURLsFromPasteboardFilenames(const String& pasteboardName, bool onlyFirstURL = false)
+{
+    Vector<String> fileList;
+    platformStrategies()->pasteboardStrategy()->getPathnamesForType(fileList, String(NSFilenamesPboardType), pasteboardName);
+
+    if (fileList.isEmpty())
+        return fileList;
+
+    size_t count = onlyFirstURL ? 1 : fileList.size();
+    Vector<String> urls;
+    for (size_t i = 0; i < count; i++) {
+        NSURL *url = [NSURL fileURLWithPath:fileList[i]];
+        urls.append(String([url absoluteString]));
+    }
+    return urls;
+}
+
+static Vector<String> absoluteURLsFromPasteboard(const String& pasteboardName, bool onlyFirstURL = false)
+{
+    // NOTE: We must always check [availableTypes containsObject:] before accessing pasteboard data
+    // or CoreFoundation will printf when there is not data of the corresponding type.
+    Vector<String> availableTypes;
+    Vector<String> absoluteURLs;
+    platformStrategies()->pasteboardStrategy()->getTypes(availableTypes, pasteboardName);
+
+    // Try NSFilenamesPboardType because it contains a list
+    if (availableTypes.contains(String(NSFilenamesPboardType))) {
+        absoluteURLs = absoluteURLsFromPasteboardFilenames(pasteboardName, onlyFirstURL);
+        if (!absoluteURLs.isEmpty())
+            return absoluteURLs;
+    }
+
+    // Fallback to NSURLPboardType (which is a single URL)
+    if (availableTypes.contains(String(NSURLPboardType))) {
+        absoluteURLs.append(platformStrategies()->pasteboardStrategy()->stringForType(String(NSURLPboardType), pasteboardName));
+        return absoluteURLs;
+    }
+
+    // No file paths on the pasteboard, return nil
+    return Vector<String>();
+}
+
+String Pasteboard::readString(const String& type)
+{
+    const String& cocoaType = cocoaTypeFromHTMLClipboardType(type);
+    String cocoaValue;
+
+    // Grab the value off the pasteboard corresponding to the cocoaType
+    if (cocoaType == String(NSURLPboardType)) {
+        // "url" and "text/url-list" both map to NSURLPboardType in cocoaTypeFromHTMLClipboardType(), "url" only wants the first URL
+        bool onlyFirstURL = (equalIgnoringCase(type, "url"));
+        Vector<String> absoluteURLs = absoluteURLsFromPasteboard(m_pasteboardName, onlyFirstURL);
+        for (size_t i = 0; i < absoluteURLs.size(); i++)
+            cocoaValue = i ? "\n" + absoluteURLs[i]: absoluteURLs[i];
+    } else if (cocoaType == String(NSStringPboardType))
+        cocoaValue = [platformStrategies()->pasteboardStrategy()->stringForType(cocoaType, m_pasteboardName) precomposedStringWithCanonicalMapping];
+    else if (!cocoaType.isEmpty())
+        cocoaValue = platformStrategies()->pasteboardStrategy()->stringForType(cocoaType, m_pasteboardName);
+
+    // Enforce changeCount ourselves for security.  We check after reading instead of before to be
+    // sure it doesn't change between our testing the change count and accessing the data.
+    if (!cocoaValue.isEmpty() && m_changeCount == platformStrategies()->pasteboardStrategy()->changeCount(m_pasteboardName))
+        return cocoaValue;
+
+    return String();
+}
+
+static String utiTypeFromCocoaType(const String& type)
+{
+    if (RetainPtr<CFStringRef> utiType = adoptCF(UTTypeCreatePreferredIdentifierForTag(kUTTagClassNSPboardType, type.createCFString().get(), 0))) {
+        if (RetainPtr<CFStringRef> mimeType = adoptCF(UTTypeCopyPreferredTagWithClass(utiType.get(), kUTTagClassMIMEType)))
+            return String(mimeType.get());
+    }
+    return String();
+}
+
+static void addHTMLClipboardTypesForCocoaType(ListHashSet<String>& resultTypes, const String& cocoaType, const String& pasteboardName)
+{
+    // UTI may not do these right, so make sure we get the right, predictable result
+    if (cocoaType == String(NSStringPboardType)) {
+        resultTypes.add("text/plain");
+        return;
+    }
+    if (cocoaType == String(NSURLPboardType)) {
+        resultTypes.add("text/uri-list");
+        return;
+    }
+    if (cocoaType == String(NSFilenamesPboardType)) {
+        // If file list is empty, add nothing.
+        // Note that there is a chance that the file list count could have changed since we grabbed the types array.
+        // However, this is not really an issue for us doing a sanity check here.
+        Vector<String> fileList;
+        platformStrategies()->pasteboardStrategy()->getPathnamesForType(fileList, String(NSFilenamesPboardType), pasteboardName);
+        if (!fileList.isEmpty()) {
+            // It is unknown if NSFilenamesPboardType always implies NSURLPboardType in Cocoa,
+            // but NSFilenamesPboardType should imply both 'text/uri-list' and 'Files'
+            resultTypes.add("text/uri-list");
+            resultTypes.add("Files");
+        }
+        return;
+    }
+    String utiType = utiTypeFromCocoaType(cocoaType);
+    if (!utiType.isEmpty()) {
+        resultTypes.add(utiType);
+        return;
+    }
+    // No mapping, just pass the whole string though
+    resultTypes.add(cocoaType);
+}
+
+bool Pasteboard::writeString(const String& type, const String& data)
+{
+    const String& cocoaType = cocoaTypeFromHTMLClipboardType(type);
+    String cocoaData = data;
+
+    if (cocoaType == String(NSURLPboardType) || cocoaType == String(kUTTypeFileURL)) {
+        NSURL *url = [NSURL URLWithString:cocoaData];
+        if ([url isFileURL])
+            return false;
+
+        Vector<String> types;
+        types.append(cocoaType);
+        platformStrategies()->pasteboardStrategy()->setTypes(types, m_pasteboardName);
+        platformStrategies()->pasteboardStrategy()->setStringForType(cocoaData, cocoaType, m_pasteboardName);
+
+        return true;
+    }
+
+    if (!cocoaType.isEmpty()) {
+        // everything else we know of goes on the pboard as a string
+        Vector<String> types;
+        types.append(cocoaType);
+        platformStrategies()->pasteboardStrategy()->addTypes(types, m_pasteboardName);
+        platformStrategies()->pasteboardStrategy()->setStringForType(cocoaData, cocoaType, m_pasteboardName);
+        return true;
+    }
+
+    return false;
+}
+
+ListHashSet<String> Pasteboard::types()
+{
+    Vector<String> types;
+    platformStrategies()->pasteboardStrategy()->getTypes(types, m_pasteboardName);
+
+    // Enforce changeCount ourselves for security. We check after reading instead of before to be
+    // sure it doesn't change between our testing the change count and accessing the data.
+    if (m_changeCount != platformStrategies()->pasteboardStrategy()->changeCount(m_pasteboardName))
+        return ListHashSet<String>();
+
+    ListHashSet<String> result;
+    // FIXME: This loop could be split into two stages. One which adds all the HTML5 specified types
+    // and a second which adds all the extra types from the cocoa clipboard (which is Mac-only behavior).
+    for (size_t i = 0; i < types.size(); i++) {
+        if (types[i] == "NeXT plain ascii pasteboard type")
+            continue;   // skip this ancient type that gets auto-supplied by some system conversion
+
+        addHTMLClipboardTypesForCocoaType(result, types[i], m_pasteboardName);
+    }
+
+    return result;
+}
+
+Vector<String> Pasteboard::readFilenames()
+{
+    // FIXME: Seems silly to convert paths to URLs and then back to paths. Does that do anything helpful?
+    Vector<String> absoluteURLs = absoluteURLsFromPasteboardFilenames(m_pasteboardName);
+    Vector<String> paths;
+    paths.reserveCapacity(absoluteURLs.size());
+    for (size_t i = 0; i < absoluteURLs.size(); i++) {
+        NSURL *absoluteURL = [NSURL URLWithString:absoluteURLs[i]];
+        ASSERT([absoluteURL isFileURL]);
+        paths.uncheckedAppend([absoluteURL path]);
+    }
+    return paths;
 }
 
 }

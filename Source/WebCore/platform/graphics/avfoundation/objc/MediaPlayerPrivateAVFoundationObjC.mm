@@ -51,7 +51,6 @@
 #import <wtf/Uint16Array.h>
 #import <wtf/Uint32Array.h>
 #import <wtf/Uint8Array.h>
-#import <wtf/UnusedParam.h>
 #import <wtf/text/CString.h>
 
 #import <AVFoundation/AVFoundation.h>
@@ -635,14 +634,12 @@ void MediaPlayerPrivateAVFoundationObjC::setVolume(float volume)
 
 void MediaPlayerPrivateAVFoundationObjC::setClosedCaptionsVisible(bool closedCaptionsVisible)
 {
+    UNUSED_PARAM(closedCaptionsVisible);
+
     if (!metaDataAvailable())
         return;
 
-#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
-    UNUSED_PARAM(closedCaptionsVisible);
-#else
-    LOG(Media, "MediaPlayerPrivateAVFoundationObjC::setClosedCaptionsVisible(%p) - setting to %s", this, boolString(closedCaptionsVisible));
-#endif
+    LOG(Media, "MediaPlayerPrivateAVFoundationObjC::setClosedCaptionsVisible(%p) - set to %s", this, boolString(closedCaptionsVisible));
 }
 
 void MediaPlayerPrivateAVFoundationObjC::updateRate()

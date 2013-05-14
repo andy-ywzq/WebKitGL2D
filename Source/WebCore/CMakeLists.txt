@@ -206,7 +206,6 @@ set(WebCore_IDL_FILES
     Modules/mediasource/SourceBuffer.idl
     Modules/mediasource/SourceBufferList.idl
 
-    Modules/mediastream/DOMWindowMediaStream.idl
     Modules/mediastream/LocalMediaStream.idl
     Modules/mediastream/MediaStream.idl
     Modules/mediastream/MediaStreamEvent.idl
@@ -261,7 +260,6 @@ set(WebCore_IDL_FILES
     Modules/webaudio/AudioSourceNode.idl
     Modules/webaudio/BiquadFilterNode.idl
     Modules/webaudio/ConvolverNode.idl
-    Modules/webaudio/DOMWindowWebAudio.idl
     Modules/webaudio/DelayNode.idl
     Modules/webaudio/DynamicsCompressorNode.idl
     Modules/webaudio/ScriptProcessorNode.idl
@@ -291,7 +289,6 @@ set(WebCore_IDL_FILES
     Modules/webdatabase/SQLTransactionSyncCallback.idl
 
     Modules/websockets/CloseEvent.idl
-    Modules/websockets/DOMWindowWebSocket.idl
     Modules/websockets/WebSocket.idl
     Modules/websockets/WorkerContextWebSocket.idl
 
@@ -556,7 +553,7 @@ set(WebCore_IDL_FILES
 
     loader/appcache/DOMApplicationCache.idl
 
-    page/BarInfo.idl
+    page/BarProp.idl
     page/Console.idl
     page/Crypto.idl
     page/DOMSecurityPolicy.idl
@@ -1728,7 +1725,7 @@ set(WebCore_SOURCES
     mathml/MathMLTextElement.cpp
 
     page/AutoscrollController.cpp
-    page/BarInfo.cpp
+    page/BarProp.cpp
     page/CaptionUserPreferences.cpp
     page/Chrome.cpp
     page/Console.cpp
@@ -1818,7 +1815,6 @@ set(WebCore_SOURCES
     platform/Decimal.cpp
     platform/DragData.cpp
     platform/DragImage.cpp
-    platform/EventTracer.cpp
     platform/FileChooser.cpp
     platform/FileIconLoader.cpp
     platform/FileStream.cpp
@@ -1832,12 +1828,12 @@ set(WebCore_SOURCES
     platform/LengthBox.cpp
     platform/LinkHash.cpp
     platform/Logging.cpp
-    platform/MemoryUsageSupport.cpp
     platform/MIMETypeRegistry.cpp
     platform/MemoryPressureHandler.cpp
     platform/NotImplemented.cpp
     platform/PlatformEvent.cpp
     platform/PlatformInstrumentation.cpp
+    platform/PlatformStrategies.cpp
     platform/RunLoop.cpp
     platform/RuntimeApplicationChecks.cpp
     platform/ScrollAnimator.cpp
@@ -2096,8 +2092,13 @@ set(WebCore_SOURCES
     plugins/DOMMimeType.cpp
     plugins/DOMPluginArray.cpp
     plugins/DOMPlugin.cpp
+    plugins/PluginDatabase.cpp
     plugins/PluginData.cpp
+    plugins/PluginDebug.cpp
     plugins/PluginMainThreadScheduler.cpp
+    plugins/PluginPackage.cpp
+    plugins/PluginStream.cpp
+    plugins/PluginView.cpp
 
     rendering/AutoTableLayout.cpp
     rendering/BidiRun.cpp
@@ -2597,9 +2598,12 @@ endif ()
 
 if (ENABLE_NETSCAPE_PLUGIN_API)
     list(APPEND WebCore_SOURCES
-        plugins/PluginDebug.cpp
-        plugins/PluginStream.cpp
         plugins/npapi.cpp
+    )
+else ()
+    list(APPEND WebCore_SOURCES
+        plugins/PluginPackageNone.cpp
+        plugins/PluginViewNone.cpp
     )
 endif ()
 
@@ -2951,6 +2955,7 @@ set(SCRIPTS_BINDINGS
 )
 set(IDL_FILES_TMP ${DERIVED_SOURCES_WEBCORE_DIR}/idl_files.tmp)
 set(SUPPLEMENTAL_DEPENDENCY_FILE ${DERIVED_SOURCES_WEBCORE_DIR}/supplemental_dependency.tmp)
+set(WINDOW_CONSTRUCTORS_FILE ${DERIVED_SOURCES_WEBCORE_DIR}/DOMWindowConstructors.idl)
 set(IDL_ATTRIBUTES_FILE ${WEBCORE_DIR}/bindings/scripts/IDLAttributes.txt)
 
 include(${WEBCORE_DIR}/UseJSC.cmake)

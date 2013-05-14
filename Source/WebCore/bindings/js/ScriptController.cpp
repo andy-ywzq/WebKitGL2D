@@ -21,6 +21,7 @@
 #include "config.h"
 #include "ScriptController.h"
 
+#include "BridgeJSC.h"
 #include "ContentSecurityPolicy.h"
 #include "Event.h"
 #include "EventNames.h"
@@ -289,11 +290,6 @@ void ScriptController::updateDocument()
         JSLockHolder lock(iter->key->vm());
         iter->value->window()->updateDocument();
     }
-}
-
-void ScriptController::updateSecurityOrigin()
-{
-    // Our bindings do not do anything in this case.
 }
 
 Bindings::RootObject* ScriptController::cacheableBindingRootObject()

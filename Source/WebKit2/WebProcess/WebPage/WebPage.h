@@ -165,7 +165,7 @@ class WebGestureEvent;
 class WebTouchEvent;
 #endif
 
-typedef Vector<RefPtr<PageOverlay> > PageOverlayList;
+typedef Vector<RefPtr<PageOverlay>> PageOverlayList;
 
 class WebPage : public TypedAPIObject<APIObject::TypeBundlePage>, public CoreIPC::MessageReceiver, public CoreIPC::MessageSender<WebPage> {
 public:
@@ -295,6 +295,7 @@ public:
     EditorState editorState() const;
 
     String renderTreeExternalRepresentation() const;
+    String renderTreeExternalRepresentationForPrinting() const;
     uint64_t renderTreeSize() const;
 
     void setTracksRepaints(bool);
@@ -513,7 +514,7 @@ public:
     void dummy(bool&);
 
 #if PLATFORM(MAC)
-    void performDictionaryLookupForSelection(DictionaryPopupInfo::Type, WebCore::Frame*, const WebCore::VisibleSelection&);
+    void performDictionaryLookupForSelection(WebCore::Frame*, const WebCore::VisibleSelection&);
 
     bool isSpeaking();
     void speak(const String&);
@@ -759,7 +760,7 @@ private:
 
 #if PLATFORM(MAC)
     void performDictionaryLookupAtLocation(const WebCore::FloatPoint&);
-    void performDictionaryLookupForRange(DictionaryPopupInfo::Type, WebCore::Frame*, WebCore::Range*, NSDictionary *options);
+    void performDictionaryLookupForRange(WebCore::Frame*, WebCore::Range*, NSDictionary *options);
 
     void setWindowIsVisible(bool windowIsVisible);
     void windowAndViewFramesChanged(const WebCore::FloatRect& windowFrameInScreenCoordinates, const WebCore::FloatRect& windowFrameInUnflippedScreenCoordinates, const WebCore::FloatRect& viewFrameInWindowCoordinates, const WebCore::FloatPoint& accessibilityViewCoordinates);
@@ -850,7 +851,7 @@ private:
 
     HashSet<PluginView*> m_pluginViews;
 
-    HashMap<uint64_t, RefPtr<WebCore::TextCheckingRequest> > m_pendingTextCheckingRequestMap;
+    HashMap<uint64_t, RefPtr<WebCore::TextCheckingRequest>> m_pendingTextCheckingRequestMap;
 
     bool m_useFixedLayout;
 
@@ -927,7 +928,7 @@ private:
     WebCore::RunLoop::Timer<WebPage> m_sendDidUpdateInWindowStateTimer;
     bool m_mayStartMediaWhenInWindow;
 
-    HashMap<uint64_t, RefPtr<WebUndoStep> > m_undoStepMap;
+    HashMap<uint64_t, RefPtr<WebUndoStep>> m_undoStepMap;
 
     WebCore::IntSize m_windowResizerSize;
 
@@ -982,7 +983,7 @@ private:
     uint64_t m_pageID;
 
     RefPtr<SandboxExtension> m_pendingDropSandboxExtension;
-    Vector<RefPtr<SandboxExtension> > m_pendingDropExtensionsForFileUpload;
+    Vector<RefPtr<SandboxExtension>> m_pendingDropExtensionsForFileUpload;
 
     bool m_canRunBeforeUnloadConfirmPanel;
 

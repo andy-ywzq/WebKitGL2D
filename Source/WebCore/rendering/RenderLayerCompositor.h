@@ -179,11 +179,16 @@ public:
     void repaintCompositedLayers(const IntRect* = 0);
 
     // Returns true if the given layer needs it own backing store.
-    bool requiresOwnBackingStore(const RenderLayer*, const RenderLayer* compositingAncestorLayer) const;
+    bool requiresOwnBackingStore(const RenderLayer*, const RenderLayer* compositingAncestorLayer, const IntRect& layerCompositedBoundsInAncestor, const IntRect& ancestorCompositedBounds) const;
 
     RenderLayer* rootRenderLayer() const;
     GraphicsLayer* rootGraphicsLayer() const;
     GraphicsLayer* scrollLayer() const;
+
+#if ENABLE(RUBBER_BANDING)
+    GraphicsLayer* headerLayer() const;
+    GraphicsLayer* footerLayer() const;
+#endif
 
     enum RootLayerAttachment {
         RootLayerUnattached,

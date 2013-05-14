@@ -195,7 +195,6 @@
 
 using namespace JSC;
 using namespace WebCore;
-using namespace std;
 
 namespace WebKit {
 
@@ -683,6 +682,11 @@ String WebPage::renderTreeExternalRepresentation() const
     return externalRepresentation(m_mainFrame->coreFrame(), RenderAsTextBehaviorNormal);
 }
 
+String WebPage::renderTreeExternalRepresentationForPrinting() const
+{
+    return externalRepresentation(m_mainFrame->coreFrame(), RenderAsTextPrintingMode);
+}
+
 uint64_t WebPage::renderTreeSize() const
 {
     if (!m_page)
@@ -721,7 +725,7 @@ PassRefPtr<ImmutableArray> WebPage::trackedRepaintRects()
     if (!size)
         return ImmutableArray::create();
 
-    Vector<RefPtr<APIObject> > vector;
+    Vector<RefPtr<APIObject>> vector;
     vector.reserveInitialCapacity(size);
 
     for (size_t i = 0; i < size; ++i)

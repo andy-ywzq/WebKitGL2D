@@ -44,6 +44,7 @@
 #include "NotificationPermissionRequest.h"
 #include "NotificationPermissionRequestManager.h"
 #include "PageClient.h"
+#include "PluginInformation.h"
 #include "PrintInfo.h"
 #include "SessionState.h"
 #include "TextChecker.h"
@@ -163,7 +164,7 @@ private:
     ExceededDatabaseQuotaRecords() { }
     ~ExceededDatabaseQuotaRecords() { }
 
-    Deque<OwnPtr<Record> > m_records;
+    Deque<OwnPtr<Record>> m_records;
     OwnPtr<Record> m_currentRecord;
 };
 
@@ -310,6 +311,9 @@ WebPageProxy::WebPageProxy(PageClient* pageClient, PassRefPtr<WebProcessProxy> p
     , m_mediaVolume(1)
     , m_mayStartMediaWhenInWindow(true)
     , m_waitingForDidUpdateInWindowState(false)
+#if PLATFORM(MAC)
+    , m_exposedRectChangedTimer(this, &WebPageProxy::exposedRectChangedTimerFired)
+#endif
 #if ENABLE(PAGE_VISIBILITY_API)
     , m_visibilityState(PageVisibilityStateVisible)
 #endif
@@ -390,7 +394,7 @@ PassRefPtr<ImmutableArray> WebPageProxy::relatedPages() const
     // pages() returns a list of pages in WebProcess, so this page may or may not be among them - a client can use a reference to WebPageProxy after the page has closed.
     Vector<WebPageProxy*> pages = m_process->pages();
 
-    Vector<RefPtr<APIObject> > result;
+    Vector<RefPtr<APIObject>> result;
     result.reserveCapacity(pages.size());
     for (size_t i = 0; i < pages.size(); ++i) {
         if (pages[i] != this)
@@ -637,6 +641,10 @@ void WebPageProxy::close()
 
     m_drawingArea = nullptr;
 
+#if PLATFORM(MAC)
+    m_exposedRectChangedTimer.stop();
+#endif
+
     m_process->send(Messages::WebPage::Close(), m_pageID);
     m_process->removeWebPage(m_pageID);
     m_process->removeMessageReceiver(Messages::WebPageProxy::messageReceiverName(), m_pageID);
@@ -869,7 +877,7 @@ void WebPageProxy::tryRestoreScrollPosition()
     m_process->send(Messages::WebPage::TryRestoreScrollPosition(), m_pageID);
 }
 
-void WebPageProxy::didChangeBackForwardList(WebBackForwardListItem* added, Vector<RefPtr<APIObject> >* removed)
+void WebPageProxy::didChangeBackForwardList(WebBackForwardListItem* added, Vector<RefPtr<APIObject>>* removed)
 {
     m_loaderClient.didChangeBackForwardList(this, added, removed);
 }
@@ -1340,7 +1348,7 @@ void WebPageProxy::handleWheelEvent(const NativeWebWheelEvent& event)
         return;
     }
 
-    OwnPtr<Vector<NativeWebWheelEvent> > coalescedWheelEvent = adoptPtr(new Vector<NativeWebWheelEvent>);
+    OwnPtr<Vector<NativeWebWheelEvent>> coalescedWheelEvent = adoptPtr(new Vector<NativeWebWheelEvent>);
     coalescedWheelEvent->append(event);
     m_currentlyProcessedWheelEvents.append(coalescedWheelEvent.release());
     sendWheelEvent(event);
@@ -1348,7 +1356,7 @@ void WebPageProxy::handleWheelEvent(const NativeWebWheelEvent& event)
 
 void WebPageProxy::processNextQueuedWheelEvent()
 {
-    OwnPtr<Vector<NativeWebWheelEvent> > nextCoalescedEvent = adoptPtr(new Vector<NativeWebWheelEvent>);
+    OwnPtr<Vector<NativeWebWheelEvent>> nextCoalescedEvent = adoptPtr(new Vector<NativeWebWheelEvent>);
     WebWheelEvent nextWheelEvent = coalescedWheelEvent(m_wheelEventQueue, *nextCoalescedEvent.get());
     m_currentlyProcessedWheelEvents.append(nextCoalescedEvent.release());
     sendWheelEvent(nextWheelEvent);
@@ -1392,8 +1400,8 @@ void WebPageProxy::findPlugin(const String& mimeType, const String& urlString, c
     MESSAGE_CHECK_URL(urlString);
 
     newMimeType = mimeType.lower();
-
     pluginLoadPolicy = PluginModuleLoadNormally;
+    
     PluginModuleInfo plugin = m_process->context()->pluginInfoStore().findPlugin(newMimeType, KURL(KURL(), urlString));
     if (!plugin.path)
         return;
@@ -1401,8 +1409,8 @@ void WebPageProxy::findPlugin(const String& mimeType, const String& urlString, c
     pluginLoadPolicy = PluginInfoStore::policyForPlugin(plugin);
 
 #if PLATFORM(MAC)
-    PluginModuleLoadPolicy currentPluginLoadPolicy = static_cast<PluginModuleLoadPolicy>(pluginLoadPolicy);
-    pluginLoadPolicy = m_loaderClient.pluginLoadPolicy(this, plugin.bundleIdentifier, plugin.versionString, plugin.info.name, frameURLString, pageURLString, currentPluginLoadPolicy);
+    RefPtr<ImmutableDictionary> pluginInformation = createPluginInformationDictionary(plugin, frameURLString, String(), pageURLString, String(), String());
+    pluginLoadPolicy = m_loaderClient.pluginLoadPolicy(this, static_cast<PluginModuleLoadPolicy>(pluginLoadPolicy), pluginInformation.get());
 #else
     UNUSED_PARAM(frameURLString);
     UNUSED_PARAM(pageURLString);
@@ -1945,7 +1953,7 @@ void WebPageProxy::setMemoryCacheClientCallsEnabled(bool memoryCacheClientCallsE
 void WebPageProxy::findStringMatches(const String& string, FindOptions options, unsigned maxMatchCount)
 {
     if (string.isEmpty()) {
-        didFindStringMatches(string, Vector<Vector<WebCore::IntRect> > (), 0);
+        didFindStringMatches(string, Vector<Vector<WebCore::IntRect>> (), 0);
         return;
     }
 
@@ -2619,7 +2627,7 @@ void WebPageProxy::unableToImplementPolicy(uint64_t frameID, const ResourceError
 
 // FormClient
 
-void WebPageProxy::willSubmitForm(uint64_t frameID, uint64_t sourceFrameID, const Vector<std::pair<String, String> >& textFieldValues, uint64_t listenerID, CoreIPC::MessageDecoder& decoder)
+void WebPageProxy::willSubmitForm(uint64_t frameID, uint64_t sourceFrameID, const Vector<std::pair<String, String>>& textFieldValues, uint64_t listenerID, CoreIPC::MessageDecoder& decoder)
 {
     RefPtr<APIObject> userData;
     WebContextUserMessageDecoder messageDecoder(userData, m_process.get());
@@ -2738,69 +2746,6 @@ void WebPageProxy::connectionWillClose(CoreIPC::Connection* connection)
     m_process->context()->storageManager().setAllowedSessionStorageNamespaceConnection(m_pageID, 0);
 }
 
-String WebPageProxy::pluginInformationBundleIdentifierKey()
-{
-    return ASCIILiteral("PluginInformationBundleIdentifier");
-}
-
-String WebPageProxy::pluginInformationBundleVersionKey()
-{
-    return ASCIILiteral("PluginInformationBundleVersion");
-}
-
-String WebPageProxy::pluginInformationDisplayNameKey()
-{
-    return ASCIILiteral("PluginInformationDisplayName");
-}
-
-String WebPageProxy::pluginInformationFrameURLKey()
-{
-    return ASCIILiteral("PluginInformationFrameURL");
-}
-
-String WebPageProxy::pluginInformationMIMETypeKey()
-{
-    return ASCIILiteral("PluginInformationMIMEType");
-}
-
-String WebPageProxy::pluginInformationPageURLKey()
-{
-    return ASCIILiteral("PluginInformationPageURL");
-}
-
-String WebPageProxy::pluginInformationPluginspageAttributeURLKey()
-{
-    return ASCIILiteral("PluginInformationPluginspageAttributeURL");
-}
-
-String WebPageProxy::pluginInformationPluginURLKey()
-{
-    return ASCIILiteral("PluginInformationPluginURL");
-}
-
-PassRefPtr<ImmutableDictionary> WebPageProxy::pluginInformationDictionary(const String& bundleIdentifier, const String& bundleVersion, const String& displayName, const String& frameURLString, const String& mimeType, const String& pageURLString, const String& pluginspageAttributeURLString, const String& pluginURLString)
-{
-    HashMap<String, RefPtr<APIObject> > pluginInfoMap;
-    if (!bundleIdentifier.isEmpty())
-        pluginInfoMap.set(WebPageProxy::pluginInformationBundleIdentifierKey(), WebString::create(bundleIdentifier));
-    if (!bundleVersion.isEmpty())
-        pluginInfoMap.set(WebPageProxy::pluginInformationBundleVersionKey(), WebString::create(bundleVersion));
-    if (!displayName.isEmpty())
-        pluginInfoMap.set(WebPageProxy::pluginInformationDisplayNameKey(), WebString::create(displayName));
-    if (!frameURLString.isEmpty())
-        pluginInfoMap.set(WebPageProxy::pluginInformationFrameURLKey(), WebURL::create(frameURLString));
-    if (!mimeType.isEmpty())
-        pluginInfoMap.set(WebPageProxy::pluginInformationMIMETypeKey(), WebString::create(mimeType));
-    if (!pageURLString.isEmpty())
-        pluginInfoMap.set(WebPageProxy::pluginInformationPageURLKey(), WebURL::create(pageURLString));
-    if (!pluginspageAttributeURLString.isEmpty())
-        pluginInfoMap.set(WebPageProxy::pluginInformationPluginspageAttributeURLKey(), WebURL::create(pluginspageAttributeURLString));
-    if (!pluginURLString.isEmpty())
-        pluginInfoMap.set(WebPageProxy::pluginInformationPluginURLKey(), WebURL::create(pluginURLString));
-
-    return ImmutableDictionary::adopt(pluginInfoMap);
-}
-
 void WebPageProxy::unavailablePluginButtonClicked(uint32_t opaquePluginUnavailabilityReason, const String& mimeType, const String& pluginURLString, const String& pluginspageAttributeURLString, const String& frameURLString, const String& pageURLString)
 {
     MESSAGE_CHECK_URL(pluginURLString);
@@ -2808,17 +2753,11 @@ void WebPageProxy::unavailablePluginButtonClicked(uint32_t opaquePluginUnavailab
     MESSAGE_CHECK_URL(frameURLString);
     MESSAGE_CHECK_URL(pageURLString);
 
-    String pluginBundleIdentifier;
-    String pluginBundleVersion;
-    String pluginName;
-    String newMimeType = mimeType;
+    RefPtr<ImmutableDictionary> pluginInformation;
 #if ENABLE(NETSCAPE_PLUGIN_API)
+    String newMimeType = mimeType;
     PluginModuleInfo plugin = m_process->context()->pluginInfoStore().findPlugin(newMimeType, KURL(KURL(), pluginURLString));
-#if PLATFORM(MAC)
-    pluginBundleIdentifier = plugin.bundleIdentifier;
-    pluginBundleVersion = plugin.versionString;
-#endif
-    pluginName = plugin.info.name;
+    pluginInformation = createPluginInformationDictionary(plugin, frameURLString, mimeType, pageURLString, pluginspageAttributeURLString, pluginURLString);
 #endif
 
     WKPluginUnavailabilityReason pluginUnavailabilityReason = kWKPluginUnavailabilityReasonPluginMissing;
@@ -2847,7 +2786,7 @@ void WebPageProxy::unavailablePluginButtonClicked(uint32_t opaquePluginUnavailab
         ASSERT_NOT_REACHED();
     }
 
-    m_uiClient.unavailablePluginButtonClicked(this, pluginUnavailabilityReason, mimeType, pluginBundleIdentifier, pluginBundleVersion, pluginName, pluginURLString, pluginspageAttributeURLString, frameURLString, pageURLString);
+    m_uiClient.unavailablePluginButtonClicked(this, pluginUnavailabilityReason, pluginInformation.get());
 }
 
 void WebPageProxy::setToolbarsAreVisible(bool toolbarsAreVisible)
@@ -3219,15 +3158,15 @@ void WebPageProxy::didFindString(const String& string, uint32_t matchCount)
     m_findClient.didFindString(this, string, matchCount);
 }
 
-void WebPageProxy::didFindStringMatches(const String& string, Vector<Vector<WebCore::IntRect> > matchRects, int32_t firstIndexAfterSelection)
+void WebPageProxy::didFindStringMatches(const String& string, Vector<Vector<WebCore::IntRect>> matchRects, int32_t firstIndexAfterSelection)
 {
-    Vector<RefPtr<APIObject> > matches;
+    Vector<RefPtr<APIObject>> matches;
     matches.reserveInitialCapacity(matchRects.size());
 
     for (size_t i = 0; i < matchRects.size(); ++i) {
         const Vector<WebCore::IntRect>& rects = matchRects[i];
         size_t numRects = matchRects[i].size();
-        Vector<RefPtr<APIObject> > apiRects;
+        Vector<RefPtr<APIObject>> apiRects;
         apiRects.reserveInitialCapacity(numRects);
 
         for (size_t i = 0; i < numRects; ++i)
@@ -3676,7 +3615,7 @@ void WebPageProxy::didReceiveEvent(uint32_t opaqueType, bool handled)
     case WebEvent::Wheel: {
         ASSERT(!m_currentlyProcessedWheelEvents.isEmpty());
 
-        OwnPtr<Vector<NativeWebWheelEvent> > oldestCoalescedEvent = m_currentlyProcessedWheelEvents.takeFirst();
+        OwnPtr<Vector<NativeWebWheelEvent>> oldestCoalescedEvent = m_currentlyProcessedWheelEvents.takeFirst();
 
         // FIXME: Dispatch additional events to the didNotHandleWheelEvent client function.
         if (!handled && m_uiClient.implementsDidNotHandleWheelEvent())
@@ -4044,7 +3983,7 @@ WebPageCreationParameters WebPageProxy::creationParameters() const
     parameters.highestUsedBackForwardItemID = WebBackForwardListItem::highedUsedItemID();
     parameters.canRunBeforeUnloadConfirmPanel = m_uiClient.canRunBeforeUnloadConfirmPanel();
     parameters.canRunModal = m_canRunModal;
-    parameters.deviceScaleFactor = m_intrinsicDeviceScaleFactor;
+    parameters.deviceScaleFactor = deviceScaleFactor();
     parameters.mediaVolume = m_mediaVolume;
     parameters.mayStartMediaWhenInWindow = m_mayStartMediaWhenInWindow;
     parameters.overridePrivateBrowsingEnabled = m_overridePrivateBrowsingEnabled;
@@ -4239,26 +4178,22 @@ void WebPageProxy::didChangePageCount(unsigned pageCount)
 
 void WebPageProxy::didFailToInitializePlugin(const String& mimeType, const String& frameURLString, const String& pageURLString)
 {
-    m_loaderClient.didFailToInitializePlugin(this, mimeType, frameURLString, pageURLString);
+    m_loaderClient.didFailToInitializePlugin(this, createPluginInformationDictionary(mimeType, frameURLString, pageURLString).get());
 }
 
-// FIXME: ENABLE(NETSCAPE_PLUGIN_API)
 void WebPageProxy::didBlockInsecurePluginVersion(const String& mimeType, const String& pluginURLString, const String& frameURLString, const String& pageURLString)
 {
-    String pluginBundleIdentifier;
-    String pluginBundleVersion;
-    String newMimeType = mimeType;
+    RefPtr<ImmutableDictionary> pluginInformation;
 
 #if PLATFORM(MAC) && ENABLE(NETSCAPE_PLUGIN_API)
+    String newMimeType = mimeType;
     PluginModuleInfo plugin = m_process->context()->pluginInfoStore().findPlugin(newMimeType, KURL(KURL(), pluginURLString));
-
-    pluginBundleIdentifier = plugin.bundleIdentifier;
-    pluginBundleVersion = plugin.versionString;
+    pluginInformation = createPluginInformationDictionary(plugin, frameURLString, mimeType, pageURLString, String(), String());
 #else
     UNUSED_PARAM(pluginURLString);
 #endif
 
-    m_loaderClient.didBlockInsecurePluginVersion(this, newMimeType, pluginBundleIdentifier, pluginBundleVersion, frameURLString, pageURLString);
+    m_loaderClient.didBlockInsecurePluginVersion(this, pluginInformation.get());
 }
 
 bool WebPageProxy::willHandleHorizontalScrollEvents() const

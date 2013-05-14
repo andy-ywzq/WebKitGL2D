@@ -1,3 +1,142 @@
+2013-05-13  Dan Bernstein  <mitz@apple.com>
+
+        Make -[WebNavigationData url] the destination of the navigation
+        https://bugs.webkit.org/show_bug.cgi?id=114904
+
+        Reviewed by Dave Kilzer.
+
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        (WebFrameLoaderClient::updateGlobalHistory): Initialize the WebNavigationData with the
+        current URL, not the original request URL.
+
+2013-05-13  Anders Carlsson  <andersca@apple.com>
+
+        Remove ChromeClient::willPopupMenu
+        https://bugs.webkit.org/show_bug.cgi?id=116063
+
+        Reviewed by Andreas Kling.
+
+        ChromeClient::willPopupMenu is only called in one place from WebKit, so just move the function to the call site.
+
+        * WebCoreSupport/PopupMenuMac.mm:
+        (PopupMenuMac::show):
+        * WebCoreSupport/WebChromeClient.h:
+        * WebCoreSupport/WebChromeClient.mm:
+
+2013-05-12  Timothy Hatcher  <timothy@apple.com>
+
+        Add support for updating the Web Inspector toolbar height.
+
+        https://bugs.webkit.org/show_bug.cgi?id=115996
+
+        Reviewed by Joseph Pecoraro and Benjamin Poulain.
+
+        * WebCoreSupport/WebInspectorClient.h:
+        * WebCoreSupport/WebInspectorClient.mm:
+        (WebInspectorFrontendClient::setToolbarHeight):
+
+2013-05-13  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Sometimes NSUndoManager can get into an inconsistent state
+        https://bugs.webkit.org/show_bug.cgi?id=116050
+
+        Reviewed by Enrica Casucci.
+
+        Always group undo items to work around a bug in NSUndoManager that manifests
+        when we call removeAllActionsWithTarget.
+
+        * WebCoreSupport/WebEditorClient.mm:
+        (WebEditorClient::registerUndoOrRedoStep):
+
+2013-05-13  Zalan Bujtas  <zalan@apple.com>
+
+        WebProcess consuming very high CPU on linkedin.com
+        https://bugs.webkit.org/show_bug.cgi?id=115601
+
+        Reviewed by Andreas Kling.
+
+        Disable WEB_TIMING_MINIMAL.
+        Turn off window.performance and performance.now(). Some JS frameworks expect
+        additional Web Timing APIs, when performance.now() is available.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-05-13  Darin Adler  <darin@apple.com>
+
+        [Mac] Layer-backed WebViews draw their background color even when setDrawsBackground:NO was called
+        https://bugs.webkit.org/show_bug.cgi?id=116014
+        <rdar://problem/12781227>
+
+        Reviewed by Dan Bernstein.
+
+        * WebView/WebFrame.mm:
+        (-[WebFrame _updateBackgroundAndUpdatesWhileOffscreen]): Remove calls to setBackgroundColor: and
+        setDrawsBackground: on the document view. These were added to support a hypothetical document view
+        that wanted to draw its background like WebHTMLView does, but this was never communicated as a
+        document view protocol, formal or informal, and it's unlikely that it was ever used. The bug was
+        caused because there is an -[NSView setDrawsBackground:] method, probably an internal one, and we
+        were calling it unintentionally on a WebHTMLView.
+
+2013-05-12  Anders Carlsson  <andersca@apple.com>
+
+        Stop including UnusedParam.h
+        https://bugs.webkit.org/show_bug.cgi?id=116003
+
+        Reviewed by Sam Weinig.
+
+        UnusedParam.h is empty now so there's no need to include it anymore.
+
+        * Plugins/WebNetscapePluginEventHandlerCocoa.mm:
+        * WebView/WebDashboardRegion.mm:
+        * WebView/WebFullScreenController.mm:
+
+2013-05-12  Andreas Kling  <akling@apple.com>
+
+        Unload event listeners should prevent Safari from insta-killing the web process on last tab close.
+        <http://webkit.org/b/115988>
+        <rdar://problem/13870943>
+
+        Reviewed by Anders Carlsson.
+
+        * WebCoreSupport/WebChromeClient.h:
+        * WebCoreSupport/WebChromeClient.mm:
+        (WebChromeClient::enableSuddenTermination):
+        (WebChromeClient::disableSuddenTermination):
+
+2013-05-10  Brian J. Burg  <burg@cs.washington.edu>
+
+        Web Inspector: Implement WK2 version of WebInspectorFrontendClient::save
+        https://bugs.webkit.org/show_bug.cgi?id=115564
+
+        Reviewed by Benjamin Poulain.
+
+        Clean up save() and append() implementations.
+
+        * WebCoreSupport/WebInspectorClient.h:
+        * WebCoreSupport/WebInspectorClient.mm:
+        (WebInspectorFrontendClient::save):
+        (WebInspectorFrontendClient::append):
+
+2013-05-10  Laszlo Gombos  <l.gombos@samsung.com>
+
+        Remove Mac OS X Leopard (10.5) support
+        https://bugs.webkit.org/show_bug.cgi?id=107964
+
+        Reviewed by Ryosuke Niwa.
+
+        Removed the code for 10.5 and removed if-def for 10.6.
+
+        * DefaultDelegates/WebDefaultContextMenuDelegate.mm:
+        * Misc/WebKitErrors.m:
+        (-[NSError _initWithPluginErrorCode:contentURL:pluginPageURL:pluginName:MIMEType:]):
+        * WebCoreSupport/WebSystemInterface.mm:
+        (InitWebCoreSystemInterface):
+        * WebView/WebClipView.mm:
+        (-[WebClipView _immediateScrollToPoint:]):
+        * WebView/WebFrameView.mm:
+        (-[WebFrameView initWithFrame:]):
+        * WebView/WebView.mm:
+
 2013-05-07  Mark Rowe  <mrowe@apple.com>
 
         <rdar://problem/13633007> WebKit and others fail to build headers due to build root dependency

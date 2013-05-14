@@ -1,3 +1,298 @@
+2013-05-14  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [BlackBerry] Use requestAnimationFrame for animations
+        https://bugs.webkit.org/show_bug.cgi?id=115896
+
+        Reviewed by Rob Buis.
+
+        * wtf/Platform.h: Disable REQUEST_ANIMATION_FRAME_TIMER and
+        WTF_USE_REQUEST_ANIMATION_FRAME_DISPLAY_MONITOR for BlackBerry
+        port.
+
+2013-05-14  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [BlackBerry] Implement platform strategies
+        https://bugs.webkit.org/show_bug.cgi?id=112162
+
+        Reviewed by Rob Buis.
+
+        * wtf/Platform.h: Add BlackBerry platform to the list of platforms
+        using platform strategies.
+
+2013-05-13  Benjamin Poulain  <benjamin@webkit.org>
+
+        Improve stringProtoFuncLastIndexOf for the prefix case
+        https://bugs.webkit.org/show_bug.cgi?id=115952
+
+        Reviewed by Geoffrey Garen.
+
+        Add an optimized version of StringImpl::startsWith() for JavaScriptCore.
+
+        * wtf/text/StringImpl.cpp:
+        (WTF::StringImpl::startsWith):
+        * wtf/text/StringImpl.h:
+        (StringImpl):
+        (WTF::StringImpl::startsWith):
+        * wtf/text/WTFString.h:
+        (WTF::String::startsWith):
+
+2013-05-13  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix Qt Linux MIPS32R2 build after r149879.
+
+        Bring back GLIB_CHECK_VERSION for GBytes since Qt Linux MIPS32R2
+        depends on glib 2.24.2.
+
+        * wtf/gobject/GRefPtr.cpp:
+        (_GBytes):
+        (WTF::refGPtr):
+        (WTF::derefGPtr):
+
+2013-05-13  Anders Carlsson  <andersca@apple.com>
+
+        Remove UnusedParam.h
+        https://bugs.webkit.org/show_bug.cgi?id=116029
+
+        Reviewed by Andreas Kling.
+
+        Remove UnusedParam.h, it's empty now.
+
+        * GNUmakefile.list.am:
+        * WTF.pro:
+        * WTF.vcproj/WTF.vcproj:
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/UnusedParam.h: Removed.
+
+2013-05-13  Zalan Bujtas  <zalan@apple.com>
+
+        WebProcess consuming very high CPU on linkedin.com
+        https://bugs.webkit.org/show_bug.cgi?id=115601
+
+        Reviewed by Andreas Kling.
+
+        Disable WEB_TIMING_MINIMAL.
+        Turn off window.performance and performance.now(). Some JS frameworks expect
+        additional Web Timing APIs, when performance.now() is available.
+
+        * wtf/FeatureDefines.h:
+
+2013-05-12  Anders Carlsson  <andersca@apple.com>
+
+        Stop including UnusedParam.h
+        https://bugs.webkit.org/show_bug.cgi?id=116003
+
+        Reviewed by Sam Weinig.
+
+        UnusedParam.h is empty now so there's no need to include it anymore.
+
+        * wtf/Atomics.h:
+        * wtf/BoundsCheckedPointer.h:
+        * wtf/DateMath.h:
+        * wtf/FastMalloc.cpp:
+        * wtf/NumberOfCores.cpp:
+        * wtf/OSAllocator.h:
+        * wtf/OSAllocatorPosix.cpp:
+        * wtf/PageAllocation.h:
+        * wtf/RefCounted.h:
+        * wtf/TCSystemAlloc.cpp:
+        * wtf/ThreadingPthreads.cpp:
+        * wtf/Vector.h:
+        * wtf/dtoa/cached-powers.cc:
+        * wtf/dtoa/fixed-dtoa.cc:
+
+2013-05-12  Anders Carlsson  <andersca@apple.com>
+
+        Move UNUSED_PARAM and UNUSED_LABEL macros to Compiler.h
+        https://bugs.webkit.org/show_bug.cgi?id=115997
+
+        Reviewed by Benjamin Poulain.
+
+        UnusedParam.h predates Compiler.h and the macros defined there should just go into Compiler.h
+
+        * wtf/Compiler.h:
+        (unusedParam):
+        * wtf/UnusedParam.h:
+
+2013-05-12  Anders Carlsson  <andersca@apple.com>
+
+        Remove Complex.h from WTF
+        https://bugs.webkit.org/show_bug.cgi?id=115989
+
+        Reviewed by Beth Dakin.
+
+        Complex.h contains a typedef and a single function (that already has an equivalent in the STL).
+        The header is used by three files in WebCore, so just use std::complex<double> and std::polar directly.
+
+        * GNUmakefile.list.am:
+        * WTF.vcproj/WTF.vcproj:
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/Complex.h: Removed.
+
+2013-05-11  Martin Robinson  <mrobinson@igalia.com>
+
+        [GTK] Add a basic cmake build for WTF and JavaScriptCore
+        https://bugs.webkit.org/show_bug.cgi?id=115967
+
+        Reviewed by Laszlo Gombos.
+
+        * wtf/PlatformGTK.cmake: Added.
+
+2013-05-11  Martin Robinson  <mrobinson@igalia.com>
+
+        Move defines to platform
+
+        [GTK] Move defines that will never be configured to Platform.h
+        https://bugs.webkit.org/show_bug.cgi?id=115965
+
+        Reviewed by Andreas Kling.
+
+        * wtf/Platform.h: Add new defines that were previously in the autoconf header.
+
+2013-05-12  Anders Carlsson  <andersca@apple.com>
+
+        Simplify AutodrainedPool
+        https://bugs.webkit.org/show_bug.cgi?id=115986
+
+        Reviewed by Andreas Kling.
+
+        Remove the ability to cycle an AutodrainedPool, as well as the iteration count.
+        Creating and draining pools is fast enough now that we don't need to try to be clever about it.
+
+        * wtf/AutodrainedPool.h:
+        (AutodrainedPool):
+        (WTF::AutodrainedPool::AutodrainedPool):
+        * wtf/AutodrainedPoolMac.mm:
+        (WTF::AutodrainedPool::AutodrainedPool):
+
+2013-05-12  Anders Carlsson  <andersca@apple.com>
+
+        Move RemoteMemoryReader into FastMalloc.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=115985
+
+        Reviewed by Andreas Kling.
+
+        RemoteMemoryReader is only used in FastMalloc.cpp, and even had one of its member functions
+        implemented there, so move the entire class template there and remove MallocZoneSupport.h.
+
+        * GNUmakefile.list.am:
+        * WTF.pro:
+        * WTF.vcproj/WTF.vcproj:
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/FastMalloc.cpp:
+        (WTF):
+        (PageHeapAllocator):
+        (WTF::TCMalloc_ThreadCache::CreateCacheIfNecessary):
+        * wtf/MallocZoneSupport.h: Removed.
+
+2013-05-10  Laszlo Gombos  <l.gombos@samsung.com>
+
+        Remove USE(OS_RANDOMNESS)
+        https://bugs.webkit.org/show_bug.cgi?id=108095
+
+        Reviewed by Darin Adler.
+
+        Remove the USE(OS_RANDOMNESS) guard as it is turned on for all
+        ports.
+
+        * wtf/CryptographicallyRandomNumber.cpp:
+        (WTF::cryptographicallyRandomValues):
+        * wtf/CryptographicallyRandomNumber.h:
+        * wtf/OSRandomSource.cpp:
+        (WTF::cryptographicallyRandomValuesFromOS):
+        * wtf/OSRandomSource.h:
+        * wtf/Platform.h:
+        * wtf/RandomNumber.cpp:
+        (WTF::randomNumber):
+        * wtf/RandomNumber.h:
+        * wtf/RandomNumberSeed.h:
+        (WTF::initializeRandomNumberGenerator):
+
+2013-05-10  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Remove unnecessary GLIB_CHECK_VERSION #ifdefs
+        https://bugs.webkit.org/show_bug.cgi?id=115904
+
+        Reviewed by Martin Robinson.
+
+        * wtf/gobject/GRefPtr.cpp:
+
+2013-05-09  Darin Adler  <darin@apple.com>
+
+        RenderQuote has giant function for language to quotes map
+        https://bugs.webkit.org/show_bug.cgi?id=115807
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/unicode/CharacterNames.h: Added a couple of character names.
+
+2013-05-08  Michael Saboff  <msaboff@apple.com>
+
+        JSC: There should be a disassembler for ARM Thumb 2
+        https://bugs.webkit.org/show_bug.cgi?id=115827
+
+        Reviewed by Filip Pizlo.
+
+        Added a new disassembler for ARMv7 Thumb2 instructions for use by the JSC debugging
+        and profiling code.  Enabled the disassembler for IOS bulds.
+
+        * wtf/Platform.h:
+
+2013-05-08  Mikhail Pozdnyakov  <mikhail.pozdnyakov@intel.com>
+
+        Simplify RetainPtrObjectHashTraits
+        https://bugs.webkit.org/show_bug.cgi?id=115822
+
+        Reviewed by Benjamin Poulain.
+
+        RetainPtrObjectHashTraits is inherited from SimpleClassHashTraits
+        instead of GenericHashTraits re-using more shared functionality.
+
+        * wtf/RetainPtr.h:
+        (WTF::RetainPtrObjectHashTraits::emptyValue):
+
+2013-05-08  Anders Carlsson  <andersca@apple.com>
+
+        Assert at compile time that we don't pass Objective-C object pointers to adoptCF
+        https://bugs.webkit.org/show_bug.cgi?id=115823
+
+        Reviewed by Geoffrey Garen.
+
+        static_assert in adoptCF that the object passed in is not an Objective-C object.
+        * wtf/RetainPtr.h:
+
+2013-05-08  Anders Carlsson  <andersca@apple.com>
+
+        Remove RetainPtr::adoptNS and RetainPtr::adoptCF
+        https://bugs.webkit.org/show_bug.cgi?id=115817
+
+        Reviewed by Jessie Berlin.
+
+        These functions are now unused so remove them. The preferred way to create a RetainPtr with an
+        adopted reference is to use the adoptNS/adoptCF free functions.
+        
+        Rewrite the move assignment operators to just call CFRelease explicitly.
+
+        * wtf/RetainPtr.h:
+
+2013-05-08  Anders Carlsson  <andersca@apple.com>
+
+        Remove ThreadingNone.cpp
+
+        Rubber-stamped by Beth Dakin.
+
+        ThreadingNone.cpp is empty and not used anywhere.
+
+        * wtf/ThreadingNone.cpp: Removed.
+
 2013-05-08  Anders Carlsson  <andersca@apple.com>
 
         Remove HashMap::deleteAllKeys

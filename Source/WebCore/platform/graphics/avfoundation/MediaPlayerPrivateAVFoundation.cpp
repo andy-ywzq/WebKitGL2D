@@ -42,7 +42,6 @@
 #include "TimeRanges.h"
 #include <CoreMedia/CoreMedia.h>
 #include <wtf/MainThread.h>
-#include <wtf/UnusedParam.h>
 
 using namespace std;
 
@@ -75,7 +74,9 @@ MediaPlayerPrivateAVFoundation::MediaPlayerPrivateAVFoundation(MediaPlayer* play
     , m_ignoreLoadStateChanges(false)
     , m_haveReportedFirstVideoFrame(false)
     , m_playWhenFramesAvailable(false)
+#if !PLATFORM(WIN)
     , m_inbandTrackConfigurationPending(false)
+#endif
 {
     LOG(Media, "MediaPlayerPrivateAVFoundation::MediaPlayerPrivateAVFoundation(%p)", this);
 }
@@ -265,8 +266,10 @@ void MediaPlayerPrivateAVFoundation::seek(float time)
     if (currentTime() == time)
         return;
 
+#if !PLATFORM(WIN)
     if (currentTrack())
         currentTrack()->beginSeeking();
+#endif
     
     LOG(Media, "MediaPlayerPrivateAVFoundation::seek(%p) - seeking to %f", this, time);
     m_seekTo = time;
@@ -590,8 +593,10 @@ void MediaPlayerPrivateAVFoundation::seekCompleted(bool finished)
     LOG(Media, "MediaPlayerPrivateAVFoundation::seekCompleted(%p) - finished = %d", this, finished);
     UNUSED_PARAM(finished);
 
+#if !PLATFORM(WIN)
     if (currentTrack())
         currentTrack()->endSeeking();
+#endif
 
     m_seekTo = MediaPlayer::invalidTime();
     updateStates();
@@ -822,8 +827,10 @@ void MediaPlayerPrivateAVFoundation::dispatchNotification()
         contentsNeedsDisplay();
         break;
     case Notification::InbandTracksNeedConfiguration:
+#if !PLATFORM(WIN)
         m_inbandTrackConfigurationPending = false;
         configureInbandTracks();
+#endif
         break;
 
     case Notification::None:
@@ -832,6 +839,7 @@ void MediaPlayerPrivateAVFoundation::dispatchNotification()
     }
 }
 
+#if !PLATFORM(WIN)
 void MediaPlayerPrivateAVFoundation::configureInbandTracks()
 {
     RefPtr<InbandTextTrackPrivateAVF> trackToEnable;
@@ -858,6 +866,7 @@ void MediaPlayerPrivateAVFoundation::trackModeChanged()
     m_inbandTrackConfigurationPending = true;
     scheduleMainThreadNotification(Notification::InbandTracksNeedConfiguration);
 }
+#endif
 
 } // namespace WebCore
 

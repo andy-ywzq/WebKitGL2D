@@ -82,7 +82,7 @@ public:
     void addConsoleMessage(MessageSource, MessageLevel, const String& message, const String& sourceURL, unsigned lineNumber, unsigned columnNumber, ScriptState* = 0, unsigned long requestIdentifier = 0);
     virtual void addConsoleMessage(MessageSource, MessageLevel, const String& message, unsigned long requestIdentifier = 0) = 0;
 
-    virtual const SecurityOrigin* topOrigin() const = 0;
+    virtual SecurityOrigin* topOrigin() const = 0;
 
 #if ENABLE(BLOB)
     PublicURLManager& publicURLManager();
@@ -110,9 +110,6 @@ public:
 
     void didCreateDestructionObserver(ContextDestructionObserver*);
     void willDestroyDestructionObserver(ContextDestructionObserver*);
-
-    virtual void suspendScriptedAnimationControllerCallbacks() { }
-    virtual void resumeScriptedAnimationControllerCallbacks() { }
 
     // MessagePort is conceptually a kind of ActiveDOMObject, but it needs to be tracked separately for message dispatch.
     void processMessagePortMessagesSoon();

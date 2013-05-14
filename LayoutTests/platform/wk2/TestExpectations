@@ -94,39 +94,16 @@ inspector/styles/styles-computed-trace.html
 webkit.org/b/42197 fast/harness/override-preferences-2.html [ Failure ]
 webkit.org/b/42197 fast/text/zero-font-size.html [ Pass ]
 
-# WebKitTestRunner needs to support layoutTestController.dumpDOMAsWebArchive
-# <https://bugs.webkit.org/show_bug.cgi?id=42324>
-http/tests/webarchive/cross-origin-stylesheet-crash.html
-http/tests/webarchive/test-css-url-encoding.html
-http/tests/webarchive/test-css-url-encoding-shift-jis.html
-http/tests/webarchive/test-css-url-encoding-utf-8.html
-http/tests/webarchive/test-preload-resources.html
-svg/custom/image-with-prefix-in-webarchive.svg
-svg/webarchive/svg-cursor-subresources.svg
-svg/webarchive/svg-feimage-subresources.svg
-svg/webarchive/svg-script-subresouces.svg
-webarchive/adopt-attribute-styled-body-webarchive.html
-webarchive/adopt-attribute-styled-node-webarchive.html
-webarchive/adopt-inline-styled-node-webarchive.html
-webarchive/archive-empty-frame-dom.html
-webarchive/archive-with-unencoded-url.html
-webarchive/css-page-rule-crash.html
-webarchive/ignore-noscript-if-scripting-enabled.html
-webarchive/test-body-background.html
-webarchive/test-css-import.html
-webarchive/test-css-url-resources-in-stylesheets.html
-webarchive/test-css-url-resources-inline-styles.html
-webarchive/test-duplicate-resources.html
-webarchive/test-frameset.html
-webarchive/test-img-src.html
-webarchive/test-input-src.html
-webarchive/test-link-href.html
-webarchive/test-link-rel-icon-beforeload.html
-webarchive/test-object-data.html
-webarchive/test-script-src.html
-webarchive/test-table-background.html
-webarchive/test-td-background.html
-webarchive/test-xml-stylesheet.xml
+# setIconDatabaseEnabled not implemented in WebKitTestRunner.
+# https://bugs.webkit.org/show_bug.cgi?id=115809
+webarchive/test-link-rel-icon-beforeload.html [ Skip ]
+
+# https://bugs.webkit.org/show_bug.cgi?id=82665
+http/tests/webarchive/test-css-url-encoding.html [ Skip ]
+http/tests/webarchive/test-css-url-encoding-shift-jis.html [ Skip ]
+http/tests/webarchive/test-css-url-encoding-utf-8.html [ Skip ]
+webarchive/test-css-url-resources-in-stylesheets.html [ Skip ]
+webarchive/test-css-url-resources-inline-styles.html [ Skip ]
 
 # Fails on WebKit2
 # <https://bugs.webkit.org/show_bug.cgi?id=96741>
@@ -206,17 +183,6 @@ fast/encoding/idn-security.html
 # <https://bugs.webkit.org/show_bug.cgi?id=69548>
 fast/events/show-modal-dialog-onblur-onfocus.html
 
-# WebKitTestRunner needs layoutTestController.setPrinting
-# <https://bugs.webkit.org/show_bug.cgi?id=42693>
-printing/compositing-layer-printing.html
-printing/iframe-print.html
-printing/media-queries-print.html
-printing/page-rule-in-media-query.html
-printing/setPrinting.html
-printing/single-line-must-not-be-split-into-two-pages.html
-printing/simultaneous-position-float-change.html
-printing/width-overflow.html
-
 # WebKitTestRunner needs layoutTestController.setWillSendRequestClearHeader
 # <https://bugs.webkit.org/show_bug.cgi?id=42699>
 http/tests/security/no-referrer.html
@@ -275,6 +241,7 @@ http/tests/multipart/multipart-wait-before-boundary.html
 # https://bugs.webkit.org/show_bug.cgi?id=81736 rdar://problem/11088268
 fast/events/blur-focus-window-should-blur-focus-element.html
 fast/selectors/selection-window-inactive.html
+fast/dom/Window/window-focus-self.html
 
 # WebKit2 needs an implementation of InspectorClient::overrideDeviceMetrics() and
 # autoZoomPageToFitWidth().
@@ -378,15 +345,6 @@ platform/mac/fast/dom/HTMLImageElement/dashboard-src-quirk.html
 
 # WebKitTestRunner needs layoutTestController.addURLToRedirect
 http/tests/loading/cross-origin-XHR-willLoadRequest.html
-
-# WebKitTestRunner needs to sanitize file urls in the output
-http/tests/misc/image-blocked-src-change.html
-http/tests/misc/image-blocked-src-no-change.html
-userscripts/script-not-run-for-fragments.html
-userscripts/user-script-image-document.html
-userscripts/user-script-plugin-document.html
-userscripts/user-script-audio-document.html
-userscripts/user-script-video-document.html
 
 # WebKit2 needs showModalDialog
 fast/events/scroll-event-during-modal-dialog.html

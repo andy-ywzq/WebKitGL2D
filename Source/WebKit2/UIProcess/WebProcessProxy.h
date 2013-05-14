@@ -60,8 +60,8 @@ struct WebNavigationDataStore;
 
 class WebProcessProxy : public ChildProcessProxy, ResponsivenessTimer::Client {
 public:
-    typedef HashMap<uint64_t, RefPtr<WebBackForwardListItem> > WebBackForwardListItemMap;
-    typedef HashMap<uint64_t, RefPtr<WebFrameProxy> > WebFrameProxyMap;
+    typedef HashMap<uint64_t, RefPtr<WebBackForwardListItem>> WebBackForwardListItemMap;
+    typedef HashMap<uint64_t, RefPtr<WebFrameProxy>> WebFrameProxyMap;
     typedef HashMap<uint64_t, WebPageProxy*> WebPageProxyMap;
 
     static PassRefPtr<WebProcessProxy> create(PassRefPtr<WebContext>);
@@ -114,6 +114,9 @@ public:
     static bool pageIsProcessSuppressible(WebPageProxy*);
     void updateProcessSuppressionState();
 #endif
+
+    void enableSuddenTermination();
+    void disableSuddenTermination();
 
     void requestTermination();
 
@@ -178,6 +181,8 @@ private:
     void didReceiveWebProcessProxyMessage(CoreIPC::Connection*, CoreIPC::MessageDecoder&);
     void didReceiveSyncWebProcessProxyMessage(CoreIPC::Connection*, CoreIPC::MessageDecoder&, OwnPtr<CoreIPC::MessageEncoder>&);
 
+    bool canTerminateChildProcess();
+
     ResponsivenessTimer m_responsivenessTimer;
     
     RefPtr<WebConnectionToWebProcess> m_webConnection;
@@ -185,6 +190,8 @@ private:
 
     bool m_mayHaveUniversalFileReadSandboxExtension; // True if a read extension for "/" was ever granted - we don't track whether WebProcess still has it.
     HashSet<String> m_localPathsWithAssumedReadAccess;
+
+    unsigned m_suddenTerminationCounter;
 
     WebPageProxyMap m_pageMap;
     WebFrameProxyMap m_frameMap;

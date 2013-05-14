@@ -158,8 +158,6 @@ list(APPEND WebCore_SOURCES
     platform/network/soup/SocketStreamHandleSoup.cpp
     platform/network/soup/SoupURIUtils.cpp
 
-    platform/PlatformStrategies.cpp
-
     platform/posix/FileSystemPOSIX.cpp
     platform/posix/SharedBufferPOSIX.cpp
 
@@ -175,19 +173,8 @@ endif ()
 
 if (ENABLE_NETSCAPE_PLUGIN_API)
     list(APPEND WebCore_SOURCES
-        plugins/PluginDatabase.cpp
-        plugins/PluginDebug.cpp
-        plugins/PluginPackage.cpp
-        plugins/PluginStream.cpp
-        plugins/PluginView.cpp
-
         plugins/efl/PluginPackageEfl.cpp
         plugins/efl/PluginViewEfl.cpp
-    )
-else ()
-    list(APPEND WebCore_SOURCES
-        plugins/PluginPackageNone.cpp
-        plugins/PluginViewNone.cpp
     )
 endif ()
 

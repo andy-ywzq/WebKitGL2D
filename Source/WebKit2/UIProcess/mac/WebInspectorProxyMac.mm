@@ -31,7 +31,13 @@
 #import "WKAPICast.h"
 #import "WebContext.h"
 #import "WKInspectorPrivateMac.h"
+#import "WKMutableArray.h"
+#import "WKOpenPanelParameters.h"
+#import "WKOpenPanelResultListener.h"
+#import "WKRetainPtr.h"
+#import "WKURLCF.h"
 #import "WKViewPrivate.h"
+#import "WebInspectorMessages.h"
 #import "WebPageGroup.h"
 #import "WebPageProxy.h"
 #import "WebPreferences.h"
@@ -221,6 +227,37 @@ static unsigned long long exceededDatabaseQuota(WKPageRef, WKFrameRef, WKSecurit
     return std::max<unsigned long long>(expectedUsage, currentDatabaseUsage * 1.25);
 }
 
+static void runOpenPanel(WKPageRef page, WKFrameRef frame, WKOpenPanelParametersRef parameters, WKOpenPanelResultListenerRef listener, const void* clientInfo)
+{
+    WebInspectorProxy* webInspectorProxy = static_cast<WebInspectorProxy*>(const_cast<void*>(clientInfo));
+    ASSERT(webInspectorProxy);
+
+    NSOpenPanel *openPanel = [NSOpenPanel openPanel];
+    [openPanel setAllowsMultipleSelection:WKOpenPanelParametersGetAllowsMultipleFiles(parameters)];
+
+    WKRetain(listener);
+
+    // If the inspector is detached, then openPanel will be window-modal; otherwise, openPanel is opened in a new window.
+    [openPanel beginSheetModalForWindow:webInspectorProxy->inspectorWindow() completionHandler:^(NSInteger result) {
+        if (result == NSFileHandlingPanelOKButton) {
+            WKMutableArrayRef fileURLs = WKMutableArrayCreate();
+
+            for (NSURL* nsURL in [openPanel URLs]) {
+                WKURLRef wkURL = WKURLCreateWithCFURL(reinterpret_cast<CFURLRef>(nsURL));
+                WKArrayAppendItem(fileURLs, wkURL);
+                WKRelease(wkURL);
+            }
+
+            WKOpenPanelResultListenerChooseFiles(listener, fileURLs);
+
+            WKRelease(fileURLs);
+        } else
+            WKOpenPanelResultListenerCancel(listener);
+        
+        WKRelease(listener);
+    }];
+}
+
 void WebInspectorProxy::setInspectorWindowFrame(WKRect& frame)
 {
     if (m_isAttached)
@@ -408,7 +445,7 @@ WebPageProxy* WebInspectorProxy::platformCreateInspectorPage()
         0, // didDraw
         0, // pageDidScroll
         exceededDatabaseQuota,
-        0, // runOpenPanel
+        runOpenPanel,
         0, // decidePolicyForGeolocationPermissionRequest
         0, // headerHeight
         0, // footerHeight
@@ -473,6 +510,14 @@ void WebInspectorProxy::platformHide()
 
 void WebInspectorProxy::platformBringToFront()
 {
+    // If the Web Inspector is no longer in the same window as the inspected view,
+    // then we need to reopen the Inspector to get it attached to the right window.
+    // This can happen when dragging tabs to another window in Safari.
+    if (m_isAttached && m_inspectorView.get().window != m_page->wkView().window) {
+        platformOpen();
+        return;
+    }
+
     // FIXME <rdar://problem/10937688>: this will not bring a background tab in Safari to the front, only its window.
     [m_inspectorView.get().window makeKeyAndOrderFront:nil];
     [m_inspectorView.get().window makeFirstResponder:m_inspectorView.get()];
@@ -495,6 +540,67 @@ void WebInspectorProxy::platformInspectedURLChanged(const String& urlString)
     m_urlString = urlString;
 
     updateInspectorWindowTitle();
+}
+
+void WebInspectorProxy::platformSave(const String& suggestedURL, const String& content, bool forceSaveDialog)
+{
+    ASSERT(!suggestedURL.isEmpty());
+    
+    NSURL *platformURL = m_suggestedToActualURLMap.get(suggestedURL).get();
+    if (!platformURL) {
+        platformURL = [NSURL URLWithString:suggestedURL];
+        // The user must confirm new filenames before we can save to them.
+        forceSaveDialog = true;
+    }
+    
+    ASSERT(platformURL);
+    if (!platformURL)
+        return;
+
+    // Necessary for the block below.
+    String suggestedURLCopy = suggestedURL;
+    String contentCopy = content;
+
+    auto saveToURL = ^(NSURL *actualURL) {
+        ASSERT(actualURL);
+        
+        m_suggestedToActualURLMap.set(suggestedURLCopy, actualURL);
+        [contentCopy writeToURL:actualURL atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+        m_page->process()->send(Messages::WebInspector::DidSave([actualURL absoluteString]), m_page->pageID());
+    };
+
+    if (!forceSaveDialog) {
+        saveToURL(platformURL);
+        return;
+    }
+
+    NSSavePanel *panel = [NSSavePanel savePanel];
+    panel.nameFieldStringValue = platformURL.lastPathComponent;
+    panel.directoryURL = [platformURL URLByDeletingLastPathComponent];
+
+    [panel beginSheetModalForWindow:m_inspectorWindow.get() completionHandler:^(NSInteger result) {
+        if (result == NSFileHandlingPanelCancelButton)
+            return;
+        ASSERT(result == NSFileHandlingPanelOKButton);
+        saveToURL(panel.URL);
+    }];
+}
+
+void WebInspectorProxy::platformAppend(const String& suggestedURL, const String& content)
+{
+    ASSERT(!suggestedURL.isEmpty());
+    
+    RetainPtr<NSURL> actualURL = m_suggestedToActualURLMap.get(suggestedURL);
+    // Do not append unless the user has already confirmed this filename in save().
+    if (!actualURL)
+        return;
+
+    NSFileHandle *handle = [NSFileHandle fileHandleForWritingToURL:actualURL.get() error:NULL];
+    [handle seekToEndOfFile];
+    [handle writeData:[content dataUsingEncoding:NSUTF8StringEncoding]];
+    [handle closeFile];
+
+    m_page->process()->send(Messages::WebInspector::DidAppend([actualURL absoluteString]), m_page->pageID());
 }
 
 void WebInspectorProxy::windowFrameDidChange()
@@ -636,6 +742,11 @@ void WebInspectorProxy::platformSetAttachedWindowWidth(unsigned width)
         return;
 
     inspectedViewFrameDidChange(width);
+}
+
+void WebInspectorProxy::platformSetToolbarHeight(unsigned height)
+{
+    [m_inspectorWindow setContentBorderThickness:height forEdge:NSMaxYEdge];
 }
 
 String WebInspectorProxy::inspectorPageURL() const

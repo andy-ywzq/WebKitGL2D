@@ -308,6 +308,11 @@ void FrameLoaderClientBlackBerry::committedLoad(DocumentLoader* loader, const ch
     }
 }
 
+bool FrameLoaderClientBlackBerry::shouldAlwaysUsePluginDocument(const String& mimeType) const
+{
+    return mimeType == "application/x-shockwave-flash";
+}
+
 PassRefPtr<Widget> FrameLoaderClientBlackBerry::createPlugin(const IntSize& pluginSize,
     HTMLPlugInElement* element, const KURL& url, const Vector<String>& paramNames,
     const Vector<String>& paramValues, const String& mimeTypeIn, bool loadManually)
@@ -316,7 +321,7 @@ PassRefPtr<Widget> FrameLoaderClientBlackBerry::createPlugin(const IntSize& plug
     if (mimeType.isEmpty()) {
         mimeType = MIMETypeRegistry::getMIMETypeForPath(url.path());
         mimeType = MIMETypeRegistry::getNormalizedMIMEType(mimeType);
-        if (mimeType != "application/x-shockwave-flash")
+        if (!shouldAlwaysUsePluginDocument(mimeType))
             mimeType = mimeTypeIn;
     }
 
@@ -330,7 +335,7 @@ PassRefPtr<Widget> FrameLoaderClientBlackBerry::createPlugin(const IntSize& plug
     // will generally be a valid media mime type, or it may be null. We
     // explicitly check for Flash content so it does not get rendered as
     // text at this point, producing garbled characters.
-    if (mimeType != "application/x-shockwave-flash" && m_frame->loader() && m_frame->loader()->subframeLoader() && !url.isNull())
+    if (!shouldAlwaysUsePluginDocument(mimeType) && m_frame->loader() && m_frame->loader()->subframeLoader() && !url.isNull())
         m_frame->loader()->subframeLoader()->requestFrame(element, url, String());
 
     return 0;
@@ -629,7 +634,7 @@ void FrameLoaderClientBlackBerry::dispatchDidFinishLoad()
             String title = linkElement->title();
 
             if (WTF::equalIgnoringCase(linkElement->rel(), "apple-touch-icon"))
-                m_webPagePrivate->m_client->setLargeIcon(href.latin1().data());
+                m_webPagePrivate->m_client->setLargeIcon(href);
             else if (WTF::equalIgnoringCase(linkElement->rel(), "search")) {
                 if (WTF::equalIgnoringCase(linkElement->type(), "application/opensearchdescription+xml"))
                     m_webPagePrivate->m_client->setSearchProviderDetails(title, href);
@@ -1187,13 +1192,10 @@ PassRefPtr<FrameNetworkingContext> FrameLoaderClientBlackBerry::createNetworking
 
 void FrameLoaderClientBlackBerry::startDownload(const ResourceRequest& request, const String& suggestedName)
 {
-    if (suggestedName.empty())
-        m_webPagePrivate->m_mainFrame->loader()->load(FrameLoadRequest(m_webPagePrivate->m_mainFrame, request));
-    else {
-        ResourceRequest requestCopy = request;
-        requestCopy.setSuggestedSaveName(suggestedName);
-        m_webPagePrivate->m_mainFrame->loader()->load(FrameLoadRequest(m_webPagePrivate->m_mainFrame, requestCopy));
-    }
+    ResourceRequest requestCopy = request;
+    requestCopy.setSuggestedSaveName(suggestedName);
+    requestCopy.setForceDownload(true);
+    m_webPagePrivate->m_mainFrame->loader()->load(FrameLoadRequest(m_webPagePrivate->m_mainFrame, requestCopy));
 }
 
 void FrameLoaderClientBlackBerry::convertMainResourceLoadToDownload(DocumentLoader* documentLoader, const ResourceRequest& request, const ResourceResponse& response)
@@ -1254,7 +1256,7 @@ void FrameLoaderClientBlackBerry::dispatchDidReceiveIcon()
     base64Encode(static_cast<const char*>(data->data()), data->size(), out);
     out.append('\0'); // Make it null-terminated.
     String iconUrl = iconDatabase().synchronousIconURLForPageURL(url);
-    m_webPagePrivate->m_client->setFavicon(out.data(), iconUrl);
+    m_webPagePrivate->m_client->setFavicon(BlackBerry::Platform::String::fromAscii(out.data(), out.size()), iconUrl);
     data->unref();
 }
 

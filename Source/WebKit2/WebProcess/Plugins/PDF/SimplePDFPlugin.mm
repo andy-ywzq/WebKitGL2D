@@ -52,7 +52,6 @@
 #import <WebCore/ScrollbarTheme.h>
 
 using namespace WebCore;
-using namespace std;
 
 static const char* postScriptMIMEType = "application/postscript";
 
@@ -87,7 +86,7 @@ static void getAllValuesInPDFNameTree(CGPDFDictionaryRef tree, Vector<CGPDFObjec
     appendValuesInPDFNameSubtreeToVector(tree, allValues);
 }
 
-static void getAllScriptsInPDFDocument(CGPDFDocumentRef pdfDocument, Vector<RetainPtr<CFStringRef> >& scripts)
+static void getAllScriptsInPDFDocument(CGPDFDocumentRef pdfDocument, Vector<RetainPtr<CFStringRef>>& scripts)
 {
     if (!pdfDocument)
         return;
@@ -384,7 +383,7 @@ void SimplePDFPlugin::pdfDocumentDidLoad()
     
 void SimplePDFPlugin::runScriptsInPDFDocument()
 {
-    Vector<RetainPtr<CFStringRef> > scripts;
+    Vector<RetainPtr<CFStringRef>> scripts;
     getAllScriptsInPDFDocument([m_pdfDocument.get() documentRef], scripts);
 
     size_t scriptCount = scripts.size();

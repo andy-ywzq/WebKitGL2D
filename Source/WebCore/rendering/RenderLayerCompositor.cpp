@@ -619,10 +619,27 @@ void RenderLayerCompositor::logLayerInfo(const RenderLayer* layer, int depth)
         m_secondaryBackingStoreBytes += backing->backingStoreMemoryEstimate();
     }
 
-    LOG(Compositing, "%*p %dx%d %.2fKB %s(%s) %s\n", 12 + depth * 2, layer, backing->compositedBounds().width(), backing->compositedBounds().height(),
-        backing->backingStoreMemoryEstimate() / 1024,
-        backing->graphicsLayer()->contentsOpaque() ? "opaque " : "",
-        logReasonsForCompositing(layer), layer->name().utf8().data());
+    StringBuilder logString;
+    logString.append(String::format("%*p %dx%d %.2fKB", 12 + depth * 2, layer,
+        backing->compositedBounds().width(), backing->compositedBounds().height(),
+        backing->backingStoreMemoryEstimate() / 1024));
+    
+    logString.append(" (");
+    logString.append(logReasonsForCompositing(layer));
+    logString.append(") ");
+
+    if (backing->graphicsLayer()->contentsOpaque() || backing->paintsIntoCompositedAncestor()) {
+        logString.append('[');
+        if (backing->graphicsLayer()->contentsOpaque())
+            logString.append("opaque");
+        if (backing->paintsIntoCompositedAncestor())
+            logString.append("paints into ancestor");
+        logString.append("] ");
+    }
+
+    logString.append(layer->name());
+
+    LOG(Compositing, "%s", logString.toString().utf8().data());
 }
 #endif
 
@@ -1565,6 +1582,18 @@ GraphicsLayer* RenderLayerCompositor::scrollLayer() const
     return m_scrollLayer.get();
 }
 
+#if ENABLE(RUBBER_BANDING)
+GraphicsLayer* RenderLayerCompositor::headerLayer() const
+{
+    return m_layerForHeader.get();
+}
+
+GraphicsLayer* RenderLayerCompositor::footerLayer() const
+{
+    return m_layerForFooter.get();
+}
+#endif
+
 TiledBacking* RenderLayerCompositor::pageTiledBacking() const
 {
     RenderLayerBacking* renderViewBacking = m_renderView->layer()->backing();
@@ -1734,7 +1763,7 @@ bool RenderLayerCompositor::canBeComposited(const RenderLayer* layer) const
     return m_hasAcceleratedCompositing && layer->isSelfPaintingLayer() && layer->renderer()->flowThreadState() == RenderObject::NotInsideFlowThread;
 }
 
-bool RenderLayerCompositor::requiresOwnBackingStore(const RenderLayer* layer, const RenderLayer* compositingAncestorLayer) const
+bool RenderLayerCompositor::requiresOwnBackingStore(const RenderLayer* layer, const RenderLayer* compositingAncestorLayer, const IntRect& layerCompositedBoundsInAncestor, const IntRect& ancestorCompositedBounds) const
 {
     RenderObject* renderer = layer->renderer();
     if (compositingAncestorLayer
@@ -1770,6 +1799,10 @@ bool RenderLayerCompositor::requiresOwnBackingStore(const RenderLayer* layer, co
             || reason == RenderLayer::IndirectCompositingForGraphicalEffect
             || reason == RenderLayer::IndirectCompositingForPreserve3D; // preserve-3d has to create backing store to ensure that 3d-transformed elements intersect.
     }
+
+    if (!ancestorCompositedBounds.contains(layerCompositedBoundsInAncestor))
+        return true;
+
     return false;
 }
 
@@ -2520,8 +2553,13 @@ GraphicsLayer* RenderLayerCompositor::updateLayerForHeader(bool wantsLayer)
         m_renderView->frameView()->addPaintPendingMilestones(DidFirstFlushForHeaderLayer);
     }
 
-    m_layerForHeader->setPosition(FloatPoint(0, 0));
+    m_layerForHeader->setPosition(FloatPoint());
+    m_layerForHeader->setAnchorPoint(FloatPoint3D());
     m_layerForHeader->setSize(FloatSize(m_renderView->frameView()->visibleWidth(), m_renderView->frameView()->headerHeight()));
+
+    if (ScrollingCoordinator* scrollingCoordinator = this->scrollingCoordinator())
+        scrollingCoordinator->frameViewRootLayerDidChange(m_renderView->frameView());
+
     return m_layerForHeader.get();
 }
 
@@ -2547,7 +2585,12 @@ GraphicsLayer* RenderLayerCompositor::updateLayerForFooter(bool wantsLayer)
     }
 
     m_layerForFooter->setPosition(FloatPoint(0, m_rootContentLayer->size().height() + m_renderView->frameView()->headerHeight()));
+    m_layerForFooter->setAnchorPoint(FloatPoint3D());
     m_layerForFooter->setSize(FloatSize(m_renderView->frameView()->visibleWidth(), m_renderView->frameView()->footerHeight()));
+
+    if (ScrollingCoordinator* scrollingCoordinator = this->scrollingCoordinator())
+        scrollingCoordinator->frameViewRootLayerDidChange(m_renderView->frameView());
+
     return m_layerForFooter.get();
 }
 

@@ -27,13 +27,10 @@ list(APPEND WebCore_SOURCES
 
     rendering/RenderThemeWince.cpp
 
-    plugins/PluginDatabase.cpp
-
     plugins/win/PluginDatabaseWin.cpp
 
     platform/Cursor.cpp
     platform/LocalizedStrings.cpp
-    platform/PlatformStrategies.cpp
     platform/ScrollAnimatorNone.cpp
 
     platform/win/BitmapInfo.cpp
@@ -119,19 +116,10 @@ list(APPEND WebCore_LIBRARIES
     wininet
 )
 
-
 if (ENABLE_NETSCAPE_PLUGIN_API)
     list(APPEND WebCore_SOURCES
         plugins/win/PluginMessageThrottlerWin.cpp
         plugins/win/PluginPackageWin.cpp
         plugins/win/PluginViewWin.cpp
-        plugins/PluginPackage.cpp
-        plugins/PluginView.cpp
-    )
-else ()
-    list(APPEND WebCore_SOURCES
-        plugins/PluginPackage.cpp
-        plugins/PluginPackageNone.cpp
-        plugins/PluginViewNone.cpp
     )
 endif ()

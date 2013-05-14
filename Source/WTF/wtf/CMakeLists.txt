@@ -11,7 +11,6 @@ set(WTF_HEADERS
     BumpPointerAllocator.h
     ByteOrder.h
     Compiler.h
-    Complex.h
     CryptographicallyRandomNumber.h
     CurrentTime.h
     DateMath.h
@@ -45,7 +44,6 @@ set(WTF_HEADERS
     Locker.h
     MD5.h
     MainThread.h
-    MallocZoneSupport.h
     MathExtras.h
     MediaTime.h
     MessageQueue.h
@@ -107,7 +105,6 @@ set(WTF_HEADERS
     Threading.h
     ThreadingPrimitives.h
     TypeTraits.h
-    UnusedParam.h
     VMTags.h
     ValueCheck.h
     Vector.h

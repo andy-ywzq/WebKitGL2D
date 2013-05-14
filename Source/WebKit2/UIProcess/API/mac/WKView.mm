@@ -126,7 +126,7 @@ using namespace WebCore;
 namespace WebKit {
 
 typedef id <NSValidatedUserInterfaceItem> ValidationItem;
-typedef Vector<RetainPtr<ValidationItem> > ValidationVector;
+typedef Vector<RetainPtr<ValidationItem>> ValidationVector;
 typedef HashMap<String, ValidationVector> ValidationMap;
 
 }
@@ -3394,7 +3394,12 @@ static NSString *pathWithUniqueFilenameForPath(NSString *path)
 - (NSWindow*)createFullScreenWindow
 {
 #if ENABLE(FULLSCREEN_API)
-    return [[[WebCoreFullScreenWindow alloc] initWithContentRect:[[NSScreen mainScreen] frame] styleMask:NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:NO] autorelease];
+#if __MAC_OS_X_VERSION_MIN_REQUIRED <= 1080
+    NSRect contentRect = NSZeroRect;
+#else
+    NSRect contentRect = [[NSScreen mainScreen] frame];
+#endif
+    return [[[WebCoreFullScreenWindow alloc] initWithContentRect:contentRect styleMask:NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:NO] autorelease];
 #else
     return nil;
 #endif

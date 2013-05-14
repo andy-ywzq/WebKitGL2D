@@ -368,6 +368,7 @@ fast/css/variables/use-before-defined.html
 fast/css/variables/var-inside-box-reflect.html
 fast/css/variables/var-inside-pair.html
 fast/css/variables/var-inside-quad.html
+fast/css/variables/var-inside-shape.html
 fast/css/variables/var-inside-shorthand.html
 fast/css/variables/variable-chain.html
 inspector/styles/variables/css-variables.html
@@ -1508,10 +1509,6 @@ fast/css/line-after-floating-div.html
 # https://bugs.webkit.org/show_bug.cgi?id=67128
 fast/css/square-button-appearance.html
 
-# [Qt] REGRESSION (r148975) shape-inside-percentage.html and shape-inside-overflow-fixed-dimensions.html are failing after r148975
-# https://bugs.webkit.org/show_bug.cgi?id=115053
-fast/exclusions/shape-inside/shape-inside-overflow-fixed-dimensions.html
-fast/exclusions/shape-inside/shape-inside-percentage.html
 fast/exclusions/shape-inside/shape-inside-polygon-layout.html
 
 # REGRESSION(r149457): some fast/exclusions tests are failing
@@ -2341,12 +2338,6 @@ fast/regions/overflow-in-uniform-regions.html
 webkit.org/b/114807 fast/gradients/css3-color-stop-invalid.html [ Skip ]
 webkit.org/b/115512 compositing/layer-creation/deep-tree.html [ Skip ]
 
-# [Qt][EFL][GTK] Failing CSS region tests
-webkit.org/b/115785 fast/regions/webkit-flow-double-pagination-float-push.html [ Skip ]
-webkit.org/b/115785 fast/regions/webkit-flow-float-pushed-to-last-region.html [ Skip ]
-webkit.org/b/115785 fast/regions/webkit-flow-float-unable-to-push.html [ Skip ]
-webkit.org/b/115785 fast/regions/webkit-flow-floats-inside-regions-bounds.html [ Skip ]
-
 # Failing fast/css/sticky/ tests with minor pixel differences
 # https://bugs.webkit.org/show_bug.cgi?id=92080
 fast/css/sticky/inline-sticky-abspos-child.html
@@ -2651,6 +2642,7 @@ webkit.org/b/103769 media/track/track-in-band-cues-added-once.html [ Skip ]
 webkit.org/b/103769 media/track/track-in-band-style.html [ Skip ]
 webkit.org/b/103769 media/track/track-in-band-legacy-api.html [ Skip ]
 webkit.org/b/103769 media/track/track-forced-subtitles-in-band.html [ Skip ]
+webkit.org/b/103769 media/track/track-in-band-mode.html [ Skip ]
 
 # [Qt] new http/tests/xmlhttprequest/post-blob-content-type-sync.html and ~async.html fail since introduced in r136893
 # https://bugs.webkit.org/show_bug.cgi?id=104352
@@ -2764,3 +2756,22 @@ fast/sub-pixel/transformed-iframe-copy-on-scroll.html [ Missing ]
 
 # Reference test fast/sub-pixel/float-wrap-zoom.html fails
 webkit.org/b/114800 fast/sub-pixel/float-wrap-zoom.html [ ImageOnlyFailure ]
+
+# Needs rebaseline after bug https://bugs.webkit.org/show_bug.cgi?id=52185
+webkit.org/b/52185 fast/table/007.html [ Failure Rebaseline ]
+webkit.org/b/52185 fast/table/colspanMinWidth.html [ Failure Rebaseline ]
+webkit.org/b/52185 fast/table/colspanMinWidth-vertical.html [ Failure Rebaseline ]
+webkit.org/b/52185 fast/table/spanOverlapRepaint.html [ Failure Rebaseline ]
+webkit.org/b/52185 tables/mozilla/bugs/bug13169.html [ Failure Rebaseline ]
+webkit.org/b/52185 tables/mozilla/bugs/bug133756-1.html [ Failure Rebaseline ]
+webkit.org/b/52185 tables/mozilla/bugs/bug133756-2.html [ Failure Rebaseline ]
+webkit.org/b/52185 tables/mozilla/bugs/bug17138.html [ Failure Rebaseline ]
+webkit.org/b/52185 tables/mozilla/bugs/bug6304.html [ Failure Rebaseline ]
+webkit.org/b/52185 tables/mozilla/bugs/bug73321.html [ Failure Rebaseline ]
+webkit.org/b/52185 tables/mozilla/bugs/bug86708.html [ ImageOnlyFailure Rebaseline ]
+webkit.org/b/52185 tables/mozilla/bugs/bug8858.html [ Failure Rebaseline ]
+webkit.org/b/52185 tables/mozilla/core/cell_heights.html [ Failure Rebaseline ]
+webkit.org/b/52185 tables/mozilla_expected_failures/bugs/bug131020-3.html [ Failure Rebaseline ]
+webkit.org/b/52185 tables/mozilla_expected_failures/bugs/bug65372.html [ Failure Rebaseline ]
+webkit.org/b/52185 accessibility/table-cells.html [ Failure Rebaseline ]
+webkit.org/b/52185 accessibility/table-attributes.html [ Failure Rebaseline ]

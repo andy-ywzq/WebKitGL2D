@@ -192,7 +192,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="$(ConfigurationBuildDir)\obj32\$(ProjectName)\DerivedSources\JSBarInfo.cpp">
+    <ClCompile Include="$(ConfigurationBuildDir)\obj32\$(ProjectName)\DerivedSources\JSBarProp.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|Win32'">true</ExcludedFromBuild>
@@ -3897,7 +3897,7 @@
     <ClCompile Include="..\page\animation\AnimationBase.cpp" />
     <ClCompile Include="..\page\animation\AnimationController.cpp" />
     <ClCompile Include="..\page\AutoscrollController.cpp" />
-    <ClCompile Include="..\page\BarInfo.cpp" />
+    <ClCompile Include="..\page\BarProp.cpp" />
     <ClCompile Include="..\page\CaptionUserPreferences.cpp" />
     <ClCompile Include="..\page\Chrome.cpp" />
     <ClCompile Include="..\page\animation\CompositeAnimation.cpp" />
@@ -4089,7 +4089,6 @@
     <ClCompile Include="..\platform\Decimal.cpp" />
     <ClCompile Include="..\platform\DragData.cpp" />
     <ClCompile Include="..\platform\DragImage.cpp" />
-    <ClCompile Include="..\platform\EventTracer.cpp" />
     <ClCompile Include="..\platform\FileChooser.cpp" />
     <ClCompile Include="..\platform\FileIconLoader.cpp" />
     <ClCompile Include="..\platform\FileStream.cpp" />
@@ -4109,7 +4108,6 @@
     <ClCompile Include="..\platform\LocalizedStrings.cpp" />
     <ClCompile Include="..\platform\Logging.cpp" />
     <ClCompile Include="..\platform\MemoryPressureHandler.cpp" />
-    <ClCompile Include="..\platform\MemoryUsageSupport.cpp" />
     <ClCompile Include="..\platform\MIMETypeRegistry.cpp" />
     <ClCompile Include="..\platform\NotImplemented.cpp" />
     <ClCompile Include="..\platform\PlatformEvent.cpp" />
@@ -9057,7 +9055,6 @@
     <ClCompile Include="..\html\shadow\MediaControlsApple.cpp" />
     <ClCompile Include="..\html\shadow\MeterShadowElement.cpp" />
     <ClCompile Include="..\html\shadow\ProgressShadowElement.cpp" />
-    <ClCompile Include="..\html\shadow\SelectRuleFeatureSet.cpp" />
     <ClCompile Include="..\html\shadow\SliderThumbElement.cpp" />
     <ClCompile Include="..\html\shadow\SpinButtonElement.cpp" />
     <ClCompile Include="..\html\shadow\TextControlInnerElements.cpp" />
@@ -10650,7 +10647,7 @@
     <ClInclude Include="$(ConfigurationBuildDir)\obj32\$(ProjectName)\DerivedSources\InspectorTypeBuilder.h" />
     <ClInclude Include="$(ConfigurationBuildDir)\obj32\WebCore\DerivedSources\JSAbstractWorker.h" />
     <ClInclude Include="$(ConfigurationBuildDir)\obj32\$(ProjectName)\DerivedSources\JSAttr.h" />
-    <ClInclude Include="$(ConfigurationBuildDir)\obj32\$(ProjectName)\DerivedSources\JSBarInfo.h" />
+    <ClInclude Include="$(ConfigurationBuildDir)\obj32\$(ProjectName)\DerivedSources\JSBarProp.h" />
     <ClInclude Include="$(ConfigurationBuildDir)\obj32\$(ProjectName)\DerivedSources\JSBeforeLoadEvent.h" />
     <ClInclude Include="$(ConfigurationBuildDir)\obj32\$(ProjectName)\DerivedSources\JSBlob.h" />
     <ClInclude Include="$(ConfigurationBuildDir)\obj32\$(ProjectName)\DerivedSources\JSCanvasGradient.h" />
@@ -11352,7 +11349,7 @@
     <ClInclude Include="..\page\animation\AnimationController.h" />
     <ClInclude Include="..\page\animation\AnimationControllerPrivate.h" />
     <ClInclude Include="..\page\AutoscrollController.h" />
-    <ClInclude Include="..\page\BarInfo.h" />
+    <ClInclude Include="..\page\BarProp.h" />
     <ClInclude Include="..\page\Chrome.h" />
     <ClInclude Include="..\page\ChromeClient.h" />
     <ClInclude Include="..\page\animation\CompositeAnimation.h" />
@@ -11538,7 +11535,6 @@
     <ClInclude Include="..\platform\DragData.h" />
     <ClInclude Include="..\platform\DragImage.h" />
     <ClInclude Include="..\platform\EventLoop.h" />
-    <ClInclude Include="..\platform\EventTracer.h" />
     <ClInclude Include="..\platform\FileChooser.h" />
     <ClInclude Include="..\platform\FileIconLoader.h" />
     <ClInclude Include="..\platform\FileMetadata.h" />
@@ -11566,7 +11562,6 @@
     <ClInclude Include="..\platform\LocalizedStrings.h" />
     <ClInclude Include="..\platform\Logging.h" />
     <ClInclude Include="..\platform\MemoryPressureHandler.h" />
-    <ClInclude Include="..\platform\MemoryUsageSupport.h" />
     <ClInclude Include="..\platform\MainThreadTask.h" />
     <ClInclude Include="..\platform\MIMETypeRegistry.h" />
     <ClInclude Include="..\platform\NotImplemented.h" />
@@ -11671,7 +11666,6 @@
     <ClInclude Include="..\platform\graphics\FontSmoothingMode.h" />
     <ClInclude Include="..\platform\graphics\FontTraitsMask.h" />
     <ClInclude Include="..\platform\graphics\GeneratedImage.h" />
-    <ClInclude Include="..\platform\graphics\Generator.h" />
     <ClInclude Include="..\platform\graphics\Glyph.h" />
     <ClInclude Include="..\platform\graphics\GlyphBuffer.h" />
     <ClInclude Include="..\platform\graphics\GlyphMetricsMap.h" />
@@ -12874,7 +12868,6 @@
     <ClInclude Include="..\html\shadow\MediaControlsApple.h" />
     <ClInclude Include="..\html\shadow\MeterShadowElement.h" />
     <ClInclude Include="..\html\shadow\ProgressShadowElement.h" />
-    <ClInclude Include="..\html\shadow\SelectRuleFeatureSet.h" />
     <ClInclude Include="..\html\shadow\SliderThumbElement.h" />
     <ClInclude Include="..\html\shadow\SpinButtonElement.h" />
     <ClInclude Include="..\html\shadow\TextControlInnerElements.h" />
@@ -12945,7 +12938,6 @@
     <ClInclude Include="..\bindings\js\ScriptFunctionCall.h" />
     <ClInclude Include="..\bindings\js\ScriptGCEvent.h" />
     <ClInclude Include="..\bindings\js\ScriptHeapSnapshot.h" />
-    <ClInclude Include="..\bindings\js\ScriptInstance.h" />
     <ClInclude Include="..\bindings\js\ScriptObject.h" />
     <ClInclude Include="..\bindings\js\ScriptProfile.h" />
     <ClInclude Include="..\bindings\js\ScriptProfileNode.h" />
@@ -13457,8 +13449,6 @@
     <None Include="..\inspector\front-end\MetricsSidebarPane.js" />
     <None Include="..\inspector\front-end\NativeBreakpointsSidebarPane.js" />
     <None Include="..\inspector\front-end\NativeHeapGraph.js" />
-    <None Include="..\inspector\front-end\nativeMemoryProfiler.css" />
-    <None Include="..\inspector\front-end\NativeMemorySnapshotView.js" />
     <None Include="..\inspector\front-end\NavigatorOverlayController.js" />
     <None Include="..\inspector\front-end\navigatorView.css" />
     <None Include="..\inspector\front-end\NavigatorView.js" />

@@ -39,7 +39,7 @@ namespace WebCore {
 class ElementShadow;
 class ScopeContentDistribution;
 
-class ShadowRoot : public DocumentFragment, public TreeScope {
+class ShadowRoot FINAL : public DocumentFragment, public TreeScope {
 public:
     // FIXME: We will support multiple shadow subtrees, however current implementation does not work well
     // if a shadow root is dynamically created. So we prohibit multiple shadow subtrees
@@ -74,9 +74,6 @@ public:
 
     virtual void attach();
 
-    virtual InsertionNotificationRequest insertedInto(ContainerNode*) OVERRIDE;
-    virtual void removedFrom(ContainerNode*) OVERRIDE;
-
     virtual void registerScopedHTMLStyleChild() OVERRIDE;
     virtual void unregisterScopedHTMLStyleChild() OVERRIDE;
 
@@ -106,7 +103,6 @@ private:
     unsigned m_applyAuthorStyles : 1;
     unsigned m_resetStyleInheritance : 1;
     unsigned m_type : 1;
-    unsigned m_registeredWithParentShadowRoot : 1;
 };
 
 inline Element* ShadowRoot::activeElement() const

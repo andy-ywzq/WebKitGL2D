@@ -1,3 +1,596 @@
+2013-05-13  Alvaro Lopez Ortega  <alvaro@alobbs.com>
+
+        Nightly build's jsc doesn't work without DYLD_FRAMEWORK...
+        https://bugs.webkit.org/show_bug.cgi?id=79065
+
+        Reviewed by Darin Adler.
+
+        Fixes the build process so the depencencies of the jsc binary are
+        modified before its copied to its target directory. In this way
+        jsc should always use relative reference to the JavaScriptCore
+        libraries.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj: Fixes the commands in
+        the "Copy Into Framework" target.
+
+2013-05-13  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        Objective-C API: scanExternalObjectGraph should not create new JSVirtualMachine wrappers
+        https://bugs.webkit.org/show_bug.cgi?id=116074
+
+        If scanExternalObjectGraph creates a new JSVirtualMachine wrapper during collection, when the 
+        scanExternalObjectGraph call finishes and the autorelease pool is drained we will dealloc the 
+        JSVirtualMachine which will cause us to try to take the API lock for the corresponding VM. 
+        If this happens on a GC thread other than the "main" thread, we will deadlock. The solution 
+        is to just check the VM cache, and if there is no JSVirtualMachine wrapper, return early.
+
+        Reviewed by Darin Adler.
+
+        * API/JSVirtualMachine.mm:
+        (scanExternalObjectGraph):
+
+2013-05-13  Benjamin Poulain  <benjamin@webkit.org>
+
+        Improve stringProtoFuncLastIndexOf for the prefix case
+        https://bugs.webkit.org/show_bug.cgi?id=115952
+
+        Reviewed by Geoffrey Garen.
+
+        * runtime/StringPrototype.cpp:
+        (JSC::stringProtoFuncLastIndexOf):
+        Use the optimized string search when possible.
+
+        On Joseph Pecoraro's tests, this gives a ~30% speed improvement.
+
+2013-05-13  Zalan Bujtas  <zalan@apple.com>
+
+        WebProcess consuming very high CPU on linkedin.com
+        https://bugs.webkit.org/show_bug.cgi?id=115601
+
+        Reviewed by Andreas Kling.
+
+        Disable WEB_TIMING_MINIMAL.
+        Turn off window.performance and performance.now(). Some JS frameworks expect
+        additional Web Timing APIs, when performance.now() is available.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-05-12  Anders Carlsson  <andersca@apple.com>
+
+        Stop including UnusedParam.h
+        https://bugs.webkit.org/show_bug.cgi?id=116003
+
+        Reviewed by Sam Weinig.
+
+        UnusedParam.h is empty now so there's no need to include it anymore.
+
+        * API/APICast.h:
+        * API/tests/JSNode.c:
+        * API/tests/JSNodeList.c:
+        * API/tests/minidom.c:
+        * API/tests/testapi.c:
+        * assembler/AbstractMacroAssembler.h:
+        * assembler/MacroAssemblerCodeRef.h:
+        * bytecode/CodeBlock.cpp:
+        * heap/HandleStack.h:
+        * interpreter/JSStackInlines.h:
+        * jit/CompactJITCodeMap.h:
+        * jit/ExecutableAllocator.h:
+        * parser/SourceProvider.h:
+        * runtime/DatePrototype.cpp:
+        * runtime/JSNotAnObject.cpp:
+        * runtime/JSSegmentedVariableObject.h:
+        * runtime/JSVariableObject.h:
+        * runtime/Options.cpp:
+        * runtime/PropertyOffset.h:
+
+2013-05-11  Martin Robinson  <mrobinson@igalia.com>
+
+        [GTK] Add a basic cmake build for WTF and JavaScriptCore
+        https://bugs.webkit.org/show_bug.cgi?id=115967
+
+        Reviewed by Laszlo Gombos.
+
+        * PlatformGTK.cmake: Added.
+        * shell/PlatformGTK.cmake: Added.
+
+2013-05-10  Laszlo Gombos  <l.gombos@samsung.com>
+
+        Remove USE(OS_RANDOMNESS)
+        https://bugs.webkit.org/show_bug.cgi?id=108095
+
+        Reviewed by Darin Adler.
+
+        Remove the USE(OS_RANDOMNESS) guard as it is turned on for all
+        ports.
+
+        * jit/JIT.cpp:
+        (JSC::JIT::JIT):
+
+2013-05-10  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        Rename StructureCheckHoistingPhase to TypeCheckHoistingPhase
+        https://bugs.webkit.org/show_bug.cgi?id=115938
+
+        We're going to add some more types of check hoisting soon, so let's have the right name here.
+
+        Rubber stamped by Filip Pizlo.
+        
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * Target.pri:
+        * dfg/DFGDriver.cpp:
+        (JSC::DFG::compile):
+        * dfg/DFGStructureCheckHoistingPhase.cpp: Removed.
+        * dfg/DFGStructureCheckHoistingPhase.h: Removed.
+        * dfg/DFGTypeCheckHoistingPhase.cpp: Copied from Source/JavaScriptCore/dfg/DFGStructureCheckHoistingPhase.cpp.
+        (JSC::DFG::TypeCheckHoistingPhase::TypeCheckHoistingPhase):
+        (JSC::DFG::performTypeCheckHoisting):
+        * dfg/DFGTypeCheckHoistingPhase.h: Copied from Source/JavaScriptCore/dfg/DFGStructureCheckHoistingPhase.h.
+
+2013-05-09  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Unreviewed build fix after r149836.
+
+        It broke at least EFL and GTK builds. Move new static members initialization
+        outside the class. Those need to have a definition outside the class because
+        their address is used (e.g. CodeCacheMap::nonGlobalWorkingSetMaxEntries).
+
+        * runtime/CodeCache.cpp:
+        (JSC):
+        * runtime/CodeCache.h:
+        (CodeCacheMap):
+
+2013-05-08  Oliver Hunt  <oliver@apple.com>
+
+        Code cache stores bogus var references for functions in eval code
+        https://bugs.webkit.org/show_bug.cgi?id=115747
+
+        Reviewed by Mark Hahnenberg.
+
+        Non-global eval now uses a per-CodeBlock cache, and only use it
+        when we're at the top of a function's scope.  This means that we
+        will no longer cache the parsing of a single string across
+        multiple functions, and we won't cache when we're nested inside
+        constructs like |with| and |catch| where previously we would, which
+        is good because caching in those cases is unsound.
+
+        * bytecode/EvalCodeCache.h:
+        (JSC):
+        (JSC::EvalCodeCache::getSlow):
+        (JSC::EvalCodeCache::get):
+        * bytecode/UnlinkedCodeBlock.h:
+        (JSC::UnlinkedCodeBlock::codeCacheForEval):
+        (UnlinkedCodeBlock):
+        (RareData):
+        * debugger/Debugger.cpp:
+        (JSC::evaluateInGlobalCallFrame):
+        * debugger/DebuggerCallFrame.cpp:
+        (JSC::DebuggerCallFrame::evaluate):
+        * interpreter/Interpreter.cpp:
+        (JSC::eval):
+        * runtime/CodeCache.cpp:
+        (JSC::CodeCache::CodeCache):
+        (JSC::CodeCache::generateBytecode):
+        (JSC):
+        (JSC::CodeCache::getCodeBlock):
+        * runtime/CodeCache.h:
+        (JSC::CodeCacheMap::CodeCacheMap):
+        (CodeCacheMap):
+        (JSC::CodeCacheMap::canPruneQuickly):
+        (JSC::CodeCacheMap::prune):
+        (JSC::CodeCache::create):
+        (CodeCache):
+        * runtime/Executable.cpp:
+        (JSC::EvalExecutable::EvalExecutable):
+        (JSC::EvalExecutable::compileInternal):
+        * runtime/Executable.h:
+        (JSC::EvalExecutable::create):
+        (EvalExecutable):
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::createEvalCodeBlock):
+        * runtime/JSGlobalObject.h:
+        (JSGlobalObject):
+        * runtime/JSGlobalObjectFunctions.cpp:
+        (JSC::globalFuncEval):
+        * runtime/VM.cpp:
+        (JSC::VM::VM):
+        * runtime/VM.h:
+        (VM):
+
+2013-05-08  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        DFGArrayMode::fromObserved is too liberal when it sees different Array and NonArray shapes
+        https://bugs.webkit.org/show_bug.cgi?id=115805
+
+        Reviewed by Geoffrey Garen.
+
+        It checks the observed ArrayModes to see if we have seen any ArrayWith* first. If so, it assumes it's 
+        an Array::Array, even if we've also observed any NonArrayWith* in the ArrayProfile. This leads to the 
+        code generated by jumpSlowForUnwantedArrayMode to check the indexing type against (shape | IsArray) 
+        instead of just shape, which can cause us to exit a lot in the case that we saw a NonArray.
+
+        To fix this we need to add a case that checks for both ArrayWith* and NonArrayWith* cases first, which 
+        should then use Array::PossiblyArray, then do the checks we were already doing.
+
+        * bytecode/ArrayProfile.h:
+        (JSC::hasSeenArray):
+        (JSC::hasSeenNonArray):
+        * dfg/DFGArrayMode.cpp:
+        (JSC::DFG::ArrayMode::fromObserved):
+
+2013-05-09  Joe Mason  <jmason@blackberry.com>
+
+        [BlackBerry] Set up logging buffer on start of jsc executable
+        https://bugs.webkit.org/show_bug.cgi?id=114688
+
+        Reviewed by Rob Buis.
+
+        Internal PR: 322715
+        Internally Reviewed By: Jeff Rogers
+
+        * jsc.cpp:
+        (main): call BB::Platform::setupApplicationLogging
+
+2013-05-08  Michael Saboff  <msaboff@apple.com>
+
+        JSC: There should be a disassembler for ARM Thumb 2
+        https://bugs.webkit.org/show_bug.cgi?id=115827
+
+        Reviewed by Filip Pizlo.
+
+        Added a new disassembler for ARMv7 Thumb2 instructions for use by the JSC debugging
+        and profiling code.  The opcode coverage is currently not complete.  It covers all
+        of the integer instructions JSC currently emits, but only a limited number of
+        floating point opcodes.  Currently that is just the 64 bit vmov and vmsr instructions.
+
+        The disassembler is structured as a base opcode class ARMv7DOpcode with sub-classes
+        for each instruction group.  There is a public format method that does the bulk of
+        the disassembly work.  There are two broad sub-classes, ARMv7D16BitOpcode and
+        ARMv7D32BitOpcode, for the 16 bit and 32 bit opcodes.  There are sub-classes under
+        those two classes for individual and related groups of opcodes.  Instructions are
+        "dispatched" to the right subclass via two arrays of linked lists in the inner classes
+        OpcodeGroup.  There is one such inner class for each ARMv7D16BitOpcode and ARMv7D32BitOpcode.
+        Each OpcodeGroup has a mask and a pattern that it applies to the instruction to determine
+        that it matches a particular group.  OpcodeGroup uses a static method to reinterpret_cast
+        the Opcode object to the right base class for the instruction group for formatting.
+        The cast eliminates the need of allocating an object for each decoded instruction.
+        Unknown instructions are formatted as ".word 1234" or ".long 12345678" depending whether
+        the instruction is 16 or 32 bit.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * disassembler/ARMv7: Added.
+        * disassembler/ARMv7/ARMv7DOpcode.cpp: Added.
+        (ARMv7Disassembler):
+        (OpcodeGroupInitializer):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::init):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::startITBlock):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::saveITConditionAt):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::fetchOpcode):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::disassemble):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::bufferPrintf):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::appendInstructionName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::appendRegisterName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::appendRegisterList):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::appendFPRegisterName):
+        (JSC::ARMv7Disassembler::ARMv7D16BitOpcode::init):
+        (JSC::ARMv7Disassembler::ARMv7D16BitOpcode::doDisassemble):
+        (JSC::ARMv7Disassembler::ARMv7D16BitOpcode::defaultFormat):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddRegisterT2::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSPPlusImmediate::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSubtractT1::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSubtractImmediate3::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSubtractImmediate8::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeBranchConditionalT1::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeBranchExchangeT1::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeBranchT2::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeCompareImmediateT1::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeCompareRegisterT1::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeCompareRegisterT2::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingRegisterT1::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeGeneratePCRelativeAddress::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadFromLiteralPool::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterImmediate::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterOffsetT1::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterSPRelative::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLogicalImmediateT1::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscAddSubSP::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscBreakpointT1::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscByteHalfwordOps::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscCompareAndBranch::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscHint16::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscIfThenT1::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscPushPop::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMoveImmediateT1::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMoveRegisterT1::format):
+        (JSC::ARMv7Disassembler::ARMv7D32BitOpcode::init):
+        (JSC::ARMv7Disassembler::ARMv7D32BitOpcode::doDisassemble):
+        (JSC::ARMv7Disassembler::ARMv7D32BitOpcode::defaultFormat):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeConditionalBranchT3::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeBranchOrBranchLink::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingModifiedImmediate::appendModifiedImmediate):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingModifiedImmediate::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingShiftedReg::appendImmShift):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingShiftedReg::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeFPTransfer::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeFPTransfer::appendFPRegister):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingRegShift::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingRegExtend::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingRegParallel::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingRegMisc::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeHint32::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadRegister::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadSignedImmediate::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadUnsignedImmediate::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLongMultipleDivide::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeUnmodifiedImmediate::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataPushPopSingle::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeStoreSingleImmediate12::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeStoreSingleImmediate8::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeStoreSingleRegister::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVMOVDoublePrecision::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVMOVSinglePrecision::format):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVMSR::format):
+        * disassembler/ARMv7/ARMv7DOpcode.h: Added.
+        (ARMv7Disassembler):
+        (ARMv7DOpcode):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::ARMv7DOpcode):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::is32BitInstruction):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::isFPInstruction):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::conditionName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::shiftName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::inITBlock):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::startingITBlock):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::endITBlock):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::appendInstructionNameNoITBlock):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::appendSeparator):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::appendCharacter):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::appendString):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::appendShiftType):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::appendSignedImmediate):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::appendUnsignedImmediate):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::appendPCRelativeOffset):
+        (JSC::ARMv7Disassembler::ARMv7DOpcode::appendShiftAmount):
+        (ARMv7D16BitOpcode):
+        (OpcodeGroup):
+        (JSC::ARMv7Disassembler::ARMv7D16BitOpcode::OpcodeGroup::OpcodeGroup):
+        (JSC::ARMv7Disassembler::ARMv7D16BitOpcode::OpcodeGroup::setNext):
+        (JSC::ARMv7Disassembler::ARMv7D16BitOpcode::OpcodeGroup::next):
+        (JSC::ARMv7Disassembler::ARMv7D16BitOpcode::OpcodeGroup::matches):
+        (JSC::ARMv7Disassembler::ARMv7D16BitOpcode::OpcodeGroup::format):
+        (JSC::ARMv7Disassembler::ARMv7D16BitOpcode::rm):
+        (JSC::ARMv7Disassembler::ARMv7D16BitOpcode::rd):
+        (JSC::ARMv7Disassembler::ARMv7D16BitOpcode::opcodeGroupNumber):
+        (ARMv7DOpcodeAddRegisterT2):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddRegisterT2::rdn):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddRegisterT2::rm):
+        (ARMv7DOpcodeAddSPPlusImmediate):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSPPlusImmediate::rd):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSPPlusImmediate::immediate8):
+        (ARMv7DOpcodeAddSubtract):
+        (ARMv7DOpcodeAddSubtractT1):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSubtractT1::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSubtractT1::op):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSubtractT1::rm):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSubtractT1::rn):
+        (ARMv7DOpcodeAddSubtractImmediate3):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSubtractImmediate3::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSubtractImmediate3::op):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSubtractImmediate3::immediate3):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSubtractImmediate3::rn):
+        (ARMv7DOpcodeAddSubtractImmediate8):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSubtractImmediate8::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSubtractImmediate8::op):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSubtractImmediate8::rdn):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeAddSubtractImmediate8::immediate8):
+        (ARMv7DOpcodeBranchConditionalT1):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeBranchConditionalT1::condition):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeBranchConditionalT1::offset):
+        (ARMv7DOpcodeBranchExchangeT1):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeBranchExchangeT1::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeBranchExchangeT1::rm):
+        (ARMv7DOpcodeBranchT2):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeBranchT2::immediate11):
+        (ARMv7DOpcodeCompareImmediateT1):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeCompareImmediateT1::rn):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeCompareImmediateT1::immediate8):
+        (ARMv7DOpcodeCompareRegisterT1):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeCompareRegisterT1::rn):
+        (ARMv7DOpcodeCompareRegisterT2):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeCompareRegisterT2::rn):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeCompareRegisterT2::rm):
+        (ARMv7DOpcodeDataProcessingRegisterT1):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingRegisterT1::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingRegisterT1::op):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingRegisterT1::rm):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingRegisterT1::rdn):
+        (ARMv7DOpcodeGeneratePCRelativeAddress):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeGeneratePCRelativeAddress::rd):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeGeneratePCRelativeAddress::immediate8):
+        (ARMv7DOpcodeLoadFromLiteralPool):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadFromLiteralPool::rt):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadFromLiteralPool::immediate8):
+        (ARMv7DOpcodeLoadStoreRegisterImmediate):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterImmediate::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterImmediate::op):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterImmediate::immediate5):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterImmediate::rn):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterImmediate::rt):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterImmediate::scale):
+        (ARMv7DOpcodeLoadStoreRegisterImmediateWordAndByte):
+        (ARMv7DOpcodeLoadStoreRegisterImmediateHalfWord):
+        (ARMv7DOpcodeLoadStoreRegisterOffsetT1):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterOffsetT1::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterOffsetT1::opB):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterOffsetT1::rm):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterOffsetT1::rn):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterOffsetT1::rt):
+        (ARMv7DOpcodeLoadStoreRegisterSPRelative):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterSPRelative::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterSPRelative::op):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterSPRelative::rt):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadStoreRegisterSPRelative::immediate8):
+        (ARMv7DOpcodeLogicalImmediateT1):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLogicalImmediateT1::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLogicalImmediateT1::op):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLogicalImmediateT1::immediate5):
+        (ARMv7DOpcodeMiscAddSubSP):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscAddSubSP::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscAddSubSP::op):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscAddSubSP::immediate7):
+        (ARMv7DOpcodeMiscByteHalfwordOps):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscByteHalfwordOps::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscByteHalfwordOps::op):
+        (ARMv7DOpcodeMiscBreakpointT1):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscBreakpointT1::immediate8):
+        (ARMv7DOpcodeMiscCompareAndBranch):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscCompareAndBranch::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscCompareAndBranch::op):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscCompareAndBranch::immediate6):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscCompareAndBranch::rn):
+        (ARMv7DOpcodeMiscHint16):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscHint16::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscHint16::opA):
+        (ARMv7DOpcodeMiscIfThenT1):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscIfThenT1::firstCondition):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscIfThenT1::mask):
+        (ARMv7DOpcodeMiscPushPop):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscPushPop::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscPushPop::op):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMiscPushPop::registerMask):
+        (ARMv7DOpcodeMoveImmediateT1):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMoveImmediateT1::rd):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMoveImmediateT1::immediate8):
+        (ARMv7DOpcodeMoveRegisterT1):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMoveRegisterT1::rd):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeMoveRegisterT1::rm):
+        (ARMv7D32BitOpcode):
+        (JSC::ARMv7Disassembler::ARMv7D32BitOpcode::OpcodeGroup::OpcodeGroup):
+        (JSC::ARMv7Disassembler::ARMv7D32BitOpcode::OpcodeGroup::setNext):
+        (JSC::ARMv7Disassembler::ARMv7D32BitOpcode::OpcodeGroup::next):
+        (JSC::ARMv7Disassembler::ARMv7D32BitOpcode::OpcodeGroup::matches):
+        (JSC::ARMv7Disassembler::ARMv7D32BitOpcode::OpcodeGroup::format):
+        (JSC::ARMv7Disassembler::ARMv7D32BitOpcode::rd):
+        (JSC::ARMv7Disassembler::ARMv7D32BitOpcode::rm):
+        (JSC::ARMv7Disassembler::ARMv7D32BitOpcode::rn):
+        (JSC::ARMv7Disassembler::ARMv7D32BitOpcode::rt):
+        (JSC::ARMv7Disassembler::ARMv7D32BitOpcode::opcodeGroupNumber):
+        (ARMv7DOpcodeBranchRelative):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeBranchRelative::sBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeBranchRelative::j1):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeBranchRelative::j2):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeBranchRelative::immediate11):
+        (ARMv7DOpcodeConditionalBranchT3):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeConditionalBranchT3::offset):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeConditionalBranchT3::condition):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeConditionalBranchT3::immediate6):
+        (ARMv7DOpcodeBranchOrBranchLink):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeBranchOrBranchLink::offset):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeBranchOrBranchLink::immediate10):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeBranchOrBranchLink::isBL):
+        (ARMv7DOpcodeDataProcessingLogicalAndRithmetic):
+        (ARMv7DOpcodeDataProcessingModifiedImmediate):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingModifiedImmediate::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingModifiedImmediate::op):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingModifiedImmediate::sBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingModifiedImmediate::immediate12):
+        (ARMv7DOpcodeDataProcessingShiftedReg):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingShiftedReg::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingShiftedReg::sBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingShiftedReg::op):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingShiftedReg::immediate5):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingShiftedReg::type):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingShiftedReg::tbBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingShiftedReg::tBit):
+        (ARMv7DOpcodeDataProcessingReg):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingReg::op1):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingReg::op2):
+        (ARMv7DOpcodeDataProcessingRegShift):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingRegShift::opName):
+        (ARMv7DOpcodeDataProcessingRegExtend):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingRegExtend::opExtendName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingRegExtend::opExtendAndAddName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingRegExtend::rotate):
+        (ARMv7DOpcodeDataProcessingRegParallel):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingRegParallel::opName):
+        (ARMv7DOpcodeDataProcessingRegMisc):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataProcessingRegMisc::opName):
+        (ARMv7DOpcodeHint32):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeHint32::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeHint32::isDebugHint):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeHint32::debugOption):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeHint32::op):
+        (ARMv7DOpcodeFPTransfer):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeFPTransfer::opH):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeFPTransfer::opL):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeFPTransfer::rt):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeFPTransfer::opC):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeFPTransfer::opB):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeFPTransfer::vd):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeFPTransfer::vn):
+        (ARMv7DOpcodeDataLoad):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataLoad::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataLoad::op):
+        (ARMv7DOpcodeLoadRegister):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadRegister::immediate2):
+        (ARMv7DOpcodeLoadSignedImmediate):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadSignedImmediate::pBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadSignedImmediate::uBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadSignedImmediate::wBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadSignedImmediate::immediate8):
+        (ARMv7DOpcodeLoadUnsignedImmediate):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLoadUnsignedImmediate::immediate12):
+        (ARMv7DOpcodeLongMultipleDivide):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLongMultipleDivide::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLongMultipleDivide::smlalOpName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLongMultipleDivide::smlaldOpName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLongMultipleDivide::smlsldOpName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLongMultipleDivide::rdLo):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLongMultipleDivide::rdHi):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLongMultipleDivide::op1):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLongMultipleDivide::op2):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLongMultipleDivide::nBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeLongMultipleDivide::mBit):
+        (ARMv7DOpcodeDataPushPopSingle):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataPushPopSingle::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataPushPopSingle::op):
+        (ARMv7DOpcodeDataStoreSingle):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataStoreSingle::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeDataStoreSingle::op):
+        (ARMv7DOpcodeStoreSingleImmediate12):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeStoreSingleImmediate12::immediate12):
+        (ARMv7DOpcodeStoreSingleImmediate8):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeStoreSingleImmediate8::pBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeStoreSingleImmediate8::uBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeStoreSingleImmediate8::wBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeStoreSingleImmediate8::immediate8):
+        (ARMv7DOpcodeStoreSingleRegister):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeStoreSingleRegister::immediate2):
+        (ARMv7DOpcodeUnmodifiedImmediate):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeUnmodifiedImmediate::opName):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeUnmodifiedImmediate::op):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeUnmodifiedImmediate::shBit):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeUnmodifiedImmediate::bitNumOrSatImmediate):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeUnmodifiedImmediate::immediate5):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeUnmodifiedImmediate::immediate12):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeUnmodifiedImmediate::immediate16):
+        (ARMv7DOpcodeVMOVDoublePrecision):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVMOVDoublePrecision::op):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVMOVDoublePrecision::rt2):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVMOVDoublePrecision::rt):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVMOVDoublePrecision::vm):
+        (ARMv7DOpcodeVMOVSinglePrecision):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVMOVSinglePrecision::op):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVMOVSinglePrecision::rt2):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVMOVSinglePrecision::rt):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVMOVSinglePrecision::vm):
+        (ARMv7DOpcodeVMSR):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVMSR::opL):
+        (JSC::ARMv7Disassembler::ARMv7DOpcodeVMSR::rt):
+        * disassembler/ARMv7Disassembler.cpp: Added.
+        (JSC::tryToDisassemble):
+
 2013-05-07  Julien Brianceau  <jbrianceau@nds.com>
 
         Take advantage of pre-decrement and post-increment opcodes for sh4 base JIT.

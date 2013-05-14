@@ -24,7 +24,6 @@
 
 [
     Conditional=CSP_NEXT,
-    OmitConstructor,
     InterfaceName=SecurityPolicy
 ] interface DOMSecurityPolicy {
     readonly attribute boolean allowsEval;

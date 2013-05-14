@@ -96,11 +96,14 @@ class WebPageCompositorPrivate;
 // the viewport position is called the transformedScrollPosition,
 // and the viewport size is called the transformedActualVisibleSize.
 class WebPagePrivate : public PageClientBlackBerry
-                     , public WebSettingsDelegate
+    , public WebSettingsDelegate
 #if USE(ACCELERATED_COMPOSITING)
-                     , public WebCore::GraphicsLayerClient
+    , public WebCore::GraphicsLayerClient
 #endif
-                     , public Platform::GuardedPointerBase {
+#if ENABLE(REQUEST_ANIMATION_FRAME) && !USE(REQUEST_ANIMATION_FRAME_TIMER)
+    , public BlackBerry::Platform::AnimationFrameRateClient
+#endif
+    , public Platform::GuardedPointerBase {
 public:
     enum ViewMode { Desktop, FixedDesktop };
     enum LoadState { None /* on instantiation of page */, Provisional, Committed, Finished, Failed };
@@ -150,7 +153,8 @@ public:
     void zoomAnimationFinished(double finalScale, const WebCore::FloatPoint& finalDocumentScrollPosition, bool shouldConstrainScrollingToContentEdge);
 
     // Called by the backing store as well as the method below.
-    void requestLayoutIfNeeded() const;
+    void updateLayoutAndStyleIfNeededRecursive() const;
+    void layoutIfNeeded() const;
     void setNeedsLayout();
 
     WebCore::IntPoint scrollPosition() const;
@@ -453,6 +457,15 @@ public:
     void updateBackgroundColor(const WebCore::Color& backgroundColor);
     WebCore::Color documentBackgroundColor() const;
 
+#if ENABLE(REQUEST_ANIMATION_FRAME) && !USE(REQUEST_ANIMATION_FRAME_TIMER)
+    // BlackBerry::Platform::AnimationFrameRateClient.
+    virtual void animationFrameChanged();
+    void scheduleAnimation();
+    void startRefreshAnimationClient();
+    void stopRefreshAnimationClient();
+    static void handleServiceScriptedAnimationsOnMainThread(void*);
+#endif
+
     WebPage* m_webPage;
     WebPageClient* m_client;
     WebCore::InspectorClientBlackBerry* m_inspectorClient;
@@ -638,6 +651,12 @@ public:
 
     bool m_didStartAnimations;
     double m_animationStartTime;
+
+#if ENABLE(REQUEST_ANIMATION_FRAME) && !USE(REQUEST_ANIMATION_FRAME_TIMER)
+    Mutex m_animationMutex;
+    bool m_isRunningRefreshAnimationClient;
+    bool m_animationScheduled;
+#endif
 
 protected:
     virtual ~WebPagePrivate();

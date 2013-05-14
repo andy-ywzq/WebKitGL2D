@@ -413,11 +413,12 @@ static HashSet<Document*>* documentsThatNeedStyleRecalc = 0;
 
 uint64_t Document::s_globalTreeVersion = 0;
 
+static const double timeBeforeThrowingAwayStyleResolverAfterLastUseInSeconds = 30;
+
 Document::Document(Frame* frame, const KURL& url, unsigned documentClasses)
     : ContainerNode(0, CreateDocument)
     , TreeScope(this)
-    , m_styleResolverThrowawayTimer(this, &Document::styleResolverThrowawayTimerFired)
-    , m_lastStyleResolverAccessTime(0)
+    , m_styleResolverThrowawayTimer(this, &Document::styleResolverThrowawayTimerFired, timeBeforeThrowingAwayStyleResolverAfterLastUseInSeconds)
     , m_activeParserCount(0)
     , m_contextFeatures(ContextFeatures::defaultSwitch())
     , m_compatibilityMode(NoQuirksMode)
@@ -2000,7 +2001,6 @@ void Document::setIsViewSource(bool isViewSource)
         return;
 
     setSecurityOrigin(SecurityOrigin::createUnique());
-    didUpdateSecurityOrigin();
 }
 
 void Document::createStyleResolver()
@@ -2233,9 +2233,6 @@ void Document::open(Document* ownerDocument)
     implicitOpen();
     if (ScriptableDocumentParser* parser = scriptableDocumentParser())
         parser->setWasCreatedByScript(true);
-
-    if (DOMWindow* domWindow = this->domWindow())
-        domWindow->removeAllEventListeners();
 
     if (m_frame)
         m_frame->loader()->didExplicitOpen();
@@ -2782,7 +2779,10 @@ bool Document::canNavigate(Frame* targetFrame)
 Frame* Document::findUnsafeParentScrollPropagationBoundary()
 {
     Frame* currentFrame = m_frame;
-    Frame* ancestorFrame = currentFrame->tree()->parent(); 
+    if (!currentFrame)
+        return 0;
+
+    Frame* ancestorFrame = currentFrame->tree()->parent();
 
     while (ancestorFrame) {
         if (!ancestorFrame->document()->securityOrigin()->canAccess(securityOrigin()))
@@ -3812,8 +3812,6 @@ void Document::setDomain(const String& newDomain, ExceptionCode& ec)
     // have also assigned to access this page.
     if (equalIgnoringCase(domain(), newDomain)) {
         securityOrigin()->setDomainFromDOM(newDomain);
-        if (m_frame)
-            m_frame->script()->updateSecurityOrigin();
         return;
     }
 
@@ -3841,8 +3839,6 @@ void Document::setDomain(const String& newDomain, ExceptionCode& ec)
     }
 
     securityOrigin()->setDomainFromDOM(newDomain);
-    if (m_frame)
-        m_frame->script()->updateSecurityOrigin();
 }
 
 // http://www.whatwg.org/specs/web-apps/current-work/#dom-document-lastmodified
@@ -4470,18 +4466,10 @@ void Document::sharedObjectPoolClearTimerFired(Timer<Document>*)
 
 void Document::didAccessStyleResolver()
 {
-    static const int timeBeforeThrowingAwayStyleResolverAfterLastUseInSeconds = 60;
-    static const int holdOffTimeBeforeReschedulingTimerInSeconds = 5;
-
-    double currentTime = WTF::currentTime();
-
-    if (currentTime > m_lastStyleResolverAccessTime + holdOffTimeBeforeReschedulingTimerInSeconds) {
-        m_styleResolverThrowawayTimer.startOneShot(timeBeforeThrowingAwayStyleResolverAfterLastUseInSeconds);
-        m_lastStyleResolverAccessTime = currentTime;
-    }
+    m_styleResolverThrowawayTimer.restart();
 }
 
-void Document::styleResolverThrowawayTimerFired(Timer<Document>*)
+void Document::styleResolverThrowawayTimerFired(DeferrableOneShotTimer<Document>*)
 {
     ASSERT(!m_inStyleRecalc);
     clearStyleResolver();
@@ -4666,13 +4654,6 @@ void Document::initContentSecurityPolicy()
     contentSecurityPolicy()->copyStateFrom(m_frame->tree()->parent()->document()->contentSecurityPolicy());
 }
 
-void Document::didUpdateSecurityOrigin()
-{
-    if (!m_frame)
-        return;
-    m_frame->script()->updateSecurityOrigin();
-}
-
 bool Document::isContextThread() const
 {
     return isMainThread();
@@ -4808,7 +4789,7 @@ void Document::addMessage(MessageSource source, MessageLevel level, const String
         page->console()->addMessage(source, level, message, sourceURL, lineNumber, columnNumber, callStack, state, requestIdentifier);
 }
 
-const SecurityOrigin* Document::topOrigin() const
+SecurityOrigin* Document::topOrigin() const
 {
     return topDocument()->securityOrigin();
 }

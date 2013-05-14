@@ -1,3 +1,463 @@
+2013-05-13  Alex Christensen  <achristensen@apple.com>
+
+        Added testRunner.setPrinting.
+        https://bugs.webkit.org/show_bug.cgi?id=42693
+        rdar://problem/8213845
+
+        Reviewed by Darin Adler.
+
+        * WebKitTestRunner/InjectedBundle/Bindings/TestRunner.idl:
+        Added setPrinting JavaScript function.
+        * WebKitTestRunner/InjectedBundle/InjectedBundlePage.cpp:
+        (WTR::InjectedBundlePage::dump):
+        Dump the external representation for printing if setPrinting has been called.
+        * WebKitTestRunner/InjectedBundle/TestRunner.h:
+        (WTR::TestRunner::isPrinting): Added.
+        (WTR::TestRunner::setPrinting): Added.
+        Added and initialized m_isPrinting member boolean.
+
+2013-05-13  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [webkitpy] Make FileInfo.repository_name support SVN version > 1.6
+        https://bugs.webkit.org/show_bug.cgi?id=116016
+
+        Reviewed by Dirk Pranke.
+
+        Same fix as in the upstream style checker, but without hg support.
+        ( http://google-styleguide.googlecode.com/svn/trunk/cpplint/cpplint.py )
+
+        * Scripts/webkitpy/style/checkers/cpp.py:
+        (FileInfo.repository_name):
+
+2013-05-13  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Use WebCore layer archives for TestWebCore, WebKitPluginProcess
+        https://bugs.webkit.org/show_bug.cgi?id=115918
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Due to layer violations and circular dependencies the TestWebCores requires for the libraries containing
+        the built code of the intertwining Platform and WebCore layers to be specified multiple times when linking.
+        This can be avoided by packing the two layers' archives into one big archive, named after the WebCore layer
+        due to no clear boundary between it and the Platform layer. The big archive can then be specified only once
+        when linking, simplifying the code and suppressing all the layering violations so they do not cause build
+        problems.
+
+        First the libtool libraries that the WebCore layer (as required by the TestWebCore) depends on are specified.
+        These are then used as dependencies for the archive creation rule as well as the list from which the archive
+        file paths are constructed and then used to dump the member files from these archives. The member files are
+        then added to the big archive. The latter is added to the list of libraries the TestWebCore requires to
+        successfully link.
+
+        * TestWebKitAPI/GNUmakefile.am:
+
+2013-05-13  Anders Carlsson  <andersca@apple.com>
+
+        Remove UnusedParam.h
+        https://bugs.webkit.org/show_bug.cgi?id=116029
+
+        Reviewed by Andreas Kling.
+
+        Stop including UnusedParam.h.
+
+        * DumpRenderTree/blackberry/TestRunnerBlackBerry.cpp:
+        * WebKitTestRunner/qt/TestInvocationQt.cpp:
+
+2013-05-12  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r149955.
+        http://trac.webkit.org/changeset/149955
+        https://bugs.webkit.org/show_bug.cgi?id=115990
+
+        Broke lots of tests (Requested by smfr on #webkit).
+
+        * Scripts/webkitpy/port/mac.py:
+
+2013-05-12  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Remove unnecessary GTK_CHECK_VERSION #ifdefs
+        https://bugs.webkit.org/show_bug.cgi?id=115914
+
+        Reviewed by Martin Robinson.
+
+        * GtkLauncher/main.c:
+        (createToolbar):
+        * MiniBrowser/gtk/BrowserWindow.c:
+        (_BrowserWindow):
+        (browserWindowSetStatusText):
+        (fullScreenMessageTimeoutCallback):
+        (webViewEnterFullScreen):
+        (webViewLeaveFullScreen):
+        (browserWindowFinalize):
+        (browserWindowConstructed):
+        * WebKitTestRunner/gtk/EventSenderProxyGtk.cpp:
+        (WTR::EventSenderProxy::mouseScrollBy):
+        (WTR::EventSenderProxy::continuousMouseScrollBy):
+
+2013-05-11  Anders Carlsson  <andersca@apple.com>
+
+        Crash when terminating a process that has not been fully launched
+        https://bugs.webkit.org/show_bug.cgi?id=115962
+        <rdar://problem/13660916>
+
+        Reviewed by Andreas Kling.
+
+        Add TerminateTwice, a test that terminates a page, then reloads it and terminates it again
+        before the process has had a chance to be fully launched.
+
+        * TestWebKitAPI/GNUmakefile.am:
+        * TestWebKitAPI/TestWebKitAPI.xcodeproj/project.pbxproj:
+        * TestWebKitAPI/Tests/WebKit2/TerminateTwice.cpp: Added.
+        (TestWebKitAPI):
+        (TestWebKitAPI::didFinishLoadForFrame):
+        (TestWebKitAPI::TEST):
+        * TestWebKitAPI/Tests/WebKit2/WebKit2.pro:
+
+2013-05-10  Laszlo Gombos  <l.gombos@samsung.com>
+
+        Remove Mac OS X Leopard (10.5) support
+        https://bugs.webkit.org/show_bug.cgi?id=107964
+
+        Reviewed by Ryosuke Niwa.
+
+        Removed the code for 10.5 and removed if-def for 10.6.
+
+        * DumpRenderTree/cf/WebArchiveDumpSupport.cpp:
+        (convertMIMEType):
+        (createXMLStringFromWebArchiveData):
+        * DumpRenderTree/mac/TestRunnerMac.mm:
+        (TestRunner::authenticateSession):
+        (TestRunner::setTextDirection):
+        * WebKitTestRunner/cf/WebArchiveDumpSupport.cpp:
+        (convertMIMEType):
+        (createXMLStringFromWebArchiveData):
+
+2013-05-10  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Allow VS2010 Build to use VS2005 Support Libraries
+        https://bugs.webkit.org/show_bug.cgi?id=115935
+
+        Reviewed by Jer Noble.
+
+        * WinLauncher/WinLauncher.vcxproj/WinLauncher.exe.manifest: Added.
+        * WinLauncher/WinLauncher.vcxproj/WinLauncher.vcxproj: Add reference
+        to the new manifest file.
+        * WinLauncher/WinLauncher.vcxproj/WinLauncher.vcxproj.filters: Ditto.
+
+2013-05-10  Jacky Jiang  <zhajiang@blackberry.com>
+
+        Fix some compiler warnings (miscellaneous)
+        https://bugs.webkit.org/show_bug.cgi?id=80790
+
+        Reviewed by Rob Buis.
+
+        Fix the following warnings for BlackBerry:
+        DumpRenderTree.cpp:357:42: warning: suggest parentheses around assignment
+        used as truth value [-Wparentheses].
+
+        * DumpRenderTree/blackberry/DumpRenderTree.cpp:
+        (BlackBerry::WebKit::DumpRenderTree::resetToConsistentStateBeforeTesting):
+
+2013-05-10  Jesus Sanchez-Palencia  <jesus.palencia@openbossa.org>
+
+        [WK2][CoordinatedGraphics] WKViewSetThemePath is EFL specific
+        https://bugs.webkit.org/show_bug.cgi?id=115928
+
+        Reviewed by Kenneth Rohde Christiansen.
+
+        WKViewSetThemePath was moved to WKViewEfl.h.
+
+        * TestWebKitAPI/efl/PlatformWebView.cpp:
+
+2013-05-10  Andreas Kling  <akling@apple.com>
+
+        I accidentally the Java testing.
+
+        * Scripts/webkitpy/port/mac.py:
+
+2013-05-10  Brian Holt  <brian.holt@samsung.com>
+
+        [GTK] Module Cairo fails to build under jhbuild
+        https://bugs.webkit.org/show_bug.cgi?id=115854
+
+        Reviewed by Martin Robinson.
+
+        Make cairo depend on glib in jhbuild.modules.
+
+        * gtk/jhbuild.modules:
+
+2013-05-10  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Remove unnecessary GLIB_CHECK_VERSION #ifdefs
+        https://bugs.webkit.org/show_bug.cgi?id=115904
+
+        Reviewed by Martin Robinson.
+
+        * ImageDiff/gtk/ImageDiff.cpp:
+        (main):
+
+2013-05-10  Balazs Kelemen  <kbalazs@webkit.org>
+
+        Add my new address to contributors.json. (Unreviewed)
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-05-10  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Unreviewed. Move myself to the reviewers list.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-05-10  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Unreviewed. Add my email to a few watchlists.
+
+        * Scripts/webkitpy/common/config/watchlist:
+
+2013-05-10  Simon Pena  <simon.pena@samsung.com>
+
+        Unicode support missing from string representation of Contributors in committers.py
+        https://bugs.webkit.org/show_bug.cgi?id=115859
+
+        Reviewed by Darin Adler.
+
+        Contributors, in committers.py, provided a string representation in __str__ which
+        didn't support unicode characters, so printing a contributor would fail in that case.
+        This patch implements __unicode__ and makes __str__ use it to represent a contributor.
+        The unit tests are updated accordingly, so they ensure that a unicode name can be shown.
+
+        * Scripts/webkitpy/common/config/committers.py: Move the existing string representation
+        to the newly implemented method __unicode__, and make __str__ display its utf-8 encoded
+        representation.
+        (Contributor.__str__):
+        (Contributor):
+        (Contributor.__unicode__):
+        * Scripts/webkitpy/common/config/committers_unittest.py: Add a new test that checks that
+        a contributor with unicode characters can be represented as a string.
+        (CommittersTest):
+        (CommittersTest.test_contributor_encoding):
+
+2013-05-09  Patrick Gansterer  <paroga@webkit.org>
+
+        [WIN][DRT] Remove duplicated (start|stop)JavaScriptThreads()
+        https://bugs.webkit.org/show_bug.cgi?id=92371
+
+        Reviewed by Brent Fulgham.
+
+        Use JavaScriptThreading.cpp where the same functionality is
+        implemented too. This reduces the dependency on the pthread
+        library. Also replace assert() with WebKit ASSERT().
+
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTree.vcxproj:
+        * DumpRenderTree/win/DumpRenderTree.cpp:
+        (dumpHistoryItem):
+        (dumpBackForwardList):
+        * DumpRenderTree/win/DumpRenderTree.vcproj:
+
+2013-05-09  Patrick Gansterer  <paroga@webkit.org>
+
+        [DRT] Replace JavaScriptThreadingPthreads.cpp with JavaScriptThreading.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=92505
+
+        Reviewed by Brent Fulgham.
+
+        * DumpRenderTree/DumpRenderTree.xcodeproj/project.pbxproj:
+        * DumpRenderTree/JavaScriptThreading.cpp: Copied from DumpRenderTree/pthreads/JavaScriptThreadingPthreads.cpp.
+        (javaScriptThreadsMutex):
+        (javaScriptThreads):
+        (runJavaScriptThread):
+        (startJavaScriptThreads):
+        (stopJavaScriptThreads):
+        * DumpRenderTree/pthreads: Removed.
+        * DumpRenderTree/pthreads/JavaScriptThreadingPthreads.cpp: Removed.
+
+2013-05-09  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        Unreviewed. Update Simon Pena email on his behalf.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-05-09  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Add support for [NoInterfaceObject] Web IDL extended attribute
+        https://bugs.webkit.org/show_bug.cgi?id=115714
+
+        Reviewed by Kentaro Hara.
+
+        Update BindingsTests.generate_supplemental_dependency() to pass an
+        additional windowConstructorsFile argument to preprocess-idls.pl.
+
+        * Scripts/webkitpy/bindings/main.py:
+        (BindingsTests.generate_supplemental_dependency):
+        (BindingsTests.main):
+
+2013-05-09  ChangSeok Oh  <changseok.oh@collabora.com>
+
+        [GTK][AC] Buildfix after r149694
+        https://bugs.webkit.org/show_bug.cgi?id=115797
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Add CLUTTER_LIBS for linking TestWebCore.
+
+        * TestWebKitAPI/GNUmakefile.am:
+
+2013-05-08  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        [EFL] Remove unnecessary pkgs in EFL jhbuild
+        https://bugs.webkit.org/show_bug.cgi?id=114908
+
+        Reviewed by Laszlo Gombos.
+
+        p11-kit, libgpg-error and libgcrypt don't influence on layout test. So, we don't need to
+        handle them using jhbuild. We can reduce build time when using --update-efl.
+
+        * efl/jhbuild.modules:
+
+2013-05-08  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        [EFL] Disable SHADOW DOM feature in FeatureList.pm
+        https://bugs.webkit.org/show_bug.cgi?id=115834
+
+        Reviewed by Gyuyoung Kim.
+
+        * Scripts/webkitperl/FeatureList.pm:
+
+2013-05-08  Lucas Forschler  <lforschler@apple.com>
+
+        Add Scheduler for Mac MtnLion 32bit Release builder.
+        
+        Unreviewed.
+        
+        * BuildSlaveSupport/build.webkit.org-config/config.json:
+
+2013-05-08  Denis Nomiyama  <d.nomiyama@samsung.com>
+
+        Update JSCIdentifier pretty printer in Tools/gdb/webkit.py
+        https://bugs.webkit.org/show_bug.cgi?id=115808
+
+        Reviewed by Darin Adler.
+
+        The pretty printer for the JSCIdentifier in Tools/gdb/webkit.py
+        was left outdated after r127191, when the m_string member was changed
+        from UString to String. This patch calls the right pretty printer for it.
+
+        * gdb/webkit.py:
+        (JSCIdentifierPrinter.to_string): Use WTFPrettyPrinter instead of
+        WTFImplPrettyPrinter.
+
+2013-05-08  Andy Estes  <aestes@apple.com>
+
+        [WebKit2] REGRESSION (Custom Protocols): Reproducible crash when navigating to URL with an invalid scheme
+        https://bugs.webkit.org/show_bug.cgi?id=115790
+
+        Reviewed by Alexey Proskuryakov.
+
+        Added two API tests:
+
+        1) Verify that +[WKBrowsingContextController (un)registerSchemeForCustomProtocol:] can be called with a nil NSString without crashing.
+        2) Verify that +[WKCustomProtocol canInitWithRequest:] does not crash when passed an NSURLRequest with an invalid scheme.
+
+        * TestWebKitAPI/TestWebKitAPI.xcodeproj/project.pbxproj:
+        * TestWebKitAPI/Tests/WebKit2ObjC/CustomProtocolsInvalidScheme.mm: Added.
+        (TestWebKitAPI):
+        (TestWebKitAPI::TEST):
+        * TestWebKitAPI/Tests/WebKit2ObjC/CustomProtocolsInvalidScheme_Bundle.cpp: Added.
+        (TestWebKitAPI):
+        (TestWebKitAPI::decidePolicyForNavigationAction):
+        (CustomProtocolInvalidSchemeTest):
+        (TestWebKitAPI::CustomProtocolInvalidSchemeTest::CustomProtocolInvalidSchemeTest):
+
+2013-05-08  Lucas Forschler  <lforschler@apple.com>
+
+        Teach buildbot how to compile 32-bit on Mac.
+
+        Reviewed by Ryosuke Niwa.
+
+        * BuildSlaveSupport/build.webkit.org-config/master.cfg:
+        (CompileWebKit.start):
+        (ExtractTestResultsAndLeaks):
+
+2013-05-08  Eli Fidler  <efidler@blackberry.com>
+
+        [BlackBerry] Fix usage of BlackBerry::Platform::String
+        https://bugs.webkit.org/show_bug.cgi?id=115781
+
+        Reviewed by Rob Buis.
+
+        BlackBerry PRs 304193 and 327181
+        Internally Reviewed by Mike Lattanzio, Arvid Nilsson, Joe Mason, Jeff Rogers, and George Staikos
+
+        We currently have a problem where we're passing UTF-8 encoded data into
+        the char* constructors of BlackBerry::Platform::String. This means the string
+        thinks its data is not UTF-8.
+
+        * DumpRenderTree/blackberry/DumpRenderTree.cpp:
+        (BlackBerry::WebKit::DumpRenderTree::resetToConsistentStateBeforeTesting):
+        (BlackBerry::WebKit::dumpHistoryItem):
+        * DumpRenderTree/blackberry/TestRunnerBlackBerry.cpp:
+        (TestRunner::setUserStyleSheetLocation):
+        * DumpRenderTree/blackberry/WorkQueueItemBlackBerry.cpp:
+        (LoadHTMLStringItem::invoke):
+
+2013-05-08  Alberto Garcia  <agarcia@igalia.com>
+
+        Tools: add new BlackBerry include dirs.
+        https://bugs.webkit.org/show_bug.cgi?id=115514
+
+        Reviewed by Rob Buis.
+
+        iType include dirs are missing, and HarfBuzz needs to be fixed.
+
+        * Scripts/webkitdirs.pm:
+        (blackberryCMakeArguments):
+
+2013-05-08  José Dapena Paz  <jdapena@igalia.com> and Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Plumb the Automake build system for the Battery Status API feature
+        https://bugs.webkit.org/show_bug.cgi?id=115718
+
+        Reviewed by Martin Robinson.
+
+        * Scripts/webkitdirs.pm:
+        (buildAutotoolsProject): List battery-status as a configurable feature, meaning its value will be adjusted
+        through the --(enable|disable)-battery-status flag passed to configure.
+
+2013-05-08  Ryosuke Niwa  <rniwa@webkit.org>
+
+        new-run-webkit-websocketserver doesn't work after Chromium removal
+        https://bugs.webkit.org/show_bug.cgi?id=115816
+
+        Reviewed by Joseph Pecoraro.
+
+        Fix the bug by instantiating the correct port object.
+
+        * Scripts/new-run-webkit-websocketserver:
+        (main):
+
+2013-05-07  Lucas Forschler  <lforschler@apple.com>
+
+        Configure buildbot for 32bit builder.
+        https://bugs.webkit.org/show_bug.cgi?id=115769
+        
+        Reviewed by Ryosuke Niwa.
+
+        * BuildSlaveSupport/build.webkit.org-config/config.json:
+
+2013-05-08  Brent Fulgham  <bfulgham@webkit.org>
+
+        Unreviewed. Update to show my apple.com address.
+
+        * Scripts/webkitpy/common/config/contributors.json: Added
+        my apple.com e-mail address.
+
+2013-05-08  David Kilzer  <ddkilzer@apple.com>
+
+        BUILD FIX (r149579): Use Vector::appendVector() instead of Vector::append()
+
+        * DumpRenderTree/ios/AccessibilityUIElementIOS.mm:
+        (concatenateAttributeAndValue): Switch to appendVector().
+
 2013-05-10  Jesus Sanchez-Palencia  <jesus.palencia@openbossa.org>
 
         [WK2][CoordinatedGraphics] WKViewSetThemePath is EFL specific

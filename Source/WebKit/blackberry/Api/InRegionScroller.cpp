@@ -134,8 +134,7 @@ bool InRegionScrollerPrivate::setScrollPositionCompositingThread(unsigned camouf
         bounds = scrollLayer->bounds();
 
     // Position is offset on the layer by the layer anchor point.
-    FloatPoint layerPosition(-scrollPosition.x() + anchor.x() * bounds.width(),
-                             -scrollPosition.y() + anchor.y() * bounds.height());
+    FloatPoint layerPosition(-scrollPosition.x() + anchor.x() * bounds.width(), -scrollPosition.y() + anchor.y() * bounds.height());
 
     scrollLayer->override()->setPosition(FloatPoint(layerPosition.x(), layerPosition.y()));
 
@@ -283,7 +282,7 @@ void InRegionScrollerPrivate::calculateInRegionScrollableAreasForPoint(const Web
             end->setCanPropagateScrollingToEnclosingScrollable(false);
         }
 
-    } while (layer = parentLayer(layer));
+    } while ((layer = parentLayer(layer)));
 
     if (m_activeInRegionScrollableAreas.empty())
         return;
@@ -346,7 +345,7 @@ Platform::ScrollViewBase* InRegionScrollerPrivate::firstScrollableInRegionForNod
             end->setCanPropagateScrollingToEnclosingScrollable(false);
         }
 
-    } while (layer = parentLayer(layer));
+    } while ((layer = parentLayer(layer)));
     return 0;
 }
 
@@ -452,8 +451,8 @@ bool InRegionScrollerPrivate::canScrollRenderBox(RenderBox* box)
     if (box->scrollHeight() == box->clientHeight() && box->scrollWidth() == box->clientWidth())
         return false;
 
-    if (box->scrollsOverflowX() && (box->scrollWidth() != box->clientWidth())
-        || box->scrollsOverflowY() && (box->scrollHeight() != box->clientHeight()))
+    if ((box->scrollsOverflowX() && (box->scrollWidth() != box->clientWidth()))
+        || (box->scrollsOverflowY() && (box->scrollHeight() != box->clientHeight())))
         return true;
 
     Node* node = box->node();

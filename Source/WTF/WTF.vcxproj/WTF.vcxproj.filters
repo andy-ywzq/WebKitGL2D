@@ -372,9 +372,6 @@
     <ClInclude Include="..\wtf\Compiler.h">
       <Filter>wtf</Filter>
     </ClInclude>
-    <ClInclude Include="..\wtf\Complex.h">
-      <Filter>wtf</Filter>
-    </ClInclude>
     <ClInclude Include="..\wtf\CryptographicallyRandomNumber.h">
       <Filter>wtf</Filter>
     </ClInclude>
@@ -484,9 +481,6 @@
       <Filter>wtf</Filter>
     </ClInclude>
     <ClInclude Include="..\wtf\MainThread.h">
-      <Filter>wtf</Filter>
-    </ClInclude>
-    <ClInclude Include="..\wtf\MallocZoneSupport.h">
       <Filter>wtf</Filter>
     </ClInclude>
     <ClInclude Include="..\wtf\MathExtras.h">
@@ -676,9 +670,6 @@
       <Filter>wtf</Filter>
     </ClInclude>
     <ClInclude Include="..\wtf\Uint8Array.h">
-      <Filter>wtf</Filter>
-    </ClInclude>
-    <ClInclude Include="..\wtf\UnusedParam.h">
       <Filter>wtf</Filter>
     </ClInclude>
     <ClInclude Include="..\wtf\ValueCheck.h">

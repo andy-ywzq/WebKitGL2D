@@ -94,7 +94,6 @@
 #include "VisibleUnits.h"
 #include "htmlediting.h"
 #include "markup.h"
-#include <wtf/UnusedParam.h>
 #include <wtf/unicode/CharacterNames.h>
 #include <wtf/unicode/Unicode.h>
 
@@ -2522,19 +2521,6 @@ bool Editor::getCompositionSelection(unsigned& selectionStart, unsigned& selecti
     selectionStart = start.deprecatedEditingOffset() - m_compositionStart;
     selectionEnd = start.deprecatedEditingOffset() - m_compositionEnd;
     return true;
-}
-
-bool Editor::setSelectionOffsets(int selectionStart, int selectionEnd)
-{
-    Element* rootEditableElement = m_frame->selection()->rootEditableElement();
-    if (!rootEditableElement)
-        return false;
-
-    RefPtr<Range> range = TextIterator::rangeFromLocationAndLength(rootEditableElement, selectionStart, selectionEnd - selectionStart);
-    if (!range)
-        return false;
-
-    return m_frame->selection()->setSelectedRange(range.get(), VP_DEFAULT_AFFINITY, false);
 }
 
 void Editor::transpose()

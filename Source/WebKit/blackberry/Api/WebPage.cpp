@@ -429,6 +429,10 @@ WebPagePrivate::WebPagePrivate(WebPage* webPage, WebPageClient* client, const In
 #endif
     , m_didStartAnimations(false)
     , m_animationStartTime(0)
+#if ENABLE(REQUEST_ANIMATION_FRAME) && !USE(REQUEST_ANIMATION_FRAME_TIMER)
+    , m_isRunningRefreshAnimationClient(false)
+    , m_animationScheduled(false)
+#endif
 {
     static bool isInitialized = false;
     if (!isInitialized) {
@@ -454,6 +458,11 @@ WebPagePrivate::~WebPagePrivate()
     m_webPage->setVisible(false);
     if (BackingStorePrivate::currentBackingStoreOwner() == m_webPage)
         BackingStorePrivate::setCurrentBackingStoreOwner(0);
+
+#if ENABLE(REQUEST_ANIMATION_FRAME) && !USE(REQUEST_ANIMATION_FRAME_TIMER)
+    stopRefreshAnimationClient();
+    cancelCallOnMainThread(handleServiceScriptedAnimationsOnMainThread, this);
+#endif
 
     delete m_webSettings;
     m_webSettings = 0;
@@ -653,7 +662,7 @@ void WebPagePrivate::init(const BlackBerry::Platform::String& pageGroupName)
     // unconditionally. It will allocate OpenGL objects lazily, so this incurs
     // no overhead in the unlikely case where the compositor is not needed.
     Platform::userInterfaceThreadMessageClient()->dispatchSyncMessage(
-            createMethodCallMessage(&WebPagePrivate::createCompositor, this));
+        createMethodCallMessage(&WebPagePrivate::createCompositor, this));
 #endif
 }
 
@@ -718,14 +727,16 @@ void WebPagePrivate::load(const Platform::NetworkRequest& netReq, bool needRefer
 
 void WebPage::loadFile(const BlackBerry::Platform::String& path, const BlackBerry::Platform::String& overrideContentType)
 {
+    STATIC_LOCAL_STRING(s_filePrefix, "file://");
+    STATIC_LOCAL_STRING(s_fileRootPrefix, "file:///");
     BlackBerry::Platform::String fileUrl(path);
-    if (fileUrl.startsWith("/"))
-        fileUrl = BlackBerry::Platform::String("file://", 7) + fileUrl;
-    else if (!fileUrl.startsWith("file:///"))
+    if (fileUrl.startsWith('/'))
+        fileUrl = s_filePrefix + fileUrl;
+    else if (!fileUrl.startsWith(s_fileRootPrefix))
         return;
 
     Platform::NetworkRequest netRequest;
-    netRequest.setRequestUrl(path);
+    netRequest.setRequestUrl(fileUrl);
     netRequest.setOverrideContentType(overrideContentType);
     d->load(netRequest, false);
 }
@@ -841,7 +852,7 @@ bool WebPagePrivate::executeJavaScriptInIsolatedWorld(const ScriptSourceCode& so
 
 bool WebPage::executeJavaScriptInIsolatedWorld(const std::wstring& script, JavaScriptDataType& returnType, BlackBerry::Platform::String& returnValue)
 {
-    // On our platform wchar_t is unsigned int and UChar is unsigned short
+    // On our platform wchar_t is unsigned and UChar is unsigned short
     // so we have to convert using ICU conversion function
     int lengthCopied = 0;
     UErrorCode error = U_ZERO_ERROR;
@@ -1240,16 +1251,16 @@ bool WebPagePrivate::zoomAboutPoint(double unclampedScale, const FloatPoint& anc
     updateViewportSize();
 
     IntPoint newScrollPosition(IntPoint(max(0, static_cast<int>(roundf(anchor.x() - anchorOffset.x() / inverseScale))),
-                                        max(0, static_cast<int>(roundf(anchor.y() - anchorOffset.y() / inverseScale)))));
+        max(0, static_cast<int>(roundf(anchor.y() - anchorOffset.y() / inverseScale)))));
 
     if (m_webPage->settings()->textReflowMode() == WebSettings::TextReflowEnabled) {
         // This is a hack for email which has reflow always turned on.
-        m_mainFrame->view()->setNeedsLayout();
-        requestLayoutIfNeeded();
+        setNeedsLayout();
+        layoutIfNeeded();
         if (m_currentPinchZoomNode)
             newScrollPosition = calculateReflowedScrollPosition(anchorOffset, scale == minimumScale() ? 1 : inverseScale);
-         m_currentPinchZoomNode = 0;
-         m_anchorInNodeRectRatio = FloatPoint(-1, -1);
+        m_currentPinchZoomNode = 0;
+        m_anchorInNodeRectRatio = FloatPoint(-1, -1);
     }
 
     setScrollPosition(newScrollPosition);
@@ -1302,7 +1313,7 @@ IntPoint WebPagePrivate::calculateReflowedScrollPosition(const FloatPoint& ancho
     IntRect reflowedRect = adjustRectOffsetForFrameOffset(nodeRect, m_currentPinchZoomNode.get());
 
     return IntPoint(max(0, static_cast<int>(roundf(reflowedRect.x() + offsetX))),
-                    max(0, static_cast<int>(roundf(reflowedRect.y() + offsetY - anchorOffset.y() / inverseScale))));
+        max(0, static_cast<int>(roundf(reflowedRect.y() + offsetY - anchorOffset.y() / inverseScale))));
 }
 
 void WebPagePrivate::setNeedsLayout()
@@ -1312,12 +1323,20 @@ void WebPagePrivate::setNeedsLayout()
     view->setNeedsLayout();
 }
 
-void WebPagePrivate::requestLayoutIfNeeded() const
+void WebPagePrivate::updateLayoutAndStyleIfNeededRecursive() const
 {
     FrameView* view = m_mainFrame->view();
     ASSERT(view);
     view->updateLayoutAndStyleIfNeededRecursive();
     ASSERT(!view->needsLayout());
+}
+
+void WebPagePrivate::layoutIfNeeded() const
+{
+    FrameView* view = m_mainFrame->view();
+    ASSERT(view);
+    if (view->needsLayout())
+        view->layout();
 }
 
 IntPoint WebPagePrivate::scrollPosition() const
@@ -1497,7 +1516,7 @@ FloatPoint WebPagePrivate::centerOfVisibleContentsRect() const
 
     // The center of the visible contents rect in float.
     return FloatPoint(visibleContentsRect.x() + visibleContentsRect.width() / 2.0,
-                      visibleContentsRect.y() + visibleContentsRect.height() / 2.0);
+        visibleContentsRect.y() + visibleContentsRect.height() / 2.0);
 }
 
 IntRect WebPagePrivate::visibleContentsRect() const
@@ -1541,7 +1560,7 @@ void WebPagePrivate::overflowExceedsContentsSize()
     if (absoluteVisibleOverflowSize().width() < DEFAULT_MAX_LAYOUT_WIDTH && !hasVirtualViewport()) {
         if (setViewMode(viewMode())) {
             setNeedsLayout();
-            requestLayoutIfNeeded();
+            layoutIfNeeded();
         }
     }
 }
@@ -1642,7 +1661,7 @@ void WebPagePrivate::zoomToInitialScaleOnLoad()
 #if DEBUG_WEBPAGE_LOAD
         Platform::logAlways(Platform::LogLevelInfo, "WebPagePrivate::zoomToInitialScaleOnLoad content is empty!");
 #endif
-        requestLayoutIfNeeded();
+        layoutIfNeeded();
         notifyTransformedContentsSizeChanged();
         return;
     }
@@ -1668,7 +1687,7 @@ void WebPagePrivate::zoomToInitialScaleOnLoad()
     }
 
     // zoomAboutPoint above can also toggle setNeedsLayout and cause recursive layout...
-    requestLayoutIfNeeded();
+    layoutIfNeeded();
 
     if (!performedZoom) {
         // We only notify if we didn't perform zoom, because zoom will notify on
@@ -2136,7 +2155,7 @@ Platform::WebContext WebPagePrivate::webContext(TargetDetectionStrategy strategy
         return context;
     }
 
-    requestLayoutIfNeeded();
+    layoutIfNeeded();
 
     bool nodeAllowSelectionOverride = false;
     Node* linkNode = node->enclosingLinkEventParentOrSelf();
@@ -2514,7 +2533,7 @@ void WebPagePrivate::assignFocus(Platform::FocusDirection direction)
 void WebPage::assignFocus(Platform::FocusDirection direction)
 {
     if (d->m_page->defersLoading())
-       return;
+        return;
     d->assignFocus(direction);
 }
 
@@ -2813,7 +2832,7 @@ IntRect WebPagePrivate::adjustRectOffsetForFrameOffset(const IntRect& rect, cons
             } while (iFrameRect.isEmpty() && ownerNode);
         } else
             break;
-    } while (tnode = tnode->parentNode());
+    } while ((tnode = tnode->parentNode()));
 
     return adjustedRect;
 }
@@ -2835,7 +2854,7 @@ IntRect WebPagePrivate::blockZoomRectForNode(Node* node)
     double blockExpansionRatio = 5.0 * blockToPageRatio * blockToPageRatio;
 
     if (!tnode->hasTagName(HTMLNames::imgTag) && !tnode->hasTagName(HTMLNames::inputTag) && !tnode->hasTagName(HTMLNames::textareaTag)) {
-        while (tnode = tnode->parentNode()) {
+        while ((tnode = tnode->parentNode())) {
             ASSERT(tnode);
             IntRect tRect = rectForNode(tnode);
             int tempBlockArea = tRect.width() * tRect.height();
@@ -2901,7 +2920,7 @@ void WebPagePrivate::zoomAnimationFinished(double finalAnimationScale, const Web
     }
 
 #if ENABLE(VIEWPORT_REFLOW)
-    requestLayoutIfNeeded();
+    layoutIfNeeded();
     if (willUseTextReflow && m_shouldReflowBlock) {
         Platform::IntPoint roundedReflowOffset(
             std::floorf(m_finalAnimationDocumentScrollPositionReflowOffset.x()),
@@ -3487,7 +3506,7 @@ void WebPagePrivate::resumeBackingStore()
         m_backingStore->d->renderAndBlitVisibleContentsImmediately();
     } else {
         if (m_backingStore->d->isOpenGLCompositing())
-           setCompositorDrawsRootLayer(false);
+            setCompositorDrawsRootLayer(false);
 
         // Rendering was disabled while we were hidden, so we need to update all tiles.
         m_backingStore->d->updateTiles(true /* updateVisible */, false /* immediate */);
@@ -3550,7 +3569,7 @@ bool WebPagePrivate::setViewportSize(const IntSize& transformedActualVisibleSize
     IntSize viewportSizeBefore = actualVisibleSize();
     FloatPoint centerOfVisibleContentsRect = this->centerOfVisibleContentsRect();
     bool newVisibleRectContainsOldVisibleRect = (m_actualVisibleHeight <= transformedActualVisibleSize.height())
-                                          && (m_actualVisibleWidth <= transformedActualVisibleSize.width());
+        && (m_actualVisibleWidth <= transformedActualVisibleSize.width());
 
     bool atInitialScale = m_webPage->isAtInitialZoom();
     bool atTop = !scrollPosition().y();
@@ -3646,7 +3665,7 @@ bool WebPagePrivate::setViewportSize(const IntSize& transformedActualVisibleSize
     bool stillNeedsLayout = needsLayout;
     while (stillNeedsLayout) {
         setNeedsLayout();
-        requestLayoutIfNeeded();
+        layoutIfNeeded();
         stillNeedsLayout = false;
 
         // Emulate the zoomToFitWidthOnLoad algorithm if we're rotating.
@@ -3674,7 +3693,7 @@ bool WebPagePrivate::setViewportSize(const IntSize& transformedActualVisibleSize
         IntRect actualVisibleRect = enclosingIntRect(rotationMatrix.inverse().mapRect(FloatRect(viewportRect)));
         m_mainFrame->view()->setFixedReportedSize(actualVisibleRect.size());
         m_mainFrame->view()->repaintFixedElementsAfterScrolling();
-        requestLayoutIfNeeded();
+        layoutIfNeeded();
         m_mainFrame->view()->updateFixedElementsAfterScrolling();
     }
 
@@ -3819,7 +3838,7 @@ void WebPage::setDefaultLayoutSize(const Platform::IntSize& platformSize)
     if (needsLayout) {
         d->setNeedsLayout();
         if (!d->isLoading())
-            d->requestLayoutIfNeeded();
+            d->layoutIfNeeded();
     }
 }
 
@@ -4172,11 +4191,11 @@ BlackBerry::Platform::String WebPage::textEncoding()
 {
     Frame* frame = d->focusedOrMainFrame();
     if (!frame)
-        return "";
+        return BlackBerry::Platform::String::emptyString();
 
     Document* document = frame->document();
     if (!document)
-        return "";
+        return BlackBerry::Platform::String::emptyString();
 
     return document->loader()->writer()->encoding();
 }
@@ -4213,7 +4232,7 @@ bool WebPage::keyEvent(const Platform::KeyboardEvent& keyboardEvent)
     return d->m_inputHandler->handleKeyboardInput(keyboardEvent);
 }
 
-bool WebPage::deleteTextRelativeToCursor(unsigned int leftOffset, unsigned int rightOffset)
+bool WebPage::deleteTextRelativeToCursor(unsigned leftOffset, unsigned rightOffset)
 {
     if (d->m_page->defersLoading())
         return false;
@@ -4864,7 +4883,7 @@ void WebPage::setEnableLocalAccessToAllCookies(bool enabled)
     cookieManager().setCanLocalAccessAllCookies(enabled);
 }
 
-void WebPage::addVisitedLink(const unsigned short* url, unsigned int length)
+void WebPage::addVisitedLink(const unsigned short* url, unsigned length)
 {
     ASSERT(d->m_page);
     d->m_page->group().addVisitedLink(url, length);
@@ -4945,12 +4964,12 @@ void WebPage::initPopupWebView(BlackBerry::WebKit::WebPage* webPage)
 String WebPagePrivate::findPatternStringForUrl(const KURL& url) const
 {
     if ((m_webSettings->shouldHandlePatternUrls() && protocolIs(url, "pattern"))
-            || protocolIs(url, "tel")
-            || protocolIs(url, "wtai")
-            || protocolIs(url, "cti")
-            || protocolIs(url, "mailto")
-            || protocolIs(url, "sms")
-            || protocolIs(url, "pin")) {
+        || protocolIs(url, "tel")
+        || protocolIs(url, "wtai")
+        || protocolIs(url, "cti")
+        || protocolIs(url, "mailto")
+        || protocolIs(url, "sms")
+        || protocolIs(url, "pin")) {
         return url;
     }
     return String();
@@ -5038,15 +5057,15 @@ void WebPage::notifyAppActivationStateChange(ActivationStateType activationState
 void WebPage::notifySwipeEvent()
 {
     if (d->m_fullScreenPluginView.get())
-       d->m_fullScreenPluginView->handleSwipeEvent();
+        d->m_fullScreenPluginView->handleSwipeEvent();
     else
-       notifyFullScreenVideoExited(true);
+        notifyFullScreenVideoExited(true);
 }
 
 void WebPage::notifyScreenPowerStateChanged(bool powered)
 {
     FOR_EACH_PLUGINVIEW(d->m_pluginViews)
-       (*it)->handleScreenPowerEvent(powered);
+        (*it)->handleScreenPowerEvent(powered);
 }
 
 void WebPage::notifyFullScreenVideoExited(bool done)
@@ -5433,8 +5452,7 @@ bool WebPagePrivate::commitRootLayerIfNeeded()
         return false;
 
     // Don't bail if the layers were removed and we now need a one shot drawing sync as a consequence.
-    if (!(m_frameLayers && m_frameLayers->hasLayer()) && !m_overlayLayer
-     && !m_needsOneShotDrawingSynchronization)
+    if (!(m_frameLayers && m_frameLayers->hasLayer()) && !m_overlayLayer && !m_needsOneShotDrawingSynchronization)
         return false;
 
     FrameView* view = m_mainFrame->view();
@@ -5517,7 +5535,7 @@ void WebPagePrivate::rootLayerCommitTimerFired(Timer<WebPagePrivate>*)
     // to texture.
     // The layout can also turn of compositing altogether, so we need to be prepared
     // to handle a one shot drawing synchronization after the layout.
-    requestLayoutIfNeeded();
+    layoutIfNeeded();
 
     // If we transitioned to drawing the root layer using compositor instead of
     // backing store, doing a one shot drawing synchronization with the
@@ -5546,10 +5564,10 @@ void WebPagePrivate::setRootLayerWebKitThread(Frame* frame, LayerWebKitThread* l
         return;
 
     if (!layer) {
-         ASSERT(m_frameLayers);
-         m_frameLayers->removeLayerByFrame(frame);
-         if (!m_frameLayers->hasLayer())
-             m_frameLayers.clear();
+        ASSERT(m_frameLayers);
+        m_frameLayers->removeLayerByFrame(frame);
+        if (!m_frameLayers->hasLayer())
+            m_frameLayers.clear();
     } else {
         if (!m_frameLayers)
             m_frameLayers = adoptPtr(new FrameLayers(this));
@@ -5634,7 +5652,7 @@ void WebPagePrivate::releaseLayerResources()
 
 void WebPagePrivate::releaseLayerResourcesCompositingThread()
 {
-     m_compositor->releaseLayerResources();
+    m_compositor->releaseLayerResources();
 }
 
 void WebPagePrivate::suspendRootLayerCommit()
@@ -5942,7 +5960,7 @@ BlackBerry::Platform::String WebPage::textHasAttribute(const BlackBerry::Platfor
     if (Document* doc = d->m_page->focusController()->focusedOrMainFrame()->document())
         return doc->queryCommandValue(query);
 
-    return "";
+    return BlackBerry::Platform::String::emptyString();
 }
 
 void WebPage::setJavaScriptCanAccessClipboard(bool enabled)
@@ -5992,7 +6010,7 @@ const BlackBerry::Platform::String& WebPagePrivate::defaultUserAgent()
         if (uaSize <= 0 || uaSize >= 256)
             BLACKBERRY_CRASH();
 
-        defaultUserAgent = new BlackBerry::Platform::String(uaBuffer, uaSize);
+        defaultUserAgent = new BlackBerry::Platform::String(BlackBerry::Platform::String::fromUtf8(uaBuffer, uaSize));
     }
 
     return *defaultUserAgent;
@@ -6297,6 +6315,55 @@ bool WebPage::isProcessingUserGesture() const
 {
     return ScriptController::processingUserGesture();
 }
+
+#if ENABLE(REQUEST_ANIMATION_FRAME) && !USE(REQUEST_ANIMATION_FRAME_TIMER)
+void WebPagePrivate::animationFrameChanged()
+{
+    if (!m_animationMutex.tryLock())
+        return;
+
+    if (!m_animationScheduled) {
+        stopRefreshAnimationClient();
+        m_animationMutex.unlock();
+        return;
+    }
+
+    m_animationScheduled = false;
+    callOnMainThread(handleServiceScriptedAnimationsOnMainThread, this);
+    m_animationMutex.unlock();
+}
+
+void WebPagePrivate::scheduleAnimation()
+{
+    if (m_animationScheduled)
+        return;
+    MutexLocker lock(m_animationMutex);
+    m_animationScheduled = true;
+    startRefreshAnimationClient();
+}
+
+void WebPagePrivate::startRefreshAnimationClient()
+{
+    if (m_isRunningRefreshAnimationClient)
+        return;
+    m_isRunningRefreshAnimationClient = true;
+    BlackBerry::Platform::AnimationFrameRateController::instance()->addClient(this);
+}
+
+void WebPagePrivate::stopRefreshAnimationClient()
+{
+    if (!m_isRunningRefreshAnimationClient)
+        return;
+    m_isRunningRefreshAnimationClient = false;
+    BlackBerry::Platform::AnimationFrameRateController::instance()->removeClient(this);
+}
+
+void WebPagePrivate::handleServiceScriptedAnimationsOnMainThread(void* data)
+{
+    WebPagePrivate* webPagePrivate = static_cast<WebPagePrivate*>(data);
+    webPagePrivate->m_mainFrame->view()->serviceScriptedAnimations(currentTime());
+}
+#endif
 
 }
 }
