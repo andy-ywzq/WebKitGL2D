@@ -1403,7 +1403,6 @@ fast/invalid/014.html [ Skip ]
 fast/invalid/residual-style.html [ Skip ]
 
 fast/js/custom-constructors.html [ Failure ]
-fast/js/i18n-bindings-locale.html [ Failure ]
 fast/js/instanceof-XMLHttpRequest.html [ Failure ]
 fast/layers/add-layer-with-nested-stacking.html [ Skip ]
 fast/layers/layer-content-visibility-change.html [ Skip ]
@@ -3435,7 +3434,6 @@ html5lib/generated/run-plain-text-unsafe-data.html [ Skip ]
 # These tests fail with timeout
 fast/events/wheelevent-in-text-node.html
 html5lib/generated/run-template-data.html
-http/tests/inspector-enabled/console-exception-while-no-inspector.html
 inspector-protocol/heap-profiler/heap-snapshot-with-detached-dom-tree.html
 inspector-protocol/heap-profiler/heap-snapshot-with-event-listener.html
 
@@ -3871,7 +3869,6 @@ fast/gradients/radial-centered.html [ Skip ]
 fast/gradients/simple-gradients.html [ Skip ]
 fast/history/visited-link-background-color.html [ Skip ]
 fast/inspector-support/matchedrules.html [ Skip ]
-fast/js/global-constructors.html [ Failure ]
 fast/layers/inline-dirty-z-order-lists.html [ Skip ]
 fast/layers/layer-visibility-sublayer.html [ Skip ]
 fast/layers/layer-visibility.html [ Skip ]
@@ -4115,7 +4112,6 @@ fast/dom/shadow/insertion-point-resetStyleInheritance-with-pseudo-element-crash.
 
 # Flakey and failing tests after merge 1545593 eb8adb3
 editing/pasteboard/smart-drag-drop.html [ Failure Pass ]  
-fast/exclusions/shape-outside-floats/shape-outside-floats-simple-rounded-rectangle.html [ ImageOnlyFailure ]
 svg/custom/resources-css-scaled.html [ ImageOnlyFailure ]
 
 # Flakey tests after merge 5494e11 a55ee6c
@@ -4145,7 +4141,6 @@ fast/events/touch/frame-hover-update.html [ Failure ]
 fast/exclusions/shape-inside/shape-inside-polygon-layout.html [ Failure ]
 fast/forms/validation-message-on-range.html [ Failure ]
 svg/animations/animate-text-nested-transforms.html [ Failure ]
-perf/show-hide-table-rows.html [ Failure Pass ]
 animations/unanimated-style.html [ Crash ]
 compositing/patterns/direct-pattern-compositing-contain.html [ Crash Failure ]
 fast/frames/set-parent-src-synchronously.html [ Crash ]
