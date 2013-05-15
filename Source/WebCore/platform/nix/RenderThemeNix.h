@@ -36,6 +36,10 @@ public:
 
     virtual ~RenderThemeNix();
 
+    virtual String extraDefaultStyleSheet();
+    virtual String extraQuirksStyleSheet();
+    virtual String extraPlugInsStyleSheet();
+
     virtual void systemFont(int cssValueId, FontDescription&) const OVERRIDE;
 
 #if ENABLE(PROGRESS_ELEMENT)
@@ -51,6 +55,26 @@ public:
 #endif
 
 protected:
+    // The platform selection color.
+    virtual Color platformActiveSelectionBackgroundColor() const;
+    virtual Color platformInactiveSelectionBackgroundColor() const;
+    virtual Color platformActiveSelectionForegroundColor() const;
+    virtual Color platformInactiveSelectionForegroundColor() const;
+
+    virtual Color platformActiveListBoxSelectionBackgroundColor() const;
+    virtual Color platformInactiveListBoxSelectionBackgroundColor() const;
+    virtual Color platformActiveListBoxSelectionForegroundColor() const;
+    virtual Color platformInactiveListBoxSelectionForegroundColor() const;
+
+    // Highlighting colors for TextMatches.
+    virtual Color platformActiveTextSearchHighlightColor() const;
+    virtual Color platformInactiveTextSearchHighlightColor() const;
+
+    virtual Color platformFocusRingColor() const;
+
+#if ENABLE(TOUCH_EVENTS)
+    virtual Color platformTapHighlightColor() const;
+#endif
 
     virtual bool paintButton(RenderObject*, const PaintInfo&, const IntRect&) OVERRIDE;
     virtual bool paintTextField(RenderObject*, const PaintInfo&, const IntRect&) OVERRIDE;

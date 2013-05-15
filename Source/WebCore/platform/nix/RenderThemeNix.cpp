@@ -53,6 +53,11 @@ static void setSizeIfAuto(RenderStyle* style, const IntSize& size)
         style->setHeight(Length(size.height(), Fixed));
 }
 
+Color toColor(const WebKit::WebColor& color)
+{
+    return WebCore::Color(RGBA32(color));
+}
+
 static WebKit::WebThemeEngine* themeEngine()
 {
     return WebKit::Platform::current()->themeEngine();
@@ -76,13 +81,89 @@ PassRefPtr<RenderTheme> RenderThemeNix::create()
 RenderThemeNix::RenderThemeNix()
     : RenderTheme()
 {
-
 }
 
 RenderThemeNix::~RenderThemeNix()
 {
 
 }
+
+String RenderThemeNix::extraDefaultStyleSheet()
+{
+    return themeEngine()->extraDefaultStyleSheet();
+}
+
+String RenderThemeNix::extraQuirksStyleSheet()
+{
+    return themeEngine()->extraQuirksStyleSheet();
+}
+
+String RenderThemeNix::extraPlugInsStyleSheet()
+{
+    return themeEngine()->extraPlugInsStyleSheet();
+}
+
+Color RenderThemeNix::platformActiveSelectionBackgroundColor() const
+{
+    return toColor(themeEngine()->activeSelectionBackgroundColor());
+}
+
+Color RenderThemeNix::platformInactiveSelectionBackgroundColor() const
+{
+    return toColor(themeEngine()->inactiveSelectionBackgroundColor());
+}
+
+Color RenderThemeNix::platformActiveSelectionForegroundColor() const
+{
+    return toColor(themeEngine()->activeSelectionForegroundColor());
+}
+
+Color RenderThemeNix::platformInactiveSelectionForegroundColor() const
+{
+    return toColor(themeEngine()->inactiveSelectionForegroundColor());
+}
+
+Color RenderThemeNix::platformActiveListBoxSelectionBackgroundColor() const
+{
+    return toColor(themeEngine()->activeListBoxSelectionBackgroundColor());
+}
+
+Color RenderThemeNix::platformInactiveListBoxSelectionBackgroundColor() const
+{
+    return toColor(themeEngine()->inactiveListBoxSelectionBackgroundColor());
+}
+
+Color RenderThemeNix::platformActiveListBoxSelectionForegroundColor() const
+{
+    return toColor(themeEngine()->activeListBoxSelectionForegroundColor());
+}
+
+Color RenderThemeNix::platformInactiveListBoxSelectionForegroundColor() const
+{
+    return toColor(themeEngine()->inactiveListBoxSelectionForegroundColor());
+}
+
+Color RenderThemeNix::platformActiveTextSearchHighlightColor() const
+{
+    return toColor(themeEngine()->activeTextSearchHighlightColor());
+}
+
+Color RenderThemeNix::platformInactiveTextSearchHighlightColor() const
+{
+    return toColor(themeEngine()->inactiveTextSearchHighlightColor());
+}
+
+Color RenderThemeNix::platformFocusRingColor() const
+{
+    return toColor(themeEngine()->focusRingColor());   
+}
+
+#if ENABLE(TOUCH_EVENTS)
+Color RenderThemeNix::platformTapHighlightColor() const
+{
+    return toColor(themeEngine()->tapHighlightColor());
+}
+#endif
 
 void RenderThemeNix::systemFont(int, FontDescription&) const
 {

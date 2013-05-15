@@ -26,6 +26,7 @@
 #include "config.h"
 
 #include "DefaultWebThemeEngine.h"
+#include "public/WebColor.h"
 #include "public/WebRect.h"
 #include "public/WebSize.h"
 #include <algorithm>
@@ -46,7 +47,69 @@ const int MENULIST_ARROW_SIZE = 6;
 const int INNERSPINBUTTON_BORDER = 3;
 const int INNERSPINBUTTON_ARROW_SIZE = 2;
 
+const WebKit::RGBA32 TAP_HIGHLIGHT_COLOR = 0x66000000;
+
 namespace WebKit {
+
+WebColor DefaultWebThemeEngine::activeSelectionBackgroundColor() const
+{
+    return WebColor(0, 0, 255);
+}
+
+WebColor DefaultWebThemeEngine::activeSelectionForegroundColor() const
+{
+    return WebColor::white;
+}
+
+WebColor DefaultWebThemeEngine::inactiveSelectionBackgroundColor() const
+{
+    return WebColor(176, 176, 176);
+}
+
+WebColor DefaultWebThemeEngine::inactiveSelectionForegroundColor() const
+{
+    return WebColor::black;
+}
+
+WebColor DefaultWebThemeEngine::activeListBoxSelectionBackgroundColor() const
+{
+    return activeSelectionBackgroundColor();
+}
+
+WebColor DefaultWebThemeEngine::activeListBoxSelectionForegroundColor() const
+{
+    return activeSelectionForegroundColor();
+}
+
+WebColor DefaultWebThemeEngine::inactiveListBoxSelectionBackgroundColor() const
+{
+    return inactiveSelectionBackgroundColor();
+}
+
+WebColor DefaultWebThemeEngine::inactiveListBoxSelectionForegroundColor() const
+{
+    return inactiveSelectionForegroundColor();
+}
+
+WebColor DefaultWebThemeEngine::activeTextSearchHighlightColor() const
+{
+    return WebColor(255, 150, 50); // Orange.
+}
+
+WebColor DefaultWebThemeEngine::inactiveTextSearchHighlightColor() const
+{
+    return WebColor(255, 255, 0); // Yellow.
+}
+
+WebColor DefaultWebThemeEngine::focusRingColor() const
+{
+    return WebColor::black;
+}
+
+WebColor DefaultWebThemeEngine::tapHighlightColor() const
+{
+    return TAP_HIGHLIGHT_COLOR;
+}
 
 static void gradientFill(cairo_t* cairo, double yStart, double yLength, bool inverted = false)
 {
