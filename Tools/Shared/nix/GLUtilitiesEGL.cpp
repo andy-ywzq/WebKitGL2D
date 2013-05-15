@@ -56,7 +56,7 @@ GLOffscreenBuffer::GLOffscreenBuffer(unsigned width, unsigned height)
         EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 8,
         EGL_DEPTH_SIZE, 24,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE
     };
     EGLConfig config;
@@ -71,7 +71,7 @@ GLOffscreenBuffer::GLOffscreenBuffer(unsigned width, unsigned height)
         return;
     }
 
-    if (!eglBindAPI(EGL_OPENGL_API)) {
+    if (!eglBindAPI(EGL_OPENGL_ES_API)) {
         cerr << "Error: eglBindAPI()\n";
         return;
     }
