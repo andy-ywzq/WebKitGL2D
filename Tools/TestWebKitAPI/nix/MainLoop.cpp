@@ -26,6 +26,7 @@
 #include "config.h"
 #include "MainLoop.h"
 #include <cstdlib>
+#include <cassert>
 #include <glib.h>
 
 static GMainLoop* g_mainLoop = 0;
