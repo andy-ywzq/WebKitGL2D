@@ -119,6 +119,21 @@ void WebInspectorProxy::platformAttachAvailabilityChanged(bool)
     notImplemented();
 }
 
+void WebInspectorProxy::platformSetToolbarHeight(unsigned)
+{
+    notImplemented();
+}
+
+void WebInspectorProxy::platformSave(const String&, const String&, bool)
+{
+    notImplemented();
+}
+
+void WebInspectorProxy::platformAppend(const String&, const String&)
+{
+    notImplemented();
+}
+
 } // namespace WebKit
 
 #endif // ENABLE(INSPECTOR)

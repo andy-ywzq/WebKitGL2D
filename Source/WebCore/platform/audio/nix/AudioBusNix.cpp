@@ -31,33 +31,33 @@
 #include "AudioFileReader.h"
 #include <public/Platform.h>
 #include <public/WebAudioBus.h>
-#include <wtf/PassOwnPtr.h>
+#include <wtf/PassRefPtr.h>
 #include <wtf/text/StringConcatenate.h>
 #include <wtf/text/CString.h>
 
 namespace WebCore {
 
-PassOwnPtr<AudioBus> decodeAudioFileData(const char* data, size_t size, double sampleRate)
+PassRefPtr<AudioBus> decodeAudioFileData(const char* data, size_t size, double sampleRate)
 {
     WebKit::WebAudioBus webAudioBus;
     if (WebKit::Platform::current()->loadAudioResource(&webAudioBus, data, size, sampleRate))
-        return webAudioBus.release();
-    return nullptr;
+        return webAudioBus.audioBus();
+    return PassRefPtr<AudioBus>();
 }
 
-PassOwnPtr<AudioBus> AudioBus::loadPlatformResource(const char* name, float sampleRate)
+PassRefPtr<AudioBus> AudioBus::loadPlatformResource(const char* name, float sampleRate)
 {
     String absoluteFilename(makeString(DATA_DIR, "/webaudio/resources/", name, ".wav"));
     const WebKit::WebData& resource = WebKit::Platform::current()->loadResource(absoluteFilename.utf8().data());
 
     if (resource.isEmpty())
-        return nullptr;
+        return PassRefPtr<AudioBus>();
 
     // FIXME: the sampleRate parameter is ignored. It should be removed from the API.
-    OwnPtr<AudioBus> audioBus = decodeAudioFileData(resource.data(), resource.size(), sampleRate);
+    RefPtr<AudioBus> audioBus = decodeAudioFileData(resource.data(), resource.size(), sampleRate);
 
     if (!audioBus.get())
-        return nullptr;
+        return PassRefPtr<AudioBus>();
 
     // If the bus is already at the requested sample-rate then return as is.
     if (audioBus->sampleRate() == sampleRate)
@@ -66,12 +66,12 @@ PassOwnPtr<AudioBus> AudioBus::loadPlatformResource(const char* name, float samp
     return AudioBus::createBySampleRateConverting(audioBus.get(), false, sampleRate);
 }
 
-PassOwnPtr<AudioBus> createBusFromInMemoryAudioFile(const void* data, size_t dataSize, bool mixToMono, float sampleRate)
+PassRefPtr<AudioBus> createBusFromInMemoryAudioFile(const void* data, size_t dataSize, bool mixToMono, float sampleRate)
 {
     // FIXME: the sampleRate parameter is ignored. It should be removed from the API.
-    OwnPtr<AudioBus> audioBus = decodeAudioFileData(static_cast<const char*>(data), dataSize, sampleRate);
+    RefPtr<AudioBus> audioBus = decodeAudioFileData(static_cast<const char*>(data), dataSize, sampleRate);
     if (!audioBus.get())
-        return nullptr;
+        return PassRefPtr<AudioBus>();
 
     // If the bus needs no conversion then return as is.
     if ((!mixToMono || audioBus->numberOfChannels() == 1) && audioBus->sampleRate() == sampleRate)

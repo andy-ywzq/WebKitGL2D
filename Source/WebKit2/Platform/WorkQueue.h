@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 class QObject;
 class QThread;
 QT_END_NAMESPACE
-#elif PLATFORM(GTK) || PLATFORM(NIX)
+#elif PLATFORM(GTK)
 #include <wtf/gobject/GRefPtr.h>
 typedef gboolean (*GSourceFunc) (gpointer data);
 #elif PLATFORM(EFL)
@@ -166,7 +166,7 @@ private:
     class SocketEventSource;
     HashMap<int, Vector<SocketEventSource*>> m_eventSources;
     typedef HashMap<int, Vector<SocketEventSource*>>::iterator SocketEventSourceIterator;
-#elif PLATFORM(EFL)
+#elif PLATFORM(EFL) || PLATFORM(NIX)
     class TimerWorkItem {
     public:
         static PassOwnPtr<TimerWorkItem> create(Function<void()>, double expireTime);

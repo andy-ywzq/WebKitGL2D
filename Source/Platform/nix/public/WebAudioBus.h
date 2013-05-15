@@ -30,7 +30,7 @@
 namespace WebCore { class AudioBus; }
 
 #if WEBKIT_IMPLEMENTATION
-namespace WTF { template <typename T> class PassOwnPtr; }
+namespace WTF { template <typename T> class PassRefPtr; }
 #endif
 
 namespace WebKit {
@@ -43,7 +43,7 @@ class WebAudioBusPrivate;
 //
 class WebAudioBus {
 public:
-    WebAudioBus() : m_private(0) { }
+    WebAudioBus() : m_d(0) { }
     ~WebAudioBus() { reset(); }
 
     // initialize() allocates memory of the given length for the given number of channels.
@@ -63,7 +63,7 @@ public:
     WEBKIT_EXPORT float* channelData(unsigned channelIndex);
 
 #if WEBKIT_IMPLEMENTATION
-    WTF::PassOwnPtr<WebCore::AudioBus> release();
+    WTF::PassRefPtr<WebCore::AudioBus> audioBus();
 #endif
 
 private:
@@ -71,7 +71,7 @@ private:
     WebAudioBus(const WebAudioBus&);
     void operator=(const WebAudioBus&);
 
-    WebCore::AudioBus* m_private;
+    WebAudioBusPrivate* m_d;
 };
 
 } // namespace WebKit

@@ -41,18 +41,22 @@ using namespace WebCore;
 
 namespace WebKit {
 
-class WebAudioBusPrivate : public AudioBus {
+class WebAudioBusPrivate {
+public:
+    WebAudioBusPrivate(PassRefPtr<WebCore::AudioBus> audioBus)
+        : m_audioBus(audioBus)
+    {}
+
+    RefPtr<WebCore::AudioBus> m_audioBus;
 };
 
 void WebAudioBus::initialize(unsigned numberOfChannels, size_t length, double sampleRate)
-{        
+{
 #if ENABLE(WEB_AUDIO)
-    AudioBus* audioBus = new AudioBus(numberOfChannels, length);
-    audioBus->setSampleRate(sampleRate);
-
-    if (m_private)
-        delete m_private;
-    m_private = static_cast<WebAudioBusPrivate*>(audioBus);
+    if (m_d)
+        delete m_d;
+    m_d = new WebAudioBusPrivate(WebCore::AudioBus::create(numberOfChannels, length));
+    m_d->m_audioBus->setSampleRate(sampleRate);
 #else
     ASSERT_NOT_REACHED();
 #endif
@@ -61,10 +65,10 @@ void WebAudioBus::initialize(unsigned numberOfChannels, size_t length, double sa
 void WebAudioBus::resizeSmaller(size_t newLength)
 {
 #if ENABLE(WEB_AUDIO)
-    ASSERT(m_private);
-    if (m_private) {
+    ASSERT(m_d);
+    if (m_d) {
         ASSERT(newLength <= length());
-        m_private->resizeSmaller(newLength);
+        m_d->m_audioBus->resizeSmaller(newLength);
     }
 #else
     ASSERT_NOT_REACHED();
@@ -74,8 +78,8 @@ void WebAudioBus::resizeSmaller(size_t newLength)
 void WebAudioBus::reset()
 {
 #if ENABLE(WEB_AUDIO)
-    delete m_private;
-    m_private = 0;
+    delete m_d;
+    m_d = 0;
 #else
     ASSERT_NOT_REACHED();
 #endif
@@ -84,9 +88,9 @@ void WebAudioBus::reset()
 unsigned WebAudioBus::numberOfChannels() const
 {
 #if ENABLE(WEB_AUDIO)
-    if (!m_private)
+    if (!m_d)
         return 0;
-    return m_private->numberOfChannels();
+    return m_d->m_audioBus->numberOfChannels();
 #else
     ASSERT_NOT_REACHED();
     return 0;
@@ -96,9 +100,9 @@ unsigned WebAudioBus::numberOfChannels() const
 size_t WebAudioBus::length() const
 {
 #if ENABLE(WEB_AUDIO)
-    if (!m_private)
+    if (!m_d)
         return 0;
-    return m_private->length();
+    return m_d->m_audioBus->length();
 #else
     ASSERT_NOT_REACHED();
     return 0;
@@ -108,9 +112,9 @@ size_t WebAudioBus::length() const
 double WebAudioBus::sampleRate() const
 {
 #if ENABLE(WEB_AUDIO)
-    if (!m_private)
+    if (!m_d)
         return 0;
-    return m_private->sampleRate();
+    return m_d->m_audioBus->sampleRate();
 #else
     ASSERT_NOT_REACHED();
     return 0;
@@ -120,22 +124,20 @@ double WebAudioBus::sampleRate() const
 float* WebAudioBus::channelData(unsigned channelIndex)
 {
 #if ENABLE(WEB_AUDIO)
-    if (!m_private)
+    if (!m_d)
         return 0;
     ASSERT(channelIndex < numberOfChannels());
-    return m_private->channel(channelIndex)->mutableData();
+    return m_d->m_audioBus->channel(channelIndex)->mutableData();
 #else
     ASSERT_NOT_REACHED();
     return 0;
 #endif
 }
 
-PassOwnPtr<AudioBus> WebAudioBus::release()
+PassRefPtr<AudioBus> WebAudioBus::audioBus()
 {
 #if ENABLE(WEB_AUDIO)
-    OwnPtr<AudioBus> audioBus(adoptPtr(static_cast<AudioBus*>(m_private)));
-    m_private = 0;
-    return audioBus.release();
+    return m_d->m_audioBus;
 #else
     ASSERT_NOT_REACHED();
     return nullptr;

@@ -50,7 +50,6 @@
 #include <climits>
 
 #include <wtf/Platform.h>
-#include <wtf/UnusedParam.h>
 #include <WebKit2/WKRetainPtr.h>
 
 #define NOCOLOR "\e[m"
