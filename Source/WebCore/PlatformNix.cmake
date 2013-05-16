@@ -20,8 +20,8 @@ list(APPEND WebCore_SOURCES
     page/nix/EventHandlerNix.cpp
     platform/Cursor.cpp
     platform/nix/ClipboardNix.cpp
-    platform/nix/ContextMenuNix.cpp
-    platform/nix/ContextMenuItemNix.cpp
+    platform/ContextMenuNone.cpp
+    platform/ContextMenuItemNone.cpp
     platform/nix/CursorNix.cpp
     platform/nix/DragDataNix.cpp
     platform/nix/DragImageNix.cpp
