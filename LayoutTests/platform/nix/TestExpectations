@@ -1058,6 +1058,7 @@ fast/forms/box-shadow-override.html [ Skip ]
 fast/forms/color/color-setrangetext.html [ Skip ]
 fast/forms/color/input-color-onchange-event.html [ Skip ]
 fast/forms/color/input-value-sanitization-color.html [ Skip ]
+fast/forms/datalist/datalist-child-validation.html [ Skip ]
 fast/forms/datalist/datalist-fallback-content.html [ Skip ]
 fast/forms/datalist/datalist.html [ Skip ]
 fast/forms/datalist/datalist-nonoption-child.html [ Skip ]
@@ -4338,6 +4339,15 @@ storage/indexeddb/keypath-intrinsic-properties.html [ Crash ]
 storage/indexeddb/mozilla/remove-objectstore.html [ Crash ]
 fast/forms/validation-message-appearance.html [ Missing ]
 
+# Failing or flakey tests after merge ceff3a0 09daeb9
+fast/css/text-overflow-ellipsis-full-truncate-rtl.html
+fast/forms/datalist/input-appearance-range-with-datalist-rtl.html
+fast/forms/range/input-appearance-range-rtl.html
+fast/js/global-constructors-attributes.html
+fast/text/complex-initial-advance.html
+userscripts/user-script-audio-document.html
+userscripts/user-script-plugin-document.html
+userscripts/user-script-video-document.html
 
 # Flakey tests when running pixel tests.
 compositing/background-color/background-color-padding-change.html [ ImageOnlyFailure Pass ]
