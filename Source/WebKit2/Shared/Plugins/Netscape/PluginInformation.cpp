@@ -102,8 +102,8 @@ void getPluginModuleInformation(const PluginModuleInfo& plugin, ImmutableDiction
     map.set(pluginInformationPathKey(), WebString::create(plugin.path));
     map.set(pluginInformationDisplayNameKey(), WebString::create(plugin.info.name));
     map.set(pluginInformationDefaultLoadPolicyKey(), WebUInt64::create(toWKPluginLoadPolicy(PluginInfoStore::policyForPlugin(plugin))));
-#endif
     getPlatformPluginModuleInformation(plugin, map);
+#endif
 }
 
 PassRefPtr<ImmutableDictionary> createPluginInformationDictionary(const PluginModuleInfo& plugin)
