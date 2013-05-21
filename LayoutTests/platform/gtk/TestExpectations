@@ -220,6 +220,7 @@ webkit.org/b/98940 fast/events/drag-dataTransferItemList-file-handling.html [ Sk
 
 # setAutomaticLinkDetectionEnabled is not yet implemented.
 webkit.org/b/99069 editing/inserting/typing-space-to-trigger-smart-link.html [ Failure ]
+webkit.org/b/85463 editing/inserting/smart-link-when-caret-is-moved-before-URL.html [ Failure ]
 
 # Custom MIME type support in DataTransfer is not yet implemented.
 webkit.org/b/99068 editing/pasteboard/clipboard-customData.html [ Failure ]
@@ -744,6 +745,7 @@ webkit.org/b/101670 media/video-controls-captions-trackmenu.html [ Skip ]
 webkit.org/b/101670 media/video-controls-captions-trackmenu-sorted.html [ Skip ]
 webkit.org/b/101670 media/video-controls-captions-trackmenu-localized.html [ Skip ]
 webkit.org/b/101670 media/video-controls-captions-trackmenu-hide-on-click.html [ Skip ]
+webkit.org/b/101670 media/video-controls-captions-trackmenu-hide-on-click-outside.html [ Skip ]
 webkit.org/b/101670 media/track/track-user-preferences.html [ Skip ]
 
 webkit.org/b/107194 storage/indexeddb/database-quota.html [ Timeout ]
@@ -1378,8 +1380,6 @@ webkit.org/b/115633 accessibility/meter-element.html [ Failure ]
 webkit.org/b/116059 fast/css/variables/var-inside-shape.html [ ImageOnlyFailure ]
 
 webkit.org/b/116153 fast/css/text-overflow-ellipsis-full-truncate-rtl.html [ ImageOnlyFailure ]
-
-webkit.org/b/116259 http/tests/cache/willsendrequest-returns-null-for-memory-cache-load.html [ Failure ]
 
 #////////////////////////////////////////////////////////////////////////////////////////
 # End of Tests failing

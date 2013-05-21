@@ -114,6 +114,7 @@ platform/mac/editing/pasteboard/drag-selections-to-contenteditable.html
 platform/mac/fast/forms/listbox-scrollbar-hit-test.html
 
 # [WK2] [Mac] Spellcheck tests don't seem to work
+webkit.org/b/105616 editing/inserting/inserting-slash-inside-url-with-smart-link.html
 webkit.org/b/105616 editing/spelling/spelling-changed-text.html
 webkit.org/b/105616 platform/mac/editing/spelling/removing-underline-after-accepting-autocorrection-using-punctuation.html [ Failure ]
 webkit.org/b/105616 platform/mac/editing/spelling/click-autocorrected-word.html
@@ -272,6 +273,10 @@ webkit.org/b/114573 fast/repaint/selection-gap-fixed-child.html [ Failure ]
 webkit.org/b/114573 fast/repaint/selection-gap-flipped-fixed-child.html [ Failure ]
 
 webkit.org/b/116259 http/tests/cache/willsendrequest-returns-null-for-memory-cache-load.html [ Failure ]
+
+webkit.org/b/116478 storage/websql/open-database-creation-callback-isolated-world.html [ Pass Failure ]
+webkit.org/b/116478 storage/websql/statement-error-callback-isolated-world.html [ Pass Failure ]
+webkit.org/b/116478 storage/websql/transaction-success-callback-isolated-world.html [ Pass Failure ]
 
 ### END OF (1) Classified failures with bug reports
 ########################################

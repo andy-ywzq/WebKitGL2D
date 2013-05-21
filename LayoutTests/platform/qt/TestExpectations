@@ -158,10 +158,6 @@ http/tests/security/webgl-remote-read-remote-image-blocked-no-crossorigin.html
 inspector/profiler/webgl
 webgl/
 
-# ENABLE(LINK_PRERENDER) is disabled.
-fast/dom/HTMLLinkElement/prerender-insert-after-stop.html
-fast/dom/HTMLLinkElement/prerender-remove-after-stop.html
-
 # ENABLE(DASHBOARD_SUPPORT) is disabled
 http/tests/xmlhttprequest/default-content-type-dashboard.html
 http/tests/xmlhttprequest/svg-created-by-xhr-allowed-in-dashboard.html
@@ -342,6 +338,7 @@ webkit.org/b/82886 inspector/styles/override-screen-size.html [ Skip ]
 
 # LayoutTestController::setAutomaticLinkDetectionEnabled isn't implemented
 webkit.org/b/85463 editing/inserting/typing-space-to-trigger-smart-link.html
+webkit.org/b/85463 editing/inserting/smart-link-when-caret-is-moved-before-URL.html
 
 # gestureTwoFingerTap not implemented by this platform (introduced in r132406)
 touchadjustment/touch-links-two-finger-tap.html
@@ -1501,13 +1498,6 @@ fast/css/line-after-floating-div.html
 # https://bugs.webkit.org/show_bug.cgi?id=67128
 fast/css/square-button-appearance.html
 
-fast/exclusions/shape-inside/shape-inside-polygon-layout.html
-
-# REGRESSION(r149457): some fast/exclusions tests are failing
-webkit.org/b/115511 fast/exclusions/shape-outside-floats/shape-outside-floats-diamond-margin-polygon.html [ Skip ]
-webkit.org/b/115511 fast/exclusions/shape-outside-floats/shape-outside-floats-ellipse-margin-left.html [ Skip ]
-webkit.org/b/115511 fast/exclusions/shape-outside-floats/shape-outside-floats-ellipse-margin-right.html [ Skip ]
-
 # --- new failing tests, bug report needed
 css3/images/cross-fade-blending.html
 css3/images/cross-fade-invalidation.html
@@ -2597,6 +2587,7 @@ webkit.org/b/101670 media/video-controls-captions-trackmenu.html [ Skip ]
 webkit.org/b/101670 media/video-controls-captions-trackmenu-sorted.html [ Skip ]
 webkit.org/b/101670 media/video-controls-captions-trackmenu-localized.html [ Skip ]
 webkit.org/b/101670 media/video-controls-captions-trackmenu-hide-on-click.html [ Skip ]
+webkit.org/b/101670 media/video-controls-captions-trackmenu-hide-on-click-outside.html [ Skip ]
 webkit.org/b/101670 media/track/track-user-preferences.html [ Skip ]
 
 # New, but failing test

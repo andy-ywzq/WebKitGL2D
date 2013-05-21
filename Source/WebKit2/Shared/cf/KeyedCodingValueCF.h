@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2010 Apple Inc. All rights reserved.
- * Portions Copyright (c) 2010 Motorola Mobility, Inc.  All rights reserved.
+ * Copyright (C) 2013 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,62 +23,16 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
-#include "SharedMemory.h"
+#ifndef KeyedCodingValueCF_h
+#define KeyedCodingValueCF_h
 
-#include <WebCore/NotImplemented.h>
+#include "KeyedCodingValue.h"
+#include <wtf/RetainPtr.h>
 
 namespace WebKit {
 
-SharedMemory::Handle::Handle()
-{
-    notImplemented();
-}
+RetainPtr<CFTypeRef> toCFType(const KeyedCodingValue&);
 
-SharedMemory::Handle::~Handle()
-{
-    notImplemented();
-}
+} // namespace WebKit
 
-void SharedMemory::Handle::encode(CoreIPC::ArgumentEncoder& encoder) const
-{
-    notImplemented();
-}
-
-bool SharedMemory::Handle::decode(CoreIPC::ArgumentDecoder& decoder, Handle& handle)
-{
-    notImplemented();
-    return false;
-}
-
-PassRefPtr<SharedMemory> SharedMemory::create(size_t size)
-{
-    notImplemented();
-    return 0;
-}
-
-PassRefPtr<SharedMemory> SharedMemory::create(const Handle& handle, Protection protection)
-{
-    notImplemented();
-    return 0;    
-}
-
-SharedMemory::~SharedMemory()
-{
-    notImplemented();
-}
-    
-bool SharedMemory::createHandle(Handle& handle, Protection protection)
-{
-    notImplemented();
-    return false;
-}
-
-unsigned SharedMemory::systemPageSize()
-{
-    unsigned pageSize = 0;
-
-    return pageSize;
-}
-
-}
+#endif // KeyedCodingValueCF_h

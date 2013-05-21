@@ -1,3 +1,34 @@
+2013-05-20  David Kilzer  <ddkilzer@apple.com>
+
+        Synchronize FeatureDefines.xcconfig
+
+        * Configurations/FeatureDefines.xcconfig: Add a newline to the
+        end of the file.
+
+2013-05-19  Anders Carlsson  <andersca@apple.com>
+
+        Remove link prerendering code
+        https://bugs.webkit.org/show_bug.cgi?id=116415
+
+        Reviewed by Darin Adler.
+
+        This code was only used by Chromium and is dead now.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-05-19  Anders Carlsson  <andersca@apple.com>
+
+        Remove ChromeClient::webView()
+        https://bugs.webkit.org/show_bug.cgi?id=116054
+
+        Reviewed by Darin Adler.
+
+        This blatantly horrible layer violation was only used to know if a ChromeClient is an empty
+        client or not. We already have a (slightly less horrible) way to do that.
+
+        * WebCoreSupport/WebChromeClient.h:
+        (WebChromeClient):
+
 2013-05-17  Anders Carlsson  <andersca@apple.com>
 
         Accessing null function pointers is bad.

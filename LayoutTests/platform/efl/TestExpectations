@@ -815,8 +815,6 @@ webkit.org/b/84338 fast/forms/plaintext-mode-2.html [ Pass ]
 webkit.org/b/102367 fast/forms/zoomed-controls.html [ Pass ]
 
 # Crashing IndexedDB tests
-webkit.org/b/112578 storage/indexeddb/transaction-coordination-across-databases.html [ Crash ]
-webkit.org/b/107194 storage/indexeddb/pending-activity.html [ Crash ]
 webkit.org/b/107194 [ Release ] storage/indexeddb/cursor-advance.html [ Crash ]
 
 # Flaky IndexedDB tests
@@ -1361,6 +1359,7 @@ webkit.org/b/83704 media/event-attributes.html [ Failure ]
 
 # EFL's LayoutTestController does not implement setAutomaticLinkDetectionEnabled
 webkit.org/b/85463 editing/inserting/typing-space-to-trigger-smart-link.html
+webkit.org/b/85463 editing/inserting/smart-link-when-caret-is-moved-before-URL.html
 
 # Tests failing due to rounding problems in colors inside pixman
 webkit.org/b/49964 fast/canvas/canvas-fillPath-shadow.html [ Failure ]
@@ -1618,6 +1617,7 @@ webkit.org/b/101670 media/video-controls-captions-trackmenu.html [ Skip ]
 webkit.org/b/101670 media/video-controls-captions-trackmenu-sorted.html [ Skip ]
 webkit.org/b/101670 media/video-controls-captions-trackmenu-localized.html [ Skip ]
 webkit.org/b/101670 media/video-controls-captions-trackmenu-hide-on-click.html [ Skip ]
+webkit.org/b/101670 media/video-controls-captions-trackmenu-hide-on-click-outside.html [ Skip ]
 webkit.org/b/101670 media/track/track-user-preferences.html [ Skip ]
 
 # Fails until we enable the Resource Timing API.
@@ -1764,10 +1764,6 @@ webkit.org/b/110316 svg/as-background-image/tiled-background-image.html [ ImageO
 webkit.org/b/110338 fast/events/touch/emulate-touch-events.html [ Failure ]
 
 webkit.org/b/110446 svg/as-background-image/svg-transformed-background.html [ ImageOnlyFailure ]
-
-# INDEXED_DATABASE is temporarily disabled at build time until WK2 build is fixed.
-Bug(EFL) storage/indexeddb
-Bug(EFL) http/tests/inspector/indexeddb
 
 # New test
 webkit.org/b/110654 css3/flexbox/button.html [ Failure ]

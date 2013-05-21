@@ -1,3 +1,442 @@
+2013-05-21  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Update test expectations after r150472 for the bug 116125.
+
+        * platform/wk2/TestExpectations:
+
+2013-05-21  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r150386 and r150397.
+        http://trac.webkit.org/changeset/150386
+        http://trac.webkit.org/changeset/150397
+        https://bugs.webkit.org/show_bug.cgi?id=116572
+
+        Broke a test; Alex is going to try again later. (Requested by
+        thorton on #webkit).
+
+        * platform/wk2/TestExpectations:
+
+2013-05-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        dispatchEvent call can execute javascript and blow away endRoot from underneath
+        https://bugs.webkit.org/show_bug.cgi?id=116567
+        https://bugs.webkit.org/show_bug.cgi?id=116483
+
+        Reviewed by Andreas Kling.
+
+        Add a regression test.
+
+        * editing/undo/undo-after-event-edited-expected.txt: Added.
+        * editing/undo/undo-after-event-edited.html: Added.
+
+2013-05-21  Ryosuke Niwa  <rniwa@webkit.org>
+
+        media/track/track-cue-rendering-snap-to-lines-not-set.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=116567
+
+        Add a failing test expectation to the test added in r150452.
+
+        * platform/mac/TestExpectations:
+        * platform/mac/media/track/track-cue-rendering-snap-to-lines-not-set-expected.txt: Added.
+
+2013-05-21  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Disable several crashing tests.
+        https://bugs.webkit.org/show_bug.cgi?id=116562
+        
+        Unreviewed change to TestExpectations while investigating.
+
+        * platform/win/TestExpectations:
+
+2013-05-21  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Workers are crashing tests.
+        https://bugs.webkit.org/show_bug.cgi?id=116560.
+
+        Unreviewed change to TestExpectations while investigating.
+
+        * platform/win/TestExpectations: Disable worker tests under Windows.
+
+2013-05-21  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed test expectation change - skip failing tests.
+        https://bugs.webkit.org/show_bug.cgi?id=116564
+
+        1. Skip a number of failing tests, and investigate the sources of the
+        problems.  Progress will be tracked on the above bug.
+        2. Correct a typo I made in r150382
+        3. Remove skip entries from https://webkit.org/b/113908; these were
+        replaced with new tests added in https://webkit.org/b/113946.
+
+        * platform/win/TestExpectations:
+
+2013-05-21  Radu Stavila  <stavila@adobe.com>
+
+        [CSSRegions] Remove percentages from offsetLeft/offsetTop tests to avoid sub-pixel errors
+        https://bugs.webkit.org/show_bug.cgi?id=116544
+
+        Reviewed by Andreas Kling.
+
+        * fast/regions/offsetLeft-offsetTop-in-multiple-regions.html:
+        * fast/regions/offsetLeft-offsetTop-in-region-absolute-sticky-fixed.html:
+
+2013-05-20  Jer Noble  <jer.noble@apple.com>
+
+        Implement overlap avoidance for cues with snap-to-lines flag not set
+        https://bugs.webkit.org/show_bug.cgi?id=84296
+
+        Reviewed by Eric Carlson.
+
+        * media/track/track-cue-overlap-snap-to-lines-not-set-expected.txt: Added.
+        * media/track/track-cue-overlap-snap-to-lines-not-set.html: Added.
+
+2013-05-21  Krzysztof Czech  <k.czech@samsung.com>
+
+        [GTK][WK2] accessibility/label-for-control-hittest.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=106341
+
+        Reviewed by Martin Robinson.
+
+        Fixing failing test. The reason of failure is missing
+        possibility of getting accessibility object at exact position. 
+
+        * platform/gtk-wk2/TestExpectations:
+
+2013-05-21  Krzysztof Czech  <k.czech@samsung.com>
+
+        [EFL] accessibility/accessibility-node-reparent.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=112026
+
+        Unreviewed EFL gardening.
+
+        accessibility/accessibility-node-reparent.html passes after r150431.
+
+        * platform/efl-wk2/TestExpectations:
+
+2013-05-21  Krzysztof Czech  <k.czech@samsung.com>
+
+        [EFL] accessibility/accessibility-node-memory-management.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=112025
+
+        Unreviewed EFL gardening
+
+        accessibility/accessibility-node-memory-management.html passes after r150431.
+
+        * platform/efl-wk2/TestExpectations:
+
+2013-05-21  Ryosuke Niwa  <rniwa@webkit.org>
+
+        [Mac] svg/batik/paints/patternRegions-positioned-objects.svg is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=116519
+
+        Add a flaky test expectation.
+
+        * platform/mac/TestExpectations:
+
+2013-05-20  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        Remove remaining link-prerender code
+        https://bugs.webkit.org/show_bug.cgi?id=116429
+
+        Reviewed by Darin Adler.
+
+        Remove test cases related to link-prerender.
+
+        * fast/dom/HTMLLinkElement/prerender-insert-after-stop-expected.txt: Removed.
+        * fast/dom/HTMLLinkElement/prerender-insert-after-stop.html: Removed.
+        * fast/dom/HTMLLinkElement/prerender-remove-after-stop-expected.txt: Removed.
+        * fast/dom/HTMLLinkElement/prerender-remove-after-stop.html: Removed.
+        * fast/dom/HTMLLinkElement/resources/empty.html: Removed.
+        * fast/dom/HTMLLinkElement/resources/empty2.html: Removed.
+        * fast/dom/HTMLLinkElement/resources/simple-prerender.html: Removed.
+        * platform/mac/TestExpectations:
+        * platform/qt/TestExpectations:
+        * platform/win/TestExpectations:
+        * platform/wincairo/TestExpectations:
+        * platform/wk2/TestExpectations:
+
+2013-05-20  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed EFL gardening. Below tests don't come to crash anymore after r150368.
+        But, pending-activity.html still comes to crash on wk2.
+
+        storage/indexeddb/pending-activity.html
+        storage/indexeddb/transaction-coordination-across-databases.html
+
+        * platform/efl-wk2/TestExpectations:
+        * platform/efl/TestExpectations:
+
+2013-05-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Add tests for named access checks on DOMWindow
+        https://bugs.webkit.org/show_bug.cgi?id=116512
+
+        Reviewed by Geoffrey Garen.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/9207625a100abe9b72333ac5dba02b38ca5f4466
+
+        * http/tests/security/xss-DENIED-window-name-alert-expected.txt: Added.
+        * http/tests/security/xss-DENIED-window-name-alert.html: Added.
+        * http/tests/security/xss-DENIED-window-name-navigator-expected.txt: Added.
+        * http/tests/security/xss-DENIED-window-name-navigator.html: Added.
+
+2013-05-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Null pointer deference in WebCore::AppendNodeCommand::create
+        https://bugs.webkit.org/show_bug.cgi?id=116479
+
+        Reviewed by Andreas Kling.
+
+        Add a regression test.
+
+        * editing/deleting/delete-uneditable-style-expected.txt: Added.
+        * editing/deleting/delete-uneditable-style.html: Added.
+
+2013-05-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        REGRESSION(r150386): [WK2] loader/go-back-cached-main-resource.html fails
+        https://bugs.webkit.org/show_bug.cgi?id=116491
+
+        Add a test expectation.
+
+        * platform/wk2/TestExpectations:
+
+2013-05-20  Simon Fraser  <simon.fraser@apple.com>
+
+        position:sticky should stick for the enclosing overflow ancestor
+        https://bugs.webkit.org/show_bug.cgi?id=100054
+
+        Reviewed by Beth Dakin.
+        
+        Reference test for sticky behavior inside overflow:.
+
+        * fast/css/sticky/sticky-top-overflow-expected.html: Added.
+        * fast/css/sticky/sticky-top-overflow.html: Added.
+
+2013-05-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Add a test that inserting a character inside a URL doesn't move caret per auto correction
+        https://bugs.webkit.org/show_bug.cgi?id=116458
+
+        Reviewed by Darin Adler.
+
+        Add a test. This is broken on Safari 6 but fixed on ToT.
+
+        * editing/inserting/inserting-slash-inside-url-with-smart-link-expected.txt: Added.
+        * editing/inserting/inserting-slash-inside-url-with-smart-link.html: Added.
+        * platform/mac-wk2/TestExpectations:
+
+2013-05-20  Manuel Rego Casasnovas  <rego@igalia.com>
+
+        [GTK][WK2] Unflag tests related to layoutTestController.setSmartInsertDeleteEnabled
+        https://bugs.webkit.org/show_bug.cgi?id=116433
+
+        Unreviewed gardening.
+
+        * platform/gtk-wk2/TestExpectations: Unflag tests as they are passing
+        since r150289.
+
+2013-05-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        [Mac] [WK2] storage/websql/open-database-creation-callback-isolated-world.html, statement-error-callback-isolated-world.html,
+        and transaction-success-callback-isolated-world.html are flaky
+        https://bugs.webkit.org/show_bug.cgi?id=116478
+
+        Add flaky test expectations.
+
+        * platform/mac-wk2/TestExpectations:
+
+2013-05-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        svg/batik/text/textEffect.svg is flaky on Mountain Lion builders
+        https://bugs.webkit.org/show_bug.cgi?id=116477
+
+        Add a failing test expectation.
+
+        * platform/mac/TestExpectations:
+
+2013-05-20  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Exclusions] Add CSS parsing support for image URI shape-inside and shape-outside values
+        https://bugs.webkit.org/show_bug.cgi?id=116349
+
+        Reviewed by Alexandru Chiculita.
+
+        Check that shape values specified with a URI are parsed correctly.
+
+        * fast/exclusions/parsing-wrap-shape-inside-expected.txt:
+        * fast/exclusions/parsing-wrap-shape-outside-expected.txt:
+        * fast/exclusions/script-tests/parsing-wrap-shape-inside.js:
+        * fast/exclusions/script-tests/parsing-wrap-shape-outside.js:
+
+2013-05-20  Alex Christensen  <achristensen@apple.com>
+
+        WTR::pathSuitableForTestResult should behave the same as _drt_descriptionSuitableForTestResult so we can unskip tests.
+        https://bugs.webkit.org/show_bug.cgi?id=116125
+
+        Reviewed by Tim Horton.
+
+        * platform/wk2/TestExpectations:
+        Unskipped working tests.
+
+2013-05-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Add a failing test expectation to editing/selection/user-drag-element-and-user-select-none.html
+        after r150354. The failure is tracked by the bug 116473.
+
+        * TestExpectations:
+
+2013-05-20  Radu Stavila  <stavila@adobe.com>
+
+        [CSSRegions] Fix offsetLeft / offsetTop for elements inside named flow
+        https://bugs.webkit.org/show_bug.cgi?id=115899
+
+        Reviewed by David Hyatt.
+
+        Added tests for the implementation of offsetLeft and offsetTop for objects inside named flows
+        for which the offsetParent is the body.
+
+        * fast/regions/offsetLeft-offsetTop-in-multiple-regions-expected.txt: Added.
+        * fast/regions/offsetLeft-offsetTop-in-multiple-regions.html: Added.
+        * fast/regions/offsetLeft-offsetTop-in-region-absolute-sticky-fixed-expected.txt: Added.
+        * fast/regions/offsetLeft-offsetTop-in-region-absolute-sticky-fixed.html: Added.
+        * fast/regions/offsetLeft-offsetTop-in-region-float-expected.txt: Added.
+        * fast/regions/offsetLeft-offsetTop-in-region-float-vert-rl-expected.txt: Added.
+        * fast/regions/offsetLeft-offsetTop-in-region-float-vert-rl.html: Added.
+        * fast/regions/offsetLeft-offsetTop-in-region-float.html: Added.
+        * fast/regions/offsetLeft-offsetTop-inlines-region-in-element-expected.txt: Added.
+        * fast/regions/offsetLeft-offsetTop-inlines-region-in-element.html: Added.
+
+2013-05-20  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed TestExpectation cleanup. Reordered lines
+        to match Mac version to make it easier to understand what features
+        are uniquely missing in Windows port.
+
+        * platform/win/TestExpectations: Reordering of lines, adds some
+        bug ID's to existing skipped tests.
+
+2013-05-20  Hans Muller  <hmuller@adobe.com>
+
+        [Qt] REGRESSION(r149457): some fast/exclusions tests are failing
+        https://bugs.webkit.org/show_bug.cgi?id=115511
+
+        Reviewed by Andreas Kling.
+
+        Unskipping the exclusions tests on Qt. They were fixed by https://bugs.webkit.org/show_bug.cgi?id=116115.
+
+        * platform/qt/TestExpectations:
+
+2013-05-20  Zoltan Horvath  <zoltan@webkit.org>
+
+        [CSS Regions][CSS Exclusions] shape-inside on regions should respect positioned shapes and overflow
+        https://bugs.webkit.org/show_bug.cgi?id=116252
+
+        Reviewed by David Hyatt.
+
+        Regions should respect shape-inside properties which have specified top offset. Since the content which overflows from the
+        shape should be pushed after the content box (for details check out r148975), I implemented  overflowthe behavior for simple
+        cases when you have only one region. I'm going to implement it for additional regions in a follow up patch.
+
+        Tests: fast/regions/shape-inside/shape-inside-on-regions-block-content-basic-overflow-shape-top-offset.html
+               fast/regions/shape-inside/shape-inside-on-regions-inline-content-basic-overflow-shape-top-offset.html
+
+        * fast/regions/shape-inside/shape-inside-on-regions-block-content-basic-overflow-shape-top-offset-expected.html: Added.
+        * fast/regions/shape-inside/shape-inside-on-regions-block-content-basic-overflow-shape-top-offset.html: Added.
+        * fast/regions/shape-inside/shape-inside-on-regions-inline-content-basic-overflow-shape-top-offset-expected.html: Added.
+        * fast/regions/shape-inside/shape-inside-on-regions-inline-content-basic-overflow-shape-top-offset.html: Added.
+
+2013-05-20  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        [GTK] Cleanup TestExpectations to pass --lint-test-files
+        https://bugs.webkit.org/show_bug.cgi?id=116419
+
+        Unreviewed GTK gardening.
+
+        Remove one of two http/tests/cache/willsendrequest-returns-null-for-memory-cache-load.html
+
+        * platform/gtk/TestExpectations:
+
+2013-05-20  Antoine Quint  <graouts@apple.com>
+
+        [Mac] captions menu should behave more like a menu
+        https://bugs.webkit.org/show_bug.cgi?id=116436
+
+        Reviewed by Eric Carlson.
+
+        New test that checks that the caption menu hides when clicking outside
+        of the bounds of the media element.
+
+        * media/video-controls-captions-trackmenu-hide-on-click-outside-expected.txt: Added.
+        * media/video-controls-captions-trackmenu-hide-on-click-outside.html: Added.
+        * platform/efl/TestExpectations:
+        * platform/gtk/TestExpectations:
+        * platform/qt/TestExpectations:
+        * platform/win/TestExpectations:
+
+2013-05-18  Rashmi Shyamasundar  <rashmi.s2@samsung.com>
+
+        [Cairo] Canvas-shadow behavior is not being as expected
+        https://bugs.webkit.org/show_bug.cgi?id=108897
+
+        Reviewed by Martin Robinson.
+
+        Test to verify the shadow of an image drawn on canvas.
+        This test uses an image whose size is smaller than,
+        the size of the rectangle which should be filled with the image.
+
+        * fast/canvas/canvas-image-shadow-expected.txt: Added.
+        * fast/canvas/canvas-image-shadow.html: Added.
+        * fast/canvas/script-tests/canvas-image-shadow.js: Added.
+        (draw):
+
+2013-05-20  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        [EFL] Reenabled INDEXED_DATABASE after r150344
+        https://bugs.webkit.org/show_bug.cgi?id=116430
+
+        Reviewed by Gyuyoung Kim.
+
+        Unskip indexeddb layout tests for EFL port now that the functionality
+        is reenabled at compile time.
+
+        * platform/efl/TestExpectations:
+
+2013-05-20  Lamarque V. Souza  <Lamarque.Souza@basyskom.com>
+
+        -webkit-text-underline-position should not be inherited
+        https://bugs.webkit.org/show_bug.cgi?id=116363
+
+        Reviewed by Dean Jackson.
+
+        Update expected results.
+
+        * fast/css3-text/css3-text-decoration/getComputedStyle/getComputedStyle-text-underline-position-expected.txt:
+        * fast/css3-text/css3-text-decoration/getComputedStyle/script-tests/getComputedStyle-text-underline-position.js:
+
+2013-05-20  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        Unreviewed EFL gardening.
+
+        Adding failure expectations for spelling tests.
+
+        * platform/efl-wk2/TestExpectations:
+
+2013-05-20  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        Unreviewed EFL gardening.
+
+        spelling-double-clicked-word.html passes after r150289.
+
+        * platform/efl-wk2/TestExpectations:
+
+2013-05-18  Simon Fraser  <simon.fraser@apple.com>
+
+        svg/batik tests are flakey.
+        webkit.org/b/116398
+
+        * platform/mac/TestExpectations:
+
 2013-05-18  Christophe Dumez  <ch.dumez@sisa.samsung.com>
 
         Unreviewed EFL build fix.

@@ -51,6 +51,13 @@ private:
         : HTMLContentElement(HTMLNames::webkitShadowContentTag, document)
     {
     }
+
+    virtual MatchType matchTypeFor(Node* node) const OVERRIDE
+    {
+        if (node->isElementNode() && node == node->parentNode()->querySelector(summaryQuerySelector(), ASSERT_NO_EXCEPTION))
+            return NeverMatches;
+        return AlwaysMatches;
+    }
 };
 
 PassRefPtr<DetailsContentElement> DetailsContentElement::create(Document* document)
@@ -73,7 +80,7 @@ private:
         : HTMLContentElement(HTMLNames::webkitShadowContentTag, document)
     { }
 
-    virtual MatchType matchTypeFor(Node* node) OVERRIDE
+    virtual MatchType matchTypeFor(Node* node) const OVERRIDE
     {
         if (node->isElementNode() && node == node->parentNode()->querySelector(summaryQuerySelector(), ASSERT_NO_EXCEPTION))
             return AlwaysMatches;

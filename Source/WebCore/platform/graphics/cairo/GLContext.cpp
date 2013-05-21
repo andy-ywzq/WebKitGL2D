@@ -33,6 +33,15 @@
 #include <X11/Xlib.h>
 #endif
 
+#if PLATFORM(GTK)
+#include <gdk/gdk.h>
+#ifndef GTK_API_VERSION_2
+#ifdef GDK_WINDOWING_WAYLAND
+#include <gdk/gdkwayland.h>
+#endif
+#endif
+#endif
+
 namespace WebCore {
 
 GLContext* GLContext::sharingContext()
@@ -117,6 +126,16 @@ void GLContext::cleanupActiveContextsAtExit()
 
 PassOwnPtr<GLContext> GLContext::createContextForWindow(uint64_t windowHandle, GLContext* sharingContext)
 {
+#if PLATFORM(GTK) && defined(GDK_WINDOWING_WAYLAND) && USE(EGL)
+    GdkDisplay* display = gdk_display_manager_get_default_display(gdk_display_manager_get());
+
+    if (GDK_IS_WAYLAND_DISPLAY(display)) {
+        if (OwnPtr<GLContext> eglContext = GLContextEGL::createContext(windowHandle, sharingContext))
+            return eglContext.release();
+        return nullptr;
+    }
+#endif
+
 #if !PLATFORM(NIX)
 #if USE(GLX)
     if (OwnPtr<GLContext> glxContext = GLContextGLX::createContext(windowHandle, sharingContext))
@@ -137,17 +156,7 @@ GLContext::GLContext()
 
 PassOwnPtr<GLContext> GLContext::createOffscreenContext(GLContext* sharingContext)
 {
-#if !PLATFORM(NIX)
-#if USE(GLX)
-    if (OwnPtr<GLContext> glxContext = GLContextGLX::createContext(0, sharingContext))
-        return glxContext.release();
-#endif
-#if USE(EGL)
-    if (OwnPtr<GLContext> eglContext = GLContextEGL::createContext(0, sharingContext))
-        return eglContext.release();
-#endif
-#endif
-    return nullptr;
+    return createContextForWindow(0, sharingContext);
 }
 
 // FIXME: This should be a thread local eventually if we

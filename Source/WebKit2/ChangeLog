@@ -1,3 +1,314 @@
+2013-05-21  Martin Robinson  <mrobinson@igalia.com>
+
+        [GTK] [CMake] Add support for building WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=116372
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * CMakeLists.txt: Add common directories to the common include list and remove UIProcess/PageViewportController.cpp
+        from the source list since it should only be compiled for WebKitEFL. Instead of taking explicit forwarding-header
+        dependencies accept a list of "tacked-on" dependencies for WebKit2. This allows GTK+ to specify its extra fake
+        installed header step.
+        * PlatformEfl.cmake: Remove common include directories and add UIProcess/PageViewportController.cpp to the source
+        list. Fix up forwarding header dependencies now.
+        * PlatformGTK.cmake: Added.
+        * config.h: First check whether this is a CMake build and then fall back to the autotools header.
+
+2013-05-21  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Compile everything in C++11 mode
+        https://bugs.webkit.org/show_bug.cgi?id=116452
+
+        Reviewed by Anders Carlsson.
+
+        * GNUmakefile.am: Remove the -std=c++11 flags from the various CPPFLAGS lists, the mode is now specified
+        by default for all the C++ source code in SetupCompilerFlags.m4.
+
+2013-05-21  Jessie Berlin  <jberlin@apple.com>
+
+        Expose a way to know when forms are added to a page or when form controls are added to a form
+        in the injected bundle
+        https://bugs.webkit.org/show_bug.cgi?id=116334
+
+        Reviewed by Alexey Proskuryakov.
+
+        Add shouldNotifyOnFormChanges and didAssociateFormControls to the WKBundlePageFormClient.
+
+        * WebProcess/InjectedBundle/API/c/WKBundlePage.h:
+        Add the new callbacks as part of version 2 of the WKBundlePageFormClient.
+
+        * WebProcess/InjectedBundle/InjectedBundlePageFormClient.cpp:
+        (WebKit::InjectedBundlePageFormClient::didAssociateFormControls):
+        Pass the message along to the client if the client has a handler.
+        (WebKit::InjectedBundlePageFormClient::shouldNotifyOnFormChanges):
+        Ditto.
+        * WebProcess/InjectedBundle/InjectedBundlePageFormClient.h:
+
+        * WebProcess/WebCoreSupport/WebChromeClient.cpp:
+        (WebKit::WebChromeClient::didAssociateFormControls):
+        Tell the injected bundle form client for the page.
+        (WebKit::WebChromeClient::shouldNotifyOnFormChanges):
+        Ditto.
+        * WebProcess/WebCoreSupport/WebChromeClient.h:
+
+2013-05-21  Michael Brüning  <michael.bruning@digia.com>
+
+        [Qt][WK2] Fix Mountain Lion builds after r150277.
+        https://bugs.webkit.org/show_bug.cgi?id=116467
+
+        Reviewed by Jocelyn Turcotte.
+
+        * Shared/API/c/WKBase.h:
+
+2013-05-20  Lucas Forschler  <lforschler@apple.com>
+
+    Rollout r150398.
+
+2013-05-20  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Fix concatenations of string literals that are not C++11-compliant
+        https://bugs.webkit.org/show_bug.cgi?id=116449
+
+        Reviewed by Martin Robinson.
+
+        Fix the problematic concatenations of string literals so they are compilable under the C++11 standard. This
+        is simply a matter of separating the string and the string literal that are being concatenated with a space.
+
+        * UIProcess/API/gtk/tests/TestPrinting.cpp:
+        (testPrintOperationPrint):
+        * UIProcess/API/gtk/tests/WebExtensionTest.cpp:
+        (methodCallCallback):
+
+2013-05-20  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r150384.
+        http://trac.webkit.org/changeset/150384
+        https://bugs.webkit.org/show_bug.cgi?id=116513
+
+        Not ready for primetime. (Requested by kling on #webkit).
+
+        * UIProcess/WebProcessProxy.cpp:
+        (WebKit::WebProcessProxy::WebProcessProxy):
+        (WebKit::WebProcessProxy::removeWebPage):
+        * UIProcess/WebProcessProxy.h:
+        (WebProcessProxy):
+
+2013-05-20  Martin Robinson  <mrobinson@igalia.com>
+
+        Remove SharedMemoryGtk.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=116457
+
+        Reviewed by Andreas Kling.
+
+        * Platform/gtk/SharedMemoryGtk.cpp: Removed.
+
+2013-05-20  Jessie Berlin  <jberlin@apple.com>
+
+        Expose a way to know when forms are added to a page or when form controls are added to a form
+        in the injected bundle
+        https://bugs.webkit.org/show_bug.cgi?id=116334
+
+        Reviewed by Alexey Proskuryakov.
+
+        Add shouldNotifyOnFormChanges and didAssociateFormControls to the WKBundlePageFormClient.
+
+        * WebProcess/InjectedBundle/API/c/WKBundlePage.h:
+        Add the new callbacks as part of version 2 of the WKBundlePageFormClient.
+
+        * WebProcess/InjectedBundle/InjectedBundlePageFormClient.cpp:
+        (WebKit::InjectedBundlePageFormClient::didAssociateFormControls):
+        Pass the message along to the client if the client has a handler.
+        (WebKit::InjectedBundlePageFormClient::shouldNotifyOnFormChanges):
+        Ditto.
+        * WebProcess/InjectedBundle/InjectedBundlePageFormClient.h:
+
+        * WebProcess/WebCoreSupport/WebChromeClient.cpp:
+        (WebKit::WebChromeClient::didAssociateFormControls):
+        Tell the injected bundle form client for the page.
+        (WebKit::WebChromeClient::shouldNotifyOnFormChanges):
+        Ditto.
+        * WebProcess/WebCoreSupport/WebChromeClient.h:
+
+2013-05-20  Tim Horton  <timothy_horton@apple.com>
+
+        Clients should have a way to extend rendering suppression
+        https://bugs.webkit.org/show_bug.cgi?id=116463
+        <rdar://problem/13738496>
+
+        Reviewed by Andy Estes.
+
+        * WebProcess/InjectedBundle/API/c/WKBundlePage.cpp:
+        (WKBundlePageExtendIncrementalRenderingSuppression): Added.
+        (WKBundlePageStopExtendingIncrementalRenderingSuppression): Added.
+        * WebProcess/InjectedBundle/API/c/WKBundlePagePrivate.h:
+        These only have any effect if SuppressesIncrementalRendering is also enabled.
+
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::transitionToCommittedForNewPage):
+        Inform the FrameView if there are any outstanding rendering suppression tokens.
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::WebPage):
+        (WebKit::WebPage::extendIncrementalRenderingSuppression):
+        Return the next available rendering suppression token.
+        Add it to the list of active tokens.
+        Inform the FrameView that we want to suppress rendering.
+
+        (WebKit::WebPage::stopExtendingIncrementalRenderingSuppression):
+        Remove the given token from the list of active tokens.
+        Un-suppress rendering if appropriate.
+
+        * WebProcess/WebPage/WebPage.h:
+        (WebKit::WebPage::shouldExtendIncrementalRenderingSuppression):
+        Return if there are any active rendering suppression tokens.
+
+2013-05-20  Andreas Kling  <akling@apple.com>
+
+        PPT: Closing tab that is hung or chewing 100% CPU leaves abandoned WebProcess.
+        <http://webkit.org/b/116464>
+        <rdar://problem/10103795>
+
+        Reviewed by Anders Carlsson.
+
+        Give the web process a 10 second chance to exit nicely after closing the last tab belonging to it.
+        This code only runs if there was something on the page (e.g an unload/beforeunload event handler)
+        preventing the UI process from killing it right away.
+
+        * UIProcess/WebProcessProxy.cpp:
+        (WebKit::WebProcessProxy::WebProcessProxy):
+        (WebKit::WebProcessProxy::removeWebPage):
+        (WebKit::WebProcessProxy::forcefulTerminationTimerFired):
+        * UIProcess/WebProcessProxy.h:
+        (WebProcessProxy):
+
+2013-05-20  Anders Carlsson  <andersca@apple.com>
+
+        Add helper function for converting a KeyedCodingValue to a CFTypeRef
+        https://bugs.webkit.org/show_bug.cgi?id=116461
+
+        Reviewed by Tim Horton.
+
+        * Shared/cf/KeyedCodingValueCF.cpp: Added.
+        * Shared/cf/KeyedCodingValueCF.h: Added.
+
+        * WebKit2.xcodeproj/project.pbxproj:
+
+2013-05-20  Anders Carlsson  <andersca@apple.com>
+
+        Begin stubbing out a new KeyedEncoder class
+        https://bugs.webkit.org/show_bug.cgi?id=116456
+
+        Reviewed by Sam Weinig.
+
+        This class (and it's coming counterpart, KeyedDecoder) will be used for serializing
+        object graphs to a tree-like structure of dictionaries. It is up to individual ports to
+        serialize them further (for example, on Mac they could be serialized to CFPropertyList objects).
+        
+        This will be used for serializing session storage state but I hope that it can be used for serializing
+        back forward state in the future as our current implementation of back forward state serialization
+        is fragile and depends on our IPC layer's binary encoding(!).
+        
+        * Shared/KeyedCodingValue.h: Added.
+        * Shared/KeyedEncoder.cpp: Added.
+        * Shared/KeyedEncoder.h: Added.
+
+        * WebKit2.xcodeproj/project.pbxproj:
+
+2013-05-19  Sam Weinig  <sam@webkit.org>
+
+        Bump WKBundlePageLoaderClient version number so as not to break some clients
+        https://bugs.webkit.org/show_bug.cgi?id=116426
+
+        Reviewed by Anders Carlsson.
+
+        * Shared/APIClientTraits.cpp:
+        (WebKit):
+        * Shared/APIClientTraits.h:
+        * WebProcess/InjectedBundle/API/c/WKBundlePage.h:
+
+2013-05-19  Anders Carlsson  <andersca@apple.com>
+
+        Remove link prerendering code
+        https://bugs.webkit.org/show_bug.cgi?id=116415
+
+        Reviewed by Darin Adler.
+
+        This code was only used by Chromium and is dead now.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-05-18  Anders Carlsson  <andersca@apple.com>
+
+        Simplify the StorageArea setter functions
+        https://bugs.webkit.org/show_bug.cgi?id=116402
+
+        Reviewed by Sam Weinig.
+
+        Remove security checking code that lives in Storage now.
+
+        * WebProcess/Storage/StorageAreaImpl.cpp:
+        (WebKit::StorageAreaImpl::setItem):
+        (WebKit::StorageAreaImpl::removeItem):
+        (WebKit::StorageAreaImpl::clear):
+        * WebProcess/Storage/StorageAreaImpl.h:
+
+2013-05-18  Sam Weinig  <sam@webkit.org>
+
+        Fix some builds.
+
+        * UIProcess/API/mac/WKTypeRefWrapper.mm:
+
+2013-05-18  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        REGRESSION(r150305): WebKit2 build broken with INDEXED_DATABASE enabled
+        https://bugs.webkit.org/show_bug.cgi?id=116389
+
+        Reviewed by Martin Robinson.
+
+        There's no longer WebKeyValueStorageManager in the web process
+        after r150305.
+
+        * WebProcess/WebPage/WebPageGroupProxy.cpp:
+        (WebKit::WebPageGroupProxy::WebPageGroupProxy):
+
+2013-05-17  Sam Weinig  <sam@webkit.org>
+
+        Add a way to pass WebKit2 WKTypeRefs in Objective-C style user data messages
+        https://bugs.webkit.org/show_bug.cgi?id=116345
+
+        Reviewed by Anders Carlsson.
+
+        In order to efficiently send a WKImageRef to another process when using the
+        Objective-C WKConnection (or other user data messages), we need a way to encode
+        WKTypeRefs in the objective-c object graph. Thus was born WKTypeRefWrapper.
+
+        * Shared/mac/ObjCObjectGraphCoders.mm:
+        (WebKit::typeFromObject):
+        (WebKit::WebContextObjCObjectGraphEncoderImpl::encode):
+        (WebKit::WebContextObjCObjectGraphDecoderImpl::decode):
+        (WebKit::InjectedBundleObjCObjectGraphEncoderImpl::encode):
+        (WebKit::InjectedBundleObjCObjectGraphDecoderImpl::decode):
+        * UIProcess/API/mac/WKTypeRefWrapper.h: Added.
+        * UIProcess/API/mac/WKTypeRefWrapper.mm: Added.
+        (-[WKTypeRefWrapper initWithObject:]):
+        (-[WKTypeRefWrapper object]):
+        * WebKit2.xcodeproj/project.pbxproj:
+
+2013-05-18  Anders Carlsson  <andersca@apple.com>
+
+        Simplify StorageArea getter functions
+        https://bugs.webkit.org/show_bug.cgi?id=116399
+
+        Reviewed by Sam Weinig.
+
+        Remove security and private browsing checks.
+
+        * WebProcess/Storage/StorageAreaImpl.cpp:
+        (WebKit::StorageAreaImpl::key):
+        (WebKit::StorageAreaImpl::item):
+        (WebKit::StorageAreaImpl::contains):
+        * WebProcess/Storage/StorageAreaImpl.h:
+
 2013-05-18  Patrick Gansterer  <paroga@webkit.org>
 
         [CMake] Replace *_LIBRARY_NAME with *_OUTPUT_NAME

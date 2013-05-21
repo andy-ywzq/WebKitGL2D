@@ -697,17 +697,22 @@ void Editor::clearLastEditCommand()
 
 // Returns whether caller should continue with "the default processing", which is the same as 
 // the event handler NOT setting the return value to false
-bool Editor::dispatchCPPEvent(const AtomicString &eventType, ClipboardAccessPolicy policy)
+bool Editor::dispatchCPPEvent(const AtomicString& eventType, ClipboardAccessPolicy policy)
 {
     Node* target = findEventTargetFromSelection();
     if (!target)
         return true;
-    
-    RefPtr<Clipboard> clipboard = newGeneralClipboard(policy, m_frame);
 
-    RefPtr<Event> evt = ClipboardEvent::create(eventType, true, true, clipboard);
-    target->dispatchEvent(evt, IGNORE_EXCEPTION);
-    bool noDefaultProcessing = evt->defaultPrevented();
+#if !USE(LEGACY_STYLE_ABSTRACT_CLIPBOARD_CLASS)
+    RefPtr<Clipboard> clipboard = Clipboard::createForCopyAndPaste(policy);
+#else
+    // FIXME: Remove declaration of newGeneralClipboard when removing LEGACY_STYLE_ABSTRACT_CLIPBOARD_CLASS.
+    RefPtr<Clipboard> clipboard = newGeneralClipboard(policy, m_frame);
+#endif
+
+    RefPtr<Event> event = ClipboardEvent::create(eventType, true, true, clipboard);
+    target->dispatchEvent(event, IGNORE_EXCEPTION);
+    bool noDefaultProcessing = event->defaultPrevented();
     if (noDefaultProcessing && policy == ClipboardWritable) {
         Pasteboard* pasteboard = Pasteboard::generalPasteboard();
         pasteboard->clear();
@@ -826,8 +831,10 @@ void Editor::outdent()
     applyCommand(IndentOutdentCommand::create(m_frame->document(), IndentOutdentCommand::Outdent));
 }
 
-static void dispatchEditableContentChangedEvents(Element* startRoot, Element* endRoot)
+static void dispatchEditableContentChangedEvents(RefPtr<Element> prpStartRoot, PassRefPtr<Element> prpEndRoot)
 {
+    RefPtr<Element> startRoot = prpStartRoot;
+    RefPtr<Element> endRoot = prpEndRoot;
     if (startRoot)
         startRoot->dispatchEvent(Event::create(eventNames().webkitEditableContentChangedEvent, false, false), IGNORE_EXCEPTION);
     if (endRoot && endRoot != startRoot)

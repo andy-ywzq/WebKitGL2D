@@ -429,10 +429,6 @@ fast/events/moving-text-should-fire-drop-and-dragend-events.html
 fast/events/moving-text-should-fire-drop-and-dragend-events-2.html
 editing/pasteboard/drag-drop-url-with-style.html
 
-# ENABLE(LINK_PRERENDER) is disabled.
-fast/dom/HTMLLinkElement/prerender-insert-after-stop.html
-fast/dom/HTMLLinkElement/prerender-remove-after-stop.html
-
 # WTR needs an implementation for eventSender.continuousMouseScrollBy
 # https://bugs.webkit.org/show_bug.cgi?id=69417
 fast/events/wheelevent-direction-inverted-from-device.html
@@ -465,13 +461,7 @@ http/tests/security/contentTypeOptions
 # Unexpected redirection happens.
 http/tests/loading/redirect-methods.html
 
-# Should pass now but need to be checked first.
-platform/mac/fast/loader/file-url-mimetypes-2.html
-platform/mac/fast/loader/file-url-mimetypes-3.html
-platform/mac/fast/loader/file-url-mimetypes.html
-webarchive/loading/cache-expired-subresource.html
-webarchive/loading/test-loading-archive.html
-webarchive/loading/test-loading-archive-subresource-null-mimetype.html
+webkit.org/b/116125 webarchive/loading/test-loading-archive-subresource-null-mimetype.html [ Failure ]
 
 # Should pass now on ports other than EFL and GTK.
 # But it needs to be checked first.

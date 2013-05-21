@@ -580,7 +580,7 @@ public:
     TextDecorationStyle textDecorationStyle() const { return static_cast<TextDecorationStyle>(rareNonInheritedData->m_textDecorationStyle); }
     TextAlignLast textAlignLast() const { return static_cast<TextAlignLast>(rareInheritedData->m_textAlignLast); }
     TextJustify textJustify() const { return static_cast<TextJustify>(rareInheritedData->m_textJustify); }
-    TextUnderlinePosition textUnderlinePosition() const { return static_cast<TextUnderlinePosition>(rareInheritedData->m_textUnderlinePosition); }
+    TextUnderlinePosition textUnderlinePosition() const { return static_cast<TextUnderlinePosition>(rareNonInheritedData->m_textUnderlinePosition); }
 #else
     TextDecorationStyle textDecorationStyle() const { return TextDecorationStyleSolid; }
 #endif // CSS3_TEXT
@@ -1150,7 +1150,7 @@ public:
     void setTextDecorationStyle(TextDecorationStyle v) { SET_VAR(rareNonInheritedData, m_textDecorationStyle, v); }
     void setTextAlignLast(TextAlignLast v) { SET_VAR(rareInheritedData, m_textAlignLast, v); }
     void setTextJustify(TextJustify v) { SET_VAR(rareInheritedData, m_textJustify, v); }
-    void setTextUnderlinePosition(TextUnderlinePosition v) { SET_VAR(rareInheritedData, m_textUnderlinePosition, v); }
+    void setTextUnderlinePosition(TextUnderlinePosition v) { SET_VAR(rareNonInheritedData, m_textUnderlinePosition, v); }
 #endif // CSS3_TEXT
     void setDirection(TextDirection v) { inherited_flags._direction = v; }
     void setLineHeight(Length specifiedLineHeight);
@@ -1480,7 +1480,7 @@ public:
     ExclusionShapeValue* resolvedShapeInside() const
     {
         ExclusionShapeValue* shapeInside = this->shapeInside();
-        if (shapeInside && shapeInside->type() == ExclusionShapeValue::OUTSIDE)
+        if (shapeInside && shapeInside->type() == ExclusionShapeValue::Outside)
             return shapeOutside();
         return shapeInside;
     }
@@ -1763,7 +1763,15 @@ public:
 #if ENABLE(CSS_COMPOSITING)
     static BlendMode initialBlendMode() { return BlendModeNormal; }
 #endif
+
 private:
+    bool changeRequiresLayout(const RenderStyle*, unsigned& changedContextSensitiveProperties) const;
+    bool changeRequiresPositionedLayoutOnly(const RenderStyle*, unsigned& changedContextSensitiveProperties) const;
+    bool changeRequiresLayerRepaint(const RenderStyle*, unsigned& changedContextSensitiveProperties) const;
+    bool changeRequiresRepaint(const RenderStyle*, unsigned& changedContextSensitiveProperties) const;
+    bool changeRequiresRepaintIfText(const RenderStyle*, unsigned& changedContextSensitiveProperties) const;
+    bool changeRequiresRecompositeLayer(const RenderStyle*, unsigned& changedContextSensitiveProperties) const;
+
     void setVisitedLinkColor(const Color&);
     void setVisitedLinkBackgroundColor(const Color& v) { SET_VAR(rareNonInheritedData, m_visitedLinkBackgroundColor, v); }
     void setVisitedLinkBorderLeftColor(const Color& v) { SET_VAR(rareNonInheritedData, m_visitedLinkBorderLeftColor, v); }

@@ -1,3 +1,456 @@
+2013-05-21  Alexey Proskuryakov  <ap@apple.com>
+
+        <rdar://problem/13929704> [WK2] WebKitTestRunner always crashes on exit
+        https://bugs.webkit.org/show_bug.cgi?id=116568
+
+        Reviewed by Anders Carlsson.
+
+        * WebKitTestRunner/WebNotificationProvider.cpp:
+        (WTR::WebNotificationProvider::~WebNotificationProvider):
+        * WebKitTestRunner/WebNotificationProvider.h:
+        When the provider is destroyed, it should no longer be registered with the manager.
+
+        * WebKitTestRunner/GeolocationProviderMock.cpp:
+        (WTR::GeolocationProviderMock::~GeolocationProviderMock):
+        * WebKitTestRunner/GeolocationProviderMock.h:
+        I wasn't seeing a crash here, but this code has the same issue as notification
+        provider, so applying the same fix.
+
+        * WebKitTestRunner/TestController.cpp: (WTR::TestController::~TestController):
+        Close icon database. I started seeing ASSERT(!isOpen()) in WebCore IconDatabase
+        destructor having fixed the above.
+
+2013-05-21  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r150386 and r150397.
+        http://trac.webkit.org/changeset/150386
+        http://trac.webkit.org/changeset/150397
+        https://bugs.webkit.org/show_bug.cgi?id=116572
+
+        Broke a test; Alex is going to try again later. (Requested by
+        thorton on #webkit).
+
+        * WebKitTestRunner/InjectedBundle/InjectedBundlePage.cpp:
+        (WTR::pathSuitableForTestResult):
+        (WTR::dumpRequestDescriptionSuitableForTestResult):
+        (WTR::dumpResponseDescriptionSuitableForTestResult):
+        (WTR::InjectedBundlePage::willPerformClientRedirectForFrame):
+        (WTR::InjectedBundlePage::didInitiateLoadForResource):
+        (WTR::InjectedBundlePage::willSendRequestForFrame):
+        (WTR::InjectedBundlePage::didReceiveResponseForResource):
+        * WebKitTestRunner/InjectedBundle/InjectedBundlePage.h:
+        (InjectedBundlePage):
+
+2013-05-21  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Fix a python unittest after r149419. We need to support Python 2.6 on Windows.
+
+        * Scripts/webkitpy/tool/commands/suggestnominations.py:
+        (AbstractCommitLogCommand._recent_commit_messages):
+
+2013-05-21  Martin Robinson  <mrobinson@igalia.com>
+
+        [GTK] [CMake] Add support for building WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=116372
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * CMakeLists.txt: Do not build WebKitTestRunner yet for WebKitGTK+.
+        * MiniBrowser/gtk/CMakeLists.txt: Added.
+
+2013-05-21  Jessie Berlin  <jberlin@apple.com>
+
+        Revert r149635, it was too optimistic.
+
+        Rubber-stamped by Andreas Kling.
+
+        We are not at the point where we can always use more descriptive macros instead of PLATFORM()
+        #ifdefs in WebCore code outside of WebCore/platform.
+
+        * Scripts/webkitpy/style/checkers/cpp.py:
+        (check_invalid_increment):
+        (process_line):
+        (CppChecker):
+        * Scripts/webkitpy/style/checkers/cpp_unittest.py:
+        (CppStyleTest.test_plain_integral_bitfields):
+
+2013-05-21  Jer Noble  <jer.noble@apple.com>
+
+        Unreviewed; fix lldb synthetic representation of WTF::Vector after r148891.
+
+        * lldb/lldb_webkit.py:
+        (WTFVectorProvider.num_children):
+        (WTFVectorProvider.get_child_index):
+        (WTFVectorProvider.get_child_at_index):
+        (WTFVectorProvider.update):
+
+2013-05-21  Jessie Berlin  <jberlin@apple.com>
+
+        Expose a way to know when forms are added to a page or when form controls are added to a form
+        in the injected bundle
+        https://bugs.webkit.org/show_bug.cgi?id=116334
+
+        Reviewed by Alexey Proskuryakov.
+
+        Add tests for the new callbacks.
+
+        * TestWebKitAPI/TestWebKitAPI.xcodeproj/project.pbxproj:
+        Add DidAssociateFormControls/_Bundle.cpp and associate-form-controls.html
+
+        * TestWebKitAPI/Tests/WebKit2/DidAssociateFormControls.cpp: Added.
+        (TestWebKitAPI::nullJavaScriptCallback):
+        A "null" callback to handle the fact that WKPageRunJavaScriptInMainFrame cannot handle null
+        being passed in for the callback.
+        (TestWebKitAPI::didReceiveMessageFromInjectedBundle):
+        After receiving the message that didAssociateFormControls callback was invoked from adding
+        the form in the onload handler, tell the page to add a password field to the form, which
+        should also invoke didAssociateFormControls callback.
+        (TestWebKitAPI::setInjectedBundleClient):
+        Register to receive messages.
+        (TestWebKitAPI::TEST):
+        Load associate-form-controls.html and wait until the didAssociateFormControls callback has
+        been invoked for both adding the form and for adding a password field to the form.
+
+        * TestWebKitAPI/Tests/WebKit2/DidAssociateFormControls_Bundle.cpp: Added.
+        (TestWebKitAPI::shouldNotifyOnFormChanges):
+        Return true so the didAssociateFormControls callback is invoked.
+        (TestWebKitAPI::didAssociateFormControls):
+        Tell the UI process.
+        (TestWebKitAPI::DidAssociateFormControlsTest::DidAssociateFormControlsTest):
+        (TestWebKitAPI::DidAssociateFormControlsTest::didCreatePage):
+        Register for the shouldNotifyOnFormChanges and didAssociateFormControls callbacks.
+
+        * TestWebKitAPI/Tests/WebKit2/associate-form-controls.html: Added.
+        Add a form in response to the onload event. Add a button that will add the password field
+        for manual testing.
+
+2013-05-21  Krzysztof Czech  <k.czech@samsung.com>
+
+        [GTK][WK2] accessibility/label-for-control-hittest.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=106341
+
+        Reviewed by Martin Robinson.
+
+        Adds support for retrieving accessibility element at exact point.
+
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::AccessibilityUIElement::elementAtPoint):
+
+2013-05-21  Krzysztof Czech  <k.czech@samsung.com>
+
+        [ATK] [WebKit2] AccessibilityUIElement often leaks its AtkObject
+        https://bugs.webkit.org/show_bug.cgi?id=112913
+
+        Reviewed by Martin Robinson.
+
+        AccessibilityUIElement is often created by passing new reference to AtkObject (transfer full).
+        AccessibilityUIElement::~AccessibilityUIElement does not decrement the reference of the element,
+        so the leak appears.
+
+        * WebKitTestRunner/InjectedBundle/AccessibilityController.cpp:
+        (WTR):
+        * WebKitTestRunner/InjectedBundle/AccessibilityUIElement.h:
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityControllerAtk.cpp:
+        (WTR::AccessibilityController::rootElement):
+        (WTR):
+        (WTR::AccessibilityController::focusedElement):
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::checkElementState):
+        (WTR::indexRangeInTable):
+        (WTR::alterCurrentValue):
+        (WTR::AccessibilityUIElement::getChildren):
+        (WTR::AccessibilityUIElement::getChildrenWithRange):
+        (WTR::AccessibilityUIElement::childrenCount):
+        (WTR::AccessibilityUIElement::indexOfChild):
+        (WTR::AccessibilityUIElement::titleUIElement):
+        (WTR::AccessibilityUIElement::parentElement):
+        (WTR::AccessibilityUIElement::allAttributes):
+        (WTR::AccessibilityUIElement::role):
+        (WTR::AccessibilityUIElement::title):
+        (WTR::AccessibilityUIElement::description):
+        (WTR::AccessibilityUIElement::orientation):
+        (WTR::AccessibilityUIElement::stringValue):
+        (WTR::AccessibilityUIElement::language):
+        (WTR::AccessibilityUIElement::x):
+        (WTR::AccessibilityUIElement::y):
+        (WTR::AccessibilityUIElement::width):
+        (WTR::AccessibilityUIElement::height):
+        (WTR::AccessibilityUIElement::intValue):
+        (WTR::AccessibilityUIElement::minValue):
+        (WTR::AccessibilityUIElement::maxValue):
+        (WTR::AccessibilityUIElement::isEnabled):
+        (WTR::AccessibilityUIElement::isFocused):
+        (WTR::AccessibilityUIElement::isSelected):
+        (WTR::AccessibilityUIElement::isExpanded):
+        (WTR::AccessibilityUIElement::isChecked):
+        (WTR::AccessibilityUIElement::rowCount):
+        (WTR::AccessibilityUIElement::columnCount):
+        (WTR::AccessibilityUIElement::rowIndexRange):
+        (WTR::AccessibilityUIElement::columnIndexRange):
+        (WTR::AccessibilityUIElement::cellForColumnAndRow):
+        (WTR::AccessibilityUIElement::increment):
+        (WTR::AccessibilityUIElement::decrement):
+        (WTR::AccessibilityUIElement::press):
+        (WTR::AccessibilityUIElement::documentEncoding):
+        (WTR::AccessibilityUIElement::documentURI):
+        (WTR::AccessibilityUIElement::isFocusable):
+        (WTR::AccessibilityUIElement::isSelectable):
+        (WTR::AccessibilityUIElement::isMultiSelectable):
+        (WTR::AccessibilityUIElement::isVisible):
+
+2013-05-20  Lucas Forschler  <lforschler@apple.com>
+
+    Rollout 150398.
+    
+2013-05-20  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Fix concatenations of string literals that are not C++11-compliant
+        https://bugs.webkit.org/show_bug.cgi?id=116449
+
+        Reviewed by Martin Robinson.
+
+        Fix the problematic concatenations of string literals so they are compilable under the C++11 standard. This
+        is simply a matter of separating the string and the string literal that are being concatenated with a space.
+
+        * ImageDiff/gtk/ImageDiff.cpp:
+        (printImage):
+
+2013-05-20  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Pass GTEST_HAS_RTTI=0 cppflag to TestWebKitAPI programs at compilation-time
+        https://bugs.webkit.org/show_bug.cgi?id=116450
+
+        Reviewed by Martin Robinson.
+
+        The -fno-rtti flag is used when compiling C++ source code throughout the project. The TestWebKitAPI
+        programs fail to compile because of this when using the C++11 standard as the GTest headers assume by
+        default that the RTTI support is available. This can be turned off by passing GTEST_HAS_RTTI=0 to the
+        TestWebKitAPI programs when compiling them.
+
+        * TestWebKitAPI/GNUmakefile.am:
+
+2013-05-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Remove DriverProxy._running_drivers from webkitpy.layout_tests.port
+        https://bugs.webkit.org/show_bug.cgi?id=116492
+
+        Reviewed by Dirk Pranke.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/1af2f0be5a1746784ff114952f29f7b8fa9895f3.
+
+        The DriverProxy class had the concept of keeping a pool of started DRTs around (indexed by command line)
+        so that we didn't necessarily need to restart DRT when the command line for a test changed (e.g., when
+        starting to run tests in a virtual suite). However, the pool was per-worker (so not shared across the machine)
+        and we didn't cap the number of processes started, so we would end up with a whole bunch of DRTs (3x-4x
+        the number of workers started). If anything, this seemed to make the tests slightly slower and probably added
+        to memory pressure on the machine.
+
+        This change removes the pool code; now we'll simply restart DRT when the command line changes. With this change,
+        we can actually fold the restarting code into Driver itself (and get rid of DriverProxy), but I'll leave that
+        for a subsequent patch just to make things easier to follow.
+
+        * Scripts/webkitpy/port/driver.py:
+        (DriverProxy.__init__):
+        (DriverProxy.run_test):
+        (DriverProxy.has_crashed):
+        (DriverProxy.stop):
+
+2013-05-20  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Change EFL Linux 64-bit Release with EFL Linux 64-bit Release WK1
+        https://bugs.webkit.org/show_bug.cgi?id=116423
+
+        Reviewed by Ryosuke Niwa.
+
+        EFL Linux 64-bit Release starts to support WK1's build and layout test from now on.
+
+        * BuildSlaveSupport/build.webkit.org-config/config.json:
+
+2013-05-20  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        Remove remaining link-prerender code
+        https://bugs.webkit.org/show_bug.cgi?id=116429
+
+        Reviewed by Darin Adler.
+
+        Link prerendering code was removed in r150356.
+
+        * Scripts/webkitperl/FeatureList.pm:
+        * qmake/mkspecs/features/features.pri:
+
+2013-05-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        commit-queue should check for oops in changelog entries
+        https://bugs.webkit.org/show_bug.cgi?id=116395
+
+        Reviewed by Martin Robinson.
+
+        Make changelog validation fail when it contains oops!.
+
+        * Scripts/webkitpy/tool/bot/commitqueuetask.py:
+        (CommitQueueTask._validate_changelog):
+        * Scripts/webkitpy/tool/bot/commitqueuetask_unittest.py:
+        (CommitQueueTaskTest._run_through_task):
+        * Scripts/webkitpy/tool/commands/queues_unittest.py:
+        * Scripts/webkitpy/tool/steps/validatechangelogs.py:
+        (ValidateChangeLogs.options):
+        (ValidateChangeLogs._check_changelog_diff):
+        (ValidateChangeLogs._changelog_contains_oops):
+        (ValidateChangeLogs.run):
+        * Scripts/webkitpy/tool/steps/validatechangelogs_unittest.py:
+        (ValidateChangeLogsTest._assert_start_line_produces_output):
+        (ValidateChangeLogsTest.test_check_changelog_diff):
+        (ValidateChangeLogsTest):
+        (ValidateChangeLogsTest.test_changelog_contains_oops):
+
+2013-05-20  Jessie Berlin  <jberlin@apple.com>
+
+        Expose a way to know when forms are added to a page or when form controls are added to a form
+        in the injected bundle
+        https://bugs.webkit.org/show_bug.cgi?id=116334
+
+        Reviewed by Alexey Proskuryakov.
+
+        Add tests for the new callbacks.
+
+        * TestWebKitAPI/TestWebKitAPI.xcodeproj/project.pbxproj:
+        Add DidAssociateFormControls/_Bundle.cpp and associate-form-controls.html
+
+        * TestWebKitAPI/Tests/WebKit2/DidAssociateFormControls.cpp: Added.
+        (TestWebKitAPI::nullJavaScriptCallback):
+        A "null" callback to handle the fact that WKPageRunJavaScriptInMainFrame cannot handle null
+        being passed in for the callback.
+        (TestWebKitAPI::didReceiveMessageFromInjectedBundle):
+        After receiving the message that didAssociateFormControls callback was invoked from adding
+        the form in the onload handler, tell the page to add a password field to the form, which
+        should also invoke didAssociateFormControls callback.
+        (TestWebKitAPI::setInjectedBundleClient):
+        Register to receive messages.
+        (TestWebKitAPI::TEST):
+        Load associate-form-controls.html and wait until the didAssociateFormControls callback has
+        been invoked for both adding the form and for adding a password field to the form.
+
+        * TestWebKitAPI/Tests/WebKit2/DidAssociateFormControls_Bundle.cpp: Added.
+        (TestWebKitAPI::shouldNotifyOnFormChanges):
+        Return true so the didAssociateFormControls callback is invoked.
+        (TestWebKitAPI::didAssociateFormControls):
+        Tell the UI process.
+        (TestWebKitAPI::DidAssociateFormControlsTest::DidAssociateFormControlsTest):
+        (TestWebKitAPI::DidAssociateFormControlsTest::didCreatePage):
+        Register for the shouldNotifyOnFormChanges and didAssociateFormControls callbacks.
+
+        * TestWebKitAPI/Tests/WebKit2/associate-form-controls.html: Added.
+        Add a form in response to the onload event. Add a button that will add the password field
+        for manual testing.
+
+2013-05-20  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        [EFL][JHBUILD] Make sure eet is built before evas
+        https://bugs.webkit.org/show_bug.cgi?id=116440
+
+        Reviewed by Gyuyoung Kim.
+
+        Mark eet as a dependency of evas since evas requires eet to enable some of its
+        functionality.
+
+        * efl/jhbuild.modules:
+
+2013-05-20  Alex Christensen  <achristensen@apple.com>
+
+        WTR::pathSuitableForTestResult should behave the same as _drt_descriptionSuitableForTestResult so we can unskip tests.
+        https://bugs.webkit.org/show_bug.cgi?id=116125
+
+        Reviewed by Tim Horton.
+
+        * WebKitTestRunner/InjectedBundle/InjectedBundlePage.cpp:
+        (WTR::pathSuitableForTestResult):
+        Changed string operations to match _drt_descriptionSuitableForTestResult.
+        (WTR::dumpRequestDescriptionSuitableForTestResult):
+        (WTR::dumpResponseDescriptionSuitableForTestResult):
+        (WTR::InjectedBundlePage::willPerformClientRedirectForFrame):
+        (WTR::InjectedBundlePage::didInitiateLoadForResource):
+        (WTR::InjectedBundlePage::willSendRequestForFrame):
+        (WTR::InjectedBundlePage::didReceiveResponseForResource):
+        Pass the main frame's URL to pathSuitableForTestResult.
+        * WebKitTestRunner/InjectedBundle/InjectedBundlePage.h:
+        Added WKBundlePageRef to willPerformClientRedirectForFrame.
+
+2013-05-20  Dirk Pranke  <dpranke@chromium.org>
+
+        fix w3c test importer unit tests after r150324
+        https://bugs.webkit.org/show_bug.cgi?id=116459
+
+        Reviewed by Ryosuke Niwa.
+
+        This patch fixes the unit tests to not actually call out to
+        'hg' (by using a mock executive) and also changes the real
+        directory we crawl from Source/WebCore/css to
+        Tools/Scripts/webkitpy/w3c to run much more quickly. We should
+        still change this to a mock filesystem, but that's a separate change.
+
+        * Scripts/webkitpy/w3c/test_importer.py:
+        (main):
+        (TestImporter.__init__):
+        (TestImporter.load_changeset):
+        * Scripts/webkitpy/w3c/test_importer_unittest.py:
+        (TestImporterTest.test_import_dir_with_no_tests_and_no_hg):
+        (TestImporterTest.test_import_dir_with_no_tests):
+
+2013-05-20  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Unreviewed EFL build fix.
+
+        Fix linking errors due to undefined symbols on Ubuntu 13.04.
+
+        * DumpRenderTree/efl/CMakeLists.txt:
+        * EWebLauncher/CMakeLists.txt:
+        * MiniBrowser/efl/CMakeLists.txt:
+
+2013-05-20  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        [EFL] Reenabled INDEXED_DATABASE after r150344
+        https://bugs.webkit.org/show_bug.cgi?id=116430
+
+        Reviewed by Gyuyoung Kim.
+
+        Reenable INDEXED_DATABASE flag for EFL port now that WebKit2
+        build was fixed in r150344.
+
+        * Scripts/webkitperl/FeatureList.pm:
+
+2013-05-19  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL] init/shutdown should be paired in EWebLauncher
+        https://bugs.webkit.org/show_bug.cgi?id=116427
+
+        Reviewed by Christophe Dumez.
+
+        Added ecore_file_shutdown() for cleanup of ecore_file.
+        Removed edje_init and ecore_evas_init because it was in ewk_init().
+
+        * EWebLauncher/main.c:
+        (main):
+
+2013-05-19  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        [EFL] Add command line option to MiniBrowser to set user agent
+        https://bugs.webkit.org/show_bug.cgi?id=116387
+
+        Reviewed by Christophe Dumez.
+
+        We need this option to compare the rendering differences according to different user agents.
+
+        * MiniBrowser/efl/main.c:
+        (window_create):
+        (elm_main):
+
+2013-05-19  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed, addressing test-webkitpy failures after r150317.
+
+        * Scripts/webkitpy/w3c/test_converter.py:
+        (W3CTestConverter.read_webkit_prefixed_css_property_list): CssPropertyNames.in doesn't exist, but CSSPropertyNames.in does.
+
 2013-05-18  Patrick Gansterer  <paroga@webkit.org>
 
         [CMake] Replace *_LIBRARY_NAME with *_OUTPUT_NAME

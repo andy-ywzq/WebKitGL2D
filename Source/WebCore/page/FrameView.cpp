@@ -202,6 +202,7 @@ FrameView::FrameView(Frame* frame)
 #if ENABLE(CSS_FILTERS)
     , m_hasSoftwareFilters(false)
 #endif
+    , m_visualUpdatesAllowedByClient(true)
 {
     init();
 
@@ -905,6 +906,14 @@ GraphicsLayer* FrameView::setWantsLayerForBottomOverHangArea(bool wantsLayer) co
 }
 
 #endif // ENABLE(RUBBER_BANDING)
+
+bool FrameView::scrollbarAnimationsAreSuppressed() const
+{
+    Page* page = frame() ? frame()->page() : 0;
+    if (!page)
+        return true;
+    return page->shouldSuppressScrollbarAnimations();
+}
 
 bool FrameView::flushCompositingStateForThisFrame(Frame* rootFrameForFlush)
 {
@@ -3581,6 +3590,7 @@ bool FrameView::isPainting() const
     return m_isPainting;
 }
 
+// FIXME: change this to use the subtreePaint terminology.
 void FrameView::setNodeToDraw(Node* node)
 {
     m_nodeToDraw = node;
@@ -4163,6 +4173,16 @@ void FrameView::firePaintRelatedMilestones()
         if (Frame* frame = page->mainFrame())
             frame->loader()->didLayout(milestonesAchieved);
     }
+}
+
+void FrameView::setVisualUpdatesAllowedByClient(bool visualUpdatesAllowed)
+{
+    if (m_visualUpdatesAllowedByClient == visualUpdatesAllowed)
+        return;
+
+    m_visualUpdatesAllowedByClient = visualUpdatesAllowed;
+
+    m_frame->document()->setVisualUpdatesAllowedByClient(visualUpdatesAllowed);
 }
 
 } // namespace WebCore
