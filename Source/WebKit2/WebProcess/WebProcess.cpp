@@ -42,7 +42,6 @@
 #include "WebFrameNetworkingContext.h"
 #include "WebGeolocationManager.h"
 #include "WebIconDatabaseProxy.h"
-#include "WebKeyValueStorageManager.h"
 #include "WebMediaCacheManager.h"
 #include "WebMemorySampler.h"
 #include "WebPage.h"
@@ -186,8 +185,6 @@ WebProcess::WebProcess()
     // FIXME: This should moved to where WebProcess::initialize is called,
     // so that ports have a chance to customize, and ifdefs in this file are
     // limited.
-    addSupplement<WebKeyValueStorageManager>();
-
     addSupplement<WebGeolocationManager>();
     addSupplement<WebApplicationCacheManager>();
     addSupplement<WebResourceCacheManager>();
@@ -1136,6 +1133,13 @@ void WebProcess::setTextCheckerState(const TextCheckerState& textCheckerState)
         if (grammarCheckingTurnedOff)
             page->unmarkAllBadGrammar();
     }
+}
+
+void WebProcess::releasePageCache()
+{
+    int savedPageCacheCapacity = pageCache()->capacity();
+    pageCache()->setCapacity(0);
+    pageCache()->setCapacity(savedPageCacheCapacity);
 }
 
 #if !PLATFORM(MAC)

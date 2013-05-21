@@ -1,3 +1,576 @@
+2013-05-18  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Move GTK port off legacy clipboard
+        https://bugs.webkit.org/show_bug.cgi?id=116221
+
+        Reviewed by Martin Robinson.
+
+        * UIProcess/API/gtk/WebKitWebViewBase.cpp: Remove ClipboardGtk.h
+        include.
+        * WebProcess/WebCoreSupport/gtk/WebDragClientGtk.cpp:
+        (WebKit::WebDragClient::startDrag): Get the DataObjectGtk from the
+        Pasteboard associated to the given Clipboard.
+
+2013-05-18  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        [EFL][WK2] Refactor ewk_view_custom_encoding_set/get API
+        https://bugs.webkit.org/show_bug.cgi?id=116386
+
+        Reviewed by Christophe Dumez.
+
+        Refactor the API to handle 'const char*' parameter in right way and
+        enable the unit test which was disabled in r136230 as there is no assertion now.
+
+        * UIProcess/API/efl/EwkView.cpp:
+        (EwkView::setCustomTextEncodingName):
+        * UIProcess/API/efl/EwkView.h:
+        (EwkView::customTextEncodingName):
+        (EwkView):
+        * UIProcess/API/efl/ewk_view.cpp:
+        (ewk_view_custom_encoding_set):
+        * UIProcess/API/efl/tests/test_ewk2_view.cpp:
+        (TEST_F):
+
+2013-05-18  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [CMake] Unreviewed speculative build fix after r150305 and r150306.
+
+        * CMakeLists.txt:
+
+2013-05-18  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [Qt][WK2] Unreviewed build fix after r150305 and r150306.
+
+        * DerivedSources.pri:
+        * Target.pri:
+
+2013-05-18  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed build fix for the GTK port after r150305 and r150306.
+
+        * GNUmakefile.list.am:
+
+2013-05-17  Alexey Proskuryakov  <ap@apple.com>
+
+        <rdar://problem/13819878> Disable SharedWorker when in multiple web process model
+        https://bugs.webkit.org/show_bug.cgi?id=116359
+
+        The condition was accidentally negated, fixing.
+
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.cpp:
+        (WebKit::WebPlatformStrategies::isAvailable):
+
+2013-05-17  Gavin Barraclough  <barraclough@apple.com>
+
+        Only allow 1 WebProcess to hold a PageCache
+        https://bugs.webkit.org/show_bug.cgi?id=116368
+        <rdar://problem/13392600>
+
+        Reviewed by Geoff Garen & Anders Carlson.
+
+        * UIProcess/WebContext.cpp:
+        (WebKit::WebContext::WebContext):
+        (WebKit::WebContext::processDidSaveToPageCache):
+        (WebKit):
+        (WebKit::WebContext::disconnectProcess):
+        * UIProcess/WebContext.h:
+            - Added m_processWithPageCache, only allow one process to keep a PageCache.
+        (WebContext):
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::didSaveToPageCache):
+        (WebKit):
+        * UIProcess/WebPageProxy.h:
+        (WebPageProxy):
+        * UIProcess/WebPageProxy.messages.in:
+            - Forward didSaveToPageCache to the WebProcessProxy.
+        * UIProcess/WebProcessProxy.cpp:
+        (WebKit::WebProcessProxy::addBackForwardItem):
+        (WebKit::WebProcessProxy::didSaveToPageCache):
+        (WebKit):
+        (WebKit::WebProcessProxy::releasePageCache):
+            - Forward releasePageCache to the WebProcess.
+            - Forward didSaveToPageCache to the WebContext.
+        * UIProcess/WebProcessProxy.h:
+        (WebProcessProxy):
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::didSaveToPageCache):
+            - Forward didSaveToPageCache to the WebPageProxy.
+        * WebProcess/WebProcess.cpp:
+        (WebKit::WebProcess::releasePageCache):
+        (WebKit):
+        * WebProcess/WebProcess.h:
+        (WebProcess):
+        * WebProcess/WebProcess.messages.in:
+            - Added 'ReleasePageCache' to instruct a web process to drop any cached pages.
+
+2013-05-17  Anders Carlsson  <andersca@apple.com>
+
+        Share code between WebKit1 and WebKit2 StorageArea subclasses
+        https://bugs.webkit.org/show_bug.cgi?id=116367
+
+        Reviewed by Andreas Kling.
+
+        * WebProcess/Storage/StorageAreaImpl.cpp:
+        (WebKit::StorageAreaImpl::length):
+        Remove code that's now in Storage::length.
+
+        (WebKit::StorageAreaImpl::storageType):
+        Make this a virtual member function.
+
+        * WebProcess/Storage/StorageAreaImpl.h:
+
+2013-05-17  Alexey Proskuryakov  <ap@apple.com>
+
+        <rdar://problem/13819878> Disable SharedWorker when in multiple web process model
+        https://bugs.webkit.org/show_bug.cgi?id=116359
+
+        Reviewed by Anders Carlsson.
+
+        Implement SharedWorkerStrategy::isAvailable.
+
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.cpp:
+        (WebKit::WebPlatformStrategies::isAvailable):
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.h:
+
+2013-05-17  Beth Dakin  <bdakin@apple.com>
+
+        Headers and footers will sometimes disappear and re-appear during page loads
+        https://bugs.webkit.org/show_bug.cgi?id=116336
+        -and corresponding-
+        <rdar://problem/13886753>
+
+        Reviewed by Simon Fraser.
+
+        This patch changes the WebCore-level API that WebKit uses to create a banner. 
+        Specifically this patch removes FrameView::setWantsLayerForHeader(), which created 
+        and returned a layer. Instead, WK2 will call Page::addHeaderWithHeight(). When the 
+        layer has been created, it will call back into WK2 via ChromeClient. This will 
+        allow WebCore to re-create the header/footer layers as needed whenever the 
+        FrameView/RenderLayerCompositor have been destroyed and recreated.
+
+        Send the layers over to PageBanner.
+        * WebProcess/WebCoreSupport/WebChromeClient.cpp:
+        (WebKit::WebChromeClient::didAddHeaderLayer):
+        (WebKit::WebChromeClient::didAddFooterLayer):
+        * WebProcess/WebCoreSupport/WebChromeClient.h:
+        (WebChromeClient):
+
+        PageBanner::addToPage() now does much less work since it can’t get the parent 
+        layer right away. The work that is used to do once it had the parent layer is now 
+        performed in didAddParentLayer()
+        * WebProcess/WebPage/PageBanner.cpp:
+        (WebKit::PageBanner::didAddParentLayer):
+        * WebProcess/WebPage/PageBanner.h:
+        * WebProcess/WebPage/mac/PageBannerMac.mm:
+        (WebKit::PageBanner::addToPage):
+        (WebKit::PageBanner::didAddParentLayer):
+
+2013-05-17  Anders Carlsson  <andersca@apple.com>
+
+        Rename WebKeyValueStorageManagerProxy to WebKeyValueStorageManager
+        https://bugs.webkit.org/show_bug.cgi?id=116361
+
+        Reviewed by Andreas Kling.
+
+        There's nothing proxy about this class anymore!
+
+        * UIProcess/API/C/WKAPICast.h:
+        * UIProcess/API/C/WKContext.cpp:
+        * UIProcess/API/C/WKKeyValueStorageManager.cpp:
+        * UIProcess/WebKeyValueStorageManager.cpp: Renamed from Source/WebKit2/UIProcess/WebKeyValueStorageManagerProxy.cpp.
+        * UIProcess/WebKeyValueStorageManager.h: Renamed from Source/WebKit2/UIProcess/WebKeyValueStorageManagerProxy.h.
+        * WebKit2.xcodeproj/project.pbxproj:
+
+2013-05-17  Anders Carlsson  <andersca@apple.com>
+
+        Remove dead local storage code
+        https://bugs.webkit.org/show_bug.cgi?id=116360
+
+        Reviewed by Beth Dakin.
+
+        Storage is all handled in the UI process now so we no longer need a WebKeyValueStorageManager in the web process.
+
+        * DerivedSources.make:
+        * UIProcess/WebKeyValueStorageManagerProxy.cpp:
+        (WebKit::WebKeyValueStorageManagerProxy::WebKeyValueStorageManagerProxy):
+        (WebKit):
+        (WebKit::didGetKeyValueStorageOrigins):
+        (WebKit::WebKeyValueStorageManagerProxy::getKeyValueStorageOrigins):
+        * UIProcess/WebKeyValueStorageManagerProxy.h:
+        (WebKeyValueStorageManagerProxy):
+        * UIProcess/WebKeyValueStorageManagerProxy.messages.in: Removed.
+        * WebKit2.xcodeproj/project.pbxproj:
+        * WebProcess/Storage/WebKeyValueStorageManager.cpp: Removed.
+        * WebProcess/Storage/WebKeyValueStorageManager.h: Removed.
+        * WebProcess/Storage/WebKeyValueStorageManager.messages.in: Removed.
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::updatePreferences):
+        * WebProcess/WebProcess.cpp:
+        (WebKit::WebProcess::WebProcess):
+
+2013-05-17  Anders Carlsson  <andersca@apple.com>
+
+        Use the UI process storage manager for deleting local storage data
+        https://bugs.webkit.org/show_bug.cgi?id=116358
+        <rdar://problem/13852829>
+
+        Reviewed by Andreas Kling.
+
+        * Shared/WebSecurityOrigin.h:
+        (WebKit::WebSecurityOrigin::protocol):
+        (WebKit::WebSecurityOrigin::host):
+        (WebKit::WebSecurityOrigin::databaseIdentifier):
+        (WebKit::WebSecurityOrigin::toString):
+        Remove unneeded consts.
+
+        (WebKit::WebSecurityOrigin::securityOrigin):
+        Add getter.
+
+        * UIProcess/Storage/LocalStorageDatabase.cpp:
+        (WebKit::LocalStorageDatabase::close):
+        deleteEmptyDatabaseWithOrigin has been renamed to deleteDatabaseWithOrigin.
+
+        * UIProcess/Storage/LocalStorageDatabaseTracker.cpp:
+        (WebKit::LocalStorageDatabaseTracker::deleteDatabaseWithOrigin):
+        Rename since this is no longer used only for empty databases.
+
+        (WebKit::LocalStorageDatabaseTracker::deleteAllDatabases):
+        Loop over the tracker database and delete all database files.
+
+        * UIProcess/Storage/StorageManager.cpp:
+        (WebKit::StorageManager::StorageArea::clear):
+        Clear the map, close the database and tell all event listeners to reset their caches.
+
+        (WebKit::StorageManager::LocalStorageNamespace::clearStorageAreasMatchingOrigin):
+        Loop over all storage areas and call clear on those matching the security origin.
+
+        (WebKit::StorageManager::LocalStorageNamespace::clearAllStorageAreas):
+        Loop over all storage areas and call clear on them.
+        
+        (WebKit::StorageManager::deleteEntriesForOrigin):
+        Dispatch deleteEntriesForOriginInternal on the work queue.
+
+        (WebKit::StorageManager::deleteAllEntries):
+        Dispatch deleteAllEntriesInternal on the work queue.
+
+        (WebKit::StorageManager::deleteEntriesForOriginInternal):
+        Call clearStorageAreasMatchingOrigin on all local storage namespaces and then delete the database.
+
+        (WebKit::StorageManager::deleteAllEntriesInternal):
+        Call clearAllStorageAreas on all local storage namespaces and then delete all databases.
+
+        * UIProcess/WebKeyValueStorageManagerProxy.cpp:
+        (WebKit::WebKeyValueStorageManagerProxy::deleteEntriesForOrigin):
+        Call out to the storage manager.
+
+        (WebKit::WebKeyValueStorageManagerProxy::deleteAllEntries):
+        Ditto.
+
+        * WebProcess/Storage/StorageAreaMap.cpp:
+        (WebKit::StorageAreaMap::clearCache):
+        Call resetValues which will null out the storage map.
+
+        * WebProcess/Storage/StorageAreaMap.messages.in:
+        Add ClearCache message.
+
+2013-05-17  Anders Carlsson  <andersca@apple.com>
+
+        Only import local storage items from the database once
+        https://bugs.webkit.org/show_bug.cgi?id=116354
+
+        Reviewed by Andreas Kling.
+
+        We import items from the database over and over, when we only want to do it once. Use a 
+        boolean flag to guard against doing it more than once. 
+        
+        Also, rename importItemsFromDatabase to openDatabaseAndImportItemsIfNeeded since it now
+        also opens the database (even if it doesn't need to import anything). This is preparation for an
+        upcoming patch where the database will be closed when it's cleared.
+
+        * UIProcess/Storage/StorageManager.cpp:
+        (StorageManager::StorageArea):
+        (WebKit::StorageManager::StorageArea::StorageArea):
+        (WebKit::StorageManager::StorageArea::setItem):
+        (WebKit::StorageManager::StorageArea::removeItem):
+        (WebKit::StorageManager::StorageArea::clear):
+        (WebKit::StorageManager::StorageArea::items):
+        (WebKit::StorageManager::StorageArea::openDatabaseAndImportItemsIfNeeded):
+
+2013-05-17  Alexey Proskuryakov  <ap@apple.com>
+
+        <rdar://problem/13869765> Lion: Crashes in islcCanLoadInputMethodFromBundleID.
+
+        Reviewed by Anders Carlsson.
+
+        * WebProcess/com.apple.WebProcess.sb.in: Allow text input directories.
+
+2013-05-17  Anders Carlsson  <andersca@apple.com>
+
+        WKKeyValueStorageManagerGetKeyValueStorageOrigins should get origins from the UI process
+        https://bugs.webkit.org/show_bug.cgi?id=116346
+        <rdar://problem/13852829>
+
+        Reviewed by Andreas Kling.
+
+        * UIProcess/Storage/LocalStorageDatabaseTracker.cpp:
+        (WebKit::LocalStorageDatabaseTracker::origins):
+        New helper function to return all the tracked origins.
+
+        * UIProcess/Storage/StorageManager.cpp:
+        (WebKit::StorageManager::StorageManager):
+        Initialize the UTF-8 encoding.
+
+        (WebKit::StorageManager::getOrigins):
+        Call getOriginsInternal on our queue.
+
+        (WebKit::callCallbackFunction):
+        Helper function for calling the callback function.
+
+        (WebKit::StorageManager::getOriginsInternal):
+        Get the origins and make sure we call the callback with the given function dispatcher.
+
+        * UIProcess/WebKeyValueStorageManagerProxy.cpp:
+        (WebKit::didGetKeyValueStorageOriginsCallback):
+        Construct the array of WebSecurityOrigin objects and call the callback.
+
+        (WebKit::WebKeyValueStorageManagerProxy::getKeyValueStorageOrigins):
+        Call StorageManager::getOrigins.
+
+2013-05-16  Alexey Proskuryakov  <ap@apple.com>
+
+        Text input is largely broken when there are subframes loading
+        http://bugs.webkit.org/show_bug.cgi?id=59121
+        <rdar://problem/9320468>
+
+        Reviewed by Darin Adler.
+
+        * UIProcess/PageClient.h:
+        * UIProcess/API/mac/PageClientImpl.h:
+        * UIProcess/API/mac/PageClientImpl.mm:
+        (WebKit::PageClientImpl::updateSecureInputState): Separated secure input state
+        updating into a separate function. Removed updateTextInputState, we don't need
+        to go through PageClient to implement its behavior at all.
+        (WebKit::PageClientImpl::dismissDictionaryLookupPanel): Added a FIXME.
+
+        * UIProcess/API/mac/WKView.mm:
+        * UIProcess/API/mac/WKViewInternal.h:
+        Removed _updateTextInputStateIncludingSecureInputState.
+
+        * UIProcess/WebPageProxy.h: Added m_temporarilyClosedComposition, which helps
+        to figure out that WebCore decided to close a composition. The issue is that WebCore
+        would first send an EditorState with hasComposition set to false, and with
+        shouldIgnoreCompositionSelectionChange set to true, at which time we forget the
+        previous m_editorState, but can't make any decisions based on this transient state.
+        We should find a way to simplify this (maybe not send these updates with
+        shouldIgnoreCompositionSelectionChange at all?)
+
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::WebPageProxy): Initialize m_temporarilyClosedComposition.
+        (WebKit::WebPageProxy::didCommitLoadForFrame): Removed the code to kill a composition
+        when any frame commits a load, which made no sense (along with surrounding code,
+        which will unfortunately survive longer).
+        (WebKit::WebPageProxy::editorStateChanged): Implemented state updating here,
+        we don't need to go to WKView.mm to implement this logic. Figure out when WebCore
+        discards a composition, and notify input methods about this.
+        (WebKit::WebPageProxy::resetStateAfterProcessExited): Reset m_temporarilyClosedComposition.
+        Added some FIXMEs.
+
+2013-05-17  Manuel Rego Casasnovas  <rego@igalia.com>
+
+        [WK2] Add support for selectTrailingWhitespaceEnabled setting
+        https://bugs.webkit.org/show_bug.cgi?id=112426
+
+        Reviewed by Ryosuke Niwa.
+
+        * Shared/WebPreferencesStore.h:
+        (WebKit): Add macro for selectTrailingWhitespaceEnabled.
+        * UIProcess/API/C/WKPreferences.cpp:
+        (WKPreferencesSetSelectTrailingWhitespaceEnabled):
+        (WKPreferencesGetSelectTrailingWhitespaceEnabled): Implement methods
+        using the new setting.
+        * UIProcess/API/C/WKPreferencesPrivate.h: Add new methods headers.
+        * WebProcess/WebCoreSupport/WebEditorClient.cpp:
+        (WebKit::WebEditorClient::isSelectTrailingWhitespaceEnabled): Implement
+        method delegating in WebPage.
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::updatePreferences): Set
+        selectTrailingWhitespaceEnabled setting.
+        (WebKit::WebPage::setSmartInsertDeleteEnabled): Set
+        selectTrailingWhitespaceEnabled as they are mutually exclusive.
+        (WebKit):
+        (WebKit::WebPage::isSelectTrailingWhitespaceEnabled): Implement method
+        using settings.
+        (WebKit::WebPage::setSelectTrailingWhitespaceEnabled): Implement method
+        using settings and set smartInsertDeleteEnabled as they are mutually
+        exclusive.
+        * WebProcess/WebPage/WebPage.h:
+        (WebPage): Add new methods headers.
+
+2013-05-17  Brady Eidson  <beidson@apple.com>
+
+        Fix crash introduced by http://trac.webkit.org/changeset/150282
+        Followup to https://bugs.webkit.org/show_bug.cgi?id=116253
+
+        Reviewed by Andreas Kling.
+
+        * WebProcess/WebCoreSupport/WebChromeClient.cpp:
+        (WebKit::WebChromeClient::focusedFrameChanged): Frame might be null.
+
+2013-05-17  Brady Eidson  <beidson@apple.com>
+
+        Replace WebFrameLoaderClient static_casts with a function that might return null.
+        https://bugs.webkit.org/show_bug.cgi?id=116253
+
+        The general approach here is:
+        1 - Introduce a toWebFrameLoaderClient() function to convert FrameLoaderClients, and that may return null.
+        2 - Adopt toWebFrameLoaderClient() everywhere we used to do a direct static_cast<WebFrameLoaderClient*>
+        3 - In functions that already support a "return 0" scenario, a failed cast results in a return 0.
+        4 - In other functions that assume no failure to get the WebFrameLoaderClient, add an ASSERT.
+
+        Reviewed by Alexey Proskuryakov.
+
+        Add the utility function to cast:
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.h:
+        (WebKit::toWebFrameLoaderClient):
+
+        Adopt it everywhere:
+        * WebProcess/Geolocation/GeolocationPermissionRequestManager.cpp:
+        (WebKit::GeolocationPermissionRequestManager::startRequestForGeolocation):
+
+        * WebProcess/InjectedBundle/DOM/InjectedBundleNodeHandle.cpp:
+        (WebKit::InjectedBundleNodeHandle::documentFrame):
+        (WebKit::InjectedBundleNodeHandle::htmlFrameElementContentFrame):
+        (WebKit::InjectedBundleNodeHandle::htmlIFrameElementContentFrame):
+
+        * WebProcess/InjectedBundle/InjectedBundle.cpp:
+        (WebKit::InjectedBundle::overrideBoolPreferenceForTestRunner):
+
+        * WebProcess/InjectedBundle/InjectedBundleDOMWindowExtension.cpp:
+        (WebKit::InjectedBundleDOMWindowExtension::frame):
+
+        * WebProcess/InjectedBundle/InjectedBundleHitTestResult.cpp:
+        (WebKit::InjectedBundleHitTestResult::frame):
+        (WebKit::InjectedBundleHitTestResult::targetFrame):
+
+        * WebProcess/Network/WebResourceLoadScheduler.cpp:
+        (WebKit::WebResourceLoadScheduler::scheduleLoad):
+
+        * WebProcess/Plugins/PluginView.cpp:
+        (WebKit::webPage):
+        (WebKit::PluginView::performFrameLoadURLRequest):
+
+        * WebProcess/WebCoreSupport/WebChromeClient.cpp:
+        (WebKit::WebChromeClient::focusedNodeChanged):
+        (WebKit::WebChromeClient::focusedFrameChanged):
+        (WebKit::WebChromeClient::runBeforeUnloadConfirmPanel):
+        (WebKit::WebChromeClient::runJavaScriptAlert):
+        (WebKit::WebChromeClient::runJavaScriptConfirm):
+        (WebKit::WebChromeClient::runJavaScriptPrompt):
+        (WebKit::WebChromeClient::print):
+        (WebKit::WebChromeClient::exceededDatabaseQuota):
+        (WebKit::WebChromeClient::runOpenPanel):
+
+        * WebProcess/WebCoreSupport/WebEditorClient.cpp:
+        (WebKit::WebEditorClient::textFieldDidBeginEditing):
+        (WebKit::WebEditorClient::textFieldDidEndEditing):
+        (WebKit::WebEditorClient::textDidChangeInTextField):
+        (WebKit::WebEditorClient::textDidChangeInTextArea):
+        (WebKit::WebEditorClient::doTextFieldCommandFromEvent):
+        (WebKit::WebEditorClient::textWillBeDeletedInTextField):
+
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::dispatchWillSendSubmitEvent):
+        (WebKit::WebFrameLoaderClient::dispatchWillSubmitForm):
+
+        * WebProcess/WebPage/WebFrame.cpp:
+        (WebKit::WebFrame::contentsAsString):
+        (WebKit::WebFrame::parentFrame):
+        (WebKit::WebFrame::childFrames):
+        (WebKit::WebFrame::frameForContext):
+        (WebKit::WebFrameFilter::shouldIncludeSubframe):
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::mainFrameHasCustomRepresentation):
+
+2013-05-17  Sam Weinig  <sam@webkit.org>
+
+        Expose new load-with-userData API to Objective-C
+        https://bugs.webkit.org/show_bug.cgi?id=116335
+
+        Reviewed by Anders Carlsson.
+
+        - Adds loadRequest:userData:, loadFileURL:restrictToFilesWithin:userData:, loadHTMLString:baseURL:userData:
+          loadData:MIMEType:textEncodingName:baseURL:, and loadData:MIMEType:textEncodingName:baseURL:userData.
+        - Adds a WKObjCTypeWrapperRef (which is a ObjCObjectGraph under the covers) to allow the userData to be unwrapped
+          in the injected bundles willLoadURLRequest and willLoadDataRequest C-SPI callbacks.
+
+        * Shared/API/c/WKBase.h:
+        * Shared/API/c/WKSharedAPICast.h:
+        * Shared/API/c/mac/WKBaseMac.h: Added.
+        * Shared/API/c/mac/WKObjCTypeWrapperRef.h: Added.
+        * Shared/API/c/mac/WKObjCTypeWrapperRef.mm: Added.
+        (WKObjCTypeWrapperGetTypeID):
+        (WKObjCTypeWrapperCreate):
+        (WKObjCTypeWrapperGetObject):
+        * UIProcess/API/mac/WKBrowsingContextController.h:
+        * UIProcess/API/mac/WKBrowsingContextController.mm:
+        (+[WKBrowsingContextController registerSchemeForCustomProtocol:]):
+        (+[WKBrowsingContextController unregisterSchemeForCustomProtocol:]):
+        (-[WKBrowsingContextController loadRequest:]):
+        (-[WKBrowsingContextController loadRequest:userData:]):
+        (-[WKBrowsingContextController loadFileURL:restrictToFilesWithin:]):
+        (-[WKBrowsingContextController loadFileURL:restrictToFilesWithin:userData:]):
+        (-[WKBrowsingContextController loadHTMLString:baseURL:]):
+        (-[WKBrowsingContextController loadHTMLString:baseURL:userData:]):
+        (-[WKBrowsingContextController loadData:MIMEType:textEncodingName:baseURL:]):
+        (-[WKBrowsingContextController loadData:MIMEType:textEncodingName:baseURL:userData:]):
+        * WebKit2.xcodeproj/project.pbxproj:
+
+2013-05-17  Sam Weinig  <sam@webkit.org>
+
+        Add WKPageLoadData and WKPageLoadDataWithUserData SPI to support loading arbitrary data blobs
+        https://bugs.webkit.org/show_bug.cgi?id=116325
+
+        Reviewed by Simon Fraser.
+
+        * UIProcess/API/C/WKPage.cpp:
+        (WKPageLoadData):
+        (WKPageLoadDataWithUserData):
+        Add new SPI.
+
+        * UIProcess/API/C/WKPage.h:
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::loadData):
+        * UIProcess/WebPageProxy.h:
+        Pipe through to the WebProcess.
+
+        * WebProcess/WebPage/WebPage.h:
+        * WebProcess/WebPage/WebPage.messages.in:
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::loadDataImpl):
+        (WebKit::WebPage::loadData):
+        (WebKit::WebPage::loadHTMLString):
+        (WebKit::WebPage::loadAlternateHTMLString):
+        (WebKit::WebPage::loadPlainTextString):
+        (WebKit::WebPage::loadWebArchiveData):
+        Rename existing loadData function to loadDataImpl (I hate it) to avoid overload conflict
+        from IPC magic.
+
+
+2013-05-17  Michał Pakuła vel Rutka  <m.pakula@samsung.com>
+
+        [EFL][WK2] Fix sub menu initialization in ewk_context_menu_item
+        https://bugs.webkit.org/show_bug.cgi?id=116321
+
+        Reviewed by Christophe Dumez.
+
+        During sub menu creation, after initializing m_parentMenu, parentMenu
+        pointer became null which may cause segfaults. This patch fixes it by
+        using m_parentMenu.
+
+        * UIProcess/API/efl/ewk_context_menu_item.cpp:
+        (EwkContextMenuItem::EwkContextMenuItem):
+
 2013-05-17  Michał Pakuła vel Rutka  <m.pakula@samsung.com>
 
         [EFL][WK2] Support sub menu in ewk context menus

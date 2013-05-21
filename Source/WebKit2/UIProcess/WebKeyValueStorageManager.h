@@ -23,8 +23,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WebKeyValueStorageManagerProxy_h
-#define WebKeyValueStorageManagerProxy_h
+#ifndef WebKeyValueStorageManager_h
+#define WebKeyValueStorageManager_h
 
 #include "APIObject.h"
 #include "GenericCallback.h"
@@ -37,19 +37,14 @@
 
 namespace WebKit {
 
-struct SecurityOriginData;
-class WebContext;
-class WebProcessProxy;
-class WebSecurityOrigin;
-
 typedef GenericCallback<WKArrayRef> ArrayCallback;
 
-class WebKeyValueStorageManagerProxy : public TypedAPIObject<APIObject::TypeKeyValueStorageManager>, public WebContextSupplement, private CoreIPC::MessageReceiver {
+class WebKeyValueStorageManager : public TypedAPIObject<APIObject::TypeKeyValueStorageManager>, public WebContextSupplement {
 public:
     static const char* supplementName();
 
-    static PassRefPtr<WebKeyValueStorageManagerProxy> create(WebContext*);
-    virtual ~WebKeyValueStorageManagerProxy();
+    static PassRefPtr<WebKeyValueStorageManager> create(WebContext*);
+    virtual ~WebKeyValueStorageManager();
 
     void getKeyValueStorageOrigins(PassRefPtr<ArrayCallback>);
     void deleteEntriesForOrigin(WebSecurityOrigin*);
@@ -59,23 +54,13 @@ public:
     using APIObject::deref;
 
 private:
-    explicit WebKeyValueStorageManagerProxy(WebContext*);
-
-    void didGetKeyValueStorageOrigins(const Vector<SecurityOriginData>&, uint64_t callbackID);
+    explicit WebKeyValueStorageManager(WebContext*);
 
     // WebContextSupplement
-    virtual void contextDestroyed() OVERRIDE;
-    virtual void processDidClose(WebProcessProxy*) OVERRIDE;
-    virtual bool shouldTerminate(WebProcessProxy*) const OVERRIDE;
     virtual void refWebContextSupplement() OVERRIDE;
     virtual void derefWebContextSupplement() OVERRIDE;
-
-    // CoreIPC::MessageReceiver
-    virtual void didReceiveMessage(CoreIPC::Connection*, CoreIPC::MessageDecoder&) OVERRIDE;
-
-    HashMap<uint64_t, RefPtr<ArrayCallback>> m_arrayCallbacks;
 };
 
 } // namespace WebKit
 
-#endif // WebKeyValueStorageManagerProxy_h
+#endif // WebKeyValueStorageManager_h

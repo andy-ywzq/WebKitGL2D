@@ -148,10 +148,13 @@ NSString *WebPluginAttributesKey = @"WebPluginAttributes";
 NSString *WebPluginContainerKey = @"WebPluginContainer";
 
 @interface WebFramePolicyListener : NSObject <WebPolicyDecisionListener, WebFormSubmissionListener> {
-    Frame* m_frame;
+    RefPtr<Frame> _frame;
+    FramePolicyFunction _policyFunction;
 }
-- (id)initWithWebCoreFrame:(Frame*)frame;
+
+- (id)initWithFrame:(Frame*)frame policyFunction:(FramePolicyFunction)policyFunction;
 - (void)invalidate;
+
 @end
 
 static inline WebDataSource *dataSource(DocumentLoader* loader)
@@ -203,7 +206,6 @@ static inline void applyAppleDictionaryApplicationQuirk(WebFrameLoaderClient* cl
 
 WebFrameLoaderClient::WebFrameLoaderClient(WebFrame *webFrame)
     : m_webFrame(webFrame)
-    , m_policyFunction(0)
 {
 }
 
@@ -751,9 +753,8 @@ void WebFrameLoaderClient::dispatchDecidePolicyForNavigationAction(FramePolicyFu
 
 void WebFrameLoaderClient::cancelPolicyCheck()
 {
-    [m_policyListener.get() invalidate];
-    m_policyListener = nil;
-    m_policyFunction = 0;
+    [m_policyListener invalidate];
+    m_policyListener = nullptr;
 }
 
 void WebFrameLoaderClient::dispatchUnableToImplementPolicy(const ResourceError& error)
@@ -1288,28 +1289,11 @@ void WebFrameLoaderClient::dispatchDidBecomeFrameset(bool)
 RetainPtr<WebFramePolicyListener> WebFrameLoaderClient::setUpPolicyListener(FramePolicyFunction function)
 {
     // FIXME: <rdar://5634381> We need to support multiple active policy listeners.
+    [m_policyListener invalidate];
 
-    [m_policyListener.get() invalidate];
+    m_policyListener = adoptNS([[WebFramePolicyListener alloc] initWithFrame:core(m_webFrame.get()) policyFunction:function]);
 
-    WebFramePolicyListener *listener = [[WebFramePolicyListener alloc] initWithWebCoreFrame:core(m_webFrame.get())];
-    m_policyListener = listener;
-    [listener release];
-    m_policyFunction = function;
-
-    return listener;
-}
-
-void WebFrameLoaderClient::receivedPolicyDecison(PolicyAction action)
-{
-    ASSERT(m_policyListener);
-    ASSERT(m_policyFunction);
-
-    FramePolicyFunction function = m_policyFunction;
-
-    m_policyListener = nil;
-    m_policyFunction = 0;
-
-    (core(m_webFrame.get())->loader()->policyChecker()->*function)(action);
+    return m_policyListener;
 }
 
 String WebFrameLoaderClient::userAgent(const KURL& url)
@@ -2013,6 +1997,7 @@ PassRefPtr<FrameNetworkingContext> WebFrameLoaderClient::createNetworkingContext
 }
 
 @implementation WebFramePolicyListener
+
 + (void)initialize
 {
     JSC::initializeThreading();
@@ -2021,22 +2006,21 @@ PassRefPtr<FrameNetworkingContext> WebFrameLoaderClient::createNetworkingContext
     WebCoreObjCFinalizeOnMainThread(self);
 }
 
-- (id)initWithWebCoreFrame:(Frame*)frame
+- (id)initWithFrame:(Frame*)frame policyFunction:(FramePolicyFunction)policyFunction
 {
     self = [self init];
     if (!self)
         return nil;
-    frame->ref();
-    m_frame = frame;
+
+    _frame = frame;
+    _policyFunction = policyFunction;
+
     return self;
 }
 
 - (void)invalidate
 {
-    if (m_frame) {
-        m_frame->deref();
-        m_frame = 0;
-    }
+    _frame = nullptr;
 }
 
 - (void)dealloc
@@ -2044,25 +2028,20 @@ PassRefPtr<FrameNetworkingContext> WebFrameLoaderClient::createNetworkingContext
     if (WebCoreObjCScheduleDeallocateOnMainThread([WebFramePolicyListener class], self))
         return;
 
-    if (m_frame)
-        m_frame->deref();
     [super dealloc];
-}
-
-- (void)finalize
-{
-    ASSERT_MAIN_THREAD();
-    if (m_frame)
-        m_frame->deref();
-    [super finalize];
 }
 
 - (void)receivedPolicyDecision:(PolicyAction)action
 {
-    RefPtr<Frame> frame = adoptRef(m_frame);
-    m_frame = 0;
-    if (frame)
-        static_cast<WebFrameLoaderClient*>(frame->loader()->client())->receivedPolicyDecison(action);
+    RefPtr<Frame> frame = _frame.release();
+    if (!frame)
+        return;
+
+    FramePolicyFunction policyFunction = _policyFunction;
+    _policyFunction = nullptr;
+
+    ASSERT(policyFunction);
+    (frame->loader()->policyChecker()->*policyFunction)(action);
 }
 
 - (void)ignore

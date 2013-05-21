@@ -65,6 +65,7 @@ class ImmutableArray;
 class ImmutableDictionary;
 class MutableArray;
 class MutableDictionary;
+class ObjCObjectGraph;
 class WebArchive;
 class WebArchiveResource;
 class WebCertificateInfo;
@@ -126,6 +127,7 @@ WK_ADD_API_MAPPING(WKPopupMenuListenerRef, WebPopupMenuListener)
 #if PLATFORM(MAC)
 WK_ADD_API_MAPPING(WKWebArchiveRef, WebArchive)
 WK_ADD_API_MAPPING(WKWebArchiveResourceRef, WebArchiveResource)
+WK_ADD_API_MAPPING(WKObjCTypeWrapperRef, ObjCObjectGraph)
 #endif
 
 template<typename ImplType, typename APIType = typename ImplTypeInfo<ImplType*>::APIType>

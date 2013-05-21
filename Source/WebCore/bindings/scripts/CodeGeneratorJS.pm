@@ -851,7 +851,10 @@ sub GenerateHeader
     }
 
     # Constructor object getter
-    push(@headerContent, "    static JSC::JSValue getConstructor(JSC::ExecState*, JSC::JSGlobalObject*);\n") if !$interface->extendedAttributes->{"OmitConstructor"};
+    unless ($interface->extendedAttributes->{"OmitConstructor"}) {
+        push(@headerContent, "    static JSC::JSValue getConstructor(JSC::ExecState*, JSC::JSGlobalObject*);\n");
+        push(@headerContent, "    static JSC::JSValue getNamedConstructor(JSC::ExecState*, JSC::JSGlobalObject*);\n") if $interface->extendedAttributes->{"NamedConstructor"};
+    }
 
     my $numCustomFunctions = 0;
     my $numCustomAttributes = 0;
@@ -1510,6 +1513,37 @@ sub GetSkipVTableValidationForInterface
     return $interface->extendedAttributes->{"SkipVTableValidation"};
 }
 
+# URL becomes url, but SetURL becomes setURL.
+sub ToMethodName
+{
+    my $param = shift;
+    my $ret = lcfirst($param);
+    $ret =~ s/hTML/html/ if $ret =~ /^hTML/;
+    $ret =~ s/uRL/url/ if $ret =~ /^uRL/;
+    $ret =~ s/jS/js/ if $ret =~ /^jS/;
+    $ret =~ s/xML/xml/ if $ret =~ /^xML/;
+    $ret =~ s/xSLT/xslt/ if $ret =~ /^xSLT/;
+    $ret =~ s/cSS/css/ if $ret =~ /^cSS/;
+
+    # For HTML5 FileSystem API Flags attributes.
+    # (create is widely used to instantiate an object and must be avoided.)
+    $ret =~ s/^create/isCreate/ if $ret =~ /^create$/;
+    $ret =~ s/^exclusive/isExclusive/ if $ret =~ /^exclusive$/;
+
+    return $ret;
+}
+
+# Returns the RuntimeEnabledFeatures function name that is hooked up to check if a method/attribute is enabled.
+sub GetRuntimeEnableFunctionName
+{
+    my $signature = shift;
+
+    # If a parameter is given (e.g. "EnabledAtRuntime=FeatureName") return the RuntimeEnabledFeatures::{FeatureName}Enabled() method.
+    return "RuntimeEnabledFeatures::" . ToMethodName($signature->extendedAttributes->{"EnabledAtRuntime"}) . "Enabled" if ($signature->extendedAttributes->{"EnabledAtRuntime"} && $signature->extendedAttributes->{"EnabledAtRuntime"} ne "VALUE_IS_MISSING");
+
+    # Otherwise return a function named RuntimeEnabledFeatures::{methodName}Enabled().
+    return "RuntimeEnabledFeatures::" . ToMethodName($signature->name) . "Enabled";
+}
 
 sub GenerateImplementation
 {
@@ -1947,6 +1981,14 @@ sub GenerateImplementation
                 push(@implContent, "JSValue ${getFunctionName}(ExecState* exec, JSValue slotBase, PropertyName)\n");
                 push(@implContent, "{\n");
 
+                # Global constructors can be disabled at runtime.
+                if ($attribute->signature->extendedAttributes->{"EnabledAtRuntime"} && $attribute->signature->type =~ /Constructor$/) {
+                    AddToImplIncludes("RuntimeEnabledFeatures.h");
+                    my $enable_function = GetRuntimeEnableFunctionName($attribute->signature);
+                    push(@implContent, "    if (!${enable_function}())\n");
+                    push(@implContent, "        return jsUndefined();\n");
+                }
+
                 if (!$attribute->isStatic || $attribute->signature->type =~ /Constructor$/) {
                     push(@implContent, "    ${className}* castedThis = jsCast<$className*>(asObject(slotBase));\n");
                 } else {
@@ -1992,7 +2034,9 @@ sub GenerateImplementation
                     # When Constructor attribute is used by DOMWindow.idl, it's correct to pass castedThis as the global object
                     # When JSDOMWrappers have a back-pointer to the globalObject we can pass castedThis->globalObject()
                     if ($interfaceName eq "DOMWindow") {
-                        push(@implContent, "    return JS" . $constructorType . "::getConstructor(exec, castedThis);\n");
+                        my $named = ($constructorType =~ /Named$/) ? "Named" : "";
+                        $constructorType =~ s/Named$//;
+                        push(@implContent, "    return JS" . $constructorType . "::get${named}Constructor(exec, castedThis);\n");
                     } else {
                        AddToImplIncludes("JS" . $constructorType . ".h", $attribute->signature->extendedAttributes->{"Conditional"});
                        push(@implContent, "    return JS" . $constructorType . "::getConstructor(exec, castedThis->globalObject());\n");
@@ -2218,7 +2262,7 @@ sub GenerateImplementation
                                 # $constructorType ~= /Constructor$/ indicates that it is NamedConstructor.
                                 # We do not generate the header file for NamedConstructor of class XXXX,
                                 # since we generate the NamedConstructor declaration into the header file of class XXXX.
-                                if ($constructorType ne "any" and $constructorType !~ /Constructor$/) {
+                                if ($constructorType ne "any" and $constructorType !~ /Named$/) {
                                     AddToImplIncludes("JS" . $constructorType . ".h", $attribute->signature->extendedAttributes->{"Conditional"});
                                 }
                                 push(@implContent, "    // Shadowing a built-in constructor\n");
@@ -2367,6 +2411,11 @@ sub GenerateImplementation
         push(@implContent, "JSValue ${className}::getConstructor(ExecState* exec, JSGlobalObject* globalObject)\n{\n");
         push(@implContent, "    return getDOMConstructor<${className}Constructor>(exec, jsCast<JSDOMGlobalObject*>(globalObject));\n");
         push(@implContent, "}\n\n");
+        if ($interface->extendedAttributes->{"NamedConstructor"}) {
+            push(@implContent, "JSValue ${className}::getNamedConstructor(ExecState* exec, JSGlobalObject* globalObject)\n{\n");
+            push(@implContent, "    return getDOMConstructor<${className}NamedConstructor>(exec, jsCast<JSDOMGlobalObject*>(globalObject));\n");
+            push(@implContent, "}\n\n");
+        }
     }
 
     # Functions
@@ -4153,20 +4202,19 @@ sub GenerateConstructorHelperMethods
     my $generatingNamedConstructor = shift;
 
     my $constructorClassName = $generatingNamedConstructor ? "${className}NamedConstructor" : "${className}Constructor";
-    my $leastConstructorLength = $interface->extendedAttributes->{"ConstructorParameters"};
-    if (!defined $leastConstructorLength) {
-        if ($codeGenerator->IsConstructorTemplate($interface, "Event") || $codeGenerator->IsConstructorTemplate($interface, "TypedArray")) {
-            $leastConstructorLength = 1;
-        } elsif ($interface->extendedAttributes->{"Constructor"}) {
-            my @constructors = @{$interface->constructors};
-            $leastConstructorLength = 255;
-            foreach my $constructor (@constructors) {
-                my $constructorLength = GetFunctionLength($constructor);
-                $leastConstructorLength = $constructorLength if ($constructorLength < $leastConstructorLength);
-            }
-        } else {
-            $leastConstructorLength = 0;
+    my $leastConstructorLength = 0;
+    if ($codeGenerator->IsConstructorTemplate($interface, "Event") || $codeGenerator->IsConstructorTemplate($interface, "TypedArray")) {
+        $leastConstructorLength = 1;
+    } elsif ($interface->extendedAttributes->{"Constructor"} || $interface->extendedAttributes->{"CustomConstructor"}) {
+        my @constructors = @{$interface->constructors};
+        my @customConstructors = @{$interface->customConstructors};
+        $leastConstructorLength = 255;
+        foreach my $constructor (@constructors, @customConstructors) {
+            my $constructorLength = GetFunctionLength($constructor);
+            $leastConstructorLength = $constructorLength if ($constructorLength < $leastConstructorLength);
         }
+    } else {
+        $leastConstructorLength = 0;
     }
 
     if ($generatingNamedConstructor) {

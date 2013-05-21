@@ -26,9 +26,13 @@
 #include "config.h"
 #include "Storage.h"
 
+#include "Document.h"
+#include "ExceptionCode.h"
 #include "Frame.h"
 #include "Page.h"
+#include "SchemeRegistry.h"
 #include "Settings.h"
+#include "StorageArea.h"
 #include <wtf/PassRefPtr.h>
 #include <wtf/text/WTFString.h>
 
@@ -45,14 +49,70 @@ Storage::Storage(Frame* frame, PassRefPtr<StorageArea> storageArea)
 {
     ASSERT(m_frame);
     ASSERT(m_storageArea);
-    if (m_storageArea)
-        m_storageArea->incrementAccessCount();
+
+    m_storageArea->incrementAccessCount();
 }
 
 Storage::~Storage()
 {
-    if (m_storageArea)
-        m_storageArea->decrementAccessCount();
+    m_storageArea->decrementAccessCount();
 }
 
+unsigned Storage::length(ExceptionCode& ec) const
+{
+    ec = 0;
+    if (!m_storageArea->canAccessStorage(m_frame)) {
+        ec = SECURITY_ERR;
+        return 0;
+    }
+
+    if (isDisabledByPrivateBrowsing())
+        return 0;
+
+    return m_storageArea->length();
 }
+
+String Storage::key(unsigned index, ExceptionCode& ec) const
+{
+    return m_storageArea->key(index, ec, m_frame);
+}
+
+String Storage::getItem(const String& key, ExceptionCode& ec) const
+{
+    return m_storageArea->getItem(key, ec, m_frame);
+}
+
+void Storage::setItem(const String& key, const String& value, ExceptionCode& ec)
+{
+    m_storageArea->setItem(key, value, ec, m_frame);
+}
+
+void Storage::removeItem(const String& key, ExceptionCode& ec)
+{
+    m_storageArea->removeItem(key, ec, m_frame);
+}
+
+void Storage::clear(ExceptionCode& ec)
+{
+    m_storageArea->clear(ec, m_frame);
+}
+
+bool Storage::contains(const String& key, ExceptionCode& ec) const
+{
+    return m_storageArea->contains(key, ec, m_frame);
+}
+
+bool Storage::isDisabledByPrivateBrowsing() const
+{
+    if (!m_frame->page()->settings()->privateBrowsingEnabled())
+        return false;
+
+    if (m_storageArea->storageType() == LocalStorage) {
+        if (SchemeRegistry::allowsLocalStorageAccessInPrivateBrowsing(m_frame->document()->securityOrigin()->protocol()))
+            return false;
+    }
+
+    return true;
+}
+
+} // namespace WebCore

@@ -396,15 +396,9 @@ AtomicString CSSParserString::substring(unsigned position, unsigned length) cons
 {
     ASSERT(m_length >= position + length);
 
-    RefPtr<StringImpl> result;
-
-    if (is8Bit()) {
-        result = StringImpl::create(characters8() + position, length);
-    } else {
-        result = StringImpl::create(characters16() + position, length);
-    }
-
-    return AtomicString(result);
+    if (is8Bit())
+        return AtomicString(characters8() + position, length);
+    return AtomicString(characters16() + position, length);
 }
 #endif
 
@@ -1756,8 +1750,7 @@ inline PassRefPtr<CSSPrimitiveValue> CSSParser::createPrimitiveStringValue(CSSPa
 inline PassRefPtr<CSSPrimitiveValue> CSSParser::createPrimitiveVariableNameValue(CSSParserValue* value)
 {
     ASSERT(value->unit == CSSPrimitiveValue::CSS_VARIABLE_NAME);
-    AtomicString variableName = String(value->string);
-    return CSSPrimitiveValue::create(variableName, CSSPrimitiveValue::CSS_VARIABLE_NAME);
+    return CSSPrimitiveValue::create(value->string, CSSPrimitiveValue::CSS_VARIABLE_NAME);
 }
 #endif
 
@@ -2903,11 +2896,11 @@ bool CSSParser::parseValue(CSSPropertyID propId, bool important)
         return false;
     case CSSPropertyPage:
         return parsePage(propId, important);
-    case CSSPropertyFontStretch:
 #if ENABLE(CSS_SHADERS)
     case CSSPropertyGeometry:
         return m_inFilterRule ? parseGeometry(propId, value, important) : false;
 #endif
+    case CSSPropertyFontStretch:
     case CSSPropertyTextLineThrough:
     case CSSPropertyTextOverline:
     case CSSPropertyTextUnderline:
@@ -6680,14 +6673,14 @@ bool CSSParser::parseBorderImage(CSSPropertyID propId, RefPtr<CSSValue>& result,
             else if (isGeneratedImageValue(val)) {
                 RefPtr<CSSValue> value;
                 if (parseGeneratedImage(m_valueList.get(), value))
-                    context.commitImage(value);
+                    context.commitImage(value.release());
                 else
                     return false;
 #if ENABLE(CSS_IMAGE_SET)
             } else if (val->unit == CSSParserValue::Function && equalIgnoringCase(val->function->name, "-webkit-image-set(")) {
                 RefPtr<CSSValue> value = parseImageSet(m_valueList.get());
                 if (value)
-                    context.commitImage(value);
+                    context.commitImage(value.release());
                 else
                     return false;
 #endif
@@ -6704,7 +6697,7 @@ bool CSSParser::parseBorderImage(CSSPropertyID propId, RefPtr<CSSValue>& result,
         if (!context.canAdvance() && context.allowRepeat()) {
             RefPtr<CSSValue> repeat;
             if (parseBorderImageRepeat(repeat))
-                context.commitRepeat(repeat);
+                context.commitRepeat(repeat.release());
         }
 
         if (!context.canAdvance() && context.requireWidth()) {
