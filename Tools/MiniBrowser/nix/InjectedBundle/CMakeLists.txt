@@ -3,7 +3,7 @@ set(MiniBrowserInjectedBundle_SOURCES
 )
 
 set(MiniBrowserInjectedBundle_LIBRARIES
-    ${WebKit2_LIBRARY_NAME}
+    WebKit2
 )
 
 add_library(MiniBrowserInjectedBundle SHARED ${MiniBrowserInjectedBundle_SOURCES})

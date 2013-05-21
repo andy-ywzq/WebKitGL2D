@@ -25,7 +25,7 @@ add_definitions(-DGTEST_CREATE_SHARED_LIBRARY=1)
 
 if (NOT PORT STREQUAL "Nix")
     target_link_libraries(gtest
-        ${WTF_LIBRARY_NAME}
+        WTF
     )
 endif ()
 

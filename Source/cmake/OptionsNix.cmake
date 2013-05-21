@@ -12,11 +12,7 @@ set(SHARED_CORE 0)
 set(ENABLE_WEBKIT 0)
 set(ENABLE_WEBKIT2 1)
 
-set(JSC_EXECUTABLE_NAME jsc)
-set(WTF_LIBRARY_NAME wtf_nix)
-set(JavaScriptCore_LIBRARY_NAME javascriptcore_nix)
-set(WebCore_LIBRARY_NAME webcore_nix)
-set(WebKit2_LIBRARY_NAME WebKitNix)
+set(WebKit2_OUTPUT_NAME WebKitNix)
 
 # Macro used to define flags that make non sense to be undefined, e.g. ENABLE_GLIB_SUPPORT on Nix
 set(_WEBKIT_HARDCODED_DEFINES "")

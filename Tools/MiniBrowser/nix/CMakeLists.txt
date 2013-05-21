@@ -20,7 +20,7 @@ set(MiniBrowser_SOURCES
 )
 
 set(MiniBrowser_LIBRARIES
-    ${WebKit2_LIBRARY_NAME}
+    WebKit2
     ${OPENGL_LIBRARIES}
     ${GLIB_LIBRARIES}
     ${GLIB_GTHREAD_LIBRARIES}

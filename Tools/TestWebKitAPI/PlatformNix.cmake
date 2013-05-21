@@ -132,7 +132,7 @@ endif ()
 
 add_library(TestWebKitNixAPIBase ${TestWebKitNixAPIBase_SOURCES})
 target_link_libraries(TestWebKitNixAPIBase ${TestWebKitNixAPIBase_LIBRARIES})
-add_dependencies(TestWebKitNixAPIBase ${WebKit2_LIBRARY_NAME} ${ForwardingHeadersForTestWebKitAPI_NAME} ${ForwardingNetworkHeadersForTestWebKitAPI_NAME})
+add_dependencies(TestWebKitNixAPIBase WebKit2 ${ForwardingHeadersForTestWebKitAPI_NAME} ${ForwardingNetworkHeadersForTestWebKitAPI_NAME})
 
 list(APPEND bundle_harness_SOURCES
     ${TESTWEBKITAPI_DIR}/Tests/nix/WebViewWebProcessCrashed_Bundle.cpp
@@ -147,7 +147,7 @@ include_directories(
 set(test_webkitnix_api_LIBRARIES
     TestWebKitNixAPIBase
     ${CAIRO_LIBRARIES}
-    ${WebKit2_LIBRARY_NAME}
+    WebKit2
     gtest
 )
 

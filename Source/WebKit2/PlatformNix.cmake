@@ -145,7 +145,7 @@ if (ENABLE_INSPECTOR_SERVER)
 endif ()
 
 list(APPEND WebKit2_LIBRARIES
-    ${WebCoreTestSupport_LIBRARY_NAME}
+    WebCoreTestSupport
     ${CAIRO_LIBRARIES}
     ${Freetype_LIBRARIES}
     ${LIBXML2_LIBRARIES}
@@ -329,18 +329,18 @@ set(WebKitNix_JavaScriptCore_HEADERS
 )
 
 install(FILES ${CMAKE_BINARY_DIR}/WebKit2/nix/WebKitNix.pc DESTINATION lib/pkgconfig)
-install(FILES ${WebKitNix_HEADERS} DESTINATION include/${WebKit2_LIBRARY_NAME}-${PROJECT_VERSION_MAJOR})
-install(FILES ${WebKitNix_WebKit2_HEADERS} DESTINATION include/${WebKit2_LIBRARY_NAME}-${PROJECT_VERSION_MAJOR}/WebKit2)
-install(FILES ${WebKitNix_JavaScriptCore_HEADERS} DESTINATION include/${WebKit2_LIBRARY_NAME}-${PROJECT_VERSION_MAJOR}/JavaScriptCore)
+install(FILES ${WebKitNix_HEADERS} DESTINATION include/${WebKit2_OUTPUT_NAME}-${PROJECT_VERSION_MAJOR})
+install(FILES ${WebKitNix_WebKit2_HEADERS} DESTINATION include/${WebKit2_OUTPUT_NAME}-${PROJECT_VERSION_MAJOR}/WebKit2)
+install(FILES ${WebKitNix_JavaScriptCore_HEADERS} DESTINATION include/${WebKit2_OUTPUT_NAME}-${PROJECT_VERSION_MAJOR}/JavaScriptCore)
 
 add_definitions(-DLIBEXECDIR=\"${CMAKE_INSTALL_PREFIX}/${EXEC_INSTALL_DIR}\"
-    -DWEBPROCESSNAME=\"${WebProcess_EXECUTABLE_NAME}\"
-    -DPLUGINPROCESSNAME=\"${PluginProcess_EXECUTABLE_NAME}\"
+    -DWEBPROCESSNAME=\"WebProcess\"
+    -DPLUGINPROCESSNAME=\"PluginProcess\"
 )
 
 if (ENABLE_INSPECTOR)
     set(WK2_WEB_INSPECTOR_DIR ${CMAKE_BINARY_DIR}/WebKit2/nix/webinspector)
-    set(WK2_WEB_INSPECTOR_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${WebKit2_LIBRARY_NAME}-${PROJECT_VERSION_MAJOR})
+    set(WK2_WEB_INSPECTOR_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${WebKit2_OUTPUT_NAME}-${PROJECT_VERSION_MAJOR})
     add_definitions(-DWK2_WEB_INSPECTOR_DIR="${WK2_WEB_INSPECTOR_DIR}")
     add_definitions(-DWK2_WEB_INSPECTOR_INSTALL_DIR="${WK2_WEB_INSPECTOR_INSTALL_DIR}/webinspector")
     add_custom_target(
@@ -349,7 +349,7 @@ if (ENABLE_INSPECTOR)
         COMMAND ${CMAKE_COMMAND} -E copy ${WEBCORE_DIR}/English.lproj/localizedStrings.js ${WK2_WEB_INSPECTOR_DIR}
         COMMAND ${CMAKE_COMMAND} -E copy ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorBackendCommands.js ${WK2_WEB_INSPECTOR_DIR}/InspectorBackendCommands.js
         COMMAND ${CMAKE_COMMAND} -E copy ${WEBKIT2_DIR}/UIProcess/InspectorServer/front-end/inspectorPageIndex.html ${WK2_WEB_INSPECTOR_DIR}
-        DEPENDS ${WebCore_LIBRARY_NAME}
+        DEPENDS WebCore
     )
     install(DIRECTORY ${WK2_WEB_INSPECTOR_DIR}
         DESTINATION ${WK2_WEB_INSPECTOR_INSTALL_DIR}

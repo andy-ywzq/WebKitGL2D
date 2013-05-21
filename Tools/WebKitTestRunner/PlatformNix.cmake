@@ -35,8 +35,8 @@ list(APPEND WebKitTestRunner_INCLUDE_DIRECTORIES
 )
 
 set(WebKitTestRunner_LIBRARIES
-    ${WTF_LIBRARY_NAME}
-    ${WebKit2_LIBRARY_NAME}
+    WTF
+    WebKit2
     ${CAIRO_LIBRARIES}
     ${GLIB_LIBRARIES}
     ${FONTCONFIG_LIBRARIES}

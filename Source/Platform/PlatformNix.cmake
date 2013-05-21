@@ -27,4 +27,4 @@ set (Platform_SOURCES
     nix/src/WebCommon.cpp
 )
 
-install(FILES ${Platform_HEADERS} DESTINATION include/${WebKit2_LIBRARY_NAME}-${PROJECT_VERSION_MAJOR}/NixPlatform)
+install(FILES ${Platform_HEADERS} DESTINATION include/${WebKit2_OUTPUT_NAME}-${PROJECT_VERSION_MAJOR}/NixPlatform)
