@@ -415,6 +415,9 @@ Bug(GTK) [ Debug ] perf [ Skip ]
 webkit.org/b/115374 editing/shadow [ Skip ]
 webkit.org/b/115374 fast/dom/shadow [ Skip ]
 
+# No concept of secure text input
+Bug(GTK) editing/secure-input [ Failure ]
+
 #////////////////////////////////////////////////////////////////////////////////////////
 # End of Expected failures
 #////////////////////////////////////////////////////////////////////////////////////////
@@ -434,9 +437,6 @@ webkit.org/b/90957 [ Release ] fast/js/random-array-gc-stress.html [ Crash Pass 
 webkit.org/b/94458 [ Debug ] http/tests/security/XFrameOptions/x-frame-options-allowall.html [ Crash Failure ]
 webkit.org/b/94458 [ Debug ] http/tests/security/XFrameOptions/x-frame-options-deny-meta-tag-in-body.html [ Crash Failure ]
 webkit.org/b/94458 [ Debug ] fast/events/message-port-context-destroyed.html [ Crash Pass ]
-
-webkit.org/b/99020 [ Debug ] fast/css/style-scoped/style-scoped-apply-author-styles.html [ Crash Pass ]
-webkit.org/b/99020 [ Debug ] fast/css/style-scoped/style-scoped-attach.html [ Crash Pass ]
 
 webkit.org/b/100688 fast/css-generated-content/first-letter-table-cell-format-block-crash.html [ Crash Pass ]
 webkit.org/b/100688 fast/text/text-fragment-first-letter-update-crash.html [ Crash Pass ]
@@ -1367,10 +1367,7 @@ webkit.org/b/115374 fast/dom/HTMLTemplateElement/cycles-in-shadow.html [ Failure
 
 webkit.org/b/115437 css3/flexbox/auto-margins.html [ ImageOnlyFailure ]
 webkit.org/b/115437 fast/css/sticky/sticky-writing-mode-vertical-lr.html [ ImageOnlyFailure ]
-webkit.org/b/115437 fast/exclusions/shape-inside/shape-inside-percentage.html [ ImageOnlyFailure ]
 webkit.org/b/115437 fast/regions/region-content-flown-into-region.html [ ImageOnlyFailure ]
-webkit.org/b/115437 fast/regions/webkit-flow-inlines-inside-regions-bounds-vertical.html [ ImageOnlyFailure ]
-webkit.org/b/115437 fast/regions/webkit-flow-inlines-inside-regions-bounds.html [ ImageOnlyFailure ]
 
 webkit.org/b/115437 fast/text/complex-initial-advance.html [ ImageOnlyFailure ]
 
@@ -1378,40 +1375,11 @@ webkit.org/b/115440 svg/stroke/animated-non-scaling-stroke.html [ ImageOnlyFailu
 
 webkit.org/b/115441 media/video-poster-background.html [ ImageOnlyFailure ]
 
-webkit.org/b/115632 fast/exclusions/shape-inside/shape-inside-polygon-layout.html [ Failure ]
-webkit.org/b/115632 fast/exclusions/shape-outside-floats/shape-outside-floats-diamond-margin-polygon.html [ Failure ]
-webkit.org/b/115632 fast/exclusions/shape-outside-floats/shape-outside-floats-ellipse-margin-left.html [ Failure ]
-webkit.org/b/115632 fast/exclusions/shape-outside-floats/shape-outside-floats-ellipse-margin-right.html [ Failure ]
-
 webkit.org/b/115633 accessibility/meter-element.html [ Failure ]
 
-# Needs rebaseline after bug https://bugs.webkit.org/show_bug.cgi?id=52185
-webkit.org/b/52185 fast/table/007.html [ Failure Rebaseline ]
-webkit.org/b/52185 fast/table/colspanMinWidth.html [ Failure Rebaseline ]
-webkit.org/b/52185 fast/table/colspanMinWidth-vertical.html [ Failure Rebaseline ]
-webkit.org/b/52185 fast/table/spanOverlapRepaint.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla/bugs/bug13169.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla/bugs/bug133756-1.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla/bugs/bug133756-2.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla/bugs/bug17138.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla/bugs/bug17548.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla/bugs/bug220536.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla/bugs/bug6304.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla/bugs/bug73321.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla/bugs/bug7714.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla/bugs/bug86708.html [ ImageOnlyFailure Rebaseline ]
-webkit.org/b/52185 tables/mozilla/bugs/bug8858.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla/core/bloomberg.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla/core/cell_heights.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla/other/test6.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla_expected_failures/bugs/bug1010.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla_expected_failures/bugs/bug131020-3.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla_expected_failures/bugs/bug23847.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla_expected_failures/bugs/bug58402-2.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla_expected_failures/bugs/bug65372.html [ Failure Rebaseline ]
-webkit.org/b/52185 tables/mozilla_expected_failures/bugs/bug6933.html [ Failure Rebaseline ]
-webkit.org/b/52185 accessibility/table-cells.html [ Failure Rebaseline ]
-webkit.org/b/52185 accessibility/table-attributes.html [ Failure Rebaseline ]
+webkit.org/b/116059 fast/css/variables/var-inside-shape.html [ ImageOnlyFailure ]
+
+webkit.org/b/116153 fast/css/text-overflow-ellipsis-full-truncate-rtl.html [ ImageOnlyFailure ]
 
 #////////////////////////////////////////////////////////////////////////////////////////
 # End of Tests failing

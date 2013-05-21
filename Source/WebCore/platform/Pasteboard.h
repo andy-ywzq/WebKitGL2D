@@ -26,18 +26,14 @@
 #ifndef Pasteboard_h
 #define Pasteboard_h
 
-#include <wtf/Forward.h>
+#include "DragImage.h"
 #include <wtf/ListHashSet.h>
 #include <wtf/Noncopyable.h>
 #include <wtf/Vector.h>
 #include <wtf/text/WTFString.h>
 
-#if PLATFORM(MAC)
-#include <wtf/RetainPtr.h>
-#endif
-
 #if PLATFORM(GTK)
-// FIXME: Why does this include need to be in the header?
+// FIXME: Why does this include need to be in this header?
 #include <PasteboardHelper.h>
 #endif
 
@@ -86,6 +82,7 @@ public:
 
 #if PLATFORM(MAC)
     static PassOwnPtr<Pasteboard> create(const String& pasteboardName);
+    String name() const { return m_pasteboardName; }
 
     // This is required to support OS X services.
     void writeSelectionForTypes(const Vector<String>& pasteboardTypes, bool canSmartCopyOrDelete, Frame*, ShouldSerializeSelectedTextForClipboard);
@@ -113,12 +110,17 @@ public:
     void writePlainText(const String&, Frame*);
     static NSArray* supportedPasteboardTypes();
 #endif
+    void writePasteboard(const Pasteboard& sourcePasteboard);
     void writeClipboard(Clipboard*);
 
     void clear();
     void clear(const String& type);
 
     bool canSmartReplace();
+
+#if ENABLE(DRAG_SUPPORT)
+    void setDragImage(DragImageRef, const IntPoint& hotSpot);
+#endif
 
     // FIXME: Having these functions here is a layering violation.
     // These functions need to move to the editing directory even if they have platform-specific aspects.

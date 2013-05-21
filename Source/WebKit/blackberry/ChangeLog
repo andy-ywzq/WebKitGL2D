@@ -1,5 +1,53 @@
 2013-05-14  Carlos Garcia Campos  <cgarcia@igalia.com>
 
+        Remove WTF_USE_PLATFORM_STRATEGIES
+        https://bugs.webkit.org/show_bug.cgi?id=114431
+
+        Reviewed by Darin Adler.
+
+        * WebCoreSupport/AboutDataUseFeatures.in:
+
+2013-05-14  Tiancheng Jiang  <tijiang@rim.com>
+
+        [BlackBerry] Improve Fatfinger phase.
+        https://bugs.webkit.org/show_bug.cgi?id=107403
+
+        Reviewed by Rob Buis.
+
+        Internally reviewed by Genevieve Mak.
+        BlackBerry PR 324965.
+
+        Cache and reuse intersected nodes as long as hit position has not been
+        changed.
+
+        * Api/WebPage.cpp:
+        (BlackBerry::WebKit::WebPagePrivate::hitTestResult):
+        * Api/WebPage_p.h:
+        (WebPagePrivate):
+        * WebKitSupport/FatFingers.cpp:
+        (BlackBerry::WebKit::FatFingers::findBestPoint):
+        (BlackBerry::WebKit::FatFingers::findIntersectingRegions):
+        (BlackBerry::WebKit::FatFingers::getNodesFromRect):
+        * WebKitSupport/FatFingers.h:
+
+2013-05-14  Andrew Lo  <anlo@rim.com>
+
+        [BlackBerry] Hook up frame render begin/end in PerformanceMonitor
+        https://bugs.webkit.org/show_bug.cgi?id=116110
+
+        Reviewed by Rob Buis.
+
+        Internally reviewed by Jeff Rogers, Jonathan Jiang.
+        Internal PR 299155.
+
+        Mark frame render begin & end for BlackBerry performance monitoring
+        in blitVisibleContents.
+
+        * Api/BackingStore.cpp:
+        (BlackBerry::WebKit::BackingStorePrivate::blitVisibleContents):
+
+2013-05-14  Carlos Garcia Campos  <cgarcia@igalia.com>
+
         [BlackBerry] Use requestAnimationFrame for animations
         https://bugs.webkit.org/show_bug.cgi?id=115896
 

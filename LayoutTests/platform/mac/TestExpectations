@@ -1536,6 +1536,9 @@ webkit.org/b/115292 fast/writing-mode/japanese-ruby-vertical-rl.html
 webkit.org/b/115292 fast/writing-mode/vertical-baseline-alignment.html
 webkit.org/b/115292 fast/writing-mode/vertical-font-fallback.html
 
+# Fails with WebKit1 only.
+editing/secure-input/reset-state-on-navigation.html [ Failure ]
+
 # Needs rebaseline after bug https://bugs.webkit.org/show_bug.cgi?id=52185
 webkit.org/b/52185 fast/table/007.html [ Failure Rebaseline ]
 webkit.org/b/52185 fast/table/colspanMinWidth.html [ Failure Rebaseline ]

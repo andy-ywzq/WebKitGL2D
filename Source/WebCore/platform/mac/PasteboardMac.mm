@@ -27,7 +27,7 @@
 #import "Pasteboard.h"
 
 #import "CachedImage.h"
-#import "ClipboardMac.h"
+#import "Clipboard.h"
 #import "DOMRangeInternal.h"
 #import "Document.h"
 #import "DocumentFragment.h"
@@ -49,6 +49,8 @@
 #import "LoaderNSURLExtras.h"
 #import "MIMETypeRegistry.h"
 #import "Page.h"
+#import "PasteboardStrategy.h"
+#import "PlatformStrategies.h"
 #import "RenderImage.h"
 #import "ResourceBuffer.h"
 #import "Text.h"
@@ -59,11 +61,6 @@
 #import <wtf/RetainPtr.h>
 #import <wtf/text/StringBuilder.h>
 #import <wtf/unicode/CharacterNames.h>
-
-#if USE(PLATFORM_STRATEGIES)
-#include "PasteboardStrategy.h"
-#include "PlatformStrategies.h"
-#endif
 
 namespace WebCore {
 
@@ -329,9 +326,9 @@ void Pasteboard::writeImage(Node* node, const KURL& url, const String& title)
     writeFileWrapperAsRTFDAttachment(fileWrapperForImage(cachedImage, cocoaURL), m_pasteboardName);
 }
 
-void Pasteboard::writeClipboard(Clipboard* clipboard)
+void Pasteboard::writePasteboard(const Pasteboard& pasteboard)
 {
-    platformStrategies()->pasteboardStrategy()->copy(static_cast<ClipboardMac*>(clipboard)->pasteboardName(), m_pasteboardName);
+    platformStrategies()->pasteboardStrategy()->copy(pasteboard.m_pasteboardName, m_pasteboardName);
 }
 
 bool Pasteboard::canSmartReplace()
@@ -811,6 +808,24 @@ Vector<String> Pasteboard::readFilenames()
         paths.uncheckedAppend([absoluteURL path]);
     }
     return paths;
+}
+
+void Pasteboard::setDragImage(DragImageRef image, const IntPoint& location)
+{
+    // Don't allow setting the drag image if someone kept a pasteboard and is trying to set the image too late.
+    if (m_changeCount != platformStrategies()->pasteboardStrategy()->changeCount(m_pasteboardName))
+        return;
+
+    // Dashboard wants to be able to set the drag image during dragging, but Cocoa does not allow this.
+    // Instead we must drop down to the CoreGraphics API.
+    wkSetDragImage(image.get(), location);
+
+    // Hack: We must post an event to wake up the NSDragManager, which is sitting in a nextEvent call
+    // up the stack from us because the CoreFoundation drag manager does not use the run loop by itself.
+    // This is the most innocuous event to use, per Kristen Forster.
+    NSEvent* event = [NSEvent mouseEventWithType:NSMouseMoved location:NSZeroPoint
+        modifierFlags:0 timestamp:0 windowNumber:0 context:nil eventNumber:0 clickCount:0 pressure:0];
+    [NSApp postEvent:event atStart:YES];
 }
 
 }

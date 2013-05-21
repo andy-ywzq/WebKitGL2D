@@ -27,24 +27,15 @@
 #import "ClipboardMac.h"
 
 #import "CachedImage.h"
-#import "CachedImageClient.h"
 #import "DOMElementInternal.h"
+#import "Document.h"
 #import "DragClient.h"
 #import "DragController.h"
 #import "DragData.h"
-#import "Editor.h"
-#import "FileList.h"
 #import "Frame.h"
 #import "FrameSnapshottingMac.h"
-#import "Image.h"
 #import "Page.h"
 #import "Pasteboard.h"
-#import "PasteboardStrategy.h"
-#import "PlatformStrategies.h"
-#import "RenderImage.h"
-#import "ScriptExecutionContext.h"
-#import "SecurityOrigin.h"
-#import "WebCoreSystemInterface.h"
 
 namespace WebCore {
 
@@ -55,102 +46,39 @@ PassRefPtr<Clipboard> Clipboard::create(ClipboardAccessPolicy policy, DragData* 
 }
 #endif
 
-ClipboardMac::ClipboardMac(ClipboardType clipboardType, const String& pasteboardName, ClipboardAccessPolicy policy, ClipboardContents clipboardContents, Frame *frame)
+ClipboardMac::ClipboardMac(ClipboardType clipboardType, const String& pasteboardName, ClipboardAccessPolicy policy, ClipboardContents clipboardContents)
     : Clipboard(policy, clipboardType, Pasteboard::create(pasteboardName), clipboardContents == DragAndDropFiles)
-    , m_pasteboardName(pasteboardName)
-    , m_frame(frame)
 {
-    m_changeCount = platformStrategies()->pasteboardStrategy()->changeCount(m_pasteboardName);
 }
 
-ClipboardMac::~ClipboardMac()
-{
-    if (m_dragImage)
-        m_dragImage->removeClient(this);
-}
-
-// The rest of these getters don't really have any impact on security, so for now make no checks
-
-void ClipboardMac::setDragImage(CachedImage* img, const IntPoint &loc)
-{
-    setDragImage(img, 0, loc);
-}
-
-void ClipboardMac::setDragImageElement(Node *node, const IntPoint &loc)
-{
-    setDragImage(0, node, loc);
-}
-
-void ClipboardMac::setDragImage(CachedImage* image, Node *node, const IntPoint &loc)
-{
-    if (canSetDragImage()) {
-        if (m_dragImage)
-            m_dragImage->removeClient(this);
-        m_dragImage = image;
-        if (m_dragImage)
-            m_dragImage->addClient(this);
-
-        m_dragLoc = loc;
-        m_dragImageElement = node;
-        
-        if (dragStarted() && m_changeCount == platformStrategies()->pasteboardStrategy()->changeCount(m_pasteboardName)) {
-            NSPoint cocoaLoc;
-            NSImage* cocoaImage = dragNSImage(cocoaLoc);
-            if (cocoaImage) {
-                // Dashboard wants to be able to set the drag image during dragging, but Cocoa does not allow this.
-                // Instead we must drop down to the CoreGraphics API.
-                wkSetDragImage(cocoaImage, cocoaLoc);
-
-                // Hack: We must post an event to wake up the NSDragManager, which is sitting in a nextEvent call
-                // up the stack from us because the CoreFoundation drag manager does not use the run loop by itself.
-                // This is the most innocuous event to use, per Kristen Forster.
-                NSEvent* ev = [NSEvent mouseEventWithType:NSMouseMoved location:NSZeroPoint
-                    modifierFlags:0 timestamp:0 windowNumber:0 context:nil eventNumber:0 clickCount:0 pressure:0];
-                [NSApp postEvent:ev atStart:YES];
-            }
-        }
-        // Else either 1) we haven't started dragging yet, so we rely on the part to install this drag image
-        // as part of getting the drag kicked off, or 2) Someone kept a ref to the clipboard and is trying to
-        // set the image way too late.
-    }
-}
-    
 #if ENABLE(DRAG_SUPPORT)
-void ClipboardMac::declareAndWriteDragImage(Element* element, const KURL& url, const String& title, Frame* frame)
+void Clipboard::declareAndWriteDragImage(Element* element, const KURL& url, const String& title, Frame* frame)
 {
     ASSERT(frame);
     if (Page* page = frame->page())
-        page->dragController()->client()->declareAndWriteDragImage(m_pasteboardName, kit(element), url, title, frame);
+        page->dragController()->client()->declareAndWriteDragImage(m_pasteboard->name(), kit(element), url, title, frame);
 }
-#endif // ENABLE(DRAG_SUPPORT)
+#endif
     
-DragImageRef ClipboardMac::createDragImage(IntPoint& loc) const
-{
-    NSPoint nsloc = NSMakePoint(loc.x(), loc.y());
-    DragImageRef result = dragNSImage(nsloc);
-    loc = (IntPoint)nsloc;
-    return result;
-}
-    
-NSImage *ClipboardMac::dragNSImage(NSPoint& loc) const
+DragImageRef Clipboard::createDragImage(IntPoint& location) const
 {
     NSImage *result = nil;
     if (m_dragImageElement) {
-        if (m_frame) {
+        Document* document = m_dragImageElement->document();
+        if (Frame* frame = document->frame()) {
             NSRect imageRect;
             NSRect elementRect;
-            result = snapshotDragImage(m_frame, m_dragImageElement.get(), &imageRect, &elementRect);
+            result = snapshotDragImage(frame, m_dragImageElement.get(), &imageRect, &elementRect);
             // Client specifies point relative to element, not the whole image, which may include child
             // layers spread out all over the place.
-            loc.x = elementRect.origin.x - imageRect.origin.x + m_dragLoc.x();
-            loc.y = elementRect.origin.y - imageRect.origin.y + m_dragLoc.y();
-            loc.y = imageRect.size.height - loc.y;
+            location.setX(elementRect.origin.x - imageRect.origin.x + m_dragLoc.x());
+            location.setY(imageRect.size.height - (elementRect.origin.y - imageRect.origin.y + m_dragLoc.y()));
         }
     } else if (m_dragImage) {
         result = m_dragImage->image()->getNSImage();
         
-        loc = m_dragLoc;
-        loc.y = [result size].height - loc.y;
+        location = m_dragLoc;
+        location.setY([result size].height - location.y());
     }
     return result;
 }

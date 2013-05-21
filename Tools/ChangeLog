@@ -1,3 +1,132 @@
+2013-05-15  Alberto Garcia  <agarcia@igalia.com>
+
+        [GTK] Fails to build while generating gtkdoc
+        https://bugs.webkit.org/show_bug.cgi?id=115612
+
+        Reviewed by Philippe Normand.
+
+        Fix typo in the prerequisites of docs-build.stamp.
+
+        * GNUmakefile.am:
+
+2013-05-15  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed, fixing the current test-webkitpy failure.
+
+        * Scripts/webkitpy/port/mac_unittest.py:
+        (test_setup_environ_for_server): Adjusting the expected DYLD_INSERT_LIBRARIES environment variable value
+        in webkitpy.port.mac_unittest.test_setup_environ_for_server after r150089.
+
+2013-05-14  Jaehun Lim  <ljaehun.lim@samsung.com>
+
+        Fix build after r150090.
+        https://bugs.webkit.org/show_bug.cgi?id=116129
+
+        Unreviewed build fix after r150090.
+
+        * WebKitTestRunner/TestInvocation.cpp:
+        (WTR::TestInvocation::didReceiveSynchronousMessageFromInjectedBundle):
+
+2013-05-14  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows, others] Unreviewed build fix after r150090.
+
+        * DumpRenderTree/TestRunner.cpp:
+        (getSecureEventInputIsEnabledCallback): IsSecureEventInputEnabled
+        doesn't exist on other platforms.
+
+2013-05-14  Brent Fulgham  <bfulgham@webkit.org>
+
+        [Windows] Expunge pthreads2VC.dll from DumpRenderTree Project
+        https://bugs.webkit.org/show_bug.cgi?id=115889
+
+        Reviewed by Benjamin Poulain.
+
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreeCommon.props:
+        * DumpRenderTree/win/DumpRenderTreeCommon.vsprops:
+
+2013-05-14  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Identify proper run environment for scripts.
+        https://bugs.webkit.org/show_bug.cgi?id=116114
+
+        Reviewed by David Kilzer.
+
+        Determine (based on Visual Studio version) which path to use for
+        executables (bin versus bin32).
+
+        * Scripts/webkitdirs.pm:
+        (determineVisualStudioInstallDir): Added.
+        (determineVisualStudioVersion): Added.
+        (determineConfigurationProductDir): Modified to choose proper bin
+        or bin32 directory.
+        (visualStudioVersion): Added
+        (setupCygwinEnv): Modified to use new determineVisualStudioInstallDir
+
+2013-05-14  Alexey Proskuryakov  <ap@apple.com>
+
+        [Mac] Add tests for secure event input
+        https://bugs.webkit.org/show_bug.cgi?id=116121
+
+        Reviewed by Mark Rowe.
+
+        * DumpRenderTree/TestRunner.cpp:
+        (getSecureEventInputIsEnabledCallback):
+        (TestRunner::staticValues):
+        Expose an accessor for current secure event input state.
+
+        * WebKitTestRunner/InjectedBundle/Bindings/TestRunner.idl:
+        * WebKitTestRunner/InjectedBundle/TestRunner.cpp:
+        (WTR::TestRunner::secureEventInputIsEnabled):
+        * WebKitTestRunner/InjectedBundle/TestRunner.h:
+        * WebKitTestRunner/TestInvocation.cpp:
+        (WTR::TestInvocation::didReceiveSynchronousMessageFromInjectedBundle):
+        Expose an accessor for current secure event input state. This has to be done in
+        UI process, as this is where it's changed by WebKit.
+
+2013-05-14  Alexey Proskuryakov  <ap@apple.com>
+
+        [Mac] Add a testing shim for secure event input functions
+        https://bugs.webkit.org/show_bug.cgi?id=116122
+
+        Reviewed by Mark Rowe.
+
+        * Scripts/webkitpy/port/mac.py: (MacPort.setup_environ_for_server):
+        Inject WebCore testing shim library to override system framework functions.
+
+2013-05-14  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Switch to embedded manifest commands for launcher executables.
+        https://bugs.webkit.org/show_bug.cgi?id=116109
+
+        Reviewed by Darin Adler.
+
+        * WinLauncher/WinLauncher.vcxproj/WinLauncher.vcxproj: Remove the
+        now-unused WinLauncher.exe.manifest file.
+        * WinLauncher/WinLauncher.vcxproj/WinLauncher.vcxproj.filters: Ditto.
+        * win/DLLLauncher/DLLLauncherMain.cpp: Add embedded manifest command
+        when building with VS2010 or newer.
+
+2013-05-14  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Update ORWT to know about the Windows 8 SDK and Debug Tools.
+        https://bugs.webkit.org/show_bug.cgi?id=116079
+
+        Reviewed by David Kilzer.
+
+        * Scripts/old-run-webkit-tests:
+        (setUpWindowsCrashLogSaving): Locate ntsd.exe and use it.
+
+2013-05-14  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Move generated ColorData.cpp, WebKitFontFamilyNames.(cpp|h) build targets into libPlatform
+        https://bugs.webkit.org/show_bug.cgi?id=115921
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * GNUmakefile.am: Add platform_cppflags to the list of CPPFLAGS for libWebCoreInternals and DumpRenderTree.
+        * TestWebKitAPI/GNUmakefile.am: Add platform_cppflags to the list of TestGtk CPPFLAGS.
+
 2013-05-13  Alex Christensen  <achristensen@apple.com>
 
         Added testRunner.setPrinting.

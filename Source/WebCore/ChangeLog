@@ -1,3 +1,607 @@
+2013-05-15  Darin Adler  <darin@apple.com>
+
+        [Mac] Thin out the ClipboardMac class and header file to prepare for deleting them
+        https://bugs.webkit.org/show_bug.cgi?id=116159
+
+        Reviewed by Andreas Kling.
+
+        * dom/Clipboard.h:
+        (WebCore::Clipboard::pasteboard): Added. For clients that have a DOM clipboard
+        object and need to get to the Pasteboard platform abstraction.
+
+        * editing/Editor.cpp:
+        (WebCore::Editor::dispatchCPPEvent): Call writePasteboard instead of writeClipboard.
+        Our long term plan is to delete writeClipboard.
+
+        * platform/Pasteboard.h: Added writePasteboard function.
+        (WebCore::Pasteboard::name): Made this const.
+
+        * platform/mac/ClipboardMac.h: Deleted unneeded includes and forward declarations.
+        Deleted all the data members and the virtual destructor.
+
+        * platform/mac/ClipboardMac.mm: Deleted the many includes that are no longer needed.
+        Deleted the destructor, since it's now automatically generated. Deleted the comment
+        on an #endif since it's only a few source lines away from the #if.
+        (WebCore::ClipboardMac::ClipboardMac): Deleted the code to set the data members,
+        since they are no longer used.
+
+        * platform/mac/PasteboardMac.mm: Changed include to Clipboard.h instead of ClipboardMac.h.
+        (WebCore::Pasteboard::writePasteboard): Replaced writeClipboard with this.
+
+2013-05-15  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        Web Inspector: Get rid of addNativeSnapshotChunk and HeapSnapshotChunk from Memory domain
+        https://bugs.webkit.org/show_bug.cgi?id=116144
+
+        Reviewed by Timothy Hatcher.
+
+        No new tests, no behavior change.
+
+        * inspector/Inspector.json:
+
+2013-05-15  Jocelyn Turcotte  <jocelyn.turcotte@digia.com>
+
+        [Qt] Fix a crash under ~PingLoader when the QNAM on the page has been destroyed.
+        https://bugs.webkit.org/show_bug.cgi?id=116035
+
+        Reviewed by Allan Sandfeld Jensen.
+
+        The previous fix only moved the crash location from WebKit down to QNetworkReplyHttpImpl
+        which expects its QNetworkAccessManager to still be alive.
+
+        Fix it by watching the QNetworkReply's destroyed() signal and avoid the dangling pointer
+        instead. The QNetworkReply doesn't need to be aborted in this case anyway.
+
+        * platform/network/qt/QNetworkReplyHandler.cpp:
+        (WebCore::QNetworkReplyWrapper::QNetworkReplyWrapper):
+        (WebCore::QNetworkReplyWrapper::release):
+        (WebCore::QNetworkReplyWrapper::stopForwarding):
+          Rename resetConnections to stopForwarding since not all connections are related
+          to data forwarding to the client anymore.
+        (WebCore::QNetworkReplyWrapper::receiveMetaData):
+        (WebCore::QNetworkReplyWrapper::replyDestroyed):
+        (WebCore::QNetworkReplyWrapper::didReceiveFinished):
+        * platform/network/qt/QNetworkReplyHandler.h:
+        (QNetworkReplyWrapper):
+
+2013-05-15  Darin Adler  <darin@apple.com>
+
+        [Mac] Make Clipboard::declareAndWriteDragImage non-virtual
+        https://bugs.webkit.org/show_bug.cgi?id=116156
+
+        Reviewed by Anders Carlsson.
+
+        * dom/Clipboard.h: Make declareAndWriteDragImage non-virtual for non-legacy.
+
+        * platform/Pasteboard.h:
+        (WebCore::Pasteboard::name): Added. Can be used in Mac platform code to do
+        pasteboard operations directly instead of through the Pasteboard class
+        functions. Not sure if we'll need it long term or not.
+
+        * platform/mac/ClipboardMac.h: Removed declareAndWriteDragImage function.
+
+        * platform/mac/ClipboardMac.mm:
+        (WebCore::Clipboard::declareAndWriteDragImage): Made this function a Clipboard
+        member instead of ClipboardMac.
+
+2013-05-15  Peter Gal  <galpeter@inf.u-szeged.hu>
+
+        [curl] Remove version #if guards
+        https://bugs.webkit.org/show_bug.cgi?id=116152
+
+        Reviewed by Brent Fulgham.
+
+        No tests required.
+
+        * platform/network/curl/ResourceHandleCurl.cpp:
+        (WebCore::ResourceHandle::platformSetDefersLoading): Removed version guard.
+        * platform/network/curl/ResourceHandleManager.cpp:
+        (WebCore::writeCallback): Ditto.
+        (WebCore::headerCallback): Ditto.
+        (WebCore::readCallback): Ditto.
+        (WebCore::ResourceHandleManager::dispatchSynchronousJob): Ditto.
+        (WebCore::ResourceHandleManager::initializeHandle): Ditto.
+
+2013-05-15  David Kilzer  <ddkilzer@apple.com>
+
+        BUILD FIX (r150089): Make WebCoreTestShim build for iOS
+
+        * Configurations/WebCoreTestShim.xcconfig: Exclude
+        WebCoreTestShimLibrary.cpp when building for iOS.
+
+2013-05-15  Radu Stavila  <stavila@adobe.com>
+
+        [CSSRegions] Implement offsetParent for elements inside named flow
+        https://bugs.webkit.org/show_bug.cgi?id=113276
+
+        In the offsetParent algorithm, the nearest ancestor search skips from the topmost named flow elements directly to the body element.
+        http://dev.w3.org/csswg/css-regions/#cssomview-offset-attributes
+
+        As a result of this change, the DumpRenderTree tool would crash in 
+        WebCore::RenderBoxModelObject::adjustedPositionRelativeToOffsetParent when running the selecting-text-through-different-region-flows.html
+        test. The RenderObjects inside a flow are attached to the RenderFlowThread. However, the RenderFlowThread is attached to the 
+        RenderView directly, meaning that we are going to bypass the <body>'s RenderObject while iterating the parents.
+
+        Reviewed by Darin Adler.
+
+        Tests: fast/regions/offsetParent-body-in-flow-thread.html
+               fast/regions/offsetParent-in-flow-thread.html
+
+        * rendering/RenderBoxModelObject.cpp:
+        (WebCore::RenderBoxModelObject::adjustedPositionRelativeToOffsetParent):
+        * rendering/RenderObject.cpp:
+        (WebCore::RenderObject::offsetParent):
+
+2013-05-15  Darin Adler  <darin@apple.com>
+
+        [Mac] Make Clipboard::createDragImage non-virtual
+        https://bugs.webkit.org/show_bug.cgi?id=116136
+
+        Reviewed by Benjamin Poulain.
+
+        * dom/Clipboard.h: Made createDragImage non-virtual for non-legacy.
+
+        * platform/mac/ClipboardMac.h: Removed frame argument from create function
+        and constructor. Removed createDragImage and dragNSImage. Removed m_frame
+        data member.
+
+        * platform/mac/ClipboardMac.mm:
+        (WebCore::ClipboardMac::ClipboardMac): Removed frame argument and code
+        to initialize m_frame.
+        (WebCore::Clipboard::createDragImage): Merged the createDragImage and
+        dragNSImage functions, since they were the same thing. Changed code to get
+        the frame from the drag image element. Made the createDragImage function
+        a Clipboard member instead of ClipboardMac.
+
+2013-05-15  Patrick Gansterer  <paroga@webkit.org>
+
+        [WINCE] Fix calls to GlyphPage::setGlyphDataForIndex()
+        https://bugs.webkit.org/show_bug.cgi?id=116137
+
+        Reviewed by Andreas Kling.
+
+        Use zero for the glyp when the fontData pointer is null.
+        This aligns GlyphPageTreeNodeWinCE with the other implementations
+        and makes all ASSERT() pass in setGlyphDataForIndex().
+
+        * platform/graphics/wince/GlyphPageTreeNodeWinCE.cpp:
+        (WebCore::GlyphPage::fill):
+
+2013-05-15  Benjamin Poulain  <bpoulain@apple.com>
+
+        Do not bloat HTMLTokenizer with a giant inline InputStreamPreprocessor::peek
+        https://bugs.webkit.org/show_bug.cgi?id=116066
+
+        Reviewed by Ryosuke Niwa.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/45e0337b2f2db535ab08365f6e763a5015e4d990.
+
+        On x86_64, this removes 40kb from the binary. On my machine it is completely neutral on performance.
+
+        * html/parser/InputStreamPreprocessor.h:
+        (WebCore::InputStreamPreprocessor::peek):
+        (InputStreamPreprocessor):
+        (WebCore::InputStreamPreprocessor::advance):
+        (WebCore::InputStreamPreprocessor::skipNextNewLine):
+        (WebCore::InputStreamPreprocessor::reset):
+        (WebCore::InputStreamPreprocessor::processNextInputCharacter):
+
+2013-05-14  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Remove WTF_USE_PLATFORM_STRATEGIES
+        https://bugs.webkit.org/show_bug.cgi?id=114431
+
+        Reviewed by Darin Adler.
+
+        * Modules/webdatabase/DatabaseManager.cpp:
+        (WebCore::DatabaseManager::DatabaseManager):
+        * dom/ContainerNode.cpp:
+        (WebCore::ContainerNode::suspendPostAttachCallbacks):
+        (WebCore::ContainerNode::resumePostAttachCallbacks):
+        * dom/VisitedLinkState.cpp:
+        (WebCore::VisitedLinkState::determineLinkStateSlowCase):
+        * loader/CookieJar.cpp:
+        (WebCore::cookies):
+        (WebCore::setCookies):
+        (WebCore::cookiesEnabled):
+        (WebCore::cookieRequestHeaderFieldValue):
+        (WebCore::getRawCookies):
+        (WebCore::deleteCookie):
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::loadResourceSynchronously):
+        * loader/HistoryController.cpp:
+        (WebCore::addVisitedLink):
+        * loader/LoaderStrategy.cpp:
+        * loader/LoaderStrategy.h:
+        * loader/ResourceLoadScheduler.cpp:
+        (WebCore::resourceLoadScheduler):
+        * loader/ResourceLoader.cpp:
+        (WebCore::ResourceLoader::releaseResources):
+        (WebCore::ResourceLoader::willSendRequest):
+        * loader/cache/CachedResource.cpp:
+        (WebCore::CachedResource::load):
+        * loader/cache/CachedResourceLoader.cpp:
+        (WebCore::CachedResourceLoader::performPostLoadActions):
+        * platform/CookiesStrategy.h:
+        * platform/DatabaseStrategy.cpp:
+        * platform/DatabaseStrategy.h:
+        * platform/PasteboardStrategy.h:
+        * platform/PlatformStrategies.cpp:
+        * platform/PlatformStrategies.h:
+        * platform/VisitedLinkStrategy.h:
+        * platform/mac/PasteboardMac.mm:
+        * platform/network/BlobRegistry.cpp:
+        (WebCore::blobRegistry):
+        * plugins/PluginData.cpp:
+        (WebCore::PluginData::initPlugins):
+        * plugins/PluginStrategy.h:
+        * storage/StorageNamespace.cpp:
+        (WebCore::StorageNamespace::localStorageNamespace):
+        (WebCore::StorageNamespace::transientLocalStorageNamespace):
+        (WebCore::StorageNamespace::sessionStorageNamespace):
+        * storage/StorageStrategy.cpp:
+        * storage/StorageStrategy.h:
+        * workers/SharedWorkerStrategy.h:
+
+2013-05-15  Dávid Szabolcs  <David.Szabolcs@stud.u-szeged.hu>
+
+        [curl] Add support for HttpOnly cookies
+        https://bugs.webkit.org/show_bug.cgi?id=116102
+
+        Reviewed by Brent Fulgham.
+
+        * platform/network/curl/CookieJarCurl.cpp:
+        (WebCore::addMatchingCurlCookie):
+        (WebCore::cookiesForSession):
+        (WebCore::cookiesForDOM):
+        (WebCore):
+        (WebCore::cookieRequestHeaderFieldValue):
+
+2013-05-14  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        REGRESSION(r147548): Broken comboboxes
+        https://bugs.webkit.org/show_bug.cgi?id=115475
+
+        Reviewed by Gustavo Noronha Silva.
+
+        The problem is that r147548 made the popup to be closed when a
+        blur event is received. Right before showing the popup the input
+        element is focused, so that after the the popup is shown the focus
+        event is emitted and the event handler is called again hiding the
+        popup.
+
+        * html/HTMLSelectElement.cpp:
+        (WebCore::HTMLSelectElement::menuListDefaultEventHandler): Check
+        element has lost the focus before closing the popup menu.
+
+2013-05-14  Darin Adler  <darin@apple.com>
+
+        [Mac] Move setDragImage from ClipboardMac to PasteboardMac
+        https://bugs.webkit.org/show_bug.cgi?id=116036
+
+        Reviewed by Anders Carlsson.
+
+        * dom/Clipboard.cpp:
+        (WebCore::Clipboard::~Clipboard): Stop loading the drag image when
+        the clipboard object is deallocated. It would be better if there was
+        a more-well-defined time to stop the load.
+        (WebCore::Clipboard::setDragImage): Added. Sets up a drag image
+        based on a CachedImage. This tells the image loader to load the image
+        and updates the drag image when the image arrives. Copied from the
+        code in ClipboardMac, but refactored to use a separate loader object.
+        (WebCore::Clipboard::setDragImageElement): Added. Sets up a drag image
+        based on an element.
+        (WebCore::Clipboard::updateDragImage): Added. Common code to update
+        drag image when a new one is set or when a drag image load completes.
+        (WebCore::DragImageLoader::create): Added.
+        (WebCore::DragImageLoader::DragImageLoader): Ditto.
+        (WebCore::DragImageLoader::startLoading): Ditto.
+        (WebCore::DragImageLoader::stopLoading): Ditto.
+        (WebCore::DragImageLoader::imageChanged): Ditto.
+
+        * dom/Clipboard.h: Made setDragImage and setDragImageElement non-virtual
+        for non-legacy. Added updateDragImage and m_dragImageLoader.
+
+        * platform/Pasteboard.h: Added setDragImage function.
+
+        * platform/mac/ClipboardMac.h: Removed CachedImageClient as a base class
+        for ClipboardMac. Removed setDragImage and setDragImageElement.
+
+        * platform/mac/ClipboardMac.mm: Removed setDragImage and setDragImageElement.
+        (WebCore::ClipboardMac::~ClipboardMac): Removed code to remove self as
+        client loading the drag image. This is now in the Clipboard base class.
+
+        * platform/mac/PasteboardMac.mm:
+        (WebCore::Pasteboard::setDragImage): Added. Contains code moved here
+        from ClipboardMac.
+
+2013-05-14  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Use ElementTraversal in SelectorDataList::execute
+        https://bugs.webkit.org/show_bug.cgi?id=116131
+
+        Reviewed by Darin Adler.
+
+        Use ElementTraversal::firstWithin and ElementTraversal::next to simplify the code.
+
+        * dom/SelectorQuery.cpp:
+        (WebCore::SelectorDataList::execute):
+
+2013-05-14  Tim Horton  <timothy_horton@apple.com>
+
+        [wk2] Not updating tiled backing coverage when main frame scrollability changes
+        https://bugs.webkit.org/show_bug.cgi?id=116123
+        <rdar://problem/13836559>
+
+        Reviewed by Simon Fraser.
+
+        Export FrameView::adjustTiledBackingCoverage.
+
+        * WebCore.exp.in:
+
+2013-05-14  Alexey Proskuryakov  <ap@apple.com>
+
+        [Mac] Add a testing shim for secure event input functions
+        https://bugs.webkit.org/show_bug.cgi?id=116122
+
+        Reviewed by Mark Rowe.
+
+        Added a new target with a dynamic library that interposes secure event input functions.
+        We need this to avoid interfering with user session state.
+
+        * Configurations/WebCoreTestShim.xcconfig: Added.
+        * WebCore.xcodeproj/project.pbxproj:
+        * platform/mac/DynamicLinkerInterposing.h: Moved from Source/WebKit2/Shared/mac/DyldInterpose.h.
+        * testing/WebCoreTestShimLibrary.cpp: Added.
+        (shimEnableSecureEventInput):
+        (shimDisableSecureEventInput):
+        (shimIsSecureEventInputEnabled):
+
+2013-05-14  Benjamin Poulain  <bpoulain@apple.com>
+
+        Get rid of Gradient::getColor()
+        https://bugs.webkit.org/show_bug.cgi?id=116089
+
+        Reviewed by Andreas Kling.
+
+        This code is now useless, remove it.
+
+        * html/canvas/CanvasGradient.h:
+        (CanvasGradient):
+        * platform/graphics/Gradient.cpp:
+        (WebCore::Gradient::Gradient):
+        (WebCore::Gradient::hash):
+        * platform/graphics/Gradient.h:
+        (Gradient):
+
+2013-05-14  David Hyatt  <hyatt@apple.com>
+
+        REGRESSION: united.com has overlapping elements and is broken by flex box changes.
+        https://bugs.webkit.org/show_bug.cgi?id=115329
+        <rdar://problem/13690610>
+        
+        The new flexbox spec says that flex-basis omitted in the flex shorthand defaults to
+        0 when flex-grow/shrink are set. This has undesirable behavior when objects don't
+        end up flexing at all, and it's something the spec is going to eventually address.
+        
+        For now, though, to fix the regression, I'm making a targeted "hack" to deliberately
+        violate the spec, but to do so as minimally as possible. This hack detects if there
+        is infinite available space on a line, and if so, it treats a flex-basis of 0 like
+        auto.
+        
+        This means that when height is constrained and set by a container, flexing will do
+        the right thing. Basically any time you end up actually flexing, the spec behavior
+        should happen. If you're just laying out at intrinsic sizes, though, and no flexing
+        is going to occur, we ignore a flex-basis of 0 and just use the child's normal size.
+        
+        Note that widths don't have to be patched because the preferred logical widths
+        algorithm is broken right now and not checking flex-basis. If it did, we'd have seen
+        the same bug in the width direction.
+        
+        This width issue is covered by https://bugs.webkit.org/show_bug.cgi?id=116117
+        
+        Reviewed by Simon Fraser.
+
+        Added fast/flexbox/auto-height-with-flex.html
+
+        * rendering/RenderFlexibleBox.cpp:
+        (WebCore::RenderFlexibleBox::mainAxisContentExtent):
+        Make sure we return LayoutUnit::max when you have infinite free space and not
+        max - borderPadding.
+
+        (WebCore::RenderFlexibleBox::preferredMainAxisContentExtentForChild):
+        Only clear override size if it was set. Only mark for relayout if we did
+        an override size clear (i.e., if we were actually flexed). Add a new parameter,
+        hasInfiniteLineLength, that - if set - causes us to special case flex-basis:0
+        and treat it like flex-basis:auto.
+
+        (WebCore::RenderFlexibleBox::layoutFlexItems):
+        Define hasInfiniteLineLength and pass it to all the functions that need it.
+
+        (WebCore::RenderFlexibleBox::computeMainAxisPreferredSizes):
+        Remove the code that marks for layout and does a layout so early. This code
+        is moving (and changing) to preferredMainAxisContentExtentForChild.
+
+        (WebCore::RenderFlexibleBox::computeNextFlexLine):
+        Computes whether or not we have infinite line length now.
+
+        (WebCore::RenderFlexibleBox::freezeViolations):
+        (WebCore::RenderFlexibleBox::resolveFlexibleLengths):
+        Propagate hasInfiniteLineLength through to preferredMainAxisContentExtentForChild.
+
+        * rendering/RenderFlexibleBox.h:
+        (RenderFlexibleBox):
+        Add hasInfiniteLineLength parameter to a bunch of functions.
+
+2013-05-14  Andreas Kling  <akling@apple.com>
+
+        Assertion failure in GlyphPage::setGlyphDataForIndex: (!glyph || fontData == m_fontDataForAllGlyphs)
+        <http://webkit.org/b/116113>
+        <rdar://problem/13833790>
+
+        Reviewed by Dan Bernstein.
+
+        If we're filling a full GlyphPage with a SimpleFontData that is actually a composite font reference,
+        we need to make sure we have per-glyph font data pointers, since it may end up using them.
+
+        Added GlyphPage::mayUseMixedFontDataWhenFilling() which can be implemented by the platform to let
+        GlyphPageTreeNode know that it should allocate a full-sized GlyphPage for mixed font data pointers
+        in case the font is a composite font reference, or if there are CJK ideographs in the text.
+
+        This code can be made smarter, but that's outside the scope of this change.
+        Fixes heavy asserting on bots running unreleased software.
+
+        * platform/graphics/GlyphPage.h:
+        (GlyphPage):
+        (WebCore::GlyphPage::mayUseMixedFontDataWhenFilling):
+        * platform/graphics/GlyphPageTreeNode.cpp:
+        (WebCore::GlyphPageTreeNode::initializePage):
+        * platform/graphics/mac/GlyphPageTreeNodeMac.cpp:
+        (WebCore::shouldUseCoreText):
+        (WebCore::GlyphPage::mayUseMixedFontDataWhenFilling):
+
+2013-05-14  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        Heap-use-after-free in WebCore::RenderBox::exclusionShapeOutsideInfo
+        https://bugs.webkit.org/show_bug.cgi?id=115566
+
+        Reviewed by David Hyatt.
+
+        When a portion of the render tree is being detached, anonymous blocks
+        will be combined as their children are deleted. In this process, the
+        anonymous block later in the tree is merged into the one preceeding it.
+        It can happen that the later block contains floats that the previous
+        block did not contain, and thus are not in the floating objects list for
+        the new block. This can result in the new block containing floats that
+        are not in it's floating objects list, but are in the floating objects
+        lists of siblings and parents. This can cause problems when the float
+        itself is deleted, since the deletion code assumes that if a float is not
+        in it's containing block's floating objects list, it isn't in any
+        floating objects list, causing dangling pointers in the floating objects
+        lists of the siblings and parents. In order to preserve this condition
+        (removing it has serious performance implications), we need to copy the
+        floating objects from the old block to the new block.  The float's
+        metrics will likely all be wrong, but since the new block is already
+        marked for layout, this will get fixed before anything gets displayed.
+
+        Test: fast/block/float/float-append-child-crash.html
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::moveAllChildrenIncludingFloatsTo): Copy
+            floating objects list in addition to children.
+        (WebCore::RenderBlock::FloatingObject::clone): Added.
+        (WebCore::RenderBlock::removeChild): Use new method to copy children.
+        * rendering/RenderBlock.h:
+        (RenderBlock): Add method.
+
+2013-05-14  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r150023.
+        http://trac.webkit.org/changeset/150023
+        https://bugs.webkit.org/show_bug.cgi?id=116120
+
+        Causes table layout issues (Bug 116118) and crashes on
+        buildbot waterfall pages. (Requested by ddkilzer on #webkit).
+
+        * rendering/RenderTableSection.cpp:
+        (WebCore::RenderTableSection::calcRowLogicalHeight):
+        * rendering/RenderTableSection.h:
+        (RenderTableSection):
+
+2013-05-14  Antoine Quint  <graouts@apple.com>
+
+        Snapshotted plug-ins shadow tree should reset style inheritance
+        https://bugs.webkit.org/show_bug.cgi?id=116098
+
+        Reset the styles such that only injected user-agent stylesheets affect
+        the rendering of snapshotted plug-ins' shadow content.
+
+        Reviewed by Darin Adler.
+
+        * html/HTMLPlugInImageElement.cpp:
+        (WebCore::HTMLPlugInImageElement::didAddUserAgentShadowRoot):
+
+2013-05-14  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSSRegions] Improve hit testing for empty regions
+        https://bugs.webkit.org/show_bug.cgi?id=115534
+
+        Reviewed by David Hyatt.
+
+        As a better follow up after WebKit bug https://bugs.webkit.org/show_bug.cgi?id=107752,
+        we can improve the code by not doing hit testing on the render flow thread object when
+        we are trying to hit test the render flow thread background. In this case, we should just bail out.
+        No new tests, covered by existing regions tests.
+
+        * rendering/RenderFlowThread.cpp:
+        (WebCore::RenderFlowThread::nodeAtPoint):
+        (WebCore):
+        (WebCore::RenderFlowThread::hitTestFlowThreadPortionInRegion):
+        * rendering/RenderFlowThread.h:
+
+2013-05-14  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [BlackBerry] Handle network errors when starting a new job
+        https://bugs.webkit.org/show_bug.cgi?id=116101
+
+        Reviewed by Rob Buis.
+
+        Make startJob() return a network status that can be used by the
+        caller to create a network error.
+
+        * platform/network/blackberry/NetworkJob.cpp:
+        (WebCore::NetworkJob::initialize): createNetworkStream() should
+        always return a valid pointer so use an ASSERT instead of an early
+        return to make sure we have a valid stream.
+        (WebCore::NetworkJob::startNewJobWithRequest): Only return true if
+        the network job was started successfully.
+        * platform/network/blackberry/NetworkJob.h:
+        (NetworkJob): Make initialize method void instead of bool since it
+        can't fail.
+        * platform/network/blackberry/NetworkManager.cpp:
+        (WebCore::NetworkManager::startJob): Return a network error or
+        StatusSuccess.
+        * platform/network/blackberry/NetworkManager.h:
+        (NetworkManager):
+        * platform/network/blackberry/ResourceHandleBlackBerry.cpp:
+        (WebCore::ResourceHandle::start): Return true if job was started
+        successfully.
+        (WebCore::ResourceHandle::platformLoadResourceSynchronously):
+        Check return value of startJob and fill the ResourceError with the
+        network status returned to finish the load.
+
+2013-05-14  Antoine Quint  <graouts@apple.com>
+
+        [Mac] captions menu is not positioned correctly in full-screen
+        https://bugs.webkit.org/show_bug.cgi?id=116103
+
+        Update the positioning properties of the captions menu in full-screen
+        following the fix for https://webkit.org/b/115968.
+
+        Reviewed by Darin Adler.
+
+        * css/fullscreenQuickTime.css:
+        (video:-webkit-full-screen::-webkit-media-controls-closed-captions-container):
+        Add 50px to the bottom position since we're now positioned relative to the
+        media element, and use a calc() command to be right-aligned to the captions
+        icon in the media controller. The max-width and max-height properties follow
+        the same technique used for the non-full-screen mode.
+
+2013-05-14  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Move generated ColorData.cpp, WebKitFontFamilyNames.(cpp|h) build targets into libPlatform
+        https://bugs.webkit.org/show_bug.cgi?id=115921
+
+        Reviewed by Gustavo Noronha Silva.
+
+        No new tests - no new functionality.
+
+        * GNUmakefile.am: Add platform_cppflags to the list of CPPFLAGS for libWebCoreSVG, libWebCore,
+        libWebCorePlatform, libWebCoreGtk. Remove generation rules for ColorData.cpp and WebKitFontFamilyNames.(cpp|h).
+        * GNUmakefile.list.am: Include the ColorData.cpp and WebKitFontFamilyNames.(cpp|h) build targers under
+        platform_built_sources.
+        * bindings/gobject/GNUmakefile.am: Add platform_cppflags to the list of libWebCoreDOM CPPFLAGS.
+
 2013-05-16  Jesus Sanchez-Palencia  <jesus.palencia@openbossa.org>
 
         Add stubs for ContextMenu and ContextMenuItem

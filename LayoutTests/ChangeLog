@@ -1,3 +1,153 @@
+2013-05-15  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/TestExpectations: Removing two redundant flaky crasher expectations. Adjusting one expectation,
+        assigning it a mock bug modifier so the TestExpectations linting passes.
+
+2013-05-15  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/TestExpectations: Removing failure expectations for 7 CSS Regions and CSS Exclusions reftests.
+
+2013-05-15  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/fast/js/global-constructors-attributes-expected.txt: Rebaselining after r149845.
+
+2013-05-15  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/TestExpectations: Adding faillure expectations for two reftests that
+        started failing after r150025 and r150065.
+
+2013-05-15  Radu Stavila  <stavila@adobe.com>
+
+        [CSSRegions] Implement offsetParent for elements inside named flow
+        https://bugs.webkit.org/show_bug.cgi?id=113276
+
+        Reviewed by Darin Adler.
+
+        In the offsetParent algorithm, the nearest ancestor search skips from the topmost named flow elements directly to the body element.
+
+        Added new test for offsetParent when body is flowed into a region.
+        Updated existing offsetParent test.
+
+        * fast/regions/offsetParent-body-in-flow-thread-expected.txt: Added.
+        * fast/regions/offsetParent-body-in-flow-thread.html: Added.
+        * fast/regions/offsetParent-in-flow-thread-expected.txt:
+        * fast/regions/offsetParent-in-flow-thread.html:
+
+2013-05-14  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Exclusions] Some layout tests fail to account for inline pixel snapping
+        https://bugs.webkit.org/show_bug.cgi?id=116115
+
+        Reviewed by Dirk Schulze.
+
+        Adjust the expected locations of spans to account for the fact that inline layout snaps boxes' logical top
+        and bottom to pixels, and the fact that line segment layout rounds the logical left and floors the logical
+        right of segments.
+
+        * fast/exclusions/shape-inside/shape-inside-polygon-layout.html: Use the quiet variable!
+        * fast/exclusions/shape-outside-floats/shape-outside-floats-diamond-margin-polygon-expected.txt:
+        * fast/exclusions/shape-outside-floats/shape-outside-floats-diamond-margin-polygon.html:
+        * fast/exclusions/shape-outside-floats/shape-outside-floats-ellipse-margin-left.html:
+        * fast/exclusions/shape-outside-floats/shape-outside-floats-ellipse-margin-right.html:
+
+2013-05-14  Alexey Proskuryakov  <ap@apple.com>
+
+        [Mac] Add tests for secure event input
+        https://bugs.webkit.org/show_bug.cgi?id=116121
+
+        Reviewed by Mark Rowe.
+
+        * editing/secure-input: Added.
+        * editing/secure-input/password-input-changed-type-expected.txt: Added.
+        * editing/secure-input/password-input-changed-type.html: Added.
+        * editing/secure-input/password-input-focusing-expected.txt: Added.
+        * editing/secure-input/password-input-focusing-to-different-frame-expected.txt: Added.
+        * editing/secure-input/password-input-focusing-to-different-frame.html: Added.
+        * editing/secure-input/password-input-focusing.html: Added.
+        * editing/secure-input/removed-password-input-expected.txt: Added.
+        * editing/secure-input/removed-password-input.html: Added.
+        * editing/secure-input/reset-state-on-navigation-expected.txt: Added.
+        * editing/secure-input/reset-state-on-navigation.html: Added.
+        * editing/secure-input/resources: Added.
+        * editing/secure-input/resources/reset-state-on-navigation-target.html: Added.
+        * platform/efl/TestExpectations:
+        * platform/gtk/TestExpectations:
+        * platform/mac-wk2/TestExpectations:
+        * platform/mac/TestExpectations:
+        * platform/qt/TestExpectations:
+        * platform/win/TestExpectations:
+        * platform/wincairo/TestExpectations:
+
+2013-05-14  David Hyatt  <hyatt@apple.com>
+
+        REGRESSION (r147261): Many overlaid elements on united.com's account page
+        https://bugs.webkit.org/show_bug.cgi?id=116107
+        <rdar://problem/13690610> 
+
+        Reviewed by Simon Fraser.
+
+        * fast/flexbox/auto-height-with-flex-expected.html: Added.
+        * fast/flexbox/auto-height-with-flex.html: Added.
+
+2013-05-14  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        Heap-use-after-free in WebCore::RenderBox::exclusionShapeOutsideInfo
+        https://bugs.webkit.org/show_bug.cgi?id=115566
+
+        Reviewed by David Hyatt.
+
+        Cleaned up test from the fuzzer. Will only crash if run under a memory
+        checking tool like ASAN.
+
+        * fast/block/float/float-append-child-crash-expected.txt: Added.
+        * fast/block/float/float-append-child-crash.html: Added.
+
+2013-05-14  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r150023.
+        http://trac.webkit.org/changeset/150023
+        https://bugs.webkit.org/show_bug.cgi?id=116120
+
+        Causes table layout issues (Bug 116118) and crashes on
+        buildbot waterfall pages. (Requested by ddkilzer on #webkit).
+
+        * fast/css/vertical-align-baseline-rowspan-007-expected.html:
+        * fast/css/vertical-align-baseline-rowspan-007.htm:
+        * fast/css/vertical-align-baseline-rowspan-008-expected.html:
+        * fast/table/table-rowspan-height-distribution-in-rows.html: Removed.
+        * platform/gtk/TestExpectations:
+        * platform/mac/TestExpectations:
+        * platform/qt/TestExpectations:
+        * platform/qt/fast/table/table-rowspan-height-distribution-in-rows-expected.png: Removed.
+        * platform/qt/fast/table/table-rowspan-height-distribution-in-rows-expected.txt: Removed.
+        * platform/qt/tables/mozilla/bugs/bug17548-expected.png:
+        * platform/qt/tables/mozilla/bugs/bug17548-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug220536-expected.png:
+        * platform/qt/tables/mozilla/bugs/bug220536-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug7714-expected.png:
+        * platform/qt/tables/mozilla/bugs/bug7714-expected.txt:
+        * platform/qt/tables/mozilla/core/bloomberg-expected.png:
+        * platform/qt/tables/mozilla/core/bloomberg-expected.txt:
+        * platform/qt/tables/mozilla/other/test6-expected.png:
+        * platform/qt/tables/mozilla/other/test6-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug1010-expected.png:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug1010-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug23847-expected.png:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug58402-2-expected.png:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug58402-2-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug6933-expected.png:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug6933-expected.txt:
+        * tables/mozilla/core/bloomberg-expected.txt:
+        * tables/mozilla_expected_failures/bugs/bug23847-expected.txt:
+
 2013-05-13  Ryosuke Niwa  <rniwa@webkit.org>
 
         Removing Attr can delete a wrong Attribute in ElementData
