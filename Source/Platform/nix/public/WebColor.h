@@ -69,6 +69,26 @@ struct WebColor
     {
         return rgba;
     }
+
+    unsigned char r() const
+    {
+        return (rgba & 0x00FF0000) >> 16;
+    }
+
+    unsigned char g() const
+    {
+        return (rgba & 0x0000FF00) >> 8;
+    }
+
+    unsigned char b() const
+    {
+        return (rgba & 0x000000FF);
+    }
+
+    unsigned char a() const
+    {
+        return (rgba & 0xFF000000) >> 24;
+    }
 };
 
 inline bool operator==(const WebColor& a, const WebColor& b)

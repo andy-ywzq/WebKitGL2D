@@ -24,6 +24,7 @@ include_directories(
     ${GLIB_INCLUDE_DIRS}
     ${CAIRO_INCLUDE_DIRS}
     ${PNG_INCLUDE_DIRS}
+    "${PLATFORM_DIR}/nix/"
 )
 
 set(test_main_SOURCES
@@ -143,6 +144,7 @@ target_link_libraries(TestWebKitNixAPIBase ${TestWebKitNixAPIBase_LIBRARIES})
 add_dependencies(TestWebKitNixAPIBase WebKit2 ${ForwardingHeadersForTestWebKitAPI_NAME} ${ForwardingNetworkHeadersForTestWebKitAPI_NAME})
 
 list(APPEND bundle_harness_SOURCES
+    ${TESTWEBKITAPI_DIR}/Tests/nix/WebThemeEngine_Bundle.cpp
     ${TESTWEBKITAPI_DIR}/Tests/nix/WebViewWebProcessCrashed_Bundle.cpp
     ${TESTWEBKITAPI_DIR}/Tests/nix/WebWorker_Bundle.cpp
 )
@@ -161,6 +163,7 @@ set(test_webkitnix_api_LIBRARIES
 
 set(test_webkitnix_api_BINARIES
     SuspendResume
+    WebThemeEngine
     WebViewPaintToCurrentGLContext
     WebViewTranslated
     WebViewViewport
