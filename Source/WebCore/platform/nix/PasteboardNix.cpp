@@ -1,40 +1,31 @@
 /*
- * Copyright (C) 2012-2013 Nokia Corporation and/or its subsidiary(-ies).
+ *  Copyright (C) 2007 Holger Hans Peter Freyther
+ *  Copyright (C) 2007 Alp Toker <alp@atoker.com>
+ *  Copyright (C) 2008-2013 INdT - Instituto Nokia de Tecnologia
+ *  Copyright (C) 2009-2010 ProFUSION embedded systems
+ *  Copyright (C) 2009-2010 Samsung Electronics
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "config.h"
 #include "Pasteboard.h"
 
 #include "DocumentFragment.h"
-#include "Frame.h"
-#include "Image.h"
-#include "KURL.h"
 #include "NotImplemented.h"
-#include "RenderImage.h"
-#include "markup.h"
-#include <wtf/text/CString.h>
-#include <wtf/text/WTFString.h>
+#include <wtf/text/StringHash.h>
 
 namespace WebCore {
 
@@ -95,6 +86,75 @@ String Pasteboard::plainText(Frame*)
 {
     notImplemented();
     return String();
+}
+
+PassOwnPtr<Pasteboard> Pasteboard::createForCopyAndPaste()
+{
+    return adoptPtr(new Pasteboard);
+}
+
+PassOwnPtr<Pasteboard> Pasteboard::createPrivate()
+{
+    return createForCopyAndPaste();
+}
+
+#if ENABLE(DRAG_SUPPORT)
+PassOwnPtr<Pasteboard> Pasteboard::createForDragAndDrop()
+{
+    return createForCopyAndPaste();
+}
+
+PassOwnPtr<Pasteboard> Pasteboard::createForDragAndDrop(const DragData&)
+{
+    return createForCopyAndPaste();
+}
+#endif
+
+bool Pasteboard::hasData()
+{
+    notImplemented();
+    return false;
+}
+
+void Pasteboard::clear(const String&)
+{
+    notImplemented();
+}
+
+String Pasteboard::readString(const String&)
+{
+    notImplemented();
+    return String();
+}
+
+bool Pasteboard::writeString(const String&, const String&)
+{
+    notImplemented();
+    return false;
+}
+
+ListHashSet<String> Pasteboard::types()
+{
+    notImplemented();
+    return ListHashSet<String>();
+}
+
+Vector<String> Pasteboard::readFilenames()
+{
+    notImplemented();
+    return Vector<String>();
+}
+
+#if ENABLE(DRAG_SUPPORT)
+void Pasteboard::setDragImage(DragImageRef, const IntPoint&)
+{
+    notImplemented();
+}
+#endif
+
+void Pasteboard::writePasteboard(const Pasteboard&)
+{
+    notImplemented();
 }
 
 }
