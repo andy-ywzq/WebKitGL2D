@@ -1,3 +1,241 @@
+2013-05-17  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Allow "//# sourceMappingURL" syntax alongside "//@"
+        https://bugs.webkit.org/show_bug.cgi?id=116290
+
+        Reviewed by Timothy Hatcher.
+
+        * http/tests/inspector/network/resources/source-map-test-style.css:
+        * http/tests/inspector/stylesheet-source-mapping.html:
+        * inspector/debugger/source-url-comment-expected.txt:
+        * inspector/debugger/source-url-comment.html:
+
+2013-05-17  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        2 math sputnik test fail on 32 bit
+        https://bugs.webkit.org/show_bug.cgi?id=88519
+
+        Reviewed by Jocelyn Turcotte.
+
+        Update the expected values to match recent changes in test262.
+        The old tested values are considered outside the validation range.
+
+        * platform/efl/TestExpectations:
+        * platform/gtk/TestExpectations:
+        * platform/qt/TestExpectations:
+        * sputnik/Conformance/15_Native_Objects/15.8_Math/15.8.2/15.8.2.16_sin/S15.8.2.16_A7.html:
+        * sputnik/Conformance/15_Native_Objects/15.8_Math/15.8.2/15.8.2.18_tan/S15.8.2.18_A7.html:
+
+2013-05-17  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Added platform specific expected after r143389.
+
+        * platform/qt/svg/as-image/image-preserveAspectRatio-all-expected.png: Added.
+        * platform/qt/svg/as-image/image-preserveAspectRatio-all-expected.txt: Added.
+        * platform/qt/svg/dynamic-updates/SVGFEImageElement-dom-preserveAspectRatio-attr-expected.png: Added.
+        * platform/qt/svg/dynamic-updates/SVGFEImageElement-dom-preserveAspectRatio-attr-expected.txt: Added.
+        * platform/qt/svg/dynamic-updates/SVGFEImageElement-svgdom-preserveAspectRatio-prop-expected.png: Added.
+        * platform/qt/svg/dynamic-updates/SVGFEImageElement-svgdom-preserveAspectRatio-prop-expected.txt: Added.
+        * platform/qt/svg/filters/feImage-preserveAspectRatio-all-expected.png: Added.
+        * platform/qt/svg/filters/feImage-preserveAspectRatio-all-expected.txt: Added.
+
+2013-05-17  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        [GTK] Rebaseline after r150169
+        https://bugs.webkit.org/show_bug.cgi?id=116256
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/TestExpectations: Renamed from fast/loader/willsendrequest-returns-null-for-memory-cache-load.html.
+
+2013-05-17  Ryosuke Niwa  <rniwa@webkit.org>
+
+        media/video-seek-after-end.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=116293
+
+        Add a flaky test expectation on all platforms.
+
+        * TestExpectations:
+
+2013-05-16  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        [EFL] inspector-protocol/page/javascriptDialogEvents.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=114781
+
+        Reviewed by Christophe Dumez.
+
+        Unskip fast/loader/form-submission-after-beforeunload-cancel.html as well.
+
+        * platform/efl-wk1/TestExpectations:
+
+2013-05-16  Alexis Menard  <alexis@webkit.org>
+
+        Regression: Event#stopPropagation() does not halt bubbling for webkitTransitionEnd
+        https://bugs.webkit.org/show_bug.cgi?id=115656
+
+        Reviewed by Darin Adler.
+
+        Added new tests to cover the bug.
+
+        * transitions/transition-end-event-prefixed-03-expected.txt: Added.
+        * transitions/transition-end-event-prefixed-03.html: Added.
+        * transitions/transition-end-event-prefixed-02-expected.txt: Added.
+        * transitions/transition-end-event-prefixed-02.html: Added.
+        * transitions/transition-end-event-prefixed-01-expected.txt: Added.
+        * transitions/transition-end-event-prefixed-01.html: Added.
+
+2013-05-16  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Add failing test expectations to http/tests/cache/willsendrequest-returns-null-for-memory-cache-load.html per bug 116259.
+
+        * platform/efl/TestExpectations:
+        * platform/gtk/TestExpectations:
+        * platform/mac-wk2/TestExpectations:
+        * platform/qt/TestExpectations:
+
+2013-05-16  Jaehun Lim  <ljaehun.lim@samsung.com>
+
+        Frame flattening prevents <HTML> in <OBJECT> from having scrollbars
+        https://bugs.webkit.org/show_bug.cgi?id=115884
+        
+        Reviewed by Antonio Gomes.
+        
+        Frame flattening should be applied when the frame owner is frame or iframe. But when
+        the frame owner is object element, frame flattening prevents it from having scrollbars.
+        In this situation, we can't scroll the html document in object element.
+        
+        This patch adds two helper functions to verify flattening conditions. 
+
+        * fast/frames/flattening/scrolling-in-object-expected.html: Added.
+        * fast/frames/flattening/scrolling-in-object.html: Added.
+
+2013-05-16  Lamarque V. Souza  <Lamarque.Souza@basyskom.com>
+
+        [WebSocket] Update pywebsocket to r760
+        https://bugs.webkit.org/show_bug.cgi?id=115863
+
+        Reviewed by Alexey Proskuryakov.
+
+        Fix failing tests.
+
+        * http/tests/websocket/tests/handler_map.txt:
+        * http/tests/websocket/tests/hybi/echo-host_wsh.py: Copied from LayoutTests/http/tests/websocket/tests/hybi/echo-location_wsh.py.
+        (web_socket_do_extra_handshake):
+        (web_socket_transfer_data):
+        * http/tests/websocket/tests/hybi/echo-path_wsh.py: Renamed from LayoutTests/http/tests/websocket/tests/hybi/echo-location_wsh.py.
+        (web_socket_do_extra_handshake):
+        (web_socket_transfer_data):
+        * http/tests/websocket/tests/hybi/url-no-trailing-slash-expected.txt:
+        * http/tests/websocket/tests/hybi/url-no-trailing-slash.html:
+        * http/tests/websocket/tests/hybi/url-with-credential-expected.txt:
+        * http/tests/websocket/tests/hybi/url-with-credential.html:
+        * http/tests/websocket/tests/hybi/url-with-empty-query-expected.txt:
+        * http/tests/websocket/tests/hybi/url-with-empty-query.html:
+        * http/tests/websocket/tests/hybi/url-with-query-expected.txt:
+        * http/tests/websocket/tests/hybi/url-with-query.html:
+
+2013-05-16  Simon Fraser  <simon.fraser@apple.com>
+
+        Content disappears when scrolling  http://www.childrenscancer.org/zach/
+        https://bugs.webkit.org/show_bug.cgi?id=116206
+
+        Reviewed by Darin Adler.
+        
+        Ref test for foreground layer removal.
+
+        * compositing/repaint/foreground-layer-change-expected.html: Added.
+        * compositing/repaint/foreground-layer-change.html: Added.
+
+2013-05-16  Ryosuke Niwa  <rniwa@webkit.org>
+
+        REGRESSION: canvas/philip/tests/2d.text.draw.fontface.notinpage.html fails
+        https://bugs.webkit.org/show_bug.cgi?id=116245
+
+        Add a passing/failing test expectation.
+
+        * platform/mac/TestExpectations:
+
+2013-05-16  Ryosuke Niwa  <rniwa@webkit.org>
+
+        [Mac] fast/events/mouse-cursor-image-set.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=116244
+
+        Add a flaky test expectation on Mac.
+
+        * platform/mac/TestExpectations:
+
+2013-05-16  Claudio Saavedra  <csaavedra@igalia.com>
+
+        [CSS] CSS Variables are case-sensitive
+        https://bugs.webkit.org/show_bug.cgi?id=116239
+
+        Reviewed by Ryosuke Niwa.
+
+        * fast/css/variables/case-sensitive-expected.html: Renamed from
+        fast/css/variables/case-insensitive-expected.html.
+        * fast/css/variables/case-sensitive.html: Renamed from
+        LayoutTests/fast/css/variables/case-insensitive.html.
+
+2013-05-16  Gustavo Noronha Silva  <gustavo.noronha@collabora.com>
+
+        [GTK] Build Xvfb with jhbuild
+        https://bugs.webkit.org/show_bug.cgi?id=115907
+
+        Reviewed by Martin Robinson.
+
+        Unskip and create baselines for transforms/3d and some webgl tests. We can unskip
+        more, but I prefer to only dip the toe in the waters first, to see how the bots
+        react.
+
+        * platform/gtk/TestExpectations:
+        * platform/gtk/transforms/3d/general/perspective-non-layer-expected.txt: Added.
+        * platform/gtk/transforms/3d/general/perspective-units-expected.txt: Added.
+        * platform/gtk/transforms/3d/hit-testing/backface-hit-test-expected.txt: Added.
+        * platform/gtk/transforms/3d/hit-testing/backface-no-transform-hit-test-expected.txt: Added.
+        * platform/gtk/transforms/3d/point-mapping/3d-point-mapping-2-expected.txt: Added.
+        * platform/gtk/transforms/3d/point-mapping/3d-point-mapping-3-expected.txt: Added.
+        * platform/gtk/transforms/3d/point-mapping/3d-point-mapping-coplanar-expected.txt: Added.
+        * platform/gtk/transforms/3d/point-mapping/3d-point-mapping-deep-expected.txt: Added.
+        * platform/gtk/transforms/3d/point-mapping/3d-point-mapping-expected.txt: Added.
+        * platform/gtk/transforms/3d/point-mapping/3d-point-mapping-origins-expected.txt: Added.
+        * platform/gtk/transforms/3d/point-mapping/3d-point-mapping-overlapping-expected.txt: Added.
+        * platform/gtk/transforms/3d/point-mapping/3d-point-mapping-preserve-3d-expected.txt: Added.
+
+2013-05-16  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Add more Mac test expectations.
+
+        * platform/mac/TestExpectations:
+
+2013-05-16  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Add a test expectation per bug 116238 and remove lines erroneously added in r150090.
+
+        * platform/mac/TestExpectations:
+
+2013-05-16  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Mac rebaseline. The flakiness dashboard tells us that it started at r150101
+        but reverting the change locally didn't fix the problem as far as Beth and I checked.
+
+        * platform/mac/platform/mac/fast/text/thai-combining-mark-positioning-expected.txt: Added.
+        * platform/mac/platform/mac/fast/text/webfont-after-tiny-monospace-text-expected.txt: Added.
+
+2013-05-16  Sergio Villar Senin  <svillar@igalia.com>
+
+        Enable the CSSVariables setting in css-variable-definition.html test
+        https://bugs.webkit.org/show_bug.cgi?id=116231
+
+        Reviewed by Andreas Kling.
+
+        CSSVariablesEnabled setting must be set to true to allow
+        CSSVariables at runtime.
+
+        Modified also the indent size to 4 spaces.
+
+        * css3/css-variable-definition-expected.html:
+        * css3/css-variable-definition.html:
+
 2013-05-15  Andy Estes  <aestes@apple.com>
 
         Resources from non-HTTP schemes should not be cached indefinitely

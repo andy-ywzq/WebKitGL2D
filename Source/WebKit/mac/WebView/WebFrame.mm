@@ -236,7 +236,7 @@ Page* core(WebView *webView)
 
 WebView *kit(Page* page)
 {
-    return page ? static_cast<WebView*>(page->chrome()->client()->webView()) : nil;
+    return page ? static_cast<WebView*>(page->chrome().client()->webView()) : nil;
 }
 
 WebView *getWebView(WebFrame *webFrame)
@@ -799,9 +799,10 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
     String mimeType = frame->document()->loader()->writer()->mimeType();
     PluginData* pluginData = frame->page() ? frame->page()->pluginData() : 0;
 
-    if (WebCore::DOMImplementation::isTextMIMEType(mimeType) ||
-        Image::supportsType(mimeType) ||
-        (pluginData && pluginData->supportsMimeType(mimeType)))
+    if (WebCore::DOMImplementation::isTextMIMEType(mimeType)
+        || Image::supportsType(mimeType)
+        || (pluginData && pluginData->supportsMimeType(mimeType, PluginData::AllPlugins) && frame->loader()->subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin))
+        || (pluginData && pluginData->supportsMimeType(mimeType, PluginData::OnlyApplicationPlugins)))
         return NO;
 
     return YES;

@@ -371,11 +371,6 @@ public:
     void setTopOverhangImage(PassRefPtr<WebImage>);
     void setBottomOverhangImage(PassRefPtr<WebImage>);
 
-    CALayer *getHeaderLayer() const;
-    void setHeaderLayerWithHeight(CALayer *, int);
-    CALayer *getFooterLayer() const;
-    void setFooterLayerWithHeight(CALayer *, int);
-
     void updateHeaderAndFooterLayersForDeviceScaleChange(float scaleFactor);
 #endif
 
@@ -677,18 +672,18 @@ private:
 
     String sourceForFrame(WebFrame*);
 
-    void loadData(PassRefPtr<WebCore::SharedBuffer>, const String& MIMEType, const String& encodingName, const WebCore::KURL& baseURL, const WebCore::KURL& failingURL);
+    void loadData(PassRefPtr<WebCore::SharedBuffer>, const String& MIMEType, const String& encodingName, const WebCore::KURL& baseURL, const WebCore::KURL& failingURL, CoreIPC::MessageDecoder&);
 
     bool platformHasLocalDataForURL(const WebCore::KURL&);
 
     // Actions
     void tryClose();
-    void loadURL(const String&, const SandboxExtension::Handle&);
-    void loadURLRequest(const WebCore::ResourceRequest&, const SandboxExtension::Handle&);
-    void loadHTMLString(const String& htmlString, const String& baseURL);
-    void loadAlternateHTMLString(const String& htmlString, const String& baseURL, const String& unreachableURL);
-    void loadPlainTextString(const String&);
-    void loadWebArchiveData(const CoreIPC::DataReference&);
+    void loadURL(const String&, const SandboxExtension::Handle&, CoreIPC::MessageDecoder&);
+    void loadURLRequest(const WebCore::ResourceRequest&, const SandboxExtension::Handle&, CoreIPC::MessageDecoder&);
+    void loadHTMLString(const String& htmlString, const String& baseURL, CoreIPC::MessageDecoder&);
+    void loadAlternateHTMLString(const String& htmlString, const String& baseURL, const String& unreachableURL, CoreIPC::MessageDecoder&);
+    void loadPlainTextString(const String&, CoreIPC::MessageDecoder&);
+    void loadWebArchiveData(const CoreIPC::DataReference&, CoreIPC::MessageDecoder&);
     void linkClicked(const String& url, const WebMouseEvent&);
     void reload(bool reloadFromOrigin, const SandboxExtension::Handle&);
     void goForward(uint64_t);
@@ -907,9 +902,6 @@ private:
     LayerHostingMode m_layerHostingMode;
 
     RetainPtr<WKAccessibilityWebPageObject> m_mockAccessibilityElement;
-
-    RetainPtr<CALayer> m_headerLayer;
-    RetainPtr<CALayer> m_footerLayer;
 
     WebCore::KeyboardEvent* m_keyboardEventBeingInterpreted;
 

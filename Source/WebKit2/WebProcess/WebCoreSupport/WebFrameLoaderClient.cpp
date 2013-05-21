@@ -596,7 +596,7 @@ Frame* WebFrameLoaderClient::dispatchCreatePage(const NavigationAction& navigati
         return 0;
 
     // Just call through to the chrome client.
-    Page* newPage = webPage->corePage()->chrome()->createWindow(m_frame->coreFrame(), FrameLoadRequest(m_frame->coreFrame()->document()->securityOrigin()), WindowFeatures(), navigationAction);
+    Page* newPage = webPage->corePage()->chrome().createWindow(m_frame->coreFrame(), FrameLoadRequest(m_frame->coreFrame()->document()->securityOrigin()), WindowFeatures(), navigationAction);
     if (!newPage)
         return 0;
     
@@ -1425,7 +1425,9 @@ ObjectContentType WebFrameLoaderClient::objectContentType(const KURL& url, const
     bool plugInSupportsMIMEType = false;
     if (WebPage* webPage = m_frame->page()) {
         if (PluginData* pluginData = webPage->corePage()->pluginData()) {
-            if (pluginData->supportsMimeType(mimeType))
+            if (pluginData->supportsMimeType(mimeType, PluginData::AllPlugins) && webFrame()->coreFrame()->loader()->subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin))
+                plugInSupportsMIMEType = true;
+            else if (pluginData->supportsMimeType(mimeType, PluginData::OnlyApplicationPlugins))
                 plugInSupportsMIMEType = true;
         }
     }

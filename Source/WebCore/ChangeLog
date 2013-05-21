@@ -1,3 +1,512 @@
+2013-05-17  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        Make PNGImageDecoder::rowAvailable auto-vectorizable
+        https://bugs.webkit.org/show_bug.cgi?id=116151
+
+        Reviewed by Benjamin Poulain.
+
+        Changed the main loops under PNGImageDecoder::rowAvailable so that they
+        avoid branches and non-sequential table look ups.
+
+        Together with automatic vectorization by the compiler this provides around
+        4x speed-up with AVX or 2x speed-up on generic x64. Shaving off 12-40% on
+        PNG decoding in general.
+
+        * platform/graphics/Color.cpp:
+        (WebCore::premultipliedARGBFromColor):
+        * platform/graphics/Color.h:
+        (WebCore::fastDivideBy255):
+        * platform/graphics/filters/FEBlend.cpp:
+        * platform/image-decoders/png/PNGImageDecoder.cpp:
+        (WebCore::setPixelRGB):
+        (WebCore::setPixelRGBA):
+        (WebCore::setPixelRGBA_Premultiplied):
+        (WebCore::PNGImageDecoder::rowAvailable):
+
+2013-05-17  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Allow "//# sourceMappingURL" syntax alongside "//@"
+        https://bugs.webkit.org/show_bug.cgi?id=116290
+
+        Follow an update to the spec and support the new and old syntax.
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/ContentSearchUtils.cpp:
+        (WebCore::ContentSearchUtils::scriptCommentPattern):
+        (WebCore::ContentSearchUtils::stylesheetCommentPattern):
+        * inspector/front-end/SASSSourceMapping.js:
+        (WebInspector.SASSSourceMapping.prototype._loadAndProcessSourceMap):
+
+2013-05-17  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Remove custom code for MessageEvent.ports getter
+        https://bugs.webkit.org/show_bug.cgi?id=116304
+
+        Reviewed by Kentaro Hara.
+
+        Remove Custom code for the "ports" attribute getter in MessageEvent
+        IDL interface. The JSC bindings generator already supports attributes
+        of type MessagePortArray.
+
+        No new tests, already covered by existing layout tests and bindings
+        tests.
+
+        * bindings/js/JSMessageEventCustom.cpp: Remove Custom code for ports getter.
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (NativeToJSValue): Small tweak to correctly handle the case where impl->ports()
+        returns NULL and avoid crashing in this case.
+        * bindings/scripts/test/JS/JSTestSerializedScriptValueInterface.cpp: Rebaseline due
+        to bindings generator tweak.
+        * dom/MessageEvent.idl: Remove [CustomGetter] extended attribute for 'ports' attribute
+        and switch to MessagePortArray type.
+
+2013-05-16  Jesus Sanchez-Palencia  <jesus.palencia@openbossa.org>
+
+        Add stubs for ContextMenu and ContextMenuItem
+        https://bugs.webkit.org/show_bug.cgi?id=116235
+
+        Reviewed by Antonio Gomes.
+
+        No new tests needed, only a refactor.
+
+        Add ContextMenuNone.cpp and ContextMenuItemNone.cpp
+        so ports using ENABLE(CROSS_PLATFORM_CONTEXT_MENU) don't
+        need to replicate these stubs.
+
+        * PlatformEfl.cmake:
+        * Target.pri:
+        * platform/ContextMenuNone.cpp: Added.
+        (WebCore):
+        (WebCore::ContextMenu::ContextMenu):
+        (WebCore::ContextMenu::getContextMenuItems):
+        (WebCore::ContextMenu::createPlatformContextMenuFromItems):
+        (WebCore::ContextMenu::platformContextMenu):
+        * platform/ContextMenuItemNone.cpp: Added.
+        (WebCore):
+        (WebCore::ContextMenuItem::platformContextMenuItem):
+        * platform/efl/ContextMenuEfl.cpp: Removed.
+        * platform/efl/ContextMenuItemEfl.cpp: Removed.
+        * platform/qt/ContextMenuQt.cpp: Removed.
+        * platform/qt/ContextMenuItemQt.cpp: Removed.
+
+2013-05-16  Alexis Menard  <alexis@webkit.org>
+
+        Regression: Event#stopPropagation() does not halt bubbling for webkitTransitionEnd
+        https://bugs.webkit.org/show_bug.cgi?id=115656
+
+        Reviewed by Darin Adler.
+
+        If we create a prefixed event to dispatch it (in the case we have only
+        prefixed event listeners in client's code) then we need to make sure to
+        keep it in sync with the original unprefixed event after it has been
+        dispatched. While being dispatched the event can be modified by
+        client's code and when propagated back to outer elements, attributes were
+        not updated. This patch changes the old design of creating a separate event
+        for the prefixed case and now change the type of the event (so the name) before
+        dispatching it, keeping the attributes if changed and then rename it
+        back to unprefixed when the dispatching is finished.
+
+        Tests: transitions/transition-end-event-prefixed-01.html
+               transitions/transition-end-event-prefixed-02.html
+               transitions/transition-end-event-prefixed-03.html
+
+        * dom/Event.h:
+        (WebCore::Event::setType):
+        * dom/EventTarget.cpp:
+        (WebCore::EventTarget::fireEventListeners):
+
+2013-05-16  Mike Fenton  <mifenton@rim.com>
+
+        [BlackBerry] Strip invoke URLs when writing to the clipboard.
+        https://bugs.webkit.org/show_bug.cgi?id=116226
+
+        Reviewed by Rob Buis.
+
+        PR 333516.
+
+        Invoke URLs should not be included in the paste data.
+
+        Internally Reviewed by Gen Mak.
+
+        * platform/blackberry/PasteboardBlackBerry.cpp:
+        (WebCore::Pasteboard::writeSelection):
+
+2013-05-16  Eduardo Lima Mitev  <elima@igalia.com>
+
+        Missing UNUSED_PARAM macro for textPosition argument in WebKitAccessibleInterfaceText
+        https://bugs.webkit.org/show_bug.cgi?id=116230
+
+        Reviewed by Chris Fleizach.
+
+        No new functionality, no new tests.
+
+        * accessibility/atk/WebKitAccessibleInterfaceText.cpp:
+        (webkitAccessibleTextGetTextForOffset): List textPosition argument as
+        unused parameter for all platforms except GTK.
+
+2013-05-16  Jaehun Lim  <ljaehun.lim@samsung.com>
+
+        Frame flattening prevents <HTML> in <OBJECT> from having scrollbars
+        https://bugs.webkit.org/show_bug.cgi?id=115884
+        
+        Reviewed by Antonio Gomes.
+
+        Frame flattening should be applied when the frame owner is frame or iframe. But when
+        the frame owner is object element, frame flattening prevents it from having scrollbars.
+        In this situation, we can't scroll the html document in object element.
+
+        This patch adds two helper functions to verify flattening conditions.
+        
+        Test: fast/frames/flattening/scrolling-in-object.html
+
+        * page/FrameView.cpp:
+        (WebCore::frameFlatteningEnabled): Added. Helper to check whether flattening is enabled or not.
+        (WebCore::supportsFrameFlattening): Added. Helper to check whether the frame owner is <frame> or <iframe>.
+        (WebCore::FrameView::avoidScrollbarCreation):
+        (WebCore::FrameView::calculateScrollbarModesForLayout): Use frameFlatteningEnabled().
+        (WebCore::FrameView::layout): Use frameFlatteningEnabled().
+        (WebCore::FrameView::isInChildFrameWithFrameFlattening): Use frameFlatteningEnabled().
+
+2013-05-16  Patrick Gansterer  <paroga@webkit.org>
+
+        Port functions for pathhandling to Windows CE in FileSystemWin
+        https://bugs.webkit.org/show_bug.cgi?id=116208
+
+        Reviewed by Darin Adler.
+
+        This will allow us to remove FileSystemWinCE in a next step.
+
+        * platform/win/FileSystemWin.cpp:
+        (WebCore::pathByAppendingComponent):
+        (WebCore::pathGetFileName):
+
+2013-05-16  Tim Horton  <timothy_horton@apple.com>
+
+        PDFPlugins don't load when plugins are disabled, but they should
+        https://bugs.webkit.org/show_bug.cgi?id=75790
+        <rdar://problem/11650197>
+
+        Reviewed by Anders Carlsson.
+
+        Make it possible to load "application" plug-ins even if settings or the FrameLoaderClient
+        say that plug-ins should be disabled, providing a mechanism for WebKit* to offer built-in
+        functionality which happens to use the plug-in infrastructure, and which also doesn't
+        unexpectedly disappear for users with plug-ins off.
+
+        * WebCore.exp.in:
+        Export SubframeLoader::allowPlugins().
+        Update signature for PluginData::supportsMimeType to include the AllowedPluginTypes argument.
+
+        * dom/DOMImplementation.cpp:
+        (WebCore::DOMImplementation::createDocument):
+        Load PluginData even if plug-ins are disabled, but if that is the case, only
+        create a PluginDocument for application plug-ins.
+
+        * html/PluginDocument.cpp:
+        (WebCore::PluginDocumentParser::appendBytes):
+        Don't bail if plug-ins are disabled, because we could still be a PluginDocument
+        for an application plug-in.
+
+        * page/Page.cpp:
+        (WebCore::Page::pluginData):
+        Allow PluginData to be constructed even if plug-ins are disabled, as there might
+        be application plug-ins that we want to load anyway.
+
+        * platform/mac/MIMETypeRegistryMac.mm:
+        (WebCore::MIMETypeRegistry::isApplicationPluginMIMEType):
+        On Mac, if we have PDFPlugin, we can support PDF and PostScript with a native application plug-in.
+
+        * plugins/PluginData.cpp:
+        (WebCore::PluginData::supportsMimeType):
+        Add an AllowedPluginTypes argument to supportsMimeType, allowing callers to specify
+        whether they are looking for any plug-in, or are looking only for application plug-ins.
+
+        * plugins/PluginData.h:
+        (PluginInfo): Added an isApplicationPlugin field, to specify whether this is a "built-in" plug-in.
+        (PluginData): Add the aforementioned AllowedPluginTypes enum and the argument to supportsMimeType.
+
+2013-05-16  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [BlackBerry] Crash due to an assert running test editing/execCommand/indent-paragraphs.html
+        https://bugs.webkit.org/show_bug.cgi?id=114944
+
+        Reviewed by Rob Buis.
+
+        It crashes in network platform code when trying to save an
+        invalid URL in the disk cache. That test contains references to
+        empty URLs like http://. Those empty URLs, are parsed as http:/ by
+        KURL and considered valid. BlackBerry network platform uses GURL
+        which considers those URLs invalid. We needed to check that the
+        URLs are valid for our platform before starting the network
+        operation.
+
+        Fixes a crash running test
+        editing/execCommand/indent-paragraphs.html.
+
+        * platform/network/blackberry/NetworkManager.cpp:
+        (WebCore::NetworkManager::startJob): Check if the request URL is
+        valid from the platform point of view right after creating the
+        platform network request and return early if the URL is invalid
+        with StatusErrorInvalidUrl error.
+
+2013-05-16  Patrick Gansterer  <paroga@webkit.org>
+
+        Remove unused function safeCreateFile() from WebCore
+        https://bugs.webkit.org/show_bug.cgi?id=116211
+
+        Reviewed by Anders Carlsson.
+
+        * platform/FileSystem.h:
+        * platform/win/FileSystemWin.cpp:
+
+2013-05-16  Peter Gal  <galpeter@inf.u-szeged.hu>
+
+        [curl] MIME type should be in lowercase
+        https://bugs.webkit.org/show_bug.cgi?id=116218
+
+        Reviewed by Benjamin Poulain.
+
+        Existing testcase: http/tests/mime/uppercase-mime-type.html
+
+        * platform/network/curl/ResourceHandleManager.cpp:
+        (WebCore::headerCallback): Convert the MIME type to lowercase.
+
+2013-05-16  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        Web Inspector: Fix optional value of promptText in Inspector.json
+        https://bugs.webkit.org/show_bug.cgi?id=116203
+
+        Reviewed by Joseph Pecoraro.
+
+        Merge from https://chromiumcodereview.appspot.com/14672031.
+
+        No new tests needed.
+
+        * inspector/Inspector.json:
+
+2013-05-16  Mary Wu  <mary.wu@torchmobile.com.cn>
+
+        [BlackBerry] Unable to download blob resource
+        https://bugs.webkit.org/show_bug.cgi?id=115888
+
+        Reviewed by Benjamin Poulain.
+
+        Add BlobStream to handle over blob data from BlobResourceHandle to download stream.
+        RIM bug 331086, internally reviewed by Charles Wei and Leo Yang.
+
+        * PlatformBlackBerry.cmake:
+        * platform/network/blackberry/BlobStream.cpp: Added.
+        (WebCore):
+        (WebCore::BlobStream::BlobStream):
+        (WebCore::BlobStream::~BlobStream):
+        (WebCore::BlobStream::didReceiveData):
+        (WebCore::BlobStream::didFinishLoading):
+        (WebCore::BlobStream::didFail):
+        (WebCore::BlobStream::url):
+        (WebCore::BlobStream::mimeType):
+        * platform/network/blackberry/BlobStream.h: Added.
+        (WebCore):
+        (BlobStream):
+
+2013-05-16  Anders Carlsson  <andersca@apple.com>
+
+        Remove SystemTime header and implementations
+        https://bugs.webkit.org/show_bug.cgi?id=116200
+
+        Reviewed by Alexey Proskuryakov.
+
+        SystemTim just had a single function that's not called anymore. Remove it.
+
+        * GNUmakefile.list.am:
+        * PlatformBlackBerry.cmake:
+        * PlatformEfl.cmake:
+        * PlatformWinCE.cmake:
+        * Target.pri:
+        * WebCore.vcproj/WebCore.vcproj:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * history/PageCache.cpp:
+        * platform/SystemTime.h: Removed.
+        * platform/blackberry/SystemTimeBlackBerry.cpp: Removed.
+        * platform/efl/SystemTimeEfl.cpp: Removed.
+        * platform/graphics/ca/GraphicsLayerCA.cpp:
+        * platform/mac/SystemTimeMac.cpp: Removed.
+        * platform/qt/TemporaryLinkStubsQt.cpp:
+        * platform/win/SystemTimeWin.cpp: Removed.
+
+2013-05-16  Glenn Adams  <glenn@skynav.com>
+
+        [Inspector] Don't filter syntax error caused by asterisk in CSS Property name.
+        https://bugs.webkit.org/show_bug.cgi?id=116196
+
+        Reviewed by Benjamin Poulain.
+
+        * inspector/InspectorConsoleAgent.cpp:
+        (WebCore::InspectorConsoleAgent::addMessageToConsole):
+            - Remove questionable IE7 related error filtering
+
+2013-05-16  Andreas Kling  <akling@apple.com>
+
+        Page::chrome() should return a reference.
+        <http://webkit.org/b/116185>
+
+        Reviewed by Anders Carlsson.
+
+        A Page's chrome() can never be null. Change Page::chrome() to return a reference to reflect this.
+        Also, make Page::m_chrome a const member variable so nobody will accidentally set it to null.
+
+2013-05-16  Simon Fraser  <simon.fraser@apple.com>
+
+        Content disappears when scrolling http://www.childrenscancer.org/zach/
+        https://bugs.webkit.org/show_bug.cgi?id=116206
+
+        Reviewed by Darin Adler.
+        
+        When a RenderLayerBacking gains or loses a foregroundLayer or backgroundLayer,
+        we need to repaint the primary layer, since what paints into that primary
+        layer will change.
+        
+        On the page in question, we gained/lost a foreground layer when scrolling because
+        the page popped an element into position:fixed.
+
+        Test: compositing/repaint/foreground-layer-change.html
+
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::updateForegroundLayer):
+        (WebCore::RenderLayerBacking::updateBackgroundLayer):
+
+2013-05-16  Andy Estes  <aestes@apple.com>
+
+        Do not indefinitely cache resources from blob URLs.
+
+        Reviewed by Alexey Proskuryakov.
+
+        Alexey pointed out after I landed r150169 that blob URLs backed by
+        files should return an error if the file changed after the URL was
+        created. By indefinitely caching them in memory, we don't give the
+        loader a chance to check for modification. Remove "blob" from the list
+        of schemes that should be indefinitely cached.
+
+        * platform/SchemeRegistry.cpp:
+        (WebCore::SchemeRegistry::shouldCacheResponsesFromURLSchemeIndefinitely):
+
+2013-05-16  Claudio Saavedra  <csaavedra@igalia.com>
+
+        [CSS] CSS Variables are case-sensitive
+        https://bugs.webkit.org/show_bug.cgi?id=116239
+
+        Reviewed by Ryosuke Niwa.
+
+        The CSS Variables specification states that variables are
+        case-sensitive, unlike other CSS properties.
+
+        Test: fast/css/variables/case-sensitive.html
+
+        * css/CSSParser.cpp:
+        (WebCore::CSSParserString::substring): Replace
+        the now unnecessary lowerSubstring() with this method.
+        Also, since the method is only used by the CSS variables
+        implementation, #ifdef it.
+        (WebCore::CSSParser::createPrimitiveVariableNameValue):
+        (WebCore::CSSParser::storeVariableDeclaration):
+        Do not normalize variable declarations to lowercase.
+        * css/CSSParserValues.h:
+        (CSSParserString): Replace the lowerSubstring() declaration
+        and wrap with #if/#endif.
+
+2013-05-16  Brady Eidson  <beidson@apple.com>
+
+        svg/as-image/img-zoom-svg-stylesheet.html crashes with NetworkProcess enabled.
+        <rdar://problem/13837408> and https://bugs.webkit.org/show_bug.cgi?id=115917
+
+        Reviewed by Sam Weinig.
+
+        Give WebKit2 the ability to not mis-cast.
+
+        * loader/FrameLoaderClient.h:
+        (WebCore::FrameLoaderClient::isEmptyFrameLoaderClient): Defaults to false, and include a FIXME
+          to remove it once https://bugs.webkit.org/show_bug.cgi?id=116233 is resolved.
+
+        * loader/EmptyClients.h: Make isEmptyFrameLoaderClient() return true, and add a FIXME to remove it.
+
+2013-05-14  Martin Robinson  <mrobinson@igalia.com>
+
+        [GTK] Add support for building WebCore to the cmake build
+        https://bugs.webkit.org/show_bug.cgi?id=116128
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * PlatformGTK.cmake: Added.
+        * platform/gtk/GtkVersioning.c: Include "config.h" because we removed
+        the autotoolsconfig.h include from the header.
+        * platform/gtk/GtkVersioning.h: Remove autotoolsconfig.h include to support for
+        non-autotools build systems.
+
+2013-05-15  Ryosuke Niwa  <rniwa@webkit.org>
+
+        DocumentOrderedMap doesn't need to have two HashMaps
+        https://bugs.webkit.org/show_bug.cgi?id=116167
+
+        Reviewed by Geoffrey Garen.
+
+        Previously, we had two hash maps: m_map and m_duplicateCounts in DocumentOrderedMap to keep track
+        of the first element and the number of duplicates for a given name. This patch simplifies this structure
+        by having a single hash map that contains both the pointer and the number of duplicates.
+
+        In addition, this patch fixes a regression introduced in r149652 that window and document name maps
+        were not updated for some elements inside a SVG use element, and makes use of the newly added list of
+        the matching elements in SelectorQuery.
+
+        * dom/DocumentOrderedMap.cpp:
+        (WebCore::DocumentOrderedMap::clear): Updated to use the new hash map.
+        (WebCore::DocumentOrderedMap::add): Ditto.
+        (WebCore::DocumentOrderedMap::remove): Ditto.
+        (WebCore::DocumentOrderedMap::get): Ditto.
+        (WebCore::DocumentOrderedMap::getAllElementsById): Added.
+
+        * dom/DocumentOrderedMap.h:
+
+        (WebCore::DocumentOrderedMap::MapEntry::MapEntry): Added.
+        (WebCore::DocumentOrderedMap::containsSingle): Updated to use new hash map.
+        (WebCore::DocumentOrderedMap::contains): Ditto.
+        (WebCore::DocumentOrderedMap::containsMultiple): Ditto.
+
+        * dom/Element.cpp:
+        (WebCore::Element::insertedInto): This function didn't add this element to window and document's name maps
+        if the element had already been inserted into a tree scope, and the current call was inserting an ancestor
+        of the tree scope into the document. We were exiting early per scope != treeScope().
+
+        Fixed the bug by splitting updateId into two functions updateIdForTreeScope and updateIdForDocument.
+        The former is called when this element is inserted into a new tree scope, and the latter is called when
+        this element is inserted into a HTML document even if it had already been inside some tree scope.
+
+        (WebCore::Element::removedFrom): This function didn't remove this element from tree scope's id maps if
+        the tree scope wasn't a document. Fixed the bug by simply checking that the removal happens beneath the
+        current tree scope.
+        (WebCore::Element::updateName):
+        (WebCore::Element::updateNameForTreeScope): Renamed from updateName.
+        (WebCore::Element::updateNameForDocument): Extracted from updateName.
+        (WebCore::Element::updateId):
+        (WebCore::Element::updateIdForTreeScope): Renamed from updateId.
+        (WebCore::Element::updateIdForDocument): Extracted from updateId.
+
+        * dom/Element.h:
+
+        * dom/SelectorQuery.cpp:
+        (WebCore::SelectorDataList::canUseIdLookup): Refactored to return the id subselector instead of checking if
+        the first subselector happens to be matching an id.
+        (WebCore::SelectorDataList::execute): Use the subselector canUseIdLookup returned. Also make use of newly
+        added getAllElementsById when there are multiple matching elements for a given id.
+
+        * dom/SelectorQuery.h:
+
+        * dom/TreeScope.cpp:
+        (WebCore::TreeScope::getAllElementsById): Added.
+
+        * dom/TreeScope.h:
+
 2013-05-15  Darin Adler  <darin@apple.com>
 
         [Mac] Make Clipboard::create functions for Mac platform independent by moving Pasteboard creation to Pasteboard functions

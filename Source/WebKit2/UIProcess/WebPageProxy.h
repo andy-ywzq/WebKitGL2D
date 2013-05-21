@@ -294,13 +294,13 @@ public:
     bool tryClose();
     bool isClosed() const { return m_isClosed; }
 
-    void loadURL(const String&);
-    void loadURLRequest(WebURLRequest*);
-    void loadHTMLString(const String& htmlString, const String& baseURL);
-    void loadAlternateHTMLString(const String& htmlString, const String& baseURL, const String& unreachableURL);
-    void loadPlainTextString(const String& string);
-    void loadWebArchiveData(const WebData*);
-    void loadFile(const String& fileURL, const String& resourceDirectoryURL);
+    void loadURL(const String&, APIObject* userData = 0);
+    void loadURLRequest(WebURLRequest*, APIObject* userData = 0);
+    void loadFile(const String& fileURL, const String& resourceDirectoryURL, APIObject* userData = 0);
+    void loadHTMLString(const String& htmlString, const String& baseURL, APIObject* userData = 0);
+    void loadAlternateHTMLString(const String& htmlString, const String& baseURL, const String& unreachableURL, APIObject* userData = 0);
+    void loadPlainTextString(const String& string, APIObject* userData = 0);
+    void loadWebArchiveData(const WebData*, APIObject* userData = 0);
 
     void stopLoading();
     void reload(bool reloadFromOrigin);
@@ -1059,7 +1059,7 @@ private:
     void sendWheelEvent(const WebWheelEvent&);
 
 #if ENABLE(NETSCAPE_PLUGIN_API)
-    void findPlugin(const String& mimeType, const String& urlString, const String& frameURLString, const String& pageURLString, String& pluginPath, String& newMIMEType, uint32_t& pluginLoadPolicy);
+    void findPlugin(const String& mimeType, const String& urlString, const String& frameURLString, const String& pageURLString, const bool allowOnlyApplicationPlugins, String& pluginPath, String& newMIMEType, uint32_t& pluginLoadPolicy);
 #endif
 
     PageClient* m_pageClient;

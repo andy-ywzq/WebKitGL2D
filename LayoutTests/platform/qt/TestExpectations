@@ -898,11 +898,6 @@ sputnik/Unicode/Unicode_510/S7.6_A3.2.html
 sputnik/Unicode/Unicode_510/S7.6_A5.3_T1.html
 sputnik/Unicode/Unicode_510/S7.6_A5.3_T2.html
 
-# [Qt] 2 math sputnik test fail on 32 bit
-# https://bugs.webkit.org/show_bug.cgi?id=88519
-sputnik/Conformance/15_Native_Objects/15.8_Math/15.8.2/15.8.2.16_sin/S15.8.2.16_A7.html
-sputnik/Conformance/15_Native_Objects/15.8_Math/15.8.2/15.8.2.18_tan/S15.8.2.18_A7.html
-
 # =========================================================================== #
 # Fluctuating/flakey tests
 # =========================================================================== #
@@ -1411,12 +1406,6 @@ fast/regions/autoheight-singleregion-breakbeforealways-minheight.html
 # [Qt] svg/css/text-gradient-shadow.svg fails
 # https://bugs.webkit.org/show_bug.cgi?id=92734
 svg/css/text-gradient-shadow.svg
-
-# These tests need to be rebaselined after https://bugs.webkit.org/show_bug.cgi?id=99984
-webkit.org/b/99984 svg/as-image/image-preserveAspectRatio-all.svg [ ImageOnlyFailure Pass ]
-webkit.org/b/99984 svg/filters/feImage-preserveAspectRatio-all.svg [ ImageOnlyFailure Pass ]
-webkit.org/b/99984 svg/dynamic-updates/SVGFEImageElement-dom-preserveAspectRatio-attr.html [ ImageOnlyFailure Pass ]
-webkit.org/b/99984 svg/dynamic-updates/SVGFEImageElement-svgdom-preserveAspectRatio-prop.html [ ImageOnlyFailure Pass ]
 
 # Need rebaseline after https://bugs.webkit.org/show_bug.cgi?id=105437
 webkit.org/b/105437 svg/W3C-SVG-1.1-SE/filters-image-03-f.svg [ ImageOnlyFailure Pass ]
@@ -2759,3 +2748,5 @@ fast/sub-pixel/transformed-iframe-copy-on-scroll.html [ Missing ]
 
 # Reference test fast/sub-pixel/float-wrap-zoom.html fails
 webkit.org/b/114800 fast/sub-pixel/float-wrap-zoom.html [ ImageOnlyFailure ]
+
+webkit.org/b/116259 http/tests/cache/willsendrequest-returns-null-for-memory-cache-load.html [ Failure ]

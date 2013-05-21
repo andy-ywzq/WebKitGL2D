@@ -655,6 +655,12 @@ static Eina_Bool _ewk_view_smart_run_javascript_confirm(Ewk_View_Smart_Data*, Ev
     return true;
 }
 
+static Eina_Bool _ewk_view_smart_run_before_unload_confirm(Ewk_View_Smart_Data*, Evas_Object* /*frame*/, const char* message)
+{
+    INFO("before unload confirm: %s", message);
+    return true;
+}
+
 static Eina_Bool _ewk_view_smart_should_interrupt_javascript(Ewk_View_Smart_Data*)
 {
     INFO("should interrupt javascript?\n"
@@ -1327,8 +1333,8 @@ static WebCore::ViewportAttributes _ewk_view_viewport_attributes_compute(Ewk_Vie
     int deviceDPI = WebCore::getDPI();
     priv->settings.devicePixelRatio = deviceDPI / WebCore::ViewportArguments::deprecatedTargetDPI;
 
-    WebCore::IntRect availableRect = enclosingIntRect(priv->page->chrome()->client()->pageRect());
-    WebCore::IntRect deviceRect = enclosingIntRect(priv->page->chrome()->client()->windowRect());
+    WebCore::IntRect availableRect = enclosingIntRect(priv->page->chrome().client()->pageRect());
+    WebCore::IntRect deviceRect = enclosingIntRect(priv->page->chrome().client()->windowRect());
 
     WebCore::ViewportAttributes attributes = WebCore::computeViewportAttributes(priv->viewportArguments, desktopWidth, deviceRect.width(), deviceRect.height(), priv->settings.devicePixelRatio, availableRect.size());
     WebCore::restrictMinimumScaleFactorToViewportSize(attributes, availableRect.size(), priv->settings.devicePixelRatio);
@@ -1408,6 +1414,7 @@ Eina_Bool ewk_view_base_smart_set(Ewk_View_Smart_Class* api)
     api->add_console_message = _ewk_view_smart_add_console_message;
     api->run_javascript_alert = _ewk_view_smart_run_javascript_alert;
     api->run_javascript_confirm = _ewk_view_smart_run_javascript_confirm;
+    api->run_before_unload_confirm = _ewk_view_smart_run_before_unload_confirm;
     api->run_javascript_prompt = _ewk_view_smart_run_javascript_prompt;
     api->should_interrupt_javascript = _ewk_view_smart_should_interrupt_javascript;
 
@@ -3610,6 +3617,18 @@ bool ewk_view_run_javascript_confirm(Evas_Object* ewkView, Evas_Object* frame, c
     return smartData->api->run_javascript_confirm(smartData, frame, message);
 }
 
+bool ewk_view_run_before_unload_confirm(Evas_Object* ewkView, Evas_Object* frame, const char* message)
+{
+    DBG("ewkView=%p frame=%p message=%s", ewkView, frame, message);
+    EWK_VIEW_SD_GET_OR_RETURN(ewkView, smartData, false);
+    EINA_SAFETY_ON_NULL_RETURN_VAL(smartData->api, false);
+
+    if (!smartData->api->run_before_unload_confirm)
+        return false;
+
+    return smartData->api->run_before_unload_confirm(smartData, frame, message);
+}
+
 bool ewk_view_run_javascript_prompt(Evas_Object* ewkView, Evas_Object* frame, const char* message, const char* defaultValue, const char** value)
 {
     DBG("ewkView=%p frame=%p message=%s", ewkView, frame, message);
@@ -4589,7 +4608,7 @@ void _ewk_view_accelerated_compositing_context_create_if_needed(Evas_Object* ewk
     EWK_VIEW_PRIV_GET_OR_RETURN(smartData, priv);
 
     if (!priv->acceleratedCompositingContext)
-        priv->acceleratedCompositingContext = WebCore::AcceleratedCompositingContext::create(priv->page->chrome());
+        priv->acceleratedCompositingContext = WebCore::AcceleratedCompositingContext::create(&priv->page->chrome());
 }
 
 bool ewk_view_accelerated_compositing_object_create(Evas_Object* ewkView, Evas_Native_Surface* nativeSurface, const WebCore::IntRect& rect)

@@ -511,6 +511,21 @@ void FrameView::setMarginHeight(LayoutUnit h)
     m_margins.setHeight(h);
 }
 
+static bool frameFlatteningEnabled(Frame* frame)
+{
+    return frame && frame->settings() && frame->settings()->frameFlatteningEnabled();
+}
+
+static bool supportsFrameFlattening(Frame* frame)
+{
+    if (!frame)
+        return false;
+
+    // Frame flattening is valid only for <frame> and <iframe>.
+    HTMLFrameOwnerElement* owner = frame->ownerElement();
+    return owner && (owner->hasTagName(frameTag) || owner->hasTagName(iframeTag));
+}
+
 bool FrameView::avoidScrollbarCreation() const
 {
     ASSERT(m_frame);
@@ -519,13 +534,7 @@ bool FrameView::avoidScrollbarCreation() const
     // but we also cannot turn scrollbars off as we determine
     // our flattening policy using that.
 
-    if (!m_frame->ownerElement())
-        return false;
-
-    if (!m_frame->settings() || m_frame->settings()->frameFlatteningEnabled())
-        return true;
-
-    return false;
+    return frameFlatteningEnabled(frame()) && supportsFrameFlattening(frame());
 }
 
 void FrameView::setCanHaveScrollbars(bool canHaveScrollbars)
@@ -590,7 +599,7 @@ void FrameView::setContentsSize(const IntSize& size)
 
     updateScrollableAreaSet();
 
-    page->chrome()->contentsSizeChanged(frame(), size); //notify only
+    page->chrome().contentsSizeChanged(frame(), size); // Notify only.
 
     m_deferSetNeedsLayouts--;
     
@@ -736,7 +745,7 @@ void FrameView::calculateScrollbarModesForLayout(ScrollbarMode& hMode, Scrollbar
         RenderObject* rootRenderer = documentElement ? documentElement->renderer() : 0;
         Node* body = document->body();
         if (body && body->renderer()) {
-            if (body->hasTagName(framesetTag) && m_frame->settings() && !m_frame->settings()->frameFlatteningEnabled()) {
+            if (body->hasTagName(framesetTag) && !frameFlatteningEnabled(frame())) {
                 vMode = ScrollbarAlwaysOff;
                 hMode = ScrollbarAlwaysOff;
             } else if (body->hasTagName(bodyTag)) {
@@ -945,7 +954,7 @@ void FrameView::setNeedsOneShotDrawingSynchronization()
 {
     Page* page = frame() ? frame()->page() : 0;
     if (page)
-        page->chrome()->client()->setNeedsOneShotDrawingSynchronization();
+        page->chrome().client()->setNeedsOneShotDrawingSynchronization();
 }
 
 #endif // USE(ACCELERATED_COMPOSITING)
@@ -1231,7 +1240,7 @@ void FrameView::layout(bool allowSubtree)
             Document* document = m_frame->document();
             Node* body = document->body();
             if (body && body->renderer()) {
-                if (body->hasTagName(framesetTag) && m_frame->settings() && !m_frame->settings()->frameFlatteningEnabled()) {
+                if (body->hasTagName(framesetTag) && !frameFlatteningEnabled(frame())) {
                     body->renderer()->setChildNeedsLayout(true);
                 } else if (body->hasTagName(bodyTag)) {
                     if (!m_firstLayout && m_size.height() != layoutHeight() && body->renderer()->enclosingBox()->stretchesToViewport())
@@ -1408,7 +1417,7 @@ void FrameView::layout(bool allowSubtree)
     if (!page)
         return;
 
-    page->chrome()->client()->layoutUpdated(frame());
+    page->chrome().client()->layoutUpdated(frame());
 }
 
 RenderBox* FrameView::embeddedContentBox() const
@@ -2042,7 +2051,7 @@ bool FrameView::shouldRubberBandInDirection(ScrollDirection direction) const
     Page* page = frame() ? frame()->page() : 0;
     if (!page)
         return ScrollView::shouldRubberBandInDirection(direction);
-    return page->chrome()->client()->shouldRubberBandInDirection(direction);
+    return page->chrome().client()->shouldRubberBandInDirection(direction);
 }
 
 bool FrameView::isRubberBandInProgress() const
@@ -2092,7 +2101,7 @@ HostWindow* FrameView::hostWindow() const
     Page* page = frame() ? frame()->page() : 0;
     if (!page)
         return 0;
-    return page->chrome();
+    return &page->chrome();
 }
 
 const unsigned cRepaintRectUnionThreshold = 25;
@@ -3048,7 +3057,7 @@ IntRect FrameView::windowResizerRect() const
     Page* page = frame() ? frame()->page() : 0;
     if (!page)
         return IntRect();
-    return page->chrome()->windowResizerRect();
+    return page->chrome().windowResizerRect();
 }
 
 float FrameView::visibleContentScaleFactor() const
@@ -3069,7 +3078,7 @@ void FrameView::setVisibleScrollerThumbRect(const IntRect& scrollerThumb)
         return;
     if (page->mainFrame() != m_frame)
         return;
-    page->chrome()->client()->notifyScrollerThumbIsVisibleInRect(scrollerThumb);
+    page->chrome().client()->notifyScrollerThumbIsVisibleInRect(scrollerThumb);
 }
 
 bool FrameView::scrollbarsCanBeActive() const
@@ -3162,7 +3171,7 @@ void FrameView::scrollbarStyleChanged(int newStyle, bool forceUpdate)
         return;
     if (page->mainFrame() != m_frame)
         return;
-    page->chrome()->client()->recommendedScrollbarStyleDidChange(newStyle);
+    page->chrome().client()->recommendedScrollbarStyleDidChange(newStyle);
 
     if (forceUpdate)
         ScrollView::scrollbarStyleChanged(newStyle, forceUpdate);
@@ -3233,7 +3242,7 @@ void FrameView::updateAnnotatedRegions()
     Page* page = m_frame->page();
     if (!page)
         return;
-    page->chrome()->client()->annotatedRegionsChanged();
+    page->chrome().client()->annotatedRegionsChanged();
 }
 #endif
 
@@ -3394,7 +3403,7 @@ bool FrameView::isInChildFrameWithFrameFlattening() const
             return true;
     }
 
-    if (!m_frame->settings() || !m_frame->settings()->frameFlatteningEnabled())
+    if (!frameFlatteningEnabled(frame()))
         return false;
 
     if (m_frame->ownerElement()->hasTagName(frameTag))
@@ -3645,7 +3654,7 @@ void FrameView::paintOverhangAreas(GraphicsContext* context, const IntRect& hori
 
     Page* page = m_frame->page();
     if (page->mainFrame() == m_frame) {
-        if (page->chrome()->client()->paintCustomOverhangArea(context, horizontalOverhangArea, verticalOverhangArea, dirtyRect))
+        if (page->chrome().client()->paintCustomOverhangArea(context, horizontalOverhangArea, verticalOverhangArea, dirtyRect))
             return;
     }
 
