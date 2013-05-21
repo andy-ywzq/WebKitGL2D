@@ -27,7 +27,7 @@
 #import "Editor.h"
 
 #import "ColorMac.h"
-#import "ClipboardMac.h"
+#import "Clipboard.h"
 #import "CachedResourceLoader.h"
 #import "DocumentFragment.h"
 #import "DOMRangeInternal.h"
@@ -57,10 +57,9 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-PassRefPtr<Clipboard> Editor::newGeneralClipboard(ClipboardAccessPolicy policy, Frame* frame)
+PassRefPtr<Clipboard> Editor::newGeneralClipboard(ClipboardAccessPolicy policy, Frame*)
 {
-    return ClipboardMac::create(Clipboard::CopyAndPaste,
-        policy == ClipboardWritable ? platformStrategies()->pasteboardStrategy()->uniqueName() : String(NSGeneralPboard), policy, ClipboardMac::CopyAndPasteGeneric, frame);
+    return Clipboard::createForCopyAndPaste(policy);
 }
 
 void Editor::showFontPanel()
@@ -83,7 +82,7 @@ void Editor::pasteWithPasteboard(Pasteboard* pasteboard, bool allowPlainText)
     RefPtr<Range> range = selectedRange();
     bool choosePlainText;
     
-    m_frame->editor()->client()->setInsertionPasteboard(NSGeneralPboard);
+    m_frame->editor().client()->setInsertionPasteboard(NSGeneralPboard);
 #if PLATFORM(IOS) || __MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
     RefPtr<DocumentFragment> fragment = pasteboard->documentFragment(m_frame, range, allowPlainText, choosePlainText);
     if (fragment && shouldInsertFragment(fragment, range, EditorInsertActionPasted))
@@ -103,7 +102,7 @@ void Editor::pasteWithPasteboard(Pasteboard* pasteboard, bool allowPlainText)
             pasteAsFragment(fragment, canSmartReplaceWithPasteboard(pasteboard), false);
     }
 #endif
-    m_frame->editor()->client()->setInsertionPasteboard(String());
+    m_frame->editor().client()->setInsertionPasteboard(String());
 }
 
 bool Editor::insertParagraphSeparatorInQuotedContent()

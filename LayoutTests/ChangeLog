@@ -1,3 +1,55 @@
+2013-05-15  Igor Oliveira  <igor.o@sisa.samsung.com>
+
+        Implement run-in remove child cases.
+        https://bugs.webkit.org/show_bug.cgi?id=86520
+
+        Move runin to original position when sibling element is destroyed.
+
+        Reviewed by David Hyatt.
+
+        * fast/runin/runin-remove-child-simple-expected.txt: Added.
+        * fast/runin/runin-remove-child-simple.html: Added.
+        * fast/runin/runin-sibling-inline-expected.txt: Added.
+        * fast/runin/runin-sibling-inline.html: Added.
+
+2013-05-15  Dongseong Hwang  <dongseong.hwang@intel.com>
+
+        Remove an overloaded strokeRect in <canvas>
+        https://bugs.webkit.org/show_bug.cgi?id=116017
+
+        Reviewed by Benjamin Poulain.
+
+        canvas/philip/tests/2d.missingargs.html can cover
+        fast/canvas/canvas-overloads-strokeRect.html, so this patch removed it.
+
+        * fast/canvas/canvas-overloads-strokeRect-expected.txt: Removed.
+        * fast/canvas/canvas-overloads-strokeRect.html: Removed.
+        * fast/canvas/script-tests/canvas-overloads-strokeRect.js: Removed.
+        * fast/canvas/script-tests/canvas-strokeRect.js:
+
+2013-05-15  Bruno de Oliveira Abinader  <bruno.abinader@basyskom.com>
+
+        [css3-text] text-decoration-line now accepts "blink" as valid value
+        https://bugs.webkit.org/show_bug.cgi?id=116104
+
+        Reviewed by Andreas Kling.
+
+        Updated layout test results to reflect changes in specification.
+
+        * fast/css3-text/css3-text-decoration/getComputedStyle/getComputedStyle-text-decoration-line-expected.txt:
+        * fast/css3-text/css3-text-decoration/getComputedStyle/script-tests/getComputedStyle-text-decoration-line.js:
+        * fast/css3-text/css3-text-decoration/text-decoration-line-expected.html:
+        * fast/css3-text/css3-text-decoration/text-decoration-line.html:
+
+2013-05-15  Peter Gal  <galpeter@inf.u-szeged.hu>
+
+        Allow http tests on Arch Linux
+        https://bugs.webkit.org/show_bug.cgi?id=116155
+
+        Reviewed by Ryosuke Niwa.
+
+        * http/conf/archlinux-httpd.conf: Added.
+
 2013-05-15  Zan Dobersek  <zdobersek@igalia.com>
 
         Unreviewed GTK gardening.

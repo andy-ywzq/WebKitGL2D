@@ -65,6 +65,7 @@ public:
 
     void suspend();
     void resume();
+    void setThrottled(bool);
 
     void windowScreenDidChange(PlatformDisplayID);
 
@@ -90,6 +91,7 @@ private:
     virtual void displayRefreshFired(double timestamp);
 
     bool m_useTimer;
+    bool m_throttled;
 #endif
 #endif
 };

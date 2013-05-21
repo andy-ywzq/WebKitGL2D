@@ -34,7 +34,7 @@
 // This DOM object now works by calling through to classes in the platform layer.
 // Specifically, the class currently named Pasteboard. The legacy style instead
 // uses this as an abstract base class.
-#define WTF_USE_LEGACY_STYLE_ABSTRACT_CLIPBOARD_CLASS (!PLATFORM(MAC) || PLATFORM(IOS))
+#define WTF_USE_LEGACY_STYLE_ABSTRACT_CLIPBOARD_CLASS (PLATFORM(BLACKBERRY) || PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(IOS) || PLATFORM(QT) || PLATFORM(WIN) || PLATFORM(NIX))
 
 #if USE(LEGACY_STYLE_ABSTRACT_CLIPBOARD_CLASS)
 #define LEGACY_VIRTUAL virtual
@@ -69,7 +69,7 @@ namespace WebCore {
         
         static PassRefPtr<Clipboard> create(ClipboardAccessPolicy, DragData*, Frame*);
 
-        virtual ~Clipboard();
+        LEGACY_VIRTUAL ~Clipboard();
 
         bool isForCopyAndPaste() const { return m_clipboardType == CopyAndPaste; }
         bool isForDragAndDrop() const { return m_clipboardType == DragAndDrop; }
@@ -124,20 +124,24 @@ namespace WebCore {
         void setDragHasStarted() { m_dragStarted = true; }
 
 #if ENABLE(DATA_TRANSFER_ITEMS)
-        virtual PassRefPtr<DataTransferItemList> items() = 0;
+        LEGACY_VIRTUAL PassRefPtr<DataTransferItemList> items() = 0;
 #endif
         
 #if !USE(LEGACY_STYLE_ABSTRACT_CLIPBOARD_CLASS)
+        static PassRefPtr<Clipboard> createForCopyAndPaste(ClipboardAccessPolicy);
+
         const Pasteboard& pasteboard() { return *m_pasteboard; }
 #endif
 
 #if !USE(LEGACY_STYLE_ABSTRACT_CLIPBOARD_CLASS) && ENABLE(DRAG_SUPPORT)
+        static PassRefPtr<Clipboard> createForDragAndDrop();
+
         void updateDragImage();
 #endif
 
     protected:
 #if !USE(LEGACY_STYLE_ABSTRACT_CLIPBOARD_CLASS)
-        Clipboard(ClipboardAccessPolicy, ClipboardType, PassOwnPtr<Pasteboard>, bool forFileDrag);
+        Clipboard(ClipboardAccessPolicy, ClipboardType, PassOwnPtr<Pasteboard>, bool forFileDrag = false);
 #else
         Clipboard(ClipboardAccessPolicy, ClipboardType);
 #endif

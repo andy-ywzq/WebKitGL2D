@@ -1,3 +1,70 @@
+2013-05-15  Oliver Hunt  <oliver@apple.com>
+
+        RefCountedArray needs to use vector initialisers for its backing store
+        https://bugs.webkit.org/show_bug.cgi?id=116194
+
+        Reviewed by Gavin Barraclough.
+
+        Use an out of line function to clear the exception stack to avoid
+        needing to include otherwise unnecessary headers all over the place.
+
+        Everything else is just being updated to use that.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        * interpreter/CallFrame.h:
+        (JSC::ExecState::clearSupplementaryExceptionInfo):
+        * interpreter/Interpreter.cpp:
+        (JSC::Interpreter::addStackTraceIfNecessary):
+        (JSC::Interpreter::throwException):
+        * runtime/JSGlobalObject.cpp:
+        (JSC::DynamicGlobalObjectScope::DynamicGlobalObjectScope):
+        * runtime/VM.cpp:
+        (JSC):
+        (JSC::VM::clearExceptionStack):
+        * runtime/VM.h:
+        (VM):
+        (JSC::VM::exceptionStack):
+
+2013-05-15  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r150051.
+        http://trac.webkit.org/changeset/150051
+        https://bugs.webkit.org/show_bug.cgi?id=116186
+
+        Broke all JSC tests on Mac and the author is unresponsive
+        (Requested by rniwa on #webkit).
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
+2013-05-15  Julien Brianceau  <jbrianceau@nds.com>
+
+        Remove savedTimeoutReg from JITStackFrame for sh4 base JIT.
+        https://bugs.webkit.org/show_bug.cgi?id=116143
+
+        Reviewed by Geoffrey Garen.
+
+        Since r148119, timeoutCheckRegister is removed from baseline JIT.
+        So we don't need to save r8 register in JITStackFrame anymore for sh4.
+
+        * jit/JITStubs.cpp:
+        * jit/JITStubs.h:
+        (JITStackFrame):
+
+2013-05-15  Nico Weber  <thakis@chromium.org>
+
+        WebKit doesn't support MSVS2003 any more, remove preprocessor checks for older versions.
+        https://bugs.webkit.org/show_bug.cgi?id=116157
+
+        Reviewed by Anders Carlsson.
+
+        Also remove a gcc3.2 workaround.
+
+        Merges parts of these two commits by the talented Nico Weber:
+        https://chromium.googlesource.com/chromium/blink/+/3677e2f47348daeff405a40b6f90fbdf0654c2f5
+        https://chromium.googlesource.com/chromium/blink/+/0fcd96c448dc30be1416dcc15713c53710c1a312
+
+        * os-win32/inttypes.h:
+
 2013-05-13  Alvaro Lopez Ortega  <alvaro@alobbs.com>
 
         Nightly build's jsc doesn't work without DYLD_FRAMEWORK...

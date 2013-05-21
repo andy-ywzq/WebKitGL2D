@@ -4024,8 +4024,6 @@ enable?(WEB_SOCKETS) {
         Modules/websockets/WebSocketExtensionProcessor.h \
         Modules/websockets/WebSocketFrame.h \
         Modules/websockets/WebSocketHandshake.h \
-        Modules/websockets/WebSocketHandshakeRequest.h \
-        Modules/websockets/WebSocketHandshakeResponse.h \
         Modules/websockets/WorkerThreadableWebSocketChannel.h \
         platform/network/qt/SocketStreamHandlePrivate.h
 
@@ -4038,8 +4036,6 @@ enable?(WEB_SOCKETS) {
         Modules/websockets/WebSocketExtensionParser.cpp \
         Modules/websockets/WebSocketFrame.cpp \
         Modules/websockets/WebSocketHandshake.cpp \
-        Modules/websockets/WebSocketHandshakeRequest.cpp \
-        Modules/websockets/WebSocketHandshakeResponse.cpp \
         Modules/websockets/WorkerThreadableWebSocketChannel.cpp \
         Modules/websockets/ThreadableWebSocketChannel.cpp \
         Modules/websockets/ThreadableWebSocketChannelClientWrapper.cpp \

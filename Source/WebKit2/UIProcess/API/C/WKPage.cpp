@@ -877,7 +877,7 @@ WKStringRef WKPageGetPluginInformationBundleVersionKey()
 
 WKStringRef WKPageGetPluginInformationDisplayNameKey()
 {
-    return WKPluginInformationBundleVersionKey();
+    return WKPluginInformationDisplayNameKey();
 }
 
 WKStringRef WKPageGetPluginInformationFrameURLKey()

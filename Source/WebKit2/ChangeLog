@@ -1,3 +1,303 @@
+2013-05-15  Arnaud Renevier  <a.renevier@sisa.samsung.com>
+
+        [GTK] [WebKit2] enable displaying console.log messages to system console
+        https://bugs.webkit.org/show_bug.cgi?id=115578
+
+        Reviewed by Martin Robinson.
+
+        Add a setting to enable/disable displaying of page messages to system
+        console. Property is called enable-write-console-messages-to-stdout.
+        Getter API function is
+        webkit_settings_get_enable_write_console_messages_to_stdout
+        Setter API function is
+        webkit_settings_set_enable_write_console_messages_to_stdout
+
+        * UIProcess/API/gtk/WebKitSettings.cpp:
+        (webKitSettingsSetProperty):
+        (webKitSettingsGetProperty):
+        (webkit_settings_class_init):
+        (webkit_settings_get_enable_write_console_messages_to_stdout):
+        (webkit_settings_set_enable_write_console_messages_to_stdout):
+        * UIProcess/API/gtk/WebKitSettings.h:
+        * UIProcess/API/gtk/docs/webkit2gtk-sections.txt:
+        * UIProcess/API/gtk/tests/TestWebKitSettings.cpp:
+        (testWebKitSettings):
+
+2013-05-08  Gavin Barraclough  <barraclough@apple.com>
+
+        Process suppression should throttle scripted animations
+        https://bugs.webkit.org/show_bug.cgi?id=115812
+
+        Reviewed by Simon Fraser.
+
+        <rdar://problem/13799726>
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::setThrottled):
+        (WebKit):
+        * WebProcess/WebPage/WebPage.h:
+        (WebPage):
+            - Added setThrottled, forwards to WebCore::Page.
+        * WebProcess/WebProcess.cpp:
+        (WebKit):
+        (WebKit::WebProcess::setProcessSuppressionEnabled):
+        * WebProcess/WebProcess.h:
+        (WebProcess):
+            - Intercept calls to setProcessSuppressionEnabled, also mark all pages as being throttled.
+
+2013-05-15  Anders Carlsson  <andersca@apple.com>
+
+        WKPageGetPluginInformationDisplayNameKey doesn't return the right key
+        https://bugs.webkit.org/show_bug.cgi?id=116188
+
+        Reviewed by Andreas Kling.
+
+        * UIProcess/API/C/WKPage.cpp:
+        (WKPageGetPluginInformationDisplayNameKey):
+
+2013-05-15  Alexey Proskuryakov  <ap@apple.com>
+
+        More fixing after WebProcessShim renaming in r149074.
+
+        * WebProcess/EntryPoint/mac/XPCService/WebContentServiceEntryPoint.mm:
+        (WebContentServiceInitializer): Updated a comment to mention the shim by its new name.
+
+2013-05-15  Alexey Proskuryakov  <ap@apple.com>
+
+        <rdar://problem/13902706> Lion: com.apple.tsm.uiserver sandbox error in Console when
+        launching Safari
+
+        Reviewed by Anders Carlsson.
+
+        * WebProcess/com.apple.WebProcess.sb.in: Silence the violation.
+
+2013-05-13  Anders Carlsson  <andersca@apple.com>
+
+        Frame::editor() should return a reference
+        https://bugs.webkit.org/show_bug.cgi?id=116037
+
+        Reviewed by Darin Adler.
+
+        * WebProcess/WebCoreSupport/WebContextMenuClient.cpp:
+        (WebKit::WebContextMenuClient::searchWithGoogle):
+        * WebProcess/WebCoreSupport/WebEditorClient.cpp:
+        (WebKit::WebEditorClient::updateGlobalSelection):
+        * WebProcess/WebCoreSupport/efl/WebEditorClientEfl.cpp:
+        (WebKit::WebEditorClient::handleInputMethodKeydown):
+        * WebProcess/WebCoreSupport/gtk/WebEditorClientGtk.cpp:
+        (WebKit::WebEditorClient::executePendingEditorCommands):
+        (WebKit::WebEditorClient::handleKeyboardEvent):
+        * WebProcess/WebCoreSupport/mac/WebContextMenuClientMac.mm:
+        (WebKit::WebContextMenuClient::searchWithGoogle):
+        (WebKit::WebContextMenuClient::searchWithSpotlight):
+        * WebProcess/WebCoreSupport/mac/WebEditorClientMac.mm:
+        (WebKit::changeWordCase):
+        * WebProcess/WebPage/WebFrame.cpp:
+        (WebKit::WebFrame::selectionAsString):
+        (WebKit::WebFrame::setTextDirection):
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::editorState):
+        (WebKit::WebPage::executeEditingCommand):
+        (WebKit::WebPage::isEditingCommandEnabled):
+        (WebKit::WebPage::validateCommand):
+        (WebKit::WebPage::handleEditingKeyboardEvent):
+        (WebKit::WebPage::advanceToNextMisspelling):
+        (WebKit::WebPage::uppercaseWord):
+        (WebKit::WebPage::lowercaseWord):
+        (WebKit::WebPage::capitalizeWord):
+        (WebKit::WebPage::replaceSelectionWithText):
+        (WebKit::WebPage::handleAlternativeTextUIResult):
+        (WebKit::WebPage::setCompositionForTesting):
+        (WebKit::WebPage::hasCompositionForTesting):
+        (WebKit::WebPage::confirmCompositionForTesting):
+        (WebKit::WebPage::setComposition):
+        (WebKit::WebPage::cancelComposition):
+        * WebProcess/WebPage/efl/WebPageEfl.cpp:
+        (WebKit::WebPage::confirmComposition):
+        (WebKit::WebPage::setComposition):
+        (WebKit::WebPage::cancelComposition):
+        * WebProcess/WebPage/mac/WebPageMac.mm:
+        (WebKit::WebPage::executeKeypressCommandsInternal):
+        (WebKit::WebPage::handleEditingKeyboardEvent):
+        (WebKit::WebPage::setComposition):
+        (WebKit::WebPage::confirmComposition):
+        (WebKit::WebPage::cancelComposition):
+        (WebKit::WebPage::insertText):
+        (WebKit::WebPage::insertDictatedText):
+        (WebKit::WebPage::getMarkedRange):
+        (WebKit::WebPage::firstRectForCharacterRange):
+        (WebKit::WebPage::readSelectionFromPasteboard):
+        (WebKit::WebPage::getStringSelectionForPasteboard):
+        (WebKit::WebPage::getDataSelectionForPasteboard):
+
+2013-05-15  Anders Carlsson  <andersca@apple.com>
+
+        Need a way for NPAPI plug-ins to open preference panes
+        https://bugs.webkit.org/show_bug.cgi?id=116173
+        <rdar://problem/13503848>
+
+        Reviewed by Sam Weinig.
+
+        * PluginProcess/PluginControllerProxy.h:
+        Add openPluginPreferencePane().
+
+        * PluginProcess/mac/PluginControllerProxyMac.mm:
+        (WebKit::PluginControllerProxy::openPluginPreferencePane):
+        Send OpenPluginPreferencePane to the UI process.
+
+        * Shared/Plugins/Netscape/mac/NetscapePluginModuleMac.mm:
+        (WebKit::NetscapePluginModule::getPluginInfo):
+        Get the preference pane path.
+        
+        * Shared/Plugins/PluginModuleInfo.h:
+        Add preferencePanePath member variable.
+
+        * UIProcess/Plugins/PluginProcessProxy.h:
+        Add openPluginPreferencePane message handler.
+
+        * UIProcess/Plugins/PluginProcessProxy.messages.in:
+        ADd OpenPluginPreferencePane message.
+
+        * UIProcess/Plugins/mac/PluginProcessProxyMac.mm:
+        (WebKit::PluginProcessProxy::openPluginPreferencePane):
+        Get the path to the preference pane and use LS to open it.
+
+        * WebKit2.xcodeproj/project.pbxproj:
+        Add new files.
+
+        * WebProcess/Plugins/Netscape/NetscapeBrowserFuncs.cpp:
+        (WebKit::NPN_GetValue):
+        Handle WKNVPlugInContainer.
+
+        * WebProcess/Plugins/Netscape/NetscapePlugin.h:
+        Add WKNVPlugInContainer member variable.
+
+        * WebProcess/Plugins/Netscape/mac/NetscapePluginMac.mm:
+        (WebKit::NetscapePlugin::openPluginPreferencePane):
+        Call through to the plug-in controller.
+
+        (WebKit::NetscapePlugin::plugInContainer):
+        Create a WKNPAPIPlugInContainer object if necessary.
+
+        (WebKit::NetscapePlugin::platformDestroy):
+        Invalidate the WKNPAPIPlugInContainer object.
+
+        * WebProcess/Plugins/Netscape/mac/WKNPAPIPlugInContainer.h:
+        New file with the protocol definition.
+
+        * WebProcess/Plugins/Netscape/mac/WKNPAPIPlugInContainer.mm:
+        (-[WKNPAPIPlugInContainer dealloc]):
+        Assert that the plug-in is null (that we've been invalidated).
+
+        (-[WKNPAPIPlugInContainer _invalidate]):
+        Set the plug-in to null.
+
+        (-[WKNPAPIPlugInContainer openPlugInPreferencePane]):
+        Call through to the plug-in.
+
+        * WebProcess/Plugins/Netscape/mac/WKNPAPIPlugInContainerInternal.h:
+        New file with the interface declaration for the object that implements the protocol.
+
+        * WebProcess/Plugins/PluginController.h:
+        Add openPluginPreferencePane member function.
+
+        * WebProcess/Plugins/PluginView.cpp:
+        (WebKit::PluginView::openPluginPreferencePane):
+        Add stub; this should never be called since we always go through the UI process.
+
+2013-05-15  Alexey Proskuryakov  <ap@apple.com>
+
+        [WK2][Mac] Split resetTextInputState into two functions
+        https://bugs.webkit.org/show_bug.cgi?id=116174
+
+        Reviewed by Anders Carlsson.
+
+        Splitting resetTextInputState into resetSecureInputState and
+        notifyInputContextAboutDiscardedComposition, paving the way for a fix where these
+        won't be happening simultaneously.
+
+        * UIProcess/API/mac/PageClientImpl.h:
+        * UIProcess/API/mac/PageClientImpl.mm:
+        (WebKit::PageClientImpl::resetSecureInputState):
+        (WebKit::PageClientImpl::notifyInputContextAboutDiscardedComposition):
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView resignFirstResponder]):
+        (-[WKView _resetSecureInputState]):
+        (-[WKView _notifyInputContextAboutDiscardedComposition]):
+        * UIProcess/API/mac/WKViewInternal.h:
+        * UIProcess/PageClient.h:
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::didCommitLoadForFrame):
+
+2013-05-15  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Add padding to all public class structs for future expansion without breaking ABI
+        https://bugs.webkit.org/show_bug.cgi?id=112565
+
+        Reviewed by Anders Carlsson.
+
+        Use 4 pointers for most of the classes that are unlikely to grow
+        and 8 for WebKitWebView and WebKitWebContext.
+
+        * UIProcess/API/gtk/WebKitBackForwardList.h:
+        (_WebKitBackForwardListClass):
+        * UIProcess/API/gtk/WebKitBackForwardListItem.h:
+        (_WebKitBackForwardListItemClass):
+        * UIProcess/API/gtk/WebKitContextMenu.h:
+        (_WebKitContextMenuClass):
+        * UIProcess/API/gtk/WebKitContextMenuItem.h:
+        (_WebKitContextMenuItemClass):
+        * UIProcess/API/gtk/WebKitCookieManager.h:
+        (_WebKitCookieManagerClass):
+        * UIProcess/API/gtk/WebKitDownload.h:
+        (_WebKitDownloadClass):
+        * UIProcess/API/gtk/WebKitFaviconDatabase.h:
+        (_WebKitFaviconDatabaseClass):
+        * UIProcess/API/gtk/WebKitFileChooserRequest.h:
+        (_WebKitFileChooserRequestClass):
+        * UIProcess/API/gtk/WebKitFindController.h:
+        (_WebKitFindControllerClass):
+        * UIProcess/API/gtk/WebKitFormSubmissionRequest.h:
+        (_WebKitFormSubmissionRequestClass):
+        * UIProcess/API/gtk/WebKitGeolocationPermissionRequest.h:
+        (_WebKitGeolocationPermissionRequestClass):
+        * UIProcess/API/gtk/WebKitHitTestResult.h:
+        (_WebKitHitTestResultClass):
+        * UIProcess/API/gtk/WebKitNavigationPolicyDecision.h:
+        (_WebKitNavigationPolicyDecisionClass):
+        * UIProcess/API/gtk/WebKitPlugin.h:
+        (_WebKitPluginClass):
+        * UIProcess/API/gtk/WebKitPolicyDecision.h:
+        (_WebKitPolicyDecisionClass):
+        * UIProcess/API/gtk/WebKitPrintOperation.h:
+        (_WebKitPrintOperationClass):
+        * UIProcess/API/gtk/WebKitResponsePolicyDecision.h:
+        (_WebKitResponsePolicyDecisionClass):
+        * UIProcess/API/gtk/WebKitSecurityManager.h:
+        (_WebKitSecurityManagerClass):
+        * UIProcess/API/gtk/WebKitSettings.h:
+        (_WebKitSettingsClass):
+        * UIProcess/API/gtk/WebKitURIRequest.h:
+        (_WebKitURIRequestClass):
+        * UIProcess/API/gtk/WebKitURIResponse.h:
+        (_WebKitURIResponseClass):
+        * UIProcess/API/gtk/WebKitURISchemeRequest.h:
+        (_WebKitURISchemeRequestClass):
+        * UIProcess/API/gtk/WebKitWebContext.h:
+        (_WebKitWebContextClass):
+        * UIProcess/API/gtk/WebKitWebInspector.h:
+        (_WebKitWebInspectorClass):
+        * UIProcess/API/gtk/WebKitWebResource.h:
+        (_WebKitWebResourceClass):
+        * UIProcess/API/gtk/WebKitWebView.h:
+        (_WebKitWebViewClass):
+        * UIProcess/API/gtk/WebKitWebViewBase.h:
+        (_WebKitWebViewBaseClass):
+        * UIProcess/API/gtk/WebKitWebViewGroup.h:
+        (_WebKitWebViewGroupClass):
+        * UIProcess/API/gtk/WebKitWindowProperties.h:
+        (_WebKitWindowPropertiesClass):
+
 2013-05-14  Carlos Garcia Campos  <cgarcia@igalia.com>
 
         Remove WTF_USE_PLATFORM_STRATEGIES

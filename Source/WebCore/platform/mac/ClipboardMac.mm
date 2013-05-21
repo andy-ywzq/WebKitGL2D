@@ -24,7 +24,7 @@
  */
 
 #import "config.h"
-#import "ClipboardMac.h"
+#import "Clipboard.h"
 
 #import "CachedImage.h"
 #import "DOMElementInternal.h"
@@ -36,29 +36,33 @@
 #import "FrameSnapshottingMac.h"
 #import "Page.h"
 #import "Pasteboard.h"
+#import "PasteboardStrategy.h"
+#import "PlatformStrategies.h"
 
 namespace WebCore {
 
-#if ENABLE(DRAG_SUPPORT)
-PassRefPtr<Clipboard> Clipboard::create(ClipboardAccessPolicy policy, DragData* dragData, Frame* frame)
+PassRefPtr<Clipboard> Clipboard::create(ClipboardAccessPolicy policy, DragData* dragData, Frame*)
 {
-    return ClipboardMac::create(DragAndDrop, dragData->pasteboardName(), policy, dragData->containsFiles() ? ClipboardMac::DragAndDropFiles : ClipboardMac::DragAndDropData, frame);
-}
-#endif
-
-ClipboardMac::ClipboardMac(ClipboardType clipboardType, const String& pasteboardName, ClipboardAccessPolicy policy, ClipboardContents clipboardContents)
-    : Clipboard(policy, clipboardType, Pasteboard::create(pasteboardName), clipboardContents == DragAndDropFiles)
-{
+    return adoptRef(new Clipboard(policy, DragAndDrop, Pasteboard::create(dragData->pasteboardName()), dragData->containsFiles()));
 }
 
-#if ENABLE(DRAG_SUPPORT)
+PassRefPtr<Clipboard> Clipboard::createForDragAndDrop()
+{
+    return adoptRef(new Clipboard(ClipboardWritable, DragAndDrop, Pasteboard::create(NSDragPboard)));
+}
+
+PassRefPtr<Clipboard> Clipboard::createForCopyAndPaste(ClipboardAccessPolicy policy)
+{
+    String pasteboardName = policy == ClipboardWritable ? platformStrategies()->pasteboardStrategy()->uniqueName() : String(NSGeneralPboard);
+    return adoptRef(new Clipboard(policy, CopyAndPaste, Pasteboard::create(pasteboardName)));
+}
+
 void Clipboard::declareAndWriteDragImage(Element* element, const KURL& url, const String& title, Frame* frame)
 {
     ASSERT(frame);
     if (Page* page = frame->page())
         page->dragController()->client()->declareAndWriteDragImage(m_pasteboard->name(), kit(element), url, title, frame);
 }
-#endif
     
 DragImageRef Clipboard::createDragImage(IntPoint& location) const
 {

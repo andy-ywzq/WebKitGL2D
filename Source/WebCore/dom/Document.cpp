@@ -370,7 +370,7 @@ static bool acceptsEditingFocus(Node* node)
     if (!frame || !root)
         return false;
 
-    return frame->editor()->shouldBeginEditing(rangeOfContents(root).get());
+    return frame->editor().shouldBeginEditing(rangeOfContents(root).get());
 }
 
 static bool canAccessAncestor(const SecurityOrigin* activeSecurityOrigin, Frame* targetFrame)
@@ -3361,7 +3361,7 @@ bool Document::setFocusedNode(PassRefPtr<Node> prpNewFocusedNode, FocusDirection
             return true;
             
         if (oldFocusedNode->isRootEditableElement())
-            frame()->editor()->didEndEditing();
+            frame()->editor().didEndEditing();
 
         if (view()) {
             Widget* oldWidget = widgetForNode(oldFocusedNode.get());
@@ -3410,7 +3410,7 @@ bool Document::setFocusedNode(PassRefPtr<Node> prpNewFocusedNode, FocusDirection
         m_focusedNode->setFocus(true);
 
         if (m_focusedNode->isRootEditableElement())
-            frame()->editor()->didBeginEditing();
+            frame()->editor().didBeginEditing();
 
         // eww, I suck. set the qt focus correctly
         // ### find a better place in the code for this
@@ -4191,7 +4191,7 @@ static Editor::Command command(Document* document, const String& commandName, bo
 
     document->updateStyleIfNeeded();
 
-    return frame->editor()->command(commandName,
+    return frame->editor().command(commandName,
         userInterface ? CommandFromDOMWithUserInterface : CommandFromDOM);
 }
 
@@ -4883,6 +4883,14 @@ void Document::resumeScriptedAnimationControllerCallbacks()
 #if ENABLE(REQUEST_ANIMATION_FRAME)
     if (m_scriptedAnimationController)
         m_scriptedAnimationController->resume();
+#endif
+}
+
+void Document::scriptedAnimationControllerSetThrottled(bool isThrottled)
+{
+#if ENABLE(REQUEST_ANIMATION_FRAME)
+    if (m_scriptedAnimationController)
+        m_scriptedAnimationController->setThrottled(isThrottled);
 #endif
 }
 
