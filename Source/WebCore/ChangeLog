@@ -1,3 +1,211 @@
+2013-05-15  Darin Adler  <darin@apple.com>
+
+        [Mac] Make Clipboard::create functions for Mac platform independent by moving Pasteboard creation to Pasteboard functions
+        https://bugs.webkit.org/show_bug.cgi?id=116179
+
+        Reviewed by Andreas Kling.
+
+        * dom/Clipboard.cpp:
+        (WebCore::Clipboard::createForCopyAndPaste): Moved the function here from
+        ClipboardMac, and have it use Pasteboard functions that are not Mac-specific.
+        (WebCore::Clipboard::create): Ditto.
+        (WebCore::Clipboard::createForDragAndDrop): Ditto.
+
+        * platform/DragData.h:
+        (WebCore::DragData::pasteboardName): Made this const.
+
+        * platform/Pasteboard.h: Added new create functions, used by the clipboard
+        create functions above.
+
+        * platform/mac/ClipboardMac.mm: Removed the functions that were moved to the
+        Clipboard.cpp file.
+
+        * platform/mac/PasteboardMac.mm:
+        (WebCore::Pasteboard::createForCopyAndPaste): Added.
+        (WebCore::Pasteboard::createPrivate): Added.
+        (WebCore::Pasteboard::createForDragAndDrop): Added.
+
+2013-05-15  Anders Carlsson  <andersca@apple.com>
+
+        Fix a thinko.
+
+        We want to invalidate the file icon loader if it exists, not create it!
+
+        * html/FileInputType.cpp:
+        (WebCore::FileInputType::requestIcon):
+
+2013-05-15  Darin Adler  <darin@apple.com>
+
+        Move drag-specific Clipboard functions inside ENABLE(DRAG_SUPPORT)
+        https://bugs.webkit.org/show_bug.cgi?id=116176
+
+        Reviewed by Andreas Kling.
+
+        * dom/Clipboard.cpp:
+        (WebCore::Clipboard::writeRange):
+        (WebCore::Clipboard::writePlainText):
+        (WebCore::Clipboard::writeURL):
+        Move these three functions inside ENABLE(DRAG_SUPPORT). Even though their names do
+        not make it obvious, these are here only for use by dragging code. Later we may
+        refactor them away entirely, but for now it's good not to compile them in on any
+        platform that does not support dragging.
+
+2013-05-15  Andy Estes  <aestes@apple.com>
+
+        Resources from non-HTTP schemes should not be cached indefinitely
+        https://bugs.webkit.org/show_bug.cgi?id=113626
+
+        Reviewed by Ryosuke Niwa.
+
+        With the exception of schemes that we know will always return the same
+        result for a given URL, we should not indefinitely cache non-HTTP
+        resources when their freshness cannot be verified.
+
+        Writing a test for this is blocked on https://webkit.org/b/116199.
+
+        The following two existing tests of memory cache behavior were
+        converted to HTTP tests so that they continue to function as expected:
+
+        Tests: http/tests/cache/display-image-unset-allows-cached-image-load.html
+               http/tests/cache/willsendrequest-returns-null-for-memory-cache-load.html
+
+        * loader/cache/CachedResource.cpp:
+        (WebCore::CachedResource::freshnessLifetime): Returned a freshness
+        lifetime of 0 for non-HTTP schemes that can't be indefinitely cached.
+        * platform/SchemeRegistry.cpp:
+        (WebCore::SchemeRegistry::shouldCacheResponsesFromURLSchemeIndefinitely):
+        Checked whether the scheme is blob:, data:, or applewebdata:.
+        * platform/SchemeRegistry.h:
+
+2013-05-15  Tim Horton  <timothy_horton@apple.com>
+
+        makeRGBAFromNSColor throws an exception if given a color in a greyscale colorspace
+        https://bugs.webkit.org/show_bug.cgi?id=116198
+        <rdar://problem/13904395>
+
+        Reviewed by Simon Fraser.
+
+        Block Objective-C exceptions in makeRGBAFromNSColor.
+        Remove a comment saying that they're impossible.
+
+        Convert the incoming color to the DeviceRGB colorspace to match
+        existing color sources. Some rare cases (attributed strings that come
+        from PDFKit) can have DeviceGrayscale color spaces, which would
+        previously throw an exception here.
+
+        * platform/graphics/mac/ColorMac.mm:
+        (WebCore::makeRGBAFromNSColor):
+
+2013-05-15  David Kilzer  <ddkilzer@apple.com>
+
+        BUILD FIX (r150140): Frame::editor() should return a reference for iOS, too
+
+        * platform/ios/ClipboardIOS.mm:
+        (WebCore::ClipboardIOS::ClipboardIOS):
+        (WebCore::ClipboardIOS::hasData):
+        (WebCore::ClipboardIOS::clearData):
+        (WebCore::ClipboardIOS::clearAllData):
+        (WebCore::ClipboardIOS::getData):
+        (WebCore::ClipboardIOS::setData):
+        (WebCore::ClipboardIOS::types):
+        (WebCore::ClipboardIOS::writeRange):
+        * platform/ios/PasteboardIOS.mm:
+        (WebCore::Pasteboard::getStringSelection):
+        (WebCore::Pasteboard::writeSelection):
+        (WebCore::Pasteboard::writePlainText):
+        (WebCore::Pasteboard::writeImage):
+        (WebCore::Pasteboard::plainText):
+        (WebCore::documentFragmentWithRTF):
+        (WebCore::Pasteboard::documentFragmentForPasteboardItemAtIndex):
+        (WebCore::Pasteboard::documentFragment):
+
+2013-05-15  Anders Carlsson  <andersca@apple.com>
+
+        Stop using the factory pattern in FileIconLoaderClient
+        https://bugs.webkit.org/show_bug.cgi?id=116197
+
+        Reviewed by Andreas Kling.
+
+        Move the FileIconLoader member out of FileIconLoaderClient and into FileInputType and remove the factory gunk.
+
+        * html/FileInputType.cpp:
+        (WebCore::FileInputType::~FileInputType):
+        (WebCore::FileInputType::requestIcon):
+        * html/FileInputType.h:
+        (FileInputType):
+        * platform/FileIconLoader.cpp:
+        (WebCore::FileIconLoader::invalidate):
+        * platform/FileIconLoader.h:
+        (WebCore::FileIconLoaderClient::~FileIconLoaderClient):
+        (FileIconLoader):
+
+2013-05-15  Anders Carlsson  <andersca@apple.com>
+
+        Fix FileChooserClient design
+        https://bugs.webkit.org/show_bug.cgi?id=116195
+
+        Reviewed by Andreas Kling.
+
+        FileChooserClient doesn't match the standard WebCore client idiom of only having virtual member functions.
+        Instead it holds on to its FileChooser and it's even a factory for creating new file choosers(!).
+
+        Fix this by making it an abstract class, and moving FileChooser into FileInputType.
+
+        * html/FileInputType.cpp:
+        (WebCore::FileInputType::~FileInputType):
+        Invalidate the file chooser.
+
+        (WebCore::FileInputType::handleDOMActivateEvent):
+        Apply the file chooser settings.
+
+        (WebCore::FileInputType::applyFileChooserSettings):
+        Recreate the file chooser with new settings.
+
+        (WebCore::FileInputType::receiveDropForDirectoryUpload):
+        Apply the settings.
+
+        * platform/FileChooser.cpp:
+        (WebCore::FileChooser::invalidate):
+        Set m_client to null.
+
+        (WebCore::FileChooser::chooseFiles):
+        Early return.
+
+        * platform/FileChooser.h:
+
+2013-05-15  Gavin Barraclough  <barraclough@apple.com>
+
+        ScriptedAnimationController::setThrottled should extend MinimumAnimationInterval
+        https://bugs.webkit.org/show_bug.cgi?id=116193
+
+        Reviewed by Darin Adler
+
+        * dom/ScriptedAnimationController.cpp:
+        (WebCore::ScriptedAnimationController::ScriptedAnimationController):
+        (WebCore::ScriptedAnimationController::setThrottled):
+        (WebCore::ScriptedAnimationController::scheduleAnimation):
+        * dom/ScriptedAnimationController.h:
+        (ScriptedAnimationController):
+            - Fixes for review comments.
+
+2013-05-15  Anders Carlsson  <andersca@apple.com>
+
+        Move HTTPRequest class to WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=116192
+
+        Reviewed by Darin Adler.
+
+        HTTPRequest is only used by the "remote inspector" feature in WebKit2,
+        so there's no need to have it in WebCore.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * Target.pri:
+        * WebCore.vcproj/WebCore.vcproj:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+
 2013-05-15  Oliver Hunt  <oliver@apple.com>
 
         RefCountedArray needs to use vector initialisers for its backing store

@@ -28,7 +28,9 @@
 
 #include <wtf/text/CString.h>
 
-namespace WebCore {
+using namespace WebCore;
+
+namespace WebKit {
 
 PassRefPtr<HTTPRequest> HTTPRequest::parseHTTPRequestFromBuffer(const char* data, size_t length, String& failureReason)
 {
@@ -100,7 +102,7 @@ size_t HTTPRequest::parseRequestBody(const char* data, size_t length)
 }
 
 HTTPRequest::HTTPRequest()
-    : m_httpVersion(Unknown)
+    : m_httpVersion(WebCore::Unknown)
 {
 }
 
