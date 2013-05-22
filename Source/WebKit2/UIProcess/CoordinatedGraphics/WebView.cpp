@@ -518,6 +518,24 @@ void WebView::pageTransitionViewportReady()
     m_client.didCompletePageTransition(this);
 }
 
+void WebView::setContentScaleFactor(float scaleFactor)
+{
+    if (m_contentScaleFactor == scaleFactor)
+        return;
+    m_contentScaleFactor = scaleFactor;
+    didChangeContentScaleFactor(scaleFactor);
+}
+
+void WebView::setContentPosition(const FloatPoint& position)
+{
+    if (m_contentPosition == position)
+        return;
+
+    FloatPoint trajectoryVector(position - m_contentPosition);
+    m_contentPosition = position;
+    didChangeContentPosition(trajectoryVector);
+}
+
 } // namespace WebKit
 
 #endif // USE(COORDINATED_GRAPHICS)

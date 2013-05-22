@@ -63,10 +63,10 @@ public:
     bool isVisible() const { return m_visible; }
     void setVisible(bool);
 
-    void setContentScaleFactor(float scaleFactor) { m_contentScaleFactor = scaleFactor; }
+    void setContentScaleFactor(float scaleFactor);
     float contentScaleFactor() const { return m_contentScaleFactor; }
 
-    void setContentPosition(const WebCore::FloatPoint& position) { m_contentPosition = position; }
+    void setContentPosition(const WebCore::FloatPoint& position);
     const WebCore::FloatPoint& contentPosition() const { return m_contentPosition; }
 
     void setUserViewportTranslation(double tx, double ty);
@@ -111,6 +111,9 @@ public:
 protected:
     WebView(WebContext*, WebPageGroup*);
     WebCore::CoordinatedGraphicsScene* coordinatedGraphicsScene();
+
+    virtual void didChangeContentScaleFactor(float /*scaleFactor*/) { }
+    virtual void didChangeContentPosition(const WebCore::FloatPoint& /*trajectoryVector*/) { }
 
     void updateViewportSize();
     WebCore::FloatSize dipSize() const;
