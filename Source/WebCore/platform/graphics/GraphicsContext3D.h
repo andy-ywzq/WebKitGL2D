@@ -488,23 +488,11 @@ public:
     PlatformGraphicsContext3D platformGraphicsContext3D() const { return m_contextObj; }
     Platform3DObject platformTexture() const { return m_compositorTexture; }
     CALayer* platformLayer() const { return reinterpret_cast<CALayer*>(m_webGLLayer.get()); }
-#elif PLATFORM(GTK)
-    PlatformGraphicsContext3D platformGraphicsContext3D() const;
-    Platform3DObject platformTexture() const { return m_texture; }
-#if USE(ACCELERATED_COMPOSITING)
-    PlatformLayer* platformLayer() const;
-#endif
-#elif PLATFORM(EFL) || PLATFORM(NIX)
-    PlatformGraphicsContext3D platformGraphicsContext3D() const;
+#else
+    PlatformGraphicsContext3D platformGraphicsContext3D();
     Platform3DObject platformTexture() const;
 #if USE(ACCELERATED_COMPOSITING)
     PlatformLayer* platformLayer() const;
-#endif
-#else
-    PlatformGraphicsContext3D platformGraphicsContext3D() const { return NullPlatformGraphicsContext3D; }
-    Platform3DObject platformTexture() const { return NullPlatform3DObject; }
-#if USE(ACCELERATED_COMPOSITING)
-    PlatformLayer* platformLayer() const { return 0; }
 #endif
 #endif
 
