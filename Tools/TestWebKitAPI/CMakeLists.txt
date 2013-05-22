@@ -21,10 +21,20 @@ include_directories(${CMAKE_BINARY_DIR}
     ${WTF_DIR}
 )
 
-WEBKIT_INCLUDE_CONFIG_FILES_IF_EXISTS()
+set(webkit2Test_LIBRARIES
+    WTF
+    JavaScriptCore
+    WebKit2
+    gtest
+)
 
-add_library(TestWebKitAPIInjectedBundle SHARED
-    ${bundle_harness_SOURCES}
+set(TestWebKitAPIBase_SOURCES
+    ${TESTWEBKITAPI_DIR}/JavaScriptTest.cpp
+    ${TESTWEBKITAPI_DIR}/PlatformUtilities.cpp
+    ${TESTWEBKITAPI_DIR}/TestsController.cpp
+)
+
+set(TestWebKitAPIInjectedBundle_SOURCES
     ${TESTWEBKITAPI_DIR}/InjectedBundleController.cpp
     ${TESTWEBKITAPI_DIR}/InjectedBundleMain.cpp
     ${TESTWEBKITAPI_DIR}/PlatformUtilities.cpp
@@ -51,6 +61,9 @@ add_library(TestWebKitAPIInjectedBundle SHARED
     ${TESTWEBKITAPI_DIR}/Tests/WebKit2/WillSendSubmitEvent_Bundle.cpp
 )
 
+WEBKIT_INCLUDE_CONFIG_FILES_IF_EXISTS()
+
+add_library(TestWebKitAPIInjectedBundle SHARED ${TestWebKitAPIInjectedBundle_SOURCES})
 target_link_libraries(TestWebKitAPIInjectedBundle WTF)
 add_dependencies(TestWebKitAPIInjectedBundle WebKit2 ${ForwardingHeadersForTestWebKitAPI_NAME} ${ForwardingNetworkHeadersForTestWebKitAPI_NAME})
 
@@ -61,11 +74,7 @@ add_definitions(-DGTEST_LINKED_AS_SHARED_LIBRARY=1
     -DTEST_INJECTED_BUNDLE_PATH=\"${TestWebKitAPIInjectedBundle_PATH}\"
 )
 
-set(test_wtf_LIBRARIES
-    WTF
-    gtest
-)
-
+# WTF tests
 add_executable(test_wtf
     ${test_main_SOURCES}
     ${TESTWEBKITAPI_DIR}/TestsController.cpp
@@ -90,56 +99,39 @@ add_executable(test_wtf
     ${TESTWEBKITAPI_DIR}/Tests/WTF/VectorReverse.cpp
     ${TESTWEBKITAPI_DIR}/Tests/WTF/WTFString.cpp
 )
-
-target_link_libraries(test_wtf ${test_wtf_LIBRARIES})
+target_link_libraries(test_wtf WTF gtest)
 add_dependencies(test_wtf ${ForwardingHeadersForTestWebKitAPI_NAME} ${ForwardingNetworkHeadersForTestWebKitAPI_NAME})
 add_test(test_wtf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_wtf)
 set_tests_properties(test_wtf PROPERTIES TIMEOUT 60)
 
-set(test_webcore_LIBRARIES
-    gtest
-    WTF
-    WebCore
-)
-
-foreach (testName ${test_webcore_BINARIES})
+# WebCore tests
+foreach (testName ${webcoreTestList})
     add_executable(test_webcore_${testName} ${test_main_SOURCES} ${TESTWEBKITAPI_DIR}/TestsController.cpp ${TESTWEBKITAPI_DIR}/Tests/WebCore/${testName}.cpp)
     add_test(test_webcore_${testName} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_webcore_${testName})
     set_tests_properties(test_webcore_${testName} PROPERTIES TIMEOUT 60)
-    target_link_libraries(test_webcore_${testName} ${test_webcore_LIBRARIES})
+    target_link_libraries(test_webcore_${testName} gtest WTF WebCore)
 endforeach ()
 
-add_library(TestWebKitAPIBase
-    ${test_main_SOURCES}
-    ${webkit2_api_harness_SOURCES}
-    ${TESTWEBKITAPI_DIR}/JavaScriptTest.cpp
-    ${TESTWEBKITAPI_DIR}/PlatformUtilities.cpp
-    ${TESTWEBKITAPI_DIR}/TestsController.cpp
-)
 
+# Code used by almost all WebKit2 tests must be on this library to avoid recompilation.
+add_library(TestWebKitAPIBase ${TestWebKitAPIBase_SOURCES})
 add_dependencies(TestWebKitAPIBase WebKit2 ${ForwardingHeadersForTestWebKitAPI_NAME} ${ForwardingNetworkHeadersForTestWebKitAPI_NAME})
 
-set(test_webkit2_api_LIBRARIES
-    TestWebKitAPIBase
-    WTF
-    JavaScriptCore
-    WebKit2
-    gtest
-)
-
-foreach (testName ${test_webkit2_api_BINARIES})
-    get_filename_component(testBaseName ${testName} NAME)
-    add_executable(test_webkit2_api_${testBaseName} ${TESTWEBKITAPI_DIR}/Tests/WebKit2/${testName}.cpp)
-    add_test(test_webkit2_api_${testBaseName} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_webkit2_api_${testBaseName})
-    set_tests_properties(test_webkit2_api_${testBaseName} PROPERTIES TIMEOUT 60)
-    target_link_libraries(test_webkit2_api_${testBaseName} ${test_webkit2_api_LIBRARIES})
+# WebKit2 tests
+foreach (testRawName ${webkit2TestList})
+    string(REPLACE "/" "_" testName ${testRawName})
+    add_executable(test_${testName} ${TESTWEBKITAPI_DIR}/Tests/${testRawName}.cpp)
+    add_test(test_${testName} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_${testName})
+    set_tests_properties(test_${testName} PROPERTIES TIMEOUT 60)
+    target_link_libraries(test_${testName} TestWebKitAPIBase ${webkit2Test_LIBRARIES})
 endforeach ()
 
 # We don't run tests that are expected to fail. We could use the WILL_FAIL
 # property, but it reports failure when the test crashes or timeouts and would
 # make the bot red.
 
-foreach (testName ${test_webkit2_api_fail_BINARIES})
-    add_executable(test_webkit2_api_fail_${testName} ${TESTWEBKITAPI_DIR}/Tests/WebKit2/${testName}.cpp)
-    target_link_libraries(test_webkit2_api_fail_${testName} ${test_webkit2_api_LIBRARIES})
+foreach (testRawName ${webkit2FailTestList})
+    string(REPLACE "/" "_" testName ${testRawName})
+     add_executable(test_fail_${testName} ${TESTWEBKITAPI_DIR}/Tests/${testRawName}.cpp)
+     target_link_libraries(test_fail_${testName} TestWebKitAPIBase ${webkit2Test_LIBRARIES})
 endforeach ()
