@@ -59,15 +59,16 @@ list(APPEND WebKit2_SOURCES
 )
 
 list(APPEND WebKit2_INCLUDE_DIRECTORIES
+    Shared/nix
+    UIProcess/nix
+    WebProcess/nix
+    WebProcess/WebCoreSupport/nix
+    UIProcess/API/nix/
     "${JAVASCRIPTCORE_DIR}/llint"
     "${WEBCORE_DIR}/platform/nix"
     "${WEBCORE_DIR}/platform/graphics/cairo"
     "${WEBCORE_DIR}/platform/graphics/filters/texmap"
     "${WEBCORE_DIR}/svg/graphics"
-    "${WEBKIT2_DIR}/Shared/nix"
-    "${WEBKIT2_DIR}/UIProcess/nix"
-    "${WEBKIT2_DIR}/WebProcess/nix"
-    "${WEBKIT2_DIR}/WebProcess/WebCoreSupport/nix"
     "${WTF_DIR}/wtf/gobject"
     ${CAIRO_INCLUDE_DIRS}
     ${LIBXML2_INCLUDE_DIR}
@@ -76,7 +77,6 @@ list(APPEND WebKit2_INCLUDE_DIRECTORIES
     ${GLIB_INCLUDE_DIRS}
     ${WTF_DIR}
     ${HARFBUZZ_INCLUDE_DIRS}
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/nix/"
     "${THIRDPARTY_DIR}/ANGLE/include/GLSLANG"
     "${THIRDPARTY_DIR}/ANGLE/include/KHR"
     ${ICU_INCLUDE_DIRS}
@@ -96,7 +96,7 @@ endif ()
 
 if (ENABLE_INSPECTOR_SERVER)
     list(APPEND WebKit2_INCLUDE_DIRECTORIES
-       "${WEBKIT2_DIR}/UIProcess/InspectorServer"
+       UIProcess/InspectorServer
     )
 
     list(APPEND WebKit2_SOURCES
@@ -137,7 +137,6 @@ add_custom_target(forwarding-headerNix
     COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${WEBKIT2_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include nix
     COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${WEBKIT2_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include CoordinatedGraphics
 )
-set(ForwardingHeaders_NAME forwarding-headerNix)
 
 if (ENABLE_SOUP)
     list(APPEND WebKit2_SOURCES
@@ -174,12 +173,12 @@ if (ENABLE_SOUP)
 
     list(APPEND WebKit2_INCLUDE_DIRECTORIES
         "${WEBCORE_DIR}/platform/network/soup"
-        "${WEBKIT2_DIR}/Shared/soup"
-        "${WEBKIT2_DIR}/UIProcess/API/C/soup"
-        "${WEBKIT2_DIR}/UIProcess/soup"
-        "${WEBKIT2_DIR}/Shared/Downloads/soup"
-        "${WEBKIT2_DIR}/WebProcess/soup"
-        "${WEBKIT2_DIR}/WebProcess/WebCoreSupport/soup"
+        Shared/soup
+        UIProcess/API/C/soup
+        UIProcess/soup
+        Shared/Downloads/soup
+        WebProcess/soup
+        WebProcess/WebCoreSupport/soup
         ${LIBSOUP_INCLUDE_DIRS}
     )
     list(APPEND WebKit2_LIBRARIES
@@ -225,117 +224,117 @@ set(WEBKIT2_EXTRA_DEPENDENCIES
 
 configure_file(nix/WebKitNix.pc.in ${CMAKE_BINARY_DIR}/WebKit2/nix/WebKitNix.pc @ONLY)
 set(WebKitNix_HEADERS
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/nix/NIXEvents.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/nix/NIXView.h"
+    UIProcess/API/nix/NIXEvents.h
+    UIProcess/API/nix/NIXView.h
 )
 
 set(WebKitNix_WebKit2_HEADERS
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKArray.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKBase.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKCertificateInfo.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKConnectionRef.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKContextMenuItem.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKContextMenuItemTypes.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKData.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKDictionary.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKError.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKEvent.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKFindOptions.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKGeometry.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKGraphicsContext.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKImage.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKMutableArray.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKMutableDictionary.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKNumber.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKPageLoadTypes.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKPageVisibilityTypes.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKPopupItem.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKPopupMenuListener.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKRenderLayer.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKRenderObject.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKSecurityOrigin.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKSerializedScriptValue.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKSerializedScriptValuePrivate.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKString.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKStringPrivate.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKType.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKURL.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKURLRequest.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKURLResponse.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Shared/API/c/WKUserContentURLPattern.h"
+    Shared/API/c/WKArray.h
+    Shared/API/c/WKBase.h
+    Shared/API/c/WKCertificateInfo.h
+    Shared/API/c/WKConnectionRef.h
+    Shared/API/c/WKContextMenuItem.h
+    Shared/API/c/WKContextMenuItemTypes.h
+    Shared/API/c/WKData.h
+    Shared/API/c/WKDictionary.h
+    Shared/API/c/WKError.h
+    Shared/API/c/WKEvent.h
+    Shared/API/c/WKFindOptions.h
+    Shared/API/c/WKGeometry.h
+    Shared/API/c/WKGraphicsContext.h
+    Shared/API/c/WKImage.h
+    Shared/API/c/WKMutableArray.h
+    Shared/API/c/WKMutableDictionary.h
+    Shared/API/c/WKNumber.h
+    Shared/API/c/WKPageLoadTypes.h
+    Shared/API/c/WKPageVisibilityTypes.h
+    Shared/API/c/WKPopupItem.h
+    Shared/API/c/WKPopupMenuListener.h
+    Shared/API/c/WKRenderLayer.h
+    Shared/API/c/WKRenderObject.h
+    Shared/API/c/WKSecurityOrigin.h
+    Shared/API/c/WKSerializedScriptValue.h
+    Shared/API/c/WKSerializedScriptValuePrivate.h
+    Shared/API/c/WKString.h
+    Shared/API/c/WKStringPrivate.h
+    Shared/API/c/WKType.h
+    Shared/API/c/WKURL.h
+    Shared/API/c/WKURLRequest.h
+    Shared/API/c/WKURLResponse.h
+    Shared/API/c/WKUserContentURLPattern.h
 
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKApplicationCacheManager.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKAuthenticationChallenge.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKAuthenticationDecisionListener.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKBackForwardList.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKBackForwardListItem.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKBatteryManager.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKBatteryStatus.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKContext.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKContextPrivate.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKCookieManager.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKCredential.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKCredentialTypes.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKDatabaseManager.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKDownload.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKFormSubmissionListener.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKFrame.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKFramePolicyListener.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKGeolocationManager.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKGeolocationPermissionRequest.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKGeolocationPosition.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKGrammarDetail.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKHitTestResult.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKIconDatabase.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKInspector.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKKeyValueStorageManager.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKMediaCacheManager.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKNativeEvent.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKNavigationData.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKNetworkInfo.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKNetworkInfoManager.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKNotification.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKNotificationManager.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKNotificationPermissionRequest.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKNotificationProvider.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKOpenPanelParameters.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKOpenPanelResultListener.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKPage.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKPageGroup.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKPagePrivate.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKPluginSiteDataManager.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKPreferences.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKPreferencesPrivate.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKProtectionSpace.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKProtectionSpaceTypes.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKResourceCacheManager.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKTextChecker.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WKVibration.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/C/WebKit2_C.h"
+    UIProcess/API/C/WKApplicationCacheManager.h
+    UIProcess/API/C/WKAuthenticationChallenge.h
+    UIProcess/API/C/WKAuthenticationDecisionListener.h
+    UIProcess/API/C/WKBackForwardList.h
+    UIProcess/API/C/WKBackForwardListItem.h
+    UIProcess/API/C/WKBatteryManager.h
+    UIProcess/API/C/WKBatteryStatus.h
+    UIProcess/API/C/WKContext.h
+    UIProcess/API/C/WKContextPrivate.h
+    UIProcess/API/C/WKCookieManager.h
+    UIProcess/API/C/WKCredential.h
+    UIProcess/API/C/WKCredentialTypes.h
+    UIProcess/API/C/WKDatabaseManager.h
+    UIProcess/API/C/WKDownload.h
+    UIProcess/API/C/WKFormSubmissionListener.h
+    UIProcess/API/C/WKFrame.h
+    UIProcess/API/C/WKFramePolicyListener.h
+    UIProcess/API/C/WKGeolocationManager.h
+    UIProcess/API/C/WKGeolocationPermissionRequest.h
+    UIProcess/API/C/WKGeolocationPosition.h
+    UIProcess/API/C/WKGrammarDetail.h
+    UIProcess/API/C/WKHitTestResult.h
+    UIProcess/API/C/WKIconDatabase.h
+    UIProcess/API/C/WKInspector.h
+    UIProcess/API/C/WKKeyValueStorageManager.h
+    UIProcess/API/C/WKMediaCacheManager.h
+    UIProcess/API/C/WKNativeEvent.h
+    UIProcess/API/C/WKNavigationData.h
+    UIProcess/API/C/WKNetworkInfo.h
+    UIProcess/API/C/WKNetworkInfoManager.h
+    UIProcess/API/C/WKNotification.h
+    UIProcess/API/C/WKNotificationManager.h
+    UIProcess/API/C/WKNotificationPermissionRequest.h
+    UIProcess/API/C/WKNotificationProvider.h
+    UIProcess/API/C/WKOpenPanelParameters.h
+    UIProcess/API/C/WKOpenPanelResultListener.h
+    UIProcess/API/C/WKPage.h
+    UIProcess/API/C/WKPageGroup.h
+    UIProcess/API/C/WKPagePrivate.h
+    UIProcess/API/C/WKPluginSiteDataManager.h
+    UIProcess/API/C/WKPreferences.h
+    UIProcess/API/C/WKPreferencesPrivate.h
+    UIProcess/API/C/WKProtectionSpace.h
+    UIProcess/API/C/WKProtectionSpaceTypes.h
+    UIProcess/API/C/WKResourceCacheManager.h
+    UIProcess/API/C/WKTextChecker.h
+    UIProcess/API/C/WKVibration.h
+    UIProcess/API/C/WebKit2_C.h
 
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/cpp/WKRetainPtr.h"
+    UIProcess/API/cpp/WKRetainPtr.h
 
-    "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/CoordinatedGraphics/WKCoordinatedScene.h"
+    UIProcess/API/CoordinatedGraphics/WKCoordinatedScene.h
 
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundle.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundleBackForwardList.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundleBackForwardListItem.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundleDOMWindowExtension.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundleFrame.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundleFramePrivate.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundleHitTestResult.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundleInitialize.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundleInspector.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundleNavigationAction.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundleNodeHandle.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundleNodeHandlePrivate.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundlePage.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundlePageGroup.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundlePageOverlay.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundlePagePrivate.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundlePrivate.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundleRangeHandle.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/WebProcess/InjectedBundle/API/c/WKBundleScriptWorld.h"
+    WebProcess/InjectedBundle/API/c/WKBundle.h
+    WebProcess/InjectedBundle/API/c/WKBundleBackForwardList.h
+    WebProcess/InjectedBundle/API/c/WKBundleBackForwardListItem.h
+    WebProcess/InjectedBundle/API/c/WKBundleDOMWindowExtension.h
+    WebProcess/InjectedBundle/API/c/WKBundleFrame.h
+    WebProcess/InjectedBundle/API/c/WKBundleFramePrivate.h
+    WebProcess/InjectedBundle/API/c/WKBundleHitTestResult.h
+    WebProcess/InjectedBundle/API/c/WKBundleInitialize.h
+    WebProcess/InjectedBundle/API/c/WKBundleInspector.h
+    WebProcess/InjectedBundle/API/c/WKBundleNavigationAction.h
+    WebProcess/InjectedBundle/API/c/WKBundleNodeHandle.h
+    WebProcess/InjectedBundle/API/c/WKBundleNodeHandlePrivate.h
+    WebProcess/InjectedBundle/API/c/WKBundlePage.h
+    WebProcess/InjectedBundle/API/c/WKBundlePageGroup.h
+    WebProcess/InjectedBundle/API/c/WKBundlePageOverlay.h
+    WebProcess/InjectedBundle/API/c/WKBundlePagePrivate.h
+    WebProcess/InjectedBundle/API/c/WKBundlePrivate.h
+    WebProcess/InjectedBundle/API/c/WKBundleRangeHandle.h
+    WebProcess/InjectedBundle/API/c/WKBundleScriptWorld.h
 )
 
 set(WebKitNix_JavaScriptCore_HEADERS
