@@ -3598,62 +3598,6 @@
 
         * Platform/CoreIPC/win/BinarySemaphoreWin.cpp: Removed.
 
-2013-05-13  Jesus Sanchez-Palencia  <jesus.palencia@openbossa.org>
-
-        [WK2][CoordinatedGraphics] Avoid dispensable calls to WebView::updateViewportSize()
-        https://bugs.webkit.org/show_bug.cgi?id=116045
-
-        Reviewed by Darin Adler.
-
-        * UIProcess/CoordinatedGraphics/WebView.cpp:
-        (WebKit::WebView::setSize):
-
-2013-05-13  Jesus Sanchez-Palencia  <jesus.palencia@openbossa.org>
-
-        [WK2][CoordinatedGraphics] WKView needs API for handling opacity
-        https://bugs.webkit.org/show_bug.cgi?id=116032
-
-        Reviewed by Kenneth Rohde Christiansen.
-
-        Add WKViewSetOpacity and WKViewOpacity APIs and use them in
-        WebView.cpp.
-
-        * UIProcess/API/C/CoordinatedGraphics/WKView.cpp:
-        (WKViewSetOpacity):
-        (WKViewOpacity):
-        * UIProcess/API/C/CoordinatedGraphics/WKView.h:
-        * UIProcess/CoordinatedGraphics/WebView.cpp:
-        (WebKit::WebView::WebView):
-        (WebKit::WebView::paintToCurrentGLContext):
-        * UIProcess/CoordinatedGraphics/WebView.h:
-        (WebKit::WebView::setOpacity):
-        (WebKit::WebView::opacity):
-        (WebView):
-
-2013-05-10  Jesus Sanchez-Palencia  <jesus.palencia@openbossa.org>
-
-        [WK2][CoordinatedGraphics] WKViewSetThemePath is EFL specific
-        https://bugs.webkit.org/show_bug.cgi?id=115928
-
-        Reviewed by Kenneth Rohde Christiansen.
-
-        WKViewSetThemePath was moved to WKViewEfl.h since it is EFL specific.
-
-        * UIProcess/API/C/CoordinatedGraphics/WKView.cpp:
-        * UIProcess/API/C/CoordinatedGraphics/WKView.h:
-        * UIProcess/API/C/efl/WKViewEfl.cpp:
-        (WKViewSetThemePath):
-        * UIProcess/API/C/efl/WKViewEfl.h:
-        * UIProcess/CoordinatedGraphics/WebView.cpp:
-        * UIProcess/CoordinatedGraphics/WebView.h:
-        (WebView):
-        * UIProcess/efl/ViewClientEfl.cpp:
-        * UIProcess/efl/WebInspectorProxyEfl.cpp:
-        * UIProcess/efl/WebViewEfl.cpp:
-        (WebKit::WebViewEfl::setThemePath):
-        * UIProcess/efl/WebViewEfl.h:
-        (WebViewEfl):
-
 2013-05-08  Zan Dobersek  <zdobersek@igalia.com>
 
         [WK2] Make the WebNetworkInfoManager a supplement to the WebProcess
