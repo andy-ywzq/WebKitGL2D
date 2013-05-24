@@ -47,7 +47,6 @@ set(TestWebKitAPIBase_SOURCES
     ${test_main_SOURCES}
     ${TESTWEBKITAPI_DIR}/JavaScriptTest.cpp
     ${TESTWEBKITAPI_DIR}/PlatformUtilities.cpp
-    ${TESTWEBKITAPI_DIR}/PlatformUtilities.cpp
     ${TESTWEBKITAPI_DIR}/nix/PageLoader.cpp
     ${TESTWEBKITAPI_DIR}/nix/PlatformUtilitiesNix.cpp
     ${TESTWEBKITAPI_DIR}/nix/PlatformWebViewNix.cpp
