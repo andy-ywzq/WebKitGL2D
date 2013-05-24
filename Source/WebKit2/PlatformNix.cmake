@@ -23,7 +23,7 @@ list(APPEND WebKit2_SOURCES
     Shared/nix/NativeWebGestureEventNix.cpp
     Shared/nix/NativeWebTouchEventNix.cpp
     Shared/nix/WebEventFactoryNix.cpp
-    Shared/gtk/ProcessExecutablePathGtk.cpp
+    Shared/efl/ProcessExecutablePathEfl.cpp
 
     UIProcess/API/nix/NIXView.cpp
 

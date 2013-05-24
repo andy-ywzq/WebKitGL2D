@@ -35,13 +35,8 @@ using namespace WebCore;
 
 namespace WebKit {
 
-#if PLATFORM(GTK)
 const char* gWebKitWebProcessName = "WebKitWebProcess";
 const char* gWebKitPluginProcessName = "WebKitPluginProcess";
-#elif PLATFORM(NIX)
-const char* gWebKitWebProcessName = WEBPROCESSNAME;
-const char* gWebKitPluginProcessName = PLUGINPROCESSNAME;
-#endif
 
 static String findWebKitProcess(const char* processName)
 {
