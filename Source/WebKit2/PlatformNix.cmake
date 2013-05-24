@@ -218,6 +218,11 @@ else ()
     set(ForwardingNetworkHeaders_NAME forwarding-headercurl)
 endif ()
 
+set(WEBKIT2_EXTRA_DEPENDENCIES
+    forwarding-headerNix
+    ${ForwardingNetworkHeaders_NAME}
+)
+
 configure_file(nix/WebKitNix.pc.in ${CMAKE_BINARY_DIR}/WebKit2/nix/WebKitNix.pc @ONLY)
 set(WebKitNix_HEADERS
     "${CMAKE_CURRENT_SOURCE_DIR}/UIProcess/API/nix/NIXEvents.h"

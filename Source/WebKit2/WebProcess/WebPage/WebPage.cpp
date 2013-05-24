@@ -41,6 +41,7 @@
 #include "NotificationPermissionRequestManager.h"
 #include "PageBanner.h"
 #include "PageOverlay.h"
+#include "PluginProcessAttributes.h"
 #include "PluginProxy.h"
 #include "PluginView.h"
 #include "PrintInfo.h"
@@ -340,7 +341,6 @@ WebPage::WebPage(uint64_t pageID, const WebPageCreationParameters& parameters)
 
     m_page->setCanStartMedia(false);
     m_mayStartMediaWhenInWindow = parameters.mayStartMediaWhenInWindow;
-    m_overridePrivateBrowsingEnabled = parameters.overridePrivateBrowsingEnabled;
 
     m_pageGroup = WebProcess::shared().webPageGroup(parameters.pageGroupData);
     m_page->setGroupName(m_pageGroup->identifier());
@@ -527,19 +527,21 @@ void WebPage::initializeInjectedBundleDiagnosticLoggingClient(WKBundlePageDiagno
 #if ENABLE(NETSCAPE_PLUGIN_API)
 PassRefPtr<Plugin> WebPage::createPlugin(WebFrame* frame, HTMLPlugInElement* pluginElement, const Plugin::Parameters& parameters, String& newMIMEType)
 {
-    String pluginPath;
-    uint32_t pluginLoadPolicy;
-
     String frameURLString = frame->coreFrame()->loader()->documentLoader()->responseURL().string();
     String pageURLString = m_page->mainFrame()->loader()->documentLoader()->responseURL().string();
+    PluginProcessType processType = pluginElement->displayState() == HTMLPlugInElement::WaitingForSnapshot ? PluginProcessTypeSnapshot : PluginProcessTypeNormal;
 
     bool allowOnlyApplicationPlugins = !frame->coreFrame()->loader()->subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin);
-    if (!sendSync(Messages::WebPageProxy::FindPlugin(parameters.mimeType, parameters.url.string(), frameURLString, pageURLString, allowOnlyApplicationPlugins), Messages::WebPageProxy::FindPlugin::Reply(pluginPath, newMIMEType, pluginLoadPolicy))) {
+
+    uint64_t pluginProcessToken;
+    uint32_t pluginLoadPolicy;
+    if (!sendSync(Messages::WebPageProxy::FindPlugin(parameters.mimeType, static_cast<uint32_t>(processType), parameters.url.string(), frameURLString, pageURLString, allowOnlyApplicationPlugins), Messages::WebPageProxy::FindPlugin::Reply(pluginProcessToken, newMIMEType, pluginLoadPolicy))) {
         return 0;
     }
 
     switch (static_cast<PluginModuleLoadPolicy>(pluginLoadPolicy)) {
     case PluginModuleLoadNormally:
+    case PluginModuleLoadUnsandboxed:
         break;
 
     case PluginModuleBlocked:
@@ -555,7 +557,7 @@ PassRefPtr<Plugin> WebPage::createPlugin(WebFrame* frame, HTMLPlugInElement* plu
         return 0;
     }
 
-    if (pluginPath.isNull()) {
+    if (!pluginProcessToken) {
 #if PLATFORM(MAC)
         String path = parameters.url.path();
         if (MIMETypeRegistry::isPDFOrPostScriptMIMEType(parameters.mimeType) || (parameters.mimeType.isEmpty() && (path.endsWith(".pdf", false) || path.endsWith(".ps", false)))) {
@@ -571,16 +573,10 @@ PassRefPtr<Plugin> WebPage::createPlugin(WebFrame* frame, HTMLPlugInElement* plu
         return 0;
     }
 
-#if ENABLE(PLUGIN_PROCESS)
-
-    PluginProcess::Type processType = (pluginElement->displayState() == HTMLPlugInElement::WaitingForSnapshot ? PluginProcess::TypeSnapshotProcess : PluginProcess::TypeRegularProcess);
     bool isRestartedProcess = (pluginElement->displayState() == HTMLPlugInElement::Restarting || pluginElement->displayState() == HTMLPlugInElement::RestartingWithPendingMouseClick);
-    return PluginProxy::create(pluginPath, processType, isRestartedProcess);
-#else
-    NetscapePlugin::setSetExceptionFunction(NPRuntimeObjectMap::setGlobalException);
-    return NetscapePlugin::create(NetscapePluginModule::getOrCreate(pluginPath));
-#endif
+    return PluginProxy::create(pluginProcessToken, isRestartedProcess);
 }
+
 #endif // ENABLE(NETSCAPE_PLUGIN_API)
 
 EditorState WebPage::editorState() const
@@ -2410,7 +2406,7 @@ void WebPage::updatePreferences(const WebPreferencesStore& store)
     settings->setXSSAuditorEnabled(store.getBoolValueForKey(WebPreferencesKey::xssAuditorEnabledKey()));
     settings->setFrameFlatteningEnabled(store.getBoolValueForKey(WebPreferencesKey::frameFlatteningEnabledKey()));
     
-    bool privateBrowsingEnabled = store.getBoolValueForKey(WebPreferencesKey::privateBrowsingEnabledKey()) || m_overridePrivateBrowsingEnabled;
+    bool privateBrowsingEnabled = store.getBoolValueForKey(WebPreferencesKey::privateBrowsingEnabledKey());
     if (privateBrowsingEnabled)
         WebProcess::shared().ensurePrivateBrowsingSession();
     settings->setPrivateBrowsingEnabled(privateBrowsingEnabled);
@@ -3810,15 +3806,15 @@ void WebPage::setScrollingPerformanceLoggingEnabled(bool enabled)
 bool WebPage::canPluginHandleResponse(const ResourceResponse& response)
 {
 #if ENABLE(NETSCAPE_PLUGIN_API)
-    String pluginPath;
-    String newMIMEType;
     uint32_t pluginLoadPolicy;
-
     bool allowOnlyApplicationPlugins = !m_mainFrame->coreFrame()->loader()->subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin);
-    if (!sendSync(Messages::WebPageProxy::FindPlugin(response.mimeType(), response.url().string(), response.url().string(), response.url().string(), allowOnlyApplicationPlugins), Messages::WebPageProxy::FindPlugin::Reply(pluginPath, newMIMEType, pluginLoadPolicy)))
+
+    uint64_t pluginProcessToken;
+    String newMIMEType;
+    if (!sendSync(Messages::WebPageProxy::FindPlugin(response.mimeType(), PluginProcessTypeNormal, response.url().string(), response.url().string(), response.url().string(), allowOnlyApplicationPlugins), Messages::WebPageProxy::FindPlugin::Reply(pluginProcessToken, newMIMEType, pluginLoadPolicy)))
         return false;
 
-    return pluginLoadPolicy != PluginModuleBlocked && !pluginPath.isEmpty();
+    return pluginLoadPolicy != PluginModuleBlocked && pluginProcessToken;
 #else
     return false;
 #endif
@@ -3924,12 +3920,6 @@ void WebPage::didChangeSelection()
 void WebPage::setMainFrameInViewSourceMode(bool inViewSourceMode)
 {
     m_mainFrame->coreFrame()->setInViewSourceMode(inViewSourceMode);
-}
-
-void WebPage::setOverridePrivateBrowsingEnabled(bool overridePrivateBrowsingEnabled)
-{
-    m_overridePrivateBrowsingEnabled = overridePrivateBrowsingEnabled;
-    m_page->settings()->setPrivateBrowsingEnabled(m_page->settings()->privateBrowsingEnabled() || m_overridePrivateBrowsingEnabled);
 }
 
 void WebPage::setMinimumLayoutWidth(double minimumLayoutWidth)

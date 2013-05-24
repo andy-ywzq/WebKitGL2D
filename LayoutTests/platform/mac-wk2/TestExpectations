@@ -265,8 +265,6 @@ webkit.org/b/104954 [ Debug ] http/tests/canvas/canvas-slow-font-loading.html [ 
 # Flaky everywhere.
 webkit.org/b/114302 platform/mac-wk2/plugins/mouse-events-scaled-iframe.html [ Pass Failure ]
 
-webkit.org/b/114571 [ Debug ] fast/regions/fixed-pos-elem-in-region.html [ Pass Failure ImageOnlyFailure ]
-
 webkit.org/b/114572 platform/mac-wk2/plugins/mouse-events-scaled.html [ Pass Failure ]
 
 webkit.org/b/114573 fast/repaint/selection-gap-fixed-child.html [ Failure ]
@@ -277,6 +275,17 @@ webkit.org/b/116259 http/tests/cache/willsendrequest-returns-null-for-memory-cac
 webkit.org/b/116478 storage/websql/open-database-creation-callback-isolated-world.html [ Pass Failure ]
 webkit.org/b/116478 storage/websql/statement-error-callback-isolated-world.html [ Pass Failure ]
 webkit.org/b/116478 storage/websql/transaction-success-callback-isolated-world.html [ Pass Failure ]
+
+webkit.org/b/81604 media/video-loop.html [ Failure ]
+
+webkit.org/b/82554 compositing/rtl/rtl-fixed-overflow-scrolled.html [ Failure ]
+
+webkit.org/b/116649 http/tests/security/cross-frame-access-put.html [ Failure ]
+
+webkit.org/b/116684 [ Lion ] compositing/overflow/overflow-compositing-descendant.html [ Timeout Failure ]
+
+# Only fails on WK1
+webkit.org/b/82805 [ Lion Debug ] fast/canvas/webgl/object-deletion-behaviour.html [ Pass ]
 
 ### END OF (1) Classified failures with bug reports
 ########################################

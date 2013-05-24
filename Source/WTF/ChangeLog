@@ -1,3 +1,42 @@
+2013-05-23  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Rolling back r150600 as it breaks the VS2010 builds.
+
+        * wtf/StackBounds.cpp: Rollback.
+
+2013-05-23 Patrick Gansterer <paroga@webkit.org>
+
+        Use correct stack size on Solaris and OpenBSD
+        https://bugs.webkit.org/show_bug.cgi?id=114978
+
+        Reviewed by Oliver Hunt.
+
+        Original patch by David Hill <david@wmol.com>.
+
+        Use stack_t.ss_size for getting the size of the stack.
+
+        * wtf/Platform.h:
+        * wtf/StackBounds.cpp:
+        (WTF):
+        (WTF::StackBounds::initialize):
+
+2013-05-23  Patrick Gansterer  <paroga@webkit.org>
+
+        [WIN] Implement correct detection of stack size
+        https://bugs.webkit.org/show_bug.cgi?id=116661
+
+        Reviewed by Oliver Hunt.
+
+        * wtf/StackBounds.cpp:
+        (WTF):
+        (WTF::StackBounds::initialize):
+
+2013-05-22  Dean Jackson  <dino@apple.com>
+
+        Rolling out r150555. It borked about 30 media tests.
+
+        * wtf/Platform.h:
+
 2013-05-21  Anders Carlsson  <andersca@apple.com>
 
         Build fix.

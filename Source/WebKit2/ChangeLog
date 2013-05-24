@@ -1,3 +1,573 @@
+2013-05-24  Andreas Kling  <akling@apple.com>
+
+        Typing in Safari's unified field causes unnecessary web content repaints.
+        <http://webkit.org/b/116703>
+
+        Reviewed by Andy Estes.
+
+        * WebProcess/WebPage/FindController.cpp:
+        (WebKit::FindController::countStringMatches):
+
+            Call WebCore::Page::countMatchesForText() instead of markAllMatchesForText(). If the search string
+            is found inside the page content, the renderer containing that text will no longer be repainted.
+
+2013-05-23  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [WK2][EFL][QT] Build break after r150610
+        https://bugs.webkit.org/show_bug.cgi?id=116699
+
+        Reviewed by Csaba Osztrogonác.
+
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::findPlugin): Initialized pluginProcessSandboxPolicy.
+
+2013-05-23  Anders Carlsson  <andersca@apple.com>
+
+        Shim Flash plug-in to allow its updater to run
+        https://bugs.webkit.org/show_bug.cgi?id=116692
+        <rdar://problem/13938510>
+
+        Reviewed by Sam Weinig.
+
+        * PluginProcess/PluginProcess.h:
+        * PluginProcess/mac/PluginProcessMac.mm:
+        (WebKit::replacedNSConcreteTask_launch):
+        (WebKit::initializeCocoaOverrides):
+        Patch -[NSConcreteTask launch] to call PluginProcess::launchProcess.
+
+        (WebKit::PluginProcess::launchProcess):
+        Send a LaunchProcess message to the UI process.
+
+        * UIProcess/Plugins/PluginProcessProxy.cpp:
+        * UIProcess/Plugins/PluginProcessProxy.h:
+        Remove PluginProcessProxy::didReceiveMessage.
+
+        (PluginProcessProxy):
+        * UIProcess/Plugins/PluginProcessProxy.messages.in:
+        Add LaunchProcess message and remove LegacyReceiver attribute.
+
+        * UIProcess/Plugins/mac/PluginProcessProxyMac.mm:
+        (WebKit::isFlashUpdater):
+        Helper function to determine whether the process is the flash updater.
+
+        (WebKit::shouldLaunchProcess):
+        Return whether we should launch this process.
+
+        (WebKit::PluginProcessProxy::launchProcess):
+        Determine if we should launch this process and then do so.
+
+2013-05-23  Anders Carlsson  <andersca@apple.com>
+
+        Don't run all plug-ins unsandboxed
+        https://bugs.webkit.org/show_bug.cgi?id=116690
+        <rdar://problem/13975569>
+
+        Reviewed by Jessie Berlin.
+
+        Remove debugging code.
+
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::findPlugin):
+
+2013-05-23  Anders Carlsson  <andersca@apple.com>
+
+        Crash in convertMainResourceLoadToDownload when downloading file by option-return
+        https://bugs.webkit.org/show_bug.cgi?id=116451
+
+        Reviewed by Andreas Kling.
+
+        If the main resource loader is null, create a new download instead since there's no existing loader to convert.
+
+        * NetworkProcess/NetworkConnectionToWebProcess.cpp:
+        (WebKit::NetworkConnectionToWebProcess::convertMainResourceLoadToDownload):
+        * WebProcess/WebPage/WebFrame.cpp:
+        (WebKit::WebFrame::convertMainResourceLoadToDownload):
+
+2013-05-22  Alexey Proskuryakov  <ap@apple.com>
+
+        <rdar://problem/13849260> Sandbox violations reading .CFUserTextEncoding
+
+        Reviewed by Dan Bernstein.
+
+        * WebProcess/com.apple.WebProcess.sb.in: Allow this.
+
+2013-05-23  Gavin Barraclough  <barraclough@apple.com>
+
+        Move posix_spawn onto a zero delay timer
+        https://bugs.webkit.org/show_bug.cgi?id=116682
+
+        Reviewed by Anders Carlson.
+
+        <rdar://problem/13973468>
+
+        * Shared/EntryPointUtilities/mac/XPCService/XPCServiceMain.Development.mm:
+        (ReexecInfo):
+            - struct to hold info from the XPC message.
+        (WebKit::reexec):
+            - moved call to posix_spawn out to this helper.
+        (WebKit::reexecCallBack):
+            - calls reexec.
+        (WebKit::XPCServiceEventHandler):
+            - removed call to posix_spawn; schedule a call to reexecCallBack.
+
+2013-05-23  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [cmake] Fix generating-forwarding-headers rule after r150460
+        https://bugs.webkit.org/show_bug.cgi?id=116659
+
+        Reviewed by Christophe Dumez.
+
+        * CMakeLists.txt: Typo fix.
+
+2013-05-23  Anton Obzhirov  <a.obzhirov@samsung.com>
+
+        [GTK] Remote Web Inspector sometimes won't serve any content
+        https://bugs.webkit.org/show_bug.cgi?id=116225
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Added an option to use environment variable to set up path to
+        inspector server files. Implementation is similar to InspectorClientGtk
+        implementation.
+
+        * UIProcess/InspectorServer/WebInspectorServer.h:
+        (WebInspectorServer):
+        * UIProcess/InspectorServer/gtk/WebInspectorServerGtk.cpp:
+        (WebKit::WebInspectorServer::platformResourceForPath):
+        (WebKit::WebInspectorServer::inspectorServerFilesPath):
+        (WebKit):
+
+2013-05-23  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        [EFL][WK2] Use WK2 C API in ewk_view_pagination_mode_set|get
+        https://bugs.webkit.org/show_bug.cgi?id=116657
+
+        Reviewed by Christophe Dumez.
+
+        WKPageGet|SetPaginationMode APIs is present in WK2 C APIs. So, we need to use them for
+        ewk_view_pagination_mode_set|get.
+
+        Besides we don't need to use WebCore namespace anymore.
+
+        * UIProcess/API/efl/ewk_view.cpp:
+        (ewk_view_pagination_mode_set):
+        (ewk_view_pagination_mode_get):
+
+2013-05-23  Roland Takacs  <rtakacs@inf.u-szeged.hu>
+
+        Support frame instrumentation for coordinated graphics
+        https://bugs.webkit.org/show_bug.cgi?id=115260
+
+        Reviewed by Andreas Kling.
+
+        Enabled supportsFrameInstrumentation on ports that use coordinated graphics
+        by calling didBeginFrame().
+
+        * WebProcess/WebCoreSupport/WebInspectorClient.cpp:
+        (WebKit::WebInspectorClient::supportsFrameInstrumentation):
+        (WebKit):
+        * WebProcess/WebCoreSupport/WebInspectorClient.h:
+        (WebInspectorClient):
+        * WebProcess/WebPage/CoordinatedGraphics/CoordinatedLayerTreeHost.cpp:
+        (WebKit::CoordinatedLayerTreeHost::syncDisplayState):
+
+2013-05-22  Dean Jackson  <dino@apple.com>
+
+        Don't snapshot plugins that can't be snapshotted
+        https://bugs.webkit.org/show_bug.cgi?id=116490
+
+        Reviewed by Tim Horton.
+
+        Some plugins, such as QuickTime, don't support snapshotting. We're
+        planning on another way to capture snapshots, but in the meantime make
+        sure that they don't fail to initialise because they were told to
+        not use accelerated rendering.
+
+        Expose a new message on the plugins so that they can tell the PluginView
+        if they support snapshotting or not.
+
+        * PluginProcess/PluginControllerProxy.cpp:
+        (WebKit::PluginControllerProxy::supportsSnapshotting): New method.
+        * PluginProcess/PluginControllerProxy.h: Ditto.
+        * PluginProcess/PluginControllerProxy.messages.in: Message signature.
+
+        * WebProcess/Plugins/Netscape/NetscapePlugin.h: Add supportsSnapshotting.
+        * WebProcess/Plugins/PDF/SimplePDFPlugin.h: Ditto.
+        * WebProcess/Plugins/Plugin.h: Ditto - pure virtual here.
+
+        * WebProcess/Plugins/PluginProxy.cpp:
+        (WebKit::PluginProxy::supportsSnapshotting): Send the message to the plugin process and return the results.
+        * WebProcess/Plugins/PluginProxy.h:
+
+        * WebProcess/Plugins/PluginView.cpp:
+        (WebKit::PluginView::didInitializePlugin): If the snapshotting plugin has a layer, make
+            sure to add it to the tree.
+        (WebKit::PluginView::isAcceleratedCompositingEnabled): Snapshotting plugins can use
+            accelerated compositing, just like normal plugins.
+        (WebKit::PluginView::pluginSnapshotTimerFired): If the plugin doesn't allow snapshotting,
+            immediately restart it.
+
+2013-05-22  Anders Carlsson  <andersca@apple.com>
+
+        Fix crash when closing a page that's trying to access session storage
+        https://bugs.webkit.org/show_bug.cgi?id=116634
+        <rdar://problem/13904054>
+
+        Reviewed by Geoffrey Garen.
+
+        It is possible for the StorageManager to get messages from a web page that has already been closed by the UI process.
+        If that happens, just ignore the messages.
+
+        * UIProcess/Storage/StorageManager.cpp:
+        (WebKit::StorageManager::createSessionStorageMap):
+        (WebKit::StorageManager::getValues):
+        (WebKit::StorageManager::setItem):
+        (WebKit::StorageManager::removeItem):
+        (WebKit::StorageManager::clear):
+        (WebKit::StorageManager::destroySessionStorageNamespaceInternal):
+
+2013-05-22  Alexey Proskuryakov  <ap@apple.com>
+
+        Crashes in NetworkProcess due to incorrect private browsing session tracking
+        https://bugs.webkit.org/show_bug.cgi?id=116628
+
+        Reviewed by Brady Eidson.
+
+        The current API for private browsing makes it extremely difficult to track sessions.
+        Private browsing is enabled via WKPreferences, but the session is shared, so it
+        has to be maintained while there is any chance that any page group anywhere still
+        needs it.
+
+        This patch fixes some of the issues, but ultimately, I think that we'll just need
+        to deprecate and replace the API.
+
+        * NetworkProcess/NetworkConnectionToWebProcess.cpp: (WebKit::storageSession):
+        There are valid scenarios where privateBrowsingEnabled is true, but there is no
+        private browsing session. Handle that without crashing, although this unfortunately
+        means that it will be harder to spot logic errors when using a wrong session.
+        (WebKit::NetworkConnectionToWebProcess::registerBlobURL): Removed an obsolete FIXME.
+
+        * NetworkProcess/mac/RemoteNetworkingContext.h: Changed privateBrowsingSession()
+        to return a pointer, as no caller could know when it was safe to call it.
+
+        * NetworkProcess/mac/RemoteNetworkingContext.mm:
+        (WebKit::RemoteNetworkingContext::storageSession): Handle the case where private
+        browsing session is unexpectedly missing without crashing.
+        (WebKit::RemoteNetworkingContext::privateBrowsingSession): Changed to return a pointer.
+
+        * UIProcess/WebContext.cpp: (WebKit::WebContext::ensureNetworkProcess):
+        Actually initialize privateBrowsingEnabled creation parameter. It would be very
+        difficult to figure out 100% reliably whether NetworkProcess needs a private browsing
+        session with the current API, but for existing clients, looking at
+        m_privateBrowsingEnterCount is good enough. Certainly better than not initializing.
+
+        * WebProcess/InjectedBundle/InjectedBundle.cpp:
+        (WebKit::InjectedBundle::setPrivateBrowsingEnabled): Added a FIXME.
+
+2013-05-22  Tim Horton  <timothy_horton@apple.com>
+
+        [wk2] Should be able to make tiled WKViews clip to the view's exposed rect without using autolayout
+        https://bugs.webkit.org/show_bug.cgi?id=116625
+        <rdar://problem/13962816>
+
+        Reviewed by Anders Carlsson.
+
+        The two modes are not dependent; it should be possible to enable
+        clips-to-exposed-rect without using autolayout. This enables apps to
+        make very large tiled WKViews that don't create tiles for the whole
+        area of the view (and also disables scrolling, since that is currently
+        incompatible with clipping to the exposed rect).
+
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView setFrameSize:]):
+        (-[WKView _updateWindowAndViewFrames]):
+        (-[WKView initWithFrame:contextRef:pageGroupRef:relatedToPage:]):
+        (-[WKView enableFrameSizeUpdates]):
+        (-[WKView forceAsyncDrawingAreaSizeUpdate:]):
+        Rename _expandsToFitContentViaAutoLayout to _clipsToVisibleRect for accuracy.
+
+        (-[WKView setMinimumWidthForAutoLayout:]):
+        Factor clips-to-sisible-rect toggle out into setShouldClipToVisibleRect.
+
+        (-[WKView shouldClipToVisibleRect]):
+        (-[WKView setShouldClipToVisibleRect:]):
+        Allow setting clips-to-visible-rect without autolayout.
+
+        * UIProcess/API/mac/WKViewPrivate.h:
+        Add shouldClipToVisibleRect property.
+
+2013-05-22  Alexey Proskuryakov  <ap@apple.com>
+
+        Remove unused private browsing override support
+        <rdar://problem/11969491>
+
+        Rubber-stamped by Sam Weinig.
+
+        Private browsing override is unused, and it complicates tracking of private
+        browsing sessions in UI process (in fact, it doesn't plug into this tracking at all,
+        so we would just assert if we used the API).
+
+        * Shared/WebPageCreationParameters.cpp:
+        (WebKit::WebPageCreationParameters::encode):
+        (WebKit::WebPageCreationParameters::decode):
+        * Shared/WebPageCreationParameters.h:
+        * UIProcess/API/C/WKPage.cpp:
+        * UIProcess/API/C/WKPagePrivate.h:
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::WebPageProxy):
+        (WebKit::WebPageProxy::creationParameters):
+        * UIProcess/WebPageProxy.h:
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::WebPage):
+        (WebKit::WebPage::updatePreferences):
+        * WebProcess/WebPage/WebPage.h:
+        * WebProcess/WebPage/WebPage.messages.in:
+
+2013-05-22  Michał Pakuła vel Rutka  <m.pakula@samsung.com>
+
+        [EFL][WK2] Change Ewk_Context_Menu_Item's parent menu to raw pointer
+        https://bugs.webkit.org/show_bug.cgi?id=116549
+
+        Reviewed by Christophe Dumez.
+
+        A context menu item should have only a pointer to parent menu instead
+        of owning parent menu.
+
+        * UIProcess/API/efl/ewk_context_menu_item.cpp:
+        (EwkContextMenuItem::EwkContextMenuItem):
+        * UIProcess/API/efl/ewk_context_menu_item_private.h:
+        (EwkContextMenuItem::create):
+        (EwkContextMenuItem::parentMenu):
+        (EwkContextMenuItem):
+
+2013-05-22  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [Qt][WK2] Unreviewed buildfix after r150484.
+
+        * UIProcess/Plugins/qt/PluginProcessProxyQt.cpp:
+        (WebKit::PluginProcessProxy::platformGetLaunchOptions):
+
+2013-05-21  Andreas Kling  <akling@apple.com>
+
+        REGRESSION(r150491): WebKit2.CloseThenTerminate asserting below WebContext::disconnectProcess().
+        <http://webkit.org/b/116588>
+
+        Reviewed by Sam Weinig.
+
+        Do an early return from WebProcessProxy::requestTermination() if there is no child process
+        connection to terminate.
+
+        * UIProcess/WebProcessProxy.cpp:
+        (WebKit::WebProcessProxy::requestTermination):
+
+2013-05-21  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/13915556> Sluggish scrolling in web content
+
+        Reviewed by Gavin Barraclough.
+
+        * Shared/mac/ChildProcessMac.mm:
+        (WebKit::ChildProcess::setProcessSuppressionEnabled): When process suppression is disabled, low latency is important.
+
+2013-05-21  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Fix build break after r150484
+
+        Unreviewed, fix build break on EFL, GTK.
+
+        * UIProcess/Plugins/PluginInfoStore.cpp:
+        (WebKit::PluginInfoStore::defaultLoadPolicyForPlugin):
+        * UIProcess/Plugins/unix/PluginProcessProxyUnix.cpp:
+        (WebKit::PluginProcessProxy::platformGetLaunchOptions):
+
+2013-05-21  Andreas Kling  <akling@apple.com>
+
+        PPT: Closing tab that is hung or chewing 100% CPU leaves abandoned WebProcess.
+        <http://webkit.org/b/116464>
+        <rdar://problem/10103795>
+
+        Reviewed by Anders Carlsson.
+
+        Simplify the web process sacrifice ritual. Instead of murderizing the process when its last tab closes,
+        just shut down the CoreIPC connection from the UI process. The web process, upon noticing this,
+        will start a 10 second watchdog timer, and if it hasn't shut down by the time it fires, well, it'll shut down.
+
+        (WebKit::WebProcessProxy::removeWebPage):
+
+            When the last page is removed from a WebProcessProxy, disconnect the process so that it'll die off
+            eventually, even if the WebPage::Close message never gets properly handled.
+
+        * Shared/ChildProcessProxy.h:
+        * Shared/ChildProcessProxy.cpp:
+        (WebKit::ChildProcessProxy::abortProcessLaunchIfNeeded):
+
+            Added a helper to abort any in-progress launch of a new web process. Otherwise we'll have a race
+            where the exiting web process may get re-used for a new tab.
+
+        * UIProcess/WebProcessProxy.h:
+        * UIProcess/WebProcessProxy.cpp:
+        (WebKit::WebProcessProxy::WebProcessProxy):
+        (WebKit::WebProcessProxy::enableSuddenTermination):
+        (WebKit::WebProcessProxy::disableSuddenTermination):
+
+            Remove WebProcessProxy's sudden termination counter. The web process will do what it needs in
+            response to the WebPage::Close message. We still forward these calls to NSProcessInfo on Mac though.
+
+2013-05-21  Anders Carlsson  <andersca@apple.com>
+
+        Fix build.
+
+        * WebProcess/Plugins/PluginProcessConnectionManager.cpp:
+        (WebKit::PluginProcessConnectionManager::getPluginProcessConnection):
+        Stop using lambdas :(
+
+2013-05-21  Anders Carlsson  <andersca@apple.com>
+
+        Provide an API to run sandboxed plug-ins outside of their sandbox
+        https://bugs.webkit.org/show_bug.cgi?id=116578
+
+        Reviewed by Andreas Kling.
+
+        * Platform/CoreIPC/HandleMessage.h:
+        (CoreIPC::callMemberFunction):
+        Add new overload.
+
+        * PluginProcess/EntryPoint/mac/LegacyProcess/PluginProcessMain.mm:
+        (WebKit::PluginProcessMainDelegate::getExtraInitializationData):
+        Handle "disable-sandbox".
+
+        * PluginProcess/EntryPoint/mac/XPCService/PluginServiceEntryPoint.mm:
+        (WebKit::PluginServiceInitializerDelegate::getExtraInitializationData):
+        Handle "disable-sandbox".
+        
+        * PluginProcess/PluginProcess.h:
+        Move Type to PluginProcessAttributes and remove hash traits for type.
+        
+        * PluginProcess/mac/PluginProcessMac.mm:
+        (WebKit::PluginProcess::platformInitializePluginProcess):
+        Update for new type name.
+
+        (WebKit::PluginProcess::initializeSandbox):
+        Return early if the sandbox is disabled.
+
+        * Shared/Plugins/Netscape/PluginInformation.cpp:
+        (WebKit::getPluginModuleInformation):
+        PluginInfoStore::policyForPlugin has been renamed to PluginInfoStore::defaultLoadPolicyForPlugin.
+
+        * Shared/Plugins/PluginModuleInfo.h:
+        Add PluginModuleLoadUnsandboxed.
+
+        * Shared/Plugins/PluginProcessAttributes.h: Added.
+        Add new header with various plug-in process attributes.
+
+        * Shared/Plugins/PluginProcessCreationParameters.h:
+        Change type enum.
+
+        * UIProcess/API/C/WKAPICast.h:
+        (WebKit::toWKPluginLoadPolicy):
+        (WebKit::toPluginModuleLoadPolicy):
+        Handle the unsandboxed enum.
+
+        * UIProcess/API/C/WKPage.h:
+        Add kWKPluginLoadPolicyLoadUnsandboxed.
+
+        * UIProcess/Plugins/PluginInfoStore.h:
+        Rename policyForPlugin to defaultLoadPolicyForPlugin.
+
+        * UIProcess/Plugins/PluginProcessManager.cpp:
+        (WebKit::PluginProcessManager::pluginProcessToken):
+        Add new helper function for getting a token given plug-in attributes.
+
+        (WebKit::PluginProcessManager::getPluginProcessConnection):
+        This now takes a pluginProcessToken.
+
+        (WebKit::PluginProcessManager::getSitesWithData):
+        Make sure to call pluginProcessToken.
+
+        (WebKit::PluginProcessManager::clearSiteData):
+        Ditto.
+
+        (WebKit::PluginProcessManager::getOrCreatePluginProcess):
+        This now takes a token.
+
+        * UIProcess/Plugins/PluginProcessProxy.cpp:
+        (WebKit::PluginProcessProxy::create):
+        (WebKit::PluginProcessProxy::PluginProcessProxy):
+        Pass the PluginProcessAttributes as well as the plug-in process token.
+
+        (WebKit::PluginProcessProxy::getLaunchOptions):
+        Pass the plug-in process attributes to platformGetLaunchOptions.
+
+        (WebKit::PluginProcessProxy::didClose):
+        Pass the token to PluginProcessCrashed.
+
+        (WebKit::PluginProcessProxy::didFinishLaunching):
+        Update for type change.
+
+        * UIProcess/Plugins/mac/PluginInfoStoreMac.mm:
+        (WebKit::shouldBlockPlugin):
+        (WebKit::PluginInfoStore::defaultLoadPolicyForPlugin):
+        Rename policyForPlugin to defaultLoadPolicyForPlugin.
+
+        * UIProcess/Plugins/mac/PluginProcessProxyMac.mm:
+        (WebKit::PluginProcessProxy::platformGetLaunchOptions):
+        Set the "disable-sandbox" data if needed.
+
+        (WebKit::PluginProcessProxy::platformInitializePluginProcess):
+        (WebKit::PluginProcessProxy::openPluginPreferencePane):
+        Get the module info from m_pluginProcessAttributes.
+
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::findPlugin):
+        This now returns a token.
+
+        * UIProcess/WebPageProxy.messages.in:
+        FindPlugin now returns a token instead of the path.
+
+        * UIProcess/WebProcessProxy.cpp:
+        (WebKit::WebProcessProxy::getPluginProcessConnection):
+        Pass the token to the plug-in process manager.
+
+        * UIProcess/WebProcessProxy.messages.in:
+        This now takes a token.
+
+        * WebKit2.xcodeproj/project.pbxproj:
+        Add new files.
+
+        * WebProcess/Plugins/PluginProcessConnection.cpp:
+        (WebKit::PluginProcessConnection::PluginProcessConnection):
+        This now takes a token.
+
+        * WebProcess/Plugins/PluginProcessConnection.h:
+        (WebKit::PluginProcessConnection::create):
+        (WebKit::PluginProcessConnection::pluginProcessToken):
+        Create this with a token instead of a path and process type.
+
+        * WebProcess/Plugins/PluginProcessConnectionManager.cpp:
+        (WebKit::PluginProcessConnectionManager::getPluginProcessConnection):
+        This now takes a token.
+
+        (WebKit::PluginProcessConnectionManager::pluginProcessCrashed):
+        Ditto.
+
+        * WebProcess/Plugins/PluginProcessConnectionManager.messages.in:
+        PluginProcessCrashed now takes a token.
+
+        * WebProcess/Plugins/PluginProxy.cpp:
+        (WebKit::PluginProxy::create):
+        (WebKit::PluginProxy::PluginProxy):
+        These now take tokens.
+
+        (WebKit::PluginProxy::initialize):
+        Pass the token when getting the connection.
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::createPlugin):
+        Get the token from the UI process and pass it to the PluginProxy.
+
+        (WebKit::WebPage::canPluginHandleResponse):
+        Update now that FindPlugin returns a token.
+
 2013-05-21  Martin Robinson  <mrobinson@igalia.com>
 
         [GTK] [CMake] Add support for building WebKit2

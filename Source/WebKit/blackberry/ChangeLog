@@ -1,3 +1,149 @@
+2013-05-24  Mike Fenton  <mifenton@rim.com>
+
+        [BlackBerry] Fix bad type warning in InputHandler log.
+        https://bugs.webkit.org/show_bug.cgi?id=116720
+
+        Reviewed by Carlos Garcia Campos.
+
+        Fix warning in inputLog string.
+
+        * WebKitSupport/InputHandler.cpp:
+        (BlackBerry::WebKit::InputHandler::handleKeyboardInput):
+
+2013-05-24  Mike Fenton  <mifenton@rim.com>
+
+        [BlackBerry] Respect tabindex when using form controls.
+        https://bugs.webkit.org/show_bug.cgi?id=116676
+
+        Reviewed by Xan Lopez.
+
+        PR 337419.
+
+        Update form control navigation tracking to take tabindex
+        order into account when calculating next and previous nodes.
+
+        The order to follow is tab index 1 - N, followed by all items
+        without a tab index or tab index 0 in rendering order to match
+        with standard desktop behavior.
+
+        Internally Reviewed by Genevieve Mak and Nima Ghanavatian.
+
+        * WebKitSupport/InputHandler.cpp:
+        (BlackBerry::WebKit::InputHandler::updateFormState):
+
+2013-05-24  Jeff Rogers  <jrogers@rim.com>
+
+        [BlackBerry] Remove SKIA leftovers from WebPage.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=116656
+
+        Reviewed by Rob Buis.
+
+        * Api/WebPage.cpp:
+        (BlackBerry::WebKit::WebPagePrivate::setLoadState):
+
+2013-05-23  Xiaobo Wang  <xiaobwang@blackberry.com>
+
+        [BlackBerry] Need to suspend/resume RootLayerCommit when the application becomes inactive/active
+        https://bugs.webkit.org/show_bug.cgi?id=115245
+
+        Reviewed by Rob Buis.
+
+        PR 330917.
+        Internally reviewed by Arvid Nilsson.
+
+        1. Suspend/resumeRootLayerCommit when notified app activation state
+        change.
+        2. Schedule root layer commit in resumeRootLayerCommit() to explicitly
+        start root layer commit timer, so that there's a commit even if
+        BackingStore got disabled/removed.
+
+        * Api/WebPage.cpp:
+        (BlackBerry::WebKit::WebPagePrivate::notifyAppActivationStateChange):
+        (BlackBerry::WebKit::WebPagePrivate::resumeRootLayerCommit):
+
+2013-05-23  Andy Chen  <andchen@blackberry.com>
+
+        [BlackBerry] Need to forward the opener frame url to client when creating a new window
+        https://bugs.webkit.org/show_bug.cgi?id=116566
+
+        Reviewed by Rob Buis.
+
+        PR 337935
+        Internally reviewed by Arvid Nilsson.
+        When creating a new window, forward the opener frame url to client.
+
+        * Api/WebPageClient.h:
+        * WebCoreSupport/ChromeClientBlackBerry.cpp:
+        (WebCore::ChromeClientBlackBerry::createWindow):
+        * WebCoreSupport/FrameLoaderClientBlackBerry.cpp:
+        (WebCore::FrameLoaderClientBlackBerry::dispatchCreatePage):
+
+2013-05-23  Jakob Petsovits  <jpetsovits@blackberry.com>
+
+        [BlackBerry] Compositor API change: Don't pass the unused "viewport" parameter.
+        https://bugs.webkit.org/show_bug.cgi?id=116545
+        Internal PR 189775
+
+        Reviewed by Rob Buis.
+
+        Also change the name of the "documentContents" parameter
+        to the more descriptive "documentSrcRect".
+
+        * Api/WebPageCompositor.cpp:
+        (BlackBerry::WebKit::WebPageCompositorPrivate::render):
+        (BlackBerry::WebKit::WebPageCompositor::render):
+        * Api/WebPageCompositor.h:
+        * Api/WebPageCompositor_p.h:
+        (WebPageCompositorPrivate):
+
+2013-05-23  Ed Baker  <edbaker@blackberry.com>
+
+        [BlackBerry] The web context does not contain any link properties if the context node is an image enclosed by a link node
+        https://bugs.webkit.org/show_bug.cgi?id=116627
+
+        Reviewed by Xan Lopez.
+
+        PR #341084
+
+        If the context node has an image tag and an enclosing link node was detected then add the link properties to the context.
+
+        Internally Reviewed by Gen Mak.
+
+        * Api/WebPage.cpp:
+        (BlackBerry::WebKit::WebPagePrivate::webContext):
+
+2013-05-23  Mike Fenton  <mifenton@rim.com>
+
+        [BlackBerry] Validate form data before doing direct submission.
+        https://bugs.webkit.org/show_bug.cgi?id=116674
+
+        Reviewed by Xan Lopez.
+
+        PR 314202.
+
+        Check validation of the input form before triggering direct submission.
+
+        Internally Reviewed by Nima Ghanavatian.
+
+        * WebKitSupport/InputHandler.cpp:
+        (BlackBerry::WebKit::InputHandler::submitForm):
+
+2013-05-23  Rob Buis  <rbuis@rim.com>
+
+        [BlackBerry] Properly fill the ResourceError in FrameLoaderClientBlackBerry::cannotShowURLError
+        https://bugs.webkit.org/show_bug.cgi?id=116603
+
+        Reviewed by Xan Lopez.
+
+        PR 119789
+        Internally reviewed by Yong Li.
+
+        Provide a domain value for this ResourceError instance. Note that
+        this does not change behavior.
+
+        * WebCoreSupport/FrameLoaderClientBlackBerry.cpp:
+        (WebCore::FrameLoaderClientBlackBerry::didRestoreFromPageCache):
+
 2013-05-21  Carlos Garcia Campos  <cgarcia@igalia.com>
 
         [BlackBerry] Make PagePopup implementation independent from WebCore

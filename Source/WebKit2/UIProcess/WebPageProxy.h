@@ -774,9 +774,6 @@ public:
     bool mainFrameInViewSourceMode() const { return m_mainFrameInViewSourceMode; }
     void setMainFrameInViewSourceMode(bool);
 
-    bool overridePrivateBrowsingEnabled() const { return m_overridePrivateBrowsingEnabled; }
-    void setOverridePrivateBrowsingEnabled(bool);
-
     void didReceiveAuthenticationChallengeProxy(uint64_t frameID, PassRefPtr<AuthenticationChallengeProxy>);
 
     int64_t spellDocumentTag();
@@ -1062,7 +1059,7 @@ private:
     void sendWheelEvent(const WebWheelEvent&);
 
 #if ENABLE(NETSCAPE_PLUGIN_API)
-    void findPlugin(const String& mimeType, const String& urlString, const String& frameURLString, const String& pageURLString, const bool allowOnlyApplicationPlugins, String& pluginPath, String& newMIMEType, uint32_t& pluginLoadPolicy);
+    void findPlugin(const String& mimeType, uint32_t processType, const String& urlString, const String& frameURLString, const String& pageURLString, bool allowOnlyApplicationPlugins, uint64_t& pluginProcessToken, String& newMIMEType, uint32_t& pluginLoadPolicy);
 #endif
 
     PageClient* m_pageClient;
@@ -1257,7 +1254,6 @@ private:
     bool m_rubberBandsAtTop;
 
     bool m_mainFrameInViewSourceMode;
-    bool m_overridePrivateBrowsingEnabled;
         
     unsigned m_pageCount;
 

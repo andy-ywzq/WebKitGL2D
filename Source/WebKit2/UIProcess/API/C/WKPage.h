@@ -54,6 +54,7 @@ enum {
     kWKPluginLoadPolicyLoadNormally = 0,
     kWKPluginLoadPolicyBlocked,
     kWKPluginLoadPolicyInactive,
+    kWKPluginLoadPolicyLoadUnsandboxed,
 };
 typedef uint32_t WKPluginLoadPolicy;
 

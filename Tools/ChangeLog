@@ -1,3 +1,164 @@
+2013-05-24  Simon Pena  <simon.pena@samsung.com>
+
+        Update WTF::Vector pretty printers
+        https://bugs.webkit.org/show_bug.cgi?id=116719
+
+        Reviewed by Anders Carlsson.
+
+        After r148891, WTF::Vector pretty printers were left outdated, as
+        the WTF::Vector was made to extend a VectorBuffer, instead of keeping
+        one as a member. This patch updates the pretty printers so they work
+        again. 
+
+        * gdb/webkit.py:
+        (WTFVectorPrinter.children):
+        (WTFVectorPrinter.to_string):
+
+2013-05-24  Steve Falkenburg  <sfalken@apple.com>
+
+        Update prepareConsistentTestingEnvironment to use a non-deprecated API.
+        https://bugs.webkit.org/show_bug.cgi?id=116710
+
+        Reviewed by Mark Rowe.
+
+        * DumpRenderTree/mac/DumpRenderTree.mm:
+        (prepareConsistentTestingEnvironment): Use beginActivityWithOptions instead of beginSuspensionOfSystemBehaviors.
+
+2013-05-23  Lauro Neto  <lauro.neto@openbossa.org>
+
+        Add missing dependencies to deps script.
+
+        [GTK] Missing packages in install-dependencies script.
+        https://bugs.webkit.org/show_bug.cgi?id=116632
+
+        Reviewed by Martin Robinson.
+
+        * gtk/install-dependencies:
+
+2013-05-23  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed change for NRWT support.
+
+        * Scripts/webkitpy/port/win.py:
+        (WinPort.default_child_processes): Added a default implementation
+        that limits NRWT to a single instance.
+
+2013-05-23  Brent Fulgham  <bfulgham@apple.com>
+
+        Remove meaningless "test_uses_apache" from Python test cases.
+        https://bugs.webkit.org/show_bug.cgi?id=38756
+
+        Reviewed by Ryosuke Niwa.
+
+        * Scripts/webkitpy/port/port_testcase.py:
+        (PortTestCase.test_driver_cmd_line): Remove the meaningless
+        "test_uses_apache" test case from the Python test infrastructure.
+        It was hard-coded to true, even though not all ports use
+        Apache.
+
+2013-05-23  Brent Fulgham  <bfulgham@webkit.org>
+
+        [Windows] Update new-run-webkit-tests for Windows port.
+        https://bugs.webkit.org/show_bug.cgi?id=38756
+
+        Reviewed by Ryosuke Niwa.
+
+        * Scripts/new-run-webkit-httpd:
+        (run): Switch from 'chromium' to 'win'
+        * Scripts/webkitpy/port/win.py:
+        (WinPort): Add support methods for lighttpd server.
+        (WinPort._uses_apache):
+        (WinPort._path_to_lighttpd):
+        (WinPort._path_to_lighttpd_modules):
+        (WinPort._path_to_lighttpd_php):
+
+2013-05-23  Patrick Gansterer  <paroga@webkit.org>
+
+        Make default bug links in buildbot clickable
+        https://bugs.webkit.org/show_bug.cgi?id=116673
+
+        Reviewed by Ryosuke Niwa.
+
+        Use changecommentlink of html.WebStatus to make the links clickable.
+
+        * BuildSlaveSupport/build.webkit.org-config/master.cfg:
+
+2013-05-22  Ryosuke Niwa  <rniwa@webkit.org>
+
+        REGRESSION(r150491): WebKit2.DOMWindowExtensionNoCache fails
+        https://bugs.webkit.org/show_bug.cgi?id=116595
+
+        Temporarily skip this test.
+
+        * TestWebKitAPI/Tests/WebKit2/DOMWindowExtensionNoCache.cpp:
+        (TestWebKitAPI::TEST):
+
+2013-05-22  Alex Christensen  <achristensen@apple.com>
+
+        Unreviewed.  Added myself to contributors.json.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+        Added myself.
+
+2013-05-22  Michał Pakuła vel Rutka  <m.pakula@samsung.com>
+
+        [EFL][WK2] Add sub menus to MiniBrowser
+        https://bugs.webkit.org/show_bug.cgi?id=114728
+
+        Reviewed by Christophe Dumez.
+
+        Elementary Ctxpopup widget API does not provide support for submenu item.
+        To implement ewk submenus in Minibrowser, Ctxpopup has to be replaced with
+        Elementary Menu widget.
+
+        * MiniBrowser/efl/main.c:
+        (_Browser_Window):
+        (on_window_resize):
+        (window_free):
+        (context_menu_item_selected_cb):
+        (context_menu_populate):
+        (on_context_menu_show):
+        (on_context_menu_hide):
+        (window_create):
+
+2013-05-22  Andrzej Badowski  <a.badowski@samsung.com>
+
+        [EFL] Add command line option to MiniBrowser to set cookies policy.
+        https://bugs.webkit.org/show_bug.cgi?id=115028
+
+        Reviewed by Christophe Dumez.
+
+        Add command line option to MiniBrowser EFL to set cookies policy:
+        -p parameter with value from (always, never, no-third-party) respectively (EWK_COOKIE_ACCEPT_POLICY_ALWAYS,
+        EWK_COOKIE_ACCEPT_POLICY_NEVER, EWK_COOKIE_ACCEPT_POLICY_NO_THIRD_PARTY).
+
+        * MiniBrowser/efl/main.c:
+        (elm_main):
+
+2013-05-21  Ryosuke Niwa  <rniwa@webkit.org>
+
+        REGRESSION(r150369): WebKit2WillLoadTest tests are failing
+        https://bugs.webkit.org/show_bug.cgi?id=116585
+
+        Reviewed by Alexey Proskuryakov.
+
+        willLoadURLRequest and willLoadDataRequest require the API version 6.
+
+        * TestWebKitAPI/Tests/WebKit2/WillLoad_Bundle.cpp:
+
+2013-05-21  Ryosuke Niwa  <rniwa@webkit.org>
+
+        REGRESSION(r150393): editing/inserting/typing-at-end-of-line.html fails
+        https://bugs.webkit.org/show_bug.cgi?id=116516
+
+        Reviewed by Alexey Proskuryakov.
+
+        Reset states in DumpRenderTree. The fix for WebKitTestRunner should be implemented in the bug 116577.
+
+        * DumpRenderTree/mac/DumpRenderTree.mm:
+        (createWebViewAndOffscreenWindow): Match the ordering.
+        (resetWebViewToConsistentStateBeforeTesting): Reset text replacement states.
+
 2013-05-21  Alexey Proskuryakov  <ap@apple.com>
 
         <rdar://problem/13929704> [WK2] WebKitTestRunner always crashes on exit

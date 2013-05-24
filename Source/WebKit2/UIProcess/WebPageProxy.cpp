@@ -45,6 +45,7 @@
 #include "NotificationPermissionRequestManager.h"
 #include "PageClient.h"
 #include "PluginInformation.h"
+#include "PluginProcessManager.h"
 #include "PrintInfo.h"
 #include "SessionState.h"
 #include "TextChecker.h"
@@ -303,7 +304,6 @@ WebPageProxy::WebPageProxy(PageClient* pageClient, PassRefPtr<WebProcessProxy> p
     , m_rubberBandsAtBottom(false)
     , m_rubberBandsAtTop(false)
     , m_mainFrameInViewSourceMode(false)
-    , m_overridePrivateBrowsingEnabled(false)
     , m_pageCount(0)
     , m_renderTreeSize(0)
     , m_shouldSendEventsSynchronously(false)
@@ -1406,7 +1406,7 @@ void WebPageProxy::handleKeyboardEvent(const NativeWebKeyboardEvent& event)
 }
 
 #if ENABLE(NETSCAPE_PLUGIN_API)
-void WebPageProxy::findPlugin(const String& mimeType, const String& urlString, const String& frameURLString, const String& pageURLString, const bool allowOnlyApplicationPlugins, String& pluginPath, String& newMimeType, uint32_t& pluginLoadPolicy)
+void WebPageProxy::findPlugin(const String& mimeType, uint32_t processType, const String& urlString, const String& frameURLString, const String& pageURLString, bool allowOnlyApplicationPlugins, uint64_t& pluginProcessToken, String& newMimeType, uint32_t& pluginLoadPolicy)
 {
     MESSAGE_CHECK_URL(urlString);
 
@@ -1415,10 +1415,12 @@ void WebPageProxy::findPlugin(const String& mimeType, const String& urlString, c
 
     PluginData::AllowedPluginTypes allowedPluginTypes = allowOnlyApplicationPlugins ? PluginData::OnlyApplicationPlugins : PluginData::AllPlugins;
     PluginModuleInfo plugin = m_process->context()->pluginInfoStore().findPlugin(newMimeType, KURL(KURL(), urlString), allowedPluginTypes);
-    if (!plugin.path)
+    if (!plugin.path) {
+        pluginProcessToken = 0;
         return;
+    }
 
-    pluginLoadPolicy = PluginInfoStore::policyForPlugin(plugin);
+    pluginLoadPolicy = PluginInfoStore::defaultLoadPolicyForPlugin(plugin);
 
 #if PLATFORM(MAC)
     RefPtr<ImmutableDictionary> pluginInformation = createPluginInformationDictionary(plugin, frameURLString, String(), pageURLString, String(), String());
@@ -1428,11 +1430,24 @@ void WebPageProxy::findPlugin(const String& mimeType, const String& urlString, c
     UNUSED_PARAM(pageURLString);
 #endif
 
-    if (pluginLoadPolicy != PluginModuleLoadNormally)
-        return;
+    PluginProcessSandboxPolicy pluginProcessSandboxPolicy = PluginProcessSandboxPolicyNormal;
+    switch (pluginLoadPolicy) {
+    case PluginModuleLoadNormally:
+        pluginProcessSandboxPolicy = PluginProcessSandboxPolicyNormal;
+        break;
+    case PluginModuleLoadUnsandboxed:
+        pluginProcessSandboxPolicy = PluginProcessSandboxPolicyUnsandboxed;
+        break;
 
-    pluginPath = plugin.path;
+    case PluginModuleBlocked:
+    case PluginModuleInactive:
+        pluginProcessToken = 0;
+        return;
+    }
+
+    pluginProcessToken = PluginProcessManager::shared().pluginProcessToken(plugin, static_cast<PluginProcessType>(processType), pluginProcessSandboxPolicy);
 }
+
 #endif // ENABLE(NETSCAPE_PLUGIN_API)
 
 #if ENABLE(GESTURE_EVENTS)
@@ -4017,7 +4032,6 @@ WebPageCreationParameters WebPageProxy::creationParameters() const
     parameters.deviceScaleFactor = deviceScaleFactor();
     parameters.mediaVolume = m_mediaVolume;
     parameters.mayStartMediaWhenInWindow = m_mayStartMediaWhenInWindow;
-    parameters.overridePrivateBrowsingEnabled = m_overridePrivateBrowsingEnabled;
     parameters.minimumLayoutWidth = m_minimumLayoutWidth;
 
 #if PLATFORM(MAC)
@@ -4497,17 +4511,6 @@ void WebPageProxy::setMainFrameInViewSourceMode(bool mainFrameInViewSourceMode)
 
     if (isValid())
         m_process->send(Messages::WebPage::SetMainFrameInViewSourceMode(mainFrameInViewSourceMode), m_pageID);
-}
-
-void WebPageProxy::setOverridePrivateBrowsingEnabled(bool overridePrivateBrowsingEnabled)
-{
-    if (m_overridePrivateBrowsingEnabled == overridePrivateBrowsingEnabled)
-        return;
-    
-    m_overridePrivateBrowsingEnabled = overridePrivateBrowsingEnabled;
-    
-    if (isValid())
-        m_process->send(Messages::WebPage::SetOverridePrivateBrowsingEnabled(overridePrivateBrowsingEnabled), m_pageID);
 }
 
 void WebPageProxy::didSaveToPageCache()

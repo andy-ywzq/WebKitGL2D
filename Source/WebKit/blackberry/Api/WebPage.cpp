@@ -185,11 +185,6 @@
 #include <memalloc.h>
 #endif
 
-#if ENABLE(ACCELERATED_2D_CANVAS)
-#include "GrContext.h"
-#include "SharedGraphicsContext3D.h"
-#endif
-
 #if ENABLE(REQUEST_ANIMATION_FRAME)
 #include "PlatformScreen.h"
 #endif
@@ -1064,16 +1059,6 @@ void WebPagePrivate::setLoadState(LoadState state)
         break;
     case Committed:
         {
-#if ENABLE(ACCELERATED_2D_CANVAS)
-            if (m_page->settings()->canvasUsesAcceleratedDrawing()) {
-                // Free GPU resources as we're on a new page.
-                // This will help us to free memory pressure.
-                SharedGraphicsContext3D::get()->makeContextCurrent();
-                GrContext* grContext = Platform::Graphics::getGrContext();
-                grContext->freeGpuResources();
-            }
-#endif
-
 #if USE(ACCELERATED_COMPOSITING)
             releaseLayerResources();
 #endif
@@ -2161,9 +2146,10 @@ Platform::WebContext WebPagePrivate::webContext(TargetDetectionStrategy strategy
     layoutIfNeeded();
 
     bool nodeAllowSelectionOverride = false;
+    bool nodeIsImage = node->isHTMLElement() && node->hasTagName(HTMLNames::imgTag);
     Node* linkNode = node->enclosingLinkEventParentOrSelf();
     // Set link url only when the node is linked image, or text inside anchor. Prevent CCM popup when long press non-link element(eg. button) inside an anchor.
-    if ((node == linkNode) || (node->isTextNode() && linkNode)) {
+    if (linkNode && (node == linkNode || node->isTextNode() || nodeIsImage)) {
         KURL href;
         if (linkNode->isLink() && linkNode->hasAttributes()) {
             if (const Attribute* attribute = toElement(linkNode)->getAttributeItem(HTMLNames::hrefAttr))
@@ -5023,6 +5009,13 @@ void WebPagePrivate::notifyAppActivationStateChange(ActivationStateType activati
 {
     m_activationState = activationState;
 
+#if USE(ACCELERATED_COMPOSITING)
+    if (activationState == ActivationActive)
+        resumeRootLayerCommit();
+    else
+        suspendRootLayerCommit();
+#endif
+
 #if ENABLE(PAGE_VISIBILITY_API)
     setPageVisibilityState();
 #endif
@@ -5672,6 +5665,9 @@ void WebPagePrivate::resumeRootLayerCommit()
 
     m_suspendRootLayerCommit = false;
     m_needsCommit = true;
+    // PR 330917, explicitly start root layer commit timer, so that there's a commit
+    // even if BackingStore got disabled/removed.
+    scheduleRootLayerCommit();
 }
 
 bool WebPagePrivate::needsOneShotDrawingSynchronization()

@@ -1,3 +1,80 @@
+2013-05-24  Julien Brianceau  <jbrianceau@nds.com>
+
+        [sh4] Optimize LLINT generated code and fix few bugs in baseline JIT.
+        https://bugs.webkit.org/show_bug.cgi?id=116716
+
+        Reviewed by Geoffrey Garen.
+
+        * assembler/MacroAssemblerSH4.h:
+        (JSC::MacroAssemblerSH4::mul32): Cosmetic changes.
+        (JSC::MacroAssemblerSH4::convertInt32ToDouble): Absolute address was not dereferenced.
+        (JSC::MacroAssemblerSH4::branch32): Absolute address was not dereferenced.
+        (JSC::MacroAssemblerSH4::revertJumpReplacementToBranchPtrWithPatch): Use all 32 bits of pointer for revertJump call.
+        * assembler/SH4Assembler.h:
+        (JSC::SH4Assembler::revertJump): Use changePCrelativeAddress to patch the whole pointer.
+        (JSC::SH4Assembler::linkJump): Cosmetic change.
+        * offlineasm/sh4.rb: Optimize LLINT generated code.
+
+2013-05-23  Peter Wang  <peter.wang@torchmobile.com.cn>
+
+        CLoop llint backend should not use the d8 register as scratch register
+        https://bugs.webkit.org/show_bug.cgi?id=116019
+
+        Reviewed by Csaba Osztrogonác.
+
+        * offlineasm/cloop.rb:
+
+2013-05-22  Peter Wang  <peter.wang@torchmobile.com.cn>
+
+        Use uninitialized register in "JIT::emit_op_neq_null" and "emit_op_eq_null"
+        https://bugs.webkit.org/show_bug.cgi?id=116593
+
+        Reviewed by Filip Pizlo.
+
+        Generated instructions using uninitialized register. It's caused by a mistake of r126494.
+
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_eq_null):
+        (JSC::JIT::emit_op_neq_null):
+
+2013-05-22  Filip Pizlo  <fpizlo@apple.com>
+
+        Fix indentation of CodeBlock.h
+
+        Rubber stampted by Mark Hahnenberg.
+
+        * bytecode/CodeBlock.h:
+
+2013-05-22  Julien Brianceau  <jbrianceau@nds.com>
+
+        [sh4] Remove MacroAssemblerSH4.cpp file.
+        https://bugs.webkit.org/show_bug.cgi?id=116596.
+
+        Reviewed by Geoffrey Garen.
+
+        Move linkCall and repatchCall implementations from MacroAssemblerSH4.cpp
+        to MacroAssemblerSH4.h and remove MacroAssemblerSH4.cpp, as it is done
+        for other architectures.
+
+        * GNUmakefile.list.am:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * Target.pri:
+        * assembler/MacroAssemblerSH4.cpp: Removed.
+        * assembler/MacroAssemblerSH4.h:
+        (JSC::MacroAssemblerSH4::linkCall):
+        (MacroAssemblerSH4):
+        (JSC::MacroAssemblerSH4::repatchCall):
+
+2013-05-21  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed speculative fix for test-bots.
+
+        Add export declaration for WTFInvokeCrashHook to avoid runtime
+        load error on test bots.
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCoreExports.def:
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExports.def.in:
+
 2013-05-21  Mark Lam  <mark.lam@apple.com>
 
         Added missing assert condition for PositiveOrZero in ARM branch32().

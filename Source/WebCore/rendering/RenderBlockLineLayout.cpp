@@ -348,12 +348,10 @@ static inline LayoutUnit borderPaddingMarginEnd(RenderInline* child)
     return child->marginEnd() + child->paddingEnd() + child->borderEnd();
 }
 
-static bool shouldAddBorderPaddingMargin(RenderObject* child, bool &checkSide)
+static inline bool shouldAddBorderPaddingMargin(RenderObject* child)
 {
-    if (!child || (child->isText() && !toRenderText(child)->textLength()))
-        return true;
-    checkSide = false;
-    return checkSide;
+    // When deciding whether we're at the edge of an inline, adjacent collapsed whitespace is the same as no sibling at all.
+    return !child || (child->isText() && !toRenderText(child)->textLength());
 }
 
 static RenderObject* previousInFlowSibling(RenderObject* child)
@@ -364,7 +362,7 @@ static RenderObject* previousInFlowSibling(RenderObject* child)
     return child;
 }
 
-static LayoutUnit inlineLogicalWidth(RenderObject* child, bool start = true, bool end = true)
+static LayoutUnit inlineLogicalWidth(RenderObject* child, bool checkStartEdge = true, bool checkEndEdge = true)
 {
     unsigned lineDepth = 1;
     LayoutUnit extraWidth = 0;
@@ -372,11 +370,13 @@ static LayoutUnit inlineLogicalWidth(RenderObject* child, bool start = true, boo
     while (parent->isRenderInline() && lineDepth++ < cMaxLineDepth) {
         RenderInline* parentAsRenderInline = toRenderInline(parent);
         if (!isEmptyInline(parentAsRenderInline)) {
-            if (start && shouldAddBorderPaddingMargin(previousInFlowSibling(child), start))
+            checkStartEdge = checkStartEdge && shouldAddBorderPaddingMargin(previousInFlowSibling(child));
+            if (checkStartEdge)
                 extraWidth += borderPaddingMarginStart(parentAsRenderInline);
-            if (end && shouldAddBorderPaddingMargin(child->nextSibling(), end))
+            checkEndEdge = checkEndEdge && shouldAddBorderPaddingMargin(child->nextSibling());
+            if (checkEndEdge)
                 extraWidth += borderPaddingMarginEnd(parentAsRenderInline);
-            if (!start && !end)
+            if (!checkStartEdge && !checkEndEdge)
                 return extraWidth;
         }
         child = parent;
@@ -1673,16 +1673,33 @@ void RenderBlock::updateLineBoundariesForExclusions(ExclusionShapeInsideInfo* ex
     // The overflow should be pushed below the content box
     LayoutUnit shapeContainingBlockHeight = exclusionShapeInsideInfo->shapeContainingBlockHeight();
     if (!exclusionShapeInsideInfo->lineWithinShapeBounds() && !lineOverflowsFromShapeInside && shapeContainingBlockHeight) {
-        LayoutUnit newHeight = shapeContainingBlockHeight;
+        lineOverflowsFromShapeInside = true;
+        LayoutUnit newLogicalHeight = shapeContainingBlockHeight;
 
         if (layoutState.flowThread()) {
             // If block contents flown across multiple regions and the shape-inside was applied on the second region we can end up with negative lineTop
             if (lineTop < 0)
                 return;
-            newHeight = logicalHeight + shapeContainingBlockHeight - lineTop - currentRegion->borderAndPaddingBefore();
+
+            newLogicalHeight = logicalHeight + shapeContainingBlockHeight - lineTop - currentRegion->borderAndPaddingBefore();
+
+            RenderRegion* nextRegion = regionAtBlockOffset(newLogicalHeight);
+            ExclusionShapeInsideInfo* nextShapeInfo = 0;
+            if (nextRegion)
+                nextShapeInfo = nextRegion->exclusionShapeInsideInfo();
+
+            // The overflow flows into another region with shape-inside
+            if (currentRegion != nextRegion && nextShapeInfo) {
+                newLogicalHeight += nextShapeInfo->shapeLogicalTop() - nextRegion->borderAndPaddingBefore();
+
+                LayoutUnit offset = nextShapeInfo->shapeLogicalTop() - nextRegion->borderAndPaddingBefore();
+                nextShapeInfo->computeSegmentsForLine(offset, lineHeight);
+
+                exclusionShapeInsideInfo = nextShapeInfo;
+                lineOverflowsFromShapeInside = false;
+            }
         }
-        setLogicalHeight(newHeight);
-        lineOverflowsFromShapeInside = true;
+        setLogicalHeight(newLogicalHeight);
     }
 }
 
@@ -1693,9 +1710,8 @@ bool RenderBlock::adjustLogicalLineTopAndLogicalHeightIfNeeded(ExclusionShapeIns
         return false;
 
     LayoutUnit newLogicalHeight = adjustedLogicalLineTop - absoluteLogicalTop;
-    RenderRegion* currentRegion = regionAtBlockOffset(logicalHeight());
     if (layoutState.flowThread())
-        newLogicalHeight -= currentRegion->logicalTopForFlowThreadContent();
+        newLogicalHeight = logicalHeight();
 
     end = restartLayoutRunsAndFloatsInRange(logicalHeight(), newLogicalHeight, lastFloatFromPreviousLine, resolver, end);
     return true;
@@ -3481,8 +3497,8 @@ void RenderBlock::checkLinesForTextOverflow()
     for (RootInlineBox* curr = firstRootBox(); curr; curr = curr->nextRootBox()) {
         // FIXME: Use pixelSnappedLogicalRightOffsetForLine instead of snapping it ourselves once the column workaround in said method has been fixed.
         // https://bugs.webkit.org/show_bug.cgi?id=105461
-        int blockRightEdge = snapSizeToPixel(logicalRightOffsetForLine(curr->lineTop(), firstLine), curr->x());
-        int blockLeftEdge = pixelSnappedLogicalLeftOffsetForLine(curr->lineTop(), firstLine);
+        int blockRightEdge = snapSizeToPixel(ltr ? logicalRightOffsetForContent(curr->lineTop()) : logicalRightOffsetForLine(curr->lineTop(), firstLine), curr->x());
+        int blockLeftEdge = ltr ? pixelSnappedLogicalLeftOffsetForLine(curr->lineTop(), firstLine).toInt() : snapSizeToPixel(logicalLeftOffsetForContent(curr->lineTop()), curr->x());
         int lineBoxEdge = ltr ? snapSizeToPixel(curr->x() + curr->logicalWidth(), curr->x()) : snapSizeToPixel(curr->x(), 0);
         if ((ltr && lineBoxEdge > blockRightEdge) || (!ltr && lineBoxEdge < blockLeftEdge)) {
             // This line spills out of our box in the appropriate direction.  Now we need to see if the line
@@ -3496,7 +3512,7 @@ void RenderBlock::checkLinesForTextOverflow()
                 float totalLogicalWidth = curr->placeEllipsis(ellipsisStr, ltr, blockLeftEdge, blockRightEdge, width);
 
                 float logicalLeft = 0; // We are only intersted in the delta from the base position.
-                float truncatedWidth = pixelSnappedLogicalRightOffsetForLine(curr->lineTop(), firstLine);
+                float truncatedWidth = snapSizeToPixel(logicalRightOffsetForContent(curr->lineTop()), curr->x());
                 updateLogicalWidthForAlignment(textAlign, 0, logicalLeft, totalLogicalWidth, truncatedWidth, 0);
                 if (ltr)
                     curr->adjustLogicalPosition(logicalLeft, 0);
