@@ -26,7 +26,9 @@
 #ifndef WebViewClient_h
 #define WebViewClient_h
 
-#include <nix/NIXView.h>
+#include "NIXView.h"
+#include "IntRect.h"
+#include "wtf/text/WTFString.h"
 
 namespace WebKit {
 
@@ -52,7 +54,7 @@ public:
     void didChangeContentsSize(WebView*, WKSize size);
     void didChangeViewportAttributes(WebView*, float width, float height, float minimumScale, float maximumScale, float initialScale, int userScalable);
     void didFindZoomableArea(WebView*, WKPoint target, WKRect area);
-    void updateTextInputState(WebView*, bool isContentEditable, WKRect cursorRect, WKRect editorRect);
+    void updateTextInputState(WebView*, const WTF::String& selectedText, const WTF::String& surroundingText, uint64_t inputMethodHints, bool isContentEditable, const WebCore::IntRect& cursorRect, const WebCore::IntRect& editorRect);
 
 private:
     NIXViewClient m_client;

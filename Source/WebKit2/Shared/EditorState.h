@@ -43,7 +43,7 @@ struct EditorState {
         , isInPasswordField(false)
         , isInPlugin(false)
         , hasComposition(false)
-#if PLATFORM(QT)
+#if PLATFORM(QT) || PLATFORM(NIX)
         , cursorPosition(0)
         , anchorPosition(0)
         , inputMethodHints(0)

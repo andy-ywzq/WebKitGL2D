@@ -350,10 +350,8 @@ void WebView::doneWithGestureEvent(const NativeWebGestureEvent& event, bool wasE
 void WebView::updateTextInputState()
 {
     const EditorState& editor = m_webPageProxy->editorState();
-    bool isContentEditable = editor.isContentEditable;
-    const IntRect& cursorRect = editor.cursorRect;
-    const IntRect& editorRect = editor.editorRect;
-    m_viewClient.updateTextInputState(this, isContentEditable, toAPI(cursorRect), toAPI(editorRect));
+    m_viewClient.updateTextInputState(this, editor.selectedText, editor.surroundingText, editor.inputMethodHints,
+                                      editor.isContentEditable, editor.cursorRect, editor.editorRect);
 }
 
 void WebView::suspendActiveDOMObjectsAndAnimations()

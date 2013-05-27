@@ -584,6 +584,10 @@ PassRefPtr<Plugin> WebPage::createPlugin(WebFrame* frame, HTMLPlugInElement* plu
 
 #endif // ENABLE(NETSCAPE_PLUGIN_API)
 
+#if PLATFORM(QT) || PLATFORM(NIX)
+uint64_t getInputMethodHint(HTMLInputElement*);
+#endif
+
 EditorState WebPage::editorState() const
 {
     Frame* frame = m_page->focusController()->focusedOrMainFrame();
@@ -617,30 +621,8 @@ EditorState WebPage::editorState() const
 
     if (!scope)
         return result;
-#if PLATFORM(QT)
-    if (scope->hasTagName(HTMLNames::inputTag)) {
-        HTMLInputElement* input = static_cast<HTMLInputElement*>(scope);
-        if (input->isTelephoneField())
-            result.inputMethodHints |= Qt::ImhDialableCharactersOnly;
-        else if (input->isNumberField())
-            result.inputMethodHints |= Qt::ImhDigitsOnly;
-        else if (input->isEmailField()) {
-            result.inputMethodHints |= Qt::ImhEmailCharactersOnly;
-            result.inputMethodHints |= Qt::ImhNoAutoUppercase;
-        } else if (input->isURLField()) {
-            result.inputMethodHints |= Qt::ImhUrlCharactersOnly;
-            result.inputMethodHints |= Qt::ImhNoAutoUppercase;
-        } else if (input->isPasswordField()) {
-            // Set ImhHiddenText flag for password fields. The Qt platform
-            // is responsible for determining which widget will receive input
-            // method events for password fields.
-            result.inputMethodHints |= Qt::ImhHiddenText;
-            result.inputMethodHints |= Qt::ImhNoAutoUppercase;
-            result.inputMethodHints |= Qt::ImhNoPredictiveText;
-            result.inputMethodHints |= Qt::ImhSensitiveData;
-        }
-    }
-#endif
+    if (scope->hasTagName(HTMLNames::inputTag))
+        result.inputMethodHints = getInputMethodHint(static_cast<HTMLInputElement*>(scope));
 
     if (selectionRoot)
         result.editorRect = frame->view()->contentsToWindow(selectionRoot->pixelSnappedBoundingBox());

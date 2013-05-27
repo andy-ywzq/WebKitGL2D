@@ -337,4 +337,29 @@ void WebPage::hidePopupMenu()
     m_activePopupMenu = 0;
 }
 
+uint64_t getInputMethodHint(HTMLInputElement* input)
+{
+    uint64_t hint = 0;
+    if (input->isTelephoneField())
+        hint |= Qt::ImhDialableCharactersOnly;
+    else if (input->isNumberField())
+        hint |= Qt::ImhDigitsOnly;
+    else if (input->isEmailField()) {
+        hint |= Qt::ImhEmailCharactersOnly;
+        hint |= Qt::ImhNoAutoUppercase;
+    } else if (input->isURLField()) {
+        hint |= Qt::ImhUrlCharactersOnly;
+        hint |= Qt::ImhNoAutoUppercase;
+    } else if (input->isPasswordField()) {
+        // Set ImhHiddenText flag for password fields. The Qt platform
+        // is responsible for determining which widget will receive input
+        // method events for password fields.
+        hint |= Qt::ImhHiddenText;
+        hint |= Qt::ImhNoAutoUppercase;
+        hint |= Qt::ImhNoPredictiveText;
+        hint |= Qt::ImhSensitiveData;
+    }
+    return hint;
+}
+
 } // namespace WebKit

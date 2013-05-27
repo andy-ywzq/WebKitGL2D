@@ -28,6 +28,7 @@
 
 #include "EventHandler.h"
 #include "NotImplemented.h"
+#include "NIXView.h"
 #include "WebEvent.h"
 #include "WindowsKeyboardCodes.h"
 #include <WebCore/NixKeyboardUtilities.h>
@@ -38,6 +39,7 @@
 #include <WebCore/Page.h>
 #include <WebCore/PlatformKeyboardEvent.h>
 #include <WebCore/Settings.h>
+#include <WebCore/html/HTMLInputElement.h>
 
 using namespace WebCore;
 
@@ -102,6 +104,27 @@ const char* WebPage::interpretKeyEvent(const KeyboardEvent* event)
         return getKeyDownCommandName(event);
 
     return getKeyPressCommandName(event);
+}
+
+uint64_t getInputMethodHint(HTMLInputElement* input)
+{
+    uint64_t hint = 0;
+    if (input->isTelephoneField())
+        hint |= NixImhDialableCharactersOnly;
+    else if (input->isNumberField())
+        hint |= NixImhDigitsOnly;
+    else if (input->isEmailField()) {
+        hint |= NixImhEmailCharactersOnly;
+        hint |= NixImhNoAutoUppercase;
+    } else if (input->isURLField()) {
+        hint |= NixImhUrlCharactersOnly;
+        hint |= NixImhNoAutoUppercase;
+    } else if (input->isPasswordField()) {
+        hint |= NixImhNoAutoUppercase;
+        hint |= NixImhNoPredictiveText;
+        hint |= NixImhSensitiveData;
+    }
+    return hint;
 }
 
 } // namespace WebKit

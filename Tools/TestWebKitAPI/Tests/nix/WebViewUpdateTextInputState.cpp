@@ -29,6 +29,7 @@
 #include <WebKit2/WKContext.h>
 #include <WebKit2/WKPage.h>
 #include <WebKit2/WKRetainPtr.h>
+#include <WebKit2/WKString.h>
 #include "NIXView.h"
 #include "NIXViewAutoPtr.h"
 
@@ -36,8 +37,10 @@ namespace TestWebKitAPI {
 
 static bool didFinishLoad = false;
 static bool didUpdateTextInputState = false;
-static bool didChangeToContentEditable = false;
+static bool contentEditableValue = false;
+static bool isInPasswordFieldValue = true;
 static bool isDoneWithSingleTapEvent = false;
+static WKStringRef surroundingTextValue;
 static const WKRect invalidRectState = WKRectMake(0, 0, 0, 0);
 static WKRect editorRectState = invalidRectState;
 static WKRect cursorRectState = invalidRectState;
@@ -52,10 +55,13 @@ static void didFinishLoadForFrame(WKPageRef page, WKFrameRef, WKTypeRef, const v
     didFinishLoad = true;
 }
 
-static void updateTextInputState(NIXView, bool isContentEditable, WKRect cursorRect, WKRect editorRect, const void*)
+static void updateTextInputState(NIXView, WKStringRef, WKStringRef surroundingText, uint64_t inputMethodHints, bool isContentEditable, WKRect cursorRect, WKRect editorRect, const void*)
 {
     didUpdateTextInputState = true;
-    didChangeToContentEditable = isContentEditable;
+    contentEditableValue = isContentEditable;
+    isInPasswordFieldValue = inputMethodHints & NixImhSensitiveData;
+    surroundingTextValue = surroundingText;
+    WKRetain(surroundingTextValue);
     cursorRectState = cursorRect;
     editorRectState = editorRect;
 }
@@ -112,7 +118,10 @@ TEST(WebKitNix, WebViewWebProcessCrashed)
     ASSERT_TRUE(didFinishLoad);
     ASSERT_TRUE(isDoneWithSingleTapEvent);
     ASSERT_TRUE(didUpdateTextInputState);
-    ASSERT_TRUE(didChangeToContentEditable);
+    ASSERT_TRUE(contentEditableValue);
+
+    ASSERT_TRUE(WKStringIsEqualToUTF8CString(surroundingTextValue, "foobar"));
+    ASSERT_FALSE(isInPasswordFieldValue);
     ASSERT_TRUE(!WKRectIsEqual(cursorRectState, invalidRectState));
     ASSERT_TRUE(!WKRectIsEqual(editorRectState, invalidRectState));
     ASSERT_TRUE(!WKRectIsEqual(cursorRectState, editorRectState));

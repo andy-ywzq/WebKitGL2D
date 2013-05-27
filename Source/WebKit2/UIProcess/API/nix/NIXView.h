@@ -53,6 +53,17 @@ WK_INLINE NIXMatrix NIXMatrixMakeTranslation(double x0, double y0)
     return m;
 }
 
+enum NixInputMethodHint {
+    NixImhNone                   = 0x000,
+    NixImhDialableCharactersOnly = 0x001,
+    NixImhDigitsOnly             = 0x002,
+    NixImhEmailCharactersOnly    = 0x004,
+    NixImhNoAutoUppercase        = 0x008,
+    NixImhUrlCharactersOnly      = 0x010,
+    NixImhNoPredictiveText       = 0x020,
+    NixImhSensitiveData          = 0x040
+};
+
 typedef struct OpaqueNIXView* NIXView;
 
 // NIXViewClient.
@@ -65,7 +76,7 @@ typedef void (*NIXViewPageDidRequestScrollCallback)(NIXView view, WKPoint positi
 typedef void (*NIXViewPageDidChangeContentsSizeCallback)(NIXView view, WKSize size, const void* clientInfo);
 typedef void (*NIXViewPageDidChangeViewportAttributesCallback)(NIXView view, float width, float height, float minimumScale, float maximumScale, float initialScale, int userScalable, const void* clientInfo);
 typedef void (*NIXViewPageDidFindZoomableAreaCallback)(NIXView view, WKPoint target, WKRect area, const void* clientInfo);
-typedef void (*NIXViewPageUpdateTextInputStateCallback)(NIXView view, bool isContentEditable, WKRect cursorRect, WKRect editorRect, const void* clientInfo);
+typedef void (*NIXViewPageUpdateTextInputStateCallback)(NIXView view, WKStringRef selectedText, WKStringRef surroundingText, uint64_t inputMethodHints, bool isContentEditable, WKRect cursorRect, WKRect editorRect, const void* clientInfo);
 
 struct NIXViewClient {
     int                                              version;

@@ -108,11 +108,13 @@ void WebViewClient::didFindZoomableArea(WebView* view, WKPoint target, WKRect ar
     m_client.didFindZoomableArea(toAPI(view), target, area, m_client.clientInfo);
 }
 
-void WebViewClient::updateTextInputState(WebView* view, bool isContentEditable, WKRect cursorRect, WKRect editorRect)
+void WebViewClient::updateTextInputState(WebView* view, const WTF::String& selectedText, const WTF::String& surroundingText, uint64_t inputMethodHints,
+                                         bool isContentEditable, const WebCore::IntRect& cursorRect, const WebCore::IntRect& editorRect)
 {
     if (!m_client.updateTextInputState)
         return;
-    m_client.updateTextInputState(toAPI(view), isContentEditable, cursorRect, editorRect, m_client.clientInfo);
+    m_client.updateTextInputState(toAPI(view), toAPI(selectedText.impl()), toAPI(surroundingText.impl()), inputMethodHints,
+                                  isContentEditable, toAPI(cursorRect), toAPI(editorRect), m_client.clientInfo);
 }
 
 } // namespace WebKit
