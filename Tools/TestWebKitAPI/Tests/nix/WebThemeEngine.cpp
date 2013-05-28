@@ -53,17 +53,37 @@ TEST(WebKitNix, WebThemeEngine)
     glViewport(0, 0, size.width, size.height);
     glClearColor(0, 0, 1, 1);
 
+    ToolsNix::RGBAPixel green = ToolsNix::RGBAPixel::green();
+    ToolsNix::RGBAPixel red = ToolsNix::RGBAPixel::red();
+
     glClear(GL_COLOR_BUFFER_BIT);
     ToolsNix::RGBAPixel clearedSample = offscreenBuffer.readPixelAtPoint(0, 0);
     EXPECT_EQ(ToolsNix::RGBAPixel::blue(), clearedSample);
 
     glClear(GL_COLOR_BUFFER_BIT);
     loader.waitForLoadURLAndRepaint("../nix/theme-button");
-    // Testing Edgesgit
-    EXPECT_EQ(ToolsNix::RGBAPixel::red(), offscreenBuffer.readPixelAtPoint(0, 0));
-    EXPECT_EQ(ToolsNix::RGBAPixel::red(), offscreenBuffer.readPixelAtPoint(size.width - 1, 0));
-    EXPECT_EQ(ToolsNix::RGBAPixel::red(), offscreenBuffer.readPixelAtPoint(0, size.height - 1));
-    EXPECT_EQ(ToolsNix::RGBAPixel::red(), offscreenBuffer.readPixelAtPoint(size.width - 1, size.height - 1));
+    // Testing Edges
+    EXPECT_EQ(red, offscreenBuffer.readPixelAtPoint(0, 0));
+    EXPECT_EQ(red, offscreenBuffer.readPixelAtPoint(size.width - 1, 0));
+    EXPECT_EQ(red, offscreenBuffer.readPixelAtPoint(0, size.height - 1));
+    EXPECT_EQ(red, offscreenBuffer.readPixelAtPoint(size.width - 1, size.height - 1));
+
+    glClear(GL_COLOR_BUFFER_BIT);
+    loader.waitForLoadURLAndRepaint("../nix/theme-progress");
+    // Testing Corners
+    EXPECT_EQ(green, offscreenBuffer.readPixelAtPoint(0, 0));
+    EXPECT_EQ(green, offscreenBuffer.readPixelAtPoint(0, size.height - 1));
+    EXPECT_EQ(red, offscreenBuffer.readPixelAtPoint(size.width - 1, 0));
+    EXPECT_EQ(red, offscreenBuffer.readPixelAtPoint(size.width - 1, size.height - 1));
+    // Testing Middle
+    EXPECT_EQ(green, offscreenBuffer.readPixelAtPoint(size.width / 2, 0));
+    EXPECT_EQ(green, offscreenBuffer.readPixelAtPoint(size.width / 2, size.height - 1));
+    // Testing Boundary
+    int boundary = size.width * 0.7;
+    EXPECT_EQ(green, offscreenBuffer.readPixelAtPoint(boundary - 1, 0));
+    EXPECT_EQ(green, offscreenBuffer.readPixelAtPoint(boundary - 1, size.height - 1));
+    EXPECT_EQ(red, offscreenBuffer.readPixelAtPoint(boundary, 0));
+    EXPECT_EQ(red, offscreenBuffer.readPixelAtPoint(boundary, size.height - 1));
 }
 
 } // TestWebKitAPI

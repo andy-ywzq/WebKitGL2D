@@ -94,7 +94,16 @@ class TestThemeEngine : public WebThemeEngine {
     void paintTextArea(WebCanvas*, State, const WebRect&) const { }
     void getMenuListPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const { }
     void paintMenuList(WebCanvas*, State, const WebRect&) const { }
-    void paintProgressBar(WebCanvas*, State, const WebRect&, const ProgressBarExtraParams&) const { }
+    void paintProgressBar(WebCanvas* canvas, State, const WebRect& rect, const ProgressBarExtraParams& params) const
+    {
+        WebColor red = 0xFFFF0000;
+        fillRect(canvas, rect, red);
+
+        WebColor green = 0xFF00FF00;
+        WebRect progressRect = rect;
+        progressRect.width *= params.position;
+        fillRect(canvas, progressRect, green);
+    }
     double getAnimationRepeatIntervalForProgressBar() const
     {
         return 0;

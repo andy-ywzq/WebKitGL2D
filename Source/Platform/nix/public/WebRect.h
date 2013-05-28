@@ -14,6 +14,14 @@ public:
     int width;
     int height;
 
+    WebRect(const WebRect& r)
+        : x(r.x)
+        , y(r.y)
+        , width(r.width)
+        , height(r.height)
+    {
+    }
+
 #if WEBKIT_IMPLEMENTATION
     WebRect(const WebCore::IntRect& r)
         : x(r.x())
