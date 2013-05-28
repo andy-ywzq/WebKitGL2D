@@ -143,6 +143,7 @@ set(WebKit2_SOURCES
     Platform/CoreIPC/MessageDecoder.cpp
     Platform/CoreIPC/MessageEncoder.cpp
     Platform/CoreIPC/MessageReceiverMap.cpp
+    Platform/CoreIPC/MessageSender.cpp
     Platform/CoreIPC/StringReference.cpp
 
     PluginProcess/PluginControllerProxy.cpp
@@ -554,8 +555,6 @@ set(WebKit2_MESSAGES_IN_FILES
     UIProcess/CoordinatedGraphics/CoordinatedLayerTreeHostProxy.messages.in
 
     UIProcess/Downloads/DownloadProxy.messages.in
-
-    UIProcess/Notifications/WebNotificationManagerProxy.messages.in
 
     UIProcess/Plugins/PluginProcessProxy.messages.in
 

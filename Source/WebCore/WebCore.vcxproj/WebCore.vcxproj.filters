@@ -259,9 +259,6 @@
     <Filter Include="history">
       <UniqueIdentifier>{6f39dedf-2d3a-414e-83fe-7bf64f911cfb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="history\cf">
-      <UniqueIdentifier>{99868b4c-8965-4d92-bddf-31bd5cf62812}</UniqueIdentifier>
-    </Filter>
     <Filter Include="storage">
       <UniqueIdentifier>{e5121f0f-9548-4aa4-b23c-23d197118a0d}</UniqueIdentifier>
     </Filter>
@@ -4890,9 +4887,6 @@
     <ClCompile Include="..\history\PageCache.cpp">
       <Filter>history</Filter>
     </ClCompile>
-    <ClCompile Include="..\history\cf\HistoryPropertyList.cpp">
-      <Filter>history\cf</Filter>
-    </ClCompile>
     <ClCompile Include="..\storage\Storage.cpp">
       <Filter>storage</Filter>
     </ClCompile>
@@ -5184,9 +5178,6 @@
     <ClCompile Include="..\platform\cf\SharedBufferCF.cpp">
       <Filter>platform\cf</Filter>
     </ClCompile>
-    <ClCompile Include="..\platform\cf\BinaryPropertyList.cpp">
-      <Filter>platform\cf</Filter>
-    </ClCompile>
     <ClCompile Include="..\platform\cf\FileSystemCF.cpp">
       <Filter>platform\cf</Filter>
     </ClCompile>
@@ -5335,9 +5326,6 @@
       <Filter>bindings\js</Filter>
     </ClCompile>
     <ClCompile Include="..\bindings\js\JSDOMWindowShell.cpp">
-      <Filter>bindings\js</Filter>
-    </ClCompile>
-    <ClCompile Include="..\bindings\js\JSDOMWindowWebAudioCustom.cpp">
       <Filter>bindings\js</Filter>
     </ClCompile>
     <ClCompile Include="..\bindings\js\JSDOMWrapper.cpp">
@@ -12141,9 +12129,6 @@
     <ClInclude Include="..\history\PageCache.h">
       <Filter>history</Filter>
     </ClInclude>
-    <ClInclude Include="..\history\cf\HistoryPropertyList.h">
-      <Filter>history\cf</Filter>
-    </ClInclude>
     <ClInclude Include="..\storage\Storage.h">
       <Filter>storage</Filter>
     </ClInclude>
@@ -12693,9 +12678,6 @@
     </ClInclude>
     <ClInclude Include="..\svg\SVGAnimatedTypeAnimator.h">
       <Filter>rendering\svg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\platform\cf\BinaryPropertyList.h">
-      <Filter>platform\cf</Filter>
     </ClInclude>
     <ClInclude Include="..\platform\cf\win\CertificateCFWin.h">
       <Filter>platform\cf\win</Filter>

@@ -29730,14 +29730,6 @@
 				Name="cf"
 				>
 				<File
-					RelativePath="..\platform\cf\BinaryPropertyList.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\platform\cf\BinaryPropertyList.h"
-					>
-				</File>
-				<File
 					RelativePath="..\platform\cf\FileSystemCF.cpp"
 					>
 				</File>
@@ -29887,14 +29879,6 @@
 				</File>
 				<File
 					RelativePath="..\platform\graphics\FontFallbackList.h"
-					>
-				</File>
-				<File
-					RelativePath="..\platform\graphics\FontFamily.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\platform\graphics\FontFamily.h"
 					>
 				</File>
 				<File
@@ -68218,58 +68202,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\bindings\js\JSDOMWindowWebAudioCustom.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug_Cairo_CFLite|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release_Cairo_CFLite|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug_All|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Production|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
 					RelativePath="..\bindings\js\JSDOMWrapper.cpp"
 					>
 					<FileConfiguration
@@ -75062,18 +74994,6 @@
 				RelativePath="..\history\PageCache.h"
 				>
 			</File>
-			<Filter
-				Name="cf"
-				>
-				<File
-					RelativePath="..\history\cf\HistoryPropertyList.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\history\cf\HistoryPropertyList.h"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="storage"

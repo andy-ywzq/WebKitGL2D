@@ -1,3 +1,2048 @@
+2013-05-28  Andreas Kling  <akling@apple.com>
+
+        Move dispatching of focus-related events from Node to Element.
+        <http://webkit.org/b/116864>
+
+        Reviewed by Antti Koivisto.
+
+        ...and pass around pointers to Element instead of Node.
+
+        * dom/Node.cpp:
+        * dom/Node.h:
+        * dom/Element.h:
+        * dom/Element.cpp:
+        (WebCore::Element::dispatchFocusInEvent):
+        (WebCore::Element::dispatchFocusOutEvent):
+        (WebCore::Element::dispatchFocusEvent):
+        (WebCore::Element::dispatchBlurEvent):
+
+            Moved here from Node.
+
+        * html/HTMLFormControlElement.h:
+        * html/HTMLFormControlElement.cpp:
+        (WebCore::HTMLFormControlElement::dispatchBlurEvent):
+        * html/HTMLSelectElement.h:
+        * html/HTMLSelectElement.cpp:
+        (WebCore::HTMLSelectElement::dispatchFocusEvent):
+        (WebCore::HTMLSelectElement::dispatchBlurEvent):
+        * html/HTMLTextFormControlElement.h:
+        * html/HTMLTextFormControlElement.cpp:
+        (WebCore::HTMLTextFormControlElement::dispatchFocusEvent):
+        (WebCore::HTMLTextFormControlElement::dispatchBlurEvent):
+
+            Update subclass overrides and sprinkle OVERRIDE/FINAL.
+
+2013-05-28  Zan Dobersek  <zdobersek@igalia.com>
+
+        Remove CachedResourceRequest::initiatorElement
+        https://bugs.webkit.org/show_bug.cgi?id=116862
+
+        Reviewed by Andreas Kling.
+
+        The CachedResourceRequest::initiatorElement method is not used anywhere and should be removed.
+
+        * loader/cache/CachedResourceRequest.cpp: Remove the initiatorElement method definition.
+        * loader/cache/CachedResourceRequest.h:
+        (CachedResourceRequest): Remove the initiatorElement method declaration.
+
+2013-05-28  Andreas Kling  <akling@apple.com>
+
+        Document::setFocusedNode() should be setFocusedElement().
+        <http://webkit.org/b/116857>
+
+        Reviewed by Antti Koivisto.
+
+        Only Elements can be focused, so tighten Document's idea of what's focused.
+
+        Most of this patch is just updating call sites for the new names and removing
+        now-unnecessary isElementNode() checks and casts.
+
+        * WebCore.exp.in:
+        * accessibility/AXObjectCache.cpp:
+        (WebCore::AXObjectCache::focusedUIElementForPage):
+        * accessibility/AccessibilityNodeObject.cpp:
+        (WebCore::AccessibilityNodeObject::canSetFocusAttribute):
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::isFocused):
+        (WebCore::AccessibilityRenderObject::setFocused):
+        (WebCore::AccessibilityRenderObject::handleActiveDescendantChanged):
+        * bindings/objc/DOM.mm:
+        (-[DOMElement isFocused]):
+        * dom/Document.cpp:
+        (WebCore::Document::dispose):
+        (WebCore::Document::detach):
+        (WebCore::Document::focusedNodeRemoved):
+        (WebCore::Document::removeFocusedNodeOfSubtree):
+        (WebCore::Document::setFocusedElement):
+        (WebCore::Document::updateFocusAppearanceTimerFired):
+        (WebCore::eventTargetNodeForDocument):
+        * dom/Document.h:
+        (Document):
+        (WebCore::Document::focusedElement):
+        * dom/Element.cpp:
+        (WebCore::Element::attach):
+        (WebCore::Element::focus):
+        (WebCore::Element::blur):
+        (WebCore::Element::cancelFocusAppearanceUpdate):
+        * dom/Node.cpp:
+        (WebCore::Node::rendererIsEditable):
+        * dom/TreeScope.cpp:
+        (WebCore::TreeScope::focusedElement):
+        * dom/UserTypingGestureIndicator.cpp:
+        (WebCore::UserTypingGestureIndicator::UserTypingGestureIndicator):
+        * editing/Editor.cpp:
+        (WebCore::Editor::setBaseWritingDirection):
+        (WebCore::Editor::setComposition):
+        (WebCore::Editor::guessesForMisspelledOrUngrammatical):
+        * editing/EditorCommand.cpp:
+        (WebCore::verticalScrollDistance):
+        * editing/FrameSelection.cpp:
+        (WebCore::FrameSelection::selectAll):
+        (WebCore::FrameSelection::focusedOrActiveStateChanged):
+        (WebCore::FrameSelection::setFocusedElementIfNeeded):
+        (WebCore::FrameSelection::currentForm):
+        * history/CachedPage.cpp:
+        (WebCore::CachedPage::restore):
+        * html/HTMLInputElement.cpp:
+        (WebCore::HTMLInputElement::updateType):
+        (WebCore::HTMLInputElement::attach):
+        * html/HTMLTextAreaElement.cpp:
+        (WebCore::HTMLTextAreaElement::setValueCommon):
+        * html/HTMLTextFormControlElement.cpp:
+        (WebCore::HTMLTextFormControlElement::placeholderShouldBeVisible):
+        (WebCore::HTMLTextFormControlElement::selectionStart):
+        (WebCore::HTMLTextFormControlElement::selectionEnd):
+        (WebCore::HTMLTextFormControlElement::selectionDirection):
+        * html/RadioInputType.cpp:
+        (WebCore::RadioInputType::handleKeydownEvent):
+        (WebCore::RadioInputType::isKeyboardFocusable):
+        * html/shadow/DateTimeEditElement.cpp:
+        (WebCore::DateTimeEditElement::focusedFieldIndex):
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::stopLoading):
+        * page/DOMWindow.cpp:
+        (WebCore::DOMWindow::focus):
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::scrollOverflow):
+        (WebCore::EventHandler::logicalScrollOverflow):
+        (WebCore::EventHandler::dispatchMouseEvent):
+        (WebCore::EventHandler::sendContextMenuEventForKey):
+        (WebCore::EventHandler::capsLockStateMayHaveChanged):
+        * page/FocusController.cpp:
+        (WebCore::dispatchEventsOnWindowAndFocusedNode):
+        (WebCore::FocusController::advanceFocusInDocumentOrder):
+        (WebCore::FocusController::setFocusedElement):
+        (WebCore::FocusController::findFocusCandidateInContainer):
+        (WebCore::FocusController::advanceFocusDirectionallyInContainer):
+        (WebCore::FocusController::advanceFocusDirectionally):
+        * page/FrameView.cpp:
+        (WebCore::FrameView::scrollToAnchor):
+        * plugins/PluginView.cpp:
+        (WebCore::PluginView::focusPluginElement):
+        * plugins/efl/PluginViewEfl.cpp:
+        (WebCore::PluginView::setFocus):
+        * plugins/mac/PluginViewMac.mm:
+        (WebCore::PluginView::platformStart):
+        * rendering/RenderImage.cpp:
+        (WebCore::RenderImage::paintAreaElementFocusRing):
+        * rendering/RenderListBox.cpp:
+        (WebCore::RenderListBox::paintItemForeground):
+        (WebCore::RenderListBox::paintItemBackground):
+        * rendering/RenderTextControlSingleLine.cpp:
+        (WebCore::RenderTextControlSingleLine::capsLockStateMayHaveChanged):
+        (WebCore::RenderTextControlSingleLine::textShouldBeTruncated):
+        * rendering/RenderTheme.cpp:
+        (WebCore::RenderTheme::isFocused):
+
+2013-05-28  Sergio Villar Senin  <svillar@igalia.com>
+
+        Web Inspector: Enable CSS logging
+        https://bugs.webkit.org/show_bug.cgi?id=113401
+
+        Reviewed by Benjamin Poulain.
+
+        From Blink r149265 by <serya@chromium.org>
+
+        CSS logging was disabled in r147028 to prevent message overflow in
+        the inspector console. This change restores it by modifying the
+        CSS grammar in order to reduce as much consecutive errors as
+        possible in 'declaration_list' and 'decl_list' rules.
+
+        This way, for rules like 'x { color: ### }' only the first '#'
+        will be reported as error (instead of 3 identical errors).
+
+        The rule 'declaration' still produces multiple errors, because it
+        does not eat as much errors as possible. So in order not to create
+        a complex risky patch we just disable logging in the parser for
+        that rule.
+
+        * css/CSSGrammar.y.in:
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::CSSParser):
+        (WebCore::CSSParser::parseSheet):
+        (WebCore::CSSParser::syntaxError):
+        (WebCore::CSSParser::isLoggingErrors):
+        (WebCore::CSSParser::rewriteSpecifiers):
+        * css/CSSParser.h:
+        (CSSParser):
+
+2013-05-27  Patrick Gansterer  <paroga@webkit.org>
+
+        Build fix for WinCE after r150730.
+
+        * platform/graphics/FontFallbackList.cpp:
+        (WebCore::FontGlyphs::glyphDataAndPageForCharacter):
+
+2013-05-27  Patrick Gansterer  <paroga@webkit.org>
+
+        Build fix for WinCE after r150772.
+
+        * platform/win/ClipboardWin.cpp:
+        (WebCore):
+        * platform/win/PasteboardWin.cpp:
+        (WebCore::Pasteboard::readFilenames):
+        (WebCore):
+
+2013-05-27  Darin Adler  <darin@apple.com>
+
+        Fix build.
+
+        * html/HTMLAnchorElement.cpp:
+        (WebCore::hasNonEmptyBox): Fix typo.
+
+2013-05-27  Darin Adler  <darin@apple.com>
+
+        Move hasNonEmptyBoundingBox from Node to HTMLAnchorElement
+        https://bugs.webkit.org/show_bug.cgi?id=116842
+
+        Reviewed by Antti Koivisto.
+
+        * dom/Node.cpp: Removed hasNonEmptyBoundingBox.
+        * dom/Node.h: Ditto.
+
+        * html/HTMLAnchorElement.cpp:
+        (WebCore::HTMLAnchorElement::isMouseFocusable): Fixed #if to be more readable and
+        added more-explicit clearer comments. No behavior change.
+        (WebCore::hasNonEmptyBox): Added.  Has the same code that was in
+        Node::hasNonEmptyBoundingBox with some additional comments.
+        (WebCore::HTMLAnchorElement::isKeyboardFocusable): Call hasNonEmptyBox.
+
+2013-05-27  Darin Adler  <darin@apple.com>
+
+        Move isBlockFlowElement and related functions out of the Node class into editing code
+        https://bugs.webkit.org/show_bug.cgi?id=116846
+
+        Reviewed by Antti Koivisto.
+
+        * dom/Node.cpp: Removed isBlockFlowElement, enclosingBlockFlowElement, and
+        inSameContainingBlockFlowElement. These are all editing functions that don't
+        belong in the Node class, and mostly-deprecated ones to boot.
+        * dom/Node.h: Ditto.
+
+        * dom/Position.cpp:
+        (WebCore::inSameEnclosingBlockFlowElement): Added. This editing-specific function
+        is used only here, so put it here.
+        (WebCore::Position::rendersInDifferentPosition): Updated to call new function above.
+        (WebCore::Position::leadingWhitespacePosition): Ditto.
+
+        * editing/InsertLineBreakCommand.cpp:
+        (WebCore::InsertLineBreakCommand::insertNodeAfterPosition): Use
+        deprecatedEnclosingBlockFlowElement at its new location.
+        (WebCore::InsertLineBreakCommand::insertNodeBeforePosition): Ditto.
+
+        * editing/InsertListCommand.cpp:
+        (WebCore::InsertListCommand::doApplyForSingleParagraph): use
+        isBlockFlowElement at its new location.
+        * editing/ReplaceSelectionCommand.cpp:
+        (WebCore::enclosingInline): Ditto.
+
+        * editing/VisiblePosition.cpp:
+        (WebCore::VisiblePosition::canonicalPosition): Use deprecatedEnclosingBlockFlowElement
+        at its new location.
+        (WebCore::enclosingBlockFlowElement): Ditto. Also added FIXME.
+        * editing/VisibleSelection.cpp:
+        (WebCore::makeSearchRange): Ditto.
+
+        * editing/htmlediting.cpp:
+        (WebCore::isBlockFlowElement): Added. Same as the Node::isBlockFlowElement
+        function, but here because this is an editing function, not suitable as a Node member.
+        (WebCore::deprecatedEnclosingBlockFlowElement): Ditto. Added "deprecated" to the name
+        since the Node member function had a comment saying it was deprecated. Also changed so
+        it tolerates a 0 for an argument, which made it easier for one caller.
+
+        * editing/htmlediting.h: Added the two new functions.
+
+2013-05-27  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        Add guard around paintForFixedRootBackground
+        https://bugs.webkit.org/show_bug.cgi?id=116754
+
+        Reviewed by Simon Fraser.
+
+        paintForFixedRootBackground is only used when ACCELERATED_COMPOSITING is enabled.
+
+        No new tests, no behavior change.
+
+        * rendering/RenderLayer.cpp:
+        (WebCore):
+
+2013-05-27  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        Remove a leftover Pagepoup from PickerIndicatorElement.h
+        https://bugs.webkit.org/show_bug.cgi?id=116801
+
+        Reviewed by Anders Carlsson.
+
+        No new tests, no behavior change.
+
+        * html/shadow/PickerIndicatorElement.h:
+        (WebCore):
+
+2013-05-27  Claudio Saavedra  <csaavedra@igalia.com>
+
+        [CSS] -webkit-var prefix is case-sensitive
+        https://bugs.webkit.org/show_bug.cgi?id=116829
+
+        Reviewed by Darin Adler.
+
+        Tests: Added case to fast/css/variables/case-sensitive.html
+
+        * css/CSSParser.cpp:
+        (WebCore::isEqualToCSSCaseSensitiveIdentifier): Add variant to
+        IsEqualToCSSIdentifier that respects case-sensitivity.
+        (WebCore::CSSParser::realLex): Use the above method for CSS
+        variable declarations.
+
+2013-05-27  Zalan Bujtas  <zalan@apple.com>
+
+        drop-shadow filter with overflow:hidden child misbehaves.
+        https://bugs.webkit.org/show_bug.cgi?id=109783
+
+        Reviewed by Simon Fraser.
+
+        Applying CSS filters only to the scrollbar rect leaves rendering
+        artefacts. Filters should skip such partial repaints.
+
+        Tests: Test framework uses mock theme for scrollbars. Such scrollbars do not
+        initiate partial repaints.
+
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::setupFilters):
+        (WebCore::RenderLayer::paintLayerContents):
+        * rendering/RenderLayer.h:
+        (RenderLayer):
+
+2013-05-27  Xueqing Huang  <huangxueqing@baidu.com>
+
+        Move Windows port off legacy clipboard.
+        https://bugs.webkit.org/show_bug.cgi?id=116258
+
+        Reviewed by Darin Adler.
+
+        Clipboard refactor, no new tests.
+
+        * dom/Clipboard.h:
+        * page/win/EventHandlerWin.cpp:
+        (WebCore::EventHandler::createDraggingClipboard): Create Clipboard instead of ClipboardWin.
+        * platform/Pasteboard.h:
+        (WebCore::Pasteboard::dataObject): Get IDataObject by Clipborad.
+        (WebCore::Pasteboard::writableDataObject): Get WCDataObject by Clipborad.
+        * platform/win/ClipboardWin.cpp:
+        (WebCore::Clipboard::createDragImage): Change parameter name loc to dragLocation.
+        (WebCore::Clipboard::declareAndWriteDragImage): Implement declareAndWriteDragImage use WCDataObject exposed by Pasteboard.
+        * platform/win/ClipboardWin.h: Removed.
+        * platform/win/EditorWin.cpp:
+        (WebCore::Editor::newGeneralClipboard): Create Clipboard instead of ClipboardWin.
+        * platform/win/PasteboardWin.cpp:
+        (WebCore::Pasteboard::createForCopyAndPaste): Create a Pasteboard.
+        (WebCore::Pasteboard::createPrivate): Ditto.
+        (WebCore::Pasteboard::createForDragAndDrop): Ditto.
+        (WebCore::Pasteboard::finishCreatingPasteboard): Create Pasteboard use Windows API.
+        (WebCore::Pasteboard::Pasteboard):
+        (WebCore::clipboardTypeFromMIMEType): Copied from ClipboardWin.cpp.
+        (WebCore::Pasteboard::clear): Ditto.
+        (WebCore::Pasteboard::hasData): Ditto.
+        (WebCore::addMimeTypesForFormat): Ditto.
+        (WebCore::Pasteboard::types): Ditto.
+        (WebCore::Pasteboard::readString): Ditto.
+        (WebCore::Pasteboard::readFilenames): Ditto.
+        (WebCore::writeURL): Ditto.
+        (WebCore::Pasteboard::writeString): Ditto.
+        (WebCore::Pasteboard::setDragImage): Ditto.
+        (WebCore::Pasteboard::writeRangeToDataObject): Write range to WCDataObject.
+        (WebCore::Pasteboard::writeSelection):
+        (WebCore::Pasteboard::writePlainTextToDataObject): Write PlainText to WCDataObject.
+        (WebCore::Pasteboard::writePlainText):
+        (WebCore::pathRemoveBadFSCharacters): Copied from ClipboardWin.cpp.
+        (WebCore::filesystemPathFromUrlOrTitle): Ditto.
+        (WebCore::writeFileToDataObject): Ditto.
+        (WebCore::Pasteboard::writeURLToDataObject): Write URL to WCDataObject.
+        (WebCore::Pasteboard::writeURL): Copied from ClipboardWin.cpp.
+        (WebCore::Pasteboard::writePasteboard): Copied from Pasteboard::writeClipboard.
+        (WebCore::Pasteboard::documentFragment): Copied from ClipboardWin.cpp.
+        (WebCore::Pasteboard::setExternalDataObject): Clipboard can set new IDataObject.
+        (WebCore::getCachedImage): Copied from ClipboardWin.cpp.
+        (WebCore::createGlobalImageFileDescriptor): Ditto.
+        (WebCore::createGlobalImageFileContent): Ditto.
+        (WebCore::createGlobalHDropContent): Ditto.
+        (WebCore::Pasteboard::writeImageToDataObject): Expose to make Clipboard implement declareAndWriteDragImage.
+        (WebCore::Pasteboard::writeURLToWritableDataObject): Ditto.
+
+2013-05-27  Tim Horton  <timothy_horton@apple.com>
+
+        PDFPlugin: Main-frame PDFPlugin Accessibility
+        https://bugs.webkit.org/show_bug.cgi?id=116563
+        <rdar://problem/13458534>
+
+        Reviewed by Sam Weinig.
+
+        * WebCore.exp.in: Export AffineTransform::mapRect.
+
+2013-05-27  Tiancheng Jiang  <tijiang@rim.com>
+
+        Checkbox UX update.
+        https://bugs.webkit.org/show_bug.cgi?id=116838.
+
+        Reviewed by Rob Buis.
+
+        BlackBerry PR 342302.
+        Internally Reviewed by Jeff Rogers.
+        Remove old background and change pressed checkmark image.
+
+        * platform/blackberry/RenderThemeBlackBerry.cpp:
+        (WebCore::RenderThemeBlackBerry::paintCheckbox):
+
+2013-05-27  Sam Weinig  <sam@webkit.org>
+
+        When the background is completely transparent we should be conservative and use the default scrollbar style, not the light one
+        https://bugs.webkit.org/show_bug.cgi?id=116836
+        <rdar://problem/13949905>
+
+        Reviewed by Simon Fraser.
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::recalculateScrollbarOverlayStyle):
+        Don't use the light style when the background is completely transparent.
+
+2013-05-27  Patrick Gansterer  <paroga@webkit.org>
+
+        Use ICU_INCLUDE_DIRS in BlackBerry CMake files
+        https://bugs.webkit.org/show_bug.cgi?id=116210
+
+        Reviewed by Rob Buis.
+
+        Set and use the ICU_INCLUDE_DIRS variable to avoid
+        duplicated adding of the ICU include directory.
+
+        * PlatformBlackBerry.cmake:
+
+2013-05-27  Antti Koivisto  <antti@apple.com>
+
+        Tighten FontGlyphs::glyphDataAndPageForCharacter to take FontDescription
+        https://bugs.webkit.org/show_bug.cgi?id=116823
+
+        Reviewed by Andreas Kling.
+
+        FontGlyphs does not need to know about Font anymore.
+
+        * platform/graphics/Font.cpp:
+        (WebCore::Font::Font):
+        (WebCore::Font::operator=):
+        * platform/graphics/Font.h:
+        (WebCore::Font::isPlatformFont):
+        (WebCore::Font::glyphDataAndPageForCharacter):
+        (Font):
+        * platform/graphics/FontCache.h:
+        * platform/graphics/FontFallbackList.cpp:
+        (WebCore::FontGlyphs::FontGlyphs):
+        (WebCore::FontGlyphs::glyphDataAndPageForCharacter):
+        * platform/graphics/FontFallbackList.h:
+        (WebCore):
+        (WebCore::FontGlyphs::createForPlatformFont):
+        
+            Tweaked the name.
+
+        (WebCore::FontGlyphs::isForPlatformFont):
+        
+            Move knowledge about platform font to FontGlyphs as it is needed for resolving system fallback on Mac.
+
+        * platform/graphics/blackberry/FontCacheBlackBerry.cpp:
+        (WebCore::FontCache::systemFallbackForCharacters):
+        * platform/graphics/freetype/FontCacheFreeType.cpp:
+        (WebCore::FontCache::systemFallbackForCharacters):
+        * platform/graphics/mac/FontCacheMac.mm:
+        (WebCore::FontCache::systemFallbackForCharacters):
+        * platform/graphics/qt/FontCacheQt.cpp:
+        (WebCore::FontCache::systemFallbackForCharacters):
+        * platform/graphics/win/FontCacheWin.cpp:
+        (WebCore::FontCache::systemFallbackForCharacters):
+        * platform/graphics/wince/FontCacheWinCE.cpp:
+        (WebCore::FontCache::systemFallbackForCharacters):
+        
+            More descriptive name and tighter interface.
+
+2013-05-27  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSSRegions] Prevent unnecessary copy of LayoutRect objects
+        https://bugs.webkit.org/show_bug.cgi?id=116828
+
+        Reviewed by Andreas Kling.
+
+        Use const references for parameter passing.
+        No functional change, no new tests.
+
+        * rendering/RenderFlowThread.cpp:
+        (WebCore::RenderFlowThread::paintFlowThreadPortionInRegion):
+        (WebCore::RenderFlowThread::hitTestFlowThreadPortionInRegion):
+        * rendering/RenderFlowThread.h:
+        * rendering/RenderRegion.cpp:
+        (WebCore::RenderRegion::overflowRectForFlowThreadPortion):
+        * rendering/RenderRegion.h:
+
+2013-05-27  Leo Yang  <leoyang@rim.com>
+
+        [BlackBerry] Reveal HTTP error code for XHR even if there is no response body
+        https://bugs.webkit.org/show_bug.cgi?id=116543
+
+        Reviewed by Rob Buis.
+        Reviewed internally by Joe Mason.
+
+        It's a regression introduced by r132556.
+        BlackBerry is doing friendly HTTP error handling: if there is no response body
+        for an HTTP error it will display an error message made by the port. But for a
+        XHR request, which usually does not result in displaying error messages to the
+        end user, HTTP error code should be revealed to let the JavaScript know what
+        the actual server error code is.
+
+        Covered by existing tests:
+        ManualTests/blackberry/head-xhr-nonexistant-file.html
+        LayoutTests/http/tests/xmlhttprequest/xmlhttprequest-check-head-readystate-for-404.html
+        LayoutTests/http/tests/xmlhttprequest/xmlhttprequest-check-get-readystate-for-404-without-body.html
+
+        * platform/network/blackberry/NetworkJob.cpp:
+        (WebCore::NetworkJob::shouldNotifyClientFailed):
+
+2013-05-27  Tiancheng Jiang  <tijiang@rim.com>
+
+        Adjust date input width.
+        https://bugs.webkit.org/show_bug.cgi?id=100760.
+
+        Reviewed by Rob Buis.
+
+        BlackBerry PR 343497.
+        Internally Reviewed by Jeff Rogers.
+
+        Set width to auto to fit the string length.
+
+        * css/themeBlackBerry.css:
+        (input[type="date"], input[type="datetime"], input[type="datetime-local"], input[type="time"], input[type="month"]):
+
+2013-05-27  Andreas Kling  <akling@apple.com>
+
+        Document::setHoveredNode() should be setHoveredElement().
+        <http://webkit.org/b/116819>
+
+        Reviewed by Antti Koivisto.
+
+        Only Elements can be hovered, teach Document about this.
+
+        * dom/Document.h:
+        * dom/Document.cpp:
+        (WebCore::Document::dispose):
+        (WebCore::Document::detach):
+
+            m_hoverNode => m_hoveredElement.
+            Removed hoverNode() and setHoverNode() since those were only used internally.
+
+        (WebCore::Document::updateHoverActiveState):
+
+            Updated for hovered things always being Elements.
+
+        (WebCore::Document::hoveredElementDidDetach):
+        * dom/Element.cpp:
+        (WebCore::Element::detach):
+
+            Renamed Document::hoveredNodeDetached() to hoveredElementDidDetach() and fix it up
+            following the same pattern as elementInActiveChainDidDetach().
+
+2013-05-27  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] REGRESSION(r150716): It made 15 inspector and 1 mozilla test to assert
+        https://bugs.webkit.org/show_bug.cgi?id=116822
+
+        Reviewed by Andreas Kling.
+
+        The input fontDescription may have more than one family defined.
+
+        * platform/qt/RenderThemeQStyle.cpp:
+        (WebCore::RenderThemeQStyle::adjustButtonStyle):
+
+2013-05-27  Jocelyn Turcotte  <jocelyn.turcotte@digia.com>
+
+        [Qt][Win] Input events aren't mapped properly with windowless plugins.
+        https://bugs.webkit.org/show_bug.cgi?id=116094
+
+        Reviewed by Tor Arne Vestbø.
+
+        The events are first sent properly but Flash then immediately repaints
+        and this causes flickering painting.
+        The issue is that Flash seems to be doing some input event tracking of
+        its own internally, using the HWND returned through NPN_GetValue(NPNVnetscapeWindow).
+
+        We are currently using two coordinate systems for windowless plugins on Windows with Qt:
+        - FrameView coordinates: Used for input events and ajusted with the WM_WINDOWPOSCHANGED message
+        - Drawable coordinates: Used by WM_PAINT and adjusted with NPP_SetWindow
+
+        This patch fixes the bug by mapping input events to the native window returned
+        as NPNVnetscapeWindow instead of the FrameView to ensure that those coordinates will match
+        the ones used by Flash internally.
+        With this we shouldn't be using FrameView coordinates anywhere for windowless plugins
+        on Windows with Qt.
+
+        * platform/qt/QWebPageClient.h:
+        (QWebPageClient):
+          Added mapToOwnerWindow to the interface, mapping from the FrameView up to the wrapping nativeParentWidget.
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::contentsToNativeWindow):
+        (WebCore::PluginView::paintIntoTransformedContext):
+        (WebCore::PluginView::handleMouseEvent):
+
+2013-05-27  Antti Koivisto  <antti@apple.com>
+
+        Tighten FontGlyphs interfaces to take FontDescription instead of Font
+        https://bugs.webkit.org/show_bug.cgi?id=116818
+
+        Reviewed by Andreas Kling.
+
+        This gives better understanding of what the actual inputs are.
+
+        * WebCore.exp.in:
+        * platform/graphics/Font.h:
+        (WebCore::Font::primaryFont):
+        (WebCore::Font::fontDataAt):
+        (WebCore::Font::isFixedPitch):
+        * platform/graphics/FontCache.cpp:
+        (WebCore::FontCache::getFontData):
+        * platform/graphics/FontCache.h:
+        * platform/graphics/FontFallbackList.cpp:
+        (WebCore::FontGlyphs::determinePitch):
+        (WebCore::FontGlyphs::realizeFontDataAt):
+        (WebCore::FontGlyphs::glyphDataAndPageForCharacter):
+        * platform/graphics/FontFallbackList.h:
+        (WebCore::FontGlyphs::primaryFontData):
+        (WebCore::FontGlyphs::isFixedPitch):
+        (WebCore::FontGlyphs::primarySimpleFontData):
+        * platform/graphics/blackberry/FontCacheBlackBerry.cpp:
+        * platform/graphics/freetype/FontCacheFreeType.cpp:
+        * platform/graphics/mac/FontCacheMac.mm:
+        (WebCore::FontCache::similarFontPlatformData):
+        
+            Drop get* naming and make this Mac only as no other platform has it.
+
+        * platform/graphics/qt/FontCacheQt.cpp:
+        * platform/graphics/win/FontCacheWin.cpp:
+        * platform/graphics/wince/FontCacheWinCE.cpp:
+        (WebCore):
+
+2013-05-27  Andreas Kling  <akling@apple.com>
+
+        Strengthen typing of detaching an Element from Document's :active chain.
+        <http://webkit.org/b/116815>
+
+        Reviewed by Antti Koivisto.
+
+        Tiny cleanup now that the :active chain can only contain elements.
+        Rename Document::activeChainNodeDetached() to elementInActiveChainDidDetach().
+
+        * dom/Element.cpp:
+        (WebCore::Element::detach):
+        * dom/Document.h:
+        * dom/Document.cpp:
+        (WebCore::Document::elementInActiveChainDidDetach):
+
+            Rename, take Element*, remove silly condition that was always true.
+
+2013-05-27  Andrei Bucur  <abucur@adobe.com>
+
+        [CSS Regions] Remove the offsetFromLogicalTopOfFirstPage parameter from layout functions
+        https://bugs.webkit.org/show_bug.cgi?id=116441
+
+        Reviewed by David Hyatt.
+
+        The patch changes the following things:
+        - exposes offsetFromLogicalTopOfFirstPage() to all the RenderBoxes;
+        - offsetFromLogicalTopOfFirstPage() is now safe to call from any box inside a flow thread, not only the
+        currently being laid out;
+        - removes the offsetFromLogicalTopOfFirstPage parameter from all the layout functions
+        that didn't actually required it; when the value is necessary, the offsetFromLogicalTopOfFirstPage
+        function is called instead;
+        - RenderFlowThread now handles its own logic for obtaining the offset from logical top of the first
+        region for a box, based on the layout states pushed on RenderView; it provides a better caching mechanism
+        that can be used for all the ancestor containing blocks of the current box being laid out.
+
+        The RenderBoxRegionInfo structures are cached only based on the box and the region. This means that
+        passing around a value for offsetFromLogicalTopOfFirstPage different in some cases than others was
+        risky. If there is a possibility of having a different box info result for a different offset
+        then the cache is not working correctly.
+
+        Tests: No function change, no tests.
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::computeStartPositionDeltaForChildAvoidingFloats):
+        (WebCore::RenderBlock::logicalLeftOffsetForContent):
+        (WebCore::RenderBlock::logicalRightOffsetForContent):
+        (WebCore::RenderBlock::getClearDelta):
+        (WebCore::RenderBlock::lineWidthForPaginatedLineChanged):
+        (WebCore::RenderBlock::offsetFromLogicalTopOfFirstPage):
+        (WebCore::RenderBlock::logicalWidthChangedInRegions):
+        * rendering/RenderBlock.h:
+        (WebCore::RenderBlock::availableLogicalWidthForLine):
+        (WebCore::RenderBlock::logicalRightOffsetForLine):
+        (WebCore::RenderBlock::logicalLeftOffsetForLine):
+        (WebCore::RenderBlock::startOffsetForLine):
+        (WebCore::RenderBlock::endOffsetForLine):
+        (WebCore::RenderBlock::availableLogicalWidthForContent):
+        (WebCore::RenderBlock::startOffsetForContent):
+        (WebCore::RenderBlock::endOffsetForContent):
+        (WebCore::RenderBlock::logicalLeftOffsetForContent):
+        (WebCore::RenderBlock::logicalRightOffsetForContent):
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::borderBoxRectInRegion):
+        (WebCore::RenderBox::constrainLogicalWidthInRegionByMinMax):
+        (WebCore::RenderBox::shrinkLogicalWidthToAvoidFloats):
+        (WebCore::RenderBox::containingBlockLogicalWidthForContentInRegion):
+        (WebCore::RenderBox::containingBlockAvailableLineWidthInRegion):
+        (WebCore::RenderBox::computeLogicalWidthInRegion):
+        (WebCore::RenderBox::computeLogicalWidthInRegionUsing):
+        (WebCore::RenderBox::renderBoxRegionInfo):
+        (WebCore::RenderBox::containingBlockLogicalWidthForPositioned):
+        (WebCore::RenderBox::containingBlockLogicalHeightForPositioned):
+        (WebCore::computeInlineStaticDistance):
+        (WebCore::RenderBox::computePositionedLogicalWidth):
+        (WebCore::RenderBox::computePositionedLogicalWidthUsing):
+        (WebCore::RenderBox::computePositionedLogicalHeight):
+        (WebCore::RenderBox::computePositionedLogicalHeightUsing):
+        (WebCore::RenderBox::computePositionedLogicalWidthReplaced):
+        (WebCore::RenderBox::computePositionedLogicalHeightReplaced):
+        (WebCore::RenderBox::offsetFromLogicalTopOfFirstPage):
+        * rendering/RenderBox.h:
+        * rendering/RenderFlexibleBox.cpp:
+        (WebCore::RenderFlexibleBox::computeMainAxisExtentForChild):
+        * rendering/RenderFlowThread.cpp:
+        (WebCore::RenderFlowThread::logicalWidthChangedInRegionsForBlock):
+        (WebCore::RenderFlowThread::hasCachedOffsetFromLogicalTopOfFirstRegion):
+        (WebCore::RenderFlowThread::cachedOffsetFromLogicalTopOfFirstRegion):
+        (WebCore::RenderFlowThread::setOffsetFromLogicalTopOfFirstRegion):
+        (WebCore::RenderFlowThread::clearOffsetFromLogicalTopOfFirstRegion):
+        (WebCore::RenderFlowThread::currentActiveRenderBox):
+        (WebCore::RenderFlowThread::pushFlowThreadLayoutState):
+        (WebCore::RenderFlowThread::popFlowThreadLayoutState):
+        (WebCore::RenderFlowThread::offsetFromLogicalTopOfFirstRegion):
+        (WebCore::RenderFlowThread::adjustedPositionRelativeToOffsetParent):
+        * rendering/RenderFlowThread.h:
+        * rendering/RenderTable.cpp:
+        (WebCore::RenderTable::updateLogicalWidth):
+        * rendering/RenderView.cpp:
+        (WebCore::RenderView::pushLayoutState):
+        (WebCore::RenderView::pushLayoutStateForCurrentFlowThread):
+        (WebCore::RenderView::popLayoutStateForCurrentFlowThread):
+        * rendering/RenderView.h:
+        (WebCore::RenderView::pushLayoutState):
+        (WebCore::RenderView::popLayoutState):
+
+2013-05-27  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        Active DOM objects stopped twice
+        https://bugs.webkit.org/show_bug.cgi?id=116524
+
+        Reviewed by Alexey Proskuryakov.
+
+        Only iterate over all active DOM object to stop them once.
+
+        To ensure later created active DOM objects are stopped,
+        suspendActiveDOMObjectIfNeeded now also stops active DOM objects
+        if needed. This also fixes an existing bug when active DOM
+        objects were created after stopActiveDOMObjects had been called.
+
+        Two existing tests creates new active DOM objects after stopActiveDOMObjects
+        has been called:
+            fast/dom/xmlhttprequest-constructor-in-detached-document.html
+            fast/dom/Window/timer-null-script-execution-context.html
+
+        * dom/ScriptExecutionContext.cpp:
+        (WebCore::ScriptExecutionContext::stopActiveDOMObjects):
+        (WebCore::ScriptExecutionContext::suspendActiveDOMObjectIfNeeded):
+
+2013-05-27  Charles Wei  <charles.wei@torchmobile.com.cn>
+
+        Remove redundant CachedRawResource::loader()
+        https://bugs.webkit.org/show_bug.cgi?id=116805
+
+        Reviewed by Andreas Kling.
+
+        Just remove redundant code, no test case needed.
+
+        * loader/cache/CachedRawResource.cpp:
+        * loader/cache/CachedRawResource.h:
+
+2013-05-27  Andreas Kling  <akling@apple.com>
+
+        WinCE build TLC: Node::active() moved to Element.
+
+        * rendering/RenderThemeWinCE.cpp:
+        (WebCore::RenderThemeWinCE::paintSearchFieldCancelButton):
+
+2013-05-26  Jaehun Lim  <ljaehun.lim@samsung.com>
+
+        CSSParser::parseImageResolution doesn't need a parameter.
+        https://bugs.webkit.org/show_bug.cgi?id=116755
+
+        Reviewed by Darin Adler.
+
+        parseImageResolution() can get CSSPraserValueList from m_valueList directly.
+
+        No new tests, no behavior change.
+
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::parseImageResolution):
+        * css/CSSParser.h:
+
+2013-05-26  Andreas Kling  <akling@apple.com>
+
+        Turn TreeScope::focusedNode() into focusedElement().
+        <http://webkit.org/b/116802>
+
+        Reviewed by Darin Adler.
+
+        For the hundredth time, only Elements can be focused!
+
+        This change mostly reverts r121079 since that made things unnecessarily complicated
+        just to tweak the behavior of ShadowRoot.activeElement, an API that we don't expose.
+        Finding a TreeScope's focused element now does a simple walk up the parent chain instead
+        of running the full Shadow DOM re-targeting algorithm.
+
+        (WebCore::TreeScope::focusedElement):
+
+            Simplify and return Element* instead of Node*.
+
+        * dom/TreeScope.h:
+        * dom/TreeScope.cpp:
+        (WebCore::focusedFrameOwnerElement):
+
+            Make this return Element* as the name already suggested.
+
+        * dom/Document.cpp:
+        (WebCore::Document::removeFocusedNodeOfSubtree):
+        * dom/Element.cpp:
+        (WebCore::Element::blur):
+        * dom/ShadowRoot.h:
+        (WebCore::ShadowRoot::activeElement):
+        * html/HTMLDocument.cpp:
+        (WebCore::HTMLDocument::activeElement):
+
+            Simplified call sites that were paranoid about getting a non-Element focused node.
+
+2013-05-26  Dean Jackson  <dino@apple.com>
+
+        Plugins with no src but valid type should not snapshot
+        https://bugs.webkit.org/show_bug.cgi?id=116799
+        <rdar://problem/13695911>
+
+        Reviewed by Simon Fraser.
+
+        There are a few plug-ins around that don't take any source content
+        via the src attribute, but rather just load the binary based on the
+        mime-type. In those cases we shouldn't snapshot until we have a
+        mechanism to do so.
+
+        * html/HTMLPlugInImageElement.cpp:
+        (WebCore::HTMLPlugInImageElement::subframeLoaderWillCreatePlugIn):
+            Add MIMEType logging, and detect the case of no src but valid type.
+        * html/HTMLPlugInImageElement.h: Add another SnapshotReason enum for
+            this special case.
+
+2013-05-26  Antti Koivisto  <antti@apple.com>
+
+        Encapsulate FontGlyphs
+        https://bugs.webkit.org/show_bug.cgi?id=116803
+
+        Reviewed by Andreas Kling.
+
+        FontGlyphs is unfriending Font. Give it a real class interface and some actual code.
+
+        * platform/graphics/Font.cpp:
+        (WebCore::Font::Font):
+        * platform/graphics/Font.h:
+        (WebCore::Font::glyphDataForCharacter):
+        (WebCore::Font::glyphDataAndPageForCharacter):
+        * platform/graphics/FontFallbackList.cpp:
+        (WebCore::FontGlyphs::FontGlyphs):
+        (WebCore::isInRange):
+        (WebCore::shouldIgnoreRotation):
+        (WebCore::glyphDataAndPageForNonCJKCharacterWithGlyphOrientation):
+        
+            Helpers from FontFastPath.cpp.
+
+        (WebCore::FontGlyphs::glyphDataAndPageForCharacter):
+        
+            This is the primary interface. The code moves here from FontFastPath.cpp.
+
+        * platform/graphics/FontFallbackList.h:
+        (WebCore::FontGlyphs::createForPlatformData):
+        
+            Remove setPlatformData in favor of constructor.
+
+        (WebCore::FontGlyphs::primarySimpleFontData):
+        * platform/graphics/FontFastPath.cpp:
+        * platform/graphics/GraphicsContext.h:
+
+            Remove a stray function definition also called setPlatformFont().
+
+        * rendering/svg/SVGTextRunRenderingContext.cpp:
+        (WebCore::SVGTextRunRenderingContext::glyphDataForCharacter):
+
+2013-05-26  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        Remove a leftover CALENDAR_PICKER from LocaleNone.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=116800
+
+        Reviewed by Kent Tamura.
+
+        No new tests, no behavior change.
+
+        * platform/text/LocaleNone.cpp:
+        (LocaleNone):
+
+2013-05-26  Antti Koivisto  <antti@apple.com>
+
+        Rename FontFallbackList to FontGlyphs
+        https://bugs.webkit.org/show_bug.cgi?id=116797
+
+        Reviewed by Andreas Kling.
+
+        Maybe it was a fallback list once. Nowadays its purpose is to cache realized glyphs and related data.
+        
+        File renaming will be done separately.
+
+        * WebCore.exp.in:
+        * platform/graphics/Font.cpp:
+        (WebCore::Font::Font):
+        (WebCore::Font::operator=):
+        (WebCore::Font::operator==):
+        
+            Refactored to early return style.
+
+        (WebCore::Font::update):
+        (WebCore::Font::width):
+        * platform/graphics/Font.h:
+        (Font):
+        (WebCore::Font::glyphs):
+        (WebCore::Font::loadingCustomFonts):
+        (WebCore::Font::primaryFont):
+        (WebCore::Font::fontDataAt):
+        (WebCore::Font::isFixedPitch):
+        (WebCore::Font::fontSelector):
+        * platform/graphics/FontCache.h:
+        (FontCache):
+        * platform/graphics/FontFallbackList.cpp:
+        (WebCore::FontGlyphs::FontGlyphs):
+        (WebCore::FontGlyphs::invalidate):
+        (WebCore::FontGlyphs::releaseFontData):
+        (WebCore::FontGlyphs::determinePitch):
+        (WebCore::FontGlyphs::realizeFontDataAt):
+        
+            Renamed for clarity along with m_fontList -> m_realizedFontData.
+
+        (WebCore::FontGlyphs::setPlatformFont):
+        * platform/graphics/FontFallbackList.h:
+        (FontGlyphs):
+        (WebCore::FontGlyphs::GlyphPagesStateSaver::GlyphPagesStateSaver):
+        (WebCore::FontGlyphs::GlyphPagesStateSaver::~GlyphPagesStateSaver):
+        (GlyphPagesStateSaver):
+        (WebCore::FontGlyphs::create):
+        (WebCore::FontGlyphs::~FontGlyphs):
+        (WebCore::FontGlyphs::primaryFontData):
+        * platform/graphics/FontFastPath.cpp:
+        (WebCore::Font::glyphDataAndPageForCharacter):
+        * rendering/svg/SVGTextRunRenderingContext.cpp:
+        (WebCore::SVGTextRunRenderingContext::glyphDataForCharacter):
+
+2013-05-26  Kent Tamura  <tkent@chromium.org>
+
+        Remove ENABLE_CALENDAR_PICKER
+        https://bugs.webkit.org/show_bug.cgi?id=116795
+
+        Reviewed by Ryosuke Niwa.
+
+        This feature was used only by Chromium port.
+
+        * Resources/pagepopups/calendarPicker.css: Removed.
+        * Resources/pagepopups/calendarPicker.js: Removed.
+        * css/html.css:
+        * platform/text/LocaleICU.cpp:
+        (WebCore::LocaleICU::LocaleICU):
+        (WebCore):
+        * platform/text/LocaleICU.h:
+        (LocaleICU):
+        * platform/text/PlatformLocale.h:
+        (Locale):
+        * platform/text/mac/LocaleMac.h:
+        (LocaleMac):
+        * platform/text/mac/LocaleMac.mm:
+        (WebCore::LocaleMac::monthLabels):
+        * platform/text/win/LocaleWin.cpp:
+        (WebCore::LocaleWin::LocaleWin):
+        (WebCore::LocaleWin::monthLabels):
+        * platform/text/win/LocaleWin.h:
+        (LocaleWin):
+
+2013-05-26  Andreas Kling  <akling@apple.com>
+
+        Move :active chain participation state from Node to Element.
+        <http://webkit.org/b/116786>
+
+        Reviewed by Antti Koivisto.
+
+        Only Elements can be in the :active chain so move the logic there from Node.
+
+        * dom/Document.cpp:
+        (WebCore::Document::updateHoverActiveState):
+
+            Add isElementNode() type checks when updating the :active chain.
+
+        * dom/Node.h:
+        * dom/Node.cpp:
+        (WebCore::Node::detach):
+        * dom/Element.cpp:
+        (WebCore::Element::detach):
+
+            Move the remaining logic for detaching from the UserActionElementSet to Element.
+
+        (WebCore::Element::isUserActionElementInActiveChain):
+        * dom/Element.h:
+        (WebCore::Element::inActiveChain):
+
+            Move all the :active chain stuff from Node to Element.
+
+        * dom/UserActionElementSet.cpp:
+        (WebCore::UserActionElementSet::didDetach):
+        * dom/UserActionElementSet.h:
+        (WebCore::UserActionElementSet::isInActiveChain):
+        (WebCore::UserActionElementSet::setInActiveChain):
+
+            UserActionElementSet now only takes Element* in its API.
+
+2013-05-26  Antti Koivisto  <antti@apple.com>
+
+        Remove FontFamily.h/.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=116788
+
+        Reviewed by Anders Carlsson.
+        
+        Empty files.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * Target.pri:
+        * WebCore.vcproj/WebCore.vcproj:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.xcodeproj/project.pbxproj:
+        * platform/graphics/FontDescription.h:
+        * platform/graphics/FontFamily.cpp: Removed.
+        * platform/graphics/FontFamily.h: Removed.
+
+2013-05-26  Antti Koivisto  <antti@apple.com>
+
+        Use Vector instead of custom linked list for font families
+        https://bugs.webkit.org/show_bug.cgi?id=116783
+
+        Reviewed by Andreas Kling.
+
+        Get rid of FontFamily and SharedFontFamily.
+
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::hasSameFont):
+        * accessibility/atk/WebKitAccessibleInterfaceText.cpp:
+        (getAttributeSetForAccessibilityObject):
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::fontFamilyFromStyle):
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::ApplyPropertyFontFamily::applyInheritValue):
+        (WebCore::ApplyPropertyFontFamily::applyInitialValue):
+        (WebCore::ApplyPropertyFontFamily::applyValue):
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::styleForDocument):
+        (WebCore::StyleResolver::initializeFontStyle):
+        * html/canvas/CanvasRenderingContext2D.cpp:
+        (WebCore::CanvasRenderingContext2D::font):
+        (WebCore::CanvasRenderingContext2D::setFont):
+        * page/PrintContext.cpp:
+        (WebCore::PrintContext::pageProperty):
+        * platform/efl/RenderThemeEfl.cpp:
+        (WebCore::RenderThemeEfl::systemFont):
+        * platform/graphics/Font.h:
+        (WebCore::Font::firstFamily):
+        (WebCore::Font::familyCount):
+        (WebCore::Font::familyAt):
+        * platform/graphics/FontCache.cpp:
+        (WebCore::FontCache::getFontData):
+        * platform/graphics/FontDescription.cpp:
+        (SameSizeAsFontDescription):
+        * platform/graphics/FontDescription.h:
+        (WebCore::FontDescription::FontDescription):
+        (WebCore::FontDescription::familyCount):
+        (WebCore::FontDescription::firstFamily):
+        (WebCore::FontDescription::familyAt):
+        (WebCore::FontDescription::families):
+        (WebCore::FontDescription::useFixedDefaultSize):
+        (WebCore::FontDescription::setOneFamily):
+        (WebCore::FontDescription::setFamilies):
+        (WebCore::FontDescription::adoptFamilies):
+        (WebCore::FontDescription::operator==):
+        * platform/graphics/FontFamily.cpp:
+        * platform/graphics/FontFamily.h:
+        * platform/graphics/ca/win/PlatformCALayerWinInternal.cpp:
+        (PlatformCALayerWinInternal::displayCallback):
+        * platform/graphics/mac/FontCacheMac.mm:
+        (WebCore::FontCache::getSimilarFontPlatformData):
+        * platform/graphics/qt/FontCacheQt.cpp:
+        (WebCore::FontCache::getLastResortFallbackFont):
+        * platform/gtk/RenderThemeGtk.cpp:
+        (WebCore::RenderThemeGtk::systemFont):
+        * platform/mac/ThemeMac.mm:
+        (WebCore::ThemeMac::controlFont):
+        * platform/qt/RenderThemeQStyle.cpp:
+        (WebCore::RenderThemeQStyle::adjustButtonStyle):
+        * platform/text/transcoder/FontTranscoder.cpp:
+        (WebCore::FontTranscoder::converterType):
+        * platform/win/DragImageWin.cpp:
+        (WebCore::dragLabelFont):
+        * rendering/RenderText.cpp:
+        (WebCore::RenderText::styleDidChange):
+        * rendering/RenderTextControl.cpp:
+        (WebCore::RenderTextControl::computeIntrinsicLogicalWidths):
+        * rendering/RenderTextControlSingleLine.cpp:
+        (WebCore::RenderTextControlSingleLine::preferredContentLogicalWidth):
+        * rendering/RenderThemeMac.mm:
+        (WebCore::RenderThemeMac::systemFont):
+        (WebCore::RenderThemeMac::setFontFromControlSize):
+        * rendering/RenderThemeSafari.cpp:
+        (WebCore::RenderThemeSafari::systemFont):
+        (WebCore::RenderThemeSafari::setFontFromControlSize):
+        * rendering/RenderThemeWin.cpp:
+        (WebCore::fillFontDescription):
+
+2013-05-26  Andreas Kling  <akling@apple.com>
+
+        Move "active" state logic from Node to Element.
+        <http://webkit.org/b/116785>
+
+        Reviewed by Antti Koivisto.
+
+        Resolve another 7 year old FIXME by merging the "active" state logic from Node and ContainerNode
+        and moving it all to Element instead.
+
+        * dom/UserActionElementSet.h:
+        (WebCore::UserActionElementSet::isActive):
+        (WebCore::UserActionElementSet::setActive):
+        * dom/ContainerNode.cpp:
+        * dom/ContainerNode.h:
+        * dom/Node.cpp:
+        * dom/Node.h:
+        * dom/Element.h:
+        (WebCore::Element::active):
+        * dom/Element.cpp:
+        (WebCore::Element::isUserActionElementActive):
+        (WebCore::Element::setActive):
+
+            Moved here from Node/ContainerNode.
+
+        * accessibility/AccessibilityNodeObject.cpp:
+        (WebCore::AccessibilityNodeObject::isPressed):
+        * dom/Document.cpp:
+        (WebCore::Document::setFocusedNode):
+        (WebCore::Document::updateHoverActiveState):
+        * rendering/RenderTheme.cpp:
+        (WebCore::RenderTheme::isPressed):
+        (WebCore::RenderTheme::isSpinUpButtonPartPressed):
+        * rendering/RenderThemeMac.mm:
+        (WebCore::getMediaUIPartStateFlags):
+        (WebCore::RenderThemeMac::updatePressedState):
+        * platform/qt/RenderThemeQt.cpp:
+        (WebCore::RenderThemeQt::getMediaControlForegroundColor):
+
+            Check that the inspected Node is an Element before asking if it's active.
+
+        * html/HTMLAnchorElement.cpp:
+        (WebCore::HTMLAnchorElement::setActive):
+
+            Call the right superclass.
+
+        * html/HTMLAnchorElement.h:
+        * html/HTMLLabelElement.h:
+        * html/shadow/MediaControlElementTypes.h:
+
+            Sprinkle OVERRIDE>
+
+2013-05-26  Andreas Kling  <akling@apple.com>
+
+        Move Node::dispatchSimulatedClick() to Element.
+        <http://webkit.org/b/116784>
+
+        Reviewed by Antti Koivisto.
+
+        Only Elements use the dispatchSimulatedClick() functionality, so move it there.
+
+        * dom/Node.cpp:
+        * dom/Node.h:
+        * dom/Element.h:
+        * dom/Element.cpp:
+        (WebCore::Element::dispatchSimulatedClick):
+        * dom/EventDispatcher.h:
+        * dom/EventDispatcher.cpp:
+        (WebCore::EventDispatcher::dispatchSimulatedClick):
+
+2013-05-26  Andreas Kling  <akling@apple.com>
+
+        TreeScope::rootNode() should return a ContainerNode.
+        <http://webkit.org/b/116782>
+
+        Reviewed by Antti Koivisto.
+
+        The rootNode() of a TreeScope is always a ContainerNode, so update pointer types to reflect that.
+        This lets us take advantage of Antti's optimized traversal functions.
+
+        * dom/ContainerNode.h:
+        (WebCore::Node::isTreeScope):
+        * dom/Document.cpp:
+        (WebCore::Document::buildAccessKeyMap):
+        * dom/Node.cpp:
+        (WebCore::Node::containingShadowRoot):
+        * dom/Node.h:
+        * dom/TreeScope.h:
+        (WebCore::TreeScope::rootNode):
+        (TreeScope):
+        * page/FocusController.cpp:
+        (WebCore::FocusNavigationScope::rootNode):
+        (WebCore::FocusNavigationScope::owner):
+        * page/FocusController.h:
+        (FocusNavigationScope):
+
+2013-05-26  Andreas Kling  <akling@apple.com>
+
+        FocusController::setFocusedNode() should be setFocusedElement().
+        <http://webkit.org/b/116780>
+
+        Reviewed by Antti Koivisto.
+
+        Only Elements can have focus, so make the public API of FocusController take Element*.
+
+        * WebCore.exp.in:
+        * page/FocusController.h:
+        * page/FocusController.cpp:
+        (WebCore::FocusController::setFocusedElement):
+
+            Out with the setFocusedNode(), in with the setFocusedElement().
+
+        * dom/Element.cpp:
+        (WebCore::Element::focus):
+        (WebCore::Element::blur):
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::dispatchMouseEvent):
+        * plugins/PluginView.cpp:
+        (WebCore::PluginView::focusPluginElement):
+        * editing/FrameSelection.cpp:
+        (WebCore::FrameSelection::setFocusedNodeIfNeeded):
+
+            Tweak for FocusController taking Element* instead of Node*.
+
+        (WebCore::FrameSelection::setFocusedElementIfNeeded):
+
+            Renamed from setFocusedNodeIfNeeded().
+
+        * editing/htmlediting.h:
+        * editing/htmlediting.cpp:
+        (WebCore::enclosingAnchorElement):
+
+            Cleaned up the loop for readability and made it return an Element.
+
+2013-05-26  Andreas Kling  <akling@apple.com>
+
+        Move some form control things from Element to HTMLFormControlElement.
+        <http://webkit.org/b/116779>
+
+        Reviewed by Antti Koivisto.
+
+        The following methods sit better on HTMLFormControlElement than on Element:
+
+            - formControlType()
+            - wasChangedSinceLastFormControlChangeEvent()
+            - setChangedSinceLastFormControlChangeEvent()
+            - dispatchFormControlChangeEvent()
+
+        Moved them, and devirtualized as much as possible.
+
+        * dom/Document.cpp:
+        (WebCore::Document::setFocusedNode):
+
+            Check if the old focus target is an Element before (possibly) dispatching a change event.
+
+        * dom/Element.cpp:
+        * dom/Element.h:
+
+            Removed some stub methods that were only used by HTMLFormControlElement subclasses.
+
+        * html/HTMLFormControlElement.cpp:
+        * html/HTMLFormControlElement.h:
+        (WebCore::isHTMLFormControlElement):
+        (WebCore::toHTMLFormControlElement):
+
+            Add toHTMLFormControlElement() helper with ASSERT_WITH_SECURITY_IMPLICATION.
+
+        * html/HTMLTextFormControlElement.h:
+
+            Sprinkle OVERRIDE.
+
+2013-05-25  Andreas Kling  <akling@apple.com>
+
+        Move Node::supportsFocus() to Element.
+        <http://webkit.org/b/116778>
+
+        Reviewed by Antti Koivisto.
+
+        Node never supports focus, so move supportsFocus() to Element instead.
+
+        * dom/Element.h:
+        * dom/Node.cpp:
+        * dom/Node.h:
+
+            Removed Node::supportsFocus(), it always returned false anyway.
+
+        * accessibility/AccessibilityNodeObject.cpp:
+        (WebCore::AccessibilityNodeObject::canSetFocusAttribute):
+
+            Check that the underlying Node is an Element before asking if it supports focus.
+
+        * html/HTMLAnchorElement.h:
+        * html/HTMLAreaElement.h:
+        * html/HTMLBodyElement.h:
+        * html/HTMLElement.h:
+        * html/HTMLFieldSetElement.h:
+        * html/HTMLFormControlElement.h:
+        * html/HTMLFrameElementBase.h:
+        * html/HTMLMediaElement.h:
+        * html/HTMLOptGroupElement.h:
+        * html/HTMLOptionElement.h:
+        * html/HTMLOutputElement.h:
+        * svg/SVGAElement.h:
+        * svg/SVGCircleElement.h:
+        * svg/SVGEllipseElement.h:
+        * svg/SVGGElement.h:
+        * svg/SVGImageElement.h:
+        * svg/SVGLineElement.h:
+        * svg/SVGPathElement.h:
+        * svg/SVGPolyElement.h:
+        * svg/SVGRectElement.h:
+        * svg/SVGSVGElement.h:
+        * svg/SVGSwitchElement.h:
+        * svg/SVGSymbolElement.h:
+        * svg/SVGTextElement.h:
+        * svg/SVGUseElement.h:
+
+            OVERRIDE ALL THE THINGS!
+
+2013-05-25  Andreas Kling  <akling@apple.com>
+
+        Move Node::isFocusable() to Element.
+        <http://webkit.org/b/116777>
+
+        Reviewed by Anders Carlsson.
+
+        Nodes cannot be focusable, so move isFocusable() from Node to Element.
+
+        * dom/Node.cpp:
+        * dom/Node.h:
+        * dom/Element.h:
+        * dom/Element.cpp:
+        (WebCore::Element::isFocusable):
+
+            Moved here from Node.
+
+        * dom/Document.cpp:
+        (WebCore::Document::setFocusedNode):
+        * accessibility/AccessibilityNodeObject.cpp:
+        (WebCore::AccessibilityNodeObject::determineAccessibilityRole):
+
+            Check that the underlying node is an Element before asking if it's focusable.
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::scrollToAnchor):
+
+            Renamed the 'anchorNode' variable to 'anchorElement' because reasons.
+
+        * html/HTMLAreaElement.h:
+        * html/HTMLFormControlElement.h:
+        * html/HTMLLabelElement.h:
+        * html/HTMLOptionElement.h:
+        * svg/SVGAElement.h:
+
+            Sprinkle OVERRIDE.
+
+        * html/ValidationMessage.cpp:
+        (WebCore::ValidationMessage::setMessage):
+
+            Update a comment to refer to Element::isFocusable() instead of Node.
+
+2013-05-25  Andreas Kling  <akling@apple.com>
+
+        Move Node::tabIndex() to Element.
+        <http://webkit.org/b/116772>
+
+        Reviewed by Ryosuke Niwa.
+
+        Since only Elements are keyboard-focusable, it doesn't make sense for Node to have a tabIndex().
+
+        * dom/Element.h:
+        * dom/Node.cpp:
+        * dom/Node.h:
+
+            A Node can't have a tab index, so move tabIndex() to Element.
+
+        * page/FocusController.h:
+        * page/FocusController.cpp:
+        (WebCore::adjustedTabIndex):
+        (WebCore::FocusController::findElementWithExactTabIndex):
+        (WebCore::nextElementWithGreaterTabIndex):
+        (WebCore::previousElementWithLowerTabIndex):
+        (WebCore::FocusController::nextFocusableNode):
+        (WebCore::FocusController::previousFocusableNode):
+
+            Make this code deal in Element* when doing tab index stuff. FocusController needs
+            more Node->Element cleanup, but let's do that separately.
+
+        * html/HTMLAnchorElement.h:
+        * html/HTMLElement.h:
+        * html/HTMLFormControlElement.h:
+
+            Sprinkle OVERRIDE.
+
+2013-05-25  Andreas Kling  <akling@apple.com>
+
+        Don't instantiate ChildNodeLists just to get a child count.
+        <http://webkit.org/b/116776>
+
+        Reviewed by Ryosuke Niwa.
+
+        Use ContainerNode::childNodeCount() instead of Node::childNodes()->length().
+
+        * editing/ApplyStyleCommand.cpp:
+        (WebCore::ApplyStyleCommand::mergeEndWithNextIfIdentical):
+
+2013-05-25  Andreas Kling  <akling@apple.com>
+
+        PluginDocument::pluginNode() should be pluginElement() instead.
+        <http://webkit.org/b/116774>
+
+        Reviewed by Anders Carlsson.
+
+        Make PluginDocument hand out a HTMLPlugInElement* instead of a Node*.
+
+        * dom/Document.cpp:
+        (WebCore::eventTargetNodeForDocument):
+        * html/PluginDocument.h:
+        * html/PluginDocument.cpp:
+        (WebCore::PluginDocumentParser::createDocumentStructure):
+        (WebCore::PluginDocument::pluginWidget):
+        (WebCore::PluginDocument::setPluginElement):
+        (WebCore::PluginDocument::detach):
+
+2013-05-25  Andreas Kling  <akling@apple.com>
+
+        Remove Document::getFocusableNodes().
+        <http://webkit.org/b/116773>
+
+        Reviewed by Joseph Pecoraro.
+
+        This was added in r42191 and there are no remaining clients of the API.
+
+        * dom/Document.cpp:
+        * dom/Document.h:
+        * WebCore.exp.in:
+
+2013-05-25  Andreas Kling  <akling@apple.com>
+
+        Move Node::focusDelegate() to Element.
+        <http://webkit.org/b/116768>
+
+        Reviewed by Anders Carlsson.
+
+        Only Element can be a focus delegate (it's currently only ever HTMLInputElement actually)
+        so move Node::focusDelegate() to Element. Sprinkled isElementNode() checks as needed.
+
+        * dom/Node.cpp:
+        * dom/Node.h:
+        * dom/Element.h:
+        * dom/Element.cpp:
+        * html/shadow/SliderThumbElement.cpp:
+        (WebCore::SliderThumbElement::focusDelegate):
+        * html/shadow/SliderThumbElement.h:
+        * rendering/RenderTheme.cpp:
+        (WebCore::RenderTheme::isFocused):
+        * rendering/RenderThemeMac.mm:
+        (WebCore::RenderThemeMac::paintSliderThumb):
+
+2013-05-25  Alberto Garcia  <agarcia@igalia.com>
+
+        Path: clean up addPathForRoundedRect()
+        https://bugs.webkit.org/show_bug.cgi?id=116765
+
+        Reviewed by Andreas Kling.
+
+        Reorganize code that is a bit redundant.
+
+        No new tests, no behavior change.
+
+        * platform/graphics/Path.cpp:
+        (WebCore::Path::addPathForRoundedRect):
+
+2013-05-25  Simon Fraser  <simon.fraser@apple.com>
+
+        Unprefix Page Visibility API
+        https://bugs.webkit.org/show_bug.cgi?id=102340
+
+        Reviewed by Tim Horton.
+        
+        Remove prefixes from the document properties, and the visibilitychanged event.
+        
+        Rename the "preview" state to "unloaded". The "unloaded" state is never
+        reached yet (see https://bugs.webkit.org/show_bug.cgi?id=116769).
+        
+        Add some comments to places where we should update the visibility state
+        when going in and out of the page cache, but cannot safely do so yet.
+
+        Tested by existing Page Visibility tests.
+
+        * dom/Document.cpp:
+        (WebCore::Document::pageVisibilityState):
+        (WebCore::Document::visibilityState):
+        (WebCore::Document::hidden):
+        (WebCore::Document::dispatchVisibilityStateChangeEvent):
+        * dom/Document.h:
+        * dom/Document.idl:
+        * dom/EventNames.h:
+        * history/CachedFrame.cpp:
+        (WebCore::CachedFrameBase::restore):
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::stopLoading):
+        * page/Page.cpp:
+        (WebCore::Page::setVisibilityState):
+        * page/PageVisibilityState.cpp:
+        (WebCore::pageVisibilityStateString):
+        * page/PageVisibilityState.h:
+
+2013-05-25  Andreas Kling  <akling@apple.com>
+
+        Move Node::isMouseFocusable() to Element.
+        <http://webkit.org/b/116762>
+
+        Reviewed by Anders Carlsson.
+
+        Node::isMouseFocusable() would just return isFocusable(), which is never true for a non-Element
+        since Node::supportsFocus() always returns false. So move it to Element!
+
+        * dom/Node.h:
+        * dom/Node.cpp:
+        * dom/Element.h:
+        * dom/Element.cpp:
+        (WebCore::Element::isMouseFocusable):
+
+            Moved here from Node.
+
+        * editing/FrameSelection.cpp:
+        (WebCore::FrameSelection::setFocusedNodeIfNeeded):
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::dispatchMouseEvent):
+
+            Walk up the parent chain with parentOrShadowHostElement() instead of parentOrShadowHostNode().
+            Removed a misleading no-op hunk about mouse-focusable ShadowRoots, since ShadowRoots are not
+            Elements and thus cannot be mouse-focusable.
+
+        * page/TouchAdjustment.cpp:
+        (WebCore::TouchAdjustment::nodeRespondsToTapGesture):
+
+            Check that the Node is an Element before asking if it's mouse-focusable.
+
+        * html/HTMLAnchorElement.h:
+        * html/HTMLAreaElement.h:
+        * html/HTMLFormControlElement.h:
+        * html/HTMLInputElement.h:
+        * html/HTMLMediaElement.h:
+        * html/HTMLSelectElement.h:
+        * html/HTMLTextAreaElement.h:
+        * html/shadow/ClearButtonElement.h:
+        * html/shadow/TextControlInnerElements.h:
+        * svg/SVGAElement.h:
+        * svg/SVGStyledElement.h:
+
+            Sprinkle OVERRIDE.
+
+2013-05-25  Andreas Kling  <akling@apple.com>
+
+        Move Node::isKeyboardFocusable() to Element.
+        <http://webkit.org/b/116761>
+
+        Reviewed by Antti Koivisto.
+
+        Only Elements can be keyboard-focusable. Move the base isKeyboardFocusable() implementation to Element
+        and sprinkle OVERRIDE on subclass overrides.
+        FocusController gets some temporary type checks that will go away as that code moves to dealing in
+        Elements instead of Node.
+
+        * dom/Node.h:
+        * dom/Node.cpp:
+        * dom/Element.h:
+        * dom/Element.cpp:
+        (WebCore::Element::isKeyboardFocusable):
+
+            Move isKeyboardFocusable() from Node to Element.
+
+        * page/FocusController.cpp:
+        (WebCore::isNonFocusableShadowHost):
+        (WebCore::isFocusableShadowHost):
+        (WebCore::shouldVisit):
+        (WebCore::FocusController::advanceFocusInDocumentOrder):
+
+            Check that the inspected Node is an Element before querying isKeyboardFocusable().
+
+        * html/HTMLAnchorElement.h:
+        * html/HTMLAreaElement.h:
+        * html/HTMLFormControlElement.h:
+        * html/HTMLFrameOwnerElement.h:
+        * html/HTMLInputElement.h:
+        * html/HTMLPlugInElement.h:
+        * html/HTMLSelectElement.h:
+        * html/HTMLTextAreaElement.h:
+        * svg/SVGAElement.h:
+        * svg/SVGStyledElement.h:
+
+            Sprinkle OVERRIDE.
+
+2013-05-25  Andreas Kling  <akling@apple.com>
+
+        Begin moving "focus" state logic from Node to Element.
+        <http://webkit.org/b/116760>
+
+        Reviewed by Antti Koivisto.
+
+        Only Elements can be focused, so merge the "focus" state logic from Node and ContainerNode
+        and move it into Element. There's a lot more iceberg under this tip, but we'll be starting
+        with setFocus(bool) and focused().
+
+        * dom/Node.h:
+        * dom/ContainerNode.cpp:
+        * dom/ContainerNode.h:
+        * dom/Element.cpp:
+        (WebCore::Element::isUserActionElementFocused):
+        (WebCore::Element::setFocus):
+        * dom/Element.h:
+        (WebCore::Element::focused):
+        * dom/Node.cpp:
+
+            Move focused() and setFocus(bool) from Node/ContainerNode to Element.
+
+        * dom/Document.cpp:
+        (WebCore::Document::setFocusedNode):
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::dispatchMouseEvent):
+
+            Check if the inspected Node is an Element before asking if it's focused.
+
+2013-05-25  Noam Rosenthal  <noam.rosenthal@nokia.com>
+
+        Direct pattern compositing breaks when no-repeat is set on a large layer
+        https://bugs.webkit.org/show_bug.cgi?id=116140
+
+        Reviewed by Antti Koivisto.
+
+        In some cases the directly composited background color logic overrides the layer's
+        contentsRect, which results in wrong rendering of tiled images.
+        This patch makes sure that the background image is applied after the solid color,
+        which ensures the correct contentsRect.
+
+        Test: compositing/patterns/direct-pattern-compositing-contain-no-repeat.html
+
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::updateDirectlyCompositedContents):
+
+2013-05-24  Andreas Kling  <akling@apple.com>
+
+        Move "hover" state logic from Node to Element.
+        <http://webkit.org/b/116757>
+
+        Reviewed by Antti Koivisto.
+
+        Resolve a 7 year old FIXME by merging the "hover" state logic from Node and ContainerNode
+        and moving it all to Element instead.
+
+        * dom/Node.cpp:
+        (WebCore::Node::detach):
+        * dom/Element.cpp:
+        (WebCore::Element::detach):
+
+            Move Document::hoveredNodeDetached() call from Node::detach() to Element::detach().
+
+        (WebCore::Element::isUserActionElementHovered):
+        (WebCore::Element::setHovered):
+        * dom/Element.h:
+        (WebCore::Element::hovered):
+
+            Moved here from Node/ContainerNode.
+
+        * dom/UserActionElementSet.h:
+        (WebCore::UserActionElementSet::setHovered):
+        (WebCore::UserActionElementSet::setFlags):
+
+            Make setHovered() take an Element* instead of a Node*. I'd like to do this will all
+            of these methods eventually, so added a setFlags() helper with the tighter type.
+
+        * html/HTMLLabelElement.h:
+        * html/shadow/SpinButtonElement.h:
+
+            Sprinkle OVERRIDE on setHovered() overrides.
+
+        * dom/Document.cpp:
+        (WebCore::Document::updateHoverActiveState):
+        * accessibility/AccessibilityNodeObject.cpp:
+        (WebCore::AccessibilityNodeObject::isHovered):
+        * rendering/RenderTheme.cpp:
+        (WebCore::RenderTheme::isHovered):
+
+            Check if the inspected Node is an element before asking if it's hovered.
+
+2013-05-25  Andreas Kling  <akling@apple.com>
+
+        Document::formController() should return a reference.
+        <http://webkit.org/b/116758>
+
+        Reviewed by Antti Koivisto.
+
+        The formController() is created on demand, so return a reference instead.
+
+        * dom/Document.h:
+        * dom/Document.cpp:
+        (WebCore::Document::formController):
+        (WebCore::Document::setStateForNewFormElements):
+        * html/HTMLFormControlElementWithState.cpp:
+        (WebCore::HTMLFormControlElementWithState::HTMLFormControlElementWithState):
+        (WebCore::HTMLFormControlElementWithState::~HTMLFormControlElementWithState):
+        (WebCore::HTMLFormControlElementWithState::didMoveToNewDocument):
+        (WebCore::HTMLFormControlElementWithState::finishParsingChildren):
+        * html/HTMLFormElement.cpp:
+        (WebCore::HTMLFormElement::~HTMLFormElement):
+        (WebCore::HTMLFormElement::finishParsingChildren):
+        * html/HTMLInputElement.cpp:
+        (WebCore::HTMLInputElement::~HTMLInputElement):
+        (WebCore::HTMLInputElement::didMoveToNewDocument):
+        (WebCore::HTMLInputElement::checkedRadioButtons):
+
+2013-05-25  Sergio Villar Senin  <svillar@igalia.com>
+
+        Reducing CSS code duplication in declaration list error recovery
+        https://bugs.webkit.org/show_bug.cgi?id=115157
+
+        Reviewed by Andreas Kling.
+
+        From Blink r148974 by <serya@chromium.org>
+
+        Refactor "invalid_block_list error | /* empty */" in a new
+        decl_list_recovery rule that allows to remove 4 redundant rules.
+
+        No new test required as we're just refactoring code, no new behaviour.
+
+        * css/CSSGrammar.y.in:
+
+2013-05-24  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Build fix after r150664.
+
+        * bindings/scripts/test/JS/JSTestObj.cpp:
+        (WebCore):
+
+2013-05-24  Sergio Villar Senin  <svillar@igalia.com>
+
+        Fixing invalid block recovery in some declaration list.
+        https://bugs.webkit.org/show_bug.cgi?id=115159
+
+        Reviewed by Darin Adler.
+
+        From Blink r148889 by <serya@chromium.org>
+
+        Improves the detection of some invalid block declarations inside a
+        declaration list. This allows the parser not to completely discard
+        a whole declaration list that contains an invalid block. In
+        particular grammar failed in tests 8, 12, 13, 15, 16 and 17 in the
+        new test added by this change.
+
+        Test: fast/css/parsing-invalid-block-recovery.html
+
+        * css/CSSGrammar.y.in:
+
+
+2013-05-24  Beth Dakin  <bdakin@apple.com>
+
+        DidFirstFlushForHeaderLayer can be called too soon on pages that redirect
+        https://bugs.webkit.org/show_bug.cgi?id=116749
+        -and corresponding-
+        <rdar://problem/13886753>
+
+        Reviewed by Simon Fraser.
+
+        Only start m_paintRelatedMilestonesTimer if we have actually painted.
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::RenderLayerCompositor::flushPendingLayerChanges):
+
+2013-05-24  Anders Carlsson  <andersca@apple.com>
+
+        Fix Windows build.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+
+2013-05-24  Tim Horton  <timothy_horton@apple.com>
+
+        Animated GIFs don't repaint after TiledCoreAnimationDrawingArea un-suspends painting
+        https://bugs.webkit.org/show_bug.cgi?id=116744
+        <rdar://problem/13973514>
+
+        Reviewed by Simon Fraser.
+
+        * WebCore.exp.in: Export FrameView::resumeAnimatingImages.
+        * page/FrameView.cpp:
+        (WebCore::FrameView::setIsInWindow):
+        (WebCore::FrameView::resumeAnimatingImages):
+        Factor the code to restart animated images out of frameView::setIsInWindow.
+
+        * page/FrameView.h:
+        (FrameView):
+
+2013-05-24  Anders Carlsson  <andersca@apple.com>
+
+        Move history property list writer to WebKit
+        https://bugs.webkit.org/show_bug.cgi?id=116746
+
+        Reviewed by Tim Horton.
+
+        Remove files from the Xcode project and remove symbols that now live in WebKit.
+
+        * WebCore.exp.in:
+        * WebCore.xcodeproj/project.pbxproj:
+
+2013-05-24  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Global constructors exposed in worker environment have wrong attributes
+        https://bugs.webkit.org/show_bug.cgi?id=116708
+
+        Reviewed by Geoffrey Garen.
+
+        Fix JSC bindings generator so that Global constructors exposed in worker environment
+        have the following attributes:
+        { [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }
+
+        This is now consistent with global constructors on DOMWindow and with the Web IDL
+        specification:
+        http://dev.w3.org/2006/webapi/WebIDL/#es-interfaces
+
+        Test: fast/js/global-constructors-attributes-worker.html
+
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateAttributesHashTable):
+
+2013-05-24  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Remove custom code for webkitAudioContext global constructor getter
+        https://bugs.webkit.org/show_bug.cgi?id=116530
+
+        Reviewed by Geoffrey Garen.
+
+        Get rid of custom code for webkitAudioContext global constructor getter. The
+        global DOMWindow attribute is now automatically generated by leveraging support
+        for [EnabledAtRuntime] extended attribute and the existing methods in
+        RuntimeEnabledFeatures class.
+
+        No new tests, no behavior change.
+
+        * GNUmakefile.list.am: Remove JSDOMWindowWebAudioCustom.*.
+        * Modules/webaudio/AudioContext.idl:
+        Remove [NoInterfaceObject] extended attribute so that the global constructor is
+        automatically generated instead of automatically added. Add [EnabledAtRuntime]
+        extended attribute since this global constructor can be disabled at runtime and
+        so that we can getter rid of the [CustomGetter] for the corresponding global
+        constructor. Use [InterfaceName] extended attribute so that the interface name
+        matches the global constructor on DOMWindow (webkitAudioContext).
+
+        * Target.pri: Remove JSDOMWindowWebAudioCustom.*.
+        * UseJSC.cmake: Remove JSDOMWindowWebAudioCustom.*.
+        * WebCore.exp.in: Export additional symbol.
+        * WebCore.order: Export additional symbol.
+        * WebCore.vcproj/WebCore.vcproj: Remove JSDOMWindowWebAudioCustom.*.
+        * WebCore.vcxproj/WebCore.vcxproj: Remove JSDOMWindowWebAudioCustom.*.
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Remove JSDOMWindowWebAudioCustom.*.
+        * WebCore.xcodeproj/project.pbxproj: Remove JSDOMWindowWebAudioCustom.*.
+        * bindings/generic/RuntimeEnabledFeatures.h:
+        (WebCore::RuntimeEnabledFeatures::setWebAudioEnabled):
+        * bindings/js/JSBindingsAllInOne.cpp: Remove JSDOMWindowWebAudioCustom.*.
+        * bindings/js/JSDOMWindowWebAudioCustom.cpp: Removed. We no longer need any custom code for
+        the WebAudio global constructor getter because we use [EnabledAtRuntime] support in the
+        bindings generator now.
+        * page/DOMWindow.idl: Remove global constructor for AudioContext as it is now automatically
+        generated.
+        * page/Settings.in: Remove webAudioEnabled setting as we use the existing setting
+        in RuntimeEnabledFeatures now.
+
+2013-05-24  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        [AC] Needs to be guarded by USE(ACCELERATED_COMPOSITING)
+        https://bugs.webkit.org/show_bug.cgi?id=116712
+
+        Reviewed by Andreas Kling.
+
+        renderView is used when ACCELERATED_COMPOSITING is enabled.
+        So, this patch allows it to be guarded by USE(ACCELERATED_COMPOSITING).
+
+        No new tests, no behavior change.
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::setFrameRect):
+
+2013-05-24  Thomas Deniau  <deniau@apple.com>
+
+        Add more lines to the context during Dictionary lookups
+        https://bugs.webkit.org/show_bug.cgi?id=115256
+
+        Reviewed by Ryosuke Niwa.
+
+        No new tests - no new functionality.
+
+        * WebCore.exp.in: Export a few methods in VisibleUnits needed to be able
+        to call previousLinePosition(), nextLinePosition(), startOfLine() and
+        endOfLine() in WebPageMac.mm when determining the context while looking
+        up a dictionary definition. These symbols used to be exported for iOS
+        only, export them on the desktop too.
+
+2013-05-24  Anders Carlsson  <andersca@apple.com>
+
+        Remove PagePopup code
+        https://bugs.webkit.org/show_bug.cgi?id=116732
+
+        Reviewed by Andreas Kling.
+
+        Remove all page popup code.
+
+        * GNUmakefile.list.am:
+        * WebCore.xcodeproj/project.pbxproj:
+        * dom/ContextFeatures.cpp:
+        * dom/ContextFeatures.h:
+        * loader/EmptyClients.h:
+        * page/ChromeClient.h:
+        * page/DOMWindowPagePopup.cpp: Removed.
+        * page/DOMWindowPagePopup.h: Removed.
+        * page/DOMWindowPagePopup.idl: Removed.
+        * page/PagePopup.h: Removed.
+        * page/PagePopupClient.cpp: Removed.
+        * page/PagePopupClient.h: Removed.
+        * page/PagePopupController.cpp: Removed.
+        * page/PagePopupController.h: Removed.
+        * page/PagePopupController.idl: Removed.
+        * page/PagePopupDriver.h: Removed.
+        * testing/Internals.cpp:
+        (WebCore::Internals::resetToConsistentState):
+        (WebCore):
+        * testing/Internals.h:
+        (WebCore):
+        (Internals):
+        * testing/Internals.idl:
+        * testing/MockPagePopupDriver.cpp: Removed.
+        * testing/MockPagePopupDriver.h: Removed.
+
+2013-05-24  Jer Noble  <jer.noble@apple.com>
+
+        Mac: Set the default audio buffer size to a large value for <video> elements.
+        https://bugs.webkit.org/show_bug.cgi?id=116342
+
+        Reviewed by Eric Carlson.
+        Roll-in rubber stamped by Eric Carlson.
+
+        To enable power savings by waking up the audio hardware less often, set the
+        requested buffer frame size to a large value, such as 4096. Since this results
+        in approximately 100ms worth of buffer, set the buffer size to a much lower
+        value when playing WebAudio, which is much more sensitive to latency than video
+        or audio elements.
+
+        Introduce a new class, AudioSessionManager, as well as a helper class,
+        AudioSessionManagerToken. Audio elements, video elements, and WebAudio destination
+        nodes will create and retain a token, and release the token in their destructor.
+        This allows the AudioSessionManager to track how many of what type of audio-
+        generating objects are in existence.
+
+        This requires implementing AudioSession for Mac platforms. Move the implementation
+        for retrieving the hardware sample rate and setting the buffer duration into
+        AudioSessionMac from AudioDestinationMac, to be shared with AudioSessionManagerMac.
+
+        Change the AudioSession method preferredBufferLength() into preferredBufferSize(),
+        as the callers really want to specify a buffer size, not a buffer duration. On iOS,
+        where the available API requires a duration, perform the conversion from duration to
+        size on behalf of the caller.
+
+        However, since the original version of this patch caused media test
+        failures on the Mac ML and Lion bots, only enable the buffer size
+        change for OS X > ML.
+
+        * html/HTMLMediaElement.h:  Add a AudioSessionManagerToken member.
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::HTMLMediaElement): Initialize the token.
+        * platform/audio/AudioSession.cpp:
+        (WebCore::AudioSession::preferredBufferSize): Renamed from preferredBufferLength.
+        (WebCore::AudioSession::setPreferredBufferSize): Renamed from setPreferredBufferLength.
+        * platform/audio/AudioSession.h:
+        * platform/audio/AudioSessionManager.cpp:
+        (AudioSessionManagerToken::create): Simple factory method.
+        (AudioSessionManagerToken::AudioSessionManagerToken): Call AudioSessionManager::incrementCount().
+        (AudioSessionManagerToken::~AudioSessionManagerToken): Call AudioSessionManager::decrementCount().
+        (AudioSessionManager::sharedManager): Simple singleton method.
+        (AudioSessionManager::AudioSessionManager): Simple constructor.
+        (AudioSessionManager::has): Return whether the type is present.
+        (AudioSessionManager::incrementCount): Increment, then call updateSessionState()
+        (AudioSessionManager::decrementCount): Decrement, then call updateSessionState()
+        (AudioSessionManager::updateSessionState): Stub, does nothing.
+        * platform/audio/AudioSessionManager.h:
+        * platform/audio/ios/AudioDestinationIOS.cpp:
+        (WebCore::AudioDestinationIOS::configure): Call setPreferredBufferSize() instead of setPreferredBufferLength()
+        * platform/audio/ios/AudioSessionIOS.mm:
+        (WebCore::AudioSession::preferredBufferSize): Renamed from preferredBufferLength.
+        (WebCore::AudioSession::setPreferredBufferSize): Renamed from setPreferredBufferLength
+        * platform/audio/mac/AudioDestinationMac.cpp:
+        (WebCore::AudioDestination::hardwareSampleRate): Call AudioSession::sampleRate().
+        (WebCore::AudioDestinationMac::AudioDestinationMac): Create the AudioSessionManagerToken.
+        (WebCore::AudioDestinationMac::configure): Do not set the buffer size (this is done in AudioSessionManagerMac).
+        * platform/audio/mac/AudioDestinationMac.h:
+        * platform/audio/mac/AudioSessionMac.cpp: Added.
+        (WebCore::defaultDevice): Added, returns the default audio device.
+        (WebCore::AudioSession::AudioSession): Simple constructor.
+        (WebCore::AudioSession::~AudioSession): Simple destructor.
+        (WebCore::AudioSession::category): Stub, unimplemented.
+        (WebCore::AudioSession::setCategory): Ditto.
+        (WebCore::AudioSession::categoryOverride): Ditto.
+        (WebCore::AudioSession::setCategoryOverride): Ditto.
+        (WebCore::AudioSession::numberOfOutputChannels): Ditto.
+        (WebCore::AudioSession::setActive): Ditto.
+        (WebCore::AudioSession::sampleRate): Use the HAL to return the default audio device sample rate.
+        (WebCore::AudioSession::preferredBufferSize): Return the current HAL setting.
+        (WebCore::AudioSession::setPreferredBufferSize): Set the buffer size.
+        * platform/audio/mac/AudioSessionManagerMac.cpp:
+        (AudioSessionManager::updateSessionState): Set the buffer size depending on what audio outputs are present.
+        * WebCore.xcodeproj/project.pbxproj: Add the new files to the project.
+
 2013-05-24  Alberto Garcia  <agarcia@igalia.com>
 
         Path: upstream the missing bits from the BlackBerry port

@@ -454,9 +454,14 @@ void WebPage::dummy(bool&)
 {
 }
 
-CoreIPC::Connection* WebPage::connection() const
+CoreIPC::Connection* WebPage::messageSenderConnection()
 {
-    return WebProcess::shared().connection();
+    return WebProcess::shared().parentProcessConnection();
+}
+
+uint64_t WebPage::messageSenderDestinationID()
+{
+    return pageID();
 }
 
 #if ENABLE(CONTEXT_MENUS)
@@ -740,7 +745,7 @@ PluginView* WebPage::focusedPluginViewForFrame(Frame* frame)
 
     PluginDocument* pluginDocument = static_cast<PluginDocument*>(frame->document());
 
-    if (pluginDocument->focusedNode() != pluginDocument->pluginNode())
+    if (pluginDocument->focusedElement() != pluginDocument->pluginElement())
         return 0;
 
     PluginView* pluginView = static_cast<PluginView*>(pluginDocument->pluginWidget());
@@ -845,6 +850,20 @@ void WebPage::close()
 #if ENABLE(PRIMARY_SNAPSHOTTED_PLUGIN_HEURISTIC)
     m_determinePrimarySnapshottedPlugInTimer.stop();
 #endif
+
+#if ENABLE(CONTEXT_MENUS)
+    m_contextMenuClient.initialize(0);
+#endif
+    m_editorClient.initialize(0);
+    m_formClient.initialize(0);
+    m_loaderClient.initialize(0);
+    m_policyClient.initialize(0);
+    m_resourceLoadClient.initialize(0);
+    m_uiClient.initialize(0);
+#if ENABLE(FULLSCREEN_API)
+    m_fullScreenClient.initialize(0);
+#endif
+    m_logDiagnosticMessageClient.initialize(0);
 
     m_underlayPage = nullptr;
     m_printContext = nullptr;
@@ -1879,7 +1898,7 @@ void WebPage::highlightPotentialActivation(const IntPoint& point, const IntSize&
                 break;
 
             // We always highlight focusable (form-elements), image links or content-editable elements.
-            if (node->isMouseFocusable() || node->isLink() || node->isContentEditable())
+            if ((node->isElementNode() && toElement(node)->isMouseFocusable()) || node->isLink() || node->isContentEditable())
                 activationNode = node;
             else if (node->willRespondToMouseClickEvents()) {
                 // Highlight elements with default mouse-click handlers, but highlight only inline elements with
@@ -2030,7 +2049,7 @@ void WebPage::setInitialFocus(bool forward, bool isKeyboardEventValid, const Web
         return;
 
     Frame* frame = m_page->focusController()->focusedOrMainFrame();
-    frame->document()->setFocusedNode(0);
+    frame->document()->setFocusedElement(0);
 
     if (isKeyboardEventValid && event.type() == WebEvent::KeyDown) {
         PlatformKeyboardEvent platformEvent(platform(event));
@@ -2490,7 +2509,7 @@ void WebPage::updatePreferences(const WebPreferencesStore& store)
 #endif
 
 #if ENABLE(WEB_AUDIO)
-    settings->setWebAudioEnabled(store.getBoolValueForKey(WebPreferencesKey::webAudioEnabledKey()));
+    RuntimeEnabledFeatures::setWebAudioEnabled(store.getBoolValueForKey(WebPreferencesKey::webAudioEnabledKey()));
 #endif
 
     settings->setApplicationChromeMode(store.getBoolValueForKey(WebPreferencesKey::applicationChromeModeKey()));

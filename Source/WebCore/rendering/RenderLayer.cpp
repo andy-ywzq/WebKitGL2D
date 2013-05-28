@@ -3596,10 +3596,12 @@ static inline bool shouldSuppressPaintingLayer(RenderLayer* layer)
     return false;
 }
 
+#if USE(ACCELERATED_COMPOSITING)
 static bool paintForFixedRootBackground(const RenderLayer* layer, RenderLayer::PaintLayerFlags paintFlags)
 {
     return layer->renderer()->isRoot() && (paintFlags & RenderLayer::PaintLayerPaintingRootBackgroundOnly);
 }
+#endif
 
 void RenderLayer::paintLayer(GraphicsContext* context, const LayerPaintingInfo& paintingInfo, PaintLayerFlags paintFlags)
 {
@@ -3770,9 +3772,12 @@ bool RenderLayer::setupClipPath(GraphicsContext* context, const LayerPaintingInf
 }
 
 #if ENABLE(CSS_FILTERS)
-PassOwnPtr<FilterEffectRendererHelper> RenderLayer::setupFilters(GraphicsContext* context, LayerPaintingInfo& paintingInfo, const LayoutPoint& offsetFromRoot, IntRect& rootRelativeBounds, bool& rootRelativeBoundsComputed)
+PassOwnPtr<FilterEffectRendererHelper> RenderLayer::setupFilters(GraphicsContext* context, LayerPaintingInfo& paintingInfo, PaintLayerFlags paintFlags, const LayoutPoint& offsetFromRoot, IntRect& rootRelativeBounds, bool& rootRelativeBoundsComputed)
 {
     if (context->paintingDisabled())
+        return nullptr;
+
+    if (paintFlags & PaintLayerPaintingOverlayScrollbars)
         return nullptr;
 
     bool hasPaintedFilter = filterRenderer() && paintsWithFilters();
@@ -3873,7 +3878,7 @@ void RenderLayer::paintLayerContents(GraphicsContext* context, const LayerPainti
 
     GraphicsContext* transparencyLayerContext = context;
 #if ENABLE(CSS_FILTERS)
-    OwnPtr<FilterEffectRendererHelper> filterPainter = setupFilters(context, localPaintingInfo, offsetFromRoot, rootRelativeBounds, rootRelativeBoundsComputed);
+    OwnPtr<FilterEffectRendererHelper> filterPainter = setupFilters(context, localPaintingInfo, paintFlags, offsetFromRoot, rootRelativeBounds, rootRelativeBoundsComputed);
     if (filterPainter) {
         context = filterPainter->filterContext();
         if (context != transparencyLayerContext && haveTransparency) {

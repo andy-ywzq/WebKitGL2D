@@ -214,8 +214,6 @@ webkit2_built_sources += \
 	DerivedSources/WebKit2/WebNetworkInfoManagerProxyMessages.h \
 	DerivedSources/WebKit2/WebNotificationManagerMessageReceiver.cpp \
 	DerivedSources/WebKit2/WebNotificationManagerMessages.h \
-	DerivedSources/WebKit2/WebNotificationManagerProxyMessageReceiver.cpp \
-	DerivedSources/WebKit2/WebNotificationManagerProxyMessages.h \
 	DerivedSources/WebKit2/WebPageGroupProxyMessageReceiver.cpp \
 	DerivedSources/WebKit2/WebPageGroupProxyMessages.h \
 	DerivedSources/WebKit2/WebPageProxyMessageReceiver.cpp \
@@ -270,6 +268,7 @@ webkit2platform_sources += \
 	Source/WebKit2/Platform/CoreIPC/MessageReceiver.h \
 	Source/WebKit2/Platform/CoreIPC/MessageReceiverMap.cpp \
 	Source/WebKit2/Platform/CoreIPC/MessageReceiverMap.h \
+	Source/WebKit2/Platform/CoreIPC/MessageSender.cpp \
 	Source/WebKit2/Platform/CoreIPC/MessageSender.h \
 	Source/WebKit2/Platform/CoreIPC/StringReference.cpp \
 	Source/WebKit2/Platform/CoreIPC/StringReference.h \
@@ -453,6 +452,7 @@ webkit2_sources += \
 	Source/WebKit2/Shared/Plugins/NPVariantData.h \
 	Source/WebKit2/Shared/Plugins/PluginModuleInfo.cpp \
 	Source/WebKit2/Shared/Plugins/PluginModuleInfo.h \
+	Source/WebKit2/Shared/Plugins/PluginProcessAttributes.h \
 	Source/WebKit2/Shared/Plugins/PluginProcessCreationParameters.cpp \
 	Source/WebKit2/Shared/Plugins/PluginProcessCreationParameters.h \
 	Source/WebKit2/Shared/Plugins/PluginQuirks.h \

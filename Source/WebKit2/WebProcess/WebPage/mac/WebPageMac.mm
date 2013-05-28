@@ -97,6 +97,18 @@ void WebPage::platformInitialize()
     m_mockAccessibilityElement = mockAccessibilityElement;
 }
 
+NSObject *WebPage::accessibilityObjectForMainFramePlugin()
+{
+    Frame* frame = m_page->mainFrame();
+    if (!frame)
+        return 0;
+
+    if (PluginView* pluginView = pluginViewForFrame(frame))
+        return pluginView->accessibilityObject();
+
+    return 0;
+}
+
 void WebPage::platformPreferencesDidChange(const WebPreferencesStore& store)
 {
     if (WebInspector* inspector = this->inspector())
@@ -187,7 +199,7 @@ bool WebPage::executeKeypressCommandsInternal(const Vector<WebCore::KeypressComm
                 }
             } else {
                 bool commandWasHandledByUIProcess = false;
-                WebProcess::shared().connection()->sendSync(Messages::WebPageProxy::ExecuteSavedCommandBySelector(commands[i].commandName), 
+                WebProcess::shared().parentProcessConnection()->sendSync(Messages::WebPageProxy::ExecuteSavedCommandBySelector(commands[i].commandName), 
                     Messages::WebPageProxy::ExecuteSavedCommandBySelector::Reply(commandWasHandledByUIProcess), m_pageID);
                 eventWasHandled |= commandWasHandledByUIProcess;
             }
@@ -215,7 +227,7 @@ bool WebPage::handleEditingKeyboardEvent(KeyboardEvent* event, bool saveCommands
     if (saveCommands) {
         KeyboardEvent* oldEvent = m_keyboardEventBeingInterpreted;
         m_keyboardEventBeingInterpreted = event;
-        bool sendResult = WebProcess::shared().connection()->sendSync(Messages::WebPageProxy::InterpretQueuedKeyEvent(editorState()), 
+        bool sendResult = WebProcess::shared().parentProcessConnection()->sendSync(Messages::WebPageProxy::InterpretQueuedKeyEvent(editorState()), 
             Messages::WebPageProxy::InterpretQueuedKeyEvent::Reply(eventWasHandled, commands), m_pageID);
         m_keyboardEventBeingInterpreted = oldEvent;
         if (!sendResult)
@@ -507,13 +519,28 @@ void WebPage::performDictionaryLookupAtLocation(const FloatPoint& floatPoint)
 
     NSDictionary *options = nil;
 
-    // As context, we are going to use the surrounding paragraph of text.
-    VisiblePosition paragraphStart = startOfParagraph(position);
-    VisiblePosition paragraphEnd = endOfParagraph(position);
+    // As context, we are going to use four lines of text before and after the point. (Dictionary can sometimes look up things that are four lines long)
+    const int numberOfLinesOfContext = 4;
+    VisiblePosition contextStart = position;
+    VisiblePosition contextEnd = position;
+    for (int i = 0; i < numberOfLinesOfContext; i++) {
+        VisiblePosition n = previousLinePosition(contextStart, contextStart.lineDirectionPointForBlockDirectionNavigation());
+        if (n.isNull() || n == contextStart)
+            break;
+        contextStart = n;
+    }
+    for (int i = 0; i < numberOfLinesOfContext; i++) {
+        VisiblePosition n = nextLinePosition(contextEnd, contextEnd.lineDirectionPointForBlockDirectionNavigation());
+        if (n.isNull() || n == contextEnd)
+            break;
+        contextEnd = n;
+    }
+    contextStart = startOfLine(contextStart);
+    contextEnd = endOfLine(contextEnd);
+    
+    NSRange rangeToPass = NSMakeRange(TextIterator::rangeLength(makeRange(contextStart, position).get()), 0);
 
-    NSRange rangeToPass = NSMakeRange(TextIterator::rangeLength(makeRange(paragraphStart, position).get()), 0);
-
-    RefPtr<Range> fullCharacterRange = makeRange(paragraphStart, paragraphEnd);
+    RefPtr<Range> fullCharacterRange = makeRange(contextStart, contextEnd);
     String fullPlainTextString = plainText(fullCharacterRange.get());
 
     NSRange extractedRange = WKExtractWordDefinitionTokenRangeFromContextualString(fullPlainTextString, rangeToPass, &options);

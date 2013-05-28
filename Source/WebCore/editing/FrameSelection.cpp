@@ -311,7 +311,7 @@ void FrameSelection::setSelection(const VisibleSelection& newSelection, SetSelec
     setCaretRectNeedsUpdate();
     
     if (!s.isNone() && !(options & DoNotSetFocus))
-        setFocusedNodeIfNeeded();
+        setFocusedElementIfNeeded();
 
     if (!(options & DoNotUpdateAppearance)) {
 #if ENABLE(TEXT_CARET)
@@ -1633,8 +1633,8 @@ void FrameSelection::selectAll()
 {
     Document* document = m_frame->document();
 
-    if (document->focusedNode() && document->focusedNode()->hasTagName(selectTag)) {
-        HTMLSelectElement* selectElement = toHTMLSelectElement(document->focusedNode());
+    if (document->focusedElement() && document->focusedElement()->hasTagName(selectTag)) {
+        HTMLSelectElement* selectElement = toHTMLSelectElement(document->focusedElement());
         if (selectElement->canSelectAll()) {
             selectElement->selectAll();
             return;
@@ -1722,9 +1722,9 @@ void FrameSelection::focusedOrActiveStateChanged()
     // Because StyleResolver::checkOneSelector() and
     // RenderTheme::isFocused() check if the frame is active, we have to
     // update style and theme state that depended on those.
-    if (Node* node = m_frame->document()->focusedNode()) {
-        node->setNeedsStyleRecalc();
-        if (RenderObject* renderer = node->renderer())
+    if (Element* element = m_frame->document()->focusedElement()) {
+        element->setNeedsStyleRecalc();
+        if (RenderObject* renderer = element->renderer())
             if (renderer && renderer->style()->hasAppearance())
                 renderer->theme()->stateChanged(renderer, FocusState);
     }
@@ -1876,36 +1876,36 @@ static bool isFrameElement(const Node* n)
     return widget && widget->isFrameView();
 }
 
-void FrameSelection::setFocusedNodeIfNeeded()
+void FrameSelection::setFocusedElementIfNeeded()
 {
     if (isNone() || !isFocused())
         return;
 
     bool caretBrowsing = m_frame->settings() && m_frame->settings()->caretBrowsingEnabled();
     if (caretBrowsing) {
-        if (Node* anchor = enclosingAnchorElement(base())) {
-            m_frame->page()->focusController()->setFocusedNode(anchor, m_frame);
+        if (Element* anchor = enclosingAnchorElement(base())) {
+            m_frame->page()->focusController()->setFocusedElement(anchor, m_frame);
             return;
         }
     }
 
-    if (Node* target = rootEditableElement()) {
-        // Walk up the DOM tree to search for a node to focus. 
+    if (Element* target = rootEditableElement()) {
+        // Walk up the DOM tree to search for an element to focus.
         while (target) {
             // We don't want to set focus on a subframe when selecting in a parent frame,
             // so add the !isFrameElement check here. There's probably a better way to make this
             // work in the long term, but this is the safest fix at this time.
             if (target->isMouseFocusable() && !isFrameElement(target)) {
-                m_frame->page()->focusController()->setFocusedNode(target, m_frame);
+                m_frame->page()->focusController()->setFocusedElement(target, m_frame);
                 return;
             }
-            target = target->parentOrShadowHostNode();
+            target = target->parentOrShadowHostElement();
         }
-        m_frame->document()->setFocusedNode(0);
+        m_frame->document()->setFocusedElement(0);
     }
 
     if (caretBrowsing)
-        m_frame->page()->focusController()->setFocusedNode(0, m_frame);
+        m_frame->page()->focusController()->setFocusedElement(0, m_frame);
 }
 
 void DragCaretController::paintDragCaret(Frame* frame, GraphicsContext* p, const LayoutPoint& paintOffset, const LayoutRect& clipRect) const
@@ -1987,7 +1987,7 @@ static HTMLFormElement* scanForForm(Node* start)
 HTMLFormElement* FrameSelection::currentForm() const
 {
     // Start looking either at the active (first responder) node, or where the selection is.
-    Node* start = m_frame->document()->focusedNode();
+    Node* start = m_frame->document()->focusedElement();
     if (!start)
         start = this->start().deprecatedNode();
 

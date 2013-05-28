@@ -138,7 +138,6 @@
 using namespace WebCore;
 using namespace HTMLNames;
 using namespace WTF;
-using namespace std;
 
 @interface WebMenuTarget : NSObject {
     WebCore::ContextMenuController* _menuController;
@@ -2215,7 +2214,7 @@ static bool mouseEventIsPartOfClickOrDrag(NSEvent *event)
 #ifdef __LP64__
     // If the new bottom is equal to the old bottom (when both are treated as floats), we just return the original
     // bottom. This prevents rounding errors that can occur when converting newBottom to a double.
-    if (fabs(static_cast<float>(bottom) - newBottom) <= numeric_limits<float>::epsilon()) 
+    if (fabs(static_cast<float>(bottom) - newBottom) <= std::numeric_limits<float>::epsilon()) 
         return bottom;
     else
 #endif
@@ -3145,7 +3144,7 @@ static void setMenuTargets(NSMenu* menu)
     if (!document)
         return;
     
-    document->setFocusedNode(0);
+    document->setFocusedElement(0);
 }
 
 - (BOOL)isOpaque
@@ -3818,7 +3817,7 @@ static PassRefPtr<KeyboardEvent> currentKeyboardEvent(Frame* coreFrame)
         return YES;
 
     if (Document* document = frame->document())
-        document->setFocusedNode(0);
+        document->setFocusedElement(0);
     page->focusController()->setInitialFocus(direction == NSSelectingNext ? FocusDirectionForward : FocusDirectionBackward,
                                              currentKeyboardEvent(frame).get());
     return YES;

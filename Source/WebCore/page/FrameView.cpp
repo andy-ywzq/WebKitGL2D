@@ -400,7 +400,7 @@ void FrameView::recalculateScrollbarOverlayStyle()
         // heuristic.
         double hue, saturation, lightness;
         backgroundColor.getHSL(hue, saturation, lightness);
-        if (lightness <= .5)
+        if (lightness <= .5 && backgroundColor.alpha() > 0)
             overlayStyle = ScrollbarOverlayStyleLight;
     }
 
@@ -469,10 +469,8 @@ void FrameView::setFrameRect(const IntRect& newRect)
 
     updateScrollableAreaSet();
 
-    RenderView* renderView = this->renderView();
-
 #if USE(ACCELERATED_COMPOSITING)
-    if (renderView) {
+    if (RenderView* renderView = this->renderView()) {
         if (renderView->usesCompositing())
             renderView->compositor()->frameViewDidChangeSize();
     }
@@ -1071,12 +1069,16 @@ void FrameView::setIsInWindow(bool isInWindow)
     if (RenderView* renderView = this->renderView())
         renderView->setIsInWindow(isInWindow);
 
-    if (isInWindow) {
-        // Drawing models which cache painted content while out-of-window (WebKit2's composited drawing areas, etc.)
-        // require that we repaint animated images to kickstart the animation loop.
+    if (isInWindow)
+        resumeAnimatingImages();
+}
 
-        CachedImage::resumeAnimatingImagesForLoader(frame()->document()->cachedResourceLoader());
-    }
+void FrameView::resumeAnimatingImages()
+{
+    // Drawing models which cache painted content while out-of-window (WebKit2's composited drawing areas, etc.)
+    // require that we repaint animated images to kickstart the animation loop.
+
+    CachedImage::resumeAnimatingImagesForLoader(frame()->document()->cachedResourceLoader());
 }
 
 RenderObject* FrameView::layoutRoot(bool onlyDuringLayout) const
@@ -1840,30 +1842,30 @@ bool FrameView::scrollToAnchor(const String& name)
 
     m_frame->document()->setGotoAnchorNeededAfterStylesheetsLoad(false);
 
-    Element* anchorNode = m_frame->document()->findAnchor(name);
+    Element* anchorElement = m_frame->document()->findAnchor(name);
 
     // Setting to null will clear the current target.
-    m_frame->document()->setCSSTarget(anchorNode);
+    m_frame->document()->setCSSTarget(anchorElement);
 
 #if ENABLE(SVG)
     if (m_frame->document()->isSVGDocument()) {
         if (SVGSVGElement* svg = toSVGDocument(m_frame->document())->rootElement()) {
-            svg->setupInitialView(name, anchorNode);
-            if (!anchorNode)
+            svg->setupInitialView(name, anchorElement);
+            if (!anchorElement)
                 return true;
         }
     }
 #endif
   
     // Implement the rule that "" and "top" both mean top of page as in other browsers.
-    if (!anchorNode && !(name.isEmpty() || equalIgnoringCase(name, "top")))
+    if (!anchorElement && !(name.isEmpty() || equalIgnoringCase(name, "top")))
         return false;
 
-    maintainScrollPositionAtAnchor(anchorNode ? static_cast<Node*>(anchorNode) : m_frame->document());
+    maintainScrollPositionAtAnchor(anchorElement ? static_cast<Node*>(anchorElement) : m_frame->document());
     
     // If the anchor accepts keyboard focus, move focus there to aid users relying on keyboard navigation.
-    if (anchorNode && anchorNode->isFocusable())
-        m_frame->document()->setFocusedNode(anchorNode);
+    if (anchorElement && anchorElement->isFocusable())
+        m_frame->document()->setFocusedElement(anchorElement);
     
     return true;
 }

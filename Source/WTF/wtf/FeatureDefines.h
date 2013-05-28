@@ -311,10 +311,6 @@
 #define ENABLE_BLOB 0
 #endif
 
-#if !defined(ENABLE_CALENDAR_PICKER)
-#define ENABLE_CALENDAR_PICKER 0
-#endif
-
 #if !defined(ENABLE_CANVAS_PATH)
 #define ENABLE_CANVAS_PATH 1
 #endif
@@ -651,10 +647,6 @@
 
 #if !defined(ENABLE_ORIENTATION_EVENTS)
 #define ENABLE_ORIENTATION_EVENTS 0
-#endif
-
-#if !defined(ENABLE_PAGE_POPUP)
-#define ENABLE_PAGE_POPUP 0
 #endif
 
 #if !defined(ENABLE_PAGE_VISIBILITY_API)

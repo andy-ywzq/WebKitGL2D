@@ -113,7 +113,6 @@ SOURCES += \
      bindings/js/JSDOMWindowBase.cpp \
      bindings/js/JSDOMWindowCustom.cpp \
      bindings/js/JSDOMWindowShell.cpp \
-     bindings/js/JSDOMWindowWebAudioCustom.cpp \
      bindings/js/JSDOMWrapper.cpp \
      bindings/js/JSDataViewCustom.cpp \
      bindings/js/JSDeviceMotionEventCustom.cpp \
@@ -994,7 +993,6 @@ SOURCES += \
     platform/HistogramSupport.cpp \
     platform/graphics/FontDescription.cpp \
     platform/graphics/FontFallbackList.cpp \
-    platform/graphics/FontFamily.cpp \
     platform/graphics/FontFeatureSettings.cpp \
     platform/graphics/BitmapImage.cpp \
     platform/graphics/Color.cpp \
@@ -2212,7 +2210,6 @@ HEADERS += \
     platform/graphics/FloatSize.h \
     platform/graphics/FontData.h \
     platform/graphics/FontDescription.h \
-    platform/graphics/FontFamily.h \
     platform/graphics/FontFeatureSettings.h \
     platform/graphics/FontMetrics.h \
     platform/graphics/Font.h \
@@ -3480,7 +3477,6 @@ enable?(WEB_AUDIO) {
         bindings/js/JSAudioBufferSourceNodeCustom.cpp \
         bindings/js/JSAudioContextCustom.cpp \
         bindings/js/JSBiquadFilterNodeCustom.cpp \
-        bindings/js/JSDOMWindowWebAudioCustom.cpp \
         bindings/js/JSOscillatorNodeCustom.cpp \
         bindings/js/JSPannerNodeCustom.cpp \
         Modules/webaudio/AsyncAudioDecoder.cpp \

@@ -4222,7 +4222,6 @@
     <ClCompile Include="..\platform\win\WheelEventWin.cpp" />
     <ClCompile Include="..\platform\win\WidgetWin.cpp" />
     <ClCompile Include="..\platform\win\WindowMessageBroadcaster.cpp" />
-    <ClCompile Include="..\platform\cf\BinaryPropertyList.cpp" />
     <ClCompile Include="..\platform\cf\FileSystemCF.cpp" />
     <ClCompile Include="..\platform\cf\KURLCFNet.cpp" />
     <ClCompile Include="..\platform\cf\SharedBufferCF.cpp" />
@@ -4240,7 +4239,6 @@
     <ClCompile Include="..\platform\graphics\FontData.cpp" />
     <ClCompile Include="..\platform\graphics\FontDescription.cpp" />
     <ClCompile Include="..\platform\graphics\FontFallbackList.cpp" />
-    <ClCompile Include="..\platform\graphics\FontFamily.cpp" />
     <ClCompile Include="..\platform\graphics\FontFastPath.cpp" />
     <ClCompile Include="..\platform\graphics\FontFeatureSettings.cpp" />
     <ClCompile Include="..\platform\graphics\FontPlatformData.cpp" />
@@ -9427,14 +9425,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\bindings\js\JSDOMWindowWebAudioCustom.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="..\bindings\js\JSDOMWrapper.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">true</ExcludedFromBuild>
@@ -10250,7 +10240,6 @@
     <ClCompile Include="..\history\CachedPage.cpp" />
     <ClCompile Include="..\history\HistoryItem.cpp" />
     <ClCompile Include="..\history\PageCache.cpp" />
-    <ClCompile Include="..\history\cf\HistoryPropertyList.cpp" />
     <ClCompile Include="..\storage\Storage.cpp" />
     <ClCompile Include="..\storage\StorageAreaImpl.cpp" />
     <ClCompile Include="..\storage\StorageAreaSync.cpp" />
@@ -11620,7 +11609,6 @@
     <ClInclude Include="..\platform\win\WindowMessageBroadcaster.h" />
     <ClInclude Include="..\platform\win\WindowMessageListener.h" />
     <ClInclude Include="..\platform\win\WindowsTouch.h" />
-    <ClInclude Include="..\platform\cf\BinaryPropertyList.h" />
     <ClInclude Include="..\platform\cf\win\CertificateCFWin.h" />
     <ClInclude Include="..\platform\graphics\BitmapImage.h" />
     <ClInclude Include="..\platform\graphics\Color.h" />
@@ -11635,7 +11623,6 @@
     <ClInclude Include="..\platform\graphics\FontData.h" />
     <ClInclude Include="..\platform\graphics\FontDescription.h" />
     <ClInclude Include="..\platform\graphics\FontFallbackList.h" />
-    <ClInclude Include="..\platform\graphics\FontFamily.h" />
     <ClInclude Include="..\platform\graphics\FontFeatureSettings.h" />
     <ClInclude Include="..\platform\graphics\FontMetrics.h" />
     <ClInclude Include="..\platform\graphics\FontPlatformData.h" />
@@ -13173,7 +13160,6 @@
     <ClInclude Include="..\history\CachedPage.h" />
     <ClInclude Include="..\history\HistoryItem.h" />
     <ClInclude Include="..\history\PageCache.h" />
-    <ClInclude Include="..\history\cf\HistoryPropertyList.h" />
     <ClInclude Include="..\storage\Storage.h" />
     <ClInclude Include="..\storage\StorageArea.h" />
     <ClInclude Include="..\storage\StorageAreaImpl.h" />

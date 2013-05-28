@@ -79,8 +79,8 @@ class BackingStoreClient;
 class DumpRenderTreeClient;
 class InPageSearchManager;
 class InputHandler;
-class PagePopupBlackBerry;
-class PagePopupBlackBerryClient;
+class PagePopup;
+class PagePopupClient;
 class SelectionHandler;
 class TouchEventHandler;
 class WebCookieJar;
@@ -413,7 +413,7 @@ public:
 
     BackingStoreClient* backingStoreClient() const;
 
-    bool openPagePopup(PagePopupBlackBerryClient*, const WebCore::IntRect& originBoundsInRootView);
+    bool openPagePopup(PagePopupClient*, const WebCore::IntRect& originBoundsInRootView);
     void closePagePopup();
     bool hasOpenedPopup() const;
 
@@ -466,6 +466,7 @@ public:
     void scheduleAnimation();
     void startRefreshAnimationClient();
     void stopRefreshAnimationClient();
+    void serviceAnimations();
     static void handleServiceScriptedAnimationsOnMainThread(void*);
 #endif
 
@@ -638,7 +639,7 @@ public:
     WebCore::Timer<WebPagePrivate> m_deferredTasksTimer;
 
     // The popup that opened in this webpage
-    PagePopupBlackBerry* m_selectPopup;
+    RefPtr<PagePopup> m_pagePopup;
 
     RefPtr<WebCore::AutofillManager> m_autofillManager;
 
@@ -662,6 +663,8 @@ public:
     Mutex m_animationMutex;
     bool m_isRunningRefreshAnimationClient;
     bool m_animationScheduled;
+    bool m_previousFrameDone;
+    double m_monotonicAnimationStartTime;
 #endif
 
 protected:

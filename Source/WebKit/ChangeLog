@@ -1,3 +1,45 @@
+2013-05-27  Patrick Gansterer  <paroga@webkit.org>
+
+        Use ICU_INCLUDE_DIRS in BlackBerry CMake files
+        https://bugs.webkit.org/show_bug.cgi?id=116210
+
+        Reviewed by Rob Buis.
+
+        Set and use the ICU_INCLUDE_DIRS variable to avoid
+        duplicated adding of the ICU include directory.
+
+        * PlatformBlackBerry.cmake:
+
+2013-05-27  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [BlackBerry] Move PagePopup implementation to WebKitSupport
+        https://bugs.webkit.org/show_bug.cgi?id=116824
+
+        Reviewed by Rob Buis.
+
+        * PlatformBlackBerry.cmake: Update new file paths and names.
+
+2013-05-24  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Expose database storage and cache locations via preferences.
+        https://bugs.webkit.org/show_bug.cgi?id=116729
+
+        Reviewed by Tim Horton.
+
+        * WebKit.vcxproj/WebKitExportGenerator/WebKitExports.def.in: Export
+        three symbols needed to implement the feature.
+
+2013-05-24  Anders Carlsson  <andersca@apple.com>
+
+        Move history property list writer to WebKit
+        https://bugs.webkit.org/show_bug.cgi?id=116746
+
+        Reviewed by Tim Horton.
+
+        Add files to the Xcode project.
+
+        * WebKit.xcodeproj/project.pbxproj:
+
 2013-05-21  Carlos Garcia Campos  <cgarcia@igalia.com>
 
         [BlackBerry] Make PagePopup implementation independent from WebCore

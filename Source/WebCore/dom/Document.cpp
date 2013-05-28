@@ -3,7 +3,7 @@
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  *           (C) 2001 Dirk Mueller (mueller@kde.org)
  *           (C) 2006 Alexey Proskuryakov (ap@webkit.org)
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2011, 2012 Apple Inc. All rights reserved.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2011, 2012, 2013 Apple Inc. All rights reserved.
  * Copyright (C) 2008, 2009 Torch Mobile Inc. All rights reserved. (http://www.torchmobile.com/)
  * Copyright (C) 2008, 2009, 2011, 2012 Google Inc. All rights reserved.
  * Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies)
@@ -92,6 +92,7 @@
 #include "HTMLCollection.h"
 #include "HTMLDocument.h"
 #include "HTMLElementFactory.h"
+#include "HTMLFormControlElement.h"
 #include "HTMLFrameOwnerElement.h"
 #include "HTMLHeadElement.h"
 #include "HTMLIFrameElement.h"
@@ -100,6 +101,7 @@
 #include "HTMLNameCollection.h"
 #include "HTMLNames.h"
 #include "HTMLParserIdioms.h"
+#include "HTMLPlugInElement.h"
 #include "HTMLStyleElement.h"
 #include "HTMLTitleElement.h"
 #include "HTTPParsers.h"
@@ -658,8 +660,8 @@ void Document::dispose()
     // We must make sure not to be retaining any of our children through
     // these extra pointers or we will create a reference cycle.
     m_docType = 0;
-    m_focusedNode = 0;
-    m_hoverNode = 0;
+    m_focusedElement = 0;
+    m_hoveredElement = 0;
     m_activeElement = 0;
     m_titleElement = 0;
     m_documentElement = 0;
@@ -709,7 +711,7 @@ Element* Document::getElementByAccessKey(const String& key)
 void Document::buildAccessKeyMap(TreeScope* scope)
 {
     ASSERT(scope);
-    Node* rootNode = scope->rootNode();
+    ContainerNode* rootNode = scope->rootNode();
     for (Element* element = ElementTraversal::firstWithin(rootNode); element; element = ElementTraversal::next(element, rootNode)) {
         const AtomicString& accessKey = element->getAttribute(accesskeyAttr);
         if (!accessKey.isEmpty())
@@ -1598,7 +1600,7 @@ void Document::removeTitle(Element* titleElement)
 }
 
 #if ENABLE(PAGE_VISIBILITY_API)
-PageVisibilityState Document::visibilityState() const
+PageVisibilityState Document::pageVisibilityState() const
 {
     // The visibility of the document is inherited from the visibility of the
     // page. If there is no page associated with the document, we will assume
@@ -1609,19 +1611,19 @@ PageVisibilityState Document::visibilityState() const
     return m_frame->page()->visibilityState();
 }
 
-String Document::webkitVisibilityState() const
+String Document::visibilityState() const
 {
-    return pageVisibilityStateString(visibilityState());
+    return pageVisibilityStateString(pageVisibilityState());
 }
 
-bool Document::webkitHidden() const
+bool Document::hidden() const
 {
-    return visibilityState() != PageVisibilityStateVisible;
+    return pageVisibilityState() != PageVisibilityStateVisible;
 }
 
 void Document::dispatchVisibilityStateChangeEvent()
 {
-    dispatchEvent(Event::create(eventNames().webkitvisibilitychangeEvent, false, false));
+    dispatchEvent(Event::create(eventNames().visibilitychangeEvent, false, false));
 }
 #endif
 
@@ -1644,11 +1646,11 @@ Node::NodeType Document::nodeType() const
     return DOCUMENT_NODE;
 }
 
-FormController* Document::formController()
+FormController& Document::formController()
 {
     if (!m_formController)
         m_formController = FormController::create();
-    return m_formController.get();
+    return *m_formController;
 }
 
 Vector<String> Document::formElementsState() const
@@ -1662,7 +1664,7 @@ void Document::setStateForNewFormElements(const Vector<String>& stateVector)
 {
     if (!stateVector.size() && !m_formController)
         return;
-    formController()->setStateForNewFormElements(stateVector);
+    formController().setStateForNewFormElements(stateVector);
 }
 
 FrameView* Document::view() const
@@ -2101,8 +2103,8 @@ void Document::detach()
         setFullScreenRenderer(0);
 #endif
 
-    m_hoverNode = 0;
-    m_focusedNode = 0;
+    m_hoveredElement = 0;
+    m_focusedElement = 0;
     m_activeElement = 0;
 
     ContainerNode::detach();
@@ -3242,11 +3244,6 @@ void Document::notifySeamlessChildDocumentsOfStylesheetUpdate() const
     }
 }
 
-void Document::setHoverNode(PassRefPtr<Node> newHoverNode)
-{
-    m_hoverNode = newHoverNode;
-}
-
 void Document::setActiveElement(PassRefPtr<Element> newActiveElement)
 {
     if (!newActiveElement) {
@@ -3259,46 +3256,46 @@ void Document::setActiveElement(PassRefPtr<Element> newActiveElement)
 
 void Document::focusedNodeRemoved()
 {
-    setFocusedNode(0);
+    setFocusedElement(0);
 }
 
 void Document::removeFocusedNodeOfSubtree(Node* node, bool amongChildrenOnly)
 {
-    if (!m_focusedNode || this->inPageCache()) // If the document is in the page cache, then we don't need to clear out the focused node.
+    if (!m_focusedElement || this->inPageCache()) // If the document is in the page cache, then we don't need to clear out the focused node.
         return;
 
-    Node* focusedNode = node->treeScope()->focusedNode();
-    if (!focusedNode)
+    Element* focusedElement = node->treeScope()->focusedElement();
+    if (!focusedElement)
         return;
 
     bool nodeInSubtree = false;
     if (amongChildrenOnly)
-        nodeInSubtree = focusedNode->isDescendantOf(node);
+        nodeInSubtree = focusedElement->isDescendantOf(node);
     else
-        nodeInSubtree = (focusedNode == node) || focusedNode->isDescendantOf(node);
+        nodeInSubtree = (focusedElement == node) || focusedElement->isDescendantOf(node);
     
     if (nodeInSubtree)
         document()->focusedNodeRemoved();
 }
 
-void Document::hoveredNodeDetached(Node* node)
+void Document::hoveredElementDidDetach(Element* element)
 {
-    if (!m_hoverNode || (node != m_hoverNode && (!m_hoverNode->isTextNode() || node != m_hoverNode->parentNode())))
+    if (!m_hoveredElement || element != m_hoveredElement)
         return;
 
-    m_hoverNode = node->parentNode();
-    while (m_hoverNode && !m_hoverNode->renderer())
-        m_hoverNode = m_hoverNode->parentNode();
+    m_hoveredElement = element->parentElement();
+    while (m_hoveredElement && !m_hoveredElement->renderer())
+        m_hoveredElement = m_hoveredElement->parentElement();
     if (frame())
         frame()->eventHandler()->scheduleHoverStateUpdate();
 }
 
-void Document::activeChainNodeDetached(Node* node)
+void Document::elementInActiveChainDidDetach(Element* element)
 {
-    if (!m_activeElement || (node != m_activeElement && (!m_activeElement->isTextNode() || node != m_activeElement->parentNode())))
+    if (!m_activeElement || element != m_activeElement)
         return;
 
-    m_activeElement = node->parentElement();
+    m_activeElement = element->parentElement();
     while (m_activeElement && !m_activeElement->renderer())
         m_activeElement = m_activeElement->parentElement();
 }
@@ -3316,67 +3313,64 @@ void Document::setAnnotatedRegions(const Vector<AnnotatedRegionValue>& regions)
 }
 #endif
 
-bool Document::setFocusedNode(PassRefPtr<Node> prpNewFocusedNode, FocusDirection direction)
+bool Document::setFocusedElement(PassRefPtr<Element> prpNewFocusedElement, FocusDirection direction)
 {
-    RefPtr<Node> newFocusedNode = prpNewFocusedNode;
+    RefPtr<Element> newFocusedElement = prpNewFocusedElement;
 
-    // Make sure newFocusedNode is actually in this document
-    if (newFocusedNode && (newFocusedNode->document() != this))
+    // Make sure newFocusedElement is actually in this document
+    if (newFocusedElement && (newFocusedElement->document() != this))
         return true;
 
-    if (m_focusedNode == newFocusedNode)
+    if (m_focusedElement == newFocusedElement)
         return true;
 
     if (m_inPageCache)
         return false;
 
     bool focusChangeBlocked = false;
-    RefPtr<Node> oldFocusedNode = m_focusedNode;
-    m_focusedNode = 0;
+    RefPtr<Element> oldFocusedElement = m_focusedElement.release();
 
     // Remove focus from the existing focus node (if any)
-    if (oldFocusedNode) {
-        ASSERT(!oldFocusedNode->inDetach());
+    if (oldFocusedElement) {
+        ASSERT(!oldFocusedElement->inDetach());
 
-        if (oldFocusedNode->active())
-            oldFocusedNode->setActive(false);
+        if (oldFocusedElement->active())
+            oldFocusedElement->setActive(false);
 
-        oldFocusedNode->setFocus(false);
+        oldFocusedElement->setFocus(false);
 
-        // Dispatch a change event for text fields or textareas that have been edited
-        if (oldFocusedNode->isElementNode()) {
-            Element* element = toElement(oldFocusedNode.get());
-            if (element->wasChangedSinceLastFormControlChangeEvent())
-                element->dispatchFormControlChangeEvent();
+        // Dispatch a change event for form control elements that have been edited.
+        if (oldFocusedElement->isFormControlElement()) {
+            HTMLFormControlElement* formControlElement = toHTMLFormControlElement(oldFocusedElement.get());
+            if (formControlElement->wasChangedSinceLastFormControlChangeEvent())
+                formControlElement->dispatchFormControlChangeEvent();
         }
 
         // Dispatch the blur event and let the node do any other blur related activities (important for text fields)
-        oldFocusedNode->dispatchBlurEvent(newFocusedNode);
+        oldFocusedElement->dispatchBlurEvent(newFocusedElement);
 
-        if (m_focusedNode) {
+        if (m_focusedElement) {
             // handler shifted focus
             focusChangeBlocked = true;
-            newFocusedNode = 0;
+            newFocusedElement = 0;
         }
         
-        oldFocusedNode->dispatchFocusOutEvent(eventNames().focusoutEvent, newFocusedNode); // DOM level 3 name for the bubbling blur event.
+        oldFocusedElement->dispatchFocusOutEvent(eventNames().focusoutEvent, newFocusedElement); // DOM level 3 name for the bubbling blur event.
         // FIXME: We should remove firing DOMFocusOutEvent event when we are sure no content depends
         // on it, probably when <rdar://problem/8503958> is resolved.
-        oldFocusedNode->dispatchFocusOutEvent(eventNames().DOMFocusOutEvent, newFocusedNode); // DOM level 2 name for compatibility.
+        oldFocusedElement->dispatchFocusOutEvent(eventNames().DOMFocusOutEvent, newFocusedElement); // DOM level 2 name for compatibility.
 
-        if (m_focusedNode) {
+        if (m_focusedElement) {
             // handler shifted focus
             focusChangeBlocked = true;
-            newFocusedNode = 0;
+            newFocusedElement = 0;
         }
-        if (oldFocusedNode == this && oldFocusedNode->hasOneRef())
-            return true;
             
-        if (oldFocusedNode->isRootEditableElement())
+        if (oldFocusedElement->isRootEditableElement())
             frame()->editor().didEndEditing();
 
         if (view()) {
-            Widget* oldWidget = widgetForNode(oldFocusedNode.get());
+            Widget* oldWidget = widgetForNode(oldFocusedElement.get());
             if (oldWidget)
                 oldWidget->setFocus(false);
             else
@@ -3384,27 +3378,27 @@ bool Document::setFocusedNode(PassRefPtr<Node> prpNewFocusedNode, FocusDirection
         }
     }
 
-    if (newFocusedNode && newFocusedNode->isFocusable()) {
-        if (newFocusedNode->isRootEditableElement() && !acceptsEditingFocus(newFocusedNode.get())) {
+    if (newFocusedElement && newFocusedElement->isFocusable()) {
+        if (newFocusedElement->isRootEditableElement() && !acceptsEditingFocus(newFocusedElement.get())) {
             // delegate blocks focus change
             focusChangeBlocked = true;
             goto SetFocusedNodeDone;
         }
         // Set focus on the new node
-        m_focusedNode = newFocusedNode;
+        m_focusedElement = newFocusedElement;
 
         // Dispatch the focus event and let the node do any other focus related activities (important for text fields)
-        m_focusedNode->dispatchFocusEvent(oldFocusedNode, direction);
+        m_focusedElement->dispatchFocusEvent(oldFocusedElement, direction);
 
-        if (m_focusedNode != newFocusedNode) {
+        if (m_focusedElement != newFocusedElement) {
             // handler shifted focus
             focusChangeBlocked = true;
             goto SetFocusedNodeDone;
         }
 
-        m_focusedNode->dispatchFocusInEvent(eventNames().focusinEvent, oldFocusedNode); // DOM level 3 bubbling focus event.
+        m_focusedElement->dispatchFocusInEvent(eventNames().focusinEvent, oldFocusedElement); // DOM level 3 bubbling focus event.
 
-        if (m_focusedNode != newFocusedNode) {
+        if (m_focusedElement != newFocusedElement) {
             // handler shifted focus
             focusChangeBlocked = true;
             goto SetFocusedNodeDone;
@@ -3412,29 +3406,30 @@ bool Document::setFocusedNode(PassRefPtr<Node> prpNewFocusedNode, FocusDirection
 
         // FIXME: We should remove firing DOMFocusInEvent event when we are sure no content depends
         // on it, probably when <rdar://problem/8503958> is m.
-        m_focusedNode->dispatchFocusInEvent(eventNames().DOMFocusInEvent, oldFocusedNode); // DOM level 2 for compatibility.
+        m_focusedElement->dispatchFocusInEvent(eventNames().DOMFocusInEvent, oldFocusedElement); // DOM level 2 for compatibility.
 
-        if (m_focusedNode != newFocusedNode) { 
+        if (m_focusedElement != newFocusedElement) {
             // handler shifted focus
             focusChangeBlocked = true;
             goto SetFocusedNodeDone;
         }
-        m_focusedNode->setFocus(true);
 
-        if (m_focusedNode->isRootEditableElement())
+        m_focusedElement->setFocus(true);
+
+        if (m_focusedElement->isRootEditableElement())
             frame()->editor().didBeginEditing();
 
         // eww, I suck. set the qt focus correctly
         // ### find a better place in the code for this
         if (view()) {
-            Widget* focusWidget = widgetForNode(m_focusedNode.get());
+            Widget* focusWidget = widgetForNode(m_focusedElement.get());
             if (focusWidget) {
                 // Make sure a widget has the right size before giving it focus.
                 // Otherwise, we are testing edge cases of the Widget code.
                 // Specifically, in WebCore this does not work well for text fields.
                 updateLayout();
                 // Re-get the widget in case updating the layout changed things.
-                focusWidget = widgetForNode(m_focusedNode.get());
+                focusWidget = widgetForNode(m_focusedElement.get());
             }
             if (focusWidget)
                 focusWidget->setFocus(true);
@@ -3443,30 +3438,20 @@ bool Document::setFocusedNode(PassRefPtr<Node> prpNewFocusedNode, FocusDirection
         }
     }
 
-    if (!focusChangeBlocked && m_focusedNode) {
+    if (!focusChangeBlocked && m_focusedElement) {
         // Create the AXObject cache in a focus change because GTK relies on it.
         if (AXObjectCache* cache = axObjectCache())
-            cache->handleFocusedUIElementChanged(oldFocusedNode.get(), newFocusedNode.get());
+            cache->handleFocusedUIElementChanged(oldFocusedElement.get(), newFocusedElement.get());
     }
 
     if (!focusChangeBlocked)
-        page()->chrome().focusedNodeChanged(m_focusedNode.get());
+        page()->chrome().focusedNodeChanged(m_focusedElement.get());
 
 SetFocusedNodeDone:
     updateStyleIfNeeded();
     return !focusChangeBlocked;
 }
-    
-void Document::getFocusableNodes(Vector<RefPtr<Node> >& nodes)
-{
-    updateLayout();
 
-    for (Node* node = firstChild(); node; node = NodeTraversal::next(node)) {
-        if (node->isFocusable())
-            nodes.append(node);
-    }
-}
-  
 void Document::setCSSTarget(Element* n)
 {
     if (m_cssTarget)
@@ -4711,15 +4696,11 @@ void Document::cancelFocusAppearanceUpdate()
 
 void Document::updateFocusAppearanceTimerFired(Timer<Document>*)
 {
-    Node* node = focusedNode();
-    if (!node)
-        return;
-    if (!node->isElementNode())
+    Element* element = focusedElement();
+    if (!element)
         return;
 
     updateLayout();
-
-    Element* element = toElement(node);
     if (element->isFocusable())
         element->updateFocusAppearance(m_updateFocusAppearanceRestoresSelection);
 }
@@ -5774,10 +5755,10 @@ Node* eventTargetNodeForDocument(Document* doc)
 {
     if (!doc)
         return 0;
-    Node* node = doc->focusedNode();
+    Node* node = doc->focusedElement();
     if (!node && doc->isPluginDocument()) {
         PluginDocument* pluginDocument = toPluginDocument(doc);
-        node =  pluginDocument->pluginNode();
+        node = pluginDocument->pluginElement();
     }
     if (!node && doc->isHTMLDocument())
         node = doc->body();
@@ -5873,11 +5854,11 @@ void Document::updateHoverActiveState(const HitTestRequest& request, Element* in
     if (oldActiveElement && !request.active()) {
         // We are clearing the :active chain because the mouse has been released.
         for (RenderObject* curr = oldActiveElement->renderer(); curr; curr = curr->parent()) {
-            if (curr->node()) {
-                ASSERT(!curr->node()->isTextNode());
-                curr->node()->setActive(false);
-                m_userActionElements.setInActiveChain(curr->node(), false);
-            }
+            if (!curr->node() || !curr->node()->isElementNode())
+                continue;
+            Element* element = toElement(curr->node());
+            element->setActive(false);
+            m_userActionElements.setInActiveChain(element, false);
         }
         setActiveElement(0);
     } else {
@@ -5886,8 +5867,9 @@ void Document::updateHoverActiveState(const HitTestRequest& request, Element* in
             // We are setting the :active chain and freezing it. If future moves happen, they
             // will need to reference this chain.
             for (RenderObject* curr = newActiveElement->renderer(); curr; curr = curr->parent()) {
-                if (curr->node() && !curr->isText())
-                    m_userActionElements.setInActiveChain(curr->node(), true);
+                if (!curr->node() || !curr->node()->isElementNode() || curr->isText())
+                    continue;
+                m_userActionElements.setInActiveChain(toElement(curr->node()), true);
             }
 
             setActiveElement(newActiveElement);
@@ -5902,25 +5884,24 @@ void Document::updateHoverActiveState(const HitTestRequest& request, Element* in
     // at the time the mouse went down.
     bool mustBeInActiveChain = request.active() && request.move();
 
-    RefPtr<Node> oldHoverNode = hoverNode();
+    RefPtr<Element> oldHoveredElement = m_hoveredElement.release();
 
     // A touch release does not set a new hover target; setting the element we're working with to 0
     // will clear the chain of hovered elements all the way to the top of the tree.
     if (request.touchRelease())
         innerElementInDocument = 0;
 
-    // Check to see if the hovered node has changed.
+    // Check to see if the hovered Element has changed.
     // If it hasn't, we do not need to do anything.
-    Node* newHoverNode = innerElementInDocument;
-    while (newHoverNode && !newHoverNode->renderer())
-        newHoverNode = newHoverNode->parentOrShadowHostNode();
+    Element* newHoveredElement = innerElementInDocument;
+    while (newHoveredElement && !newHoveredElement->renderer())
+        newHoveredElement = newHoveredElement->parentOrShadowHostElement();
 
-    // Update our current hover node.
-    setHoverNode(newHoverNode);
+    m_hoveredElement = newHoveredElement;
 
     // We have two different objects. Fetch their renderers.
-    RenderObject* oldHoverObj = oldHoverNode ? oldHoverNode->renderer() : 0;
-    RenderObject* newHoverObj = newHoverNode ? newHoverNode->renderer() : 0;
+    RenderObject* oldHoverObj = oldHoveredElement ? oldHoveredElement->renderer() : 0;
+    RenderObject* newHoverObj = newHoveredElement ? newHoveredElement->renderer() : 0;
 
     // Locate the common ancestor render object for the two renderers.
     RenderObject* ancestor = nearestCommonHoverAncestor(oldHoverObj, newHoverObj);
@@ -5933,14 +5914,14 @@ void Document::updateHoverActiveState(const HitTestRequest& request, Element* in
     // This optimization is necessary since these events can cause O(n²) capturing event-handler checks.
     bool hasCapturingMouseEnterListener = false;
     bool hasCapturingMouseLeaveListener = false;
-    if (event && newHoverNode != oldHoverNode.get()) {
-        for (Node* curr = newHoverNode; curr; curr = curr->parentOrShadowHostNode()) {
+    if (event && newHoveredElement != oldHoveredElement.get()) {
+        for (Node* curr = newHoveredElement; curr; curr = curr->parentOrShadowHostNode()) {
             if (curr->hasCapturingEventListeners(eventNames().mouseenterEvent)) {
                 hasCapturingMouseEnterListener = true;
                 break;
             }
         }
-        for (Node* curr = oldHoverNode.get(); curr; curr = curr->parentOrShadowHostNode()) {
+        for (Node* curr = oldHoveredElement.get(); curr; curr = curr->parentOrShadowHostNode()) {
             if (curr->hasCapturingEventListeners(eventNames().mouseleaveEvent)) {
                 hasCapturingMouseLeaveListener = true;
                 break;
@@ -5951,41 +5932,47 @@ void Document::updateHoverActiveState(const HitTestRequest& request, Element* in
     if (oldHoverObj != newHoverObj) {
         // The old hover path only needs to be cleared up to (and not including) the common ancestor;
         for (RenderObject* curr = oldHoverObj; curr && curr != ancestor; curr = curr->hoverAncestor()) {
-            if (curr->node() && !curr->isText() && (!mustBeInActiveChain || curr->node()->inActiveChain()))
+            if (!curr->node() || curr->isText())
+                continue;
+            if (!mustBeInActiveChain || (curr->node()->isElementNode() && toElement(curr->node())->inActiveChain()))
                 nodesToRemoveFromChain.append(curr->node());
         }
         // Unset hovered nodes in sub frame documents if the old hovered node was a frame owner.
-        if (oldHoverNode && oldHoverNode->isFrameOwnerElement()) {
-            if (Document* contentDocument = toFrameOwnerElement(oldHoverNode.get())->contentDocument())
+        if (oldHoveredElement && oldHoveredElement->isFrameOwnerElement()) {
+            if (Document* contentDocument = toFrameOwnerElement(oldHoveredElement.get())->contentDocument())
                 contentDocument->updateHoverActiveState(request, 0);
         }
     }
 
     // Now set the hover state for our new object up to the root.
     for (RenderObject* curr = newHoverObj; curr; curr = curr->hoverAncestor()) {
-        if (curr->node() && !curr->isText() && (!mustBeInActiveChain || curr->node()->inActiveChain()))
+        if (!curr->node() || curr->isText())
+            continue;
+        if (!mustBeInActiveChain || (curr->node()->isElementNode() && toElement(curr->node())->inActiveChain()))
             nodesToAddToChain.append(curr->node());
     }
 
     size_t removeCount = nodesToRemoveFromChain.size();
     for (size_t i = 0; i < removeCount; ++i) {
-        nodesToRemoveFromChain[i]->setHovered(false);
+        if (nodesToRemoveFromChain[i]->isElementNode())
+            toElement(nodesToRemoveFromChain[i].get())->setHovered(false);
         if (event && (hasCapturingMouseLeaveListener || nodesToRemoveFromChain[i]->hasEventListeners(eventNames().mouseleaveEvent)))
-            nodesToRemoveFromChain[i]->dispatchMouseEvent(*event, eventNames().mouseleaveEvent, 0, newHoverNode);
+            nodesToRemoveFromChain[i]->dispatchMouseEvent(*event, eventNames().mouseleaveEvent, 0, newHoveredElement);
     }
 
     bool sawCommonAncestor = false;
     size_t addCount = nodesToAddToChain.size();
     for (size_t i = 0; i < addCount; ++i) {
-        if (allowActiveChanges)
-            nodesToAddToChain[i]->setActive(true);
+        if (allowActiveChanges && nodesToAddToChain[i]->isElementNode())
+            toElement(nodesToAddToChain[i].get())->setActive(true);
         if (ancestor && nodesToAddToChain[i] == ancestor->node())
             sawCommonAncestor = true;
         if (!sawCommonAncestor) {
             // Elements after the common hover ancestor does not change hover state, but are iterated over because they may change active state.
-            nodesToAddToChain[i]->setHovered(true);
+            if (nodesToAddToChain[i]->isElementNode())
+                toElement(nodesToAddToChain[i].get())->setHovered(true);
             if (event && (hasCapturingMouseEnterListener || nodesToAddToChain[i]->hasEventListeners(eventNames().mouseenterEvent)))
-                nodesToAddToChain[i]->dispatchMouseEvent(*event, eventNames().mouseenterEvent, 0, oldHoverNode.get());
+                nodesToAddToChain[i]->dispatchMouseEvent(*event, eventNames().mouseenterEvent, 0, oldHoveredElement.get());
         }
     }
 

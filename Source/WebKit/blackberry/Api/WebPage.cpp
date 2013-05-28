@@ -100,8 +100,8 @@
 #include "Page.h"
 #include "PageCache.h"
 #include "PageGroup.h"
-#include "PagePopupBlackBerry.h"
-#include "PagePopupBlackBerryClient.h"
+#include "PagePopup.h"
+#include "PagePopupClient.h"
 #include "PlatformTouchEvent.h"
 #include "PlatformWheelEvent.h"
 #include "PluginDatabase.h"
@@ -416,7 +416,7 @@ WebPagePrivate::WebPagePrivate(WebPage* webPage, WebPageClient* client, const In
     , m_hasInRegionScrollableAreas(false)
     , m_updateDelegatedOverlaysDispatched(false)
     , m_deferredTasksTimer(this, &WebPagePrivate::deferredTasksTimerFired)
-    , m_selectPopup(0)
+    , m_pagePopup(0)
     , m_autofillManager(AutofillManager::create(this))
     , m_documentStyleRecalcPostponed(false)
     , m_documentChildNeedsStyleRecalc(false)
@@ -428,6 +428,8 @@ WebPagePrivate::WebPagePrivate(WebPage* webPage, WebPageClient* client, const In
 #if ENABLE(REQUEST_ANIMATION_FRAME) && !USE(REQUEST_ANIMATION_FRAME_TIMER)
     , m_isRunningRefreshAnimationClient(false)
     , m_animationScheduled(false)
+    , m_previousFrameDone(true)
+    , m_monotonicAnimationStartTime(0)
 #endif
 {
     static bool isInitialized = false;
@@ -2554,8 +2556,8 @@ Platform::IntRect WebPagePrivate::focusNodeRect()
 
     const Platform::ViewportAccessor* viewportAccessor = m_webkitThreadViewportAccessor;
 
-    IntRect focusRect = rectForNode(doc->focusedNode());
-    focusRect = adjustRectOffsetForFrameOffset(focusRect, doc->focusedNode());
+    IntRect focusRect = rectForNode(doc->focusedElement());
+    focusRect = adjustRectOffsetForFrameOffset(focusRect, doc->focusedElement());
     focusRect = viewportAccessor->roundToPixelFromDocumentContents(WebCore::FloatRect(focusRect));
     focusRect.intersect(viewportAccessor->pixelContentsRect());
     return focusRect;
@@ -2570,7 +2572,7 @@ PassRefPtr<Node> WebPagePrivate::contextNode(TargetDetectionStrategy strategy)
     // Check if we're using LinkToLink and the user is not touching the screen.
     if (m_webSettings->doesGetFocusNodeContext() && !isTouching) {
         RefPtr<Node> node;
-        node = m_page->focusController()->focusedOrMainFrame()->document()->focusedNode();
+        node = m_page->focusController()->focusedOrMainFrame()->document()->focusedElement();
         if (node) {
             IntRect visibleRect = IntRect(IntPoint(), actualVisibleSize());
             if (!visibleRect.intersects(getNodeWindowRect(node.get())))
@@ -4166,8 +4168,8 @@ void WebPagePrivate::clearFocusNode()
         return;
     ASSERT(frame->document());
 
-    if (frame->document()->focusedNode())
-        frame->page()->focusController()->setFocusedNode(0, frame);
+    if (frame->document()->focusedElement())
+        frame->page()->focusController()->setFocusedElement(0, frame);
 }
 
 BlackBerry::Platform::String WebPage::textEncoding()
@@ -4706,7 +4708,7 @@ void WebPage::setFocused(bool focused)
     focusController->setFocused(focused);
 }
 
-bool WebPage::findNextString(const char* text, bool forward, bool caseSensitive, bool wrap, bool highlightAllMatches)
+bool WebPage::findNextString(const char* text, bool forward, bool caseSensitive, bool wrap, bool highlightAllMatches, bool selectActiveMatchOnClear)
 {
     WebCore::FindOptions findOptions = WebCore::StartInSelection;
     if (!forward)
@@ -4717,7 +4719,7 @@ bool WebPage::findNextString(const char* text, bool forward, bool caseSensitive,
     // The WebCore::FindOptions::WrapAround boolean actually wraps the search
     // within the current frame as opposed to the entire Document, so we have to
     // provide our own wrapping code to wrap at the whole Document level.
-    return d->m_inPageSearchManager->findNextString(String::fromUTF8(text), findOptions, wrap, highlightAllMatches);
+    return d->m_inPageSearchManager->findNextString(String::fromUTF8(text), findOptions, wrap, highlightAllMatches, selectActiveMatchOnClear);
 }
 
 void WebPage::runLayoutTests()
@@ -4907,12 +4909,12 @@ bool WebPage::setNodeFocus(const WebDOMNode& node, bool on)
         if (Page* page = doc->page()) {
             // Modify if focusing on node or turning off focused node.
             if (on) {
-                page->focusController()->setFocusedNode(nodeImpl, doc->frame());
+                page->focusController()->setFocusedElement(toElement(nodeImpl), doc->frame());
                 if (nodeImpl->isElementNode())
                     toElement(nodeImpl)->updateFocusAppearance(true);
                 d->m_inputHandler->didNodeOpenPopup(nodeImpl);
-            } else if (doc->focusedNode() == nodeImpl) // && !on
-                page->focusController()->setFocusedNode(0, doc->frame());
+            } else if (doc->focusedElement() == nodeImpl) // && !on
+                page->focusController()->setFocusedElement(0, doc->frame());
 
             return true;
         }
@@ -4941,7 +4943,7 @@ bool WebPage::nodeHasHover(const WebDOMNode& node)
 
 void WebPage::initPopupWebView(BlackBerry::WebKit::WebPage* webPage)
 {
-    d->m_selectPopup->init(webPage);
+    d->m_pagePopup->initialize(webPage);
 }
 
 String WebPagePrivate::findPatternStringForUrl(const KURL& url) const
@@ -5339,15 +5341,13 @@ void WebPagePrivate::setCompositor(PassRefPtr<WebPageCompositorPrivate> composit
     // That seems extremely likely to be the case, but let's assert just to make sure.
     ASSERT(webKitThreadMessageClient()->isCurrentThread());
 
-    if (m_compositor || m_client->window())
-        m_backingStore->d->suspendScreenUpdates();
+    m_backingStore->d->suspendScreenUpdates();
 
     // The m_compositor member has to be modified during a sync call for thread
     // safe access to m_compositor and its refcount.
     userInterfaceThreadMessageClient()->dispatchSyncMessage(createMethodCallMessage(&WebPagePrivate::setCompositorHelper, this, compositor));
 
-    if (m_compositor || m_client->window()) // the new compositor, if one was set
-        m_backingStore->d->resumeScreenUpdates(BackingStore::RenderAndBlit);
+    m_backingStore->d->resumeScreenUpdates(BackingStore::RenderAndBlit);
 }
 
 void WebPagePrivate::setCompositorHelper(PassRefPtr<WebPageCompositorPrivate> compositor)
@@ -6064,10 +6064,10 @@ void WebPage::removeCompositingThreadOverlay(WebOverlay* overlay)
 #endif
 }
 
-bool WebPagePrivate::openPagePopup(PagePopupBlackBerryClient* popupClient, const WebCore::IntRect& originBoundsInRootView)
+bool WebPagePrivate::openPagePopup(PagePopupClient* popupClient, const WebCore::IntRect& originBoundsInRootView)
 {
     closePagePopup();
-    m_selectPopup = new PagePopupBlackBerry(this, popupClient);
+    m_pagePopup = PagePopup::create(this, popupClient);
 
     WebCore::IntRect popupRect = m_page->chrome().client()->rootViewToScreen(originBoundsInRootView);
     popupRect.setSize(popupClient->contentSize());
@@ -6081,18 +6081,17 @@ bool WebPagePrivate::openPagePopup(PagePopupBlackBerryClient* popupClient, const
 
 void WebPagePrivate::closePagePopup()
 {
-    if (!m_selectPopup)
+    if (!m_pagePopup)
         return;
 
-    m_selectPopup->closePopup();
+    m_pagePopup->close();
     m_client->closePopupWebView();
-    delete m_selectPopup;
-    m_selectPopup = 0;
+    m_pagePopup = 0;
 }
 
 bool WebPagePrivate::hasOpenedPopup() const
 {
-    return m_selectPopup;
+    return m_pagePopup;
 }
 
 void WebPagePrivate::setInspectorOverlayClient(InspectorOverlay::InspectorOverlayClient* inspectorOverlayClient)
@@ -6325,13 +6324,20 @@ void WebPagePrivate::animationFrameChanged()
     if (!m_animationMutex.tryLock())
         return;
 
+    if (!m_previousFrameDone) {
+        m_animationMutex.unlock();
+        return;
+    }
+
     if (!m_animationScheduled) {
         stopRefreshAnimationClient();
         m_animationMutex.unlock();
         return;
     }
 
-    m_animationScheduled = false;
+    m_previousFrameDone = false;
+
+    m_monotonicAnimationStartTime = monotonicallyIncreasingTime();
     callOnMainThread(handleServiceScriptedAnimationsOnMainThread, this);
     m_animationMutex.unlock();
 }
@@ -6361,10 +6367,26 @@ void WebPagePrivate::stopRefreshAnimationClient()
     BlackBerry::Platform::AnimationFrameRateController::instance()->removeClient(this);
 }
 
+void WebPagePrivate::serviceAnimations()
+{
+    double monotonicAnimationStartTime;
+    {
+        MutexLocker lock(m_animationMutex);
+        m_animationScheduled = false;
+        monotonicAnimationStartTime = m_monotonicAnimationStartTime;
+    }
+
+    m_mainFrame->view()->serviceScriptedAnimations(monotonicAnimationStartTime);
+
+    {
+        MutexLocker lock(m_animationMutex);
+        m_previousFrameDone = true;
+    }
+}
+
 void WebPagePrivate::handleServiceScriptedAnimationsOnMainThread(void* data)
 {
-    WebPagePrivate* webPagePrivate = static_cast<WebPagePrivate*>(data);
-    webPagePrivate->m_mainFrame->view()->serviceScriptedAnimations(currentTime());
+    static_cast<WebPagePrivate*>(data)->serviceAnimations();
 }
 #endif
 

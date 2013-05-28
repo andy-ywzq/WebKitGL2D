@@ -1,3 +1,146 @@
+2013-05-28  Andreas Kling  <akling@apple.com>
+
+        Document::setFocusedNode() should be setFocusedElement().
+        <http://webkit.org/b/116857>
+
+        Reviewed by Antti Koivisto.
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView clearFocus]):
+        (-[WebHTMLView becomeFirstResponder]):
+
+2013-05-25  Andreas Kling  <akling@apple.com>
+
+        Remove Document::getFocusableNodes().
+        <http://webkit.org/b/116773>
+
+        Reviewed by Joseph Pecoraro.
+
+        Remove the private _focusableNodes API on DOMDocument, it has no clients.
+
+        * DOM/WebDOMOperations.mm:
+        * DOM/WebDOMOperationsPrivate.h:
+
+2013-05-25  Simon Fraser  <simon.fraser@apple.com>
+
+        Unprefix Page Visibility API
+        https://bugs.webkit.org/show_bug.cgi?id=102340
+
+        Reviewed by Tim Horton.
+
+        Renaming of the "preview" state to "unloaded".
+
+        * WebView/WebView.mm:
+        * WebView/WebViewPrivate.h:
+
+2013-05-25  Dan Bernstein  <mitz@apple.com>
+
+        <rdar://problem/13924889> -webView:didPerformClientRedirectFromURL:toURL:inFrame: should be given the redirecting URL as the “from” URL
+        https://bugs.webkit.org/show_bug.cgi?id=116733
+
+        Reviewed by Adele Peterson.
+
+        By the time the history controller calls updateGlobalHistoryRedirectLinks(), the document
+        loader already reflects the destination URL. In order to be able to provide the immediate
+        source URL to the delegate, we make WebFrame track a URL and provisional URL, updating them
+        in response to FrameLoader callbacks in exactly the same way WebFrameProxy maintains its
+        m_url and m_provisionalURL member variables.
+
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        (WebFrameLoaderClient::dispatchDidReceiveServerRedirectForProvisionalLoad): Update
+        provisionalURL.
+        (WebFrameLoaderClient::dispatchDidChangeLocationWithinPage): Update url.
+        (WebFrameLoaderClient::dispatchDidPushStateWithinPage): Ditto.
+        (WebFrameLoaderClient::dispatchDidReplaceStateWithinPage): Ditto.
+        (WebFrameLoaderClient::dispatchDidPopStateWithinPage): Ditto.
+        (WebFrameLoaderClient::dispatchDidStartProvisionalLoad): Update provisionalURL.
+        (WebFrameLoaderClient::dispatchDidCommitLoad): Update URL and provisionalURL.
+        (WebFrameLoaderClient::dispatchDidFailProvisionalLoad): Clear provisionalURL.
+        (WebFrameLoaderClient::dispatchDidFailLoad): Added an assertion.
+        (WebFrameLoaderClient::dispatchDidFinishLoad): Ditto.
+        (WebFrameLoaderClient::updateGlobalHistoryRedirectLinks): Pass the last committed URL as the
+        source, rather than clientRedirectSourceForHistory().
+        * WebView/WebFrameInternal.h: Added url and provisionalURL ivars to WebFramePrivate.
+
+2013-05-24  Anders Carlsson  <andersca@apple.com>
+
+        Remove using namespace std from Mac WebKit1
+        https://bugs.webkit.org/show_bug.cgi?id=116747
+
+        Reviewed by Sam Weinig.
+
+        Use explicit std:: qualifiers instead.
+
+        * History/BinaryPropertyList.cpp:
+        (IntegerArray::deletedValueSize):
+        (BinaryPropertyListPlan::invalidObjectReference):
+        (bytesNeeded):
+        * History/WebHistory.mm:
+        (-[WebHistoryPrivate orderedLastVisitedDays]):
+        (WebHistoryWriter::WebHistoryWriter):
+        * History/WebHistoryItem.mm:
+        (-[WebHistoryItem initFromDictionaryRepresentation:]):
+        * Plugins/Hosted/NetscapePluginHostManager.mm:
+        (WebKit::NetscapePluginHostManager::instantiatePlugin):
+        * Plugins/Hosted/NetscapePluginHostProxy.mm:
+        * Plugins/Hosted/NetscapePluginInstanceProxy.mm:
+        (WebKit::NetscapePluginInstanceProxy::LocalObjectMap::idForObject):
+        (WebKit::NetscapePluginInstanceProxy::wheelEvent):
+        (WebKit::NetscapePluginInstanceProxy::print):
+        (WebKit::NetscapePluginInstanceProxy::snapshot):
+        (WebKit::NetscapePluginInstanceProxy::loadURL):
+        (WebKit::NetscapePluginInstanceProxy::createBindingsInstance):
+        * Plugins/Hosted/ProxyInstance.mm:
+        (WebKit::ProxyInstance::invoke):
+        (WebKit::ProxyInstance::supportsInvokeDefaultMethod):
+        (WebKit::ProxyInstance::supportsConstruct):
+        (WebKit::ProxyInstance::getPropertyNames):
+        (WebKit::ProxyInstance::methodNamed):
+        (WebKit::ProxyInstance::fieldNamed):
+        (WebKit::ProxyInstance::fieldValue):
+        (WebKit::ProxyInstance::setFieldValue):
+        * Plugins/WebBasePluginPackage.mm:
+        (-[WebBasePluginPackage supportsExtension:]):
+        (-[WebBasePluginPackage MIMETypeForExtension:]):
+        * Plugins/WebNetscapePluginStream.mm:
+        (WebNetscapePluginStream::deliverData):
+        * Plugins/WebNetscapePluginView.mm:
+        (PluginTimer::start):
+        (-[WebNetscapePluginView _postURL:target:len:buf:file:notifyData:sendNotification:allowHeaders:]):
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        * WebView/WebFrame.mm:
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _adjustedBottomOfPageWithTop:bottom:limit:]):
+        * WebView/WebTextCompletionController.mm:
+        (-[WebTextCompletionController _placePopupWindow:]):
+
+2013-05-24  Anders Carlsson  <andersca@apple.com>
+
+        Move history property list writer to WebKit
+        https://bugs.webkit.org/show_bug.cgi?id=116746
+
+        Reviewed by Tim Horton.
+
+        Move WebCore history files to WebKit since they're only used by WebKit now.
+
+        * History/BinaryPropertyList.cpp: Renamed from Source/WebCore/platform/cf/BinaryPropertyList.cpp.
+        * History/BinaryPropertyList.h: Renamed from Source/WebCore/platform/cf/BinaryPropertyList.h.
+        * History/HistoryPropertyList.cpp: Renamed from Source/WebCore/history/cf/HistoryPropertyList.cpp.
+        * History/HistoryPropertyList.h: Renamed from Source/WebCore/history/cf/HistoryPropertyList.h.
+        * History/WebHistory.mm:
+
+2013-05-24  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Remove custom code for webkitAudioContext global constructor getter
+        https://bugs.webkit.org/show_bug.cgi?id=116530
+
+        Reviewed by Geoffrey Garen.
+
+        Use RuntimeEnabledFeatures instead of Settings to toggle Web Audio support.
+
+        * WebView/WebView.mm:
+        (-[WebView _preferencesChanged:]):
+
 2013-05-23  Anders Carlsson  <andersca@apple.com>
 
         Crash in convertMainResourceLoadToDownload when downloading file by option-return

@@ -1,3 +1,262 @@
+2013-05-28  Ádám Kallai  <kadam@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Unskip now passing tests.
+
+        * platform/qt/TestExpectations:
+
+2013-05-28  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Unskip now passing tests.
+
+        * platform/qt-arm/TestExpectations:
+
+2013-05-28  Ádám Kallai  <kadam@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Skip failing tests after parallel gc is enabled.
+
+        * platform/qt/TestExpectations:
+
+2013-05-28  Sergio Villar Senin  <svillar@igalia.com>
+
+        Web Inspector: Enable CSS logging
+        https://bugs.webkit.org/show_bug.cgi?id=113401
+
+        Reviewed by Benjamin Poulain.
+
+        From Blink r149265 by <serya@chromium.org>
+
+        Unskipped console-css-warnings.html now that it's working.
+
+        * TestExpectations:
+
+2013-05-27  Claudio Saavedra  <csaavedra@igalia.com>
+
+        [CSS] -webkit-var prefix is case-sensitive
+        https://bugs.webkit.org/show_bug.cgi?id=116829
+
+        Reviewed by Darin Adler.
+
+        * fast/css/variables/case-sensitive.html: Add a
+        check for case-sensitiveness of the prefix of
+        variable declarations.
+        * fast/css/variables/case-sensitive-expected.html: Update.
+
+2013-05-27  Radu Stavila  <stavila@adobe.com>
+
+        [EFL][GTK] fast/regions/offsetLeft-offsetTop-in-multiple-regions.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=116808
+
+        Reviewed by Anders Carlsson.
+
+        The test was failing because of differences between different fonts.
+
+        * fast/regions/offsetLeft-offsetTop-in-multiple-regions-expected.txt:
+        * fast/regions/offsetLeft-offsetTop-in-multiple-regions.html:
+
+2013-05-27  Noam Rosenthal  <noam@webkit.org>
+
+        New test direct-pattern-compositing-contain-no-repeat.html fails on Mac
+        https://bugs.webkit.org/show_bug.cgi?id=116816
+
+        Modified the layer in the reference to still be composited, but have invisible painted content.
+
+        Reviewed by Andreas Kling.
+
+        * compositing/patterns/direct-pattern-compositing-contain-no-repeat-expected.html:
+
+2013-05-27  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Greening bots.
+
+        * platform/qt-5.0-wk1/TestExpectations:
+        * platform/qt-5.0-wk2/TestExpectations:
+
+2013-05-27  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/plugins/mouse-events-expected.txt: Added. Rebaselining after r150558.
+
+2013-05-27  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+        Adding failure expectations for the current test failures.
+
+        * platform/gtk-wk1/TestExpectations:
+        * platform/gtk/TestExpectations:
+
+2013-05-27  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/fast/dynamic/002-expected.txt: Rebaselining after r150527.
+        * platform/gtk/fast/js/global-constructors-attributes-worker-expected.txt: Added. Rebaselining after r150664.
+
+2013-05-25  Simon Fraser  <simon.fraser@apple.com>
+
+        Unprefix Page Visibility API
+        https://bugs.webkit.org/show_bug.cgi?id=102340
+
+        Reviewed by Tim Horton.
+        
+        Remove prefixes, adjust to state name changes.
+
+        * fast/events/page-visibility-iframe-delete-test.html:
+        * fast/events/page-visibility-iframe-move-test-expected.txt:
+        * fast/events/page-visibility-iframe-move-test.html:
+        * fast/events/page-visibility-iframe-propagation-test-expected.txt:
+        * fast/events/page-visibility-iframe-propagation-test.html:
+        * fast/events/page-visibility-null-view-expected.txt:
+        * fast/events/page-visibility-null-view.html:
+        * fast/events/page-visibility-transition-test-expected.txt:
+        * fast/events/page-visibility-transition-test.html:
+
+2013-05-25  Filip Pizlo  <fpizlo@apple.com>
+
+        We broke (-2^31/-1)|0 in the DFG
+        https://bugs.webkit.org/show_bug.cgi?id=116767
+
+        Reviewed by Andreas Kling.
+
+        * fast/js/dfg-div-by-neg1-and-then-or-zero-interesting-reg-alloc-expected.txt: Added.
+        * fast/js/dfg-div-by-neg1-and-then-or-zero-interesting-reg-alloc.html: Added.
+        * fast/js/dfg-div-by-zero-and-then-or-zero-interesting-reg-alloc-expected.txt: Added.
+        * fast/js/dfg-div-by-zero-and-then-or-zero-interesting-reg-alloc.html: Added.
+        * fast/js/dfg-div-neg2tothe31-by-one-and-then-or-zero-with-interesting-reg-alloc-expected.txt: Added.
+        * fast/js/dfg-div-neg2tothe31-by-one-and-then-or-zero-with-interesting-reg-alloc.html: Added.
+        * fast/js/jsc-test-list:
+        * fast/js/script-tests/dfg-div-by-neg1-and-then-or-zero-interesting-reg-alloc.js: Added.
+        (foo):
+        * fast/js/script-tests/dfg-div-by-zero-and-then-or-zero-interesting-reg-alloc.js: Added.
+        (foo):
+        * fast/js/script-tests/dfg-div-neg2tothe31-by-one-and-then-or-zero-with-interesting-reg-alloc.js: Added.
+        (foo):
+
+2013-05-25  Dan Bernstein  <mitz@apple.com>
+
+        Updated expected results after r150688.
+
+        Reviewed by Andreas Kling.
+
+        * http/tests/globalhistory/history-delegate-basic-refresh-redirect-expected.txt: Now shows
+        the URL that performed the client redirect, as expected.
+
+2013-05-25  Noam Rosenthal  <noam.rosenthal@nokia.com>
+
+        Direct pattern compositing breaks when no-repeat is set on a large layer
+        https://bugs.webkit.org/show_bug.cgi?id=116140
+
+        Added a ref-test to make sure that direct pattern compositing works well with no-repeat
+        in a particular geometry.
+
+        Reviewed by Antti Koivisto.
+
+        * compositing/patterns/direct-pattern-compositing-contain-no-repeat-expected.html: Added.
+        * compositing/patterns/direct-pattern-compositing-contain-no-repeat.html: Added.
+
+2013-05-24  Brent Fulgham  <bfulgham@apple.com>
+
+        Unreviewed change to get Windows bots green.  Disable a number
+        of crashes and failures.  Crashes are tracked under
+        https://bugs.webkit.org/show_bug.cgi?id=116562, failures under
+        https://bugs.webkit.org/show_bug.cgi?id=116564.
+
+        * platform/win/TestExpectations:
+
+2013-05-24  Sergio Villar Senin  <svillar@igalia.com>
+
+        Fixing invalid block recovery in some declaration list.
+        https://bugs.webkit.org/show_bug.cgi?id=115159
+
+        Reviewed by Darin Adler.
+
+        From Blink r148889 by <serya@chromium.org>
+
+        * fast/css/parsing-invalid-block-recovery-expected.txt: Added.
+        * fast/css/parsing-invalid-block-recovery.html: Added.
+
+2013-05-24  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Global constructors exposed in worker environment have wrong attributes
+        https://bugs.webkit.org/show_bug.cgi?id=116708
+
+        Reviewed by Geoffrey Garen.
+
+        Add fast/js/global-constructors-attributes-worker.html test case to check the
+        global constructors attributers in the worker environment.
+
+        * fast/js/global-constructors-attributes-expected.txt:
+        * fast/js/global-constructors-attributes-worker-expected.txt: Added.
+        * fast/js/global-constructors-attributes-worker.html: Added.
+        * fast/js/global-constructors-attributes.html:
+        * fast/js/script-tests/global-constructors-attributes.js: Make sure script usable
+        in a Worker and stop reporting the "constructor" property as a global constructor.
+        * platform/efl/fast/js/global-constructors-attributes-expected.txt:
+        * platform/efl/fast/js/global-constructors-attributes-worker-expected.txt: Added.
+        * platform/gtk/fast/js/global-constructors-attributes-expected.txt:
+        * platform/mac-lion/fast/js/global-constructors-attributes-expected.txt:
+        * platform/qt/fast/js/global-constructors-attributes-expected.txt:
+
+2013-05-24  Filip Pizlo  <fpizlo@apple.com>
+
+        We broke !(0/0)
+        https://bugs.webkit.org/show_bug.cgi?id=116736
+
+        Reviewed by Gavin Barraclough.
+
+        * fast/js/constant-fold-not-nan.html: Added.
+        * fast/js/constant-fold-not-nan-expected.txt: Added.
+        * fast/js/jsc-test-list:
+        * fast/js/script-tests/constant-fold-not-nan.js: Added.
+
+2013-05-24  Sergio Villar Senin  <svillar@igalia.com>
+
+        REGRESSION (r150215): broke a test case in inspector/console/console-css-warnings.html
+        https://bugs.webkit.org/show_bug.cgi?id=116731
+
+        Reviewed by Ryosuke Niwa.
+
+        The mentioned revision removed a layering violation added just to
+        support some IE7 hack. That was removed but the test case
+        supporting it was left untouched, remove it.
+
+        * inspector/console/console-css-warnings-expected.txt:
+        * inspector/console/console-css-warnings.html:
+
+2013-05-24  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        [WK2] Spelling tests gardening
+        https://bugs.webkit.org/show_bug.cgi?id=116718
+
+        Unreviewed gardening.
+
+        The most spelling tests are skipped for wk2 platforms and they have deprecated comments.
+        Move the tests from global wk2/TestExpectations to the ports' TestExpectations as
+        the core spellchecking implementation is delivered for wk2.
+        This change will allow to run spelling tests easier and using [ Pass ] keyword
+        in TestExpectations won't be needed.
+
+        * platform/efl-wk2/TestExpectations:
+        * platform/gtk-wk2/TestExpectations:
+        * platform/mac-wk2/TestExpectations:
+        * platform/qt-5.0-wk2/TestExpectations:
+        * platform/wk2/TestExpectations:
+
+2013-05-24  Anders Carlsson  <andersca@apple.com>
+
+        Remove PagePopup code
+        https://bugs.webkit.org/show_bug.cgi?id=116732
+
+        Reviewed by Andreas Kling.
+
+        Remove tests that relied on the mock page popup driver.
+
+        * fast/forms/date/no-page-popup-controller-expected.txt: Removed.
+        * fast/forms/date/no-page-popup-controller.html: Removed.
+        * fast/forms/resources/picker-common.js: Removed.
+        * fast/forms/time-multiple-fields/time-multiple-fields-open-picker-key-bindings-expected.txt: Removed.
+        * fast/forms/time-multiple-fields/time-multiple-fields-open-picker-key-bindings.html: Removed.
+
 2013-05-24  Manuel Rego Casasnovas  <rego@igalia.com>
 
         Improve loader/go-back-cached-main-resource.html test

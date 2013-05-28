@@ -30,6 +30,8 @@
 #include "Attr.h"
 #include "CSSParser.h"
 #include "CSSSelectorList.h"
+#include "Chrome.h"
+#include "ChromeClient.h"
 #include "ClassList.h"
 #include "ClientRect.h"
 #include "ClientRectList.h"
@@ -40,9 +42,11 @@
 #include "DocumentFragment.h"
 #include "DocumentSharedObjectPool.h"
 #include "ElementRareData.h"
+#include "EventDispatcher.h"
 #include "ExceptionCode.h"
 #include "FlowThreadController.h"
 #include "FocusController.h"
+#include "FocusEvent.h"
 #include "Frame.h"
 #include "FrameSelection.h"
 #include "FrameView.h"
@@ -70,6 +74,7 @@
 #include "PointerLockController.h"
 #include "PseudoElement.h"
 #include "RenderRegion.h"
+#include "RenderTheme.h"
 #include "RenderView.h"
 #include "RenderWidget.h"
 #include "SelectorQuery.h"
@@ -84,6 +89,7 @@
 #include "XMLNames.h"
 #include "htmlediting.h"
 #include <wtf/BitVector.h>
+#include <wtf/CurrentTime.h>
 #include <wtf/text/CString.h>
 
 #if ENABLE(SVG)
@@ -243,9 +249,29 @@ bool Element::supportsFocus() const
     return hasRareData() && elementRareData()->tabIndexSetExplicitly();
 }
 
+Element* Element::focusDelegate()
+{
+    return this;
+}
+
 short Element::tabIndex() const
 {
     return hasRareData() ? elementRareData()->tabIndex() : 0;
+}
+
+bool Element::isKeyboardFocusable(KeyboardEvent*) const
+{
+    return isFocusable() && tabIndex() >= 0;
+}
+
+bool Element::isMouseFocusable() const
+{
+    return isFocusable();
+}
+
+void Element::dispatchSimulatedClick(Event* underlyingEvent, SimulatedClickMouseEventOptions eventOptions, SimulatedClickVisualOptions visualOptions)
+{
+    EventDispatcher::dispatchSimulatedClick(this, underlyingEvent, eventOptions, visualOptions);
 }
 
 DEFINE_VIRTUAL_ATTRIBUTE_EVENT_LISTENER(Element, blur);
@@ -399,6 +425,138 @@ const AtomicString& Element::getAttribute(const QualifiedName& name) const
     if (const Attribute* attribute = getAttributeItem(name))
         return attribute->value();
     return nullAtom;
+}
+
+bool Element::isFocusable() const
+{
+    if (!inDocument() || !supportsFocus())
+        return false;
+
+    // Elements in canvas fallback content are not rendered, but they are allowed to be
+    // focusable as long as their canvas is displayed and visible.
+    if (isInCanvasSubtree()) {
+        const Element* e = this;
+        while (e && !e->hasLocalName(canvasTag))
+            e = e->parentElement();
+        ASSERT(e);
+        return e->renderer() && e->renderer()->style()->visibility() == VISIBLE;
+    }
+
+    if (renderer())
+        ASSERT(!renderer()->needsLayout());
+    else {
+        // If the node is in a display:none tree it might say it needs style recalc but
+        // the whole document is actually up to date.
+        ASSERT(!document()->childNeedsStyleRecalc());
+    }
+
+    // FIXME: Even if we are not visible, we might have a child that is visible.
+    // Hyatt wants to fix that some day with a "has visible content" flag or the like.
+    if (!renderer() || renderer()->style()->visibility() != VISIBLE)
+        return false;
+
+    return true;
+}
+
+bool Element::isUserActionElementInActiveChain() const
+{
+    ASSERT(isUserActionElement());
+    return document()->userActionElements().isInActiveChain(this);
+}
+
+bool Element::isUserActionElementActive() const
+{
+    ASSERT(isUserActionElement());
+    return document()->userActionElements().isActive(this);
+}
+
+bool Element::isUserActionElementFocused() const
+{
+    ASSERT(isUserActionElement());
+    return document()->userActionElements().isFocused(this);
+}
+
+bool Element::isUserActionElementHovered() const
+{
+    ASSERT(isUserActionElement());
+    return document()->userActionElements().isHovered(this);
+}
+
+void Element::setActive(bool flag, bool pause)
+{
+    if (flag == active())
+        return;
+
+    if (Document* document = this->document())
+        document->userActionElements().setActive(this, flag);
+
+    if (!renderer())
+        return;
+
+    bool reactsToPress = renderStyle()->affectedByActive() || childrenAffectedByActive();
+    if (reactsToPress)
+        setNeedsStyleRecalc();
+
+    if (renderer()->style()->hasAppearance() && renderer()->theme()->stateChanged(renderer(), PressedState))
+        reactsToPress = true;
+
+    // The rest of this function implements a feature that only works if the
+    // platform supports immediate invalidations on the ChromeClient, so bail if
+    // that isn't supported.
+    if (!document()->page()->chrome().client()->supportsImmediateInvalidation())
+        return;
+
+    if (reactsToPress && pause) {
+        // The delay here is subtle. It relies on an assumption, namely that the amount of time it takes
+        // to repaint the "down" state of the control is about the same time as it would take to repaint the
+        // "up" state. Once you assume this, you can just delay for 100ms - that time (assuming that after you
+        // leave this method, it will be about that long before the flush of the up state happens again).
+#ifdef HAVE_FUNC_USLEEP
+        double startTime = currentTime();
+#endif
+
+        Document::updateStyleForAllDocuments();
+        // Do an immediate repaint.
+        if (renderer())
+            renderer()->repaint(true);
+
+        // FIXME: Come up with a less ridiculous way of doing this.
+#ifdef HAVE_FUNC_USLEEP
+        // Now pause for a small amount of time (1/10th of a second from before we repainted in the pressed state)
+        double remainingTime = 0.1 - (currentTime() - startTime);
+        if (remainingTime > 0)
+            usleep(static_cast<useconds_t>(remainingTime * 1000000.0));
+#endif
+    }
+}
+
+void Element::setFocus(bool flag)
+{
+    if (flag == focused())
+        return;
+
+    if (Document* document = this->document())
+        document->userActionElements().setFocused(this, flag);
+
+    setNeedsStyleRecalc();
+}
+
+void Element::setHovered(bool flag)
+{
+    if (flag == hovered())
+        return;
+
+    if (Document* document = this->document())
+        document->userActionElements().setHovered(this, flag);
+
+    if (!renderer())
+        return;
+
+    if (renderer()->style()->affectedByHover() || childrenAffectedByHover())
+        setNeedsStyleRecalc();
+
+    if (renderer()->style()->hasAppearance())
+        renderer()->theme()->stateChanged(renderer(), HoverState);
 }
 
 void Element::scrollIntoView(bool alignToTop) 
@@ -1120,15 +1278,6 @@ bool Element::isDateTimeFieldElement() const
 }
 #endif
 
-bool Element::wasChangedSinceLastFormControlChangeEvent() const
-{
-    return false;
-}
-
-void Element::setChangedSinceLastFormControlChangeEvent(bool)
-{
-}
-
 bool Element::isDisabledFormControl() const
 {
 #if ENABLE(DIALOG_ELEMENT)
@@ -1295,7 +1444,7 @@ void Element::attach()
     if (hasRareData()) {   
         ElementRareData* data = elementRareData();
         if (data->needsFocusAppearanceUpdateSoonAfterAttach()) {
-            if (isFocusable() && document()->focusedNode() == this)
+            if (isFocusable() && document()->focusedElement() == this)
                 document()->updateFocusAppearanceSoon(false /* don't restore selection */);
             data->setNeedsFocusAppearanceUpdateSoonAfterAttach(false);
         }
@@ -1326,6 +1475,15 @@ void Element::detach()
         detachChildrenIfNeeded();
         shadow->detach();
     }
+
+    if (isUserActionElement()) {
+        if (hovered())
+            document()->hoveredElementDidDetach(this);
+        if (inActiveChain())
+            document()->elementInActiveChainDidDetach(this);
+        document()->userActionElements().didDetach(this);
+    }
+
     ContainerNode::detach();
 }
 
@@ -1930,7 +2088,7 @@ void Element::focus(bool restorePreviousSelection, FocusDirection direction)
         return;
 
     Document* doc = document();
-    if (doc->focusedNode() == this)
+    if (doc->focusedElement() == this)
         return;
 
     // If the stylesheets have already been loaded we can reliably check isFocusable.
@@ -1951,7 +2109,7 @@ void Element::focus(bool restorePreviousSelection, FocusDirection direction)
         // If a focus event handler changes the focus to a different node it
         // does not make sense to continue and update appearence.
         protect = this;
-        if (!page->focusController()->setFocusedNode(this, doc->frame(), direction))
+        if (!page->focusController()->setFocusedElement(this, doc->frame(), direction))
             return;
     }
 
@@ -1993,13 +2151,46 @@ void Element::blur()
 {
     cancelFocusAppearanceUpdate();
     Document* doc = document();
-    if (treeScope()->focusedNode() == this) {
+    if (treeScope()->focusedElement() == this) {
         if (doc->frame())
-            doc->frame()->page()->focusController()->setFocusedNode(0, doc->frame());
+            doc->frame()->page()->focusController()->setFocusedElement(0, doc->frame());
         else
-            doc->setFocusedNode(0);
+            doc->setFocusedElement(0);
     }
 }
+
+void Element::dispatchFocusInEvent(const AtomicString& eventType, PassRefPtr<Element> oldFocusedElement)
+{
+    ASSERT(!NoEventDispatchAssertion::isEventDispatchForbidden());
+    ASSERT(eventType == eventNames().focusinEvent || eventType == eventNames().DOMFocusInEvent);
+    dispatchScopedEventDispatchMediator(FocusInEventDispatchMediator::create(FocusEvent::create(eventType, true, false, document()->defaultView(), 0, oldFocusedElement)));
+}
+
+void Element::dispatchFocusOutEvent(const AtomicString& eventType, PassRefPtr<Element> newFocusedElement)
+{
+    ASSERT(!NoEventDispatchAssertion::isEventDispatchForbidden());
+    ASSERT(eventType == eventNames().focusoutEvent || eventType == eventNames().DOMFocusOutEvent);
+    dispatchScopedEventDispatchMediator(FocusOutEventDispatchMediator::create(FocusEvent::create(eventType, true, false, document()->defaultView(), 0, newFocusedElement)));
+}
+
+void Element::dispatchFocusEvent(PassRefPtr<Element> oldFocusedElement, FocusDirection)
+{
+    if (document()->page())
+        document()->page()->chrome().client()->elementDidFocus(this);
+
+    RefPtr<FocusEvent> event = FocusEvent::create(eventNames().focusEvent, false, false, document()->defaultView(), 0, oldFocusedElement);
+    EventDispatcher::dispatchEvent(this, FocusEventDispatchMediator::create(event.release()));
+}
+
+void Element::dispatchBlurEvent(PassRefPtr<Element> newFocusedElement)
+{
+    if (document()->page())
+        document()->page()->chrome().client()->elementDidBlur(this);
+
+    RefPtr<FocusEvent> event = FocusEvent::create(eventNames().blurEvent, false, false, document()->defaultView(), 0, newFocusedElement);
+    EventDispatcher::dispatchEvent(this, BlurEventDispatchMediator::create(event.release()));
+}
+
 
 String Element::innerText()
 {
@@ -2250,7 +2441,7 @@ void Element::cancelFocusAppearanceUpdate()
 {
     if (hasRareData())
         elementRareData()->setNeedsFocusAppearanceUpdateSoonAfterAttach(false);
-    if (document()->focusedNode() == this)
+    if (document()->focusedElement() == this)
         document()->cancelFocusAppearanceUpdate();
 }
 

@@ -427,7 +427,7 @@ void InputHandler::focusedNodeChanged()
     if (!frame || !frame->document())
         return;
 
-    Node* node = frame->document()->focusedNode();
+    Node* node = frame->document()->focusedElement();
 
     if (isActiveTextEdit() && m_currentFocusElement == node) {
         notifyClientOfKeyboardVisibilityChange(true);
@@ -1703,8 +1703,10 @@ void InputHandler::selectionChanged()
     if (!isActiveTextEdit())
         return;
 
-    if (processingChange())
+    if (processingChange()) {
+        m_webPage->m_client->suppressCaretChangeNotification(true /*shouldClearState*/);
         return;
+    }
 
     // Scroll the field if necessary. This must be done even if we are processing
     // a change as the text change may have moved the caret. IMF doesn't require

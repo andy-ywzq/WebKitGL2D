@@ -252,11 +252,6 @@ void HTMLFormControlElement::removedFrom(ContainerNode* insertionPoint)
     FormAssociatedElement::removedFrom(insertionPoint);
 }
 
-bool HTMLFormControlElement::wasChangedSinceLastFormControlChangeEvent() const
-{
-    return m_wasChangedSinceLastFormControlChangeEvent;
-}
-
 void HTMLFormControlElement::setChangedSinceLastFormControlChangeEvent(bool changed)
 {
     m_wasChangedSinceLastFormControlChangeEvent = changed;
@@ -461,9 +456,9 @@ bool HTMLFormControlElement::validationMessageShadowTreeContains(Node* node) con
     return m_validationMessage && m_validationMessage->shadowTreeContains(node);
 }
 
-void HTMLFormControlElement::dispatchBlurEvent(PassRefPtr<Node> newFocusedNode)
+void HTMLFormControlElement::dispatchBlurEvent(PassRefPtr<Element> newFocusedElement)
 {
-    HTMLElement::dispatchBlurEvent(newFocusedNode);
+    HTMLElement::dispatchBlurEvent(newFocusedElement);
     hideVisibleValidationMessage();
 }
 

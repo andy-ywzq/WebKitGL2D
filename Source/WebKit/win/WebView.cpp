@@ -195,6 +195,8 @@ using JSC::JSLock;
 static HMODULE accessibilityLib;
 static HashSet<WebView*> pendingDeleteBackingStoreSet;
 
+static CFStringRef WebKitLocalCacheDefaultsKey = CFSTR("WebKitLocalCache");
+
 static String webKitVersionString();
 
 WebView* kit(Page* page)
@@ -478,8 +480,13 @@ void WebView::setCacheModel(WebCacheModel cacheModel)
 
     RetainPtr<CFURLCacheRef> cfurlCache = adoptCF(CFURLCacheCopySharedURLCache());
     RetainPtr<CFStringRef> cfurlCacheDirectory = adoptCF(wkCopyFoundationCacheDirectory(0));
-    if (!cfurlCacheDirectory)
-        cfurlCacheDirectory = WebCore::localUserSpecificStorageDirectory().createCFString();
+    if (!cfurlCacheDirectory) {
+        RetainPtr<CFPropertyListRef> preference = adoptCF(CFPreferencesCopyAppValue(WebKitLocalCacheDefaultsKey, kCFPreferencesCurrentApplication));
+        if (preference && (CFStringGetTypeID() == CFGetTypeID(preference.get())))
+            cfurlCacheDirectory = adoptCF(static_cast<CFStringRef>(preference.leakRef()));
+        else
+            cfurlCacheDirectory = WebCore::localUserSpecificStorageDirectory().createCFString();
+    }
 
     // As a fudge factor, use 1000 instead of 1024, in case the reported byte 
     // count doesn't align exactly to a megabyte boundary.
@@ -2597,6 +2604,13 @@ static void WebKitSetApplicationCachePathIfNecessary()
         return;
 
     String path = localUserSpecificStorageDirectory();
+
+#if USE(CF)
+    RetainPtr<CFPropertyListRef> cacheDirectoryPreference = adoptCF(CFPreferencesCopyAppValue(WebKitLocalCacheDefaultsKey, kCFPreferencesCurrentApplication));
+    if (cacheDirectoryPreference && (CFStringGetTypeID() == CFGetTypeID(cacheDirectoryPreference.get())))
+        path = static_cast<CFStringRef>(cacheDirectoryPreference.get());
+#endif
+
     if (!path.isNull())
         cacheStorage().setCacheDirectory(path);
 
@@ -4909,7 +4923,7 @@ HRESULT WebView::notifyPreferencesChanged(IWebNotification* notification)
     settings->setShowRepaintCounter(enabled);
 
 #if ENABLE(WEB_AUDIO)
-    settings->setWebAudioEnabled(true);
+    RuntimeEnabledFeatures::setWebAudioEnabled(true);
 #endif // ENABLE(WEB_AUDIO)
 
 #if ENABLE(WEBGL)
@@ -5260,7 +5274,7 @@ HRESULT STDMETHODCALLTYPE WebView::standardUserAgentWithApplicationName(
 HRESULT STDMETHODCALLTYPE WebView::clearFocusNode()
 {
     if (m_page && m_page->focusController())
-        m_page->focusController()->setFocusedNode(0, 0);
+        m_page->focusController()->setFocusedElement(0, 0);
     return S_OK;
 }
 
@@ -5269,7 +5283,7 @@ HRESULT STDMETHODCALLTYPE WebView::setInitialFocus(
 {
     if (m_page && m_page->focusController()) {
         Frame* frame = m_page->focusController()->focusedOrMainFrame();
-        frame->document()->setFocusedNode(0);
+        frame->document()->setFocusedElement(0);
         m_page->focusController()->setInitialFocus(forward ? FocusDirectionForward : FocusDirectionBackward, 0);
     }
     return S_OK;

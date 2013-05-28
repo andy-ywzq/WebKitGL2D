@@ -61,7 +61,7 @@ class BackingStore;
 class BackingStoreClient;
 class BackingStorePrivate;
 class InRegionScroller;
-class PagePopupBlackBerry;
+class PagePopup;
 class RenderQueue;
 class WebCookieJar;
 class WebOverlay;
@@ -230,7 +230,7 @@ public:
 
     // Find the next utf8 string in the given direction.
     // Case sensitivity, wrapping, and highlighting all matches are also toggleable.
-    bool findNextString(const char*, bool forward, bool caseSensitive, bool wrap, bool highlightAllMatches);
+    bool findNextString(const char*, bool forward, bool caseSensitive, bool wrap, bool highlightAllMatches, bool selectActiveMatchOnClear);
 
     JSGlobalContextRef globalContext() const;
 
@@ -389,7 +389,7 @@ private:
     friend class WebKit::BackingStore;
     friend class WebKit::BackingStoreClient;
     friend class WebKit::BackingStorePrivate;
-    friend class WebKit::PagePopupBlackBerry;
+    friend class WebKit::PagePopup;
     friend class WebKit::RenderQueue;
     friend class WebKit::WebPageCompositor;
     friend class WebKit::WebPageGroupLoadDeferrer;

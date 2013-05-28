@@ -519,7 +519,14 @@ void PluginView::setLayerHostingMode(LayerHostingMode layerHostingMode)
 
     m_plugin->setLayerHostingMode(layerHostingMode);
 }
-
+    
+NSObject *PluginView::accessibilityObject() const
+{
+    if (!m_isInitialized || !m_plugin)
+        return 0;
+    
+    return m_plugin->accessibilityObject();
+}
 #endif
 
 void PluginView::initializePlugin()
@@ -1032,9 +1039,9 @@ void PluginView::focusPluginElement()
     ASSERT(frame());
     
     if (Page* page = frame()->page())
-       page->focusController()->setFocusedNode(m_pluginElement.get(), frame());
+        page->focusController()->setFocusedElement(m_pluginElement.get(), frame());
     else
-       frame()->document()->setFocusedNode(m_pluginElement);
+        frame()->document()->setFocusedElement(m_pluginElement);
 }
 
 void PluginView::pendingURLRequestsTimerFired()
