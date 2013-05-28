@@ -108,9 +108,10 @@ public:
     void setOpacity(double opacity) { m_opacity = clampTo(opacity, 0.0, 1.0); }
     double opacity() const { return m_opacity; }
 
+    WebCore::CoordinatedGraphicsScene* coordinatedGraphicsScene();
+
 protected:
     WebView(WebContext*, WebPageGroup*);
-    WebCore::CoordinatedGraphicsScene* coordinatedGraphicsScene();
 
     virtual void didChangeContentScaleFactor(float /*scaleFactor*/) { }
     virtual void didChangeContentPosition(const WebCore::FloatPoint& /*trajectoryVector*/) { }

@@ -23,6 +23,7 @@
 
 #include <WebKit2/WKBase.h>
 #include <WebKit2/WKGeometry.h>
+#include <WebKit2/WKCoordinatedScene.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -101,6 +102,8 @@ WK_EXPORT bool WKViewExitFullScreen(WKViewRef);
 
 WK_EXPORT void WKViewSetOpacity(WKViewRef view, double opacity);
 WK_EXPORT double WKViewOpacity(WKViewRef view);
+
+WK_EXPORT WKCoordinatedScene WKViewGetCoordinatedScene(WKViewRef view);
 
 #ifdef __cplusplus
 }

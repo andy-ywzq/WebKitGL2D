@@ -23,6 +23,7 @@
 
 #include "WKView.h"
 
+#include "WKCoordinatedSceneAPICast.h"
 #include "WKAPICast.h"
 #include "WebView.h"
 
@@ -180,6 +181,11 @@ void WKViewSetOpacity(WKViewRef view, double opacity)
 double WKViewOpacity(WKViewRef view)
 {
     return toImpl(view)->opacity();
+}
+
+WKCoordinatedScene WKViewGetCoordinatedScene(WKViewRef view)
+{
+    return toAPI(toImpl(view)->coordinatedGraphicsScene());
 }
 
 #endif // USE(COORDINATED_GRAPHICS)
