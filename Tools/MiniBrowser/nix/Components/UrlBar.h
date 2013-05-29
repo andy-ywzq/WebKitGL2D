@@ -2,6 +2,7 @@
  * Copyright (C) 2012-2013 Nokia Corporation and/or its subsidiary(-ies).
  * Copyright (C) 2013 University of Szeged
  * Copyright (C) 2013 Roland Takacs <rtakacs@inf.u-szeged.hu>
+ * Copyright (C) 2013 Matyas Mustoha <mmatyas@inf.u-szeged.hu>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,6 +31,7 @@
 
 #include "VisualComponent.h"
 
+#include <X11/Xatom.h>
 #include <cairo-xlib.h>
 #include <string>
 
@@ -58,8 +60,15 @@ private:
     void drawText();
     void drawUrlBar();
 
+    void becomeClipboardOwner();
+    void respondClipboardRequest(const XSelectionRequestEvent&);
+    void requestClipboardText();
+    void pasteClipboardText(const XEvent&);
+
     std::string m_url;
+    std::string m_copiedText;
     bool m_isFocused;
+    Atom m_clipboardAtom;
 
     cairo_t* m_cairo;
     cairo_surface_t* m_surface;

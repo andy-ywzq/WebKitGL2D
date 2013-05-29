@@ -2,6 +2,7 @@
  * Copyright (C) 2012-2013 Nokia Corporation and/or its subsidiary(-ies).
  * Copyright (C) 2013 University of Szeged
  * Copyright (C) 2013 Roland Takacs <rtakacs@inf.u-szeged.hu>
+ * Copyright (C) 2013 Matyas Mustoha <mmatyas@inf.u-szeged.hu>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,6 +37,7 @@ UrlBar::UrlBar(Display* display, Window parent, XContext context, BrowserControl
     : VisualComponent(display, control, size)
     , m_isFocused(false)
     , m_url(url)
+    , m_copiedText(url)
 {
     createXWindow(parent, context);
 
@@ -45,6 +47,8 @@ UrlBar::UrlBar(Display* display, Window parent, XContext context, BrowserControl
     cairo_set_font_size(m_cairo, 14);
 
     XDefineCursor(display, m_window, XCreateFontCursor(display, XC_xterm));
+
+    m_clipboardAtom = XInternAtom(m_display, "CLIPBOARD", True);
 }
 
 UrlBar::~UrlBar()
@@ -70,6 +74,12 @@ void UrlBar::handleEvent(const XEvent& event)
         break;
     case ButtonRelease:
         addFocus();
+        break;
+    case SelectionRequest:
+        respondClipboardRequest(event.xselectionrequest);
+        break;
+    case SelectionNotify:
+        pasteClipboardText(event);
         break;
     }
 }
@@ -155,8 +165,27 @@ void UrlBar::handleKeyReleaseEvent(const XKeyReleasedEvent& event)
     case XK_Return:
         loadPage();
         break;
+    case XK_Insert:
+        if (event.state & ControlMask)
+            becomeClipboardOwner();
+        else if (event.state & ShiftMask)
+            requestClipboardText();
+        break;
     default:
-        appendCharacter(normalKey);
+        if (event.state & ControlMask) {
+            // while the Control key is pressed, character codes start from 1 (A=1, B=2, ...).
+            switch (normalKey + 'A' - 1) {
+            case 'C':
+                becomeClipboardOwner();
+                break;
+
+            case 'V':
+                requestClipboardText();
+                break;
+            }
+        } else
+            appendCharacter(normalKey);
+
         break;
     }
 
@@ -183,4 +212,62 @@ void UrlBar::loadPage()
     }
 
     m_control->loadPage(m_url.c_str());
+}
+
+void UrlBar::requestClipboardText()
+{
+    XConvertSelection(m_display, m_clipboardAtom, XA_STRING, XA_STRING, m_window, CurrentTime);
+}
+
+void UrlBar::pasteClipboardText(const XEvent &event)
+{
+    Atom clipType;
+    int clipFormat;
+    unsigned long clipLength;
+    unsigned long clipRemainingBytes;
+    unsigned char *clipBuffer = 0;
+
+    if (event.xselection.property == None)
+        return;
+
+    XGetWindowProperty(m_display, m_window,
+        event.xselection.property, 0, 255, False, AnyPropertyType,
+        &clipType, &clipFormat, &clipLength, &clipRemainingBytes, &clipBuffer);
+
+    for (unsigned long i = 0; i < clipLength; i++)
+        appendCharacter(clipBuffer[i]);
+
+    XFree(clipBuffer);
+}
+
+void UrlBar::becomeClipboardOwner()
+{
+    m_copiedText = m_url;
+
+    XSetSelectionOwner(m_display, m_clipboardAtom, m_window, CurrentTime);
+    if (XGetSelectionOwner(m_display, m_clipboardAtom) != m_window)
+        fprintf(stderr, "Could not set clipboard ownership.\n");
+
+    XSetSelectionOwner(m_display, XA_PRIMARY, m_window, CurrentTime);
+    if (XGetSelectionOwner(m_display, XA_PRIMARY) != m_window)
+        fprintf(stderr, "Could not set primary selection ownership.\n");
+}
+
+void UrlBar::respondClipboardRequest(const XSelectionRequestEvent& requestEvent)
+{
+    XEvent responseEvent;
+    responseEvent.xselection.type = SelectionNotify;
+    responseEvent.xselection.property = None;
+    responseEvent.xselection.display = requestEvent.display;
+    responseEvent.xselection.requestor = requestEvent.requestor;
+    responseEvent.xselection.selection = requestEvent.selection;
+    responseEvent.xselection.target = requestEvent.target;
+    responseEvent.xselection.time = requestEvent.time;
+
+    XChangeProperty(m_display, requestEvent.requestor, requestEvent.property, XA_STRING,
+        8, PropModeReplace, reinterpret_cast<const unsigned char *>(m_copiedText.c_str()), m_copiedText.length());
+
+    responseEvent.xselection.property = requestEvent.property;
+    XSendEvent(m_display, requestEvent.requestor, False, 0, &responseEvent);
+    XFlush(m_display);
 }
