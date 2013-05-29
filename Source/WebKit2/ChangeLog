@@ -1,3 +1,121 @@
+2013-05-29  Marcelo Lira  <marcelo.lira@openbossa.org>
+
+        [WK2][CoordinatedGraphics][EFL] WKViewUserViewportToContents() function doesn't do what it says
+        https://bugs.webkit.org/show_bug.cgi?id=116683
+
+        Reviewed by Noam Rosenthal.
+
+        WKViewUserViewportToContents now converts WebView coordinates to
+        page contents coordinates, taking into account factors as content
+        scale and scroll, and also device scale.
+
+        The function WKViewUserViewportToScene was added to convert WebView
+        coordinates to the coordinates of the canvas/scene where the view
+        is drawn, and EwkView was fixed to use it, instead of
+        WKViewUserViewportToContents.
+
+        * UIProcess/API/C/CoordinatedGraphics/WKView.cpp:
+        (WKViewUserViewportToScene):
+        * UIProcess/API/C/CoordinatedGraphics/WKView.h:
+        * UIProcess/API/efl/EwkView.cpp:
+        (EwkView::createGLSurface):
+        * UIProcess/CoordinatedGraphics/WebView.cpp:
+        (WebKit::WebView::userViewportToContents):
+        (WebKit):
+        (WebKit::WebView::userViewportToScene):
+        (WebKit::WebView::transformToScene):
+        * UIProcess/CoordinatedGraphics/WebView.h:
+        (WebView):
+
+2013-05-29  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix make distcheck.
+
+        * GNUmakefile.am: Add WebCoreLayerGtk2.a to DISTCLEANFILES.
+
+2013-05-29  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        [GTK] Clean up WebKit2 GNUmakefile.am
+        https://bugs.webkit.org/show_bug.cgi?id=116907
+
+        Reviewed by Martin Robinson.
+
+        Removed WebNotificationManagerProxy.messages.in after r150785.
+
+        * GNUmakefile.am:
+
+2013-05-28  Alexey Proskuryakov  <ap@apple.com>
+
+        Freeze when loading a particular page on washingtonpost.com with NetworkProcess enabled
+        https://bugs.webkit.org/show_bug.cgi?id=116887
+        <rdar://problem/12965959>
+
+        Reviewed by Darin Adler.
+
+        * Shared/cf/ArgumentCodersCF.cpp:
+        (CoreIPC::encode):
+        (CoreIPC::decode):
+        Fix for the bug: use good shared WebCore code to manipulate CFURLs. Also, added
+        a FIXME about empty URLs.
+
+        * Shared/API/c/cf/WKURLCF.cpp: (WKURLCreateWithCFURL): Fixed to not use
+        CFURLGetString, as that could prevent loading certain resources, like ones with
+        curly braces in resource specifiers. We want KURL normalization, not CFURL one.
+
+2013-05-28  Tim Horton  <timothy_horton@apple.com>
+
+        Rendering suppression extension tokens shouldn't be 0, should handle overflow
+        https://bugs.webkit.org/show_bug.cgi?id=116886
+        <rdar://problem/14004474>
+
+        Reviewed by Darin Adler.
+
+        Don't use invalid HashSet values as tokens, and ensure that
+        we're not already using a token before returning it.
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::extendIncrementalRenderingSuppression):
+
+2013-05-28  Lauro Neto <lauro.neto@openbossa.org>
+
+        [GTK] Connection issues in repeated WebProcess crash/reloads.
+        https://bugs.webkit.org/show_bug.cgi?id=115880
+
+        Reviewed by Anders Carlsson.
+
+        When stressing the WebProcess creation/destruction, WebKitGTK can
+        often run into socket issues like bad file descriptor errors or
+        polling a socket indefinitely.
+
+        Currently WebKitGTK has three places where a socket can be
+        closed.
+
+        - childFinishedFunction (in ProcessLauncherGtk.cpp)
+        - Connection::platformInvalidate (in ConnectionUnix.cpp)
+        - WorkQueue EventSource destruction (in WorkQueueGtk.cpp)
+
+        To avoid these race conditions, socket closing will be handled
+        by the event source callback in WorkQueueGtk.cpp.
+
+        * Platform/CoreIPC/unix/ConnectionUnix.cpp:
+        (CoreIPC::Connection::platformInvalidate): Do not close the socket
+        when the connection is invalidated, the socket event source is
+        unregistered in this method and the socket is closed when the
+        GSocket associated to the event source is destroyed.
+        * UIProcess/Launcher/gtk/ProcessLauncherGtk.cpp:
+        (WebKit::ProcessLauncher::launchProcess): Do not monitor child
+        process to close the connection on termination. This was needed in
+        the past when we used DGRAM sockets, we currently use always
+        connection oriented sockets, so that when the other end closes
+        the connection we are notified and the connection is invalidated.
+
+2013-05-28  Martin Robinson  <mrobinson@igalia.com>
+
+        Fix GTK+ CMake build
+
+        * PlatformGTK.cmake: After r150336, the name of the WebKit2
+        library target is simply "WebKit2."
+
 2013-05-28  Marcelo Lira  <marcelo.lira@openbossa.org>
 
         [WK2][CoordinatedGraphics] DrawingArea's visible content area must be updated when contents size changes

@@ -4086,7 +4086,6 @@
     <ClCompile Include="..\platform\DragData.cpp" />
     <ClCompile Include="..\platform\DragImage.cpp" />
     <ClCompile Include="..\platform\FileChooser.cpp" />
-    <ClCompile Include="..\platform\FileIconLoader.cpp" />
     <ClCompile Include="..\platform\FileStream.cpp" />
     <ClCompile Include="..\platform\FileSystem.cpp" />
     <ClCompile Include="..\platform\graphics\ca\win\PlatformCAFiltersWin.cpp" />
@@ -4222,6 +4221,7 @@
     <ClCompile Include="..\platform\win\WheelEventWin.cpp" />
     <ClCompile Include="..\platform\win\WidgetWin.cpp" />
     <ClCompile Include="..\platform\win\WindowMessageBroadcaster.cpp" />
+    <ClCompile Include="..\platform\cf\CFURLExtras.cpp" />
     <ClCompile Include="..\platform\cf\FileSystemCF.cpp" />
     <ClCompile Include="..\platform\cf\KURLCFNet.cpp" />
     <ClCompile Include="..\platform\cf\SharedBufferCF.cpp" />
@@ -8998,6 +8998,7 @@
     <ClCompile Include="..\html\ValidationMessage.cpp" />
     <ClCompile Include="..\html\ValidityState.cpp" />
     <ClCompile Include="..\html\WeekInputType.cpp" />
+    <ClCompile Include="..\html\forms\FileIconLoader.cpp" />
     <ClCompile Include="..\html\parser\BackgroundHTMLInputStream.cpp" />
     <ClCompile Include="..\html\parser\BackgroundHTMLParser.cpp" />
     <ClCompile Include="..\html\parser\CompactHTMLToken.cpp" />
@@ -9024,13 +9025,7 @@
     <ClCompile Include="..\html\parser\TextViewSourceParser.cpp" />
     <ClCompile Include="..\html\parser\XSSAuditor.cpp" />
     <ClCompile Include="..\html\parser\XSSAuditorDelegate.cpp" />
-    <ClCompile Include="..\html\shadow\ClearButtonElement.cpp" />
     <ClCompile Include="..\html\shadow\ContentDistributor.cpp" />
-    <ClCompile Include="..\html\shadow\DateTimeEditElement.cpp" />
-    <ClCompile Include="..\html\shadow\DateTimeFieldElement.cpp" />
-    <ClCompile Include="..\html\shadow\DateTimeFieldElements.cpp" />
-    <ClCompile Include="..\html\shadow\DateTimeNumericFieldElement.cpp" />
-    <ClCompile Include="..\html\shadow\DateTimeSymbolicFieldElement.cpp" />
     <ClCompile Include="..\html\shadow\DetailsMarkerControl.cpp" />
     <ClCompile Include="..\html\shadow\HTMLContentElement.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -11507,7 +11502,6 @@
     <ClInclude Include="..\platform\DragImage.h" />
     <ClInclude Include="..\platform\EventLoop.h" />
     <ClInclude Include="..\platform\FileChooser.h" />
-    <ClInclude Include="..\platform\FileIconLoader.h" />
     <ClInclude Include="..\platform\FileMetadata.h" />
     <ClInclude Include="..\platform\FileStream.h" />
     <ClInclude Include="..\platform\FileStreamClient.h" />
@@ -11609,6 +11603,7 @@
     <ClInclude Include="..\platform\win\WindowMessageBroadcaster.h" />
     <ClInclude Include="..\platform\win\WindowMessageListener.h" />
     <ClInclude Include="..\platform\win\WindowsTouch.h" />
+    <ClInclude Include="..\platform\cf\CFURLExtras.h" />
     <ClInclude Include="..\platform\cf\win\CertificateCFWin.h" />
     <ClInclude Include="..\platform\graphics\BitmapImage.h" />
     <ClInclude Include="..\platform\graphics\Color.h" />
@@ -12785,6 +12780,7 @@
     <ClInclude Include="..\html\ValidityState.h" />
     <ClInclude Include="..\html\VoidCallback.h" />
     <ClInclude Include="..\html\WeekInputType.h" />
+    <ClInclude Include="..\html\forms\FileIconLoader.h" />
     <ClInclude Include="..\html\parser\AtomicHTMLToken.h" />
     <ClInclude Include="..\html\parser\BackgroundHTMLParser.h" />
     <ClInclude Include="..\html\parser\CompactHTMLToken.h" />
@@ -12817,13 +12813,7 @@
     <ClInclude Include="..\html\parser\TextViewSourceParser.h" />
     <ClInclude Include="..\html\parser\XSSAuditor.h" />
     <ClInclude Include="..\html\parser\XSSAuditorDelegate.h" />
-    <ClInclude Include="..\html\shadow\ClearButtonElement.h" />
     <ClInclude Include="..\html\shadow\ContentDistributor.h" />
-    <ClInclude Include="..\html\shadow\DateTimeEditElement.h" />
-    <ClInclude Include="..\html\shadow\DateTimeFieldElement.h" />
-    <ClInclude Include="..\html\shadow\DateTimeFieldElements.h" />
-    <ClInclude Include="..\html\shadow\DateTimeNumericFieldElement.h" />
-    <ClInclude Include="..\html\shadow\DateTimeSymbolicFieldElement.h" />
     <ClInclude Include="..\html\shadow\DetailsMarkerControl.h" />
     <ClInclude Include="..\html\shadow\HTMLContentElement.h" />
     <ClInclude Include="..\html\shadow\InsertionPoint.h" />

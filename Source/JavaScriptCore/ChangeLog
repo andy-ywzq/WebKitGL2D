@@ -1,3 +1,79 @@
+2013-05-28  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Put correct byteCompile symbol in file. Previous version
+        had an extra 'i' appended to the end.
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCoreExports.def:
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExports.def.in:
+
+2013-05-28  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build fix.  Remove ?byteCompile symbol that
+        is no longer accessible during link.
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCoreExports.def:
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExports.def.in:
+
+2013-05-28  Gavin Barraclough  <barraclough@apple.com>
+
+        String(new Date(2010,10,1)) is wrong in KRAT, YAKT
+        https://bugs.webkit.org/show_bug.cgi?id=106750
+
+        Reviewed by Darin Adler.
+
+        * runtime/JSDateMath.cpp:
+        (JSC::msToGregorianDateTime):
+            - Additional review comment fix.
+
+2013-05-28  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build fix after r150833
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCoreExports.def:
+        A CR/LF combination was lost in the file, combining two symbols.
+
+2013-05-27  Gavin Barraclough  <barraclough@apple.com>
+
+        String(new Date(2010,10,1)) is wrong in KRAT, YAKT
+        https://bugs.webkit.org/show_bug.cgi?id=106750
+
+        Reviewed by Darin Adler.
+
+        First part of a fix, simplfy date handling code, instead of operating separately
+        on the UTC-standard and standard-DST offsets, just generate a combined UTC-local
+        offset (this is what we actually need, and what the OS gives us).
+
+        * runtime/JSDateMath.cpp:
+        (JSC::getLocalTimeOffset):
+            - removed getUTCOffset, converted getDSTOffset -> getLocalTimeOffset
+        (JSC::gregorianDateTimeToMS):
+        (JSC::msToGregorianDateTime):
+        (JSC::parseDateFromNullTerminatedCharacters):
+            - call getLocalTimeOffset instead of getUTCOffset/getDSTOffset
+        * runtime/VM.cpp:
+        (JSC::VM::resetDateCache):
+            - removed cachedUTCOffset, converted DSTOffsetCache -> LocalTimeOffsetCache
+        * runtime/VM.h:
+        (JSC::LocalTimeOffsetCache::LocalTimeOffsetCache):
+        (JSC::LocalTimeOffsetCache::reset):
+        (LocalTimeOffsetCache):
+            - removed cachedUTCOffset, converted DSTOffsetCache -> LocalTimeOffsetCache
+
+2013-05-28  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        r150199 is very wrong
+        https://bugs.webkit.org/show_bug.cgi?id=116876
+
+        JSValue needs to protect its internal JSValueRef.
+
+        Reviewed by Darin Adler.
+
+        * API/JSValue.mm:
+        (-[JSValue initWithValue:inContext:]):
+        (-[JSValue dealloc]):
+        * API/tests/testapi.mm: Added a simple test to make sure that we protect the
+        underlying JavaScript value across garbage collections.
+
 2013-05-27  Patrick Gansterer  <paroga@webkit.org>
 
         Use ICU_INCLUDE_DIRS in BlackBerry CMake files

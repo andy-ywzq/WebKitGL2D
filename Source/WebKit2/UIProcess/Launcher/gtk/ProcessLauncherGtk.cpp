@@ -62,14 +62,6 @@ static void childSetupFunction(gpointer userData)
     close(socket);
 }
 
-static void childFinishedFunction(GPid, gint status, gpointer userData)
-{
-    if (WIFEXITED(status) && !WEXITSTATUS(status))
-        return;
-
-    close(GPOINTER_TO_INT(userData));
-}
-
 void ProcessLauncher::launchProcess()
 {
     GPid pid = 0;
@@ -122,10 +114,6 @@ void ProcessLauncher::launchProcess()
 
     close(sockets[0]);
     m_processIdentifier = pid;
-
-    // Monitor the child process, it calls waitpid to prevent the child process from becomming a zombie,
-    // and it allows us to close the socket when the child process crashes.
-    g_child_watch_add(m_processIdentifier, childFinishedFunction, GINT_TO_POINTER(sockets[1]));
 
     // We've finished launching the process, message back to the main run loop.
     RunLoop::main()->dispatch(bind(&ProcessLauncher::didFinishLaunchingProcess, this, m_processIdentifier, sockets[1]));

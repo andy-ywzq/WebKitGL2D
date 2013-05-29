@@ -1,3 +1,102 @@
+2013-05-29  Marcelo Lira  <marcelo.lira@openbossa.org>
+
+        [WK2][CoordinatedGraphics][EFL] WKViewUserViewportToContents() function doesn't do what it says
+        https://bugs.webkit.org/show_bug.cgi?id=116683
+
+        Reviewed by Noam Rosenthal.
+
+        A coordinates conversion test for WKViewUserViewportToContents was
+        added to WebKit2 API tests.
+
+        * TestWebKitAPI/PlatformEfl.cmake:
+        * TestWebKitAPI/Tests/WebKit2/CoordinatedGraphics/WKViewUserViewportToContents.cpp: Added.
+        (TestWebKitAPI):
+        (TestWebKitAPI::TEST):
+
+2013-05-29  Yong Li  <yong.li.webkit@outlook.com>
+
+        Unreviewed. Update my info.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-05-29  Dongseong Hwang  <dongseong.hwang@intel.com>
+
+        Unreviewed. Add myself as committer in contributors.json.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-05-29  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix make distcheck.
+
+        * TestWebKitAPI/GNUmakefile.am: Add WebCoreLayer.a to
+        DISTCLEANFILES.
+
+2013-05-29  Mary Wu  <mawu@blackberry.com>
+
+        Unreviewed: update my email address in contributors.json.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-05-29  Kalyan Kondapally  <kalyan.kondapally@intel.com>
+
+        Unreviewed: Adding myself to committers list.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-05-28  Arpita Bahuguna  <a.bah@samsung.com>
+
+        Unreviewed: Adding myself to committers list.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-05-28  Brent Fulgham  <bfulgham@webkit.org>
+
+        [Windows] Many CSS2.1 tests fail under NRWT.
+        https://bugs.webkit.org/show_bug.cgi?id=75707
+
+        Reviewed by Darin Adler.
+
+        * DumpRenderTree/win/DumpRenderTree.cpp:
+        (findFontFallback): Added
+        (addFontFallbackIfPresent): Added
+        (removeFontFallbackIfPresent): Added
+        (runTest): Set up/remove font fallbacks when needed.
+
+2013-05-28  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] NRWT reports failure for 'mac' test cases.
+        https://bugs.webkit.org/show_bug.cgi?id=116698
+
+        Reviewed by Ryosuke Niwa.
+
+        The Windows port falls back to the Mac port for many test results,
+        and so adds the mac and mac-wk2 to its set of fallbacks.
+        Unfortunately, NRWT thinks that this means that tests in these
+        folders should be executed, resulting in many failures on
+        Windows.
+
+        This change overloads the '_tests_for_other_platforms' method
+        to return a subset of the result fallback list so that we do
+        not attempt to execute Mac tests on Windows.
+
+        * Scripts/webkitpy/port/base.py:
+        (Port.test_search_path): Added. Defaults to just calling the
+        baseline_search_path method, which is how most ports behave.
+        (Port._test_for_other_platforms): Modified to call the new
+        test_search_path method.
+
+        * Scripts/webkitpy/port/win.py:
+        (WinPort.test_search_path): Added custom overload. Strips
+        out mac-specific test paths.
+
+2013-05-28  Martin Robinson  <mrobinson@igalia.com>
+
+        Fix GTK+ CMake build
+
+        * MiniBrowser/gtk/CMakeLists.txt: After r150336, the name of the WebKit2
+        library target is simply "WebKit2."
+
 2013-05-28  Zan Dobersek  <zdobersek@igalia.com>
 
         [webkitpy] Explicitly specify the reference file extensions
