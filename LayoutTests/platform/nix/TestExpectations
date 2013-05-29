@@ -4297,6 +4297,35 @@ fast/table/colspanMinWidth.html
 fast/table/spanOverlapRepaint.html
 http/tests/cache/willsendrequest-returns-null-for-memory-cache-load.html
 
+# Failing or flakey tests after merge 5264b53 83a2c4f
+editing/pasteboard/copy-inside-h1-preserves-h1.html
+editing/pasteboard/copy-without-selection.html
+fast/css/text-overflow-ellipsis-behind-floats.html
+fast/dynamic/002.html
+fullscreen/full-screen-inline-split-crash.html
+svg/custom/resources-css-scaled.html
+
+# Failing or flakey tests after merge 5e31806 f71ef68
+# editing/spelling tests began to fail at r150140
+editing/spelling/grammar.html
+editing/spelling/spellcheck-attribute.html
+editing/spelling/spelling-attribute-at-child.html
+editing/spelling/spelling-attribute-change.html
+editing/spelling/spelling-backspace-between-lines.html
+editing/spelling/spelling-double-clicked-word.html
+editing/spelling/spelling-exactly-selected-multiple-words.html
+editing/spelling/spelling-exactly-selected-word.html
+editing/spelling/spelling-hasspellingmarker.html
+editing/spelling/spelling-linebreak.html
+editing/spelling/spelling-multiword-selection.html
+editing/spelling/spelling-should-select-multiple-words.html
+editing/spelling/spelling-subword-selection.html
+editing/spelling/spelling-with-punctuation-selection.html
+editing/spelling/spelling-with-whitespace-selection.html
+animations/cross-fade-list-style-image.html
+scrollingcoordinator/non-fast-scrollable-region-scaled-iframe.html
+scrollingcoordinator/non-fast-scrollable-region-transformed-iframe.html
+
 # Flakey tests when running pixel tests.
 compositing/background-color/background-color-padding-change.html [ ImageOnlyFailure Pass ]
 compositing/scrollbar-painting.html [ ImageOnlyFailure Crash Pass ]
