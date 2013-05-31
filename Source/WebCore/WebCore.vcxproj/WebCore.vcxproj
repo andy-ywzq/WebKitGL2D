@@ -3933,10 +3933,12 @@
     <ClCompile Include="..\page\NavigatorBase.cpp" />
     <ClCompile Include="..\page\OriginAccessEntry.cpp" />
     <ClCompile Include="..\page\Page.cpp" />
+    <ClCompile Include="..\page\PageActivityAssertionToken.cpp" />
     <ClCompile Include="..\page\PageConsole.cpp" />
     <ClCompile Include="..\page\PageGroup.cpp" />
     <ClCompile Include="..\page\PageGroupLoadDeferrer.cpp" />
     <ClCompile Include="..\page\PageSerializer.cpp" />
+    <ClCompile Include="..\page\PageThrottler.cpp" />
     <ClCompile Include="..\page\PageVisibilityState.cpp" />
     <ClCompile Include="..\page\Performance.cpp" />
     <ClCompile Include="..\page\PerformanceEntry.cpp" />
@@ -4238,7 +4240,8 @@
     <ClCompile Include="..\platform\graphics\FontCache.cpp" />
     <ClCompile Include="..\platform\graphics\FontData.cpp" />
     <ClCompile Include="..\platform\graphics\FontDescription.cpp" />
-    <ClCompile Include="..\platform\graphics\FontFallbackList.cpp" />
+    <ClCompile Include="..\platform\graphics\FontGenericFamilies.cpp" />
+    <ClCompile Include="..\platform\graphics\FontGlyphs.cpp" />
     <ClCompile Include="..\platform\graphics\FontFastPath.cpp" />
     <ClCompile Include="..\platform\graphics\FontFeatureSettings.cpp" />
     <ClCompile Include="..\platform\graphics\FontPlatformData.cpp" />
@@ -8306,7 +8309,6 @@
     <ClCompile Include="..\html\BaseCheckableInputType.cpp" />
     <ClCompile Include="..\html\BaseClickableWithKeyInputType.cpp" />
     <ClCompile Include="..\html\BaseDateAndTimeInputType.cpp" />
-    <ClCompile Include="..\html\BaseMultipleFieldsDateAndTimeInputType.cpp" />
     <ClCompile Include="..\html\BaseTextInputType.cpp" />
     <ClCompile Include="..\fileapi\Blob.cpp" />
     <ClCompile Include="..\fileapi\BlobURL.cpp" />
@@ -11617,7 +11619,8 @@
     <ClInclude Include="..\platform\graphics\FontCache.h" />
     <ClInclude Include="..\platform\graphics\FontData.h" />
     <ClInclude Include="..\platform\graphics\FontDescription.h" />
-    <ClInclude Include="..\platform\graphics\FontFallbackList.h" />
+    <ClInclude Include="..\platform\graphics\FontGenericFamilies.h" />
+    <ClInclude Include="..\platform\graphics\FontGlyphs.h" />
     <ClInclude Include="..\platform\graphics\FontFeatureSettings.h" />
     <ClInclude Include="..\platform\graphics\FontMetrics.h" />
     <ClInclude Include="..\platform\graphics\FontPlatformData.h" />
@@ -12616,7 +12619,6 @@
     <ClInclude Include="..\html\BaseCheckableInputType.h" />
     <ClInclude Include="..\html\BaseClickableWithKeyInputType.h" />
     <ClInclude Include="..\html\BaseDateAndTimeInputType.h" />
-    <ClInclude Include="..\html\BaseMultipleFieldsDateAndTimeInputType.h" />
     <ClInclude Include="..\html\BaseTextInputType.h" />
     <ClInclude Include="..\fileapi\Blob.h" />
     <ClInclude Include="..\fileapi\BlobURL.h" />

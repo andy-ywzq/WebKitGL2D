@@ -27578,7 +27578,15 @@
 				RelativePath="..\page\Page.cpp"
 				>
 			</File>
-                        <File
+			<File
+				RelativePath="..\page\PageActivityAssertionToken.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\page\PageActivityAssertionToken.h"
+				>
+			</File>
+             <File
 				RelativePath="..\page\PageConsole.cpp"
 				>
 			</File>
@@ -27608,6 +27616,14 @@
 			</File>
 			<File
 				RelativePath="..\page\PageSerializer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\page\PageThrottler.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\page\PageThrottler.h"
 				>
 			</File>
 			<File
@@ -29873,12 +29889,20 @@
 					RelativePath="..\platform\graphics\FontDescription.h"
 					>
 				</File>
-				<File
-					RelativePath="..\platform\graphics\FontFallbackList.cpp"
+                <File
+					RelativePath="..\platform\graphics\FontGenericFamilies.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\platform\graphics\FontFallbackList.h"
+					RelativePath="..\platform\graphics\FontGenericFamilies.h"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\graphics\FontGlyphs.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\graphics\FontGlyphs.h"
 					>
 				</File>
 				<File

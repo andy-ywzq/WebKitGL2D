@@ -1,3 +1,167 @@
+2013-05-31  Julien Brianceau  <jbrianceau@nds.com>
+
+        [sh4] Fix Overflow case of branchMul32 in baseline JIT.
+        https://bugs.webkit.org/show_bug.cgi?id=117057
+
+        Reviewed by Oliver Hunt.
+
+        Current implementation of Overflow case in branchMul32 performs an
+        unsigned multiplication whereas a signed multiplication is expected.
+
+        * assembler/MacroAssemblerSH4.h:
+        (JSC::MacroAssemblerSH4::branchMul32):
+
+2013-05-31  Julien Brianceau  <jbrianceau@nds.com>
+
+        [sh4] Fix floating point comparisons in baseline JIT.
+        https://bugs.webkit.org/show_bug.cgi?id=117066.
+
+        Reviewed by Oliver Hunt.
+
+        Current implementation of branchDouble function in baseline JIT is wrong
+        for some conditions and overkill for others. For instance:
+        - With DoubleGreaterThanOrEqual condition, branch will be taken if either
+          operand is NaN with current implementation whereras it should not.
+        - With DoubleNotEqualOrUnordered condition, performed NaN checks are
+          useless (because comparison result is false if either operand is NaN).
+
+        * assembler/MacroAssemblerSH4.h:
+        (JSC::MacroAssemblerSH4::branchDouble):
+
+2013-05-31  Julien Brianceau  <jbrianceau@nds.com>
+
+        [sh4] Fix double floating point transfer in baseline JIT.
+        https://bugs.webkit.org/show_bug.cgi?id=117054
+
+        Reviewed by Oliver Hunt.
+
+        In current implementation, dmovRegReg function transfers only one single
+        FPRegister as PR=1 and SZ=0 in floating point status/control register.
+        Double transfers must be performed with two fmov.s opcodes.
+
+        * assembler/MacroAssemblerSH4.h:
+        (JSC::MacroAssemblerSH4::moveDouble):
+        (JSC::MacroAssemblerSH4::addDouble): Handle (op2==dest) case properly.
+        (JSC::MacroAssemblerSH4::sqrtDouble):
+        * assembler/SH4Assembler.h:
+        (JSC::SH4Assembler::fmovsRegReg):
+
+2013-05-31  Julien Brianceau  <jbrianceau@nds.com>
+
+        [sh4] Handle branchType properly in branchTruncateDoubleToInt32.
+        https://bugs.webkit.org/show_bug.cgi?id=117062
+
+        Reviewed by Oliver Hunt.
+
+        Current implementation of branchTruncateDoubleToInt32 is incorrect
+        when branchType == BranchIfTruncateSuccessful in sh4 baseline JIT.
+
+        * assembler/MacroAssemblerSH4.h:
+        (JSC::MacroAssemblerSH4::branchTruncateDoubleToInt32):
+
+2013-05-31  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build fix for VS2005 builders.
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCoreExports.def: Add
+        missing export for WTF::SHA1::computeHexDigest
+
+2013-05-30  David Farler  <dfarler@apple.com>
+
+        Fix jscore-test when not using --sdk option with jsDriver.pl
+        https://bugs.webkit.org/show_bug.cgi?id=116339
+
+        Reviewed by Joe Pecoraro.
+
+        * tests/mozilla/jsDriver.pl:
+        (execute_tests):
+        With each test, the shell_command needs to be started from scratch.
+
+        This fix will clear the shell_command and start over as before with
+        the opt_arch option when not using --sdk with jsDriver.pl.
+
+2013-05-30  Roger Fong  <roger_fong@apple.com>
+
+        Get rid of JavaScript exports file on AppleWin port.
+        https://bugs.webkit.org/show_bug.cgi?id=117050.
+
+        Reviewed by Darin Adler.
+
+        Delete the JavaScriptCoreExportGenerator folder and remove dependencies.
+        Start linking in WTF.lib now that it's a shared library.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.submit.sln:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.vcxproj/JavaScriptCoreCommon.props:
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator: Removed.
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGenerator.vcxproj: Removed.
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGenerator.vcxproj.filters: Removed.
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGeneratorBuildCmd.cmd: Removed.
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGeneratorCommon.props: Removed.
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGeneratorDebug.props: Removed.
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGeneratorPostBuild.cmd: Removed.
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGeneratorPreBuild.cmd: Removed.
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGeneratorProduction.props: Removed.
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExportGeneratorRelease.props: Removed.
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/JavaScriptCoreExports.def.in: Removed.
+        * JavaScriptCore.vcxproj/JavaScriptCoreExportGenerator/make-export-file-generator: Removed.
+        * JavaScriptCore.vcxproj/jsc/jscCommon.props:
+        * JavaScriptCore.vcxproj/testRegExp/testRegExp.vcxproj:
+        * JavaScriptCore.vcxproj/testRegExp/testRegExp.vcxproj.filters:
+        * JavaScriptCore.vcxproj/testRegExp/testRegExpCommon.props:
+        * JavaScriptCore.vcxproj/testapi/testapiCommon.props:
+
+2013-05-22  David Farler  <dfarler@apple.com>
+
+        Add --sdk option to jsDriver.pl to run with iOS Simulator
+        https://bugs.webkit.org/show_bug.cgi?id=116339
+
+        Reviewed by David Kilzer.
+
+        * tests/mozilla/jsDriver.pl:
+        (execute_tests):
+        Prefix shell command with the path to the "sim" tool.
+        (parse_args):
+        Add -d / --sdk option.
+        (usage):
+        Help message for -d / --sdk option.
+
+2013-05-30  Julien Brianceau  <jbrianceau@nds.com>
+
+        [sh4] Optimize NaN checks in LLINT for floating point comparisons.
+        https://bugs.webkit.org/show_bug.cgi?id=117049
+
+        Reviewed by Oliver Hunt.
+
+        Use the fcmp/eq opcode in sh4 LLINT to test if a double is NaN.
+        This is more efficient, doesn't require two tmp registers and requires
+        less code than current implementation (which converts double to float,
+        then checks 'E = Emax + 1' and 'f != 0').
+
+        * offlineasm/sh4.rb:
+
+2013-05-30  Oliver Hunt  <oliver@apple.com>
+
+        JSCallbackObject does not correctly initialise the PropertySlot for getOwnPropertyDescriptor
+        https://bugs.webkit.org/show_bug.cgi?id=117053
+
+        Reviewed by Mark Hahnenberg.
+
+        Set appropriate thisValue on the PropertySlot
+
+        * API/JSCallbackObjectFunctions.h:
+        (JSC::::getOwnPropertyDescriptor):
+        * API/tests/testapi.mm:
+
+2013-05-29  Jeffrey Pfau  <jpfau@apple.com>
+
+        [Mac] Enable cache partitioning and the public suffix list on 10.8
+        <rdar://problem/13679019>
+
+        Rubber-stamped by David Kilzer.
+
+        * Configurations/FeatureDefines.xcconfig:
+
 2013-05-28  Brent Fulgham  <bfulgham@apple.com>
 
         [Windows] Put correct byteCompile symbol in file. Previous version

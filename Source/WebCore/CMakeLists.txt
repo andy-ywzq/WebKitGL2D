@@ -258,7 +258,6 @@ set(WebCore_IDL_FILES
     Modules/webaudio/PannerNode.idl
     Modules/webaudio/AudioParam.idl
     Modules/webaudio/AudioProcessingEvent.idl
-    Modules/webaudio/AudioSourceNode.idl
     Modules/webaudio/BiquadFilterNode.idl
     Modules/webaudio/ConvolverNode.idl
     Modules/webaudio/DelayNode.idl
@@ -1754,10 +1753,12 @@ set(WebCore_SOURCES
     page/NavigatorBase.cpp
     page/OriginAccessEntry.cpp
     page/Page.cpp
+    page/PageActivityAssertionToken.cpp
     page/PageConsole.cpp
     page/PageGroup.cpp
     page/PageGroupLoadDeferrer.cpp
     page/PageSerializer.cpp
+    page/PageThrottler.cpp
     page/PageVisibilityState.cpp
     page/Performance.cpp
     page/PerformanceEntry.cpp
@@ -1893,7 +1894,8 @@ set(WebCore_SOURCES
     platform/graphics/FontCache.cpp
     platform/graphics/FontData.cpp
     platform/graphics/FontDescription.cpp
-    platform/graphics/FontFallbackList.cpp
+    platform/graphics/FontGenericFamilies.cpp
+    platform/graphics/FontGlyphs.cpp
     platform/graphics/FontFastPath.cpp
     platform/graphics/FontFeatureSettings.cpp
     platform/graphics/LayoutBoxExtent.cpp
@@ -2541,8 +2543,8 @@ set(WebCore_SOURCES
 if (CMAKE_COMPILER_IS_GNUCXX) # Can restrict based on the version.
     string(TOUPPER "CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}" _CXXFLAGS_VARNAME)
 
-    string(FIND ${_CXXFLAGS_VARNAME} "-O3" _CXXFLAGS_HAS_O3)
-    if (_CXXFLAGS_HAS_O3)
+    string(FIND ${_CXXFLAGS_VARNAME} "-O3" _CXXFLAGS_O3_INDEX)
+    if (_CXXFLAGS_O3_INDEX GREATER -1)
         string(REPLACE "-O3" "-O2" _CXXFLAGS ${${_CXXFLAGS_VARNAME}})
         set_source_files_properties(Modules/websockets/WebSocketDeflater.cpp
                                     PROPERTIES COMPILE_FLAGS "${_CXXFLAGS}")

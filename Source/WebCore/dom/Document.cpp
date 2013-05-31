@@ -682,6 +682,7 @@ void Document::dispose()
     // so tear down scope information upfront to avoid having stale references in the map.
     destroyTreeScopeData();
     removeDetachedChildren();
+    m_formController.clear();
 
     m_markers->detach();
 
@@ -1312,6 +1313,9 @@ void Document::setVisualUpdatesAllowed(bool visualUpdatesAllowed)
 
     if (RenderView* renderView = this->renderView())
         renderView->repaintViewAndCompositedLayers();
+
+    if (Frame* frame = this->frame())
+        frame->loader()->forcePageTransitionIfNeeded();
 }
 
 void Document::visualUpdatesSuppressionTimerFired(Timer<Document>*)
@@ -1328,7 +1332,10 @@ void Document::visualUpdatesSuppressionTimerFired(Timer<Document>*)
 
 void Document::setVisualUpdatesAllowedByClient(bool visualUpdatesAllowedByClient)
 {
-    if (visualUpdatesAllowedByClient && m_readyState == Complete && !visualUpdatesAllowed())
+    // We should only re-enable visual updates if ReadyState is Completed or the watchdog timer has fired,
+    // both of which we can determine by looking at the timer.
+
+    if (visualUpdatesAllowedByClient && !m_visualUpdatesSuppressionTimer.isActive() && !visualUpdatesAllowed())
         setVisualUpdatesAllowed(true);
 }
 
@@ -2876,7 +2883,7 @@ void Document::processHttpEquiv(const String& equiv, const String& content)
             if (frameLoader->activeDocumentLoader() && frameLoader->activeDocumentLoader()->mainResourceLoader())
                 requestIdentifier = frameLoader->activeDocumentLoader()->mainResourceLoader()->identifier();
             if (frameLoader->shouldInterruptLoadForXFrameOptions(content, url(), requestIdentifier)) {
-                String message = "Refused to display '" + url().elidedString() + "' in a frame because it set 'X-Frame-Options' to '" + content + "'.";
+                String message = "Refused to display '" + url().stringCenterEllipsizedToLength() + "' in a frame because it set 'X-Frame-Options' to '" + content + "'.";
                 frameLoader->stopAllLoaders();
                 // Stopping the loader isn't enough, as we're already parsing the document; to honor the header's
                 // intent, we must navigate away from the possibly partially-rendered document to a location that

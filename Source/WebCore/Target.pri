@@ -931,9 +931,11 @@ SOURCES += \
     page/NavigatorBase.cpp \
     page/OriginAccessEntry.cpp \
     page/Page.cpp \
+    page/PageActivityAssertionToken.cpp \
     page/PageConsole.cpp \
     page/PageGroup.cpp \
     page/PageGroupLoadDeferrer.cpp \
+    page/PageThrottler.cpp \
     page/PageVisibilityState.cpp \
     page/Performance.cpp \
     page/PerformanceEntry.cpp \
@@ -985,7 +987,8 @@ SOURCES += \
     platform/FileSystem.cpp \
     platform/HistogramSupport.cpp \
     platform/graphics/FontDescription.cpp \
-    platform/graphics/FontFallbackList.cpp \
+    platform/graphics/FontGenericFamilies.cpp \
+    platform/graphics/FontGlyphs.cpp \
     platform/graphics/FontFeatureSettings.cpp \
     platform/graphics/BitmapImage.cpp \
     platform/graphics/Color.cpp \
@@ -2098,7 +2101,9 @@ HEADERS += \
     page/PageGroup.h \
     page/PageGroupLoadDeferrer.h \
     page/Page.h \
+    page/PageActivityAssertionToken.h \
     page/PageConsole.h \
+    page/PageThrottler.h \
     page/PageVisibilityState.h \
     page/PlugInClient.h \
     page/PopupOpeningObserver.h \
@@ -3403,7 +3408,6 @@ enable?(WEB_AUDIO) {
         Modules/webaudio/AudioParamTimeline.h \
         Modules/webaudio/AudioProcessingEvent.h \
         Modules/webaudio/AudioScheduledSourceNode.h \
-        Modules/webaudio/AudioSourceNode.h \
         Modules/webaudio/AudioSummingJunction.h \
         Modules/webaudio/BiquadDSPKernel.h \
         Modules/webaudio/BiquadFilterNode.h \

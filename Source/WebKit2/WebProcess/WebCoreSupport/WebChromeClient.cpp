@@ -782,6 +782,14 @@ void WebChromeClient::scheduleCompositingLayerFlush()
         m_page->drawingArea()->scheduleCompositingLayerFlush();
 }
 
+
+bool WebChromeClient::layerTreeStateIsFrozen() const
+{
+    if (m_page->drawingArea())
+        return m_page->drawingArea()->layerTreeStateIsFrozen();
+
+    return false;
+}
 #endif
 
 #if ENABLE(TOUCH_EVENTS)
@@ -899,6 +907,16 @@ void WebChromeClient::didAddFooterLayer(GraphicsLayer* footerParent)
 {
     if (PageBanner* banner = m_page->footerPageBanner())
         banner->didAddParentLayer(footerParent);
+}
+
+void WebChromeClient::incrementActivePageCount()
+{
+    WebProcess::shared().incrementActiveTaskCount();
+}
+
+void WebChromeClient::decrementActivePageCount()
+{
+    WebProcess::shared().decrementActiveTaskCount();
 }
 
 } // namespace WebKit

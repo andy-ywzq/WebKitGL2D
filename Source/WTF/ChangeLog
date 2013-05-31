@@ -1,3 +1,76 @@
+2013-05-31  Rafael Brandao  <rafael.lobo@openbossa.org>
+
+        Fix double hash lookup in PageMapMemoryUsageRecorder::visit
+        https://bugs.webkit.org/show_bug.cgi?id=117071
+
+        Reviewed by Andreas Kling.
+
+        * wtf/FastMalloc.cpp:
+        (WTF::TCMalloc_ThreadCache::CreateCacheIfNecessary):
+
+2013-05-31  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Speculative build fix for pre-VS2010 compilers
+
+        * wtf/Platform.h: Only treat WTF as DLL for VS2010 builds
+
+2013-05-31  Zan Dobersek  <zdobersek@igalia.com>
+
+        Move MD5, SHA1 unit tests from WTF to TestWebKitAPI
+        https://bugs.webkit.org/show_bug.cgi?id=116445
+
+        Reviewed by Benjamin Poulain.
+
+        Remove the MD5 and SHA1 test cases from the WTF code. The same cases are now built and run under TestWebKitAPI.
+
+        * wtf/MD5.cpp:
+        (WTF::MD5::MD5):
+        * wtf/SHA1.cpp:
+        (WTF::SHA1::SHA1):
+
+2013-05-30  Roger Fong  <roger_fong@apple.com>
+
+        Another unreviewed build fix for Mac.
+
+        * wtf/text/WTFString.h:
+        (WTF::String::fromUTF8WithLatin1Fallback):
+
+2013-05-30  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed build fix for Mac.
+
+        * wtf/OSAllocator.h:
+        * wtf/text/WTFString.h:
+        (WTF::String::fromUTF8):
+
+2013-05-30  Roger Fong  <roger_fong@apple.com>
+
+        Get rid of JavaScript exports file on AppleWin port.
+        https://bugs.webkit.org/show_bug.cgi?id=117050.
+
+        Reviewed by Darin Adler.
+
+        This requires turning WTF into a shared library and adding the WTF_EXPORT_PRIVATE to some methods where it was missed.
+
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTFCommon.props:
+        * wtf/DateMath.h:
+        * wtf/ExportMacros.h:
+        * wtf/FilePrintStream.h:
+        * wtf/OSAllocator.h:
+        * wtf/PageAllocationAligned.h:
+        * wtf/Platform.h:
+        * wtf/PrintStream.h:
+        * wtf/StackBounds.h:
+        * wtf/StringPrintStream.h:
+        * wtf/ThreadSpecific.h:
+        * wtf/WTFThreadData.h:
+        * wtf/dtoa/cached-powers.h:
+        * wtf/dtoa/double-conversion.h:
+        * wtf/text/WTFString.h:
+        * wtf/unicode/Collator.h:
+        * wtf/unicode/UTF8.h:
+
 2013-05-29  Kent Tamura  <tkent@chromium.org>
 
         Remove ENABLE_INPUT_MULTIPLE_FIELDS_UI.
