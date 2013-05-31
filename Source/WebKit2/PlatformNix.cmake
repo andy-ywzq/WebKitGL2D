@@ -237,9 +237,22 @@ set(WebKitNix_HEADERS
     UIProcess/API/nix/NIXView.h
 )
 
+macro(PROCESS_HEADER_IFDEFS _file _enable _output)
+    get_filename_component(_absolute "${_file}" ABSOLUTE)
+    get_filename_component(_filename "${_file}" NAME)
+    set(${_output} "${CMAKE_BINARY_DIR}/${_filename}")
+    file(READ "${_absolute}" _contents)
+    foreach (_define ${_enable})
+        string(REGEX REPLACE "${_define}" "TRUE" _contents "${_contents}")
+    endforeach ()
+    file(WRITE "${${_output}}" "${_contents}")
+endmacro()
+
+PROCESS_HEADER_IFDEFS(Shared/API/c/WKBase.h "BUILDING_NIX__" _Shared_API_c_WKBase_h)
+
 set(WebKitNix_WebKit2_HEADERS
+    "${_Shared_API_c_WKBase_h}"
     Shared/API/c/WKArray.h
-    Shared/API/c/WKBase.h
     Shared/API/c/WKCertificateInfo.h
     Shared/API/c/WKConnectionRef.h
     Shared/API/c/WKContextMenuItem.h
@@ -328,8 +341,6 @@ set(WebKitNix_WebKit2_HEADERS
     UIProcess/API/CoordinatedGraphics/WKCoordinatedScene.h
     UIProcess/API/C/CoordinatedGraphics/WKView.h
     UIProcess/API/C/WKViewportAttributes.h
-
-    UIProcess/API/C/nix/WKAPICastNix.h
 
     WebProcess/InjectedBundle/API/c/WKBundle.h
     WebProcess/InjectedBundle/API/c/WKBundleBackForwardList.h
