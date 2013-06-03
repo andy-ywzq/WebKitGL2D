@@ -474,7 +474,7 @@ sub determineConfigurationProductDir
     determineBaseProductDir();
     determineConfiguration();
     if (isAppleWinWebKit()) {
-        my $binDir = (visualStudioVersion() eq "8") ? "bin" : "bin32";
+        my $binDir = "bin32";
         $configurationProductDir = File::Spec->catdir($baseProductDir, configurationForVisualStudio(), $binDir);
     } else {
         if (usesPerConfigurationBuildDirectory()) {
@@ -2573,7 +2573,7 @@ sub runSafari
     if (isAppleWinWebKit()) {
         my $result;
         my $productDir = productDir();
-        my $webKitLauncherPath = File::Spec->catfile(productDir(), "WebKit.exe");
+        my $webKitLauncherPath = File::Spec->catfile(productDir(), "WinLauncher.exe");
         return system { $webKitLauncherPath } $webKitLauncherPath, @ARGV;
     }
 

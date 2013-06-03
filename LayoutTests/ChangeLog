@@ -1,3 +1,348 @@
+2013-06-03  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: MathML multiscripts not exposed in Accessibility
+        https://bugs.webkit.org/show_bug.cgi?id=115069
+
+        Reviewed by Tim Horton.
+
+        * platform/mac/accessibility/mathml-multiscript-expected.txt: Added.
+        * platform/mac/accessibility/mathml-multiscript.html: Added.
+
+2013-06-03  Zan Dobersek  <zdobersek@igalia.com>
+
+        [Layout Tests] Update testharness scripts, add WebIDLParser.js and idlharness.js
+        https://bugs.webkit.org/show_bug.cgi?id=116983
+
+        Reviewed by Sam Weinig.
+
+        Update the testharness scripts that are used by the W3C tests that are located under LayoutTests/http/tests/w3c. Also add the
+        WebIDLParser.js and idlharness.js scripts that will be used by tests imported in the future. The files are being updated or impoted
+        off the 06cab30bcee2 changeset in the http://w3c-test.org/resources repository.
+
+        No test is affected by this update, though some tests will require rebaselining due to the baselines containing stack traces of which
+        line numbers will change due to the updated scripts.
+
+        * http/tests/w3c/README: List the currently-imported directories, noting from where they originate, at which changeset were
+        they imported and what files can or should be modified. Also note what script should be used to import/update the files, if available.
+        * http/tests/w3c/resources/WebIDLParser.js: Added. Will be used by future tests imported from the W3C test suites.
+        * http/tests/w3c/resources/idlharness.js: Ditto.
+        * http/tests/w3c/resources/testharness.css: Updated.
+        * http/tests/w3c/resources/testharness.js: Updated.
+        * http/tests/w3c/resources/testharnessreport.js: Updated. Removed the default completion callback and readded
+        the completion callback that was in use until now.
+
+2013-06-03  Radu Stavila  <stavila@adobe.com>
+
+        [Qt][WK1][CSS Regions]  New test fast/regions/hover-on-child-parent-different-regions.html fails
+        https://bugs.webkit.org/show_bug.cgi?id=117035
+
+        Forced relayout to ensure the hover event has propagated before checking the results.
+
+        Reviewed by Alexandru Chiculita.
+
+        * fast/regions/hover-on-child-parent-different-regions.html:
+
+2013-06-03  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        ASSERTION FAILED: node->parentNode(), Heap-use-after-free in WebCore::RenderBox::exclusionShapeOutsideInfo
+        https://bugs.webkit.org/show_bug.cgi?id=117155
+
+        Reviewed by David Hyatt.
+
+        Test for crash. Note that this will only crash when run under a memory
+        checking tool like ASAN.
+
+        * fast/block/float/float-list-changed-before-layout-crash-expected.txt: Added.
+        * fast/block/float/float-list-changed-before-layout-crash.html: Added.
+
+2013-06-03  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] inset-rectangle support for shape-outside
+        https://bugs.webkit.org/show_bug.cgi?id=116641
+
+        Reviewed by Alexandru Chiculita.
+
+        Add tests for inset-rectangles.
+
+        * fast/exclusions/shape-outside-floats/shape-outside-floats-simple-inset-rectangle-expected.html: Added.
+        * fast/exclusions/shape-outside-floats/shape-outside-floats-simple-inset-rectangle.html: Added.
+        * fast/exclusions/shape-outside-floats/shape-outside-floats-simple-inset-rectangle-percentage-expected.html: Added.
+        * fast/exclusions/shape-outside-floats/shape-outside-floats-simple-inset-rectangle-percentage.html: Added.
+        * fast/exclusions/shape-outside-floats/shape-outside-floats-simple-rounded-inset-rectangle-expected.html: Added.
+        * fast/exclusions/shape-outside-floats/shape-outside-floats-simple-rounded-inset-rectangle.html: Added.
+
+2013-06-03  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] [WK2] Unreviewed gardening. Unskipping passing tests and generate new test expectations where needed.
+
+        * platform/qt-5.0-wk2/TestExpectations:
+        * platform/qt-5.0-wk2/compositing/geometry/video-opacity-overlay-expected.png: Added.
+        * platform/qt-5.0-wk2/compositing/geometry/video-opacity-overlay-expected.txt: Added.
+        * platform/qt-5.0-wk2/editing/spelling/grammar-markers-expected.png: Added.
+        * platform/qt-5.0-wk2/editing/spelling/grammar-markers-expected.txt: Added.
+        * platform/qt-5.0-wk2/editing/spelling/grammar-markers-hidpi-expected.png: Added.
+        * platform/qt-5.0-wk2/editing/spelling/grammar-markers-hidpi-expected.txt: Added.
+        * platform/qt-5.0-wk2/fast/ruby/rubyDOM-insert-rt-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/ruby/rubyDOM-insert-rt-expected.txt: Added.
+        * platform/qt-5.0-wk2/fast/ruby/rubyDOM-insert-text1-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/ruby/rubyDOM-insert-text1-expected.txt: Added.
+        * platform/qt-5.0-wk2/fast/ruby/rubyDOM-insert-text3-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/ruby/rubyDOM-insert-text3-expected.txt: Added.
+        * platform/qt-5.0-wk2/fast/ruby/rubyDOM-remove-rt1-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/ruby/rubyDOM-remove-rt1-expected.txt: Added.
+        * platform/qt-5.0-wk2/fast/ruby/rubyDOM-remove-text1-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/ruby/rubyDOM-remove-text1-expected.txt: Added.
+
+2013-06-03  Krzysztof Czech  <k.czech@samsung.com>
+
+        [EFL] accessibility/placeholder.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=112031
+
+        Unreviewed EFL gardening.
+
+        accessibility/placeholder.html passes after r151103.
+
+        * platform/efl-wk2/TestExpectations:
+
+2013-06-03  Zalan Bujtas  <zalan@apple.com>
+
+        REGRESSION (r143070): Overflow:scroll content does not get clipped properly when the parent box has CSS3 filter on.
+        https://bugs.webkit.org/show_bug.cgi?id=116859
+
+        Reviewed by Simon Fraser.
+
+        Apply proper clipping for overflow:scroll, when parent dictates
+        full repaint to ensure correct CSS3 filter effect.
+
+        When a particular layer has 'pixel moving' CSS3 filter(drop shadow, blur), it sets clipToDirtyRect 
+        to false to force no clipping on itself and on the child layers too.
+        No clipping makes overflow:scroll behave like overflow:display, because
+        overflow::scroll gets clipped at RenderLayer level (as opposed to overflow::hidden).
+        This patch makes sure that both full repaint and clipping are ensured.
+
+        * css3/filters/clipping-overflow-scroll-with-pixel-moving-effect-on-expected.html: Added.
+        * css3/filters/clipping-overflow-scroll-with-pixel-moving-effect-on-parent-expected.html: Added.
+        * css3/filters/clipping-overflow-scroll-with-pixel-moving-effect-on-parent.html: Added.
+        * css3/filters/clipping-overflow-scroll-with-pixel-moving-effect-on.html: Added.
+
+2013-06-03  Kangil Han  <kangil.han@samsung.com>
+
+        [EFL] Remove obsolete test case from TestExpectations
+
+        Unreviewed EFL gardening.
+
+        xmlviewer/extensions-api.html case has been removed since r151080.
+
+        * platform/efl/TestExpectations:
+
+2013-06-03  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening.
+
+        * platform/qt-5.0-wk1/TestExpectations: Unskip after r151104.
+        * platform/qt-5.0-wk2/TestExpectations:
+        * platform/qt/TestExpectations: Skip crashing test.
+
+2013-06-03  Radu Stavila  <stavila@adobe.com>
+
+        [Qt][WK1][CSS Regions]  New test fast/regions/hover-on-child-parent-different-regions.html fails
+        https://bugs.webkit.org/show_bug.cgi?id=117035
+
+        Used waitUntilDone() to ensure correct results.
+
+        Reviewed by Antti Koivisto.
+
+        * fast/regions/hover-on-child-parent-different-regions-expected.txt:
+        * fast/regions/hover-on-child-parent-different-regions.html:
+
+2013-06-03  Krzysztof Czech  <k.czech@samsung.com>
+
+        [GTK][WK2] accessibility/placeholder.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=106344
+
+        Reviewed by Gyuyoung Kim.
+
+        Unskipping failing test. It's been fixed.
+
+        * platform/gtk-wk2/TestExpectations:
+
+2013-06-03  Praveen R Jadhav  <praveen.j@samsung.com>
+
+        'onended' event is not received in AudioBufferSourceNode and OscillatorNode.
+        https://bugs.webkit.org/show_bug.cgi?id=117132.
+
+        Reviewed by Christophe Dumez.
+
+        Unskip webaudio test cases that were failing due to the 'onended' event not being fired.
+
+        * platform/efl/TestExpectations:
+
+2013-06-03  Rashmi Kulakarni  <rashmi.vijay@samsung.com>
+
+        [EFL]<select> element's text is clipped when a height is specified along with CSS line-height.
+        https://bugs.webkit.org/show_bug.cgi?id=114862
+
+        Reviewed by Gyuyoung Kim.
+
+        Rebaselined the test case fast/forms/001.html.
+
+        * platform/efl/fast/forms/001-expected.png:
+        * platform/efl/fast/forms/001-expected.txt:
+
+2013-06-03  Charles Wei  <chwei@blackberry.com>
+
+        Webkit crashes while loading  content from Application Cache.
+        https://bugs.webkit.org/show_bug.cgi?id=116814
+
+        Reviewed by Darin Adler.
+
+        * http/tests/appcache/main-resource-fallback-for-network-error-crash-expected.txt: Added.
+        * http/tests/appcache/main-resource-fallback-for-network-error-crash.html: Added.
+        * http/tests/appcache/resources/main-resource-fallback-for-network-error-crash.manifest: Added.
+        * http/tests/appcache/resources/success-and-notify-done.html: Added.
+
+2013-06-03  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Unreviewed EFL gardening.
+
+        Rebaseline 2 printing test cases on EFL port.
+
+        * platform/efl/printing/compositing-layer-printing-expected.png:
+        * platform/efl/printing/compositing-layer-printing-expected.txt:
+        * platform/efl/printing/page-rule-in-media-query-expected.png:
+        * platform/efl/printing/page-rule-in-media-query-expected.txt:
+
+2013-06-03  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Unreviewed EFL gardening.
+
+        Skip 2 webaudio tests that are failing due to the onended event not getting
+        fired.
+
+        * platform/efl/TestExpectations:
+
+2013-06-03  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Unreviewed EFL gardening.
+
+        Rebaseline several test cases on EFL.
+
+        * platform/efl-wk2/compositing/overflow/content-gains-scrollbars-expected.txt: Added.
+        * platform/efl-wk2/compositing/overflow/content-loses-scrollbars-expected.txt: Added.
+        * platform/efl-wk2/fast/dynamic/002-expected.txt:
+        * platform/efl/fast/block/float/float-not-removed-from-next-sibling2-expected.png:
+        * platform/efl/fast/block/float/float-not-removed-from-next-sibling2-expected.txt:
+        * platform/efl/fast/dynamic/002-expected.png:
+        * platform/efl/fast/table/007-expected.png:
+        * platform/efl/fast/table/007-expected.txt:
+        * platform/efl/fast/table/colspanMinWidth-expected.png:
+        * platform/efl/fast/table/colspanMinWidth-expected.txt:
+        * platform/efl/fast/table/spanOverlapRepaint-expected.png:
+        * platform/efl/fast/table/spanOverlapRepaint-expected.txt:
+
+2013-06-03  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Unreviewed EFL gardening.
+
+        Rebaseline several mozilla tables layout tests for EFL port.
+
+        * platform/efl/tables/mozilla/bugs/bug13169-expected.png:
+        * platform/efl/tables/mozilla/bugs/bug13169-expected.txt:
+        * platform/efl/tables/mozilla/bugs/bug133756-1-expected.png:
+        * platform/efl/tables/mozilla/bugs/bug133756-1-expected.txt:
+        * platform/efl/tables/mozilla/bugs/bug133756-2-expected.png:
+        * platform/efl/tables/mozilla/bugs/bug133756-2-expected.txt:
+        * platform/efl/tables/mozilla/bugs/bug17138-expected.png:
+        * platform/efl/tables/mozilla/bugs/bug17138-expected.txt:
+        * platform/efl/tables/mozilla/bugs/bug17548-expected.png:
+        * platform/efl/tables/mozilla/bugs/bug17548-expected.txt:
+        * platform/efl/tables/mozilla/bugs/bug220536-expected.png:
+        * platform/efl/tables/mozilla/bugs/bug220536-expected.txt:
+        * platform/efl/tables/mozilla/bugs/bug6304-expected.png:
+        * platform/efl/tables/mozilla/bugs/bug6304-expected.txt:
+        * platform/efl/tables/mozilla/bugs/bug73321-expected.png:
+        * platform/efl/tables/mozilla/bugs/bug73321-expected.txt:
+        * platform/efl/tables/mozilla/bugs/bug7714-expected.txt:
+        * platform/efl/tables/mozilla/bugs/bug8858-expected.png:
+        * platform/efl/tables/mozilla/bugs/bug8858-expected.txt:
+        * platform/efl/tables/mozilla/core/bloomberg-expected.png:
+        * platform/efl/tables/mozilla/core/bloomberg-expected.txt:
+        * platform/efl/tables/mozilla/core/cell_heights-expected.png:
+        * platform/efl/tables/mozilla/core/cell_heights-expected.txt:
+        * platform/efl/tables/mozilla/other/test6-expected.png:
+        * platform/efl/tables/mozilla/other/test6-expected.txt:
+        * platform/efl/tables/mozilla_expected_failures/bugs/bug1010-expected.png:
+        * platform/efl/tables/mozilla_expected_failures/bugs/bug1010-expected.txt:
+        * platform/efl/tables/mozilla_expected_failures/bugs/bug131020-3-expected.png:
+        * platform/efl/tables/mozilla_expected_failures/bugs/bug131020-3-expected.txt:
+        * platform/efl/tables/mozilla_expected_failures/bugs/bug23847-expected.png:
+        * platform/efl/tables/mozilla_expected_failures/bugs/bug23847-expected.txt:
+        * platform/efl/tables/mozilla_expected_failures/bugs/bug58402-2-expected.png:
+        * platform/efl/tables/mozilla_expected_failures/bugs/bug58402-2-expected.txt:
+        * platform/efl/tables/mozilla_expected_failures/bugs/bug65372-expected.png:
+        * platform/efl/tables/mozilla_expected_failures/bugs/bug65372-expected.txt:
+        * platform/efl/tables/mozilla_expected_failures/bugs/bug6933-expected.txt:
+
+2013-06-02  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed EFL Gardening.
+
+        * platform/efl-wk2/TestExpectations: Unskipping some of webgl passing tests.
+
+2013-06-02  Brady Eidson  <beidson@apple.com>
+
+        Going "back" to a cached page from a page with a main resource error breaks scrolling, amongst other issues.
+        <rdar://problem/13751844> and https://bugs.webkit.org/show_bug.cgi?id=117112
+
+        Reviewed by Alexey Proskuryakov.
+
+        * http/tests/loading/resources/resource-that-goes-back-while-still-loading.php: Added.
+        * http/tests/loading/unfinished-load-back-to-cached-page-callbacks-expected.txt: Added.
+        * http/tests/loading/unfinished-load-back-to-cached-page-callbacks.html: Added.
+
+2013-06-02  Alexey Proskuryakov  <ap@apple.com>
+
+        The empty directory did not get deleted by commit queue, deleting manually.
+
+        * xmlviewer: Removed.
+        * xmlviewer/resources: Removed.
+
+2013-06-02  Alexey Proskuryakov  <ap@apple.com>
+
+        Unstyled XML viewer crashes when XML contains an element with id="tree"
+        https://bugs.webkit.org/show_bug.cgi?id=117117
+        <rdar://problem/13727267>
+
+        Reviewed by Darin Adler.
+
+        * http/tests/xmlviewer/dumpAsText/existing-tree-element-crash-expected.txt: Added.
+        * http/tests/xmlviewer/dumpAsText/existing-tree-element-crash.xml: Added.
+
+        * xmlviewer: Removed.
+        * xmlviewer/extensions-api-expected.txt: Removed.
+        * xmlviewer/extensions-api.html: Removed.
+        * xmlviewer/resources: Removed.
+        * xmlviewer/resources/sample.xml: Removed.
+        The "API" no longer exists.
+
+2013-06-01  Chris Fleizach  <cfleizach@apple.com>
+
+        WebKit ignores aria-hidden when traversing nodes for name calculation
+        https://bugs.webkit.org/show_bug.cgi?id=117101
+
+        Reviewed by Tim Horton.
+
+        * accessibility/text-role-with-aria-hidden-inside-expected.txt: Added.
+        * accessibility/text-role-with-aria-hidden-inside.html: Added.
+
+2013-05-31  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed, EFL gardening. Remove passed accessibility test from EFL WK1.
+
+        * platform/efl-wk1/TestExpectations:
+        * platform/efl-wk2/TestExpectations:
+        * platform/efl/TestExpectations:
+
 2013-05-31  Jer Noble  <jer.noble@apple.com>
 
         Unreviewed gardening. Update test-expectations after r151000.
