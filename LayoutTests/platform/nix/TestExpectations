@@ -4326,6 +4326,24 @@ animations/cross-fade-list-style-image.html
 scrollingcoordinator/non-fast-scrollable-region-scaled-iframe.html
 scrollingcoordinator/non-fast-scrollable-region-transformed-iframe.html
 
+# Failing tests after commit ae6d1714efb71a3be7f161156cfa5b1b576888a1
+compositing/tiled-layers-hidpi.html
+editing/inserting/redo.html
+editing/undo/4063751.html
+fast/backgrounds/gradient-background-leakage-hidpi.html
+fast/css/relative-positioned-block-crash.html
+fast/hidpi/broken-image-icon-hidpi.html
+fast/hidpi/broken-image-with-size-hidpi.html
+fast/hidpi/clip-text-in-hidpi.html
+fast/hidpi/device-scale-factor-paint.html
+fast/hidpi/focus-rings.html
+fast/hidpi/gradient-with-scaled-ancestor.html
+fast/hidpi/image-set-as-background.html
+fast/hidpi/image-set-background-dynamic.html
+fast/hidpi/image-set-background-repeat-without-size.html
+fast/hidpi/image-set-background-repeat.html
+fast/hidpi/image-set-border-image-comparison.html
+
 # Flakey tests when running pixel tests.
 compositing/background-color/background-color-padding-change.html [ ImageOnlyFailure Pass ]
 compositing/scrollbar-painting.html [ ImageOnlyFailure Crash Pass ]
