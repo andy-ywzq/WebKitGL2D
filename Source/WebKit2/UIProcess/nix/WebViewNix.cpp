@@ -150,10 +150,7 @@ void WebViewNix::doneWithGestureEvent(const NativeWebGestureEvent& event, bool w
 void WebViewNix::updateTextInputState()
 {
     const EditorState& editor = page()->editorState();
-    bool isContentEditable = editor.isContentEditable;
-    const IntRect& cursorRect = editor.cursorRect;
-    const IntRect& editorRect = editor.editorRect;
-    m_viewClientNix.updateTextInputState(this, editor.selectedText, editor.surroundingText, editor.inputMethodHints,
+    m_viewClientNix.updateTextInputState(this, editor.selectedText, editor.surroundingText, editor.submitLabel, editor.inputMethodHints,
                                          editor.isContentEditable, editor.cursorRect, editor.editorRect);
 }
 

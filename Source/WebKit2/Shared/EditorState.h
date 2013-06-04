@@ -79,6 +79,10 @@ struct EditorState {
     WebCore::IntRect cursorRect;
 #endif
 
+#if PLATFORM(NIX)
+    WTF::String submitLabel;
+#endif
+
     void encode(CoreIPC::ArgumentEncoder&) const;
     static bool decode(CoreIPC::ArgumentDecoder&, EditorState&);
 };

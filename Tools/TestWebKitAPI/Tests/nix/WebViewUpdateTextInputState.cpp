@@ -41,6 +41,7 @@ static bool contentEditableValue = false;
 static bool isInPasswordFieldValue = true;
 static bool isDoneWithSingleTapEvent = false;
 static WKStringRef surroundingTextValue;
+static WKStringRef submitLabelValue;
 static const WKRect invalidRectState = WKRectMake(0, 0, 0, 0);
 static WKRect editorRectState = invalidRectState;
 static WKRect cursorRectState = invalidRectState;
@@ -55,13 +56,15 @@ static void didFinishLoadForFrame(WKPageRef page, WKFrameRef, WKTypeRef, const v
     didFinishLoad = true;
 }
 
-static void updateTextInputState(WKViewRef, WKStringRef, WKStringRef surroundingText, uint64_t inputMethodHints, bool isContentEditable, WKRect cursorRect, WKRect editorRect, const void*)
+static void updateTextInputState(WKViewRef, WKStringRef, WKStringRef surroundingText, WKStringRef submitLabel, uint64_t inputMethodHints, bool isContentEditable, WKRect cursorRect, WKRect editorRect, const void*)
 {
     didUpdateTextInputState = true;
     contentEditableValue = isContentEditable;
     isInPasswordFieldValue = inputMethodHints & NixImhSensitiveData;
     surroundingTextValue = surroundingText;
     WKRetain(surroundingTextValue);
+    submitLabelValue = submitLabel;
+    WKRetain(submitLabel);
     cursorRectState = cursorRect;
     editorRectState = editorRect;
 }
@@ -71,7 +74,7 @@ static void doneWithGestureEvent(WKViewRef, const NIXGestureEvent* event, bool, 
     isDoneWithSingleTapEvent = event->type == kNIXInputEventTypeGestureSingleTap;
 }
 
-TEST(WebKitNix, WebViewWebProcessCrashed)
+TEST(WebKitNix, WebViewUpdateTextInputState)
 {
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
 
@@ -96,10 +99,6 @@ TEST(WebKitNix, WebViewWebProcessCrashed)
     const WKSize size = WKSizeMake(100, 100);
     WKViewSetSize(view.get(), size);
 
-    WKRetainPtr<WKURLRef> editableContentUrl = adoptWK(Util::createURLForResource("../nix/single-tap-on-editable-content", "html"));
-    WKPageLoadURL(WKViewGetPage(view.get()), editableContentUrl.get());
-    Util::run(&didFinishLoad);
-
     NIXGestureEvent tapEvent;
     tapEvent.type = kNIXInputEventTypeGestureSingleTap;
     tapEvent.timestamp = 0;
@@ -112,6 +111,11 @@ TEST(WebKitNix, WebViewWebProcessCrashed)
     tapEvent.height = 20;
     tapEvent.deltaX = 0.0;
     tapEvent.deltaY = 0.0;
+
+    // Simple test on content editable.
+    WKRetainPtr<WKURLRef> editableContentUrl = adoptWK(Util::createURLForResource("../nix/single-tap-on-editable-content", "html"));
+    WKPageLoadURL(WKViewGetPage(view.get()), editableContentUrl.get());
+    Util::run(&didFinishLoad);
     NIXViewSendGestureEvent(view.get(), &tapEvent);
     Util::run(&isDoneWithSingleTapEvent);
 
@@ -121,10 +125,30 @@ TEST(WebKitNix, WebViewWebProcessCrashed)
     ASSERT_TRUE(contentEditableValue);
 
     ASSERT_TRUE(WKStringIsEqualToUTF8CString(surroundingTextValue, "foobar"));
+    WKRelease(surroundingTextValue);
+    ASSERT_TRUE(WKStringIsEmpty(submitLabelValue));
+    WKRelease(submitLabelValue);
     ASSERT_FALSE(isInPasswordFieldValue);
     ASSERT_TRUE(!WKRectIsEqual(cursorRectState, invalidRectState));
     ASSERT_TRUE(!WKRectIsEqual(editorRectState, invalidRectState));
     ASSERT_TRUE(!WKRectIsEqual(cursorRectState, editorRectState));
+
+    // Test on a form field.
+    didFinishLoad = false;
+    isDoneWithSingleTapEvent = false;
+
+    editableContentUrl = adoptWK(Util::createURLForResource("../nix/single-tap-on-form-field", "html"));
+    WKPageLoadURL(WKViewGetPage(view.get()), editableContentUrl.get());
+    Util::run(&didFinishLoad);
+    NIXViewSendGestureEvent(view.get(), &tapEvent);
+    Util::run(&isDoneWithSingleTapEvent);
+    WKRelease(surroundingTextValue);
+    ASSERT_TRUE(didFinishLoad);
+    ASSERT_TRUE(WKStringIsEqualToUTF8CString(submitLabelValue, "submitLabelValue"));
+    WKRelease(submitLabelValue);
+    ASSERT_TRUE(isInPasswordFieldValue);
+
+
 }
 
 } // TestWebKitAPI

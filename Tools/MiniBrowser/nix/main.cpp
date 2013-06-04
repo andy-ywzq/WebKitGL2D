@@ -103,7 +103,7 @@ public:
     static void didFindZoomableArea(WKViewRef, WKPoint target, WKRect area, const void* clientInfo);
     static void doneWithTouchEvent(WKViewRef, const NIXTouchEvent* event, bool wasEventHandled, const void* clientInfo);
     static void doneWithGestureEvent(WKViewRef, const NIXGestureEvent* event, bool wasEventHandled, const void* clientInfo);
-    static void updateTextInputState(WKViewRef, WKStringRef, WKStringRef, uint64_t, bool isContentEditable, WKRect cursorRect, WKRect editorRect, const void* clientInfo);
+    static void updateTextInputState(WKViewRef, WKStringRef, WKStringRef, WKStringRef, uint64_t, bool isContentEditable, WKRect cursorRect, WKRect editorRect, const void* clientInfo);
 
     // GestureRecognizerClient.
     virtual void handleSingleTap(double timestamp, const NIXTouchPoint&);
@@ -963,7 +963,7 @@ static inline bool WKRectIsEqual(const WKRect& a, const WKRect& b)
     return a.origin == b.origin && a.size.width == b.size.width && a.size.height == b.size.height;
 }
 
-void MiniBrowser::updateTextInputState(WKViewRef, WKStringRef, WKStringRef, uint64_t, bool isContentEditable, WKRect cursorRect, WKRect editorRect, const void* clientInfo)
+void MiniBrowser::updateTextInputState(WKViewRef, WKStringRef, WKStringRef, WKStringRef, uint64_t, bool isContentEditable, WKRect cursorRect, WKRect editorRect, const void* clientInfo)
 {
     MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
 

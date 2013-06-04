@@ -656,6 +656,16 @@ EditorState WebPage::editorState() const
     }
 #endif
 
+#if PLATFORM(NIX)
+    if (scope->isHTMLElement()) {
+        HTMLFormElement* form = static_cast<HTMLElement*>(scope)->form();
+        if (form) {
+            HTMLFormControlElement* defaultButton = form->defaultButton();
+            if (defaultButton && defaultButton->hasTagName(HTMLNames::inputTag))
+                result.submitLabel = static_cast<HTMLInputElement*>(defaultButton)->value();
+        }
+    }
+#endif
 #if PLATFORM(GTK)
     result.cursorRect = frame->selection()->absoluteCaretBounds();
 #endif

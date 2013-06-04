@@ -55,6 +55,10 @@ void EditorState::encode(CoreIPC::ArgumentEncoder& encoder) const
 #if PLATFORM(QT) || PLATFORM(GTK) || PLATFORM(NIX)
     encoder << cursorRect;
 #endif
+
+#if PLATFORM(NIX)
+    encoder << submitLabel;
+#endif
 }
 
 bool EditorState::decode(CoreIPC::ArgumentDecoder& decoder, EditorState& result)
@@ -111,6 +115,10 @@ bool EditorState::decode(CoreIPC::ArgumentDecoder& decoder, EditorState& result)
         return false;
 #endif
 
+#if PLATFORM(NIX)
+    if (!decoder.decode(result.submitLabel))
+        return false;
+#endif
     return true;
 }
 
