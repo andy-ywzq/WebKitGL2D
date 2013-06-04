@@ -1,3 +1,257 @@
+2013-06-04  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL] File dialog of MiniBrowser have broken background.
+        https://bugs.webkit.org/show_bug.cgi?id=117189
+
+        Reviewed by Christophe Dumez.
+
+        * MiniBrowser/efl/main.c:
+        (on_file_chooser_request): Added elm_bg for elm_win of file chooser.
+
+2013-06-04  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        [WKTR][WTK] Undefined symbols in libTestRunnerInjectedBundle.so after r151124
+        https://bugs.webkit.org/show_bug.cgi?id=117184
+
+        Reviewed by Gyuyoung Kim.
+
+        Add ATK stubs for mathPostscriptsDescription() and mathPrescriptsDescription() so
+        that we don't have undefined symbols in libTestRunnerInjectedBundle.so.
+
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::AccessibilityUIElement::mathPostscriptsDescription):
+        (WTR::AccessibilityUIElement::mathPrescriptsDescription):
+
+2013-06-03  Simon Pena  <simon.pena@samsung.com>
+
+        validate-committer-lists script is now outdated and does not work
+        https://bugs.webkit.org/show_bug.cgi?id=115860
+
+        Reviewed by Brent Fulgham.
+
+        The script validate-committer-lists was outdated, still using the deprecated log
+        system and having the old addresses for the mailing lists, as well as still referring
+        to committers.py, after this was renamed to contributors.json. This patch fixes that
+        so it can be used again.
+
+        * Scripts/validate-committer-lists: Replace calls to log and error with the
+        new logging mechanism, fix the URLs for the mailing lists, and fix the mentions
+        to committers.py, which should be contributors.json.
+        (CommitterListFromMailingList):
+        (CommitterListFromMailingList.check_for_emails_missing_from_list):
+        (CommitterListFromGit._fetch_authors_and_last_commit_time_from_git_log):
+        (CommitterListFromGit._fill_in_emails_for_old_logins):
+        (CommitterListFromGit.print_committers_missing_from_committer_list):
+
+2013-06-03  Dirk Pranke  <dpranke@chromium.org>
+
+        add a script to dump the tests run most recently by a given worker
+        https://bugs.webkit.org/show_bug.cgi?id=116571
+
+        Reviewed by Brent Fulgham.
+
+        The tests_run*.txt results files in layout-test-results/ were removed
+        in r137356, in favor of collecting more data about how the tests were
+        run and compressing it and storing it in stats.json. However, it was
+        nice to just be able to look at a flat text file.
+
+        This script will extract the tests run by a given worker from a
+        given stats.json file, and should help to address that.
+
+        * Scripts/dump-webkit-tests-run: Added.
+        (main):
+        (convert_trie_to_flat_paths):
+
+2013-06-03  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] NRWT is not putting crash logs in proper place
+        https://bugs.webkit.org/show_bug.cgi?id=117098
+
+        Reviewed by Ryosuke Niwa.
+
+        Provide windows-specific overloads for various Port features needed to create and capture
+        crash logs.  This change makes it possible to view crash logs (when created) as part of the
+        summary report at the end of the NRWT run.
+
+        * Scripts/webkitpy/common/system/crashlogs.py:
+        (CrashLogs.find_newest_log): Add support for win32 crash logs
+        (CrashLogs._find_newest_log_win): Added
+        * Scripts/webkitpy/common/system/crashlogs_unittest.py:
+        (make_mock_crash_report_win): Added
+        (CrashLogsTest.test_find_log_win): Added.
+        * Scripts/webkitpy/common/system/executive.py:
+        (Executive.running_pids): Add support for Cygwin win32 crash logs
+        * Scripts/webkitpy/common/system/executive_mock.py:
+        (MockExecutive.__init__):
+        * Scripts/webkitpy/common/system/filesystem_unittest.py:
+        (RealFileSystemTest.test_read_and_write_file): Add tests for
+        malformed ascii/utf8 handling (i.e., Windows log files)
+        * Scripts/webkitpy/port/base.py:
+        (Port.find_system_pid): Added
+        * Scripts/webkitpy/port/server_process.py:
+        (ServerProcess._start): Gather windows PIDs to match up with Cygwin PIDs
+        * Scripts/webkitpy/port/win.py:
+        (WinPort.setup_crash_log_saving): Don't open windows shell (which might get stuck waiting
+        for user to hit enter.
+        (WinPort._get_crash_log): Added
+        (WinPort.look_for_new_crash_logs): Added
+        (WinPort.find_system_pid): Added
+        * Scripts/webkitpy/port/win_unittest.py:
+        (WinPortTest.test_get_crash_log): Added test
+
+2013-06-03  Eduardo Lima Mitev  <elima@igalia.com>
+
+        [EFL] Add ATK version 2.8.0 to efl jhbuild moduleset
+        https://bugs.webkit.org/show_bug.cgi?id=116726
+
+        Reviewed by Gyuyoung Kim.
+
+        Current version of ATK in efl-ews environment is 2.4.0 and is taken from
+        the platform (it is not listed in jhbuild moduleset). That version is
+        old-ish and contain deprecated symbols and missing API, that are blocking
+        patches in other ports (gtk). This patch adds ATK version 2.8.0 to efl
+        moduleset, which is the same version the gtk port uses.
+
+        See bug https://bugs.webkit.org/show_bug.cgi?id=115647 for more details on
+        why this is needed.
+
+        * efl/jhbuild.modules: Adds ATK module as dependency
+
+2013-06-03  Erik van Pienbroek  <epienbro@fedoraproject.org>
+
+        [GTK] Respect PKG_CONFIG env variable when generating gtk-doc
+        https://bugs.webkit.org/show_bug.cgi?id=117168
+
+        Reviewed by Martin Robinson.
+
+        The tool generate-gtkdoc internally calls pkg-config.
+        When cross-compiling it shouldn't use pkg-config, but
+        it should use the pkg-config which was detected by
+        the ./configure script (for example this can be
+        i686-w64-mingw32-pkg-config when cross-compiling)
+
+        * GNUmakefile.am:
+        * gtk/gtkdoc.py:
+        (PkgConfigGTKDoc.__init__):
+
+2013-06-03  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build fix.
+
+        * TestWebKitAPI/win/main.cpp: Embed proper manifest information to
+        allow VS2010 builds to use VS2005 runtime libraries as needed.
+
+2013-06-03  Roger Fong  <roger_fong@apple.com>
+
+        Nuke VS2005 files from the tree.
+        <rdar://problem/14042021>.
+
+        Rubberstamped by Brent Fulgham.
+
+        * DumpRenderTree/TestNetscapePlugIn/win/TestNetscapePlugin.def: Removed.
+        * DumpRenderTree/TestNetscapePlugIn/win/TestNetscapePlugin.rc: Removed.
+        * DumpRenderTree/TestNetscapePlugIn/win/TestNetscapePlugin.vcproj: Removed.
+        * DumpRenderTree/TestNetscapePlugIn/win/TestNetscapePluginCommon.vsprops: Removed.
+        * DumpRenderTree/TestNetscapePlugIn/win/TestNetscapePluginDebug.vsprops: Removed.
+        * DumpRenderTree/TestNetscapePlugIn/win/TestNetscapePluginDebugAll.vsprops: Removed.
+        * DumpRenderTree/TestNetscapePlugIn/win/TestNetscapePluginDebugCairoCFLite.vsprops: Removed.
+        * DumpRenderTree/TestNetscapePlugIn/win/TestNetscapePluginPostBuild.cmd: Removed.
+        * DumpRenderTree/TestNetscapePlugIn/win/TestNetscapePluginPreBuild.cmd: Removed.
+        * DumpRenderTree/TestNetscapePlugIn/win/TestNetscapePluginProduction.vsprops: Removed.
+        * DumpRenderTree/TestNetscapePlugIn/win/TestNetscapePluginRelease.vsprops: Removed.
+        * DumpRenderTree/TestNetscapePlugIn/win/TestNetscapePluginReleaseCairoCFLite.vsprops: Removed.
+        * DumpRenderTree/TestNetscapePlugIn/win/resource.h: Removed.
+        * DumpRenderTree/win/DumpRenderTree.vcproj: Removed.
+        * DumpRenderTree/win/DumpRenderTreeApple.vsprops: Removed.
+        * DumpRenderTree/win/DumpRenderTreeCFLite.vsprops: Removed.
+        * DumpRenderTree/win/DumpRenderTreeCairo.vsprops: Removed.
+        * DumpRenderTree/win/DumpRenderTreeCommon.vsprops: Removed.
+        * DumpRenderTree/win/DumpRenderTreeDebug.vsprops: Removed.
+        * DumpRenderTree/win/DumpRenderTreeDebugAll.vsprops: Removed.
+        * DumpRenderTree/win/DumpRenderTreeDebugCairoCFLite.vsprops: Removed.
+        * DumpRenderTree/win/DumpRenderTreeLauncher.vcproj: Removed.
+        * DumpRenderTree/win/DumpRenderTreeLauncherCommon.vsprops: Removed.
+        * DumpRenderTree/win/DumpRenderTreeLauncherDebug.vsprops: Removed.
+        * DumpRenderTree/win/DumpRenderTreeLauncherDebugAll.vsprops: Removed.
+        * DumpRenderTree/win/DumpRenderTreeLauncherDebugCairoCFLite.vsprops: Removed.
+        * DumpRenderTree/win/DumpRenderTreeLauncherProduction.vsprops: Removed.
+        * DumpRenderTree/win/DumpRenderTreeLauncherRelease.vsprops: Removed.
+        * DumpRenderTree/win/DumpRenderTreeLauncherReleaseCairoCFLite.vsprops: Removed.
+        * DumpRenderTree/win/DumpRenderTreePostBuild.cmd: Removed.
+        * DumpRenderTree/win/DumpRenderTreePreBuild.cmd: Removed.
+        * DumpRenderTree/win/DumpRenderTreeProduction.vsprops: Removed.
+        * DumpRenderTree/win/DumpRenderTreeRelease.vsprops: Removed.
+        * DumpRenderTree/win/DumpRenderTreeReleaseCairoCFLite.vsprops: Removed.
+        * DumpRenderTree/win/ImageDiff.vcproj: Removed.
+        * DumpRenderTree/win/ImageDiffCommon.vsprops: Removed.
+        * DumpRenderTree/win/ImageDiffDebug.vsprops: Removed.
+        * DumpRenderTree/win/ImageDiffDebugAll.vsprops: Removed.
+        * DumpRenderTree/win/ImageDiffDebugCairoCFLite.vsprops: Removed.
+        * DumpRenderTree/win/ImageDiffLauncher.vcproj: Removed.
+        * DumpRenderTree/win/ImageDiffLauncherCommon.vsprops: Removed.
+        * DumpRenderTree/win/ImageDiffLauncherDebug.vsprops: Removed.
+        * DumpRenderTree/win/ImageDiffLauncherDebugAll.vsprops: Removed.
+        * DumpRenderTree/win/ImageDiffLauncherDebugCairoCFLite.vsprops: Removed.
+        * DumpRenderTree/win/ImageDiffLauncherProduction.vsprops: Removed.
+        * DumpRenderTree/win/ImageDiffLauncherRelease.vsprops: Removed.
+        * DumpRenderTree/win/ImageDiffLauncherReleaseCairoCFLite.vsprops: Removed.
+        * DumpRenderTree/win/ImageDiffPostBuild.cmd: Removed.
+        * DumpRenderTree/win/ImageDiffPreBuild.cmd: Removed.
+        * DumpRenderTree/win/ImageDiffProduction.vsprops: Removed.
+        * DumpRenderTree/win/ImageDiffRelease.vsprops: Removed.
+        * DumpRenderTree/win/ImageDiffReleaseCairoCFLite.vsprops: Removed.
+        * DumpRenderTree/win/ImageDiffWinCairoCommon.vsprops: Removed.
+        * Scripts/pdevenv: Removed.
+        * TestWebKitAPI/win/TestWebKitAPI.vcproj: Removed.
+        * TestWebKitAPI/win/TestWebKitAPIPostBuild.cmd: Removed.
+        * TestWebKitAPI/win/TestWebKitAPIPreBuild.cmd: Removed.
+        * WebKitLauncherWin: Removed.
+        * WebKitLauncherWin/Resource.h: Removed.
+        * WebKitLauncherWin/WebKitLauncherWin.cpp: Removed.
+        * WebKitLauncherWin/WebKitLauncherWin.rc: Removed.
+        * WebKitLauncherWin/WebKitLauncherWin.vcproj: Removed.
+        * WebKitLauncherWin/WebKitLauncherWinCommon.vsprops: Removed.
+        * WebKitLauncherWin/WebKitLauncherWinDebug.vsprops: Removed.
+        * WebKitLauncherWin/WebKitLauncherWinDebugAll.vsprops: Removed.
+        * WebKitLauncherWin/WebKitLauncherWinDebugCairoCFLite.vsprops: Removed.
+        * WebKitLauncherWin/WebKitLauncherWinProduction.vsprops: Removed.
+        * WebKitLauncherWin/WebKitLauncherWinRelease.vsprops: Removed.
+        * WebKitLauncherWin/WebKitLauncherWinReleaseCairoCFLite.vsprops: Removed.
+        * WebKitLauncherWin/webkit.ico: Removed.
+        * WinLauncher/WinLauncher.ico: Removed.
+        * WinLauncher/WinLauncher.rc: Removed.
+        * WinLauncher/WinLauncher.vcproj: Removed.
+        * WinLauncher/WinLauncherCommon.vsprops: Removed.
+        * WinLauncher/WinLauncherDebug.vsprops: Removed.
+        * WinLauncher/WinLauncherDebugAll.vsprops: Removed.
+        * WinLauncher/WinLauncherDebugCairoCFLite.vsprops: Removed.
+        * WinLauncher/WinLauncherLauncher.rc: Removed.
+        * WinLauncher/WinLauncherLauncher.vcproj: Removed.
+        * WinLauncher/WinLauncherLauncherCommon.vsprops: Removed.
+        * WinLauncher/WinLauncherLauncherDebug.vsprops: Removed.
+        * WinLauncher/WinLauncherLauncherDebugAll.vsprops: Removed.
+        * WinLauncher/WinLauncherLauncherDebugCairoCFLite.vsprops: Removed.
+        * WinLauncher/WinLauncherLauncherProduction.vsprops: Removed.
+        * WinLauncher/WinLauncherLauncherRelease.vsprops: Removed.
+        * WinLauncher/WinLauncherLauncherReleaseCairoCFLite.vsprops: Removed.
+        * WinLauncher/WinLauncherLauncherResource.h: Removed.
+        * WinLauncher/WinLauncherPostBuild.cmd: Removed.
+        * WinLauncher/WinLauncherPreBuild.cmd: Removed.
+        * WinLauncher/WinLauncherProduction.vsprops: Removed.
+        * WinLauncher/WinLauncherRelease.vsprops: Removed.
+        * WinLauncher/WinLauncherReleaseCairoCFLite.vsprops: Removed.
+        * WinLauncher/small.ico: Removed.
+        * record-memory-win: Removed.
+        * record-memory-win/main.cpp: Removed.
+        * record-memory-win/record-memory-win-common.vsprops: Removed.
+        * record-memory-win/record-memory-win.vcproj: Removed.
+        * record-memory-win/record-memory-winDebug.vsprops: Removed.
+        * record-memory-win/record-memory-winDebugAll.vsprops: Removed.
+        * record-memory-win/record-memory-winDebugCairoCFLite.vsprops: Removed.
+        * record-memory-win/record-memory-winProduction.vsprops: Removed.
+        * record-memory-win/record-memory-winRelease.vsprops: Removed.
+        * record-memory-win/record-memory-winReleaseCairoCFLite.vsprops: Removed.
+
 2013-06-03  Chris Fleizach  <cfleizach@apple.com>
 
         AX: MathML multiscripts not exposed in Accessibility
