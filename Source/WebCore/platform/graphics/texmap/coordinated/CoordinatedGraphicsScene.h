@@ -84,6 +84,9 @@ public:
     void setBackgroundColor(const Color&);
     void setDrawsBackground(bool enable) { m_setDrawsBackground = enable; }
 
+    void lockState() { m_stateLocked = true; }
+    void unlockState() { m_stateLocked = false; }
+
 private:
     void setRootLayerID(CoordinatedLayerID);
     void createLayers(const Vector<CoordinatedLayerID>&);
@@ -150,6 +153,7 @@ private:
     void createBackingStoreIfNeeded(TextureMapperLayer*);
     void removeBackingStoreIfNeeded(TextureMapperLayer*);
     void resetBackingStoreSizeToLayerSize(TextureMapperLayer*);
+    void commitPendingStateChange();
 
     void dispatchCommitScrollOffset(uint32_t layerID, const IntSize& offset);
 
@@ -198,6 +202,9 @@ private:
 #endif
 
     TextureMapperFPSCounter m_fpsCounter;
+
+    bool m_stateLocked;
+    OwnPtr<CoordinatedGraphicsState> m_pendingStateChange;
 };
 
 } // namespace WebCore

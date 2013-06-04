@@ -613,8 +613,23 @@ void CoordinatedGraphicsScene::commitPendingBackingStoreOperations()
     m_backingStoresWithPendingBuffers.clear();
 }
 
+void CoordinatedGraphicsScene::commitPendingStateChange()
+{
+    if (m_stateLocked || !m_pendingStateChange)
+        return;
+
+    OwnPtr<CoordinatedGraphicsState> pendingChange = m_pendingStateChange.release();
+    commitSceneState(*pendingChange.get());
+}
+
 void CoordinatedGraphicsScene::commitSceneState(const CoordinatedGraphicsState& state)
 {
+    if (m_stateLocked) {
+        ASSERT(!m_pendingStateChange);
+        m_pendingStateChange = adoptPtr(new CoordinatedGraphicsState(state));
+        return;
+    }
+
     m_renderedContentsScrollPosition = state.scrollPosition;
 
     createLayers(state.layersToCreate);
@@ -665,6 +680,7 @@ void CoordinatedGraphicsScene::ensureRootLayer()
 void CoordinatedGraphicsScene::syncRemoteContent()
 {
     // We enqueue messages and execute them during paint, as they require an active GL context.
+    commitPendingStateChange();
     ensureRootLayer();
 
     Vector<Function<void()> > renderQueue;

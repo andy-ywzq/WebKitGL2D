@@ -54,4 +54,14 @@ WK_EXPORT WKCoordinatedSceneLayer WKCoordinatedSceneGetAncestorScrollableContent
 {
     return toAPI(toImpl(layer)->getAncestorScrollableLayer());
 }
+
+WK_EXPORT void WKCoordinatedSceneLockState(WKCoordinatedScene scene)
+{
+    toImpl(scene)->lockState();
+}
+
+WK_EXPORT void WKCoordinatedSceneUnlockState(WKCoordinatedScene scene)
+{
+    toImpl(scene)->unlockState();
+}
 #endif

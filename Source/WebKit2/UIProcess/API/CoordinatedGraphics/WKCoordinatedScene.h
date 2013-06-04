@@ -42,6 +42,9 @@ WK_EXPORT WKCoordinatedSceneLayer WKCoordinatedSceneGetAncestorScrollableContent
 WK_EXPORT uint32_t WKCoordinatedSceneGetLayerID(WKCoordinatedSceneLayer);
 WK_EXPORT void WKCoordinatedSceneScrollBy(WKCoordinatedSceneLayer, WKSize);
 
+WK_EXPORT void WKCoordinatedSceneLockState(WKCoordinatedScene);
+WK_EXPORT void WKCoordinatedSceneUnlockState(WKCoordinatedScene);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus
