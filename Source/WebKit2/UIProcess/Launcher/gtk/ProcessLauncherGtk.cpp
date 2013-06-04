@@ -90,27 +90,12 @@ void ProcessLauncher::launchProcess()
     argv[1] = socket.get();
     argv[2] = const_cast<char*>(realPluginPath.data());
     argv[3] = 0;
-    gchar** args = argv;
-
-#ifndef NDEBUG
-    const gchar* prefixToUse = g_getenv("WEB_PROCESS_CMD_PREFIX");
-    if (prefixToUse) {
-        GOwnPtr<gchar> commandLine(g_strjoin(" ", prefixToUse, argv[0], argv[1], argv[2], NULL));
-        args = g_strsplit(commandLine.get(), " ", 0);
-    }
-#endif
 
     GOwnPtr<GError> error;
-    int spawnFlags = G_SPAWN_LEAVE_DESCRIPTORS_OPEN | G_SPAWN_DO_NOT_REAP_CHILD;
-    if (!g_spawn_async(0, args, 0, static_cast<GSpawnFlags>(spawnFlags), childSetupFunction, GINT_TO_POINTER(sockets[1]), &pid, &error.outPtr())) {
+    if (!g_spawn_async(0, argv, 0, G_SPAWN_LEAVE_DESCRIPTORS_OPEN, childSetupFunction, GINT_TO_POINTER(sockets[1]), &pid, &error.outPtr())) {
         g_printerr("Unable to fork a new WebProcess: %s.\n", error->message);
         ASSERT_NOT_REACHED();
     }
-
-#ifndef NDEBUG
-    if (prefixToUse)
-        g_strfreev(args);
-#endif
 
     close(sockets[0]);
     m_processIdentifier = pid;
