@@ -68,6 +68,8 @@ inline std::ostream& operator<<(std::ostream& os, const RGBAPixel& p) {
               << std::setw(2) << unsigned(p.a);
 }
 
+void dumpGLBufferToPng(const char* fileName, int width, int height);
+
 class GLOffscreenBuffer {
 public:
     GLOffscreenBuffer(unsigned width, unsigned height);

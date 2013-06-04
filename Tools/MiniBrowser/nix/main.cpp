@@ -23,6 +23,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "config.h"
+
+#include "GLUtilities.h"
 #include "GestureRecognizer.h"
 #include "BrowserControl.h"
 #include "Options.h"
@@ -47,6 +50,7 @@
 #include <glib.h>
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <climits>
 
 #include <wtf/Platform.h>
@@ -428,6 +432,14 @@ void MiniBrowser::handleKeyPressEvent(const XKeyPressedEvent& event)
 
     bool shouldUseUpperCase;
     KeySym symbol = chooseSymbolForXKeyEvent(event, &shouldUseUpperCase);
+    if (event.state & ControlMask && (symbol == XK_p || symbol == XK_P)) {
+        ostringstream snapshotFile;
+        snapshotFile << "webpage-snapshot-" << event.time << ".png";
+        WKSize size = WKViewGetSize(m_view);
+        ToolsNix::dumpGLBufferToPng(snapshotFile.str().c_str(), size.width, size.height);
+        cout << "Web page snapshot saved to " << snapshotFile.str() << endl;
+        return;
+    }
     NavigationCommand command = checkNavigationCommand(symbol, event.state);
     switch (command) {
     case BackNavigation:

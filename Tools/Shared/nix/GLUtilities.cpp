@@ -33,7 +33,7 @@ using namespace std;
 
 namespace ToolsNix {
 
-void GLOffscreenBuffer::dumpToPng(const char* fileName)
+void dumpGLBufferToPng(const char* fileName, int width, int height)
 {
     FILE* fp = fopen(fileName, "w+");
     if (!fp) {
@@ -51,19 +51,19 @@ void GLOffscreenBuffer::dumpToPng(const char* fileName)
     }
 
     png_init_io(pngPtr, fp);
-    png_set_IHDR(pngPtr, pngInfo, m_width, m_height, 8, PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+    png_set_IHDR(pngPtr, pngInfo, width, height, 8, PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
     png_write_info(pngPtr, pngInfo);
 
-    const size_t imageDataSize = m_width * m_height * 4;
+    const size_t imageDataSize = width * height * 4;
     unsigned char* imageData = new unsigned char[imageDataSize];
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
 
     // write each row separately.
     png_bytep row = 0;
-    for (int y = 0; y < m_height; ++y) {
-        // glReadPixels returns the image up side down, so we write last rows first.
-        png_uint_32 q = imageDataSize - (y + 1) * m_width * 4;
+    for (int y = 0; y < height; ++y) {
+        // glReadPixels returns the image upside down, so we write last rows first.
+        png_uint_32 q = imageDataSize - (y + 1) * width * 4;
         row = (png_bytep) imageData + q;
         png_write_row(pngPtr, row);
     }
@@ -73,6 +73,11 @@ void GLOffscreenBuffer::dumpToPng(const char* fileName)
     png_destroy_write_struct(&pngPtr, &pngInfo);
 
     fclose(fp);
+}
+
+void GLOffscreenBuffer::dumpToPng(const char* fileName)
+{
+    dumpGLBufferToPng(fileName, m_width, m_height);
 }
 
 RGBAPixel GLOffscreenBuffer::readPixelAtPoint(unsigned x, unsigned y)

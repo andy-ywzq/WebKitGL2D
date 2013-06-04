@@ -17,6 +17,7 @@ set(MiniBrowser_SOURCES
     ${MiniBrowser_DIR}/Components/WebView.cpp
     ${MiniBrowser_DIR}/Components/Button.cpp
     ${MiniBrowser_DIR}/Components/UrlBar.cpp
+    ${TOOLS_DIR}/Shared/nix/GLUtilities.cpp
 )
 
 set(MiniBrowser_LIBRARIES
@@ -26,6 +27,7 @@ set(MiniBrowser_LIBRARIES
     ${GLIB_GTHREAD_LIBRARIES}
     ${CAIRO_LIBRARIES}
     ${X11_LIBRARIES}
+    ${PNG_LIBRARY}
 )
 
 set(MiniBrowser_INCLUDE_DIRECTORIES
@@ -38,6 +40,10 @@ set(MiniBrowser_INCLUDE_DIRECTORIES
     ${WTF_DIR}
     ${X11_INCLUDE_DIR}
     ${OPENGL_INCLUDE_DIR}
+    ${TOOLS_DIR}/Shared/nix
+    ${CMAKE_BINARY_DIR}
+    ${JAVASCRIPTCORE_DIR}
+    ${PNG_INCLUDE_DIRS}
 )
 
 if (WTF_USE_EGL)
