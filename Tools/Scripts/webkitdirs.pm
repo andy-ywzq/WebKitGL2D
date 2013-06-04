@@ -2179,6 +2179,9 @@ sub buildCMakeProjectOrExit($$$$@)
         system("perl", "$sourceDir/Tools/Scripts/update-webkitefl-libs") == 0 or die $!;
     }
 
+    if (isNix() && checkForArgumentAndRemoveFromARGV("--update-nix")) {
+        system("perl", "$sourceDir/Tools/Scripts/update-webkitnix-libs") == 0 or die $!;
+    }
 
     $returnCode = exitStatus(generateBuildSystemFromCMakeProject($port, $prefixPath, @cmakeArgs));
     exit($returnCode) if $returnCode;
