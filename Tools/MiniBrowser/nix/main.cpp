@@ -220,6 +220,7 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     }
 
     m_view = WKViewCreate(m_context.get(), m_pageGroup.get());
+    WKViewSetDrawsBackground(m_view, false);
 
     NIXViewClient nixViewClient;
     memset(&nixViewClient, 0, sizeof(NIXViewClient));
