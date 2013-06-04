@@ -91,6 +91,13 @@ void UrlBar::setText(std::string url)
     drawUrlBar();
 }
 
+void UrlBar::setLoadProgress(double progress)
+{
+    m_loadProgress = progress;
+
+    drawUrlBar();
+}
+
 bool UrlBar::focused()
 {
     return m_isFocused;
@@ -117,8 +124,18 @@ void UrlBar::releaseFocus()
 void UrlBar::drawUrlBar()
 {
     XClearWindow(m_display, m_window);
+    drawBackground();
     drawText();
     drawCursor();
+}
+
+void UrlBar::drawBackground()
+{
+    if (m_loadProgress == 0.0 || m_loadProgress == 1.0)
+        return;
+    cairo_set_source_rgb(m_cairo, 0.8, 0.8, 0.8);
+    cairo_rectangle(m_cairo, 0, 0, m_size.size.width * m_loadProgress, m_size.size.height);
+    cairo_fill(m_cairo);
 }
 
 void UrlBar::drawText()

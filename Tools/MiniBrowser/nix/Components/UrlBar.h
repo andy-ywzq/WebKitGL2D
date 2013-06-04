@@ -49,6 +49,8 @@ public:
 
     void setText(std::string);
 
+    void setLoadProgress(double);
+
 private:
     virtual void createXWindow(Window parent, XContext);
 
@@ -56,6 +58,7 @@ private:
     void appendCharacter(const char);
     void loadPage();
 
+    void drawBackground();
     void drawCursor();
     void drawText();
     void drawUrlBar();
@@ -73,6 +76,8 @@ private:
     cairo_t* m_cairo;
     cairo_surface_t* m_surface;
     cairo_text_extents_t m_extents;
+
+    double m_loadProgress;
 };
 
 #endif

@@ -90,6 +90,7 @@ public:
     void pageGoForward();
     void pageReload();
     void loadPage(const char*);
+    void setLoadProgress(double);
 
     void handleExposeEvent();
     void handleKeyPressEvent(const XKeyPressedEvent&);

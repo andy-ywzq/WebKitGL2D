@@ -142,6 +142,11 @@ void BrowserControl::loadPage(const char* url)
     passFocusToWebView();
 }
 
+void BrowserControl::setLoadProgress(double progress)
+{
+    m_urlBar->setLoadProgress(progress);
+}
+
 void BrowserControl::handleExposeEvent()
 {
     m_client->handleExposeEvent();

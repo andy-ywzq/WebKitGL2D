@@ -121,6 +121,9 @@ public:
     static bool runJavaScriptConfirm(WKPageRef page, WKStringRef message, WKFrameRef frame, const void* clientInfo);
     static WKStringRef runJavaScriptPrompt(WKPageRef page, WKStringRef message, WKStringRef defaultValue, WKFrameRef frame, const void* clientInfo);
 
+    // PageLoaderClient.
+    static void didChangeProgress(WKPageRef page, const void* clientInfo);
+
     virtual double scale();
 
     void setTouchEmulationMode(bool enabled);
@@ -292,8 +295,14 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     uiClient.runJavaScriptAlert = MiniBrowser::runJavaScriptAlert;
     uiClient.runJavaScriptConfirm = MiniBrowser::runJavaScriptConfirm;
     uiClient.runJavaScriptPrompt = MiniBrowser::runJavaScriptPrompt;
-
     WKPageSetPageUIClient(pageRef(), &uiClient);
+
+    WKPageLoaderClient loadClient;
+    memset(&loadClient, 0, sizeof(WKPageLoaderClient));
+    loadClient.version = kWKPageLoaderClientCurrentVersion;
+    loadClient.clientInfo = this;
+    loadClient.didChangeProgress = MiniBrowser::didChangeProgress;
+    WKPageSetPageLoaderClient(pageRef(), &loadClient);
 
     WKURLRef wkUrl = WKURLCreateWithUTF8CString(options.url.c_str());
     WKPageLoadURL(pageRef(), wkUrl);
@@ -1114,6 +1123,12 @@ WKStringRef MiniBrowser::runJavaScriptPrompt(WKPageRef, WKStringRef message, WKS
     std::string userInput;
     getline(cin, userInput);
     return WKStringCreateWithUTF8CString(userInput.c_str());
+}
+
+void MiniBrowser::didChangeProgress(WKPageRef page, const void* clientInfo)
+{
+    MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
+    mb->m_control->setLoadProgress(WKPageGetEstimatedProgress(page));
 }
 
 std::string MiniBrowser::activeUrl()
