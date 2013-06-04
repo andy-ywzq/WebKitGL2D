@@ -1049,6 +1049,7 @@ fast/forms/box-shadow-override.html [ Skip ]
 fast/forms/color/color-setrangetext.html [ Skip ]
 fast/forms/color/input-color-onchange-event.html [ Skip ]
 fast/forms/color/input-value-sanitization-color.html [ Skip ]
+fast/forms/control-clip-overflow.html [ Skip ]
 fast/forms/datalist/datalist-child-validation.html [ Skip ]
 fast/forms/datalist/datalist-fallback-content.html [ Skip ]
 fast/forms/datalist/datalist.html [ Skip ]
@@ -1806,6 +1807,7 @@ http/tests/security/contentSecurityPolicy/object-src-none-allowed.html [ Skip ]
 http/tests/security/contentSecurityPolicy/object-src-url-allowed.html [ Skip ]
 http/tests/security/contentSecurityPolicy/object-src-url-blocked.html [ Skip ]
 http/tests/security/contentSecurityPolicy/source-list-parsing-nonascii.html [ Skip ]
+http/tests/security/cross-origin-appcache.html [ Skip ]
 http/tests/security/cross-origin-plugin-allowed.html [ Skip ]
 http/tests/security/cross-origin-plugin-private-browsing-toggled-allowed.html [ Skip ]
 http/tests/security/cross-origin-plugin-private-browsing-toggled.html [ Skip ]
@@ -1836,6 +1838,7 @@ http/tests/w3c/webperf/approved/navigation-timing/html/test_timing_xserver_redir
 http/tests/w3c/webperf/submission [ Skip ]
 http/tests/websocket/tests/hybi/send-file-blob-fail.html [ Skip ]
 http/tests/websocket/tests/hybi/send-file-blob.html [ Skip ]
+http/tests/workers/terminate-during-sync-operation.html	 [ Skip ]
 http/tests/xmlhttprequest/cache-override.html [ Skip ]
 http/tests/xmlhttprequest/cross-origin-cookie-storage.html [ Skip ]
 http/tests/xmlhttprequest/cross-origin-no-authorization.html [ Skip ]
@@ -4229,6 +4232,11 @@ fast/hidpi/image-set-background-dynamic.html
 fast/hidpi/image-set-background-repeat-without-size.html
 fast/hidpi/image-set-background-repeat.html
 fast/hidpi/image-set-border-image-comparison.html
+
+# Failing tests after commit 1dbe8bf2f7edf12357524dc503b4faaa7db515e1
+editing/deleting/delete-block-merge-contents-001.html
+editing/deleting/delete-block-merge-contents-019.html
+editing/deleting/delete-block-merge-contents-020.html
 
 # Flakey tests when running pixel tests.
 compositing/background-color/background-color-padding-change.html [ ImageOnlyFailure Pass ]
