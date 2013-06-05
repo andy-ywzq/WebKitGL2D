@@ -97,10 +97,6 @@
 #if ENABLE(TOUCH_EVENTS)
 #include "NativeWebTouchEvent.h"
 #endif
- 
-#if ENABLE(GESTURE_EVENTS)
-#include "NativeWebGestureEvent.h"
-#endif
 
 namespace CoreIPC {
     class ArgumentDecoder;
@@ -446,7 +442,7 @@ public:
     void handleWheelEvent(const NativeWebWheelEvent&);
     void handleKeyboardEvent(const NativeWebKeyboardEvent&);
 #if ENABLE(GESTURE_EVENTS)
-    void handleGestureEvent(const NativeWebGestureEvent&);
+    void handleGestureEvent(const WebGestureEvent&);
 #endif
 #if ENABLE(TOUCH_EVENTS)
     void handleTouchEvent(const NativeWebTouchEvent&);
@@ -1206,7 +1202,7 @@ private:
     uint64_t m_syncNavigationActionPolicyDownloadID;
 
 #if ENABLE(GESTURE_EVENTS)
-    Deque<NativeWebGestureEvent> m_gestureEventQueue;
+    Deque<WebGestureEvent> m_gestureEventQueue;
 #endif
     Deque<NativeWebKeyboardEvent> m_keyEventQueue;
     Deque<NativeWebWheelEvent> m_wheelEventQueue;

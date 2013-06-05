@@ -131,7 +131,7 @@ void QRawWebViewPrivate::handleWillSetInputMethodState()
 }
 
 #if ENABLE(GESTURE_EVENTS)
-void QRawWebViewPrivate::doneWithGestureEvent(const WebKit::NativeWebGestureEvent& event, bool wasEventHandled)
+void QRawWebViewPrivate::doneWithGestureEvent(const WebKit::WebGestureEvent& event, bool wasEventHandled)
 {
     notImplemented();
 }

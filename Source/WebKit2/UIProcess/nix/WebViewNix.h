@@ -64,7 +64,7 @@ protected:
     // PageClient.
     virtual void didFindZoomableArea(const WebCore::IntPoint& target, const WebCore::IntRect& area) OVERRIDE;
 #if ENABLE(GESTURE_EVENTS)
-    virtual void doneWithGestureEvent(const NativeWebGestureEvent&, bool wasEventHandled) OVERRIDE;
+    virtual void doneWithGestureEvent(const WebGestureEvent&, bool wasEventHandled) OVERRIDE;
 #endif
 #if ENABLE(TOUCH_EVENTS)
     virtual void doneWithTouchEvent(const NativeWebTouchEvent&, bool wasEventHandled) OVERRIDE;

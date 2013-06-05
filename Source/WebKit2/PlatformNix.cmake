@@ -20,7 +20,6 @@ list(APPEND WebKit2_SOURCES
     Shared/nix/NativeWebMouseEventNix.cpp
     Shared/nix/NativeWebWheelEventNix.cpp
     Shared/nix/NativeWebKeyboardEventNix.cpp
-    Shared/nix/NativeWebGestureEventNix.cpp
     Shared/nix/NativeWebTouchEventNix.cpp
     Shared/nix/WebEventFactoryNix.cpp
 

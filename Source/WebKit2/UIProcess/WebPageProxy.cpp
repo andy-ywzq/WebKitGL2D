@@ -1455,7 +1455,7 @@ void WebPageProxy::findPlugin(const String& mimeType, uint32_t processType, cons
 #endif // ENABLE(NETSCAPE_PLUGIN_API)
 
 #if ENABLE(GESTURE_EVENTS)
-void WebPageProxy::handleGestureEvent(const NativeWebGestureEvent& event)
+void WebPageProxy::handleGestureEvent(const WebGestureEvent& event)
 {
     if (!isValid())
         return;
@@ -3646,7 +3646,7 @@ void WebPageProxy::didReceiveEvent(uint32_t opaqueType, bool handled)
     case WebEvent::GestureScrollBegin:
     case WebEvent::GestureScrollEnd:
     case WebEvent::GestureSingleTap: {
-        NativeWebGestureEvent event = m_gestureEventQueue.first();
+        WebGestureEvent event = m_gestureEventQueue.first();
         MESSAGE_CHECK(type == event.type());
 
         m_gestureEventQueue.removeFirst();

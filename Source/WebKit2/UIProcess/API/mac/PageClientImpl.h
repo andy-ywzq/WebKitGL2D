@@ -39,7 +39,6 @@ class AlternativeTextUIController;
 
 namespace WebKit {
 class FindIndicatorWindow;
-class NativeWebGestureEvent;
 
 class PageClientImpl FINAL : public PageClient {
 public:
@@ -93,7 +92,7 @@ private:
     virtual WebCore::IntRect windowToScreen(const WebCore::IntRect&);
 
 #if ENABLE(GESTURE_EVENTS)
-    virtual void doneWithGestureEvent(const NativeWebGestureEvent&, bool wasEventHandled);
+    virtual void doneWithGestureEvent(const WebGestureEvent&, bool wasEventHandled);
 #endif
     virtual void doneWithKeyEvent(const NativeWebKeyboardEvent&, bool wasEventHandled);
 

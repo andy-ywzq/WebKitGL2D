@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2010 Apple Inc. All rights reserved.
- * Copyright (C) 2010, 2012 Nokia Corporation and/or its subsidiary(-ies).
+ * Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies)
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -226,18 +226,5 @@ WebTouchEvent WebEventFactory::createWebTouchEvent(const QTouchEvent* event, con
     return WebTouchEvent(type, m_touchPoints, modifiers, timestamp);
 }
 #endif
-
-WebGestureEvent WebEventFactory::createWebGestureEvent(const QTouchEvent::TouchPoint& point, const WebEvent::Type& gestureType, const QTransform& fromItemTransform)
-{
-    WebEvent::Type type             = gestureType;
-    IntPoint position               = fromItemTransform.map(point.pos()).toPoint();
-    IntPoint screenPosition         = point.screenPos().toPoint();
-    WebEvent::Modifiers modifiers   = WebEvent::Modifiers(0);
-    double timestamp                = 0;
-    IntSize area                    = IntSize(point.rect().size().toSize());
-    FloatPoint delta                = FloatPoint(0, 0);
-
-    return WebGestureEvent(type, position, screenPosition, modifiers, timestamp, area, delta);
-}
 
 } // namespace WebKit

@@ -29,11 +29,12 @@
 
 #include "DrawingAreaProxyImpl.h"
 #include "CoordinatedLayerTreeHostProxy.h"
-#include "NativeWebGestureEvent.h"
 #include "NativeWebKeyboardEvent.h"
 #include "NativeWebMouseEvent.h"
 #include "NativeWebWheelEvent.h"
 #include "WebContext.h"
+#include "WebEvent.h"
+#include "WebEventFactoryNix.h"
 #include "WebPageGroup.h"
 #include "WebPopupMenuListenerNix.h"
 #include "WebPreferences.h"
@@ -85,7 +86,8 @@ void WebViewNix::sendKeyEvent(const NIXKeyEvent& event)
 
 void WebViewNix::sendGestureEvent(const NIXGestureEvent& event)
 {
-    page()->handleGestureEvent(NativeWebGestureEvent(event));
+    WebGestureEvent ev = WebEventFactory::createWebGestureEvent(event);
+    page()->handleGestureEvent(ev);
 }
 
 void WebViewNix::findZoomableAreaForPoint(const WKPoint& point, int horizontalRadius, int verticalRadius)
@@ -141,9 +143,10 @@ void WebViewNix::doneWithTouchEvent(const NativeWebTouchEvent& event, bool wasEv
 #endif
 
 #if ENABLE(GESTURE_EVENTS)
-void WebViewNix::doneWithGestureEvent(const NativeWebGestureEvent& event, bool wasEventHandled)
+void WebViewNix::doneWithGestureEvent(const WebGestureEvent& event, bool wasEventHandled)
 {
-    m_viewClientNix.doneWithGestureEvent(this, *event.nativeEvent(), wasEventHandled);
+    NIXGestureEvent ev = WebEventFactory::createNativeWebGestureEvent(event);
+    m_viewClientNix.doneWithGestureEvent(this, ev, wasEventHandled);
 }
 #endif
 

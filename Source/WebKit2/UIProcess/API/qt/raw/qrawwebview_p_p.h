@@ -70,6 +70,9 @@ public:
 
     virtual void updateTextInputState();
     virtual void handleWillSetInputMethodState();
+#if ENABLE(GESTURE_EVENTS)
+    virtual void doneWithGestureEvent(const WebKit::WebGestureEvent& event, bool wasEventHandled);
+#endif
     virtual void displayView();
     virtual bool canScrollView() { return false; }
     virtual void scrollView(const WebCore::IntRect& scrollRect, const WebCore::IntSize& scrollOffset);
@@ -115,9 +118,7 @@ public:
 #if ENABLE(TOUCH_EVENTS)
     virtual void doneWithTouchEvent(const WebKit::NativeWebTouchEvent&, bool wasEventHandled);
 #endif
-#if ENABLE(GESTURE_EVENTS)
-    virtual void doneWithGestureEvent(const WebKit::NativeWebGestureEvent&, bool wasEventHandled);
-#endif
+
 
     bool m_focused;
     bool m_visible;

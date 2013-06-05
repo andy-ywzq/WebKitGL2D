@@ -32,14 +32,15 @@
 #include <NativeWebMouseEvent.h>
 #include <NativeWebWheelEvent.h>
 #include <NativeWebKeyboardEvent.h>
-#if ENABLE(GESTURE_EVENTS)
-#include <NativeWebGestureEvent.h>
-#endif
 #if ENABLE(TOUCH_EVENTS)
 #include <NativeWebTouchEvent.h>
 #endif
 
 namespace WebKit {
+
+#if ENABLE(GESTURE_EVENTS)
+class WebGestureEvent;
+#endif
 
 class WebEventFactory {
 public:
@@ -48,6 +49,7 @@ public:
     static WebKeyboardEvent createWebKeyboardEvent(const NIXKeyEvent&);
 #if ENABLE(GESTURE_EVENTS)
     static WebGestureEvent createWebGestureEvent(const NIXGestureEvent&);
+    static NIXGestureEvent createNativeWebGestureEvent(const WebGestureEvent&);
 #endif
 #if ENABLE(TOUCH_EVENTS)
     static WebTouchEvent createWebTouchEvent(const NIXTouchEvent&);
