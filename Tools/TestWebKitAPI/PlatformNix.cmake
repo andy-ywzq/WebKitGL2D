@@ -118,6 +118,7 @@ set(webkit2TestList
     nix/WebViewViewport
     nix/WebViewWebProcessCrashed
     nix/WebWorker
+    nix/WKCoordinatedSceneLockState
 )
 
 set(webkit2FailTestList

@@ -58,6 +58,9 @@ public:
     void waitForLoadURLAndRepaint(const char* resource);
     void forceRepaint();
 
+    WKPageLoaderClient& loaderClient() { return m_loaderClient; }
+    WKViewRef webView() { return m_view; }
+
 private:
     WKViewRef m_view;
     bool m_didFinishLoadAndRepaint;
