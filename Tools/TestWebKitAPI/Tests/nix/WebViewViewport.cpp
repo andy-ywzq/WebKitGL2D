@@ -48,8 +48,8 @@ TEST(WebKitNix, WebViewViewport)
 
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
     NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
-    Util::ForceRepaintClient client(view.get());
-    client.setClearColor(0, 0, 1, 1);
+    Util::ForceRepaintClient forceRepaintClient(view.get());
+    forceRepaintClient.setClearColor(0, 0, 1, 1);
 
     WKViewInitialize(view.get());
     WKPageSetUseFixedLayout(WKViewGetPage(view.get()), true);

@@ -97,13 +97,23 @@ void ForceRepaintClient::setClearColor(int r, int g, int b, int a)
     m_clearA = a;
 }
 
+void ForceRepaintClient::clear()
+{
+    glClearColor(m_clearR, m_clearG, m_clearB, m_clearA);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void ForceRepaintClient::repaint()
+{
+    clear();
+    WKViewPaintToCurrentGLContext(m_view);
+}
+
 void ForceRepaintClient::viewNeedsDisplay(WKViewRef, WKRect, const void* clientInfo)
 {
     ForceRepaintClient* client = static_cast<ForceRepaintClient*>(const_cast<void*>(clientInfo));
     assert(client);
     assert(client->m_view);
-    glClearColor(client->m_clearR, client->m_clearG, client->m_clearB, client->m_clearA);
 
-    glClear(GL_COLOR_BUFFER_BIT);
-    WKViewPaintToCurrentGLContext(client->m_view);
+    client->repaint();
 }

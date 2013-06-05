@@ -44,24 +44,23 @@ TEST(WebKitNix, WebThemeEngine)
     WKRetainPtr<WKContextRef> context = adoptWK(Util::createContextForInjectedBundleTest("WebThemeEngineTest"));
     NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
 
-    Util::ForceRepaintClient client(view.get());
-    client.setClearColor(0, 0, 1, 1);
+    Util::ForceRepaintClient forceRepaintClient(view.get());
+    forceRepaintClient.setClearColor(0, 0, 1, 1);
 
     WKViewInitialize(view.get());
     WKViewSetSize(view.get(), size);
     Util::PageLoader loader(view.get());
 
     glViewport(0, 0, size.width, size.height);
-    glClearColor(0, 0, 1, 1);
 
     ToolsNix::RGBAPixel green = ToolsNix::RGBAPixel::green();
     ToolsNix::RGBAPixel red = ToolsNix::RGBAPixel::red();
 
-    glClear(GL_COLOR_BUFFER_BIT);
+    forceRepaintClient.clear();
     ToolsNix::RGBAPixel clearedSample = offscreenBuffer.readPixelAtPoint(0, 0);
     EXPECT_EQ(ToolsNix::RGBAPixel::blue(), clearedSample);
 
-    glClear(GL_COLOR_BUFFER_BIT);
+    forceRepaintClient.clear();
     loader.waitForLoadURLAndRepaint("../nix/theme-button");
     // Testing Edges
     EXPECT_EQ(red, offscreenBuffer.readPixelAtPoint(0, 0));
@@ -69,7 +68,7 @@ TEST(WebKitNix, WebThemeEngine)
     EXPECT_EQ(red, offscreenBuffer.readPixelAtPoint(0, size.height - 1));
     EXPECT_EQ(red, offscreenBuffer.readPixelAtPoint(size.width - 1, size.height - 1));
 
-    glClear(GL_COLOR_BUFFER_BIT);
+    forceRepaintClient.clear();
     loader.waitForLoadURLAndRepaint("../nix/theme-progress");
     // Testing Corners
     EXPECT_EQ(green, offscreenBuffer.readPixelAtPoint(0, 0));

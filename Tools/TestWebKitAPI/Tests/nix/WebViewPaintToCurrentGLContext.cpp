@@ -42,26 +42,25 @@ TEST(WebKitNix, WebViewPaintToCurrentGLContext)
 
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
     NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
-    Util::ForceRepaintClient client(view.get());
-    client.setClearColor(0, 0, 1, 1);
+    Util::ForceRepaintClient forceRepaintClient(view.get());
+    forceRepaintClient.setClearColor(0, 0, 1, 1);
 
     WKViewInitialize(view.get());
     WKViewSetSize(view.get(), size);
     Util::PageLoader loader(view.get());
 
     glViewport(0, 0, size.width, size.height);
-    glClearColor(0, 0, 1, 1);
 
-    glClear(GL_COLOR_BUFFER_BIT);
+    forceRepaintClient.clear();
     ToolsNix::RGBAPixel clearedSample = offscreenBuffer.readPixelAtPoint(0, 0);
     EXPECT_EQ(ToolsNix::RGBAPixel::blue(), clearedSample);
 
-    glClear(GL_COLOR_BUFFER_BIT);
+    forceRepaintClient.clear();
     loader.waitForLoadURLAndRepaint("../nix/red-background");
     ToolsNix::RGBAPixel redSample = offscreenBuffer.readPixelAtPoint(0, 0);
     EXPECT_EQ(ToolsNix::RGBAPixel::red(), redSample);
 
-    glClear(GL_COLOR_BUFFER_BIT);
+    forceRepaintClient.clear();
     loader.waitForLoadURLAndRepaint("../nix/green-background");
     ToolsNix::RGBAPixel greenSample = offscreenBuffer.readPixelAtPoint(0, 0);
     EXPECT_EQ(ToolsNix::RGBAPixel::green(), greenSample);

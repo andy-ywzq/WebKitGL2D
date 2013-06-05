@@ -89,12 +89,11 @@ TEST(WebKitNix, WebViewUpdateTextInputState)
 
     WKViewInitialize(view.get());
 
-    WKPageLoaderClient loaderClient;
-    memset(&loaderClient, 0, sizeof(loaderClient));
-
-    loaderClient.version = 0;
-    loaderClient.didFinishLoadForFrame = didFinishLoadForFrame;
-    WKPageSetPageLoaderClient(WKViewGetPage(view.get()), &loaderClient);
+    WKPageLoaderClient pageLoaderClient;
+    memset(&pageLoaderClient, 0, sizeof(WKPageLoaderClient));
+    pageLoaderClient.version = kWKPageLoaderClientCurrentVersion;
+    pageLoaderClient.didFinishLoadForFrame = didFinishLoadForFrame;
+    WKPageSetPageLoaderClient(WKViewGetPage(view.get()), &pageLoaderClient);
 
     const WKSize size = WKSizeMake(100, 100);
     WKViewSetSize(view.get(), size);

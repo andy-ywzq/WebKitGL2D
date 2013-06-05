@@ -36,6 +36,8 @@ class ForceRepaintClient {
 public:
     ForceRepaintClient(WKViewRef);
     void setClearColor(int r, int g, int b, int a);
+    void clear();
+    void repaint();
 
 private:
     static void viewNeedsDisplay(WKViewRef, WKRect, const void*);

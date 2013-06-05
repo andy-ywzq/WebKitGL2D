@@ -38,18 +38,6 @@
 
 namespace TestWebKitAPI {
 
-static void clear()
-{
-    glClearColor(0, 0, 1, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-}
-
-static void viewNeedsDisplay(WKViewRef view, WKRect, const void*)
-{
-    clear();
-    WKViewPaintToCurrentGLContext(view);
-}
-
 TEST(WebKitNix, SingleOverflowScroll)
 {
     const WKSize size = WKSizeMake(100, 100);
@@ -59,11 +47,8 @@ TEST(WebKitNix, SingleOverflowScroll)
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
     NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
 
-    WKViewClient viewClient;
-    memset(&viewClient, 0, sizeof(WKViewClient));
-    viewClient.version = kWKViewClientCurrentVersion;
-    viewClient.viewNeedsDisplay = viewNeedsDisplay;
-    WKViewSetViewClient(view.get(), &viewClient);
+    Util::ForceRepaintClient forceRepaintClient(view.get());
+    forceRepaintClient.setClearColor(0, 0, 1, 1);
 
     WKViewInitialize(view.get());
     WKPageSetUseFixedLayout(WKViewGetPage(view.get()), true);
@@ -74,7 +59,7 @@ TEST(WebKitNix, SingleOverflowScroll)
     WKPreferencesSetAcceleratedCompositingForOverflowScrollEnabled(preferences, true);
 
     glViewport(0, 0, size.width, size.height);
-    clear();
+    forceRepaintClient.clear();
 
     Util::PageLoader loader(view.get());
     loader.waitForLoadURLAndRepaint("../nix/overflow-scroll");
@@ -83,7 +68,7 @@ TEST(WebKitNix, SingleOverflowScroll)
     WKCoordinatedSceneLayer layer = WKCoordinatedSceneFindScrollableContentsLayerAt(scene, WKPointMake(30, 30));
     ASSERT_TRUE(layer != 0);
     WKCoordinatedSceneScrollBy(layer, WKSizeMake(0, 100));
-    viewNeedsDisplay(view.get(), WKRectMake(0, 0, 0, 0), 0);
+    forceRepaintClient.repaint();
     ToolsNix::RGBAPixel greenSample = offscreenBuffer.readPixelAtPoint(25, 25);
     EXPECT_EQ(ToolsNix::RGBAPixel::green(), greenSample);
 }
@@ -97,11 +82,8 @@ TEST(WebKitNix, MultipleOverflowScroll)
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
     NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
 
-    WKViewClient viewClient;
-    memset(&viewClient, 0, sizeof(WKViewClient));
-    viewClient.version = kWKViewClientCurrentVersion;
-    viewClient.viewNeedsDisplay = viewNeedsDisplay;
-    WKViewSetViewClient(view.get(), &viewClient);
+    Util::ForceRepaintClient forceRepaintClient(view.get());
+    forceRepaintClient.setClearColor(0, 0, 1, 1);
 
     WKViewInitialize(view.get());
     WKPageSetUseFixedLayout(WKViewGetPage(view.get()), true);
@@ -112,7 +94,7 @@ TEST(WebKitNix, MultipleOverflowScroll)
     WKPreferencesSetAcceleratedCompositingForOverflowScrollEnabled(preferences, true);
 
     glViewport(0, 0, size.width, size.height);
-    clear();
+    forceRepaintClient.clear();
 
     Util::PageLoader loader(view.get());
     loader.waitForLoadURLAndRepaint("../nix/multiple-overflow-scroll-layers");

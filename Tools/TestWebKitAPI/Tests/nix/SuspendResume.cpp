@@ -50,15 +50,14 @@ TEST(WebKitNix, SuspendResumeAPI)
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
     NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
 
-    Util::ForceRepaintClient client(view.get());
-    client.setClearColor(0, 0, 1, 1);
+    Util::ForceRepaintClient forceRepaintClient(view.get());
+    forceRepaintClient.setClearColor(0, 0, 1, 1);
 
     WKViewInitialize(view.get());
     WKViewSetSize(view.get(), size);
 
     glViewport(0, 0, size.width, size.height);
-    glClearColor(0, 0, 1, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
+    forceRepaintClient.clear();
 
     Util::PageLoader loader(view.get());
     loader.waitForLoadURLAndRepaint("../nix/SuspendResume");

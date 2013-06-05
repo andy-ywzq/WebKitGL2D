@@ -38,18 +38,6 @@ namespace TestWebKitAPI {
 static bool s_didFindZoomableArea;
 const WKPoint touchPoint = {13, 18};
 
-static void clear()
-{
-    glClearColor(0, 0, 1, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-}
-
-static void viewNeedsDisplay(WKViewRef view, WKRect, const void*)
-{
-    clear();
-    WKViewPaintToCurrentGLContext(view);
-}
-
 static void didFindZoomableArea(WKViewRef, WKPoint target, WKRect area, const void*)
 {
     EXPECT_EQ(target.x, touchPoint.x);
@@ -81,18 +69,15 @@ TEST(WebKitNix, WebViewFindZoomableArea)
     nixViewClient.didFindZoomableArea = didFindZoomableArea;
     NIXViewSetNixViewClient(view.get(), &nixViewClient);
 
-    WKViewClient viewClient;
-    memset(&viewClient, 0, sizeof(WKViewClient));
-    viewClient.version = kWKViewClientCurrentVersion;
-    viewClient.viewNeedsDisplay = viewNeedsDisplay;
-    WKViewSetViewClient(view.get(), &viewClient);
+    Util::ForceRepaintClient forceRepaintClient(view.get());
+    forceRepaintClient.setClearColor(0, 0, 1, 1);
 
     WKViewInitialize(view.get());
     WKPageSetUseFixedLayout(WKViewGetPage(view.get()), true);
     WKViewSetSize(view.get(), size);
 
     glViewport(0, 0, size.width, size.height);
-    clear();
+    forceRepaintClient.clear();
 
     Util::PageLoader loader(view.get());
     loader.waitForLoadURLAndRepaint("../nix/red-rectangle");
