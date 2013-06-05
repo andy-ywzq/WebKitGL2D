@@ -26,12 +26,8 @@
 #endif
 #if USE(GLX)
 #include "GLContextGLX.h"
-<<<<<<< HEAD
 #endif
-#include <wtf/MainThread.h>
-=======
 #include <wtf/ThreadSpecific.h>
->>>>>>> webkit/master
 
 #if PLATFORM(X11)
 #include <X11/Xlib.h>
