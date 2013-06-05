@@ -1368,7 +1368,6 @@ webkit.org/b/29359 fast/forms/datetimelocal [ Skip ]
 webkit.org/b/29359 fast/forms/month [ Skip ]
 webkit.org/b/29359 fast/forms/time [ Skip ]
 webkit.org/b/29359 fast/forms/week [ Skip ]
-webkit.org/b/89209 fast/forms/input-in-table-cell-no-value.html [ ImageOnlyFailure ]
 
 # These tests cause flakiness (extra console messages in output)
 webkit.org/b/88729 userscripts/window-onerror-for-isolated-world-1.html
@@ -1471,9 +1470,6 @@ webkit.org/b/116023 svg/as-image/svg-as-image-canvas.html [ ImageOnlyFailure ]
 
 # EFL does not yet support global selection
 webkit.org/b/88238 editing/pasteboard/paste-global-selection.html [ Skip ]
-
-# Gradient instead of solid color in the rectangle
-webkit.org/b/54251 fast/canvas/DrawImageSinglePixelStretch.html [ Failure ]
 
 webkit.org/b/98564 fast/table/colspanMinWidth-vertical.html [ Missing Failure ]
 
@@ -1717,9 +1713,6 @@ webkit.org/b/83869 media/video-no-audio.html [ Failure ]
 webkit.org/b/83869 media/video-zoom-controls.html [ Failure ]
 
 webkit.org/b/109950 fast/dom/Window/webkitConvertPoint.html [ Failure ]
-
-# Failing after r142758.
-webkit.org/b/109948 fast/dom/Window/mozilla-focus-blur.html [ Failure ]
 
 # Newly added test in r142979 is failing.
 webkit.org/b/109951 compositing/transitions/transform-on-large-layer.html [ ImageOnlyFailure ]

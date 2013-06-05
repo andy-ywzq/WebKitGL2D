@@ -1,3 +1,702 @@
+2013-06-05  Kondapally Kalyan  <kalyan.kondapally@intel.com>
+
+        [EFL] Build fix with EGL and GLES2 backend.
+        https://bugs.webkit.org/show_bug.cgi?id=117246
+
+        Reviewed by Kenneth Rohde Christiansen.
+
+        r150958 added support for EGLTransportSurfaceClient.
+        This patch adds the missing changes.
+
+        * platform/graphics/surfaces/efl/GLTransportSurface.cpp:
+        (WebCore::GLTransportSurfaceClient::createTransportSurfaceClient):
+        (WebCore::GLTransportSurfaceClient::GLTransportSurfaceClient):
+        * platform/graphics/surfaces/efl/GLTransportSurface.h:
+        * platform/graphics/surfaces/efl/GraphicsSurfaceCommon.cpp:
+        (WebCore::GraphicsSurfacePrivate::initializeClient):
+        * platform/graphics/surfaces/egl/EGLXSurface.cpp:
+        (WebCore::EGLXTransportSurfaceClient::EGLXTransportSurfaceClient):
+        * platform/graphics/surfaces/egl/EGLXSurface.h:
+        * platform/graphics/surfaces/glx/GLXSurface.cpp:
+        (WebCore::GLXTransportSurfaceClient::GLXTransportSurfaceClient):
+        * platform/graphics/surfaces/glx/GLXSurface.h:
+        * platform/graphics/surfaces/glx/X11Helper.cpp:
+        (WebCore::X11Helper::createOffScreenWindow):
+        (WebCore::X11Helper::createPixmap):
+        * platform/graphics/surfaces/glx/X11Helper.h:
+
+2013-06-05  Jae Hyun Park  <jae.park@company100.net>
+
+        [GTK] Support using GLContext from multiple threads
+        https://bugs.webkit.org/show_bug.cgi?id=117238
+
+        Reviewed by Martin Robinson.
+
+        Current implementation assumes that GLContext is only used in the main thread.
+        However, to support using GLContext from multiple threads, we need to change it
+        to thread local. Therefore, ASSERT(isMainThread()) is removed and GLContext is
+        changed to thread local.
+
+        * platform/graphics/cairo/GLContext.cpp:
+        (WebCore::ThreadGlobalGLContext::setContext):
+        (WebCore::ThreadGlobalGLContext::context):
+        (WebCore::currentContext):
+        (WebCore::GLContext::sharingContext):
+        (WebCore::GLContext::~GLContext):
+        (WebCore::GLContext::makeContextCurrent):
+        (WebCore::GLContext::getCurrent):
+
+2013-06-05  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Unreviewed build fix when CHANNEL_MESSAGING is disabled.
+
+        Add #if ENABLE(CHANNEL_MESSAGING) to JSMessageChannelCustom.cpp.
+
+        * bindings/js/JSMessageChannelCustom.cpp:
+
+2013-06-05  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Remove remaining custom getters for WorkerContext constructor attributes
+        https://bugs.webkit.org/show_bug.cgi?id=117247
+
+        Reviewed by Kentaro Hara.
+
+        Remove custom getter code for remaining constructor attribute on WorkerContext
+        interface. The custom code wasn't needed as it was doing nothing more than the
+        generated one. These constructor attributes are now automatically generated.
+
+        No new tests, no behavior change.
+
+        * CMakeLists.txt:
+        * DerivedSources.make:
+        * DerivedSources.pri:
+        * GNUmakefile.list.am:
+        * Modules/websockets/WebSocket.idl:
+        * Modules/websockets/WorkerContextWebSocket.idl: Removed.
+        * WebCore.order:
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/js/JSWorkerContextCustom.cpp:
+        * dom/MessageChannel.idl:
+        * page/EventSource.idl:
+        * workers/WorkerContext.idl:
+        * xml/XMLHttpRequest.idl:
+
+2013-06-05  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        Remove ChromeClient::deviceOrPageScaleFactorChanged
+        https://bugs.webkit.org/show_bug.cgi?id=117245
+
+        Reviewed by Andreas Kling.
+
+        It was introduced for chromium at r147357.
+        But now, there are no ports to use this.
+
+        No new tests - no behavior change.
+
+        * page/ChromeClient.h:
+        * page/Frame.cpp:
+        (WebCore::Frame::deviceOrPageScaleFactorChanged):
+
+2013-06-05  Gwang Yoon Hwang  <ryumiel@company100.net>
+
+        [Coordinated Graphics] Prevent a recursive painting in CoordinatedGraphicsLayer
+        https://bugs.webkit.org/show_bug.cgi?id=117222
+
+        Reviewed by Noam Rosenthal.
+
+        CoordinatedGraphicsLayer::flushCompositingState() will cross frame
+        boundaries if the GraphicsLayers are connected. In this case,
+        updateContentBuffers will invoke a painting of a sub-frame that causes
+        flushCompositingState recursively.
+
+        To prevent this behavior this patch extracts updateContentBuffers from
+        flushCompositingState, and places it in
+        updateContentBuffersIncludeSublayers, which is another tree traveler for
+        painting.
+
+        No new tests, covered by existing tests.
+
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsLayer.cpp:
+        (WebCore::CoordinatedGraphicsLayer::flushCompositingStateForThisLayerOnly):
+        (WebCore::CoordinatedGraphicsLayer::syncPendingStateChangesIncludingSubLayers):
+        (WebCore::CoordinatedGraphicsLayer::updateContentBuffersIncludingSubLayers):
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsLayer.h:
+
+2013-06-05  Andreas Kling  <akling@apple.com>
+
+        Fix some inefficiencies in AnimationController's composite animation map.
+        <http://webkit.org/b/117248>
+
+        Reviewed by Antti Koivisto.
+
+        Clean up some small things that were showing up in a window resizing profile (0.4%)
+
+        * page/animation/AnimationControllerPrivate.h:
+        * page/animation/AnimationController.cpp:
+        (WebCore::AnimationControllerPrivate::ensureCompositeAnimation):
+
+            Renamed this ensure* to conform to the WebKit Design Patterns, 2013 edition.
+            Always do a single hash lookup instead of two.
+
+        (WebCore::AnimationControllerPrivate::clear):
+
+            Use RefPtr<T> for local variables, never PassRefPtr<T>. See WKDP, 2013 ed.
+
+        (WebCore::AnimationControllerPrivate::updateAnimationTimerForRenderer):
+        (WebCore::AnimationControllerPrivate::isRunningAnimationOnRenderer):
+        (WebCore::AnimationControllerPrivate::isRunningAcceleratedAnimationOnRenderer):
+        (WebCore::AnimationControllerPrivate::getAnimatedStyleForRenderer):
+
+            Peek into m_compositeAnimations through "const CompositeAnimation*" instead
+            of using RefPtrs. There's no need to hold a reference on the animation while
+            querying some const method on it.
+
+        (WebCore::AnimationControllerPrivate::pauseAnimationAtTime):
+        (WebCore::AnimationControllerPrivate::pauseTransitionAtTime):
+        (WebCore::AnimationController::updateAnimations):
+
+            Poke into m_compositeAnimations through "CompositeAnimation*" instead of using
+            RefPtrs. There's no need to hold a reference here either, we can modify the
+            animations through a raw pointer.
+
+2013-06-05  Roland Takacs  <rtakacs@inf.u-szeged.hu>
+
+        Web Inspector: Clear button doesn't clean Memory graph in Overview pane.
+        https://bugs.webkit.org/show_bug.cgi?id=112429
+
+        Reviewed by Noam Rosenthal.
+
+        There is an early return from TimelineMemoryOverview.update() when
+        record array is empty. Thats why if you click onto the clear button,
+        the canvas won't be updated.
+        Moved this "return condition" after the canvas size definition
+        because we need to know the canvas size for refreshing.
+        Overridden TimelineOverviewBase's reset function to clear
+        HeapSizeLabels' content.
+
+        * inspector/front-end/TimelineOverviewPane.js:
+        (WebInspector.TimelineMemoryOverview.prototype.reset):
+        (WebInspector.TimelineMemoryOverview.prototype.update):
+
+2013-06-05  Gwang Yoon Hwang  <ryumiel@company100.net>
+
+        [Coordinated Graphics] Rename client classes for CoordinatedImageBacking and UpdateAtlas.
+        https://bugs.webkit.org/show_bug.cgi?id=111948
+
+        Reviewed by Noam Rosenthal.
+
+        This patch renames CoordinatedImageBacking::Coordinator to
+        CoordinatedImageBacking::Client, and UpdateAtlasClient to
+        UpdateAtlas::Client for naming consistency and clarification.
+
+        No new tests, covered by existing tests.
+
+        * platform/graphics/texmap/coordinated/CoordinatedImageBacking.cpp:
+        (WebCore::CoordinatedImageBacking::create):
+        (WebCore::CoordinatedImageBacking::CoordinatedImageBacking):
+        (WebCore::CoordinatedImageBacking::removeHost):
+        (WebCore::CoordinatedImageBacking::update):
+        (WebCore::CoordinatedImageBacking::clearContentsTimerFired):
+        * platform/graphics/texmap/coordinated/CoordinatedImageBacking.h:
+        * platform/graphics/texmap/coordinated/UpdateAtlas.cpp:
+        (WebCore::UpdateAtlas::UpdateAtlas):
+        * platform/graphics/texmap/coordinated/UpdateAtlas.h:
+
+2013-06-05  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Handle Return key without key text
+        https://bugs.webkit.org/show_bug.cgi?id=117239
+
+        Reviewed by Andreas Kling.
+
+        Test added to tst_qwebpage.cpp.
+
+        * platform/qt/PlatformKeyboardEventQt.cpp:
+        (WebCore::keyTextForKeyEvent):
+
+2013-06-05  Gwang Yoon Hwang  <ryumiel@company100.net>
+
+        Coordinated Graphics: Unify messages related object's lifecycles into CoordinatedGraphicsState.
+        https://bugs.webkit.org/show_bug.cgi?id=111919
+
+        Reviewed by Noam Rosenthal.
+
+        CoordinatedLayerTreeHostProxy has several methods, which simply passes
+        these calls to CoordinatedGraphicsScene.
+
+        This patch removes methods in CoordinatedLayerTreeHostProxy just for
+        message chaining. Instead of that, messages for creation/deletion of objects
+        (Layers, CustomFilters, UpdateAtlas, and ImageBacking) are unified into
+        CommitCoordinatedGraphicsState.
+
+        And this patch also removes codes for WebCoordinatedSurface in
+        CoordinatedLayerTreeHost, except for a factory method.
+        CoordinatedGraphicsArgumentCoders [en|de]codes CoordinatedSurface itself
+        using WebCoordinatedSurface.
+
+        No new tests, covered by existing tests.
+
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsScene.cpp:
+        (WebCore::CoordinatedGraphicsScene::syncCustomFilterPrograms):
+        (WebCore::CoordinatedGraphicsScene::syncUpdateAtlases):
+        (WebCore::CoordinatedGraphicsScene::syncImageBackings):
+        (WebCore::CoordinatedGraphicsScene::commitSceneState):
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsScene.h:
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsState.h:
+        * platform/graphics/texmap/coordinated/CoordinatedImageBacking.cpp:
+        (WebCore::CoordinatedImageBacking::update):
+        * platform/graphics/texmap/coordinated/CoordinatedImageBacking.h:
+        * platform/graphics/texmap/coordinated/UpdateAtlas.cpp:
+        (WebCore::UpdateAtlas::UpdateAtlas):
+        * platform/graphics/texmap/coordinated/UpdateAtlas.h:
+
+2013-06-05  Andreas Kling  <akling@apple.com>
+
+        Remove unnecessary null checks in SelectorChecker::checkOne().
+        <http://webkit.org/b/117243>
+
+        Reviewed by Antti Koivisto.
+
+        This function was riddled with unnecessary null checks of 'element', despite ASSERT(element)
+        being the first thing it does.
+
+        * css/SelectorChecker.cpp:
+        (WebCore::SelectorChecker::checkOne):
+
+2013-06-05  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Merge [NoInterfaceObject] and [OmitConstructor] extended attributes
+        https://bugs.webkit.org/show_bug.cgi?id=115853
+
+        Reviewed by Geoffrey Garen.
+
+        Remove [OmitConstructor] extended attribute as it is overlapping with
+        the standard [NoInterfaceObject] Web IDL extended attribute.
+
+        Having [NoInterfaceObject] extended attribute on an interface now
+        implies that its constructor is omitted (i.e. not generated).
+
+        No new tests, no behavior change.
+
+        * Modules/geolocation/Coordinates.idl:
+        * Modules/geolocation/Geolocation.idl:
+        * Modules/geolocation/Geoposition.idl:
+        * Modules/notifications/Notification.idl:
+        * Modules/notifications/NotificationCenter.idl:
+        * Modules/quota/StorageInfo.idl:
+        * Modules/quota/StorageQuota.idl:
+        * Modules/webdatabase/Database.idl:
+        * Modules/webdatabase/DatabaseSync.idl:
+        * Modules/webdatabase/SQLError.idl:
+        * Modules/webdatabase/SQLResultSet.idl:
+        * Modules/webdatabase/SQLResultSetRowList.idl:
+        * Modules/webdatabase/SQLTransaction.idl:
+        * Modules/webdatabase/SQLTransactionSync.idl:
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateHeader):
+        (GenerateAttributesHashTable):
+        (GenerateImplementation):
+        * bindings/scripts/IDLAttributes.txt:
+        * css/CSSUnknownRule.idl:
+        * css/MediaQueryListListener.idl:
+        * dom/EventListener.idl:
+        * dom/EventTarget.idl:
+        * html/MicroDataItemValue.idl:
+        * html/ValidityState.idl:
+        * html/canvas/EXTDrawBuffers.idl:
+        * html/canvas/EXTTextureFilterAnisotropic.idl:
+        * html/canvas/OESElementIndexUint.idl:
+        * html/canvas/OESStandardDerivatives.idl:
+        * html/canvas/OESTextureFloat.idl:
+        * html/canvas/OESTextureHalfFloat.idl:
+        * html/canvas/OESVertexArrayObject.idl:
+        * html/canvas/WebGLCompressedTextureATC.idl:
+        * html/canvas/WebGLCompressedTexturePVRTC.idl:
+        * html/canvas/WebGLCompressedTextureS3TC.idl:
+        * html/canvas/WebGLContextAttributes.idl:
+        * html/canvas/WebGLDebugRendererInfo.idl:
+        * html/canvas/WebGLDebugShaders.idl:
+        * html/canvas/WebGLDepthTexture.idl:
+        * html/canvas/WebGLLoseContext.idl:
+        * inspector/JavaScriptCallFrame.idl:
+        * inspector/ScriptProfile.idl:
+        * inspector/ScriptProfileNode.idl:
+        * loader/appcache/DOMApplicationCache.idl:
+        * page/AbstractView.idl:
+        * page/Console.idl:
+        * page/Crypto.idl:
+        * page/PerformanceEntryList.idl:
+        * page/WorkerNavigator.idl:
+        * page/make_settings.pl:
+        (generateInternalSettingsIdlFile):
+        * svg/ElementTimeControl.idl:
+        * svg/SVGAnimationElement.idl:
+        * svg/SVGExternalResourcesRequired.idl:
+        * svg/SVGFitToViewBox.idl:
+        * svg/SVGLangSpace.idl:
+        * svg/SVGLocatable.idl:
+        * svg/SVGTests.idl:
+        * svg/SVGTransformable.idl:
+        * svg/SVGURIReference.idl:
+        * testing/InternalSettings.idl:
+        * testing/Internals.idl:
+        * testing/MallocStatistics.idl:
+        * testing/MemoryInfo.idl:
+        * testing/TypeConversions.idl:
+        * workers/DedicatedWorkerContext.idl:
+        * workers/SharedWorkerContext.idl:
+        * workers/WorkerContext.idl:
+        * xml/XPathNSResolver.idl:
+
+2013-06-05  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Font::shouldUseSmoothing() has fake dependency on Qt 5.1
+        https://bugs.webkit.org/show_bug.cgi?id=117195
+
+        Reviewed by Jocelyn Turcotte.
+
+        Remove the fake dependency on Qt 5.1 so we may rebase the layout tests
+        before switching to Qt 5.1
+
+        * platform/graphics/qt/FontPlatformDataQt.cpp:
+        (WebCore::FontPlatformData::FontPlatformData):
+
+2013-06-05  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSSRegions] Respect renderer creation constraints when element is part of named flow
+        https://bugs.webkit.org/show_bug.cgi?id=116790
+
+        Reviewed by David Hyatt.
+
+        Before adding a child to a named flow, we have to make sure that the rules for
+        creation are properly checked.
+
+        Test: fast/regions/br-content-node-crash.xhtml
+
+        * rendering/RenderNamedFlowThread.cpp:
+        (WebCore::RenderNamedFlowThread::isChildAllowed):
+        Call isChildAllowed on the original parent renderer, before reparenting to
+        named flow.
+        * rendering/RenderNamedFlowThread.h:
+
+2013-06-05  Philippe Normand  <pnormand@igalia.com>
+
+        Unreviewed, GStreamer 0.10 build fix after r151175.
+
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamerBase.cpp:
+        (WebCore::MediaPlayerPrivateGStreamerBase::MediaPlayerPrivateGStreamerBase):
+        (WebCore::MediaPlayerPrivateGStreamerBase::~MediaPlayerPrivateGStreamerBase):
+        (WebCore::MediaPlayerPrivateGStreamerBase::naturalSize):
+        (WebCore::MediaPlayerPrivateGStreamerBase::triggerRepaint):
+        (WebCore::MediaPlayerPrivateGStreamerBase::paint):
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamerBase.h:
+
+2013-06-05  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSS Regions] REGRESSION Incorrect layer clipping inside flow thread
+        https://bugs.webkit.org/show_bug.cgi?id=117074
+
+        Reviewed by David Hyatt.
+
+        Function RenderBox::mapLocalToContainer was adapted for elements inside flow threads to convert
+        elements coordinates to RenderView coordinates, passing through the region in which the elements
+        were flowed (https://bugs.webkit.org/show_bug.cgi?id=66641).
+
+        The fix for https://bugs.webkit.org/show_bug.cgi?id=76486 modified RenderLayer::calculateClipRects and replaced
+        convertToLayerCoords with localToContainerPoint, which further calls mapLocalToContainer.
+
+        However, for elements inside the flow thread, which acts as a root layer for its collected children, we do not want
+        to get the offset in RenderView coordinates but rather in flow thread coordinates (and still take transforms into
+        account). This patch modifies RenderBox::mapLocalToContainer so that it stops at flow thread boundary when the passed
+        repaintContainer is the flow thread. The flow thread is the container for repaint for elements inside it, as seen from
+        RenderObject::containerForRepaint.
+
+        No new tests, converted overflow-size-change-with-stacking-context and overflow-size-change-with-stacking-context-rtl
+        into ref tests so that the we do not rely on pixel tests in the future.
+
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::mapLocalToContainer):
+
+2013-06-05  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Remove [NoInterfaceObject] from TreeWalker
+        https://bugs.webkit.org/show_bug.cgi?id=117225
+
+        Reviewed by Kentaro Hara.
+
+        Remove [NoInterfaceObject] IDL extended attribute from TreeWalker interface
+        to match Firefox's behavior and the specification:
+        http://www.w3.org/TR/DOM-Level-2-Traversal-Range/traversal.html#Traversal-TreeWalker
+
+        No new tests, already covered by existing tests.
+
+        * dom/TreeWalker.idl:
+
+2013-06-05  Zan Dobersek  <zdobersek@igalia.com>
+
+        Move MemoryInfo under window.internals
+        https://bugs.webkit.org/show_bug.cgi?id=117197
+
+        Reviewed by Ryosuke Niwa.
+
+        The MemoryInfo interface is not a subject of any specification and should not be exposed
+        to the Web. It's still used by the performance tests so it is moved under the testing
+        internals, accessible through window.internals.memoryInfo.
+
+        The jsHeapSizeLimit attribute is removed from the MemoryInfo interface as that value was
+        only usable when using the V8 bindings which are not supported anymore. A small fast/harness
+        test is also provided to check that the MemoryInfo object is accessible through window.internals.
+
+        Test: fast/harness/memoryinfo-object.html
+
+        * CMakeLists.txt:
+        * DerivedSources.cpp:
+        * DerivedSources.make:
+        * DerivedSources.pri:
+        * GNUmakefile.list.am:
+        * Target.pri:
+        * UseJSC.cmake:
+        * WebCore.exp.in:
+        * WebCore.order:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.vcxproj/WebCoreTestSupport.vcxproj:
+        * WebCore.vcxproj/WebCoreTestSupport.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/gobject/GNUmakefile.am: Remove the GObject bindings targets for MemoryInfo.
+        * bindings/js/JSBindingsAllInOne.cpp: Remove the JSMemoryInfo.h and MemoryInfo.h inclusion.
+        * bindings/js/JSMemoryInfoCustom.cpp: Removed.
+        * bindings/js/ScriptGCEvent.cpp: Remove the ENABLE(INSPECTOR) guards.
+        (WebCore::ScriptGCEvent::getHeapSize): Remove the jsHeapSizeLimit assignment.
+        * bindings/js/ScriptGCEvent.h: Remove the ENABLE(INSPECTOR) guards.
+        (WebCore::HeapInfo::HeapInfo): Remove the jsHeapSizeLimit member.
+        * page/Console.cpp: Remove the Console::memory method.
+        * page/Console.h: Ditto.
+        * page/Console.idl: Remove the window.console.memory attribute.
+        * page/MemoryInfo.cpp: Removed.
+        * page/Performance.cpp: Remove the Performance::memory method.
+        * page/Performance.h: Ditto.
+        * page/Performance.idl: Remove the window.performance.memory attribute.
+        * testing/Internals.cpp:
+        (WebCore::Internals::memoryInfo): Return a MemoryInfo object upon invoking.
+        * testing/Internals.h: Declare the Internals::memoryInfo method.
+        * testing/Internals.idl: Expose the window.internals.memoryInfo operation.
+        * testing/MemoryInfo.h: Renamed from Source/WebCore/page/MemoryInfo.h.
+        (WebCore::MemoryInfo::create): Return a new RefPtr-wrapped MemoryInfo object.
+        (WebCore::MemoryInfo::usedJSHeapSize): Return the value of the equally-named HeapInfo member.
+        (WebCore::MemoryInfo::totalJSHeapSize): Ditto.
+        (WebCore::MemoryInfo::MemoryInfo): Acquire the current heap info upon construction.
+        * testing/MemoryInfo.idl: Renamed from Source/WebCore/page/MemoryInfo.idl.
+        The jsHeapSizeLimit attribute is removed.
+
+2013-06-04  Peter Gal  <galpeter@inf.u-szeged.hu>
+
+        [curl] Headers should be parsed as utf8 if possible
+        https://bugs.webkit.org/show_bug.cgi?id=117196
+
+        Reviewed by Brent Fulgham.
+
+        Testcase already present: http/tests/download/literal-utf-8.html
+
+        * platform/network/curl/ResourceHandleManager.cpp:
+        (WebCore::headerCallback): Parse the header as an utf8 string if possible.
+
+2013-06-04  Oliver Hunt  <oliver@apple.com>
+
+        Prevent throttling while resources are being loaded
+        https://bugs.webkit.org/show_bug.cgi?id=117218
+
+        Reviewed by Gavin Barraclough.
+
+        Make use of the page activity assertion infrastructure to delay
+        throttling while we are waiting on resource loads.
+
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::completed):
+        (WebCore::FrameLoader::started):
+        * loader/FrameLoader.h:
+        * loader/SubresourceLoader.cpp:
+        (WebCore::SubresourceLoader::init):
+        (WebCore::SubresourceLoader::checkForHTTPStatusCodeError):
+        (WebCore::SubresourceLoader::didFinishLoading):
+        (WebCore::SubresourceLoader::didFail):
+        (WebCore::SubresourceLoader::willCancel):
+        * loader/SubresourceLoader.h:
+
+2013-06-04  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Remove [NoInterfaceObject] from XPathExpression and NodeIterator
+        https://bugs.webkit.org/show_bug.cgi?id=117204
+
+        Reviewed by Alexey Proskuryakov.
+
+        Remove [NoInterfaceObject] from XPathExpression and NodeIterator to match
+        their respective specifications:
+        - http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathExpression
+        - http://www.w3.org/TR/DOM-Level-2-Traversal-Range/traversal.html#Traversal-NodeIterator
+
+        No new tests, already covered by:
+        fast/js/global-constructors-attributes.html
+
+        * dom/NodeIterator.idl:
+        * xml/XPathExpression.idl:
+
+2013-06-04  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: MathML multiscripts not exposed in Accessibility
+        https://bugs.webkit.org/show_bug.cgi?id=115069
+
+        Unreviewed, build fix.
+
+        Remove an accessibility iOS method that was erroneously added.
+
+        * accessibility/ios/WebAccessibilityObjectWrapperIOS.mm:
+
+2013-06-04  Greg Hughes  <ghughes@apple.com>
+
+        Add "VisibleOnly" key to search predicate
+        https://bugs.webkit.org/show_bug.cgi?id=115491
+
+        Reviewed by Chris Fleizach.
+
+        Added support for accessibility clients to use the search predicate to find only visible elements
+
+        * accessibility/AccessibilityObject.cpp:
+        (WebCore::AccessibilityObject::isAccessibilityObjectSearchMatch):
+        (WebCore::AccessibilityObject::isOnscreen):
+        (WebCore):
+        * accessibility/AccessibilityObject.h:
+        (AccessibilitySearchCriteria):
+        (WebCore::AccessibilitySearchCriteria::AccessibilitySearchCriteria):
+        (AccessibilityObject):
+        * accessibility/mac/WebAccessibilityObjectWrapperMac.mm:
+        (-[WebAccessibilityObjectWrapper accessibilityAttributeValue:forParameter:]):
+
+2013-06-04  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Rollout of r151146. Broke some tests.
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::forceLayoutForPagination):
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::finishDelayUpdateScrollInfo):
+        (WebCore::RenderBlock::updateScrollInfoAfterLayout):
+        (WebCore::RenderBlock::layout):
+        * rendering/RenderBlock.h:
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::clearLayoutOverflow):
+        * rendering/RenderBox.h:
+        * rendering/RenderDeprecatedFlexibleBox.cpp:
+        (WebCore::RenderDeprecatedFlexibleBox::layoutBlock):
+        * rendering/RenderGrid.cpp:
+        (WebCore::RenderGrid::layoutBlock):
+
+2013-06-04  Noam Rosenthal  <noam@webkit.org>
+
+        Refactor the code that decides whether to enable WebGL from settings to helper functions
+        https://bugs.webkit.org/show_bug.cgi?id=117181
+
+        This removes some #ifdef crud out of the getContext() function.
+
+        Reviewed by Benjamin Poulain.
+
+        * html/HTMLCanvasElement.cpp:
+        (WebCore::requiresAcceleratedCompositingForWebGL):
+        (WebCore::shouldEnableWebGL):
+        (WebCore::HTMLCanvasElement::getContext):
+
+2013-06-04  Thiago Santos  <thiago.sousa.santos@collabora.com>
+
+        Prevent race when pad caps is set on gstreamer player
+        https://bugs.webkit.org/show_bug.cgi?id=115355
+
+        Reviewed by Philippe Normand.
+
+        Prevent race when pad caps is set on gstreamer player and
+        Also protect internal paint buffer with a mutex.
+
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamerBase.cpp:
+        (WebCore::MediaPlayerPrivateGStreamerBase::MediaPlayerPrivateGStreamerBase):
+        (WebCore::MediaPlayerPrivateGStreamerBase::~MediaPlayerPrivateGStreamerBase):
+        (WebCore::MediaPlayerPrivateGStreamerBase::naturalSize):
+        (WebCore::MediaPlayerPrivateGStreamerBase::triggerRepaint):
+        (WebCore::MediaPlayerPrivateGStreamerBase::paint):
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamerBase.h:
+        (MediaPlayerPrivateGStreamerBase):
+
+2013-06-04  Jocelyn Turcotte  <jocelyn.turcotte@digia.com>
+
+        [Qt] Fix a crash in QtPixmapRuntime.
+        https://bugs.webkit.org/show_bug.cgi?id=117193
+        https://bugreports.qt-project.org/browse/QTBUG-30736
+
+        Reviewed by Allan Sandfeld Jensen.
+
+        The crash could only be reproduced in release builds on Windows.
+        JSClassCreate calculates the size of JSClassDefinition.staticValues
+        and staticFunctions by iterating until an entry with a null name is found.
+
+        * bridge/qt/qt_pixmapruntime.cpp:
+        (JSC::Bindings::QtPixmapRuntime::getClassRef):
+
+2013-06-04  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Automatically generate WorkerContext constructor attributes
+        https://bugs.webkit.org/show_bug.cgi?id=117183
+
+        Reviewed by Kentaro Hara.
+
+        Add [GlobalContext=WindowOnly|WorkerOnly|WindowAndWorker] IDL extended attribute
+        to indicate to the bindings generator on which global context the constructor
+        attribute should be generated for interfaces without [NoInterfaceObject]:
+        - WindowOnly: only on the global Window object (default if ommitted)
+        - WorkerOnly: only on the worker context
+        - WindowAndWorker: On both the global Window object and the worker context
+
+        This covers all the current use cases.
+
+        The JSC bindings generator now automatically generates the Constructor attributes
+        on the WorkerContext for non-callback interfaces which do not have the
+        [NoInterfaceObject] extended attribute but have [GlobalContext=WorkerOnly|WindowAndWorker]
+        extended attribute.
+
+        No new tests, already covered by:
+        fast/js/global-constructors-attributes.html
+        fast/js/global-constructors-attributes-worker.html
+
+        * CMakeLists.txt:
+        * DerivedSources.make: Pass new --workerContextConstructorsFile argument to preprocess-idls.pl.
+        * DerivedSources.pri: Ditto.
+        * GNUmakefile.am: Ditto.
+        * PlatformBlackBerry.cmake: Ditto.
+        * UseJSC.cmake: Ditto.
+        * bindings/scripts/IDLAttributes.txt: Add [GlobalContext=WindowOnly|WorkerOnly|WindowAndWorker]
+        IDL extended attribute.
+        * bindings/scripts/preprocess-idls.pl: Add support for [GlobalContext] extended attribute and
+        generate a partial interface for WorkerContext global constructors that are automatically
+        generated.
+        * dom/MessageEvent.idl: Add [GlobalContext=WindowAndWorker].
+        * fileapi/Blob.idl: Add [GlobalContext=WindowAndWorker].
+        * fileapi/FileReader.idl: Add [GlobalContext=WindowAndWorker].
+        * fileapi/FileReaderSync.idl: Add [GlobalContext=WorkerOnly] and remove [NoInterfaceObject]
+        as the interface should only be visible in worker environment as per the spec.
+        * html/DOMURL.idl: Add [GlobalContext=WindowAndWorker].
+        * html/canvas/ArrayBuffer.idl: Add [GlobalContext=WindowAndWorker].
+        * html/canvas/DataView.idl: Add [GlobalContext=WindowAndWorker].
+        * html/canvas/Float32Array.idl: Add [GlobalContext=WindowAndWorker].
+        * html/canvas/Float64Array.idl: Add [GlobalContext=WindowAndWorker].
+        * html/canvas/Int16Array.idl: Add [GlobalContext=WindowAndWorker].
+        * html/canvas/Int32Array.idl: Add [GlobalContext=WindowAndWorker].
+        * html/canvas/Int8Array.idl: Add [GlobalContext=WindowAndWorker].
+        * html/canvas/Uint16Array.idl: Add [GlobalContext=WindowAndWorker].
+        * html/canvas/Uint32Array.idl: Add [GlobalContext=WindowAndWorker].
+        * html/canvas/Uint8Array.idl: Add [GlobalContext=WindowAndWorker].
+        * html/canvas/Uint8ClampedArray.idl: Add [GlobalContext=WindowAndWorker].
+        * workers/WorkerContext.idl: Remove several Constructor attributes which are now automatically
+        generated.
+        * workers/WorkerLocation.idl: Add [GlobalContext=WorkerOnly] and remove [NoInterfaceObject]
+        as the interface should only be visible in worker environment as per the spec.
+
 2013-06-04  Kangil Han  <kangil.han@samsung.com>
 
         Use ASSERT_DISABLED option for assertion purpose code in InlineBox

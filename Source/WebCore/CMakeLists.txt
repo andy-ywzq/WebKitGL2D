@@ -290,7 +290,6 @@ set(WebCore_IDL_FILES
 
     Modules/websockets/CloseEvent.idl
     Modules/websockets/WebSocket.idl
-    Modules/websockets/WorkerContextWebSocket.idl
 
     css/Counter.idl
     css/CSSCharsetRule.idl
@@ -562,7 +561,6 @@ set(WebCore_IDL_FILES
     page/EventSource.idl
     page/History.idl
     page/Location.idl
-    page/MemoryInfo.idl
     page/Navigator.idl
     page/Performance.idl
     page/PerformanceEntry.idl
@@ -1747,7 +1745,6 @@ set(WebCore_SOURCES
     page/GestureTapHighlighter.cpp
     page/History.cpp
     page/Location.cpp
-    page/MemoryInfo.cpp
     page/MouseEventWithHitTestResults.cpp
     page/Navigator.cpp
     page/NavigatorBase.cpp
@@ -2928,6 +2925,7 @@ set(WebCoreTestSupport_IDL_FILES
     testing/Internals.idl
     testing/InternalSettings.idl
     testing/MallocStatistics.idl
+    testing/MemoryInfo.idl
     testing/TypeConversions.idl
 )
 
@@ -2949,6 +2947,7 @@ set(SCRIPTS_BINDINGS
 set(IDL_FILES_TMP ${DERIVED_SOURCES_WEBCORE_DIR}/idl_files.tmp)
 set(SUPPLEMENTAL_DEPENDENCY_FILE ${DERIVED_SOURCES_WEBCORE_DIR}/supplemental_dependency.tmp)
 set(WINDOW_CONSTRUCTORS_FILE ${DERIVED_SOURCES_WEBCORE_DIR}/DOMWindowConstructors.idl)
+set(WORKERCONTEXT_CONSTRUCTORS_FILE ${DERIVED_SOURCES_WEBCORE_DIR}/WorkerContextConstructors.idl)
 set(IDL_ATTRIBUTES_FILE ${WEBCORE_DIR}/bindings/scripts/IDLAttributes.txt)
 
 include(${WEBCORE_DIR}/UseJSC.cmake)

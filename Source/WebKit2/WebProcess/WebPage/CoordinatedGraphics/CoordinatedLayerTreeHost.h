@@ -1,5 +1,6 @@
 /*
     Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies)
+    Copyright (C) 2013 Company 100, Inc.
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -48,8 +49,8 @@ class WebPage;
 
 class CoordinatedLayerTreeHost : public LayerTreeHost, WebCore::GraphicsLayerClient
     , public WebCore::CoordinatedGraphicsLayerClient
-    , public WebCore::CoordinatedImageBacking::Coordinator
-    , public WebCore::UpdateAtlasClient
+    , public WebCore::CoordinatedImageBacking::Client
+    , public WebCore::UpdateAtlas::Client
     , public WebCore::GraphicsLayerFactory
 #if ENABLE(CSS_SHADERS)
     , WebCustomFilterProgramProxyClient
@@ -111,9 +112,9 @@ private:
     virtual float deviceScaleFactor() const OVERRIDE;
     virtual float pageScaleFactor() const OVERRIDE;
 
-    // CoordinatedImageBacking::Coordinator
+    // CoordinatedImageBacking::Client
     virtual void createImageBacking(WebCore::CoordinatedImageBackingID) OVERRIDE;
-    virtual bool updateImageBacking(WebCore::CoordinatedImageBackingID, PassRefPtr<WebCore::CoordinatedSurface>) OVERRIDE;
+    virtual void updateImageBacking(WebCore::CoordinatedImageBackingID, PassRefPtr<WebCore::CoordinatedSurface>) OVERRIDE;
     virtual void clearImageBackingContents(WebCore::CoordinatedImageBackingID) OVERRIDE;
     virtual void removeImageBacking(WebCore::CoordinatedImageBackingID) OVERRIDE;
 
@@ -127,9 +128,9 @@ private:
     virtual PassOwnPtr<WebCore::GraphicsContext> beginContentUpdate(const WebCore::IntSize&, WebCore::CoordinatedSurface::Flags, uint32_t& atlasID, WebCore::IntPoint&);
     virtual void syncLayerState(WebCore::CoordinatedLayerID, WebCore::CoordinatedGraphicsLayerState&);
 
-    // UpdateAtlasClient
-    virtual bool createUpdateAtlas(uint32_t atlasID, PassRefPtr<WebCore::CoordinatedSurface>) OVERRIDE;
-    virtual void removeUpdateAtlas(uint32_t atlasID);
+    // UpdateAtlas::Client
+    virtual void createUpdateAtlas(uint32_t atlasID, PassRefPtr<WebCore::CoordinatedSurface>) OVERRIDE;
+    virtual void removeUpdateAtlas(uint32_t atlasID) OVERRIDE;
 
     // GraphicsLayerFactory
     virtual PassOwnPtr<WebCore::GraphicsLayer> createGraphicsLayer(WebCore::GraphicsLayerClient*) OVERRIDE;
@@ -139,8 +140,7 @@ private:
     void createPageOverlayLayer();
     void destroyPageOverlayLayer();
     bool flushPendingLayerChanges();
-    void createCompositingLayers();
-    void deleteCompositingLayers();
+    void clearPendingStateChanges();
     void cancelPendingLayerFlush();
     void performScheduledLayerFlush();
     void didPerformScheduledLayerFlush();
@@ -172,8 +172,6 @@ private:
 
     typedef HashMap<WebCore::CoordinatedLayerID, WebCore::CoordinatedGraphicsLayer*> LayerMap;
     LayerMap m_registeredLayers;
-    Vector<WebCore::CoordinatedLayerID> m_layersToCreate;
-    Vector<WebCore::CoordinatedLayerID> m_layersToDelete;
     typedef HashMap<WebCore::CoordinatedImageBackingID, RefPtr<WebCore::CoordinatedImageBacking> > ImageBackingMap;
     ImageBackingMap m_imageBackings;
     Vector<OwnPtr<WebCore::UpdateAtlas> > m_updateAtlases;

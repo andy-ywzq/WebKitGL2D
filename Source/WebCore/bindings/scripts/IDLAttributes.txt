@@ -56,6 +56,7 @@ EnforceRange
 EventTarget
 ExtendsDOMGlobalObject
 GenerateIsReachable=|Impl|ImplContext|ImplDocument|ImplElementRoot|ImplFrame|ImplOwnerNodeRoot
+GlobalContext=WindowOnly|WorkerOnly|WindowAndWorker
 Immutable
 ImplementationLacksVTable
 ImplementationNamespace=*
@@ -90,7 +91,6 @@ ObjCCustomImplementation
 ObjCLegacyUnnamedParameters
 ObjCPolymorphic
 ObjCProtocol
-OmitConstructor
 PassContext
 PassThisToCallback=*
 Reflect=*

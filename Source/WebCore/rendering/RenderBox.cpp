@@ -1759,7 +1759,8 @@ void RenderBox::mapLocalToContainer(const RenderLayerModelObject* repaintContain
     }
 
     mode &= ~ApplyContainerFlip;
-    if (o->isRenderFlowThread()) {
+
+    if (o->isRenderFlowThread() && (o != repaintContainer)) {
         // Transform from render flow coordinates into region coordinates.
         RenderRegion* region = toRenderFlowThread(o)->mapFromFlowToRegion(transformState);
         if (region)
@@ -4223,6 +4224,19 @@ void RenderBox::addVisualOverflow(const LayoutRect& rect)
         m_overflow = adoptPtr(new RenderOverflow(clientBoxRect(), borderBox));
     
     m_overflow->addVisualOverflow(rect);
+}
+
+void RenderBox::clearLayoutOverflow()
+{
+    if (!m_overflow)
+        return;
+    
+    if (visualOverflowRect() == borderBoxRect()) {
+        m_overflow.clear();
+        return;
+    }
+    
+    m_overflow->setLayoutOverflow(borderBoxRect());
 }
 
 inline static bool percentageLogicalHeightIsResolvable(const RenderBox* box)

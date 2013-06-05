@@ -1,3 +1,216 @@
+2013-06-05  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed build fix. Don't pass in --use-remote-links argument on Windows now that we use NRWT.
+
+        * BuildSlaveSupport/build.webkit.org-config/master.cfg:
+        (RunWebKitTests.start):
+
+2013-06-05  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Switch to NRWT
+        https://bugs.webkit.org/show_bug.cgi?id=117200
+
+        Reviewed by Anders Carlsson.
+
+        * Scripts/run-webkit-tests:
+        (useNewRunWebKitTests): No longer use old-run-webkit-tests for Windows port.
+
+2013-06-05  Dominik Röttsches  <dominik.rottsches@intel.com>
+
+        Unreviewed name fix after r150662
+
+        My firstname got duplicated when fixing bug 116737.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-06-05  Raphael Kubo da Costa  <raphael.kubo.da.costa@intel.com>
+
+        Use WEBKITOUTPUTDIR if WEBKIT_OUTPUTDIR is not present.
+        https://bugs.webkit.org/show_bug.cgi?id=117244
+
+        Reviewed by Daniel Bates.
+
+        Fixed a regression introduced by r151196: not only does webkit.org
+        still mention WEBKITOUTPUTDIR instead of WEBKIT_OUTPUTDIR, but the
+        infrastructure used by ports such as GTK+ and EFL also use on it for
+        things such as jhbuild.
+
+        While everything is not fully transitioned to WEBKIT_OUTPUTDIR, read
+        both environment variables.
+
+        * Scripts/webkitdirs.pm:
+        (determineBaseProductDir):
+
+2013-06-05  Wojciech Bielawski  <w.bielawski@samsung.com>
+
+        [GTK] Forwarding headers not generated for incremental build
+        https://bugs.webkit.org/show_bug.cgi?id=117198
+
+        Reviewed by Carlos Garcia Campos.
+
+        * WebKitTestRunner/GNUmakefile.am: libTestRunnerInjectedBundle added to dependencies.
+
+2013-06-05  Andras Becsi  <andras.becsi@digia.com>
+
+        [Qt][WK2] Fix layout testing with Qt 5.1
+        https://bugs.webkit.org/show_bug.cgi?id=117203
+
+        Reviewed by Jocelyn Turcotte.
+
+        With Qt 5.1 synchronous requests via QNetworkAccessManager do not
+        go into loading state but directly call handler functions for
+        finished state instead of relying on a connection.
+        Our wrapper QQuickView uses a data URI scheme to create the root
+        item for testing which results in a synchronous request when loading
+        the QML data, therefore the state of the QQuickWindow immediately
+        becomes Ready.
+        Since the final initialization of the root item depended on the
+        emission of QQuickView::statusChanged(QQuickView::Ready) we ended
+        up with a partially initialized wrapper window, thus most of our
+        layout tests were failing.
+        For compatibility with pre-5.1 Qt versions keep the old behaviour
+        in case the WrapperWindow is not ready in the constructor yet.
+
+        * WebKitTestRunner/qt/PlatformWebViewQt.cpp:
+        (WTR::WrapperWindow::WrapperWindow):
+        * TestWebKitAPI/qt/PlatformWebViewQt.cpp:
+        (TestWebKitAPI::WrapperWindow::WrapperWindow):
+
+2013-06-05  Dariusz Frankiewicz  <d.frankiewic@samsung.com>
+
+        Bad value in tests counter at new-run-webkit-tests
+        in --debug-rwt-logging mode
+        https://bugs.webkit.org/show_bug.cgi?id=116858
+
+        Reviewed by Dirk Pranke.
+
+        Fix by moving counter incrementation, from after printing line,
+        to before printing. Also changed variable name.
+
+        * Scripts/webkitpy/layout_tests/controllers/layout_test_runner.py:
+        (LayoutTestRunner.run_tests):
+        * Scripts/webkitpy/layout_tests/controllers/layout_test_runner_unittest.py:
+        (FakePrinter):
+        * Scripts/webkitpy/layout_tests/views/printing.py:
+        (Printer.__init__):
+        (Printer._test_status_line):
+        (Printer.print_started_test):
+        (Printer.print_finished_test):
+        * Scripts/webkitpy/test/printer.py:
+        (Printer.__init__):
+        (Printer.print_finished_test):
+        (Printer._test_line):
+        (Printer.print_result):
+
+2013-06-05  Zan Dobersek  <zdobersek@igalia.com>
+
+        Move MemoryInfo under window.internals
+        https://bugs.webkit.org/show_bug.cgi?id=117197
+
+        Reviewed by Ryosuke Niwa.
+
+        * GNUmakefile.am: Add the testing/MemoryInfo.(h|idl) files and the generated targets to
+        the Automake build
+        * Scripts/webkitperl/filter-build-webkit_unittest/shouldIgnoreLine_unittests.pl: List the
+        testing/MemoryInfo.idl file instead of page/MemoryInfo.idl.
+
+2013-06-03  Roger Fong  <roger_fong@apple.com>
+
+        Remove uses of VS2005 scripts, executables and associated environment variables from scripts.
+        <rdar://problem/14042021>.
+
+        Reviewed by Brent Fulgham.
+
+        * Scripts/build-api-tests:
+        * Scripts/build-dumprendertree:
+        * Scripts/build-webkit:
+        * Scripts/update-webkit-dependency:
+        * Scripts/update-webkit-support-libs:
+        * Scripts/webkitdirs.pm:
+        (determineBaseProductDir):
+        (setupAppleWinEnv):
+        (setupCygwinEnv):
+
+2013-06-04  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] NRWT is not putting crash logs in proper place (corrections)
+        https://bugs.webkit.org/show_bug.cgi?id=117212
+
+        Reviewed by Dirk Pranke.
+
+        * Scripts/webkitpy/common/system/crashlogs.py:
+        (CrashLogs.__init__): Accept a result directory argument in constructor.
+        (CrashLogs.find_newest_log): Don't require 'port' argument anymore.
+        (CrashLogs._find_newest_log_win): No longer use 'port' argument.
+        * Scripts/webkitpy/common/system/crashlogs_unittest.py:
+        (CrashLogsTest.test_find_log_win): Simplify test.
+        * Scripts/webkitpy/common/system/executive.py:
+        (Executive.running_pids): Handle "win32" case separately from "cygwin" case.
+        * Scripts/webkitpy/port/win.py:
+        (WinPort._get_crash_log): No longer require 'port' argument.
+
+2013-06-04  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Build fix after r150592. We need to disable \2 shouldn't be treated as an escape character.
+
+        * BuildSlaveSupport/build.webkit.org-config/master.cfg:
+
+2013-06-04  Greg Hughes  <ghughes@apple.com>
+
+        Add "VisibleOnly" key to search predicate
+        https://bugs.webkit.org/show_bug.cgi?id=115491
+
+        Reviewed by Chris Fleizach.
+
+        Added support for accessibility clients to use the search predicate to find only visible elements
+
+        * DumpRenderTree/AccessibilityUIElement.cpp:
+        (uiElementForSearchPredicateCallback):
+        * DumpRenderTree/AccessibilityUIElement.h:
+        (AccessibilityUIElement):
+        * DumpRenderTree/ios/AccessibilityUIElementIOS.mm:
+        (AccessibilityUIElement::uiElementForSearchPredicate):
+        * DumpRenderTree/mac/AccessibilityUIElementMac.mm:
+        (AccessibilityUIElement::uiElementForSearchPredicate):
+        * WebKitTestRunner/InjectedBundle/AccessibilityUIElement.cpp:
+        (WTR::AccessibilityUIElement::uiElementForSearchPredicate):
+        * WebKitTestRunner/InjectedBundle/AccessibilityUIElement.h:
+        (AccessibilityUIElement):
+        * WebKitTestRunner/InjectedBundle/Bindings/AccessibilityUIElement.idl:
+        * WebKitTestRunner/InjectedBundle/mac/AccessibilityUIElementMac.mm:
+        (WTR::AccessibilityUIElement::uiElementForSearchPredicate):
+
+2013-06-04  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build fix.  The last check-in lost CR/LF endings on the batch file,
+        causing build failure.
+
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreePostBuild.cmd: Revert to
+        DOS-style CR/LF endings.
+
+2013-06-04  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed test correction.
+
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreePostBuild.cmd: Also copy the
+        QuartzCore dll's, which are needed by TestWebKitAPI.
+        * TestWebKitAPI/win/main.cpp: Declare proper manfifest dependencies to ensure TestWebKitAPI built
+        with VS2010 will run when linked against VS2005 support libraries.
+
+2013-06-04  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Automatically generate WorkerContext constructor attributes
+        https://bugs.webkit.org/show_bug.cgi?id=117183
+
+        Reviewed by Kentaro Hara.
+
+        Pass new --workerContextConstructorsFile to preprocess-idl.pl for bindings
+        tests.
+
+        * Scripts/webkitpy/bindings/main.py:
+        (BindingsTests.generate_supplemental_dependency):
+        (BindingsTests.main):
+
 2013-06-04  Ryuan Choi  <ryuan.choi@samsung.com>
 
         [EFL] File dialog of MiniBrowser have broken background.

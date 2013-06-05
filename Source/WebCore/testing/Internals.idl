@@ -26,7 +26,6 @@
 
 [
     NoInterfaceObject,
-    OmitConstructor
 ] interface Internals {
     DOMString address(Node node);
 
@@ -233,6 +232,7 @@
 
     MallocStatistics mallocStatistics();
     TypeConversions typeConversions();
+    MemoryInfo memoryInfo();
 
     DOMString[] getReferencedFilePaths();
 
