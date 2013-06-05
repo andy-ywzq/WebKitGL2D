@@ -40,22 +40,35 @@
 extern "C" {
 #endif
 
-enum NixInputMethodHint {
-    NixImhNone                   = 0x000,
-    NixImhDialableCharactersOnly = 0x001,
-    NixImhDigitsOnly             = 0x002,
-    NixImhEmailCharactersOnly    = 0x004,
-    NixImhNoAutoUppercase        = 0x008,
-    NixImhUrlCharactersOnly      = 0x010,
-    NixImhNoPredictiveText       = 0x020,
-    NixImhSensitiveData          = 0x040
+enum NIXInputMethodHint {
+    NIXImhNone                   = 0x000,
+    NIXImhDialableCharactersOnly = 0x001,
+    NIXImhDigitsOnly             = 0x002,
+    NIXImhEmailCharactersOnly    = 0x004,
+    NIXImhNoAutoUppercase        = 0x008,
+    NIXImhUrlCharactersOnly      = 0x010,
+    NIXImhNoPredictiveText       = 0x020,
+    NIXImhSensitiveData          = 0x040
 };
+
+struct NIXTextInputState {
+    WKStringRef selectedText;
+    WKStringRef surroundingText;
+    WKStringRef submitLabel;
+    uint64_t inputMethodHints;
+    bool isContentEditable;
+    unsigned cursorPosition;
+    unsigned anchorPosition;
+    WKRect cursorRect;
+    WKRect editorRect;
+};
+typedef struct NIXTextInputState NIXTextInputState;
 
 // NIXViewClient.
 typedef void (*NIXViewDoneWithTouchEventCallback)(WKViewRef view, const NIXTouchEvent* touchEvent, bool wasEventHandled, const void* clientInfo);
 typedef void (*NIXViewDoneWithGestureEventCallback)(WKViewRef view, const NIXGestureEvent* gestureEvent, bool wasEventHandled, const void* clientInfo);
 typedef void (*NIXViewPageDidFindZoomableAreaCallback)(WKViewRef view, WKPoint target, WKRect area, const void* clientInfo);
-typedef void (*NIXViewPageUpdateTextInputStateCallback)(WKViewRef view, WKStringRef selectedText, WKStringRef surroundingText, WKStringRef submitLabel, uint64_t inputMethodHints, bool isContentEditable, WKRect cursorRect, WKRect editorRect, const void* clientInfo);
+typedef void (*NIXViewPageUpdateTextInputStateCallback)(WKViewRef view, const NIXTextInputState* state, const void* clientInfo);
 
 struct NIXViewClient {
     int                                              version;

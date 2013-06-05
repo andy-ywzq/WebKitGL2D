@@ -110,19 +110,19 @@ uint64_t getInputMethodHint(HTMLInputElement* input)
 {
     uint64_t hint = 0;
     if (input->isTelephoneField())
-        hint |= NixImhDialableCharactersOnly;
+        hint |= NIXImhDialableCharactersOnly;
     else if (input->isNumberField())
-        hint |= NixImhDigitsOnly;
+        hint |= NIXImhDigitsOnly;
     else if (input->isEmailField()) {
-        hint |= NixImhEmailCharactersOnly;
-        hint |= NixImhNoAutoUppercase;
+        hint |= NIXImhEmailCharactersOnly;
+        hint |= NIXImhNoAutoUppercase;
     } else if (input->isURLField()) {
-        hint |= NixImhUrlCharactersOnly;
-        hint |= NixImhNoAutoUppercase;
+        hint |= NIXImhUrlCharactersOnly;
+        hint |= NIXImhNoAutoUppercase;
     } else if (input->isPasswordField()) {
-        hint |= NixImhNoAutoUppercase;
-        hint |= NixImhNoPredictiveText;
-        hint |= NixImhSensitiveData;
+        hint |= NIXImhNoAutoUppercase;
+        hint |= NIXImhNoPredictiveText;
+        hint |= NIXImhSensitiveData;
     }
     return hint;
 }

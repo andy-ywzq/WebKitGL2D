@@ -37,14 +37,9 @@ namespace TestWebKitAPI {
 
 static bool didFinishLoad = false;
 static bool didUpdateTextInputState = false;
-static bool contentEditableValue = false;
-static bool isInPasswordFieldValue = true;
+static NIXTextInputState stateReceived;
 static bool isDoneWithSingleTapEvent = false;
-static WKStringRef surroundingTextValue;
-static WKStringRef submitLabelValue;
 static const WKRect invalidRectState = WKRectMake(0, 0, 0, 0);
-static WKRect editorRectState = invalidRectState;
-static WKRect cursorRectState = invalidRectState;
 
 static bool WKRectIsEqual(const WKRect& a, const WKRect& b)
 {
@@ -56,17 +51,13 @@ static void didFinishLoadForFrame(WKPageRef page, WKFrameRef, WKTypeRef, const v
     didFinishLoad = true;
 }
 
-static void updateTextInputState(WKViewRef, WKStringRef, WKStringRef surroundingText, WKStringRef submitLabel, uint64_t inputMethodHints, bool isContentEditable, WKRect cursorRect, WKRect editorRect, const void*)
+static void updateTextInputState(WKViewRef, const NIXTextInputState* state, const void*)
 {
     didUpdateTextInputState = true;
-    contentEditableValue = isContentEditable;
-    isInPasswordFieldValue = inputMethodHints & NixImhSensitiveData;
-    surroundingTextValue = surroundingText;
-    WKRetain(surroundingTextValue);
-    submitLabelValue = submitLabel;
-    WKRetain(submitLabel);
-    cursorRectState = cursorRect;
-    editorRectState = editorRect;
+
+    memcpy(&stateReceived, state, sizeof(NIXTextInputState));
+    WKRetain(stateReceived.surroundingText);
+    WKRetain(stateReceived.submitLabel);
 }
 
 static void doneWithGestureEvent(WKViewRef, const NIXGestureEvent* event, bool, const void*)
@@ -76,6 +67,7 @@ static void doneWithGestureEvent(WKViewRef, const NIXGestureEvent* event, bool, 
 
 TEST(WebKitNix, WebViewUpdateTextInputState)
 {
+    memset(&stateReceived, 0, sizeof(stateReceived));
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
 
     NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
@@ -121,33 +113,32 @@ TEST(WebKitNix, WebViewUpdateTextInputState)
     ASSERT_TRUE(didFinishLoad);
     ASSERT_TRUE(isDoneWithSingleTapEvent);
     ASSERT_TRUE(didUpdateTextInputState);
-    ASSERT_TRUE(contentEditableValue);
+    ASSERT_TRUE(stateReceived.isContentEditable);
 
-    ASSERT_TRUE(WKStringIsEqualToUTF8CString(surroundingTextValue, "foobar"));
-    WKRelease(surroundingTextValue);
-    ASSERT_TRUE(WKStringIsEmpty(submitLabelValue));
-    WKRelease(submitLabelValue);
-    ASSERT_FALSE(isInPasswordFieldValue);
-    ASSERT_TRUE(!WKRectIsEqual(cursorRectState, invalidRectState));
-    ASSERT_TRUE(!WKRectIsEqual(editorRectState, invalidRectState));
-    ASSERT_TRUE(!WKRectIsEqual(cursorRectState, editorRectState));
+    ASSERT_TRUE(WKStringIsEqualToUTF8CString(stateReceived.surroundingText, "foobar"));
+    WKRelease(stateReceived.surroundingText);
+    ASSERT_TRUE(WKStringIsEmpty(stateReceived.submitLabel));
+    WKRelease(stateReceived.submitLabel);
+    ASSERT_FALSE(stateReceived.inputMethodHints & NIXImhSensitiveData);
+    ASSERT_TRUE(!WKRectIsEqual(stateReceived.cursorRect, invalidRectState));
+    ASSERT_TRUE(!WKRectIsEqual(stateReceived.editorRect, invalidRectState));
+    ASSERT_TRUE(!WKRectIsEqual(stateReceived.cursorRect, stateReceived.editorRect));
 
     // Test on a form field.
     didFinishLoad = false;
     isDoneWithSingleTapEvent = false;
+    memset(&stateReceived, 0, sizeof(stateReceived));
 
     editableContentUrl = adoptWK(Util::createURLForResource("../nix/single-tap-on-form-field", "html"));
     WKPageLoadURL(WKViewGetPage(view.get()), editableContentUrl.get());
     Util::run(&didFinishLoad);
     NIXViewSendGestureEvent(view.get(), &tapEvent);
     Util::run(&isDoneWithSingleTapEvent);
-    WKRelease(surroundingTextValue);
+    WKRelease(stateReceived.surroundingText);
     ASSERT_TRUE(didFinishLoad);
-    ASSERT_TRUE(WKStringIsEqualToUTF8CString(submitLabelValue, "submitLabelValue"));
-    WKRelease(submitLabelValue);
-    ASSERT_TRUE(isInPasswordFieldValue);
-
-
+    ASSERT_TRUE(WKStringIsEqualToUTF8CString(stateReceived.submitLabel, "submitLabelValue"));
+    WKRelease(stateReceived.submitLabel);
+    ASSERT_TRUE(stateReceived.inputMethodHints & NIXImhSensitiveData);
 }
 
 } // TestWebKitAPI

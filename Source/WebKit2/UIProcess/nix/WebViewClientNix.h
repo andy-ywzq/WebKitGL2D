@@ -34,13 +34,14 @@
 namespace WebKit {
 
 class WebView;
+struct EditorState;
 
 class WebViewClientNix : public APIClient<NIXViewClient, kNIXViewClientCurrentVersion> {
 public:
     void doneWithTouchEvent(WebView*, const NIXTouchEvent&, bool wasEventHandled);
     void doneWithGestureEvent(WebView*, const NIXGestureEvent&, bool wasEventHandled);
     void didFindZoomableArea(WebView*, WKPoint target, WKRect area);
-    void updateTextInputState(WebView*, const WTF::String& selectedText, const WTF::String& surroundingText, const WTF::String& submitLabel, uint64_t inputMethodHints, bool isContentEditable, const WebCore::IntRect& cursorRect, const WebCore::IntRect& editorRect);
+    void updateTextInputState(WebView*, const EditorState&);
 };
 
 } // namespace WebKit

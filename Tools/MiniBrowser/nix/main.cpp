@@ -103,7 +103,7 @@ public:
     static void didFindZoomableArea(WKViewRef, WKPoint target, WKRect area, const void* clientInfo);
     static void doneWithTouchEvent(WKViewRef, const NIXTouchEvent* event, bool wasEventHandled, const void* clientInfo);
     static void doneWithGestureEvent(WKViewRef, const NIXGestureEvent* event, bool wasEventHandled, const void* clientInfo);
-    static void updateTextInputState(WKViewRef, WKStringRef, WKStringRef, WKStringRef, uint64_t, bool isContentEditable, WKRect cursorRect, WKRect editorRect, const void* clientInfo);
+    static void updateTextInputState(WKViewRef, const NIXTextInputState* state, const void* clientInfo);
 
     // GestureRecognizerClient.
     virtual void handleSingleTap(double timestamp, const NIXTouchPoint&);
@@ -962,21 +962,21 @@ static inline bool WKRectIsEqual(const WKRect& a, const WKRect& b)
     return a.origin == b.origin && a.size.width == b.size.width && a.size.height == b.size.height;
 }
 
-void MiniBrowser::updateTextInputState(WKViewRef, WKStringRef, WKStringRef, WKStringRef, uint64_t, bool isContentEditable, WKRect cursorRect, WKRect editorRect, const void* clientInfo)
+void MiniBrowser::updateTextInputState(WKViewRef, const NIXTextInputState* state, const void* clientInfo)
 {
     MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
 
     if (mb->m_postponeTextInputUpdates)
         return;
 
-    if (isContentEditable) {
+    if (state->isContentEditable) {
         // If we're only moving cursor inside the current editor, then we should not focus it again.
-        if (WKRectIsEqual(editorRect, mb->m_editorRect))
+        if (WKRectIsEqual(state->editorRect, mb->m_editorRect))
             return;
 
         mb->m_shouldFocusEditableArea = true;
-        mb->m_cursorRect = cursorRect;
-        mb->m_editorRect = editorRect;
+        mb->m_cursorRect = state->cursorRect;
+        mb->m_editorRect = state->editorRect;
     } else {
         if (mb->m_shouldRestoreViewportWhenLosingFocus) {
             mb->m_shouldRestoreViewportWhenLosingFocus = false;

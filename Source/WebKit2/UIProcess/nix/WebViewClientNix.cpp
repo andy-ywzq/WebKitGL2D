@@ -27,6 +27,7 @@
 #include "WebViewClientNix.h"
 
 #include "WebViewNix.h"
+#include "EditorState.h"
 #include <cstring>
 
 namespace WebKit {
@@ -52,14 +53,27 @@ void WebViewClientNix::didFindZoomableArea(WebView* view, WKPoint target, WKRect
     m_client.didFindZoomableArea(toAPI(view), target, area, m_client.clientInfo);
 }
 
-void WebViewClientNix::updateTextInputState(WebView* view, const WTF::String& selectedText, const WTF::String& surroundingText,
-                                            const WTF::String& submitLabel, uint64_t inputMethodHints, bool isContentEditable,
-                                            const WebCore::IntRect& cursorRect, const WebCore::IntRect& editorRect)
+void WebViewClientNix::updateTextInputState(WebView* view, const EditorState& state)
 {
     if (!m_client.updateTextInputState)
         return;
-    m_client.updateTextInputState(toAPI(view), toAPI(selectedText.impl()), toAPI(surroundingText.impl()), toAPI(submitLabel.impl()),
-                                  inputMethodHints, isContentEditable, toAPI(cursorRect), toAPI(editorRect), m_client.clientInfo);
+
+    NIXTextInputState nixState;
+    ProxyingRefPtr<WebString> selectedText = toAPI(state.selectedText.impl());
+    ProxyingRefPtr<WebString> surroundingText = toAPI(state.surroundingText.impl());
+    ProxyingRefPtr<WebString> submitLabel = toAPI(state.submitLabel.impl());
+
+    nixState.selectedText = selectedText;
+    nixState.surroundingText = surroundingText;
+    nixState.submitLabel = submitLabel;
+    nixState.inputMethodHints = state.inputMethodHints;
+    nixState.isContentEditable = state.isContentEditable;
+    nixState.cursorPosition = state.cursorPosition;
+    nixState.anchorPosition = state.anchorPosition;
+    nixState.cursorRect = toAPI(state.cursorRect);
+    nixState.editorRect = toAPI(state.editorRect);
+
+    m_client.updateTextInputState(toAPI(view), &nixState, m_client.clientInfo);
 }
 
 } // namespace WebKit
