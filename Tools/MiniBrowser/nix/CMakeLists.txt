@@ -7,6 +7,7 @@ add_definitions(-DMINIBROWSER_INJECTEDBUNDLE_DIR="${MINIBROWSER_INJECTEDBUNDLE_D
 
 set(MiniBrowser_SOURCES
     ${MiniBrowser_DIR}/main.cpp
+    ${MiniBrowser_DIR}/MiniBrowser.cpp
     ${MiniBrowser_DIR}/BrowserControl.cpp
     ${MiniBrowser_DIR}/GestureRecognizer.cpp
     ${MiniBrowser_DIR}/Options.cpp
