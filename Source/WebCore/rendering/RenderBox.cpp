@@ -35,7 +35,6 @@
 #include "HTMLElement.h"
 #include "HTMLFrameOwnerElement.h"
 #include "HTMLNames.h"
-#include "ImageBuffer.h"
 #include "FloatQuad.h"
 #include "Frame.h"
 #include "Page.h"
@@ -47,12 +46,10 @@
 #include "RenderGeometryMap.h"
 #include "RenderInline.h"
 #include "RenderLayer.h"
-#include "RenderPart.h"
 #include "RenderRegion.h"
 #include "RenderTableCell.h"
 #include "RenderTheme.h"
 #include "RenderView.h"
-#include "ScrollbarTheme.h"
 #include "TransformState.h"
 #include <algorithm>
 #include <math.h>
@@ -162,7 +159,7 @@ void RenderBox::willBeDestroyed()
 
     RenderBlock::removePercentHeightDescendantIfNeeded(this);
 
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
     ExclusionShapeOutsideInfo::removeInfo(this);
 #endif
 
@@ -314,12 +311,12 @@ void RenderBox::styleDidChange(StyleDifference diff, const RenderStyle* oldStyle
         frame()->view()->recalculateScrollbarOverlayStyle();
     }
 
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
     updateExclusionShapeOutsideInfoAfterStyleChange(style()->shapeOutside(), oldStyle ? oldStyle->shapeOutside() : 0);
 #endif
 }
 
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
 void RenderBox::updateExclusionShapeOutsideInfoAfterStyleChange(const ExclusionShapeValue* shapeOutside, const ExclusionShapeValue* oldShapeOutside)
 {
     // FIXME: A future optimization would do a deep comparison for equality. (bug 100811)
@@ -1760,14 +1757,6 @@ void RenderBox::mapLocalToContainer(const RenderLayerModelObject* repaintContain
 
     mode &= ~ApplyContainerFlip;
 
-    if (o->isRenderFlowThread() && (o != repaintContainer)) {
-        // Transform from render flow coordinates into region coordinates.
-        RenderRegion* region = toRenderFlowThread(o)->mapFromFlowToRegion(transformState);
-        if (region)
-            region->mapLocalToContainer(region->containerForRepaint(), transformState, mode, wasFixed);
-        return;
-    }
-
     o->mapLocalToContainer(repaintContainer, transformState, mode, wasFixed);
 }
 
@@ -1793,9 +1782,6 @@ const RenderObject* RenderBox::pushMappingToContainer(const RenderLayerModelObje
     bool offsetDependsOnPoint = false;
     LayoutSize containerOffset = offsetFromContainer(container, LayoutPoint(), &offsetDependsOnPoint);
 
-    if (container->isRenderFlowThread())
-        offsetDependsOnPoint = true;
-    
     bool preserve3D = container->style()->preserves3D() || style()->preserves3D();
     if (shouldUseTransformFromContainer(container)) {
         TransformationMatrix t;
@@ -1856,6 +1842,9 @@ LayoutSize RenderBox::offsetFromContainer(RenderObject* o, const LayoutPoint& po
 
     if (style()->position() == AbsolutePosition && o->isInFlowPositioned() && o->isRenderInline())
         offset += toRenderInline(o)->offsetForInFlowPositionedInline(this);
+
+    if (offsetDependsOnPoint)
+        *offsetDependsOnPoint |= o->isRenderFlowThread();
 
     return offset;
 }

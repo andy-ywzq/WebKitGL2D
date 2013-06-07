@@ -29,11 +29,8 @@
 
 #include "AXObjectCache.h"
 #include "AnimationController.h"
-#include "Chrome.h"
 #include "ContentData.h"
 #include "CursorList.h"
-#include "DashArray.h"
-#include "EditingBoundary.h"
 #include "EventHandler.h"
 #include "FloatQuad.h"
 #include "FlowThreadController.h"
@@ -75,7 +72,6 @@
 #include "TransformState.h"
 #include "htmlediting.h"
 #include <algorithm>
-#include <stdio.h>
 #include <wtf/RefCountedLeakCounter.h>
 #include <wtf/StackStats.h>
 
@@ -1632,13 +1628,15 @@ Color RenderObject::selectionBackgroundColor() const
 {
     Color color;
     if (style()->userSelect() != SELECT_NONE) {
-        RefPtr<RenderStyle> pseudoStyle = getUncachedPseudoStyle(PseudoStyleRequest(SELECTION));
-        if (pseudoStyle && pseudoStyle->visitedDependentColor(CSSPropertyBackgroundColor).isValid())
-            color = pseudoStyle->visitedDependentColor(CSSPropertyBackgroundColor).blendWithWhite();
-        else
-            color = frame()->selection()->isFocusedAndActive() ?
-                    theme()->activeSelectionBackgroundColor() :
-                    theme()->inactiveSelectionBackgroundColor();
+        if (frame()->selection()->shouldShowBlockCursor() && frame()->selection()->isCaret())
+            color = style()->visitedDependentColor(CSSPropertyColor).blendWithWhite();
+        else {
+            RefPtr<RenderStyle> pseudoStyle = getUncachedPseudoStyle(PseudoStyleRequest(SELECTION));
+            if (pseudoStyle && pseudoStyle->visitedDependentColor(CSSPropertyBackgroundColor).isValid())
+                color = pseudoStyle->visitedDependentColor(CSSPropertyBackgroundColor).blendWithWhite();
+            else
+                color = frame()->selection()->isFocusedAndActive() ? theme()->activeSelectionBackgroundColor() : theme()->inactiveSelectionBackgroundColor();
+        }
     }
 
     return color;
@@ -2258,7 +2256,7 @@ LayoutSize RenderObject::offsetFromContainer(RenderObject* o, const LayoutPoint&
         offset -= toRenderBox(o)->scrolledContentOffset();
 
     if (offsetDependsOnPoint)
-        *offsetDependsOnPoint = hasColumns();
+        *offsetDependsOnPoint = hasColumns() || o->isRenderFlowThread();
 
     return offset;
 }

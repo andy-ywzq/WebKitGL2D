@@ -1,3 +1,238 @@
+2013-06-07  Thomas Deniau  <deniau@apple.com>
+
+        Reproducible crash with triple-finger-tap "define word" gesture on a Netflix video
+        https://bugs.webkit.org/show_bug.cgi?id=117020
+
+        Reviewed by Ryosuke Niwa.
+
+        * WebProcess/WebPage/mac/WebPageMac.mm:
+        (WebKit::WebPage::performDictionaryLookupAtLocation):
+        Don't invoke the Dictionary lookup when we failed to extract the range of the token
+        surrounding the tapped position.
+
+2013-06-07  Enrique Ocana Gonzalez  <eocanha@igalia.com>
+
+        [GTK] Weird behaviour and no clues to the user when the shared memory file can't be opened
+        https://bugs.webkit.org/show_bug.cgi?id=117063
+
+        Reviewed by Anders Carlsson.
+
+        Log error message when the shared memory file can't be opened in
+        Unix platform using a release build
+
+        * Platform/unix/SharedMemoryUnix.cpp:
+        (WebKit::SharedMemory::create):
+
+2013-06-07  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        [EFL][WK2] Context menu spellchecking items are not available when "Check Spelling While Typing" is off
+        https://bugs.webkit.org/show_bug.cgi?id=117190
+
+        Reviewed by Christophe Dumez.
+
+        Context menu items (suggestions, learn and ignore word) are not available
+        due to missing dictionary. To get the suggestions for the misspelled word,
+        the dictionary has to be loaded first.
+
+        WebKit loads the default dictionary when check spelling while typing is being enabled.
+        However, context menu spellchecking items should be present even if this setting is off.
+
+        * UIProcess/API/efl/ewk_context.cpp:
+        (EwkContext::EwkContext):
+        Load the user's default dictionary to ensure context menu spellchecking items.
+        The dictionary is loaded asynchronously so it shouldn't delay application.
+
+        * UIProcess/API/efl/ewk_text_checker.h:
+        Update doc. Spelling suggestions, learn and ignore word should be available
+        independently of checking spelling while typing setting.
+
+        * UIProcess/API/efl/tests/test_ewk2_text_checker.cpp:
+        (onContextMenuShow):
+        (TEST_F):
+        Add two unit tests to check whether the default dictionary is loaded and
+        whether the context menu spelling items are available.
+
+        * UIProcess/efl/TextCheckerEfl.cpp:
+        (WebKit::TextChecker::setContinuousSpellCheckingEnabled):
+        (WebKit::TextChecker::continuousSpellCheckingEnabledStateChanged):
+        Not set the default dictionary while enabling the setting, it's already loaded.
+
+2013-06-07  Michał Pakuła vel Rutka  <m.pakula@samsung.com>
+
+        [EFL][WK2] Implement customContextMenuItemSelected
+        https://bugs.webkit.org/show_bug.cgi?id=117298
+
+        Reviewed by Christophe Dumez.
+
+        When custom context menu item is selected using ewk API, the feedback is not
+        sent back to application, as customContextMenuItemSelected was unimplemented in
+        contextMenuClientEfl.
+
+        * UIProcess/API/efl/EwkView.cpp:
+        (EwkView::customContextMenuItemSelected):
+        * UIProcess/API/efl/EwkView.h:
+        * UIProcess/API/efl/ewk_view.h: added custom_item_selected callback.
+        * UIProcess/efl/ContextMenuClientEfl.cpp:
+        (customContextMenuItemSelected):
+        (ContextMenuClientEfl::ContextMenuClientEfl):
+
+2013-06-06  Oliver Hunt  <oliver@apple.com>
+
+        Completely initialize ChildProcess state on launch
+        https://bugs.webkit.org/show_bug.cgi?id=117328
+
+        Reviewed by Sam Weinig.
+
+        Use setProcessSuppressionEnabledInternal to avoid setProcessSuppressionEnabled
+        "optimizing" our initialization away.
+
+        * Shared/mac/ChildProcessMac.mm:
+        (WebKit::ChildProcess::platformInitialize):
+
+2013-06-06  Rafael Brandao  <rafael.lobo@openbossa.org>
+
+        [Gtk] Connection is leaking when WebProcess is terminated
+        https://bugs.webkit.org/show_bug.cgi?id=117293
+
+        Reviewed by Martin Robinson.
+
+        Connection is leaking because WorkQueue::SocketEventSource inherits from
+        WorkQueue::EventSource but when it is destroyed, the actual destructor running
+        is the one from base class; however, subclass contains a function binded from
+        Connection (m_closeFunction) and we need to do this extra cleanup, otherwise
+        WorkQueue will keep Connection alive. A better explanation of this fix is provided
+        on http://stackoverflow.com/questions/461203/when-to-use-virtual-destructors
+
+        A quick way to see the leak is to change WK2 test "ReloadPageAfterCrash" to terminate
+        WebProcess N times and add a printf on Connection destructor.
+
+        * Platform/gtk/WorkQueueGtk.cpp:
+        (WorkQueue::EventSource::~EventSource): Adds a virtual destructor to enable
+        the subclass to do its own cleanup.
+
+2013-06-06  Jae Hyun Park  <jae.park@company100.net>
+
+        Coordinated Graphics : Refactor CoordinatedSurface to manage the lifecycle of GraphicsContext
+        https://bugs.webkit.org/show_bug.cgi?id=108899
+
+        Reviewed by Noam Rosenthal.
+
+        This is a preparation patch for Threaded Coordinated Graphics.
+
+        This patch changes CoordinatedSurface to be responsible for the
+        lifecycle of GraphicsContext used in Coordinated Graphics System.
+        CoordinatedImageBacking and UpdateAtlas do not ask for the ownership
+        of GraphicsContext anymore. Instead, those classes use client pattern to
+        ask the CoordiantedSurface to paint to the GraphicsContext.
+
+        This refactoring is needed to implement CoordinatedSurface for Threaded
+        Coordinated Graphics.
+
+        * Shared/CoordinatedGraphics/WebCoordinatedSurface.cpp:
+        (WebKit::WebCoordinatedSurface::paintToSurface):
+        * Shared/CoordinatedGraphics/WebCoordinatedSurface.h:
+        * WebProcess/WebPage/CoordinatedGraphics/CoordinatedLayerTreeHost.cpp:
+        (WebKit::CoordinatedLayerTreeHost::paintToSurface):
+        * WebProcess/WebPage/CoordinatedGraphics/CoordinatedLayerTreeHost.h:
+
+2013-06-05  Kangil Han  <kangil.han@samsung.com>
+
+        [EFL][WK2] Fix test_ewk2_view unit test timed out issue
+        https://bugs.webkit.org/show_bug.cgi?id=117251
+
+        Reviewed by Christophe Dumez.
+
+        'ewk_view_contents_size_changed' unit test case has been timed out since r150802 because
+        same size is filtered by WebView class. So create one different test html string that has
+        different size to continue unit tests.
+
+        * UIProcess/API/efl/tests/test_ewk2_view.cpp:
+        (onContentsSizeChangedPortrait):
+        (onContentsSizeChangedLandscape):
+        (TEST_F):
+
+2013-06-05  Bear Travis  <betravis@adobe.com>
+
+        [CSS Exclusions][CSS Shapes] Split CSS Exclusions & Shapes compile & runtime flags
+        https://bugs.webkit.org/show_bug.cgi?id=117172
+
+        Reviewed by Alexandru Chiculita.
+
+        Adding the CSS_SHAPES compile flag.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-06-05  Anders Carlsson  <andersca@apple.com>
+
+        Crash if an IPC connection is invalidated before it's completely set up
+        https://bugs.webkit.org/show_bug.cgi?id=117274
+        <rdar://problem/13319035>
+
+        Reviewed by Andreas Kling.
+
+        Resume our dispatch sources on the connection queue so we won't get invalidation callbacks before
+        all sources have been set up.
+
+        * Platform/CoreIPC/mac/ConnectionMac.cpp:
+        (CoreIPC::Connection::open):
+        (CoreIPC::Connection::sendOutgoingMessage):
+        (CoreIPC::Connection::initializeDeadNameSource):
+        (CoreIPC::Connection::receiveSourceEventHandler):
+
+2013-06-05  Tim Horton  <timothy_horton@apple.com>
+
+        [wk2] WebProcess' page-in-window count can be wrong
+        https://bugs.webkit.org/show_bug.cgi?id=117106
+        <rdar://problem/14040991>
+
+        Reviewed by Anders Carlsson.
+
+        If we're using a single WebProcess and a window is closed, we were
+        not decrementing the page-in-window count (because we apparently don't
+        setIsInWindow(false) a WebPage in a closing window before tearing it down).
+
+        Turn the page-in-window count into a HashSet of pageIDs instead.
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::WebPage):
+        (WebKit::WebPage::setIsInWindow):
+        Send the pageID instead (this change is just so that I don't need to
+        fetch the WebPage in WebProcess::removeWebPage).
+
+        * WebProcess/WebProcess.cpp:
+        (WebKit::WebProcess::WebProcess):
+        Remove m_inWindowPageCount.
+
+        (WebKit::WebProcess::removeWebPage):
+        Ensure that WebPages being torn-down are removed from the in-window WebPage set.
+
+        (WebKit::WebProcess::pageDidEnterWindow):
+        (WebKit::WebProcess::pageWillLeaveWindow):
+        Use our new HashSet instead of a count.
+
+        (WebKit::WebProcess::nonVisibleProcessCleanupTimerFired):
+        Make sure that we don't have any visible pages before doing cleanup.
+
+        * WebProcess/WebProcess.h:
+        Remove m_inWindowPageCount.
+        Add m_inWindowPageSet.
+        Make pageDidEnterWindow/pageWillLeaveWindow take pageID instead of WebPage.
+
+2013-06-05  Tim Horton  <timothy_horton@apple.com>
+
+        REGRESSION (r148713): Crash under waitForDidUpdateInWindowState
+        https://bugs.webkit.org/show_bug.cgi?id=117268
+        <rdar://problem/13822353>
+
+        Reviewed by Anders Carlsson.
+
+        Check if the WebProcess is valid before waiting for a message from it.
+        Reset the bool that tells us that we have an outstanding didUpdateInWindowState message if the WebProcess quits.
+
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::waitForDidUpdateInWindowState):
+        (WebKit::WebPageProxy::resetStateAfterProcessExited):
+
 2013-06-05  Gwang Yoon Hwang  <ryumiel@company100.net>
 
         [Coordinated Graphics] Prevent a recursive painting in CoordinatedGraphicsLayer

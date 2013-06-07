@@ -202,31 +202,43 @@ sub AddIncludesForTypeInHeader
     AddIncludesForType($type, $isCallback, \%headerIncludes);
 }
 
+my %typesWithoutHeader = (
+    "Array" => 1,
+    "DOMString" => 1,
+    "DOMTimeStamp" => 1,
+    "any" => 1
+);
+
+sub SkipIncludeHeader
+{
+    my $type = shift;
+
+    return 1 if $codeGenerator->SkipIncludeHeader($type);
+    return 1 if $codeGenerator->GetSequenceType($type) or $codeGenerator->GetArrayType($type);
+    return $typesWithoutHeader{$type};
+}
+
 sub AddIncludesForType
 {
     my $type = shift;
     my $isCallback = shift;
     my $includesRef = shift;
 
+    return if SkipIncludeHeader($type);
+
     # When we're finished with the one-file-per-class
     # reorganization, we won't need these special cases.
-    if ($codeGenerator->IsPrimitiveType($type) or $codeGenerator->SkipIncludeHeader($type)
-        or $type eq "DOMString" or $type eq "any" or $type eq "Array" or $type eq "DOMTimeStamp") {
-    } elsif ($type =~ /SVGPathSeg/) {
+    if ($type =~ /SVGPathSeg/) {
         my $joinedName = $type;
         $joinedName =~ s/Abs|Rel//;
         $includesRef->{"${joinedName}.h"} = 1;
     } elsif ($type eq "XPathNSResolver") {
         $includesRef->{"JSXPathNSResolver.h"} = 1;
         $includesRef->{"JSCustomXPathNSResolver.h"} = 1;
-    } elsif ($type eq "SerializedScriptValue") {
-        $includesRef->{"SerializedScriptValue.h"} = 1;
-    } elsif ($isCallback) {
+    } elsif ($isCallback && $codeGenerator->IsWrapperType($type)) {
         $includesRef->{"JS${type}.h"} = 1;
     } elsif ($codeGenerator->IsTypedArrayType($type)) {
         $includesRef->{"<wtf/${type}.h>"} = 1;
-    } elsif ($codeGenerator->GetSequenceType($type)) {
-    } elsif ($codeGenerator->GetArrayType($type)) {
     } else {
         # default, include the same named file
         $includesRef->{"${type}.h"} = 1;
@@ -288,19 +300,6 @@ sub AddClassForwardIfNeeded
         $headerIncludes{"<profiler/ProfileNode.h>"} = 1;
         AddTypedefForScriptProfileType($interfaceName);
     }
-}
-
-sub HashValueForClassAndName
-{
-    my $class = shift;
-    my $name = shift;
-
-    # SVG Filter enums live in WebCore namespace (platform/graphics/)
-    if ($class =~ /^SVGFE*/ or $class =~ /^SVGComponentTransferFunctionElement$/) {
-        return "WebCore::$name";
-    }
-
-    return "${class}::$name";
 }
 
 sub hashTableAccessor
@@ -2041,7 +2040,7 @@ sub GenerateImplementation
                        AddToImplIncludes("JS" . $constructorType . ".h", $attribute->signature->extendedAttributes->{"Conditional"});
                        push(@implContent, "    return JS" . $constructorType . "::getConstructor(exec, castedThis->globalObject());\n");
                     }
-                } elsif (!@{$attribute->getterExceptions}) {
+                } elsif (!$attribute->signature->extendedAttributes->{"GetterRaisesException"}) {
                     push(@implContent, "    UNUSED_PARAM(exec);\n") if !$attribute->signature->extendedAttributes->{"CallWith"};
                     push(@implContent, "    bool isNull = false;\n") if $isNullable;
 
@@ -2218,6 +2217,7 @@ sub GenerateImplementation
                         my $type = $attribute->signature->type;
                         my $putFunctionName = GetAttributeSetterName($interfaceName, $className, $attribute);
                         my $implSetterFunctionName = $codeGenerator->WK_ucfirst($name);
+                        my $setterRaisesException = $attribute->signature->extendedAttributes->{"SetterRaisesException"};
 
                         my $attributeConditionalString = $codeGenerator->GenerateConditionalString($attribute->signature);
                         push(@implContent, "#if ${attributeConditionalString}\n") if $attributeConditionalString;
@@ -2280,7 +2280,7 @@ sub GenerateImplementation
                                     push(@implContent, "    $className* castedThis = jsCast<$className*>(thisObject);\n");
                                     push(@implContent, "    $implType* impl = static_cast<$implType*>(castedThis->impl());\n");
                                 }
-                                push(@implContent, "    ExceptionCode ec = 0;\n") if @{$attribute->setterExceptions};
+                                push(@implContent, "    ExceptionCode ec = 0;\n") if $setterRaisesException;
 
                                 # If the "StrictTypeChecking" extended attribute is present, and the attribute's type is an
                                 # interface type, then if the incoming value does not implement that interface, a TypeError
@@ -2326,12 +2326,12 @@ sub GenerateImplementation
                                         push(@implContent, "    podImpl = nativeValue;\n");
                                     } else {
                                         push(@implContent, "    podImpl.set$implSetterFunctionName(nativeValue");
-                                        push(@implContent, ", ec") if @{$attribute->setterExceptions};
+                                        push(@implContent, ", ec") if $setterRaisesException;
                                         push(@implContent, ");\n");
-                                        push(@implContent, "    setDOMException(exec, ec);\n") if @{$attribute->setterExceptions};
+                                        push(@implContent, "    setDOMException(exec, ec);\n") if $setterRaisesException;
                                     }
                                     if ($svgPropertyType) {
-                                        if (@{$attribute->setterExceptions}) {
+                                        if ($setterRaisesException) {
                                             push(@implContent, "    if (!ec)\n");
                                             push(@implContent, "        impl->commitChange();\n");
                                         } else {
@@ -2354,9 +2354,9 @@ sub GenerateImplementation
 
                                     unshift(@arguments, GenerateCallWith($attribute->signature->extendedAttributes->{"CallWith"}, \@implContent, ""));
 
-                                    push(@arguments, "ec") if @{$attribute->setterExceptions};
+                                    push(@arguments, "ec") if $setterRaisesException;
                                     push(@implContent, "    ${functionName}(" . join(", ", @arguments) . ");\n");
-                                    push(@implContent, "    setDOMException(exec, ec);\n") if @{$attribute->setterExceptions};
+                                    push(@implContent, "    setDOMException(exec, ec);\n") if $setterRaisesException;
                                 }
                             }
 

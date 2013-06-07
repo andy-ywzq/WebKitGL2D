@@ -31,14 +31,12 @@
 #include "CollectionType.h"
 #include "Color.h"
 #include "ContainerNode.h"
-#include "DOMTimeStamp.h"
 #include "DocumentEventQueue.h"
 #include "DocumentTiming.h"
 #include "FocusDirection.h"
 #include "HitTestRequest.h"
 #include "IconURL.h"
 #include "InspectorCounters.h"
-#include "IntRect.h"
 #include "MutationObserver.h"
 #include "PageVisibilityState.h"
 #include "PlatformScreen.h"
@@ -51,7 +49,6 @@
 #include "UserActionElementSet.h"
 #include "ViewportArguments.h"
 #include <wtf/Deque.h>
-#include <wtf/FixedArray.h>
 #include <wtf/HashSet.h>
 #include <wtf/OwnPtr.h>
 #include <wtf/PassOwnPtr.h>
@@ -532,8 +529,8 @@ public:
     static void updateStyleForAllDocuments(); // FIXME: Try to reduce the # of calls to this function.
     CachedResourceLoader* cachedResourceLoader() { return m_cachedResourceLoader.get(); }
 
-    virtual void attach();
-    virtual void detach();
+    virtual void attach(const AttachContext& = AttachContext()) OVERRIDE;
+    virtual void detach(const AttachContext& = AttachContext()) OVERRIDE;
     void prepareForDestruction();
 
     // Override ScriptExecutionContext methods to do additional work

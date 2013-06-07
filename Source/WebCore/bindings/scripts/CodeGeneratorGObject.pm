@@ -45,6 +45,12 @@ my %baseTypeHash = ("Object" => 1, "Node" => 1, "NodeList" => 1, "NamedNodeMap" 
                     "NodeIterator" => 1, "TreeWalker" => 1, "AbstractView" => 1, "Blob" => 1, "DOMTokenList" => 1,
                     "HTMLCollection" => 1);
 
+# List of function parameters that are allowed to be NULL
+my $canBeNullParams = {
+    'webkit_dom_document_evaluate' => ['inResult', 'resolver'],
+    'webkit_dom_node_insert_before' => ['refChild']
+};
+
 # Default constructor
 sub new {
     my $object = shift;
@@ -446,6 +452,8 @@ sub GenerateProperty {
     my $camelPropName = $attribute->signature->name;
     my $setPropNameFunction = $codeGenerator->WK_ucfirst($camelPropName);
     my $getPropNameFunction = $codeGenerator->WK_lcfirst($camelPropName);
+    my $hasGetterException = $attribute->signature->extendedAttributes->{"GetterRaisesException"};
+    my $hasSetterException = $attribute->signature->extendedAttributes->{"SetterRaisesException"};
 
     my $propName = decamelize($camelPropName);
     my $propNameCaps = uc($propName);
@@ -497,14 +505,14 @@ sub GenerateProperty {
         $setterFunctionName = "coreSelf->$setterFunctionName";
     }
     push(@getterArguments, "isNull") if $attribute->signature->isNullable;
-    push(@getterArguments, "ec") if @{$attribute->getterExceptions};
-    push(@setterArguments, "ec") if @{$attribute->setterExceptions};
+    push(@getterArguments, "ec") if $hasGetterException;
+    push(@setterArguments, "ec") if $hasSetterException;
 
     if (grep {$_ eq $attribute} @writeableProperties) {
         push(@txtSetProps, "    case ${propEnum}: {\n");
         push(@txtSetProps, "#if ${parentConditionalString}\n") if $parentConditionalString;
         push(@txtSetProps, "#if ${conditionalString}\n") if $conditionalString;
-        push(@txtSetProps, "        WebCore::ExceptionCode ec = 0;\n") if @{$attribute->setterExceptions};
+        push(@txtSetProps, "        WebCore::ExceptionCode ec = 0;\n") if $hasSetterException;
         push(@txtSetProps, "        ${setterFunctionName}(" . join(", ", @setterArguments) . ");\n");
         push(@txtSetProps, "#else\n") if $conditionalString;
         push(@txtSetProps, @conditionalWarn) if scalar(@conditionalWarn);
@@ -519,7 +527,7 @@ sub GenerateProperty {
     push(@txtGetProps, "#if ${parentConditionalString}\n") if $parentConditionalString;
     push(@txtGetProps, "#if ${conditionalString}\n") if $conditionalString;
     push(@txtGetProps, "        bool isNull = false;\n") if $attribute->signature->isNullable;
-    push(@txtGetProps, "        WebCore::ExceptionCode ec = 0;\n") if @{$attribute->getterExceptions};
+    push(@txtGetProps, "        WebCore::ExceptionCode ec = 0;\n") if $hasGetterException;
 
     # FIXME: Should we return a default value when isNull == true?
 
@@ -845,7 +853,7 @@ EOF
 }
 
 sub GetGReturnMacro {
-    my ($paramName, $paramIDLType, $returnType) = @_;
+    my ($paramName, $paramIDLType, $returnType, $functionName) = @_;
 
     my $condition;
     if ($paramIDLType eq "GError") {
@@ -853,6 +861,9 @@ sub GetGReturnMacro {
     } elsif (IsGDOMClassType($paramIDLType)) {
         my $paramTypeCaps = uc(FixUpDecamelizedName(decamelize($paramIDLType)));
         $condition = "WEBKIT_DOM_IS_${paramTypeCaps}($paramName)";
+        if (ParamCanBeNull($functionName, $paramName)) {
+            $condition = "!$paramName || $condition";
+        }
     } else {
         $condition = "$paramName";
     }
@@ -866,6 +877,15 @@ sub GetGReturnMacro {
     }
 
     return $macro;
+}
+
+sub ParamCanBeNull {
+    my($functionName, $paramName) = @_;
+
+    if (defined($functionName)) {
+        return scalar(grep(/$paramName/, @{$canBeNullParams->{$functionName}}));
+    }
+    return 0;
 }
 
 sub GenerateFunction {
@@ -973,12 +993,8 @@ sub GenerateFunction {
         my $paramTypeIsPrimitive = $codeGenerator->IsPrimitiveType($paramIDLType);
         my $paramIsGDOMType = IsGDOMClassType($paramIDLType);
         if (!$paramTypeIsPrimitive) {
-            # FIXME: Temporary hack for generating a proper implementation
-            #        of the webkit_dom_document_evaluate function (Bug-ID: 42115)
-            if (!(($functionName eq "webkit_dom_document_evaluate") && ($paramIDLType eq "XPathResult"))) {
-                $gReturnMacro = GetGReturnMacro($paramName, $paramIDLType, $returnType);
-                push(@cBody, $gReturnMacro);
-            }
+            $gReturnMacro = GetGReturnMacro($paramName, $paramIDLType, $returnType, $functionName);
+            push(@cBody, $gReturnMacro);
         }
     }
 
@@ -1227,7 +1243,9 @@ sub GenerateFunctions {
         # "get_foo" which calls a DOM class method named foo().
         my $function = new domFunction();
         $function->signature($attribute->signature);
-        $function->raisesExceptions($attribute->getterExceptions);
+        if ($attribute->signature->extendedAttributes->{"GetterRaisesException"}) {
+            $function->raisesExceptions(["DOMException"]);
+        }
         $object->GenerateFunction($interfaceName, $function, "get_", $interface);
 
         # FIXME: We are not generating setters for 'Replaceable'
@@ -1253,7 +1271,9 @@ sub GenerateFunctions {
         my $arrayRef = $function->parameters;
         push(@$arrayRef, $param);
         
-        $function->raisesExceptions($attribute->setterExceptions);
+        if ($attribute->signature->extendedAttributes->{"SetterRaisesException"}) {
+            $function->raisesExceptions(["DOMException"]);
+        }
         
         $object->GenerateFunction($interfaceName, $function, "set_", $interface);
     }

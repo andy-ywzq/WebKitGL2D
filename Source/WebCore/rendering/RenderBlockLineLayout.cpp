@@ -47,7 +47,7 @@
 #include <wtf/Vector.h>
 #include <wtf/unicode/CharacterNames.h>
 
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
 #include "ExclusionShapeInsideInfo.h"
 #endif
 
@@ -76,12 +76,10 @@ static LayoutUnit logicalHeightForLine(const RenderBlock* block, bool isFirstLin
     return max<LayoutUnit>(replacedHeight, block->lineHeight(isFirstLine, block->isHorizontalWritingMode() ? HorizontalLine : VerticalLine, PositionOfInteriorLineBoxes));
 }
 
-#if ENABLE(CSS_EXCLUSIONS)
-ExclusionShapeInsideInfo* RenderBlock::layoutExclusionShapeInsideInfo(ExclusionShapeStatus exclusionShapeStatus) const
+#if ENABLE(CSS_SHAPES)
+ExclusionShapeInsideInfo* RenderBlock::layoutExclusionShapeInsideInfo() const
 {
     ExclusionShapeInsideInfo* shapeInsideInfo = view()->layoutState()->exclusionShapeInsideInfo();
-    if (shapeInsideInfo && shapeInsideInfo->needsRemoval() && exclusionShapeStatus == ShapePresent)
-        shapeInsideInfo = 0;
 
     if (!shapeInsideInfo && flowThreadContainingBlock() && allowsExclusionShapeInsideInfoSharing()) {
         // regionAtBlockOffset returns regions like an array first={0,N-1}, second={N,M-1}, ...
@@ -89,7 +87,6 @@ ExclusionShapeInsideInfo* RenderBlock::layoutExclusionShapeInsideInfo(ExclusionS
         RenderRegion* region = regionAtBlockOffset(offset);
         if (region)
             shapeInsideInfo = region->exclusionShapeInsideInfo();
-        return shapeInsideInfo && shapeInsideInfo->needsRemoval() && exclusionShapeStatus == ShapePresent ? 0 : shapeInsideInfo;
     }
 
     return shapeInsideInfo;
@@ -109,14 +106,14 @@ public:
         , m_left(0)
         , m_right(0)
         , m_availableWidth(0)
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
         , m_segment(0)
 #endif
         , m_isFirstLine(isFirstLine)
         , m_shouldIndentText(shouldIndentText)
     {
         ASSERT(block);
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
         ExclusionShapeInsideInfo* exclusionShapeInsideInfo = m_block->layoutExclusionShapeInsideInfo();
         if (exclusionShapeInsideInfo)
             m_segment = exclusionShapeInsideInfo->currentSegment();
@@ -163,7 +160,7 @@ private:
     float m_left;
     float m_right;
     float m_availableWidth;
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
     const LineSegment* m_segment;
 #endif
     bool m_isFirstLine;
@@ -177,7 +174,7 @@ inline void LineWidth::updateAvailableWidth(LayoutUnit replacedHeight)
     m_left = m_block->logicalLeftOffsetForLine(height, shouldIndentText(), logicalHeight);
     m_right = m_block->logicalRightOffsetForLine(height, shouldIndentText(), logicalHeight);
 
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
     if (m_segment) {
         m_left = max<float>(m_segment->logicalLeft, m_left);
         m_right = min<float>(m_segment->logicalRight, m_right);
@@ -193,7 +190,7 @@ inline void LineWidth::shrinkAvailableWidthForNewFloatIfNeeded(RenderBlock::Floa
     if (height < m_block->logicalTopForFloat(newFloat) || height >= m_block->logicalBottomForFloat(newFloat))
         return;
 
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
     // When floats with shape outside are stacked, the floats are positioned based on the bounding box of the shape,
     // not the shape's contour. Since we computed the width based on the shape contour when we added the float,
     // when we add a subsequent float on the same line, we need to undo the shape delta in order to position
@@ -220,7 +217,7 @@ inline void LineWidth::shrinkAvailableWidthForNewFloatIfNeeded(RenderBlock::Floa
 
     if (newFloat->type() == RenderBlock::FloatingObject::FloatLeft) {
         float newLeft = m_block->logicalRightForFloat(newFloat);
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
         if (lastShapeOutsideInfo)
             newLeft -= lastShapeOutsideInfo->rightSegmentShapeBoundingBoxDelta();
         if (shapeOutsideInfo)
@@ -232,7 +229,7 @@ inline void LineWidth::shrinkAvailableWidthForNewFloatIfNeeded(RenderBlock::Floa
         m_left = max<float>(m_left, newLeft);
     } else {
         float newRight = m_block->logicalLeftForFloat(newFloat);
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
         if (lastShapeOutsideInfo)
             newRight -= lastShapeOutsideInfo->leftSegmentShapeBoundingBoxDelta();
         if (shapeOutsideInfo)
@@ -683,7 +680,7 @@ RootInlineBox* RenderBlock::constructLine(BidiRunList<BidiRun>& bidiRuns, const 
         // then we need to construct inline boxes as necessary to properly enclose the
         // run's inline box. Segments can only be siblings at the root level, as
         // they are positioned separately.
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
         bool runStartsSegment = r->m_startsSegment;
 #else
         bool runStartsSegment = false;
@@ -809,10 +806,10 @@ void RenderBlock::setMarginsForRubyRun(BidiRun* run, RenderRubyRun* renderer, Re
     setMarginEndForChild(renderer, -endOverhang);
 }
 
-static inline float measureHyphenWidth(RenderText* renderer, const Font& font)
+static inline float measureHyphenWidth(RenderText* renderer, const Font& font, HashSet<const SimpleFontData*>* fallbackFonts = 0)
 {
     RenderStyle* style = renderer->style();
-    return font.width(RenderBlock::constructTextRun(renderer, font, style->hyphenString().string(), style));
+    return font.width(RenderBlock::constructTextRun(renderer, font, style->hyphenString().string(), style), fallbackFonts);
 }
 
 class WordMeasurement {
@@ -833,7 +830,7 @@ public:
 };
 
 static inline void setLogicalWidthForTextRun(RootInlineBox* lineBox, BidiRun* run, RenderText* renderer, float xPos, const LineInfo& lineInfo,
-                                             GlyphOverflowAndFallbackFontsMap& textBoxDataMap, VerticalPositionCache& verticalPositionCache, WordMeasurements& wordMeasurements)
+    GlyphOverflowAndFallbackFontsMap& textBoxDataMap, VerticalPositionCache& verticalPositionCache, WordMeasurements& wordMeasurements)
 {
     HashSet<const SimpleFontData*> fallbackFonts;
     GlyphOverflow glyphOverflow;
@@ -856,7 +853,7 @@ static inline void setLogicalWidthForTextRun(RootInlineBox* lineBox, BidiRun* ru
     LayoutUnit hyphenWidth = 0;
     if (toInlineTextBox(run->m_box)->hasHyphen()) {
         const Font& font = renderer->style(lineInfo.isFirstLine())->font();
-        hyphenWidth = measureHyphenWidth(renderer, font);
+        hyphenWidth = measureHyphenWidth(renderer, font, &fallbackFonts);
     }
     float measuredWidth = 0;
 
@@ -869,8 +866,8 @@ static inline void setLogicalWidthForTextRun(RootInlineBox* lineBox, BidiRun* ru
     if (!lineBox->fitsToGlyphs() && canUseSimpleFontCodePath) {
         int lastEndOffset = run->m_start;
         for (size_t i = 0, size = wordMeasurements.size(); i < size && lastEndOffset < run->m_stop; ++i) {
-            const WordMeasurement& wordMeasurement = wordMeasurements[i];
-            if (wordMeasurement.width <=0 || wordMeasurement.startOffset == wordMeasurement.endOffset)
+            WordMeasurement& wordMeasurement = wordMeasurements[i];
+            if (wordMeasurement.width <= 0 || wordMeasurement.startOffset == wordMeasurement.endOffset)
                 continue;
             if (wordMeasurement.renderer != renderer || wordMeasurement.startOffset != lastEndOffset || wordMeasurement.endOffset > run->m_stop)
                 continue;
@@ -878,7 +875,9 @@ static inline void setLogicalWidthForTextRun(RootInlineBox* lineBox, BidiRun* ru
             lastEndOffset = wordMeasurement.endOffset;
             if (kerningIsEnabled && lastEndOffset == run->m_stop) {
                 int wordLength = lastEndOffset - wordMeasurement.startOffset;
-                measuredWidth += renderer->width(wordMeasurement.startOffset, wordLength, xPos + measuredWidth, lineInfo.isFirstLine());
+                GlyphOverflow overflow;
+                measuredWidth += renderer->width(wordMeasurement.startOffset, wordLength, xPos + measuredWidth, lineInfo.isFirstLine(),
+                    &wordMeasurement.fallbackFonts, &overflow);
                 UChar c = renderer->characterAt(wordMeasurement.startOffset);
                 if (i > 0 && wordLength == 1 && (c == ' ' || c == '\t'))
                     measuredWidth += renderer->style()->wordSpacing();
@@ -923,7 +922,7 @@ static inline void computeExpansionForJustifiedText(BidiRun* firstRun, BidiRun* 
 
     size_t i = 0;
     for (BidiRun* r = firstRun; r; r = r->next()) {
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
         // This method is called once per segment, do not move past the current segment.
         if (r->m_startsSegment)
             break;
@@ -1037,7 +1036,7 @@ void RenderBlock::computeInlineDirectionPositionsForLine(RootInlineBox* lineBox,
     float availableLogicalWidth;
     updateLogicalInlinePositions(this, lineLogicalLeft, lineLogicalRight, availableLogicalWidth, isFirstLine, shouldIndentText, 0);
     bool needsWordSpacing;
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
     ExclusionShapeInsideInfo* exclusionShapeInsideInfo = layoutExclusionShapeInsideInfo();
     if (exclusionShapeInsideInfo && exclusionShapeInsideInfo->hasSegments()) {
         BidiRun* segmentStart = firstRun;
@@ -1094,7 +1093,7 @@ BidiRun* RenderBlock::computeInlineDirectionPositionsForSegment(RootInlineBox* l
 
     BidiRun* r = firstRun;
     for (; r; r = r->next()) {
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
         // Once we have reached the start of the next segment, we have finished
         // computing the positions for this segment's contents.
         if (r->m_startsSegment)
@@ -1358,7 +1357,7 @@ static inline void constructBidiRunsForSegment(InlineBidiResolver& topResolver, 
 
 static inline void constructBidiRunsForLine(const RenderBlock* block, InlineBidiResolver& topResolver, BidiRunList<BidiRun>& bidiRuns, const InlineIterator& endOfLine, VisualDirectionOverride override, bool previousLineBrokeCleanly)
 {
-#if !ENABLE(CSS_EXCLUSIONS)
+#if !ENABLE(CSS_SHAPES)
     UNUSED_PARAM(block);
     constructBidiRunsForSegment(topResolver, bidiRuns, endOfLine, override, previousLineBrokeCleanly);
 #else
@@ -1624,7 +1623,7 @@ inline const InlineIterator& RenderBlock::restartLayoutRunsAndFloatsInRange(Layo
     return oldEnd;
 }
 
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
 static inline float firstPositiveWidth(const WordMeasurements& wordMeasurements)
 {
     for (size_t i = 0; i < wordMeasurements.size(); ++i) {
@@ -1647,7 +1646,7 @@ static inline LayoutUnit adjustLogicalLineTop(ExclusionShapeInsideInfo* exclusio
     return exclusionShapeInsideInfo->shapeLogicalBottom();
 }
 
-void RenderBlock::updateLineBoundariesForExclusions(ExclusionShapeInsideInfo* exclusionShapeInsideInfo, LayoutUnit& absoluteLogicalTop, LineLayoutState& layoutState, bool& lineOverflowsFromShapeInside)
+void RenderBlock::updateShapeAndSegmentsForCurrentLine(ExclusionShapeInsideInfo* exclusionShapeInsideInfo, LayoutUnit& absoluteLogicalTop, LineLayoutState& layoutState, bool& lineOverflowsFromShapeInside)
 {
     LayoutUnit logicalHeight = this->logicalHeight();
     RenderRegion* currentRegion = regionAtBlockOffset(logicalHeight);
@@ -1730,7 +1729,7 @@ void RenderBlock::layoutRunsAndFloatsInRange(LineLayoutState& layoutState, Inlin
 
     LineBreaker lineBreaker(this);
 
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
     LayoutUnit absoluteLogicalTop;
     ExclusionShapeInsideInfo* exclusionShapeInsideInfo = layoutExclusionShapeInsideInfo();
     if (exclusionShapeInsideInfo) {
@@ -1771,8 +1770,8 @@ void RenderBlock::layoutRunsAndFloatsInRange(LineLayoutState& layoutState, Inlin
         bool isNewUBAParagraph = layoutState.lineInfo().previousLineBrokeCleanly();
         FloatingObject* lastFloatFromPreviousLine = (containsFloats()) ? m_floatingObjects->set().last() : 0;
 
-#if ENABLE(CSS_EXCLUSIONS)
-        updateLineBoundariesForExclusions(exclusionShapeInsideInfo, absoluteLogicalTop, layoutState, lineOverflowsFromShapeInside);
+#if ENABLE(CSS_SHAPES)
+        updateShapeAndSegmentsForCurrentLine(exclusionShapeInsideInfo, absoluteLogicalTop, layoutState, lineOverflowsFromShapeInside);
 #endif
         WordMeasurements wordMeasurements;
         end = lineBreaker.nextLineBreak(resolver, layoutState.lineInfo(), renderTextInfo, lastFloatFromPreviousLine, consecutiveHyphenatedLines, wordMeasurements);
@@ -1787,7 +1786,7 @@ void RenderBlock::layoutRunsAndFloatsInRange(LineLayoutState& layoutState, Inlin
             break;
         }
 
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
         if (adjustLogicalLineTopAndLogicalHeightIfNeeded(exclusionShapeInsideInfo, absoluteLogicalTop, layoutState, resolver, lastFloatFromPreviousLine, end, wordMeasurements))
             continue;
 #endif
@@ -2563,14 +2562,14 @@ static bool shouldSkipWhitespaceAfterStartObject(RenderBlock* block, RenderObjec
     return false;
 }
 
-static ALWAYS_INLINE float textWidth(RenderText* text, unsigned from, unsigned len, const Font& font, float xPos, bool isFixedPitch, bool collapseWhiteSpace, HashSet<const SimpleFontData*>* fallbackFonts = 0, TextLayout* layout = 0)
+static ALWAYS_INLINE float textWidth(RenderText* text, unsigned from, unsigned len, const Font& font, float xPos, bool isFixedPitch, bool collapseWhiteSpace, HashSet<const SimpleFontData*>& fallbackFonts, TextLayout* layout = 0)
 {
     GlyphOverflow glyphOverflow;
     if (isFixedPitch || (!from && len == text->textLength()) || text->style()->hasTextCombine())
-        return text->width(from, len, font, xPos, fallbackFonts, &glyphOverflow);
+        return text->width(from, len, font, xPos, &fallbackFonts, &glyphOverflow);
 
     if (layout)
-        return Font::width(*layout, from, len, fallbackFonts);
+        return Font::width(*layout, from, len, &fallbackFonts);
 
     TextRun run = RenderBlock::constructTextRun(text, font, text, from, len, text->style());
     run.setCharactersLength(text->textLength() - from);
@@ -2579,7 +2578,7 @@ static ALWAYS_INLINE float textWidth(RenderText* text, unsigned from, unsigned l
     run.setCharacterScanForCodePath(!text->canUseSimpleFontCodePath());
     run.setTabSize(!collapseWhiteSpace, text->style()->tabSize());
     run.setXPos(xPos);
-    return font.width(run, fallbackFonts, &glyphOverflow);
+    return font.width(run, &fallbackFonts, &glyphOverflow);
 }
 
 static void tryHyphenating(RenderText* text, const Font& font, const AtomicString& localeIdentifier, unsigned consecutiveHyphenatedLines, int consecutiveHyphenatedLinesLimit, int minimumPrefixLimit, int minimumSuffixLimit, unsigned lastSpace, unsigned pos, float xPos, int availableWidth, bool isFixedPitch, bool collapseWhiteSpace, int lastSpaceWordSpacing, InlineIterator& lineBreak, int nextBreakable, bool& hyphenated)
@@ -2638,7 +2637,8 @@ static void tryHyphenating(RenderText* text, const Font& font, const AtomicStrin
     ASSERT(pos - lastSpace - prefixLength >= minimumSuffixLength);
 
 #if !ASSERT_DISABLED
-    float prefixWidth = hyphenWidth + textWidth(text, lastSpace, prefixLength, font, xPos, isFixedPitch, collapseWhiteSpace) + lastSpaceWordSpacing;
+    HashSet<const SimpleFontData*> fallbackFonts;
+    float prefixWidth = hyphenWidth + textWidth(text, lastSpace, prefixLength, font, xPos, isFixedPitch, collapseWhiteSpace, fallbackFonts) + lastSpaceWordSpacing;
     ASSERT(xPos + prefixWidth <= availableWidth);
 #else
     UNUSED_PARAM(isFixedPitch);
@@ -2738,7 +2738,7 @@ void RenderBlock::LineBreaker::reset()
 
 InlineIterator RenderBlock::LineBreaker::nextLineBreak(InlineBidiResolver& resolver, LineInfo& lineInfo, RenderTextInfo& renderTextInfo, FloatingObject* lastFloatFromPreviousLine, unsigned consecutiveHyphenatedLines, WordMeasurements& wordMeasurements)
 {
-#if !ENABLE(CSS_EXCLUSIONS)
+#if !ENABLE(CSS_SHAPES)
     return nextSegmentBreak(resolver, lineInfo, renderTextInfo, lastFloatFromPreviousLine, consecutiveHyphenatedLines, wordMeasurements);
 #else
     ExclusionShapeInsideInfo* exclusionShapeInsideInfo = m_block->layoutExclusionShapeInsideInfo();
@@ -3081,7 +3081,8 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
 
             // Non-zero only when kerning is enabled and TextLayout isn't used, in which case we measure
             // words with their trailing space, then subtract its width.
-            float wordTrailingSpaceWidth = (f.typesettingFeatures() & Kerning) && !textLayout ? f.width(constructTextRun(t, f, &space, 1, style)) + wordSpacing : 0;
+            HashSet<const SimpleFontData*> fallbackFonts;
+            float wordTrailingSpaceWidth = (f.typesettingFeatures() & Kerning) && !textLayout ? f.width(constructTextRun(t, f, &space, 1, style), &fallbackFonts) + wordSpacing : 0;
 
             UChar lastCharacter = renderTextInfo.m_lineBreakIterator.lastCharacter();
             UChar secondToLastCharacter = renderTextInfo.m_lineBreakIterator.secondToLastCharacter();
@@ -3095,7 +3096,7 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
                     lineInfo.setEmpty(false, m_block, &width);
 
                 if (c == softHyphen && autoWrap && !hyphenWidth && style->hyphens() != HyphensNone) {
-                    hyphenWidth = measureHyphenWidth(t, f);
+                    hyphenWidth = measureHyphenWidth(t, f, &fallbackFonts);
                     width.addUncommittedWidth(hyphenWidth);
                 }
 
@@ -3106,7 +3107,7 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
                 if ((breakAll || breakWords) && !midWordBreak) {
                     wrapW += charWidth;
                     bool midWordBreakIsBeforeSurrogatePair = U16_IS_LEAD(c) && current.m_pos + 1 < t->textLength() && U16_IS_TRAIL(t->characters()[current.m_pos + 1]);
-                    charWidth = textWidth(t, current.m_pos, midWordBreakIsBeforeSurrogatePair ? 2 : 1, f, width.committedWidth() + wrapW, isFixedPitch, collapseWhiteSpace, 0, textLayout);
+                    charWidth = textWidth(t, current.m_pos, midWordBreakIsBeforeSurrogatePair ? 2 : 1, f, width.committedWidth() + wrapW, isFixedPitch, collapseWhiteSpace, fallbackFonts, textLayout);
                     midWordBreak = width.committedWidth() + wrapW + charWidth > width.availableWidth();
                 }
 
@@ -3140,9 +3141,13 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
                     
                     float additionalTempWidth;
                     if (wordTrailingSpaceWidth && c == ' ')
-                        additionalTempWidth = textWidth(t, lastSpace, current.m_pos + 1 - lastSpace, f, width.currentWidth(), isFixedPitch, collapseWhiteSpace, &wordMeasurement.fallbackFonts, textLayout) - wordTrailingSpaceWidth;
+                        additionalTempWidth = textWidth(t, lastSpace, current.m_pos + 1 - lastSpace, f, width.currentWidth(), isFixedPitch, collapseWhiteSpace, wordMeasurement.fallbackFonts, textLayout) - wordTrailingSpaceWidth;
                     else
-                        additionalTempWidth = textWidth(t, lastSpace, current.m_pos - lastSpace, f, width.currentWidth(), isFixedPitch, collapseWhiteSpace, &wordMeasurement.fallbackFonts, textLayout);
+                        additionalTempWidth = textWidth(t, lastSpace, current.m_pos - lastSpace, f, width.currentWidth(), isFixedPitch, collapseWhiteSpace, wordMeasurement.fallbackFonts, textLayout);
+
+                    if (wordMeasurement.fallbackFonts.isEmpty() && !fallbackFonts.isEmpty())
+                        wordMeasurement.fallbackFonts.swap(fallbackFonts);
+                    fallbackFonts.clear();
 
                     wordMeasurement.width = additionalTempWidth + wordSpacingForWordMeasurement;
                     additionalTempWidth += lastSpaceWordSpacing;
@@ -3166,7 +3171,7 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
                         // as candidate width for this line.
                         bool lineWasTooWide = false;
                         if (width.fitsOnLine() && currentCharacterIsWS && currentStyle->breakOnlyAfterWhiteSpace() && !midWordBreak) {
-                            float charWidth = textWidth(t, current.m_pos, 1, f, width.currentWidth(), isFixedPitch, collapseWhiteSpace, &wordMeasurement.fallbackFonts, textLayout) + (applyWordSpacing ? wordSpacing : 0);
+                            float charWidth = textWidth(t, current.m_pos, 1, f, width.currentWidth(), isFixedPitch, collapseWhiteSpace, wordMeasurement.fallbackFonts, textLayout) + (applyWordSpacing ? wordSpacing : 0);
                             // Check if line is too big even without the extra space
                             // at the end of the line. If it is not, do nothing.
                             // If the line needs the extra whitespace to be too long,
@@ -3304,7 +3309,7 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
             wordMeasurement.renderer = t;
 
             // IMPORTANT: current.m_pos is > length here!
-            float additionalTempWidth = ignoringSpaces ? 0 : textWidth(t, lastSpace, current.m_pos - lastSpace, f, width.currentWidth(), isFixedPitch, collapseWhiteSpace, &wordMeasurement.fallbackFonts, textLayout);
+            float additionalTempWidth = ignoringSpaces ? 0 : textWidth(t, lastSpace, current.m_pos - lastSpace, f, width.currentWidth(), isFixedPitch, collapseWhiteSpace, wordMeasurement.fallbackFonts, textLayout);
             wordMeasurement.startOffset = lastSpace;
             wordMeasurement.endOffset = current.m_pos;
             wordMeasurement.width = ignoringSpaces ? 0 : additionalTempWidth + wordSpacingForWordMeasurement;
@@ -3312,6 +3317,10 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
 
             float inlineLogicalTempWidth = inlineLogicalWidth(current.m_obj, !appliedStartWidth, includeEndWidth);
             width.addUncommittedWidth(additionalTempWidth + inlineLogicalTempWidth);
+
+            if (wordMeasurement.fallbackFonts.isEmpty() && !fallbackFonts.isEmpty())
+                wordMeasurement.fallbackFonts.swap(fallbackFonts);
+            fallbackFonts.clear();
 
             if (collapseWhiteSpace && currentCharacterIsSpace && additionalTempWidth)
                 width.setTrailingWhitespaceWidth(additionalTempWidth + inlineLogicalTempWidth);
@@ -3400,7 +3409,7 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
         lBreak.clear();
 
  end:
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
     ExclusionShapeInsideInfo* shapeInfo = m_block->layoutExclusionShapeInsideInfo();
     bool segmentAllowsOverflow = !shapeInfo || !shapeInfo->hasSegments();
 #else

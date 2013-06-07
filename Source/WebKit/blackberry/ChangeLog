@@ -1,3 +1,79 @@
+2013-06-06  Genevieve Mak  <gmak@rim.com>
+
+        [BlackBerry] Crash in InRegionScrollerPrivate::clearDocumentData
+        https://bugs.webkit.org/show_bug.cgi?id=117317
+
+        Reviewed by Rob Buis.
+
+        PR #348994
+        Need to check the scrollableArea instead of asserting because in this case for the
+        selection subframe it is allowed to be null.
+
+        * Api/InRegionScroller.cpp:
+        (BlackBerry::WebKit::InRegionScrollerPrivate::clearDocumentData):
+
+2013-06-05  Bear Travis  <betravis@adobe.com>
+
+        [CSS Exclusions][CSS Shapes] Split CSS Exclusions & Shapes compile & runtime flags
+        https://bugs.webkit.org/show_bug.cgi?id=117172
+
+        Reviewed by Alexandru Chiculita.
+
+        Adding the CSS_SHAPES compile flag.
+
+        * WebCoreSupport/AboutDataEnableFeatures.in:
+
+2013-06-05  Genevieve Mak  <gmak@rim.com>
+
+        [BlackBerry] Deleting the pendingSelectionCandidate on the wrong thread causes an assert.
+        https://bugs.webkit.org/show_bug.cgi?id=117276
+
+        Reviewed by Rob Buis.
+
+        Reviewed Internally by Nima Ghanavatian.
+        PR #342399
+        Store and delete the selectionScrollView in webkit which is what we already do for
+        scrolling subframes.
+
+        * Api/InRegionScroller.cpp:
+        (BlackBerry::WebKit::InRegionScrollerPrivate::InRegionScrollerPrivate):
+        (BlackBerry::WebKit::InRegionScrollerPrivate::resetSelectionScrollView):
+        (WebKit):
+        (BlackBerry::WebKit::InRegionScrollerPrivate::clearDocumentData):
+        (BlackBerry::WebKit::InRegionScrollerPrivate::calculateInRegionScrollableAreasForPoint):
+        (BlackBerry::WebKit::InRegionScrollerPrivate::updateSelectionScrollView):
+        (BlackBerry::WebKit::InRegionScrollerPrivate::firstScrollableInRegionForNode):
+        * Api/InRegionScroller_p.h:
+        (InRegionScrollerPrivate):
+
+2013-06-05  Tiancheng Jiang  <tijiang@rim.com>
+
+        [BlackBerry] Make image clickable when it has anchor as parent node.
+        https://bugs.webkit.org/show_bug.cgi?id=117271
+
+        Reviewed by Rob Buis.
+
+        BlackBerry PR 345995
+        Internally Reviewed by Genevieve Mak.
+        * WebKitSupport/FatFingers.cpp:
+        (BlackBerry::WebKit::FatFingers::isElementClickable):
+
+2013-06-05  Mike Fenton  <mifenton@rim.com>
+
+        [BlackBerry] Selection handles are inverted on directional selections
+        https://bugs.webkit.org/show_bug.cgi?id=117269
+
+        Reviewed by Rob Buis.
+
+        PR 336178
+
+        Don't invert the handles leave them in the visual order.
+
+        Internally Reviewed by Nima Ghanavatian.
+
+        * WebKitSupport/SelectionHandler.cpp:
+        (BlackBerry::WebKit::SelectionHandler::selectionPositionChanged):
+
 2013-06-03  Andrew Lo  <anlo@rim.com>
 
         [BlackBerry] Expose show debug borders setting through BlackBerry::WebKit::WebPage

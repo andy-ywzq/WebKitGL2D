@@ -375,7 +375,7 @@ WebPage::WebPage(uint64_t pageID, const WebPageCreationParameters& parameters)
     if (!parameters.isInWindow)
         m_page->setIsInWindow(false);
     else
-        WebProcess::shared().pageDidEnterWindow(this);
+        WebProcess::shared().pageDidEnterWindow(m_pageID);
 
     setIsInWindow(parameters.isInWindow);
 
@@ -2098,7 +2098,7 @@ void WebPage::setIsInWindow(bool isInWindow)
         m_page->willMoveOffscreen();
         
         if (pageWasInWindow)
-            WebProcess::shared().pageWillLeaveWindow(this);
+            WebProcess::shared().pageWillLeaveWindow(m_pageID);
     } else {
         // Defer the call to Page::setCanStartMedia() since it ends up sending a synchronous message to the UI process
         // in order to get plug-in connections, and the UI process will be waiting for the Web process to update the backing
@@ -2109,7 +2109,7 @@ void WebPage::setIsInWindow(bool isInWindow)
         m_page->didMoveOnscreen();
         
         if (!pageWasInWindow)
-            WebProcess::shared().pageDidEnterWindow(this);
+            WebProcess::shared().pageDidEnterWindow(m_pageID);
     }
 
     m_page->setIsInWindow(isInWindow);

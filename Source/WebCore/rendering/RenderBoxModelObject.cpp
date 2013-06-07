@@ -41,7 +41,6 @@
 #include "ScrollingConstraints.h"
 #include "Settings.h"
 #include "TransformState.h"
-#include <wtf/CurrentTime.h>
 
 #if USE(ACCELERATED_COMPOSITING)
 #include "RenderLayerBacking.h"
@@ -625,7 +624,7 @@ LayoutSize RenderBoxModelObject::paintOffset() const
 {
     LayoutSize offset = offsetForInFlowPosition();
 
-#if ENABLE(CSS_EXCLUSIONS)
+#if ENABLE(CSS_SHAPES)
     if (isBox() && isFloating())
         if (ExclusionShapeOutsideInfo* shapeOutside = toRenderBox(this)->exclusionShapeOutsideInfo())
             offset -= shapeOutside->shapeLogicalOffset();
