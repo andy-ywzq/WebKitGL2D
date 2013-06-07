@@ -87,7 +87,7 @@ void FFTFrame::doInverseFFT(float* data)
 
     // Scale so that a forward then inverse FFT yields exactly the original data.
     const float scale = 1.0 / (2 * m_FFTSize);
-    for (int i = 0; i < m_FFTSize; ++i)
+    for (unsigned i = 0; i < m_FFTSize; ++i)
         data[i] = scale * data[i];
 }
 
@@ -106,7 +106,7 @@ void FFTFrame::scalePlanarData(float scale)
 
     const unsigned framesToProcess = m_fftFrame->frequencyDomainSampleCount();
 
-    for (int i = 0; i < framesToProcess; ++i) {
+    for (unsigned i = 0; i < framesToProcess; ++i) {
         realP[i] *= scale;
         imagP[i] *= scale;
     }
