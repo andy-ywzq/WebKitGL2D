@@ -33,9 +33,9 @@ class WebFFTFrame {
 public:
     virtual ~WebFFTFrame() { }
 
-    virtual void doFFT(const float* data) { }
-    virtual void doInverseFFT(float* data) { }
-    virtual void multiply(const WebFFTFrame& frame) { }
+    virtual void doFFT(const float*) { }
+    virtual void doInverseFFT(float*) { }
+    virtual void multiply(const WebFFTFrame&) { }
 
     virtual unsigned frequencyDomainSampleCount() const { return 0; }
     // After multiplication and transform operations, the data is scaled
