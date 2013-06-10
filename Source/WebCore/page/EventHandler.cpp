@@ -794,7 +794,6 @@ bool EventHandler::eventMayStartDrag(const PlatformMouseEvent& event) const
     return result.innerElement() && page->dragController()->draggableElement(m_frame, result.innerElement(), result.roundedPointInInnerNodeFrame(), state);
 }
 
-#if ENABLE(DRAG_SUPPORT)
 void EventHandler::updateSelectionForMouseDrag()
 {
     FrameView* view = m_frame->view();
@@ -809,7 +808,6 @@ void EventHandler::updateSelectionForMouseDrag()
     renderer->hitTest(request, result);
     updateSelectionForMouseDrag(result);
 }
-#endif
 
 static VisiblePosition selectionExtentRespectingEditingBoundary(const VisibleSelection& selection, const LayoutPoint& localPoint, Node* targetNode)
 {
