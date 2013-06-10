@@ -1,3 +1,59 @@
+2013-06-10  Iago Toral Quiroga  <itoral@igalia.com>
+
+        Use Cairo implementation of the WidgetBackingStore instead of X11 when running on Wayland
+        https://bugs.webkit.org/show_bug.cgi?id=116717
+
+        Reviewed by Martin Robinson.
+
+        Decide which implementation of WidgetBackingStore to use (X11 or Cairo)
+        depending on whether we are running on X11 or not. Select Cairo
+        implementation when not running in X11.
+
+        * UIProcess/cairo/BackingStoreCairo.cpp:
+        (WebKit):
+        (WebKit::createBackingStoreForGTK):
+        (WebKit::BackingStore::incorporateUpdate):
+
+2013-06-09  Jae Hyun Park  <jae.park@company100.net>
+
+        [CoordinatedGraphics] Typo in argument decoder for CoordinatedGraphicsState
+        https://bugs.webkit.org/show_bug.cgi?id=117384
+
+        Reviewed by Noam Rosenthal.
+
+        For CSS Shaders, it must decode state.customFiltersToRemove instead of
+        state.updateAtlasesToRemove.
+
+        * Shared/CoordinatedGraphics/CoordinatedGraphicsArgumentCoders.cpp:
+        (CoreIPC::::decode):
+
+2013-06-08  Jae Hyun Park  <jae.park@company100.net>
+
+        [Coordinated Graphics] Pass the ownership of GraphicsSurface explicitly
+        https://bugs.webkit.org/show_bug.cgi?id=117379
+
+        Reviewed by Noam Rosenthal.
+
+        When creating WebCoordinatedSurface with GraphicsSurface, it is clearer
+        to pass the ownership of the created GraphicsSurface explicitly.
+
+        * Shared/CoordinatedGraphics/WebCoordinatedSurface.cpp:
+        (WebKit::WebCoordinatedSurface::create):
+
+2013-06-07  Anders Carlsson  <andersca@apple.com>
+
+        Coalesce multiple calls to WebPageProxy::windowAndViewFramesChanged
+        https://bugs.webkit.org/show_bug.cgi?id=117364
+        <rdar://problem/14042099>
+
+        Reviewed by Geoffrey Garen.
+
+        -[WKView _updateWindowAndViewFrames] can be called many times per run loop iteration so coalesce calls
+        to WebPageProxy::windowAndViewFrames using dispatch_async.
+
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView _updateWindowAndViewFrames]):
+
 2013-06-07  Thomas Deniau  <deniau@apple.com>
 
         Reproducible crash with triple-finger-tap "define word" gesture on a Netflix video

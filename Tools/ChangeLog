@@ -1,3 +1,30 @@
+2013-06-09  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed test correction:  Prevent DumpRenderTree crashes
+        * DumpRenderTree/win/AccessibilityUIElementWin.cpp:
+        (AccessibilityUIElement::role): Prevent crashes when m_element is null. This
+        happends in some of the 'accessibility' test cases.
+
+2013-06-08  peavo@outlook.com  <peavo@outlook.com>
+
+        [WinCairo] TestWebKitAPI fails to link.
+        https://bugs.webkit.org/show_bug.cgi?id=117345
+
+        Reviewed by Brent Fulgham.
+
+        Need to link with WTF.lib.
+
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPICommonWinCairo.props: Link with WTF.lib.
+
+2013-06-07  Roger Fong  <roger_fong@apple.com>
+
+        Get rid of not very helpful test that fails only on some machines because xcrun is not installed.
+
+        Rubberstamped by Ryousuke Niwa.
+
+        * Scripts/webkitpy/layout_tests/run_webkit_tests_integrationtest.py:
+        (RunTest.test_build_check):
+
 2013-06-07  Hugo Parente Lima  <hugo.lima@openbossa.org>
 
         [Qt] Remove Qt bits from Scripts/webkitperl/FeatureList.pm
