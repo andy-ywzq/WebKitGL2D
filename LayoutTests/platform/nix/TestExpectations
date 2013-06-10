@@ -3309,21 +3309,6 @@ html5lib/generated/run-template-data.html
 inspector-protocol/heap-profiler/heap-snapshot-with-detached-dom-tree.html
 inspector-protocol/heap-profiler/heap-snapshot-with-event-listener.html
 
-# Reference tests
-fast/block/float/floats-wrap-inside-inline-007.html [ ImageOnlyFailure ]
-fast/regions/positioned-objects-block-static-spanning-regions-rtl.html [ ImageOnlyFailure ]
-fast/regions/positioned-objects-block-static-spanning-regions.html [ ImageOnlyFailure ]
-fast/regions/positioned-objects-inline-static-spanning-regions.html [ ImageOnlyFailure ]
-fast/regions/region-overflow-auto-overflow-hidden.html [ ImageOnlyFailure ]
-fast/regions/region-overflow-auto-overflow-visible.html [ ImageOnlyFailure ]
-fast/regions/region-overflow-break.html [ ImageOnlyFailure ]
-fast/regions/region-style-color.html [ ImageOnlyFailure ]
-fast/regions/region-style-in-columns.html [ ImageOnlyFailure ]
-fast/regions/region-style-rule-specificity.html [ ImageOnlyFailure ]
-fast/regions/region-width-change-relayout-1.html [ ImageOnlyFailure ]
-fast/regions/region-width-change-relayout-2.html [ ImageOnlyFailure ]
-fast/regions/region-width-change-relayout-3.html [ ImageOnlyFailure ]
-
 #############################################################
 # After pixel tests support.
 #############################################################
@@ -3388,7 +3373,6 @@ compositing/geometry/layer-due-to-layer-children-switch.html [ Failure ]
 # Text diff: Graphics Layers hidden/appearing.
 compositing/geometry/limit-layer-bounds-fixed.html [ Failure ]
 compositing/layer-creation/fixed-position-no-content.html [ Failure ]
-compositing/iframes/iframe-composited-scrolling.html [ Failure ]
 compositing/iframes/leave-compositing-iframe.html [ Failure ]
 compositing/overflow/overflow-auto-with-touch-no-overflow.html [ Failure ]
 compositing/overflow/overflow-auto-with-touch-toggle.html [ Failure ]
