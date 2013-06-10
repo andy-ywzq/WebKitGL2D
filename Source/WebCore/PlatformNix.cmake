@@ -14,8 +14,6 @@ list(APPEND WebCore_INCLUDE_DIRECTORIES
 )
 
 list(APPEND WebCore_SOURCES
-    accessibility/nix/AccessibilityObjectNix.cpp
-    page/nix/DragControllerNix.cpp
     page/nix/EventHandlerNix.cpp
     platform/Cursor.cpp
     platform/nix/ClipboardNix.cpp
