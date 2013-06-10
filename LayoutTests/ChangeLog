@@ -1,3 +1,118 @@
+2013-06-10  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSSRegions] ASSERTION FAILED: roundedIntPoint(rendererMappedResult) == roundedIntPoint(result) in RenderGeometryMap::mapToContainer
+        https://bugs.webkit.org/show_bug.cgi?id=117395
+
+        Reviewed by Alexandru Chiculita.
+
+        * fast/regions/assert-flow-thread-compositing-expected.txt: Added.
+        * fast/regions/assert-flow-thread-compositing.html: Added.
+
+2013-06-10  Radu Stavila  <stavila@adobe.com>
+
+        [CSS Regions] Rename region-overflow to region-fragment
+        https://bugs.webkit.org/show_bug.cgi?id=117397
+
+        Renamed -webkit-region-overflow to -webkit-region-fragment and 
+        webkitRegionOverflow to webkitRegionFragment according to the new working draft
+        at http://www.w3.org/TR/2013/WD-css3-regions-20130528/#the-region-fragment-property
+
+        Reviewed by Alexander Pavlov.
+
+        * fast/regions/autoheight-breakafteralways-maxheight.html:
+        * fast/regions/autoheight-breakbeforealways.html:
+        * fast/regions/autoheight-singleregion-breakafteralways-maxheight.html:
+        * fast/regions/autoheight-singleregion-breakafteralways.html:
+        * fast/regions/autoheight-singleregion-breakaftermargin.html:
+        * fast/regions/autoheight-singleregion-breakbeforealways-minheight.html:
+        * fast/regions/autoheight-singleregion-breakbeforealways.html:
+        * fast/regions/autoheight-singleregion-multiplebreaks.html:
+        * fast/regions/css-regions-disabled-expected.txt:
+        * fast/regions/region-overflow-auto-overflow-hidden.html:
+        * fast/regions/region-overflow-auto-overflow-visible.html:
+        * fast/regions/region-overflow-break.html:
+        * fast/regions/regions-widows-and-orphans.html:
+        * fast/regions/script-tests/css-regions-disabled.js:
+        * fast/regions/script-tests/webkit-region-overflow-parsing.js:
+        * fast/regions/webkit-region-overflow-parsing-expected.txt:
+
+2013-06-10  Mátyás Mustoha  <mmatyas@inf.u-szeged.hu>
+
+        Web Inspector: refactor statusBarItems getter in front-end.
+        https://bugs.webkit.org/show_bug.cgi?id=110114
+
+        Reviewed by Noam Rosenthal.
+
+        Fix layout test to correspond to refactoring.
+        Patch created by Andrey Lushnikov.
+
+        * inspector/extensions/extensions-panel.html:
+
+2013-06-07  Roger Fong  <roger_fong@apple.com>
+
+        Layout info should never be cleared before delayed scroll information updates.
+        https://bugs.webkit.org/show_bug.cgi?id=116689.
+
+        Reviewed by Darin Adler.
+
+        * fast/flexbox/clear-overflow-before-scroll-update-expected.txt: Added.
+        * fast/flexbox/clear-overflow-before-scroll-update.html: Added.
+
+2013-06-08  Igor Oliveira  <igor.o@sisa.samsung.com>
+
+        before/after generated content is not working with HTMLSummaryElement and HTMLDetailsElement.
+        https://bugs.webkit.org/show_bug.cgi?id=117374
+
+        Reviewed by Ryosuke Niwa.
+
+        * fast/css-generated-content/details-summary-before-after.html: Added.
+        * platform/mac/fast/css-generated-content/details-summary-before-after-expected.txt: Added.
+        * platform/mac/fast/css-generated-content/details-summary-before-after-expected.png: Added
+
+2013-06-08  Kondapally Kalyan  <kalyan.kondapally@intel.com>
+
+        [EFL][WebGL] Enable webgl-background-color test.
+        https://bugs.webkit.org/show_bug.cgi?id=111428
+
+        Reviewed by Christophe Dumez.
+
+        This patch adds platform specific test expectation files for the
+        test and enables it for efl port.
+
+        * platform/efl/TestExpectations:
+        * platform/efl/compositing/webgl/webgl-background-color-expected.png: Added.
+        * platform/efl/compositing/webgl/webgl-background-color-expected.txt: Added.
+
+2013-06-07  Chris Fleizach  <cfleizach@apple.com>
+
+        MathML line fraction needs to parse number values
+        https://bugs.webkit.org/show_bug.cgi?id=117305
+
+        Unreviewed. Rebaseline math fractions test on EFL.
+
+        * platform/efl/mathml/presentation/fractions-expected.png:
+        * platform/efl/mathml/presentation/fractions-expected.txt:
+
+2013-06-07  Chris Fleizach  <cfleizach@apple.com>
+
+        MathML line fraction needs to parse number values
+        https://bugs.webkit.org/show_bug.cgi?id=117305
+
+        Unreviewed. Rebaseline math fractions test on GTK.
+
+        * platform/gtk/mathml/presentation/fractions-expected.png:
+        * platform/gtk/mathml/presentation/fractions-expected.txt:
+
+2013-06-07  Brady Eidson  <beidson@apple.com>
+
+        REGRESSION (r151088): Crash navigating away from non-loaded main resources with non-loaded scripts.
+        <rdar://problem/14052886> and https://bugs.webkit.org/show_bug.cgi?id=117278
+
+        Reviewed by Anders Carlsson.
+
+        * http/tests/navigation/slow-loading-page-with-slow-script-expected.txt: Added.
+        * http/tests/navigation/slow-loading-page-with-slow-script.php: Added.
+
 2013-06-07  Chris Fleizach  <cfleizach@apple.com>
 
         MathML line fraction needs to parse number values

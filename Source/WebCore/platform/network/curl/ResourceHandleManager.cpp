@@ -482,11 +482,18 @@ void ResourceHandleManager::removeFromCurl(ResourceHandle* job)
 
 static inline size_t getFormElementsCount(ResourceHandle* job)
 {
-    if (!job->firstRequest().httpBody())
+    RefPtr<FormData> formData = job->firstRequest().httpBody();
+
+    if (!formData)
         return 0;
 
-    Vector<FormDataElement> elements = job->firstRequest().httpBody()->elements();
-    return elements.size();
+#if ENABLE(BLOB)
+    // Resolve the blob elements so the formData can correctly report it's size.
+    formData = formData->resolveBlobReferences();
+    job->firstRequest().setHTTPBody(formData);
+#endif
+
+    return formData->elements().size();
 }
 
 static void setupFormData(ResourceHandle* job, CURLoption sizeOption, struct curl_slist** headers)
@@ -754,8 +761,13 @@ void ResourceHandleManager::initializeHandle(ResourceHandle* job)
             String key = it->key;
             String value = it->value;
             String headerString(key);
-            headerString.append(": ");
-            headerString.append(value);
+            if (value.isEmpty())
+                // Insert the ; to tell curl that this header has an empty value.
+                headerString.append(";");
+            else {
+                headerString.append(": ");
+                headerString.append(value);
+            }
             CString headerLatin1 = headerString.latin1();
             headers = curl_slist_append(headers, headerLatin1.data());
         }
