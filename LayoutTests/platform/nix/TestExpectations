@@ -4238,6 +4238,39 @@ editing/deleting/delete-block-merge-contents-001.html
 editing/deleting/delete-block-merge-contents-019.html
 editing/deleting/delete-block-merge-contents-020.html
 
+# Failing tests after merge ca70d6a b693522
+# fast/exclusions tests began to fail at r151237
+fast/dom/shadow/distributed-pseudo-element-for-shadow-element.html
+fast/dom/shadow/distributed-pseudo-element-match-all.html
+fast/dom/shadow/distributed-pseudo-element-match-descendant.html
+fast/dom/shadow/distributed-pseudo-element-nested.html
+fast/dom/shadow/distributed-pseudo-element-no-match.html
+fast/dom/shadow/distributed-pseudo-element-reprojection.html
+fast/dom/shadow/distributed-pseudo-element-scoped.html
+fast/dom/shadow/distributed-pseudo-element-specifiers-in-left-side.html
+fast/dom/shadow/distributed-pseudo-element-support-selector.html
+fast/dom/shadow/distributed-pseudo-element-used-in-selector-list.html
+fast/dom/shadow/distributed-pseudo-element-with-any.html
+fast/dom/shadow/distributed-pseudo-element.html
+fast/dom/shadow/no-style-sharing-with-distributed-nodes.
+# fast/exclusions tests began to fail at r151282
+fast/exclusions/css-exclusions-disabled.html
+fast/exclusions/css-exclusions-enabled.html
+fast/exclusions/parsing/parsing-shape-inside.html
+fast/exclusions/parsing/parsing-shape-lengths.html
+fast/exclusions/parsing/parsing-shape-margin.html
+fast/exclusions/parsing/parsing-shape-outside.html
+fast/exclusions/parsing/parsing-shape-padding.html
+fast/exclusions/shape-inside/shape-inside-animation.html
+fast/exclusions/shape-inside/shape-inside-polygon-layout.html
+fast/exclusions/shape-inside/shape-inside-polygon-padding-002.html
+fast/exclusions/shape-inside/shape-inside-polygon-padding-003.html
+fast/exclusions/shape-outside-floats/shape-outside-floats-diamond-margin-polygon.html
+compositing/overflow/overflow-clip-with-accelerated-scrolling-ancestor.html
+fast/frames/flattening/scrolling-in-object.html
+mathml/presentation/fractions.xhtml
+svg/hittest/svg-ellipse-non-scale-stroke.xhtml
+
 # Flakey tests when running pixel tests.
 compositing/background-color/background-color-padding-change.html [ ImageOnlyFailure Pass ]
 compositing/scrollbar-painting.html [ ImageOnlyFailure Crash Pass ]
