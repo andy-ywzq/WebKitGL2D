@@ -16,7 +16,6 @@ list(APPEND WebCore_INCLUDE_DIRECTORIES
 list(APPEND WebCore_SOURCES
     page/nix/EventHandlerNix.cpp
     platform/Cursor.cpp
-    platform/nix/ClipboardNix.cpp
     platform/ContextMenuNone.cpp
     platform/ContextMenuItemNone.cpp
     platform/nix/CursorNix.cpp
