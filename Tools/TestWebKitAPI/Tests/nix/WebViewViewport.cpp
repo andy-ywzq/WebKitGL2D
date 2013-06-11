@@ -26,10 +26,9 @@
 #include "config.h"
 
 #include "NIXView.h"
-#include "NIXViewAutoPtr.h"
 #include "PageLoader.h"
 #include "GLUtilities.h"
-#include "WebKit2/WKRetainPtr.h"
+#include <WebKit2/WKRetainPtr.h>
 
 namespace TestWebKitAPI {
 
@@ -47,7 +46,8 @@ TEST(WebKitNix, WebViewViewport)
     glViewport(0, 0, size.width, size.height);
 
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
-    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
+    WKRetainPtr<WKViewRef> view(AdoptWK, WKViewCreate(context.get(), 0));
+
     Util::ForceRepaintClient forceRepaintClient(view.get());
     forceRepaintClient.setClearColor(0, 0, 1, 1);
 

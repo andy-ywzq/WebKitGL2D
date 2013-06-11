@@ -29,9 +29,8 @@
 #include "PageLoader.h"
 #include "PlatformUtilities.h"
 #include "NIXView.h"
-#include "NIXViewAutoPtr.h"
-#include "WebKit2/WKContext.h"
-#include "WebKit2/WKRetainPtr.h"
+#include <WebKit2/WKContext.h>
+#include <WebKit2/WKRetainPtr.h>
 
 namespace TestWebKitAPI {
 
@@ -42,7 +41,7 @@ TEST(WebKitNix, WebThemeEngine)
     ASSERT_TRUE(offscreenBuffer.makeCurrent());
 
     WKRetainPtr<WKContextRef> context = adoptWK(Util::createContextForInjectedBundleTest("WebThemeEngineTest"));
-    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
+    WKRetainPtr<WKViewRef> view(AdoptWK, WKViewCreate(context.get(), 0));
 
     Util::ForceRepaintClient forceRepaintClient(view.get());
     forceRepaintClient.setClearColor(0, 0, 1, 1);

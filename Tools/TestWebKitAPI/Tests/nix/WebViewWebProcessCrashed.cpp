@@ -29,8 +29,7 @@
 #include <WebKit2/WKContext.h>
 #include <WebKit2/WKPage.h>
 #include <WebKit2/WKRetainPtr.h>
-#include "NIXView.h"
-#include "NIXViewAutoPtr.h"
+#include <WebKit2/WKView.h>
 
 namespace TestWebKitAPI {
 
@@ -56,7 +55,7 @@ static void webProcessRelaunched(WKViewRef, const void*)
 TEST(WebKitNix, WebViewWebProcessCrashed)
 {
     WKRetainPtr<WKContextRef> context = adoptWK(Util::createContextForInjectedBundleTest("WebViewWebProcessCrashedTest"));
-    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
+    WKRetainPtr<WKViewRef> view(AdoptWK, WKViewCreate(context.get(), 0));
 
     WKViewClient viewClient;
     memset(&viewClient, 0, sizeof(WKViewClient));

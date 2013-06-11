@@ -28,10 +28,9 @@
 #include "GLUtilities.h"
 #include "PageLoader.h"
 #include "NIXView.h"
-#include "NIXViewAutoPtr.h"
-#include "WebKit2/WKContext.h"
-#include "WebKit2/WKCoordinatedScene.h"
-#include "WebKit2/WKRetainPtr.h"
+#include <WebKit2/WKContext.h>
+#include <WebKit2/WKCoordinatedScene.h>
+#include <WebKit2/WKRetainPtr.h>
 
 namespace TestWebKitAPI {
 
@@ -61,8 +60,8 @@ TEST(WebKitNix, LockAndUnlockCoordinatedSceneState)
     glBuffer = &offscreenBuffer;
 
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
+    WKRetainPtr<WKViewRef> view(AdoptWK, WKViewCreate(context.get(), 0));
 
-    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
     Util::ForceRepaintClient forceRepaintClient(view.get());
     forceRepaintClient.setClearColor(0, 0, 1, 1);
 
@@ -102,8 +101,8 @@ TEST(WebKitNix, LockCoordinatedSceneState)
     glBuffer = &offscreenBuffer;
 
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
+    WKRetainPtr<WKViewRef> view(AdoptWK, WKViewCreate(context.get(), 0));
 
-    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
     Util::ForceRepaintClient forceRepaintClient(view.get());
     forceRepaintClient.setClearColor(0, 0, 1, 1);
 

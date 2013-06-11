@@ -31,7 +31,6 @@
 #include <WebKit2/WKRetainPtr.h>
 #include <WebKit2/WKString.h>
 #include "NIXView.h"
-#include "NIXViewAutoPtr.h"
 
 namespace TestWebKitAPI {
 
@@ -69,8 +68,7 @@ TEST(WebKitNix, WebViewUpdateTextInputState)
 {
     memset(&stateReceived, 0, sizeof(stateReceived));
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
-
-    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
+    WKRetainPtr<WKViewRef> view(AdoptWK, WKViewCreate(context.get(), 0));
 
     NIXViewClient nixViewClient;
     memset(&nixViewClient, 0, sizeof(NIXViewClient));

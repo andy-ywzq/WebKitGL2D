@@ -29,12 +29,11 @@
 #include "PageLoader.h"
 #include "PlatformUtilities.h"
 #include "NIXView.h"
-#include "NIXViewAutoPtr.h"
-#include "WebKit2/WKContext.h"
-#include "WebKit2/WKCoordinatedScene.h"
-#include "WebKit2/WKGeometry.h"
-#include "WebKit2/WKPreferencesPrivate.h"
-#include "WebKit2/WKRetainPtr.h"
+#include <WebKit2/WKContext.h>
+#include <WebKit2/WKCoordinatedScene.h>
+#include <WebKit2/WKGeometry.h>
+#include <WebKit2/WKPreferencesPrivate.h>
+#include <WebKit2/WKRetainPtr.h>
 
 namespace TestWebKitAPI {
 
@@ -45,7 +44,7 @@ TEST(WebKitNix, SingleOverflowScroll)
     ASSERT_TRUE(offscreenBuffer.makeCurrent());
 
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
-    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
+    WKRetainPtr<WKViewRef> view(AdoptWK, WKViewCreate(context.get(), 0));
 
     Util::ForceRepaintClient forceRepaintClient(view.get());
     forceRepaintClient.setClearColor(0, 0, 1, 1);
@@ -53,7 +52,6 @@ TEST(WebKitNix, SingleOverflowScroll)
     WKViewInitialize(view.get());
     WKPageSetUseFixedLayout(WKViewGetPage(view.get()), true);
     WKViewSetSize(view.get(), size);
-
     WKPageGroupRef pageGroup = WKPageGetPageGroup(WKViewGetPage(view.get()));
     WKPreferencesRef preferences = WKPageGroupGetPreferences(pageGroup);
     WKPreferencesSetAcceleratedCompositingForOverflowScrollEnabled(preferences, true);
@@ -80,7 +78,7 @@ TEST(WebKitNix, MultipleOverflowScroll)
     ASSERT_TRUE(offscreenBuffer.makeCurrent());
 
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
-    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
+    WKRetainPtr<WKViewRef> view(AdoptWK, WKViewCreate(context.get(), 0));
 
     Util::ForceRepaintClient forceRepaintClient(view.get());
     forceRepaintClient.setClearColor(0, 0, 1, 1);

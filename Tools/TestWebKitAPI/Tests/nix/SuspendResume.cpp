@@ -29,9 +29,8 @@
 #include "PageLoader.h"
 #include "PlatformUtilities.h"
 #include "NIXView.h"
-#include "NIXViewAutoPtr.h"
-#include "WebKit2/WKContext.h"
-#include "WebKit2/WKRetainPtr.h"
+#include <WebKit2/WKContext.h>
+#include <WebKit2/WKRetainPtr.h>
 
 namespace TestWebKitAPI {
 
@@ -42,13 +41,12 @@ TEST(WebKitNix, SuspendResumeAPI)
     // animation continues as we call the resume method. During this process
     // there are checkpoints to ensure that changes are pausing/resuming.
 
-
     const WKSize size = WKSizeMake(150, 100);
     ToolsNix::GLOffscreenBuffer offscreenBuffer(size.width, size.height);
     ASSERT_TRUE(offscreenBuffer.makeCurrent());
 
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
-    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
+    WKRetainPtr<WKViewRef> view(AdoptWK, WKViewCreate(context.get(), 0));
 
     Util::ForceRepaintClient forceRepaintClient(view.get());
     forceRepaintClient.setClearColor(0, 0, 1, 1);

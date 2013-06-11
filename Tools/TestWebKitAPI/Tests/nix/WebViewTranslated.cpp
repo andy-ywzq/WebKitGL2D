@@ -28,9 +28,8 @@
 #include "PageLoader.h"
 #include "GLUtilities.h"
 #include "NIXView.h"
-#include "NIXViewAutoPtr.h"
-#include "WebKit2/WKContext.h"
-#include "WebKit2/WKRetainPtr.h"
+#include <WebKit2/WKContext.h>
+#include <WebKit2/WKRetainPtr.h>
 
 namespace TestWebKitAPI {
 
@@ -41,8 +40,8 @@ TEST(WebKitNix, WebViewTranslated)
     ASSERT_TRUE(offscreenBuffer.makeCurrent());
 
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
+    WKRetainPtr<WKViewRef> view(AdoptWK, WKViewCreate(context.get(), 0));
 
-    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
     Util::ForceRepaintClient forceRepaintClient(view.get());
     forceRepaintClient.setClearColor(0, 0, 1, 1);
 
