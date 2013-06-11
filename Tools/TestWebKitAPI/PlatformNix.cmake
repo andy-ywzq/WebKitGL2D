@@ -39,8 +39,8 @@ list(APPEND TestWebKitAPIInjectedBundle_SOURCES
     ${TESTWEBKITAPI_DIR}/nix/PlatformUtilitiesNix.cpp
     ${TESTWEBKITAPI_DIR}/nix/MainLoop.cpp
     ${TESTWEBKITAPI_DIR}/Tests/nix/WebViewWebProcessCrashed_Bundle.cpp
-    ${TESTWEBKITAPI_DIR}/Tests/nix/WebWorker_Bundle.cpp
     ${TESTWEBKITAPI_DIR}/Tests/nix/WebThemeEngine_Bundle.cpp
+    ${TESTWEBKITAPI_DIR}/Tests/WebKit2/WebWorker_Bundle.cpp
 )
 
 set(TestWebKitAPIBase_SOURCES
@@ -106,6 +106,7 @@ set(webkit2TestList
     WebKit2/WKConnection
     WebKit2/WKString
     WebKit2/WKStringJSString
+    WebKit2/WebWorker
     WebKit2/WillSendSubmitEvent
     nix/OverflowScroll
     nix/SuspendResume
@@ -117,7 +118,6 @@ set(webkit2TestList
     nix/WebViewUpdateTextInputState
     nix/WebViewViewport
     nix/WebViewWebProcessCrashed
-    nix/WebWorker
     nix/WKCoordinatedSceneLockState
 )
 

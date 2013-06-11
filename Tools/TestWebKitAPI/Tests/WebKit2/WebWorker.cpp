@@ -1,11 +1,11 @@
 #include "config.h"
 
+#include "PlatformWebView.h"
 #include "PlatformUtilities.h"
 #include <WebKit2/WKContext.h>
 #include <WebKit2/WKPage.h>
 #include <WebKit2/WKPreferencesPrivate.h>
-#include "NIXView.h"
-#include "NIXViewAutoPtr.h"
+#include <WebKit2/WKView.h>
 
 namespace TestWebKitAPI {
 
@@ -36,7 +36,6 @@ static void didReceiveTitleForFrame(WKPageRef, WKStringRef title, WKFrameRef, WK
         changedTitleShared = true;
 }
 
-
 TEST(WebKitNix, WebWorker)
 {
     // This test cover the binding between functions of JavaScript Workers and
@@ -44,33 +43,33 @@ TEST(WebKitNix, WebWorker)
     // types of Workers, dedicated and shared.
 
     WKRetainPtr<WKContextRef> context = adoptWK(Util::createContextForInjectedBundleTest("WebWorkerTest"));
-    NIXViewAutoPtr view(WKViewCreate(context.get(), 0));
+    PlatformWebView view(context.get());
 
-    WKViewInitialize(view.get());
+    WKViewInitialize(view.platformView());
 
     WKPageLoaderClient pageLoaderClient;
     memset(&pageLoaderClient, 0, sizeof(WKPageLoaderClient));
     pageLoaderClient.version = kWKPageLoaderClientCurrentVersion;
     pageLoaderClient.didReceiveTitleForFrame = didReceiveTitleForFrame;
-    WKPageSetPageLoaderClient(WKViewGetPage(view.get()), &pageLoaderClient);
+    WKPageSetPageLoaderClient(WKViewGetPage(view.platformView()), &pageLoaderClient);
 
     WKContextInjectedBundleClient injectedBundleClient;
     memset(&injectedBundleClient, 0, sizeof(injectedBundleClient));
     injectedBundleClient.didReceiveMessageFromInjectedBundle = didReceiveMessageFromInjectedBundle;
     WKContextSetInjectedBundleClient(context.get(), &injectedBundleClient);
 
-    WKPageGroupRef pageGroup = WKPageGetPageGroup(WKViewGetPage(view.get()));
+    WKPageGroupRef pageGroup = WKPageGetPageGroup(WKViewGetPage(view.platformView()));
     WKPreferencesRef preferences = WKPageGroupGetPreferences(pageGroup);
     WKPreferencesSetFileAccessFromFileURLsAllowed(preferences, true);
 
-    WKRetainPtr<WKURLRef> url = adoptWK(Util::createURLForResource("../nix/WebWorkerTest", "html"));
-    WKPageLoadURL(WKViewGetPage(view.get()), url.get());
+    WKRetainPtr<WKURLRef> url = adoptWK(Util::createURLForResource("../WebKit2/WebWorkerTest", "html"));
+    WKPageLoadURL(WKViewGetPage(view.platformView()), url.get());
     Util::run(&initialized);
     Util::run(&terminated);
     Util::run(&changedTitle);
 
-    url = adoptWK(Util::createURLForResource("../nix/WebWorkerSharedTest", "html"));
-    WKPageLoadURL(WKViewGetPage(view.get()), url.get());
+    url = adoptWK(Util::createURLForResource("../WebKit2/WebWorkerSharedTest", "html"));
+    WKPageLoadURL(WKViewGetPage(view.platformView()), url.get());
     Util::run(&initializedShared);
     Util::run(&terminatedShared);
     Util::run(&changedTitleShared);
