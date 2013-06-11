@@ -3065,10 +3065,6 @@ svg/zoom/text/zoom-hixie-mixed-009.xml [ Skip ]
 svg/zoom/text/zoom-hixie-rendering-model-004.xhtml [ Skip ]
 svg/zoom/text/zoom-svg-float-border-padding.xml [ Skip ]
 
-# Many tests needing new rebaselines
-# the generic results are using a viewport of 800 pixels
-tables [ Skip ]
-
 touchadjustment/focusout-on-touch.html [ Skip ]
 touchadjustment/touch-links-active.html [ Skip ]
 touchadjustment/touch-links-longpress.html [ Skip ]
