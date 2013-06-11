@@ -104,6 +104,9 @@ WK_EXPORT double NIXViewportAttributesGetMaximumScale(WKViewportAttributesRef);
 WK_EXPORT double NIXViewportAttributesGetInitialScale(WKViewportAttributesRef);
 WK_EXPORT bool NIXViewportAttributesGetIsUserScalable(WKViewportAttributesRef);
 
+WK_EXPORT void NIXViewViewportInteractionStart(WKViewRef view);
+WK_EXPORT void NIXViewViewportInteractionStop(WKViewRef view);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

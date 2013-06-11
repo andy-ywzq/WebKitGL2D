@@ -690,7 +690,7 @@ void MiniBrowser::handlePanning(double timestamp, WKPoint delta)
     // When the user is panning around the contents we don't force the page scroll position
     // to respect any boundaries other than the physical constraints of the device from where
     // the user input came. This will be adjusted after the user interaction ends.
-    WKViewSuspendActiveDOMObjectsAndAnimations(m_view);
+    NIXViewViewportInteractionStart(m_view);
     WKPoint position = WKViewGetContentPosition(m_view);
     if ((m_contentsSize.width - NIXViewVisibleContentsSize(m_view).width) > 0)
         position.x -= delta.x;
@@ -701,7 +701,7 @@ void MiniBrowser::handlePanning(double timestamp, WKPoint delta)
 void MiniBrowser::handlePanningFinished(double timestamp)
 {
     adjustScrollPosition();
-    WKViewResumeActiveDOMObjectsAndAnimations(m_view);
+    NIXViewViewportInteractionStop(m_view);
 }
 
 void MiniBrowser::handlePinch(double timestamp, WKPoint delta, double scale, WKPoint contentCenter)
@@ -713,7 +713,7 @@ void MiniBrowser::handlePinch(double timestamp, WKPoint delta, double scale, WKP
     // Scrolling: If the center of the pinch initially was position (120,120) in content
     //            coordinates, them during the page must be scrolled to keep the pinch center
     //            at the same coordinates.
-    WKViewSuspendActiveDOMObjectsAndAnimations(m_view);
+    NIXViewViewportInteractionStart(m_view);
     WKPoint position = WKPointMake(WKViewGetContentPosition(m_view).x - delta.x, WKViewGetContentPosition(m_view).y - delta.y);
 
     WKViewSetContentPosition(m_view, position);
@@ -741,7 +741,7 @@ void MiniBrowser::handlePinchFinished(double timestamp)
         WKViewSetContentScaleFactor(m_view, scale);
 
     adjustScrollPosition();
-    WKViewResumeActiveDOMObjectsAndAnimations(m_view);
+    NIXViewViewportInteractionStop(m_view);
 }
 
 void MiniBrowser::scaleAtPoint(const WKPoint& point, double scale, ScaleBehavior scaleBehavior)

@@ -99,6 +99,20 @@ void WebViewNix::findZoomableAreaForPoint(const WKPoint& point, int horizontalRa
     page()->findZoomableAreaForPoint(contentsPoint, touchSize);
 }
 
+void WebViewNix::viewportInteractionStart()
+{
+    suspendActiveDOMObjectsAndAnimations();
+}
+
+void WebViewNix::viewportInteractionStop()
+{
+    float effectiveScale = contentScaleFactor() * page()->deviceScaleFactor();
+    if (page()->pageScaleFactor() != effectiveScale)
+        page()->scalePage(effectiveScale, roundedIntPoint(contentPosition()));
+    updateViewportSize();
+    resumeActiveDOMObjectsAndAnimations();
+}
+
 void WebViewNix::didRelaunchProcess()
 {
     coordinatedGraphicsScene()->setActive(true);
@@ -107,13 +121,10 @@ void WebViewNix::didRelaunchProcess()
 
 void WebViewNix::didChangeContentScaleFactor(float scaleFactor)
 {
+    if (isSuspended())
+        return;
     float effectiveScale = scaleFactor * page()->deviceScaleFactor();
-
-    FloatPoint position = contentPosition();
-    position.scale(effectiveScale, effectiveScale);
-    page()->scalePage(effectiveScale, roundedIntPoint(position));
-
-    updateViewportSize();
+    page()->scalePage(effectiveScale, roundedIntPoint(contentPosition()));
 }
 
 void WebViewNix::didChangeContentPosition(const WebCore::FloatPoint& trajectoryVector)

@@ -55,6 +55,8 @@ public:
     void sendGestureEvent(const NIXGestureEvent&);
 
     bool isSuspended() { return page()->areActiveDOMObjectsAndAnimationsSuspended(); }
+    void viewportInteractionStart();
+    void viewportInteractionStop();
 
 protected:
     // WebKit::WebView

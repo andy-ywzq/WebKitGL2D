@@ -110,3 +110,13 @@ bool NIXViewportAttributesGetIsUserScalable(WKViewportAttributesRef attributesRe
 {
     return toImpl(attributesRef)->originalAttributes().userScalable;
 }
+
+void NIXViewViewportInteractionStart(WKViewRef view)
+{
+    static_cast<WebViewNix*>(toImpl(view))->viewportInteractionStart();
+}
+
+void NIXViewViewportInteractionStop(WKViewRef view)
+{
+    static_cast<WebViewNix*>(toImpl(view))->viewportInteractionStop();
+}
