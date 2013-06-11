@@ -36,7 +36,7 @@ static void didReceiveTitleForFrame(WKPageRef, WKStringRef title, WKFrameRef, WK
         changedTitleShared = true;
 }
 
-TEST(WebKitNix, WebWorker)
+TEST(WebKit2, WebWorker)
 {
     // This test cover the binding between functions of JavaScript Workers and
     // functions defined at a previously loaded bundle. It verifies the two
