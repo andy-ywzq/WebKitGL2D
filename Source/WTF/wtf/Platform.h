@@ -446,6 +446,8 @@
 #define WTF_PLATFORM_GTK 1
 #elif defined(BUILDING_BLACKBERRY__)
 #define WTF_PLATFORM_BLACKBERRY 1
+#elif defined(BUILDING_NIX__)
+#include "nix/PlatformNix.h"
 #elif OS(DARWIN)
 #define WTF_PLATFORM_MAC 1
 #elif OS(WINDOWS)
@@ -489,10 +491,6 @@
 #define WTF_USE_WEBP 1
 #define ENABLE_GLOBAL_FASTMALLOC_NEW 0
 #define GST_API_VERSION_1 1
-#endif
-
-#if PLATFORM(NIX)
-#define ENABLE_GLOBAL_FASTMALLOC_NEW 0
 #endif
 
 /* On Windows, use QueryPerformanceCounter by default */
@@ -930,7 +928,7 @@
 #define WTF_USE_EXPORT_MACROS_FOR_TESTING 1
 #endif
 
-#if (PLATFORM(QT) && !OS(DARWIN) && !OS(WINDOWS)) || PLATFORM(GTK) || PLATFORM(EFL) || PLATFORM(NIX)
+#if (PLATFORM(QT) && !OS(DARWIN) && !OS(WINDOWS)) || PLATFORM(GTK) || PLATFORM(EFL)
 #define WTF_USE_UNIX_DOMAIN_SOCKETS 1
 #endif
 

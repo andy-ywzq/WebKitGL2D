@@ -148,7 +148,32 @@ add_custom_target(forwarding-headerNix
     COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${WEBKIT2_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include CoordinatedGraphics
 )
 
-if (ENABLE_SOUP)
+if (WTF_USE_CURL)
+    list(APPEND WebKit2_SOURCES
+        Shared/curl/WebCoreArgumentCodersCurl.cpp
+        WebProcess/curl/WebProcessCurl.cpp
+        WebProcess/Cookies/curl/WebCookieManagerCurl.cpp
+
+        Shared/Downloads/curl/DownloadCurl.cpp
+
+        WebProcess/WebCoreSupport/curl/WebFrameNetworkingContext.cpp
+    )
+
+    list(APPEND WebKit2_INCLUDE_DIRECTORIES
+        "${WEBCORE_DIR}/platform/network/curl"
+        "${WEBKIT2_DIR}/Shared/curl"
+        "${WEBKIT2_DIR}/WebProcess/WebCoreSupport/curl"
+    )
+
+    list(APPEND WebKit2_LIBRARIES
+         ${GLIB_GMODULE_LIBRARIES}
+    )
+
+    add_custom_target(forwarding-headercurl
+        COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${WEBKIT2_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include curl
+    )
+    set(ForwardingNetworkHeaders_NAME forwarding-headercurl)
+else ()
     list(APPEND WebKit2_SOURCES
         Shared/soup/PlatformCertificateInfo.cpp
         Shared/soup/WebCoreArgumentCodersSoup.cpp
@@ -200,31 +225,6 @@ if (ENABLE_SOUP)
         COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${WEBKIT2_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include soup
     )
     set(ForwardingNetworkHeaders_NAME forwarding-headerSoup)
-else ()
-    list(APPEND WebKit2_SOURCES
-        Shared/curl/WebCoreArgumentCodersCurl.cpp
-        WebProcess/curl/WebProcessCurl.cpp
-        WebProcess/Cookies/curl/WebCookieManagerCurl.cpp
-
-        Shared/Downloads/curl/DownloadCurl.cpp
-
-        WebProcess/WebCoreSupport/curl/WebFrameNetworkingContext.cpp
-    )
-
-    list(APPEND WebKit2_INCLUDE_DIRECTORIES
-        "${WEBCORE_DIR}/platform/network/curl"
-        "${WEBKIT2_DIR}/Shared/curl"
-        "${WEBKIT2_DIR}/WebProcess/WebCoreSupport/curl"
-    )
-
-    list(APPEND WebKit2_LIBRARIES
-         ${GLIB_GMODULE_LIBRARIES}
-    )
-
-    add_custom_target(forwarding-headercurl
-        COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${WEBKIT2_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include curl
-    )
-    set(ForwardingNetworkHeaders_NAME forwarding-headercurl)
 endif ()
 
 set(WEBKIT2_EXTRA_DEPENDENCIES

@@ -276,7 +276,28 @@ if (ENABLE_GAMEPAD)
     )
 endif ()
 
-if (ENABLE_SOUP)
+if (WTF_USE_CURL)
+    list(APPEND WebCore_INCLUDE_DIRECTORIES
+        "${WEBCORE_DIR}/platform/network/curl"
+    )
+
+    list(APPEND WebCore_SOURCES
+        platform/network/NetworkStorageSessionStub.cpp
+        platform/network/curl/CookieJarCurl.cpp
+        platform/network/curl/CookieStorageCurl.cpp
+        platform/network/curl/CredentialStorageCurl.cpp
+        platform/network/curl/DNSCurl.cpp
+        platform/network/curl/FormDataStreamCurl.cpp
+        platform/network/curl/ProxyServerCurl.cpp
+        platform/network/curl/ResourceHandleCurl.cpp
+        platform/network/curl/ResourceHandleManager.cpp
+        platform/network/curl/SocketStreamHandleCurl.cpp
+    )
+
+    list(APPEND WebCore_LIBRARIES
+        ${CURL_LIBRARIES}
+    )
+else ()
     list(APPEND WebCore_SOURCES
         platform/network/soup/AuthenticationChallengeSoup.cpp
         platform/network/soup/CookieJarSoup.cpp
@@ -302,27 +323,5 @@ if (ENABLE_SOUP)
 
     list(APPEND WebCore_LIBRARIES
         ${LIBSOUP_LIBRARIES}
-    )
-
-else ()
-    list(APPEND WebCore_INCLUDE_DIRECTORIES
-        "${WEBCORE_DIR}/platform/network/curl"
-    )
-
-    list(APPEND WebCore_SOURCES
-        platform/network/NetworkStorageSessionStub.cpp
-        platform/network/curl/CookieJarCurl.cpp
-        platform/network/curl/CookieStorageCurl.cpp
-        platform/network/curl/CredentialStorageCurl.cpp
-        platform/network/curl/DNSCurl.cpp
-        platform/network/curl/FormDataStreamCurl.cpp
-        platform/network/curl/ProxyServerCurl.cpp
-        platform/network/curl/ResourceHandleCurl.cpp
-        platform/network/curl/ResourceHandleManager.cpp
-        platform/network/curl/SocketStreamHandleCurl.cpp
-    )
-
-    list(APPEND WebCore_LIBRARIES
-        ${CURL_LIBRARIES}
     )
 endif ()

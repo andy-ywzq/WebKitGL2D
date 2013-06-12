@@ -33,7 +33,7 @@
 #include <WebKit2/WKBaseGtk.h>
 #endif
 
-#if defined(WTF_USE_SOUP)
+#if defined(WTF_USE_SOUP) && WTF_USE_SOUP
 #include <WebKit2/WKBaseSoup.h>
 #endif
 

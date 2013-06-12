@@ -14,32 +14,7 @@ set(ENABLE_WEBKIT2 1)
 
 set(WebKit2_OUTPUT_NAME WebKitNix)
 
-# Macro used to define flags that make non sense to be undefined, e.g. ENABLE_GLIB_SUPPORT on Nix
-set(_WEBKIT_HARDCODED_DEFINES "")
-macro(SET_HARDCODED_DEFINE _name)
-    list(APPEND _WEBKIT_HARDCODED_DEFINES ${_name})
-    set(${_name} ON)
-endmacro()
-
-# Set default values for features based on Features${PORT}.config
-file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/Source/cmake/Features${PORT}.config" featureData NEWLINE_CONSUME)
-string(REPLACE ";" "\\\\;" featureData "${featureData}")
-string(REPLACE "\n" ";" featureData "${featureData}")
-
-set(_WEBKIT_AVAILABLE_OPTIONS "")
-foreach (feature IN ITEMS ${featureData})
-    string(REGEX MATCH "^[^\#].*" validRecord ${feature})
-    if (validRecord)
-        string(REGEX REPLACE "([0-9A-Z_-]+).*" "\\1" defineName "${feature}")
-        string(REGEX REPLACE "[0-9A-Z_-]+ *= *(.*)" "\\1" value "${feature}")
-        option(${defineName} "Toggle ${defineName}" ${value})
-        list(APPEND _WEBKIT_AVAILABLE_OPTIONS ${defineName})
-    endif ()
-endforeach ()
-
 add_definitions(-DBUILDING_NIX__=1)
-add_definitions(-DWTF_PLATFORM_NIX=1)
-set(WTF_PLATFORM_NIX 1)
 
 # We set this because we now use Source/Platform/chromium
 add_definitions(-DWEBKIT_IMPLEMENTATION=1)
@@ -59,118 +34,39 @@ find_package(Sqlite REQUIRED)
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
 
-if (ENABLE_SOUP)
-    find_package(LibSoup 2.42.0 REQUIRED)
-    SET_HARDCODED_DEFINE(WTF_USE_SOUP)
-    set(REQUIRED_NETWORK libsoup-2.4)
-else ()
+# Variable that must exists on CMake space
+# to keep common CMake files working as desired for us
+set(WTF_USE_ICU_UNICODE ON)
+set(WTF_USE_LEVELDB ON)
+set(ENABLE_API_TESTS ON)
+
+WEBKIT_OPTION_DEFAULTS("NIX")
+
+if (WTF_USE_CURL)
     find_package(CURL REQUIRED)
-    SET_HARDCODED_DEFINE(WTF_USE_CURL)
     set(REQUIRED_NETWORK libcurl)
+else ()
+    find_package(LibSoup 2.42.0 REQUIRED)
+    set(REQUIRED_NETWORK libsoup-2.4)
 endif ()
 
 if (WTF_USE_OPENGL_ES_2)
+    find_package(EGL REQUIRED)
     find_package(OpenGLES2 REQUIRED)
-    set(WTF_USE_EGL ON)
-    set(WTF_USE_OPENGL_ES_2 ON)
+    add_definitions(-DWTF_USE_OPENGL_ES_2=1)
 else ()
+    find_package(X11 REQUIRED)
     find_package(OpenGL REQUIRED)
-    SET_HARDCODED_DEFINE(WTF_USE_OPENGL)
+    add_definitions(-DHAVE_GLX=1)
 endif ()
 
-SET_HARDCODED_DEFINE(WTF_USE_GLIB)
-SET_HARDCODED_DEFINE(WTF_USE_3D_GRAPHICS)
-SET_HARDCODED_DEFINE(WTF_USE_ACCELERATED_COMPOSITING)
-SET_HARDCODED_DEFINE(WTF_USE_CAIRO)
-SET_HARDCODED_DEFINE(WTF_USE_COORDINATED_GRAPHICS)
-SET_HARDCODED_DEFINE(WTF_USE_FREETYPE)
-SET_HARDCODED_DEFINE(WTF_USE_HARFBUZZ_NG)
-SET_HARDCODED_DEFINE(WTF_USE_ICU_UNICODE)
-SET_HARDCODED_DEFINE(WTF_USE_PTHREADS)
-SET_HARDCODED_DEFINE(WTF_USE_TEXTURE_MAPPER)
-SET_HARDCODED_DEFINE(WTF_USE_TEXTURE_MAPPER_GL)
-SET_HARDCODED_DEFINE(WTF_USE_IOSURFACE_CANVAS_BACKING_STORE)
-SET_HARDCODED_DEFINE(WTF_USE_TILED_BACKING_STORE)
-SET_HARDCODED_DEFINE(WTF_USE_CROSS_PLATFORM_CONTEXT_MENUS)
 if (NOT ENABLE_SVG)
     set(ENABLE_SVG_FONTS OFF)
 endif ()
 
-if (WTF_USE_EGL)
-    find_package(EGL REQUIRED)
-    SET_HARDCODED_DEFINE(WTF_USE_EGL)
-else ()
-    find_package(X11 REQUIRED)
-    SET_HARDCODED_DEFINE(HAVE_GLX)
-    SET_HARDCODED_DEFINE(WTF_USE_GLX)
-    SET_HARDCODED_DEFINE(WTF_PLATFORM_X11)
-    SET_HARDCODED_DEFINE(WTF_USE_GRAPHICS_SURFACE)
-endif ()
-
-
-macro(PROCESS_WEBKIT_OPTIONS)
-    # Show all options on screen
-    message(STATUS "Enabled features:")
-
-    set(_MAX_FEATURE_LENGTH 0)
-    foreach (_name ${_WEBKIT_AVAILABLE_OPTIONS})
-        string(LENGTH ${_name} _NAME_LENGTH)
-        if (_NAME_LENGTH GREATER _MAX_FEATURE_LENGTH)
-            set(_MAX_FEATURE_LENGTH ${_NAME_LENGTH})
-        endif ()
-    endforeach ()
-
-    set(_SHOULD_PRINT_POINTS OFF)
-    foreach (_name ${_WEBKIT_AVAILABLE_OPTIONS})
-        string(LENGTH ${_name} _NAME_LENGTH)
-
-        set(_MESSAGE " ${_name} ")
-
-        if (_SHOULD_PRINT_POINTS)
-            foreach (IGNORE RANGE ${_NAME_LENGTH} ${_MAX_FEATURE_LENGTH})
-                set(_MESSAGE "${_MESSAGE} ")
-            endforeach ()
-            set(_SHOULD_PRINT_POINTS OFF)
-        else ()
-            foreach (IGNORE RANGE ${_NAME_LENGTH} ${_MAX_FEATURE_LENGTH})
-                set(_MESSAGE "${_MESSAGE}.")
-            endforeach ()
-            set(_SHOULD_PRINT_POINTS ON)
-        endif ()
-
-        if (${_name})
-            list(APPEND FEATURE_DEFINES ${_name})
-            set(FEATURE_DEFINES_WITH_SPACE_SEPARATOR "${FEATURE_DEFINES_WITH_SPACE_SEPARATOR} ${_name}")
-        endif ()
-
-        message(STATUS "${_MESSAGE} ${${_name}}")
-    endforeach ()
-
-    # Create cmakeconfig.h.in based on the features we have available
-    set(CMK_CONFIG_H_IN "${CMAKE_BINARY_DIR}/cmakeconfig.h.in")
-
-    file(WRITE ${CMK_CONFIG_H_IN}
-        "#ifndef CMAKECONFIG_H\n"
-        "#define CMAKECONFIG_H\n\n")
-
-    file(APPEND ${CMK_CONFIG_H_IN} "\n// Hardcoded defines\n\n")
-    foreach (_name ${_WEBKIT_HARDCODED_DEFINES})
-        file(APPEND ${CMK_CONFIG_H_IN} "#define ${_name} 1\n")
-    endforeach ()
-
-    file(APPEND ${CMK_CONFIG_H_IN} "\n// WebKit options\n\n")
-    foreach (_name ${_WEBKIT_AVAILABLE_OPTIONS})
-        file(APPEND ${CMK_CONFIG_H_IN} "#cmakedefine01 ${_name}\n")
-    endforeach ()
-
-    file(APPEND ${CMK_CONFIG_H_IN} "\n#endif // CMAKECONFIG_H\n")
-
-    file(MD5 ${CMK_CONFIG_H_IN} CMK_CONFIG_H_IN_NEW_MD5)
-    if (NOT "${CMK_CONFIG_H_IN_MD5}" STREQUAL "${CMK_CONFIG_H_IN_NEW_MD5}")
-        message(STATUS "Creating cmakeconfig.h")
-        configure_file(${CMK_CONFIG_H_IN} "${CMAKE_BINARY_DIR}/cmakeconfig.h" @ONLY)
-        set(CMK_CONFIG_H_IN_MD5 "${CMK_CONFIG_H_IN_NEW_MD5}" CACHE STRING "Md5 of ${CMK_CONFIG_H_IN}" FORCE)
-    endif ()
-endmacro()
-
+WEBKIT_OPTION_DEFINE(WTF_USE_OPENGL_ES_2 "Use EGL + OpenGLES2" OFF)
+WEBKIT_OPTION_DEFINE(WTF_USE_CURL "Use libCurl as network backend" OFF)
 PROCESS_WEBKIT_OPTIONS()
+
+
+

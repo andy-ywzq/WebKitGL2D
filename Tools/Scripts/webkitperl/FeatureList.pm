@@ -157,7 +157,6 @@ my (
     $xsltSupport,
 );
 
-my @featureValues = ();
 my @features = (
     { option => "3d-rendering", desc => "Toggle 3D Rendering support",
       define => "ENABLE_3D_RENDERING", default => (isAppleMacWebKit() || isGtk() || isEfl()), value => \$threeDRenderingSupport },
@@ -489,42 +488,6 @@ my @features = (
     { option => "xslt", desc => "Toggle XSLT support",
       define => "ENABLE_XSLT", default => 1, value => \$xsltSupport },
 );
-
-if (isNix()) {
-    # Reset WebKit @features array and populate it with Source/cmake/FeaturesNix.config file
-    @features = ( );
-    my @featureValues = ( );
-    my %featureIndex = ( );
-    my $baseDir = __FILE__;
-    $baseDir =~ s/Tools\/Scripts\/webkitperl\/FeatureList\.pm/Source\/cmake\//;
-    my $featureDescriptionFile = "${baseDir}FeaturesNix.config";
-
-    open(FEATURE_FILE, $featureDescriptionFile) or die("Failed to open $featureDescriptionFile\n.");
-    while (<FEATURE_FILE>) {
-        chomp;
-        next if (!$_ or $_ =~ /^#/);
-        next if (!($_ =~ m/([A-Z0-9_]*)\s+=\s+([01])/));
-
-        my $define = $1;
-        my $default = $2;
-
-        # get feature description from name
-        my $descr = lc($define);
-        $descr =~ s/(enable_|wtf_use_)//;
-        my $switch = $descr;
-        $switch =~ s/_/-/g;
-        $switch = "opengles2" if ($switch eq "opengl-es-2");
-        $descr =~ s/_/ /g;
-        $descr =~ s/(\w+)/\u\L$1/g; # capitalize
-        $descr =~ s/Api/API/g;
-        $descr = "Toggle $descr support";
-
-        push(@featureValues, 0);
-        push(@features, { option => $switch, desc => $descr, define => $define, default => $default, value => \$featureValues[$#featureValues + 1]});
-        $featureIndex{ $define } = \$features[$#features];
-    }
-    close(FEATURE_FILE);
-}
 
 sub getFeatureOptionList()
 {

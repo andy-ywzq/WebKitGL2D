@@ -108,3 +108,16 @@ macro(ADD_SOURCE_WEBCORE_DERIVED_DEPENDENCIES _source _deps)
     ADD_SOURCE_DEPENDENCIES(${_source} ${_tmp})
     unset(_tmp)
 endmacro()
+
+# Compute and set default values for feature defines
+macro(WEBKIT_OPTION_DEFAULTS _port)
+    # Use the preprocessor to get the default values for feature defines
+    EXEC_PROGRAM("gcc -E -P -dM -DBUILDING_${_port}__ -I ${CMAKE_SOURCE_DIR}/Source/WTF ${CMAKE_SOURCE_DIR}/Source/WTF/wtf/Platform.h | grep '^#define ENABLE_\\w\\+ [01]$' | cut -d' ' -f2-3 | sort" OUTPUT_VARIABLE DEFINITIONS)
+    string(REGEX MATCHALL "([^\n]+|[^\n]+$)" DEFINITIONS_LIST ${DEFINITIONS})
+
+    foreach (DEFINITION ${DEFINITIONS_LIST})
+        string(REGEX REPLACE "^([^ ]+) ([^ ]+)$" "\\1" DEFINITION_NAME "${DEFINITION}")
+        string(REGEX REPLACE "^([^ ]+) ([^ ]+)$" "\\2" DEFINITION_VALUE "${DEFINITION}")
+        WEBKIT_OPTION_DEFINE(${DEFINITION_NAME} "Toggle ${DEFINITION_NAME}" ${DEFINITION_VALUE})
+    endforeach ()
+endmacro()

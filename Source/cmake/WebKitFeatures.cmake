@@ -180,3 +180,26 @@ macro(WEBKIT_OPTION_END)
         message(STATUS "${_MESSAGE}")
     endforeach ()
 endmacro()
+
+macro(PROCESS_WEBKIT_OPTIONS)
+    WEBKIT_OPTION_END()
+
+    # Add add_definitions to values different from the defaults
+    foreach (_name ${_WEBKIT_AVAILABLE_OPTIONS})
+        # Convert values from ON/OFF to 1/0 because
+        # CMake says "1 EQUAL ON" is false.
+        if (${_WEBKIT_AVAILABLE_OPTIONS_INITALVALUE_${_name}})
+            set(_a 1)
+        else ()
+            set(_a 0)
+        endif ()
+        if (${${_name}})
+            set(_b 1)
+        else ()
+            set(_b 0)
+        endif ()
+        if (NOT _a EQUAL _b)
+            add_definitions("-D${_name}=${_b}")
+        endif ()
+    endforeach ()
+endmacro()
