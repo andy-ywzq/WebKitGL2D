@@ -106,9 +106,8 @@ void WebViewNix::viewportInteractionStart()
 
 void WebViewNix::viewportInteractionStop()
 {
-    float effectiveScale = contentScaleFactor() * page()->deviceScaleFactor();
-    if (page()->pageScaleFactor() != effectiveScale)
-        page()->scalePage(effectiveScale, roundedIntPoint(contentPosition()));
+    if (page()->pageScaleFactor() != contentScaleFactor())
+        page()->scalePage(contentScaleFactor(), roundedIntPoint(contentPosition()));
     updateViewportSize();
     resumeActiveDOMObjectsAndAnimations();
 }
@@ -123,8 +122,8 @@ void WebViewNix::didChangeContentScaleFactor(float scaleFactor)
 {
     if (isSuspended())
         return;
-    float effectiveScale = scaleFactor * page()->deviceScaleFactor();
-    page()->scalePage(effectiveScale, roundedIntPoint(contentPosition()));
+    page()->scalePage(scaleFactor, roundedIntPoint(contentPosition()));
+    updateViewportSize();
 }
 
 void WebViewNix::didChangeContentPosition(const WebCore::FloatPoint& trajectoryVector)
