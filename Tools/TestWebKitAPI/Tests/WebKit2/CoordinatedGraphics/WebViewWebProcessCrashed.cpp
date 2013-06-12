@@ -52,7 +52,7 @@ static void webProcessRelaunched(WKViewRef, const void*)
     didWebProcessRelaunch = true;
 }
 
-TEST(WebKitNix, WebViewWebProcessCrashed)
+TEST(WebKit2, WebViewWebProcessCrashed)
 {
     WKRetainPtr<WKContextRef> context = adoptWK(Util::createContextForInjectedBundleTest("WebViewWebProcessCrashedTest"));
     WKRetainPtr<WKViewRef> view(AdoptWK, WKViewCreate(context.get(), 0));
@@ -80,7 +80,7 @@ TEST(WebKitNix, WebViewWebProcessCrashed)
         didWebProcessCrash = false;
         didWebProcessRelaunch = false;
 
-        WKRetainPtr<WKURLRef> redUrl = adoptWK(Util::createURLForResource("../nix/red-background", "html"));
+        WKRetainPtr<WKURLRef> redUrl = adoptWK(Util::createURLForResource("../WebKit2/CoordinatedGraphics/red-background", "html"));
         WKPageLoadURL(WKViewGetPage(view.get()), redUrl.get());
         Util::run(&didFinishLoad);
         didFinishLoad = false;
@@ -89,7 +89,7 @@ TEST(WebKitNix, WebViewWebProcessCrashed)
         Util::run(&didWebProcessCrash);
         ASSERT_TRUE(didWebProcessCrash);
 
-        WKRetainPtr<WKURLRef> greenUrl = adoptWK(Util::createURLForResource("../nix/green-background", "html"));
+        WKRetainPtr<WKURLRef> greenUrl = adoptWK(Util::createURLForResource("../WebKit2/CoordinatedGraphics/green-background", "html"));
         WKPageLoadURL(WKViewGetPage(view.get()), greenUrl.get());
         Util::run(&didFinishLoad);
 

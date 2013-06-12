@@ -38,6 +38,7 @@ UrlBar::UrlBar(Display* display, Window parent, XContext context, BrowserControl
     , m_isFocused(false)
     , m_url(url)
     , m_copiedText(url)
+    , m_loadProgress(0.0)
 {
     createXWindow(parent, context);
 

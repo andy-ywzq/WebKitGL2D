@@ -56,12 +56,12 @@ TEST(WebKitNix, WebViewPaintToCurrentGLContext)
     EXPECT_EQ(ToolsNix::RGBAPixel::blue(), clearedSample);
 
     forceRepaintClient.clear();
-    loader.waitForLoadURLAndRepaint("../nix/red-background");
+    loader.waitForLoadURLAndRepaint("../WebKit2/CoordinatedGraphics/red-background");
     ToolsNix::RGBAPixel redSample = offscreenBuffer.readPixelAtPoint(0, 0);
     EXPECT_EQ(ToolsNix::RGBAPixel::red(), redSample);
 
     forceRepaintClient.clear();
-    loader.waitForLoadURLAndRepaint("../nix/green-background");
+    loader.waitForLoadURLAndRepaint("../WebKit2/CoordinatedGraphics/green-background");
     ToolsNix::RGBAPixel greenSample = offscreenBuffer.readPixelAtPoint(0, 0);
     EXPECT_EQ(ToolsNix::RGBAPixel::green(), greenSample);
 }
