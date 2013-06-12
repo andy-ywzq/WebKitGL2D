@@ -18,7 +18,6 @@ add_definitions(-DBUILDING_NIX__=1)
 
 # We set this because we now use Source/Platform/chromium
 add_definitions(-DWEBKIT_IMPLEMENTATION=1)
-add_definitions(-DWEBKIT_DLL=1)
 
 find_package(Cairo 1.12.8 REQUIRED)
 find_package(Fontconfig 2.8.0 REQUIRED)

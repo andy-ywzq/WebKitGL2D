@@ -41,18 +41,14 @@
 // -----------------------------------------------------------------------------
 // Exported symbols need to be annotated with WEBKIT_EXPORT
 
-#if defined(WEBKIT_DLL)
-    #if defined(WIN32)
-        #if WEBKIT_IMPLEMENTATION
-            #define WEBKIT_EXPORT __declspec(dllexport)
-        #else
-            #define WEBKIT_EXPORT __declspec(dllimport)
-        #endif
+#if defined(WIN32)
+    #if WEBKIT_IMPLEMENTATION
+        #define WEBKIT_EXPORT __declspec(dllexport)
     #else
-        #define WEBKIT_EXPORT __attribute__((visibility("default")))
+        #define WEBKIT_EXPORT __declspec(dllimport)
     #endif
 #else
-    #define WEBKIT_EXPORT
+    #define WEBKIT_EXPORT __attribute__((visibility("default")))
 #endif
 
 // -----------------------------------------------------------------------------
