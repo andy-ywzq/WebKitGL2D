@@ -145,6 +145,7 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     memset(&loadClient, 0, sizeof(WKPageLoaderClient));
     loadClient.version = kWKPageLoaderClientCurrentVersion;
     loadClient.clientInfo = this;
+    loadClient.didStartProgress = MiniBrowser::didStartProgress;
     loadClient.didChangeProgress = MiniBrowser::didChangeProgress;
     WKPageSetPageLoaderClient(pageRef(), &loadClient);
 
@@ -997,6 +998,12 @@ WKStringRef MiniBrowser::runJavaScriptPrompt(WKPageRef, WKStringRef message, WKS
     std::string userInput;
     getline(cin, userInput);
     return WKStringCreateWithUTF8CString(userInput.c_str());
+}
+
+void MiniBrowser::didStartProgress(WKPageRef page, const void* clientInfo)
+{
+    MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
+    mb->m_control->setLoadProgress(0.0);
 }
 
 void MiniBrowser::didChangeProgress(WKPageRef page, const void* clientInfo)

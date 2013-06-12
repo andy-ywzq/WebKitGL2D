@@ -96,6 +96,7 @@ public:
     static WKStringRef runJavaScriptPrompt(WKPageRef page, WKStringRef message, WKStringRef defaultValue, WKFrameRef frame, const void* clientInfo);
 
     // PageLoaderClient.
+    static void didStartProgress(WKPageRef page, const void *clientInfo);
     static void didChangeProgress(WKPageRef page, const void* clientInfo);
 
     virtual double scale();
