@@ -83,6 +83,7 @@ set(webcoreTestList
 )
 
 set(webkit2TestList
+    WebKit2/AboutBlankLoad
     WebKit2/CookieManager
     WebKit2/DOMWindowExtensionBasic
     WebKit2/DOMWindowExtensionNoCache
@@ -108,6 +109,7 @@ set(webkit2TestList
     WebKit2/RestoreSessionStateContainingFormData
     WebKit2/ShouldGoToBackForwardListItem
     WebKit2/WKConnection
+    WebKit2/WKPreferences
     WebKit2/WKString
     WebKit2/WKStringJSString
     WebKit2/WebWorker
@@ -136,12 +138,10 @@ set(webkit2FailTestList
 
 # Tests disabled because of missing features on the test harness:
 #
-#   WebKit2/AboutBlankLoad
 #   WebKit2/HitTestResultNodeHandle
 #   WebKit2/MouseMoveAfterCrash
 #   WebKit2/ResponsivenessTimerDoesntFireEarly
 #   WebKit2/SpacebarScrolling
-#   WebKit2/WKPreferences
 #
 # Flaky test, fails on Release but passes on Debug:
 #
