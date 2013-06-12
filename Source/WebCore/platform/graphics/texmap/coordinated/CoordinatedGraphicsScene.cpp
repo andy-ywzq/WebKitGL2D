@@ -61,6 +61,7 @@ CoordinatedGraphicsScene::CoordinatedGraphicsScene(CoordinatedGraphicsSceneClien
     , m_rootLayerID(InvalidCoordinatedLayerID)
     , m_backgroundColor(Color::white)
     , m_setDrawsBackground(false)
+    , m_stateLocked(false)
 {
     ASSERT(isMainThread());
 }
