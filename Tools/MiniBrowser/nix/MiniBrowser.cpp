@@ -280,6 +280,28 @@ void MiniBrowser::handleKeyPressEvent(const XKeyPressedEvent& event)
         cout << "Web page snapshot saved to " << snapshotFile.str() << endl;
         return;
     }
+
+    if (isMobileMode() && event.state & ControlMask) {
+        bool doScale = true;
+        double newScale = WKViewGetContentScaleFactor(m_view);
+        if (symbol == XK_0)
+            newScale = m_viewportInitScale;
+        else if (symbol == XK_KP_Add || symbol == XK_plus || symbol == XK_equal)
+            newScale = std::min(m_viewportMaxScale, float(newScale + 0.1));
+        else if ((symbol == XK_KP_Subtract || symbol == XK_minus || symbol == XK_underscore))
+            newScale = std::max(m_viewportMinScale, float(newScale - 0.1));
+        else
+            doScale = false;
+
+        if (doScale) {
+            if (newScale != WKViewGetContentScaleFactor(m_view)) {
+                WKViewSetContentScaleFactor(m_view, newScale);
+                adjustScrollPosition();
+            }
+            return;
+        }
+    }
+
     NavigationCommand command = checkNavigationCommand(symbol, event.state);
     switch (command) {
     case BackNavigation:
