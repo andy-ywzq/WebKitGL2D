@@ -28,8 +28,6 @@
 [
     Conditional=WORKERS,
     CustomConstructor(DOMString scriptUrl),
-    CallWith=ScriptExecutionContext,
-    RaisesException,
     JSGenerateToNativeObject,
     JSGenerateToJSObject
 ] interface Worker : AbstractWorker {

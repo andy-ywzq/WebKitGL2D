@@ -160,7 +160,7 @@ void RenderBox::willBeDestroyed()
     RenderBlock::removePercentHeightDescendantIfNeeded(this);
 
 #if ENABLE(CSS_SHAPES)
-    ExclusionShapeOutsideInfo::removeInfo(this);
+    ShapeOutsideInfo::removeInfo(this);
 #endif
 
     RenderBoxModelObject::willBeDestroyed();
@@ -312,22 +312,22 @@ void RenderBox::styleDidChange(StyleDifference diff, const RenderStyle* oldStyle
     }
 
 #if ENABLE(CSS_SHAPES)
-    updateExclusionShapeOutsideInfoAfterStyleChange(style()->shapeOutside(), oldStyle ? oldStyle->shapeOutside() : 0);
+    updateShapeOutsideInfoAfterStyleChange(style()->shapeOutside(), oldStyle ? oldStyle->shapeOutside() : 0);
 #endif
 }
 
 #if ENABLE(CSS_SHAPES)
-void RenderBox::updateExclusionShapeOutsideInfoAfterStyleChange(const ExclusionShapeValue* shapeOutside, const ExclusionShapeValue* oldShapeOutside)
+void RenderBox::updateShapeOutsideInfoAfterStyleChange(const ShapeValue* shapeOutside, const ShapeValue* oldShapeOutside)
 {
     // FIXME: A future optimization would do a deep comparison for equality. (bug 100811)
     if (shapeOutside == oldShapeOutside)
         return;
 
     if (shapeOutside) {
-        ExclusionShapeOutsideInfo* exclusionShapeOutsideInfo = ExclusionShapeOutsideInfo::ensureInfo(this);
-        exclusionShapeOutsideInfo->dirtyShapeSize();
+        ShapeOutsideInfo* shapeOutsideInfo = ShapeOutsideInfo::ensureInfo(this);
+        shapeOutsideInfo->dirtyShapeSize();
     } else
-        ExclusionShapeOutsideInfo::removeInfo(this);
+        ShapeOutsideInfo::removeInfo(this);
 }
 #endif
 
@@ -3034,9 +3034,15 @@ static void computeInlineStaticDistance(Length& logicalLeft, Length& logicalRigh
     }
 }
 
+static bool isReplacedElement(const RenderBox* child)
+{
+    // FIXME: Bug 117267, we should make form control elements isReplaced too so that we can just check for that.
+    return child->isReplaced() || (child->node() && child->node()->isElementNode() && toElement(child->node())->isFormControlElement() && !child->isFieldset());
+}
+
 void RenderBox::computePositionedLogicalWidth(LogicalExtentComputedValues& computedValues, RenderRegion* region) const
 {
-    if (isReplaced()) {
+    if (isReplacedElement(this)) {
         // FIXME: Positioned replaced elements inside a flow thread are not working properly
         // with variable width regions (see https://bugs.webkit.org/show_bug.cgi?id=69896 ).
         computePositionedLogicalWidthReplaced(computedValues);
@@ -3378,7 +3384,7 @@ static void computeBlockStaticDistance(Length& logicalTop, Length& logicalBottom
 
 void RenderBox::computePositionedLogicalHeight(LogicalExtentComputedValues& computedValues) const
 {
-    if (isReplaced()) {
+    if (isReplacedElement(this)) {
         computePositionedLogicalHeightReplaced(computedValues);
         return;
     }

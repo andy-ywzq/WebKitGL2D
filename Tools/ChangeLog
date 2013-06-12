@@ -1,3 +1,136 @@
+2013-06-12  Andres Gomez  <agomez@igalia.com>
+
+        [GTK] MiniBrowser to automatically download "non-showable" documents when left click in link
+        https://bugs.webkit.org/show_bug.cgi?id=117533
+
+        Reviewed by Carlos Garcia Campos.
+
+        MiniBrowser now starts automatically the download of the documents
+        that cannot be shown just by WebKit itself on link left clicking.
+
+        * MiniBrowser/gtk/BrowserWindow.c:
+        (webViewDecidePolicy): handled the
+        WEBKIT_POLICY_DECISION_TYPE_RESPONSE decision type too.
+
+2013-06-12  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Remove the WebCoreLayer(Gtk2).a archives before regenerating them
+        https://bugs.webkit.org/show_bug.cgi?id=116723
+
+        Reviewed by Carlos Garcia Campos.
+
+        * TestWebKitAPI/GNUmakefile.am: When generating the WebCoreLayer.a archive from all the dependency archives,
+        remove the current archive (if any). Updating an existent archive in an incremental build is not bulletproof
+        and can lead to corrupt archives and subsequent build failures. On the other hand, the archive generation is
+        not expensive and produces a working archive without problems even on incremental builds.
+
+2013-06-11  Santosh Mahto  <santosh.ma@samsung.com>
+
+        [EFL] Window resize should close the popupmenu
+        https://bugs.webkit.org/show_bug.cgi?id=117391
+
+        Reviewed by Christophe Dumez.
+        
+        Added the code to close the popup when main window is resized.
+
+        * MiniBrowser/efl/main.c:
+        (on_window_resize):
+
+2013-06-11  Alex Christensen  <achristensen@apple.com>
+
+        Removed old broken code coverage tool.
+        https://bugs.webkit.org/show_bug.cgi?id=117520
+
+        Reviewed by Sam Weinig.
+
+        * CodeCoverage: Removed.
+        * CodeCoverage/README: Removed.
+        * CodeCoverage/amber.png: Removed.
+        * CodeCoverage/cov.py: Removed.
+        * CodeCoverage/emerald.png: Removed.
+        * CodeCoverage/gcov.css: Removed.
+        * CodeCoverage/glass.png: Removed.
+        * CodeCoverage/regenerate-coverage-display: Removed.
+        * CodeCoverage/ruby.png: Removed.
+        * CodeCoverage/run-generate-coverage-data: Removed.
+        * CodeCoverage/snow.png: Removed.
+
+2013-06-11  Timothy Hatcher  <timothy@apple.com>
+
+        Have build-webkit build the WebInspectorUI project.
+
+        * Scripts/build-webkit:
+
+2013-06-11  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Add an option to run-webkit-tests to skip java dependency check
+        https://bugs.webkit.org/show_bug.cgi?id=117516
+
+        Reviewed by Andreas Kling.
+
+        * Scripts/webkitpy/layout_tests/run_webkit_tests.py:
+        (parse_args):
+        * Scripts/webkitpy/port/mac.py:
+        (MacPort._check_port_build):
+
+2013-06-11  Alex Christensen  <achristensen@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=117514
+        Removed extra Xcode code coverage flags.
+
+        Reviewed by Sam Weinig.
+
+        * Scripts/webkitdirs.pm:
+        (XcodeCoverageSupportOptions):
+
+2013-06-11  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Implement 'attributeValue' accessor to support testing
+        https://bugs.webkit.org/show_bug.cgi?id=117513
+
+        Reviewed by Anders Carlsson.
+
+        * DumpRenderTree/win/AccessibilityControllerWin.cpp:
+        (comparableObject): Move earlier in file.
+        (findAccessibleObjectById): New implemenation.
+        (AccessibilityController::accessibleElementById): New implementation.
+
+2013-06-11  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Make WTR use its own temporary directory for application cache
+        https://bugs.webkit.org/show_bug.cgi?id=117143
+
+        Reviewed by Alexey Proskuryakov.
+
+        * WebKitTestRunner/TestController.cpp:
+        (WTR::TestController::initialize):
+
+2013-06-10  Alexey Proskuryakov  <ap@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=117449
+        Remove dead code for storing fonts in __DATA section
+
+        Reviewed by Dan Bernstein.
+
+        * DumpRenderTree/mac/Configurations/DumpRenderTree.xcconfig:
+        Don't copy font resources to __DATA, as we don't have any code that reads them
+        from there (previously removed due to being under "defined(BUILDING_ON_LEOPARD)").
+
+        * DumpRenderTree/mac/DumpRenderTree.mm: (activateTestingFonts):
+        * WebKitTestRunner/InjectedBundle/mac/ActivateFonts.mm: (WTR::activateFonts):
+        Removed comments suggesting that we want to restore the old solution.
+
+2013-06-10  Bear Travis  <betravis@adobe.com>
+
+        [CSS Shapes][CSS Exclusions] Split CSS Exclusions and CSS Shapes code
+        https://bugs.webkit.org/show_bug.cgi?id=117162
+
+        Reviewed by Alexandru Chiculita.
+
+        Adding the WebCore/rendering/shapes directory to the include list.
+
+        * DumpRenderTree/efl/CMakeLists.txt:
+
 2013-06-09  Brent Fulgham  <bfulgham@apple.com>
 
         [Windows] Unreviewed test correction:  Prevent DumpRenderTree crashes

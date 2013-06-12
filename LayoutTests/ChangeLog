@@ -1,3 +1,326 @@
+2013-06-12  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [ARM] Unreviewed gardening, unskip now passing tests and try to paint the bot green.
+
+        * platform/qt-arm/TestExpectations:
+        * platform/qt-arm/svg/W3C-SVG-1.1/paths-data-05-t-expected.txt: Removed.
+        * platform/qt-arm/svg/W3C-SVG-1.1/paths-data-09-t-expected.txt: Removed.
+        * platform/qt-arm/svg/batik/text/textOnPath3-expected.txt: Removed.
+
+2013-06-12  Sergio Villar Senin  <svillar@igalia.com>
+
+        Skipping {}, () and [] blocks while error recovering in CSS
+        https://bugs.webkit.org/show_bug.cgi?id=116071
+
+        Reviewed by Darin Adler.
+
+        From Blink r150201 and r150755 by <serya@chromium.org>
+
+        * fast/css/parsing-expr-error-recovery-expected.txt: Added.
+        * fast/css/parsing-expr-error-recovery.html: Added.
+
+2013-06-12  Sergio Villar Senin  <svillar@igalia.com>
+
+        [css exclusions] fast/css/variables/var-inside-shape.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=116059
+
+        Reviewed by Alexandru Chiculita.
+
+        Some shapes were incorrectly defined, there was a "rectange"
+        instead of a "rectangle" and also the number of parameters and
+        their types was wrong. Apart from that, both the CSS exclusions
+        and CSS variables settings were not enabled at runtime.
+
+        Some extra text was also added to the divs in order to verify that
+        the CSS exclusions are working properly.
+
+        * fast/css/variables/var-inside-shape-expected.html:
+        * fast/css/variables/var-inside-shape.html:
+        * platform/efl/TestExpectations: Removed var-inside-shape.html.
+        * platform/gtk/TestExpectations: Ditto.
+
+2013-06-12  Daniel Bates  <dabates@apple.com>
+
+        window.find() case-insensitive search doesn't match diacritical marks
+        https://bugs.webkit.org/show_bug.cgi?id=117353
+        <rdar://problem/8535227>
+
+        Reviewed by Darin Adler.
+
+        Added test to use window.find() to find a search string in text, where either
+        the search string or text (or both) contain diacritical characters.
+
+        Additionally, updated tests LayoutTests/fast/text/find-soft-hyphen.html
+        and LayoutTests/editing/execCommand/findString-diacriticals.html based on the
+        new behavior of window.find(). Moved function testFind() from LayoutTests/fast/text/script-tests/find-backwards.js
+        to its own file, LayoutTests/fast/text/resources/test-find.js, so that this function can
+        be used by both tests LayoutTests/fast/text/find-{backwards, diacritical-mark}.html.
+
+        * LayoutTests/editing/execCommand/findString-diacriticals.html: Update test based on the new
+        behavior of window.find().
+        * fast/text/find-backwards.html: Include external JavaScript file test-find.js.
+        * fast/text/find-case-folding-expected.txt: Rebase result; expected failure.
+        * fast/text/find-case-folding.html: Add comment to see bug #117548 with regards to expected failure.
+        * fast/text/find-diacritical-mark-expected.txt: Added.
+        * fast/text/find-diacritical-mark.html: Copied from LayoutTests/fast/text/find-backwards.html.
+        * fast/text/find-soft-hyphen-expected.txt: Rebase result.
+        * fast/text/resources/test-find.js: Added.
+        (testFind):
+        * fast/text/script-tests/find-backwards.js: Moved function testFind() from here to
+        file fast/text/resources/test-find.js and modified it to take an additional argument to
+        toggle search case sensitivity.
+        * fast/text/script-tests/find-diacritical-mark.js: Added.
+        * fast/text/script-tests/find-soft-hyphen.js: Update test based on the new behavior of window.find().
+
+2013-06-12  Javier Fernandez  <jfernandez@igalia.com>
+
+        [Qt][CSS Regions] fast/regions/overflow-size-change-with-stacking-context.html fails
+        https://bugs.webkit.org/show_bug.cgi?id=97199
+
+        Unreviewed, Qt Gardening.
+
+        Unskip test that is now passing on the bots.
+
+        * platform/qt/TestExpectations:
+
+2013-06-12  Kwang Yul Seo  <skyul@company100.net>
+
+        Unreviewed gardening. Unskipping passing tests.
+
+        * platform/gtk-wk2/TestExpectations:
+
+2013-06-12  Sergio Villar Senin  <svillar@igalia.com>
+
+        Add CSS parsing recovery to functions
+        https://bugs.webkit.org/show_bug.cgi?id=117500
+
+        Reviewed by Andreas Kling.
+
+        From Blink r150205 by <serya@chromium.org>
+
+        * fast/css/parsing-error-recovery.html: added some test cases for
+        parsing recovery inside functions.
+
+2013-06-11  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed, EFL Gardening. Unskip fast/canvas/webgl/context-attributes-alpha-depth-stencil-antialias.html
+        for efl-wk2. Because Ubuntu 13.04 solves issues related to xvfb. However, EFL WK1 doesn't support
+        webgl yet. So, it needs to be moved to efl-wk1 TestExpectations.
+
+        * platform/efl-wk1/TestExpectations:
+        * platform/efl/TestExpectations:
+
+2013-06-11  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed, EFL Gardening.
+
+        EFL WK2 supports fast/canvas/webgl/read-pixels-test.html because Ubuntu 13.04 solves issues related to xvfb.
+        However, EFL WK1 doesn't support webgl yet. So, it is moved to efl-wk1 TestExpectations.
+
+        * platform/efl-wk1/TestExpectations:
+        * platform/efl/TestExpectations:
+
+2013-06-11  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed, EFL gardening. Unskip passing tests for new EFL bots.
+
+        fast/parser/document-write-fighting-eof.html
+        fast/parser/document-write-partial-entity-before-load.html
+
+        * platform/efl/TestExpectations:
+
+2013-06-11  Max Vujovic  <mvujovic@adobe.com>
+
+        [CSS Regions] Regions don't create a stacking context for their contents
+        https://bugs.webkit.org/show_bug.cgi?id=114268
+
+        Reviewed by Alexandru Chiculita.
+
+        * fast/regions/region-sibling-paint-order-expected.html: Added.
+        * fast/regions/region-sibling-paint-order.html: Added.
+
+2013-06-11  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Use HTMLElementFactory to create equivalent elements in WebVTTElement
+        https://bugs.webkit.org/show_bug.cgi?id=117423
+
+        Reviewed by Eric Carlson.
+
+        * media/track/getCueAsHTMLCrash-expected.txt: Added.
+        * media/track/getCueAsHTMLCrash.html: Added.
+
+2013-06-11  Eric Carlson  <eric.carlson@apple.com>
+
+        [Mac] Update text track menu
+        https://bugs.webkit.org/show_bug.cgi?id=117351
+
+        Reviewed by Darin Adler.
+
+        * media/video-controls-captions-trackmenu-localized.html:
+        * media/video-controls-captions-trackmenu-sorted.html:
+        * platform/mac-lion/media/video-controls-captions-trackmenu-localized-expected.txt:
+        * platform/mac/media/video-controls-captions-trackmenu-localized-expected.txt:
+        * platform/mac/media/video-controls-captions-trackmenu-sorted-expected.txt:
+
+2013-06-11  Robert Hogan  <robert@webkit.org>
+
+        Rebaseline results after r151451
+
+        Unreviewed, gardening.
+
+        * platform/efl/fast/forms/button-positioned-expected.txt:
+        * platform/efl/fast/forms/input-appearance-preventDefault-expected.txt:
+        * platform/efl/fast/replaced/width-and-height-of-positioned-replaced-elements-expected.txt: Added.
+        * platform/gtk/fast/forms/button-positioned-expected.txt:
+        * platform/gtk/fast/forms/input-appearance-preventDefault-expected.png:
+        * platform/gtk/fast/forms/input-appearance-preventDefault-expected.txt:
+        * platform/gtk/fast/replaced/width-and-height-of-positioned-replaced-elements-expected.txt: Added.
+        * platform/win/fast/forms/onselect-textfield-expected.txt: Added.
+
+2013-06-11  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening. Rebaselining various tests that are at the moment failing and need the new baseline.
+
+        * platform/gtk/editing/deleting/delete-block-merge-contents-001-expected.txt:
+        * platform/gtk/editing/deleting/delete-block-merge-contents-019-expected.txt:
+        * platform/gtk/editing/deleting/delete-block-merge-contents-020-expected.txt:
+        * platform/gtk/editing/pasteboard/4944770-2-expected.txt:
+        * platform/gtk/editing/pasteboard/8145-2-expected.txt:
+        * platform/gtk/editing/pasteboard/paste-line-endings-006-expected.txt:
+        * platform/gtk/editing/pasteboard/paste-text-008-expected.txt:
+        * platform/gtk/editing/pasteboard/paste-text-at-tabspan-003-expected.txt:
+        * platform/gtk/editing/pasteboard/paste-xml-expected.txt:
+        * platform/gtk/http/tests/w3c/webperf/approved/navigation-timing/html/test_timing_xserver_redirect-expected.txt:
+
+2013-05-27  Robert Hogan  <robert@webkit.org>
+
+        Positioned Replaced Elements That Aren't RenderReplaced get Incorrect Width
+        https://bugs.webkit.org/show_bug.cgi?id=93735
+
+        Reviewed by Darin Adler.
+
+        * fast/forms/onselect-textfield-expected.txt:
+        * fast/replaced/width-and-height-of-positioned-replaced-elements-expected.png: Added.
+        * fast/replaced/width-and-height-of-positioned-replaced-elements-expected.txt: Added.
+        * fast/replaced/width-and-height-of-positioned-replaced-elements.html: Added.
+        * platform/mac-wk2/fast/replaced/width-and-height-of-positioned-replaced-elements-expected.txt: Added.
+        * platform/mac/fast/forms/button-positioned-expected.txt:
+        * platform/mac/fast/forms/input-appearance-preventDefault-expected.txt:
+        * platform/mac/fast/replaced/width-and-height-of-positioned-replaced-elements-expected.txt: Added.
+        * platform/qt/fast/forms/button-positioned-expected.txt:
+        * platform/qt/fast/forms/input-appearance-preventDefault-expected.txt:
+
+2013-06-11  Robert Hogan  <robert@webkit.org>
+
+        Add baselines for test added in r151444
+
+        Unreviewed.
+
+        * platform/gtk/fast/repaint/table-cell-collapsed-border-scroll-expected.txt: Added.
+        * platform/win/fast/repaint/table-cell-collapsed-border-scroll-expected.txt: Added.
+
+2013-06-03  Robert Hogan  <robert@webkit.org>
+
+        Painting collapsed borders during scrolling
+        https://bugs.webkit.org/show_bug.cgi?id=85658
+
+        Reviewed by David Hyatt.
+
+        * fast/repaint/table-cell-collapsed-border-scroll-expected.txt: Added.
+        * fast/repaint/table-cell-collapsed-border-scroll.html: Added.
+        * platform/qt/fast/repaint/table-cell-collapsed-border-scroll-expected.png: Added.
+
+2013-06-11  Ryosuke Niwa  <rniwa@webkit.org>
+
+        editing/undo/undo-after-event-edited.html can be flaky
+        https://bugs.webkit.org/show_bug.cgi?id=117461
+
+        Reviewed by Andreas Kling.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/515de860730b34289df5805b40adb2535a9a8ba1
+
+        * editing/undo/undo-after-event-edited.html:
+
+2013-06-11  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Unskipping passing tests. Generate new baseline where needed.
+
+        * platform/qt-5.0-wk1/TestExpectations:
+        * platform/qt-5.0-wk2/TestExpectations:
+        * platform/qt-5.0-wk2/fast/images/paletted-png-with-color-profile-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/images/paletted-png-with-color-profile-expected.txt: Added.
+        * platform/qt/TestExpectations:
+
+2013-06-11  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [Qt][EFL][GTK]fast/regions/overflow-size-change-with-stacking-context-rtl.html fails after r151202
+        https://bugs.webkit.org/show_bug.cgi?id=117295
+
+        Reviewed by Alexandru Chiculita.
+
+        Both test specify margins auto, which means that they can be computed to floats.
+        I changed the tests so that the margins are computed to integer values, to avoid
+        possible differences on platforms that enable subpixel layout.
+
+        * fast/regions/overflow-size-change-with-stacking-context-rtl-expected.html:
+        * fast/regions/overflow-size-change-with-stacking-context-rtl.html:
+        * platform/qt/TestExpectations: Unskip the skipped test
+
+2013-06-11  Sergio Villar Senin  <svillar@igalia.com>
+
+        Autoclose braces and parentheses at the end of style sheet
+        https://bugs.webkit.org/show_bug.cgi?id=117414
+
+        Reviewed by Andreas Kling.
+
+        From Blink r150202 by <serya@chromium.org>
+
+        * animations/keyframe-autoclose-brace-expected.txt: Added.
+        * animations/keyframe-autoclose-brace.html: Added.
+        * css3/autoclose-braces-and-parentheses-expected.txt: Added.
+        * css3/autoclose-braces-and-parentheses.html: Added.
+
+2013-06-10  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Use shouldBeType in animations/keyframes-rule.html
+        https://bugs.webkit.org/show_bug.cgi?id=117439
+
+        Reviewed by Andreas Kling.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/7eb727a7d5765eaa1779e00a45ac9f63e2e0047f
+
+        * animations/keyframes-rule-expected.txt:
+        * animations/keyframes-rule.html:
+
+2013-06-10  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed, EFL gardening. Fix wrong expectation result on 151416.
+
+        * platform/efl-wk2/TestExpectations:
+
+2013-06-10  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed, EFL gardening. Manage tests which need to implement repaint rect. 
+
+        * platform/efl-wk2/TestExpectations:
+        * platform/efl/TestExpectations:
+
+2013-06-10  Jer Noble  <jer.noble@apple.com>
+
+        REGRESSION(r151302): Many broken webaudio/ tests on Mac port.
+        https://bugs.webkit.org/show_bug.cgi?id=117446
+
+        Reviewed by Chris Rogers.
+
+        Re-enable the tests on mac-wk2 and add new baselines for codec and audiobuffersource tests.
+
+        * platform/mac-wk2/TestExpectations:
+        * platform/mac-wk2/webaudio/audiobuffersource-loop-points-expected.wav: Added.
+        * platform/mac-wk2/webaudio/audiobuffersource-playbackrate-expected.wav: Added.
+        * platform/mac-wk2/webaudio/codec-tests/aac/vbr-128kbps-44khz-expected.wav: Added.
+        * platform/mac-wk2/webaudio/codec-tests/mp3/128kbps-44khz-expected.wav: Added.
+        * platform/mac-wk2/webaudio/codec-tests/wav/24bit-22khz-resample-expected.wav: Added.
+
 2013-06-10  Mihnea Ovidenie  <mihnea@adobe.com>
 
         [CSSRegions] ASSERTION FAILED: roundedIntPoint(rendererMappedResult) == roundedIntPoint(result) in RenderGeometryMap::mapToContainer

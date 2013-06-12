@@ -32,8 +32,8 @@
     Conditional=MEDIA_STREAM,
     ActiveDOMObject,
     Constructor(Dictionary rtcIceServers, optional Dictionary mediaConstraints),
-    RaisesException,
-    CallWith=ScriptExecutionContext,
+    ConstructorRaisesException,
+    ConstructorCallWith=ScriptExecutionContext,
     EventTarget,
     InterfaceName=webkitRTCPeerConnection
 ] interface RTCPeerConnection {

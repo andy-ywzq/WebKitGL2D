@@ -494,6 +494,11 @@ String contextMenuItemTagEnterVideoFullscreen()
     return WEB_UI_STRING("Enter Fullscreen", "Video Enter Fullscreen context menu item");
 }
 
+String contextMenuItemTagExitVideoFullscreen()
+{
+    return WEB_UI_STRING("Exit Fullscreen", "Video Exit Fullscreen context menu item");
+}
+
 String contextMenuItemTagMediaPlay()
 {
     return WEB_UI_STRING("Play", "Media Play context menu item");
@@ -1026,9 +1031,9 @@ String textTrackOffMenuItemText()
     return WEB_UI_STRING("Off", "Menu item label for the track that represents disabling closed captions");
 }
 
-String textTrackAutomaticMenuItemText(const String& language)
+String textTrackAutomaticMenuItemText()
 {
-    return formatLocalizedString(WEB_UI_STRING("Automatic (%@)", "Menu item label for automatic track selection behavior in the form of 'Automatic (SystemLanguage)'"), language.createCFString().get());
+    return formatLocalizedString(WEB_UI_STRING("Auto (Recommended)", "Menu item label for automatic track selection behavior"));
 }
 
 String textTrackNoLabelText()

@@ -27,7 +27,9 @@ CheckSecurityForNode
 Clamp
 Conditional=*
 Constructor
+ConstructorCallWith=ScriptExecutionContext
 ConstructorConditional=*
+ConstructorRaisesException
 ConstructorTemplate=Event|TypedArray
 Custom
 CustomCall
@@ -61,7 +63,6 @@ Immutable
 ImplementationLacksVTable
 ImplementationNamespace=*
 ImplementedAs=*
-IndexedGetter
 InitializedByEventConstructor
 InterfaceName=*
 IsIndex
@@ -83,10 +84,8 @@ JSNoStaticTables
 JSWindowEventListener
 MasqueradesAsUndefined
 NamedConstructor=*
-NamedGetter
 NoInterfaceObject
 NotEnumerable
-NumericIndexedGetter
 ObjCCustomImplementation
 ObjCLegacyUnnamedParameters
 ObjCPolymorphic

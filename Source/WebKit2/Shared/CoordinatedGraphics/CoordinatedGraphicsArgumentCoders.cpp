@@ -188,6 +188,10 @@ void ArgumentCoder<WebCore::FilterOperations>::encode(ArgumentEncoder& encoder, 
                     ArgumentCoder<TransformOperations>::encode(encoder, transformParameter->operations());
                     break;
                 }
+                default: {
+                    ASSERT_NOT_REACHED();
+                    break;
+                }
                 }
             }
 
@@ -322,6 +326,10 @@ bool ArgumentCoder<WebCore::FilterOperations>::decode(ArgumentDecoder& decoder, 
                     transformParameter->setOperations(operations);
                     parameters[i] = transformParameter.release();
                     break;
+                }
+                default: {
+                    ASSERT_NOT_REACHED();
+                    return false;
                 }
                 }
             }

@@ -2190,6 +2190,8 @@ void WebPageProxy::preferencesDidChange()
 
     m_process->pagePreferencesChanged(this);
 
+    m_pageClient->preferencesDidChange();
+
     // FIXME: It probably makes more sense to send individual preference changes.
     // However, WebKitTestRunner depends on getting a preference change notification
     // even if nothing changed in UI process, so that overrides get removed.

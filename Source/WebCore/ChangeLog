@@ -1,3 +1,1004 @@
+2013-06-12  Ralph Thomas  <ralpht@gmail.com>
+
+        [CSS Shaders] Animations and transitions should use validated custom programs
+        https://bugs.webkit.org/show_bug.cgi?id=117550
+
+        Run filters used for animations and transitions through RenderLayer::computeFilterOperations
+        in order to validate custom filter operations.
+
+        Reviewed by Alexandru Chiculita.
+
+        No new tests as no platform can run custom filters with accelerated animations yet.
+
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::startAnimation):
+        (WebCore::RenderLayerBacking::startTransition):
+
+2013-06-12  Ruth Fong  <ruth_fong@apple.com>
+
+        Allow for toggling fullscreen on <video> elements
+        https://bugs.webkit.org/show_bug.cgi?id=117220
+
+        Reviewed by Dean Jackson.
+
+        This patch adds the ability for fullscreen
+        context menu item on <video> elements to switch between "Enter Fullscreen"
+        and "Exit Fullscreen" and behave appropriately.
+
+        No new tests. media/context-menu-action.html,
+        which has been disabled by bug 116651, is used to test context menus.
+
+        * English.lproj/Localizable.strings: Add "Exit Fullscreen" string.
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::toggleFullscreenState): Added to appropriately enter/exit fullscreen.
+        * html/HTMLMediaElement.h:
+        * page/ContextMenuController.cpp:
+        * platform/ContextMenuItem.h:
+        * platform/LocalizedStrings.cpp:
+        * platform/LocalizedStrings.h:
+        Updated to rename variables more appropriately to reflect the toggle-ability of video fullscreen.
+        * rendering/HitTestResult.cpp:
+        (WebCore::HitTestResult::mediaIsInFullscreen): Added to check if an element
+        was a media element in fullscreen.
+        (WebCore::HitTestResult::toggleMediaFullscreenState): Added to hook into
+        HTMLMediaElement::toggleFullscreenState.
+        * rendering/HitTestResult.h:
+
+2013-06-12  Sergio Villar Senin  <svillar@igalia.com>
+
+        Skipping {}, () and [] blocks while error recovering in CSS
+        https://bugs.webkit.org/show_bug.cgi?id=116071
+
+        Reviewed by Darin Adler.
+
+        From Blink r150201 and r150755 by <serya@chromium.org>
+
+        Test: fast/css/parsing-expr-error-recovery.html
+
+        The CSS parser should properly recover from invalid {}, () and []
+        blocks skipping them instead of discarding the whole declaration
+        as invalid. This merge is actually made of two different changes
+        from Blink, the original one that fixes the bug and another one
+        which refactors a bit the code making it more legible.
+
+        * css/CSSGrammar.y.in:
+
+2013-06-12  Alberto Garcia  <agarcia@igalia.com>
+
+        [BlackBerry] Remove dead WebDOM code
+        https://bugs.webkit.org/show_bug.cgi?id=113370
+
+        Reviewed by Anders Carlsson.
+
+        BlackBerry PR 347565
+        Internally reviewed by Charles Wei.
+
+        * PlatformBlackBerry.cmake:
+
+2013-06-12  Daniel Bates  <dabates@apple.com>
+
+        window.find() case-insensitive search doesn't match diacritical marks
+        https://bugs.webkit.org/show_bug.cgi?id=117353
+        <rdar://problem/8535227>
+
+        Reviewed by Darin Adler.
+
+        Currently, a case-insensitive window.find() search will return true for a word w
+        (e.g. café) with diacritical characters when w appears on the page without
+        diacritical marks (e.g. cafe). This leads to bad results, especially when
+        searching for a non-English word (e.g. qué) where the presence of an accented
+        character(s) may change the meaning of the word. Instead window.find() should
+        return false when case-insensitively matching a word with diacritical marks to
+        the same word without diacritical marks.
+
+        Test: fast/text/find-diacritical-mark.html
+
+        * editing/TextIterator.cpp:
+        (WebCore::SearchBuffer::SearchBuffer):
+
+2013-06-12  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Support latest Web IDL indexed property getters
+        https://bugs.webkit.org/show_bug.cgi?id=117507
+
+        Reviewed by Kentaro Hara.
+
+        Support latest Web IDL indexed property getters:
+        http://www.w3.org/TR/WebIDL/#dfn-support-indexed-properties
+
+        Drop support for outdated [IndexedGetter] and [NumericIndexedGetter]
+        IDL extended attributes. Since the new getter format specifies the
+        return type, the bindings generator is now smart enough to know if
+        the indexed getter is numeric or not on its own.
+
+        Based on Blink r149564 by <kojih@chromium.org>.
+
+        No new tests, no behavior change.
+
+        * Modules/filesystem/EntryArray.idl:
+        * Modules/filesystem/EntryArraySync.idl:
+        * Modules/gamepad/GamepadList.idl:
+        * Modules/mediasource/SourceBufferList.idl:
+        * Modules/speech/SpeechGrammarList.idl:
+        * Modules/speech/SpeechRecognitionResult.idl:
+        * Modules/speech/SpeechRecognitionResultList.idl:
+        * bindings/scripts/CodeGenerator.pm:
+        (IsNumericType):
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateGetOwnPropertySlotBody):
+        (GenerateGetOwnPropertyDescriptorBody):
+        (GetIndexedGetterFunction):
+        (GenerateHeader):
+        (GenerateImplementation):
+        * bindings/scripts/IDLAttributes.txt:
+        * bindings/scripts/test/TestEventTarget.idl:
+        * bindings/scripts/test/TestTypedArray.idl:
+        * css/CSSRuleList.idl:
+        * css/CSSStyleDeclaration.idl:
+        * css/CSSValueList.idl:
+        * css/MediaList.idl:
+        * css/StyleSheetList.idl:
+        * css/WebKitCSSFilterValue.idl:
+        * css/WebKitCSSKeyframesRule.idl:
+        * css/WebKitCSSTransformValue.idl:
+        * dom/ClientRectList.idl:
+        * dom/DOMNamedFlowCollection.idl:
+        * dom/DOMStringList.idl:
+        * dom/DataTransferItemList.idl:
+        * dom/NamedNodeMap.idl:
+        * dom/NodeList.idl:
+        * dom/PropertyNodeList.idl:
+        * dom/TouchList.idl:
+        * fileapi/FileList.idl:
+        * html/DOMSettableTokenList.idl:
+        * html/DOMTokenList.idl:
+        * html/HTMLAllCollection.idl:
+        * html/HTMLCollection.idl:
+        * html/HTMLFormControlsCollection.idl:
+        * html/HTMLFormElement.idl:
+        * html/HTMLPropertiesCollection.idl:
+        * html/HTMLSelectElement.idl:
+        * html/RadioNodeList.idl:
+        * html/canvas/Float32Array.idl:
+        * html/canvas/Float64Array.idl:
+        * html/canvas/Int16Array.idl:
+        * html/canvas/Int32Array.idl:
+        * html/canvas/Int8Array.idl:
+        * html/canvas/Uint16Array.idl:
+        * html/canvas/Uint32Array.idl:
+        * html/canvas/Uint8Array.idl:
+        * html/canvas/Uint8ClampedArray.idl:
+        * html/track/AudioTrackList.idl:
+        * html/track/TextTrackCueList.idl:
+        * html/track/TextTrackList.idl:
+        * html/track/TextTrackRegionList.idl:
+        * html/track/VideoTrackList.idl:
+        * page/PerformanceEntryList.idl:
+        * page/SpeechInputResultList.idl:
+        * plugins/DOMMimeTypeArray.idl:
+        * plugins/DOMPlugin.idl:
+        * plugins/DOMPluginArray.idl:
+
+2013-06-12  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Rename [CallWith] to [ConstructorCallWith] for IDL interfaces
+        https://bugs.webkit.org/show_bug.cgi?id=117531
+
+        Reviewed by Kentaro Hara.
+
+        Rename [CallWith] to [ConstructorCallWith] for IDL interfaces as the
+        meaning is slightly different when [CallWith] is used for IDL operations
+        or attributes. This improves IDL readability a bit and makes it more
+        directly understandable.
+
+        Also removed [ConstructorCallWith] statements from interfaces with custom
+        constructors or no constructor, as this does not have any effect.
+
+        No new tests, no behavior change.
+
+        * Modules/filesystem/FileWriter.idl:
+        * Modules/mediasource/MediaSource.idl:
+        * Modules/mediasource/SourceBufferList.idl:
+        * Modules/mediastream/MediaStream.idl:
+        * Modules/mediastream/RTCPeerConnection.idl:
+        * Modules/notifications/Notification.idl:
+        * Modules/speech/SpeechRecognition.idl:
+        * Modules/speech/SpeechSynthesisUtterance.idl:
+        * Modules/webaudio/OfflineAudioContext.idl:
+        * Modules/websockets/WebSocket.idl:
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateConstructorDefinition):
+        * bindings/scripts/IDLAttributes.txt:
+        * bindings/scripts/test/TestInterface.idl:
+        * dom/MessageChannel.idl:
+        * fileapi/FileReader.idl:
+        * html/MediaController.idl:
+        * html/track/TextTrackCue.idl:
+        * page/EventSource.idl:
+        * workers/SharedWorker.idl:
+        * workers/Worker.idl:
+        * xml/XMLHttpRequest.idl:
+
+2013-06-12  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Set windows key-code for multimedia keys
+        https://bugs.webkit.org/show_bug.cgi?id=117535
+
+        Reviewed by Jocelyn Turcotte.
+
+        Map Qt Key-events to their defined windows keycode values.
+
+        * platform/qt/PlatformKeyboardEventQt.cpp:
+        (WebCore::windowsKeyCodeForKeyEvent):
+
+2013-06-12  Sergio Villar Senin  <svillar@igalia.com>
+
+        [Soup] Use ResourceLoadPriority
+        https://bugs.webkit.org/show_bug.cgi?id=112902
+
+        Reviewed by Carlos Garcia Campos.
+
+        Use the ResourceLoadPriority from the ResourceRequest to set the
+        correnpondent priority to each SoupMessage.
+
+        No new tests required as there is no change in functionality,
+        we're just enabling a new feature in the underlying network stack.
+
+        * platform/network/soup/ResourceHandleSoup.cpp:
+        (WebCore::createSoupMessageForHandleAndRequest):
+        * platform/network/soup/ResourceRequest.h:
+        (WebCore):
+        (WebCore::toSoupMessagePriority): Translates ResourceLoadPriority
+        to SoupMessagePriority.
+
+2013-06-12  Zan Dobersek  <zdobersek@igalia.com>
+
+        Remove memoryInfoEnabled, quantizedMemoryInfoEnabled settings
+        https://bugs.webkit.org/show_bug.cgi?id=117512
+
+        Reviewed by Darin Adler.
+
+        * page/Settings.in: Remove the memoryInfoEnabled and the quantizedMemoryInfoEnabled settings. These are not used
+        anywhere anymore after r151199 which simplified and moved the MemoryInfo interface under window.internals.
+
+2013-06-12  Diego Pino Garcia  <dpino@igalia.com>
+
+        [GTK] Parameter 'pseudoElement' from function 'webkit_dom_dom_window_get_computed_style' should be allowed to be NULL
+        https://bugs.webkit.org/show_bug.cgi?id=117332
+
+        Reviewed by Xan Lopez.
+
+        Add parameter 'pseudoElement' to the list of parameters that are allowed to
+        be NULL.
+
+        * bindings/scripts/CodeGeneratorGObject.pm:
+        (GetGReturnMacro):
+
+2013-06-12  Sergio Villar Senin  <svillar@igalia.com>
+
+        Add CSS parsing recovery to functions
+        https://bugs.webkit.org/show_bug.cgi?id=117500
+
+        Reviewed by Andreas Kling.
+
+        From Blink r150205 by <serya@chromium.org>
+
+        Add parsing recovery capabilities to functions. Errors were
+        correctly detected without this change but then the whole
+        declaration was invalidated. By using expr_recovery to handle them
+        we can recover from those errors and go on with the parsing.
+
+        * css/CSSGrammar.y.in:
+
+2013-06-11  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Unreviewed, rolling out r151378.
+        http://trac.webkit.org/changeset/151378
+        https://bugs.webkit.org/show_bug.cgi?id=117400
+
+        Decreased IDL readability a bit.
+
+        * Modules/encryptedmedia/MediaKeys.idl:
+        * Modules/mediastream/RTCIceCandidate.idl:
+        * Modules/mediastream/RTCPeerConnection.idl:
+        * Modules/mediastream/RTCSessionDescription.idl:
+        * Modules/webaudio/OfflineAudioContext.idl:
+        * Modules/websockets/WebSocket.idl:
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateConstructorDefinition):
+        * bindings/scripts/IDLAttributes.txt:
+        * bindings/scripts/test/TestInterface.idl:
+        * bindings/scripts/test/TestNamedConstructor.idl:
+        * css/WebKitCSSMatrix.idl:
+        * html/HTMLOptionElement.idl:
+        * page/EventSource.idl:
+        * workers/SharedWorker.idl:
+        * workers/Worker.idl:
+
+2013-06-11  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Have to invalidate the mute button when changing the volume
+        https://bugs.webkit.org/show_bug.cgi?id=117464
+
+        Reviewed by Darin Adler.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/c4c685c82908449526fd8c251cc551e729ebed08
+        but without a test since the test doesn't work in WebKit.
+
+        * html/shadow/MediaControls.cpp:
+        (WebCore::MediaControls::changedVolume):
+
+2013-06-11  Max Vujovic  <mvujovic@adobe.com>
+
+        [CSS Regions] Regions don't create a stacking context for their contents
+        https://bugs.webkit.org/show_bug.cgi?id=114268
+
+        Reviewed by Alexandru Chiculita.
+
+        Paint the region content (from RenderFlowThread) during the background phase instead of the
+        foreground phase.
+
+        Let's assume there is a region and a sibling element. The sibling partially overlaps the
+        region and appears after the region in DOM order.
+
+        Before this patch, we would paint in this order:
+        1) Region background
+        2) Sibling background
+        3) Region content
+        4) Sibling content
+
+        As a result, the sibling background would incorrectly paint between the region
+        background and the region content. Instead, the sibling background should paint over the
+        region background and the region content.
+
+        After this patch, we paint in this order:
+        1) Region background
+        2) Region content
+        3) Sibling background
+        4) Sibling content
+
+        Test: fast/regions/region-sibling-paint-order.html
+
+        * rendering/RenderRegion.cpp:
+        (WebCore::RenderRegion::paintObject):
+
+2013-06-11  Jer Noble  <jer.noble@apple.com>
+
+        REGRESSION: (r149232) videos on disney.com are initially scrambled on load
+        https://bugs.webkit.org/show_bug.cgi?id=117517
+
+        Reviewed by Eric Carlson.
+
+        Set a background color on the AVPlayerLayer to avoid corruption when no
+        frames are available to display.
+
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm:
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::createVideoLayer):
+
+2013-06-11  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Use HTMLElementFactory to create equivalent elements in WebVTTElement
+        https://bugs.webkit.org/show_bug.cgi?id=117423
+
+        Reviewed by Eric Carlson.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/3d60bec8e5dabfe877c482797d9ef430bfde31
+
+        This change forces the calls through the factory so that we create appropriate sub-classes based upon the passed tag name,
+        rather than just creating a concrete HTMLElement class with an inappropriate tag name.
+
+        Test: media/track/getCueAsHTMLCrash.html
+
+        * html/track/WebVTTElement.cpp:
+        (WebCore::WebVTTElement::createEquivalentHTMLElement):
+
+2013-06-11  Benjamin Poulain  <bpoulain@apple.com>
+
+        Split SelectorDataList::executeSingleTagNameSelectorData() into the 4 kinds of traversal
+        https://bugs.webkit.org/show_bug.cgi?id=117486
+
+        Reviewed by Ryosuke Niwa.
+
+        Since this is pretty common, split the name selector to have the constant conditions
+        outside the traversal.
+
+        * dom/SelectorQuery.cpp:
+        (WebCore::SelectorDataList::executeSingleTagNameSelectorData):
+
+2013-06-11  Eric Carlson  <eric.carlson@apple.com>
+
+        [Mac] Update text track menu
+        https://bugs.webkit.org/show_bug.cgi?id=117351
+
+        Reviewed by Darin Adler.
+
+        No new tests, existing tests updated.
+
+        * English.lproj/Localizable.strings: Update the menu title.
+
+        * page/CaptionUserPreferencesMac.mm: System language is no longer needed.
+
+        * platform/LocalizedStrings.cpp: Ditto.
+        * platform/LocalizedStrings.h:
+
+2013-06-11  Benjamin Poulain  <bpoulain@apple.com>
+
+        Fix the element type in the selector checkers
+        https://bugs.webkit.org/show_bug.cgi?id=117450
+
+        Reviewed by Anders Carlsson.
+
+        * css/SelectorCheckerFastPath.cpp:
+        (WebCore::HTMLNames::checkClassValue):
+        * dom/SelectorQuery.cpp:
+        (WebCore::SelectorDataList::executeSingleClassNameSelectorData):
+
+2013-06-11  Benjamin Poulain  <bpoulain@apple.com>
+
+        Clean up the initializer mess in Document
+        https://bugs.webkit.org/show_bug.cgi?id=117448
+
+        Reviewed by Ryosuke Niwa.
+
+        Basic cleaning from
+        https://chromium.googlesource.com/chromium/blink/+/e54ba8d3b62b0245ecdf2f3ec11cd33b4035a4d7
+
+        * dom/Document.cpp:
+        (WebCore::Document::Document):
+        * dom/Document.h:
+
+2013-06-11  Jer Noble  <jer.noble@apple.com>
+
+        Set the font size for in-band captions on the display box, not the :cue.
+        https://bugs.webkit.org/show_bug.cgi?id=117515
+
+        Reviewed by Eric Carlson.
+
+        Make the in-band font size behavior match the out-of-band behavior.
+
+        * html/track/TextTrackCueGeneric.cpp:
+        (WebCore::TextTrackCueGeneric::setFontSize):
+
+2013-06-11  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Implement 'attributeValue' accessor to support testing.
+        https://bugs.webkit.org/show_bug.cgi?id=117513
+
+        Reviewed by Anders Carlsson.
+
+        * WebCore.vcxproj/WebCore.vcxproj: Add new implementation file.
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Ditto.
+        * accessibility/win/AccessibilityObjectWrapperWin.cpp: Added.
+        * accessibility/win/AccessibilityObjectWrapperWin.h: Add declaration
+
+2013-05-27  Robert Hogan  <robert@webkit.org>
+
+        Positioned Replaced Elements That Aren't RenderReplaced get Incorrect Width
+        https://bugs.webkit.org/show_bug.cgi?id=93735
+
+        Reviewed by Darin Adler.
+
+        Replaced elements that aren't RenderReplaced aren't |isReplaced| and don't have an 
+        intrinsic height or width. This causes them to go down the wrong height and width computation
+        path in RenderBox when they are absolute positioned. 
+        
+        The notion of |isReplaced| is entwined with the notion of being |isInline| so it isn't really 
+        possible to make them isReplaced without re-wiring a lot of code. So instead use an ad-hoc definition
+        of isReplacedElement in RenderBox to bring all replaced elements into the height and width calculation.
+        To make sure we get the right height and width in there, give non-RenderReplaced replaced renderers
+        the helpers for returning their approximation of intrinsic height and width.
+
+        Test: fast/replaced/width-and-height-of-positioned-replaced-elements.html
+
+        * rendering/RenderBox.cpp:
+        (WebCore::isReplacedElement):
+        (WebCore::RenderBox::computePositionedLogicalWidth):
+        (WebCore::RenderBox::computePositionedLogicalHeight):
+        * rendering/RenderBox.h:
+        (WebCore::RenderBox::intrinsicSize):
+        * rendering/RenderButton.h:
+        * rendering/RenderListBox.cpp:
+        (WebCore::RenderListBox::RenderListBox):
+        (WebCore::RenderListBox::computeLogicalHeight):
+        * rendering/RenderListBox.h:
+        * rendering/RenderMenuList.h:
+        * rendering/RenderReplaced.h:
+        * rendering/RenderTextControl.cpp:
+        (WebCore::RenderTextControl::RenderTextControl):
+        (WebCore::RenderTextControl::computeLogicalHeight):
+        * rendering/RenderTextControl.h:
+
+2013-06-11  Ryosuke Niwa  <rniwa@webkit.org>
+
+        There are unused variables in ApplyStyleCommand::mergeEndWithNextIfIdentical and ReplaceSelectionCommand::removeUnrenderedTextNodesAtEnds
+        https://bugs.webkit.org/show_bug.cgi?id=117475
+
+        Reviewed by Andreas Kling.
+
+        Removed.
+
+        * editing/ApplyStyleCommand.cpp:
+        (WebCore::ApplyStyleCommand::mergeEndWithNextIfIdentical):
+        * editing/ReplaceSelectionCommand.cpp:
+        (WebCore::ReplaceSelectionCommand::removeUnrenderedTextNodesAtEnds):
+
+2013-06-11  Robert Hogan  <robert@webkit.org>
+
+        Fix typo in r151445
+
+        Unreviewed build fix.
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::computeInlinePreferredLogicalWidths):
+
+2013-06-11  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Remove redundant calls to ceilToFloat in RenderBlock::computeInlinePreferredLogicalWidths
+        https://bugs.webkit.org/show_bug.cgi?id=117490
+
+        Reviewed by Andreas Kling.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/be336b14325b2938ff6a4fb6191073a6e717a57c.
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::computeInlinePreferredLogicalWidths):
+
+2013-06-03  Robert Hogan  <robert@webkit.org>
+
+        Painting collapsed borders during scrolling
+        https://bugs.webkit.org/show_bug.cgi?id=85658
+
+        Reviewed by David Hyatt.
+
+        Test: fast/repaint/table-cell-collapsed-border-scroll.html
+
+        WHen painting collapsed borders we need to paint the borders of the row above
+        the topmost dirtied row so that we compute the correct value for the dirtied row's collapsed border.
+
+        * rendering/RenderTableSection.cpp:
+        (WebCore::RenderTableSection::paintObject):
+
+2013-06-11  Peter Gal  <galpeter@inf.u-szeged.hu>
+
+        [curl] Custom HTTP method support
+        https://bugs.webkit.org/show_bug.cgi?id=117302
+
+        Reviewed by Kenneth Rohde Christiansen.
+
+        No new tests, already covered by existing ones like:
+        http/tests/xmlhttprequest/workers/methods.html
+        http/tests/xmlhttprequest/workers/methods-async.html
+
+        * platform/network/curl/ResourceHandleManager.cpp:
+        (WebCore::ResourceHandleManager::initializeHandle):
+
+2013-06-11  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        Web Inspector: Remove 'using namespace std'
+        https://bugs.webkit.org/show_bug.cgi?id=117498
+
+        Reviewed by Anders Carlsson.
+
+        No new tests, no behavior change.
+
+        * inspector/InspectorAgent.cpp: Remove unneeded 'using namespace std'.
+        * inspector/InspectorFrontendClientLocal.cpp: Use explicit std:: qualifiers instead.
+        (WebCore::InspectorFrontendClientLocal::constrainedAttachedWindowHeight):
+        (WebCore::InspectorFrontendClientLocal::constrainedAttachedWindowWidth):
+        * inspector/InspectorFrontendHost.cpp: Remove unneeded 'using namespace std'.
+        * inspector/InspectorPageAgent.cpp: Remove unneeded 'using namespace std'.
+
+2013-06-11  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Support latest Web IDL named property getters
+        https://bugs.webkit.org/show_bug.cgi?id=117403
+
+        Reviewed by Kentaro Hara.
+
+        Add support for the latest Web IDL named property getters to the JSC
+        bindings generator:
+        http://www.w3.org/TR/WebIDL/#idl-named-properties
+
+        Drop support for outdated [NamedGetter] IDL extended attribute.
+
+        Support for other kinds of named properties will be added in later
+        patches. This patch only brings named property getters.
+
+        This patch is based on Blink r149247 by kojih@chromium.org.
+
+        No new tests, no behavior change.
+
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateGetOwnPropertySlotBody):
+        (GenerateGetOwnPropertyDescriptorBody):
+        (GetSpecialAccessorFunctionForType):
+        (GetNamedGetterFunction):
+        (GenerateHeader):
+        (GenerateImplementation):
+        * bindings/scripts/IDLAttributes.txt:
+        * bindings/scripts/IDLParser.pm:
+        (applyTypedefs):
+        (parseSpecialOperation):
+        (parseSpecials):
+        (applyMemberList):
+        * bindings/scripts/test/TestEventTarget.idl:
+        * css/StyleSheetList.idl:
+        * dom/DOMNamedFlowCollection.idl:
+        * dom/DOMStringMap.idl:
+        * dom/NamedNodeMap.idl:
+        * dom/NodeList.idl:
+        * html/HTMLAllCollection.idl:
+        * html/HTMLCollection.idl:
+        * html/HTMLFormControlsCollection.idl:
+        * html/HTMLPropertiesCollection.idl:
+        * plugins/DOMMimeTypeArray.idl:
+        * plugins/DOMPlugin.idl:
+        * plugins/DOMPluginArray.idl:
+        * storage/Storage.idl:
+
+2013-06-11  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [BlackBerry] Test editing/execCommand/indent-paragraphs.html times out
+        https://bugs.webkit.org/show_bug.cgi?id=117235
+
+        Reviewed by Rob Buis.
+
+        PR 346414.
+
+        After r150224 ResourceHandle::start() can fail returning false so
+        that the ResourceHandle is destroyed and the error not
+        handled. Handle the errors by scheduling a InvalidURLFailure and
+        returning true when startJob fails to make sure the ResourceHandle
+        is not destroyed and the error is handled and notified to the
+        client.
+
+        Fixes timeout in editing/execCommand/indent-paragraphs.html.
+
+        * platform/network/blackberry/ResourceHandleBlackBerry.cpp:
+        (WebCore::ResourceHandle::start):
+
+2013-06-11  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Remove IntRect::pixelSnapped* and its enclosingRect since they are no longer used
+        https://bugs.webkit.org/show_bug.cgi?id=117494
+
+        Reviewed by Darin Adler.
+
+        Merge: https://chromium.googlesource.com/chromium/blink/+/9433dc00e882e2808ac1db3c1fd89090896d7b58
+               https://chromium.googlesource.com/chromium/blink/+/7beaa73aa099170cb2cad02c12c5e0a448b12c21
+
+        * inspector/InspectorLayerTreeAgent.cpp:
+        (WebCore::InspectorLayerTreeAgent::buildObjectForLayer):
+        * inspector/InspectorOverlay.cpp:
+        (WebCore::InspectorOverlay::update):
+        * platform/graphics/IntRect.h:
+        * rendering/RenderInline.cpp:
+        (WebCore::RenderInline::hitTestCulledInline):
+        * rendering/RenderObject.cpp:
+        (WebCore::RenderObject::repaintUsingContainer):
+
+2013-06-11  Sergio Villar Senin  <svillar@igalia.com>
+
+        Autoclose braces and parentheses at the end of style sheet
+        https://bugs.webkit.org/show_bug.cgi?id=117414
+
+        Reviewed by Andreas Kling.
+
+        From Blink r150202 by <serya@chromium.org>
+
+        Use closing_parenthesis and closing_brace instead of the literals
+        '}' and ')'. This allows the parser to treat expressions with
+        unmatched closing braces/parenthesis as if all of them were
+        actually closed.
+
+        Tests: animations/keyframe-autoclose-brace.html
+               css3/autoclose-braces-and-parentheses.html
+
+        * css/CSSGrammar.y.in:
+
+2013-06-10  Jae Hyun Park  <jae.park@company100.net>
+
+        [CoordinatedGraphics] Typos in custom shader support
+        https://bugs.webkit.org/show_bug.cgi?id=117413
+
+        Reviewed by Noam Rosenthal.
+
+        Wrong keyframe is passed when assigning filterValue.
+
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsScene.cpp:
+        (WebCore::CoordinatedGraphicsScene::setLayerAnimationsIfNeeded):
+
+2013-06-10  Ryosuke Niwa  <rniwa@webkit.org>
+
+        text-transform: capitalize shouldn't upconvert
+        https://bugs.webkit.org/show_bug.cgi?id=117485
+
+        Reviewed by Adam Barth.
+
+        Avoid the upconversion. Merge https://chromium.googlesource.com/chromium/blink/+/c5a221d6da2443df0639c01c40aac6040908ec79.
+
+        * rendering/RenderText.cpp:
+        (WebCore::makeCapitalized):
+
+2013-06-10  Ryosuke Niwa  <rniwa@webkit.org>
+
+        DocType strings should be 8 bit wide
+        https://bugs.webkit.org/show_bug.cgi?id=117487
+
+        Reviewed by Michael Saboff.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/8da02d0ce3965c4e6bf227db856bce930393429a.
+
+        * html/parser/HTMLConstructionSite.cpp:
+        (WebCore::HTMLConstructionSite::insertDoctype):
+
+2013-06-10  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Make more functions const
+        https://bugs.webkit.org/show_bug.cgi?id=117455
+
+        Reviewed by Benjamin Poulain.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/886866f5034d7f30f8aa607b909313f99db1f3b4.
+
+        * editing/VisibleUnits.cpp:
+        (WebCore::CachedLogicallyOrderedLeafBoxes::boxIndexInLeaves):
+        * html/canvas/WebGLRenderingContext.cpp:
+        * page/ContentSecurityPolicy.cpp:
+        (WebCore::CSPDirectiveList::evalDisabledErrorMessage):
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::LineWidth::shouldIndentText):
+
+2013-06-10  Jer Noble  <jer.noble@apple.com>
+
+        REGRESSION(r151302): Many broken webaudio/ tests on Mac port.
+        https://bugs.webkit.org/show_bug.cgi?id=117446
+
+        Reviewed by Chris Rogers.
+
+        The new "pageConsentRequiredForAudioStart()" restriction was blocking playback event
+        even when page consent was given. Remvoe the restriction immediately in that case.
+
+        * Modules/webaudio/AudioContext.cpp:
+        (WebCore::AudioContext::startRendering):
+
+2013-06-10  Andreas Kling  <akling@apple.com>
+
+        REGRESSION(r150633): Find on page non-focused text highlight color is bright yellow.
+        <rdar://problem/14098882>
+        <http://webkit.org/b/117371>
+
+        Reviewed by Anders Carlsson.
+
+        There was a mistake in the parameter ordering which still compiled because of
+        implicit bool/unsigned conversion.
+        Changed the interface of Page::findMatchesForText() to use enums instead of bools.
+
+        No test because the color of the highlighted matches is not available through APIs.
+
+        * page/Page.h:
+        * page/Page.cpp:
+        (WebCore::Page::findMatchesForText):
+        (WebCore::Page::markAllMatchesForText):
+        (WebCore::Page::countFindMatches):
+
+2013-06-10  Bear Travis  <betravis@adobe.com>
+
+        [CSS Shapes][CSS Exclusions] Split CSS Exclusions and CSS Shapes code
+        https://bugs.webkit.org/show_bug.cgi?id=117162
+
+        Reviewed by Alexandru Chiculita.
+
+        With the split between the CSS Exclusions and CSS Shapes specifications,
+        some renaming is necessary. In general, this patch removes 'Exclusion' from
+        any Shapes code, while organizing the rendering shapes code into a 'shapes'
+        folder.
+
+        Renames:
+        ExclusionShape -> Shape
+        Exclusion[Rectangle|Polygon] -> [Rectangle|Polygon]Shape
+        Exclusion -> Shape
+
+        Refactoring, no new tests.
+
+        * CMakeLists.txt:
+        * GNUmakefile.am:
+        * GNUmakefile.list.am:
+        * Target.pri:
+        * WebCore.pri:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::ComputedStyleExtractor::propertyValue):
+        * css/CSSPrimitiveValue.h:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::ApplyPropertyShape::setValue):
+        (WebCore::ApplyPropertyShape::applyValue):
+        (WebCore::ApplyPropertyShape::createHandler):
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        * page/animation/CSSPropertyAnimation.cpp:
+        (WebCore::blendFunc):
+        (WebCore::PropertyWrapperShape::PropertyWrapperShape):
+        (WebCore::CSSPropertyAnimation::ensurePropertyMap):
+        * rendering/LayoutState.cpp:
+        (WebCore::LayoutState::LayoutState):
+        * rendering/LayoutState.h:
+        (WebCore::LayoutState::LayoutState):
+        (WebCore::LayoutState::shapeInsideInfo):
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::styleDidChange):
+        (WebCore::RenderBlock::updateShapeInsideInfoAfterStyleChange):
+        (WebCore::shapeInfoRequiresRelayout):
+        (WebCore::RenderBlock::updateRegionsAndExclusionsBeforeChildLayout):
+        (WebCore::RenderBlock::computeShapeSize):
+        (WebCore::RenderBlock::updateRegionsAndExclusionsAfterChildLayout):
+        (WebCore::RenderBlock::insertFloatingObject):
+        (WebCore::RenderBlock::computeLogicalLocationForFloat):
+        (WebCore::RenderBlock::positionNewFloats):
+        (WebCore::RenderBlock::logicalLeftOffsetForLine):
+        (WebCore::RenderBlock::logicalRightOffsetForLine):
+        * rendering/RenderBlock.h:
+        (WebCore::RenderBlock::ensureShapeInsideInfo):
+        (WebCore::RenderBlock::shapeInsideInfo):
+        (WebCore::RenderBlock::setShapeInsideInfo):
+        (WebCore::RenderBlock::allowsShapeInsideInfoSharing):
+        (WebCore::RenderBlock::xPositionForFloatIncludingMargin):
+        (WebCore::RenderBlock::yPositionForFloatIncludingMargin):
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::RenderBlock::layoutShapeInsideInfo):
+        (WebCore::LineWidth::LineWidth):
+        (WebCore::LineWidth::shrinkAvailableWidthForNewFloatIfNeeded):
+        (WebCore::RenderBlock::computeInlineDirectionPositionsForLine):
+        (WebCore::constructBidiRunsForLine):
+        (WebCore::adjustLogicalLineTop):
+        (WebCore::RenderBlock::updateLineBoundariesForShapes):
+        (WebCore::RenderBlock::adjustLogicalLineTopAndLogicalHeightIfNeeded):
+        (WebCore::RenderBlock::layoutRunsAndFloatsInRange):
+        (WebCore::RenderBlock::LineBreaker::nextLineBreak):
+        (WebCore::RenderBlock::LineBreaker::nextSegmentBreak):
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::willBeDestroyed):
+        (WebCore::RenderBox::styleDidChange):
+        (WebCore::RenderBox::updateShapeOutsideInfoAfterStyleChange):
+        * rendering/RenderBox.h:
+        (WebCore::RenderBox::shapeOutsideInfo):
+        * rendering/RenderBoxModelObject.cpp:
+        (WebCore::RenderBoxModelObject::paintOffset):
+        * rendering/RenderView.h:
+        (WebCore::RenderView::pushLayoutState):
+        * rendering/shapes/PolygonShape.cpp: Renamed from Source/WebCore/rendering/ExclusionPolygon.cpp.
+        (WebCore::leftSide):
+        (WebCore::isReflexVertex):
+        (WebCore::computeXIntersection):
+        (WebCore::inwardEdgeNormal):
+        (WebCore::outwardEdgeNormal):
+        (WebCore::appendArc):
+        (WebCore::snapVerticesToLayoutUnitGrid):
+        (WebCore::computeShapePaddingBounds):
+        (WebCore::computeShapeMarginBounds):
+        (WebCore::PolygonShape::shapePaddingBounds):
+        (WebCore::PolygonShape::shapeMarginBounds):
+        (WebCore::getVertexIntersectionVertices):
+        (WebCore::appendIntervalX):
+        (WebCore::compareEdgeIntersectionX):
+        (WebCore::computeXIntersections):
+        (WebCore::computeOverlappingEdgeXProjections):
+        (WebCore::PolygonShape::getExcludedIntervals):
+        (WebCore::PolygonShape::getIncludedIntervals):
+        (WebCore::firstFitRectInPolygon):
+        (WebCore::aboveOrToTheLeft):
+        (WebCore::PolygonShape::firstIncludedIntervalLogicalTop):
+        * rendering/shapes/PolygonShape.h: Renamed from Source/WebCore/rendering/ExclusionPolygon.h.
+        (WebCore::OffsetPolygonEdge::OffsetPolygonEdge):
+        (WebCore::OffsetPolygonEdge::edgeIndex):
+        (WebCore::OffsetPolygonEdge::basis):
+        (WebCore::PolygonShape::PolygonShape):
+        * rendering/shapes/RectangleShape.cpp: Renamed from Source/WebCore/rendering/ExclusionRectangle.cpp.
+        (WebCore::ellipseXIntercept):
+        (WebCore::ellipseYIntercept):
+        (WebCore::FloatRoundedRect::paddingBounds):
+        (WebCore::FloatRoundedRect::marginBounds):
+        (WebCore::FloatRoundedRect::cornerInterceptForWidth):
+        (WebCore::RectangleShape::shapePaddingBounds):
+        (WebCore::RectangleShape::shapeMarginBounds):
+        (WebCore::RectangleShape::getExcludedIntervals):
+        (WebCore::RectangleShape::getIncludedIntervals):
+        (WebCore::RectangleShape::firstIncludedIntervalLogicalTop):
+        * rendering/shapes/RectangleShape.h: Renamed from Source/WebCore/rendering/ExclusionRectangle.h.
+        (WebCore::FloatRoundedRect::FloatRoundedRect):
+        (WebCore::FloatRoundedRect::rx):
+        (WebCore::FloatRoundedRect::ry):
+        (WebCore::RectangleShape::RectangleShape):
+        * rendering/shapes/Shape.cpp: Renamed from Source/WebCore/rendering/ExclusionShape.cpp.
+        (WebCore::createRectangleShape):
+        (WebCore::createShapeCircle):
+        (WebCore::createShapeEllipse):
+        (WebCore::createPolygonShape):
+        (WebCore::physicalRectToLogical):
+        (WebCore::physicalPointToLogical):
+        (WebCore::physicalSizeToLogical):
+        (WebCore::Shape::createShape):
+        * rendering/shapes/Shape.h: Renamed from Source/WebCore/rendering/ExclusionShape.h.
+        (WebCore::LineSegment::LineSegment):
+        (WebCore::Shape::~Shape):
+        (WebCore::Shape::shapeMargin):
+        (WebCore::Shape::shapePadding):
+        * rendering/shapes/ShapeInfo.cpp: Renamed from Source/WebCore/rendering/ExclusionShapeInfo.cpp.
+        (WebCore::::computedShape):
+        (WebCore::::computeSegmentsForLine):
+        * rendering/shapes/ShapeInfo.h: Renamed from Source/WebCore/rendering/ExclusionShapeInfo.h.
+        (WebCore::MappedInfo::ensureInfo):
+        (WebCore::MappedInfo::removeInfo):
+        (WebCore::MappedInfo::info):
+        (WebCore::MappedInfo::infoMap):
+        (WebCore::ShapeInfo::~ShapeInfo):
+        (WebCore::ShapeInfo::setShapeSize):
+        (WebCore::ShapeInfo::clearSegments):
+        (WebCore::ShapeInfo::shapeLogicalTop):
+        (WebCore::ShapeInfo::shapeLogicalBottom):
+        (WebCore::ShapeInfo::shapeLogicalLeft):
+        (WebCore::ShapeInfo::shapeLogicalRight):
+        (WebCore::ShapeInfo::shapeLogicalWidth):
+        (WebCore::ShapeInfo::shapeLogicalHeight):
+        (WebCore::ShapeInfo::logicalLineTop):
+        (WebCore::ShapeInfo::logicalLineBottom):
+        (WebCore::ShapeInfo::shapeContainingBlockHeight):
+        (WebCore::ShapeInfo::lineOverlapsShapeBounds):
+        (WebCore::ShapeInfo::lineWithinShapeBounds):
+        (WebCore::ShapeInfo::dirtyShapeSize):
+        (WebCore::ShapeInfo::shapeSizeDirty):
+        (WebCore::ShapeInfo::owner):
+        (WebCore::ShapeInfo::ShapeInfo):
+        (WebCore::ShapeInfo::logicalTopOffset):
+        (WebCore::ShapeInfo::logicalLeftOffset):
+        * rendering/shapes/ShapeInsideInfo.cpp: Renamed from Source/WebCore/rendering/ExclusionShapeInsideInfo.cpp.
+        (WebCore::LineSegmentRange::LineSegmentRange):
+        (WebCore::ShapeInsideInfo::isEnabledFor):
+        (WebCore::ShapeInsideInfo::adjustLogicalLineTop):
+        * rendering/shapes/ShapeInsideInfo.h: Renamed from Source/WebCore/rendering/ExclusionShapeInsideInfo.h.
+        (WebCore::LineSegmentIterator::LineSegmentIterator):
+        (WebCore::ShapeInsideInfo::createInfo):
+        (WebCore::ShapeInsideInfo::hasSegments):
+        (WebCore::ShapeInsideInfo::segments):
+        (WebCore::ShapeInsideInfo::segmentRanges):
+        (WebCore::ShapeInsideInfo::currentSegment):
+        (WebCore::ShapeInsideInfo::setNeedsLayout):
+        (WebCore::ShapeInsideInfo::needsLayout):
+        (WebCore::ShapeInsideInfo::ShapeInsideInfo):
+        * rendering/shapes/ShapeInterval.cpp: Renamed from Source/WebCore/rendering/ExclusionInterval.cpp.
+        (WebCore::IntervalX1Comparator::operator()):
+        (WebCore::ShapeInterval::intersect):
+        (WebCore::sortShapeIntervals):
+        (WebCore::mergeShapeIntervals):
+        (WebCore::intersectShapeIntervals):
+        (WebCore::subtractShapeIntervals):
+        * rendering/shapes/ShapeInterval.h: Renamed from Source/WebCore/rendering/ExclusionInterval.h.
+        (WebCore::ShapeInterval::ShapeInterval):
+        * rendering/shapes/ShapeOutsideInfo.cpp: Renamed from Source/WebCore/rendering/ExclusionShapeOutsideInfo.cpp.
+        (WebCore::ShapeOutsideInfo::isEnabledFor):
+        (WebCore::ShapeOutsideInfo::computeSegmentsForLine):
+        * rendering/shapes/ShapeOutsideInfo.h: Renamed from Source/WebCore/rendering/ExclusionShapeOutsideInfo.h.
+        (WebCore::ShapeOutsideInfo::shapeLogicalOffset):
+        (WebCore::ShapeOutsideInfo::leftSegmentShapeBoundingBoxDelta):
+        (WebCore::ShapeOutsideInfo::rightSegmentShapeBoundingBoxDelta):
+        (WebCore::ShapeOutsideInfo::createInfo):
+        (WebCore::ShapeOutsideInfo::ShapeOutsideInfo):
+        * rendering/style/RenderStyle.cpp:
+        (WebCore::RenderStyle::initialShapeInside):
+        * rendering/style/RenderStyle.h:
+        * rendering/style/ShapeValue.h: Renamed from Source/WebCore/rendering/style/ExclusionShapeValue.h.
+        (WebCore::ShapeValue::createShapeValue):
+        (WebCore::ShapeValue::createOutsideValue):
+        (WebCore::ShapeValue::createImageValue):
+        (WebCore::ShapeValue::type):
+        (WebCore::ShapeValue::shape):
+        (WebCore::ShapeValue::image):
+        (WebCore::ShapeValue::setImage):
+        (WebCore::ShapeValue::operator==):
+        (WebCore::ShapeValue::ShapeValue):
+        * rendering/style/StyleRareNonInheritedData.h:
+
 2013-06-10  Iago Toral Quiroga  <itoral@igalia.com>
 
         Use Cairo implementation of the WidgetBackingStore instead of X11 when running on Wayland

@@ -27,7 +27,7 @@
 #include "RenderOverflow.h"
 #include "ScrollTypes.h"
 #if ENABLE(CSS_SHAPES)
-#include "ExclusionShapeOutsideInfo.h"
+#include "ShapeOutsideInfo.h"
 #endif
 
 namespace WebCore {
@@ -399,7 +399,6 @@ public:
         return document()->inQuirksMode() && style()->logicalHeight().isAuto() && !isFloatingOrOutOfFlowPositioned() && (isRoot() || isBody()) && !document()->shouldDisplaySeamlesslyWithParent() && !isInline();
     }
 
-    virtual LayoutSize intrinsicSize() const { return LayoutSize(); }
     LayoutUnit intrinsicLogicalWidth() const { return style()->isHorizontalWritingMode() ? intrinsicSize().width() : intrinsicSize().height(); }
     LayoutUnit intrinsicLogicalHeight() const { return style()->isHorizontalWritingMode() ? intrinsicSize().height() : intrinsicSize().width(); }
 
@@ -576,9 +575,9 @@ public:
     bool hasSameDirectionAs(const RenderBox* object) const { return style()->direction() == object->style()->direction(); }
 
 #if ENABLE(CSS_SHAPES)
-    ExclusionShapeOutsideInfo* exclusionShapeOutsideInfo() const
+    ShapeOutsideInfo* shapeOutsideInfo() const
     {
-        return isFloatingWithShapeOutside() && ExclusionShapeOutsideInfo::isEnabledFor(this) ? ExclusionShapeOutsideInfo::info(this) : 0;
+        return isFloatingWithShapeOutside() && ShapeOutsideInfo::isEnabledFor(this) ? ShapeOutsideInfo::info(this) : 0;
     }
 #endif
 
@@ -623,7 +622,7 @@ protected:
  
 private:
 #if ENABLE(CSS_SHAPES)
-    void updateExclusionShapeOutsideInfoAfterStyleChange(const ExclusionShapeValue* shapeOutside, const ExclusionShapeValue* oldShapeOutside);
+    void updateShapeOutsideInfoAfterStyleChange(const ShapeValue* shapeOutside, const ShapeValue* oldShapeOutside);
 #endif
 
     bool fixedElementLaysOutRelativeToFrame(Frame*, FrameView*) const;
@@ -641,6 +640,7 @@ private:
 
     LayoutUnit viewLogicalHeightForPercentages() const;
 
+    virtual LayoutSize intrinsicSize() const { return LayoutSize(); }
     void computePositionedLogicalHeight(LogicalExtentComputedValues&) const;
     void computePositionedLogicalWidthUsing(Length logicalWidth, const RenderBoxModelObject* containerBlock, TextDirection containerDirection,
                                             LayoutUnit containerLogicalWidth, LayoutUnit bordersPlusPadding,
