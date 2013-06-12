@@ -108,6 +108,7 @@ set(webkit2TestList
     WebKit2/WKStringJSString
     WebKit2/WebWorker
     WebKit2/WillSendSubmitEvent
+    WebKit2/CoordinatedGraphics/WKViewUserViewportToContents
     nix/OverflowScroll
     nix/SuspendResume
     nix/WebThemeEngine
