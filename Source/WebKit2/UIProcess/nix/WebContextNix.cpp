@@ -69,7 +69,7 @@ static void initInspectorServer()
 #endif
 }
 
-String WebContext::applicationCacheDirectory()
+String WebContext::platformDefaultApplicationCacheDirectory() const
 {
     GOwnPtr<gchar> cacheDirectory(g_build_filename(g_get_user_cache_dir(), "webkitnix", "applications", NULL));
     return WebCore::filenameToString(cacheDirectory.get());
