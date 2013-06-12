@@ -84,8 +84,10 @@ set(webcoreTestList
 
 set(webkit2TestList
     WebKit2/CookieManager
+    WebKit2/DOMWindowExtensionBasic
     WebKit2/DOMWindowExtensionNoCache
     WebKit2/DocumentStartUserScriptAlertCrash
+    WebKit2/DownloadDecideDestinationCrash
     WebKit2/EvaluateJavaScript
     WebKit2/FailedLoad
     WebKit2/Find
@@ -97,17 +99,20 @@ set(webkit2TestList
     WebKit2/LoadAlternateHTMLStringWithNonDirectoryURL
     WebKit2/LoadCanceledNoServerRedirectCallback
     WebKit2/NewFirstVisuallyNonEmptyLayout
+    WebKit2/NewFirstVisuallyNonEmptyLayoutForImages
     WebKit2/PageLoadBasic
     WebKit2/PageLoadDidChangeLocationWithinPageForFrame
     WebKit2/ParentFrame
     WebKit2/PreventEmptyUserAgent
     WebKit2/PrivateBrowsingPushStateNoHistoryCallback
     WebKit2/RestoreSessionStateContainingFormData
+    WebKit2/ShouldGoToBackForwardListItem
     WebKit2/WKConnection
     WebKit2/WKString
     WebKit2/WKStringJSString
     WebKit2/WebWorker
     WebKit2/WillSendSubmitEvent
+    WebKit2/WKPageGetScaleFactorNotZero
     WebKit2/CoordinatedGraphics/WebViewWebProcessCrashed
     WebKit2/CoordinatedGraphics/WKViewUserViewportToContents
     nix/OverflowScroll
@@ -124,14 +129,9 @@ set(webkit2TestList
 
 set(webkit2FailTestList
     WebKit2/CanHandleRequest
-    WebKit2/DOMWindowExtensionBasic
-    WebKit2/DownloadDecideDestinationCrash
     WebKit2/ForceRepaint
-    WebKit2/NewFirstVisuallyNonEmptyLayoutForImages
     WebKit2/NewFirstVisuallyNonEmptyLayoutFrames
     WebKit2/NewFirstVisuallyNonEmptyLayoutFails
-    WebKit2/ShouldGoToBackForwardListItem
-    WebKit2/WKPageGetScaleFactorNotZero
 )
 
 # Tests disabled because of missing features on the test harness:
