@@ -80,13 +80,13 @@ TEST(WebKitNix, LockAndUnlockCoordinatedSceneState)
     ToolsNix::RGBAPixel currentPixelSample = offscreenBuffer.readPixelAtPoint(1, 1);
     EXPECT_EQ(ToolsNix::RGBAPixel::blue(), currentPixelSample);
 
-    loader.waitForLoadURLAndRepaint("../nix/green-background");
+    loader.waitForLoadURLAndRepaint("../WebKit2/CoordinatedGraphics/green-background");
 
     EXPECT_EQ(ToolsNix::RGBAPixel::blue(), lastPixelSample);
     currentPixelSample = offscreenBuffer.readPixelAtPoint(1, 1);
     EXPECT_EQ(ToolsNix::RGBAPixel::green(), currentPixelSample);
 
-    loader.waitForLoadURLAndRepaint("../nix/red-background");
+    loader.waitForLoadURLAndRepaint("../WebKit2/CoordinatedGraphics/red-background");
 
     EXPECT_EQ(ToolsNix::RGBAPixel::green(), lastPixelSample);
     currentPixelSample = offscreenBuffer.readPixelAtPoint(1, 1);
@@ -121,7 +121,7 @@ TEST(WebKitNix, LockCoordinatedSceneState)
     ToolsNix::RGBAPixel currentPixelSample = offscreenBuffer.readPixelAtPoint(1, 1);
     EXPECT_EQ(ToolsNix::RGBAPixel::blue(), currentPixelSample);
 
-    loader.waitForLoadURLAndRepaint("../nix/red-background");
+    loader.waitForLoadURLAndRepaint("../WebKit2/CoordinatedGraphics/red-background");
 
     EXPECT_EQ(ToolsNix::RGBAPixel::blue(), lastPixelSample);
     currentPixelSample = offscreenBuffer.readPixelAtPoint(1, 1);

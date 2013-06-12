@@ -57,7 +57,7 @@ TEST(WebKitNix, WebViewTranslated)
 
     Util::PageLoader loader(view.get());
 
-    loader.waitForLoadURLAndRepaint("../nix/red-background");
+    loader.waitForLoadURLAndRepaint("../WebKit2/CoordinatedGraphics/red-background");
 
     // Note that glReadPixels [0, 0] is at the bottom-left of the buffer, so a diagonal
     // line from the top-left, to the bottom-right, will have X values going up and Y
