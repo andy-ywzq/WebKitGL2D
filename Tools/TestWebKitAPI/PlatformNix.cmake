@@ -95,6 +95,7 @@ set(webkit2TestList
     WebKit2/FrameMIMETypeHTML
     WebKit2/FrameMIMETypePNG
     WebKit2/GetInjectedBundleInitializationUserDataCallback
+    WebKit2/HitTestResultNodeHandle
     WebKit2/InjectedBundleBasic
     WebKit2/InjectedBundleInitializationUserDataCallbackWins
     WebKit2/LoadAlternateHTMLStringWithNonDirectoryURL
@@ -139,7 +140,6 @@ set(webkit2FailTestList
 
 # Tests disabled because of missing features on the test harness:
 #
-#   WebKit2/HitTestResultNodeHandle
 #   WebKit2/MouseMoveAfterCrash
 #   WebKit2/ResponsivenessTimerDoesntFireEarly
 #

@@ -65,4 +65,19 @@ void PlatformWebView::simulateSpacebarKeyPress()
     NIXViewSendKeyEvent(m_view, &nixEvent);
 }
 
+void PlatformWebView::simulateRightClick(unsigned x, unsigned y)
+{
+    NIXMouseEvent nixEvent;
+    nixEvent.type = kNIXInputEventTypeMouseDown;
+    nixEvent.button = kWKEventMouseButtonRightButton;
+    nixEvent.x = x;
+    nixEvent.y = y;
+    nixEvent.globalX = x;
+    nixEvent.globalY = y;
+    nixEvent.clickCount = 0;
+    nixEvent.modifiers = 0;
+    nixEvent.timestamp = 0;
+    NIXViewSendMouseEvent(m_view, &nixEvent);
+}
+
 } // namespace TestWebKitAPI
