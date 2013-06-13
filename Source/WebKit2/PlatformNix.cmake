@@ -143,11 +143,6 @@ list(APPEND WebProcess_LIBRARIES
 
 add_definitions(-DDEFAULT_THEME_PATH=\"${CMAKE_INSTALL_PREFIX}/${DATA_INSTALL_DIR}/themes\")
 
-add_custom_target(forwarding-headerNix
-    COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${WEBKIT2_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include nix
-    COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${WEBKIT2_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include CoordinatedGraphics
-)
-
 if (WTF_USE_CURL)
     list(APPEND WebKit2_SOURCES
         Shared/curl/WebCoreArgumentCodersCurl.cpp
@@ -169,10 +164,9 @@ if (WTF_USE_CURL)
          ${GLIB_GMODULE_LIBRARIES}
     )
 
-    add_custom_target(forwarding-headercurl
+    add_custom_target(forwarding-headerNetwork
         COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${WEBKIT2_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include curl
     )
-    set(ForwardingNetworkHeaders_NAME forwarding-headercurl)
 else ()
     list(APPEND WebKit2_SOURCES
         Shared/soup/PlatformCertificateInfo.cpp
@@ -221,15 +215,19 @@ else ()
         rt
     )
 
-    add_custom_target(forwarding-headerSoup
+    add_custom_target(forwarding-headerNetwork
         COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${WEBKIT2_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include soup
     )
-    set(ForwardingNetworkHeaders_NAME forwarding-headerSoup)
 endif ()
 
+add_custom_target(forwarding-headerNix
+     COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${WEBKIT2_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include nix
+     COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${WEBKIT2_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include CoordinatedGraphics
+)
+
 set(WEBKIT2_EXTRA_DEPENDENCIES
-    forwarding-headerNix
-    ${ForwardingNetworkHeaders_NAME}
+     forwarding-headerNix
+     forwarding-headerNetwork
 )
 
 configure_file(nix/WebKitNix.pc.in ${CMAKE_BINARY_DIR}/WebKit2/nix/WebKitNix.pc @ONLY)

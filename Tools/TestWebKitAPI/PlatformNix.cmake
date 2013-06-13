@@ -5,19 +5,18 @@ add_custom_target(forwarding-headersNixForTestWebKitAPI
 )
 set(ForwardingHeadersForTestWebKitAPI_NAME forwarding-headersNixForTestWebKitAPI)
 
-if (ENABLE_SOUP)
-    add_custom_target(forwarding-headersSoupForTestWebKitAPI
-        COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${WEBKIT2_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include soup
-        COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${TESTWEBKITAPI_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include soup
-    )
-    set(ForwardingNetworkHeadersForTestWebKitAPI_NAME forwarding-headersSoupForTestWebKitAPI)
-else ()
-    add_custom_target(forwarding-headerscurlForTestWebKitAPI
+if (WTF_USE_CURL)
+    add_custom_target(forwarding-headersNetworkForTestWebKitAPI
         COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${WEBKIT2_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include curl
         COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${TESTWEBKITAPI_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include curl
     )
-    set(ForwardingNetworkHeadersForTestWebKitAPI_NAME forwarding-headerscurlForTestWebKitAPI)
+else ()
+    add_custom_target(forwarding-headersNetworkForTestWebKitAPI
+        COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${WEBKIT2_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include soup
+        COMMAND ${PERL_EXECUTABLE} ${WEBKIT2_DIR}/Scripts/generate-forwarding-headers.pl ${TESTWEBKITAPI_DIR} ${DERIVED_SOURCES_WEBKIT2_DIR}/include soup
+    )
 endif ()
+set(ForwardingNetworkHeadersForTestWebKitAPI_NAME forwarding-headersNetworkForTestWebKitAPI)
 
 include_directories(
     ${WEBKIT2_DIR}/UIProcess/API/nix
