@@ -26,6 +26,7 @@
 
 #include "config.h"
 #include "PlatformUtilities.h"
+#include "NIXEvents.h"
 
 #include "MainLoop.h"
 #include <glib.h>
@@ -71,6 +72,11 @@ WKStringRef createInjectedBundlePath()
 WKURLRef URLForNonExistentResource()
 {
     return WKURLCreateWithUTF8CString("file:///does-not-exist.html");
+}
+
+bool isKeyDown(WKNativeEventPtr event)
+{
+    return static_cast<const NIXKeyEvent*>(event)->type == kNIXInputEventTypeKeyDown;
 }
 
 } // namespace Util

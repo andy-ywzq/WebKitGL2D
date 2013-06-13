@@ -108,6 +108,7 @@ set(webkit2TestList
     WebKit2/PrivateBrowsingPushStateNoHistoryCallback
     WebKit2/RestoreSessionStateContainingFormData
     WebKit2/ShouldGoToBackForwardListItem
+    WebKit2/SpacebarScrolling
     WebKit2/WKConnection
     WebKit2/WKPreferences
     WebKit2/WKString
@@ -141,7 +142,6 @@ set(webkit2FailTestList
 #   WebKit2/HitTestResultNodeHandle
 #   WebKit2/MouseMoveAfterCrash
 #   WebKit2/ResponsivenessTimerDoesntFireEarly
-#   WebKit2/SpacebarScrolling
 #
 # Flaky test, fails on Release but passes on Debug:
 #

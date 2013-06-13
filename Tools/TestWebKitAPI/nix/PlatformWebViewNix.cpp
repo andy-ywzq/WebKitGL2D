@@ -27,6 +27,7 @@
 #include "PlatformWebView.h"
 
 #include "NIXView.h"
+#include "NIXEvents.h"
 
 namespace TestWebKitAPI {
 
@@ -50,6 +51,18 @@ void PlatformWebView::resizeTo(unsigned width, unsigned height)
 WKPageRef PlatformWebView::page() const
 {
     return WKViewGetPage(m_view);
+}
+
+void PlatformWebView::simulateSpacebarKeyPress()
+{
+    NIXKeyEvent nixEvent;
+    nixEvent.type = kNIXInputEventTypeKeyDown;
+    nixEvent.modifiers = 0;
+    nixEvent.timestamp = 0;
+    nixEvent.shouldUseUpperCase = false;
+    nixEvent.isKeypad = false;
+    nixEvent.key = kNIXKeyEventKey_Space;
+    NIXViewSendKeyEvent(m_view, &nixEvent);
 }
 
 } // namespace TestWebKitAPI
