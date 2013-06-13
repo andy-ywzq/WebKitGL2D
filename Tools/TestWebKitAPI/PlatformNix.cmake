@@ -107,9 +107,11 @@ set(webkit2TestList
     WebKit2/ParentFrame
     WebKit2/PreventEmptyUserAgent
     WebKit2/PrivateBrowsingPushStateNoHistoryCallback
+    WebKit2/ResponsivenessTimerDoesntFireEarly
     WebKit2/RestoreSessionStateContainingFormData
     WebKit2/ShouldGoToBackForwardListItem
     WebKit2/SpacebarScrolling
+    WebKit2/UserMessage
     WebKit2/WKConnection
     WebKit2/WKPreferences
     WebKit2/WKString
@@ -141,8 +143,3 @@ set(webkit2FailTestList
 # Tests disabled because of missing features on the test harness:
 #
 #   WebKit2/MouseMoveAfterCrash
-#   WebKit2/ResponsivenessTimerDoesntFireEarly
-#
-# Flaky test, fails on Release but passes on Debug:
-#
-#   WebKit2/UserMessage
