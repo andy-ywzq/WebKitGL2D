@@ -38,6 +38,7 @@ list(APPEND TestWebKitAPIInjectedBundle_SOURCES
     ${TESTWEBKITAPI_DIR}/nix/PlatformUtilitiesNix.cpp
     ${TESTWEBKITAPI_DIR}/nix/MainLoop.cpp
     ${TESTWEBKITAPI_DIR}/Tests/nix/WebThemeEngine_Bundle.cpp
+    ${TESTWEBKITAPI_DIR}/Tests/WebKit2/MouseMoveAfterCrash_Bundle.cpp
     ${TESTWEBKITAPI_DIR}/Tests/WebKit2/WebWorker_Bundle.cpp
     ${TESTWEBKITAPI_DIR}/Tests/WebKit2/CoordinatedGraphics/WebViewWebProcessCrashed_Bundle.cpp
 )
@@ -99,6 +100,7 @@ set(webkit2TestList
     WebKit2/InjectedBundleInitializationUserDataCallbackWins
     WebKit2/LoadAlternateHTMLStringWithNonDirectoryURL
     WebKit2/LoadCanceledNoServerRedirectCallback
+    WebKit2/MouseMoveAfterCrash
     WebKit2/NewFirstVisuallyNonEmptyLayout
     WebKit2/NewFirstVisuallyNonEmptyLayoutForImages
     WebKit2/PageLoadBasic
@@ -138,7 +140,3 @@ set(webkit2FailTestList
     WebKit2/NewFirstVisuallyNonEmptyLayoutFrames
     WebKit2/NewFirstVisuallyNonEmptyLayoutFails
 )
-
-# Tests disabled because of missing features on the test harness:
-#
-#   WebKit2/MouseMoveAfterCrash

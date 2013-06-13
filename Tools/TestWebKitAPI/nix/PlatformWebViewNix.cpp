@@ -29,11 +29,15 @@
 #include "NIXView.h"
 #include "NIXEvents.h"
 
+#define WEBVIEW_WIDTH   200
+#define WEBVIEW_HEIGHT  200
+
 namespace TestWebKitAPI {
 
 PlatformWebView::PlatformWebView(WKContextRef context, WKPageGroupRef pageGroup)
 {
     m_view = WKViewCreate(context, pageGroup);
+    WKViewSetSize(m_view, WKSizeMake(WEBVIEW_WIDTH, WEBVIEW_HEIGHT));
     WKViewInitialize(m_view);
     m_window = 0;
 }
@@ -70,6 +74,21 @@ void PlatformWebView::simulateRightClick(unsigned x, unsigned y)
     NIXMouseEvent nixEvent;
     nixEvent.type = kNIXInputEventTypeMouseDown;
     nixEvent.button = kWKEventMouseButtonRightButton;
+    nixEvent.x = x;
+    nixEvent.y = y;
+    nixEvent.globalX = x;
+    nixEvent.globalY = y;
+    nixEvent.clickCount = 0;
+    nixEvent.modifiers = 0;
+    nixEvent.timestamp = 0;
+    NIXViewSendMouseEvent(m_view, &nixEvent);
+}
+
+void PlatformWebView::simulateMouseMove(unsigned x, unsigned y)
+{
+    NIXMouseEvent nixEvent;
+    nixEvent.type = kNIXInputEventTypeMouseMove;
+    nixEvent.button = kWKEventMouseButtonNoButton;
     nixEvent.x = x;
     nixEvent.y = y;
     nixEvent.globalX = x;
