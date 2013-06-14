@@ -108,12 +108,6 @@ PlatformWebView::PlatformWebView(WKContextRef context, WKPageGroupRef pageGroup,
     m_offscreenBuffer->makeCurrent();
     glViewport(0, 0, size.width, size.height);
 
-    NIXViewClient nixViewClient;
-    memset(&nixViewClient, 0, sizeof(NIXViewClient));
-    nixViewClient.version = kNIXViewClientCurrentVersion;
-    nixViewClient.clientInfo = this;
-    NIXViewSetNixViewClient(m_view, &nixViewClient);
-
     WKViewClient viewClient;
     memset(&viewClient, 0, sizeof(WKViewClient));
     viewClient.version = kWKViewClientCurrentVersion;
