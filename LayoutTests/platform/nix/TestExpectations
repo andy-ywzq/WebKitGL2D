@@ -3549,6 +3549,7 @@ compositing/self-painting-layers.html [ Missing ]
 compositing/layer-creation/spanOverlapsCanvas.html [ Missing Failure ]
 
 # Tests missing results - PNG. Some of them have a text expectation.
+editing/pasteboard/paste-2.html [ Missing ]
 fast/layers/scroll-with-transform-layer.html [ Missing Pass ]
 fast/layers/scroll-with-transform-composited-layer.html [ Missing Pass ]
 fast/gradients/gradient-after-transparent-border.html [ Missing Pass ]
@@ -4135,9 +4136,7 @@ compositing/patterns/direct-pattern-compositing-change.html [ ImageOnlyFailure P
 css3/filters/custom-with-at-rule-syntax/parsing-custom-function-invalid.html [ Failure ]
 fast/events/touch/frame-hover-update.html [ Failure ]
 svg/animations/animate-text-nested-transforms.html [ Failure ]
-animations/unanimated-style.html [ Crash ]
 compositing/patterns/direct-pattern-compositing-contain.html [ Crash Failure ]
-fast/frames/set-parent-src-synchronously.html [ Crash ]
 fast/parser/document-write-basic.html [ Crash ]
 storage/indexeddb/keypath-intrinsic-properties.html [ Crash ]
 storage/indexeddb/mozilla/remove-objectstore.html [ Crash ]
