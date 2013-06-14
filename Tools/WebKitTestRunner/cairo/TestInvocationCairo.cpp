@@ -124,8 +124,6 @@ void TestInvocation::dumpPixelsAndCompareWithExpected(WKImageRef wkImage, WKArra
     WKPageRef page = TestController::shared().mainWebView()->page();
     WKPageForceRepaint(page, this, &forceRepaintDoneCallback);
 
-    // FIXME NIX Some repaint related tests may fail as viewNeedsDisplay may have not been called
-    // after this loop. Needs further investigation.
     TestController::shared().runUntil(m_gotRepaint, TestController::ShortTimeout);
 
     if (!m_gotRepaint) {

@@ -41,7 +41,7 @@ namespace TestWebKitAPI {
 static void fillRect(WebCanvas *canvas, const WebRect& rect, const WebColor& color)
 {
     cairo_save(canvas);
-        
+
    // Cairo uses a coordinate system not based on pixel coordinates, so
    // we need to add  0.5 to x and y coord or the line will stay between
    // two pixels instead of in the middle of a pixel.
