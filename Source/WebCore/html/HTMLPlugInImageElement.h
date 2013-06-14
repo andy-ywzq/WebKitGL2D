@@ -126,12 +126,12 @@ protected:
     virtual bool isRestartedPlugin() const OVERRIDE { return m_isRestartedPlugin; }
 
 private:
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
-    virtual bool willRecalcStyle(StyleChange);
+    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*) OVERRIDE;
+    virtual bool willRecalcStyle(StyleChange) OVERRIDE;
 
     void didAddUserAgentShadowRoot(ShadowRoot*) OVERRIDE;
 
-    virtual void finishParsingChildren();
+    virtual void finishParsingChildren() OVERRIDE;
 
     void updateWidgetIfNecessary();
 
@@ -146,6 +146,8 @@ private:
     virtual bool isPlugInImageElement() const OVERRIDE { return true; }
 
     void removeSnapshotTimerFired(Timer<HTMLPlugInImageElement>*);
+
+    virtual void defaultEventHandler(Event*) OVERRIDE;
 
     bool m_needsWidgetUpdate;
     bool m_shouldPreferPlugInsForImages;

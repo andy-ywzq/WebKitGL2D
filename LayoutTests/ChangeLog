@@ -1,3 +1,561 @@
+2013-06-14  Eric Carlson  <eric.carlson@apple.com>
+
+        Potential use-after-free with an event fired at a HTMLMediaElement which is currently being deleted
+        https://bugs.webkit.org/show_bug.cgi?id=117466
+
+        Reviewed by Oliver Hunt.
+        
+        Merge https://chromium.googlesource.com/chromium/blink/+/f4200a0093b3d9376f703961615359ec7fb712b4
+        
+        If an event is created using as target an HTMLMediaElement which is
+        currently being deleted it becomes a heap-use-after free situation.
+
+        The GenericEventQueue instance is already owned by the HTMLMediaElement,
+        and there already is an underlying mechanism to set the target of the
+        event to NULL, if their target is owner of the queue.
+
+        In order to avoid creating this reference in the first place, we enqueue
+        the event with a NULL target to defer the refcount increment until the
+        timer for dispatching the event happens (which won't happen at all if
+        garbage collection is already destroying the objects).
+
+        * media/track/media-element-enqueue-event-crash-expected.txt: Added.
+        * media/track/media-element-enqueue-event-crash.html: Added.
+
+2013-06-14  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Generate new baseline to some tests and bot greening.
+
+        * platform/qt-5.0-wk2/TestExpectations:
+        * platform/qt-5.0-wk2/animations/3d/change-transform-in-end-event-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/borders/border-left-right-same-bottom-different-color-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/borders/border-radius-percent-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/borders/border-radius-wide-border-05-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/borders/border-radius-with-box-shadow-01-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/borders/border-radius-with-box-shadow-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/css-generated-content/details-summary-before-after-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/css-generated-content/details-summary-before-after-expected.txt: Added.
+        * platform/qt-5.0-wk2/fast/forms/zoomed-controls-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/gradients/unprefixed-color-stop-units-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/gradients/unprefixed-generated-gradients-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/gradients/unprefixed-linear-angle-gradients-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/gradients/unprefixed-linear-right-angle-gradients-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/gradients/unprefixed-list-item-gradient-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/gradients/unprefixed-radial-gradients-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/gradients/unprefixed-radial-gradients3-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/gradients/unprefixed-repeating-end-fill-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/gradients/unprefixed-repeating-linear-gradient-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/gradients/unprefixed-repeating-radial-gradients-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/gradients/unprefixed-zero-range-repeating-gradient-hang-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/custom/marker-orient-auto-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/custom/marker-orient-auto-expected.txt: Added.
+        * platform/qt-5.0-wk2/svg/filters/feDropShadow-zero-deviation-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/filters/feDropShadow-zero-deviation-expected.txt: Added.
+        * platform/qt-5.0-wk2/svg/filters/feGaussianBlur-zero-deviation-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/filters/feGaussianBlur-zero-deviation-expected.txt: Added.
+        * platform/qt/TestExpectations:
+
+2013-06-14  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Some more rebaselining after r151205 and r150798.
+
+        * platform/qt-5.0-wk2/css2.1/20110323/absolute-replaced-height-004-expected.png: Added.
+        * platform/qt-5.0-wk2/css2.1/20110323/absolute-replaced-height-022-expected.png: Added.
+        * platform/qt-5.0-wk2/css2.1/t0805-c5518-brdr-t-01-e-expected.png: Added.
+        * platform/qt-5.0-wk2/css2.1/t170602-bdr-conflct-w-09-d-expected.png: Added.
+        * platform/qt-5.0-wk2/css3/selectors3/html/css3-modsel-70-expected.png: Added.
+        * platform/qt-5.0-wk2/css3/selectors3/xhtml/css3-modsel-131b-expected.png: Added.
+        * platform/qt-5.0-wk2/css3/unicode-bidi-isolate-basic-expected.png:
+        * platform/qt-5.0-wk2/editing/deleting/delete-image-002-expected.png:
+        * platform/qt-5.0-wk2/editing/deleting/smart-delete-004-expected.png:
+        * platform/qt-5.0-wk2/editing/selection/caret-rtl-2-expected.png:
+        * platform/qt-5.0-wk2/editing/selection/caret-rtl-2-left-expected.png:
+        * platform/qt-5.0-wk2/editing/selection/caret-rtl-expected.png:
+        * platform/qt-5.0-wk2/editing/selection/caret-rtl-right-expected.png: Added.
+        * platform/qt-5.0-wk2/editing/selection/extend-selection-bidi-expected.png:
+        * platform/qt-5.0-wk2/editing/selection/vertical-rl-rtl-extend-line-backward-br-expected.png:
+        * platform/qt-5.0-wk2/editing/selection/vertical-rl-rtl-extend-line-backward-p-expected.png:
+        * platform/qt-5.0-wk2/editing/selection/vertical-rl-rtl-extend-line-forward-br-expected.png:
+        * platform/qt-5.0-wk2/editing/selection/vertical-rl-rtl-extend-line-forward-p-expected.png:
+        * platform/qt-5.0-wk2/fast/block/positioning/auto/vertical-rl/001-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/borders/rtl-border-05-expected.png:
+        * platform/qt-5.0-wk2/fast/box-shadow/box-shadow-transformed-expected.png:
+        * platform/qt-5.0-wk2/fast/css/error-in-last-decl-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/css/font-size-negative-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/css/namespaces/004-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/css/table-text-align-strict-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/dom/34176-expected.png:
+        * platform/qt-5.0-wk2/fast/dom/inner-text-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/forms/HTMLOptionElement_label06-expected.png:
+        * platform/qt-5.0-wk2/fast/forms/HTMLOptionElement_label07-expected.png:
+        * platform/qt-5.0-wk2/fast/forms/button-cannot-be-nested-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/forms/form-element-geometry-expected.png:
+        * platform/qt-5.0-wk2/fast/forms/input-appearance-default-bkcolor-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/forms/listbox-bidi-align-expected.png:
+        * platform/qt-5.0-wk2/fast/forms/search-rtl-expected.png:
+        * platform/qt-5.0-wk2/fast/forms/select-baseline-expected.png:
+        * platform/qt-5.0-wk2/fast/inline/inline-box-background-expected.png:
+        * platform/qt-5.0-wk2/fast/inline/inline-box-background-long-image-expected.png:
+        * platform/qt-5.0-wk2/fast/inline/inline-box-background-repeat-x-expected.png:
+        * platform/qt-5.0-wk2/fast/inline/inline-box-background-repeat-y-expected.png:
+        * platform/qt-5.0-wk2/fast/invalid/014-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/overflow/childFocusRingClip-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/overflow/hit-test-overflow-controls-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/repaint/float-in-new-block-with-layout-delta-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/replaced/width-and-height-of-positioned-replaced-elements-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/runin/generated-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/table/multiple-captions-display-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/table/remove-td-display-none-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/text/international/bidi-ignored-for-first-child-inline-expected.png:
+        * platform/qt-5.0-wk2/fast/text/international/unicode-bidi-plaintext-in-textarea-expected.png:
+        * platform/qt-5.0-wk2/ietestcenter/css3/bordersbackgrounds/border-radius-applies-to-017-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/animate-elem-16-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/animate-elem-23-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/animate-elem-31-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/animate-elem-85-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/coords-trans-04-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/coords-units-02-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/fonts-glyph-04-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/painting-marker-01-f-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/paths-data-01-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/pservers-grad-10-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/pservers-grad-16-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/script-handle-01-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/shapes-rect-01-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/struct-cond-03-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/struct-defs-01-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/text-align-02-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/text-align-08-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/text-text-03-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/custom/text-ctm-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/custom/use-instanceRoot-event-listeners-expected.png:
+        * platform/qt-5.0-wk2/tables/mozilla/bugs/bug81934-expected.png: Added.
+        * platform/qt-5.0-wk2/tables/mozilla/marvin/tables_bgcolor_red-expected.png: Added.
+        * platform/qt-5.0-wk2/tables/mozilla/marvin/tfoot_align_left-expected.png: Added.
+        * platform/qt-5.0-wk2/tables/mozilla/marvin/x_td_align_right-expected.png: Added.
+        * platform/qt-5.0-wk2/tables/mozilla/marvin/x_th_class-expected.png: Added.
+
+2013-06-14  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        [Qt] Unreviewed TestExpectation cleanup
+        https://bugs.webkit.org/show_bug.cgi?id=117626
+
+        Unreviewed gardening.
+
+        * platform/qt-5.0-wk1/TestExpectations:
+        * platform/qt/TestExpectations:
+
+2013-06-14  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Rebaselining after r151205.
+
+        * platform/qt-5.0-wk2/css2.1/t0805-c5519-ibrdr-r-00-a-expected.png: Added.
+        * platform/qt-5.0-wk2/css3/selectors3/html/css3-modsel-39-expected.png: Added.
+        * platform/qt-5.0-wk2/editing/execCommand/create-list-with-hr-expected.png: Added.
+        * platform/qt-5.0-wk2/editing/inserting/4960120-2-expected.png: Added.
+        * platform/qt-5.0-wk2/editing/selection/5057506-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/invalid/003-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/selectors/061-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/table/table-display-types-strict-expected.png: Added.
+        * platform/qt-5.0-wk2/ietestcenter/css3/bordersbackgrounds/border-radius-applies-to-014-expected.png: Added.
+        * platform/qt-5.0-wk2/ietestcenter/css3/bordersbackgrounds/border-top-left-radius-values-002-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/animate-elem-02-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/animate-elem-05-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/animate-elem-12-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/animate-elem-13-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/animate-elem-14-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/animate-elem-24-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/animate-elem-26-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/animate-elem-29-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/animate-elem-41-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/animate-elem-62-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/animate-elem-83-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/animate-elem-84-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/coords-trans-02-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/coords-units-01-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/filters-comptran-01-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/filters-felem-01-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/filters-tile-01-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/fonts-desc-02-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/fonts-glyph-02-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/fonts-kern-01-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/interact-order-01-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/linking-a-03-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/linking-uri-02-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/linking-uri-03-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/masking-opacity-01-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/masking-path-01-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/masking-path-03-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/painting-fill-03-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/painting-fill-05-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/painting-marker-02-f-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/painting-stroke-01-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/painting-stroke-04-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/paths-data-06-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/paths-data-12-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/pservers-grad-01-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/pservers-grad-03-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/pservers-grad-08-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/pservers-grad-09-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/pservers-grad-12-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/pservers-grad-18-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/pservers-grad-19-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/pservers-pattern-01-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/render-elems-06-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/script-handle-02-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/script-handle-04-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/shapes-ellipse-01-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/shapes-polyline-01-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/shapes-rect-02-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/struct-cond-01-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/struct-dom-01-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/struct-dom-03-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/struct-frag-05-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/struct-group-03-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/styling-css-01-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/styling-inherit-01-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/styling-pres-01-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/text-align-04-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/text-align-05-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/text-deco-01-b-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/text-fonts-02-t-expected.png: Added.
+        * platform/qt-5.0-wk2/svg/custom/use-font-face-crash-expected.png:
+        * platform/qt-5.0-wk2/tables/mozilla/bugs/bug727-expected.png: Added.
+        * platform/qt-5.0-wk2/tables/mozilla/marvin/tables_border_1-expected.png: Added.
+        * platform/qt-5.0-wk2/tables/mozilla/marvin/tr_bgcolor_blue_rgb-expected.png: Added.
+
+2013-06-13  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed. Added new baselines for some tests as r151533 on EFL port.
+
+        * platform/efl-wk1/TestExpectations:
+        * platform/efl/TestExpectations:
+        * platform/efl/editing/selection/select-across-readonly-input-1-expected.png: Added.
+        * platform/efl/editing/selection/select-across-readonly-input-1-expected.txt: Added.
+        * platform/efl/editing/selection/select-across-readonly-input-2-expected.png: Added.
+        * platform/efl/editing/selection/select-across-readonly-input-2-expected.txt: Added.
+        * platform/efl/editing/selection/select-across-readonly-input-3-expected.png: Added.
+        * platform/efl/editing/selection/select-across-readonly-input-3-expected.txt: Added.
+        * platform/efl/editing/selection/select-across-readonly-input-4-expected.png: Added.
+        * platform/efl/editing/selection/select-across-readonly-input-4-expected.txt: Added.
+        * platform/efl/editing/selection/select-across-readonly-input-5-expected.png: Added.
+        * platform/efl/editing/selection/select-across-readonly-input-5-expected.txt: Added.
+        * platform/efl/editing/selection/select-all-002-expected.png: Added.
+        * platform/efl/editing/selection/select-all-002-expected.txt: Added.
+        * platform/efl/editing/selection/select-all-003-expected.png: Added.
+        * platform/efl/editing/selection/select-all-003-expected.txt: Added.
+        * platform/efl/editing/selection/select-all-004-expected.png: Added.
+        * platform/efl/editing/selection/select-all-004-expected.txt: Added.
+        * platform/efl/editing/selection/select-all-005-expected.png: Added.
+        * platform/efl/editing/selection/select-all-005-expected.txt: Added.
+        * platform/efl/editing/selection/select-all-006-expected.png: Added.
+        * platform/efl/editing/selection/select-all-006-expected.txt: Added.
+        * platform/efl/editing/selection/select-box-expected.png: Added.
+        * platform/efl/editing/selection/select-box-expected.txt: Added.
+        * platform/efl/editing/selection/select-element-paragraph-boundary-expected.png: Added.
+        * platform/efl/editing/selection/select-element-paragraph-boundary-expected.txt: Added.
+        * platform/efl/editing/selection/select-from-textfield-outwards-expected.png: Added.
+        * platform/efl/editing/selection/select-from-textfield-outwards-expected.txt: Added.
+        * platform/efl/editing/selection/selection-actions-expected.png: Added.
+        * platform/efl/editing/selection/selection-actions-expected.txt: Added.
+        * platform/efl/editing/selection/selection-button-text-expected.png: Added.
+        * platform/efl/editing/selection/selection-button-text-expected.txt: Added.
+
+2013-06-13  Zoltan Horvath  <zoltan@webkit.org>
+
+        [CSS Shapes][CSS Regions] Respect bottom positioned shapes and content adjustment inside shapes
+        https://bugs.webkit.org/show_bug.cgi?id=117599
+
+        Reviewed by David Hyatt.
+
+        In r150478 I added support for multiple positioned shape-insides on regions, this patch covers the cases when a shape
+        is positioned to the bottom of the region or the region contains a shape which forces the content to be adjusted inside
+        the shape (e.g. we have a triangle shape and the first line needs to be started at the first position where it fits).
+        I introduced a new helper function to update the current shape and the current line segments in the flow thread cases. With
+        this new helper function all the logic which calculates the segments for shape-inside on regions is located in one function.
+
+        * fast/regions/shape-inside/shape-inside-on-regions-block-content-overflow-bottom-positioned-multiple-shapes-expected.html: Added.
+        * fast/regions/shape-inside/shape-inside-on-regions-block-content-overflow-bottom-positioned-multiple-shapes.html: Added.
+        * fast/regions/shape-inside/shape-inside-on-regions-block-content-polygon-with-adjustment-expected.html: Added.
+        * fast/regions/shape-inside/shape-inside-on-regions-block-content-polygon-with-adjustment.html: Added.
+        * fast/regions/shape-inside/shape-inside-on-regions-inline-content-overflow-bottom-positioned-multiple-shapes-expected.html: Added.
+        * fast/regions/shape-inside/shape-inside-on-regions-inline-content-overflow-bottom-positioned-multiple-shapes.html: Added.
+        * fast/regions/shape-inside/shape-inside-on-regions-inline-content-polygon-with-adjustment-expected.html: Added.
+        * fast/regions/shape-inside/shape-inside-on-regions-inline-content-polygon-with-adjustment.html: Added.
+
+2013-06-13  Mihai Tica  <mitica@adobe.com>
+
+        Add tests to validate CSS Background Blending
+
+        This patch set removes the test case of adding bg blend mode through script, as it
+        is now part of bug#117223
+
+        https://bugs.webkit.org/show_bug.cgi?id=117537
+
+        Reviewed by Dirk Schulze.
+
+        * css3/compositing/background-blend-mode-default-value.html: Added.
+        * css3/compositing/background-blend-mode-different-image-formats.html: Added.
+        * css3/compositing/background-blend-mode-image-color.html: Added.
+        * css3/compositing/background-blend-mode-image-image.html: Added.
+        * css3/compositing/background-blend-mode-single-layer-no-blending.html: Added.
+        * css3/compositing/resources/ducky.jpg: Added.
+        * platform/mac/css3/compositing/background-blend-mode-default-value-expected.png: Added.
+        * platform/mac/css3/compositing/background-blend-mode-default-value-expected.txt: Added.
+        * platform/mac/css3/compositing/background-blend-mode-different-image-formats-expected.png: Added.
+        * platform/mac/css3/compositing/background-blend-mode-different-image-formats-expected.txt: Added.
+        * platform/mac/css3/compositing/background-blend-mode-image-color-expected.png: Added.
+        * platform/mac/css3/compositing/background-blend-mode-image-color-expected.txt: Added.
+        * platform/mac/css3/compositing/background-blend-mode-image-image-expected.png: Added.
+        * platform/mac/css3/compositing/background-blend-mode-image-image-expected.txt: Added.
+        * platform/mac/css3/compositing/background-blend-mode-single-layer-no-blending-expected.png: Added.
+        * platform/mac/css3/compositing/background-blend-mode-single-layer-no-blending-expected.txt: Added.
+
+2013-06-13  Mihai Tica  <mitica@adobe.com>
+
+        [CSS Background Blending] Enable CSS Background blending for layers with SVGs.
+
+        Adding tests for SVGs over simple background colors and images blending with SVGs.
+        https://bugs.webkit.org/show_bug.cgi?id=117588
+
+        Reviewed by Dirk Schulze.
+
+        * css3/compositing/background-blend-mode-image-svg-expected.txt: Added.
+        * css3/compositing/background-blend-mode-image-svg.html: Added.
+        * css3/compositing/background-blend-mode-svg-color-expected.txt: Added.
+        * css3/compositing/background-blend-mode-svg-color.html: Added.
+        * css3/compositing/resources/red-circle.svg: Added.
+        * platform/mac/css3/compositing/background-blend-mode-image-svg-expected.png: Added.
+        * platform/mac/css3/compositing/background-blend-mode-svg-color-expected.png: Added.
+
+2013-06-13  Mihai Tica  <mitica@adobe.com>
+
+        Updating the -webkit-background-blend-mode property dynamically does not trigger a redraw of the element.
+
+        Adding test that sets background blend modes from script, after the page is loaded.
+        https://bugs.webkit.org/show_bug.cgi?id=117223
+
+        Reviewed by Dirk Schulze.
+
+        * fast/repaint/background-blend-mode-image-color-dynamic-expected.html: Added.
+        * fast/repaint/background-blend-mode-image-color-dynamic.html: Added.
+
+2013-06-13  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Support byte and octet types in bindings generators
+        https://bugs.webkit.org/show_bug.cgi?id=117547
+
+        Reviewed by Kentaro Hara.
+
+        Update fast/js/webidl-type-mapping.html to cover byte and octet
+        Web IDL types with and without [EnforceRange].
+
+        * fast/js/webidl-type-mapping-expected.txt:
+        * fast/js/webidl-type-mapping.html:
+
+2013-06-13  Max Vujovic  <mvujovic@adobe.com>
+
+        [CSS Regions] -webkit-background-clip: text; does not clip the background in regions
+        https://bugs.webkit.org/show_bug.cgi?id=117566
+
+        Reviewed by Alexandru Chiculita.
+
+        * fast/regions/webkit-background-clip-text-expected.html: Added.
+        * fast/regions/webkit-background-clip-text.html: Added.
+
+2013-06-13  Yuki Sekiguchi  <yuki.sekiguchi@access-company.com>
+
+        Setting overflow:hidden on position:absolute does not repaint hidden content
+        https://bugs.webkit.org/show_bug.cgi?id=116994
+
+        Reviewed by Simon Fraser.
+
+        * fast/repaint/change-overflow-and-display-of-relative-expected.txt: Added.
+        * fast/repaint/change-overflow-and-display-of-relative.html: Added.
+
+2013-06-13  Mihai Tica  <mitica@adobe.com>
+
+        [CSS Background Blending] Gradients don't blend with any of the layers behind.
+        First, allow the layers behind opaque gradients to be drawn, then add the blending filters
+        when working with gradients.
+
+        https://bugs.webkit.org/show_bug.cgi?id=117532
+        Reviewed by Dirk Schulze.
+
+        * css3/compositing/background-blend-mode-gradient-color-expected.txt: Added.
+        * css3/compositing/background-blend-mode-gradient-color.html: Added.
+        * css3/compositing/background-blend-mode-gradient-gradient-expected.txt: Added.
+        * css3/compositing/background-blend-mode-gradient-gradient.html: Added.
+        * css3/compositing/background-blend-mode-gradient-image-expected.txt: Added.
+        * css3/compositing/background-blend-mode-gradient-image.html: Added.
+        * css3/compositing/background-blend-mode-multiple-background-layers-expected.txt: Added.
+        * css3/compositing/background-blend-mode-multiple-background-layers.html: Added.
+        * platform/mac/css3/compositing/background-blend-mode-gradient-color-expected.png: Added.
+        * platform/mac/css3/compositing/background-blend-mode-gradient-gradient-expected.png: Added.
+        * platform/mac/css3/compositing/background-blend-mode-gradient-image-expected.png: Added.
+        * platform/mac/css3/compositing/background-blend-mode-multiple-background-layers-expected.png: Added.
+
+2013-06-13  Morten Stenshorne  <mstensho@opera.com>
+
+        Column balancing support in the region based multicol implementation
+        https://bugs.webkit.org/show_bug.cgi?id=116033
+
+        Reviewed by David Hyatt.
+
+        * fast/multicol/newmulticol/balance-images-expected.txt: Added.
+        * fast/multicol/newmulticol/balance-images.html: Added.
+        * fast/multicol/newmulticol/balance-maxheight1-expected.txt: Added.
+        * fast/multicol/newmulticol/balance-maxheight1.html: Added.
+        * fast/multicol/newmulticol/balance-maxheight2-expected.txt: Added.
+        * fast/multicol/newmulticol/balance-maxheight2.html: Added.
+        * fast/multicol/newmulticol/balance1-expected.txt: Added.
+        * fast/multicol/newmulticol/balance1.html: Added.
+        * fast/multicol/newmulticol/balance2-expected.txt: Added.
+        * fast/multicol/newmulticol/balance2.html: Added.
+        * fast/multicol/newmulticol/balance3-expected.txt: Added.
+        * fast/multicol/newmulticol/balance3.html: Added.
+        * fast/multicol/newmulticol/balance4-expected.txt: Added.
+        * fast/multicol/newmulticol/balance4.html: Added.
+        * fast/multicol/newmulticol/balance5-expected.txt: Added.
+        * fast/multicol/newmulticol/balance5.html: Added.
+        * fast/multicol/newmulticol/balance6-expected.txt: Added.
+        * fast/multicol/newmulticol/balance6.html: Added.
+        * fast/multicol/newmulticol/balance7-expected.txt: Added.
+        * fast/multicol/newmulticol/balance7.html: Added.
+        * fast/multicol/newmulticol/balance8-expected.txt: Added.
+        * fast/multicol/newmulticol/balance8.html: Added.
+        * fast/multicol/newmulticol/balance9-expected.txt: Added.
+        * fast/multicol/newmulticol/balance9.html: Added.
+        * fast/multicol/newmulticol/cell-shrinkback-expected.html: Added.
+        * fast/multicol/newmulticol/cell-shrinkback.html: Added.
+        * fast/multicol/newmulticol/columns-shorthand-parsing-expected.html: Added.
+        * fast/multicol/newmulticol/columns-shorthand-parsing.html: Added.
+        * fast/multicol/newmulticol/orphans-and-widows-balance-expected.txt: Added.
+        * fast/multicol/newmulticol/orphans-and-widows-balance.html: Added.
+        * fast/multicol/newmulticol/single-line-expected.html: Added.
+        * fast/multicol/newmulticol/single-line.html: Added.
+
+2013-06-13  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Unskipping passing test and move to the right place.
+
+        * platform/qt-5.0-wk2/TestExpectations:
+        * platform/qt/TestExpectations:
+
+2013-06-13  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [ARM] Unreviewed gardening, skip one more test to paint the bot green.
+
+        * platform/qt-arm/TestExpectations:
+
+2013-06-13  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+        Adding failure expectations for most of the current failures.
+
+        * platform/gtk-wk1/TestExpectations:
+        * platform/gtk/TestExpectations:
+
+2013-06-12  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [ARM] Unreviewed gardening, skip one more test to paint the bot green.
+
+        * platform/qt-arm/TestExpectations:
+
+2013-06-12  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed. EFL Gardening. Needs to add new baseline for some tests, which are passing on EFL bots.
+
+        * platform/efl-wk1/TestExpectations:
+        * platform/efl/TestExpectations:
+        * platform/efl/editing/selection/3690703-2-expected.png: Added.
+        * platform/efl/editing/selection/3690703-2-expected.txt: Added.
+        * platform/efl/editing/selection/3690703-expected.png: Added.
+        * platform/efl/editing/selection/3690703-expected.txt: Added.
+        * platform/efl/editing/selection/3690719-expected.png: Added.
+        * platform/efl/editing/selection/3690719-expected.txt: Added.
+        * platform/efl/editing/selection/4397952-expected.png: Added.
+        * platform/efl/editing/selection/4397952-expected.txt: Added.
+        * platform/efl/editing/selection/4895428-3-expected.png: Added.
+        * platform/efl/editing/selection/4895428-3-expected.txt: Added.
+        * platform/efl/editing/selection/4975120-expected.png: Added.
+        * platform/efl/editing/selection/4975120-expected.txt: Added.
+        * platform/efl/editing/selection/5007143-2-expected.png: Added.
+        * platform/efl/editing/selection/5007143-2-expected.txt: Added.
+        * platform/efl/editing/selection/5007143-expected.png: Added.
+        * platform/efl/editing/selection/5007143-expected.txt: Added.
+        * platform/efl/editing/selection/5057506-expected.png: Added.
+        * platform/efl/editing/selection/5057506-expected.txt: Added.
+        * platform/efl/editing/selection/5195166-1-expected.txt: Added.
+        * platform/efl/editing/selection/7152-2-expected.png: Added.
+        * platform/efl/editing/selection/7152-2-expected.txt: Added.
+        * platform/efl/editing/selection/caret-before-select-expected.png: Added.
+        * platform/efl/editing/selection/caret-before-select-expected.txt: Added.
+        * platform/efl/editing/selection/caret-ltr-right-expected.png: Added.
+        * platform/efl/editing/selection/caret-ltr-right-expected.txt: Added.
+        * platform/efl/editing/selection/caret-rtl-2-left-expected.png: Added.
+        * platform/efl/editing/selection/caret-rtl-2-left-expected.txt: Added.
+        * platform/efl/editing/selection/caret-rtl-right-expected.png: Added.
+        * platform/efl/editing/selection/caret-rtl-right-expected.txt: Added.
+
+2013-06-12  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Accessibility code assumes an area element's parent is a map element
+        https://bugs.webkit.org/show_bug.cgi?id=117496
+
+        Reviewed by Chris Fleizach.
+
+        Add a regression test from https://chromium.googlesource.com/chromium/blink/+/b6f486284f08c52904701c93e1ec0b7d6e76af9f.
+
+        * accessibility/image-map-with-indirect-area-crash-expected.txt: Added.
+        * accessibility/image-map-with-indirect-area-crash.html: Added.
+
+2013-06-12  Robert Hogan  <robert@webkit.org>
+
+        Whitespace between inlines with nowrap and a shrink-to-fit parent line-break incorrectly
+        https://bugs.webkit.org/show_bug.cgi?id=117370
+
+        Reviewed by David Hyatt.
+
+        * fast/text/whitespace/inline-whitespace-wrapping-8-expected.html: Added.
+        * fast/text/whitespace/inline-whitespace-wrapping-8.html: Added.
+
+2013-06-12  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] rectangle and inset-rectangle do not properly handle rx and ry
+        https://bugs.webkit.org/show_bug.cgi?id=116745
+
+        Reviewed by Dirk Schulze.
+
+        Update tests to check for the rx and ry conditions.
+
+        * fast/exclusions/parsing/parsing-shape-inside-expected.txt: New results.
+        * fast/exclusions/parsing/parsing-shape-outside-expected.txt: New results.
+        * fast/exclusions/parsing/script-tests/parsing-shape-inside.js: Update
+            to reflect that the computed value now always has rx and ry.
+        * fast/exclusions/parsing/script-tests/parsing-shape-outside.js: Ditto.
+        * fast/exclusions/parsing/script-tests/parsing-test-utils.js: Ditto.
+        * fast/exclusions/resources/rounded-rectangle.js:
+        (genLeftRightRoundedRectFloatShapeOutsideRefTest): Factor out left and
+            right into separate methods so that they can be used in tests that
+            only have left floats or only right floats.
+        (genLeftRoundedRectFloatShapeOutsideRefTest): Ditto.
+        (genRightRoundedRectFloatShapeOutsideRefTest): Ditto.
+        * fast/exclusions/shape-inside/shape-inside-animation-expected.txt: New results.
+        * fast/exclusions/shape-inside/shape-inside-animation.html: Change to
+            reflect new computed style value.
+        * fast/exclusions/shape-inside/shape-inside-rounded-rectangle-large-radius-expected.html: Added.
+        * fast/exclusions/shape-inside/shape-inside-rounded-rectangle-large-radius.html: Added.
+        * fast/exclusions/shape-outside-floats/shape-outside-floats-rounded-rectangle-large-radius-expected.html: Added.
+        * fast/exclusions/shape-outside-floats/shape-outside-floats-rounded-rectangle-large-radius.html: Added.
+            Note that the expected test here uses shape-inside, because we
+            really are just testing that the behavior is the same as a
+            shape-inside with rx and ry set to 50%, and it turned out to be
+            very hard to construct an expected result that didn't use
+            shape-inside and wasn't off by a pixel.
+        * css3/masking/clip-path-animation.html: Update expected value.
+        * css3/masking/clip-path-animation-expected.txt: New results.
+
 2013-06-12  Csaba Osztrogonác  <ossy@webkit.org>
 
         [ARM] Unreviewed gardening, unskip now passing tests and try to paint the bot green.

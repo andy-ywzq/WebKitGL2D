@@ -103,6 +103,7 @@ public:
         , m_committedWidth(0)
         , m_overhangWidth(0)
         , m_trailingWhitespaceWidth(0)
+        , m_trailingCollapsedWhitespaceWidth(0)
         , m_left(0)
         , m_right(0)
         , m_availableWidth(0)
@@ -119,16 +120,15 @@ public:
 #endif
         updateAvailableWidth();
     }
-    bool fitsOnLine() const { return currentWidth() <= m_availableWidth; }
-    bool fitsOnLine(float extra) const { return currentWidth() + extra <= m_availableWidth; }
-    bool fitsOnLine(float extra, bool excludeWhitespace) const { return currentWidth() - (excludeWhitespace ? trailingWhitespaceWidth() : 0) + extra <= m_availableWidth; }
+    bool fitsOnLine(float extra = 0) const { return currentWidth() + extra <= m_availableWidth; }
+    bool fitsOnLineExcludingTrailingWhitespace(float extra = 0) const { return currentWidth() - m_trailingWhitespaceWidth + extra <= m_availableWidth; }
+    bool fitsOnLineExcludingTrailingCollapsedWhitespace(float extra = 0) const { return currentWidth() - m_trailingCollapsedWhitespaceWidth + extra <= m_availableWidth; }
     float currentWidth() const { return m_committedWidth + m_uncommittedWidth; }
 
     // FIXME: We should eventually replace these three functions by ones that work on a higher abstraction.
     float uncommittedWidth() const { return m_uncommittedWidth; }
     float committedWidth() const { return m_committedWidth; }
     float availableWidth() const { return m_availableWidth; }
-    float trailingWhitespaceWidth() const { return m_trailingWhitespaceWidth; }
 
     void updateAvailableWidth(LayoutUnit minimumHeight = 0);
     void shrinkAvailableWidthForNewFloatIfNeeded(RenderBlock::FloatingObject*);
@@ -140,7 +140,7 @@ public:
     }
     void applyOverhang(RenderRubyRun*, RenderObject* startRenderer, RenderObject* endRenderer);
     void fitBelowFloats();
-    void setTrailingWhitespaceWidth(float width) { m_trailingWhitespaceWidth = width; }
+    void setTrailingWhitespaceWidth(float collapsedWhitespace, float borderPaddingMargin = 0) { m_trailingCollapsedWhitespaceWidth = collapsedWhitespace; m_trailingWhitespaceWidth =  collapsedWhitespace + borderPaddingMargin; }
 
     bool shouldIndentText() const { return m_shouldIndentText == IndentText; }
 
@@ -156,6 +156,7 @@ private:
     float m_committedWidth;
     float m_overhangWidth; // The amount by which |m_availableWidth| has been inflated to account for possible contraction due to ruby overhang.
     float m_trailingWhitespaceWidth;
+    float m_trailingCollapsedWhitespaceWidth;
     float m_left;
     float m_right;
     float m_availableWidth;
@@ -1457,6 +1458,7 @@ public:
         , m_isFullLayout(fullLayout)
         , m_repaintLogicalTop(repaintLogicalTop)
         , m_repaintLogicalBottom(repaintLogicalBottom)
+        , m_adjustedLogicalLineTop(0)
         , m_usesRepaintBounds(false)
         , m_flowThread(flowThread)
     { }
@@ -1502,6 +1504,9 @@ public:
     unsigned floatIndex() const { return m_floatIndex; }
     void setFloatIndex(unsigned floatIndex) { m_floatIndex = floatIndex; }
     
+    LayoutUnit adjustedLogicalLineTop() const { return m_adjustedLogicalLineTop; }
+    void setAdjustedLogicalLineTop(LayoutUnit value) { m_adjustedLogicalLineTop = value; }
+
     RenderFlowThread* flowThread() const { return m_flowThread; }
     void setFlowThread(RenderFlowThread* thread) { m_flowThread = thread; }
 
@@ -1520,6 +1525,8 @@ private:
     // FIXME: Should this be a range object instead of two ints?
     LayoutUnit& m_repaintLogicalTop;
     LayoutUnit& m_repaintLogicalBottom;
+
+    LayoutUnit m_adjustedLogicalLineTop;
 
     bool m_usesRepaintBounds;
     
@@ -1645,58 +1652,98 @@ static inline LayoutUnit adjustLogicalLineTop(ShapeInsideInfo* shapeInsideInfo, 
     return shapeInsideInfo->shapeLogicalBottom();
 }
 
-void RenderBlock::updateShapeAndSegmentsForCurrentLine(ShapeInsideInfo* shapeInsideInfo, LayoutUnit& absoluteLogicalTop, LineLayoutState& layoutState, bool& lineOverflowsFromShapeInside)
+void RenderBlock::updateShapeAndSegmentsForCurrentLine(ShapeInsideInfo*& shapeInsideInfo, LayoutUnit& absoluteLogicalTop, LineLayoutState& layoutState, bool& lineOverflowsFromShapeInside)
 {
-    LayoutUnit logicalHeight = this->logicalHeight();
-    RenderRegion* currentRegion = regionAtBlockOffset(logicalHeight);
-    if (currentRegion)
-        shapeInsideInfo = layoutShapeInsideInfo();
+    if (layoutState.flowThread())
+        return updateShapeAndSegmentsForCurrentLineInFlowThread(shapeInsideInfo, layoutState, lineOverflowsFromShapeInside);
+
     if (!shapeInsideInfo)
         return;
 
-    LayoutUnit lineTop = logicalHeight + absoluteLogicalTop;
-    LayoutUnit lineHeight = this->lineHeight(layoutState.lineInfo().isFirstLine(), isHorizontalWritingMode() ? HorizontalLine : VerticalLine, PositionOfInteriorLineBoxes);
-
-    if (layoutState.flowThread()) {
-        RenderRegion* nextRegion = regionAtBlockOffset(logicalHeight + lineHeight - LayoutUnit(1));
-        lineTop += shapeInsideInfo->owner()->borderAndPaddingBefore();
-        // Content in a flow thread is relative to the beginning of the thread, but the shape calculation should be relative to the current region.
-        if (currentRegion == nextRegion)
-            lineTop -= currentRegion->logicalTopForFlowThreadContent();
-    }
-
+    LayoutUnit lineTop = logicalHeight() + absoluteLogicalTop;
     // FIXME: Bug 95361: It is possible for a line to grow beyond lineHeight, in which case these segments may be incorrect.
-    shapeInsideInfo->computeSegmentsForLine(lineTop, lineHeight);
+    shapeInsideInfo->computeSegmentsForLine(lineTop, lineHeight(layoutState.lineInfo().isFirstLine(), isHorizontalWritingMode() ? HorizontalLine : VerticalLine, PositionOfInteriorLineBoxes));
 
     // The overflow should be pushed below the content box
     LayoutUnit shapeContainingBlockHeight = shapeInsideInfo->shapeContainingBlockHeight();
     if (!shapeInsideInfo->lineWithinShapeBounds() && !lineOverflowsFromShapeInside && shapeContainingBlockHeight) {
         lineOverflowsFromShapeInside = true;
-        LayoutUnit newLogicalHeight = shapeContainingBlockHeight;
+        setLogicalHeight(shapeContainingBlockHeight);
+    }
+}
 
-        if (layoutState.flowThread()) {
-            // If block contents flown across multiple regions and the shape-inside was applied on the second region we can end up with negative lineTop
-            if (lineTop < 0)
-                return;
+void RenderBlock::updateShapeAndSegmentsForCurrentLineInFlowThread(ShapeInsideInfo*& shapeInsideInfo, LineLayoutState& layoutState, bool& lineOverflowsFromShapeInside)
+{
+    ASSERT(layoutState.flowThread());
 
-            newLogicalHeight = logicalHeight + shapeContainingBlockHeight - lineTop - currentRegion->borderAndPaddingBefore();
+    LayoutUnit lineHeight = this->lineHeight(layoutState.lineInfo().isFirstLine(), isHorizontalWritingMode() ? HorizontalLine : VerticalLine, PositionOfInteriorLineBoxes);
 
-            RenderRegion* nextRegion = regionAtBlockOffset(newLogicalHeight);
-            ShapeInsideInfo* nextShapeInfo = 0;
-            if (nextRegion)
-                nextShapeInfo = nextRegion->shapeInsideInfo();
+    RenderRegion* currentRegion = regionAtBlockOffset(logicalHeight());
+    if (!currentRegion)
+        return;
 
-            // The overflow flows into another region with shape-inside
-            if (currentRegion != nextRegion && nextShapeInfo) {
-                newLogicalHeight += nextShapeInfo->shapeLogicalTop() - nextRegion->borderAndPaddingBefore();
+    shapeInsideInfo = currentRegion->shapeInsideInfo();
 
-                LayoutUnit offset = nextShapeInfo->shapeLogicalTop() - nextRegion->borderAndPaddingBefore();
-                nextShapeInfo->computeSegmentsForLine(offset, lineHeight);
+    LayoutUnit logicalLineTopInFlowThread = logicalHeight() + offsetFromLogicalTopOfFirstPage();
+    LayoutUnit logicalLineBottomInFlowThread = logicalLineTopInFlowThread + lineHeight;
+    LayoutUnit logicalRegionTopInFlowThread = currentRegion->logicalTopForFlowThreadContent();
+    LayoutUnit logicalRegionBottomInFlowThread = logicalRegionTopInFlowThread + currentRegion->logicalHeight() - currentRegion->borderAndPaddingBefore() - currentRegion->borderAndPaddingAfter();
 
-                shapeInsideInfo = nextShapeInfo;
-                lineOverflowsFromShapeInside = false;
-            }
-        }
+    // We only want to deal regions with shapes, so we look up for the next region whether it has a shape
+    if (!shapeInsideInfo && !currentRegion->isLastRegion()) {
+        LayoutUnit deltaToNextRegion = logicalHeight() + logicalRegionBottomInFlowThread - logicalLineTopInFlowThread;
+        RenderRegion* lookupForNextRegion = regionAtBlockOffset(logicalHeight() + deltaToNextRegion);
+        if (!lookupForNextRegion->shapeInsideInfo())
+            return;
+    }
+
+    LayoutUnit shapeBottomInFlowThread = LayoutUnit::max();
+    if (shapeInsideInfo)
+        shapeBottomInFlowThread = shapeInsideInfo->shapeLogicalBottom() + currentRegion->logicalTopForFlowThreadContent();
+
+    // If the line is between two shapes/regions we position the line to the top of the next shape/region
+    RenderRegion* nextRegion = regionAtBlockOffset(logicalHeight() + lineHeight);
+    if ((currentRegion != nextRegion && (logicalLineBottomInFlowThread > logicalRegionBottomInFlowThread)) || (!currentRegion->isLastRegion() && shapeBottomInFlowThread < logicalLineBottomInFlowThread)) {
+        LayoutUnit deltaToNextRegion = logicalRegionBottomInFlowThread - logicalLineTopInFlowThread;
+        nextRegion = regionAtBlockOffset(logicalHeight() + deltaToNextRegion);
+
+        ASSERT(currentRegion != nextRegion);
+
+        shapeInsideInfo = nextRegion->shapeInsideInfo();
+        setLogicalHeight(logicalHeight() + deltaToNextRegion);
+
+        currentRegion = nextRegion;
+
+        logicalLineTopInFlowThread = logicalHeight() + offsetFromLogicalTopOfFirstPage();
+        logicalLineBottomInFlowThread = logicalLineTopInFlowThread + lineHeight;
+        logicalRegionTopInFlowThread = currentRegion->logicalTopForFlowThreadContent();
+        logicalRegionBottomInFlowThread = logicalRegionTopInFlowThread + currentRegion->logicalHeight() - currentRegion->borderAndPaddingBefore() - currentRegion->borderAndPaddingAfter();
+    }
+
+    if (!shapeInsideInfo)
+        return;
+
+    // We position the first line to the top of the shape in the region or to the previously adjusted position in the shape
+    if (logicalLineBottomInFlowThread <= (logicalRegionTopInFlowThread + lineHeight) || (logicalLineTopInFlowThread - logicalRegionTopInFlowThread) < (layoutState.adjustedLogicalLineTop() - currentRegion->borderAndPaddingBefore())) {
+        LayoutUnit shapeTopOffset = layoutState.adjustedLogicalLineTop();
+        if (!shapeTopOffset)
+            shapeTopOffset = shapeInsideInfo->shapeLogicalTop();
+
+        LayoutUnit shapePositionInFlowThread = currentRegion->logicalTopForFlowThreadContent() + shapeTopOffset;
+        LayoutUnit shapeTopLineTopDelta = shapePositionInFlowThread - logicalLineTopInFlowThread - currentRegion->borderAndPaddingBefore();
+
+        setLogicalHeight(logicalHeight() + shapeTopLineTopDelta);
+        logicalLineTopInFlowThread += shapeTopLineTopDelta;
+        layoutState.setAdjustedLogicalLineTop(0);
+    }
+
+    LayoutUnit lineTop = logicalLineTopInFlowThread - currentRegion->logicalTopForFlowThreadContent() + currentRegion->borderAndPaddingBefore();
+    shapeInsideInfo->computeSegmentsForLine(lineTop, lineHeight);
+
+    // Overflow from last shape on last region should be pushed below the content box
+    if (currentRegion->isLastRegion() && !lineOverflowsFromShapeInside && (lineTop + lineHeight) > shapeInsideInfo->shapeLogicalBottom()) {
+        lineOverflowsFromShapeInside = true;
+        LayoutUnit newLogicalHeight = this->logicalHeight() + (shapeInsideInfo->shapeContainingBlockHeight() - (lineTop + currentRegion->borderAndPaddingAfter()));
         setLogicalHeight(newLogicalHeight);
     }
 }
@@ -1708,8 +1755,12 @@ bool RenderBlock::adjustLogicalLineTopAndLogicalHeightIfNeeded(ShapeInsideInfo* 
         return false;
 
     LayoutUnit newLogicalHeight = adjustedLogicalLineTop - absoluteLogicalTop;
-    if (layoutState.flowThread())
+
+    if (layoutState.flowThread()) {
+        layoutState.setAdjustedLogicalLineTop(adjustedLogicalLineTop);
         newLogicalHeight = logicalHeight();
+    }
+
 
     end = restartLayoutRunsAndFloatsInRange(logicalHeight(), newLogicalHeight, lastFloatFromPreviousLine, resolver, end);
     return true;
@@ -2040,7 +2091,7 @@ void RenderBlock::repaintDirtyFloats(Vector<FloatWithRect>& floats)
 
 void RenderBlock::layoutInlineChildren(bool relayoutChildren, LayoutUnit& repaintLogicalTop, LayoutUnit& repaintLogicalBottom)
 {
-    setLogicalHeight(borderBefore() + paddingBefore());
+    setLogicalHeight(borderAndPaddingBefore());
     
     // Lay out our hypothetical grid line as though it occurs at the top of the block.
     if (view()->layoutState() && view()->layoutState()->lineGrid() == this)
@@ -2131,7 +2182,7 @@ void RenderBlock::layoutInlineChildren(bool relayoutChildren, LayoutUnit& repain
     }
 
     // Now add in the bottom border/padding.
-    setLogicalHeight(logicalHeight() + lastLineAnnotationsAdjustment + borderAfter() + paddingAfter() + scrollbarLogicalHeight());
+    setLogicalHeight(logicalHeight() + lastLineAnnotationsAdjustment + borderAndPaddingAfter() + scrollbarLogicalHeight());
 
     if (!firstLineBox() && hasLineIfEmpty())
         setLogicalHeight(logicalHeight() + lineHeight(true, isHorizontalWritingMode() ? HorizontalLine : VerticalLine, PositionOfInteriorLineBoxes));
@@ -2930,7 +2981,7 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
             // If it does, position it now, otherwise, position
             // it after moving to next line (in newLine() func)
             // FIXME: Bug 110372: Properly position multiple stacked floats with non-rectangular shape outside.
-            if (floatsFitOnLine && width.fitsOnLine(m_block->logicalWidthForFloat(f), true)) {
+            if (floatsFitOnLine && width.fitsOnLineExcludingTrailingWhitespace(m_block->logicalWidthForFloat(f))) {
                 m_block->positionNewFloatOnLine(f, lastFloatFromPreviousLine, lineInfo, width);
                 if (lBreak.m_obj == current.m_obj) {
                     ASSERT(!lBreak.m_pos);
@@ -3021,6 +3072,13 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
 #if ENABLE(SVG)
             bool isSVGText = t->isSVGInlineText();
 #endif
+
+            // If we have left a no-wrap inline and entered an autowrap inline while ignoring spaces
+            // then we need to mark the start of the autowrap inline as a potential linebreak now. 
+            if (autoWrap && !RenderStyle::autoWrap(lastWS) && ignoringSpaces) {
+                width.commit();
+                lBreak.moveToStartOf(current.m_obj);
+            }
 
             if (t->style()->hasTextCombine() && current.m_obj->isCombineText() && !toRenderCombineText(current.m_obj)->isCombined()) {
                 RenderCombineText* combineRenderer = toRenderCombineText(current.m_obj);
@@ -3322,7 +3380,7 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
             fallbackFonts.clear();
 
             if (collapseWhiteSpace && currentCharacterIsSpace && additionalTempWidth)
-                width.setTrailingWhitespaceWidth(additionalTempWidth + inlineLogicalTempWidth);
+                width.setTrailingWhitespaceWidth(additionalTempWidth, inlineLogicalTempWidth);
 
             includeEndWidth = false;
 
@@ -3340,7 +3398,7 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
             ASSERT_NOT_REACHED();
 
         bool checkForBreak = autoWrap;
-        if (width.committedWidth() && !width.fitsOnLine() && lBreak.m_obj && currWS == NOWRAP)
+        if (width.committedWidth() && !width.fitsOnLineExcludingTrailingCollapsedWhitespace() && lBreak.m_obj && currWS == NOWRAP)
             checkForBreak = true;
         else if (next && current.m_obj->isText() && next->isText() && !next->isBR() && (autoWrap || next->style()->autoWrap())) {
             if (autoWrap && currentCharacterIsSpace)
@@ -3404,7 +3462,7 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
         atStart = false;
     }
 
-    if (width.fitsOnLine() || lastWS == NOWRAP)
+    if (width.fitsOnLineExcludingTrailingCollapsedWhitespace() || lastWS == NOWRAP)
         lBreak.clear();
 
  end:

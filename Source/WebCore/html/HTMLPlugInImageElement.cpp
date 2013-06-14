@@ -23,6 +23,8 @@
 
 #include "Chrome.h"
 #include "ChromeClient.h"
+#include "Event.h"
+#include "EventHandler.h"
 #include "Frame.h"
 #include "FrameLoader.h"
 #include "FrameLoaderClient.h"
@@ -705,6 +707,22 @@ void HTMLPlugInImageElement::subframeLoaderDidCreatePlugIn(const Widget* widget)
         setIsPrimarySnapshottedPlugIn(true);
         m_deferredPromotionToPrimaryPlugIn = false;
     }
+}
+
+void HTMLPlugInImageElement::defaultEventHandler(Event* event)
+{
+    RenderObject* r = renderer();
+    if (r && r->isEmbeddedObject()) {
+        if (isPlugInImageElement() && displayState() == WaitingForSnapshot && event->isMouseEvent() && event->type() == eventNames().clickEvent) {
+            MouseEvent* mouseEvent = toMouseEvent(event);
+            if (mouseEvent->button() == LeftButton) {
+                userDidClickSnapshot(mouseEvent, true);
+                event->setDefaultHandled();
+                return;
+            }
+        }
+    }
+    HTMLPlugInElement::defaultEventHandler(event);
 }
 
 } // namespace WebCore

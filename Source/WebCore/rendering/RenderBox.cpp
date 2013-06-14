@@ -1374,7 +1374,7 @@ void RenderBox::paintFillLayers(const PaintInfo& paintInfo, const Color& c, cons
             shouldDrawBackgroundInSeparateBuffer = true;
 
         // The clipOccludesNextLayers condition must be evaluated first to avoid short-circuiting.
-        if (curLayer->clipOccludesNextLayers(curLayer == fillLayer) && curLayer->hasOpaqueImage(this) && curLayer->image()->canRender(this, style()->effectiveZoom()) && curLayer->hasRepeatXY())
+        if (curLayer->clipOccludesNextLayers(curLayer == fillLayer) && curLayer->hasOpaqueImage(this) && curLayer->image()->canRender(this, style()->effectiveZoom()) && curLayer->hasRepeatXY() && curLayer->blendMode() == BlendModeNormal)
             break;
         curLayer = curLayer->next();
     }
@@ -2021,7 +2021,7 @@ void RenderBox::computeRectForRepaint(const RenderLayerModelObject* repaintConta
     // FIXME: We ignore the lightweight clipping rect that controls use, since if |o| is in mid-layout,
     // its controlClipRect will be wrong. For overflow clip we use the values cached by the layer.
     rect.setLocation(topLeft);
-    if (o->hasOverflowClip()) {
+    if (shouldUseClipForRepaint(o)) {
         RenderBox* containerBox = toRenderBox(o);
         containerBox->applyCachedClipAndScrollOffsetForRepaint(rect);
         if (rect.isEmpty())

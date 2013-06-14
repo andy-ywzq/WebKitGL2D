@@ -1,3 +1,89 @@
+2013-06-14  Tor Arne Vestbø  <tor.arne.vestbo@digia.com>
+
+        Remove myself from Qt build system watchlist
+
+        Reviewed by Simon Hausmann.
+
+        * Scripts/webkitpy/common/config/watchlist:
+
+2013-06-13  Michael Brüning  <michael.bruning@digia.com>
+
+        [Qt][Mac] Disable QTKit video on OS X.
+        https://bugs.webkit.org/show_bug.cgi?id=117591
+
+        Reviewed by Tor Arne Vestbø.
+
+        Deployment of Qt binaries to different Mac OS X
+        platform version makes it impossible to link against
+        the correct version of the WebKitSystemInterface library,
+        so we need to disable QTKit for media elements.
+
+        * qmake/mkspecs/features/features.prf:
+
+2013-06-13  Michał Pakuła vel Rutka  <m.pakula@samsung.com>
+
+        [EFL][WK2] Wrong context menu and popup menu positions when scroll is applied
+        https://bugs.webkit.org/show_bug.cgi?id=116610
+
+        Reviewed by Noam Rosenthal.
+
+        Remove unnecessary code adjusting context menu position to webview position.
+        Now position is calculcated in EwkView.
+
+        * MiniBrowser/efl/main.c:
+        (on_context_menu_show):
+
+2013-06-12  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Turn on WinEWS test now that AppleWin port uses new-run-webkit-tests.
+
+        * Scripts/webkitpy/common/config/ews.json:
+
+2013-06-12  Eduardo Lima Mitev  <elima@igalia.com>
+
+        [atk] Replace deprecated call to atk_document_get_locale() in DumpRenderTree
+        https://bugs.webkit.org/show_bug.cgi?id=115647
+
+        Reviewed by Martin Robinson.
+
+        Locale resolution is moved to WebKitAccessibleWrapperAtk using
+        AtkObject::get_object_locale() API. Now, implementation of
+        AccessibilityUIElement::language() in both DumpRenderTree and WebKitTestRunner can
+        be leveraged to get_object_locale() of AtkObject.
+
+        Apart from improving encapsulation, this avoids calling deprecated get_document_locale()
+        method.
+
+        No new functionality, no new tests.
+
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (AccessibilityUIElement::language): Leverage locale resolution to
+        AtkObject::get_object_locale().
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::AccessibilityUIElement::language): Leverage locale resolution to
+        AtkObject::get_object_locale().
+
+2013-06-12  Hugo Parente Lima  <hugo.lima@openbossa.org>
+
+        Remove last bits of GYP from build-webkit and update-webkit scripts
+        https://bugs.webkit.org/show_bug.cgi?id=117557
+
+        Reviewed by Ryosuke Niwa.
+
+        * Scripts/build-webkit:
+        * Scripts/update-webkit:
+
+2013-06-12  Hugo Parente Lima  <hugo.lima@openbossa.org>
+
+        Remove forgotten unused Tools/Script/make-gypi script
+        https://bugs.webkit.org/show_bug.cgi?id=117558
+
+        Reviewed by Ryosuke Niwa.
+
+        This script isn't used since the GYP removal from WebKit.
+
+        * Scripts/make-gypi: Removed.
+
 2013-06-12  Andres Gomez  <agomez@igalia.com>
 
         [GTK] MiniBrowser to automatically download "non-showable" documents when left click in link

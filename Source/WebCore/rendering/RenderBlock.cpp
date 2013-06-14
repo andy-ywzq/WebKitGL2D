@@ -1652,7 +1652,7 @@ void RenderBlock::layoutBlock(bool relayoutChildren, LayoutUnit pageLogicalHeigh
         layoutBlockChildren(relayoutChildren, maxFloatLogicalBottom);
 
     // Expand our intrinsic height to encompass floats.
-    LayoutUnit toAdd = borderAfter() + paddingAfter() + scrollbarLogicalHeight();
+    LayoutUnit toAdd = borderAndPaddingAfter() + scrollbarLogicalHeight();
     if (lowestFloatLogicalBottom() > (logicalHeight() - toAdd) && expandsToEncloseOverhangingFloats())
         setLogicalHeight(lowestFloatLogicalBottom() + toAdd);
     
@@ -2312,7 +2312,7 @@ void RenderBlock::marginBeforeEstimateForChild(RenderBox* child, LayoutUnit& pos
     if (childBlock->childrenInline() || childBlock->isWritingModeRoot())
         return;
 
-    MarginInfo childMarginInfo(childBlock, childBlock->borderBefore() + childBlock->paddingBefore(), childBlock->borderAfter() + childBlock->paddingAfter());
+    MarginInfo childMarginInfo(childBlock, childBlock->borderAndPaddingBefore(), childBlock->borderAndPaddingAfter());
     if (!childMarginInfo.canCollapseMarginBeforeWithChildren())
         return;
 
@@ -2537,8 +2537,8 @@ void RenderBlock::layoutBlockChildren(bool relayoutChildren, LayoutUnit& maxFloa
         }
     }
 
-    LayoutUnit beforeEdge = borderBefore() + paddingBefore();
-    LayoutUnit afterEdge = borderAfter() + paddingAfter() + scrollbarLogicalHeight();
+    LayoutUnit beforeEdge = borderAndPaddingBefore();
+    LayoutUnit afterEdge = borderAndPaddingAfter() + scrollbarLogicalHeight();
 
     setLogicalHeight(beforeEdge);
     
@@ -3035,10 +3035,10 @@ void RenderBlock::paintColumnRules(PaintInfo& paintInfo, const LayoutPoint& pain
         bool topToBottom = !style()->isFlippedBlocksWritingMode() ^ colInfo->progressionIsReversed();
         LayoutUnit ruleLeft = isHorizontalWritingMode()
             ? borderLeft() + paddingLeft()
-            : colGap / 2 - colGap - ruleThickness / 2 + (!colInfo->progressionIsReversed() ? borderBefore() + paddingBefore() : borderAfter() + paddingAfter());
+            : colGap / 2 - colGap - ruleThickness / 2 + (!colInfo->progressionIsReversed() ? borderAndPaddingBefore() : borderAndPaddingAfter());
         LayoutUnit ruleWidth = isHorizontalWritingMode() ? contentWidth() : ruleThickness;
         LayoutUnit ruleTop = isHorizontalWritingMode()
-            ? colGap / 2 - colGap - ruleThickness / 2 + (!colInfo->progressionIsReversed() ? borderBefore() + paddingBefore() : borderAfter() + paddingAfter())
+            ? colGap / 2 - colGap - ruleThickness / 2 + (!colInfo->progressionIsReversed() ? borderAndPaddingBefore() : borderAndPaddingAfter())
             : borderStart() + paddingStart();
         LayoutUnit ruleHeight = isHorizontalWritingMode() ? ruleThickness : contentHeight();
         LayoutRect ruleRect(ruleLeft, ruleTop, ruleWidth, ruleHeight);
@@ -5582,7 +5582,7 @@ LayoutRect RenderBlock::columnRectAt(ColumnInfo* colInfo, unsigned index) const
     // Compute the appropriate rect based off our information.
     LayoutUnit colLogicalWidth = colInfo->desiredColumnWidth();
     LayoutUnit colLogicalHeight = colInfo->columnHeight();
-    LayoutUnit colLogicalTop = borderBefore() + paddingBefore();
+    LayoutUnit colLogicalTop = borderAndPaddingBefore();
     LayoutUnit colLogicalLeft = logicalLeftOffsetForContent();
     LayoutUnit colGap = columnGap();
     if (colInfo->progressionAxis() == ColumnInfo::InlineAxis) {
@@ -5612,7 +5612,7 @@ bool RenderBlock::relayoutForPagination(bool hasSpecifiedPageLogicalHeight, Layo
         addOverflowFromInlineChildren();
     else
         addOverflowFromBlockChildren();
-    LayoutUnit layoutOverflowLogicalBottom = (isHorizontalWritingMode() ? layoutOverflowRect().maxY() : layoutOverflowRect().maxX()) - borderBefore() - paddingBefore();
+    LayoutUnit layoutOverflowLogicalBottom = (isHorizontalWritingMode() ? layoutOverflowRect().maxY() : layoutOverflowRect().maxX()) - borderAndPaddingBefore();
 
     // FIXME: We don't balance properly at all in the presence of forced page breaks.  We need to understand what
     // the distance between forced page breaks is so that we can avoid making the minimum column height too tall.
@@ -5626,7 +5626,7 @@ bool RenderBlock::relayoutForPagination(bool hasSpecifiedPageLogicalHeight, Layo
             // maximum page break distance.
             if (!pageLogicalHeight) {
                 LayoutUnit distanceBetweenBreaks = max<LayoutUnit>(colInfo->maximumDistanceBetweenForcedBreaks(),
-                                                                   view()->layoutState()->pageLogicalOffset(this, borderBefore() + paddingBefore() + layoutOverflowLogicalBottom) - colInfo->forcedBreakOffset());
+                    view()->layoutState()->pageLogicalOffset(this, borderAndPaddingBefore() + layoutOverflowLogicalBottom) - colInfo->forcedBreakOffset());
                 columnHeight = max(colInfo->minimumColumnHeight(), distanceBetweenBreaks);
             }
         } else if (layoutOverflowLogicalBottom > boundedMultiply(pageLogicalHeight, desiredColumnCount)) {
@@ -5646,7 +5646,7 @@ bool RenderBlock::relayoutForPagination(bool hasSpecifiedPageLogicalHeight, Layo
         colInfo->setColumnCountAndHeight(ceilf((float)layoutOverflowLogicalBottom / pageLogicalHeight), pageLogicalHeight);
 
     if (columnCount(colInfo)) {
-        setLogicalHeight(borderBefore() + paddingBefore() + colInfo->columnHeight() + borderAfter() + paddingAfter() + scrollbarLogicalHeight());
+        setLogicalHeight(borderAndPaddingBefore() + colInfo->columnHeight() + borderAndPaddingAfter() + scrollbarLogicalHeight());
         m_overflow.clear();
     } else
         m_overflow = savedOverflow.release();
@@ -5758,7 +5758,7 @@ void RenderBlock::adjustRectForColumns(LayoutRect& r) const
     LayoutRect result;
 
     bool isHorizontal = isHorizontalWritingMode();
-    LayoutUnit beforeBorderPadding = borderBefore() + paddingBefore();
+    LayoutUnit beforeBorderPadding = borderAndPaddingBefore();
     LayoutUnit colHeight = colInfo->columnHeight();
     if (!colHeight)
         return;
@@ -5807,7 +5807,7 @@ LayoutPoint RenderBlock::flipForWritingModeIncludingColumns(const LayoutPoint& p
         return point;
     ColumnInfo* colInfo = columnInfo();
     LayoutUnit columnLogicalHeight = colInfo->columnHeight();
-    LayoutUnit expandedLogicalHeight = borderBefore() + paddingBefore() + columnCount(colInfo) * columnLogicalHeight + borderAfter() + paddingAfter() + scrollbarLogicalHeight();
+    LayoutUnit expandedLogicalHeight = borderAndPaddingBefore() + columnCount(colInfo) * columnLogicalHeight + borderAndPaddingAfter() + scrollbarLogicalHeight();
     if (isHorizontalWritingMode())
         return LayoutPoint(point.x(), expandedLogicalHeight - point.y());
     return LayoutPoint(expandedLogicalHeight - point.x(), point.y());
@@ -5821,7 +5821,7 @@ void RenderBlock::adjustStartEdgeForWritingModeIncludingColumns(LayoutRect& rect
     
     ColumnInfo* colInfo = columnInfo();
     LayoutUnit columnLogicalHeight = colInfo->columnHeight();
-    LayoutUnit expandedLogicalHeight = borderBefore() + paddingBefore() + columnCount(colInfo) * columnLogicalHeight + borderAfter() + paddingAfter() + scrollbarLogicalHeight();
+    LayoutUnit expandedLogicalHeight = borderAndPaddingBefore() + columnCount(colInfo) * columnLogicalHeight + borderAndPaddingAfter() + scrollbarLogicalHeight();
     
     if (isHorizontalWritingMode())
         rect.setY(expandedLogicalHeight - rect.maxY());
@@ -5843,7 +5843,7 @@ void RenderBlock::adjustForColumns(LayoutSize& offset, const LayoutPoint& point)
 
     for (unsigned i = 0; i < colCount; ++i) {
         // Compute the edges for a given column in the block progression direction.
-        LayoutRect sliceRect = LayoutRect(logicalLeft, borderBefore() + paddingBefore() + i * colLogicalHeight, colLogicalWidth, colLogicalHeight);
+        LayoutRect sliceRect = LayoutRect(logicalLeft, borderAndPaddingBefore() + i * colLogicalHeight, colLogicalWidth, colLogicalHeight);
         if (!isHorizontalWritingMode())
             sliceRect = sliceRect.transposedRect();
         
@@ -5855,7 +5855,7 @@ void RenderBlock::adjustForColumns(LayoutSize& offset, const LayoutPoint& point)
                 if (colInfo->progressionAxis() == ColumnInfo::InlineAxis)
                     offset.expand(columnRectAt(colInfo, i).x() - logicalLeft, -logicalOffset);
                 else
-                    offset.expand(0, columnRectAt(colInfo, i).y() - logicalOffset - borderBefore() - paddingBefore());
+                    offset.expand(0, columnRectAt(colInfo, i).y() - logicalOffset - borderAndPaddingBefore());
                 return;
             }
         } else {
@@ -5863,7 +5863,7 @@ void RenderBlock::adjustForColumns(LayoutSize& offset, const LayoutPoint& point)
                 if (colInfo->progressionAxis() == ColumnInfo::InlineAxis)
                     offset.expand(-logicalOffset, columnRectAt(colInfo, i).y() - logicalLeft);
                 else
-                    offset.expand(columnRectAt(colInfo, i).x() - logicalOffset - borderBefore() - paddingBefore(), 0);
+                    offset.expand(columnRectAt(colInfo, i).x() - logicalOffset - borderAndPaddingBefore(), 0);
                 return;
             }
         }
@@ -7517,11 +7517,9 @@ LayoutUnit RenderBlock::adjustForUnsplittableChild(RenderBox* child, LayoutUnit 
     if (!isUnsplittable)
         return logicalOffset;
     LayoutUnit childLogicalHeight = logicalHeightForChild(child) + (includeMargins ? marginBeforeForChild(child) + marginAfterForChild(child) : LayoutUnit());
-    LayoutState* layoutState = view()->layoutState();
-    if (layoutState->m_columnInfo)
-        layoutState->m_columnInfo->updateMinimumColumnHeight(childLogicalHeight);
     LayoutUnit pageLogicalHeight = pageLogicalHeightForOffset(logicalOffset);
     bool hasUniformPageLogicalHeight = !flowThread || flowThread->regionsHaveUniformLogicalHeight();
+    updateMinimumPageHeight(logicalOffset, childLogicalHeight);
     if (!pageLogicalHeight || (hasUniformPageLogicalHeight && childLogicalHeight > pageLogicalHeight)
         || !hasNextPage(logicalOffset))
         return logicalOffset;
@@ -7549,6 +7547,38 @@ bool RenderBlock::pushToNextPageWithMinimumLogicalHeight(LayoutUnit& adjustment,
     return !checkRegion;
 }
 
+void RenderBlock::setPageBreak(LayoutUnit offset, LayoutUnit spaceShortage)
+{
+    if (RenderFlowThread* flowThread = flowThreadContainingBlock())
+        flowThread->setPageBreak(offsetFromLogicalTopOfFirstPage() + offset, spaceShortage);
+}
+
+void RenderBlock::updateMinimumPageHeight(LayoutUnit offset, LayoutUnit minHeight)
+{
+    if (RenderFlowThread* flowThread = flowThreadContainingBlock())
+        flowThread->updateMinimumPageHeight(offsetFromLogicalTopOfFirstPage() + offset, minHeight);
+    else if (ColumnInfo* colInfo = view()->layoutState()->m_columnInfo)
+        colInfo->updateMinimumColumnHeight(minHeight);
+}
+
+static inline LayoutUnit calculateMinimumPageHeight(RenderStyle* renderStyle, RootInlineBox* lastLine, LayoutUnit lineTop, LayoutUnit lineBottom)
+{
+    // We may require a certain minimum number of lines per page in order to satisfy
+    // orphans and widows, and that may affect the minimum page height.
+    unsigned lineCount = max<unsigned>(renderStyle->hasAutoOrphans() ? 1 : renderStyle->orphans(), renderStyle->hasAutoWidows() ? 1 : renderStyle->widows());
+    if (lineCount > 1) {
+        RootInlineBox* line = lastLine;
+        for (unsigned i = 1; i < lineCount && line->prevRootBox(); i++)
+            line = line->prevRootBox();
+
+        // FIXME: Paginating using line overflow isn't all fine. See FIXME in
+        // adjustLinePositionForPagination() for more details.
+        LayoutRect overflow = line->logicalVisualOverflowRect(line->lineTop(), line->lineBottom());
+        lineTop = min(line->lineTopWithLeading(), overflow.y());
+    }
+    return lineBottom - lineTop;
+}
+
 void RenderBlock::adjustLinePositionForPagination(RootInlineBox* lineBox, LayoutUnit& delta, RenderFlowThread* flowThread)
 {
     // FIXME: For now we paginate using line overflow.  This ensures that lines don't overlap at all when we
@@ -7572,11 +7602,9 @@ void RenderBlock::adjustLinePositionForPagination(RootInlineBox* lineBox, Layout
     // line and all following lines.
     LayoutRect logicalVisualOverflow = lineBox->logicalVisualOverflowRect(lineBox->lineTop(), lineBox->lineBottom());
     LayoutUnit logicalOffset = min(lineBox->lineTopWithLeading(), logicalVisualOverflow.y());
-    LayoutUnit lineHeight = max(lineBox->lineBottomWithLeading(), logicalVisualOverflow.maxY()) - logicalOffset;
-    RenderView* renderView = view();
-    LayoutState* layoutState = renderView->layoutState();
-    if (layoutState->m_columnInfo)
-        layoutState->m_columnInfo->updateMinimumColumnHeight(lineHeight);
+    LayoutUnit logicalBottom = max(lineBox->lineBottomWithLeading(), logicalVisualOverflow.maxY());
+    LayoutUnit lineHeight = logicalBottom - logicalOffset;
+    updateMinimumPageHeight(logicalOffset, calculateMinimumPageHeight(style(), lineBox, logicalOffset, logicalBottom));
     logicalOffset += delta;
     lineBox->setPaginationStrut(0);
     lineBox->setIsFirstAfterPageBreak(false);
@@ -7601,6 +7629,7 @@ void RenderBlock::adjustLinePositionForPagination(RootInlineBox* lineBox, Layout
         }
         LayoutUnit totalLogicalHeight = lineHeight + max<LayoutUnit>(0, logicalOffset);
         LayoutUnit pageLogicalHeightAtNewOffset = hasUniformPageLogicalHeight ? pageLogicalHeight : pageLogicalHeightForOffset(logicalOffset + remainingLogicalHeight);
+        setPageBreak(logicalOffset, lineHeight - remainingLogicalHeight);
         if (((lineBox == firstRootBox() && totalLogicalHeight < pageLogicalHeightAtNewOffset) || (!style()->hasAutoOrphans() && style()->orphans() >= lineCount(lineBox)))
             && !isOutOfFlowPositioned() && !isTableCell())
             setPaginationStrut(remainingLogicalHeight + max<LayoutUnit>(0, logicalOffset));
@@ -7646,6 +7675,21 @@ LayoutUnit RenderBlock::adjustBlockChildForPagination(LayoutUnit logicalTopAfter
 
     // If the object has a page or column break value of "before", then we should shift to the top of the next page.
     LayoutUnit result = applyBeforeBreak(child, logicalTopAfterClear);
+
+    if (pageLogicalHeightForOffset(result)) {
+        LayoutUnit remainingLogicalHeight = pageRemainingLogicalHeightForOffset(result, ExcludePageBoundary);
+        LayoutUnit spaceShortage = child->logicalHeight() - remainingLogicalHeight;
+        if (spaceShortage > 0) {
+            // If the child crosses a column boundary, report a break, in case nothing inside it has already
+            // done so. The column balancer needs to know how much it has to stretch the columns to make more
+            // content fit. If no breaks are reported (but do occur), the balancer will have no clue. FIXME:
+            // This should be improved, though, because here we just pretend that the child is
+            // unsplittable. A splittable child, on the other hand, has break opportunities at every position
+            // where there's no child content, border or padding. In other words, we risk stretching more
+            // than necessary.
+            setPageBreak(result, spaceShortage);
+        }
+    }
 
     // For replaced elements and scrolled elements, we want to shift them to the next page if they don't fit on the current one.
     LayoutUnit logicalTopBeforeUnsplittableAdjustment = result;

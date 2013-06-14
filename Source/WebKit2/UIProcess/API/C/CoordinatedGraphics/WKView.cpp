@@ -113,6 +113,12 @@ WKPoint WKViewUserViewportToScene(WKViewRef viewRef, WKPoint point)
     return WKPointMake(result.x(), result.y());
 }
 
+WKPoint WKViewContentsToUserViewport(WKViewRef viewRef, WKPoint point)
+{
+    WebCore::IntPoint result = toImpl(viewRef)->contentsToUserViewport(toIntPoint(point));
+    return WKPointMake(result.x(), result.y());
+}
+
 void WKViewPaintToCurrentGLContext(WKViewRef viewRef)
 {
     toImpl(viewRef)->paintToCurrentGLContext();

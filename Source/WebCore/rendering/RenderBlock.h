@@ -1085,7 +1085,8 @@ private:
     void layoutRunsAndFloats(LineLayoutState&, bool hasInlineChild);
     void layoutRunsAndFloatsInRange(LineLayoutState&, InlineBidiResolver&, const InlineIterator& cleanLineStart, const BidiStatus& cleanLineBidiStatus, unsigned consecutiveHyphenatedLines);
 #if ENABLE(CSS_SHAPES)
-    void updateShapeAndSegmentsForCurrentLine(ShapeInsideInfo*, LayoutUnit&, LineLayoutState&, bool&);
+    void updateShapeAndSegmentsForCurrentLine(ShapeInsideInfo*&, LayoutUnit&, LineLayoutState&, bool&);
+    void updateShapeAndSegmentsForCurrentLineInFlowThread(ShapeInsideInfo*&, LineLayoutState&, bool&);
     bool adjustLogicalLineTopAndLogicalHeightIfNeeded(ShapeInsideInfo*, LayoutUnit, LineLayoutState&, InlineBidiResolver&, FloatingObject*, InlineIterator&, WordMeasurements&);
 #endif
     const InlineIterator& restartLayoutRunsAndFloatsInRange(LayoutUnit oldLogicalHeight, LayoutUnit newLogicalHeight,  FloatingObject* lastFloatFromPreviousLine, InlineBidiResolver&,  const InlineIterator&);
@@ -1119,6 +1120,14 @@ public:
     
 protected:
     bool pushToNextPageWithMinimumLogicalHeight(LayoutUnit& adjustment, LayoutUnit logicalOffset, LayoutUnit minimumLogicalHeight) const;
+
+    // A page break is required at some offset due to space shortage in the current fragmentainer.
+    void setPageBreak(LayoutUnit offset, LayoutUnit spaceShortage);
+
+    // Update minimum page height required to avoid fragmentation where it shouldn't occur (inside
+    // unbreakable content, between orphans and widows, etc.). This will be used as a hint to the
+    // column balancer to help set a good minimum column height.
+    void updateMinimumPageHeight(LayoutUnit offset, LayoutUnit minHeight);
 
     LayoutUnit adjustForUnsplittableChild(RenderBox* child, LayoutUnit logicalOffset, bool includeMargins = false); // If the child is unsplittable and can't fit on the current page, return the top of the next page/column.
     void adjustLinePositionForPagination(RootInlineBox*, LayoutUnit& deltaOffset, RenderFlowThread*); // Computes a deltaOffset value that put a line at the top of the next page if it doesn't fit on the current page.

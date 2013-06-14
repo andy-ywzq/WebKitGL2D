@@ -1,3 +1,1196 @@
+2013-06-14  Eric Carlson  <eric.carlson@apple.com>
+
+        Potential use-after-free with an event fired at a HTMLMediaElement which is currently being deleted
+        https://bugs.webkit.org/show_bug.cgi?id=117466
+
+        Reviewed by Oliver Hunt.
+        
+        Merge https://chromium.googlesource.com/chromium/blink/+/f4200a0093b3d9376f703961615359ec7fb712b4
+        
+        If an event is created using as target an HTMLMediaElement which is
+        currently being deleted it becomes a heap-use-after free situation.
+
+        The GenericEventQueue instance is already owned by the HTMLMediaElement,
+        and there already is an underlying mechanism to set the target of the
+        event to NULL, if their target is owner of the queue.
+
+        In order to avoid creating this reference in the first place, we enqueue
+        the event with a NULL target to defer the refcount increment until the
+        timer for dispatching the event happens (which won't happen at all if
+        garbage collection is already destroying the objects).
+
+        Test: media/track/media-element-enqueue-event-crash.html
+
+        * dom/GenericEventQueue.cpp:
+        (WebCore::GenericEventQueue::enqueueEvent): Don't ASSERT if the event has no target.
+
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::~HTMLMediaElement): Close the event queue so it won't try to
+            dispatch any pending events.
+        (WebCore::HTMLMediaElement::scheduleEvent): Don't set the event target, it will happen just
+            prior to event dispatch.
+        (WebCore::HTMLMediaElement::stop): Close the event queue.
+
+2013-06-14  Dean Jackson  <dino@apple.com>
+
+        Clicking on snapshotting plug-ins does not restart them
+        https://bugs.webkit.org/show_bug.cgi?id=117620
+        <rdar://problem/13821729>
+
+        Follow-up review comments from Darin Adler, with some
+        discussion on IRC.
+
+        Sprinkle OVERRIDE on virtual functions where needed. Also
+        make sure that the Event is a MouseEvent before casting to it.
+
+        * html/HTMLPlugInElement.h: Move defaultEventHandler back to protected and add OVERRIDE.
+        * html/HTMLPlugInImageElement.cpp:
+        (WebCore::HTMLPlugInImageElement::defaultEventHandler): Check for MouseEvent and
+        use toMouseEvent().
+        * html/HTMLPlugInImageElement.h: Sprinkle some OVERRIDEs, and move defaultEventHandler
+        to private.
+
+2013-06-14  Timothy Hatcher  <timothy@apple.com>
+
+        Remove front-end from the WebCore Xcode project.
+        https://bugs.webkit.org/show_bug.cgi?id=117640
+
+        Reviewed by Darin Adler.
+
+        * WebCore.xcodeproj/project.pbxproj:
+
+2013-06-14  Jaehun Lim  <ljaehun.lim@samsung.com>
+
+        CSSParser::parseImageSet() doesn't need a parameter.
+        https://bugs.webkit.org/show_bug.cgi?id=117617
+
+        Reviewed by Darin Adler.
+
+        parseImageSet() can get m_valueList directly.
+        And minor fixes.
+
+        No new tests, no behavior change.
+
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::parseValue):
+        (WebCore::CSSParser::parseContent):
+        (WebCore::CSSParser::parseFillImage):
+        (WebCore::CSSParser::parseBorderImage):
+        (WebCore::CSSParser::parseImageSet):
+        * css/CSSParser.h:
+
+2013-06-14  Tiancheng Jiang  <tijiang@rim.com>
+
+        [BlackBerry] Dropdown button UX updates.
+        https://bugs.webkit.org/show_bug.cgi?id=117642.
+
+        Reviewed by Rob Buis.
+
+        JIRA 388652
+        Internally Reviewed by Jeff Rogers.
+
+        Change arrow assert.
+
+        * platform/blackberry/RenderThemeBlackBerry.cpp:
+        (WebCore::RenderThemeBlackBerry::paintMenuList):
+
+2013-06-14  Arvid Nilsson  <anilsson@rim.com>
+
+        [BlackBerry] LayerTiler fails to tile really big layers
+        https://bugs.webkit.org/show_bug.cgi?id=117211
+
+        Reviewed by Carlos Garcia Campos.
+
+        PR 273550
+
+        The cause for this bug was that LayerTiler computed which tiles are
+        visible by exhaustively mapping every tile to normalized device
+        coordinates and checking if it intersected the viewport. If there was a
+        lot of tiles, it would get stuck in this loop, iterating over all
+        tiles, for a very long time. Also, the visibility information was
+        transferred to the WebKit thread using mutexes, which added unnecessary
+        mutex contention to the mix.
+
+        Fixed by doing the reverse calculation, unprojecting the visible part
+        of the layer to layer coordinate space to find which tiles are visible.
+        Instead of doing a traditional unprojection of point to line and see
+        where the line intersects the layer, this patch uses the w-coordinates
+        of triangle vertices to perform "perspective correct texturing" of the
+        intersection points in device space, which is equivalent to
+        unprojection since perspective correct texturing computes a 2D
+        coordinate in (normalized) layer coordinate space which is easily
+        scaled up to the layer bounds and get the visible region expressed in
+        layer coordinate space.
+
+        The visible area is approximated by a rectangle, and a set of tiles
+        needing render are added to the mix, and  we have a swappable data
+        structure so visbility can be transferred to WebKit thread without
+        mutexes, but instead using atomic swap.
+
+        No new tests, covered by existing tests.
+
+        * platform/graphics/blackberry/CanvasLayerWebKitThread.cpp:
+        (CanvasLayerCompositingThreadClient):
+        (WebCore::CanvasLayerCompositingThreadClient::drawTextures):
+        * platform/graphics/blackberry/EGLImageLayerCompositingThreadClient.cpp:
+        (WebCore::EGLImageLayerCompositingThreadClient::drawTextures):
+        * platform/graphics/blackberry/EGLImageLayerCompositingThreadClient.h:
+        (EGLImageLayerCompositingThreadClient):
+        * platform/graphics/blackberry/LayerCompositingThread.cpp:
+        (WebCore::LayerCompositingThread::drawTextures):
+        (WebCore::LayerCompositingThread::drawSurface):
+        * platform/graphics/blackberry/LayerCompositingThread.h:
+        (LayerCompositingThread):
+        * platform/graphics/blackberry/LayerCompositingThreadClient.h:
+        (WebCore):
+        (LayerCompositingThreadClient):
+        * platform/graphics/blackberry/LayerRenderer.cpp:
+        (WebCore::LayerRenderer::compositeLayersRecursive):
+        * platform/graphics/blackberry/LayerTile.cpp:
+        (WebCore::LayerTile::LayerTile):
+        (WebCore::LayerTile::setContents):
+        (WebCore::LayerTile::updateContents):
+        (WebCore::LayerTile::discardContents):
+        * platform/graphics/blackberry/LayerTile.h:
+        (LayerTile):
+        (WebCore::LayerTile::contentsScale):
+        (WebCore::LayerTile::setContentsDirty):
+        * platform/graphics/blackberry/LayerTiler.cpp:
+        (LayerVisibility):
+        (WebCore::LayerVisibility::LayerVisibility):
+        (WebCore::LayerVisibility::visibleRect):
+        (WebCore::LayerVisibility::setVisibleRect):
+        (WebCore::LayerVisibility::needsRender):
+        (WebCore::LayerVisibility::tileNeedsRender):
+        (WebCore::LayerVisibility::willRenderTile):
+        (WebCore::LayerVisibility::swapTilesNeedingRender):
+        (WebCore::LayerVisibility::merge):
+        (WebCore):
+        (WebCore::LayerTiler::LayerTiler):
+        (WebCore::LayerTiler::~LayerTiler):
+        (WebCore::LayerTiler::updateTextureContentsIfNeeded):
+        (WebCore::LayerTiler::swapFrontVisibility):
+        (WebCore::LayerTiler::setFrontVisibility):
+        (WebCore::LayerTiler::layerVisibilityChanged):
+        (WebCore::LayerTiler::uploadTexturesIfNeeded):
+        (WebCore::LayerTiler::processTextureJob):
+        (WebCore::LayerTiler::addTileJob):
+        (WebCore::LayerTiler::performTileJob):
+        (WebCore::LayerTiler::drawTile):
+        (WebCore::inflateViewport):
+        (WebCore::LayerTiler::drawTextures):
+        (WebCore::LayerTiler::pruneTextures):
+        (WebCore::LayerTiler::rectForTile):
+        * platform/graphics/blackberry/LayerTiler.h:
+        (WebCore):
+        (LayerTiler):
+        (WebCore::LayerTiler::TextureJob::TextureJob):
+        (WebCore::LayerTiler::takeFrontVisibility):
+        * platform/graphics/blackberry/LayerUtilities.h:
+        (WebCore):
+        (WebCore::det):
+        (WebCore::dot):
+        (LayerClipEdge):
+        (WebCore::LayerClipEdge::LayerClipEdge):
+        (WebCore::LayerClipEdge::isPointInside):
+        (WebCore::LayerClipEdge::computeIntersection):
+        (WebCore::intersectPolygonWithRect):
+        (WebCore::computeBarycentricCoordinates):
+        (WebCore::manhattanDistanceToViewport):
+        (UnprojectionVertex):
+        (WebCore::compareManhattanDistanceToViewport):
+        (WebCore::unproject):
+
+2013-06-14  Antoine Quint  <graouts@apple.com>
+
+        [Mac] clicking caption track glyph should dismiss menu
+        https://bugs.webkit.org/show_bug.cgi?id=117621
+
+        We now correctly capture all click events while the captions track menu
+        is showing, and ensure that no other control in the media player can be
+        activated as the track list gets dismissed by clicking anywhere but on
+        itself.
+
+        Reviewed by Eric Carlson.
+
+        * html/shadow/MediaControlsApple.cpp:
+        (WebCore::MediaControlsApple::showClosedCaptionTrackList):
+        Make the controls panel non-interactive and track click events in the
+        capture phase also on the controls container itself such that we can
+        identify correctly whether a click in the <video> shadow tree is on
+        the track list or another element (the target could only be resolved
+        to a shadow tree node if the event is handled within the shadow tree).
+
+        (WebCore::MediaControlsApple::hideClosedCaptionTrackList):
+        Make the controls panel interactive again and remove the new click
+        event handler on the controls container.
+
+        (WebCore::MediaControlsApple::handleClickEvent):
+        Capture any click event that targets a node anywhere outside of the track
+        list container and its subtree and hide the track list in this condition.
+
+        (WebCore::MediaControlsAppleEventListener::handleEvent):
+        Call handleClickEvent() on the media controls when a click event is handled.
+
+        * html/shadow/MediaControlsApple.h:
+        New public handleClickEvent() API such that it can be called from
+        MediaControlsAppleEventListener::handleEvent().
+
+2013-06-14  Arvid Nilsson  <anilsson@rim.com>
+
+        [BlackBerry] Accelerated compositing layers that intersect the image plane are incorrectly transformed
+        https://bugs.webkit.org/show_bug.cgi?id=117067
+
+        Reviewed by Carlos Garcia Campos.
+
+        PR 273550
+
+        The BlackBerry port used to mathematically project each corner of each
+        layer bounds rectangle, which gives the wrong results when the layer
+        intersects the image plane.
+
+        For display lists, we still got the correct appearance of the layer
+        contents, since the display list results in geometry that's transformed
+        in the vertex shader, on the GPU.
+
+        However, the transformed bounds are used for drawing the debug border,
+        performing visibility calculations on the CPU and drawing of WebGL,
+        masks/reflections and filters. Using the mathematical projection of
+        points that lie behind the image plane gives the wrong results.
+
+        The most important consequence of this bug was that the wrong area of
+        the layer would be considered visible, so a tiled layer would not
+        populate the right tiles (or any tiles at all).
+
+        Fixed by implementing something along the lines of the recipe in
+        section 6.2 of http://www.w3.org/TR/css3-transforms.
+
+        No new tests, manually testable by enabling debug border on
+        https://developer.mozilla.org/en-US/demos/detail/the-box/launch.
+
+        * platform/graphics/blackberry/EGLImageLayerCompositingThreadClient.cpp:
+        (WebCore::EGLImageLayerCompositingThreadClient::drawTextures):
+        * platform/graphics/blackberry/LayerCompositingThread.cpp:
+        (WebCore::LayerCompositingThread::LayerCompositingThread):
+        (WebCore::LayerCompositingThread::setDrawTransform):
+        (WebCore):
+        (WebCore::LayerCompositingThread::textureCoordinates):
+        (WebCore::LayerCompositingThread::drawTextures):
+        * platform/graphics/blackberry/LayerCompositingThread.h:
+        (LayerCompositingThread):
+        (WebCore::LayerCompositingThread::transformedBounds):
+        (WebCore::LayerCompositingThread::ws):
+        (WebCore::LayerCompositingThread::centerW):
+        * platform/graphics/blackberry/LayerFilterRenderer.cpp:
+        (WebCore::LayerFilterRenderer::applyActions):
+        * platform/graphics/blackberry/LayerRenderer.cpp:
+        (WebCore::compareLayerW):
+        (WebCore::LayerRenderer::compositeLayers):
+        (WebCore::LayerRenderer::drawDebugBorder):
+        (WebCore):
+        (WebCore::LayerRenderer::updateLayersRecursive):
+        (WebCore::LayerRenderer::compositeLayersRecursive):
+        * platform/graphics/blackberry/LayerRenderer.h:
+        (WebCore):
+        (LayerRenderer):
+        * platform/graphics/blackberry/LayerRendererSurface.cpp:
+        (WebCore::LayerRendererSurface::boundingBox):
+        (WebCore::LayerRendererSurface::transformedBounds):
+        * platform/graphics/blackberry/LayerRendererSurface.h:
+        (WebCore::LayerRendererSurface::setDrawTransform):
+        (WebCore::LayerRendererSurface::setReplicaDrawTransform):
+        (LayerRendererSurface):
+        * platform/graphics/blackberry/LayerUtilities.h: Added.
+        (WebCore):
+        (LayerClipPlane):
+        (WebCore::LayerClipPlane::LayerClipPlane):
+        (WebCore::LayerClipPlane::isPointInside):
+        (WebCore::LayerClipPlane::computeIntersection):
+        (WebCore::intersect):
+        (WebCore::boundingBox):
+        (WebCore::multVecMatrix):
+        (WebCore::toVector):
+
+2013-06-14  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Map rewind and fast forward keys to match GoogleTV
+        https://bugs.webkit.org/show_bug.cgi?id=117634
+
+        Reviewed by Jocelyn Turcotte.
+
+        Set the same keycode for media keys rewind and fast-forward as
+        GoogleTV does.
+
+        * platform/qt/PlatformKeyboardEventQt.cpp:
+        (WebCore::windowsKeyCodeForKeyEvent):
+
+2013-06-13  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Avoid unnecessary data copies when loading subresources with DoNotBufferData option
+        https://bugs.webkit.org/show_bug.cgi?id=115804
+
+        Reviewed by Darin Adler.
+
+        When DoNotBufferData option is used to load a resource its data
+        is always copied before sending it to the CachedResource. Most
+        of the cached resources ignore the incremental data and wait
+        until all data has been received to save the ResourceBuffer,
+        that will be NULL anyway when DoNotBufferData is used.
+        CachedRawResource notifies its clients about the incremental
+        data, but it doesn't save the data when DoNotBufferData option
+        is present. In those cases we are unnecessary copying the data.
+
+        CachedResource::data has been split into
+        CachedResource::addDataBuffer() used for incremental data chunks
+        when buffering data, CachedResource::addData() used for
+        incremental data chunks when not buffering and
+        CachedResource::finishLoading() used to finish the loading. This
+        way we get rid of the allDataReceived boolean parameter and cached
+        resources not interested in incremenetal data chunks only have to
+        implement finishLoading() without having to check if all data have
+        been received or not.
+
+        SubresourceLoader::sendDataToResource was always called after
+        checking if loading multipart content, and then it was checked
+        again to decided whether to copy the data or not. It has been
+        removed in favor of calling directly the resource methods,
+        finishLoading for multipart content, addDataBuffer for data chunks
+        when buffering and addData for data chunks when not buffering.
+
+        No new functionality, covered by existing tests.
+
+        * html/ImageDocument.cpp:
+        (WebCore::ImageDocumentParser::appendBytes): Update to API changes.
+        (WebCore::ImageDocumentParser::finish): Ditto.
+        * loader/SubresourceLoader.cpp:
+        (WebCore::SubresourceLoader::didReceiveResponse): Call
+        finishLoading() for multipart content.
+        (WebCore::SubresourceLoader::didReceiveDataOrBuffer): Add data to
+        the resource using addDataBuffer or addData depending on whether
+        we are buffering or not.
+        (WebCore::SubresourceLoader::didFinishLoading): Call
+        finishLoading() for the cached resource instead of data.
+        * loader/SubresourceLoader.h:
+        * loader/cache/CachedCSSStyleSheet.cpp:
+        (WebCore::CachedCSSStyleSheet::finishLoading):
+        * loader/cache/CachedCSSStyleSheet.h:
+        * loader/cache/CachedFont.cpp:
+        (WebCore::CachedFont::finishLoading):
+        * loader/cache/CachedFont.h:
+        * loader/cache/CachedImage.cpp:
+        (WebCore::CachedImage::isValidDecodedImageSize): Helper function
+        to check if the image size is valid.
+        (WebCore::CachedImage::addIncrementalDataBuffer): Helper function
+        to add incremental data buffer.
+        (WebCore::CachedImage::addDataBuffer): Call
+        addIncrementalDataBuffer().
+        (WebCore::CachedImage::addData): Create a ResourceBuffer and call
+        addIncrementalDataBuffer().
+        (WebCore::CachedImage::finishLoading):
+        * loader/cache/CachedImage.h:
+        * loader/cache/CachedRawResource.cpp:
+        (WebCore::CachedRawResource::calculateIncrementalDataChunk):
+        Returns a pointer to the data corresponding to the current chunk
+        and its length.
+        (WebCore::CachedRawResource::addDataBuffer): Assert to make sure
+        this is only called when BufferData option is present. Use
+        calculateIncrementalDataChunk().
+        (WebCore::CachedRawResource::addData): Assert to make sure this is
+        only called when DoNotBufferData option is present.
+        (WebCore::CachedRawResource::finishLoading):
+        (WebCore::CachedRawResource::notifyClientsDataWasReceived): Helper
+        private function to notify the clients about data received.
+        * loader/cache/CachedRawResource.h:
+        * loader/cache/CachedResource.cpp:
+        (WebCore::CachedResource::addDataBuffer):
+        (WebCore::CachedResource::addData):
+        (WebCore::CachedResource::finishLoading):
+        * loader/cache/CachedResource.h:
+        * loader/cache/CachedSVGDocument.cpp:
+        (WebCore::CachedSVGDocument::finishLoading):
+        * loader/cache/CachedSVGDocument.h:
+        * loader/cache/CachedScript.cpp:
+        (WebCore::CachedScript::finishLoading):
+        * loader/cache/CachedScript.h:
+        * loader/cache/CachedShader.cpp:
+        (WebCore::CachedShader::finishLoading):
+        * loader/cache/CachedShader.h:
+        * loader/cache/CachedTextTrack.cpp:
+        (WebCore::CachedTextTrack::addDataBuffer):
+        (WebCore::CachedTextTrack::finishLoading):
+        * loader/cache/CachedTextTrack.h:
+        * loader/cache/CachedXSLStyleSheet.cpp:
+        (WebCore::CachedXSLStyleSheet::finishLoading):
+        * loader/cache/CachedXSLStyleSheet.h:
+
+2013-06-14  Michał Pakuła vel Rutka  <m.pakula@samsung.com>
+
+        [EFL] Fix build when DRAG_SUPPORT is set OFF
+        https://bugs.webkit.org/show_bug.cgi?id=117628
+
+        Reviewed by Gyuyoung Kim.
+
+        Add guard around Clipboard::declareAndWriteDragImage.
+
+        * platform/efl/ClipboardEfl.cpp:
+
+2013-06-13  Simon Fraser  <simon.fraser@apple.com>
+
+        Sometimes we stick in slow scrolling mode even after leaving a page
+        https://bugs.webkit.org/show_bug.cgi?id=117622
+
+        Reviewed by Sam Weinig.
+        
+        ScrollingCoordinator, and thus the scrolling state tree, is owned by Page,
+        and so persists when navigating between cached pages. We do give the ScrollingStateTree
+        a new ScrollingStateScrollingNode on navigation, however the ScrollingStateScrollingNode
+        would not have dirty flags set for, say, WheelEventHandlerCount if the document had
+        no wheel handlers. And because that dirty flag wasn't set, ScrollingTree::commitNewTreeState()
+        would fail to update m_hasWheelEventHandlers, so we'd remain in slow scrolling.
+        
+        Fix by having ScrollingStateTree remember if it's been given a new root ScrollingStateScrollingNode,
+        and making ScrollingTree::commitNewTreeState() to the right thing in that case.
+        
+        Also fix a couple of issues with the tiled scrolling indicator. First, on cached page
+        navigation, the indicator color would show the state for the old page, because
+        ScrollingCoordinatorMac::commitTreeState() checked scrollingTree()->hasWheelEventHandlers()
+        before the scrolling thread has committed the new scrolling tree.
+        
+        Second, the color change would animate, so stop that.
+
+        Not testable, since tests can only dump the scrolling state tree.
+
+        * page/scrolling/ScrollingStateTree.cpp:
+        (WebCore::ScrollingStateTree::ScrollingStateTree):
+        (WebCore::ScrollingStateTree::attachNode):
+        (WebCore::ScrollingStateTree::commit):
+        * page/scrolling/ScrollingStateTree.h:
+        (WebCore::ScrollingStateTree::hasNewRootStateNode):
+        * page/scrolling/ScrollingTree.cpp:
+        (WebCore::ScrollingTree::commitNewTreeState):
+        * page/scrolling/mac/ScrollingCoordinatorMac.mm:
+        (WebCore::ScrollingCoordinatorMac::commitTreeState):
+        * platform/graphics/ca/mac/TileController.mm:
+        (-[WebTiledScrollingIndicatorLayer init]): Turn off borderColor implicit animations.
+
+2013-06-13  Peter Gal  <galpeter@inf.u-szeged.hu>
+
+        [curl] Merge http response header values
+        https://bugs.webkit.org/show_bug.cgi?id=117342
+
+        Reviewed by Brent Fulgham.
+
+        According to the HTTP RFC some HTTP header values should be
+        merged if multiple entries for the same header exists.
+
+        * platform/network/curl/ResourceHandleManager.cpp:
+        (WebCore::isAppendableHeader):
+        (WebCore::headerCallback):
+
+2013-06-13  Simon Fraser  <simon.fraser@apple.com>
+
+        Should not call firePaintRelatedMilestones() for "update control tints" paint pass
+        https://bugs.webkit.org/show_bug.cgi?id=117624
+
+        Reviewed by Sam Weinig.
+
+        When window activation changes, we do a fake paint pass that is just used to
+        invalidate controls that change their appearance in background windows. This fake
+        paint should not be recorded in the inspector, and it should not cause paint-related
+        milestones to fire.
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::paintContents):
+
+2013-06-13  Dean Jackson  <dino@apple.com>
+
+        Clicking on snapshotting plug-ins does not restart them
+        https://bugs.webkit.org/show_bug.cgi?id=117620
+        <rdar://problem/13821729>
+
+        Reviewed by Simon Fraser.
+
+        HTMLPlugInElement has an event handler which would return
+        immediately if the element was not snapshotted, restarting
+        or playing. There is a case it missed, which was snapshotting
+        (WaitingForSnapshot to be precise). If we get a click in this
+        state then it should immediately restart.
+
+        * html/HTMLPlugInElement.h: Move defaultEventHandler to public (we call it from the child class).
+        * html/HTMLPlugInImageElement.cpp:
+        (WebCore::HTMLPlugInImageElement::defaultEventHandler): If there is a click on a snapshotting
+        plug-in, then call restart.
+        * html/HTMLPlugInImageElement.h: Virtual defaultEventHandler declaration.
+
+2013-06-13  Zoltan Horvath  <zoltan@webkit.org>
+
+        Use borderAndPadding[Before,After]() instead of border[Before,After]() + padding[Before,After]()
+        https://bugs.webkit.org/show_bug.cgi?id=117611
+
+        Reviewed by Dirk Schulze.
+
+        I added a new function called borderAndPaddingAfter(), since we already had borderAndPaddingBefore(). I changed
+        every separate additions to the old/new function. This change makes the code shorter and more straightforward.
+
+        Behavior hasn't changed, no new tests were needed.
+
+        * rendering/InlineFlowBox.cpp:
+        (WebCore::InlineFlowBox::placeBoxesInBlockDirection):
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::layoutBlock):
+        (WebCore::RenderBlock::marginBeforeEstimateForChild):
+        (WebCore::RenderBlock::layoutBlockChildren):
+        (WebCore::RenderBlock::paintColumnRules):
+        (WebCore::RenderBlock::columnRectAt):
+        (WebCore::RenderBlock::relayoutForPagination):
+        (WebCore::RenderBlock::adjustRectForColumns):
+        (WebCore::RenderBlock::flipForWritingModeIncludingColumns):
+        (WebCore::RenderBlock::adjustStartEdgeForWritingModeIncludingColumns):
+        (WebCore::RenderBlock::adjustForColumns):
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::RenderBlock::updateShapeAndSegmentsForCurrentLineInFlowThread):
+        (WebCore::RenderBlock::layoutInlineChildren):
+        * rendering/RenderBoxModelObject.h:
+        (WebCore::RenderBoxModelObject::borderAndPaddingStart):
+        (WebCore::RenderBoxModelObject::borderAndPaddingBefore):
+        (WebCore::RenderBoxModelObject::borderAndPaddingAfter):
+        (WebCore::RenderBoxModelObject::borderAndPaddingLogicalHeight):
+        * rendering/RenderMultiColumnBlock.cpp:
+        (WebCore::RenderMultiColumnBlock::layoutSpecialExcludedChild):
+        * rendering/RenderMultiColumnSet.cpp:
+        (WebCore::RenderMultiColumnSet::heightAdjustedForSetOffset):
+        (WebCore::RenderMultiColumnSet::prepareForLayout):
+        (WebCore::RenderMultiColumnSet::columnRectAt):
+        * rendering/RenderTableCell.cpp:
+        (WebCore::RenderTableCell::computeIntrinsicPadding):
+        (WebCore::RenderTableCell::cellBaselinePosition):
+        * rendering/RenderTableSection.cpp:
+        (WebCore::RenderTableSection::calcRowLogicalHeight):
+        (WebCore::RenderTableSection::layoutRows):
+        (WebCore::RenderTableSection::firstLineBoxBaseline):
+        * rendering/RootInlineBox.cpp:
+        (WebCore::RootInlineBox::lineSnapAdjustment):
+        (WebCore::RootInlineBox::selectionTop):
+        (WebCore::RootInlineBox::ascentAndDescentForBox):
+
+2013-06-13  Andreas Kling  <akling@apple.com>
+
+        Move Node::shouldUseInputMethod() to Element.
+        <http://webkit.org/b/117603>
+
+        Reviewed by Antti Koivisto.
+
+        This method is only ever called on Elements, so move it off of Node.
+
+        * dom/Element.cpp:
+        (WebCore::Element::shouldUseInputMethod):
+        * dom/Element.h:
+        * dom/Node.cpp:
+        * dom/Node.h:
+        * html/HTMLInputElement.h:
+        * html/HTMLTextAreaElement.h:
+
+2013-06-13  Max Vujovic  <mvujovic@adobe.com>
+
+        [CSS Regions] Selection dragged from a region paints its background
+        https://bugs.webkit.org/show_bug.cgi?id=117607
+
+        Reviewed by Alexandru Chiculita.
+
+        When a RenderFlowThread is in the selection paint phase, tell its layer to paint with the
+        selection only behavior. This way, only foregrounds and not backgrounds will be painted in
+        the dragged selection.
+
+        Manual test: ManualTests/regions/drag-selection-painting.html
+
+        * rendering/RenderFlowThread.cpp:
+        (WebCore::RenderFlowThread::paintFlowThreadPortionInRegion):
+
+2013-06-13  Zoltan Horvath  <zoltan@webkit.org>
+
+        [CSS Shapes][CSS Regions] Respect bottom positioned shapes and content adjustment inside shapes
+        https://bugs.webkit.org/show_bug.cgi?id=117599
+
+        Reviewed by David Hyatt.
+
+        In r150478 I added support for multiple positioned shape-insides on regions, this patch covers the cases when a shape
+        is positioned to the bottom of the region or the region contains a shape which forces the content to be adjusted inside
+        the shape (e.g. we have a triangle shape and the first line needs to be started at the first position where it fits).
+        I introduced a new helper function to update the current shape and the current line segments in the flow thread cases. With
+        this new helper function all the logic which calculates the segments for shape-inside on regions is located in one function.
+
+        Tests: fast/regions/shape-inside/shape-inside-on-regions-block-content-overflow-bottom-positioned-multiple-shapes.html
+               fast/regions/shape-inside/shape-inside-on-regions-block-content-polygon-with-adjustment.html
+               fast/regions/shape-inside/shape-inside-on-regions-inline-content-overflow-bottom-positioned-multiple-shapes.html
+               fast/regions/shape-inside/shape-inside-on-regions-inline-content-polygon-with-adjustment.html
+
+        * rendering/RenderBlock.h: Add new helper's declaration
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::LineLayoutState::LineLayoutState): Add a member to carry adjustment for flow thread cases.
+        (WebCore::LineLayoutState::adjustedLogicalLineTop): Add new member.
+        (WebCore::LineLayoutState::setAdjustedLogicalLineTop): Add new setter for the new member.
+        (WebCore::RenderBlock::updateShapeAndSegmentsForCurrentLine): Move flow thread case to its helper function.
+        (WebCore::RenderBlock::updateShapeAndSegmentsForCurrentLineInFlowThread): Added new helper for flow thread cases.
+        (WebCore::RenderBlock::adjustLogicalLineTopAndLogicalHeightIfNeeded): Save adjustment for flow thread cases.
+
+2013-06-13  Mihai Tica  <mitica@adobe.com>
+
+        [CSS Background Blending] Enable CSS Background blending for layers with SVGs.
+
+        The change implies adding the blending parameter for SVGImage
+        https://bugs.webkit.org/show_bug.cgi?id=117588
+
+        Reviewed by Dirk Schulze.
+
+        Tests: css3/compositing/background-blend-mode-image-svg.html
+               css3/compositing/background-blend-mode-svg-color.html
+
+        * svg/graphics/SVGImage.cpp:
+        (WebCore::SVGImage::draw):
+
+2013-06-13  Mihai Tica  <mitica@adobe.com>
+
+        Updating the -webkit-background-blend-mode property dynamically does not trigger a redraw of the element.
+
+        Adding krit's fix: actual blending values should be compared, not the sets.
+        https://bugs.webkit.org/show_bug.cgi?id=117223
+
+        Reviewed by Dirk Schulze.
+
+        Test: css3/compositing/background-blend-mode-image-color-dynamic.html
+
+        * rendering/style/FillLayer.cpp:
+        (WebCore::FillLayer::operator==):
+
+2013-06-13  Beth Dakin  <bdakin@apple.com>
+
+        Headers and footers should be pinned to the left edge of the window when scrolling 
+        horizontally, even when zoomed
+        https://bugs.webkit.org/show_bug.cgi?id=117562
+        -and corresponding-
+        <rdar://problem/14006745>
+
+        Reviewed by Sam Weinig.
+
+        We really want to use the width value from scrollOffsetForFixedPosition() for the 
+        banner with a scaled factor of 1. So if there is a different scale factor, re-
+        compute this value specifically for the banners. 
+        * page/scrolling/mac/ScrollingTreeScrollingNodeMac.mm:
+        (WebCore::ScrollingTreeScrollingNodeMac::setScrollLayerPosition):
+
+2013-06-13  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Support byte and octet types in bindings generators
+        https://bugs.webkit.org/show_bug.cgi?id=117547
+
+        Reviewed by Kentaro Hara.
+
+        Add support for byte and octet IDL types to the bindings
+        generator:
+        http://dev.w3.org/2006/webapi/WebIDL/#idl-byte
+        http://dev.w3.org/2006/webapi/WebIDL/#idl-octet
+
+        No new tests, covered by existing layout tests and by new
+        bindings tests.
+
+        No new tests, covered by bindings tests and:
+        fast/js/webidl-type-mapping.html
+
+        * WebCore.exp.in: Export new symbols for mac port.
+        * bindings/js/JSDOMBinding.cpp:
+        * bindings/js/JSDOMBinding.h: Add toInt8() / toUInt8()
+        methods to convert from JSValue to int8_t / uint8_t as
+        specified by Web IDL.
+
+        * bindings/js/JSDataViewCustom.cpp: Remove custom code for
+        getInt8, getUInt8, setInt8, setUInt8 now that byte and octet
+        types are supported by the bindings generator.
+
+        * bindings/scripts/CodeGeneratorCPP.pm:
+        * bindings/scripts/CodeGeneratorGObject.pm:
+        * bindings/scripts/CodeGeneratorJS.pm:
+        * bindings/scripts/CodeGeneratorObjC.pm:
+        * bindings/scripts/test/CPP/WebDOMTestObj.cpp:
+        * bindings/scripts/test/CPP/WebDOMTestObj.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestObj.cpp:
+        * bindings/scripts/test/GObject/WebKitDOMTestObj.h:
+        * bindings/scripts/test/JS/JSTestObj.cpp:
+        * bindings/scripts/test/JS/JSTestObj.h:
+        * bindings/scripts/test/ObjC/DOMTestObj.h:
+        * bindings/scripts/test/ObjC/DOMTestObj.mm:
+        * bindings/scripts/test/TestObj.idl: Add tests for byte and octet types.
+        * html/canvas/DataView.idl: Remove [Custom] extended attribute for
+        getInt8, getUInt8, setInt8, setUInt8 and use newly supported byte / octet
+        types.
+
+2013-06-13  Timothy Hatcher  <timothy@apple.com>
+
+        Revert r150339 since it causes a hang while paused in the Web Inspector in other apps.
+
+        https://bugs.webkit.org/show_bug.cgi?id=117596
+
+        Reviewed by Joseph Pecoraro.
+
+        * platform/mac/EventLoopMac.mm:
+        (WebCore::EventLoop::cycle):
+
+2013-06-13  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed gardening.  Remove dangling 'strings' folder from solution.
+
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Get rid of 'strings' that was orphaned by
+        recent file reorganization.
+
+2013-06-13  Praveen R Jadhav  <praveen.j@samsung.com>
+
+        Avoid unwanted thread hops in ScriptProcessorNode when 'onaudioprocess' listener is not set.
+        https://bugs.webkit.org/show_bug.cgi?id=117578.
+
+        Reviewed by Darin Adler.
+
+        ScriptProcessorNode process operation continues to dispatch AudioProcessingEvent
+        even though 'onaudioprocess' listener is not set. This results in unwanted thread hops.
+        Code is optimized to dispatch AudioProcessingEvent only if the listener is set.
+
+        No new tests, already covered by existing tests.
+
+        * Modules/webaudio/ScriptProcessorNode.cpp:
+        (WebCore::ScriptProcessorNode::ScriptProcessorNode):
+        (WebCore::ScriptProcessorNode::process):
+        (WebCore::ScriptProcessorNode::setOnaudioprocess):
+        * Modules/webaudio/ScriptProcessorNode.h:
+        (WebCore::ScriptProcessorNode::onaudioprocess):
+
+2013-06-13  Max Vujovic  <mvujovic@adobe.com>
+
+        [CSS Regions] -webkit-background-clip: text; does not clip the background in regions
+        https://bugs.webkit.org/show_bug.cgi?id=117566
+
+        Reviewed by Alexandru Chiculita.
+
+        This patch enables -webkit-background-clip: text; on regions.
+
+        Test: fast/regions/webkit-background-clip-text.html
+
+        * rendering/RenderFlowThread.cpp:
+        (WebCore::RenderFlowThread::paintFlowThreadPortionInRegion):
+            Force black text if we're in the text clip paint phase. This makes sure the text's alpha
+            channel does not affect the final opacity of the background clipping result. Rather,
+            the text's alpha channel affects the amount of blending between the text color
+            and the background.
+        * rendering/RenderRegion.cpp:
+        (WebCore::shouldPaintRegionContentsInPhase):
+            Factor out a function to check if we should paint the region contents in a particular
+            phase. Add "PaintPhaseTextClip" so that we draw the contents in the text clipping phase.
+        (WebCore::RenderRegion::paintObject):
+            Call shouldPaintRegionContentsInPhase instead of doing the phase checks directly in this
+            function. Move, update, and clarify the surrounding comments.
+
+2013-06-13  Anton Obzhirov  <a.obzhirov@samsung.com>
+
+        [CSS Regions] Regions auto-height and absolute positioning bug
+        https://bugs.webkit.org/show_bug.cgi?id=111092
+
+        Reviewed by David Hyatt.
+
+        During last layout that should update the auto-height regions new auto-height region height
+        is calculated correctly based on the text content, but it requires extra step 
+        to reposition the render block after new logical height is set (correct logical height becomes
+        available only during last layout). 
+
+        Tests: fast/regions/autoheight-abspos-bottom-align.html
+
+        * rendering/RenderRegion.cpp:
+        (WebCore::RenderRegion::updateLogicalHeight):
+
+2013-06-13  Brent Fulgham  <bfulgham@webkit.org>
+
+        [WinCairo] Unreviewed build correction.
+
+        * WebCore.vcxproj/WebCoreCairo.props: Use proper WebKit_Libraries
+        environment variable, rather than older WebKitLibraries.
+
+2013-06-13  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Avoid duplicate isInt32() / isUInt32() checks in JSDOMBindings
+        https://bugs.webkit.org/show_bug.cgi?id=117593
+
+        Reviewed by Geoffrey Garen.
+
+        Avoid duplicate isInt32() / isUInt32() checks in JSDOMBindings by
+        calling asInt32() / asUInt32() instead of toInt32() / toUInt32()
+        when we already know the value is a int32 / uint32.
+
+        No new tests, no behavior change.
+
+        * bindings/js/JSDOMBinding.cpp:
+
+2013-06-13  Yuki Sekiguchi  <yuki.sekiguchi@access-company.com>
+
+        Setting overflow:hidden on position:absolute does not repaint hidden content
+        https://bugs.webkit.org/show_bug.cgi?id=116994
+
+        Reviewed by Simon Fraser.
+
+        Since a container which has overflow clip of RenderBox which has self painting layer doesn't have a rect of the RenderBox as visual overflow,
+        the container should not clip request repainting rect of the RenderBox.
+
+        Test: fast/repaint/change-overflow-and-display-of-relative.html
+
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::computeRectForRepaint):
+        * rendering/RenderLayerModelObject.cpp:
+        (WebCore::RenderLayerModelObject::shouldUseClipForRepaint): If this has self painting layer, we should not clip for repaint.
+        * rendering/RenderLayerModelObject.h:
+
+2013-06-13  Mihai Tica  <mitica@adobe.com>
+
+        [CSS Background Blending] Gradients don't blend with any of the layers behind.
+        First, allow the layers behind opaque gradients to be drawn, then add the blending filters
+        when working with gradients.
+
+        https://bugs.webkit.org/show_bug.cgi?id=117532
+
+        Reviewed by Dirk Schulze.
+
+        Tests: css3/compositing/background-blend-mode-gradient-color.html
+               css3/compositing/background-blend-mode-gradient-gradient.html
+               css3/compositing/background-blend-mode-gradient-image.html
+               css3/compositing/background-blend-mode-multiple-background-layers.html
+
+        * platform/graphics/GeneratorGeneratedImage.cpp:
+        (WebCore::GeneratorGeneratedImage::draw):
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::paintFillLayers):
+
+2013-06-13  Michael Brüning  <michael.bruning@digia.com>
+
+        [Qt][Mac] Disable QTKit video on OS X.
+        https://bugs.webkit.org/show_bug.cgi?id=117591
+
+        Reviewed by Tor Arne Vestbø.
+
+        Deployment of the same Qt binaries to different
+        Mac OS X version makes it impossible to link against
+        the correct WebKitSystemInterface version at build time.
+
+        No new tests, no behavioural change.
+
+        * WebCore.pri:
+
+2013-06-13  Morten Stenshorne  <mstensho@opera.com>
+
+        Column balancing support in the region based multicol implementation
+        https://bugs.webkit.org/show_bug.cgi?id=116033
+
+        Start by setting the column height to the flow thread's height divided
+        by the number of columns. Then stretch the column height until
+        contents fits without creating overflowing columns, or until the
+        maximum allowed column height is reached, whichever comes first. This
+        may require several layout iterations (but normally only a
+        couple). For each time we stretch, stretch by the least amount
+        required to make a difference to which box goes where.
+
+        Also make sure that the columns get tall enough to honor orphans
+        and widows settings.
+
+        This change takes some tiny steps in preparing for multiple column
+        set support. There is also some minor cleanup and bugfixing; see
+        details below.
+
+        Reviewed by David Hyatt.
+
+        Tests: fast/multicol/newmulticol/balance-images.html
+               fast/multicol/newmulticol/balance-maxheight1.html
+               fast/multicol/newmulticol/balance-maxheight2.html
+               fast/multicol/newmulticol/balance1.html
+               fast/multicol/newmulticol/balance2.html
+               fast/multicol/newmulticol/balance3.html
+               fast/multicol/newmulticol/balance4.html
+               fast/multicol/newmulticol/balance5.html
+               fast/multicol/newmulticol/balance6.html
+               fast/multicol/newmulticol/balance7.html
+               fast/multicol/newmulticol/balance8.html
+               fast/multicol/newmulticol/balance9.html
+               fast/multicol/newmulticol/cell-shrinkback.html
+               fast/multicol/newmulticol/columns-shorthand-parsing.html
+               fast/multicol/newmulticol/orphans-and-widows-balance.html
+               fast/multicol/newmulticol/single-line.html
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::adjustForUnsplittableChild):
+        (WebCore::RenderBlock::setPageBreak):
+        (WebCore):
+        (WebCore::RenderBlock::updateMinimumPageHeight):
+        (WebCore::calculateMinimumPageHeight):
+        (WebCore::RenderBlock::adjustLinePositionForPagination):
+        (WebCore::RenderBlock::adjustBlockChildForPagination): If no lines
+        cross the boundaries, we need to report where blocks cross
+        instead, so that the column balancer knows how much to stretch
+        columns if necessary.
+        * rendering/RenderBlock.h:
+        * rendering/RenderFlowThread.h:
+        * rendering/RenderMultiColumnBlock.cpp:
+        (WebCore::RenderMultiColumnBlock::RenderMultiColumnBlock):
+        (WebCore::RenderMultiColumnBlock::checkForPaginationLogicalHeightChange):
+        (WebCore::RenderMultiColumnBlock::relayoutForPagination):
+        (WebCore::RenderMultiColumnBlock::layoutSpecialExcludedChild):
+        * rendering/RenderMultiColumnBlock.h:
+        (WebCore::RenderMultiColumnBlock::columnHeightAvailable):
+        (WebCore::RenderMultiColumnBlock::requiresBalancing):
+        (RenderMultiColumnBlock):
+        * rendering/RenderMultiColumnFlowThread.cpp:
+        (WebCore::RenderMultiColumnFlowThread::autoGenerateRegionsToBlockOffset):
+        (WebCore::RenderMultiColumnFlowThread::setPageBreak):
+        (WebCore):
+        (WebCore::RenderMultiColumnFlowThread::updateMinimumPageHeight):
+        * rendering/RenderMultiColumnFlowThread.h:
+        (RenderMultiColumnFlowThread):
+        * rendering/RenderMultiColumnSet.cpp: Get rid of
+        RenderMultiColumnSet::updateLogicalHeight() override. Make
+        RenderMultiColumnSet behave more like normal blocks, by having
+        computeLogicalHeight() calculate logical top in addition to
+        height, just like any other block.
+        (WebCore::RenderMultiColumnSet::RenderMultiColumnSet):
+        (WebCore::RenderMultiColumnSet::heightAdjustedForSetOffset): This
+        method will become more meaningful once we add support for
+        multiple column sets.
+        (WebCore):
+        (WebCore::RenderMultiColumnSet::pageLogicalTopForOffset):
+        (WebCore::RenderMultiColumnSet::setAndConstrainColumnHeight):
+        (WebCore::RenderMultiColumnSet::calculateBalancedHeight):
+        (WebCore::RenderMultiColumnSet::recordSpaceShortage):
+        (WebCore::RenderMultiColumnSet::updateLogicalWidth):
+        (WebCore::RenderMultiColumnSet::prepareForLayout):
+        (WebCore::RenderMultiColumnSet::computeLogicalHeight):
+        (WebCore::RenderMultiColumnSet::columnCount):
+        (WebCore::RenderMultiColumnSet::columnIndexAtOffset):
+        repaintFlowThreadContent() could end up in an infinite loop
+        because columnIndexAtOffset() could return UINT_MAX
+        (subtracting 1 from unsigned 0, which columnCount() could return),
+        which an unsigned integer obviously can never become larger
+        than. Also always call columnIndexAtOffset() if we want to get the
+        column index for some offset, rather than doing it on our own
+        sometimes. To make this work also during layout, we cannot just
+        return the last column created so far if we're past it, since
+        adding new columns is exactly what we want to do at this point.
+        * rendering/RenderMultiColumnSet.h:
+        (RenderMultiColumnSet):
+
+2013-06-12  Anders Carlsson  <andersca@apple.com>
+
+        Remove the notion of inactive plug-ins
+        https://bugs.webkit.org/show_bug.cgi?id=117570
+        <rdar://problem/13484213>
+
+        Reviewed by Tim Horton.
+
+        Remove RenderEmbeddedObject::PluginInactive and the replacement text.
+
+        * English.lproj/Localizable.strings:
+        * platform/LocalizedStrings.cpp:
+        * platform/LocalizedStrings.h:
+        * rendering/RenderEmbeddedObject.cpp:
+        (WebCore::unavailablePluginReplacementText):
+        * rendering/RenderEmbeddedObject.h:
+
+2013-06-12  Dean Jackson  <dino@apple.com>
+
+        [Mac] Change default Traditional Chinese serif font on 10.9
+        https://bugs.webkit.org/show_bug.cgi?id=117568
+
+        Reviewed by Alexey Proskuryakov.
+
+        Change default font on newer versions of OS X.
+
+        * page/mac/SettingsMac.mm:
+        (WebCore::Settings::initializeDefaultFontFamilies): Use 'Songti TC'
+        on 10.9 and above.
+
+2013-06-12  Dean Jackson  <dino@apple.com>
+
+        [Mac] Change default Simplified Chinese serif font on 10.9
+        https://bugs.webkit.org/show_bug.cgi?id=117567
+
+        Reviewed by Alexey Proskuryakov.
+
+        Change default font on newer versions of OS X.
+
+        * page/mac/SettingsMac.mm:
+        (WebCore::Settings::initializeDefaultFontFamilies): Use 'Songti SC'
+        instead of 'STSong' on newer systems.
+
+2013-06-12  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Fix crashes due to failed ImageBuffer allocation
+        https://bugs.webkit.org/show_bug.cgi?id=117541
+
+        Reviewed by Andreas Kling.
+
+        From Blink r152268 by <pdr@chromium.org>
+
+        A crash can happen due to a failed ImageBuffer allocation in
+        SVGImage::drawPatternForContainer(). Added a check for that failed allocation.
+
+        * svg/graphics/SVGImage.cpp:
+        (WebCore::SVGImage::drawPatternForContainer):
+
+2013-06-12  Eduardo Lima Mitev  <elima@igalia.com>
+
+        [atk] Replace deprecated call to atk_document_get_locale() in DumpRenderTree
+        https://bugs.webkit.org/show_bug.cgi?id=115647
+
+        Reviewed by Martin Robinson.
+
+        Override the get_object_locale() method of WebkitAccessibleWrapperAtk's internal
+        AtkObject, to include custom implementations for AtkDocument and AtkText objects,
+        taking the logic as-is from AtkDocument::get_document_locale() and DumpRenderTree's
+        AccessibilityUIElementAtk::language(), respectively.
+
+        Apart from improving encapsulation, this avoids calling deprecated get_document_locale()
+        method.
+
+        No new functionality, no new tests.
+
+        * accessibility/atk/WebKitAccessibleInterfaceDocument.cpp:
+        (webkitAccessibleDocumentInterfaceInit): Chains implementation of
+        AtkDocument::get_document_locale() to AtkObject::get_object_locale().
+        * accessibility/atk/WebKitAccessibleWrapperAtk.cpp:
+        (webkitAccessibleGetObjectLocale): Add implementation of locale resolution for
+        objects of type AtkDocument and AtkText.
+        (webkitAccessibleClassInit): Override AtkObject::get_object_locale() method.
+
+2013-06-12  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Move more build targets for source code that's free of layer violations into libPlatform
+        https://bugs.webkit.org/show_bug.cgi?id=115936
+
+        Reviewed by Martin Robinson.
+
+        No new tests - no new functionality.
+
+        * GNUmakefile.list.am: Move more build targets under the platform_sources and platformgtk_sources listing.
+        These build targets represent source files that are already free of platform layer violations and are as such
+        ready to be pushed down from the WebCore layer into the Platform layer.
+
+2013-06-12  Ruth Fong  <ruth_fong@apple.com>
+
+        "Open Video in New Window" doesn't make sense in fullscreen
+        https://bugs.webkit.org/show_bug.cgi?id=117556
+
+        Reviewed by Beth Dakin.
+
+        No new tests needed.
+
+        * WebCore.exp.in: Added WebKit2 hook for mediaIsInFullscreen() method.
+
+2013-06-12  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Accessibility code assumes an area element's parent is a map element
+        https://bugs.webkit.org/show_bug.cgi?id=117496
+
+        Reviewed by Chris Fleizach.
+
+        We can't make such an assumption. Scripts can insert any element between area and map elements.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/b6f486284f08c52904701c93e1ec0b7d6e76af9f.
+
+        Test: accessibility/image-map-with-indirect-area-crash.html
+
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::accessibilityImageMapHitTest):
+
+2013-06-12  Robert Hogan  <robert@webkit.org>
+
+        Whitespace between inlines with nowrap and a shrink-to-fit parent gets a line-break when it shouldn't
+        https://bugs.webkit.org/show_bug.cgi?id=117370
+
+        Reviewed by David Hyatt.
+
+        Test: fast/text/whitespace/inline-whitespace-wrapping-8.html
+
+        A no-wrap inline shouldn't include trailing space when deciding whether it fits on a line. 
+        Likewise when we finish iterating through the objects on a line we should clear our linebreak
+        if the only thing that prevents us fitting on the line is our collapsed trailing whitespace.
+         
+        Removing the trailing space from this measurement means we need to watch out for potential
+        breaks between no-wrap inlines, in particular if we leave a no-wrap inline ignoring spaces
+        and enter an autowrap inline then we need to mark the beginning of the autowrap inline
+        as a potential linebreak. The test fast/text/whitespace/inline-whitespace-wrapping-5.html 
+        is an example of such a case.
+
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::LineWidth::LineWidth):
+        (WebCore::LineWidth::fitsOnLine):
+        (WebCore::LineWidth::fitsOnLineExcludingTrailingWhitespace):
+        (WebCore::LineWidth::fitsOnLineExcludingTrailingCollapsedWhitespace):
+        (WebCore::LineWidth::setTrailingWhitespaceWidth):
+        (WebCore::RenderBlock::LineBreaker::nextSegmentBreak):
+
+2013-06-12  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] rectangle and inset-rectangle do not properly handle rx and ry
+        https://bugs.webkit.org/show_bug.cgi?id=116745
+
+        Reviewed by Dirk Schulze.
+
+        If ry is not supplied, it now defaults to the rx value. Also, if rx
+        and ry are not supplied, they default to 0px. This also has the effect
+        that the computed style for any rectangle or inset-rectangle now
+        contains all six parameters.
+
+        If rx > width/2 then it is clamped to width/2, and if ry > height/2,
+        then it is clamped to height/2. This happens at layout time because
+        given mixed units and relative units, that is the only time this
+        determination can be made.
+
+        Tests: fast/exclusions/shape-inside/shape-inside-rounded-rectangle-large-radius.html
+               fast/exclusions/shape-outside-floats/shape-outside-floats-rounded-rectangle-large-radius.html
+
+        * css/BasicShapeFunctions.cpp:
+        (WebCore::valueForBasicShape): Remove checks for undefined, since rx
+            and ry cannot be undefined in BasicShapes anymore.
+        (WebCore::basicShapeForValue): If radii are undefined in CSS, set
+            default values in the BasicShape, per the spec.
+        * rendering/ExclusionShape.cpp:
+        (WebCore::ensureRadiiDoNotOverlap): Utility method to ensure radii
+            don't overlap.
+        (WebCore::ExclusionShape::createExclusionShape): Remove defaulting to
+            zero, clamp radii per the spec.
+        * rendering/style/BasicShapes.cpp:
+        (WebCore::BasicShapeRectangle::path): Remove defaulting.
+        (WebCore::BasicShapeRectangle::blend): Ditto.
+        (WebCore::BasicShapeInsetRectangle::path): Ditto.
+        (WebCore::BasicShapeInsetRectangle::blend): Ditto.
+        * rendering/style/BasicShapes.h:
+        (WebCore::BasicShapeRectangle::BasicShapeRectangle): Remove defaulting
+            to undefined for radii.
+        (WebCore::BasicShapeRectangle::setCornerRadiusX): Add assert to
+            prevent undefined.
+       (WebCore::BasicShapeRectangle::setCornerRadiusY): Add assert to
+            prevent undefined.
+        (WebCore::BasicShapeInsetRectangle::BasicShapeInsetRectangle): Ditto.
+        (WebCore::BasicShapeInsetRectangle::setCornerRadiusX): Add assert to
+            prevent undefined.
+       (WebCore::BasicShapeInsetRectangle::setCornerRadiusY): Add assert to
+            prevent undefined.
+
+2013-06-11  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Support Title UI Element Accessibility Attribute
+        https://bugs.webkit.org/show_bug.cgi?id=117530
+
+        Reviewed by Anders Carlsson.
+
+        Fixes: accessibility/list-item-role.html
+               accessibility/hidden-legend.html
+
+        * accessibility/win/AccessibilityObjectWrapperWin.cpp:
+        (WebCore::AccessibilityObjectWrapper::accessibilityAttributeValue): Extend to support access
+        for the Title UI Element object.
+        * accessibility/win/AccessibilityObjectWrapperWin.h: Revise interface to use Variant output,
+        which is more in keeping with the Mac's 'id' method signature.
+
 2013-06-12  Ralph Thomas  <ralpht@gmail.com>
 
         [CSS Shaders] Animations and transitions should use validated custom programs
