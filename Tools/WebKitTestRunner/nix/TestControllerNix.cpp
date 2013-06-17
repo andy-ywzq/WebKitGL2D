@@ -35,6 +35,7 @@ namespace WTR {
 
 static guint gTimeoutSourceId = 0;
 static GMainLoop* mainLoop = 0;
+static gchar* nixTemporaryDirectory = 0;
 
 static void cancelTimeout()
 {
@@ -57,6 +58,10 @@ void TestController::platformInitialize()
 
 void TestController::platformDestroy()
 {
+    if (nixTemporaryDirectory) {
+        g_free(nixTemporaryDirectory);
+        nixTemporaryDirectory = 0;
+    }
 }
 
 static gboolean timeoutCallback(gpointer)
@@ -147,7 +152,10 @@ void TestController::runModal(PlatformWebView*)
 
 const char* TestController::platformLibraryPathForTesting()
 {
-    return 0;
+    ASSERT(!nixTemporaryDirectory);
+
+    nixTemporaryDirectory = g_dir_make_tmp("WebKitNixTests-XXXXXX", 0);
+    return nixTemporaryDirectory;
 }
 
 } // namespace WTR
