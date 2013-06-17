@@ -1,3 +1,39 @@
+2013-06-17  Michael Brüning  <michael.bruning@digia.com>
+
+        [Qt] Remove Qt specific QTKIT flagged code.
+        https://bugs.webkit.org/show_bug.cgi?id=117635
+
+        Reviewed by Simon Hausmann.
+
+        Due to disabling QTKIT for Qt in r151546, the
+        code the flags that are not taken into account
+        anymore and the code that has been rendered
+        unreachable by this are removed.
+
+        * Source/widgetsapi.pri:
+
+2013-06-17  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Rename gobject_introspection_required variable.
+
+        As gobject_introspection_required_version for consistency with all
+        other required_version variables.
+
+        * Source/autotools/FindDependencies.m4:
+        * Source/autotools/Versions.m4:
+
+2013-06-14  Patrick Gansterer  <paroga@webkit.org>
+
+        Introduce USE(WINGDI) for the Windows port
+        https://bugs.webkit.org/show_bug.cgi?id=116138
+
+        Reviewed by Ryosuke Niwa.
+
+        Using USE(WINGDI) instead of OS(WINCE) will allow us to
+        compile the GDI based Windows port on WinNT too.
+
+        * Source/cmake/OptionsWinCE.cmake:
+
 2013-06-14  Manuel Rego Casasnovas  <rego@igalia.com>
 
         [GTK][WK1] Missing symbols

@@ -1,3 +1,158 @@
+2013-06-17  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/13145014> Allow CoreIPC messages to transmit importance boosts
+
+        Transmitting the importance boost from the UI process to the web process is particularly
+        important when disabling process suppression on a web process, as it will minimize the
+        delays that can occur before the message instructing process suppression to be disabled
+        is processed by the web process.
+
+        We keep the importance boost alive for the duration of the CoreIPC message handler. We
+        achieve this by having an ImportanceAssertion object that owns the assertion, and whose
+        lifetime is tied to that of the MessageDecoder.
+
+        Reviewed by Anders Carlsson.
+
+        * Platform/CoreIPC/MessageDecoder.cpp:
+        (CoreIPC::MessageDecoder::setImportanceAssertion): Associate an importance assertion
+        with this message.
+        * Platform/CoreIPC/MessageDecoder.h:
+        * Platform/CoreIPC/mac/ConnectionMac.cpp:
+        (CoreIPC::Connection::open): Mark our receive port as allowing importance boosts to be received.
+        (CoreIPC::Connection::receiveSourceEventHandler):
+        * Platform/CoreIPC/mac/ImportanceAssertion.h:
+        (CoreIPC::ImportanceAssertion::create):
+        (CoreIPC::ImportanceAssertion::~ImportanceAssertion): Release the assertion.
+        (CoreIPC::ImportanceAssertion::ImportanceAssertion): Take an assertion if a boost was present in
+        the Mach message.
+
+2013-06-17  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/14051357> Web processes sometimes remain in a suppressed
+        state after their window is unoccluded.
+
+        The code in WKView that responds to occlusion notifications was incorrectly
+        treating the window's occlusion state as being an enum rather than the set of
+        flags that it is.
+
+        Reviewed by Oliver Hunt.
+
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView _windowDidChangeOcclusionState:]): Test only the visibility state.
+        (-[WKView setWindowOcclusionDetectionEnabled:]): Ditto.
+
+2013-06-17  Michael Brüning  <michael.bruning@digia.com>
+
+        [Qt] Remove Qt specific QTKIT flagged code.
+        https://bugs.webkit.org/show_bug.cgi?id=117635
+
+        Reviewed by Simon Hausmann.
+
+        Due to disabling QTKIT for Qt in r151546, the
+        code the flags that are not taken into account
+        anymore and the code that has been rendered
+        unreachable by this are removed.
+
+        * Target.pri:
+        * UIProcess/qt/WebContextQt.cpp:
+        (WebKit::WebContext::platformInitializeWebProcess):
+        * WebProcess/WebCoreSupport/qt/WebSystemInterface.h: Removed.
+        * WebProcess/WebCoreSupport/qt/WebSystemInterface.mm: Removed.
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::updatePreferences):
+        * WebProcess/qt/WebProcessMainQt.cpp:
+        (WebKit::WebProcessMainQt):
+
+2013-06-17  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        Unreviewed, rolling out r151632.
+        http://trac.webkit.org/changeset/151632
+        https://bugs.webkit.org/show_bug.cgi?id=117585
+
+        Debug build error ASSERT(WTF_USE_GRAMMAR_CHECKING) for non MAC
+        platforms
+
+        * Shared/API/c/WKSharedAPICast.h:
+        (WebKit::toAPI):
+        (WebKit::toImpl):
+        * UIProcess/API/efl/ewk_context_menu_item.cpp:
+        (getEwkActionFromWKTag):
+        * UIProcess/API/efl/tests/test_ewk2_text_checker.cpp:
+        (onContextMenuShow):
+        (TEST_F):
+        * UIProcess/API/gtk/WebKitContextMenuActions.cpp:
+        (webkitContextMenuActionGetActionTag):
+        (webkitContextMenuActionGetForContextMenuItem):
+        (webkitContextMenuActionGetLabel):
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::contextMenuItemSelected):
+
+2013-06-14  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        Context menu grammar checking items are available when GRAMMAR_CHECKING macro is off
+        https://bugs.webkit.org/show_bug.cgi?id=117585
+
+        Reviewed by Anders Carlsson.
+
+        Add GRAMMAR_CHECKING guard to the context menu grammar items.
+
+        * Shared/API/c/WKSharedAPICast.h:
+        (WebKit::toAPI):
+        (WebKit::toImpl):
+        * UIProcess/API/efl/ewk_context_menu_item.cpp:
+        (getEwkActionFromWKTag):
+        * UIProcess/API/efl/tests/test_ewk2_text_checker.cpp:
+        (checkSpellingItemsAvailability):
+        Change callback name, to be consistent with a newly added.
+
+        (checkSpellingAndGrammarSubmenuAvailability):
+        (checkGrammarWithSpellingItemAvailability):
+        Add two unit tests for EFL to check whether context menu grammar items are
+        available only when GRAMMAR_CHECKING macro is enabled.
+
+        * UIProcess/API/gtk/WebKitContextMenuActions.cpp:
+        (webkitContextMenuActionGetActionTag):
+        (webkitContextMenuActionGetForContextMenuItem):
+        (webkitContextMenuActionGetLabel):
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::contextMenuItemSelected):
+
+2013-06-14  Dean Jackson  <dino@apple.com>
+
+        Crash in supportsSnapshotting
+        https://bugs.webkit.org/show_bug.cgi?id=117670
+        <rdar://problem/14059711>
+
+        Reviewed by Darin Adler.
+
+        Speculative fix for deferencing a null RefPtr in supportsSnapshotting.
+        It seems like it was possible to get in a state where the plugin machinery
+        would fire up and attempt to get a screenshot before there was an active
+        connection to the plugin process (usually under periods of high load, such
+        as opening a lot of tabs at once). In this case we're now returning false
+        from supportsSnapshotting, which will trigger the plugin to restart, but
+        that's better than requesting a snapshot on something that doesn't yet exist.
+
+        * WebProcess/Plugins/PluginProxy.cpp:
+        (WebKit::PluginProxy::supportsSnapshotting): Guard for an empty connection object.
+
+2013-06-14  Enrica Casucci  <enrica@apple.com>
+
+        WKPageFindStringMatches ignores the kWKFindOptionsBackwards option.
+        https://bugs.webkit.org/show_bug.cgi?id=117647
+        <rdar://problem/13881024>
+
+        Reviewed by Darin Adler.
+        
+        The API returns the matched ranges in the DOM order regardless of the
+        find direction, but the index of the first match after the user selection
+        should take the find direction into account.
+
+        Extended existing test in TestWebKitAPI.
+
+        * Shared/API/c/WKFindOptions.h: Added enum for the case where there are
+        no matches after the user selection in the direction of the find.
+
 2013-06-14  Andres Gomez  <agomez@igalia.com>
 
         [GTK] Compilation problems - hb.h not found

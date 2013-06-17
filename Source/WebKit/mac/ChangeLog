@@ -1,3 +1,54 @@
+2013-06-17  Michael Brüning  <michael.bruning@digia.com>
+
+        [Qt] Remove Qt specific QTKIT flagged code.
+        https://bugs.webkit.org/show_bug.cgi?id=117635
+
+        Reviewed by Simon Hausmann.
+
+        Due to disabling QTKIT for Qt in r151546, the
+        code the flags that are not taken into account
+        anymore and the code that has been rendered
+        unreachable by this are removed.
+
+        * WebView/WebView.mm:
+        (-[WebView _preferencesChanged:]):
+
+2013-06-17  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        Unreviewed, rolling out r151632.
+        http://trac.webkit.org/changeset/151632
+        https://bugs.webkit.org/show_bug.cgi?id=117585
+
+        Debug build error ASSERT(WTF_USE_GRAMMAR_CHECKING) for non MAC
+        platforms
+
+        * WebCoreSupport/WebContextMenuClient.mm:
+        (fixMenusReceivedFromOldClients):
+
+2013-06-14  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        Context menu grammar checking items are available when GRAMMAR_CHECKING macro is off
+        https://bugs.webkit.org/show_bug.cgi?id=117585
+
+        Reviewed by Anders Carlsson.
+
+        Add GRAMMAR_CHECKING guard to the context menu grammar items.
+
+        * WebCoreSupport/WebContextMenuClient.mm:
+        (fixMenusReceivedFromOldClients):
+
+2013-06-13  Jer Noble  <jer.noble@apple.com>
+
+        Add support for AVFoundation-backed HTMLMediaElements in the WebVideoFullScreenController.
+        https://bugs.webkit.org/show_bug.cgi?id=117597
+
+        Reviewed by Eric Carlson.
+
+        Allow AVFoundation to be enabled even when the FullScreen API is disabled.
+
+        * WebView/WebView.mm:
+        (-[WebView _preferencesChanged:]): 
+
 2013-06-12  Anders Carlsson  <andersca@apple.com>
 
         Remove the notion of inactive plug-ins

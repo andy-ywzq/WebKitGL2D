@@ -1868,9 +1868,9 @@ void RenderObject::setStyle(PassRefPtr<RenderStyle> style)
         if (updatedDiff == StyleDifferenceLayout)
             setNeedsLayoutAndPrefWidthsRecalc();
         else if (updatedDiff == StyleDifferenceLayoutPositionedMovementOnly)
-            setNeedsPositionedMovementLayout();
+            setNeedsPositionedMovementLayout(oldStyle.get());
         else if (updatedDiff == StyleDifferenceSimplifiedLayoutAndPositionedMovement) {
-            setNeedsPositionedMovementLayout();
+            setNeedsPositionedMovementLayout(oldStyle.get());
             setNeedsSimplifiedNormalFlowLayout();
         } else if (updatedDiff == StyleDifferenceSimplifiedLayout)
             setNeedsSimplifiedNormalFlowLayout();
@@ -1973,10 +1973,10 @@ void RenderObject::styleWillChange(StyleDifference diff, const RenderStyle* newS
 #endif
         if (oldStyleSlowScroll != newStyleSlowScroll) {
             if (oldStyleSlowScroll)
-                frameView->removeSlowRepaintObject();
+                frameView->removeSlowRepaintObject(this);
 
             if (newStyleSlowScroll)
-                frameView->addSlowRepaintObject();
+                frameView->addSlowRepaintObject(this);
         }
     }
 }
@@ -2022,10 +2022,10 @@ void RenderObject::styleDidChange(StyleDifference diff, const RenderStyle* oldSt
         else
             setNeedsSimplifiedNormalFlowLayout();
     } else if (diff == StyleDifferenceSimplifiedLayoutAndPositionedMovement) {
-        setNeedsPositionedMovementLayout();
+        setNeedsPositionedMovementLayout(oldStyle);
         setNeedsSimplifiedNormalFlowLayout();
     } else if (diff == StyleDifferenceLayoutPositionedMovementOnly)
-        setNeedsPositionedMovementLayout();
+        setNeedsPositionedMovementLayout(oldStyle);
 
     // Don't check for repaint here; we need to wait until the layer has been
     // updated by subclasses before we know if we have to repaint (in setStyle()).
@@ -2450,6 +2450,8 @@ void RenderObject::willBeDestroyed()
 
     remove();
 
+    ASSERT(documentBeingDestroyed() || !frame()->view()->hasSlowRepaintObject(this));
+
     // The remove() call above may invoke axObjectCache()->childrenChanged() on the parent, which may require the AX render
     // object for this renderer. So we remove the AX render object now, after the renderer is removed.
     if (AXObjectCache* cache = document()->existingAXObjectCache())
@@ -2523,7 +2525,7 @@ void RenderObject::willBeRemovedFromTree()
         if (FrameView* frameView = view()->frameView()) {
             bool repaintFixedBackgroundsOnScroll = shouldRepaintFixedBackgroundsOnScroll(frameView);
             if (repaintFixedBackgroundsOnScroll && m_style && m_style->hasFixedBackgroundImage())
-                frameView->removeSlowRepaintObject();
+                frameView->removeSlowRepaintObject(this);
         }
     }
 

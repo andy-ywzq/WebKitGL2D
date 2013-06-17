@@ -1,3 +1,40 @@
+2013-06-17  Kangil Han  <kangil.han@samsung.com>
+
+        Unreviewed. Add my email to a DOM watchlist.
+
+        * Scripts/webkitpy/common/config/watchlist:
+
+2013-06-17  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * Scripts/run-gtk-tests:
+        (TestRunner): Skip three WebKit2APITests suites that are currently timing out.
+
+2013-06-15  Bruno de Oliveira Abinader  <brunoabinader@gmail.com>
+
+        Unreviewed. Reorder my email addresses.
+        https://bugs.webkit.org/show_bug.cgi?id=100122
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-06-14  Enrica Casucci  <enrica@apple.com>
+
+        WKPageFindStringMatches ignores the kWKFindOptionsBackwards option.
+        https://bugs.webkit.org/show_bug.cgi?id=117647
+        <rdar://problem/13881024>
+
+        Reviewed by Darin Adler.
+        
+        The test now uses content with a selection and tests both
+        forwards and backward find as well as the case of a find
+        that has no matches after the user selection.
+
+        * TestWebKitAPI/TestWebKitAPI.xcodeproj/project.pbxproj:
+        * TestWebKitAPI/Tests/WebKit2/FindMatches.mm:
+        (TestWebKitAPI::didFindStringMatches):
+        * TestWebKitAPI/Tests/WebKit2/findRanges.html: Added.
+
 2013-06-14  Tor Arne Vestbø  <tor.arne.vestbo@digia.com>
 
         Remove myself from Qt build system watchlist

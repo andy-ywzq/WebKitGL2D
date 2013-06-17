@@ -1,3 +1,201 @@
+2013-06-17  Igor Oliveira  <igor.o@sisa.samsung.com>
+
+        [CSS Regions] ::before and ::after pseudo-elements are not displayed for regions
+        https://bugs.webkit.org/show_bug.cgi?id=80163
+
+        Add two simple tests verifying if region works with before/after generated content.
+
+        Reviewed by David Hyatt.
+
+        * fast/regions/region-dynamic-after-before.html: Added.
+        * fast/regions/region-generated-content-before-after.html: Added.
+        * platform/mac/fast/regions/region-dynamic-after-before-expected.png: Added.
+        * platform/mac/fast/regions/region-dynamic-after-before-expected.txt: Added.
+        * platform/mac/fast/regions/region-generated-content-before-after-expected.png: Added.
+        * platform/mac/fast/regions/region-generated-content-before-after-expected.txt: Added.
+
+2013-06-17  Sergio Villar Senin  <svillar@igalia.com>
+
+        Remove invalid checks from block-cursor-overtype-mode.html
+        https://bugs.webkit.org/show_bug.cgi?id=117587
+
+        Reviewed by Darin Adler.
+
+        The test uses an array of ">" "<" symbols to perform comparisons
+        between consecutive positions of the block cursor. Since those
+        checks are done for each pair of consecutive characters the total
+        amount of checks is lengthOfTheWord - 1. We were adding an extra
+        symbol that was not used at all in the test.
+
+        * editing/selection/block-cursor-overtype-mode.html:
+
+2013-06-17  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Correcting rebaselining after r151634.
+
+        * platform/qt-5.0-wk2/compositing/repaint/fixed-background-scroll-expected.txt: Renamed from LayoutTests/platform/qt-5.0-wk2/fast/repaint/fixed-background-scroll-expected.txt.
+        * platform/qt-5.0-wk2/compositing/repaint/positioned-movement-expected.txt: Renamed from LayoutTests/platform/qt-5.0-wk2/fast/repaint/positioned-movement-expected.txt.
+
+2013-06-17  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Rebaselining repaint tests, see bug 115372.
+
+        * platform/qt-5.0-wk2/fast/repaint/change-overflow-and-display-of-relative-expected.txt: Rebaselining after r151549.
+        * platform/qt-5.0-wk2/fast/repaint/fixed-background-scroll-expected.txt: Rebaselining after r151624.
+        * platform/qt-5.0-wk2/fast/repaint/positioned-movement-expected.txt: Rebaselining after r151622.
+
+2013-06-17  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk-wk1/TestExpectations: Add a crashing expectation for a test that most likely regressed with r151021.
+        * platform/gtk/TestExpectations: Add failure expectations for a couple of tests failing due to stack size misbehavior.
+
+2013-06-16  Mihai Tica  <mitica@adobe.com>
+
+        [CSS Blending] Update the background-blend-mode-image-color-dynamic test to use the repaint test logic
+
+        Updating testcase verifying if background blend modes are updated dynamically from script. This now
+        properly uses the repaint test mechanism. Also, the background image resource is addded.
+
+        https://bugs.webkit.org/show_bug.cgi?id=117686
+
+        Reviewed by Dean Jackson.
+
+        * fast/repaint/background-blend-mode-image-color-dynamic-expected.html:
+        * fast/repaint/background-blend-mode-image-color-dynamic.html:
+        * fast/repaint/resources/ducky.png: Added.
+
+2013-06-16  Kent Tamura  <tkent@chromium.org>
+
+        Fix two assertion failures in Range::insertNode
+        https://bugs.webkit.org/show_bug.cgi?id=116511
+
+        Reviewed by Ryosuke Niwa.
+
+        We need to update fast/dom/insertBefore-refChild-crash.html because the
+        test caused recursive calls to the event handler. container.innerHTML=''
+        did nothing before this CL. Now container has the newChild because
+        DOMNodeRemoved event dispatching is delayed until Range::insertNode
+        completion.
+
+        We need to update fast/text/split-text-crash.xhtml so that it doesn't
+        stop when the event handler is called twice. I'm not sure why the test
+        worked before this CL.
+
+        * fast/dom/Range/range-insertNode-assertion-expected.txt: Added.
+        * fast/dom/Range/range-insertNode-assertion.html: Added.
+        * fast/dom/insertBefore-refChild-crash.html:
+        * fast/text/split-text-crash.xhtml:
+
+2013-06-16  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed. Added new baselines for some of editing/style tests, which works on EFL port.
+
+        * platform/efl/TestExpectations:
+        * platform/efl/editing/style/5017613-1-expected.png: Added.
+        * platform/efl/editing/style/5017613-1-expected.txt: Added.
+        * platform/efl/editing/style/5046875-1-expected.png: Added.
+        * platform/efl/editing/style/5046875-1-expected.txt: Added.
+        * platform/efl/editing/style/5065910-expected.png: Added.
+        * platform/efl/editing/style/5065910-expected.txt: Added.
+        * platform/efl/editing/style/5228141-expected.png: Added.
+        * platform/efl/editing/style/5228141-expected.txt: Added.
+        * platform/efl/editing/style/5279521-expected.png: Added.
+        * platform/efl/editing/style/5279521-expected.txt: Added.
+
+2013-06-16  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed. Added new baselines for some of editing/selection tests as r151533 on EFL port.
+
+        * platform/efl/TestExpectations:
+
+2013-06-16  Simon Fraser  <simon.fraser@apple.com>
+
+        Fixed backgrounds in composited layers not repainted on scrolling
+        https://bugs.webkit.org/show_bug.cgi?id=117684
+
+        Reviewed by Tim Horton.
+        
+        Test that verifies that a composited layer with a fixed background is repainted
+        on scrolling.
+
+        * compositing/repaint/fixed-background-scroll-expected.txt: Added.
+        * compositing/repaint/fixed-background-scroll.html: Added.
+
+2013-06-15  Simon Fraser  <simon.fraser@apple.com>
+
+        Fixed background images behave strangely with webkit transitions
+        https://bugs.webkit.org/show_bug.cgi?id=65793
+
+        Reviewed by Sam Weinig.
+        
+        Ref tests that compare fixed background rendering after a scroll, with and
+        without compositing, with a couple of layer configurations.
+
+        * compositing/backgrounds/fixed-background-on-descendant-expected.html: Added.
+        * compositing/backgrounds/fixed-background-on-descendant.html: Added.
+        * compositing/backgrounds/fixed-backgrounds-expected.html: Added.
+        * compositing/backgrounds/fixed-backgrounds.html: Added.
+
+2013-06-15  Simon Fraser  <simon.fraser@apple.com>
+
+        webkit-backface-visibility on a parent element stops background-position from updating
+        https://bugs.webkit.org/show_bug.cgi?id=116319
+
+        Reviewed by Darin Adler.
+        
+        Test that does a positioned-movement-only layout and dumps a layer tree with
+        repaint rects.
+
+        * compositing/repaint/positioned-movement-expected.txt: Added.
+        * compositing/repaint/positioned-movement.html: Added.
+
+2013-06-14  Robert Hogan  <robert@webkit.org>
+
+        REGRESSION (r148367): Facebook and Twitter icons at macworld.com are stacked vertically, obscuring Twitter one
+        https://bugs.webkit.org/show_bug.cgi?id=117284
+
+        Reviewed by David Hyatt.
+
+        * fast/text/whitespace/inline-whitespace-wrapping-7-expected.html: Added.
+        * fast/text/whitespace/inline-whitespace-wrapping-7.html: Added.
+
+2013-06-14  Lukasz Gajowy  <l.gajowy@samsung.com>
+
+        background-color is not preserved when inserting a new paragraph
+        https://bugs.webkit.org/show_bug.cgi?id=117138
+
+        Reviewed by Ryosuke Niwa.
+
+        Adding layout test and expected result to reproduce the issue.
+
+        * editing/inserting/insert-paragraph-with-font-and-background-color-expected.txt: Added.
+        * editing/inserting/insert-paragraph-with-font-and-background-color.html: Added.
+
+2013-06-14  Adam Barth  <abarth@webkit.org>
+
+        Threaded HTML parser can ASSERT in some situations
+        https://bugs.webkit.org/show_bug.cgi?id=117662
+
+        Reviewed by Ryosuke Niwa.
+
+        * http/tests/navigation/pending-location-change-assert-expected.txt: Added.
+        * http/tests/navigation/pending-location-change-assert.html: Added.
+        * http/tests/resources/slow-notify-done.php: Added.
+
+2013-06-14  Arpita Bahuguna  <a.bah@samsung.com>
+
+        Editing: wrong text position when you click enter on the text behind the image
+        https://bugs.webkit.org/show_bug.cgi?id=115023
+
+        Reviewed by Ryosuke Niwa.
+
+        * editing/inserting/insert-paragraph-after-non-editable-node-before-text-expected.txt: Added.
+        * editing/inserting/insert-paragraph-after-non-ediatble-node-before-text.html: Added.
+        Layout test added for verifying the insert paragraph behavior between an inline node
+        which is ignored for editing purposes and some text.
+
 2013-06-14  Eric Carlson  <eric.carlson@apple.com>
 
         Potential use-after-free with an event fired at a HTMLMediaElement which is currently being deleted

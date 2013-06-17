@@ -1,3 +1,689 @@
+2013-06-17  Igor Oliveira  <igor.o@sisa.samsung.com>
+
+        [CSS Regions] ::before and ::after pseudo-elements are not displayed for regions
+        https://bugs.webkit.org/show_bug.cgi?id=80163
+
+        When the implementation of the before/after was moved to the DOM, before/after generated
+        content stoppped to work with css regions. The problem happens when:
+        1. RenderRegion can not have children and when the PseudoElement::attach tries to create a renderer for the
+        generated content, it fails.
+        2. RenderRegion::canHaveGeneratedChildren should not be false because regions can have generated content.
+
+        Reviewed by David Hyatt.
+
+        Tests: fast/regions/region-dynamic-after-before.html
+               fast/regions/region-generated-content-before-after.html
+
+        * dom/NodeRenderingContext.cpp:
+        (WebCore::NodeRenderingContext::shouldCreateRenderer):
+        * rendering/RenderRegion.h:
+
+2013-06-17  Michael Brüning  <michael.bruning@digia.com>
+
+        [Mac] Remove unmaintained GStreamer specific video code.
+        https://bugs.webkit.org/show_bug.cgi?id=117694
+
+        Reviewed by Philippe Normand.
+
+        No new tests, no behaviour change.
+
+        * platform/mac/WebVideoFullscreenController.mm:
+        (-[WebVideoFullscreenController setupVideoOverlay:]):
+        (-[WebVideoFullscreenController windowDidLoad]):
+        (-[WebVideoFullscreenController setMediaElement:]):
+        (-[WebVideoFullscreenController windowDidExitFullscreen]):
+
+2013-06-17  Michael Brüning  <michael.bruning@digia.com>
+
+        [Qt] Remove Qt specific QTKIT flagged code.
+        https://bugs.webkit.org/show_bug.cgi?id=117635
+
+        Reviewed by Simon Hausmann.
+
+        Due to disabling QTKIT for Qt in r151546, the
+        code the flags that are not taken into account
+        anymore and the code that has been rendered
+        unreachable by this are removed.
+
+        No new tests, no behavioural change.
+
+        * Target.pri:
+        * WebCore.exp.in:
+        * page/Settings.cpp:
+        * page/Settings.h:
+        * platform/KURL.h:
+        * platform/SharedBuffer.h:
+        * platform/cf/KURLCFNet.cpp:
+        (WebCore::KURL::fileSystemPath):
+        * platform/cf/SharedBufferCF.cpp:
+        * platform/graphics/FloatSize.h:
+        * platform/graphics/IntRect.h:
+        * platform/graphics/IntSize.h:
+        * platform/graphics/MediaPlayer.cpp:
+        (WebCore::installedMediaEngines):
+        * platform/graphics/cg/FloatSizeCG.cpp:
+        * platform/graphics/cg/IntRectCG.cpp:
+        * platform/graphics/mac/MediaPlayerPrivateQTKit.h:
+        * platform/graphics/mac/MediaPlayerPrivateQTKit.mm:
+        (WebCore::MediaPlayerPrivateQTKit::createQTMovieLayer):
+        (WebCore::MediaPlayerPrivateQTKit::preferredRenderingMode):
+        (WebCore::MediaPlayerPrivateQTKit::paint):
+        (-[WebCoreMovieObserver layerHostChanged:]):
+        * platform/mac/SharedBufferMac.mm:
+        (+[WebCoreSharedBufferData initialize]):
+        (WebCore::SharedBuffer::createWithContentsOfFile):
+
+2013-06-17  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        REGRESSSION(r151632) : Build error on ASSERT(WTF_USE_GRAMMAR_CHECKING)
+        https://bugs.webkit.org/show_bug.cgi?id=117692
+
+        Reviewed by Jocelyn Turcotte.
+
+        Ifdef the feature-depending code and fix the assertions to check runtime conditions.
+
+        * editing/Editor.cpp:
+        (WebCore::Editor::advanceToNextMisspelling):
+        (WebCore::Editor::markMisspellingsOrBadGrammar):
+        (WebCore::Editor::markBadGrammar):
+        * editing/TextCheckingHelper.cpp:
+        (WebCore::findBadGrammars):
+        (WebCore::TextCheckingHelper::findFirstGrammarDetail):
+        (WebCore::TextCheckingHelper::findFirstBadGrammar):
+        (WebCore::TextCheckingHelper::isUngrammatical):
+        (WebCore::TextCheckingHelper::markAllBadGrammar):
+        (WebCore::checkTextOfParagraph):
+        * editing/TextCheckingHelper.h:
+
+2013-06-17  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        Unreviewed, rolling out r151632.
+        http://trac.webkit.org/changeset/151632
+        https://bugs.webkit.org/show_bug.cgi?id=117585
+
+        Debug build error ASSERT(WTF_USE_GRAMMAR_CHECKING) for non MAC
+        platforms
+
+        * page/ContextMenuController.cpp:
+        (WebCore::ContextMenuController::contextMenuItemSelected):
+        (WebCore::ContextMenuController::createAndAppendSpellingAndGrammarSubMenu):
+        (WebCore::ContextMenuController::populate):
+        (WebCore::ContextMenuController::checkOrEnableIfNeeded):
+        * platform/LocalizedStrings.cpp:
+        (WebCore::contextMenuItemTagSpellingMenu):
+        (WebCore::contextMenuItemTagShowSpellingPanel):
+        (WebCore::contextMenuItemTagCheckGrammarWithSpelling):
+        * platform/LocalizedStrings.h:
+        * platform/efl/LocalizedStringsEfl.cpp:
+        (WebCore::contextMenuItemTagSpellingMenu):
+        (WebCore::contextMenuItemTagShowSpellingPanel):
+        (WebCore::contextMenuItemTagCheckGrammarWithSpelling):
+        * platform/gtk/LocalizedStringsGtk.cpp:
+        (WebCore::contextMenuItemTagSpellingMenu):
+        (WebCore::contextMenuItemTagShowSpellingPanel):
+        (WebCore::contextMenuItemTagCheckGrammarWithSpelling):
+        * platform/qt/LocalizedStringsQt.cpp:
+        (WebCore::contextMenuItemTagSpellingMenu):
+        (WebCore::contextMenuItemTagShowSpellingPanel):
+        (WebCore::contextMenuItemTagCheckGrammarWithSpelling):
+
+2013-06-17  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix make distcheck.
+
+        * GNUmakefile.list.am: Remove non existent files from compilation
+        and add a missing header file.
+
+2013-06-14  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        Context menu grammar checking items are available when GRAMMAR_CHECKING macro is off
+        https://bugs.webkit.org/show_bug.cgi?id=117585
+
+        Reviewed by Anders Carlsson.
+
+        Do not add "Check Grammar With Spelling" and "Ignore Grammar" to the context menu
+        when GRAMMAR_CHECKING is off.
+        Replace "Spelling and Grammar" with "Spelling" as the sub menu title and "Show/Hide Spelling
+        and Grammar" with "Show/Hide Spelling" when GRAMMAR_CHECKING is off.
+
+        Additionally, guard grammar checking in context menu code to not necessarily
+        compile it.
+
+        No new layout tests because every port has a different way of showing
+        spelling/grammar context menu items.
+
+        * page/ContextMenuController.cpp:
+        (WebCore::ContextMenuController::contextMenuItemSelected):
+        (WebCore::ContextMenuController::createAndAppendSpellingAndGrammarSubMenu):
+        (WebCore::ContextMenuController::populate):
+        (WebCore::ContextMenuController::checkOrEnableIfNeeded):
+        * platform/LocalizedStrings.cpp:
+        (WebCore::contextMenuItemTagCheckGrammarWithSpelling):
+        (WebCore::contextMenuItemTagSpellingMenu):
+        (WebCore::contextMenuItemTagShowSpellingPanel):
+        * platform/LocalizedStrings.h:
+        * platform/efl/LocalizedStringsEfl.cpp:
+        (WebCore::contextMenuItemTagCheckGrammarWithSpelling):
+        (WebCore::contextMenuItemTagSpellingMenu):
+        (WebCore::contextMenuItemTagShowSpellingPanel):
+        * platform/gtk/LocalizedStringsGtk.cpp:
+        (WebCore::contextMenuItemTagCheckGrammarWithSpelling):
+        (WebCore::contextMenuItemTagSpellingMenu):
+        (WebCore::contextMenuItemTagShowSpellingPanel):
+        * platform/qt/LocalizedStringsQt.cpp:
+        (WebCore::contextMenuItemTagCheckGrammarWithSpelling):
+        (WebCore::contextMenuItemTagSpellingMenu):
+        (WebCore::contextMenuItemTagShowSpellingPanel):
+
+2013-06-16  Simon Fraser  <simon.fraser@apple.com>
+
+        Fix test assertion after r151624
+
+        An assertion was hit in RenderObject::willBeDestroyed()
+        for fast/css/getComputedStyle/getComputedStyle-background-shorthand.html
+        because the code asserted that the RenderObject had been removed from
+        the FrameView's slowRepaintObject set before remove() was called,
+        so move the assertion to after that call.
+
+        * rendering/RenderObject.cpp:
+        (WebCore::RenderObject::willBeDestroyed):
+
+2013-06-16  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Remove a redundant virtual call to hostWindow() in FrameView::invalidateRect()
+        https://bugs.webkit.org/show_bug.cgi?id=117685
+
+        Reviewed by Andreas Kling.
+
+        From Blink r152490 by <vivek.vg@samsung.com>
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::invalidateRect): Avoid hostWindow() twice call.
+
+2013-06-16  Kent Tamura  <tkent@chromium.org>
+
+        Fix two assertion failures in Range::insertNode
+        https://bugs.webkit.org/show_bug.cgi?id=116511
+
+        Reviewed by Ryosuke Niwa.
+
+        > ASSERTION FAILED: childBefore == (offset ? container->childNode(offset - 1) : 0)
+        > third_party/WebKit/Source/WebCore/dom/RangeBoundaryPoint.h(115) : void WebCore::RangeBoundaryPoint::set(PassRefPtr<WebCore::Node>, int, WebCore::Node *)
+
+        > ASSERTION FAILED: child->parentNode()
+        > ../../third_party/WebKit/Source/core/dom/RangeBoundaryPoint.h(133) : void WebCore::RangeBoundaryPoint::setToBeforeChild(WebCore::Node *)
+        >  1   0x87594b2 WebCore::RangeBoundaryPoint::setToBeforeChild(WebCore::Node*)
+        >  2   0x87534a9 WebCore::Range::insertNode(WTF::PassRefPtr<WebCore::Node>, int&)
+
+        Range::insertNode calls Node::insertBefore, in which an event handler
+        can update the DOM structure so that RangeBoundaryPoint don't like. We
+        postpone event dispatching by EventQueueScope.
+
+        Also, remove old comments about Acid3. The behavior is standardized.
+        (Step 9 of http://dom.spec.whatwg.org/#dom-range-insertnode)
+
+        This patch imports http://src.chromium.org/viewvc/blink?view=revision&revision=150470 .
+
+        Test: fast/dom/Range/range-insertNode-assertion.html
+
+        * dom/Range.cpp:
+        (WebCore::Range::insertNode):
+         - Add EventQueueScope
+         - Remove obsolete comments
+
+2013-06-16  Simon Fraser  <simon.fraser@apple.com>
+
+        Fixed backgrounds in composited layers not repainted on scrolling
+        https://bugs.webkit.org/show_bug.cgi?id=117684
+
+        Reviewed by Tim Horton.
+        
+        FrameView is aware that "slow-repaint objects" (i.e. renderers with 
+        background-attachment:fixed) require a slow-scrolling path. However,
+        it was ignorant of the fact that such objects could be painting into
+        compositing layers; it simply dirtied the main tiles, and nothing else.
+        
+        Fix by having FrameView track the slow-repaints objects explicitly, as we
+        do for position:fixed, and repaint each of them on scrolling.
+
+        Test: compositing/repaint/fixed-background-scroll.html
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::FrameView): No need to initialize m_slowRepaintObjectCount,
+        which is now an OwnPtr<RenderObjectSet>.
+        (WebCore::FrameView::useSlowRepaints): Use hasSlowRepaintObjects() now.
+        (WebCore::FrameView::addSlowRepaintObject): Now adds the object to a set,
+        allocating the set if necessary.
+        (WebCore::FrameView::removeSlowRepaintObject): Remove the object from the set,
+        and deallocate the set if empty.
+        (WebCore::FrameView::scrollContentsSlowPath): Call repaintSlowRepaintObjects();
+        this is the change that fixes the bug for always-composited implementations (e.g.
+        tile cache). This is a conservative change; we still invalidate the tile cache
+        as well. This could be optimized later.
+        (WebCore::FrameView::repaintSlowRepaintObjects): Repaint each object in the set.
+        Their appropriate compositing ancestor will be repainted.
+        (WebCore::FrameView::scrollPositionChangedViaPlatformWidget): Call
+        repaintSlowRepaintObjects() so that fixed backgrounds in composited layers are
+        correctly repainted; this fixes the bug for WebKit1.
+        * page/FrameView.h: Replace m_slowRepaintObjectCount with a HashSet of
+        RenderObjects.
+        (WebCore::FrameView::hasSlowRepaintObject): Takes a RenderObject* now.
+        (WebCore::FrameView::hasSlowRepaintObjects): Ditto.
+        * rendering/RenderObject.cpp:
+        (WebCore::RenderObject::styleWillChange): Pass the RenderObject.
+        (WebCore::RenderObject::willBeDestroyed): Assert that this RenderObject
+        has been removed from FrameView's set of slow-repaint objects already, if
+        the document is not being destroyed.
+        (WebCore::RenderObject::willBeRemovedFromTree): Pass the RenderObject.
+
+2013-06-15  Simon Fraser  <simon.fraser@apple.com>
+
+        Painting of fixed background images is wrong in composited layers
+        https://bugs.webkit.org/show_bug.cgi?id=65793
+
+        Reviewed by Sam Weinig.
+        
+        The code that computed background image geometry for background-attachment:fixed
+        images was unaware of compositing, so often painting the image at the wrong location.
+        
+        Fix by having RenderBoxModelObject::calculateBackgroundImageGeometry() do the correct
+        math for fixed backgrounds in composited layer by offsetting the viewport rect by
+        the paint container's absolute position.
+
+        Tests: compositing/backgrounds/fixed-background-on-descendant.html
+               compositing/backgrounds/fixed-backgrounds.html
+
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::getBackgroundPaintedExtent): Now returns a bool indicating
+        whether it is returning a reliable extent rect. It can return false in the case where
+        a background is fixed, since computing the correct extent would require finding
+        the appropriate composited ancestor to pass to calculateBackgroundImageGeometry().
+        This is OK since this function is used for "background opaque" optimizations.
+        (WebCore::RenderBox::computeBackgroundIsKnownToBeObscured): If getBackgroundPaintedExtent()
+        returns false, return false.
+        (WebCore::RenderBox::maskClipRect): We removed mask-attachment, so we never need to
+        compute the composited ancestor here and can pass null.
+        (WebCore::RenderBox::repaintLayerRectsForImage): Unwrap a comment.
+        If the changed image is related to a fixed background, geometry.hasNonLocalGeometry()
+        will be true. In that cause, just repaint the entire renderer rather than groveling
+        around for a composited ancestor.
+        * rendering/RenderBox.h: Changed name and signature of backgroundPaintedExtent.
+        * rendering/RenderBoxModelObject.cpp:
+        (WebCore::RenderBoxModelObject::paintFillLayerExtended): calculateBackgroundImageGeometry()
+        now needs to know the painting container.
+        (WebCore::RenderBoxModelObject::calculateBackgroundImageGeometry): Now takes a painting
+        container, that is required to correctly compute the viewport-relative offset for fixed
+        backgrounds. geometry.setHasNonLocalGeometry() is set for fixed backgrounds to indicate
+        to callers that, if they didn't pass a paint container, the destRect is not accurate.
+        The main bug fix is also here: we move the viewportRect by the absolute location of
+        paint container, which is equivalent to the composited layer offset.
+        (WebCore::RenderBoxModelObject::getGeometryForBackgroundImage): calculateBackgroundImageGeometry()
+        takes a paint container.
+        * rendering/RenderBoxModelObject.h:
+        (WebCore::RenderBoxModelObject::BackgroundImageGeometry::BackgroundImageGeometry):
+        (WebCore::RenderBoxModelObject::BackgroundImageGeometry::setHasNonLocalGeometry):
+        (WebCore::RenderBoxModelObject::BackgroundImageGeometry::hasNonLocalGeometry):
+        * rendering/RenderImage.cpp:
+        (WebCore::RenderImage::computeBackgroundIsKnownToBeObscured): If getBackgroundPaintedExtent()
+        can't cheaply give an accurate answer, return false.
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::updateDirectlyCompositedBackgroundImage): Pass the paint container,
+        which is our own renderer.
+
+2013-06-15  Simon Fraser  <simon.fraser@apple.com>
+
+        webkit-backface-visibility on a parent element stops background-position from updating
+        https://bugs.webkit.org/show_bug.cgi?id=116319
+
+        Reviewed by Darin Adler.
+
+        The optimization added in r102952 was incorrect in the case where a style change
+        resulted in a positioned-movement-only layout but also required a repaint; it assumed
+        that a composited layer did not need to be repainted for a a positioned-movement-only layout.
+        
+        Fix by making RenderObject::setNeedsLayoutForPositionedMovement() check whether the
+        style change requires a repaint, and calling setLayerNeedsFullRepaint() in that situation.
+
+        Test: compositing/repaint/positioned-movement.html
+
+        * rendering/RenderLayer.h: RepaintStatus values do not need to be bit flags.
+        * rendering/RenderObject.cpp:
+        (WebCore::RenderObject::setStyle): Pass the old style to setNeedsPositionedMovementLayout().
+        (WebCore::RenderObject::styleDidChange): Ditto.
+        * rendering/RenderObject.h:
+        (WebCore::RenderObject::setNeedsPositionedMovementLayout): Now takes a const RenderStyle*.
+        * rendering/style/RenderStyle.cpp:
+        (WebCore::RenderStyle::diff): Remove a comment now that this bug is fixed.
+        (WebCore::RenderStyle::diffRequiresRepaint): Public wrapper for changeRequiresRepaint().
+        That function never uses contextSensitiveProperties so we can safely ignore them.
+        * rendering/style/RenderStyle.h: Expose a way to call changeRequiresRepaint().
+
+2013-06-15  Darin Adler  <darin@apple.com>
+
+        Try to fix iOS after last Pasteboard change.
+
+        * platform/ios/PasteboardIOS.mm:
+        (WebCore::Pasteboard::writeSelection): Put the new code inline here because the
+        stringSelectionForPasteboard function is currently Mac-only.
+
+2013-06-15  Darin Adler  <darin@apple.com>
+
+        Move Pasteboard::getStringSelection to Editor, fixing a layering violation
+        https://bugs.webkit.org/show_bug.cgi?id=117673
+
+        Reviewed by Ryosuke Niwa.
+
+        * editing/Editor.h: Added stringSelectionForPasteboardWithImageAltText.
+
+        * editing/mac/EditorMac.mm:
+        (WebCore::Editor::stringSelectionForPasteboard): Moved code here from the Pasteboard
+        class, since all the Pasteboard class did really was turn around and call back here.
+        (WebCore::Editor::stringSelectionForPasteboardWithImageAltText): Added. Variant of
+        the function above that includes image alt text. Separate named functions are often
+        the best pattern for something like this unless there are many different combinations.
+
+        * platform/Pasteboard.h: Remove the Mac-only Pasteboard::getStringSelectioon.
+
+        * platform/ios/PasteboardIOS.mm:
+        (WebCore::Pasteboard::writeSelection):
+        * platform/mac/PasteboardMac.mm:
+        (WebCore::Pasteboard::writeSelectionForTypes):
+        Call the two new functions instead of the old Pasteboard::getStringSelection.
+
+2013-06-15  Darin Adler  <darin@apple.com>
+
+        Support using clang instead of gcc for bindings preprocessing
+        https://bugs.webkit.org/show_bug.cgi?id=117674
+
+        Reviewed by Sam Weinig.
+
+        I couldn't build on my computer because I don't have gcc installed.
+        This is my cut at fixing it.
+
+        * bindings/scripts/CodeGeneratorObjC.pm:
+        (ReadPublicInterfaces): Use clang if present.
+        * bindings/scripts/preprocessor.pm:
+        (applyPreprocessor): Ditto.
+
+2013-06-14  Robert Hogan  <robert@webkit.org>
+
+        REGRESSION (r148367): Facebook and Twitter icons at macworld.com are stacked vertically, obscuring Twitter one
+        https://bugs.webkit.org/show_bug.cgi?id=117284
+
+        Reviewed by David Hyatt.
+
+        Test: fast/text/whitespace/inline-whitespace-wrapping-7.html
+
+        We were looking for line breaks in trailing collapsed whitespace even when inside a nowrap inline.
+        It's wrong to do this as we don't know yet if we will want or need to break - that decision has to
+        be deferred until we enter a part of the line that is autowrap.
+
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::RenderBlock::LineBreaker::nextSegmentBreak):
+
+2013-06-14  Lukasz Gajowy  <l.gajowy@samsung.com>
+
+        background-color is not preserved when inserting a new paragraph
+        https://bugs.webkit.org/show_bug.cgi?id=117138
+
+        Reviewed by Ryosuke Niwa.
+
+        The style isn't copied because background-color isn't defined as inheritable property.
+
+        Test: editing/inserting/insert-paragraph-not-preserving-background-color.html
+
+        * editing/InsertParagraphSeparatorCommand.cpp:
+        (WebCore::InsertParagraphSeparatorCommand::calculateStyleBeforeInsertion):
+        Passing EditingPropertiesInEffect instead of implicit parameter OnlyEditingInheritableProperties.
+
+2013-06-14  Adam Barth  <abarth@webkit.org>
+
+        Threaded HTML parser can ASSERT in some situations
+        https://bugs.webkit.org/show_bug.cgi?id=117662
+
+        Reviewed by Ryosuke Niwa.
+
+        This patch merges https://chromium.googlesource.com/chromium/blink/+/3c0a112b42d72c7623f78463166dd7f04d680b4c
+
+        --->8---
+        The parser is supposed to stop processing data when there's a pending
+        location change, but before this CL we would actually process the first
+        token from every chunk when there was a pending location change.
+
+        If the first token in a chunk was a "script" start tag, that would put
+        the tree builder into TextMode, which can only process character
+        tokens. If the next chunk starts with another start tag token, the tree
+        builder would be sad and hit an ASSERT.
+
+        This CL reorders a couple lines in HTMLDocumentParser so that we check
+        for pending location changes before processing any tokens. This change
+        stops us from processing the first token from each chunk while there is
+        a pending location change.
+
+        This issue can reproduce on any platform, but it reproduced often on
+        Android because mobile markup often elides spaces between consecutive
+        script tags. If there are space characters between the script tags,
+        then those space characters will be the first ones processes in the
+        chunk, which doesn't trigger the ASSERT.
+        ---8<---
+
+        Since we landed this patch in Blink, we've been able to reproduce this
+        issue on desktops as well. I spoke with rniwa in #webkit and he said
+        that WebKit doesn't have any current plans to enable the threaded
+        parser but that it was probably worth merging this patch anyway.
+
+        Test: http/tests/navigation/pending-location-change-assert.html
+
+        * html/parser/HTMLDocumentParser.cpp:
+        (WebCore::HTMLDocumentParser::processParsedChunkFromBackgroundParser):
+
+2013-06-14  Patrick Gansterer  <paroga@webkit.org>
+
+        Introduce USE(WINGDI) for the Windows port
+        https://bugs.webkit.org/show_bug.cgi?id=116138
+
+        Reviewed by Ryosuke Niwa.
+
+        Using USE(WINGDI) instead of OS(WINCE) will allow us to
+        compile the GDI based Windows port on WinNT too.
+
+        * config.h:
+        * platform/graphics/BitmapImage.h:
+        * platform/graphics/FontPlatformData.h:
+        * platform/graphics/GlyphBuffer.h:
+        (WebCore):
+        (GlyphBuffer):
+        * platform/graphics/Gradient.h:
+        (Gradient):
+        * platform/graphics/GraphicsContext.cpp:
+        (WebCore):
+        * platform/graphics/GraphicsContext.h:
+        (WebCore):
+        (GraphicsContext):
+        * platform/graphics/ImageBufferData.h:
+        * platform/graphics/NativeImagePtr.h:
+        (WebCore):
+        * platform/graphics/Path.h:
+        * platform/graphics/Pattern.h:
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginView::paintWindowedPluginIntoContext):
+        (WebCore::PluginView::paint):
+        (WebCore::PluginView::snapshot):
+
+2013-06-13  Jer Noble  <jer.noble@apple.com>
+
+        Report the memory cost of HTMLMediaElements to GC.
+        https://bugs.webkit.org/show_bug.cgi?id=117608
+
+        Reviewed by Darin Adler.
+
+        Report the extra memory cost of a HTMLMediaElement to the VM, in order to
+        encourage GC to occur after a media element is removed from the DOM.
+
+        Because we cannot know for sure the memory cost of our underlying media
+        framework objects, use the worst case scenario for the media memory cost:
+        the buffered percentage of movie * the total data length of the movie.
+
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::HTMLMediaElement): Initialize m_reportedExtraMemoryCost.
+        (WebCore::HTMLMediaElement::removedFrom): Report the extra memory cost.
+        * html/HTMLMediaElement.h:
+        * html/TimeRanges.cpp:
+        (TimeRanges::totalDuration): Added convenience function.
+        * html/TimeRanges.h:
+        * platform/graphics/MediaPlayer.cpp:
+        (WebCore::MediaPlayer::extraMemoryCost): Pass to MediaPlayerPrivate.
+        * platform/graphics/MediaPlayer.h:
+        * platform/graphics/MediaPlayerPrivate.h:
+        (WebCore::MediaPlayerPrivateInterface::extraMemoryCost): Default to 0.
+        * platform/graphics/avfoundation/MediaPlayerPrivateAVFoundation.cpp:
+        (WebCore::MediaPlayerPrivateAVFoundation::extraMemoryCost): Return the percentage
+            loaded * total data length.
+        * platform/graphics/avfoundation/MediaPlayerPrivateAVFoundation.h:
+
+2013-06-13  Jer Noble  <jer.noble@apple.com>
+
+        Add support for AVFoundation-backed HTMLMediaElements in the WebVideoFullScreenController.
+        https://bugs.webkit.org/show_bug.cgi?id=117597
+
+        Reviewed by Eric Carlson.
+
+        Check for media elements with AVFoundation media types and create a AVPlayerLayer
+        rather than a QTMovieLayer.
+
+        * platform/mac/WebVideoFullscreenController.h:
+        * platform/mac/WebVideoFullscreenController.mm:
+        (-[WebVideoFullscreenController setupVideoOverlay:]): Take a CALayer rather than a
+            QTMovieLayer. Move the code which connects the layer with it's media source into
+            setMediaElement.
+        (-[WebVideoFullscreenController windowDidLoad]): Give the window's contentView a generic
+            CALayer instaead of a QTMovieLayer.
+        (-[WebVideoFullscreenController setMediaElement:]): Test whether the incoming media 
+            element is backed by a QTMovie or an AVPlayer, and create the appropriate layer.
+        (-[WebVideoFullscreenController windowDidExitFullscreen]): Remove the observer of
+            AVPlayer's rate property.
+        (-[WebVideoFullscreenController observeValueForKeyPath:ofObject:change:context:]):
+            If the keyPath is "rate", call rateChanged.
+
+2013-06-14  Enrica Casucci  <enrica@apple.com>
+
+        WKPageFindStringMatches ignores the kWKFindOptionsBackwards option.
+        https://bugs.webkit.org/show_bug.cgi?id=117647
+        <rdar://problem/13881024>
+
+        Reviewed by Darin Adler.
+        
+        The API returns the matched ranges in the DOM order regardless of the
+        find direction, but the index of the first match after the user selection
+        should take the find direction into account.
+
+        Extended existing test in TestWebKitAPI.
+
+        * page/Page.cpp:
+        (WebCore::Page::findStringMatchingRanges): Added handling of the Backwards case.
+        * page/Page.h: Fixed incorrect name of the enum.
+
+2013-06-14  Jer Noble  <jer.noble@apple.com>
+
+        REGRESSION (r150651): Web Audio doesn't work at all (silence or squawks) on Mountain Lion
+        https://bugs.webkit.org/show_bug.cgi?id=117652
+
+        Reviewed by Eric Carlson.
+
+        r150651 disabled setting the buffer size to a large value, but in so doing, also
+        disabled setting the buffer size to a small value for Web Audio. Narrow the Mountain
+        Lion protection to just the <video> element case.
+        
+        * platform/audio/mac/AudioSessionManagerMac.cpp:
+        (AudioSessionManager::updateSessionState):
+
+2013-06-14  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Function names on Object.prototype should be common identifiers
+        https://bugs.webkit.org/show_bug.cgi?id=117614
+
+        Reviewed by Darin Adler.
+
+        Use the added common identifiers.
+
+        * bindings/js/JSDOMWindowBase.cpp:
+        (WebCore::JSDOMWindowBase::finishCreation):
+        (WebCore::JSDOMWindowBase::updateDocument):
+
+2013-06-14  Arpita Bahuguna  <a.bah@samsung.com>
+
+        Editing: wrong text position when you click enter on the text behind the image
+        https://bugs.webkit.org/show_bug.cgi?id=115023
+
+        Reviewed by Ryosuke Niwa.
+
+        When trying to break a line after an image followed by some text, contrary
+        to the expected behavior the text doesn't move to a new line, instead, the
+        caret position just shifts to the end of line.
+
+        As per the existing implementation for inserting a paragraph separator,
+        the insertion position obtained corresponds to the point after the image
+        element.
+        Since the insertion position doesn't resolve to being offset in the
+        following text node (0 offset), no splitting of text occurs and the block
+        to be inserted is placed after the containing (start) block (thereby
+        causing the caret position to shift).
+
+        If the computed insertionPosition points to an element that shall be
+        ignored for editing purposes (i.e. cannot have a VisiblePosition inside
+        it), and the position lies either at the start or at the end of such
+        an element, we should move our Position either upstream or
+        downstream (respectively) so as to obtain a valid position which can
+        be used further for splitting of the text.
+        
+        Test: editing/inserting/insert-paragraph-after-non-editable-node-before-text.html
+
+        * editing/InsertParagraphSeparatorCommand.cpp:
+        (WebCore::InsertParagraphSeparatorCommand::doApply):
+        Moving the insertionPosition either upstream or downstream, if the point
+        lies either at the start or at the end of the anchor node.
+        The ensuing position, if a text node, can then be used for splitting of
+        the text correctly.
+
+2013-06-14  Alberto Garcia  <agarcia@igalia.com>
+
+        [BlackBerry] Remove implementation of ContextMenu classes
+        https://bugs.webkit.org/show_bug.cgi?id=114860
+
+        Reviewed by Rob Buis.
+
+        This code is not being used so we can safely remove it.
+
+        * PlatformBlackBerry.cmake:
+        * platform/blackberry/ContextMenuBlackBerry.cpp: Removed.
+        * platform/blackberry/ContextMenuItemBlackBerry.cpp: Removed.
+        * platform/blackberry/LocalizedStringsBlackBerry.cpp:
+
+2013-06-14  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Provide simple <meter> drawing logic for testing.
+        https://bugs.webkit.org/show_bug.cgi?id=117645.
+
+        Reviewed by Anders Carlsson.
+
+        accessbility/meter-element.html
+
+        * rendering/RenderThemeSafari.cpp: Simple test implementation
+        (WebCore::RenderThemeSafari::adjustMeterStyle): Added.
+        (WebCore::RenderThemeSafari::supportsMeter): Added.
+        (WebCore::RenderThemeSafari::meterSizeForBounds): Added.
+        (WebCore::RenderThemeSafari::paintMeter): Added.
+        * rendering/RenderThemeSafari.h:
+        * rendering/RenderThemeWin.cpp:
+        (WebCore::RenderThemeWin::progressBarTheme): Added.
+        (WebCore::RenderThemeWin::getClassicThemeData): Support meters.
+        (WebCore::RenderThemeWin::getThemeData): Support meter theme.
+        (WebCore::RenderThemeWin::adjustMeterStyle): Added.
+        (WebCore::RenderThemeWin::supportsMeter): Added.
+        (WebCore::RenderThemeWin::meterSizeForBounds): Added.
+        (WebCore::RenderThemeWin::paintMeter): Added.
+        * rendering/RenderThemeWin.h:
+
 2013-06-14  Eric Carlson  <eric.carlson@apple.com>
 
         Potential use-after-free with an event fired at a HTMLMediaElement which is currently being deleted
