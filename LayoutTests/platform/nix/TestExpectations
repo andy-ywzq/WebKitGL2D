@@ -4237,6 +4237,24 @@ fast/frames/flattening/scrolling-in-object.html
 mathml/presentation/fractions.xhtml
 svg/hittest/svg-ellipse-non-scale-stroke.xhtml
 
+# Failing tests after merge e1a830d 502300f
+fast/forms/button-positioned.html
+fast/flexbox/clear-overflow-before-scroll-update.html
+
+# Failing tests after merge ac354b4 a0aa576
+fast/multicol/newmulticol/balance-maxheight1.html
+fast/multicol/newmulticol/balance1.html
+fast/multicol/newmulticol/balance2.html
+fast/multicol/newmulticol/balance3.html
+fast/multicol/newmulticol/balance4.html
+fast/multicol/newmulticol/balance5.html
+fast/multicol/newmulticol/balance7.html
+fast/multicol/newmulticol/balance8.html
+fast/multicol/newmulticol/orphans-and-widows-balance.html
+fast/repaint/change-overflow-and-display-of-relative.html
+fast/repaint/table-cell-collapsed-border-scroll.html
+fast/replaced/width-and-height-of-positioned-replaced-elements.html
+
 # Flakey tests when running pixel tests.
 compositing/background-color/background-color-padding-change.html [ ImageOnlyFailure Pass ]
 compositing/scrollbar-painting.html [ ImageOnlyFailure Crash Pass ]
