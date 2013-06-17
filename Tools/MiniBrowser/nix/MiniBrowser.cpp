@@ -50,6 +50,7 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     , m_viewportUserScalable(true)
     , m_viewportInitScale(1)
 {
+    m_control->setWindowTitle("MiniBrowser");
     g_main_loop_ref(m_mainLoop);
 
     WKPreferencesRef preferences = WKPageGroupGetPreferences(m_pageGroup.get());
@@ -147,6 +148,7 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     loadClient.clientInfo = this;
     loadClient.didStartProgress = MiniBrowser::didStartProgress;
     loadClient.didChangeProgress = MiniBrowser::didChangeProgress;
+    loadClient.didReceiveTitleForFrame = MiniBrowser::didReceiveTitleForFrame;
     WKPageSetPageLoaderClient(pageRef(), &loadClient);
 
     WKURLRef wkUrl = WKURLCreateWithUTF8CString(options.url.c_str());
@@ -1010,6 +1012,13 @@ void MiniBrowser::didChangeProgress(WKPageRef page, const void* clientInfo)
 {
     MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
     mb->m_control->setLoadProgress(WKPageGetEstimatedProgress(page));
+}
+
+void MiniBrowser::didReceiveTitleForFrame(WKPageRef, WKStringRef title, WKFrameRef, WKTypeRef, const void* clientInfo)
+{
+    MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
+    std::string titleStr = createStdStringFromWKString(title) + " - MiniBrowser";
+    mb->m_control->setWindowTitle(titleStr.c_str());
 }
 
 std::string MiniBrowser::activeUrl()

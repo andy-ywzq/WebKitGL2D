@@ -98,6 +98,7 @@ public:
     // PageLoaderClient.
     static void didStartProgress(WKPageRef page, const void *clientInfo);
     static void didChangeProgress(WKPageRef page, const void* clientInfo);
+    static void didReceiveTitleForFrame(WKPageRef, WKStringRef, WKFrameRef, WKTypeRef, const void*);
 
     virtual double scale();
 

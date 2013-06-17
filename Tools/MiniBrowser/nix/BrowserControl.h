@@ -80,6 +80,8 @@ public:
     WKSize windowSize();
     WKSize webViewSize();
 
+    void setWindowTitle(const char*);
+
     void updateUrlText(const char*);
     bool isUrlBarFocused();
 

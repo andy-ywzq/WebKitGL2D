@@ -34,6 +34,8 @@ class BrowserWindow : public VisualComponent {
 public:
     BrowserWindow(Display*, Window, XContext, BrowserControl*, WKRect);
 
+    void setTitle(const char*);
+
     virtual void handleEvent(const XEvent&);
 
 private:

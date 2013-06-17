@@ -37,6 +37,11 @@ BrowserWindow::BrowserWindow(Display* display, Window parent, XContext context, 
     createXWindow(parent, context);
 }
 
+void BrowserWindow::setTitle(const char* title)
+{
+    XStoreName(m_display, m_window, title);
+}
+
 void BrowserWindow::createXWindow(Window parent, XContext context)
 {
     m_window = XCreateSimpleWindow(m_display, parent, m_size.origin.x, m_size.origin.y, m_size.size.width, m_size.size.height, 0, 0, 0);
@@ -44,7 +49,6 @@ void BrowserWindow::createXWindow(Window parent, XContext context)
     wmDeleteMessageAtom = XInternAtom(m_display, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(m_display, m_window, &wmDeleteMessageAtom, 1);
 
-    XStoreName(m_display, m_window, "MiniBrowser");
     XSelectInput(m_display, m_window, ExposureMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask);
     XSaveContext(m_display, m_window, context, (XPointer)this);
     XMapWindow(m_display, m_window);

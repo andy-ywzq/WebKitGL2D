@@ -98,6 +98,11 @@ WKSize BrowserControl::webViewSize()
     return m_webView->size();
 }
 
+void BrowserControl::setWindowTitle(const char* title)
+{
+    m_browserWindow->setTitle(title);
+}
+
 void BrowserControl::passFocusToWebView()
 {
     m_client->addFocus();
