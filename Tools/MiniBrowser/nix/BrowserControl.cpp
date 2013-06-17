@@ -114,6 +114,11 @@ void BrowserControl::passFocusToUrlBar()
     m_client->releaseFocus();
 }
 
+void BrowserControl::updateUrlText(const char* url)
+{
+    m_urlBar->setText(url);
+}
+
 bool BrowserControl::isUrlBarFocused()
 {
     return m_urlBar->focused();

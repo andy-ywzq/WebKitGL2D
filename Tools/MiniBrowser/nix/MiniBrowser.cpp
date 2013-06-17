@@ -149,6 +149,8 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     loadClient.didStartProgress = MiniBrowser::didStartProgress;
     loadClient.didChangeProgress = MiniBrowser::didChangeProgress;
     loadClient.didReceiveTitleForFrame = MiniBrowser::didReceiveTitleForFrame;
+    loadClient.didStartProvisionalLoadForFrame = MiniBrowser::didStartProvisionalLoadForFrame;
+    loadClient.didFinishDocumentLoadForFrame = MiniBrowser::didFinishDocumentLoadForFrame;
     WKPageSetPageLoaderClient(pageRef(), &loadClient);
 
     WKURLRef wkUrl = WKURLCreateWithUTF8CString(options.url.c_str());
@@ -1021,12 +1023,27 @@ void MiniBrowser::didReceiveTitleForFrame(WKPageRef, WKStringRef title, WKFrameR
     mb->m_control->setWindowTitle(titleStr.c_str());
 }
 
+void MiniBrowser::didStartProvisionalLoadForFrame(WKPageRef page, WKFrameRef, WKTypeRef, const void* clientInfo)
+{
+    MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
+    mb->m_control->updateUrlText(mb->activeUrl().c_str());
+}
+
+void MiniBrowser::didFinishDocumentLoadForFrame(WKPageRef page, WKFrameRef, WKTypeRef, const void* clientInfo)
+{
+    MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
+    mb->m_control->updateUrlText(mb->activeUrl().c_str());
+}
+
 std::string MiniBrowser::activeUrl()
 {
     WKURLRef urlRef = WKPageCopyActiveURL(pageRef());
-    WKStringRef urlStr = WKURLCopyString(urlRef);
-    std::string url = createStdStringFromWKString(urlStr);
-    WKRelease(urlStr);
-    WKRelease(urlRef);
+    std::string url;
+    if (urlRef) {
+        WKStringRef urlStr = WKURLCopyString(urlRef);
+        url = createStdStringFromWKString(urlStr);
+        WKRelease(urlStr);
+        WKRelease(urlRef);
+    }
     return url;
 }
