@@ -31,6 +31,9 @@ WEBKIT_INCLUDE_CONFIG_FILES_IF_EXISTS()
 # Set compiler flags for all targets
 # -----------------------------------------------------------------------------
 if ("${PORT}" STREQUAL "Nix")
+    if (NOT DISABLE_STRICT_BUILD)
+        set(ADDITIONAL_FLAGS ENABLE_WERROR)
+    endif ()
     WEBKIT_SET_EXTRA_COMPILER_FLAGS(Platform ${ADDITIONAL_FLAGS})
 endif ()
 
