@@ -3070,13 +3070,9 @@ touchadjustment/touch-links-active.html [ Skip ]
 touchadjustment/touch-links-longpress.html [ Skip ]
 touchadjustment/touch-links-two-finger-tap.html [ Skip ]
 
-transforms/2d/transform-borderbox.html [ Skip ]
-transforms/2d/transform-origin-borderbox.html [ Skip ]
 transitions/cross-fade-background-image.html [ Skip ]
 transitions/cross-fade-border-image.html [ Skip ]
-transitions/opacity-transition-zindex.html [ Skip ]
 transitions/suspend-transform-transition.html [ Skip ]
-transitions/svg-transitions.html [ Skip ]
 webarchive/loading/javascript-url-iframe-crash.html [ Skip ]
 
 # Returning null to computedStyle.cssValueType (--webkit-blend-mode related)
@@ -3234,7 +3230,6 @@ fast/text/international/bidi-menulist.html [ Failure ]
 fast/text/international/pop-up-button-text-alignment-and-direction.html [ Failure ]
 fast/text/international/text-combine-image-test.html [ Failure ]
 storage/indexeddb/lazy-index-population.html [ Timeout Pass ]
-perf/htmlcollection-backwards-iteration.html [ Failure Pass ]
 
 # Nix WTR needs EventSender methods mouseScrollBy and continuousMouseScrollBy
 fast/events/wheelevent-direction-inverted-from-device.html [ Skip ]
@@ -3569,7 +3564,6 @@ transforms/3d/hit-testing/backface-no-transform-hit-test.html [ Missing Pass ]
 transforms/3d/hit-testing/backface-hit-test.html [ Missing Pass ]
 transforms/3d/point-mapping/3d-point-mapping.html [ Missing Pass ]
 transforms/3d/point-mapping/3d-point-mapping-overlapping.html [ Missing Pass ]
-transforms/3d/point-mapping/3d-point-mapping-coplanar.html [ Missing Pass ]
 transforms/3d/point-mapping/3d-point-mapping-deep.html [ Missing Pass ]
 transforms/3d/point-mapping/3d-point-mapping-3.html [ Missing Pass ]
 transforms/3d/point-mapping/3d-point-mapping-2.html [ Missing Pass ]
@@ -3785,16 +3779,11 @@ svg/filters/feDropShadow-zero-deviation.svg [ Missing ]
 svg/filters/feGaussianBlur-zero-deviation.svg [ Missing ]
 
 transforms/2d/compound-transforms-vs-containers.html [ Skip ]
-transforms/2d/hindi-rotated.html [ Skip ]
-transforms/2d/transform-fixed-container.html [ Skip ]
 transforms/2d/zoom-menulist.html [ Skip ]
 
 transforms/3d/point-mapping/3d-point-mapping-origins.html [ Skip ]
 
 transitions/default-timing-function.html [ Skip ]
-transitions/move-after-transition.html [ Skip ]
-transitions/svg-text-shadow-transition.html [ Skip ]
-transitions/transition-end-event-rendering.html [ Skip ]
 userscripts/script-run-at-end.html [ Skip ]
 
 animations/cross-fade-border-image-source.html [ Missing ]
@@ -3988,7 +3977,6 @@ svg/text/small-fonts.svg [ Missing ]
 svg/text/text-midpoint-split-bug.svg [ Missing ]
 svg/wicd/rightsizing-grid.xhtml [ Missing ]
 svg/wicd/test-rightsizing-b.xhtml [ Missing ]
-transforms/svg-vs-css.xhtml [ Missing ]
 
 ################################################################################
 # <video> related skips
