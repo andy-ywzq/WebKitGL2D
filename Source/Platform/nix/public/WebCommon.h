@@ -40,39 +40,16 @@
 
 // -----------------------------------------------------------------------------
 // Exported symbols need to be annotated with WEBKIT_EXPORT
-
-#if defined(WIN32)
-    #if WEBKIT_IMPLEMENTATION
-        #define WEBKIT_EXPORT __declspec(dllexport)
-    #else
-        #define WEBKIT_EXPORT __declspec(dllimport)
-    #endif
-#else
-    #define WEBKIT_EXPORT __attribute__((visibility("default")))
-#endif
+#define WEBKIT_EXPORT __attribute__((visibility("default")))
 
 // -----------------------------------------------------------------------------
 // Basic types
 
 #include <stddef.h> // For size_t
 
-#if defined(WIN32)
-// Visual Studio doesn't have stdint.h.
-typedef short int16_t;
-typedef unsigned short uint16_t;
-typedef int int32_t;
-typedef unsigned int uint32_t;
-#endif
-
 namespace WebKit {
-
 // UTF-16 character type
-#if defined(WIN32)
-typedef wchar_t WebUChar;
-#else
 typedef unsigned short WebUChar;
-#endif
-
 } // namespace WebKit
 
 #endif
