@@ -129,7 +129,7 @@ if (WTF_USE_OPENGL_ES_2)
         platform/graphics/opengl/Extensions3DOpenGLES.cpp
         platform/graphics/opengl/GraphicsContext3DOpenGLES.cpp
     )
-    list(APPEND WebCore_INCLUDE_DIRECTORIES ${OPENGLES2_INCLUDE_DIRS})
+    list(INSERT WebCore_INCLUDE_DIRECTORIES 0 ${OPENGLES2_INCLUDE_DIRS})
     list(APPEND WebCore_LIBRARIES ${OPENGLES2_LIBRARIES})
     add_definitions(${OPENGLES2_DEFINITIONS})
 else ()
