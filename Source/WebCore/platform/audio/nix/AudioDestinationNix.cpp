@@ -50,7 +50,7 @@ PassOwnPtr<AudioDestination> AudioDestination::create(AudioIOCallback& callback,
     return adoptPtr(new AudioDestinationNix(callback, inputDeviceId, numberOfInputChannels, numberOfOutputChannels, sampleRate));
 }
 
-AudioDestinationNix::AudioDestinationNix(AudioIOCallback& callback, const String& inputDeviceId, unsigned numberOfInputChannels, unsigned numberOfOutputChannels, float sampleRate)
+AudioDestinationNix::AudioDestinationNix(AudioIOCallback& callback, const String&, unsigned numberOfInputChannels, unsigned numberOfOutputChannels, float sampleRate)
     : m_callback(callback)
     , m_numberOfOutputChannels(numberOfOutputChannels)
     , m_inputBus(AudioBus::create(numberOfInputChannels, renderBufferSize))
@@ -66,7 +66,7 @@ AudioDestinationNix::AudioDestinationNix(AudioIOCallback& callback, const String
     if (m_callbackBufferSize + renderBufferSize > fifoSize)
         return;
 
-    m_audioDevice = adoptPtr(WebKit::Platform::current()->createAudioDevice(m_callbackBufferSize, numberOfInputChannels, numberOfOutputChannels, sampleRate, this, inputDeviceId));
+    m_audioDevice = adoptPtr(WebKit::Platform::current()->createAudioDevice(m_callbackBufferSize, numberOfInputChannels, numberOfOutputChannels, sampleRate, this));
     ASSERT(m_audioDevice);
 
     // Create a FIFO to handle the possibility of the callback size

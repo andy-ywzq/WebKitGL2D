@@ -35,7 +35,6 @@
 #include <public/WebAudioDevice.h>
 #include <public/WebData.h>
 #include <public/WebGamepads.h>
-#include <wtf/Forward.h>
 #else
 #include "WebAudioDevice.h"
 #include "WebData.h"
@@ -48,19 +47,6 @@ namespace WebKit {
 class WebAudioBus;
 class WebFFTFrame;
 class WebThemeEngine;
-
-class NixString {
-public:
-#if WEBKIT_IMPLEMENTATION
-    NixString(const WTF::String&);
-#endif
-    const char* data() const { return m_data; }
-private:
-    NixString();
-    const char* m_data;
-};
-
-typedef NixString WebString;
 
 class WEBKIT_EXPORT Platform {
 public:
@@ -76,7 +62,7 @@ public:
 
     // Creates a device for audio I/O.
     // Pass in (numberOfInputChannels > 0) if live/local audio input is desired.
-    virtual WebAudioDevice* createAudioDevice(size_t /*bufferSize*/, unsigned /*numberOfInputChannels*/, unsigned /*numberOfChannels*/, double /*sampleRate*/, WebAudioDevice::RenderCallback*, const WebString& /*deviceId*/) { return 0; }
+    virtual WebAudioDevice* createAudioDevice(size_t /*bufferSize*/, unsigned /*numberOfInputChannels*/, unsigned /*numberOfChannels*/, double /*sampleRate*/, WebAudioDevice::RenderCallback*) { return 0; }
 
 
     // Gamepad -------------------------------------------------------------
