@@ -32,19 +32,11 @@
 #define WebCommon_h
 
 // -----------------------------------------------------------------------------
-// Default configuration
-
-#if !defined(WEBKIT_IMPLEMENTATION)
-    #define WEBKIT_IMPLEMENTATION 0
-#endif
-
-// -----------------------------------------------------------------------------
 // Exported symbols need to be annotated with WEBKIT_EXPORT
 #define WEBKIT_EXPORT __attribute__((visibility("default")))
 
 // -----------------------------------------------------------------------------
 // Basic types
-
 #include <stddef.h> // For size_t
 
 namespace WebKit {

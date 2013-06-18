@@ -1,7 +1,7 @@
 #ifndef WebRect_h
 #define WebRect_h
 
-#if WEBKIT_IMPLEMENTATION
+#ifdef BUILDING_NIX__
 #include "IntRect.h"
 #endif
 
@@ -22,7 +22,7 @@ public:
     {
     }
 
-#if WEBKIT_IMPLEMENTATION
+#ifdef BUILDING_NIX__
     WebRect(const WebCore::IntRect& r)
         : x(r.x())
         , y(r.y())

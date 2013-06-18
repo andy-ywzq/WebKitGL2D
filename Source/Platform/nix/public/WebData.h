@@ -33,7 +33,7 @@
 
 #include "WebCommon.h"
 
-#if WEBKIT_IMPLEMENTATION
+#ifdef BUILDING_NIX__
 namespace WebCore { class SharedBuffer; }
 namespace WTF { template <typename T> class PassRefPtr; }
 #endif
@@ -81,7 +81,7 @@ public:
     bool isEmpty() const { return !size(); }
     bool isNull() const { return !m_private; }
 
-#if WEBKIT_IMPLEMENTATION
+#ifdef BUILDING_NIX__
     WebData(const WTF::PassRefPtr<WebCore::SharedBuffer>&);
     WebData& operator=(const WTF::PassRefPtr<WebCore::SharedBuffer>&);
     operator WTF::PassRefPtr<WebCore::SharedBuffer>() const;

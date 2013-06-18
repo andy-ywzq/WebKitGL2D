@@ -31,7 +31,7 @@
 #ifndef WebSize_h
 #define WebSize_h
 
-#if WEBKIT_IMPLEMENTATION
+#ifdef BUILDING_NIX__
 #include "IntSize.h"
 #endif
 
@@ -55,7 +55,7 @@ struct WebSize {
     {
     }
 
-#if WEBKIT_IMPLEMENTATION
+#ifdef BUILDING_NIX__
     WebSize(const WebCore::IntSize& s)
         : width(s.width())
         , height(s.height())
