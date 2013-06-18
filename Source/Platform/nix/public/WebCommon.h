@@ -73,23 +73,6 @@ typedef wchar_t WebUChar;
 typedef unsigned short WebUChar;
 #endif
 
-// -----------------------------------------------------------------------------
-// Assertions
-
-WEBKIT_EXPORT void failedAssertion(const char* file, int line, const char* function, const char* assertion);
-
 } // namespace WebKit
-
-// Ideally, only use inside the public directory but outside of WEBKIT_IMPLEMENTATION blocks.  (Otherwise use WTF's ASSERT.)
-#if defined(NDEBUG)
-#define WEBKIT_ASSERT(assertion) ((void)0)
-#else
-#define WEBKIT_ASSERT(assertion) do { \
-    if (!(assertion)) \
-        failedAssertion(__FILE__, __LINE__, __FUNCTION__, #assertion); \
-} while (0)
-#endif
-
-#define WEBKIT_ASSERT_NOT_REACHED() WEBKIT_ASSERT(0)
 
 #endif
