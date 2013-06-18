@@ -31,16 +31,9 @@
 #ifndef Platform_h
 #define Platform_h
 
-#if WEBKIT_IMPLEMENTATION
-#include <public/WebAudioDevice.h>
-#include <public/WebData.h>
-#include <public/WebGamepads.h>
-#else
 #include "WebAudioDevice.h"
 #include "WebData.h"
 #include "WebGamepads.h"
-#endif
-
 
 namespace WebKit {
 
