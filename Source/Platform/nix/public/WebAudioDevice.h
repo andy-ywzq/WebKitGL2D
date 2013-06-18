@@ -39,7 +39,7 @@ class WebAudioDevice {
 public:
     class RenderCallback {
     public:
-        virtual void render(const WebVector<float*>& /*sourceData*/, const WebVector<float*>& /*destinationData*/, size_t /*numberOfFrames*/) { };
+        virtual void render(const WebVector<float*>& /*sourceData*/, const WebVector<float*>& /*destinationData*/, size_t /*numberOfFrames*/) { }
 
     protected:
         virtual ~RenderCallback() { }
