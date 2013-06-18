@@ -28,8 +28,6 @@
 
 #include <algorithm>
 
-using namespace std;
-
 namespace WebKit {
 
 typedef unsigned RGBA32;        // RGBA quadruplet
@@ -56,7 +54,7 @@ struct WebColor
     }
 
     WebColor(int r, int g, int b, int a = 255)
-        : rgba(max(0, min(a, 255)) << 24 | max(0, min(r, 255)) << 16 | max(0, min(g, 255)) << 8 | max(0, min(b, 255)))
+        : rgba(std::max(0, std::min(a, 255)) << 24 | std::max(0, std::min(r, 255)) << 16 | std::max(0, std::min(g, 255)) << 8 | std::max(0, std::min(b, 255)))
     {
     }
 
