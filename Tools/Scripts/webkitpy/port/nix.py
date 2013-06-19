@@ -77,8 +77,6 @@ class NixPort(Port):
         if self.webprocess_cmd_prefix:
             env['WEB_PROCESS_CMD_PREFIX'] = self.webprocess_cmd_prefix
 
-        #env['XDG_CACHE_HOME'] = str(self._filesystem.mkdtemp(prefix='%s-Efl-CacheDir-' % self.driver_name()))
-        #env['XDG_DATA_HOME'] = str(self._filesystem.mkdtemp(prefix='%s-Efl-DataDir-' % self.driver_name()))
         return env
 
     def default_timeout_ms(self):
@@ -104,22 +102,11 @@ class NixPort(Port):
     def _image_diff_command(self, *args, **kwargs):
         return [self._jhbuild_wrapper_path] + super(NixPort, self)._image_diff_command(*args, **kwargs)
 
-    def _path_to_webcore_library(self):
-        static_path = self._build_path('lib', 'libwebcore_nix.a')
-        dyn_path = self._build_path('lib', 'libwebcore_nix.so')
-        return static_path if self._filesystem.exists(static_path) else dyn_path
-
     def _search_paths(self):
-        search_paths = []
-        search_paths.append(self.port_name)
-        return search_paths
+        return [ self.port_name ]
 
     def show_results_html_file(self, results_filename):
-        # FIXME: We should find a way to share this implmentation with Gtk,
-        # or teach run-launcher how to call run-safari and move this down to WebKitPort.
         run_launcher_args = ["file://%s" % results_filename]
-        # FIXME: old-run-webkit-tests also added ["-graphicssystem", "raster", "-style", "windows"]
-        # FIXME: old-run-webkit-tests converted results_filename path for cygwin.
         self._run_script("run-launcher", run_launcher_args)
 
     def _port_specific_expectations_files(self):
