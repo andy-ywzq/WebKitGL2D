@@ -38,8 +38,10 @@ list(APPEND TestWebKitAPIInjectedBundle_SOURCES
     ${TESTWEBKITAPI_DIR}/nix/PlatformUtilitiesNix.cpp
     ${TESTWEBKITAPI_DIR}/nix/MainLoop.cpp
     ${TESTWEBKITAPI_DIR}/Tests/nix/WebThemeEngine_Bundle.cpp
+    ${TESTWEBKITAPI_DIR}/Tests/WebKit2/DidAssociateFormControls_Bundle.cpp
     ${TESTWEBKITAPI_DIR}/Tests/WebKit2/MouseMoveAfterCrash_Bundle.cpp
     ${TESTWEBKITAPI_DIR}/Tests/WebKit2/WebWorker_Bundle.cpp
+    ${TESTWEBKITAPI_DIR}/Tests/WebKit2/WillLoad_Bundle.cpp
     ${TESTWEBKITAPI_DIR}/Tests/WebKit2/CoordinatedGraphics/WebViewWebProcessCrashed_Bundle.cpp
 )
 
@@ -84,9 +86,11 @@ set(webcoreTestList
 
 set(webkit2TestList
     WebKit2/AboutBlankLoad
+    WebKit2/CloseThenTerminate
     WebKit2/CookieManager
     WebKit2/DOMWindowExtensionBasic
     WebKit2/DOMWindowExtensionNoCache
+    WebKit2/DidAssociateFormControls
     WebKit2/DocumentStartUserScriptAlertCrash
     WebKit2/DownloadDecideDestinationCrash
     WebKit2/EvaluateJavaScript
@@ -97,9 +101,11 @@ set(webkit2TestList
     WebKit2/GetInjectedBundleInitializationUserDataCallback
     WebKit2/HitTestResultNodeHandle
     WebKit2/InjectedBundleBasic
+    WebKit2/InjectedBundleFrameHitTest
     WebKit2/InjectedBundleInitializationUserDataCallbackWins
     WebKit2/LoadAlternateHTMLStringWithNonDirectoryURL
     WebKit2/LoadCanceledNoServerRedirectCallback
+    WebKit2/LoadPageOnCrash
     WebKit2/MouseMoveAfterCrash
     WebKit2/NewFirstVisuallyNonEmptyLayout
     WebKit2/NewFirstVisuallyNonEmptyLayoutForImages
@@ -108,15 +114,19 @@ set(webkit2TestList
     WebKit2/ParentFrame
     WebKit2/PreventEmptyUserAgent
     WebKit2/PrivateBrowsingPushStateNoHistoryCallback
+    WebKit2/ReloadPageAfterCrash
+    WebKit2/ResizeWindowAfterCrash
     WebKit2/ResponsivenessTimerDoesntFireEarly
     WebKit2/RestoreSessionStateContainingFormData
     WebKit2/ShouldGoToBackForwardListItem
     WebKit2/SpacebarScrolling
+    WebKit2/TerminateTwice
     WebKit2/UserMessage
     WebKit2/WKConnection
     WebKit2/WKPreferences
     WebKit2/WKString
     WebKit2/WKStringJSString
+    WebKit2/WKURL
     WebKit2/WebWorker
     WebKit2/WillSendSubmitEvent
     WebKit2/WKPageGetScaleFactorNotZero
@@ -139,4 +149,6 @@ set(webkit2FailTestList
     WebKit2/ForceRepaint
     WebKit2/NewFirstVisuallyNonEmptyLayoutFrames
     WebKit2/NewFirstVisuallyNonEmptyLayoutFails
+    WebKit2/PageVisibilityState
+    WebKit2/WillLoad
 )
