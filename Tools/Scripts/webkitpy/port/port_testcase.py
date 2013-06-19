@@ -99,10 +99,8 @@ class PortTestCase(unittest.TestCase):
         self.assertEqual(port.default_max_locked_shards(), 1)
 
     def test_default_timeout_ms(self):
-        port = self.make_port(options=MockOptions(configuration='Release'))
-        self.assertEqual(port.default_timeout_ms(), 80000 if port.get_option('webkit_test_runner') else 35000)
-        port = self.make_port(options=MockOptions(configuration='Debug'))
-        self.assertEqual(port.default_timeout_ms(), 80000 if port.get_option('webkit_test_runner') else 35000)
+        self.assertEqual(self.make_port(options=MockOptions(configuration='Release')).default_timeout_ms(), 35000)
+        self.assertEqual(self.make_port(options=MockOptions(configuration='Debug')).default_timeout_ms(), 35000)
 
     def test_default_pixel_tests(self):
         self.assertEqual(self.make_port().default_pixel_tests(), False)
