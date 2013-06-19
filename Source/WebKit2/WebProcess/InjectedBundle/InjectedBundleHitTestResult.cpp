@@ -110,8 +110,10 @@ BundleHitTestResultMediaType InjectedBundleHitTestResult::getMediaType() const
     if (!node->isElementNode())
         return BundleHitTestResultMediaTypeNone;
     
+#if ENABLE(VIDEO)
     if (!toElement(node)->isMediaElement())
         return BundleHitTestResultMediaTypeNone;
+#endif
     
     return m_hitTestResult.mediaIsVideo() ? BundleHitTestResultMediaTypeVideo : BundleHitTestResultMediaTypeAudio;    
 }
