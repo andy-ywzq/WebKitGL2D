@@ -114,3 +114,6 @@ class NixPort(Port):
         if self.get_option('webkit_test_runner'):
             paths.append('wk2')
         return list(([self._filesystem.join(self._webkit_baseline_path(p), 'TestExpectations') for p in paths]))
+
+    def default_baseline_search_path(self):
+        return map(self._webkit_baseline_path, ['nix', 'wk2'])

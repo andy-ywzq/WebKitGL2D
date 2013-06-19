@@ -223,9 +223,8 @@ class Port(object):
         search_paths = []
         if self.get_option('webkit_test_runner'):
             search_paths.append(self._wk2_port_name())
-        if self.name() not in search_paths:
-            search_paths.append(self.name())
-        if self.name() != self.port_name and self.port_name not in search_paths:
+        search_paths.append(self.name())
+        if self.name() != self.port_name:
             search_paths.append(self.port_name)
         return map(self._webkit_baseline_path, search_paths)
 
