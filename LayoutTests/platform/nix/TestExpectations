@@ -1852,7 +1852,6 @@ http/tests/xmlhttprequest/workers/methods-async.html [ Skip ]
 http/tests/xmlhttprequest/workers/methods.html [ Skip ]
 http/tests/xmlhttprequest/workers/shared-worker-methods-async.html [ Skip ]
 http/tests/xmlhttprequest/workers/shared-worker-methods.html [ Skip ]
-ietestcenter/css3/bordersbackgrounds/background_repeat_space_border_box.htm [ Skip ]
 ietestcenter/css3/bordersbackgrounds/background-repeat-space-padding-box.htm [ Skip ]
 ietestcenter/css3/flexbox/flexbox-align-stretch-001.htm [ Skip ]
 ietestcenter/css3/flexbox/flexbox-layout-002.htm [ Skip ]
@@ -3156,8 +3155,6 @@ compositing/color-matching/image-color-matching.html [ Crash Missing ]
 compositing/overflow/overflow-compositing-descendant.html [ Crash Missing ]
 fast/dom/remove-body-during-body-replacement2.html [ Crash Pass ]
 fast/masking/parsing-clip-path-shape.html [ Crash Pass ]
-inspector-protocol/dom-focus.html [ Crash Pass ]
-inspector-protocol/dom-request-child-nodes-depth.html [ Crash Pass ]
 canvas/philip/tests/2d.canvas.reference.html [ Timeout Pass ]
 compositing/absolute-position-changed-in-composited-layer.html [ Timeout Pass ]
 compositing/animation/animation-compositing.html [ Timeout Pass ]
@@ -3289,10 +3286,6 @@ fast/dom/HTMLTemplateElement/ownerDocumentXHTML.xhtml [ Failure ]
 http/tests/xmlhttprequest/access-control-preflight-async-header-denied.html [ Failure Pass ]
 http/tests/xmlhttprequest/cross-site-denied-response.html [ Failure Pass ]
 http/tests/xmlhttprequest/origin-whitelisting-https.html [ Failure Pass ]
-
-html5lib/generated/run-domjs-unsafe-data.html [ Skip ]
-html5lib/generated/run-pending-spec-changes-plain-text-unsafe-data.html [ Skip ]
-html5lib/generated/run-plain-text-unsafe-data.html [ Skip ]
 
 # These tests fail with timeout
 fast/events/wheelevent-in-text-node.html
@@ -3960,14 +3953,6 @@ fast/transforms/bounding-rect-zoom.html [ Missing ]
 fast/transforms/transformed-document-element.html [ Missing ]
 fast/transforms/transforms-with-zoom.html [ Missing ]
 fast/writing-mode/fieldsets.html [ Missing ]
-ietestcenter/css3/bordersbackgrounds/border-radius-applies-to-009.htm [ Missing ]
-ietestcenter/css3/bordersbackgrounds/border-radius-applies-to-012.htm [ Missing ]
-ietestcenter/css3/bordersbackgrounds/border-radius-applies-to-013.htm [ Missing ]
-ietestcenter/css3/bordersbackgrounds/border-radius-applies-to-014.htm [ Missing ]
-ietestcenter/css3/bordersbackgrounds/border-radius-applies-to-015.htm [ Missing ]
-ietestcenter/css3/bordersbackgrounds/border-radius-applies-to-016.htm [ Missing ]
-ietestcenter/css3/bordersbackgrounds/border-radius-clip-002.htm [ Missing ]
-ietestcenter/css3/bordersbackgrounds/border-top-left-radius-values-001.htm [ Missing ]
 svg/as-border-image/svg-as-border-image-2.html [ Missing ]
 svg/carto.net/scrollbar.svg [ Missing ]
 svg/carto.net/selectionlist.svg [ Missing ]
@@ -4088,7 +4073,6 @@ fast/regions/seamless-iframe-flowed-into-regions.html
 fullscreen/full-screen-table-section.html
 fullscreen/video-cursor-auto-hide.html
 http/tests/misc/delete-frame-during-readystatechange-with-gc-after-video-removal.html
-ietestcenter/css3/flexbox/flexbox-align-baseline-001.htm
 
 # Flakey and failing tests after merge dff29f8 8abe6e2
 editing/pasteboard/cleanup-on-move.html
@@ -4219,7 +4203,7 @@ fast/dom/shadow/distributed-pseudo-element-support-selector.html
 fast/dom/shadow/distributed-pseudo-element-used-in-selector-list.html
 fast/dom/shadow/distributed-pseudo-element-with-any.html
 fast/dom/shadow/distributed-pseudo-element.html
-fast/dom/shadow/no-style-sharing-with-distributed-nodes.
+fast/dom/shadow/no-style-sharing-with-distributed-nodes.html
 compositing/overflow/overflow-clip-with-accelerated-scrolling-ancestor.html
 fast/frames/flattening/scrolling-in-object.html
 mathml/presentation/fractions.xhtml
