@@ -37,7 +37,7 @@ class NixPortTest(port_testcase.PortTestCase):
     port_name = 'nix'
     port_maker = NixPort
     search_paths_cases = [
-        {'search_paths':['nix'], 'os_name':'linux'}
+        {'search_paths':['nix', 'wk2'], 'os_name':'linux'}
     ]
     expectation_files_cases = [
         {'search_paths':['', 'nix', 'wk2'], 'os_name':'linux'}
@@ -64,3 +64,7 @@ class NixPortTest(port_testcase.PortTestCase):
             expectations_case = deepcopy(case)
             expectations_case['search_paths'] = map(lambda path: '/mock-checkout/LayoutTests/TestExpectations'  if not path else '/mock-checkout/LayoutTests/platform/%s/TestExpectations' % (path), expectations_case['search_paths'])
             self._assert_expectations_files(**expectations_case)
+
+    def test_default_timeout_ms(self):
+        self.assertEqual(self.make_port(options=MockOptions(configuration='Release')).default_timeout_ms(), 80000)
+        self.assertEqual(self.make_port(options=MockOptions(configuration='Debug')).default_timeout_ms(), 80000)
