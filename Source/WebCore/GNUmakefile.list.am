@@ -1387,6 +1387,7 @@ dom_binding_idls += \
 	$(WebCore)/dom/BeforeLoadEvent.idl \
 	$(WebCore)/dom/CDATASection.idl \
 	$(WebCore)/dom/CharacterData.idl \
+	$(WebCore)/dom/ChildNode.idl \
 	$(WebCore)/dom/ClientRect.idl \
 	$(WebCore)/dom/ClientRectList.idl \
 	$(WebCore)/dom/Clipboard.idl \
@@ -2378,7 +2379,6 @@ webcore_sources += \
 	Source/WebCore/bindings/js/JSDOMPluginCustom.cpp \
 	Source/WebCore/bindings/js/JSDOMStringListCustom.cpp \
 	Source/WebCore/bindings/js/JSDOMStringMapCustom.cpp \
-	Source/WebCore/bindings/js/JSDOMStringMapCustom.h \
 	Source/WebCore/bindings/js/JSDOMTokenListCustom.cpp \
 	Source/WebCore/bindings/js/JSDOMWindowBase.cpp \
 	Source/WebCore/bindings/js/JSDOMWindowBase.h \
@@ -2408,13 +2408,11 @@ webcore_sources += \
 	Source/WebCore/bindings/js/JSGeolocationCustom.cpp \
 	Source/WebCore/bindings/js/JSHTMLAllCollectionCustom.cpp \
 	Source/WebCore/bindings/js/JSHTMLAppletElementCustom.cpp \
-	Source/WebCore/bindings/js/JSHTMLAppletElementCustom.h \
 	Source/WebCore/bindings/js/JSHTMLCanvasElementCustom.cpp \
 	Source/WebCore/bindings/js/JSHTMLCollectionCustom.cpp \
 	Source/WebCore/bindings/js/JSHTMLDocumentCustom.cpp \
 	Source/WebCore/bindings/js/JSHTMLElementCustom.cpp \
 	Source/WebCore/bindings/js/JSHTMLEmbedElementCustom.cpp \
-	Source/WebCore/bindings/js/JSHTMLEmbedElementCustom.h \
 	Source/WebCore/bindings/js/JSHTMLFormControlsCollectionCustom.cpp \
 	Source/WebCore/bindings/js/JSHTMLFormElementCustom.cpp \
 	Source/WebCore/bindings/js/JSHTMLFrameElementCustom.cpp \
@@ -2424,14 +2422,12 @@ webcore_sources += \
 	Source/WebCore/bindings/js/JSHTMLLinkElementCustom.cpp \
 	Source/WebCore/bindings/js/JSHTMLMediaElementCustom.cpp \
 	Source/WebCore/bindings/js/JSHTMLObjectElementCustom.cpp \
-	Source/WebCore/bindings/js/JSHTMLObjectElementCustom.h \
 	Source/WebCore/bindings/js/JSHTMLOptionsCollectionCustom.cpp \
 	Source/WebCore/bindings/js/JSHTMLSelectElementCustom.cpp \
 	Source/WebCore/bindings/js/JSHTMLSelectElementCustom.h \
 	Source/WebCore/bindings/js/JSHTMLStyleElementCustom.cpp \
 	Source/WebCore/bindings/js/JSHTMLTemplateElementCustom.cpp \
 	Source/WebCore/bindings/js/JSHistoryCustom.cpp \
-	Source/WebCore/bindings/js/JSHistoryCustom.h \
 	Source/WebCore/bindings/js/JSIDBAnyCustom.cpp \
 	Source/WebCore/bindings/js/JSIDBDatabaseCustom.cpp \
 	Source/WebCore/bindings/js/JSIDBObjectStoreCustom.cpp \
@@ -2445,7 +2441,6 @@ webcore_sources += \
 	Source/WebCore/bindings/js/JSLazyEventListener.cpp \
 	Source/WebCore/bindings/js/JSLazyEventListener.h \
 	Source/WebCore/bindings/js/JSLocationCustom.cpp \
-	Source/WebCore/bindings/js/JSLocationCustom.h \
 	Source/WebCore/bindings/js/JSMainThreadExecState.cpp \
 	Source/WebCore/bindings/js/JSMainThreadExecState.h \
 	Source/WebCore/bindings/js/JSMediaListCustom.h \
@@ -2480,7 +2475,6 @@ webcore_sources += \
 	Source/WebCore/bindings/js/JSRTCStatsResponseCustom.cpp \
 	Source/WebCore/bindings/js/JSSharedWorkerCustom.cpp \
 	Source/WebCore/bindings/js/JSStorageCustom.cpp \
-	Source/WebCore/bindings/js/JSStorageCustom.h \
 	Source/WebCore/bindings/js/JSStyleSheetCustom.cpp \
 	Source/WebCore/bindings/js/JSStyleSheetCustom.h \
 	Source/WebCore/bindings/js/JSStyleSheetListCustom.cpp \

@@ -1652,27 +1652,40 @@ static inline LayoutUnit adjustLogicalLineTop(ShapeInsideInfo* shapeInsideInfo, 
     return shapeInsideInfo->shapeLogicalBottom();
 }
 
-void RenderBlock::updateShapeAndSegmentsForCurrentLine(ShapeInsideInfo*& shapeInsideInfo, LayoutUnit& absoluteLogicalTop, LineLayoutState& layoutState, bool& lineOverflowsFromShapeInside)
+static inline void pushShapeContentOverflowBelowTheContentBox(RenderBlock* block, ShapeInsideInfo* shapeInsideInfo, LayoutUnit lineTop, LayoutUnit lineHeight)
+{
+    ASSERT(shapeInsideInfo);
+
+    LayoutUnit logicalLineBottom = lineTop + lineHeight;
+    LayoutUnit shapeContainingBlockHeight = shapeInsideInfo->shapeContainingBlockHeight();
+
+    bool isOverflowPositionedAlready = (shapeContainingBlockHeight - shapeInsideInfo->owner()->borderAndPaddingAfter() + lineHeight) <= lineTop;
+
+    if (logicalLineBottom <= shapeInsideInfo->shapeLogicalBottom() || !shapeContainingBlockHeight || isOverflowPositionedAlready)
+        return;
+
+    LayoutUnit newLogicalHeight = block->logicalHeight() + (shapeContainingBlockHeight - (lineTop + shapeInsideInfo->owner()->borderAndPaddingAfter()));
+    block->setLogicalHeight(newLogicalHeight);
+}
+
+void RenderBlock::updateShapeAndSegmentsForCurrentLine(ShapeInsideInfo*& shapeInsideInfo, LayoutUnit& absoluteLogicalTop, LineLayoutState& layoutState)
 {
     if (layoutState.flowThread())
-        return updateShapeAndSegmentsForCurrentLineInFlowThread(shapeInsideInfo, layoutState, lineOverflowsFromShapeInside);
+        return updateShapeAndSegmentsForCurrentLineInFlowThread(shapeInsideInfo, layoutState);
 
     if (!shapeInsideInfo)
         return;
 
     LayoutUnit lineTop = logicalHeight() + absoluteLogicalTop;
-    // FIXME: Bug 95361: It is possible for a line to grow beyond lineHeight, in which case these segments may be incorrect.
-    shapeInsideInfo->computeSegmentsForLine(lineTop, lineHeight(layoutState.lineInfo().isFirstLine(), isHorizontalWritingMode() ? HorizontalLine : VerticalLine, PositionOfInteriorLineBoxes));
+    LayoutUnit lineHeight = this->lineHeight(layoutState.lineInfo().isFirstLine(), isHorizontalWritingMode() ? HorizontalLine : VerticalLine, PositionOfInteriorLineBoxes);
 
-    // The overflow should be pushed below the content box
-    LayoutUnit shapeContainingBlockHeight = shapeInsideInfo->shapeContainingBlockHeight();
-    if (!shapeInsideInfo->lineWithinShapeBounds() && !lineOverflowsFromShapeInside && shapeContainingBlockHeight) {
-        lineOverflowsFromShapeInside = true;
-        setLogicalHeight(shapeContainingBlockHeight);
-    }
+    // FIXME: Bug 95361: It is possible for a line to grow beyond lineHeight, in which case these segments may be incorrect.
+    shapeInsideInfo->computeSegmentsForLine(lineTop, lineHeight);
+
+    pushShapeContentOverflowBelowTheContentBox(this, shapeInsideInfo, lineTop, lineHeight);
 }
 
-void RenderBlock::updateShapeAndSegmentsForCurrentLineInFlowThread(ShapeInsideInfo*& shapeInsideInfo, LineLayoutState& layoutState, bool& lineOverflowsFromShapeInside)
+void RenderBlock::updateShapeAndSegmentsForCurrentLineInFlowThread(ShapeInsideInfo*& shapeInsideInfo, LineLayoutState& layoutState)
 {
     ASSERT(layoutState.flowThread());
 
@@ -1740,12 +1753,8 @@ void RenderBlock::updateShapeAndSegmentsForCurrentLineInFlowThread(ShapeInsideIn
     LayoutUnit lineTop = logicalLineTopInFlowThread - currentRegion->logicalTopForFlowThreadContent() + currentRegion->borderAndPaddingBefore();
     shapeInsideInfo->computeSegmentsForLine(lineTop, lineHeight);
 
-    // Overflow from last shape on last region should be pushed below the content box
-    if (currentRegion->isLastRegion() && !lineOverflowsFromShapeInside && (lineTop + lineHeight) > shapeInsideInfo->shapeLogicalBottom()) {
-        lineOverflowsFromShapeInside = true;
-        LayoutUnit newLogicalHeight = this->logicalHeight() + (shapeInsideInfo->shapeContainingBlockHeight() - (lineTop + currentRegion->borderAndPaddingAfter()));
-        setLogicalHeight(newLogicalHeight);
-    }
+    if (currentRegion->isLastRegion())
+        pushShapeContentOverflowBelowTheContentBox(this, shapeInsideInfo, lineTop, lineHeight);
 }
 
 bool RenderBlock::adjustLogicalLineTopAndLogicalHeightIfNeeded(ShapeInsideInfo* shapeInsideInfo, LayoutUnit absoluteLogicalTop, LineLayoutState& layoutState, InlineBidiResolver& resolver, FloatingObject* lastFloatFromPreviousLine, InlineIterator& end, WordMeasurements& wordMeasurements)
@@ -1797,8 +1806,6 @@ void RenderBlock::layoutRunsAndFloatsInRange(LineLayoutState& layoutState, Inlin
             setLogicalHeight(logicalHeight);
         }
     }
-
-    bool lineOverflowsFromShapeInside = false;
 #endif
 
     while (!end.atEnd()) {
@@ -1821,7 +1828,7 @@ void RenderBlock::layoutRunsAndFloatsInRange(LineLayoutState& layoutState, Inlin
         FloatingObject* lastFloatFromPreviousLine = (containsFloats()) ? m_floatingObjects->set().last() : 0;
 
 #if ENABLE(CSS_SHAPES)
-        updateShapeAndSegmentsForCurrentLine(shapeInsideInfo, absoluteLogicalTop, layoutState, lineOverflowsFromShapeInside);
+        updateShapeAndSegmentsForCurrentLine(shapeInsideInfo, absoluteLogicalTop, layoutState);
 #endif
         WordMeasurements wordMeasurements;
         end = lineBreaker.nextLineBreak(resolver, layoutState.lineInfo(), renderTextInfo, lastFloatFromPreviousLine, consecutiveHyphenatedLines, wordMeasurements);

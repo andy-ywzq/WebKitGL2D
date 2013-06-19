@@ -6784,6 +6784,9 @@
     <ClCompile Include="$(ConfigurationBuildDir)\obj32\$(ProjectName)\DerivedSources\XPathGrammar.cpp">
       <Filter>DerivedSources</Filter>
     </ClCompile>
+    <ClCompile Include="..\accessibility\AccessibilityNodeObject.cpp">
+      <Filter>accessibility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Modules\filesystem\AsyncFileWriter.h">
@@ -11310,19 +11313,10 @@
     <ClInclude Include="..\bindings\js\JSDOMGlobalObject.h">
       <Filter>bindings\js</Filter>
     </ClInclude>
-    <ClInclude Include="..\bindings\js\JSDOMStringMapCustom.h">
-      <Filter>bindings\js</Filter>
-    </ClInclude>
     <ClInclude Include="..\bindings\js\JSErrorHandler.h">
       <Filter>bindings\js</Filter>
     </ClInclude>
-    <ClInclude Include="..\bindings\js\JSHTMLEmbedElementCustom.h">
-      <Filter>bindings\js</Filter>
-    </ClInclude>
     <ClInclude Include="..\bindings\js\JSHTMLInputElementCustom.h">
-      <Filter>bindings\js</Filter>
-    </ClInclude>
-    <ClInclude Include="..\bindings\js\JSHTMLObjectElementCustom.h">
       <Filter>bindings\js</Filter>
     </ClInclude>
     <ClInclude Include="..\bindings\js\JSHTMLSelectElementCustom.h">
@@ -11332,9 +11326,6 @@
       <Filter>bindings\js</Filter>
     </ClInclude>
     <ClInclude Include="..\bindings\js\JSLazyEventListener.h">
-      <Filter>bindings\js</Filter>
-    </ClInclude>
-    <ClInclude Include="..\bindings\js\JSLocationCustom.h">
       <Filter>bindings\js</Filter>
     </ClInclude>
     <ClInclude Include="..\bindings\js\JSMainThreadExecState.h">
@@ -11353,9 +11344,6 @@
       <Filter>bindings\js</Filter>
     </ClInclude>
     <ClInclude Include="..\bindings\js\JSPluginElementFunctions.h">
-      <Filter>bindings\js</Filter>
-    </ClInclude>
-    <ClInclude Include="..\bindings\js\JSStorageCustom.h">
       <Filter>bindings\js</Filter>
     </ClInclude>
     <ClInclude Include="..\bindings\js\JSWorkerContextBase.h">
@@ -12761,12 +12749,6 @@
       <Filter>bindings\js</Filter>
     </ClInclude>
     <ClInclude Include="..\bindings\js\JSExceptionBase.h">
-      <Filter>bindings\js</Filter>
-    </ClInclude>
-    <ClInclude Include="..\bindings\js\JSHistoryCustom.h">
-      <Filter>bindings\js</Filter>
-    </ClInclude>
-    <ClInclude Include="..\bindings\js\JSHTMLAppletElementCustom.h">
       <Filter>bindings\js</Filter>
     </ClInclude>
     <ClInclude Include="..\bindings\js\JSDOMWindowBase.h">
@@ -14242,6 +14224,9 @@
     </ClInclude>
     <ClInclude Include="$(ConfigurationBuildDir)\obj32\$(ProjectName)\DerivedSources\XMLViewerJS.h">
       <Filter>DerivedSources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\accessibility\AccessibilityNodeObject.h">
+      <Filter>accessibility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

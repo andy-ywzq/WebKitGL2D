@@ -1,3 +1,937 @@
+2013-06-19  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        Fix a few missed renames from Exclusions -> Shapes
+        https://bugs.webkit.org/show_bug.cgi?id=117803
+
+        Reviewed by David Hyatt.
+
+        In the great CSS Exclusions to CSS Shapes rename, a few instances were
+        missed. This fixes those instances.
+
+        No new tests, no behavior change, just renames.
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::updateRegionsAndShapesBeforeChildLayout):
+        (WebCore::RenderBlock::updateRegionsAndShapesAfterChildLayout):
+        (WebCore::RenderBlock::layoutBlock):
+        (WebCore::RenderBlock::logicalLeftOffsetForLine):
+        (WebCore::RenderBlock::logicalRightOffsetForLine):
+        * rendering/RenderBlock.h:
+        * rendering/RenderDeprecatedFlexibleBox.cpp:
+        (WebCore::RenderDeprecatedFlexibleBox::layoutBlock):
+        * rendering/RenderFlexibleBox.cpp:
+        (WebCore::RenderFlexibleBox::layoutBlock):
+        * rendering/RenderGrid.cpp:
+        (WebCore::RenderGrid::layoutBlock):
+
+2013-06-19  Oliver Hunt  <oliver@apple.com>
+
+        Incorrect use of jsCast in a finalizer
+        https://bugs.webkit.org/show_bug.cgi?id=117807
+
+        Reviewed by Geoffrey Garen.
+
+        We can't use jsCast in a finalizer as it checks an object's structure,
+        and the structure may already have been swept by that point.  Use a
+        static_cast instead.
+
+        * bridge/runtime_array.cpp:
+        (JSC::RuntimeArray::destroy):
+
+2013-06-19  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] AX: Extend notification handling
+        https://bugs.webkit.org/show_bug.cgi?id=117761.
+
+        Reviewed by Anders Carlsson.
+
+        accessibility/press-works-on-control-types.html
+
+        * accessibility/win/AXObjectCacheWin.cpp:
+        (WebCore::AXObjectCache::postPlatformNotification): Add handlers for more event notifications.
+        * accessibility/win/AccessibilityObjectWrapperWin.cpp:
+        (WebCore::AccessibilityObjectWrapper::accessibilityAttributeValue): Protect against null
+        pointer dereference found during testing.
+        * dom/Document.cpp:
+        (WebCore::Document::implicitClose): Execute notification handler for Windows as well as Mac.
+        * page/FrameView.cpp:
+        (WebCore::FrameView::layout): Ditto.
+
+2013-06-19  peavo@outlook.com  <peavo@outlook.com>
+
+        [WinCairo] Webfont rendering is broken.
+        https://bugs.webkit.org/show_bug.cgi?id=117695
+
+        Reviewed by Brent Fulgham.
+
+        The native font handle created from webfont data is invalid.
+        In much the same way it's done in WinApple, we first need to install the webfont,
+        create a native font handle from the new font name,
+        and pass the font handle to the FontPlatformData object, where it's needed to get the glyphs.
+
+        * platform/graphics/FontPlatformData.h: Added HFONT parameter to constructor.
+        * platform/graphics/win/FontCustomPlatformDataCairo.cpp:
+        (WebCore::FontCustomPlatformData::~FontCustomPlatformData): Release installed webfont.
+        (WebCore::FontCustomPlatformData::fontPlatformData): Create valid HFONT handle for webfont.
+        (WebCore::createUniqueFontName): Added method to create webfont name.
+        (WebCore::createFontCustomPlatformData): Install font from webfont data.
+        * platform/graphics/win/FontCustomPlatformDataCairo.h: Removed.
+        * platform/graphics/win/FontPlatformDataCairoWin.cpp:
+        (WebCore::FontPlatformData::FontPlatformData): Added HFONT parameter to constructor.
+
+2013-06-19  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Implement WebIDL implements
+        https://bugs.webkit.org/show_bug.cgi?id=117785
+
+        Reviewed by Kentaro Hara.
+
+        Add support for Web IDL 'implements' statements to the bindings generator:
+        http://www.w3.org/TR/WebIDL/#dfn-implements-statement
+
+        Introduce ChildNode IDL interface and have Element, DocumentType and
+        CharacterData implement it, to match the specification:
+        http://dom.spec.whatwg.org/#childnode
+
+        There is no change in behavior, merely refactoring to match the
+        specification by leveraging support for Web IDL implements statements.
+
+        No new tests, no behavior change.
+
+        * CMakeLists.txt:
+        * DerivedSources.make:
+        * DerivedSources.pri:
+        * GNUmakefile.list.am:
+        * bindings/scripts/generate-bindings.pl:
+        * bindings/scripts/preprocess-idls.pl:
+        (GeneratePartialInterface):
+        (getImplementersFromIDL):
+        * bindings/scripts/test/CPP/WebDOMTestImplements.cpp: Added.
+        * bindings/scripts/test/CPP/WebDOMTestImplements.h: Added.
+        * bindings/scripts/test/CPP/WebDOMTestInterface.cpp:
+        (WebDOMTestInterface::implementsStr1):
+        (WebDOMTestInterface::implementsStr2):
+        (WebDOMTestInterface::setImplementsStr2):
+        (WebDOMTestInterface::implementsNode):
+        (WebDOMTestInterface::setImplementsNode):
+        (WebDOMTestInterface::implementsMethod1):
+        (WebDOMTestInterface::implementsMethod4):
+        * bindings/scripts/test/CPP/WebDOMTestInterface.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestImplements.cpp: Added.
+        * bindings/scripts/test/GObject/WebKitDOMTestImplements.h: Added.
+        * bindings/scripts/test/GObject/WebKitDOMTestInterface.cpp:
+        (webkit_dom_test_interface_set_property):
+        (webkit_dom_test_interface_get_property):
+        (webkit_dom_test_interface_class_init):
+        (webkit_dom_test_interface_implements_method1):
+        (webkit_dom_test_interface_implements_method2):
+        (webkit_dom_test_interface_implements_method4):
+        (webkit_dom_test_interface_get_implements_str1):
+        (webkit_dom_test_interface_get_implements_str2):
+        (webkit_dom_test_interface_set_implements_str2):
+        (webkit_dom_test_interface_get_implements_node):
+        (webkit_dom_test_interface_set_implements_node):
+        * bindings/scripts/test/GObject/WebKitDOMTestInterface.h:
+        * bindings/scripts/test/JS/JSTestImplements.cpp: Added.
+        * bindings/scripts/test/JS/JSTestImplements.h: Added.
+        * bindings/scripts/test/JS/JSTestInterface.cpp:
+        (WebCore::jsTestInterfaceConstructorImplementsStaticReadOnlyAttr):
+        (WebCore::jsTestInterfaceConstructorImplementsStaticAttr):
+        (WebCore::jsTestInterfaceImplementsStr1):
+        (WebCore::jsTestInterfaceImplementsStr2):
+        (WebCore::jsTestInterfaceImplementsStr3):
+        (WebCore::jsTestInterfaceImplementsNode):
+        (WebCore::setJSTestInterfaceConstructorImplementsStaticAttr):
+        (WebCore::setJSTestInterfaceImplementsStr2):
+        (WebCore::setJSTestInterfaceImplementsStr3):
+        (WebCore::setJSTestInterfaceImplementsNode):
+        (WebCore::jsTestInterfacePrototypeFunctionImplementsMethod1):
+        (WebCore::jsTestInterfacePrototypeFunctionImplementsMethod2):
+        (WebCore::jsTestInterfacePrototypeFunctionImplementsMethod3):
+        (WebCore::jsTestInterfaceConstructorFunctionImplementsMethod4):
+        (WebCore::jsTestInterfaceIMPLEMENTSCONSTANT1):
+        (WebCore::jsTestInterfaceIMPLEMENTSCONSTANT2):
+        * bindings/scripts/test/JS/JSTestInterface.h:
+        * bindings/scripts/test/ObjC/DOMTestImplements.cpp: Added.
+        * bindings/scripts/test/ObjC/DOMTestImplements.h: Added.
+        * bindings/scripts/test/ObjC/DOMTestInterface.h:
+        * bindings/scripts/test/ObjC/DOMTestInterface.mm:
+        (-[DOMTestInterface implementsStr1]):
+        (-[DOMTestInterface implementsStr2]):
+        (-[DOMTestInterface setImplementsStr2:]):
+        (-[DOMTestInterface implementsStr3]):
+        (-[DOMTestInterface setImplementsStr3:]):
+        (-[DOMTestInterface implementsNode]):
+        (-[DOMTestInterface setImplementsNode:]):
+        (-[DOMTestInterface implementsMethod1]):
+        (-[DOMTestInterface implementsMethod2:objArg:]):
+        (-[DOMTestInterface implementsMethod3]):
+        (-[DOMTestInterface implementsMethod4]):
+        * bindings/scripts/test/TestImplements.idl: Added.
+        * dom/CharacterData.idl:
+        * dom/ChildNode.idl: Copied from Source/WebCore/dom/DocumentType.idl.
+        * dom/DocumentType.idl:
+        * dom/Element.idl:
+
+2013-06-19  Robert Hogan  <robert@webkit.org>
+
+        Incorrect computation of shrink-to-fit width for block with white-space:nowrap and floating children
+        https://bugs.webkit.org/show_bug.cgi?id=114879
+
+        Reviewed by David Hyatt.
+        Per http://www.w3.org/TR/CSS21/visudet.html#Computing_widths_and_margins when width is auto then floating non-replaced,
+        absolute non-replaced, and inline-block non-replaced elements should use shrink-to-fit width. This trumps any no-wrap property 
+        on the element so if we are shrinking to fit ensure our minimum width respects all possible line breaks.
+
+        Test: fast/block/shrink-to-fit-width-container-with-floating-children.html
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::computeIntrinsicLogicalWidths):
+
+2013-06-19  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Do not require JS*Custom.h header if [CustomPutFunction] / [CustomNamedSetter] is used
+        https://bugs.webkit.org/show_bug.cgi?id=117795
+
+        Reviewed by Kentaro Hara.
+
+        Fix the JS bindings generator so that it stops including JS*Custom.h header whenever
+        [CustomPutFunction] or [CustomNamedSetter] IDL extended attributes are used. We don't
+        really need this custom header and this forces the developer to create dummy custom
+        headers so that it builds.
+
+        If the developer really needs such custom header to be included, he can still use
+        [JSCustomHeader] IDL extended attribute to do so.
+
+        This patch also remove the dummy custom headers that were created but are no longer
+        required to build.
+
+        No new tests, no behavior change. Already covered by the following bindings test:
+        TestInterface.idl
+
+        * GNUmakefile.list.am:
+        * Target.pri:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/js/JSDOMStringMapCustom.h: Removed.
+        * bindings/js/JSHTMLAppletElementCustom.cpp:
+        * bindings/js/JSHTMLAppletElementCustom.h: Removed.
+        * bindings/js/JSHTMLEmbedElementCustom.cpp:
+        * bindings/js/JSHTMLEmbedElementCustom.h: Removed.
+        * bindings/js/JSHTMLObjectElementCustom.cpp:
+        * bindings/js/JSHTMLObjectElementCustom.h: Removed.
+        * bindings/js/JSHistoryCustom.cpp:
+        * bindings/js/JSHistoryCustom.h: Removed.
+        * bindings/js/JSLocationCustom.cpp:
+        * bindings/js/JSLocationCustom.h: Removed.
+        * bindings/js/JSStorageCustom.cpp:
+        * bindings/js/JSStorageCustom.h: Removed.
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateHeader):
+
+2013-06-19  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [BlackBerry] Several tests crash due to an assert when creating an ImageBuffer
+        https://bugs.webkit.org/show_bug.cgi?id=117793
+
+        Reviewed by Rob Buis.
+
+        JIRA 388741
+
+        Fixes a crash in several layout tests due to an assert when
+        creating an ImageBuffer with an empty size.
+
+        * platform/graphics/blackberry/ImageBufferBlackBerry.cpp:
+        (WebCore::ImageBuffer::ImageBuffer): Return early if the given
+        size is empty.
+
+2013-06-19  Víctor Manuel Jáquez Leal  <vjaquez@igalia.com>
+
+        [GStreamer] [texmap] the bytesPerLine is wrong when updating the texture
+        https://bugs.webkit.org/show_bug.cgi?id=117551
+
+        Reviewed by Philippe Normand.
+
+        The bytesPerLine (or stride) is wrong when updating the texture
+        content. This is because the naturalSize() is not updated to the
+        current buffer. This patch extracts the current value of the size and
+        the stride.
+
+        No tests required.
+
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamerBase.cpp:
+        (WebCore::MediaPlayerPrivateGStreamerBase::updateTexture):
+        (WebCore::MediaPlayerPrivateGStreamerBase::paintToTextureMapper):
+
+2013-06-19  Andre Moreira Magalhaes   <andre.magalhaes@collabora.co.uk>
+
+        Adjust internal size on gstreamer source element when receiving data if necessary
+        https://bugs.webkit.org/show_bug.cgi?id=116534
+
+        Reviewed by Philippe Normand.
+
+        If the size received in didReceiveResponse is smaller than the actual size of the received data
+        update the internal size and the appsrc size to the proper value.
+
+        * platform/graphics/gstreamer/WebKitWebSourceGStreamer.cpp:
+        (StreamingClient::didReceiveData):
+
+2013-06-19  Víctor Manuel Jáquez Leal  <vjaquez@igalia.com>
+
+        [GStreamer] Potential race condition when getting the video sink caps.
+        https://bugs.webkit.org/show_bug.cgi?id=117736
+
+        Reviewed by Philippe Normand.
+
+        There is a potential race condition with the pad setting caps, as the
+        buffer and the caps won't match when renegotiation happens, and might
+        cause a crash.
+
+        This patch keeps an instance of the current caps in the video sink,
+        and it is accessible through a getter method. Hence the player can ask
+        for the current caps without running into a race condition.
+
+        No new tests. No change in behaviour.
+
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamerBase.cpp:
+        (WebCore::MediaPlayerPrivateGStreamerBase::naturalSize):
+        (WebCore::MediaPlayerPrivateGStreamerBase::paint):
+        (WebCore::MediaPlayerPrivateGStreamerBase::currentVideoSinkCaps):
+        (WebCore::MediaPlayerPrivateGStreamerBase::createVideoSink):
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamerBase.h:
+        * platform/graphics/gstreamer/VideoSinkGStreamer.cpp:
+        (webkitVideoSinkGetProperty):
+        (webkitVideoSinkStop):
+        (webkitVideoSinkSetCaps):
+        (webkit_video_sink_class_init):
+
+2013-06-19  Kihong Kwon  <kihong.kwon@samsung.com>
+
+        Vibration can be canceled even if page visibility status is hidden
+        https://bugs.webkit.org/show_bug.cgi?id=117333
+
+        Reviewed by Gyuyoung Kim.
+
+        vibration can be canceled in the onvisibilitychange listener even if page visibility is changed to hidden status.
+        Therefore cancelVibration needs to work when page visibility is hidden.
+
+        Tests: vibration/cancelVibration-after-pagevisibility-changed-to-hidden.html
+
+        * Modules/vibration/NavigatorVibration.cpp:
+        (WebCore::NavigatorVibration::vibrate):
+        * Modules/vibration/Vibration.h:
+        (WebCore::Vibration::isVibrating):
+        * testing/Internals.cpp:
+        (WebCore::Internals::isVibrating):
+        * testing/Internals.h:
+        * testing/Internals.idl:
+
+2013-06-18  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Input type range slider is not updated when min or max are changed
+        https://bugs.webkit.org/show_bug.cgi?id=117778
+
+        Reviewed by Kent Tamura.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/089c7a0ba2d85b9b59632c2603fbc6472b310be1.
+
+        Test: fast/forms/range/range-change-min-max.html
+
+        * html/RangeInputType.cpp:
+        (WebCore::RangeInputType::minOrMaxAttributeChanged):
+
+2013-06-18  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Remove two superfluous overrides of supportsFocus
+        https://bugs.webkit.org/show_bug.cgi?id=117770
+
+        Reviewed by Benjamin Poulain.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/4228964a63e3a889a40efce0d01866629fdcd9b9.
+
+        * html/HTMLOptGroupElement.cpp:
+        * html/HTMLOptGroupElement.h:
+        * html/HTMLOptionElement.cpp:
+        * html/HTMLOptionElement.h:
+
+2013-06-18  Darin Adler  <darin@apple.com>
+
+        Improve style of null checks in FrameView::setFrameRect
+        https://bugs.webkit.org/show_bug.cgi?id=117681
+
+        Reviewed by Sam Weinig.
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::setFrameRect): Used nested if statements and local variables
+        to tighten this code up a little.
+
+2013-06-18  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Move IDL extended attributes to their correct location
+        https://bugs.webkit.org/show_bug.cgi?id=117732
+
+        Reviewed by Kentaro Hara.
+
+        Move IDL extended attributes to their correct location according to the
+        latest Web IDL specification. We used to be inconsistent in the positioning
+        of the extended attributes. This simplifies a lot the code of the IDL parser
+        and makes our IDL files more standard.
+
+        Based on Blink r148345 by Kentaro Hara <haraken@chromium.org>.
+
+        No new tests, no behavior change.
+
+        * Modules/encryptedmedia/MediaKeyMessageEvent.idl:
+        * Modules/notifications/Notification.idl:
+        * Modules/speech/SpeechSynthesisVoice.idl:
+        * bindings/scripts/IDLParser.pm:
+        (parseDefinitions):
+        (parseInterfaceMembers):
+        (parseInterfaceMember):
+        (parseDictionaryMembers):
+        (parseAttributeOrOperationOrIterator):
+        (parseAttribute):
+        * css/CSSFontFaceLoadEvent.idl:
+        * dom/Document.idl:
+        * dom/Element.idl:
+        * dom/Node.idl:
+        * html/HTMLBodyElement.idl:
+        * html/HTMLEmbedElement.idl:
+        * html/HTMLFrameSetElement.idl:
+        * html/HTMLMediaElement.idl:
+        * html/HTMLSelectElement.idl:
+        * html/HTMLSourceElement.idl:
+        * page/DOMWindow.idl:
+        * svg/SVGElementInstance.idl:
+        * svg/SVGScriptElement.idl:
+        * testing/TypeConversions.idl:
+
+2013-06-18  Jessie Berlin  <jberlin@apple.com>
+
+        Let the script to update the Localizable.strings file do the reordering it wants to do.
+
+        Rubber-stamped by Anders Carlsson.
+
+        * English.lproj/Localizable.strings:
+
+2013-06-18  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed gardening -- show missing AccessibilityNodeObject source
+        files in Visual Studio.
+
+        * WebCore.vcxproj/WebCore.vcxproj: Add missing files.
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Ditto.
+
+2013-06-18  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r151513.
+        http://trac.webkit.org/changeset/151513
+        https://bugs.webkit.org/show_bug.cgi?id=117763
+
+        It causes assertions in debug (Requested by benjaminp on
+        #webkit).
+
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::startAnimation):
+        (WebCore::RenderLayerBacking::startTransition):
+
+2013-06-18  Roger Fong  <roger_fong@apple.com>
+
+        Replace tools32 folder with tools and update WebKit Windows solution accordingly.
+        <rdar://problem/14118143>.
+
+        Rubberstamped by Brent Fulgham.
+
+        * WebCore.vcxproj/QTMovieWin/QTMovieWin.vcxproj:
+        * WebCore.vcxproj/QTMovieWin/QTMovieWinCairoDebug.props:
+        * WebCore.vcxproj/QTMovieWin/QTMovieWinCairoRelease.props:
+        * WebCore.vcxproj/QTMovieWin/QTMovieWinDebug.props:
+        * WebCore.vcxproj/QTMovieWin/QTMovieWinPostBuild.cmd:
+        * WebCore.vcxproj/QTMovieWin/QTMovieWinProduction.props:
+        * WebCore.vcxproj/QTMovieWin/QTMovieWinRelease.props:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCoreDebug.props:
+        * WebCore.vcxproj/WebCoreDebugWinCairo.props:
+        * WebCore.vcxproj/WebCoreGenerated.vcxproj:
+        * WebCore.vcxproj/WebCoreGeneratedDebug.props:
+        * WebCore.vcxproj/WebCoreGeneratedDebugWinCairo.props:
+        * WebCore.vcxproj/WebCoreGeneratedProduction.props:
+        * WebCore.vcxproj/WebCoreGeneratedRelease.props:
+        * WebCore.vcxproj/WebCoreGeneratedReleaseWinCairo.props:
+        * WebCore.vcxproj/WebCoreProduction.props:
+        * WebCore.vcxproj/WebCoreRelease.props:
+        * WebCore.vcxproj/WebCoreReleaseWinCairo.props:
+        * WebCore.vcxproj/WebCoreTestSupport.vcxproj:
+        * WebCore.vcxproj/build-generated-files.sh:
+
+2013-06-18  Zoltan Horvath  <zoltan@webkit.org>
+
+        [CSS Shapes] Remove lineOverflowsFromShapeInside boolean from RenderBlock::layoutRunsAndFloatsInRange function
+        https://bugs.webkit.org/show_bug.cgi?id=117757
+
+        Reviewed by David Hyatt.
+
+        We don't need keep lineOverflowsFromShapeInside boolean in RenderBlock::layoutRunsAndFloatsInRange and in its
+        helpers because it's easy to decide whether we are in an shape content overflow state or not, so I got rid of
+        lineOverflowsFromShapeInside's occurences and updated the affected functions.
+
+        Covered by existing overflow tests in fast/exclusions/shape-inside and fast/regions/shape-inside.
+
+        * rendering/RenderBlock.h: Update helper's definition.
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::pushShapeContentOverflowBelowTheContentBox): Add condition when overflow is already positioned.
+        (WebCore::RenderBlock::updateShapeAndSegmentsForCurrentLine): Remove lineOverflowsFromShapeInside.
+        (WebCore::RenderBlock::updateShapeAndSegmentsForCurrentLineInFlowThread):  Remove lineOverflowsFromShapeInside.
+        (WebCore::RenderBlock::layoutRunsAndFloatsInRange):  Remove lineOverflowsFromShapeInside.
+
+2013-06-18  Zalan Bujtas  <zalan@apple.com>
+
+        widthMediaFeatureEval ends up with null FrameView during iframe unload.
+        https://bugs.webkit.org/show_bug.cgi?id=117754
+
+        Reviewed by Geoffrey Garen.
+
+        Ensure that MediaQueryEvaluator checks against NULL FrameView.
+
+        While frames are being unloaded, the Frame object does not necessarily have valid
+        FrameView anymore. Layout on the main frame can end up querying media values on such child
+        frames, while detaching.
+
+        Test: fast/frames/crash-when-child-iframe-forces-layout-during-unload-and-sibling-frame-has-mediaquery.html
+
+        * css/MediaQueryEvaluator.cpp:
+        (WebCore::orientationMediaFeatureEval):
+        (WebCore::aspect_ratioMediaFeatureEval):
+        (WebCore::evalResolution):
+        (WebCore::heightMediaFeatureEval):
+        (WebCore::widthMediaFeatureEval):
+        (WebCore::MediaQueryEvaluator::eval):
+
+2013-06-18  Ruth Fong  <ruth_fong@apple.com>
+
+        Expose a getMediaType method in WebKit
+        https://bugs.webkit.org/show_bug.cgi?id=117667
+
+        Reviewed by Brady Eidson.
+
+        * WebCore.exp.in: Updated to add a symbol for 
+        HitTestResult::mediaIsVideo method
+        and alphabetize the list of exposed methods.
+
+2013-06-18  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Remove unused bool argument from ReplacementFragment's constructor
+        https://bugs.webkit.org/show_bug.cgi?id=117752
+
+        Reviewed by Antti Koivisto.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/265586d9f154a9dff657511d09926429b8e1b53d.
+
+        * editing/ReplaceSelectionCommand.cpp:
+        (WebCore::ReplacementFragment::ReplacementFragment):
+        (WebCore::ReplaceSelectionCommand::doApply):
+
+2013-06-18  Eric Carlson  <eric.carlson@apple.com>
+
+        Not all subtitle tracks are SDH
+        https://bugs.webkit.org/show_bug.cgi?id=117738
+
+        Reviewed by Dean Jackson.
+
+        No new tests, existing tests updated.
+
+        * html/track/InbandTextTrack.cpp:
+        (WebCore::InbandTextTrack::isSDH): New.
+
+        * html/track/InbandTextTrack.h: Add isSDH override.
+        * html/track/TextTrack.h:
+
+        * page/CaptionUserPreferencesMac.mm:
+        (WebCore::trackDisplayName): Only add "SDH" label if a track claims to be SDH.
+
+        * platform/graphics/InbandTextTrackPrivate.h:
+        (WebCore::InbandTextTrackPrivate::isSDH): New.
+
+        * platform/graphics/avfoundation/objc/InbandTextTrackPrivateAVFObjC.h:
+        * platform/graphics/avfoundation/objc/InbandTextTrackPrivateAVFObjC.mm:
+        (WebCore::InbandTextTrackPrivateAVFObjC::isSDH): Return true if track has both "transcribes
+            spoken dialog for accessibility" and "describes music and sound for accessibility" 
+            characteristics.
+
+2013-06-18  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Simplify FormKeyGenerator::willDeleteForm
+        https://bugs.webkit.org/show_bug.cgi?id=117751
+
+        Reviewed by Antti Koivisto.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/c6399efb9da863eb1d1fc98b17ef925998b985ac
+
+        * html/FormController.cpp:
+        (WebCore::FormKeyGenerator::willDeleteForm):
+
+2013-06-18  Ryosuke Niwa  <rniwa@webkit.org>
+
+        REGRESSION(r147602): Search text field doesn't render selection when it has some :focus rules
+        https://bugs.webkit.org/show_bug.cgi?id=117747
+
+        Reviewed by Kent Tamura.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/7ff656c8239ce3b125246abcc8b149a603fcff28
+
+        r147612 added setNeedsLayout(true, MarkOnlyThis) for
+        TextControlInnerTextElement renderer. It's ok for input[type=text]
+        because RenderTextControlSingleLine also has needsLayout flag, and it
+        has only the inner text renderer as a child.
+
+        As for input[type=search], it doesn't work. Renderer structure for
+        input[type=search] is:
+
+        RenderTextControlSingleLine
+        └Renderer for TextControlInnerContainer
+          └Renderer for TextControlInnerElement
+            └Renderer for TextControlInnerTextElement
+
+        After r147612, there is a case that only RenderTextControlSingleLine
+        and TextControlInnerTextElement renderer have needsLayout flag, and
+        others don't.  It won't trigger layout for
+        TextControlInnerTextElement renderer.
+
+        We should set needsLayout flags of TextControlInnerContainer renderer
+        and TextControlInnerElement renderer by MarkContainingBlockChain.
+
+        Manual Tests: search-select-all-with-focus-style.html
+        (I tried but couldn't make a test that works in DRT)
+
+        * rendering/RenderTextControlSingleLine.cpp:
+        (WebCore::RenderTextControlSingleLine::styleDidChange):
+
+2013-06-18  Dean Jackson  <dino@apple.com>
+
+        Attempted build fix for non-Mac.
+
+        * platform/graphics/SimpleFontData.cpp:
+        (WebCore::SimpleFontData::nonSyntheticItalicFontData):
+
+2013-06-18  Dean Jackson  <dino@apple.com>
+
+        Synthesized vertical italics on rotated glyphs are transformed incorrectly
+        https://bugs.webkit.org/show_bug.cgi?id=117726
+
+        Reviewed by Enrica Casucci.
+
+        If a font does not have italic glyphs, and is in a vertical flow, then
+        the synthesis of italics was skewing in the wrong direction. While here,
+        ensure that no CJK text will get italics in vertical layout.
+
+        This is a topic under discussion in the CSS Working Group. The resolution
+        at the June 2013 face-to-face was that:
+        - italics in Japanese (and Chinese) text are rare in vertical layout
+        - most people wanted Latin text to italicize in the direction of the line flow
+
+        The final behaviour was left undefined, but we consider the change here
+        to be sufficient for now. In all cases, the best solution is to avoid
+        synthesized italics by specifying a font that includes such forms.
+
+        Tests: fast/text/international/synthesized-italic-vertical-latin.html
+               fast/text/international/synthesized-italic-vertical.html
+
+        * platform/graphics/FontGlyphs.cpp:
+        (WebCore::glyphDataAndPageForCJKCharacterWithoutSyntheticItalic): New function
+            that makes a new glyph data pair that is marked as NOT using a synthesized italic.
+        (WebCore::FontGlyphs::glyphDataAndPageForCharacter): If this is a CJK character and
+            has a synthesized oblique, then run it through the function above to make a new glyph data pair.
+        * platform/graphics/SimpleFontData.cpp:
+        (WebCore::SimpleFontData::nonSyntheticItalicFontData): Creates/returns a new SimpleFontData that will
+            not synthesize italics.
+        * platform/graphics/SimpleFontData.h: New method nonSyntheticItalicFontData.
+        * platform/graphics/mac/FontMac.mm:
+        (WebCore::Font::drawGlyphs): This is the actual bug fix. If you are in a vertical flow, the
+            skew direction should be downwards, not leftwards.
+
+2013-06-18  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r151549.
+        http://trac.webkit.org/changeset/151549
+        https://bugs.webkit.org/show_bug.cgi?id=117741
+
+        broke selection in the web inspector source after scrolling
+        (Requested by smfr on #webkit).
+
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::computeRectForRepaint):
+        * rendering/RenderLayerModelObject.cpp:
+        * rendering/RenderLayerModelObject.h:
+
+2013-06-18  Santosh Mahto  <santosh.ma@samsung.com>
+
+        <video> element delays document load event for ~ 3 seconds
+        https://bugs.webkit.org/show_bug.cgi?id=90272
+
+        Reviewed by Eric Carlson.
+
+        Test: media/media-preload-no-delay-loadevent.html
+
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::prepareForLoad):
+        No need to delay document load event here  when preload="none"
+
+2013-06-18  Diego Pino Garcia  <dpino@igalia.com>
+
+        [GTK] Remove comment about possibility of handling ObjCPolymorphic (it's used by ObjC bindings only)
+        https://bugs.webkit.org/show_bug.cgi?id=117546
+
+        Reviewed by Xan Lopez.
+
+        According to the WebKit IDL spec the modifier ObjCPolymorphic only
+        applies to the Objective-C bindings generator
+
+        * bindings/scripts/CodeGeneratorGObject.pm:
+        (IsPolymorphic): Remove comment. Search parameter 'type' in array, instead of
+        concatening a series of 'or' conditionals.
+
+2013-06-18  Víctor Manuel Jáquez Leal  <vjaquez@igalia.com>
+
+        Fix after r151673
+        https://bugs.webkit.org/show_bug.cgi?id=116042
+
+        Reviewed by Philippe Normand.
+
+        Removed a spurious semicolon in the video sink caps definition.
+
+        No new tests, no behavior change.
+
+        * platform/graphics/gstreamer/VideoSinkGStreamer.cpp:
+
+2013-06-18  Praveen R Jadhav  <praveen.j@samsung.com>
+
+        [WebSpeech] Speech Recognition requires convertValue support in JSDictionary
+        https://bugs.webkit.org/show_bug.cgi?id=117731
+
+        Reviewed by Christophe Dumez.
+
+        Build fails after enabling ENABLE_SCRIPTED_SPEECH feature. This patch
+        resolves the issue.
+
+        No new tests. No change in behaviour.
+
+        * bindings/js/JSDictionary.cpp:
+        (WebCore::JSDictionary::convertValue):
+        * bindings/js/JSDictionary.h:
+
+2013-06-18  Mary Wu  <mary.wu@torchmobile.com.cn>
+
+        [BlackBerry] only notify download client when download error
+        https://bugs.webkit.org/show_bug.cgi?id=117687
+
+        Reviewed by Rob Buis.
+
+        When met network error in downloading, we notify the error to download
+        client through download stream, we shouldn't notify page client the error.
+        RIM JIRA 419985
+
+        * platform/network/blackberry/NetworkJob.cpp:
+        (WebCore::NetworkJob::shouldNotifyClientFailed):
+
+2013-06-18  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        Shader compiler not properly configured for GLES on cairo based ports
+        https://bugs.webkit.org/show_bug.cgi?id=117705
+
+        Reviewed by Martin Robinson.
+
+        Configure the shader compiler with SH_ESSL_OUTPUT for GLESv2
+        compliant platforms, and with SH_GLSL_OUTPUT otherwise.
+
+        * platform/graphics/cairo/GraphicsContext3DCairo.cpp:
+        (WebCore::GraphicsContext3D::GraphicsContext3D):
+
+2013-06-18  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        touching any idl rebuilds all derived sources
+        https://bugs.webkit.org/show_bug.cgi?id=117708
+
+        Reviewed by Kentaro Hara.
+
+        Fix preprocess-idls.pl script to update the following files only
+        if they have changed:
+        DerivedSources/WebCore/supplemental_dependency.tmp
+        DerivedSources/WebCore/DOMWindowConstructors.idl
+        DerivedSources/WebCore/WorkerContextConstructors.idl
+
+        This avoids triggering uselessly bindings generation for all IDL
+        files whenever an IDL file is touched.
+
+        No new tests, no behavior change.
+
+        * bindings/scripts/preprocess-idls.pl:
+        (WriteFileIfChanged):
+        (GeneratePartialInterface):
+
+2013-06-18  Víctor Manuel Jáquez Leal  <vjaquez@igalia.com>
+
+        [GStreamer] [texmap] upload a video buffer into the video texture
+        https://bugs.webkit.org/show_bug.cgi?id=116042
+
+        Reviewed by Philippe Normand.
+
+        This patch prepares more quickly the texture when the video frame is
+        already in the GPU memory.
+
+        It is done using a new buffer's metadata available in GStreamer 1.2,
+        and its purpose is to upload buffers into a OpenGL texture.
+
+        If the decoder provides buffers with this metadata, the buffer will be
+        uploaded into the texture used for the video display and it will be
+        rendered, avoiding a expensive mem copies. This is particularly useful
+        for Full HD videos, where all the processing and display will be done
+        in the GPU.
+
+        No new tests, covered by existing tests.
+
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamerBase.cpp:
+        (WebCore::MediaPlayerPrivateGStreamerBase::MediaPlayerPrivateGStreamerBase):
+        (WebCore::MediaPlayerPrivateGStreamerBase::updateTexture):
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamerBase.h:
+        * platform/graphics/gstreamer/VideoSinkGStreamer.cpp:
+        (webkitVideoSinkProposeAllocation):
+
+2013-06-17  Peter Gal  <galpeter@inf.u-szeged.hu>
+
+        [curl] Set the http response status text
+        https://bugs.webkit.org/show_bug.cgi?id=117307
+
+        Reviewed by Brent Fulgham.
+
+        No new tests, covered by existing ones.
+
+        * platform/network/curl/ResourceHandleManager.cpp:
+        (WebCore::headerCallback):
+
+2013-06-14  Brent Fulgham  <bfulgham@apple.com>
+
+        AX: Correct accessibility role when -webkit-box:display is used.
+        https://bugs.webkit.org/show_bug.cgi?id=117706
+
+        Reviewed by Chris Fleizach.
+
+        accessibility/box-styled-lists.html
+
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::determineAccessibilityRole): If HTML token is
+        of the list element type, treat it as a ListItemRole accessibility role, regardless
+        of what specific renderer is being used.
+
+2013-06-17  Roger Fong  <roger_fong@apple.com>
+
+        Add some UNUSED_PARAMs to RenderBlock.cpp so that it builds properly if CSS_EXCLUSIONS is disabled.
+        https://bugs.webkit.org/show_bug.cgi?id=117722.
+
+        Rubberstamped by Jon Lee.
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::updateRegionsAndExclusionsAfterChildLayout):
+        (WebCore::RenderBlock::logicalLeftOffsetForLine):
+        (WebCore::RenderBlock::logicalRightOffsetForLine):
+
+2013-06-17  Beth Dakin  <bdakin@apple.com>
+
+        PageBanners appear over HTML5 video when media element is in full screen mode
+        https://bugs.webkit.org/show_bug.cgi?id=117721
+        -and corresponding-
+        <rdar://problem/13686998>
+
+        Reviewed by Sam Weinig.
+
+        Update the scrolling tree when a header/footer has been removed.
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::RenderLayerCompositor::updateLayerForHeader):
+        (WebCore::RenderLayerCompositor::updateLayerForFooter):
+
+2013-06-17  Roger Fong  <roger_fong@apple.com>
+
+        Modify Windows makefiles to copy some bin output into Program Files.
+        https://bugs.webkit.org/show_bug.cgi?id=117714.
+        <rdar://problem/14179054>
+
+        Reviewed by Brent Fulgham.
+
+        * WebCore.vcxproj/WebCore.make:
+
+2013-06-17  Max Vujovic  <mvujovic@adobe.com>
+
+        Crash in loadPendingShaders
+        https://bugs.webkit.org/show_bug.cgi?id=117665
+
+        Reviewed by Dean Jackson.
+
+        Speculative fix because the crash reports do not contain a test case.
+
+        Rearrange the conditions to check m_state.hasPendingShaders() first. Additionally, check if
+        m_state.style() is non-null.
+
+        No new tests. We don't know how to reproduce this crash yet.
+
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::loadPendingShaders):
+
+2013-06-17  Ruth Fong  <ruth_fong@apple.com>
+
+        REGRESSION: Important controls are missing from <video> element UI, when compared to QuickTime
+        https://bugs.webkit.org/show_bug.cgi?id=20599
+
+        Add a "Download Video"/"Download Audio" context menu item to download media
+        elements.
+
+        Reviewed by Beth Dakin.
+
+        No new tests. media/context-menu-action.html,
+        which has been disabled by bug 116651, is used to test context menus.
+
+        * English.lproj/Localizable.strings: Updated to
+        include localizable strings for "Download Video" and "Download Audio".
+
+        * page/ContextMenuController.cpp: Updated to 
+        include and handle a "Download Video/Audio" context menu item.
+
+        * platform/ContextMenuItem.h:
+
+        * platform/LocalizedStrings.cpp: 
+        * platform/LocalizedStrings.h:
+        * platform/efl/LocalizedStringsEfl.cpp:
+        * platform/gtk/LocalizedStringsGtk.cpp:
+        * platform/qt/LocalizedStringsQt.cpp: 
+        Updated to include localizable strings for "Download Video" and "Download Audio".
+
+2013-06-17  Zoltan Horvath  <zoltan@webkit.org>
+
+        [CSS Shapes] Consider bottom borders when calculating the position of the overflow
+        https://bugs.webkit.org/show_bug.cgi?id=117663
+
+        Reviewed by Alexandru Chiculita.
+
+        When you have a shape and the content overflows from the shape we need to push the overflow below the content box,
+        not below the border box. We didn't consider the bottom borders of the content box, now I fixed it too and the overflow
+        just starts after the content box. I added a new helper function called pushShapeContentOverflowBelowTheContentBox. Now
+        both the shape in flow thread and the shape overflow use the same function. I added a new test and modified the existing
+        tests to cover all the affected cases.
+
+        Test: fast/exclusions/shape-inside/shape-inside-overflow-fixed-dimensions-block-content.html
+        Existing overflow tests also modified to test the behavior:
+              fast/exclusions/shape-inside/shape-inside-empty-expected.html
+              fast/exclusions/shape-inside/shape-inside-overflow-fixed-dimensions-block-content-expected.html
+              fast/exclusions/shape-inside/shape-inside-overflow-fixed-dimensions-block-content.html
+              fast/exclusions/shape-inside/shape-inside-overflow-fixed-dimensions-expected.html
+              fast/exclusions/shape-inside/shape-inside-overflow-fixed-dimensions.html
+              fast/regions/shape-inside/shape-inside-on-regions-block-content-overflow-multiple-shapes-expected.html
+              fast/regions/shape-inside/shape-inside-on-regions-block-content-overflow-multiple-shapes.html
+
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::pushShapeContentOverflowBelowTheContentBox):
+        (WebCore::RenderBlock::updateShapeAndSegmentsForCurrentLine):
+        (WebCore::RenderBlock::updateShapeAndSegmentsForCurrentLineInFlowThread):
+
 2013-06-17  Igor Oliveira  <igor.o@sisa.samsung.com>
 
         [CSS Regions] ::before and ::after pseudo-elements are not displayed for regions
@@ -17070,7 +18004,7 @@
         Test: fast/text/word-space-with-kerning-4.html
 
         * rendering/RenderBlockLineLayout.cpp:
-        (WebCore::setLogicalWidthForTextRun): Look for '\t'.
+        (WebCore::setLogicalWidthForTextRun): Look for '    '.
 
 2013-05-10  Anders Carlsson  <andersca@apple.com>
 

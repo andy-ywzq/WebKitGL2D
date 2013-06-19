@@ -1,3 +1,318 @@
+2013-06-19  Robert Hogan  <robert@webkit.org>
+
+        Rebaseline results on GTK and EFL after r151737
+
+        Unreviewed, gardening. 
+
+        * platform/efl/fast/css/word-space-extra-expected.txt:
+        * platform/efl/fast/replaced/width100percent-image-expected.png:
+        * platform/efl/fast/replaced/width100percent-image-expected.txt:
+        * platform/efl/fast/replaced/width100percent-menulist-expected.png:
+        * platform/efl/fast/replaced/width100percent-menulist-expected.txt:
+        * platform/efl/fast/replaced/width100percent-searchfield-expected.png:
+        * platform/efl/fast/replaced/width100percent-searchfield-expected.txt:
+        * platform/efl/fast/replaced/width100percent-textarea-expected.png:
+        * platform/efl/fast/replaced/width100percent-textarea-expected.txt:
+        * platform/efl/fast/replaced/width100percent-textfield-expected.png:
+        * platform/efl/fast/replaced/width100percent-textfield-expected.txt:
+        * platform/efl/tables/mozilla/bugs/bug57828-expected.png:
+        * platform/efl/tables/mozilla/bugs/bug57828-expected.txt:
+        * platform/gtk/fast/css/word-space-extra-expected.txt:
+        * platform/gtk/fast/replaced/width100percent-image-expected.png:
+        * platform/gtk/fast/replaced/width100percent-image-expected.txt:
+        * platform/gtk/fast/replaced/width100percent-menulist-expected.png:
+        * platform/gtk/fast/replaced/width100percent-menulist-expected.txt:
+        * platform/gtk/fast/replaced/width100percent-searchfield-expected.png:
+        * platform/gtk/fast/replaced/width100percent-searchfield-expected.txt:
+        * platform/gtk/fast/replaced/width100percent-textarea-expected.png:
+        * platform/gtk/fast/replaced/width100percent-textarea-expected.txt:
+        * platform/gtk/fast/replaced/width100percent-textfield-expected.png:
+        * platform/gtk/fast/replaced/width100percent-textfield-expected.txt:
+        * platform/gtk/tables/mozilla/bugs/bug57828-expected.txt:
+
+2013-06-19  Robert Hogan  <robert@webkit.org>
+
+        Incorrect computation of shrink-to-fit width for block with white-space:nowrap and floating children
+        https://bugs.webkit.org/show_bug.cgi?id=114879
+
+        Reviewed by David Hyatt.
+
+        * fast/block/shrink-to-fit-width-container-with-floating-children-expected.txt: Added.
+        * fast/block/shrink-to-fit-width-container-with-floating-children.html: Added.
+        * platform/qt/fast/css/word-space-extra-expected.txt:
+        * platform/qt/fast/replaced/width100percent-image-expected.txt:
+        * platform/qt/fast/replaced/width100percent-searchfield-expected.txt:
+        * platform/qt/fast/replaced/width100percent-textfield-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug57828-expected.txt:
+
+2013-06-19  Víctor Manuel Jáquez Leal  <vjaquez@igalia.com>
+
+        [GStreamer] [texmap] the bytesPerLine is wrong when updating the texture
+        https://bugs.webkit.org/show_bug.cgi?id=117551
+
+        Reviewed by Philippe Normand.
+
+        * platform/gtk-wk2/TestExpectations:
+        enabled media/video-display-aspect-ratio.html
+
+2013-06-19  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed rebaselining after 151705.
+
+        * platform/qt/http/tests/cache/partitioned-cache-expected.txt: Added.
+        * platform/qt/http/tests/cache/partitioned-cache-iframe-expected.txt: Added.
+
+2013-06-19  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] TestExpectation sorting on Qt WK2.
+
+        Reviewed by Csaba Osztrogonác.
+
+        * platform/qt-5.0-wk2/TestExpectations:
+
+2013-06-19  Kihong Kwon  <kihong.kwon@samsung.com>
+
+        Vibration can be canceled even if page visibility status is hidden
+        https://bugs.webkit.org/show_bug.cgi?id=117333
+
+        Reviewed by Gyuyoung Kim.
+
+        Add a test case for cancel vibration after page visibility is changed to hidden status.
+        In addition, move navigator-vibration.html to vibration directory.
+
+        * platform/gtk/TestExpectations:
+        * platform/mac/TestExpectations:
+        * platform/qt/TestExpectations:
+        * platform/win/TestExpectations:
+        * vibration/cancelVibration-after-pagevisibility-changed-to-hidden-expected.txt: Added.
+        * vibration/cancelVibration-after-pagevisibility-changed-to-hidden.html: Added.
+        * vibration/navigator-vibration-expected.txt: Renamed from LayoutTests/fast/dom/navigator-vibration-expected.txt.
+        * vibration/navigator-vibration.html: Renamed from LayoutTests/fast/dom/navigator-vibration.html.
+
+2013-06-18  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed, EFL gardening. Added new baselines for some of editing/delete
+        tests after system upgrade.
+
+        * platform/efl/TestExpectations:
+        * platform/efl/editing/deleting/smart-delete-003-expected.png: Added.
+        * platform/efl/editing/deleting/smart-delete-003-expected.txt: Added.
+        * platform/efl/editing/deleting/smart-delete-004-expected.png: Added.
+        * platform/efl/editing/deleting/smart-delete-004-expected.txt: Added.
+
+2013-06-18  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Input type range slider is not updated when min or max are changed
+        https://bugs.webkit.org/show_bug.cgi?id=117778
+
+        Reviewed by Kent Tamura.
+
+        * fast/forms/range/range-change-min-max-expected.html: Added.
+        * fast/forms/range/range-change-min-max.html: Added.
+
+2013-06-18  Benjamin Poulain  <bpoulain@apple.com>
+
+        [WK2] Media elements never fail to load
+        https://bugs.webkit.org/show_bug.cgi?id=117767
+
+        Mark the media tests as failing for now.
+
+        * platform/mac-wk2/TestExpectations:
+
+2013-06-18  Oliver Hunt  <oliver@apple.com>
+
+        Going to google.com/trends causes a crash
+        https://bugs.webkit.org/show_bug.cgi?id=117602
+
+        Reviewed by Geoffrey Garen.
+
+        Make sure we correctly initialise the appropriate argument registers,
+        and make sure we perform the tearoff correctly.
+
+        * fast/js/inline-arguments-tear-off-expected.txt: Added.
+        * fast/js/inline-arguments-tear-off.html: Added.
+        * fast/js/script-tests/inline-arguments-tear-off.js: Added.
+        (g):
+        (f):
+        (doStuff):
+
+2013-06-18  Benjamin Poulain  <bpoulain@apple.com>
+
+        Rebaseline after system update
+
+        Unreviewed.
+
+        * http/tests/cache/partitioned-cache-expected.txt:
+        * http/tests/cache/partitioned-cache-iframe-expected.txt:
+        System fix, the tests pass.
+
+2013-06-18  Zalan Bujtas  <zalan@apple.com>
+
+        widthMediaFeatureEval ends up with null FrameView during iframe unload.
+        https://bugs.webkit.org/show_bug.cgi?id=117754
+
+        Reviewed by Geoffrey Garen.
+
+        Ensure that MediaQueryEvaluator checks against NULL FrameView.
+
+        While frames are being unloaded, the Frame object does not necessarily have valid
+        FrameView anymore. Layout on the main frame can end up querying media values on such child
+        frames, while detaching.
+
+        * fast/frames/crash-when-child-iframe-forces-layout-during-unload-and-sibling-frame-has-mediaquery-expected.txt: Added.
+        * fast/frames/crash-when-child-iframe-forces-layout-during-unload-and-sibling-frame-has-mediaquery.html: Added.
+        * fast/frames/resources/child-iframe-forces-parent-layout-on-unload.html: Added.
+
+2013-06-18  Eric Carlson  <eric.carlson@apple.com>
+
+        Not all subtitle tracks are SDH
+        https://bugs.webkit.org/show_bug.cgi?id=117738
+
+        Reviewed by Dean Jackson.
+
+        * media/video-controls-captions-trackmenu-localized.html:
+        * media/video-controls-captions-trackmenu-sorted.html:
+        * platform/mac/media/video-controls-captions-trackmenu-localized-expected.txt:
+        * platform/mac/media/video-controls-captions-trackmenu-sorted-expected.txt:
+
+2013-06-18  Dean Jackson  <dino@apple.com>
+
+        Synthesized vertical italics on rotated glyphs are transformed incorrectly
+        https://bugs.webkit.org/show_bug.cgi?id=117726
+
+        Reviewed by Enrica Casucci.
+
+        Two new tests. One ensures that CJK characters do not get italics
+        when vertical. The other ensures that Latin text does get italics in
+        a font that is not synthesized, but unfortunately has to be a pixel test.
+        The latter is skipped on non-Mac since they don't support
+        synthesized obliques in FontPlatformData.
+
+        * fast/text/international/synthesized-italic-vertical-expected.html: Added.
+        * fast/text/international/synthesized-italic-vertical-latin.html: Added.
+        * fast/text/international/synthesized-italic-vertical.html: Added.
+        * platform/efl/TestExpectations:
+        * platform/gtk/TestExpectations:
+        * platform/mac/fast/text/international/synthesized-italic-vertical-latin-expected.txt: Added.
+        * platform/qt/TestExpectations:
+        * platform/win/TestExpectations:
+
+2013-06-18  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r151549.
+        http://trac.webkit.org/changeset/151549
+        https://bugs.webkit.org/show_bug.cgi?id=117741
+
+        broke selection in the web inspector source after scrolling
+        (Requested by smfr on #webkit).
+
+        * fast/repaint/change-overflow-and-display-of-relative-expected.txt: Removed.
+        * fast/repaint/change-overflow-and-display-of-relative.html: Removed.
+
+2013-06-18  Santosh Mahto  <santosh.ma@samsung.com>
+
+        <video> element delays document load event for ~ 3 seconds
+        https://bugs.webkit.org/show_bug.cgi?id=90272
+
+        Reviewed by Eric Carlson.
+
+        * media/media-preload-no-delay-loadevent-expected.txt: Added.
+        * media/media-preload-no-delay-loadevent.html: Added.
+
+2013-06-18  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Rebaseline and skipping some tests.
+
+        * platform/qt-5.0-wk2/fast/repaint/table-cell-collapsed-border-scroll-expected.png: Added.
+        * platform/qt/TestExpectations:
+        * platform/qt/fast/repaint/table-cell-collapsed-border-scroll-expected.txt: Added.
+
+2013-06-18  Xabier Rodriguez Calvar  <calvaris@igalia.com>
+
+        [GTK][GStreamer] Fullscreen option in video element context menu not working
+        https://bugs.webkit.org/show_bug.cgi?id=105191
+
+        Reviewed by Philippe Normand.
+
+        * platform/gtk-wk1/TestExpectations:
+        fullscreen/video-controls-drag.html does not time out anymore.
+        * platform/gtk-wk2/TestExpectations:
+        media/video-display-aspect-ratio.html crashes sometimes.
+        * platform/gtk/TestExpectations:
+        media/video-playing-and-pause.html was already flaky.
+
+2013-06-18  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/TestExpectations: Mark two tests that are flakily timing out as slow.
+
+2013-06-17  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed AX gardening of windows-specific results.
+
+        * platform/win/accessibility/aria-combobox-expected.txt: Added.
+        * platform/win/aria-labelledby-on-input-expected.txt: Added.
+        * platform/win/aria-menubar-menuitems-expected.txt: Added.
+        * platform/win/aria-roles-expected.txt: Added.
+
+2013-06-17  Brent Fulgham  <bfulgham@apple.com>
+
+        AX: Correct accessibility role when -webkit-box:display is used.
+        https://bugs.webkit.org/show_bug.cgi?id=117706
+
+        Reviewed by Chris Fleizach.
+
+        * accessibility/box-styled-lists.html: Added.
+        * platform/efl/TestExpectations:
+        * platform/gtk/TestExpectations:
+        * platform/mac/accessibility/box-styled-lists-expected.txt: Added.
+        * platform/win/TestExpectations:
+        * platform/win/accessibility/box-styled-lists-expected.txt: Added.
+
+2013-06-17  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Mac rebaseline.
+
+        * fast/repaint/table-cell-collapsed-border-scroll-expected.png:
+        * fast/repaint/table-cell-collapsed-border-scroll-expected.txt:
+
+2013-06-17  Zoltan Horvath  <zoltan@webkit.org>
+
+        [CSS Shapes] Consider bottom borders when calculating the position of the overflow
+        https://bugs.webkit.org/show_bug.cgi?id=117663
+
+        Reviewed by Alexandru Chiculita.
+
+        When you have a shape and the content overflows from the shape we need to push the overflow below the content box,
+        not below the border box. We didn't consider the bottom borders of the content box, now I fixed it too and the overflow
+        just starts after the content box. I added a new helper function called pushShapeContentOverflowBelowTheContentBox. Now
+        both the shape in flow thread and the shape overflow use the same function. I added a new test and modified the existing
+        tests to cover all the affected cases.
+
+        * fast/exclusions/shape-inside/shape-inside-empty-expected.html:
+        * fast/exclusions/shape-inside/shape-inside-overflow-fixed-dimensions-block-content-expected.html: Copied from LayoutTests/fast/exclusions/shape-inside/shape-inside-overflow-fixed-dimensions-expected.html.
+        * fast/exclusions/shape-inside/shape-inside-overflow-fixed-dimensions-block-content.html: Copied from LayoutTests/fast/exclusions/shape-inside/shape-inside-overflow-fixed-dimensions.html.
+        * fast/exclusions/shape-inside/shape-inside-overflow-fixed-dimensions-expected.html:
+        * fast/exclusions/shape-inside/shape-inside-overflow-fixed-dimensions.html:
+        * fast/regions/shape-inside/shape-inside-on-regions-block-content-overflow-multiple-shapes-expected.html:
+        * fast/regions/shape-inside/shape-inside-on-regions-block-content-overflow-multiple-shapes.html:
+
+2013-06-17  Bear Travis  <betravis@adobe.com>
+
+        [CSS Exclusions] Implement text alignment for shape-inside
+        https://bugs.webkit.org/show_bug.cgi?id=101086
+
+        Reviewed by Alexandru Chiculita.
+
+        Adding tests to make sure that shape-inside layout correctly supports
+        the different values of text-align.
+
+        * fast/exclusions/resources/multi-segment-polygon.js:
+        (createOrInsert):
+        * fast/exclusions/shape-inside/shape-inside-text-align-expected.html: Added.
+        * fast/exclusions/shape-inside/shape-inside-text-align.html: Added.
+
 2013-06-17  Igor Oliveira  <igor.o@sisa.samsung.com>
 
         [CSS Regions] ::before and ::after pseudo-elements are not displayed for regions

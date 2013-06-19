@@ -1,3 +1,349 @@
+2013-06-19  Anders Carlsson  <andersca@apple.com>
+
+        REGRESSION: Cannot open Silverlight preferences via context menu
+        https://bugs.webkit.org/show_bug.cgi?id=117806
+        <rdar://problem/14166644>
+
+        Reviewed by Beth Dakin.
+
+        Hook the LSOpenCFURLRef function and make the UI process open the URL if it's the URL for the
+        Silverlight Preferences application. This is what we do for the Flash updater.
+
+        * PluginProcess/PluginProcess.h:
+        * PluginProcess/mac/PluginProcessMac.mm:
+        (WebKit::openCFURLRef):
+        (WebKit::initializeShim):
+        (WebKit::PluginProcess::openURL):
+        * PluginProcess/mac/PluginProcessShim.h:
+        * PluginProcess/mac/PluginProcessShim.mm:
+        (WebKit::shimLSOpenCFURLRef):
+        * UIProcess/Plugins/PluginProcessProxy.h:
+        * UIProcess/Plugins/PluginProcessProxy.messages.in:
+        * UIProcess/Plugins/mac/PluginProcessProxyMac.mm:
+        (WebKit::isSilverlightPreferencesURL):
+        (WebKit::shouldOpenURL):
+        (WebKit::PluginProcessProxy::openURL):
+
+2013-06-19  Krzysztof Wolanski  <k.wolanski@samsung.com>
+
+        [EFL][WK2] Implement unit test callback: onSettingChange.
+        https://bugs.webkit.org/show_bug.cgi?id=117728
+
+        Reviewed by Christophe Dumez.
+
+        It is finally possible to implement missing unit tests as WebKit2-EFL
+        has delivered sub menu (r150254).
+        Add two unit tests for checking onSettingChange callback behaviour,
+        when toggling "Check Spelling While Typing" in context menu.
+
+        Changed types inside callbacksExecutionStats struct from bit field to bool,
+        because casting from bit field to &bool is invalid (in using waitUntilTrue method).
+
+        * UIProcess/API/efl/tests/test_ewk2_text_checker.cpp:
+        (resetCallbacksExecutionStats):
+        (onSettingChange):
+        (findContextMenuItem):
+        Get determined option from context menu.
+
+        (checkCorrectnessOfSpellingItems):
+        Changed the name of onContextMenuShow method to be consistent with new methods.
+
+        (toogleCheckSpellingWhileTyping):
+        Select "Check Spelling While Typing" in context menu to test whether
+        onSettingChange is called.
+
+2013-06-19  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK][SOUP] Migrate SoupRequestManager to GTask
+        https://bugs.webkit.org/show_bug.cgi?id=117157
+
+        Reviewed by Gustavo Noronha Silva.
+
+        GSimpleAsyncResult has been deprecated in favour of GTask.
+
+        * WebProcess/soup/WebKitSoupRequestGeneric.cpp:
+        (webkitSoupRequestGenericSendAsync):
+        (webkitSoupRequestGenericSendFinish):
+        * WebProcess/soup/WebSoupRequestManager.cpp:
+        (WebKit::WebSoupRequestAsyncData::WebSoupRequestAsyncData):
+        (WebKit::WebSoupRequestAsyncData::releaseTask):
+        (WebKit::WebSoupRequestManager::didHandleURIRequest):
+        (WebKit::WebSoupRequestManager::didFailURIRequest):
+        (WebKit::WebSoupRequestManager::send):
+        (WebKit::WebSoupRequestManager::finish):
+        * WebProcess/soup/WebSoupRequestManager.h:
+
+2013-06-19  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Migrate WebKitFaviconDatabase to GTask
+        https://bugs.webkit.org/show_bug.cgi?id=117156
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * UIProcess/API/gtk/WebKitFaviconDatabase.cpp:
+        (processPendingIconsForPageURL):
+        (webkit_favicon_database_get_favicon):
+        (webkit_favicon_database_get_favicon_finish):
+
+2013-06-19  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Migrate WebKitWebView to GTask
+        https://bugs.webkit.org/show_bug.cgi?id=117154
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * UIProcess/API/gtk/WebKitWebView.cpp:
+        (didValidateCommand):
+        (webkit_web_view_can_execute_editing_command):
+        (webkit_web_view_can_execute_editing_command_finish):
+        (webkitWebViewRunJavaScriptCallback):
+        (webkit_web_view_run_javascript):
+        (webkit_web_view_run_javascript_finish):
+        (resourcesStreamReadCallback):
+        (webkit_web_view_run_javascript_from_gresource):
+        (webkit_web_view_run_javascript_from_gresource_finish):
+        (fileReplaceContentsCallback):
+        (getContentsAsMHTMLDataCallback):
+        (webkit_web_view_save):
+        (webkit_web_view_save_finish):
+        (webkit_web_view_save_to_file):
+        (webkit_web_view_save_to_file_finish):
+        (webKitWebViewDidReceiveSnapshot):
+        (webkit_web_view_get_snapshot):
+        (webkit_web_view_get_snapshot_finish):
+
+2013-06-18  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Migrate WebKitCookieManager to GTask
+        https://bugs.webkit.org/show_bug.cgi?id=117150
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Don't use helper structs for async data since the cancellable is
+        now accessible from the GTask.
+
+        * UIProcess/API/gtk/WebKitCookieManager.cpp:
+        (webkitCookieManagerGetAcceptPolicyCallback):
+        (webkit_cookie_manager_get_accept_policy):
+        (webkit_cookie_manager_get_accept_policy_finish):
+        (webkitCookieManagerGetDomainsWithCookiesCallback):
+        (webkit_cookie_manager_get_domains_with_cookies):
+        (webkit_cookie_manager_get_domains_with_cookies_finish):
+
+2013-06-18  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Fix a typo that may be causing some test failures.
+
+        * WebProcess/WebCoreSupport/mac/WebFrameNetworkingContext.mm:
+        (WebKit::WebFrameNetworkingContext::scheduledRunLoopPairs):
+
+2013-06-18  Anders Carlsson  <andersca@apple.com>
+
+        Make it possible to set a minimum height for auto-layout
+        https://bugs.webkit.org/show_bug.cgi?id=117758
+        <rdar://problem/12849080>
+
+        Reviewed by Tim Horton.
+
+        Change a bunch of minimumLayoutWidth declarations to minimumLayoutSize and add a new minimumLayoutSize property.
+        If minimumLayoutSize.height is greater than zero, use it to set the minimum layout size on the frame view.
+
+        * Shared/WebPageCreationParameters.cpp:
+        (WebKit::WebPageCreationParameters::encode):
+        (WebKit::WebPageCreationParameters::decode):
+        * Shared/WebPageCreationParameters.h:
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView _setIntrinsicContentSize:]):
+        (-[WKView minimumLayoutWidth]):
+        (-[WKView setMinimumLayoutWidth:]):
+        (-[WKView minimumWidthForAutoLayout]):
+        (-[WKView setMinimumWidthForAutoLayout:]):
+        (-[WKView minimumSizeForAutoLayout]):
+        (-[WKView setMinimumSizeForAutoLayout:]):
+        * UIProcess/API/mac/WKViewPrivate.h:
+        * UIProcess/DrawingAreaProxy.h:
+        (WebKit::DrawingAreaProxy::minimumLayoutSizeDidChange):
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::WebPageProxy):
+        (WebKit::WebPageProxy::creationParameters):
+        (WebKit::WebPageProxy::setMinimumLayoutSize):
+        * UIProcess/WebPageProxy.h:
+        (WebKit::WebPageProxy::minimumLayoutSize):
+        * UIProcess/mac/TiledCoreAnimationDrawingAreaProxy.h:
+        * UIProcess/mac/TiledCoreAnimationDrawingAreaProxy.mm:
+        (WebKit::TiledCoreAnimationDrawingAreaProxy::TiledCoreAnimationDrawingAreaProxy):
+        (WebKit::TiledCoreAnimationDrawingAreaProxy::minimumLayoutSizeDidChange):
+        (WebKit::TiledCoreAnimationDrawingAreaProxy::didUpdateGeometry):
+        (WebKit::TiledCoreAnimationDrawingAreaProxy::intrinsicContentSizeDidChange):
+        (WebKit::TiledCoreAnimationDrawingAreaProxy::sendUpdateGeometry):
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::transitionToCommittedForNewPage):
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::WebPage):
+        (WebKit::WebPage::setMinimumLayoutSize):
+        * WebProcess/WebPage/WebPage.h:
+        (WebKit::WebPage::minimumLayoutSize):
+        * WebProcess/WebPage/WebPage.messages.in:
+        * WebProcess/WebPage/mac/TiledCoreAnimationDrawingArea.mm:
+        (WebKit::TiledCoreAnimationDrawingArea::mainFrameContentSizeChanged):
+        (WebKit::TiledCoreAnimationDrawingArea::updateGeometry):
+
+2013-06-18  Simon Cooper  <scooper@apple.com>
+
+        sandbox violation when Flash runs for the first time
+        https://bugs.webkit.org/show_bug.cgi?id=117753
+        <rdar://problem/14165466>
+
+        Reviewed by Alexey Proskuryakov.
+
+        Allow flash to try and change the ownership of directories it has just created.
+
+        * Resources/PlugInSandboxProfiles/com.macromedia.Flash Player.plugin.sb:
+
+2013-06-18  Ruth Fong  <ruth_fong@apple.com>
+
+        Expose a getMediaType method in WebKit
+        https://bugs.webkit.org/show_bug.cgi?id=117667
+
+        Reviewed by Brady Eidson.
+
+        * GNUmakefile.list.am:
+        * Target.pri:
+        Updated to include the added header file InjectedBundleHitTestResultMediaType.h
+        
+        * UIProcess/API/C/WKAPICast.h:
+        (WebKit::toBundleHitTestResultMediaType):
+        (WebKit::toAPI):
+        Added methods to convert between BundleHitTestResultMediaType
+        and WKBundleHitTestResultMediaType.
+
+        * WebKit2.xcodeproj/project.pbxproj: Updated to include
+        InjectedBundleHitTestResultMediaType.h in the WebKit2 project.
+
+        * WebProcess/InjectedBundle/API/c/WKBundleHitTestResult.cpp:
+        (WKBundleHitTestResultGetMediaType): Exposes the method getMediaType and
+        hooks into InjectedBundleHitTestResult::getMediaType.
+
+        * WebProcess/InjectedBundle/API/c/WKBundleHitTestResult.h:
+
+        * WebProcess/InjectedBundle/InjectedBundleHitTestResult.cpp:
+        (WebKit::InjectedBundleHitTestResult::getMediaType): Added to return 
+        what type, if any, a media element is.
+
+        * WebProcess/InjectedBundle/InjectedBundleHitTestResult.h:
+
+        * WebProcess/InjectedBundle/InjectedBundleHitTestResultMediaType.h: Added
+        to contain new BundleHitTestResultMediaType enums.
+
+2013-06-18  Roger Fong  <roger_fong@apple.com>
+
+        Re-implement WebFrameNetworkingContext.
+        <rdar://problem/13174821>.
+
+        Reviewed by Alexey Proskuryakov.
+
+        * WebProcess/WebCoreSupport/mac/WebFrameNetworkingContext.h: Added.
+        (WebKit::WebFrameNetworkingContext::create):
+        (WebKit::WebFrameNetworkingContext::WebFrameNetworkingContext):
+        * WebProcess/WebCoreSupport/mac/WebFrameNetworkingContext.mm: Added.
+        (WebKit::WebFrameNetworkingContext::setPrivateBrowsingStorageSessionIdentifierBase):
+        (WebKit::WebFrameNetworkingContext::ensurePrivateBrowsingSession):
+        (WebKit::WebFrameNetworkingContext::destroyPrivateBrowsingSession):
+        (WebKit::WebFrameNetworkingContext::setCookieAcceptPolicyForAllContexts):
+        (WebKit::WebFrameNetworkingContext::needsSiteSpecificQuirks):
+        (WebKit::WebFrameNetworkingContext::localFileContentSniffingEnabled):
+        (WebKit::WebFrameNetworkingContext::scheduledRunLoopPairs):
+        (WebKit::WebFrameNetworkingContext::sourceApplicationAuditData):
+        (WebKit::WebFrameNetworkingContext::blockedError):
+        (WebKit::WebFrameNetworkingContext::storageSession):
+
+2013-06-18  Alexey Proskuryakov  <ap@apple.com>
+
+        <rdar://problem/13174821> Remove files with an incorrect license.
+
+        Rubber-stamped by Maciej Stachowiak.
+
+        This will break the build, stay tuned for a fix coming soon.
+
+        * WebProcess/WebCoreSupport/mac/WebFrameNetworkingContext.h: Removed.
+        * WebProcess/WebCoreSupport/mac/WebFrameNetworkingContext.mm: Removed.
+
+2013-06-17  Santosh Mahto  <santosh.ma@samsung.com>
+
+        Extra whitespace in blank line in PlatformPopupMenuData.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=117627
+
+        Reviewed by Brent Fulgham.
+
+        * Shared/PlatformPopupMenuData.cpp:
+        (WebKit::PlatformPopupMenuData::decode):
+        Removing extra space
+
+2013-06-17  Beth Dakin  <bdakin@apple.com>
+
+        PageBanners appear over HTML5 video when media element is in full screen mode
+        https://bugs.webkit.org/show_bug.cgi?id=117721
+        -and corresponding-
+        <rdar://problem/13686998>
+
+        Reviewed by Sam Weinig.
+
+        When an element enters fullscreen, hide the banners. Show them again when the 
+        element exits fullscreen.
+        * WebProcess/FullScreen/WebFullScreenManager.cpp:
+        (WebKit::WebFullScreenManager::willEnterFullScreen):
+        (WebKit::WebFullScreenManager::willExitFullScreen):
+
+        Handle hiding and showing by removing or re-creating a parent layer for m_layer.
+        * WebProcess/WebPage/PageBanner.cpp:
+        (WebKit::PageBanner::hide):
+        (WebKit::PageBanner::showIfHidden):
+        * WebProcess/WebPage/PageBanner.h:
+        * WebProcess/WebPage/mac/PageBannerMac.mm:
+        (WebKit::PageBanner::PageBanner):
+        (WebKit::PageBanner::hide):
+        (WebKit::PageBanner::showIfHidden):
+        (WebKit::PageBanner::mouseEvent):
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::hidePageBanners):
+        (WebKit::WebPage::showPageBanners):
+        * WebProcess/WebPage/WebPage.h:
+
+2013-06-17  Ruth Fong  <ruth_fong@apple.com>
+
+        REGRESSION: Important controls are missing from <video> element UI, when compared to QuickTime
+        https://bugs.webkit.org/show_bug.cgi?id=20599
+
+        Add a "Download Video"/"Download Audio" context menu item to download media
+        elements.
+
+        Reviewed by Beth Dakin.
+
+        * Shared/API/c/WKContextMenuItemTypes.h: Updated to include
+        an enum type for the "Download Video/Audio" context menu item.
+
+        * Shared/API/c/WKSharedAPICast.h: Updated to associate
+        the enums in WebKit and WebCore that handle the "Download Video/Audio"
+        context menu item.
+
+        * UIProcess/API/efl/ewk_context_menu.cpp:
+        * UIProcess/API/efl/ewk_context_menu_item.cpp:
+        * UIProcess/API/efl/ewk_context_menu_item.h:
+        Updated to include new EWK enum type for "Download Video/Audio" context menu item.
+
+        * UIProcess/WebPageProxy.cpp: Updated to 
+        handle the "Download Video/Audio" context menu item mouse click
+        and download the media item in the UI process.
+
+2013-06-17  Ralph Thomas  <ralpht@gmail.com>
+
+        [CoordinatedGraphics][CSS Shaders] Use forwarding header for TextureMapperPlatformCompiledProgram.h
+        https://bugs.webkit.org/show_bug.cgi?id=117712
+
+        Reviewed by Noam Rosenthal.
+
+        * Shared/CoordinatedGraphics/WebCustomFilterProgramProxy.h:
+
 2013-06-17  Mark Rowe  <mrowe@apple.com>
 
         <rdar://problem/13145014> Allow CoreIPC messages to transmit importance boosts

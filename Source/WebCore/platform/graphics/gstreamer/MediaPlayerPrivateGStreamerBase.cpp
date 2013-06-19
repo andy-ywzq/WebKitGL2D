@@ -51,6 +51,10 @@
 #include <gst/interfaces/streamvolume.h>
 #endif
 
+#if GST_CHECK_VERSION(1, 1, 0) && USE(ACCELERATED_COMPOSITING) && USE(TEXTURE_MAPPER_GL)
+#include "TextureMapperGL.h"
+#endif
+
 GST_DEBUG_CATEGORY(webkit_media_player_debug);
 #define GST_CAT_DEFAULT webkit_media_player_debug
 
@@ -172,11 +176,7 @@ IntSize MediaPlayerPrivateGStreamerBase::naturalSize() const
         return m_videoSize;
 
 #ifdef GST_API_VERSION_1
-    /* FIXME this has a race with the pad setting caps as the buffer (m_buffer)
-     * and the caps won't match and might cause a crash. (In case a
-     * renegotiation happens)
-     */
-    GRefPtr<GstCaps> caps = webkitGstGetPadCaps(m_videoSinkPad.get());
+    GRefPtr<GstCaps> caps = currentVideoSinkCaps();
 #else
     g_mutex_lock(m_bufferMutex);
     GRefPtr<GstCaps> caps = m_buffer ? GST_BUFFER_CAPS(m_buffer) : 0;
@@ -334,10 +334,37 @@ void MediaPlayerPrivateGStreamerBase::updateTexture(GstBuffer* buffer)
         return;
 
     const void* srcData = 0;
-    IntSize size = naturalSize();
+#ifdef GST_API_VERSION_1
+    GRefPtr<GstCaps> caps = currentVideoSinkCaps();
+#else
+    GRefPtr<GstCaps> caps = GST_BUFFER_CAPS(buffer);
+#endif
+    if (!caps)
+        return;
+
+    IntSize size;
+    GstVideoFormat format;
+    int pixelAspectRatioNumerator, pixelAspectRatioDenominator, stride;
+    if (!getVideoSizeAndFormatFromCaps(caps.get(), size, format, pixelAspectRatioNumerator, pixelAspectRatioDenominator, stride))
+        return;
 
     if (m_texture->size() != size)
         m_texture->reset(size);
+
+#if GST_CHECK_VERSION(1, 1, 0)
+    GstVideoGLTextureUploadMeta* meta;
+    if ((meta = gst_buffer_get_video_gl_texture_upload_meta(buffer))) {
+        if (meta->n_textures == 1) { // BRGx & BGRA formats use only one texture.
+            const BitmapTextureGL* textureGL = static_cast<const BitmapTextureGL*>(m_texture.get());
+            guint ids[4] = { textureGL->id(), 0, 0, 0 };
+
+            if (gst_video_gl_texture_upload_meta_upload(meta, ids)) {
+                client()->setPlatformLayerNeedsDisplay();
+                return;
+            }
+        }
+    }
+#endif
 
 #ifdef GST_API_VERSION_1
     GstMapInfo srcInfo;
@@ -347,8 +374,7 @@ void MediaPlayerPrivateGStreamerBase::updateTexture(GstBuffer* buffer)
     srcData = GST_BUFFER_DATA(buffer);
 #endif
 
-    // @TODO: support cropping
-    m_texture->updateContents(srcData, WebCore::IntRect(WebCore::IntPoint(0, 0), size), WebCore::IntPoint(0, 0), size.width() * 4, BitmapTexture::UpdateCannotModifyOriginalImageData);
+    m_texture->updateContents(srcData, WebCore::IntRect(WebCore::IntPoint(0, 0), size), WebCore::IntPoint(0, 0), stride, BitmapTexture::UpdateCannotModifyOriginalImageData);
 
 #ifdef GST_API_VERSION_1
     gst_buffer_unmap(buffer, &srcInfo);
@@ -400,11 +426,7 @@ void MediaPlayerPrivateGStreamerBase::paint(GraphicsContext* context, const IntR
     }
 
 #ifdef GST_API_VERSION_1
-    /* FIXME this has a race with the pad setting caps as the buffer (m_buffer)
-     * and the caps won't match and might cause a crash. (In case a
-     * renegotiation happens)
-     */
-    GRefPtr<GstCaps> caps = webkitGstGetPadCaps(m_videoSinkPad.get());
+    GRefPtr<GstCaps> caps = currentVideoSinkCaps();
 #else
     GRefPtr<GstCaps> caps = GST_BUFFER_CAPS(m_buffer);
 #endif
@@ -428,6 +450,9 @@ void MediaPlayerPrivateGStreamerBase::paint(GraphicsContext* context, const IntR
 void MediaPlayerPrivateGStreamerBase::paintToTextureMapper(TextureMapper* textureMapper, const FloatRect& targetRect, const TransformationMatrix& matrix, float opacity)
 {
     if (textureMapper->accelerationMode() != TextureMapper::OpenGLMode)
+        return;
+
+    if (!m_player->visible())
         return;
 
     if (!m_texture) {
@@ -485,6 +510,16 @@ MediaPlayer::MovieLoadType MediaPlayerPrivateGStreamerBase::movieLoadType() cons
     return MediaPlayer::Download;
 }
 
+GRefPtr<GstCaps> MediaPlayerPrivateGStreamerBase::currentVideoSinkCaps() const
+{
+    if (!m_webkitVideoSink)
+        return 0;
+
+    GstCaps* currentCaps = 0;
+    g_object_get(G_OBJECT(m_webkitVideoSink.get()), "current-caps", &currentCaps, NULL);
+    return adoptGRef(currentCaps);
+}
+
 // This function creates and initializes some internal variables, and returns a
 // pointer to the element that should receive the data flow first
 GstElement* MediaPlayerPrivateGStreamerBase::createVideoSink(GstElement* pipeline)
@@ -499,7 +534,6 @@ GstElement* MediaPlayerPrivateGStreamerBase::createVideoSink(GstElement* pipelin
     UNUSED_PARAM(pipeline);
     m_webkitVideoSink = webkitVideoSinkNew();
 #endif
-    m_videoSinkPad = adoptGRef(gst_element_get_static_pad(m_webkitVideoSink.get(), "sink"));
 
     m_repaintHandler = g_signal_connect(m_webkitVideoSink.get(), "repaint-requested", G_CALLBACK(mediaPlayerPrivateRepaintCallback), this);
 

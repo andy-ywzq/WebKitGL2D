@@ -1,3 +1,73 @@
+2013-06-19  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed build fix for Apple Windows port.
+
+        * WebCoreSupport/WebFrameNetworkingContext.cpp:
+        (WebFrameNetworkingContext::ensurePrivateBrowsingSession):
+
+2013-06-19  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] AX: Extend notification support.
+        https://bugs.webkit.org/show_bug.cgi?id=117761
+
+        Reviewed by Anders Carlsson.
+
+        * AccessibleDocument.cpp:
+        (AccessibleDocument::state): Improve handling of focus state.
+        * AccessibleDocument.h: Provide signature for new state override.
+
+2013-06-19  peavo@outlook.com  <peavo@outlook.com>
+
+        [WinCairo] Does not compile.
+        https://bugs.webkit.org/show_bug.cgi?id=117798
+
+        Reviewed by Brent Fulgham.
+
+        Add USE(CFNETWORK) guards.
+
+        * WebCoreSupport/WebFrameNetworkingContext.cpp: Add USE(CFNETWORK) guard.
+        (WebFrameNetworkingContext::ensurePrivateBrowsingSession): Change USE(CF_NETWORK) to USE(CFNETWORK).
+        * WebCoreSupport/WebFrameNetworkingContext.h: Add USE(CFNETWORK) guard.
+
+2013-06-18  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Build fix for Apple Windows.
+
+        * WebCoreSupport/WebFrameNetworkingContext.h:
+        (WebFrameNetworkingContext::create):
+        (WebFrameNetworkingContext::WebFrameNetworkingContext):
+        (WebFrameNetworkingContext::userAgent):
+
+2013-06-18  Roger Fong  <roger_fong@apple.com>
+
+        Re-implement WebFrameNetworkingContext.
+        <rdar://problem/13174821>.
+
+        Reviewed by Alexey Proskuryakov.
+
+        * WebCoreSupport/WebFrameNetworkingContext.cpp: Added.
+        (WebFrameNetworkingContext::setCookieAcceptPolicyForAllContexts):
+        (WebFrameNetworkingContext::setPrivateBrowsingStorageSessionIdentifierBase):
+        (WebFrameNetworkingContext::ensurePrivateBrowsingSession):
+        (WebFrameNetworkingContext::destroyPrivateBrowsingSession):
+        (WebFrameNetworkingContext::blockedError):
+        (WebFrameNetworkingContext::referrer):
+        (WebFrameNetworkingContext::storageSession):
+        * WebCoreSupport/WebFrameNetworkingContext.h: Added.
+        (WebFrameNetworkingContext::create):
+        (WebFrameNetworkingContext::WebFrameNetworkingContext):
+
+2013-06-18  Alexey Proskuryakov  <ap@apple.com>
+
+        <rdar://problem/13174821> Remove files with an incorrect license.
+
+        Rubber-stamped by Maciej Stachowiak.
+
+        This will break the build, stay tuned for a fix coming soon.
+
+        * WebCoreSupport/WebFrameNetworkingContext.cpp: Removed.
+        * WebCoreSupport/WebFrameNetworkingContext.h: Removed.
+
 2013-06-12  Brent Fulgham  <bfulgham@apple.com>
 
         [Windows] Implement Accessibility2 APIs in Windows.

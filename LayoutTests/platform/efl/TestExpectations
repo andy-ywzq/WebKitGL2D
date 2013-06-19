@@ -463,8 +463,6 @@ webkit.org/b/102486 editing/pasteboard/line-feed-between-br-and-b-should-not-reo
 webkit.org/b/102486 editing/pasteboard/paste-table-cells.html [ Failure ]
 
 # Needs baselines
-editing/deleting/smart-delete-003.html [ Missing ]
-editing/deleting/smart-delete-004.html [ Missing ]
 editing/inserting/before-after-input-element.html [ Missing ]
 editing/inserting/break-blockquote-after-delete.html [ Missing ]
 editing/selection/contains-boundaries.html [ Missing ]
@@ -1778,3 +1776,8 @@ webkit.org/b/116587 http/tests/websocket/tests/hybi/close.html [ Skip ]
 webkit.org/b/116587 http/tests/websocket/tests/hybi/close-on-navigate-new-location.html [ Skip ]
 webkit.org/b/116587 http/tests/websocket/tests/hybi/multiple-subprotocols.html [ Skip ]
 webkit.org/b/116587 http/tests/websocket/tests/hybi/reload-crash.html [ Skip ]
+
+webkit.org/b/117706 accessibility/box-styled-lists.html [ Failure ]
+
+# Synthesized italics not supported
+fast/text/international/synthesized-italic-vertical-latin.html [ Skip ]

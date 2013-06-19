@@ -576,8 +576,8 @@ protected:
     }
 #endif
 
-    bool updateRegionsAndExclusionsBeforeChildLayout(RenderFlowThread*);
-    void updateRegionsAndExclusionsAfterChildLayout(RenderFlowThread*, bool heightChanged = false);
+    bool updateRegionsAndShapesBeforeChildLayout(RenderFlowThread*);
+    void updateRegionsAndShapesAfterChildLayout(RenderFlowThread*, bool heightChanged = false);
     void computeRegionRangeForBlock(RenderFlowThread*);
 
     void updateBlockChildDirtyBitsBeforeLayout(bool relayoutChildren, RenderBox*);
@@ -1085,8 +1085,8 @@ private:
     void layoutRunsAndFloats(LineLayoutState&, bool hasInlineChild);
     void layoutRunsAndFloatsInRange(LineLayoutState&, InlineBidiResolver&, const InlineIterator& cleanLineStart, const BidiStatus& cleanLineBidiStatus, unsigned consecutiveHyphenatedLines);
 #if ENABLE(CSS_SHAPES)
-    void updateShapeAndSegmentsForCurrentLine(ShapeInsideInfo*&, LayoutUnit&, LineLayoutState&, bool&);
-    void updateShapeAndSegmentsForCurrentLineInFlowThread(ShapeInsideInfo*&, LineLayoutState&, bool&);
+    void updateShapeAndSegmentsForCurrentLine(ShapeInsideInfo*&, LayoutUnit&, LineLayoutState&);
+    void updateShapeAndSegmentsForCurrentLineInFlowThread(ShapeInsideInfo*&, LineLayoutState&);
     bool adjustLogicalLineTopAndLogicalHeightIfNeeded(ShapeInsideInfo*, LayoutUnit, LineLayoutState&, InlineBidiResolver&, FloatingObject*, InlineIterator&, WordMeasurements&);
 #endif
     const InlineIterator& restartLayoutRunsAndFloatsInRange(LayoutUnit oldLogicalHeight, LayoutUnit newLogicalHeight,  FloatingObject* lastFloatFromPreviousLine, InlineBidiResolver&,  const InlineIterator&);

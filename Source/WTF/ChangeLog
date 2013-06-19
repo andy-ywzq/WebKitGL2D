@@ -1,3 +1,113 @@
+2013-06-19  David Kilzer  <ddkilzer@apple.com>
+
+        BUILD FIX (r151663): Fix build for iOS WebKit
+
+        * wtf/text/AtomicStringTable.cpp: Include MainThread.h.
+        (WTF::AtomicStringTable::create): Use AtomicStringTable::destroy
+        instead of non-existent destroyAtomicStringTable function.
+
+2013-06-18  Roger Fong  <roger_fong@apple.com>
+
+        Replace tools32 folder with tools and update WebKit Windows solution accordingly.
+        <rdar://problem/14118143>.
+
+        Rubberstamped by Brent Fulgham.
+
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTFDebug.props:
+        * WTF.vcxproj/WTFDebugWinCairo.props:
+        * WTF.vcxproj/WTFGenerated.vcxproj:
+        * WTF.vcxproj/WTFGeneratedDebug.props:
+        * WTF.vcxproj/WTFGeneratedProduction.props:
+        * WTF.vcxproj/WTFGeneratedRelease.props:
+        * WTF.vcxproj/WTFProduction.props:
+        * WTF.vcxproj/WTFRelease.props:
+        * WTF.vcxproj/WTFReleaseWinCairo.props:
+        * WTF.vcxproj/work-around-vs-dependency-tracking-bugs.py:
+        (react_to_vsprops_changes):
+
+2013-06-18  Mikhail Pozdnyakov  <mikhail.pozdnyakov@intel.com>
+
+        PackedIntVector: check template arguments at compile time
+        https://bugs.webkit.org/show_bug.cgi?id=117737
+
+        Use 'COMPILE_ASSERT' instead of 'ASSERT' in PackedIntVector class
+        constructor.
+
+        Reviewed by Sam Weinig.
+
+        * wtf/PackedIntVector.h:
+        (WTF::PackedIntVector::PackedIntVector):
+
+2013-06-17  Andy Estes  <aestes@apple.com>
+
+        A static_assert() in RetainPtr.h sometimes causes the build to fail.
+
+        Wrap the first argument to a static_assert() in parentheses since it
+        contains a comma, which sometimes tricks the preprocessor into thinking
+        the macro is being passed three arguments rather than two.
+
+        Reviewed by Brian Weinstein.
+
+        * wtf/RetainPtr.h:
+        (WTF::RetainPtr::RetainPtr):
+
+2013-06-17  Zan Dobersek  <zdobersek@igalia.com>
+
+        REGRESSION (r149184): Build errors in RefPtr.h when building with Clang, C++98 standard
+        https://bugs.webkit.org/show_bug.cgi?id=116352
+
+        Reviewed by Anders Carlsson.
+
+        Use the __has_feature macro instead of the __has_extension one when detecting what features the Clang compiler
+        that's being used is capable to provide. With the project moving onto using C++11 throughout its components,
+        there currently exist cases where C++11-specific functionality (for instance std::move) is used despite being
+        guarded by compiler-specific feature guards that still get enabled even when compiling in C++98 with Clang.
+        The problematic features are enabled because they're available as C++98 language extensions by Clang.
+
+        Using __has_feature instead enables the feature guard only if the tested feature is actually standardized in
+        the currently used language standard.
+
+        * wtf/Compiler.h:
+
+2013-06-17  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Initialize AtomicStringTable in WTFThreadData's constructor
+        https://bugs.webkit.org/show_bug.cgi?id=117671
+
+        Reviewed by Geoffrey Garen.
+
+        Extracted AtomicStringTable from AtomicString.cpp into AtomicStringTable.h/cpp
+        and made WTFThreadDada::WTFThreadData create the atomic string table for the thread.
+
+        This eliminates a branch from stringTable() in AtomicString.cpp.
+
+        * GNUmakefile.list.am:
+        * WTF.pro:
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/WTFThreadData.cpp:
+        (WTF::WTFThreadData::WTFThreadData):
+        * wtf/text/AtomicString.cpp:
+        (WTF::stringTable):
+        * wtf/text/AtomicStringTable.cpp: Added.
+        (WTF::AtomicStringTable::create):
+        (WTF::AtomicStringTable::destroy):
+        * wtf/text/AtomicStringTable.h: Added.
+        (WTF::AtomicStringTable::table):
+
+2013-06-17  Roger Fong  <roger_fong@apple.com>
+
+        Modify Windows makefiles to copy some bin output into Program Files.
+        https://bugs.webkit.org/show_bug.cgi?id=117714.
+        <rdar://problem/14179054>
+
+        Reviewed by Brent Fulgham.
+
+        * WTF.vcxproj/WTF.make:
+
 2013-06-17  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
 
         Unreviewed, rolling out r151632.
