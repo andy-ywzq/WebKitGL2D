@@ -104,6 +104,16 @@ String contextMenuItemTagOpenImageInNewWindow()
     return String::fromUTF8("Open Image in New Window");
 }
 
+String contextMenuItemTagDownloadVideoToDisk()
+{
+    return String::fromUTF8("Download Video");
+}
+
+String contextMenuItemTagDownloadAudioToDisk()
+{
+    return String::fromUTF8("Download Audio");
+}
+
 String contextMenuItemTagDownloadImageToDisk()
 {
     return String::fromUTF8("Save Image As");
