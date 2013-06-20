@@ -60,6 +60,10 @@
 #define ENABLE_8BIT_TEXTRUN 1
 #endif
 
+#if !defined(ENABLE_CONTEXT_MENUS)
+#define ENABLE_CONTEXT_MENUS 0
+#endif
+
 #if !defined(ENABLE_CSS_IMAGE_SET)
 #define ENABLE_CSS_IMAGE_SET 1
 #endif
