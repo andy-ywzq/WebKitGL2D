@@ -7,6 +7,8 @@
 #include "WebKit2/WKPreferences.h"
 #include "WebKit2/WKPreferencesPrivate.h"
 #include "WebKit2/WKString.h"
+#include "WKPageNix.h"
+
 #include "XlibEventUtils.h"
 
 #include <GL/gl.h>
@@ -131,7 +133,7 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     popupMenuClient.version = kWKPageUIPopupMenuClientCurrentVersion;
     popupMenuClient.clientInfo = this;
     popupMenuClient.showPopupMenu = MiniBrowser::showPopupMenu;
-    WKPageSetPagePopupMenuClient(pageRef(), &popupMenuClient);
+    WKPageSetUIPopupMenuClient(pageRef(), &popupMenuClient);
 
     WKPageUIClient uiClient;
     memset(&uiClient, 0, sizeof(WKPageUIClient));

@@ -34,7 +34,6 @@
 #include <WebKit2/WKNativeEvent.h>
 #include <WebKit2/WKPageLoadTypes.h>
 #include <WebKit2/WKPageVisibilityTypes.h>
-#include <WebKit2/WKPopupItem.h>
 
 #ifndef __cplusplus
 #include <stdbool.h>
@@ -353,21 +352,6 @@ typedef struct WKPageContextMenuClient WKPageContextMenuClient;
 
 enum { kWKPageContextMenuClientCurrentVersion = 3 };
 
-// PopupMenu client
-typedef void (*WKPageShowPopupMenuCallback)(WKPageRef page, WKPopupMenuListenerRef menuListenerRef, WKRect rect, WKPopupItemTextDirection textDirection, double pageScaleFactor, WKArrayRef itemsRef, int32_t selectedIndex, const void* clientInfo);
-typedef void (*WKPageHidePopupMenuCallback)(WKPageRef page, const void* clientInfo);
-
-struct WKPageUIPopupMenuClient {
-    int                                                                          version;
-    const void *                                                                 clientInfo;
-
-    WKPageShowPopupMenuCallback                                                  showPopupMenu;
-    WKPageHidePopupMenuCallback                                                  hidePopupMenu;
-};
-typedef struct WKPageUIPopupMenuClient WKPageUIPopupMenuClient;
-
-enum { kWKPageUIPopupMenuClientCurrentVersion = 1 };
-
 WK_EXPORT WKTypeID WKPageGetTypeID();
 
 WK_EXPORT WKContextRef WKPageGetContext(WKPageRef page);
@@ -510,7 +494,6 @@ WK_EXPORT void WKPageSetPageFindMatchesClient(WKPageRef page, const WKPageFindMa
 WK_EXPORT void WKPageSetPageFormClient(WKPageRef page, const WKPageFormClient* client);
 WK_EXPORT void WKPageSetPageLoaderClient(WKPageRef page, const WKPageLoaderClient* client);
 WK_EXPORT void WKPageSetPagePolicyClient(WKPageRef page, const WKPagePolicyClient* client);
-WK_EXPORT void WKPageSetPagePopupMenuClient(WKPageRef page, const WKPageUIPopupMenuClient* client);
 WK_EXPORT void WKPageSetPageUIClient(WKPageRef page, const WKPageUIClient* client);
 
 typedef void (*WKPageRunJavaScriptFunction)(WKSerializedScriptValueRef, WKErrorRef, void*);

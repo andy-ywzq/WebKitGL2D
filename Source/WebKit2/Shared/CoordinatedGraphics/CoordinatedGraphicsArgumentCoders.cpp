@@ -73,10 +73,6 @@
 #include <WebCore/GraphicsSurface.h>
 #endif
 
-#if PLATFORM(NIX)
-namespace WebKit {}
-#endif
-
 using namespace WebCore;
 using namespace WebKit;
 

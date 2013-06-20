@@ -28,8 +28,8 @@
 
 #include "APIClient.h"
 #include "APIObject.h"
-#include "WKPage.h"
-#include "WebPopupItemPlatform.h"
+#include "WKPageNix.h"
+#include "WebPopupItem.h"
 #include <WebCore/IntRect.h>
 #include <WebCore/TextDirection.h>
 

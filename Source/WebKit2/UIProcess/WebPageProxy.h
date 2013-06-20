@@ -87,6 +87,7 @@
 #endif
 
 #if PLATFORM(NIX)
+#include "WKPageNix.h"
 #include "WebUIPopupMenuClient.h"
 #endif
 

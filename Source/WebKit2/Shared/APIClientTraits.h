@@ -63,10 +63,6 @@ template<> struct APIClientTraits<WKPageContextMenuClient> {
     static const size_t interfaceSizesByVersion[4];
 };
 
-template<> struct APIClientTraits<WKPageUIPopupMenuClient> {
-    static const size_t interfaceSizesByVersion[2];
-};
-
 template<> struct APIClientTraits<WKPageLoaderClient> {
     static const size_t interfaceSizesByVersion[3];
 };

@@ -28,7 +28,6 @@
 
 #include "ImageOptions.h"
 #include "SameDocumentNavigationType.h"
-#include "TextDirection.h"
 #include "WKBase.h"
 #include "WKContextMenuItemTypes.h"
 #include "WKEvent.h"
@@ -38,7 +37,6 @@
 #include "WKPageLoadTypes.h"
 #include "WKPageLoadTypesPrivate.h"
 #include "WKPageVisibilityTypes.h"
-#include "WKPopupItem.h"
 #include "WebError.h"
 #include "WebEvent.h"
 #include "WebFindOptions.h"
@@ -75,10 +73,6 @@ class WebData;
 class WebGraphicsContext;
 class WebImage;
 class WebPoint;
-#if PLATFORM(NIX)
-class WebPopupMenuListener;
-class WebPopupItemPlatform;
-#endif
 class WebRect;
 class WebSecurityOrigin;
 class WebSerializedScriptValue;
@@ -119,10 +113,6 @@ WK_ADD_API_MAPPING(WKURLRef, WebURL)
 WK_ADD_API_MAPPING(WKURLRequestRef, WebURLRequest)
 WK_ADD_API_MAPPING(WKURLResponseRef, WebURLResponse)
 WK_ADD_API_MAPPING(WKUserContentURLPatternRef, WebUserContentURLPattern)
-#if PLATFORM(NIX)
-WK_ADD_API_MAPPING(WKPopupItemRef, WebPopupItemPlatform)
-WK_ADD_API_MAPPING(WKPopupMenuListenerRef, WebPopupMenuListener)
-#endif
 
 #if PLATFORM(MAC)
 WK_ADD_API_MAPPING(WKWebArchiveRef, WebArchive)
@@ -734,22 +724,6 @@ inline WKContextMenuItemType toAPI(WebCore::ContextMenuItemType type)
         ASSERT_NOT_REACHED();
         return kWKContextMenuItemTypeAction;
     }
-}
-
-inline WKPopupItemTextDirection toAPI(WebCore::TextDirection direction)
-{
-    WKPopupItemTextDirection wkDirection = kWKPopupItemTextDirectionLTR;
-
-    switch (direction) {
-    case WebCore::RTL:
-        wkDirection = kWKPopupItemTextDirectionRTL;
-        break;
-    case WebCore::LTR:
-        wkDirection = kWKPopupItemTextDirectionLTR;
-        break;
-    }
-
-    return wkDirection;
 }
 
 inline FindOptions toFindOptions(WKFindOptions wkFindOptions)

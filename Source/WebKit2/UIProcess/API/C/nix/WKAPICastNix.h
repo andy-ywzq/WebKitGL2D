@@ -30,11 +30,35 @@
 #error "Please #include \"WKAPICast.h\" instead of this file directly."
 #endif
 
+#include "WKPopupItem.h"
+#include "TextDirection.h"
+
 namespace WebKit {
+
+class WebPopupMenuListener;
+class WebPopupItemPlatform;
 
 class WebView;
 
 WK_ADD_API_MAPPING(WKViewRef, WebView)
+WK_ADD_API_MAPPING(WKPopupItemRef, WebPopupItemPlatform)
+WK_ADD_API_MAPPING(WKPopupMenuListenerRef, WebPopupMenuListener)
+
+inline WKPopupItemTextDirection toAPI(WebCore::TextDirection direction)
+{
+    WKPopupItemTextDirection wkDirection = kWKPopupItemTextDirectionLTR;
+
+    switch (direction) {
+    case WebCore::RTL:
+        wkDirection = kWKPopupItemTextDirectionRTL;
+        break;
+    case WebCore::LTR:
+        wkDirection = kWKPopupItemTextDirectionLTR;
+        break;
+    }
+
+    return wkDirection;
+}
 
 }
 

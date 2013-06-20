@@ -44,11 +44,6 @@
 #include "WebContextMenuItem.h"
 #endif
 
-#if ENABLE(POPUP_MENUS)
-#include "WebPopupItemPlatform.h"
-#include "WebPopupMenuListener.h"
-#endif
-
 using namespace WebCore;
 using namespace WebKit;
 
@@ -618,13 +613,6 @@ void WKPageSetPageContextMenuClient(WKPageRef pageRef, const WKPageContextMenuCl
 {
 #if ENABLE(CONTEXT_MENUS)
     toImpl(pageRef)->initializeContextMenuClient(wkClient);
-#endif
-}
-
-void WKPageSetPagePopupMenuClient(WKPageRef pageRef, const WKPageUIPopupMenuClient* wkClient)
-{
-#if ENABLE(POPUP_MENUS)
-    toImpl(pageRef)->initializeUIPopupMenuClient(wkClient);
 #endif
 }
 

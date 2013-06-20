@@ -466,13 +466,6 @@ void WebPageProxy::initializeContextMenuClient(const WKPageContextMenuClient* cl
 }
 #endif
 
-#if PLATFORM(NIX)
-void WebPageProxy::initializeUIPopupMenuClient(const WKPageUIPopupMenuClient* client)
-{
-    m_uiPopupMenuClient.initialize(client);
-}
-#endif
-
 void WebPageProxy::reattachToWebProcess()
 {
     ASSERT(!isValid());

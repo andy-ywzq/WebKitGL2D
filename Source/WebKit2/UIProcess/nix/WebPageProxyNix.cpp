@@ -87,4 +87,9 @@ void WebPageProxy::findZoomableAreaForPoint(const WebCore::IntPoint& point, cons
     m_process->send(Messages::WebPage::FindZoomableAreaForPoint(point, area), m_pageID);
 }
 
+void WebPageProxy::initializeUIPopupMenuClient(const WKPageUIPopupMenuClient* client)
+{
+    m_uiPopupMenuClient.initialize(client);
+}
+
 } // namespace WebKit

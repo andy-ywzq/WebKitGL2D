@@ -63,11 +63,6 @@ const size_t APIClientTraits<WKPageContextMenuClient>::interfaceSizesByVersion[]
     sizeof(WKPageContextMenuClient)
 };
 
-const size_t APIClientTraits<WKPageUIPopupMenuClient>::interfaceSizesByVersion[] = {
-    offsetof(WKPageUIPopupMenuClient, showPopupMenu),
-    sizeof(WKPageUIPopupMenuClient)
-};
-
 const size_t APIClientTraits<WKPageLoaderClient>::interfaceSizesByVersion[] = {
     offsetof(WKPageLoaderClient, didDetectXSSForFrame),
     offsetof(WKPageLoaderClient, didReceiveIntentForFrame_unavailable),

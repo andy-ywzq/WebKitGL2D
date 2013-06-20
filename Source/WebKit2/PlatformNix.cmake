@@ -14,6 +14,9 @@ list(APPEND WebKit2_SOURCES
 
     Shared/API/c/gtk/WKGraphicsContextGtk.cpp
 
+    Shared/API/c/nix/WKPopupItem.cpp
+    Shared/API/c/nix/WKPopupMenuListener.cpp
+
     Shared/cairo/ShareableBitmapCairo.cpp
 
     Shared/nix/LayerTreeContextNix.cpp
@@ -22,10 +25,14 @@ list(APPEND WebKit2_SOURCES
     Shared/nix/NativeWebKeyboardEventNix.cpp
     Shared/nix/NativeWebTouchEventNix.cpp
     Shared/nix/WebEventFactoryNix.cpp
+    Shared/nix/WebPopupItemPlatform.cpp
+    Shared/nix/WebPopupMenuListener.cpp
+    Shared/nix/WebUIPopupMenuClient.cpp
 
     Shared/efl/ProcessExecutablePathEfl.cpp
 
     UIProcess/API/C/CoordinatedGraphics/WKView.cpp
+    UIProcess/API/C/nix/WKPageNix.cpp
     UIProcess/API/nix/NIXView.cpp
 
     UIProcess/cairo/BackingStoreCairo.cpp
@@ -269,8 +276,8 @@ set(WebKitNix_WebKit2_HEADERS
     Shared/API/c/WKNumber.h
     Shared/API/c/WKPageLoadTypes.h
     Shared/API/c/WKPageVisibilityTypes.h
-    Shared/API/c/WKPopupItem.h
-    Shared/API/c/WKPopupMenuListener.h
+    Shared/API/c/nix/WKPopupItem.h
+    Shared/API/c/nix/WKPopupMenuListener.h
     Shared/API/c/WKRenderLayer.h
     Shared/API/c/WKRenderObject.h
     Shared/API/c/WKSecurityOrigin.h
@@ -340,6 +347,8 @@ set(WebKitNix_WebKit2_HEADERS
     UIProcess/API/CoordinatedGraphics/WKCoordinatedScene.h
     UIProcess/API/C/CoordinatedGraphics/WKView.h
     UIProcess/API/C/WKViewportAttributes.h
+
+    UIProcess/API/C/nix/WKPageNix.h
 
     WebProcess/InjectedBundle/API/c/WKBundle.h
     WebProcess/InjectedBundle/API/c/WKBundleBackForwardList.h
