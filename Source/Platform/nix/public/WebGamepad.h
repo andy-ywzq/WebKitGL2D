@@ -28,11 +28,6 @@
 
 namespace WebKit {
 
-#pragma pack(push, 1)
-
-// This structure is intentionally POD and fixed size so that it can be shared
-// memory between hardware polling threads and the rest of the browser. See
-// also WebGamepads.h.
 class WebGamepad {
 public:
     static const size_t idLengthCap = 128;
@@ -70,8 +65,6 @@ public:
     // Normalized values representing buttons, in the range [0..1].
     float buttons[buttonsLengthCap];
 };
-
-#pragma pack(pop)
 
 }
 

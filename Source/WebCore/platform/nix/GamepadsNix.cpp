@@ -31,12 +31,6 @@
 #include "GamepadList.h"
 
 #include <public/Platform.h>
-#include <wtf/Assertions.h>
-
-// FIXME Change this to a static_assert in the future
-// FIXME2 We really need this!?
-COMPILE_ASSERT(sizeof(WebKit::WebGamepads) == 1864, WebGamepads_has_wrong_size);
-COMPILE_ASSERT(sizeof(WebKit::WebGamepad) == 465, WebGamepad_has_wrong_size);
 
 namespace WebCore {
 

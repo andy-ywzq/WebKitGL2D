@@ -28,11 +28,6 @@
 
 namespace WebKit {
 
-#pragma pack(push, 1)
-
-// This structure is intentionally POD and fixed size so that it can be stored
-// in shared memory between hardware polling threads and the rest of the
-// browser.
 class WebGamepads {
 public:
     WebGamepads()
@@ -46,8 +41,6 @@ public:
     // Gamepad data for N separate gamepad devices.
     WebGamepad items[itemsLengthCap];
 };
-
-#pragma pack(pop)
 
 }
 
