@@ -31,12 +31,6 @@
 #include <wtf/OwnArrayPtr.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/WTFString.h>
-#include <sys/wait.h>
-#include <errno.h>
-#include <stdio.h>
-
-#include <sys/socket.h>
-#include <sys/un.h>
 
 using namespace WebCore;
 
