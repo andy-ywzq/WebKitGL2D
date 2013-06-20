@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2010 Apple Inc. All rights reserved.
- * Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+ * Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies)
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,6 +34,7 @@ QT_BEGIN_NAMESPACE
 #if ENABLE(TOUCH_EVENTS)
 class QTouchEvent;
 #endif
+
 class QMouseEvent;
 class QWheelEvent;
 class QKeyEvent;
