@@ -37,7 +37,7 @@ list(APPEND WebCore_SOURCES
     platform/nix/ScrollbarThemeNix.cpp
     platform/gtk/SharedBufferGtk.cpp
     platform/nix/SoundNix.cpp
-    platform/gtk/SharedTimerGtk.cpp
+    platform/nix/SharedTimerNix.cpp
     platform/nix/TemporaryLinkStubs.cpp
     platform/nix/WidgetNix.cpp
 
