@@ -165,7 +165,7 @@ Color RenderThemeNix::platformTapHighlightColor() const
 }
 #endif
 
-void RenderThemeNix::systemFont(int, FontDescription&) const
+void RenderThemeNix::systemFont(WebCore::CSSValueID, FontDescription&) const
 {
 }
 
