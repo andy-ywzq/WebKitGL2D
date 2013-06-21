@@ -477,7 +477,6 @@ void WebChromeClient::contentsSizeChanged(Frame* frame, const IntSize& size) con
     if (frame->page()->mainFrame() != frame)
         return;
 
-
 #if USE(COORDINATED_GRAPHICS)
     if (m_page->useFixedLayout())
         m_page->drawingArea()->layerTreeHost()->sizeDidChange(size);

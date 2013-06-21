@@ -95,10 +95,6 @@
 #include "QtNetworkRequestData.h"
 #endif
 
-#if ENABLE(TOUCH_EVENTS)
-#include "NativeWebTouchEvent.h"
-#endif
-
 namespace CoreIPC {
     class ArgumentDecoder;
     class Connection;
