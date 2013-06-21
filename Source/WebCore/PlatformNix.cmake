@@ -33,7 +33,7 @@ list(APPEND WebCore_SOURCES
     platform/nix/PlatformScreenNix.cpp
     platform/nix/PlatformKeyboardEventNix.cpp
     platform/nix/RenderThemeNix.cpp
-    platform/gtk/RunLoopGtk.cpp
+    platform/nix/RunLoopNix.cpp
     platform/nix/ScrollbarThemeNix.cpp
     platform/gtk/SharedBufferGtk.cpp
     platform/nix/SoundNix.cpp
