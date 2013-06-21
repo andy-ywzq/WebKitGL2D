@@ -420,8 +420,8 @@ String StylePropertySet::getLayeredShorthandValue(const StylePropertyShorthand& 
                     else
                         yValue = nextValue;
 
-                    int xId = static_cast<CSSPrimitiveValue*>(value.get())->getIdent();
-                    int yId = static_cast<CSSPrimitiveValue*>(yValue.get())->getIdent();
+                    CSSValueID xId = static_cast<CSSPrimitiveValue*>(value.get())->getValueID();
+                    CSSValueID yId = static_cast<CSSPrimitiveValue*>(yValue.get())->getValueID();
                     if (xId != yId) {
                         if (xId == CSSValueRepeat && yId == CSSValueNoRepeat) {
                             useRepeatXShorthand = true;
@@ -727,7 +727,13 @@ void MutableStylePropertySet::setPrefixingVariantProperty(const CSSProperty& pro
         *toReplace = CSSProperty(prefixingVariant, property.value(), property.isImportant(), property.shorthandID(), property.metadata().m_implicit);
 }
 
-bool MutableStylePropertySet::setProperty(CSSPropertyID propertyID, int identifier, bool important)
+bool MutableStylePropertySet::setProperty(CSSPropertyID propertyID, CSSValueID identifier, bool important)
+{
+    setProperty(CSSProperty(propertyID, cssValuePool().createIdentifierValue(identifier), important));
+    return true;
+}
+
+bool MutableStylePropertySet::setProperty(CSSPropertyID propertyID, CSSPropertyID identifier, bool important)
 {
     setProperty(CSSProperty(propertyID, cssValuePool().createIdentifierValue(identifier), important));
     return true;

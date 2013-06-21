@@ -1992,7 +1992,7 @@ bool EventHandler::dispatchDragEvent(const AtomicString& eventType, Node* dragTa
 
     view->resetDeferredRepaintDelay();
     RefPtr<MouseEvent> me = MouseEvent::create(eventType,
-        true, true, m_frame->document()->defaultView(),
+        true, true, event.timestamp(), m_frame->document()->defaultView(),
         0, event.globalPosition().x(), event.globalPosition().y(), event.position().x(), event.position().y(),
 #if ENABLE(POINTER_LOCK)
         event.movementDelta().x(), event.movementDelta().y(),
@@ -2598,9 +2598,6 @@ bool EventHandler::handleGestureEvent(const PlatformGestureEvent& gestureEvent)
         return handleGestureLongTap(gestureEvent);
     case PlatformEvent::GestureTwoFingerTap:
         return handleGestureTwoFingerTap(gestureEvent);
-    case PlatformEvent::GesturePinchBegin:
-    case PlatformEvent::GesturePinchEnd:
-    case PlatformEvent::GesturePinchUpdate:
     case PlatformEvent::GestureTapDownCancel:
         break;
     default:

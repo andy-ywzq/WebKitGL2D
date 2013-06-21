@@ -1440,7 +1440,7 @@ void Element::attach(const AttachContext& context)
     // When a shadow root exists, it does the work of attaching the children.
     if (ElementShadow* shadow = this->shadow()) {
         parentPusher.push();
-        shadow->attach();
+        shadow->attach(context);
     } else if (firstChild())
         parentPusher.push();
 
@@ -1479,8 +1479,8 @@ void Element::detach(const AttachContext& context)
     }
 
     if (ElementShadow* shadow = this->shadow()) {
-        detachChildrenIfNeeded();
-        shadow->detach();
+        detachChildrenIfNeeded(context);
+        shadow->detach(context);
     }
 
     // Do not remove the element's hovered and active status
@@ -2420,6 +2420,16 @@ bool Element::isInCanvasSubtree() const
     return hasRareData() && elementRareData()->isInCanvasSubtree();
 }
 
+void Element::setRegionOversetState(RegionOversetState state)
+{
+    ensureElementRareData()->setRegionOversetState(state);
+}
+
+RegionOversetState Element::regionOversetState() const
+{
+    return hasRareData() ? elementRareData()->regionOversetState() : RegionUndefined;
+}
+
 AtomicString Element::computeInheritedLanguage() const
 {
     const Node* n = this;
@@ -2644,6 +2654,19 @@ void Element::setUnsignedIntegralAttribute(const QualifiedName& attributeName, u
     setAttribute(attributeName, String::number(value));
 }
 
+#if ENABLE(INDIE_UI)
+void Element::setUIActions(const AtomicString& actions)
+{
+    setAttribute(uiactionsAttr, actions);
+}
+
+const AtomicString& Element::UIActions() const
+{
+    return getAttribute(uiactionsAttr);
+}
+#endif
+
+    
 #if ENABLE(SVG)
 bool Element::childShouldCreateRenderer(const NodeRenderingContext& childContext) const
 {
@@ -2790,20 +2813,20 @@ const AtomicString& Element::webkitRegionOverset() const
     if (!document()->cssRegionsEnabled() || !renderRegion())
         return undefinedState;
 
-    switch (renderRegion()->regionState()) {
-    case RenderRegion::RegionFit: {
+    switch (renderRegion()->regionOversetState()) {
+    case RegionFit: {
         DEFINE_STATIC_LOCAL(AtomicString, fitState, ("fit", AtomicString::ConstructFromLiteral));
         return fitState;
     }
-    case RenderRegion::RegionEmpty: {
+    case RegionEmpty: {
         DEFINE_STATIC_LOCAL(AtomicString, emptyState, ("empty", AtomicString::ConstructFromLiteral));
         return emptyState;
     }
-    case RenderRegion::RegionOverset: {
+    case RegionOverset: {
         DEFINE_STATIC_LOCAL(AtomicString, overflowState, ("overset", AtomicString::ConstructFromLiteral));
         return overflowState;
     }
-    case RenderRegion::RegionUndefined:
+    case RegionUndefined:
         return undefinedState;
     }
 

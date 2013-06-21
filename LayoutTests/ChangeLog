@@ -1,3 +1,427 @@
+2013-06-20  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] AX: Radio buttons with "tab" role should describe themselves as tabs.
+        https://bugs.webkit.org/show_bug.cgi?id=117837
+
+        Reviewed by Chris Fleizach.
+
+        * accessibility/aria-tab-role-on-buttons.html: Added.
+        * accessibility/aria-tab-role-on-buttons-expected.txt: Added.
+        * platform/win/aria-tab-role-on-buttons-expected.txt: Added.
+
+2013-06-21  Radu Stavila  <stavila@adobe.com>
+
+        Improve the reattaching process while applying the :hover style
+        https://bugs.webkit.org/show_bug.cgi?id=117590
+
+        Reviewed by Andreas Kling.
+
+        Moved hover-display-block-inline.html and hover-display-block-none.html from fast/regions to fast/css.
+        Updated hover-display-block-none.html and hover-single-flow-into-other.html to ensure the outcome won't be affected by the machine's speed.
+        Updated input-file-re-render.html to stop it from failing on windows and linux machines (a more detailed description can be found inside the test itself).
+
+        * fast/css/hover-display-block-inline-expected.txt: Renamed from LayoutTests/fast/regions/hover-display-block-inline-expected.txt.
+        * fast/css/hover-display-block-inline.html: Renamed from LayoutTests/fast/regions/hover-display-block-inline.html.
+        * fast/css/hover-display-block-none-expected.txt: Renamed from LayoutTests/fast/regions/hover-display-block-none-expected.txt.
+        * fast/css/hover-display-block-none.html: Added.
+        * fast/css/hover-update-expected.txt:
+        * fast/css/hover-update.html:
+        * fast/forms/file/input-file-re-render.html:
+        * fast/regions/hover-display-block-none.html: Removed.
+        * fast/regions/hover-single-flow-into-other.html:
+
+2013-06-21  Zalan Bujtas  <zalan@apple.com>
+
+        Rollout r150602: Restoring text-overflow vs. floating rendering behaviour.
+        https://bugs.webkit.org/show_bug.cgi?id=117871
+
+        Unreviewed. Rolling out r150602.
+        Undesirable rendering behaviour.
+
+        * fast/css/text-overflow-ellipsis-behind-floats-expected.html:
+        * fast/css/text-overflow-ellipsis-behind-floats.html:
+        * fast/css/text-overflow-ellipsis-full-truncate-rtl-expected.html:
+        * fast/css/text-overflow-ellipsis-full-truncate-rtl.html:
+
+2013-06-21  Radu Stavila  <stavila@adobe.com>
+
+        Web Inspector: Integrate new regionOversetChange event into inspector
+        https://bugs.webkit.org/show_bug.cgi?id=117833
+
+        Tests for the new regionOversetChange event.
+
+        Reviewed by Joseph Pecoraro.
+
+        * inspector/styles/protocol-css-regions-commands-expected.txt:
+        * inspector/styles/protocol-css-regions-commands.html:
+
+2013-06-21  Krzysztof Czech  <k.czech@samsung.com>
+
+        [ATK] Added support for aria-required attribute.
+        https://bugs.webkit.org/show_bug.cgi?id=117730
+
+        Reviewed by Chris Fleizach.
+
+        Moving specific platform accessibility tests.
+
+        * accessibility/aria-required-expected.txt: Renamed from LayoutTests/platform/mac/accessibility/aria-required-expected.txt.
+        * accessibility/aria-required.html: Renamed from LayoutTests/platform/mac/accessibility/aria-required.html.
+        * accessibility/html5-required-attribute-expected.txt: Renamed from LayoutTests/platform/mac/accessibility/html5-required-attribute-expected.txt.
+        * accessibility/html5-required-attribute.html: Renamed from LayoutTests/platform/mac/accessibility/html5-required-attribute.html.
+
+2013-06-21  Chris Fleizach  <cfleizach@apple.com>
+
+        IndieUI: Add basic IndieUI infrastructure
+        https://bugs.webkit.org/show_bug.cgi?id=117367
+
+        Unreviewed. Update Lion expected results.
+
+        * platform/mac-lion/fast/js/global-constructors-attributes-expected.txt:
+
+2013-06-20  Chris Fleizach  <cfleizach@apple.com>
+
+        IndieUI: Add basic IndieUI infrastructure
+        https://bugs.webkit.org/show_bug.cgi?id=117367
+
+        Reviewed by Ryosuke Niwa.
+
+        * fast/js/dom-static-property-for-in-iteration-expected.txt:
+        * fast/js/global-constructors-attributes-expected.txt:
+        * indieui: Added.
+        * indieui/create-uirequestevent-expected.txt: Added.
+        * indieui/create-uirequestevent.html: Added.
+        * indieui/uiactions-expected.txt: Added.
+        * indieui/uiactions.html: Added.
+        * platform/efl/TestExpectations:
+        * platform/gtk/TestExpectations:
+        * platform/qt/TestExpectations:
+        * platform/qt/fast/js/dom-static-property-for-in-iteration-expected.txt: Added.
+        * platform/win/TestExpectations:
+        * platform/win/fast/js/dom-static-property-for-in-iteration-expected.txt: Added.
+
+2013-06-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        REGRESSION(r151808): fast/xmlhttprequest/xmlhttprequest-recursive-sync-event.html fails
+        https://bugs.webkit.org/show_bug.cgi?id=117862
+
+        Add a failing test expectation.
+
+        * platform/mac/TestExpectations:
+
+2013-06-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        REGRESSION(r145788): mouse drag on canvas shouldn't start selection
+        https://bugs.webkit.org/show_bug.cgi?id=117860
+
+        Reviewed by Benjamin Poulain.
+
+        Add a regression test for dragging mouse inside a canvas.
+        The canvas should not be selected and mouseup event should fire.
+
+        * fast/events/mosuedrag-on-canvas-should-not-start-selection-expected.txt: Added.
+        * fast/events/mosuedrag-on-canvas-should-not-start-selection.html: Added.
+
+2013-06-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        REGRESSION(r149652): accessing items in .children via id doesn't work when element is not rooted in DOM tree
+        https://bugs.webkit.org/show_bug.cgi?id=117836
+
+        Reviewed by Benjamin Poulain.
+
+        Add a regression test for named getter for a detached element.
+
+        * fast/dom/htmlallcollection-detached-node-children-expected.txt: Added.
+        * fast/dom/htmlallcollection-detached-node-children.html: Added.
+
+2013-06-20  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [CMAKE][EFL] Enable DOM4 Events Constructor
+        https://bugs.webkit.org/show_bug.cgi?id=117858
+
+        Reviewed by Laszlo Gombos.
+
+        * platform/efl/TestExpectations: Unskip the related tests.
+
+2013-06-20  Alexey Proskuryakov  <ap@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=116495
+        Fix null-pointer deref in DocumentLoader::responseReceived()
+
+        Patch by Nate Chapin, reviewed by Mike West and myself.
+
+        * http/tests/security/XFrameOptions/x-frame-options-deny-delete-frame-in-load-event-expected.txt: Added.
+        * http/tests/security/XFrameOptions/x-frame-options-deny-delete-frame-in-load-event.html: Added.
+
+2013-06-20  Enrica Casucci  <enrica@apple.com>
+
+        Initial advance on the first glyph of the run is not correctly set for rtl text.
+        https://bugs.webkit.org/show_bug.cgi?id=117839
+        <rdar://problem/13860717>
+
+        Reviewed by Sam Weinig.
+
+        * fast/text/complex-first-glyph-with-initial-advance-expected.html: Added.
+        * fast/text/complex-first-glyph-with-initial-advance.html: Added.
+
+2013-06-20  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r151463.
+        http://trac.webkit.org/changeset/151463
+        https://bugs.webkit.org/show_bug.cgi?id=117850
+
+        "r151451 was rolled out" (Requested by rhogan on #webkit).
+
+        * platform/efl/fast/forms/button-positioned-expected.txt:
+        * platform/efl/fast/forms/input-appearance-preventDefault-expected.txt:
+        * platform/efl/fast/replaced/width-and-height-of-positioned-replaced-elements-expected.txt: Removed.
+        * platform/gtk/fast/forms/button-positioned-expected.txt:
+        * platform/gtk/fast/forms/input-appearance-preventDefault-expected.png:
+        * platform/gtk/fast/forms/input-appearance-preventDefault-expected.txt:
+        * platform/gtk/fast/replaced/width-and-height-of-positioned-replaced-elements-expected.txt: Removed.
+        * platform/win/fast/forms/onselect-textfield-expected.txt: Removed.
+
+2013-06-20  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r151451.
+        http://trac.webkit.org/changeset/151451
+        https://bugs.webkit.org/show_bug.cgi?id=117848
+
+        "Broke quite a lot of sites" (Requested by rhogan on #webkit).
+
+        * fast/forms/onselect-textfield-expected.txt:
+        * fast/replaced/width-and-height-of-positioned-replaced-elements-expected.png: Removed.
+        * fast/replaced/width-and-height-of-positioned-replaced-elements-expected.txt: Removed.
+        * fast/replaced/width-and-height-of-positioned-replaced-elements.html: Removed.
+        * platform/mac-wk2/fast/replaced/width-and-height-of-positioned-replaced-elements-expected.txt: Removed.
+        * platform/mac/fast/forms/button-positioned-expected.txt:
+        * platform/mac/fast/forms/input-appearance-preventDefault-expected.txt:
+        * platform/mac/fast/replaced/width-and-height-of-positioned-replaced-elements-expected.txt: Removed.
+        * platform/qt/fast/forms/button-positioned-expected.txt:
+        * platform/qt/fast/forms/input-appearance-preventDefault-expected.txt:
+
+2013-06-20  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r151788.
+        http://trac.webkit.org/changeset/151788
+        https://bugs.webkit.org/show_bug.cgi?id=117847
+
+        "This is the wrong fix" (Requested by rhogan on #webkit).
+
+        * fast/forms/onselect-textfield-expected.txt:
+        * fast/replaced/height-of-positioned-text-control-expected.html: Removed.
+        * fast/replaced/height-of-positioned-text-control.html: Removed.
+        * fast/replaced/width-and-height-of-positioned-replaced-elements-expected.txt:
+        * platform/mac/fast/forms/input-appearance-preventDefault-expected.png:
+        * platform/mac/fast/forms/input-appearance-preventDefault-expected.txt:
+        * platform/mac/fast/replaced/width-and-height-of-positioned-replaced-elements-expected.png:
+        * platform/mac/fast/replaced/width-and-height-of-positioned-replaced-elements-expected.txt:
+        * platform/qt/fast/forms/input-appearance-preventDefault-expected.txt:
+
+2013-05-24  Balazs Kelemen  <kbalazs@webkit.org>
+
+        [Gstreamer] cleanup buffering and state updates
+        https://bugs.webkit.org/show_bug.cgi?id=116642
+
+        Reviewed by Philippe Normand.
+
+        Remove failure expectations from tests that started to pass.
+
+        * platform/efl/TestExpectations:
+        * platform/gtk/TestExpectations:
+
+2013-06-20  Eric Carlson  <eric.carlson@apple.com>
+
+        ASSERT removing then adding a <track> element
+        https://bugs.webkit.org/show_bug.cgi?id=117814
+
+        Reviewed by Jer Noble.
+
+        * media/track/add-and-remove-track-expected.txt: Added.
+        * media/track/add-and-remove-track.html: Added.
+
+2013-06-20  Benjamin Poulain  <bpoulain@apple.com>
+
+        Mark compositing/repaint/positioned-movement.html as flaky on Mountain Lion Debug
+
+        * platform/mac-wk2/TestExpectations:
+        The test fails regularly in Debug on Mountain Lion.
+
+2013-06-20  Robert Hogan  <robert@webkit.org>
+
+        [Qt][WK2] REGRESSION(r151737): fast/replaced/width100percent-image.html fails
+        https://bugs.webkit.org/show_bug.cgi?id=117824
+
+        Unreviewed, rebaselining.
+
+        * platform/qt-5.0-wk2/TestExpectations:
+        * platform/qt-5.0-wk2/fast/replaced/width100percent-image-expected.png:
+        * platform/qt-5.0-wk2/fast/replaced/width100percent-image-expected.txt:
+
+2013-06-18  Robert Hogan  <robert@webkit.org>
+
+        REGRESSION (r151451): Text not vertically centered correctly on icloud.com
+        https://bugs.webkit.org/show_bug.cgi?id=117744
+
+        Reviewed by David Hyatt.
+
+        * fast/forms/onselect-textfield-expected.txt:
+        * fast/replaced/height-of-positioned-text-control-expected.html: Added.
+        * fast/replaced/height-of-positioned-text-control.html: Added.
+        * fast/replaced/width-and-height-of-positioned-replaced-elements-expected.txt:
+        * platform/mac/fast/forms/input-appearance-preventDefault-expected.png:
+        * platform/mac/fast/forms/input-appearance-preventDefault-expected.txt:
+        * platform/mac/fast/replaced/width-and-height-of-positioned-replaced-elements-expected.png: Added.
+        * platform/mac/fast/replaced/width-and-height-of-positioned-replaced-elements-expected.txt:
+        * platform/qt/fast/forms/input-appearance-preventDefault-expected.txt:
+
+2013-06-20  Radu Stavila  <stavila@adobe.com>
+
+        [CSS Regions] Add new regionOversetChange event
+        https://bugs.webkit.org/show_bug.cgi?id=117508
+
+        Changed regionLayoutUpdate tests to regionOversetChange and added new tests for regionOversetChange.
+
+        Reviewed by Antti Koivisto.
+
+        * fast/regions/webkit-named-flow-event-add-to-flow-expected.txt:
+        * fast/regions/webkit-named-flow-event-add-to-flow.html:
+        * fast/regions/webkit-named-flow-event-auto-height-expected.txt:
+        * fast/regions/webkit-named-flow-event-auto-height.html: Added.
+        * fast/regions/webkit-named-flow-event-crash-expected.txt:
+        * fast/regions/webkit-named-flow-event-crash.html:
+        * fast/regions/webkit-named-flow-event-expected.txt:
+        * fast/regions/webkit-named-flow-event-no-regions-expected.txt:
+        * fast/regions/webkit-named-flow-event-no-regions.html:
+        * fast/regions/webkit-named-flow-event-region-in-flexbox-no-overset-change-expected.txt:
+        * fast/regions/webkit-named-flow-event-region-in-flexbox-no-overset-change.html: Added.
+        * fast/regions/webkit-named-flow-event-region-in-flexbox-overset-change-expected.txt:
+        * fast/regions/webkit-named-flow-event-region-in-flexbox-overset-change.html: Added.
+        * fast/regions/webkit-named-flow-event-remove-from-dom-expected.txt:
+        * fast/regions/webkit-named-flow-event-remove-from-dom.html:
+        * fast/regions/webkit-named-flow-event-remove-from-flow-expected.txt:
+        * fast/regions/webkit-named-flow-event-remove-from-flow.html:
+        * fast/regions/webkit-named-flow-event-target-expected.txt:
+        * fast/regions/webkit-named-flow-event-target.html:
+        * fast/regions/webkit-named-flow-event-to-null-expected.txt:
+        * fast/regions/webkit-named-flow-event-to-null.html:
+        * fast/regions/webkit-named-flow-event.html:
+
+2013-06-20  James Craig  <james@cookiecrook.com>
+
+        AX: aria-required is not exposed on all expected roles
+        https://bugs.webkit.org/show_bug.cgi?id=115123
+
+        Reviewed by Chris Fleizach.
+
+        aria-required is now exposed on more roles. Updated existing test file.
+
+        * platform/mac/accessibility/aria-required-expected.txt:
+        * platform/mac/accessibility/aria-required.html:
+        * platform/mac/accessibility/radio-button-group-members-expected.txt:
+
+2013-06-20  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        Web Inspector: Use console.timeStamp instead of console.markTimeline
+        https://bugs.webkit.org/show_bug.cgi?id=117810
+
+        Reviewed by Joseph Pecoraro.
+
+        Use 'console.timeStamp' instead of 'console.markTimeline' in LayoutTests.
+        And remove inspector/timeline/timeline-mark-timeline.html.
+
+        * inspector/console/console-messages-stack-traces-expected.txt:
+        * inspector/console/console-messages-stack-traces.html:
+        * inspector/timeline/timeline-mark-timeline-expected.txt: Removed.
+        * inspector/timeline/timeline-mark-timeline.html: Removed.
+        * inspector/timeline/timeline-timer-fired-from-eval-call-site.html:
+
+2013-06-20  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening.
+
+        Rebselining after r151761, see bug 115372.
+
+        * platform/qt-5.0-wk2/TestExpectations:
+        * platform/qt-5.0-wk2/fast/repaint/horizontal-bt-overflow-child-expected.txt: Added.
+        * platform/qt-5.0-wk2/fast/repaint/horizontal-bt-overflow-parent-expected.txt: Added.
+        * platform/qt-5.0-wk2/fast/repaint/horizontal-bt-overflow-same-expected.txt: Added.
+        * platform/qt-5.0-wk2/fast/repaint/vertical-overflow-child-expected.txt: Added.
+        * platform/qt-5.0-wk2/fast/repaint/vertical-overflow-parent-expected.txt: Added.
+        * platform/qt-5.0-wk2/fast/repaint/vertical-overflow-same-expected.txt: Added.
+
+2013-06-20  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        background-color and text-decoration are not preserved when merging paragraphs
+        https://bugs.webkit.org/show_bug.cgi?id=116215
+
+        Reviewed by Ryosuke Niwa.
+
+        Added tests for verifying merge of paragraph/div from span with non-inline styles.
+
+        * editing/deleting/merge-div-from-span-with-style-expected.txt: Added.
+        * editing/deleting/merge-div-from-span-with-style.html: Added.
+        * editing/deleting/merge-paragraph-from-span-with-multiple-text-decoration-expected.txt: Added.
+        * editing/deleting/merge-paragraph-from-span-with-multiple-text-decoration.html: Added.
+        * editing/deleting/merge-paragraph-from-span-with-style-expected.txt: Added.
+        * editing/deleting/merge-paragraph-from-span-with-style.html: Added.
+
+2013-06-19  Beth Dakin  <bdakin@apple.com>
+
+        Adding a Mac pixel result.
+
+        * platform/mac/fast/replaced/width-and-height-of-positioned-replaced-elements-expected.png: Added.
+
+2013-06-19  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed AX test expecation gardening.
+
+        * platform/win/accessibility/aria-labelledby-on-input-expected.txt: Added.
+        * platform/win/accessibility/aria-list-and-listitem-expected.txt: Added.
+        * platform/win/accessibility/aria-roles-expected.txt: Added.
+
+2013-06-19  Benjamin Poulain  <bpoulain@apple.com>
+
+        Unskip feSpecularLight-premultiplied.svg on Mountain Lion
+
+        * platform/mac/TestExpectations:
+        The test is failing on Lion exclusively.
+
+2013-06-19  Yuki Sekiguchi  <yuki.sekiguchi@access-company.com>
+
+        Incomplete repaint of input elements in writing-mode overflow
+        https://bugs.webkit.org/show_bug.cgi?id=110246
+
+        Reviewed by Simon Fraser.
+
+        * fast/repaint/horizontal-bt-overflow-child-expected.txt: Added.
+        * fast/repaint/horizontal-bt-overflow-child.html: Added.
+        * fast/repaint/horizontal-bt-overflow-parent-expected.txt: Added.
+        * fast/repaint/horizontal-bt-overflow-parent.html: Added.
+        * fast/repaint/horizontal-bt-overflow-same-expected.txt: Added.
+        * fast/repaint/horizontal-bt-overflow-same.html: Added.
+        * fast/repaint/vertical-overflow-child-expected.txt: Added.
+        * fast/repaint/vertical-overflow-child.html: Added.
+        * fast/repaint/vertical-overflow-parent-expected.txt: Added.
+        * fast/repaint/vertical-overflow-parent.html: Added.
+        * fast/repaint/vertical-overflow-same-expected.txt: Added.
+        * fast/repaint/vertical-overflow-same.html: Added.
+
+2013-06-19  Benjamin Poulain  <bpoulain@apple.com>
+
+        Unskip two canvas tests that only fail on Lion
+
+        * platform/mac/TestExpectations:
+
+2013-06-19  Benjamin Poulain  <bpoulain@apple.com>
+
+        Rebaseline 24bit-22khz-resample on Mac
+
+        The result did not match the expectation after a system update.
+
+        * platform/mac-wk2/webaudio/codec-tests/wav/24bit-22khz-resample-expected.wav:
+        Comparing the files, they have the exact same length, sample rate, bit per sample and binary size.
+        I cannot ear a difference in the files.
+
 2013-06-19  Robert Hogan  <robert@webkit.org>
 
         Rebaseline results on GTK and EFL after r151737

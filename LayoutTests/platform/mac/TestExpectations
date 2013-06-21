@@ -529,8 +529,8 @@ webkit.org/b/78801 touchadjustment
 # canvas/philip/tests/2d.line.cap.round.html fails on Mac Lion WK1
 # <rdar://problem/11059777>
 webkit.org/b/81289 canvas/philip/tests/2d.line.cap.round.html [ Failure ]
-webkit.org/b/81289 canvas/philip/tests/2d.shadow.canvas.transparent.2.html [ Failure ]
-webkit.org/b/81289 canvas/philip/tests/2d.shadow.image.transparent.2.html [ Failure ]
+webkit.org/b/81289 [ Lion ] canvas/philip/tests/2d.shadow.canvas.transparent.2.html [ Failure ]
+webkit.org/b/81289 [ Lion ] canvas/philip/tests/2d.shadow.image.transparent.2.html [ Failure ]
 
 # Needs BatteryClient implementation.
 webkit.org/b/62698 batterystatus/
@@ -659,7 +659,7 @@ webkit.org/b/88672 [ Lion ] svg/filters/color-space-conversion.svg [ ImageOnlyFa
 webkit.org/b/89680 [ Lion ] fast/canvas/canvas-imageSmoothingEnabled-repaint.html [ Failure ]
 
 webkit.org/b/89528 [ Lion ] svg/filters/container-with-filters.svg [ ImageOnlyFailure ]
-webkit.org/b/89528 svg/filters/feSpecularLight-premultiplied.svg [ ImageOnlyFailure ]
+webkit.org/b/89528 [ Lion ] svg/filters/feSpecularLight-premultiplied.svg [ ImageOnlyFailure ]
 
 # Implement textInputController.setComposition()
 webkit.org/b/89845 fast/forms/input-set-composition-scroll.html [ Failure ]
@@ -1336,3 +1336,5 @@ webkit.org/b/116388 fast/js/post-message-numeric-property.html
 webkit.org/b/116582 [ Debug ] inspector/styles/import-pseudoclass-crash.html [ Pass Crash ]
 
 webkit.org/b/116592 inspector/geolocation-error.html [ Pass Failure ]
+
+webkit.org/b/117862 fast/xmlhttprequest/xmlhttprequest-recursive-sync-event.html [ Failure ]

@@ -718,6 +718,30 @@ bool AccessibilityNodeObject::isRequired() const
     return false;
 }
 
+bool AccessibilityNodeObject::supportsRequiredAttribute() const
+{
+    switch (roleValue()) {
+    case CheckBoxRole:
+    case ComboBoxRole:
+    case GridRole:
+    case IncrementorRole:
+    case ListBoxRole:
+    case PopUpButtonRole:
+    case RadioButtonRole:
+    case RadioGroupRole:
+    case RowHeaderRole:
+    case SliderRole:
+    case SpinButtonRole:
+    case TableHeaderContainerRole:
+    case TextAreaRole:
+    case TextFieldRole:
+    case ToggleButtonRole:
+        return true;
+    default:
+        return false;
+    }
+}
+
 int AccessibilityNodeObject::headingLevel() const
 {
     // headings can be in block flow and non-block flow
@@ -1876,6 +1900,25 @@ bool AccessibilityNodeObject::hasContentEditableAttributeSet() const
     const AtomicString& contentEditableValue = getAttribute(contenteditableAttr);
     // Both "true" (case-insensitive) and the empty string count as true.
     return contentEditableValue.isEmpty() || equalIgnoringCase(contentEditableValue, "true");
+}
+
+bool AccessibilityNodeObject::canSetSelectedAttribute() const
+{
+    // Elements that can be selected
+    switch (roleValue()) {
+    case CellRole:
+    case RadioButtonRole:
+    case RowHeaderRole:
+    case RowRole:
+    case TabListRole:
+    case TabRole:
+    case TreeGridRole:
+    case TreeItemRole:
+    case TreeRole:
+        return isEnabled();
+    default:
+        return false;
+    }
 }
 
 } // namespace WebCore

@@ -816,17 +816,21 @@ LayoutSize RenderBox::cachedSizeForOverflowClip() const
 
 void RenderBox::applyCachedClipAndScrollOffsetForRepaint(LayoutRect& paintRect) const
 {
+    flipForWritingMode(paintRect);
     paintRect.move(-scrolledContentOffset()); // For overflow:auto/scroll/hidden.
 
     // Do not clip scroll layer contents to reduce the number of repaints while scrolling.
-    if (usesCompositedScrolling())
+    if (usesCompositedScrolling()) {
+        flipForWritingMode(paintRect);
         return;
+    }
 
     // height() is inaccurate if we're in the middle of a layout of this RenderBox, so use the
     // layer's size instead. Even if the layer's size is wrong, the layer itself will repaint
     // anyway if its size does change.
     LayoutRect clipRect(LayoutPoint(), cachedSizeForOverflowClip());
     paintRect = intersection(paintRect, clipRect);
+    flipForWritingMode(paintRect);
 }
 
 void RenderBox::computeIntrinsicLogicalWidths(LayoutUnit& minLogicalWidth, LayoutUnit& maxLogicalWidth) const
@@ -3050,15 +3054,9 @@ static void computeInlineStaticDistance(Length& logicalLeft, Length& logicalRigh
     }
 }
 
-static bool isReplacedElement(const RenderBox* child)
-{
-    // FIXME: Bug 117267, we should make form control elements isReplaced too so that we can just check for that.
-    return child->isReplaced() || (child->node() && child->node()->isElementNode() && toElement(child->node())->isFormControlElement() && !child->isFieldset());
-}
-
 void RenderBox::computePositionedLogicalWidth(LogicalExtentComputedValues& computedValues, RenderRegion* region) const
 {
-    if (isReplacedElement(this)) {
+    if (isReplaced()) {
         // FIXME: Positioned replaced elements inside a flow thread are not working properly
         // with variable width regions (see https://bugs.webkit.org/show_bug.cgi?id=69896 ).
         computePositionedLogicalWidthReplaced(computedValues);
@@ -3400,7 +3398,7 @@ static void computeBlockStaticDistance(Length& logicalTop, Length& logicalBottom
 
 void RenderBox::computePositionedLogicalHeight(LogicalExtentComputedValues& computedValues) const
 {
-    if (isReplacedElement(this)) {
+    if (isReplaced()) {
         computePositionedLogicalHeightReplaced(computedValues);
         return;
     }

@@ -1,3 +1,90 @@
+2013-06-21  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        REGRESSION (r150663): Using webkitAudioContext in Inspector makes it undefined everywhere
+        https://bugs.webkit.org/show_bug.cgi?id=117825
+
+        Reviewed by Kentaro Hara.
+
+        DumpRenderTreeSupportEfl::setWebAudioEnabled() now requires an additional view argument.
+
+        * DumpRenderTree/efl/DumpRenderTreeChrome.cpp:
+        (DumpRenderTreeChrome::resetDefaultsToConsistentValues):
+        * DumpRenderTree/efl/TestRunnerEfl.cpp:
+        (TestRunner::overridePreference):
+
+2013-06-21  Krzysztof Czech  <k.czech@samsung.com>
+
+        [ATK] Added support for aria-required attribute.
+        https://bugs.webkit.org/show_bug.cgi?id=117730
+
+        Reviewed by Chris Fleizach.
+
+        Added support for testing aria-required attribute.
+
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (AccessibilityUIElement::isRequired):
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::AccessibilityUIElement::isRequired):
+
+2013-06-20  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [CMAKE][EFL] Enable DOM4 Events Constructor
+        https://bugs.webkit.org/show_bug.cgi?id=117858
+
+        Reviewed by Laszlo Gombos.
+
+        * Scripts/webkitperl/FeatureList.pm: Enable the feature for the EFL port.
+
+2013-06-20  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [BlackBerry] Handle testRunner.setWillSendRequestReturnsNull() in DRT
+        https://bugs.webkit.org/show_bug.cgi?id=117827
+
+        Reviewed by Rob Buis.
+
+        Reset the passed in request if willSendRequestReturnsNull() is
+        true or willSendRequestReturnsNullOnRedirect() is true and it's a
+        redirection.
+
+        * DumpRenderTree/blackberry/DumpRenderTree.cpp:
+        (BlackBerry::WebKit::DumpRenderTree::willSendRequestForFrame):
+        * DumpRenderTree/blackberry/DumpRenderTreeBlackBerry.h:
+
+2013-06-20  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Commit queue shouldn't reopen unrelated bugs because of flakiness
+        https://bugs.webkit.org/show_bug.cgi?id=117503
+
+        Reviewed by Ryosuke Niwa.
+
+        * Scripts/webkitpy/tool/bot/flakytestreporter.py:
+        (_follow_duplicate_chain):
+        (_update_bug_for_flaky_test):
+
+2013-06-19  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] AX: Expand notification support.
+        https://bugs.webkit.org/show_bug.cgi?id=117761
+
+        Reviewed by Anders Carlsson.
+
+        * DumpRenderTree/win/AccessibilityUIElementWin.cpp:
+        (AccessibilityUIElement::isPressActionSupported): Provide implementation.
+        (AccessibilityUIElement::press): Provide implementation.
+
+2013-06-19  Benjamin Poulain  <bpoulain@apple.com>
+
+        Use the PlatformEvent timestamp when creating a DOM Event
+        https://bugs.webkit.org/show_bug.cgi?id=117179
+
+        Reviewed by Darin Adler.
+
+        * WebKitTestRunner/mac/EventSenderProxy.mm:
+        (WTR::EventSenderProxy::mouseDown):
+        (WTR::EventSenderProxy::mouseUp):
+        (WTR::EventSenderProxy::mouseMoveTo):
+        (WTR::EventSenderProxy::keyDown):
+
 2013-06-18  Alex Christensen  <achristensen@apple.com>
 
         Working on coverage script, added xml to json data extraction script.

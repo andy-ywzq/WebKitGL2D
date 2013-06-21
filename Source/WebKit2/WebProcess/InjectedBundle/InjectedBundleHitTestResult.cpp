@@ -104,8 +104,11 @@ bool InjectedBundleHitTestResult::mediaIsInFullscreen() const
     return m_hitTestResult.mediaIsInFullscreen();
 }
 
-BundleHitTestResultMediaType InjectedBundleHitTestResult::getMediaType() const
+BundleHitTestResultMediaType InjectedBundleHitTestResult::mediaType() const
 {
+#if !ENABLE(VIDEO)
+    return BundleHitTestResultMediaTypeNone;
+#else
     WebCore::Node* node = m_hitTestResult.innerNonSharedNode();
     if (!node->isElementNode())
         return BundleHitTestResultMediaTypeNone;
@@ -116,6 +119,7 @@ BundleHitTestResultMediaType InjectedBundleHitTestResult::getMediaType() const
 #endif
     
     return m_hitTestResult.mediaIsVideo() ? BundleHitTestResultMediaTypeVideo : BundleHitTestResultMediaTypeAudio;    
+#endif
 }
 
 String InjectedBundleHitTestResult::linkLabel() const

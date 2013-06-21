@@ -29,6 +29,7 @@
 #include "CollectionType.h"
 #include "Document.h"
 #include "HTMLNames.h"
+#include "RegionOversetState.h"
 #include "ScrollTypes.h"
 #include "SpaceSplitString.h"
 
@@ -478,6 +479,9 @@ public:
     void setIsInCanvasSubtree(bool);
     bool isInCanvasSubtree() const;
 
+    void setRegionOversetState(RegionOversetState);
+    RegionOversetState regionOversetState() const;
+
     AtomicString computeInheritedLanguage() const;
     Locale& locale() const;
 
@@ -618,6 +622,11 @@ public:
     void webkitRequestPointerLock();
 #endif
 
+#if ENABLE(INDIE_UI)
+    void setUIActions(const AtomicString&);
+    const AtomicString& UIActions() const;
+#endif
+    
     virtual bool isSpellCheckingEnabled() const;
 
     PassRefPtr<RenderStyle> styleForRenderer();
