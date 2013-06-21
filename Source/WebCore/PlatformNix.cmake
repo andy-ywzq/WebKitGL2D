@@ -24,7 +24,7 @@ list(APPEND WebCore_SOURCES
     platform/nix/NixKeyboardUtilities.cpp
     platform/nix/ErrorsNix.cpp
     platform/gtk/EventLoopGtk.cpp
-    platform/gtk/FileSystemGtk.cpp
+    platform/nix/FileSystemNix.cpp
     platform/nix/LanguageNix.cpp
     platform/nix/LocalizedStringsNix.cpp
     platform/gtk/LoggingGtk.cpp
@@ -33,11 +33,11 @@ list(APPEND WebCore_SOURCES
     platform/nix/PlatformScreenNix.cpp
     platform/nix/PlatformKeyboardEventNix.cpp
     platform/nix/RenderThemeNix.cpp
-    platform/gtk/RunLoopGtk.cpp
+    platform/nix/RunLoopNix.cpp
     platform/nix/ScrollbarThemeNix.cpp
     platform/gtk/SharedBufferGtk.cpp
     platform/nix/SoundNix.cpp
-    platform/gtk/SharedTimerGtk.cpp
+    platform/nix/SharedTimerNix.cpp
     platform/nix/TemporaryLinkStubs.cpp
     platform/nix/WidgetNix.cpp
 
