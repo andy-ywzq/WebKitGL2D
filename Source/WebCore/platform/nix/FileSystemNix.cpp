@@ -45,37 +45,25 @@ String filenameToString(const char* filename)
     if (!filename)
         return String();
 
-#if OS(WINDOWS)
-    return String::fromUTF8(filename);
-#else
     GOwnPtr<gchar> escapedString(g_uri_escape_string(filename, "/:", false));
     return escapedString.get();
-#endif
 }
 
 CString fileSystemRepresentation(const String& path)
 {
-#if OS(WINDOWS)
-    return path.utf8();
-#else
     GOwnPtr<gchar> filename(g_uri_unescape_string(path.utf8().data(), 0));
     return filename.get();
-#endif
 }
 
 // Converts a string to something suitable to be displayed to the user.
 String filenameForDisplay(const String& string)
 {
-#if OS(WINDOWS)
-    return string;
-#else
     CString filename = fileSystemRepresentation(string);
     GOwnPtr<gchar> display(g_filename_to_utf8(filename.data(), 0, 0, 0, 0));
     if (!display)
         return string;
 
     return String::fromUTF8(display.get());
-#endif
 }
 
 bool fileExists(const String& path)
@@ -215,15 +203,7 @@ CString sharedResourcesPath()
     if (!cachedPath.isNull())
         return cachedPath;
 
-#if OS(WINDOWS)
-    HMODULE hmodule = 0;
-    GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, reinterpret_cast<char*>(sharedResourcesPath), &hmodule);
-
-    GOwnPtr<gchar> runtimeDir(g_win32_get_package_installation_directory_of_module(hmodule));
-    GOwnPtr<gchar> dataPath(g_build_filename(runtimeDir.get(), "share", "webkitgtk-"WEBKITGTK_API_VERSION_STRING, NULL));
-#else
-    GOwnPtr<gchar> dataPath(g_build_filename(DATA_DIR, "webkitgtk-" WEBKITGTK_API_VERSION_STRING, NULL));
-#endif
+    GOwnPtr<gchar> dataPath(g_build_filename(DATA_DIR, "webkitnix", NULL));
 
     cachedPath = dataPath.get();
     return cachedPath;
@@ -356,10 +336,6 @@ int readFromFile(PlatformFileHandle handle, char* data, int length)
 
 bool unloadModule(PlatformModule module)
 {
-#if OS(WINDOWS)
-    return ::FreeLibrary(module);
-#else
     return g_module_close(module);
-#endif
 }
 }
