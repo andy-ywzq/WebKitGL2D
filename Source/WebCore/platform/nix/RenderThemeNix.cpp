@@ -419,6 +419,9 @@ bool RenderThemeNix::supportsMeter(ControlPart part) const
 
 bool RenderThemeNix::paintMeter(RenderObject* o, const PaintInfo& i, const IntRect& rect)
 {
+    if (!o->isMeter())
+        return true;
+
     RenderMeter* renderMeter = toRenderMeter(o);
     HTMLMeterElement* e = renderMeter->meterElement();
     WebKit::WebThemeEngine::MeterExtraParams extraParams;
