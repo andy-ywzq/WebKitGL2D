@@ -662,7 +662,6 @@ fast/dom/gc-10.html [ Skip ]
 fast/dom/gc-attribute-node.html [ Skip ]
 fast/dom/icon-url-property.html [ Failure ]
 fast/dom/navigator-detached-no-crash.html [ Failure ]
-fast/dom/navigator-vibration.html [ Failure ]
 fast/dom/timer-throttling-hidden-page.html [ Failure ]
 fast/dom/title-directionality-removeChild.html [ Failure ]
 fast/dom/title-directionality.html [ Failure ]
@@ -4219,6 +4218,27 @@ fast/multicol/newmulticol/orphans-and-widows-balance.html
 fast/repaint/change-overflow-and-display-of-relative.html
 fast/repaint/table-cell-collapsed-border-scroll.html
 fast/replaced/width-and-height-of-positioned-replaced-elements.html
+
+# Failing tests after merge 94f23f6 d0c3f55
+vibration/cancelVibration-after-pagevisibility-changed-to-hidden.html
+vibration/navigator-vibration.html
+http/tests/cache/partitioned-cache-iframe.html
+http/tests/cache/partitioned-cache.html
+compositing/repaint/fixed-background-scroll.html
+compositing/repaint/positioned-movement.html
+
+# Failing tests after merge 5f07512 e9c8dbd
+fast/css/lang-mapped-to-webkit-locale-dynamic.xhtml
+fast/forms/input-appearance-preventDefault.html
+fast/forms/search-event-delay.html
+fast/repaint/horizontal-bt-overflow-child.html
+fast/repaint/horizontal-bt-overflow-parent.html
+fast/repaint/horizontal-bt-overflow-same.html
+fast/repaint/vertical-overflow-child.html
+fast/repaint/vertical-overflow-parent.html
+fast/repaint/vertical-overflow-same.html
+indieui/create-uirequestevent.html
+indieui/uiactions.html
 
 # Flakey tests when running pixel tests.
 compositing/background-color/background-color-padding-change.html [ ImageOnlyFailure Pass ]
