@@ -1,3 +1,253 @@
+2013-06-24  Simon Cooper  <scooper@apple.com>
+
+        Silverlight triggers sandbox violations: deny network-bind 0.0.0.0:0
+        https://bugs.webkit.org/show_bug.cgi?id=117966
+        <rdar://problem/13927918>
+
+        Reviewed by Sam Weinig.
+
+        Allow assigning (via bind) an ephemeral port before connecting
+
+        * Resources/PlugInSandboxProfiles/com.apple.QuickTime Plugin.plugin.sb:
+        * Resources/PlugInSandboxProfiles/com.macromedia.Flash Player.plugin.sb:
+        * Resources/PlugInSandboxProfiles/com.microsoft.SilverlightPlugin.sb:
+        * Resources/PlugInSandboxProfiles/com.oracle.java.JavaAppletPlugin.sb:
+
+2013-06-24  Simon Cooper  <scooper@apple.com>
+
+        PluginProcess deny file-read-data /Network/Library under addVolumeTracker
+        https://bugs.webkit.org/show_bug.cgi?id=117965
+        <rdar://problem/14121247>
+
+        Reviewed by Alexey Proskuryakov.
+
+        Silently deny reading /Network/Applications and 
+        /Network/Library.
+
+        * Resources/PlugInSandboxProfiles/com.apple.WebKit.plugin-common.sb:
+
+2013-06-24  Kangil Han  <kangil.han@samsung.com>
+
+        Adopt is/toHTMLFormElement for code cleanup
+        https://bugs.webkit.org/show_bug.cgi?id=117937
+
+        Reviewed by Andreas Kling.
+
+        This refers to http://src.chromium.org/viewvc/blink?view=revision&revision=152859
+
+        To enhance readibility, this patch adopts is/toHTMLFormElement.
+        This also helps out to reduce duplicated use of static_cast.
+
+        * WebProcess/WebPage/WebFrame.cpp:
+        (WebKit::WebFrame::containsAnyFormElements):
+
+2013-06-24  Simon Cooper  <scooper@apple.com>
+
+        deny file-read-data /Library/CoreMediaIO/Plug-Ins/DAL
+        https://bugs.webkit.org/show_bug.cgi?id=117964
+        <rdar://problem/14036864>
+
+        Reviewed by Alexey Proskuryakov.
+
+        Permit reading of the /Library/CoreMediaIO/Plug-Ins/DAL
+        subdirectory.
+
+        * Resources/PlugInSandboxProfiles/com.apple.WebKit.plugin-common.sb:
+
+2013-06-24  Simon Cooper  <scooper@apple.com>
+
+        Repeating sandbox violations when playing Amazon Prime videos with Flash
+        https://bugs.webkit.org/show_bug.cgi?id=117953
+        <rdar://problem/14193693>
+
+        Reviewed by Alexey Proskuryakov.
+
+        Add some missing "standard" files for network service lookups
+
+        * Resources/PlugInSandboxProfiles/com.apple.WebKit.plugin-common.sb:
+
+2013-06-24  Simon Cooper  <scooper@apple.com>
+
+        Plug-in sandbox violations attempting to access com.apple.CoreGraphics.plist
+        https://bugs.webkit.org/show_bug.cgi?id=117963
+        <rdar://problem/14084234>
+
+        Reviewed by Alexey Proskuryakov.
+
+        Permit the reading of the com.apple.CoreGraphics preference file
+
+        * Resources/PlugInSandboxProfiles/com.apple.WebKit.plugin-common.sb:
+
+2013-06-24  Simon Cooper  <scooper@apple.com>
+
+        com.oracle.javadeployment.plist is not correctly specified in the JavaApplet plugin profile
+        https://bugs.webkit.org/show_bug.cgi?id=117961
+        <rdar://problem/14223823>
+
+        Reviewed by Alexey Proskuryakov.
+
+        Remove the trailing extraneous .plist from the preference file rule
+
+        * Resources/PlugInSandboxProfiles/com.oracle.java.JavaAppletPlugin.sb:
+
+2013-06-24  Simon Cooper  <scooper@apple.com>
+
+        PluginProcess sandbox violations on com.apple.networkConnect.plist when resetting Safari
+        https://bugs.webkit.org/show_bug.cgi?id=117958
+        <rdar://problem/13938149>
+
+        Reviewed by Alexey Proskuryakov.
+
+        Allow reading the com.apple.networkConnect plist.
+
+        * Resources/PlugInSandboxProfiles/com.apple.ist.ds.appleconnect.webplugin.sb:
+
+2013-06-24  Simon Cooper  <scooper@apple.com>
+
+        Java sandbox violation ipc-posix-shm-read-data /tmp/com.apple.csseed.67
+        https://bugs.webkit.org/show_bug.cgi?id=117954
+        <rdar://problem/14166577>
+
+        Reviewed by Alexey Proskuryakov.
+
+        Permit read access to this shared memory segment
+
+        * Resources/PlugInSandboxProfiles/com.apple.WebKit.plugin-common.sb:
+
+2013-06-24  Simon Cooper  <scooper@apple.com>
+
+        Plugin Sandbox violation in /Library/Audio/Sounds/Banks
+        https://bugs.webkit.org/show_bug.cgi?id=117957
+        <rdar://problem/14163582>
+
+        Reviewed by Alexey Proskuryakov.
+
+        Permit read access to subdirectories under /Library/Audio/Sounds
+
+        * Resources/PlugInSandboxProfiles/com.apple.WebKit.plugin-common.sb:
+
+2013-06-24  Nick Diego Yamane  <nick.yamane@openbossa.org>
+
+        Make sure m_iconDatabaseImpl is not null before closing it
+        https://bugs.webkit.org/show_bug.cgi?id=117943
+
+        Reviewed by Simon Fraser.
+
+        Since r150474 WebIconDatabase is closed unconditionally in
+        TestController destructor, in that case WebKitTestRunner crashes
+        when no icon database path is set. This misbehavior was observed in
+        ports such as efl and nix.
+        In this patch, WebIconDatabase::close() calls m_iconDatabaseImpl->close()
+        only if m_iconDatabaseImpl is not null, as it's already being done in other
+        WebIconDatabase's methods, such as isOpen().
+
+        * UIProcess/WebIconDatabase.cpp:
+        (WebKit::WebIconDatabase::close):
+
+2013-06-24  Ruth Fong  <ruth_fong@apple.com>
+
+        Expose the mediaHasAudio() function in WK2
+        https://bugs.webkit.org/show_bug.cgi?id=117946
+        <rdar://problem/14250527>
+
+        Reviewed by Beth Dakin.
+
+        Exposes the WebCore::HTMLMediaElement::mediaHasAudio() function
+        in WK2.
+
+        * WebProcess/InjectedBundle/API/c/WKBundleHitTestResult.cpp:
+        (WKBundleHitTestResultMediaHasAudio): Added.
+        * WebProcess/InjectedBundle/API/c/WKBundleHitTestResult.h:
+        * WebProcess/InjectedBundle/InjectedBundleHitTestResult.cpp:
+        (WebKit::InjectedBundleHitTestResult::mediaHasAudio): Added.
+        * WebProcess/InjectedBundle/InjectedBundleHitTestResult.h:
+
+2013-06-24  Anders Carlsson  <andersca@apple.com>
+
+        REGRESSION (r147591): can't type in Adobe Connect
+        https://bugs.webkit.org/show_bug.cgi?id=117947
+        <rdar://problem/14223539>
+
+        Reviewed by Andreas Kling.
+
+        With the change in r147591, it is now possible for a plug-in element to be focused before the plug-in
+        starts. Handle this by focusing the plug-in right after it's started if necessary.
+
+        * WebProcess/Plugins/PluginView.cpp:
+        (WebKit::PluginView::didInitializePlugin):
+
+2013-06-24  Simon Fraser  <simon.fraser@apple.com>
+
+        Move displayID stuff from Widget to Chrome
+        https://bugs.webkit.org/show_bug.cgi?id=117944
+
+        Reviewed by Anders Carlsson.
+
+        In r151877 I polluted Widget with displayID-related stuff. This would
+        be better on HostWindow, so move it there. This is a net code reduction,
+        and eliminates PlatformScreenMac.h, and the NSScreen category.
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::windowScreenDidChange): Go via chrome().
+
+2013-06-24  Krzysztof Wolanski  <k.wolanski@samsung.com>
+
+        [EFL][WK2] Implement unit test callback: onWordGuesses.
+        https://bugs.webkit.org/show_bug.cgi?id=117794
+
+        Reviewed by Christophe Dumez.
+
+        * UIProcess/API/efl/tests/test_ewk2_text_checker.cpp:
+        (onWordGuesses):
+        Add client suggestions for the word.
+
+        (checkClientSuggestionsForWord):
+        Verify the suggestions that were given by the client.
+
+2013-06-17  Darin Adler  <darin@apple.com>
+
+        Sort all the Xcode project files
+        https://bugs.webkit.org/show_bug.cgi?id=117696
+
+        Reviewed by Anders Carlsson.
+
+        * WebKit2.xcodeproj/project.pbxproj: Ran the sort-Xcode-project-file script.
+
+2013-06-22  Dean Jackson  <dino@apple.com>
+
+        Slightly reduce width threshold on detection of primary snapshotted Plug-In
+        https://bugs.webkit.org/show_bug.cgi?id=117914
+        <rdar://problem/14136687>
+
+        Reviewed by Simon Fraser.
+
+        We've noticed some content that should be detected as the primary snapshotted plug-in,
+        but is just a bit smaller than our 450x300 minimum threshold. Reduce the width to 400.
+
+        * WebProcess/WebPage/WebPage.cpp: Change primarySnapshottedPlugInMinimumWidth from 450 to 400.
+
+2013-06-22  Simon Fraser  <simon.fraser@apple.com>
+
+        screen.availWidth always returns width of primary display
+        https://bugs.webkit.org/show_bug.cgi?id=117863
+
+        Reviewed by Geoffrey Garen.
+    
+        In WebKit2, Widgets have no platformWidget, so trying to get to the
+        NSScreen via the platform widget's window never succeeded, and we always
+        fell back on getting info for the main display.
+
+        However, we were already pushing the WKView's displayID down to the
+        WebProcess for the requestAnimationFrame infrastructure, so use that.
+        
+        The WebProcess would not receive a displayID for a WKView until the window
+        was activated; fix by calling -doWindowDidChangeScreen when the view
+        moves to a window, rather than doing it from -_windowDidBecomeKey:.
+        
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView viewDidMoveToWindow]):
+        (-[WKView _windowDidBecomeKey:]):
+
 2013-06-21  Carlos Garcia Campos  <cgarcia@igalia.com>
 
         [GTK] Do not try to load videos in unit tests

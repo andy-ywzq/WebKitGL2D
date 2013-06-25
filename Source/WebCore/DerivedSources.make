@@ -158,7 +158,7 @@ BINDING_IDLS = \
     $(WebCore)/Modules/webaudio/OfflineAudioCompletionEvent.idl \
     $(WebCore)/Modules/webaudio/AnalyserNode.idl \
     $(WebCore)/Modules/webaudio/WaveShaperNode.idl \
-    $(WebCore)/Modules/webaudio/WaveTable.idl \
+    $(WebCore)/Modules/webaudio/PeriodicWave.idl \
     $(WebCore)/Modules/webdatabase/DOMWindowWebDatabase.idl \
     $(WebCore)/Modules/webdatabase/Database.idl \
     $(WebCore)/Modules/webdatabase/DatabaseCallback.idl \
@@ -464,6 +464,7 @@ BINDING_IDLS = \
     $(WebCore)/page/SpeechInputResult.idl \
     $(WebCore)/page/SpeechInputResultList.idl \
     $(WebCore)/page/WebKitPoint.idl \
+    $(WebCore)/page/WindowTimers.idl \
     $(WebCore)/page/WorkerNavigator.idl \
     $(WebCore)/plugins/DOMMimeType.idl \
     $(WebCore)/plugins/DOMMimeTypeArray.idl \
@@ -1026,7 +1027,7 @@ $(SUPPLEMENTAL_MAKEFILE_DEPS) : $(PREPROCESS_IDLS_SCRIPTS) $(BINDING_IDLS) $(ADD
 JS%.h : %.idl $(JS_BINDINGS_SCRIPTS) $(IDL_ATTRIBUTES_FILE) $(WINDOW_CONSTRUCTORS_FILE) $(WORKERCONTEXT_CONSTRUCTORS_FILE) $(PLATFORM_FEATURE_DEFINES)
 	$(call generator_script, $(JS_BINDINGS_SCRIPTS)) $(IDL_COMMON_ARGS) --defines "$(FEATURE_DEFINES) $(ADDITIONAL_IDL_DEFINES) LANGUAGE_JAVASCRIPT" --generator JS --idlAttributesFile $(IDL_ATTRIBUTES_FILE) --supplementalDependencyFile $(SUPPLEMENTAL_DEPENDENCY_FILE) $<
 
-include $(SUPPLEMENTAL_MAKEFILE_DEPS)
+-include $(SUPPLEMENTAL_MAKEFILE_DEPS)
 
 # Inspector interfaces generator
 

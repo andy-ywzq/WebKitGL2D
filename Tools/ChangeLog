@@ -1,3 +1,98 @@
+2013-06-25  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed, change my email address for watch list.
+
+        * Scripts/webkitpy/common/config/watchlist:
+
+2013-06-25  Byungwoo Lee  <bw80.lee@samsung.com>
+
+        [EFL] Add a script to install dependencies.
+        https://bugs.webkit.org/show_bug.cgi?id=117968
+
+        Reviewed by Christophe Dumez.
+
+        Add a script which installs basic dependencies for building WebKit EFL.
+
+        The dependencies are from the current EFLWebKit wiki page.
+        After this patch is landed, the wiki page will be updated to use
+        this script.
+
+        * efl/install-dependencies: Added.
+
+2013-06-24  Dean Jackson  <dino@apple.com>
+
+        [Mac] Update font used for Chinese in test systems
+        https://bugs.webkit.org/show_bug.cgi?id=117970
+
+        Reviewed by Alexey Proskuryakov.
+
+        Add "Songti TC" and "Songti SC" to the list of allowed fonts
+        in DRT and WKTR.
+
+        * DumpRenderTree/mac/DumpRenderTree.mm:
+        (allowedFontFamilySet):
+        * WebKitTestRunner/InjectedBundle/mac/ActivateFonts.mm:
+        (WTR::allowedFontFamilySet):
+
+2013-06-24  Tim Horton  <timothy_horton@apple.com>
+
+        Make MiniBrowser paginated mode work with WebKit1
+        https://bugs.webkit.org/show_bug.cgi?id=117950
+
+        Reviewed by Beth Dakin.
+
+        * MiniBrowser/mac/WK1BrowserWindowController.m:
+        (-[WK1BrowserWindowController isPaginated]):
+        (-[WK1BrowserWindowController togglePaginationMode:]):
+        Hook up isPaginated and togglePaginationMode just as for WebKit2.
+
+2013-06-24  David Kilzer  <ddkilzer@apple.com>
+
+        bisect-builds: improve heuristic for choosing the next build after a broken build
+        <http://webkit.org/b/117918>
+
+        Reviewed by Simon Fraser.
+
+        * Scripts/bisect-builds: When a build is broken, use a heuristic
+        that "bisects" the left side or the right side of the remaining
+        revisions to pick a revision that's sufficiently different from
+        the revision of the broken build.  This heuristic assumes there
+        is a sequential range of broken builds whenever one broken build
+        is found.
+
+2013-06-24  Chris Rogers  <crogers@google.com>
+
+        WaveTable name has changed to PeriodicWave
+        https://bugs.webkit.org/show_bug.cgi?id=117748
+
+        Reviewed by Jer Noble.
+
+        * Scripts/do-webcore-rename:
+
+2013-06-22  Santosh Mahto  <santosh.ma@samsung.com>
+
+        [EFL] Add support for MHTML save/load feature to MiniBrowser
+        https://bugs.webkit.org/show_bug.cgi?id=106620
+
+        Reviewed by Christophe Dumez.
+
+        Enable CTRL + S as save page in mhtml and CTRL + L to load any page
+        from filesystem.
+
+        * MiniBrowser/efl/CMakeLists.txt:
+        * MiniBrowser/efl/main.c:
+        (page_contents_callback):
+        (on_key_down):
+        (show_file_entry_dialog): generic function to show file enrty
+        selector dialogue
+
+2013-06-21  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed crash protection for DRT
+
+        * DumpRenderTree/win/AccessibilityUIElementWin.cpp: Check for null elements in routines
+        to avoid crashing during test runs.
+
 2013-06-21  Christophe Dumez  <ch.dumez@sisa.samsung.com>
 
         REGRESSION (r150663): Using webkitAudioContext in Inspector makes it undefined everywhere

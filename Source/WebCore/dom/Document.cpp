@@ -91,6 +91,7 @@
 #include "HTMLNames.h"
 #include "HTMLParserIdioms.h"
 #include "HTMLPlugInElement.h"
+#include "HTMLScriptElement.h"
 #include "HTMLStyleElement.h"
 #include "HTMLTitleElement.h"
 #include "HTTPParsers.h"
@@ -715,7 +716,10 @@ void Document::setCompatibilityMode(CompatibilityMode mode)
         return;
     bool wasInQuirksMode = inQuirksMode();
     m_compatibilityMode = mode;
-    selectorQueryCache()->invalidate();
+
+    if (m_selectorQueryCache)
+        m_selectorQueryCache->invalidate();
+
     if (inQuirksMode() != wasInQuirksMode) {
         // All user stylesheets have to reparse using the different mode.
         m_styleSheetCollection->clearPageUserSheet();
@@ -2631,7 +2635,9 @@ void Document::updateBaseURL()
         // and DOM 3 Core does not specify how it should be resolved.
         m_baseURL = KURL(ParsedURLString, documentURI());
     }
-    selectorQueryCache()->invalidate();
+
+    if (m_selectorQueryCache)
+        m_selectorQueryCache->invalidate();
 
     if (!m_baseURL.isValid())
         m_baseURL = KURL();
@@ -4214,6 +4220,18 @@ KURL Document::openSearchDescriptionURL()
     return KURL();
 }
 
+void Document::pushCurrentScript(PassRefPtr<HTMLScriptElement> newCurrentScript)
+{
+    ASSERT(newCurrentScript);
+    m_currentScriptStack.append(newCurrentScript);
+}
+
+void Document::popCurrentScript()
+{
+    ASSERT(!m_currentScriptStack.isEmpty());
+    m_currentScriptStack.removeLast();
+}
+
 #if ENABLE(XSLT)
 
 void Document::applyXSLTransform(ProcessingInstruction* pi)
@@ -5462,7 +5480,7 @@ int Document::requestAnimationFrame(PassRefPtr<RequestAnimationFrameCallback> ca
 {
     if (!m_scriptedAnimationController) {
 #if USE(REQUEST_ANIMATION_FRAME_DISPLAY_MONITOR)
-        m_scriptedAnimationController = ScriptedAnimationController::create(this, page() ? page()->displayID() : 0);
+        m_scriptedAnimationController = ScriptedAnimationController::create(this, page() ? page()->chrome().displayID() : 0);
 #else
         m_scriptedAnimationController = ScriptedAnimationController::create(this, 0);
 #endif

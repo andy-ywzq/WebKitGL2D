@@ -489,6 +489,9 @@ http/tests/security/contentTypeOptions
 # No concept of secure text input other than on Mac; support not yet implemented on Mac.
 editing/secure-input [ Failure ]
 
+# CSS.regionOversetChanged is not implemented.
+webkit.org/b/117833 inspector/styles/protocol-css-regions-commands.html [ Skip ]
+
 # =========================================================================== #
 #       Drag and Drop Support in DRT.                                         #
 # =========================================================================== #
@@ -676,6 +679,10 @@ http/tests/cookies/js-get-and-set-http-only-cookie.html
 
 # https://bugs.webkit.org/show_bug.cgi?id=109799
 webkit.org/b/90007 http/tests/security/mixedContent/insecure-audio-video-in-main-frame.html [ Skip ]
+
+# Assertion failure in MessagePort::contextDestroyed
+webkit.org/b/94458 [ Debug ] http/tests/security/XFrameOptions/x-frame-options-deny-meta-tag-parent-same-origin-allow.html [ Skip ]
+webkit.org/b/94458 [ Debug ] http/tests/security/XFrameOptions/x-frame-options-deny.html [ Skip ]
 
 # =========================================================================== #
 #       Failing xmlhttprequest tests                                          #

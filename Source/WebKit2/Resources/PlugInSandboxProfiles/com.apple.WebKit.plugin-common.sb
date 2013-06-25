@@ -81,6 +81,7 @@
 (shared-preferences-read
     ".GlobalPreferences"
     "com.apple.Bluetooth"
+    "com.apple.CoreGraphics"
     "com.apple.QuickTime"
     "com.apple.HIToolbox"
     "com.apple.ATS"
@@ -107,6 +108,12 @@
 ;; Read-only data
 (allow file-read*
     (literal "/")
+    (literal "/private/etc/hosts")
+    (literal "/private/etc/protocols")
+    (literal "/private/etc/services")
+    (literal "/private/etc/resolv.conf")
+    (literal "/private/var/run/resolv.conf")
+
     (subpath "/Library/Frameworks")
     (subpath "/private/var/db/mds")
 
@@ -135,9 +142,11 @@
 
     (home-library-literal "/Caches/com.apple.coreaudio.components.plist")
 
+    (subpath "/Library/Audio/Sounds")
     (subpath "/Library/Audio/Plug-Ins/Components")
     (home-library-subpath "/Audio/Plug-Ins/Components")
     (subpath "/Library/Audio/Plug-Ins/HAL")
+    (subpath "/Library/CoreMediaIO/Plug-Ins/DAL")
     (subpath "/Library/QuickTime")
     (home-library-subpath "/QuickTime")
     (subpath "/Library/Video/Plug-Ins")
@@ -285,11 +294,14 @@
     (ipc-posix-name "_CS_DSHMEMLOCK"))
 
 (allow ipc-posix-shm-read*
+    (ipc-posix-name-regex #"^/tmp/com\.apple\.csseed\.")
     (ipc-posix-name "FNetwork.defaultStorageSession")
     (ipc-posix-name "apple.shm.notification_center"))
 
 ;; Silently block access to some resources
 (deny file-read* file-write* (with no-log)
+    (subpath "/Network/Library")
+    (subpath "/Network/Applications")
     (home-library-preferences-regex #"/com\.apple\.internetconfig(priv)?\.plist")
 
     ;; FIXME: Should be removed after <rdar://problem/9422957> is fixed.
