@@ -1,7 +1,7 @@
 GLX vs. EGL
 ===========
 
-GLX is used by default, to use EGL pass --egl to build-webkit script.
+GLX is used by default, to use OpenGLES2+EGL pass --opengles2 to build-webkit script.
 
 
 Packages required
