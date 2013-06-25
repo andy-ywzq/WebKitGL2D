@@ -16,7 +16,7 @@
 (shared-preferences-read
     "com.apple.java.JavaPreferences"
     "com.apple.java.util.prefs")
-(shared-preferences-read-write "com.oracle.javadeployment.plist")
+(shared-preferences-read-write "com.oracle.javadeployment")
 
 (allow file-read* file-write*
     (home-library-subpath "/Saved Application State/net.java.openjdk.cmd.savedState")
@@ -28,6 +28,7 @@
     (home-library-literal "/Application Support/Oracle/Java"))
 
 (allow network-bind network-outbound (subpath (param "DARWIN_USER_TEMP_DIR")))
+(allow network-bind (local ip))
 
 (deny mach-lookup (with no-log)
     (global-name "com.apple.ls.boxd")

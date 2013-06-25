@@ -30,7 +30,6 @@
 #if USE(3D_GRAPHICS)
 
 #include "GraphicsContext3D.h"
-#include "GraphicsContext3DNEON.h"
 
 #include "CheckedInt.h"
 #include "DrawingBuffer.h"
@@ -38,6 +37,10 @@
 #include "Image.h"
 #include "ImageData.h"
 #include "ImageObserver.h"
+
+#if HAVE(ARM_NEON_INTRINSICS)
+#include "GraphicsContext3DNEON.h"
+#endif
 
 #include <wtf/ArrayBufferView.h>
 #include <wtf/OwnArrayPtr.h>
@@ -1471,7 +1474,7 @@ unsigned GraphicsContext3D::getChannelBitsByFormat(GC3Denum format)
     }
 }
 
-#if !PLATFORM(BLACKBERRY) && !PLATFORM(QT) && !PLATFORM(GTK) && !PLATFORM(EFL) && !PLATFORM(MAC) && !PLATFORM(NIX)
+#if !PLATFORM(BLACKBERRY) && !PLATFORM(QT) && !PLATFORM(GTK) && !PLATFORM(EFL) && !PLATFORM(MAC) && !PLATFORM(WIN) && !PLATFORM(NIX)
 PlatformGraphicsContext3D GraphicsContext3D::platformGraphicsContext3D() const
 {
     return NullPlatformGraphicsContext3D;

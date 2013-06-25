@@ -120,11 +120,14 @@ public:
 #endif
         updateAvailableWidth();
     }
-    bool fitsOnLine(float extra = 0) const { return currentWidth() + extra <= m_availableWidth; }
-    bool fitsOnLineExcludingTrailingWhitespace(float extra = 0) const { return currentWidth() - m_trailingWhitespaceWidth + extra <= m_availableWidth; }
-    bool fitsOnLineExcludingTrailingCollapsedWhitespace(float extra = 0) const { return currentWidth() - m_trailingCollapsedWhitespaceWidth + extra <= m_availableWidth; }
-    float currentWidth() const { return m_committedWidth + m_uncommittedWidth; }
+    bool fitsOnLine(bool ignoringTrailingSpace = false)
+    {
+        return ignoringTrailingSpace ? fitsOnLineExcludingTrailingCollapsedWhitespace() : fitsOnLineIncludingExtraWidth(0);
+    }
+    bool fitsOnLineIncludingExtraWidth(float extra) const { return currentWidth() + extra <= m_availableWidth; }
+    bool fitsOnLineExcludingTrailingWhitespace(float extra) const { return currentWidth() - m_trailingWhitespaceWidth + extra <= m_availableWidth; }
 
+    float currentWidth() const { return m_committedWidth + m_uncommittedWidth; }
     // FIXME: We should eventually replace these three functions by ones that work on a higher abstraction.
     float uncommittedWidth() const { return m_uncommittedWidth; }
     float committedWidth() const { return m_committedWidth; }
@@ -149,6 +152,7 @@ private:
     {
         m_availableWidth = max(0.0f, m_right - m_left) + m_overhangWidth;
     }
+    bool fitsOnLineExcludingTrailingCollapsedWhitespace() const { return currentWidth() - m_trailingCollapsedWhitespaceWidth <= m_availableWidth; }
 
 private:
     RenderBlock* m_block;
@@ -2859,6 +2863,12 @@ static inline bool iteratorIsBeyondEndOfRenderCombineText(const InlineIterator& 
     return iter.m_obj == renderer && iter.m_pos >= renderer->textLength();
 }
 
+static inline void commitLineBreakAtCurrentWidth(LineWidth& width, InlineIterator& lBreak, RenderObject* object, unsigned offset = 0, int nextBreak = -1)
+{
+    width.commit();
+    lBreak.moveTo(object, offset, nextBreak);
+}
+
 InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& resolver, LineInfo& lineInfo, RenderTextInfo& renderTextInfo, FloatingObject* lastFloatFromPreviousLine, unsigned consecutiveHyphenatedLines, WordMeasurements& wordMeasurements)
 {
     reset();
@@ -3037,10 +3047,8 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
                 width.updateAvailableWidth(replacedBox->logicalHeight());
 
             // Break on replaced elements if either has normal white-space.
-            if ((autoWrap || RenderStyle::autoWrap(lastWS)) && (!current.m_obj->isImage() || allowImagesToBreak)) {
-                width.commit();
-                lBreak.moveToStartOf(current.m_obj);
-            }
+            if ((autoWrap || RenderStyle::autoWrap(lastWS)) && (!current.m_obj->isImage() || allowImagesToBreak))
+                commitLineBreakAtCurrentWidth(width, lBreak, current.m_obj);
 
             if (ignoringSpaces)
                 stopIgnoringSpaces(lineMidpointState, InlineIterator(0, current.m_obj, 0));
@@ -3082,10 +3090,8 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
 
             // If we have left a no-wrap inline and entered an autowrap inline while ignoring spaces
             // then we need to mark the start of the autowrap inline as a potential linebreak now. 
-            if (autoWrap && !RenderStyle::autoWrap(lastWS) && ignoringSpaces) {
-                width.commit();
-                lBreak.moveToStartOf(current.m_obj);
-            }
+            if (autoWrap && !RenderStyle::autoWrap(lastWS) && ignoringSpaces)
+                commitLineBreakAtCurrentWidth(width, lBreak, current.m_obj);
 
             if (t->style()->hasTextCombine() && current.m_obj->isCombineText() && !toRenderCombineText(current.m_obj)->isCombined()) {
                 RenderCombineText* combineRenderer = toRenderCombineText(current.m_obj);
@@ -3125,8 +3131,7 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
 #endif
 
             if (t->isWordBreak()) {
-                width.commit();
-                lBreak.moveToStartOf(current.m_obj);
+                commitLineBreakAtCurrentWidth(width, lBreak, current.m_obj);
                 ASSERT(current.m_pos == t->textLength());
             }
 
@@ -3241,7 +3246,7 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
                             // If the line needs the extra whitespace to be too long,
                             // then move the line break to the space and skip all
                             // additional whitespace.
-                            if (!width.fitsOnLine(charWidth)) {
+                            if (!width.fitsOnLineIncludingExtraWidth(charWidth)) {
                                 lineWasTooWide = true;
                                 lBreak.moveTo(current.m_obj, current.m_pos, current.m_nextBreakablePosition);
                                 skipTrailingWhitespace(lBreak, lineInfo);
@@ -3292,9 +3297,8 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
                     }
 
                     if (autoWrap && betweenWords) {
-                        width.commit();
                         wrapW = 0;
-                        lBreak.moveTo(current.m_obj, current.m_pos, current.m_nextBreakablePosition);
+                        commitLineBreakAtCurrentWidth(width, lBreak, current.m_obj, current.m_pos, current.m_nextBreakablePosition);
                         // Auto-wrapping text should not wrap in the middle of a word once it has had an
                         // opportunity to break after a word.
                         breakWords = false;
@@ -3405,7 +3409,7 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
             ASSERT_NOT_REACHED();
 
         bool checkForBreak = autoWrap;
-        if (width.committedWidth() && !width.fitsOnLineExcludingTrailingCollapsedWhitespace() && lBreak.m_obj && currWS == NOWRAP)
+        if (width.committedWidth() && !width.fitsOnLine(currentCharacterIsSpace) && lBreak.m_obj && currWS == NOWRAP)
             checkForBreak = true;
         else if (next && current.m_obj->isText() && next->isText() && !next->isBR() && (autoWrap || next->style()->autoWrap())) {
             if (autoWrap && currentCharacterIsSpace)
@@ -3414,9 +3418,7 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
                 RenderText* nextText = toRenderText(next);
                 if (nextText->textLength()) {
                     UChar c = nextText->characterAt(0);
-                    // If we allow whitespace collapsing, 'word  ' and 'word' are equivalent before a whitespace
-                    // character, so treat both as a potential linebreak.
-                    checkForBreak = autoWrap && (ignoringSpaces || !currentCharacterIsSpace) && (c == ' ' || c == '\t' || (c == '\n' && !next->preservesNewline()));
+                    checkForBreak = !currentCharacterIsSpace && (c == ' ' || c == '\t' || (c == '\n' && !next->preservesNewline()));
                 } else if (nextText->isWordBreak())
                     checkForBreak = true;
 
@@ -3424,14 +3426,12 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
                     width.fitBelowFloats();
 
                 bool canPlaceOnLine = width.fitsOnLine() || !autoWrapWasEverTrueOnLine;
-                if (canPlaceOnLine && checkForBreak) {
-                    width.commit();
-                    lBreak.moveToStartOf(next);
-                }
+                if (canPlaceOnLine && checkForBreak)
+                    commitLineBreakAtCurrentWidth(width, lBreak, next);
             }
         }
 
-        if (checkForBreak && !width.fitsOnLine()) {
+        if (checkForBreak && !width.fitsOnLine(ignoringSpaces)) {
             // if we have floats, try to get below them.
             if (currentCharacterIsSpace && !ignoringSpaces && currentStyle->collapseWhiteSpace())
                 trailingObjects.clear();
@@ -3444,7 +3444,7 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
             // |width| may have been adjusted because we got shoved down past a float (thus
             // giving us more room), so we need to retest, and only jump to
             // the end label if we still don't fit on the line. -dwh
-            if (!width.fitsOnLine())
+            if (!width.fitsOnLine(ignoringSpaces))
                 goto end;
         } else if (blockStyle->autoWrap() && !width.fitsOnLine() && !width.committedWidth()) {
             // If the container autowraps but the current child does not then we still need to ensure that it
@@ -3454,10 +3454,8 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
 
         if (!current.m_obj->isFloatingOrOutOfFlowPositioned()) {
             last = current.m_obj;
-            if (last->isReplaced() && autoWrap && (!last->isImage() || allowImagesToBreak) && (!last->isListMarker() || toRenderListMarker(last)->isInside())) {
-                width.commit();
-                lBreak.moveToStartOf(next);
-            }
+            if (last->isReplaced() && autoWrap && (!last->isImage() || allowImagesToBreak) && (!last->isListMarker() || toRenderListMarker(last)->isInside()))
+                commitLineBreakAtCurrentWidth(width, lBreak, next);
         }
 
         // Clear out our character space bool, since inline <pre>s don't collapse whitespace
@@ -3469,7 +3467,7 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
         atStart = false;
     }
 
-    if (width.fitsOnLineExcludingTrailingCollapsedWhitespace() || lastWS == NOWRAP)
+    if (width.fitsOnLine(true) || lastWS == NOWRAP)
         lBreak.clear();
 
  end:

@@ -133,16 +133,23 @@ LayoutRect RenderRegion::overflowRectForFlowThreadPortion(const LayoutRect& flow
 
 RegionOversetState RenderRegion::regionOversetState() const
 {
-    if (isValid() && node() && node()->isElementNode())
-        return toElement(node())->regionOversetState();
+    ASSERT(node());
+
+    if (!isValid())
+        return RegionUndefined;
+
+    if (Element* element = toElement(node()))
+        return element->regionOversetState();
     
     return RegionUndefined;
 }
 
 void RenderRegion::setRegionOversetState(RegionOversetState state)
 {
-    if (node() && node()->isElementNode())
-        toElement(node())->setRegionOversetState(state);
+    ASSERT(node());
+
+    if (Element* element = toElement(node()))
+        element->setRegionOversetState(state);
 }
 
 LayoutUnit RenderRegion::pageLogicalTopForOffset(LayoutUnit /* offset */) const

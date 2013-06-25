@@ -1,3 +1,27 @@
+2013-06-24  Alex Christensen  <achristensen@apple.com>
+
+        Windows build links to opengl32.lib to allow WebGL compiling.
+        https://bugs.webkit.org/show_bug.cgi?id=117949
+
+        Reviewed by Brent Fulgham.
+
+        * WebKit.vcxproj/WebKit/WebKitCommon.props: Added link to opengl32.lib.
+
+2013-06-17  Darin Adler  <darin@apple.com>
+
+        Sort all the Xcode project files
+        https://bugs.webkit.org/show_bug.cgi?id=117696
+
+        Reviewed by Anders Carlsson.
+
+        * WebKit.xcodeproj/project.pbxproj: Ran the sort-Xcode-project-file script.
+
+2013-06-21  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Fix a missing parenthesis in include directory path.
+
+        * WebKit.vcxproj/WebKitExportGenerator/WebKitExportGeneratorCommon.props:
+
 2013-06-20  Roger Fong  <roger_fong@apple.com>
 
         Make Windows makefile copy build output to a different folder.

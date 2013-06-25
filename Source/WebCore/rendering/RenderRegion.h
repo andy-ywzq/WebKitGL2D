@@ -84,7 +84,7 @@ public:
 
     RegionOversetState regionOversetState() const;
     void setRegionOversetState(RegionOversetState);
-    
+
     // These methods represent the width and height of a "page" and for a RenderRegion they are just the
     // content width and content height of a region. For RenderRegionSets, however, they will be the width and
     // height of a single column or page in the set.

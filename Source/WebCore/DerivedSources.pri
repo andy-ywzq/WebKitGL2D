@@ -169,7 +169,7 @@ IDL_BINDINGS += \
     $$PWD/Modules/webaudio/OscillatorNode.idl \
     $$PWD/Modules/webaudio/AnalyserNode.idl \
     $$PWD/Modules/webaudio/WaveShaperNode.idl \
-    $$PWD/Modules/webaudio/WaveTable.idl \
+    $$PWD/Modules/webaudio/PeriodicWave.idl \
     $$PWD/Modules/webdatabase/DOMWindowWebDatabase.idl \
     $$PWD/Modules/webdatabase/Database.idl \
     $$PWD/Modules/webdatabase/DatabaseCallback.idl \
@@ -462,6 +462,7 @@ IDL_BINDINGS += \
     $$PWD/page/SpeechInputResult.idl \
     $$PWD/page/SpeechInputResultList.idl \
     $$PWD/page/WebKitPoint.idl \
+    $$PWD/page/WindowTimers.idl \
     $$PWD/page/WorkerNavigator.idl \
     $$PWD/plugins/DOMPlugin.idl \
     $$PWD/plugins/DOMMimeType.idl \

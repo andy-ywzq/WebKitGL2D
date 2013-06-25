@@ -1,3 +1,286 @@
+2013-06-25  Krzysztof Czech  <k.czech@samsung.com>
+
+        [AX][ATK] Update accessibility baselines after r151953
+        https://bugs.webkit.org/show_bug.cgi?id=117983
+
+        Reviewed by Chris Fleizach.
+
+        Updating aria-option-role-expected.txt for EFL and GTK after the changes in aria-option-role.html test (r151953).
+        Moving platform aria-checkbox-text.html to LayoutTests/accessibility. Baseline is the same for mac, gtk, efl. Windows port has it's own specific version.
+
+        * accessibility/aria-checkbox-text-expected.txt: Renamed from LayoutTests/platform/mac/accessibility/aria-checkbox-text-expected.txt.
+        * platform/efl/accessibility/aria-checkbox-text-expected.txt: Removed.
+        * platform/efl/accessibility/aria-option-role-expected.txt:
+        * platform/gtk/accessibility/aria-checkbox-text-expected.txt: Removed.
+        * platform/gtk/accessibility/aria-option-role-expected.txt:
+
+2013-06-25  Denis Nomiyama  <d.nomiyama@samsung.com>
+
+        [GTK] Add bug report into TestExpectations for fast/text/international/synthesized-italic-vertical-latin.html
+        https://bugs.webkit.org/show_bug.cgi?id=117976
+
+        Unreviewed gardening.
+
+        TestExpectations was missing a bug number for a skip test (http://webkit.org/b/117975).
+
+        * platform/gtk/TestExpectations:
+
+2013-06-25  Ádám Kallai  <kadam@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Skip failing inspector test.
+
+        * platform/qt/TestExpectations:
+
+2013-06-24  Brent Fulgham  <bfulgham@gmail.com>
+
+        [Mac] Build correction.
+
+        * platform/mac/accessibility/aria-tab-roles-expected.txt:
+
+2013-06-24  Kangil Han  <kangil.han@samsung.com>
+
+        Add support for document.currentScript
+        https://bugs.webkit.org/show_bug.cgi?id=104221
+
+        Reviewed by Ryosuke Niwa.
+
+        Merge http://src.chromium.org/viewvc/blink?view=revision&revision=152230
+        document.currentScript reflects the script that is currently being executed.
+
+        Merge http://src.chromium.org/viewvc/blink?view=revision&revision=152237
+        Following up patch for code clean-up.
+
+        * fast/dom/Document/document-current-script-async-expected.txt: Added.
+        * fast/dom/Document/document-current-script-async.html: Added.
+        * fast/dom/Document/document-current-script-expected.txt: Added.
+        * fast/dom/Document/document-current-script.html: Added.
+        * fast/dom/Document/resources/log-current-script-b.js: Added.
+        * fast/dom/Document/resources/log-current-script-d.js: Added.
+        * fast/dom/Document/resources/log-current-script-f.js: Added.
+        * fast/dom/Document/resources/log-current-script.js: Added.
+
+2013-06-24  Jer Noble  <jer.noble@apple.com>
+
+        [Mac] media/video-played-collapse.html is flakey on certain platforms.
+        https://bugs.webkit.org/show_bug.cgi?id=117034
+
+        Reviewed by Beth Dakin.
+
+        This test does not wait until a seek completes before issuing a play()
+        command during its subtests. This can cause flakiness on some platforms
+        where playback will begin from the pre-seek currentTime. Wait for the seek
+        to complete before continuing the sub-tests.
+
+        Additionally, a 2s watchdog timeout is present to catch stalled tests. This
+        timeout is fine for short-duration sub-tests, but longer tests' durations
+        approach this 2s timeout period. Make the timeout the test duration + 2s.
+
+        * media/video-played-collapse-expected.txt:
+        * media/video-played-collapse.html:
+        * media/video-played.js:
+        (playForMillisecs.callPauseIfTimeIsReached):
+        (playForMillisecs):
+        * platform/mac-wk2/TestExpectations:
+
+2013-06-24  Simon Fraser  <simon.fraser@apple.com>
+
+        Fix various crashes on sites with fixed backgrounds
+        https://bugs.webkit.org/show_bug.cgi?id=117959
+
+        Reviewed by Andy Estes.
+        
+        Test that does a document.write on a page with a fixed background on the body.
+
+        * platform/mac-wk2/tiled-drawing/fixed-background/fixed-background-removal-expected.txt: Added.
+        * platform/mac-wk2/tiled-drawing/fixed-background/fixed-background-removal.html: Added.
+
+2013-06-24  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Shapes] split test shape-inside-first-fit-001.html into 800x600 parts
+        https://bugs.webkit.org/show_bug.cgi?id=117939
+
+        Reviewed by Dirk Schulze.
+
+        Split the test into two parts, to ensure that it first within the 800x600 limit.
+
+        * fast/exclusions/shape-inside/shape-inside-first-fit-001-horizontal-expected.html: Copied from LayoutTests/fast/exclusions/shape-inside/shape-inside-first-fit-001-expected.html.
+        * fast/exclusions/shape-inside/shape-inside-first-fit-001-horizontal.html: Copied from LayoutTests/fast/exclusions/shape-inside/shape-inside-first-fit-001.html.
+        * fast/exclusions/shape-inside/shape-inside-first-fit-001-vertical-expected.html: Renamed from LayoutTests/fast/exclusions/shape-inside/shape-inside-first-fit-001-expected.html.
+        * fast/exclusions/shape-inside/shape-inside-first-fit-001-vertical.html: Renamed from LayoutTests/fast/exclusions/shape-inside/shape-inside-first-fit-001.html.
+
+2013-06-24  Zoltan Horvath  <zoltan@webkit.org>
+
+        [CSS Shapes] Remove setCSSShapesEnabled(true) from shape-inside-empty-expected.html since it isn't using shapes 
+        https://bugs.webkit.org/show_bug.cgi?id=117945
+
+        Reviewed by Dirk Schulze.
+
+        * fast/exclusions/shape-inside/shape-inside-empty-expected.html:
+
+2013-06-24  Brent Fulgham  <bfulgham@apple.com>
+
+        AX: Make tests usable on Mac and Windows
+        https://bugs.webkit.org/show_bug.cgi?id=117901
+
+        Reviewed by Chris Fleizach.
+
+        * accessibility/aria-checkbox-text.html:
+        * accessibility/aria-hidden-expected.txt:
+        * accessibility/aria-hidden-with-elements-expected.txt:
+        * accessibility/aria-hidden-with-elements.html:
+        * accessibility/aria-hidden.html:
+        * accessibility/aria-labelledby-overrides-label-expected.txt:
+        * accessibility/aria-labelledby-overrides-label.html:
+        * accessibility/aria-option-role.html:
+        * accessibility/aria-presentational-role-expected.txt:
+        * accessibility/aria-presentational-role.html:
+        * accessibility/aria-tab-roles-expected.txt:
+        * accessibility/aria-tab-roles.html:
+        * accessibility/empty-image-with-title-expected.txt:
+        * accessibility/empty-image-with-title.html:
+        * accessibility/html-html-element-is-ignored-expected.txt:
+        * accessibility/html-html-element-is-ignored.html:
+        * accessibility/img-aria-button-alt-tag-expected.txt:
+        * accessibility/img-aria-button-alt-tag.html:
+        * accessibility/input-image-alt-expected.txt:
+        * accessibility/input-image-alt.html:
+        * platform/mac/accessibility/aria-checkbox-text-expected.txt:
+        * platform/mac/accessibility/aria-option-role-expected.txt:
+        * platform/win/accessibility/aria-checkbox-text-expected.txt: Added.
+        * platform/win/accessibility/aria-hidden-expected.txt: Added.
+        * platform/win/accessibility/aria-hidden-with-elements-expected.txt: Added.
+        * platform/win/accessibility/aria-labelledby-overrides-label-expected.txt: Added.
+        * platform/win/accessibility/aria-option-role-expected.txt: Added.
+        * platform/win/accessibility/aria-presentational-role-expected.txt: Added.
+        * platform/win/accessibility/aria-tab-roles-expected.txt: Added.
+        * platform/win/accessibility/empty-image-with-title-expected.txt: Added.
+        * platform/win/accessibility/html-html-element-is-ignored-expected.txt: Added.
+        * platform/win/accessibility/img-aria-button-alt-tag-expected.txt: Added.
+        * platform/win/accessibility/input-image-alt-expected.txt: Added.
+        * platform/win/aria-labelledby-on-input-expected.txt: Removed.
+        * platform/win/aria-menubar-menuitems-expected.txt: Removed.
+        * platform/win/aria-roles-expected.txt: Removed.
+
+2013-06-24  Chris Rogers  <crogers@google.com>
+
+        WaveTable name has changed to PeriodicWave
+        https://bugs.webkit.org/show_bug.cgi?id=117748
+
+        Reviewed by Jer Noble.
+
+        * fast/js/global-constructors-attributes-expected.txt:
+        * webaudio/oscillator-basic-expected.txt:
+        * webaudio/oscillator-basic.html:
+        * webaudio/oscillator-custom.html:
+        * webaudio/resources/oscillator-testing.js:
+        (generateExponentialOscillatorSweep):
+
+2013-06-24  Brent Fulgham  <bfulgham@apple.com>
+
+        [Mac] Unreviewed build correction after r151868
+        New test expecation had been placed in the wrong directory.
+
+        * platform/mac/accessibility/listitem-title-expected.txt: Copied from platform/mac/listitem-title-actual.txt.
+        * platform/mac/listitem-title-actual.txt: Removed.
+
+2013-06-24  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Skipping the crashing tests on debug bots.
+        https://bugs.webkit.org/show_bug.cgi?id=94458
+
+        * platform/qt/TestExpectations:
+
+2013-06-24  Zalan Bujtas  <zalan@apple.com>
+
+        Hittest finds the truncated text instead of the floating input, when the input is clicked.
+        https://bugs.webkit.org/show_bug.cgi?id=115675
+
+        Reviewed by David Hyatt.
+
+        Ignore truncated text on inline textbox and everything beyond the ellipsis box on
+        the root inlinebox while hittesting. (provided that nodeAtPoint finds no hit for any of
+        the root inline's children.)
+
+        * fast/css/text-overflow-ellipsis-and-floating-input-hittest-expected.txt: Added.
+        * fast/css/text-overflow-ellipsis-and-floating-input-hittest.html: Added.
+
+2013-06-23  Brent Fulgham  <bfulgham@gmail.com>
+
+        AX: Rebaseline test after r151868
+        https://bugs.webkit.org/show_bug.cgi?id=117892
+
+        Rubber stamped by Chris Fleizach.
+
+        * platform/mac/accessibility/lists-expected.txt:
+
+2013-06-23  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed EFL gardening. Unskip two media tests because there is no crash after system update.
+
+        * platform/efl/TestExpectations:
+
+2013-06-22  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Shapes] limit shape image values to same origin
+        https://bugs.webkit.org/show_bug.cgi?id=117610
+
+        Reviewed by Alexey Proskuryakov.
+
+        Verify that a non same-origin image URL specified for shape-inside or
+        shape-outside will not load and the shape property will be reset to "none".
+
+        * http/tests/resources/square100.png: Added.
+        * http/tests/security/shape-inside-image-origin-expected.txt: Added.
+        * http/tests/security/shape-inside-image-origin.html: Added.
+
+2013-06-21  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed gardening.
+
+        * platform/win/accessibility/aria-menubar-menuitems-expected.txt: Added.
+
+2013-06-21  Mark Lam  <mark.lam@apple.com>
+
+        Reverting failure expectation for fast/xmlhttprequest/xmlhttprequest-recursive-sync-event.html.
+        https://bugs.webkit.org/show_bug.cgi?id=117862.
+
+        Reviewed by Geoffrey Garen.
+
+        * platform/mac/TestExpectations:
+
+2013-06-21  Brent Fulgham  <bfulgham@apple.com>
+
+        AX: Title for ListItemRole should consist of concatenated child text elements.
+        https://bugs.webkit.org/show_bug.cgi?id=117892
+
+        Reviewed by Chris Fleizach.
+
+        * accessibility/listitem-title.html: Added.
+        * platform/mac/accessibility/listitem-title-expected.txt: Added.
+        * platform/win/accessibility/listitem-title-expected.txt: Added.
+
+2013-06-21  Robert Hogan  <robert@webkit.org>
+
+        Ignoring padding-right of inline elements in containers with undefined width
+        https://bugs.webkit.org/show_bug.cgi?id=76451
+
+        Reviewed by David Hyatt.
+
+        * fast/text/whitespace/inline-whitespace-wrapping-9-expected.html: Added.
+        * fast/text/whitespace/inline-whitespace-wrapping-9.html: Added.
+
+2013-06-21  James Craig  <james@cookiecrook.com>
+
+        AX: audio/video playback control timers (elapsed and remaining) should be exposed as ApplicationTimerRole
+        https://bugs.webkit.org/show_bug.cgi?id=117883
+
+        Reviewed by Chris Fleizach.
+
+        Some of the media controls were returning the wrong role. Updated existing test coverage.
+
+        * accessibility/media-element.html:
+        * platform/mac/accessibility/media-element-expected.txt:
+
 2013-06-20  Brent Fulgham  <bfulgham@apple.com>
 
         [Windows] AX: Radio buttons with "tab" role should describe themselves as tabs.

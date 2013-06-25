@@ -655,6 +655,7 @@ void DocumentLoader::continueAfterContentPolicy(PolicyAction policy)
     case PolicyUse: {
         // Prevent remote web archives from loading because they can claim to be from any domain and thus avoid cross-domain security checks (4120255).
         bool isRemoteWebArchive = (equalIgnoringCase("application/x-webarchive", mimeType)
+            || equalIgnoringCase("application/x-mimearchive", mimeType)
 #if PLATFORM(GTK)
             || equalIgnoringCase("message/rfc822", mimeType)
 #endif
@@ -1371,7 +1372,7 @@ void DocumentLoader::startLoadingMainResource()
 
     ResourceRequest request(m_request);
     DEFINE_STATIC_LOCAL(ResourceLoaderOptions, mainResourceLoadOptions,
-        (SendCallbacks, SniffContent, BufferData, AllowStoredCredentials, AskClientForAllCredentials, SkipSecurityCheck));
+        (SendCallbacks, SniffContent, BufferData, AllowStoredCredentials, AskClientForAllCredentials, SkipSecurityCheck, UseDefaultOriginRestrictionsForType));
     CachedResourceRequest cachedResourceRequest(request, mainResourceLoadOptions);
     m_mainResource = m_cachedResourceLoader->requestMainResource(cachedResourceRequest);
     if (!m_mainResource) {
