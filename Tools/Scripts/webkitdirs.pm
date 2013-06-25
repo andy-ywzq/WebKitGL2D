@@ -1490,7 +1490,7 @@ sub launcherName()
     } elsif (isWinCE()) {
         return "WinCELauncher";
     } elsif (isNix()) {
-        return "NixLauncher";
+        return "MiniBrowser";
     }
 }
 
