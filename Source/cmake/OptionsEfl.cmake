@@ -147,7 +147,7 @@ if ((${EINA_VERSION} STRLESS 1.7) OR (${EVAS_VERSION} STRLESS 1.7) OR (${ECORE_V
 endif ()
 
 find_package(Freetype 2.4.2 REQUIRED)
-find_package(HarfBuzz)
+find_package(HarfBuzz 0.9.2 REQUIRED)
 add_definitions(-DWTF_USE_FREETYPE=1)
 add_definitions(-DWTF_USE_HARFBUZZ=1)
 
