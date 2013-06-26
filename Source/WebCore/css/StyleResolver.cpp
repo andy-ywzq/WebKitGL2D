@@ -48,13 +48,7 @@
 #include "CSSSupportsRule.h"
 #include "CSSTimingFunctionValue.h"
 #include "CSSValueList.h"
-#if ENABLE(CSS_VARIABLES)
-#include "CSSVariableValue.h"
-#endif
 #include "CachedImage.h"
-#if ENABLE(CSS_SHAPES)
-#include "CachedResourceLoader.h"
-#endif
 #include "CalculationValue.h"
 #include "ContentData.h"
 #include "ContextFeatures.h"
@@ -137,18 +131,9 @@
 #include "WebKitCSSFilterValue.h"
 #endif
 
-#if ENABLE(DASHBOARD_SUPPORT)
-#include "DashboardRegion.h"
-#endif
-
-#if ENABLE(SVG)
-#include "CachedSVGDocument.h"
-#include "CachedSVGDocumentReference.h"
-#include "SVGDocument.h"
-#include "SVGElement.h"
-#include "SVGNames.h"
-#include "SVGURIReference.h"
-#include "WebKitCSSSVGDocumentValue.h"
+#if ENABLE(CSS_IMAGE_SET)
+#include "CSSImageSetValue.h"
+#include "StyleCachedImageSet.h"
 #endif
 
 #if ENABLE(CSS_SHADERS)
@@ -169,9 +154,30 @@
 #include "WebKitCSSShaderValue.h"
 #endif
 
-#if ENABLE(CSS_IMAGE_SET)
-#include "CSSImageSetValue.h"
-#include "StyleCachedImageSet.h"
+#if ENABLE(CSS_SHAPES)
+#include "CachedResourceLoader.h"
+#endif
+
+#if ENABLE(CSS_VARIABLES)
+#include "CSSVariableValue.h"
+#endif
+
+#if ENABLE(DASHBOARD_SUPPORT)
+#include "DashboardRegion.h"
+#endif
+
+#if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
+#include "HTMLAudioElement.h"
+#endif
+
+#if ENABLE(SVG)
+#include "CachedSVGDocument.h"
+#include "CachedSVGDocumentReference.h"
+#include "SVGDocument.h"
+#include "SVGElement.h"
+#include "SVGNames.h"
+#include "SVGURIReference.h"
+#include "WebKitCSSSVGDocumentValue.h"
 #endif
 
 #if ENABLE(VIDEO_TRACK)
@@ -673,7 +679,7 @@ bool StyleResolver::canShareStyleWithElement(StyledElement* element) const
     if (element->hasTagName(iframeTag) || element->hasTagName(frameTag) || element->hasTagName(embedTag) || element->hasTagName(objectTag) || element->hasTagName(appletTag) || element->hasTagName(canvasTag)
 #if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
         // With proxying, the media elements are backed by a RenderEmbeddedObject.
-        || element->hasTagName(videoTag) || element->hasTagName(audioTag)
+        || element->hasTagName(videoTag) || isHTMLAudioElement(element)
 #endif
         )
         return false;

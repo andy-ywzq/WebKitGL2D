@@ -579,7 +579,7 @@ Element* AccessibilityRenderObject::anchorElement() const
     // NOTE: this assumes that any non-image with an anchor is an HTMLAnchorElement
     Node* node = currRenderer->node();
     for ( ; node; node = node->parentNode()) {
-        if (node->hasTagName(aTag) || (node->renderer() && cache->getOrCreate(node->renderer())->isAnchor()))
+        if (isHTMLAnchorElement(node) || (node->renderer() && cache->getOrCreate(node->renderer())->isAnchor()))
             return toElement(node);
     }
     
@@ -888,9 +888,9 @@ AccessibilityObject* AccessibilityRenderObject::internalLinkElement() const
         return 0;
     
     // Right now, we do not support ARIA links as internal link elements
-    if (!element->hasTagName(aTag))
+    if (!isHTMLAnchorElement(element))
         return 0;
-    HTMLAnchorElement* anchor = static_cast<HTMLAnchorElement*>(element);
+    HTMLAnchorElement* anchor = toHTMLAnchorElement(element);
     
     KURL linkURL = anchor->href();
     String fragmentIdentifier = linkURL.fragmentIdentifier();
@@ -1459,8 +1459,8 @@ void AccessibilityRenderObject::setSelectedTextRange(const PlainTextRange& range
 
 KURL AccessibilityRenderObject::url() const
 {
-    if (isAnchor() && m_renderer->node()->hasTagName(aTag)) {
-        if (HTMLAnchorElement* anchor = static_cast<HTMLAnchorElement*>(anchorElement()))
+    if (isAnchor() && isHTMLAnchorElement(m_renderer->node())) {
+        if (HTMLAnchorElement* anchor = toHTMLAnchorElement(anchorElement()))
             return anchor->href();
     }
     
@@ -1735,9 +1735,9 @@ void AccessibilityRenderObject::getDocumentLinks(AccessibilityChildrenVector& re
                 result.append(axobj);
         } else {
             Node* parent = curr->parentNode();
-            if (parent && curr->hasTagName(areaTag) && parent->hasTagName(mapTag)) {
+            if (parent && isHTMLAreaElement(curr) && parent->hasTagName(mapTag)) {
                 AccessibilityImageMapLink* areaObject = static_cast<AccessibilityImageMapLink*>(axObjectCache()->getOrCreate(ImageMapLinkRole));
-                areaObject->setHTMLAreaElement(static_cast<HTMLAreaElement*>(curr));
+                areaObject->setHTMLAreaElement(toHTMLAreaElement(curr));
                 areaObject->setHTMLMapElement(static_cast<HTMLMapElement*>(parent));
                 areaObject->setParent(accessibilityParentForImageMap(static_cast<HTMLMapElement*>(parent)));
 
@@ -2205,8 +2205,8 @@ AccessibilityObject* AccessibilityRenderObject::accessibilityHitTest(const IntPo
         return 0;
     Node* node = hitTestResult.innerNode()->deprecatedShadowAncestorNode();
 
-    if (node->hasTagName(areaTag)) 
-        return accessibilityImageMapHitTest(static_cast<HTMLAreaElement*>(node), point);
+    if (isHTMLAreaElement(node))
+        return accessibilityImageMapHitTest(toHTMLAreaElement(node), point);
     
     if (node->hasTagName(optionTag))
         node = static_cast<HTMLOptionElement*>(node)->ownerSelectElement();
@@ -2746,9 +2746,9 @@ void AccessibilityRenderObject::addImageMapChildren()
 
     for (Element* current = ElementTraversal::firstWithin(map); current; current = ElementTraversal::next(current, map)) {
         // add an <area> element for this child if it has a link
-        if (current->hasTagName(areaTag) && current->isLink()) {
+        if (isHTMLAreaElement(current) && current->isLink()) {
             AccessibilityImageMapLink* areaObject = static_cast<AccessibilityImageMapLink*>(axObjectCache()->getOrCreate(ImageMapLinkRole));
-            areaObject->setHTMLAreaElement(static_cast<HTMLAreaElement*>(current));
+            areaObject->setHTMLAreaElement(toHTMLAreaElement(current));
             areaObject->setHTMLMapElement(map);
             areaObject->setParent(this);
             if (!areaObject->accessibilityIsIgnored())
@@ -3195,8 +3195,8 @@ String AccessibilityRenderObject::stringValueForMSAA() const
 {
     if (isLinkable(*this)) {
         Element* anchor = anchorElement();
-        if (anchor && anchor->hasTagName(aTag))
-            return static_cast<HTMLAnchorElement*>(anchor)->href();
+        if (anchor && isHTMLAnchorElement(anchor))
+            return toHTMLAnchorElement(anchor)->href();
     }
 
     return stringValue();
@@ -3208,10 +3208,10 @@ bool AccessibilityRenderObject::isLinked() const
         return false;
 
     Element* anchor = anchorElement();
-    if (!anchor || !anchor->hasTagName(aTag))
+    if (!anchor || !isHTMLAnchorElement(anchor))
         return false;
 
-    return !static_cast<HTMLAnchorElement*>(anchor)->href().isEmpty();
+    return !toHTMLAnchorElement(anchor)->href().isEmpty();
 }
 
 bool AccessibilityRenderObject::hasBoldFont() const

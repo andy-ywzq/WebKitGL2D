@@ -1,3 +1,496 @@
+2013-06-26  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Speed up SVG sprites by only painting the source rect in SVGImage::draw
+        https://bugs.webkit.org/show_bug.cgi?id=118070
+
+        Reviewed by Tim Horton.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/d359ab67fdd76a877d666dca91c311505dd27bbf.
+
+        * svg/graphics/SVGImage.cpp:
+        (WebCore::SVGImage::draw):
+
+2013-06-26  David Kilzer  <ddkilzer@apple.com>
+
+        BUILD FIX (r151981): Include HTMLAudioElement.h for ENABLE(PLUGIN_PROXY_FOR_VIDEO)
+
+        * css/StyleResolver.cpp:
+        - Include HTMLAudioElement.h.
+        - Sort headers.
+        * rendering/RenderLayerCompositor.cpp:
+        - Include HTMLAudioElement.h.
+
+2013-06-26  Yuki Sekiguchi  <yuki.sekiguchi@access-company.com>
+
+        getComputedStyle().width wrong after text changed
+        https://bugs.webkit.org/show_bug.cgi?id=106611
+
+        Reviewed by Dean Jackson.
+
+        When a new RenderText is created, NodeRenderingContext::createRendererForTextIfNeeded() sets a style to the RenderText.
+        If a font in the new style needs transcode (e.g. Meiryo), styleDidChange() calls transformText().
+        It sets a preferredLogicalWidthsDirty flag.
+        After that, createRendererForTextIfNeeded() inserts the RenderText to its parent renderer.
+        However, RenderObjectChildList::insertChildNode() doesn't set a preferredLogicalWidthsDirty flag of owner
+        because a preferredLogicalWidthsDirty flag of the RenderText is already true.
+
+        Inserting new child should always sets a preferredLogicalWidthsDirty flag.
+        Therefore, this patch called setPreferredLogicalWidthsDirty() of owner.
+
+        Test: fast/dynamic/empty-absolute-innerhtml-transcoding-text.html
+
+        * rendering/RenderObjectChildList.cpp:
+        (WebCore::RenderObjectChildList::insertChildNode):
+
+2013-06-26  Brent Fulgham  <bfulgham@apple.com>
+
+        Prepare CaptionUserPreferencesMac for use on Windows port.
+        https://bugs.webkit.org/show_bug.cgi?id=118069
+
+        Reviewed by Eric Carlson.
+
+        * WebCore.vcxproj/WebCore.vcxproj: Add new files.
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Ditto.
+        * WebCore.xcodeproj/project.pbxproj: Update for new file name.
+        * page/CaptionUserPreferencesMac.h: Removed.
+        * page/CaptionUserPreferencesMac.mm: Removed.
+        * page/CaptionUserPreferencesMediaAF.cpp: Copied from page/CaptionUserPreferencesMac.mm.
+        * page/CaptionUserPreferencesMediaAF.h: Copied from page/CaptionUserPreferencesMac.h.
+        * page/PageGroup.cpp:
+        (WebCore::PageGroup::captionPreferences): Updated to new class name.
+
+2013-06-26  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Remove unneccesary cast to Node* in MediaControlTextTrackContainerElement::updateDisplay
+        https://bugs.webkit.org/show_bug.cgi?id=118020
+
+        Reviewed by Christophe Dumez.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/2de89f61bb316f5e166b45ce71bb2b293dbf575d
+
+        TextTrackCue is a Node, there's no reason to static_cast from it to Node*.
+
+        * html/shadow/MediaControlElements.cpp:
+        (WebCore::MediaControlTextTrackContainerElement::updateDisplay):
+
+2013-06-26  Ryosuke Niwa  <rniwa@webkit.org>
+
+        RenderBox::hasRenderOverflow should return bool instead of RenderOverflow*
+        https://bugs.webkit.org/show_bug.cgi?id=118041
+
+        Reviewed by Christophe Dumez.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/1683b58c855b745463acbf18086e32279db5000f.
+
+        * rendering/RenderBox.h:
+        (WebCore::RenderBox::hasRenderOverflow):
+        (WebCore::RenderBox::hasHorizontalLayoutOverflow):
+        (WebCore::RenderBox::hasVerticalLayoutOverflow):
+
+2013-06-26  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Remove unneeded static_casts from SelectorChecker
+        https://bugs.webkit.org/show_bug.cgi?id=118018
+
+        Reviewed by Christophe Dumez.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/adc5b8bec2d8c6a857b3c930ca7484f76cad1367
+
+        SelectorChecker::checkOne casts to StyledElement just to call classNames, but
+        this method is on Element so there's no reason for this. The cast here also
+        looks pretty suspect. The method also casts to HTMLFrameElementBase to call
+        containsFullScreenElement which is also on Element so the cast can be removed.
+
+        * css/SelectorChecker.cpp:
+        (WebCore::SelectorChecker::checkOne):
+
+2013-06-26  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Set Attr.ownerDocument in Element#setAttributeNode()
+        https://bugs.webkit.org/show_bug.cgi?id=118031
+
+        Reviewed by Andreas Kling.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/fa739fe5369f55bbdcb3fa123cb64df36b8ae414.
+
+        Adopt Attr node as needed.
+
+        Test: fast/dom/Attr/set-attribute-node-from-iframe.html
+
+        * dom/Element.cpp:
+        (WebCore::Element::setAttributeNode):
+
+2013-06-25  David Hyatt  <hyatt@apple.com>
+
+        Flex boxes (both old and new) don't handle max-height images correctly.
+        https://bugs.webkit.org/show_bug.cgi?id=118000
+
+        Reviewed by Beth Dakin.
+
+        Tests: css3/flexbox/image-percent-max-height.html
+               fast/flexbox/image-percent-max-height.html
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::dirtyForLayoutFromPercentageHeightDescendants):
+        (WebCore::RenderBlock::layoutBlockChildren):
+        Pull the percentage height descendant code that dirties those descendants
+        out of layoutBlockChildren and into a protected helper function,
+        dirtyForLayoutFromPercentageHeightDescendants, that can be called from the 
+        flex box code.
+        
+        Also patch dirtyForLayoutFromPercentageHeightDescendants so that it will dirty
+        preferred logical widths when a child has an aspect ratio, since we know that
+        percentage height changes will potentially affect the preferred widths of the image and
+        its ancestor blocks.
+
+        * rendering/RenderBlock.h:
+        Declaration of the new dirtyForLayoutFromPercentageHeightDescendants function.
+
+        * rendering/RenderDeprecatedFlexibleBox.cpp:
+        (WebCore::RenderDeprecatedFlexibleBox::layoutBlock):
+        Make the old flex box code call dirtyForLayoutFromPercentageHeightDescendants so
+        that everything is dirtied properly.
+
+        (WebCore::RenderDeprecatedFlexibleBox::layoutHorizontalBox):
+        (WebCore::RenderDeprecatedFlexibleBox::layoutVerticalBox):
+        Remove the isReplaced()/percentage height/width dirtying now that the old flexible
+        box is using the same dirtying mechanism as RenderBlock.
+
+        * rendering/RenderFlexibleBox.cpp:
+        (WebCore::RenderFlexibleBox::layoutBlock):
+        Patch the new flexible box code to use the dirtying mechanism that RenderBlock
+        uses for percentage heights/widths on replaced descendants.
+
+        * rendering/RenderObject.h:
+        (WebCore::RenderObject::hasAspectRatio):
+        Pulled the static helper function from RenderReplaced into a full-blown method
+        on RenderObject, so that dirtyForLayoutFromPercentageHeightDescendants can call
+        it to check if an object has an aspect ratio.
+
+        * rendering/RenderReplaced.cpp:
+        (WebCore::RenderReplaced::computeAspectRatioInformationForRenderBox):
+        (WebCore::RenderReplaced::computeIntrinsicRatioInformation):
+        Patch the call sites of the static helper function to use hasAspectRatio instead
+        and get rid of the static in the cpp file.
+
+2013-06-26  Kangil Han  <kangil.han@samsung.com>
+
+        Adopt is/toHTMLAreaElement for code cleanup
+        https://bugs.webkit.org/show_bug.cgi?id=117980
+
+        Reviewed by Antonio Gomes.
+
+        To enhance readibility, this patch adopts is/toHTMLAreaElement.
+        This also helps out to reduce duplicated use of static_cast.
+
+        * accessibility/AXObjectCache.cpp:
+        (WebCore::AXObjectCache::focusedUIElementForPage):
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::getDocumentLinks):
+        (WebCore::AccessibilityRenderObject::accessibilityHitTest):
+        (WebCore::AccessibilityRenderObject::addImageMapChildren):
+        * html/HTMLAreaElement.h:
+        (WebCore::isHTMLAreaElement):
+        (WebCore::toHTMLAreaElement):
+        * html/HTMLMapElement.cpp:
+        (WebCore::HTMLMapElement::mapMouseEvent):
+        * page/FocusController.cpp:
+        (WebCore::FocusController::advanceFocusDirectionally):
+        * page/SpatialNavigation.cpp:
+        (WebCore::FocusCandidate::FocusCandidate):
+        (WebCore::areElementsOnSameLine):
+        * rendering/HitTestResult.cpp:
+        (WebCore::HitTestResult::absoluteLinkURL):
+        * rendering/RenderImage.cpp:
+        (WebCore::RenderImage::paintAreaElementFocusRing):
+
+2013-06-26  Brady Eidson  <beidson@apple.com>
+
+        [Mac] Document URL is not updated by HSTS
+        <rdar://problem/14241270> and https://bugs.webkit.org/show_bug.cgi?id=118003
+        
+        Patch started by Alexey Proskuryakov, finished by Brady Eidson.
+
+        Reviewed by Brady Eidson and then Alexey Proskuryakov.
+
+        Synthesize a response and properly handle willSendRequest when the URL changes in a way that's typical for HSTS.
+
+        * platform/network/mac/WebCoreURLResponse:
+        * platform/network/mac/WebCoreURLResponse:
+        (WebCore::synthesizeRedirectResponseIfNecessary): Synthesize a redirect response and when the URL changes in a way that's
+          typical for HSTS connections.
+
+        * platform/network/mac/WebCoreResourceHandleAsDelegate.mm:
+        (-[WebCoreResourceHandleAsDelegate connection:willSendRequest:redirectResponse:]): Call synthesizeRedirectResponseIfNecessary.
+
+        * platform/network/mac/WebCoreResourceHandleAsOperationQueueDelegate.mm:
+        (-[WebCoreResourceHandleAsOperationQueueDelegate connection:willSendRequest:redirectResponse:]): Ditto.
+
+2013-06-26  Andrei Bucur  <abucur@adobe.com>
+
+        [CSS Regions] fast/regions/seamless-iframe-flowed-into-regions.html asserts
+        https://bugs.webkit.org/show_bug.cgi?id=117797
+
+        Reviewed by Antti Koivisto.
+
+        The seamless iframes inherit the current RenderFlowThread during layout. This means getting
+        the LayoutState object from the flow thread RenderView object is not always correct.
+        For RenderObjects inside the seamless iframes the view()/LayoutState object is different than the one
+        of the RenderFlowThread. The patch changes the code to use the correct LayoutState object during
+        layout when pushing a new state.
+
+        Tests: covered by fast/regions/seamless-iframe-flowed-into-regions.html
+
+        * rendering/RenderFlowThread.cpp:
+        (WebCore::RenderFlowThread::currentActiveRenderBox):
+        (WebCore::RenderFlowThread::pushFlowThreadLayoutState):
+        (WebCore::RenderFlowThread::popFlowThreadLayoutState):
+
+2013-06-26  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Remove many static_casts to Element types from AccessibilityNodeObject
+        https://bugs.webkit.org/show_bug.cgi?id=118021
+
+        Reviewed by Chris Fleizach.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/ecd837f94996a20fdb8798e24f26cf6edea2a423.
+
+        * accessibility/AccessibilityNodeObject.cpp:
+        (WebCore::AccessibilityNodeObject::isReadOnly):
+        (WebCore::AccessibilityNodeObject::alternativeTextForWebArea):
+        (WebCore::AccessibilityNodeObject::text):
+
+2013-06-26  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Stop inheriting SVGExternalResourcesRequired, SVGFitToViewBox and SVGZoomAndPan
+        https://bugs.webkit.org/show_bug.cgi?id=118029
+
+        Reviewed by Kentaro Hara.
+
+        Stop inheriting SVGExternalResourcesRequired, SVGFitToViewBox and SVGZoomAndPan
+        in the IDL and use implements statements instead.
+
+        This is one step towards getting rid of multiple inheritance in the SVG code
+        and matching the latest specification:
+        http://www.w3.org/TR/SVG2/types.html#BasicDOMInterfaces
+
+        There is no webexposed behavior change.
+
+        No new tests, no behavior change.
+
+        * svg/SVGAnimationElement.idl:
+        * svg/SVGCircleElement.idl:
+        * svg/SVGClipPathElement.idl:
+        * svg/SVGCursorElement.idl:
+        * svg/SVGDefsElement.idl:
+        * svg/SVGEllipseElement.idl:
+        * svg/SVGFEImageElement.idl:
+        * svg/SVGFilterElement.idl:
+        * svg/SVGForeignObjectElement.idl:
+        * svg/SVGGElement.idl:
+        * svg/SVGGradientElement.idl:
+        * svg/SVGImageElement.idl:
+        * svg/SVGLineElement.idl:
+        * svg/SVGMPathElement.idl:
+        * svg/SVGMarkerElement.idl:
+        * svg/SVGMaskElement.idl:
+        * svg/SVGPathElement.idl:
+        * svg/SVGPatternElement.idl:
+        * svg/SVGPolygonElement.idl:
+        * svg/SVGPolylineElement.idl:
+        * svg/SVGRectElement.idl:
+        * svg/SVGSVGElement.idl:
+        * svg/SVGScriptElement.idl:
+        * svg/SVGSwitchElement.idl:
+        * svg/SVGSymbolElement.idl:
+        * svg/SVGTextContentElement.idl:
+        * svg/SVGUseElement.idl:
+        * svg/SVGViewSpec.idl:
+
+2013-06-26  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Use-after-free in RadioInputType::handleKeydownEvent
+        https://bugs.webkit.org/show_bug.cgi?id=118035
+
+        Reviewed by Kent Tamura.
+
+        Use RefPtr for inputElement since setFocusedNode could blow it away.
+
+        * html/RadioInputType.cpp:
+        (WebCore::RadioInputType::handleKeydownEvent):
+
+2013-06-26  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Get rid of multiple inheritence for SVGViewElement interface
+        https://bugs.webkit.org/show_bug.cgi?id=118014
+
+        Reviewed by Kentaro Hara.
+
+        Web IDL no longer supports multiple inheritence. As per the latest
+        specification SVGViewElement should only inherit from SVGElement.
+        'implements' statements are used for the rest. This patch refactors
+        the IDL files to match the latest specification:
+        http://www.w3.org/TR/SVG2/linking.html#InterfaceSVGViewElement
+
+        Note that there is a WebExposed change as SVGZoomAndPan used to be
+        exposed on the Window and it is not anymore. SVGZoomAndPan merely
+        supplements SVGViewElement and should not be exposed to JavaScript
+        according to the latest specification.
+
+        No new tests, covered by existing tests.
+
+        * CMakeLists.txt:
+        * DerivedSources.pri:
+        * GNUmakefile.list.am:
+        * svg/SVGExternalResourcesRequired.idl:
+        * svg/SVGFitToViewBox.idl:
+        * svg/SVGViewElement.idl:
+        * svg/SVGZoomAndPan.idl:
+
+2013-06-26  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Mark SVG(Circle|Path|Rect)Element::createRenderer() with OVERRIDE
+        https://bugs.webkit.org/show_bug.cgi?id=118037
+
+        Reviewed by Philip Rogers.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/e8196920e769ab0786b2b4b21d3fdc2d87afef0d.
+
+        * svg/SVGCircleElement.h:
+        * svg/SVGPathElement.h:
+        * svg/SVGRectElement.h:
+
+2013-06-26  Kangil Han  <kangil.han@samsung.com>
+
+        Adopt is/toHTMLAudioElement for code cleanup
+        https://bugs.webkit.org/show_bug.cgi?id=117985
+
+        Reviewed by Jer Noble.
+
+        To enhance readibility, this patch adopts is/toHTMLAudioElement.
+        This also helps out to reduce duplicated use of static_cast.
+
+        * bindings/js/JSNodeCustom.cpp:
+        (WebCore::isReachableFromDOM):
+        * css/CSSDefaultStyleSheets.cpp:
+        (WebCore::CSSDefaultStyleSheets::ensureDefaultStyleSheetsForElement):
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::canShareStyleWithElement):
+        * html/HTMLAudioElement.h:
+        (WebCore::isHTMLAudioElement):
+        (WebCore::toHTMLAudioElement):
+        * loader/SubframeLoader.cpp:
+        (WebCore::SubframeLoader::loadMediaPlayerProxyPlugin):
+        * rendering/HitTestResult.cpp:
+        (WebCore::HitTestResult::mediaElement):
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::RenderLayerCompositor::requiresCompositingForVideo):
+        * rendering/RenderThemeMac.mm:
+        (WebCore::RenderThemeMac::paintMediaMuteButton):
+        (WebCore::RenderThemeMac::paintMediaPlayButton):
+
+2013-06-26  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Refactoring: Fold Document::focusedNodeRemoved into Document::removeFocusedNodeOfSubtree
+        https://bugs.webkit.org/show_bug.cgi?id=118036
+
+        Reviewed by Kent Tamura.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/3391beabe75548cc638a6c88982f913621a4410f.
+
+        * dom/Document.cpp:
+        (WebCore::Document::removeFocusedNodeOfSubtree):
+        * dom/Document.h:
+
+2013-06-25  Ryosuke Niwa  <rniwa@webkit.org>
+
+        JSString should remember AtomicString
+        https://bugs.webkit.org/show_bug.cgi?id=117386
+
+        Reviewed by Geoffrey Garen.
+
+        Added "Atomic" attribute as a WebKit extension to WebIDL, and deployed it in Element.idl and Node.idl so that
+        the binding code can use newly added JSValue::toAtomic to update JSString's m_value.
+
+        * bindings/js/JSDOMBinding.cpp:
+        (WebCore::valueToAtomicStringWithNullCheck): Added.
+        (WebCore::valueToAtomicStringWithUndefinedOrNullCheck): Added.
+
+        * bindings/js/JSDOMBinding.h:
+
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GetNativeTypeFromSignature): Return const AtomicString& when either Atomic attribute is specified or the type is
+        Reflect. Note that setAttribute and getAttribute both use AtomicString for all arguments.
+        (JSValueToNative): Use AtomicString equivalents when possible when converting DOMString to a WebCore object.
+
+        * bindings/scripts/IDLAttributes.txt: Added "Atomic" attribute.
+
+        * bindings/scripts/test/JS/JSTestObj.cpp: Baselined test cases.
+        (WebCore::setJSTestObjReflectedStringAttr):
+        (WebCore::setJSTestObjReflectedURLAttr):
+        (WebCore::setJSTestObjReflectedCustomURLAttr):
+
+        * dom/Document.idl:
+        * dom/Element.idl:
+        * dom/Node.idl:
+
+2013-06-25  Kangil Han  <kangil.han@samsung.com>
+
+        Adopt is/toHTMLAnchorElement for code cleanup
+        https://bugs.webkit.org/show_bug.cgi?id=117973
+
+        Reviewed by Andreas Kling.
+
+        To enhance readibility, this patch adopts is/toHTMLAnchorElement.
+        This also helps out to reduce duplicated use of static_cast.
+
+        * accessibility/AccessibilityNodeObject.cpp:
+        (WebCore::AccessibilityNodeObject::anchorElement):
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::anchorElement):
+        (WebCore::AccessibilityRenderObject::internalLinkElement):
+        (WebCore::AccessibilityRenderObject::url):
+        (WebCore::AccessibilityRenderObject::stringValueForMSAA):
+        (WebCore::AccessibilityRenderObject::isLinked):
+        * css/CSSDefaultStyleSheets.cpp:
+        (WebCore::elementCanUseSimpleDefaultStyle):
+        * css/SelectorChecker.cpp:
+        (WebCore::SelectorChecker::checkOne):
+        * dom/Document.cpp:
+        (WebCore::Document::updateBaseURL):
+        * dom/TreeScope.cpp:
+        (WebCore::TreeScope::findAnchor):
+        * dom/VisitedLinkState.cpp:
+        (WebCore::linkHashForElement):
+        (WebCore::VisitedLinkState::determineLinkStateSlowCase):
+        * html/HTMLAnchorElement.h:
+        (WebCore::isHTMLAnchorElement):
+        (WebCore::toHTMLAnchorElement):
+        * page/DragController.cpp:
+        (WebCore::DragController::draggableElement):
+        * rendering/HitTestResult.cpp:
+        (WebCore::HitTestResult::absoluteLinkURL):
+        (WebCore::HitTestResult::isLiveLink):
+        * rendering/RenderObject.cpp:
+        (WebCore::RenderObject::getTextDecorationColors):
+
+2013-06-25  Dean Jackson  <dino@apple.com>
+
+        Don't snapshot plug-ins that come from the same host as the page
+        https://bugs.webkit.org/show_bug.cgi?id=117969
+        <rdar://problem/12885400>
+
+        Reviewed by Tim Horton.
+
+        If a page is serving plug-in content directly, then that content
+        is typically very important to the page. For example, embedding
+        a video or audio player. In this case, don't snapshot the plug-ins.
+
+        * html/HTMLPlugInImageElement.cpp:
+        (WebCore::HTMLPlugInImageElement::subframeLoaderWillCreatePlugIn): Add a test
+        that compares the plug-in's URL against the main page's URL and don't snapshot
+        if they are the same.
+
 2013-06-25  Alex Christensen  <achristensen@apple.com>
 
         Added PLATFORM(WIN) to many places where it was missing for compiling WebGL for Windows.

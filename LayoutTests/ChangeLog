@@ -1,3 +1,78 @@
+2013-06-26  Yuki Sekiguchi  <yuki.sekiguchi@access-company.com>
+
+        getComputedStyle().width wrong after text changed
+        https://bugs.webkit.org/show_bug.cgi?id=106611
+
+        Reviewed by Dean Jackson.
+
+        * fast/dynamic/empty-absolute-innerhtml-transcoding-text-expected.html: Added.
+        * fast/dynamic/empty-absolute-innerhtml-transcoding-text.html: Added.
+
+2013-06-26  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Set Attr.ownerDocument in Element#setAttributeNode()
+        https://bugs.webkit.org/show_bug.cgi?id=118031
+
+        Reviewed by Andreas Kling.
+
+        Add a regression test.
+
+        * fast/dom/Attr/set-attribute-node-from-iframe-expected.txt: Added.
+        * fast/dom/Attr/set-attribute-node-from-iframe.html: Added.
+
+2013-06-25  David Hyatt  <hyatt@apple.com>
+
+        Flex boxes (both old and new) don't handle max-height images correctly.
+        https://bugs.webkit.org/show_bug.cgi?id=118000
+
+        Reviewed by Beth Dakin.
+
+        * css3/flexbox/image-percent-max-height-expected.html: Added.
+        * css3/flexbox/image-percent-max-height.html: Added.
+        * css3/flexbox/resources/hero.png: Added.
+        * fast/flexbox/image-percent-max-height-expected.html: Added.
+        * fast/flexbox/image-percent-max-height.html: Added.
+        * fast/flexbox/resources/hero.png: Added.
+
+2013-06-26  Ryosuke Niwa  <rniwa@webkit.org>
+
+        editing/selection/doubleclick-crash.html can be flaky
+        https://bugs.webkit.org/show_bug.cgi?id=118017
+
+        Reviewed by Jessie Berlin.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/45ac882064589ac41a63762905f0618fc035cd44.
+
+        * editing/selection/doubleclick-crash.html:
+
+2013-06-26  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Get rid of multiple inheritence for SVGViewElement interface
+        https://bugs.webkit.org/show_bug.cgi?id=118014
+
+        Reviewed by Kentaro Hara.
+
+        Update / Rebaseline several SVG test cases now that SVGZoomAndPan interface
+        is no longer exposed.
+
+        * fast/js/global-constructors-attributes-expected.txt:
+        * platform/efl/fast/js/global-constructors-attributes-expected.txt:
+        * platform/gtk/fast/js/global-constructors-attributes-expected.txt:
+        * platform/mac-lion/fast/js/global-constructors-attributes-expected.txt:
+        * platform/qt/fast/js/global-constructors-attributes-expected.txt:
+        * svg/custom/global-constructors-expected.txt:
+        * svg/custom/js-svg-constructors-expected.txt:
+        * svg/custom/js-svg-constructors.svg:
+        * svg/custom/script-tests/global-constructors.js:
+        * svg/dom/SVGViewSpec-defaults-expected.txt:
+        * svg/dom/SVGViewSpec-expected.txt:
+        * svg/dom/resources/viewspec-parser.js:
+        (zoomAndPanToString):
+        (viewSpecToString):
+        * svg/dom/script-tests/SVGViewSpec-defaults.js:
+        * svg/dom/script-tests/SVGViewSpec.js:
+        (continueTesting):
+
 2013-06-25  Krzysztof Czech  <k.czech@samsung.com>
 
         [AX][ATK] Update accessibility baselines after r151953

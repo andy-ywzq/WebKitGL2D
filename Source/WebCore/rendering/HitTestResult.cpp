@@ -29,6 +29,8 @@
 #include "FrameSelection.h"
 #include "FrameTree.h"
 #include "HTMLAnchorElement.h"
+#include "HTMLAreaElement.h"
+#include "HTMLAudioElement.h"
 #include "HTMLImageElement.h"
 #include "HTMLInputElement.h"
 #include "HTMLMediaElement.h"
@@ -377,7 +379,7 @@ HTMLMediaElement* HitTestResult::mediaElement() const
     if (!(m_innerNonSharedNode->renderer() && m_innerNonSharedNode->renderer()->isMedia()))
         return 0;
 
-    if (m_innerNonSharedNode->hasTagName(HTMLNames::videoTag) || m_innerNonSharedNode->hasTagName(HTMLNames::audioTag))
+    if (m_innerNonSharedNode->hasTagName(HTMLNames::videoTag) || isHTMLAudioElement(m_innerNonSharedNode.get()))
         return static_cast<HTMLMediaElement*>(m_innerNonSharedNode.get());
     return 0;
 }
@@ -510,7 +512,7 @@ KURL HitTestResult::absoluteLinkURL() const
         return KURL();
 
     AtomicString urlString;
-    if (m_innerURLElement->hasTagName(aTag) || m_innerURLElement->hasTagName(areaTag) || m_innerURLElement->hasTagName(linkTag))
+    if (isHTMLAnchorElement(m_innerURLElement.get()) || isHTMLAreaElement(m_innerURLElement.get()) || m_innerURLElement->hasTagName(linkTag))
         urlString = m_innerURLElement->getAttribute(hrefAttr);
 #if ENABLE(SVG)
     else if (m_innerURLElement->hasTagName(SVGNames::aTag))
@@ -527,8 +529,8 @@ bool HitTestResult::isLiveLink() const
     if (!(m_innerURLElement && m_innerURLElement->document()))
         return false;
 
-    if (m_innerURLElement->hasTagName(aTag))
-        return static_cast<HTMLAnchorElement*>(m_innerURLElement.get())->isLiveLink();
+    if (isHTMLAnchorElement(m_innerURLElement.get()))
+        return toHTMLAnchorElement(m_innerURLElement.get())->isLiveLink();
 #if ENABLE(SVG)
     if (m_innerURLElement->hasTagName(SVGNames::aTag))
         return m_innerURLElement->isLink();

@@ -63,6 +63,7 @@
 #include <wtf/TemporaryChange.h>
 
 #if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
+#include "HTMLAudioElement.h"
 #include "HTMLMediaElement.h"
 #endif
 
@@ -2067,7 +2068,7 @@ bool RenderLayerCompositor::requiresCompositingForVideo(RenderObject* renderer) 
             return false;
 
         Node* node = renderer->node();
-        if (!node || (!node->hasTagName(HTMLNames::videoTag) && !node->hasTagName(HTMLNames::audioTag)))
+        if (!node || (!node->hasTagName(HTMLNames::videoTag) && !isHTMLAudioElement(node)))
             return false;
 
         HTMLMediaElement* mediaElement = toMediaElement(node);
