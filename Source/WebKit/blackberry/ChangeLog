@@ -1,3 +1,73 @@
+2013-06-27  Kangil Han  <kangil.han@samsung.com>
+
+        Adopt is/toHTMLInputElement for code cleanup
+        https://bugs.webkit.org/show_bug.cgi?id=118130
+
+        Reviewed by Antti Koivisto.
+
+        To enhance readability, this patch adopts is/toHTMLInputElement.
+        This also helps out to reduce duplicated use of static_cast.
+
+        * Api/WebPage.cpp:
+        (BlackBerry::WebKit::WebPagePrivate::webContext):
+        (BlackBerry::WebKit::WebPagePrivate::blockZoomRectForNode):
+        * WebCoreSupport/CredentialTransformData.cpp:
+        (WebCore::CredentialTransformData::findPasswordFormFields):
+        * WebCoreSupport/EditorClientBlackBerry.cpp:
+        (WebCore::EditorClientBlackBerry::shouldSpellCheckFocusedField):
+        * WebKitSupport/DOMSupport.cpp:
+        (BlackBerry::WebKit::DOMSupport::isPasswordElement):
+        (BlackBerry::WebKit::DOMSupport::inputElementText):
+        (BlackBerry::WebKit::DOMSupport::isDateTimeInputField):
+        (BlackBerry::WebKit::DOMSupport::isColorInputField):
+        (BlackBerry::WebKit::DOMSupport::elementIdOrNameIndicatesNoAutocomplete):
+        * WebKitSupport/InputHandler.cpp:
+        (BlackBerry::WebKit::InputHandler::elementType):
+        (BlackBerry::WebKit::InputHandler::setInputValue):
+        (BlackBerry::WebKit::InputHandler::extractedTextRequest):
+        (BlackBerry::WebKit::InputHandler::showTextInputTypeSuggestionBox):
+
+2013-06-27  Nima Ghanavatian  <nghanavatian@blackberry.com>
+
+        [BlackBerry] We should clear all markers when input changes a word
+        https://bugs.webkit.org/show_bug.cgi?id=118136
+        JIRA115313.
+
+        For the case where a letter is added to the middle of a misspelled word, we were
+        sending incorrect offsets to clear spelling markers. However, since this
+        expanded the current word, it overlaps entirely the previous spelling marker so
+        no issue is found. However, if the keypress is backspace, the incorrect range
+        is smaller, causing an overlap which recreates the marker over the last character.
+        Setting shouldEraseMarkersAfterChangeSelection to follow continuous spell checking,
+        which will clear all markers regardless of overlap.
+        This patch also sustains spelling markers after the user taps to move the caret onto
+        the word, which is a nice gain as it was asked for previously.
+
+        Reviewed by Rob Buis.
+
+        Internally Reviewed by Mike Fenton
+
+        * WebCoreSupport/EditorClientBlackBerry.cpp:
+        (WebCore::EditorClientBlackBerry::shouldEraseMarkersAfterChangeSelection):
+
+2013-06-26  Carlos Garcia Campos  <cargarcia@blackberry.com>
+
+        [BlackBerry] Handle testRunner.setCustomPolicyDelegate()
+        https://bugs.webkit.org/show_bug.cgi?id=117982
+
+        Reviewed by Rob Buis.
+
+        Take custom policy into account when deciding the policy for
+        navigation actions.
+
+        Fixes test fast/loader/onload-policy-ignore-for-frame.html.
+
+        * Api/DumpRenderTreeClient.h:
+        * WebCoreSupport/FrameLoaderClientBlackBerry.cpp:
+        (WebCore::FrameLoaderClientBlackBerry::dispatchDecidePolicyForNavigationAction):
+        If custom policy is enabled ignore the navigation action when it's
+        not permissive.
+
 2013-06-26  Kangil Han  <kangil.han@samsung.com>
 
         Adopt is/toHTMLAreaElement for code cleanup

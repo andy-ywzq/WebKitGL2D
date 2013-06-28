@@ -26,10 +26,7 @@
 
 [
     Conditional=SVG
-] interface SVGPathElement : SVGStyledElement,
-                                             SVGTests,
-                                             SVGLangSpace,
-                                             SVGTransformable {
+] interface SVGPathElement : SVGGraphicsElement {
     readonly attribute SVGAnimatedNumber pathLength;
 
     float getTotalLength();

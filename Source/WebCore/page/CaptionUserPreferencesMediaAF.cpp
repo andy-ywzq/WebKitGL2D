@@ -29,7 +29,9 @@
 
 #include "CaptionUserPreferencesMediaAF.h"
 
+#if HAVE(MEDIA_ACCESSIBILITY_FRAMEWORK)
 #include "CoreText/CoreText.h"
+#endif
 #include "DOMWrapperWorld.h"
 #include "FloatConversion.h"
 #include "HTMLMediaElement.h"
@@ -131,6 +133,11 @@ SOFT_LINK_VARIABLE_DLL_IMPORT(MediaAccessibility, kMAXCaptionAppearanceSettingsC
 
 SOFT_LINK_LIBRARY(CoreText)
 
+SOFT_LINK_DLL_IMPORT(CoreText, CTFontDescriptorCopyAttribute,  CFTypeRef, __cdecl, (CTFontDescriptorRef descriptor, CFStringRef attribute), (descriptor, attribute));
+#define CTFontDescriptorCopyAttribute softLink_CTFontDescriptorCopyAttribute
+
+SOFT_LINK_VARIABLE_DLL_IMPORT(CoreText, kCTFontNameAttribute, CFStringRef)
+#define kCTFontNameAttribute get_kCTFontNameAttribute()
 
 #endif
 

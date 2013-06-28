@@ -282,8 +282,8 @@ AccessibilityRole AccessibilityNodeObject::determineAccessibilityRole()
         return StaticTextRole;
     if (node()->hasTagName(buttonTag))
         return buttonRoleType();
-    if (node()->hasTagName(inputTag)) {
-        HTMLInputElement* input = static_cast<HTMLInputElement*>(node());
+    if (isHTMLInputElement(node())) {
+        HTMLInputElement* input = toHTMLInputElement(node());
         if (input->isCheckbox())
             return CheckBoxRole;
         if (input->isRadioButton())
@@ -313,7 +313,7 @@ AccessibilityRole AccessibilityNodeObject::determineAccessibilityRole()
         return DivRole;
     if (node()->hasTagName(pTag))
         return ParagraphRole;
-    if (node()->hasTagName(labelTag))
+    if (isHTMLLabelElement(node()))
         return LabelRole;
     if (node()->isElementNode() && toElement(node())->isFocusable())
         return GroupRole;
@@ -444,8 +444,8 @@ bool AccessibilityNodeObject::isNativeTextControl() const
     if (node->hasTagName(textareaTag))
         return true;
 
-    if (node->hasTagName(inputTag)) {
-        HTMLInputElement* input = static_cast<HTMLInputElement*>(node);
+    if (isHTMLInputElement(node)) {
+        HTMLInputElement* input = toHTMLInputElement(node);
         return input->isText() || input->isNumberField();
     }
 
@@ -494,8 +494,8 @@ bool AccessibilityNodeObject::isNativeImage() const
     if (node->hasTagName(appletTag) || node->hasTagName(embedTag) || node->hasTagName(objectTag))
         return true;
 
-    if (node->hasTagName(inputTag)) {
-        HTMLInputElement* input = static_cast<HTMLInputElement*>(node);
+    if (isHTMLInputElement(node)) {
+        HTMLInputElement* input = toHTMLInputElement(node);
         return input->isImageButton();
     }
 
@@ -529,8 +529,8 @@ bool AccessibilityNodeObject::isInputImage() const
     if (!node)
         return false;
  
-    if (roleValue() == ButtonRole && node->hasTagName(inputTag)) {
-        HTMLInputElement* input = static_cast<HTMLInputElement*>(node);
+    if (roleValue() == ButtonRole && isHTMLInputElement(node)) {
+        HTMLInputElement* input = toHTMLInputElement(node);
         return input->isImageButton();
     }
 
@@ -697,8 +697,8 @@ bool AccessibilityNodeObject::isReadOnly() const
     if (node->hasTagName(textareaTag))
         return toHTMLFormControlElement(node)->isReadOnly();
 
-    if (node->hasTagName(inputTag)) {
-        HTMLInputElement* input = static_cast<HTMLInputElement*>(node);
+    if (isHTMLInputElement(node)) {
+        HTMLInputElement* input = toHTMLInputElement(node);
         if (input->isTextField())
             return input->isReadOnly();
     }
@@ -786,8 +786,8 @@ String AccessibilityNodeObject::valueDescription() const
 
 float AccessibilityNodeObject::valueForRange() const
 {
-    if (node() && node()->hasTagName(inputTag)) {
-        HTMLInputElement* input = static_cast<HTMLInputElement*>(node());
+    if (node() && isHTMLInputElement(node())) {
+        HTMLInputElement* input = toHTMLInputElement(node());
         if (input->isRangeControl())
             return input->valueAsNumber();
     }
@@ -800,8 +800,8 @@ float AccessibilityNodeObject::valueForRange() const
 
 float AccessibilityNodeObject::maxValueForRange() const
 {
-    if (node() && node()->hasTagName(inputTag)) {
-        HTMLInputElement* input = static_cast<HTMLInputElement*>(node());
+    if (node() && isHTMLInputElement(node())) {
+        HTMLInputElement* input = toHTMLInputElement(node());
         if (input->isRangeControl())
             return input->maximum();
     }
@@ -814,8 +814,8 @@ float AccessibilityNodeObject::maxValueForRange() const
 
 float AccessibilityNodeObject::minValueForRange() const
 {
-    if (node() && node()->hasTagName(inputTag)) {
-        HTMLInputElement* input = static_cast<HTMLInputElement*>(node());
+    if (node() && isHTMLInputElement(node())) {
+        HTMLInputElement* input = toHTMLInputElement(node());
         if (input->isRangeControl())
             return input->minimum();
     }
@@ -933,8 +933,8 @@ Element* AccessibilityNodeObject::actionElement() const
     if (!node)
         return 0;
 
-    if (node->hasTagName(inputTag)) {
-        HTMLInputElement* input = static_cast<HTMLInputElement*>(node);
+    if (isHTMLInputElement(node)) {
+        HTMLInputElement* input = toHTMLInputElement(node);
         if (!input->isDisabledFormControl() && (isCheckboxOrRadio() || input->isTextButton()))
             return input;
     } else if (node->hasTagName(buttonTag))
@@ -1100,8 +1100,8 @@ HTMLLabelElement* AccessibilityNodeObject::labelForElement(Element* element) con
     }
 
     for (Element* parent = element->parentElement(); parent; parent = parent->parentElement()) {
-        if (parent->hasTagName(labelTag))
-            return static_cast<HTMLLabelElement*>(parent);
+        if (isHTMLLabelElement(parent))
+            return toHTMLLabelElement(parent);
     }
 
     return 0;
@@ -1177,7 +1177,7 @@ void AccessibilityNodeObject::titleElementText(Vector<AccessibilityText>& textOr
     if (!node)
         return;
     
-    bool isInputTag = node->hasTagName(inputTag);
+    bool isInputTag = isHTMLInputElement(node);
     if (isInputTag || AccessibilityObject::isARIAInput(ariaRoleAttribute()) || isControl()) {
         HTMLLabelElement* label = labelForElement(toElement(node));
         if (label) {
@@ -1237,9 +1237,9 @@ void AccessibilityNodeObject::visibleText(Vector<AccessibilityText>& textOrder) 
     if (!node)
         return;
     
-    bool isInputTag = node->hasTagName(inputTag);
+    bool isInputTag = isHTMLInputElement(node);
     if (isInputTag) {
-        HTMLInputElement* input = static_cast<HTMLInputElement*>(node);
+        HTMLInputElement* input = toHTMLInputElement(node);
         if (input->isTextButton()) {
             textOrder.append(AccessibilityText(input->valueWithDefault(), VisibleText));
             return;
@@ -1580,9 +1580,9 @@ String AccessibilityNodeObject::title() const
     if (!node)
         return String();
 
-    bool isInputTag = node->hasTagName(inputTag);
+    bool isInputTag = isHTMLInputElement(node);
     if (isInputTag) {
-        HTMLInputElement* input = static_cast<HTMLInputElement*>(node);
+        HTMLInputElement* input = toHTMLInputElement(node);
         if (input->isTextButton())
             return input->valueWithDefault();
     }
@@ -1643,7 +1643,7 @@ String AccessibilityNodeObject::text() const
     if (!node)
         return String();
 
-    if (isNativeTextControl() && (node->hasTagName(textareaTag) || node->hasTagName(inputTag)))
+    if (isNativeTextControl() && (node->hasTagName(textareaTag) || isHTMLInputElement(node)))
         return toHTMLTextFormControlElement(node)->value();
 
     if (!node->isElementNode())
@@ -1701,10 +1701,10 @@ void AccessibilityNodeObject::colorValue(int& r, int& g, int& b) const
     if (!isColorWell())
         return;
 
-    if (!node() || !node()->hasTagName(inputTag))
+    if (!node() || !isHTMLInputElement(node()))
         return;
 
-    HTMLInputElement* input = static_cast<HTMLInputElement*>(node());
+    HTMLInputElement* input = toHTMLInputElement(node());
     const AtomicString& type = input->getAttribute(typeAttr);
     if (!equalIgnoringCase(type, "color"))
         return;
@@ -1723,8 +1723,8 @@ static String accessibleNameForNode(Node* node)
     if (node->isTextNode())
         return toText(node)->data();
 
-    if (node->hasTagName(inputTag))
-        return static_cast<HTMLInputElement*>(node)->value();
+    if (isHTMLInputElement(node))
+        return toHTMLInputElement(node)->value();
 
     if (node->isHTMLElement()) {
         const AtomicString& alt = toHTMLElement(node)->getAttribute(altAttr);

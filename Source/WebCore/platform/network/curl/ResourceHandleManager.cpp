@@ -115,13 +115,13 @@ static Mutex* sharedResourceMutex(curl_lock_data data) {
 // libcurl does not implement its own thread synchronization primitives.
 // these two functions provide mutexes for cookies, and for the global DNS
 // cache.
-static void curl_lock_callback(CURL* handle, curl_lock_data data, curl_lock_access access, void* userPtr)
+static void curl_lock_callback(CURL* /* handle */, curl_lock_data data, curl_lock_access /* access */, void* /* userPtr */)
 {
     if (Mutex* mutex = sharedResourceMutex(data))
         mutex->lock();
 }
 
-static void curl_unlock_callback(CURL* handle, curl_lock_data data, void* userPtr)
+static void curl_unlock_callback(CURL* /* handle */, curl_lock_data data, void* /* userPtr */)
 {
     if (Mutex* mutex = sharedResourceMutex(data))
         mutex->unlock();
@@ -255,6 +255,7 @@ static bool isAppendableHeader(const String &key)
         "proxy-authenticate",
         "public",
         "server",
+        "set-cookie",
         "te",
         "trailer",
         "transfer-encoding",
@@ -420,7 +421,7 @@ size_t readCallback(void* ptr, size_t size, size_t nmemb, void* data)
     return sent;
 }
 
-void ResourceHandleManager::downloadTimerCallback(Timer<ResourceHandleManager>* timer)
+void ResourceHandleManager::downloadTimerCallback(Timer<ResourceHandleManager>* /* timer */)
 {
     startScheduledJobs();
 

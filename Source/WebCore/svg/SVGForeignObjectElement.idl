@@ -25,10 +25,7 @@
 
 [
     Conditional=SVG
-] interface SVGForeignObjectElement : SVGStyledElement,
-                                                      SVGTests,
-                                                      SVGLangSpace,
-                                                      SVGTransformable {
+] interface SVGForeignObjectElement : SVGGraphicsElement {
     readonly attribute SVGAnimatedLength x;
     readonly attribute SVGAnimatedLength y;
     readonly attribute SVGAnimatedLength width;
