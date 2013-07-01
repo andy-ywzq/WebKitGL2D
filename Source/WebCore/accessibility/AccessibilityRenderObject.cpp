@@ -1467,8 +1467,8 @@ KURL AccessibilityRenderObject::url() const
     if (isWebArea())
         return m_renderer->document()->url();
     
-    if (isImage() && m_renderer->node() && m_renderer->node()->hasTagName(imgTag))
-        return static_cast<HTMLImageElement*>(m_renderer->node())->src();
+    if (isImage() && m_renderer->node() && isHTMLImageElement(m_renderer->node()))
+        return toHTMLImageElement(m_renderer->node())->src();
     
     if (isInputImage())
         return toHTMLInputElement(m_renderer->node())->src();
@@ -1644,7 +1644,7 @@ void AccessibilityRenderObject::setValue(const String& string)
         toHTMLInputElement(element)->setValue(string);
     } else if (renderer->isTextArea()) {
         // FIXME: This is not safe!  Other elements could have a TextArea renderer.
-        static_cast<HTMLTextAreaElement*>(element)->setValue(string);
+        toHTMLTextAreaElement(element)->setValue(string);
     }
 }
 
@@ -2208,8 +2208,8 @@ AccessibilityObject* AccessibilityRenderObject::accessibilityHitTest(const IntPo
     if (isHTMLAreaElement(node))
         return accessibilityImageMapHitTest(toHTMLAreaElement(node), point);
     
-    if (node->hasTagName(optionTag))
-        node = static_cast<HTMLOptionElement*>(node)->ownerSelectElement();
+    if (isHTMLOptionElement(node))
+        node = toHTMLOptionElement(node)->ownerSelectElement();
     
     RenderObject* obj = node->renderer();
     if (!obj)
