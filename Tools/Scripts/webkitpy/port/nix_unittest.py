@@ -46,12 +46,12 @@ class NixPortTest(port_testcase.PortTestCase):
         port = self.make_port(port_name=self.port_name, host=host, options=MockOptions(webkit_test_runner=True))
         absolute_search_paths = map(port._webkit_baseline_path, search_paths)
 
-        unittest.TestCase.assertEqual(port.baseline_search_path(), absolute_search_paths)
+        unittest.TestCase.assertEqual(self, port.baseline_search_path(), absolute_search_paths)
 
     def _assert_expectations_files(self, search_paths, os_name):
         host = MockSystemHost(os_name=os_name)
         port = self.make_port(port_name=self.port_name, host=host, options=MockOptions(webkit_test_runner=True))
-        unittest.TestCase.assertEqual(port.expectations_files(), search_paths)
+        unittest.TestCase.assertEqual(self, port.expectations_files(), search_paths)
 
     def test_baseline_search_path(self):
         for case in self.search_paths_cases:
@@ -64,5 +64,5 @@ class NixPortTest(port_testcase.PortTestCase):
             self._assert_expectations_files(**expectations_case)
 
     def test_default_timeout_ms(self):
-        unittest.TestCase.assertEqual(self.make_port(options=MockOptions(configuration='Release')).default_timeout_ms(), 80000)
-        unittest.TestCase.assertEqual(self.make_port(options=MockOptions(configuration='Debug')).default_timeout_ms(), 80000)
+        unittest.TestCase.assertEqual(self, self.make_port(options=MockOptions(configuration='Release')).default_timeout_ms(), 80000)
+        unittest.TestCase.assertEqual(self, self.make_port(options=MockOptions(configuration='Debug')).default_timeout_ms(), 80000)
