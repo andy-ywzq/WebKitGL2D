@@ -4,6 +4,7 @@
 #include "GLUtilities.h"
 #include "TouchMocker.h"
 #include "WebKit2/WKArray.h"
+#include "WebKit2/WKFrame.h"
 #include "WebKit2/WKPreferences.h"
 #include "WebKit2/WKPreferencesPrivate.h"
 #include "WebKit2/WKString.h"
@@ -153,6 +154,7 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     loadClient.didReceiveTitleForFrame = MiniBrowser::didReceiveTitleForFrame;
     loadClient.didStartProvisionalLoadForFrame = MiniBrowser::didStartProvisionalLoadForFrame;
     loadClient.didFinishDocumentLoadForFrame = MiniBrowser::didFinishDocumentLoadForFrame;
+    loadClient.didFailProvisionalLoadWithErrorForFrame = MiniBrowser::didFailProvisionalLoadWithErrorForFrame;
     WKPageSetPageLoaderClient(pageRef(), &loadClient);
 
     WKURLRef wkUrl = WKURLCreateWithUTF8CString(options.url.c_str());
@@ -1035,6 +1037,16 @@ void MiniBrowser::didFinishDocumentLoadForFrame(WKPageRef page, WKFrameRef, WKTy
 {
     MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
     mb->m_control->updateUrlText(mb->activeUrl().c_str());
+}
+
+void MiniBrowser::didFailProvisionalLoadWithErrorForFrame(WKPageRef page, WKFrameRef frame, WKErrorRef error, WKTypeRef, const void *)
+{
+    if (!WKFrameIsMainFrame(frame))
+        return;
+
+    WKStringRef wkErrorDescription = WKErrorCopyLocalizedDescription(error);
+    WKPageLoadPlainTextString(page, wkErrorDescription);
+    WKRelease(wkErrorDescription);
 }
 
 std::string MiniBrowser::activeUrl()
