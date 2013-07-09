@@ -237,7 +237,11 @@ void MiniBrowser::handleMousePress(NIXMouseEvent* event)
     if (!view)
         return;
 
-    if (m_touchMocker && m_touchMocker->handleMousePress(*event, WKPointMake(event->x, event->y))) {
+    WKPoint windowPos = WKPointMake(event->x, event->y);
+    WKPoint p = WKViewUserViewportToContents(m_view, WKPointMake(event->x, event->y));
+    event->x = p.x;
+    event->y = p.y;
+    if (m_touchMocker && m_touchMocker->handleMousePress(*event, windowPos)) {
         scheduleUpdateDisplay();
         return;
     }
@@ -246,16 +250,19 @@ void MiniBrowser::handleMousePress(NIXMouseEvent* event)
 
 void MiniBrowser::handleMouseRelease(NIXMouseEvent* event)
 {
-    if (m_touchMocker && m_touchMocker->handleMouseRelease(*event)) {
-        scheduleUpdateDisplay();
-        return;
-    }
-
     // The mouse release event was allowed to be sent to the TouchMocker because it
     // may be tracking a button press that happened in a valid position.
     WKViewRef view = webViewAtX11Position(WKPointMake(event->x, event->y));
     if (!view)
         return;
+
+    WKPoint p = WKViewUserViewportToContents(m_view, WKPointMake(event->x, event->y));
+    event->x = p.x;
+    event->y = p.y;
+    if (m_touchMocker && m_touchMocker->handleMouseRelease(*event)) {
+        scheduleUpdateDisplay();
+        return;
+    }
     NIXViewSendMouseEvent(view, event);
 }
 
