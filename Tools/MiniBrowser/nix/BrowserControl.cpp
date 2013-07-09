@@ -28,7 +28,7 @@
 #include "BrowserControl.h"
 #include "XlibEventUtils.h"
 
-BrowserControl::BrowserControl(WebViewClient * client, int width, int height, std::string url)
+BrowserControl::BrowserControl(BrowserControlClient * client, int width, int height, std::string url)
     : m_client(client)
     , m_display(XOpenDisplay(0))
     , m_context(XUniqueContext())

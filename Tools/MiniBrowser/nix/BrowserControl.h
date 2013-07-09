@@ -35,9 +35,9 @@
 #include "NIXEvents.h"
 #include "XlibEventSource.h"
 
-class WebViewClient {
+class BrowserControlClient {
 public:
-    virtual ~WebViewClient() { }
+    virtual ~BrowserControlClient() { }
 
     virtual void handleWindowExpose() = 0;
     virtual void handleKeyPress(NIXKeyEvent*) = 0;
@@ -75,7 +75,7 @@ public:
     static const int minimumUrlBarWidth = 50;
     static const int urlBarRightOffset = urlBarX + 25;
 
-    BrowserControl(WebViewClient*, int width, int height, std::string url);
+    BrowserControl(BrowserControlClient*, int width, int height, std::string url);
     ~BrowserControl();
 
     void makeCurrent();
@@ -112,7 +112,7 @@ private:
     virtual void handleXEvent(const XEvent&);
     void updateClickCount(const XButtonPressedEvent&);
 
-    WebViewClient* m_client;
+    BrowserControlClient* m_client;
 
     Display* m_display;
     XContext m_context;

@@ -38,7 +38,7 @@
 
 class TouchMocker;
 
-class MiniBrowser : public WebViewClient, public GestureRecognizerClient {
+class MiniBrowser : public BrowserControlClient, public GestureRecognizerClient {
 public:
     MiniBrowser(GMainLoop* mainLoop, const Options& options);
     virtual ~MiniBrowser();
