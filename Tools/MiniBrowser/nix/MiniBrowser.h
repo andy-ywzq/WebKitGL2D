@@ -46,14 +46,16 @@ public:
     WKPageRef pageRef() const { return WKViewGetPage(m_view); }
 
     // WebViewClient.
-    virtual void handleExposeEvent() { scheduleUpdateDisplay(); }
-    virtual void handleKeyPressEvent(const XKeyPressedEvent&);
-    virtual void handleKeyReleaseEvent(const XKeyReleasedEvent&);
-    virtual void handleButtonPressEvent(const XButtonPressedEvent&);
-    virtual void handleButtonReleaseEvent(const XButtonReleasedEvent&);
-    virtual void handlePointerMoveEvent(const XPointerMovedEvent&);
-    virtual void handleSizeChanged(int, int);
-    virtual void handleClosed();
+    virtual void handleWindowExpose() { scheduleUpdateDisplay(); }
+    virtual void handleKeyPress(NIXKeyEvent*);
+    virtual void handleKeyRelease(NIXKeyEvent*);
+    virtual void handleMousePress(NIXMouseEvent*);
+    virtual void handleMouseRelease(NIXMouseEvent*);
+    virtual void handleMouseMove(NIXMouseEvent*);
+    virtual void handleMouseWheel(NIXWheelEvent*);
+
+    virtual void onWindowSizeChange(WKSize);
+    virtual void onWindowClose();
 
     virtual void pageGoBack() { WKPageGoBack(pageRef()); }
     virtual void pageGoForward() { WKPageGoForward(pageRef()); }
@@ -113,8 +115,6 @@ private:
         AdjustToBoundaries = 1 << 0,
         LowerMinimumScale = 1 << 1
     };
-    void handleWheelEvent(const XButtonPressedEvent&);
-    void updateClickCount(const XButtonPressedEvent&);
 
     void updateDisplay();
     void scheduleUpdateDisplay();
@@ -126,6 +126,7 @@ private:
     void scaleAtPoint(const WKPoint& point, double scale, ScaleBehavior scaleBehavior = AdjustToBoundaries);
 
     WKViewRef webViewAtX11Position(const WKPoint& poisition);
+    void saveSnapshot(double timestamp);
 
     WKRetainPtr<WKContextRef> m_context;
     WKRetainPtr<WKPageGroupRef> m_pageGroup;
@@ -134,11 +135,6 @@ private:
     WKRect m_viewRect;
     GMainLoop* m_mainLoop;
     const Options& m_options;
-    double m_lastClickTime;
-    int m_lastClickX;
-    int m_lastClickY;
-    WKEventMouseButton m_lastClickButton;
-    unsigned m_clickCount;
     TouchMocker* m_touchMocker;
     bool m_displayUpdateScheduled;
     WKSize m_contentsSize;
