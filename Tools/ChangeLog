@@ -1,3 +1,82 @@
+2013-07-10  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] WebKitTestRunner tries to remove an already deleted event in EventSenderProxy::replaySavedEvents
+        https://bugs.webkit.org/show_bug.cgi?id=118509
+
+        Reviewed by Martin Robinson.
+
+        In EventSenderProxy::replaySavedEvents WebKitTestRunner can crash
+        when trying to remove an event already removed, if another event is
+        processed in the middle. By using a Deque's takeFirst, we ensure the
+        element is removed before we dispatch it.
+
+        fast/events/mousedown-inside-dragstart-should-not-cause-crash.html no longer
+        crashes after this fix is added.
+
+        * WebKitTestRunner/EventSenderProxy.h: Use a Deque instead of Vector in GTK
+        * WebKitTestRunner/gtk/EventSenderProxyGtk.cpp:
+        (WTR::EventSenderProxy::replaySavedEvents): Use takeFirst to retrieve the event
+        from the queue.
+
+2013-07-09  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL] Add ewk_view_device_pixel_ratio_set
+        https://bugs.webkit.org/show_bug.cgi?id=118521
+
+        Reviewed by Gyuyoung Kim.
+
+        * EWebLauncher/main.c: Added new option(-r) to test device pixel ratio.
+        (windowCreate):
+        (parseUserArguments):
+
+2013-07-09  Bruno de Oliveira Abinader  <brunoabinader@gmail.com>
+
+        Unreviewed change of my email addresses.
+        https://bugs.webkit.org/show_bug.cgi?id=100122
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-07-09  Anders Carlsson  <andersca@apple.com>
+
+        DumpRenderTree should stop sending unsupported URLs to NSWorkspace
+        https://bugs.webkit.org/show_bug.cgi?id=118514
+        <rdar://problem/13686836>
+
+        Reviewed by Sam Weinig.
+
+        Add a new default policy delegate and override decidePolicyForNavigationAction: to not pass unhandled URLs to NSWorkspace.
+
+        * DumpRenderTree/DefaultPolicyDelegate.h: Added.
+        * DumpRenderTree/DefaultPolicyDelegate.m: Added.
+        (-[DefaultPolicyDelegate webView:decidePolicyForNavigationAction:request:frame:decisionListener:]):
+        * DumpRenderTree/DumpRenderTree.xcodeproj/project.pbxproj:
+        Add DefaultPolicyDelegate.h and DefaultPolicyDelegate.m.
+
+        * DumpRenderTree/mac/DumpRenderTree.mm:
+        (allocateGlobalControllers):
+        Allocate a DefaultPolicyDelegate object.
+
+        (resetWebViewToConsistentStateBeforeTesting):
+        Set the policy delegate to the default policy delegate.
+
+        * DumpRenderTree/mac/DumpRenderTreeMac.h:
+        Declare the defaultPolicyDelegate object.
+
+        * DumpRenderTree/mac/TestRunnerMac.mm:
+        (TestRunner::setCustomPolicyDelegate):
+        Set the policy delegate to the default delegate if setDelegate is false.
+
+2013-07-08  Zan Dobersek  <zdobersek@igalia.com>
+
+        KURL unit test fixture class should have a meaningful name
+        https://bugs.webkit.org/show_bug.cgi?id=118467
+
+        Reviewed by Sam Weinig.
+
+        * TestWebKitAPI/Tests/WebCore/KURL.cpp:
+        (TestWebKitAPI::TEST_F): Use 'KURLTest' as the name for the KURL unit test's fixture class
+        instead of the generic and inappropriate 'WebCore' name.
+
 2013-07-08  Antti Koivisto  <antti@apple.com>
 
         Add Deque::removeLast
