@@ -27,9 +27,9 @@
 
 #include "DefaultWebThemeEngine.h"
 
+#include "public/Size.h"
 #include "public/WebColor.h"
 #include "public/WebRect.h"
-#include "public/WebSize.h"
 #include <algorithm>
 #include <cairo/cairo.h>
 #include <cmath>
@@ -176,9 +176,9 @@ void DefaultWebThemeEngine::paintTextArea(Canvas* canvas, State state, const Web
     paintTextField(canvas, state, rect);
 }
 
-WebSize DefaultWebThemeEngine::getCheckboxSize() const
+Size DefaultWebThemeEngine::getCheckboxSize() const
 {
-    return WebSize(13, 13);
+    return Size(13, 13);
 }
 
 void DefaultWebThemeEngine::paintCheckbox(Canvas* canvas, State state, const WebRect& rect, const ButtonExtraParams& param) const
@@ -204,9 +204,9 @@ void DefaultWebThemeEngine::paintCheckbox(Canvas* canvas, State state, const Web
     cairo_restore(canvas);
 }
 
-WebSize DefaultWebThemeEngine::getRadioSize() const
+Size DefaultWebThemeEngine::getRadioSize() const
 {
-    return WebSize(13, 13);
+    return Size(13, 13);
 }
 
 void DefaultWebThemeEngine::paintRadio(Canvas* canvas, State state, const WebRect& rect, const ButtonExtraParams& param) const
@@ -253,9 +253,9 @@ void DefaultWebThemeEngine::paintMenuList(Canvas* canvas, State state, const Web
     cairo_restore(canvas);
 }
 
-WebSize DefaultWebThemeEngine::getProgressBarSize() const
+Size DefaultWebThemeEngine::getProgressBarSize() const
 {
-    return WebSize(2000, 300);
+    return Size(2000, 300);
 }
 
 void DefaultWebThemeEngine::paintProgressBar(Canvas* canvas, State state, const WebRect& rect, const ProgressBarExtraParams& params) const

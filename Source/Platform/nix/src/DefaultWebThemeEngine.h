@@ -29,13 +29,13 @@ public:
     virtual void paintButton(Canvas*, State, const WebRect&, const ButtonExtraParams&) const;
     virtual void paintTextField(Canvas*, State, const WebRect&) const;
     virtual void paintTextArea(Canvas*, State, const WebRect&) const;
-    virtual WebSize getCheckboxSize() const;
+    virtual Size getCheckboxSize() const;
     virtual void paintCheckbox(Canvas*, State, const WebRect&, const ButtonExtraParams&) const;
-    virtual WebSize getRadioSize() const;
+    virtual Size getRadioSize() const;
     virtual void paintRadio(Canvas*, State, const WebRect&, const ButtonExtraParams&) const;
     virtual void paintMenuList(Canvas *, State, const WebRect &) const;
     virtual void getMenuListPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const;
-    virtual WebSize getProgressBarSize() const;
+    virtual Size getProgressBarSize() const;
     virtual void paintProgressBar(Canvas*, State, const WebRect&, const ProgressBarExtraParams&) const;
     virtual double getAnimationRepeatIntervalForProgressBar() const;
     virtual double getAnimationDurationForProgressBar() const;

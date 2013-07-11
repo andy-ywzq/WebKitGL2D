@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WebSize_h
-#define WebSize_h
+#ifndef Nix_Size_h
+#define Nix_Size_h
 
 #ifdef BUILDING_NIX__
 #include "IntSize.h"
@@ -37,32 +37,32 @@
 
 namespace Nix {
 
-struct WebSize {
+struct Size {
     int width;
     int height;
 
     bool isEmpty() const { return width <= 0 || height <= 0; }
 
-    WebSize()
+    Size()
         : width(0)
         , height(0)
     {
     }
 
-    WebSize(int width, int height)
+    Size(int width, int height)
         : width(width)
         , height(height)
     {
     }
 
 #ifdef BUILDING_NIX__
-    WebSize(const WebCore::IntSize& s)
+    Size(const WebCore::IntSize& s)
         : width(s.width())
         , height(s.height())
     {
     }
 
-    WebSize& operator=(const WebCore::IntSize& s)
+    Size& operator=(const WebCore::IntSize& s)
     {
         width = s.width();
         height = s.height();
@@ -76,12 +76,12 @@ struct WebSize {
 #endif
 };
 
-inline bool operator==(const WebSize& a, const WebSize& b)
+inline bool operator==(const Size& a, const Size& b)
 {
     return a.width == b.width && a.height == b.height;
 }
 
-inline bool operator!=(const WebSize& a, const WebSize& b)
+inline bool operator!=(const Size& a, const Size& b)
 {
     return !(a == b);
 }

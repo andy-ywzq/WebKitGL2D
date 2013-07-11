@@ -11,7 +11,7 @@ set(Platform_HEADERS
     nix/public/WebColor.h
     nix/public/WebFFTFrame.h
     nix/public/WebRect.h
-    nix/public/WebSize.h
+    nix/public/Size.h
     nix/public/WebThemeEngine.h
     nix/public/WebAudioBus.h
     nix/public/WebAudioDevice.h

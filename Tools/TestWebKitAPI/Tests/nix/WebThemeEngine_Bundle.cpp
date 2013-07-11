@@ -26,9 +26,9 @@
 #include "config.h"
 #include "InjectedBundleTest.h"
 #include <public/Platform.h>
+#include <public/Size.h>
 #include <public/WebColor.h>
 #include <public/WebRect.h>
-#include <public/WebSize.h>
 #include <public/WebThemeEngine.h>
 #include <WebKit2/WKRetainPtr.h>
 
@@ -81,14 +81,14 @@ class TestThemeEngine : public WebThemeEngine {
     {
     }
 
-    WebSize getCheckboxSize() const
+    Size getCheckboxSize() const
     {
-        return WebSize();
+        return Size();
     }
     void paintCheckbox(Canvas*, State, const WebRect&, const ButtonExtraParams&) const { }
-    WebSize getRadioSize() const
+    Size getRadioSize() const
     {
-        return WebSize();
+        return Size();
     }
     void paintRadio(Canvas*, State, const WebRect&, const ButtonExtraParams&) const { }
     void paintTextArea(Canvas*, State, const WebRect&) const { }

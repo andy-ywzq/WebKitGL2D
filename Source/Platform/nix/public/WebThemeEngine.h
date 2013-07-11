@@ -32,8 +32,8 @@
 #define WebThemeEngine_h
 
 #include "Canvas.h"
+#include "Size.h"
 #include "WebColor.h"
-#include "WebSize.h"
 
 namespace Nix {
 
@@ -137,9 +137,9 @@ public:
 
     virtual void paintButton(Canvas*, State, const WebRect&, const ButtonExtraParams&) const = 0;
     virtual void paintTextField(Canvas*, State, const WebRect&) const = 0;
-    virtual WebSize getCheckboxSize() const = 0;
+    virtual Size getCheckboxSize() const = 0;
     virtual void paintCheckbox(Canvas*, State, const WebRect&, const ButtonExtraParams&) const = 0;
-    virtual WebSize getRadioSize() const = 0;
+    virtual Size getRadioSize() const = 0;
     virtual void paintRadio(Canvas*, State, const WebRect&, const ButtonExtraParams&) const = 0;
     virtual void paintTextArea(Canvas*, State, const WebRect&) const = 0;
     virtual void getMenuListPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const = 0;
