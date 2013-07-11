@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WebVector_h
-#define WebVector_h
+#ifndef Nix_Vector_h
+#define Nix_Vector_h
 
 #include "WebCommon.h"
 
@@ -60,32 +60,32 @@ namespace Nix {
 //   }
 //
 template <typename T>
-class WebVector {
+class Vector {
 public:
     typedef T ValueType;
 
-    ~WebVector()
+    ~Vector()
     {
         destroy();
     }
 
-    explicit WebVector(size_t size = 0)
+    explicit Vector(size_t size = 0)
     {
         initialize(size);
     }
 
-    WebVector(const WebVector<T>& other)
+    Vector(const Vector<T>& other)
     {
         initializeFrom(other.m_ptr, other.m_size);
     }
 
     template <typename C>
-    WebVector(const C& other)
+    Vector(const C& other)
     {
         initializeFrom(other.size() ? &other[0] : 0, other.size());
     }
 
-    WebVector& operator=(const WebVector& other)
+    Vector& operator=(const Vector& other)
     {
         if (this != &other)
             assign(other);
@@ -93,9 +93,9 @@ public:
     }
 
     template <typename C>
-    WebVector<T>& operator=(const C& other)
+    Vector<T>& operator=(const C& other)
     {
-        if (this != reinterpret_cast<const WebVector<T>*>(&other))
+        if (this != reinterpret_cast<const Vector<T>*>(&other))
             assign(other);
         return *this;
     }
@@ -139,7 +139,7 @@ public:
     T* data() { return m_ptr; }
     const T* data() const { return m_ptr; }
 
-    void swap(WebVector<T>& other)
+    void swap(Vector<T>& other)
     {
         std::swap(m_ptr, other.m_ptr);
         std::swap(m_size, other.m_size);

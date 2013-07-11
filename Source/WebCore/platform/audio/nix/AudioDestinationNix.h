@@ -33,8 +33,8 @@
 #include "AudioDestination.h"
 #include "AudioIOCallback.h"
 #include "AudioSourceProvider.h"
+#include <public/Vector.h>
 #include <public/WebAudioDevice.h>
-#include <public/WebVector.h>
 
 namespace WebCore {
 
@@ -55,7 +55,7 @@ public:
     float sampleRate() const { return m_sampleRate; }
 
     // WebKit::WebAudioDevice::RenderCallback
-    virtual void render(const Nix::WebVector<float*>& sourceData, const Nix::WebVector<float*>& audioData, size_t numberOfFrames);
+    virtual void render(const Nix::Vector<float*>& sourceData, const Nix::Vector<float*>& audioData, size_t numberOfFrames);
 
     // WebCore::AudioSourceProvider
     virtual void provideInput(AudioBus*, size_t framesToProcess);

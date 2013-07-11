@@ -19,7 +19,7 @@ set(Platform_HEADERS
     nix/public/WebData.h
     nix/public/WebGamepads.h
     nix/public/WebGamepad.h
-    nix/public/WebVector.h
+    nix/public/Vector.h
 )
 
 set(Platform_SOURCES

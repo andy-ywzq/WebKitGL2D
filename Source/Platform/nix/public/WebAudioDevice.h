@@ -29,7 +29,7 @@
 #ifndef WebAudioDevice_h
 #define WebAudioDevice_h
 
-#include "WebVector.h"
+#include "Vector.h"
 
 namespace Nix {
 
@@ -39,7 +39,7 @@ class WebAudioDevice {
 public:
     class RenderCallback {
     public:
-        virtual void render(const WebVector<float*>& /*sourceData*/, const WebVector<float*>& /*destinationData*/, size_t /*numberOfFrames*/) { }
+        virtual void render(const Vector<float*>& /*sourceData*/, const Vector<float*>& /*destinationData*/, size_t /*numberOfFrames*/) { }
 
     protected:
         virtual ~RenderCallback() { }
