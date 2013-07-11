@@ -35,7 +35,7 @@
 #include "WebData.h"
 #include "WebGamepads.h"
 
-namespace WebKit {
+namespace Nix {
 
 class WebAudioBus;
 class WebFFTFrame;
@@ -82,6 +82,6 @@ protected:
     virtual ~Platform() { }
 };
 
-} // namespace WebKit
+} // namespace Nix
 
 #endif

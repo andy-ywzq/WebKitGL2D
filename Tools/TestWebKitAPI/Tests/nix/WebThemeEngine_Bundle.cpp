@@ -34,7 +34,7 @@
 
 #include <cstdlib>
 
-using namespace WebKit;
+using namespace Nix;
 
 namespace TestWebKitAPI {
 

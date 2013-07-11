@@ -36,7 +36,7 @@
 #include <algorithm>
 #include <cassert>
 
-namespace WebKit {
+namespace Nix {
 
 // A simple vector class.
 //
@@ -182,6 +182,6 @@ private:
     size_t m_size;
 };
 
-} // namespace WebKit
+} // namespace Nix
 
 #endif

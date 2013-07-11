@@ -5,7 +5,7 @@
 #include "IntRect.h"
 #endif
 
-namespace WebKit {
+namespace Nix {
 
 class WebRect {
 public:

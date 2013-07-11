@@ -43,7 +43,7 @@ class AudioPullFIFO;
 
 // An AudioDestination using Chromium's audio system
 
-class AudioDestinationNix : public AudioDestination, public WebKit::WebAudioDevice::RenderCallback, public AudioSourceProvider {
+class AudioDestinationNix : public AudioDestination, public Nix::WebAudioDevice::RenderCallback, public AudioSourceProvider {
 public:
     AudioDestinationNix(AudioIOCallback&, const String& inputDeviceId, unsigned numberOfInputChannels, unsigned numberOfOutputChannels, float sampleRate);
     virtual ~AudioDestinationNix();
@@ -55,7 +55,7 @@ public:
     float sampleRate() const { return m_sampleRate; }
 
     // WebKit::WebAudioDevice::RenderCallback
-    virtual void render(const WebKit::WebVector<float*>& sourceData, const WebKit::WebVector<float*>& audioData, size_t numberOfFrames);
+    virtual void render(const Nix::WebVector<float*>& sourceData, const Nix::WebVector<float*>& audioData, size_t numberOfFrames);
 
     // WebCore::AudioSourceProvider
     virtual void provideInput(AudioBus*, size_t framesToProcess);
@@ -67,7 +67,7 @@ private:
     RefPtr<AudioBus> m_renderBus;
     float m_sampleRate;
     bool m_isPlaying;
-    OwnPtr<WebKit::WebAudioDevice> m_audioDevice;
+    OwnPtr<Nix::WebAudioDevice> m_audioDevice;
     size_t m_callbackBufferSize;
 
     OwnPtr<AudioFIFO> m_inputFifo;

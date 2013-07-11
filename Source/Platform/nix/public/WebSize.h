@@ -35,7 +35,7 @@
 #include "IntSize.h"
 #endif
 
-namespace WebKit {
+namespace Nix {
 
 struct WebSize {
     int width;
@@ -86,6 +86,6 @@ inline bool operator!=(const WebSize& a, const WebSize& b)
     return !(a == b);
 }
 
-} // namespace WebKit
+} // namespace Nix
 
 #endif

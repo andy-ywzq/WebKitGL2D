@@ -28,7 +28,7 @@
 
 #include <algorithm>
 
-namespace WebKit {
+namespace Nix {
 
 typedef unsigned RGBA32; // RGBA quadruplet
 
@@ -93,6 +93,6 @@ inline bool operator!=(const WebColor& a, const WebColor& b)
     return !(a == b);
 }
 
-} // namespace WebKit
+} // namespace Nix
 
 #endif

@@ -26,7 +26,7 @@
 
 #include "WebCommon.h"
 
-namespace WebKit {
+namespace Nix {
 
 class WebGamepad {
 public:

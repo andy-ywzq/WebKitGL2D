@@ -39,9 +39,9 @@
 // Basic types
 #include <stddef.h> // For size_t
 
-namespace WebKit {
+namespace Nix {
 // UTF-16 character type
 typedef unsigned short WebUChar;
-} // namespace WebKit
+}
 
 #endif

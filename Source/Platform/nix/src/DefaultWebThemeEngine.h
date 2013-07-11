@@ -3,7 +3,7 @@
 
 #include "public/WebThemeEngine.h"
 
-namespace WebKit {
+namespace Nix {
 
 class DefaultWebThemeEngine : public WebThemeEngine {
 public:

@@ -35,7 +35,7 @@
 
 using namespace WebCore;
 
-namespace WebKit {
+namespace Nix {
 
 class WebDataPrivate : public SharedBuffer {
 };
@@ -100,4 +100,4 @@ void WebData::assign(WebDataPrivate* p)
     m_private = p;
 }
 
-} // namespace WebKit
+} // namespace Nix

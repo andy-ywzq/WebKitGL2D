@@ -185,7 +185,7 @@ private:
 
 #if PLATFORM(NIX)
     void scalePlanarData(float scale);
-    OwnPtr<WebKit::WebFFTFrame> m_fftFrame;
+    OwnPtr<Nix::WebFFTFrame> m_fftFrame;
 #endif // PLATFORM(NIX)
 
 #if USE(WEBAUDIO_OPENMAX_DL_FFT)

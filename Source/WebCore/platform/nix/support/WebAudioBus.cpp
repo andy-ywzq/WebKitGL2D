@@ -39,7 +39,7 @@ class AudioBus {
 
 using namespace WebCore;
 
-namespace WebKit {
+namespace Nix {
 
 class WebAudioBusPrivate {
 public:

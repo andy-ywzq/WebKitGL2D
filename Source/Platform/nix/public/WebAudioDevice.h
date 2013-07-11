@@ -31,7 +31,7 @@
 
 #include "WebVector.h"
 
-namespace WebKit {
+namespace Nix {
 
 // Abstract interface to the Chromium audio system.
 
@@ -52,6 +52,6 @@ public:
     virtual double sampleRate() = 0;
 };
 
-} // namespace WebKit
+} // namespace Nix
 
 #endif // WebAudioDevice_h

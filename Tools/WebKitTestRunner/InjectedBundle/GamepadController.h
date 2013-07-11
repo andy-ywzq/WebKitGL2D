@@ -55,14 +55,14 @@ public:
     void setAxisData(int index, int button, float axisData);
 
 #if PLATFORM(NIX)
-    void sampleGamepads(WebKit::WebGamepads& into);
+    void sampleGamepads(Nix::WebGamepads& into);
 #endif
 
 private:
     GamepadController();
 
 #if PLATFORM(NIX)
-    WebKit::WebGamepads m_gamepads;
+    Nix::WebGamepads m_gamepads;
 #endif
 };
 

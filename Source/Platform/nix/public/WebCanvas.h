@@ -3,7 +3,7 @@
 
 #include <cairo/cairo.h>
 
-namespace WebKit {
+namespace Nix {
 typedef cairo_t WebCanvas;
 }
 

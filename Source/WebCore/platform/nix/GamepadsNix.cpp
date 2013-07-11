@@ -38,12 +38,12 @@ class GamepadList;
 
 void sampleGamepads(GamepadList* into)
 {
-    WebKit::WebGamepads gamepads;
+    Nix::WebGamepads gamepads;
 
-    WebKit::Platform::current()->sampleGamepads(gamepads);
+    Nix::Platform::current()->sampleGamepads(gamepads);
 
-    for (unsigned i = 0; i < WebKit::WebGamepads::itemsLengthCap; ++i) {
-        WebKit::WebGamepad& webGamepad = gamepads.items[i];
+    for (unsigned i = 0; i < Nix::WebGamepads::itemsLengthCap; ++i) {
+        Nix::WebGamepad& webGamepad = gamepads.items[i];
         if (i < gamepads.length && webGamepad.connected) {
             RefPtr<Gamepad> gamepad = into->item(i);
             if (!gamepad)

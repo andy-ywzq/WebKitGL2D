@@ -37,7 +37,7 @@
 #include <wtf/OwnPtr.h>
 #include <wtf/PassOwnPtr.h>
 
-namespace WebKit {
+namespace Nix {
 
 class EmptyPlatform : public Platform {
 public:
@@ -68,4 +68,4 @@ WebThemeEngine* Platform::themeEngine()
     return &theme;
 }
 
-} // namespace WebKit
+} // namespace Nix

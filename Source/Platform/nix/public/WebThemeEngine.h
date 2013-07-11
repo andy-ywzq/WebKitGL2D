@@ -35,7 +35,7 @@
 #include "WebColor.h"
 #include "WebSize.h"
 
-namespace WebKit {
+namespace Nix {
 
 class WebRect;
 
@@ -154,6 +154,6 @@ public:
     virtual void paintSliderThumb(WebCanvas*, State, const WebRect&) const = 0;
 };
 
-} // namespace WebKit
+} // namespace Nix
 
 #endif

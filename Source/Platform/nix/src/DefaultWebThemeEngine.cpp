@@ -48,9 +48,9 @@ const int MenuListArrowSize = 6;
 const int InnerSpinButtonBorder = 3;
 const int InnerSpinButtonArrowSize = 2;
 
-const WebKit::RGBA32 TapHighLightColor = 0x66000000;
+const Nix::RGBA32 TapHighLightColor = 0x66000000;
 
-namespace WebKit {
+namespace Nix {
 
 WebColor DefaultWebThemeEngine::activeSelectionBackgroundColor() const
 {

@@ -38,7 +38,7 @@ namespace WebCore { class SharedBuffer; }
 namespace WTF { template <typename T> class PassRefPtr; }
 #endif
 
-namespace WebKit {
+namespace Nix {
 
 class WebDataPrivate;
 
@@ -105,6 +105,6 @@ private:
     WebDataPrivate* m_private;
 };
 
-} // namespace WebKit
+} // namespace Nix
 
 #endif

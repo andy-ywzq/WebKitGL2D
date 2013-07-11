@@ -25,7 +25,7 @@
 #ifndef WebFFTFrame_h
 #define WebFFTFrame_h
 
-namespace WebKit {
+namespace Nix {
 
 class WebAudioBus;
 
@@ -48,6 +48,6 @@ public:
     virtual float* imagData() const { return 0; }
 };
 
-} // namespace WebKit
+} // namespace Nix
 
 #endif
