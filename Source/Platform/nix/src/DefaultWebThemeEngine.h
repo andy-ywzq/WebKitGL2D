@@ -26,24 +26,24 @@ public:
 
     virtual WebColor tapHighlightColor() const;
 
-    virtual void paintButton(WebCanvas*, State, const WebRect&, const ButtonExtraParams&) const;
-    virtual void paintTextField(WebCanvas*, State, const WebRect&) const;
-    virtual void paintTextArea(WebCanvas*, State, const WebRect&) const;
+    virtual void paintButton(Canvas*, State, const WebRect&, const ButtonExtraParams&) const;
+    virtual void paintTextField(Canvas*, State, const WebRect&) const;
+    virtual void paintTextArea(Canvas*, State, const WebRect&) const;
     virtual WebSize getCheckboxSize() const;
-    virtual void paintCheckbox(WebCanvas*, State, const WebRect&, const ButtonExtraParams&) const;
+    virtual void paintCheckbox(Canvas*, State, const WebRect&, const ButtonExtraParams&) const;
     virtual WebSize getRadioSize() const;
-    virtual void paintRadio(WebCanvas*, State, const WebRect&, const ButtonExtraParams&) const;
-    virtual void paintMenuList(WebCanvas *, State, const WebRect &) const;
+    virtual void paintRadio(Canvas*, State, const WebRect&, const ButtonExtraParams&) const;
+    virtual void paintMenuList(Canvas *, State, const WebRect &) const;
     virtual void getMenuListPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const;
     virtual WebSize getProgressBarSize() const;
-    virtual void paintProgressBar(WebCanvas*, State, const WebRect&, const ProgressBarExtraParams&) const;
+    virtual void paintProgressBar(Canvas*, State, const WebRect&, const ProgressBarExtraParams&) const;
     virtual double getAnimationRepeatIntervalForProgressBar() const;
     virtual double getAnimationDurationForProgressBar() const;
-    virtual void paintInnerSpinButton(WebCanvas *, State, const WebRect &, const InnerSpinButtonExtraParams&) const;
+    virtual void paintInnerSpinButton(Canvas *, State, const WebRect &, const InnerSpinButtonExtraParams&) const;
     virtual void getInnerSpinButtonPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const;
-    virtual void paintMeter(WebCanvas*, State, const WebRect&, const MeterExtraParams&) const;
-    virtual void paintSliderTrack(WebCanvas*, State, const WebRect&) const;
-    virtual void paintSliderThumb(WebCanvas*, State, const WebRect&) const;
+    virtual void paintMeter(Canvas*, State, const WebRect&, const MeterExtraParams&) const;
+    virtual void paintSliderTrack(Canvas*, State, const WebRect&) const;
+    virtual void paintSliderThumb(Canvas*, State, const WebRect&) const;
 };
 
 }

@@ -38,7 +38,7 @@ using namespace Nix;
 
 namespace TestWebKitAPI {
 
-static void fillRect(WebCanvas *canvas, const WebRect& rect, const WebColor& color)
+static void fillRect(Canvas *canvas, const WebRect& rect, const WebColor& color)
 {
     cairo_save(canvas);
 
@@ -71,13 +71,13 @@ class TestThemeEngine : public WebThemeEngine {
 
     WebColor tapHighlightColor() const { return WebColor(); }
 
-    void paintButton(WebCanvas* canvas, State, const WebRect& rect, const ButtonExtraParams&) const
+    void paintButton(Canvas* canvas, State, const WebRect& rect, const ButtonExtraParams&) const
     {
         WebColor red = 0xFFFF0000;
         fillRect(canvas, rect, red);
     }
 
-    void paintTextField(WebCanvas*, State, const WebRect&) const
+    void paintTextField(Canvas*, State, const WebRect&) const
     {
     }
 
@@ -85,16 +85,16 @@ class TestThemeEngine : public WebThemeEngine {
     {
         return WebSize();
     }
-    void paintCheckbox(WebCanvas*, State, const WebRect&, const ButtonExtraParams&) const { }
+    void paintCheckbox(Canvas*, State, const WebRect&, const ButtonExtraParams&) const { }
     WebSize getRadioSize() const
     {
         return WebSize();
     }
-    void paintRadio(WebCanvas*, State, const WebRect&, const ButtonExtraParams&) const { }
-    void paintTextArea(WebCanvas*, State, const WebRect&) const { }
+    void paintRadio(Canvas*, State, const WebRect&, const ButtonExtraParams&) const { }
+    void paintTextArea(Canvas*, State, const WebRect&) const { }
     void getMenuListPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const { }
-    void paintMenuList(WebCanvas*, State, const WebRect&) const { }
-    void paintProgressBar(WebCanvas* canvas, State, const WebRect& rect, const ProgressBarExtraParams& params) const
+    void paintMenuList(Canvas*, State, const WebRect&) const { }
+    void paintProgressBar(Canvas* canvas, State, const WebRect& rect, const ProgressBarExtraParams& params) const
     {
         WebColor red = 0xFFFF0000;
         fillRect(canvas, rect, red);
@@ -113,10 +113,10 @@ class TestThemeEngine : public WebThemeEngine {
         return 0;
     }
     void getInnerSpinButtonPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const { }
-    void paintInnerSpinButton(WebCanvas*, State, const WebRect&, const InnerSpinButtonExtraParams&) const { }
-    void paintMeter(WebCanvas*, State, const WebRect&, const MeterExtraParams&) const { }
-    void paintSliderTrack(WebCanvas*, State, const WebRect&) const { }
-    void paintSliderThumb(WebCanvas*, State, const WebRect&) const { }
+    void paintInnerSpinButton(Canvas*, State, const WebRect&, const InnerSpinButtonExtraParams&) const { }
+    void paintMeter(Canvas*, State, const WebRect&, const MeterExtraParams&) const { }
+    void paintSliderTrack(Canvas*, State, const WebRect&) const { }
+    void paintSliderThumb(Canvas*, State, const WebRect&) const { }
 };
 
 class TestThemeEnginePlatform : public Platform {

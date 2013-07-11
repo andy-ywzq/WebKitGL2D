@@ -29,8 +29,8 @@
 #include "InputTypeNames.h"
 #include "PaintInfo.h"
 #include "PlatformContextCairo.h"
+#include "public/Canvas.h"
 #include "public/Platform.h"
-#include "public/WebCanvas.h"
 #include "public/WebRect.h"
 #include "public/WebThemeEngine.h"
 #if ENABLE(PROGRESS_ELEMENT)
@@ -63,7 +63,7 @@ static Nix::WebThemeEngine* themeEngine()
     return Nix::Platform::current()->themeEngine();
 }
 
-static Nix::WebCanvas* webCanvas(const PaintInfo& info)
+static Nix::Canvas* webCanvas(const PaintInfo& info)
 {
     return info.context->platformContext()->cr();
 }
