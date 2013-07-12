@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef Platform_h
-#define Platform_h
+#ifndef Nix_Platform_h
+#define Nix_Platform_h
 
 #include "Gamepads.h"
 #include "WebAudioDevice.h"
