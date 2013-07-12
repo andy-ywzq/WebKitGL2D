@@ -8,7 +8,7 @@ set(Platform_INCLUDES
 set(Platform_HEADERS
     nix/public/Platform.h
     nix/public/Canvas.h
-    nix/public/WebColor.h
+    nix/public/Color.h
     nix/public/WebFFTFrame.h
     nix/public/Rect.h
     nix/public/Size.h

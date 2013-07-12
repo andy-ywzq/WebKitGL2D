@@ -32,8 +32,8 @@
 #define WebThemeEngine_h
 
 #include "Canvas.h"
+#include "Color.h"
 #include "Size.h"
-#include "WebColor.h"
 
 namespace Nix {
 
@@ -65,7 +65,7 @@ public:
         bool indeterminate; // Whether the button state is indeterminate.
         bool isDefault; // Whether the button is default button.
         bool hasBorder;
-        WebColor backgroundColor;
+        Color backgroundColor;
     };
 
     // Extra parameters for PartMenuList
@@ -74,7 +74,7 @@ public:
         bool hasBorderRadius;
         int arrowX;
         int arrowY;
-        WebColor backgroundColor;
+        Color backgroundColor;
     };
 
     // Extra parameters for PartSliderTrack and PartSliderThumb
@@ -117,23 +117,23 @@ public:
     virtual const char* extraPlugInsStyleSheet() const { return ""; }
 
     // Text selection colors.
-    virtual WebColor activeSelectionBackgroundColor() const = 0;
-    virtual WebColor activeSelectionForegroundColor() const = 0;
-    virtual WebColor inactiveSelectionBackgroundColor() const = 0;
-    virtual WebColor inactiveSelectionForegroundColor() const = 0;
+    virtual Color activeSelectionBackgroundColor() const = 0;
+    virtual Color activeSelectionForegroundColor() const = 0;
+    virtual Color inactiveSelectionBackgroundColor() const = 0;
+    virtual Color inactiveSelectionForegroundColor() const = 0;
 
     // List box selection colors
-    virtual WebColor activeListBoxSelectionBackgroundColor() const = 0;
-    virtual WebColor activeListBoxSelectionForegroundColor() const = 0;
-    virtual WebColor inactiveListBoxSelectionBackgroundColor() const = 0;
-    virtual WebColor inactiveListBoxSelectionForegroundColor() const = 0;
+    virtual Color activeListBoxSelectionBackgroundColor() const = 0;
+    virtual Color activeListBoxSelectionForegroundColor() const = 0;
+    virtual Color inactiveListBoxSelectionBackgroundColor() const = 0;
+    virtual Color inactiveListBoxSelectionForegroundColor() const = 0;
 
-    virtual WebColor activeTextSearchHighlightColor() const = 0;
-    virtual WebColor inactiveTextSearchHighlightColor() const = 0;
+    virtual Color activeTextSearchHighlightColor() const = 0;
+    virtual Color inactiveTextSearchHighlightColor() const = 0;
 
-    virtual WebColor focusRingColor() const = 0;
+    virtual Color focusRingColor() const = 0;
 
-    virtual WebColor tapHighlightColor() const = 0;
+    virtual Color tapHighlightColor() const = 0;
 
     virtual void paintButton(Canvas*, State, const Rect&, const ButtonExtraParams&) const = 0;
     virtual void paintTextField(Canvas*, State, const Rect&) const = 0;

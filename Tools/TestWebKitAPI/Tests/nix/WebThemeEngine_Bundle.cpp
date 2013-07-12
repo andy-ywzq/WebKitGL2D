@@ -25,10 +25,10 @@
 
 #include "config.h"
 #include "InjectedBundleTest.h"
+#include <public/Color.h>
 #include <public/Platform.h>
 #include <public/Rect.h>
 #include <public/Size.h>
-#include <public/WebColor.h>
 #include <public/WebThemeEngine.h>
 #include <WebKit2/WKRetainPtr.h>
 
@@ -38,7 +38,7 @@ using namespace Nix;
 
 namespace TestWebKitAPI {
 
-static void fillRect(Canvas *canvas, const Rect& rect, const WebColor& color)
+static void fillRect(Canvas *canvas, const Rect& rect, const Color& color)
 {
     cairo_save(canvas);
 
@@ -53,27 +53,27 @@ static void fillRect(Canvas *canvas, const Rect& rect, const WebColor& color)
 }
 
 class TestThemeEngine : public WebThemeEngine {
-    WebColor activeSelectionBackgroundColor() const { return WebColor(); }
-    WebColor activeSelectionForegroundColor() const { return WebColor(); }
-    WebColor inactiveSelectionBackgroundColor() const { return WebColor(); }
-    WebColor inactiveSelectionForegroundColor() const { return WebColor(); }
+    Color activeSelectionBackgroundColor() const { return Color(); }
+    Color activeSelectionForegroundColor() const { return Color(); }
+    Color inactiveSelectionBackgroundColor() const { return Color(); }
+    Color inactiveSelectionForegroundColor() const { return Color(); }
 
     // List box selection colors
-    WebColor activeListBoxSelectionBackgroundColor() const { return WebColor(); }
-    WebColor activeListBoxSelectionForegroundColor() const { return WebColor(); }
-    WebColor inactiveListBoxSelectionBackgroundColor() const { return WebColor(); }
-    WebColor inactiveListBoxSelectionForegroundColor() const { return WebColor(); }
+    Color activeListBoxSelectionBackgroundColor() const { return Color(); }
+    Color activeListBoxSelectionForegroundColor() const { return Color(); }
+    Color inactiveListBoxSelectionBackgroundColor() const { return Color(); }
+    Color inactiveListBoxSelectionForegroundColor() const { return Color(); }
 
-    WebColor activeTextSearchHighlightColor() const { return WebColor(); }
-    WebColor inactiveTextSearchHighlightColor() const { return WebColor(); }
+    Color activeTextSearchHighlightColor() const { return Color(); }
+    Color inactiveTextSearchHighlightColor() const { return Color(); }
 
-    WebColor focusRingColor() const { return WebColor(); }
+    Color focusRingColor() const { return Color(); }
 
-    WebColor tapHighlightColor() const { return WebColor(); }
+    Color tapHighlightColor() const { return Color(); }
 
     void paintButton(Canvas* canvas, State, const Rect& rect, const ButtonExtraParams&) const
     {
-        WebColor red = 0xFFFF0000;
+        Color red = 0xFFFF0000;
         fillRect(canvas, rect, red);
     }
 
@@ -96,10 +96,10 @@ class TestThemeEngine : public WebThemeEngine {
     void paintMenuList(Canvas*, State, const Rect&) const { }
     void paintProgressBar(Canvas* canvas, State, const Rect& rect, const ProgressBarExtraParams& params) const
     {
-        WebColor red = 0xFFFF0000;
+        Color red = 0xFFFF0000;
         fillRect(canvas, rect, red);
 
-        WebColor green = 0xFF00FF00;
+        Color green = 0xFF00FF00;
         Rect progressRect = rect;
         progressRect.width *= params.position;
         fillRect(canvas, progressRect, green);

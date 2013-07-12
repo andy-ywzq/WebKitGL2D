@@ -53,7 +53,7 @@ static void setSizeIfAuto(RenderStyle* style, const IntSize& size)
         style->setHeight(Length(size.height(), Fixed));
 }
 
-Color toColor(const Nix::WebColor& color)
+Color toColor(const Nix::Color& color)
 {
     return WebCore::Color(RGBA32(color));
 }

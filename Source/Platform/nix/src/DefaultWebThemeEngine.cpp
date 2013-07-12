@@ -27,9 +27,9 @@
 
 #include "DefaultWebThemeEngine.h"
 
+#include "public/Color.h"
 #include "public/Rect.h"
 #include "public/Size.h"
-#include "public/WebColor.h"
 #include <algorithm>
 #include <cairo/cairo.h>
 #include <cmath>
@@ -52,62 +52,62 @@ const Nix::RGBA32 TapHighLightColor = 0x66000000;
 
 namespace Nix {
 
-WebColor DefaultWebThemeEngine::activeSelectionBackgroundColor() const
+Color DefaultWebThemeEngine::activeSelectionBackgroundColor() const
 {
-    return WebColor(0, 0, 255);
+    return Color(0, 0, 255);
 }
 
-WebColor DefaultWebThemeEngine::activeSelectionForegroundColor() const
+Color DefaultWebThemeEngine::activeSelectionForegroundColor() const
 {
-    return WebColor::white;
+    return Color::white;
 }
 
-WebColor DefaultWebThemeEngine::inactiveSelectionBackgroundColor() const
+Color DefaultWebThemeEngine::inactiveSelectionBackgroundColor() const
 {
-    return WebColor(176, 176, 176);
+    return Color(176, 176, 176);
 }
 
-WebColor DefaultWebThemeEngine::inactiveSelectionForegroundColor() const
+Color DefaultWebThemeEngine::inactiveSelectionForegroundColor() const
 {
-    return WebColor::black;
+    return Color::black;
 }
 
-WebColor DefaultWebThemeEngine::activeListBoxSelectionBackgroundColor() const
+Color DefaultWebThemeEngine::activeListBoxSelectionBackgroundColor() const
 {
     return activeSelectionBackgroundColor();
 }
 
-WebColor DefaultWebThemeEngine::activeListBoxSelectionForegroundColor() const
+Color DefaultWebThemeEngine::activeListBoxSelectionForegroundColor() const
 {
     return activeSelectionForegroundColor();
 }
 
-WebColor DefaultWebThemeEngine::inactiveListBoxSelectionBackgroundColor() const
+Color DefaultWebThemeEngine::inactiveListBoxSelectionBackgroundColor() const
 {
     return inactiveSelectionBackgroundColor();
 }
 
-WebColor DefaultWebThemeEngine::inactiveListBoxSelectionForegroundColor() const
+Color DefaultWebThemeEngine::inactiveListBoxSelectionForegroundColor() const
 {
     return inactiveSelectionForegroundColor();
 }
 
-WebColor DefaultWebThemeEngine::activeTextSearchHighlightColor() const
+Color DefaultWebThemeEngine::activeTextSearchHighlightColor() const
 {
-    return WebColor(255, 150, 50); // Orange.
+    return Color(255, 150, 50); // Orange.
 }
 
-WebColor DefaultWebThemeEngine::inactiveTextSearchHighlightColor() const
+Color DefaultWebThemeEngine::inactiveTextSearchHighlightColor() const
 {
-    return WebColor(255, 255, 0); // Yellow.
+    return Color(255, 255, 0); // Yellow.
 }
 
-WebColor DefaultWebThemeEngine::focusRingColor() const
+Color DefaultWebThemeEngine::focusRingColor() const
 {
-    return WebColor::black;
+    return Color::black;
 }
 
-WebColor DefaultWebThemeEngine::tapHighlightColor() const
+Color DefaultWebThemeEngine::tapHighlightColor() const
 {
     return TapHighLightColor;
 }

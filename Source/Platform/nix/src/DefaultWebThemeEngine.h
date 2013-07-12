@@ -8,23 +8,23 @@ namespace Nix {
 class DefaultWebThemeEngine : public WebThemeEngine {
 public:
     // Text selection colors.
-    virtual WebColor activeSelectionBackgroundColor() const;
-    virtual WebColor activeSelectionForegroundColor() const;
-    virtual WebColor inactiveSelectionBackgroundColor() const;
-    virtual WebColor inactiveSelectionForegroundColor() const;
+    virtual Color activeSelectionBackgroundColor() const;
+    virtual Color activeSelectionForegroundColor() const;
+    virtual Color inactiveSelectionBackgroundColor() const;
+    virtual Color inactiveSelectionForegroundColor() const;
 
     // List box selection colors
-    virtual WebColor activeListBoxSelectionBackgroundColor() const;
-    virtual WebColor activeListBoxSelectionForegroundColor() const;
-    virtual WebColor inactiveListBoxSelectionBackgroundColor() const;
-    virtual WebColor inactiveListBoxSelectionForegroundColor() const;
+    virtual Color activeListBoxSelectionBackgroundColor() const;
+    virtual Color activeListBoxSelectionForegroundColor() const;
+    virtual Color inactiveListBoxSelectionBackgroundColor() const;
+    virtual Color inactiveListBoxSelectionForegroundColor() const;
 
-    virtual WebColor activeTextSearchHighlightColor() const;
-    virtual WebColor inactiveTextSearchHighlightColor() const;
+    virtual Color activeTextSearchHighlightColor() const;
+    virtual Color inactiveTextSearchHighlightColor() const;
 
-    virtual WebColor focusRingColor() const;
+    virtual Color focusRingColor() const;
 
-    virtual WebColor tapHighlightColor() const;
+    virtual Color tapHighlightColor() const;
 
     virtual void paintButton(Canvas*, State, const Rect&, const ButtonExtraParams&) const;
     virtual void paintTextField(Canvas*, State, const Rect&) const;

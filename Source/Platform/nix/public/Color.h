@@ -23,8 +23,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef WebColor_h
-#define WebColor_h
+#ifndef Nix_Color_h
+#define Nix_Color_h
 
 #include <algorithm>
 
@@ -32,7 +32,7 @@ namespace Nix {
 
 typedef unsigned RGBA32; // RGBA quadruplet
 
-struct WebColor {
+struct Color {
     static const RGBA32 black = 0xFF000000;
     static const RGBA32 white = 0xFFFFFFFF;
     static const RGBA32 darkGray = 0xFF808080;
@@ -42,17 +42,17 @@ struct WebColor {
 
     RGBA32 rgba;
 
-    WebColor()
-        : rgba(WebColor::black)
+    Color()
+        : rgba(Color::black)
     {
     }
 
-    WebColor(RGBA32 rgba)
+    Color(RGBA32 rgba)
         : rgba(rgba)
     {
     }
 
-    WebColor(int r, int g, int b, int a = 255)
+    Color(int r, int g, int b, int a = 255)
         : rgba(std::max(0, std::min(a, 255)) << 24 | std::max(0, std::min(r, 255)) << 16 | std::max(0, std::min(g, 255)) << 8 | std::max(0, std::min(b, 255)))
     {
     }
@@ -83,12 +83,12 @@ struct WebColor {
     }
 };
 
-inline bool operator==(const WebColor& a, const WebColor& b)
+inline bool operator==(const Color& a, const Color& b)
 {
     return a.rgba == b.rgba;
 }
 
-inline bool operator!=(const WebColor& a, const WebColor& b)
+inline bool operator!=(const Color& a, const Color& b)
 {
     return !(a == b);
 }
