@@ -1,11 +1,11 @@
 #ifndef DefaultWebThemeEngine_h
 #define DefaultWebThemeEngine_h
 
-#include "public/WebThemeEngine.h"
+#include "public/ThemeEngine.h"
 
 namespace Nix {
 
-class DefaultWebThemeEngine : public WebThemeEngine {
+class DefaultWebThemeEngine : public ThemeEngine {
 public:
     // Text selection colors.
     virtual Color activeSelectionBackgroundColor() const;

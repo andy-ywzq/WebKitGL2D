@@ -32,7 +32,7 @@
 #include "public/Canvas.h"
 #include "public/Platform.h"
 #include "public/Rect.h"
-#include "public/WebThemeEngine.h"
+#include "public/ThemeEngine.h"
 #if ENABLE(PROGRESS_ELEMENT)
 #include "RenderProgress.h"
 #endif
@@ -58,7 +58,7 @@ Color toColor(const Nix::Color& color)
     return WebCore::Color(RGBA32(color));
 }
 
-static Nix::WebThemeEngine* themeEngine()
+static Nix::ThemeEngine* themeEngine()
 {
     return Nix::Platform::current()->themeEngine();
 }
@@ -169,21 +169,21 @@ void RenderThemeNix::systemFont(WebCore::CSSValueID, FontDescription&) const
 {
 }
 
-static Nix::WebThemeEngine::State getWebThemeState(const RenderTheme* theme, const RenderObject* o)
+static Nix::ThemeEngine::State getWebThemeState(const RenderTheme* theme, const RenderObject* o)
 {
     if (!theme->isEnabled(o))
-        return Nix::WebThemeEngine::StateDisabled;
+        return Nix::ThemeEngine::StateDisabled;
     if (theme->isPressed(o))
-        return Nix::WebThemeEngine::StatePressed;
+        return Nix::ThemeEngine::StatePressed;
     if (theme->isHovered(o))
-        return Nix::WebThemeEngine::StateHover;
+        return Nix::ThemeEngine::StateHover;
 
-    return Nix::WebThemeEngine::StateNormal;
+    return Nix::ThemeEngine::StateNormal;
 }
 
 bool RenderThemeNix::paintButton(RenderObject* o, const PaintInfo& i, const IntRect& rect)
 {
-    Nix::WebThemeEngine::ButtonExtraParams extraParams;
+    Nix::ThemeEngine::ButtonExtraParams extraParams;
     extraParams.isDefault = isDefault(o);
     extraParams.hasBorder = true;
     extraParams.backgroundColor = defaultButtonBackgroundColor;
@@ -212,7 +212,7 @@ bool RenderThemeNix::paintTextArea(RenderObject* o, const PaintInfo& i, const In
 
 bool RenderThemeNix::paintCheckbox(RenderObject* o, const PaintInfo& i, const IntRect& rect)
 {
-    Nix::WebThemeEngine::ButtonExtraParams extraParams;
+    Nix::ThemeEngine::ButtonExtraParams extraParams;
     extraParams.checked = isChecked(o);
     extraParams.indeterminate = isIndeterminate(o);
 
@@ -232,7 +232,7 @@ void RenderThemeNix::setCheckboxSize(RenderStyle* style) const
 
 bool RenderThemeNix::paintRadio(RenderObject* o, const PaintInfo& i, const IntRect& rect)
 {
-    Nix::WebThemeEngine::ButtonExtraParams extraParams;
+    Nix::ThemeEngine::ButtonExtraParams extraParams;
     extraParams.checked = isChecked(o);
     extraParams.indeterminate = isIndeterminate(o);
 
@@ -281,7 +281,7 @@ void RenderThemeNix::adjustProgressBarStyle(StyleResolver*, RenderStyle* style, 
 bool RenderThemeNix::paintProgressBar(RenderObject* o, const PaintInfo& i, const IntRect& rect)
 {
     RenderProgress* renderProgress = toRenderProgress(o);
-    Nix::WebThemeEngine::ProgressBarExtraParams extraParams;
+    Nix::ThemeEngine::ProgressBarExtraParams extraParams;
     extraParams.isDeterminate = renderProgress->isDeterminate();
     extraParams.position = renderProgress->position();
     extraParams.animationProgress = renderProgress->animationProgress();
@@ -384,7 +384,7 @@ void RenderThemeNix::adjustInnerSpinButtonStyle(StyleResolver*, RenderStyle* sty
 
 bool RenderThemeNix::paintInnerSpinButton(RenderObject* o, const PaintInfo& i, const IntRect& rect)
 {
-    Nix::WebThemeEngine::InnerSpinButtonExtraParams extraParams;
+    Nix::ThemeEngine::InnerSpinButtonExtraParams extraParams;
     extraParams.spinUp = isSpinUpButtonPartPressed(o);
     extraParams.readOnly = isReadOnlyControl(o);
 
@@ -424,7 +424,7 @@ bool RenderThemeNix::paintMeter(RenderObject* o, const PaintInfo& i, const IntRe
 
     RenderMeter* renderMeter = toRenderMeter(o);
     HTMLMeterElement* e = renderMeter->meterElement();
-    Nix::WebThemeEngine::MeterExtraParams extraParams;
+    Nix::ThemeEngine::MeterExtraParams extraParams;
     extraParams.min = e->min();
     extraParams.max = e->max();
     extraParams.value = e->value();

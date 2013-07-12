@@ -29,7 +29,7 @@
 #include <public/Platform.h>
 #include <public/Rect.h>
 #include <public/Size.h>
-#include <public/WebThemeEngine.h>
+#include <public/ThemeEngine.h>
 #include <WebKit2/WKRetainPtr.h>
 
 #include <cstdlib>
@@ -52,7 +52,7 @@ static void fillRect(Canvas *canvas, const Rect& rect, const Color& color)
     cairo_restore(canvas);
 }
 
-class TestThemeEngine : public WebThemeEngine {
+class TestThemeEngine : public ThemeEngine {
     Color activeSelectionBackgroundColor() const { return Color(); }
     Color activeSelectionForegroundColor() const { return Color(); }
     Color inactiveSelectionBackgroundColor() const { return Color(); }
@@ -121,7 +121,8 @@ class TestThemeEngine : public WebThemeEngine {
 
 class TestThemeEnginePlatform : public Platform {
 public:
-    WebThemeEngine* themeEngine() {
+    ThemeEngine* themeEngine()
+    {
         static TestThemeEngine testTheme;
         return &testTheme;
     }

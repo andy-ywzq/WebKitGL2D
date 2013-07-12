@@ -127,9 +127,9 @@ static void gradientFill(cairo_t* cairo, double yStart, double yLength, bool inv
     cairo_pattern_destroy(gradient);
 }
 
-static void setupBorder(cairo_t * cairo, WebThemeEngine::State state)
+static void setupBorder(cairo_t * cairo, ThemeEngine::State state)
 {
-    double borderColor = state == WebThemeEngine::StateHover ? BorderOnHoverColor : BorderColor;
+    double borderColor = state == ThemeEngine::StateHover ? BorderOnHoverColor : BorderColor;
     cairo_set_source_rgb(cairo, borderColor, borderColor, borderColor);
     cairo_set_line_width(cairo, 1);
 }

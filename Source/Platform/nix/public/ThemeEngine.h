@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WebThemeEngine_h
-#define WebThemeEngine_h
+#ifndef Nix_ThemeEngine_h
+#define Nix_ThemeEngine_h
 
 #include "Canvas.h"
 #include "Color.h"
@@ -39,7 +39,7 @@ namespace Nix {
 
 class Rect;
 
-class WebThemeEngine {
+class ThemeEngine {
 public:
     // The current state of the associated Part.
     enum State {

@@ -39,7 +39,7 @@ namespace Nix {
 
 class WebAudioBus;
 class WebFFTFrame;
-class WebThemeEngine;
+class ThemeEngine;
 
 class WEBKIT_EXPORT Platform {
 public:
@@ -76,7 +76,7 @@ public:
     virtual bool loadAudioResource(WebAudioBus* /*destinationBus*/, const char* /*audioFileData*/, size_t /*dataSize*/, double /*sampleRate*/) { return false; }
 
     // Theme engine
-    virtual WebThemeEngine* themeEngine();
+    virtual ThemeEngine* themeEngine();
 
 protected:
     virtual ~Platform() { }
