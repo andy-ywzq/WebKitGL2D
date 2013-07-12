@@ -31,7 +31,7 @@
 #ifndef Nix_Vector_h
 #define Nix_Vector_h
 
-#include "WebCommon.h"
+#include "Common.h"
 
 #include <algorithm>
 #include <cassert>

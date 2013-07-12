@@ -25,7 +25,7 @@
 #ifndef WebAudioBus_h
 #define WebAudioBus_h
 
-#include "WebCommon.h"
+#include "Common.h"
 
 namespace WebCore { class AudioBus; }
 

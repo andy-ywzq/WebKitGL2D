@@ -31,7 +31,7 @@
 #ifndef Nix_Data_h
 #define Nix_Data_h
 
-#include "WebCommon.h"
+#include "Common.h"
 
 #ifdef BUILDING_NIX__
 namespace WebCore { class SharedBuffer; }

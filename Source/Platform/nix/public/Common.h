@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WebCommon_h
-#define WebCommon_h
+#ifndef Nix_Common_h
+#define Nix_Common_h
 
 // -----------------------------------------------------------------------------
 // Exported symbols need to be annotated with WEBKIT_EXPORT
@@ -41,7 +41,7 @@
 
 namespace Nix {
 // UTF-16 character type
-typedef unsigned short WebUChar;
+typedef unsigned short UChar;
 }
 
 #endif

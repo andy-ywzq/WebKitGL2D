@@ -24,7 +24,7 @@
 #ifndef Nix_Gamepad_h
 #define Nix_Gamepad_h
 
-#include "WebCommon.h"
+#include "Common.h"
 
 namespace Nix {
 
@@ -47,7 +47,7 @@ public:
     bool connected;
 
     // Device identifier (based on manufacturer, model, etc.).
-    WebUChar id[idLengthCap];
+    UChar id[idLengthCap];
 
     // Monotonically increasing value referring to when the data were last
     // updated.
