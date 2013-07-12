@@ -37,7 +37,7 @@
 
 namespace Nix {
 
-class WebAudioBus;
+class AudioBus;
 class WebFFTFrame;
 class ThemeEngine;
 
@@ -73,7 +73,7 @@ public:
     // Decodes the in-memory audio file data and returns the linear PCM audio data in the destinationBus.
     // A sample-rate conversion to sampleRate will occur if the file data is at a different sample-rate.
     // Returns true on success.
-    virtual bool loadAudioResource(WebAudioBus* /*destinationBus*/, const char* /*audioFileData*/, size_t /*dataSize*/, double /*sampleRate*/) { return false; }
+    virtual bool loadAudioResource(AudioBus* /*destinationBus*/, const char* /*audioFileData*/, size_t /*dataSize*/, double /*sampleRate*/) { return false; }
 
     // Theme engine
     virtual ThemeEngine* themeEngine();

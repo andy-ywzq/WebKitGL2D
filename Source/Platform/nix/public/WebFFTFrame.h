@@ -27,7 +27,7 @@
 
 namespace Nix {
 
-class WebAudioBus;
+class AudioBus;
 
 class WebFFTFrame {
 public:

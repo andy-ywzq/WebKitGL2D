@@ -30,7 +30,7 @@
 
 #include "AudioFileReader.h"
 #include <public/Platform.h>
-#include <public/WebAudioBus.h>
+#include <public/AudioBus.h>
 #include <wtf/PassRefPtr.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/StringConcatenate.h>
@@ -39,9 +39,9 @@ namespace WebCore {
 
 PassRefPtr<AudioBus> decodeAudioFileData(const char* data, size_t size, double sampleRate)
 {
-    Nix::WebAudioBus webAudioBus;
-    if (Nix::Platform::current()->loadAudioResource(&webAudioBus, data, size, sampleRate))
-        return webAudioBus.audioBus();
+    Nix::AudioBus nixAudioBus;
+    if (Nix::Platform::current()->loadAudioResource(&nixAudioBus, data, size, sampleRate))
+        return nixAudioBus.audioBus();
     return PassRefPtr<AudioBus>();
 }
 

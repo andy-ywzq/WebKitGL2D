@@ -22,8 +22,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WebAudioBus_h
-#define WebAudioBus_h
+#ifndef Nix_AudioBus_h
+#define Nix_AudioBus_h
 
 #include "Common.h"
 
@@ -35,16 +35,16 @@ namespace WTF { template <typename T> class PassRefPtr; }
 
 namespace Nix {
 
-class WebAudioBusPrivate;
+class AudioBusPrivate;
 
 // A container for multi-channel linear PCM audio data.
 //
-// WARNING: It is not safe to pass a WebAudioBus across threads!!!
+// WARNING: It is not safe to pass a AudioBus across threads!!!
 //
-class WebAudioBus {
+class AudioBus {
 public:
-    WebAudioBus() : m_d(0) { }
-    ~WebAudioBus() { reset(); }
+    AudioBus() : m_d(0) { }
+    ~AudioBus() { reset(); }
 
     // initialize() allocates memory of the given length for the given number of channels.
     WEBKIT_EXPORT void initialize(unsigned numberOfChannels, size_t length, double sampleRate);
@@ -68,12 +68,12 @@ public:
 
 private:
     // Disallow copy and assign.
-    WebAudioBus(const WebAudioBus&);
-    void operator=(const WebAudioBus&);
+    AudioBus(const AudioBus&);
+    void operator=(const AudioBus&);
 
-    WebAudioBusPrivate* m_d;
+    AudioBusPrivate* m_d;
 };
 
 } // namespace Nix
 
-#endif // WebAudioBus_h
+#endif // Nix_AudioBus_h

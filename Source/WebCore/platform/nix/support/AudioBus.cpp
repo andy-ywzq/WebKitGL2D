@@ -23,7 +23,7 @@
  */
 
 #include "config.h"
-#include <public/WebAudioBus.h>
+#include <public/AudioBus.h>
 
 #if ENABLE(WEB_AUDIO)
 #include "AudioBus.h"
@@ -41,28 +41,28 @@ using namespace WebCore;
 
 namespace Nix {
 
-class WebAudioBusPrivate {
+class AudioBusPrivate {
 public:
-    WebAudioBusPrivate(PassRefPtr<WebCore::AudioBus> audioBus)
+    AudioBusPrivate(PassRefPtr<WebCore::AudioBus> audioBus)
         : m_audioBus(audioBus)
     { }
 
     RefPtr<WebCore::AudioBus> m_audioBus;
 };
 
-void WebAudioBus::initialize(unsigned numberOfChannels, size_t length, double sampleRate)
+void AudioBus::initialize(unsigned numberOfChannels, size_t length, double sampleRate)
 {
 #if ENABLE(WEB_AUDIO)
     if (m_d)
         delete m_d;
-    m_d = new WebAudioBusPrivate(WebCore::AudioBus::create(numberOfChannels, length));
+    m_d = new AudioBusPrivate(WebCore::AudioBus::create(numberOfChannels, length));
     m_d->m_audioBus->setSampleRate(sampleRate);
 #else
     ASSERT_NOT_REACHED();
 #endif
 }
 
-void WebAudioBus::resizeSmaller(size_t newLength)
+void AudioBus::resizeSmaller(size_t newLength)
 {
 #if ENABLE(WEB_AUDIO)
     ASSERT(m_d);
@@ -75,7 +75,7 @@ void WebAudioBus::resizeSmaller(size_t newLength)
 #endif
 }
 
-void WebAudioBus::reset()
+void AudioBus::reset()
 {
 #if ENABLE(WEB_AUDIO)
     delete m_d;
@@ -85,7 +85,7 @@ void WebAudioBus::reset()
 #endif
 }
 
-unsigned WebAudioBus::numberOfChannels() const
+unsigned AudioBus::numberOfChannels() const
 {
 #if ENABLE(WEB_AUDIO)
     if (!m_d)
@@ -97,7 +97,7 @@ unsigned WebAudioBus::numberOfChannels() const
 #endif
 }
 
-size_t WebAudioBus::length() const
+size_t AudioBus::length() const
 {
 #if ENABLE(WEB_AUDIO)
     if (!m_d)
@@ -109,7 +109,7 @@ size_t WebAudioBus::length() const
 #endif
 }
 
-double WebAudioBus::sampleRate() const
+double AudioBus::sampleRate() const
 {
 #if ENABLE(WEB_AUDIO)
     if (!m_d)
@@ -121,7 +121,7 @@ double WebAudioBus::sampleRate() const
 #endif
 }
 
-float* WebAudioBus::channelData(unsigned channelIndex)
+float* AudioBus::channelData(unsigned channelIndex)
 {
 #if ENABLE(WEB_AUDIO)
     if (!m_d)
@@ -134,7 +134,7 @@ float* WebAudioBus::channelData(unsigned channelIndex)
 #endif
 }
 
-PassRefPtr<AudioBus> WebAudioBus::audioBus()
+PassRefPtr<WebCore::AudioBus> AudioBus::audioBus()
 {
 #if ENABLE(WEB_AUDIO)
     return m_d->m_audioBus;
