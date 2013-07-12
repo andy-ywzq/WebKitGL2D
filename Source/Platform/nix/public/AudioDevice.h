@@ -26,8 +26,8 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WebAudioDevice_h
-#define WebAudioDevice_h
+#ifndef Nix_AudioDevice_h
+#define Nix_AudioDevice_h
 
 #include "Vector.h"
 
@@ -35,7 +35,7 @@ namespace Nix {
 
 // Abstract interface to the Chromium audio system.
 
-class WebAudioDevice {
+class AudioDevice {
 public:
     class RenderCallback {
     public:
@@ -45,7 +45,7 @@ public:
         virtual ~RenderCallback() { }
     };
 
-    virtual ~WebAudioDevice() { }
+    virtual ~AudioDevice() { }
 
     virtual void start() = 0;
     virtual void stop() = 0;

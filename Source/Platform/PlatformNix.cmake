@@ -6,6 +6,7 @@ set(Platform_INCLUDES
 )
 
 set(Platform_HEADERS
+    nix/public/AudioDevice.h
     nix/public/Platform.h
     nix/public/Canvas.h
     nix/public/Color.h
@@ -17,7 +18,6 @@ set(Platform_HEADERS
     nix/public/Size.h
     nix/public/ThemeEngine.h
     nix/public/WebAudioBus.h
-    nix/public/WebAudioDevice.h
     nix/public/WebCommon.h
     nix/public/Vector.h
 )

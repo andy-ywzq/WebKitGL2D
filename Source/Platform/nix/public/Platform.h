@@ -31,9 +31,9 @@
 #ifndef Nix_Platform_h
 #define Nix_Platform_h
 
+#include "AudioDevice.h"
 #include "Data.h"
 #include "Gamepads.h"
-#include "WebAudioDevice.h"
 
 namespace Nix {
 
@@ -55,7 +55,7 @@ public:
 
     // Creates a device for audio I/O.
     // Pass in (numberOfInputChannels > 0) if live/local audio input is desired.
-    virtual WebAudioDevice* createAudioDevice(size_t /*bufferSize*/, unsigned /*numberOfInputChannels*/, unsigned /*numberOfChannels*/, double /*sampleRate*/, WebAudioDevice::RenderCallback*) { return 0; }
+    virtual AudioDevice* createAudioDevice(size_t /*bufferSize*/, unsigned /*numberOfInputChannels*/, unsigned /*numberOfChannels*/, double /*sampleRate*/, AudioDevice::RenderCallback*) { return 0; }
 
 
     // Gamepad -------------------------------------------------------------
