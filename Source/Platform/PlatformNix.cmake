@@ -9,6 +9,7 @@ set(Platform_HEADERS
     nix/public/Platform.h
     nix/public/Canvas.h
     nix/public/Color.h
+    nix/public/Data.h
     nix/public/Gamepads.h
     nix/public/Gamepad.h
     nix/public/WebFFTFrame.h
@@ -18,7 +19,6 @@ set(Platform_HEADERS
     nix/public/WebAudioBus.h
     nix/public/WebAudioDevice.h
     nix/public/WebCommon.h
-    nix/public/WebData.h
     nix/public/Vector.h
 )
 

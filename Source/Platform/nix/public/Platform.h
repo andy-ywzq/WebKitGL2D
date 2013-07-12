@@ -31,9 +31,9 @@
 #ifndef Nix_Platform_h
 #define Nix_Platform_h
 
+#include "Data.h"
 #include "Gamepads.h"
 #include "WebAudioDevice.h"
-#include "WebData.h"
 
 namespace Nix {
 
@@ -68,7 +68,7 @@ public:
 
     // Resources -----------------------------------------------------------
     // Returns a blob of data corresponding to the named resource.
-    virtual WebData loadResource(const char* /*name*/) { return WebData(); }
+    virtual Data loadResource(const char* /*name*/) { return Data(); }
 
     // Decodes the in-memory audio file data and returns the linear PCM audio data in the destinationBus.
     // A sample-rate conversion to sampleRate will occur if the file data is at a different sample-rate.

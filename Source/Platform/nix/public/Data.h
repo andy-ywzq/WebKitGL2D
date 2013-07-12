@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WebData_h
-#define WebData_h
+#ifndef Nix_Data_h
+#define Nix_Data_h
 
 #include "WebCommon.h"
 
@@ -40,39 +40,37 @@ namespace WTF { template <typename T> class PassRefPtr; }
 
 namespace Nix {
 
-class WebDataPrivate;
-
-// A container for raw bytes. It is inexpensive to copy a WebData object.
+// A container for raw bytes. It is inexpensive to copy a Nix::Data object.
 //
-// WARNING: It is not safe to pass a WebData across threads!!!
+// WARNING: It is not safe to pass a Nix::Data across threads!!!
 //
-class WebData {
+class Data {
 public:
-    ~WebData() { reset(); }
+    ~Data() { reset(); }
 
-    WebData() : m_private(0) { }
+    Data() : m_private(0) { }
 
-    WebData(const char* data, size_t size) : m_private(0)
+    Data(const char* data, size_t size) : m_private(0)
     {
         assign(data, size);
     }
 
     template <int N>
-    WebData(const char (&data)[N]) : m_private(0)
+    Data(const char (&data)[N]) : m_private(0)
     {
         assign(data, N - 1);
     }
 
-    WebData(const WebData& d) : m_private(0) { assign(d); }
+    Data(const Data& d) : m_private(0) { assign(d); }
 
-    WebData& operator=(const WebData& d)
+    Data& operator=(const Data& d)
     {
         assign(d);
         return *this;
     }
 
     WEBKIT_EXPORT void reset();
-    WEBKIT_EXPORT void assign(const WebData&);
+    WEBKIT_EXPORT void assign(const Data&);
     WEBKIT_EXPORT void assign(const char* data, size_t);
 
     WEBKIT_EXPORT size_t size() const;
@@ -82,18 +80,18 @@ public:
     bool isNull() const { return !m_private; }
 
 #ifdef BUILDING_NIX__
-    WebData(const WTF::PassRefPtr<WebCore::SharedBuffer>&);
-    WebData& operator=(const WTF::PassRefPtr<WebCore::SharedBuffer>&);
+    Data(const WTF::PassRefPtr<WebCore::SharedBuffer>&);
+    Data& operator=(const WTF::PassRefPtr<WebCore::SharedBuffer>&);
     operator WTF::PassRefPtr<WebCore::SharedBuffer>() const;
 #else
     template <class C>
-    WebData(const C& c) : m_private(0)
+    Data(const C& c) : m_private(0)
     {
         assign(c.data(), c.size());
     }
 
     template <class C>
-    WebData& operator=(const C& c)
+    Data& operator=(const C& c)
     {
         assign(c.data(), c.size());
         return *this;
@@ -101,8 +99,9 @@ public:
 #endif
 
 private:
-    void assign(WebDataPrivate*);
-    WebDataPrivate* m_private;
+    class DataPrivate;
+    void assign(DataPrivate*);
+    DataPrivate* m_private;
 };
 
 } // namespace Nix

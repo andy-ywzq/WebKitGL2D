@@ -29,18 +29,16 @@
  */
 
 #include "config.h"
-#include <public/WebData.h>
+#include <public/Data.h>
 
 #include "SharedBuffer.h"
 
-using namespace WebCore;
-
 namespace Nix {
 
-class WebDataPrivate : public SharedBuffer {
+class Data::DataPrivate : public WebCore::SharedBuffer {
 };
 
-void WebData::reset()
+void Data::reset()
 {
     if (m_private) {
         m_private->deref();
@@ -48,51 +46,51 @@ void WebData::reset()
     }
 }
 
-void WebData::assign(const WebData& other)
+void Data::assign(const Data& other)
 {
-    WebDataPrivate* p = const_cast<WebDataPrivate*>(other.m_private);
+    DataPrivate* p = const_cast<DataPrivate*>(other.m_private);
     if (p)
         p->ref();
     assign(p);
 }
 
-void WebData::assign(const char* data, size_t size)
+void Data::assign(const char* data, size_t size)
 {
-    assign(static_cast<WebDataPrivate*>(
-        SharedBuffer::create(data, size).leakRef()));
+    assign(static_cast<DataPrivate*>(
+        WebCore::SharedBuffer::create(data, size).leakRef()));
 }
 
-size_t WebData::size() const
+size_t Data::size() const
 {
     if (!m_private)
         return 0;
-    return const_cast<WebDataPrivate*>(m_private)->size();
+    return const_cast<DataPrivate*>(m_private)->size();
 }
 
-const char* WebData::data() const
+const char* Data::data() const
 {
     if (!m_private)
         return 0;
-    return const_cast<WebDataPrivate*>(m_private)->data();
+    return const_cast<DataPrivate*>(m_private)->data();
 }
 
-WebData::WebData(const PassRefPtr<SharedBuffer>& buffer)
-    : m_private(static_cast<WebDataPrivate*>(buffer.leakRef()))
+Data::Data(const PassRefPtr<WebCore::SharedBuffer>& buffer)
+    : m_private(static_cast<DataPrivate*>(buffer.leakRef()))
 {
 }
 
-WebData& WebData::operator=(const PassRefPtr<SharedBuffer>& buffer)
+Data& Data::operator=(const PassRefPtr<WebCore::SharedBuffer>& buffer)
 {
-    assign(static_cast<WebDataPrivate*>(buffer.leakRef()));
+    assign(static_cast<DataPrivate*>(buffer.leakRef()));
     return *this;
 }
 
-WebData::operator PassRefPtr<SharedBuffer>() const
+Data::operator PassRefPtr<WebCore::SharedBuffer>() const
 {
-    return PassRefPtr<SharedBuffer>(const_cast<WebDataPrivate*>(m_private));
+    return PassRefPtr<WebCore::SharedBuffer>(const_cast<DataPrivate*>(m_private));
 }
 
-void WebData::assign(WebDataPrivate* p)
+void Data::assign(DataPrivate* p)
 {
     // p is already ref'd for us by the caller
     if (m_private)

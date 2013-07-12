@@ -48,7 +48,7 @@ PassRefPtr<AudioBus> decodeAudioFileData(const char* data, size_t size, double s
 PassRefPtr<AudioBus> AudioBus::loadPlatformResource(const char* name, float sampleRate)
 {
     String absoluteFilename(makeString(DATA_DIR, "/webaudio/resources/", name, ".wav"));
-    const Nix::WebData& resource = Nix::Platform::current()->loadResource(absoluteFilename.utf8().data());
+    const Nix::Data resource = Nix::Platform::current()->loadResource(absoluteFilename.utf8().data());
 
     if (resource.isEmpty())
         return PassRefPtr<AudioBus>();
