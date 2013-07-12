@@ -38,7 +38,7 @@
 namespace Nix {
 
 class AudioBus;
-class WebFFTFrame;
+class FFTFrame;
 class ThemeEngine;
 
 class WEBKIT_EXPORT Platform {
@@ -63,8 +63,8 @@ public:
 
 
     // FFTFrame
-    virtual WebFFTFrame* createFFTFrame(unsigned /*fftsize*/) { return 0; }
-    virtual WebFFTFrame* createFFTFrame(const WebFFTFrame* /*frame*/) { return 0; }
+    virtual FFTFrame* createFFTFrame(unsigned /*fftsize*/) { return 0; }
+    virtual FFTFrame* createFFTFrame(const FFTFrame* /*frame*/) { return 0; }
 
     // Resources -----------------------------------------------------------
     // Returns a blob of data corresponding to the named resource.

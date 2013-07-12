@@ -29,7 +29,7 @@
 
 #include "VectorMath.h"
 #include <public/Platform.h>
-#include <public/WebFFTFrame.h>
+#include <public/FFTFrame.h>
 
 
 namespace WebCore {

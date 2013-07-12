@@ -22,20 +22,20 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef WebFFTFrame_h
-#define WebFFTFrame_h
+#ifndef Nix_FFTFrame_h
+#define Nix_FFTFrame_h
 
 namespace Nix {
 
 class AudioBus;
 
-class WebFFTFrame {
+class FFTFrame {
 public:
-    virtual ~WebFFTFrame() { }
+    virtual ~FFTFrame() { }
 
     virtual void doFFT(const float*) { }
     virtual void doInverseFFT(float*) { }
-    virtual void multiply(const WebFFTFrame&) { }
+    virtual void multiply(const FFTFrame&) { }
 
     virtual unsigned frequencyDomainSampleCount() const { return 0; }
     // After multiplication and transform operations, the data is scaled

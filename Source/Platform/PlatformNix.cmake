@@ -8,17 +8,17 @@ set(Platform_INCLUDES
 set(Platform_HEADERS
     nix/public/AudioBus.h
     nix/public/AudioDevice.h
-    nix/public/Platform.h
     nix/public/Canvas.h
     nix/public/Color.h
+    nix/public/Common.h
     nix/public/Data.h
-    nix/public/Gamepads.h
+    nix/public/FFTFrame.h
     nix/public/Gamepad.h
-    nix/public/WebFFTFrame.h
+    nix/public/Gamepads.h
+    nix/public/Platform.h
     nix/public/Rect.h
     nix/public/Size.h
     nix/public/ThemeEngine.h
-    nix/public/Common.h
     nix/public/Vector.h
 )
 
