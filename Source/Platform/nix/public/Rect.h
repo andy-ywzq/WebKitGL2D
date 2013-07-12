@@ -1,5 +1,5 @@
-#ifndef WebRect_h
-#define WebRect_h
+#ifndef Nix_Rect_h
+#define Nix_Rect_h
 
 #ifdef BUILDING_NIX__
 #include "IntRect.h"
@@ -7,14 +7,14 @@
 
 namespace Nix {
 
-class WebRect {
+class Rect {
 public:
     int x;
     int y;
     int width;
     int height;
 
-    WebRect(const WebRect& r)
+    Rect(const Rect& r)
         : x(r.x)
         , y(r.y)
         , width(r.width)
@@ -23,7 +23,7 @@ public:
     }
 
 #ifdef BUILDING_NIX__
-    WebRect(const WebCore::IntRect& r)
+    Rect(const WebCore::IntRect& r)
         : x(r.x())
         , y(r.y())
         , width(r.width())
@@ -31,7 +31,7 @@ public:
     {
     }
 
-    WebRect& operator=(const WebCore::IntRect& r)
+    Rect& operator=(const WebCore::IntRect& r)
     {
         x = r.x();
         y = r.y();

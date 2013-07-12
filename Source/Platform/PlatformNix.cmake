@@ -10,7 +10,7 @@ set(Platform_HEADERS
     nix/public/Canvas.h
     nix/public/WebColor.h
     nix/public/WebFFTFrame.h
-    nix/public/WebRect.h
+    nix/public/Rect.h
     nix/public/Size.h
     nix/public/WebThemeEngine.h
     nix/public/WebAudioBus.h

@@ -26,9 +26,9 @@
 #include "config.h"
 #include "InjectedBundleTest.h"
 #include <public/Platform.h>
+#include <public/Rect.h>
 #include <public/Size.h>
 #include <public/WebColor.h>
-#include <public/WebRect.h>
 #include <public/WebThemeEngine.h>
 #include <WebKit2/WKRetainPtr.h>
 
@@ -38,7 +38,7 @@ using namespace Nix;
 
 namespace TestWebKitAPI {
 
-static void fillRect(Canvas *canvas, const WebRect& rect, const WebColor& color)
+static void fillRect(Canvas *canvas, const Rect& rect, const WebColor& color)
 {
     cairo_save(canvas);
 
@@ -71,13 +71,13 @@ class TestThemeEngine : public WebThemeEngine {
 
     WebColor tapHighlightColor() const { return WebColor(); }
 
-    void paintButton(Canvas* canvas, State, const WebRect& rect, const ButtonExtraParams&) const
+    void paintButton(Canvas* canvas, State, const Rect& rect, const ButtonExtraParams&) const
     {
         WebColor red = 0xFFFF0000;
         fillRect(canvas, rect, red);
     }
 
-    void paintTextField(Canvas*, State, const WebRect&) const
+    void paintTextField(Canvas*, State, const Rect&) const
     {
     }
 
@@ -85,22 +85,22 @@ class TestThemeEngine : public WebThemeEngine {
     {
         return Size();
     }
-    void paintCheckbox(Canvas*, State, const WebRect&, const ButtonExtraParams&) const { }
+    void paintCheckbox(Canvas*, State, const Rect&, const ButtonExtraParams&) const { }
     Size getRadioSize() const
     {
         return Size();
     }
-    void paintRadio(Canvas*, State, const WebRect&, const ButtonExtraParams&) const { }
-    void paintTextArea(Canvas*, State, const WebRect&) const { }
+    void paintRadio(Canvas*, State, const Rect&, const ButtonExtraParams&) const { }
+    void paintTextArea(Canvas*, State, const Rect&) const { }
     void getMenuListPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const { }
-    void paintMenuList(Canvas*, State, const WebRect&) const { }
-    void paintProgressBar(Canvas* canvas, State, const WebRect& rect, const ProgressBarExtraParams& params) const
+    void paintMenuList(Canvas*, State, const Rect&) const { }
+    void paintProgressBar(Canvas* canvas, State, const Rect& rect, const ProgressBarExtraParams& params) const
     {
         WebColor red = 0xFFFF0000;
         fillRect(canvas, rect, red);
 
         WebColor green = 0xFF00FF00;
-        WebRect progressRect = rect;
+        Rect progressRect = rect;
         progressRect.width *= params.position;
         fillRect(canvas, progressRect, green);
     }
@@ -113,10 +113,10 @@ class TestThemeEngine : public WebThemeEngine {
         return 0;
     }
     void getInnerSpinButtonPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const { }
-    void paintInnerSpinButton(Canvas*, State, const WebRect&, const InnerSpinButtonExtraParams&) const { }
-    void paintMeter(Canvas*, State, const WebRect&, const MeterExtraParams&) const { }
-    void paintSliderTrack(Canvas*, State, const WebRect&) const { }
-    void paintSliderThumb(Canvas*, State, const WebRect&) const { }
+    void paintInnerSpinButton(Canvas*, State, const Rect&, const InnerSpinButtonExtraParams&) const { }
+    void paintMeter(Canvas*, State, const Rect&, const MeterExtraParams&) const { }
+    void paintSliderTrack(Canvas*, State, const Rect&) const { }
+    void paintSliderThumb(Canvas*, State, const Rect&) const { }
 };
 
 class TestThemeEnginePlatform : public Platform {

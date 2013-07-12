@@ -31,7 +31,7 @@
 #include "PlatformContextCairo.h"
 #include "public/Canvas.h"
 #include "public/Platform.h"
-#include "public/WebRect.h"
+#include "public/Rect.h"
 #include "public/WebThemeEngine.h"
 #if ENABLE(PROGRESS_ELEMENT)
 #include "RenderProgress.h"
@@ -190,7 +190,7 @@ bool RenderThemeNix::paintButton(RenderObject* o, const PaintInfo& i, const IntR
     if (o->hasBackground())
         extraParams.backgroundColor = o->style()->visitedDependentColor(CSSPropertyBackgroundColor).rgb();
 
-    themeEngine()->paintButton(webCanvas(i), getWebThemeState(this, o), Nix::WebRect(rect), extraParams);
+    themeEngine()->paintButton(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
     return false;
 }
 
@@ -201,7 +201,7 @@ bool RenderThemeNix::paintTextField(RenderObject* o, const PaintInfo& i, const I
     if (o->style()->hasBorderRadius() || o->style()->hasBackgroundImage())
         return true;
 
-    themeEngine()->paintTextField(webCanvas(i), getWebThemeState(this, o), Nix::WebRect(rect));
+    themeEngine()->paintTextField(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect));
     return false;
 }
 
@@ -216,7 +216,7 @@ bool RenderThemeNix::paintCheckbox(RenderObject* o, const PaintInfo& i, const In
     extraParams.checked = isChecked(o);
     extraParams.indeterminate = isIndeterminate(o);
 
-    themeEngine()->paintCheckbox(webCanvas(i), getWebThemeState(this, o), Nix::WebRect(rect), extraParams);
+    themeEngine()->paintCheckbox(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
     return false;
 }
 
@@ -236,7 +236,7 @@ bool RenderThemeNix::paintRadio(RenderObject* o, const PaintInfo& i, const IntRe
     extraParams.checked = isChecked(o);
     extraParams.indeterminate = isIndeterminate(o);
 
-    themeEngine()->paintRadio(webCanvas(i), getWebThemeState(this, o), Nix::WebRect(rect), extraParams);
+    themeEngine()->paintRadio(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
     return false;
 }
 
@@ -252,7 +252,7 @@ void RenderThemeNix::setRadioSize(RenderStyle* style) const
 
 bool RenderThemeNix::paintMenuList(RenderObject* o, const PaintInfo& i, const IntRect& rect)
 {
-    themeEngine()->paintMenuList(webCanvas(i), getWebThemeState(this, o), Nix::WebRect(rect));
+    themeEngine()->paintMenuList(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect));
     return false;
 }
 
@@ -286,7 +286,7 @@ bool RenderThemeNix::paintProgressBar(RenderObject* o, const PaintInfo& i, const
     extraParams.position = renderProgress->position();
     extraParams.animationProgress = renderProgress->animationProgress();
     extraParams.animationStartTime = renderProgress->animationStartTime();
-    themeEngine()->paintProgressBar(webCanvas(i), getWebThemeState(this, o), Nix::WebRect(rect), extraParams);
+    themeEngine()->paintProgressBar(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
 
     return false;
 }
@@ -388,7 +388,7 @@ bool RenderThemeNix::paintInnerSpinButton(RenderObject* o, const PaintInfo& i, c
     extraParams.spinUp = isSpinUpButtonPartPressed(o);
     extraParams.readOnly = isReadOnlyControl(o);
 
-    themeEngine()->paintInnerSpinButton(webCanvas(i), getWebThemeState(this, o), Nix::WebRect(rect), extraParams);
+    themeEngine()->paintInnerSpinButton(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
     return false;
 }
 

@@ -27,9 +27,9 @@
 
 #include "DefaultWebThemeEngine.h"
 
+#include "public/Rect.h"
 #include "public/Size.h"
 #include "public/WebColor.h"
-#include "public/WebRect.h"
 #include <algorithm>
 #include <cairo/cairo.h>
 #include <cmath>
@@ -134,7 +134,7 @@ static void setupBorder(cairo_t * cairo, WebThemeEngine::State state)
     cairo_set_line_width(cairo, 1);
 }
 
-void DefaultWebThemeEngine::paintButton(Canvas* canvas, State state, const WebRect& rect, const ButtonExtraParams&) const
+void DefaultWebThemeEngine::paintButton(Canvas* canvas, State state, const Rect& rect, const ButtonExtraParams&) const
 {
     cairo_save(canvas);
     setupBorder(canvas, state);
@@ -148,7 +148,7 @@ void DefaultWebThemeEngine::paintButton(Canvas* canvas, State state, const WebRe
     cairo_restore(canvas);
 }
 
-void DefaultWebThemeEngine::paintTextField(Canvas* canvas, State, const WebRect& rect) const
+void DefaultWebThemeEngine::paintTextField(Canvas* canvas, State, const Rect& rect) const
 {
     cairo_save(canvas);
 
@@ -171,7 +171,7 @@ void DefaultWebThemeEngine::paintTextField(Canvas* canvas, State, const WebRect&
     cairo_restore(canvas);
 }
 
-void DefaultWebThemeEngine::paintTextArea(Canvas* canvas, State state, const WebRect& rect) const
+void DefaultWebThemeEngine::paintTextArea(Canvas* canvas, State state, const Rect& rect) const
 {
     paintTextField(canvas, state, rect);
 }
@@ -181,7 +181,7 @@ Size DefaultWebThemeEngine::getCheckboxSize() const
     return Size(13, 13);
 }
 
-void DefaultWebThemeEngine::paintCheckbox(Canvas* canvas, State state, const WebRect& rect, const ButtonExtraParams& param) const
+void DefaultWebThemeEngine::paintCheckbox(Canvas* canvas, State state, const Rect& rect, const ButtonExtraParams& param) const
 {
     cairo_save(canvas);
     setupBorder(canvas, state);
@@ -209,7 +209,7 @@ Size DefaultWebThemeEngine::getRadioSize() const
     return Size(13, 13);
 }
 
-void DefaultWebThemeEngine::paintRadio(Canvas* canvas, State state, const WebRect& rect, const ButtonExtraParams& param) const
+void DefaultWebThemeEngine::paintRadio(Canvas* canvas, State state, const Rect& rect, const ButtonExtraParams& param) const
 {
     cairo_save(canvas);
     setupBorder(canvas, state);
@@ -234,7 +234,7 @@ void DefaultWebThemeEngine::getMenuListPadding(int& paddingTop, int& paddingLeft
     paddingRight = 2 * MenuListBorder + MenuListArrowSize;
 }
 
-void DefaultWebThemeEngine::paintMenuList(Canvas* canvas, State state, const WebRect& rect) const
+void DefaultWebThemeEngine::paintMenuList(Canvas* canvas, State state, const Rect& rect) const
 {
     cairo_save(canvas);
     setupBorder(canvas, state);
@@ -258,7 +258,7 @@ Size DefaultWebThemeEngine::getProgressBarSize() const
     return Size(2000, 300);
 }
 
-void DefaultWebThemeEngine::paintProgressBar(Canvas* canvas, State state, const WebRect& rect, const ProgressBarExtraParams& params) const
+void DefaultWebThemeEngine::paintProgressBar(Canvas* canvas, State state, const Rect& rect, const ProgressBarExtraParams& params) const
 {
     cairo_save(canvas);
 
@@ -301,7 +301,7 @@ void DefaultWebThemeEngine::getInnerSpinButtonPadding(int& paddingTop, int& padd
     paddingRight = 2 * InnerSpinButtonBorder + InnerSpinButtonArrowSize;
 }
 
-void DefaultWebThemeEngine::paintInnerSpinButton(Canvas* canvas, State state, const WebRect& rect, const InnerSpinButtonExtraParams& param) const
+void DefaultWebThemeEngine::paintInnerSpinButton(Canvas* canvas, State state, const Rect& rect, const InnerSpinButtonExtraParams& param) const
 {
     double rectHalfHeight = rect.height / 2;
 
@@ -333,7 +333,7 @@ void DefaultWebThemeEngine::paintInnerSpinButton(Canvas* canvas, State state, co
     cairo_fill(canvas);
 }
 
-void DefaultWebThemeEngine::paintMeter(Canvas* canvas, State state, const WebRect& rect, const MeterExtraParams& params) const
+void DefaultWebThemeEngine::paintMeter(Canvas* canvas, State state, const Rect& rect, const MeterExtraParams& params) const
 {
     cairo_save(canvas);
 
@@ -350,7 +350,7 @@ void DefaultWebThemeEngine::paintMeter(Canvas* canvas, State state, const WebRec
 
 const int SliderTrackHeight = 6;
 
-void DefaultWebThemeEngine::paintSliderTrack(Canvas* canvas, State, const WebRect& rect) const
+void DefaultWebThemeEngine::paintSliderTrack(Canvas* canvas, State, const Rect& rect) const
 {
     cairo_save(canvas);
     cairo_rectangle(canvas, rect.x, rect.y + (rect.height - SliderTrackHeight) / 2.0, rect.width, SliderTrackHeight);
@@ -358,7 +358,7 @@ void DefaultWebThemeEngine::paintSliderTrack(Canvas* canvas, State, const WebRec
     cairo_restore(canvas);
 }
 
-void DefaultWebThemeEngine::paintSliderThumb(Canvas* canvas, State state, const WebRect& rect) const
+void DefaultWebThemeEngine::paintSliderThumb(Canvas* canvas, State state, const Rect& rect) const
 {
     cairo_save(canvas);
     setupBorder(canvas, state);

@@ -37,7 +37,7 @@
 
 namespace Nix {
 
-class WebRect;
+class Rect;
 
 class WebThemeEngine {
 public:
@@ -135,23 +135,23 @@ public:
 
     virtual WebColor tapHighlightColor() const = 0;
 
-    virtual void paintButton(Canvas*, State, const WebRect&, const ButtonExtraParams&) const = 0;
-    virtual void paintTextField(Canvas*, State, const WebRect&) const = 0;
+    virtual void paintButton(Canvas*, State, const Rect&, const ButtonExtraParams&) const = 0;
+    virtual void paintTextField(Canvas*, State, const Rect&) const = 0;
     virtual Size getCheckboxSize() const = 0;
-    virtual void paintCheckbox(Canvas*, State, const WebRect&, const ButtonExtraParams&) const = 0;
+    virtual void paintCheckbox(Canvas*, State, const Rect&, const ButtonExtraParams&) const = 0;
     virtual Size getRadioSize() const = 0;
-    virtual void paintRadio(Canvas*, State, const WebRect&, const ButtonExtraParams&) const = 0;
-    virtual void paintTextArea(Canvas*, State, const WebRect&) const = 0;
+    virtual void paintRadio(Canvas*, State, const Rect&, const ButtonExtraParams&) const = 0;
+    virtual void paintTextArea(Canvas*, State, const Rect&) const = 0;
     virtual void getMenuListPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const = 0;
-    virtual void paintMenuList(Canvas*, State, const WebRect&) const = 0;
-    virtual void paintProgressBar(Canvas*, State, const WebRect&, const ProgressBarExtraParams&) const = 0;
+    virtual void paintMenuList(Canvas*, State, const Rect&) const = 0;
+    virtual void paintProgressBar(Canvas*, State, const Rect&, const ProgressBarExtraParams&) const = 0;
     virtual double getAnimationRepeatIntervalForProgressBar() const = 0;
     virtual double getAnimationDurationForProgressBar() const = 0;
     virtual void getInnerSpinButtonPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const = 0;
-    virtual void paintInnerSpinButton(Canvas*, State, const WebRect&, const InnerSpinButtonExtraParams&) const = 0;
-    virtual void paintMeter(Canvas*, State, const WebRect&, const MeterExtraParams&) const = 0;
-    virtual void paintSliderTrack(Canvas*, State, const WebRect&) const = 0;
-    virtual void paintSliderThumb(Canvas*, State, const WebRect&) const = 0;
+    virtual void paintInnerSpinButton(Canvas*, State, const Rect&, const InnerSpinButtonExtraParams&) const = 0;
+    virtual void paintMeter(Canvas*, State, const Rect&, const MeterExtraParams&) const = 0;
+    virtual void paintSliderTrack(Canvas*, State, const Rect&) const = 0;
+    virtual void paintSliderThumb(Canvas*, State, const Rect&) const = 0;
 };
 
 } // namespace Nix
