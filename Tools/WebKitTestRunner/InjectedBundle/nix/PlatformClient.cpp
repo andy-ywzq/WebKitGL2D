@@ -41,7 +41,7 @@ PlatformClient* PlatformClient::current()
     return static_cast<PlatformClient*>(Nix::Platform::current());
 }
 
-void PlatformClient::sampleGamepads(Nix::WebGamepads& into)
+void PlatformClient::sampleGamepads(Nix::Gamepads& into)
 {
     if (!m_gamepadController)
         return;

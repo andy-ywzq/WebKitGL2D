@@ -39,7 +39,7 @@ public:
 
     PlatformClient();
 
-    virtual void sampleGamepads(Nix::WebGamepads& into);
+    virtual void sampleGamepads(Nix::Gamepads& into);
     void registerGamepadController(GamepadController* controller);
 
 private:

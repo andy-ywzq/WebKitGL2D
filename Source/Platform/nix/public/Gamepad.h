@@ -21,27 +21,51 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 // DAMAGE.
 
-#ifndef WebGamepads_h
-#define WebGamepads_h
+#ifndef Nix_Gamepad_h
+#define Nix_Gamepad_h
 
-#include "WebGamepad.h"
+#include "WebCommon.h"
 
 namespace Nix {
 
-class WebGamepads {
+class Gamepad {
 public:
-    WebGamepads()
-        : length(0) { }
+    static const size_t idLengthCap = 128;
+    static const size_t axesLengthCap = 16;
+    static const size_t buttonsLengthCap = 32;
 
-    static const size_t itemsLengthCap = 4;
+    Gamepad()
+        : connected(false)
+        , timestamp(0)
+        , axesLength(0)
+        , buttonsLength(0)
+    {
+        id[0] = 0;
+    }
 
-    // Number of valid entries in the items array.
-    unsigned length;
+    // Is there a gamepad connected at this index?
+    bool connected;
 
-    // Gamepad data for N separate gamepad devices.
-    WebGamepad items[itemsLengthCap];
+    // Device identifier (based on manufacturer, model, etc.).
+    WebUChar id[idLengthCap];
+
+    // Monotonically increasing value referring to when the data were last
+    // updated.
+    unsigned long long timestamp;
+
+    // Number of valid entries in the axes array.
+    unsigned axesLength;
+
+    // Normalized values representing axes, in the range [-1..1].
+    float axes[axesLengthCap];
+
+    // Number of valid entries in the buttons array.
+    unsigned buttonsLength;
+
+    // Normalized values representing buttons, in the range [0..1].
+    float buttons[buttonsLengthCap];
 };
 
 }
 
-#endif // WebGamepads_h
+#endif

@@ -31,9 +31,9 @@
 #ifndef Platform_h
 #define Platform_h
 
+#include "Gamepads.h"
 #include "WebAudioDevice.h"
 #include "WebData.h"
-#include "WebGamepads.h"
 
 namespace Nix {
 
@@ -59,7 +59,7 @@ public:
 
 
     // Gamepad -------------------------------------------------------------
-    virtual void sampleGamepads(WebGamepads& into) { into.length = 0; }
+    virtual void sampleGamepads(Gamepads& into) { into.length = 0; }
 
 
     // FFTFrame
