@@ -111,7 +111,7 @@ void AudioDestinationNix::stop()
 
 float AudioDestination::hardwareSampleRate()
 {
-    return static_cast<float>(Nix::Platform::current()->audioHardwareSampleRate());
+    return Nix::Platform::current()->audioHardwareSampleRate();
 }
 
 unsigned long AudioDestination::maxChannelCount()
