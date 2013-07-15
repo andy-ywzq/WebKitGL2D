@@ -26,6 +26,7 @@ list(APPEND WebCore_SOURCES
     platform/nix/ErrorsNix.cpp
     platform/gtk/EventLoopGtk.cpp
     platform/nix/FileSystemNix.cpp
+    platform/nix/GamepadsNix.cpp
     platform/nix/LanguageNix.cpp
     platform/nix/LocalizedStringsNix.cpp
     platform/gtk/LoggingGtk.cpp
@@ -269,12 +270,6 @@ if (ENABLE_WEB_AUDIO)
   file(GLOB WEB_AUDIO_DATA "${WEBCORE_DIR}/platform/audio/resources/*.wav")
   install(FILES ${WEB_AUDIO_DATA} DESTINATION ${WEB_AUDIO_DIR})
   add_definitions(-DUNINSTALLED_AUDIO_RESOURCES_DIR="${WEBCORE_DIR}/platform/audio/resources")
-endif ()
-
-if (ENABLE_GAMEPAD)
-    list(APPEND WebCore_SOURCES
-        platform/nix/GamepadsNix.cpp
-    )
 endif ()
 
 if (WTF_USE_CURL)
