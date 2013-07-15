@@ -2103,7 +2103,6 @@ set(WebCore_SOURCES
     plugins/PluginData.cpp
     plugins/PluginDebug.cpp
     plugins/PluginMainThreadScheduler.cpp
-    plugins/PluginPackage.cpp
     plugins/PluginStream.cpp
     plugins/PluginView.cpp
 
@@ -2358,6 +2357,7 @@ set(WebCore_SOURCES
     svg/SVGAnimatedString.cpp
     svg/SVGAnimatedTransformList.cpp
     svg/SVGAnimatedType.cpp
+    svg/SVGAnimatedTypeAnimator.cpp
     svg/SVGAnimateElement.cpp
     svg/SVGAnimateMotionElement.cpp
     svg/SVGAnimateTransformElement.cpp
@@ -2499,6 +2499,7 @@ set(WebCore_SOURCES
     svg/graphics/filters/SVGFilter.cpp
     svg/graphics/filters/SVGFilterBuilder.cpp
 
+    svg/properties/SVGAnimatedProperty.cpp
     svg/properties/SVGAttributeToPropertyMap.cpp
     svg/properties/SVGPathSegListPropertyTearOff.cpp
 
@@ -2609,6 +2610,7 @@ endif ()
 
 if (ENABLE_NETSCAPE_PLUGIN_API)
     list(APPEND WebCore_SOURCES
+        plugins/PluginPackage.cpp
         plugins/npapi.cpp
     )
 else ()
