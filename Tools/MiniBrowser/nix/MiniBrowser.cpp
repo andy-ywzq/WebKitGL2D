@@ -49,19 +49,10 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     g_main_loop_ref(m_mainLoop);
 
     WKPreferencesRef preferences = WKPageGroupGetPreferences(m_pageGroup.get());
-    WKPreferencesSetAcceleratedCompositingEnabled(preferences, true);
     WKPreferencesSetFrameFlatteningEnabled(preferences, true);
     WKPreferencesSetDeveloperExtrasEnabled(preferences, true);
     WKPreferencesSetWebGLEnabled(preferences, true);
     WKPreferencesSetOfflineWebApplicationCacheEnabled(preferences, true);
-
-    char* debugVisualsEnvironment = getenv("WEBKIT_SHOW_COMPOSITING_DEBUG_VISUALS");
-    bool showDebugVisuals = debugVisualsEnvironment && !strcmp(debugVisualsEnvironment, "1");
-    if (showDebugVisuals) {
-        cout << "Showing debug visuals...\n";
-        WKPreferencesSetCompositingBordersVisible(preferences, true);
-        WKPreferencesSetCompositingRepaintCountersVisible(preferences, true);
-    }
 
     m_view = WKViewCreate(m_context.get(), m_pageGroup.get());
 
