@@ -39,9 +39,9 @@ struct Options {
     int viewportVerticalDisplacement;
     bool desktopModeEnabled;
     bool forceTouchEmulationEnabled;
+    float devicePixelRatio;
     std::string userAgent;
     std::string url;
-    float devicePixelRatio;
 };
 
 #endif // Options_h

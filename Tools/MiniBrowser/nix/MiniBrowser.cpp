@@ -89,8 +89,6 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
 
     WKViewInitialize(m_view);
 
-    WKPageSetCustomBackingScaleFactor(pageRef(), options.devicePixelRatio);
-
     if (isMobileMode())
         WKPageSetUseFixedLayout(pageRef(), true);
 
@@ -369,7 +367,7 @@ WKPoint MiniBrowser::adjustScrollPositionToBoundaries(WKPoint position)
 
 double MiniBrowser::scaleToFitContents()
 {
-    return WKViewGetSize(m_view).width / m_contentsSize.width;
+    return m_options.devicePixelRatio * WKViewGetSize(m_view).width / m_contentsSize.width;
 }
 
 void MiniBrowser::adjustScrollPosition()
