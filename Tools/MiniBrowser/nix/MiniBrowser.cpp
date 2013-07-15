@@ -549,12 +549,16 @@ void MiniBrowser::handleLongTap(double timestamp, const NIXTouchPoint& touch)
     NIXViewSendMouseEvent(m_view, &event);
 }
 
+void MiniBrowser::handlePanningStarted(double)
+{
+    NIXViewViewportInteractionStart(m_view);
+}
+
 void MiniBrowser::handlePanning(double timestamp, WKPoint delta)
 {
     // When the user is panning around the contents we don't force the page scroll position
     // to respect any boundaries other than the physical constraints of the device from where
     // the user input came. This will be adjusted after the user interaction ends.
-    NIXViewViewportInteractionStart(m_view);
     WKPoint position = WKViewGetContentPosition(m_view);
     if ((m_contentsSize.width - NIXViewVisibleContentsSize(m_view).width) > 0)
         position.x -= delta.x;
