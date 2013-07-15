@@ -83,6 +83,7 @@ public:
     virtual void handleLongTap(double timestamp, const NIXTouchPoint&);
     virtual void handlePanning(double timestamp, WKPoint delta);
     virtual void handlePanningFinished(double timestamp);
+    virtual void handlePinchStarted(double timestamp);
     virtual void handlePinch(double timestamp, WKPoint delta, double scale, WKPoint contentCenter);
     virtual void handlePinchFinished(double timestamp);
 

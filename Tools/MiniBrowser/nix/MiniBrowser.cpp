@@ -562,6 +562,11 @@ void MiniBrowser::handlePanning(double timestamp, WKPoint delta)
     WKViewSetContentPosition(m_view, position);
 }
 
+void MiniBrowser::handlePinchStarted(double)
+{
+    NIXViewViewportInteractionStart(m_view);
+}
+
 void MiniBrowser::handlePanningFinished(double timestamp)
 {
     adjustScrollPosition();
@@ -577,7 +582,6 @@ void MiniBrowser::handlePinch(double timestamp, WKPoint delta, double scale, WKP
     // Scrolling: If the center of the pinch initially was position (120,120) in content
     //            coordinates, them during the page must be scrolled to keep the pinch center
     //            at the same coordinates.
-    NIXViewViewportInteractionStart(m_view);
     WKPoint position = WKPointMake(WKViewGetContentPosition(m_view).x - delta.x, WKViewGetContentPosition(m_view).y - delta.y);
 
     WKViewSetContentPosition(m_view, position);
