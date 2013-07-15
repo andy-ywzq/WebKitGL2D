@@ -23,7 +23,6 @@
 #define YELLOW  "\e[38;05;10m"
 #define GREEN   "\e[38;05;11m"
 
-
 extern void glUseProgram(GLuint);
 
 using namespace std;
@@ -89,6 +88,8 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     WKViewSetViewClient(m_view, &viewClient);
 
     WKViewInitialize(m_view);
+
+    WKPageSetCustomBackingScaleFactor(pageRef(), options.devicePixelRatio);
 
     if (isMobileMode())
         WKPageSetUseFixedLayout(pageRef(), true);

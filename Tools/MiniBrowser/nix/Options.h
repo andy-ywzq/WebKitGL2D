@@ -41,6 +41,7 @@ struct Options {
     bool forceTouchEmulationEnabled;
     std::string userAgent;
     std::string url;
+    float devicePixelRatio;
 };
 
 #endif // Options_h

@@ -36,6 +36,7 @@ Options::Options()
     , viewportVerticalDisplacement(0)
     , desktopModeEnabled(false)
     , forceTouchEmulationEnabled(false)
+    , devicePixelRatio(1.0)
 {
 }
 
@@ -96,6 +97,12 @@ bool Options::parse(int argc, char* argv[])
             device = Device::IPhone;
         else if (!strcmp(argv[i], "--android"))
             device = Device::Android;
+        else if (!strcmp(argv[i], "--dpr")) {
+            if (sscanf(argv[++i], "%f", &devicePixelRatio) != 1) {
+                fprintf(stderr, "--dpr format is x.yz.\n");
+                return false;
+            }
+        }
         else
             url = argv[i];
     }
