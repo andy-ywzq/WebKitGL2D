@@ -18,6 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 import multiprocessing
+import os
 import sys
 
 __nix_tools_directory = os.path.abspath(os.path.dirname(__file__))
@@ -51,21 +52,81 @@ notrayicon = True
 if 'MAKEFLAGS' not in os.environ:
     os.environ['MAKEFLAGS'] = '-j%d' % multiprocessing.cpu_count()
 
-# Use system libraries while building.
-if use_lib64:
+###########################
+# Cross compiling support #
+###########################
+cross_compiler_prefix = os.environ.get('CROSS_COMPILER_PREFIX')
+cross_target_root = os.environ.get('CROSS_TARGET_ROOT')
+cross_target_name = os.environ.get('CROSS_TARGET_NAME')
+
+if cross_compiler_prefix:
+
+    tools = {'ADDR2LINE': 'addr2line',
+             'AR': 'ar',
+             'AS': 'as',
+             'CC': 'gcc',
+             'CPPFILT': 'c++filt',
+             'CXX': 'g++',
+             'GCOV': 'gcov',
+             'LD': 'ld',
+             'OBJCOPY': 'objcopy',
+             'OBJDUMP': 'objdump',
+             'READELF': 'readelf',
+             'SIZE': 'size',
+             'STRINGS': 'strings',
+             'RANLIB': 'ranlib',
+             'STRIP': 'strip'}
+
+    for tool in tools.keys():
+        fullpath_tool = cross_compiler_prefix + '-' + tools[tool]
+        os.environ[tool] = fullpath_tool
+
+    os.environ['BUILD'] = os.uname()[4]
+    os.environ['HOST'] = cross_compiler_prefix
+    os.environ['TARGET'] = cross_compiler_prefix
+
+    autogenargs += ' --build='+os.environ['BUILD']
+    autogenargs += ' --host='+os.environ['HOST']
+    autogenargs += ' --target='+os.environ['TARGET']
+
+    for tool in ('AR', 'RANLIB', 'STRIP', 'AS', 'OBJDUMP'):
+        autogenargs += ' ' + tool + '=" ' +os.environ[tool] + '" '
+
+    module_autogenargs['cairo'] = autogenargs
+    module_autogenargs['pixman'] = autogenargs
+    module_autogenargs['fonts'] = autogenargs
+    module_autogenargs['libffi'] = autogenargs
+    module_autogenargs['glib'] = autogenargs + '--cache-file=' + os.path.abspath(common.top_level_path('Tools','nix', 'glib-autoconf-arm.cache'))
+    module_autogenargs['glib-networking'] = autogenargs
+    module_autogenargs['libsoup'] = autogenargs + '--disable-silent-rules' + ' --verbose'
+    module_autogenargs['fontconfig'] = autogenargs + ' --with-arch=arm' # remove this hack
+    module_autogenargs['harfbuzz'] = autogenargs
+    module_autogenargs['freetype6'] = autogenargs
+
+    os.environ['LDFLAGS'] = ''
+    os.environ['LDFLAGS'] += '-Wl,-rpath-link=' + os.path.join(os.sep, prefix, 'lib64') + ' -L' + os.path.join(os.sep, prefix, 'lib64')
+    for libdir in ('/lib', '/usr/lib', '/lib/%s' % cross_target_name, '/usr/lib/%s' % cross_target_name):
+        os.environ['LDFLAGS'] += ' -Wl,-rpath-link=' + cross_target_root + libdir + ' -L' + cross_target_root + libdir
+
+    os.environ['CFLAGS'] = ' -I' + cross_target_root + '/usr/include/'
+    os.environ['CPPFLAGS'] = ' -I' + cross_target_root + '/usr/include/'
+
+#################################
+# Cross compiling support - end #
+#################################
+
+# Use system libraries while building and avoid overlapping search path CMAKE warning on 64bit systems.
+if (use_lib64 and not cross_compiler_prefix):
     _libdir = 'lib64'
+    addpath('CMAKE_PREFIX_PATH', os.path.join(os.sep, prefix, 'lib64'))
 else:
     _libdir = 'lib'
+    addpath('CMAKE_PREFIX_PATH', prefix)
+
 addpath('PKG_CONFIG_PATH', os.path.join(os.sep, 'usr', _libdir, 'pkgconfig'))
 addpath('PKG_CONFIG_PATH', os.path.join(os.sep, 'usr', 'share', 'pkgconfig'))
 
 addpath('XDG_DATA_DIRS', '/usr/share')
 addpath('XDG_CONFIG_DIRS', '/etc/xdg')
-
-# Avoid overlapping search path CMAKE warning on 64bit systems.
-if (use_lib64):
-    addpath('CMAKE_PREFIX_PATH', os.path.join(os.sep, prefix, 'lib64'))
-else:
-    addpath('CMAKE_PREFIX_PATH', prefix)
 
 partial_build = False

@@ -1,0 +1,23 @@
+--- a/aclocal.m4	2013-01-14 23:36:18.000000000 +0100
++++ b/aclocal.m4	2013-03-11 13:50:44.268162075 +0100
+@@ -1329,10 +1329,18 @@
+   fi
+ 
+   if test x"$no_glib" = x ; then
+-    GLIB_GENMARSHAL=`$PKG_CONFIG --variable=glib_genmarshal glib-2.0`
+     GOBJECT_QUERY=`$PKG_CONFIG --variable=gobject_query glib-2.0`
+     GLIB_MKENUMS=`$PKG_CONFIG --variable=glib_mkenums glib-2.0`
+-    GLIB_COMPILE_RESOURCES=`$PKG_CONFIG --variable=glib_compile_resources gio-2.0`
++
++    AC_PATH_PROGS_FEATURE_CHECK(GLIB_GENMARSHAL, glib-genmarshal,
++        AS_IF($ac_path_GLIB_GENMARSHAL --help, ac_cv_path_GLIB_GENMARSHAL=$ac_path_GLIB_GENMARSHAL GLIB_GENMARSHAL=$ac_path_GLIB_GENMARSHAL),
++        GLIB_GENMARSHAL=`$PKG_CONFIG --variable=glib_genmarshal glib-2.0` ac_cv_path_GLIB_GENMARSHAL=$GLIB_GENMARSHAL
++    )
++
++    AC_PATH_PROGS_FEATURE_CHECK(GLIB_COMPILE_RESOURCES, glib-compile-resources,
++        AS_IF($ac_path_GLIB_COMPILE_RESOURCES --help, ac_cv_path_GLIB_COMPILE_RESOURCES=$ac_path_GLIB_COMPILE_RESOURCES GLIB_COMPILE_RESOURCES=$ac_path_GLIB_COMPILE_RESOURCES),
++        GLIB_COMPILE_RESOURCES=`$PKG_CONFIG --variable=glib_compile_resources gio-2.0` ac_cv_path_GLIB_COMPILE_RESOURCES=$GLIB_COMPILE_RESOURCES
++    )
+ 
+     GLIB_CFLAGS=`$PKG_CONFIG --cflags $pkg_config_args`
+     GLIB_LIBS=`$PKG_CONFIG --libs $pkg_config_args`
