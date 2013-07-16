@@ -278,6 +278,7 @@ if (isNix()) {
     $makeArgs .= ($makeArgs ? " " : "") . "-j" . numberOfCPUs() if $makeArgs !~ /-j\s*\d+/;
     $cmakeArgs = "-DWTF_USE_CURL=ON " . $cmakeArgs if $curl;
     $cmakeArgs = "-DWTF_USE_OPENGL_ES_2=ON " . $cmakeArgs if $opengles2;
+    $cmakeArgs = "-DDISABLE_STRICT_BUILD=1 " . $cmakeArgs;
 
     # We remove CMakeCache to avoid the bots to reuse cached flags when
     # we enable new features. This forces a reconfiguration.
