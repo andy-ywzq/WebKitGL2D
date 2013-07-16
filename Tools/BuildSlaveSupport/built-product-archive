@@ -113,7 +113,7 @@ def createZip(directoryToZip, configuration, archiveConfigurationOnMac=False):
 
 
 def archiveBuiltProduct(configuration, platform, fullPlatform):
-    assert platform in ('mac', 'win', 'qt', 'gtk', 'efl')
+    assert platform in ('mac', 'win', 'qt', 'gtk', 'efl', 'nix')
 
     configurationBuildDirectory = os.path.join(_buildDirectory, configuration.title())
 
@@ -131,7 +131,7 @@ def archiveBuiltProduct(configuration, platform, fullPlatform):
 
         shutil.rmtree(thinDirectory)
 
-    elif platform == 'qt' or platform == 'gtk' or platform == 'efl':
+    elif platform == 'qt' or platform == 'gtk' or platform == 'efl' or platform == 'nix':
         thinDirectory = os.path.join(configurationBuildDirectory, "thin")
 
         removeDirectoryIfExists(thinDirectory)
@@ -139,6 +139,8 @@ def archiveBuiltProduct(configuration, platform, fullPlatform):
 
         if platform == 'qt' or platform == 'efl':
             neededDirectories = ["bin", "lib"]
+        if platform == 'nix':
+            neededDirectories = ["bin", "lib", "WebKit2"]
         elif platform == 'gtk':
             neededDirectories = ["Programs", ".libs", "Libraries", "TestNetscapePlugin"]
 
@@ -177,7 +179,7 @@ def unzipArchive(directoryToExtractTo, configuration):
 
 
 def extractBuiltProduct(configuration, platform):
-    assert platform in ('mac', 'win', 'qt', 'gtk', 'efl')
+    assert platform in ('mac', 'win', 'qt', 'gtk', 'efl', 'nix')
 
     archiveFile = os.path.join(_buildDirectory, configuration + ".zip")
     configurationBuildDirectory = os.path.join(_buildDirectory, configuration.title())
@@ -198,7 +200,7 @@ def extractBuiltProduct(configuration, platform):
             return 1
 
         return unzipArchive(configurationBuildDirectory, configuration)
-    elif platform == 'qt' or platform == 'gtk' or platform == 'efl':
+    elif platform == 'qt' or platform == 'gtk' or platform == 'efl' or platform == 'nix':
         print "Extracting", configurationBuildDirectory
         return unzipArchive(configurationBuildDirectory, configuration)
 
