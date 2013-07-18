@@ -850,8 +850,11 @@ void MiniBrowser::didChangeProgress(WKPageRef page, const void* clientInfo)
     mb->m_control->setLoadProgress(WKPageGetEstimatedProgress(page));
 }
 
-void MiniBrowser::didReceiveTitleForFrame(WKPageRef, WKStringRef title, WKFrameRef, WKTypeRef, const void* clientInfo)
+void MiniBrowser::didReceiveTitleForFrame(WKPageRef, WKStringRef title, WKFrameRef frame, WKTypeRef, const void* clientInfo)
 {
+    if (!WKFrameIsMainFrame(frame))
+        return;
+
     MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
     std::string titleStr = createStdStringFromWKString(title) + " - MiniBrowser";
     mb->m_control->setWindowTitle(titleStr.c_str());
