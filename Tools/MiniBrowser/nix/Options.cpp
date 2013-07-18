@@ -62,7 +62,7 @@ Device deviceList[] = {
     { 800, 480, "Mozilla/5.0 (Linux; U; Android 4.0.2; en-us; Galaxy Nexus Build/ICL53F) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30" }
 };
 
-bool Options::parse(int argc, char* argv[])
+bool Options::parse(int argc, const char* argv[])
 {
     Device::Type device = Device::Default;
 

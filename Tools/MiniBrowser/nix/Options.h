@@ -31,7 +31,7 @@
 struct Options {
     Options();
 
-    bool parse(int argc, char* argv[]);
+    bool parse(int argc, const char* argv[]);
 
     int width;
     int height;
