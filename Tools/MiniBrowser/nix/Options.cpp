@@ -155,6 +155,8 @@ static bool showHelp(const std::list<Option>& options)
 bool Options::parse(int argc, const char* argv[])
 {
     Device::Type device = Device::Default;
+    char injectedBundle[256];
+    injectedBundle[0] = 0;
 
     std::list<Option> options = {
         Option("--desktop", "Enable desktop mode.", &desktopModeEnabled),
@@ -162,6 +164,7 @@ bool Options::parse(int argc, const char* argv[])
         Option("-t", "Alias for --touch-emulation.", &forceTouchEmulationEnabled),
         Option("--window-size", "WxH", "Set the window size.", "%dx%d", &width, &height),
         Option("--viewport-displacement", "HxV", "Set the horizontal and vertical viewport displacement.", "%dx%d", &viewportHorizontalDisplacement, &viewportVerticalDisplacement),
+        Option("--injected-bundle", "path", "Use a custom injected bundle.", "%255s", &injectedBundle),
         Option("--dpr", "value", "Set the device pixel ratio.", "%f", &devicePixelRatio),
         Option("--n9", "Use n9 user agent.", &device, Device::N9),
         Option("--ipad", "Use iPad user agent.", &device, Device::IPad),
@@ -205,6 +208,9 @@ bool Options::parse(int argc, const char* argv[])
         std::ifstream localFile(url.c_str());
         url.insert(0, localFile ? "file://" : "http://");
     }
+
+    if (injectedBundle[0])
+        Options::injectedBundle = injectedBundle;
 
     return true;
 }

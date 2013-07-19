@@ -42,6 +42,7 @@ struct Options {
     float devicePixelRatio;
     std::string userAgent;
     std::string url;
+    std::string injectedBundle;
 };
 
 #endif // Options_h

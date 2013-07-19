@@ -28,9 +28,7 @@ extern void glUseProgram(GLuint);
 using namespace std;
 
 MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
-    : m_context(AdoptWK, WKContextCreateWithInjectedBundlePath(WKStringCreateWithUTF8CString(MINIBROWSER_INJECTEDBUNDLE_DIR "libMiniBrowserInjectedBundle.so")))
-    , m_pageGroup(AdoptWK, (WKPageGroupCreateWithIdentifier(WKStringCreateWithUTF8CString("MiniBrowser"))))
-    , m_control(new BrowserControl(this, options.width, options.height, options.url))
+    : m_control(new BrowserControl(this, options.width, options.height, options.url))
     , m_view(0)
     , m_mainLoop(mainLoop)
     , m_options(options)
@@ -45,6 +43,14 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     , m_viewportUserScalable(true)
     , m_viewportInitScale(1)
 {
+    WKStringRef bundlePath = WKStringCreateWithUTF8CString(options.injectedBundle.empty() ? MINIBROWSER_INJECTEDBUNDLE_DIR "libMiniBrowserInjectedBundle.so" : options.injectedBundle.c_str());
+    m_context = adoptWK(WKContextCreateWithInjectedBundlePath(bundlePath));
+    WKRelease(bundlePath);
+
+    WKStringRef groupIdentifier = WKStringCreateWithUTF8CString("MiniBrowser");
+    m_pageGroup = adoptWK(WKPageGroupCreateWithIdentifier(groupIdentifier));
+    WKRelease(groupIdentifier);
+
     m_control->setWindowTitle("MiniBrowser");
     g_main_loop_ref(m_mainLoop);
 
