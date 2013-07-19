@@ -134,7 +134,7 @@ public:
     }
 
     const char* m_name;
-    const char* m_valueName = "";
+    const char* m_valueName;
     const char* m_helpMessage;
     // Should return -1 on error, 0 sucess, 1 success and should pop an argument.
     std::function<int(const char*)> m_assigner;
