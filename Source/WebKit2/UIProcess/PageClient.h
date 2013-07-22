@@ -116,6 +116,10 @@ public:
 
     virtual void toolTipChanged(const String&, const String&) = 0;
 
+#if PLATFORM(NIX)
+    virtual void didCommitLoadForFrame() = 0;
+    virtual void didChangePageScaleFactor(double scaleFactor) = 0;
+#endif
 #if USE(TILED_BACKING_STORE)
     virtual void pageDidRequestScroll(const WebCore::IntPoint&) = 0;
     virtual void didRenderFrame(const WebCore::IntSize& contentsSize, const WebCore::IntRect& coveredRect) = 0;

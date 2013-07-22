@@ -62,9 +62,13 @@ protected:
     // WebKit::WebView
     virtual void didChangeContentScaleFactor(float) OVERRIDE;
     virtual void didChangeContentPosition(const WebCore::FloatPoint&) OVERRIDE;
+    virtual void didChangePageScaleFactor(double scaleFactor) OVERRIDE;
+    virtual void pageDidRequestScroll(const WebCore::IntPoint&) OVERRIDE;
+    virtual void didRenderFrame(const WebCore::IntSize&, const WebCore::IntRect&) OVERRIDE;
 
     // PageClient.
     virtual void didFindZoomableArea(const WebCore::IntPoint& target, const WebCore::IntRect& area) OVERRIDE;
+    virtual void didCommitLoadForFrame() OVERRIDE;
 #if ENABLE(GESTURE_EVENTS)
     virtual void doneWithGestureEvent(const WebGestureEvent&, bool wasEventHandled) OVERRIDE;
 #endif
@@ -83,6 +87,11 @@ private:
     WebViewClientNix m_viewClientNix;
     WebCore::IntPoint m_lastCursorPosition;
     WTF::RefPtr<WebContextMenuProxyNix> m_activeContextMenu;
+
+    bool m_duringPageTransition;
+    bool m_pendingScaleOrPositionChange;
+    WebCore::FloatPoint m_contentPositionAfterTransition;
+    double m_scaleAfterTransition;
 
     friend class WebView;
 };

@@ -58,6 +58,9 @@ PassRefPtr<WebView> WebView::create(WebContext* context, WebPageGroup* pageGroup
 WebViewNix::WebViewNix(WebContext* context, WebPageGroup* pageGroup)
     : WebView(context, pageGroup)
     , m_activeContextMenu(WebContextMenuProxyNix::create())
+    , m_duringPageTransition(false)
+    , m_pendingScaleOrPositionChange(false)
+    , m_scaleAfterTransition(1.0)
 {
 }
 
@@ -126,6 +129,40 @@ void WebViewNix::didChangeContentScaleFactor(float scaleFactor)
     updateViewportSize();
 }
 
+void WebViewNix::pageDidRequestScroll(const IntPoint& position)
+{
+    if ((m_duringPageTransition || m_pendingScaleOrPositionChange) && position != m_contentPosition) {
+        m_pendingScaleOrPositionChange = true;
+        m_contentPositionAfterTransition = position;
+    } else
+        WebView::pageDidRequestScroll(position);
+}
+
+void WebViewNix::didRenderFrame(const WebCore::IntSize& contentsSize, const WebCore::IntRect& coveredRect)
+{
+    if (m_duringPageTransition) {
+        m_duringPageTransition = false;
+        if (m_pendingScaleOrPositionChange) {
+            m_pendingScaleOrPositionChange = false;
+            if (m_scaleAfterTransition != m_contentScaleFactor)
+                m_contentScaleFactor = m_scaleAfterTransition;
+
+            if (m_contentPosition != m_contentPositionAfterTransition)
+                setContentPosition(m_contentPositionAfterTransition);
+        }
+    }
+
+    WebView::didRenderFrame(contentsSize, coveredRect);
+}
+
+void WebViewNix::didChangePageScaleFactor(double scaleFactor)
+{
+    if ((m_duringPageTransition || m_pendingScaleOrPositionChange) && scaleFactor != m_contentScaleFactor) {
+        m_pendingScaleOrPositionChange = true;
+        m_scaleAfterTransition = scaleFactor;
+    }
+}
+
 void WebViewNix::didChangeContentPosition(const WebCore::FloatPoint& trajectoryVector)
 {
     DrawingAreaProxy* drawingArea = page()->drawingArea();
@@ -139,6 +176,14 @@ void WebViewNix::didChangeContentPosition(const WebCore::FloatPoint& trajectoryV
 void WebViewNix::didFindZoomableArea(const IntPoint& target, const IntRect& area)
 {
     m_viewClientNix.didFindZoomableArea(this, toAPI(target), toAPI(area));
+}
+
+void WebViewNix::didCommitLoadForFrame()
+{
+    m_duringPageTransition = true;
+    m_pendingScaleOrPositionChange = false;
+    m_contentPositionAfterTransition = WebCore::FloatPoint();
+    m_scaleAfterTransition = 1.0;
 }
 
 void WebViewNix::pageTransitionViewportReady()

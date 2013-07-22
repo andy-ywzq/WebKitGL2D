@@ -1942,6 +1942,9 @@ void WebPageProxy::setGapBetweenPages(double gap)
 void WebPageProxy::pageScaleFactorDidChange(double scaleFactor)
 {
     m_pageScaleFactor = scaleFactor;
+#if PLATFORM(NIX)
+    m_pageClient->didChangePageScaleFactor(m_pageScaleFactor);
+#endif
 }
 
 void WebPageProxy::pageZoomFactorDidChange(double zoomFactor)
@@ -2316,6 +2319,9 @@ void WebPageProxy::didCommitLoadForFrame(uint64_t frameID, const String& mimeTyp
     if (frame->isMainFrame() && static_cast<FrameLoadType>(opaqueFrameLoadType) == FrameLoadTypeStandard)
         m_pageScaleFactor = 1;
 
+#if PLATFORM(NIX)
+    m_pageClient->didCommitLoadForFrame();
+#endif
     m_loaderClient.didCommitLoadForFrame(this, frame, userData.get());
 }
 
