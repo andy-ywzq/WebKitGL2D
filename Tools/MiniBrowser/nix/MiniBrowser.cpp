@@ -563,7 +563,8 @@ void MiniBrowser::handlePanning(double timestamp, WKPoint delta)
 
 void MiniBrowser::handlePinchStarted(double)
 {
-    NIXViewViewportInteractionStart(m_view);
+    if (m_viewportUserScalable)
+        NIXViewViewportInteractionStart(m_view);
 }
 
 void MiniBrowser::handlePanningFinished(double timestamp)
@@ -587,22 +588,23 @@ void MiniBrowser::handlePinch(double timestamp, WKPoint delta, double scale, WKP
     scaleAtPoint(contentCenter, scale, LowerMinimumScale);
 }
 
-void MiniBrowser::handlePinchFinished(double timestamp)
+void MiniBrowser::handlePinchFinished(double)
 {
+    if (!m_viewportUserScalable)
+        return;
+
     double scale = WKViewGetContentScaleFactor(m_view);
-    bool needsScale = false;
     double minimumScale = double(WKViewGetSize(m_view).width) / m_contentsSize.width;
 
-    if (scale > m_viewportMaxScale) {
+    bool needsScale = true;
+    if (scale > m_viewportMaxScale)
         scale = m_viewportMaxScale;
-        needsScale = true;
-    } else if (scale < m_viewportMinScale) {
+    else if (scale < m_viewportMinScale)
         scale = m_viewportMinScale;
-        needsScale = true;
-    } else if (scale < minimumScale) {
+    else if (scale < minimumScale)
         scale = minimumScale;
-        needsScale = true;
-    }
+    else
+        needsScale = false;
 
     if (needsScale)
         WKViewSetContentScaleFactor(m_view, scale);
