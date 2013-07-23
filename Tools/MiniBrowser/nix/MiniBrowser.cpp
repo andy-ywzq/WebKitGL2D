@@ -868,16 +868,25 @@ void MiniBrowser::didReceiveTitleForFrame(WKPageRef, WKStringRef title, WKFrameR
     mb->m_control->setWindowTitle(titleStr.c_str());
 }
 
+void MiniBrowser::updateActiveUrlText()
+{
+    std::string url = activeUrl();
+    if (m_activeUrlText != url) {
+        m_activeUrlText = url;
+        m_control->updateUrlText(m_activeUrlText.c_str());
+    }
+}
+
 void MiniBrowser::didStartProvisionalLoadForFrame(WKPageRef page, WKFrameRef, WKTypeRef, const void* clientInfo)
 {
     MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
-    mb->m_control->updateUrlText(mb->activeUrl().c_str());
+    mb->updateActiveUrlText();
 }
 
 void MiniBrowser::didFinishDocumentLoadForFrame(WKPageRef page, WKFrameRef, WKTypeRef, const void* clientInfo)
 {
     MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
-    mb->m_control->updateUrlText(mb->activeUrl().c_str());
+    mb->updateActiveUrlText();
 }
 
 void MiniBrowser::didFailProvisionalLoadWithErrorForFrame(WKPageRef page, WKFrameRef frame, WKErrorRef error, WKTypeRef, const void *)

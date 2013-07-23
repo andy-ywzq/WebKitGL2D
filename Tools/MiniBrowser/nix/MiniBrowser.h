@@ -130,6 +130,8 @@ private:
     WKViewRef webViewAtX11Position(const WKPoint& poisition);
     void saveSnapshot(double timestamp);
 
+    void updateActiveUrlText();
+
     WKRetainPtr<WKContextRef> m_context;
     WKRetainPtr<WKPageGroupRef> m_pageGroup;
     BrowserControl* m_control;
@@ -155,6 +157,8 @@ private:
     float m_viewportMaxScale;
     float m_viewportInitScale;
     bool m_viewportUserScalable;
+
+    std::string m_activeUrlText;
 
     static gboolean callUpdateDisplay(gpointer);
 };
