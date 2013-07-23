@@ -39,6 +39,7 @@ Options::Options()
     , desktopModeEnabled(false)
     , forceTouchEmulationEnabled(false)
     , devicePixelRatio(1.0)
+    , helpRequested(false)
 {
 }
 
@@ -142,7 +143,7 @@ public:
     std::function<int(const char*)> m_assigner;
 };
 
-static bool showHelp(const std::list<Option>& options)
+static void showHelp(const std::list<Option>& options)
 {
     printf("Use MiniBrowser [options] [url]\n\n");
     for (const Option& option : options) {
@@ -151,7 +152,6 @@ static bool showHelp(const std::list<Option>& options)
         arg += option.m_valueName;
         printf("  %-28s %s\n", arg.c_str(), option.m_helpMessage);
     }
-    return false;
 }
 
 bool Options::parse(int argc, const char* argv[])
@@ -180,8 +180,11 @@ bool Options::parse(int argc, const char* argv[])
         const char* arg = args.front();
         args.pop_front();
 
-        if (!strcmp("--help", arg))
-            return showHelp(options);
+        if (!strcmp("--help", arg)) {
+            helpRequested = true;
+            showHelp(options);
+            return true;
+        }
 
         bool argMatches = false;
         for (Option option : options) {
@@ -189,7 +192,8 @@ bool Options::parse(int argc, const char* argv[])
             if (argMatches) {
                 if (option.process(args))
                     break;
-                return showHelp(options);
+                showHelp(options);
+                return false;
             }
         }
         if (!argMatches)
