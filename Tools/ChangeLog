@@ -1,3 +1,299 @@
+2013-07-18  Timothy Hatcher  <timothy@apple.com>
+
+        Add extract-localizable-js-strings and use it for WebInspectorUI.
+
+        https://bugs.webkit.org/show_bug.cgi?id=118851
+
+        Reviewed by Joseph Pecoraro.
+
+        * Scripts/extract-localizable-js-strings: Added.
+        * Scripts/extract-localizable-strings: Drive-by-fix: disable deprecated warnings about "goto".
+        * Scripts/update-webkit-localizable-strings: Use extract-localizable-js-strings for
+        the WebInspectorUI project.
+
+2013-07-18  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Build correction #2 after r152861.
+
+        * WinLauncher/WinLauncher.cpp: Declare proper linkage.
+
+2013-07-18  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Build correction after r152861.
+
+        * WinLauncher/WinLauncher.cpp: Don't reference private header.
+
+2013-07-16  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Support in-band text tracks.
+        https://bugs.webkit.org/show_bug.cgi?id=103770
+
+        Reviewed by Eric Carlson.
+
+        Update WinLauncher to run in a CFRunLoop (rather than a hand-written Windows event loop) so that
+        libdispatch and CFRunLoop elements are services during the run loop.
+
+        * WinLauncher/WinLauncher.cpp:
+        (dllLauncherEntryPoint): Use CFRunLoopRun (rather than a Windows message loop) if running with
+        a CoreFoundation (or CFLite) support library.
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherCF.props: Added.
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherCFLite.props: Added.
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherLib.vcxproj: Add references to WinLauncherCF.props
+        and WinLauncherCFLite.props.
+
+2013-07-18  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Test enabling WinEWS tests now that queue is at a good state and NRWT with multiple processes is enabled.
+
+        * Scripts/webkitpy/common/config/ews.json:
+
+2013-07-18  Daniel Bates  <dabates@apple.com>
+
+        REGRESSION (r132678): Tests that use SSL or port 8080 time out when run using old-run-webkit-tests
+        https://bugs.webkit.org/show_bug.cgi?id=118854
+        <rdar://problem/14081339>
+
+        Reviewed by David Kilzer.
+
+        Following <http://trac.webkit.org/changeset/132678> (https://bugs.webkit.org/show_bug.cgi?id=98602)
+        Apache no longer listens to ports 8443 (SSL) and 8080. So, tests that use these ports time out when
+        run using old-run-webkit-tests. We need to update old-run-webkit-tests to explicitly tell Apache to
+        listen on these ports so that we can run tests that use port 8443 and 8080.
+
+        * Scripts/old-run-webkit-tests:
+        (configureAndOpenHTTPDIfNeeded):
+
+2013-07-17  Tim Horton  <timothy_horton@apple.com>
+
+        Update blocked/missing plug-in UI
+        https://bugs.webkit.org/show_bug.cgi?id=118347
+        <rdar://problem/14209318>
+
+        Reviewed by Sam Weinig.
+
+        * MiniBrowser/mac/WK2BrowserWindowController.m:
+        (-[WK2BrowserWindowController awakeFromNib]):
+        * WebKitTestRunner/TestController.cpp:
+        (WTR::TestController::createWebViewWithOptions):
+        Match new WKPageLoaderClient entry.
+
+2013-07-17  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r152701, r152703, r152739, r152754,
+        and r152756.
+        http://trac.webkit.org/changeset/152701
+        http://trac.webkit.org/changeset/152703
+        http://trac.webkit.org/changeset/152739
+        http://trac.webkit.org/changeset/152754
+        http://trac.webkit.org/changeset/152756
+        https://bugs.webkit.org/show_bug.cgi?id=118821
+
+        this was a buggy fix and we're going to try something
+        different (Requested by thorton on #webkit).
+
+        * MiniBrowser/mac/WK2BrowserWindowController.m:
+        (-[WK2BrowserWindowController awakeFromNib]):
+        * WebKitTestRunner/TestController.cpp:
+        (WTR::TestController::createWebViewWithOptions):
+
+2013-07-17  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r151535.
+        http://trac.webkit.org/changeset/151535
+        https://bugs.webkit.org/show_bug.cgi?id=118804
+
+        Re-disable WinEWS tests (Requested by rfong on #webkit).
+
+        * Scripts/webkitpy/common/config/ews.json:
+
+2013-07-17  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] Make DRT obbey testRunner's addURLToRedirect
+        https://bugs.webkit.org/show_bug.cgi?id=118239
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Support testRunner's addURLToRedirect in GTK's DRT, so it redirects
+        to the proper URI when indicated.
+
+        * DumpRenderTree/gtk/DumpRenderTree.cpp:
+        (willSendRequestCallback):
+
+2013-07-17  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        Add a new find-resolved-bugs command to webkit-patch.
+        https://bugs.webkit.org/show_bug.cgi?id=118060
+
+        Reviewed by Csaba Osztrogonác.
+
+        * Scripts/webkitpy/tool/commands/queries.py:
+        (PrintBaselines._platform_for_path):
+        (FindResolvedBugs):
+        (FindResolvedBugs.execute):
+
+2013-07-16  Balazs Kelemen  <kbalazs@webkit.org>
+
+        [CMake] Undefined references should be detected at build time
+        https://bugs.webkit.org/show_bug.cgi?id=110236
+
+        Reviewed by Christophe Dumez.
+
+        Add library dependencies that were not defined explicitly before.
+
+        * DumpRenderTree/TestNetscapePlugIn/CMakeLists.txt:
+        * TestWebKitAPI/CMakeLists.txt:
+        * WebKitTestRunner/CMakeLists.txt:
+
+2013-07-16  Kwang Yul Seo  <skyul@company100.net>
+
+        check-webkit-style: "using namespace foo;" should be flagged as an error only in headers
+        https://bugs.webkit.org/show_bug.cgi?id=118755
+
+        Reviewed by Ryosuke Niwa.
+
+        Fix r152719 to check "using namespace foo;" only in headers.
+
+        * Scripts/webkitpy/style/checkers/cpp.py:
+        (check_using_namespace):
+        (check_style):
+        * Scripts/webkitpy/style/checkers/cpp_unittest.py:
+        (WebKitStyleTest.test_using_namespace):
+
+2013-07-16  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Get rid of multiple inheritance support from the bindings generators
+        https://bugs.webkit.org/show_bug.cgi?id=118353
+
+        Reviewed by Kentaro Hara.
+
+        Update CodeGeneratorTestRunner.pm to use domInterface->parent instead of
+        deprecated domInterface->parents.
+
+        * WebKitTestRunner/InjectedBundle/Bindings/CodeGeneratorTestRunner.pm:
+        (_parentInterface):
+
+2013-07-16  Brian Holt  <brian.holt@samsung.com>
+
+        check-webkit-style: "using namespace foo;" should be flagged as an error in headers
+        https://bugs.webkit.org/show_bug.cgi?id=57241
+
+        Reviewed by Ryosuke Niwa.
+
+        Added check for "using namespace foo" and unit test.
+
+        * Scripts/webkitpy/style/checkers/cpp.py:
+        (check_using_namespace):
+        (check_style):
+        (CppChecker):
+        * Scripts/webkitpy/style/checkers/cpp_unittest.py:
+        (WebKitStyleTest.test_using_namespace):
+
+2013-07-16  Anton Obzhirov  <a.obzhirov@samsung.com>
+
+        [GTK] fast/events/platform-wheelevent-with-delta-zero-crash.html is crashing
+        https://bugs.webkit.org/show_bug.cgi?id=110222
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Added handling of zero mouse scroll deltas in EventSender.
+
+        * DumpRenderTree/gtk/EventSender.cpp:
+        (mouseScrollByCallback):
+
+2013-07-16  Brian Holt  <brian.holt@samsung.com>
+
+        webkitpy: replace urllib with urllib2 for downloading additional modules
+        https://bugs.webkit.org/show_bug.cgi?id=118671
+
+        Reviewed by Ryosuke Niwa.
+
+        Urllib2 is available whereever urllib is, but has better proxy support.
+
+        * Scripts/webkitpy/common/system/autoinstall.py:
+        (AutoInstaller._download_to_stream):
+
+2013-07-16  Krzysztof Czech  <k.czech@samsung.com>
+
+        [ATK] Adds support for aria-haspopup property.
+        https://bugs.webkit.org/show_bug.cgi?id=117834
+
+        Reviewed by Christophe Dumez.
+
+        Adds implementation for testing aria-haspopup property.
+
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (getAttributeSetValueForId):
+        (AccessibilityUIElement::stringAttributeValue):
+        (AccessibilityUIElement::hasPopup):
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::getAttributeSetValueForId):
+        (WTR::AccessibilityUIElement::stringAttributeValue):
+        (WTR::AccessibilityUIElement::hasPopup):
+
+2013-07-16  Michael Brüning  <michael.bruning@digia.com>
+
+        [Qt] Replace Nokia references.
+        https://bugs.webkit.org/show_bug.cgi?id=118728
+
+        Reviewed by Simon Hausmann.
+
+        * MiniBrowser/qt/MiniBrowserApplication.cpp:
+        (MiniBrowserApplication::MiniBrowserApplication):
+        * QtTestBrowser/qttestbrowser.cpp:
+        (LauncherApplication::LauncherApplication):
+
+2013-07-15  Tim Horton  <timothy_horton@apple.com>
+
+        Update blocked/missing plug-in UI
+        https://bugs.webkit.org/show_bug.cgi?id=118347
+        <rdar://problem/14209318>
+
+        Reviewed by Sam Weinig.
+
+        * MiniBrowser/mac/WK2BrowserWindowController.m:
+        (-[WK2BrowserWindowController awakeFromNib]):
+        * WebKitTestRunner/TestController.cpp:
+        (WTR::TestController::createWebViewWithOptions):
+        Match new WKPageLoaderClient entry.
+
+2013-07-15  Chris Fleizach  <cfleizach@apple.com>
+
+        Update James Craig's email address.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-07-15  Dong-Gwan Kim  <donggwan.kim@samsung.com>
+
+        [EFL] Add fallback for TestWebKitAPI if opengl is not available.
+        https://bugs.webkit.org/show_bug.cgi?id=118583
+
+        Reviewed by Christophe Dumez.
+
+        There're many fails on efl webkit2 API test if opengl is not available.
+        So, add fallback to non-opengl evas engine.
+
+        * TestWebKitAPI/efl/PlatformWebView.cpp:
+        (TestWebKitAPI::initEcoreEvas):
+
+2013-07-15  Brian Holt  <brian.holt@samsung.com>
+
+        check-webkit-style: Ignore false positive: Instance of 'Popen' has no 'pid' member
+        https://bugs.webkit.org/show_bug.cgi?id=118592
+
+        Reviewed by Martin Robinson.
+
+        Added a suppression for pylint false positives and a unit test.
+
+        * Scripts/webkitpy/style/checkers/python.py:
+        (Pylinter):
+        * Scripts/webkitpy/style/checkers/python_unittest.py:
+        (PythonCheckerTest.test_check):
+        (PythonCheckerTest):
+        (PythonCheckerTest.test_pylint_false_positives):
+        (PythonCheckerTest.test_pylint_false_positives._mock_handle_style_error):
+        * Scripts/webkitpy/style/checkers/python_unittest_falsepositives.py: Added.
+        (test_popen):
+
 2013-07-15  Xabier Rodriguez Calvar  <calvaris@igalia.com>
 
         [GTK] Increase the JHBuild version of GStreamer to 1.0.7

@@ -295,6 +295,8 @@ if (WTF_USE_CURL)
     )
 else ()
     list(APPEND WebCore_SOURCES
+        loader/soup/CachedRawResourceSoup.cpp
+        loader/soup/SubresourceLoaderSoup.cpp
         platform/network/soup/AuthenticationChallengeSoup.cpp
         platform/network/soup/CookieJarSoup.cpp
         platform/network/soup/CookieStorageSoup.cpp

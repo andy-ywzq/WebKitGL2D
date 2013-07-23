@@ -102,7 +102,7 @@ fast/events/option-tab.html [ WontFix Failure ]
 # These tests expect a TIFF decoder (via Chromium).
 # These pass while they're marked as WontFix - check it.
 fast/images/embed-image.html [ WontFix Pass ]
-fast/images/object-image.html [ WontFix Pass ]
+webkit.org/b/118730 fast/images/object-image.html [ WontFix Failure ]
 
 # This test requires Mac ObjC bindings, although it currently passes
 Bug(GTK) http/tests/security/dataTransfer-set-data-file-url.html [ WontFix Pass ]
@@ -472,8 +472,6 @@ webkit.org/b/108682 [ Debug ] media/video-controls-visible-exiting-fullscreen.ht
 webkit.org/b/108682 [ Debug ] media/video-src.html [ Crash Pass ] 
 
 webkit.org/b/108927 http/tests/xmlhttprequest/workers/xmlhttprequest-file-not-found.html [ Crash Pass ]
-
-webkit.org/b/110222 fast/events/platform-wheelevent-with-delta-zero-crash.html [ Crash ]
 
 webkit.org/b/110695 http/tests/security/cross-origin-local-storage-allowed.html [ Crash Pass ]
 webkit.org/b/110695 http/tests/security/cross-origin-local-storage.html [ Crash Pass ]
@@ -1065,9 +1063,6 @@ Bug(GTK) fast/frames/meta-refresh-user-gesture.html [ Failure Timeout ]
 # Rounding color problems inside pixman
 webkit.org/b/49964 fast/canvas/canvas-fillPath-shadow.html [ Failure ]
 
-# DRT does not obey testRunner.addURLToRedirect()
-Bug(GTK) http/tests/loading/cross-origin-XHR-willLoadRequest.html [ Failure ]
-
 # See also https://bugs.webkit.org/show_bug.cgi?id=54926
 webkit.org/b/53707 http/tests/security/xss-DENIED-xsl-document-redirect.xml [ Failure ]
 webkit.org/b/53707 http/tests/security/xss-DENIED-xsl-external-entity-redirect.xml [ Failure ]
@@ -1430,6 +1425,19 @@ webkit.org/b/118418 accessibility/img-fallsback-to-title.html [ Failure ]
 webkit.org/b/118419 fast/css/style-scoped/registering.html [ Failure ]
 
 webkit.org/b/118420 [ Release ] fast/dom/gc-dom-tree-lifetime.html [ Failure ]
+
+webkit.org/b/118595 fast/regions/autoheight-correct-region-for-lines-2.html [ ImageOnlyFailure ]
+
+webkit.org/b/118724 svg/custom/xlink-prefix-in-attributes.html [ Failure ]
+
+# Plugin-related failures after r152701
+webkit.org/b/118730 fast/replaced/border-radius-clip.html [ Failure ]
+webkit.org/b/118730 http/tests/security/contentSecurityPolicy/1.1/plugintypes-invalid.html [ Failure ]
+webkit.org/b/118730 http/tests/security/contentSecurityPolicy/1.1/plugintypes-notype-url.html [ Failure ]
+webkit.org/b/118730 http/tests/security/contentSecurityPolicy/1.1/plugintypes-url-02.html [ Failure ]
+webkit.org/b/118730 plugins/embed-attributes-style.html [ Failure ]
+webkit.org/b/118730 plugins/iframe-shims.html [ Failure ]
+webkit.org/b/118730 editing/pasteboard/paste-noplugin.html [ Failure ]
 
 #////////////////////////////////////////////////////////////////////////////////////////
 # End of Tests failing

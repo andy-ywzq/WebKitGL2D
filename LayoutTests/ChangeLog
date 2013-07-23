@@ -1,3 +1,977 @@
+2013-07-18  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r152801.
+        http://trac.webkit.org/changeset/152801
+        https://bugs.webkit.org/show_bug.cgi?id=118876
+
+        Un-rebaseline some plugin tests since r152789 was rolled out
+        (Requested by rfong on #webkit).
+
+        * platform/win/editing/pasteboard/paste-noplugin-expected.txt: Removed.
+        * platform/win/platform/win/plugins/draws-gradient-expected.txt:
+
+2013-07-18  Chris Curtis  <chris_curtis@apple.com>
+
+        Fixed ASSERTION FAILED: callFrame == vm->topCallFrame in JSC::Interpreter::addStackTraceIfNecessary
+        https://bugs.webkit.org/show_bug.cgi?id=118498
+
+        Reviewed by Geoffrey Garen.
+
+        New Tests to see if JSC evaluates user code after exception creation
+
+        * fast/js/not-a-constructor-to-string-expected.txt: Added.
+        * fast/js/not-a-constructor-to-string.html: Added.
+        * fast/js/not-a-function-to-string-expected.txt: Added.
+        * fast/js/not-a-function-to-string.html: Added.
+
+        Modified test output of the object that was being evaluated at the time of the 
+        error. Only the error message has changed.
+
+        * fast/dom/MutationObserver/mutation-record-constructor-expected.txt:
+        * fast/dom/NodeList/nodelist-item-call-as-function-expected.txt:
+        * fast/dom/Range/getClientRects-expected.txt:
+        * fast/dom/SelectorAPI/dumpNodeList-almost-strict-expected.txt:
+        * fast/dom/SelectorAPI/dumpNodeList-expected.txt:
+        * fast/dom/call-a-constructor-as-a-function-expected.txt:
+        * fast/dom/setPrimitiveValue-exceptions-expected.txt:
+        * fast/events/window-onerror-exception-in-attr-expected.txt:
+        * fast/forms/select-namedItem-expected.txt:
+        * fast/js/arguments-expected.txt:
+        * fast/js/array-prototype-properties-expected.txt:
+        * fast/js/basic-strict-mode-expected.txt:
+        * fast/js/date-toisostring-expected.txt:
+        * fast/js/delete-getters-setters-expected.txt:
+        * fast/js/dfg-check-structure-elimination-for-non-cell-expected.txt:
+        * fast/js/dfg-compare-final-object-to-final-object-or-other-when-both-proven-final-object-expected.txt:
+        * fast/js/dfg-compare-final-object-to-final-object-or-other-when-proven-final-object-expected.txt:
+        * fast/js/dfg-inline-arguments-use-from-all-the-places-broken-expected.txt:
+        * fast/js/dfg-peephole-compare-final-object-to-final-object-or-other-when-both-proven-final-object-expected.txt:
+        * fast/js/dfg-peephole-compare-final-object-to-final-object-or-other-when-proven-final-object-expected.txt:
+        * fast/js/exception-expression-offset-expected.txt:
+        * fast/js/exception-for-nonobject-expected.txt:
+        * fast/js/exception-thrown-from-new-expected.txt:
+        * fast/js/function-bind-expected.txt:
+        * fast/js/instance-of-immediates-expected.txt:
+        * fast/js/object-prototype-properties-expected.txt:
+        * fast/regex/cross-frame-callable-expected.txt:
+        * fast/xsl/transform-xhr-doc-expected.txt:
+        * http/tests/security/aboutBlank/xss-DENIED-navigate-opener-document-write-expected.txt:
+        * http/tests/security/aboutBlank/xss-DENIED-navigate-opener-javascript-url-expected.txt:
+        * http/tests/security/aboutBlank/xss-DENIED-set-opener-expected.txt:
+        * http/tests/security/document-all-expected.txt:
+        * http/tests/security/srcdoc-in-sandbox-cannot-access-parent-expected.txt:
+        * http/tests/security/window-named-proto-expected.txt:
+        * inspector/console/console-exception-stack-traces-expected.txt:
+        * platform/efl/css3/selectors3/xhtml/css3-modsel-15c-expected.txt:
+        * platform/efl/css3/selectors3/xml/css3-modsel-15c-expected.txt:
+        * platform/efl/fast/events/updateLayoutForHitTest-expected.txt:
+        * platform/efl/tables/mozilla_expected_failures/bugs/bug92868_1-expected.txt:
+        * platform/gtk/css3/selectors3/xhtml/css3-modsel-15c-expected.txt:
+        * platform/gtk/css3/selectors3/xml/css3-modsel-15c-expected.txt:
+        * platform/gtk/fast/events/updateLayoutForHitTest-expected.txt:
+        * platform/gtk/svg/custom/createelement-expected.txt:
+        * platform/gtk/tables/mozilla_expected_failures/bugs/bug92868_1-expected.txt:
+        * platform/mac-wk2/editing/spelling/markers-expected.txt:
+        * platform/mac-wk2/plugins/npruntime/object-from-destroyed-plugin-expected.txt: Added.
+        * platform/mac-wk2/plugins/npruntime/object-from-destroyed-plugin-in-subframe-expected.txt: Added.
+        * platform/mac/css3/selectors3/xhtml/css3-modsel-15c-expected.txt:
+        * platform/mac/css3/selectors3/xml/css3-modsel-15c-expected.txt:
+        * platform/mac/fast/events/updateLayoutForHitTest-expected.txt:
+        * platform/mac/tables/mozilla_expected_failures/bugs/bug92868_1-expected.txt:
+        * platform/qt/css3/selectors3/xhtml/css3-modsel-15c-expected.txt:
+        * platform/qt/css3/selectors3/xml/css3-modsel-15c-expected.txt:
+        * platform/qt/svg/custom/createelement-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug92868_1-expected.txt:
+        * platform/win/fast/dom/call-a-constructor-as-a-function-expected.txt:
+        * plugins/npruntime/object-from-destroyed-plugin-expected.txt:
+        * plugins/npruntime/object-from-destroyed-plugin-in-subframe-expected.txt:
+        * plugins/npruntime/plugin-scriptable-object-invoke-default-expected.txt:
+        * sputnik/Conformance/08_Types/8.6_The_Object_Type/8.6.2_Internal_Properties_and_Methods/S8.6.2_A7-expected.txt:
+        * sputnik/Conformance/13_Function_Definition/S13_A17_T2-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.1_The_Global_Object/S15.1_A1_T1-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.1_The_Global_Object/S15.1_A1_T2-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.1_The_Global_Object/S15.1_A2_T1-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.2_Object/15.2.4/15.2.4.2_Object.prototype.toString/S15.2.4.2_A7-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.2_Object/15.2.4/15.2.4.3_Object.prototype.toLocaleString/S15.2.4.3_A7-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.2_Object/15.2.4/15.2.4.4_Object.prototype.valueOf/S15.2.4.4_A7-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.2_Object/15.2.4/15.2.4.5_Object.prototype.hasOwnProperty/S15.2.4.5_A7-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.2_Object/15.2.4/15.2.4.6_Object.prototype.isPrototypeOf/S15.2.4.6_A7-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.2_Object/15.2.4/15.2.4.7_Object.prototype.propertyIsEnumerable/S15.2.4.7_A7-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.2_Object/15.2.4/S15.2.4_A3-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.2_Object/15.2.4/S15.2.4_A4-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.3_Function/15.3.4/15.3.4.2_Function.prototype.toString/S15.3.4.2_A7-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.3_Function/15.3.4/S15.3.4_A5-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.5_String/15.5.4/15.5.4.12_String.prototype.search/S15.5.4.12_A7-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.5_String/15.5.4/15.5.4.13_String.prototype.slice/S15.5.4.13_A7-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.5_String/15.5.4/15.5.4.15_String.prototype.substring/S15.5.4.15_A7-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.5_String/15.5.4/15.5.4.17_String.prototype.toLocaleLowerCase/S15.5.4.17_A7-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.5_String/15.5.4/15.5.4.7_String.prototype.indexOf/S15.5.4.7_A7-expected.txt:
+        * sputnik/Conformance/15_Native_Objects/15.5_String/15.5.4/15.5.4.8_String.prototype.lastIndexOf/S15.5.4.8_A7-expected.txt:
+        * svg/custom/createelement-expected.txt:
+        * svg/custom/use-nested-missing-target-removed-expected.txt:
+        * svg/dom/svgpath-out-of-bounds-getPathSeg-expected.txt:
+
+2013-07-18  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Make atob() / btoa() argument non optional
+        https://bugs.webkit.org/show_bug.cgi?id=118844
+
+        Reviewed by Kentaro Hara.
+
+        Update and rebaseline fast/dom/Window/atob-btoa.html as atob() /
+        btoa() 's behavior has changed to match the specification and
+        the behavior in other browsers.
+
+        * fast/dom/Window/atob-btoa-expected.txt:
+        * fast/dom/Window/atob-btoa.html:
+
+2013-07-18  Frédéric Wang  <fred.wang@free.fr>
+
+        Convert MathML fraction tests to reftests.
+        https://bugs.webkit.org/show_bug.cgi?id=118812
+
+        Reviewed by Chris Fleizach.
+
+        fractions-vertical-alignment and fractions are converted to reftests.
+
+        * mathml/presentation/fractions-box-expected.html: Added.
+        * mathml/presentation/fractions-box.html: Added.
+        * mathml/presentation/fractions-color-expected-mismatch.html: Added.
+        * mathml/presentation/fractions-color.html: Added.
+        * mathml/presentation/fractions-invalid-expected.html: Added.
+        * mathml/presentation/fractions-invalid.html: Added.
+        * mathml/presentation/fractions-linethickness-expected.html: Added.
+        * mathml/presentation/fractions-linethickness.html: Added.
+        * mathml/presentation/fractions-mrow-expected.html: Added.
+        * mathml/presentation/fractions-mrow.html: Added.
+        * mathml/presentation/fractions-numalign-denomalign-expected.html: Added.
+        * mathml/presentation/fractions-numalign-denomalign.html: Added.
+        * mathml/presentation/fractions-positions-expected.html: Added.
+        * mathml/presentation/fractions-positions.html: Added.
+        * mathml/presentation/fractions-vertical-alignment-expected.html: Added.
+        * mathml/presentation/fractions-vertical-alignment.html: Added.
+        * mathml/presentation/fractions-vertical-alignment.xhtml: Removed.
+        * mathml/presentation/fractions.xhtml: Removed.
+        * platform/efl/mathml/presentation/fractions-expected.png: Removed.
+        * platform/efl/mathml/presentation/fractions-expected.txt: Removed.
+        * platform/efl/mathml/presentation/fractions-vertical-alignment-expected.png: Removed.
+        * platform/efl/mathml/presentation/fractions-vertical-alignment-expected.txt: Removed.
+        * platform/gtk/mathml/presentation/fractions-expected.png: Removed.
+        * platform/gtk/mathml/presentation/fractions-expected.txt: Removed.
+        * platform/gtk/mathml/presentation/fractions-vertical-alignment-expected.png: Removed.
+        * platform/gtk/mathml/presentation/fractions-vertical-alignment-expected.txt: Removed.
+        * platform/mac/mathml/presentation/fractions-expected.png: Removed.
+        * platform/mac/mathml/presentation/fractions-expected.txt: Removed.
+        * platform/mac/mathml/presentation/fractions-vertical-alignment-expected.png: Removed.
+        * platform/mac/mathml/presentation/fractions-vertical-alignment-expected.txt: Removed.
+
+2013-07-18  Zalan Bujtas  <zalan@apple.com>
+
+        fullscreen/full-screen-iframe-with-max-width-height.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=118820
+
+        Reviewed by Andreas Kling.
+
+        Don't start the test until after the iframe has finished loading.
+
+        * fullscreen/full-screen-iframe-with-max-width-height-expected.txt:
+        * fullscreen/full-screen-iframe-with-max-width-height.html:
+        * platform/mac/TestExpectations:
+
+2013-07-18  Praveen R Jadhav  <praveen.j@samsung.com>
+
+        Only the first call to 'stop' method of AudioBufferSourceNode must be entertained.
+        https://bugs.webkit.org/show_bug.cgi?id=118776
+
+        Reviewed by Jer Noble.
+
+        Test case updated to check subsequent calls to 'stop' for a given AudioBufferSourceNode.
+
+        * webaudio/audiobuffersource-exception-expected.txt:
+        * webaudio/audiobuffersource-exception.html:
+
+2013-07-18  Zalan Bujtas  <zalan@apple.com>
+
+        Unskip mathml tests after r152840.
+        https://bugs.webkit.org/show_bug.cgi?id=118842
+
+        Unreviewed.
+
+        * platform/mac/TestExpectations:
+
+2013-07-18  Zalan Bujtas  <zalan@apple.com>
+
+        Incorrect calculated width for mspace.
+        https://bugs.webkit.org/show_bug.cgi?id=118601
+
+        Reviewed by Chris Fleizach.
+
+        Use intrinsic logical widths to size <mspace> properly.
+        This patch also fixes an assert on isPreferredLogicalHeightDirty(), which occurs
+        while layouting <mspace>. The assert fix is required, so that the sizing can be
+        fixed.
+
+        * mathml/presentation/mspace-prefered-width-expected.html: Added.
+        * mathml/presentation/mspace-prefered-width.html: Added.
+        * platform/mac/mathml/presentation/fractions-expected.png: Rebaseline: float->LayoutUnit.
+        * platform/mac/mathml/presentation/fractions-expected.txt: Rebaseline: float->LayoutUnit.
+
+2013-07-18  Santosh Mahto  <santosh.ma@samsung.com>
+
+        ASSERTION FAILED: !listItems().size() || m_activeSelectionAnchorIndex >= 0 in WebCore::HTMLSelectElement::updateListBoxSelection
+        https://bugs.webkit.org/show_bug.cgi?id=118591
+
+        Reviewed by Kent Tamura.
+
+        * fast/forms/select/selectall-command-crash-expected.txt: Added.
+        * fast/forms/select/selectall-command-crash.html: Added.
+
+2013-07-18  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL] Refactor spin.edc not to use offset
+        https://bugs.webkit.org/show_bug.cgi?id=118830
+
+        Reviewed by Gyuyoung Kim.
+
+        Updated pixel tests reults.
+
+        * platform/efl/fast/forms/number/number-appearance-rtl-expected.png:
+        * platform/efl/fast/forms/number/number-appearance-spinbutton-disabled-readonly-expected.png:
+        * platform/efl/fast/forms/number/number-appearance-spinbutton-layer-expected.png:
+
+2013-07-17  Jacky Jiang  <zhajiang@blackberry.com>
+
+        Dereference null pointer crash in Length::decrementCalculatedRef()
+        https://bugs.webkit.org/show_bug.cgi?id=118686
+
+        Reviewed by Simon Fraser.
+
+        * transitions/transition-transform-translate-calculated-length-crash-expected.txt: Added.
+        * transitions/transition-transform-translate-calculated-length-crash.html: Added.
+
+2013-07-18  Stephanie Lewis  <slewis@apple.com>
+
+        Compositing pattern tests fail on Lion WK1 Debug.
+        https://bugs.webkit.org/show_bug.cgi?id=118870
+
+        Unreviewed.
+
+        Update Lion expectations after http://trac.webkit.org/changeset/152470
+
+        * platform/mac-lion/TestExpectations:
+
+2013-07-17  Stephanie Lewis  <slewis@apple.com>
+
+        Skip crashing MathML tests while waiting for a fix for 
+        https://bugs.webkit.org/show_bug.cgi?id=118601
+
+        Unreviewed.
+
+        * platform/mac/TestExpectations:
+
+2013-07-17  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r152701, r152703, r152739, r152754,
+        and r152756.
+        http://trac.webkit.org/changeset/152701
+        http://trac.webkit.org/changeset/152703
+        http://trac.webkit.org/changeset/152739
+        http://trac.webkit.org/changeset/152754
+        http://trac.webkit.org/changeset/152756
+        https://bugs.webkit.org/show_bug.cgi?id=118821
+
+        this was a buggy fix and we're going to try something
+        different (Requested by thorton on #webkit).
+
+        * editing/pasteboard/paste-noplugin-expected.txt:
+        * http/tests/security/contentSecurityPolicy/object-src-url-blocked-expected.txt:
+        * platform/mac/accessibility/plugin-expected.txt:
+
+2013-07-17  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG assumes that NewFunction will never pass its input through
+        https://bugs.webkit.org/show_bug.cgi?id=118798
+
+        Reviewed by Sam Weinig.
+
+        * fast/js/dfg-use-function-as-variable-expected.txt: Added.
+        * fast/js/dfg-use-function-as-variable-merge-structure-expected.txt: Added.
+        * fast/js/dfg-use-function-as-variable-merge-structure.html: Added.
+        * fast/js/dfg-use-function-as-variable-not-constant-expected.txt: Added.
+        * fast/js/dfg-use-function-as-variable-not-constant.html: Added.
+        * fast/js/dfg-use-function-as-variable-with-closure-expected.txt: Added.
+        * fast/js/dfg-use-function-as-variable-with-closure.html: Added.
+        * fast/js/dfg-use-function-as-variable.html: Added.
+        * fast/js/jsc-test-list:
+        * fast/js/script-tests/dfg-use-function-as-variable-merge-structure.js: Added.
+        (.x):
+        (run_tests):
+        * fast/js/script-tests/dfg-use-function-as-variable-not-constant.js: Added.
+        (run_tests.x):
+        (run_tests):
+        * fast/js/script-tests/dfg-use-function-as-variable-with-closure.js: Added.
+        (run_tests.x):
+        (run_tests.y):
+        (run_tests):
+        * fast/js/script-tests/dfg-use-function-as-variable.js: Added.
+        (run_tests.x):
+        (run_tests):
+
+2013-07-17  Alex Christensen  <achristensen@apple.com>
+
+        Unreviewed. Skip more failing WebGL tests on Mac.
+
+        * platform/mac-lion/TestExpectations:
+        * platform/mac/TestExpectations:
+
+2013-07-17  Stephanie Lewis  <slewis@apple.com>
+
+        fullscreen/full-screen-iframe-with-max-width-height.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=118820
+
+        Unreviewed.
+
+        Label a flaky test as flaky
+
+        * platform/mac/TestExpectations:
+
+2013-07-17  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed gardening after r152800.
+        https://bugs.webkit.org/show_bug.cgi?id=118810.
+
+        CSS_SHAPES not yet supported on AppleWin port.
+
+        * platform/win/TestExpectations:
+
+2013-07-17  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed gardening. 
+        Skip some tests on AppleWin port that requires AVFoundation, since it does not support it yet.
+
+        * platform/win/TestExpectations:
+
+2013-07-17  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Rebaseline tests for AppleWin port after r152789.
+
+        * platform/win/editing/pasteboard/paste-noplugin-expected.txt: Added.
+        * platform/win/platform/win/plugins/draws-gradient-expected.txt:
+
+2013-07-17  Bear Travis  <betravis@adobe.com>
+
+        [CSS Shapes][CSS Exclusions] Cleanup tests to reflect split between CSS Shapes and CSS Exclusions
+        https://bugs.webkit.org/show_bug.cgi?id=117164
+
+        Reviewed by Alexandru Chiculita.
+
+        Moving shapes tests from the fast/exclusions directory to the new fast/shapes directory.
+        In addition, some parsing tests which included both exclusions and shapes properties
+        have been split in order for each piece of functionality to sit within its own directory.
+
+        * fast/exclusions/parsing/script-tests/parsing-test-utils.js:
+        * fast/shapes/css-shapes-disabled-expected.txt: Added.
+        * fast/shapes/css-shapes-disabled.html: Added.
+        * fast/shapes/css-shapes-enabled-expected.txt: Added.
+        * fast/shapes/css-shapes-enabled.html: Added.
+        * fast/shapes/parsing/parsing-shape-inside-expected.txt: Added.
+        * fast/shapes/parsing/parsing-shape-inside.html: Added.
+        * fast/shapes/parsing/parsing-shape-lengths-expected.txt: Added.
+        * fast/shapes/parsing/parsing-shape-lengths.html: Added.
+        * fast/shapes/parsing/parsing-shape-margin-expected.txt: Added.
+        * fast/shapes/parsing/parsing-shape-margin.html: Added.
+        * fast/shapes/parsing/parsing-shape-outside-expected.txt: Added.
+        * fast/shapes/parsing/parsing-shape-outside.html: Added.
+        * fast/shapes/parsing/parsing-shape-padding-expected.txt: Added.
+        * fast/shapes/parsing/parsing-shape-padding.html: Added.
+        * fast/shapes/parsing/script-tests/parsing-shape-inside.js: Added.
+        * fast/shapes/parsing/script-tests/parsing-shape-lengths.js: Added.
+        * fast/shapes/parsing/script-tests/parsing-shape-margin.js: Added.
+        * fast/shapes/parsing/script-tests/parsing-shape-outside.js: Added.
+        * fast/shapes/parsing/script-tests/parsing-shape-padding.js: Added.
+        * fast/shapes/parsing/script-tests/parsing-test-utils.js: Added.
+        * fast/shapes/resources/multi-segment-polygon.js: Added.
+        * fast/shapes/resources/rounded-rectangle.js: Added.
+        * fast/shapes/resources/simple-polygon.js: Added.
+        * fast/shapes/resources/simple-rectangle.js: Added.
+        * fast/shapes/resources/subpixel-utils.js: Added.
+        * fast/shapes/shape-inside/shape-inside-animation-expected.txt: Added.
+        * fast/shapes/shape-inside/shape-inside-animation.html: Added.
+        * fast/shapes/shape-inside/shape-inside-bottom-edge-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-bottom-edge.html: Added.
+        * fast/shapes/shape-inside/shape-inside-box-sizing-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-box-sizing.html: Added.
+        * fast/shapes/shape-inside/shape-inside-circle-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-circle-padding-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-circle-padding.html: Added.
+        * fast/shapes/shape-inside/shape-inside-circle.html: Added.
+        * fast/shapes/shape-inside/shape-inside-coincident-vertices-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-coincident-vertices.html: Added.
+        * fast/shapes/shape-inside/shape-inside-collinear-vertices-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-collinear-vertices.html: Added.
+        * fast/shapes/shape-inside/shape-inside-counterclockwise-polygon-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-counterclockwise-polygon.html: Added.
+        * fast/shapes/shape-inside/shape-inside-dynamic-nested-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-dynamic-nested.html: Added.
+        * fast/shapes/shape-inside/shape-inside-dynamic-shape-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-dynamic-shape.html: Added.
+        * fast/shapes/shape-inside/shape-inside-dynamic-text-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-dynamic-text.html: Added.
+        * fast/shapes/shape-inside/shape-inside-ellipse-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-ellipse-padding-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-ellipse-padding.html: Added.
+        * fast/shapes/shape-inside/shape-inside-ellipse.html: Added.
+        * fast/shapes/shape-inside/shape-inside-empty-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-empty-segments-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-empty-segments.html: Added.
+        * fast/shapes/shape-inside/shape-inside-empty.html: Added.
+        * fast/shapes/shape-inside/shape-inside-first-fit-001-horizontal-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-first-fit-001-horizontal.html: Added.
+        * fast/shapes/shape-inside/shape-inside-first-fit-001-vertical-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-first-fit-001-vertical.html: Added.
+        * fast/shapes/shape-inside/shape-inside-first-fit-002-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-first-fit-002.html: Added.
+        * fast/shapes/shape-inside/shape-inside-first-fit-003-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-first-fit-003.html: Added.
+        * fast/shapes/shape-inside/shape-inside-first-fit-004-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-first-fit-004.html: Added.
+        * fast/shapes/shape-inside/shape-inside-first-fit-reflex-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-first-fit-reflex.html: Added.
+        * fast/shapes/shape-inside/shape-inside-floats-simple-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-floats-simple.html: Added.
+        * fast/shapes/shape-inside/shape-inside-inline-elements-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-inline-elements.html: Added.
+        * fast/shapes/shape-inside/shape-inside-multiple-blocks-dynamic-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-multiple-blocks-dynamic.html: Added.
+        * fast/shapes/shape-inside/shape-inside-multiple-blocks-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-multiple-blocks-vertical-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-multiple-blocks-vertical.html: Added.
+        * fast/shapes/shape-inside/shape-inside-multiple-blocks.html: Added.
+        * fast/shapes/shape-inside/shape-inside-multiple-segments-001-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-multiple-segments-001.html: Added.
+        * fast/shapes/shape-inside/shape-inside-multiple-segments-002-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-multiple-segments-002.html: Added.
+        * fast/shapes/shape-inside/shape-inside-multiple-segments-003-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-multiple-segments-003.html: Added.
+        * fast/shapes/shape-inside/shape-inside-multiple-segments-004-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-multiple-segments-004.html: Added.
+        * fast/shapes/shape-inside/shape-inside-on-nested-container-with-unresolved-height-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-on-nested-container-with-unresolved-height.html: Added.
+        * fast/shapes/shape-inside/shape-inside-outside-shape-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-outside-shape.html: Added.
+        * fast/shapes/shape-inside/shape-inside-overflow-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-overflow-fixed-dimensions-block-content-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-overflow-fixed-dimensions-block-content.html: Added.
+        * fast/shapes/shape-inside/shape-inside-overflow-fixed-dimensions-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-overflow-fixed-dimensions.html: Added.
+        * fast/shapes/shape-inside/shape-inside-overflow.html: Added.
+        * fast/shapes/shape-inside/shape-inside-partial-fill-001-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-partial-fill-001.html: Added.
+        * fast/shapes/shape-inside/shape-inside-partial-fill-002-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-partial-fill-002.html: Added.
+        * fast/shapes/shape-inside/shape-inside-percentage-auto-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-percentage-auto.html: Added.
+        * fast/shapes/shape-inside/shape-inside-percentage-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-percentage.html: Added.
+        * fast/shapes/shape-inside/shape-inside-polygon-layout-expected.txt: Added.
+        * fast/shapes/shape-inside/shape-inside-polygon-layout.html: Added.
+        * fast/shapes/shape-inside/shape-inside-polygon-padding-001-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-polygon-padding-001.html: Added.
+        * fast/shapes/shape-inside/shape-inside-polygon-padding-002-expected.txt: Added.
+        * fast/shapes/shape-inside/shape-inside-polygon-padding-002.html: Added.
+        * fast/shapes/shape-inside/shape-inside-polygon-padding-003-expected.txt: Added.
+        * fast/shapes/shape-inside/shape-inside-polygon-padding-003.html: Added.
+        * fast/shapes/shape-inside/shape-inside-polygon-rectangle-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-polygon-rectangle.html: Added.
+        * fast/shapes/shape-inside/shape-inside-polygon-zoom-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-polygon-zoom.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rectangle-padding-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rectangle-padding.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rectilinear-polygon-001-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rectilinear-polygon-001.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rectilinear-polygon-002-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rectilinear-polygon-002.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rectilinear-polygon-003-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rectilinear-polygon-003.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rectilinear-polygon-004-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rectilinear-polygon-004.html: Added.
+        * fast/shapes/shape-inside/shape-inside-recursive-layout-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-recursive-layout.html: Added.
+        * fast/shapes/shape-inside/shape-inside-regular-polygon16-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-regular-polygon16.html: Added.
+        * fast/shapes/shape-inside/shape-inside-regular-polygon8-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-regular-polygon8.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-001-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-001.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-002-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-002.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-003-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-003.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-004-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-004.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-fit-001-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-fit-001.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-fit-002-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-fit-002.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-fit-003-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-fit-003.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-large-radius-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-large-radius.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-padding-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-rounded-rectangle-padding.html: Added.
+        * fast/shapes/shape-inside/shape-inside-shape-logical-top-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-shape-logical-top.html: Added.
+        * fast/shapes/shape-inside/shape-inside-sibling-block-dimension-change-needs-relayout-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-sibling-block-dimension-change-needs-relayout.html: Added.
+        * fast/shapes/shape-inside/shape-inside-simple-polygon-001-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-simple-polygon-001.html: Added.
+        * fast/shapes/shape-inside/shape-inside-simple-polygon-002-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-simple-polygon-002.html: Added.
+        * fast/shapes/shape-inside/shape-inside-simple-polygon-003-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-simple-polygon-003.html: Added.
+        * fast/shapes/shape-inside/shape-inside-simple-polygon-004-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-simple-polygon-004.html: Added.
+        * fast/shapes/shape-inside/shape-inside-subsequent-blocks-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-subsequent-blocks.html: Added.
+        * fast/shapes/shape-inside/shape-inside-text-align-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-text-align.html: Added.
+        * fast/shapes/shape-inside/shape-inside-text-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-text.html: Added.
+        * fast/shapes/shape-inside/shape-inside-vertical-text-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-vertical-text.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-diamond-margin-polygon-expected.txt: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-diamond-margin-polygon.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-ellipse-margin-bottom-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-ellipse-margin-bottom.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-ellipse-margin-left-expected.txt: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-ellipse-margin-left.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-ellipse-margin-right-expected.txt: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-ellipse-margin-right.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-left-margin-polygon-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-left-margin-polygon.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-right-margin-polygon-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-right-margin-polygon.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-rounded-rectangle-large-radius-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-rounded-rectangle-large-radius.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-circle-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-circle.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-ellipse-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-ellipse.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-inset-rectangle-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-inset-rectangle-percentage-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-inset-rectangle-percentage.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-inset-rectangle.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-polygon-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-polygon.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-rectangle-horizontal-multiple-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-rectangle-horizontal-multiple.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-rectangle-percentage-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-rectangle-percentage.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-rounded-inset-rectangle-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-rounded-inset-rectangle.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-rounded-rectangle-001-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-rounded-rectangle-001.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-rounded-rectangle-002-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-rounded-rectangle-002.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-rounded-rectangle-003-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-rounded-rectangle-003.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-stacked-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-stacked.html: Added.
+
+2013-07-17  Zalan Bujtas  <zalan@apple.com>
+
+        Wrong linebox height, when block element parent has vertical-align property defined.
+        https://bugs.webkit.org/show_bug.cgi?id=118245
+
+        Reviewed by David Hyatt.
+
+        Do not push the current element to the next, when it is still considered empty, even with
+        some object(s) in front. Behave as if it was actually empty.
+        Inline elements like <span></span> generate such lines.
+
+        * fast/css/empty-span-with-parent-div-and-vertical-align-expected.html: Added.
+        * fast/css/empty-span-with-parent-div-and-vertical-align.html: Added.
+        * platform/mac/fast/lists/inlineBoxWrapperNullCheck-expected.png: Rebased.
+        * platform/mac/fast/lists/inlineBoxWrapperNullCheck-expected.txt: Rebased.
+        * platform/mac/tables/mozilla/marvin/backgr_index-expected.png: Rebased.
+        * platform/mac/tables/mozilla/marvin/backgr_index-expected.txt: Rebased.
+
+2013-07-17  Alex Christensen  <achristensen@apple.com>
+
+        Unreviewed. Skip failing WebGL tests.
+
+        * platform/mac/TestExpectations:
+
+2013-07-17  Andreas Kling  <akling@apple.com>
+
+        CSS selector list splitting should be by component, not by selector.
+        <http://webkit.org/b/118761>
+        <rdar://problem/14421609>
+
+        Reviewed by Antti Koivisto.
+
+        Added more cases to the already existing selector list splitting test.
+
+        * fast/css/rule-selector-overflow-expected.txt:
+        * fast/css/rule-selector-overflow.html:
+
+2013-07-17  Rob Buis  <rwlbuis@webkit.org>
+
+        [Mac] REGRESSION(r152685): svg/custom/xlink-prefix-in-attributes.html failed unexpectedly
+        https://bugs.webkit.org/show_bug.cgi?id=118701
+
+        Reviewed by Ryosuke Niwa.
+
+        * platform/mac/TestExpectations:
+        * platform/qt/TestExpectations:
+
+2013-07-17  Chris Fleizach  <cfleizach@apple.com>
+
+        Regression: columnheader/rowheader roles not exposed correctly
+        https://bugs.webkit.org/show_bug.cgi?id=113628
+
+        Reviewed by Tim Horton.
+
+        * platform/mac/accessibility/aria-columnrowheaders-expected.txt: Added.
+        * platform/mac/accessibility/aria-columnrowheaders.html: Added.
+
+2013-07-17  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] Make DRT obbey testRunner's addURLToRedirect
+        https://bugs.webkit.org/show_bug.cgi?id=118239
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Unskip http/tests/loading/cross-origin-XHR-willLoadRequest.html now that DRT obbeys
+        testRunner's addURLToRedirect.
+
+        * platform/gtk/TestExpectations:
+
+2013-07-17  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] Unreviewd gardening. Rebase and skip failing tests.
+
+        * platform/qt-5.0-wk2/TestExpectations:
+        * platform/qt-5.0-wk2/fast/replaced/border-radius-clip-expected.png: Added.
+        * platform/qt-5.0-wk2/fast/replaced/border-radius-clip-expected.txt: Added.
+
+2013-07-17  Frédéric Wang  <fred.wang@free.fr>
+
+        Replace MathML pixel tests by reftests.
+        https://bugs.webkit.org/show_bug.cgi?id=118599
+
+        Reviewed by Chris Fleizach.
+
+        - attributes.xhtml is replaced by attributes*.html
+
+        - underover.xhtml, under.xhtml, sub.xhtml, sup.xhtml, over.xhtml and subsup.xhtml are replaced by scripts*.html and bug*.html.
+
+        - tokenElements.xhtml is replaced by replaced tokenElements-mathvariant.html
+
+        * mathml/presentation/attributes-background-color-expected.html: Added.
+        * mathml/presentation/attributes-background-color.html: Added.
+        * mathml/presentation/attributes-display-expected.html: Added.
+        * mathml/presentation/attributes-display.html: Added.
+        * mathml/presentation/attributes-mathsize-expected.html: Added.
+        * mathml/presentation/attributes-mathsize.html: Added.
+        * mathml/presentation/attributes-mathvariant-expected.html: Added.
+        * mathml/presentation/attributes-mathvariant.html: Added.
+        * mathml/presentation/attributes-style-expected-mismatch.html: Added.
+        * mathml/presentation/attributes-style.html: Added.
+        * mathml/presentation/attributes.xhtml: Removed.
+        * mathml/presentation/bug95015-expected.html: Added.
+        * mathml/presentation/bug95015.html: Added.
+        * mathml/presentation/bug95404-expected.html: Added.
+        * mathml/presentation/bug95404.html: Added.
+        * mathml/presentation/bug97990-expected.html: Added.
+        * mathml/presentation/bug97990.html: Added.
+        * mathml/presentation/over.xhtml: Removed.
+        * mathml/presentation/scripts-font-size-expected-mismatch.html: Added.
+        * mathml/presentation/scripts-font-size.html: Added.
+        * mathml/presentation/scripts-height-expected.html: Added.
+        * mathml/presentation/scripts-height.html: Added.
+        * mathml/presentation/scripts-mrow-expected.html: Added.
+        * mathml/presentation/scripts-mrow.html: Added.
+        * mathml/presentation/scripts-subsup-expected.html: Added.
+        * mathml/presentation/scripts-subsup.html: Added.
+        * mathml/presentation/scripts-underover-expected.html: Added.
+        * mathml/presentation/scripts-underover.html: Added.
+        * mathml/presentation/scripts-width-expected.html: Added.
+        * mathml/presentation/scripts-width.html: Added.
+        * mathml/presentation/sub.xhtml: Removed.
+        * mathml/presentation/subsup.xhtml: Removed.
+        * mathml/presentation/sup.xhtml: Removed.
+        * mathml/presentation/tokenElements-mathvariant-expected.html: Added.
+        * mathml/presentation/tokenElements-mathvariant.html: Added.
+        * mathml/presentation/tokenElements.xhtml: Removed.
+        * mathml/presentation/under.xhtml: Removed.
+        * mathml/presentation/underover.xhtml: Removed.
+
+2013-07-17  Zoltan Horvath  <zoltan@webkit.org>
+
+        [CSS Shapes] Remove setCSSShapesEnabled(true) from shape-inside-on-first-region-inline-content-expected.html since it's no longer using shapes 
+        https://bugs.webkit.org/show_bug.cgi?id=117952
+
+        Reviewed by Alexandru Chiculita.
+
+        * fast/regions/shape-inside/shape-inside-on-first-region-inline-content-expected.html:
+
+2013-07-17  Mihai Maerean  <mmaerean@adobe.com>
+
+        ASSERTION FAILED: layoutState->m_renderer == this in WebCore::RenderBlock::offsetFromLogicalTopOfFirstPage
+        https://bugs.webkit.org/show_bug.cgi?id=118587
+
+        Reviewed by David Hyatt.
+
+        * fast/regions/crash-div-outside-body-vertical-rl-expected.html: Added.
+        * fast/regions/crash-div-outside-body-vertical-rl.html: Added.
+
+2013-07-16  Alex Christensen  <achristensen@apple.com>
+
+        Added passing WebGL tests.
+        https://bugs.webkit.org/show_bug.cgi?id=118696
+
+        Reviewed by Dean Jackson.
+
+        * platform/mac/TestExpectations: Replaced webgl directory with list of failing webgl tests.
+
+2013-07-16  Filip Pizlo  <fpizlo@apple.com>
+
+        MakeRope fixup shouldn't lead to an Identity without kids
+        https://bugs.webkit.org/show_bug.cgi?id=118745
+
+        Reviewed by Mark Hahnenberg.
+
+        * fast/js/dfg-make-rope-all-empty-strings.html: Added.
+        * fast/js/dfg-make-rope-all-empty-strings-expected.txt: Added.
+        * fast/js/jsc-test-list:
+        * fast/js/script-tests/dfg-make-rope-all-empty-strings.js: Added.
+        (foo):
+        (bar):
+
+2013-07-16  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed rebaseline test added in r152612 for Apple Windows port.
+
+        * platform/win/editing/caret: Added.
+        * platform/win/editing/caret/caret-color-expected.txt: Added.
+
+2013-07-16  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed rebaselines, AppleWin port.
+
+        * platform/win/fast/js/global-constructors-attributes-dedicated-worker-expected.txt:
+        * platform/win/fast/js/global-constructors-attributes-shared-worker-expected.txt:
+
+2013-07-16  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Adjust test and update results for AppleWin port after r151868.
+
+        * platform/win/accessibility/multiple-select-element-role-expected.txt:
+        * platform/win/accessibility/multiple-select-element-role.html:
+
+2013-07-16  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed rebaselines, AppleWin port.
+
+        * platform/win/fast/js/global-constructors-attributes-dedicated-worker-expected.txt: Added.
+        * platform/win/fast/js/global-constructors-attributes-shared-worker-expected.txt: Added.
+
+2013-07-16  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed gardening. -webkit-user-select: all not supported on AppleWin port.
+        https://bugs.webkit.org/show_bug.cgi?id=118740
+
+        * platform/win/TestExpectations:
+
+2013-07-16  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] Unreviewed gardening. Update test expectations after r152701
+        https://bugs.webkit.org/show_bug.cgi?id=118731
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/TestExpectations: Skip failing tests after r152701.
+
+2013-07-16  Eric Carlson  <eric.carlson@apple.com>
+
+        HTMLMediaElement should not add cues for disabled text tracks
+        https://bugs.webkit.org/show_bug.cgi?id=118682
+
+        Merge https://src.chromium.org/viewvc/blink?view=rev&revision=153810
+
+        Reviewed by Ryosuke Niwa.
+
+        * media/track/track-disabled-addcue-expected.txt: Added.
+        * media/track/track-disabled-addcue.html: Added.
+        * media/track/track-disabled-expected.txt: Added.
+        * media/track/track-disabled.html: Added.
+
+2013-07-16  Anton Obzhirov  <a.obzhirov@samsung.com>
+
+        [GTK] fast/events/platform-wheelevent-with-delta-zero-crash.html is crashing
+        https://bugs.webkit.org/show_bug.cgi?id=110222
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * platform/gtk/TestExpectations:
+
+2013-07-16  Krzysztof Czech  <k.czech@ymail.com>
+
+        [ATK] Adds support for aria-haspopup property.
+        https://bugs.webkit.org/show_bug.cgi?id=117834
+
+        Reviewed by Christophe Dumez.
+
+        Moving accessibility tests related to aria-haspopup property.
+
+        * accessibility/element-haspopup-expected.txt: Renamed from LayoutTests/platform/mac/accessibility/element-haspopup-expected.txt.
+        * accessibility/element-haspopup.html: Renamed from LayoutTests/platform/mac/accessibility/element-haspopup.html.
+        * accessibility/popup-button-title-expected.txt: Renamed from LayoutTests/platform/mac/accessibility/popup-button-title-expected.txt.
+        * accessibility/popup-button-title.html: Renamed from LayoutTests/platform/mac/accessibility/popup-button-title.html.
+
+2013-07-16  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt]Unreviewed gardening. New baseline and skip failing tests.
+
+        * platform/qt-5.0-wk1/TestExpectations:
+        * platform/qt-5.0-wk1/http/tests/security/contentSecurityPolicy/object-src-none-allowed-expected.txt: Added.
+        * platform/qt/TestExpectations:
+        * platform/qt/editing/caret/caret-color-expected.png: Added.
+        * platform/qt/editing/caret/caret-color-expected.txt: Added.
+        * platform/qt/http/tests/security/contentSecurityPolicy/object-src-none-blocked-expected.txt: Added.
+
+2013-07-15  Yuta Kitamura  <yutak@chromium.org>
+
+        NULL ptr in WebCore::Range::processAncestorsAndTheirSiblings
+        https://bugs.webkit.org/show_bug.cgi?id=77614
+
+        Reviewed by Ryosuke Niwa.
+
+        This change is ported from Blink revision 153483:
+        https://src.chromium.org/viewvc/blink?revision=153483&view=revision
+
+        * fast/dom/Range/detach-range-during-deletecontents-expected.txt: Added.
+        * fast/dom/Range/detach-range-during-deletecontents.html: Added.
+        * fast/dom/Range/resources/detach-range-during-deletecontents-iframe.xhtml: Added.
+
+2013-07-15  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Input element that becomes visible during a simulated click event from an associated label element doesn't get focused
+        https://bugs.webkit.org/show_bug.cgi?id=118700
+
+        Reviewed by Kent Tamura.
+
+        Add a regression test.
+
+        * fast/forms/label/label-becomes-visible-while-clicking-on-label-expected.txt: Added.
+        * fast/forms/label/label-becomes-visible-while-clicking-on-label.html: Added.
+
+2013-07-15  Tim Horton  <timothy_horton@apple.com>
+
+        Unreviewed rebaselines after r152701.
+
+        * editing/pasteboard/paste-noplugin-expected.txt:
+        * http/tests/security/contentSecurityPolicy/object-src-url-blocked-expected.txt:
+        * platform/mac/accessibility/plugin-expected.txt:
+
+2013-07-15  Chris Rogers  <crogers@google.com>
+
+        Add support for WaveShaperNode.oversample
+        https://bugs.webkit.org/show_bug.cgi?id=117435
+
+        Reviewed by Kenneth Russell.
+
+        * webaudio/resources/waveshaper-testing.js: Added.
+        (T0):
+        (T1):
+        (T2):
+        (T3):
+        (T4):
+        (generateWaveShapingCurve):
+        (checkShapedCurve):
+        (createImpulseBuffer):
+        (runWaveShaperOversamplingTest):
+        * webaudio/waveshaper-oversample-2x-expected.txt: Added.
+        * webaudio/waveshaper-oversample-2x.html: Added.
+        * webaudio/waveshaper-oversample-4x-expected.txt: Added.
+        * webaudio/waveshaper-oversample-4x.html: Added.
+
+2013-07-15  Jeffrey Pfau  <jpfau@apple.com>
+
+        Mark svg/custom/xlink-prefix-in-attributes.html as failing on Mac
+        https://bugs.webkit.org/show_bug.cgi?id=118701
+
+        Unreviewed, changing test expectations
+
+        * platform/mac/TestExpectations:
+
+2013-07-15  Rob Buis  <rwlbuis@webkit.org>
+
+        XMLSerializer doesn't include namespaces on nodes in HTML documents
+        https://bugs.webkit.org/show_bug.cgi?id=16496
+
+        Reviewed by Ryosuke Niwa.
+
+        The updated tests are progressions and match FF.
+
+        * fast/dom/Element/getAttribute-check-case-sensitivity-expected.txt:
+        * fast/dom/Element/script-tests/getAttribute-check-case-sensitivity.js:
+        * fast/dom/XMLSerializer-xml-namespace-expected.txt:
+        * fast/dom/dom-serialize-namespace-expected.txt: Added.
+        * fast/dom/dom-serialize-namespace.html: Added.
+        * fast/xsl/xslt-processor-expected.txt:
+        * inspector/elements/set-outer-html-expected.txt:
+        * svg/custom/xlink-prefix-in-attributes-expected.txt:
+
+2013-07-15  Ryosuke Niwa  <rniwa@webkit.org>
+
+        compositionstart event should contain the text to be replaced
+        https://bugs.webkit.org/show_bug.cgi?id=118684
+
+        Reviewed by Alexey Proskuryakov.
+
+        Add a test case.
+
+        * fast/events/ime-composition-events-001-expected.txt:
+        * fast/events/ime-composition-events-001.html:
+
+2013-07-15  Antoine Quint  <graouts@apple.com>
+
+        Text with "text-overflow:ellipsis" and an SVG font do not render correctly
+        https://bugs.webkit.org/show_bug.cgi?id=118669
+
+        Reviewed by David Kilzer.
+
+        * platform/mac/svg/text/text-overflow-ellipsis-svgfont-kerning-ligatures-expected.png: Added.
+        * platform/mac/svg/text/text-overflow-ellipsis-svgfont-kerning-ligatures-expected.txt: Added.
+        * svg/text/text-overflow-ellipsis-svgfont-kerning-ligatures.html: Added.
+
+2013-07-14  Jon Lee  <jonlee@apple.com>
+
+        [WK2] Calling Notification.requestPermission() without a callback crashes
+        https://bugs.webkit.org/show_bug.cgi?id=118654
+        <rdar://problem/14293352>
+
+        Reviewed by Alexey Proskuryakov.
+
+        * http/tests/notifications/notification-request-permission-expected.txt:
+        * http/tests/notifications/notification-request-permission.html: Add additional subtests that check
+        that the call succeeds even after granting or denying permission.
+
+        * http/tests/notifications/notification-request-permission-no-callback-expected.txt: Added.
+        * http/tests/notifications/notification-request-permission-no-callback.html: Added. Similar test to
+        notification-request-permission, without the callback function.
+
+2013-07-15  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt][WK2] Unreviewed cleanup for pixel tester bot.
+
+        * platform/qt-5.0-wk2/TestExpectations:
+        * platform/qt-5.0-wk2/editing/deleting/delete-image-002-expected.png:
+        * platform/qt-5.0-wk2/editing/selection/move-by-character-004-expected.png:
+        * platform/qt-5.0-wk2/fast/canvas/setWidthResetAfterForcedRender-expected.png:
+
 2013-07-15  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
 
         [Qt][WK2] Unreviewed gardening. Skipping bad pixel results.

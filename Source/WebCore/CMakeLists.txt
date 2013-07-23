@@ -577,6 +577,7 @@ set(WebCore_IDL_FILES
     page/SpeechInputResult.idl
     page/SpeechInputResultList.idl
     page/WebKitPoint.idl
+    page/WindowBase64.idl
     page/WindowTimers.idl
     page/WorkerNavigator.idl
 
@@ -1871,6 +1872,7 @@ set(WebCore_SOURCES
     platform/audio/Cone.cpp
     platform/audio/DirectConvolver.cpp
     platform/audio/Distance.cpp
+    platform/audio/DownSampler.cpp
     platform/audio/DynamicsCompressor.cpp
     platform/audio/DynamicsCompressorKernel.cpp
     platform/audio/EqualPowerPanner.cpp
@@ -1889,6 +1891,7 @@ set(WebCore_SOURCES
     platform/audio/ReverbConvolverStage.cpp
     platform/audio/ReverbInputBuffer.cpp
     platform/audio/SincResampler.cpp
+    platform/audio/UpSampler.cpp
     platform/audio/VectorMath.cpp
     platform/audio/ZeroPole.cpp
 
@@ -2869,6 +2872,7 @@ if (WTF_USE_3D_GRAPHICS)
     endif ()
 
     list(APPEND ANGLESupport_SOURCES
+        ${THIRDPARTY_DIR}/ANGLE/src/compiler/builtin_symbol_table.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/BuiltInFunctionEmulator.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/CodeGenGLSL.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/Compiler.cpp
@@ -2879,8 +2883,8 @@ if (WTF_USE_3D_GRAPHICS)
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/depgraph/DependencyGraphBuilder.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/depgraph/DependencyGraphOutput.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/depgraph/DependencyGraphTraverse.cpp
+        ${THIRDPARTY_DIR}/ANGLE/src/compiler/DetectCallDepth.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/DetectDiscontinuity.cpp
-        ${THIRDPARTY_DIR}/ANGLE/src/compiler/DetectRecursion.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/ForLoopUnroll.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/InfoSink.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/Initialize.cpp
@@ -2956,6 +2960,12 @@ set(WebCoreTestSupport_SOURCES
     testing/Internals.cpp
     testing/InternalSettings.cpp
     platform/mock/PlatformSpeechSynthesizerMock.cpp
+)
+
+set(WebCoreTestSupport_LIBRARIES
+    JavaScriptCore
+    WTF
+    WebCore
 )
 
 # Modules that the bindings generator scripts may use
@@ -3210,14 +3220,12 @@ if (WebCore_OUTPUT_NAME)
 endif ()
 
 add_library(WebCoreTestSupport ${WebCoreTestSupport_LIBRARY_TYPE} ${WebCoreTestSupport_SOURCES})
+target_link_libraries(WebCoreTestSupport ${WebCoreTestSupport_LIBRARIES})
 set_target_properties(WebCoreTestSupport PROPERTIES FOLDER "WebCore")
 
 if (WebCoreTestSupport_OUTPUT_NAME)
     set_target_properties(WebCoreTestSupport PROPERTIES OUTPUT_NAME ${WebCoreTestSupport_OUTPUT_NAME})
 endif ()
-
-add_dependencies(WebCore JavaScriptCore)
-add_dependencies(WebCoreTestSupport WebCore)
 
 if (WTF_USE_LEVELDB)
     add_library(leveldb STATIC ${LEVELDB_SOURCES})

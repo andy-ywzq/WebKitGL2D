@@ -1,3 +1,62 @@
+2013-07-18  Andreas Kling  <akling@apple.com>
+
+        CodeBlock::m_argumentValueProfiles wastes a lot of memory.
+        <http://webkit.org/b/118852>
+        <rdar://problem/14481659>
+
+        Reviewed by Anders Carlsson.
+
+        Add Vector::resizeToFit(size), like resize() but without growth padding.
+
+        * wtf/Vector.h:
+        (WTF::::resizeToFit):
+
+2013-07-17  Benjamin Poulain  <benjamin@webkit.org>
+
+        Add a thread safety assertion when creating an AtomicString from a StringImpl
+        https://bugs.webkit.org/show_bug.cgi?id=118637
+
+        Reviewed by Sam Weinig.
+
+        The goal is to prevent this kind of use:
+        -Someone create a String from a StringImpl.
+        -At some point, the string becomes atomic.
+        -Later, when the string only has one ref, its ownership is 'passed' to an other thread
+         without checking String::isSafeToSendToAnotherThread().
+        -In the thread B, an AtomicString is created from the String.
+        ->The AtomicString's StringImpl returned is not in the current thread string table.
+
+        * wtf/text/AtomicString.cpp:
+        (WTF::AtomicString::isInAtomicStringTable):
+        * wtf/text/AtomicString.h:
+        (WTF::AtomicString::add):
+
+2013-07-17  Benjamin Poulain  <benjamin@webkit.org>
+
+        Simplify AtomicString::lower()
+        https://bugs.webkit.org/show_bug.cgi?id=118719
+        <rdar://problem/14452883>
+
+        Reviewed by Gavin Barraclough.
+
+        * wtf/text/AtomicString.cpp:
+        (WTF::AtomicString::lower): Previously, the code was using a copy constructor for two path
+        and one regular construction in another path.
+        Just put the StringImpl where it needs to be instead.
+
+2013-07-15  Benjamin Poulain  <benjamin@webkit.org>
+
+        Add a threading assertion to AtomicString::remove
+        https://bugs.webkit.org/show_bug.cgi?id=118695
+
+        Reviewed by Sam Weinig.
+
+        * wtf/text/AtomicString.cpp:
+        (WTF::AtomicString::remove): The destructor of StringImpl remove
+        the string from the string table if it is atomic. This needs to be done
+        on the same thread as the one on which the string was added (otherwise the original
+        table would keep a dangling pointer to a dead string).
+
 2013-07-15  Benjamin Poulain  <benjamin@webkit.org>
 
         Minor cleaning of AtomicString::addSlowCase
