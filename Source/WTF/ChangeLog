@@ -1,3 +1,63 @@
+2013-07-22  Benjamin Poulain  <benjamin@webkit.org>
+
+        String::lower() - Skip to slow path on the first failure
+        https://bugs.webkit.org/show_bug.cgi?id=118885
+
+        Reviewed by Andreas Kling.
+
+        In the 8 bits case, we don't need to know the state of the full string before changing characters
+        to their lowercase variant.
+        Just fail immediately and start transforming characters from the point of failure.
+
+        This avoid reading the string twice when the uppercase character is not at the end of the string.
+
+        * wtf/text/StringImpl.cpp:
+        (WTF::StringImpl::lower):
+
+2013-07-22  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build fix.
+
+        * WTF.vcxproj/WTFGenerated.make: Stop triggering a "Build All" when things have not changed.
+
+2013-07-19  Alex Christensen  <achristensen@apple.com>
+
+        Added x64 configuration to Visual Studio build.
+        https://bugs.webkit.org/show_bug.cgi?id=118888
+
+        Reviewed by Brent Fulgham.
+
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.vcxproj/WTFGenerated.vcxproj:
+
+2013-07-18  Benjamin Poulain  <benjamin@webkit.org>
+
+        Fix the build after r152881
+
+        * wtf/text/StringImpl.cpp:
+        (WTF::StringImpl::lower):
+
+2013-07-18  Benjamin Poulain  <benjamin@webkit.org>
+
+        Little cleaning of StringImpl::lower() and StringImpl::upper() for ARM
+        https://bugs.webkit.org/show_bug.cgi?id=118831
+
+        Reviewed by Gavin Barraclough.
+
+        Clean lower() and upper() before trying some optimizations:
+        -Prefix the code with the empty() case. Otherwise, each descending loop starts with
+         a check for length == 0.
+        -Change ored to a 32 bits registers. ARM only has 32 bits registers and access to full word.
+         To keep the value a UChar, the compiler is adding a bunch of useless value & 0xffff in the loops.
+        -Change the pointer based loops for index based loops. The compiler does a mighty job at optimizing
+         those for each architecture. No need to make the code more complex.
+        -Don't perform the check for int32 unless we need to. The only code limited to int is Unicode::toLower.
+
+        * wtf/text/StringImpl.cpp:
+        (WTF::StringImpl::lower):
+        (WTF::StringImpl::upper):
+
 2013-07-18  Andreas Kling  <akling@apple.com>
 
         CodeBlock::m_argumentValueProfiles wastes a lot of memory.

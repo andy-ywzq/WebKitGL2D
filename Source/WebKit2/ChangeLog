@@ -1,3 +1,110 @@
+2013-07-23  Eunmi Lee  <eunmi15.lee@samsung.com>
+
+        [EFL][WK2] Add doneWithTouchEvent callback to the WKViewClient.
+        https://bugs.webkit.org/show_bug.cgi?id=110085
+
+        Reviewed by Kenneth Rohde Christiansen.
+
+        Add doneWithTouchEvent callback to the WKViewClient in order to get the
+        result of touch events in the EwkView. The result will be used to
+        recognize gestures in the Bug 102643.
+
+        APIs to get values from WKTouchEventRef and WKTouchPointRef are added
+        because WKTypeRef is opaque to the applications.
+
+        * UIProcess/API/C/CoordinatedGraphics/WKView.h:
+        * UIProcess/API/C/efl/WKAPICastEfl.h:
+        (WebKit::toAPI):
+        * UIProcess/API/C/efl/WKEventEfl.cpp:
+        (WKTouchEventGetType):
+        (WKTouchEventGetTouchPoints):
+        (WKTouchEventGetModifiers):
+        (WKTouchEventGetTimestamp):
+        (WKTouchPointGetID):
+        (WKTouchPointGetState):
+        (WKTouchPointGetScreenPosition):
+        (WKTouchPointGetPosition):
+        (WKTouchPointGetRadius):
+        (WKTouchPointGetRotationAngle):
+        (WKTouchPointGetForceFactor):
+        * UIProcess/API/C/efl/WKEventEfl.h:
+        * UIProcess/API/efl/EwkView.cpp:
+        (EwkView::doneWithTouchEvent):
+        * UIProcess/API/efl/EwkView.h:
+        * UIProcess/CoordinatedGraphics/WebView.cpp:
+        (WebKit::WebView::doneWithTouchEvent):
+        * UIProcess/CoordinatedGraphics/WebViewClient.cpp:
+        (WebKit::WebViewClient::doneWithTouchEvent):
+        * UIProcess/CoordinatedGraphics/WebViewClient.h:
+        * UIProcess/efl/ViewClientEfl.cpp:
+        (WebKit::ViewClientEfl::doneWithTouchEvent):
+        (WebKit::ViewClientEfl::ViewClientEfl):
+        * UIProcess/efl/ViewClientEfl.h:
+
+2013-07-22  Alexey Proskuryakov  <ap@apple.com>
+
+        Frequent MESSAGE_CHECK failures in WebPageProxy::didReceiveEvent
+        https://bugs.webkit.org/show_bug.cgi?id=118976
+        <rdar://problem/14155030>
+
+        Reviewed by Sam Weinig.
+
+        * UIProcess/WebPageProxy.cpp: (WebKit::WebPageProxy::resetStateAfterProcessExited):
+        Clear m_gestureEventQueue, just like we clear all other event queues here.
+
+2013-07-21  Anders Carlsson  <andersca@apple.com>
+
+        Java Updater not launched on Lion and Mountain Lion
+        https://bugs.webkit.org/show_bug.cgi?id=118953
+        <rdar://problem/14496721>
+
+        Reviewed by Sam Weinig.
+
+        On Lion and Mountain Lion, -[NSURL isEqual:] will return NO for two file URLs if one of
+        them has "localhost" specified, even if the paths are otherwise equal. Work around this by
+        comparing the paths directly.
+
+        * UIProcess/Plugins/mac/PluginProcessProxyMac.mm:
+        (WebKit::isJavaUpdaterURL):
+
+2013-07-19  Morten Stenshorne  <mstensho@opera.com>
+
+        [GTK] Need a way to enable region based columns from the command line
+        https://bugs.webkit.org/show_bug.cgi?id=116611
+
+        Reviewed by Martin Robinson.
+
+        Add an environment variable to enable experimental features.
+
+        This provides a means to enable experimental features without polluting
+        the public API.
+
+        Environment variable name: WEBKITGTK_EXPERIMENTAL_FEATURES
+
+        Format: WEBKITGTK_EXPERIMENTAL_FEATURES="<feature1>=1,<feature2>=1,..."
+        Or, to enable all experimental features: WEBKITGTK_EXPERIMENTAL_FEATURES=all
+
+        So far the only feature is region based columns (implement multicol using
+        the CSS regions implementation rather than ColumnInfo & co) - REGION_BASED_COLUMNS.
+
+        Example: WEBKITGTK_EXPERIMENTAL_FEATURES="REGION_BASED_COLUMNS=1"
+
+        * GNUmakefile.list.am:
+        * PlatformGTK.cmake:
+        * UIProcess/API/gtk/WebKitSettings.cpp:
+        (webKitSettingsConstructed):
+        (webkit_settings_class_init):
+        * UIProcess/gtk/ExperimentalFeatures.cpp: Added.
+        (WebKit):
+        (Setting):
+        (WebKit::ExperimentalFeatures::ExperimentalFeatures):
+        (WebKit::ExperimentalFeatures::isEnabled):
+        (WebKit::ExperimentalFeatures::setEnableByName):
+        (WebKit::ExperimentalFeatures::parseEnvironment):
+        * UIProcess/gtk/ExperimentalFeatures.h: Added.
+        (WebKit):
+        (ExperimentalFeatures):
+
 2013-07-18  Eunmi Lee  <eunmi15.lee@samsung.com>
 
         [WK2] Share Qt port's codes to find zoomable area with CoordinatedGraphics.

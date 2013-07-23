@@ -1,3 +1,123 @@
+2013-07-21  Andreas Kling  <akling@apple.com>
+
+        KURL creates duplicate strings when completing data: URIs.
+        <http://webkit.org/b/118952>
+        <rdar://problem/14504480>
+
+        Reviewed by Anders Carlsson.
+
+        * TestWebKitAPI/Tests/WebCore/KURL.cpp:
+        (TestWebKitAPI::TEST_F):
+
+2013-07-19  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: VoiceOver not detecting misspelled words don't work in all cases
+        https://bugs.webkit.org/show_bug.cgi?id=118924
+
+        Reviewed by Tim Horton.
+
+        Make the misspelled detection dependent on both types of attributes being present.
+
+        * DumpRenderTree/mac/AccessibilityUIElementMac.mm:
+        (AccessibilityUIElement::attributedStringRangeIsMisspelled):
+        * WebKitTestRunner/InjectedBundle/mac/AccessibilityUIElementMac.mm:
+        (WTR::AccessibilityUIElement::attributedStringRangeIsMisspelled):
+
+2013-07-19  Alex Christensen  <achristensen@apple.com>
+
+        Improved code coverage generation.
+        https://bugs.webkit.org/show_bug.cgi?id=118926
+
+        Reviewed by Tim Horton.
+
+        * Scripts/build-webkit: Removed exception preventing ANGLE code coverage support.
+        * Scripts/generate-coverage-data: Added --no-build to run-javascriptcore-tests call.
+        (generateReport): Moved report generation to a subroutine.
+
+2013-07-19  Stephanie Lewis  <slewis@apple.com>
+
+        <rdar://problem/14499595> pagination wk2 api test failing on ML (118928)
+
+        Unreviewed.
+
+        Rebaseline pagination test after http://trac.webkit.org/changeset/152911
+
+        * TestWebKitAPI/Tests/WebKit2/ResizeReversePaginatedWebView.cpp:
+        (TestWebKitAPI::didLayout):
+
+2013-07-19  Daniel Bates  <dabates@apple.com>
+
+        Make Perl tools work when using git bisect with Git branch build setup
+        https://bugs.webkit.org/show_bug.cgi?id=118512
+
+        Reviewed by Martin Robinson.
+
+        The various Perl tools (run-webkit-app, {debug, run}-safari, et cetera) don't work
+        during a git bisect session with a Git branch build setup (i.e. git config
+        core.webKitBranchBuild true). Specifically, the tools cannot find the branch-
+        specific build of WebKit because they cannot determine the branch Git is on (since
+        git bisect puts Git into a detached HEAD state). We should teach our tooling to
+        parse the file .git/BISECT_START (created by git bisect start) for the name of the
+        branch Git was on when we began a git bisect session. Then the tools can determine
+        the path to the built WebKit.
+
+        * Scripts/VCSUtils.pm:
+        (gitDirectory): Added.
+        (gitBisectStartBranch): Added.
+        (gitBranch): Modified to call gitBisectStartBranch() when we have a detached
+        HEAD (e.g. running git bisect).
+        (determineVCSRoot): Modified to call gitDirectory() to determine the path to
+        the .git directory in the Git checkout.
+
+2013-07-19  Alex Christensen  <achristensen@apple.com>
+
+        Added x64 configuration to Visual Studio build.
+        https://bugs.webkit.org/show_bug.cgi?id=118888
+
+        Reviewed by Brent Fulgham.
+
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTree.vcxproj:
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTree.vcxproj.filters:
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreeLauncher.vcxproj:
+        * DumpRenderTree/DumpRenderTree.vcxproj/ImageDiff/ImageDiff.vcxproj:
+        * DumpRenderTree/DumpRenderTree.vcxproj/ImageDiff/ImageDiffLauncher.vcxproj:
+        * DumpRenderTree/DumpRenderTree.vcxproj/TestNetscapePlugin/TestNetscapePlugin.vcxproj:
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPI.vcxproj:
+        * WinLauncher/WinLauncher.vcxproj/WinLauncher.vcxproj:
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherLib.vcxproj:
+        * win/AssembleBuildLogs/AssembleBuildLogs.vcxproj:
+        * win/record-memory/record-memory.vcxproj:
+
+2013-07-19  Martin Robinson  <mrobinson@igalia.com>
+
+        Add a couple people to the MathML watchlist
+        https://bugs.webkit.org/show_bug.cgi?id=118909
+
+        Reviewed by Andreas Kling.
+
+        Add a couple people to the MathML watchlist and add Kalyan's other
+        email address to fix style checker warnings about the watchlist
+        contents.
+
+        * Scripts/webkitpy/common/config/contributors.json: Add Frédéric to the
+        list of contributors and add Kalyan's second email address.
+        * Scripts/webkitpy/common/config/watchlist: Add myself and Frédéric to the MathML
+        watchlist.
+
+2013-07-19  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] Fix regression in DumpRenderTree introduced in r152782 by checking if uri is valid
+        https://bugs.webkit.org/show_bug.cgi?id=118895
+
+        Reviewed by Philippe Normand.
+
+        In r152782 an uri is used to create an string representation without checking first if it
+        is valid. That fails later when the string is used to check for existing redirections. This
+        patch ensures that the uri is valid before using it.
+
+        * DumpRenderTree/gtk/DumpRenderTree.cpp:
+        (willSendRequestCallback): Ensure an uri is valid before using it.
+
 2013-07-18  Timothy Hatcher  <timothy@apple.com>
 
         Add extract-localizable-js-strings and use it for WebInspectorUI.

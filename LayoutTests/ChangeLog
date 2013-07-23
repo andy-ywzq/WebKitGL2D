@@ -1,3 +1,665 @@
+2013-07-23  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [GTK] Unreviewed gardening. Added expectations for flaky tests.
+
+        * platform/gtk/TestExpectations: Added new expectations.
+
+2013-07-23  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] Unreviewed gardening. Unskip passing tests.
+        https://bugs.webkit.org/show_bug.cgi?id=119008
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/TestExpectations: unskip editing/selection/mixed-editability-10.html,
+        editing/selection/5825350-1.html and editing/selection/5825350-2.html since they have new
+        baselines, unskip http/tests/security/mixedContent/insecure-audio-video-in-main-frame.html
+        after r152778, unskip fast/images/webgl-teximage2d.html after r152531 and
+        svg/custom/xlink-prefix-in-attributes.html after r152785
+
+2013-07-23  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [GTK] Unreviewed gardening. Baseline and rebaseline needed after r152612 and r152911.
+
+        * platform/gtk/editing/caret/caret-color-expected.txt: Added.
+        * platform/gtk/fast/multicol/shrink-to-column-height-for-pagination-expected.txt: Updated.
+
+2013-07-23  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [GTK] Unreviewed gardening. Added needed baselines after r104133.
+
+        * platform/gtk/perf/nested-combined-selectors-expected.txt: Added.
+
+2013-07-23  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] Unreviewed gardening. New baselines after r152941.
+        https://bugs.webkit.org/show_bug.cgi?id=119005
+
+        Unreviewed GTK gardening.
+
+        GTK's DumpRenderTree prints CONFIRM instead of CONFIRM NAVIGATION, so we need
+        platform-specific expectations.
+
+        * platform/gtk/fast/loader/show-only-one-beforeunload-dialog-expected.txt: Added.
+        * platform/gtk/http/tests/misc/iframe-beforeunload-dialog-matching-ancestor-securityorigin-expected.txt: Added.
+
+2013-07-23  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] Unreviewed gardening. Skip failing test.
+        https://bugs.webkit.org/show_bug.cgi?id=119006
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/TestExpectations: mathml/presentation/fenced-mi.html fails
+        after being converted to ref test.
+
+2013-07-23  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [GTK] Unreviewed gardening. Added needed baselines for GTK+.
+
+        * platform/gtk/fast/block/lineboxcontain/block-with-ideographs-expected.txt: Added.
+        * platform/gtk/fast/css-generated-content/details-summary-before-after-expected.txt: Added.
+        * platform/gtk/fast/css3-text/css3-text-decoration/text-decoration-line-scaled-expected.txt: Added.
+        * platform/gtk/fast/regions/region-dynamic-after-before-expected.txt: Added.
+        * platform/gtk/fast/regions/region-generated-content-before-after-expected.txt: Added.
+        * platform/gtk/fast/text/text-combine-different-fonts-expected.txt: Added.
+        * platform/gtk/svg/text/text-overflow-ellipsis-svgfont-kerning-ligatures-expected.txt: Added.
+
+2013-07-23  Frédéric Wang  <fred.wang@free.fr>
+
+        Enable some MathML reftests on Windows and EFL ports.
+        https://bugs.webkit.org/show_bug.cgi?id=118916
+
+        Reviewed by Chris Fleizach.
+
+        * platform/efl/TestExpectations: do not skip over.html
+        * platform/win/TestExpectations: enable most of the non-pixel tests
+
+2013-07-22  Zalan Bujtas  <zalan@apple.com>
+
+        segfault in RenderLayerCompositor when the iframe's position attribute is changed and it embeds <object>.
+        https://bugs.webkit.org/show_bug.cgi?id=118965
+
+        Reviewed by Simon Fraser.
+
+        Do not change the composition state unless we can reliably figure out the iframe's size.
+        If the renderer is not yet attached, its size is not computable.
+
+        * compositing/iframes/iframe-position-absolute-with-padding-percentage-crash-expected.txt: Added.
+        * compositing/iframes/iframe-position-absolute-with-padding-percentage-crash.html: Added.
+        * compositing/iframes/resources/embed-tag-with-composition.html: Added.
+        * platform/efl/TestExpectations: skip
+        * platform/efl-wk2/TestExpectations: skip
+        * platform/qt-5.0-wk1/TestExpectations: skip
+        * platform/qt-5.0-wk2/TestExpectations: skip
+
+2013-07-22  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: VoiceOver only read the first column in a safari table
+        https://bugs.webkit.org/show_bug.cgi?id=118992
+
+        Reviewed by Tim Horton.
+
+        * accessibility/table-with-mismatch-column-count-in-initial-section-expected.txt: Added.
+        * accessibility/table-with-mismatch-column-count-in-initial-section.html: Added.
+
+2013-07-22  Beth Dakin  <bdakin@apple.com>
+
+        StickyPositionContraints should not need to change to account for a RenderLayer's 
+        scrollOffset
+        https://bugs.webkit.org/show_bug.cgi?id=118958
+        -and corresponding-
+        <rdar://problem/12469203>
+
+        Reviewed by Simon Fraser.
+
+        This tests stick in overflow areas where the sticky’s containing block overflows 
+        the overflow area. The sticky object should not extend beyond the overflow area in 
+        that case. 
+
+        * fast/css/sticky/sticky-top-overflow-container-overflow-expected.html: Added.
+        * fast/css/sticky/sticky-top-overflow-container-overflow.html: Added.
+
+2013-07-22  Joone Hur  <joone.hur@intel.com>
+
+        Rebaseline the caret color test for the Mac port after r152612
+        https://bugs.webkit.org/show_bug.cgi?id=118961
+
+        Reviewed by Alexey Proskuryakov.
+    
+        Added expected results of the caret color test for the Mac port.
+
+        * platform/mac-wk2/editing/caret/caret-color-expected.png: Added.
+        * platform/mac/TestExpectations:
+        * platform/mac/editing/caret/caret-color-expected.png: Added.
+        * platform/mac/editing/caret/caret-color-expected.txt: Added.
+
+2013-07-22  Zalan Bujtas  <zalan@apple.com>
+
+        REGRESSION(r152227) Images with compositing layer don't show up unless the containing window is resized.
+        https://bugs.webkit.org/show_bug.cgi?id=118951
+
+        Reviewed by Simon Fraser.
+
+        Ensure that the content rect is initialized when the image is set on the graphics layer.
+
+        RenderLayerBacking::updateGraphicsLayerGeometry() only updates the contents rect when
+        the associated graphics layer has a content layer. Since the image gets committed 
+        on the graphics layer after the update calls, the contents rect is left uninitialized.
+
+        * compositing/images/positioned-image-content-rect-expected.html: Added.
+        * compositing/images/positioned-image-content-rect.html: Added.
+
+2013-07-22  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r152968.
+        http://trac.webkit.org/changeset/152968
+        https://bugs.webkit.org/show_bug.cgi?id=118975
+
+        "I forgot to add a test" (Requested by abucur on #webkit).
+
+        * fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.html: Removed.
+        * fast/regions/percentage-margins-mixed-ltr-dominant-regions.html:
+        * fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.html: Removed.
+        * fast/regions/percentage-margins-mixed-rtl-dominant-regions.html:
+        * fast/regions/percentage-margins-rtl-variable-width-regions-expected.html: Removed.
+        * fast/regions/percentage-margins-rtl-variable-width-regions.html:
+        * platform/efl/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.png: Added.
+        * platform/efl/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.txt: Added.
+        * platform/efl/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.png: Added.
+        * platform/efl/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.txt: Added.
+        * platform/efl/fast/regions/percentage-margins-rtl-variable-width-regions-expected.png: Added.
+        * platform/efl/fast/regions/percentage-margins-rtl-variable-width-regions-expected.txt: Added.
+        * platform/efl/fast/regions/percentage-margins-variable-width-regions-expected.png: Added.
+        * platform/efl/fast/regions/percentage-margins-variable-width-regions-expected.txt: Added.
+        * platform/gtk/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.png: Added.
+        * platform/gtk/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.txt: Added.
+        * platform/gtk/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.png: Added.
+        * platform/gtk/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.txt: Added.
+        * platform/gtk/fast/regions/percentage-margins-rtl-variable-width-regions-expected.png: Added.
+        * platform/gtk/fast/regions/percentage-margins-rtl-variable-width-regions-expected.txt: Added.
+        * platform/gtk/fast/regions/percentage-margins-variable-width-regions-expected.png: Added.
+        * platform/gtk/fast/regions/percentage-margins-variable-width-regions-expected.txt: Added.
+        * platform/mac/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.png: Added.
+        * platform/mac/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.txt: Added.
+        * platform/mac/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.png: Added.
+        * platform/mac/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.txt: Added.
+        * platform/mac/fast/regions/percentage-margins-rtl-variable-width-regions-expected.png: Added.
+        * platform/mac/fast/regions/percentage-margins-rtl-variable-width-regions-expected.txt: Added.
+        * platform/qt/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.png: Added.
+        * platform/qt/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.txt: Added.
+        * platform/qt/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.png: Added.
+        * platform/qt/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.txt: Added.
+        * platform/qt/fast/regions/percentage-margins-rtl-variable-width-regions-expected.png: Added.
+        * platform/qt/fast/regions/percentage-margins-rtl-variable-width-regions-expected.txt: Added.
+        * platform/qt/fast/regions/percentage-margins-variable-width-regions-expected.png: Added.
+        * platform/qt/fast/regions/percentage-margins-variable-width-regions-expected.txt: Added.
+
+2013-07-22  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed gardening of AppleWin port. Skip some crashing tests.
+
+        * platform/win/TestExpectations:
+
+2013-07-22  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [GTK] Unreviewed gardening. Added baselines needed after r110542.
+
+        * platform/gtk/fast/forms/label/labelable-elements-expected.txt: Added.
+
+2013-07-22  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Rebase after r152814.
+
+        * platform/qt-5.0-wk1/http/tests/security/contentSecurityPolicy/object-src-none-allowed-expected.txt:
+
+2013-07-22  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        Unreviewed gardening. Added new baselines for GTK+ after r152911.
+
+        * platform/gtk/fast/multicol/pagination/BottomToTop-bt-expected.txt: Added.
+        * platform/gtk/fast/multicol/pagination/BottomToTop-lr-expected.txt: Added.
+        * platform/gtk/fast/multicol/pagination/BottomToTop-rl-expected.txt: Added.
+        * platform/gtk/fast/multicol/pagination/BottomToTop-tb-expected.txt: Added.
+        * platform/gtk/fast/multicol/pagination/LeftToRight-bt-expected.txt: Added.
+        * platform/gtk/fast/multicol/pagination/LeftToRight-lr-expected.txt: Added.
+        * platform/gtk/fast/multicol/pagination/LeftToRight-rl-expected.txt: Added.
+        * platform/gtk/fast/multicol/pagination/LeftToRight-tb-expected.txt: Added.
+        * platform/gtk/fast/multicol/pagination/RightToLeft-bt-expected.txt: Added.
+        * platform/gtk/fast/multicol/pagination/RightToLeft-lr-expected.txt: Added.
+        * platform/gtk/fast/multicol/pagination/RightToLeft-rl-expected.txt: Added.
+        * platform/gtk/fast/multicol/pagination/RightToLeft-tb-expected.txt: Added.
+        * platform/gtk/fast/multicol/pagination/TopToBottom-bt-expected.txt: Added.
+        * platform/gtk/fast/multicol/pagination/TopToBottom-lr-expected.txt: Added.
+        * platform/gtk/fast/multicol/pagination/TopToBottom-rl-expected.txt: Added.
+        * platform/gtk/fast/multicol/pagination/TopToBottom-tb-expected.txt: Added.
+
+2013-07-22  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        Unreviewed gardening. Added baselines for GTK+ related to subpixel layout.
+
+        * platform/gtk/editing/selection/mixed-editability-10-expected.txt: Added.
+        * platform/gtk/svg/W3C-SVG-1.1/animate-elem-22-b-expected.txt: Added.
+        * platform/gtk/svg/W3C-SVG-1.1/animate-elem-23-t-expected.txt: Added.
+        * platform/gtk/svg/W3C-SVG-1.1/coords-units-03-b-expected.txt: Added.
+        * platform/gtk/svg/W3C-SVG-1.1/filters-comptran-01-b-expected.txt: Added.
+        * platform/gtk/svg/W3C-SVG-1.1/filters-example-01-b-expected.txt: Added.
+        * platform/gtk/svg/custom/pattern-with-transformation-expected.txt: Added.
+        * platform/gtk/svg/text/text-midpoint-split-bug-expected.txt: Added.
+
+2013-07-22  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        Unreviewed gardening. Added needed baselines for GTK after r149088.
+
+        * platform/gtk/editing/selection/5825350-1-expected.txt: Added.
+        * platform/gtk/editing/selection/5825350-2-expected.txt: Added.
+
+2013-07-22  Andrei Bucur  <abucur@adobe.com>
+
+        [CSS Regions] Convert percentage-margins-* tests to ref-tests
+        https://bugs.webkit.org/show_bug.cgi?id=118723
+
+        Reviewed by Andreas Kling.
+
+        The patch converts the percentage margins tests for regions in ref tests.
+
+        * fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.html: Added.
+        * fast/regions/percentage-margins-mixed-ltr-dominant-regions.html:
+        * fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.html: Added.
+        * fast/regions/percentage-margins-mixed-rtl-dominant-regions.html:
+        * fast/regions/percentage-margins-rtl-variable-width-regions-expected.html: Added.
+        * fast/regions/percentage-margins-rtl-variable-width-regions.html:
+        * platform/efl/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.png: Removed.
+        * platform/efl/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.txt: Removed.
+        * platform/efl/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.png: Removed.
+        * platform/efl/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.txt: Removed.
+        * platform/efl/fast/regions/percentage-margins-rtl-variable-width-regions-expected.png: Removed.
+        * platform/efl/fast/regions/percentage-margins-rtl-variable-width-regions-expected.txt: Removed.
+        * platform/efl/fast/regions/percentage-margins-variable-width-regions-expected.png: Removed.
+        * platform/efl/fast/regions/percentage-margins-variable-width-regions-expected.txt: Removed.
+        * platform/gtk/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.png: Removed.
+        * platform/gtk/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.txt: Removed.
+        * platform/gtk/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.png: Removed.
+        * platform/gtk/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.txt: Removed.
+        * platform/gtk/fast/regions/percentage-margins-rtl-variable-width-regions-expected.png: Removed.
+        * platform/gtk/fast/regions/percentage-margins-rtl-variable-width-regions-expected.txt: Removed.
+        * platform/gtk/fast/regions/percentage-margins-variable-width-regions-expected.png: Removed.
+        * platform/gtk/fast/regions/percentage-margins-variable-width-regions-expected.txt: Removed.
+        * platform/mac/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.png: Removed.
+        * platform/mac/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.txt: Removed.
+        * platform/mac/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.png: Removed.
+        * platform/mac/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.txt: Removed.
+        * platform/mac/fast/regions/percentage-margins-rtl-variable-width-regions-expected.png: Removed.
+        * platform/mac/fast/regions/percentage-margins-rtl-variable-width-regions-expected.txt: Removed.
+        * platform/qt/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.png: Removed.
+        * platform/qt/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.txt: Removed.
+        * platform/qt/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.png: Removed.
+        * platform/qt/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.txt: Removed.
+        * platform/qt/fast/regions/percentage-margins-rtl-variable-width-regions-expected.png: Removed.
+        * platform/qt/fast/regions/percentage-margins-rtl-variable-width-regions-expected.txt: Removed.
+        * platform/qt/fast/regions/percentage-margins-variable-width-regions-expected.png: Removed.
+        * platform/qt/fast/regions/percentage-margins-variable-width-regions-expected.txt: Removed.
+
+2013-07-22  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        Unreviewed gardening. Add accesibility/lists.html as 'Missing' expectation.
+
+        * platform/gtk/TestExpectations: Added test.
+
+2013-07-22  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Skipping failing tests.
+
+        * platform/qt-5.0-wk1/TestExpectations:
+        * platform/qt/TestExpectations:
+
+2013-07-22  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] Regression: Multiple tests fail after r152701 changed how unavailable plugins are handled
+        https://bugs.webkit.org/show_bug.cgi?id=118730
+
+        Unreviewed GTK gardening. Unskip tests no longer failing.
+
+        Changes from r152701 were reverted in r152814 and later reworked in r152824,
+        so the tests no longer fail.
+
+        * platform/gtk/TestExpectations:
+
+2013-07-22  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        Unreviewed gardening. Update test expectations for GTK.
+
+        * platform/gtk/accessibility/aria-option-role-expected.txt: Update
+        expectations to match those from EFL.
+        * platform/gtk/TestExpectations: Removed test from failures expectations,
+        now it's running as expected.
+
+2013-07-22  Ádám Kallai  <kadam@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Update platform specific expectations.
+
+        * platform/qt-5.0-wk1/fast/loader/show-only-one-beforeunload-dialog-expected.txt: Added after r152941.
+        * platform/qt-5.0-wk1/http/tests/misc/iframe-beforeunload-dialog-matching-ancestor-securityorigin-expected.txt: Added after r152941.
+        * platform/qt-5.0-wk2/fast/multicol/shrink-to-column-height-for-pagination-expected.png: Removed.
+        * platform/qt/fast/multicol/shrink-to-column-height-for-pagination-expected.png: Added after r152911.
+        * platform/qt/fast/multicol/shrink-to-column-height-for-pagination-expected.txt: Renamed from LayoutTests/platform/qt-5.0-wk2/fast/multicol/shrink-to-column-height-for-pagination-expected.txt.
+
+2013-07-19  Brady Eidson  <beidson@apple.com>
+
+        Pages should not be able to abuse users inside beforeunload handlers.
+        <rdar://problem/14475779> and https://bugs.webkit.org/show_bug.cgi?id=118871.
+
+        Reviewed by Alexey Proskuryakov.
+
+        In addition to the new tests, updated some results of previous tests that were relying on "alert"
+        as a poor man's logging method.
+
+        * fast/events/onbeforeunload-focused-iframe-expected.txt:
+        * fast/events/onbeforeunload-focused-iframe.html:
+        * fast/events/onunload-clears-onbeforeunload-expected.txt:
+        * fast/events/onunload-clears-onbeforeunload.html:
+        * fast/loader/page-dismissal-modal-dialogs-expected.txt:
+        * fast/loader/page-dismissal-modal-dialogs.html:
+        * fast/loader/recursive-before-unload-crash-expected.txt:
+        * fast/loader/recursive-before-unload-crash.html:
+        * fast/loader/resources/iframe-with-beforeunload.html: Added.
+        * fast/loader/show-only-one-beforeunload-dialog-expected.txt: Added.
+        * fast/loader/show-only-one-beforeunload-dialog.html: Added.
+        * http/tests/misc/iframe-beforeunload-dialog-matching-ancestor-securityorigin-expected.txt: Added.
+        * http/tests/misc/iframe-beforeunload-dialog-matching-ancestor-securityorigin.html: Added.
+        * http/tests/misc/iframe-beforeunload-dialog-not-matching-ancestor-securityorigin-expected.txt: Added.
+        * http/tests/misc/iframe-beforeunload-dialog-not-matching-ancestor-securityorigin.html: Added.
+        * http/tests/misc/resources/iframe-with-beforeunload.html: Added.
+        * http/tests/misc/resources/notify-done.html: Added.
+
+2013-07-19  Stephanie Lewis  <slewis@apple.com>
+
+        Some compositing tests fail on ML WK2 Debugi
+        https://bugs.webkit.org/show_bug.cgi?id=118925
+
+        Unreviewed.
+
+        * platform/mac-wk2/TestExpectations:
+
+2013-07-19  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Skip failing tests to make WinEWS bots happy.
+
+        * platform/win/TestExpectations:
+
+2013-07-19  Roger Fong  <roger_fong@apple.com>
+
+        Unskip flaky tests on AppleWin. 
+        Flakiness is not an issue with the tests themselves but with the test infrastructure.
+
+        * platform/win/TestExpectations:
+
+2013-07-19  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Skip some flaky tests on AppleWin port.
+
+        * platform/win/TestExpectations:
+
+2013-07-19  Frédéric Wang  <fred.wang@free.fr>
+
+        More conversions from MathML pixel tests to reftests.
+        https://bugs.webkit.org/show_bug.cgi?id=118853
+
+        Reviewed by Chris Fleizach.
+
+        * mathml/presentation/fenced-expected.html: Added.
+        * mathml/presentation/fenced-mi-expected.html: Added.
+        * mathml/presentation/fenced-mi.html: Added.
+        * mathml/presentation/fenced-mi.xhtml: Removed.
+        * mathml/presentation/fenced.html: Added.
+        * mathml/presentation/fenced.xhtml: Removed.
+        * mathml/presentation/mroot-pref-width-expected.html: Added.
+        * mathml/presentation/mroot-pref-width.html:
+        * mathml/presentation/row-alignment.xhtml: Removed.
+        * mathml/presentation/style-border-padding-background-expected.html: Added.
+        * mathml/presentation/style-border-padding-background.html: Added.
+        * mathml/presentation/style-color-sqrt-expected-mismatch.html: Added.
+        * mathml/presentation/style-color-sqrt.html: Added.
+        * mathml/presentation/style.xhtml: Removed.
+        * mathml/presentation/tables-columnalign-expected.html: Added.
+        * mathml/presentation/tables-columnalign.html: Added.
+        * mathml/presentation/tables-simple-expected.html: Added.
+        * mathml/presentation/tables-simple.html: Added.
+        * mathml/presentation/tables-spans-dynamic-expected.html: Added.
+        * mathml/presentation/tables-spans-dynamic.html: Added.
+        * mathml/presentation/tables-spans-expected.html: Added.
+        * mathml/presentation/tables-spans.html: Added.
+        * mathml/presentation/tables.xhtml: Removed.
+        * mathml/xHeight.xhtml: Removed.
+        * platform/efl/mathml/presentation/fenced-expected.png: Removed.
+        * platform/efl/mathml/presentation/fenced-expected.txt: Removed.
+        * platform/efl/mathml/presentation/fenced-mi-expected.png: Removed.
+        * platform/efl/mathml/presentation/fenced-mi-expected.txt: Removed.
+        * platform/efl/mathml/presentation/mroot-pref-width-expected.png: Removed.
+        * platform/efl/mathml/presentation/mroot-pref-width-expected.txt: Removed.
+        * platform/efl/mathml/presentation/row-alignment-expected.png: Removed.
+        * platform/efl/mathml/presentation/row-alignment-expected.txt: Removed.
+        * platform/efl/mathml/presentation/style-expected.png: Removed.
+        * platform/efl/mathml/presentation/style-expected.txt: Removed.
+        * platform/efl/mathml/presentation/tables-expected.png: Removed.
+        * platform/efl/mathml/presentation/tables-expected.txt: Removed.
+        * platform/efl/mathml/xHeight-expected.png: Removed.
+        * platform/efl/mathml/xHeight-expected.txt: Removed.
+        * platform/gtk/mathml/presentation/fenced-expected.png: Removed.
+        * platform/gtk/mathml/presentation/fenced-expected.txt: Removed.
+        * platform/gtk/mathml/presentation/fenced-mi-expected.png: Removed.
+        * platform/gtk/mathml/presentation/fenced-mi-expected.txt: Removed.
+        * platform/gtk/mathml/presentation/mroot-pref-width-expected.png: Removed.
+        * platform/gtk/mathml/presentation/mroot-pref-width-expected.txt: Removed.
+        * platform/gtk/mathml/presentation/row-alignment-expected.png: Removed.
+        * platform/gtk/mathml/presentation/row-alignment-expected.txt: Removed.
+        * platform/gtk/mathml/presentation/style-expected.png: Removed.
+        * platform/gtk/mathml/presentation/style-expected.txt: Removed.
+        * platform/gtk/mathml/presentation/tables-expected.png: Removed.
+        * platform/gtk/mathml/presentation/tables-expected.txt: Removed.
+        * platform/gtk/mathml/xHeight-expected.png: Removed.
+        * platform/gtk/mathml/xHeight-expected.txt: Removed.
+        * platform/mac/TestExpectations:
+        * platform/mac/mathml/presentation/fenced-expected.png: Removed.
+        * platform/mac/mathml/presentation/fenced-expected.txt: Removed.
+        * platform/mac/mathml/presentation/fenced-mi-expected.png: Removed.
+        * platform/mac/mathml/presentation/fenced-mi-expected.txt: Removed.
+        * platform/mac/mathml/presentation/mroot-pref-width-expected.png: Removed.
+        * platform/mac/mathml/presentation/mroot-pref-width-expected.txt: Removed.
+        * platform/mac/mathml/presentation/row-alignment-expected.png: Removed.
+        * platform/mac/mathml/presentation/row-alignment-expected.txt: Removed.
+        * platform/mac/mathml/presentation/style-expected.png: Removed.
+        * platform/mac/mathml/presentation/style-expected.txt: Removed.
+        * platform/mac/mathml/presentation/tables-expected.png: Removed.
+        * platform/mac/mathml/presentation/tables-expected.txt: Removed.
+        * platform/mac/mathml/xHeight-expected.png: Removed.
+        * platform/mac/mathml/xHeight-expected.txt: Removed.
+
+2013-07-19  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Skip some flaky tests on AppleWin port.
+
+        * platform/win/TestExpectations:
+
+2013-07-19  Abhijeet Kandalkar  <abhijeet.k@samsung.com>
+
+        Spatial Navigation handling of space key in <select> appears to confuse listIndex and optionIndex.
+        https://bugs.webkit.org/show_bug.cgi?id=99525
+
+        Added testcase to test support of option group within HTMLSelect element.
+
+        Reviewed by Joseph Pecoraro.
+
+        * fast/spatial-navigation/snav-multiple-select-optgroup-expected.txt: Added.
+        * fast/spatial-navigation/snav-multiple-select-optgroup.html: Added.
+
+2013-07-19  David Hyatt  <hyatt@apple.com>
+
+        OSX: ePub: Unable to select text in vertical Japanese book
+        https://bugs.webkit.org/show_bug.cgi?id=118864
+        <rdar://problem/14109351>
+
+        Reviewed by Dan Bernstein and Sam Weinig.
+
+        * fast/multicol/pagination: Added.
+        * fast/multicol/pagination/BottomToTop-bt.html: Added.
+        * fast/multicol/pagination/BottomToTop-lr.html: Added.
+        * fast/multicol/pagination/BottomToTop-rl.html: Added.
+        * fast/multicol/pagination/BottomToTop-tb.html: Added.
+        * fast/multicol/pagination/LeftToRight-bt.html: Added.
+        * fast/multicol/pagination/LeftToRight-lr.html: Added.
+        * fast/multicol/pagination/LeftToRight-rl.html: Added.
+        * fast/multicol/pagination/LeftToRight-tb.html: Added.
+        * fast/multicol/pagination/RightToLeft-bt.html: Added.
+        * fast/multicol/pagination/RightToLeft-lr.html: Added.
+        * fast/multicol/pagination/RightToLeft-rl.html: Added.
+        * fast/multicol/pagination/RightToLeft-tb.html: Added.
+        * fast/multicol/pagination/TopToBottom-bt.html: Added.
+        * fast/multicol/pagination/TopToBottom-lr.html: Added.
+        * fast/multicol/pagination/TopToBottom-rl.html: Added.
+        * fast/multicol/pagination/TopToBottom-tb.html: Added.
+        * platform/mac/fast/multicol/pagination: Added.
+        * platform/mac/fast/multicol/pagination/BottomToTop-bt-expected.png: Added.
+        * platform/mac/fast/multicol/pagination/BottomToTop-bt-expected.txt: Added.
+        * platform/mac/fast/multicol/pagination/BottomToTop-lr-expected.png: Added.
+        * platform/mac/fast/multicol/pagination/BottomToTop-lr-expected.txt: Added.
+        * platform/mac/fast/multicol/pagination/BottomToTop-rl-expected.png: Added.
+        * platform/mac/fast/multicol/pagination/BottomToTop-rl-expected.txt: Added.
+        * platform/mac/fast/multicol/pagination/BottomToTop-tb-expected.png: Added.
+        * platform/mac/fast/multicol/pagination/BottomToTop-tb-expected.txt: Added.
+        * platform/mac/fast/multicol/pagination/LeftToRight-bt-expected.png: Added.
+        * platform/mac/fast/multicol/pagination/LeftToRight-bt-expected.txt: Added.
+        * platform/mac/fast/multicol/pagination/LeftToRight-lr-expected.png: Added.
+        * platform/mac/fast/multicol/pagination/LeftToRight-lr-expected.txt: Added.
+        * platform/mac/fast/multicol/pagination/LeftToRight-rl-expected.png: Added.
+        * platform/mac/fast/multicol/pagination/LeftToRight-rl-expected.txt: Added.
+        * platform/mac/fast/multicol/pagination/LeftToRight-tb-expected.png: Added.
+        * platform/mac/fast/multicol/pagination/LeftToRight-tb-expected.txt: Added.
+        * platform/mac/fast/multicol/pagination/RightToLeft-bt-expected.png: Added.
+        * platform/mac/fast/multicol/pagination/RightToLeft-bt-expected.txt: Added.
+        * platform/mac/fast/multicol/pagination/RightToLeft-lr-expected.png: Added.
+        * platform/mac/fast/multicol/pagination/RightToLeft-lr-expected.txt: Added.
+        * platform/mac/fast/multicol/pagination/RightToLeft-rl-expected.png: Added.
+        * platform/mac/fast/multicol/pagination/RightToLeft-rl-expected.txt: Added.
+        * platform/mac/fast/multicol/pagination/RightToLeft-tb-expected.png: Added.
+        * platform/mac/fast/multicol/pagination/RightToLeft-tb-expected.txt: Added.
+        * platform/mac/fast/multicol/pagination/TopToBottom-bt-expected.png: Added.
+        * platform/mac/fast/multicol/pagination/TopToBottom-bt-expected.txt: Added.
+        * platform/mac/fast/multicol/pagination/TopToBottom-lr-expected.png: Added.
+        * platform/mac/fast/multicol/pagination/TopToBottom-lr-expected.txt: Added.
+        * platform/mac/fast/multicol/pagination/TopToBottom-rl-expected.png: Added.
+        * platform/mac/fast/multicol/pagination/TopToBottom-rl-expected.txt: Added.
+        * platform/mac/fast/multicol/pagination/TopToBottom-tb-expected.png: Added.
+        * platform/mac/fast/multicol/pagination/TopToBottom-tb-expected.txt: Added.
+        * platform/mac/fast/multicol/shrink-to-column-height-for-pagination-expected.png:
+        * platform/mac/fast/multicol/shrink-to-column-height-for-pagination-expected.txt:
+
+2013-07-19  Radu Stavila  <stavila@adobe.com>
+
+        Hover doesn't work for block elements inside a href element
+        https://bugs.webkit.org/show_bug.cgi?id=118907
+
+        Reviewed by David Hyatt.
+
+        Don't skip all anonymous objects when searching for the hover ancestor, only the ones
+        directly flowed into a region.
+
+        * fast/css/hover-display-block-expected.txt: Added.
+        * fast/css/hover-display-block.html: Added.
+
+2013-07-19  Zoltan Horvath  <zoltan@webkit.org>
+
+        [CSS Shapes] Clear overflowing line's segments in pushShapeContentOverflowBelowTheContentBox
+        https://bugs.webkit.org/show_bug.cgi?id=118002
+
+        Reviewed by David Hyatt.
+
+        When the last line in the shape overlaps with the shape bottom boundaries we need to clear the computed segments. (We need to compute
+        the segments anyway, since shape-outside's code uses the same code path to determine its segments and the line containing is not a
+        requirement in that case.) Rather then doing the job in RenderBlock::LineBreaker::nextLineBreak I moved the functionality to its correct
+        place to pushShapeContentOverflowBelowTheContentBox. Now all the overflow related functionality is located in one function. I fixed the
+        corresponding layout test.
+
+        * fast/shapes/shape-inside/shape-inside-overflow-expected.html:
+        * fast/shapes/shape-inside/shape-inside-overflow.html:
+
+2013-07-19  Zoltan Horvath  <zoltan@webkit.org>
+
+        [CSS Shapes][CSS Regions] Modify existing tests to test overflow also when padding is applied on the container
+        https://bugs.webkit.org/show_bug.cgi?id=117881
+
+        Reviewed by David Hyatt.
+
+        Currently, we don't have tests which test the overflow behavior when there is padding applied on the container.
+        I modified the existing tests to cover these cases as well and increase our test coverage.
+
+        * fast/shapes/shape-inside/shape-inside-overflow-fixed-dimensions-expected.html:
+        * fast/shapes/shape-inside/shape-inside-overflow-fixed-dimensions.html:
+        * fast/regions/shape-inside/shape-inside-on-regions-block-content-overflow-bottom-positioned-multiple-shapes-expected.html:
+        * fast/regions/shape-inside/shape-inside-on-regions-block-content-overflow-bottom-positioned-multiple-shapes.html:
+        * fast/regions/shape-inside/shape-inside-on-regions-inline-content-overflow-bottom-positioned-multiple-shapes-expected.html:
+        * fast/regions/shape-inside/shape-inside-on-regions-inline-content-overflow-bottom-positioned-multiple-shapes.html:
+
+2013-07-19  Frédéric Wang  <fred.wang@free.fr>
+
+        Update test expectations for MathML after r152840.
+        https://bugs.webkit.org/show_bug.cgi?id=118053
+
+        Reviewed by Chris Fleizach.
+
+        * TestExpectations: unskip mspace tests
+        * platform/mac/TestExpectations: ImageOnlyFailure for mspace-units
+
+2013-07-19  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] Unreviewed gardening. Update expectations after r152793, r152777 and r152872
+        https://bugs.webkit.org/show_bug.cgi?id=118906
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/TestExpectations: Mark svg/animations/svgenum-animation-6.html as flaky, and
+        mathml/presentation/bug95404.html, introduced in r152777, as ImageOnlyFailure.
+        * platform/gtk/editing/pasteboard/emacs-cntl-y-001-expected.txt: New baseline after r152872.
+        * platform/gtk/editing/pasteboard/emacs-ctrl-k-y-001-expected.txt: Ditto.
+        * platform/gtk/fast/dom/Range/getClientRects-expected.txt: Ditto.
+        * platform/gtk/fast/js/function-length-expected.txt: Ditto.
+        * platform/gtk/plugins/npruntime/object-from-destroyed-plugin-expected.txt: Added after r152872.
+        * platform/gtk/plugins/npruntime/object-from-destroyed-plugin-in-subframe-expected.txt: Added after r152872.
+        * platform/gtk/tables/mozilla/marvin/backgr_index-expected.txt: New baseline after r152793.
+
+2013-07-19  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt][WK2] More unreviewed cleanup for pixel tester bot.
+
+        * platform/qt-5.0-wk2/TestExpectations:
+
+2013-07-19  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt][WK2] Unreviewed cleanup for pixel tester bot.
+
+        * platform/qt-5.0-wk2/TestExpectations:
+
+2013-07-19  Miguel Gomez  <magomez@igalia.com>
+
+        [GTK] media/video-seek-multiple.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=117580
+
+        Reviewed by Philippe Normand.
+
+        Change expectation for media/video-seek-multiple.html test
+
+        * platform/gtk/TestExpectations:
+
+2013-07-19  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Rebase failing tests.
+
+        * platform/qt-5.0-wk2/tables/mozilla/marvin/backgr_index-expected.png:
+        * platform/qt-5.0-wk2/tables/mozilla/marvin/backgr_index-expected.txt: Copied from LayoutTests/platform/qt/tables/mozilla/marvin/backgr_index-expected.txt.
+        * platform/qt/fast/lists/inlineBoxWrapperNullCheck-expected.txt:
+        * platform/qt/http/tests/security/contentSecurityPolicy/object-src-none-blocked-expected.txt:
+        * platform/qt/tables/mozilla/marvin/backgr_index-expected.txt:
+
 2013-07-18  Commit Queue  <commit-queue@webkit.org>
 
         Unreviewed, rolling out r152801.

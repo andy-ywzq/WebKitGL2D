@@ -172,6 +172,7 @@ compositing/geometry/tall-page-composited.html
 compositing/plugins
 compositing/video
 compositing/layers-inside-overflow-scroll.html
+compositing/iframes/iframe-position-absolute-with-padding-percentage-crash.html
 
 # [Qt][WK2] New compositing test are failing since added in r126663.
 # webkit.org/b/95076 
@@ -232,6 +233,18 @@ webkit.org/b/91610 editing/selection/14971.html
 
 # These tests always fail (with and without --singly). It needs investigation.
 editing/selection/caret-mode-paragraph-keys-navigation.html
+
+# [Qt][WK2] Editing/selection tests that has different results from xvfb with gpu
+# webkit.org/b/118903
+editing/selection/caret-rtl-2-left.html
+editing/selection/caret-rtl-2.html
+editing/selection/caret-rtl-right.html
+editing/selection/caret-rtl.html
+editing/selection/extend-selection-bidi.html
+editing/selection/vertical-rl-rtl-extend-line-backward-br.html
+editing/selection/vertical-rl-rtl-extend-line-backward-p.html
+editing/selection/vertical-rl-rtl-extend-line-forward-br.html
+editing/selection/vertical-rl-rtl-extend-line-forward-p.html
 
 # =========================================================================== #
 # Fast tests.                                                                 #
@@ -442,6 +455,27 @@ fast/repaint/transform-translate.html
 
 # [GTK][Qt] Regression: This test fails after r152701 changed how unavailable plugins are handled
 webkit.org/b/118730 fast/images/object-image.html [ Skip ]
+
+# [Qt][WK2] Some fast test has different result from xvfb with gpu
+# webkit.org/b/118901
+fast/animation/request-animation-frame-too-rapid.html
+fast/borders/rtl-border-05.html
+fast/dom/34176.html
+fast/dom/Window/window-resize-and-move-arguments.html
+fast/forms/HTMLOptionElement_label06.html
+fast/forms/HTMLOptionElement_label07.html
+fast/forms/form-element-geometry.html
+fast/forms/listbox-bidi-align.html
+fast/forms/menulist-separator-painting.html
+fast/forms/search-rtl.html
+fast/forms/select-baseline.html
+fast/forms/selectlist-minsize.html
+fast/inline/inline-box-background-long-image.html
+fast/inline/inline-box-background-repeat-x.html
+fast/inline/inline-box-background-repeat-y.html
+fast/inline/inline-box-background.html
+fast/text/international/bidi-ignored-for-first-child-inline.html
+fast/text/international/unicode-bidi-plaintext-in-textarea.html
 
 # =========================================================================== #
 # Fullscreen tests.                                                          #
@@ -937,6 +971,20 @@ plugins/mouse-click-iframe-to-plugin.html
 # Unexplained failures
 fast/table/giantCellspacing.html
 media/video-zoom-controls.html
+
+# [Qt][WK2] transforms/3d/point-mapping/3d-point-mapping pixel tests failing
+# webkit.org/b/118837
+transforms/3d/point-mapping/3d-point-mapping-2.html
+transforms/3d/point-mapping/3d-point-mapping-deep.html
+transforms/3d/point-mapping/3d-point-mapping-preserve-3d.html
+transforms/3d/point-mapping/3d-point-mapping.html
+
+# Failing pixel reftests
+fast/regions/region-style-image-background-color.html
+svg/animations/animateMotion-additive-2d.svg
+fast/regions/region-style-inline-background-color.html
+fast/regions/render-region-custom-style-mark.html
+svg/animations/animateMotion-additive-2c.svg
 
 # =========================================================================== #
 # Unsorted tests.                                                             #

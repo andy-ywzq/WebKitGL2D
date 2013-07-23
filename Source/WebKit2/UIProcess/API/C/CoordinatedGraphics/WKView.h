@@ -25,6 +25,10 @@
 #include <WebKit2/WKGeometry.h>
 #include <WebKit2/WKCoordinatedScene.h>
 
+#ifndef __cplusplus
+#include <stdbool.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,6 +42,7 @@ typedef void (*WKViewPageDidRenderFrameCallback)(WKViewRef view, WKSize contents
 typedef void (*WKViewPageDidChangeViewportAttributesCallback)(WKViewRef view, WKViewportAttributesRef, const void* clientInfo);
 typedef void (*WKViewPageDidChangeTooltipCallback)(WKViewRef view, WKStringRef newTooltip, const void* clientInfo);
 typedef void (*WKViewDidFindZoomableAreaCallback)(WKViewRef view, WKPoint point, WKRect area, const void* clientInfo);
+typedef void (*WKViewDoneWithTouchEventCallback)(WKViewRef view, WKTouchEventRef touchEvent, bool wasEventHandled, const void* clientInfo);
 
 struct WKViewClient {
     int                                              version;
@@ -54,6 +59,7 @@ struct WKViewClient {
     WKViewPageDidChangeViewportAttributesCallback    didChangeViewportAttributes;
     WKViewPageDidChangeTooltipCallback               didChangeTooltip;
     WKViewDidFindZoomableAreaCallback                didFindZoomableArea;
+    WKViewDoneWithTouchEventCallback                 doneWithTouchEvent;
 };
 typedef struct WKViewClient WKViewClient;
 
