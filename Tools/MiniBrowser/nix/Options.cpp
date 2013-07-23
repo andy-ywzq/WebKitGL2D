@@ -68,6 +68,7 @@ class Option {
 public:
     Option(const char* name, const char* helpMessage, bool* variable)
         : m_name(name)
+        , m_valueName("")
         , m_helpMessage(helpMessage)
     {
         m_assigner = [=](const char*)
@@ -108,6 +109,7 @@ public:
     template<typename T>
     Option(const char* name, const char* helpMessage, T* variable, T value)
         : m_name(name)
+        , m_valueName("")
         , m_helpMessage(helpMessage)
     {
         m_assigner = [=](const char*)
