@@ -1,3 +1,178 @@
+2013-07-23  Andreas Kling  <akling@apple.com>
+
+        REGRESSION(r150867): FrameView auto-sizing + delegate denied image load may cause StyleResolver to re-enter itself.
+        <rdar://problem/14324895>
+        <http://webkit.org/b/119023>
+
+        Reviewed by Simon Fraser.
+
+        The bug happened when FrameView::autoSizeIfEnabled() was getting called below FrameLoader::checkCompleted()
+        triggered by an incorrect loadDone() callback originating in SubresourceLoader::didCancel().
+
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::loadPendingResources):
+
+            Add an assertion that this function is not getting re-entered. If a similar bug occurs
+            in the future, this will help the lucky person debugging.
+
+        * loader/SubresourceLoader.cpp:
+        (WebCore::SubresourceLoader::didCancel):
+
+            Don't notifyDone() if the SubresourceLoader is in Uninitialized state.
+
+2013-07-23  Tim Horton  <timothy_horton@apple.com>
+
+        Pixel-snap the unavailable plugin indicator arrow for maximum sharpness
+        https://bugs.webkit.org/show_bug.cgi?id=119024
+        <rdar://problem/14523331>
+
+        Reviewed by Anders Carlsson.
+
+        * rendering/RenderEmbeddedObject.cpp:
+        (WebCore::addReplacementArrowPath):
+        (WebCore::RenderEmbeddedObject::getReplacementTextGeometry):
+        Pixel-snap the unavailable plugin indicator arrow. Snapping directions
+        were chosen by eye/symmetry to look best on 1x and 2x devices at
+        1x and 2x page scale.
+
+2013-07-19  Ryosuke Niwa  <rniwa@webkit.org>
+
+        The computed values of fix length padding should be subpixel precision like margin
+        https://bugs.webkit.org/show_bug.cgi?id=118936
+
+        Reviewed by Simon Fraser.
+
+        The bug was caused by ComputedStyleExtractor::propertyValue always returning the used value
+        for padding. Fixed the bug by returning the computed value when they're of fixed length.
+
+        This aligns the behaviors of getComputedStyle(~).padding~ with getComputedStyle(~).margin~,
+        which had been fixed in r102149. While the current CSSOM specification says getComputedStyle
+        should return the used values for margins when display property is set to anything but none,
+        new behavior matches that of Chrome, Firefox, and Internet Explorer.
+
+        Also extracted zoomAdjustedPaddingOrMarginPixelValue to reduce the code duplication.
+
+        Test: fast/css/getComputedStyle/getComputedStyle-padding-margin-subpixel-length.html
+
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::zoomAdjustedPaddingOrMarginPixelValue): Extracted.
+        (WebCore::ComputedStyleExtractor::propertyValue):
+
+2013-07-23  Alex Christensen  <achristensen@apple.com>
+
+        Updated ANGLE to latest git commit (047373aa3eb408be62be52ade840fa5f11e72337).
+        https://bugs.webkit.org/show_bug.cgi?id=118550
+
+        Reviewed by Dean Jackson.
+
+        * CMakeLists.txt: Renamed DetectRecursion to DetectCallDepth and added Uniform.cpp.
+
+2013-07-23  Zan Dobersek  <zdobersek@igalia.com>
+
+        Use Checked<uint32_t, RecordOverflow> instead of CheckedInt in GraphicsContext3D
+        https://bugs.webkit.org/show_bug.cgi?id=118988
+
+        Reviewed by Oliver Hunt.
+
+        Use the WTF's Checked class, with uint32_t as the numeric type and RecordOverflow as the overflow handler,
+        instead of the CheckedInt class. This removes a layering violation that's occurring due to including the CheckedInt
+        header that's currently located in the WebCore layer (alongside the HTML canvas code in Source/WebCore/html/canvas).
+
+        * platform/graphics/GraphicsContext3D.cpp:
+        (WebCore::GraphicsContext3D::computeImageSizeInBytes):
+
+2013-07-23  Zalan Bujtas  <zalan@apple.com>
+
+        REGRESSION(r152313): Links in certain twitter postings don't warp correctly on page
+        https://bugs.webkit.org/show_bug.cgi?id=118435
+
+        Reviewed by David Hyatt.
+
+        When we find an empty inline in the middle of the word, prefer breaking it before 
+        instead of after to match other browsers' rendering.
+
+        Test: fast/text/whitespace/inline-whitespace-wrapping-12.html
+
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::canBreakAtThisPosition):
+
+2013-07-23  Alexey Proskuryakov  <ap@apple.com>
+
+        Dictionary hotkey does not work on vertical text
+        https://bugs.webkit.org/show_bug.cgi?id=118993
+        <rdar://problem/14478260>
+
+        Reviewed by Enrica Casucci.
+
+        Test: platform/mac/editing/input/firstrectforcharacterrange-vertical.html
+
+        * editing/Editor.cpp:
+        (WebCore::collapseCaretWidth): A helper function.
+        (WebCore::Editor::firstRectForRange): Many changes:
+        - use RenderObject::absoluteBoundingBoxRectForRange() in regular case, because
+        that's more direct that getting caret rects and computing bounding rect from those.
+        - handle collapsed ranges separately, because absoluteBoundingBoxRectForRange()
+        doesn't provide the needed result, and because it can be done faster.
+        - wherever we use carets to compute the result, account for vertical text (in a hackish
+        way, as we don't have layout information at Editor level).
+
+        * rendering/RenderBlock.cpp: (WebCore::RenderBlock::localCaretRect): Removed
+        dead code.
+
+2013-07-23  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] New positioning model: Borders
+        https://bugs.webkit.org/show_bug.cgi?id=118822
+
+        Reviewed by Dean Jackson.
+
+        Converting to the shape coordinate system was not properly accounting
+        for borders and padding. This has been fixed and a new convienence
+        method added because of the added complexity of the conversion.
+
+        Test: csswg/submitted/shapes/shape-outside/shape-outside-floats-square-border-000.html
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::logicalLeftFloatOffsetForLine): Update to use
+            computeSegmentsForContainingBlockLine to do the coordinate
+            conversion.
+        (WebCore::RenderBlock::logicalRightFloatOffsetForLine): Ditto.
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::LineWidth::shrinkAvailableWidthForNewFloatIfNeeded): Ditto.
+        * rendering/shapes/ShapeOutsideInfo.cpp:
+        (WebCore::ShapeOutsideInfo::computeSegmentsForContainingBlockLine):
+            Add new method to do the coordinate conversion from the containing
+            block coordinate system to the coordinate system of the shape so
+            that the segments can be correctly calculated.
+
+2013-07-23  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        Remove deprecated and unused compositing settings
+        https://bugs.webkit.org/show_bug.cgi?id=119014
+
+        Reviewed by Andreas Kling.
+
+        * page/Settings.in:
+
+2013-07-23  Tim Horton  <timothy_horton@apple.com>
+
+        Add a test for plug-in unavailability indicator obscurity detection
+        https://bugs.webkit.org/show_bug.cgi?id=119007
+
+        Reviewed by Anders Carlsson.
+
+        Test: plugins/unavailable-plugin-indicator-obscurity.html
+
+        Expose the ability to test whether the unavailable plugin indicator
+        is obscured via the internals object.
+
+        * testing/Internals.cpp:
+        (WebCore::Internals::isPluginUnavailabilityIndicatorObscured):
+        * testing/Internals.h:
+        * testing/Internals.idl:
+        Expose RenderEmbeddedObject::isReplacementObscured as
+        internals.isPluginUnavailabilityIndicatorObscured for testing purposes.
+
 2013-07-23  Zan Dobersek  <zdobersek@igalia.com>
 
         [Soup] Clean up header inclusions in ResourceRequest(Soup), SocketStreamHandle

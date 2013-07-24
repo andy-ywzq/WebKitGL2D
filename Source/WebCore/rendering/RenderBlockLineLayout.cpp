@@ -209,8 +209,7 @@ inline void LineWidth::shrinkAvailableWidthForNewFloatIfNeeded(RenderBlock::Floa
         if (previousFloat != newFloat && previousFloat->type() == newFloat->type()) {
             previousShapeOutsideInfo = previousFloat->renderer()->shapeOutsideInfo();
             if (previousShapeOutsideInfo) {
-                LayoutUnit lineTopInShapeCoordinates = m_block->logicalHeight() - m_block->logicalTopForFloat(previousFloat);
-                previousShapeOutsideInfo->computeSegmentsForLine(lineTopInShapeCoordinates, logicalHeightForLine(m_block, m_isFirstLine));
+                previousShapeOutsideInfo->computeSegmentsForContainingBlockLine(m_block->logicalHeight(), m_block->logicalTopForFloat(previousFloat), logicalHeightForLine(m_block, m_isFirstLine));
             }
             break;
         }
@@ -218,8 +217,7 @@ inline void LineWidth::shrinkAvailableWidthForNewFloatIfNeeded(RenderBlock::Floa
 
     ShapeOutsideInfo* shapeOutsideInfo = newFloat->renderer()->shapeOutsideInfo();
     if (shapeOutsideInfo) {
-        LayoutUnit lineTopInShapeCoordinates = m_block->logicalHeight() - m_block->logicalTopForFloat(newFloat);
-        shapeOutsideInfo->computeSegmentsForLine(lineTopInShapeCoordinates, logicalHeightForLine(m_block, m_isFirstLine));
+        shapeOutsideInfo->computeSegmentsForContainingBlockLine(m_block->logicalHeight(), m_block->logicalTopForFloat(newFloat), logicalHeightForLine(m_block, m_isFirstLine));
     }
 #endif
 
@@ -2909,11 +2907,7 @@ static bool canBreakAtThisPosition(bool autoWrap, LineWidth& width, InlineIterat
 
     bool canPlaceOnLine = width.fitsOnLine() || !autoWrapWasEverTrueOnLine;
 
-    // If we are an empty inline in the middle of a word and don't fit on the line then clear any line break we have and find
-    // one in the following text instead.
-    if (!canPlaceOnLine && !canBreakHere && isEmptyInline(current.m_obj))
-        lBreak.clear();
-    else if (canPlaceOnLine && canBreakHere)
+    if (canPlaceOnLine && canBreakHere)
         commitLineBreakAtCurrentWidth(width, lBreak, next);
 
     return canBreakHere;

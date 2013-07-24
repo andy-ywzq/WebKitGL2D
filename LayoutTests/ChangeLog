@@ -1,3 +1,220 @@
+2013-07-24  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] Unreviewed gardening. Add expectations for flaky test.
+
+        * platform/gtk/TestExpectations: Mark svg/stroke/non-scaling-stroke-pattern.svg
+        as flaky.
+
+2013-07-24  Seokju Kwon  <seokju.kwon@gmail.com>
+
+        [EFL] Unreviewed gardening
+        https://bugs.webkit.org/show_bug.cgi?id=118826
+
+        Unreviewed EFL gardening.
+
+        * platform/efl-wk2/TestExpectations: Update test expectations after r134890 and r139491.
+
+2013-07-24  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] Unreviewed gardening. Added expectations for flaky tests.
+
+        * platform/gtk/TestExpectations: Marked animations/resume-after-page-cache.html,
+        css3/calc/img-size.html and perf/nested-combined-selectors.html as flaky.
+
+2013-07-23  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG string concatenation optimizations might emit speculative nodes after emitting nodes that kill the original inputs
+        https://bugs.webkit.org/show_bug.cgi?id=119032
+
+        Reviewed by Oliver Hunt.
+
+        * fast/js/dfg-strcat-over-objects-then-exit-on-it-expected.txt: Added.
+        * fast/js/dfg-strcat-over-objects-then-exit-on-it.html: Added.
+        * fast/js/script-tests/dfg-strcat-over-objects-then-exit-on-it.js: Added.
+        (foo):
+        (bar):
+        (x):
+
+2013-07-23  Mark Lam  <mark.lam@apple.com>
+
+        Added ExpressionRangeInfo for BinaryOpNodes that can throw exceptions
+        due to type coersion.
+        https://bugs.webkit.org/show_bug.cgi?id=116853.
+
+        Reviewed by Geoffrey Garen.
+
+        Added the test case from bugzilla which exercises the general binary op
+        type coersion case, plus another for exercising the strcat case.
+
+        * fast/js/line-column-numbers-expected.txt:
+        * fast/js/line-column-numbers.html:
+        * fast/js/script-tests/line-column-numbers.js:
+
+2013-07-22  Ryosuke Niwa  <rniwa@webkit.org>
+
+        The computed values of fix length padding should be subpixel precision like margin
+        https://bugs.webkit.org/show_bug.cgi?id=118936
+
+        Reviewed by Simon Fraser.
+
+        Add a regression test for obtaining the computed values of floating point padding and margin.
+        They shouldn't be rounded to whole pixels.
+
+        * fast/css/getComputedStyle/getComputedStyle-padding-margin-subpixel-length-expected.txt: Added.
+        * fast/css/getComputedStyle/getComputedStyle-padding-margin-subpixel-length.html: Added.
+        * fast/shapes/shape-inside/shape-inside-shape-logical-top-expected.html: Use a different technique to detect
+        the subpixel layout since paddings
+
+2013-07-23  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] New positioning model: support for rounded rectangle shape-outside
+        https://bugs.webkit.org/show_bug.cgi?id=118081
+
+        Reviewed by Dean Jackson.
+
+        Update the shape-outside rounded rectangle tests and import them from
+        the CSS WG's repository. They have been moved to the CSS WG repository
+        so they can be part of the spec test suite for CSS Shapes.
+
+        * TestExpectations: Remove skipping for tests that have been replaced.
+        * csswg/submitted/shapes/shape-outside/resources/rounded-rectangle.js: Added.
+        (ellipseXIntercept):
+        (scanConvertRoundedRectangleOutside):
+        (genLeftRightRoundedRectFloatShapeOutsideRefTest):
+        (genLeftRoundedRectFloatShapeOutsideRefTest):
+        (genRightRoundedRectFloatShapeOutsideRefTest):
+        * csswg/submitted/shapes/shape-outside/resources/subpixel-utils.js: Added.
+        (SubPixelLayout):
+        (SubPixelLayout.):
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-rounded-rectangle-001-expected.html: Renamed from LayoutTests/fast/shapes/shape-outside-floats/shape-outside-floats-simple-rounded-rectangle-001-expected.html.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-rounded-rectangle-001.html: Renamed from LayoutTests/fast/shapes/shape-outside-floats/shape-outside-floats-simple-rounded-rectangle-001.html.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-rounded-rectangle-002-expected.html: Renamed from LayoutTests/fast/shapes/shape-outside-floats/shape-outside-floats-simple-rounded-rectangle-002-expected.html.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-rounded-rectangle-002.html: Renamed from LayoutTests/fast/shapes/shape-outside-floats/shape-outside-floats-simple-rounded-rectangle-002.html.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-rounded-rectangle-003-expected.html: Renamed from LayoutTests/fast/shapes/shape-outside-floats/shape-outside-floats-simple-rounded-rectangle-003-expected.html.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-rounded-rectangle-003.html: Renamed from LayoutTests/fast/shapes/shape-outside-floats/shape-outside-floats-simple-rounded-rectangle-003.html.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-rounded-rectangle-004-expected.html: Added.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-rounded-rectangle-004.html: Added.
+        * csswg/submitted/shapes/shape-outside/w3c-import.log:
+
+2013-07-23  Zalan Bujtas  <zalan@apple.com>
+
+        REGRESSION(r152313): Links in certain twitter postings don't warp correctly on page
+        https://bugs.webkit.org/show_bug.cgi?id=118435
+
+        Reviewed by David Hyatt.
+
+        When we find an empty inline in the middle of the word, prefer breaking it before 
+        instead of after to match other browsers' rendering.
+
+        * fast/text/whitespace/inline-whitespace-wrapping-12-expected.html: Added.
+        * fast/text/whitespace/inline-whitespace-wrapping-12.html: Added.
+
+2013-07-23  Alexey Proskuryakov  <ap@apple.com>
+
+        Dictionary hotkey does not work on vertical text
+        https://bugs.webkit.org/show_bug.cgi?id=118993
+        <rdar://problem/14478260>
+
+        Reviewed by Enrica Casucci.
+
+        * platform/mac/editing/input/caret-primary-bidi-expected.txt: Old results had
+        some collapsed positions have a rect of width 1. Now they are all consistently 0.
+
+        * platform/mac/editing/input/firstrectforcharacterrange-vertical-expected.txt: Added.
+        * platform/mac/editing/input/firstrectforcharacterrange-vertical.html: Added.
+        * platform/wk2/TestExpectations: Skipping the new test, as WKTR doesn't implement firstRectForCharacterRange.
+
+2013-07-23  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] New positioning model: Borders
+        https://bugs.webkit.org/show_bug.cgi?id=118822
+
+        Reviewed by Dean Jackson.
+
+        Test that the shape is properly respected when the float has a border.
+
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-square-border-000-expected.html: Added.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-square-border-000.html: Added.
+        * csswg/submitted/shapes/shape-outside/w3c-import.log: Updated with new
+            import information.
+
+2013-07-23  Andrei Bucur  <abucur@adobe.com>
+
+        [CSS Regions] Convert percentage-margins-* tests to ref-tests
+        https://bugs.webkit.org/show_bug.cgi?id=118723
+
+        Reviewed by Andreas Kling.
+
+        The patch converts the percentage margins tests for regions in ref tests.
+
+        * fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.html: Added.
+        * fast/regions/percentage-margins-mixed-ltr-dominant-regions.html:
+        * fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.html: Added.
+        * fast/regions/percentage-margins-mixed-rtl-dominant-regions.html:
+        * fast/regions/percentage-margins-rtl-variable-width-regions-expected.html: Added.
+        * fast/regions/percentage-margins-rtl-variable-width-regions.html:
+        * fast/regions/percentage-margins-variable-width-regions-expected.html: Added.
+        * fast/regions/percentage-margins-variable-width-regions.html:
+        * platform/efl/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.png: Removed.
+        * platform/efl/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.txt: Removed.
+        * platform/efl/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.png: Removed.
+        * platform/efl/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.txt: Removed.
+        * platform/efl/fast/regions/percentage-margins-rtl-variable-width-regions-expected.png: Removed.
+        * platform/efl/fast/regions/percentage-margins-rtl-variable-width-regions-expected.txt: Removed.
+        * platform/efl/fast/regions/percentage-margins-variable-width-regions-expected.png: Removed.
+        * platform/efl/fast/regions/percentage-margins-variable-width-regions-expected.txt: Removed.
+        * platform/gtk/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.png: Removed.
+        * platform/gtk/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.txt: Removed.
+        * platform/gtk/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.png: Removed.
+        * platform/gtk/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.txt: Removed.
+        * platform/gtk/fast/regions/percentage-margins-rtl-variable-width-regions-expected.png: Removed.
+        * platform/gtk/fast/regions/percentage-margins-rtl-variable-width-regions-expected.txt: Removed.
+        * platform/gtk/fast/regions/percentage-margins-variable-width-regions-expected.png: Removed.
+        * platform/gtk/fast/regions/percentage-margins-variable-width-regions-expected.txt: Removed.
+        * platform/mac/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.png: Removed.
+        * platform/mac/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.txt: Removed.
+        * platform/mac/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.png: Removed.
+        * platform/mac/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.txt: Removed.
+        * platform/mac/fast/regions/percentage-margins-rtl-variable-width-regions-expected.png: Removed.
+        * platform/mac/fast/regions/percentage-margins-rtl-variable-width-regions-expected.txt: Removed.
+        * platform/mac/fast/regions/percentage-margins-variable-width-regions-expected.png: Removed.
+        * platform/mac/fast/regions/percentage-margins-variable-width-regions-expected.txt: Removed.
+        * platform/qt/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.png: Removed.
+        * platform/qt/fast/regions/percentage-margins-mixed-ltr-dominant-regions-expected.txt: Removed.
+        * platform/qt/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.png: Removed.
+        * platform/qt/fast/regions/percentage-margins-mixed-rtl-dominant-regions-expected.txt: Removed.
+        * platform/qt/fast/regions/percentage-margins-rtl-variable-width-regions-expected.png: Removed.
+        * platform/qt/fast/regions/percentage-margins-rtl-variable-width-regions-expected.txt: Removed.
+        * platform/qt/fast/regions/percentage-margins-variable-width-regions-expected.png: Removed.
+        * platform/qt/fast/regions/percentage-margins-variable-width-regions-expected.txt: Removed.
+
+2013-07-23  Tim Horton  <timothy_horton@apple.com>
+
+        Add a test for plug-in unavailability indicator obscurity detection
+        https://bugs.webkit.org/show_bug.cgi?id=119007
+
+        Reviewed by Anders Carlsson.
+
+        Add a test that ensures that RenderEmbeddedObject accurately detects the
+        various different ways the unavailable plugin dialog can be obscured.
+
+        * platform/mac-wk2/TestExpectations:
+        * platform/mac/TestExpectations:
+        * plugins/unavailable-plugin-indicator-obscurity-expected.txt: Added.
+        * plugins/unavailable-plugin-indicator-obscurity.html: Added.
+
+2013-07-23  Zoltan Horvath  <zoltan@webkit.org>
+
+        [Qt] REGRESSION(r152906) Modified fast/shapes/shape-inside/shape-inside-overflow.html ref test fails.
+        https://bugs.webkit.org/show_bug.cgi?id=118964
+
+        Reviewed by Andreas Kling.
+
+        I modified the test to use Ahem font. Now it's working well on Qt as well.
+
+        * fast/shapes/shape-inside/shape-inside-overflow-expected.html:
+        * fast/shapes/shape-inside/shape-inside-overflow.html:
+
 2013-07-23  Mario Sanchez Prada  <mario.prada@samsung.com>
 
         [GTK] Unreviewed gardening. Added expectations for flaky tests.
