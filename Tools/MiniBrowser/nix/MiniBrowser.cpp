@@ -12,6 +12,7 @@
 
 #include <GL/gl.h>
 #include <cassert>
+#include <cmath>
 #include <cstring>
 #include <glib.h>
 #include <iostream>
@@ -24,6 +25,8 @@
 #define GREEN   "\e[38;05;11m"
 
 extern void glUseProgram(GLuint);
+
+const double EPSILON = 1e-4;
 
 using namespace std;
 
@@ -466,7 +469,7 @@ void MiniBrowser::didFindZoomableArea(WKViewRef, WKPoint target, WKRect area, co
     double scale = WKViewGetSize(mb->m_view).width / (area.size.width + horizontalMarginForViewportAdjustment * 2.0);
 
     // Trying to zoom to an area with the same scale factor causes a zoom out.
-    if (scale == WKViewGetContentScaleFactor(mb->m_view))
+    if (std::fabs(scale - WKViewGetContentScaleFactor(mb->m_view)) < EPSILON)
         scale = mb->scaleToFitContents();
     else {
         // We want the zoomed content area to fit horizontally in the WebView,
