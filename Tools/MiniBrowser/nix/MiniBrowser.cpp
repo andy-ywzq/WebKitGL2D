@@ -85,6 +85,7 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     WKViewSetViewClient(m_view, &viewClient);
 
     WKViewInitialize(m_view);
+    WKPageSetCustomBackingScaleFactor(pageRef(), options.devicePixelRatio);
 
     if (isMobileMode())
         WKPageSetUseFixedLayout(pageRef(), true);
@@ -556,8 +557,8 @@ void MiniBrowser::handlePanning(double timestamp, WKPoint delta)
     // the user input came. This will be adjusted after the user interaction ends.
     WKPoint position = WKViewGetContentPosition(m_view);
     if ((m_contentsSize.width - NIXViewVisibleContentsSize(m_view).width) > 0)
-        position.x -= delta.x;
-    position.y -= delta.y;
+        position.x -= delta.x / m_options.devicePixelRatio;
+    position.y -= delta.y / m_options.devicePixelRatio;
     WKViewSetContentPosition(m_view, position);
 }
 
