@@ -326,6 +326,11 @@ void MiniBrowser::updateDisplay()
         m_touchMocker->paintTouchPoints(size);
 
     m_control->swapBuffers();
+
+    if (m_options.dumpFrames) {
+        static int i = 1;
+        saveSnapshot(i++);
+    }
 }
 
 gboolean MiniBrowser::callUpdateDisplay(gpointer data)
