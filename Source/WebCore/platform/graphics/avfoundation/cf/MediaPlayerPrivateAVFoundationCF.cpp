@@ -36,7 +36,11 @@
 #include "FloatConversion.h"
 #include "FrameView.h"
 #include "GraphicsContext.h"
+#if HAVE(AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT)
 #include "InbandTextTrackPrivateAVCF.h"
+#else
+#include "InbandTextTrackPrivateLegacyAVCF.h"
+#endif
 #include "KURL.h"
 #include "Logging.h"
 #include "PlatformCALayer.h"
@@ -44,7 +48,9 @@
 #include "TimeRanges.h"
 
 #include <AVFoundationCF/AVCFPlayerItem.h>
+#if HAVE(AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT)
 #include <AVFoundationCF/AVCFPlayerItemLegibleOutput.h>
+#endif
 #include <AVFoundationCF/AVCFPlayerLayer.h>
 #include <AVFoundationCF/AVFoundationCF.h>
 #include <CoreMedia/CoreMedia.h>
@@ -204,7 +210,9 @@ static CFArrayRef createMetadataKeyNames()
         AVCFAssetPropertyPreferredRate,
         AVCFAssetPropertyPlayable,
         AVCFAssetPropertyTracks,
-        AVCFAssetPropertyAvailableMediaCharacteristicsWithMediaSelectionOptions
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
+        AVCFAssetPropertyAvailableMediaCharacteristicsWithMediaSelectionOptions,
+#endif
     };
     
     return CFArrayCreate(0, (const void**)keyNames, sizeof(keyNames) / sizeof(keyNames[0]), &kCFTypeArrayCallBacks);
@@ -949,7 +957,9 @@ void MediaPlayerPrivateAVFoundationCF::sizeChanged()
 #if !HAVE(AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT)
 void MediaPlayerPrivateAVFoundationCF::processLegacyClosedCaptionsTracks()
 {
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
     AVCFPlayerItemSelectMediaOptionInMediaSelectionGroup(avPlayerItem(m_avfWrapper), 0, safeMediaSelectionGroupForLegibleMedia(m_avfWrapper));
+#endif
 
     Vector<RefPtr<InbandTextTrackPrivateAVF> > removedTextTracks = m_textTracks;
     RetainPtr<CFArrayRef> tracks = adoptCF(AVCFPlayerItemCopyTracks(avPlayerItem(m_avfWrapper)));
@@ -1271,13 +1281,6 @@ void AVFWrapper::createPlayer(IDirect3DDevice9* d3dDevice)
     if (m_d3dDevice && AVCFPlayerSetDirect3DDevicePtr())
         AVCFPlayerSetDirect3DDevicePtr()(playerRef, m_d3dDevice.get());
 
-#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP) && HAVE(AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT)
-    // Because of a bug in AVFoundationCF, we have to wait until the player is created before we can add the legible output:
-    // Once <rdar://problem/14390466> this is fixed, we can remove the following two lines.
-    ::Sleep(1000); // FIXME: This is being fixed as part of <rdar://problem/14390466>
-    AVCFPlayerItemAddOutput(avPlayerItem(), legibleOutput());
-#endif
-
     CFNotificationCenterRef center = CFNotificationCenterGetLocalCenter();
     ASSERT(center);
 
@@ -1328,9 +1331,7 @@ void AVFWrapper::createPlayerItem()
     AVCFPlayerItemLegibleOutputSetCallbacks(m_legibleOutput.get(), &callbackInfo, dispatch_get_main_queue());
     AVCFPlayerItemLegibleOutputSetAdvanceIntervalForCallbackInvocation(m_legibleOutput.get(), legibleOutputAdvanceInterval);
     AVCFPlayerItemLegibleOutputSetTextStylingResolution(m_legibleOutput.get(), AVCFPlayerItemLegibleOutputTextStylingResolutionSourceAndRulesOnly);
-    // We cannot add the Legible Output to the player item until the player is constructed. <rdar://problem/14390466>
-    // Once this is fixed, we can uncomment the following line.
-    // AVCFPlayerItemAddOutput(m_avPlayerItem.get(), m_legibleOutput.get());
+    AVCFPlayerItemAddOutput(m_avPlayerItem.get(), m_legibleOutput.get());
 #endif
 }
 
@@ -1460,6 +1461,7 @@ void AVFWrapper::seekToTime(float time)
         kCMTimeZero, kCMTimeZero, &seekCompletedCallback, callbackContext());
 }
 
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP) && HAVE(AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT)
 struct LegibleOutputData {
     RetainPtr<CFArrayRef> m_attributedStrings;
     double m_time;
@@ -1512,6 +1514,7 @@ void AVFWrapper::legibleOutputCallback(void* context, AVCFPlayerItemLegibleOutpu
 
     dispatch_async_f(dispatch_get_main_queue(), legibleOutputData.leakPtr(), processCue);
 }
+#endif
 
 void AVFWrapper::setAsset(AVCFURLAssetRef asset)
 {
@@ -1539,8 +1542,7 @@ PlatformLayer* AVFWrapper::platformLayer()
     if (!m_videoLayerWrapper)
         return 0;
 
-    CACFLayerRef layerRef = AVCFPlayerLayerCopyCACFLayer(m_avCFVideoLayer.get());
-    m_caVideoLayer = adoptCF(layerRef);
+    m_caVideoLayer = adoptCF(AVCFPlayerLayerCopyCACFLayer(m_avCFVideoLayer.get()));
 
     CACFLayerInsertSublayer(m_videoLayerWrapper->platformLayer(), m_caVideoLayer.get(), 0);
     m_videoLayerWrapper->setAnchorPoint(FloatPoint3D());
@@ -1625,7 +1627,7 @@ RetainPtr<CGImageRef> AVFWrapper::createImageForTimeInRect(float time, const Int
     return image;
 }
 
-#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP) && HAVE(AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT)
+#if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
 AVCFMediaSelectionGroupRef AVFWrapper::safeMediaSelectionGroupForLegibleMedia() const
 {
     if (!avAsset())

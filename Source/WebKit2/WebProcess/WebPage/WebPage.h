@@ -273,8 +273,6 @@ public:
     InjectedBundlePageFullScreenClient& injectedBundleFullScreenClient() { return m_fullScreenClient; }
 #endif
 
-    void setUnderlayPage(PassRefPtr<WebPage> underlayPage) { m_underlayPage = underlayPage; }
-
     bool findStringFromInjectedBundle(const String&, FindOptions);
 
     WebFrame* mainWebFrame() const { return m_mainFrame.get(); }
@@ -639,6 +637,9 @@ public:
     void setMinimumLayoutSize(const WebCore::IntSize&);
     WebCore::IntSize minimumLayoutSize() const { return m_minimumLayoutSize; }
 
+    void setAutoSizingShouldExpandToViewHeight(bool shouldExpand);
+    bool autoSizingShouldExpandToViewHeight() { return m_autoSizingShouldExpandToViewHeight; }
+
     bool canShowMIMEType(const String& MIMEType) const;
 
     void addTextCheckingRequest(uint64_t requestID, PassRefPtr<WebCore::TextCheckingRequest>);
@@ -659,6 +660,9 @@ public:
     WebCore::ScrollPinningBehavior scrollPinningBehavior() { return m_scrollPinningBehavior; }
     void setScrollPinningBehavior(uint32_t /* WebCore::ScrollPinningBehavior */ pinning);
 
+    WKTypeRef pageOverlayCopyAccessibilityAttributeValue(WKStringRef attribute, WKTypeRef parameter);
+    WKArrayRef pageOverlayCopyAccessibilityAttributesNames(bool parameterizedNames);
+    
 private:
     WebPage(uint64_t pageID, const WebPageCreationParameters&);
 
@@ -955,8 +959,6 @@ private:
 #endif
     PageOverlayList m_pageOverlays;
 
-    RefPtr<WebPage> m_underlayPage;
-
 #if ENABLE(INSPECTOR)
     RefPtr<WebInspector> m_inspector;
 #endif
@@ -1003,6 +1005,7 @@ private:
     unsigned m_cachedPageCount;
 
     WebCore::IntSize m_minimumLayoutSize;
+    bool m_autoSizingShouldExpandToViewHeight;
 
 #if ENABLE(CONTEXT_MENUS)
     bool m_isShowingContextMenu;

@@ -278,6 +278,7 @@ WebPage::WebPage(uint64_t pageID, const WebPageCreationParameters& parameters)
     , m_canShortCircuitHorizontalWheelEvents(false)
     , m_numWheelEventHandlers(0)
     , m_cachedPageCount(0)
+    , m_autoSizingShouldExpandToViewHeight(false)
 #if ENABLE(CONTEXT_MENUS)
     , m_isShowingContextMenu(false)
 #endif
@@ -380,6 +381,7 @@ WebPage::WebPage(uint64_t pageID, const WebPageCreationParameters& parameters)
     setIsInWindow(parameters.isInWindow);
 
     setMinimumLayoutSize(parameters.minimumLayoutSize);
+    setAutoSizingShouldExpandToViewHeight(parameters.autoSizingShouldExpandToViewHeight);
     
     setScrollPinningBehavior(parameters.scrollPinningBehavior);
 
@@ -860,7 +862,6 @@ void WebPage::close()
 #endif
     m_logDiagnosticMessageClient.initialize(0);
 
-    m_underlayPage = nullptr;
     m_printContext = nullptr;
     m_mainFrame->coreFrame()->loader()->detachFromParent();
     m_page = nullptr;
@@ -1058,11 +1059,6 @@ void WebPage::layoutIfNeeded()
 {
     if (m_mainFrame->coreFrame()->view())
         m_mainFrame->coreFrame()->view()->updateLayoutAndStyleIfNeededRecursive();
-
-    if (m_underlayPage) {
-        if (FrameView *frameView = m_underlayPage->mainFrameView())
-            frameView->updateLayoutAndStyleIfNeededRecursive();
-    }
 }
 
 WebPage* WebPage::fromCorePage(Page* page)
@@ -1168,15 +1164,6 @@ void WebPage::drawRect(GraphicsContext& graphicsContext, const IntRect& rect)
 {
     GraphicsContextStateSaver stateSaver(graphicsContext);
     graphicsContext.clip(rect);
-
-    if (m_underlayPage) {
-        m_underlayPage->drawRect(graphicsContext, rect);
-
-        graphicsContext.beginTransparencyLayer(1);
-        m_mainFrame->coreFrame()->view()->paint(&graphicsContext, rect);
-        graphicsContext.endTransparencyLayer();
-        return;
-    }
 
     m_mainFrame->coreFrame()->view()->paint(&graphicsContext, rect);
 }
@@ -1828,6 +1815,32 @@ void WebPage::gestureEvent(const WebGestureEvent& gestureEvent)
     send(Messages::WebPageProxy::DidReceiveEvent(static_cast<uint32_t>(gestureEvent.type()), handled));
 }
 #endif
+    
+WKTypeRef WebPage::pageOverlayCopyAccessibilityAttributeValue(WKStringRef attribute, WKTypeRef parameter)
+{
+    if (!m_pageOverlays.size())
+        return 0;
+    PageOverlayList::reverse_iterator end = m_pageOverlays.rend();
+    for (PageOverlayList::reverse_iterator it = m_pageOverlays.rbegin(); it != end; ++it) {
+        WKTypeRef value = (*it)->copyAccessibilityAttributeValue(attribute, parameter);
+        if (value)
+            return value;
+    }
+    return 0;
+}
+
+WKArrayRef WebPage::pageOverlayCopyAccessibilityAttributesNames(bool parameterizedNames)
+{
+    if (!m_pageOverlays.size())
+        return 0;
+    PageOverlayList::reverse_iterator end = m_pageOverlays.rend();
+    for (PageOverlayList::reverse_iterator it = m_pageOverlays.rbegin(); it != end; ++it) {
+        WKArrayRef value = (*it)->copyAccessibilityAttributeNames(parameterizedNames);
+        if (value)
+            return value;
+    }
+    return 0;
+}
 
 void WebPage::validateCommand(const String& commandName, uint64_t callbackID)
 {
@@ -3891,6 +3904,16 @@ void WebPage::setMinimumLayoutSize(const IntSize& minimumLayoutSize)
     int maximumSize = std::numeric_limits<int>::max();
 
     corePage()->mainFrame()->view()->enableAutoSizeMode(true, IntSize(minimumLayoutWidth, minimumLayoutHeight), IntSize(maximumSize, maximumSize));
+}
+
+void WebPage::setAutoSizingShouldExpandToViewHeight(bool shouldExpand)
+{
+    if (m_autoSizingShouldExpandToViewHeight == shouldExpand)
+        return;
+
+    m_autoSizingShouldExpandToViewHeight = shouldExpand;
+
+    corePage()->mainFrame()->view()->setAutoSizeFixedMinimumHeight(shouldExpand ? m_viewSize.height() : 0);
 }
 
 bool WebPage::isSmartInsertDeleteEnabled()

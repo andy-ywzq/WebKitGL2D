@@ -1,3 +1,620 @@
+2013-07-29  Alex Christensen  <achristensen@apple.com>
+
+        Speculative implementation of missing GraphicsContext3D methods on Windows.
+        https://bugs.webkit.org/show_bug.cgi?id=119167
+
+        Reviewed by Dean Jackson.
+
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * platform/graphics/win/GraphicsContext3DWin.cpp: Added.
+        (WebCore::GraphicsContext3DPrivate::GraphicsContext3DPrivate):
+        (WebCore::GraphicsContext3DPrivate::~GraphicsContext3DPrivate):
+        (WebCore::GraphicsContext3D::create):
+        (WebCore::GraphicsContext3D::GraphicsContext3D):
+        (WebCore::GraphicsContext3D::~GraphicsContext3D):
+        (WebCore::GraphicsContext3D::setContextLostCallback):
+        (WebCore::GraphicsContext3D::setErrorMessageCallback):
+        (WebCore::GraphicsContext3D::makeContextCurrent):
+        (WebCore::GraphicsContext3D::platformGraphicsContext3D):
+        (WebCore::GraphicsContext3D::platformTexture):
+        (WebCore::GraphicsContext3D::isGLES2Compliant):
+        (WebCore::GraphicsContext3D::platformLayer):
+
+2013-07-29  Dean Jackson  <dino@apple.com>
+
+        Max IOSurfaceDimension should be an inclusive upper bound
+        https://bugs.webkit.org/show_bug.cgi?id=119206
+        <rdar://problem/14555311>
+
+        Reviewed by Simon Fraser.
+
+        The maxIOSurfaceDimension value should be an inclusive upper bound.
+        Change the greater than or equal to into a greater than. This will
+        allow canvas elements of this dimension to be accelerated.
+
+        * platform/graphics/cg/ImageBufferCG.cpp:
+        (WebCore::ImageBuffer::ImageBuffer): Change >= to >
+
+2013-07-29  Renata Hodovan  <reni@webkit.org>
+
+        ASSERT_NOT_REACHED was touched in WebCore::SVGAnimatedType::valueAsString
+        https://bugs.webkit.org/show_bug.cgi?id=118744
+
+        Reviewed by Philip Rogers.
+
+        If we have an <animateTransform> tag that sets the attributeName and attributeType
+        properties however they are not consistent and we shouldn't try to apply it.
+        It is already checked and catched in SVGAnimateElement::resetAnimatedType() but
+        DontApplyAnimation case isn't handled properly. The patch forces an early return
+        in this case.
+
+        Test: svg/animations/attributeNameAndAttributeTypeMissmatch.svg
+
+        * svg/SVGAnimateElement.cpp:
+        (WebCore::SVGAnimateElement::resetAnimatedType):
+
+2013-07-29  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        REGRESSION(148300) GIFs not reanimated after resumeActiveDOMObjectAndAnimations
+        https://bugs.webkit.org/show_bug.cgi?id=119217
+
+        Reviewed by Tim Horton.
+
+        Commit 148300 introduced a new better was of restarting GIF animations after
+        they have been suspended. Unfortunately the method was not activated when a page
+        is resumed but only when it is returning from background.
+
+        This fixes GIF animations that are stopped during user interaction on Qt and other
+        platforms using suspendActiveDOMObjectAndAnimations.
+
+        * page/Frame.cpp:
+        (WebCore::Frame::resumeActiveDOMObjectsAndAnimations):
+
+2013-07-29  Alex Christensen  <achristensen@apple.com>
+
+        Made EGL useable by non-cairo ports.
+        https://bugs.webkit.org/show_bug.cgi?id=119177
+
+        Reviewed by Brent Fulgham.
+
+        * platform/graphics/cairo/GLContext.h:
+        * platform/graphics/egl/GLContextEGL.cpp:
+        (WebCore::GLContextEGL::GLContextEGL):
+        * platform/graphics/egl/GLContextEGL.h:
+        Protected Cairo-specific code with #if USE(CAIRO)
+
+2013-07-29  Sergio Correia  <sergio.correia@openbossa.org>
+
+        CoordinatedGraphics: Add API to get and set the active state of a WebView
+        https://bugs.webkit.org/show_bug.cgi?id=119067
+
+        Reviewed by Noam Rosenthal.
+
+        Added a method to return whether a scene is active or not.
+
+        No new tests, no behavior change.
+
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsScene.h:
+        (WebCore::CoordinatedGraphicsScene::isActive): Added method to return the
+        active state of the scene.
+
+2013-07-29  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [ATK] Issues with edge cases when getting offsets for a text range in AtkText
+        https://bugs.webkit.org/show_bug.cgi?id=118908
+
+        Reviewed by Martin Robinson.
+
+        Reimplement getSelectionOffsetsForObject() just in term of
+        Positions instead of using ranges, which makes it simpler and
+        works better. Also, make sure we use the right Node as reference
+        for the accessibility object by getting the proper one both for
+        text control objects (e.g. input, text area) and normal ones.
+
+        * accessibility/atk/WebKitAccessibleInterfaceText.cpp:
+        (getNodeForAccessibilityObject): New helper function to ensure we
+        always get the relevant object from the DOM tree for a given
+        accessibility object, in the context of the implementation of
+        AtkText, so it works both with Text Controls and other elements.
+        (getSelectionOffsetsForObject): Rewritten this function in terms
+        of VisiblePositions and avoiding weird operations with ranges, so
+        we have more control to fine tune the results and give more
+        accurate ones. Besides, now it works better with edge cases.
+
+2013-07-29  Zan Dobersek  <zdobersek@igalia.com>
+
+        Clean up DragImage
+        https://bugs.webkit.org/show_bug.cgi?id=118981
+
+        Reviewed by Anders Carlsson.
+
+        * dom/Clipboard.h: Add forward declaration for the Range class. This was not necessary until now as the forward
+        declaration was introduced in the DragImage header, from where it's being removed due to not being required in that class.
+        * page/Frame.h: Ditto.
+        * platform/DragImage.cpp: Remove the unnecessary DragController and FontRenderingMode header inclusions.
+        The latter is already included in the header.
+        * platform/DragImage.h: Remove the forward declaration for the Range class - it's not used by the DragImage class at all.
+
+2013-07-29  Kwang Yul Seo  <skyul@company100.net>
+
+        [EFL] Improve string use in ErrorsEfl
+        https://bugs.webkit.org/show_bug.cgi?id=119207
+
+        Reviewed by Christophe Dumez.
+
+        Use ASCIILiteral for constant strings becoming WTFStrings.
+
+        No behavior change.
+
+        * platform/efl/ErrorsEfl.cpp:
+        (WebCore::cancelledError):
+        (WebCore::blockedError):
+        (WebCore::cannotShowURLError):
+        (WebCore::interruptedForPolicyChangeError):
+        (WebCore::cannotShowMIMETypeError):
+        (WebCore::fileDoesNotExistError):
+        (WebCore::pluginWillHandleLoadError):
+        (WebCore::downloadCancelledByUserError):
+        (WebCore::printerNotFoundError):
+        (WebCore::invalidPageRangeToPrint):
+
+2013-07-28  Andreas Kling  <akling@apple.com>
+
+        Don't update the text track override CSS every time a media element is created.
+        <http://webkit.org/b/119199>
+        <rdar://problem/14572855>
+
+        Reviewed by Darin Adler.
+
+        We should only have to update the CSS if the accessibility caption preferences are changed.
+        This was forcing a full style recalc in every Document any time a media element is instantiated.
+
+        * page/CaptionUserPreferencesMediaAF.cpp:
+        (WebCore::CaptionUserPreferencesMediaAF::setInterestedInCaptionPreferenceChanges):
+
+2013-07-28  Andy Estes  <aestes@apple.com>
+
+        Stop exporting Widget::frameRectsChanged()
+        https://bugs.webkit.org/show_bug.cgi?id=119196
+
+        Reviewed by Darin Adler.
+
+        The definition is inlined in a private header, so there's no need to
+        export a symbol to link against. On the Mac, since we compile with
+        -fvisibility-inlines-hidden, removing the symbol from the export file
+        silences an ld warning about exporting a hidden symbol.
+
+        * WebCore.exp.in: Removed __ZN7WebCore6Widget17frameRectsChangedEv.
+
+2013-07-28  Sam Weinig  <sam@webkit.org>
+
+        Clean up CSSPrimitiveValue::equals a bit
+        https://bugs.webkit.org/show_bug.cgi?id=119195
+
+        Reviewed by Andreas Kling.
+
+        * css/CSSPrimitiveValue.cpp:
+        (WebCore::CSSPrimitiveValue::equals):
+        This should not change behavior, but is quite a bit clearer.
+
+2013-07-27  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL] Bump required version of EFL to 1.7
+        https://bugs.webkit.org/show_bug.cgi?id=119144
+
+        Reviewed by Christophe Dumez.
+
+        * platform/efl/FileSystemEfl.cpp: Removed workaround code which was fixed at Eina 1.7
+        (WebCore::listDirectory):
+
+2013-07-27  Jacky Jiang  <zhajiang@blackberry.com>
+
+        Replace all uses of GraphicsLayer::create function with the one that takes a GraphicsLayerFactory
+        https://bugs.webkit.org/show_bug.cgi?id=119186
+
+        Reviewed by Anders Carlsson.
+
+        Remove GraphicsLayer::create(GraphicsLayerClient*) function since it's
+        been deprecated by r130072.
+
+        * WebCore.exp.in:
+        * WebCore.order:
+        * platform/graphics/GraphicsLayer.h:
+        * platform/graphics/blackberry/GraphicsLayerBlackBerry.cpp:
+        * platform/graphics/ca/GraphicsLayerCA.cpp:
+        * platform/graphics/texmap/GraphicsLayerTextureMapper.cpp:
+
+2013-07-27  Alexey Proskuryakov  <ap@apple.com>
+
+        HTMLParserScheduler gets into an inconsistent state when suspended for reasons
+        other than WillDeferLoading
+        https://bugs.webkit.org/show_bug.cgi?id=119172
+
+        Reviewed by Sam Weinig.
+
+        When loading is not deferred, even a suspended parser will be processing new data
+        from network, potentially starting its next chunk timer.
+
+        Limit suspending to when we can actually enforce it.
+
+        Here is what happens for each ReasonForSuspension:
+        - JavaScriptDebuggerPaused: continuing to parse is probably wrong, but in practice,
+        this is unlikely to happen while debugging, and wasn't properly prevented before
+        this patch anyway.
+        - WillDeferLoading: No change in behavior.
+        - DocumentWillBecomeInactive: This is about page cache, and documents are only allowed
+        to be cached when fully loaded.
+        - PageWillBeSuspended: This appears to be part of Frame::suspendActiveDOMObjectsAndAnimations()
+        implementation, I'm guessing that it is appropriate to continue loading.
+
+        * dom/Document.cpp:
+        (WebCore::Document::suspendScheduledTasks):
+        (WebCore::Document::resumeScheduledTasks):
+        Only suspend/resume parsing when loading is deferred. This is not expressed directly,
+        but it's important to do this to avoid executing JS behind alerts and other modal dialogs.
+
+        * html/parser/HTMLParserScheduler.h: Added m_suspended member variable for assertions.
+
+        * html/parser/HTMLParserScheduler.cpp:
+        (WebCore::HTMLParserScheduler::HTMLParserScheduler):
+        (WebCore::HTMLParserScheduler::continueNextChunkTimerFired):
+        (WebCore::HTMLParserScheduler::scheduleForResume):
+        (WebCore::HTMLParserScheduler::suspend):
+        (WebCore::HTMLParserScheduler::resume):
+        Update m_suspended and assert as appropriate. No behavior changes for release mode.
+
+        * page/Frame.cpp: (WebCore::Frame::suspendActiveDOMObjectsAndAnimations):
+        Added a FIXME.
+
+2013-07-27  Alexey Proskuryakov  <ap@apple.com>
+
+        Make SuspendableTimer safer
+        https://bugs.webkit.org/show_bug.cgi?id=119127
+
+        Reviewed by Sam Weinig.
+
+        SuspendableTimer now enforces that it stays suspended until resumed (or until stopped
+        and started again). To ensure this, TimerBase is now a private base class, and parts of
+        its interface that clients use are reimplemented with suspend/resume in mind.
+
+        Derived classes are still allowed to override TimerBase virtual functions (notably
+        fired() and alignedFireTime()).
+
+        * dom/DocumentEventQueue.cpp:
+        (WebCore::DocumentEventQueueTimer): Removed an extraneous WTF_MAKE_NONCOPYABLE,
+        TimerBase has it already.
+        (WebCore::DocumentEventQueueTimer::create): Use our normal create() pattern.
+        (WebCore::DocumentEventQueue::DocumentEventQueue): Made the constructor private, accordingly.
+        (WebCore::DocumentEventQueue::cancelEvent): Use SuspendableTimer::cancel(), which
+        is a new name to disambiguate TimerBase::stop() and ActiveDOMObject::stop().
+        (WebCore::DocumentEventQueue::close): Ditto.
+
+        * page/DOMTimer.cpp:
+        (WebCore::DOMTimer::fired): Now that SuspendableTimer knows whether it's currently
+        suspended, assert that it's not.
+        (WebCore::DOMTimer::didStop): Separated ActiveDOMObject::stop() implementation from
+        additional cleanup, allowing for better SuspendableTimer encapsulation.
+
+        * page/DOMTimer.h: Added FINAL and OVVERIDE specifiers as appropriate.
+
+        * page/SuspendableTimer.h: Added FINAL (and OVERRIDE) qualifiers to ActiveDOMObject
+        methods. A derived class that wants to override current behavior is most likely not
+        a timer, and thus shouldn't be a derived class.
+        (WebCore::SuspendableTimer::isActive): SuspendableTimer with a next fire time is
+        active even if suspended, we shouldn't overwrite its saved data thinking that it's
+        inactive.
+        (WebCore::SuspendableTimer::isSuspended): Exposed to clients (m_suspended is no
+        longer debug only).
+
+        * page/SuspendableTimer.cpp:
+        (WebCore::SuspendableTimer::SuspendableTimer): Updated for new variable names.
+        (WebCore::SuspendableTimer::stop): This is ActiveDOMObject::stop(), which is called
+        before final destruction. We don't track this state directly, but can approximate
+        with setting m_suspended, so even if someone tries to start the timer afterwards,
+        it won't fire.
+        (WebCore::SuspendableTimer::suspend): Updated for new names.
+        (WebCore::SuspendableTimer::resume): Ditto.
+        (WebCore::SuspendableTimer::didStop): No-op default implementation for client hook.
+        (WebCore::SuspendableTimer::cancel): Equivalent of TimerBase::stop(), which also
+        works when suspended. 
+        (WebCore::SuspendableTimer::startRepeating): Replacement for TimerBase function with
+        the same name, which works correctly when suspended. We don't want to actually start
+        the timer in this case.
+        (WebCore::SuspendableTimer::startOneShot): Ditto.
+        (WebCore::SuspendableTimer::repeatInterval): Ditto.
+        (WebCore::SuspendableTimer::augmentFireInterval): Ditto.
+        (WebCore::SuspendableTimer::augmentRepeatInterval): Ditto.
+
+2013-07-27  Sam Weinig  <sam@webkit.org>
+
+        Add assertions for CSSPrimitiveValue's m_value.valueID accessor
+        https://bugs.webkit.org/show_bug.cgi?id=119180
+
+        Reviewed by Andreas Kling.
+
+        * css/CSSPrimitiveValueMappings.h:
+        (WebCore::CSSPrimitiveValue::operator CSSReflectionDirection):
+        (WebCore::CSSPrimitiveValue::operator ColumnSpan):
+        (WebCore::CSSPrimitiveValue::operator PrintColorAdjust):
+        (WebCore::CSSPrimitiveValue::operator EBorderStyle):
+        (WebCore::CSSPrimitiveValue::operator OutlineIsAuto):
+        (WebCore::CSSPrimitiveValue::operator CompositeOperator):
+        (WebCore::CSSPrimitiveValue::operator ControlPart):
+        (WebCore::CSSPrimitiveValue::operator EBackfaceVisibility):
+        (WebCore::CSSPrimitiveValue::operator EFillAttachment):
+        (WebCore::CSSPrimitiveValue::operator EFillBox):
+        (WebCore::CSSPrimitiveValue::operator EFillRepeat):
+        (WebCore::CSSPrimitiveValue::operator EBoxPack):
+        (WebCore::CSSPrimitiveValue::operator EBoxAlignment):
+        (WebCore::CSSPrimitiveValue::operator EBoxDecorationBreak):
+        (WebCore::CSSPrimitiveValue::operator BackgroundEdgeOrigin):
+        (WebCore::CSSPrimitiveValue::operator EBoxSizing):
+        (WebCore::CSSPrimitiveValue::operator EBoxDirection):
+        (WebCore::CSSPrimitiveValue::operator EBoxLines):
+        (WebCore::CSSPrimitiveValue::operator EBoxOrient):
+        (WebCore::CSSPrimitiveValue::operator ECaptionSide):
+        (WebCore::CSSPrimitiveValue::operator EClear):
+        (WebCore::CSSPrimitiveValue::operator ECursor):
+        (WebCore::CSSPrimitiveValue::operator CursorVisibility):
+        (WebCore::CSSPrimitiveValue::operator EDisplay):
+        (WebCore::CSSPrimitiveValue::operator EEmptyCell):
+        (WebCore::CSSPrimitiveValue::operator EAlignItems):
+        (WebCore::CSSPrimitiveValue::operator EJustifyContent):
+        (WebCore::CSSPrimitiveValue::operator EFlexDirection):
+        (WebCore::CSSPrimitiveValue::operator EAlignContent):
+        (WebCore::CSSPrimitiveValue::operator EFlexWrap):
+        (WebCore::CSSPrimitiveValue::operator EFloat):
+        (WebCore::CSSPrimitiveValue::operator LineBreak):
+        (WebCore::CSSPrimitiveValue::operator EListStylePosition):
+        (WebCore::CSSPrimitiveValue::operator EListStyleType):
+        (WebCore::CSSPrimitiveValue::operator EMarginCollapse):
+        (WebCore::CSSPrimitiveValue::operator EMarqueeBehavior):
+        (WebCore::CSSPrimitiveValue::operator RegionFragment):
+        (WebCore::CSSPrimitiveValue::operator EMarqueeDirection):
+        (WebCore::CSSPrimitiveValue::operator ENBSPMode):
+        (WebCore::CSSPrimitiveValue::operator EOverflow):
+        (WebCore::CSSPrimitiveValue::operator EPageBreak):
+        (WebCore::CSSPrimitiveValue::operator EPosition):
+        (WebCore::CSSPrimitiveValue::operator EResize):
+        (WebCore::CSSPrimitiveValue::operator ETableLayout):
+        (WebCore::CSSPrimitiveValue::operator ETextAlign):
+        (WebCore::CSSPrimitiveValue::operator TextAlignLast):
+        (WebCore::CSSPrimitiveValue::operator TextJustify):
+        (WebCore::CSSPrimitiveValue::operator TextDecoration):
+        (WebCore::CSSPrimitiveValue::operator TextDecorationStyle):
+        (WebCore::CSSPrimitiveValue::operator TextUnderlinePosition):
+        (WebCore::CSSPrimitiveValue::operator ETextSecurity):
+        (WebCore::CSSPrimitiveValue::operator ETextTransform):
+        (WebCore::CSSPrimitiveValue::operator EUnicodeBidi):
+        (WebCore::CSSPrimitiveValue::operator EUserDrag):
+        (WebCore::CSSPrimitiveValue::operator EUserModify):
+        (WebCore::CSSPrimitiveValue::operator EUserSelect):
+        (WebCore::CSSPrimitiveValue::operator EVerticalAlign):
+        (WebCore::CSSPrimitiveValue::operator EVisibility):
+        (WebCore::CSSPrimitiveValue::operator EWhiteSpace):
+        (WebCore::CSSPrimitiveValue::operator EWordBreak):
+        (WebCore::CSSPrimitiveValue::operator EOverflowWrap):
+        (WebCore::CSSPrimitiveValue::operator TextDirection):
+        (WebCore::CSSPrimitiveValue::operator WritingMode):
+        (WebCore::CSSPrimitiveValue::operator TextCombine):
+        (WebCore::CSSPrimitiveValue::operator RubyPosition):
+        (WebCore::CSSPrimitiveValue::operator TextEmphasisPosition):
+        (WebCore::CSSPrimitiveValue::operator TextOverflow):
+        (WebCore::CSSPrimitiveValue::operator TextEmphasisFill):
+        (WebCore::CSSPrimitiveValue::operator TextEmphasisMark):
+        (WebCore::CSSPrimitiveValue::operator TextOrientation):
+        (WebCore::CSSPrimitiveValue::operator EPointerEvents):
+        (WebCore::CSSPrimitiveValue::operator FontDescription::Kerning):
+        (WebCore::CSSPrimitiveValue::operator FontSmoothingMode):
+        (WebCore::CSSPrimitiveValue::operator FontWeight):
+        (WebCore::CSSPrimitiveValue::operator FontItalic):
+        (WebCore::CSSPrimitiveValue::operator FontSmallCaps):
+        (WebCore::CSSPrimitiveValue::operator TextRenderingMode):
+        (WebCore::CSSPrimitiveValue::operator ColorSpace):
+        (WebCore::CSSPrimitiveValue::operator Hyphens):
+        (WebCore::CSSPrimitiveValue::operator LineSnap):
+        (WebCore::CSSPrimitiveValue::operator LineAlign):
+        (WebCore::CSSPrimitiveValue::operator Order):
+        (WebCore::CSSPrimitiveValue::operator ESpeak):
+        (WebCore::CSSPrimitiveValue::operator BlendMode):
+        (WebCore::CSSPrimitiveValue::operator LineCap):
+        (WebCore::CSSPrimitiveValue::operator LineJoin):
+        (WebCore::CSSPrimitiveValue::operator WindRule):
+        (WebCore::CSSPrimitiveValue::operator EAlignmentBaseline):
+        (WebCore::CSSPrimitiveValue::operator EBorderCollapse):
+        (WebCore::CSSPrimitiveValue::operator EBorderFit):
+        (WebCore::CSSPrimitiveValue::operator EImageRendering):
+        (WebCore::CSSPrimitiveValue::operator ETransformStyle3D):
+        (WebCore::CSSPrimitiveValue::operator ColumnAxis):
+        (WebCore::CSSPrimitiveValue::operator ColumnProgression):
+        (WebCore::CSSPrimitiveValue::operator WrapFlow):
+        (WebCore::CSSPrimitiveValue::operator WrapThrough):
+        (WebCore::CSSPrimitiveValue::operator GridAutoFlow):
+        (WebCore::CSSPrimitiveValue::operator EBufferedRendering):
+        (WebCore::CSSPrimitiveValue::operator EColorInterpolation):
+        (WebCore::CSSPrimitiveValue::operator EColorRendering):
+        (WebCore::CSSPrimitiveValue::operator EDominantBaseline):
+        (WebCore::CSSPrimitiveValue::operator EShapeRendering):
+        (WebCore::CSSPrimitiveValue::operator ETextAnchor):
+        (WebCore::CSSPrimitiveValue::operator SVGWritingMode):
+        (WebCore::CSSPrimitiveValue::operator EVectorEffect):
+        (WebCore::CSSPrimitiveValue::operator EMaskType):
+        Assert that the CSSPrimitiveValue is holding a CSSValueID before accessing it.
+
+2013-07-26  Sam Weinig  <sam@webkit.org>
+
+        Stop pretending to support <string> for text-align.
+        https://bugs.webkit.org/show_bug.cgi?id=119107
+
+        Reviewed by Andreas Kling.
+
+        Test: fast/css/text-align-string-crash.html
+
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::parseValue):
+        Stop pretending to support <string> for text-align.
+
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::ApplyPropertyTextAlign::applyValue):
+        ASSERT that only value IDs get passed.
+
+2013-07-26  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Introduce toSVGRectElement(), use it
+        https://bugs.webkit.org/show_bug.cgi?id=119126
+
+        Reviewed by Andreas Kling.
+
+        As a step to change static_cast with toSVGXXX, static_cast<SVGRectElement*> can
+        be changed with toSVGRectElement().
+
+        No new tests, no behavior change.
+
+        * rendering/svg/RenderSVGRect.cpp:
+        (WebCore::RenderSVGRect::updateShapeFromElement):
+        * rendering/svg/SVGPathData.cpp:
+        (WebCore::updatePathFromRectElement):
+        * rendering/svg/SVGRenderTreeAsText.cpp:
+        (WebCore::operator<<):
+        * svg/SVGRectElement.h:
+        (WebCore::toSVGRectElement):
+
+2013-07-26  Yongjun Zhang  <yongjun_zhang@apple.com>
+
+        With frame flattening on, too many resize events fired if document is resized in onresize handler.
+        https://bugs.webkit.org/show_bug.cgi?id=119075
+
+        Reviewed by Simon Fraser.
+
+        With http://trac.webkit.org/changeset/149287, WebCore also sends resize event in FrameView::setFrameRect.  When
+        flattening an iframe, setFrameRect could be called multiple times from RenderFrameBase::layoutWithFlattening and
+        we could get multiple resize events.  This patch adds a flag in FrameView to disallow sending resize events if
+        we are inside layoutWithFlattening.  The resize event will be sent in performPostLayoutTasks after the iframe
+        is done laying out.
+
+        Manually tested by verifying the rendering slowness in www.hi-pda.com is fixed when frame flattening is enabled.
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::FrameView):
+        (WebCore::FrameView::setFrameRect):
+        * page/FrameView.h:
+        (WebCore::FrameView::setResizeEventAllowed):
+        (WebCore::FrameView::resizeEventAllowed):
+        * rendering/RenderFrameBase.cpp:
+        (WebCore::RenderFrameBase::layoutWithFlattening):
+
+2013-07-26  Dean Jackson  <dino@apple.com>
+
+        Allow new transitions to run even when controller is suspended
+        https://bugs.webkit.org/show_bug.cgi?id=119171
+        <rdar://problem/14511404>
+
+        Reviewed by Simon Fraser.
+
+        Expose a new property on AnimationController that allows newly created
+        animations to run even if the controller says it is suspended. See WebKit
+        ChangeLog for more details.
+
+        Test: transitions/created-while-suspended.html
+
+        * WebCore.exp.in: Export the new methods so WebView can use them.
+        * page/animation/AnimationController.cpp:
+        (WebCore::AnimationControllerPrivate::AnimationControllerPrivate): Initialize new flag to false.
+        (WebCore::AnimationControllerPrivate::startAnimationsIfNotSuspended): Check new flag is not true.
+        (WebCore::AnimationControllerPrivate::setAllowsNewAnimationsWhileSuspended): Expose setter.
+        (WebCore::AnimationController::allowsNewAnimationsWhileSuspended): "Public" getter.
+        (WebCore::AnimationController::setAllowsNewAnimationsWhileSuspended): "Public" setter.
+        * page/animation/AnimationController.h:
+        * page/animation/AnimationControllerPrivate.h:
+        (WebCore::AnimationControllerPrivate::allowsNewAnimationsWhileSuspended):
+        * page/animation/CompositeAnimation.cpp:
+        (WebCore::CompositeAnimation::CompositeAnimation): Only suspend if new flag is false. Everything else
+        relies on the m_suspended flag, so the real code change is this one line.
+
+2013-07-26  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build fix.
+
+        * platform/graphics/avfoundation/cf/MediaPlayerPrivateAVFoundationCF.cpp:
+        (WebCore::createMetadataKeyNames): Do not include Media Selection
+        synbols when building without Media Selection API.
+
+2013-07-26  Oliver Hunt  <oliver@apple.com>
+
+        REGRESSION(FTL?): Crashes in plugin tests
+        https://bugs.webkit.org/show_bug.cgi?id=119141
+
+        Reviewed by Michael Saboff.
+
+        Getting the correct semantics to appease the inspector is fairly
+        awful with the iterator system.  For the time being lets just revert
+        to requesting a full stack trace as we did in the past. 
+
+        * bindings/js/ScriptCallStackFactory.cpp:
+        (WebCore::createScriptCallStack):
+
+2013-07-26  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build fix.
+
+        Correct build when targeting a release that does not have the AVCF
+        Legible Output infrastructure.
+
+        * platform/graphics/avfoundation/cf/AVFoundationCFSoftLinking.h: Exclude
+        a soft-link target when the API doesn't exist.
+        * platform/graphics/avfoundation/cf/MediaPlayerPrivateAVFoundationCF.cpp:
+        Correct include options for non-Legible Output supporting environments.
+        (WebCore::MediaPlayerPrivateAVFoundationCF::processLegacyClosedCaptionsTracks):
+        Prevent build failure when building with legacy caption support.
+
+2013-07-26  Andreas Kling  <akling@apple.com>
+
+        Apply FINAL to the RenderObject hierarchy.
+        <http://webkit.org/b/115977>
+
+        Mostly from Blink r148795 by <cevans@chromium.org>
+        <http://src.chromium.org/viewvc/blink?view=revision&revision=148795>
+
+        * rendering/: Beat things with the FINAL stick.
+        * WebCore.exp.in: Export a now-needed symbol.
+
+2013-07-26  Tim Horton  <timothy_horton@apple.com>
+
+        Add a mode where autosizing fixes the FrameView height to at least the WKView height
+        https://bugs.webkit.org/show_bug.cgi?id=119104
+        <rdar://problem/14549021>
+
+        Reviewed by Anders Carlsson.
+
+        * WebCore.exp.in: Export FrameView::setAutoSizeFixedMinimumHeight.
+        * page/FrameView.cpp:
+        (WebCore::FrameView::FrameView):
+        Initialize m_autoSizeFixedMinimumHeight to 0.
+
+        (WebCore::FrameView::autoSizeIfEnabled):
+        Increase the FrameView height to m_autoSizeFixedMinimumHeight if necessary,
+        and do another layout. Store the computed intrinsic content size.
+
+        (WebCore::FrameView::setAutoSizeFixedMinimumHeight): Added.
+
+        * page/FrameView.h:
+        (WebCore::FrameView::autoSizingIntrinsicContentSize): Added.
+
+2013-07-26  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Remove workarounds now that rdar://problem/14390466 is fixed.
+        https://bugs.webkit.org/show_bug.cgi?id=119150
+
+        Reviewed by Anders Carlsson.
+
+        * platform/graphics/avfoundation/cf/MediaPlayerPrivateAVFoundationCF.cpp:
+        (WebCore::AVFWrapper::createPlayer): Remove workaround to add legible output
+        after player is created.
+        (WebCore::AVFWrapper::createPlayerItem): Remove workaround to delay adding
+        legible output until player is created.
+        (WebCore::AVFWrapper::platformLayer): Get rid of unused temporary.
+
 2013-07-26  Brent Fulgham  <bfulgham@apple.com>
 
         [Windows] Unreviewed gardening.

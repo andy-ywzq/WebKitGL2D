@@ -1,3 +1,171 @@
+2013-07-29  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] New positioning model: update percentage rectangle and inset rectangle tests
+        https://bugs.webkit.org/show_bug.cgi?id=118086
+
+        Reviewed by Dirk Schulze.
+
+        Update percentage based tests to work with the new positioning model.
+        Also move the tests to be W3C spec tests, so they have been impored
+        back here from the CSSWG repo.
+
+        * TestExpectations: Remove skipping for replaced tests.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-horizontal-rectangle-003-expected.html: Added.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-horizontal-rectangle-003.html: Added.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-horizontal-rectangle-004-expected.html: Added.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-horizontal-rectangle-004.html: Added.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-inset-rectangle-002-expected.html: Added.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-inset-rectangle-002.html: Added.
+        * csswg/submitted/shapes/shape-outside/w3c-import.log:
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-inset-rectangle-percentage-expected.html: Removed.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-inset-rectangle-percentage.html: Removed.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-rectangle-percentage-expected.html: Removed.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-rectangle-percentage.html: Removed.
+
+2013-07-29  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [ATK] Implement attributesOfChildren() for AccessibilityUIElement
+        https://bugs.webkit.org/show_bug.cgi?id=118967
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Removed fixed tests from TestExpectations and added/updated expected
+        results for tests that are now dumping more useful information.
+
+        * platform/gtk/TestExpectations: Removed three fixed tests.
+        * platform/gtk/accessibility/image-map2-expected.txt: Updated.
+        * platform/gtk/accessibility/lists-expected.txt: Added.
+        * platform/gtk/accessibility/plugin-expected.txt: Added.
+        * platform/gtk/accessibility/table-with-aria-role-expected.txt: Added.
+
+2013-07-29  Renata Hodovan  <reni@webkit.org>
+
+        ASSERT_NOT_REACHED was touched in WebCore::SVGAnimatedType::valueAsString
+        https://bugs.webkit.org/show_bug.cgi?id=118744
+
+        Reviewed by Philip Rogers.
+
+        Adding test to check whether attributeName and attributeType are consistent in <animateTransform>.
+
+        * platform/qt/svg/animations/attributeNameAndAttributeTypeMissmatch-expected.txt: Added.
+        * svg/animations/attributeNameAndAttributeTypeMissmatch.svg: Added.
+
+2013-07-29  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [ATK] Implement allAttributes() for AccessibilityUIElement
+        https://bugs.webkit.org/show_bug.cgi?id=118966
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Removed fixed tests from TestExpectations and added/updated expected
+        results for tests that are now dumping more useful information.
+
+        * platform/gtk/TestExpectations: Removed four fixed tests.
+        * platform/gtk/accessibility/image-link-expected.txt: Updated.
+        * platform/gtk/accessibility/table-cell-spans-expected.txt: Updated
+        * platform/gtk/accessibility/table-cells-expected.txt: Updated
+        * platform/gtk/accessibility/table-detection-expected.txt: Added.
+        * platform/gtk/accessibility/table-one-cell-expected.txt: Added.
+        * platform/gtk/accessibility/table-with-rules-expected.txt: Added.
+        * platform/gtk/accessibility/transformed-element-expected.txt: Added.
+
+2013-07-29  Antoine Quint  <graouts@apple.com>
+
+        fast/spatial-navigation test fail on mac-wk2
+        https://bugs.webkit.org/show_bug.cgi?id=96438
+
+        This test now passes on Mac so we don't need to skip it any longer.
+
+        Reviewed by Antonio Gomes.
+
+        * platform/mac/TestExpectations:
+
+2013-07-28  Antoine Quint  <graouts@apple.com>
+
+        fast/forms/input-in-table-cell-no-value.html fails on platform without ENABLE(INPUT_TYPE_DATE)
+        https://bugs.webkit.org/show_bug.cgi?id=90987
+
+        This test now passes on Mac so we don't need to skip it any longer.
+
+        Reviewed by Anders Carlsson.
+
+        * platform/mac/TestExpectations:
+
+2013-07-27  Sam Weinig  <sam@webkit.org>
+
+        Stop pretending to support <string> for text-align.
+        https://bugs.webkit.org/show_bug.cgi?id=119107
+
+        Reviewed by Andreas Kling.
+
+        * fast/css/text-align-string-crash-expected.txt: Added.
+        * fast/css/text-align-string-crash.html: Added.
+
+2013-07-26  Dean Jackson  <dino@apple.com>
+
+        Allow new transitions to run even when controller is suspended
+        https://bugs.webkit.org/show_bug.cgi?id=119171
+        <rdar://problem/14511404>
+
+        Reviewed by Simon Fraser.
+
+        This is actually a test to make sure this fix didn't break anything. There is no
+        way to trigger the new behaviour from the test system (or from Safari).
+
+2013-07-26  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] New positioning model: support for polygon shape-outside
+        https://bugs.webkit.org/show_bug.cgi?id=118085
+
+        Reviewed by Dirk Schulze.
+
+        Update polygon tests to work for new positioning model and migrate
+        them to be W3C spec tests. Thus, they have been imported from the
+        CSSWG repository now.
+
+        * TestExpectations: Remove skip for replaced test.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-polygon-000-expected.html: Added.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-polygon-000.html: Added.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-polygon-001-expected.html: Added.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-polygon-001.html: Added.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-polygon-002-expected.html: Added.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-polygon-002.html: Added.
+        * csswg/submitted/shapes/shape-outside/w3c-import.log:
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-polygon-expected.html: Removed.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-simple-polygon.html: Removed.
+
+2013-07-26  Oliver Hunt  <oliver@apple.com>
+
+        REGRESSION(FTL?): Crashes in plugin tests
+        https://bugs.webkit.org/show_bug.cgi?id=119141
+
+        Reviewed by Michael Saboff.
+
+        Bring back plugin tests
+
+        * platform/mac/TestExpectations:
+
+2013-07-26  Filip Pizlo  <fpizlo@apple.com>
+
+        REGRESSION: Crash when opening a message on Gmail
+        https://bugs.webkit.org/show_bug.cgi?id=119105
+
+        Reviewed by Oliver Hunt and Mark Hahnenberg.
+
+        * fast/js/dfg-get-by-id-unset-then-proto-less-warmup.html: Added.
+        * fast/js/dfg-get-by-id-unset-then-proto-more-warmup.html: Added.
+        * fast/js/dfg-get-by-id-unset-then-proto.html: Added.
+        * fast/js/jsc-test-list
+        * fast/js/script-tests/dfg-get-by-id-unset-then-proto-less-warmup.js: Added.
+        (foo):
+        (Blah):
+        * fast/js/script-tests/dfg-get-by-id-unset-then-proto-more-warmup.js: Added.
+        (foo):
+        (Blah):
+        * fast/js/script-tests/dfg-get-by-id-unset-then-proto.js: Added.
+        (foo):
+        (Blah):
+
 2013-07-19  Mark Hahnenberg  <mhahnenberg@apple.com>
 
         Setting a large numeric property on an object causes it to allocate a huge backing store

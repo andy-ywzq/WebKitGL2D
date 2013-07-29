@@ -74,6 +74,9 @@ WK_EXPORT void WKViewSetSize(WKViewRef, WKSize size);
 
 WK_EXPORT void WKViewSetViewClient(WKViewRef, const WKViewClient*);
 
+WK_EXPORT bool WKViewIsActive(WKViewRef);
+WK_EXPORT void WKViewSetIsActive(WKViewRef, bool);
+
 WK_EXPORT bool WKViewIsFocused(WKViewRef);
 WK_EXPORT void WKViewSetIsFocused(WKViewRef, bool);
 

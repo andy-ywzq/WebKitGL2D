@@ -1,3 +1,224 @@
+2013-07-29  Anders Carlsson  <andersca@apple.com>
+
+        Remove setUnderlayPage() and associated code
+        https://bugs.webkit.org/show_bug.cgi?id=119220
+        <rdar://problem/14392426>
+
+        Reviewed by Jessie Berlin.
+
+        This is dead code, get rid of it.
+
+        * WebProcess/InjectedBundle/API/c/WKBundlePage.cpp:
+        * WebProcess/InjectedBundle/API/c/WKBundlePage.h:
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::close):
+        (WebKit::WebPage::layoutIfNeeded):
+        (WebKit::WebPage::drawRect):
+        * WebProcess/WebPage/WebPage.h:
+
+2013-07-29  Sergio Correia  <sergio.correia@openbossa.org>
+
+        CoordinatedGraphics: Add API to get and set the active state of a WebView
+        https://bugs.webkit.org/show_bug.cgi?id=119067
+
+        Reviewed by Noam Rosenthal.
+
+        A view being in the "active" state generally means that it is not in the
+        "background", although this definition can vary depending on the platform
+        under consideration.
+
+        This patch adds the following APIs to WKView:
+        - bool WKViewIsActive(WKViewRef)
+        This API accepts a WKViewRef as parameter and returns a boolean indicating
+        whether the given view is active.
+
+        - void WKViewSetIsActive(WKViewRef, bool)
+        This API accepts a WKViewRef and a boolean as parameteres, and it sets the
+        active state of the given view to the given boolean argument.
+
+        * UIProcess/API/C/CoordinatedGraphics/WKView.cpp:
+        (WKViewIsActive): API added.
+        (WKViewSetIsActive): Ditto.
+        * UIProcess/API/C/CoordinatedGraphics/WKView.h: Export aforementioned API.
+        * UIProcess/CoordinatedGraphics/WebView.cpp:
+        (WebKit::WebView::initialize): Use new setActive method.
+        (WebKit::WebView::setActive): Added method to set the active state of the
+        view.
+        (WebKit::WebView::isActive): Added method to return the active state of
+        view.
+        (WebKit::WebView::enterAcceleratedCompositingMode): Use new setActive
+        method.
+        (WebKit::WebView::exitAcceleratedCompositingMode): Ditto.
+        * UIProcess/CoordinatedGraphics/WebView.h: Added declarations of isActive
+        and setActive.
+
+2013-07-29  Jae Hyun Park  <jae.park@company100.net>
+
+        Remove duplicated LayerTreeHost::supportsAcceleratedCompositing
+        https://bugs.webkit.org/show_bug.cgi?id=118949
+
+        Reviewed by Noam Rosenthal.
+
+        * WebProcess/WebPage/CoordinatedGraphics/CoordinatedLayerTreeHost.cpp:
+        * WebProcess/WebPage/LayerTreeHost.h:
+        (WebKit::LayerTreeHost::supportsAcceleratedCompositing):
+
+2013-07-29  Zan Dobersek  <zdobersek@igalia.com>
+
+        [Automake] Remove references to non-existent *_CFLAGS and *_LIBS variables
+        https://bugs.webkit.org/show_bug.cgi?id=119212
+
+        Reviewed by Carlos Garcia Campos.
+
+        * GNUmakefile.am: Remove references to GLOBALDEPS_(CFLAGS|LIBS) and CLUTTER_(CFLAGS|LIBS)
+        variables that are not defined during the configuration process.
+
+2013-07-28  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        [EFL][WK2] Simplify context_menu_spelling_items_availability unit test
+        https://bugs.webkit.org/show_bug.cgi?id=119085
+
+        Reviewed by Gyuyoung Kim.
+
+        Use findContextMenuItem method to check whether the item
+        appears in context menu.
+
+        * UIProcess/API/efl/tests/test_ewk2_text_checker.cpp:
+        (EWK2TextCheckerTest::findContextMenuItem):
+        Do not report failure inside the method.
+        It doesn't allow to test the negative test cases.
+
+        (EWK2TextCheckerTest::checkCorrectnessOfSpellingItems):
+        Use findContextMenuItem method.
+
+        (EWK2TextCheckerTest::toogleCheckSpellingWhileTyping):
+        (EWK2TextCheckerTest::selectLearnSpelling):
+        (EWK2TextCheckerTest::selectIgnoreSpelling):
+        Verify the return value of findContextMenuItem.
+
+        (TEST_F):
+        Reset wasContextMenuShown variable, it's needed after r152153.
+        Use waitUntilTrue method.
+
+2013-07-27  Jacky Jiang  <zhajiang@blackberry.com>
+
+        Replace all uses of GraphicsLayer::create function with the one that takes a GraphicsLayerFactory
+        https://bugs.webkit.org/show_bug.cgi?id=119186
+
+        Reviewed by Anders Carlsson.
+
+        * UIProcess/mac/RemoteLayerTreeHost.mm:
+        (WebKit::RemoteLayerTreeHost::getOrCreateLayer):
+
+2013-07-27  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: VoiceOver not working with data detection page overlays
+        https://bugs.webkit.org/show_bug.cgi?id=118680
+
+        Reviewed by Sam Weinig.
+
+        Expose API in BundlePageOverlay so that accessibility attributes can be retrieved through the overlay.
+        This requires two methods in a new callback struct. One to copy the attribute names, and the other to 
+        copy the attribute values. I've folded both parameterized and non-parameterized attribute names into one method
+        with a boolean to determine which one should be used. The non-parameterized attributes are not used or passed to the
+        overlay at this time as there are no clients with such a need.
+
+        * WebProcess/InjectedBundle/API/c/WKBundlePageOverlay.cpp:
+        (PageOverlayClientImpl::setAccessibilityClient):
+        (PageOverlayClientImpl::PageOverlayClientImpl):
+        (PageOverlayClientImpl::copyAccessibilityAttributeValue):
+        (PageOverlayClientImpl::copyAccessibilityAttributeNames):
+        (WKBundlePageOverlaySetAccessibilityClient):
+        * WebProcess/InjectedBundle/API/c/WKBundlePageOverlay.h:
+        * WebProcess/WebPage/PageOverlay.cpp:
+        (WebKit::PageOverlay::copyAccessibilityAttributeValue):
+        (WebKit::PageOverlay::copyAccessibilityAttributeNames):
+        * WebProcess/WebPage/PageOverlay.h:
+        (WebKit::PageOverlay::Client::copyAccessibilityAttributeValue):
+        (WebKit::PageOverlay::Client::copyAccessibilityAttributeNames):
+        (WebKit::PageOverlay::client):
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::pageOverlayCopyAccessibilityAttributeValue):
+        (WebKit::WebPage::pageOverlayCopyAccessibilityAttributesNames):
+        * WebProcess/WebPage/WebPage.h:
+        * WebProcess/WebPage/mac/WKAccessibilityWebPageObject.mm:
+        (-[WKAccessibilityWebPageObject accessibilityParameterizedAttributeNames]):
+        (-[WKAccessibilityWebPageObject _convertScreenPointToWindow:]):
+        (-[WKAccessibilityWebPageObject accessibilityAttributeValue:forParameter:]):
+
+2013-07-27  Simon Fraser  <simon.fraser@apple.com>
+
+        If entering fullscreen for a window fails, don't leave things in a bad state
+        https://bugs.webkit.org/show_bug.cgi?id=119179
+
+        Reviewed by Sam Weinig.
+        
+        On Lion, attempting to take a video fullscreen when the Safari window is already
+        fullscreen can sometimes fail, and AppKit informs us via windowDidFailToEnterFullScreen:
+        
+        When this happens we have to undo the work done when entering fullscreen, to
+        avoid leaving things in a bad state.
+
+        * UIProcess/mac/WKFullScreenWindowController.mm:
+        (-[WKFullScreenWindowController finishedEnterFullScreenAnimation:]):
+
+2013-07-26  Tim Horton  <timothy_horton@apple.com>
+
+        Add a mode where autosizing fixes the FrameView height to at least the WKView height
+        https://bugs.webkit.org/show_bug.cgi?id=119104
+        <rdar://problem/14549021>
+
+        Reviewed by Anders Carlsson.
+
+        * Shared/WebPageCreationParameters.cpp:
+        (WebKit::WebPageCreationParameters::encode):
+        (WebKit::WebPageCreationParameters::decode):
+        * Shared/WebPageCreationParameters.h:
+        Add autoSizingShouldExpandToViewHeight parameter.
+
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView minimumWidthForAutoLayout]):
+        (-[WKView setMinimumWidthForAutoLayout:]):
+        Un-deprecate these as they're still useful if not sending a height.
+
+        (-[WKView shouldExpandToViewHeightForAutoLayout]):
+        (-[WKView setShouldExpandToViewHeightForAutoLayout:]):
+        * UIProcess/API/mac/WKViewPrivate.h:
+        New property, forward to WebPageProxy.
+
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::WebPageProxy):
+        (WebKit::WebPageProxy::creationParameters):
+        (WebKit::WebPageProxy::setAutoSizingShouldExpandToViewHeight):
+        * UIProcess/WebPageProxy.h:
+        (WebKit::WebPageProxy::autoSizingShouldExpandToViewHeight):
+        New property, forward to WebPage.
+
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::transitionToCommittedForNewPage):
+        If enabled, update the FrameView's autoSizeFixedMinimumHeight.
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::WebPage):
+        (WebKit::WebPage::setAutoSizingShouldExpandToViewHeight):
+        * WebProcess/WebPage/WebPage.h:
+        (WebKit::WebPage::autoSizingShouldExpandToViewHeight):
+        New property; if enabled, set FrameView's autoSizeFixedMinimumHeight,
+        otherwise reset it to 0.
+
+        * WebProcess/WebPage/WebPage.messages.in:
+        * WebProcess/WebPage/mac/TiledCoreAnimationDrawingArea.mm:
+        (WebKit::TiledCoreAnimationDrawingArea::updateIntrinsicContentSizeTimerFired):
+        (WebKit::TiledCoreAnimationDrawingArea::updateGeometry):
+        Retrieve intrinsic content size explicitly from the FrameView, as
+        it may not have used it as its final contentsSize if
+        autoSizeFixedMinimumHeight is set.
+
+        Set the WebPage's size in case the load is committed so that the
+        WebFrameLoaderClient doesn't reset us to the wrong size.
+
+        Update autoSizeFixedMinimumHeight if enabled when the view size changes.
+
 2013-07-25  Andreas Kling  <akling@apple.com>
 
         ChromeClient::focusedNodeChanged() should be focusedElementChanged().
