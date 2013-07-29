@@ -6,18 +6,18 @@ set(MINIBROWSER_INJECTEDBUNDLE_DIR ${CMAKE_BINARY_DIR}/lib/)
 add_definitions(-std=c++0x -DMINIBROWSER_INJECTEDBUNDLE_DIR="${MINIBROWSER_INJECTEDBUNDLE_DIR}")
 
 set(MiniBrowser_SOURCES
-    ${MiniBrowser_DIR}/main.cpp
-    ${MiniBrowser_DIR}/MiniBrowser.cpp
-    ${MiniBrowser_DIR}/BrowserControl.cpp
-    ${MiniBrowser_DIR}/GestureRecognizer.cpp
-    ${MiniBrowser_DIR}/Options.cpp
-    ${MiniBrowser_DIR}/TouchMocker.cpp
-    ${MiniBrowser_DIR}/XlibEventSource.cpp
-    ${MiniBrowser_DIR}/Components/VisualComponent.cpp
-    ${MiniBrowser_DIR}/Components/BrowserWindow.cpp
-    ${MiniBrowser_DIR}/Components/WebView.cpp
-    ${MiniBrowser_DIR}/Components/Button.cpp
-    ${MiniBrowser_DIR}/Components/UrlBar.cpp
+    main.cpp
+    MiniBrowser.cpp
+    BrowserControl.cpp
+    GestureRecognizer.cpp
+    Options.cpp
+    TouchMocker.cpp
+    XlibEventSource.cpp
+    Components/VisualComponent.cpp
+    Components/BrowserWindow.cpp
+    Components/WebView.cpp
+    Components/Button.cpp
+    Components/UrlBar.cpp
     ${TOOLS_DIR}/Shared/nix/GLUtilities.cpp
 )
 
