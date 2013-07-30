@@ -58,6 +58,8 @@ public:
     void viewportInteractionStart();
     void viewportInteractionStop();
 
+    bool pendingScaleOrPositionChange() const { return m_pendingScaleOrPositionChange; }
+
 protected:
     // WebKit::WebView
     virtual void didChangeContentScaleFactor(float) OVERRIDE;

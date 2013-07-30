@@ -84,6 +84,8 @@ typedef struct NIXViewClient NIXViewClient;
 
 enum { kNIXViewClientCurrentVersion = 0 };
 
+WK_EXPORT bool NIXViewPendingScaleOrPositionChange(WKViewRef);
+
 WK_EXPORT void NIXViewSetNixViewClient(WKViewRef view, const NIXViewClient* viewClient);
 
 WK_EXPORT WKSize NIXViewVisibleContentsSize(WKViewRef view);
