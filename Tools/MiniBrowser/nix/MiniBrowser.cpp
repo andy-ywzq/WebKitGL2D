@@ -898,10 +898,9 @@ void MiniBrowser::didFailProvisionalLoadWithErrorForFrame(WKPageRef page, WKFram
 
 void MiniBrowser::didFirstLayoutForFrame(WKPageRef, WKFrameRef frame, WKTypeRef, const void* clientInfo)
 {
-    if (!WKFrameIsMainFrame(frame))
-        return;
-
     MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
+    if (!WKFrameIsMainFrame(frame) || NIXViewPendingScaleOrPositionChange(mb->m_view))
+        return;
 
     double scale = mb->scaleToFitContents();
     if (scale < mb->m_viewportMinScale)
