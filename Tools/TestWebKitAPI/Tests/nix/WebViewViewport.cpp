@@ -70,10 +70,30 @@ TEST(WebKitNix, WebViewViewport)
     loader.forceRepaint();
 
     // Now check that the black dots are in the expected places.
+    // The pixel color of the result could be different depending
+    // of the video driver, so the check is made relative to the
+    // color at position of the reference pixel. The color in the
+    // neighborhood should be numerically higher than the
+    // reference color.
     ToolsNix::RGBAPixel firstDotAfter = offscreenBuffer.readPixelAtPoint(0, 0);
-    EXPECT_EQ(ToolsNix::RGBAPixel::black(), firstDotAfter);
+    ToolsNix::RGBAPixel sample = offscreenBuffer.readPixelAtPoint(0, 1);
+    EXPECT_TRUE(sample > firstDotAfter);
+    sample = offscreenBuffer.readPixelAtPoint(1, 0);
+    EXPECT_TRUE(sample > firstDotAfter);
+    sample = offscreenBuffer.readPixelAtPoint(1, 1);
+    EXPECT_TRUE(sample > firstDotAfter);
+
     ToolsNix::RGBAPixel secondDotAfter = offscreenBuffer.readPixelAtPoint(200, size.height - 1);
-    EXPECT_EQ(ToolsNix::RGBAPixel::black(), secondDotAfter);
+    sample = offscreenBuffer.readPixelAtPoint(199, size.height - 2);
+    EXPECT_TRUE(sample > secondDotAfter);
+    sample = offscreenBuffer.readPixelAtPoint(200, size.height - 2);
+    EXPECT_TRUE(sample > secondDotAfter);
+    sample = offscreenBuffer.readPixelAtPoint(201, size.height - 2);
+    EXPECT_TRUE(sample > secondDotAfter);
+    sample = offscreenBuffer.readPixelAtPoint(199, size.height - 1);
+    EXPECT_TRUE(sample > secondDotAfter);
+    sample = offscreenBuffer.readPixelAtPoint(201, size.height - 1);
+    EXPECT_TRUE(sample > secondDotAfter);
 }
 
 }

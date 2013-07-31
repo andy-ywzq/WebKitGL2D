@@ -50,7 +50,18 @@ struct RGBAPixel {
     unsigned char b;
     unsigned char a;
 
-    bool operator==(const RGBAPixel& other) const { return r == other.r && b == other.b && g == other.g && a == other.a; }
+    bool operator == (const RGBAPixel& other) const { return compare(other) == 0; }
+    bool operator != (const RGBAPixel& other) const { return compare(other) != 0; }
+    bool operator < (const RGBAPixel& other) const { return compare(other) == -1; }
+    bool operator > (const RGBAPixel& other) const { return compare(other) == 1; }
+
+    int compare (const RGBAPixel& other) const {
+        if (r != other.r) return r < other.r ? (-1) : (1);
+        if (g != other.g) return g < other.g ? (-1) : (1);
+        if (b != other.b) return b < other.b ? (-1) : (1);
+        if (a != other.a) return a < other.a ? (-1) : (1);
+        return 0;
+    }
 
     static RGBAPixel white() { RGBAPixel p = { 255, 255, 255, 255 }; return p; }
     static RGBAPixel black() { RGBAPixel p = { 0, 0, 0, 255 }; return p; }
