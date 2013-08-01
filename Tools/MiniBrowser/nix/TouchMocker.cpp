@@ -24,10 +24,11 @@
  */
 
 #include "TouchMocker.h"
+#include "touchTexture.h"
 
 #include <GL/gl.h>
 #include <cassert>
-#include "touchTexture.h"
+#include <cstring>
 
 // On single touches, every mouse interaction is used as touch event.
 // Holding CTRL key means you're building a multi-touch event and each mouse,
@@ -193,6 +194,8 @@ void TouchMocker::trackTouchPoint(WKEventMouseButton id, NIXTouchPointState stat
 void TouchMocker::sendCurrentTouchEvent(NIXTouchPointState state, double timestamp)
 {
     NIXTouchEvent ev;
+
+    memset(&ev, 0, sizeof(NIXTouchEvent));
     ev.timestamp = timestamp;
 
     switch (state) {
