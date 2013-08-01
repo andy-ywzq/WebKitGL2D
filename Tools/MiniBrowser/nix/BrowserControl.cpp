@@ -33,6 +33,11 @@ BrowserControl::BrowserControl(BrowserControlClient * client, int width, int hei
     , m_display(XOpenDisplay(0))
     , m_context(XUniqueContext())
     , m_eventSource(0)
+    , m_lastClickTime(0.)
+    , m_lastClickX(-1)
+    , m_lastClickY(-1)
+    , m_lastClickButton(kWKEventMouseButtonNoButton)
+    , m_clickCount(0)
 {
     if (!m_display)
         fatalError("couldn't connect to X server\n");
