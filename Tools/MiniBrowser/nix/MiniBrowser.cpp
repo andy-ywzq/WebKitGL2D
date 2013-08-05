@@ -375,7 +375,7 @@ WKPoint MiniBrowser::adjustScrollPositionToBoundaries(WKPoint position)
 
 double MiniBrowser::scaleToFitContents()
 {
-    return m_options.devicePixelRatio * WKViewGetSize(m_view).width / m_contentsSize.width;
+    return WKViewGetSize(m_view).width / (m_contentsSize.width * m_options.devicePixelRatio);
 }
 
 void MiniBrowser::adjustScrollPosition()
