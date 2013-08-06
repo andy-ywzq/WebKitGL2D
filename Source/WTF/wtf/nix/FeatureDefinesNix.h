@@ -178,10 +178,6 @@
 #define ENABLE_METER_ELEMENT 1
 #endif
 
-#if !defined(ENABLE_MICRODATA)
-#define ENABLE_MICRODATA 1
-#endif
-
 #if !defined(ENABLE_NAVIGATOR_CONTENT_UTILS)
 #define ENABLE_NAVIGATOR_CONTENT_UTILS 1
 #endif
