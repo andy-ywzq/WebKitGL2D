@@ -58,7 +58,7 @@ PassRefPtr<WebView> WebView::create(WebContext* context, WebPageGroup* pageGroup
 WebViewNix::WebViewNix(WebContext* context, WebPageGroup* pageGroup)
     : WebView(context, pageGroup)
     , m_activeContextMenu(WebContextMenuProxyNix::create())
-    , m_duringPageTransition(false)
+    , m_duringFrameRendering(false)
     , m_pendingScaleOrPositionChange(false)
     , m_scaleAfterTransition(1.0)
 {
@@ -131,7 +131,7 @@ void WebViewNix::didChangeContentScaleFactor(float scaleFactor)
 
 void WebViewNix::pageDidRequestScroll(const IntPoint& position)
 {
-    if (m_duringPageTransition && (m_pendingScaleOrPositionChange || position != m_contentPosition)) {
+    if (m_duringFrameRendering && (m_pendingScaleOrPositionChange || position != m_contentPosition)) {
         m_pendingScaleOrPositionChange = true;
         m_contentPositionAfterTransition = position;
     } else
@@ -140,8 +140,8 @@ void WebViewNix::pageDidRequestScroll(const IntPoint& position)
 
 void WebViewNix::didRenderFrame(const WebCore::IntSize& contentsSize, const WebCore::IntRect& coveredRect)
 {
-    if (m_duringPageTransition) {
-        m_duringPageTransition = false;
+    if (m_duringFrameRendering) {
+        m_duringFrameRendering = false;
         if (m_pendingScaleOrPositionChange) {
             m_pendingScaleOrPositionChange = false;
             if (m_scaleAfterTransition != m_contentScaleFactor)
@@ -157,7 +157,7 @@ void WebViewNix::didRenderFrame(const WebCore::IntSize& contentsSize, const WebC
 
 void WebViewNix::didChangePageScaleFactor(double scaleFactor)
 {
-    if (m_duringPageTransition && (m_pendingScaleOrPositionChange || scaleFactor != m_contentScaleFactor)) {
+    if (m_duringFrameRendering && (m_pendingScaleOrPositionChange || scaleFactor != m_contentScaleFactor)) {
         m_pendingScaleOrPositionChange = true;
         m_scaleAfterTransition = scaleFactor;
     }
@@ -180,7 +180,7 @@ void WebViewNix::didFindZoomableArea(const IntPoint& target, const IntRect& area
 
 void WebViewNix::didCommitLoadForFrame()
 {
-    m_duringPageTransition = true;
+    m_duringFrameRendering = true;
     m_pendingScaleOrPositionChange = false;
     m_contentPositionAfterTransition = WebCore::FloatPoint();
     m_scaleAfterTransition = 1.0;

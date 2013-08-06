@@ -90,7 +90,7 @@ private:
     WebCore::IntPoint m_lastCursorPosition;
     WTF::RefPtr<WebContextMenuProxyNix> m_activeContextMenu;
 
-    bool m_duringPageTransition;
+    bool m_duringFrameRendering;
     bool m_pendingScaleOrPositionChange;
     WebCore::FloatPoint m_contentPositionAfterTransition;
     double m_scaleAfterTransition;
