@@ -150,7 +150,7 @@ if (WTF_USE_EGL)
         ${EGL_INCLUDE_DIR}
     )
     list(APPEND WebCore_SOURCES
-        platform/graphics/cairo/GLContext.cpp
+        platform/graphics/GLContext.cpp
         platform/graphics/cairo/GraphicsContext3DCairo.cpp
         platform/graphics/cairo/GraphicsContext3DPrivate.cpp
         platform/graphics/egl/GLContextFromCurrentEGL.cpp
@@ -167,7 +167,7 @@ else ()
         platform/graphics/efl/GraphicsContext3DPrivate.cpp
         platform/graphics/opengl/GLPlatformContext.cpp
         platform/graphics/opengl/GLPlatformSurface.cpp
-        platform/graphics/surfaces/efl/GLTransportSurface.cpp
+        platform/graphics/surfaces/GLTransportSurface.cpp
         platform/graphics/surfaces/efl/GraphicsSurfaceCommon.cpp
         platform/graphics/surfaces/GraphicsSurface.cpp
 
