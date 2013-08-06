@@ -799,8 +799,6 @@ fast/events/touch/gesture/context-menu-on-long-press.html [ Skip ]
 fast/events/touch/gesture/context-menu-on-two-finger-tap.html [ Skip ]
 fast/events/updateLayoutForHitTest.html [ Skip ]
 
-fast/exclusions/shape-inside/shape-inside-rounded-rectangle-fit-002.html [ Skip ]
-
 fast/files/apply-blob-url-to-img.html [ Skip ]
 fast/files/apply-blob-url-to-xhr.html [ Skip ]
 fast/files/file-list-test.html [ Skip ]
@@ -2864,7 +2862,6 @@ fast/css/table-rules-attribute.html [ ImageOnlyFailure Pass ]
 fast/css/variables/var-inside-pair.html [ ImageOnlyFailure Pass ]
 fast/css/variables/var-inside-shape.html [ ImageOnlyFailure Pass ]
 fast/css/vertical-align-baseline-rowspan-009.htm [ ImageOnlyFailure Pass ]
-fast/exclusions/shape-inside/shape-inside-coincident-vertices.html [ ImageOnlyFailure Pass ]
 fast/layers/no-clipping-overflow-hidden-added-after-transform.html [ ImageOnlyFailure Pass ]
 fast/layers/no-clipping-overflow-hidden-added-after-transition.html [ ImageOnlyFailure Pass ]
 fast/layers/no-clipping-overflow-hidden-hardware-acceleration.html [ ImageOnlyFailure Pass ]
@@ -2942,8 +2939,6 @@ fast/dom/HTMLImageElement/image-alt-text.html [ Failure ]
 fast/dom/HTMLInputElement/input-image-alt-text.html [ Failure ]
 fast/encoding/utf-16-big-endian.html [ Failure ]
 fast/encoding/utf-16-little-endian.html [ Failure ]
-fast/exclusions/shape-outside-floats/shape-outside-floats-ellipse-margin-left.html [ Failure ]
-fast/exclusions/shape-outside-floats/shape-outside-floats-ellipse-margin-right.html [ Failure ]
 fast/forms/select/popup-closes-on-blur.html [ Failure ]
 fast/lists/inlineBoxWrapperNullCheck.html [ Failure ]
 fast/replaced/replaced-breaking.html [ Failure ]
@@ -3519,7 +3514,6 @@ http/tests/navigation/postredirect-goback1.html [ Skip ]
 http/tests/security/dataTransfer-set-data-file-url.html [ Skip ]
 http/tests/uri/css-href.php [ Skip ]
 
-mathml/presentation/fractions-vertical-alignment.xhtml [ Skip ]
 mathml/presentation/mo-stretch.html [ Skip ]
 mathml/presentation/mroot-pref-width.html [ Skip ]
 printing/compositing-layer-printing.html [ Skip ]
@@ -3850,10 +3844,6 @@ editing/spelling/spellcheck-async-mutation.html
 editing/spelling/spellcheck-async.html
 editing/spelling/spellcheck-queue.html
 editing/spelling/spelling-marker-description.html
-fast/exclusions/shape-inside/shape-inside-circle-padding.html
-fast/exclusions/shape-inside/shape-inside-circle.html
-fast/exclusions/shape-inside/shape-inside-ellipse-padding.html
-fast/exclusions/shape-inside/shape-inside-ellipse.html
 printing/quirks-percentage-height-body.html
 printing/quirks-percentage-height.html
 printing/standards-percentage-heights.html
@@ -3894,7 +3884,6 @@ fast/dom/shadow/insertion-point-resetStyleInheritance-with-pseudo-element-crash.
 editing/pasteboard/smart-drag-drop.html [ Failure Pass ]
 
 # Flakey tests after merge 5494e11 a55ee6c
-fast/exclusions/shape-outside-floats/shape-outside-floats-positioning.html [ Failure Pass ]
 fast/sub-pixel/zoomed-image-tiles.html [ Failure ImageOnlyFailure Pass ]
 storage/indexeddb/index-basics.html [ Failure Pass ]
 svg/batik/masking/maskRegions.svg [ Failure Pass ]
@@ -4013,7 +4002,6 @@ fast/dom/shadow/distributed-pseudo-element.html
 fast/dom/shadow/no-style-sharing-with-distributed-nodes.html
 compositing/overflow/overflow-clip-with-accelerated-scrolling-ancestor.html
 fast/frames/flattening/scrolling-in-object.html
-mathml/presentation/fractions.xhtml
 svg/hittest/svg-ellipse-non-scale-stroke.xhtml
 
 # Failing tests after merge e1a830d 502300f
@@ -4030,9 +4018,7 @@ fast/multicol/newmulticol/balance5.html
 fast/multicol/newmulticol/balance7.html
 fast/multicol/newmulticol/balance8.html
 fast/multicol/newmulticol/orphans-and-widows-balance.html
-fast/repaint/change-overflow-and-display-of-relative.html
 fast/repaint/table-cell-collapsed-border-scroll.html
-fast/replaced/width-and-height-of-positioned-replaced-elements.html
 
 # Failing tests after merge 94f23f6 d0c3f55
 vibration/cancelVibration-after-pagevisibility-changed-to-hidden.html
