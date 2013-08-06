@@ -3353,6 +3353,7 @@ compositing/geometry/fixed-position-iframe-composited-page-scale-down.html [ Mis
 
 accessibility [ Skip ]
 batterystatus [ Skip ]
+fast/dom/MicroData [ Skip ]
 fast/filesystem [ Skip ]
 fast/mediastream [ Skip ]
 fast/notifications [ Skip ]
@@ -3743,8 +3744,6 @@ fast/dom/beforeload/clear-video-poster-in-beforeload-listener.html [ Skip ]
 fast/dom/beforeload/remove-video-in-beforeload-listener.html [ Skip ]
 fast/dom/beforeload/remove-video-poster-in-beforeload-listener.html [ Skip ]
 fast/dom/beforeload/video-before-load.html [ Skip ]
-fast/dom/MicroData/itemvalue-reflects-the-src-attr.html [ Skip ]
-fast/dom/MicroData/propertynodelist-getvalues-array-values-obtained-from-itemvalue-of-each-element.html [ Skip ]
 
 
 ################################################################################
