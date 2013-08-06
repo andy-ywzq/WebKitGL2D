@@ -131,7 +131,7 @@ void WebViewNix::didChangeContentScaleFactor(float scaleFactor)
 
 void WebViewNix::pageDidRequestScroll(const IntPoint& position)
 {
-    if ((m_duringPageTransition || m_pendingScaleOrPositionChange) && position != m_contentPosition) {
+    if (m_duringPageTransition && (m_pendingScaleOrPositionChange || position != m_contentPosition)) {
         m_pendingScaleOrPositionChange = true;
         m_contentPositionAfterTransition = position;
     } else
@@ -157,7 +157,7 @@ void WebViewNix::didRenderFrame(const WebCore::IntSize& contentsSize, const WebC
 
 void WebViewNix::didChangePageScaleFactor(double scaleFactor)
 {
-    if ((m_duringPageTransition || m_pendingScaleOrPositionChange) && scaleFactor != m_contentScaleFactor) {
+    if (m_duringPageTransition && (m_pendingScaleOrPositionChange || scaleFactor != m_contentScaleFactor)) {
         m_pendingScaleOrPositionChange = true;
         m_scaleAfterTransition = scaleFactor;
     }
