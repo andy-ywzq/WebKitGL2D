@@ -4075,7 +4075,7 @@ void SpeculativeJIT::compileGetByValOnArguments(Node* node)
     // Two really lame checks.
     speculationCheck(
         Uncountable, JSValueSource(), 0,
-        m_jit.branchPtr(
+        m_jit.branch32(
             MacroAssembler::AboveOrEqual, propertyReg,
             MacroAssembler::Address(baseReg, OBJECT_OFFSETOF(Arguments, m_numArguments))));
     speculationCheck(
@@ -4259,7 +4259,7 @@ bool SpeculativeJIT::compileRegExpExec(Node* node)
 
 void SpeculativeJIT::compileAllocatePropertyStorage(Node* node)
 {
-    if (hasIndexingHeader(node->structureTransitionData().previousStructure->indexingType())) {
+    if (node->structureTransitionData().previousStructure->couldHaveIndexingHeader()) {
         SpeculateCellOperand base(this, node->child1());
         
         GPRReg baseGPR = base.gpr();
@@ -4302,7 +4302,7 @@ void SpeculativeJIT::compileReallocatePropertyStorage(Node* node)
     size_t newSize = oldSize * outOfLineGrowthFactor;
     ASSERT(newSize == node->structureTransitionData().newStructure->outOfLineCapacity() * sizeof(JSValue));
 
-    if (hasIndexingHeader(node->structureTransitionData().previousStructure->indexingType())) {
+    if (node->structureTransitionData().previousStructure->couldHaveIndexingHeader()) {
         SpeculateCellOperand base(this, node->child1());
         
         GPRReg baseGPR = base.gpr();

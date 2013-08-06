@@ -5289,6 +5289,7 @@ webcore_svg_sources += \
 	Source/WebCore/svg/SVGPathUtilities.h \
 	Source/WebCore/svg/SVGPatternElement.cpp \
 	Source/WebCore/svg/SVGPatternElement.h \
+	Source/WebCore/svg/SVGPoint.h \
 	Source/WebCore/svg/SVGPointList.cpp \
 	Source/WebCore/svg/SVGPointList.h \
 	Source/WebCore/svg/SVGPolyElement.cpp \
@@ -6065,7 +6066,6 @@ platform_sources += \
 	Source/WebCore/platform/HistogramSupport.cpp \
 	Source/WebCore/platform/HistogramSupport.h \
 	Source/WebCore/platform/HostWindow.h \
-	Source/WebCore/platform/InitializeLogging.h \
 	Source/WebCore/platform/KURL.cpp \
 	Source/WebCore/platform/KURL.h \
 	Source/WebCore/platform/KURLHash.h \
@@ -6304,8 +6304,8 @@ platformgtk_sources += \
 	Source/WebCore/platform/cairo/WidgetBackingStoreCairo.cpp
 if USE_OPENGL
 platformgtk_sources += \
-	Source/WebCore/platform/graphics/cairo/GLContext.cpp \
-	Source/WebCore/platform/graphics/cairo/GLContext.h \
+	Source/WebCore/platform/graphics/GLContext.cpp \
+	Source/WebCore/platform/graphics/GLContext.h \
 	Source/WebCore/platform/gtk/RedirectedXCompositeWindow.cpp \
 	Source/WebCore/platform/gtk/RedirectedXCompositeWindow.h
 endif # END USE_OPENGL

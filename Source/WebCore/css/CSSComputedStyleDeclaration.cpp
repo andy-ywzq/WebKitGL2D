@@ -291,12 +291,12 @@ static const CSSPropertyID computedProperties[] = {
     CSSPropertyWebkitGridAutoColumns,
     CSSPropertyWebkitGridAutoFlow,
     CSSPropertyWebkitGridAutoRows,
+    CSSPropertyWebkitGridColumnEnd,
+    CSSPropertyWebkitGridColumnStart,
     CSSPropertyWebkitGridDefinitionColumns,
     CSSPropertyWebkitGridDefinitionRows,
-    CSSPropertyWebkitGridStart,
-    CSSPropertyWebkitGridEnd,
-    CSSPropertyWebkitGridBefore,
-    CSSPropertyWebkitGridAfter,
+    CSSPropertyWebkitGridRowEnd,
+    CSSPropertyWebkitGridRowStart,
     CSSPropertyWebkitHighlight,
     CSSPropertyWebkitHyphenateCharacter,
     CSSPropertyWebkitHyphenateLimitAfter,
@@ -1100,8 +1100,15 @@ static PassRefPtr<CSSValue> valueForGridPosition(const GridPosition& position)
     if (position.isAuto())
         return cssValuePool().createIdentifierValue(CSSValueAuto);
 
-    return cssValuePool().createValue(position.integerPosition(), CSSPrimitiveValue::CSS_NUMBER);
+    if (position.isInteger())
+        return cssValuePool().createValue(position.integerPosition(), CSSPrimitiveValue::CSS_NUMBER);
+
+    RefPtr<CSSValueList> list = CSSValueList::createSpaceSeparated();
+    list->append(cssValuePool().createIdentifierValue(CSSValueSpan));
+    list->append(cssValuePool().createValue(position.spanPosition(), CSSPrimitiveValue::CSS_NUMBER));
+    return list.release();
 }
+
 static PassRefPtr<CSSValue> createTransitionPropertyValue(const Animation* animation)
 {
     RefPtr<CSSValue> propertyValue;
@@ -2041,14 +2048,14 @@ PassRefPtr<CSSValue> ComputedStyleExtractor::propertyValue(CSSPropertyID propert
         case CSSPropertyWebkitGridDefinitionRows:
             return valueForGridTrackList(style->gridRows(), style.get(), m_node->document()->renderView());
 
-        case CSSPropertyWebkitGridStart:
-            return valueForGridPosition(style->gridItemStart());
-        case CSSPropertyWebkitGridEnd:
-            return valueForGridPosition(style->gridItemEnd());
-        case CSSPropertyWebkitGridBefore:
-            return valueForGridPosition(style->gridItemBefore());
-        case CSSPropertyWebkitGridAfter:
-            return valueForGridPosition(style->gridItemAfter());
+        case CSSPropertyWebkitGridColumnStart:
+            return valueForGridPosition(style->gridItemColumnStart());
+        case CSSPropertyWebkitGridColumnEnd:
+            return valueForGridPosition(style->gridItemColumnEnd());
+        case CSSPropertyWebkitGridRowStart:
+            return valueForGridPosition(style->gridItemRowStart());
+        case CSSPropertyWebkitGridRowEnd:
+            return valueForGridPosition(style->gridItemRowEnd());
         case CSSPropertyWebkitGridColumn:
             return getCSSPropertyValuesForGridShorthand(webkitGridColumnShorthand());
         case CSSPropertyWebkitGridRow:
@@ -3159,8 +3166,8 @@ PassRefPtr<CSSValueList> ComputedStyleExtractor::getBackgroundShorthandValue() c
                                                                     CSSPropertyBackgroundClip };
 
     RefPtr<CSSValueList> list = CSSValueList::createSlashSeparated();
-    list->append(getCSSPropertyValuesForShorthandProperties(StylePropertyShorthand(propertiesBeforeSlashSeperator, WTF_ARRAY_LENGTH(propertiesBeforeSlashSeperator))));
-    list->append(getCSSPropertyValuesForShorthandProperties(StylePropertyShorthand(propertiesAfterSlashSeperator, WTF_ARRAY_LENGTH(propertiesAfterSlashSeperator))));
+    list->append(getCSSPropertyValuesForShorthandProperties(StylePropertyShorthand(CSSPropertyBackground, propertiesBeforeSlashSeperator, WTF_ARRAY_LENGTH(propertiesBeforeSlashSeperator))));
+    list->append(getCSSPropertyValuesForShorthandProperties(StylePropertyShorthand(CSSPropertyBackground, propertiesAfterSlashSeperator, WTF_ARRAY_LENGTH(propertiesAfterSlashSeperator))));
     return list.release();
 }
 

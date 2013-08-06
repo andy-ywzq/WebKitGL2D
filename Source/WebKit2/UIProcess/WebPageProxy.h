@@ -348,6 +348,8 @@ public:
     };
     typedef unsigned ViewStateFlags;
     void viewStateDidChange(ViewStateFlags flags);
+    enum class WantsReplyOrNot { DoesNotWantReply, DoesWantReply };
+    void viewInWindowStateDidChange(WantsReplyOrNot = WantsReplyOrNot::DoesNotWantReply);
     bool isInWindow() const { return m_isInWindow; }
     void waitForDidUpdateInWindowState();
 
@@ -752,8 +754,8 @@ public:
     void postMessageToInjectedBundle(const String& messageName, APIObject* messageBody);
 
 #if ENABLE(INPUT_TYPE_COLOR)
-    void setColorChooserColor(const WebCore::Color&);
-    void endColorChooser();
+    void setColorPickerColor(const WebCore::Color&);
+    void endColorPicker();
 #endif
 
     const WebLoaderClient& loaderClient() { return m_loaderClient; }
@@ -903,9 +905,9 @@ private:
 #endif
 
 #if ENABLE(INPUT_TYPE_COLOR)
-    void showColorChooser(const WebCore::Color& initialColor, const WebCore::IntRect&);
+    void showColorPicker(const WebCore::Color& initialColor, const WebCore::IntRect&);
     void didChooseColor(const WebCore::Color&);
-    void didEndColorChooser();
+    void didEndColorPicker();
 #endif
 
     void editorStateChanged(const EditorState&);

@@ -38,7 +38,6 @@
 #include "DFGRepatch.h"
 #include "DFGWorklist.h"
 #include "Debugger.h"
-#include "FTLJITCode.h"
 #include "Interpreter.h"
 #include "JIT.h"
 #include "JITStubs.h"
@@ -61,6 +60,10 @@
 #include "DFGOperations.h"
 #endif
 
+#if ENABLE(FTL_JIT)
+#include "FTLJITCode.h"
+#endif
+
 #define DUMP_CODE_BLOCK_STATISTICS 0
 
 namespace JSC {
@@ -80,10 +83,20 @@ CString CodeBlock::inferredName() const
     }
 }
 
+bool CodeBlock::hasHash() const
+{
+    return !!m_hash;
+}
+
+bool CodeBlock::isSafeToComputeHash() const
+{
+    return !isCompilationThread();
+}
+
 CodeBlockHash CodeBlock::hash() const
 {
     if (!m_hash) {
-        RELEASE_ASSERT(!isCompilationThread());
+        RELEASE_ASSERT(isSafeToComputeHash());
         m_hash = CodeBlockHash(ownerExecutable()->source(), specializationKind());
     }
     return m_hash;
@@ -114,7 +127,11 @@ CString CodeBlock::sourceCodeOnOneLine() const
 
 void CodeBlock::dumpAssumingJITType(PrintStream& out, JITCode::JITType jitType) const
 {
-    out.print(inferredName(), "#", hash(), ":[", RawPointer(this), "->", RawPointer(ownerExecutable()), ", ", jitType, codeType());
+    if (hasHash() || isSafeToComputeHash())
+        out.print(inferredName(), "#", hash(), ":[", RawPointer(this), "->", RawPointer(ownerExecutable()), ", ", jitType, codeType());
+    else
+        out.print(inferredName(), "#<no-hash>:[", RawPointer(this), "->", RawPointer(ownerExecutable()), ", ", jitType, codeType());
+
     if (codeType() == FunctionCode)
         out.print(specializationKind());
     if (this->jitType() == JITCode::BaselineJIT && m_shouldAlwaysBeInlined)

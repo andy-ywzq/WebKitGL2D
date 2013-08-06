@@ -557,39 +557,34 @@ void Interpreter::getStackTrace(Vector<StackFrame>& results, size_t maxStackSize
         }
     }
 }
-
+JSString* Interpreter:: stackTraceAsString(ExecState* exec, Vector<StackFrame> stackTrace)
+{
+    // FIXME: JSStringJoiner could be more efficient than StringBuilder here.
+    StringBuilder builder;
+    for (unsigned i = 0; i < stackTrace.size(); i++) {
+        builder.append(String(stackTrace[i].toString(exec)));
+        if (i != stackTrace.size() - 1)
+            builder.append('\n');
+    }
+    return jsString(&exec->vm(), builder.toString());
+}
+    
 void Interpreter::addStackTraceIfNecessary(CallFrame* callFrame, JSValue error)
 {
     VM* vm = &callFrame->vm();
     ASSERT(callFrame == vm->topCallFrame || callFrame == callFrame->lexicalGlobalObject()->globalExec() || callFrame == callFrame->dynamicGlobalObject()->globalExec());
 
-    if (error.isObject()) {
-        if (asObject(error)->hasProperty(callFrame, vm->propertyNames->stack))
-            return;
-    }
-    
     Vector<StackFrame> stackTrace;
     vm->interpreter->getStackTrace(stackTrace);
     vm->exceptionStack() = RefCountedArray<StackFrame>(stackTrace);
     if (stackTrace.isEmpty() || !error.isObject())
         return;
 
-    JSObject* errorObject = asObject(error);
-    JSGlobalObject* globalObject = 0;
-    if (isTerminatedExecutionException(error))
-        globalObject = vm->dynamicGlobalObject;
-    else
-        globalObject = errorObject->globalObject();
+    if (asObject(error)->hasProperty(callFrame, vm->propertyNames->stack))
+        return;
+    
+    asObject(error)->putDirect(*vm, vm->propertyNames->stack, vm->interpreter->stackTraceAsString(vm->topCallFrame, stackTrace), None);
 
-    // FIXME: JSStringJoiner could be more efficient than StringBuilder here.
-    StringBuilder builder;
-    for (unsigned i = 0; i < stackTrace.size(); i++) {
-        builder.append(String(stackTrace[i].toString(globalObject->globalExec()).impl()));
-        if (i != stackTrace.size() - 1)
-            builder.append('\n');
-    }
-
-    errorObject->putDirect(*vm, vm->propertyNames->stack, jsString(vm, builder.toString()), ReadOnly | DontDelete);
 }
 
 NEVER_INLINE HandlerInfo* Interpreter::throwException(CallFrame*& callFrame, JSValue& exceptionValue, unsigned bytecodeOffset)

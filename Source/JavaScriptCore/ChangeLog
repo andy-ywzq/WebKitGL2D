@@ -1,3 +1,1005 @@
+2013-08-06  Patrick Gansterer  <paroga@webkit.org>
+
+        Build fix for ARM MSVC after r153222 and r153648.
+
+        * jit/JITStubsARM.h: Added ctiVMThrowTrampolineSlowpath.
+
+2013-08-06  Patrick Gansterer  <paroga@webkit.org>
+
+        Build fix for ARM MSVC after r150109.
+
+        Read the stub template from a header files instead of the JITStubs.cpp.
+
+        * CMakeLists.txt:
+        * DerivedSources.pri:
+        * create_jit_stubs:
+
+2013-08-05  Oliver Hunt  <oliver@apple.com>
+
+        Move TypedArray implementation into JSC
+        https://bugs.webkit.org/show_bug.cgi?id=119489
+
+        Reviewed by Filip Pizlo.
+
+        Move TypedArray implementation into JSC in advance of re-implementation
+
+        * GNUmakefile.list.am:
+        * JSCTypedArrayStubs.h:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * runtime/ArrayBuffer.cpp: Renamed from Source/WTF/wtf/ArrayBuffer.cpp.
+        (JSC::ArrayBuffer::transfer):
+        (JSC::ArrayBuffer::addView):
+        (JSC::ArrayBuffer::removeView):
+        * runtime/ArrayBuffer.h: Renamed from Source/WTF/wtf/ArrayBuffer.h.
+        (JSC::ArrayBufferContents::ArrayBufferContents):
+        (JSC::ArrayBufferContents::data):
+        (JSC::ArrayBufferContents::sizeInBytes):
+        (JSC::ArrayBufferContents::transfer):
+        (JSC::ArrayBufferContents::copyTo):
+        (JSC::ArrayBuffer::isNeutered):
+        (JSC::ArrayBuffer::~ArrayBuffer):
+        (JSC::ArrayBuffer::clampValue):
+        (JSC::ArrayBuffer::create):
+        (JSC::ArrayBuffer::createUninitialized):
+        (JSC::ArrayBuffer::ArrayBuffer):
+        (JSC::ArrayBuffer::data):
+        (JSC::ArrayBuffer::byteLength):
+        (JSC::ArrayBuffer::slice):
+        (JSC::ArrayBuffer::sliceImpl):
+        (JSC::ArrayBuffer::clampIndex):
+        (JSC::ArrayBufferContents::tryAllocate):
+        (JSC::ArrayBufferContents::~ArrayBufferContents):
+        * runtime/ArrayBufferView.cpp: Renamed from Source/WTF/wtf/ArrayBufferView.cpp.
+        (JSC::ArrayBufferView::ArrayBufferView):
+        (JSC::ArrayBufferView::~ArrayBufferView):
+        (JSC::ArrayBufferView::neuter):
+        * runtime/ArrayBufferView.h: Renamed from Source/WTF/wtf/ArrayBufferView.h.
+        (JSC::ArrayBufferView::buffer):
+        (JSC::ArrayBufferView::baseAddress):
+        (JSC::ArrayBufferView::byteOffset):
+        (JSC::ArrayBufferView::setNeuterable):
+        (JSC::ArrayBufferView::isNeuterable):
+        (JSC::ArrayBufferView::verifySubRange):
+        (JSC::ArrayBufferView::clampOffsetAndNumElements):
+        (JSC::ArrayBufferView::setImpl):
+        (JSC::ArrayBufferView::setRangeImpl):
+        (JSC::ArrayBufferView::zeroRangeImpl):
+        (JSC::ArrayBufferView::calculateOffsetAndLength):
+        * runtime/Float32Array.h: Renamed from Source/WTF/wtf/Float32Array.h.
+        (JSC::Float32Array::set):
+        (JSC::Float32Array::getType):
+        (JSC::Float32Array::create):
+        (JSC::Float32Array::createUninitialized):
+        (JSC::Float32Array::Float32Array):
+        (JSC::Float32Array::subarray):
+        * runtime/Float64Array.h: Renamed from Source/WTF/wtf/Float64Array.h.
+        (JSC::Float64Array::set):
+        (JSC::Float64Array::getType):
+        (JSC::Float64Array::create):
+        (JSC::Float64Array::createUninitialized):
+        (JSC::Float64Array::Float64Array):
+        (JSC::Float64Array::subarray):
+        * runtime/Int16Array.h: Renamed from Source/WTF/wtf/Int16Array.h.
+        (JSC::Int16Array::getType):
+        (JSC::Int16Array::create):
+        (JSC::Int16Array::createUninitialized):
+        (JSC::Int16Array::Int16Array):
+        (JSC::Int16Array::subarray):
+        * runtime/Int32Array.h: Renamed from Source/WTF/wtf/Int32Array.h.
+        (JSC::Int32Array::getType):
+        (JSC::Int32Array::create):
+        (JSC::Int32Array::createUninitialized):
+        (JSC::Int32Array::Int32Array):
+        (JSC::Int32Array::subarray):
+        * runtime/Int8Array.h: Renamed from Source/WTF/wtf/Int8Array.h.
+        (JSC::Int8Array::getType):
+        (JSC::Int8Array::create):
+        (JSC::Int8Array::createUninitialized):
+        (JSC::Int8Array::Int8Array):
+        (JSC::Int8Array::subarray):
+        * runtime/IntegralTypedArrayBase.h: Renamed from Source/WTF/wtf/IntegralTypedArrayBase.h.
+        (JSC::IntegralTypedArrayBase::set):
+        (JSC::IntegralTypedArrayBase::IntegralTypedArrayBase):
+        * runtime/TypedArrayBase.h: Renamed from Source/WTF/wtf/TypedArrayBase.h.
+        (JSC::TypedArrayBase::data):
+        (JSC::TypedArrayBase::set):
+        (JSC::TypedArrayBase::setRange):
+        (JSC::TypedArrayBase::zeroRange):
+        (JSC::TypedArrayBase::length):
+        (JSC::TypedArrayBase::byteLength):
+        (JSC::TypedArrayBase::item):
+        (JSC::TypedArrayBase::checkInboundData):
+        (JSC::TypedArrayBase::TypedArrayBase):
+        (JSC::TypedArrayBase::create):
+        (JSC::TypedArrayBase::createUninitialized):
+        (JSC::TypedArrayBase::subarrayImpl):
+        (JSC::TypedArrayBase::neuter):
+        * runtime/Uint16Array.h: Renamed from Source/WTF/wtf/Uint16Array.h.
+        (JSC::Uint16Array::getType):
+        (JSC::Uint16Array::create):
+        (JSC::Uint16Array::createUninitialized):
+        (JSC::Uint16Array::Uint16Array):
+        (JSC::Uint16Array::subarray):
+        * runtime/Uint32Array.h: Renamed from Source/WTF/wtf/Uint32Array.h.
+        (JSC::Uint32Array::getType):
+        (JSC::Uint32Array::create):
+        (JSC::Uint32Array::createUninitialized):
+        (JSC::Uint32Array::Uint32Array):
+        (JSC::Uint32Array::subarray):
+        * runtime/Uint8Array.h: Renamed from Source/WTF/wtf/Uint8Array.h.
+        (JSC::Uint8Array::getType):
+        (JSC::Uint8Array::create):
+        (JSC::Uint8Array::createUninitialized):
+        (JSC::Uint8Array::Uint8Array):
+        (JSC::Uint8Array::subarray):
+        * runtime/Uint8ClampedArray.h: Renamed from Source/WTF/wtf/Uint8ClampedArray.h.
+        (JSC::Uint8ClampedArray::getType):
+        (JSC::Uint8ClampedArray::create):
+        (JSC::Uint8ClampedArray::createUninitialized):
+        (JSC::Uint8ClampedArray::zeroFill):
+        (JSC::Uint8ClampedArray::set):
+        (JSC::Uint8ClampedArray::Uint8ClampedArray):
+        (JSC::Uint8ClampedArray::subarray):
+        * runtime/VM.h:
+
+2013-08-03  Filip Pizlo  <fpizlo@apple.com>
+
+        Copied space should be able to handle more than one copied backing store per JSCell
+        https://bugs.webkit.org/show_bug.cgi?id=119471
+
+        Reviewed by Mark Hahnenberg.
+        
+        This allows a cell to call copyLater() multiple times for multiple different
+        backing stores, and then have copyBackingStore() called exactly once for each
+        of those. A token tells it which backing store to copy. All backing stores
+        must be named using the CopyToken, an enumeration which currently cannot
+        exceed eight entries.
+        
+        When copyBackingStore() is called, it's up to the callee to (a) use the token
+        to decide what to copy and (b) call its base class's copyBackingStore() in
+        case the base class had something that needed copying. The only exception is
+        that JSCell never asks anything to be copied, and so if your base is JSCell
+        then you don't have to do anything.
+
+        * GNUmakefile.list.am:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * heap/CopiedBlock.h:
+        * heap/CopiedBlockInlines.h:
+        (JSC::CopiedBlock::reportLiveBytes):
+        * heap/CopyToken.h: Added.
+        * heap/CopyVisitor.cpp:
+        (JSC::CopyVisitor::copyFromShared):
+        * heap/CopyVisitor.h:
+        * heap/CopyVisitorInlines.h:
+        (JSC::CopyVisitor::visitItem):
+        * heap/CopyWorkList.h:
+        (JSC::CopyWorklistItem::CopyWorklistItem):
+        (JSC::CopyWorklistItem::cell):
+        (JSC::CopyWorklistItem::token):
+        (JSC::CopyWorkListSegment::get):
+        (JSC::CopyWorkListSegment::append):
+        (JSC::CopyWorkListSegment::data):
+        (JSC::CopyWorkListIterator::get):
+        (JSC::CopyWorkListIterator::operator*):
+        (JSC::CopyWorkListIterator::operator->):
+        (JSC::CopyWorkList::append):
+        * heap/SlotVisitor.h:
+        * heap/SlotVisitorInlines.h:
+        (JSC::SlotVisitor::copyLater):
+        * runtime/ClassInfo.h:
+        * runtime/JSCell.cpp:
+        (JSC::JSCell::copyBackingStore):
+        * runtime/JSCell.h:
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::visitButterfly):
+        (JSC::JSObject::copyBackingStore):
+        * runtime/JSObject.h:
+
+2013-08-05  Zan Dobersek  <zdobersek@igalia.com>
+
+        [Automake] Define ENABLE_JIT through the Autoconf header
+        https://bugs.webkit.org/show_bug.cgi?id=119445
+
+        Reviewed by Martin Robinson.
+
+        * GNUmakefile.am: Remove JSC_CPPFLAGS from the cpp flags for the JSC library.
+
+2013-08-03  Filip Pizlo  <fpizlo@apple.com>
+
+        hasIndexingHeader() ought really to be a property of an object and its structure, not just its structure
+        https://bugs.webkit.org/show_bug.cgi?id=119470
+
+        Reviewed by Oliver Hunt.
+        
+        Structure can still tell you if the object "could" (in the conservative sense)
+        have an indexing header; that's used by the compiler.
+        
+        Most of the time if you want to know if there's an indexing header, you ask the
+        JSObject.
+        
+        In some cases, the JSObject wants to know if it would have an indexing header if
+        it had a different structure; then it uses Structure::hasIndexingHeader(JSCell*).
+
+        * dfg/DFGRepatch.cpp:
+        (JSC::DFG::tryCachePutByID):
+        (JSC::DFG::tryBuildPutByIdList):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileAllocatePropertyStorage):
+        (JSC::DFG::SpeculativeJIT::compileReallocatePropertyStorage):
+        * runtime/ButterflyInlines.h:
+        (JSC::Butterfly::create):
+        (JSC::Butterfly::growPropertyStorage):
+        (JSC::Butterfly::growArrayRight):
+        (JSC::Butterfly::resizeArray):
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::copyButterfly):
+        (JSC::JSObject::visitButterfly):
+        * runtime/JSObject.h:
+        (JSC::JSObject::hasIndexingHeader):
+        (JSC::JSObject::setButterfly):
+        * runtime/Structure.h:
+        (JSC::Structure::couldHaveIndexingHeader):
+        (JSC::Structure::hasIndexingHeader):
+
+2013-08-02  Chris Curtis  <chris_curtis@apple.com>
+
+        Give the error object's stack property accessor attributes.
+        https://bugs.webkit.org/show_bug.cgi?id=119404
+
+        Reviewed by Geoffrey Garen.
+        
+        Changed the attributes of error object's stack property to allow developers to write
+        and delete the stack property. This will match the functionality of Chrome. Firefox  
+        allows developers to write the error's stack, but not delete it. 
+
+        * interpreter/Interpreter.cpp:
+        (JSC::Interpreter::addStackTraceIfNecessary):
+        * runtime/ErrorInstance.cpp:
+        (JSC::ErrorInstance::finishCreation):
+
+2013-08-02  Oliver Hunt  <oliver@apple.com>
+
+        Incorrect type speculation reported by ToPrimitive
+        https://bugs.webkit.org/show_bug.cgi?id=119458
+
+        Reviewed by Mark Hahnenberg.
+
+        Make sure that we report the correct type possibilities for the output
+        from ToPrimitive
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::::executeEffects):
+
+2013-08-02  Gavin Barraclough  <barraclough@apple.com>
+
+        Remove no-arguments constructor to PropertySlot
+        https://bugs.webkit.org/show_bug.cgi?id=119460
+
+        Reviewed by Geoff Garen.
+
+        This constructor was unsafe if getValue is subsequently called,
+        and the property is a getter. Simplest to just remove it.
+
+        * runtime/Arguments.cpp:
+        (JSC::Arguments::defineOwnProperty):
+        * runtime/JSActivation.cpp:
+        (JSC::JSActivation::getOwnPropertyDescriptor):
+        * runtime/JSFunction.cpp:
+        (JSC::JSFunction::getOwnPropertyDescriptor):
+        (JSC::JSFunction::getOwnNonIndexPropertyNames):
+        (JSC::JSFunction::put):
+        (JSC::JSFunction::defineOwnProperty):
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::defineOwnProperty):
+        * runtime/JSGlobalObject.h:
+        (JSC::JSGlobalObject::hasOwnPropertyForWrite):
+        * runtime/JSNameScope.cpp:
+        (JSC::JSNameScope::put):
+        * runtime/JSONObject.cpp:
+        (JSC::Stringifier::Holder::appendNextProperty):
+        (JSC::Walker::walk):
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::hasProperty):
+        (JSC::JSObject::hasOwnProperty):
+        (JSC::JSObject::reifyStaticFunctionsForDelete):
+        * runtime/Lookup.h:
+        (JSC::getStaticPropertyDescriptor):
+        (JSC::getStaticFunctionDescriptor):
+        (JSC::getStaticValueDescriptor):
+        * runtime/ObjectConstructor.cpp:
+        (JSC::defineProperties):
+        * runtime/PropertySlot.h:
+
+2013-08-02  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        DFG validation can cause assertion failures due to dumping
+        https://bugs.webkit.org/show_bug.cgi?id=119456
+
+        Reviewed by Geoffrey Garen.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::hasHash):
+        (JSC::CodeBlock::isSafeToComputeHash):
+        (JSC::CodeBlock::hash):
+        (JSC::CodeBlock::dumpAssumingJITType):
+        * bytecode/CodeBlock.h:
+
+2013-08-02  Chris Curtis  <chris_curtis@apple.com>
+
+        Have vm's exceptionStack match java's vm's exceptionStack.
+        https://bugs.webkit.org/show_bug.cgi?id=119362
+
+        Reviewed by Geoffrey Garen.
+        
+        The error object's stack is only updated if it does not exist yet. This matches 
+        the functionality of other browsers, and Java VMs. 
+
+        * interpreter/Interpreter.cpp:
+        (JSC::Interpreter::addStackTraceIfNecessary):
+        (JSC::Interpreter::throwException):
+        * runtime/VM.cpp:
+        (JSC::VM::clearExceptionStack):
+        * runtime/VM.h:
+        (JSC::VM::lastExceptionStack):
+
+2013-08-02  Julien Brianceau  <jbrianceau@nds.com>
+
+        REGRESSION(FTL): Fix mips implementation of ctiVMThrowTrampolineSlowpath.
+        https://bugs.webkit.org/show_bug.cgi?id=119447
+
+        Reviewed by Geoffrey Garen.
+
+        Fix .cpload, update call frame and do not restore registers from JIT stack frame in
+        mips implementation of ctiVMThrowTrampolineSlowpath. This change is similar to
+        r153583 (sh4) and r153648 (ARM).
+
+        * jit/JITStubsMIPS.h:
+
+2013-08-01  Filip Pizlo  <fpizlo@apple.com>
+
+        hasIndexingHeader should be a property of the Structure, not just the IndexingType
+        https://bugs.webkit.org/show_bug.cgi?id=119422
+
+        Reviewed by Oliver Hunt.
+        
+        This simplifies some code and also allows Structure to claim that an object
+        has an indexing header even if it doesn't have indexed properties.
+        
+        I also changed some calls to use hasIndexedProperties() since in some cases,
+        that's what we actually meant. Currently the two are synonyms.
+
+        * dfg/DFGRepatch.cpp:
+        (JSC::DFG::tryCachePutByID):
+        (JSC::DFG::tryBuildPutByIdList):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileAllocatePropertyStorage):
+        (JSC::DFG::SpeculativeJIT::compileReallocatePropertyStorage):
+        * runtime/ButterflyInlines.h:
+        (JSC::Butterfly::create):
+        (JSC::Butterfly::growPropertyStorage):
+        (JSC::Butterfly::growArrayRight):
+        (JSC::Butterfly::resizeArray):
+        * runtime/IndexingType.h:
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::copyButterfly):
+        (JSC::JSObject::visitButterfly):
+        (JSC::JSObject::setPrototype):
+        * runtime/JSObject.h:
+        (JSC::JSObject::setButterfly):
+        * runtime/JSPropertyNameIterator.cpp:
+        (JSC::JSPropertyNameIterator::create):
+        * runtime/Structure.h:
+        (JSC::Structure::hasIndexingHeader):
+
+2013-08-02  Julien Brianceau  <jbrianceau@nds.com>
+
+        REGRESSION: ARM still crashes after change set r153612.
+        https://bugs.webkit.org/show_bug.cgi?id=119433
+
+        Reviewed by Michael Saboff.
+
+        Update call frame and do not restore registers from JIT stack frame in ARM and ARMv7
+        implementations of ctiVMThrowTrampolineSlowpath. This change is similar to r153583
+        for sh4 architecture.
+
+        * jit/JITStubsARM.h:
+        * jit/JITStubsARMv7.h:
+
+2013-08-02  Michael Saboff  <msaboff@apple.com>
+
+        REGRESSION(r153612): It made jsc and layout tests crash
+        https://bugs.webkit.org/show_bug.cgi?id=119440
+
+        Reviewed by Csaba Osztrogonác.
+
+        Made the changes if changeset r153612 only apply to 32 bit builds.
+
+        * jit/JITExceptions.cpp:
+        * jit/JITExceptions.h:
+        * jit/JITStubs.cpp:
+        (JSC::cti_vm_throw_slowpath):
+        * jit/JITStubs.h:
+
+2013-08-02  Patrick Gansterer  <paroga@webkit.org>
+
+        Add JSCTestRunnerUtils to the list of forwarding headers to fix build.
+
+        * CMakeLists.txt:
+
+2013-08-01  Ruth Fong  <ruth_fong@apple.com>
+
+        [Forms: color] <input type='color'> popover color well implementation
+        <rdar://problem/14411008> and https://bugs.webkit.org/show_bug.cgi?id=119356
+
+        Reviewed by Benjamin Poulain.
+
+        * Configurations/FeatureDefines.xcconfig: Added and enabled INPUT_TYPE_COLOR_POPOVER.
+
+2013-08-01  Oliver Hunt  <oliver@apple.com>
+
+        DFG is not enforcing correct ordering of ToString conversion in MakeRope
+        https://bugs.webkit.org/show_bug.cgi?id=119408
+
+        Reviewed by Filip Pizlo.
+
+        Construct ToString and Phantom nodes in advance of MakeRope
+        nodes to ensure that ordering is ensured, and correct values
+        will be reified on OSR exit.
+
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock):
+
+2013-08-01  Michael Saboff  <msaboff@apple.com>
+
+        REGRESSION: Crash beneath cti_vm_throw_slowpath due to invalid CallFrame pointer
+        https://bugs.webkit.org/show_bug.cgi?id=119140
+
+        Reviewed by Filip Pizlo.
+
+        Ensure that ExceptionHandler is returned by functions in two registers by encoding the value as a 64 bit int.
+
+        * jit/JITExceptions.cpp:
+        (JSC::encode):
+        * jit/JITExceptions.h:
+        * jit/JITStubs.cpp:
+        (JSC::cti_vm_throw_slowpath):
+        * jit/JITStubs.h:
+
+2013-08-01  Julien Brianceau  <jbrianceau@nds.com>
+
+        REGRESSION(FTL): Fix sh4 implementation of ctiVMThrowTrampolineSlowpath.
+        https://bugs.webkit.org/show_bug.cgi?id=119391
+
+        Reviewed by Csaba Osztrogonác.
+
+        * jit/JITStubsSH4.h: Fix ctiVMThrowTrampolineSlowpath implementation:
+            - Call frame is in r14 register.
+            - Do not restore registers from JIT stack frame here.
+
+2013-07-31  Gavin Barraclough  <barraclough@apple.com>
+
+        More cleanup in PropertySlot
+        https://bugs.webkit.org/show_bug.cgi?id=119359
+
+        Reviewed by Geoff Garen.
+
+        m_slotBase is overloaded to store the (receiver) thisValue and the object that contains the property,
+        This is confusing, and means that slotBase cannot be typed correctly (can only be a JSObject).
+
+        * dfg/DFGRepatch.cpp:
+        (JSC::DFG::tryCacheGetByID):
+        (JSC::DFG::tryBuildGetByIDList):
+            - No need to ASSERT slotBase is an object.
+        * jit/JITStubs.cpp:
+        (JSC::tryCacheGetByID):
+        (JSC::DEFINE_STUB_FUNCTION):
+            - No need to ASSERT slotBase is an object.
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::getOwnPropertySlotByIndex):
+        (JSC::JSObject::fillGetterPropertySlot):
+            - Pass an object through to setGetterSlot.
+        * runtime/JSObject.h:
+        (JSC::PropertySlot::getValue):
+            - Moved from PropertySlot (need to know anout JSObject).
+        * runtime/PropertySlot.cpp:
+        (JSC::PropertySlot::functionGetter):
+            - update per member name changes
+        * runtime/PropertySlot.h:
+        (JSC::PropertySlot::PropertySlot):
+            - Argument to constructor set to 'thisValue'.
+        (JSC::PropertySlot::slotBase):
+            - This returns a JSObject*.
+        (JSC::PropertySlot::setValue):
+        (JSC::PropertySlot::setCustom):
+        (JSC::PropertySlot::setCacheableCustom):
+        (JSC::PropertySlot::setCustomIndex):
+        (JSC::PropertySlot::setGetterSlot):
+        (JSC::PropertySlot::setCacheableGetterSlot):
+            - slotBase is a JSObject*, make setGetterSlot set slotBase for consistency.
+        * runtime/SparseArrayValueMap.cpp:
+        (JSC::SparseArrayEntry::get):
+            - Pass an object through to setGetterSlot.
+        * runtime/SparseArrayValueMap.h:
+            - Pass an object through to setGetterSlot.
+
+2013-07-31  Yi Shen  <max.hong.shen@gmail.com>
+
+        Reduce JSC API static value setter/getter overhead.
+        https://bugs.webkit.org/show_bug.cgi?id=119277
+
+        Reviewed by Geoffrey Garen.
+
+        Add property name to the static value entry, so that OpaqueJSString::create() doesn't
+        need to get called every time when set or get the static value.
+
+        * API/JSCallbackObjectFunctions.h:
+        (JSC::::put):
+        (JSC::::putByIndex):
+        (JSC::::getStaticValue):
+        * API/JSClassRef.cpp:
+        (OpaqueJSClassContextData::OpaqueJSClassContextData):
+        * API/JSClassRef.h:
+        (StaticValueEntry::StaticValueEntry):
+
+2013-07-31  Kwang Yul Seo  <skyul@company100.net>
+
+        Use emptyString instead of String("")
+        https://bugs.webkit.org/show_bug.cgi?id=119335
+
+        Reviewed by Darin Adler.
+
+        Use emptyString() instead of String("") because it is better style and
+        faster. This is a followup to r116908, removing all occurrences of
+        String("") from WebKit.
+
+        * runtime/RegExpConstructor.cpp:
+        (JSC::constructRegExp):
+        * runtime/RegExpPrototype.cpp:
+        (JSC::regExpProtoFuncCompile):
+        * runtime/StringPrototype.cpp:
+        (JSC::stringProtoFuncMatch):
+        (JSC::stringProtoFuncSearch):
+
+2013-07-31  Ruth Fong  <ruth_fong@apple.com>
+
+        <input type=color> Mac UI behaviour
+        <rdar://problem/10269922> and https://bugs.webkit.org/show_bug.cgi?id=61276
+
+        Reviewed by Brady Eidson.
+
+        * Configurations/FeatureDefines.xcconfig: Enabled INPUT_TYPE_COLOR.
+
+2013-07-31  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        DFG doesn't account for inlining of functions with switch statements that haven't been executed by the baseline JIT
+        https://bugs.webkit.org/show_bug.cgi?id=119349
+
+        Reviewed by Geoffrey Garen.
+
+        Prior to this patch, the baseline JIT was responsible for resizing the ctiOffsets Vector for 
+        SimpleJumpTables to be equal to the size of the branchOffsets Vector. The DFG implicitly relied
+        on code it compiled with any switch statements to have been run in the baseline JIT first. 
+        However, if the DFG chooses to inline a function that has never been compiled by the baseline 
+        JIT then this resizing never happens and we crash at link time in the DFG.
+
+        We can fix this by also doing the resize in the DFG to catch this case.
+
+        * dfg/DFGJITCompiler.cpp:
+        (JSC::DFG::JITCompiler::link):
+
+2013-07-31  Gavin Barraclough  <barraclough@apple.com>
+
+        Speculative Windows build fix.
+
+        Reviewed by NOBODY
+
+        * runtime/JSString.cpp:
+        (JSC::JSRopeString::getIndexSlowCase):
+        * runtime/JSString.h:
+
+2013-07-30  Gavin Barraclough  <barraclough@apple.com>
+
+        Some cleanup in JSValue::get
+        https://bugs.webkit.org/show_bug.cgi?id=119343
+
+        Reviewed by Geoff Garen.
+
+        JSValue::get is implemented to:
+            1) Check if the value is a cell – if not, synthesize a prototype to search,
+            2) call getOwnPropertySlot on the cell,
+            3) if this returns false, cast to JSObject to get the prototype, and walk the prototype chain.
+        By all rights this should crash when passed a string and accessing a property that does not exist, because
+        the string is a cell, getOwnPropertySlot should return false, and the cast to JSObject should be unsafe.
+        To work around this, JSString::getOwnPropertySlot actually implements 'get' functionality - searching the
+        prototype chain, and faking out a return value of undefined if no property is found.
+
+        This is a huge hazard, since fixing JSString::getOwnPropertySlot or calling getOwnPropertySlot on cells
+        from elsewhere would introduce bugs. Fortunately it is only ever called in this one place.
+
+        The fix here is to move getOwnPropertySlot onto JSObjecte and end this madness - cells don't have property
+        slots anyway.
+
+        Interesting changes are in JSCJSValueInlines.h, JSString.cpp - the rest is pretty much all JSCell -> JSObject.
+
+2013-07-31  Michael Saboff  <msaboff@apple.com>
+
+        [Win] JavaScript crash.
+        https://bugs.webkit.org/show_bug.cgi?id=119339
+
+        Reviewed by Mark Hahnenberg.
+
+        * jit/JITStubsX86.h: Implement ctiVMThrowTrampoline and
+        ctiVMThrowTrampolineSlowpath the same way as the gcc x86 version does.
+
+2013-07-30  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        GetByVal on Arguments does the wrong size load when checking the Arguments object length
+        https://bugs.webkit.org/show_bug.cgi?id=119281
+
+        Reviewed by Geoffrey Garen.
+
+        This leads to out of bounds accesses and subsequent crashes.
+
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileGetByValOnArguments):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2013-07-30  Oliver Hunt  <oliver@apple.com>
+
+        Add an assertion to SpeculateCellOperand
+        https://bugs.webkit.org/show_bug.cgi?id=119276
+
+        Reviewed by Michael Saboff.
+
+        More assertions are better
+
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::fillSpeculateCell):
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2013-07-30  Mark Lam  <mark.lam@apple.com>
+
+        Fix problems with divot and lineStart mismatches.
+        https://bugs.webkit.org/show_bug.cgi?id=118662.
+
+        Reviewed by Oliver Hunt.
+
+        r152494 added the recording of lineStart values for divot positions.
+        This is needed for the computation of column numbers. Similarly, it also
+        added the recording of line numbers for the divot positions. One problem
+        with the approach taken was that the line and lineStart values were
+        recorded independently, and hence were not always guaranteed to be
+        sampled at the same place that the divot position is recorded. This
+        resulted in potential mismatches that cause some assertions to fail.
+
+        The solution is to introduce a JSTextPosition abstraction that records
+        the divot position, line, and lineStart as a single quantity. Wherever
+        we record the divot position as an unsigned int previously, we now record
+        its JSTextPosition which captures all 3 values in one go. This ensures
+        that the captured line and lineStart will always match the captured divot
+        position.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::emitCall):
+        (JSC::BytecodeGenerator::emitCallEval):
+        (JSC::BytecodeGenerator::emitCallVarargs):
+        (JSC::BytecodeGenerator::emitConstruct):
+        (JSC::BytecodeGenerator::emitDebugHook):
+        - Use JSTextPosition instead of passing line and lineStart explicitly.
+        * bytecompiler/BytecodeGenerator.h:
+        (JSC::BytecodeGenerator::emitExpressionInfo):
+        - Use JSTextPosition instead of passing line and lineStart explicitly.
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ThrowableExpressionData::emitThrowReferenceError):
+        (JSC::ResolveNode::emitBytecode):
+        (JSC::BracketAccessorNode::emitBytecode):
+        (JSC::DotAccessorNode::emitBytecode):
+        (JSC::NewExprNode::emitBytecode):
+        (JSC::EvalFunctionCallNode::emitBytecode):
+        (JSC::FunctionCallValueNode::emitBytecode):
+        (JSC::FunctionCallResolveNode::emitBytecode):
+        (JSC::FunctionCallBracketNode::emitBytecode):
+        (JSC::FunctionCallDotNode::emitBytecode):
+        (JSC::CallFunctionCallDotNode::emitBytecode):
+        (JSC::ApplyFunctionCallDotNode::emitBytecode):
+        (JSC::PostfixNode::emitResolve):
+        (JSC::PostfixNode::emitBracket):
+        (JSC::PostfixNode::emitDot):
+        (JSC::DeleteResolveNode::emitBytecode):
+        (JSC::DeleteBracketNode::emitBytecode):
+        (JSC::DeleteDotNode::emitBytecode):
+        (JSC::PrefixNode::emitResolve):
+        (JSC::PrefixNode::emitBracket):
+        (JSC::PrefixNode::emitDot):
+        (JSC::UnaryOpNode::emitBytecode):
+        (JSC::BinaryOpNode::emitStrcat):
+        (JSC::BinaryOpNode::emitBytecode):
+        (JSC::ThrowableBinaryOpNode::emitBytecode):
+        (JSC::InstanceOfNode::emitBytecode):
+        (JSC::emitReadModifyAssignment):
+        (JSC::ReadModifyResolveNode::emitBytecode):
+        (JSC::AssignResolveNode::emitBytecode):
+        (JSC::AssignDotNode::emitBytecode):
+        (JSC::ReadModifyDotNode::emitBytecode):
+        (JSC::AssignBracketNode::emitBytecode):
+        (JSC::ReadModifyBracketNode::emitBytecode):
+        (JSC::ForInNode::emitBytecode):
+        (JSC::WithNode::emitBytecode):
+        (JSC::ThrowNode::emitBytecode):
+        - Use JSTextPosition instead of passing line and lineStart explicitly.
+        * parser/ASTBuilder.h:
+        - Replaced ASTBuilder::PositionInfo with JSTextPosition.
+        (JSC::ASTBuilder::BinaryOpInfo::BinaryOpInfo):
+        (JSC::ASTBuilder::AssignmentInfo::AssignmentInfo):
+        (JSC::ASTBuilder::createResolve):
+        (JSC::ASTBuilder::createBracketAccess):
+        (JSC::ASTBuilder::createDotAccess):
+        (JSC::ASTBuilder::createRegExp):
+        (JSC::ASTBuilder::createNewExpr):
+        (JSC::ASTBuilder::createAssignResolve):
+        (JSC::ASTBuilder::createExprStatement):
+        (JSC::ASTBuilder::createForInLoop):
+        (JSC::ASTBuilder::createReturnStatement):
+        (JSC::ASTBuilder::createBreakStatement):
+        (JSC::ASTBuilder::createContinueStatement):
+        (JSC::ASTBuilder::createLabelStatement):
+        (JSC::ASTBuilder::createWithStatement):
+        (JSC::ASTBuilder::createThrowStatement):
+        (JSC::ASTBuilder::appendBinaryExpressionInfo):
+        (JSC::ASTBuilder::appendUnaryToken):
+        (JSC::ASTBuilder::unaryTokenStackLastStart):
+        (JSC::ASTBuilder::assignmentStackAppend):
+        (JSC::ASTBuilder::createAssignment):
+        (JSC::ASTBuilder::setExceptionLocation):
+        (JSC::ASTBuilder::makeDeleteNode):
+        (JSC::ASTBuilder::makeFunctionCallNode):
+        (JSC::ASTBuilder::makeBinaryNode):
+        (JSC::ASTBuilder::makeAssignNode):
+        (JSC::ASTBuilder::makePrefixNode):
+        (JSC::ASTBuilder::makePostfixNode):
+        - Use JSTextPosition instead of passing line and lineStart explicitly.
+        * parser/Lexer.cpp:
+        (JSC::::lex):
+        - Added support for capturing the appropriate JSTextPositions instead
+          of just the character offset.
+        * parser/Lexer.h:
+        (JSC::Lexer::currentPosition):
+        (JSC::::lexExpectIdentifier):
+        - Added support for capturing the appropriate JSTextPositions instead
+          of just the character offset.
+        * parser/NodeConstructors.h:
+        (JSC::Node::Node):
+        (JSC::ResolveNode::ResolveNode):
+        (JSC::EvalFunctionCallNode::EvalFunctionCallNode):
+        (JSC::FunctionCallValueNode::FunctionCallValueNode):
+        (JSC::FunctionCallResolveNode::FunctionCallResolveNode):
+        (JSC::FunctionCallBracketNode::FunctionCallBracketNode):
+        (JSC::FunctionCallDotNode::FunctionCallDotNode):
+        (JSC::CallFunctionCallDotNode::CallFunctionCallDotNode):
+        (JSC::ApplyFunctionCallDotNode::ApplyFunctionCallDotNode):
+        (JSC::PostfixNode::PostfixNode):
+        (JSC::DeleteResolveNode::DeleteResolveNode):
+        (JSC::DeleteBracketNode::DeleteBracketNode):
+        (JSC::DeleteDotNode::DeleteDotNode):
+        (JSC::PrefixNode::PrefixNode):
+        (JSC::ReadModifyResolveNode::ReadModifyResolveNode):
+        (JSC::ReadModifyBracketNode::ReadModifyBracketNode):
+        (JSC::AssignBracketNode::AssignBracketNode):
+        (JSC::AssignDotNode::AssignDotNode):
+        (JSC::ReadModifyDotNode::ReadModifyDotNode):
+        (JSC::AssignErrorNode::AssignErrorNode):
+        (JSC::WithNode::WithNode):
+        (JSC::ForInNode::ForInNode):
+        - Use JSTextPosition instead of passing line and lineStart explicitly.
+        * parser/Nodes.cpp:
+        (JSC::StatementNode::setLoc):
+        - Use JSTextPosition instead of passing line and lineStart explicitly.
+        * parser/Nodes.h:
+        (JSC::Node::lineNo):
+        (JSC::Node::startOffset):
+        (JSC::Node::lineStartOffset):
+        (JSC::Node::position):
+        (JSC::ThrowableExpressionData::ThrowableExpressionData):
+        (JSC::ThrowableExpressionData::setExceptionSourceCode):
+        (JSC::ThrowableExpressionData::divot):
+        (JSC::ThrowableExpressionData::divotStart):
+        (JSC::ThrowableExpressionData::divotEnd):
+        (JSC::ThrowableSubExpressionData::ThrowableSubExpressionData):
+        (JSC::ThrowableSubExpressionData::setSubexpressionInfo):
+        (JSC::ThrowableSubExpressionData::subexpressionDivot):
+        (JSC::ThrowableSubExpressionData::subexpressionStart):
+        (JSC::ThrowableSubExpressionData::subexpressionEnd):
+        (JSC::ThrowablePrefixedSubExpressionData::ThrowablePrefixedSubExpressionData):
+        (JSC::ThrowablePrefixedSubExpressionData::setSubexpressionInfo):
+        (JSC::ThrowablePrefixedSubExpressionData::subexpressionDivot):
+        (JSC::ThrowablePrefixedSubExpressionData::subexpressionStart):
+        (JSC::ThrowablePrefixedSubExpressionData::subexpressionEnd):
+        - Use JSTextPosition instead of passing line and lineStart explicitly.
+        * parser/Parser.cpp:
+        (JSC::::Parser):
+        (JSC::::parseInner):
+        - Use JSTextPosition instead of passing line and lineStart explicitly.
+        (JSC::::didFinishParsing):
+        - Remove setting of m_lastLine value. We always pass in the value from
+          m_lastLine anyway. So, this assignment is effectively a nop.
+        (JSC::::parseVarDeclaration):
+        (JSC::::parseVarDeclarationList):
+        (JSC::::parseForStatement):
+        (JSC::::parseBreakStatement):
+        (JSC::::parseContinueStatement):
+        (JSC::::parseReturnStatement):
+        (JSC::::parseThrowStatement):
+        (JSC::::parseWithStatement):
+        (JSC::::parseTryStatement):
+        (JSC::::parseBlockStatement):
+        (JSC::::parseFunctionDeclaration):
+        (JSC::LabelInfo::LabelInfo):
+        (JSC::::parseExpressionOrLabelStatement):
+        (JSC::::parseExpressionStatement):
+        (JSC::::parseAssignmentExpression):
+        (JSC::::parseBinaryExpression):
+        (JSC::::parseProperty):
+        (JSC::::parsePrimaryExpression):
+        (JSC::::parseMemberExpression):
+        (JSC::::parseUnaryExpression):
+        - Use JSTextPosition instead of passing line and lineStart explicitly.
+        * parser/Parser.h:
+        (JSC::Parser::next):
+        (JSC::Parser::nextExpectIdentifier):
+        (JSC::Parser::getToken):
+        (JSC::Parser::tokenStartPosition):
+        (JSC::Parser::tokenEndPosition):
+        (JSC::Parser::lastTokenEndPosition):
+        (JSC::::parse):
+        - Use JSTextPosition instead of passing line and lineStart explicitly.
+        * parser/ParserTokens.h:
+        (JSC::JSTextPosition::JSTextPosition):
+        (JSC::JSTextPosition::operator+):
+        (JSC::JSTextPosition::operator-):
+        (JSC::JSTextPosition::operator int):
+        - Added JSTextPosition.
+        * parser/SyntaxChecker.h:
+        (JSC::SyntaxChecker::makeFunctionCallNode):
+        (JSC::SyntaxChecker::makeAssignNode):
+        (JSC::SyntaxChecker::makePrefixNode):
+        (JSC::SyntaxChecker::makePostfixNode):
+        (JSC::SyntaxChecker::makeDeleteNode):
+        (JSC::SyntaxChecker::createResolve):
+        (JSC::SyntaxChecker::createBracketAccess):
+        (JSC::SyntaxChecker::createDotAccess):
+        (JSC::SyntaxChecker::createRegExp):
+        (JSC::SyntaxChecker::createNewExpr):
+        (JSC::SyntaxChecker::createAssignResolve):
+        (JSC::SyntaxChecker::createForInLoop):
+        (JSC::SyntaxChecker::createReturnStatement):
+        (JSC::SyntaxChecker::createBreakStatement):
+        (JSC::SyntaxChecker::createContinueStatement):
+        (JSC::SyntaxChecker::createWithStatement):
+        (JSC::SyntaxChecker::createLabelStatement):
+        (JSC::SyntaxChecker::createThrowStatement):
+        (JSC::SyntaxChecker::appendBinaryExpressionInfo):
+        (JSC::SyntaxChecker::operatorStackPop):
+        - Use JSTextPosition instead of passing line and lineStart explicitly.
+
+2013-07-29  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix make distcheck.
+
+        * GNUmakefile.list.am: Add missing files to compilation.
+        * bytecode/CodeBlock.cpp: Add a ENABLE(FTL_JIT) #if block to
+        include FTL header files not included in the compilation.
+        * dfg/DFGDriver.cpp: Ditto.
+        * dfg/DFGPlan.cpp: Ditto.
+
+2013-07-29  Chris Curtis  <chris_curtis@apple.com>
+
+        Eager stack trace for error objects.
+        https://bugs.webkit.org/show_bug.cgi?id=118918
+
+        Reviewed by Geoffrey Garen.
+        
+        Chrome and Firefox give error objects the stack property and we wanted to match
+        that functionality. This allows developers to see the stack without throwing an object.
+
+        * runtime/ErrorInstance.cpp:
+        (JSC::ErrorInstance::finishCreation):
+         For error objects that are not thrown as an exception, we pass the stackTrace in 
+         as a parameter. This allows the error object to have the stack property.
+        
+        * interpreter/Interpreter.cpp:
+        (JSC::stackTraceAsString):
+        Helper function used to eliminate duplicate code.
+
+        (JSC::Interpreter::addStackTraceIfNecessary):
+        When an error object is created by the user the vm->exceptionStack is not set.
+        If the user throws this error object later the stack that is in the error object 
+        may not be the correct stack for the throw, so when we set the vm->exception stack,
+        the stack property on the error object is set as well.
+        
+        * runtime/ErrorConstructor.cpp:
+        (JSC::constructWithErrorConstructor):
+        (JSC::callErrorConstructor):
+        * runtime/NativeErrorConstructor.cpp:
+        (JSC::constructWithNativeErrorConstructor):
+        (JSC::callNativeErrorConstructor):
+        These functions indicate that the user created an error object. For all error objects 
+        that the user explicitly creates, the topCallFrame is at a new frame created to 
+        handle the user's call. In this case though, the error object needs the caller's 
+        frame to create the stack trace correctly.
+        
+        * interpreter/Interpreter.h:
+        * runtime/ErrorInstance.h:
+        (JSC::ErrorInstance::create):
+
+2013-07-29  Gavin Barraclough  <barraclough@apple.com>
+
+        Some cleanup in PropertySlot
+        https://bugs.webkit.org/show_bug.cgi?id=119189
+
+        Reviewed by Geoff Garen.
+
+        PropertySlot represents a property in one of four states - value, getter, custom, or custom-index.
+        The state is currently tracked redundantly by two mechanisms - the custom getter function (m_getValue)
+        is set to a special value to indicate the type (other than custom), and the type is also tracked by
+        an enum - but only if cacheable. Cacheability can typically be determined by the value of m_offset
+        (this is invalidOffset if not cacheable).
+
+            * Internally, always track the type of the property using an enum value, PropertyType.
+            * Use m_offset to indicate cacheable.
+            * Keep the external interface (CachedPropertyType) unchanged.
+            * Better pack data into the m_data union.
+
+        Performance neutral.
+
+        * dfg/DFGRepatch.cpp:
+        (JSC::DFG::tryCacheGetByID):
+        (JSC::DFG::tryBuildGetByIDList):
+            - cachedPropertyType() -> isCacheable*()
+        * jit/JITPropertyAccess.cpp:
+        (JSC::JIT::privateCompileGetByIdProto):
+        (JSC::JIT::privateCompileGetByIdSelfList):
+        (JSC::JIT::privateCompileGetByIdProtoList):
+        (JSC::JIT::privateCompileGetByIdChainList):
+        (JSC::JIT::privateCompileGetByIdChain):
+            - cachedPropertyType() -> isCacheable*()
+        * jit/JITPropertyAccess32_64.cpp:
+        (JSC::JIT::privateCompileGetByIdProto):
+        (JSC::JIT::privateCompileGetByIdSelfList):
+        (JSC::JIT::privateCompileGetByIdProtoList):
+        (JSC::JIT::privateCompileGetByIdChainList):
+        (JSC::JIT::privateCompileGetByIdChain):
+            - cachedPropertyType() -> isCacheable*()
+        * jit/JITStubs.cpp:
+        (JSC::tryCacheGetByID):
+            - cachedPropertyType() -> isCacheable*()
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+            - cachedPropertyType() -> isCacheable*()
+        * runtime/PropertySlot.cpp:
+        (JSC::PropertySlot::functionGetter):
+            - refactoring described above.
+        * runtime/PropertySlot.h:
+        (JSC::PropertySlot::PropertySlot):
+        (JSC::PropertySlot::getValue):
+        (JSC::PropertySlot::isCacheable):
+        (JSC::PropertySlot::isCacheableValue):
+        (JSC::PropertySlot::isCacheableGetter):
+        (JSC::PropertySlot::isCacheableCustom):
+        (JSC::PropertySlot::cachedOffset):
+        (JSC::PropertySlot::customGetter):
+        (JSC::PropertySlot::setValue):
+        (JSC::PropertySlot::setCustom):
+        (JSC::PropertySlot::setCacheableCustom):
+        (JSC::PropertySlot::setCustomIndex):
+        (JSC::PropertySlot::setGetterSlot):
+        (JSC::PropertySlot::setCacheableGetterSlot):
+        (JSC::PropertySlot::setUndefined):
+        (JSC::PropertySlot::slotBase):
+        (JSC::PropertySlot::setBase):
+            - refactoring described above.
+
 2013-07-28  Oliver Hunt  <oliver@apple.com>
 
         REGRESSION: Crash when opening Facebook.com

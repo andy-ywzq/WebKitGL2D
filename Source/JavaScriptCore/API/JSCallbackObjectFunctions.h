@@ -122,9 +122,9 @@ String JSCallbackObject<Parent>::className(const JSObject* object)
 }
 
 template <class Parent>
-bool JSCallbackObject<Parent>::getOwnPropertySlot(JSCell* cell, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSCallbackObject<Parent>::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
 {
-    JSCallbackObject* thisObject = jsCast<JSCallbackObject*>(cell);
+    JSCallbackObject* thisObject = jsCast<JSCallbackObject*>(object);
     JSContextRef ctx = toRef(exec);
     JSObjectRef thisRef = toRef(thisObject);
     RefPtr<OpaqueJSString> propertyNameRef;
@@ -183,9 +183,9 @@ bool JSCallbackObject<Parent>::getOwnPropertySlot(JSCell* cell, ExecState* exec,
 }
 
 template <class Parent>
-bool JSCallbackObject<Parent>::getOwnPropertySlotByIndex(JSCell* cell, ExecState* exec, unsigned propertyName, PropertySlot& slot)
+bool JSCallbackObject<Parent>::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, unsigned propertyName, PropertySlot& slot)
 {
-    return cell->methodTable()->getOwnPropertySlot(cell, exec, Identifier::from(exec, propertyName), slot);
+    return object->methodTable()->getOwnPropertySlot(object, exec, Identifier::from(exec, propertyName), slot);
 }
 
 template <class Parent>
@@ -263,13 +263,11 @@ void JSCallbackObject<Parent>::put(JSCell* cell, ExecState* exec, PropertyName p
                     if (entry->attributes & kJSPropertyAttributeReadOnly)
                         return;
                     if (JSObjectSetPropertyCallback setProperty = entry->setProperty) {
-                        if (!propertyNameRef)
-                            propertyNameRef = OpaqueJSString::create(name);
                         JSValueRef exception = 0;
                         bool result;
                         {
                             APICallbackShim callbackShim(exec);
-                            result = setProperty(ctx, thisRef, propertyNameRef.get(), valueRef, &exception);
+                            result = setProperty(ctx, thisRef, entry->propertyNameRef.get(), valueRef, &exception);
                         }
                         if (exception)
                             throwError(exec, toJS(exec, exception));
@@ -324,13 +322,11 @@ void JSCallbackObject<Parent>::putByIndex(JSCell* cell, ExecState* exec, unsigne
                 if (entry->attributes & kJSPropertyAttributeReadOnly)
                     return;
                 if (JSObjectSetPropertyCallback setProperty = entry->setProperty) {
-                    if (!propertyNameRef)
-                        propertyNameRef = OpaqueJSString::create(propertyName.impl());
                     JSValueRef exception = 0;
                     bool result;
                     {
                         APICallbackShim callbackShim(exec);
-                        result = setProperty(ctx, thisRef, propertyNameRef.get(), valueRef, &exception);
+                        result = setProperty(ctx, thisRef, entry->propertyNameRef.get(), valueRef, &exception);
                     }
                     if (exception)
                         throwError(exec, toJS(exec, exception));
@@ -580,20 +576,17 @@ template <class Parent>
 JSValue JSCallbackObject<Parent>::getStaticValue(ExecState* exec, PropertyName propertyName)
 {
     JSObjectRef thisRef = toRef(this);
-    RefPtr<OpaqueJSString> propertyNameRef;
     
     if (StringImpl* name = propertyName.publicName()) {
         for (JSClassRef jsClass = classRef(); jsClass; jsClass = jsClass->parentClass) {
             if (OpaqueJSClassStaticValuesTable* staticValues = jsClass->staticValues(exec)) {
                 if (StaticValueEntry* entry = staticValues->get(name)) {
                     if (JSObjectGetPropertyCallback getProperty = entry->getProperty) {
-                        if (!propertyNameRef)
-                            propertyNameRef = OpaqueJSString::create(name);
                         JSValueRef exception = 0;
                         JSValueRef value;
                         {
                             APICallbackShim callbackShim(exec);
-                            value = getProperty(toRef(exec), thisRef, propertyNameRef.get(), &exception);
+                            value = getProperty(toRef(exec), thisRef, entry->propertyNameRef.get(), &exception);
                         }
                         if (exception) {
                             throwError(exec, toJS(exec, exception));

@@ -47,10 +47,10 @@
 #import "WebCoreAVFResourceLoader.h"
 #import "WebCoreSystemInterface.h"
 #import <objc/runtime.h>
+#import <runtime/Uint16Array.h>
+#import <runtime/Uint32Array.h>
+#import <runtime/Uint8Array.h>
 #import <wtf/CurrentTime.h>
-#import <wtf/Uint16Array.h>
-#import <wtf/Uint32Array.h>
-#import <wtf/Uint8Array.h>
 #import <wtf/text/CString.h>
 
 #import <AVFoundation/AVFoundation.h>
@@ -942,8 +942,9 @@ bool MediaPlayerPrivateAVFoundationObjC::shouldWaitForLoadingOfResource(AVAssetR
     }
 #endif
 
-    m_resourceLoader = WebCoreAVFResourceLoader::create(this, avRequest);
-    m_resourceLoader->startLoading();
+    RefPtr<WebCoreAVFResourceLoader> resourceLoader = WebCoreAVFResourceLoader::create(this, avRequest);
+    m_resourceLoaderMap.add(avRequest, resourceLoader);
+    resourceLoader->startLoading();
     return true;
 }
 
@@ -951,8 +952,15 @@ void MediaPlayerPrivateAVFoundationObjC::didCancelLoadingRequest(AVAssetResource
 {
     String scheme = [[[avRequest request] URL] scheme];
 
-    if (m_resourceLoader)
-        m_resourceLoader->stopLoading();
+    WebCoreAVFResourceLoader* resourceLoader = m_resourceLoaderMap.get(avRequest);
+
+    if (resourceLoader)
+        resourceLoader->stopLoading();
+}
+
+void MediaPlayerPrivateAVFoundationObjC::didStopLoadingRequest(AVAssetResourceLoadingRequest *avRequest)
+{
+    m_resourceLoaderMap.remove(avRequest);
 }
 #endif
 

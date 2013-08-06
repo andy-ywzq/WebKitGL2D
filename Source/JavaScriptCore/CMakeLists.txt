@@ -264,6 +264,8 @@ set(JavaScriptCore_SOURCES
     profiler/ProfileNode.cpp
     profiler/LegacyProfiler.cpp
 
+    runtime/ArrayBuffer.cpp
+    runtime/ArrayBufferView.cpp
     runtime/ArgList.cpp
     runtime/Arguments.cpp
     runtime/ArrayConstructor.cpp
@@ -536,6 +538,7 @@ set(JavaScriptCore_FORWARDING_HEADERS_FILES
     API/APIShims.h
     API/JavaScript.h
     API/JSBase.h
+    API/JSCTestRunnerUtils.h
     API/JSContextRef.h
     API/JSContextRefPrivate.h
     API/JSObjectRef.h
@@ -585,8 +588,9 @@ if (WTF_CPU_ARM)
         add_custom_command(
             OUTPUT ${DERIVED_SOURCES_DIR}/GeneratedJITStubs.asm
             MAIN_DEPENDENCY ${JAVASCRIPTCORE_DIR}/create_jit_stubs
+            DEPENDS ${JAVASCRIPTCORE_DIR}/jit/JITStubsARM.h
             DEPENDS ${JAVASCRIPTCORE_DIR}/jit/JITStubs.cpp
-            COMMAND ${PERL_EXECUTABLE} ${JAVASCRIPTCORE_DIR}/create_jit_stubs --prefix=MSVC ${JAVASCRIPTCORE_DIR}/jit/JITStubs.cpp > ${DERIVED_SOURCES_DIR}/GeneratedJITStubs.asm
+            COMMAND ${PERL_EXECUTABLE} ${JAVASCRIPTCORE_DIR}/create_jit_stubs --prefix=MSVC --header ${JAVASCRIPTCORE_DIR}/jit/JITStubsARM.h ${JAVASCRIPTCORE_DIR}/jit/JITStubs.cpp > ${DERIVED_SOURCES_DIR}/GeneratedJITStubs.asm
             VERBATIM)
 
         add_custom_command(

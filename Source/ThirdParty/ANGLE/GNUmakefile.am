@@ -1,6 +1,9 @@
 if USE_OPENGL
 noinst_LTLIBRARIES += \
 	libANGLE.la
+
+angle_lib_for_dep = libANGLE.la
+$(angle_lib_for_dep): $(srcdir)/Source/ThirdParty/ANGLE/GNUmakefile.am
 endif
 
 libANGLE_la_CXXFLAGS = $(global_cxxflags)
@@ -12,14 +15,11 @@ libANGLE_la_CPPFLAGS = \
 	-I$(srcdir)/Source/ThirdParty/ANGLE/include/GLSLANG \
 	-I$(srcdir)/Source/ThirdParty/ANGLE/include/KHR
 
-nodist_libANGLE_la_SOURCES = \
-	DerivedSources/ANGLE/glslang.cpp \
-	DerivedSources/ANGLE/glslang_tab.cpp \
-	DerivedSources/ANGLE/glslang_tab.h
-
 libANGLE_la_SOURCES = \
 	Source/ThirdParty/ANGLE/include/EGL/egl.h \
 	Source/ThirdParty/ANGLE/include/EGL/eglplatform.h \
+	Source/ThirdParty/ANGLE/include/GLES2/gl2.h \
+	Source/ThirdParty/ANGLE/include/GLES2/gl2platform.h \
 	Source/ThirdParty/ANGLE/include/GLSLANG/ShaderLang.h \
 	Source/ThirdParty/ANGLE/include/KHR/khrplatform.h \
 	Source/ThirdParty/ANGLE/src/common/angleutils.h \
@@ -51,6 +51,9 @@ libANGLE_la_SOURCES = \
 	Source/ThirdParty/ANGLE/src/compiler/ForLoopUnroll.cpp \
 	Source/ThirdParty/ANGLE/src/compiler/ForLoopUnroll.h \
 	Source/ThirdParty/ANGLE/src/compiler/glslang.h \
+	Source/ThirdParty/ANGLE/src/compiler/glslang_lex.cpp \
+	Source/ThirdParty/ANGLE/src/compiler/glslang_tab.cpp \
+	Source/ThirdParty/ANGLE/src/compiler/glslang_tab.h \
 	Source/ThirdParty/ANGLE/src/compiler/HashNames.h \
 	Source/ThirdParty/ANGLE/src/compiler/InfoSink.cpp \
 	Source/ThirdParty/ANGLE/src/compiler/InfoSink.h \
@@ -122,6 +125,7 @@ libANGLE_la_SOURCES = \
 	Source/ThirdParty/ANGLE/src/compiler/ShHandle.h \
 	Source/ThirdParty/ANGLE/src/compiler/SymbolTable.cpp \
 	Source/ThirdParty/ANGLE/src/compiler/SymbolTable.h \
+	Source/ThirdParty/ANGLE/src/compiler/Uniform.h \
 	Source/ThirdParty/ANGLE/src/compiler/VariablePacker.cpp \
 	Source/ThirdParty/ANGLE/src/compiler/VariablePacker.h \
 	Source/ThirdParty/ANGLE/src/compiler/VersionGLSL.cpp \

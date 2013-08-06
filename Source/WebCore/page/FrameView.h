@@ -115,7 +115,7 @@ public:
     void setNeedsLayout();
     void setViewportConstrainedObjectsNeedLayout();
 
-    bool needsFullRepaint() const { return m_doFullRepaint; }
+    bool needsFullRepaint() const { return m_needsFullRepaint; }
 
 #if ENABLE(REQUEST_ANIMATION_FRAME)
     void serviceScriptedAnimations(double monotonicAnimationStartTime);
@@ -277,9 +277,9 @@ public:
     void setLastPaintTime(double lastPaintTime) { m_lastPaintTime = lastPaintTime; }
     void setNodeToDraw(Node*);
 
-    enum SelectionInSnaphot { IncludeSelection, ExcludeSelection };
+    enum SelectionInSnapshot { IncludeSelection, ExcludeSelection };
     enum CoordinateSpaceForSnapshot { DocumentCoordinates, ViewCoordinates };
-    void paintContentsForSnapshot(GraphicsContext*, const IntRect& imageRect, SelectionInSnaphot shouldPaintSelection, CoordinateSpaceForSnapshot);
+    void paintContentsForSnapshot(GraphicsContext*, const IntRect& imageRect, SelectionInSnapshot shouldPaintSelection, CoordinateSpaceForSnapshot);
 
     virtual void paintOverhangAreas(GraphicsContext*, const IntRect& horizontalOverhangArea, const IntRect& verticalOverhangArea, const IntRect& dirtyRect);
     virtual void paintScrollCorner(GraphicsContext*, const IntRect& cornerRect);
@@ -439,9 +439,6 @@ public:
     
     void setScrollPinningBehavior(ScrollPinningBehavior);
 
-    void setResizeEventAllowed(bool resizeEventAllowed) { m_resizeEventAllowed = resizeEventAllowed; }
-    bool resizeEventAllowed() const { return m_resizeEventAllowed; }
-
 protected:
     virtual bool scrollContentsFastPath(const IntSize& scrollDelta, const IntRect& rectToScroll, const IntRect& clipRect);
     virtual void scrollContentsSlowPath(const IntRect& updateRect);
@@ -538,6 +535,8 @@ private:
     FrameView* parentFrameView() const;
 
     bool doLayoutWithFrameFlattening(bool allowSubtree);
+    bool frameFlatteningEnabled() const;
+    bool isFrameFlatteningValidForThisFrame() const;
 
     bool qualifiesAsVisuallyNonEmpty() const;
 
@@ -556,7 +555,7 @@ private:
 
     OwnPtr<RenderObjectSet> m_slowRepaintObjects;
 
-    bool m_doFullRepaint;
+    bool m_needsFullRepaint;
     
     bool m_canHaveScrollbars;
     bool m_cannotBlitToWindow;
@@ -674,7 +673,6 @@ private:
     bool m_visualUpdatesAllowedByClient;
     
     ScrollPinningBehavior m_scrollPinningBehavior;
-    bool m_resizeEventAllowed;
 };
 
 inline void FrameView::incrementVisuallyNonEmptyCharacterCount(unsigned count)

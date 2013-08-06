@@ -163,10 +163,7 @@
 #endif
 
 #if PLATFORM(MAC)
-#include "SimplePDFPlugin.h"
-#if ENABLE(PDFKIT_PLUGIN)
 #include "PDFPlugin.h"
-#endif
 #include <WebCore/LegacyWebArchive.h>
 #endif
 
@@ -568,15 +565,10 @@ PassRefPtr<Plugin> WebPage::createPlugin(WebFrame* frame, HTMLPlugInElement* plu
     }
 
     if (!pluginProcessToken) {
-#if PLATFORM(MAC)
-        String path = parameters.url.path();
-        if (MIMETypeRegistry::isPDFOrPostScriptMIMEType(parameters.mimeType) || (parameters.mimeType.isEmpty() && (path.endsWith(".pdf", false) || path.endsWith(".ps", false)))) {
 #if ENABLE(PDFKIT_PLUGIN)
-            if (shouldUsePDFPlugin())
-                return PDFPlugin::create(frame);
-#endif
-            return SimplePDFPlugin::create(frame);
-        }
+        String path = parameters.url.path();
+        if (shouldUsePDFPlugin() && (MIMETypeRegistry::isPDFOrPostScriptMIMEType(parameters.mimeType) || (parameters.mimeType.isEmpty() && (path.endsWith(".pdf", false) || path.endsWith(".ps", false)))))
+            return PDFPlugin::create(frame);
 #else
         UNUSED_PARAM(frame);
 #endif
@@ -1493,7 +1485,11 @@ void WebPage::showPageBanners()
 
 PassRefPtr<WebImage> WebPage::scaledSnapshotWithOptions(const IntRect& rect, double scaleFactor, SnapshotOptions options)
 {
-    FrameView* frameView = m_mainFrame->coreFrame()->view();
+    Frame* coreFrame = m_mainFrame->coreFrame();
+    if (!coreFrame)
+        return 0;
+
+    FrameView* frameView = coreFrame->view();
     if (!frameView)
         return 0;
 
@@ -1512,7 +1508,7 @@ PassRefPtr<WebImage> WebPage::scaledSnapshotWithOptions(const IntRect& rect, dou
     graphicsContext->applyDeviceScaleFactor(combinedScaleFactor);
     graphicsContext->translate(-rect.x(), -rect.y());
 
-    FrameView::SelectionInSnaphot shouldPaintSelection = FrameView::IncludeSelection;
+    FrameView::SelectionInSnapshot shouldPaintSelection = FrameView::IncludeSelection;
     if (options & SnapshotOptionsExcludeSelectionHighlighting)
         shouldPaintSelection = FrameView::ExcludeSelection;
 
@@ -2106,10 +2102,12 @@ void WebPage::setCanStartMediaTimerFired()
         m_page->setCanStartMedia(true);
 }
 
+#if !PLATFORM(MAC)
 void WebPage::didUpdateInWindowStateTimerFired()
 {
     send(Messages::WebPageProxy::DidUpdateInWindowState());
 }
+#endif
 
 inline bool WebPage::canHandleUserEvents() const
 {
@@ -2120,7 +2118,7 @@ inline bool WebPage::canHandleUserEvents() const
     return true;
 }
 
-void WebPage::setIsInWindow(bool isInWindow)
+void WebPage::setIsInWindow(bool isInWindow, bool wantsDidUpdateViewInWindowState)
 {
     bool pageWasInWindow = m_page->isInWindow();
     
@@ -2145,7 +2143,9 @@ void WebPage::setIsInWindow(bool isInWindow)
     }
 
     m_page->setIsInWindow(isInWindow);
-    m_sendDidUpdateInWindowStateTimer.startOneShot(0);
+
+    if (wantsDidUpdateViewInWindowState)
+        m_sendDidUpdateInWindowStateTimer.startOneShot(0);
 }
 
 void WebPage::didReceivePolicyDecision(uint64_t frameID, uint64_t listenerID, uint32_t policyAction, uint64_t downloadID)
@@ -2829,7 +2829,7 @@ void WebPage::setActiveColorChooser(WebColorChooser* colorChooser)
     m_activeColorChooser = colorChooser;
 }
 
-void WebPage::didEndColorChooser()
+void WebPage::didEndColorPicker()
 {
     m_activeColorChooser->didEndChooser();
 }

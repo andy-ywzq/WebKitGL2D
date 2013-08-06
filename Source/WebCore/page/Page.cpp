@@ -187,6 +187,7 @@ Page::Page(PageClients& pageClients)
     , m_scriptedAnimationsSuspended(false)
     , m_pageThrottler(PageThrottler::create(this))
     , m_console(PageConsole::create(this))
+    , m_lastSpatialNavigationCandidatesCount(0) // NOTE: Only called from Internals for Spatial Navigation testing.
     , m_framesHandlingBeforeUnloadEvent(0)
 {
     ASSERT(m_editorClient);
@@ -904,9 +905,8 @@ unsigned Page::pageCount() const
     if (m_pagination.mode == Pagination::Unpaginated)
         return 0;
 
-    FrameView* frameView = mainFrame()->view();
-    if (frameView->needsLayout())
-        frameView->layout();
+    if (Document* document = mainFrame()->document())
+        document->updateLayoutIgnorePendingStylesheets();
 
     RenderView* contentRenderer = mainFrame()->contentRenderer();
     return contentRenderer ? contentRenderer->columnCount(contentRenderer->columnInfo()) : 0;

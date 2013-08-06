@@ -115,7 +115,7 @@ public:
     }
         
     JS_EXPORT_PRIVATE static void visitChildren(JSCell*, SlotVisitor&);
-    JS_EXPORT_PRIVATE static void copyBackingStore(JSCell*, CopyVisitor&);
+    JS_EXPORT_PRIVATE static void copyBackingStore(JSCell*, CopyVisitor&, CopyToken);
 
     JS_EXPORT_PRIVATE static String className(const JSObject*);
 
@@ -131,12 +131,13 @@ public:
     JSValue get(ExecState*, PropertyName) const;
     JSValue get(ExecState*, unsigned propertyName) const;
 
+    bool fastGetOwnPropertySlot(ExecState*, PropertyName, PropertySlot&);
     bool getPropertySlot(ExecState*, PropertyName, PropertySlot&);
     bool getPropertySlot(ExecState*, unsigned propertyName, PropertySlot&);
     JS_EXPORT_PRIVATE bool getPropertyDescriptor(ExecState*, PropertyName, PropertyDescriptor&);
 
-    static bool getOwnPropertySlot(JSCell*, ExecState*, PropertyName, PropertySlot&);
-    JS_EXPORT_PRIVATE static bool getOwnPropertySlotByIndex(JSCell*, ExecState*, unsigned propertyName, PropertySlot&);
+    static bool getOwnPropertySlot(JSObject*, ExecState*, PropertyName, PropertySlot&);
+    JS_EXPORT_PRIVATE static bool getOwnPropertySlotByIndex(JSObject*, ExecState*, unsigned propertyName, PropertySlot&);
     JS_EXPORT_PRIVATE static bool getOwnPropertyDescriptor(JSObject*, ExecState*, PropertyName, PropertyDescriptor&);
 
     bool allowsAccessFrom(ExecState*);
@@ -188,6 +189,11 @@ public:
     // A non-throwing version of putDirect and putDirectIndex.
     JS_EXPORT_PRIVATE void putDirectMayBeIndex(ExecState*, PropertyName, JSValue);
         
+    bool hasIndexingHeader() const
+    {
+        return structure()->hasIndexingHeader(this);
+    }
+    
     bool canGetIndexQuickly(unsigned i)
     {
         switch (structure()->indexingType()) {
@@ -1106,7 +1112,7 @@ inline bool JSObject::isErrorInstance() const
 inline void JSObject::setButterfly(VM& vm, Butterfly* butterfly, Structure* structure)
 {
     ASSERT(structure);
-    ASSERT(!butterfly == (!structure->outOfLineCapacity() && !hasIndexingHeader(structure->indexingType())));
+    ASSERT(!butterfly == (!structure->outOfLineCapacity() && !structure->hasIndexingHeader(this)));
     setStructure(vm, structure);
     m_butterfly = butterfly;
 }
@@ -1171,9 +1177,16 @@ ALWAYS_INLINE bool JSObject::inlineGetOwnPropertySlot(ExecState* exec, PropertyN
 // It may seem crazy to inline a function this large, especially a virtual function,
 // but it makes a big difference to property lookup that derived classes can inline their
 // base class call to this.
-ALWAYS_INLINE bool JSObject::getOwnPropertySlot(JSCell* cell, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+ALWAYS_INLINE bool JSObject::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
 {
-    return jsCast<JSObject*>(cell)->inlineGetOwnPropertySlot(exec, propertyName, slot);
+    return object->inlineGetOwnPropertySlot(exec, propertyName, slot);
+}
+
+ALWAYS_INLINE bool JSObject::fastGetOwnPropertySlot(ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+{
+    if (!structure()->typeInfo().overridesGetOwnPropertySlot())
+        return asObject(this)->inlineGetOwnPropertySlot(exec, propertyName, slot);
+    return methodTable()->getOwnPropertySlot(this, exec, propertyName, slot);
 }
 
 // It may seem crazy to inline a function this large but it makes a big difference
@@ -1482,6 +1495,28 @@ ALWAYS_INLINE Identifier makeIdentifier(ExecState*, const Identifier& name)
 // intrinsic.
 #define JSC_NATIVE_FUNCTION(jsName, cppName, attributes, length) \
     JSC_NATIVE_INTRINSIC_FUNCTION(jsName, cppName, (attributes), (length), NoIntrinsic)
+
+ALWAYS_INLINE JSValue PropertySlot::getValue(ExecState* exec, PropertyName propertyName) const
+{
+    if (m_propertyType == TypeValue)
+        return JSValue::decode(m_data.value);
+    if (m_propertyType == TypeCustomIndex)
+        return m_data.customIndex.getIndexValue(exec, slotBase(), m_data.customIndex.index);
+    if (m_propertyType == TypeGetter)
+        return functionGetter(exec);
+    return m_data.custom.getValue(exec, slotBase(), propertyName);
+}
+
+ALWAYS_INLINE JSValue PropertySlot::getValue(ExecState* exec, unsigned propertyName) const
+{
+    if (m_propertyType == TypeValue)
+        return JSValue::decode(m_data.value);
+    if (m_propertyType == TypeCustomIndex)
+        return m_data.customIndex.getIndexValue(exec, slotBase(), m_data.customIndex.index);
+    if (m_propertyType == TypeGetter)
+        return functionGetter(exec);
+    return m_data.custom.getValue(exec, slotBase(), Identifier::from(exec, propertyName));
+}
 
 } // namespace JSC
 

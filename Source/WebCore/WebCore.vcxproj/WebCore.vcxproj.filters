@@ -6877,6 +6877,9 @@
     <ClCompile Include="$(ConfigurationBuildDir)\obj32\WebCore\DerivedSources\JSOESTextureFloat.cpp">
       <Filter>DerivedSources</Filter>
     </ClCompile>
+    <ClCompile Include="$(ConfigurationBuildDir)\obj32\WebCore\DerivedSources\JSOESTextureHalfFloat.cpp">
+      <Filter>DerivedSources</Filter>
+    </ClCompile>
     <ClCompile Include="$(ConfigurationBuildDir)\obj32\WebCore\DerivedSources\JSOESVertexArrayObject.cpp">
       <Filter>DerivedSources</Filter>
     </ClCompile>
@@ -7057,7 +7060,7 @@
     <ClCompile Include="..\html\canvas\CanvasContextAttributes.cpp">
       <Filter>html\canvas</Filter>
     </ClCompile>
-    <ClCompile Include="..\platform\graphics\cairo\GLContext.cpp">
+    <ClCompile Include="..\platform\graphics\GLContext.cpp">
       <Filter>platform\graphics\cairo</Filter>
     </ClCompile>
     <ClCompile Include="..\platform\graphics\opengl\GraphicsContext3DOpenGLES.cpp">
@@ -14640,6 +14643,9 @@
     <ClInclude Include="$(ConfigurationBuildDir)\obj32\WebCore\DerivedSources\JSOESTextureFloat.h">
       <Filter>DerivedSources</Filter>
     </ClInclude>
+    <ClInclude Include="$(ConfigurationBuildDir)\obj32\WebCore\DerivedSources\JSOESTextureHalfFloat.h">
+      <Filter>DerivedSources</Filter>
+    </ClInclude>
     <ClInclude Include="$(ConfigurationBuildDir)\obj32\WebCore\DerivedSources\JSOESVertexArrayObject.h">
       <Filter>DerivedSources</Filter>
     </ClInclude>
@@ -14823,7 +14829,7 @@
     <ClInclude Include="..\html\canvas\CanvasContextAttributes.h">
       <Filter>html\canvas</Filter>
     </ClInclude>
-    <ClInclude Include="..\platform\graphics\cairo\GLContext.h">
+    <ClInclude Include="..\platform\graphics\GLContext.h">
       <Filter>platform\graphics\cairo</Filter>
     </ClInclude>
     <ClInclude Include="..\platform\graphics\egl\GLContextEGL.h">

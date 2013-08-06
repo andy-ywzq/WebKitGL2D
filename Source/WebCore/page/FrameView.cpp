@@ -204,7 +204,6 @@ FrameView::FrameView(Frame* frame)
 #endif
     , m_visualUpdatesAllowedByClient(true)
     , m_scrollPinningBehavior(DoNotPin)
-    , m_resizeEventAllowed(true)
 {
     init();
 
@@ -275,7 +274,7 @@ void FrameView::reset()
     m_layoutTimer.stop();
     m_layoutRoot = 0;
     m_delayedLayout = false;
-    m_doFullRepaint = true;
+    m_needsFullRepaint = true;
     m_layoutSchedulingEnabled = true;
     m_inLayout = false;
     m_doingPreLayoutStyleUpdate = false;
@@ -482,7 +481,7 @@ void FrameView::setFrameRect(const IntRect& newRect)
     }
 #endif
 
-    if (m_resizeEventAllowed)
+    if (!frameFlatteningEnabled())
         sendResizeEventIfNeeded();
 }
 
@@ -509,30 +508,35 @@ void FrameView::setMarginHeight(LayoutUnit h)
     m_margins.setHeight(h);
 }
 
-static bool frameFlatteningEnabled(Frame* frame)
+bool FrameView::frameFlatteningEnabled() const
 {
-    return frame && frame->settings() && frame->settings()->frameFlatteningEnabled();
+    Settings* settings = frame() ? frame()->settings() : 0;
+    if (!settings)
+        return false;
+
+    return settings->frameFlatteningEnabled();
 }
 
-static bool supportsFrameFlattening(Frame* frame)
+bool FrameView::isFrameFlatteningValidForThisFrame() const
 {
-    if (!frame)
+    if (!frameFlatteningEnabled())
+        return false;
+
+    HTMLFrameOwnerElement* owner = frame() ? frame()->ownerElement() : 0;
+    if (!owner)
         return false;
 
     // Frame flattening is valid only for <frame> and <iframe>.
-    HTMLFrameOwnerElement* owner = frame->ownerElement();
-    return owner && (owner->hasTagName(frameTag) || owner->hasTagName(iframeTag));
+    return owner->hasTagName(frameTag) || owner->hasTagName(iframeTag);
 }
 
 bool FrameView::avoidScrollbarCreation() const
 {
     ASSERT(m_frame);
-
     // with frame flattening no subframe can have scrollbars
     // but we also cannot turn scrollbars off as we determine
     // our flattening policy using that.
-
-    return frameFlatteningEnabled(frame()) && supportsFrameFlattening(frame());
+    return isFrameFlatteningValidForThisFrame();
 }
 
 void FrameView::setCanHaveScrollbars(bool canHaveScrollbars)
@@ -743,7 +747,7 @@ void FrameView::calculateScrollbarModesForLayout(ScrollbarMode& hMode, Scrollbar
         RenderObject* rootRenderer = documentElement ? documentElement->renderer() : 0;
         Node* body = document->body();
         if (body && body->renderer()) {
-            if (body->hasTagName(framesetTag) && !frameFlatteningEnabled(frame())) {
+            if (body->hasTagName(framesetTag) && !frameFlatteningEnabled()) {
                 vMode = ScrollbarAlwaysOff;
                 hMode = ScrollbarAlwaysOff;
             } else if (body->hasTagName(bodyTag)) {
@@ -1191,8 +1195,10 @@ void FrameView::layout(bool allowSubtree)
         }
 
         // Viewport-dependent media queries may cause us to need completely different style information.
-        if (document->ensureStyleResolver()->affectedByViewportChange()) {
+        if (!document->styleResolverIfExists() || document->styleResolverIfExists()->affectedByViewportChange()) {
             document->styleResolverChanged(DeferRecalcStyle);
+            // FIXME: This instrumentation event is not strictly accurate since cached media query results
+            //        do not persist across StyleResolver rebuilds.
             InspectorInstrumentation::mediaQueryResultChanged(document);
         } else
             document->evaluateMediaQueryList();
@@ -1233,7 +1239,7 @@ void FrameView::layout(bool allowSubtree)
             Document* document = m_frame->document();
             Node* body = document->body();
             if (body && body->renderer()) {
-                if (body->hasTagName(framesetTag) && !frameFlatteningEnabled(frame())) {
+                if (body->hasTagName(framesetTag) && !frameFlatteningEnabled()) {
                     body->renderer()->setChildNeedsLayout(true);
                 } else if (body->hasTagName(bodyTag)) {
                     if (!m_firstLayout && m_size.height() != layoutHeight() && body->renderer()->enclosingBox()->stretchesToViewport())
@@ -1253,7 +1259,7 @@ void FrameView::layout(bool allowSubtree)
         ScrollbarMode vMode;    
         calculateScrollbarModesForLayout(hMode, vMode);
 
-        m_doFullRepaint = !subtree && (m_firstLayout || toRenderView(root)->printing());
+        m_needsFullRepaint = !subtree && (m_firstLayout || toRenderView(root)->printing());
 
         if (!subtree) {
             // Now set our scrollbar state for the layout.
@@ -1290,7 +1296,7 @@ void FrameView::layout(bool allowSubtree)
             m_size = LayoutSize(layoutWidth(), layoutHeight());
 
             if (oldSize != m_size) {
-                m_doFullRepaint = true;
+                m_needsFullRepaint = true;
                 if (!m_firstLayout) {
                     RenderBox* rootRenderer = document->documentElement() ? document->documentElement()->renderBox() : 0;
                     RenderBox* bodyRenderer = rootRenderer && document->body() ? document->body()->renderBox() : 0;
@@ -1333,20 +1339,19 @@ void FrameView::layout(bool allowSubtree)
         m_layoutRoot = 0;
     } // Reset m_layoutSchedulingEnabled to its previous value.
 
-    bool neededFullRepaint = m_doFullRepaint;
+    bool neededFullRepaint = m_needsFullRepaint;
 
     if (!subtree && !toRenderView(root)->printing())
         adjustViewSize();
 
-    m_doFullRepaint = neededFullRepaint;
+    m_needsFullRepaint = neededFullRepaint;
 
     // Now update the positions of all layers.
     beginDeferredRepaints();
-    if (m_doFullRepaint)
-        root->view()->repaint(); // FIXME: This isn't really right, since the RenderView doesn't fully encompass the visibleContentRect(). It just happens
-                                 // to work out most of the time, since first layouts and printing don't have you scrolled anywhere.
+    if (m_needsFullRepaint)
+        root->view()->repaintRootContents();
 
-    layer->updateLayerPositionsAfterLayout(renderView()->layer(), updateLayerPositionFlags(layer, subtree, m_doFullRepaint));
+    layer->updateLayerPositionsAfterLayout(renderView()->layer(), updateLayerPositionFlags(layer, subtree, m_needsFullRepaint));
 
     endDeferredRepaints();
 
@@ -3462,7 +3467,7 @@ bool FrameView::isInChildFrameWithFrameFlattening() const
             return true;
     }
 
-    if (!frameFlatteningEnabled(frame()))
+    if (!frameFlatteningEnabled())
         return false;
 
     if (m_frame->ownerElement()->hasTagName(frameTag))
@@ -3672,7 +3677,7 @@ void FrameView::setNodeToDraw(Node* node)
     m_nodeToDraw = node;
 }
 
-void FrameView::paintContentsForSnapshot(GraphicsContext* context, const IntRect& imageRect, SelectionInSnaphot shouldPaintSelection, CoordinateSpaceForSnapshot coordinateSpace)
+void FrameView::paintContentsForSnapshot(GraphicsContext* context, const IntRect& imageRect, SelectionInSnapshot shouldPaintSelection, CoordinateSpaceForSnapshot coordinateSpace)
 {
     updateLayoutAndStyleIfNeededRecursive();
 

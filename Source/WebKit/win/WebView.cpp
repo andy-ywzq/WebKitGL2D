@@ -104,10 +104,10 @@
 #include <WebCore/HistoryItem.h>
 #include <WebCore/HitTestRequest.h>
 #include <WebCore/HitTestResult.h>
-#include <WebCore/InitializeLogging.h>
 #include <WebCore/IntRect.h>
 #include <WebCore/JSElement.h>
 #include <WebCore/KeyboardEvent.h>
+#include <WebCore/Logging.h>
 #include <WebCore/MIMETypeRegistry.h>
 #include <WebCore/MemoryCache.h>
 #include <WebCore/Page.h>
@@ -3563,8 +3563,8 @@ HRESULT STDMETHODCALLTYPE WebView::generateSelectionImage(BOOL forceWhiteText, O
     WebCore::Frame* frame = m_page->focusController()->focusedOrMainFrame();
 
     if (frame) {
-        HBITMAP bitmap = imageFromSelection(frame, forceWhiteText ? TRUE : FALSE);
-        *hBitmap = (OLE_HANDLE)(ULONG64)bitmap;
+        OwnPtr<HBITMAP> bitmap = imageFromSelection(frame, forceWhiteText ? TRUE : FALSE);
+        *hBitmap = static_cast<OLE_HANDLE>(reinterpret_cast<ULONG64>(bitmap.leakPtr()));
     }
 
     return S_OK;
@@ -6287,9 +6287,11 @@ void WebView::enterFullscreenForNode(Node* node)
 void WebView::exitFullscreen()
 {
 #if ENABLE(VIDEO)
-    if (m_fullScreenVideoController)
-        m_fullScreenVideoController->exitFullscreen();
+    if (!m_fullScreenVideoController)
+        return;
     
+    m_fullScreenVideoController->exitFullscreen();
+    m_fullScreenVideoController = nullptr;
 #endif
 }
 
@@ -6924,7 +6926,7 @@ void WebView::fullScreenClientDidExitFullScreen()
 
 void WebView::fullScreenClientForceRepaint()
 {
-    ASSERT(m_fullScreenElement);
+    ASSERT(m_fullscreenController);
     RECT windowRect = {0};
     frameRect(&windowRect);
     repaint(windowRect, true /*contentChanged*/, true /*immediate*/, false /*contentOnly*/);

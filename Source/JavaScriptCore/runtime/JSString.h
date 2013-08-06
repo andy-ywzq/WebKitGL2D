@@ -203,10 +203,6 @@ namespace JSC {
             
         static JSValue toThis(JSCell*, ExecState*, ECMAMode);
 
-        // Actually getPropertySlot, not getOwnPropertySlot (see JSCell).
-        static bool getOwnPropertySlot(JSCell*, ExecState*, PropertyName, PropertySlot&);
-        static bool getOwnPropertySlotByIndex(JSCell*, ExecState*, unsigned propertyName, PropertySlot&);
-
         String& string() { ASSERT(!isRope()); return m_value; }
 
         friend JSValue jsString(ExecState*, JSString*, JSString*);
@@ -324,7 +320,7 @@ namespace JSC {
         void resolveRopeSlowCase(UChar*) const;
         void outOfMemory(ExecState*) const;
             
-        JSString* getIndexSlowCase(ExecState*, unsigned);
+        JS_EXPORT_PRIVATE JSString* getIndexSlowCase(ExecState*, unsigned);
 
         mutable FixedArray<WriteBarrier<JSString>, s_maxInternalRopeLength> m_fibers;
     };

@@ -58,10 +58,10 @@
 #include "XMLHttpRequestUpload.h"
 #include "markup.h"
 #include <heap/Strong.h>
+#include <runtime/ArrayBuffer.h>
+#include <runtime/ArrayBufferView.h>
 #include <runtime/JSLock.h>
 #include <runtime/Operations.h>
-#include <wtf/ArrayBuffer.h>
-#include <wtf/ArrayBufferView.h>
 #include <wtf/RefCountedLeakCounter.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/text/CString.h>
@@ -885,6 +885,7 @@ void XMLHttpRequest::clearResponse()
 void XMLHttpRequest::clearResponseBuffers()
 {
     m_responseBuilder.clear();
+    m_responseEncoding = String();
     m_createdDocument = false;
     m_responseDocument = 0;
     m_responseBlob = 0;
@@ -1148,6 +1149,7 @@ void XMLHttpRequest::didFinishLoading(unsigned long identifier, double)
     m_loader = 0;
 
     changeState(DONE);
+    m_responseEncoding = String();
     m_decoder = 0;
 
     if (hadLoader)

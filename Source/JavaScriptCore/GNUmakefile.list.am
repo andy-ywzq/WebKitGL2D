@@ -32,7 +32,7 @@ javascriptcore_built_nosources += \
 	DerivedSources/JavaScriptCore/LLIntAssembly.h
 
 javascriptcore_sources += \
-    Source/JavaScriptCore/API/APICallbackFunction.h \
+	Source/JavaScriptCore/API/APICallbackFunction.h \
 	Source/JavaScriptCore/API/APICast.h \
 	Source/JavaScriptCore/API/APIShims.h \
 	Source/JavaScriptCore/API/JSAPIWrapperObject.h \
@@ -134,6 +134,7 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/bytecode/Opcode.cpp \
 	Source/JavaScriptCore/bytecode/Opcode.h \
 	Source/JavaScriptCore/bytecode/Operands.h \
+	Source/JavaScriptCore/bytecode/OperandsInlines.h \
 	Source/JavaScriptCore/bytecode/PolymorphicAccessStructureList.h \
 	Source/JavaScriptCore/bytecode/PolymorphicPutByIdList.cpp \
 	Source/JavaScriptCore/bytecode/PolymorphicPutByIdList.h \
@@ -336,6 +337,8 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/dfg/DFGSpeculativeJIT64.cpp \
 	Source/JavaScriptCore/dfg/DFGSpeculativeJIT.cpp \
 	Source/JavaScriptCore/dfg/DFGSpeculativeJIT.h \
+	Source/JavaScriptCore/dfg/DFGSSAConversionPhase.cpp \
+	Source/JavaScriptCore/dfg/DFGSSAConversionPhase.h \
 	Source/JavaScriptCore/dfg/DFGStructureAbstractValue.h \
 	Source/JavaScriptCore/dfg/DFGThunks.cpp \
 	Source/JavaScriptCore/dfg/DFGThunks.h \
@@ -370,12 +373,14 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/heap/CopiedSpace.cpp \
 	Source/JavaScriptCore/heap/CopiedSpace.h \
 	Source/JavaScriptCore/heap/CopiedSpaceInlines.h \
+	Source/JavaScriptCore/heap/CopyToken.h \
 	Source/JavaScriptCore/heap/CopyVisitor.h \
 	Source/JavaScriptCore/heap/CopyVisitorInlines.h \
 	Source/JavaScriptCore/heap/CopyVisitor.cpp \
 	Source/JavaScriptCore/heap/CopyWorkList.h \
 	Source/JavaScriptCore/heap/ConservativeRoots.cpp \
 	Source/JavaScriptCore/heap/ConservativeRoots.h \
+	Source/JavaScriptCore/heap/DeferGC.h \
 	Source/JavaScriptCore/heap/DFGCodeBlocks.cpp \
 	Source/JavaScriptCore/heap/DFGCodeBlocks.h \
 	Source/JavaScriptCore/heap/GCAssertions.h \
@@ -459,6 +464,7 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/ForwardingHeaders/JavaScriptCore/JavaScript.h \
 	Source/JavaScriptCore/ForwardingHeaders/JavaScriptCore/JSBase.h \
 	Source/JavaScriptCore/ForwardingHeaders/JavaScriptCore/JSContextRef.h \
+	Source/JavaScriptCore/ForwardingHeaders/JavaScriptCore/JSCTestRunnerUtils.h \
 	Source/JavaScriptCore/ForwardingHeaders/JavaScriptCore/JSObjectRef.h \
 	Source/JavaScriptCore/ForwardingHeaders/JavaScriptCore/JSRetainPtr.h \
 	Source/JavaScriptCore/ForwardingHeaders/JavaScriptCore/JSStringRef.h \
@@ -546,12 +552,14 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/jit/JITStubsSH4.h \
 	Source/JavaScriptCore/jit/JITStubsX86.h \
 	Source/JavaScriptCore/jit/JITStubsX86_64.h \
+	Source/JavaScriptCore/jit/JITStubsX86Common.h \
 	Source/JavaScriptCore/jit/JITThunks.cpp \
 	Source/JavaScriptCore/jit/JITThunks.h \
 	Source/JavaScriptCore/jit/JITWriteBarrier.h \
 	Source/JavaScriptCore/jit/JSInterfaceJIT.h \
 	Source/JavaScriptCore/jit/JumpReplacementWatchpoint.cpp \
 	Source/JavaScriptCore/jit/JumpReplacementWatchpoint.h \
+	Source/JavaScriptCore/jit/SlowPathCall.h \
 	Source/JavaScriptCore/jit/SpecializedThunkJIT.h \
 	Source/JavaScriptCore/jit/ThunkGenerator.h \
 	Source/JavaScriptCore/jit/ThunkGenerators.cpp \
@@ -636,6 +644,10 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/runtime/ArgList.h \
 	Source/JavaScriptCore/runtime/Arguments.cpp \
 	Source/JavaScriptCore/runtime/Arguments.h \
+	Source/JavaScriptCore/runtime/ArrayBuffer.cpp \
+	Source/JavaScriptCore/runtime/ArrayBuffer.h \
+	Source/JavaScriptCore/runtime/ArrayBufferView.cpp \
+	Source/JavaScriptCore/runtime/ArrayBufferView.h \
 	Source/JavaScriptCore/runtime/ArrayConstructor.cpp \
 	Source/JavaScriptCore/runtime/ArrayConstructor.h \
 	Source/JavaScriptCore/runtime/ArrayConventions.h \
@@ -670,6 +682,7 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/runtime/CompilationResult.h \
 	Source/JavaScriptCore/runtime/Completion.cpp \
 	Source/JavaScriptCore/runtime/Completion.h \
+	Source/JavaScriptCore/runtime/ConcurrentJITLock.h \
 	Source/JavaScriptCore/runtime/ConstructData.cpp \
 	Source/JavaScriptCore/runtime/ConstructData.h \
 	Source/JavaScriptCore/runtime/DateConstructor.cpp \
@@ -696,6 +709,8 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/runtime/Executable.cpp \
 	Source/JavaScriptCore/runtime/Executable.h \
 	Source/JavaScriptCore/runtime/ExecutionHarness.h \
+	Source/JavaScriptCore/runtime/Float32Array.h \
+	Source/JavaScriptCore/runtime/Float64Array.h \
 	Source/JavaScriptCore/runtime/FunctionConstructor.cpp \
 	Source/JavaScriptCore/runtime/FunctionConstructor.h \
 	Source/JavaScriptCore/runtime/FunctionExecutableDump.cpp \
@@ -714,6 +729,10 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/runtime/IndexingType.h \
 	Source/JavaScriptCore/runtime/InitializeThreading.cpp \
 	Source/JavaScriptCore/runtime/InitializeThreading.h \
+	Source/JavaScriptCore/runtime/Int16Array.h \
+	Source/JavaScriptCore/runtime/Int32Array.h \
+	Source/JavaScriptCore/runtime/Int8Array.h \
+	Source/JavaScriptCore/runtime/IntegralTypedArrayBase.h \
 	Source/JavaScriptCore/runtime/IntendedStructureChain.cpp \
 	Source/JavaScriptCore/runtime/IntendedStructureChain.h \
 	Source/JavaScriptCore/runtime/InternalFunction.cpp \
@@ -738,6 +757,7 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/runtime/JSExportMacros.h \
 	Source/JavaScriptCore/runtime/VM.cpp \
 	Source/JavaScriptCore/runtime/VM.h \
+	Source/JavaScriptCore/runtime/JSFunctionInlines.h \
 	Source/JavaScriptCore/runtime/JSGlobalObject.cpp \
 	Source/JavaScriptCore/runtime/JSGlobalObjectFunctions.cpp \
 	Source/JavaScriptCore/runtime/JSGlobalObjectFunctions.h \
@@ -872,8 +892,13 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/runtime/SymbolTable.cpp \
 	Source/JavaScriptCore/runtime/SymbolTable.h \
 	Source/JavaScriptCore/runtime/Tracing.h \
+	Source/JavaScriptCore/runtime/TypedArrayBase.h \
 	Source/JavaScriptCore/runtime/TypedArrayDescriptor.h \
+	Source/JavaScriptCore/runtime/Uint16Array.h \
 	Source/JavaScriptCore/runtime/Uint16WithFraction.h \
+	Source/JavaScriptCore/runtime/Uint32Array.h \
+	Source/JavaScriptCore/runtime/Uint8Array.h \
+	Source/JavaScriptCore/runtime/Uint8ClampedArray.h \
 	Source/JavaScriptCore/runtime/VMStackBounds.h \
 	Source/JavaScriptCore/runtime/Watchdog.cpp \
 	Source/JavaScriptCore/runtime/Watchdog.h \

@@ -47,15 +47,12 @@
 #include <wtf/text/CString.h>
 #include <wtf/text/WTFString.h>
 
-#if PLATFORM(MAC)
-#include "SimplePDFPlugin.h"
-#if ENABLE(PDFKIT_PLUGIN)
-#include "PDFPlugin.h"
-#endif
-#endif
-
 #if ENABLE(CUSTOM_PROTOCOLS)
 #include "CustomProtocolManagerProxyMessages.h"
+#endif
+
+#if PLATFORM(MAC)
+#include "PDFPlugin.h"
 #endif
 
 #if USE(SECURITY_FRAMEWORK)
@@ -318,14 +315,10 @@ void WebProcessProxy::getPlugins(bool refresh, Vector<PluginInfo>& plugins)
     for (size_t i = 0; i < pluginModules.size(); ++i)
         plugins.append(pluginModules[i].info);
 
-#if PLATFORM(MAC)
-    // Add built-in PDF last, so that it's not used when a real plug-in is installed.
-    if (!m_context->omitPDFSupport()) {
 #if ENABLE(PDFKIT_PLUGIN)
+    // Add built-in PDF last, so that it's not used when a real plug-in is installed.
+    if (!m_context->omitPDFSupport())
         plugins.append(PDFPlugin::pluginInfo());
-#endif
-        plugins.append(SimplePDFPlugin::pluginInfo());
-    }
 #endif
 }
 #endif // ENABLE(NETSCAPE_PLUGIN_API)

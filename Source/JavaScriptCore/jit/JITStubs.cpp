@@ -220,8 +220,7 @@ NEVER_INLINE static void tryCacheGetByID(CallFrame* callFrame, CodeBlock* codeBl
 
     if (slot.slotBase() == baseValue) {
         RELEASE_ASSERT(stubInfo->accessType == access_unset);
-        if ((slot.cachedPropertyType() != PropertySlot::Value)
-            || !MacroAssembler::isCompactPtrAlignedAddressOffset(maxOffsetRelativeToPatchedStorage(slot.cachedOffset())))
+        if (!slot.isCacheableValue() || !MacroAssembler::isCompactPtrAlignedAddressOffset(maxOffsetRelativeToPatchedStorage(slot.cachedOffset())))
             ctiPatchCallByReturnAddress(codeBlock, returnAddress, FunctionPtr(cti_op_get_by_id_self_fail));
         else {
             JIT::patchGetByIdSelf(codeBlock, stubInfo, structure, slot.cachedOffset(), returnAddress);
@@ -237,8 +236,6 @@ NEVER_INLINE static void tryCacheGetByID(CallFrame* callFrame, CodeBlock* codeBl
     }
 
     if (slot.slotBase() == structure->prototypeForLookup(callFrame)) {
-        ASSERT(slot.slotBase().isObject());
-        
         JSObject* slotBaseObject = asObject(slot.slotBase());
         size_t offset = slot.cachedOffset();
 
@@ -255,7 +252,7 @@ NEVER_INLINE static void tryCacheGetByID(CallFrame* callFrame, CodeBlock* codeBl
             offset = slotBaseObject->structure()->get(callFrame->vm(), propertyName);
         }
         
-        stubInfo->initGetByIdProto(callFrame->vm(), codeBlock->ownerExecutable(), structure, slotBaseObject->structure(), slot.cachedPropertyType() == PropertySlot::Value);
+        stubInfo->initGetByIdProto(callFrame->vm(), codeBlock->ownerExecutable(), structure, slotBaseObject->structure(), slot.isCacheableValue());
 
         ASSERT(!structure->isDictionary());
         ASSERT(!slotBaseObject->structure()->isDictionary());
@@ -272,7 +269,7 @@ NEVER_INLINE static void tryCacheGetByID(CallFrame* callFrame, CodeBlock* codeBl
     }
 
     StructureChain* prototypeChain = structure->prototypeChain(callFrame);
-    stubInfo->initGetByIdChain(callFrame->vm(), codeBlock->ownerExecutable(), structure, prototypeChain, count, slot.cachedPropertyType() == PropertySlot::Value);
+    stubInfo->initGetByIdChain(callFrame->vm(), codeBlock->ownerExecutable(), structure, prototypeChain, count, slot.isCacheableValue());
     JIT::compileGetByIdChain(callFrame->scope()->vm(), callFrame, codeBlock, stubInfo, structure, prototypeChain, count, propertyName, slot, offset, returnAddress);
 }
 
@@ -654,8 +651,6 @@ DEFINE_STUB_FUNCTION(EncodedJSValue, op_get_by_id_self_fail)
         && !baseValue.asCell()->structure()->isUncacheableDictionary()
         && slot.slotBase() == baseValue) {
 
-        ASSERT(slot.slotBase().isObject());
-
         PolymorphicAccessStructureList* polymorphicStructureList;
         int listIndex = 1;
 
@@ -767,7 +762,6 @@ DEFINE_STUB_FUNCTION(EncodedJSValue, op_get_by_id_proto_list)
     
     Structure* structure = baseValue.asCell()->structure();
 
-    ASSERT(slot.slotBase().isObject());
     JSObject* slotBaseObject = asObject(slot.slotBase());
     
     PropertyOffset offset = slot.cachedOffset();
@@ -2162,12 +2156,21 @@ DEFINE_STUB_FUNCTION(void*, vm_throw)
     return handler.callFrame;
 }
 
+#if USE(JSVALUE32_64)
+EncodedExceptionHandler JIT_STUB cti_vm_throw_slowpath(CallFrame* callFrame)
+{
+    VM* vm = callFrame->codeBlock()->vm();
+    vm->topCallFrame = callFrame;
+    return encode(jitThrowNew(vm, callFrame, vm->exception));
+}
+#else
 ExceptionHandler JIT_STUB cti_vm_throw_slowpath(CallFrame* callFrame)
 {
     VM* vm = callFrame->codeBlock()->vm();
     vm->topCallFrame = callFrame;
     return jitThrowNew(vm, callFrame, vm->exception);
 }
+#endif
 
 DEFINE_STUB_FUNCTION(EncodedJSValue, to_object)
 {

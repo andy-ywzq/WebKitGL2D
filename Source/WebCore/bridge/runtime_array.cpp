@@ -85,9 +85,9 @@ void RuntimeArray::getOwnPropertyNames(JSObject* object, ExecState* exec, Proper
     JSObject::getOwnPropertyNames(thisObject, exec, propertyNames, mode);
 }
 
-bool RuntimeArray::getOwnPropertySlot(JSCell* cell, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool RuntimeArray::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
 {
-    RuntimeArray* thisObject = jsCast<RuntimeArray*>(cell);
+    RuntimeArray* thisObject = jsCast<RuntimeArray*>(object);
     if (propertyName == exec->propertyNames().length) {
         slot.setCacheableCustom(thisObject, thisObject->lengthGetter);
         return true;
@@ -107,7 +107,7 @@ bool RuntimeArray::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, P
 {
     RuntimeArray* thisObject = jsCast<RuntimeArray*>(object);
     if (propertyName == exec->propertyNames().length) {
-        PropertySlot slot;
+        PropertySlot slot(thisObject);
         slot.setCustom(thisObject, lengthGetter);
         descriptor.setDescriptor(slot.getValue(exec, propertyName), ReadOnly | DontDelete | DontEnum);
         return true;
@@ -116,7 +116,7 @@ bool RuntimeArray::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, P
     unsigned index = propertyName.asIndex();
     if (index < thisObject->getLength()) {
         ASSERT(index != PropertyName::NotAnIndex);
-        PropertySlot slot;
+        PropertySlot slot(thisObject);
         slot.setCustomIndex(thisObject, index, indexGetter);
         descriptor.setDescriptor(slot.getValue(exec, propertyName), DontDelete | DontEnum);
         return true;
@@ -125,9 +125,9 @@ bool RuntimeArray::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, P
     return JSObject::getOwnPropertyDescriptor(thisObject, exec, propertyName, descriptor);
 }
 
-bool RuntimeArray::getOwnPropertySlotByIndex(JSCell* cell, ExecState *exec, unsigned index, PropertySlot& slot)
+bool RuntimeArray::getOwnPropertySlotByIndex(JSObject* object, ExecState *exec, unsigned index, PropertySlot& slot)
 {
-    RuntimeArray* thisObject = jsCast<RuntimeArray*>(cell);
+    RuntimeArray* thisObject = jsCast<RuntimeArray*>(object);
     if (index < thisObject->getLength()) {
         slot.setCustomIndex(thisObject, index, thisObject->indexGetter);
         return true;

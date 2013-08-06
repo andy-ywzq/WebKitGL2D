@@ -150,9 +150,9 @@ inline bool JSActivation::symbolTablePutWithAttributes(VM& vm, PropertyName prop
     return true;
 }
 
-bool JSActivation::getOwnPropertySlot(JSCell* cell, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSActivation::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
 {
-    JSActivation* thisObject = jsCast<JSActivation*>(cell);
+    JSActivation* thisObject = jsCast<JSActivation*>(object);
 
     if (propertyName == exec->propertyNames().arguments) {
         // Defend against the inspector asking for the arguments object after it has been optimized out.
@@ -184,7 +184,7 @@ bool JSActivation::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, P
     if (propertyName == exec->propertyNames().arguments) {
         // Defend against the inspector asking for the arguments object after it has been optimized out.
         if (!thisObject->isTornOff()) {
-            PropertySlot slot;
+            PropertySlot slot(thisObject);
             JSActivation::getOwnPropertySlot(thisObject, exec, propertyName, slot);
             descriptor.setDescriptor(slot.getValue(exec, propertyName), DontEnum);
             return true;

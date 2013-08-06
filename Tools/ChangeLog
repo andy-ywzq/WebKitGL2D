@@ -1,3 +1,318 @@
+2013-08-05  Brian Holt  <brian.holt@samsung.com>
+
+        [GTK] Implement leak checking with valgrind
+        https://bugs.webkit.org/show_bug.cgi?id=118785
+
+        Reviewed by Dirk Pranke.
+
+        Launch the DRT under Valgrind to generate xml files with details
+        of leaks found.
+
+        * Scripts/webkitpy/layout_tests/run_webkit_tests.py:
+        (parse_args):
+        * Scripts/webkitpy/port/gtk.py:
+        (GtkPort.__init__):
+        (GtkPort.default_timeout_ms): Allow extra time to run under
+        Valgrind.
+        (GtkPort.setup_environ_for_server): Pass Valgrind instructions
+        using environment variables.
+
+2013-08-02  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [EFL] REGRESSION after r153432: some accessibility tests crash.
+        https://bugs.webkit.org/show_bug.cgi?id=119333
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Add missing null-check to avoid dereferencing a non-existent parent.
+
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::attributesOfElement): Ditto.
+
+2013-08-02  Patrick Gansterer  <paroga@webkit.org>
+
+        Add --rmdir option to git svn dcommit
+        https://bugs.webkit.org/show_bug.cgi?id=119398
+
+        Reviewed by Ryosuke Niwa.
+
+        Add this option tells git-svn to remove empty directories
+        from the svn tree so they do not leave over there.
+
+        * Scripts/webkitpy/common/checkout/scm/git.py:
+        (Git.push_local_commits_to_server):
+
+2013-08-01  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] WebKit1 Fullscreen Video Play is Broken
+        https://bugs.webkit.org/show_bug.cgi?id=119415
+
+        Reviewed by Jer Noble.
+
+        * WinLauncher/WinLauncher.cpp:
+        (dllLauncherEntryPoint): Activate full screen mode via
+        IWebPreferencesInternal interface.
+
+2013-08-01  ChangSeok Oh  <changseok.oh@collabora.com>
+
+        Unreviewed. Add an alternative address to show my affiliation in team.html.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-08-01  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        Duplicate property names can cause test to fail
+        https://bugs.webkit.org/show_bug.cgi?id=119399
+
+        Reviewed by Dirk Pranke.
+
+        This problem was noticed when porting the patch for
+        http://wkb.ug/119357 to Blink: a test would fail because the converted
+        and test property lists weren't the same length, but they contained
+        all of the same property names. It looks like this is actually caused
+        by a bug in converting the HTML, which is being currently rewritten.
+        In the meantime, as long as this compares the number of unique
+        properties, it makes the test more robust.
+
+        * Scripts/webkitpy/w3c/test_converter_unittest.py:
+        (verify_prefixed_properties):
+
+2013-08-01  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        Unreviewed. Adding my expertise.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-08-01  ChangSeok Oh  <changseok.oh@collabora.com>
+
+        Unreviewed. Add myself as a committer. Yoo-hoo! \o/
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-08-01  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r153518.
+        http://trac.webkit.org/changeset/153518
+        https://bugs.webkit.org/show_bug.cgi?id=119386
+
+        The Jhbuild dep bump of GTK+ is not actually required by
+        layout testing, is causing pango dep problems (Requested by
+        zdobersek on #webkit).
+
+        * gtk/jhbuild.modules:
+
+2013-08-01  Xabier Rodriguez Calvar  <calvaris@igalia.com>
+
+        Unreviewed. Add myself as a committer.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-08-01  Jaehun Lim  <ljaehun.lim@samsung.com>
+
+        Unreviewed. Add myself as a committer.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-07-31  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Unreviewed. Add myself as a committer.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-08-01  Alberto Garcia  <berto@igalia.com>
+
+        Unreviewed. Add myself as a committer.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-07-31  Seokju Kwon  <seokju@webkit.org>
+
+        Unreviewed. Add myself as a committer.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-07-31  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        W3C test import script prefixes some properties that it shouldn't
+        https://bugs.webkit.org/show_bug.cgi?id=119357
+
+        Reviewed by Dirk Pranke.
+
+        Some prefixed properties also have unprefixed implemetations, but when
+        the implementations aren't identical, they aren't declared in
+        CSSPropertyNames.in on the same line. This fixes the import script so
+        that it catches all instances of prefixed properties that have an
+        unprefixed variant, and does not add the prefix in those cases.
+
+        * Scripts/webkitpy/w3c/test_converter.py:
+        (W3CTestConverter.read_webkit_prefixed_css_property_list): Read all of
+        the properties on every line and record if they are prefixed or not.
+        Use this information to only return prefixed properties that do not
+        have any unprefixed variant. The prefixed property list has also
+        changed to not include the '-webkit-' prefix, making it much easier to
+        do the comparison, and removing the need to remove the prefix later.
+        (W3CTestConverter.add_webkit_prefix_to_unprefixed_properties): This no
+        longer needs to remove the '-webkit-' prefix, but needs to add it in
+        the case where a property that needs a prefix is found.
+        * Scripts/webkitpy/w3c/test_converter_unittest.py:
+        (W3CTestConverterTest.test_read_prefixed_property_list): Remove assert
+        for '-webkit-' prefix, as it is no longer included in the properties
+        in the prefixed property list.
+
+2013-07-31  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        Update location of w3c shapes tests to reflect new import location
+        https://bugs.webkit.org/show_bug.cgi?id=118156
+
+        Reviewed by Dirk Pranke.
+
+        Partial imports should not be imported to the same place as the full
+        import, so this adds an option to allow importing to a different
+        location than the default. In doing that, I found that imports from
+        contributor directories didn't seem to be working correctly, so I
+        updated the import to be smarter about both contributor directories
+        and the test status directories. It should now be more likely that the
+        script guesses the root directory properly.
+
+        * Scripts/webkitpy/w3c/test_importer.py: Remove comment about the
+            script not working with the full set of contributors, as that is
+            no longer true, and I didn't see a good way to keep that behavior.
+            Also update documentation to properly explain what happens when a
+            contributor dir is imported.
+        (main): Attempt to find the proper repo dir by looking at the
+            directory above the "test status" in the given path, this is still
+            not exactly right, but is less error prone than just trimming.
+        (parse_args): Add -d option to set the import directory.
+        (TestImporter.__init__): Stop appending the subdirs to the
+            destination_directory because it was making things more complex
+            and isn't really needed.
+        (TestImporter.update_test_status): Remove hardcoded strings and use
+            the TEST_STATUS constants instead.
+        * Scripts/webkitpy/w3c/test_importer_unittest.py:
+        (TestImporterTest.test_import_dir_with_no_tests_and_no_hg): Add
+            support for new option.
+        (TestImporterTest.test_import_dir_with_no_tests): Ditto.
+
+2013-07-31  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Winlauncher shouldn't look for Safari Install Directory
+        https://bugs.webkit.org/show_bug.cgi?id=119351
+
+        Reviewed by Darin Adler.
+
+        * win/DLLLauncher/DLLLauncherMain.cpp: Don't check registry for
+        the Safari install location. Instead, use the proper support
+        library path for the build architecture.
+
+2013-07-31  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        Update scripts to reference contributors.json instead of committers.py in messaging
+        https://bugs.webkit.org/show_bug.cgi?id=119342
+
+        Reviewed by Ryosuke Niwa.
+
+        Change the scripts to point people to contributors.json instead of
+        committers.py since the latter no longer contains the list of
+        contributors.
+
+        * Scripts/webkitpy/common/config/committervalidator.py:
+        (CommitterValidator._contributors_json_path):
+        (CommitterValidator._flag_permission_rejection_message):
+        * Scripts/webkitpy/common/config/committervalidator_unittest.py:
+        (CommitterValidatorTest.test_flag_permission_rejection_message):
+        * Scripts/webkitpy/common/net/bugzilla/bugzilla.py:
+        (Bugzilla._commit_queue_flag):
+        * Scripts/webkitpy/common/watchlist/watchlistparser.py:
+        (WatchListParser._validate):
+        * Scripts/webkitpy/common/watchlist/watchlistparser_unittest.py:
+        (WatchListParserTest.test_cc_rule_with_invalid_email):
+        * Scripts/webkitpy/tool/bot/feeders_unittest.py:
+        * Scripts/webkitpy/tool/commands/queues_unittest.py:
+        * Scripts/webkitpy/tool/steps/validatereviewer.py:
+        (ValidateReviewer.run):
+
+2013-07-31  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Re-enable WinEWS tests following r153527.
+
+        * Scripts/webkitpy/common/config/ews.json:
+
+2013-07-31  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        Unreviewed: Adding myself to the committers' list.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-07-31  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Build WebKit with C++11
+        https://bugs.webkit.org/show_bug.cgi?id=119337
+
+        Reviewed by Csaba Osztrogonác.
+
+        Enable building with C++11.
+
+        * qmake/mkspecs/features/default_pre.prf:
+        * qmake/mkspecs/features/unix/default_post.prf:
+        * qmake/mkspecs/features/unix/default_pre.prf:
+
+2013-07-31  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] ASSERTS trigger in release builds
+        https://bugs.webkit.org/show_bug.cgi?id=119336
+
+        Reviewed by Jocelyn Turcotte.
+
+        Ensure the qmake also defaults to release if no configuration is known.
+
+        * qmake/mkspecs/features/default_post.prf:
+
+2013-07-31  Zan Dobersek  <zdobersek@igalia.com>
+
+        [texmap][GStreamer][GTK] composited video shows tearing
+        https://bugs.webkit.org/show_bug.cgi?id=118253
+
+        Reviewed by Martin Robinson.
+
+        * gtk/jhbuild.modules: Bump the Jhbuild versions of the Gdk-Pixbuf and GTK+ packages to 2.27.3 and 3.8.2, respectively.
+        The first is required by the second, and the GTK+ bump introduces proper display framerate synchronization that removes
+        screen tearing when enabling accelerated compositing and performing graphically heavy operations like viewing HD videos.
+
+2013-07-30  Ruth Fong  <ruth_fong@apple.com>
+
+        Unreviewed: Adding myself to the committers' list.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-07-30  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Unreviewed, add my new email to contributors.json.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-07-30  Krzysztof Czech  <k.czech@samsung.com>
+
+        [EFL] REGRESSION after r153439: layout tests do not run.
+        https://bugs.webkit.org/show_bug.cgi?id=119240
+
+        Reviewed by Christophe Dumez.
+
+        Changed attribute name from check_xvfb to check_driver.
+
+        * Scripts/webkitpy/port/efl.py:
+        (EflPort.check_sys_deps):
+
+2013-07-29  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r152860.
+        http://trac.webkit.org/changeset/152860
+        https://bugs.webkit.org/show_bug.cgi?id=119227
+
+        Disable WinEWS tests until tests stop crashing (Requested by
+        rfong on #webkit).
+
+        * Scripts/webkitpy/common/config/ews.json:
+
 2013-07-29  Zan Dobersek  <zdobersek@igalia.com>
 
         [GTK] Add WestonDriver, use it when appropriate

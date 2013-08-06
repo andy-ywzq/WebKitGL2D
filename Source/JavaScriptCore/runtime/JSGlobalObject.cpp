@@ -178,7 +178,7 @@ void JSGlobalObject::putDirectVirtual(JSObject* object, ExecState* exec, Propert
 bool JSGlobalObject::defineOwnProperty(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor, bool shouldThrow)
 {
     JSGlobalObject* thisObject = jsCast<JSGlobalObject*>(object);
-    PropertySlot slot;
+    PropertySlot slot(thisObject);
     // silently ignore attempts to add accessors aliasing vars.
     if (descriptor.isAccessorDescriptor() && symbolTableGet(thisObject, propertyName, slot))
         return false;
@@ -569,9 +569,9 @@ void JSGlobalObject::addStaticGlobals(GlobalPropertyInfo* globals, int count)
     }
 }
 
-bool JSGlobalObject::getOwnPropertySlot(JSCell* cell, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
+bool JSGlobalObject::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot& slot)
 {
-    JSGlobalObject* thisObject = jsCast<JSGlobalObject*>(cell);
+    JSGlobalObject* thisObject = jsCast<JSGlobalObject*>(object);
     if (getStaticFunctionSlot<Base>(exec, ExecState::globalObjectTable(exec), thisObject, propertyName, slot))
         return true;
     return symbolTableGet(thisObject, propertyName, slot);

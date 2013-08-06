@@ -935,6 +935,11 @@ bool HTMLInputElement::sizeShouldIncludeDecoration(int& preferredSize) const
     return m_inputType->sizeShouldIncludeDecoration(defaultSize, preferredSize);
 }
 
+float HTMLInputElement::decorationWidth() const
+{
+    return m_inputType->decorationWidth();
+}
+
 void HTMLInputElement::copyNonAttributePropertiesFromElement(const Element& source)
 {
     const HTMLInputElement& sourceElement = static_cast<const HTMLInputElement&>(source);
@@ -1482,8 +1487,25 @@ void HTMLInputElement::updateClearButtonVisibility()
 void HTMLInputElement::documentDidResumeFromPageCache()
 {
     ASSERT(needsSuspensionCallback());
+
+#if ENABLE(INPUT_TYPE_COLOR)
+    // <input type=color> uses documentWillSuspendForPageCache to detach the color picker UI,
+    // so it should not be reset when being loaded from page cache.
+    if (isColorControl()) 
+        return;
+#endif // ENABLE(INPUT_TYPE_COLOR)
     reset();
 }
+
+#if ENABLE(INPUT_TYPE_COLOR)
+void HTMLInputElement::documentWillSuspendForPageCache()
+{
+    if (!isColorControl())
+        return;
+    m_inputType->detach();
+}
+#endif // ENABLE(INPUT_TYPE_COLOR)
+
 
 void HTMLInputElement::willChangeForm()
 {

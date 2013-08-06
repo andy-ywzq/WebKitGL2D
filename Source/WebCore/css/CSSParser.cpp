@@ -1560,12 +1560,37 @@ void CSSParser::addPropertyWithPrefixingVariant(CSSPropertyID propId, PassRefPtr
     CSSPropertyID prefixingVariant = prefixingVariantForPropertyId(propId);
     if (prefixingVariant == propId)
         return;
-    addProperty(prefixingVariant, val.release(), important, implicit);
+
+    if (m_currentShorthand) {
+        // We can't use ShorthandScope here as we can already be inside one (e.g we are parsing CSSTransition).
+        m_currentShorthand = prefixingVariantForPropertyId(m_currentShorthand);
+        addProperty(prefixingVariant, val.release(), important, implicit);
+        m_currentShorthand = prefixingVariantForPropertyId(m_currentShorthand);
+    } else
+        addProperty(prefixingVariant, val.release(), important, implicit);
 }
 
 void CSSParser::addProperty(CSSPropertyID propId, PassRefPtr<CSSValue> value, bool important, bool implicit)
 {
-    m_parsedProperties.append(CSSProperty(propId, value, important, m_currentShorthand, m_implicitShorthand || implicit));
+#if ENABLE(CSS_VARIABLES)
+    CSSPrimitiveValue* primitiveValue = value->isPrimitiveValue() ? static_cast<CSSPrimitiveValue*>(value.get()) : 0;
+#endif
+    // This property doesn't belong to a shorthand or is a CSS variable (which will be resolved later).
+    if (!m_currentShorthand
+#if ENABLE(CSS_VARIABLES)
+        || (primitiveValue && primitiveValue->isVariableName())
+#endif
+        ) {
+        m_parsedProperties.append(CSSProperty(propId, value, important, false, CSSPropertyInvalid, m_implicitShorthand || implicit));
+        return;
+    }
+
+    const Vector<const StylePropertyShorthand*> shorthands = matchingShorthandsForLonghand(propId);
+    // The longhand does not belong to multiple shorthands.
+    if (shorthands.size() == 1)
+        m_parsedProperties.append(CSSProperty(propId, value, important, true, CSSPropertyInvalid, m_implicitShorthand || implicit));
+    else
+        m_parsedProperties.append(CSSProperty(propId, value, important, true, indexOfShorthandForLonghand(m_currentShorthand, shorthands), m_implicitShorthand || implicit));
 }
 
 void CSSParser::rollbackLastProperties(int num)
@@ -2652,14 +2677,14 @@ bool CSSParser::parseValue(CSSPropertyID propId, bool important)
             return false;
         return parseGridTrackList(propId, important);
 
-    case CSSPropertyWebkitGridStart:
-    case CSSPropertyWebkitGridEnd:
-    case CSSPropertyWebkitGridBefore:
-    case CSSPropertyWebkitGridAfter:
+    case CSSPropertyWebkitGridColumnStart:
+    case CSSPropertyWebkitGridColumnEnd:
+    case CSSPropertyWebkitGridRowStart:
+    case CSSPropertyWebkitGridRowEnd:
         if (!cssGridLayoutEnabled())
             return false;
 
-        validPrimitive = id == CSSValueAuto || (validUnit(value, FInteger) && value->fValue);
+        parsedValue = parseGridPosition();
         break;
 
     case CSSPropertyWebkitGridColumn:
@@ -4745,6 +4770,50 @@ bool CSSParser::parseAnimationProperty(CSSPropertyID propId, RefPtr<CSSValue>& r
         return true;
     }
     return false;
+}
+
+PassRefPtr<CSSValue> CSSParser::parseGridPosition()
+{
+    CSSParserValue* value = m_valueList->current();
+    if (value->id == CSSValueAuto) {
+        m_valueList->next();
+        return cssValuePool().createIdentifierValue(CSSValueAuto);
+    }
+
+    RefPtr<CSSPrimitiveValue> numericValue;
+    bool hasSeenSpanKeyword = false;
+
+    if (validUnit(value, FInteger) && value->fValue) {
+        numericValue = createPrimitiveNumericValue(value);
+        value = m_valueList->next();
+        if (value && value->id == CSSValueSpan) {
+            hasSeenSpanKeyword = true;
+            m_valueList->next();
+        }
+    } else if (value->id == CSSValueSpan) {
+        hasSeenSpanKeyword = true;
+        value = m_valueList->next();
+        if (value && (validUnit(value, FInteger) && value->fValue)) {
+            numericValue = createPrimitiveNumericValue(value);
+            m_valueList->next();
+        }
+    }
+
+    if (!hasSeenSpanKeyword)
+        return numericValue.release();
+
+    if (!numericValue && hasSeenSpanKeyword)
+        return cssValuePool().createIdentifierValue(CSSValueSpan);
+
+    // Negative numbers are not allowed for span (but are for <integer>).
+    if (numericValue && numericValue->getIntValue() < 0)
+        return 0;
+
+    RefPtr<CSSValueList> values = CSSValueList::createSpaceSeparated();
+    values->append(cssValuePool().createIdentifierValue(CSSValueSpan));
+    if (numericValue)
+        values->append(numericValue.release());
+    return values.release();
 }
 
 bool CSSParser::parseGridItemPositionShorthand(CSSPropertyID shorthandId, bool important)
@@ -8577,8 +8646,8 @@ PassRefPtr<WebKitCSSMixFunctionValue> CSSParser::parseMixFunction(CSSParserValue
 
     bool hasBlendMode = false;
     bool hasAlphaCompositing = false;
-    CSSParserValue* arg;
-    while ((arg = argsList->current())) {
+
+    for (CSSParserValue* arg = argsList->current(); arg; arg = argsList->next()) {
         RefPtr<CSSValue> value;
 
         unsigned argNumber = argsList->currentIndex();
@@ -8601,8 +8670,6 @@ PassRefPtr<WebKitCSSMixFunctionValue> CSSParser::parseMixFunction(CSSParserValue
             return 0;
 
         mixFunction->append(value.release());
-
-        arg = argsList->next();
     }
 
     return mixFunction;
@@ -8771,7 +8838,7 @@ PassRefPtr<WebKitCSSFilterValue> CSSParser::parseCustomFilterFunctionWithInlineS
     RefPtr<CSSValueList> shadersList = CSSValueList::createSpaceSeparated();
     bool hadAtLeastOneCustomShader = false;
     CSSParserValue* arg;
-    while ((arg = argsList->current())) {
+    for (arg = argsList->current(); arg; arg = argsList->next()) {
         RefPtr<CSSValue> value;
         if (arg->id == CSSValueNone)
             value = cssValuePool().createIdentifierValue(CSSValueNone);
@@ -8788,7 +8855,6 @@ PassRefPtr<WebKitCSSFilterValue> CSSParser::parseCustomFilterFunctionWithInlineS
         if (!value)
             break;
         shadersList->append(value.release());
-        argsList->next();
     }
 
     if (!shadersList->length() || !hadAtLeastOneCustomShader || shadersList->length() > 2 || !acceptCommaOperator(argsList))
@@ -8799,7 +8865,7 @@ PassRefPtr<WebKitCSSFilterValue> CSSParser::parseCustomFilterFunctionWithInlineS
     // 2. Parse the mesh size <vertex-mesh>
     RefPtr<CSSValueList> meshSizeList = CSSValueList::createSpaceSeparated();
     
-    while ((arg = argsList->current())) {
+    for (arg = argsList->current(); arg; arg = argsList->next()) {
         if (!validUnit(arg, FInteger | FNonNeg, CSSStrictMode))
             break;
         int integerValue = clampToInteger(arg->fValue);
@@ -8807,7 +8873,6 @@ PassRefPtr<WebKitCSSFilterValue> CSSParser::parseCustomFilterFunctionWithInlineS
         if (integerValue < 1)
             return 0;
         meshSizeList->append(cssValuePool().createValue(integerValue, CSSPrimitiveValue::CSS_NUMBER));
-        argsList->next();
     }
     
     if (meshSizeList->length() > 2)

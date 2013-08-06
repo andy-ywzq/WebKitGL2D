@@ -150,6 +150,7 @@ public:
 
     int size() const;
     bool sizeShouldIncludeDecoration(int& preferredSize) const;
+    float decorationWidth() const;
 
     void setType(const String&);
 
@@ -367,6 +368,9 @@ private:
     virtual bool isOutOfRange() const;
 
     virtual void documentDidResumeFromPageCache();
+#if ENABLE(INPUT_TYPE_COLOR)
+    virtual void documentWillSuspendForPageCache() OVERRIDE;
+#endif
 
     virtual void addSubresourceAttributeURLs(ListHashSet<KURL>&) const;
 

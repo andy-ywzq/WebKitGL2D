@@ -56,9 +56,9 @@
 #include "WebProcessMessages.h"
 #include "WebProcessProxy.h"
 #include "WebResourceCacheManagerProxy.h"
-#include <WebCore/InitializeLogging.h>
 #include <WebCore/Language.h>
 #include <WebCore/LinkHash.h>
+#include <WebCore/Logging.h>
 #include <WebCore/ResourceRequest.h>
 #include <WebCore/RunLoop.h>
 #include <runtime/InitializeThreading.h>
@@ -1248,7 +1248,7 @@ void WebContext::pluginInfoStoreDidLoadPlugins(PluginInfoStore* store)
         pluginArray.append(ImmutableDictionary::adopt(map));
     }
 
-    m_client.plugInInformationBecameAvailable(this, ImmutableArray::adopt(pluginArray).leakRef());
+    m_client.plugInInformationBecameAvailable(this, ImmutableArray::adopt(pluginArray).get());
 }
 #endif
 

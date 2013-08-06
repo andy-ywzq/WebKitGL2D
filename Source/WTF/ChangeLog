@@ -1,3 +1,277 @@
+2013-08-05  Mark Rowe  <mrowe@apple.com>
+
+        Build fix for Qt Windows.
+
+        * wtf/Assertions.cpp: Include StringExtras.h rather than StdLibExtras.h, since the former is where
+        strncasecmp is declared.
+
+2013-07-26  Mark Rowe  <mrowe@apple.com>
+
+        Logging should be configurable using human-readable channel names rather than crazy bitmasks
+        <http://webkit.org/b/119031>
+
+        Implement shared logic for initializing logging channels based on human-readable channel names in WTF,
+        and rework the WebCore, WebKit and WebKit2 logging initialization on top of it.
+
+        Logging channels may now be enabled by providing a comma-separated list of channel names, with the special
+        "all" name enabling all channels. Channel names prefixed with a leading "-" will result in the named channel
+        being disabled. For instance, specifying "all,-history,-loading" will result in all logging channels except
+        for history and loading being enabled.
+
+        For OS X developers, this also changes the name of the user defaults used to enable logging. This is done to allow
+        the old user defaults to remain set for those people that need to switch between version of WebKit before and
+        after this change. Where the old user default keys were WebCoreLogLevel, WebKitLogLevel and WebKit2LogLevel,
+        the new user default keys are WebCoreLogging, WebKitLogging and WebKit2Logging.
+
+        For GTK developers, this changes the separator used in the WEBKIT_DEBUG environment variable to a comma for
+        consistency with the other platforms and to enable more code sharing.
+
+        While doing this work I've also taken the opportunity to eliminate the need to touch multiple files when
+        adding a new logging channel. Now only the header in the relevant project needs to be updated.
+
+        Reviewed by Sam Weinig.
+
+        * wtf/Assertions.cpp:
+        (WTFLogChannelByName): Iterate over the provided array of log channels, returning the first whose name
+        matches case-insensitively.
+        (setStateOfAllChannels): Helper function to set the state of all channels to a single value.
+        (WTFInitializeLogChannelStatesFromString): Parse a string containing a case-insensitive, comma-separated list
+        of channel names to enable or disable, with the latter being prefixed by a "-".
+        * wtf/Assertions.h: Update the layout of WTFLogChannel to include only the state of the channel and its name.
+        Declare WTFLogChannelByName and WTFInitializeLogChannelStatesFromString.
+        * wtf/RefCountedLeakCounter.cpp: Update to the new format of WTFLogChannel.
+
+2013-08-05  Benjamin Poulain  <bpoulain@apple.com>
+
+        Disable <meter> by default on iOS, it is enabled through the xconfig files
+        https://bugs.webkit.org/show_bug.cgi?id=119503
+
+        Reviewed by Alexey Proskuryakov.
+
+        * wtf/FeatureDefines.h:
+
+2013-08-05  Oliver Hunt  <oliver@apple.com>
+
+        Move TypedArray implementation into JSC
+        https://bugs.webkit.org/show_bug.cgi?id=119489
+
+        Reviewed by Filip Pizlo.
+
+        Remove TypedArray implementation from WTF
+
+        * GNUmakefile.list.am:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/Forward.h:
+
+2013-08-02  Benjamin Poulain  <benjamin@webkit.org>
+
+        Remove a bunch of redundant checks for empty string in StringImpl
+        https://bugs.webkit.org/show_bug.cgi?id=118768
+
+        Reviewed by Ryosuke Niwa.
+
+        The first thing done by createUninitialized() is check if the length passed
+        is zero. Internally, there are many cases for which we know the check will never succeed.
+
+        Clang is usually really smart for those kind of things, but there are a few cases where
+        the condition to avoid returning empty() is not simply a check for the length.
+        This patch adds an internal initializer to deal with that.
+
+        * wtf/text/StringImpl.cpp:
+        (WTF::StringImpl::createUninitializedInternal):
+        (WTF::StringImpl::createUninitializedInternalNonEmpty):
+        (WTF::StringImpl::createInternal): Create internal has a special case for null pointer
+        for the characters. The test also check length, the second check for length cannot fail.
+        (WTF::StringImpl::create8BitIfPossible): ditto.
+        (WTF::StringImpl::lower): 3 of the calls cannot be reached for empty length. On an empty length,
+        the test for (noUpper && !(ored & ~0x7F)) would have caused the function to return "this".
+
+        For the last createUninitialized(), there is no guarantee the realLength is not zero.
+
+        (WTF::StringImpl::replace): The first thing we do in replace(UChar,UChar) is check if there is anything
+        to replace. The check for length will never succeed as there must be a character to replace at that point.
+        * wtf/text/StringImpl.h:
+
+2013-08-02  Mark Lam  <mark.lam@apple.com>
+
+        Gardening: Touched a line in Platform.h to get all bots to do a clean build.
+
+        Not reviewed.
+
+        * wtf/Platform.h:
+
+2013-08-02  Mikhail Pozdnyakov  <mikhail.pozdnyakov@intel.com>
+
+        Check WTF::Vector size with '0' inline capacity
+        https://bugs.webkit.org/show_bug.cgi?id=119397
+
+        Reviewed by Andreas Kling.
+
+        Putting in place the compile assertion that had been removed with r153514.
+
+        * wtf/SizeLimits.cpp:
+
+2013-07-26  Mark Rowe  <mrowe@apple.com>
+
+        <http://webkit.org/b/119169> RetainPtr should support ARC for Objective-C objects.
+
+        While RetainPtr is not necessary under ARC, having it available makes it easier to transition
+        existing code from manual retain / release to ARC.
+
+        Under ARC, the object member of RetainPtr is treated as a strong reference by the compiler.
+        This means that merely assigning to the member variable is sufficient to retain the object,
+        and clearing the member variable is sufficient to release it. We still need to explicitly
+        CFRetain / CFRelease CoreFoundation types so the explicit calls to these functions are
+        moved in to helper functions and overloading is used to have the Objective-C object versions
+        of them be no-ops under ARC.
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/RetainPtr.h:
+        (WTF::retain): Continue to always CFRetain / CFRelease CoreFoundation objects. Only CFRetain / CFRelease
+        Objective-C objects when using manual retain / release.
+        (WTF::release): Ditto.
+        (WTF::adoptNSReference): Adopting references will be handled automatically by the compiler
+        when possible under ARC by eliminating redundant retain / release pairs.
+        (WTF::RetainPtr::ImplicitConversionToBoolIsNotAllowed): A new method that exists only to be used by the
+        conversion to the unspecified bool type.
+        (WTF::RetainPtr::operator UnspecifiedBoolType): Switch to using a pointer to a member function as the
+        unspecified bool type to avoid warnings from the compiler when casting Objective-C object types under ARC.
+
+        (WTF::RetainPtr::RetainPtr): Switch to our retain / release helper functions.
+        (WTF::RetainPtr::~RetainPtr): Ditto.
+        (WTF::::RetainPtr): Ditto.
+        (WTF::::clear): Ditto.
+        (WTF::=): Ditto.
+        (WTF::adoptCF): Annotate the argument with CF_RELEASES_ARGUMENT on both the declaration and the definition.
+        (WTF::adoptNS): Ditto for NS_RELEASES_ARGUMENT.
+
+2013-08-01  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/14235491> FastMalloc zone enumerator responding to MALLOC_PTR_REGION_RANGE_TYPE with individual allocations
+
+        Teach PageMapMemoryUsageRecorder::recordPendingRegions to only record data of the type that it's asked for.
+        This also fixes the vmmap output to associate some regions with the FastMalloc malloc zone that were previously
+        associated with it only via the VM tag, meaning they were incorrectly being omitted from the malloc statistics
+        section of the report.
+
+        Reviewed by Dan Bernstein.
+
+        * wtf/FastMalloc.cpp:
+        (WTF::PageMapMemoryUsageRecorder::recordPendingRegions): Report the individual allocations only when requested. Add
+        the ability to report the regions containing pointers separately from the allocations.
+
+2013-08-01  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/14528244> False-positive leaks from FastMalloc.
+
+        A logic error in the page map enumeration code within FastMalloc could result in a subset of the memory regions
+        owned by FastMalloc being skipped by the malloc zone enumeration code used by leaks and other performance tools.
+        If the only reference to an allocated object lived within one of the skipped memory regions, leaks would believe
+        it had been leaked since it would not find any references to the object.
+
+        The logic error manifested when a FastMalloc span owned a region of memory that crossed a 16MB address space boundary,
+        and when there was one or more other spans immediately after it in the address space. Crossing the 16MB address space
+        boundary means that the start and end points of the span are in different leaf nodes of the page map trie, and the
+        code within the page map's visitValues method didn't correctly account this case when skipping to the end of the span
+        after visiting it. It would resume iterating from the start of the next leaf node rather than continuing to skip values
+        until the end of the span was passed. The value representing the end of the span would then be processed as if it were
+        the start of a new span, and more values would be skipped even though they may contain actual spans.
+
+        The solution is to rework the algorithm used in visitValues so that it will skip the correct number of values even when
+        some of the values are in different leaf nodes. This is a more involved change than it may seem since it's also necessary
+        to deal with the case where a memory region spans two separate root nodes, which can happen if the region happens to cross
+        a 64GB boundary in the address space.
+
+        Reviewed by Geoff Garen.
+
+        * wtf/TCPageMap.h:
+        (TCMalloc_PageMap3::visitValues): Use a single loop to iterate, with the loop index being the key in to the page map in the
+        same form as used by get and set. This allows us to correctly deal with the index being skipped to a different intermediate or
+        root node as a result of visiting a span that crosses a 16MB boundary in memory.
+        (TCMalloc_PageMap2::visitValues): Ditto, but without having to deal with intermediate nodes.
+
+2013-08-01  Ruth Fong  <ruth_fong@apple.com>
+
+        [Forms: color] <input type='color'> popover color well implementation
+        <rdar://problem/14411008> and https://bugs.webkit.org/show_bug.cgi?id=119356
+
+        Reviewed by Benjamin Poulain.
+
+        * wtf/FeatureDefines.h: Added and enabled INPUT_TYPE_COLOR_POPOVER.
+
+2013-08-01  Simon Fraser  <simon.fraser@apple.com>
+
+        REGRESSION(r145592): AutodrainedPool.h. RunLoopTimer.h, SchedulePair.h are being copied into the wrong location
+        https://bugs.webkit.org/show_bug.cgi?id=112833
+
+        Reviewed by Sam Weinig.
+        
+        AutodrainedPool.h and SchedulePair.h should just be project headers, not
+        private headers, so they get copied into <build dir>/usr/local/include/wtf
+        not <build dir>/usr/local/include
+
+        * WTF.xcodeproj/project.pbxproj:
+
+2013-07-31  Ruth Fong  <ruth_fong@apple.com>
+
+        <input type=color> Mac UI behaviour
+        <rdar://problem/10269922> and https://bugs.webkit.org/show_bug.cgi?id=61276
+
+        Reviewed by Brady Eidson.
+
+        * wtf/FeatureDefines.h: Enabled INPUT_TYPE_COLOR on Mac port.
+
+2013-07-31  Andreas Kling  <akling@apple.com>
+
+        Shrink Vectors with inline capacity.
+        <http://webkit.org/b/119295>
+        <rdar://problem/14598360>
+
+        Reviewed by Anders Carlsson.
+
+        Pack Vector::m_size next to VectorBufferBase::m_capacity so there's no space wasted
+        on padding when sizeof(T) >= 8. Since m_size is not conceptually part of the buffer,
+        I just using'ed it into Vector.
+
+        * wtf/SizeLimits.cpp:
+        * wtf/Vector.h:
+        (WTF::VectorBufferBase::VectorBufferBase):
+        (WTF::VectorBuffer::VectorBuffer):
+        (WTF::Vector::Vector):
+        (WTF::::Vector):
+
+2013-07-30  Patrick Gansterer  <paroga@webkit.org>
+
+        Move WindowsExtras.h from WebCore to WTF
+        https://bugs.webkit.org/show_bug.cgi?id=118125
+
+        Reviewed by Anders Carlsson.
+
+        Move it to WTF to be able to use the functions in WTF too.
+
+        * wtf/WindowsExtras.h: Renamed from Source/WebCore/platform/win/WindowsExtras.h.
+        (WTF::getRegistryValue):
+        (WTF::getWindowPointer):
+        (WTF::setWindowPointer):
+        * wtf/win/MainThreadWin.cpp:
+        (WTF::initializeMainThreadPlatform):
+
+2013-07-29  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix make distcheck.
+
+        * GNUmakefile.list.am: Add missing files to compilation.
+
+2013-07-29  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/14528244> Tons of FastMalloc leaks reported by leaks of objects that have already been deallocated
+
+        Reviewed by Sam Weinig.
+
+        * wtf/FastMalloc.cpp:
+        (WTF::TCMalloc_Central_FreeList::enumerateFreeObjects): Mark objects in the transfer cache as being free.
+
 2013-07-29  Zan Dobersek  <zdobersek@igalia.com>
 
         Reintroduce convenience CheckedInt*, CheckedUint* types

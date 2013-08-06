@@ -25,6 +25,7 @@
 
 #include "CallFrame.h"
 #include "ConstructData.h"
+#include "CopyToken.h"
 #include "JSCell.h"
 
 namespace JSC {
@@ -39,7 +40,7 @@ struct MethodTable {
     typedef void (*VisitChildrenFunctionPtr)(JSCell*, SlotVisitor&);
     VisitChildrenFunctionPtr visitChildren;
 
-    typedef void (*CopyBackingStoreFunctionPtr)(JSCell*, CopyVisitor&);
+    typedef void (*CopyBackingStoreFunctionPtr)(JSCell*, CopyVisitor&, CopyToken);
     CopyBackingStoreFunctionPtr copyBackingStore;
 
     typedef CallType (*GetCallDataFunctionPtr)(JSCell*, CallData&);
@@ -60,10 +61,10 @@ struct MethodTable {
     typedef bool (*DeletePropertyByIndexFunctionPtr)(JSCell*, ExecState*, unsigned);
     DeletePropertyByIndexFunctionPtr deletePropertyByIndex;
 
-    typedef bool (*GetOwnPropertySlotFunctionPtr)(JSCell*, ExecState*, PropertyName, PropertySlot&);
+    typedef bool (*GetOwnPropertySlotFunctionPtr)(JSObject*, ExecState*, PropertyName, PropertySlot&);
     GetOwnPropertySlotFunctionPtr getOwnPropertySlot;
 
-    typedef bool (*GetOwnPropertySlotByIndexFunctionPtr)(JSCell*, ExecState*, unsigned, PropertySlot&);
+    typedef bool (*GetOwnPropertySlotByIndexFunctionPtr)(JSObject*, ExecState*, unsigned, PropertySlot&);
     GetOwnPropertySlotByIndexFunctionPtr getOwnPropertySlotByIndex;
 
     typedef JSValue (*ToThisFunctionPtr)(JSCell*, ExecState*, ECMAMode);

@@ -71,6 +71,16 @@
             "ajwong@chromium.org"
          ]
       },
+      "Alberto Garcia" : {
+         "emails" : [
+            "berto@igalia.com",
+            "agarcia@igalia.com"
+         ],
+         "nicks" : [
+            "bertogg",
+            "berto"
+         ]
+      },
       "Alec Flett" : {
          "emails" : [
             "alecflett@chromium.org",
@@ -261,14 +271,6 @@
             "piman"
          ]
       },
-      "Antoine Quint" : {
-         "emails" : [
-            "graouts@apple.com"
-         ],
-         "nicks" : [
-            "graouts"
-         ]
-      },
       "Anton D'Auria" : {
          "emails" : [
             "adauria@apple.com"
@@ -380,6 +382,15 @@
             "otte"
          ]
       },
+      "Bem Jones-Bey" : {
+         "emails" : [
+            "bjonesbe@adobe.com"
+         ],
+         "expertise" : "CSS Shapes, Floats",
+         "nicks" : [
+            "bemjb"
+         ]
+      },
       "Bill Budge" : {
          "emails" : [
             "bbudge@chromium.org",
@@ -444,6 +455,17 @@
          ],
          "nicks" : [
             "caryclark"
+         ]
+      },
+      "ChangSeok Oh" : {
+         "emails" : [
+            "changseok.oh@collabora.co.uk",
+            "changseok.oh@collabora.com",
+            "kevin.cs.oh@gmail.com"
+         ],
+         "expertise" : "The WebKitGTK+ port, H/W acceleration",
+         "nicks" : [
+            "changseok"
          ]
       },
       "Charles Reis" : {
@@ -981,6 +1003,15 @@
             "jkjiang"
          ]
       },
+      "Jaehun Lim" : {
+         "emails" : [
+            "ljaehun.lim@samsung.com"
+         ],
+         "expertise" : "The EFLWebKit port",
+         "nicks" : [
+            "jaehun"
+         ]
+      },
       "Jakob Petsovits" : {
          "emails" : [
             "jpetsovits@blackberry.com",
@@ -1113,6 +1144,16 @@
       "Jia Pu" : {
          "emails" : [
             "jpu@apple.com"
+         ]
+      },
+      "Jinwoo Song" : {
+         "emails" : [
+            "jinwoo7.song@samsung.com",
+            "fantaros77@gmail.com"
+         ],
+         "expertise" : "The EFLWebKit port",
+         "nicks" : [
+            "jinwoo"
          ]
       },
       "Joanmarie Diggs" : {
@@ -1963,6 +2004,16 @@
             "rolandsteiner@chromium.org"
          ]
       },
+      "Ruth Fong" : {
+         "emails" : [
+            "ruth_fong@apple.com",
+            "ruthiecftg@gmail.com"
+         ],
+         "nicks" : [
+            "ruthfong",
+            "ruth_fong"
+         ]
+      },
       "Ryuan Choi" : {
          "emails" : [
             "ryuan.choi@samsung.com",
@@ -2002,6 +2053,16 @@
          "expertise" : "The Chromium Port",
          "nicks" : [
             "sky"
+         ]
+      },
+      "Seokju Kwon" : {
+         "emails" : [
+            "seokju@webkit.org",
+            "seokju.kwon@gmail.com",
+            "seokju.kwon@samsung.com"
+         ],
+         "nicks" : [
+            "seokju"
          ]
       },
       "Sergio Villar Senin" : {
@@ -2268,6 +2329,15 @@
             "wms"
          ]
       },
+      "Xabier Rodriguez-Calvar" : {
+         "emails" : [
+            "calvaris@igalia.com",
+            "xrcalvar@igalia.com"
+         ],
+         "nicks" : [
+            "calvaris"
+         ]
+      },
       "Xianzhu Wang" : {
          "emails" : [
             "wangxianzhu@chromium.org",
@@ -2509,14 +2579,6 @@
          ],
          "nicks" : [
             "abalazs"
-         ]
-      },
-      "Bem Jones-Bey" : {
-         "emails" : [
-            "bjonesbe@adobe.com"
-         ],
-         "nicks" : [
-            "bemjb"
          ]
       },
       "Brian Salomon" : {
@@ -3122,6 +3184,14 @@
             "tonikitoo"
          ]
       },
+      "Antoine Quint" : {
+         "emails" : [
+            "graouts@apple.com"
+         ],
+         "nicks" : [
+            "graouts"
+         ]
+      },
       "Antti Koivisto" : {
          "emails" : [
             "koivisto@iki.fi",
@@ -3275,6 +3345,7 @@
       "Christophe Dumez" : {
          "emails" : [
             "dchris@gmail.com",
+            "ch.dumez@sta.samsung.com",
             "ch.dumez@sisa.samsung.com",
             "christophe.dumez@intel.com"
          ],

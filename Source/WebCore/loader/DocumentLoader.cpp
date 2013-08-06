@@ -295,12 +295,6 @@ void DocumentLoader::stopLoading()
     if (isLoadingMainResource()) {
         // Stop the main resource loader and let it send the cancelled message.
         cancelMainResourceLoad(frameLoader->cancelledError(m_request));
-    
-        // When cancelling the main resource load, we need to also cancel the Document's parser.
-        // Otherwise cancelling the parser when starting the next page load might result
-        // in unexpected side effects such as erroneous event dispatch. ( http://webkit.org/b/117112 )
-        if (Document* doc = document())
-            doc->cancelParsing();
     } else if (!m_subresourceLoaders.isEmpty())
         // The main resource loader already finished loading. Set the cancelled error on the 
         // document and let the subresourceLoaders send individual cancelled messages below.
@@ -309,6 +303,12 @@ void DocumentLoader::stopLoading()
         // If there are no resource loaders, we need to manufacture a cancelled message.
         // (A back/forward navigation has no resource loaders because its resources are cached.)
         mainReceivedError(frameLoader->cancelledError(m_request));
+
+    // We always need to explicitly cancel the Document's parser when stopping the load.
+    // Otherwise cancelling the parser while starting the next page load might result
+    // in unexpected side effects such as erroneous event dispatch. ( http://webkit.org/b/117112 )
+    if (Document* document = this->document())
+        document->cancelParsing();
     
     stopLoadingSubresources();
     stopLoadingPlugIns();
@@ -782,16 +782,28 @@ void DocumentLoader::commitData(const char* bytes, size_t length)
         if (!isMultipartReplacingLoad())
             frameLoader()->receivedFirstData();
 
-        bool userChosen = true;
-        String encoding = overrideEncoding();
-        if (encoding.isNull()) {
+        bool userChosen;
+        String encoding;
+#if USE(CONTENT_FILTERING)
+        // The content filter's replacement data has a known encoding that might
+        // differ from the response's encoding.
+        if (m_contentFilter && m_contentFilter->didBlockData()) {
+            ASSERT(!m_contentFilter->needsMoreData());
+            userChosen = false;
+        } else
+#endif
+        if (overrideEncoding().isNull()) {
             userChosen = false;
             encoding = response().textEncodingName();
 #if ENABLE(WEB_ARCHIVE)
             if (m_archive && m_archive->type() == Archive::WebArchive)
                 encoding = m_archive->mainResource()->textEncoding();
 #endif
+        } else {
+            userChosen = true;
+            encoding = overrideEncoding();
         }
+
         m_writer.setEncoding(encoding, userChosen);
     }
     ASSERT(m_frame->document()->parsing());
@@ -824,9 +836,8 @@ void DocumentLoader::dataReceived(CachedResource* resource, const char* data, in
 
         if (m_contentFilter->needsMoreData()) {
             // Since the filter still needs more data to make a decision,
-            // transition back to the committed state so that we don't partially
-            // load content that might later be blocked.
-            commitLoad(0, 0);
+            // avoid committing this data to prevent partial rendering of
+            // content that might later be blocked.
             return;
         }
 
