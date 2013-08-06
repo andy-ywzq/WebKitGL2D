@@ -45,6 +45,8 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     , m_viewportMaxScale(5)
     , m_viewportUserScalable(true)
     , m_viewportInitScale(1)
+    , m_isBackForwardFrameLoad(false)
+    , m_shouldAdjustScaleAfterRenderingMainFrame(false)
 {
     WKStringRef bundlePath = WKStringCreateWithUTF8CString(options.injectedBundle.empty() ? MINIBROWSER_INJECTEDBUNDLE_DIR "libMiniBrowserInjectedBundle.so" : options.injectedBundle.c_str());
     m_context = adoptWK(WKContextCreateWithInjectedBundlePath(bundlePath));
@@ -85,6 +87,7 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     viewClient.didChangeContentsSize = MiniBrowser::didChangeContentsSize;
     viewClient.didChangeContentsPosition = MiniBrowser::pageDidRequestScroll;
     viewClient.didChangeViewportAttributes = MiniBrowser::didChangeViewportAttributes;
+    viewClient.didRenderFrame = MiniBrowser::didRenderFrame;
     WKViewSetViewClient(m_view, &viewClient);
 
     WKViewInitialize(m_view);
@@ -146,6 +149,7 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     loadClient.didFinishDocumentLoadForFrame = MiniBrowser::didFinishDocumentLoadForFrame;
     loadClient.didFailProvisionalLoadWithErrorForFrame = MiniBrowser::didFailProvisionalLoadWithErrorForFrame;
     loadClient.didFirstLayoutForFrame = MiniBrowser::didFirstLayoutForFrame;
+    loadClient.willGoToBackForwardListItem = MiniBrowser::willGoToBackForwardListItem;
 
     WKPageSetPageLoaderClient(pageRef(), &loadClient);
 
@@ -896,10 +900,26 @@ void MiniBrowser::didFailProvisionalLoadWithErrorForFrame(WKPageRef page, WKFram
     WKRelease(wkErrorDescription);
 }
 
+void MiniBrowser::willGoToBackForwardListItem(WKPageRef page, WKBackForwardListItemRef item, WKTypeRef userData, const void *clientInfo)
+{
+    MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
+    mb->m_isBackForwardFrameLoad = true;
+}
+
+void MiniBrowser::didRenderFrame(WKViewRef view, WKSize contentsSize, WKRect coveredRect, const void* clientInfo)
+{
+    MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
+    if (mb->m_shouldAdjustScaleAfterRenderingMainFrame) {
+        mb->m_shouldAdjustScaleAfterRenderingMainFrame = false;
+
+        WKViewSetContentScaleFactor(mb->m_view, mb->m_viewportInitScale);
+    }
+}
+
 void MiniBrowser::didFirstLayoutForFrame(WKPageRef, WKFrameRef frame, WKTypeRef, const void* clientInfo)
 {
     MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
-    if (!WKFrameIsMainFrame(frame) || NIXViewPendingScaleOrPositionChange(mb->m_view))
+    if (!WKFrameIsMainFrame(frame))
         return;
 
     double scale = mb->scaleToFitContents();
@@ -911,6 +931,14 @@ void MiniBrowser::didFirstLayoutForFrame(WKPageRef, WKFrameRef frame, WKTypeRef,
 
     if (!mb->m_viewportUserScalable)
         mb->m_viewportMaxScale = mb->m_viewportMinScale = scale;
+
+    if (mb->m_isBackForwardFrameLoad || NIXViewPendingScaleOrPositionChange(mb->m_view)) {
+        if (!mb->m_isBackForwardFrameLoad)
+            mb->m_shouldAdjustScaleAfterRenderingMainFrame = true;
+
+        mb->m_isBackForwardFrameLoad = false;
+        return;
+    }
 
     WKViewSetContentScaleFactor(mb->m_view, scale);
 }

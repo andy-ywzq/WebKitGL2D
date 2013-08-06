@@ -76,6 +76,7 @@ public:
     static void doneWithTouchEvent(WKViewRef, const NIXTouchEvent* event, bool wasEventHandled, const void* clientInfo);
     static void doneWithGestureEvent(WKViewRef, const NIXGestureEvent* event, bool wasEventHandled, const void* clientInfo);
     static void updateTextInputState(WKViewRef, const NIXTextInputState* state, const void* clientInfo);
+    static void didRenderFrame(WKViewRef, WKSize, WKRect, const void*);
 
     // GestureRecognizerClient.
     virtual void handleSingleTap(double timestamp, const NIXTouchPoint&);
@@ -107,6 +108,7 @@ public:
     static void didFinishDocumentLoadForFrame(WKPageRef, WKFrameRef, WKTypeRef, const void*);
     static void didFailProvisionalLoadWithErrorForFrame(WKPageRef, WKFrameRef, WKErrorRef, WKTypeRef, const void*);
     static void didFirstLayoutForFrame(WKPageRef, WKFrameRef, WKTypeRef, const void*);
+    static void willGoToBackForwardListItem(WKPageRef, WKBackForwardListItemRef, WKTypeRef, const void*);
 
     virtual double scale();
 
@@ -158,6 +160,8 @@ private:
     float m_viewportMaxScale;
     float m_viewportInitScale;
     bool m_viewportUserScalable;
+    bool m_isBackForwardFrameLoad;
+    bool m_shouldAdjustScaleAfterRenderingMainFrame;
 
     std::string m_activeUrlText;
 
