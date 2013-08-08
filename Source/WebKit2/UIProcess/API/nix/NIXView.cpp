@@ -49,11 +49,6 @@ void NIXViewScaleToFitContents(WKViewRef view)
     static_cast<WebViewNix*>(toImpl(view))->adjustScaleToFitContents();
 }
 
-bool NIXViewPendingScaleOrPositionChange(WKViewRef view)
-{
-    return static_cast<WebViewNix*>(toImpl(view))->pendingScaleOrPositionChange();
-}
-
 void NIXViewSetNixViewClient(WKViewRef view, const NIXViewClient* viewClient)
 {
     static_cast<WebViewNix*>(toImpl(view))->setNixViewClient(viewClient);

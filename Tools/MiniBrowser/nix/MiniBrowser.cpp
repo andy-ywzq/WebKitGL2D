@@ -45,8 +45,6 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     , m_viewportMaxScale(5)
     , m_viewportUserScalable(true)
     , m_viewportInitScale(1)
-    , m_isBackForwardFrameLoad(false)
-    , m_shouldAdjustScaleAfterRenderingMainFrame(false)
 {
     WKStringRef bundlePath = WKStringCreateWithUTF8CString(options.injectedBundle.empty() ? MINIBROWSER_INJECTEDBUNDLE_DIR "libMiniBrowserInjectedBundle.so" : options.injectedBundle.c_str());
     m_context = adoptWK(WKContextCreateWithInjectedBundlePath(bundlePath));
@@ -87,7 +85,6 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     viewClient.didChangeContentsSize = MiniBrowser::didChangeContentsSize;
     viewClient.didChangeContentsPosition = MiniBrowser::pageDidRequestScroll;
     viewClient.didChangeViewportAttributes = MiniBrowser::didChangeViewportAttributes;
-    viewClient.didRenderFrame = MiniBrowser::didRenderFrame;
     WKViewSetViewClient(m_view, &viewClient);
 
     WKViewInitialize(m_view);
@@ -148,8 +145,6 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     loadClient.didStartProvisionalLoadForFrame = MiniBrowser::didStartProvisionalLoadForFrame;
     loadClient.didFinishDocumentLoadForFrame = MiniBrowser::didFinishDocumentLoadForFrame;
     loadClient.didFailProvisionalLoadWithErrorForFrame = MiniBrowser::didFailProvisionalLoadWithErrorForFrame;
-    loadClient.didFirstLayoutForFrame = MiniBrowser::didFirstLayoutForFrame;
-    loadClient.willGoToBackForwardListItem = MiniBrowser::willGoToBackForwardListItem;
 
     WKPageSetPageLoaderClient(pageRef(), &loadClient);
 
@@ -304,7 +299,7 @@ void MiniBrowser::onWindowSizeChange(WKSize size)
     WKViewSetSize(m_view, m_viewRect.size);
 
     if (isMobileMode())
-        WKViewSetContentScaleFactor(m_view, scaleToFitContents());
+        NIXViewScaleToFitContents(m_view);
 }
 
 void MiniBrowser::onWindowClose()
@@ -375,11 +370,6 @@ WKPoint MiniBrowser::adjustScrollPositionToBoundaries(WKPoint position)
         position.y = bottomBoundary;
 
     return position;
-}
-
-double MiniBrowser::scaleToFitContents()
-{
-    return WKViewGetSize(m_view).width / (m_contentsSize.width * m_options.devicePixelRatio);
 }
 
 void MiniBrowser::adjustScrollPosition()
@@ -467,7 +457,7 @@ void MiniBrowser::didFindZoomableArea(WKViewRef, WKPoint target, WKRect area, co
 
     // Trying to zoom to an area with the same scale factor causes a zoom out.
     if (std::fabs(scale - WKViewGetContentScaleFactor(mb->m_view)) < EPSILON)
-        scale = mb->scaleToFitContents();
+        scale = NIXViewGetScaleToFitContents(mb->m_view);
     else {
         // We want the zoomed content area to fit horizontally in the WebView,
         // so let's give the scaleAtPoint method a suitable value.
@@ -898,49 +888,6 @@ void MiniBrowser::didFailProvisionalLoadWithErrorForFrame(WKPageRef page, WKFram
     WKStringRef wkErrorDescription = WKErrorCopyLocalizedDescription(error);
     WKPageLoadPlainTextString(page, wkErrorDescription);
     WKRelease(wkErrorDescription);
-}
-
-void MiniBrowser::willGoToBackForwardListItem(WKPageRef page, WKBackForwardListItemRef item, WKTypeRef userData, const void *clientInfo)
-{
-    MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
-    mb->m_isBackForwardFrameLoad = true;
-}
-
-void MiniBrowser::didRenderFrame(WKViewRef view, WKSize contentsSize, WKRect coveredRect, const void* clientInfo)
-{
-    MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
-    if (mb->m_shouldAdjustScaleAfterRenderingMainFrame) {
-        mb->m_shouldAdjustScaleAfterRenderingMainFrame = false;
-
-        WKViewSetContentScaleFactor(mb->m_view, mb->m_viewportInitScale);
-    }
-}
-
-void MiniBrowser::didFirstLayoutForFrame(WKPageRef, WKFrameRef frame, WKTypeRef, const void* clientInfo)
-{
-    MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
-    if (!WKFrameIsMainFrame(frame))
-        return;
-
-    double scale = mb->scaleToFitContents();
-    if (scale < mb->m_viewportMinScale)
-        scale = mb->m_viewportMinScale;
-    else if (scale > mb->m_viewportMaxScale)
-        scale = mb->m_viewportMaxScale;
-    mb->m_viewportInitScale = scale;
-
-    if (!mb->m_viewportUserScalable)
-        mb->m_viewportMaxScale = mb->m_viewportMinScale = scale;
-
-    if (mb->m_isBackForwardFrameLoad || NIXViewPendingScaleOrPositionChange(mb->m_view)) {
-        if (!mb->m_isBackForwardFrameLoad)
-            mb->m_shouldAdjustScaleAfterRenderingMainFrame = true;
-
-        mb->m_isBackForwardFrameLoad = false;
-        return;
-    }
-
-    WKViewSetContentScaleFactor(mb->m_view, scale);
 }
 
 std::string MiniBrowser::activeUrl()

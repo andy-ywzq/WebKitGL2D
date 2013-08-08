@@ -88,8 +88,6 @@ WK_EXPORT float NIXViewGetScaleToFitContents(WKViewRef);
 
 WK_EXPORT void NIXViewScaleToFitContents(WKViewRef);
 
-WK_EXPORT bool NIXViewPendingScaleOrPositionChange(WKViewRef);
-
 WK_EXPORT void NIXViewSetNixViewClient(WKViewRef view, const NIXViewClient* viewClient);
 
 WK_EXPORT WKSize NIXViewVisibleContentsSize(WKViewRef view);
