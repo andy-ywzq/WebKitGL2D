@@ -122,26 +122,6 @@ bool ShadowRoot::childTypeAllowed(NodeType type) const
     }
 }
 
-void ShadowRoot::recalcStyle(StyleChange change)
-{
-    // ShadowRoot doesn't support custom callbacks.
-    ASSERT(!hasCustomStyleCallbacks());
-
-    StyleResolver* styleResolver = document()->ensureStyleResolver();
-    styleResolver->pushParentShadowRoot(this);
-
-    for (Node* child = firstChild(); child; child = child->nextSibling()) {
-        if (child->isElementNode())
-            toElement(child)->recalcStyle(change);
-        else if (child->isTextNode())
-            toText(child)->recalcTextStyle(change);
-    }
-
-    styleResolver->popParentShadowRoot(this);
-    clearNeedsStyleRecalc();
-    clearChildNeedsStyleRecalc();
-}
-
 void ShadowRoot::setApplyAuthorStyles(bool value)
 {
     if (isOrphan())
@@ -160,8 +140,8 @@ void ShadowRoot::setResetStyleInheritance(bool value)
 
     if (value != m_resetStyleInheritance) {
         m_resetStyleInheritance = value;
-        if (attached() && owner())
-            owner()->recalcStyle(Force);
+        if (attached() && host())
+            Style::resolveTree(host(), Style::Force);
     }
 }
 

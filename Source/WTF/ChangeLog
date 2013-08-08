@@ -1,3 +1,68 @@
+2013-08-07  Alex Christensen  <achristensen@apple.com>
+
+        Fixed wrong definition for AppleWin port's WebGL after r153768.
+
+        Rubberstamped by Benjamin Poulain.
+
+        * wtf/Platform.h: Replaced WTF_USE_SURFACE with WTF_USE_GRAPHICS_SURFACE.
+
+2013-08-04  Sam Weinig  <sam@webkit.org>
+
+        Remove support for HTML5 MicroData
+        https://bugs.webkit.org/show_bug.cgi?id=119480
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/FeatureDefines.h:
+
+2013-08-06  Alex Christensen  <achristensen@apple.com>
+
+        Enabled WebGL on WinCairo port.
+        https://bugs.webkit.org/show_bug.cgi?id=119502
+
+        Reviewed by Benjamin Poulain.
+
+        * wtf/FeatureDefines.h: Enabled WebGL.
+        * wtf/Platform.h: Added definitions required for WebGL on Windows.
+
+2013-08-05  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/5927399> FastMalloc should support MallocStackLogging
+
+        Call the malloc stack logging function from within the various entry points to FastMalloc
+        when stack logging is enabled.
+
+        Reviewed by Oliver Hunt and Geoff Garen.
+
+        * wtf/FastMalloc.cpp:
+        Call in to MallocHook::InvokeNewHook / MallocHook::InvokeDeleteHook at the appropriate entry
+        points to FastMalloc. The naming comes from TCMalloc's existing, unused concept of malloc hooks.
+        (WTF::MallocHook::record): Call the stack logging function with appropriate argument types.
+        (WTF::MallocHook::recordAllocation): Out-of-line slow path for when stack logging is enabled
+        that calls record with the values in the right arguments.
+        (WTF::MallocHook::recordDeallocation): Ditto.
+        (WTF::MallocHook::init): Stack logging is enabled if the system allocator has enabled stack logging.
+        (WTF::MallocHook::InvokeNewHook): Call recordAllocation in the unlikely event that stack logging is
+        enabled.
+        (WTF::MallocHook::InvokeDeleteHook): Ditto for recordDeallocation.
+        (WTF::TCMalloc_ThreadCache::InitModule): Initialize the malloc hook.
+
+2013-08-06  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build correction after r153754 and r153757.
+
+        * wtf/MathExtras.h:
+        (remainder): Provide implementation of C99 remainder for VS2010 (and earlier).
+
+2013-07-23  David Farler  <dfarler@apple.com> 
+        Provide optional OTHER_CFLAGS, OTHER_CPPFLAGS, OTHER_LDFLAGS additions for building with ASAN
+        https://bugs.webkit.org/show_bug.cgi?id=117762
+
+        Reviewed by Mark Rowe.
+
+        * Configurations/DebugRelease.xcconfig:
+        Add ASAN_OTHER_CFLAGS, CPLUSPLUSFLAGS.
+
 2013-08-05  Mark Rowe  <mrowe@apple.com>
 
         Build fix for Qt Windows.

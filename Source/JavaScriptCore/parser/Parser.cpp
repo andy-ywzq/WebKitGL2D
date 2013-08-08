@@ -80,6 +80,8 @@ Parser<LexerType>::Parser(VM* vm, const SourceCode& source, FunctionParameters* 
     m_lexer = adoptPtr(new LexerType(vm));
     m_arena = m_vm->parserArena.get();
     m_lexer->setCode(source, m_arena);
+    m_token.m_location.line = source.firstLine();
+    m_token.m_location.startOffset = source.startOffset();
     m_token.m_location.endOffset = source.startOffset();
     m_token.m_location.lineStartOffset = source.startOffset();
 
@@ -121,12 +123,15 @@ String Parser<LexerType>::parseInner()
     }
 
     IdentifierSet capturedVariables;
-    scope->getCapturedVariables(capturedVariables);
+    bool modifiedParameter = false;
+    scope->getCapturedVariables(capturedVariables, modifiedParameter);
     CodeFeatures features = context.features();
     if (scope->strictMode())
         features |= StrictModeFeature;
     if (scope->shadowsArguments())
         features |= ShadowsArgumentsFeature;
+    if (modifiedParameter)
+        features |= ModifiedParameterFeature;
 
     didFinishParsing(sourceElements, context.varDeclarations(), context.funcDeclarations(), features,
         context.numConstants(), capturedVariables);

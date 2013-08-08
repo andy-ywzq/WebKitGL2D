@@ -205,11 +205,6 @@
 #include "ScriptedAnimationController.h"
 #endif
 
-#if ENABLE(MICRODATA)
-#include "MicroDataItemList.h"
-#include "NodeRareData.h"
-#endif
-
 #if ENABLE(TEXT_AUTOSIZING)
 #include "TextAutosizer.h"
 #endif
@@ -417,6 +412,7 @@ Document::Document(Frame* frame, const KURL& url, unsigned documentClasses)
     , m_visuallyOrdered(false)
     , m_readyState(Complete)
     , m_bParsing(false)
+    , m_optimizedStyleSheetUpdateTimer(this, &Document::optimizedStyleSheetUpdateTimerFired)
     , m_styleRecalcTimer(this, &Document::styleRecalcTimerFired)
     , m_pendingStyleRecalcShouldForce(false)
     , m_inStyleRecalc(false)
@@ -1747,7 +1743,7 @@ bool Document::childNeedsAndNotInStyleRecalc()
     return childNeedsStyleRecalc() && !m_inStyleRecalc;
 }
 
-void Document::recalcStyle(StyleChange change)
+void Document::recalcStyle(Style::Change change)
 {
     // we should not enter style recalc while painting
     ASSERT(!view() || !view()->isPainting());
@@ -1764,8 +1760,7 @@ void Document::recalcStyle(StyleChange change)
     // re-attaching our containing iframe, which when asked HTMLFrameElementBase::isURLAllowed
     // hits a null-dereference due to security code always assuming the document has a SecurityOrigin.
 
-    if (m_styleSheetCollection->needsUpdateActiveStylesheetsOnStyleRecalc())
-        m_styleSheetCollection->updateActiveStyleSheets(DocumentStyleSheetCollection::FullUpdate);
+    m_styleSheetCollection->flushPendingUpdates();
 
     InspectorInstrumentationCookie cookie = InspectorInstrumentation::willRecalculateStyle(this);
 
@@ -1788,16 +1783,16 @@ void Document::recalcStyle(StyleChange change)
             goto bailOut;
 
         if (m_pendingStyleRecalcShouldForce)
-            change = Force;
+            change = Style::Force;
 
         // Recalculating the root style (on the document) is not needed in the common case.
-        if ((change == Force) || (shouldDisplaySeamlesslyWithParent() && (change >= Inherit))) {
+        if ((change == Style::Force) || (shouldDisplaySeamlesslyWithParent() && (change >= Style::Inherit))) {
             // style selector may set this again during recalc
             m_hasNodesWithPlaceholderStyle = false;
             
             RefPtr<RenderStyle> documentStyle = StyleResolver::styleForDocument(this, m_styleResolver ? m_styleResolver->fontSelector() : 0);
-            StyleChange ch = Node::diff(documentStyle.get(), renderer()->style(), this);
-            if (ch != NoChange)
+            Style::Change documentChange = Style::determineChange(documentStyle.get(), renderer()->style(), settings());
+            if (documentChange != Style::NoChange)
                 renderer()->setStyle(documentStyle.release());
         }
 
@@ -1805,8 +1800,8 @@ void Document::recalcStyle(StyleChange change)
             if (!n->isElementNode())
                 continue;
             Element* element = toElement(n);
-            if (change >= Inherit || element->childNeedsStyleRecalc() || element->needsStyleRecalc())
-                element->recalcStyle(change);
+            if (change >= Style::Inherit || element->childNeedsStyleRecalc() || element->needsStyleRecalc())
+                Style::resolveTree(element, change);
         }
 
 #if USE(ACCELERATED_COMPOSITING)
@@ -1850,12 +1845,15 @@ void Document::updateStyleIfNeeded()
 {
     ASSERT(isMainThread());
     ASSERT(!view() || (!view()->isInLayout() && !view()->isPainting()));
-    
+
+    if (m_optimizedStyleSheetUpdateTimer.isActive())
+        styleResolverChanged(RecalcStyleIfNeeded);
+
     if ((!m_pendingStyleRecalcShouldForce && !childNeedsStyleRecalc()) || inPageCache())
         return;
 
     AnimationUpdateBlock animationUpdateBlock(m_frame ? m_frame->animation() : 0);
-    recalcStyle(NoChange);
+    recalcStyle(Style::NoChange);
 }
 
 void Document::updateStyleForAllDocuments()
@@ -1921,7 +1919,7 @@ void Document::updateLayoutIgnorePendingStylesheets()
             // If new nodes have been added or style recalc has been done with style sheets still pending, some nodes 
             // may not have had their real style calculated yet. Normally this gets cleaned when style sheets arrive 
             // but here we need up-to-date style immediately.
-            recalcStyle(Force);
+            recalcStyle(Style::Force);
     }
 
     updateLayout();
@@ -2029,7 +2027,7 @@ void Document::attach(const AttachContext& context)
     renderView()->setIsInWindow(true);
 #endif
 
-    recalcStyle(Force);
+    recalcStyle(Style::Force);
 
     RenderObject* render = renderer();
     setRenderer(0);
@@ -3140,8 +3138,24 @@ void Document::evaluateMediaQueryList()
         m_mediaQueryMatcher->styleResolverChanged();
 }
 
+void Document::optimizedStyleSheetUpdateTimerFired(Timer<Document>*)
+{
+    styleResolverChanged(RecalcStyleIfNeeded);
+}
+
+void Document::scheduleOptimizedStyleSheetUpdate()
+{
+    if (m_optimizedStyleSheetUpdateTimer.isActive())
+        return;
+    styleSheetCollection()->setPendingUpdateType(DocumentStyleSheetCollection::OptimizedUpdate);
+    m_optimizedStyleSheetUpdateTimer.startOneShot(0);
+}
+
 void Document::styleResolverChanged(StyleResolverUpdateFlag updateFlag)
 {
+    if (m_optimizedStyleSheetUpdateTimer.isActive())
+        m_optimizedStyleSheetUpdateTimer.stop();
+
     // Don't bother updating, since we haven't loaded all our style info yet
     // and haven't calculated the style selector for the first time.
     if (!attached() || (!m_didCalculateStyleResolver && !haveStylesheetsLoaded())) {
@@ -3184,7 +3198,7 @@ void Document::styleResolverChanged(StyleResolverUpdateFlag updateFlag)
     // make sure animations get the correct update time
     {
         AnimationUpdateBlock animationUpdateBlock(m_frame ? m_frame->animation() : 0);
-        recalcStyle(Force);
+        recalcStyle(Style::Force);
     }
 
 #ifdef INSTRUMENT_LAYOUT_SCHEDULING
@@ -5214,7 +5228,7 @@ void Document::webkitWillEnterFullScreenForElement(Element* element)
 
     m_fullScreenElement->setContainsFullScreenElementOnAncestorsCrossingFrameBoundaries(true);
     
-    recalcStyle(Force);
+    recalcStyle(Style::Force);
 }
 
 void Document::webkitDidEnterFullScreenForElement(Element*)
@@ -5669,17 +5683,6 @@ DocumentLoader* Document::loader() const
     
     return loader;
 }
-
-#if ENABLE(MICRODATA)
-PassRefPtr<NodeList> Document::getItems(const String& typeNames)
-{
-    // Since documet.getItem() is allowed for microdata, typeNames will be null string.
-    // In this case we need to create an empty string identifier to map such request in the cache.
-    String localTypeNames = typeNames.isNull() ? MicroDataItemList::undefinedItemType() : typeNames;
-
-    return ensureRareData()->ensureNodeLists()->addCacheWithName<MicroDataItemList>(this, MicroDataItemListType, localTypeNames);
-}
-#endif
 
 IntSize Document::viewportSize() const
 {

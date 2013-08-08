@@ -1,3 +1,414 @@
+2013-08-08  Alexey Proskuryakov  <ap@apple.com>
+
+        WTR::pathSuitableForTestResult should behave the same as _drt_descriptionSuitableForTestResult so we can unskip tests.
+        https://bugs.webkit.org/show_bug.cgi?id=116125
+
+        * platform/wk2/TestExpectations: Removed a test that now passes, added one that fails
+        (will look into that separately).
+
+2013-08-08  Zalan Bujtas  <zalan@apple.com>
+
+        REGRESSION (r121551) Incorrect handling of invalid media query list.
+        https://bugs.webkit.org/show_bug.cgi?id=119164
+
+        Reviewed by Antti Koivisto.
+
+        Differentiate between syntactically invalid media queries and media queries with empty expressions.
+
+        Introduce a dedicated function for valid, but empty expression queries, so that passing NULL MediaQuerySet
+        object to CSSParser::createMediaRule() can indicate invalid media query.
+
+        * fast/media/invalid-media-query-list-expected.html: Added.
+        * fast/media/invalid-media-query-list.html: Added.
+
+2013-08-08  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed rebaselining after r153647.
+
+        * platform/qt/fast/css/input-search-padding-expected.png:
+        * platform/qt/fast/css/input-search-padding-expected.txt:
+        * platform/qt/fast/css/text-overflow-input-expected.png:
+        * platform/qt/fast/css/text-overflow-input-expected.txt:
+        * platform/qt/fast/forms/box-shadow-override-expected.png:
+        * platform/qt/fast/forms/box-shadow-override-expected.txt:
+        * platform/qt/fast/forms/control-restrict-line-height-expected.png:
+        * platform/qt/fast/forms/control-restrict-line-height-expected.txt:
+        * platform/qt/fast/forms/placeholder-position-expected.png:
+        * platform/qt/fast/forms/placeholder-position-expected.txt:
+        * platform/qt/fast/forms/placeholder-pseudo-style-expected.png:
+        * platform/qt/fast/forms/placeholder-pseudo-style-expected.txt:
+        * platform/qt/fast/forms/search-cancel-button-style-sharing-expected.png:
+        * platform/qt/fast/forms/search-cancel-button-style-sharing-expected.txt:
+        * platform/qt/fast/forms/search-display-none-cancel-button-expected.png:
+        * platform/qt/fast/forms/search-display-none-cancel-button-expected.txt:
+        * platform/qt/fast/forms/search-rtl-expected.png:
+        * platform/qt/fast/forms/search-rtl-expected.txt:
+        * platform/qt/fast/forms/search-styled-expected.png:
+        * platform/qt/fast/forms/search-styled-expected.txt:
+        * platform/qt/fast/forms/search-vertical-alignment-expected.png:
+        * platform/qt/fast/forms/search-vertical-alignment-expected.txt:
+        * platform/qt/fast/forms/search/search-size-with-decorations-expected.png: Added.
+        * platform/qt/fast/forms/search/search-size-with-decorations-expected.txt: Added.
+        * platform/qt/fast/repaint/search-field-cancel-expected.png:
+        * platform/qt/fast/repaint/search-field-cancel-expected.txt:
+
+2013-08-08  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Skip more tests depending on canvas blending.
+        https://bugs.webkit.org/show_bug.cgi?id=100072
+
+        Unreviewed gardening.
+
+        * platform/qt/TestExpectations:
+
+2013-08-08  Andreas Kling  <akling@apple.com>
+
+        REGRESSION(r139282): Old caret sometimes gets "stuck" (not repainted) in contenteditable elements.
+        <http://webkit.org/b/119520>
+        <rdar://problem/14658929>
+
+        Reviewed by Simon Fraser.
+
+        * fast/repaint/caret-jump-between-nodes-expected.txt: Added.
+        * fast/repaint/caret-jump-between-nodes.html: Added.
+
+2013-08-07  Andrei Bucur  <abucur@adobe.com>
+
+        [CSS Regions] Propagate overflow from the flow thread to the first and last region
+        https://bugs.webkit.org/show_bug.cgi?id=118526
+
+        Reviewed by David Hyatt.
+
+        Add tests for scrolling of regions in containers in different situations: regions with
+        transforms, nested regions, regions affected by scrollbars etc.
+
+        * fast/regions/overflow-scrollable-1-expected.html: Added.
+        * fast/regions/overflow-scrollable-1.html: Added.
+        * fast/regions/overflow-scrollable-2-expected.html: Added.
+        * fast/regions/overflow-scrollable-2.html: Added.
+        * fast/regions/overflow-scrollable-3-expected.html: Added.
+        * fast/regions/overflow-scrollable-3.html: Added.
+        * fast/regions/overflow-scrollable-fit-complex-expected.html: Added.
+        * fast/regions/overflow-scrollable-fit-complex.html: Added.
+        * fast/regions/overflow-scrollable-fit-expected.html: Added.
+        * fast/regions/overflow-scrollable-fit.html: Added.
+        * fast/regions/overflow-scrollable-nested-expected.txt: Added.
+        * fast/regions/overflow-scrollable-nested.html: Added.
+
+2013-08-07  Tim Horton  <timothy_horton@apple.com>
+
+        Fall out of simple image layer optimization if the image has EXIF rotation
+        https://bugs.webkit.org/show_bug.cgi?id=119535
+        <rdar://problem/14071174>
+
+        Reviewed by Simon Fraser.
+
+        Add a test that ensures that composited images with EXIF orientation paint correctly.
+
+        * fast/images/exif-orientation-composited-expected.txt: Added.
+        * fast/images/exif-orientation-composited.html: Added.
+        * platform/mac/fast/images/exif-orientation-composited-expected.png: Added.
+
+2013-08-07  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Skip background-blending-mode tests
+
+        Unreviewed gardening.
+
+        * platform/qt/TestExpectations:
+
+2013-08-07  Antti Koivisto  <antti@apple.com>
+
+        2.5% regression on page cycler moz
+        https://bugs.webkit.org/show_bug.cgi?id=102822
+
+        Reviewed by Andreas Kling.
+        
+        This is a progression.
+
+        * inspector/timeline/timeline-script-tag-1-expected.txt:
+
+2013-08-07  Mirela Budaes  <mbudaes@adobe.com>
+
+        [CSS Blending] Add test suite to validate background blending with different properties
+        https://bugs.webkit.org/show_bug.cgi?id=118243
+
+        Reviewed by Dirk Schulze.
+
+        * css3/compositing/background-blend-mode-background-attachement-fixed-expected.html: Added.
+        * css3/compositing/background-blend-mode-background-attachement-fixed.html: Added.
+        * css3/compositing/background-blend-mode-background-clip-content-box-expected.html: Added.
+        * css3/compositing/background-blend-mode-background-clip-content-box.html: Added.
+        * css3/compositing/background-blend-mode-background-clip-padding-box-expected.html: Added.
+        * css3/compositing/background-blend-mode-background-clip-padding-box.html: Added.
+        * css3/compositing/background-blend-mode-background-origin-border-box-expected.html: Added.
+        * css3/compositing/background-blend-mode-background-origin-border-box.html: Added.
+        * css3/compositing/background-blend-mode-background-position-percentage-expected.html: Added.
+        * css3/compositing/background-blend-mode-background-position-percentage.html: Added.
+        * css3/compositing/background-blend-mode-background-repeat-no-repeat-expected.html: Added.
+        * css3/compositing/background-blend-mode-background-repeat-no-repeat.html: Added.
+        * css3/compositing/background-blend-mode-background-size-contain-expected.html: Added.
+        * css3/compositing/background-blend-mode-background-size-contain.html: Added.
+        * css3/compositing/background-blend-mode-background-size-cover-expected.html: Added.
+        * css3/compositing/background-blend-mode-background-size-cover.html: Added.
+        * css3/compositing/resources/white_square.svg: Added.
+
+2013-08-07  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSSRegions] Wrong auto-height region computation for nested named flows
+        https://bugs.webkit.org/show_bug.cgi?id=119517
+
+        Reviewed by David Hyatt.
+
+        * fast/regions/abspos-autoheight-nested-region-expected.txt: Added.
+        * fast/regions/abspos-autoheight-nested-region.html: Added.
+
+2013-08-07  Krzysztof Czech  <k.czech@samsung.com>
+
+        [EFL] REGRESSION after r153432: marking crashing tests.
+        https://bugs.webkit.org/show_bug.cgi?id=119539
+
+        Unreviewed EFL gardening.
+
+        * platform/efl-wk1/TestExpectations:
+        * platform/efl-wk2/TestExpectations:
+        * platform/efl/TestExpectations:
+
+2013-08-06  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG FixupPhase should insert Int32ToDouble nodes for number uses in NewArray, and SpeculativeJIT 64-bit should not try to coerce integer constants to double constants
+        https://bugs.webkit.org/show_bug.cgi?id=119528
+
+        Reviewed by Geoffrey Garen.
+
+        * fast/js/dfg-new-array-double-const-then-int-const.html: Added.
+        * fast/js/dfg-new-array-double-const-then-int-const-expected.txt: Added.
+        * fast/js/jsc-test-list:
+        * fast/js/script-tests/dfg-new-array-double-const-then-int-const.js: Added.
+        (bar):
+        (foo):
+
+2013-08-04  Sam Weinig  <sam@webkit.org>
+
+        Remove support for HTML5 MicroData
+        https://bugs.webkit.org/show_bug.cgi?id=119480
+
+        Reviewed by Anders Carlsson.
+
+        * fast/dom/MicroData: Removed.
+        * fast/dom/MicroData/001-expected.txt: Removed.
+        * fast/dom/MicroData/001.html: Removed.
+        * fast/dom/MicroData/002-expected.txt: Removed.
+        * fast/dom/MicroData/002.html: Removed.
+        * fast/dom/MicroData/003-expected.txt: Removed.
+        * fast/dom/MicroData/003.html: Removed.
+        * fast/dom/MicroData/004-expected.txt: Removed.
+        * fast/dom/MicroData/004.html: Removed.
+        * fast/dom/MicroData/005-expected.txt: Removed.
+        * fast/dom/MicroData/005.html: Removed.
+        * fast/dom/MicroData/006-expected.txt: Removed.
+        * fast/dom/MicroData/006.html: Removed.
+        * fast/dom/MicroData/007-expected.txt: Removed.
+        * fast/dom/MicroData/007.html: Removed.
+        * fast/dom/MicroData/008-expected.txt: Removed.
+        * fast/dom/MicroData/008.html: Removed.
+        * fast/dom/MicroData/009-expected.txt: Removed.
+        * fast/dom/MicroData/009.html: Removed.
+        * fast/dom/MicroData/add-remove-property-to-item-which-is-not-attached-to-domtree-expected.txt: Removed.
+        * fast/dom/MicroData/add-remove-property-to-item-which-is-not-attached-to-domtree.html: Removed.
+        * fast/dom/MicroData/domsettabletokenlist-attributes-add-token-expected.txt: Removed.
+        * fast/dom/MicroData/domsettabletokenlist-attributes-add-token.html: Removed.
+        * fast/dom/MicroData/domsettabletokenlist-attributes-out-of-range-index-expected.txt: Removed.
+        * fast/dom/MicroData/domsettabletokenlist-attributes-out-of-range-index.html: Removed.
+        * fast/dom/MicroData/element-with-empty-itemprop-expected.txt: Removed.
+        * fast/dom/MicroData/element-with-empty-itemprop.html: Removed.
+        * fast/dom/MicroData/getitems-empty-string-as-arg-expected.txt: Removed.
+        * fast/dom/MicroData/getitems-empty-string-as-arg.html: Removed.
+        * fast/dom/MicroData/getitems-multiple-itemtypes-expected.txt: Removed.
+        * fast/dom/MicroData/getitems-multiple-itemtypes.html: Removed.
+        * fast/dom/MicroData/item-not-attached-to-domtree-expected.txt: Removed.
+        * fast/dom/MicroData/item-not-attached-to-domtree.html: Removed.
+        * fast/dom/MicroData/item-with-itemprop-attr-expected.txt: Removed.
+        * fast/dom/MicroData/item-with-itemprop-attr.html: Removed.
+        * fast/dom/MicroData/item-with-itemref-pointing-to-itself-expected.txt: Removed.
+        * fast/dom/MicroData/item-with-itemref-pointing-to-itself.html: Removed.
+        * fast/dom/MicroData/itemid-attribute-test-001-expected.txt: Removed.
+        * fast/dom/MicroData/itemid-attribute-test-001.html: Removed.
+        * fast/dom/MicroData/itemid-attribute-test-expected.txt: Removed.
+        * fast/dom/MicroData/itemid-attribute-test.html: Removed.
+        * fast/dom/MicroData/itemid-must-see-resolved-url-expected.txt: Removed.
+        * fast/dom/MicroData/itemid-must-see-resolved-url.html: Removed.
+        * fast/dom/MicroData/itemprop-add-remove-tokens-expected.txt: Removed.
+        * fast/dom/MicroData/itemprop-add-remove-tokens.html: Removed.
+        * fast/dom/MicroData/itemprop-for-an-element-must-be-correct-expected.txt: Removed.
+        * fast/dom/MicroData/itemprop-for-an-element-must-be-correct.html: Removed.
+        * fast/dom/MicroData/itemprop-must-be-read-only-expected.txt: Removed.
+        * fast/dom/MicroData/itemprop-must-be-read-only.html: Removed.
+        * fast/dom/MicroData/itemprop-names-override-builtin-properties-expected.txt: Removed.
+        * fast/dom/MicroData/itemprop-names-override-builtin-properties.html: Removed.
+        * fast/dom/MicroData/itemprop-reflected-by-itemProp-property-expected.txt: Removed.
+        * fast/dom/MicroData/itemprop-reflected-by-itemProp-property.html: Removed.
+        * fast/dom/MicroData/itemref-add-remove-tokens-expected.txt: Removed.
+        * fast/dom/MicroData/itemref-add-remove-tokens.html: Removed.
+        * fast/dom/MicroData/itemref-attribute-reflected-by-itemRef-property-expected.txt: Removed.
+        * fast/dom/MicroData/itemref-attribute-reflected-by-itemRef-property.html: Removed.
+        * fast/dom/MicroData/itemref-for-an-element-must-be-correct-expected.txt: Removed.
+        * fast/dom/MicroData/itemref-for-an-element-must-be-correct.html: Removed.
+        * fast/dom/MicroData/itemref-must-be-read-only-expected.txt: Removed.
+        * fast/dom/MicroData/itemref-must-be-read-only.html: Removed.
+        * fast/dom/MicroData/itemref-pointing-to-root-node-expected.txt: Removed.
+        * fast/dom/MicroData/itemref-pointing-to-root-node.html: Removed.
+        * fast/dom/MicroData/itemref-refers-first-element-with-given-id-expected.txt: Removed.
+        * fast/dom/MicroData/itemref-refers-first-element-with-given-id.html: Removed.
+        * fast/dom/MicroData/itemscope-attribute-test-expected.txt: Removed.
+        * fast/dom/MicroData/itemscope-attribute-test.html: Removed.
+        * fast/dom/MicroData/itemscope-must-be-read-write-expected.txt: Removed.
+        * fast/dom/MicroData/itemscope-must-be-read-write.html: Removed.
+        * fast/dom/MicroData/itemtype-add-remove-tokens-expected.txt: Removed.
+        * fast/dom/MicroData/itemtype-add-remove-tokens.html: Removed.
+        * fast/dom/MicroData/itemtype-attribute-test-expected.txt: Removed.
+        * fast/dom/MicroData/itemtype-attribute-test.html: Removed.
+        * fast/dom/MicroData/itemvalue-reflects-data-attr-on-object-element-expected.txt: Removed.
+        * fast/dom/MicroData/itemvalue-reflects-data-attr-on-object-element.html: Removed.
+        * fast/dom/MicroData/itemvalue-reflects-href-attr-expected.txt: Removed.
+        * fast/dom/MicroData/itemvalue-reflects-href-attr.html: Removed.
+        * fast/dom/MicroData/itemvalue-reflects-src-attribute-on-img-element-expected.txt: Removed.
+        * fast/dom/MicroData/itemvalue-reflects-src-attribute-on-img-element.html: Removed.
+        * fast/dom/MicroData/itemvalue-reflects-the-content-attr-on-meta-element-expected.txt: Removed.
+        * fast/dom/MicroData/itemvalue-reflects-the-content-attr-on-meta-element.html: Removed.
+        * fast/dom/MicroData/itemvalue-reflects-the-src-attr-expected.txt: Removed.
+        * fast/dom/MicroData/itemvalue-reflects-the-src-attr.html: Removed.
+        * fast/dom/MicroData/itemvalue-returns-element-itself-expected.txt: Removed.
+        * fast/dom/MicroData/itemvalue-returns-element-itself.html: Removed.
+        * fast/dom/MicroData/itemvalue-returns-null-expected.txt: Removed.
+        * fast/dom/MicroData/itemvalue-returns-null.html: Removed.
+        * fast/dom/MicroData/itemvalue-throws-excpetion-onsetting-001-expected.txt: Removed.
+        * fast/dom/MicroData/itemvalue-throws-excpetion-onsetting-001.html: Removed.
+        * fast/dom/MicroData/itemvalue-throws-excpetion-onsetting-002-expected.txt: Removed.
+        * fast/dom/MicroData/itemvalue-throws-excpetion-onsetting-002.html: Removed.
+        * fast/dom/MicroData/microdata-domtokenlist-attribute-add-remove-tokens-expected.txt: Removed.
+        * fast/dom/MicroData/microdata-domtokenlist-attribute-add-remove-tokens.html: Removed.
+        * fast/dom/MicroData/nameditem-must-be-case-sensitive-expected.txt: Removed.
+        * fast/dom/MicroData/nameditem-must-be-case-sensitive.html: Removed.
+        * fast/dom/MicroData/nameditem-must-return-correct-item-properties-expected.txt: Removed.
+        * fast/dom/MicroData/nameditem-must-return-correct-item-properties.html: Removed.
+        * fast/dom/MicroData/nameditem-returns-propertynodelist-expected.txt: Removed.
+        * fast/dom/MicroData/nameditem-returns-propertynodelist.html: Removed.
+        * fast/dom/MicroData/names-item-out-of-range-index-expected.txt: Removed.
+        * fast/dom/MicroData/names-item-out-of-range-index.html: Removed.
+        * fast/dom/MicroData/names-property-must-be-correct-expected.txt: Removed.
+        * fast/dom/MicroData/names-property-must-be-correct.html: Removed.
+        * fast/dom/MicroData/names-property-test-expected.txt: Removed.
+        * fast/dom/MicroData/names-property-test.html: Removed.
+        * fast/dom/MicroData/properties-collection-add-remove-itemref-expected.txt: Removed.
+        * fast/dom/MicroData/properties-collection-add-remove-itemref.html: Removed.
+        * fast/dom/MicroData/properties-collection-add-remove-property-expected.txt: Removed.
+        * fast/dom/MicroData/properties-collection-add-remove-property.html: Removed.
+        * fast/dom/MicroData/properties-collection-behavior-add-remove-itemscope-attr-expected.txt: Removed.
+        * fast/dom/MicroData/properties-collection-behavior-add-remove-itemscope-attr.html: Removed.
+        * fast/dom/MicroData/properties-collection-must-be-correct-expected.txt: Removed.
+        * fast/dom/MicroData/properties-collection-must-be-correct.html: Removed.
+        * fast/dom/MicroData/properties-collection-must-ignore-properties-of-nested-items-expected.txt: Removed.
+        * fast/dom/MicroData/properties-collection-must-ignore-properties-of-nested-items.html: Removed.
+        * fast/dom/MicroData/properties-collection-must-see-the-properties-added-in-itemref-expected.txt: Removed.
+        * fast/dom/MicroData/properties-collection-must-see-the-properties-added-in-itemref.html: Removed.
+        * fast/dom/MicroData/properties-collection-namedgetter-with-invalid-name-expected.txt: Removed.
+        * fast/dom/MicroData/properties-collection-namedgetter-with-invalid-name.html: Removed.
+        * fast/dom/MicroData/properties-collection-nameditem-test-expected.txt: Removed.
+        * fast/dom/MicroData/properties-collection-nameditem-test.html: Removed.
+        * fast/dom/MicroData/properties-collection-test-expected.txt: Removed.
+        * fast/dom/MicroData/properties-collection-test.html: Removed.
+        * fast/dom/MicroData/propertiescollection-crash-expected.txt: Removed.
+        * fast/dom/MicroData/propertiescollection-crash.html: Removed.
+        * fast/dom/MicroData/propertiescollection-on-changing-id-attr-expected.txt: Removed.
+        * fast/dom/MicroData/propertiescollection-on-changing-id-attr.html: Removed.
+        * fast/dom/MicroData/propertynodelist-add-remove-itemprop-tokens-expected.txt: Removed.
+        * fast/dom/MicroData/propertynodelist-add-remove-itemprop-tokens.html: Removed.
+        * fast/dom/MicroData/propertynodelist-add-remove-itemref-tokens-expected.txt: Removed.
+        * fast/dom/MicroData/propertynodelist-add-remove-itemref-tokens.html: Removed.
+        * fast/dom/MicroData/propertynodelist-crash-expected.txt: Removed.
+        * fast/dom/MicroData/propertynodelist-crash.html: Removed.
+        * fast/dom/MicroData/propertynodelist-getvalues-array-values-obtained-from-itemvalue-of-each-element-expected.txt: Removed.
+        * fast/dom/MicroData/propertynodelist-getvalues-array-values-obtained-from-itemvalue-of-each-element.html: Removed.
+        * fast/dom/MicroData/propertynodelist-getvalues-test-expected.txt: Removed.
+        * fast/dom/MicroData/propertynodelist-getvalues-test.html: Removed.
+        * fast/dom/MicroData/propertynodelist-test-add-remove-element-expected.txt: Removed.
+        * fast/dom/MicroData/propertynodelist-test-add-remove-element.html: Removed.
+        * fast/dom/MicroData/resources: Removed.
+        * fast/dom/MicroData/resources/microdata-common.js: Removed.
+
+2013-08-06  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Shapes] New positioning model: scripted shape-margin tests
+        https://bugs.webkit.org/show_bug.cgi?id=119491
+
+        Update some of the shape-margin tests to work with the new positioning model. Floats
+        that specify shape-outside are now positioned according to their margin box, not the
+        bounding box of the shape-outside shape. The tests have been revised to reflect the
+        change.
+
+        Reviewed by Alexandru Chiculita.
+
+        * TestExpectations:
+        * fast/shapes/shape-outside-floats/shape-outside-floats-diamond-margin-polygon.html:
+        * fast/shapes/shape-outside-floats/shape-outside-floats-ellipse-margin-bottom.html:
+        * fast/shapes/shape-outside-floats/shape-outside-floats-ellipse-margin-left.html:
+        * fast/shapes/shape-outside-floats/shape-outside-floats-ellipse-margin-right.html:
+
+2013-08-06  Oliver Hunt  <oliver@apple.com>
+
+        Delay Arguments creation in strict mode
+        https://bugs.webkit.org/show_bug.cgi?id=119505
+
+        Reviewed by Geoffrey Garen.
+
+        Add performance testcase for lazy creation of arguments in strict mode
+
+        * fast/js/regress/delay-tear-off-arguments-strictmode-expected.txt: Added.
+        * fast/js/regress/delay-tear-off-arguments-strictmode.html: Added.
+        * fast/js/regress/script-tests/delay-tear-off-arguments-strictmode.js: Added.
+        (bar):
+
+2013-08-06  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] New positioning model: support for shape-margin
+        https://bugs.webkit.org/show_bug.cgi?id=118088
+
+        Reviewed by Alexandru Chiculita.
+
+        Update simple shape-margin tests to work with new positioning model.
+        Also move them to the CSSWG's repo.
+
+        * TestExpectations: Remove replaced tests.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-shape-margin-000-expected.html: Renamed from LayoutTests/fast/shapes/shape-outside-floats/shape-outside-floats-left-margin-polygon-expected.html.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-shape-margin-000.html: Renamed from LayoutTests/fast/shapes/shape-outside-floats/shape-outside-floats-left-margin-polygon.html.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-shape-margin-001-expected.html: Renamed from LayoutTests/fast/shapes/shape-outside-floats/shape-outside-floats-right-margin-polygon-expected.html.
+        * csswg/submitted/shapes/shape-outside/shape-outside-floats-shape-margin-001.html: Renamed from LayoutTests/fast/shapes/shape-outside-floats/shape-outside-floats-right-margin-polygon.html.
+
+2013-08-05  Rob Buis  <rwlbuis@webkit.org>
+
+        SVG stroke-dasharray is not animatable
+        https://bugs.webkit.org/show_bug.cgi?id=118574
+
+        Reviewed by Dirk Schulze.
+
+        Add test for animating stroke-dasharray in addition to the original SVG tests.
+
+        * transitions/svg-transitions-expected.txt:
+        * transitions/svg-transitions.html:
+
+2013-08-06  Sergio Villar Senin  <svillar@igalia.com>
+
+        [CSS Grid Layout] Allow defining named grid lines on the grid element
+        https://bugs.webkit.org/show_bug.cgi?id=118255
+
+        Reviewed by Andreas Kling.
+
+        From Blink r149798 by <jchaffraix@chromium.org>
+
+        * fast/css-grid-layout/named-grid-line-get-set-expected.txt: Added.
+        * fast/css-grid-layout/named-grid-line-get-set.html: Added.
+
 2013-06-26  Sergio Villar Senin  <svillar@igalia.com>
 
         [CSS Grid Layout] Add support for parsing <grid-line> that includes a 'span'

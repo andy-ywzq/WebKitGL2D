@@ -436,8 +436,8 @@ private:
     virtual bool childShouldCreateRenderer(const NodeRenderingContext&) const OVERRIDE;
     virtual InsertionNotificationRequest insertedInto(ContainerNode*) OVERRIDE;
     virtual void removedFrom(ContainerNode*) OVERRIDE;
-    virtual void didRecalcStyle(StyleChange);
-    
+    virtual void didRecalcStyle(Style::Change);
+
     virtual void defaultEventHandler(Event*);
 
     virtual void didBecomeFullscreenElement();
@@ -606,11 +606,6 @@ private:
     void changeNetworkStateFromLoadingToIdle();
 
     void removeBehaviorsRestrictionsAfterFirstUserGesture();
-
-#if ENABLE(MICRODATA)
-    virtual String itemValueText() const;
-    virtual void setItemValueText(const String&, ExceptionCode&);
-#endif
 
     void updateMediaController();
     bool isBlocked() const;

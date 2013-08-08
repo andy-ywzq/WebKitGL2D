@@ -245,6 +245,10 @@
 #define ENABLE_VIEW_MODE_CSS_MEDIA 0
 #endif
 
+#if !defined(ENABLE_WEBGL)
+#define ENABLE_WEBGL 1
+#endif
+
 #endif /* PLATFORM(WIN_CAIRO) */
 
 /* --------- NIX port (Unix) --------- */
@@ -615,10 +619,6 @@
 
 #if !defined(ENABLE_MHTML)
 #define ENABLE_MHTML 0
-#endif
-
-#if !defined(ENABLE_MICRODATA)
-#define ENABLE_MICRODATA 0
 #endif
 
 #if !defined(ENABLE_MOUSE_CURSOR_SCALE)

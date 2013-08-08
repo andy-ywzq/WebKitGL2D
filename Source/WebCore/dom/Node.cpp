@@ -137,11 +137,6 @@
 #include <runtime/VM.h>
 #include <runtime/Operations.h>
 
-#if ENABLE(MICRODATA)
-#include "HTMLPropertiesCollection.h"
-#include "PropertyNodeList.h"
-#endif
-
 using namespace std;
 
 namespace WebCore {
@@ -211,8 +206,8 @@ void Node::dumpStatistics()
                     attributes += elementData->length();
                     ++elementsWithAttributeStorage;
                     for (unsigned i = 0; i < elementData->length(); ++i) {
-                        Attribute* attr = elementData->attributeItem(i);
-                        if (attr->attr())
+                        Attribute& attr = elementData->attributeAt(i);
+                        if (attr.attr())
                             ++attributesWithAttr;
                     }
                 }
@@ -323,68 +318,6 @@ void Node::stopIgnoringLeaks()
 #ifndef NDEBUG
     shouldIgnoreLeaks = false;
 #endif
-}
-
-Node::StyleChange Node::diff(const RenderStyle* s1, const RenderStyle* s2, Document* doc)
-{
-    StyleChange ch = NoInherit;
-    EDisplay display1 = s1 ? s1->display() : NONE;
-    bool fl1 = s1 && s1->hasPseudoStyle(FIRST_LETTER);
-    EDisplay display2 = s2 ? s2->display() : NONE;
-    bool fl2 = s2 && s2->hasPseudoStyle(FIRST_LETTER);
-    
-    // We just detach if a renderer acquires or loses a column-span, since spanning elements
-    // typically won't contain much content.
-    bool colSpan1 = s1 && s1->columnSpan();
-    bool colSpan2 = s2 && s2->columnSpan();
-    
-    bool specifiesColumns1 = s1 && (!s1->hasAutoColumnCount() || !s1->hasAutoColumnWidth());
-    bool specifiesColumns2 = s2 && (!s2->hasAutoColumnCount() || !s2->hasAutoColumnWidth());
-
-    if (display1 != display2 || fl1 != fl2 || colSpan1 != colSpan2 
-        || (specifiesColumns1 != specifiesColumns2 && doc->settings()->regionBasedColumnsEnabled())
-        || (s1 && s2 && !s1->contentDataEquivalent(s2)))
-        ch = Detach;
-    else if (!s1 || !s2)
-        ch = Inherit;
-    else if (*s1 == *s2)
-        ch = NoChange;
-    else if (s1->inheritedNotEqual(s2))
-        ch = Inherit;
-    else if (s1->hasExplicitlyInheritedProperties() || s2->hasExplicitlyInheritedProperties())
-        ch = Inherit;
-
-    // If the pseudoStyles have changed, we want any StyleChange that is not NoChange
-    // because setStyle will do the right thing with anything else.
-    if (ch == NoChange && s1->hasAnyPublicPseudoStyles()) {
-        for (PseudoId pseudoId = FIRST_PUBLIC_PSEUDOID; ch == NoChange && pseudoId < FIRST_INTERNAL_PSEUDOID; pseudoId = static_cast<PseudoId>(pseudoId + 1)) {
-            if (s1->hasPseudoStyle(pseudoId)) {
-                RenderStyle* ps2 = s2->getCachedPseudoStyle(pseudoId);
-                if (!ps2)
-                    ch = NoInherit;
-                else {
-                    RenderStyle* ps1 = s1->getCachedPseudoStyle(pseudoId);
-                    ch = ps1 && *ps1 == *ps2 ? NoChange : NoInherit;
-                }
-            }
-        }
-    }
-
-    // When text-combine property has been changed, we need to prepare a separate renderer object.
-    // When text-combine is on, we use RenderCombineText, otherwise RenderText.
-    // https://bugs.webkit.org/show_bug.cgi?id=55069
-    if ((s1 && s2) && (s1->hasTextCombine() != s2->hasTextCombine()))
-        ch = Detach;
-
-    // We need to reattach the node, so that it is moved to the correct RenderFlowThread.
-    if ((s1 && s2) && (s1->flowThread() != s2->flowThread()))
-        ch = Detach;
-
-    // When the region thread has changed, we need to prepare a separate render region object.
-    if ((s1 && s2) && (s1->regionThread() != s2->regionThread()))
-        ch = Detach;
-
-    return ch;
 }
 
 void Node::trackForDebugging()
@@ -1373,10 +1306,10 @@ bool Node::isDefaultNamespace(const AtomicString& namespaceURIMaybeEmpty) const
 
             if (elem->hasAttributes()) {
                 for (unsigned i = 0; i < elem->attributeCount(); i++) {
-                    const Attribute* attr = elem->attributeItem(i);
+                    const Attribute& attribute = elem->attributeAt(i);
                     
-                    if (attr->localName() == xmlnsAtom)
-                        return attr->value() == namespaceURI;
+                    if (attribute.localName() == xmlnsAtom)
+                        return attribute.value() == namespaceURI;
                 }
             }
 
@@ -1457,16 +1390,17 @@ String Node::lookupNamespaceURI(const String &prefix) const
             
             if (elem->hasAttributes()) {
                 for (unsigned i = 0; i < elem->attributeCount(); i++) {
-                    const Attribute* attr = elem->attributeItem(i);
+                    const Attribute& attribute = elem->attributeAt(i);
                     
-                    if (attr->prefix() == xmlnsAtom && attr->localName() == prefix) {
-                        if (!attr->value().isEmpty())
-                            return attr->value();
+                    if (attribute.prefix() == xmlnsAtom && attribute.localName() == prefix) {
+                        if (!attribute.value().isEmpty())
+                            return attribute.value();
                         
                         return String();
-                    } else if (attr->localName() == xmlnsAtom && prefix.isNull()) {
-                        if (!attr->value().isEmpty())
-                            return attr->value();
+                    }
+                    if (attribute.localName() == xmlnsAtom && prefix.isNull()) {
+                        if (!attribute.value().isEmpty())
+                            return attribute.value();
                         
                         return String();
                     }
@@ -1512,11 +1446,11 @@ String Node::lookupNamespacePrefix(const AtomicString &_namespaceURI, const Elem
     const Element* thisElement = toElement(this);
     if (thisElement->hasAttributes()) {
         for (unsigned i = 0; i < thisElement->attributeCount(); i++) {
-            const Attribute* attr = thisElement->attributeItem(i);
+            const Attribute& attribute = thisElement->attributeAt(i);
             
-            if (attr->prefix() == xmlnsAtom && attr->value() == _namespaceURI
-                    && originalElement->lookupNamespaceURI(attr->localName()) == _namespaceURI)
-                return attr->localName();
+            if (attribute.prefix() == xmlnsAtom && attribute.value() == _namespaceURI
+                && originalElement->lookupNamespaceURI(attribute.localName()) == _namespaceURI)
+                return attribute.localName();
         }
     }
     
@@ -1671,10 +1605,10 @@ unsigned short Node::compareDocumentPosition(Node* otherNode)
             // the same nodeType are inserted into or removed from the direct container. This would be the case, for example, 
             // when comparing two attributes of the same element, and inserting or removing additional attributes might change 
             // the order between existing attributes.
-            const Attribute* attribute = owner1->attributeItem(i);
-            if (attr1->qualifiedName() == attribute->name())
+            const Attribute& attribute = owner1->attributeAt(i);
+            if (attr1->qualifiedName() == attribute.name())
                 return DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC | DOCUMENT_POSITION_FOLLOWING;
-            if (attr2->qualifiedName() == attribute->name())
+            if (attr2->qualifiedName() == attribute.name())
                 return DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC | DOCUMENT_POSITION_PRECEDING;
         }
         
@@ -2406,43 +2340,6 @@ bool Node::willRespondToTouchEvents()
     return false;
 #endif
 }
-
-#if ENABLE(MICRODATA)
-DOMSettableTokenList* Node::itemProp()
-{
-    return ensureRareData()->ensureMicroDataTokenLists()->itemProp(this);
-}
-
-void Node::setItemProp(const String& value)
-{
-    ensureRareData()->ensureMicroDataTokenLists()->itemProp(this)->setValueInternal(value);
-}
-
-DOMSettableTokenList* Node::itemRef()
-{
-    return ensureRareData()->ensureMicroDataTokenLists()->itemRef(this);
-}
-
-void Node::setItemRef(const String& value)
-{
-    ensureRareData()->ensureMicroDataTokenLists()->itemRef(this)->setValueInternal(value);
-}
-
-DOMSettableTokenList* Node::itemType()
-{
-    return ensureRareData()->ensureMicroDataTokenLists()->itemType(this);
-}
-
-void Node::setItemType(const String& value)
-{
-    ensureRareData()->ensureMicroDataTokenLists()->itemType(this)->setValueInternal(value);
-}
-
-PassRefPtr<PropertyNodeList> Node::propertyNodeList(const String& name)
-{
-    return ensureRareData()->ensureNodeLists()->addCacheWithName<PropertyNodeList>(this, PropertyNodeListType, name);
-}
-#endif
 
 // This is here for inlining
 inline void TreeScope::removedLastRefToScope()

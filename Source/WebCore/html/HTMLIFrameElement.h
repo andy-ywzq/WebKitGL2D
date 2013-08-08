@@ -44,12 +44,7 @@ private:
     virtual bool rendererIsNeeded(const NodeRenderingContext&);
     virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
 
-    virtual void didRecalcStyle(StyleChange) OVERRIDE;
-
-#if ENABLE(MICRODATA)
-    virtual String itemValueText() const OVERRIDE;
-    virtual void setItemValueText(const String&, ExceptionCode&) OVERRIDE;
-#endif
+    virtual void didRecalcStyle(Style::Change) OVERRIDE;
 };
 
 inline HTMLIFrameElement* toHTMLIFrameElement(Node* node)

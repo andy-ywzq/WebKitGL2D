@@ -651,7 +651,7 @@ void HTMLMediaElement::attach(const AttachContext& context)
 #endif
 }
 
-void HTMLMediaElement::didRecalcStyle(StyleChange)
+void HTMLMediaElement::didRecalcStyle(Style::Change)
 {
     if (renderer())
         renderer()->updateFromElement();
@@ -4816,18 +4816,6 @@ AudioSourceProvider* HTMLMediaElement::audioSourceProvider()
         return m_player->audioSourceProvider();
 
     return 0;
-}
-#endif
-
-#if ENABLE(MICRODATA)
-String HTMLMediaElement::itemValueText() const
-{
-    return getURLAttribute(srcAttr);
-}
-
-void HTMLMediaElement::setItemValueText(const String& value, ExceptionCode&)
-{
-    setAttribute(srcAttr, value);
 }
 #endif
 
