@@ -62,6 +62,7 @@ public:
 
     float scaleToFitContents();
     void adjustScaleToFitContents();
+    void setAutoScaleToFitContents(bool);
 protected:
     // WebKit::WebView
     virtual void didChangeContentScaleFactor(float) OVERRIDE;
@@ -101,6 +102,7 @@ private:
     double m_scaleAfterTransition;
     bool m_loadIsBackForward;
     bool m_adjustScaleAfterFirstMainFrameRender;
+    bool m_autoScaleToFitContents;
 
     friend class WebView;
 };

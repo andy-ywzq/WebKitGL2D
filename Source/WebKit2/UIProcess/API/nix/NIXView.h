@@ -84,6 +84,8 @@ typedef struct NIXViewClient NIXViewClient;
 
 enum { kNIXViewClientCurrentVersion = 0 };
 
+WK_EXPORT void NIXViewSetAutoScaleToFitContents(WKViewRef, bool);
+
 WK_EXPORT float NIXViewGetScaleToFitContents(WKViewRef);
 
 WK_EXPORT void NIXViewScaleToFitContents(WKViewRef);

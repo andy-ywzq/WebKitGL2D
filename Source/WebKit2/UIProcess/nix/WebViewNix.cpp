@@ -63,6 +63,7 @@ WebViewNix::WebViewNix(WebContext* context, WebPageGroup* pageGroup)
     , m_scaleAfterTransition(1.0)
     , m_loadIsBackForward(false)
     , m_adjustScaleAfterFirstMainFrameRender(false)
+    , m_autoScaleToFitContents(true)
 {
 }
 
@@ -232,14 +233,15 @@ void WebViewNix::notifyLoadIsBackForward()
 void WebViewNix::didStartedMainFrameLayout()
 {
     if (m_loadIsBackForward || m_pendingScaleOrPositionChange) {
-        if (!m_loadIsBackForward && m_page->useFixedLayout())
+        if (m_autoScaleToFitContents && !m_loadIsBackForward && m_page->useFixedLayout())
             m_adjustScaleAfterFirstMainFrameRender = true;
 
         m_loadIsBackForward = false;
         return;
     }
 
-    adjustScaleToFitContents();
+    if (m_autoScaleToFitContents)
+        adjustScaleToFitContents();
 }
 
 void WebViewNix::adjustScaleToFitContents()
@@ -251,6 +253,13 @@ void WebViewNix::adjustScaleToFitContents()
 float WebViewNix::scaleToFitContents()
 {
     return size().width() / (m_contentsSize.width() * deviceScaleFactor());
+}
+
+void WebViewNix::setAutoScaleToFitContents(bool enable)
+{
+    m_autoScaleToFitContents = enable;
+    if (!m_autoScaleToFitContents)
+        m_adjustScaleAfterFirstMainFrameRender = false;
 }
 
 } // namespace WebKit
