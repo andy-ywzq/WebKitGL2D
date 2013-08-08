@@ -2770,6 +2770,7 @@ void RenderBlock::simplifiedNormalFlowLayout()
         }
 
         // FIXME: Glyph overflow will get lost in this case, but not really a big deal.
+        // FIXME: Find a way to invalidate the knownToHaveNoOverflow flag on the InlineBoxes.
         GlyphOverflowAndFallbackFontsMap textBoxDataMap;                  
         for (ListHashSet<RootInlineBox*>::const_iterator it = lineBoxes.begin(); it != lineBoxes.end(); ++it) {
             RootInlineBox* box = *it;
@@ -2796,6 +2797,11 @@ bool RenderBlock::simplifiedLayout()
     // Lay out positioned descendants or objects that just need to recompute overflow.
     if (needsSimplifiedNormalFlowLayout())
         simplifiedNormalFlowLayout();
+
+    // Make sure a forced break is applied after the content if we are a flow thread in a simplified layout.
+    // This ensures the size information is correctly computed for the last auto-height region receiving content.
+    if (isRenderFlowThread())
+        toRenderFlowThread(this)->applyBreakAfterContent(clientLogicalBottom());
 
     // Lay out our positioned objects if our positioned child bit is set.
     // Also, if an absolute position element inside a relative positioned container moves, and the absolute element has a fixed position
@@ -6748,7 +6754,7 @@ void RenderBlock::updateFirstLetterStyle(RenderObject* firstLetterBlock, RenderO
     RenderStyle* pseudoStyle = styleForFirstLetter(firstLetterBlock, firstLetterContainer);
     ASSERT(firstLetter->isFloating() || firstLetter->isInline());
 
-    if (Node::diff(firstLetter->style(), pseudoStyle, document()) == Node::Detach) {
+    if (Style::determineChange(firstLetter->style(), pseudoStyle, document()->settings()) == Style::Detach) {
         // The first-letter renderer needs to be replaced. Create a new renderer of the right type.
         RenderBoxModelObject* newFirstLetter;
         if (pseudoStyle->display() == INLINE)

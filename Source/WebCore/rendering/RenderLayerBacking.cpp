@@ -918,7 +918,6 @@ void RenderLayerBacking::updateInternalHierarchy()
     if (m_backgroundLayer)
         m_contentsContainmentLayer->addChild(m_backgroundLayer.get());
 
-    m_graphicsLayer->removeFromParent();
     if (m_contentsContainmentLayer)
         m_contentsContainmentLayer->addChild(m_graphicsLayer.get());
     else if (m_ancestorClippingLayer)
@@ -1705,6 +1704,9 @@ bool RenderLayerBacking::isDirectlyCompositedImage() const
 
         Image* image = cachedImage->imageForRenderer(imageRenderer);
         if (!image->isBitmapImage())
+            return false;
+
+        if (image->orientationForCurrentFrame() != DefaultImageOrientation)
             return false;
 
         return m_graphicsLayer->shouldDirectlyCompositeImage(image);

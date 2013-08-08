@@ -222,13 +222,16 @@ namespace JSC {
         static void addStackTraceIfNecessary(CallFrame*, JSValue error);
         JSString* stackTraceAsString(ExecState*, Vector<StackFrame>);
 
+        static EncodedJSValue JSC_HOST_CALL constructWithErrorConstructor(ExecState*);
+        static EncodedJSValue JSC_HOST_CALL callErrorConstructor(ExecState*);
+        static EncodedJSValue JSC_HOST_CALL constructWithNativeErrorConstructor(ExecState*);
+        static EncodedJSValue JSC_HOST_CALL callNativeErrorConstructor(ExecState*);
+
         void dumpSampleData(ExecState* exec);
         void startSampling();
         void stopSampling();
 
         JS_EXPORT_PRIVATE void dumpCallFrame(CallFrame*);
-
-        JS_EXPORT_PRIVATE void getStackTrace(Vector<StackFrame>& results, size_t maxStackSize = std::numeric_limits<size_t>::max());
 
     private:
         enum ExecutionFlag { Normal, InitializeAndReturn };
@@ -237,6 +240,7 @@ namespace JSC {
         void endRepeatCall(CallFrameClosure&);
         JSValue execute(CallFrameClosure&);
 
+        void getStackTrace(Vector<StackFrame>& results, size_t maxStackSize = std::numeric_limits<size_t>::max());
         NEVER_INLINE bool unwindCallFrame(StackIterator&, JSValue);
 
         void dumpRegisters(CallFrame*);

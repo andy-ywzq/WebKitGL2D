@@ -113,12 +113,6 @@ bool ElementShadow::needsStyleRecalc() const
     return shadowRoot()->needsStyleRecalc();
 }
 
-void ElementShadow::recalcStyle(Node::StyleChange change)
-{
-    if (ShadowRoot* root = shadowRoot())
-        root->recalcStyle(change);
-}
-
 void ElementShadow::removeAllEventListeners()
 {
     if (ShadowRoot* root = shadowRoot()) {

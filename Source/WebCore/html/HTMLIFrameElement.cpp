@@ -106,25 +106,13 @@ bool HTMLIFrameElement::shouldDisplaySeamlessly() const
     return contentDocument() && contentDocument()->shouldDisplaySeamlesslyWithParent();
 }
 
-void HTMLIFrameElement::didRecalcStyle(StyleChange styleChange)
+void HTMLIFrameElement::didRecalcStyle(Style::Change styleChange)
 {
     if (!shouldDisplaySeamlessly())
         return;
     Document* childDocument = contentDocument();
-    if (styleChange >= Inherit || childDocument->childNeedsStyleRecalc() || childDocument->needsStyleRecalc())
-        contentDocument()->recalcStyle(styleChange);
+    if (styleChange >= Style::Inherit || childDocument->childNeedsStyleRecalc() || childDocument->needsStyleRecalc())
+        contentDocument()->recalcStyle(styleChange == Style::Detach ? Style::Force : styleChange);
 }
-
-#if ENABLE(MICRODATA)
-String HTMLIFrameElement::itemValueText() const
-{
-    return getURLAttribute(srcAttr);
-}
-
-void HTMLIFrameElement::setItemValueText(const String& value, ExceptionCode&)
-{
-    setAttribute(srcAttr, value);
-}
-#endif
 
 }

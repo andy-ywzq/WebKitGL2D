@@ -1,3 +1,1006 @@
+2013-08-08  Andreas Kling  <akling@apple.com>
+
+        Inserting multiple rules into an empty style sheet should avoid style recalc if possible.
+        <http://webkit.org/b/119568>
+
+        Reviewed by Antti Koivisto.
+
+        As a follow-up to <http://webkit.org/b/119475>, where I added a hack for inserting
+        a single rule into an empty style sheet, this broadens the optimization to support
+        any number of rules.
+
+        This optimizes the scenario where a style sheet is added to the DOM and then populated
+        rule-by-rule via CSSOM insertRule()/addRule() calls. Previously we'd do a full style
+        recalc for this case, but now we'll treat it the same as a full sheet added at once.
+
+        * css/CSSStyleSheet.h:
+        * css/CSSStyleSheet.cpp:
+        (WebCore::CSSStyleSheet::willMutateRules):
+
+            Made willMutateRules() return whether the style sheet contents were cloned by the
+            copy-on-write mechanism.
+
+        * dom/Document.h:
+        (WebCore::CSSStyleSheet::didMutateRules):
+        (WebCore::CSSStyleSheet::insertRule):
+
+            Replaced the InsertionIntoEmptySheet mutation type by a general RuleInsertion.
+            The mutation callback checks if we're inserting into a rule that's not (yet) part
+            of the document's active sheet set. In that case, we defer doing the style sheet
+            until all the insertions are done (or something forces us to style+layout.)
+
+            Note that this optimization only happens if the style sheet had a single client.
+            Shared style sheets that just got cloned before mutation may have pointers into
+            them from the Document's StyleResolver, so we're forced to do an immediate sheet
+            update in that case.
+
+        (WebCore::CSSStyleSheet::RuleMutationScope::RuleMutationScope):
+        (WebCore::CSSStyleSheet::RuleMutationScope::~RuleMutationScope):
+
+            Moved these out-of-line.
+
+        (WebCore::CSSStyleSheet::didMutateRuleFromCSSStyleDeclaration):
+        * css/PropertySetCSSStyleDeclaration.cpp:
+        (WebCore::StyleRuleCSSStyleDeclaration::didMutate):
+
+            Made a separate mutation callback for CSSStyleDeclaration since its needs are
+            so simple compared to the mutation callback from CSSStyleSheet. Seems better
+            than adding yet another mode to the enum.
+
+        * dom/Document.cpp:
+        (WebCore::Document::Document):
+        (WebCore::Document::recalcStyle):
+        (WebCore::Document::styleResolverChanged):
+        (WebCore::Document::optimizedStyleSheetUpdateTimerFired):
+        (WebCore::Document::scheduleOptimizedStyleSheetUpdate):
+
+            Added mechanism to defer doing a RecalcStyleIfNeeded.
+
+        (WebCore::Document::updateStyleIfNeeded):
+
+            Synchronize the optimized style sheet update if there's one scheduled.
+            This ensures that stuff like layout-dependent property access won't operate
+            on stale style.
+
+        * dom/DocumentStyleSheetCollection.h:
+        (WebCore::DocumentStyleSheetCollection::pendingUpdateType):
+        (WebCore::DocumentStyleSheetCollection::setPendingUpdateType):
+        (WebCore::DocumentStyleSheetCollection::flushPendingUpdates):
+        * dom/DocumentStyleSheetCollection.cpp:
+        (WebCore::DocumentStyleSheetCollection::DocumentStyleSheetCollection):
+        (WebCore::DocumentStyleSheetCollection::updateActiveStyleSheets):
+
+            Have DSSC track the kind of style sheet update it needs to do (instead of just
+            a boolean "needs update.") This is used by Document::recalcStyle() to make sure
+            the right kind of update happens if there's one scheduled.
+
+        (WebCore::DocumentStyleSheetCollection::activeStyleSheetsContains):
+
+            Added helper to check if a CSSStyleSheet is part of the active set.
+
+2013-08-08  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [WK1] NPStream::headers not initialized
+        https://bugs.webkit.org/show_bug.cgi?id=119574
+
+        Reviewed by Alexey Proskuryakov.
+
+        Initialize the header field. According to user feedback that should solve some
+        cases of random crashes when loading plugins on Mac and Windows.
+
+        * plugins/PluginStream.cpp:
+        (WebCore::PluginStream::PluginStream):
+
+2013-08-08  Andreas Kling  <akling@apple.com>
+
+        Element: Modernize attribute storage accessor functions.
+        <http://webkit.org/b/119578>
+
+        Reviewed by Antti Koivisto.
+
+        Rename these functions to more WebKit-style names.
+
+        - const Attribute* attributeItem(index) => const Attribute& attributeAt(index)
+        - const Attribute* getAttributeItem(name) => const Attribute* findAttributeByName(name)
+        - unsigned getAttributeItemIndex(name) => unsigned findAttributeIndexByName(name)
+
+        Note that attributeAt() now returns a reference instead of a pointer. That's right.
+
+        * css/SelectorChecker.cpp:
+        (WebCore::attributeValueMatches):
+        (WebCore::anyAttributeMatches):
+        * css/SelectorChecker.h:
+        (WebCore::SelectorChecker::checkExactAttribute):
+        * dom/Attr.cpp:
+        (WebCore::Attr::elementAttribute):
+        * dom/DatasetDOMStringMap.cpp:
+        (WebCore::DatasetDOMStringMap::getNames):
+        (WebCore::DatasetDOMStringMap::item):
+        (WebCore::DatasetDOMStringMap::contains):
+        * dom/Element.cpp:
+        (WebCore::Element::detachAttribute):
+        (WebCore::Element::removeAttribute):
+        (WebCore::Element::getAttribute):
+        (WebCore::Element::setAttribute):
+        (WebCore::Element::setSynchronizedLazyAttribute):
+        (WebCore::Element::setAttributeInternal):
+        (WebCore::Element::setAttributeNode):
+        (WebCore::Element::removeAttributeNode):
+        (WebCore::Element::removeAttributeInternal):
+        (WebCore::Element::getAttributeNode):
+        (WebCore::Element::getAttributeNodeNS):
+        (WebCore::Element::hasAttribute):
+        (WebCore::Element::hasAttributeNS):
+        (WebCore::Element::computeInheritedLanguage):
+        (WebCore::Element::normalizeAttributes):
+        (WebCore::Element::getURLAttribute):
+        (WebCore::Element::getNonEmptyURLAttribute):
+        (WebCore::Element::detachAllAttrNodesFromElement):
+        (WebCore::Element::cloneAttributesFromElement):
+        (WebCore::ElementData::isEquivalent):
+        (WebCore::ElementData::findAttributeIndexByNameSlowCase):
+        (WebCore::ElementData::findAttributeIndexByNameForAttributeNode):
+        (WebCore::UniqueElementData::findAttributeByName):
+        (WebCore::UniqueElementData::attributeAt):
+        * dom/Element.h:
+        (WebCore::Element::findAttributeIndexByName):
+        (WebCore::Element::fastHasAttribute):
+        (WebCore::Element::fastGetAttribute):
+        (WebCore::Element::attributeAt):
+        (WebCore::Element::findAttributeByName):
+        (WebCore::ElementData::findAttributeByName):
+        (WebCore::ElementData::findAttributeIndexByName):
+        (WebCore::ElementData::attributeAt):
+        * dom/NamedNodeMap.cpp:
+        (WebCore::NamedNodeMap::removeNamedItem):
+        (WebCore::NamedNodeMap::removeNamedItemNS):
+        (WebCore::NamedNodeMap::item):
+        * dom/Node.cpp:
+        (WebCore::Node::dumpStatistics):
+        (WebCore::Node::isDefaultNamespace):
+        (WebCore::Node::lookupNamespaceURI):
+        (WebCore::Node::lookupNamespacePrefix):
+        (WebCore::Node::compareDocumentPosition):
+        * dom/StyledElement.cpp:
+        (WebCore::StyledElement::makePresentationAttributeCacheKey):
+        (WebCore::StyledElement::rebuildPresentationAttributeStyle):
+        * editing/MarkupAccumulator.cpp:
+        (WebCore::MarkupAccumulator::appendElement):
+        * editing/markup.cpp:
+        (WebCore::completeURLs):
+        (WebCore::StyledMarkupAccumulator::appendElement):
+        * html/HTMLEmbedElement.cpp:
+        (WebCore::HTMLEmbedElement::parametersForPlugin):
+        * html/HTMLInputElement.cpp:
+        (WebCore::HTMLInputElement::updateType):
+        * html/HTMLObjectElement.cpp:
+        (WebCore::HTMLObjectElement::parametersForPlugin):
+        * html/HTMLSelectElement.cpp:
+        (WebCore::HTMLSelectElement::parseAttribute):
+        * html/parser/HTMLConstructionSite.cpp:
+        (WebCore::HTMLConstructionSite::mergeAttributesFromTokenIntoElement):
+        * inspector/DOMPatchSupport.cpp:
+        (WebCore::DOMPatchSupport::innerPatchNode):
+        (WebCore::DOMPatchSupport::createDigest):
+        * inspector/InspectorDOMAgent.cpp:
+        (WebCore::InspectorDOMAgent::setAttributesAsText):
+        (WebCore::InspectorDOMAgent::performSearch):
+        (WebCore::InspectorDOMAgent::buildArrayForElementAttributes):
+        * page/PageSerializer.cpp:
+        (WebCore::isCharsetSpecifyingNode):
+        * svg/SVGStyledElement.cpp:
+        (WebCore::SVGStyledElement::getPresentationAttribute):
+        * xml/XPathFunctions.cpp:
+        (WebCore::XPath::FunLang::evaluate):
+        * xml/XPathNodeSet.cpp:
+        (WebCore::XPath::NodeSet::traversalSort):
+        * xml/XPathStep.cpp:
+        (WebCore::XPath::Step::nodesInAxis):
+        * xml/parser/XMLDocumentParserLibxml2.cpp:
+        (WebCore::XMLDocumentParser::XMLDocumentParser):
+        * xml/parser/XMLDocumentParserQt.cpp:
+        (WebCore::XMLDocumentParser::XMLDocumentParser):
+
+2013-08-08  Mark Lam  <mark.lam@apple.com>
+
+        Restoring use of StackIterator instead of Interpreter::getStacktrace().
+        https://bugs.webkit.org/show_bug.cgi?id=119575.
+
+        Reviewed by Oliver Hunt.
+
+        No new tests.
+
+        * bindings/js/ScriptCallStackFactory.cpp:
+        (WebCore::createScriptCallStack):
+
+2013-08-08  Zalan Bujtas  <zalan@apple.com>
+
+        REGRESSION (r121551) Incorrect handling of invalid media query list.
+        https://bugs.webkit.org/show_bug.cgi?id=119164
+
+        Reviewed by Antti Koivisto.
+
+        Differentiate between syntactically invalid media queries and media queries with empty expressions.
+
+        Introduce a dedicated function for valid, but empty expression queries, so that passing NULL MediaQuerySet
+        object to CSSParser::createMediaRule() can indicate invalid media query.
+
+        Test: fast/media/invalid-media-query-list.html
+
+        * css/CSSGrammar.y.in:
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::createMediaRule):
+        (WebCore::CSSParser::createEmptyMediaRule):
+        * css/CSSParser.h:
+
+2013-08-08  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Introduce toSVGMPathElement(), and use it
+        https://bugs.webkit.org/show_bug.cgi?id=119566
+
+        Reviewed by Andreas Kling.
+
+        As a step to change static_cast with toSVGXXX, static_cast<SVGMPathElement*> can
+        be changed with toSVGMPathElement().
+
+        * svg/SVGAnimateMotionElement.cpp:
+        (WebCore::SVGAnimateMotionElement::updateAnimationPath):
+        * svg/SVGMPathElement.h:
+        (WebCore::toSVGMPathElement):
+        * svg/SVGPathElement.cpp:
+        (WebCore::SVGPathElement::invalidateMPathDependencies):
+
+2013-08-08  Antti Koivisto  <antti@apple.com>
+
+        Move more style recalc code to StyleResolveTree.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=119553
+
+        Reviewed by Andreas Kling.
+
+        * css/StyleResolver.cpp:
+        * css/StyleResolver.h:
+        
+            Remove now unused StyleResolver::styleForText.
+
+        * dom/ElementShadow.cpp:
+        * dom/ElementShadow.h:
+        
+            Remove ElementShadow::recalcStyle.
+
+        * dom/ShadowRoot.cpp:
+        (WebCore::ShadowRoot::setResetStyleInheritance):
+        
+            Use Style::resolveTree instead of ElementShadow::recalcStyle.
+
+        * dom/ShadowRoot.h:
+        
+            Remove ShadowRoot::recalcStyle.
+
+        * dom/Text.cpp:
+        * dom/Text.h:
+        
+            Remove Text::recalcTextStyle.
+
+        * style/StyleResolveTree.cpp:
+        (WebCore::Style::updateTextStyle):
+        
+            Moved from Text::recalcTextStyle. Speed up by just setting the parent style on common case.
+
+        (WebCore::Style::resolveShadowTree):
+        
+            Moved from ShadowRoot::recalcStyle. 
+            Simplified to cover only cases that can occur with the current shadow DOM support.
+
+        (WebCore::Style::resolveTree):
+
+2013-08-08  Andreas Kling  <akling@apple.com>
+
+        REGRESSION(r139282): Old caret sometimes gets "stuck" (not repainted) in contenteditable elements.
+        <http://webkit.org/b/119520>
+        <rdar://problem/14658929>
+
+        Reviewed by Simon Fraser.
+
+        When computing a new caret rect, don't forget to repaint the old rect if the caret jumped
+        from one node to another.
+        We were being a little too clever, assuming that oldRect==newRect meant that no repaint was
+        necessary, but moving from (0,0) in one node to (0,0) in another would cause a ghost caret
+        in the old node.
+
+        Test: fast/repaint/caret-jump-between-nodes.html
+
+        * editing/FrameSelection.cpp:
+        (WebCore::FrameSelection::recomputeCaretRect):
+
+            Fall through all the way down to caret repaints if the selection's new anchor node is not
+            the same as m_previousCaretNode.
+
+2013-08-07  Andrei Bucur  <abucur@adobe.com>
+
+        [CSS Regions] Propagate overflow from the flow thread to the first and last region
+        https://bugs.webkit.org/show_bug.cgi?id=118526
+
+        Reviewed by David Hyatt.
+
+        The patch implements layout overflow propagation for the first and last regions. The approach
+        taken is triggering a simple layout on the regions after the named flows are laid out
+        that extracts the layout overflow from the flow thread and adds it to the regions.
+
+        The process is based on adding two new layout phases: the overflow phase and the final phase.
+        The overflow phase is set after the flow threads are laid out and it marks the regions as
+        needing to extract the overflow from the flow thread. In case there are blocks with auto overflow
+        it's possible the overflow to create scrollbars that shrink the regions. In this case the flow
+        thread is relaid out and set in the final phase, forcing the regions to recollect the layout
+        overflow. In theory this would be an N-step layout because scrollbars can force content to change
+        regions and create overflow for other blocks (and thus creating more scrollbars). For now, we are
+        limiting this to the first pass by inserting this new final layout phase.
+
+        A short description of the processing model for a document:
+        - layout the document (all the flow threads should be in the constrained layout phase after this step)
+        - reverse iterate through the flow threads and mark the regions for simplified layout (we need to
+        reverse iterate so the overflow can correctly propagate with nested regions)
+        - if the layout changes the size of a region, invalidate the flow thread and when laying it out mark
+        it as needing a new pass
+        - make a secondary pass through the flow threads that changed after scrollbars have been added and
+        recompute the overflow for their regions; mark the flow threads in the final phase (flow threads can't
+        be invalidated in the final phase)
+        - after the overflow was propagated update all the flow threads in the normal layout phase
+
+        There are some issues with the patch:
+        - the simplified layout doesn't compute correct overflow values for inline blocks
+        - the layout overflow from the flow thread doesn't take the region size into account
+
+        The first issue is not related to regions and will be fixed in a future patch. The second issue
+        will be fixed when box overflow will be region bound.
+
+        Tests: fast/regions/overflow-scrollable-1.html
+               fast/regions/overflow-scrollable-2.html
+               fast/regions/overflow-scrollable-3.html
+               fast/regions/overflow-scrollable-fit-complex.html
+               fast/regions/overflow-scrollable-fit.html
+               fast/regions/overflow-scrollable-nested.html
+
+        * rendering/FlowThreadController.cpp: Flow threads layout driver functions.
+        (WebCore::FlowThreadController::updateFlowThreadsNeedingLayout):
+        (WebCore::FlowThreadController::updateFlowThreadsIntoConstrainedPhase):
+        (WebCore::FlowThreadController::updateFlowThreadsIntoOverflowPhase):
+        (WebCore::FlowThreadController::updateFlowThreadsIntoMeasureContentPhase):
+        (WebCore::FlowThreadController::updateFlowThreadsIntoFinalPhase):
+        * rendering/FlowThreadController.h:
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::simplifiedNormalFlowLayout):
+        * rendering/RenderFlowThread.cpp:
+        (WebCore::RenderFlowThread::RenderFlowThread):
+        (WebCore::RenderFlowThread::invalidateRegions):
+        (WebCore::RenderFlowThread::validateRegions):
+        (WebCore::RenderFlowThread::layout):
+        (WebCore::RenderFlowThread::firstRegion): This getter should work even though the region chain is invalid.
+        (WebCore::RenderFlowThread::lastRegion): This getter should work even though the region chain is invalid.
+        (WebCore::RenderFlowThread::initializeRegionsComputedAutoHeight):
+        (WebCore::RenderFlowThread::markRegionsForOverflowLayoutIfNeeded): If the flow thread has no overflow do nothing.
+        (WebCore::RenderFlowThread::updateRegionsFlowThreadPortionRect):
+        (WebCore::RenderFlowThread::addForcedRegionBreak):
+        * rendering/RenderFlowThread.h:
+        * rendering/RenderMultiColumnSet.cpp:
+        (WebCore::RenderMultiColumnSet::flowThreadPortionOverflowRect):
+        * rendering/RenderRegion.cpp:
+        (WebCore::RenderRegion::pageLogicalHeight):
+        (WebCore::RenderRegion::maxPageLogicalHeight):
+        (WebCore::RenderRegion::logicalHeightOfAllFlowThreadContent):
+        (WebCore::RenderRegion::flowThreadPortionOverflowRect):
+        (WebCore::RenderRegion::overflowRectForFlowThreadPortion): Used to get the flow thread visual or layout overflow.
+        (WebCore::RenderRegion::layoutBlock):
+        (WebCore::RenderRegion::computeOverflowFromFlowThread):
+        (WebCore::RenderRegion::updateLogicalHeight):
+        * rendering/RenderRegion.h:
+        * rendering/RenderView.cpp:
+        (WebCore::RenderView::layoutContentToComputeOverflowInRegions):
+        (WebCore::RenderView::layout):
+        * rendering/RenderView.h:
+
+2013-08-07  Simon Fraser  <simon.fraser@apple.com>
+
+        Avoid spurious "all repaint" layouts when scrolling WebViews on Retina displays
+        https://bugs.webkit.org/show_bug.cgi?id=119564
+
+        Reviewed by Beth Dakin.
+
+        When scrolling WebViews on Macs with Retina displays, AppKit uses
+        device pixels for the scroll offset, so [scrollView() documentVisibleRect]
+        can return a CGRect with non-integral origin. This rect is used by layout,
+        via layoutSize(), to decide whether the view size changed, which prompts
+        a full repaint. However, FrameView gets a value which has been rounded
+        by enclosingIntRect(), which increases the height or width by 1px if the 
+        y or x offset is on a half-pixel, causing spurious full repaints.
+        
+        Fix by plumbing through platformVisibleContentSize(), which just
+        gets the size of the -documentVisibleRect.
+        
+        * page/FrameView.cpp:
+        (WebCore::FrameView::layout): Don't get layoutHeight and layoutWidth
+        separately, since that is two calls down into platformVisibleContentSize.
+        * platform/ScrollView.cpp:
+        (WebCore::ScrollView::unscaledVisibleContentSize):
+        (WebCore::ScrollView::platformVisibleContentSize):
+        * platform/ScrollView.h:
+        * platform/mac/ScrollViewMac.mm:
+        (WebCore::ScrollView::platformVisibleContentSize):
+
+2013-08-07  Simon Fraser  <simon.fraser@apple.com>
+
+        Be more aggressive about sending fake mouse events less frequently
+        https://bugs.webkit.org/show_bug.cgi?id=119563
+        <rdar://problem/14669029>
+
+        Reviewed by Tim Horton.
+
+        r109151 added code that throttles back the fake mouse events that we
+        send during scrolling, but in such a way that a page could take up to
+        100ms to handle a single mousemove, and we'd still send fake mousemove
+        events every 100ms. This could cause serious scrolling stutter.
+        
+        Fix by changing when we drop back to sending events every 250ms, rather than every
+        100ms: if the slowest mousemove takes 10ms or more (less than one frame), drop back
+        to a 250ms fake move interval.
+
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::dispatchFakeMouseMoveEventSoon):
+
+2013-08-07  Adenilson Cavalcanti  <cavalcantii@gmail.com>
+
+        [rendering] Implement PaintInfo interfaces
+        https://bugs.webkit.org/show_bug.cgi?id=119388
+
+        Reviewed by Benjamin Poulain.
+
+        In discussion in IRC, it was decided to remove this comment since implementing such change
+        would have a vast impact on rendering classes.
+
+        * rendering/PaintInfo.h:
+
+2013-08-07  Dean Jackson  <dino@apple.com>
+
+        Don't remove contents layer from its parent unless necessary
+        https://bugs.webkit.org/show_bug.cgi?id=119560
+
+        Reviewed by Simon Fraser.
+
+        RenderLayerBacking::updateInternalHierarchy() is called in some
+        instances where there doesn't need to be a complete reparenting of the
+        the m_graphicsLayer. For example, on OS X when the user changes the
+        scrollbar styles to/from always visible. We don't need to always
+        remove the graphics layer from its parent - any reparenting does that
+        automatically.
+
+        Unfortunately we can't trigger this situation in an automated test.
+
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::updateInternalHierarchy): Don't call removeFromParent().
+
+2013-08-07  Tim Horton  <timothy_horton@apple.com>
+
+        Fall out of simple image layer optimization if the image has EXIF rotation
+        https://bugs.webkit.org/show_bug.cgi?id=119535
+        <rdar://problem/14071174>
+
+        Reviewed by Simon Fraser.
+
+        Test: fast/images/exif-orientation-composited.html
+
+        * platform/graphics/BitmapImage.cpp:
+        (WebCore::BitmapImage::frameOrientationAtIndex):
+        Ensure that the frame is cached if we're requesting the orientation,
+        so we can acquire orientation information at any given time.
+
+        * platform/mac/DragImageMac.mm:
+        (WebCore::createDragImageFromImage):
+        * platform/graphics/BitmapImage.h:
+        Rename currentFrameOrientation to frameOrientationForCurrentFrame to match
+        the similarly-behaving nativeImageForCurrentFrame.
+
+        * platform/graphics/Image.h:
+        (WebCore::Image::orientationForCurrentFrame): Added. Virtual, overriden by BitmapImage.
+
+        * rendering/RenderLayerBacking.cpp:
+        (WebCore::RenderLayerBacking::isDirectlyCompositedImage):
+        If the given image has a non-default image orientation, don't use direct compositing.
+
+2013-08-07  Antti Koivisto  <antti@apple.com>
+
+        fast/frames/seamless/seamless-custom-font-pruning-crash.html asserts
+        https://bugs.webkit.org/show_bug.cgi?id=119557
+
+        Rubber-stamped by Eric Carlson.
+        
+        Pass Style::Detach style change to seamless document as Style::Force. Style::resolveTree does not expect to be called with Detach.
+
+        * html/HTMLIFrameElement.cpp:
+        (WebCore::HTMLIFrameElement::didRecalcStyle):
+
+2013-08-07  Andre Moreira Magalhaes   <andre.magalhaes@collabora.co.uk>
+
+        Disable HTTP request "Accept-Encoding:" header field on gstreamer source element to avoid receiving the wrong size when retrieving data
+        https://bugs.webkit.org/show_bug.cgi?id=115354
+
+        Reviewed by Philippe Normand.
+
+        The default value for the HTTP "Accept-Encoding:" header field in the request allows
+        compressed data to be received on requests.
+        While this works fine for most cases, it can break the webkit source that needs to rely on the
+        the proper data size when receiving the response (even though the received data is already
+        uncompressed the size reported in ResourceResponse::expectedContentLength() is the same
+        represented by the HTTP header field "Content-Length" which is the size of the compressed data).
+
+        This patch disables the HTTP "Accept-Encoding:" header field when using the request
+        as we don't want the received response to be encoded in any way, as we need to rely on the proper
+        size of the returned data on ResourceHandle::didReceiveResponse().
+
+        * platform/graphics/gstreamer/WebKitWebSourceGStreamer.cpp:
+        (webKitWebSrcStart):
+        * platform/network/soup/ResourceRequest.h:
+        (ResourceRequestBase):
+        (WebCore::ResourceRequest::acceptEncoding):
+        (WebCore::ResourceRequest::setAcceptEncoding):
+        (WebCore::ResourceRequest::ResourceRequestBase):
+        * platform/network/soup/ResourceRequestSoup.cpp:
+        (WebCore::ResourceRequest::updateSoupMessage):
+        (WebCore::ResourceRequest::toSoupMessage):
+
+2013-08-07  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] REGRESSION(r) Two pixel result fail after r153522
+        https://bugs.webkit.org/show_bug.cgi?id=119392
+
+        Reviewed by Jocelyn Turcotte.
+
+        Consider scaling transform on the painter to determine final destination size.
+
+        Covered by existing tests.
+
+        * platform/graphics/qt/ImageQt.cpp:
+        (WebCore::prescaleImageIfRequired):
+        (WebCore::BitmapImage::draw):
+
+2013-08-07  Antti Koivisto  <antti@apple.com>
+
+        2.5% regression on page cycler moz
+        https://bugs.webkit.org/show_bug.cgi?id=102822
+
+        Reviewed by Andreas Kling.
+
+        DocumentStyleSheetCollection::invalidateInjectedStyleSheetCache() triggers a style recalc for quirks mode
+        documents in the beginning of document parsing via Document::setCompatibilityMode. This often coalesces 
+        with style recalc triggered by stylesheet loading. However on very simple documents it can generate genuinely
+        unnecessary work.
+
+        * dom/DocumentStyleSheetCollection.cpp:
+        (WebCore::DocumentStyleSheetCollection::invalidateInjectedStyleSheetCache):
+        
+            Check that we actually have cached injected stylesheets before triggering style recalc.
+            
+        * page/PageGroup.cpp:
+        (WebCore::PageGroup::addUserStyleSheetToWorld):
+        (WebCore::PageGroup::removeUserStyleSheetFromWorld):
+        (WebCore::PageGroup::removeUserStyleSheetsFromWorld):
+        (WebCore::PageGroup::removeAllUserContent):
+        
+            Fix a misspelling.
+
+        (WebCore::PageGroup::invalidateInjectedStyleSheetCacheInAllFrames):
+        
+            Always invalidate style when user sheets change since we don't do that in
+            DocumentStyleSheetCollection::invalidateInjectedStyleSheetCache anymore.
+
+        * page/PageGroup.h:
+
+2013-08-07  Andre Moreira Magalhaes   <andre.magalhaes@collabora.co.uk>
+
+        Do no check seek offset against internal size on gstreamer source element
+        https://bugs.webkit.org/show_bug.cgi?id=116533
+
+        Reviewed by Philippe Normand.
+
+        The internal size on gstreamer source element may be wrong in case the received size in
+        didReceiveResponse is not accurate. Lets just try to seek and let it fail if necessary.
+
+        * platform/graphics/gstreamer/WebKitWebSourceGStreamer.cpp:
+        (webKitWebSrcSeekDataCb):
+
+2013-08-07  Antti Koivisto  <antti@apple.com>
+
+        Create WebCore/style and move StyleResolveTree there
+        https://bugs.webkit.org/show_bug.cgi?id=119543
+
+        Reviewed by Andreas Kling.
+
+        WebCore/css is bloated. We should move the internal style representation and the style resolver
+        related code to a directory of their own. CSS language related code including parser and 
+        CSSOM stays under css.
+
+        Things named StyleFoo should generally move under WebCore/style. They should also be moved to
+        the Style namespace at the same time.
+
+        * CMakeLists.txt:
+        * GNUmakefile.am:
+        * GNUmakefile.list.am:
+        * WebCore.pri:
+        * Target.pri:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCoreCommon.props:
+        * WebCore.vcxproj/copyForwardingHeaders.cmd:
+        * WebCore.xcodeproj/project.pbxproj:
+        * css/StyleResolveTree.cpp: Removed.
+        * css/StyleResolveTree.h: Removed.
+        * style: Added.
+        * style/StyleResolveTree.cpp: Copied from Source/WebCore/css/StyleResolveTree.cpp.
+        * style/StyleResolveTree.h: Copied from Source/WebCore/css/StyleResolveTree.h.
+
+2013-08-07  Antti Koivisto  <antti@apple.com>
+
+        Move style recalculation out from Element
+        https://bugs.webkit.org/show_bug.cgi?id=119497
+
+        Reviewed by Andreas Kling.
+
+        Element currently does too much. Element::recalcStyle() and the related functions can be turned into
+        standalone functions that operate on DOM tree. This will also give more freedom for future refactoring,
+        for example making style recalculation non-recursive.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * css/StyleResolveTree.cpp: Added.
+        (WebCore::Style::determineChange):
+                
+            - moved and renamed from Node::diff
+            - factored to use early return style
+            - simplifield the null input logic
+
+        (WebCore::Style::pseudoStyleCacheIsInvalid):
+        
+            - moved from Element::pseudoStyleCacheIsInvalid
+            - narrowed to take RenderObject rather than operate on Element
+
+        (WebCore::Style::resolveLocal):
+        
+            - split from Element::recalcStyle
+            - factored to use early return style
+
+        (WebCore::Style::resolveTree):
+        
+            - moved and renamed from Element::recalcStyle
+
+        * css/StyleResolveTree.h: Added.
+        
+            - introcuduce Style namespace for style related classes and functions
+            - move and rename Node::StyleChange -> Style::Change
+
+        * css/StyleResolver.h:
+        (WebCore::StyleResolverParentPusher::StyleResolverParentPusher):
+        (WebCore::StyleResolverParentPusher::push):
+        (WebCore::StyleResolverParentPusher::~StyleResolverParentPusher):
+        
+            Moved this stack helper to StyleResolver.h for now since it is needed by both
+            StyleRecalculation and Element.
+
+        * dom/Document.cpp:
+        (WebCore::Document::recalcStyle):
+        (WebCore::Document::updateStyleIfNeeded):
+        (WebCore::Document::updateLayoutIgnorePendingStylesheets):
+        (WebCore::Document::attach):
+        (WebCore::Document::styleResolverChanged):
+        (WebCore::Document::webkitWillEnterFullScreenForElement):
+        * dom/Document.h:
+        * dom/Element.cpp:
+        (WebCore::shouldIgnoreAttributeCase):
+        (WebCore::Element::updatePseudoElement):
+        (WebCore::Element::resetComputedStyle):
+        (WebCore::Element::willRecalcStyle):
+        (WebCore::Element::didRecalcStyle):
+        * dom/Element.h:
+        
+            - remove Element::recalcStyle
+            - make a few private functions needed by StyleRecalculation public
+
+        * dom/ElementShadow.cpp:
+        (WebCore::ElementShadow::recalcStyle):
+        * dom/ElementShadow.h:
+        * dom/Node.cpp:
+        * dom/Node.h:
+
+            - remove Node::StyleChange
+            - remove Node::diff
+
+        * dom/PseudoElement.cpp:
+        (WebCore::PseudoElement::didRecalcStyle):
+        * dom/PseudoElement.h:
+        * dom/ShadowRoot.cpp:
+        (WebCore::ShadowRoot::recalcStyle):
+        (WebCore::ShadowRoot::setResetStyleInheritance):
+        * dom/ShadowRoot.h:
+        * dom/Text.cpp:
+        (WebCore::Text::recalcTextStyle):
+        * dom/Text.h:
+        * html/HTMLFormControlElement.cpp:
+        (WebCore::HTMLFormControlElement::didRecalcStyle):
+        * html/HTMLFormControlElement.h:
+        * html/HTMLFrameSetElement.cpp:
+        (WebCore::HTMLFrameSetElement::willRecalcStyle):
+        * html/HTMLFrameSetElement.h:
+        * html/HTMLIFrameElement.cpp:
+        (WebCore::HTMLIFrameElement::didRecalcStyle):
+        * html/HTMLIFrameElement.h:
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::didRecalcStyle):
+        * html/HTMLMediaElement.h:
+        * html/HTMLOptionElement.cpp:
+        (WebCore::HTMLOptionElement::didRecalcStyle):
+        * html/HTMLOptionElement.h:
+        * html/HTMLPlugInImageElement.cpp:
+        (WebCore::HTMLPlugInImageElement::willRecalcStyle):
+        (WebCore::HTMLPlugInImageElement::documentWillSuspendForPageCache):
+        (WebCore::HTMLPlugInImageElement::documentDidResumeFromPageCache):
+        * html/HTMLPlugInImageElement.h:
+        * inspector/InspectorOverlay.cpp:
+        (WebCore::InspectorOverlay::update):
+        * loader/DocumentWriter.cpp:
+        (WebCore::DocumentWriter::reportDataReceived):
+        * page/Frame.cpp:
+        (WebCore::Frame::setPageAndTextZoomFactors):
+        * page/Page.cpp:
+        (WebCore::Page::setPageScaleFactor):
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::updateFirstLetterStyle):
+        * svg/SVGElement.cpp:
+        (WebCore::SVGElement::willRecalcStyle):
+        * svg/SVGElement.h:
+        * svg/SVGUseElement.cpp:
+        (WebCore::SVGUseElement::willRecalcStyle):
+        * svg/SVGUseElement.h:
+
+2013-08-07  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSSRegions] Wrong auto-height region computation for nested named flows
+        https://bugs.webkit.org/show_bug.cgi?id=119517
+
+        Reviewed by David Hyatt.
+
+        Test: fast/regions/abspos-autoheight-nested-region.html
+
+        In the case of an (inner) auto-height region that is absolutely positioned in a named flow that is displayed in an (outer) auto-height region,
+        when we are doing the layout for the named flow we need to add a "forced region break" also for the case of simplified layout, otherwise
+        the outer auto-height region will not get the chance to compute its auto-height, ending up with a huge value that was used to initialize
+        the auto-height computed value before the start of the layout algorithm.
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::simplifiedLayout):
+
+2013-08-06  Stephanie Lewis  <slewis@apple.com>
+
+        Update Order Files for Safari
+        <rdar://problem/14517392>
+
+        Unreviewed.
+
+        No change in functionality.
+
+        * WebCore.order:
+
+2013-08-04  Sam Weinig  <sam@webkit.org>
+
+        Remove support for HTML5 Microdata
+        https://bugs.webkit.org/show_bug.cgi?id=119480
+
+        Reviewed by Anders Carlsson.
+
+        * CMakeLists.txt:
+        * Configurations/FeatureDefines.xcconfig:
+        * DerivedSources.cpp:
+        * DerivedSources.make:
+        * DerivedSources.pri:
+        * GNUmakefile.list.am:
+        * Target.pri:
+        * UseJSC.cmake:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/gobject/GNUmakefile.am:
+        * bindings/js/JSBindingsAllInOne.cpp:
+        * bindings/js/JSHTMLCollectionCustom.cpp:
+        (WebCore::JSHTMLCollection::nameGetter):
+        * bindings/js/JSHTMLElementCustom.cpp:
+        * bindings/js/JSMicroDataItemValueCustom.cpp: Removed.
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateImplementation):
+        * dom/Document.cpp:
+        * dom/Document.h:
+        * dom/Document.idl:
+        * dom/Element.cpp:
+        (WebCore::Element::ensureCachedHTMLCollection):
+        * dom/LiveNodeList.cpp:
+        (WebCore::LiveNodeListBase::rootNode):
+        (WebCore::LiveNodeListBase::invalidateCache):
+        (WebCore::LiveNodeList::namedItem):
+        * dom/LiveNodeList.h:
+        (WebCore::LiveNodeListBase::shouldInvalidateTypeOnAttributeChange):
+        * dom/MicroDataItemList.cpp: Removed.
+        * dom/MicroDataItemList.h: Removed.
+        * dom/Node.cpp:
+        * dom/Node.h:
+        * dom/NodeRareData.cpp:
+        * dom/NodeRareData.h:
+        * dom/PropertyNodeList.cpp: Removed.
+        * dom/PropertyNodeList.h: Removed.
+        * dom/PropertyNodeList.idl: Removed.
+        * html/CollectionType.h:
+        * html/HTMLAnchorElement.cpp:
+        * html/HTMLAnchorElement.h:
+        * html/HTMLAreaElement.cpp:
+        * html/HTMLAreaElement.h:
+        * html/HTMLCollection.cpp:
+        (WebCore::shouldOnlyIncludeDirectChildren):
+        (WebCore::rootTypeFromCollectionType):
+        (WebCore::invalidationTypeExcludingIdAndNameAttributes):
+        (WebCore::isMatchingElement):
+        (WebCore::LiveNodeListBase::item):
+        * html/HTMLElement.cpp:
+        (WebCore::HTMLElement::parseAttribute):
+        (WebCore::HTMLElement::isURLAttribute):
+        * html/HTMLElement.h:
+        * html/HTMLElement.idl:
+        * html/HTMLEmbedElement.cpp:
+        * html/HTMLEmbedElement.h:
+        * html/HTMLIFrameElement.cpp:
+        * html/HTMLIFrameElement.h:
+        * html/HTMLImageElement.cpp:
+        * html/HTMLImageElement.h:
+        * html/HTMLLinkElement.cpp:
+        * html/HTMLLinkElement.h:
+        * html/HTMLMediaElement.cpp:
+        * html/HTMLMediaElement.h:
+        * html/HTMLMetaElement.cpp:
+        * html/HTMLMetaElement.h:
+        * html/HTMLObjectElement.cpp:
+        * html/HTMLObjectElement.h:
+        * html/HTMLPropertiesCollection.cpp: Removed.
+        * html/HTMLPropertiesCollection.h: Removed.
+        * html/HTMLPropertiesCollection.idl: Removed.
+        * html/HTMLSourceElement.cpp:
+        * html/HTMLSourceElement.h:
+        * html/HTMLTrackElement.cpp:
+        * html/HTMLTrackElement.h:
+        * html/MicroDataAttributeTokenList.cpp: Removed.
+        * html/MicroDataAttributeTokenList.h: Removed.
+        * html/MicroDataItemValue.cpp: Removed.
+        * html/MicroDataItemValue.h: Removed.
+        * html/MicroDataItemValue.idl: Removed.
+
+2013-08-06  Tim Horton  <timothy_horton@apple.com>
+
+        Remove PlatformCALayer::contentsTransform and ::setContentsTransform
+        https://bugs.webkit.org/show_bug.cgi?id=119529
+
+        Reviewed by Sam Weinig.
+
+        No new tests, removing dead code.
+
+        These methods are not used and are currently unimplemented.
+
+        * platform/graphics/ca/PlatformCALayer.h:
+        * platform/graphics/ca/mac/PlatformCALayerMac.mm:
+        * platform/graphics/ca/win/PlatformCALayerWin.cpp:
+
+2013-08-06  Alex Christensen  <achristensen@apple.com>
+
+        Moved GraphicsContext3DPrivate out of cairo directory to be used by the AppleWin port.
+        https://bugs.webkit.org/show_bug.cgi?id=119525
+
+        Reviewed by Dean Jackson.
+
+        * GNUmakefile.list.am:
+        * PlatformGTK.cmake:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        Changed location of GraphicsContext3DPrivate.cpp and GraphicsContext3DPrivate.h.
+        * platform/graphics/GraphicsContext3DPrivate.cpp: Copied from WebCore/platform/graphics/cairo/GraphicsContext3DPrivate.cpp.
+        * platform/graphics/GraphicsContext3DPrivate.h: Copied from WebCore/platform/graphics/cairo/GraphicsContext3DPrivate.h.
+        * platform/graphics/cairo/GraphicsContext3DPrivate.cpp: Removed.
+        * platform/graphics/cairo/GraphicsContext3DPrivate.h: Removed.
+
+2013-08-06  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build correction after r153754 and r153757.
+
+        * page/animation/CSSPropertyAnimation.cpp:
+        (WebCore::blendFunc): Don't force std::remainder, since we are using our own
+        custom implementation on Windows.
+
+2013-08-06  Brent Fulgham  <bfulgham@apple.com>
+
+        Improper Calculation of In-band Cue Colors
+        https://bugs.webkit.org/show_bug.cgi?id=119523
+
+        Reviewed by Eric Carlson.
+
+        * platform/graphics/avfoundation/InbandTextTrackPrivateAVF.cpp:
+        (WebCore::makeRGBA32FromARGBCFArray): Remove redundant multiplication by
+        255.  The internal conversion logic already converts to bytes.
+
+2013-08-06  Rob Buis  <rwlbuis@webkit.org>
+
+        Speculative build fix after r153754.
+
+        * page/animation/CSSPropertyAnimation.cpp:
+        (WebCore::blendFunc):
+
+2013-07-23  David Farler  <dfarler@apple.com>
+
+        Provide optional OTHER_CFLAGS, OTHER_CPPFLAGS, OTHER_LDFLAGS additions for building with ASAN
+        https://bugs.webkit.org/show_bug.cgi?id=117762
+
+        Reviewed by Mark Rowe.
+
+        No new tests necessary.
+
+        * Configurations/DebugRelease.xcconfig:
+        Add ASAN_OTHER_CFLAGS, CPLUSPLUSFLAGS, LDFLAGS.
+        * Configurations/WebCore.xcconfig:
+        Add ASAN_OTHER_LDFLAGS.
+        * Configurations/WebCoreTestShim.xcconfig:
+        Add ASAN_OTHER_LDFLAGS.
+        * Configurations/WebCoreTestSupport.xcconfig:
+        Add ASAN_OTHER_LDFLAGS.
+        * WebCore.xcodeproj/project.pbxproj:
+        Don't use ASAN for build tools.
+
+2013-08-05  Rob Buis  <rwlbuis@webkit.org>
+
+        SVG stroke-dasharray is not animatable
+        https://bugs.webkit.org/show_bug.cgi?id=118574
+
+        Reviewed by Dirk Schulze.
+
+        Make stroke-dasharray a property that can be animated using CSS transitions.
+
+        * page/animation/CSSPropertyAnimation.cpp:
+        (WebCore::blendFunc):
+        (WebCore::CSSPropertyAnimation::ensurePropertyMap):
+        * rendering/style/RenderStyle.h:
+
+2013-08-06  Sergio Villar Senin  <svillar@igalia.com>
+
+        [CSS Grid Layout] Allow defining named grid lines on the grid element
+        https://bugs.webkit.org/show_bug.cgi?id=118255
+
+        Reviewed by Andreas Kling.
+
+        From Blink r149798 by <jchaffraix@chromium.org>
+
+        This change adds parsing, style resolution and getComputedStyle
+        support for named grid lines at the grid element level
+        (i.e. extends our <track-list> support). Per the specification, we
+        allow multiple grid lines with the same name.
+
+        To fully support resolving the grid lines to a position on our
+        grid, we need to add the parsing at the grid item's level (which
+        means extending our <grid-line> support). This will be done in a
+        follow-up change.
+
+        Test: fast/css-grid-layout/named-grid-line-get-set.html
+
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::addValuesForNamedGridLinesAtIndex):
+        (WebCore::valueForGridTrackList):
+        (WebCore::ComputedStyleExtractor::propertyValue):
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::parseGridTrackList):
+        * css/StyleResolver.cpp:
+        (WebCore::createGridTrackList):
+        (WebCore::StyleResolver::applyProperty):
+        * rendering/style/RenderStyle.h:
+        * rendering/style/StyleGridData.cpp:
+        (WebCore::StyleGridData::StyleGridData):
+        * rendering/style/StyleGridData.h:
+        (WebCore::StyleGridData::operator==):
+
 2013-08-06  Allan Sandfeld Jensen  <allan.jensen@digia.com>
 
         [Qt] Fix minimal build.

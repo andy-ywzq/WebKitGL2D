@@ -189,7 +189,6 @@ public:
 
     PassRefPtr<RenderStyle> styleForPage(int pageIndex);
     PassRefPtr<RenderStyle> defaultStyleForElement();
-    PassRefPtr<RenderStyle> styleForText(Text*);
 
     static PassRefPtr<RenderStyle> styleForDocument(Document*, CSSFontSelector* = 0);
 
@@ -676,6 +675,36 @@ inline bool checkRegionSelector(const CSSSelector* regionSelector, Element* regi
     }
     return false;
 }
+
+class StyleResolverParentPusher {
+public:
+    StyleResolverParentPusher(Element* parent)
+        : m_parent(parent)
+        , m_pushedStyleResolver(0)
+    { }
+    void push()
+    {
+        if (m_pushedStyleResolver)
+            return;
+        m_pushedStyleResolver = m_parent->document()->ensureStyleResolver();
+        m_pushedStyleResolver->pushParentElement(m_parent);
+    }
+    ~StyleResolverParentPusher()
+    {
+        if (!m_pushedStyleResolver)
+            return;
+        // This tells us that our pushed style selector is in a bad state,
+        // so we should just bail out in that scenario.
+        ASSERT(m_pushedStyleResolver == m_parent->document()->ensureStyleResolver());
+        if (m_pushedStyleResolver != m_parent->document()->ensureStyleResolver())
+            return;
+        m_pushedStyleResolver->popParentElement(m_parent);
+    }
+    
+private:
+    Element* m_parent;
+    StyleResolver* m_pushedStyleResolver;
+};
 
 } // namespace WebCore
 
