@@ -39,6 +39,16 @@
 
 using namespace WebKit;
 
+float NIXViewGetScaleToFitContents(WKViewRef view)
+{
+    return static_cast<WebViewNix*>(toImpl(view))->scaleToFitContents();
+}
+
+void NIXViewScaleToFitContents(WKViewRef view)
+{
+    static_cast<WebViewNix*>(toImpl(view))->adjustScaleToFitContents();
+}
+
 bool NIXViewPendingScaleOrPositionChange(WKViewRef view)
 {
     return static_cast<WebViewNix*>(toImpl(view))->pendingScaleOrPositionChange();
