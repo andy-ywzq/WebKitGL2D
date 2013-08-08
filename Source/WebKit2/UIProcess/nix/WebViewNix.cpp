@@ -152,12 +152,12 @@ void WebViewNix::didRenderFrame(const WebCore::IntSize& contentsSize, const WebC
             setContentPosition(m_contentPositionAfterTransition);
     }
 
-    WebView::didRenderFrame(contentsSize, coveredRect);
-
     if (m_adjustScaleAfterFirstMainFrameRender) {
         m_adjustScaleAfterFirstMainFrameRender = false;
-        scaleToFitContents();
+        adjustScaleToFitContents();
     }
+
+    WebView::didRenderFrame(contentsSize, coveredRect);
 }
 
 void WebViewNix::didChangePageScaleFactor(double scaleFactor)
