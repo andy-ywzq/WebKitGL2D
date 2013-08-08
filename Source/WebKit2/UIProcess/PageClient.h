@@ -119,6 +119,8 @@ public:
 #if PLATFORM(NIX)
     virtual void didCommitLoadForFrame() = 0;
     virtual void didChangePageScaleFactor(double scaleFactor) = 0;
+    virtual void notifyLoadIsBackForward() = 0;
+    virtual void didStartedMainFrameLayout() = 0;
 #endif
 #if USE(TILED_BACKING_STORE)
     virtual void pageDidRequestScroll(const WebCore::IntPoint&) = 0;

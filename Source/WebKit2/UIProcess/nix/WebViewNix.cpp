@@ -61,6 +61,8 @@ WebViewNix::WebViewNix(WebContext* context, WebPageGroup* pageGroup)
     , m_duringFrameRendering(false)
     , m_pendingScaleOrPositionChange(false)
     , m_scaleAfterTransition(1.0)
+    , m_loadIsBackForward(false)
+    , m_adjustScaleAfterFirstMainFrameRender(false)
 {
 }
 
@@ -151,6 +153,11 @@ void WebViewNix::didRenderFrame(const WebCore::IntSize& contentsSize, const WebC
     }
 
     WebView::didRenderFrame(contentsSize, coveredRect);
+
+    if (m_adjustScaleAfterFirstMainFrameRender) {
+        m_adjustScaleAfterFirstMainFrameRender = false;
+        scaleToFitContents();
+    }
 }
 
 void WebViewNix::didChangePageScaleFactor(double scaleFactor)
@@ -215,6 +222,35 @@ void WebViewNix::updateTextInputState()
 PassRefPtr<WebPopupMenuProxy> WebViewNix::createPopupMenuProxy(WebPageProxy* page)
 {
     return WebPopupMenuListenerNix::create(page);
+}
+
+void WebViewNix::notifyLoadIsBackForward()
+{
+    m_loadIsBackForward = true;
+}
+
+void WebViewNix::didStartedMainFrameLayout()
+{
+    if (m_loadIsBackForward || m_pendingScaleOrPositionChange) {
+        if (!m_loadIsBackForward && m_page->useFixedLayout())
+            m_adjustScaleAfterFirstMainFrameRender = true;
+
+        m_loadIsBackForward = false;
+        return;
+    }
+
+    adjustScaleToFitContents();
+}
+
+void WebViewNix::adjustScaleToFitContents()
+{
+    float scale = scaleToFitContents();
+    setContentScaleFactor(scale);
+}
+
+float WebViewNix::scaleToFitContents()
+{
+    return size().width() / (m_contentsSize.width() * deviceScaleFactor());
 }
 
 } // namespace WebKit

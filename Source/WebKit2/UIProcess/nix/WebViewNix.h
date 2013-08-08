@@ -60,6 +60,8 @@ public:
 
     bool pendingScaleOrPositionChange() const { return m_pendingScaleOrPositionChange; }
 
+    float scaleToFitContents();
+    void adjustScaleToFitContents();
 protected:
     // WebKit::WebView
     virtual void didChangeContentScaleFactor(float) OVERRIDE;
@@ -71,6 +73,8 @@ protected:
     // PageClient.
     virtual void didFindZoomableArea(const WebCore::IntPoint& target, const WebCore::IntRect& area) OVERRIDE;
     virtual void didCommitLoadForFrame() OVERRIDE;
+    virtual void notifyLoadIsBackForward() OVERRIDE;
+    virtual void didStartedMainFrameLayout() OVERRIDE;
 #if ENABLE(GESTURE_EVENTS)
     virtual void doneWithGestureEvent(const WebGestureEvent&, bool wasEventHandled) OVERRIDE;
 #endif
@@ -83,6 +87,7 @@ protected:
     virtual PassRefPtr<WebContextMenuProxy> createContextMenuProxy(WebPageProxy*) OVERRIDE { return m_activeContextMenu; }
     virtual PassRefPtr<WebPopupMenuProxy> createPopupMenuProxy(WebPageProxy*) OVERRIDE;
 
+    float deviceScaleFactor() { return m_page->deviceScaleFactor(); }
 private:
     WebViewNix(WebContext* context, WebPageGroup* pageGroup);
 
@@ -94,6 +99,8 @@ private:
     bool m_pendingScaleOrPositionChange;
     WebCore::FloatPoint m_contentPositionAfterTransition;
     double m_scaleAfterTransition;
+    bool m_loadIsBackForward;
+    bool m_adjustScaleAfterFirstMainFrameRender;
 
     friend class WebView;
 };
