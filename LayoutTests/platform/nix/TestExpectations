@@ -3348,7 +3348,6 @@ compositing/geometry/fixed-position-iframe-composited-page-scale-down.html [ Mis
 
 accessibility [ Skip ]
 batterystatus [ Skip ]
-fast/dom/MicroData [ Skip ]
 fast/filesystem [ Skip ]
 fast/mediastream [ Skip ]
 fast/notifications [ Skip ]
