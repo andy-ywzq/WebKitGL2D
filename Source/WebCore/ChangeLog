@@ -1,3 +1,664 @@
+2013-08-09  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Add support for KeyboardEvent.location attribute
+        https://bugs.webkit.org/show_bug.cgi?id=119326
+
+        Reviewed by Benjamin Poulain.
+
+        Add support for KeyboardEvent.location attribute as per the latest specification:
+        http://dev.w3.org/2006/webapi/DOM-Level-3-Events/html/DOM3-Events.html#events-KeyboardEvent
+
+        IE10, Firefox 22 and recently Blink all support KeyboardEvent.location already.
+
+        The deprecated 'keyLocation' attribute was not removed to maintain backward
+        compatibility.
+
+        No new tests, covered by existing tests.
+
+        * bindings/objc/PublicDOMInterfaces.h:
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateConstructorDefinition):
+        * dom/KeyboardEvent.cpp:
+        (WebCore::KeyboardEventInit::KeyboardEventInit):
+        (WebCore::KeyboardEvent::KeyboardEvent):
+        (WebCore::KeyboardEvent::initKeyboardEvent):
+        * dom/KeyboardEvent.h:
+        (WebCore::KeyboardEvent::location):
+        * dom/KeyboardEvent.idl:
+
+2013-08-09  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Make atob() throw an InvalidCharacterError on excess padding characters
+        https://bugs.webkit.org/show_bug.cgi?id=118898
+
+        Reviewed by Darin Adler.
+
+        According to the latest specification, window.atob() should throw an
+        InvalidCharacterError on excess padding characters:
+        http://www.whatwg.org/specs/web-apps/current-work/multipage/webappapis.html#dom-windowbase64-atob
+
+        This behavior is consistent with both Firefox, IE10 and recently Blink.
+
+        No new tests, already covered by:
+        fast/dom/Window/atob-btoa.html
+
+        * page/DOMWindow.cpp:
+        (WebCore::DOMWindow::atob):
+
+2013-08-09  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Make DOMImplementation::hasFeature() behave according to specification
+        https://bugs.webkit.org/show_bug.cgi?id=119329
+
+        Reviewed by Ryosuke Niwa.
+
+        Make DOMImplementation::hasFeature() behave according to the latest specification:
+        http://dom.spec.whatwg.org/#dom-domimplementation-hasfeature
+
+        Specifically, the function should now return true unconditionally for any non-SVG feature.
+        This behavior is consistent with Firefox and since recently Blink.
+
+        hasFeature() originally would report whether the user agent claimed to support a
+        given DOM feature, but experience proved it was not nearly as reliable or granular
+        as simply checking whether the desired interfaces, attributes, or methods existed.
+        As such, it should no longer be used, but continues to exist (and simply returns
+        true) so that old pages don't stop working.
+
+        No new tests, covered by existing tests.
+
+        * dom/DOMImplementation.cpp:
+        (WebCore::isSupportedSVG10Feature):
+        (WebCore::isSupportedSVG11Feature):
+        (WebCore::DOMImplementation::hasFeature):
+
+2013-08-09  Alejandro G. Castro  <alex@igalia.com>
+
+        [GTK] [EFL] Enable tiled shadow blur for the inset shadows.
+        https://bugs.webkit.org/show_bug.cgi?id=119078
+
+        Reviewed by Martin Robinson.
+
+        Already covered in the tests.
+
+        * platform/graphics/GraphicsContext.cpp:
+        * platform/graphics/cairo/GraphicsContextCairo.cpp:
+        (WebCore::fillCurrentCairoPath): Added to allow fill the path
+        without the shadow.
+        (WebCore::shadowAndFillCurrentCairoPath):
+        (WebCore::GraphicsContext::fillRectWithRoundedHole): Added cairo
+        implementation.
+
+2013-08-09  Jakob Petsovits  <jpetsovits@blackberry.com>
+
+        [BlackBerry] Don't release the canvas Drawable, flush it directly instead.
+        https://bugs.webkit.org/show_bug.cgi?id=119589
+        https://jira.bbqnx.net/browse/BRWSR-12531
+        JIRA 444857
+
+        Reviewed by George Staikos.
+
+        The previous code here used releaseBufferDrawable() to
+        flush painted ImageBuffer contents, but then proceeded
+        to use that released Drawable for further painting
+        without ever locking a new one.
+
+        In an implementation that actually releases the Drawable
+        rather than keeping it around and just flushing it,
+        this will wreak havoc as bad as black screens or crashes.
+
+        As a solution that doesn't require the ImageBuffer object
+        to swap out its m_canvas member for a new Drawable, we can
+        access the PlatformGraphicsContext::flush() method directly
+        to achieve the same effect as was previously intended by
+        calling releaseBufferDrawable(). All it needs is letting
+        the canvas layer know about the Drawable so it can call
+        that flush() method by itself.
+
+        No new tests, verified by not crashing with an aforementioned
+        implementation of releaseBufferDrawable().
+
+        * platform/graphics/blackberry/CanvasLayerWebKitThread.cpp:
+        (WebCore::CanvasLayerCompositingThreadClient::CanvasLayerCompositingThreadClient):
+        (WebCore::CanvasLayerCompositingThreadClient::commitPendingTextureUploads):
+        (WebCore::CanvasLayerWebKitThread::CanvasLayerWebKitThread):
+        * platform/graphics/blackberry/CanvasLayerWebKitThread.h:
+        (WebCore::CanvasLayerWebKitThread::create):
+        * platform/graphics/blackberry/ImageBufferBlackBerry.cpp:
+        (WebCore::ImageBuffer::ImageBuffer):
+        (WebCore::ImageBuffer::~ImageBuffer):
+
+2013-08-08  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt][WK2] Composited and transformed links asserts in tap highlight
+        https://bugs.webkit.org/show_bug.cgi?id=94345
+
+        Reviewed by Jocelyn Turcotte.
+
+        Use a mapping that does not assert when hitting transforms. We still skip
+        transforms that produces non-rectangular areas.
+
+        * page/GestureTapHighlighter.cpp:
+
+2013-08-09  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        Buildfix. Fix warning after r153887:
+        control reaches end of non-void function [-Werror=return-type]
+
+        Reviewed by Csaba Osztrogonác.
+
+        * svg/SVGAnimateElement.cpp:
+        (WebCore::SVGAnimateElement::animatedPropertyTypeSupportsAddition):
+
+2013-08-09  Bruno de Oliveira Abinader  <bruno.d@partner.samsung.com>
+
+        Text decorations should be listed as non-inheritable
+        https://bugs.webkit.org/show_bug.cgi?id=119608
+
+        Reviewed by Andreas Kling.
+
+        Both "text-decoration" specs (CSS 2.1, CSS 3) and "text-decoration-line"
+        spec (CSS 3) states these properties are not inherited (w/ exceptions,
+        which are currently handled by -in-effect property), however those were
+        listed as inherited for no reason - thus preserving behavior as shown by
+        layout test results.
+
+        Backported from Blink: https://codereview.chromium.org/20751008
+
+        Updated getComputedStyle tests for both 'text-decoration' and
+        'text-decoration-line' properties to check that both are not implicitly
+        inherited.
+
+        * css/CSSProperty.cpp:
+        (WebCore::CSSProperty::isInheritedProperty):
+
+2013-08-09  Andreas Kling  <akling@apple.com>
+
+        I wish we had a Windows EWS. :(
+
+        * css/ElementRuleCollector.cpp:
+        (WebCore::ElementRuleCollector::doCollectMatchingRulesForList): No range-based for today.
+
+2013-08-09  Rob Buis  <rwlbuis@webkit.org>
+
+        ASSERT_NOT_REACHED() touched in WebCore::SVGAnimatedStringAnimator::addAnimatedTypes
+        https://bugs.webkit.org/show_bug.cgi?id=113224
+
+        Reviewed by Darin Adler.
+
+        Do not perform from-by animations for non-additive attributes.
+
+        Test: svg/animations/non-additive-type-from-by-animation.html
+
+        * svg/SVGAnimateElement.cpp:
+        (WebCore::SVGAnimateElement::calculateFromAndByValues):
+        (WebCore::SVGAnimateElement::animatedPropertyTypeSupportsAddition):
+        (WebCore::SVGAnimateElement::isAdditive):
+        * svg/SVGAnimateElement.h:
+
+2013-08-09  Rob Buis  <rwlbuis@webkit.org>
+
+        ASSERT(m_type == toSVGTransform.type())
+        https://bugs.webkit.org/show_bug.cgi?id=113217
+
+        Reviewed by Darin Adler.
+
+        For to animations clear the transform list while animating and reset to it after the animation is done.
+        This matches Firefox and Opera 12 behavior.
+
+        Tests: svg/animations/animateTransform-to-scale-expected.svg
+               svg/animations/animateTransform-to-scale.svg
+
+        * svg/SVGAnimatedTransformList.cpp:
+        (WebCore::SVGAnimatedTransformListAnimator::calculateAnimatedValue):
+
+2013-08-09  Arunprasad Rajkumar  <arurajku@cisco.com>
+
+        [Qt] QtWebKit should allow sending domain specific keycode to HTML applications
+        https://bugs.webkit.org/show_bug.cgi?id=118445
+
+        Reviewed by Allan Sandfeld Jensen.
+
+        No new test required, it is covered by QtWebKit API test.
+
+        This fix allows sending QKeyEvent::nativeVirtualKey as the DOM KeyboardEvent keyCode value instead
+        of Windows virtual key code. It can be enabled/disabled using "_q_useNativeVirtualKeyAsDOMKey"
+        dynamic property present in QWebPage.
+
+        * platform/PlatformKeyboardEvent.h:
+        (WebCore::PlatformKeyboardEvent::PlatformKeyboardEvent):
+        * platform/qt/PlatformKeyboardEventQt.cpp:
+        (WebCore::PlatformKeyboardEvent::PlatformKeyboardEvent):
+        (WebCore::PlatformKeyboardEvent::disambiguateKeyDownEvent):
+
+2013-08-09  Renata Hodovan  <reni@webkit.org>
+
+        Missing NULL check in ApplyStyleCommand::applyInlineStyleToNodeRange()
+        https://bugs.webkit.org/show_bug.cgi?id=119570
+
+        Reviewed by Ryosuke Niwa.
+
+        The m_mutableStyleSet of EditingStyle can be NULL in ApplyStyleCommand::applyInlineStyleToNodeRange but
+        this scenario was not checked earlier.
+
+        Test: editing/execCommand/null-style-crash.html
+
+        * css/StylePropertySet.cpp:
+        (WebCore::MutableStylePropertySet::mergeAndOverrideOnConflict):
+        * css/StylePropertySet.h:
+        * css/ViewportStyleResolver.cpp:
+        (WebCore::ViewportStyleResolver::addViewportRule):
+        * editing/ApplyStyleCommand.cpp:
+        (WebCore::ApplyStyleCommand::applyInlineStyleToNodeRange):
+        * editing/EditingStyle.cpp:
+        (WebCore::styleFromMatchedRulesForElement):
+        (WebCore::EditingStyle::mergeStyleFromRules):
+        (WebCore::EditingStyle::mergeStyleFromRulesForSerialization):
+
+2013-08-09  Andreas Kling  <akling@apple.com>
+
+        ElementRuleCollector: Use range-based for syntax in rule collection loop.
+        <http://webkit.org/b/119617>
+        <rdar://problem/14695311>
+
+        Reviewed by Antti Koivisto.
+
+        * css/ElementRuleCollector.cpp:
+        (WebCore::ElementRuleCollector::doCollectMatchingRulesForList):
+
+2013-08-09  Andreas Kling  <akling@apple.com>
+
+        StyleRule*::properties() should return const references.
+        <http://webkit.org/b/119596>
+
+        Reviewed by Antti Koivisto.
+
+        Make StyleRule::properties() & friends return const-references instead of
+        pointers. This exposed some pointless null checking, since rules should
+        always have properties.
+
+        All rule objects that contain properties now require a StylePropertySet at
+        the time of construction instead having you call setProperties() later.
+
+        The only rules that could ever have null properties were the default-inserted
+        animation keyframe rules for 0% and 100% that we'd conjure up if the author
+        didn't provide them. Now they just have an empty property set instead.
+
+        * css/CSSFontFaceRule.cpp:
+        (WebCore::CSSFontFaceRule::cssText):
+        * css/CSSFontSelector.cpp:
+        (WebCore::CSSFontSelector::addFontFaceRule):
+        * css/CSSPageRule.cpp:
+        (WebCore::CSSPageRule::cssText):
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::createFilterRule):
+        (WebCore::CSSParser::createStyleRule):
+        (WebCore::CSSParser::createFontFaceRule):
+        (WebCore::CSSParser::rewriteSpecifiers):
+        * css/CSSStyleRule.cpp:
+        (WebCore::CSSStyleRule::cssText):
+        * css/ElementRuleCollector.cpp:
+        (WebCore::leftToRightDeclaration):
+        (WebCore::rightToLeftDeclaration):
+        (WebCore::ElementRuleCollector::addElementStyleProperties):
+        (WebCore::ElementRuleCollector::doCollectMatchingRulesForList):
+        * css/PageRuleCollector.cpp:
+        (WebCore::PageRuleCollector::matchPageRulesForList):
+        * css/StylePropertySet.cpp:
+        (WebCore::MutableStylePropertySet::mergeAndOverrideOnConflict):
+        * css/StylePropertySet.h:
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::MatchResult::addMatchedProperties):
+        (WebCore::StyleResolver::styleForKeyframe):
+        (WebCore::StyleResolver::keyframeStylesForAnimation):
+        * css/StyleResolver.h:
+        * css/StyleRule.cpp:
+        (WebCore::StyleRule::StyleRule):
+        (WebCore::StyleRule::create):
+        (WebCore::StyleRulePage::StyleRulePage):
+        (WebCore::StyleRuleFontFace::StyleRuleFontFace):
+        (WebCore::StyleRuleViewport::StyleRuleViewport):
+        (WebCore::StyleRuleViewport::mutableProperties):
+        (WebCore::StyleRuleFilter::StyleRuleFilter):
+        * css/StyleRule.h:
+        (WebCore::StyleRule::create):
+        (WebCore::StyleRule::properties):
+        (WebCore::StyleRuleFontFace::create):
+        (WebCore::StyleRuleFontFace::properties):
+        (WebCore::StyleRulePage::create):
+        (WebCore::StyleRulePage::properties):
+        (WebCore::StyleRuleViewport::create):
+        (WebCore::StyleRuleViewport::properties):
+        (WebCore::StyleRuleFilter::create):
+        (WebCore::StyleRuleFilter::properties):
+        * css/StyleSheetContents.cpp:
+        (WebCore::StyleSheetContents::addSubresourceStyleURLs):
+        (WebCore::childRulesHaveFailedOrCanceledSubresources):
+        * css/WebKitCSSFilterRule.cpp:
+        (WebCore::WebKitCSSFilterRule::cssText):
+        * css/WebKitCSSKeyframeRule.cpp:
+        (WebCore::StyleKeyframe::StyleKeyframe):
+        (WebCore::StyleKeyframe::mutableProperties):
+        * css/WebKitCSSKeyframeRule.h:
+        (WebCore::StyleKeyframe::create):
+        (WebCore::StyleKeyframe::properties):
+        * css/WebKitCSSViewportRule.cpp:
+        (WebCore::WebKitCSSViewportRule::cssText):
+        * editing/ApplyStyleCommand.cpp:
+        (WebCore::ApplyStyleCommand::applyInlineStyleToNodeRange):
+        * editing/EditingStyle.cpp:
+        (WebCore::EditingStyle::mergeStyleFromRules):
+        (WebCore::EditingStyle::mergeStyleFromRulesForSerialization):
+        * inspector/InspectorStyleSheet.cpp:
+        (WebCore::InspectorStyleSheet::revalidateStyle):
+        * page/PageSerializer.cpp:
+        (WebCore::PageSerializer::retrieveResourcesForRule):
+        * svg/SVGFontFaceElement.cpp:
+        (WebCore::SVGFontFaceElement::SVGFontFaceElement):
+        (WebCore::SVGFontFaceElement::fontFamily):
+        (WebCore::SVGFontFaceElement::rebuildFontFace):
+
+2013-08-09  Julien Brianceau  <jbrianceau@nds.com>
+
+        [Qt] Fix build (broken by changeset r153826).
+        https://bugs.webkit.org/show_bug.cgi?id=119616
+
+        Reviewed by Andreas Kling.
+
+        * xml/parser/XMLDocumentParserQt.cpp:
+        (WebCore::XMLDocumentParser::XMLDocumentParser):
+
+2013-08-08  Tim Horton  <timothy_horton@apple.com>
+
+        navigator.plugins has plugins in it when plugins are disabled
+        https://bugs.webkit.org/show_bug.cgi?id=119607
+        <rdar://problem/14678030>
+
+        Reviewed by Anders Carlsson.
+
+        Test: plugins/navigator-plugins-disabled.html
+
+        * page/Settings.cpp:
+        (WebCore::Settings::setPluginsEnabled):
+        Refresh the plugin database when plugins are enabled or disabled.
+        This is necessary to ensure that navigator.plugins will have the
+        correct set of plugins after dynamically changing whether plugins
+        are enabled, which makes the test for this patch possible (but it
+        makes sense in the browser as well).
+
+2013-08-08  Timothy Hatcher  <timothy@apple.com>
+
+        Allow SVG images to be drawn into canvas without tainting.
+        https://bugs.webkit.org/show_bug.cgi?id=119492
+
+        Reviewed by Darin Adler.
+
+        Tests: svg/as-image/svg-canvas-not-tainted.html
+               svg/as-image/svg-canvas-link-not-colored.html
+               svg/as-image/svg-canvas-xhtml-tainted.html
+
+        * html/HTMLAnchorElement.cpp:
+        (WebCore::HTMLAnchorElement::parseAttribute): Call shouldProhibitLinks.
+        (WebCore::shouldProhibitLinks): Added.
+        * html/HTMLAnchorElement.h:
+        * html/HTMLImageElement.cpp:
+        (WebCore::HTMLImageElement::parseAttribute): Call shouldProhibitLinks.
+        * rendering/svg/RenderSVGRoot.cpp:
+        (WebCore::RenderSVGRoot::isEmbeddedThroughSVGImage): Use isInSVGImage.
+        * svg/SVGAElement.cpp:
+        (WebCore::SVGAElement::svgAttributeChanged): Call shouldProhibitLinks.
+        * svg/graphics/SVGImage.cpp:
+        (WebCore::SVGImage::hasSingleSecurityOrigin): Added.
+        (WebCore::isInSVGImage): Added.
+        * svg/graphics/SVGImage.h:
+
+2013-08-08  Simon Fraser  <simon.fraser@apple.com>
+
+        Fix ASSERT(m_contentsSolidColor.isValid()) assertion on iOS at nytimes.com
+        https://bugs.webkit.org/show_bug.cgi?id=119603
+
+        Reviewed by Dean Jackson.
+
+        On iOS it's possible for a GraphicsLayer to transition between having
+        a solid background color, and containing media. This happens on nytimes.com
+        when playing video.
+        
+        In this case, GraphicsLayerCA::updateContentsColorLayer() would assert
+        because m_contentsLayer had been already set up to contain media, but
+        it would be trying to update the color.
+        
+        Fix by bailing from all the updateContents* functions if there is no
+        contents layer, or that layer exists for a different purpose.
+
+        * platform/graphics/ca/GraphicsLayerCA.cpp:
+        (WebCore::GraphicsLayerCA::updateContentsMediaLayer):
+        (WebCore::GraphicsLayerCA::updateContentsCanvasLayer):
+        (WebCore::GraphicsLayerCA::updateContentsColorLayer):
+
+2013-08-08  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r153847.
+        http://trac.webkit.org/changeset/153847
+        https://bugs.webkit.org/show_bug.cgi?id=119609
+
+        caused new SVG animation test failures (Requested by smfr on
+        #webkit).
+
+        * svg/SVGAnimateElement.cpp:
+        (WebCore::SVGAnimateElement::calculateFromAndByValues):
+
+2013-08-08  Simon Fraser  <simon.fraser@apple.com>
+
+        Kill updateStyleForAllDocuments()
+        https://bugs.webkit.org/show_bug.cgi?id=118093
+
+        Reviewed by Geoff Garen.
+
+        We should never have to eagerly update style, especially for all documents
+        that the process knows about. The WebKit model is to update style when
+        required for layout etc, not to update it eagerly.
+        
+        This is historical code whose origins are lost in the mists of KHTML.
+        r42384 makes it possible to do away with this eager updating, and
+        r55568 removed some calls. Discussion in bug 32580 suggests that
+        form control code still need this, but tests still pass without it.
+
+        * bindings/js/JSCallbackData.cpp:
+        (WebCore::JSCallbackData::invokeCallback):
+        * bindings/js/JSCustomXPathNSResolver.cpp:
+        (WebCore::JSCustomXPathNSResolver::lookupNamespaceURI):
+        * dom/Document.cpp:
+        (WebCore::Document::scheduleStyleRecalc):
+        (WebCore::Document::unscheduleStyleRecalc):
+        * dom/Document.h:
+        * dom/Element.cpp:
+        (WebCore::Element::setActive):
+
+2013-08-08  Jer Noble  <jer.noble@apple.com>
+
+        [EME] MediaKey APIs should be prefixed.
+        https://bugs.webkit.org/show_bug.cgi?id=119606
+
+        Reviewed by Anders Carlsson.
+
+        No new tests; updated exsisting tests with new names.
+
+        Prefix all new classes with "WebKit" and new methods on existing unprefixed
+        classes with "webkit"
+
+        * Modules/encryptedmedia/MediaKeyMessageEvent.idl: MediaKeyMessageEvent -> WebKitMediaKeyMessageEvent
+        * Modules/encryptedmedia/MediaKeySession.idl: MediaKeySession -> WebKitMediaKeySession
+        * Modules/encryptedmedia/MediaKeys.idl: MediaKeys -> WebKitMediaKeys
+        * html/HTMLMediaElement.idl: keys -> webkitKeys, setMediaKeys -> webkitSetMediaKeys
+        * html/MediaKeyError.idl: MediaKeyError -> WebKitMediaKeyError
+
+2013-08-08  Jer Noble  <jer.noble@apple.com>
+
+        [EME] setMediaKeys function as defined in the EME specification does not work
+        https://bugs.webkit.org/show_bug.cgi?id=119597
+
+        Reviewed by Anders Carlsson.
+
+        No new tests; updated media/encrypted-media/encrypted-media-v2-syntax.html
+
+        Rename the mediaKeys attribute 'keys' and make readonly, and add an explicit
+        setMediaKeys() method in HTMLMediaElement's IDL.
+
+        * html/HTMLMediaElement.h:
+        (WebCore::HTMLMediaElement::keys):
+        * html/HTMLMediaElement.idl:
+
+2013-08-06  Sam Weinig  <sam@webkit.org>
+
+        Hashing SecurityOrigin's can lead to trouble if you mutate them :(
+        https://bugs.webkit.org/show_bug.cgi?id=119533
+        <rdar://problem/12978338>
+
+        Reviewed by Andreas Kling.
+
+        We are getting into trouble in the following circumstance:
+        - You have a HashMap<RefPtr<SecurityOrigin>, Value> map.
+        - You add security origin A (http, www.webkit.org, 80) to the map.
+        - You mutate security origin A by domain relaxation, so that it has the domain webkit.org.
+        - You add security origin B (http, www.webkit.org, 80) to the map.
+        - You mutate security origin B by domain relaxation, so that it has the domain webkit.org.
+            You now have two identical keys in the map.
+        - Add few more items to the map causing a rehash.
+        - When you try to add A and B back into the map, you will have a collision, because they now equal each other.
+
+        We should probably stop using SecurityOrigins as keys in HashMaps (and move to using a non-mutable SecurityOriginTuple,
+        or something), but for now, we can just only use the scheme / host / port part for equality, which is what all the users
+        really want.
+
+        * page/SecurityOriginHash.h:
+        (WebCore::SecurityOriginHash::equal):
+        Switch to using isSameSchemeHostPort() for SecurityOriginHash::equal().
+
+2013-08-08  Rob Buis  <rwlbuis@webkit.org>
+
+        ASSERT_NOT_REACHED() touched in WebCore::SVGAnimatedStringAnimator::addAnimatedTypes
+        https://bugs.webkit.org/show_bug.cgi?id=113224
+
+        Reviewed by Dirk Schulze.
+
+        Do not perform from-by animations for non-additive attributes.
+
+        Test: svg/animations/non-additive-type-from-by-animation.html
+
+        * svg/SVGAnimateElement.cpp:
+        (WebCore::SVGAnimateElement::calculateFromAndByValues):
+
+2013-08-08  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Improper Caption Button Displayed to Users
+        https://bugs.webkit.org/show_bug.cgi?id=119593 
+
+        Reviewed by Eric Carlson.
+
+        Remove the custom drawing code for the Windows port, and
+        have it render using the CSS/SVG markup like we do on OS X.
+
+        * rendering/RenderThemeWin.cpp: Remove drawing code.
+        * rendering/RenderThemeWin.h: Remove declaration.
+
+2013-08-08  Alex Christensen  <achristensen@apple.com>
+
+        Work towards WebGL on AppleWin port.
+        https://bugs.webkit.org/show_bug.cgi?id=119562
+
+        Reviewed by Brent Fulgham.
+
+        * WebCore.vcxproj/WebCore.vcxproj:
+        Build GLContext.cpp and GraphicsContext3DPrivate.cpp on AppleWin port.
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        Moved GLContext and GraphicsContext3DPrivate from Cairo filter to graphics.
+        * platform/graphics/GraphicsContext3D.h:
+        Added m_webGLLayer for AppleWin port.
+        * platform/graphics/GraphicsContext3DPrivate.cpp:
+        Protected inclusion of PlatformContextCairo.h in USE(CAIRO) macro for non-cairo ports.
+        * platform/graphics/win/GraphicsContext3DWin.cpp:
+        Removed stub GraphicsContext3DPrivate implementation in favor of GraphicsContext3DPrivate.cpp.
+        (WebCore::GraphicsContext3D::GraphicsContext3D):
+        Added GraphicsContext3DPrivate and PlatformCALayer initialization.
+        (WebCore::GraphicsContext3D::makeContextCurrent):
+        (WebCore::GraphicsContext3D::platformGraphicsContext3D):
+        Added implementation based on Cairo ports' to be refactored soon.
+        (WebCore::GraphicsContext3D::platformLayer):
+        Return PlatformCALayer's PlatformLayer instead of 0.
+
+2013-08-08  Jer Noble  <jer.noble@apple.com>
+
+        [EME] Implement MediaKeys.isTypeSupported()
+        https://bugs.webkit.org/show_bug.cgi?id=119586
+
+        Reviewed by Eric Carlson.
+
+        Test: media/encrypted-media/encrypted-media-is-type-supported.html
+
+        The EME spec has removed the extra keySystem parameter from
+        HTMLMediaElement.canPlayType() in favor of a new isTypeSupported()
+        method on MediaKeys.
+
+        To implement this method, the CDMFactory needs to know whether the
+        registered CDM supports the specified mime type.  CDMs must register
+        this new factory method, which requires changes to CDMPrivateAVFoundation
+        and MockCDM.
+
+        Add the new MediaKeys.isTypeSupported() method:
+        * Modules/encryptedmedia/MediaKeys.cpp:
+        (WebCore::MediaKeys::isTypeSupported):
+        * Modules/encryptedmedia/MediaKeys.h:
+        * Modules/encryptedmedia/MediaKeys.idl:
+
+        Add the new factory CDMSupportsKeySystemAndMimeType method:
+        * Modules/encryptedmedia/CDM.cpp:
+        (WebCore::CDMFactory::CDMFactory): Now takes a third parameter.
+        (WebCore::installedCDMFactories): When adding the AVFoundation CDM, pass its new method.
+        (WebCore::CDM::registerCDMFactory): Now takes a third parameter.
+        (WebCore::CDM::keySystemSupportsMimeType): Added.
+        * Modules/encryptedmedia/CDM.h:
+        * WebCore.exp.in:
+
+        Register this new method with the factory for all concrete CDMs:
+        * Modules/encryptedmedia/CDMPrivateAVFoundation.h:
+        * Modules/encryptedmedia/CDMPrivateAVFoundation.mm:
+        (WebCore::CDMPrivateAVFoundation::supportsKeySystem):
+        (WebCore::CDMPrivateAVFoundation::supportsKeySystemAndMimeType):
+        * testing/Internals.cpp:
+        (WebCore::Internals::initializeMockCDM):
+        * testing/MockCDM.cpp:
+        (WebCore::MockCDM::supportsKeySystem):
+        (WebCore::MockCDM::supportsKeySystemAndMimeType):
+        * testing/MockCDM.h:
+
+2013-08-08  Rob Buis  <rwlbuis@webkit.org>
+
+        Crash in WTF::RefPtr<WebCore::SpaceSplitStringData>::operator UnspecifiedBoolType
+        https://bugs.webkit.org/show_bug.cgi?id=118839
+
+        Reviewed by Darin Adler.
+
+        Take into account that elementData() can be null in classAttributeChanged.
+
+        Test: svg/animations/classAttributeSettingCrash.html
+
+        * dom/Element.cpp:
+        (WebCore::Element::classAttributeChanged):
+
+2013-08-08  Robert Hogan  <robert@webkit.org>
+
+        REGRESSION(r147019): Page has extra space
+        https://bugs.webkit.org/show_bug.cgi?id=119424
+
+        Reviewed by David Hyatt.
+
+        Clear the overflow rect before recomputing it in table sections.
+
+        No new tests: the reduction uses jquery and I was unable to simulate the reduction without it.
+
+        * rendering/RenderTableSection.cpp:
+        (WebCore::RenderTableSection::layoutRows):
+        (WebCore::RenderTableSection::computeOverflowFromCells):
+
 2013-08-08  Andreas Kling  <akling@apple.com>
 
         Inserting multiple rules into an empty style sheet should avoid style recalc if possible.

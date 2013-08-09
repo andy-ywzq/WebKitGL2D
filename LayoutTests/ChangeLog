@@ -1,3 +1,539 @@
+2013-08-09  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Add support for KeyboardEvent.location attribute
+        https://bugs.webkit.org/show_bug.cgi?id=119326
+
+        Reviewed by Benjamin Poulain.
+
+        Rename KeyboardEvent.keyLocation to KeyboardEvent.location in the
+        tests and add test cases to make sure that the deprecated
+        KeyboardEvent.keyLocation still works.
+
+        * fast/events/arrow-keys-on-body-expected.txt:
+        * fast/events/arrow-keys-on-body.html:
+        * fast/events/constructors/keyboard-event-constructor-expected.txt:
+        * fast/events/constructors/keyboard-event-constructor.html:
+        * fast/events/init-events-expected.txt:
+        * fast/events/js-keyboard-event-creation.html:
+        * fast/events/keydown-leftright-keys-expected.txt:
+        * fast/events/keydown-leftright-keys.html:
+        * fast/events/keydown-numpad-keys-expected.txt:
+        * fast/events/script-tests/init-events.js:
+        * fast/events/script-tests/keydown-numpad-keys.js:
+        (recordKeyEvent):
+        (testKeyEventWithLocation):
+        * platform/mac/fast/events/objc-keyboard-event-creation.html:
+        * platform/win/fast/events/keyLocation-numpad.html:
+
+2013-08-09  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Make atob() throw an InvalidCharacterError on excess padding characters
+        https://bugs.webkit.org/show_bug.cgi?id=118898
+
+        Reviewed by Darin Adler.
+
+        Update and rebaseline fast/dom/Window/atob-btoa.html now that window.atob()'s
+        behavior has changed and now that we throw an InvalidCharacterError on excess
+        pad characters.
+
+        * fast/dom/Window/atob-btoa-expected.txt:
+        * fast/dom/Window/atob-btoa.html:
+
+2013-08-09  Alexey Proskuryakov  <ap@apple.com>
+
+        <unknown> is often dumped instead of path in test output
+        https://bugs.webkit.org/show_bug.cgi?id=119590
+
+        Reviewed by Anders Carlsson.
+
+        Updating test results.
+
+        * fast/loader/file-protocol-fragment-expected.txt:
+        * fast/loader/main-document-url-for-non-http-loads-expected.txt:
+        * http/tests/cache/iframe-304-crash-expected.txt:
+        * http/tests/cache/willsendrequest-returns-null-for-memory-cache-load-expected.txt:
+        * http/tests/loading/307-after-303-after-post-expected.txt:
+        * http/tests/loading/authentication-after-redirect-stores-wrong-credentials/authentication-after-redirect-stores-wrong-credentials-expected.txt:
+        * http/tests/loading/basic-auth-resend-wrong-credentials-expected.txt:
+        * http/tests/loading/basic-credentials-sent-automatically-expected.txt:
+        * http/tests/loading/redirect-methods-expected.txt:
+        * http/tests/misc/401-alternative-content-expected.txt:
+        * http/tests/misc/authentication-redirect-1/authentication-sent-to-redirect-cross-origin-expected.txt:
+        * http/tests/misc/authentication-redirect-2/authentication-sent-to-redirect-same-origin-expected.txt:
+        * http/tests/misc/authentication-redirect-4/authentication-sent-to-redirect-same-origin-url-expected.txt:
+        * http/tests/misc/favicon-loads-with-images-disabled-expected.txt:
+        * http/tests/misc/link-rel-icon-beforeload-expected.txt:
+        * http/tests/misc/will-send-request-returns-null-on-redirect-expected.txt:
+        * http/tests/misc/window-dot-stop-expected.txt:
+        * http/tests/security/401-logout/401-logout-expected.txt:
+        * http/tests/security/XFrameOptions/x-frame-options-allowall-expected.txt:
+        * http/tests/security/XFrameOptions/x-frame-options-deny-expected.txt:
+        * http/tests/security/XFrameOptions/x-frame-options-deny-meta-tag-expected.txt:
+        * http/tests/security/XFrameOptions/x-frame-options-deny-meta-tag-in-body-expected.txt:
+        * http/tests/security/XFrameOptions/x-frame-options-deny-meta-tag-parent-same-origin-allow-expected.txt:
+        * http/tests/security/XFrameOptions/x-frame-options-deny-meta-tag-parent-same-origin-deny-expected.txt:
+        * http/tests/security/XFrameOptions/x-frame-options-invalid-expected.txt:
+        * http/tests/security/XFrameOptions/x-frame-options-multiple-headers-conflict-expected.txt:
+        * http/tests/security/XFrameOptions/x-frame-options-multiple-headers-sameorigin-allow-expected.txt:
+        * http/tests/security/XFrameOptions/x-frame-options-multiple-headers-sameorigin-deny-expected.txt:
+        * http/tests/security/XFrameOptions/x-frame-options-parent-same-origin-allow-expected.txt:
+        * http/tests/security/XFrameOptions/x-frame-options-parent-same-origin-deny-expected.txt:
+        * http/tests/xmlhttprequest/failed-auth-expected.txt:
+        * http/tests/xmlhttprequest/remember-bad-password-expected.txt:
+        * loader/go-back-cached-main-resource-expected.txt:
+        * platform/efl-wk2/loader/go-back-cached-main-resource-expected.txt:
+        * platform/mac/fast/images/support-broken-image-delegate-expected.txt:
+        * platform/mac/security/block-test-expected.txt:
+        * platform/mac/security/block-test-no-port-expected.txt:
+        * platform/mac/webarchive/loading/cache-expired-subresource-expected.txt:
+        * webarchive/loading/test-loading-archive-expected.txt:
+        * webarchive/loading/test-loading-archive-subresource-null-mimetype-expected.txt:
+
+2013-08-09  Mihai Tica  <mitica@adobe.com>
+
+        Modify the existing canvas blending test suite to test both
+        accelerated and non accelerated modes.
+        https://bugs.webkit.org/show_bug.cgi?id=119628
+
+        Reviewed by Dirk Schulze.
+
+        * fast/canvas/canvas-blending-clipping-expected.txt:
+        * fast/canvas/canvas-blending-clipping.html:
+        * fast/canvas/canvas-blending-color-over-color-expected.txt:
+        * fast/canvas/canvas-blending-color-over-color.html:
+        * fast/canvas/canvas-blending-color-over-gradient-expected.txt:
+        * fast/canvas/canvas-blending-color-over-gradient.html:
+        * fast/canvas/canvas-blending-color-over-image-expected.txt:
+        * fast/canvas/canvas-blending-color-over-image.html:
+        * fast/canvas/canvas-blending-color-over-pattern-expected.txt:
+        * fast/canvas/canvas-blending-color-over-pattern.html:
+        * fast/canvas/canvas-blending-fill-style-expected.txt:
+        * fast/canvas/canvas-blending-fill-style.html:
+        * fast/canvas/canvas-blending-global-alpha-expected.txt:
+        * fast/canvas/canvas-blending-global-alpha.html:
+        * fast/canvas/canvas-blending-gradient-over-color-expected.txt:
+        * fast/canvas/canvas-blending-gradient-over-color.html:
+        * fast/canvas/canvas-blending-gradient-over-gradient-expected.txt:
+        * fast/canvas/canvas-blending-gradient-over-gradient.html:
+        * fast/canvas/canvas-blending-gradient-over-image-expected.txt:
+        * fast/canvas/canvas-blending-gradient-over-image.html:
+        * fast/canvas/canvas-blending-gradient-over-pattern-expected.txt:
+        * fast/canvas/canvas-blending-gradient-over-pattern.html:
+        * fast/canvas/canvas-blending-image-over-color-expected.txt:
+        * fast/canvas/canvas-blending-image-over-color.html:
+        * fast/canvas/canvas-blending-image-over-gradient-expected.txt:
+        * fast/canvas/canvas-blending-image-over-gradient.html:
+        * fast/canvas/canvas-blending-image-over-image-expected.txt:
+        * fast/canvas/canvas-blending-image-over-image.html:
+        * fast/canvas/canvas-blending-image-over-pattern-expected.txt:
+        * fast/canvas/canvas-blending-image-over-pattern.html:
+        * fast/canvas/canvas-blending-pattern-over-color-expected.txt:
+        * fast/canvas/canvas-blending-pattern-over-color.html:
+        * fast/canvas/canvas-blending-pattern-over-gradient-expected.txt:
+        * fast/canvas/canvas-blending-pattern-over-gradient.html:
+        * fast/canvas/canvas-blending-pattern-over-image-expected.txt:
+        * fast/canvas/canvas-blending-pattern-over-image.html:
+        * fast/canvas/canvas-blending-pattern-over-pattern-expected.txt:
+        * fast/canvas/canvas-blending-pattern-over-pattern.html:
+        * fast/canvas/canvas-blending-shadow-expected.txt:
+        * fast/canvas/canvas-blending-shadow.html:
+        * fast/canvas/canvas-blending-text-expected.txt:
+        * fast/canvas/canvas-blending-text.html:
+        * fast/canvas/canvas-blending-transforms-expected.txt:
+        * fast/canvas/canvas-blending-transforms.html:
+
+2013-08-09  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Make DOMImplementation::hasFeature() behave according to specification
+        https://bugs.webkit.org/show_bug.cgi?id=119329
+
+        Reviewed by Ryosuke Niwa.
+
+        Rebaseline several test cases now that DOMImplementation::hasFeature() returns
+        true unconditionally for non-SVG features.
+
+        Also use a valid svg prefix for unknown features in SVG tests so that they are
+        properly recognized as SVG features and so that hasFeature() returns false as
+        expected.
+
+        * dom/xhtml/level3/core/hasFeature01-expected.txt:
+        * dom/xhtml/level3/core/hasFeature02-expected.txt:
+        * dom/xhtml/level3/core/hasFeature03-expected.txt:
+        * dom/xhtml/level3/core/hasFeature04-expected.txt:
+        * fast/dom/features-expected.txt:
+        * platform/efl/svg/W3C-SVG-1.1-SE/types-dom-06-f-expected.txt:
+        * platform/efl/svg/W3C-SVG-1.1/struct-dom-03-b-expected.txt:
+        * platform/gtk/svg/W3C-SVG-1.1-SE/types-dom-06-f-expected.txt:
+        * platform/gtk/svg/W3C-SVG-1.1/struct-dom-03-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/types-dom-06-f-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/struct-dom-03-b-expected.txt:
+        * platform/qt-mac/svg/W3C-SVG-1.1-SE/types-dom-06-f-expected.txt:
+        * platform/qt/svg/W3C-SVG-1.1-SE/types-dom-06-f-expected.txt:
+        * svg/W3C-SVG-1.1/struct-dom-03-b-expected.txt:
+        * svg/custom/outer-svg-unknown-feature.svg:
+        * svg/dynamic-updates/script-tests/SVGCircleElement-dom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGCircleElement-svgdom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGEllipseElement-dom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGEllipseElement-svgdom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGForeignObjectElement-dom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGForeignObjectElement-svgdom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGGElement-dom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGGElement-svgdom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGImageElement-dom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGImageElement-svgdom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGLineElement-dom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGLineElement-svgdom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGPathElement-dom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGPathElement-svgdom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGPolygonElement-dom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGPolygonElement-svgdom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGPolylineElement-dom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGPolylineElement-svgdom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGRectElement-dom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGRectElement-svgdom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGSVGElement-dom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGSVGElement-svgdom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGTextElement-dom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGTextElement-svgdom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGUseElement-dom-requiredFeatures.js:
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGUseElement-svgdom-requiredFeatures.js:
+        (repaintTest):
+
+2013-08-09  Simon Fraser  <simon.fraser@apple.com>
+
+        move-by-word-visually-multi-space.html takes 21s and spends most of its time doing spelling and grammar checking
+        https://bugs.webkit.org/show_bug.cgi?id=119613
+
+        Reviewed by Darin Adler.
+        
+        editing/selection tests are very slow, and much of the time is spent
+        doing spelling and grammar checking (which is not what these tests are
+        testing). So call internals.setContinuousSpellCheckingEnabled(false)
+        to turn that off.
+
+        * editing/selection/caret-at-bidi-boundary.html:
+        * editing/selection/move-by-character-brute-force.html:
+        * editing/selection/move-left-right.html:
+        * editing/selection/programmatic-selection-on-mac-is-directionless.html:
+        * editing/selection/resources/extend-selection.js:
+        * editing/selection/resources/move-by-word-visually.js:
+        (runTest):
+
+2013-08-09  Bruno de Oliveira Abinader  <bruno.d@partner.samsung.com>
+
+        Text decorations should be listed as non-inheritable
+        https://bugs.webkit.org/show_bug.cgi?id=119608
+
+        Reviewed by Andreas Kling.
+
+        Added test to verify that 'text-decoration' and 'text-decoration-line'
+        properties are not implicitly inherited.
+
+        * fast/css/getComputedStyle/getComputedStyle-text-decoration-expected.txt:
+        * fast/css/getComputedStyle/script-tests/getComputedStyle-text-decoration.js:
+        * fast/css3-text/css3-text-decoration/getComputedStyle/getComputedStyle-text-decoration-line-expected.txt:
+        * fast/css3-text/css3-text-decoration/getComputedStyle/script-tests/getComputedStyle-text-decoration-line.js:
+
+2013-08-09  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Rebaselinnig some new tests.
+
+        * platform/qt-5.0-wk1/TestExpectations:
+        * platform/qt-5.0-wk2/compositing/overflow-trumps-transform-style-expected.txt:
+        * platform/qt-5.0-wk2/fast/repaint/caret-jump-between-nodes-expected.txt: Added.
+        * platform/qt/compositing/geometry/preserve-3d-switching-expected.txt:
+        * platform/qt/fast/forms/search-rtl-expected.png:
+        * platform/qt/fast/forms/search-rtl-expected.txt:
+        * platform/qt/fast/repaint/caret-jump-between-nodes-expected.txt: Added.
+
+2013-08-09  Rob Buis  <rwlbuis@webkit.org>
+
+        ASSERT_NOT_REACHED() touched in WebCore::SVGAnimatedStringAnimator::addAnimatedTypes
+        https://bugs.webkit.org/show_bug.cgi?id=113224
+
+        Reviewed by Dirk Schulze.
+
+        Add a test for animating non-additive attributes in from-by animations
+
+        * svg/animations/non-additive-type-from-by-animation-expected.txt: Added.
+        * svg/animations/non-additive-type-from-by-animation.html: Added.
+        * svg/animations/resources/non-additive-type-from-by-animation.svg: Added.
+        * svg/animations/script-tests/non-additive-type-from-by-animation.js: Added.
+        (sample):
+        (executeTest):
+
+2013-08-09  Rob Buis  <rwlbuis@webkit.org>
+
+        ASSERT(m_type == toSVGTransform.type())
+        https://bugs.webkit.org/show_bug.cgi?id=113217
+
+        Reviewed by Darin Adler.
+
+        Add reftest for additive to animation where from and to transform types differ.
+
+        * svg/animations/animateTransform-to-scale-expected.svg: Added.
+        * svg/animations/animateTransform-to-scale.svg: Added.
+
+2013-08-09  Renata Hodovan  <reni@webkit.org>
+
+        Missing NULL check in ApplyStyleCommand::applyInlineStyleToNodeRange()
+        https://bugs.webkit.org/show_bug.cgi?id=119570
+
+        Reviewed by Ryosuke Niwa.
+
+        * editing/execCommand/null-style-crash-expected.txt: Added.
+        * editing/execCommand/null-style-crash.html: Added.
+
+2013-08-08  Tim Horton  <timothy_horton@apple.com>
+
+        navigator.plugins has plugins in it when plugins are disabled
+        https://bugs.webkit.org/show_bug.cgi?id=119607
+        <rdar://problem/14678030>
+
+        Reviewed by Anders Carlsson.
+
+        Add a test that ensures that navigator.plugins only contains
+        application plugins when plugins are disabled.
+
+        * plugins/navigator-plugins-disabled-expected.txt: Added.
+        * plugins/navigator-plugins-disabled.html: Added.
+
+2013-08-08  Timothy Hatcher  <timothy@apple.com>
+
+        Allow SVG images to be drawn into canvas without tainting.
+        https://bugs.webkit.org/show_bug.cgi?id=119492
+
+        Reviewed by Darin Adler.
+
+        * fast/canvas/svg-taint-expected.txt: Removed.
+        * fast/canvas/svg-taint.html: Removed. Obsolete.
+        * http/tests/security/canvas-remote-read-data-url-svg-image-expected.txt: Removed.
+        * http/tests/security/canvas-remote-read-data-url-svg-image.html: Removed. Obsolete.
+        * http/tests/security/canvas-remote-read-svg-image-expected.txt: Removed.
+        * http/tests/security/canvas-remote-read-svg-image.html: Removed. Obsolete.
+        * svg/as-image/resources/link-xhtml-svg.svg: Added.
+        * svg/as-image/resources/link-xhtml.svg: Added.
+        * svg/as-image/resources/link.svg: Added.
+        * svg/as-image/svg-canvas-link-not-colored-expected.txt: Added.
+        * svg/as-image/svg-canvas-link-not-colored.html: Added.
+        * svg/as-image/svg-canvas-not-tainted-expected.txt: Added.
+        * svg/as-image/svg-canvas-not-tainted.html: Added.
+        * svg/as-image/svg-canvas-xhtml-tainted-expected.txt: Added.
+        * svg/as-image/svg-canvas-xhtml-tainted.html: Added.
+
+2013-08-08  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r153847.
+        http://trac.webkit.org/changeset/153847
+        https://bugs.webkit.org/show_bug.cgi?id=119609
+
+        caused new SVG animation test failures (Requested by smfr on
+        #webkit).
+
+        * svg/animations/non-additive-type-from-by-animation-expected.txt: Removed.
+        * svg/animations/non-additive-type-from-by-animation.html: Removed.
+        * svg/animations/resources/non-additive-type-from-by-animation.svg: Removed.
+        * svg/animations/script-tests/non-additive-type-from-by-animation.js: Removed.
+
+2013-08-08  Jer Noble  <jer.noble@apple.com>
+
+        Unreviewed gardening; update test after addKey() was renamed to update().
+
+        * media/encrypted-media/encrypted-media-v2-events-expected.txt:
+        * media/encrypted-media/encrypted-media-v2-events.html:
+
+2013-08-08  Jer Noble  <jer.noble@apple.com>
+
+        [EME] MediaKey APIs should be prefixed.
+        https://bugs.webkit.org/show_bug.cgi?id=119606
+
+        Reviewed by Anders Carlsson.
+
+        * media/encrypted-media/encrypted-media-constants-expected.txt:
+        * media/encrypted-media/encrypted-media-constants.html:
+        * media/encrypted-media/encrypted-media-events-expected.txt:
+        * media/encrypted-media/encrypted-media-events.html:
+        * media/encrypted-media/encrypted-media-is-type-supported-expected.txt:
+        * media/encrypted-media/encrypted-media-is-type-supported.html:
+        * media/encrypted-media/encrypted-media-v2-events-expected.txt:
+        * media/encrypted-media/encrypted-media-v2-events.html:
+        * media/encrypted-media/encrypted-media-v2-syntax-expected.txt:
+        * media/encrypted-media/encrypted-media-v2-syntax.html:
+
+2013-08-08  Tim Horton  <timothy_horton@apple.com>
+
+        Unreviewed, remove TestExpectations for removed microdata tests.
+
+        * platform/mac/TestExpectations:
+        * platform/qt/TestExpectations:
+        * platform/win/TestExpectations:
+
+2013-08-08  Alexey Proskuryakov  <ap@apple.com>
+
+        [WK2] loader/go-back-cached-main-resource.html fails
+        https://bugs.webkit.org/show_bug.cgi?id=116491
+
+        Reviewed by Tim Horton.
+
+        * platform/wk2/TestExpectations:
+        * webarchive/loading/test-loading-archive-subresource-null-mimetype-expected.txt:
+        Updated to not have file:// in results. This may not be desirable for a webarchive
+        test, but shouldn't be too bad either.
+        * platform/mac-wk2/loader/go-back-cached-main-resource-expected.txt: Deleted.
+        Cross-platform results now work.
+
+2013-08-08  Jer Noble  <jer.noble@apple.com>
+
+        [EME] setMediaKeys function as defined in the EME specification does not work
+        https://bugs.webkit.org/show_bug.cgi?id=119597
+
+        Reviewed by Anders Carlsson.
+
+        * media/encrypted-media/encrypted-media-v2-syntax-expected.txt:
+        * media/encrypted-media/encrypted-media-v2-syntax.html:
+
+2013-08-08  Rob Buis  <rwlbuis@webkit.org>
+
+        ASSERT_NOT_REACHED() touched in WebCore::SVGAnimatedStringAnimator::addAnimatedTypes
+        https://bugs.webkit.org/show_bug.cgi?id=113224
+
+        Reviewed by Dirk Schulze.
+
+        Add a test for animating non-additive attributes in from-by animations
+
+        * svg/animations/non-additive-type-from-by-animation-expected.txt: Added.
+        * svg/animations/non-additive-type-from-by-animation.html: Added.
+        * svg/animations/resources/non-additive-type-from-by-animation.svg: Added.
+        * svg/animations/script-tests/non-additive-type-from-by-animation.js: Added.
+        (sample):
+        (executeTest):
+
+2013-08-08  Eric Carlson  <eric.carlson@apple.com>
+
+        fullscreen/exit-full-screen-iframe.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=90708
+
+        Unreviewed gardening.
+
+        * platform/mac/TestExpectations: Mark test as flakey, it doesn't always pass.
+
+2013-08-08  Eric Carlson  <eric.carlson@apple.com>
+
+        fast/events/scroll-div-with-prevent-default-in-subframe.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=82747
+
+        Unreviewed gardening.
+
+        * platform/mac/TestExpectations: Mark test as flakey, it doesn't always pass.
+
+2013-08-08  Eric Carlson  <eric.carlson@apple.com>
+
+        http/tests/navigation/back-twice-without-commit.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=82980
+
+        Unreviewed gardening.
+
+        * platform/mac/TestExpectations: Unskip passing test.
+
+2013-08-08  Eric Carlson  <eric.carlson@apple.com>
+
+        Layout Test fast/overflow/scrollbar-click-retains-focus.html is failing on Apple Mac WK1 and GTK.
+        https://bugs.webkit.org/show_bug.cgi?id=104104
+
+        Unreviewed gardening.
+
+        * platform/mac/TestExpectations: Unskip passing test.
+
+2013-08-08  Jer Noble  <jer.noble@apple.com>
+
+        [EME] Implement MediaKeys.isTypeSupported()
+        https://bugs.webkit.org/show_bug.cgi?id=119586
+
+        Reviewed by Eric Carlson.
+
+        * media/encrypted-media/encrypted-media-is-type-supported-expected.txt: Added.
+        * media/encrypted-media/encrypted-media-is-type-supported.html: Added.
+
+2013-08-08  Eric Carlson  <eric.carlson@apple.com>
+
+        fast/events/scroll-div-with-prevent-default-in-subframe.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=82747
+
+        Unreviewed gardening.
+
+        * platform/mac/TestExpectations: Unskip passing test.
+
+2013-08-08  Eric Carlson  <eric.carlson@apple.com>
+
+        REGRESSION(r130839): fast/canvas/webgl/arraybuffer-transfer-of-control.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=99096
+
+        Unreviewed gardening.
+
+        * platform/mac/TestExpectations: Unskip passing test.
+
+2013-08-08  Eric Carlson  <eric.carlson@apple.com>
+
+        fullscreen/exit-full-screen-iframe.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=90708
+
+        Unreviewed gardening.
+
+        * platform/mac/TestExpectations: Unskip passing test.
+
+2013-08-08  Rob Buis  <rwlbuis@webkit.org>
+
+        Crash in WTF::RefPtr<WebCore::SpaceSplitStringData>::operator UnspecifiedBoolType
+        https://bugs.webkit.org/show_bug.cgi?id=118839
+
+        Reviewed by Darin Adler.
+
+        Add testcase that showed up to cause a crash by the fuzzer.
+
+        * svg/animations/classAttributeSettingCrash-expected.txt: Added.
+        * svg/animations/classAttributeSettingCrash.html: Added.
+
+2013-08-08  Rob Buis  <rwlbuis@webkit.org>
+
+        svg/custom/use-href-update-crash.svg failing on certain platforms
+        https://bugs.webkit.org/show_bug.cgi?id=104054
+
+        Reviewed by Darin Adler.
+
+        Fix mistake in use-href-update-crash.svg which caused the gc() not found problem. Update the test expectations
+        that had this marked as failure, it passes after the test fix.
+
+        * platform/gtk/TestExpectations:
+        * platform/mac/TestExpectations:
+        * platform/qt/TestExpectations:
+        * platform/win/TestExpectations:
+        * svg/custom/use-href-update-crash.svg:
+
 2013-08-08  Alexey Proskuryakov  <ap@apple.com>
 
         WTR::pathSuitableForTestResult should behave the same as _drt_descriptionSuitableForTestResult so we can unskip tests.

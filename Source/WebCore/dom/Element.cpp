@@ -485,7 +485,8 @@ void Element::setActive(bool flag, bool pause)
         double startTime = currentTime();
 #endif
 
-        Document::updateStyleForAllDocuments();
+        document()->updateStyleIfNeeded();
+
         // Do an immediate repaint.
         if (renderer())
             renderer()->repaint(true);
@@ -1110,11 +1111,11 @@ void Element::classAttributeChanged(const AtomicString& newClassString)
 
     if (classStringHasClassName(newClassString)) {
         const bool shouldFoldCase = document()->inQuirksMode();
-        const SpaceSplitString oldClasses = elementData()->classNames();
+        const SpaceSplitString oldClasses = ensureUniqueElementData()->classNames();
         elementData()->setClass(newClassString, shouldFoldCase);
         const SpaceSplitString& newClasses = elementData()->classNames();
         shouldInvalidateStyle = testShouldInvalidateStyle && checkSelectorForClassChange(oldClasses, newClasses, *styleResolver);
-    } else {
+    } else if (elementData()) {
         const SpaceSplitString& oldClasses = elementData()->classNames();
         shouldInvalidateStyle = testShouldInvalidateStyle && checkSelectorForClassChange(oldClasses, *styleResolver);
         elementData()->clearClass();

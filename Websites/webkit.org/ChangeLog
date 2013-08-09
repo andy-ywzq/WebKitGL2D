@@ -1,3 +1,43 @@
+2013-08-08  Benjamin Poulain  <bpoulain@apple.com>
+
+        Fix webkit.org content overflowing their content box
+
+        Rubberstamped by Simon Fraser.
+
+        More fixes to have webkit.org show properly on iPad and iPhone.
+
+        * blog/wp-content/themes/webkit/header.php:
+        Add the correct viewport width for the blog.
+
+        * building/debug.html:
+        * building/launch-debugger-vs2010-small.png: Added.
+        * building/set-debugging-properties-vs2010-small.png: Added.
+        Fix the images to make them fit in the page.
+
+        * coding/adding-features.html:
+        Using <pre> for the example of email just make it looks like our code examples.
+        Change the source to use <blockquote> so that the text can reflow to the content box.
+        * css/main.css:
+        (.code, pre, tt, code):
+        Scroll the content when it overflows the box for code and pre.
+
+2013-08-08  Benjamin Poulain  <benjamin@webkit.org>
+
+        Give a smaller viewport to webkit.org on devices
+
+        Rubberstamped by Simon Fraser.
+
+        The CSS of WebKit.org layout the content on 615px + a right margin of
+        215px + a left margin of 20px. The total layout width is 850px.
+
+        The standard viewport size on mobile devices is 980px. This leaves a gap
+        on the right side of the content when opening the size on iPhone/iPad.
+
+        This patch changes the layout width to be 860 to display more content on devices
+        while keeping a little margin.
+
+        * header.inc:
+
 2013-08-08  Cosmin Truta  <ctruta@blackberry.com>
 
         SunSpider: Move the 3d-morph fix from version 1.0 to version 1.0.1

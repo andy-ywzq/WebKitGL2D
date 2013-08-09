@@ -1,3 +1,156 @@
+2013-08-09  Brian Holt  <brian.holt@samsung.com>
+
+        [GTK] [WebKit2] Add an 'authenticate' signal to WebKitWebView
+        https://bugs.webkit.org/show_bug.cgi?id=99352
+
+        Reviewed by Carlos Garcia Campos.
+
+        Add a new public class to the API, WebKitAuthenticationRequest, to be
+        emitted along with a new WebKitWebView::authenticate signal to
+        let client applications to provide their own authentication
+        when the user is challenged with HTTP authentication. The
+        credential is exposed through a new class WebKitCredential.
+
+        * GNUmakefile.list.am:
+        * UIProcess/API/gtk/WebKitAuthenticationDialog.cpp:
+        (okButtonClicked): Use new API for authentication.
+        (cancelButtonClicked): Ditto.
+        (webkitAuthenticationDialogInitialize):Get
+        authenticationChallenge from request object.
+        (webkitAuthenticationDialogNew): Ditto.
+        * UIProcess/API/gtk/WebKitAuthenticationDialog.h:
+        * UIProcess/API/gtk/WebKitAuthenticationRequest.cpp: Added new
+        class representing a HTTP authentication request.
+        (webkitAuthenticationRequestDispose):
+        (webkit_authentication_request_class_init):
+        (webkitAuthenticationRequestCreate):
+        (webkitAuthenticationRequestGetAuthenticationChallenge):
+        (webkit_authentication_request_can_save_credentials):
+        (webkit_authentication_request_get_proposed_credential):
+        (webkit_authentication_request_get_host):
+        (webkit_authentication_request_get_port):
+        (webkit_authentication_request_get_realm):
+        (webkit_authentication_request_get_scheme):
+        (webkit_authentication_request_is_for_proxy):
+        (webkit_authentication_request_is_retry):
+        (webkit_authentication_request_authenticate):
+        (webkit_authentication_request_cancel):
+        * UIProcess/API/gtk/WebKitAuthenticationRequest.h: Added.
+        * UIProcess/API/gtk/WebKitAuthenticationRequestPrivate.h: Added.
+        * UIProcess/API/gtk/WebKitCredential.cpp: Added new class to
+        support credentials for HTTP authentication.
+        (_WebKitCredential::_WebKitCredential):
+        (webkitCredentialCreate):
+        (webkitCredentialGetCredential):
+        (webkit_credential_new):
+        (webkit_credential_copy):
+        (webkit_credential_free):
+        (webkit_credential_get_username):
+        (webkit_credential_get_password):
+        (webkit_credential_has_password):
+        (webkit_credential_get_persistence):
+        * UIProcess/API/gtk/WebKitCredential.h: Added.
+        * UIProcess/API/gtk/WebKitCredentialPrivate.h: Added.
+        * UIProcess/API/gtk/WebKitWebView.cpp: Added authenticate signal.
+        (webkitWebViewAuthenticate): Default signal handler for authenticate.
+        (webkit_web_view_class_init): Ditto.
+        (webkitWebViewHandleAuthenticationChallenge): Create an
+        authentication request and emit it with authenticate signal.
+        * UIProcess/API/gtk/WebKitWebView.h: Replaced reserved function
+        pointer slot with for WebViewClass with function pointer to
+        authenticate signal handler.
+        * UIProcess/API/gtk/docs/webkit2gtk-docs.sgml: Added new section for
+        the authentication request.
+        * UIProcess/API/gtk/docs/webkit2gtk-sections.txt: Ditto.
+        * UIProcess/API/gtk/docs/webkit2gtk.types: Added authentication
+        request and credential types.
+        * UIProcess/API/gtk/tests/TestWebKitWebView.cpp: Created a new
+        unit test for HTTP authentication. A libsoup server callback
+        handler is installed that creates soup messages with appropriate
+        headers and body to test HTTP authentication.
+        (testWebViewAuthenticationRequest): Test the authentication
+        request and credential API.
+        (testWebViewAuthenticationCancel): Test cancelled authentication.
+        (testWebViewAuthenticationFailure): Test repeated authentication failures.
+        (testWebViewAuthenticationNoCredential): Test continue without
+        credentials.
+        (testWebViewAuthenticationStorage): Test credential storage.
+        (testWebViewAuthenticationSuccess): Test successful authentication.
+        (beforeAll): Added tests.
+        * UIProcess/API/gtk/webkit2.h: Added WebKitAuthenticationRequest and
+        WebKitCredential headers.
+
+2013-08-09  Tim Horton  <timothy_horton@apple.com>
+
+        PDFPlugin is disabled by default in nightlies on Mac accidentally
+        https://bugs.webkit.org/show_bug.cgi?id=119615
+
+        Rubber-stamped by Andreas Kling.
+
+        Enable PDFPlugin by default on Mac at the WebKit2 level.
+
+        * Shared/WebPreferencesStore.h:
+        * UIProcess/API/C/WKPreferencesPrivate.h:
+
+2013-08-08  Tim Horton  <timothy_horton@apple.com>
+
+        navigator.plugins has plugins in it when plugins are disabled
+        https://bugs.webkit.org/show_bug.cgi?id=119607
+        <rdar://problem/14678030>
+
+        Reviewed by Anders Carlsson.
+
+        * UIProcess/WebProcessProxy.cpp:
+        (WebKit::WebProcessProxy::getPlugins):
+        Return a list of all plugins, and a list of only application plugins.
+
+        * UIProcess/WebProcessProxy.h:
+        * UIProcess/WebProcessProxy.messages.in:
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.h:
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.cpp:
+        (WebKit::WebPlatformStrategies::getPluginInfo):
+        Add applicationPlugin parameter to getPlugins, and storage for the returned list.
+
+        (WebKit::WebPlatformStrategies::populatePluginCache):
+        If plugins are disabled for the given page, give WebCore the list that
+        only includes application plugins. Otherwise, give it the whole list
+        as we are doing currently.
+
+2013-08-08  Gavin Barraclough  <barraclough@apple.com>
+
+        Disable suppression of plugin process for Java
+        https://bugs.webkit.org/show_bug.cgi?id=119604
+
+        Reviewed by Sam Weinig.
+
+        Workaround, the Java plugin doesn't like this.
+
+        * PluginProcess/mac/PluginProcessMac.mm:
+        (WebKit::PluginProcess::platformInitializeProcess):
+            - +1 active task count on the java plugin, to inhibit supression.
+
+2013-08-08  Dean Jackson  <dino@apple.com>
+
+        Add logging to the primary plugin detection
+        https://bugs.webkit.org/show_bug.cgi?id=119594
+
+        Reviewed by Tim Horton.
+
+        Add some simple logging to our primary plug-in detection.
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::determinePrimarySnapshottedPlugIn):
+
+2013-08-08  Alexey Proskuryakov  <ap@apple.com>
+
+        WKBundleFrameCopyProvisionalURL crashes when there is no provisional loader
+        https://bugs.webkit.org/show_bug.cgi?id=119587
+
+        Reviewed by Darin Adler.
+
+        * WebProcess/WebPage/WebFrame.cpp: (WebKit::WebFrame::provisionalURL): Added a null
+        check, like we already have in WebFrame::url().
+
 2013-08-07  Antti Koivisto  <antti@apple.com>
 
         Try to fix EFL build.

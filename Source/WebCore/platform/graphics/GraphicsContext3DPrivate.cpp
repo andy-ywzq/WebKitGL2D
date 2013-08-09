@@ -24,11 +24,14 @@
 
 #include "HostWindow.h"
 #include "NotImplemented.h"
-#include "PlatformContextCairo.h"
 #include <wtf/OwnArrayPtr.h>
 
 #if PLATFORM(NIX) && USE(EGL)
 #include "GLContextFromCurrentEGL.h"
+#endif
+
+#if USE(CAIRO)
+#include "PlatformContextCairo.h"
 #endif
 
 #if USE(OPENGL_ES_2)

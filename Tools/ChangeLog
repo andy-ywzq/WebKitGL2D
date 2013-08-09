@@ -1,3 +1,91 @@
+2013-08-09  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Add support for KeyboardEvent.location attribute
+        https://bugs.webkit.org/show_bug.cgi?id=119326
+
+        Reviewed by Benjamin Poulain.
+
+        Rename the deprecated 'keyLocation' to 'location' in Mac's DRT code.
+
+        * DumpRenderTree/mac/EventSendingController.mm:
+        (-[EventSendingController keyDown:withModifiers:withLocation:]):
+        (-[EventSendingController keyDownWrapper:withModifiers:withLocation:]):
+        (-[EventSendingController scheduleAsynchronousKeyDown:withModifiers:withLocation:]):
+        (-[EventSendingController handleEvent:]):
+        (-[EventSendingController fireKeyboardEventsToElement:]):
+
+2013-08-09  Alexey Proskuryakov  <ap@apple.com>
+
+        <unknown> is often dumped instead of path in test output
+        https://bugs.webkit.org/show_bug.cgi?id=119590
+
+        Reviewed by Anders Carlsson.
+
+        There were two reasons for <unknown>:
+        1. When delegate logging is enabled via a testRunner call, that obviously happens
+        after main resource load starts, so we don't record its URL.
+        2. Authentication delegate logging relied on URL recording, but it's only turned on
+        when enabling resource loading delegate logging, not auth one.
+
+        URL recording was made conditional in <http://trac.webkit.org/r19316>, which was
+        landed without posted rationale and unreviewed. Just undoing that change now.
+
+        * DumpRenderTree/mac/ResourceLoadDelegate.mm:
+        (-[ResourceLoadDelegate webView:identifierForInitialRequest:fromDataSource:]):
+        * WebKitTestRunner/InjectedBundle/InjectedBundlePage.cpp:
+        (WTR::InjectedBundlePage::didInitiateLoadForResource):
+
+2013-08-08  Alex Christensen  <achristensen@apple.com>
+
+        Windows build fixes.
+
+        Rubberstamped by Brent Fulgham.
+
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreeLauncher.vcxproj:
+        Removed /SAFESEH link option which doesn't work with x64.
+
+2013-08-08  Daniel Bates  <dabates@apple.com>
+
+        Add iOS support to run-javascriptcore-tests
+        https://bugs.webkit.org/show_bug.cgi?id=119602
+
+        Reviewed by Joseph Pecoraro.
+
+        Make run-javascriptcore-tests work for iOS WebKit.
+
+        * Scripts/run-javascriptcore-tests:
+
+2013-08-08  Alexey Proskuryakov  <ap@apple.com>
+
+        [WK2] loader/go-back-cached-main-resource.html fails
+        https://bugs.webkit.org/show_bug.cgi?id=116491
+
+        Reviewed by Tim Horton.
+
+        * DumpRenderTree/efl/DumpRenderTreeChrome.cpp:
+        * DumpRenderTree/gtk/DumpRenderTree.cpp:
+        * DumpRenderTree/qt/DumpRenderTreeQt.cpp:
+        * DumpRenderTree/win/DumpRenderTree.cpp:
+        Added FIXMEs about making path printing normalization more compatible.
+
+        * DumpRenderTree/mac/ResourceLoadDelegate.mm: (-[NSURL _drt_descriptionSuitableForTestResult]):
+        Return last path component in cases where we used to return a full path, which is
+        never desirable. Added a null check to basePath to prevent potentially getting
+        an Objective C exception.
+
+        * WebKitTestRunner/InjectedBundle/InjectedBundlePage.cpp:
+        (WTR::pathSuitableForTestResult): Changed to use path for main test window, not
+        for a currently loading one (which is different for tests that use multiple windows).
+        Changed to return "(null)" for empty URLs to match WK1 output. Changed to return
+        last path component as last fallback.
+        (WTR::dumpRequestDescriptionSuitableForTestResult): We no longer need to pass main
+        frame URL here, and it was potentially a wrong frame.
+        (WTR::dumpResponseDescriptionSuitableForTestResult): Ditto.
+        (WTR::InjectedBundlePage::willPerformClientRedirectForFrame): Ditto.
+        (WTR::InjectedBundlePage::didInitiateLoadForResource): Ditto.
+        (WTR::InjectedBundlePage::willSendRequestForFrame): Ditto.
+        (WTR::InjectedBundlePage::didReceiveResponseForResource): Ditto.
+
 2013-08-08  Alex Christensen  <achristensen@apple.com>
 
         WTR::pathSuitableForTestResult should behave the same as _drt_descriptionSuitableForTestResult so we can unskip tests.
