@@ -99,6 +99,8 @@ void PlatformWebView::performDisplayUpdate()
 PlatformWebView::PlatformWebView(WKContextRef context, WKPageGroupRef pageGroup, WKPageRef /* relatedPage */, WKDictionaryRef options)
 {
     m_view = WKViewCreate(context, pageGroup);
+    NIXViewSetAutoScaleToFitContents(m_view, false);
+
     m_window = 0;
     m_scheduledDisplayUpdateID = 0;
 
