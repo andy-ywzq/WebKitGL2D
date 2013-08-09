@@ -45,6 +45,7 @@ TEST(WebKitNix, SingleOverflowScroll)
 
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
     WKRetainPtr<WKViewRef> view(AdoptWK, WKViewCreate(context.get(), 0));
+    NIXViewSetAutoScaleToFitContents(view.get(), false);
 
     Util::ForceRepaintClient forceRepaintClient(view.get());
     forceRepaintClient.setClearColor(0, 0, 1, 1);
@@ -79,6 +80,7 @@ TEST(WebKitNix, MultipleOverflowScroll)
 
     WKRetainPtr<WKContextRef> context = adoptWK(WKContextCreate());
     WKRetainPtr<WKViewRef> view(AdoptWK, WKViewCreate(context.get(), 0));
+    NIXViewSetAutoScaleToFitContents(view.get(), false);
 
     Util::ForceRepaintClient forceRepaintClient(view.get());
     forceRepaintClient.setClearColor(0, 0, 1, 1);
