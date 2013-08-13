@@ -27,21 +27,57 @@
 #include "config.h"
 #include "WebCookieManager.h"
 
-#include <WebCore/CookieStorage.h>
-#include <WebCore/NotImplemented.h>
+#include <WebCore/CookieManager.h>
+
+using namespace WebCore;
 
 namespace WebKit {
 
 void WebCookieManager::platformSetHTTPCookieAcceptPolicy(HTTPCookieAcceptPolicy policy)
 {
-    // Fixme: To be implemented
-    notImplemented();
+    CookieAcceptPolicy cookiePolicy;
+    switch (policy) {
+    case HTTPCookieAcceptPolicyAlways:
+        cookiePolicy = Always;
+        break;
+
+    case HTTPCookieAcceptPolicyNever:
+        cookiePolicy = Never;
+        break;
+
+    case HTTPCookieAcceptPolicyOnlyFromMainDocumentDomain:
+        cookiePolicy = OnlyFromMainDocumentDomain;
+        break;
+
+    default:
+        ASSERT_NOT_REACHED();
+        return;
+    }
+
+    CookieManager::getInstance().setCookieAcceptPolicy(cookiePolicy);
 }
 
 HTTPCookieAcceptPolicy WebCookieManager::platformGetHTTPCookieAcceptPolicy()
 {
-    notImplemented();
-    return HTTPCookieAcceptPolicyOnlyFromMainDocumentDomain;
+    HTTPCookieAcceptPolicy cookiePolicy;
+    switch (CookieManager::getInstance().cookieAcceptPolicy()) {
+    case Always:
+        cookiePolicy = HTTPCookieAcceptPolicyAlways;
+        break;
+
+    case Never:
+        cookiePolicy = HTTPCookieAcceptPolicyNever;
+        break;
+
+    default:
+        ASSERT_NOT_REACHED();
+        // Fallthrough.
+    case OnlyFromMainDocumentDomain:
+        cookiePolicy = HTTPCookieAcceptPolicyOnlyFromMainDocumentDomain;
+        break;
+    }
+
+    return cookiePolicy;
 }
 
 } // namespace WebKit
