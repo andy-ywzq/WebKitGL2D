@@ -171,6 +171,11 @@ void WebSoupRequestManager::didFailURIRequest(const WebCore::ResourceError& erro
     m_requestMap.remove(requestID);
 }
 
+void WebSoupRequestManager::setHostAllowsAnyHTTPSCertificate(const String& host)
+{
+    WebCore::ResourceHandle::setHostAllowsAnyHTTPSCertificate(host);
+}
+
 void WebSoupRequestManager::send(GTask* task)
 {
     WebKitSoupRequestGeneric* request = WEBKIT_SOUP_REQUEST_GENERIC(g_task_get_source_object(task));

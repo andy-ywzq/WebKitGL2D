@@ -48,6 +48,7 @@ public:
     void didReceiveURIRequestData(const WebData*, uint64_t requestID);
     void didReceiveURIRequest(const String& uriString, WebPageProxy*, uint64_t requestID);
     void didFailURIRequest(const WebCore::ResourceError&, uint64_t requestID);
+    void setHostAllowsAnyHTTPSCertificate(const String&);
 
     const Vector<String>& registeredURISchemes() const { return m_registeredURISchemes; }
 

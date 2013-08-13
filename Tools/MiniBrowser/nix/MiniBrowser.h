@@ -128,6 +128,7 @@ private:
 
     WKViewRef webViewAtX11Position(const WKPoint& poisition);
     void saveSnapshot(double timestamp);
+    bool handleTLSError(WKErrorRef);
 
     void updateActiveUrlText();
 

@@ -3,12 +3,14 @@
 
 #include "GLUtilities.h"
 #include "TouchMocker.h"
-#include "WebKit2/WKArray.h"
-#include "WebKit2/WKFrame.h"
-#include "WebKit2/WKPreferences.h"
-#include "WebKit2/WKPreferencesPrivate.h"
-#include "WebKit2/WKString.h"
+#include "WKArray.h"
+#include "WKContextNix.h"
+#include "WKErrorNix.h"
+#include "WKFrame.h"
 #include "WKPageNix.h"
+#include "WKPreferences.h"
+#include "WKPreferencesPrivate.h"
+#include "WKString.h"
 
 #include <GL/gl.h>
 #include <cassert>
@@ -880,9 +882,48 @@ void MiniBrowser::didFinishDocumentLoadForFrame(WKPageRef page, WKFrameRef, WKTy
     mb->updateActiveUrlText();
 }
 
-void MiniBrowser::didFailProvisionalLoadWithErrorForFrame(WKPageRef page, WKFrameRef frame, WKErrorRef error, WKTypeRef, const void *)
+bool MiniBrowser::handleTLSError(WKErrorRef error)
 {
-    if (!WKFrameIsMainFrame(frame))
+    unsigned tlsErrors = 0;
+    WKErrorGetTLSErrors(error, &tlsErrors);
+
+    if (!tlsErrors)
+        return false;
+
+    std::string errorDescription("The site's security certificate is not trusted!\n\n");
+    if (tlsErrors & NIXTlsErrorUnkownCA)
+        errorDescription += "- The signing certificate authority is not known.\n";
+    if (tlsErrors & NIXTlsErrorCertificateBadIdentity)
+        errorDescription += "- The certificate does not match the expected identity of the site that it was retrieved from.\n";
+    if (tlsErrors & NIXTlsErrorCertificateNotActivated)
+        errorDescription += "- The certificate's activation time is still in the future.\n";
+    if (tlsErrors & NIXTlsErrorCertificateExpired)
+        errorDescription += "- The certificate has expired.\n";
+    if (tlsErrors & NIXTlsErrorCertificateRevoked)
+        errorDescription += "- The certificate has been revoked.\n";
+    if (tlsErrors & NIXTlsErrorCertificateInsecure)
+        errorDescription += "- The certificate's algorithm is considered insecure.\n";
+    if (tlsErrors & NIXTlsErrorCertificateGenericError)
+        errorDescription += "- Some error occurred validating the certificate.\n";
+
+    std::cout << errorDescription;
+    std::cout << "Do you want to continue anyway? [Yn]\n";
+    char yn = std::cin.get();
+    if (yn == 'y' || yn == 'Y' || yn == '\n') {
+        WKRetainPtr<WKURLRef> url = adoptWK(WKErrorCopyFailingURL(error));
+        WKRetainPtr<WKStringRef> hostname = adoptWK(WKURLCopyHostName(url.get()));
+        WKContextSetHostAllowsAnyHTTPSCertificate(m_context.get(), hostname.get());
+        loadPage(m_activeUrlText.c_str());
+        return true;
+    }
+    return false;
+}
+
+void MiniBrowser::didFailProvisionalLoadWithErrorForFrame(WKPageRef page, WKFrameRef frame, WKErrorRef error, WKTypeRef, const void* clientInfo)
+{
+    MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
+
+    if (!WKFrameIsMainFrame(frame) || mb->handleTLSError(error))
         return;
 
     WKStringRef wkErrorDescription = WKErrorCopyLocalizedDescription(error);

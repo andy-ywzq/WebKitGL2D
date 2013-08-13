@@ -125,4 +125,12 @@ void WebSoupRequestManagerProxy::didFailURIRequest(const WebCore::ResourceError&
     context()->sendToAllProcesses(Messages::WebSoupRequestManager::DidFailURIRequest(error, requestID));
 }
 
+void WebSoupRequestManagerProxy::setHostAllowsAnyHTTPSCertificate(const String& host)
+{
+    if (!context())
+        return;
+
+    context()->sendToAllProcesses(Messages::WebSoupRequestManager::SetHostAllowsAnyHTTPSCertificate(host));
+}
+
 } // namespace WebKit

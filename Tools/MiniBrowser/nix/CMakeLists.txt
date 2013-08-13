@@ -36,7 +36,10 @@ set(MiniBrowser_INCLUDE_DIRECTORIES
     ${CAIRO_INCLUDE_DIRS}
     ${DERIVED_SOURCES_WEBKIT2_DIR}/include
     ${WEBKIT2_DIR}/UIProcess/API/nix
+    ${WEBKIT2_DIR}/Shared/API/c
+    ${WEBKIT2_DIR}/UIProcess/API/C
     ${WEBKIT2_DIR}/UIProcess/API/C/nix
+    ${WEBKIT2_DIR}/UIProcess/API/C/soup
     ${WEBKIT2_DIR}
     ${CMAKE_SOURCE_DIR}/Source
     ${WTF_DIR}

@@ -25,4 +25,5 @@ messages -> WebSoupRequestManager {
     DidHandleURIRequest(CoreIPC::DataReference requestData, uint64_t contentLength, WTF::String mimeType, uint64_t requestID);
     DidReceiveURIRequestData(CoreIPC::DataReference requestData, uint64_t requestID);
     DidFailURIRequest(WebCore::ResourceError error, uint64_t requestID);
+    SetHostAllowsAnyHTTPSCertificate(WTF::String host);
 }

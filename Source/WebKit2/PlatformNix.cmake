@@ -33,6 +33,8 @@ list(APPEND WebKit2_SOURCES
     Shared/efl/ProcessExecutablePathEfl.cpp
 
     UIProcess/API/C/CoordinatedGraphics/WKView.cpp
+    UIProcess/API/C/nix/WKContextNix.cpp
+    UIProcess/API/C/nix/WKErrorNix.cpp
     UIProcess/API/C/nix/WKPageNix.cpp
     UIProcess/API/nix/NIXView.cpp
 
