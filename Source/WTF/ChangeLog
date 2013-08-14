@@ -1,3 +1,46 @@
+2013-08-13  Arunprasad Rajkumar  <arurajku@cisco.com>
+
+        [WTF] [JSC] Replace currentTime() with monotonicallyIncreasingTime() in all possible places
+        https://bugs.webkit.org/show_bug.cgi?id=119762
+
+        Reviewed by Geoffrey Garen.
+
+        * wtf/MainThread.cpp:
+        (WTF::dispatchFunctionsFromMainThread):
+
+2013-08-12  Ragner Magalhaes  <ranger.n@samsung.com>
+
+        Broken build with build-webkit --no-webgl
+        https://bugs.webkit.org/show_bug.cgi?id=119272
+
+        Reviewed by Alexandru Chiculita.
+
+        CSS_SHADERS requires WEBGL enabled.
+        Add error message to dependency failure.
+
+        * wtf/FeatureDefines.h:
+
+2013-08-12  Joseph Pecoraro  <pecoraro@apple.com>
+
+        [iOS] isMainThread implementation with USE(WEB_THREAD)
+        https://bugs.webkit.org/show_bug.cgi?id=119644
+
+        Reviewed by Benjamin Poulain.
+
+        On iOS isMainThread() means that the current thread is either the
+        MainThread or WebThread and the current thread has the WebThreadLock.
+
+        * wtf/ios/WebCoreThread.cpp: Added.
+        * wtf/ios/WebCoreThread.h: Added.
+        * wtf/mac/MainThreadMac.mm:
+        (WTF::isMainThread):
+
+2013-08-11  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix make distcheck.
+
+        * GNUmakefile.list.am: Add missing header file.
+
 2013-08-09  Christophe Dumez  <ch.dumez@sisa.samsung.com>
 
         Make atob() throw an InvalidCharacterError on excess padding characters

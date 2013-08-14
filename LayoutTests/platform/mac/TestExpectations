@@ -85,7 +85,6 @@ fast/media/media-query-list-03.html [ Failure ]
 fast/media/media-query-list-04.html [ Failure ]
 fast/media/media-query-list-05.html [ Failure ]
 fast/media/media-query-list-06.html [ Failure ]
-fast/media/media-query-list-07.html [ Failure ]
 
 # Needs layoutTestController.enableAutoResizeMode()
 fast/autoresize
@@ -593,6 +592,8 @@ webkit.org/b/82978 inspector/styles/svg-style.xhtml [ Pass Failure ]
 webkit.org/b/82979 fast/canvas/2d.text.draw.fill.maxWidth.gradient.html [ Pass Failure ]
 webkit.org/b/82979 canvas/philip/tests/2d.text.draw.align.center.html [ Pass Failure ]
 
+webkit.org/b/82980 http/tests/navigation/back-twice-without-commit.html [ Timeout ]
+
 webkit.org/b/112617 [ Debug ] http/tests/navigation/navigation-redirect-schedule-crash.html [ Crash Pass ]
 
 webkit.org/b/82981 http/tests/misc/favicon-loads-with-icon-loading-override.html [ Pass Failure ]
@@ -618,8 +619,6 @@ webkit.org/b/84357 media/audio-repaint.html [ Failure ]
 
 # Requires ENABLE(MEDIA_CAPTURE)
 fast/forms/file/file-input-capture.html
-
-webkit.org/b/85522 http/tests/security/sandboxed-iframe-form-top.html [ Pass Failure ]
 
 webkit.org/b/85523 fullscreen/full-screen-iframe-legacy.html [ Pass Failure ]
 
@@ -730,9 +729,6 @@ fast/block/float/016.html
 # Due to JSC::Bindings::Instance::createRuntimeObject(JSC::ExecState*) crashes:
 editing/pasteboard/paste-TIFF.html
 platform/mac/editing/pasteboard/dataTransfer-set-data-file-url.html
-
-# https://bugs.webkit.org/show_bug.cgi?id=93878 (yes, same bug as the previous)
-# Due to WebCore::JSEventListener::jsFunction(WebCore::ScriptExecutionContext*) crashes:
 
 # https://bugs.webkit.org/show_bug.cgi?id=94458
 # Assertion failure in MessagePort::contextDestroyed, usually attributed to later tests
@@ -1125,6 +1121,9 @@ webkit.org/b/112492 media/track/track-prefer-captions.html [ Skip ]
 
 # The logic in this test is no longer correct for Apple ports
 webkit.org/b/112492 media/track/track-user-preferences.html [ Skip ]
+
+# Only failing on WK1
+webkit.org/b/104104 fast/overflow/scrollbar-click-retains-focus.html [ Failure ]
 
 webkit.org/b/104954 http/tests/canvas/canvas-slow-font-loading.html [ ImageOnlyFailure ]
 

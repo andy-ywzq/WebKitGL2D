@@ -654,10 +654,28 @@ public:
 #endif
 
     // Constant Pool
+#if ENABLE(DFG_JIT)
+    size_t numberOfIdentifiers() const { return m_unlinkedCode->numberOfIdentifiers() + numberOfDFGIdentifiers(); }
+    size_t numberOfDFGIdentifiers() const
+    {
+        if (!JITCode::isOptimizingJIT(jitType()))
+            return 0;
 
-    size_t numberOfIdentifiers() const { return m_identifiers.size(); }
-    void addIdentifier(const Identifier& i) { return m_identifiers.append(i); }
-    Identifier& identifier(int index) { return m_identifiers[index]; }
+        return m_jitCode->dfgCommon()->dfgIdentifiers.size();
+    }
+
+    const Identifier& identifier(int index) const
+    {
+        size_t unlinkedIdentifiers = m_unlinkedCode->numberOfIdentifiers();
+        if (static_cast<unsigned>(index) < unlinkedIdentifiers)
+            return m_unlinkedCode->identifier(index);
+        ASSERT(JITCode::isOptimizingJIT(jitType()));
+        return m_jitCode->dfgCommon()->dfgIdentifiers[index - unlinkedIdentifiers];
+    }
+#else
+    size_t numberOfIdentifiers() const { return m_unlinkedCode->numberOfIdentifiers(); }
+    const Identifier& identifier(int index) const { return m_unlinkedCode->identifier(index); }
+#endif
 
     size_t numberOfConstantRegisters() const { return m_constantRegisters.size(); }
     unsigned addConstant(JSValue v)
@@ -963,12 +981,6 @@ private:
     void updateAllPredictionsAndCountLiveness(OperationInProgress, unsigned& numberOfLiveNonArgumentValueProfiles, unsigned& numberOfSamplesInProfiles);
 #endif
 
-    void setIdentifiers(const Vector<Identifier>& identifiers)
-    {
-        RELEASE_ASSERT(m_identifiers.isEmpty());
-        m_identifiers.appendVector(identifiers);
-    }
-
     void setConstantRegisters(const Vector<WriteBarrier<Unknown> >& constants)
     {
         size_t count = constants.size();
@@ -1086,7 +1098,7 @@ private:
     SegmentedVector<ObjectAllocationProfile, 8> m_objectAllocationProfiles;
 
     // Constant Pool
-    Vector<Identifier> m_identifiers;
+    Vector<Identifier> m_additionalIdentifiers;
     COMPILE_ASSERT(sizeof(Register) == sizeof(WriteBarrier<Unknown>), Register_must_be_same_size_as_WriteBarrier_Unknown);
     // TODO: This could just be a pointer to m_unlinkedCodeBlock's data, but the DFG mutates
     // it, so we're stuck with it for now.
@@ -1241,7 +1253,7 @@ inline CodeBlock* baselineCodeBlockForInlineCallFrame(InlineCallFrame* inlineCal
 {
     RELEASE_ASSERT(inlineCallFrame);
     ExecutableBase* executable = inlineCallFrame->executable.get();
-    RELEASE_ASSERT(executable->structure()->classInfo() == &FunctionExecutable::s_info);
+    RELEASE_ASSERT(executable->structure()->classInfo() == FunctionExecutable::info());
     return static_cast<FunctionExecutable*>(executable)->baselineCodeBlockFor(inlineCallFrame->isCall ? CodeForCall : CodeForConstruct);
 }
 

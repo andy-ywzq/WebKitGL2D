@@ -28,12 +28,14 @@
 
 #include "Element.h"
 #include "ElementRareData.h"
+#include "ElementTraversal.h"
 #include "NodeRenderStyle.h"
 #include "NodeTraversal.h"
 #include "RenderObject.h"
 #include "RenderText.h"
 #include "Settings.h"
 #include "ShadowRoot.h"
+#include "StyleResolveForDocument.h"
 #include "StyleResolver.h"
 #include "Text.h"
 
@@ -145,7 +147,7 @@ static Change resolveLocal(Element* current, Change inheritedChange)
         localChange = determineChange(currentStyle.get(), newStyle.get(), document->settings());
     }
     if (localChange == Detach) {
-        Node::AttachContext reattachContext;
+        Element::AttachContext reattachContext;
         reattachContext.resolvedStyle = newStyle.get();
         current->reattach(reattachContext);
         return Detach;
@@ -189,7 +191,7 @@ static void updateTextStyle(Text* text, RenderStyle* parentElementStyle, Style::
     if (renderer)
         renderer->setText(text->dataImpl());
     else
-        text->reattach();
+        text->attachText();
     text->clearNeedsStyleRecalc();
 }
 
@@ -197,8 +199,8 @@ static void resolveShadowTree(ShadowRoot* shadowRoot, RenderStyle* parentElement
 {
     if (!shadowRoot)
         return;
-    StyleResolver* styleResolver = shadowRoot->document()->ensureStyleResolver();
-    styleResolver->pushParentShadowRoot(shadowRoot);
+    StyleResolver& styleResolver = shadowRoot->document()->ensureStyleResolver();
+    styleResolver.pushParentShadowRoot(shadowRoot);
 
     for (Node* child = shadowRoot->firstChild(); child; child = child->nextSibling()) {
         if (child->isTextNode()) {
@@ -209,7 +211,7 @@ static void resolveShadowTree(ShadowRoot* shadowRoot, RenderStyle* parentElement
         resolveTree(toElement(child), change);
     }
 
-    styleResolver->popParentShadowRoot(shadowRoot);
+    styleResolver.popParentShadowRoot(shadowRoot);
     shadowRoot->clearNeedsStyleRecalc();
     shadowRoot->clearChildNeedsStyleRecalc();
 }
@@ -281,6 +283,23 @@ void resolveTree(Element* current, Change change)
         current->didRecalcStyle(change);
 }
 
+void resolveTree(Document* document, Change change)
+{
+    bool resolveRootStyle = change == Force || (document->shouldDisplaySeamlesslyWithParent() && change >= Inherit);
+    if (resolveRootStyle) {
+        RefPtr<RenderStyle> documentStyle = resolveForDocument(document);
+
+        Style::Change documentChange = determineChange(documentStyle.get(), document->renderer()->style(), document->settings());
+        if (documentChange != NoChange)
+            document->renderer()->setStyle(documentStyle.release());
+    }
+
+    for (Element* child = ElementTraversal::firstWithin(document); child; child = ElementTraversal::nextSibling(child)) {
+        if (change < Inherit && !child->childNeedsStyleRecalc() && !child->needsStyleRecalc())
+            continue;
+        resolveTree(child, change);
+    }
 }
 
+}
 }

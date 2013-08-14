@@ -834,7 +834,7 @@ QString QWebElement::styleProperty(const QString &name, StyleResolveStrategy str
         // declarations, as well as embedded and inline style declarations.
 
         Document* doc = m_element->document();
-        Vector<RefPtr<StyleRuleBase> > rules = doc->ensureStyleResolver()->styleRulesForElement(m_element, StyleResolver::AuthorCSSRules | StyleResolver::CrossOriginCSSRules);
+        Vector<RefPtr<StyleRuleBase> > rules = doc->ensureStyleResolver().styleRulesForElement(m_element, StyleResolver::AuthorCSSRules | StyleResolver::CrossOriginCSSRules);
         for (int i = rules.size(); i > 0; --i) {
             if (!rules[i - 1]->isStyleRule())
                 continue;
@@ -2073,13 +2073,13 @@ static QVariant convertJSValueToWebElementVariant(JSC::JSObject* object, int *di
 {
     Element* element = 0;
     QVariant ret;
-    if (object && object->inherits(&JSElement::s_info)) {
+    if (object && object->inherits(JSElement::info())) {
         element =(static_cast<JSElement*>(object))->impl();
         *distance = 0;
         // Allow other objects to reach this one. This won't cause our algorithm to
         // loop since when we find an Element we do not recurse.
         visitedObjects->remove(toRef(object));
-    } else if (object && object->inherits(&JSDocument::s_info)) {
+    } else if (object && object->inherits(JSDocument::info())) {
         // To support TestRunnerQt::nodesFromRect(), used in DRT, we do an implicit
         // conversion from 'document' to the QWebElement representing the 'document.documentElement'.
         // We can't simply use a QVariantMap in nodesFromRect() because it currently times out

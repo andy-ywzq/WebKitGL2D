@@ -32,6 +32,7 @@
 #include "Attribute.h"
 #include "Chrome.h"
 #include "ChromeClient.h"
+#include "ElementTraversal.h"
 #include "EventHandler.h"
 #include "EventNames.h"
 #include "ExceptionCodePlaceholder.h"
@@ -47,7 +48,6 @@
 #include "LocalizedStrings.h"
 #include "MouseEvent.h"
 #include "NodeRenderingContext.h"
-#include "NodeTraversal.h"
 #include "Page.h"
 #include "PlatformMouseEvent.h"
 #include "RenderListBox.h"
@@ -295,7 +295,7 @@ void HTMLSelectElement::parseAttribute(const QualifiedName& name, const AtomicSt
         String attrSize = String::number(size);
         if (attrSize != value) {
             // FIXME: This is horribly factored.
-            if (Attribute* sizeAttribute = ensureUniqueElementData()->findAttributeByName(sizeAttr))
+            if (Attribute* sizeAttribute = ensureUniqueElementData().findAttributeByName(sizeAttr))
                 sizeAttribute->setValue(attrSize);
         }
         size = max(size, 1);

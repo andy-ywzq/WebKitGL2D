@@ -60,6 +60,7 @@
 #include "Editor.h"
 #include "Element.h"
 #include "ElementShadow.h"
+#include "ElementTraversal.h"
 #include "EntityReference.h"
 #include "Event.h"
 #include "EventFactory.h"
@@ -113,7 +114,6 @@
 #include "NodeFilter.h"
 #include "NodeIterator.h"
 #include "NodeRareData.h"
-#include "NodeTraversal.h"
 #include "NodeWithIndex.h"
 #include "Page.h"
 #include "PageConsole.h"
@@ -690,18 +690,18 @@ void Document::invalidateAccessKeyMap()
     m_elementsByAccessKey.clear();
 }
 
-SelectorQueryCache* Document::selectorQueryCache()
+SelectorQueryCache& Document::selectorQueryCache()
 {
     if (!m_selectorQueryCache)
         m_selectorQueryCache = adoptPtr(new SelectorQueryCache());
-    return m_selectorQueryCache.get();
+    return *m_selectorQueryCache;
 }
 
-MediaQueryMatcher* Document::mediaQueryMatcher()
+MediaQueryMatcher& Document::mediaQueryMatcher()
 {
     if (!m_mediaQueryMatcher)
         m_mediaQueryMatcher = MediaQueryMatcher::create(this);
-    return m_mediaQueryMatcher.get();
+    return *m_mediaQueryMatcher;
 }
 
 void Document::setCompatibilityMode(CompatibilityMode mode)
@@ -1264,10 +1264,11 @@ void Document::setVisualUpdatesAllowed(bool visualUpdatesAllowed)
         updateLayout();
 
     if (Page* page = this->page()) {
-        if (frame() == page->mainFrame())
+        if (frame() == page->mainFrame()) {
             frameView->addPaintPendingMilestones(DidFirstPaintAfterSuppressedIncrementalRendering);
-        if (page->requestedLayoutMilestones() & DidFirstLayoutAfterSuppressedIncrementalRendering)
-            frame()->loader()->didLayout(DidFirstLayoutAfterSuppressedIncrementalRendering);
+            if (page->requestedLayoutMilestones() & DidFirstLayoutAfterSuppressedIncrementalRendering)
+                frame()->loader()->didLayout(DidFirstLayoutAfterSuppressedIncrementalRendering);
+        }
     }
 
 #if USE(ACCELERATED_COMPOSITING)
@@ -1776,24 +1777,12 @@ void Document::recalcStyle(Style::Change change)
         if (m_pendingStyleRecalcShouldForce)
             change = Style::Force;
 
-        // Recalculating the root style (on the document) is not needed in the common case.
-        if ((change == Style::Force) || (shouldDisplaySeamlesslyWithParent() && (change >= Style::Inherit))) {
-            // style selector may set this again during recalc
+        if (change == Style::Force) {
+            // This may get set again during style resolve.
             m_hasNodesWithPlaceholderStyle = false;
-            
-            RefPtr<RenderStyle> documentStyle = StyleResolver::styleForDocument(this, m_styleResolver ? m_styleResolver->fontSelector() : 0);
-            Style::Change documentChange = Style::determineChange(documentStyle.get(), renderer()->style(), settings());
-            if (documentChange != Style::NoChange)
-                renderer()->setStyle(documentStyle.release());
         }
 
-        for (Node* n = firstChild(); n; n = n->nextSibling()) {
-            if (!n->isElementNode())
-                continue;
-            Element* element = toElement(n);
-            if (change >= Style::Inherit || element->childNeedsStyleRecalc() || element->needsStyleRecalc())
-                Style::resolveTree(element, change);
-        }
+        resolveTree(this, change);
 
 #if USE(ACCELERATED_COMPOSITING)
         if (view())
@@ -1910,14 +1899,14 @@ PassRefPtr<RenderStyle> Document::styleForElementIgnoringPendingStylesheets(Elem
 
     bool oldIgnore = m_ignorePendingStylesheets;
     m_ignorePendingStylesheets = true;
-    RefPtr<RenderStyle> style = ensureStyleResolver()->styleForElement(element, element->parentNode() ? element->parentNode()->computedStyle() : 0);
+    RefPtr<RenderStyle> style = ensureStyleResolver().styleForElement(element, element->parentNode() ? element->parentNode()->computedStyle() : 0);
     m_ignorePendingStylesheets = oldIgnore;
     return style.release();
 }
 
 PassRefPtr<RenderStyle> Document::styleForPage(int pageIndex)
 {
-    RefPtr<RenderStyle> style = ensureStyleResolver()->styleForPage(pageIndex);
+    RefPtr<RenderStyle> style = ensureStyleResolver().styleForPage(pageIndex);
     return style.release();
 }
 
@@ -1989,7 +1978,7 @@ void Document::clearStyleResolver()
     m_styleResolver.clear();
 }
 
-void Document::attach(const AttachContext& context)
+void Document::attach()
 {
     ASSERT(!attached());
     ASSERT(!m_inPageCache);
@@ -2009,12 +1998,15 @@ void Document::attach(const AttachContext& context)
     RenderObject* render = renderer();
     setRenderer(0);
 
-    ContainerNode::attach(context);
+    Element::AttachContext attachContext;
+    for (Element* child = ElementTraversal::firstWithin(this); child; child = ElementTraversal::nextSibling(child))
+        child->attach(attachContext);
 
     setRenderer(render);
+    setAttached(true);
 }
 
-void Document::detach(const AttachContext& context)
+void Document::detach()
 {
     ASSERT(attached());
     ASSERT(!m_inPageCache);
@@ -2065,7 +2057,12 @@ void Document::detach(const AttachContext& context)
     m_focusedElement = 0;
     m_activeElement = 0;
 
-    ContainerNode::detach(context);
+    Element::AttachContext attachContext;
+    for (Element* child = ElementTraversal::firstWithin(this); child; child = ElementTraversal::nextSibling(child))
+        child->detach(attachContext);
+
+    clearChildNeedsStyleRecalc();
+    setAttached(false);
 
     unscheduleStyleRecalc();
 
@@ -2561,7 +2558,7 @@ double Document::minimumTimerInterval() const
     Page* p = page();
     if (!p)
         return ScriptExecutionContext::minimumTimerInterval();
-    return p->settings()->minDOMTimerInterval();
+    return p->settings().minDOMTimerInterval();
 }
 
 double Document::timerAlignmentInterval() const
@@ -2569,7 +2566,7 @@ double Document::timerAlignmentInterval() const
     Page* p = page();
     if (!p)
         return ScriptExecutionContext::timerAlignmentInterval();
-    return p->settings()->domTimerAlignmentInterval();
+    return p->settings().domTimerAlignmentInterval();
 }
 
 EventTarget* Document::errorEventTarget()
@@ -3281,8 +3278,6 @@ bool Document::setFocusedElement(PassRefPtr<Element> prpNewFocusedElement, Focus
 
     // Remove focus from the existing focus node (if any)
     if (oldFocusedElement) {
-        ASSERT(!oldFocusedElement->inDetach());
-
         if (oldFocusedElement->active())
             oldFocusedElement->setActive(false);
 
@@ -3686,7 +3681,7 @@ HTMLFrameOwnerElement* Document::ownerElement() const
 
 String Document::cookie(ExceptionCode& ec) const
 {
-    if (page() && !page()->settings()->cookieEnabled())
+    if (page() && !page()->settings().cookieEnabled())
         return String();
 
     // FIXME: The HTML5 DOM spec states that this attribute can raise an
@@ -3707,7 +3702,7 @@ String Document::cookie(ExceptionCode& ec) const
 
 void Document::setCookie(const String& value, ExceptionCode& ec)
 {
-    if (page() && !page()->settings()->cookieEnabled())
+    if (page() && !page()->settings().cookieEnabled())
         return;
 
     // FIXME: The HTML5 DOM spec states that this attribute can raise an
@@ -4321,7 +4316,7 @@ bool Document::hasSVGRootNode() const
 
 PassRefPtr<HTMLCollection> Document::ensureCachedCollection(CollectionType type)
 {
-    return ensureRareData()->ensureNodeLists()->addCacheWithAtomicName<HTMLCollection>(this, type);
+    return ensureRareData().ensureNodeLists().addCacheWithAtomicName<HTMLCollection>(this, type);
 }
 
 PassRefPtr<HTMLCollection> Document::images()
@@ -4367,17 +4362,17 @@ PassRefPtr<HTMLCollection> Document::anchors()
 
 PassRefPtr<HTMLCollection> Document::all()
 {
-    return ensureRareData()->ensureNodeLists()->addCacheWithAtomicName<HTMLAllCollection>(this, DocAll);
+    return ensureRareData().ensureNodeLists().addCacheWithAtomicName<HTMLAllCollection>(this, DocAll);
 }
 
 PassRefPtr<HTMLCollection> Document::windowNamedItems(const AtomicString& name)
 {
-    return ensureRareData()->ensureNodeLists()->addCacheWithAtomicName<WindowNameCollection>(this, WindowNamedItems, name);
+    return ensureRareData().ensureNodeLists().addCacheWithAtomicName<WindowNameCollection>(this, WindowNamedItems, name);
 }
 
 PassRefPtr<HTMLCollection> Document::documentNamedItems(const AtomicString& name)
 {
-    return ensureRareData()->ensureNodeLists()->addCacheWithAtomicName<DocumentNameCollection>(this, DocumentNamedItems, name);
+    return ensureRareData().ensureNodeLists().addCacheWithAtomicName<DocumentNameCollection>(this, DocumentNamedItems, name);
 }
 
 void Document::finishedParsing()
@@ -4995,7 +4990,7 @@ void Document::requestFullScreenForElement(Element* element, unsigned short flag
             break;
 
         // There is a previously-established user preference, security risk, or platform limitation.
-        if (!page() || !page()->settings()->fullScreenEnabled())
+        if (!page() || !page()->settings().fullScreenEnabled())
             break;
 
         if (!page()->chrome().client()->supportsFullScreenForElement(element, flags & Element::ALLOW_KEYBOARD_INPUT)) {
@@ -5177,7 +5172,7 @@ void Document::webkitWillEnterFullScreenForElement(Element* element)
     if (!page())
         return;
 
-    ASSERT(page()->settings()->fullScreenEnabled());
+    ASSERT(page()->settings().fullScreenEnabled());
 
     if (m_fullScreenRenderer)
         m_fullScreenRenderer->unwrapRenderer();

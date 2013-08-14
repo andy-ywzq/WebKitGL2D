@@ -29,6 +29,7 @@
 #include "CachedImage.h"
 #include "Chrome.h"
 #include "ChromeClient.h"
+#include "ElementTraversal.h"
 #include "EventNames.h"
 #include "ExceptionCode.h"
 #include "FormDataList.h"
@@ -42,7 +43,6 @@
 #include "HTMLParserIdioms.h"
 #include "MIMETypeRegistry.h"
 #include "NodeList.h"
-#include "NodeTraversal.h"
 #include "Page.h"
 #include "PluginViewBase.h"
 #include "RenderEmbeddedObject.h"
@@ -237,7 +237,7 @@ bool HTMLObjectElement::shouldAllowQuickTimeClassIdQuirk()
     // fallback content, which ensures the quirk will disable itself if Wiki
     // Server is updated to generate an alternate embed tag as fallback content.
     if (!document()->page()
-        || !document()->page()->settings()->needsSiteSpecificQuirks()
+        || !document()->page()->settings().needsSiteSpecificQuirks()
         || hasFallbackContent()
         || !equalIgnoringCase(classId(), "clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B"))
         return false;
@@ -445,17 +445,17 @@ void HTMLObjectElement::updateDocNamedItem()
         const AtomicString& id = getIdAttribute();
         if (!id.isEmpty()) {
             if (isNamedItem)
-                document->documentNamedItemMap().add(id.impl(), this);
+                document->addDocumentNamedItem(id, this);
             else
-                document->documentNamedItemMap().remove(id.impl(), this);
+                document->removeDocumentNamedItem(id, this);
         }
 
         const AtomicString& name = getNameAttribute();
         if (!name.isEmpty() && id != name) {
             if (isNamedItem)
-                document->documentNamedItemMap().add(name.impl(), this);
+                document->addDocumentNamedItem(name, this);
             else
-                document->documentNamedItemMap().remove(name.impl(), this);
+                document->removeDocumentNamedItem(name, this);
         }
     }
     m_docNamedItem = isNamedItem;
@@ -466,7 +466,7 @@ bool HTMLObjectElement::containsJavaApplet() const
     if (MIMETypeRegistry::isJavaAppletMIMEType(getAttribute(typeAttr)))
         return true;
         
-    for (Element* child = ElementTraversal::firstWithin(this); child; child = ElementTraversal::nextSkippingChildren(child, this)) {
+    for (Element* child = ElementTraversal::firstWithin(this); child; child = ElementTraversal::nextSibling(child)) {
         if (child->hasTagName(paramTag)
                 && equalIgnoringCase(child->getNameAttribute(), "type")
                 && MIMETypeRegistry::isJavaAppletMIMEType(child->getAttribute(valueAttr).string()))

@@ -41,6 +41,7 @@
 #include "DiagnosticLoggingKeys.h"
 #include "DocumentLoader.h"
 #include "ElementShadow.h"
+#include "ElementTraversal.h"
 #include "Event.h"
 #include "EventNames.h"
 #include "ExceptionCode.h"
@@ -534,9 +535,9 @@ void HTMLMediaElement::finishParsingChildren()
 #if ENABLE(VIDEO_TRACK)
     if (!RuntimeEnabledFeatures::webkitVideoTrackEnabled())
         return;
-    
-    for (Node* node = firstChild(); node; node = node->nextSibling()) {
-        if (node->hasTagName(trackTag)) {
+
+    for (Element* element = ElementTraversal::firstWithin(this); element; element = ElementTraversal::nextSibling(element)) {
+        if (element->hasTagName(trackTag)) {
             scheduleDelayedAction(ConfigureTextTracks);
             break;
         }
@@ -1684,7 +1685,7 @@ void HTMLMediaElement::mediaPlayerNetworkStateChanged(MediaPlayer*)
 
 static void logMediaLoadRequest(Page* page, const String& mediaEngine, const String& errorMessage, bool succeeded)
 {
-    if (!page || !page->settings()->diagnosticLoggingEnabled())
+    if (!page || !page->settings().diagnosticLoggingEnabled())
         return;
 
     ChromeClient* client = page->chrome().client();
@@ -4178,6 +4179,11 @@ void HTMLMediaElement::stop()
     cancelPendingEventsAndCallbacks();
 
     m_asyncEventQueue->close();
+
+    // Once an active DOM object has been stopped it can not be restarted, so we can deallocate
+    // the media player now. Note that userCancelledLoad will already have cleared the player
+    // if the media was not fully loaded. This handles all other cases.
+    m_player.clear();
 }
 
 void HTMLMediaElement::suspend(ReasonForSuspension why)
@@ -4649,7 +4655,7 @@ bool HTMLMediaElement::createMediaControls()
     if (isFullscreen())
         mediaControls->enteredFullscreen();
 
-    ensureUserAgentShadowRoot()->appendChild(mediaControls, ASSERT_NO_EXCEPTION);
+    ensureUserAgentShadowRoot().appendChild(mediaControls, ASSERT_NO_EXCEPTION);
 
     if (!controls() || !inDocument())
         mediaControls->hide();

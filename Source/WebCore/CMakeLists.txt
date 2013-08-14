@@ -316,6 +316,7 @@ set(WebCore_IDL_FILES
     css/FontLoader.idl
     css/MediaList.idl
     css/MediaQueryList.idl
+    css/MediaQueryListListener.idl
     css/RGBColor.idl
     css/Rect.idl
     css/StyleMedia.idl
@@ -1074,7 +1075,6 @@ set(WebCore_SOURCES
     css/MediaQueryEvaluator.cpp
     css/MediaQueryExp.cpp
     css/MediaQueryList.cpp
-    css/MediaQueryListListener.cpp
     css/MediaQueryMatcher.cpp
     css/PageRuleCollector.cpp
     css/PropertySetCSSStyleDeclaration.cpp
@@ -2328,6 +2328,8 @@ set(WebCore_SOURCES
     storage/StorageSyncManager.cpp
     storage/StorageTracker.cpp
 
+    style/StyleFontSizeFunctions.cpp
+    style/StyleResolveForDocument.cpp
     style/StyleResolveTree.cpp
 
     svg/ColorDistance.cpp
@@ -2852,9 +2854,13 @@ if (WTF_USE_3D_GRAPHICS)
         list(APPEND WebCore_LIBRARIES ${OPENGL_gl_LIBRARY})
     endif ()
 
-    if (BISON_VERSION EQUAL "2.5")
+    if (BISON_VERSION EQUAL "2.5" OR NOT (BISON_VERSION LESS "3.0"))
         # Bison 2.5 can not compile generated glslang.
         # See https://bugs.webkit.org/show_bug.cgi?id=93487
+        #
+        # With Bison 3.0 or greater the generated glslang will not compile.
+        # See https://bugs.webkit.org/show_bug.cgi?id=119373
+        # Use already generated glslang.
         list(APPEND ANGLESupport_SOURCES
             ${THIRDPARTY_DIR}/ANGLE/src/compiler/glslang_lex.cpp
             ${THIRDPARTY_DIR}/ANGLE/src/compiler/glslang_tab.cpp
@@ -2888,7 +2894,6 @@ if (WTF_USE_3D_GRAPHICS)
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/intermOut.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/IntermTraverse.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/MapLongVariableNames.cpp
-        ${THIRDPARTY_DIR}/ANGLE/src/compiler/ossource_posix.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/OutputESSL.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/OutputGLSL.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/OutputGLSLBase.cpp
@@ -2926,6 +2931,16 @@ if (WTF_USE_3D_GRAPHICS)
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/VersionGLSL.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/third_party/compiler/ArrayBoundsClamper.cpp
     )
+
+    if (WIN32)
+        list(APPEND ANGLESupport_SOURCES
+            ${THIRDPARTY_DIR}/ANGLE/src/compiler/ossource_win.cpp
+        )
+    else ()
+        list(APPEND ANGLESupport_SOURCES
+            ${THIRDPARTY_DIR}/ANGLE/src/compiler/ossource_posix.cpp
+        )
+    endif ()
 
     list(APPEND WebCore_SOURCES
         platform/graphics/ANGLEWebKitBridge.cpp

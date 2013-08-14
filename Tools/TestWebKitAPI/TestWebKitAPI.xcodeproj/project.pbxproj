@@ -110,12 +110,15 @@
 		8AA28C1A16D2FA7B002FF4DB /* LoadPageOnCrash.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AA28C1916D2FA7B002FF4DB /* LoadPageOnCrash.cpp */; };
 		930AD402150698D00067970F /* lots-of-text.html in Copy Resources */ = {isa = PBXBuildFile; fileRef = 930AD401150698B30067970F /* lots-of-text.html */; };
 		9318778915EEC57700A9CCE3 /* NewFirstVisuallyNonEmptyLayoutForImages.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 93AF4ECA1506F035007FD57E /* NewFirstVisuallyNonEmptyLayoutForImages.cpp */; };
+		9331407C17B4419000F083B1 /* DidNotHandleKeyDown.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9331407B17B4419000F083B1 /* DidNotHandleKeyDown.cpp */; };
 		9361002914DC95A70061379D /* lots-of-iframes.html in Copy Resources */ = {isa = PBXBuildFile; fileRef = 9361002814DC957B0061379D /* lots-of-iframes.html */; };
 		939BA91714103412001A01BD /* DeviceScaleFactorOnBack.mm in Sources */ = {isa = PBXBuildFile; fileRef = 939BA91614103412001A01BD /* DeviceScaleFactorOnBack.mm */; };
 		93ABA80916DDAB91002DB2FA /* StringHasher.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 93ABA80816DDAB91002DB2FA /* StringHasher.cpp */; };
 		93AF4ECE1506F064007FD57E /* NewFirstVisuallyNonEmptyLayoutForImages_Bundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 93AF4ECD1506F064007FD57E /* NewFirstVisuallyNonEmptyLayoutForImages_Bundle.cpp */; };
 		93AF4ED01506F123007FD57E /* lots-of-images.html in Resources */ = {isa = PBXBuildFile; fileRef = 93AF4ECF1506F123007FD57E /* lots-of-images.html */; };
 		93AF4ED11506F130007FD57E /* lots-of-images.html in Copy Resources */ = {isa = PBXBuildFile; fileRef = 93AF4ECF1506F123007FD57E /* lots-of-images.html */; };
+		93D3D19C17B1A7B000C7C415 /* all-content-in-one-iframe.html in Resources */ = {isa = PBXBuildFile; fileRef = 93D3D19B17B1A7B000C7C415 /* all-content-in-one-iframe.html */; };
+		93D3D19E17B1A84200C7C415 /* LayoutMilestonesWithAllContentInFrame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 93D3D19D17B1A84200C7C415 /* LayoutMilestonesWithAllContentInFrame.cpp */; };
 		93F1DB3114DA20760024C362 /* NewFirstVisuallyNonEmptyLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 93F1DB3014DA20760024C362 /* NewFirstVisuallyNonEmptyLayout.cpp */; };
 		93F1DB3414DA20870024C362 /* NewFirstVisuallyNonEmptyLayout_Bundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 93F1DB3314DA20870024C362 /* NewFirstVisuallyNonEmptyLayout_Bundle.cpp */; };
 		93F1DB5514DB1B730024C362 /* NewFirstVisuallyNonEmptyLayoutFails.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 93F1DB5414DB1B730024C362 /* NewFirstVisuallyNonEmptyLayoutFails.cpp */; };
@@ -414,12 +417,15 @@
 		8AA28C1916D2FA7B002FF4DB /* LoadPageOnCrash.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LoadPageOnCrash.cpp; sourceTree = "<group>"; };
 		8DD76FA10486AA7600D96B5E /* TestWebKitAPI */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TestWebKitAPI; sourceTree = BUILT_PRODUCTS_DIR; };
 		930AD401150698B30067970F /* lots-of-text.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = "lots-of-text.html"; sourceTree = "<group>"; };
+		9331407B17B4419000F083B1 /* DidNotHandleKeyDown.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DidNotHandleKeyDown.cpp; sourceTree = "<group>"; };
 		9361002814DC957B0061379D /* lots-of-iframes.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = "lots-of-iframes.html"; sourceTree = "<group>"; };
 		939BA91614103412001A01BD /* DeviceScaleFactorOnBack.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DeviceScaleFactorOnBack.mm; sourceTree = "<group>"; };
 		93ABA80816DDAB91002DB2FA /* StringHasher.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StringHasher.cpp; path = WTF/StringHasher.cpp; sourceTree = "<group>"; };
 		93AF4ECA1506F035007FD57E /* NewFirstVisuallyNonEmptyLayoutForImages.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NewFirstVisuallyNonEmptyLayoutForImages.cpp; sourceTree = "<group>"; };
 		93AF4ECD1506F064007FD57E /* NewFirstVisuallyNonEmptyLayoutForImages_Bundle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NewFirstVisuallyNonEmptyLayoutForImages_Bundle.cpp; sourceTree = "<group>"; };
 		93AF4ECF1506F123007FD57E /* lots-of-images.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = "lots-of-images.html"; sourceTree = "<group>"; };
+		93D3D19B17B1A7B000C7C415 /* all-content-in-one-iframe.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = "all-content-in-one-iframe.html"; sourceTree = "<group>"; };
+		93D3D19D17B1A84200C7C415 /* LayoutMilestonesWithAllContentInFrame.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LayoutMilestonesWithAllContentInFrame.cpp; sourceTree = "<group>"; };
 		93F1DB3014DA20760024C362 /* NewFirstVisuallyNonEmptyLayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NewFirstVisuallyNonEmptyLayout.cpp; sourceTree = "<group>"; };
 		93F1DB3314DA20870024C362 /* NewFirstVisuallyNonEmptyLayout_Bundle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NewFirstVisuallyNonEmptyLayout_Bundle.cpp; sourceTree = "<group>"; };
 		93F1DB5414DB1B730024C362 /* NewFirstVisuallyNonEmptyLayoutFails.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NewFirstVisuallyNonEmptyLayoutFails.cpp; sourceTree = "<group>"; };
@@ -707,6 +713,7 @@
 				F6F3F29013342FEB00A6BF19 /* CookieManager.cpp */,
 				F6B7BE93174691EF008A3445 /* DidAssociateFormControls.cpp */,
 				F6B7BE92174691EF008A3445 /* DidAssociateFormControls_Bundle.cpp */,
+				9331407B17B4419000F083B1 /* DidNotHandleKeyDown.cpp */,
 				BCB6803F126FBFE100642A61 /* DocumentStartUserScriptAlertCrash.cpp */,
 				BCB68041126FBFF100642A61 /* DocumentStartUserScriptAlertCrash_Bundle.cpp */,
 				51393E1E1523944A005F39C5 /* DOMWindowExtensionBasic.cpp */,
@@ -744,6 +751,7 @@
 				93AF4ECA1506F035007FD57E /* NewFirstVisuallyNonEmptyLayoutForImages.cpp */,
 				93AF4ECD1506F064007FD57E /* NewFirstVisuallyNonEmptyLayoutForImages_Bundle.cpp */,
 				93F7E86B14DC8E4D00C84A99 /* NewFirstVisuallyNonEmptyLayoutFrames.cpp */,
+				93D3D19D17B1A84200C7C415 /* LayoutMilestonesWithAllContentInFrame.cpp */,
 				93F7E86E14DC8E5B00C84A99 /* NewFirstVisuallyNonEmptyLayoutFrames_Bundle.cpp */,
 				BC909779125571AB00083756 /* PageLoadBasic.cpp */,
 				BC2D004812A9FDFA00E732A3 /* PageLoadDidChangeLocationWithinPageForFrame.cpp */,
@@ -832,6 +840,7 @@
 				BCBD372E125ABBE600D2C29F /* icon.png */,
 				378E647816326FDF00B6C676 /* link-with-title.html */,
 				9361002814DC957B0061379D /* lots-of-iframes.html */,
+				93D3D19B17B1A7B000C7C415 /* all-content-in-one-iframe.html */,
 				93AF4ECF1506F123007FD57E /* lots-of-images.html */,
 				930AD401150698B30067970F /* lots-of-text.html */,
 				2DD7D3AE178227AC0026E1E3 /* lots-of-text-vertical-lr.html */,
@@ -1070,6 +1079,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				93D3D19C17B1A7B000C7C415 /* all-content-in-one-iframe.html in Resources */,
 				93AF4ED01506F123007FD57E /* lots-of-images.html in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1156,6 +1166,7 @@
 				93F7E86C14DC8E4D00C84A99 /* NewFirstVisuallyNonEmptyLayoutFrames.cpp in Sources */,
 				BC90977A125571AB00083756 /* PageLoadBasic.cpp in Sources */,
 				BC2D004912A9FDFA00E732A3 /* PageLoadDidChangeLocationWithinPageForFrame.cpp in Sources */,
+				9331407C17B4419000F083B1 /* DidNotHandleKeyDown.cpp in Sources */,
 				A51B650916ADF9B1007AA5D9 /* PageVisibilityState.cpp in Sources */,
 				A57A34F016AF677200C2501F /* PageVisibilityStateWithWindowChanges.mm in Sources */,
 				52E5CE4614D21E9D003B2BD8 /* ParentFrame.cpp in Sources */,
@@ -1185,6 +1196,7 @@
 				51FCF79A1534AC6D00104491 /* ShouldGoToBackForwardListItem.cpp in Sources */,
 				C540F776152E4DA000A40C8C /* SimplifyMarkup.mm in Sources */,
 				C02B77F2126612140026BF0F /* SpacebarScrolling.cpp in Sources */,
+				93D3D19E17B1A84200C7C415 /* LayoutMilestonesWithAllContentInFrame.cpp in Sources */,
 				E194E1BB177E5145009C4D4E /* StopLoadingFromDidReceiveResponse.mm in Sources */,
 				81B50193140F232300D9EB58 /* StringBuilder.cpp in Sources */,
 				3799AD3A14120A43005EB0C6 /* StringByEvaluatingJavaScriptFromString.mm in Sources */,

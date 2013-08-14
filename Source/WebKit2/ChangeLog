@@ -1,3 +1,82 @@
+2013-08-12  Dan Bernstein  <mitz@apple.com>
+
+        Fixed an off-by-(sizeof(char*) - 1) bug.
+
+        Reviewed by Sam Weinig.
+
+        * Shared/EntryPointUtilities/mac/XPCService/XPCServiceMain.Development.mm:
+        (WebKit::XPCServiceEventHandler): Allocate a sufficiently large buffer.
+
+2013-08-12  Beth Dakin  <bdakin@apple.com>
+
+        Remove didNewFirstVisuallyNonEmptyLayout from WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=119658
+
+        Reviewed by Darin Adler.
+
+        Removing this function entirely will change some functionality in the Nightlies, 
+        but we think that is an acceptable difference for the Nightlies. If is does cause 
+        a problem though, we can roll out this patch and deprecate the function instead.
+
+        * UIProcess/API/C/WKPage.h:
+        * UIProcess/WebLoaderClient.cpp:
+        * UIProcess/WebLoaderClient.h:
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::initializeLoaderClient):
+        * UIProcess/WebPageProxy.h:
+        * UIProcess/WebPageProxy.messages.in:
+        * WebProcess/InjectedBundle/API/c/WKBundlePage.h:
+        * WebProcess/InjectedBundle/InjectedBundlePageLoaderClient.cpp:
+        * WebProcess/InjectedBundle/InjectedBundlePageLoaderClient.h:
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::dispatchDidLayout):
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::initializeInjectedBundleLoaderClient):
+
+2013-08-12  Arunprasad Rajkumar  <arurajku@cisco.com>
+
+        [Qt] [WebKit2] Remove duplicate RAM Size calculation and reuse WTF::ramSize()
+        https://bugs.webkit.org/show_bug.cgi?id=119663
+
+        Reviewed by Sam Weinig.
+
+        * WebProcess/qt/WebProcessQt.cpp:
+        (WebKit::WebProcess::platformSetCacheModel):
+
+2013-08-12  Anton Obzhirov  <a.obzhirov@samsung.com>
+
+        [GTK] Don't load GAIL when using GTK 3.2 or greater
+        https://bugs.webkit.org/show_bug.cgi?id=72735
+
+        Reviewed by Carlos Garcia Campos.
+
+        * UIProcess/API/gtk/tests/AccessibilityTestServer.cpp:
+        (main):
+
+2013-08-09  Beth Dakin  <bdakin@apple.com>
+
+        AX: Not able to use arrow keys to read text in a WK2 app
+        https://bugs.webkit.org/show_bug.cgi?id=119605
+        -and corresponding-
+        <rdar://problem/14281275>
+
+        Reviewed by Darin Adler.
+
+        Make all of these scrolling functions actually return the WebCore bools that 
+        indicate whether or not scrolling happened. 
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::scroll):
+        (WebKit::WebPage::logicalScroll):
+        (WebKit::WebPage::scrollBy):
+        * WebProcess/WebPage/WebPage.h:
+        * WebProcess/WebPage/mac/WebPageMac.mm:
+        (WebKit::WebPage::executeKeypressCommandsInternal):
+
+        This function now gives accessibility a chance to handle the event too. And it 
+        also actually tracks whether or not the event was handled by scrolling instead of 
+        assuming that it was and universally returning true.
+        (WebKit::WebPage::performNonEditingBehaviorForSelector):
+
 2013-08-09  Brian Holt  <brian.holt@samsung.com>
 
         [GTK] [WebKit2] Add an 'authenticate' signal to WebKitWebView

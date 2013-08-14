@@ -181,7 +181,7 @@ CallFrame* loadVarargs(CallFrame* callFrame, JSStack* stack, JSValue thisValue, 
         return 0;
     }
 
-    if (asObject(arguments)->classInfo() == &Arguments::s_info) {
+    if (asObject(arguments)->classInfo() == Arguments::info()) {
         Arguments* argsObject = asArguments(arguments);
         unsigned argCount = argsObject->length(callFrame);
         CallFrame* newCallFrame = CallFrame::create(callFrame->registers() + firstFreeRegister + CallFrame::offsetFor(argCount + 1));
@@ -1004,8 +1004,14 @@ JSObject* Interpreter::executeConstruct(CallFrame* callFrame, JSObject* construc
 #elif ENABLE(JIT)
             result = constructData.js.functionExecutable->generatedJITCodeForConstruct()->execute(&m_stack, newCallFrame, &vm);
 #endif // ENABLE(JIT)
-        } else
+        } else {
             result = JSValue::decode(constructData.native.function(newCallFrame));
+            if (!callFrame->hadException()) {
+                ASSERT_WITH_MESSAGE(result.isObject(), "Host constructor returned non object.");
+                if (!result.isObject())
+                    throwTypeError(newCallFrame);
+            }
+        }
     }
 
     if (LegacyProfiler* profiler = vm.enabledProfiler())

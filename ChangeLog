@@ -1,3 +1,61 @@
+2013-08-13  Zan Dobersek  <zdobersek@igalia.com>
+
+        [Autotools] Unicode's CFLAGS enforce -D_FORTIFY_SOURCE=2, -D_REENTRANT=1, causing faulty Clang builds
+        https://bugs.webkit.org/show_bug.cgi?id=119685
+
+        Reviewed by Gustavo Noronha Silva.
+
+        icu-config includes '-D_FORTIFY_SOURCE=2 -D_REENTRANT=1' when printing out C preprocessor flags that are used
+        as the C compiler flags to avoid other unwanted compiler options. This causes problems when building optimized
+        builds with Clang because of a bug in that compiler:
+        http://llvm.org/bugs/show_bug.cgi?id=16821
+
+        To avoid that, the C preprocessor search flags, as printed by `icu-config --cppflags-searchpath` are now used
+        the Unicode dependency's C compiler flags, avoiding unconditionally specifying the two macros.
+
+        To adjust for that, the `-pthread` flag is added to the global CFLAGS and CXXFLAGS variables, ensuring
+        the _REENTRANT define is set to 1 and declaring the flag globally instead of relying on Glib dependency's
+        C compiler flags to do so for us. -D_FORTIFY_SOURCE=2 is only added to the CFLAGS and CXXFLAGS variables if
+        the compiler in use is gcc or g++, preventing the Clang builds to malfunction.
+
+        * Source/autotools/FindDependencies.m4:
+        * Source/autotools/SetupCompilerFlags.m4:
+
+2013-08-13  Zan Dobersek  <zdobersek@igalia.com>
+
+        [Autotools] Don't compare $CC, $CXX to exact compiler names
+        https://bugs.webkit.org/show_bug.cgi?id=119683
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Instead of comparing $CC and $CXX to exact compiler names (like 'gcc', 'clang++' etc.),
+        use the compiler version checks to also specify the broader compiler collection of which
+        the used compiler is a member of. This avoids failures in some border-line cases where
+        the user would still use either a GCC or a Clang compiler but provide it through a symbolic
+        link that was specified via the CC/CXX environment variables.
+
+        * Source/autotools/CheckSystemAndBasicDependencies.m4: Store the detected C/C++ compiler collection
+        in c_compiler/cxx_compiler. Throw an error if no supported compiler was found.
+        * Source/autotools/SetupCompilerFlags.m4: Test for a specific compiler by checking against
+        c_compiler/cxx_compiler rather than CC/CXX values.
+
+2013-08-12  Zan Dobersek  <zdobersek@igalia.com>
+
+        [Autotools] Adjust the help string for the configure's --enable-optimizations flag
+        https://bugs.webkit.org/show_bug.cgi?id=119682
+
+        Reviewed by Martin Robinson.
+
+        * Source/autotools/ReadCommandLineArguments.m4: Remove the 'GCC only' part of the help
+        string for the --enable-optimizations flag. This is not true and can lead to confusion
+        since the optimizations can be applied when compiling with Clang as well.
+
+2013-08-11  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Update NEWS and Versions.m4 for 2.1.4 release.
+
+        * Source/autotools/Versions.m4: Update version numbers.
+
 2013-08-09  Zan Dobersek  <zdobersek@igalia.com>
 
         [Automake] Clean up OpenGL graphics configuration sections

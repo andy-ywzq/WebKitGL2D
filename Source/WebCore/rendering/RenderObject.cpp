@@ -126,7 +126,7 @@ COMPILE_ASSERT(sizeof(RenderObject) == sizeof(SameSizeAsRenderObject), RenderObj
 // ignore the CSS property "background-attachment: fixed".
 static bool shouldRepaintFixedBackgroundsOnScroll(FrameView* frameView)
 {
-#if !ENABLE(FAST_MOBILE_SCROLLING) && !PLATFORM(QT)
+#if !ENABLE(FAST_MOBILE_SCROLLING) || !PLATFORM(QT)
     UNUSED_PARAM(frameView);
 #endif
 
@@ -2837,12 +2837,12 @@ PassRefPtr<RenderStyle> RenderObject::getUncachedPseudoStyle(const PseudoStyleRe
     Element* element = toElement(n);
 
     if (pseudoStyleRequest.pseudoId == FIRST_LINE_INHERITED) {
-        RefPtr<RenderStyle> result = document()->ensureStyleResolver()->styleForElement(element, parentStyle, DisallowStyleSharing);
+        RefPtr<RenderStyle> result = document()->ensureStyleResolver().styleForElement(element, parentStyle, DisallowStyleSharing);
         result->setStyleType(FIRST_LINE_INHERITED);
         return result.release();
     }
 
-    return document()->ensureStyleResolver()->pseudoStyleForElement(element, pseudoStyleRequest, parentStyle);
+    return document()->ensureStyleResolver().pseudoStyleForElement(element, pseudoStyleRequest, parentStyle);
 }
 
 static Color decorationColor(RenderStyle* style)

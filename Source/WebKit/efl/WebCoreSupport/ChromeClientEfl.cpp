@@ -128,7 +128,7 @@ FloatRect ChromeClientEfl::windowRect()
 
 void ChromeClientEfl::setWindowRect(const FloatRect& rect)
 {
-    if (!ewk_view_setting_enable_auto_resize_window_get(m_view) || rect.isEmpty())
+    if (!ewk_view_setting_enable_auto_resize_window_get(m_view))
         return;
 
     Ecore_Evas* ee = ecore_evas_ecore_evas_get(evas_object_evas_get(m_view));
@@ -636,7 +636,7 @@ bool ChromeClientEfl::supportsFullScreenForElement(const WebCore::Element* eleme
 
     if (!element->document()->page())
         return false;
-    return element->document()->page()->settings()->fullScreenEnabled();
+    return element->document()->page()->settings().fullScreenEnabled();
 }
 
 void ChromeClientEfl::enterFullScreenForElement(WebCore::Element* element)

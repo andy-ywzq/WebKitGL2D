@@ -29,7 +29,7 @@
 #include "CSSParser.h"
 #include "CSSSelectorList.h"
 #include "Document.h"
-#include "NodeTraversal.h"
+#include "ElementTraversal.h"
 #include "SelectorChecker.h"
 #include "SelectorCheckerFastPath.h"
 #include "StaticNodeList.h"
@@ -132,9 +132,10 @@ ALWAYS_INLINE void SelectorDataList::executeFastPathForIdSelector(const Node* ro
         const Vector<Element*>* elements = rootNode->treeScope()->getAllElementsById(idToMatch);
         ASSERT(elements);
         size_t count = elements->size();
+        bool rootNodeIsTreeScopeRoot = isTreeScopeRoot(rootNode);
         for (size_t i = 0; i < count; ++i) {
             Element* element = elements->at(i);
-            if (selectorMatches(selectorData, element, rootNode)) {
+            if ((rootNodeIsTreeScopeRoot || element->isDescendantOf(rootNode)) && selectorMatches(selectorData, element, rootNode)) {
                 matchedElements.append(element);
                 if (firstMatchOnly)
                     return;

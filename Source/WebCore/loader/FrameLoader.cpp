@@ -356,6 +356,12 @@ void FrameLoader::submitForm(PassRefPtr<FormSubmission> submission)
         if (!DOMWindow::allowPopUp(m_frame) && !ScriptController::processingUserGesture())
             return;
 
+        // FIXME: targetFrame can be 0 for two distinct reasons:
+        // 1. The frame was not found by name, so we should try opening a new window.
+        // 2. The frame was found, but navigating it was not allowed, e.g. by HTML5 sandbox or by origin checks.
+        // Continuing form submission makes no sense in the latter case.
+        // There is a repeat check after timer fires, so this is not a correctness issue.
+
         targetFrame = m_frame;
     } else
         submission->clearTarget();
@@ -2283,6 +2289,11 @@ void FrameLoader::setOriginalURLForDownloadRequest(ResourceRequest& request)
 
 void FrameLoader::didLayout(LayoutMilestones milestones)
 {
+#if !ASSERT_DISABLED
+    if (Page* page = m_frame->page())
+        ASSERT(page->mainFrame() == m_frame);
+#endif
+
     m_client->dispatchDidLayout(milestones);
 }
 
@@ -3083,15 +3094,12 @@ Frame* FrameLoader::findFrameForNavigation(const AtomicString& name, Document* a
         ASSERT(frame != m_frame);
     }
 
-    if (activeDocument) {
-        if (!activeDocument->canNavigate(frame))
-            return 0;
-    } else {
-        // FIXME: Eventually all callers should supply the actual activeDocument
-        // so we can call canNavigate with the right document.
-        if (!m_frame->document()->canNavigate(frame))
-            return 0;
-    }
+    // FIXME: Eventually all callers should supply the actual activeDocument so we can call canNavigate with the right document.
+    if (!activeDocument)
+        activeDocument = m_frame->document();
+
+    if (!activeDocument->canNavigate(frame))
+        return 0;
 
     return frame;
 }
@@ -3452,9 +3460,10 @@ PassRefPtr<Frame> createWindow(Frame* openerFrame, Frame* lookupFrame, const Fra
         windowRect.setX(features.x);
     if (features.ySet)
         windowRect.setY(features.y);
-    if (features.widthSet)
+    // Zero width and height mean using default size, not minumum one.
+    if (features.widthSet && features.width)
         windowRect.setWidth(features.width + (windowRect.width() - viewportSize.width()));
-    if (features.heightSet)
+    if (features.heightSet && features.height)
         windowRect.setHeight(features.height + (windowRect.height() - viewportSize.height()));
 
     // Ensure non-NaN values, minimum size as well as being within valid screen area.

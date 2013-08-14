@@ -41,6 +41,7 @@
 #endif
 #include "DocumentFragment.h"
 #include "Editor.h"
+#include "ElementTraversal.h"
 #include "ExceptionCode.h"
 #include "ExceptionCodePlaceholder.h"
 #include "Frame.h"
@@ -52,7 +53,6 @@
 #include "HTMLTextFormControlElement.h"
 #include "KURL.h"
 #include "MarkupAccumulator.h"
-#include "NodeTraversal.h"
 #include "Range.h"
 #include "RenderBlock.h"
 #include "RenderObject.h"
@@ -1053,14 +1053,14 @@ PassRefPtr<DocumentFragment> createContextualFragment(const String& markup, HTML
     // accommodate folks passing complete HTML documents to make the
     // child of an element.
 
-    RefPtr<Node> nextNode;
-    for (RefPtr<Node> node = fragment->firstChild(); node; node = nextNode) {
-        nextNode = node->nextSibling();
-        if (node->hasTagName(htmlTag) || node->hasTagName(headTag) || node->hasTagName(bodyTag)) {
-            HTMLElement* element = toHTMLElement(node.get());
-            if (Node* firstChild = element->firstChild())
-                nextNode = firstChild;
-            removeElementPreservingChildren(fragment, element);
+    RefPtr<Element> nextElement;
+    for (RefPtr<Element> element = ElementTraversal::firstWithin(fragment.get()); element; element = nextElement) {
+        nextElement = ElementTraversal::nextSibling(element.get());
+        if (element->hasTagName(htmlTag) || element->hasTagName(headTag) || element->hasTagName(bodyTag)) {
+            HTMLElement* htmlElement = toHTMLElement(element.get());
+            if (Element* firstChild = ElementTraversal::firstWithin(htmlElement))
+                nextElement = firstChild;
+            removeElementPreservingChildren(fragment, htmlElement);
         }
     }
     return fragment.release();

@@ -28,8 +28,8 @@
 #include "ContentDistributor.h"
 
 #include "ElementShadow.h"
+#include "ElementTraversal.h"
 #include "HTMLContentElement.h"
-#include "NodeTraversal.h"
 #include "ShadowRoot.h"
 
 
@@ -150,8 +150,8 @@ void ContentDistributor::invalidateDistribution(Element* host)
     bool needsReattach = didNeedInvalidation ? invalidate(host) : false;
 
     if (needsReattach && host->attached()) {
-        for (Node* n = host->firstChild(); n; n = n->nextSibling())
-            n->lazyReattach();
+        for (Element* element = ElementTraversal::firstWithin(host); element; element = ElementTraversal::nextSibling(element))
+            element->lazyReattach();
         host->setNeedsStyleRecalc();
     }
 

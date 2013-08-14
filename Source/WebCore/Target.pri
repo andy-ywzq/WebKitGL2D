@@ -317,7 +317,6 @@ SOURCES += \
     css/MediaQueryEvaluator.cpp \
     css/MediaQueryExp.cpp \
     css/MediaQueryList.cpp \
-    css/MediaQueryListListener.cpp \
     css/MediaQueryMatcher.cpp \
     css/PageRuleCollector.cpp \
     css/PropertySetCSSStyleDeclaration.cpp \
@@ -1281,6 +1280,8 @@ SOURCES += \
     storage/StorageSyncManager.cpp \
     storage/StorageStrategy.cpp \
     storage/StorageTracker.cpp \
+    style/StyleFontSizeFunctions.cpp \
+    style/StyleResolveForDocument.cpp \
     style/StyleResolveTree.cpp \
     testing/Internals.cpp \
     testing/InternalSettings.cpp \
@@ -1608,6 +1609,7 @@ HEADERS += \
     dom/DatasetDOMStringMap.h \
     dom/Element.h \
     dom/ElementShadow.h \
+    dom/ElementTravesal.h \
     dom/Entity.h \
     dom/EntityReference.h \
     dom/Event.h \
@@ -2601,6 +2603,8 @@ HEADERS += \
     storage/StorageThread.h \
     storage/StorageTracker.h \
     storage/StorageTrackerClient.h \
+    style/StyleFontSizeFunctions.h \
+    style/StyleResolveForDocument.h \
     style/StyleResolveTree.h \
     svg/animation/SMILTimeContainer.h \
     svg/animation/SMILTime.h \
@@ -3401,6 +3405,7 @@ enable?(WEB_AUDIO) {
         platform/audio/DenormalDisabler.h \
         platform/audio/DirectConvolver.h \
         platform/audio/Distance.h \
+        platform/audio/DownSampler.h \
         platform/audio/DynamicsCompressor.h \
         platform/audio/DynamicsCompressorKernel.h \
         platform/audio/EqualPowerPanner.h \
@@ -3419,6 +3424,7 @@ enable?(WEB_AUDIO) {
         platform/audio/Reverb.h \
         platform/audio/ReverbInputBuffer.h \
         platform/audio/SincResampler.h \
+        platform/audio/UpSampler.h \
         platform/audio/VectorMath.h \
         platform/audio/ZeroPole.h
 
@@ -3482,6 +3488,7 @@ enable?(WEB_AUDIO) {
         platform/audio/Cone.cpp \
         platform/audio/DirectConvolver.cpp \
         platform/audio/Distance.cpp \
+        platform/audio/DownSampler.cpp \
         platform/audio/DynamicsCompressor.cpp \
         platform/audio/DynamicsCompressorKernel.cpp \
         platform/audio/EqualPowerPanner.cpp \
@@ -3502,6 +3509,7 @@ enable?(WEB_AUDIO) {
         platform/audio/Reverb.cpp \
         platform/audio/ReverbInputBuffer.cpp \
         platform/audio/SincResampler.cpp \
+        platform/audio/UpSampler.cpp \
         platform/audio/VectorMath.cpp \
         platform/audio/ZeroPole.cpp
 

@@ -397,7 +397,7 @@ public:
     void stripScriptingAttributes(Vector<Attribute>&) const;
 
     const ElementData* elementData() const { return m_elementData.get(); }
-    UniqueElementData* ensureUniqueElementData();
+    UniqueElementData& ensureUniqueElementData();
 
     void synchronizeAllAttributes() const;
 
@@ -411,21 +411,36 @@ public:
 
     virtual void copyNonAttributePropertiesFromElement(const Element&) { }
 
-    virtual void attach(const AttachContext& = AttachContext()) OVERRIDE;
-    virtual void detach(const AttachContext& = AttachContext()) OVERRIDE;
+    struct AttachContext {
+        RenderStyle* resolvedStyle;
+        bool performingReattach;
+
+        AttachContext() : resolvedStyle(0), performingReattach(false) { }
+    };
+    virtual void attach(const AttachContext& = AttachContext());
+    virtual void detach(const AttachContext& = AttachContext());
+    void reattach(const AttachContext& = AttachContext());
+    void reattachIfAttached(const AttachContext& = AttachContext());
+    enum ShouldSetAttached {
+        SetAttached,
+        DoNotSetAttached
+    };
+    void lazyAttach(ShouldSetAttached = SetAttached);
+    void lazyReattach(ShouldSetAttached = SetAttached);
+
     virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
     virtual bool rendererIsNeeded(const NodeRenderingContext&);
     void didAffectSelector(AffectedSelectorMask);
 
     ElementShadow* shadow() const;
-    ElementShadow* ensureShadow();
+    ElementShadow& ensureShadow();
     PassRefPtr<ShadowRoot> createShadowRoot(ExceptionCode&);
     ShadowRoot* authorShadowRoot() const;
 
     bool hasAuthorShadowRoot() const { return authorShadowRoot(); }
 
     ShadowRoot* userAgentShadowRoot() const;
-    ShadowRoot* ensureUserAgentShadowRoot();
+    ShadowRoot& ensureUserAgentShadowRoot();
 
     virtual const AtomicString& shadowPseudoId() const;
 
@@ -767,10 +782,13 @@ private:
     void createUniqueElementData();
 
     ElementRareData* elementRareData() const;
-    ElementRareData* ensureElementRareData();
+    ElementRareData& ensureElementRareData();
 
     void detachAllAttrNodesFromElement();
     void detachAttrNodeFromElementWithValue(Attr*, const AtomicString& value);
+
+    void attachChildren(const AttachContext&);
+    void detachChildren(const AttachContext&);
 
     void createRendererIfNeeded(const AttachContext&);
 
@@ -823,22 +841,6 @@ inline Element* Node::parentElement() const
 {
     ContainerNode* parent = parentNode();
     return parent && parent->isElementNode() ? toElement(parent) : 0;
-}
-
-inline Element* Element::previousElementSibling() const
-{
-    Node* n = previousSibling();
-    while (n && !n->isElementNode())
-        n = n->previousSibling();
-    return static_cast<Element*>(n);
-}
-
-inline Element* Element::nextElementSibling() const
-{
-    Node* n = nextSibling();
-    while (n && !n->isElementNode())
-        n = n->nextSibling();
-    return static_cast<Element*>(n);
 }
 
 inline bool Element::fastHasAttribute(const QualifiedName& name) const
@@ -932,11 +934,11 @@ inline bool Element::hasName() const
     return elementData() && elementData()->hasName();
 }
 
-inline UniqueElementData* Element::ensureUniqueElementData()
+inline UniqueElementData& Element::ensureUniqueElementData()
 {
     if (!elementData() || !elementData()->isUnique())
         createUniqueElementData();
-    return static_cast<UniqueElementData*>(m_elementData.get());
+    return static_cast<UniqueElementData&>(*m_elementData);
 }
 
 inline Node::InsertionNotificationRequest Node::insertedInto(ContainerNode* insertionPoint)

@@ -549,7 +549,7 @@ void WebFrameLoaderClient::dispatchDidLayout(LayoutMilestones milestones)
         webPage->send(Messages::WebPageProxy::DidFirstLayoutForFrame(m_frame->frameID(), InjectedBundleUserMessageEncoder(userData.get())));
 
         if (m_frame == m_frame->page()->mainWebFrame()) {
-            if (!webPage->corePage()->settings()->suppressesIncrementalRendering() && !m_didCompletePageTransitionAlready) {
+            if (!webPage->corePage()->settings().suppressesIncrementalRendering() && !m_didCompletePageTransitionAlready) {
                 webPage->didCompletePageTransition();
                 m_didCompletePageTransitionAlready = true;
             }
@@ -566,12 +566,6 @@ void WebFrameLoaderClient::dispatchDidLayout(LayoutMilestones milestones)
         // double duty with the new didLayout API.
         webPage->injectedBundleLoaderClient().didFirstVisuallyNonEmptyLayoutForFrame(webPage, m_frame, userData);
         webPage->send(Messages::WebPageProxy::DidFirstVisuallyNonEmptyLayoutForFrame(m_frame->frameID(), InjectedBundleUserMessageEncoder(userData.get())));
-    }
-
-    if (milestones & DidHitRelevantRepaintedObjectsAreaThreshold) {
-        // FIXME: This can go away when we remove didNewFirstVisuallyNonEmptyLayout.
-        webPage->injectedBundleLoaderClient().didNewFirstVisuallyNonEmptyLayout(webPage, userData);
-        webPage->send(Messages::WebPageProxy::DidNewFirstVisuallyNonEmptyLayout(InjectedBundleUserMessageEncoder(userData.get())));
     }
 }
 

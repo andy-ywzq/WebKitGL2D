@@ -329,7 +329,7 @@ public:
     void setUserActionElement(bool flag) { setFlag(flag, IsUserActionElement); }
 
     bool attached() const { return getFlag(IsAttachedFlag); }
-    void setAttached() { setFlag(IsAttachedFlag); }
+    void setAttached(bool flag) { setFlag(flag, IsAttachedFlag); }
     bool needsStyleRecalc() const { return styleChangeType() != NoStyleChange; }
     StyleChangeType styleChangeType() const { return static_cast<StyleChangeType>(m_nodeFlags & StyleChangeMask); }
     bool childNeedsStyleRecalc() const { return getFlag(ChildNeedsStyleRecalcFlag); }
@@ -355,13 +355,6 @@ public:
 
     bool hasEventTargetData() const { return getFlag(HasEventTargetDataFlag); }
     void setHasEventTargetData(bool flag) { setFlag(flag, HasEventTargetDataFlag); }
-
-    enum ShouldSetAttached {
-        SetAttached,
-        DoNotSetAttached
-    };
-    void lazyAttach(ShouldSetAttached = SetAttached);
-    void lazyReattach(ShouldSetAttached = SetAttached);
 
     enum UserSelectAllTreatment {
         UserSelectAllDoesNotAffectEditability,
@@ -472,28 +465,6 @@ public:
     RenderBox* renderBox() const;
     RenderBoxModelObject* renderBoxModelObject() const;
 
-    struct AttachContext {
-        RenderStyle* resolvedStyle;
-        bool performingReattach;
-
-        AttachContext() : resolvedStyle(0), performingReattach(false) { }
-    };
-
-    // Attaches this node to the rendering tree. This calculates the style to be applied to the node and creates an
-    // appropriate RenderObject which will be inserted into the tree (except when the style has display: none). This
-    // makes the node visible in the FrameView.
-    virtual void attach(const AttachContext& = AttachContext());
-
-    // Detaches the node from the rendering tree, making it invisible in the rendered view. This method will remove
-    // the node's rendering object from the rendering tree and delete it.
-    virtual void detach(const AttachContext& = AttachContext());
-
-#ifndef NDEBUG
-    bool inDetach() const;
-#endif
-
-    void reattach(const AttachContext& = AttachContext());
-    void reattachIfAttached(const AttachContext& = AttachContext());
     ContainerNode* parentNodeForRenderingAndStyle();
     
     // Wrapper for nodes that don't have a renderer, but still cache the style (like HTMLOptionElement).
@@ -609,8 +580,8 @@ public:
     using TreeShared<Node>::ref;
     using TreeShared<Node>::deref;
 
-    virtual EventTargetData* eventTargetData();
-    virtual EventTargetData* ensureEventTargetData();
+    virtual EventTargetData* eventTargetData() OVERRIDE;
+    virtual EventTargetData& ensureEventTargetData() OVERRIDE;
 
     void getRegisteredMutationObserversOfType(HashMap<MutationObserver*, MutationRecordDeliveryOptions>&, MutationObserver::MutationType, const QualifiedName* attributeName);
     void registerMutationObserver(MutationObserver*, MutationObserverOptions, const HashSet<AtomicString>& attributeFilter);
@@ -630,6 +601,8 @@ public:
     void decrementConnectedSubframeCount(unsigned amount = 1);
     void updateAncestorConnectedSubframeCountForRemoval() const;
     void updateAncestorConnectedSubframeCountForInsertion() const;
+
+    void markAncestorsWithChildNeedsStyleRecalc();
 
 private:
     enum NodeFlags {
@@ -703,7 +676,7 @@ protected:
     bool hasRareData() const { return getFlag(HasRareDataFlag); }
 
     NodeRareData* rareData() const;
-    NodeRareData* ensureRareData();
+    NodeRareData& ensureRareData();
     void clearRareData();
 
     void clearEventTargetData();
@@ -712,6 +685,8 @@ protected:
 
     Document* documentInternal() const { return treeScope()->documentScope(); }
     void setTreeScope(TreeScope* scope) { m_treeScope = scope; }
+
+    void setStyleChange(StyleChangeType changeType) { m_nodeFlags = (m_nodeFlags & ~StyleChangeMask) | changeType; }
 
 private:
     friend class TreeShared<Node>;
@@ -728,11 +703,6 @@ private:
     enum EditableLevel { Editable, RichlyEditable };
     bool rendererIsEditable(EditableLevel, UserSelectAllTreatment = UserSelectAllIsAlwaysNonEditable) const;
     bool isEditableToAccessibility(EditableLevel) const;
-
-    void setStyleChange(StyleChangeType);
-
-    // Used to share code between lazyAttach and setNeedsStyleRecalc.
-    void markAncestorsWithChildNeedsStyleRecalc();
 
     virtual void refEventTarget();
     virtual void derefEventTarget();
@@ -799,32 +769,6 @@ inline ContainerNode* Node::parentNodeGuaranteedHostFree() const
 {
     ASSERT(!isShadowRoot());
     return parentOrShadowHostNode();
-}
-
-inline void Node::reattach(const AttachContext& context)
-{
-    AttachContext reattachContext(context);
-    reattachContext.performingReattach = true;
-
-    if (attached())
-        detach(reattachContext);
-    attach(reattachContext);
-}
-
-inline void Node::reattachIfAttached(const AttachContext& context)
-{
-    if (attached())
-        reattach(context);
-}
-
-inline void Node::lazyReattach(ShouldSetAttached shouldSetAttached)
-{
-    AttachContext context;
-    context.performingReattach = true;
-
-    if (attached())
-        detach(context);
-    lazyAttach(shouldSetAttached);
 }
 
 } //namespace

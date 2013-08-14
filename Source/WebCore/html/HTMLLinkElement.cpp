@@ -44,10 +44,12 @@
 #include "MediaList.h"
 #include "MediaQueryEvaluator.h"
 #include "Page.h"
+#include "RenderStyle.h"
 #include "ScriptEventListener.h"
 #include "SecurityOrigin.h"
 #include "Settings.h"
-#include "StyleResolver.h"
+#include "StyleInheritedData.h"
+#include "StyleResolveForDocument.h"
 #include "StyleSheetContents.h"
 #include <wtf/StdLibExtras.h>
 
@@ -182,7 +184,7 @@ void HTMLLinkElement::process()
     if (!m_linkLoader.loadLink(m_relAttribute, type, m_sizes->toString(), url, document()))
         return;
 
-    bool acceptIfTypeContainsTextCSS = document()->page() && document()->page()->settings() && document()->page()->settings()->treatsAnyTextCSSLinkAsStylesheet();
+    bool acceptIfTypeContainsTextCSS = document()->page() && document()->page()->settings().treatsAnyTextCSSLinkAsStylesheet();
 
     if (m_disabledState != Disabled && (m_relAttribute.m_isStyleSheet || (acceptIfTypeContainsTextCSS && type.contains("text/css")))
         && document()->frame() && url.isValid()) {
@@ -204,7 +206,7 @@ void HTMLLinkElement::process()
 
         bool mediaQueryMatches = true;
         if (!m_media.isEmpty()) {
-            RefPtr<RenderStyle> documentStyle = StyleResolver::styleForDocument(document());
+            RefPtr<RenderStyle> documentStyle = Style::resolveForDocument(document());
             RefPtr<MediaQuerySet> media = MediaQuerySet::createAllowingDescriptionSyntax(m_media);
             MediaQueryEvaluator evaluator(document()->frame()->view()->mediaType(), document()->frame(), documentStyle.get());
             mediaQueryMatches = evaluator.eval(media.get());

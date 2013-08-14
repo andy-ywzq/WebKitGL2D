@@ -1467,7 +1467,7 @@ void EventHandler::startAutoHideCursorTimer()
     if (!page)
         return;
 
-    m_autoHideCursorTimer.startOneShot(page->settings()->timeWithoutMouseMovementBeforeHidingControls());
+    m_autoHideCursorTimer.startOneShot(page->settings().timeWithoutMouseMovementBeforeHidingControls());
 
     // The fake mouse move event screws up the auto-hide feature (by resetting the auto-hide timer)
     // so cancel any pending fake mouse moves.
@@ -3342,7 +3342,15 @@ static void handleKeyboardSelectionMovement(FrameSelection* selection, KeyboardE
     selection->modify(alternation, direction, granularity, UserTriggered);
     event->setDefaultHandled();
 }
-    
+
+void EventHandler::handleKeyboardSelectionMovementForAccessibility(KeyboardEvent* event)
+{
+    if (event->type() == eventNames().keydownEvent) {
+        if (AXObjectCache::accessibilityEnhancedUserInterfaceEnabled())
+            handleKeyboardSelectionMovement(m_frame->selection(), event);
+    }
+}
+
 void EventHandler::defaultKeyboardEventHandler(KeyboardEvent* event)
 {
     if (event->type() == eventNames().keydownEvent) {
@@ -3359,9 +3367,7 @@ void EventHandler::defaultKeyboardEventHandler(KeyboardEvent* event)
                 defaultArrowEventHandler(direction, event);
         }
 
-        // provides KB navigation and selection for enhanced accessibility users
-        if (AXObjectCache::accessibilityEnhancedUserInterfaceEnabled())
-            handleKeyboardSelectionMovement(m_frame->selection(), event);
+        handleKeyboardSelectionMovementForAccessibility(event);
     }
     if (event->type() == eventNames().keypressEvent) {
         m_frame->editor().handleKeyboardEvent(event);

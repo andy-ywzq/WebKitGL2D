@@ -27,6 +27,7 @@
 
 #include "Attribute.h"
 #include "Document.h"
+#include "ElementTraversal.h"
 #include "Event.h"
 #include "EventNames.h"
 #include "FormController.h"
@@ -41,7 +42,6 @@
 #include "HTMLNames.h"
 #include "HTMLTableElement.h"
 #include "NodeRenderingContext.h"
-#include "NodeTraversal.h"
 #include "Page.h"
 #include "RenderTextControl.h"
 #include "ScriptController.h"
@@ -202,7 +202,7 @@ static inline HTMLFormControlElement* submitElementFromEvent(const Event* event)
 bool HTMLFormElement::validateInteractively(Event* event)
 {
     ASSERT(event);
-    if (!document()->page() || !document()->page()->settings()->interactiveFormValidationEnabled() || noValidate())
+    if (!document()->page() || !document()->page()->settings().interactiveFormValidationEnabled() || noValidate())
         return true;
 
     HTMLFormControlElement* submitElement = submitElementFromEvent(event);

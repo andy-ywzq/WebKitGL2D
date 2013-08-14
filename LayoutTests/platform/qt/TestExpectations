@@ -481,47 +481,12 @@ editing/secure-input [ Failure ]
 # CSS.regionOversetChanged is not implemented.
 webkit.org/b/117833 inspector/styles/protocol-css-regions-commands.html [ Skip ]
 
-# CSS -webkit-background-blend-mode not supported yet.
-css3/compositing/background-blend-mode-background-attachement-fixed.html
-css3/compositing/background-blend-mode-background-clip-content-box.html
-css3/compositing/background-blend-mode-background-clip-padding-box.html
-css3/compositing/background-blend-mode-background-origin-border-box.html
-css3/compositing/background-blend-mode-background-position-percentage.html
-css3/compositing/background-blend-mode-background-repeat-no-repeat.html
-css3/compositing/background-blend-mode-background-size-contain.html
-css3/compositing/background-blend-mode-background-size-cover.html
+# The following tests fail because blend-modes are only partially supported.
 css3/compositing/background-blend-mode-default-value.html
 css3/compositing/background-blend-mode-different-image-formats.html
 css3/compositing/background-blend-mode-image-color.html
 css3/compositing/background-blend-mode-image-image.html
 css3/compositing/background-blend-mode-single-layer-no-blending.html
-
-# The following test fail because canvas blending is not yet supported.
-# https://bugs.webkit.org/show_bug.cgi?id=100072
-fast/canvas/canvas-blend-image.html
-fast/canvas/canvas-blend-solid.html
-fast/canvas/canvas-blending-clipping.html
-fast/canvas/canvas-blending-color-over-color.html
-fast/canvas/canvas-blending-color-over-gradient.html
-fast/canvas/canvas-blending-color-over-image.html
-fast/canvas/canvas-blending-color-over-pattern.html
-fast/canvas/canvas-blending-fill-style.html
-fast/canvas/canvas-blending-global-alpha.html
-fast/canvas/canvas-blending-gradient-over-color.html
-fast/canvas/canvas-blending-gradient-over-gradient.html
-fast/canvas/canvas-blending-gradient-over-image.html
-fast/canvas/canvas-blending-gradient-over-pattern.html
-fast/canvas/canvas-blending-image-over-color.html
-fast/canvas/canvas-blending-image-over-gradient.html
-fast/canvas/canvas-blending-image-over-image.html
-fast/canvas/canvas-blending-image-over-pattern.html
-fast/canvas/canvas-blending-pattern-over-color.html
-fast/canvas/canvas-blending-pattern-over-gradient.html
-fast/canvas/canvas-blending-pattern-over-image.html
-fast/canvas/canvas-blending-pattern-over-pattern.html
-fast/canvas/canvas-blending-shadow.html
-fast/canvas/canvas-blending-text.html
-fast/canvas/canvas-blending-transforms.html
 
 # =========================================================================== #
 #       Drag and Drop Support in DRT.                                         #
@@ -826,6 +791,9 @@ webkit.org/b/115261 editing/selection/selection-in-iframe-removed-crash.html [ S
 
 webkit.org/b/116613 editing/selection/contains-node-crash.html [ Skip ]
 
+# [Qt] New editing/selection/leak-document-with-selection-inside.html test fails on Qt bots after r153366.
+webkit.org/b/119689 editing/selection/leak-document-with-selection-inside.html [ Skip ]
+
 # ============================================================================= #
 # Failing editing/spelling tests
 # ============================================================================= #
@@ -929,6 +897,10 @@ sputnik/Unicode/Unicode_510/S7.6_A3.1.html
 sputnik/Unicode/Unicode_510/S7.6_A3.2.html
 sputnik/Unicode/Unicode_510/S7.6_A5.3_T1.html
 sputnik/Unicode/Unicode_510/S7.6_A5.3_T2.html
+
+# [Qt] REGRESSION(FTL) 2 sputnik/ test failing on x86.
+webkit.org/b/119796 sputnik/Conformance/08_Types/8.5_The_Number_Type/S8.5_A2.1.html [ Skip ]
+webkit.org/b/119796 sputnik/Conformance/08_Types/8.5_The_Number_Type/S8.5_A2.2.html [ Skip ]
 
 # =========================================================================== #
 # Fluctuating/flakey tests
@@ -1295,6 +1267,10 @@ fast/images/support-broken-image-delegate.html
 
 # Missing testRunner.setHandlesAuthenticationChallenges() implementation
 http/tests/misc/authentication-redirect-4/authentication-sent-to-redirect-same-origin-url.html
+
+# TestRunner::overridePreference() does not support the 'WebKitCanvasUsesAcceleratedDrawing' preference
+fast/canvas/canvas-blend-image.html
+fast/canvas/canvas-blend-solid.html
 
 # ============================================================================= #
 # Failing SVG tests
@@ -1953,6 +1929,16 @@ webkit.org/b/117582 fast/flexbox/clear-overflow-before-scroll-update.html [ Skip
 
 # [Qt] fast/repaint/fixed-right-bottom-in-page-scale.html test flaky on Debug build and caused regression on the following tests after r118238. 
 webkit.org/b/118238 [ Debug ] fast/repaint/fixed-right-bottom-in-page-scale.html [ Skip ]
+
+
+# REGRESSION (r153925): fast/media/media-query-list-07.html is failing
+webkit.org/b/119732 fast/media/media-query-list-07.html [ Skip ]
+
+# REGRESSION (r153145): fast/workers/worker-call.html fails
+webkit.org/b/119271 fast/workers/worker-call.html [ Skip ]
+
+# [Qt] fast/canvas/canvas-blending-transforms.html test fails on x32.
+webkit.org/b/119792 fast/canvas/canvas-blending-transforms.html [ Skip ]
 
 # ============================================================================= #
 # failing security tests

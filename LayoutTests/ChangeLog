@@ -1,3 +1,596 @@
+2013-08-14  Rob Buis  <rwlbuis@webkit.org>
+
+        ASSERTION FAILED: resultAnimationElement->m_animatedType in WebCore::SVGAnimateElement::calculateAnimatedValue
+        https://bugs.webkit.org/show_bug.cgi?id=119748
+
+        Reviewed by Dirk Schulze.
+
+        Test that using animateTransform with attributeType="CSS" will cause no animateTransform animation, and
+        attributeType="auto" will act as "XML".
+
+        * svg/animations/animateTransform-translate-attributetype-auto-expected.txt: Added.
+        * svg/animations/animateTransform-translate-attributetype-auto.html: Added.
+        * svg/animations/animateTransform-translate-invalid-attributetype-expected.txt: Added.
+        * svg/animations/animateTransform-translate-invalid-attributetype.html: Added.
+        * svg/animations/script-tests/animateTransform-translate-attributetype-auto.js: Added.
+        (sample1):
+        (sample2):
+        (sample3):
+        (executeTest):
+        * svg/animations/script-tests/animateTransform-translate-invalid-attributetype.js: Added.
+        (sample):
+        (executeTest):
+
+2013-08-14  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] Unreviewd gardening. Skipping failing tests on x86.
+
+        * platform/qt/TestExpectations:
+
+2013-08-13  Sergio Villar Senin  <svillar@igalia.com>
+
+        [CSS Grid Layout] Align our grid-line handling with the updated specification
+        https://bugs.webkit.org/show_bug.cgi?id=113546
+
+        Reviewed by Andreas Kling.
+
+        From Blink r148091 by <jchaffraix@chromium.org>
+
+        Added a couple of new tests to cover the cases of grid resolutions
+        using negative integers. Negative integers must resolve against
+        the grid-{column|row}-end of the explicit grid.
+
+        * fast/css-grid-layout/grid-auto-flow-resolution-expected.txt:
+        * fast/css-grid-layout/grid-auto-flow-resolution.html:
+        * fast/css-grid-layout/grid-item-negative-integer-explicit-grid-resolution-expected.txt: Added.
+        * fast/css-grid-layout/grid-item-negative-integer-explicit-grid-resolution.html: Added.
+        * fast/css-grid-layout/grid-item-spanning-resolution-expected.txt:
+        * fast/css-grid-layout/grid-item-spanning-resolution.html:
+        * fast/css-grid-layout/resources/grid.css:
+        (.autoLastRowAutoLastColumn):
+        (.autoSecondRowAutoFirstColumn):
+        (.firstRowBothColumn):
+        (.secondRowBothColumn):
+        (.bothRowFirstColumn):
+        (.bothRowSecondColumn):
+        (.bothRowBothColumn):
+
+2013-08-13  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        The length of scheme is at least five characters even when the scheme has 'web+' prefix
+        https://bugs.webkit.org/show_bug.cgi?id=119779
+
+        Reviewed by Ryosuke Niwa.
+
+        Add a test case to check if the length of 'web+' is five characters at least.
+
+        * fast/dom/register-protocol-handler-expected.txt:
+        * fast/dom/register-protocol-handler.html:
+        * fast/dom/unregister-protocol-handler-expected.txt:
+        * fast/dom/unregister-protocol-handler.html:
+        * platform/efl/fast/dom/register-protocol-handler-expected.txt:
+        * platform/efl/fast/dom/unregister-protocol-handler-expected.txt:
+
+2013-08-13  Ryosuke Niwa  <rniwa@webkit.org>
+
+        REGRESSION(r150187): Safari fails to render allrecipe.com comment popups
+        https://bugs.webkit.org/show_bug.cgi?id=119780
+
+        Reviewed by Benjamin Poulain.
+
+        * fast/selectors/querySelector-id-with-multiple-elements-with-same-id-expected.txt: Added.
+        * fast/selectors/querySelector-id-with-multiple-elements-with-same-id.html: Added.
+
+2013-08-13  Sam Weinig  <sam@webkit.org>
+
+        [Re-land] Cleanup MediaQueryListListener
+        https://bugs.webkit.org/show_bug.cgi?id=119664
+
+        Reviewed by Andreas Kling.
+
+        * fast/media/media-query-list-07-expected.txt:
+        * fast/media/media-query-list-07.html:
+        * platform/mac/TestExpectations:
+        Update test to reflect that we are supposed to throw exceptions when when not passing a callback
+        object to addListener/removeListener. Also update the test to use the internals interface that is
+        supported by more ports.
+
+2013-08-13  Alexey Proskuryakov  <ap@apple.com>
+
+        Removed a bogus comment that didn't have any bugs after it.
+
+        * platform/mac/TestExpectations:
+
+2013-08-13  Alexey Proskuryakov  <ap@apple.com>
+
+        REGRESSION(r139282): Old caret sometimes gets "stuck" (not repainted) in contenteditable elements.
+        https://bugs.webkit.org/show_bug.cgi?id=119520
+
+        * fast/repaint/caret-jump-between-nodes-expected.txt: Test was failing everywhere.
+        Landing current Mac results to make bots greener, but Andreas should take a look at
+        fixing the test.
+
+2013-08-13  Robert Hogan  <robert@webkit.org>
+
+        Section's collapsed borders painted in wrong place in rtl tables
+        https://bugs.webkit.org/show_bug.cgi?id=119691
+
+        Reviewed by Darin Adler.
+
+        * fast/table/paint-collapsed-borders-rtl-section-expected.html: Added.
+        * fast/table/paint-collapsed-borders-rtl-section.html: Added.
+
+2013-08-13  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        NodeList.item() does not behave according to specification
+        https://bugs.webkit.org/show_bug.cgi?id=119722
+
+        Reviewed by Darin Adler.
+
+        Add a layout test to check that the NodeList.item() indexed getter's
+        argument is properly validated. Also, update the following test case now
+        that the argument is mandatory:
+        fast/dom/non-numeric-values-numeric-parameters.html
+
+        * fast/dom/nodelist-item-parameter-expected.txt: Added.
+        * fast/dom/nodelist-item-parameter.html: Added.
+        * fast/dom/non-numeric-values-numeric-parameters-expected.txt:
+        * fast/dom/script-tests/non-numeric-values-numeric-parameters.js:
+
+2013-08-13  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        REGRESSION(SUBPIXEL_LAYOUT) Composited layers can cause one pixel shifts
+        https://bugs.webkit.org/show_bug.cgi?id=115304
+
+        Reviewed by David Hyatt.
+
+        * fast/sub-pixel/sub-pixel-composited-layers-expected.html: Added.
+        * fast/sub-pixel/sub-pixel-composited-layers.html: Added.
+
+2013-08-13  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        HTMLSelectElement.item() does not behave according to specification
+        https://bugs.webkit.org/show_bug.cgi?id=119738
+
+        Reviewed by Darin Adler.
+
+        Add a new layout test to check that the HTMLSelectElement.item() indexed getter's
+        parameter is correctly validated.
+        Also update fast/dom/non-numeric-values-numeric-parameters.html now that the
+        argument is mandatory.
+
+        * fast/dom/HTMLSelectElement/select-element-item-argument-expected.txt: Added.
+        * fast/dom/HTMLSelectElement/select-element-item-argument.html: Added.
+        * fast/dom/non-numeric-values-numeric-parameters-expected.txt:
+        * fast/dom/script-tests/non-numeric-values-numeric-parameters.js:
+
+2013-08-13  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        On request error, always fire events on the XMLHttpRequestUpload before the XMLHttpRequest
+        https://bugs.webkit.org/show_bug.cgi?id=119714
+
+        Reviewed by Alexey Proskuryakov.
+
+        Add a layout test to validate the order in which the events are fired in case
+        of a xhr request error. Also update an existing test which was relying on the
+        outdated firing order.
+
+        * http/tests/xmlhttprequest/simple-cross-origin-progress-events-expected.txt:
+        * http/tests/xmlhttprequest/simple-cross-origin-progress-events.html:
+        * http/tests/xmlhttprequest/upload-request-error-event-order-expected.txt: Added.
+        * http/tests/xmlhttprequest/upload-request-error-event-order.html: Added.
+
+2013-08-13  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Rebase tests after r153901 and r153915. Skip failing tests.
+
+        * platform/qt-5.0-wk2/TestExpectations:
+        * platform/qt-5.0-wk2/svg/W3C-SVG-1.1/struct-dom-03-b-expected.png: Removed.
+        * platform/qt-5.0/http/tests/security/xss-DENIED-xsl-document-redirect-expected.txt: Removed.
+        * platform/qt/TestExpectations:
+        * platform/qt/http/tests/security/xss-DENIED-xsl-document-redirect-expected.txt: Added.
+        * platform/qt/svg/W3C-SVG-1.1/struct-dom-03-b-expected.png:
+        * platform/qt/svg/W3C-SVG-1.1/struct-dom-03-b-expected.txt: Added.
+
+2013-08-13  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/TestExpectations: Simplify test failure expectations to remove various lint failures,
+        also removing a couple of expectations for tests that are passing in the process.
+
+2013-08-13  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/fast/repaint/caret-jump-between-nodes-expected.txt: Added. Rebaselining after r153815.
+        * platform/gtk/svg/W3C-SVG-1.1/struct-dom-03-b-expected.png: Rebaselining after r153901.
+        * platform/gtk/svg/W3C-SVG-1.1/struct-dom-03-b-expected.txt: Ditto.
+
+2013-08-13  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/TestExpectations: Add failure expectations for various failing tests.
+
+2013-08-13  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Skipping new fails.
+
+        * platform/qt-5.0-wk1/TestExpectations:
+        * platform/qt/TestExpectations:
+
+2013-08-13  Arpita Bahuguna  <a.bah@samsung.com>
+
+        Adding testcase for verifying editing behavior for up/down caret movement between lines.
+        https://bugs.webkit.org/show_bug.cgi?id=119511
+
+        Reviewed by Ryosuke Niwa.
+
+        * editing/selection/verify-editing-behavior-for-line-granularity-expected.txt: Added.
+        * editing/selection/verify-editing-behavior-for-line-granularity.html: Added.
+        Layout testcase added for verifying that the up/down caret movement between
+        lines is similar to the default text editor behavior on various platforms.
+
+2013-08-13  Andrei Bucur  <abucur@adobe.com>
+
+        [CSS Regions] Compute correct region ranges for boxes
+        https://bugs.webkit.org/show_bug.cgi?id=116296
+
+        Reviewed by David Hyatt.
+
+        Tests for the changes in how region ranges are computed and applied.
+
+        * fast/regions/bottom-overflow-out-of-first-region-absolute-expected.html: Added.
+        * fast/regions/bottom-overflow-out-of-first-region-absolute.html: Added.
+        * fast/regions/float-pushed-width-change-2-expected.html: Copied from LayoutTests/fast/regions/float-pushed-width-change-expected.html.
+        * fast/regions/float-pushed-width-change-2.html: Copied from LayoutTests/fast/regions/float-pushed-width-change.html.
+        * fast/regions/float-pushed-width-change-expected.html:
+        * fast/regions/float-pushed-width-change.html:
+        * fast/regions/scrollable-paragraph-unsplittable-expected.html: Added.
+        * fast/regions/scrollable-paragraph-unsplittable.html: Added.
+
+2013-08-13  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/editing/caret/caret-color-expected.txt: Rebaselining after r152612.
+        * platform/gtk/fast/js/dom-static-property-for-in-iteration-expected.txt: Rebaselining after r153772.
+        * platform/gtk/fast/js/global-constructors-attributes-expected.txt: Ditto.
+
+2013-08-13  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+        Rebaselining after r153647.
+
+        * platform/gtk/fast/css/input-search-padding-expected.txt:
+        * platform/gtk/fast/css/text-overflow-input-expected.txt:
+        * platform/gtk/fast/forms/box-shadow-override-expected.txt:
+        * platform/gtk/fast/forms/control-restrict-line-height-expected.txt:
+        * platform/gtk/fast/forms/input-appearance-height-expected.txt:
+        * platform/gtk/fast/forms/placeholder-position-expected.txt:
+        * platform/gtk/fast/forms/placeholder-pseudo-style-expected.txt:
+        * platform/gtk/fast/forms/search-cancel-button-style-sharing-expected.txt:
+        * platform/gtk/fast/forms/search-display-none-cancel-button-expected.txt:
+        * platform/gtk/fast/forms/search-rtl-expected.txt:
+        * platform/gtk/fast/forms/search-size-with-decorations-expected.txt: Added.
+        * platform/gtk/fast/forms/search-styled-expected.txt:
+        * platform/gtk/fast/forms/search-vertical-alignment-expected.txt:
+        * platform/gtk/fast/forms/searchfield-heights-expected.txt:
+        * platform/gtk/fast/repaint/search-field-cancel-expected.txt:
+
+2013-08-13  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Update scheme list according to latest specification
+        https://bugs.webkit.org/show_bug.cgi?id=119510
+
+        Reviewed by Christophe Dumez.
+
+        New schemes are added to it additionally. Those are bitcoin, im, ircs and wtai.
+        As additional work, scheme order is listed to be sync with spec.
+
+        Spec: http://www.w3.org/html/wg/drafts/html/master/webappapis.html#custom-handlers
+
+        * fast/dom/register-protocol-handler-expected.txt:
+        * fast/dom/register-protocol-handler.html:
+        * fast/dom/unregister-protocol-handler-expected.txt:
+        * fast/dom/unregister-protocol-handler.html:
+        * platform/efl/fast/dom/register-protocol-handler-expected.txt:
+        * platform/efl/fast/dom/unregister-protocol-handler-expected.txt:
+
+2013-08-12  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Fix null dereference in HTMLAnchorElement::sendPings when frame is not attached to a page
+        https://bugs.webkit.org/show_bug.cgi?id=119716
+
+        Reviewed by Darin Adler.
+
+        Add a regression test for r153975.
+
+        * fast/html/detach-frame-while-clicking-on-anchor-with-ping-expected.txt: Added.
+        * fast/html/detach-frame-while-clicking-on-anchor-with-ping.html: Added.
+
+2013-08-12  Zan Dobersek  <zdobersek@igalia.com>
+
+        ASSERTION FAILED: type() == Percent in WebCore::Length::percent
+        https://bugs.webkit.org/show_bug.cgi?id=116715
+
+        Reviewed by Darin Adler.
+
+        Add the test case, as produced by the Fuzzinator, that was causing assertions
+        in Length::percent due to Length objects of the Calculated type not being treated
+        as holding a proper percent value in that method, despite Length::isPercent
+        returning true for Length objects of either Percent or the Calculated type.
+
+        * fast/css/calculated-length-as-percent-crash-expected.txt: Added.
+        * fast/css/calculated-length-as-percent-crash.html: Added.
+
+2013-08-12  Alexey Proskuryakov  <ap@apple.com>
+
+        http/tests/security/sandboxed-iframe-invalid.html is flaky on Mac
+        https://bugs.webkit.org/show_bug.cgi?id=85522
+
+        Reviewed by Andy Estes.
+
+        * http/tests/security/sandboxed-iframe-form-top-expected.txt: Console logging got
+        improved while this test was marked as skipped or flaky, updating the results.
+
+        * platform/mac/TestExpectations: Removed sandboxed-iframe-form-top.html, this test
+        no longer leaks output into later ones. The test was erroneously marked as flaky
+        instead of skipped, but now it's good.
+
+2013-08-12  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL] Unreviewed gardening.
+
+        Add a missing result after r152911.
+
+        * platform/efl/fast/multicol/pagination/BottomToTop-bt-expected.png: Added.
+        * platform/efl/fast/multicol/pagination/BottomToTop-bt-expected.txt: Added.
+        * platform/efl/fast/multicol/pagination/BottomToTop-lr-expected.png: Added.
+        * platform/efl/fast/multicol/pagination/BottomToTop-lr-expected.txt: Added.
+        * platform/efl/fast/multicol/pagination/BottomToTop-rl-expected.png: Added.
+        * platform/efl/fast/multicol/pagination/BottomToTop-rl-expected.txt: Added.
+        * platform/efl/fast/multicol/pagination/BottomToTop-tb-expected.png: Added.
+        * platform/efl/fast/multicol/pagination/BottomToTop-tb-expected.txt: Added.
+        * platform/efl/fast/multicol/pagination/LeftToRight-bt-expected.png: Added.
+        * platform/efl/fast/multicol/pagination/LeftToRight-bt-expected.txt: Added.
+        * platform/efl/fast/multicol/pagination/LeftToRight-lr-expected.png: Added.
+        * platform/efl/fast/multicol/pagination/LeftToRight-lr-expected.txt: Added.
+        * platform/efl/fast/multicol/pagination/LeftToRight-rl-expected.png: Added.
+        * platform/efl/fast/multicol/pagination/LeftToRight-rl-expected.txt: Added.
+        * platform/efl/fast/multicol/pagination/LeftToRight-tb-expected.png: Added.
+        * platform/efl/fast/multicol/pagination/LeftToRight-tb-expected.txt: Added.
+        * platform/efl/fast/multicol/pagination/RightToLeft-bt-expected.png: Added.
+        * platform/efl/fast/multicol/pagination/RightToLeft-bt-expected.txt: Added.
+        * platform/efl/fast/multicol/pagination/RightToLeft-lr-expected.png: Added.
+        * platform/efl/fast/multicol/pagination/RightToLeft-lr-expected.txt: Added.
+        * platform/efl/fast/multicol/pagination/RightToLeft-rl-expected.png: Added.
+        * platform/efl/fast/multicol/pagination/RightToLeft-rl-expected.txt: Added.
+        * platform/efl/fast/multicol/pagination/RightToLeft-tb-expected.png: Added.
+        * platform/efl/fast/multicol/pagination/RightToLeft-tb-expected.txt: Added.
+        * platform/efl/fast/multicol/pagination/TopToBottom-bt-expected.png: Added.
+        * platform/efl/fast/multicol/pagination/TopToBottom-bt-expected.txt: Added.
+        * platform/efl/fast/multicol/pagination/TopToBottom-lr-expected.png: Added.
+        * platform/efl/fast/multicol/pagination/TopToBottom-lr-expected.txt: Added.
+        * platform/efl/fast/multicol/pagination/TopToBottom-rl-expected.png: Added.
+        * platform/efl/fast/multicol/pagination/TopToBottom-rl-expected.txt: Added.
+        * platform/efl/fast/multicol/pagination/TopToBottom-tb-expected.png: Added.
+        * platform/efl/fast/multicol/pagination/TopToBottom-tb-expected.txt: Added.
+
+2013-08-12  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL] Unreviewed gardening.
+
+        * platform/efl/TestExpectations: Added pasteboard after r152185.
+        * platform/efl/editing/deleting/delete-br-002-expected.txt: Updated after r152478.
+        * platform/efl/editing/execCommand/outdent-blockquote-test1-expected.txt:
+        Removed platform specific expectations after r152494.
+        * platform/efl/editing/execCommand/outdent-blockquote-test2-expected.txt: Ditto.
+        * platform/efl/editing/execCommand/outdent-blockquote-test3-expected.txt: Ditto.
+        * platform/efl/editing/execCommand/outdent-blockquote-test4-expected.txt: Ditto.
+
+2013-08-12  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Layout Test fast/overflow/scrollbar-click-retains-focus.html is failing on Apple Mac WK1 and GTK.
+        https://bugs.webkit.org/show_bug.cgi?id=104104
+
+        Add back test expectation for Mac since it's still failing on ML WK1 bots.
+
+        * platform/mac/TestExpectations:
+        * platform/mac-wk2/TestExpectations:
+
+2013-08-12  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Define DOM_KEY_LOCATION_* constants on KeyboardEvent
+        https://bugs.webkit.org/show_bug.cgi?id=119341
+
+        Reviewed by Ryosuke Niwa.
+
+        Make use of the new DOM_KEY_LOCATION_* constants in the KeyboardEvent
+        test cases instead of hardcoding their values.
+
+        * fast/events/constructors/keyboard-event-constructor-expected.txt:
+        * fast/events/constructors/keyboard-event-constructor.html:
+        * fast/events/js-keyboard-event-creation-expected.txt:
+        * fast/events/js-keyboard-event-creation.html:
+        * fast/events/keyboardevent-location-constants-expected.txt: Added.
+        * fast/events/keyboardevent-location-constants.html: Added.
+        * fast/events/keydown-leftright-keys-expected.txt:
+        * fast/events/keydown-leftright-keys.html:
+        * fast/events/keydown-numpad-keys-expected.txt:
+        * fast/events/script-tests/keydown-numpad-keys.js:
+        (testKeyEventWithLocation):
+        * platform/efl/fast/events/js-keyboard-event-creation-expected.txt:
+        * platform/gtk/fast/events/js-keyboard-event-creation-expected.txt:
+
+2013-08-12  Alexey Proskuryakov  <ap@apple.com>
+
+        Multiple CSP tests complain about undefined strings in echo-object-data.pl and echo-script-src.pl
+        https://bugs.webkit.org/show_bug.cgi?id=119692
+
+        Reviewed by Darin Adler.
+
+        * http/tests/security/contentSecurityPolicy/resources/echo-object-data.pl:
+        * http/tests/security/contentSecurityPolicy/resources/echo-script-src.pl:
+        Check whether optional CGI parameters are provided.
+
+2013-08-12  Dean Jackson  <dino@apple.com>
+
+        Shadows don't support viewport units
+        https://bugs.webkit.org/show_bug.cgi?id=119649
+
+        Reviewed by Darin Adler.
+
+        Test that exercises a viewport unit in text-shadow to make sure we don't parse it.
+
+        * fast/css/shadow-viewport-units-expected.txt: Added.
+        * fast/css/shadow-viewport-units.html: Added.
+
+2013-08-12  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Add Support for canvas blend modes
+        https://bugs.webkit.org/show_bug.cgi?id=100072
+
+        Reviewed by Jocelyn Turcotte.
+
+        Unskip tests that now passes.
+
+        * platform/qt/TestExpectations:
+
+2013-08-12  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Rebaselining after r153903.
+
+        * platform/qt-5.0-wk1/fast/loader/main-document-url-for-non-http-loads-expected.txt: Added.
+        * platform/qt-5.0-wk1/http/tests/cache/iframe-304-crash-expected.txt: Added.
+        * platform/qt-5.0-wk1/http/tests/loading/307-after-303-after-post-expected.txt: Added.
+        * platform/qt-5.0-wk1/http/tests/loading/redirect-methods-expected.txt: Added.
+        * platform/qt-5.0-wk1/http/tests/misc/favicon-loads-with-images-disabled-expected.txt: Added.
+        * platform/qt-5.0-wk1/http/tests/security/XFrameOptions/x-frame-options-allowall-expected.txt: Added.
+        * platform/qt-5.0-wk1/http/tests/security/XFrameOptions/x-frame-options-deny-meta-tag-parent-same-origin-allow-expected.txt: Added.
+        * platform/qt-5.0-wk1/http/tests/security/XFrameOptions/x-frame-options-invalid-expected.txt: Added.
+        * platform/qt-5.0-wk1/http/tests/security/XFrameOptions/x-frame-options-multiple-headers-sameorigin-allow-expected.txt: Added.
+        * platform/qt-5.0-wk1/http/tests/security/XFrameOptions/x-frame-options-parent-same-origin-allow-expected.txt: Added.
+        * platform/qt-5.0-wk2/compositing/geometry/preserve-3d-switching-expected.txt:
+        * platform/qt-5.0-wk2/http/tests/misc/will-send-request-returns-null-on-redirect-expected.txt:
+        * platform/qt-5.0-wk2/http/tests/misc/window-dot-stop-expected.txt:
+        * platform/qt-5.0-wk2/http/tests/security/XFrameOptions/x-frame-options-deny-expected.txt:
+        * platform/qt-5.0-wk2/http/tests/security/XFrameOptions/x-frame-options-deny-meta-tag-expected.txt:
+        * platform/qt-5.0-wk2/http/tests/security/XFrameOptions/x-frame-options-deny-meta-tag-in-body-expected.txt:
+        * platform/qt-5.0-wk2/http/tests/security/XFrameOptions/x-frame-options-deny-meta-tag-parent-same-origin-deny-expected.txt:
+        * platform/qt-5.0-wk2/http/tests/security/XFrameOptions/x-frame-options-multiple-headers-conflict-expected.txt:
+        * platform/qt-5.0-wk2/http/tests/security/XFrameOptions/x-frame-options-multiple-headers-sameorigin-deny-expected.txt:
+        * platform/qt-5.0-wk2/http/tests/security/XFrameOptions/x-frame-options-parent-same-origin-deny-expected.txt:
+        * platform/qt-5.0-wk2/loader/go-back-cached-main-resource-expected.txt:
+
+2013-08-12  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        Update spellcheck-attribute.html description.
+        https://bugs.webkit.org/show_bug.cgi?id=119486
+
+        Reviewed by Ryosuke Niwa.
+
+        r70512 r72782 added new fields to spellcheck-attribute.html to verify
+        spellcheck attribute.
+        Update the test to be more descriptive by dumping additional information
+        whether the misspelled word should be marked or not.
+
+        * editing/spelling/spellcheck-attribute-expected.txt:
+        * editing/spelling/spellcheck-attribute.html:
+
+2013-08-09  Alexey Proskuryakov  <ap@apple.com>
+
+        Merge an encoding test from Blink
+        https://bugs.webkit.org/show_bug.cgi?id=116943
+
+        Original patch by Adam Barth.
+
+        * fast/encoding/meta-overrules-auto-expected.txt: Added.
+        * fast/encoding/meta-overrules-auto.html: Added.
+        * fast/encoding/resources/meta-input-encoding.html: Added.
+
+2013-08-09  Alexey Proskuryakov  <ap@apple.com>
+
+        Tests that dump delegate calls are flaky because of cached redirects
+        https://bugs.webkit.org/show_bug.cgi?id=119641
+
+        Reviewed by Brady Eidson.
+
+        Made redirect.php emit Cache-Control: no store as a workaround for bug 77538.
+        Removed several reimplementations of it, and changed the test to use the
+        central copy.
+
+        * http/tests/permissionclient/resources/redir.php: Removed.
+        * http/tests/resources/redirect.php:
+        * http/tests/security/beforeload-iframe-server-redirect-expected.txt:
+        * http/tests/security/beforeload-iframe-server-redirect.html:
+        * http/tests/security/cannot-read-cssrules-redirect.html:
+        * http/tests/security/canvas-remote-read-redirect-to-remote-image.html:
+        * http/tests/security/canvas-remote-read-remote-image-redirect.html:
+        * http/tests/security/contentSecurityPolicy/frame-src-redirect-blocked.html:
+        * http/tests/security/contentSecurityPolicy/resources/multiple-iframe-test.js:
+        * http/tests/security/contentSecurityPolicy/resources/redir.php: Removed.
+        * http/tests/security/contentSecurityPolicy/script-src-redirect-expected.txt:
+        * http/tests/security/contentSecurityPolicy/script-src-redirect.html:
+        * http/tests/security/cross-origin-css.html:
+        * http/tests/security/cross-origin-script-window-onerror-redirected.html:
+        * http/tests/security/mixedContent/redirect-http-to-https-iframe-in-main-frame-expected.txt:
+        * http/tests/security/mixedContent/redirect-http-to-https-script-in-iframe-expected.txt:
+        * http/tests/security/mixedContent/redirect-https-to-http-iframe-in-main-frame-expected.txt:
+        * http/tests/security/mixedContent/resources/frame-with-redirect-http-to-https-frame.html:
+        * http/tests/security/mixedContent/resources/frame-with-redirect-http-to-https-script.html:
+        * http/tests/security/mixedContent/resources/frame-with-redirect-https-to-http-frame.html:
+        * http/tests/security/mixedContent/resources/frame-with-redirect-https-to-http-script.html:
+        * http/tests/security/redirect-BLOCKED-to-localURL.html:
+        * http/tests/security/resources/cross-origin-xsl-redirect.xml:
+        * http/tests/security/resources/redir.php: Removed.
+        * http/tests/security/resources/xsl-using-document-redirect.xsl:
+        * http/tests/security/resources/xsl-using-external-entity-redirect.xsl:
+        * http/tests/security/stylesheet-href-redirect-expected.txt:
+        * http/tests/security/stylesheet-href-redirect.html:
+        * http/tests/security/xssAuditor/block-does-not-leak-referrer.html:
+        * http/tests/security/xssAuditor/resources/redir.php: Removed.
+        * http/tests/security/xssAuditor/script-tag-open-redirect.html:
+        * http/tests/security/xssAuditor/script-tag-redirect.html:
+        * http/tests/xmlhttprequest/redirect-cross-origin-2.html:
+        * http/tests/xmlhttprequest/redirect-cross-origin-post-sync.html:
+        * http/tests/xmlhttprequest/redirect-cross-origin-post.html:
+        * http/tests/xmlhttprequest/redirect-cross-origin-sync-double.html:
+        * http/tests/xmlhttprequest/redirect-cross-origin-sync.html:
+        * http/tests/xmlhttprequest/redirect-cross-origin.html:
+        * http/tests/xmlhttprequest/resources/redirect.php: Removed.
+        * http/tests/xmlhttprequest/xmlhttprequest-unsafe-redirect.html:
+
+2013-08-09  Rob Buis  <rwlbuis@webkit.org>
+
+        ASSERTION FAILED: stroke->opacity != other->stroke->opacity in WebCore::SVGRenderStyle::diff
+        https://bugs.webkit.org/show_bug.cgi?id=119623
+
+        Reviewed by Dirk Schulze.
+
+        Add testcase from bug with small adjustments.
+
+        * svg/animations/animate-stroke-crasher-expected.txt: Added.
+        * svg/animations/animate-stroke-crasher.html: Added.
+
+2013-08-09  Alexey Proskuryakov  <ap@apple.com>
+
+        REGRESSION (r142755): window.open creates an invisible window when width and height are 0
+        https://bugs.webkit.org/show_bug.cgi?id=119633
+
+        Reviewed by Darin Adler.
+
+        * fast/dom/Window/open-zero-size-as-default-expected.txt: Added.
+        * fast/dom/Window/open-zero-size-as-default.html: Added.
+
+2013-08-09  Alexey Proskuryakov  <ap@apple.com>
+
+        http/tests/navigation/back-twice-without-commit.html times out
+        https://bugs.webkit.org/show_bug.cgi?id=82980
+
+        * platform/mac/TestExpectations: Marked as such again, reverting r153842.
+
 2013-08-09  Christophe Dumez  <ch.dumez@sisa.samsung.com>
 
         Add support for KeyboardEvent.location attribute

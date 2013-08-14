@@ -50,6 +50,7 @@
 #include "Element.h"
 #include "ElementRareData.h"
 #include "ElementShadow.h"
+#include "ElementTraversal.h"
 #include "Event.h"
 #include "EventContext.h"
 #include "EventDispatchMediator.h"
@@ -348,11 +349,10 @@ Node::~Node()
     liveNodeSet.remove(this);
 #endif
 
+    ASSERT(!renderer());
+
     if (hasRareData())
         clearRareData();
-
-    if (renderer())
-        detach();
 
     if (!isContainerNode()) {
         if (Document* document = documentInternal())
@@ -391,10 +391,10 @@ NodeRareData* Node::rareData() const
     return static_cast<NodeRareData*>(m_data.m_rareData);
 }
 
-NodeRareData* Node::ensureRareData()
+NodeRareData& Node::ensureRareData()
 {
     if (hasRareData())
-        return rareData();
+        return *rareData();
 
     NodeRareData* data;
     if (isElementNode())
@@ -405,7 +405,7 @@ NodeRareData* Node::ensureRareData()
 
     m_data.m_rareData = data;
     setFlag(HasRareDataFlag);
-    return data;
+    return *data;
 }
 
 void Node::clearRareData()
@@ -454,7 +454,7 @@ void Node::setNodeValue(const String& /*nodeValue*/, ExceptionCode& ec)
 
 PassRefPtr<NodeList> Node::childNodes()
 {
-    return ensureRareData()->ensureNodeLists()->ensureChildNodeList(this);
+    return ensureRareData().ensureNodeLists().ensureChildNodeList(this);
 }
 
 Node *Node::lastDescendant() const
@@ -706,12 +706,7 @@ LayoutRect Node::renderRect(bool* isReplaced)
     return LayoutRect();    
 }
 
-inline void Node::setStyleChange(StyleChangeType changeType)
-{
-    m_nodeFlags = (m_nodeFlags & ~StyleChangeMask) | changeType;
-}
-
-inline void Node::markAncestorsWithChildNeedsStyleRecalc()
+void Node::markAncestorsWithChildNeedsStyleRecalc()
 {
     for (ContainerNode* p = parentOrShadowHostNode(); p && !p->childNeedsStyleRecalc(); p = p->parentOrShadowHostNode())
         p->setChildNeedsStyleRecalc();
@@ -742,18 +737,6 @@ void Node::setNeedsStyleRecalc(StyleChangeType changeType)
 
     if (existingChangeType == NoStyleChange)
         markAncestorsWithChildNeedsStyleRecalc();
-}
-
-void Node::lazyAttach(ShouldSetAttached shouldSetAttached)
-{
-    for (Node* n = this; n; n = NodeTraversal::next(n, this)) {
-        if (n->hasChildNodes())
-            n->setChildNeedsStyleRecalc();
-        n->setStyleChange(FullStyleChange);
-        if (shouldSetAttached == SetAttached)
-            n->setAttached();
-    }
-    markAncestorsWithChildNeedsStyleRecalc();
 }
 
 unsigned Node::nodeIndex() const
@@ -904,67 +887,6 @@ bool Node::containsIncludingHostElements(const Node* node) const
     return false;
 #else
     return containsIncludingShadowDOM(node);
-#endif
-}
-
-void Node::attach(const AttachContext&)
-{
-    ASSERT(!attached());
-    ASSERT(!renderer() || (renderer()->style() && renderer()->parent()));
-
-    // If this node got a renderer it may be the previousRenderer() of sibling text nodes and thus affect the
-    // result of Text::textRendererIsNeeded() for those nodes.
-    if (renderer()) {
-        for (Node* next = nextSibling(); next; next = next->nextSibling()) {
-            if (next->renderer())
-                break;
-            if (!next->attached())
-                break; // Assume this means none of the following siblings are attached.
-            if (!next->isTextNode())
-                continue;
-            ASSERT(!next->renderer());
-            toText(next)->createTextRendererIfNeeded();
-            // If we again decided not to create a renderer for next, we can bail out the loop,
-            // because it won't affect the result of Text::textRendererIsNeeded() for the rest
-            // of sibling nodes.
-            if (!next->renderer())
-                break;
-        }
-    }
-
-    setAttached();
-    clearNeedsStyleRecalc();
-
-    if (Document* doc = documentInternal()) {
-        if (AXObjectCache* cache = doc->axObjectCache())
-            cache->updateCacheAfterNodeIsAttached(this);
-    }
-}
-
-#ifndef NDEBUG
-static Node* detachingNode;
-
-bool Node::inDetach() const
-{
-    return detachingNode == this;
-}
-#endif
-
-void Node::detach(const AttachContext&)
-{
-#ifndef NDEBUG
-    ASSERT(!detachingNode);
-    detachingNode = this;
-#endif
-
-    if (renderer())
-        renderer()->destroyAndCleanupAnonymousWrappers();
-    setRenderer(0);
-
-    clearFlag(IsAttachedFlag);
-
-#ifndef NDEBUG
-    detachingNode = 0;
 #endif
 }
 
@@ -1165,8 +1087,8 @@ PassRefPtr<NodeList> Node::getElementsByTagName(const AtomicString& localName)
         return 0;
 
     if (document()->isHTMLDocument())
-        return ensureRareData()->ensureNodeLists()->addCacheWithAtomicName<HTMLTagNodeList>(this, HTMLTagNodeListType, localName);
-    return ensureRareData()->ensureNodeLists()->addCacheWithAtomicName<TagNodeList>(this, TagNodeListType, localName);
+        return ensureRareData().ensureNodeLists().addCacheWithAtomicName<HTMLTagNodeList>(this, HTMLTagNodeListType, localName);
+    return ensureRareData().ensureNodeLists().addCacheWithAtomicName<TagNodeList>(this, TagNodeListType, localName);
 }
 
 PassRefPtr<NodeList> Node::getElementsByTagNameNS(const AtomicString& namespaceURI, const AtomicString& localName)
@@ -1177,23 +1099,23 @@ PassRefPtr<NodeList> Node::getElementsByTagNameNS(const AtomicString& namespaceU
     if (namespaceURI == starAtom)
         return getElementsByTagName(localName);
 
-    return ensureRareData()->ensureNodeLists()->addCacheWithQualifiedName(this, namespaceURI.isEmpty() ? nullAtom : namespaceURI, localName);
+    return ensureRareData().ensureNodeLists().addCacheWithQualifiedName(this, namespaceURI.isEmpty() ? nullAtom : namespaceURI, localName);
 }
 
 PassRefPtr<NodeList> Node::getElementsByName(const String& elementName)
 {
-    return ensureRareData()->ensureNodeLists()->addCacheWithAtomicName<NameNodeList>(this, NameNodeListType, elementName);
+    return ensureRareData().ensureNodeLists().addCacheWithAtomicName<NameNodeList>(this, NameNodeListType, elementName);
 }
 
 PassRefPtr<NodeList> Node::getElementsByClassName(const String& classNames)
 {
-    return ensureRareData()->ensureNodeLists()->addCacheWithName<ClassNodeList>(this, ClassNodeListType, classNames);
+    return ensureRareData().ensureNodeLists().addCacheWithName<ClassNodeList>(this, ClassNodeListType, classNames);
 }
 
 PassRefPtr<RadioNodeList> Node::radioNodeList(const AtomicString& name)
 {
     ASSERT(hasTagName(formTag) || hasTagName(fieldsetTag));
-    return ensureRareData()->ensureNodeLists()->addCacheWithAtomicName<RadioNodeList>(this, RadioNodeListType, name);
+    return ensureRareData().ensureNodeLists().addCacheWithAtomicName<RadioNodeList>(this, RadioNodeListType, name);
 }
 
 PassRefPtr<Element> Node::querySelector(const AtomicString& selectors, ExceptionCode& ec)
@@ -1203,7 +1125,7 @@ PassRefPtr<Element> Node::querySelector(const AtomicString& selectors, Exception
         return 0;
     }
 
-    SelectorQuery* selectorQuery = document()->selectorQueryCache()->add(selectors, document(), ec);
+    SelectorQuery* selectorQuery = document()->selectorQueryCache().add(selectors, document(), ec);
     if (!selectorQuery)
         return 0;
     return selectorQuery->queryFirst(this);
@@ -1216,7 +1138,7 @@ PassRefPtr<NodeList> Node::querySelectorAll(const AtomicString& selectors, Excep
         return 0;
     }
 
-    SelectorQuery* selectorQuery = document()->selectorQueryCache()->add(selectors, document(), ec);
+    SelectorQuery* selectorQuery = document()->selectorQueryCache().add(selectors, document(), ec);
     if (!selectorQuery)
         return 0;
     return selectorQuery->queryAll(this);
@@ -2018,14 +1940,14 @@ EventTargetData* Node::eventTargetData()
     return hasEventTargetData() ? eventTargetDataMap().get(this) : 0;
 }
 
-EventTargetData* Node::ensureEventTargetData()
+EventTargetData& Node::ensureEventTargetData()
 {
     if (hasEventTargetData())
-        return eventTargetDataMap().get(this);
+        return *eventTargetDataMap().get(this);
     setHasEventTargetData(true);
     EventTargetData* data = new EventTargetData;
     eventTargetDataMap().set(this, adoptPtr(data));
-    return data;
+    return *data;
 }
 
 void Node::clearEventTargetData()
@@ -2083,7 +2005,7 @@ void Node::getRegisteredMutationObserversOfType(HashMap<MutationObserver*, Mutat
 void Node::registerMutationObserver(MutationObserver* observer, MutationObserverOptions options, const HashSet<AtomicString>& attributeFilter)
 {
     MutationObserverRegistration* registration = 0;
-    Vector<OwnPtr<MutationObserverRegistration> >& registry = ensureRareData()->ensureMutationObserverData()->registry;
+    Vector<OwnPtr<MutationObserverRegistration> >& registry = ensureRareData().ensureMutationObserverData().registry;
     for (size_t i = 0; i < registry.size(); ++i) {
         if (registry[i]->observer() == observer) {
             registration = registry[i].get();
@@ -2116,7 +2038,7 @@ void Node::unregisterMutationObserver(MutationObserverRegistration* registration
 
 void Node::registerTransientMutationObserver(MutationObserverRegistration* registration)
 {
-    ensureRareData()->ensureMutationObserverData()->transientRegistry.add(registration);
+    ensureRareData().ensureMutationObserverData().transientRegistry.add(registration);
 }
 
 void Node::unregisterTransientMutationObserver(MutationObserverRegistration* registration)
@@ -2399,7 +2321,7 @@ unsigned Node::connectedSubframeCount() const
 void Node::incrementConnectedSubframeCount(unsigned amount)
 {
     ASSERT(isContainerNode());
-    ensureRareData()->incrementConnectedSubframeCount(amount);
+    ensureRareData().incrementConnectedSubframeCount(amount);
 }
 
 void Node::decrementConnectedSubframeCount(unsigned amount)

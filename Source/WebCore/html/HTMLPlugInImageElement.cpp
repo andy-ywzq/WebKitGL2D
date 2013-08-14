@@ -322,7 +322,7 @@ void HTMLPlugInImageElement::documentDidResumeFromPageCache()
 PassRefPtr<RenderStyle> HTMLPlugInImageElement::customStyleForRenderer()
 {
     if (!m_customStyleForPageCache)
-        return document()->ensureStyleResolver()->styleForElement(this);
+        return document()->ensureStyleResolver().styleForElement(this);
     return m_customStyleForPageCache;
 }
 
@@ -356,7 +356,7 @@ void HTMLPlugInImageElement::checkSnapshotStatus()
     }
 
     // Notify the shadow root that the size changed so that we may update the overlay layout.
-    ensureUserAgentShadowRoot()->dispatchEvent(Event::create(eventNames().resizeEvent, true, false));
+    ensureUserAgentShadowRoot().dispatchEvent(Event::create(eventNames().resizeEvent, true, false));
 }
 
 void HTMLPlugInImageElement::didAddUserAgentShadowRoot(ShadowRoot* root)
@@ -372,11 +372,11 @@ void HTMLPlugInImageElement::didAddUserAgentShadowRoot(ShadowRoot* root)
     
     String mimeType = loadedMimeType();
 
-    DEFINE_STATIC_LOCAL(RefPtr<DOMWrapperWorld>, isolatedWorld, (DOMWrapperWorld::create(JSDOMWindow::commonVM())));
-    document()->ensurePlugInsInjectedScript(isolatedWorld.get());
+    static DOMWrapperWorld* isolatedWorld = DOMWrapperWorld::create(JSDOMWindow::commonVM()).leakRef();
+    document()->ensurePlugInsInjectedScript(isolatedWorld);
 
     ScriptController* scriptController = page->mainFrame()->script();
-    JSDOMGlobalObject* globalObject = JSC::jsCast<JSDOMGlobalObject*>(scriptController->globalObject(isolatedWorld.get()));
+    JSDOMGlobalObject* globalObject = JSC::jsCast<JSDOMGlobalObject*>(scriptController->globalObject(isolatedWorld));
     JSC::ExecState* exec = globalObject->globalExec();
 
     JSC::JSLockHolder lock(exec);
@@ -403,7 +403,7 @@ void HTMLPlugInImageElement::didAddUserAgentShadowRoot(ShadowRoot* root)
 bool HTMLPlugInImageElement::partOfSnapshotOverlay(Node* node)
 {
     DEFINE_STATIC_LOCAL(AtomicString, selector, (".snapshot-overlay", AtomicString::ConstructFromLiteral));
-    RefPtr<Element> snapshotLabel = ensureUserAgentShadowRoot()->querySelector(selector, ASSERT_NO_EXCEPTION);
+    RefPtr<Element> snapshotLabel = ensureUserAgentShadowRoot().querySelector(selector, ASSERT_NO_EXCEPTION);
     return node && snapshotLabel && (node == snapshotLabel.get() || node->isDescendantOf(snapshotLabel.get()));
 }
 
@@ -488,7 +488,7 @@ void HTMLPlugInImageElement::userDidClickSnapshot(PassRefPtr<MouseEvent> event, 
         m_pendingClickEventFromSnapshot = event;
 
     String plugInOrigin = m_loadedUrl.host();
-    if (document()->page() && !SchemeRegistry::shouldTreatURLSchemeAsLocal(document()->page()->mainFrame()->document()->baseURL().protocol()) && document()->page()->settings()->autostartOriginPlugInSnapshottingEnabled())
+    if (document()->page() && !SchemeRegistry::shouldTreatURLSchemeAsLocal(document()->page()->mainFrame()->document()->baseURL().protocol()) && document()->page()->settings().autostartOriginPlugInSnapshottingEnabled())
         document()->page()->plugInClient()->didStartFromOrigin(document()->page()->mainFrame()->document()->baseURL().host(), plugInOrigin, loadedMimeType());
 
     LOG(Plugins, "%p User clicked on snapshotted plug-in. Restart.", this);
@@ -500,7 +500,7 @@ void HTMLPlugInImageElement::userDidClickSnapshot(PassRefPtr<MouseEvent> event, 
 
 void HTMLPlugInImageElement::setIsPrimarySnapshottedPlugIn(bool isPrimarySnapshottedPlugIn)
 {
-    if (!document()->page() || !document()->page()->settings()->primaryPlugInSnapshotDetectionEnabled() || document()->page()->settings()->snapshotAllPlugIns())
+    if (!document()->page() || !document()->page()->settings().primaryPlugInSnapshotDetectionEnabled() || document()->page()->settings().snapshotAllPlugIns())
         return;
 
     if (isPrimarySnapshottedPlugIn) {
@@ -585,7 +585,7 @@ void HTMLPlugInImageElement::subframeLoaderWillCreatePlugIn(const KURL& url)
     m_plugInWasCreated = false;
     m_deferredPromotionToPrimaryPlugIn = false;
 
-    if (!document()->page() || !document()->page()->settings()->plugInSnapshottingEnabled()) {
+    if (!document()->page() || !document()->page()->settings().plugInSnapshottingEnabled()) {
         m_snapshotDecision = NeverSnapshot;
         return;
     }
@@ -634,14 +634,14 @@ void HTMLPlugInImageElement::subframeLoaderWillCreatePlugIn(const KURL& url)
         return;
     }
 
-    if (document()->page()->settings()->snapshotAllPlugIns()) {
+    if (document()->page()->settings().snapshotAllPlugIns()) {
         LOG(Plugins, "%p Plug-in forced to snapshot by user preference", this);
         m_snapshotDecision = Snapshotted;
         setDisplayState(WaitingForSnapshot);
         return;
     }
 
-    if (document()->page()->settings()->autostartOriginPlugInSnapshottingEnabled() && document()->page()->plugInClient() && document()->page()->plugInClient()->shouldAutoStartFromOrigin(document()->page()->mainFrame()->document()->baseURL().host(), url.host(), loadedMimeType())) {
+    if (document()->page()->settings().autostartOriginPlugInSnapshottingEnabled() && document()->page()->plugInClient() && document()->page()->plugInClient()->shouldAutoStartFromOrigin(document()->page()->mainFrame()->document()->baseURL().host(), url.host(), loadedMimeType())) {
         LOG(Plugins, "%p Plug-in from (%s, %s) is marked to auto-start, set to play", this, document()->page()->mainFrame()->document()->baseURL().host().utf8().data(), url.host().utf8().data());
         m_snapshotDecision = NeverSnapshot;
         return;
