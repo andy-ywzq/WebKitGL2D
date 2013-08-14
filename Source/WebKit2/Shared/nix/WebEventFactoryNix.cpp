@@ -30,6 +30,7 @@
 #include "WindowsKeyboardCodes.h"
 
 #include <WebCore/Scrollbar.h>
+#include <wtf/text/CString.h>
 #include <wtf/text/WTFString.h>
 
 using namespace WebCore;
@@ -566,6 +567,9 @@ static int windowsKeyCodeForKeyEvent(NIXKeyEventKey keycode, bool isKeypad)
 
 static String keyTextForNixKeyEvent(const NIXKeyEvent& event)
 {
+    if (event.text)
+        return String::fromUTF8(event.text);
+
     int keycode = static_cast<int>(event.key);
     if (isASCIIPrintable(keycode))
         return String::format("%c", event.shouldUseUpperCase ? toASCIIUpper(keycode) : toASCIILower(keycode));

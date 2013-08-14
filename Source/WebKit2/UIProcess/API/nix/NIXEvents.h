@@ -533,6 +533,9 @@ struct NIXKeyEvent {
     bool shouldUseUpperCase;
     // isKeypad is needed to distinguish on WebKit some keys (e.g. KEY_9 becomes VK_NUMPAD9).
     bool isKeypad;
+    // Used to map UTF-8 characters. When the character is not ASCII printable, but it is a
+    // printable character, the user must fill this char* with its string representation
+    const char* text;
 };
 typedef struct NIXKeyEvent NIXKeyEvent;
 
