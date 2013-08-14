@@ -30,7 +30,6 @@
 #include "WindowsKeyboardCodes.h"
 
 #include <WebCore/Scrollbar.h>
-#include <wtf/text/CString.h>
 #include <wtf/text/WTFString.h>
 
 using namespace WebCore;
