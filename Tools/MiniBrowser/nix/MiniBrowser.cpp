@@ -150,9 +150,8 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
 
     WKPageSetPageLoaderClient(pageRef(), &loadClient);
 
-    WKURLRef wkUrl = WKURLCreateWithUTF8CString(options.url.c_str());
-    WKPageLoadURL(pageRef(), wkUrl);
-    WKRelease(wkUrl);
+    WKRetainPtr<WKURLRef> wkUrl = adoptWK(WKURLCreateWithUTF8CString(options.url.c_str()));
+    WKPageLoadURL(pageRef(), wkUrl.get());
 }
 
 MiniBrowser::~MiniBrowser()
@@ -693,18 +692,15 @@ void MiniBrowser::updateTextInputState(WKViewRef, const NIXTextInputState* state
 
 static void printPopupMenuItem(const WKPopupItemRef item, const int optionIndex, const int level)
 {
-    const WKStringRef title = WKPopupItemCopyText(item);
-    if (WKStringIsEmpty(title)) {
-        WKRelease(title);
+    WKRetainPtr<WKStringRef> title = adoptWK(WKPopupItemCopyText(item));
+    if (WKStringIsEmpty(title.get()))
         return;
-    }
 
     // No tabs for level 0.
     for (int i = 0; i < level; ++i)
         cout << "\t";
 
-    cout << optionIndex << "- " << createStdStringFromWKString(title) << endl;
-    WKRelease(title);
+    cout << optionIndex << "- " << createStdStringFromWKString(title.get()) << endl;
 }
 
 static int renderPopupMenu(const WKArrayRef menuItems, int& optionIndex, const int level = 0)
@@ -744,20 +740,17 @@ void MiniBrowser::showPopupMenu(WKPageRef page, WKPopupMenuListenerRef menuListe
 
 static void printContextMenuItem(const WKContextMenuItemRef item, const int optionIndex, const int level)
 {
-    const WKStringRef title = WKContextMenuItemCopyTitle(item);
-    if (WKStringIsEmpty(title)) {
-        WKRelease(title);
+    WKRetainPtr<WKStringRef> title = adoptWK(WKContextMenuItemCopyTitle(item));
+    if (WKStringIsEmpty(title.get()))
         return;
-    }
 
-    std::string titleBuffer = createStdStringFromWKString(title);
+    std::string titleBuffer = createStdStringFromWKString(title.get());
 
     // No tabs for level 0.
     for (int i = 0; i < level; ++i)
         cout << "\t";
 
     cout << optionIndex << "- " << titleBuffer << endl;
-    WKRelease(title);
 }
 
 static int renderContextMenu(const WKArrayRef menuItems, int& optionIndex, const int level = 0)
@@ -769,9 +762,8 @@ static int renderContextMenu(const WKArrayRef menuItems, int& optionIndex, const
             cout << "--------------------" << endl;
         else if (WKContextMenuItemGetType(item) == kWKContextMenuItemTypeSubmenu) {
             printContextMenuItem(item, optionIndex++, level);
-            const WKArrayRef subMenu = WKContextMenuCopySubmenuItems(item);
-            renderContextMenu(subMenu, optionIndex, level + 1);
-            WKRelease(subMenu);
+            WKRetainPtr<WKArrayRef> subMenu = adoptWK(WKContextMenuCopySubmenuItems(item));
+            renderContextMenu(subMenu.get(), optionIndex, level + 1);
         } else
             printContextMenuItem(item, optionIndex++, level);
     }
@@ -926,20 +918,17 @@ void MiniBrowser::didFailProvisionalLoadWithErrorForFrame(WKPageRef page, WKFram
     if (!WKFrameIsMainFrame(frame) || mb->handleTLSError(error))
         return;
 
-    WKStringRef wkErrorDescription = WKErrorCopyLocalizedDescription(error);
-    WKPageLoadPlainTextString(page, wkErrorDescription);
-    WKRelease(wkErrorDescription);
+    WKRetainPtr<WKStringRef> wkErrorDescription = adoptWK(WKErrorCopyLocalizedDescription(error));
+    WKPageLoadPlainTextString(page, wkErrorDescription.get());
 }
 
 std::string MiniBrowser::activeUrl()
 {
-    WKURLRef urlRef = WKPageCopyActiveURL(pageRef());
+    WKRetainPtr<WKURLRef> urlRef = adoptWK(WKPageCopyActiveURL(pageRef()));
     std::string url;
     if (urlRef) {
-        WKStringRef urlStr = WKURLCopyString(urlRef);
-        url = createStdStringFromWKString(urlStr);
-        WKRelease(urlStr);
-        WKRelease(urlRef);
+        WKRetainPtr<WKStringRef> urlStr = adoptWK(WKURLCopyString(urlRef.get()));
+        url = createStdStringFromWKString(urlStr.get());
     }
     return url;
 }
