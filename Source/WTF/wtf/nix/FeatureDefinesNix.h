@@ -158,6 +158,10 @@
 #define ENABLE_LEGACY_VIEWPORT_ADAPTION 1
 #endif
 
+#if !defined(ENABLE_LEGACY_WEB_AUDIO)
+#define ENABLE_LEGACY_WEB_AUDIO 1
+#endif
+
 #if !defined(ENABLE_LLINT)
 #define ENABLE_LLINT 1
 #endif
