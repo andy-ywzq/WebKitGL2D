@@ -351,6 +351,8 @@ set(WebKitNix_WebKit2_HEADERS
     UIProcess/API/C/CoordinatedGraphics/WKView.h
     UIProcess/API/C/WKViewportAttributes.h
 
+    UIProcess/API/C/nix/WKContextNix.h
+    UIProcess/API/C/nix/WKErrorNix.h
     UIProcess/API/C/nix/WKPageNix.h
 
     WebProcess/InjectedBundle/API/c/WKBundle.h
