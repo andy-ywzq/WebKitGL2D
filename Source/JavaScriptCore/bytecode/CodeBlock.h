@@ -55,6 +55,7 @@
 #include "ObjectAllocationProfile.h"
 #include "Options.h"
 #include "Operations.h"
+#include "PutPropertySlot.h"
 #include "Instruction.h"
 #include "JITCode.h"
 #include "JITWriteBarrier.h"
@@ -398,6 +399,12 @@ public:
     }
 
     CodeType codeType() const { return m_unlinkedCode->codeType(); }
+    PutPropertySlot::Context putByIdContext() const
+    {
+        if (codeType() == EvalCode)
+            return PutPropertySlot::PutByIdEval;
+        return PutPropertySlot::PutById;
+    }
 
     SourceProvider* source() const { return m_source.get(); }
     unsigned sourceOffset() const { return m_sourceOffset; }
@@ -686,7 +693,13 @@ public:
         return result;
     }
 
+    WriteBarrier<Unknown>& addConstantLazily()
+    {
+        m_constantRegisters.append(WriteBarrier<Unknown>());
+        return m_constantRegisters.last();
+    }
 
+    bool findConstant(JSValue, unsigned& result);
     unsigned addOrFindConstant(JSValue);
     WriteBarrier<Unknown>& constantRegister(int index) { return m_constantRegisters[index - FirstConstantRegisterIndex]; }
     ALWAYS_INLINE bool isConstantRegisterIndex(int index) const { return index >= FirstConstantRegisterIndex; }

@@ -345,7 +345,7 @@ void ContainerNode::insertBeforeCommon(Node* nextChild, Node* newChild)
         ASSERT(m_firstChild == nextChild);
         m_firstChild = newChild;
     }
-    newChild->setParentOrShadowHostNode(this);
+    newChild->setParentNode(this);
     newChild->setPreviousSibling(prev);
     newChild->setNextSibling(nextChild);
 }
@@ -579,7 +579,7 @@ void ContainerNode::removeBetween(Node* previousChild, Node* nextChild, Node* ol
 
     oldChild->setPreviousSibling(0);
     oldChild->setNextSibling(0);
-    oldChild->setParentOrShadowHostNode(0);
+    oldChild->setParentNode(0);
 
     document()->adoptIfNeeded(oldChild);
 }
@@ -1074,7 +1074,7 @@ bool childAttachedAllowedWhenAttachingChildren(ContainerNode* node)
     if (node->isInsertionPoint())
         return true;
 
-    if (node->isElementNode() && toElement(node)->shadow())
+    if (node->isElementNode() && toElement(node)->shadowRoot())
         return true;
 
     return false;

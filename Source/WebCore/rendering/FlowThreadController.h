@@ -79,6 +79,10 @@ public:
     void updateFlowThreadsIntoMeasureContentPhase();
     void updateFlowThreadsIntoFinalPhase();
 
+#if USE(ACCELERATED_COMPOSITING)
+    void updateRenderFlowThreadLayersIfNeeded();
+#endif
+
 #ifndef NDEBUG
     bool isAutoLogicalHeightRegionsCountConsistent() const;
 #endif

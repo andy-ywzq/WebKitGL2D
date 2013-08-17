@@ -34,6 +34,7 @@
 #include "CSSCalculationValue.h"
 #include "CSSCursorImageValue.h"
 #include "CSSDefaultStyleSheets.h"
+#include "CSSFilterImageValue.h"
 #include "CSSFontFaceRule.h"
 #include "CSSFontSelector.h"
 #include "CSSLineBoxContainValue.h"
@@ -58,7 +59,6 @@
 #include "DeprecatedStyleBuilder.h"
 #include "DocumentStyleSheetCollection.h"
 #include "ElementRuleCollector.h"
-#include "ElementShadow.h"
 #include "FontFeatureValue.h"
 #include "FontValue.h"
 #include "Frame.h"
@@ -276,7 +276,7 @@ StyleResolver::StyleResolver(Document* document, bool matchAuthorAndUserStyles)
         m_rootDefaultStyle = styleForElement(root, 0, DisallowStyleSharing, MatchOnlyUserAgentRules);
 
     if (m_rootDefaultStyle && view)
-        m_medium = adoptPtr(new MediaQueryEvaluator(view->mediaType(), view->frame(), m_rootDefaultStyle.get()));
+        m_medium = adoptPtr(new MediaQueryEvaluator(view->mediaType(), &view->frame(), m_rootDefaultStyle.get()));
 
     m_ruleSets.resetAuthorStyle();
 
@@ -336,14 +336,14 @@ void StyleResolver::popParentElement(Element* parent)
 
 void StyleResolver::pushParentShadowRoot(const ShadowRoot* shadowRoot)
 {
-    ASSERT(shadowRoot->host());
+    ASSERT(shadowRoot->hostElement());
     if (m_scopeResolver)
-        m_scopeResolver->push(shadowRoot, shadowRoot->host());
+        m_scopeResolver->push(shadowRoot, shadowRoot->hostElement());
 }
 
 void StyleResolver::popParentShadowRoot(const ShadowRoot* shadowRoot)
 {
-    ASSERT(shadowRoot->host());
+    ASSERT(shadowRoot->hostElement());
     if (m_scopeResolver)
         m_scopeResolver->pop(shadowRoot);
 }
@@ -491,7 +491,7 @@ Node* StyleResolver::locateCousinList(Element* parent, unsigned& visitedNodeCoun
             if (currentNode->renderStyle() == parentStyle && currentNode->lastChild()
                 && currentNode->isElementNode() && !parentElementPreventsSharing(toElement(currentNode))
 #if ENABLE(SHADOW_DOM)
-                && !toElement(currentNode)->shadow()
+                && !toElement(currentNode)->authorShadowRoot()
 #endif
                 ) {
                 // Adjust for unused reserved tries.
@@ -2687,7 +2687,7 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     case CSSPropertyWebkitFilter: {
         HANDLE_INHERIT_AND_INITIAL(filter, Filter);
         FilterOperations operations;
-        if (createFilterOperations(value, state.style(), state.rootElementStyle(), operations))
+        if (createFilterOperations(value, operations))
             state.style()->setFilter(operations);
         return;
     }
@@ -2964,6 +2964,7 @@ void StyleResolver::applyProperty(CSSPropertyID id, CSSValue* value)
     case CSSPropertyWebkitMaskRepeatX:
     case CSSPropertyWebkitMaskRepeatY:
     case CSSPropertyWebkitMaskSize:
+    case CSSPropertyWebkitMaskSourceType:
     case CSSPropertyWebkitNbspMode:
     case CSSPropertyWebkitPerspectiveOrigin:
     case CSSPropertyWebkitPerspectiveOriginX:
@@ -3075,6 +3076,12 @@ PassRefPtr<StyleImage> StyleResolver::cachedOrPendingFromValue(CSSPropertyID pro
 
 PassRefPtr<StyleImage> StyleResolver::generatedOrPendingFromValue(CSSPropertyID property, CSSImageGeneratorValue* value)
 {
+#if ENABLE(CSS_FILTERS)
+    if (value->isFilterImageValue()) {
+        // FilterImage needs to calculate FilterOperations.
+        static_cast<CSSFilterImageValue*>(value)->createFilterOperations(this);
+    }
+#endif
     if (value->isPending()) {
         m_state.pendingImageProperties().set(property, value);
         return StylePendingImage::create(value);
@@ -3658,8 +3665,11 @@ PassRefPtr<CustomFilterOperation> StyleResolver::createCustomFilterOperation(Web
 
 #endif
 
-bool StyleResolver::createFilterOperations(CSSValue* inValue, RenderStyle* style, RenderStyle* rootStyle, FilterOperations& outOperations)
+bool StyleResolver::createFilterOperations(CSSValue* inValue, FilterOperations& outOperations)
 {
+    State& state = m_state;
+    RenderStyle* style = state.style();
+    RenderStyle* rootStyle = state.rootElementStyle();
     ASSERT(outOperations.isEmpty());
     
     if (!inValue)

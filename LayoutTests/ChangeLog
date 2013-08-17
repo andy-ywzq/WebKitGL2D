@@ -1,3 +1,725 @@
+2013-08-16  Ryosuke Niwa  <rniwa@webkit.org>
+
+        <https://webkit.org/b/119915> REGRESSION(r154144): ASSERTION FAILED: m_history->provisionalItem() == m_requestedHistoryItem.get()
+
+        Add failing test expectations.
+
+        * platform/mac-wk2/TestExpectations:
+
+2013-08-16  Filip Pizlo  <fpizlo@apple.com>
+
+        Object properties added using dot syntax (o.f = ...) from code that isn't in eval should be less likely to cause an object to become a dictionary
+        https://bugs.webkit.org/show_bug.cgi?id=119897
+
+        Reviewed by Oliver Hunt.
+
+        * fast/js/regress/lots-of-fields-expected.txt: Added.
+        * fast/js/regress/lots-of-fields.html: Added.
+        * fast/js/regress/script-tests/lots-of-fields.js: Added.
+        (foo):
+
+2013-08-16  Jer Noble  <jer.noble@apple.com>
+
+        [Mac] Unreviewed gardening. Rebaseline after r154124.
+
+        * platform/mac-lion/fast/js/global-constructors-attributes-expected.txt:
+
+2013-08-16  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed gardening. Correct Windows test expectations after JSC changes.
+
+        * platform/win/fast/js/dom-static-property-for-in-iteration-expected.txt:
+        * platform/win/fast/js/global-constructors-attributes-shared-worker-expected.txt:
+
+2013-08-16  Jer Noble  <jer.noble@apple.com>
+
+        [Mac] [WK2] Some inspector tests intermittently asserts in InspectorOverlay::paint
+        https://bugs.webkit.org/show_bug.cgi?id=105988
+
+        Unreviewed gardening. Mark tests as flakey (crashing) in WK1 expectations as well as WK2.
+
+        * platform/mac-wk2/TestExpectations:
+        * platform/mac/TestExpectations:
+
+2013-08-16  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Kerning in fast font path breaks letter-spacing
+        https://bugs.webkit.org/show_bug.cgi?id=119838
+
+        Reviewed by Jocelyn Turcotte.
+
+        Test that kerning does not break letter spacing.
+
+        * fast/text/letter-spacing-kerned-expected.html: Added.
+        * fast/text/letter-spacing-kerned.html: Added.
+
+2013-08-16  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed gardening. Turn on a now-passing test.
+
+        * platform/win/TestExpectations: Reactivate fast/text/split-text-crash.xhtml
+
+2013-08-16  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Enable previously-failing compositing/tiling/empty-to-tiled.html
+        https://bugs.webkit.org/show_bug.cgi?id=119818
+
+        Reviewed by Darin Adler.
+
+        * platform/win/TestExpectations: Re-enable empty-to-tiled.html
+
+2013-08-16  Tamas Czene <tczene@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Rebase js tests after r154127.
+
+        * platform/qt/fast/js/constructor-length-expected.txt:
+        * platform/qt/fast/js/global-constructors-attributes-expected.txt:
+
+2013-08-16  Santosh Mahto  <santosh.ma@samsung.com>
+
+        [EFL] fast/forms/datalist/input-list.html is failing
+
+        Unreviewed EFL gardening. unskip LayoutTests/fast/forms/datalist/input-list.html test.
+
+        * platform/efl/TestExpectations:
+        * platform/efl/fast/forms/datalist/input-list-expected.txt: Added. 
+
+2013-08-16  Andrei Parvu  <parvu@adobe.com>
+
+        [CSS Masking] Add -webkit-mask-source-type property, with auto, alpha and luminance values
+        https://bugs.webkit.org/show_bug.cgi?id=119614
+
+        Added tests for the parsing of the -webkit-mask-source-type property
+
+        Reviewed by Dirk Schulze.
+
+        * fast/masking/parsing-mask-expected.txt:
+        * fast/masking/parsing-mask-source-type-expected.txt: Added.
+        * fast/masking/parsing-mask-source-type.html: Added.
+        * fast/masking/parsing-mask.html:
+
+2013-08-16  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] Unreviewed gardening. Rebaseline after r154127 and add new baseline after r153647.
+
+        * platform/gtk-wk1/TestExpectations:
+        x-frame-options-deny-meta-tag-in-body.html fails in Release and
+        Debug.
+        * platform/gtk/TestExpectations: CSS Image filter is not enabled
+        in GTK bots. Also remove entry for deleted test.
+        * platform/gtk/fast/forms/search/search-size-with-decorations-expected.png: Added.
+        * platform/gtk/fast/forms/search/search-size-with-decorations-expected.txt: Added.
+        * platform/gtk/fast/js/constructor-length-expected.txt:
+        Rebaselined after r154127.
+        * platform/gtk/fast/js/global-constructors-attributes-dedicated-worker-expected.txt:
+        ditto.
+        * platform/gtk/fast/js/global-constructors-attributes-expected.txt:
+        ditto.
+        * platform/gtk/fast/js/global-constructors-attributes-shared-worker-expected.txt:
+        ditto.
+
+2013-08-16  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        Reskip tests that times out.
+
+        Unreviewed gardening.
+
+        * platform/qt/TestExpectations:
+
+2013-08-15  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed gardening. Correct some test expectations that now pass.
+
+        * platform/win/editing/selection/caret-ltr-right-expected.txt:
+        * platform/win/editing/selection/caret-rtl-2-left-expected.txt:
+
+2013-08-15  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Shapes] Add support for shape-outside image values
+        https://bugs.webkit.org/show_bug.cgi?id=119809
+
+        Two tests to verify that the initial implementation of shape valued images is working
+        for shape-outside.
+
+        Reviewed by Alexandru Chiculita.
+
+        * fast/shapes/shape-outside-floats/shape-outside-floats-image-001-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-image-001.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-image-002-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-image-002.html: Added.
+
+2013-08-15  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Revert that. The test had been fixed in r154148.
+
+        * TestExpectations:
+
+2013-08-15  Ryosuke Niwa  <rniwa@webkit.org>
+
+        <https://webkit.org/b/119873> REGRESSION(r154057): platform/mac/accessibility/role-subrole-roledescription.html fails
+
+        Add a test expectation.
+
+        * TestExpectations:
+
+2013-08-15  Sam White  <samuel_white@apple.com>
+
+        AX: platform/mac/accessibility/role-subrole-roledescription.html is failing
+        <https://webkit.org/b/119821>
+
+        Updating our layout test now that accessibleElementById is able
+        to fetch the math element correctly.
+
+        Reviewed by Chris Fleizach.
+
+        * platform/mac/accessibility/role-subrole-roledescription-expected.txt:
+        * platform/mac/accessibility/role-subrole-roledescription.html:
+
+2013-08-15  Simon Fraser  <simon.fraser@apple.com>
+
+        <https://webkit.org/b/119871> Flash of garbage pixels when playing a show on Hulu
+
+        Reviewed by Tim Horton.
+        
+        Test that would hit the newly added assertion in case of failure.
+        Was unable to create a ref test that worked reliably.
+
+        * compositing/contents-opaque/fixed-to-nonfixed.html: Added.
+
+2013-08-15  Filip Pizlo  <fpizlo@apple.com>
+
+        Remove a test that times out.
+        
+        Rubber stamped by Mark Hahnenberg.
+        
+        This test times out for me, every time. It tests code that has since been rewritten
+        and has had new tests added to cover it. It's not clear that this test would be
+        useful anymore even if we made it not timeout.
+
+        * fast/js/array-sort-modifying-tostring-expected.txt: Removed.
+        * fast/js/array-sort-modifying-tostring.html: Removed.
+        * fast/js/script-tests/array-sort-modifying-tostring.js: Removed.
+
+2013-08-15  Dirk Schulze  <krit@webkit.org>
+
+        Implement CSS Image filter() function
+        https://bugs.webkit.org/show_bug.cgi?id=119845
+
+        Reviewed by Dean Jackson.
+
+        Test parsing, style resolving, computed style and behavior of new
+        CSS image function filter().
+
+        * fast/filter-image/filter-image-expected.html: Added.
+        * fast/filter-image/filter-image.html: Added.
+        * fast/filter-image/parse-filter-image-expected.txt: Added.
+        * fast/filter-image/parse-filter-image.html: Added.
+        * fast/filter-image/resources/image.svg: Added.
+
+2013-08-15  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, rebase the test now that we throw different exceptions.
+
+        * fast/canvas/webgl/data-view-test-expected.txt:
+
+2013-08-14  Filip Pizlo  <fpizlo@apple.com>
+
+        Typed arrays should be rewritten
+        https://bugs.webkit.org/show_bug.cgi?id=119064
+
+        Reviewed by Oliver Hunt.
+
+        * fast/canvas/webgl/array-set-invalid-arguments-expected.txt:
+        * fast/canvas/webgl/array-set-out-of-bounds-expected.txt:
+        * fast/canvas/webgl/array-unit-tests-expected.txt:
+        * fast/canvas/webgl/array-unit-tests.html:
+        * fast/canvas/webgl/data-view-crash-expected.txt:
+        * fast/canvas/webgl/script-tests/arraybuffer-transfer-of-control.js:
+        (checkView):
+        * fast/dom/call-a-constructor-as-a-function-expected.txt:
+        * fast/dom/call-a-constructor-as-a-function.html:
+        * fast/js/constructor-length.html:
+        * fast/js/global-constructors-attributes-dedicated-worker-expected.txt:
+        * fast/js/global-constructors-attributes-expected.txt:
+        * fast/js/global-constructors-attributes-shared-worker-expected.txt:
+        * fast/js/regress/ArrayBuffer-Int8Array-alloc-expected.txt: Added.
+        * fast/js/regress/ArrayBuffer-Int8Array-alloc-huge-long-lived-expected.txt: Added.
+        * fast/js/regress/ArrayBuffer-Int8Array-alloc-huge-long-lived.html: Added.
+        * fast/js/regress/ArrayBuffer-Int8Array-alloc-large-long-lived-expected.txt: Added.
+        * fast/js/regress/ArrayBuffer-Int8Array-alloc-large-long-lived.html: Added.
+        * fast/js/regress/ArrayBuffer-Int8Array-alloc-long-lived-buffer-expected.txt: Added.
+        * fast/js/regress/ArrayBuffer-Int8Array-alloc-long-lived-buffer.html: Added.
+        * fast/js/regress/ArrayBuffer-Int8Array-alloc-long-lived-expected.txt: Added.
+        * fast/js/regress/ArrayBuffer-Int8Array-alloc-long-lived.html: Added.
+        * fast/js/regress/ArrayBuffer-Int8Array-alloc.html: Added.
+        * fast/js/regress/Int32Array-Int8Array-view-alloc-expected.txt: Added.
+        * fast/js/regress/Int32Array-Int8Array-view-alloc.html: Added.
+        * fast/js/regress/Int32Array-alloc-expected.txt: Added.
+        * fast/js/regress/Int32Array-alloc-huge-expected.txt: Added.
+        * fast/js/regress/Int32Array-alloc-huge-long-lived-expected.txt: Added.
+        * fast/js/regress/Int32Array-alloc-huge-long-lived.html: Added.
+        * fast/js/regress/Int32Array-alloc-huge.html: Added.
+        * fast/js/regress/Int32Array-alloc-large-expected.txt: Added.
+        * fast/js/regress/Int32Array-alloc-large-long-lived-expected.txt: Added.
+        * fast/js/regress/Int32Array-alloc-large-long-lived.html: Added.
+        * fast/js/regress/Int32Array-alloc-large.html: Added.
+        * fast/js/regress/Int32Array-alloc-long-lived-expected.txt: Added.
+        * fast/js/regress/Int32Array-alloc-long-lived.html: Added.
+        * fast/js/regress/Int32Array-alloc.html: Added.
+        * fast/js/regress/script-tests/ArrayBuffer-Int8Array-alloc-huge-long-lived.js: Added.
+        * fast/js/regress/script-tests/ArrayBuffer-Int8Array-alloc-large-long-lived.js: Added.
+        * fast/js/regress/script-tests/ArrayBuffer-Int8Array-alloc-long-lived-buffer.js: Added.
+        * fast/js/regress/script-tests/ArrayBuffer-Int8Array-alloc-long-lived.js: Added.
+        * fast/js/regress/script-tests/ArrayBuffer-Int8Array-alloc.js: Added.
+        * fast/js/regress/script-tests/Int32Array-Int8Array-view-alloc.js: Added.
+        * fast/js/regress/script-tests/Int32Array-alloc-huge-long-lived.js: Added.
+        * fast/js/regress/script-tests/Int32Array-alloc-huge.js: Added.
+        * fast/js/regress/script-tests/Int32Array-alloc-large-long-lived.js: Added.
+        * fast/js/regress/script-tests/Int32Array-alloc-large.js: Added.
+        * fast/js/regress/script-tests/Int32Array-alloc-long-lived.js: Added.
+        * fast/js/regress/script-tests/Int32Array-alloc.js: Added.
+        * platform/mac/fast/js/constructor-length-expected.txt:
+        * webgl/resources/webgl_test_files/conformance/typedarrays/array-unit-tests.html:
+        * webgl/resources/webgl_test_files/conformance/typedarrays/data-view-test.html:
+
+2013-08-15  Oliver Hunt  <oliver@apple.com>
+
+        <https://webkit.org/b/119830> Assigning to a readonly global results in DFG byte code parse failure
+
+        Reviewed by Filip Pizlo.
+
+        Add a test
+
+        * fast/js/dfg-put-to-readonly-property-expected.txt: Added.
+        * fast/js/dfg-put-to-readonly-property.html: Added.
+        * fast/js/script-tests/dfg-put-to-readonly-property.js: Added.
+        (foo):
+        (bar):
+
+2013-08-15  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [GTK] Unreviewed gardening. Move Mac specific expectation for
+        accessibility test to the cross platform directory, as the result
+        it's shared with GTK and EFL ports.
+
+        * accessibility/heading-title-includes-links-expected.txt: Renamed
+        from LayoutTests/platform/mac/accessibility/heading-title-includes-links-expected.txt.
+
+2013-08-15  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        Empty qt-5.0 expectations into qt expectations
+
+        Unreviewed gardening.
+
+        * platform/qt-5.0/TestExpectations:
+        * platform/qt-5.0/editing/selection/editable-html-element-expected.txt: Removed.
+        * platform/qt-5.0/editing/selection/extend-by-word-001-expected.txt: Removed.
+        * platform/qt-5.0/editing/selection/vertical-rl-ltr-extend-line-backward-wrap-expected.txt: Removed.
+        * platform/qt-5.0/editing/selection/vertical-rl-ltr-extend-line-forward-wrap-expected.txt: Removed.
+        * platform/qt-5.0/fast/dom/Orientation/create-event-orientationchange-expected.txt: Removed.
+        * platform/qt-5.0/fast/dom/Window/window-properties-device-orientation-expected.txt: Removed.
+        * platform/qt-5.0/fast/events/onload-re-entry-expected.txt: Removed.
+        * platform/qt-5.0/fast/forms/input-disabled-color-expected.png: Removed.
+        * platform/qt-5.0/fast/forms/input-disabled-color-expected.txt: Removed.
+        * platform/qt-5.0/fast/forms/menulist-separator-painting-expected.png: Removed.
+        * platform/qt-5.0/fast/forms/menulist-separator-painting-expected.txt: Removed.
+        * platform/qt-5.0/fast/forms/select-background-none-expected.png: Removed.
+        * platform/qt-5.0/fast/forms/select-background-none-expected.txt: Removed.
+        * platform/qt-5.0/fast/images/embed-image-expected.txt: Removed.
+        * platform/qt-5.0/fast/images/object-image-expected.txt: Removed.
+        * platform/qt-5.0/fast/text/backslash-to-yen-sign-expected.txt: Removed.
+        * platform/qt-5.0/fast/text/basic/003-expected.png: Removed.
+        * platform/qt-5.0/fast/text/basic/003-expected.txt: Removed.
+        * platform/qt-5.0/fast/text/fallback-traits-fixup-expected.txt: Removed.
+        * platform/qt-5.0/fast/text/international/hindi-whitespace-expected.txt: Removed.
+        * platform/qt-5.0/fast/text/international/text-spliced-font-expected.txt: Removed.
+        * platform/qt-5.0/fast/text/letter-spacing-negative-opacity-expected.png: Removed.
+        * platform/qt-5.0/fast/text/letter-spacing-negative-opacity-expected.txt: Removed.
+        * platform/qt-5.0/fast/text/soft-hyphen-3-expected.txt: Removed.
+        * platform/qt-5.0/http/tests/misc/location-replace-crossdomain-expected.png: Removed.
+        * platform/qt-5.0/http/tests/misc/location-replace-crossdomain-expected.txt: Removed.
+        * platform/qt-5.0/svg/W3C-SVG-1.1-SE/color-prop-05-t-expected.png: Removed.
+        * platform/qt-5.0/svg/W3C-SVG-1.1-SE/filters-image-03-f-expected.png: Removed.
+        * platform/qt-5.0/svg/W3C-SVG-1.1-SE/pservers-pattern-03-f-expected.png: Removed.
+        * platform/qt-5.0/svg/W3C-SVG-1.1-SE/struct-use-14-f-expected.png: Removed.
+        * platform/qt-5.0/svg/W3C-SVG-1.1-SE/svgdom-over-01-f-expected.png: Removed.
+        * platform/qt-5.0/svg/as-image/img-preserveAspectRatio-support-1-expected.png: Removed.
+        * platform/qt-5.0/svg/as-image/img-preserveAspectRatio-support-1-expected.txt: Removed.
+        * platform/qt-5.0/svg/as-object/object-box-sizing-no-width-height-expected.png: Removed.
+        * platform/qt-5.0/svg/as-object/object-box-sizing-no-width-height-expected.txt: Removed.
+        * platform/qt-5.0/svg/batik/text/longTextOnPath-expected.png: Removed.
+        * platform/qt-5.0/svg/batik/text/longTextOnPath-expected.txt: Removed.
+        * platform/qt-5.0/svg/carto.net/tabgroup-expected.txt: Removed.
+        * platform/qt-5.0/svg/foreignObject/text-tref-02-b-expected.png: Removed.
+        * platform/qt-5.0/svg/transforms/text-with-pattern-with-svg-transform-expected.png: Removed.
+        * platform/qt-5.0/svg/transforms/text-with-pattern-with-svg-transform-expected.txt: Removed.
+        * platform/qt/TestExpectations:
+        * platform/qt/editing/execCommand/findString-diacriticals-expected.txt: Renamed from LayoutTests/platform/qt-5.0/editing/execCommand/findString-diacriticals-expected.txt.
+        * platform/qt/editing/selection/click-left-of-rtl-wrapping-text-expected.txt: Renamed from LayoutTests/platform/qt-5.0/editing/selection/click-left-of-rtl-wrapping-text-expected.txt.
+        * platform/qt/fast/events/onload-re-entry-expected.png: Renamed from LayoutTests/platform/qt-5.0/fast/events/onload-re-entry-expected.png.
+        * platform/qt/fast/events/onload-re-entry-expected.txt:
+        * platform/qt/fast/events/touch/touch-slider-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/events/touch/touch-slider-expected.txt.
+        * platform/qt/fast/events/touch/touch-slider-no-js-touch-listener-expected.txt: Renamed from LayoutTests/platform/qt-5.0/fast/events/touch/touch-slider-no-js-touch-listener-expected.txt.
+        * platform/qt/fast/forms/input-disabled-color-expected.png:
+        * platform/qt/fast/forms/input-disabled-color-expected.txt:
+        * platform/qt/fast/forms/menulist-separator-painting-expected.png:
+        * platform/qt/fast/forms/menulist-separator-painting-expected.txt:
+        * platform/qt/fast/forms/select-background-none-expected.png:
+        * platform/qt/fast/forms/select-background-none-expected.txt:
+        * platform/qt/fast/images/embed-image-expected.txt:
+        * platform/qt/fast/images/object-image-expected.txt:
+        * platform/qt/fast/text/basic/003-expected.png:
+        * platform/qt/fast/text/international/text-spliced-font-expected.png: Renamed from LayoutTests/platform/qt-5.0/fast/text/international/text-spliced-font-expected.png.
+        * platform/qt/fast/text/soft-hyphen-3-expected.txt:
+        * platform/qt/http/tests/cookies/double-quoted-value-with-semi-colon-expected.txt: Renamed from LayoutTests/platform/qt-5.0/http/tests/cookies/double-quoted-value-with-semi-colon-expected.txt.
+        * platform/qt/http/tests/misc/location-replace-crossdomain-expected.png:
+        * platform/qt/http/tests/misc/location-replace-crossdomain-expected.txt:
+        * platform/qt/http/tests/security/xss-DENIED-xsl-external-entity-redirect-expected.txt: Renamed from LayoutTests/platform/qt-5.0/http/tests/security/xss-DENIED-xsl-external-entity-redirect-expected.txt.
+        * platform/qt/http/tests/xmlhttprequest/methods-expected.txt: Renamed from LayoutTests/platform/qt-5.0/http/tests/xmlhttprequest/methods-expected.txt.
+        * platform/qt/http/tests/xmlhttprequest/workers/methods-async-expected.txt: Renamed from LayoutTests/platform/qt-5.0/http/tests/xmlhttprequest/workers/methods-async-expected.txt.
+        * platform/qt/http/tests/xmlhttprequest/workers/methods-expected.txt: Renamed from LayoutTests/platform/qt-5.0/http/tests/xmlhttprequest/workers/methods-expected.txt.
+        * platform/qt/http/tests/xmlhttprequest/workers/shared-worker-methods-async-expected.txt: Renamed from LayoutTests/platform/qt-5.0/http/tests/xmlhttprequest/workers/shared-worker-methods-async-expected.txt.
+        * platform/qt/svg/W3C-SVG-1.1-SE/color-prop-05-t-expected.png:
+        * platform/qt/svg/W3C-SVG-1.1-SE/filters-image-03-f-expected.png:
+        * platform/qt/svg/W3C-SVG-1.1-SE/pservers-pattern-03-f-expected.png:
+        * platform/qt/svg/W3C-SVG-1.1-SE/struct-use-14-f-expected.png:
+        * platform/qt/svg/W3C-SVG-1.1-SE/svgdom-over-01-f-expected.png:
+        * platform/qt/svg/as-image/img-preserveAspectRatio-support-1-expected.png:
+        * platform/qt/svg/as-object/object-box-sizing-no-width-height-expected.png:
+        * platform/qt/svg/as-object/object-box-sizing-no-width-height-expected.txt:
+        * platform/qt/svg/batik/text/longTextOnPath-expected.png:
+        * platform/qt/svg/batik/text/longTextOnPath-expected.txt:
+        * platform/qt/svg/carto.net/tabgroup-expected.png: Renamed from LayoutTests/platform/qt-5.0/svg/carto.net/tabgroup-expected.png.
+        * platform/qt/svg/carto.net/tabgroup-expected.txt:
+        * platform/qt/svg/foreignObject/text-tref-02-b-expected.png:
+        * platform/qt/svg/transforms/text-with-pattern-with-svg-transform-expected.png:
+        * platform/qt/svg/transforms/text-with-pattern-with-svg-transform-expected.txt:
+
+2013-08-15  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] Unreviewed gardening. Update test expectations.
+
+        * platform/gtk-wk1/TestExpectations: Unskip tests no longer failing.
+        * platform/gtk-wk1/loader/go-back-cached-main-resource-expected.txt:
+        Rebaseline after r153852.
+        * platform/gtk/TestExpectations:
+        * platform/gtk/fast/regions/region-dynamic-after-before-expected.txt:
+        Rebaseline after r154072.
+        * platform/gtk/fast/regions/region-generated-content-before-after-expected.txt:
+        Rebaseline after r154072.
+        * platform/gtk/security/block-test-no-port-expected.txt:
+        Rebaseline after r153852.
+
+2013-08-15  Rob Buis  <rwlbuis@webkit.org>
+
+        ASSERTION FAILED: !m_adoptionIsRequired in void WebCore::TreeShared<NodeType>::ref()
+        https://bugs.webkit.org/show_bug.cgi?id=116979
+
+        Reviewed by Antti Koivisto.
+
+        Add testcase from bug with small adjustments.
+
+        * svg/custom/tref-with-progress-tag-setpseudo-assert-expected.txt: Added.
+        * svg/custom/tref-with-progress-tag-setpseudo-assert.html: Added.
+
+2013-08-15  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] Unreviewed gardening. Skip failing test.
+
+        * platform/gtk-wk1/TestExpectations:
+        http/tests/loading/unfinished-main-resource-back-to-cached-page-callbacks.html
+        is failing.
+
+2013-08-15  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] fast/canvas/canvas-blending-transforms.html test fails on x32 after r153941.
+        https://bugs.webkit.org/show_bug.cgi?id=119792
+
+        Unreviewed gardening.
+
+        Speculative unskip after r154095.
+
+        * platform/qt/TestExpectations:
+
+2013-08-15  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        REGRESSION(r148790) Made 7 tests fail on x86 32bit
+        https://bugs.webkit.org/show_bug.cgi?id=114913
+
+        Reviewed by Filip Pizlo.
+
+        Unskip the five tests now passsing again.
+
+        * platform/qt/TestExpectations:
+
+2013-08-15  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] Unreviewed gardening. Rebaseline after r154057.
+
+        * platform/gtk/fast/js/dom-static-property-for-in-iteration-expected.txt:
+
+2013-08-15  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL] Unreviwed gardening.
+
+        Skipped some failures.
+
+        * platform/efl-wk2/TestExpectations:
+        * platform/efl/TestExpectations:
+        * platform/efl/fast/forms/datalist/input-list-expected.txt: Removed.
+
+2013-08-15  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] Unreviewed gardening. Rebaseline after r154072.
+
+        * platform/gtk/fast/regions/autoheight-regions-mark-expected.txt:
+        * platform/gtk/fast/regions/overflow-in-uniform-regions-dynamic-expected.txt:
+        * platform/gtk/fast/regions/overflow-in-variable-width-regions-expected.txt:
+        * platform/gtk/fast/regions/overflow-moving-below-floats-in-variable-width-regions-expected.txt:
+        * platform/gtk/fast/regions/overflow-not-moving-below-floats-in-variable-width-regions-expected.txt:
+        * platform/gtk/fast/regions/overflow-rtl-in-variable-width-regions-expected.txt:
+        * platform/gtk/fast/regions/overflow-size-change-in-variable-width-regions-expected.txt:
+        * platform/gtk/fast/repaint/japanese-rl-selection-repaint-in-regions-expected.txt:
+        * platform/gtk/fast/repaint/line-flow-with-floats-in-regions-expected.txt:
+        * platform/gtk/fast/repaint/overflow-flipped-writing-mode-block-in-regions-expected.txt:
+        * platform/gtk/fast/repaint/region-painting-via-layout-expected.txt:
+
+2013-08-15  Tamas Czene <tczene@inf.u-szeged.hu>
+
+        [Qt] Unreviwed gardening. Rebase fast tests after r154072.
+
+        * platform/qt-5.0-wk2/fast/repaint/region-painting-via-layout-expected.txt: Removed.
+        * platform/qt/fast/regions/autoheight-regions-mark-expected.txt:
+        * platform/qt/fast/regions/overflow-in-uniform-regions-dynamic-expected.png:
+        * platform/qt/fast/regions/overflow-in-uniform-regions-dynamic-expected.txt:
+        * platform/qt/fast/regions/overflow-in-variable-width-regions-expected.png:
+        * platform/qt/fast/regions/overflow-in-variable-width-regions-expected.txt:
+        * platform/qt/fast/regions/overflow-moving-below-floats-in-variable-width-regions-expected.png:
+        * platform/qt/fast/regions/overflow-moving-below-floats-in-variable-width-regions-expected.txt:
+        * platform/qt/fast/regions/overflow-not-moving-below-floats-in-variable-width-regions-expected.png:
+        * platform/qt/fast/regions/overflow-not-moving-below-floats-in-variable-width-regions-expected.txt:
+        * platform/qt/fast/regions/overflow-rtl-in-variable-width-regions-expected.png:
+        * platform/qt/fast/regions/overflow-rtl-in-variable-width-regions-expected.txt:
+        * platform/qt/fast/regions/overflow-size-change-in-variable-width-regions-expected.png:
+        * platform/qt/fast/regions/overflow-size-change-in-variable-width-regions-expected.txt:
+        * platform/qt/fast/repaint/line-flow-with-floats-in-regions-expected.png:
+        * platform/qt/fast/repaint/line-flow-with-floats-in-regions-expected.txt:
+        * platform/qt/fast/repaint/overflow-flipped-writing-mode-block-in-regions-expected.txt:
+        * platform/qt/fast/repaint/region-painting-via-layout-expected.txt:
+
+2013-08-14  Alexey Proskuryakov  <ap@apple.com>
+
+        Don't copy js-test-pre in cookies-test-pre
+        https://bugs.webkit.org/show_bug.cgi?id=119802
+
+        Reviewed by Sam Weinig.
+
+        * http/tests/cookies/resources/cookies-test-post.js:
+        * http/tests/cookies/resources/cookies-test-pre.js:
+
+2013-08-14  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        <https://webkit.org/b/119786> [EFL] decoration of search type is different from other platforms
+
+        Reviewed by Gyuyoung Kim.
+
+        Rebaseline related to input search field.
+
+        * platform/efl/fast/css/input-search-padding-expected.png:
+        * platform/efl/fast/css/input-search-padding-expected.txt:
+        * platform/efl/fast/css/text-input-with-webkit-border-radius-expected.png:
+        * platform/efl/fast/css/text-input-with-webkit-border-radius-expected.txt:
+        * platform/efl/fast/css/text-overflow-input-expected.png:
+        * platform/efl/fast/css/text-overflow-input-expected.txt:
+        * platform/efl/fast/forms/box-shadow-override-expected.png:
+        * platform/efl/fast/forms/box-shadow-override-expected.txt:
+        * platform/efl/fast/forms/control-restrict-line-height-expected.png:
+        * platform/efl/fast/forms/control-restrict-line-height-expected.txt:
+        * platform/efl/fast/forms/input-appearance-height-expected.png:
+        * platform/efl/fast/forms/input-appearance-height-expected.txt:
+        * platform/efl/fast/forms/placeholder-position-expected.png:
+        * platform/efl/fast/forms/placeholder-position-expected.txt:
+        * platform/efl/fast/forms/placeholder-pseudo-style-expected.png:
+        * platform/efl/fast/forms/placeholder-pseudo-style-expected.txt:
+        * platform/efl/fast/forms/search-cancel-button-style-sharing-expected.png:
+        * platform/efl/fast/forms/search-cancel-button-style-sharing-expected.txt:
+        * platform/efl/fast/forms/search-display-none-cancel-button-expected.png:
+        * platform/efl/fast/forms/search-display-none-cancel-button-expected.txt:
+        * platform/efl/fast/forms/search-rtl-expected.png:
+        * platform/efl/fast/forms/search-rtl-expected.txt:
+        * platform/efl/fast/forms/search-vertical-alignment-expected.png:
+        * platform/efl/fast/forms/search-vertical-alignment-expected.txt:
+        * platform/efl/fast/forms/searchfield-heights-expected.png:
+        * platform/efl/fast/forms/searchfield-heights-expected.txt:
+        * platform/efl/fast/repaint/search-field-cancel-expected.png:
+        * platform/efl/fast/repaint/search-field-cancel-expected.txt:
+
+2013-08-14  Chris Fleizach  <cfleizach@apple.com>
+
+        <https://webkit.org/b/119817> AX: Integrate layout tests from overflow bounding boxes are way too big; prevents VoiceOver taps from activating the right elements
+
+        Reviewed by Simon Fraser.
+
+        Add a layout test to ensure that transformed elements do not get offset twice when calculating their accessibility bounds.
+
+        * accessibility/transformed-bounds-expected.txt: Added.
+        * accessibility/transformed-bounds.html: Added.
+
+2013-08-14  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Exclusions] Minimal support for using an image to define a shape
+        https://bugs.webkit.org/show_bug.cgi?id=116643
+
+        Two tests to verify that the initial implementation of shape valued images is working
+        for shape-inside.
+
+        Reviewed by Alexandru Chiculita.
+
+        * fast/exclusions/shape-inside/shape-inside-image-001-expected.html: Added.
+        * fast/exclusions/shape-inside/shape-inside-image-001.html: Added.
+        * fast/exclusions/shape-inside/shape-inside-image-002-expected.html: Added.
+        * fast/exclusions/shape-inside/shape-inside-image-002.html: Added.
+
+2013-08-14  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build gardening.
+
+        * platform/win/TestExpectations: Clean up a lint warning, and reactivate four tiling tests
+        that pass and had been turned off previously.
+
+
+2013-08-14  Alexandru Chiculita  <achicu@adobe.com>
+
+        [CSS Regions] RenderRegions should have a RenderLayer+Backing when they contain a Composited RenderLayer
+        https://bugs.webkit.org/show_bug.cgi?id=117365
+
+        Reviewed by David Hyatt.
+
+        Added new tests for cases when CSS Regions are promoted to RenderLayers because
+        they contain elements that might need to become composited.
+
+        * fast/regions/layers/dynamic-layer-added-with-no-layout-expected.png: Added.
+        * fast/regions/layers/dynamic-layer-added-with-no-layout-expected.txt: Added.
+        * fast/regions/layers/dynamic-layer-added-with-no-layout.html: Added.
+        * fast/regions/layers/dynamic-layer-removed-with-no-layout-expected.png: Added.
+        * fast/regions/layers/dynamic-layer-removed-with-no-layout-expected.txt: Added.
+        * fast/regions/layers/dynamic-layer-removed-with-no-layout.html: Added.
+        * fast/regions/layers/float-region-promoted-to-layer-expected.html: Added.
+        * fast/regions/layers/float-region-promoted-to-layer.html: Added.
+        * fast/regions/layers/regions-promoted-to-layers-expected.txt: Added.
+        * fast/regions/layers/regions-promoted-to-layers-horizontal-bt-expected.txt: Added.
+        * fast/regions/layers/regions-promoted-to-layers-horizontal-bt.html: Added.
+        * fast/regions/layers/regions-promoted-to-layers-vertical-lr-expected.txt: Added.
+        * fast/regions/layers/regions-promoted-to-layers-vertical-lr.html: Added.
+        * fast/regions/layers/regions-promoted-to-layers-vertical-rl-expected.txt: Added.
+        * fast/regions/layers/regions-promoted-to-layers-vertical-rl.html: Added.
+        * fast/regions/layers/regions-promoted-to-layers.html: Added.
+
+        Updated existing tests that now have CSS Regions that require a RenderLayer.
+        * fast/regions/autoheight-regions-mark-expected.txt:
+        * fast/repaint/overflow-flipped-writing-mode-block-in-regions-expected.txt:
+        * fast/repaint/region-painting-via-layout-expected.txt:
+        * platform/mac/fast/regions/overflow-in-uniform-regions-dynamic-expected.txt:
+        * platform/mac/fast/regions/overflow-in-variable-width-regions-expected.txt:
+        * platform/mac/fast/regions/overflow-moving-below-floats-in-variable-width-regions-expected.txt:
+        * platform/mac/fast/regions/overflow-not-moving-below-floats-in-variable-width-regions-expected.txt:
+        * platform/mac/fast/regions/overflow-rtl-in-variable-width-regions-expected.txt:
+        * platform/mac/fast/regions/overflow-size-change-in-variable-width-regions-expected.txt:
+        * platform/mac/fast/repaint/japanese-rl-selection-repaint-in-regions-expected.txt:
+        * platform/mac/fast/repaint/line-flow-with-floats-in-regions-expected.txt:
+
+2013-08-14  Andreas Kling  <akling@apple.com>
+
+        <http://webkit.org/b/119520> REGRESSION(154062): fast/repaint/caret-jump-between-nodes.html flakes on bots.
+
+        Unreviewed. This isn't working out. I can't get it to blink the caret a consistent number of times.
+        Removing the test for now to stop making bots red.
+
+        * fast/repaint/caret-jump-between-nodes-expected.txt: Removed.
+        * fast/repaint/caret-jump-between-nodes.html: Removed.
+
+2013-08-14  Rob Buis  <rwlbuis@webkit.org>
+
+        Assertion failure in RenderObject::drawLineForBoxSide
+        https://bugs.webkit.org/show_bug.cgi?id=108187
+
+        Reviewed by David Hyatt.
+
+        Add testcase from bug with small adjustments.
+
+        * fast/css/outline-negative-expected.txt: Added.
+        * fast/css/outline-negative.html: Added.
+
+2013-08-14  Andreas Kling  <akling@apple.com>
+
+        REGRESSION(r153815): fast/repaint/caret-jump-between-nodes.html sucks.
+        <http://webkit.org/b/119520>
+
+        Unreviewed, remove the description text from this repaint test in an attempt
+        to get consistent cross-platform results.
+
+        * fast/repaint/caret-jump-between-nodes-expected.txt:
+        * fast/repaint/caret-jump-between-nodes.html:
+        * platform/gtk/fast/repaint/caret-jump-between-nodes-expected.txt: Removed.
+        * platform/qt-5.0-wk2/fast/repaint/caret-jump-between-nodes-expected.txt: Removed.
+        * platform/qt/fast/repaint/caret-jump-between-nodes-expected.txt: Removed.
+
+2013-08-13  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: Headings not longer have an AXTitle if they have a link as the only child
+        https://bugs.webkit.org/show_bug.cgi?id=119699
+
+        Reviewed by Anders Carlsson.
+
+        * accessibility/heading-title-includes-links.html: Added.
+        * platform/mac/accessibility/heading-title-includes-links-expected.txt: Added.
+        * platform/mac/accessibility/internal-link-anchors2-expected.txt:
+
+2013-08-14  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Move id attribute to parent Element interface
+        https://bugs.webkit.org/show_bug.cgi?id=119706
+
+        Reviewed by Ryosuke Niwa.
+
+        Rebaseline fast/js/dom-static-property-for-in-iteration.html as
+        the order has changed.
+
+        * fast/js/dom-static-property-for-in-iteration-expected.txt:
+
+2013-08-14  Arpita Bahuguna  <a.bah@samsung.com>
+
+        createAttribute/setAttributeNode does not properly normalize case
+        https://bugs.webkit.org/show_bug.cgi?id=90341
+
+        Reviewed by Darin Adler.
+
+        * fast/dom/Element/setAttributeNode-case-insensitivity.html: Added.
+        * fast/dom/Element/setAttributeNode-case-insensitivity-expected.txt: Added.
+        Testcase for verifying that setAttributeNode() checks against existing
+        attributes in a case insensitive manner. It updates the value of an
+        existing attribute (in lower case) with that of the one set using
+        setAttributeNode() (in upper case).
+        The test also verifies the behavior of attributes when specified with
+        namespace and prefix.
+
+        * fast/dom/Element/setAttributeNode-case-insensitivity-xhtml-expected.txt: Added.
+        * fast/dom/Element/setAttributeNode-case-insensitivity-xhtml.xhtml: Added.
+        Testcase added for verifying that the default behavior for xhtml documents
+        does not change with this fix.
+        For xhtml documents, attributes can be added case sensitively. This testcase
+        verifies that two attributes with the same name but different case are
+        allowed for an xhtml document.
+
+2013-08-14  Benjamin Dupont   <bdupont@nds.com>
+
+        [Qt] Activate visibility API layout tests
+        https://bugs.webkit.org/show_bug.cgi?id=119790
+
+        Reviewed by Allan Sandfeld Jensen.
+
+        * platform/qt/TestExpectations:
+
 2013-08-14  Rob Buis  <rwlbuis@webkit.org>
 
         ASSERTION FAILED: resultAnimationElement->m_animatedType in WebCore::SVGAnimateElement::calculateAnimatedValue

@@ -126,7 +126,7 @@ FrameLoader* DocumentLoader::frameLoader() const
 {
     if (!m_frame)
         return 0;
-    return m_frame->loader();
+    return &m_frame->loader();
 }
 
 ResourceLoader* DocumentLoader::mainResourceLoader() const
@@ -157,7 +157,7 @@ PassRefPtr<ResourceBuffer> DocumentLoader::mainResourceData() const
 
 Document* DocumentLoader::document() const
 {
-    if (m_frame && m_frame->loader()->documentLoader() == this)
+    if (m_frame && m_frame->loader().documentLoader() == this)
         return m_frame->document();
     return 0;
 }
@@ -262,7 +262,7 @@ void DocumentLoader::stopLoading()
         Document* doc = m_frame->document();
         
         if (loading || doc->parsing())
-            m_frame->loader()->stopLoading(UnloadEventPolicyNone);
+            m_frame->loader().stopLoading(UnloadEventPolicyNone);
     }
 
     // Always cancel multipart loaders
@@ -364,8 +364,13 @@ void DocumentLoader::finishedLoading(double finishTime)
     RefPtr<DocumentLoader> protect(this);
 
     if (m_identifierForLoadWithoutResourceLoader) {
-        frameLoader()->notifier()->dispatchDidFinishLoading(this, m_identifierForLoadWithoutResourceLoader, finishTime);
+        // A didFinishLoading delegate might try to cancel the load (despite it
+        // being finished). Clear m_identifierForLoadWithoutResourceLoader
+        // before calling dispatchDidFinishLoading so that we don't later try to
+        // cancel the already-finished substitute load.
+        unsigned long identifier = m_identifierForLoadWithoutResourceLoader;
         m_identifierForLoadWithoutResourceLoader = 0;
+        frameLoader()->notifier()->dispatchDidFinishLoading(this, identifier, finishTime);
     }
 
 #if USE(CONTENT_FILTERING)
@@ -1312,7 +1317,7 @@ void DocumentLoader::removeSubresourceLoader(ResourceLoader* loader)
     m_subresourceLoaders.remove(it);
     checkLoadComplete();
     if (Frame* frame = m_frame)
-        frame->loader()->checkLoadComplete();
+        frame->loader().checkLoadComplete();
 }
 
 void DocumentLoader::addPlugInStreamLoader(ResourceLoader* loader)
@@ -1447,7 +1452,7 @@ void DocumentLoader::subresourceLoaderFinishedLoadingOnePart(ResourceLoader* loa
     m_subresourceLoaders.remove(loader);
     checkLoadComplete();
     if (Frame* frame = m_frame)
-        frame->loader()->checkLoadComplete();    
+        frame->loader().checkLoadComplete();    
 }
 
 void DocumentLoader::maybeFinishLoadingMultipartContent()
@@ -1464,7 +1469,7 @@ void DocumentLoader::maybeFinishLoadingMultipartContent()
 void DocumentLoader::iconLoadDecisionAvailable()
 {
     if (m_frame)
-        m_frame->loader()->icon()->loadDecisionReceived(iconDatabase().synchronousLoadDecisionForIconURL(frameLoader()->icon()->url(), this));
+        m_frame->loader().icon()->loadDecisionReceived(iconDatabase().synchronousLoadDecisionForIconURL(frameLoader()->icon()->url(), this));
 }
 
 static void iconLoadDecisionCallback(IconLoadDecision decision, void* context)
@@ -1485,7 +1490,7 @@ void DocumentLoader::continueIconLoadWithDecision(IconLoadDecision decision)
     ASSERT(m_iconLoadDecisionCallback);
     m_iconLoadDecisionCallback = 0;
     if (m_frame)
-        m_frame->loader()->icon()->continueLoadWithDecision(decision);
+        m_frame->loader().icon()->continueLoadWithDecision(decision);
 }
 
 static void iconDataCallback(SharedBuffer*, void*)

@@ -77,14 +77,14 @@ CachedPage::~CachedPage()
 void CachedPage::restore(Page* page)
 {
     ASSERT(m_cachedMainFrame);
-    ASSERT(page && page->mainFrame() && page->mainFrame() == m_cachedMainFrame->view()->frame());
+    ASSERT(page && page->mainFrame() && page->mainFrame() == &m_cachedMainFrame->view()->frame());
     ASSERT(!page->subframeCount());
 
     m_cachedMainFrame->open();
     
     // Restore the focus appearance for the focused element.
     // FIXME: Right now we don't support pages w/ frames in the b/f cache.  This may need to be tweaked when we add support for that.
-    Document* focusedDocument = page->focusController()->focusedOrMainFrame()->document();
+    Document* focusedDocument = page->focusController().focusedOrMainFrame()->document();
     if (Element* element = focusedDocument->focusedElement())
         element->updateFocusAppearance(true);
 

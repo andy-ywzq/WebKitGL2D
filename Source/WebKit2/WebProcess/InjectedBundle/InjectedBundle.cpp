@@ -59,7 +59,6 @@
 #include <WebCore/GeolocationPosition.h>
 #include <WebCore/JSDOMWindow.h>
 #include <WebCore/JSNotification.h>
-#include <WebCore/JSUint8Array.h>
 #include <WebCore/Page.h>
 #include <WebCore/PageGroup.h>
 #include <WebCore/PrintContext.h>
@@ -75,10 +74,6 @@
 
 #if ENABLE(SHADOW_DOM) || ENABLE(CSS_REGIONS) || ENABLE(IFRAME_SEAMLESS) || ENABLE(CSS_COMPOSITING)
 #include <WebCore/RuntimeEnabledFeatures.h>
-#endif
-
-#if PLATFORM(MAC)
-#include "WebSystemInterface.h"
 #endif
 
 #if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
@@ -163,7 +158,7 @@ void InjectedBundle::overrideBoolPreferenceForTestRunner(WebPageGroupProxy* page
     if (preference == "WebKitTabToLinksPreferenceKey") {
         WebPreferencesStore::overrideBoolValueForKey(WebPreferencesKey::tabsToLinksKey(), enabled);
         for (HashSet<Page*>::iterator i = pages.begin(); i != pages.end(); ++i) {
-            WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient((*i)->mainFrame()->loader()->client());
+            WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient((*i)->mainFrame()->loader().client());
             ASSERT(webFrameLoaderClient);
             webFrameLoaderClient->webFrame()->page()->setTabToLinksEnabled(enabled);
         }
@@ -172,7 +167,7 @@ void InjectedBundle::overrideBoolPreferenceForTestRunner(WebPageGroupProxy* page
     if (preference == "WebKit2AsynchronousPluginInitializationEnabled") {
         WebPreferencesStore::overrideBoolValueForKey(WebPreferencesKey::asynchronousPluginInitializationEnabledKey(), enabled);
         for (HashSet<Page*>::iterator i = pages.begin(); i != pages.end(); ++i) {
-            WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient((*i)->mainFrame()->loader()->client());
+            WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient((*i)->mainFrame()->loader().client());
             ASSERT(webFrameLoaderClient);
             webFrameLoaderClient->webFrame()->page()->setAsynchronousPluginInitializationEnabled(enabled);
         }
@@ -181,7 +176,7 @@ void InjectedBundle::overrideBoolPreferenceForTestRunner(WebPageGroupProxy* page
     if (preference == "WebKit2AsynchronousPluginInitializationEnabledForAllPlugins") {
         WebPreferencesStore::overrideBoolValueForKey(WebPreferencesKey::asynchronousPluginInitializationEnabledForAllPluginsKey(), enabled);
         for (HashSet<Page*>::iterator i = pages.begin(); i != pages.end(); ++i) {
-            WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient((*i)->mainFrame()->loader()->client());
+            WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient((*i)->mainFrame()->loader().client());
             ASSERT(webFrameLoaderClient);
             webFrameLoaderClient->webFrame()->page()->setAsynchronousPluginInitializationEnabledForAllPlugins(enabled);
         }
@@ -190,7 +185,7 @@ void InjectedBundle::overrideBoolPreferenceForTestRunner(WebPageGroupProxy* page
     if (preference == "WebKit2ArtificialPluginInitializationDelayEnabled") {
         WebPreferencesStore::overrideBoolValueForKey(WebPreferencesKey::artificialPluginInitializationDelayEnabledKey(), enabled);
         for (HashSet<Page*>::iterator i = pages.begin(); i != pages.end(); ++i) {
-            WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient((*i)->mainFrame()->loader()->client());
+            WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient((*i)->mainFrame()->loader().client());
             ASSERT(webFrameLoaderClient);
             webFrameLoaderClient->webFrame()->page()->setArtificialPluginInitializationDelayEnabled(enabled);
         }
@@ -321,15 +316,6 @@ void InjectedBundle::setPopupBlockingEnabled(WebPageGroupProxy* pageGroup, bool 
     HashSet<Page*>::const_iterator end = pages.end();
     for (HashSet<Page*>::const_iterator iter = pages.begin(); iter != end; ++iter)
         (*iter)->settings().setJavaScriptCanOpenWindowsAutomatically(!enabled);
-}
-
-void InjectedBundle::switchNetworkLoaderToNewTestingSession()
-{
-#if PLATFORM(MAC) || USE(CFNETWORK)
-    // FIXME (NetworkProcess): Do this in network process, too.
-    InitWebCoreSystemInterface();
-    NetworkStorageSession::switchToNewTestingSession();
-#endif
 }
 
 void InjectedBundle::setAuthorAndUserStylesEnabled(WebPageGroupProxy* pageGroup, bool enabled)

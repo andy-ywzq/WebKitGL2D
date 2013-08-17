@@ -99,6 +99,9 @@ void WebPage::platformInitialize()
 
 NSObject *WebPage::accessibilityObjectForMainFramePlugin()
 {
+    if (!m_page)
+        return 0;
+    
     Frame* frame = m_page->mainFrame();
     if (!frame)
         return 0;
@@ -260,7 +263,7 @@ void WebPage::sendComplexTextInputToPlugin(uint64_t pluginComplexTextInputIdenti
 
 void WebPage::setComposition(const String& text, Vector<CompositionUnderline> underlines, uint64_t selectionStart, uint64_t selectionEnd, uint64_t replacementRangeStart, uint64_t replacementRangeEnd, EditorState& newState)
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
 
     if (frame->selection()->isContentEditable()) {
         RefPtr<Range> replacementRange;
@@ -277,25 +280,21 @@ void WebPage::setComposition(const String& text, Vector<CompositionUnderline> un
 
 void WebPage::confirmComposition(EditorState& newState)
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
-
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     frame->editor().confirmComposition();
-
     newState = editorState();
 }
 
 void WebPage::cancelComposition(EditorState& newState)
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
-
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     frame->editor().cancelComposition();
-
     newState = editorState();
 }
 
 void WebPage::insertText(const String& text, uint64_t replacementRangeStart, uint64_t replacementRangeEnd, bool& handled, EditorState& newState)
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
 
     if (replacementRangeStart != NSNotFound) {
         RefPtr<Range> replacementRange = convertToRange(frame, NSMakeRange(replacementRangeStart, replacementRangeEnd - replacementRangeStart));
@@ -317,7 +316,7 @@ void WebPage::insertText(const String& text, uint64_t replacementRangeStart, uin
 
 void WebPage::insertDictatedText(const String& text, uint64_t replacementRangeStart, uint64_t replacementRangeEnd, const Vector<WebCore::DictationAlternative>& dictationAlternativeLocations, bool& handled, EditorState& newState)
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
 
     if (replacementRangeStart != NSNotFound) {
         RefPtr<Range> replacementRange = convertToRange(frame, NSMakeRange(replacementRangeStart, replacementRangeEnd - replacementRangeStart));
@@ -334,7 +333,7 @@ void WebPage::getMarkedRange(uint64_t& location, uint64_t& length)
 {
     location = NSNotFound;
     length = 0;
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     if (!frame)
         return;
 
@@ -351,7 +350,7 @@ void WebPage::getSelectedRange(uint64_t& location, uint64_t& length)
 {
     location = NSNotFound;
     length = 0;
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     if (!frame)
         return;
 
@@ -368,7 +367,7 @@ void WebPage::getAttributedSubstringFromRange(uint64_t location, uint64_t length
 {
     NSRange nsRange = NSMakeRange(location, length - location);
 
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     if (!frame)
         return;
 
@@ -399,8 +398,8 @@ void WebPage::characterIndexForPoint(IntPoint point, uint64_t& index)
     if (!frame)
         return;
 
-    HitTestResult result = frame->eventHandler()->hitTestResultAtPoint(point);
-    frame = result.innerNonSharedNode() ? result.innerNodeFrame() : m_page->focusController()->focusedOrMainFrame();
+    HitTestResult result = frame->eventHandler().hitTestResultAtPoint(point);
+    frame = result.innerNonSharedNode() ? result.innerNodeFrame() : m_page->focusController().focusedOrMainFrame();
     
     RefPtr<Range> range = frame->rangeForPoint(result.roundedPointInInnerNodeFrame());
     if (!range)
@@ -430,7 +429,7 @@ PassRefPtr<Range> convertToRange(Frame* frame, NSRange nsrange)
     
 void WebPage::firstRectForCharacterRange(uint64_t location, uint64_t length, WebCore::IntRect& resultRect)
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     resultRect.setLocation(IntPoint(0, 0));
     resultRect.setSize(IntSize(0, 0));
     
@@ -493,8 +492,8 @@ void WebPage::performDictionaryLookupAtLocation(const FloatPoint& floatPoint)
 
     // Find the frame the point is over.
     IntPoint point = roundedIntPoint(floatPoint);
-    HitTestResult result = frame->eventHandler()->hitTestResultAtPoint(frame->view()->windowToContents(point));
-    frame = result.innerNonSharedNode() ? result.innerNonSharedNode()->document()->frame() : m_page->focusController()->focusedOrMainFrame();
+    HitTestResult result = frame->eventHandler().hitTestResultAtPoint(frame->view()->windowToContents(point));
+    frame = result.innerNonSharedNode() ? result.innerNonSharedNode()->document()->frame() : m_page->focusController().focusedOrMainFrame();
 
     IntPoint translatedPoint = frame->view()->windowToContents(point);
 
@@ -503,7 +502,7 @@ void WebPage::performDictionaryLookupAtLocation(const FloatPoint& floatPoint)
         return;
 
     VisiblePosition position = frame->visiblePositionForPoint(translatedPoint);
-    VisibleSelection selection = m_page->focusController()->focusedOrMainFrame()->selection()->selection();
+    VisibleSelection selection = m_page->focusController().focusedOrMainFrame()->selection()->selection();
     if (shouldUseSelection(position, selection)) {
         performDictionaryLookupForSelection(frame, selection);
         return;
@@ -628,7 +627,7 @@ bool WebPage::performNonEditingBehaviorForSelector(const String& selector, Keybo
 {
     // First give accessibility a chance to handle the event.
     Frame* frame = frameForEvent(event);
-    frame->eventHandler()->handleKeyboardSelectionMovementForAccessibility(event);
+    frame->eventHandler().handleKeyboardSelectionMovementForAccessibility(event);
     if (event->defaultHandled())
         return true;
 
@@ -685,7 +684,7 @@ void WebPage::registerUIProcessAccessibilityTokens(const CoreIPC::DataReference&
 
 void WebPage::readSelectionFromPasteboard(const String& pasteboardName, bool& result)
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     if (!frame || frame->selection()->isNone()) {
         result = false;
         return;
@@ -696,7 +695,7 @@ void WebPage::readSelectionFromPasteboard(const String& pasteboardName, bool& re
 
 void WebPage::getStringSelectionForPasteboard(String& stringValue)
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
 
     if (!frame)
         return;
@@ -717,7 +716,7 @@ void WebPage::getStringSelectionForPasteboard(String& stringValue)
 
 void WebPage::getDataSelectionForPasteboard(const String pasteboardType, SharedMemory::Handle& handle, uint64_t& size)
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     if (!frame || frame->selection()->isNone())
         return;
 
@@ -742,7 +741,7 @@ bool WebPage::platformHasLocalDataForURL(const WebCore::KURL& url)
     NSMutableURLRequest* request = [[NSMutableURLRequest alloc] initWithURL:url];
     [request setValue:(NSString*)userAgent() forHTTPHeaderField:@"User-Agent"];
     NSCachedURLResponse *cachedResponse;
-    if (CFURLStorageSessionRef storageSession = corePage()->mainFrame()->loader()->networkingContext()->storageSession().platformSession())
+    if (CFURLStorageSessionRef storageSession = corePage()->mainFrame()->loader().networkingContext()->storageSession().platformSession())
         cachedResponse = WKCachedResponseForRequest(storageSession, request);
     else
         cachedResponse = [[NSURLCache sharedURLCache] cachedResponseForRequest:request];
@@ -756,7 +755,7 @@ static NSCachedURLResponse *cachedResponseForURL(WebPage* webPage, const KURL& u
     RetainPtr<NSMutableURLRequest> request = adoptNS([[NSMutableURLRequest alloc] initWithURL:url]);
     [request.get() setValue:(NSString *)webPage->userAgent() forHTTPHeaderField:@"User-Agent"];
 
-    if (CFURLStorageSessionRef storageSession = webPage->corePage()->mainFrame()->loader()->networkingContext()->storageSession().platformSession())
+    if (CFURLStorageSessionRef storageSession = webPage->corePage()->mainFrame()->loader().networkingContext()->storageSession().platformSession())
         return WKCachedResponseForRequest(storageSession, request.get());
 
     return [[NSURLCache sharedURLCache] cachedResponseForRequest:request.get()];
@@ -789,29 +788,29 @@ bool WebPage::platformCanHandleRequest(const WebCore::ResourceRequest& request)
 void WebPage::shouldDelayWindowOrderingEvent(const WebKit::WebMouseEvent& event, bool& result)
 {
     result = false;
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     if (!frame)
         return;
 
 #if ENABLE(DRAG_SUPPORT)
-    HitTestResult hitResult = frame->eventHandler()->hitTestResultAtPoint(frame->view()->windowToContents(event.position()), HitTestRequest::ReadOnly | HitTestRequest::Active);
+    HitTestResult hitResult = frame->eventHandler().hitTestResultAtPoint(frame->view()->windowToContents(event.position()), HitTestRequest::ReadOnly | HitTestRequest::Active);
     if (hitResult.isSelected())
-        result = frame->eventHandler()->eventMayStartDrag(platform(event));
+        result = frame->eventHandler().eventMayStartDrag(platform(event));
 #endif
 }
 
 void WebPage::acceptsFirstMouse(int eventNumber, const WebKit::WebMouseEvent& event, bool& result)
 {
     result = false;
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     if (!frame)
         return;
     
-    HitTestResult hitResult = frame->eventHandler()->hitTestResultAtPoint(frame->view()->windowToContents(event.position()), HitTestRequest::ReadOnly | HitTestRequest::Active);
-    frame->eventHandler()->setActivationEventNumber(eventNumber);
+    HitTestResult hitResult = frame->eventHandler().hitTestResultAtPoint(frame->view()->windowToContents(event.position()), HitTestRequest::ReadOnly | HitTestRequest::Active);
+    frame->eventHandler().setActivationEventNumber(eventNumber);
 #if ENABLE(DRAG_SUPPORT)
     if (hitResult.isSelected())
-        result = frame->eventHandler()->eventMayStartDrag(platform(event));
+        result = frame->eventHandler().eventMayStartDrag(platform(event));
     else
 #endif
         result = !!hitResult.scrollbar();

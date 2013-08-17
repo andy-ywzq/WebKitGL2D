@@ -499,31 +499,19 @@ set(WebCore_IDL_FILES
     html/ValidityState.idl
     html/VoidCallback.idl
 
-    html/canvas/ArrayBuffer.idl
-    html/canvas/ArrayBufferView.idl
     html/canvas/CanvasGradient.idl
     html/canvas/CanvasPattern.idl
     html/canvas/CanvasProxy.idl
     html/canvas/CanvasRenderingContext2D.idl
     html/canvas/CanvasRenderingContext.idl
-    html/canvas/DataView.idl
     html/canvas/DOMPath.idl
     html/canvas/EXTDrawBuffers.idl
     html/canvas/EXTTextureFilterAnisotropic.idl
-    html/canvas/Float32Array.idl
-    html/canvas/Float64Array.idl
-    html/canvas/Int16Array.idl
-    html/canvas/Int32Array.idl
-    html/canvas/Int8Array.idl
     html/canvas/OESStandardDerivatives.idl
     html/canvas/OESTextureFloat.idl
     html/canvas/OESTextureHalfFloat.idl
     html/canvas/OESVertexArrayObject.idl
     html/canvas/OESElementIndexUint.idl
-    html/canvas/Uint16Array.idl
-    html/canvas/Uint32Array.idl
-    html/canvas/Uint8Array.idl
-    html/canvas/Uint8ClampedArray.idl
     html/canvas/WebGLActiveInfo.idl
     html/canvas/WebGLBuffer.idl
     html/canvas/WebGLCompressedTextureATC.idl
@@ -1020,6 +1008,7 @@ set(WebCore_SOURCES
     css/CSSCrossfadeValue.cpp
     css/CSSCursorImageValue.cpp
     css/CSSDefaultStyleSheets.cpp
+    css/CSSFilterImageValue.cpp
     css/CSSFontFace.cpp
     css/CSSFontFaceLoadEvent.cpp
     css/CSSFontFaceRule.cpp
@@ -1166,7 +1155,6 @@ set(WebCore_SOURCES
     dom/DocumentType.cpp
     dom/Element.cpp
     dom/ElementRareData.cpp
-    dom/ElementShadow.cpp
     dom/EntityReference.cpp
     dom/ErrorEvent.cpp
     dom/Event.cpp
@@ -1499,7 +1487,6 @@ set(WebCore_SOURCES
     html/canvas/CanvasRenderingContext.cpp
     html/canvas/CanvasRenderingContext2D.cpp
     html/canvas/CanvasStyle.cpp
-    html/canvas/DataView.cpp
     html/canvas/EXTDrawBuffers.cpp
     html/canvas/EXTTextureFilterAnisotropic.cpp
     html/canvas/OESStandardDerivatives.cpp
@@ -1920,7 +1907,9 @@ set(WebCore_SOURCES
     platform/graphics/Image.cpp
     platform/graphics/ImageBuffer.cpp
     platform/graphics/ImageOrientation.cpp
+    platform/graphics/IntPoint.cpp
     platform/graphics/IntRect.cpp
+    platform/graphics/IntSize.cpp
     platform/graphics/MediaPlayer.cpp
     platform/graphics/Path.cpp
     platform/graphics/PathTraversalState.cpp
@@ -2222,6 +2211,7 @@ set(WebCore_SOURCES
     rendering/mathml/RenderMathMLUnderOver.cpp
 
     rendering/shapes/PolygonShape.cpp
+    rendering/shapes/RasterShape.cpp
     rendering/shapes/RectangleShape.cpp
     rendering/shapes/Shape.cpp
     rendering/shapes/ShapeInfo.cpp
@@ -2854,25 +2844,9 @@ if (WTF_USE_3D_GRAPHICS)
         list(APPEND WebCore_LIBRARIES ${OPENGL_gl_LIBRARY})
     endif ()
 
-    if (BISON_VERSION EQUAL "2.5" OR NOT (BISON_VERSION LESS "3.0"))
-        # Bison 2.5 can not compile generated glslang.
-        # See https://bugs.webkit.org/show_bug.cgi?id=93487
-        #
-        # With Bison 3.0 or greater the generated glslang will not compile.
-        # See https://bugs.webkit.org/show_bug.cgi?id=119373
-        # Use already generated glslang.
-        list(APPEND ANGLESupport_SOURCES
-            ${THIRDPARTY_DIR}/ANGLE/src/compiler/glslang_lex.cpp
-            ${THIRDPARTY_DIR}/ANGLE/src/compiler/glslang_tab.cpp
-        )
-    else ()
-        list(APPEND ANGLESupport_SOURCES
-            ${DERIVED_SOURCES_WEBCORE_DIR}/glslang.cpp
-            ${DERIVED_SOURCES_WEBCORE_DIR}/glslang_tab.cpp
-        )
-    endif ()
-
     list(APPEND ANGLESupport_SOURCES
+        ${DERIVED_SOURCES_WEBCORE_DIR}/glslang.cpp
+        ${DERIVED_SOURCES_WEBCORE_DIR}/glslang_tab.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/BuiltInFunctionEmulator.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/CodeGenGLSL.cpp
         ${THIRDPARTY_DIR}/ANGLE/src/compiler/Compiler.cpp

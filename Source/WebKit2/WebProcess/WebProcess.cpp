@@ -344,6 +344,9 @@ void WebProcess::initializeWebProcess(const WebProcessCreationParameters& parame
     WebFrameNetworkingContext::setPrivateBrowsingStorageSessionIdentifierBase(parameters.uiProcessBundleIdentifier);
 #endif
 
+    if (parameters.shouldUseTestingNetworkSession)
+        NetworkStorageSession::switchToNewTestingSession();
+
 #if ENABLE(NETWORK_PROCESS)
     m_usesNetworkProcess = parameters.usesNetworkProcess;
     ensureNetworkProcessConnection();
@@ -1083,7 +1086,7 @@ void WebProcess::downloadRequest(uint64_t downloadID, uint64_t initiatingPageID,
 
     ResourceRequest requestWithOriginalURL = request;
     if (initiatingPage)
-        initiatingPage->mainFrame()->loader()->setOriginalURLForDownloadRequest(requestWithOriginalURL);
+        initiatingPage->mainFrame()->loader().setOriginalURLForDownloadRequest(requestWithOriginalURL);
 
     downloadManager().startDownload(downloadID, requestWithOriginalURL);
 }

@@ -1,3 +1,2197 @@
+2013-08-16  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Update RenderMediaControls for new API
+        https://bugs.webkit.org/show_bug.cgi?id=119910
+
+        Reviewed by Eric Carlson.
+
+        * rendering/RenderMediaControls.cpp: Update calls to WebKitSystemInterface for
+        the changed API.
+
+2013-08-16  Arunprasad Rajkumar  <arurajku@cisco.com>
+
+        <https://webkit.org/b/119912> Fix WebKit build error when SVG is disabled(broken since r154174)
+
+        Reviewed by Simon Fraser.
+
+        No new tests required, just a build fix.
+
+        Since r154174 CSS keywords alpha and luminance used by -webkit-mask-source-type. Move those
+        keywords from SVGCSSValueKeywords.in to CSSValueKeywords.in.
+
+        * css/CSSValueKeywords.in:
+        * css/SVGCSSValueKeywords.in:
+
+2013-08-16  Arunprasad Rajkumar  <arurajku@cisco.com>
+
+        <https://webkit.org/b/119785> Replace currentTime() with monotonicallyIncreasingTime() in WebCore
+
+        Reviewed by Alexey Proskuryakov.
+
+        WTF::currentTime() is prone to DST changes and NTP adjustments, so use
+        WTF::monotonicallyIncreasingTime() to measure elapsed time.
+        
+        * Modules/filesystem/FileWriter.cpp:
+        (WebCore::FileWriter::didWrite):
+        * dom/Document.cpp:
+        (WebCore::Document::Document):
+        (WebCore::Document::elapsedTime):
+        (WebCore::Document::resetLastHandledUserGestureTimestamp):
+        * dom/Element.cpp:
+        (WebCore::Element::setActive):
+        * fileapi/FileReader.cpp:
+        (WebCore::FileReader::didReceiveData):
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::HTMLMediaElement):
+        (WebCore::HTMLMediaElement::startProgressEventTimer):
+        (WebCore::HTMLMediaElement::progressEventTimerFired):
+        (WebCore::HTMLMediaElement::refreshCachedTime):
+        (WebCore::HTMLMediaElement::invalidateCachedTime):
+        (WebCore::HTMLMediaElement::currentTime):
+        (WebCore::HTMLMediaElement::startPlaybackProgressTimer):
+        (WebCore::HTMLMediaElement::scheduleTimeupdateEvent):
+        * html/HTMLMediaElement.h:
+        * html/HTMLPlugInImageElement.cpp:
+        (WebCore::documentHadRecentUserGesture):
+        * html/MediaController.cpp:
+        (MediaController::scheduleTimeupdateEvent):
+        * html/parser/HTMLDocumentParser.cpp:
+        (WebCore::HTMLDocumentParser::pumpPendingSpeculations):
+        * html/parser/HTMLParserScheduler.h:
+        (WebCore::HTMLParserScheduler::checkForYieldBeforeToken):
+        * inspector/InspectorCSSAgent.cpp:
+        (WebCore::SelectorProfile::SelectorProfile):
+        (WebCore::SelectorProfile::totalMatchingTimeMs):
+        (WebCore::SelectorProfile::startSelector):
+        (WebCore::SelectorProfile::commitSelector):
+        (WebCore::SelectorProfile::commitSelectorTime):
+        * inspector/InspectorProfilerAgent.cpp:
+        (WebCore::InspectorProfilerAgent::willProcessTask):
+        (WebCore::InspectorProfilerAgent::didProcessTask):
+        * inspector/InspectorTimelineAgent.cpp:
+        (WebCore::InspectorTimelineAgent::timestamp):
+        * inspector/TimelineTraceEventProcessor.cpp:
+        (WebCore::TimelineTraceEventProcessor::processEventOnAnyThread):
+        * page/FrameView.cpp:
+        (WebCore::FrameView::adjustedDeferredRepaintDelay):
+        (WebCore::FrameView::paintContents):
+        * platform/ClockGeneric.cpp:
+        (ClockGeneric::now):
+        * platform/ScrollAnimatorNone.cpp:
+        (WebCore::ScrollAnimatorNone::scroll):
+        (WebCore::ScrollAnimatorNone::animationTimerFired):
+        * platform/graphics/cg/ImageBufferCG.cpp:
+        (WebCore::ImageBuffer::ImageBuffer):
+        (WebCore::ImageBuffer::flushContextIfNecessary):
+        (WebCore::ImageBuffer::flushContext):
+        (WebCore::ImageBuffer::copyNativeImage):
+
+2013-08-16  peavo@outlook.com  <peavo@outlook.com>
+
+        <https://webkit.org/b/119891> [WinCairo] Compile error.
+
+        Reviewed by Brent Fulgham.
+
+        * rendering/FlowThreadController.cpp: Need USE(ACCELERATED_COMPOSITING) guard.
+        * rendering/FlowThreadController.h: Need USE(ACCELERATED_COMPOSITING) guard.
+
+2013-08-16  Zan Dobersek  <zdobersek@igalia.com>
+
+        <https://webkit.org/b/119887> [Soup] The testing NetworkStorageSession should have a proper SoupSession
+
+        Reviewed by Martin Robinson.
+
+        After r154144, a testing NetworkStorageSession is enforced when running the layout tests
+        through WebKitTestRunner. Ports using the Soup networking backend don't assign any SoupSession
+        objects to such NetworkStorageSession objects as it's usually the case. This is causing problems
+        as the ResourceHandleInternal uses the SoupSession that's provided by the NetworkingContext's
+        NetworkStorageSession, which ends up being null if the testing-specific NetworkStorageSession is used.
+        As a result, all the layout tests are crashing under WKTR.
+
+        * platform/network/NetworkStorageSession.h: Make the SoupSession member a GRefPtr.
+        (WebCore::NetworkStorageSession::soupSession): Return the GRefPtr's pointer.
+        * platform/network/ResourceHandle.h: Declare the new createTestingSession method.
+        * platform/network/soup/CookieJarSoup.cpp: 
+        (WebCore::cookieJarForSession): Instead of returning the default SoupCookieJar when there's no SoupSession
+        provided by the NetworkStorageSession, assert that there now always is one, and return the session's cookie
+        jar. For testing NetworkStorageSession objects, their SoupSession objects will always use the default cookie jar.
+        * platform/network/soup/NetworkStorageSessionSoup.cpp:
+        (WebCore::NetworkStorageSession::NetworkStorageSession): Adopt the given SoupSession reference pointer.
+        (WebCore::NetworkStorageSession::switchToNewTestingSession): Use a newly-created, testing-specific SoupSession.
+        * platform/network/soup/ResourceHandleSoup.cpp:
+        (WebCore::ResourceHandle::createTestingSession): Define the new createTestingSession method. It creates a new
+        SoupSession through createSoupSession, but uses the default SoupCookieJar, as provided by WebCore::soupCookieJar.
+
+2013-08-16  Pratik Solanki  <psolanki@apple.com>
+
+        <https://webkit.org/b/119852> Frame::scriptController() should return a reference
+
+        Reviewed by Andreas Kling.
+
+        m_script is never NULL so we can just return a reference. Also remove some pointless null
+        checks as a result of doing this.
+
+        * Modules/websockets/WebSocket.cpp:
+        (WebCore::WebSocket::connect):
+        * bindings/js/JSDOMWindowBase.cpp:
+        (WebCore::toJS):
+        (WebCore::toJSDOMWindow):
+        * bindings/js/JSDOMWindowShell.cpp:
+        (WebCore::toJS):
+        (WebCore::toJSDOMWindowShell):
+        * bindings/js/JSEventListener.cpp:
+        (WebCore::JSEventListener::handleEvent):
+        * bindings/js/JSLazyEventListener.cpp:
+        (WebCore::JSLazyEventListener::initializeJSFunction):
+        * bindings/js/PageScriptDebugServer.cpp:
+        (WebCore::PageScriptDebugServer::setJavaScriptPaused):
+        * bindings/js/ScheduledAction.cpp:
+        (WebCore::ScheduledAction::execute):
+        * bindings/js/ScriptCachedFrameData.cpp:
+        (WebCore::ScriptCachedFrameData::ScriptCachedFrameData):
+        (WebCore::ScriptCachedFrameData::restore):
+        * bindings/js/ScriptEventListener.cpp:
+        (WebCore::createAttributeEventListener):
+        (WebCore::eventListenerHandlerScriptState):
+        * bindings/js/ScriptState.cpp:
+        (WebCore::mainWorldScriptState):
+        (WebCore::scriptStateFromNode):
+        (WebCore::scriptStateFromPage):
+        * bindings/objc/DOM.mm:
+        (-[DOMNode JSC::Bindings::]):
+        * bindings/objc/DOMInternal.mm:
+        (-[WebScriptObject _initializeScriptDOMNodeImp]):
+        * dom/Document.cpp:
+        (WebCore::Document::disableEval):
+        (WebCore::Document::ensurePlugInsInjectedScript):
+        * dom/ScriptElement.cpp:
+        (WebCore::ScriptElement::prepareScript):
+        (WebCore::ScriptElement::executeScript):
+        * history/CachedFrame.cpp:
+        (WebCore::CachedFrameBase::restore):
+        * html/HTMLCanvasElement.cpp:
+        (WebCore::HTMLCanvasElement::createRenderer):
+        * html/HTMLElement.cpp:
+        (WebCore::HTMLElement::rendererIsNeeded):
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::controls):
+        * html/HTMLPlugInElement.cpp:
+        (WebCore::HTMLPlugInElement::getInstance):
+        (WebCore::HTMLPlugInElement::getNPObject):
+        * html/HTMLPlugInImageElement.cpp:
+        (WebCore::HTMLPlugInImageElement::didAddUserAgentShadowRoot):
+        * html/parser/HTMLParserOptions.cpp:
+        (WebCore::HTMLParserOptions::HTMLParserOptions):
+        * inspector/InspectorAgent.cpp:
+        (WebCore::InspectorAgent::didClearWindowObjectInWorld):
+        * inspector/InspectorClient.cpp:
+        (WebCore::InspectorClient::doDispatchMessageOnFrontendPage):
+        * inspector/InspectorFrontendClientLocal.cpp:
+        (WebCore::InspectorFrontendClientLocal::evaluateAsBoolean):
+        (WebCore::InspectorFrontendClientLocal::evaluateOnLoad):
+        * inspector/InspectorOverlay.cpp:
+        (WebCore::InspectorOverlay::evaluateInOverlay):
+        * inspector/InspectorPageAgent.cpp:
+        (WebCore::InspectorPageAgent::getScriptExecutionStatus):
+        (WebCore::InspectorPageAgent::didClearWindowObjectInWorld):
+        * inspector/PageRuntimeAgent.cpp:
+        (WebCore::PageRuntimeAgent::reportExecutionContextCreation):
+        * loader/DocumentWriter.cpp:
+        (WebCore::DocumentWriter::begin):
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::urlSelected):
+        (WebCore::FrameLoader::submitForm):
+        (WebCore::FrameLoader::cancelAndClear):
+        (WebCore::FrameLoader::clear):
+        (WebCore::FrameLoader::prepareForCachedPageRestore):
+        (WebCore::FrameLoader::dispatchDidClearWindowObjectsInAllWorlds):
+        (WebCore::FrameLoader::dispatchDidClearWindowObjectInWorld):
+        * loader/SubframeLoader.cpp:
+        (WebCore::SubframeLoader::requestFrame):
+        * loader/cache/CachedResourceLoader.cpp:
+        (WebCore::CachedResourceLoader::canRequest):
+        * page/EventSource.cpp:
+        (WebCore::EventSource::create):
+        * page/Frame.cpp:
+        (WebCore::Frame::willDetachPage):
+        * page/Frame.h:
+        (WebCore::Frame::script):
+        * page/Navigator.cpp:
+        (WebCore::shouldHideFourDot):
+        * page/Page.cpp:
+        (WebCore::Page::setDebugger):
+        * platform/graphics/wince/MediaPlayerProxy.cpp:
+        (WebCore::WebMediaPlayerProxy::pluginInstance):
+        (WebCore::WebMediaPlayerProxy::invokeMethod):
+        * plugins/PluginView.cpp:
+        (WebCore::PluginView::~PluginView):
+        (WebCore::PluginView::performRequest):
+        (WebCore::PluginView::load):
+        (WebCore::PluginView::bindingInstance):
+        (WebCore::PluginView::getValue):
+        * plugins/efl/PluginViewEfl.cpp:
+        (WebCore::PluginView::platformGetValue):
+        * xml/XMLHttpRequest.cpp:
+        (WebCore::XMLHttpRequest::open):
+        * xml/XMLTreeViewer.cpp:
+        (WebCore::XMLTreeViewer::transformDocumentToTreeView):
+
+2013-08-16  Andreas Kling  <akling@apple.com>
+
+        Attempt to fix the Qt/MountainLion build after r154142.
+
+        * platform/graphics/qt/MediaPlayerPrivateQt.cpp:
+        (WebCore::MediaPlayerPrivateQt::commitLoad):
+
+2013-08-16  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Kerning in fast font path breaks letter-spacing
+        https://bugs.webkit.org/show_bug.cgi?id=119838
+
+        Reviewed by Jocelyn Turcotte.
+
+        Mark fonts with both kerning and letter-spacing as unsupported by the simple font-path.
+
+        Test: fast/text/letter-spacing-kerned.html
+
+        * platform/graphics/WidthIterator.h:
+        (WebCore::WidthIterator::supportsTypesettingFeatures):
+
+2013-08-16  Andreas Kling  <akling@apple.com>
+
+        <https://webkit.org/b/119893> FrameView::frame() should return a reference.
+
+        Reviewed by Antti Koivisto.
+
+        FrameView::m_frame was only ever null for a brief moment during CachedFrame teardown.
+        Leave it alone instead, and update the assertion that depended on this behavior.
+        This enables us to make FrameView::frame() return a Frame&, exposing a ton of
+        unnecessary null checks.
+
+        * history/CachedFrame.cpp:
+        (WebCore::CachedFrame::destroy):
+
+            Remove call to FrameView::clearFrame() that was the only way to get a null
+            FrameView::m_frame. Immediately followed by a call to CachedFrame::clear() where
+            the FrameView would get destroyed anyway.
+
+        (WebCore::CachedFrame::clear):
+
+            Update an assertion to support the case where the Document's Frame pointer has
+            been cleared out and CachedFrame is still clinging to the FrameView.
+
+        * history/CachedPage.h:
+
+            Made CachedPage::destroy() private as it was only called by ~CachedPage().
+
+        * /:
+
+            Frame* FrameView::frame() => Frame& FrameView::frame()
+
+2013-08-16  Brady Eidson  <beidson@apple.com>
+
+        (NetworkProcess)  Sync XHRs should load using async ResourceHandles, not ResourceHandle::loadResourceSynchronously
+        https://bugs.webkit.org/show_bug.cgi?id=119493
+
+        Reviewed by Alexey Proskuryakov.
+
+        No new tests (Covered by plenty of existing tests).
+
+        * WebCore.exp.in:
+        * WebCore.xcodeproj/project.pbxproj:
+
+        * platform/network/SynchronousLoaderClient.h: Make platformBadResponseError public
+
+        * platform/network/mac/ResourceHandleMac.mm:
+        (WebCore::ResourceHandle::platformLoadResourceSynchronously): Add comments/FIXMEs spelling out how wrong this code is.
+
+2013-08-16  peavo@outlook.com  <peavo@outlook.com>
+
+        <https://webkit.org/b/119889> [WinCairo] Compile error.
+
+        Reviewed by Brent Fulgham.
+
+        * platform/network/curl/ResourceHandleManager.cpp:
+        (WebCore::certificatePath): Use correct function name.
+
+2013-08-16  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build correction after r154165.
+
+        * WebCore.vcxproj/copyForwardingHeaders.cmd: Copy html/shadow header files
+        to WebKit include location.
+
+2013-08-15  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Prevent dangling CACFLayer when switching to/from Tiled backing.
+        https://bugs.webkit.org/show_bug.cgi?id=119818
+
+        Reviewed by Darin Adler.
+
+        Covered by existing: compositing/tiling/empty-to-tiled.html
+
+        * platform/graphics/ca/win/PlatformCALayerWin.cpp:
+        (PlatformCALayer::~PlatformCALayer): Remove deleted layer from its
+        parent layer 
+
+2013-08-16  Andreas Kling  <akling@apple.com>
+
+        <https://webkit.org/b/119866> Frame::eventHandler() should return a reference.
+
+        Reviewed by Anders Carlsson.
+
+        Frame::m_eventHandler is never null.
+
+2013-08-16  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r153749.
+        http://trac.webkit.org/changeset/153749
+        https://bugs.webkit.org/show_bug.cgi?id=119892
+
+        The bison generation of the glslang* files has now been fixed. (Requested by zdobersek on #webkit).
+
+        * GNUmakefile.am:
+
+2013-08-16  Danilo Cesar Lemes de Paula  <danilo.cesar@collabora.co.uk>
+
+        [GTK] fixing localizedString method name
+        https://bugs.webkit.org/show_bug.cgi?id=119884
+
+        The method name defined in LocalizedStringsGtk.cpp doesn't not match
+        the one used in LocalizedStrings.h
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * platform/gtk/LocalizedStringsGtk.cpp:
+        (WebCore::textTrackOffMenuItemText):
+
+2013-08-16  Andrei Parvu  <parvu@adobe.com>
+
+        [CSS Masking] Add -webkit-mask-source-type property, with auto, alpha and luminance values
+        https://bugs.webkit.org/show_bug.cgi?id=119614
+
+        Added the -webkit-mask-source-type property, which can have a value of auto, alpha or
+        luminance. The default value is auto. This patch contains only the parsing of the property,
+        not the actual implementation of the types of masks. The parsing of mask-source-type in the
+        -webkit-mask property will be handled in a separate patch.
+
+        Reviewed by Dirk Schulze.
+
+        Test: fast/masking/parsing-mask-source-type.html
+
+        * css/CSSComputedStyleDeclaration.cpp: Added case for CSSPropertyWebkitMaskType.
+        (WebCore::ComputedStyleExtractor::propertyValue):
+        * css/CSSParser.cpp: Parsed the values for CSSPropertyWebkitMaskType.
+        (WebCore::CSSParser::parseValue):
+        (WebCore::CSSParser::parseFillProperty):
+        * css/CSSProperty.cpp:
+        (WebCore::CSSProperty::isInheritedProperty):
+        * css/CSSPropertyNames.in: Added -webkit-mask-type property.
+        * css/CSSToStyleMap.cpp: map the provided mask type to the FillLayer class.
+        (WebCore::CSSToStyleMap::mapFillMaskType):
+        * css/CSSToStyleMap.h:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::applyProperty):
+        * rendering/style/FillLayer.cpp: Added the m_maskType property to the FillLayer class.
+        (WebCore::FillLayer::FillLayer):
+        (WebCore::FillLayer::operator=):
+        (WebCore::FillLayer::operator==):
+        * rendering/style/FillLayer.h: Added methods for working with m_maskType.
+        (WebCore::FillLayer::maskType):
+        (WebCore::FillLayer::isMaskTypeSet):
+        (WebCore::FillLayer::setMaskType):
+        (WebCore::FillLayer::clearMaskType):
+        (WebCore::FillLayer::initialMaskType):
+        * rendering/style/RenderStyleConstants.h: Added the EMaskSourceType enum.
+
+2013-08-16  Raphael Kubo da Costa  <raphael.kubo.da.costa@intel.com>
+
+        <https://webkit.org/b/119885> [CMake] Always build our generated versions of ANGLE's glslang.cpp and glslang_tab.cpp
+
+        Reviewed by Gyuyoung Kim.
+
+        Now that r154109 has landed, all Bison versions (at least from 2.3 up
+        to the latest 3.0) should be able to generate versions of glslang* that
+        build correctly.
+
+        Since the idea is to remove the prebuilt files from future imports of
+        ANGLE, always building our own versions is a good idea, and allows us
+        to get rid of some very ugly CMake checks.
+
+        * CMakeLists.txt: Always build glslang.cpp and glslang_tab.cpp from
+        DERIVED_SOURCES_WEBCORE_DIR.
+
+2013-08-16  Julien Brianceau  <jbrianceau@nds.com>
+
+        <https://webkit.org/b/119880> [Qt] Build fix (broken since r154142).
+
+        Reviewed by Gyuyoung Kim.
+
+        Since r154142, Frame::loader() is a reference (and not a pointer anymore).
+
+        * xml/parser/XMLDocumentParserQt.cpp:
+        (WebCore::XMLDocumentParser::parseStartElement):
+
+2013-08-16  Przemyslaw Szymanski  <p.szymanski3@samsung.com>
+
+        [WebGL] Vertex attribute binding validation method
+        https://bugs.webkit.org/show_bug.cgi?id=119515
+
+        This patch refactors WebGLRenderingContext code by moving the vertex
+        attribute binding validation to a separate method. It is now
+        possible to use that validation in other parts of the code. The
+        code is more clear now. 
+
+        Reviewed by Christophe Dumez.
+
+        No new tests. Covered by existing tests. No behaviour changed.
+        LayoutTests/webgl/resources/webgl_test_files/conformance/rendering/gl-drawelements.html
+        LayoutTests/webgl/resources/webgl_test_files/conformance/rendering/draw-elements-out-of-bounds.html
+        LayoutTests/webgl/resources/webgl_test_files/conformance/rendering/draw-arrays-out-of-bounds.html
+
+        * html/canvas/WebGLRenderingContext.cpp:
+        (WebCore::WebGLRenderingContext::validateVertexAttributes):
+        * html/canvas/WebGLVertexArrayObjectOES.h:
+        (WebCore::WebGLVertexArrayObjectOES::VertexAttribState::isBound):
+        (WebCore::WebGLVertexArrayObjectOES::VertexAttribState::validateBinding):
+
+2013-08-15  Antti Koivisto  <antti@apple.com>
+
+        <https://webkit.org/b/119865> Parent pointer and shadow root host pointer should not be shared
+
+        Reviewed by Andreas Kling.
+
+        Node::m_parentOrShadowHostNode is currently used both as the parent pointer for regular nodes and as the host
+        pointer for ShadowRoots. This is confusing. It is also slow as it introduces a branch to all code paths that 
+        want to traverse ancestors normally, without leaving the shadow trees. This is much more popular than
+        traversing through.
+        
+        This patch makes the Node have a pure parent pointer only and adds the host element pointer as a separate
+        member in ShadowRoot. This eliminates the ShadowRoot test branch from Node::parentNode() as the pointer is
+        now always null in the root node.
+        
+        ShadowRoot grows by a pointer. This is not significant as there are few ShadowRoots compared to Nodes.
+
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::pushParentShadowRoot):
+        (WebCore::StyleResolver::popParentShadowRoot):
+        * dom/Attr.cpp:
+        (WebCore::Attr::createTextChild):
+        * dom/ComposedShadowTreeWalker.cpp:
+        (WebCore::ComposedShadowTreeWalker::traverseParentBackToShadowRootOrHost):
+        * dom/ContainerNode.cpp:
+        (WebCore::ContainerNode::insertBeforeCommon):
+        (WebCore::ContainerNode::removeBetween):
+        * dom/ContainerNodeAlgorithms.cpp:
+        (WebCore::ChildNodeInsertionNotifier::notifyDescendantInsertedIntoDocument):
+        (WebCore::ChildNodeRemovalNotifier::notifyDescendantRemovedFromDocument):
+        * dom/ContainerNodeAlgorithms.h:
+        (WebCore::appendChildToContainer):
+        (WebCore::Private::addChildNodesToDeletionQueue):
+        * dom/Document.h:
+        (WebCore::Node::Node):
+        * dom/Element.cpp:
+        (WebCore::Element::addShadowRoot):
+        (WebCore::Element::removeShadowRoot):
+        * dom/ElementRareData.h:
+        (WebCore::ElementRareData::releasePseudoElement):
+        * dom/EventPathWalker.cpp:
+        (WebCore::EventPathWalker::moveToParent):
+        * dom/EventRetargeter.cpp:
+        (WebCore::determineDispatchBehavior):
+        * dom/EventRetargeter.h:
+        (WebCore::EventRetargeter::eventTargetRespectingTargetRules):
+        * dom/Node.cpp:
+        (WebCore::Node::shadowHost):
+        (WebCore::Node::deprecatedShadowAncestorNode):
+        (WebCore::Node::parentOrShadowHostElement):
+        * dom/Node.h:
+        (WebCore::Node::hasTreeSharedParent):
+        
+            Shadow host elements refs the ShadowRoot. There is no reason to use TreeShared to keep it alive.
+
+        (WebCore::Node::setParentNode):
+        (WebCore::Node::parentNode):
+        (WebCore::Node::parentNodeGuaranteedHostFree):
+        * dom/PseudoElement.cpp:
+        (WebCore::PseudoElement::PseudoElement):
+        * dom/ShadowRoot.cpp:
+        (WebCore::ShadowRoot::ShadowRoot):
+        (WebCore::ShadowRoot::setInnerHTML):
+        (WebCore::ShadowRoot::setApplyAuthorStyles):
+        (WebCore::ShadowRoot::setResetStyleInheritance):
+        * dom/ShadowRoot.h:
+        
+            Rename host() -> hostElement() for clarity.
+
+        (WebCore::Node::parentOrShadowHostNode):
+        * dom/Text.cpp:
+        (WebCore::isSVGShadowText):
+        * dom/TreeScope.cpp:
+        (WebCore::TreeScope::focusedElement):
+        * html/shadow/ContentDistributor.cpp:
+        (WebCore::ContentDistributor::ensureDistribution):
+        * html/shadow/InsertionPoint.cpp:
+        (WebCore::InsertionPoint::insertedInto):
+        (WebCore::InsertionPoint::removedFrom):
+        (WebCore::InsertionPoint::parseAttribute):
+        * page/DragController.cpp:
+        (WebCore::asFileInput):
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::handleMousePressEvent):
+        (WebCore::instanceAssociatedWithShadowTreeElement):
+        * page/FocusController.cpp:
+        (WebCore::FocusNavigationScope::owner):
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::hasLineIfEmpty):
+        * rendering/RenderLayer.cpp:
+        (WebCore::rendererForScrollbar):
+        * svg/SVGElementInstance.h:
+        (WebCore::SVGElementInstance::setParentNode):
+            
+            Renamed so it works with appendChildToContainer template.
+
+        * svg/SVGStyledElement.cpp:
+        (WebCore::SVGStyledElement::title):
+
+2013-08-13  Darin Adler  <darin@apple.com>
+
+        [iOS] Get iOS port off legacy clipboard
+        https://bugs.webkit.org/show_bug.cgi?id=116412
+
+        Reviewed by Daniel Bates.
+
+        * dom/Clipboard.h: Turn off legacy style clipboard for iOS.
+        Next patch will be able to remove legacy style entirely!
+
+        * editing/Editor.cpp:
+        (WebCore::Editor::dispatchCPPEvent): Attach the frame to the
+        pasteboard directly explicitly. This is a layering violation, but
+        is needed until we change how iOS pasteboard communicates with the
+        host to use platform strategies instead of the editor client.
+
+        * editing/ios/EditorIOS.mm: Removed Editor::newGeneralClipboard and
+        the include of ClipboardIOS.h.
+
+        * platform/Pasteboard.h: Added the setFrame function (iOS-only) and
+        frame and change count data members.
+
+        * platform/ios/ClipboardIOS.h: Emptied out. Later we can remove this.
+        * platform/ios/ClipboardIOS.mm: Ditto.
+
+        * platform/ios/PasteboardIOS.mm:
+        (WebCore::Pasteboard::Pasteboard): Initialize m_frame to zero.
+        (WebCore::Pasteboard::createForCopyAndPaste): Added.
+        (WebCore::Pasteboard::createPrivate): Added.
+        (WebCore::Pasteboard::writePasteboard): Added. Empty function, like
+        writeClipboard. Eventually need to remove or implement this.
+        (WebCore::Pasteboard::setFrame): Added. Sets frame and change count.
+        (WebCore::Pasteboard::hasData): Moved here from ClipboardIOS.
+        (WebCore::utiTypeFromCocoaType): Ditto.
+        (WebCore::cocoaTypeFromHTMLClipboardType): Ditto.
+        (WebCore::Pasteboard::clear): Ditto.
+        (WebCore::Pasteboard::readString): Ditto.
+        (WebCore::addHTMLClipboardTypesForCocoaType): Ditto.
+        (WebCore::Pasteboard::writeString): Ditto.
+        (WebCore::Pasteboard::types): Ditto.
+        (WebCore::Pasteboard::readFilenames): Ditto.
+
+        * WebCore.exp.in: Move Clipboard destructor from Mac-only section to
+        common section shared by Mac and iOS.
+
+2013-08-15  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL] Unreviewed build fix after r154142 and r154144.
+
+        * platform/efl/ErrorsEfl.cpp: Follow the changes of r154142.
+        (WebCore::printError):
+        (WebCore::printerNotFoundError):
+        (WebCore::invalidPageRangeToPrint):
+
+2013-08-15  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Shapes] Add support for shape-outside image values
+        https://bugs.webkit.org/show_bug.cgi?id=119809
+
+        Added minimal support for shape-outside image values. A new method that computes
+        the excluded intervals for a horizontal line segment was added to the RasterIntervals
+        class. The stub RasterShape getExcludedIntervals() method has been replaced by
+        one that uses the new method.
+
+        Image shapes are represented by a RasterIntervals object, which just encapsulates a
+        Region object. The new getExcludedIntervals() method computes the excluded intervals
+        for a horizontal line segment between y1 and y2. To find the excluded intervals we
+        vertically expand each of the image shape Region's rectangles that fall within the line
+        segment, so that they begin at y1 and have height = y2 - y1. The union of the expanded
+        rectangles produces a new Region whose horizontal projection defines the excluded intervals.
+
+        Reviewed by Alexandru Chiculita.
+
+        Tests: fast/shapes/shape-outside-floats/shape-outside-floats-image-001.html
+               fast/shapes/shape-outside-floats/shape-outside-floats-image-002.html
+
+        * rendering/shapes/RasterShape.cpp:
+        (WebCore::RasterShapeIntervals::getExcludedIntervals): See above.
+        (WebCore::RasterShape::getExcludedIntervals): Stub method has been replaced by one that uses RasterShapeIntervals::getExcludedIntervals().
+        * rendering/shapes/RasterShape.h:
+        * rendering/shapes/ShapeOutsideInfo.cpp:
+        (WebCore::ShapeOutsideInfo::isEnabledFor): Enable Image valued shapes.
+
+2013-08-15  Simon Fraser  <simon.fraser@apple.com>
+
+        <https://webkit.org/b/119871> Flash of garbage pixels when playing a show on Hulu
+
+        Reviewed by Tim Horton.
+        
+        When starting a show on Hulu, there's a layer that gets marked as
+        opaque because it has a child RenderLayer whose background fills the
+        compositing layer. That child RenderLayer was recently position:fixed
+        but outside the viewport, so its viewportConstrainedNotCompositedReason
+        was set to a non-zero value.
+        
+        However, we failed to clear the viewportConstrainedNotCompositedReason
+        when the layer became non-fixed. This caused painting the opaque
+        layer to bail in RenderLayer::paintLayer(), leaving garbage.
+
+        Test: compositing/contents-opaque/fixed-to-nonfixed.html
+
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::paintLayer): Add an assertion to catch this error in future.
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::RenderLayerCompositor::updateBacking): Make sure we clear the
+        ViewportConstrainedNotCompositedReason if the layer is no longer fixed.
+
+2013-08-15  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Consolidate WebKit Bundle Handling
+        https://bugs.webkit.org/show_bug.cgi?id=119869
+
+        Reviewed by Tim Horton.
+
+        * WebCore.vcxproj/WebCore.vcxproj: Add new WebCoreBundleWin files.
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Ditto.
+        * platform/network/curl/ResourceHandleManager.cpp:
+        (WebCore::certificatePath): Use correct bundle handling logic.
+        * platform/win/LocalizedStringsWin.cpp: Move bundle implementation to
+        new WebCoreBundleWin.cpp file.
+        * platform/win/WebCoreBundleWin.cpp: Added.
+        (WebCore::createWebKitBundle):
+        (WebCore::webKitBundle):
+        * platform/win/WebCoreBundleWin.h: Added.
+
+2013-08-15  Anders Carlsson  <andersca@apple.com>
+
+        <https://webkit.org/b/119859> Frame::loader() should return a reference
+
+        Reviewed by Andreas Kling.
+
+        * Modules/websockets/WebSocketChannel.cpp:
+        (WebCore::WebSocketChannel::willOpenSocketStream):
+        * WebCore.xcodeproj/project.pbxproj:
+        * accessibility/AccessibilityObject.cpp:
+        (WebCore::AccessibilityObject::press):
+        * accessibility/mac/WebAccessibilityObjectWrapperMac.mm:
+        (-[WebAccessibilityObjectWrapper remoteAccessibilityParentObject]):
+        * bindings/ScriptControllerBase.cpp:
+        (WebCore::ScriptController::canExecuteScripts):
+        * bindings/js/ScriptController.cpp:
+        (WebCore::ScriptController::initScript):
+        * css/CSSFontSelector.cpp:
+        (WebCore::CSSFontSelector::beginLoadTimerFired):
+        * dom/DOMImplementation.cpp:
+        (WebCore::DOMImplementation::createDocument):
+        * dom/Document.cpp:
+        (WebCore::Document::Document):
+        (WebCore::Document::setVisualUpdatesAllowed):
+        (WebCore::Document::updateTitle):
+        (WebCore::Document::open):
+        (WebCore::Document::explicitClose):
+        (WebCore::Document::implicitClose):
+        (WebCore::Document::userAgent):
+        (WebCore::Document::canNavigate):
+        (WebCore::Document::processHttpEquiv):
+        (WebCore::Document::referrer):
+        (WebCore::Document::documentDidResumeFromPageCache):
+        (WebCore::Document::openSearchDescriptionURL):
+        (WebCore::Document::finishedParsing):
+        (WebCore::Document::addIconURL):
+        (WebCore::Document::initSecurityContext):
+        (WebCore::Document::updateURLForPushOrReplaceState):
+        (WebCore::Document::loadEventDelayTimerFired):
+        (WebCore::Document::loader):
+        (WebCore::Document::decrementActiveParserCount):
+        * history/CachedFrame.cpp:
+        (WebCore::CachedFrameBase::CachedFrameBase):
+        (WebCore::CachedFrameBase::restore):
+        (WebCore::CachedFrame::CachedFrame):
+        (WebCore::CachedFrame::open):
+        (WebCore::CachedFrame::destroy):
+        * history/PageCache.cpp:
+        (WebCore::logCanCacheFrameDecision):
+        (WebCore::logCanCachePageDecision):
+        (WebCore::PageCache::canCachePageContainingThisFrame):
+        (WebCore::PageCache::canCache):
+        * html/HTMLAnchorElement.cpp:
+        (WebCore::HTMLAnchorElement::handleClick):
+        * html/HTMLAppletElement.cpp:
+        (WebCore::HTMLAppletElement::updateWidget):
+        * html/HTMLElement.cpp:
+        (WebCore::HTMLElement::rendererIsNeeded):
+        * html/HTMLEmbedElement.cpp:
+        (WebCore::HTMLEmbedElement::updateWidget):
+        * html/HTMLFormElement.cpp:
+        (WebCore::HTMLFormElement::prepareForSubmission):
+        (WebCore::HTMLFormElement::submit):
+        * html/HTMLFrameElementBase.cpp:
+        (WebCore::HTMLFrameElementBase::openURL):
+        * html/HTMLFrameOwnerElement.cpp:
+        (WebCore::HTMLFrameOwnerElement::disconnectContentFrame):
+        * html/HTMLFrameSetElement.cpp:
+        (WebCore::HTMLFrameSetElement::insertedInto):
+        (WebCore::HTMLFrameSetElement::removedFrom):
+        * html/HTMLHtmlElement.cpp:
+        (WebCore::HTMLHtmlElement::insertedByParser):
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::createRenderer):
+        (WebCore::HTMLMediaElement::attach):
+        (WebCore::HTMLMediaElement::loadResource):
+        (WebCore::HTMLMediaElement::getPluginProxyParams):
+        (WebCore::HTMLMediaElement::createMediaPlayerProxy):
+        (WebCore::HTMLMediaElement::updateWidget):
+        (WebCore::HTMLMediaElement::mediaPlayerReferrer):
+        (WebCore::HTMLMediaElement::mediaPlayerUserAgent):
+        * html/HTMLObjectElement.cpp:
+        (WebCore::HTMLObjectElement::parametersForPlugin):
+        (WebCore::HTMLObjectElement::updateWidget):
+        * html/HTMLPlugInImageElement.cpp:
+        (WebCore::HTMLPlugInImageElement::isImageType):
+        (WebCore::HTMLPlugInImageElement::wouldLoadAsNetscapePlugin):
+        (WebCore::HTMLPlugInImageElement::restartSimilarPlugIns):
+        * html/HTMLVideoElement.cpp:
+        (WebCore::HTMLVideoElement::setDisplayMode):
+        * html/ImageDocument.cpp:
+        (WebCore::ImageDocumentParser::appendBytes):
+        (WebCore::ImageDocumentParser::finish):
+        (WebCore::ImageDocument::createDocumentStructure):
+        * html/MediaDocument.cpp:
+        (WebCore::MediaDocumentParser::createDocumentStructure):
+        * html/PluginDocument.cpp:
+        (WebCore::PluginDocumentParser::createDocumentStructure):
+        (WebCore::PluginDocumentParser::appendBytes):
+        (WebCore::PluginDocument::detach):
+        (WebCore::PluginDocument::cancelManualPluginLoad):
+        * html/canvas/WebGLRenderingContext.cpp:
+        (WebCore::WebGLRenderingContext::create):
+        (WebCore::WebGLRenderingContext::loseContextImpl):
+        (WebCore::WebGLRenderingContext::maybeRestoreContext):
+        * html/parser/HTMLConstructionSite.cpp:
+        (WebCore::HTMLConstructionSite::dispatchDocumentElementAvailableIfNeeded):
+        (WebCore::HTMLConstructionSite::insertHTMLBodyElement):
+        * html/parser/HTMLParserOptions.cpp:
+        (WebCore::HTMLParserOptions::HTMLParserOptions):
+        * html/parser/XSSAuditor.cpp:
+        (WebCore::XSSAuditor::init):
+        * html/parser/XSSAuditorDelegate.cpp:
+        (WebCore::XSSAuditorDelegate::generateViolationReport):
+        (WebCore::XSSAuditorDelegate::didBlockScript):
+        * inspector/InspectorApplicationCacheAgent.cpp:
+        (WebCore::InspectorApplicationCacheAgent::updateApplicationCacheStatus):
+        (WebCore::InspectorApplicationCacheAgent::getFramesWithManifests):
+        * inspector/InspectorFrontendClientLocal.cpp:
+        (WebCore::InspectorFrontendClientLocal::openInNewTab):
+        * inspector/InspectorFrontendHost.cpp:
+        (WebCore::InspectorFrontendHost::loadResourceSynchronously):
+        * inspector/InspectorOverlay.cpp:
+        (WebCore::InspectorOverlay::overlayPage):
+        * inspector/InspectorPageAgent.cpp:
+        (WebCore::InspectorPageAgent::mainResourceContent):
+        (WebCore::InspectorPageAgent::reload):
+        (WebCore::InspectorPageAgent::navigate):
+        (WebCore::allResourcesURLsForFrame):
+        (WebCore::InspectorPageAgent::searchInResource):
+        (WebCore::InspectorPageAgent::assertDocumentLoader):
+        (WebCore::InspectorPageAgent::buildObjectForFrame):
+        * inspector/InspectorResourceAgent.cpp:
+        (WebCore::InspectorResourceAgent::didFailLoading):
+        * loader/CookieJar.cpp:
+        (WebCore::networkingContext):
+        * loader/DocumentLoader.cpp:
+        (WebCore::DocumentLoader::frameLoader):
+        (WebCore::DocumentLoader::document):
+        (WebCore::DocumentLoader::stopLoading):
+        (WebCore::DocumentLoader::removeSubresourceLoader):
+        (WebCore::DocumentLoader::subresourceLoaderFinishedLoadingOnePart):
+        (WebCore::DocumentLoader::iconLoadDecisionAvailable):
+        (WebCore::DocumentLoader::continueIconLoadWithDecision):
+        * loader/DocumentThreadableLoader.cpp:
+        (WebCore::DocumentThreadableLoader::didReceiveResponse):
+        (WebCore::DocumentThreadableLoader::didFinishLoading):
+        (WebCore::DocumentThreadableLoader::didFail):
+        (WebCore::DocumentThreadableLoader::preflightFailure):
+        (WebCore::DocumentThreadableLoader::loadRequest):
+        * loader/DocumentWriter.cpp:
+        (WebCore::DocumentWriter::replaceDocument):
+        (WebCore::DocumentWriter::createDocument):
+        (WebCore::DocumentWriter::begin):
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::~FrameLoader):
+        (WebCore::FrameLoader::allChildrenAreComplete):
+        (WebCore::FrameLoader::allAncestorsAreComplete):
+        (WebCore::FrameLoader::loadURLIntoChildFrame):
+        (WebCore::FrameLoader::outgoingReferrer):
+        (WebCore::FrameLoader::setOpener):
+        (WebCore::FrameLoader::completed):
+        (WebCore::FrameLoader::started):
+        (WebCore::FrameLoader::loadFrameRequest):
+        (WebCore::FrameLoader::loadURL):
+        (WebCore::FrameLoader::load):
+        (WebCore::FrameLoader::loadWithDocumentLoader):
+        (WebCore::FrameLoader::stopAllLoaders):
+        (WebCore::FrameLoader::closeOldDataSources):
+        (WebCore::FrameLoader::subframeIsLoading):
+        (WebCore::FrameLoader::subresourceCachePolicy):
+        (WebCore::FrameLoader::checkLoadCompleteForThisFrame):
+        (WebCore::FrameLoader::detachChildren):
+        (WebCore::FrameLoader::checkLoadComplete):
+        (WebCore::FrameLoader::detachFromParent):
+        (WebCore::FrameLoader::loadPostRequest):
+        (WebCore::FrameLoader::loadResourceSynchronously):
+        (WebCore::FrameLoader::shouldClose):
+        (WebCore::FrameLoader::handleBeforeUnloadEvent):
+        (WebCore::FrameLoader::continueLoadAfterNavigationPolicy):
+        (WebCore::FrameLoader::continueLoadAfterNewWindowPolicy):
+        (WebCore::createWindow):
+        * loader/HistoryController.cpp:
+        (WebCore::HistoryController::saveScrollPositionAndViewStateToItem):
+        (WebCore::HistoryController::restoreScrollPositionAndViewState):
+        (WebCore::HistoryController::saveDocumentState):
+        (WebCore::HistoryController::saveDocumentAndScrollState):
+        (WebCore::isAssociatedToRequestedHistoryItem):
+        (WebCore::HistoryController::restoreDocumentState):
+        (WebCore::HistoryController::shouldStopLoadingForHistoryItem):
+        (WebCore::HistoryController::goToItem):
+        (WebCore::HistoryController::updateForBackForwardNavigation):
+        (WebCore::HistoryController::updateForReload):
+        (WebCore::HistoryController::updateForStandardLoad):
+        (WebCore::HistoryController::updateForRedirectWithLockedBackForwardList):
+        (WebCore::HistoryController::updateForClientRedirect):
+        (WebCore::HistoryController::updateForCommit):
+        (WebCore::HistoryController::recursiveUpdateForCommit):
+        (WebCore::HistoryController::updateForSameDocumentNavigation):
+        (WebCore::HistoryController::recursiveUpdateForSameDocumentNavigation):
+        (WebCore::HistoryController::initializeItem):
+        (WebCore::HistoryController::createItemTree):
+        (WebCore::HistoryController::recursiveSetProvisionalItem):
+        (WebCore::HistoryController::recursiveGoToItem):
+        (WebCore::HistoryController::updateBackForwardListClippedAtTarget):
+        (WebCore::HistoryController::updateCurrentItem):
+        (WebCore::HistoryController::pushState):
+        (WebCore::HistoryController::replaceState):
+        * loader/ImageLoader.cpp:
+        (WebCore::pageIsBeingDismissed):
+        * loader/MixedContentChecker.cpp:
+        (WebCore::MixedContentChecker::client):
+        * loader/NavigationScheduler.cpp:
+        (WebCore::ScheduledURLNavigation::fire):
+        (WebCore::ScheduledURLNavigation::didStartTimer):
+        (WebCore::ScheduledURLNavigation::didStopTimer):
+        (WebCore::ScheduledRedirect::shouldStartTimer):
+        (WebCore::ScheduledRedirect::fire):
+        (WebCore::ScheduledRefresh::fire):
+        (WebCore::ScheduledHistoryNavigation::fire):
+        (WebCore::ScheduledFormSubmission::fire):
+        (WebCore::ScheduledFormSubmission::didStartTimer):
+        (WebCore::ScheduledFormSubmission::didStopTimer):
+        (WebCore::NavigationScheduler::mustLockBackForwardList):
+        (WebCore::NavigationScheduler::scheduleLocationChange):
+        (WebCore::NavigationScheduler::scheduleFormSubmission):
+        (WebCore::NavigationScheduler::scheduleRefresh):
+        (WebCore::NavigationScheduler::schedule):
+        * loader/PingLoader.cpp:
+        (WebCore::PingLoader::loadImage):
+        (WebCore::PingLoader::sendPing):
+        (WebCore::PingLoader::sendViolationReport):
+        (WebCore::PingLoader::PingLoader):
+        * loader/PolicyChecker.cpp:
+        (WebCore::PolicyChecker::checkNavigationPolicy):
+        (WebCore::PolicyChecker::checkNewWindowPolicy):
+        (WebCore::PolicyChecker::checkContentPolicy):
+        (WebCore::PolicyChecker::cancelCheck):
+        (WebCore::PolicyChecker::stopCheck):
+        (WebCore::PolicyChecker::cannotShowMIMEType):
+        (WebCore::PolicyChecker::continueLoadAfterWillSubmitForm):
+        (WebCore::PolicyChecker::continueAfterNavigationPolicy):
+        (WebCore::PolicyChecker::continueAfterNewWindowPolicy):
+        (WebCore::PolicyChecker::handleUnimplementablePolicy):
+        * loader/ProgressTracker.cpp:
+        (WebCore::ProgressTracker::progressStarted):
+        (WebCore::ProgressTracker::progressCompleted):
+        (WebCore::ProgressTracker::finalProgressComplete):
+        (WebCore::ProgressTracker::incrementProgress):
+        (WebCore::ProgressTracker::progressHeartbeatTimerFired):
+        * loader/ResourceLoadNotifier.cpp:
+        (WebCore::ResourceLoadNotifier::didReceiveAuthenticationChallenge):
+        (WebCore::ResourceLoadNotifier::didCancelAuthenticationChallenge):
+        (WebCore::ResourceLoadNotifier::willSendRequest):
+        (WebCore::ResourceLoadNotifier::didFailToLoad):
+        (WebCore::ResourceLoadNotifier::assignIdentifierToInitialRequest):
+        (WebCore::ResourceLoadNotifier::dispatchWillSendRequest):
+        (WebCore::ResourceLoadNotifier::dispatchDidReceiveResponse):
+        (WebCore::ResourceLoadNotifier::dispatchDidReceiveData):
+        (WebCore::ResourceLoadNotifier::dispatchDidFinishLoading):
+        (WebCore::ResourceLoadNotifier::dispatchDidFailLoading):
+        * loader/ResourceLoader.cpp:
+        (WebCore::ResourceLoader::ResourceLoader):
+        (WebCore::ResourceLoader::start):
+        (WebCore::ResourceLoader::frameLoader):
+        (WebCore::ResourceLoader::willSendRequest):
+        * loader/SubframeLoader.cpp:
+        (WebCore::SubframeLoader::pluginIsLoadable):
+        (WebCore::SubframeLoader::loadMediaPlayerProxyPlugin):
+        (WebCore::SubframeLoader::createJavaAppletWidget):
+        (WebCore::SubframeLoader::loadOrRedirectSubframe):
+        (WebCore::SubframeLoader::loadSubframe):
+        (WebCore::SubframeLoader::allowPlugins):
+        (WebCore::SubframeLoader::shouldUsePlugin):
+        (WebCore::SubframeLoader::loadPlugin):
+        * loader/appcache/ApplicationCacheGroup.cpp:
+        (WebCore::ApplicationCacheGroup::selectCache):
+        (WebCore::ApplicationCacheGroup::selectCacheWithoutManifestURL):
+        (WebCore::ApplicationCacheGroup::update):
+        (WebCore::ApplicationCacheGroup::createResourceHandle):
+        (WebCore::ApplicationCacheGroup::didReceiveResponse):
+        (WebCore::ApplicationCacheGroup::didFinishLoading):
+        (WebCore::ApplicationCacheGroup::didFail):
+        (WebCore::ApplicationCacheGroup::addEntry):
+        (WebCore::CallCacheListenerTask::performTask):
+        (WebCore::ApplicationCacheGroup::postListenerTask):
+        * loader/appcache/DOMApplicationCache.cpp:
+        (WebCore::DOMApplicationCache::applicationCacheHost):
+        * loader/archive/cf/LegacyWebArchive.cpp:
+        (WebCore::LegacyWebArchive::create):
+        (WebCore::LegacyWebArchive::createFromSelection):
+        * loader/cache/CachedResource.cpp:
+        (WebCore::CachedResource::addAdditionalRequestHeaders):
+        (WebCore::CachedResource::load):
+        * loader/cache/CachedResourceLoader.cpp:
+        (WebCore::CachedResourceLoader::requestImage):
+        (WebCore::CachedResourceLoader::checkInsecureContent):
+        (WebCore::CachedResourceLoader::canRequest):
+        (WebCore::CachedResourceLoader::shouldContinueAfterNotifyingLoadedFromMemoryCache):
+        (WebCore::CachedResourceLoader::requestResource):
+        (WebCore::CachedResourceLoader::clientDefersImage):
+        (WebCore::CachedResourceLoader::cachePolicy):
+        (WebCore::CachedResourceLoader::loadDone):
+        * loader/icon/IconController.cpp:
+        (WebCore::IconController::commitToDatabase):
+        (WebCore::IconController::startLoader):
+        (WebCore::IconController::continueLoadWithDecision):
+        * loader/icon/IconLoader.cpp:
+        (WebCore::IconLoader::startLoading):
+        (WebCore::IconLoader::notifyFinished):
+        * page/Chrome.cpp:
+        (WebCore::canRunModalIfDuringPageDismissal):
+        * page/ContextMenuController.cpp:
+        (WebCore::openNewWindow):
+        (WebCore::ContextMenuController::contextMenuItemSelected):
+        (WebCore::ContextMenuController::populate):
+        (WebCore::ContextMenuController::checkOrEnableIfNeeded):
+        * page/DOMWindow.cpp:
+        (WebCore::DOMWindow::dispatchAllPendingBeforeUnloadEvents):
+        (WebCore::DOMWindow::postMessageTimerFired):
+        (WebCore::DOMWindow::close):
+        (WebCore::DOMWindow::print):
+        (WebCore::DOMWindow::stop):
+        (WebCore::DOMWindow::setName):
+        (WebCore::DOMWindow::opener):
+        (WebCore::DOMWindow::dispatchLoadEvent):
+        (WebCore::DOMWindow::setLocation):
+        (WebCore::DOMWindow::createWindow):
+        (WebCore::DOMWindow::open):
+        * page/DOMWindowExtension.cpp:
+        (WebCore::DOMWindowExtension::disconnectFrameForPageCache):
+        (WebCore::DOMWindowExtension::reconnectFrameFromPageCache):
+        (WebCore::DOMWindowExtension::willDestroyGlobalObjectInCachedFrame):
+        (WebCore::DOMWindowExtension::willDestroyGlobalObjectInFrame):
+        (WebCore::DOMWindowExtension::willDetachGlobalObjectFromFrame):
+        * page/DragController.cpp:
+        (WebCore::DragController::performDrag):
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::handleMousePressEvent):
+        (WebCore::EventHandler::keyEvent):
+        * page/Frame.cpp:
+        (WebCore::Frame::~Frame):
+        (WebCore::Frame::setView):
+        (WebCore::Frame::injectUserScripts):
+        (WebCore::Frame::willDetachPage):
+        * page/Frame.h:
+        (WebCore::Frame::loader):
+        * page/FrameView.cpp:
+        (WebCore::FrameView::mediaType):
+        (WebCore::FrameView::setFixedVisibleContentRect):
+        (WebCore::FrameView::shouldUseLoadTimeDeferredRepaintDelay):
+        (WebCore::FrameView::performPostLayoutTasks):
+        (WebCore::FrameView::autoSizeIfEnabled):
+        (WebCore::FrameView::scrollTo):
+        (WebCore::FrameView::shouldSuspendScrollAnimations):
+        (WebCore::FrameView::qualifiesAsVisuallyNonEmpty):
+        (WebCore::FrameView::wheelEvent):
+        (WebCore::FrameView::firePaintRelatedMilestones):
+        * page/History.cpp:
+        (WebCore::History::stateInternal):
+        (WebCore::History::stateObjectAdded):
+        * page/Location.cpp:
+        (WebCore::Location::setLocation):
+        * page/Navigator.cpp:
+        (WebCore::Navigator::userAgent):
+        * page/Page.cpp:
+        (WebCore::Page::goToItem):
+        (WebCore::Page::refreshPlugins):
+        (WebCore::Page::setDefersLoading):
+        (WebCore::Page::setMemoryCacheClientCallsEnabled):
+        (WebCore::Page::addRelevantRepaintedObject):
+        * page/Performance.cpp:
+        (WebCore::Performance::now):
+        * page/PerformanceNavigation.cpp:
+        (WebCore::PerformanceNavigation::type):
+        (WebCore::PerformanceNavigation::redirectCount):
+        * page/PerformanceResourceTiming.cpp:
+        (WebCore::monotonicTimeToDocumentMilliseconds):
+        * page/mac/PageMac.cpp:
+        (WebCore::Page::addSchedulePair):
+        (WebCore::Page::removeSchedulePair):
+        * platform/ios/PasteboardIOS.mm:
+        (WebCore::documentFragmentWithImageResource):
+        (WebCore::documentFragmentWithRTF):
+        (WebCore::Pasteboard::documentFragmentForPasteboardItemAtIndex):
+        * platform/mac/HTMLConverter.mm:
+        (-[WebHTMLConverter _addAttachmentForElement:URL:needsParagraph:usePlaceholder:]):
+        (-[WebHTMLConverter _loadFromDOMRange]):
+        * platform/mac/PasteboardMac.mm:
+        (WebCore::documentFragmentWithImageResource):
+        (WebCore::documentFragmentWithRTF):
+        (WebCore::fragmentFromWebArchive):
+        * plugins/DOMMimeType.cpp:
+        (WebCore::DOMMimeType::enabledPlugin):
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::scrollTo):
+        * svg/SVGAElement.cpp:
+        (WebCore::SVGAElement::defaultEventHandler):
+        * svg/graphics/SVGImage.cpp:
+        (WebCore::SVGImage::~SVGImage):
+        (WebCore::SVGImage::dataChanged):
+        * testing/Internals.cpp:
+        (WebCore::Internals::formControlStateOfPreviousHistoryItem):
+        (WebCore::Internals::setFormControlStateOfPreviousHistoryItem):
+        (WebCore::Internals::getReferencedFilePaths):
+        (WebCore::Internals::forceReload):
+        * xml/XSLTProcessorLibxslt.cpp:
+        (WebCore::docLoaderFunc):
+        * xml/parser/XMLDocumentParserLibxml2.cpp:
+        (WebCore::openFunc):
+        (WebCore::XMLDocumentParser::startElementNs):
+
+2013-08-15  Daniel Bates  <dabates@apple.com>
+
+        <https://webkit.org/b/119863> [iOS] Upstream WebCore/editing/ios
+
+        Reviewed by David Kilzer.
+
+        Use the same UUIDs for EditorIOS.mm and the group ios as in the iOS tree
+        so as to make it straightforward to merge changes to the WebCore Xcode
+        project file on WebKit.org with changes to the same file in the iOS tree.
+
+        * WebCore.xcodeproj/project.pbxproj:
+
+2013-08-15  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build fix after r15417.
+
+        * DerivedSources.cpp: Remove classes that now live in JSC.
+        * WebCore.vcxproj/WebCore.vcxproj: Remove classes no longer included in WebCore.
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Ditto.
+        * bindings/js/WebCoreTypedArrayController.cpp: Add explicit namespace to avoid conflict
+        with Windows 'Unknown' type.
+        (WebCore::WebCoreTypedArrayController::JSArrayBufferOwner::isReachableFromOpaqueRoots):
+        (WebCore::WebCoreTypedArrayController::JSArrayBufferOwner::finalize):
+
+2013-08-15  Daniel Bates  <dabates@apple.com>
+
+        <https://webkit.org/b/119863> [iOS] Upstream WebCore/editing/ios
+
+        Reviewed by David Kilzer.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * editing/ios/EditorIOS.mm: Added.
+        (WebCore::Editor::newGeneralClipboard):
+        (WebCore::Editor::showFontPanel):
+        (WebCore::Editor::showStylesPanel):
+        (WebCore::Editor::showColorPanel):
+        (WebCore::Editor::setTextAlignmentForChangedBaseWritingDirection):
+        (WebCore::Editor::insertParagraphSeparatorInQuotedContent):
+        (WebCore::styleForSelectionStart):
+        (WebCore::Editor::fontForSelection):
+        (WebCore::Editor::fontAttributesForSelectionStart):
+        (WebCore::Editor::removeUnchangeableStyles):
+
+2013-08-15  Dirk Schulze  <krit@webkit.org>
+
+        Implement CSS Image filter() function
+        https://bugs.webkit.org/show_bug.cgi?id=119845
+
+        Reviewed by Dean Jackson.
+
+        The Filter Effects specification defines a new CSS Image function called
+        filter(). This function takes another CSS Image as well as a filter function
+        list as input and can be used by various CSS properties.
+
+        Example:
+
+            background-image: -webkit-filter(url(image.png), brightness(0.5))
+
+        This patch implements the current definition of filter() based on other
+        image generation classes like CSSCrossfadeValue.
+        A new class called CSSFilterImageValue was added together with an
+        image observer.
+
+        The function is implemented prefixed and behind the compiler flag CSS_FILTERS.
+
+        Tests: fast/filter-image/filter-image.html
+               fast/filter-image/parse-filter-image.html
+
+        * CMakeLists.txt: Added new files to build systems.
+        * GNUmakefile.list.am:
+        * Target.pri:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.xcodeproj/project.pbxproj:
+        * css/CSSAllInOne.cpp:
+        * css/CSSCrossfadeValue.cpp: Share code together with CSSFilterImageValue
+            in CSSImageGeneratorValue.cpp.
+        (WebCore::CSSCrossfadeValue::isPending):
+        (WebCore::CSSCrossfadeValue::loadSubimages):
+        * css/CSSFilterImageValue.cpp: Added.
+        (WebCore::CSSFilterImageValue::~CSSFilterImageValue):
+        (WebCore::CSSFilterImageValue::customCssText):
+        (WebCore::CSSFilterImageValue::fixedSize):
+        (WebCore::CSSFilterImageValue::isPending):
+        (WebCore::CSSFilterImageValue::knownToBeOpaque):
+        (WebCore::CSSFilterImageValue::loadSubimages):
+        (WebCore::CSSFilterImageValue::image):
+        (WebCore::CSSFilterImageValue::filterImageChanged):
+        (WebCore::CSSFilterImageValue::createFilterOperations):
+        (WebCore::CSSFilterImageValue::FilterSubimageObserverProxy::imageChanged):
+        (WebCore::CSSFilterImageValue::hasFailedOrCanceledSubresources):
+        (WebCore::CSSFilterImageValue::equals):
+        * css/CSSFilterImageValue.h: Added.
+        (WebCore::CSSFilterImageValue::create):
+        (WebCore::CSSFilterImageValue::isFixedSize):
+        (WebCore::CSSFilterImageValue::CSSFilterImageValue):
+        (WebCore::CSSFilterImageValue::FilterSubimageObserverProxy::FilterSubimageObserverProxy):
+        (WebCore::CSSFilterImageValue::FilterSubimageObserverProxy::~FilterSubimageObserverProxy):
+        (WebCore::CSSFilterImageValue::FilterSubimageObserverProxy::setReady):
+        * css/CSSImageGeneratorValue.cpp: Shared code between CSSCrossfadeValue and
+            CSSFilterImageValue.
+        (WebCore::CSSImageGeneratorValue::image):
+        (WebCore::CSSImageGeneratorValue::isFixedSize):
+        (WebCore::CSSImageGeneratorValue::fixedSize):
+        (WebCore::CSSImageGeneratorValue::isPending):
+        (WebCore::CSSImageGeneratorValue::knownToBeOpaque):
+        (WebCore::CSSImageGeneratorValue::loadSubimages):
+        (WebCore::CSSImageGeneratorValue::subimageIsPending):
+        (WebCore::CSSImageGeneratorValue::cachedImageForCSSValue):
+        * css/CSSImageGeneratorValue.h:
+        * css/CSSParser.cpp: Added parsing information for new image function.
+        (WebCore::CSSParser::parseValue):
+        (WebCore::CSSParser::isGeneratedImageValue):
+        (WebCore::CSSParser::parseGeneratedImage):
+        (WebCore::CSSParser::parseFilterImage):
+        (WebCore::CSSParser::parseFilter):
+        * css/CSSParser.h:
+        * css/CSSValue.cpp:
+        (WebCore::CSSValue::hasFailedOrCanceledSubresources):
+        (WebCore::CSSValue::equals):
+        (WebCore::CSSValue::cssText):
+        (WebCore::CSSValue::destroy):
+        * css/CSSValue.h:
+        (WebCore::CSSValue::isFilterImageValue):
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::applyProperty):
+        (WebCore::StyleResolver::generatedOrPendingFromValue):
+        (WebCore::StyleResolver::createFilterOperations):
+        * css/StyleResolver.h: StyleResolver needs to be passed to
+            CSSFilterImageValue in order to resolve blur() and
+            drop-shadow() function. Both needs to be resolved together
+            with all other properties and can't be done earlier or later.
+        * rendering/FilterEffectRenderer.cpp:
+        (WebCore::FilterEffectRenderer::build): Pass an argument whether the
+            intermediate filter results should be clipped or not. The filter
+            property for instance doesn't clip but scales the intermediate
+            image sizes.
+        * rendering/FilterEffectRenderer.h:
+
+2013-08-15  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix bindings tests after http://trac.webkit.org/changeset/154127
+
+        * bindings/scripts/test/JS/JSTestCallback.cpp:
+        (WebCore::JSTestCallback::callbackWithArrayParam):
+        * bindings/scripts/test/JS/JSTestCallback.h:
+        * bindings/scripts/test/JS/JSTestObj.cpp:
+        (WebCore::setJSTestObjTypedArrayAttr):
+        * bindings/scripts/test/JS/JSTestOverloadedConstructors.cpp:
+        (WebCore::JSTestOverloadedConstructorsConstructor::constructJSTestOverloadedConstructors2):
+        * bindings/scripts/test/JS/JSTestTypedefs.cpp:
+        (WebCore::jsTestTypedefsPrototypeFunctionFunc):
+        * bindings/scripts/test/ObjC/DOMFloat64Array.mm:
+        * bindings/scripts/test/ObjC/DOMTestCallback.mm:
+        * bindings/scripts/test/TestTypedArray.idl: Removed.
+
+2013-08-15  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Qt minimum build fix after r154116.
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::sendResizeEventIfNeeded):
+
+2013-08-14  Filip Pizlo  <fpizlo@apple.com>
+
+        Typed arrays should be rewritten
+        https://bugs.webkit.org/show_bug.cgi?id=119064
+
+        Reviewed by Oliver Hunt.
+
+        Typed arrays are now implemented in JavaScriptCore, and WebCore is merely a
+        client of them. There is only one layering violation: WebCore installs a
+        WebCoreTypedArrayController on VM, which makes the
+        ArrayBuffer<->JSArrayBuffer relationship resemble DOM wrappers. By default,
+        JSC makes the ownership go one way; the JSArrayBuffer keeps the ArrayBuffer
+        alive but if ArrayBuffer is kept alive from native code then the
+        JSArrayByffer may die. WebCoreTypedArrayController will keep the
+        JSArrayBuffer alive if the ArrayBuffer is in the opaque root set.
+        
+        To make non-JSDOMWrappers behave like DOM wrappers, a bunch of code is
+        changed to make most references to wrappers refer to JSObject* rather than
+        JSDOMWrapper*.
+        
+        Array buffer views are now transient; the JS array buffer view wrappers
+        don't own them or keep them alive. This required a bunch of changes to make
+        bindings code use RefPtr<ArrayBufferView> to hold onto their views.
+        
+        Also there is a bunch of new code to make JSC-provided array buffers and
+        views obey the toJS/to<ClassName> idiom for wrapping and unwrapping.
+        
+        Finally, the DataView API is now completely different: the JSDataView
+        provides the same user-visible JS API but using its own internal magic; the
+        C++ code that uses DataView now uses a rather different API that is not
+        aware of usual DOM semantics, since it's in JSC and not WebCore. It's
+        equally useful for all of WebCore's purposes, but some code had to change
+        to adapt the new conventions.
+        
+        Some tests have been changed or rebased due to changes in behavior, that
+        bring us into conformance with where the standards are going and allow us to
+        match Firefox behavior.
+
+        Automake work and some additional GTK changes courtesy of
+        Zan Dobersek <zdobersek@igalia.com>.
+        
+        Additional Qt changes courtesy of Arunprasad Rajkumar <arurajku@cisco.com>.
+
+        * CMakeLists.txt:
+        * DerivedSources.make:
+        * ForwardingHeaders/runtime/DataView.h: Added.
+        * ForwardingHeaders/runtime/JSArrayBuffer.h: Added.
+        * ForwardingHeaders/runtime/JSArrayBufferView.h: Added.
+        * ForwardingHeaders/runtime/JSDataView.h: Added.
+        * ForwardingHeaders/runtime/JSTypedArrays.h: Added.
+        * ForwardingHeaders/runtime/TypedArrayController.h: Added.
+        * ForwardingHeaders/runtime/TypedArrayInlines.h: Added.
+        * ForwardingHeaders/runtime/TypedArrays.h: Added.
+        * GNUmakefile.list.am:
+        * Modules/webaudio/RealtimeAnalyser.h:
+        * Target.pri:
+        * UseJSC.cmake:
+        * WebCore.exp.in:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/js/DOMWrapperWorld.h:
+        * bindings/js/JSArrayBufferCustom.cpp: Removed.
+        * bindings/js/JSArrayBufferViewHelper.h: Removed.
+        * bindings/js/JSAudioContextCustom.cpp:
+        * bindings/js/JSBindingsAllInOne.cpp:
+        * bindings/js/JSBlobCustom.cpp:
+        * bindings/js/JSCSSRuleCustom.cpp:
+        (WebCore::toJS):
+        * bindings/js/JSCSSValueCustom.cpp:
+        (WebCore::toJS):
+        * bindings/js/JSCryptoCustom.cpp:
+        (WebCore::JSCrypto::getRandomValues):
+        * bindings/js/JSDOMBinding.h:
+        (WebCore::wrapperOwner):
+        (WebCore::wrapperContext):
+        (WebCore::getInlineCachedWrapper):
+        (WebCore::setInlineCachedWrapper):
+        (WebCore::clearInlineCachedWrapper):
+        (WebCore::getCachedWrapper):
+        (WebCore::cacheWrapper):
+        (WebCore::uncacheWrapper):
+        (WebCore::wrap):
+        (WebCore::toJS):
+        (WebCore::toArrayBufferView):
+        (WebCore::toInt8Array):
+        (WebCore::toInt16Array):
+        (WebCore::toInt32Array):
+        (WebCore::toUint8Array):
+        (WebCore::toUint8ClampedArray):
+        (WebCore::toUint16Array):
+        (WebCore::toUint32Array):
+        (WebCore::toFloat32Array):
+        (WebCore::toFloat64Array):
+        (WebCore::toDataView):
+        * bindings/js/JSDataViewCustom.cpp: Removed.
+        * bindings/js/JSDictionary.cpp:
+        * bindings/js/JSDictionary.h:
+        * bindings/js/JSDocumentCustom.cpp:
+        (WebCore::JSDocument::location):
+        (WebCore::toJS):
+        * bindings/js/JSEventCustom.cpp:
+        (WebCore::toJS):
+        * bindings/js/JSFileReaderCustom.cpp:
+        * bindings/js/JSHTMLCollectionCustom.cpp:
+        (WebCore::toJS):
+        * bindings/js/JSHTMLTemplateElementCustom.cpp:
+        (WebCore::JSHTMLTemplateElement::content):
+        * bindings/js/JSImageDataCustom.cpp:
+        (WebCore::toJS):
+        * bindings/js/JSInjectedScriptHostCustom.cpp:
+        * bindings/js/JSMessageEventCustom.cpp:
+        * bindings/js/JSMessagePortCustom.cpp:
+        * bindings/js/JSSVGPathSegCustom.cpp:
+        (WebCore::toJS):
+        * bindings/js/JSStyleSheetCustom.cpp:
+        (WebCore::toJS):
+        * bindings/js/JSTrackCustom.cpp:
+        (WebCore::toJS):
+        * bindings/js/JSWebGLRenderingContextCustom.cpp:
+        * bindings/js/JSXMLHttpRequestCustom.cpp:
+        (WebCore::JSXMLHttpRequest::send):
+        * bindings/js/SerializedScriptValue.cpp:
+        (WebCore::SerializedScriptValue::transferArrayBuffers):
+        * bindings/js/WebCoreJSClientData.h:
+        (WebCore::initNormalWorldClientData):
+        * bindings/js/WebCoreTypedArrayController.cpp: Added.
+        (WebCore::WebCoreTypedArrayController::WebCoreTypedArrayController):
+        (WebCore::WebCoreTypedArrayController::~WebCoreTypedArrayController):
+        (WebCore::WebCoreTypedArrayController::toJS):
+        (WebCore::WebCoreTypedArrayController::JSArrayBufferOwner::isReachableFromOpaqueRoots):
+        (WebCore::WebCoreTypedArrayController::JSArrayBufferOwner::finalize):
+        * bindings/js/WebCoreTypedArrayController.h: Added.
+        (WebCore::WebCoreTypedArrayController::wrapperOwner):
+        * bindings/scripts/CodeGenerator.pm:
+        (ForAllParents):
+        (ParseInterface):
+        (SkipIncludeHeader):
+        (IsTypedArrayType):
+        (IsWrapperType):
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (AddIncludesForType):
+        (GenerateHeader):
+        (GenerateImplementation):
+        (GenerateParametersCheck):
+        (GetNativeType):
+        (JSValueToNative):
+        (NativeToJSValue):
+        (GenerateConstructorDefinition):
+        (GenerateConstructorHelperMethods):
+        * fileapi/WebKitBlobBuilder.cpp:
+        (WebCore::BlobBuilder::append):
+        * fileapi/WebKitBlobBuilder.h:
+        * html/canvas/ArrayBuffer.idl: Removed.
+        * html/canvas/ArrayBufferView.idl: Removed.
+        * html/canvas/DataView.cpp: Removed.
+        * html/canvas/DataView.h: Removed.
+        * html/canvas/DataView.idl: Removed.
+        * html/canvas/Float32Array.idl: Removed.
+        * html/canvas/Float64Array.idl: Removed.
+        * html/canvas/Int16Array.idl: Removed.
+        * html/canvas/Int32Array.idl: Removed.
+        * html/canvas/Int8Array.idl: Removed.
+        * html/canvas/Uint16Array.idl: Removed.
+        * html/canvas/Uint32Array.idl: Removed.
+        * html/canvas/Uint8Array.idl: Removed.
+        * html/canvas/Uint8ClampedArray.idl: Removed.
+        * html/canvas/WebGLRenderingContext.cpp:
+        (WebCore::WebGLRenderingContext::readPixels):
+        (WebCore::WebGLRenderingContext::validateTexFuncData):
+        * page/Crypto.cpp:
+        * platform/graphics/avfoundation/objc/MediaPlayerPrivateAVFoundationObjC.mm:
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::shouldWaitForLoadingOfResource):
+        (WebCore::MediaPlayerPrivateAVFoundationObjC::extractKeyURIKeyIDAndCertificateFromInitData):
+        * platform/graphics/filters/FECustomFilter.h:
+        * platform/graphics/filters/FEGaussianBlur.cpp:
+        * platform/graphics/filters/FilterEffect.cpp:
+        * testing/MockCDM.cpp:
+
+2013-08-15  Chris Fleizach  <cfleizach@apple.com>
+
+        <https://webkit.org/b/119824> AX: WKView does not become first responder when the voiceover cursor lands on it
+
+        Reviewed by Darin Adler.
+
+        Incorporate review feedback from Darin.
+
+        * accessibility/AccessibilityScrollView.cpp:
+        (WebCore::AccessibilityScrollView::canSetFocusAttribute):
+        (WebCore::AccessibilityScrollView::isFocused):
+        * accessibility/AccessibilityScrollView.h:
+
+2013-08-15  Andreas Kling  <akling@apple.com>
+
+        <https://webkit.org/b/119826> Page::focusController() should return a reference.
+
+        Reviewed by Anders Carlsson.
+
+        Page::focusController() is never null so make it return a reference.
+        Some unnecessary checks were removed as a result.
+
+2013-08-15  Rob Buis  <rwlbuis@webkit.org>
+
+        ASSERTION FAILED: !m_adoptionIsRequired in void WebCore::TreeShared<NodeType>::ref()
+        https://bugs.webkit.org/show_bug.cgi?id=116979
+
+        Reviewed by Alexey Proskuryakov.
+
+        Make constructors private since only ::create should use them.
+
+        * html/shadow/MeterShadowElement.h:
+        * html/shadow/ProgressShadowElement.h:
+
+2013-08-15  Tim Horton  <timothy_horton@apple.com>
+
+        FrameView should have an isMainFrameView()
+        https://bugs.webkit.org/show_bug.cgi?id=119435
+
+        Reviewed by Simon Fraser.
+
+        No new tests, just refactoring.
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::FrameView):
+        (WebCore::FrameView::isMainFrameView):
+        (WebCore::FrameView::setFrameRect):
+        (WebCore::FrameView::createScrollbar):
+        (WebCore::FrameView::applyOverflowToViewport):
+        (WebCore::FrameView::setHeaderHeight):
+        (WebCore::FrameView::setFooterHeight):
+        (WebCore::FrameView::minimumScrollPosition):
+        (WebCore::FrameView::maximumScrollPosition):
+        (WebCore::FrameView::performPostLayoutTasks):
+        (WebCore::FrameView::sendResizeEventIfNeeded):
+        (WebCore::FrameView::pagination):
+        (WebCore::FrameView::visibleContentScaleFactor):
+        (WebCore::FrameView::setVisibleScrollerThumbRect):
+        (WebCore::FrameView::scrollbarStyleChanged):
+        (WebCore::FrameView::paintScrollCorner):
+        (WebCore::FrameView::paintScrollbar):
+        (WebCore::FrameView::paintOverhangAreas):
+        * page/FrameView.h:
+        Add isMainFrameView and adopt it wherever we were previously checking if
+        the FrameView's frame was the same as its page's main frame.
+
+2013-08-15  Andy Estes  <aestes@apple.com>
+
+        <https://webkit.org/b/119853> REGRESSION (r139343): WebKit crashes when canceling a load inside webView:resource:didFinishLoadingFromDataSource:
+
+        Reviewed by Brady Eidson.
+
+        A client implementing webView:resource:didFinishLoadingFromDataSource:
+        might decide to call stopLoading: for the identifier that just finished
+        loading. If this happens we re-enter the loader and attempt to cancel a
+        load that has already finished and been removed from the set of active
+        loaders. Prevent this by clearing DocumentLoader's
+        m_identifierForLoadWithoutResourceLoader before calling
+        dispatchDidFinishLoading().
+
+        New API test: WebKit1.StopLoadingFromDidFinishLoading.
+
+        * loader/DocumentLoader.cpp:
+        (WebCore::DocumentLoader::finishedLoading): Set
+        m_identifierForLoadWithoutResourceLoader to 0 before calling
+        dispatchDidFinishLoading().
+
+2013-08-15  Eric Carlson  <eric.carlson@apple.com>
+
+        [Mac] Remove "legacy" media UI
+        https://bugs.webkit.org/show_bug.cgi?id=119752
+
+        Reviewed by Jer Noble.
+
+        * WebCore.exp.in: Remove _wkMediaControllerThemeAvailable.
+
+        * platform/mac/WebCoreSystemInterface.h: Update for API change.
+        * platform/mac/WebCoreSystemInterface.mm: Ditto.
+
+        * rendering/RenderThemeMac.h: Don't override hasOwnDisabledStateHandlingFor.
+        * rendering/RenderThemeMac.mm:
+        (WebCore::RenderThemeMac::adjustMediaSliderThumbSize): Remove code to deal with legacy theme.
+        (WebCore::getUnzoomedRectAndAdjustCurrentContext): Ditto.
+        (WebCore::RenderThemeMac::paintMediaFullscreenButton): wkDrawMediaUIPart doesn't need to know
+            the current theme.
+        (WebCore::RenderThemeMac::paintMediaMuteButton): Ditto.
+        (WebCore::RenderThemeMac::paintMediaPlayButton): Ditto.
+        (WebCore::RenderThemeMac::paintMediaSeekBackButton): Ditto.
+        (WebCore::RenderThemeMac::paintMediaSeekForwardButton): Ditto.
+        (WebCore::RenderThemeMac::paintMediaSliderTrack): Ditto.
+        (WebCore::RenderThemeMac::paintMediaSliderThumb): Ditto.
+        (WebCore::RenderThemeMac::paintMediaRewindButton): Ditto.
+        (WebCore::RenderThemeMac::paintMediaReturnToRealtimeButton): Ditto.
+        (WebCore::RenderThemeMac::paintMediaControlsBackground): Ditto.
+        (WebCore::RenderThemeMac::paintMediaCurrentTime): Ditto.
+        (WebCore::RenderThemeMac::paintMediaTimeRemaining): Ditto.
+        (WebCore::RenderThemeMac::paintMediaVolumeSliderContainer): Ditto.
+        (WebCore::RenderThemeMac::paintMediaVolumeSliderTrack): Ditto.
+        (WebCore::RenderThemeMac::paintMediaVolumeSliderThumb): Ditto.
+        (WebCore::RenderThemeMac::paintMediaFullScreenVolumeSliderTrack): Ditto.
+        (WebCore::RenderThemeMac::paintMediaFullScreenVolumeSliderThumb): Ditto.
+        (WebCore::RenderThemeMac::extraMediaControlsStyleSheet): We only have one theme.
+        (WebCore::RenderThemeMac::extraFullScreenStyleSheet): Ditto.
+        (WebCore::RenderThemeMac::usesMediaControlStatusDisplay): Ditto.
+
+2013-08-15  Antti Koivisto  <antti@apple.com>
+
+        <https://webkit.org/b/119834> Remove ElementShadow
+
+        Reviewed by Anders Carlsson.
+
+        It is 1:1 with ShadowRoot and has virtually no functionality. What little there is can be moved to ShadowRoot or Element.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * Target.pri:
+        * WebCore.exp.in:
+        * WebCore.xcodeproj/project.pbxproj:
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::locateCousinList):
+        * css/StyleScopeResolver.cpp:
+        (WebCore::StyleScopeResolver::styleSharingCandidateMatchesHostRules):
+        (WebCore::StyleScopeResolver::matchHostRules):
+        * dom/ComposedShadowTreeWalker.cpp:
+        (WebCore::nodeCanBeDistributed):
+        (WebCore::ComposedShadowTreeWalker::traverseChild):
+        * dom/ContainerNode.cpp:
+        (WebCore::childAttachedAllowedWhenAttachingChildren):
+        * dom/ContainerNodeAlgorithms.cpp:
+        (WebCore::ChildNodeInsertionNotifier::notifyDescendantInsertedIntoDocument):
+        (WebCore::ChildNodeRemovalNotifier::notifyDescendantRemovedFromDocument):
+        (WebCore::ChildNodeRemovalNotifier::notifyDescendantRemovedFromTree):
+        (WebCore::assertConnectedSubrameCountIsConsistent):
+        * dom/ContainerNodeAlgorithms.h:
+        (WebCore::ChildFrameDisconnector::collectFrameOwners):
+        * dom/DOMAllInOne.cpp:
+        * dom/Document.cpp:
+        * dom/Element.cpp:
+        (WebCore::Element::~Element):
+        (WebCore::Element::attach):
+        (WebCore::Element::detach):
+        (WebCore::Element::shadowRoot):
+        (WebCore::Element::didAffectSelector):
+        (WebCore::Element::addShadowRoot):
+        (WebCore::Element::removeShadowRoot):
+        
+            Move addShadowRoot and removeShadowRoot here from ElementShadow.
+
+        (WebCore::Element::createShadowRoot):
+        (WebCore::Element::authorShadowRoot):
+        (WebCore::Element::userAgentShadowRoot):
+        (WebCore::Element::ensureUserAgentShadowRoot):
+        (WebCore::Element::childrenChanged):
+        (WebCore::Element::removeAllEventListeners):
+        * dom/Element.h:
+        (WebCore::isShadowHost):
+        * dom/ElementRareData.h:
+        (WebCore::ElementRareData::clearShadowRoot):
+        (WebCore::ElementRareData::shadowRoot):
+        (WebCore::ElementRareData::setShadowRoot):
+        (WebCore::ElementRareData::~ElementRareData):
+        * dom/ElementShadow.cpp: Removed.
+        * dom/ElementShadow.h: Removed.
+        * dom/EventDispatcher.cpp:
+        * dom/EventPathWalker.cpp:
+        (WebCore::EventPathWalker::moveToParent):
+        * dom/Node.cpp:
+        (WebCore::Node::needsShadowTreeWalkerSlow):
+        * dom/NodeRenderingContext.cpp:
+        * dom/NodeRenderingContext.h:
+        * dom/ShadowRoot.cpp:
+        (WebCore::ShadowRoot::attach):
+        (WebCore::ShadowRoot::detach):
+        
+            Move attached() tests from ElementShadow.
+
+        (WebCore::ShadowRoot::childrenChanged):
+        (WebCore::ShadowRoot::removeAllEventListeners):
+        
+            Move here from ElementShadow.
+
+        * dom/ShadowRoot.h:
+        (WebCore::Node::shadowRoot):
+        * dom/TreeScopeAdopter.cpp:
+        * html/ColorInputType.cpp:
+        (WebCore::ColorInputType::createShadowSubtree):
+        * html/FileInputType.cpp:
+        (WebCore::FileInputType::createShadowSubtree):
+        (WebCore::FileInputType::disabledAttributeChanged):
+        (WebCore::FileInputType::multipleAttributeChanged):
+        * html/HTMLFormControlElement.cpp:
+        * html/HTMLImageElement.cpp:
+        (WebCore::HTMLImageElement::canStartSelection):
+        * html/HTMLInputElement.cpp:
+        (WebCore::HTMLInputElement::updateType):
+        * html/HTMLKeygenElement.cpp:
+        * html/HTMLMediaElement.cpp:
+        * html/HTMLTextAreaElement.cpp:
+        * html/InputType.cpp:
+        * html/RangeInputType.cpp:
+        (WebCore::RangeInputType::handleMouseDownEvent):
+        (WebCore::RangeInputType::createShadowSubtree):
+        * html/TextFieldInputType.cpp:
+        (WebCore::TextFieldInputType::createShadowSubtree):
+        * html/ValidationMessage.cpp:
+        * html/shadow/ContentDistributor.cpp:
+        (WebCore::ContentDistributor::distribute):
+        (WebCore::ContentDistributor::ensureDistribution):
+        * html/shadow/ContentDistributor.h:
+        (WebCore::ContentDistributor::isValid):
+        * html/shadow/InsertionPoint.cpp:
+        (WebCore::InsertionPoint::childrenChanged):
+        (WebCore::InsertionPoint::insertedInto):
+        (WebCore::InsertionPoint::removedFrom):
+        (WebCore::resolveReprojection):
+        * html/shadow/InsertionPoint.h:
+        (WebCore::shadowRootOfParentForDistribution):
+        * html/shadow/SliderThumbElement.cpp:
+        * inspector/InspectorDOMAgent.cpp:
+        (WebCore::InspectorDOMAgent::unbind):
+        (WebCore::InspectorDOMAgent::buildObjectForNode):
+        * page/FocusController.cpp:
+        (WebCore::FocusNavigationScope::focusNavigationScopeOwnedByShadowHost):
+        * rendering/RenderFileUploadControl.cpp:
+        (WebCore::RenderFileUploadControl::uploadButton):
+        * rendering/RenderTheme.cpp:
+        * style/StyleResolveTree.cpp:
+        (WebCore::Style::resolveTree):
+        * svg/SVGTRefElement.cpp:
+        (WebCore::SVGTRefElement::updateReferencedText):
+        (WebCore::SVGTRefElement::detachTarget):
+        * svg/SVGUseElement.cpp:
+        (WebCore::SVGUseElement::clearResourceReferences):
+        (WebCore::SVGUseElement::buildShadowAndInstanceTree):
+        (WebCore::SVGUseElement::buildShadowTree):
+        * testing/Internals.cpp:
+        (WebCore::Internals::ensureShadowRoot):
+        (WebCore::Internals::shadowRoot):
+
+2013-08-15  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] memory leak in WebCore::FontCache::getLastResortFallbackFont
+        https://bugs.webkit.org/show_bug.cgi?id=118532
+
+        Reviewed by Jocelyn Turcotte.
+
+        We don't need to allocate FontPlatformData on the heap
+        since getCachedFontData makes a deep copy anyway.
+
+        * platform/graphics/qt/FontCacheQt.cpp:
+        (WebCore::FontCache::getLastResortFallbackFont):
+
+2013-08-15  Rob Buis  <rwlbuis@webkit.org>
+
+        ASSERTION FAILED: !m_adoptionIsRequired in void WebCore::TreeShared<NodeType>::ref()
+        https://bugs.webkit.org/show_bug.cgi?id=116979
+
+        Reviewed by Antti Koivisto.
+
+        Make sure adoptRef is called before calling setPseudo, for all progress shadow elements.
+
+        * html/shadow/ProgressShadowElement.cpp:
+        (WebCore::ProgressInnerElement::ProgressInnerElement):
+        (WebCore::ProgressBarElement::ProgressBarElement):
+        (WebCore::ProgressValueElement::ProgressValueElement):
+        * html/shadow/ProgressShadowElement.h:
+        (WebCore::ProgressInnerElement::create):
+        (WebCore::ProgressBarElement::create):
+        (WebCore::ProgressValueElement::create):
+
+2013-08-14  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        <https://webkit.org/b/119786> [EFL] decoration of search type is different from other platforms
+
+        Reviewed by Gyuyoung Kim.
+
+        Other platforms except EFL port draw a magnifying icon for
+        -webkit-search-results-button and -webkit-search-results-decoration in search field,
+        but Efl port draws it for -webkit-search-decoration.
+
+        This patch makes Efl port draw icon in first two cases like other ports.
+
+        Tests: fast/css/input-search-padding.html
+           fast/css/text-input-with-webkit-border-radius.html
+           fast/css/text-overflow-input.html
+           fast/forms/box-shadow-override.html
+           fast/forms/control-restrict-line-height.html
+           fast/forms/input-appearance-height.html
+           fast/forms/placeholder-position.html
+           fast/forms/placeholder-pseudo-style.html
+           fast/forms/search-cancel-button-style-sharing.html
+           fast/forms/search-display-none-cancel-button.html
+           fast/forms/search-rtl.html
+           fast/forms/search-vertical-alignment.html
+           fast/forms/searchfield-heights.html
+           fast/repaint/search-field-cancel.html
+
+        * platform/efl/DefaultTheme/widget/search/cancel/search_cancel.edc:
+        Moved results_button alias to search_decoration.edc
+        * platform/efl/DefaultTheme/widget/search/decoration/search_decoration.edc:
+        * platform/efl/RenderThemeEfl.cpp:
+        Updated size of ResultsButtonStyle and ResultsDecorationStyle to show icon.
+        In addition, removed adjustSearchFieldResultsButtonStyle and paintSearchFieldDecoration.
+        (WebCore::toEdjeGroup): Removed decoration group.
+        (WebCore::RenderThemeEfl::adjustSearchFieldResultsButtonStyle):
+        (WebCore::RenderThemeEfl::adjustSearchFieldResultsDecorationStyle):
+        * platform/efl/RenderThemeEfl.h:
+
+2013-08-14  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        [CSS] Introduce new structure to pass image orientation values.
+        https://bugs.webkit.org/show_bug.cgi?id=119418
+
+        Reviewed by Beth Dakin.
+
+        Add a ImageOrientationDescription struct in order to reduce count of argument for
+        image orientation.
+
+        No new tests, no behavior change.
+
+        * html/HTMLCanvasElement.cpp:
+        (WebCore::HTMLCanvasElement::paint):
+        * page/DragController.cpp:
+        (WebCore::DragController::doImageDrag):
+        * page/Frame.cpp:
+        (WebCore::Frame::nodeImage):
+        (WebCore::Frame::dragImageForSelection):
+        * platform/DragImage.h:
+        * platform/blackberry/DragImageBlackBerry.cpp:
+        (WebCore::createDragImageFromImage):
+        * platform/efl/DragImageEfl.cpp:
+        (WebCore::createDragImageFromImage):
+        * platform/graphics/BitmapImage.cpp:
+        (WebCore::BitmapImage::updateSize):
+        * platform/graphics/BitmapImage.h:
+        * platform/graphics/GraphicsContext.cpp:
+        (WebCore::GraphicsContext::drawImage):
+        * platform/graphics/GraphicsContext.h:
+        * platform/graphics/Image.cpp:
+        (WebCore::Image::draw):
+        * platform/graphics/Image.h:
+        * platform/graphics/ImageOrientation.h:
+        (WebCore::ImageOrientationDescription::ImageOrientationDescription):
+        (WebCore::ImageOrientationDescription::respectImageOrientation):
+        (WebCore::ImageOrientationDescription::imageOrientation):
+        * platform/graphics/ImageSource.cpp:
+        (WebCore::ImageSource::size):
+        (WebCore::ImageSource::frameSizeAtIndex):
+        * platform/graphics/ImageSource.h:
+        * platform/graphics/blackberry/ImageBlackBerry.cpp:
+        (WebCore::BitmapImage::draw):
+        * platform/graphics/cairo/BitmapImageCairo.cpp:
+        (WebCore::BitmapImage::draw):
+        * platform/graphics/cairo/ImageBufferCairo.cpp:
+        (WebCore::ImageBuffer::draw):
+        * platform/graphics/cg/BitmapImageCG.cpp:
+        (WebCore::BitmapImage::draw):
+        * platform/graphics/cg/ImageSourceCG.cpp:
+        (WebCore::ImageSource::frameSizeAtIndex):
+        (WebCore::ImageSource::size):
+        (WebCore::ImageSource::frameBytesAtIndex):
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamerBase.cpp:
+        (WebCore::MediaPlayerPrivateGStreamerBase::paint):
+        * platform/graphics/qt/ImageBufferQt.cpp:
+        (WebCore::ImageBuffer::draw):
+        * platform/graphics/wince/ImageBufferWinCE.cpp:
+        (WebCore::ImageBuffer::draw):
+        * platform/gtk/ClipboardGtk.cpp:
+        (WebCore::Clipboard::createDragImage):
+        * platform/gtk/DragImageGtk.cpp:
+        (WebCore::createDragImageFromImage):
+        * platform/mac/DragImageMac.mm:
+        (WebCore::createDragImageFromImage):
+        * platform/qt/ClipboardQt.cpp:
+        (WebCore::Clipboard::createDragImage):
+        * platform/qt/DragImageQt.cpp:
+        (WebCore::createDragImageFromImage):
+        * platform/win/ClipboardWin.cpp:
+        (WebCore::Clipboard::createDragImage):
+        * platform/win/DragImageCGWin.cpp:
+        (WebCore::createDragImageFromImage):
+        * platform/win/DragImageCairoWin.cpp:
+        (WebCore::createDragImageFromImage):
+        * rendering/RenderEmbeddedObject.cpp:
+        (WebCore::RenderEmbeddedObject::paintSnapshotImage):
+        * rendering/RenderImage.cpp:
+        (WebCore::RenderImage::paintReplaced):
+        (WebCore::RenderImage::paintIntoRect):
+        * rendering/RenderSnapshottedPlugIn.cpp:
+        (WebCore::RenderSnapshottedPlugIn::paintSnapshot):
+
+2013-08-14  Sam Weinig  <sam@webkit.org>
+
+        Update binding test results.  Follow up fix for <https://webkit.org/b/119664>
+
+        * bindings/scripts/test/JS/JSTestCallback.cpp:
+        (WebCore::JSTestCallback::JSTestCallback):
+        * bindings/scripts/test/JS/JSTestMediaQueryListListener.cpp:
+        (WebCore::jsTestMediaQueryListListenerPrototypeFunctionMethod):
+
+2013-08-14  Joseph Pecoraro  <pecoraro@apple.com>
+
+        <https://webkit.org/b/119810> [Mac] No AutoreleasePool leaks when dragging image out of WebView
+
+        Reviewed by Dan Bernstein.
+
+        This code was just running a block of code asynchronously using a
+        pthread. Convert this to use a dispatch block, which does provide
+        an autorelease pool so there are no leaks and ends up much simpler.
+
+        * platform/mac/FileSystemMac.mm:
+        (WebCore::setMetadataURL):
+
+2013-08-14  Tim Horton  <timothy_horton@apple.com>
+
+        Un-inline dataLog dumpers for IntSize and IntPoint
+        https://bugs.webkit.org/show_bug.cgi?id=119697
+
+        Reviewed by Sam Weinig.
+
+        Avoid regressing build performance by moving IntSize::dump and IntPoint::dump elsewhere.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * Target.pri:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * platform/graphics/IntPoint.cpp: Added.
+        (WebCore::IntPoint::dump):
+        * platform/graphics/IntPoint.h:
+        * platform/graphics/IntSize.cpp: Added.
+        (WebCore::IntSize::dump):
+        * platform/graphics/IntSize.h:
+
+2013-08-14  Chris Fleizach  <cfleizach@apple.com>
+
+        <https://webkit.org/b/119824> AX: WKView does not become first responder when the voiceover cursor lands on it
+
+        Reviewed by Tim Horton.
+
+        VoiceOver lands on Scroll views by default. It expects that the scroll view will be able to handle the focus calls. 
+        We should forward scroll view focus requests to the web area to handle, which will trigger a becomeFirstResponder on WKView.
+
+        There's not a great way to test this unfortunately, since it requires having focus comes from outside the webview into the webview.
+
+        * accessibility/AccessibilityScrollView.cpp:
+        (WebCore::AccessibilityScrollView::canSetFocusAttribute):
+        (WebCore::AccessibilityScrollView::isFocused):
+        (WebCore::AccessibilityScrollView::setFocused):
+        * accessibility/AccessibilityScrollView.h:
+
+2013-08-14  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Exclusions] Minimal support for using an image to define a shape
+        https://bugs.webkit.org/show_bug.cgi?id=116643
+
+        Reviewed by Alexandru Chiculita.
+
+        This is a first small step towards supporting CSS shapes defined by an
+        image URL and a alpha channel threshold. To keep the patch as small as
+        possible, there are many limitations and remaining work items. For
+        example images are currently restricted to same-origin, although CORS
+        should be supported. See https://bugs.webkit.org/show_bug.cgi?id=116348
+        for the current list.
+
+        Test: fast/exclusions/shape-inside/shape-inside-image-001.html
+        Test: fast/exclusions/shape-inside/shape-inside-image-002.html
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * Target.pri:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.xcodeproj/project.pbxproj:
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::imageChanged): When the image has finished loading, request a layout.
+        * rendering/RenderBlock.h:
+        * rendering/RenderObject.cpp:
+        (WebCore::RenderObject::setStyle): Add notify clients for shape images.
+        (WebCore::RenderObject::updateShapeImage):
+        (WebCore::removeShapeImageClient):
+        (WebCore::RenderObject::arenaDelete): Remove notify clients for shape images.
+        * rendering/RenderObject.h:
+        * rendering/shapes/RasterShape.cpp: Added. A Shape defined by thresholding an image's alpha channel.
+        (WebCore::RasterShapeIntervals::bounds):
+        (WebCore::RasterShapeIntervals::addInterval): Add a single run to the shape.
+        (WebCore::alignedRect):
+        (WebCore::RasterShapeIntervals::getIntervals): Return the shape's runs that fall within a horizonal box.
+        (WebCore::RasterShape::marginIntervals): Internal representation of the shape with shape-margin factored in.  Currently only a stub.
+        (WebCore::RasterShape::paddingIntervals): Internal representation of the shape with shape-padding factored in.  Currently only a stub.
+        (WebCore::RasterShape::getExcludedIntervals):
+        (WebCore::RasterShape::getIncludedIntervals):
+        (WebCore::RasterShape::firstIncludedIntervalLogicalTop):
+        * rendering/shapes/RasterShape.h:
+        (WebCore::RasterShapeIntervals::RasterShapeIntervals): Internal run length encoded representation of a RasterShape.
+        (WebCore::RasterShapeIntervals::isEmpty):
+        (WebCore::RasterShape::RasterShape):
+        * rendering/shapes/Shape.cpp:
+        (WebCore::Shape::createShape): Support for creating a Shape based on a RasterShapeIntervals object.
+        * rendering/shapes/Shape.h:
+        * rendering/shapes/ShapeInfo.cpp:
+        (WebCore::::computedShape): Added support for the Image ShapeValue type.
+        * rendering/shapes/ShapeInsideInfo.cpp:
+        (WebCore::ShapeInsideInfo::isEnabledFor): Added support for the Image ShapeValue type.
+        * rendering/shapes/ShapeOutsideInfo.cpp:
+        (WebCore::ShapeOutsideInfo::isEnabledFor): Added support for the Image ShapeValue type.
+        * rendering/style/ShapeValue.h:
+        (WebCore::ShapeValue::isImageValid): True if the shape's image is ready to be be processed.
+
+2013-08-14  Alexandru Chiculita  <achicu@adobe.com>
+
+        [CSS Regions] RenderRegions should have a RenderLayer+Backing when they contain a Composited RenderLayer
+        https://bugs.webkit.org/show_bug.cgi?id=117365
+
+        Reviewed by David Hyatt.
+
+        After the RenderFlowThread has a new layout we need to check if any of the children layers
+        had been moved to a new render region. We are only checking for the first level of layers,
+        as they are the only ones supported right now. Also, added code to make Regions require a layer
+        based on the layers that fit in their clipping area.
+
+        Tests: fast/regions/layers/dynamic-layer-added-with-no-layout.html
+               fast/regions/layers/dynamic-layer-removed-with-no-layout.html
+               fast/regions/layers/float-region-promoted-to-layer.html
+               fast/regions/layers/regions-promoted-to-layers-horizontal-bt.html
+               fast/regions/layers/regions-promoted-to-layers-vertical-lr.html
+               fast/regions/layers/regions-promoted-to-layers-vertical-rl.html
+               fast/regions/layers/regions-promoted-to-layers.html
+
+        * rendering/FlowThreadController.cpp:
+        (WebCore::FlowThreadController::updateRenderFlowThreadLayersIfNeeded): Iterate on all the flow threads and updateLayerToRegionMappings if needed. 
+        * rendering/FlowThreadController.h:
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::updateLocalFloatingObjectsForPaintingContainer): Checks if the FloatingObject
+        needs to be painted by the current block or not.
+        (WebCore::RenderBlock::updateFloatingObjectsPaintingContainer): Helper function to lookup what is the right
+        container that would need to paint a FloatingObject.
+        (WebCore::RenderBlock::updateAllDescendantsFloatingObjectsPaintingContainer):
+        * rendering/RenderBlock.h:
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::outermostBlockContainingFloatingObject): Looks up the ancestor RenderBlock that contains all
+        the FloatingObjects of a float.
+        (WebCore::RenderBox::removeFloatingOrPositionedChildFromBlockLists): Extracted the code for outermostBlockContainingFloatingObject
+        into its own method.
+        (WebCore::RenderBox::updatePaintingContainerForFloatingObject): Helper method to update the "m_shouldPaint" flag
+        of all the FloatingObjects created for a floating RenderObject. Normally, that flag is maintained during layout,
+        but we need to patch it for the floating RenderRegions after the layout is already finished.
+        (WebCore::RenderBox::updateLayerIfNeeded): Overwrite of the RenderLayerModelObject::updateLayerIfNeeded that is also
+        calling updatePaintingContainerForFloatingObject if a new layer was created or destroyed.
+        * rendering/RenderBox.h:
+        * rendering/RenderFlowThread.cpp:
+        (WebCore::RenderFlowThread::layout): Added code to call updateLayerToRegionMappings when needed.
+        (WebCore::RenderFlowThread::regionForCompositedLayer): Looks up the first RenderRegion to display a specific layer.
+        It only cares about the top most point of the element and ignores transforms.
+        (WebCore::RenderFlowThread::updateRegionForRenderLayer): Helper method to update the mapped region of a layer.
+        (WebCore::RenderFlowThread::updateLayerToRegionMappings): Iterates all the first level layers of the flow thread
+        and updates the region. Will return true if there was any change.
+        * rendering/RenderFlowThread.h:
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::dirtyZOrderLists): When new layers are added or removed we need to update the layer map in the flow thread.
+        (WebCore::RenderLayer::dirtyNormalFlowList):
+        (WebCore::RenderLayer::shouldBeNormalFlowOnly): CSS Regions might become layers because they contain RenderLayers,
+        but they should not become stacking contexts for that reason. This will prevent the RenderRegions from rendering
+        in front of other layers.
+        (WebCore::RenderLayer::shouldBeSelfPaintingLayer):
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::RenderLayerCompositor::updateCompositingLayers): Call updateRenderFlowThreadLayersIfNeeded when there's a layer hierarchy update.
+        (WebCore::RenderLayerCompositor::updateRenderFlowThreadLayersIfNeeded): Update the render flow thread layer maps when they are dirty.
+        * rendering/RenderLayerCompositor.h:
+        * rendering/RenderLayer.h:
+        (WebCore::RenderLayer::isDirtyRenderFlowThread): Used to check if the RenderLayers had changed their order,
+        so that we can update the list of layers associated with a region. In a following patch we will need to 
+        rebuild the composited layers.
+        * rendering/RenderLayerModelObject.cpp:
+        (WebCore::RenderLayerModelObject::updateLayerIfNeeded): Adds or removes a layer when the "requiresLayer" changes
+        after the styleDidChange already happened. This is needed for Regions as we only know if they still require a layer,
+        only after the content of the flow thread is computed.
+        * rendering/RenderLayerModelObject.h:
+        * rendering/RenderRegion.cpp:
+        (WebCore::RenderRegion::RenderRegion):
+        (WebCore::RenderRegion::setRequiresLayerForCompositing):
+        * rendering/RenderRegion.h:
+        (WebCore::RenderRegion::requiresLayer):
+        * rendering/RenderTreeAsText.cpp:
+        (WebCore::writeRenderRegionList): Updated the output to print the fact that the layer has a layer.
+
+2013-08-14  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        Finish making FloatingObject a real class with private members
+        https://bugs.webkit.org/show_bug.cgi?id=119807
+
+        This is a port from Blink of
+        http://src.chromium.org/viewvc/blink?view=revision&revision=155964
+        Original patch by Eric Seidel.
+
+        From his comments on the Blink change:
+
+        Previously FloatingObject was in a half-done state where it had
+        accessors for many members, but also many members were public.
+
+        This CL makes all members private and adds the necessary remaining
+        accessors.
+
+        Reviewed by David Hyatt.
+
+        No new tests, no behavior change.
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::deleteLineBoxTree):
+        (WebCore::RenderBlock::addOverflowFromFloats):
+        (WebCore::RenderBlock::repaintOverhangingFloats):
+        (WebCore::RenderBlock::paintFloats):
+        (WebCore::RenderBlock::selectionGaps):
+        (WebCore::RenderBlock::insertFloatingObject):
+        (WebCore::RenderBlock::removeFloatingObject):
+        (WebCore::RenderBlock::removeFloatingObjectsBelow):
+        (WebCore::RenderBlock::positionNewFloats):
+        (WebCore::RenderBlock::clearFloats):
+        (WebCore::RenderBlock::addOverhangingFloats):
+        (WebCore::RenderBlock::addIntrudingFloats):
+        (WebCore::RenderBlock::hitTestFloats):
+        (WebCore::RenderBlock::adjustForBorderFit):
+        * rendering/RenderBlock.h:
+        (WebCore::RenderBlock::FloatingObject::paginationStrut):
+        (WebCore::RenderBlock::FloatingObject::setPaginationStrut):
+        (WebCore::RenderBlock::FloatingObject::setRenderer):
+        (WebCore::RenderBlock::FloatingObject::originatingLine):
+        (WebCore::RenderBlock::FloatingObject::setOriginatingLine):
+        (WebCore::RenderBlock::FloatingObjectHashFunctions::hash):
+        (WebCore::RenderBlock::FloatingObjectHashFunctions::equal):
+        (WebCore::RenderBlock::FloatingObjectHashTranslator::equal):
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::RenderBlock::appendFloatingObjectToLastLine):
+        (WebCore::RenderBlock::layoutRunsAndFloatsInRange):
+        (WebCore::RenderBlock::linkToEndLineIfNeeded):
+        (WebCore::RenderBlock::determineStartPosition):
+        (WebCore::RenderBlock::positionNewFloatOnLine):
+
+2013-08-14  Rob Buis  <rwlbuis@webkit.org>
+
+        Assertion failure in RenderObject::drawLineForBoxSide
+        https://bugs.webkit.org/show_bug.cgi?id=108187
+
+        Reviewed by David Hyatt.
+
+        Don't draw the outline if the rectangle to draw is empty.
+
+        Test: fast/css/outline-negative.html
+
+        * rendering/RenderInline.cpp:
+        (WebCore::RenderInline::paintOutlineForLine):
+
+2013-08-13  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: Headings not longer have an AXTitle if they have a link as the only child
+        https://bugs.webkit.org/show_bug.cgi?id=119699
+
+        Reviewed by Anders Carlsson.
+
+        Normally, focusable content is not incuded when looking at the visible text of an element.
+        One case where we need an exception is with headings, where there is usually link content inside the heading
+        that we want to be used as the visible text.
+
+        Test: accessibility/heading-title-includes-links.html
+
+        * accessibility/AccessibilityNodeObject.cpp:
+        (WebCore::AccessibilityNodeObject::visibleText):
+        (WebCore::shouldUseAccessiblityObjectInnerText):
+        (WebCore::AccessibilityNodeObject::title):
+        * accessibility/AccessibilityNodeObject.h:
+        * accessibility/AccessibilityObject.h:
+        (WebCore::AccessibilityTextUnderElementMode::AccessibilityTextUnderElementMode):
+        (WebCore::AccessibilityObject::textUnderElement):
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::textUnderElement):
+        * accessibility/AccessibilityRenderObject.h:
+
+2013-08-14  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Move id attribute to parent Element interface
+        https://bugs.webkit.org/show_bug.cgi?id=119706
+
+        Reviewed by Ryosuke Niwa.
+
+        Move id attribute from SVGElement / HTMLElement to their Element parent
+        interface to match the latest DOM specification and avoid duplication:
+        http://dom.spec.whatwg.org/#dom-element-id
+
+        There is no web-exposed behavior change because we haven't moved
+        properties from instances to their prototype, as per the Web IDL
+        specification (http://dev.w3.org/2006/webapi/WebIDL/#es-attributes).
+
+        Firefox already exposes the id property of Element's prototype.
+
+        This patch also drops the comment about returning the empty string when
+        no id is present (introduced in http://trac.webkit.org/changeset/4417).
+        This comment is redundant since the id property is already marked to
+        "reflect" the id attribute. Returning the empty string when the
+        attribute is not present is the normal behavior when reflecting:
+        http://www.whatwg.org/specs/web-apps/current-work/multipage/common-dom-interfaces.html#reflect
+
+        No new test, no web-exposed behavior change.
+
+        * dom/Element.idl:
+        * html/HTMLElement.idl:
+        * svg/SVGElement.idl:
+
+2013-08-14  Arpita Bahuguna  <a.bah@samsung.com>
+
+        createAttribute/setAttributeNode does not properly normalize case
+        https://bugs.webkit.org/show_bug.cgi?id=90341
+
+        Reviewed by Darin Adler.
+
+        setAttributeNode() verifies for existing attributes in a case sensitive
+        manner. Thus, it would add another attribute if specified in a case
+        different from the existing one. Instead, like setAttribute(), it too
+        should modify the existing attribute's value.
+
+        Tests: fast/dom/Element/setAttributeNode-case-insensitivity-xhtml.xhtml
+               fast/dom/Element/setAttributeNode-case-insensitivity.html
+
+        * dom/Element.cpp:
+        (WebCore::Element::setAttributeNode):
+        Passing the second param (shouldIgnoreAttributeCase) to
+        findAttributeIndexByNameForAttributeNode() method. We are now letting
+        findAttributeIndexByNameForAttributeNode() handle the case-sensitive/insensitive
+        checking.
+
+        (WebCore::ElementData::findAttributeIndexByNameForAttributeNode):
+        * dom/Element.h:
+        Added shouldIgnoreAttributeCase boolean param to the method. It passes
+        this on to QualifiedName::matchesIgnoringCaseForLocalName() method.
+
+        * dom/QualifiedName.h:
+        (WebCore::QualifiedName::matchesIgnoringCaseForLocalName):
+        New method added for doing a case-insensitive comparison based on the
+        shouldIgnoreCase param passed to this method.
+
 2013-08-14  Gabor Abraham  <abrhm@inf.u-szeged.hu>
 
         [CMake] Fix building with bison-3.0.

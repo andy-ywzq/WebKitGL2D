@@ -140,7 +140,7 @@ bool HTMLAnchorElement::isKeyboardFocusable(KeyboardEvent* event) const
     if (!document()->frame())
         return false;
 
-    if (!document()->frame()->eventHandler()->tabsToLinks(event))
+    if (!document()->frame()->eventHandler().tabsToLinks(event))
         return false;
 
     if (isInCanvasSubtree())
@@ -539,16 +539,16 @@ void HTMLAnchorElement::handleClick(Event* event)
 
         // FIXME: Why are we not calling addExtraFieldsToMainResourceRequest() if this check fails? It sets many important header fields.
         if (!hasRel(RelationNoReferrer)) {
-            String referrer = SecurityPolicy::generateReferrerHeader(document()->referrerPolicy(), kurl, frame->loader()->outgoingReferrer());
+            String referrer = SecurityPolicy::generateReferrerHeader(document()->referrerPolicy(), kurl, frame->loader().outgoingReferrer());
             if (!referrer.isEmpty())
                 request.setHTTPReferrer(referrer);
-            frame->loader()->addExtraFieldsToMainResourceRequest(request);
+            frame->loader().addExtraFieldsToMainResourceRequest(request);
         }
 
-        frame->loader()->client()->startDownload(request, fastGetAttribute(downloadAttr));
+        frame->loader().client()->startDownload(request, fastGetAttribute(downloadAttr));
     } else
 #endif
-        frame->loader()->urlSelected(kurl, target(), event, false, false, hasRel(RelationNoReferrer) ? NeverSendReferrer : MaybeSendReferrer);
+        frame->loader().urlSelected(kurl, target(), event, false, false, hasRel(RelationNoReferrer) ? NeverSendReferrer : MaybeSendReferrer);
 
     sendPings(kurl);
 }

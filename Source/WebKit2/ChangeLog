@@ -1,3 +1,402 @@
+2013-08-16  Pratik Solanki  <psolanki@apple.com>
+
+        <https://webkit.org/b/119852> Frame::scriptController() should return a reference
+
+        Reviewed by Andreas Kling.
+
+        m_script is never NULL so we can just return a reference. Also remove some pointless null
+        checks as a result of doing this.
+
+        * WebProcess/Plugins/Netscape/NPRuntimeObjectMap.cpp:
+        (WebKit::NPRuntimeObjectMap::globalObject):
+        * WebProcess/Plugins/PluginView.cpp:
+        (WebKit::PluginView::performJavaScriptURLRequest):
+        (WebKit::PluginView::windowScriptNPObject):
+        (WebKit::PluginView::pluginElementNPObject):
+        * WebProcess/WebPage/WebFrame.cpp:
+        (WebKit::WebFrame::jsContext):
+        (WebKit::WebFrame::jsContextForWorld):
+        (WebKit::WebFrame::jsWrapperForWorld):
+        * WebProcess/WebPage/WebInspector.cpp:
+        (WebKit::WebInspector::didSave):
+        (WebKit::WebInspector::didAppend):
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::runJavaScriptInMainFrame):
+
+2013-08-16  Brady Eidson  <beidson@apple.com>
+
+        (NetworkProcess)  Sync XHRs should load using async ResourceHandles, not ResourceHandle::loadResourceSynchronously
+        https://bugs.webkit.org/show_bug.cgi?id=119493
+
+        Reviewed by Alexey Proskuryakov.
+
+        This patch does the following:
+          - Consolidates SchedulableLoader and NetworkResourceLoader into one class.
+          - Removes SyncNetworkResourceLoader.
+          - Adds a NetworkLoaderClient interface that customizes certain behaviors of the NetworkResourceLoader.
+          - Implements a SynchronousNetworkLoaderClient and AsynchronousNetworkLoaderClient for the two different types of loads.
+
+        The AsynchronousNetworkLoaderClient results in messaging back progress to the WebProcess as the load progresses.
+        The SynchronousNetworkLoaderClient accumulates the response, data, and error to be communicated back to the WebProcess
+        only when the load is complete.
+
+        Update small swaths of code to reflect that NetworkResourceLoader is the One True Loader (tm):
+        * NetworkProcess/HostRecord.cpp:
+        (WebKit::HostRecord::scheduleResourceLoader):
+        (WebKit::HostRecord::addLoaderInProgress):
+        (WebKit::removeLoaderFromQueue):
+        (WebKit::HostRecord::removeLoader):
+        (WebKit::HostRecord::servePendingRequestsForQueue):
+        (WebKit::HostRecord::limitsRequests):
+        * NetworkProcess/HostRecord.h:
+
+        * NetworkProcess/NetworkConnectionToWebProcess.cpp:
+        (WebKit::NetworkConnectionToWebProcess::didClose):
+        (WebKit::NetworkConnectionToWebProcess::performSynchronousLoad):
+        (WebKit::NetworkConnectionToWebProcess::removeLoadIdentifier):
+        * NetworkProcess/NetworkConnectionToWebProcess.h:
+
+        * NetworkProcess/NetworkProcess.cpp:
+        * NetworkProcess/NetworkResourceLoadScheduler.cpp:
+        (WebKit::NetworkResourceLoadScheduler::scheduleLoader):
+        (WebKit::NetworkResourceLoadScheduler::removeLoader):
+        (WebKit::NetworkResourceLoadScheduler::receivedRedirect):
+        (WebKit::NetworkResourceLoadScheduler::removeScheduledLoaders):
+        (WebKit::NetworkResourceLoadScheduler::scheduleRemoveLoader):
+        * NetworkProcess/NetworkResourceLoadScheduler.h:
+
+        Combine ScheduleableLoader and NetworkResourceLoader into NetworkResourceLoader:
+        * NetworkProcess/NetworkResourceLoader.cpp:
+        (WebKit::NetworkResourceLoader::NetworkResourceLoader):
+        (WebKit::NetworkResourceLoader::~NetworkResourceLoader):
+        (WebKit::NetworkResourceLoader::isSynchronous):
+        (WebKit::NetworkResourceLoader::start):
+        (WebKit::NetworkResourceLoader::didReceiveResponseAsync):
+        (WebKit::NetworkResourceLoader::didReceiveBuffer):
+        (WebKit::NetworkResourceLoader::didFinishLoading):
+        (WebKit::NetworkResourceLoader::didFail):
+        (WebKit::NetworkResourceLoader::willSendRequestAsync):
+        (WebKit::NetworkResourceLoader::continueWillSendRequest):
+        (WebKit::NetworkResourceLoader::didSendData):
+        (WebKit::NetworkResourceLoader::shouldUseCredentialStorage):
+        (WebKit::NetworkResourceLoader::didReceiveAuthenticationChallenge):
+        (WebKit::NetworkResourceLoader::consumeSandboxExtensions):
+        (WebKit::NetworkResourceLoader::invalidateSandboxExtensions):
+        (WebKit::NetworkResourceLoader::canAuthenticateAgainstProtectionSpaceAsync):
+        * NetworkProcess/NetworkResourceLoader.h:
+        (WebKit::NetworkResourceLoader::create):
+        (WebKit::NetworkResourceLoader::connectionToWebProcess):
+        (WebKit::NetworkResourceLoader::priority):
+        (WebKit::NetworkResourceLoader::request):
+        (WebKit::NetworkResourceLoader::isLoadingMainResource):
+        (WebKit::NetworkResourceLoader::setHostRecord):
+        (WebKit::NetworkResourceLoader::hostRecord):
+        (WebKit::NetworkResourceLoader::sendAbortingOnFailure):
+
+        Add an abstract NetworkLoaderClient to adapt a load to be either synchronous or asynchronous:
+        * NetworkProcess/NetworkLoaderClient.h:
+        (WebKit::NetworkLoaderClient::~NetworkLoaderClient):
+        (WebKit::NetworkLoaderClient::isSynchronous):
+        (WebKit::NetworkLoaderClient::NetworkLoaderClient):
+
+        The asynchronous loader client, primarily to message progress back to the WebProcess as it happens:
+        * NetworkProcess/AsynchronousNetworkLoaderClient.cpp: Added.
+        (WebKit::AsynchronousNetworkLoaderClient::AsynchronousNetworkLoaderClient):
+        (WebKit::AsynchronousNetworkLoaderClient::willSendRequest):
+        (WebKit::AsynchronousNetworkLoaderClient::canAuthenticateAgainstProtectionSpace):
+        (WebKit::AsynchronousNetworkLoaderClient::didReceiveResponse):
+        (WebKit::AsynchronousNetworkLoaderClient::didReceiveBuffer):
+        (WebKit::AsynchronousNetworkLoaderClient::didSendData):
+        (WebKit::AsynchronousNetworkLoaderClient::didFinishLoading):
+        (WebKit::AsynchronousNetworkLoaderClient::didFail):
+        * NetworkProcess/AsynchronousNetworkLoaderClient.h:
+        (WebKit::AsynchronousNetworkLoaderClient::create):
+
+        The synchronous loader client, primarily to accumulate results of the load to send back to the WebProcess all at once:
+        * NetworkProcess/SynchronousNetworkLoaderClient.cpp: Added.
+        (WebKit::SynchronousNetworkLoaderClient::SynchronousNetworkLoaderClient):
+        (WebKit::SynchronousNetworkLoaderClient::~SynchronousNetworkLoaderClient):
+        (WebKit::SynchronousNetworkLoaderClient::willSendRequest):
+        (WebKit::SynchronousNetworkLoaderClient::canAuthenticateAgainstProtectionSpace):
+        (WebKit::SynchronousNetworkLoaderClient::didReceiveResponse):
+        (WebKit::SynchronousNetworkLoaderClient::didReceiveBuffer):
+        (WebKit::SynchronousNetworkLoaderClient::didFinishLoading):
+        (WebKit::SynchronousNetworkLoaderClient::didFail):
+        (WebKit::SynchronousNetworkLoaderClient::sendDelayedReply):
+        * NetworkProcess/SynchronousNetworkLoaderClient.h: Added.
+        (WebKit::SynchronousNetworkLoaderClient::create):
+
+        * NetworkProcess/SchedulableLoader.cpp: Removed.
+        * NetworkProcess/SchedulableLoader.h: Removed.
+        * NetworkProcess/SyncNetworkResourceLoader.cpp: Removed.
+        * NetworkProcess/SyncNetworkResourceLoader.h: Removed.
+
+        * WebKit2.xcodeproj/project.pbxproj:
+
+2013-08-16  Gabor Rapcsanyi  <rgabor@webkit.org>
+
+        [Qt][ARM] Unreviewed buildfix after 154127.
+
+        * WebProcess/WebPage/CoordinatedGraphics/CoordinatedLayerTreeHost.h: Add missing header.
+
+2013-08-15  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL] Unreviewed build fix after r154142 and r154144.
+
+        * UIProcess/WebContext.cpp:
+        (WebKit::WebContext::useTestingNetworkSession):
+        Fixed build break when NETWORK_PROCESS is disabled after r154144.
+
+2013-08-15  Chris Fleizach  <cfleizach@apple.com>
+
+        <https://webkit.org/b/119858> AX: Crash: com.apple.WebKit.WebContent at com.apple.WebKit2: WebKit::WebPage::accessibilityObjectForMainFramePlugin + 8
+
+        Reviewed by Tim Horton.
+
+        Ensure that the page is available before accessing it.
+
+        * WebProcess/WebPage/mac/WebPageMac.mm:
+        (WebKit::WebPage::accessibilityObjectForMainFramePlugin):
+
+2013-08-15  Alexey Proskuryakov  <ap@apple.com>
+
+        [WK2] NetworkProcess should use a temporary storage session for test
+        https://bugs.webkit.org/show_bug.cgi?id=119855
+
+        Reviewed by Darin Adler.
+
+        We used to have a bundle API for WebKitTestRunner to do this in injected bundle, but
+        NetworkProcess has no injected bundle.
+
+        Added a WKContext API, sending the information to NetworkProcess with initialization
+        parameters. Reworked WebProcess path to do the same for consistency - bundle API
+        is better per se, but not when we also need to have another one.
+
+        * NetworkProcess/NetworkProcess.cpp:
+        (WebKit::NetworkProcess::initializeNetworkProcess):
+        * Shared/Network/NetworkProcessCreationParameters.cpp:
+        (WebKit::NetworkProcessCreationParameters::encode):
+        (WebKit::NetworkProcessCreationParameters::decode):
+        * Shared/Network/NetworkProcessCreationParameters.h:
+        * Shared/WebProcessCreationParameters.cpp:
+        (WebKit::WebProcessCreationParameters::encode):
+        (WebKit::WebProcessCreationParameters::decode):
+        * Shared/WebProcessCreationParameters.h:
+        * UIProcess/API/C/WKContext.cpp:
+        (WKContextUseTestingNetworkSession):
+        * UIProcess/API/C/WKContextPrivate.h:
+        * UIProcess/WebContext.cpp:
+        (WebKit::WebContext::WebContext):
+        (WebKit::WebContext::ensureNetworkProcess):
+        (WebKit::WebContext::createNewWebProcess):
+        (WebKit::WebContext::useTestingNetworkSession):
+        * UIProcess/WebContext.h:
+        * WebProcess/InjectedBundle/API/c/WKBundle.cpp:
+        * WebProcess/InjectedBundle/API/c/WKBundlePrivate.h:
+        * WebProcess/InjectedBundle/InjectedBundle.cpp:
+        * WebProcess/InjectedBundle/InjectedBundle.h:
+        * WebProcess/WebProcess.cpp:
+        (WebKit::WebProcess::initializeWebProcess):
+
+2013-08-15  Anders Carlsson  <andersca@apple.com>
+
+        <https://webkit.org/b/119859> Frame::loader() should return a reference
+
+        Reviewed by Andreas Kling.
+
+        * Shared/WebRenderLayer.cpp:
+        (WebKit::WebRenderLayer::create):
+        * Shared/WebRenderObject.cpp:
+        (WebKit::WebRenderObject::create):
+        * WebProcess/Geolocation/GeolocationPermissionRequestManager.cpp:
+        (WebKit::GeolocationPermissionRequestManager::startRequestForGeolocation):
+        * WebProcess/InjectedBundle/API/c/WKBundleFrame.cpp:
+        (WKBundleFrameGetFrameLoadState):
+        (WKBundleFrameClearOpener):
+        (WKBundleFrameCallShouldCloseOnWebView):
+        * WebProcess/InjectedBundle/DOM/InjectedBundleNodeHandle.cpp:
+        (WebKit::InjectedBundleNodeHandle::documentFrame):
+        (WebKit::InjectedBundleNodeHandle::htmlFrameElementContentFrame):
+        (WebKit::InjectedBundleNodeHandle::htmlIFrameElementContentFrame):
+        * WebProcess/InjectedBundle/InjectedBundle.cpp:
+        (WebKit::InjectedBundle::overrideBoolPreferenceForTestRunner):
+        * WebProcess/InjectedBundle/InjectedBundleDOMWindowExtension.cpp:
+        (WebKit::InjectedBundleDOMWindowExtension::frame):
+        * WebProcess/InjectedBundle/InjectedBundleHitTestResult.cpp:
+        (WebKit::InjectedBundleHitTestResult::frame):
+        (WebKit::InjectedBundleHitTestResult::targetFrame):
+        * WebProcess/Plugins/PDF/PDFPlugin.mm:
+        (WebKit::PDFPlugin::clickedLink):
+        * WebProcess/Plugins/PluginView.cpp:
+        (WebKit::webPage):
+        (WebKit::PluginView::didFailToInitializePlugin):
+        (WebKit::PluginView::performFrameLoadURLRequest):
+        (WebKit::PluginView::userAgent):
+        (WebKit::PluginView::loadURL):
+        (WebKit::PluginView::cancelManualStreamLoad):
+        (WebKit::PluginView::proxiesForURL):
+        * WebProcess/WebCoreSupport/WebChromeClient.cpp:
+        (WebKit::WebChromeClient::focusedElementChanged):
+        (WebKit::WebChromeClient::focusedFrameChanged):
+        (WebKit::WebChromeClient::runBeforeUnloadConfirmPanel):
+        (WebKit::WebChromeClient::closeWindowSoon):
+        (WebKit::WebChromeClient::runJavaScriptAlert):
+        (WebKit::WebChromeClient::runJavaScriptConfirm):
+        (WebKit::WebChromeClient::runJavaScriptPrompt):
+        (WebKit::WebChromeClient::unavailablePluginButtonClicked):
+        (WebKit::WebChromeClient::print):
+        (WebKit::WebChromeClient::exceededDatabaseQuota):
+        (WebKit::WebChromeClient::runOpenPanel):
+        * WebProcess/WebCoreSupport/WebContextMenuClient.cpp:
+        (WebKit::WebContextMenuClient::searchWithGoogle):
+        * WebProcess/WebCoreSupport/WebEditorClient.cpp:
+        (WebKit::WebEditorClient::textFieldDidBeginEditing):
+        (WebKit::WebEditorClient::textFieldDidEndEditing):
+        (WebKit::WebEditorClient::textDidChangeInTextField):
+        (WebKit::WebEditorClient::textDidChangeInTextArea):
+        (WebKit::WebEditorClient::doTextFieldCommandFromEvent):
+        (WebKit::WebEditorClient::textWillBeDeletedInTextField):
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::dispatchDidReceiveServerRedirectForProvisionalLoad):
+        (WebKit::WebFrameLoaderClient::dispatchDidStartProvisionalLoad):
+        (WebKit::WebFrameLoaderClient::dispatchDidCommitLoad):
+        (WebKit::WebFrameLoaderClient::dispatchDecidePolicyForResponse):
+        (WebKit::WebFrameLoaderClient::dispatchDecidePolicyForNewWindowAction):
+        (WebKit::WebFrameLoaderClient::dispatchDecidePolicyForNavigationAction):
+        (WebKit::WebFrameLoaderClient::dispatchWillSendSubmitEvent):
+        (WebKit::WebFrameLoaderClient::dispatchWillSubmitForm):
+        (WebKit::WebFrameLoaderClient::updateGlobalHistory):
+        (WebKit::WebFrameLoaderClient::updateGlobalHistoryRedirectLinks):
+        (WebKit::WebFrameLoaderClient::restoreViewState):
+        (WebKit::WebFrameLoaderClient::createFrame):
+        (WebKit::WebFrameLoaderClient::createJavaAppletWidget):
+        (WebKit::WebFrameLoaderClient::objectContentType):
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.cpp:
+        (WebKit::WebPlatformStrategies::getPluginInfo):
+        * WebProcess/WebCoreSupport/mac/WebFrameNetworkingContext.mm:
+        (WebKit::WebFrameNetworkingContext::blockedError):
+        * WebProcess/WebPage/WebFrame.cpp:
+        (WebKit::WebFrame::didReceivePolicyDecision):
+        (WebKit::WebFrame::startDownload):
+        (WebKit::WebFrame::source):
+        (WebKit::WebFrame::contentsAsString):
+        (WebKit::WebFrame::url):
+        (WebKit::WebFrame::parentFrame):
+        (WebKit::WebFrame::childFrames):
+        (WebKit::WebFrame::stopLoading):
+        (WebKit::WebFrame::frameForContext):
+        (WebKit::WebFrame::provisionalURL):
+        (WebKit::WebFrame::suggestedFilenameForResourceWithURL):
+        (WebKit::WebFrame::mimeTypeForResourceWithURL):
+        (WebKit::WebFrameFilter::shouldIncludeSubframe):
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::createPlugin):
+        (WebKit::WebPage::close):
+        (WebKit::WebPage::tryClose):
+        (WebKit::WebPage::loadURLRequest):
+        (WebKit::WebPage::loadDataImpl):
+        (WebKit::WebPage::linkClicked):
+        (WebKit::WebPage::stopLoadingFrame):
+        (WebKit::WebPage::stopLoading):
+        (WebKit::WebPage::reload):
+        (WebKit::WebPage::tryRestoreScrollPosition):
+        (WebKit::WebPage::getMainResourceDataOfFrame):
+        (WebKit::resourceDataForFrame):
+        (WebKit::shouldReuseCommittedSandboxExtension):
+        (WebKit::WebPage::SandboxExtensionTracker::didStartProvisionalLoad):
+        (WebKit::WebPage::hasLocalDataForURL):
+        (WebKit::WebPage::setCustomTextEncodingName):
+        (WebKit::WebPage::canPluginHandleResponse):
+        (WebKit::WebPage::canShowMIMEType):
+        (WebKit::WebPage::didCommitLoad):
+        * WebProcess/WebPage/mac/WebPageMac.mm:
+        (WebKit::WebPage::platformHasLocalDataForURL):
+        (WebKit::cachedResponseForURL):
+        * WebProcess/WebProcess.cpp:
+        (WebKit::WebProcess::downloadRequest):
+
+2013-08-14  Filip Pizlo  <fpizlo@apple.com>
+
+        Typed arrays should be rewritten
+        https://bugs.webkit.org/show_bug.cgi?id=119064
+
+        Reviewed by Oliver Hunt.
+        
+        You don't need to include JSUint8Array anymore if you just want to
+        unwrap one; JSDOMBinding gives you all of the things you need.
+
+        * WebProcess/InjectedBundle/InjectedBundle.cpp:
+
+2013-08-15  Eric Carlson  <eric.carlson@apple.com>
+
+        [Mac] Remove "legacy" media UI
+        https://bugs.webkit.org/show_bug.cgi?id=119752
+
+        Reviewed by Jer Noble.
+
+        * WebProcess/WebCoreSupport/mac/WebSystemInterface.mm:
+        (InitWebCoreSystemInterface): Remove MediaControllerThemeAvailable.
+
+2013-08-14  Dean Jackson  <dino@apple.com>
+
+        <https://webkit.org/b/119827> Allow primary plug-in detection to run more than once if necessary
+
+        Reviewed by Tim Horton.
+
+        We occasionally see cases where the primary plug-in detection runs before the plugins have been added
+        to the page, especially if they do so in response to a load event. Tweak the algorithm so that it can
+        run an arbitrary number of times if it fails.
+
+        While here, also have the detection run if there has ever been a plugin in the page as opposed to any
+        current views. We may have snapshotted a plugin by now and deleted its view.
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::WebPage): initialise new members.
+        (WebKit::WebPage::addPluginView): Mark that we've seen a plugin.
+        (WebKit::WebPage::resetPrimarySnapshottedPlugIn): Reset new members.
+        (WebKit::WebPage::determinePrimarySnapshottedPlugIn): Exit early if we've never
+        seen a plugin, rather than if we don't have any active views. Also, if we didn't find anything set
+        a timer to run again (maximum of two attempts at the moment).
+        * WebProcess/WebPage/WebPage.h: New members - m_numberOfPrimarySnapshotDetectionAttempts
+        and m_hasSeenPlugin.
+
+2013-08-14  Dean Jackson  <dino@apple.com>
+
+        <https://webkit.org/b/119820> Add pluginView-related logging to WebPage
+
+        Reviewed by Tim Horton.
+
+        Add some more diagnostic output to help track down bugs.
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::addPluginView): More logging.
+        (WebKit::WebPage::removePluginView): Ditto.
+
+2013-08-14  Alexey Proskuryakov  <ap@apple.com>
+
+        [WK2] Sync messages with with non-default timeout sent from secondary threads always time out
+        https://bugs.webkit.org/show_bug.cgi?id=119767
+
+        Fix by Justin Bur.
+        Reviewed by Darin Adler.
+
+        * Platform/CoreIPC/Connection.cpp: (CoreIPC::Connection::sendSyncMessageFromSecondaryThread):
+        The argument to wait() is absolute time, not a delta. This calculation matches one
+        in Connection::waitForMessage().
+
+2013-08-14  Tim Horton  <timothy_horton@apple.com>
+
+        REGRESSION (r153877): Plugin scanning slows creation of WebViews
+        https://bugs.webkit.org/show_bug.cgi?id=119665
+        <rdar://problem/14716549>
+
+        Reviewed by Darin Adler.
+
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.cpp:
+        (WebKit::WebPlatformStrategies::refreshPlugins):
+        Don't repopulate the plugin cache in refreshPlugins, just invalidate it.
+        It will be repopulated the next time something tries to use it.
+
 2013-08-12  Dan Bernstein  <mitz@apple.com>
 
         Fixed an off-by-(sizeof(char*) - 1) bug.

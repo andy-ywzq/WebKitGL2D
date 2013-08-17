@@ -172,7 +172,7 @@ static VisiblePosition visiblePositionForPointIgnoringClipping(const Frame& fram
     // outside the visible rect. To work around the bug, this is a copy of
     // visiblePositionAtPoint which which passes ignoreClipping=true.
     // See RIM Bug #4315.
-    HitTestResult result = frame.eventHandler()->hitTestResultAtPoint(framePoint, HitTestRequest::ReadOnly | HitTestRequest::Active | HitTestRequest::IgnoreClipping);
+    HitTestResult result = frame.eventHandler().hitTestResultAtPoint(framePoint, HitTestRequest::ReadOnly | HitTestRequest::Active | HitTestRequest::IgnoreClipping);
 
     Node* node = result.innerNode();
     if (!node || node->document() != frame.document())
@@ -897,7 +897,7 @@ void SelectionHandler::selectObject(const WebCore::IntPoint& location, TextGranu
     if (!m_webPage->m_inputHandler->boundingBoxForInputField().contains(relativePoint)) {
         Node* anchorNode = selection.start().anchorNode();
         if (!anchorNode || anchorNode->isElementNode())
-            m_webPage->m_page->focusController()->setFocusedElement(toElement(anchorNode), focusedFrame);
+            m_webPage->m_page->focusController().setFocusedElement(toElement(anchorNode), focusedFrame);
     }
 
     m_selectionActive = expandSelectionToGranularity(focusedFrame, selection, granularity, m_webPage->m_inputHandler->isInputMode());

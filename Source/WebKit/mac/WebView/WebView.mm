@@ -1108,7 +1108,7 @@ static bool fastDocumentTeardownEnabled()
 #endif
 
     if (Frame* mainFrame = [self _mainCoreFrame])
-        mainFrame->loader()->detachFromParent();
+        mainFrame->loader().detachFromParent();
 
     [self setHostWindow:nil];
 
@@ -1304,7 +1304,7 @@ static bool fastDocumentTeardownEnabled()
             // If this item is showing , save away its current scroll and form state,
             // since that might have changed since loading and it is normally not saved
             // until we leave that page.
-            otherView->_private->page->mainFrame()->loader()->history()->saveDocumentAndScrollState();
+            otherView->_private->page->mainFrame()->loader().history()->saveDocumentAndScrollState();
         }
         RefPtr<HistoryItem> newItem = otherBackForwardList->itemAtIndex(i)->copy();
         if (i == 0) 
@@ -2010,7 +2010,7 @@ static inline IMP getMethod(id o, SEL s)
     if (!_private->page)
         return nil;
 
-    if (CFURLStorageSessionRef storageSession = _private->page->mainFrame()->loader()->networkingContext()->storageSession().platformSession())
+    if (CFURLStorageSessionRef storageSession = _private->page->mainFrame()->loader().networkingContext()->storageSession().platformSession())
         cachedResponse = WKCachedResponseForRequest(storageSession, request.get());
     else
         cachedResponse = [[NSURLCache sharedURLCache] cachedResponseForRequest:request.get()];
@@ -2077,7 +2077,7 @@ static inline IMP getMethod(id o, SEL s)
 
 - (void)_addScrollerDashboardRegionsForFrameView:(FrameView*)frameView dashboardRegions:(NSMutableDictionary *)regions
 {    
-    NSView *documentView = [[kit(frameView->frame()) frameView] documentView];
+    NSView *documentView = [[kit(&frameView->frame()) frameView] documentView];
 
     const HashSet<RefPtr<Widget> >* children = frameView->children();
     HashSet<RefPtr<Widget> >::const_iterator end = children->end();
@@ -2653,7 +2653,7 @@ static inline IMP getMethod(id o, SEL s)
 - (void)_updateActiveState
 {
     if (_private && _private->page)
-        _private->page->focusController()->setActive([[self window] _hasKeyAppearance]);
+        _private->page->focusController().setActive([[self window] _hasKeyAppearance]);
 }
 
 static Vector<String> toStringVector(NSArray* patterns)
@@ -3761,7 +3761,7 @@ static NSString * const backingPropertyOldScaleFactorKey = @"NSBackingPropertyOl
 
     if (_private && _private->page) {
         _private->page->resumeScriptedAnimations();
-        _private->page->focusController()->setContainingWindowIsVisible(true);
+        _private->page->focusController().setContainingWindowIsVisible(true);
     }
 }
 
@@ -3774,7 +3774,7 @@ static NSString * const backingPropertyOldScaleFactorKey = @"NSBackingPropertyOl
 {
     if (_private && _private->page) {
         _private->page->suspendScriptedAnimations();
-        _private->page->focusController()->setContainingWindowIsVisible(false);
+        _private->page->focusController().setContainingWindowIsVisible(false);
     }
 }
 
@@ -4152,7 +4152,7 @@ static NSString * const backingPropertyOldScaleFactorKey = @"NSBackingPropertyOl
     if (encoding == oldEncoding || [encoding isEqualToString:oldEncoding])
         return;
     if (Frame* mainFrame = [self _mainCoreFrame])
-        mainFrame->loader()->reloadWithOverrideEncoding(encoding);
+        mainFrame->loader().reloadWithOverrideEncoding(encoding);
 }
 
 - (NSString *)_mainFrameOverrideEncoding
@@ -4195,7 +4195,7 @@ static NSString * const backingPropertyOldScaleFactorKey = @"NSBackingPropertyOl
     Frame* coreFrame = [self _mainCoreFrame];
     if (!coreFrame)
         return nil;
-    return coreFrame->script()->windowScriptObject();
+    return coreFrame->script().windowScriptObject();
 }
 
 - (String)_userAgentString
@@ -5011,7 +5011,7 @@ static BOOL findString(NSView <WebDocumentSearching> *searchView, NSString *stri
     Frame* coreFrame = [self _mainCoreFrame];
     if (!coreFrame)
         return YES;
-    return coreFrame->loader()->shouldClose();
+    return coreFrame->loader().shouldClose();
 }
 
 static NSAppleEventDescriptor* aeDescFromJSValue(ExecState* exec, JSC::JSValue jsValue)
@@ -5075,11 +5075,11 @@ static NSAppleEventDescriptor* aeDescFromJSValue(ExecState* exec, JSC::JSValue j
         return nil;
     if (!coreFrame->document())
         return nil;
-    JSC::JSValue result = coreFrame->script()->executeScript(script, true).jsValue();
+    JSC::JSValue result = coreFrame->script().executeScript(script, true).jsValue();
     if (!result) // FIXME: pass errors
         return 0;
-    JSLockHolder lock(coreFrame->script()->globalObject(mainThreadNormalWorld())->globalExec());
-    return aeDescFromJSValue(coreFrame->script()->globalObject(mainThreadNormalWorld())->globalExec(), result);
+    JSLockHolder lock(coreFrame->script().globalObject(mainThreadNormalWorld())->globalExec());
+    return aeDescFromJSValue(coreFrame->script().globalObject(mainThreadNormalWorld())->globalExec(), result);
 }
 
 - (BOOL)canMarkAllTextMatches

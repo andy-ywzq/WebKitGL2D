@@ -1,3 +1,40 @@
+2013-08-15  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK build fix after r154106.
+
+        * Source/autotools/symbols.filter: Export the proper Element::shadowRoot() symbol.
+
+2013-08-14  Filip Pizlo  <fpizlo@apple.com>
+
+        Typed arrays should be rewritten
+        https://bugs.webkit.org/show_bug.cgi?id=119064
+
+        Reviewed by Oliver Hunt.
+
+        Automake work courtesy of Zan Dobersek <zdobersek@igalia.com>.
+
+        * Source/autotools/symbols.filter:
+
+2013-08-14  Tim Horton  <timothy_horton@apple.com>
+
+        Un-inline dataLog dumpers for IntSize and IntPoint
+        https://bugs.webkit.org/show_bug.cgi?id=119697
+
+        Reviewed by Sam Weinig.
+
+        Avoid regressing build performance by moving IntSize::dump and IntPoint::dump elsewhere.
+
+        * Source/autotools/symbols.filter:
+
+2013-08-14  Martin Robinson  <mrobinson@igalia.com>
+
+        [GTK] [CMake] Add support for building TestWebKitAPI
+        https://bugs.webkit.org/show_bug.cgi?id=116987
+
+        Reviewed by Philippe Normand.
+
+        * Source/cmake/OptionsGTK.cmake: Turn on the API tests in the settings.
+
 2013-08-13  Zan Dobersek  <zdobersek@igalia.com>
 
         [Autotools] Unicode's CFLAGS enforce -D_FORTIFY_SOURCE=2, -D_REENTRANT=1, causing faulty Clang builds

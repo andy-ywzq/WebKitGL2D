@@ -211,7 +211,7 @@ PassRefPtr<Frame> Frame::create(Page* page, HTMLFrameOwnerElement* ownerElement,
 Frame::~Frame()
 {
     setView(0);
-    loader()->cancelAndClear();
+    loader().cancelAndClear();
 
     // FIXME: We should not be doing all this work inside the destructor
 
@@ -267,14 +267,14 @@ void Frame::setView(PassRefPtr<FrameView> view)
     if (m_view)
         m_view->unscheduleRelayout();
     
-    eventHandler()->clear();
+    eventHandler().clear();
 
     m_view = view;
 
     // Only one form submission is allowed per view of a part.
     // Since this part may be getting reused as a result of being
     // pulled from the back/forward cache, reset this flag.
-    loader()->resetMultipleFormSubmissionProtection();
+    loader().resetMultipleFormSubmissionProtection();
     
 #if USE(TILED_BACKING_STORE)
     if (m_view && tiledBackingStore())
@@ -560,7 +560,7 @@ void Frame::injectUserScripts(UserScriptInjectionTime injectionTime)
     if (!m_page)
         return;
 
-    if (loader()->stateMachine()->creatingInitialEmptyDocument() && !settings()->shouldInjectUserScriptsInInitialEmptyDocument())
+    if (loader().stateMachine()->creatingInitialEmptyDocument() && !settings()->shouldInjectUserScriptsInInitialEmptyDocument())
         return;
 
     // Walk the hashtable. Inject by world.
@@ -626,17 +626,15 @@ Frame* Frame::frameForWidget(const Widget* widget)
     // Assume all widgets are either a FrameView or owned by a RenderWidget.
     // FIXME: That assumption is not right for scroll bars!
     ASSERT_WITH_SECURITY_IMPLICATION(widget->isFrameView());
-    return toFrameView(widget)->frame();
+    return &toFrameView(widget)->frame();
 }
 
 void Frame::clearTimers(FrameView *view, Document *document)
 {
     if (view) {
         view->unscheduleRelayout();
-        if (view->frame()) {
-            view->frame()->animation()->suspendAnimationsForDocument(document);
-            view->frame()->eventHandler()->stopAutoscrollTimer();
-        }
+        view->frame().animation()->suspendAnimationsForDocument(document);
+        view->frame().eventHandler().stopAutoscrollTimer();
     }
 }
 
@@ -663,7 +661,7 @@ void Frame::dispatchVisibilityStateChangeEvent()
 void Frame::willDetachPage()
 {
     if (Frame* parent = tree()->parent())
-        parent->loader()->checkLoadComplete();
+        parent->loader().checkLoadComplete();
 
     HashSet<FrameDestructionObserver*>::iterator stop = m_destructionObservers.end();
     for (HashSet<FrameDestructionObserver*>::iterator it = m_destructionObservers.begin(); it != stop; ++it)
@@ -671,14 +669,14 @@ void Frame::willDetachPage()
 
     // FIXME: It's unclear as to why this is called more than once, but it is,
     // so page() could be NULL.
-    if (page() && page()->focusController()->focusedFrame() == this)
-        page()->focusController()->setFocusedFrame(0);
+    if (page() && page()->focusController().focusedFrame() == this)
+        page()->focusController().setFocusedFrame(0);
 
     if (page() && page()->scrollingCoordinator() && m_view)
         page()->scrollingCoordinator()->willDestroyScrollableArea(m_view.get());
 
-    script()->clearScriptObjects();
-    script()->updatePlatformScriptObjects();
+    script().clearScriptObjects();
+    script().updatePlatformScriptObjects();
 }
 
 void Frame::disconnectOwnerElement()
@@ -708,7 +706,7 @@ String Frame::displayStringModifiedByEncoding(const String& str) const
 
 VisiblePosition Frame::visiblePositionForPoint(const IntPoint& framePoint)
 {
-    HitTestResult result = eventHandler()->hitTestResultAtPoint(framePoint, HitTestRequest::ReadOnly | HitTestRequest::Active);
+    HitTestResult result = eventHandler().hitTestResultAtPoint(framePoint, HitTestRequest::ReadOnly | HitTestRequest::Active);
     Node* node = result.innerNonSharedNode();
     if (!node)
         return VisiblePosition();
@@ -730,7 +728,7 @@ Document* Frame::documentAtPoint(const IntPoint& point)
     HitTestResult result = HitTestResult(pt);
 
     if (contentRenderer())
-        result = eventHandler()->hitTestResultAtPoint(pt);
+        result = eventHandler().hitTestResultAtPoint(pt);
     return result.innerNode() ? result.innerNode()->document() : 0;
 }
 
@@ -1097,7 +1095,7 @@ DragImageRef Frame::nodeImage(Node* node)
     m_view->paintContents(buffer->context(), paintingRect);
 
     RefPtr<Image> image = buffer->copyImage();
-    return createDragImageFromImage(image.get(), renderer->shouldRespectImageOrientation());
+    return createDragImageFromImage(image.get(), ImageOrientationDescription(renderer->shouldRespectImageOrientation()));
 }
 
 DragImageRef Frame::dragImageForSelection()
@@ -1126,7 +1124,7 @@ DragImageRef Frame::dragImageForSelection()
     m_view->paintContents(buffer->context(), paintingRect);
 
     RefPtr<Image> image = buffer->copyImage();
-    return createDragImageFromImage(image.get());
+    return createDragImageFromImage(image.get(), ImageOrientationDescription());
 }
 
 #endif

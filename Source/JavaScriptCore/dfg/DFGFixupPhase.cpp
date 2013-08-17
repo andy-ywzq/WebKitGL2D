@@ -725,7 +725,8 @@ private:
             break;
         }
             
-        case GetById: {
+        case GetById:
+        case GetByIdFlush: {
             if (!node->child1()->shouldSpeculateCell())
                 break;
             setUseKindAndUnboxIfProfitable<CellUse>(node->child1());
@@ -741,9 +742,19 @@ private:
                 ConcurrentJITLocker locker(profiledBlock->m_lock);
                 arrayProfile->computeUpdatedPrediction(locker, profiledBlock);
                 arrayMode = ArrayMode::fromObserved(locker, arrayProfile, Array::Read, false);
-                arrayMode = arrayMode.refine(node->child1()->prediction(), node->prediction());
-            } else
-                arrayMode = arrayMode.refine(node->child1()->prediction(), node->prediction());
+                if (arrayMode.type() == Array::Unprofiled) {
+                    // For normal array operations, it makes sense to treat Unprofiled
+                    // accesses as ForceExit and get more data rather than using
+                    // predictions and then possibly ending up with a Generic. But here,
+                    // we treat anything that is Unprofiled as Generic and keep the
+                    // GetById. I.e. ForceExit = Generic. So, there is no harm - and only
+                    // profit - from treating the Unprofiled case as
+                    // SelectUsingPredictions.
+                    arrayMode = ArrayMode(Array::SelectUsingPredictions);
+                }
+            }
+            
+            arrayMode = arrayMode.refine(node->child1()->prediction(), node->prediction());
             
             if (arrayMode.type() == Array::Generic) {
                 // Check if the input is something that we can't get array length for, but for which we
@@ -768,12 +779,6 @@ private:
                 break;
             
             node->child2() = Edge(storage);
-            break;
-        }
-            
-        case GetByIdFlush: {
-            if (node->child1()->shouldSpeculateCell())
-                setUseKindAndUnboxIfProfitable<CellUse>(node->child1());
             break;
         }
             
@@ -1407,9 +1412,17 @@ private:
         
         value = jsNumber(JSC::toInt32(value.asNumber()));
         ASSERT(value.isInt32());
+        unsigned constantRegister;
+        if (!codeBlock()->findConstant(value, constantRegister)) {
+            initializeLazyWriteBarrier(
+                codeBlock()->addConstantLazily(),
+                m_graph.m_plan.writeBarriers,
+                codeBlock()->ownerExecutable(),
+                value);
+        }
         edge.setNode(m_insertionSet.insertNode(
             m_indexInBlock, SpecInt32, JSConstant, m_currentNode->codeOrigin,
-            OpInfo(codeBlock()->addOrFindConstant(value))));
+            OpInfo(constantRegister)));
     }
     
     void truncateConstantsIfNecessary(Node* node, AddSpeculationMode mode)

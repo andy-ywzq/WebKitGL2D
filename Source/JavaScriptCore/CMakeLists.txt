@@ -100,7 +100,10 @@ set(JavaScriptCore_SOURCES
     dfg/DFGDCEPhase.cpp
     dfg/DFGDesiredIdentifiers.cpp
     dfg/DFGDesiredStructureChains.cpp
+    dfg/DFGDesiredTransitions.cpp
     dfg/DFGDesiredWatchpoints.cpp
+    dfg/DFGDesiredWeakReferences.cpp
+    dfg/DFGDesiredWriteBarriers.cpp
     dfg/DFGDisassembler.cpp
     dfg/DFGDominators.cpp
     dfg/DFGDriver.cpp
@@ -167,6 +170,10 @@ set(JavaScriptCore_SOURCES
     heap/CopyVisitor.cpp
     heap/ConservativeRoots.cpp
     heap/DFGCodeBlocks.cpp
+    heap/GCIncomingRefCountedSet.h
+    heap/GCIncomingRefCounted.h
+    heap/GCIncomingRefCountedSetInlines.h
+    heap/GCIncomingRefCountedInlines.h
     heap/GCThread.cpp
     heap/GCThreadSharedData.cpp
     heap/HandleSet.cpp
@@ -264,10 +271,10 @@ set(JavaScriptCore_SOURCES
     profiler/ProfileNode.cpp
     profiler/LegacyProfiler.cpp
 
-    runtime/ArrayBuffer.cpp
-    runtime/ArrayBufferView.cpp
     runtime/ArgList.cpp
     runtime/Arguments.cpp
+    runtime/ArrayBuffer.cpp
+    runtime/ArrayBufferView.cpp
     runtime/ArrayConstructor.cpp
     runtime/ArrayPrototype.cpp
     runtime/BooleanConstructor.cpp
@@ -282,6 +289,8 @@ set(JavaScriptCore_SOURCES
     runtime/CompilationResult.cpp
     runtime/Completion.cpp
     runtime/ConstructData.cpp
+    runtime/DataView.cpp
+    runtime/DataView.h
     runtime/DateConstructor.cpp
     runtime/DateConversion.cpp
     runtime/DateInstance.cpp
@@ -306,10 +315,16 @@ set(JavaScriptCore_SOURCES
     runtime/JSAPIValueWrapper.cpp
     runtime/JSActivation.cpp
     runtime/JSArray.cpp
+    runtime/JSArrayBuffer.cpp
+    runtime/JSArrayBufferConstructor.cpp
+    runtime/JSArrayBufferPrototype.cpp
+    runtime/JSArrayBufferView.cpp
     runtime/JSBoundFunction.cpp
     runtime/JSCJSValue.cpp
     runtime/JSCell.cpp
     runtime/JSChunk.cpp
+    runtime/JSDataView.cpp
+    runtime/JSDataViewPrototype.cpp
     runtime/JSDateMath.cpp
     runtime/JSFunction.cpp
     runtime/JSGlobalObject.cpp
@@ -327,6 +342,9 @@ set(JavaScriptCore_SOURCES
     runtime/JSString.cpp
     runtime/JSStringJoiner.cpp
     runtime/JSSymbolTableObject.cpp
+    runtime/JSTypedArrayConstructors.cpp
+    runtime/JSTypedArrayPrototypes.cpp
+    runtime/JSTypedArrays.cpp
     runtime/JSVariableObject.cpp
     runtime/JSWithScope.cpp
     runtime/JSWrapperObject.cpp
@@ -359,6 +377,7 @@ set(JavaScriptCore_SOURCES
     runtime/RegExpObject.cpp
     runtime/RegExpPrototype.cpp
     runtime/SamplingCounter.cpp
+    runtime/SimpleTypedArrayController.cpp
     runtime/SmallStrings.cpp
     runtime/SparseArrayValueMap.cpp
     runtime/StrictEvalActivation.cpp
@@ -370,6 +389,8 @@ set(JavaScriptCore_SOURCES
     runtime/StructureChain.cpp
     runtime/StructureRareData.cpp
     runtime/SymbolTable.cpp
+    runtime/TypedArrayController.cpp
+    runtime/TypedArrayType.cpp
     runtime/VM.cpp
     runtime/Watchdog.cpp
     runtime/WatchdogNone.cpp
@@ -391,6 +412,7 @@ set(JavaScriptCore_LUT_FILES
     runtime/DateConstructor.cpp
     runtime/DatePrototype.cpp
     runtime/ErrorPrototype.cpp
+    runtime/JSDataViewPrototype.cpp
     runtime/JSGlobalObject.cpp
     runtime/JSONObject.cpp
     runtime/NamePrototype.cpp

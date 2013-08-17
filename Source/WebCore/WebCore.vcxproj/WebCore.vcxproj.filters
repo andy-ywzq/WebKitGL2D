@@ -1404,7 +1404,13 @@
     <ClCompile Include="..\platform\graphics\ImageSource.cpp">
       <Filter>platform\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="..\platform\graphics\IntPoint.cpp">
+      <Filter>platform\graphics</Filter>
+    </ClCompile>
     <ClCompile Include="..\platform\graphics\IntRect.cpp">
+      <Filter>platform\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\platform\graphics\IntSize.cpp">
       <Filter>platform\graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\platform\graphics\LayoutBoxExtent.cpp">
@@ -5350,9 +5356,6 @@
     <ClCompile Include="..\html\canvas\CanvasStyle.cpp">
       <Filter>html\canvas</Filter>
     </ClCompile>
-    <ClCompile Include="..\html\canvas\DataView.cpp">
-      <Filter>html\canvas</Filter>
-    </ClCompile>
     <ClCompile Include="..\html\parser\HTMLResourcePreloader.cpp">
       <Filter>html\parser</Filter>
     </ClCompile>
@@ -7057,6 +7060,15 @@
     </ClCompile>
     <ClCompile Include="..\platform\graphics\GLContext.cpp">
       <Filter>platform\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rendering\shapes\RasterShape.cpp" />
+    <ClCompile Include="..\bindings\js\WebCoreTypedArrayController.cpp" />
+    <ClCompile Include="..\style\StyleFontSizeFunctions.cpp" />
+    <ClCompile Include="..\style\StyleResolveForDocument.cpp" />
+    <ClCompile Include="..\style\StyleResolveTree.cpp" />
+    <ClCompile Include="..\css\CSSFilterImageValue.cpp" />
+    <ClCompile Include="..\platform\win\WebCoreBundleWin.cpp">
+      <Filter>platform\win</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -13095,9 +13107,6 @@
     <ClInclude Include="..\html\canvas\CanvasStyle.h">
       <Filter>html\canvas</Filter>
     </ClInclude>
-    <ClInclude Include="..\html\canvas\DataView.h">
-      <Filter>html\canvas</Filter>
-    </ClInclude>
     <ClInclude Include="..\html\parser\HTMLResourcePreloader.h">
       <Filter>html\parser</Filter>
     </ClInclude>
@@ -14804,6 +14813,15 @@
     </ClInclude>
     <ClInclude Include="..\platform\graphics\GLContext.h">
       <Filter>platform\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rendering\shapes\RasterShape.h" />
+    <ClInclude Include="..\dom\ElementTraversal.h" />
+    <ClInclude Include="..\style\StyleFontSizeFunctions.h" />
+    <ClInclude Include="..\style\StyleResolveForDocument.h" />
+    <ClInclude Include="..\style\StyleResolveTree.h" />
+    <ClInclude Include="..\css\CSSFilterImageValue.h" />
+    <ClInclude Include="..\platform\win\WebCoreBundleWin.h">
+      <Filter>platform\win</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -231,7 +231,7 @@ void WebFrame::didReceivePolicyDecision(uint64_t listenerID, PolicyAction action
 
     m_policyDownloadID = downloadID;
 
-    (m_coreFrame->loader()->policyChecker()->*function)(action);
+    (m_coreFrame->loader().policyChecker()->*function)(action);
 }
 
 void WebFrame::startDownload(const WebCore::ResourceRequest& request)
@@ -243,7 +243,7 @@ void WebFrame::startDownload(const WebCore::ResourceRequest& request)
 
 #if ENABLE(NETWORK_PROCESS)
     if (WebProcess::shared().usesNetworkProcess()) {
-        bool privateBrowsingEnabled = m_coreFrame->loader()->networkingContext()->storageSession().isPrivateBrowsingSession();
+        bool privateBrowsingEnabled = m_coreFrame->loader().networkingContext()->storageSession().isPrivateBrowsingSession();
         WebProcess::shared().networkConnection()->connection()->send(Messages::NetworkConnectionToWebProcess::StartDownload(privateBrowsingEnabled, policyDownloadID, request), 0);
         return;
     }
@@ -295,7 +295,7 @@ String WebFrame::source() const
     TextResourceDecoder* decoder = document->decoder();
     if (!decoder)
         return String();
-    DocumentLoader* documentLoader = m_coreFrame->loader()->activeDocumentLoader();
+    DocumentLoader* documentLoader = m_coreFrame->loader().activeDocumentLoader();
     if (!documentLoader)
         return String();
     RefPtr<ResourceBuffer> mainResourceData = documentLoader->mainResourceData();
@@ -315,7 +315,7 @@ String WebFrame::contentsAsString() const
             if (!builder.isEmpty())
                 builder.append(' ');
 
-            WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(child->loader()->client());
+            WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(child->loader().client());
             WebFrame* webFrame = webFrameLoaderClient ? webFrameLoaderClient->webFrame() : 0;
             ASSERT(webFrame);
 
@@ -395,7 +395,7 @@ String WebFrame::url() const
     if (!m_coreFrame)
         return String();
 
-    DocumentLoader* documentLoader = m_coreFrame->loader()->documentLoader();
+    DocumentLoader* documentLoader = m_coreFrame->loader().documentLoader();
     if (!documentLoader)
         return String();
 
@@ -418,7 +418,7 @@ WebFrame* WebFrame::parentFrame() const
     if (!m_coreFrame || !m_coreFrame->ownerElement() || !m_coreFrame->ownerElement()->document())
         return 0;
 
-    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(m_coreFrame->ownerElement()->document()->frame()->loader()->client());
+    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(m_coreFrame->ownerElement()->document()->frame()->loader().client());
     return webFrameLoaderClient ? webFrameLoaderClient->webFrame() : 0;
 }
 
@@ -435,7 +435,7 @@ PassRefPtr<ImmutableArray> WebFrame::childFrames()
     vector.reserveInitialCapacity(size);
 
     for (Frame* child = m_coreFrame->tree()->firstChild(); child; child = child->tree()->nextSibling()) {
-        WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(child->loader()->client());
+        WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(child->loader().client());
         WebFrame* webFrame = webFrameLoaderClient ? webFrameLoaderClient->webFrame() : 0;
         ASSERT(webFrame);
         vector.uncheckedAppend(webFrame);
@@ -470,12 +470,12 @@ bool WebFrame::allowsFollowingLink(const WebCore::KURL& url) const
 
 JSGlobalContextRef WebFrame::jsContext()
 {
-    return toGlobalRef(m_coreFrame->script()->globalObject(mainThreadNormalWorld())->globalExec());
+    return toGlobalRef(m_coreFrame->script().globalObject(mainThreadNormalWorld())->globalExec());
 }
 
 JSGlobalContextRef WebFrame::jsContextForWorld(InjectedBundleScriptWorld* world)
 {
-    return toGlobalRef(m_coreFrame->script()->globalObject(world->coreWorld())->globalExec());
+    return toGlobalRef(m_coreFrame->script().globalObject(world->coreWorld())->globalExec());
 }
 
 bool WebFrame::handlesPageScaleGesture() const
@@ -567,7 +567,7 @@ PassRefPtr<InjectedBundleHitTestResult> WebFrame::hitTest(const IntPoint point) 
     if (!m_coreFrame)
         return 0;
 
-    return InjectedBundleHitTestResult::create(m_coreFrame->eventHandler()->hitTestResultAtPoint(point, HitTestRequest::ReadOnly | HitTestRequest::Active | HitTestRequest::IgnoreClipping | HitTestRequest::DisallowShadowContent));
+    return InjectedBundleHitTestResult::create(m_coreFrame->eventHandler().hitTestResultAtPoint(point, HitTestRequest::ReadOnly | HitTestRequest::Active | HitTestRequest::IgnoreClipping | HitTestRequest::DisallowShadowContent));
 }
 
 bool WebFrame::getDocumentBackgroundColor(double* red, double* green, double* blue, double* alpha)
@@ -628,7 +628,7 @@ void WebFrame::stopLoading()
     if (!m_coreFrame)
         return;
 
-    m_coreFrame->loader()->stopForUserCancel();
+    m_coreFrame->loader().stopForUserCancel();
 }
 
 WebFrame* WebFrame::frameForContext(JSContextRef context)
@@ -640,7 +640,7 @@ WebFrame* WebFrame::frameForContext(JSContextRef context)
 
     Frame* coreFrame = static_cast<JSDOMWindowShell*>(globalObjectObj)->window()->impl()->frame();
 
-    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(coreFrame->loader()->client());
+    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(coreFrame->loader().client());
     return webFrameLoaderClient ? webFrameLoaderClient->webFrame() : 0;
 }
 
@@ -649,7 +649,7 @@ JSValueRef WebFrame::jsWrapperForWorld(InjectedBundleNodeHandle* nodeHandle, Inj
     if (!m_coreFrame)
         return 0;
 
-    JSDOMWindow* globalObject = m_coreFrame->script()->globalObject(world->coreWorld());
+    JSDOMWindow* globalObject = m_coreFrame->script().globalObject(world->coreWorld());
     ExecState* exec = globalObject->globalExec();
 
     JSLockHolder lock(exec);
@@ -661,7 +661,7 @@ JSValueRef WebFrame::jsWrapperForWorld(InjectedBundleRangeHandle* rangeHandle, I
     if (!m_coreFrame)
         return 0;
 
-    JSDOMWindow* globalObject = m_coreFrame->script()->globalObject(world->coreWorld());
+    JSDOMWindow* globalObject = m_coreFrame->script().globalObject(world->coreWorld());
     ExecState* exec = globalObject->globalExec();
 
     JSLockHolder lock(exec);
@@ -681,7 +681,7 @@ String WebFrame::provisionalURL() const
     if (!m_coreFrame)
         return String();
 
-    DocumentLoader* provisionalDocumentLoader = m_coreFrame->loader()->provisionalDocumentLoader();
+    DocumentLoader* provisionalDocumentLoader = m_coreFrame->loader().provisionalDocumentLoader();
     if (!provisionalDocumentLoader)
         return String();
 
@@ -693,7 +693,7 @@ String WebFrame::suggestedFilenameForResourceWithURL(const KURL& url) const
     if (!m_coreFrame)
         return String();
 
-    DocumentLoader* loader = m_coreFrame->loader()->documentLoader();
+    DocumentLoader* loader = m_coreFrame->loader().documentLoader();
     if (!loader)
         return String();
 
@@ -714,7 +714,7 @@ String WebFrame::mimeTypeForResourceWithURL(const KURL& url) const
     if (!m_coreFrame)
         return String();
 
-    DocumentLoader* loader = m_coreFrame->loader()->documentLoader();
+    DocumentLoader* loader = m_coreFrame->loader().documentLoader();
     if (!loader)
         return String();
 
@@ -769,7 +769,7 @@ bool WebFrameFilter::shouldIncludeSubframe(Frame* frame) const
     if (!m_callback)
         return true;
 
-    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(frame->loader()->client());
+    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(frame->loader().client());
     WebFrame* webFrame = webFrameLoaderClient ? webFrameLoaderClient->webFrame() : 0;
     ASSERT(webFrame);
 

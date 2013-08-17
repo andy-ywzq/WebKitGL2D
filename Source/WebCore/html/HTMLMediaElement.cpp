@@ -40,7 +40,6 @@
 #include "CSSValueKeywords.h"
 #include "DiagnosticLoggingKeys.h"
 #include "DocumentLoader.h"
-#include "ElementShadow.h"
 #include "ElementTraversal.h"
 #include "Event.h"
 #include "EventNames.h"
@@ -268,7 +267,7 @@ HTMLMediaElement::HTMLMediaElement(const QualifiedName& tagName, Document* docum
     , m_volume(1.0f)
     , m_lastSeekTime(0)
     , m_previousProgressTime(numeric_limits<double>::max())
-    , m_lastTimeUpdateEventWallTime(0)
+    , m_clockTimeAtLastUpdateEvent(0)
     , m_lastTimeUpdateEventMovieTime(numeric_limits<double>::max())
     , m_loadState(WaitingForSource)
 #if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
@@ -279,8 +278,8 @@ HTMLMediaElement::HTMLMediaElement(const QualifiedName& tagName, Document* docum
     , m_displayMode(Unknown)
     , m_processingMediaPlayerCallback(0)
     , m_cachedTime(MediaPlayer::invalidTime())
-    , m_cachedTimeWallClockUpdateTime(0)
-    , m_minimumWallClockTimeToCacheMediaTime(0)
+    , m_clockTimeAtLastCachedTimeUpdate(0)
+    , m_minimumClockTimeToUpdateCachedTime(0)
     , m_fragmentStartTime(MediaPlayer::invalidTime())
     , m_fragmentEndTime(MediaPlayer::invalidTime())
     , m_pendingActionFlags(0)
@@ -568,7 +567,7 @@ RenderObject* HTMLMediaElement::createRenderer(RenderArena* arena, RenderStyle*)
         mediaRenderer->setWidget(m_proxyWidget);
 
         if (Frame* frame = document()->frame())
-            frame->loader()->client()->showMediaPlayerProxyPlugin(m_proxyWidget.get());
+            frame->loader().client()->showMediaPlayerProxyPlugin(m_proxyWidget.get());
     }
     return mediaRenderer;
 #else
@@ -647,7 +646,7 @@ void HTMLMediaElement::attach(const AttachContext& context)
 #if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
     else if (m_proxyWidget) {
         if (Frame* frame = document()->frame())
-            frame->loader()->client()->hideMediaPlayerProxyPlugin(m_proxyWidget.get());
+            frame->loader().client()->hideMediaPlayerProxyPlugin(m_proxyWidget.get());
     }
 #endif
 }
@@ -1040,7 +1039,7 @@ void HTMLMediaElement::loadResource(const KURL& initialURL, ContentType& content
     }
 
     KURL url = initialURL;
-    if (!frame->loader()->willLoadMediaElementURL(url)) {
+    if (!frame->loader().willLoadMediaElementURL(url)) {
         mediaLoadingFailed(MediaPlayer::FormatError);
         return;
     }
@@ -1050,7 +1049,7 @@ void HTMLMediaElement::loadResource(const KURL& initialURL, ContentType& content
 
     // If the url should be loaded from the application cache, pass the url of the cached file
     // to the media engine.
-    ApplicationCacheHost* cacheHost = frame->loader()->documentLoader()->applicationCacheHost();
+    ApplicationCacheHost* cacheHost = frame->loader().documentLoader()->applicationCacheHost();
     ApplicationCacheResource* resource = 0;
     if (cacheHost && cacheHost->shouldLoadResourceFromApplicationCache(ResourceRequest(url), resource)) {
         // Resources that are not present in the manifest will always fail to load (at least, after the
@@ -1560,7 +1559,7 @@ void HTMLMediaElement::startProgressEventTimer()
     if (m_progressEventTimer.isActive())
         return;
 
-    m_previousProgressTime = WTF::currentTime();
+    m_previousProgressTime = monotonicallyIncreasingTime();
     // 350ms is not magic, it is in the spec!
     m_progressEventTimer.startRepeating(0.350);
 }
@@ -2071,7 +2070,7 @@ void HTMLMediaElement::progressEventTimerFired(Timer<HTMLMediaElement>*)
     if (m_networkState != NETWORK_LOADING)
         return;
 
-    double time = WTF::currentTime();
+    double time = monotonicallyIncreasingTime();
     double timedelta = time - m_previousProgressTime;
 
     if (m_player->didLoadingProgress()) {
@@ -2261,7 +2260,7 @@ bool HTMLMediaElement::seeking() const
 void HTMLMediaElement::refreshCachedTime() const
 {
     m_cachedTime = m_player->currentTime();
-    m_cachedTimeWallClockUpdateTime = WTF::currentTime();
+    m_clockTimeAtLastCachedTimeUpdate = monotonicallyIncreasingTime();
 }
 
 void HTMLMediaElement::invalidateCachedTime()
@@ -2273,7 +2272,7 @@ void HTMLMediaElement::invalidateCachedTime()
     // too early.
     static const double minimumTimePlayingBeforeCacheSnapshot = 0.5;
 
-    m_minimumWallClockTimeToCacheMediaTime = WTF::currentTime() + minimumTimePlayingBeforeCacheSnapshot;
+    m_minimumClockTimeToUpdateCachedTime = monotonicallyIncreasingTime() + minimumTimePlayingBeforeCacheSnapshot;
     m_cachedTime = MediaPlayer::invalidTime();
 }
 
@@ -2302,15 +2301,15 @@ double HTMLMediaElement::currentTime() const
     }
 
     // Is it too soon use a cached time?
-    double now = WTF::currentTime();
+    double now = monotonicallyIncreasingTime();
     double maximumDurationToCacheMediaTime = m_player->maximumDurationToCacheMediaTime();
 
-    if (maximumDurationToCacheMediaTime && m_cachedTime != MediaPlayer::invalidTime() && !m_paused && now > m_minimumWallClockTimeToCacheMediaTime) {
-        double wallClockDelta = now - m_cachedTimeWallClockUpdateTime;
+    if (maximumDurationToCacheMediaTime && m_cachedTime != MediaPlayer::invalidTime() && !m_paused && now > m_minimumClockTimeToUpdateCachedTime) {
+        double clockDelta = now - m_clockTimeAtLastCachedTimeUpdate;
 
         // Not too soon, use the cached time only if it hasn't expired.
-        if (wallClockDelta < maximumDurationToCacheMediaTime) {
-            double adjustedCacheTime = m_cachedTime + (m_playbackRate * wallClockDelta);
+        if (clockDelta < maximumDurationToCacheMediaTime) {
+            double adjustedCacheTime = m_cachedTime + (m_playbackRate * clockDelta);
 
 #if LOG_CACHED_TIME_WARNINGS
             double delta = adjustedCacheTime - m_player->currentTime();
@@ -2322,9 +2321,9 @@ double HTMLMediaElement::currentTime() const
     }
 
 #if LOG_CACHED_TIME_WARNINGS
-    if (maximumDurationToCacheMediaTime && now > m_minimumWallClockTimeToCacheMediaTime && m_cachedTime != MediaPlayer::invalidTime()) {
-        double wallClockDelta = now - m_cachedTimeWallClockUpdateTime;
-        double delta = m_cachedTime + (m_playbackRate * wallClockDelta) - m_player->currentTime();
+    if (maximumDurationToCacheMediaTime && now > m_minimumClockTimeToUpdateCachedTime && m_cachedTime != MediaPlayer::invalidTime()) {
+        double clockDelta = now - m_clockTimeAtLastCachedTimeUpdate;
+        double delta = m_cachedTime + (m_playbackRate * clockDelta) - m_player->currentTime();
         LOG(Media, "HTMLMediaElement::currentTime - cached time was %f seconds off of media time when it expired", delta);
     }
 #endif
@@ -2683,7 +2682,7 @@ bool HTMLMediaElement::controls() const
     Frame* frame = document()->frame();
 
     // always show controls when scripting is disabled
-    if (frame && !frame->script()->canExecuteScripts(NotAboutToExecuteScript))
+    if (frame && !frame->script().canExecuteScripts(NotAboutToExecuteScript))
         return true;
 
     // always show controls for video when fullscreen playback is required.
@@ -2796,7 +2795,7 @@ void HTMLMediaElement::startPlaybackProgressTimer()
     if (m_playbackProgressTimer.isActive())
         return;
 
-    m_previousProgressTime = WTF::currentTime();
+    m_previousProgressTime = monotonicallyIncreasingTime();
     m_playbackProgressTimer.startRepeating(maxTimeupdateEventFrequency);
 }
 
@@ -2828,8 +2827,8 @@ void HTMLMediaElement::playbackProgressTimerFired(Timer<HTMLMediaElement>*)
 
 void HTMLMediaElement::scheduleTimeupdateEvent(bool periodicEvent)
 {
-    double now = WTF::currentTime();
-    double timedelta = now - m_lastTimeUpdateEventWallTime;
+    double now = monotonicallyIncreasingTime();
+    double timedelta = now - m_clockTimeAtLastUpdateEvent;
 
     // throttle the periodic events
     if (periodicEvent && timedelta < maxTimeupdateEventFrequency)
@@ -2840,7 +2839,7 @@ void HTMLMediaElement::scheduleTimeupdateEvent(bool periodicEvent)
     double movieTime = currentTime();
     if (movieTime != m_lastTimeUpdateEventMovieTime) {
         scheduleEvent(eventNames().timeupdateEvent);
-        m_lastTimeUpdateEventWallTime = now;
+        m_clockTimeAtLastUpdateEvent = now;
         m_lastTimeUpdateEventMovieTime = movieTime;
     }
 }
@@ -4313,7 +4312,7 @@ void HTMLMediaElement::getPluginProxyParams(KURL& url, Vector<String>& names, Ve
     if (isVideo()) {
         HTMLVideoElement* video = toHTMLVideoElement(this);
         KURL posterURL = video->posterImageURL();
-        if (!posterURL.isEmpty() && frame && frame->loader()->willLoadMediaElementURL(posterURL)) {
+        if (!posterURL.isEmpty() && frame && frame->loader().willLoadMediaElementURL(posterURL)) {
             names.append(ASCIILiteral("_media_element_poster_"));
             values.append(posterURL.string());
         }
@@ -4329,7 +4328,7 @@ void HTMLMediaElement::getPluginProxyParams(KURL& url, Vector<String>& names, Ve
         url = selectNextSourceChild(0, 0, DoNothing);
 
     m_currentSrc = url;
-    if (url.isValid() && frame && frame->loader()->willLoadMediaElementURL(url)) {
+    if (url.isValid() && frame && frame->loader().willLoadMediaElementURL(url)) {
         names.append(ASCIILiteral("_media_element_src_"));
         values.append(m_currentSrc.string());
     }
@@ -4356,7 +4355,7 @@ void HTMLMediaElement::createMediaPlayerProxy()
     
     // Hang onto the proxy widget so it won't be destroyed if the plug-in is set to
     // display:none
-    m_proxyWidget = frame->loader()->subframeLoader()->loadMediaPlayerProxyPlugin(this, url, paramNames, paramValues);
+    m_proxyWidget = frame->loader().subframeLoader()->loadMediaPlayerProxyPlugin(this, url, paramNames, paramValues);
     if (m_proxyWidget)
         m_needWidgetUpdate = false;
 }
@@ -4372,7 +4371,7 @@ void HTMLMediaElement::updateWidget(PluginCreationOption)
 
     mediaElement->getPluginProxyParams(kurl, paramNames, paramValues);
     // FIXME: What if document()->frame() is 0?
-    SubframeLoader* loader = document()->frame()->loader()->subframeLoader();
+    SubframeLoader* loader = document()->frame()->loader().subframeLoader();
     loader->loadMediaPlayerProxyPlugin(mediaElement, kurl, paramNames, paramValues);
 }
 
@@ -4994,7 +4993,7 @@ String HTMLMediaElement::mediaPlayerReferrer() const
     if (!frame)
         return String();
 
-    return SecurityPolicy::generateReferrerHeader(document()->referrerPolicy(), m_currentSrc, frame->loader()->outgoingReferrer());
+    return SecurityPolicy::generateReferrerHeader(document()->referrerPolicy(), m_currentSrc, frame->loader().outgoingReferrer());
 }
 
 String HTMLMediaElement::mediaPlayerUserAgent() const
@@ -5003,7 +5002,7 @@ String HTMLMediaElement::mediaPlayerUserAgent() const
     if (!frame)
         return String();
 
-    return frame->loader()->userAgent(m_currentSrc);
+    return frame->loader().userAgent(m_currentSrc);
 
 }
 

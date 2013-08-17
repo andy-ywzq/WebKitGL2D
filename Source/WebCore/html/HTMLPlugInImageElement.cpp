@@ -158,7 +158,7 @@ bool HTMLPlugInImageElement::isImageType()
 
     if (Frame* frame = document()->frame()) {
         KURL completedURL = document()->completeURL(m_url);
-        return frame->loader()->client()->objectContentType(completedURL, m_serviceType, shouldPreferPlugInsForImages()) == ObjectContentImage;
+        return frame->loader().client()->objectContentType(completedURL, m_serviceType, shouldPreferPlugInsForImages()) == ObjectContentImage;
     }
 
     return Image::supportsType(m_serviceType);
@@ -187,9 +187,8 @@ bool HTMLPlugInImageElement::wouldLoadAsNetscapePlugin(const String& url, const 
     if (!url.isEmpty())
         completedURL = document()->completeURL(url);
 
-    FrameLoader* frameLoader = document()->frame()->loader();
-    ASSERT(frameLoader);
-    if (frameLoader->client()->objectContentType(completedURL, serviceType, shouldPreferPlugInsForImages()) == ObjectContentNetscapePlugin)
+    FrameLoader& frameLoader = document()->frame()->loader();
+    if (frameLoader.client()->objectContentType(completedURL, serviceType, shouldPreferPlugInsForImages()) == ObjectContentNetscapePlugin)
         return true;
     return false;
 }
@@ -375,8 +374,8 @@ void HTMLPlugInImageElement::didAddUserAgentShadowRoot(ShadowRoot* root)
     static DOMWrapperWorld* isolatedWorld = DOMWrapperWorld::create(JSDOMWindow::commonVM()).leakRef();
     document()->ensurePlugInsInjectedScript(isolatedWorld);
 
-    ScriptController* scriptController = page->mainFrame()->script();
-    JSDOMGlobalObject* globalObject = JSC::jsCast<JSDOMGlobalObject*>(scriptController->globalObject(isolatedWorld));
+    ScriptController& scriptController = page->mainFrame()->script();
+    JSDOMGlobalObject* globalObject = JSC::jsCast<JSDOMGlobalObject*>(scriptController.globalObject(isolatedWorld));
     JSC::ExecState* exec = globalObject->globalExec();
 
     JSC::JSLockHolder lock(exec);
@@ -457,7 +456,7 @@ void HTMLPlugInImageElement::restartSimilarPlugIns()
         return;
 
     for (Frame* frame = document()->page()->mainFrame(); frame; frame = frame->tree()->traverseNext()) {
-        if (!frame->loader()->subframeLoader()->containsPlugins())
+        if (!frame->loader().subframeLoader()->containsPlugins())
             continue;
         
         if (!frame->document())
@@ -548,7 +547,7 @@ static bool documentHadRecentUserGesture(Document* document)
     if (document->frame() != document->page()->mainFrame() && document->page()->mainFrame() && document->page()->mainFrame()->document())
         lastKnownUserGestureTimestamp = std::max(lastKnownUserGestureTimestamp, document->page()->mainFrame()->document()->lastHandledUserGestureTimestamp());
 
-    if (currentTime() - lastKnownUserGestureTimestamp < autostartSoonAfterUserGestureThreshold)
+    if (monotonicallyIncreasingTime() - lastKnownUserGestureTimestamp < autostartSoonAfterUserGestureThreshold)
         return true;
 
     return false;

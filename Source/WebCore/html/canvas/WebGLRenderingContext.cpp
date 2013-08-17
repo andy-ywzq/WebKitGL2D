@@ -74,6 +74,8 @@
 #include "WebGLTexture.h"
 #include "WebGLUniformLocation.h"
 
+#include <runtime/Operations.h>
+#include <runtime/TypedArrayInlines.h>
 #include <runtime/Uint32Array.h>
 #include <wtf/OwnArrayPtr.h>
 #include <wtf/PassOwnArrayPtr.h>
@@ -413,7 +415,7 @@ PassOwnPtr<WebGLRenderingContext> WebGLRenderingContext::create(HTMLCanvasElemen
 
     // The FrameLoaderClient might creation of a new WebGL context despite the page settings; in
     // particular, if WebGL contexts were lost one or more times via the GL_ARB_robustness extension.
-    if (!frame->loader()->client()->allowWebGL(settings && settings->webGLEnabled())) {
+    if (!frame->loader().client()->allowWebGL(settings && settings->webGLEnabled())) {
         canvas->dispatchEvent(WebGLContextEvent::create(eventNames().webglcontextcreationerrorEvent, false, true, "Web page was not allowed to create a WebGL context."));
         return nullptr;
     }
@@ -1879,9 +1881,7 @@ bool WebGLRenderingContext::validateVertexAttributes(unsigned numElementsRequire
 
     // Look in each enabled vertex attrib and check if they've been bound to a buffer.
     for (unsigned i = 0; i < m_maxVertexAttribs; ++i) {
-        const WebGLVertexArrayObjectOES::VertexAttribState& state = m_boundVertexArrayObject->getVertexAttribState(i);
-        if (state.enabled
-            && (!state.bufferBinding || !state.bufferBinding->object()))
+        if (!m_boundVertexArrayObject->getVertexAttribState(i).validateBinding())
             return false;
     }
 
@@ -3415,7 +3415,7 @@ void WebGLRenderingContext::readPixels(GC3Dint x, GC3Dint y, GC3Dsizei width, GC
         return;
     }
     // Validate array type against pixel type.
-    if (pixels->getType() != ArrayBufferView::TypeUint8) {
+    if (pixels->getType() != JSC::TypeUint8) {
         synthesizeGLError(GraphicsContext3D::INVALID_OPERATION, "readPixels", "ArrayBufferView not Uint8Array");
         return;
     }
@@ -4601,7 +4601,7 @@ void WebGLRenderingContext::loseContextImpl(WebGLRenderingContext::LostContextMo
         // decide to take action such as asking the user for permission to use WebGL again.
         if (Document* document = canvas()->document()) {
             if (Frame* frame = document->frame())
-                frame->loader()->client()->didLoseWebGLContext(m_context->getExtensions()->getGraphicsResetStatusARB());
+                frame->loader().client()->didLoseWebGLContext(m_context->getExtensions()->getGraphicsResetStatusARB());
         }
     }
 
@@ -5156,7 +5156,7 @@ bool WebGLRenderingContext::validateTexFuncData(const char* functionName, GC3Din
 
     switch (type) {
     case GraphicsContext3D::UNSIGNED_BYTE:
-        if (pixels->getType() != ArrayBufferView::TypeUint8) {
+        if (pixels->getType() != JSC::TypeUint8) {
             synthesizeGLError(GraphicsContext3D::INVALID_OPERATION, functionName, "type UNSIGNED_BYTE but ArrayBufferView not Uint8Array");
             return false;
         }
@@ -5164,13 +5164,13 @@ bool WebGLRenderingContext::validateTexFuncData(const char* functionName, GC3Din
     case GraphicsContext3D::UNSIGNED_SHORT_5_6_5:
     case GraphicsContext3D::UNSIGNED_SHORT_4_4_4_4:
     case GraphicsContext3D::UNSIGNED_SHORT_5_5_5_1:
-        if (pixels->getType() != ArrayBufferView::TypeUint16) {
+        if (pixels->getType() != JSC::TypeUint16) {
             synthesizeGLError(GraphicsContext3D::INVALID_OPERATION, functionName, "type UNSIGNED_SHORT but ArrayBufferView not Uint16Array");
             return false;
         }
         break;
     case GraphicsContext3D::FLOAT: // OES_texture_float
-        if (pixels->getType() != ArrayBufferView::TypeFloat32) {
+        if (pixels->getType() != JSC::TypeFloat32) {
             synthesizeGLError(GraphicsContext3D::INVALID_OPERATION, functionName, "type FLOAT but ArrayBufferView not Float32Array");
             return false;
         }
@@ -5820,7 +5820,7 @@ void WebGLRenderingContext::maybeRestoreContext(Timer<WebGLRenderingContext>*)
     if (!frame)
         return;
 
-    if (!frame->loader()->client()->allowWebGL(frame->settings() && frame->settings()->webGLEnabled()))
+    if (!frame->loader().client()->allowWebGL(frame->settings() && frame->settings()->webGLEnabled()))
         return;
 
     FrameView* view = frame->view();

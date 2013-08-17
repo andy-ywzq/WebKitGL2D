@@ -426,10 +426,10 @@ void Page::goToItem(HistoryItem* item, FrameLoadType type)
     // being deref()-ed. Make sure we can still use it with HistoryController::goToItem later.
     RefPtr<HistoryItem> protector(item);
 
-    if (m_mainFrame->loader()->history()->shouldStopLoadingForHistoryItem(item))
-        m_mainFrame->loader()->stopAllLoaders();
+    if (m_mainFrame->loader().history()->shouldStopLoadingForHistoryItem(item))
+        m_mainFrame->loader().stopAllLoaders();
 
-    m_mainFrame->loader()->history()->goToItem(item, type);
+    m_mainFrame->loader().history()->goToItem(item, type);
 }
 
 int Page::getHistoryLength()
@@ -510,13 +510,13 @@ void Page::refreshPlugins(bool reload)
             continue;
         
         for (Frame* frame = (*it)->mainFrame(); frame; frame = frame->tree()->traverseNext()) {
-            if (frame->loader()->subframeLoader()->containsPlugins())
+            if (frame->loader().subframeLoader()->containsPlugins())
                 framesNeedingReload.append(frame);
         }
     }
 
     for (size_t i = 0; i < framesNeedingReload.size(); ++i)
-        framesNeedingReload[i]->loader()->reload();
+        framesNeedingReload[i]->loader().reload();
 }
 
 PluginData* Page::pluginData() const
@@ -568,13 +568,13 @@ bool Page::findString(const String& target, FindOptions options)
         return false;
 
     bool shouldWrap = options & WrapAround;
-    Frame* frame = focusController()->focusedOrMainFrame();
+    Frame* frame = focusController().focusedOrMainFrame();
     Frame* startFrame = frame;
     do {
         if (frame->editor().findString(target, (options & ~WrapAround) | StartInSelection)) {
             if (frame != startFrame)
                 startFrame->selection()->clear();
-            focusController()->setFocusedFrame(frame);
+            focusController().setFocusedFrame(frame);
             return true;
         }
         frame = incrementFrame(frame, !(options & Backwards), shouldWrap);
@@ -584,7 +584,7 @@ bool Page::findString(const String& target, FindOptions options)
     // We cheat a bit and just research with wrap on
     if (shouldWrap && !startFrame->selection()->isNone()) {
         bool found = startFrame->editor().findString(target, options | WrapAround | StartInSelection);
-        focusController()->setFocusedFrame(frame);
+        focusController().setFocusedFrame(frame);
         return found;
     }
 
@@ -705,7 +705,7 @@ void Page::unmarkAllTextMatches()
 
 const VisibleSelection& Page::selection() const
 {
-    return focusController()->focusedOrMainFrame()->selection()->selection();
+    return focusController().focusedOrMainFrame()->selection()->selection();
 }
 
 void Page::setDefersLoading(bool defers)
@@ -727,7 +727,7 @@ void Page::setDefersLoading(bool defers)
 
     m_defersLoading = defers;
     for (Frame* frame = mainFrame(); frame; frame = frame->tree()->traverseNext())
-        frame->loader()->setDefersLoading(defers);
+        frame->loader().setDefersLoading(defers);
 }
 
 void Page::clearUndoRedoOperations()
@@ -1109,7 +1109,7 @@ void Page::setDebugger(JSC::Debugger* debugger)
     m_debugger = debugger;
 
     for (Frame* frame = m_mainFrame.get(); frame; frame = frame->tree()->traverseNext())
-        frame->script()->attachDebugger(m_debugger);
+        frame->script().attachDebugger(m_debugger);
 }
 
 StorageNamespace* Page::sessionStorage(bool optionalCreate)
@@ -1153,7 +1153,7 @@ void Page::setMemoryCacheClientCallsEnabled(bool enabled)
         return;
 
     for (RefPtr<Frame> frame = mainFrame(); frame; frame = frame->tree()->traverseNext())
-        frame->loader()->tellClientAboutPastMemoryCacheLoads();
+        frame->loader().tellClientAboutPastMemoryCacheLoads();
 }
 
 void Page::setMinimumTimerInterval(double minimumTimerInterval)
@@ -1461,7 +1461,7 @@ void Page::addRelevantRepaintedObject(RenderObject* object, const LayoutRect& ob
         m_isCountingRelevantRepaintedObjects = false;
         resetRelevantPaintedObjectCounter();
         if (Frame* frame = mainFrame())
-            frame->loader()->didLayout(DidHitRelevantRepaintedObjectsAreaThreshold);
+            frame->loader().didLayout(DidHitRelevantRepaintedObjectsAreaThreshold);
     }
 }
 

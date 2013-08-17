@@ -128,6 +128,7 @@
 #include <WebCore/ScriptValue.h>
 #include <WebCore/SerializedScriptValue.h>
 #include <WebCore/Settings.h>
+#include <WebCore/ShadowRoot.h>
 #include <WebCore/SharedBuffer.h>
 #include <WebCore/SubstituteData.h>
 #include <WebCore/TextIterator.h>
@@ -226,6 +227,7 @@ PassRefPtr<WebPage> WebPage::create(uint64_t pageID, const WebPageCreationParame
 
 WebPage::WebPage(uint64_t pageID, const WebPageCreationParameters& parameters)
     : m_viewSize(parameters.viewSize)
+    , m_hasSeenPlugin(false)
     , m_useFixedLayout(false)
     , m_drawsBackground(true)
     , m_drawsTransparentBackground(false)
@@ -240,6 +242,7 @@ WebPage::WebPage(uint64_t pageID, const WebPageCreationParameters& parameters)
 #if ENABLE(PRIMARY_SNAPSHOTTED_PLUGIN_HEURISTIC)
     , m_readyToFindPrimarySnapshottedPlugin(false)
     , m_didFindPrimarySnapshottedPlugin(false)
+    , m_numberOfPrimarySnapshotDetectionAttempts(0)
     , m_determinePrimarySnapshottedPlugInTimer(RunLoop::main(), this, &WebPage::determinePrimarySnapshottedPlugInTimerFired)
 #endif
 #if PLATFORM(MAC)
@@ -532,11 +535,11 @@ void WebPage::initializeInjectedBundleDiagnosticLoggingClient(WKBundlePageDiagno
 #if ENABLE(NETSCAPE_PLUGIN_API)
 PassRefPtr<Plugin> WebPage::createPlugin(WebFrame* frame, HTMLPlugInElement* pluginElement, const Plugin::Parameters& parameters, String& newMIMEType)
 {
-    String frameURLString = frame->coreFrame()->loader()->documentLoader()->responseURL().string();
-    String pageURLString = m_page->mainFrame()->loader()->documentLoader()->responseURL().string();
+    String frameURLString = frame->coreFrame()->loader().documentLoader()->responseURL().string();
+    String pageURLString = m_page->mainFrame()->loader().documentLoader()->responseURL().string();
     PluginProcessType processType = pluginElement->displayState() == HTMLPlugInElement::WaitingForSnapshot ? PluginProcessTypeSnapshot : PluginProcessTypeNormal;
 
-    bool allowOnlyApplicationPlugins = !frame->coreFrame()->loader()->subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin);
+    bool allowOnlyApplicationPlugins = !frame->coreFrame()->loader().subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin);
 
     uint64_t pluginProcessToken;
     uint32_t pluginLoadPolicy;
@@ -586,7 +589,7 @@ uint64_t getInputMethodHint(HTMLInputElement*);
 
 EditorState WebPage::editorState() const
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     ASSERT(frame);
 
     EditorState result;
@@ -752,7 +755,7 @@ PluginView* WebPage::pluginViewForFrame(Frame* frame)
 
 void WebPage::executeEditingCommand(const String& commandName, const String& argument)
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     if (!frame)
         return;
 
@@ -766,7 +769,7 @@ void WebPage::executeEditingCommand(const String& commandName, const String& arg
 
 bool WebPage::isEditingCommandEnabled(const String& commandName)
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     if (!frame)
         return false;
 
@@ -854,7 +857,7 @@ void WebPage::close()
     m_logDiagnosticMessageClient.initialize(0);
 
     m_printContext = nullptr;
-    m_mainFrame->coreFrame()->loader()->detachFromParent();
+    m_mainFrame->coreFrame()->loader().detachFromParent();
     m_page = nullptr;
     m_drawingArea = nullptr;
 
@@ -872,7 +875,7 @@ void WebPage::tryClose()
 {
     SendStopResponsivenessTimer stopper(this);
 
-    if (!m_mainFrame->coreFrame()->loader()->shouldClose()) {
+    if (!m_mainFrame->coreFrame()->loader().shouldClose()) {
         send(Messages::WebPageProxy::StopResponsivenessTimer());
         return;
     }
@@ -906,7 +909,7 @@ void WebPage::loadURLRequest(const ResourceRequest& request, const SandboxExtens
     m_loaderClient.willLoadURLRequest(this, request, userData.get());
 
     // Initate the load in WebCore.
-    m_mainFrame->coreFrame()->loader()->load(FrameLoadRequest(m_mainFrame->coreFrame(), request));
+    m_mainFrame->coreFrame()->loader().load(FrameLoadRequest(m_mainFrame->coreFrame(), request));
 }
 
 void WebPage::loadDataImpl(PassRefPtr<SharedBuffer> sharedBuffer, const String& MIMEType, const String& encodingName, const KURL& baseURL, const KURL& unreachableURL, CoreIPC::MessageDecoder& decoder)
@@ -926,7 +929,7 @@ void WebPage::loadDataImpl(PassRefPtr<SharedBuffer> sharedBuffer, const String& 
     m_loaderClient.willLoadDataRequest(this, request, substituteData.content(), substituteData.mimeType(), substituteData.textEncoding(), substituteData.failingURL(), userData.get());
 
     // Initate the load in WebCore.
-    m_mainFrame->coreFrame()->loader()->load(FrameLoadRequest(m_mainFrame->coreFrame(), request, substituteData));
+    m_mainFrame->coreFrame()->loader().load(FrameLoadRequest(m_mainFrame->coreFrame(), request, substituteData));
 }
 
 void WebPage::loadData(const CoreIPC::DataReference& data, const String& MIMEType, const String& encodingName, const String& baseURLString, CoreIPC::MessageDecoder& decoder)
@@ -973,7 +976,7 @@ void WebPage::linkClicked(const String& url, const WebMouseEvent& event)
     if (event.type() != WebEvent::NoType)
         coreEvent = MouseEvent::create(eventNames().clickEvent, frame->document()->defaultView(), platform(event), 0, 0);
 
-    frame->loader()->loadFrameRequest(FrameLoadRequest(frame, ResourceRequest(url)), false, false, coreEvent.get(), 0, MaybeSendReferrer);
+    frame->loader().loadFrameRequest(FrameLoadRequest(frame, ResourceRequest(url)), false, false, coreEvent.get(), 0, MaybeSendReferrer);
 }
 
 void WebPage::stopLoadingFrame(uint64_t frameID)
@@ -982,14 +985,14 @@ void WebPage::stopLoadingFrame(uint64_t frameID)
     if (!frame)
         return;
 
-    frame->coreFrame()->loader()->stopForUserCancel();
+    frame->coreFrame()->loader().stopForUserCancel();
 }
 
 void WebPage::stopLoading()
 {
     SendStopResponsivenessTimer stopper(this);
 
-    m_mainFrame->coreFrame()->loader()->stopForUserCancel();
+    m_mainFrame->coreFrame()->loader().stopForUserCancel();
 }
 
 void WebPage::setDefersLoading(bool defersLoading)
@@ -1002,7 +1005,7 @@ void WebPage::reload(bool reloadFromOrigin, const SandboxExtension::Handle& sand
     SendStopResponsivenessTimer stopper(this);
 
     m_sandboxExtensionTracker.beginLoad(m_mainFrame.get(), sandboxExtensionHandle);
-    m_mainFrame->coreFrame()->loader()->reload(reloadFromOrigin);
+    m_mainFrame->coreFrame()->loader().reload(reloadFromOrigin);
 }
 
 void WebPage::goForward(uint64_t backForwardItemID)
@@ -1043,7 +1046,7 @@ void WebPage::goToBackForwardItem(uint64_t backForwardItemID)
 
 void WebPage::tryRestoreScrollPosition()
 {
-    m_page->mainFrame()->loader()->history()->restoreScrollPositionAndViewState();
+    m_page->mainFrame()->loader().history()->restoreScrollPositionAndViewState();
 }
 
 void WebPage::layoutIfNeeded()
@@ -1554,7 +1557,7 @@ WebContextMenu* WebPage::contextMenuAtPointInWindow(const IntPoint& point)
     
     // Simulate a mouse click to generate the correct menu.
     PlatformMouseEvent mouseEvent(point, point, RightButton, PlatformEvent::MousePressed, 1, false, false, false, false, currentTime());
-    bool handled = corePage()->mainFrame()->eventHandler()->sendContextMenuEvent(mouseEvent);
+    bool handled = corePage()->mainFrame()->eventHandler().sendContextMenuEvent(mouseEvent);
     if (!handled)
         return 0;
 
@@ -1609,13 +1612,13 @@ static bool isContextClick(const PlatformMouseEvent& event)
 static bool handleContextMenuEvent(const PlatformMouseEvent& platformMouseEvent, WebPage* page)
 {
     IntPoint point = page->corePage()->mainFrame()->view()->windowToContents(platformMouseEvent.position());
-    HitTestResult result = page->corePage()->mainFrame()->eventHandler()->hitTestResultAtPoint(point);
+    HitTestResult result = page->corePage()->mainFrame()->eventHandler().hitTestResultAtPoint(point);
 
     Frame* frame = page->corePage()->mainFrame();
     if (result.innerNonSharedNode())
         frame = result.innerNonSharedNode()->document()->frame();
     
-    bool handled = frame->eventHandler()->sendContextMenuEvent(platformMouseEvent);
+    bool handled = frame->eventHandler().sendContextMenuEvent(platformMouseEvent);
     if (handled)
         page->contextMenu()->show();
 
@@ -1638,7 +1641,7 @@ static bool handleMouseEvent(const WebMouseEvent& mouseEvent, WebPage* page, boo
                 page->corePage()->contextMenuController()->clearContextMenu();
 #endif
 
-            bool handled = frame->eventHandler()->handleMousePressEvent(platformMouseEvent);
+            bool handled = frame->eventHandler().handleMousePressEvent(platformMouseEvent);
 #if ENABLE(CONTEXT_MENUS)
             if (isContextClick(platformMouseEvent))
                 handled = handleContextMenuEvent(platformMouseEvent, page);
@@ -1646,12 +1649,12 @@ static bool handleMouseEvent(const WebMouseEvent& mouseEvent, WebPage* page, boo
             return handled;
         }
         case PlatformEvent::MouseReleased:
-            return frame->eventHandler()->handleMouseReleaseEvent(platformMouseEvent);
+            return frame->eventHandler().handleMouseReleaseEvent(platformMouseEvent);
 
         case PlatformEvent::MouseMoved:
             if (onlyUpdateScrollbars)
-                return frame->eventHandler()->passMouseMovedEventToScrollbars(platformMouseEvent);
-            return frame->eventHandler()->mouseMoved(platformMouseEvent);
+                return frame->eventHandler().passMouseMovedEventToScrollbars(platformMouseEvent);
+            return frame->eventHandler().mouseMoved(platformMouseEvent);
         default:
             ASSERT_NOT_REACHED();
             return false;
@@ -1689,7 +1692,7 @@ void WebPage::mouseEvent(const WebMouseEvent& mouseEvent)
         // Lion when legacy scrollbars are enabled, WebKit receives mouse events all the time. If it is one
         // of those cases where the page is not active and the mouse is not pressed, then we can fire a more
         // efficient scrollbars-only version of the event.
-        bool onlyUpdateScrollbars = !(m_page->focusController()->isActive() || (mouseEvent.button() != WebMouseEvent::NoButton));
+        bool onlyUpdateScrollbars = !(m_page->focusController().isActive() || (mouseEvent.button() != WebMouseEvent::NoButton));
         handled = handleMouseEvent(mouseEvent, this, onlyUpdateScrollbars);
     }
 
@@ -1719,7 +1722,7 @@ void WebPage::mouseEventSyncForTesting(const WebMouseEvent& mouseEvent, bool& ha
         // Lion when legacy scrollbars are enabled, WebKit receives mouse events all the time. If it is one 
         // of those cases where the page is not active and the mouse is not pressed, then we can fire a more
         // efficient scrollbars-only version of the event.
-        bool onlyUpdateScrollbars = !(m_page->focusController()->isActive() || (mouseEvent.button() != WebMouseEvent::NoButton));
+        bool onlyUpdateScrollbars = !(m_page->focusController().isActive() || (mouseEvent.button() != WebMouseEvent::NoButton));
         handled = handleMouseEvent(mouseEvent, this, onlyUpdateScrollbars);
     }
 }
@@ -1731,7 +1734,7 @@ static bool handleWheelEvent(const WebWheelEvent& wheelEvent, Page* page)
         return false;
 
     PlatformWheelEvent platformWheelEvent = platform(wheelEvent);
-    return frame->eventHandler()->handleWheelEvent(platformWheelEvent);
+    return frame->eventHandler().handleWheelEvent(platformWheelEvent);
 }
 
 void WebPage::wheelEvent(const WebWheelEvent& wheelEvent)
@@ -1759,8 +1762,8 @@ static bool handleKeyEvent(const WebKeyboardEvent& keyboardEvent, Page* page)
         return false;
 
     if (keyboardEvent.type() == WebEvent::Char && keyboardEvent.isSystemKey())
-        return page->focusController()->focusedOrMainFrame()->eventHandler()->handleAccessKey(platform(keyboardEvent));
-    return page->focusController()->focusedOrMainFrame()->eventHandler()->keyEvent(platform(keyboardEvent));
+        return page->focusController().focusedOrMainFrame()->eventHandler().handleAccessKey(platform(keyboardEvent));
+    return page->focusController().focusedOrMainFrame()->eventHandler().keyEvent(platform(keyboardEvent));
 }
 
 void WebPage::keyEvent(const WebKeyboardEvent& keyboardEvent)
@@ -1795,7 +1798,7 @@ static bool handleGestureEvent(const WebGestureEvent& gestureEvent, Page* page)
         return false;
 
     PlatformGestureEvent platformGestureEvent = platform(gestureEvent);
-    return frame->eventHandler()->handleGestureEvent(platformGestureEvent);
+    return frame->eventHandler().handleGestureEvent(platformGestureEvent);
 }
 
 void WebPage::gestureEvent(const WebGestureEvent& gestureEvent)
@@ -1841,7 +1844,7 @@ void WebPage::validateCommand(const String& commandName, uint64_t callbackID)
 {
     bool isEnabled = false;
     int32_t state = 0;
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     if (frame) {
         if (PluginView* pluginView = focusedPluginViewForFrame(frame))
             isEnabled = pluginView->isEditingCommandEnabled(commandName);
@@ -1904,11 +1907,11 @@ void WebPage::highlightPotentialActivation(const IntPoint& point, const IntSize&
         IntPoint adjustedPoint;
 
 #if ENABLE(TOUCH_ADJUSTMENT)
-        if (!mainframe->eventHandler()->bestClickableNodeForTouchPoint(point, IntSize(area.width() / 2, area.height() / 2), adjustedPoint, adjustedNode))
+        if (!mainframe->eventHandler().bestClickableNodeForTouchPoint(point, IntSize(area.width() / 2, area.height() / 2), adjustedPoint, adjustedNode))
             return;
 
 #else
-        HitTestResult result = mainframe->eventHandler()->hitTestResultAtPoint(mainframe->view()->windowToContents(point), HitTestRequest::ReadOnly | HitTestRequest::Active | HitTestRequest::IgnoreClipping | HitTestRequest::DisallowShadowContent);
+        HitTestResult result = mainframe->eventHandler().hitTestResultAtPoint(mainframe->view()->windowToContents(point), HitTestRequest::ReadOnly | HitTestRequest::Active | HitTestRequest::IgnoreClipping | HitTestRequest::DisallowShadowContent);
         adjustedNode = result.innerNode();
 #endif
         // Find the node to highlight. This is not the same as the node responding the tap gesture, because many
@@ -1943,7 +1946,7 @@ static bool handleTouchEvent(const WebTouchEvent& touchEvent, Page* page)
     if (!frame->view())
         return false;
 
-    return frame->eventHandler()->handleTouchEvent(platform(touchEvent));
+    return frame->eventHandler().handleTouchEvent(platform(touchEvent));
 }
 
 void WebPage::touchEvent(const WebTouchEvent& touchEvent)
@@ -1967,12 +1970,12 @@ void WebPage::touchEventSyncForTesting(const WebTouchEvent& touchEvent, bool& ha
 
 bool WebPage::scroll(Page* page, ScrollDirection direction, ScrollGranularity granularity)
 {
-    return page->focusController()->focusedOrMainFrame()->eventHandler()->scrollRecursively(direction, granularity);
+    return page->focusController().focusedOrMainFrame()->eventHandler().scrollRecursively(direction, granularity);
 }
 
 bool WebPage::logicalScroll(Page* page, ScrollLogicalDirection direction, ScrollGranularity granularity)
 {
-    return page->focusController()->focusedOrMainFrame()->eventHandler()->logicalScrollRecursively(direction, granularity);
+    return page->focusController().focusedOrMainFrame()->eventHandler().logicalScrollRecursively(direction, granularity);
 }
 
 bool WebPage::scrollBy(uint32_t scrollDirection, uint32_t scrollGranularity)
@@ -1982,7 +1985,7 @@ bool WebPage::scrollBy(uint32_t scrollDirection, uint32_t scrollGranularity)
 
 void WebPage::centerSelectionInVisibleArea()
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     if (!frame)
         return;
     
@@ -1992,7 +1995,7 @@ void WebPage::centerSelectionInVisibleArea()
 
 void WebPage::setActive(bool isActive)
 {
-    m_page->focusController()->setActive(isActive);
+    m_page->focusController().setActive(isActive);
 
 #if PLATFORM(MAC)    
     // Tell all our plug-in views that the window focus changed.
@@ -2040,7 +2043,7 @@ void WebPage::viewWillStartLiveResize()
         return;
 
     // FIXME: This should propagate to all ScrollableAreas.
-    if (Frame* frame = m_page->focusController()->focusedOrMainFrame()) {
+    if (Frame* frame = m_page->focusController().focusedOrMainFrame()) {
         if (FrameView* view = frame->view())
             view->willStartLiveResize();
     }
@@ -2052,7 +2055,7 @@ void WebPage::viewWillEndLiveResize()
         return;
 
     // FIXME: This should propagate to all ScrollableAreas.
-    if (Frame* frame = m_page->focusController()->focusedOrMainFrame()) {
+    if (Frame* frame = m_page->focusController().focusedOrMainFrame()) {
         if (FrameView* view = frame->view())
             view->willEndLiveResize();
     }
@@ -2060,25 +2063,25 @@ void WebPage::viewWillEndLiveResize()
 
 void WebPage::setFocused(bool isFocused)
 {
-    m_page->focusController()->setFocused(isFocused);
+    m_page->focusController().setFocused(isFocused);
 }
 
 void WebPage::setInitialFocus(bool forward, bool isKeyboardEventValid, const WebKeyboardEvent& event)
 {
-    if (!m_page || !m_page->focusController())
+    if (!m_page)
         return;
 
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     frame->document()->setFocusedElement(0);
 
     if (isKeyboardEventValid && event.type() == WebEvent::KeyDown) {
         PlatformKeyboardEvent platformEvent(platform(event));
         platformEvent.disambiguateKeyDownEvent(PlatformEvent::RawKeyDown);
-        m_page->focusController()->setInitialFocus(forward ? FocusDirectionForward : FocusDirectionBackward, KeyboardEvent::create(platformEvent, frame->document()->defaultView()).get());
+        m_page->focusController().setInitialFocus(forward ? FocusDirectionForward : FocusDirectionBackward, KeyboardEvent::create(platformEvent, frame->document()->defaultView()).get());
         return;
     }
 
-    m_page->focusController()->setInitialFocus(forward ? FocusDirectionForward : FocusDirectionBackward, 0);
+    m_page->focusController().setInitialFocus(forward ? FocusDirectionForward : FocusDirectionBackward, 0);
 }
 
 void WebPage::setWindowResizerSize(const IntSize& windowResizerSize)
@@ -2238,8 +2241,8 @@ void WebPage::runJavaScriptInMainFrame(const String& script, uint64_t callbackID
     CoreIPC::DataReference dataReference;
 
     JSLockHolder lock(JSDOMWindow::commonVM());
-    if (JSValue resultValue = m_mainFrame->coreFrame()->script()->executeScript(script, true).jsValue()) {
-        if ((serializedResultValue = SerializedScriptValue::create(m_mainFrame->jsContext(), toRef(m_mainFrame->coreFrame()->script()->globalObject(mainThreadNormalWorld())->globalExec(), resultValue), 0)))
+    if (JSValue resultValue = m_mainFrame->coreFrame()->script().executeScript(script, true).jsValue()) {
+        if ((serializedResultValue = SerializedScriptValue::create(m_mainFrame->jsContext(), toRef(m_mainFrame->coreFrame()->script().globalObject(mainThreadNormalWorld())->globalExec(), resultValue), 0)))
             dataReference = serializedResultValue->data();
     }
 
@@ -2333,7 +2336,7 @@ void WebPage::getMainResourceDataOfFrame(uint64_t frameID, uint64_t callbackID)
         }
 
         if (dataReference.isEmpty()) {
-            if (DocumentLoader* loader = frame->coreFrame()->loader()->documentLoader()) {
+            if (DocumentLoader* loader = frame->coreFrame()->loader().documentLoader()) {
                 if ((buffer = loader->mainResourceData()))
                     dataReference = CoreIPC::DataReference(reinterpret_cast<const uint8_t*>(buffer->data()), buffer->size());
             }
@@ -2345,7 +2348,7 @@ void WebPage::getMainResourceDataOfFrame(uint64_t frameID, uint64_t callbackID)
 
 static PassRefPtr<SharedBuffer> resourceDataForFrame(Frame* frame, const KURL& resourceURL)
 {
-    DocumentLoader* loader = frame->loader()->documentLoader();
+    DocumentLoader* loader = frame->loader().documentLoader();
     if (!loader)
         return 0;
 
@@ -2760,7 +2763,7 @@ void WebPage::dragEnded(WebCore::IntPoint clientPosition, WebCore::IntPoint glob
         return;
     // FIXME: These are fake modifier keys here, but they should be real ones instead.
     PlatformMouseEvent event(adjustedClientPosition, adjustedGlobalPosition, LeftButton, PlatformEvent::MouseMoved, 0, false, false, false, false, currentTime());
-    m_page->mainFrame()->eventHandler()->dragSourceEndedAt(event, (DragOperation)operation);
+    m_page->mainFrame()->eventHandler().dragSourceEndedAt(event, (DragOperation)operation);
 }
 
 void WebPage::willPerformLoadDragDestinationAction()
@@ -2928,13 +2931,13 @@ void WebPage::didReceiveNotificationPermissionDecision(uint64_t notificationID, 
 
 void WebPage::advanceToNextMisspelling(bool startBeforeSelection)
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     frame->editor().advanceToNextMisspelling(startBeforeSelection);
 }
 
 void WebPage::changeSpellingToWord(const String& word)
 {
-    replaceSelectionWithText(m_page->focusController()->focusedOrMainFrame(), word);
+    replaceSelectionWithText(m_page->focusController().focusedOrMainFrame(), word);
 }
 
 void WebPage::unmarkAllMisspellings()
@@ -2956,17 +2959,17 @@ void WebPage::unmarkAllBadGrammar()
 #if USE(APPKIT)
 void WebPage::uppercaseWord()
 {
-    m_page->focusController()->focusedOrMainFrame()->editor().uppercaseWord();
+    m_page->focusController().focusedOrMainFrame()->editor().uppercaseWord();
 }
 
 void WebPage::lowercaseWord()
 {
-    m_page->focusController()->focusedOrMainFrame()->editor().lowercaseWord();
+    m_page->focusController().focusedOrMainFrame()->editor().lowercaseWord();
 }
 
 void WebPage::capitalizeWord()
 {
-    m_page->focusController()->focusedOrMainFrame()->editor().capitalizeWord();
+    m_page->focusController().focusedOrMainFrame()->editor().capitalizeWord();
 }
 #endif
     
@@ -3008,7 +3011,7 @@ void WebPage::replaceSelectionWithText(Frame* frame, const String& text)
 
 void WebPage::clearSelection()
 {
-    m_page->focusController()->focusedOrMainFrame()->selection()->clear();
+    m_page->focusController().focusedOrMainFrame()->selection()->clear();
 }
 
 void WebPage::didChangeScrollOffsetForMainFrame()
@@ -3059,8 +3062,9 @@ void WebPage::addPluginView(PluginView* pluginView)
     ASSERT(!m_pluginViews.contains(pluginView));
 
     m_pluginViews.add(pluginView);
+    m_hasSeenPlugin = true;
 #if ENABLE(PRIMARY_SNAPSHOTTED_PLUGIN_HEURISTIC)
-    LOG(Plugins, "Primary Plug-In Detection: triggering detection from addPluginView.");
+    LOG(Plugins, "Primary Plug-In Detection: triggering detection from addPluginView(%p)", pluginView);
     m_determinePrimarySnapshottedPlugInTimer.startOneShot(0);
 #endif
 }
@@ -3070,6 +3074,9 @@ void WebPage::removePluginView(PluginView* pluginView)
     ASSERT(m_pluginViews.contains(pluginView));
 
     m_pluginViews.remove(pluginView);
+#if ENABLE(PRIMARY_SNAPSHOTTED_PLUGIN_HEURISTIC)
+    LOG(Plugins, "Primary Plug-In Detection: removePluginView(%p)", pluginView);
+#endif
 }
 
 void WebPage::sendSetWindowFrame(const FloatRect& windowFrame)
@@ -3085,7 +3092,7 @@ void WebPage::setWindowIsVisible(bool windowIsVisible)
 {
     m_windowIsVisible = windowIsVisible;
 
-    corePage()->focusController()->setContainingWindowIsVisible(windowIsVisible);
+    corePage()->focusController().setContainingWindowIsVisible(windowIsVisible);
 
     // Tell all our plug-in views that the window visibility changed.
     for (HashSet<PluginView*>::const_iterator it = m_pluginViews.begin(), end = m_pluginViews.end(); it != end; ++it)
@@ -3126,7 +3133,7 @@ void WebPage::setMainFrameIsScrollable(bool isScrollable)
 
 bool WebPage::windowIsFocused() const
 {
-    return m_page->focusController()->isActive();
+    return m_page->focusController().isActive();
 }
 
 bool WebPage::windowAndWebPageAreFocused() const
@@ -3135,7 +3142,7 @@ bool WebPage::windowAndWebPageAreFocused() const
     if (!m_windowIsVisible)
         return false;
 #endif
-    return m_page->focusController()->isFocused() && m_page->focusController()->isActive();
+    return m_page->focusController().isFocused() && m_page->focusController().isActive();
 }
 
 void WebPage::didReceiveMessage(CoreIPC::Connection* connection, CoreIPC::MessageDecoder& decoder)
@@ -3225,15 +3232,15 @@ static bool shouldReuseCommittedSandboxExtension(WebFrame* frame)
 {
     ASSERT(frame->isMainFrame());
 
-    FrameLoader* frameLoader = frame->coreFrame()->loader();
-    FrameLoadType frameLoadType = frameLoader->loadType();
+    FrameLoader& frameLoader = frame->coreFrame()->loader();
+    FrameLoadType frameLoadType = frameLoader.loadType();
 
     // If the page is being reloaded, it should reuse whatever extension is committed.
     if (frameLoadType == FrameLoadTypeReload || frameLoadType == FrameLoadTypeReloadFromOrigin)
         return true;
 
-    DocumentLoader* documentLoader = frameLoader->documentLoader();
-    DocumentLoader* provisionalDocumentLoader = frameLoader->provisionalDocumentLoader();
+    DocumentLoader* documentLoader = frameLoader.documentLoader();
+    DocumentLoader* provisionalDocumentLoader = frameLoader.provisionalDocumentLoader();
     if (!documentLoader || !provisionalDocumentLoader)
         return false;
 
@@ -3259,7 +3266,7 @@ void WebPage::SandboxExtensionTracker::didStartProvisionalLoad(WebFrame* frame)
     if (!m_provisionalSandboxExtension)
         return;
 
-    ASSERT(!m_provisionalSandboxExtension || frame->coreFrame()->loader()->provisionalDocumentLoader()->url().isLocalFile());
+    ASSERT(!m_provisionalSandboxExtension || frame->coreFrame()->loader().provisionalDocumentLoader()->url().isLocalFile());
 
     m_provisionalSandboxExtension->consume();
 }
@@ -3299,8 +3306,7 @@ bool WebPage::hasLocalDataForURL(const KURL& url)
     if (url.isLocalFile())
         return true;
 
-    FrameLoader* frameLoader = m_page->mainFrame()->loader();
-    DocumentLoader* documentLoader = frameLoader ? frameLoader->documentLoader() : 0;
+    DocumentLoader* documentLoader = m_page->mainFrame()->loader().documentLoader();
     if (documentLoader && documentLoader->subresource(url))
         return true;
 
@@ -3309,7 +3315,7 @@ bool WebPage::hasLocalDataForURL(const KURL& url)
 
 void WebPage::setCustomTextEncodingName(const String& encoding)
 {
-    m_page->mainFrame()->loader()->reloadWithOverrideEncoding(encoding);
+    m_page->mainFrame()->loader().reloadWithOverrideEncoding(encoding);
 }
 
 void WebPage::didRemoveBackForwardItem(uint64_t itemID)
@@ -3597,7 +3603,7 @@ void WebPage::commitPageTransitionViewport()
 #if PLATFORM(MAC)
 void WebPage::handleAlternativeTextUIResult(const String& result)
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     if (!frame)
         return;
     frame->editor().handleAlternativeTextUIResult(result);
@@ -3621,7 +3627,7 @@ void WebPage::simulateMouseMotion(WebCore::IntPoint position, double time)
 
 void WebPage::setCompositionForTesting(const String& compositionString, uint64_t from, uint64_t length)
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     if (!frame || !frame->editor().canEdit())
         return;
 
@@ -3632,13 +3638,13 @@ void WebPage::setCompositionForTesting(const String& compositionString, uint64_t
 
 bool WebPage::hasCompositionForTesting()
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     return frame && frame->editor().hasComposition();
 }
 
 void WebPage::confirmCompositionForTesting(const String& compositionString)
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    Frame* frame = m_page->focusController().focusedOrMainFrame();
     if (!frame || !frame->editor().canEdit())
         return;
 
@@ -3780,7 +3786,7 @@ bool WebPage::canPluginHandleResponse(const ResourceResponse& response)
 {
 #if ENABLE(NETSCAPE_PLUGIN_API)
     uint32_t pluginLoadPolicy;
-    bool allowOnlyApplicationPlugins = !m_mainFrame->coreFrame()->loader()->subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin);
+    bool allowOnlyApplicationPlugins = !m_mainFrame->coreFrame()->loader().subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin);
 
     uint64_t pluginProcessToken;
     String newMIMEType;
@@ -3797,7 +3803,7 @@ bool WebPage::canPluginHandleResponse(const ResourceResponse& response)
 #if PLATFORM(QT) || PLATFORM(GTK)
 static Frame* targetFrameForEditing(WebPage* page)
 {
-    Frame* targetFrame = page->corePage()->focusController()->focusedOrMainFrame();
+    Frame* targetFrame = page->corePage()->focusController().focusedOrMainFrame();
 
     if (!targetFrame)
         return 0;
@@ -3948,7 +3954,7 @@ bool WebPage::canShowMIMEType(const String& MIMEType) const
         return true;
 
     if (PluginData* pluginData = m_page->pluginData()) {
-        if (pluginData->supportsMimeType(MIMEType, PluginData::AllPlugins) && corePage()->mainFrame()->loader()->subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin))
+        if (pluginData->supportsMimeType(MIMEType, PluginData::AllPlugins) && corePage()->mainFrame()->loader().subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin))
             return true;
 
         // We can use application plugins even if plugins aren't enabled.
@@ -3991,11 +3997,11 @@ void WebPage::didCommitLoad(WebFrame* frame)
 
     // If previous URL is invalid, then it's not a real page that's being navigated away from.
     // Most likely, this is actually the first load to be committed in this page.
-    if (frame->coreFrame()->loader()->previousURL().isValid())
+    if (frame->coreFrame()->loader().previousURL().isValid())
         reportUsedFeatures();
 
     // Only restore the scale factor for standard frame loads (of the main frame).
-    if (frame->coreFrame()->loader()->loadType() == FrameLoadTypeStandard) {
+    if (frame->coreFrame()->loader().loadType() == FrameLoadTypeStandard) {
         Page* page = frame->coreFrame()->page();
         if (page && page->pageScaleFactor() != 1)
             scalePage(1, IntPoint());
@@ -4028,6 +4034,8 @@ static int primarySnapshottedPlugInSearchGap = 200;
 static float primarySnapshottedPlugInSearchBucketSize = 1.1;
 static int primarySnapshottedPlugInMinimumWidth = 400;
 static int primarySnapshottedPlugInMinimumHeight = 300;
+static unsigned maxPrimarySnapshottedPlugInDetectionAttempts = 2;
+static int deferredPrimarySnapshottedPlugInDetectionDelay = 3;
 
 #if ENABLE(PRIMARY_SNAPSHOTTED_PLUGIN_HEURISTIC)
 void WebPage::determinePrimarySnapshottedPlugInTimerFired()
@@ -4053,8 +4061,8 @@ void WebPage::determinePrimarySnapshottedPlugIn()
         return;
     }
 
-    if (m_pluginViews.isEmpty()) {
-        LOG(Plugins, "Primary Plug-In Detection: exiting - no plugin views.");
+    if (!m_hasSeenPlugin) {
+        LOG(Plugins, "Primary Plug-In Detection: exiting - we never saw a plug-in get added to the page.");
         return;
     }
 
@@ -4062,6 +4070,8 @@ void WebPage::determinePrimarySnapshottedPlugIn()
         LOG(Plugins, "Primary Plug-In Detection: exiting - we've already found a primary plug-in.");
         return;
     }
+
+    ++m_numberOfPrimarySnapshotDetectionAttempts;
 
     RenderView* renderView = corePage()->mainFrame()->view()->renderView();
 
@@ -4118,6 +4128,10 @@ void WebPage::determinePrimarySnapshottedPlugIn()
 
     if (!candidatePlugIn) {
         LOG(Plugins, "Primary Plug-In Detection: fail - did not find a candidate plug-in.");
+        if (m_numberOfPrimarySnapshotDetectionAttempts < maxPrimarySnapshottedPlugInDetectionAttempts) {
+            LOG(Plugins, "Primary Plug-In Detection: will attempt again in %ds.", deferredPrimarySnapshottedPlugInDetectionDelay);
+            m_determinePrimarySnapshottedPlugInTimer.startOneShot(deferredPrimarySnapshottedPlugInDetectionDelay);
+        }
         return;
     }
 
@@ -4134,6 +4148,8 @@ void WebPage::resetPrimarySnapshottedPlugIn()
 {
     m_readyToFindPrimarySnapshottedPlugin = false;
     m_didFindPrimarySnapshottedPlugin = false;
+    m_numberOfPrimarySnapshotDetectionAttempts = 0;
+    m_hasSeenPlugin = false;
 }
 
 bool WebPage::matchesPrimaryPlugIn(const String& pageOrigin, const String& pluginOrigin, const String& mimeType) const

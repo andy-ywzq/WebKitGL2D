@@ -48,6 +48,7 @@
 #include "RenderTableCell.h"
 #include "RenderView.h"
 #include "RenderWidget.h"
+#include "ShadowRoot.h"
 #include "StylePropertySet.h"
 #include <wtf/HexNumber.h>
 #include <wtf/Vector.h>
@@ -587,8 +588,7 @@ void write(TextStream& ts, const RenderObject& o, int indent, RenderAsTextBehavi
         Widget* widget = toRenderWidget(&o)->widget();
         if (widget && widget->isFrameView()) {
             FrameView* view = toFrameView(widget);
-            RenderView* root = view->frame()->contentRenderer();
-            if (root) {
+            if (RenderView* root = view->frame().contentRenderer()) {
                 view->layout();
                 RenderLayer* l = root->layer();
                 if (l)
@@ -676,6 +676,8 @@ static void writeRenderRegionList(const RenderRegionList& flowThreadRegionList, 
                 Element* element = toElement(renderRegion->generatingNode());
                 ts << " #" << element->idForStyleResolution();
             }
+            if (renderRegion->hasLayer())
+                ts << " hasLayer";
             if (renderRegion->hasCustomRegionStyle())
                 ts << " region style: 1";
             if (renderRegion->hasAutoLogicalHeight())

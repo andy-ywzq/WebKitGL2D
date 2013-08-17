@@ -1291,9 +1291,9 @@ void CodeBlock::dumpBytecode(PrintStream& out, ExecState* exec, const Instructio
         case op_resolve_scope: {
             int r0 = (++it)->u.operand;
             int id0 = (++it)->u.operand;
-            ++it; // ResolveType
+            int resolveModeAndType = (++it)->u.operand;
             ++it; // depth
-            out.printf("[%4d] resolve_scope\t %s, %s", location, registerName(r0).data(), idName(id0, identifier(id0)).data());
+            out.printf("[%4d] resolve_scope\t %s, %s, %d", location, registerName(r0).data(), idName(id0, identifier(id0)).data(), resolveModeAndType);
             break;
         }
         case op_get_from_scope: {
@@ -2489,12 +2489,23 @@ void CodeBlock::createActivation(CallFrame* callFrame)
 
 unsigned CodeBlock::addOrFindConstant(JSValue v)
 {
+    unsigned result;
+    if (findConstant(v, result))
+        return result;
+    return addConstant(v);
+}
+
+bool CodeBlock::findConstant(JSValue v, unsigned& index)
+{
     unsigned numberOfConstants = numberOfConstantRegisters();
     for (unsigned i = 0; i < numberOfConstants; ++i) {
-        if (getConstant(FirstConstantRegisterIndex + i) == v)
-            return i;
+        if (getConstant(FirstConstantRegisterIndex + i) == v) {
+            index = i;
+            return true;
+        }
     }
-    return addConstant(v);
+    index = numberOfConstants;
+    return false;
 }
 
 #if ENABLE(JIT)

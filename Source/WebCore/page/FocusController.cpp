@@ -33,7 +33,6 @@
 #include "Editor.h"
 #include "EditorClient.h"
 #include "Element.h"
-#include "ElementShadow.h"
 #include "ElementTraversal.h"
 #include "Event.h"
 #include "EventHandler.h"
@@ -83,7 +82,7 @@ Element* FocusNavigationScope::owner() const
 {
     ContainerNode* root = rootNode();
     if (root->isShadowRoot())
-        return toShadowRoot(root)->host();
+        return toShadowRoot(root)->hostElement();
     if (Frame* frame = root->document()->frame())
         return frame->ownerElement();
     return 0;
@@ -103,7 +102,7 @@ FocusNavigationScope FocusNavigationScope::focusNavigationScopeOf(Node* node)
 FocusNavigationScope FocusNavigationScope::focusNavigationScopeOwnedByShadowHost(Node* node)
 {
     ASSERT(isShadowHost(node));
-    return FocusNavigationScope(toElement(node)->shadow()->shadowRoot());
+    return FocusNavigationScope(toElement(node)->shadowRoot());
 }
 
 FocusNavigationScope FocusNavigationScope::focusNavigationScopeOwnedByIFrame(HTMLFrameOwnerElement* frame)
@@ -220,7 +219,7 @@ void FocusController::setFocused(bool focused)
     m_isFocused = focused;
 
     if (!m_isFocused)
-        focusedOrMainFrame()->eventHandler()->stopAutoscrollTimer();
+        focusedOrMainFrame()->eventHandler().stopAutoscrollTimer();
 
     if (!m_focusedFrame)
         setFocusedFrame(m_page->mainFrame());
@@ -577,7 +576,7 @@ static void clearSelectionIfNeeded(Frame* oldFocusedFrame, Frame* newFocusedFram
     if (selectionStartNode == newFocusedNode || selectionStartNode->isDescendantOf(newFocusedNode) || selectionStartNode->deprecatedShadowAncestorNode() == newFocusedNode)
         return;
         
-    if (Node* mousePressNode = newFocusedFrame->eventHandler()->mousePressNode()) {
+    if (Node* mousePressNode = newFocusedFrame->eventHandler().mousePressNode()) {
         if (mousePressNode->renderer() && !mousePressNode->canStartSelection()) {
             // Don't clear the selection for contentEditable elements, but do clear it for input and textarea. See bug 38696.
             Node * root = s->rootEditableElement();
@@ -736,7 +735,7 @@ static void updateFocusCandidateIfNeeded(FocusDirection direction, const FocusCa
         // If 2 nodes are intersecting, do hit test to find which node in on top.
         LayoutUnit x = intersectionRect.x() + intersectionRect.width() / 2;
         LayoutUnit y = intersectionRect.y() + intersectionRect.height() / 2;
-        HitTestResult result = candidate.visibleNode->document()->page()->mainFrame()->eventHandler()->hitTestResultAtPoint(IntPoint(x, y), HitTestRequest::ReadOnly | HitTestRequest::Active | HitTestRequest::IgnoreClipping | HitTestRequest::DisallowShadowContent);
+        HitTestResult result = candidate.visibleNode->document()->page()->mainFrame()->eventHandler().hitTestResultAtPoint(IntPoint(x, y), HitTestRequest::ReadOnly | HitTestRequest::Active | HitTestRequest::IgnoreClipping | HitTestRequest::DisallowShadowContent);
         if (candidate.visibleNode->contains(result.innerNode())) {
             closest = candidate;
             return;

@@ -1,3 +1,59 @@
+2013-08-16  Pratik Solanki  <psolanki@apple.com>
+
+        <https://webkit.org/b/119852> Frame::scriptController() should return a reference
+
+        Reviewed by Andreas Kling.
+
+        m_script is never NULL so we can just return a reference. Also remove some pointless null
+        checks as a result of doing this.
+
+        * Api/qwebelement.cpp:
+        (setupScriptContext):
+        (QWebElement::evaluateJavaScript):
+        * WebCoreSupport/DumpRenderTreeSupportQt.cpp:
+        (DumpRenderTreeSupportQt::evaluateScriptInIsolatedWorld):
+        * WebCoreSupport/QWebFrameAdapter.cpp:
+        (QWebFrameAdapter::evaluateJavaScript):
+        (QWebFrameAdapter::addToJavaScriptWindowObject):
+
+2013-08-15  Anders Carlsson  <andersca@apple.com>
+
+        <https://webkit.org/b/119859> Frame::loader() should return a reference
+
+        Reviewed by Andreas Kling.
+
+        * WebCoreSupport/ChromeClientQt.cpp:
+        (WebCore::ChromeClientQt::closeWindowSoon):
+        * WebCoreSupport/DumpRenderTreeSupportQt.cpp:
+        (DumpRenderTreeSupportQt::shouldClose):
+        (DumpRenderTreeSupportQt::responseMimeType):
+        (DumpRenderTreeSupportQt::clearOpener):
+        (DumpRenderTreeSupportQt::thirdPartyCookiePolicyAllows):
+        (DumpRenderTreeSupportQt::setAlternateHtml):
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+        (WebCore::FrameLoaderClientQt::callPolicyFunction):
+        (WebCore::FrameLoaderClientQt::dispatchDidStartProvisionalLoad):
+        (WebCore::FrameLoaderClientQt::updateGlobalHistory):
+        (WebCore::FrameLoaderClientQt::updateGlobalHistoryRedirectLinks):
+        (WebCore::FrameLoaderClientQt::callErrorPageExtension):
+        (WebCore::FrameLoaderClientQt::dispatchDecidePolicyForNewWindowAction):
+        (WebCore::FrameLoaderClientQt::dispatchDecidePolicyForNavigationAction):
+        (WebCore::FrameLoaderClientQt::startDownload):
+        (WebCore::FrameLoaderClientQt::createFrame):
+        (WebCore::FrameLoaderClientQt::objectContentType):
+        * WebCoreSupport/QWebFrameAdapter.cpp:
+        (QWebFrameAdapter::load):
+        (QWebFrameAdapter::setContent):
+        (QWebFrameAdapter::setHtml):
+        (QWebFrameAdapter::kit):
+        (QWebFrameAdapter::title):
+        (QWebFrameAdapter::clearCoreFrame):
+        * WebCoreSupport/QWebPageAdapter.cpp:
+        (frameLoadRequest):
+        (openNewWindow):
+        (QWebPageAdapter::triggerAction):
+        (QWebPageAdapter::currentFrame):
+
 2013-08-13  Filip Pizlo  <fpizlo@apple.com>
 
         Foo::s_info should be Foo::info(), so that you can change how the s_info is actually linked

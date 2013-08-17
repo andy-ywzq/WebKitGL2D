@@ -251,6 +251,8 @@ webkit.org/b/99025 fast/dom/HTMLAnchorElement/anchor-download-unset.html [ Pass 
 
 # CSS Filters is disabled
 webkit.org/b/99026 css3/filters [ Skip ]
+webkit.org/b/99026 fast/filter-image/filter-image.html [ Skip ]
+webkit.org/b/99026 fast/filter-image/parse-filter-image.html [ Skip ]
 
 # Needs testRunner.enableAutoResizeMode()
 webkit.org/b/99028 fast/autoresize [ Failure ]
@@ -435,8 +437,6 @@ webkit.org/b/93812 [ Debug ] svg/custom/use-instanceRoot-as-event-target.xhtml [
 
 webkit.org/b/90957 [ Release ] fast/js/random-array-gc-stress.html [ Crash Pass ]
 
-webkit.org/b/94458 [ Debug ] http/tests/security/XFrameOptions/x-frame-options-allowall.html [ Crash Failure ]
-webkit.org/b/94458 [ Debug ] http/tests/security/XFrameOptions/x-frame-options-deny-meta-tag-in-body.html [ Crash Failure ]
 webkit.org/b/94458 [ Debug ] fast/events/message-port-context-destroyed.html [ Crash Pass ]
 
 webkit.org/b/104684 fast/xmlhttprequest/xmlhttprequest-recursive-sync-event.html [ Crash Pass ]
@@ -709,7 +709,6 @@ Bug(GTK) css3/flexbox/position-absolute-child.html [ Pass Slow ]
 Bug(GTK) css3/flexbox/multiline-justify-content.html [ Pass Slow ]
 Bug(GTK) [ Debug ] editing/selection/move-by-word-visually-crash-test-5.html [ Pass Slow ]
 Bug(GTK) [ Debug ] fast/css/visited-link-hang.html [ Pass Slow ]
-Bug(GTK) [ Debug ] fast/js/array-sort-modifying-tostring.html [ Pass Slow ]
 Bug(GTK) fast/js/create-lots-of-workers.html [ Pass Slow ]
 Bug(GTK) [ Debug ] fast/js/dfg-double-vote-fuzz.html [ Pass Slow ]
 Bug(GTK) [ Debug ] fast/js/dfg-float32array.html [ Pass Slow ]
@@ -1436,13 +1435,15 @@ webkit.org/b/119730 fast/dom/Window/open-zero-size-as-default.html [ Failure ]
 
 webkit.org/b/119731 fast/images/exif-orientation-composited.html [ Failure ]
 
-webkit.org/b/119732 fast/media/media-query-list-07.html [ Failure ]
-
 webkit.org/b/119733 fast/regions/overflow-scrollable-2.html [ ImageOnlyFailure ]
 
 webkit.org/b/119734 plugins/navigator-plugins-disabled.html [ Failure ]
 
 webkit.org/b/119735 plugins/unavailable-plugin-indicator-obscurity.html [ Failure ]
+
+webkit.org/b/119840 http/tests/loading/authentication-after-redirect-stores-wrong-credentials/authentication-after-redirect-stores-wrong-credentials.html [ Failure ]
+
+webkit.org/b/119841 fast/sub-pixel/sub-pixel-composited-layers.html [ ImageOnlyFailure ]
 
 #////////////////////////////////////////////////////////////////////////////////////////
 # End of Tests failing

@@ -395,12 +395,12 @@ Element* TreeScope::focusedElement()
     Element* element = document->focusedElement();
 
     if (!element && document->page())
-        element = focusedFrameOwnerElement(document->page()->focusController()->focusedFrame(), document->frame());
+        element = focusedFrameOwnerElement(document->page()->focusController().focusedFrame(), document->frame());
     if (!element)
         return 0;
     TreeScope* treeScope = element->treeScope();
     while (treeScope != this && treeScope != document) {
-        element = toShadowRoot(treeScope->rootNode())->host();
+        element = toShadowRoot(treeScope->rootNode())->hostElement();
         treeScope = element->treeScope();
     }
     if (this != treeScope)

@@ -49,7 +49,6 @@
 #include "DocumentType.h"
 #include "Element.h"
 #include "ElementRareData.h"
-#include "ElementShadow.h"
 #include "ElementTraversal.h"
 #include "Event.h"
 #include "EventContext.h"
@@ -987,14 +986,14 @@ bool Node::isRegisteredWithNamedFlow() const
 Element* Node::shadowHost() const
 {
     if (ShadowRoot* root = containingShadowRoot())
-        return root->host();
+        return root->hostElement();
     return 0;
 }
 
 Node* Node::deprecatedShadowAncestorNode() const
 {
     if (ShadowRoot* root = containingShadowRoot())
-        return root->host();
+        return root->hostElement();
 
     return const_cast<Node*>(this);
 }
@@ -1033,7 +1032,7 @@ Element* Node::parentOrShadowHostElement() const
         return 0;
 
     if (parent->isShadowRoot())
-        return toShadowRoot(parent)->host();
+        return toShadowRoot(parent)->hostElement();
 
     if (!parent->isElementNode())
         return 0;
@@ -1046,9 +1045,28 @@ Node* Node::insertionParentForBinding() const
     return resolveReprojection(this);
 }
 
+Node::InsertionNotificationRequest Node::insertedInto(ContainerNode* insertionPoint)
+{
+    ASSERT(insertionPoint->inDocument() || isContainerNode());
+    if (insertionPoint->inDocument())
+        setFlag(InDocumentFlag);
+    if (parentOrShadowHostNode()->isInShadowTree())
+        setFlag(IsInShadowTreeFlag);
+    return InsertionDone;
+}
+
+void Node::removedFrom(ContainerNode* insertionPoint)
+{
+    ASSERT(insertionPoint->inDocument() || isContainerNode());
+    if (insertionPoint->inDocument())
+        clearFlag(InDocumentFlag);
+    if (isInShadowTree() && !treeScope()->rootNode()->isShadowRoot())
+        clearFlag(IsInShadowTreeFlag);
+}
+
 bool Node::needsShadowTreeWalkerSlow() const
 {
-    return (isShadowRoot() || (isElementNode() && (isInsertionPoint() || isPseudoElement() || toElement(this)->hasPseudoElements() || toElement(this)->shadow())));
+    return (isShadowRoot() || (isElementNode() && (isInsertionPoint() || isPseudoElement() || toElement(this)->hasPseudoElements() || toElement(this)->shadowRoot())));
 }
 
 bool Node::isRootEditableElement() const
@@ -2189,7 +2207,7 @@ void Node::defaultEventHandler(Event* event)
     if (eventType == eventNames().keydownEvent || eventType == eventNames().keypressEvent) {
         if (event->isKeyboardEvent())
             if (Frame* frame = document()->frame())
-                frame->eventHandler()->defaultKeyboardEventHandler(static_cast<KeyboardEvent*>(event));
+                frame->eventHandler().defaultKeyboardEventHandler(static_cast<KeyboardEvent*>(event));
     } else if (eventType == eventNames().clickEvent) {
         int detail = event->isUIEvent() ? static_cast<UIEvent*>(event)->detail() : 0;
         if (dispatchDOMActivateEvent(detail, event))
@@ -2203,7 +2221,7 @@ void Node::defaultEventHandler(Event* event)
     } else if (eventType == eventNames().textInputEvent) {
         if (event->hasInterface(eventNames().interfaceForTextEvent))
             if (Frame* frame = document()->frame())
-                frame->eventHandler()->defaultTextInputEventHandler(static_cast<TextEvent*>(event));
+                frame->eventHandler().defaultTextInputEventHandler(static_cast<TextEvent*>(event));
 #if ENABLE(PAN_SCROLLING)
     } else if (eventType == eventNames().mousedownEvent && event->isMouseEvent()) {
         MouseEvent* mouseEvent = static_cast<MouseEvent*>(event);
@@ -2217,7 +2235,7 @@ void Node::defaultEventHandler(Event* event)
 
             if (renderer) {
                 if (Frame* frame = document()->frame())
-                    frame->eventHandler()->startPanScrolling(renderer);
+                    frame->eventHandler().startPanScrolling(renderer);
             }
         }
 #endif
@@ -2232,7 +2250,7 @@ void Node::defaultEventHandler(Event* event)
         
         if (startNode && startNode->renderer())
             if (Frame* frame = document()->frame())
-                frame->eventHandler()->defaultWheelEventHandler(startNode, wheelEvent);
+                frame->eventHandler().defaultWheelEventHandler(startNode, wheelEvent);
     } else if (event->type() == eventNames().webkitEditableContentChangedEvent) {
         dispatchInputEvent();
     }

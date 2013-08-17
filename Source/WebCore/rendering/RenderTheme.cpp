@@ -55,7 +55,6 @@
 #endif
 
 #if ENABLE(DATALIST_ELEMENT)
-#include "ElementShadow.h"
 #include "HTMLCollection.h"
 #include "HTMLDataListElement.h"
 #include "HTMLOptionElement.h"
@@ -756,7 +755,7 @@ bool RenderTheme::isActive(const RenderObject* o) const
     if (!page)
         return false;
 
-    return page->focusController()->isActive();
+    return page->focusController().isActive();
 }
 
 bool RenderTheme::isChecked(const RenderObject* o) const

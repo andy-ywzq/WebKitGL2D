@@ -78,7 +78,6 @@ SOURCES += \
      bindings/js/DOMWrapperWorld.cpp \
      bindings/js/Dictionary.cpp \
      bindings/js/GCController.cpp \
-     bindings/js/JSArrayBufferCustom.cpp \
      bindings/js/JSAudioBufferCustom.cpp \
      bindings/js/JSAttrCustom.cpp \
      bindings/js/JSBlobCustom.cpp \
@@ -114,7 +113,6 @@ SOURCES += \
      bindings/js/JSDOMWindowCustom.cpp \
      bindings/js/JSDOMWindowShell.cpp \
      bindings/js/JSDOMWrapper.cpp \
-     bindings/js/JSDataViewCustom.cpp \
      bindings/js/JSDeviceMotionEventCustom.cpp \
      bindings/js/JSDeviceOrientationEventCustom.cpp \
      bindings/js/JSDocumentCustom.cpp \
@@ -200,6 +198,7 @@ SOURCES += \
      bindings/js/ScriptState.cpp \
      bindings/js/ScriptValue.cpp \
      bindings/js/SerializedScriptValue.cpp \
+     bindings/js/WebCoreTypedArrayController.cpp \
      bridge/IdentifierRep.cpp \
      bridge/NP_jsobject.cpp \
      bridge/c/CRuntimeObject.cpp \
@@ -261,6 +260,7 @@ SOURCES += \
     css/CSSComputedStyleDeclaration.cpp \
     css/CSSCrossfadeValue.cpp \
     css/CSSCursorImageValue.cpp \
+    css/CSSFilterImageValue.cpp \
     css/CSSFontFace.cpp \
     css/CSSDefaultStyleSheets.cpp \
     css/CSSFontFaceLoadEvent.cpp \
@@ -401,7 +401,6 @@ SOURCES += \
     dom/DatasetDOMStringMap.cpp \
     dom/Element.cpp \
     dom/ElementRareData.cpp \
-    dom/ElementShadow.cpp \
     dom/EntityReference.cpp \
     dom/ErrorEvent.cpp \
     dom/Event.cpp \
@@ -719,7 +718,6 @@ SOURCES += \
     html/canvas/CanvasRenderingContext.cpp \
     html/canvas/CanvasRenderingContext2D.cpp \
     html/canvas/CanvasStyle.cpp \
-    html/canvas/DataView.cpp \
     html/forms/FileIconLoader.cpp \
     html/parser/BackgroundHTMLInputStream.cpp \
     html/parser/BackgroundHTMLParser.cpp \
@@ -1010,7 +1008,9 @@ SOURCES += \
     platform/graphics/ImageBuffer.cpp \
     platform/graphics/ImageOrientation.cpp \
     platform/graphics/ImageSource.cpp \
+    platform/graphics/IntPoint.cpp \
     platform/graphics/IntRect.cpp \
+    platform/graphics/IntSize.cpp \
     platform/graphics/Path.cpp \
     platform/graphics/PathTraversalState.cpp \
     platform/graphics/Pattern.cpp \
@@ -1232,6 +1232,7 @@ SOURCES += \
     rendering/RootInlineBox.cpp \
     rendering/ScrollBehavior.cpp \
     rendering/shapes/PolygonShape.cpp \
+    rendering/shapes/RasterShape.cpp \
     rendering/shapes/RectangleShape.cpp \
     rendering/shapes/Shape.cpp \
     rendering/shapes/ShapeInfo.cpp \
@@ -1344,7 +1345,6 @@ HEADERS += \
     bindings/js/GCController.h \
     bindings/js/DOMObjectHashTableMap.h \
     bindings/js/DOMWrapperWorld.h \
-    bindings/js/JSArrayBufferViewHelper.h \
     bindings/js/JSCSSStyleDeclarationCustom.h \
     bindings/js/JSCallbackData.h \
     bindings/js/JSCustomXPathNSResolver.h \
@@ -1481,6 +1481,7 @@ HEADERS += \
     css/CSSComputedStyleDeclaration.h \
     css/CSSCrossfadeValue.h \
     css/CSSCursorImageValue.h \
+    css/CSSFilterImageValue.h \
     css/CSSFontFace.h \
     css/CSSFontFaceLoadEvent.h \
     css/CSSFontFaceRule.h \
@@ -1608,7 +1609,6 @@ HEADERS += \
     dom/DOMTimeStamp.h \
     dom/DatasetDOMStringMap.h \
     dom/Element.h \
-    dom/ElementShadow.h \
     dom/ElementTravesal.h \
     dom/Entity.h \
     dom/EntityReference.h \
@@ -1781,7 +1781,6 @@ HEADERS += \
     html/canvas/CanvasRenderingContext.h \
     html/canvas/CanvasRenderingContext2D.h \
     html/canvas/CanvasStyle.h \
-    html/canvas/DataView.h \
     html/canvas/DOMPath.h \
     html/ClassList.h \
     html/DOMFormData.h \
@@ -2493,6 +2492,7 @@ HEADERS += \
     rendering/RootInlineBox.h \
     rendering/ScrollBehavior.h \
     rendering/shapes/PolygonShape.h \
+    rendering/shapes/RasterShape.h \
     rendering/shapes/RectangleShape.h \
     rendering/shapes/Shape.h \
     rendering/shapes/ShapeInfo.h \

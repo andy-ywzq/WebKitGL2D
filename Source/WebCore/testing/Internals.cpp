@@ -44,7 +44,6 @@
 #include "DocumentMarkerController.h"
 #include "Editor.h"
 #include "Element.h"
-#include "ElementShadow.h"
 #include "EventHandler.h"
 #include "ExceptionCode.h"
 #include "FormController.h"
@@ -627,8 +626,8 @@ Internals::ShadowRootIfShadowDOMEnabledOrNode* Internals::ensureShadowRoot(Eleme
         return 0;
     }
 
-    if (ElementShadow* shadow = host->shadow())
-        return shadow->shadowRoot();
+    if (ShadowRoot* shadowRoot = host->shadowRoot())
+        return shadowRoot;
 
     return host->createShadowRoot(ec).get();
 }
@@ -648,9 +647,7 @@ Internals::ShadowRootIfShadowDOMEnabledOrNode* Internals::shadowRoot(Element* ho
         ec = INVALID_ACCESS_ERR;
         return 0;
     }
-    if (ElementShadow* shadow = host->shadow())
-        return shadow->shadowRoot();
-    return 0;
+    return host->shadowRoot();
 }
 
 String Internals::shadowRootType(const Node* root, ExceptionCode& ec) const
@@ -725,7 +722,7 @@ void Internals::selectColorInColorChooser(Element* element, const String& colorV
 
 Vector<String> Internals::formControlStateOfPreviousHistoryItem(ExceptionCode& ec)
 {
-    HistoryItem* mainItem = frame()->loader()->history()->previousItem();
+    HistoryItem* mainItem = frame()->loader().history()->previousItem();
     if (!mainItem) {
         ec = INVALID_ACCESS_ERR;
         return Vector<String>();
@@ -740,7 +737,7 @@ Vector<String> Internals::formControlStateOfPreviousHistoryItem(ExceptionCode& e
 
 void Internals::setFormControlStateOfPreviousHistoryItem(const Vector<String>& state, ExceptionCode& ec)
 {
-    HistoryItem* mainItem = frame()->loader()->history()->previousItem();
+    HistoryItem* mainItem = frame()->loader().history()->previousItem();
     if (!mainItem) {
         ec = INVALID_ACCESS_ERR;
         return;
@@ -1115,7 +1112,7 @@ PassRefPtr<WebKitPoint> Internals::touchPositionAdjustedToBestClickableNode(long
     Node* targetNode;
     IntPoint adjustedPoint;
 
-    bool foundNode = document->frame()->eventHandler()->bestClickableNodeForTouchPoint(point, radius, adjustedPoint, targetNode);
+    bool foundNode = document->frame()->eventHandler().bestClickableNodeForTouchPoint(point, radius, adjustedPoint, targetNode);
     if (foundNode)
         return WebKitPoint::create(adjustedPoint.x(), adjustedPoint.y());
 
@@ -1134,7 +1131,7 @@ Node* Internals::touchNodeAdjustedToBestClickableNode(long x, long y, long width
 
     Node* targetNode;
     IntPoint adjustedPoint;
-    document->frame()->eventHandler()->bestClickableNodeForTouchPoint(point, radius, adjustedPoint, targetNode);
+    document->frame()->eventHandler().bestClickableNodeForTouchPoint(point, radius, adjustedPoint, targetNode);
     return targetNode;
 }
 
@@ -1151,7 +1148,7 @@ PassRefPtr<WebKitPoint> Internals::touchPositionAdjustedToBestContextMenuNode(lo
     Node* targetNode = 0;
     IntPoint adjustedPoint;
 
-    bool foundNode = document->frame()->eventHandler()->bestContextMenuNodeForTouchPoint(point, radius, adjustedPoint, targetNode);
+    bool foundNode = document->frame()->eventHandler().bestContextMenuNodeForTouchPoint(point, radius, adjustedPoint, targetNode);
     if (foundNode)
         return WebKitPoint::create(adjustedPoint.x(), adjustedPoint.y());
 
@@ -1170,7 +1167,7 @@ Node* Internals::touchNodeAdjustedToBestContextMenuNode(long x, long y, long wid
 
     Node* targetNode = 0;
     IntPoint adjustedPoint;
-    document->frame()->eventHandler()->bestContextMenuNodeForTouchPoint(point, radius, adjustedPoint, targetNode);
+    document->frame()->eventHandler().bestContextMenuNodeForTouchPoint(point, radius, adjustedPoint, targetNode);
     return targetNode;
 }
 
@@ -1186,7 +1183,7 @@ PassRefPtr<ClientRect> Internals::bestZoomableAreaForTouchPoint(long x, long y, 
 
     Node* targetNode;
     IntRect zoomableArea;
-    bool foundNode = document->frame()->eventHandler()->bestZoomableAreaForTouchPoint(point, radius, zoomableArea, targetNode);
+    bool foundNode = document->frame()->eventHandler().bestZoomableAreaForTouchPoint(point, radius, zoomableArea, targetNode);
     if (foundNode)
         return ClientRect::create(zoomableArea);
 
@@ -1886,8 +1883,8 @@ PassRefPtr<MemoryInfo> Internals::memoryInfo() const
 
 Vector<String> Internals::getReferencedFilePaths() const
 {
-    frame()->loader()->history()->saveDocumentAndScrollState();
-    return FormController::getReferencedFilePaths(frame()->loader()->history()->currentItem()->documentState());
+    frame()->loader().history()->saveDocumentAndScrollState();
+    return FormController::getReferencedFilePaths(frame()->loader().history()->currentItem()->documentState());
 }
 
 void Internals::startTrackingRepaints(Document* document, ExceptionCode& ec)
@@ -1974,7 +1971,7 @@ String Internals::getCurrentCursorInfo(Document* document, ExceptionCode& ec)
         return String();
     }
 
-    Cursor cursor = document->frame()->eventHandler()->currentMouseCursor();
+    Cursor cursor = document->frame()->eventHandler().currentMouseCursor();
 
 #if USE(LAZY_NATIVE_CURSOR)
     StringBuilder result;
@@ -2024,7 +2021,7 @@ void Internals::setUsesOverlayScrollbars(bool enabled)
 
 void Internals::forceReload(bool endToEnd)
 {
-    frame()->loader()->reload(endToEnd);
+    frame()->loader().reload(endToEnd);
 }
 
 #if ENABLE(ENCRYPTED_MEDIA_V2)

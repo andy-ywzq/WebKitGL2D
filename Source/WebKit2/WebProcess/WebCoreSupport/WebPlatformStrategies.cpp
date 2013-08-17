@@ -275,8 +275,6 @@ void WebPlatformStrategies::refreshPlugins()
     m_cachedPlugins.clear();
     m_pluginCacheIsPopulated = false;
     m_shouldRefreshPlugins = true;
-
-    populatePluginCache();
 #endif // ENABLE(NETSCAPE_PLUGIN_API)
 }
 
@@ -285,7 +283,7 @@ void WebPlatformStrategies::getPluginInfo(const WebCore::Page* page, Vector<WebC
 #if ENABLE(NETSCAPE_PLUGIN_API)
     populatePluginCache();
 
-    if (page->mainFrame()->loader()->subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin)) {
+    if (page->mainFrame()->loader().subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin)) {
         plugins = m_cachedPlugins;
         return;
     }

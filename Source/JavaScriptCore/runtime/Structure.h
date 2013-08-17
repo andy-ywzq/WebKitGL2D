@@ -36,6 +36,7 @@
 #include "PropertyNameArray.h"
 #include "PropertyOffset.h"
 #include "Protect.h"
+#include "PutPropertySlot.h"
 #include "StructureRareData.h"
 #include "StructureTransitionTable.h"
 #include "JSTypeInfo.h"
@@ -95,7 +96,7 @@ protected:
 public:
     static void dumpStatistics();
 
-    JS_EXPORT_PRIVATE static Structure* addPropertyTransition(VM&, Structure*, PropertyName, unsigned attributes, JSCell* specificValue, PropertyOffset&);
+    JS_EXPORT_PRIVATE static Structure* addPropertyTransition(VM&, Structure*, PropertyName, unsigned attributes, JSCell* specificValue, PropertyOffset&, PutPropertySlot::Context = PutPropertySlot::UnknownContext);
     static Structure* addPropertyTransitionToExistingStructureConcurrently(Structure*, StringImpl* uid, unsigned attributes, JSCell* specificValue, PropertyOffset&);
     JS_EXPORT_PRIVATE static Structure* addPropertyTransitionToExistingStructure(Structure*, PropertyName, unsigned attributes, JSCell* specificValue, PropertyOffset&);
     static Structure* removePropertyTransition(VM&, Structure*, PropertyName, PropertyOffset&);
@@ -230,13 +231,11 @@ public:
     
     bool couldHaveIndexingHeader() const
     {
-        return hasIndexedProperties(indexingType());
+        return hasIndexedProperties(indexingType())
+            || isTypedView(m_classInfo->typedArrayStorageType);
     }
     
-    bool hasIndexingHeader(const JSCell*) const
-    {
-        return hasIndexedProperties(indexingType());
-    }
+    bool hasIndexingHeader(const JSCell*) const;
     
     bool masqueradesAsUndefined(JSGlobalObject* lexicalGlobalObject);
 
@@ -466,6 +465,7 @@ private:
     void cloneRareDataFrom(VM&, const Structure*);
 
     static const int s_maxTransitionLength = 64;
+    static const int s_maxTransitionLengthForNonEvalPutById = 512;
 
     static const unsigned maxSpecificFunctionThrashCount = 3;
         

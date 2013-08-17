@@ -59,7 +59,6 @@
 #include "DocumentType.h"
 #include "Editor.h"
 #include "Element.h"
-#include "ElementShadow.h"
 #include "ElementTraversal.h"
 #include "EntityReference.h"
 #include "Event.h"
@@ -425,7 +424,7 @@ Document::Document(Frame* frame, const KURL& url, unsigned documentClasses)
     , m_cssTarget(0)
     , m_processingLoadEvent(false)
     , m_loadEventFinished(false)
-    , m_startTime(currentTime())
+    , m_startTime(monotonicallyIncreasingTimeMS())
     , m_overMinimumLayoutThreshold(false)
     , m_scriptRunner(ScriptRunner::create(this))
     , m_xmlVersion(ASCIILiteral("1.0"))
@@ -494,7 +493,7 @@ Document::Document(Frame* frame, const KURL& url, unsigned documentClasses)
     m_markers = adoptPtr(new DocumentMarkerController);
 
     if (m_frame)
-        m_cachedResourceLoader = m_frame->loader()->activeDocumentLoader()->cachedResourceLoader();
+        m_cachedResourceLoader = m_frame->loader().activeDocumentLoader()->cachedResourceLoader();
     if (!m_cachedResourceLoader)
         m_cachedResourceLoader = CachedResourceLoader::create(0);
     m_cachedResourceLoader->setDocument(this);
@@ -1267,7 +1266,7 @@ void Document::setVisualUpdatesAllowed(bool visualUpdatesAllowed)
         if (frame() == page->mainFrame()) {
             frameView->addPaintPendingMilestones(DidFirstPaintAfterSuppressedIncrementalRendering);
             if (page->requestedLayoutMilestones() & DidFirstLayoutAfterSuppressedIncrementalRendering)
-                frame()->loader()->didLayout(DidFirstLayoutAfterSuppressedIncrementalRendering);
+                frame()->loader().didLayout(DidFirstLayoutAfterSuppressedIncrementalRendering);
         }
     }
 
@@ -1280,7 +1279,7 @@ void Document::setVisualUpdatesAllowed(bool visualUpdatesAllowed)
         renderView->repaintViewAndCompositedLayers();
 
     if (Frame* frame = this->frame())
-        frame->loader()->forcePageTransitionIfNeeded();
+        frame->loader().forcePageTransitionIfNeeded();
 }
 
 void Document::visualUpdatesSuppressionTimerFired(Timer<Document>*)
@@ -1511,7 +1510,7 @@ void Document::updateTitle(const StringWithDirection& title)
             m_title = canonicalizedTitle<UChar>(this, m_rawTitle);
     }
     if (Frame* f = frame())
-        f->loader()->setTitle(m_title);
+        f->loader().setTitle(m_title);
 }
 
 void Document::setTitle(const String& title)
@@ -1818,7 +1817,7 @@ void Document::recalcStyle(Style::Change change)
     // detached (for example, by setting display:none in the :hover style), schedule another mouseMove event
     // to check if any other elements ended up under the mouse pointer due to re-layout.
     if (m_hoveredElement && !m_hoveredElement->renderer() && frame())
-        frame()->eventHandler()->dispatchFakeMouseMoveEventSoon();
+        frame()->eventHandler().dispatchFakeMouseMoveEventSoon();
 }
 
 void Document::updateStyleIfNeeded()
@@ -2194,8 +2193,8 @@ void Document::open(Document* ownerDocument)
             }
         }
 
-        if (m_frame->loader()->state() == FrameStateProvisional)
-            m_frame->loader()->stopAllLoaders();
+        if (m_frame->loader().state() == FrameStateProvisional)
+            m_frame->loader().stopAllLoaders();
     }
 
     removeAllEventListeners();
@@ -2204,7 +2203,7 @@ void Document::open(Document* ownerDocument)
         parser->setWasCreatedByScript(true);
 
     if (m_frame)
-        m_frame->loader()->didExplicitOpen();
+        m_frame->loader().didExplicitOpen();
 }
 
 void Document::detachParser()
@@ -2327,7 +2326,7 @@ void Document::explicitClose()
         return;
     }
 
-    m_frame->loader()->checkCompleted();
+    m_frame->loader().checkCompleted();
 }
 
 void Document::implicitClose()
@@ -2364,7 +2363,7 @@ void Document::implicitClose()
     // ramifications, and we need to decide what is the Right Thing To Do(tm)
     Frame* f = frame();
     if (f) {
-        f->loader()->icon()->startLoader();
+        f->loader().icon()->startLoader();
         f->animation()->startAnimationsIfNotSuspended(this);
     }
 
@@ -2388,7 +2387,7 @@ void Document::implicitClose()
     enqueuePopstateEvent(m_pendingStateObject ? m_pendingStateObject.release() : SerializedScriptValue::nullValue());
     
     if (f)
-        f->loader()->handledOnloadEvents();
+        f->loader().handledOnloadEvents();
 #ifdef INSTRUMENT_LAYOUT_SCHEDULING
     if (!ownerElement())
         printf("onload fired at %d\n", elapsedTime());
@@ -2412,7 +2411,7 @@ void Document::implicitClose()
         return;
     }
 
-    frame()->loader()->checkCallImplicitClose();
+    frame()->loader().checkCallImplicitClose();
     
     // We used to force a synchronous display and flush here.  This really isn't
     // necessary and can in fact be actively harmful if pages are loading at a rate of > 60fps
@@ -2498,7 +2497,7 @@ int Document::minimumLayoutDelay()
 
 int Document::elapsedTime() const
 {
-    return static_cast<int>((currentTime() - m_startTime) * 1000);
+    return static_cast<int>(monotonicallyIncreasingTimeMS() - m_startTime);
 }
 
 void Document::write(const SegmentedString& text, Document* ownerDocument)
@@ -2676,7 +2675,7 @@ void Document::processBaseElement()
 
 String Document::userAgent(const KURL& url) const
 {
-    return frame() ? frame()->loader()->userAgent(url) : String();
+    return frame() ? frame()->loader().userAgent(url) : String();
 }
 
 void Document::disableEval(const String& errorMessage)
@@ -2684,7 +2683,7 @@ void Document::disableEval(const String& errorMessage)
     if (!frame())
         return;
 
-    frame()->script()->disableEval(errorMessage);
+    frame()->script().disableEval(errorMessage);
 }
 
 bool Document::canNavigate(Frame* targetFrame)
@@ -2736,10 +2735,10 @@ bool Document::canNavigate(Frame* targetFrame)
     // and/or "parent" relation). Requiring some sort of relation prevents a
     // document from navigating arbitrary, unrelated top-level frames.
     if (!targetFrame->tree()->parent()) {
-        if (targetFrame == m_frame->loader()->opener())
+        if (targetFrame == m_frame->loader().opener())
             return true;
 
-        if (canAccessAncestor(securityOrigin(), targetFrame->loader()->opener()))
+        if (canAccessAncestor(securityOrigin(), targetFrame->loader().opener()))
             return true;
     }
 
@@ -2828,13 +2827,13 @@ void Document::processHttpEquiv(const String& equiv, const String& content)
         parseDNSPrefetchControlHeader(content);
     else if (equalIgnoringCase(equiv, "x-frame-options")) {
         if (frame) {
-            FrameLoader* frameLoader = frame->loader();
+            FrameLoader& frameLoader = frame->loader();
             unsigned long requestIdentifier = 0;
-            if (frameLoader->activeDocumentLoader() && frameLoader->activeDocumentLoader()->mainResourceLoader())
-                requestIdentifier = frameLoader->activeDocumentLoader()->mainResourceLoader()->identifier();
-            if (frameLoader->shouldInterruptLoadForXFrameOptions(content, url(), requestIdentifier)) {
+            if (frameLoader.activeDocumentLoader() && frameLoader.activeDocumentLoader()->mainResourceLoader())
+                requestIdentifier = frameLoader.activeDocumentLoader()->mainResourceLoader()->identifier();
+            if (frameLoader.shouldInterruptLoadForXFrameOptions(content, url(), requestIdentifier)) {
                 String message = "Refused to display '" + url().stringCenterEllipsizedToLength() + "' in a frame because it set 'X-Frame-Options' to '" + content + "'.";
-                frameLoader->stopAllLoaders();
+                frameLoader.stopAllLoaders();
                 // Stopping the loader isn't enough, as we're already parsing the document; to honor the header's
                 // intent, we must navigate away from the possibly partially-rendered document to a location that
                 // doesn't inherit the parent's SecurityOrigin.
@@ -3233,7 +3232,7 @@ void Document::hoveredElementDidDetach(Element* element)
     while (m_hoveredElement && !m_hoveredElement->renderer())
         m_hoveredElement = m_hoveredElement->parentElement();
     if (frame())
-        frame()->eventHandler()->scheduleHoverStateUpdate();
+        frame()->eventHandler().scheduleHoverStateUpdate();
 }
 
 void Document::elementInActiveChainDidDetach(Element* element)
@@ -3474,7 +3473,7 @@ void Document::nodeChildrenWillBeRemoved(ContainerNode* container)
 
     if (Frame* frame = this->frame()) {
         for (Node* n = container->firstChild(); n; n = n->nextSibling()) {
-            frame->eventHandler()->nodeWillBeRemoved(n);
+            frame->eventHandler().nodeWillBeRemoved(n);
             frame->selection()->nodeWillBeRemoved(n);
             frame->page()->dragCaretController()->nodeWillBeRemoved(n);
         }
@@ -3494,7 +3493,7 @@ void Document::nodeWillBeRemoved(Node* n)
     }
 
     if (Frame* frame = this->frame()) {
-        frame->eventHandler()->nodeWillBeRemoved(n);
+        frame->eventHandler().nodeWillBeRemoved(n);
         frame->selection()->nodeWillBeRemoved(n);
         frame->page()->dragCaretController()->nodeWillBeRemoved(n);
     }
@@ -3724,7 +3723,7 @@ void Document::setCookie(const String& value, ExceptionCode& ec)
 String Document::referrer() const
 {
     if (frame())
-        return frame()->loader()->referrer();
+        return frame()->loader().referrer();
     return String();
 }
 
@@ -4037,7 +4036,7 @@ void Document::documentDidResumeFromPageCache()
         frameView->setAnimatorsAreActive();
 
     ASSERT(m_frame);
-    m_frame->loader()->client()->dispatchDidBecomeFrameset(isFrameSet());
+    m_frame->loader().client()->dispatchDidBecomeFrameset(isFrameSet());
 }
 
 void Document::registerForPageCacheSuspensionCallbacks(Element* e)
@@ -4176,7 +4175,7 @@ KURL Document::openSearchDescriptionURL()
         return KURL();
 
     // FIXME: Why do we need to wait for FrameStateComplete?
-    if (frame()->loader()->state() != FrameStateComplete)
+    if (frame()->loader().state() != FrameStateComplete)
         return KURL();
 
     if (!head())
@@ -4396,7 +4395,7 @@ void Document::finishedParsing()
         // See https://bugs.webkit.org/show_bug.cgi?id=36864 starting around comment 35.
         updateStyleIfNeeded();
 
-        f->loader()->finishedParsing();
+        f->loader().finishedParsing();
 
         InspectorInstrumentation::domContentLoadedEventFired(f.get());
     }
@@ -4499,7 +4498,7 @@ void Document::addIconURL(const String& url, const String&, const String&, IconT
     if (!f)
         return;
 
-    f->loader()->didChangeIcons(iconType);
+    f->loader().didChangeIcons(iconType);
 }
 
 static bool isEligibleForSeamless(Document* parent, Document* child)
@@ -4535,7 +4534,7 @@ void Document::initSecurityContext()
     // In the common case, create the security context from the currently
     // loading URL with a fresh content security policy.
     m_cookieURL = m_url;
-    enforceSandboxFlags(m_frame->loader()->effectiveSandboxFlags());
+    enforceSandboxFlags(m_frame->loader().effectiveSandboxFlags());
     setSecurityOrigin(isSandboxed(SandboxOrigin) ? SecurityOrigin::createUnique() : SecurityOrigin::create(m_url));
     setContentSecurityPolicy(ContentSecurityPolicy::create(this));
 
@@ -4545,7 +4544,7 @@ void Document::initSecurityContext()
             // harnesses for web sites.
             securityOrigin()->grantUniversalAccess();
         } else if (securityOrigin()->isLocal()) {
-            if (settings->allowUniversalAccessFromFileURLs() || m_frame->loader()->client()->shouldForceUniversalAccessFromLocalURL(m_url)) {
+            if (settings->allowUniversalAccessFromFileURLs() || m_frame->loader().client()->shouldForceUniversalAccessFromLocalURL(m_url)) {
                 // Some clients want local URLs to have universal access, but that setting is dangerous for other clients.
                 securityOrigin()->grantUniversalAccess();
             } else if (!settings->allowFileAccessFromFileURLs()) {
@@ -4559,7 +4558,7 @@ void Document::initSecurityContext()
     }
 
     Document* parentDocument = ownerElement() ? ownerElement()->document() : 0;
-    if (parentDocument && m_frame->loader()->shouldTreatURLAsSrcdocDocument(url())) {
+    if (parentDocument && m_frame->loader().shouldTreatURLAsSrcdocDocument(url())) {
         m_isSrcdocDocument = true;
         setBaseURLOverride(parentDocument->baseURL());
     }
@@ -4576,7 +4575,7 @@ void Document::initSecurityContext()
 
     Frame* ownerFrame = m_frame->tree()->parent();
     if (!ownerFrame)
-        ownerFrame = m_frame->loader()->opener();
+        ownerFrame = m_frame->loader().opener();
 
     if (!ownerFrame) {
         didFailToInitializeSecurityOrigin();
@@ -4619,7 +4618,7 @@ void Document::updateURLForPushOrReplaceState(const KURL& url)
         return;
 
     setURL(url);
-    f->loader()->setOutgoingReferrer(url);
+    f->loader().setOutgoingReferrer(url);
 
     if (DocumentLoader* documentLoader = loader())
         documentLoader->replaceRequestURLForSameDocumentNavigation(url);
@@ -5454,7 +5453,7 @@ void Document::decrementLoadEventDelayCount()
 void Document::loadEventDelayTimerFired(Timer<Document>*)
 {
     if (frame())
-        frame()->loader()->checkCompleted();
+        frame()->loader().checkCompleted();
 }
 
 #if ENABLE(REQUEST_ANIMATION_FRAME)
@@ -5616,7 +5615,7 @@ void Document::didRemoveEventTargetNode(Node* handler)
 
 void Document::resetLastHandledUserGestureTimestamp()
 {
-    m_lastHandledUserGestureTimestamp = currentTime();
+    m_lastHandledUserGestureTimestamp = monotonicallyIncreasingTime();
 }
 
 HTMLIFrameElement* Document::seamlessParentIFrame() const
@@ -5646,7 +5645,7 @@ DocumentLoader* Document::loader() const
     if (!m_frame)
         return 0;
     
-    DocumentLoader* loader = m_frame->loader()->documentLoader();
+    DocumentLoader* loader = m_frame->loader().documentLoader();
     if (!loader)
         return 0;
     
@@ -5738,7 +5737,7 @@ void Document::decrementActiveParserCount()
 #if ENABLE(THREADED_HTML_PARSER)
     loader()->checkLoadComplete();
 #endif
-    frame()->loader()->checkLoadComplete();
+    frame()->loader().checkLoadComplete();
 }
 
 void Document::setContextFeatures(PassRefPtr<ContextFeatures> features)
@@ -5984,7 +5983,7 @@ void Document::ensurePlugInsInjectedScript(DOMWrapperWorld* world)
     if (!jsString)
         jsString = plugInsJavaScript;
 
-    page()->mainFrame()->script()->evaluateInWorld(ScriptSourceCode(jsString), world);
+    page()->mainFrame()->script().evaluateInWorld(ScriptSourceCode(jsString), world);
 
     m_hasInjectedPlugInsScript = true;
 }

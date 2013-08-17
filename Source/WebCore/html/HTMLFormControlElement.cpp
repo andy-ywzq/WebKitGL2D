@@ -26,7 +26,6 @@
 #include "HTMLFormControlElement.h"
 
 #include "Attribute.h"
-#include "ElementShadow.h"
 #include "Event.h"
 #include "EventHandler.h"
 #include "EventNames.h"
@@ -328,7 +327,7 @@ bool HTMLFormControlElement::isKeyboardFocusable(KeyboardEvent* event) const
 {
     if (isFocusable())
         if (document()->frame())
-            return document()->frame()->eventHandler()->tabsToAllFormControls(event);
+            return document()->frame()->eventHandler().tabsToAllFormControls(event);
     return false;
 }
 

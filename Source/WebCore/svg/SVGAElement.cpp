@@ -180,7 +180,7 @@ void SVGAElement::defaultEventHandler(Event* event)
             Frame* frame = document()->frame();
             if (!frame)
                 return;
-            frame->loader()->urlSelected(document()->completeURL(url), target, event, false, false, MaybeSendReferrer);
+            frame->loader().urlSelected(document()->completeURL(url), target, event, false, false, MaybeSendReferrer);
             return;
         }
     }
@@ -221,7 +221,7 @@ bool SVGAElement::isKeyboardFocusable(KeyboardEvent* event) const
     if (!document()->frame())
         return false;
     
-    return document()->frame()->eventHandler()->tabsToLinks(event);
+    return document()->frame()->eventHandler().tabsToLinks(event);
 }
 
 bool SVGAElement::childShouldCreateRenderer(const NodeRenderingContext& childContext) const

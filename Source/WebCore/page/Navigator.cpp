@@ -58,7 +58,7 @@ Navigator::~Navigator()
 // sites such as nwa.com -- the library thinks Safari is Netscape 4 if we don't do this!
 static bool shouldHideFourDot(Frame* frame)
 {
-    const String* sourceURL = frame->script()->sourceURL();
+    const String* sourceURL = frame->script().sourceURL();
     if (!sourceURL)
         return false;
     if (!(sourceURL->endsWith("/dqm_script.js") || sourceURL->endsWith("/dqm_loader.js") || sourceURL->endsWith("/tdqm_loader.js")))
@@ -94,7 +94,7 @@ String Navigator::userAgent() const
     if (!m_frame->page())
         return String();
         
-    return m_frame->loader()->userAgent(m_frame->document()->url());
+    return m_frame->loader().userAgent(m_frame->document()->url());
 }
 
 DOMPluginArray* Navigator::plugins() const

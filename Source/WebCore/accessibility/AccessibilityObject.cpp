@@ -405,7 +405,7 @@ static void appendAccessibilityObject(AccessibilityObject* object, Accessibility
         if (!widget || !widget->isFrameView())
             return;
         
-        Document* doc = toFrameView(widget)->frame()->document();
+        Document* doc = toFrameView(widget)->frame().document();
         if (!doc || !doc->renderer())
             return;
         
@@ -578,7 +578,7 @@ bool AccessibilityObject::press() const
     if (!actionElem)
         return false;
     if (Frame* f = actionElem->document()->frame())
-        f->loader()->resetMultipleFormSubmissionProtection();
+        f->loader().resetMultipleFormSubmissionProtection();
     
     UserGestureIndicator gestureIndicator(DefinitelyProcessingUserGesture);
     actionElem->accessKeyAction(true);
@@ -1159,7 +1159,7 @@ Document* AccessibilityObject::document() const
     if (!frameView)
         return 0;
     
-    return frameView->frame()->document();
+    return frameView->frame().document();
 }
     
 Page* AccessibilityObject::page() const
