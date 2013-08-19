@@ -61,11 +61,6 @@ void Pasteboard::writeImage(Node*, const KURL&, const String&)
     notImplemented();
 }
 
-void Pasteboard::writeClipboard(Clipboard*)
-{
-    notImplemented();
-}
-
 void Pasteboard::clear()
 {
     notImplemented();
