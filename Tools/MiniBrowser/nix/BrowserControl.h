@@ -108,6 +108,7 @@ public:
     void handleClose();
 
 private:
+    void init();
     // XlibEventSource::Client.
     virtual void handleXEvent(const XEvent&);
     void updateClickCount(const XButtonPressedEvent&);

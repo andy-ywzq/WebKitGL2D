@@ -30,8 +30,8 @@
 
 BrowserControl::BrowserControl(BrowserControlClient * client, int width, int height, std::string url)
     : m_client(client)
-    , m_display(XOpenDisplay(0))
-    , m_context(XUniqueContext())
+    , m_display(0)
+    , m_context(0)
     , m_eventSource(0)
     , m_lastClickTime(0.)
     , m_lastClickX(-1)
@@ -39,8 +39,7 @@ BrowserControl::BrowserControl(BrowserControlClient * client, int width, int hei
     , m_lastClickButton(kWKEventMouseButtonNoButton)
     , m_clickCount(0)
 {
-    if (!m_display)
-        fatalError("couldn't connect to X server\n");
+    init();
 
     m_eventSource = new XlibEventSource(m_display, this);
 
@@ -72,6 +71,15 @@ BrowserControl::~BrowserControl()
     delete m_browserWindow;
 
     XCloseDisplay(m_display);
+}
+
+void BrowserControl::init()
+{
+    m_display = XOpenDisplay(0);
+    if (!m_display)
+        fatalError("couldn't connect to X server\n");
+
+    m_context = XUniqueContext();
 }
 
 void BrowserControl::handleXEvent(const XEvent& event)
