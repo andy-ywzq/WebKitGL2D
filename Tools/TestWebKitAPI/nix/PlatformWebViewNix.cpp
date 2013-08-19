@@ -60,6 +60,8 @@ WKPageRef PlatformWebView::page() const
 void PlatformWebView::simulateSpacebarKeyPress()
 {
     NIXKeyEvent nixEvent;
+    memset(&nixEvent, 0, sizeof(NIXKeyEvent));
+
     nixEvent.type = kNIXInputEventTypeKeyDown;
     nixEvent.modifiers = 0;
     nixEvent.timestamp = 0;
@@ -72,6 +74,8 @@ void PlatformWebView::simulateSpacebarKeyPress()
 void PlatformWebView::simulateRightClick(unsigned x, unsigned y)
 {
     NIXMouseEvent nixEvent;
+    memset(&nixEvent, 0, sizeof(NIXMouseEvent));
+
     nixEvent.type = kNIXInputEventTypeMouseDown;
     nixEvent.button = kWKEventMouseButtonRightButton;
     nixEvent.x = x;
@@ -87,6 +91,8 @@ void PlatformWebView::simulateRightClick(unsigned x, unsigned y)
 void PlatformWebView::simulateMouseMove(unsigned x, unsigned y)
 {
     NIXMouseEvent nixEvent;
+    memset(&nixEvent, 0, sizeof(NIXMouseEvent));
+
     nixEvent.type = kNIXInputEventTypeMouseMove;
     nixEvent.button = kWKEventMouseButtonNoButton;
     nixEvent.x = x;
