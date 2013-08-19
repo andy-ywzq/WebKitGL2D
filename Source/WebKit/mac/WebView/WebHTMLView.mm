@@ -3111,7 +3111,7 @@ static void setMenuTargets(NSMenu* menu)
 
     // Match behavior of other browsers by sending a mousedown event for right clicks.
     _private->handlingMouseDownEvent = YES;
-    page->contextMenuController()->clearContextMenu();
+    page->contextMenuController().clearContextMenu();
     coreFrame->eventHandler().mouseDown(event);
     BOOL handledEvent = coreFrame->eventHandler().sendContextMenuEvent(PlatformEventFactory::createPlatformMouseEvent(event, page->chrome().platformPageClient()));
     _private->handlingMouseDownEvent = NO;
@@ -3124,7 +3124,7 @@ static void setMenuTargets(NSMenu* menu)
     if (!page)
         return nil;
 
-    ContextMenu* coreMenu = page->contextMenuController()->contextMenu();
+    ContextMenu* coreMenu = page->contextMenuController().contextMenu();
     if (!coreMenu)
         return nil;
 
@@ -3141,7 +3141,7 @@ static void setMenuTargets(NSMenu* menu)
         [menu addItem:[menuItems objectAtIndex:i]];
     setMenuTargets(menu);
     
-    [[WebMenuTarget sharedMenuTarget] setMenuController:page->contextMenuController()];
+    [[WebMenuTarget sharedMenuTarget] setMenuController:&page->contextMenuController()];
     
     return menu;
 }
@@ -3626,7 +3626,7 @@ static void setMenuTargets(NSMenu* menu)
     if (!page)
         return NSDragOperationNone;
 
-    return (NSDragOperation)page->dragController()->sourceDragOperation();
+    return (NSDragOperation)page->dragController().sourceDragOperation();
 }
 
 - (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
@@ -3637,9 +3637,8 @@ static void setMenuTargets(NSMenu* menu)
     NSPoint windowMouseLoc = windowImageLoc;
     
     if (Page* page = core([self _webView])) {
-        DragController* dragController = page->dragController();
-        windowMouseLoc = NSMakePoint(windowImageLoc.x + dragController->dragOffset().x(), windowImageLoc.y + dragController->dragOffset().y());
-        dragController->dragEnded();
+        windowMouseLoc = NSMakePoint(windowImageLoc.x + page->dragController().dragOffset().x(), windowImageLoc.y + page->dragController().dragOffset().y());
+        page->dragController().dragEnded();
     }
     
     [[self _frame] _dragSourceEndedAt:windowMouseLoc operation:operation];
@@ -3696,7 +3695,7 @@ static bool matchesExtensionOrEquivalent(NSString *filename, NSString *extension
         if (!page) 
             return nil; 
         
-        const KURL& imageURL = page->dragController()->draggingImageURL();
+        const KURL& imageURL = page->dragController().draggingImageURL();
         ASSERT(!imageURL.isEmpty());
         draggingImageURL = imageURL;
 

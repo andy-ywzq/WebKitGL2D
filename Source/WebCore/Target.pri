@@ -400,6 +400,7 @@ SOURCES += \
     dom/DOMStringMap.cpp \
     dom/DatasetDOMStringMap.cpp \
     dom/Element.cpp \
+    dom/ElementData.cpp \
     dom/ElementRareData.cpp \
     dom/EntityReference.cpp \
     dom/ErrorEvent.cpp \
@@ -421,6 +422,7 @@ SOURCES += \
     dom/IconURL.cpp \
     dom/IdTargetObserver.cpp \
     dom/IdTargetObserverRegistry.cpp \
+    dom/InlineStyleSheetOwner.cpp \
     dom/LiveNodeList.cpp \
     dom/KeyboardEvent.cpp \
     dom/MessageChannel.cpp \
@@ -473,10 +475,10 @@ SOURCES += \
     dom/SpaceSplitString.cpp \
     dom/StaticNodeList.cpp \
     dom/StyledElement.cpp \
-    dom/StyleElement.cpp \
     dom/TagNodeList.cpp \
     dom/Text.cpp \
     dom/TextEvent.cpp \
+    dom/TextNodeTraversal.cpp \
     dom/Touch.cpp \
     dom/TouchEvent.cpp \
     dom/TouchList.cpp \
@@ -1609,6 +1611,7 @@ HEADERS += \
     dom/DOMTimeStamp.h \
     dom/DatasetDOMStringMap.h \
     dom/Element.h \
+    dom/ElementData.h \
     dom/ElementTravesal.h \
     dom/Entity.h \
     dom/EntityReference.h \
@@ -1627,6 +1630,7 @@ HEADERS += \
     dom/GestureEvent.h \
     dom/IdTargetObserver.h \
     dom/IdTargetObserverRegistry.h \
+    dom/InlineStyleSheetOwner.h \
     dom/LiveNodeList.h \
     dom/KeyboardEvent.h \
     dom/MessageChannel.h \
@@ -1673,10 +1677,10 @@ HEADERS += \
     dom/SpaceSplitString.h \
     dom/StaticNodeList.h \
     dom/StyledElement.h \
-    dom/StyleElement.h \
     dom/TagNodeList.h \
     dom/TemplateContentDocumentFragment.h \
     dom/TextEvent.h \
+    dom/TextNodeTraversal.h \
     dom/TextEventInputType.h \
     dom/Text.h \
     dom/Touch.h \
@@ -2904,7 +2908,6 @@ SOURCES += \
     platform/Cursor.cpp \
     platform/ContextMenu.cpp \
     platform/ContextMenuItem.cpp \
-    platform/qt/ClipboardQt.cpp \
     platform/ContextMenuItemNone.cpp \
     platform/ContextMenuNone.cpp \
     platform/qt/CursorQt.cpp \

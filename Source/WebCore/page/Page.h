@@ -185,13 +185,13 @@ public:
     int subframeCount() const { checkSubframeCountConsistency(); return m_subframeCount; }
 
     Chrome& chrome() const { return *m_chrome; }
-    DragCaretController* dragCaretController() const { return m_dragCaretController.get(); }
+    DragCaretController& dragCaretController() const { return *m_dragCaretController; }
 #if ENABLE(DRAG_SUPPORT)
-    DragController* dragController() const { return m_dragController.get(); }
+    DragController& dragController() const { return *m_dragController; }
 #endif
     FocusController& focusController() const { return *m_focusController; }
 #if ENABLE(CONTEXT_MENUS)
-    ContextMenuController* contextMenuController() const { return m_contextMenuController.get(); }
+    ContextMenuController& contextMenuController() const { return *m_contextMenuController; }
 #endif
 #if ENABLE(INSPECTOR)
     InspectorController* inspectorController() const { return m_inspectorController.get(); }
@@ -208,7 +208,7 @@ public:
     PassRefPtr<ClientRectList> nonFastScrollableRects(const Frame*);
 
     Settings& settings() const { return *m_settings; }
-    ProgressTracker* progress() const { return m_progress.get(); }
+    ProgressTracker& progress() const { return *m_progress; }
     BackForwardController* backForward() const { return m_backForwardController.get(); }
 
     FeatureObserver* featureObserver() { return &m_featureObserver; }
@@ -440,14 +440,14 @@ private:
     void unthrottleTimers();
 
     const OwnPtr<Chrome> m_chrome;
-    OwnPtr<DragCaretController> m_dragCaretController;
+    const OwnPtr<DragCaretController> m_dragCaretController;
 
 #if ENABLE(DRAG_SUPPORT)
-    OwnPtr<DragController> m_dragController;
+    const OwnPtr<DragController> m_dragController;
 #endif
     const OwnPtr<FocusController> m_focusController;
 #if ENABLE(CONTEXT_MENUS)
-    OwnPtr<ContextMenuController> m_contextMenuController;
+    const OwnPtr<ContextMenuController> m_contextMenuController;
 #endif
 #if ENABLE(INSPECTOR)
     OwnPtr<InspectorController> m_inspectorController;
@@ -457,8 +457,8 @@ private:
 #endif
     RefPtr<ScrollingCoordinator> m_scrollingCoordinator;
 
-    const OwnPtr<Settings> m_settings;
-    OwnPtr<ProgressTracker> m_progress;
+    const RefPtr<Settings> m_settings;
+    const OwnPtr<ProgressTracker> m_progress;
 
     OwnPtr<BackForwardController> m_backForwardController;
     RefPtr<Frame> m_mainFrame;

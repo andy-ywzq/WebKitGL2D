@@ -75,7 +75,7 @@ static const String titleText(Page* page, String mimeType)
     if (!titleText.isEmpty())
         return titleText;
 
-    titleText = page->chrome().client()->plugInStartLabelTitle(mimeType);
+    titleText = page->chrome().client().plugInStartLabelTitle(mimeType);
     if (titleText.isEmpty())
         titleText = snapshottedPlugInLabelTitle();
     mimeTypeToLabelTitleMap.set(mimeType, titleText);
@@ -89,7 +89,7 @@ static const String subtitleText(Page* page, String mimeType)
     if (!subtitleText.isEmpty())
         return subtitleText;
 
-    subtitleText = page->chrome().client()->plugInStartLabelSubtitle(mimeType);
+    subtitleText = page->chrome().client().plugInStartLabelSubtitle(mimeType);
     if (subtitleText.isEmpty())
         subtitleText = snapshottedPlugInLabelSubtitle();
     mimeTypeToLabelSubtitleMap.set(mimeType, subtitleText);
@@ -115,7 +115,7 @@ HTMLPlugInImageElement::HTMLPlugInImageElement(const QualifiedName& tagName, Doc
     , m_deferredPromotionToPrimaryPlugIn(false)
     , m_snapshotDecision(SnapshotNotYetDecided)
 {
-    setHasCustomStyleCallbacks();
+    setHasCustomStyleResolveCallbacks();
 }
 
 HTMLPlugInImageElement::~HTMLPlugInImageElement()
@@ -227,37 +227,33 @@ bool HTMLPlugInImageElement::willRecalcStyle(Style::Change)
 {
     // FIXME: Why is this necessary?  Manual re-attach is almost always wrong.
     if (!useFallbackContent() && needsWidgetUpdate() && renderer() && !isImageType() && (displayState() != DisplayingSnapshot))
-        reattach();
+        Style::reattachRenderTree(this);
     return true;
 }
 
-void HTMLPlugInImageElement::attach(const AttachContext& context)
+void HTMLPlugInImageElement::didAttachRenderers()
 {
-    PostAttachCallbackDisabler disabler(this);
-
-    bool isImage = isImageType();
-
-    if (!isImage)
+    if (!isImageType()) {
         queuePostAttachCallback(&HTMLPlugInImageElement::updateWidgetCallback, this);
-
-    HTMLPlugInElement::attach(context);
-
-    if (isImage && renderer() && !useFallbackContent()) {
-        if (!m_imageLoader)
-            m_imageLoader = adoptPtr(new HTMLImageLoader(this));
-        m_imageLoader->updateFromElement();
+        return;
     }
+    if (!renderer() || useFallbackContent())
+        return;
+    if (!m_imageLoader)
+        m_imageLoader = adoptPtr(new HTMLImageLoader(this));
+    m_imageLoader->updateFromElement();
 }
 
-void HTMLPlugInImageElement::detach(const AttachContext& context)
+void HTMLPlugInImageElement::willDetachRenderers()
 {
-    // FIXME: Because of the insanity that is HTMLPlugInImageElement::recalcStyle,
+    // FIXME: Because of the insanity that is HTMLPlugInImageElement::willRecalcStyle,
     // we can end up detaching during an attach() call, before we even have a
     // renderer.  In that case, don't mark the widget for update.
-    if (attached() && renderer() && !useFallbackContent())
+    if (attached() && renderer() && !useFallbackContent()) {
         // Update the widget the next time we attach (detaching destroys the plugin).
         setNeedsWidgetUpdate(true);
-    HTMLPlugInElement::detach(context);
+    }
+    HTMLPlugInElement::willDetachRenderers();
 }
 
 void HTMLPlugInImageElement::updateWidgetIfNecessary()
@@ -520,7 +516,7 @@ void HTMLPlugInImageElement::restartSnapshottedPlugIn()
         return;
 
     setDisplayState(Restarting);
-    reattach();
+    Style::reattachRenderTree(this);
 }
 
 void HTMLPlugInImageElement::dispatchPendingMouseClick()

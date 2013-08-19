@@ -36,13 +36,11 @@ list(APPEND WebCore_SOURCES
 
     platform/win/BitmapInfo.cpp
     platform/win/ClipboardUtilitiesWin.cpp
-    platform/win/ClipboardWin.cpp
     platform/win/ContextMenuItemWin.cpp
     platform/win/ContextMenuWin.cpp
     platform/win/CursorWin.cpp
     platform/win/DragDataWin.cpp
     platform/win/DragImageWin.cpp
-    platform/win/EditorWin.cpp
     platform/win/EventLoopWin.cpp
     platform/win/FileSystemWin.cpp
     platform/win/KeyEventWin.cpp

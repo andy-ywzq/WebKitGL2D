@@ -179,14 +179,14 @@ public:
     {
         ASSERT(!m_inProgress || m_frame->page());
         if (m_inProgress)
-            m_frame->page()->progress()->progressCompleted(m_frame);
+            m_frame->page()->progress().progressCompleted(m_frame);
     }
 
     void progressStarted()
     {
         ASSERT(m_frame->page());
         if (!m_inProgress)
-            m_frame->page()->progress()->progressStarted(m_frame);
+            m_frame->page()->progress().progressStarted(m_frame);
         m_inProgress = true;
     }
 
@@ -195,7 +195,7 @@ public:
         ASSERT(m_inProgress);
         ASSERT(m_frame->page());
         m_inProgress = false;
-        m_frame->page()->progress()->progressCompleted(m_frame);
+        m_frame->page()->progress().progressCompleted(m_frame);
     }
 
 private:
@@ -1833,7 +1833,7 @@ void FrameLoader::transitionToCommitted(PassRefPtr<CachedPage> cachedPage)
 
 #if ENABLE(TOUCH_EVENTS)
     if (isLoadingMainFrame())
-        m_frame->page()->chrome().client()->needTouchEvents(false);
+        m_frame->page()->chrome().client().needTouchEvents(false);
 #endif
 
     // Handle adding the URL to the back/forward list.
@@ -1862,7 +1862,6 @@ void FrameLoader::transitionToCommitted(PassRefPtr<CachedPage> cachedPage)
                     ASSERT(cachedDocumentLoader);
                     cachedDocumentLoader->setFrame(m_frame);
                     m_client->transitionToCommittedFromCachedFrame(cachedPage->cachedMainFrame());
-
                 } else
                     m_client->transitionToCommittedForNewPage();
             }
@@ -2503,8 +2502,7 @@ void FrameLoader::addExtraFieldsToRequest(ResourceRequest& request, FrameLoadTyp
     // Only set fallback array if it's still empty (later attempts may be incorrect, see bug 117818).
     if (request.responseContentDispositionEncodingFallbackArray().isEmpty()) {
         // Always try UTF-8. If that fails, try frame encoding (if any) and then the default.
-        Settings* settings = m_frame->settings();
-        request.setResponseContentDispositionEncodingFallbackArray("UTF-8", m_frame->document()->encoding(), settings ? settings->defaultTextEncodingName() : String());
+        request.setResponseContentDispositionEncodingFallbackArray("UTF-8", m_frame->document()->encoding(), m_frame->settings().defaultTextEncodingName());
     }
 }
 
@@ -2925,7 +2923,7 @@ void FrameLoader::requestFromDelegate(ResourceRequest& request, unsigned long& i
 
     identifier = 0;
     if (Page* page = m_frame->page()) {
-        identifier = page->progress()->createUniqueIdentifier();
+        identifier = page->progress().createUniqueIdentifier();
         notifier()->assignIdentifierToInitialRequest(identifier, m_documentLoader.get(), request);
     }
 
@@ -3246,11 +3244,6 @@ ResourceError FrameLoader::cancelledError(const ResourceRequest& request) const
     return error;
 }
 
-void FrameLoader::setTitle(const StringWithDirection& title)
-{
-    documentLoader()->setTitle(title);
-}
-
 String FrameLoader::referrer() const
 {
     return m_documentLoader ? m_documentLoader->request().httpReferrer() : "";
@@ -3422,7 +3415,7 @@ PassRefPtr<Frame> createWindow(Frame* openerFrame, Frame* lookupFrame, const Fra
         requestWithReferrer.resourceRequest().setHTTPReferrer(referrer);
     FrameLoader::addHTTPOriginIfNeeded(requestWithReferrer.resourceRequest(), openerFrame->loader().outgoingOrigin());
 
-    if (openerFrame->settings() && !openerFrame->settings()->supportsMultipleWindows()) {
+    if (!openerFrame->settings().supportsMultipleWindows()) {
         created = false;
         return openerFrame;
     }

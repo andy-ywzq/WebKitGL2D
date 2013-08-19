@@ -345,7 +345,7 @@ void FrameView::init()
     }
 
     Page* page = frame().page();
-    if (page && page->chrome().client()->shouldPaintEntireContents())
+    if (page && page->chrome().client().shouldPaintEntireContents())
         setPaintsEntireContents(true);
 }
     
@@ -495,9 +495,7 @@ void FrameView::setMarginHeight(LayoutUnit h)
 
 bool FrameView::frameFlatteningEnabled() const
 {
-    if (Settings* settings = frame().settings())
-        return settings->frameFlatteningEnabled();
-    return false;
+    return frame().settings().frameFlatteningEnabled();
 }
 
 bool FrameView::isFrameFlatteningValidForThisFrame() const
@@ -540,10 +538,8 @@ void FrameView::updateCanHaveScrollbars()
 
 PassRefPtr<Scrollbar> FrameView::createScrollbar(ScrollbarOrientation orientation)
 {
-    if (Settings* settings = frame().settings()) {
-        if (!settings->allowCustomScrollbarInMainFrame() && isMainFrameView())
-            return ScrollView::createScrollbar(orientation);
-    }
+    if (!frame().settings().allowCustomScrollbarInMainFrame() && isMainFrameView())
+        return ScrollView::createScrollbar(orientation);
 
     // FIXME: We need to update the scrollbar dynamically as documents change (or as doc elements and bodies get discovered that have custom styles).
     Document* doc = frame().document();
@@ -797,7 +793,7 @@ bool FrameView::usesCompositedScrolling() const
     RenderView* renderView = this->renderView();
     if (!renderView)
         return false;
-    if (frame().settings() && frame().settings()->compositedScrollingForFramesEnabled())
+    if (frame().settings().compositedScrollingForFramesEnabled())
         return renderView->compositor()->inForcedCompositingMode();
     return false;
 }
@@ -921,7 +917,7 @@ bool FrameView::flushCompositingStateForThisFrame(Frame* rootFrameForFlush)
 void FrameView::setNeedsOneShotDrawingSynchronization()
 {
     if (Page* page = frame().page())
-        page->chrome().client()->setNeedsOneShotDrawingSynchronization();
+        page->chrome().client().setNeedsOneShotDrawingSynchronization();
 }
 
 #endif // USE(ACCELERATED_COMPOSITING)
@@ -1384,7 +1380,7 @@ void FrameView::layout(bool allowSubtree)
         return;
 
     if (Page* page = frame().page())
-        page->chrome().client()->layoutUpdated(&frame());
+        page->chrome().client().layoutUpdated(&frame());
 }
 
 RenderBox* FrameView::embeddedContentBox() const
@@ -1633,10 +1629,7 @@ IntPoint FrameView::maximumScrollPosition() const
 
 bool FrameView::fixedElementsLayoutRelativeToFrame() const
 {
-    if (!frame().settings())
-        return false;
-
-    return frame().settings()->fixedElementsLayoutRelativeToFrame();
+    return frame().settings().fixedElementsLayoutRelativeToFrame();
 }
 
 IntPoint FrameView::lastKnownMousePosition() const
@@ -2056,7 +2049,7 @@ void FrameView::updateFixedElementsAfterScrolling()
 bool FrameView::shouldRubberBandInDirection(ScrollDirection direction) const
 {
     if (Page* page = frame().page())
-        return page->chrome().client()->shouldRubberBandInDirection(direction);
+        return page->chrome().client().shouldRubberBandInDirection(direction);
     return ScrollView::shouldRubberBandInDirection(direction);
 }
 
@@ -2353,7 +2346,7 @@ void FrameView::endDisableRepaints()
 void FrameView::updateLayerFlushThrottlingInAllFrames()
 {
 #if USE(ACCELERATED_COMPOSITING)
-    bool isMainLoadProgressing = frame().page()->progress()->isMainLoadProgressing();
+    bool isMainLoadProgressing = frame().page()->progress().isMainLoadProgressing();
     for (Frame* frame = m_frame.get(); frame; frame = frame->tree()->traverseNext(m_frame.get())) {
         if (RenderView* renderView = frame->contentRenderer())
             renderView->compositor()->setLayerFlushThrottlingEnabled(isMainLoadProgressing);
@@ -3084,7 +3077,7 @@ IntRect FrameView::windowResizerRect() const
 
 float FrameView::visibleContentScaleFactor() const
 {
-    if (!isMainFrameView() || !frame().settings()->applyPageScaleFactorInCompositor())
+    if (!isMainFrameView() || !frame().settings().applyPageScaleFactorInCompositor())
         return 1;
 
     return frame().page()->pageScaleFactor();
@@ -3095,7 +3088,7 @@ void FrameView::setVisibleScrollerThumbRect(const IntRect& scrollerThumb)
     if (!isMainFrameView())
         return;
 
-    frame().page()->chrome().client()->notifyScrollerThumbIsVisibleInRect(scrollerThumb);
+    frame().page()->chrome().client().notifyScrollerThumbIsVisibleInRect(scrollerThumb);
 }
 
 bool FrameView::scrollbarsCanBeActive() const
@@ -3183,7 +3176,7 @@ void FrameView::scrollbarStyleChanged(int newStyle, bool forceUpdate)
     if (!isMainFrameView())
         return;
 
-    frame().page()->chrome().client()->recommendedScrollbarStyleDidChange(newStyle);
+    frame().page()->chrome().client().recommendedScrollbarStyleDidChange(newStyle);
 
     if (forceUpdate)
         ScrollView::scrollbarStyleChanged(newStyle, forceUpdate);
@@ -3254,7 +3247,7 @@ void FrameView::updateAnnotatedRegions()
     Page* page = frame().page();
     if (!page)
         return;
-    page->chrome().client()->annotatedRegionsChanged();
+    page->chrome().client().annotatedRegionsChanged();
 }
 #endif
 
@@ -3664,7 +3657,7 @@ void FrameView::paintOverhangAreas(GraphicsContext* context, const IntRect& hori
     if (frame().document()->printing())
         return;
 
-    if (isMainFrameView() && frame().page()->chrome().client()->paintCustomOverhangArea(context, horizontalOverhangArea, verticalOverhangArea, dirtyRect))
+    if (isMainFrameView() && frame().page()->chrome().client().paintCustomOverhangArea(context, horizontalOverhangArea, verticalOverhangArea, dirtyRect))
         return;
 
     ScrollView::paintOverhangAreas(context, horizontalOverhangArea, verticalOverhangArea, dirtyRect);

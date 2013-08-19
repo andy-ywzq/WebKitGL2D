@@ -108,14 +108,10 @@ bool SubframeLoader::resourceWillUsePlugin(const String& url, const String& mime
 
 bool SubframeLoader::pluginIsLoadable(HTMLPlugInImageElement* pluginElement, const KURL& url, const String& mimeType)
 {
-    Settings* settings = m_frame->settings();
-    if (!settings)
-        return false;
-
     if (MIMETypeRegistry::isJavaAppletMIMEType(mimeType)) {
-        if (!settings->isJavaEnabled())
+        if (!m_frame->settings().isJavaEnabled())
             return false;
-        if (document() && document()->securityOrigin()->isLocal() && !settings->isJavaEnabledForLocalFiles())
+        if (document() && document()->securityOrigin()->isLocal() && !m_frame->settings().isJavaEnabledForLocalFiles())
             return false;
     }
 
@@ -203,14 +199,14 @@ static void logPluginRequest(Page* page, const String& mimeType, const String& u
     String pluginFile = pluginData ? pluginData->pluginFileForMimeType(newMIMEType) : String();
     String description = !pluginFile ? newMIMEType : pluginFile;
 
-    ChromeClient* client = page->chrome().client();
-    client->logDiagnosticMessage(success ? DiagnosticLoggingKeys::pluginLoadedKey() : DiagnosticLoggingKeys::pluginLoadingFailedKey(), description, DiagnosticLoggingKeys::noopKey());
+    ChromeClient& chromeClient = page->chrome().client();
+    chromeClient.logDiagnosticMessage(success ? DiagnosticLoggingKeys::pluginLoadedKey() : DiagnosticLoggingKeys::pluginLoadingFailedKey(), description, DiagnosticLoggingKeys::noopKey());
 
     if (!page->hasSeenAnyPlugin())
-        client->logDiagnosticMessage(DiagnosticLoggingKeys::pageContainsAtLeastOnePluginKey(), emptyString(), DiagnosticLoggingKeys::noopKey());
+        chromeClient.logDiagnosticMessage(DiagnosticLoggingKeys::pageContainsAtLeastOnePluginKey(), emptyString(), DiagnosticLoggingKeys::noopKey());
     
     if (!page->hasSeenPlugin(description))
-        client->logDiagnosticMessage(DiagnosticLoggingKeys::pageContainsPluginKey(), description, DiagnosticLoggingKeys::noopKey());
+        chromeClient.logDiagnosticMessage(DiagnosticLoggingKeys::pageContainsPluginKey(), description, DiagnosticLoggingKeys::noopKey());
 
     page->sawPlugin(description);
 }
@@ -404,8 +400,7 @@ Frame* SubframeLoader::loadSubframe(HTMLFrameOwnerElement* ownerElement, const K
 
 bool SubframeLoader::allowPlugins(ReasonForCallingAllowPlugins reason)
 {
-    Settings* settings = m_frame->settings();
-    bool allowed = m_frame->loader().client()->allowPlugins(settings && settings->arePluginsEnabled());
+    bool allowed = m_frame->loader().client()->allowPlugins(m_frame->settings().arePluginsEnabled());
     if (!allowed && reason == AboutToInstantiatePlugin)
         m_frame->loader().client()->didNotAllowPlugins();
     return allowed;

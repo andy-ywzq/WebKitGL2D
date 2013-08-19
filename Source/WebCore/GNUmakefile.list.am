@@ -2868,6 +2868,8 @@ webcore_sources += \
 	Source/WebCore/dom/DOMTimeStamp.h \
 	Source/WebCore/dom/Element.cpp \
 	Source/WebCore/dom/Element.h \
+	Source/WebCore/dom/ElementData.cpp \
+	Source/WebCore/dom/ElementData.h \
 	Source/WebCore/dom/ElementRareData.cpp \
 	Source/WebCore/dom/ElementRareData.h \
 	Source/WebCore/dom/ElementTraversal.h \
@@ -2920,6 +2922,8 @@ webcore_sources += \
 	Source/WebCore/dom/IdTargetObserver.h \
 	Source/WebCore/dom/IdTargetObserverRegistry.cpp \
 	Source/WebCore/dom/IdTargetObserverRegistry.h \
+	Source/WebCore/dom/InlineStyleSheetOwner.cpp \
+	Source/WebCore/dom/InlineStyleSheetOwner.h \
 	Source/WebCore/dom/LiveNodeList.cpp \
 	Source/WebCore/dom/LiveNodeList.h \
 	Source/WebCore/dom/HashChangeEvent.h \
@@ -3033,8 +3037,6 @@ webcore_sources += \
 	Source/WebCore/dom/StringCallback.h \
 	Source/WebCore/dom/StyledElement.cpp \
 	Source/WebCore/dom/StyledElement.h \
-	Source/WebCore/dom/StyleElement.cpp \
-	Source/WebCore/dom/StyleElement.h \
 	Source/WebCore/dom/TagNodeList.cpp \
 	Source/WebCore/dom/TagNodeList.h \
 	Source/WebCore/dom/TemplateContentDocumentFragment.h \
@@ -3042,6 +3044,8 @@ webcore_sources += \
 	Source/WebCore/dom/TextEvent.cpp \
 	Source/WebCore/dom/TextEvent.h \
 	Source/WebCore/dom/TextEventInputType.h \
+	Source/WebCore/dom/TextNodeTraversal.cpp \
+	Source/WebCore/dom/TextNodeTraversal.h \
 	Source/WebCore/dom/Text.h \
 	Source/WebCore/dom/Touch.h \
 	Source/WebCore/dom/TouchEvent.h \
@@ -6145,7 +6149,6 @@ webcoregtk_sources += \
 	Source/WebCore/platform/graphics/gtk/ImageBufferGtk.cpp \
 	Source/WebCore/platform/gtk/AsyncFileSystemGtk.cpp \
 	Source/WebCore/platform/gtk/AsyncFileSystemGtk.h \
-	Source/WebCore/platform/gtk/ClipboardGtk.cpp \
 	Source/WebCore/platform/gtk/ClipboardUtilitiesGtk.cpp \
 	Source/WebCore/platform/gtk/ClipboardUtilitiesGtk.h \
 	Source/WebCore/platform/gtk/DataObjectGtk.cpp \

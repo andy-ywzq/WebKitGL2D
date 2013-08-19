@@ -1233,8 +1233,8 @@ static void _ewk_view_zoom_animation_start(Ewk_View_Smart_Data* smartData)
 static WebCore::ViewportAttributes _ewk_view_viewport_attributes_compute(Ewk_View_Private_Data* priv)
 {
     int desktopWidth = 980;
-    WebCore::IntRect availableRect = enclosingIntRect(priv->page->chrome().client()->pageRect());
-    WebCore::IntRect deviceRect = enclosingIntRect(priv->page->chrome().client()->windowRect());
+    WebCore::IntRect availableRect = enclosingIntRect(priv->page->chrome().client().pageRect());
+    WebCore::IntRect deviceRect = enclosingIntRect(priv->page->chrome().client().windowRect());
 
     WebCore::ViewportAttributes attributes = WebCore::computeViewportAttributes(priv->viewportArguments, desktopWidth, deviceRect.width(), deviceRect.height(), priv->page->deviceScaleFactor(), availableRect.size());
     WebCore::restrictMinimumScaleFactorToViewportSize(attributes, availableRect.size(), priv->page->deviceScaleFactor());
@@ -1600,7 +1600,7 @@ Eina_Bool ewk_view_context_menu_forward_event(Evas_Object* ewkView, const Evas_E
     EWK_VIEW_PRIV_GET_OR_RETURN(smartData, priv, false);
     Eina_Bool mouse_press_handled = false;
 
-    priv->page->contextMenuController()->clearContextMenu();
+    priv->page->contextMenuController().clearContextMenu();
     if (priv->contextMenu)
         ewk_context_menu_free(priv->contextMenu);
 
@@ -1619,14 +1619,14 @@ Eina_Bool ewk_view_context_menu_forward_event(Evas_Object* ewkView, const Evas_E
         return false;
 
     WebCore::ContextMenu* coreMenu =
-        priv->page->contextMenuController()->contextMenu();
+        priv->page->contextMenuController().contextMenu();
     if (!coreMenu) {
         // WebCore decided not to create a context menu, return true if event
         // was handled by handleMouseReleaseEvent
         return mouse_press_handled;
     }
 
-    priv->contextMenu = ewk_context_menu_new(ewkView, priv->page->contextMenuController(), coreMenu);
+    priv->contextMenu = ewk_context_menu_new(ewkView, &priv->page->contextMenuController(), coreMenu);
     if (!priv->contextMenu)
         return false;
 
@@ -1644,7 +1644,7 @@ double ewk_view_load_progress_get(const Evas_Object* ewkView)
 {
     EWK_VIEW_SD_GET_OR_RETURN(ewkView, smartData, -1.0);
     EWK_VIEW_PRIV_GET_OR_RETURN(smartData, priv, -1.0);
-    return priv->page->progress()->estimatedProgress();
+    return priv->page->progress().estimatedProgress();
 }
 
 Eina_Bool ewk_view_stop(Evas_Object* ewkView)
@@ -3173,7 +3173,7 @@ void ewk_view_load_progress_changed(Evas_Object* ewkView)
     EWK_VIEW_PRIV_GET_OR_RETURN(smartData, priv);
 
     // Evas_Coord width, height;
-    double progress = priv->page->progress()->estimatedProgress();
+    double progress = priv->page->progress().estimatedProgress();
 
     DBG("ewkView=%p (p=%0.3f)", ewkView, progress);
 

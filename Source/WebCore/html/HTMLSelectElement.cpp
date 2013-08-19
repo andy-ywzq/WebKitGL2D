@@ -307,7 +307,7 @@ void HTMLSelectElement::parseAttribute(const QualifiedName& name, const AtomicSt
         m_size = size;
         setNeedsValidityCheck();
         if (m_size != oldSize && attached()) {
-            reattach();
+            Style::reattachRenderTree(this);
             setRecalcListItems();
         }
     } else if (name == multipleAttr)
@@ -1011,8 +1011,8 @@ void HTMLSelectElement::parseMultipleAttribute(const AtomicString& value)
     bool oldUsesMenuList = usesMenuList();
     m_multiple = !value.isNull();
     setNeedsValidityCheck();
-    if (oldUsesMenuList != usesMenuList())
-        reattachIfAttached();
+    if (oldUsesMenuList != usesMenuList() && attached())
+        Style::reattachRenderTree(this);
 }
 
 bool HTMLSelectElement::appendFormData(FormDataList& list, bool)
@@ -1131,7 +1131,7 @@ void HTMLSelectElement::menuListDefaultEventHandler(Event* event)
         // When using caret browsing, we want to be able to move the focus
         // out of the select element when user hits a left or right arrow key.
         const Frame* frame = document()->frame();
-        if (frame && frame->settings() && frame->settings()->caretBrowsingEnabled()) {
+        if (frame && frame->settings().caretBrowsingEnabled()) {
             if (keyIdentifier == "Left" || keyIdentifier == "Right")
                 return;
         }

@@ -145,7 +145,7 @@ RenderLayerBacking::RenderLayerBacking(RenderLayer* layer)
             if (m_isMainFrameRenderViewLayer)
                 tiledBacking->setUnparentsOffscreenTiles(true);
 
-            tiledBacking->setScrollingPerformanceLoggingEnabled(frame->settings() && frame->settings()->scrollingPerformanceLoggingEnabled());
+            tiledBacking->setScrollingPerformanceLoggingEnabled(frame->settings().scrollingPerformanceLoggingEnabled());
             adjustTiledBackingCoverage();
         }
     }
@@ -175,7 +175,7 @@ PassOwnPtr<GraphicsLayer> RenderLayerBacking::createGraphicsLayer(const String& 
 {
     GraphicsLayerFactory* graphicsLayerFactory = 0;
     if (Page* page = renderer()->frame()->page())
-        graphicsLayerFactory = page->chrome().client()->graphicsLayerFactory();
+        graphicsLayerFactory = page->chrome().client().graphicsLayerFactory();
 
     OwnPtr<GraphicsLayer> graphicsLayer = GraphicsLayer::create(graphicsLayerFactory, this);
 
@@ -221,7 +221,7 @@ static TiledBacking::TileCoverage computeTileCoverage(RenderLayerBacking* backin
     bool useMinimalTilesDuringLoading = false;
     // Avoid churn.
     if (!backing->didSwitchToFullTileCoverageDuringLoading()) {
-        useMinimalTilesDuringLoading = !frameView->isVisuallyNonEmpty() || (frame->page()->progress()->isMainLoadProgressing() && !frameView->wasScrolledByUser());
+        useMinimalTilesDuringLoading = !frameView->isVisuallyNonEmpty() || (frame->page()->progress().isMainLoadProgressing() && !frameView->wasScrolledByUser());
         if (!useMinimalTilesDuringLoading)
             backing->setDidSwitchToFullTileCoverageDuringLoading();
     }

@@ -554,9 +554,11 @@ Document::~Document()
 #endif
 
 #if ENABLE(TOUCH_EVENT_TRACKING)
+    // FIXME: This is dead code. The ownerDocument function returns 0 when called on a document.
     if (Document* ownerDocument = this->ownerDocument())
         ownerDocument->didRemoveEventTargetNode(this);
 #endif
+
     // FIXME: Should we reset m_domWindow when we detach from the Frame?
     if (m_domWindow)
         m_domWindow->resetUnlessSuspendedForPageCache();
@@ -591,7 +593,7 @@ Document::~Document()
     if (m_elemSheet)
         m_elemSheet->clearOwnerNode();
 
-    clearStyleResolver(); // We need to destory CSSFontSelector before destroying m_cachedResourceLoader.
+    clearStyleResolver(); // We need to destroy CSSFontSelector before destroying m_cachedResourceLoader.
 
     // It's possible for multiple Documents to end up referencing the same CachedResourceLoader (e.g., SVGImages
     // load the initial empty document and the SVGDocument with the same DocumentLoader).
@@ -674,7 +676,7 @@ void Document::buildAccessKeyMap(TreeScope* scope)
     ASSERT(scope);
     ContainerNode* rootNode = scope->rootNode();
     for (Element* element = ElementTraversal::firstWithin(rootNode); element; element = ElementTraversal::next(element, rootNode)) {
-        const AtomicString& accessKey = element->getAttribute(accesskeyAttr);
+        const AtomicString& accessKey = element->fastGetAttribute(accesskeyAttr);
         if (!accessKey.isEmpty())
             m_elementsByAccessKey.set(accessKey.impl(), element);
 
@@ -1386,16 +1388,15 @@ void Document::setContent(const String& content)
 String Document::suggestedMIMEType() const
 {
     if (isXHTMLDocument())
-        return "application/xhtml+xml";
+        return ASCIILiteral("application/xhtml+xml");
     if (isSVGDocument())
-        return "image/svg+xml";
+        return ASCIILiteral("image/svg+xml");
     if (xmlStandalone())
-        return "text/xml";
+        return ASCIILiteral("text/xml");
     if (isHTMLDocument())
-        return "text/html";
-
-    if (DocumentLoader* documentLoader = loader())
-        return documentLoader->responseMIMEType();
+        return ASCIILiteral("text/html");
+    if (DocumentLoader* loader = this->loader())
+        return loader->responseMIMEType();
     return String();
 }
 
@@ -1509,8 +1510,8 @@ void Document::updateTitle(const StringWithDirection& title)
         else
             m_title = canonicalizedTitle<UChar>(this, m_rawTitle);
     }
-    if (Frame* f = frame())
-        f->loader().setTitle(m_title);
+    if (DocumentLoader* loader = this->loader())
+        loader->setTitle(m_title);
 }
 
 void Document::setTitle(const String& title)
@@ -1539,9 +1540,10 @@ void Document::setTitle(const String& title)
 void Document::setTitleElement(const StringWithDirection& title, Element* titleElement)
 {
     if (titleElement != m_titleElement) {
-        if (m_titleElement || m_titleSetExplicitly)
+        if (m_titleElement || m_titleSetExplicitly) {
             // Only allow the first title element to change the title -- others have no effect.
             return;
+        }
         m_titleElement = titleElement;
     }
 
@@ -1558,12 +1560,13 @@ void Document::removeTitle(Element* titleElement)
 
     // Update title based on first title element in the head, if one exists.
     if (HTMLElement* headElement = head()) {
-        for (Node* e = headElement->firstChild(); e; e = e->nextSibling())
-            if (isHTMLTitleElement(e)) {
-                HTMLTitleElement* titleElement = toHTMLTitleElement(e);
+        for (Element* element = ElementTraversal::firstWithin(headElement); element; element = ElementTraversal::nextSibling(element)) {
+            if (isHTMLTitleElement(element)) {
+                HTMLTitleElement* titleElement = toHTMLTitleElement(element);
                 setTitleElement(titleElement->textWithDirection(), titleElement);
                 break;
             }
+        }
     }
 
     if (!m_titleElement)
@@ -1650,7 +1653,7 @@ Page* Document::page() const
 
 Settings* Document::settings() const
 {
-    return m_frame ? m_frame->settings() : 0;
+    return m_frame ? &m_frame->settings() : 0;
 }
 
 PassRefPtr<Range> Document::createRange()
@@ -1727,11 +1730,6 @@ bool Document::hasPendingForcedStyleRecalc() const
 void Document::styleRecalcTimerFired(Timer<Document>*)
 {
     updateStyleIfNeeded();
-}
-
-bool Document::childNeedsAndNotInStyleRecalc()
-{
-    return childNeedsStyleRecalc() && !m_inStyleRecalc;
 }
 
 void Document::recalcStyle(Style::Change change)
@@ -1903,21 +1901,14 @@ PassRefPtr<RenderStyle> Document::styleForElementIgnoringPendingStylesheets(Elem
     return style.release();
 }
 
-PassRefPtr<RenderStyle> Document::styleForPage(int pageIndex)
-{
-    RefPtr<RenderStyle> style = ensureStyleResolver().styleForPage(pageIndex);
-    return style.release();
-}
-
 bool Document::isPageBoxVisible(int pageIndex)
 {
-    RefPtr<RenderStyle> style = styleForPage(pageIndex);
-    return style->visibility() != HIDDEN; // display property doesn't apply to @page.
+    return ensureStyleResolver().styleForPage(pageIndex)->visibility() != HIDDEN; // display property doesn't apply to @page.
 }
 
 void Document::pageSizeAndMarginsInPixels(int pageIndex, IntSize& pageSize, int& marginTop, int& marginRight, int& marginBottom, int& marginLeft)
 {
-    RefPtr<RenderStyle> style = styleForPage(pageIndex);
+    RefPtr<RenderStyle> style = ensureStyleResolver().styleForPage(pageIndex);
     RenderView* view = renderView();
 
     int width = pageSize.width();
@@ -1966,8 +1957,8 @@ void Document::setIsViewSource(bool isViewSource)
 void Document::createStyleResolver()
 {
     bool matchAuthorAndUserStyles = true;
-    if (Settings* docSettings = settings())
-        matchAuthorAndUserStyles = docSettings->authorAndUserStylesEnabled();
+    if (Settings* settings = this->settings())
+        matchAuthorAndUserStyles = settings->authorAndUserStylesEnabled();
     m_styleResolver = adoptPtr(new StyleResolver(this, matchAuthorAndUserStyles));
     m_styleSheetCollection->combineCSSFeatureFlags();
 }
@@ -1997,9 +1988,8 @@ void Document::attach()
     RenderObject* render = renderer();
     setRenderer(0);
 
-    Element::AttachContext attachContext;
     for (Element* child = ElementTraversal::firstWithin(this); child; child = ElementTraversal::nextSibling(child))
-        child->attach(attachContext);
+        Style::attachRenderTree(child);
 
     setRenderer(render);
     setAttached(true);
@@ -2056,9 +2046,8 @@ void Document::detach()
     m_focusedElement = 0;
     m_activeElement = 0;
 
-    Element::AttachContext attachContext;
     for (Element* child = ElementTraversal::firstWithin(this); child; child = ElementTraversal::nextSibling(child))
-        child->detach(attachContext);
+        Style::detachRenderTree(child);
 
     clearChildNeedsStyleRecalc();
     setAttached(false);
@@ -3475,7 +3464,7 @@ void Document::nodeChildrenWillBeRemoved(ContainerNode* container)
         for (Node* n = container->firstChild(); n; n = n->nextSibling()) {
             frame->eventHandler().nodeWillBeRemoved(n);
             frame->selection()->nodeWillBeRemoved(n);
-            frame->page()->dragCaretController()->nodeWillBeRemoved(n);
+            frame->page()->dragCaretController().nodeWillBeRemoved(n);
         }
     }
 }
@@ -3495,7 +3484,7 @@ void Document::nodeWillBeRemoved(Node* n)
     if (Frame* frame = this->frame()) {
         frame->eventHandler().nodeWillBeRemoved(n);
         frame->selection()->nodeWillBeRemoved(n);
-        frame->page()->dragCaretController()->nodeWillBeRemoved(n);
+        frame->page()->dragCaretController().nodeWillBeRemoved(n);
     }
 }
 
@@ -4992,12 +4981,12 @@ void Document::requestFullScreenForElement(Element* element, unsigned short flag
         if (!page() || !page()->settings().fullScreenEnabled())
             break;
 
-        if (!page()->chrome().client()->supportsFullScreenForElement(element, flags & Element::ALLOW_KEYBOARD_INPUT)) {
+        if (!page()->chrome().client().supportsFullScreenForElement(element, flags & Element::ALLOW_KEYBOARD_INPUT)) {
             // The new full screen API does not accept a "flags" parameter, so fall back to disallowing
             // keyboard input if the chrome client refuses to allow keyboard input.
             if (!inLegacyMozillaMode && flags & Element::ALLOW_KEYBOARD_INPUT) {
                 flags &= ~Element::ALLOW_KEYBOARD_INPUT;
-                if (!page()->chrome().client()->supportsFullScreenForElement(element, false))
+                if (!page()->chrome().client().supportsFullScreenForElement(element, false))
                     break;
             } else
                 break;
@@ -5052,7 +5041,7 @@ void Document::requestFullScreenForElement(Element* element, unsigned short flag
         // 5. Return, and run the remaining steps asynchronously.
         // 6. Optionally, perform some animation.
         m_areKeysEnabledInFullScreen = flags & Element::ALLOW_KEYBOARD_INPUT;
-        page()->chrome().client()->enterFullScreenForElement(element);
+        page()->chrome().client().enterFullScreenForElement(element);
 
         // 7. Optionally, display a message indicating how the user can exit displaying the context object fullscreen.
         return;
@@ -5143,12 +5132,12 @@ void Document::webkitExitFullscreen()
     // Only exit out of full screen window mode if there are no remaining elements in the 
     // full screen stack.
     if (!newTop) {
-        page()->chrome().client()->exitFullScreenForElement(m_fullScreenElement.get());
+        page()->chrome().client().exitFullScreenForElement(m_fullScreenElement.get());
         return;
     }
 
     // Otherwise, notify the chrome of the new full screen element.
-    page()->chrome().client()->enterFullScreenForElement(newTop);
+    page()->chrome().client().enterFullScreenForElement(newTop);
 }
 
 bool Document::webkitFullscreenEnabled() const
@@ -5273,7 +5262,7 @@ void Document::setFullScreenRenderer(RenderFullScreen* renderer)
     
     // This notification can come in after the page has been destroyed.
     if (page())
-        page()->chrome().client()->fullScreenRendererChanged(m_fullScreenRenderer);
+        page()->chrome().client().fullScreenRendererChanged(m_fullScreenRenderer);
 }
 
 void Document::fullScreenRendererDestroyed()
@@ -5281,7 +5270,7 @@ void Document::fullScreenRendererDestroyed()
     m_fullScreenRenderer = 0;
 
     if (page())
-        page()->chrome().client()->fullScreenRendererChanged(0);
+        page()->chrome().client().fullScreenRendererChanged(0);
 }
 
 void Document::fullScreenChangeDelayTimerFired(Timer<Document>*)
@@ -5564,7 +5553,7 @@ void Document::didAddTouchEventHandler(Node* handler)
             scrollingCoordinator->touchEventTargetRectsDidChange(this);
 #endif
         if (m_touchEventTargets->size() == 1)
-            page->chrome().client()->needTouchEvents(true);
+            page->chrome().client().needTouchEvents(true);
     }
 #else
     UNUSED_PARAM(handler);
@@ -5596,7 +5585,7 @@ void Document::didRemoveTouchEventHandler(Node* handler)
         if (frame->document() && frame->document()->hasTouchEventHandlers())
             return;
     }
-    page->chrome().client()->needTouchEvents(false);
+    page->chrome().client().needTouchEvents(false);
 #else
     UNUSED_PARAM(handler);
 #endif
@@ -5953,7 +5942,7 @@ PassRefPtr<FontLoader> Document::fontloader()
 
 void Document::didAssociateFormControl(Element* element)
 {
-    if (!frame() || !frame()->page() || !frame()->page()->chrome().client()->shouldNotifyOnFormChanges())
+    if (!frame() || !frame()->page() || !frame()->page()->chrome().client().shouldNotifyOnFormChanges())
         return;
     m_associatedFormControls.add(element);
     if (!m_didAssociateFormControlsTimer.isActive())
@@ -5969,7 +5958,7 @@ void Document::didAssociateFormControlsTimerFired(Timer<Document>* timer)
     Vector<RefPtr<Element> > associatedFormControls;
     copyToVector(m_associatedFormControls, associatedFormControls);
 
-    frame()->page()->chrome().client()->didAssociateFormControls(associatedFormControls);
+    frame()->page()->chrome().client().didAssociateFormControls(associatedFormControls);
     m_associatedFormControls.clear();
 }
 
@@ -5979,7 +5968,7 @@ void Document::ensurePlugInsInjectedScript(DOMWrapperWorld* world)
         return;
 
     // Use the JS file provided by the Chrome client, or fallback to the default one.
-    String jsString = page()->chrome().client()->plugInExtraScript();
+    String jsString = page()->chrome().client().plugInExtraScript();
     if (!jsString)
         jsString = plugInsJavaScript;
 

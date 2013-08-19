@@ -296,7 +296,7 @@ void FrameLoaderClient::postProgressEstimateChangedNotification()
     WebKitWebView* webView = getViewFromFrame(m_frame);
     Page* corePage = core(webView);
 
-    g_signal_emit_by_name(webView, "load-progress-changed", lround(corePage->progress()->estimatedProgress()*100));
+    g_signal_emit_by_name(webView, "load-progress-changed", lround(corePage->progress().estimatedProgress()*100));
 
     g_object_notify(G_OBJECT(webView), "progress");
 }
@@ -585,8 +585,7 @@ void FrameLoaderClient::dispatchDidClearWindowObjectInWorld(DOMWrapperWorld* wor
     Frame* coreFrame = core(m_frame);
     ASSERT(coreFrame);
 
-    Settings* settings = coreFrame->settings();
-    if (!settings || !settings->isScriptEnabled())
+    if (!coreFrame->settings().isScriptEnabled())
         return;
 
     // TODO: Consider using g_signal_has_handler_pending() to avoid the overhead

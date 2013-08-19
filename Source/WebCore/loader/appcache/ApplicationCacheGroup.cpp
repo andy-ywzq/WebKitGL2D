@@ -138,7 +138,7 @@ void ApplicationCacheGroup::selectCache(Frame* frame, const KURL& passedManifest
 {
     ASSERT(frame && frame->page());
     
-    if (!frame->settings() || !frame->settings()->offlineWebApplicationCacheEnabled())
+    if (!frame->settings().offlineWebApplicationCacheEnabled())
         return;
 
     if (!frame->document()->securityOrigin()->canAccessApplicationCache(frame->tree()->top()->document()->securityOrigin()))
@@ -196,7 +196,7 @@ void ApplicationCacheGroup::selectCache(Frame* frame, const KURL& passedManifest
         return;
 
     // Don't change anything on disk if private browsing is enabled.
-    if (frame->settings()->privateBrowsingEnabled()) {
+    if (frame->settings().privateBrowsingEnabled()) {
         postListenerTask(ApplicationCacheHost::CHECKING_EVENT, documentLoader);
         postListenerTask(ApplicationCacheHost::ERROR_EVENT, documentLoader);
         return;
@@ -214,7 +214,7 @@ void ApplicationCacheGroup::selectCache(Frame* frame, const KURL& passedManifest
 
 void ApplicationCacheGroup::selectCacheWithoutManifestURL(Frame* frame)
 {
-    if (!frame->settings() || !frame->settings()->offlineWebApplicationCacheEnabled())
+    if (!frame->settings().offlineWebApplicationCacheEnabled())
         return;
 
     if (!frame->document()->securityOrigin()->canAccessApplicationCache(frame->tree()->top()->document()->securityOrigin()))
@@ -440,7 +440,7 @@ void ApplicationCacheGroup::update(Frame* frame, ApplicationCacheUpdateOption up
     }
 
     // Don't change anything on disk if private browsing is enabled.
-    if (!frame->settings() || frame->settings()->privateBrowsingEnabled()) {
+    if (frame->settings().privateBrowsingEnabled()) {
         ASSERT(m_pendingMasterResourceLoaders.isEmpty());
         ASSERT(m_pendingEntries.isEmpty());
         ASSERT(!m_cacheBeingUpdated);
@@ -522,7 +522,7 @@ PassRefPtr<ResourceHandle> ApplicationCacheGroup::createResourceHandle(const KUR
 #if ENABLE(INSPECTOR)
     // Because willSendRequest only gets called during redirects, we initialize
     // the identifier and the first willSendRequest here.
-    m_currentResourceIdentifier = m_frame->page()->progress()->createUniqueIdentifier();
+    m_currentResourceIdentifier = m_frame->page()->progress().createUniqueIdentifier();
     ResourceResponse redirectResponse = ResourceResponse();
     InspectorInstrumentation::willSendRequest(m_frame, m_currentResourceIdentifier, m_frame->loader().documentLoader(), request, redirectResponse);
 #endif
@@ -821,7 +821,7 @@ void ApplicationCacheGroup::didReachMaxAppCacheSize()
 {
     ASSERT(m_frame);
     ASSERT(m_cacheBeingUpdated);
-    m_frame->page()->chrome().client()->reachedMaxAppCacheSize(cacheStorage().spaceNeeded(m_cacheBeingUpdated->estimatedSizeInStorage()));
+    m_frame->page()->chrome().client().reachedMaxAppCacheSize(cacheStorage().spaceNeeded(m_cacheBeingUpdated->estimatedSizeInStorage()));
     m_calledReachedMaxAppCacheSize = true;
     checkIfLoadIsComplete();
 }
@@ -830,7 +830,7 @@ void ApplicationCacheGroup::didReachOriginQuota(int64_t totalSpaceNeeded)
 {
     // Inform the client the origin quota has been reached, they may decide to increase the quota.
     // We expect quota to be increased synchronously while waiting for the call to return.
-    m_frame->page()->chrome().client()->reachedApplicationCacheOriginQuota(m_origin.get(), totalSpaceNeeded);
+    m_frame->page()->chrome().client().reachedApplicationCacheOriginQuota(m_origin.get(), totalSpaceNeeded);
 }
 
 void ApplicationCacheGroup::cacheUpdateFailed()

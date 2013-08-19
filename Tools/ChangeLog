@@ -1,3 +1,52 @@
+2013-08-19  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        REGRESSION(r154275): webkitpy tests failing
+        https://bugs.webkit.org/show_bug.cgi?id=120010
+
+        Reviewed by Jocelyn Turcotte.
+
+        Update unit-tests to tests the new search-path structure,
+        but reverting the architecture search path addition.
+
+        * Scripts/webkitpy/port/qt.py:
+        (QtPort):
+        (QtPort.__init__):
+        (QtPort._generate_all_test_configurations):
+        (QtPort.qt_architecture):
+        * Scripts/webkitpy/port/qt_unittest.py:
+        (QtPortTest):
+        (QtPortTest._assert_search_path):
+        (QtPortTest._assert_expectations_files):
+        (QtPortTest._qt_version):
+
+2013-08-19  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Keep the qt-5.0-wk2 search path until the expectation migration is completed
+
+        Unreviewed meta gardening.
+
+        We need to keep using the qt-5.0-wk2 path until it is fully migrated.
+
+        * Scripts/webkitpy/port/qt.py:
+        (QtPort._search_paths):
+
+2013-08-19  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        Restructure Qt test expectations
+
+        Unreviewed meta gardening.
+
+        Removed 5.0 name from WK1 and WK2 results and made it possible to set
+        expectations by both Qt version and mayor architectures.
+
+        * Scripts/webkitpy/port/qt.py:
+        (QtPort._wk2_port_name):
+        (QtPort.__init__):
+        (QtPort.qt_version):
+        (QtPort.architecture):
+        (QtPort._search_paths):
+        (QtPort._port_specific_expectations_files):
+
 2013-08-16  Brent Fulgham  <bfulgham@apple.com>
 
         [Windows] DRT is not using the same preferences as the Mac build.

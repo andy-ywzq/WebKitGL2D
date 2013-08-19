@@ -89,6 +89,7 @@
 #include "Settings.h"
 #include "StylePropertySet.h"
 #include "TextIterator.h"
+#include "TextNodeTraversal.h"
 #include "TextResourceDecoder.h"
 #include "UserContentURLPattern.h"
 #include "UserTypingGestureIndicator.h"
@@ -151,12 +152,13 @@ static inline float parentTextZoomFactor(Frame* frame)
 
 inline Frame::Frame(Page* page, HTMLFrameOwnerElement* ownerElement, FrameLoaderClient* frameLoaderClient)
     : m_page(page)
+    , m_settings(&page->settings())
     , m_treeNode(this, parentFromOwnerElement(ownerElement))
     , m_loader(this, frameLoaderClient)
     , m_navigationScheduler(this)
     , m_ownerElement(ownerElement)
     , m_script(adoptPtr(new ScriptController(this)))
-    , m_editor(adoptPtr(new Editor(this)))
+    , m_editor(Editor::create(*this))
     , m_selection(adoptPtr(new FrameSelection(this)))
     , m_eventHandler(adoptPtr(new EventHandler(this)))
     , m_animationController(adoptPtr(new AnimationController(this)))
@@ -183,7 +185,7 @@ inline Frame::Frame(Page* page, HTMLFrameOwnerElement* ownerElement, FrameLoader
     if (!ownerElement) {
 #if USE(TILED_BACKING_STORE)
         // Top level frame only for now.
-        setTiledBackingStoreEnabled(page->settings().tiledBackingStoreEnabled());
+        setTiledBackingStoreEnabled(settings().tiledBackingStoreEnabled());
 #endif
     } else {
         page->incrementSubframeCount();
@@ -306,7 +308,7 @@ void Frame::setDocument(PassRefPtr<Document> newDoc)
         notifyChromeClientWheelEventHandlerCountChanged();
 #if ENABLE(TOUCH_EVENTS)
         if (m_doc && m_doc->hasTouchEventHandlers())
-            m_page->chrome().client()->needTouchEvents(true);
+            m_page->chrome().client().needTouchEvents(true);
 #endif
     }
 
@@ -326,11 +328,6 @@ void Frame::sendOrientationChangeEvent(int orientation)
         doc->dispatchWindowEvent(Event::create(eventNames().orientationchangeEvent, false, false));
 }
 #endif // ENABLE(ORIENTATION_EVENTS)
-    
-Settings* Frame::settings() const
-{
-    return m_page ? &m_page->settings() : 0;
-}
 
 static PassOwnPtr<RegularExpression> createRegExpForLabels(const Vector<String>& labels)
 {
@@ -372,18 +369,18 @@ String Frame::searchForLabelsAboveCell(RegularExpression* regExp, HTMLTableCellE
     if (aboveCell) {
         // search within the above cell we found for a match
         size_t lengthSearched = 0;    
-        for (Node* n = aboveCell->firstChild(); n; n = NodeTraversal::next(n, aboveCell)) {
-            if (n->isTextNode() && n->renderer() && n->renderer()->style()->visibility() == VISIBLE) {
-                // For each text chunk, run the regexp
-                String nodeString = n->nodeValue();
-                int pos = regExp->searchRev(nodeString);
-                if (pos >= 0) {
-                    if (resultDistanceFromStartOfCell)
-                        *resultDistanceFromStartOfCell = lengthSearched;
-                    return nodeString.substring(pos, regExp->matchedLength());
-                }
-                lengthSearched += nodeString.length();
+        for (Text* textNode = TextNodeTraversal::firstWithin(aboveCell); textNode; textNode = TextNodeTraversal::next(textNode, aboveCell)) {
+            if (!textNode->renderer() || textNode->renderer()->style()->visibility() != VISIBLE)
+                continue;
+            // For each text chunk, run the regexp
+            String nodeString = textNode->data();
+            int pos = regExp->searchRev(nodeString);
+            if (pos >= 0) {
+                if (resultDistanceFromStartOfCell)
+                    *resultDistanceFromStartOfCell = lengthSearched;
+                return nodeString.substring(pos, regExp->matchedLength());
             }
+            lengthSearched += nodeString.length();
         }
     }
 
@@ -560,7 +557,7 @@ void Frame::injectUserScripts(UserScriptInjectionTime injectionTime)
     if (!m_page)
         return;
 
-    if (loader().stateMachine()->creatingInitialEmptyDocument() && !settings()->shouldInjectUserScriptsInInitialEmptyDocument())
+    if (loader().stateMachine()->creatingInitialEmptyDocument() && !settings().shouldInjectUserScriptsInInitialEmptyDocument())
         return;
 
     // Walk the hashtable. Inject by world.
@@ -848,7 +845,7 @@ IntRect Frame::tiledBackingStoreVisibleRect()
 {
     if (!m_page)
         return IntRect();
-    return m_page->chrome().client()->visibleRectForTiledBackingStore();
+    return m_page->chrome().client().visibleRectForTiledBackingStore();
 }
 
 Color Frame::tiledBackingStoreBackgroundColor() const
@@ -946,7 +943,7 @@ float Frame::frameScaleFactor() const
     Page* page = this->page();
 
     // Main frame is scaled with respect to he container but inner frames are not scaled with respect to the main frame.
-    if (!page || page->mainFrame() != this || page->settings().applyPageScaleFactorInCompositor())
+    if (!page || page->mainFrame() != this || settings().applyPageScaleFactorInCompositor())
         return 1;
 
     return page->pageScaleFactor();
@@ -1010,7 +1007,7 @@ void Frame::notifyChromeClientWheelEventHandlerCountChanged() const
             count += frame->document()->wheelEventHandlerCount();
     }
 
-    m_page->chrome().client()->numWheelEventHandlersChanged(count);
+    m_page->chrome().client().numWheelEventHandlersChanged(count);
 }
 
 bool Frame::isURLAllowed(const KURL& url) const

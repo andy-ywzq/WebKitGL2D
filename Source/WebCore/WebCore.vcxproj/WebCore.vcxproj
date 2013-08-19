@@ -7440,7 +7440,6 @@
     <ClCompile Include="..\platform\win\BitmapInfo.cpp" />
     <ClCompile Include="..\platform\win\BString.cpp" />
     <ClCompile Include="..\platform\win\ClipboardUtilitiesWin.cpp" />
-    <ClCompile Include="..\platform\win\ClipboardWin.cpp" />
     <ClCompile Include="..\platform\win\ContextMenuItemWin.cpp" />
     <ClCompile Include="..\platform\win\ContextMenuWin.cpp" />
     <ClCompile Include="..\platform\win\CursorWin.cpp" />
@@ -7464,7 +7463,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\platform\win\DragImageWin.cpp" />
-    <ClCompile Include="..\platform\win\EditorWin.cpp" />
     <ClCompile Include="..\platform\win\EventLoopWin.cpp" />
     <ClCompile Include="..\platform\win\FileSystemWin.cpp" />
     <ClCompile Include="..\platform\win\GDIObjectCounter.cpp" />
@@ -12501,6 +12499,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\dom\ElementData.cpp" />
     <ClCompile Include="..\dom\ElementRareData.cpp" />
     <ClCompile Include="..\dom\EntityReference.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -13322,7 +13321,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\dom\StyleElement.cpp">
+    <ClCompile Include="..\dom\InlineStyleSheetOwner.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">true</ExcludedFromBuild>
@@ -13377,6 +13376,20 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\dom\TextNodeTraversal.cpp">
+        <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+        <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+        <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">true</ExcludedFromBuild>
+        <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|x64'">true</ExcludedFromBuild>
+        <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|Win32'">true</ExcludedFromBuild>
+        <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|x64'">true</ExcludedFromBuild>
+        <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+        <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+        <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|Win32'">true</ExcludedFromBuild>
+        <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|x64'">true</ExcludedFromBuild>
+        <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
+        <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\dom\TransformSourceLibxslt.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -19279,7 +19292,6 @@
     <ClInclude Include="..\platform\win\BitmapInfo.h" />
     <ClInclude Include="..\platform\win\BString.h" />
     <ClInclude Include="..\platform\win\ClipboardUtilitiesWin.h" />
-    <ClInclude Include="..\platform\win\ClipboardWin.h" />
     <ClInclude Include="..\platform\win\COMPtr.h" />
     <ClInclude Include="..\platform\win\DefWndProcWindowClass.h" />
     <ClInclude Include="..\platform\win\DelayLoadedModulesEnumerator.h" />
@@ -20231,6 +20243,7 @@
     <ClInclude Include="..\dom\DOMStringMap.h" />
     <ClInclude Include="..\dom\DOMTimeStamp.h" />
     <ClInclude Include="..\dom\Element.h" />
+    <ClInclude Include="..\dom\ElementData.h" />
     <ClInclude Include="..\dom\ElementTraversal.h" />
     <ClInclude Include="..\dom\Entity.h" />
     <ClInclude Include="..\dom\EntityReference.h" />
@@ -20255,6 +20268,7 @@
     <ClInclude Include="..\dom\IdTargetObserver.h" />
     <ClInclude Include="..\dom\IdTargetObserverRegistry.h" />
     <ClInclude Include="..\dom\IgnoreDestructiveWriteCountIncrementer.h" />
+    <ClInclude Include="..\dom\InlineStyleSheetOwner.h" />
     <ClInclude Include="..\dom\KeyboardEvent.h" />
     <ClInclude Include="..\dom\MessageChannel.h" />
     <ClInclude Include="..\dom\MessageEvent.h" />
@@ -20307,11 +20321,11 @@
     <ClInclude Include="..\dom\StaticNodeList.h" />
     <ClInclude Include="..\dom\StringCallback.h" />
     <ClInclude Include="..\dom\StyledElement.h" />
-    <ClInclude Include="..\dom\StyleElement.h" />
     <ClInclude Include="..\dom\TagNodeList.h" />
     <ClInclude Include="..\dom\TemplateContentDocumentFragment.h" />
     <ClInclude Include="..\dom\Text.h" />
     <ClInclude Include="..\dom\TextEvent.h" />
+    <ClInclude Include="..\dom\TextNodeTraversal.h" />
     <ClInclude Include="..\dom\TextEventInputType.h" />
     <ClInclude Include="..\dom\TransformSource.h" />
     <ClInclude Include="..\dom\Traversal.h" />

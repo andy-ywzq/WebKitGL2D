@@ -44,6 +44,7 @@
 #include "EventNames.h"
 #include "EventPathWalker.h"
 #include "ExceptionCodePlaceholder.h"
+#include "FileList.h"
 #include "FloatPoint.h"
 #include "FloatRect.h"
 #include "FocusController.h"
@@ -789,7 +790,7 @@ bool EventHandler::eventMayStartDrag(const PlatformMouseEvent& event) const
     HitTestResult result(view->windowToContents(event.position()));
     m_frame->contentRenderer()->hitTest(request, result);
     DragState state;
-    return result.innerElement() && page->dragController()->draggableElement(m_frame, result.innerElement(), result.roundedPointInInnerNodeFrame(), state);
+    return result.innerElement() && page->dragController().draggableElement(m_frame, result.innerElement(), result.roundedPointInInnerNodeFrame(), state);
 }
 
 void EventHandler::updateSelectionForMouseDrag()
@@ -946,7 +947,7 @@ bool EventHandler::handleMouseReleaseEvent(const MouseEventWithHitTestResults& e
             && event.event().button() != RightButton) {
         VisibleSelection newSelection;
         Node* node = event.targetNode();
-        bool caretBrowsing = m_frame->settings() && m_frame->settings()->caretBrowsingEnabled();
+        bool caretBrowsing = m_frame->settings().caretBrowsingEnabled();
         if (node && (caretBrowsing || node->rendererIsEditable()) && node->renderer()) {
             VisiblePosition pos = node->renderer()->positionForPoint(event.localPoint());
             newSelection = VisibleSelection(pos);
@@ -1025,7 +1026,7 @@ DragSourceAction EventHandler::updateDragSourceActionsAllowed() const
     if (!view)
         return DragSourceActionNone;
 
-    return page->dragController()->delegateDragSourceAction(view->contentsToRootView(m_mouseDownPos));
+    return page->dragController().delegateDragSourceAction(view->contentsToRootView(m_mouseDownPos));
 }
 #endif // ENABLE(DRAG_SUPPORT)
 
@@ -1214,8 +1215,7 @@ bool EventHandler::useHandCursor(Node* node, bool isOverLink, bool shiftKey)
 
     // If the link is editable, then we need to check the settings to see whether or not the link should be followed
     if (editable) {
-        ASSERT(m_frame->settings());
-        switch (m_frame->settings()->editableLinkBehavior()) {
+        switch (m_frame->settings().editableLinkBehavior()) {
         default:
         case EditableLinkDefaultBehavior:
         case EditableLinkAlwaysLive:
@@ -1972,8 +1972,8 @@ bool EventHandler::handlePasteGlobalSelection(const PlatformMouseEvent& mouseEve
     return false;
 }
 
-
 #if ENABLE(DRAG_SUPPORT)
+
 bool EventHandler::dispatchDragEvent(const AtomicString& eventType, Node* dragTarget, const PlatformMouseEvent& event, Clipboard* clipboard)
 {
     FrameView* view = m_frame->view();
@@ -2009,6 +2009,57 @@ static bool targetIsFrame(Node* target, Frame*& frame)
     return true;
 }
 
+static DragOperation convertDropZoneOperationToDragOperation(const String& dragOperation)
+{
+    if (dragOperation == "copy")
+        return DragOperationCopy;
+    if (dragOperation == "move")
+        return DragOperationMove;
+    if (dragOperation == "link")
+        return DragOperationLink;
+    return DragOperationNone;
+}
+
+static String convertDragOperationToDropZoneOperation(DragOperation operation)
+{
+    switch (operation) {
+    case DragOperationCopy:
+        return ASCIILiteral("copy");
+    case DragOperationMove:
+        return ASCIILiteral("move");
+    case DragOperationLink:
+        return ASCIILiteral("link");
+    default:
+        return ASCIILiteral("copy");
+    }
+}
+
+static inline bool hasFileOfType(Clipboard& clipboard, const String& type)
+{
+    RefPtr<FileList> fileList = clipboard.files();
+    for (unsigned i = 0; i < fileList->length(); i++) {
+        if (equalIgnoringCase(fileList->item(i)->type(), type))
+            return true;
+    }
+    return false;
+}
+
+static inline bool hasStringOfType(Clipboard& clipboard, const String& type)
+{
+    return !type.isNull() && clipboard.types().contains(type);
+}
+
+static bool hasDropZoneType(Clipboard& clipboard, const String& keyword)
+{
+    if (keyword.startsWith("file:"))
+        return hasFileOfType(clipboard, keyword.substring(5));
+
+    if (keyword.startsWith("string:"))
+        return hasStringOfType(clipboard, keyword.substring(7));
+
+    return false;
+}
+
 static bool findDropZone(Node* target, Clipboard* clipboard)
 {
     Element* element = target->isElementNode() ? toElement(target) : target->parentElement();
@@ -2032,7 +2083,7 @@ static bool findDropZone(Node* target, Clipboard* clipboard)
                 if (dragOperation == DragOperationNone)
                     dragOperation = op;
             } else
-                matched = matched || clipboard->hasDropZoneType(keywords[i].string());
+                matched = matched || hasDropZoneType(*clipboard, keywords[i].string());
 
             if (matched && dragOperation != DragOperationNone)
                 break;
@@ -2635,7 +2686,7 @@ bool EventHandler::handleGestureTap(const PlatformGestureEvent& gestureEvent)
 bool EventHandler::handleGestureLongPress(const PlatformGestureEvent& gestureEvent)
 {
 #if ENABLE(DRAG_SUPPORT)
-    if (m_frame->settings() && m_frame->settings()->touchDragDropEnabled()) {
+    if (m_frame->settings().touchDragDropEnabled()) {
         IntPoint adjustedPoint = gestureEvent.position();
 #if ENABLE(TOUCH_ADJUSTMENT)
         adjustGesturePosition(gestureEvent, adjustedPoint);
@@ -2816,7 +2867,7 @@ bool EventHandler::isScrollbarHandlingGestures() const
 #if ENABLE(TOUCH_ADJUSTMENT)
 bool EventHandler::shouldApplyTouchAdjustment(const PlatformGestureEvent& event) const
 {
-    if (m_frame->settings() && !m_frame->settings()->touchAdjustmentEnabled())
+    if (!m_frame->settings().touchAdjustmentEnabled())
         return false;
     return !event.area().isEmpty();
 }
@@ -3030,8 +3081,7 @@ void EventHandler::dispatchFakeMouseMoveEventSoon()
     if (m_mousePositionIsUnknown)
         return;
 
-    Settings* settings = m_frame->settings();
-    if (settings && !settings->deviceSupportsMouse())
+    if (!m_frame->settings().deviceSupportsMouse())
         return;
 
     // If the content has ever taken longer than fakeMouseMoveShortInterval we
@@ -3070,8 +3120,7 @@ void EventHandler::fakeMouseMoveEventTimerFired(Timer<EventHandler>* timer)
     ASSERT_UNUSED(timer, timer == &m_fakeMouseMoveEventTimer);
     ASSERT(!m_mousePressed);
 
-    Settings* settings = m_frame->settings();
-    if (settings && !settings->deviceSupportsMouse())
+    if (!m_frame->settings().deviceSupportsMouse())
         return;
 
     FrameView* view = m_frame->view();
@@ -3482,7 +3531,7 @@ bool EventHandler::handleDrag(const MouseEventWithHitTestResults& event, CheckDr
         HitTestResult result(m_mouseDownPos);
         m_frame->contentRenderer()->hitTest(request, result);
         if (m_frame->page())
-            dragState().source = m_frame->page()->dragController()->draggableElement(m_frame, result.innerElement(), m_mouseDownPos, dragState());
+            dragState().source = m_frame->page()->dragController().draggableElement(m_frame, result.innerElement(), m_mouseDownPos, dragState());
         
         if (!dragState().source)
             m_mouseDownMayStartDrag = false; // no element is draggable
@@ -3580,8 +3629,7 @@ bool EventHandler::handleDrag(const MouseEventWithHitTestResults& event, CheckDr
     
     if (m_mouseDownMayStartDrag) {
         Page* page = m_frame->page();
-        DragController* dragController = page ? page->dragController() : 0;
-        m_didStartDrag = dragController && dragController->startDrag(m_frame, dragState(), srcOp, event.event(), m_mouseDownPos);
+        m_didStartDrag = page && page->dragController().startDrag(m_frame, dragState(), srcOp, event.event(), m_mouseDownPos);
         // In WebKit2 we could re-enter this code and start another drag.
         // On OS X this causes problems with the ownership of the pasteboard and the promised types.
         if (m_didStartDrag) {
@@ -3659,7 +3707,7 @@ bool EventHandler::tabsToLinks(KeyboardEvent* event) const
     if (!page)
         return false;
 
-    bool tabsToLinksClientCallResult = page->chrome().client()->keyboardUIMode() & KeyboardAccessTabsToLinks;
+    bool tabsToLinksClientCallResult = page->chrome().client().keyboardUIMode() & KeyboardAccessTabsToLinks;
     return eventInvertsTabsToLinksClientCallResult(event) ? !tabsToLinksClientCallResult : tabsToLinksClientCallResult;
 }
 
@@ -3705,7 +3753,7 @@ void EventHandler::defaultBackspaceEventHandler(KeyboardEvent* event)
     if (!page)
         return;
 
-    if (!m_frame->settings()->backspaceKeyNavigationEnabled())
+    if (!m_frame->settings().backspaceKeyNavigationEnabled())
         return;
     
     bool handledEvent = false;
@@ -4064,7 +4112,7 @@ bool EventHandler::handleTouchEvent(const PlatformTouchEvent& event)
 
 bool EventHandler::dispatchSyntheticTouchEventIfEnabled(const PlatformMouseEvent& event)
 {
-    if (!m_frame || !m_frame->settings() || !m_frame->settings()->isTouchEventEmulationEnabled())
+    if (!m_frame || !m_frame->settings().isTouchEventEmulationEnabled())
         return false;
 
     PlatformEvent::Type eventType = event.type();

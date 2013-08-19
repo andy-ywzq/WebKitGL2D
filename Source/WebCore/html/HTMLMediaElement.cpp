@@ -327,6 +327,8 @@ HTMLMediaElement::HTMLMediaElement(const QualifiedName& tagName, Document* docum
     , m_reportedExtraMemoryCost(0)
 {
     LOG(Media, "HTMLMediaElement::HTMLMediaElement");
+    setHasCustomStyleResolveCallbacks();
+
     document->registerForMediaVolumeCallbacks(this);
     document->registerForPrivateBrowsingStateChangedCallbacks(this);
 
@@ -335,7 +337,6 @@ HTMLMediaElement::HTMLMediaElement(const QualifiedName& tagName, Document* docum
         addBehaviorRestriction(RequireUserGestureForLoadRestriction);
     }
 
-    setHasCustomStyleCallbacks();
     addElementToDocumentMap(this, document);
 
 #if ENABLE(VIDEO_TRACK)
@@ -424,7 +425,7 @@ bool HTMLMediaElement::hasCustomFocusLogic() const
 
 bool HTMLMediaElement::supportsFocus() const
 {
-    if (ownerDocument()->isMediaDocument())
+    if (document()->isMediaDocument())
         return false;
 
     // If no controls specified, we should still be able to focus the element if it has tabIndex.
@@ -631,16 +632,17 @@ void HTMLMediaElement::removedFrom(ContainerNode* insertionPoint)
     HTMLElement::removedFrom(insertionPoint);
 }
 
-void HTMLMediaElement::attach(const AttachContext& context)
+void HTMLMediaElement::willAttachRenderers()
 {
     ASSERT(!attached());
 
 #if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
     m_needWidgetUpdate = true;
 #endif
+}
 
-    HTMLElement::attach(context);
-
+void HTMLMediaElement::didAttachRenderers()
+{
     if (renderer())
         renderer()->updateFromElement();
 #if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
@@ -1667,12 +1669,7 @@ void HTMLMediaElement::cancelPendingEventsAndCallbacks()
 
 Document* HTMLMediaElement::mediaPlayerOwningDocument()
 {
-    Document* d = document();
-    
-    if (!d)
-        d = ownerDocument();
-    
-    return d;
+    return document();
 }
 
 void HTMLMediaElement::mediaPlayerNetworkStateChanged(MediaPlayer*)
@@ -1687,20 +1684,20 @@ static void logMediaLoadRequest(Page* page, const String& mediaEngine, const Str
     if (!page || !page->settings().diagnosticLoggingEnabled())
         return;
 
-    ChromeClient* client = page->chrome().client();
+    ChromeClient& chromeClient = page->chrome().client();
 
     if (!succeeded) {
-        client->logDiagnosticMessage(DiagnosticLoggingKeys::mediaLoadingFailedKey(), errorMessage, DiagnosticLoggingKeys::failKey());
+        chromeClient.logDiagnosticMessage(DiagnosticLoggingKeys::mediaLoadingFailedKey(), errorMessage, DiagnosticLoggingKeys::failKey());
         return;
     }
 
-    client->logDiagnosticMessage(DiagnosticLoggingKeys::mediaLoadedKey(), mediaEngine, DiagnosticLoggingKeys::noopKey());
+    chromeClient.logDiagnosticMessage(DiagnosticLoggingKeys::mediaLoadedKey(), mediaEngine, DiagnosticLoggingKeys::noopKey());
 
     if (!page->hasSeenAnyMediaEngine())
-        client->logDiagnosticMessage(DiagnosticLoggingKeys::pageContainsAtLeastOneMediaEngineKey(), emptyString(), DiagnosticLoggingKeys::noopKey());
+        chromeClient.logDiagnosticMessage(DiagnosticLoggingKeys::pageContainsAtLeastOneMediaEngineKey(), emptyString(), DiagnosticLoggingKeys::noopKey());
 
     if (!page->hasSeenMediaEngine(mediaEngine))
-        client->logDiagnosticMessage(DiagnosticLoggingKeys::pageContainsMediaEngineKey(), mediaEngine, DiagnosticLoggingKeys::noopKey());
+        chromeClient.logDiagnosticMessage(DiagnosticLoggingKeys::pageContainsMediaEngineKey(), mediaEngine, DiagnosticLoggingKeys::noopKey());
 
     page->sawMediaEngine(mediaEngine);
 }
@@ -3767,8 +3764,8 @@ void HTMLMediaElement::mediaPlayerSawUnsupportedTracks(MediaPlayer*)
     // The MediaPlayer came across content it cannot completely handle.
     // This is normally acceptable except when we are in a standalone
     // MediaDocument. If so, tell the document what has happened.
-    if (ownerDocument()->isMediaDocument()) {
-        MediaDocument* mediaDocument = toMediaDocument(ownerDocument());
+    if (document()->isMediaDocument()) {
+        MediaDocument* mediaDocument = toMediaDocument(document());
         mediaDocument->mediaElementSawUnsupportedTracks();
     }
 }
@@ -3826,7 +3823,7 @@ GraphicsDeviceAdapter* HTMLMediaElement::mediaPlayerGraphicsDeviceAdapter(const 
     if (!document() || !document()->page())
         return 0;
 
-    return document()->page()->chrome().client()->graphicsDeviceAdapter();
+    return document()->page()->chrome().client().graphicsDeviceAdapter();
 }
 #endif
 
@@ -4415,7 +4412,7 @@ void HTMLMediaElement::enterFullscreen()
     if (hasMediaControls())
         mediaControls()->enteredFullscreen();
     if (document() && document()->page()) {
-        document()->page()->chrome().client()->enterFullscreenForNode(this);
+        document()->page()->chrome().client().enterFullscreenForNode(this);
         scheduleEvent(eventNames().webkitbeginfullscreenEvent);
     }
 }
@@ -4438,7 +4435,7 @@ void HTMLMediaElement::exitFullscreen()
     if (document() && document()->page()) {
         if (document()->page()->chrome().requiresFullscreenForVideoPlayback())
             pauseInternal();
-        document()->page()->chrome().client()->exitFullscreenForNode(this);
+        document()->page()->chrome().client().exitFullscreenForNode(this);
         scheduleEvent(eventNames().webkitendfullscreenEvent);
     }
 }

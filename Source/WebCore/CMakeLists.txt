@@ -1154,6 +1154,7 @@ set(WebCore_SOURCES
     dom/DocumentStyleSheetCollection.cpp
     dom/DocumentType.cpp
     dom/Element.cpp
+    dom/ElementData.cpp
     dom/ElementRareData.cpp
     dom/EntityReference.cpp
     dom/ErrorEvent.cpp
@@ -1175,6 +1176,7 @@ set(WebCore_SOURCES
     dom/IconURL.cpp
     dom/IdTargetObserver.cpp
     dom/IdTargetObserverRegistry.cpp
+    dom/InlineStyleSheetOwner.cpp
     dom/LiveNodeList.cpp
     dom/KeyboardEvent.cpp
     dom/MessageChannel.cpp
@@ -1226,10 +1228,10 @@ set(WebCore_SOURCES
     dom/StaticNodeList.cpp
     dom/StringCallback.cpp
     dom/StyledElement.cpp
-    dom/StyleElement.cpp
     dom/TagNodeList.cpp
     dom/Text.cpp
     dom/TextEvent.cpp
+    dom/TextNodeTraversal.cpp
     dom/Touch.cpp
     dom/TouchEvent.cpp
     dom/TouchList.cpp

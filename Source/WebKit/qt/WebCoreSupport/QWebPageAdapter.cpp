@@ -300,7 +300,7 @@ void QWebPageAdapter::deletePage()
 
 QWebPageAdapter* QWebPageAdapter::kit(Page* page)
 {
-    return static_cast<ChromeClientQt*>(page->chrome().client())->m_webPage;
+    return static_cast<ChromeClientQt&>(page->chrome().client()).m_webPage;
 }
 
 ViewportArguments QWebPageAdapter::viewportArguments() const
@@ -594,25 +594,25 @@ void QWebPageAdapter::wheelEvent(QWheelEvent *ev, int wheelScrollLines)
 Qt::DropAction QWebPageAdapter::dragEntered(const QMimeData *data, const QPoint &pos, Qt::DropActions possibleActions)
 {
     DragData dragData(data, pos, QCursor::pos(), dropActionToDragOp(possibleActions));
-    return dragOpToDropAction(page->dragController()->dragEntered(&dragData).operation);
+    return dragOpToDropAction(page->dragController().dragEntered(&dragData).operation);
 }
 
 void QWebPageAdapter::dragLeaveEvent()
 {
     DragData dragData(0, IntPoint(), QCursor::pos(), DragOperationNone);
-    page->dragController()->dragExited(&dragData);
+    page->dragController().dragExited(&dragData);
 }
 
 Qt::DropAction QWebPageAdapter::dragUpdated(const QMimeData *data, const QPoint &pos, Qt::DropActions possibleActions)
 {
     DragData dragData(data, pos, QCursor::pos(), dropActionToDragOp(possibleActions));
-    return dragOpToDropAction(page->dragController()->dragUpdated(&dragData).operation);
+    return dragOpToDropAction(page->dragController().dragUpdated(&dragData).operation);
 }
 
 bool QWebPageAdapter::performDrag(const QMimeData *data, const QPoint &pos, Qt::DropActions possibleActions)
 {
     DragData dragData(data, pos, QCursor::pos(), dropActionToDragOp(possibleActions));
-    return page->dragController()->performDrag(&dragData);
+    return page->dragController().performDrag(&dragData);
 }
 
 void QWebPageAdapter::inputMethodEvent(QInputMethodEvent *ev)
@@ -875,7 +875,7 @@ QList<MenuItem> descriptionForPlatformMenu(const Vector<ContextMenuItem>& items,
                 description.type = MenuItem::Action;
                 description.action = action;
                 ContextMenuItem it(item);
-                page->contextMenuController()->checkOrEnableIfNeeded(it);
+                page->contextMenuController().checkOrEnableIfNeeded(it);
                 if (it.enabled())
                     description.traits |= MenuItem::Enabled;
                 if (item.type() == WebCore::CheckableActionType) {
@@ -909,14 +909,14 @@ QWebHitTestResultPrivate* QWebPageAdapter::updatePositionDependentMenuActions(co
     ASSERT(visitedWebActions);
     WebCore::Frame* focusedFrame = page->focusController().focusedOrMainFrame();
     HitTestResult result = focusedFrame->eventHandler().hitTestResultAtPoint(focusedFrame->view()->windowToContents(pos));
-    page->contextMenuController()->setHitTestResult(result);
+    page->contextMenuController().setHitTestResult(result);
 
 #if ENABLE(INSPECTOR)
     if (page->inspectorController()->enabled())
-        page->contextMenuController()->addInspectElementItem();
+        page->contextMenuController().addInspectElementItem();
 #endif
 
-    WebCore::ContextMenu* webcoreMenu = page->contextMenuController()->contextMenu();
+    WebCore::ContextMenu* webcoreMenu = page->contextMenuController().contextMenu();
     QList<MenuItem> itemDescriptions;
     if (client && webcoreMenu)
         itemDescriptions = descriptionForPlatformMenu(webcoreMenu->items(), page);
@@ -971,8 +971,8 @@ void QWebPageAdapter::_q_cleanupLeakMessages()
 
 void QWebPageAdapter::_q_onLoadProgressChanged(int)
 {
-    m_totalBytes = page->progress()->totalPageAndResourceBytesToLoad();
-    m_bytesReceived = page->progress()->totalBytesReceived();
+    m_totalBytes = page->progress().totalPageAndResourceBytesToLoad();
+    m_bytesReceived = page->progress().totalBytesReceived();
 }
 
 bool QWebPageAdapter::supportsContentType(const QString& mimeType) const
@@ -1423,7 +1423,7 @@ bool QWebPageAdapter::swallowContextMenuEvent(QContextMenuEvent *event, QWebFram
     ASSERT(int(QWebPageAdapter::ScrollByLine) == int(WebCore::ScrollByLine));
     ASSERT(int(QWebPageAdapter::ScrollByDocument) == int(WebCore::ScrollByDocument));
 
-    page->contextMenuController()->clearContextMenu();
+    page->contextMenuController().clearContextMenu();
 
     if (webFrame) {
         Frame* frame = webFrame->frame;
@@ -1451,7 +1451,7 @@ bool QWebPageAdapter::swallowContextMenuEvent(QContextMenuEvent *event, QWebFram
 
     WebCore::Frame* focusedFrame = page->focusController().focusedOrMainFrame();
     focusedFrame->eventHandler().sendContextMenuEvent(convertMouseEvent(event, 1));
-    ContextMenu* menu = page->contextMenuController()->contextMenu();
+    ContextMenu* menu = page->contextMenuController().contextMenu();
     // If the website defines its own handler then sendContextMenuEvent takes care of
     // calling/showing it and the context menu pointer will be zero. This is the case
     // on maps.google.com for example.

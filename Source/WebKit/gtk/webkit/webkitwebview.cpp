@@ -345,7 +345,7 @@ static bool defaultContextMenuEnabled(WebKitWebView* webView)
 static gboolean webkit_web_view_forward_context_menu_event(WebKitWebView* webView, const PlatformMouseEvent& event, bool triggeredWithKeyboard)
 {
     Page* page = core(webView);
-    page->contextMenuController()->clearContextMenu();
+    page->contextMenuController().clearContextMenu();
     Frame* focusedFrame;
     Frame* mainFrame = page->mainFrame();
     gboolean mousePressEventResult = FALSE;
@@ -381,8 +381,7 @@ static gboolean webkit_web_view_forward_context_menu_event(WebKitWebView* webVie
     // If coreMenu is NULL, this means WebCore decided to not create
     // the default context menu; this may happen when the page is
     // handling the right-click for reasons other than the context menu.
-    ContextMenuController* controller = page->contextMenuController();
-    ContextMenu* coreMenu = controller->contextMenu();
+    ContextMenu* coreMenu = page->contextMenuController().contextMenu();
     if (!coreMenu)
         return mousePressEventResult;
 
@@ -391,7 +390,7 @@ static gboolean webkit_web_view_forward_context_menu_event(WebKitWebView* webVie
 
     // We connect the "activate" signal here rather than in ContextMenuGtk to avoid
     // a layering violation. ContextMenuGtk should not know about the ContextMenuController.
-    gtk_container_foreach(GTK_CONTAINER(defaultMenu), reinterpret_cast<GtkCallback>(contextMenuConnectActivate), controller);
+    gtk_container_foreach(GTK_CONTAINER(defaultMenu), reinterpret_cast<GtkCallback>(contextMenuConnectActivate), &page->contextMenuController());
 
     if (!hitTestResult) {
         MouseEventWithHitTestResults mev = prepareMouseEventForFrame(focusedFrame, event);
@@ -471,7 +470,7 @@ static void setHorizontalAdjustment(WebKitWebView* webView, GtkAdjustment* adjus
     // This may be called after the page has been destroyed, in which case we do nothing.
     Page* page = core(webView);
     if (page)
-        static_cast<WebKit::ChromeClient*>(page->chrome().client())->adjustmentWatcher()->setHorizontalAdjustment(adjustment);
+        static_cast<WebKit::ChromeClient&>(page->chrome().client()).adjustmentWatcher()->setHorizontalAdjustment(adjustment);
 }
 
 static void setVerticalAdjustment(WebKitWebView* webView, GtkAdjustment* adjustment)
@@ -479,7 +478,7 @@ static void setVerticalAdjustment(WebKitWebView* webView, GtkAdjustment* adjustm
     // This may be called after the page has been destroyed, in which case we do nothing.
     Page* page = core(webView);
     if (page)
-        static_cast<WebKit::ChromeClient*>(page->chrome().client())->adjustmentWatcher()->setVerticalAdjustment(adjustment);
+        static_cast<WebKit::ChromeClient&>(page->chrome().client()).adjustmentWatcher()->setVerticalAdjustment(adjustment);
 }
 
 #ifndef GTK_API_VERSION_2
@@ -487,7 +486,7 @@ static GtkAdjustment* getHorizontalAdjustment(WebKitWebView* webView)
 {
     Page* page = core(webView);
     if (page)
-        return static_cast<WebKit::ChromeClient*>(page->chrome().client())->adjustmentWatcher()->horizontalAdjustment();
+        return static_cast<WebKit::ChromeClient&>(page->chrome().client()).adjustmentWatcher()->horizontalAdjustment();
     return 0;
 }
 
@@ -495,7 +494,7 @@ static GtkAdjustment* getVerticalAdjustment(WebKitWebView* webView)
 {
     Page* page = core(webView);
     if (page)
-        return static_cast<WebKit::ChromeClient*>(page->chrome().client())->adjustmentWatcher()->verticalAdjustment();
+        return static_cast<WebKit::ChromeClient&>(page->chrome().client()).adjustmentWatcher()->verticalAdjustment();
     return 0;
 }
 
@@ -868,9 +867,9 @@ static void resizeWebViewFromAllocation(WebKitWebView* webView, GtkAllocation* a
     if (!sizeChanged)
         return;
 
-    WebKit::ChromeClient* chromeClient = static_cast<WebKit::ChromeClient*>(page->chrome().client());
-    chromeClient->widgetSizeChanged(oldSize, IntSize(allocation->width, allocation->height));
-    chromeClient->adjustmentWatcher()->updateAdjustmentsFromScrollbars();
+    WebKit::ChromeClient& chromeClient = static_cast<WebKit::ChromeClient&>(page->chrome().client());
+    chromeClient.widgetSizeChanged(oldSize, IntSize(allocation->width, allocation->height));
+    chromeClient.adjustmentWatcher()->updateAdjustmentsFromScrollbars();
 }
 
 static void webkit_web_view_size_allocate(GtkWidget* widget, GtkAllocation* allocation)
@@ -1533,8 +1532,8 @@ static void dragExitedCallback(GtkWidget* widget, DragData* dragData, bool dropH
     // Don't call dragExited if we have just received a drag-drop signal. This
     // happens in the case of a successful drop onto the view.
     if (!dropHappened)
-        core(WEBKIT_WEB_VIEW(widget))->dragController()->dragExited(dragData);
-    core(WEBKIT_WEB_VIEW(widget))->dragController()->dragEnded();
+        core(WEBKIT_WEB_VIEW(widget))->dragController().dragExited(dragData);
+    core(WEBKIT_WEB_VIEW(widget))->dragController().dragEnded();
 }
 
 static void webkit_web_view_drag_leave(GtkWidget* widget, GdkDragContext* context, guint time)
@@ -1551,7 +1550,7 @@ static gboolean webkit_web_view_drag_motion(GtkWidget* widget, GdkDragContext* c
         return TRUE;
 
     DragData dragData(dataObject, position, convertWidgetPointToScreenPoint(widget, position), gdkDragActionToDragOperation(gdk_drag_context_get_actions(context)));
-    DragOperation operation = core(webView)->dragController()->dragUpdated(&dragData).operation;
+    DragOperation operation = core(webView)->dragController().dragUpdated(&dragData).operation;
     gdk_drag_status(context, dragOperationToSingleGdkDragAction(operation), time);
     return TRUE;
 }
@@ -1565,7 +1564,7 @@ static void webkit_web_view_drag_data_received(GtkWidget* widget, GdkDragContext
         return;
 
     DragData dragData(dataObject, position, convertWidgetPointToScreenPoint(widget, position), gdkDragActionToDragOperation(gdk_drag_context_get_actions(context)));
-    DragOperation operation = core(webView)->dragController()->dragEntered(&dragData).operation;
+    DragOperation operation = core(webView)->dragController().dragEntered(&dragData).operation;
     gdk_drag_status(context, dragOperationToSingleGdkDragAction(operation), time);
 }
 
@@ -1578,7 +1577,7 @@ static gboolean webkit_web_view_drag_drop(GtkWidget* widget, GdkDragContext* con
 
     IntPoint position(x, y);
     DragData dragData(dataObject, position, convertWidgetPointToScreenPoint(widget, position), gdkDragActionToDragOperation(gdk_drag_context_get_actions(context)));
-    core(webView)->dragController()->performDrag(&dragData);
+    core(webView)->dragController().performDrag(&dragData);
     gtk_drag_finish(context, TRUE, FALSE, time);
     return TRUE;
 }
@@ -4925,7 +4924,7 @@ gdouble webkit_web_view_get_progress(WebKitWebView* webView)
 {
     g_return_val_if_fail(WEBKIT_IS_WEB_VIEW(webView), 1.0);
 
-    return core(webView)->progress()->estimatedProgress();
+    return core(webView)->progress().estimatedProgress();
 }
 
 /**
@@ -5424,7 +5423,7 @@ GtkMenu* webkit_web_view_get_context_menu(WebKitWebView* webView)
     g_return_val_if_fail(WEBKIT_IS_WEB_VIEW(webView), 0);
 
 #if ENABLE(CONTEXT_MENUS)
-    ContextMenu* menu = core(webView)->contextMenuController()->contextMenu();
+    ContextMenu* menu = core(webView)->contextMenuController().contextMenu();
     if (!menu)
         return 0;
     return menu->platformDescription();
@@ -5542,11 +5541,11 @@ WebKitWebView* kit(WebCore::Page* corePage)
     if (!corePage)
         return 0;
 
-    WebCore::ChromeClient* chromeClient = corePage->chrome().client();
-    if (chromeClient->isEmptyChromeClient())
+    WebCore::ChromeClient& chromeClient = corePage->chrome().client();
+    if (chromeClient.isEmptyChromeClient())
         return 0;
 
-    return static_cast<WebKit::ChromeClient*>(chromeClient)->webView();
+    return static_cast<WebKit::ChromeClient&>(chromeClient).webView();
 }
 
 }

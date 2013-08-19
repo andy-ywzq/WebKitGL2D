@@ -367,8 +367,7 @@ void HistoryController::updateForStandardLoad(HistoryUpdateType updateType)
 
     FrameLoader& frameLoader = m_frame->loader();
 
-    Settings* settings = m_frame->settings();
-    bool needPrivacy = !settings || settings->privateBrowsingEnabled();
+    bool needPrivacy = m_frame->settings().privateBrowsingEnabled();
     const KURL& historyURL = frameLoader.documentLoader()->urlForHistory();
 
     if (!frameLoader.documentLoader()->isClientRedirect()) {
@@ -405,8 +404,7 @@ void HistoryController::updateForRedirectWithLockedBackForwardList()
         LOG(History, "WebCoreHistory: Updating History for redirect load in frame %s", m_frame->loader().documentLoader()->title().string().utf8().data());
 #endif
     
-    Settings* settings = m_frame->settings();
-    bool needPrivacy = !settings || settings->privateBrowsingEnabled();
+    bool needPrivacy = m_frame->settings().privateBrowsingEnabled();
     const KURL& historyURL = m_frame->loader().documentLoader()->urlForHistory();
 
     if (m_frame->loader().documentLoader()->isClientRedirect()) {
@@ -454,8 +452,7 @@ void HistoryController::updateForClientRedirect()
         m_currentItem->clearScrollPoint();
     }
 
-    Settings* settings = m_frame->settings();
-    bool needPrivacy = !settings || settings->privateBrowsingEnabled();
+    bool needPrivacy = m_frame->settings().privateBrowsingEnabled();
     const KURL& historyURL = m_frame->loader().documentLoader()->urlForHistory();
 
     if (!historyURL.isEmpty() && !needPrivacy) {
@@ -547,8 +544,7 @@ void HistoryController::updateForSameDocumentNavigation()
     if (m_frame->document()->url().isEmpty())
         return;
 
-    Settings* settings = m_frame->settings();
-    if (!settings || settings->privateBrowsingEnabled())
+    if (m_frame->settings().privateBrowsingEnabled())
         return;
 
     Page* page = m_frame->page();
@@ -876,8 +872,7 @@ void HistoryController::pushState(PassRefPtr<SerializedScriptValue> stateObject,
 
     page->backForward()->addItem(topItem.release());
 
-    Settings* settings = m_frame->settings();
-    if (!settings || settings->privateBrowsingEnabled())
+    if (m_frame->settings().privateBrowsingEnabled())
         return;
 
     addVisitedLink(page, KURL(ParsedURLString, urlString));
@@ -897,8 +892,7 @@ void HistoryController::replaceState(PassRefPtr<SerializedScriptValue> stateObje
     m_currentItem->setFormData(0);
     m_currentItem->setFormContentType(String());
 
-    Settings* settings = m_frame->settings();
-    if (!settings || settings->privateBrowsingEnabled())
+    if (m_frame->settings().privateBrowsingEnabled())
         return;
 
     ASSERT(m_frame->page());

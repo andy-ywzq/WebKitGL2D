@@ -29,6 +29,7 @@
 #include "RenderText.h"
 #include "ScopedEventQueue.h"
 #include "ShadowRoot.h"
+#include "TextNodeTraversal.h"
 
 #if ENABLE(SVG)
 #include "RenderSVGInlineText.h"
@@ -93,64 +94,37 @@ PassRefPtr<Text> Text::splitText(unsigned offset, ExceptionCode& ec)
     return newText.release();
 }
 
-static const Text* earliestLogicallyAdjacentTextNode(const Text* t)
+static const Text* earliestLogicallyAdjacentTextNode(const Text* text)
 {
-    const Node* n = t;
-    while ((n = n->previousSibling())) {
-        Node::NodeType type = n->nodeType();
-        if (type == Node::TEXT_NODE || type == Node::CDATA_SECTION_NODE) {
-            t = static_cast<const Text*>(n);
-            continue;
-        }
-
-        // We would need to visit EntityReference child text nodes if they existed
-        ASSERT(type != Node::ENTITY_REFERENCE_NODE || !n->hasChildNodes());
-        break;
+    const Node* node = text;
+    while ((node = node->previousSibling())) {
+        if (!node->isTextNode())
+            break;
+        text = toText(node);
     }
-    return t;
+    return text;
 }
 
-static const Text* latestLogicallyAdjacentTextNode(const Text* t)
+static const Text* latestLogicallyAdjacentTextNode(const Text* text)
 {
-    const Node* n = t;
-    while ((n = n->nextSibling())) {
-        Node::NodeType type = n->nodeType();
-        if (type == Node::TEXT_NODE || type == Node::CDATA_SECTION_NODE) {
-            t = static_cast<const Text*>(n);
-            continue;
-        }
-
-        // We would need to visit EntityReference child text nodes if they existed
-        ASSERT(type != Node::ENTITY_REFERENCE_NODE || !n->hasChildNodes());
-        break;
+    const Node* node = text;
+    while ((node = node->nextSibling())) {
+        if (!node->isTextNode())
+            break;
+        text = toText(node);
     }
-    return t;
+    return text;
 }
 
 String Text::wholeText() const
 {
     const Text* startText = earliestLogicallyAdjacentTextNode(this);
     const Text* endText = latestLogicallyAdjacentTextNode(this);
+    const Node* onePastEndText = TextNodeTraversal::nextSibling(endText);
 
-    Node* onePastEndText = endText->nextSibling();
-    Checked<unsigned> resultLength = 0;
-    for (const Node* n = startText; n != onePastEndText; n = n->nextSibling()) {
-        if (!n->isTextNode())
-            continue;
-        const Text* t = static_cast<const Text*>(n);
-        const String& data = t->data();
-        resultLength += data.length();
-    }
     StringBuilder result;
-    result.reserveCapacity(resultLength.unsafeGet());
-    for (const Node* n = startText; n != onePastEndText; n = n->nextSibling()) {
-        if (!n->isTextNode())
-            continue;
-        const Text* t = static_cast<const Text*>(n);
-        result.append(t->data());
-    }
-    ASSERT(result.length() == resultLength.unsafeGet());
-
+    for (const Text* text = startText; text != onePastEndText; text = TextNodeTraversal::nextSibling(text))
+        result.append(text->data());
     return result.toString();
 }
 
