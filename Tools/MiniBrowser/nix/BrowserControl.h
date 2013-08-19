@@ -109,6 +109,8 @@ public:
 
 private:
     void init();
+    void sendKeyboardEventToNix(const XEvent&);
+    void createInputMethodAndInputContext();
     // XlibEventSource::Client.
     virtual void handleXEvent(const XEvent&);
     void updateClickCount(const XButtonPressedEvent&);
@@ -117,6 +119,8 @@ private:
 
     Display* m_display;
     XContext m_context;
+    XIM m_im;
+    XIC m_ic;
     XlibEventSource* m_eventSource;
 
     double m_lastClickTime;

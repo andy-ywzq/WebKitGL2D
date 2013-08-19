@@ -33,6 +33,8 @@ BrowserControl::BrowserControl(BrowserControlClient * client, int width, int hei
     , m_display(0)
     , m_context(0)
     , m_eventSource(0)
+    , m_im(0)
+    , m_ic(0)
     , m_lastClickTime(0.)
     , m_lastClickX(-1)
     , m_lastClickY(-1)
@@ -57,6 +59,8 @@ BrowserControl::BrowserControl(BrowserControlClient * client, int width, int hei
 
     // create a simple urlbar
     m_urlBar = new UrlBar(m_display, m_toolBar->window(), m_context, this, WKRectMake(urlBarX, toolBarElementY, width - urlBarRightOffset, urlBarHeight), url);
+
+    createInputMethodAndInputContext();
 }
 
 BrowserControl::~BrowserControl()
@@ -71,15 +75,43 @@ BrowserControl::~BrowserControl()
     delete m_browserWindow;
 
     XCloseDisplay(m_display);
+
+    if (m_ic)
+        XDestroyIC(m_ic);
+
+    if (m_im)
+        XCloseIM(m_im);
 }
 
 void BrowserControl::init()
 {
+    char* loc = setlocale(LC_ALL, "");
+    if (!loc)
+        fprintf(stderr, "Could not use the the default environment locale\n");
+
+    if (!XSupportsLocale())
+        fprintf(stderr, "Default locale \"%s\" is no supported\n", loc ? loc : "");
+
+    // When changing the locale being used we must call XSetLocaleModifiers (refer to manpage).
+    if (!XSetLocaleModifiers(""))
+        fprintf(stderr, "Could not set locale modifiers for locale \"%s\"\n", loc ? loc : "");
+
     m_display = XOpenDisplay(0);
     if (!m_display)
         fatalError("couldn't connect to X server\n");
 
     m_context = XUniqueContext();
+}
+
+void BrowserControl::createInputMethodAndInputContext()
+{
+    m_im = XOpenIM(m_display, 0, 0, 0);
+    if (!m_im)
+        fprintf(stderr, "Could not open input method\n");
+
+    m_ic = XCreateIC(m_im, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow, m_browserWindow->window(), 0);
+    if (!m_ic)
+        fprintf(stderr, "Could not open input context\n");
 }
 
 void BrowserControl::handleXEvent(const XEvent& event)
@@ -217,32 +249,46 @@ static NIXKeyEvent convertXKeyEventToNixKeyEvent(const XKeyEvent* event, const K
     return nixEvent;
 }
 
-static void XEventToNix(const XEvent& event, NIXKeyEvent* nixEvent)
+void BrowserControl::sendKeyboardEventToNix(const XEvent& event)
 {
+    if (XFilterEvent(const_cast<XEvent*>(&event), m_browserWindow->window()))
+        return;
+
+    NIXKeyEvent ev;
+    char buf[20];
     bool shouldUseUpperCase;
     const XKeyEvent* keyEvent = reinterpret_cast<const XKeyEvent*>(&event);
-    KeySym symbol = chooseSymbolForXKeyEvent(keyEvent, &shouldUseUpperCase);
-    *nixEvent = convertXKeyEventToNixKeyEvent(keyEvent, symbol, shouldUseUpperCase);
+    int count = 0;
+    KeySym keySym = 0;
+    Status status;
+
+    keySym = chooseSymbolForXKeyEvent(keyEvent, &shouldUseUpperCase);
+    ev = convertXKeyEventToNixKeyEvent(keyEvent, keySym, shouldUseUpperCase);
+
+    count = Xutf8LookupString(m_ic, const_cast<XKeyEvent*>(keyEvent), buf, 20, &keySym, &status);
+    if (count) {
+        buf[count] = '\0';
+        ev.text = buf;
+    }
+
+    if (ev.type == kNIXInputEventTypeKeyDown)
+        m_client->handleKeyPress(&ev);
+    else
+        m_client->handleKeyRelease(&ev);
 }
 
 void BrowserControl::handleKeyPressEvent(const XEvent& event)
 {
-    if (!m_urlBar->focused()) {
-        NIXKeyEvent ev;
-        XEventToNix(event, &ev);
-        m_client->handleKeyPress(&ev);
-    }
+    if (!m_urlBar->focused())
+        sendKeyboardEventToNix(event);
 }
 
 void BrowserControl::handleKeyReleaseEvent(const XEvent& event)
 {
     if (m_urlBar->focused())
         m_urlBar->handleKeyReleaseEvent(reinterpret_cast<const XKeyReleasedEvent&>(event));
-    else {
-        NIXKeyEvent ev;
-        XEventToNix(event, &ev);
-        m_client->handleKeyRelease(&ev);
-    }
+    else
+        sendKeyboardEventToNix(event);
 }
 
 void BrowserControl::updateClickCount(const XButtonPressedEvent& event)
