@@ -26,6 +26,7 @@
 #include "config.h"
 #include "RenderThemeNix.h"
 
+#include "HTMLMediaElement.h"
 #include "InputTypeNames.h"
 #include "PaintInfo.h"
 #include "PlatformContextCairo.h"
@@ -33,6 +34,7 @@
 #include "public/Platform.h"
 #include "public/Rect.h"
 #include "public/ThemeEngine.h"
+#include "UserAgentStyleSheets.h"
 #if ENABLE(PROGRESS_ELEMENT)
 #include "RenderProgress.h"
 #endif
@@ -436,6 +438,104 @@ bool RenderThemeNix::paintMeter(RenderObject* o, const PaintInfo& i, const IntRe
 
     return false;
 }
+#endif
+
+#if ENABLE(VIDEO)
+
+String RenderThemeNix::extraMediaControlsStyleSheet()
+{
+    return String(mediaControlsNixUserAgentStyleSheet, sizeof(mediaControlsNixUserAgentStyleSheet));
+}
+
+bool RenderThemeNix::paintMediaPlayButton(RenderObject* o, const PaintInfo& i, const IntRect& rect)
+{
+    auto state = toHTMLMediaElement(o->node()->shadowHost())->canPlay() ? Nix::ThemeEngine::StatePaused : Nix::ThemeEngine::StatePlaying;
+    themeEngine()->paintMediaPlayButton(webCanvas(i), state, rect);
+    return false;
+}
+
+bool RenderThemeNix::paintMediaOverlayPlayButton(RenderObject*, const PaintInfo&, const IntRect&)
+{
+    return false;
+}
+
+bool RenderThemeNix::paintMediaMuteButton(RenderObject* o, const PaintInfo& i, const IntRect& rect)
+{
+    auto state = toHTMLMediaElement(o->node()->shadowHost())->muted() ? Nix::ThemeEngine::StateMuted : Nix::ThemeEngine::StateNormal;
+    themeEngine()->paintMediaMuteButton(webCanvas(i), state, rect);
+    return false;
+}
+
+bool RenderThemeNix::paintMediaSeekBackButton(RenderObject*, const PaintInfo& i, const IntRect& rect)
+{
+    themeEngine()->paintMediaSeekBackButton(webCanvas(i), rect);
+    return false;
+}
+
+bool RenderThemeNix::paintMediaSeekForwardButton(RenderObject*, const PaintInfo& i, const IntRect& rect)
+{
+    themeEngine()->paintMediaSeekForwardButton(webCanvas(i), rect);
+    return false;
+}
+
+bool RenderThemeNix::paintMediaSliderTrack(RenderObject*, const PaintInfo&, const IntRect&)
+{
+    return false;
+}
+
+bool RenderThemeNix::paintMediaSliderThumb(RenderObject*, const PaintInfo& i, const IntRect& rect)
+{
+    themeEngine()->paintMediaSliderThumb(webCanvas(i), rect);
+    return false;
+}
+
+bool RenderThemeNix::paintMediaVolumeSliderContainer(RenderObject*, const PaintInfo&, const IntRect&)
+{
+    return false;
+}
+
+bool RenderThemeNix::paintMediaVolumeSliderTrack(RenderObject*, const PaintInfo&, const IntRect&)
+{
+    return false;
+}
+
+bool RenderThemeNix::paintMediaVolumeSliderThumb(RenderObject*, const PaintInfo& i, const IntRect& rect)
+{
+    themeEngine()->paintMediaVolumeSliderThumb(webCanvas(i), rect);
+    return false;
+}
+
+bool RenderThemeNix::paintMediaRewindButton(RenderObject*, const PaintInfo& i, const IntRect& rect)
+{
+    themeEngine()->paintMediaRewindButton(webCanvas(i), rect);
+    return false;
+}
+
+bool RenderThemeNix::paintMediaReturnToRealtimeButton(RenderObject*, const PaintInfo&, const IntRect&)
+{
+    return false;
+}
+
+bool RenderThemeNix::paintMediaToggleClosedCaptionsButton(RenderObject*, const PaintInfo&, const IntRect&)
+{
+    return false;
+}
+
+bool RenderThemeNix::paintMediaControlsBackground(RenderObject*, const PaintInfo&, const IntRect&)
+{
+    return false;
+}
+
+bool RenderThemeNix::paintMediaCurrentTime(RenderObject*, const PaintInfo&, const IntRect&)
+{
+    return false;
+}
+
+bool RenderThemeNix::paintMediaTimeRemaining(RenderObject*, const PaintInfo&, const IntRect&)
+{
+    return false;
+}
+
 #endif
 
 }

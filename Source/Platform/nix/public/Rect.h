@@ -14,6 +14,14 @@ public:
     int width;
     int height;
 
+    Rect(int x, int y, int width, int height)
+        : x(x)
+        , y(y)
+        , width(width)
+        , height(height)
+    {
+    }
+
     Rect(const Rect& r)
         : x(r.x)
         , y(r.y)

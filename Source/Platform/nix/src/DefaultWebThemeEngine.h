@@ -44,6 +44,22 @@ public:
     virtual void paintMeter(Canvas*, State, const Rect&, const MeterExtraParams&) const;
     virtual void paintSliderTrack(Canvas*, State, const Rect&) const;
     virtual void paintSliderThumb(Canvas*, State, const Rect&) const;
+
+    // Media Player
+    // FIXME Implement these functions
+    virtual void paintMediaPlayButton(Canvas*, State, const Rect&) const;
+    virtual void paintMediaOverlayPlayButton(Canvas*, State, const Rect&) const;
+    virtual void paintMediaMuteButton(Canvas*, State, const Rect&) const;
+    virtual void paintMediaSeekBackButton(Canvas*, const Rect&) const;
+    virtual void paintMediaSeekForwardButton(Canvas*, const Rect&) const;
+    virtual void paintMediaSliderThumb(Canvas*, const Rect&) const;
+    virtual void paintMediaVolumeSliderContainer(Canvas*, State, const Rect&) const;
+    virtual void paintMediaVolumeSliderThumb(Canvas*, const Rect&) const;
+    virtual void paintMediaRewindButton(Canvas*, const Rect&) const;
+    virtual void paintMediaReturnToRealtimeButton(Canvas*, State, const Rect&) const;
+    virtual void paintMediaToggleClosedCaptionsButton(Canvas*, State, const Rect&) const;
+    virtual void paintMediaTimeRemaining(Canvas*, State, const Rect&) const;
+
 };
 
 } // namespace Nix
