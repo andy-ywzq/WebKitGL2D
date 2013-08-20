@@ -37,6 +37,7 @@ set(bundle_harness_SOURCES
     ${TESTWEBKITAPI_DIR}/nix/InjectedBundleControllerNix.cpp
     ${TESTWEBKITAPI_DIR}/nix/PlatformUtilitiesNix.cpp
     ${TESTWEBKITAPI_DIR}/nix/MainLoop.cpp
+    ${TESTWEBKITAPI_DIR}/Tests/nix/WebAudio_Bundle.cpp
     ${TESTWEBKITAPI_DIR}/Tests/nix/WebThemeEngine_Bundle.cpp
     ${TESTWEBKITAPI_DIR}/Tests/WebKit2/DidAssociateFormControls_Bundle.cpp
     ${TESTWEBKITAPI_DIR}/Tests/WebKit2/MouseMoveAfterCrash_Bundle.cpp
@@ -137,6 +138,7 @@ set(test_webkit2_api_BINARIES
     CoordinatedGraphics/WKViewUserViewportToContents
     ../nix/OverflowScroll
     ../nix/SuspendResume
+    ../nix/WebAudio
     ../nix/WebThemeEngine
     ../nix/WebViewFindZoomableArea
     ../nix/WebViewPaintToCurrentGLContext
