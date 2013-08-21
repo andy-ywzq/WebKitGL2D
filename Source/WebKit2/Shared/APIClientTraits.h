@@ -29,6 +29,7 @@
 #include "WKBundle.h"
 #include "WKBundlePage.h"
 #include "WKContext.h"
+#include "WKGeolocationManager.h"
 #include "WKIconDatabase.h"
 #include "WKPage.h"
 
@@ -84,6 +85,10 @@ template<> struct APIClientTraits<WKContextInjectedBundleClient> {
 };
 
 template<> struct APIClientTraits<WKIconDatabaseClient> {
+    static const size_t interfaceSizesByVersion[2];
+};
+
+template<> struct APIClientTraits<WKGeolocationProvider> {
     static const size_t interfaceSizesByVersion[2];
 };
 

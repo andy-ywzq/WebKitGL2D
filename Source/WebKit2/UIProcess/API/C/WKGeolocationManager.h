@@ -35,16 +35,22 @@ extern "C" {
 // Provider.
 typedef void (*WKGeolocationProviderStartUpdatingCallback)(WKGeolocationManagerRef geolocationManager, const void* clientInfo);
 typedef void (*WKGeolocationProviderStopUpdatingCallback)(WKGeolocationManagerRef geolocationManager, const void* clientInfo);
+typedef void (*WKGeolocationProviderDidChangeEnableHighAccuracy)(WKGeolocationManagerRef geolocationManager, bool, const void* clientInfo);
 
 struct WKGeolocationProvider {
     int                                                                 version;
     const void *                                                        clientInfo;
+
+    // Version 0
     WKGeolocationProviderStartUpdatingCallback                          startUpdating;
     WKGeolocationProviderStopUpdatingCallback                           stopUpdating;
+
+    // Version 1
+    WKGeolocationProviderDidChangeEnableHighAccuracy                    didChangeEnableHighAccuracy;
 };
 typedef struct WKGeolocationProvider WKGeolocationProvider;
 
-enum { kWKGeolocationProviderCurrentVersion = 0 };
+enum { kWKGeolocationProviderCurrentVersion = 1 };
 
 WK_EXPORT WKTypeID WKGeolocationManagerGetTypeID();
 

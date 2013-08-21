@@ -66,6 +66,7 @@ private:
 
     void startUpdating();
     void stopUpdating();
+    void didChangeEnableHighAccuracy(bool);
 
     bool m_isUpdating;
 

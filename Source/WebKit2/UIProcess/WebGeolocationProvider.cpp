@@ -47,4 +47,12 @@ void WebGeolocationProvider::stopUpdating(WebGeolocationManagerProxy* geolocatio
     m_client.stopUpdating(toAPI(geolocationManager), m_client.clientInfo);
 }
 
+void WebGeolocationProvider::didChangeEnableHighAccuracy(WebGeolocationManagerProxy* geolocationManager, bool value)
+{
+    if (!m_client.didChangeEnableHighAccuracy || m_client.version < 1)
+        return;
+
+    m_client.didChangeEnableHighAccuracy(toAPI(geolocationManager), value, m_client.clientInfo);
+}
+
 } // namespace WebKit

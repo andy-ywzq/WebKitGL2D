@@ -23,4 +23,5 @@
 messages -> WebGeolocationManagerProxy {
     StartUpdating();
     StopUpdating();
+    DidChangeEnableHighAccuracy(bool value);
 }

@@ -73,6 +73,11 @@ void WebGeolocationManager::unregisterWebPage(WebPage* page)
         m_process->parentProcessConnection()->send(Messages::WebGeolocationManagerProxy::StopUpdating(), 0);
 }
 
+void WebGeolocationManager::didChangeEnableHighAccuracy(bool value)
+{
+    m_process->parentProcessConnection()->send(Messages::WebGeolocationManagerProxy::DidChangeEnableHighAccuracy(value), 0);
+}
+
 void WebGeolocationManager::didChangePosition(const WebGeolocationPosition::Data& data)
 {
 #if ENABLE(GEOLOCATION)
