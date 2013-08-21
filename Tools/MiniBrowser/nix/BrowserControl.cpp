@@ -74,13 +74,14 @@ BrowserControl::~BrowserControl()
     delete m_toolBar;
     delete m_browserWindow;
 
-    XCloseDisplay(m_display);
-
     if (m_ic)
         XDestroyIC(m_ic);
 
     if (m_im)
         XCloseIM(m_im);
+
+    if (m_display)
+        XCloseDisplay(m_display);
 }
 
 void BrowserControl::init()
