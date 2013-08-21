@@ -71,11 +71,6 @@ bool JSTestActiveDOMObjectConstructor::getOwnPropertySlot(JSObject* object, Exec
     return getStaticValueSlot<JSTestActiveDOMObjectConstructor, JSDOMWrapper>(exec, &JSTestActiveDOMObjectConstructorTable, jsCast<JSTestActiveDOMObjectConstructor*>(object), propertyName, slot);
 }
 
-bool JSTestActiveDOMObjectConstructor::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    return getStaticValueDescriptor<JSTestActiveDOMObjectConstructor, JSDOMWrapper>(exec, &JSTestActiveDOMObjectConstructorTable, jsCast<JSTestActiveDOMObjectConstructor*>(object), propertyName, descriptor);
-}
-
 /* Hash table for prototype */
 
 static const HashTableValue JSTestActiveDOMObjectPrototypeTableValues[] =
@@ -97,12 +92,6 @@ bool JSTestActiveDOMObjectPrototype::getOwnPropertySlot(JSObject* object, ExecSt
 {
     JSTestActiveDOMObjectPrototype* thisObject = jsCast<JSTestActiveDOMObjectPrototype*>(object);
     return getStaticFunctionSlot<JSObject>(exec, &JSTestActiveDOMObjectPrototypeTable, thisObject, propertyName, slot);
-}
-
-bool JSTestActiveDOMObjectPrototype::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    JSTestActiveDOMObjectPrototype* thisObject = jsCast<JSTestActiveDOMObjectPrototype*>(object);
-    return getStaticFunctionDescriptor<JSObject>(exec, &JSTestActiveDOMObjectPrototypeTable, thisObject, propertyName, descriptor);
 }
 
 const ClassInfo JSTestActiveDOMObject::s_info = { "TestActiveDOMObject", &Base::s_info, &JSTestActiveDOMObjectTable, 0 , CREATE_METHOD_TABLE(JSTestActiveDOMObject) };
@@ -140,15 +129,6 @@ bool JSTestActiveDOMObject::getOwnPropertySlot(JSObject* object, ExecState* exec
     JSTestActiveDOMObject* thisObject = jsCast<JSTestActiveDOMObject*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     return getStaticValueSlot<JSTestActiveDOMObject, Base>(exec, &JSTestActiveDOMObjectTable, thisObject, propertyName, slot);
-}
-
-bool JSTestActiveDOMObject::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    JSTestActiveDOMObject* thisObject = jsCast<JSTestActiveDOMObject*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    if (!shouldAllowAccessToFrame(exec, thisObject->impl()->frame()))
-        return false;
-    return getStaticValueDescriptor<JSTestActiveDOMObject, Base>(exec, &JSTestActiveDOMObjectTable, thisObject, propertyName, descriptor);
 }
 
 JSValue jsTestActiveDOMObjectExcitingAttr(ExecState* exec, JSValue slotBase, PropertyName)

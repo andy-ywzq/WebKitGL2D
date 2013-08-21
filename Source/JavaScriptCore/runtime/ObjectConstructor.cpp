@@ -99,11 +99,6 @@ bool ObjectConstructor::getOwnPropertySlot(JSObject* object, ExecState* exec, Pr
     return getStaticFunctionSlot<JSObject>(exec, ExecState::objectConstructorTable(exec), jsCast<ObjectConstructor*>(object), propertyName, slot);
 }
 
-bool ObjectConstructor::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    return getStaticFunctionDescriptor<JSObject>(exec, ExecState::objectConstructorTable(exec), jsCast<ObjectConstructor*>(object), propertyName, descriptor);
-}
-
 static ALWAYS_INLINE JSObject* constructObject(ExecState* exec)
 {
     JSGlobalObject* globalObject = exec->callee()->globalObject();
@@ -157,7 +152,7 @@ EncodedJSValue JSC_HOST_CALL objectConstructorGetOwnPropertyDescriptor(ExecState
         return JSValue::encode(jsNull());
     JSObject* object = asObject(exec->argument(0));
     PropertyDescriptor descriptor;
-    if (!object->methodTable()->getOwnPropertyDescriptor(object, exec, Identifier(exec, propertyName), descriptor))
+    if (!object->getOwnPropertyDescriptor(exec, Identifier(exec, propertyName), descriptor))
         return JSValue::encode(jsUndefined());
     if (exec->hadException())
         return JSValue::encode(jsUndefined());
@@ -382,7 +377,7 @@ EncodedJSValue JSC_HOST_CALL objectConstructorSeal(ExecState* exec)
     for (PropertyNameArray::const_iterator iter = properties.begin(); iter != end; ++iter) {
         // a. Let desc be the result of calling the [[GetOwnProperty]] internal method of O with P.
         PropertyDescriptor desc;
-        if (!object->methodTable()->getOwnPropertyDescriptor(object, exec, *iter, desc))
+        if (!object->getOwnPropertyDescriptor(exec, *iter, desc))
             continue;
         // b. If desc.[[Configurable]] is true, set desc.[[Configurable]] to false.
         desc.setConfigurable(false);
@@ -419,7 +414,7 @@ EncodedJSValue JSC_HOST_CALL objectConstructorFreeze(ExecState* exec)
     for (PropertyNameArray::const_iterator iter = properties.begin(); iter != end; ++iter) {
         // a. Let desc be the result of calling the [[GetOwnProperty]] internal method of O with P.
         PropertyDescriptor desc;
-        if (!object->methodTable()->getOwnPropertyDescriptor(object, exec, *iter, desc))
+        if (!object->getOwnPropertyDescriptor(exec, *iter, desc))
             continue;
         // b. If IsDataDescriptor(desc) is true, then
         // i. If desc.[[Writable]] is true, set desc.[[Writable]] to false.
@@ -467,7 +462,7 @@ EncodedJSValue JSC_HOST_CALL objectConstructorIsSealed(ExecState* exec)
     for (PropertyNameArray::const_iterator iter = properties.begin(); iter != end; ++iter) {
         // a. Let desc be the result of calling the [[GetOwnProperty]] internal method of O with P.
         PropertyDescriptor desc;
-        if (!object->methodTable()->getOwnPropertyDescriptor(object, exec, *iter, desc))
+        if (!object->getOwnPropertyDescriptor(exec, *iter, desc))
             continue;
         // b. If desc.[[Configurable]] is true, then return false.
         if (desc.configurable())
@@ -497,7 +492,7 @@ EncodedJSValue JSC_HOST_CALL objectConstructorIsFrozen(ExecState* exec)
     for (PropertyNameArray::const_iterator iter = properties.begin(); iter != end; ++iter) {
         // a. Let desc be the result of calling the [[GetOwnProperty]] internal method of O with P.
         PropertyDescriptor desc;
-        if (!object->methodTable()->getOwnPropertyDescriptor(object, exec, *iter, desc))
+        if (!object->getOwnPropertyDescriptor(exec, *iter, desc))
             continue;
         // b. If IsDataDescriptor(desc) is true then
         // i. If desc.[[Writable]] is true, return false. c. If desc.[[Configurable]] is true, then return false.

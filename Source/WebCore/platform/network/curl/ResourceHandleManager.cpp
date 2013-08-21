@@ -44,7 +44,9 @@
 #include "ResourceError.h"
 #include "ResourceHandle.h"
 #include "ResourceHandleInternal.h"
+#if OS(WINDOWS)
 #include "WebCoreBundleWin.h"
+#endif
 
 #include <errno.h>
 #include <stdio.h>

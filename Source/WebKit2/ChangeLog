@@ -1,3 +1,155 @@
+2013-08-20  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120093
+        Remove getOwnPropertyDescriptor trap
+
+        Reviewed by Geoff Garen.
+
+        All implementations of this method are now called via the method table, and equivalent in behaviour.
+        Remove all duplicate implementations (and the method table trap), and add a single member function implementation on JSObject.
+
+        * WebProcess/Plugins/Netscape/JSNPObject.cpp:
+        * WebProcess/Plugins/Netscape/JSNPObject.h:
+            - remove getOwnPropertyDescriptor
+
+2013-08-20  Pratik Solanki  <psolanki@apple.com>
+
+        <https://webkit.org/b/120029> Document::markers() should return a reference
+
+        Reviewed by Andreas Kling.
+
+        Document::m_markers is never NULL so return a reference from Document::markers(). Also mark
+        m_markers as const and initialize it in member initialization.
+
+        * WebProcess/WebPage/FindController.cpp:
+        (WebKit::FindController::rectsForTextMatches):
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::unmarkAllMisspellings):
+        (WebKit::WebPage::unmarkAllBadGrammar):
+
+2013-08-20  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120053
+        Remove custom getOwnPropertyDescriptor for JSNPObject
+
+        Reviewed by Oliver Hunt.
+
+        Think this is the last one!
+
+        * WebProcess/Plugins/Netscape/JSNPObject.cpp:
+            - Remove custom getOwnPropertyDescriptor implementation.
+
+2013-08-20  Anton Obzhirov  <a.obzhirov@samsung.com>
+
+        <https://webkit.org/b/119487> [Gtk] Cancel authentication on load failed
+
+        Reviewed by Martin Robinson.
+
+        Added callback to handle load-failed event in default authentication dialog.
+        Authentication request gets cancelled and the dialog widget gets destroyed.
+
+        * UIProcess/API/gtk/WebKitAuthenticationDialog.cpp:
+        (pageLoadFailed):
+        (webkitAuthenticationDialogInitialize):
+        (webkitAuthenticationDialogDispose):
+        (webkit_authentication_dialog_class_init):
+        (webkitAuthenticationDialogNew):
+        * UIProcess/API/gtk/WebKitAuthenticationDialog.h:
+        * UIProcess/API/gtk/WebKitWebView.cpp:
+        (webkitWebViewAuthenticate):
+
+2013-08-20  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt][WK2] Doesn't build without Plugin-process
+        https://bugs.webkit.org/show_bug.cgi?id=120060
+
+        Reviewed by Jocelyn Turcotte.
+
+        Disable netscape plugin api in WebKit2 when the plugin architecture is unsupported for WebKit2.
+
+        * Target.pri:
+
+2013-08-19  Ryosuke Niwa  <rniwa@webkit.org>
+
+        <https://webkit.org/b/120049> Delete code for Snow Leopard
+
+        Reviewed by Benjamin Poulain.
+
+        * NetworkProcess/mac/NetworkProcessMac.mm:
+        (WebKit::overrideSystemProxies):
+        (WebKit::NetworkProcess::platformInitializeNetworkProcess):
+        * WebKit2Prefix.h:
+
+2013-08-19  Beth Dakin  <bdakin@apple.com>
+
+        <https://webkit.org/b/120027> AXObjectCache's 
+        accessibilityEnhancedUserInterfaceEnabled should be initialized on process 
+        creation
+
+        Reviewed by Sam Weinig.
+
+        Right now we only call AXObjectCache::setEnhancedAccessibility() when AppKit sends 
+        us a notification indicating that the value has changed. We should not have to 
+        rely on that to properly initialize this value. It should be done with the 
+        WebProcessCreationParamters. 
+
+        * Shared/WebProcessCreationParameters.cpp:
+        (WebKit::WebProcessCreationParameters::encode):
+        (WebKit::WebProcessCreationParameters::decode):
+        * Shared/WebProcessCreationParameters.h:
+        * UIProcess/mac/WebContextMac.mm:
+        (WebKit::WebContext::platformInitializeWebProcess):
+        * WebProcess/mac/WebProcessMac.mm:
+        (WebKit::WebProcess::platformInitializeWebProcess):
+
+2013-08-19  Pratik Solanki  <psolanki@apple.com>
+
+        <https://webkit.org/b/119918> Frame::selection() should return a reference
+
+        Reviewed by Darin Adler.
+
+        m_selection is never NULL so return a reference from Frame::selection(). Also removed some
+        unnecessary null checks and assert diff ts exposed as a result.
+
+        * WebProcess/WebCoreSupport/WebEditorClient.cpp:
+        (WebKit::WebEditorClient::updateGlobalSelection):
+        * WebProcess/WebCoreSupport/gtk/WebEditorClientGtk.cpp:
+        (WebKit::collapseSelection):
+        (WebKit::WebEditorClient::updateGlobalSelection):
+        * WebProcess/WebCoreSupport/mac/WebContextMenuClientMac.mm:
+        (WebKit::WebContextMenuClient::lookUpInDictionary):
+        (WebKit::WebContextMenuClient::searchWithSpotlight):
+        * WebProcess/WebPage/FindController.cpp:
+        (WebKit::frameWithSelection):
+        (WebKit::FindController::updateFindUIAfterPageScroll):
+        (WebKit::FindController::getFindIndicatorBitmapAndRect):
+        (WebKit::FindController::getImageForFindMatch):
+        (WebKit::FindController::selectFindMatch):
+        (WebKit::FindController::updateFindIndicator):
+        (WebKit::FindController::drawRect):
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::editorState):
+        (WebKit::WebPage::scaledSnapshotWithOptions):
+        (WebKit::WebPage::centerSelectionInVisibleArea):
+        (WebKit::frameWithSelection):
+        (WebKit::WebPage::clearSelection):
+        (WebKit::WebPage::confirmComposition):
+        (WebKit::WebPage::setComposition):
+        (WebKit::WebPage::currentSelectionAsRange):
+        * WebProcess/WebPage/mac/WebPageMac.mm:
+        (WebKit::WebPage::setComposition):
+        (WebKit::WebPage::insertText):
+        (WebKit::WebPage::insertDictatedText):
+        (WebKit::WebPage::getMarkedRange):
+        (WebKit::WebPage::getSelectedRange):
+        (WebKit::WebPage::getAttributedSubstringFromRange):
+        (WebKit::WebPage::characterIndexForPoint):
+        (WebKit::convertToRange):
+        (WebKit::WebPage::performDictionaryLookupAtLocation):
+        (WebKit::WebPage::readSelectionFromPasteboard):
+        (WebKit::WebPage::getStringSelectionForPasteboard):
+        (WebKit::WebPage::getDataSelectionForPasteboard):
+
 2013-08-18  Darin Adler  <darin@apple.com>
 
         <https://webkit.org/b/119989> Make use of Node::ownerDocument a compile time error

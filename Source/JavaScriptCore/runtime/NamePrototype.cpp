@@ -63,11 +63,6 @@ bool NamePrototype::getOwnPropertySlot(JSObject* object, ExecState* exec, Proper
     return getStaticFunctionSlot<Base>(exec, ExecState::privateNamePrototypeTable(exec), jsCast<NamePrototype*>(object), propertyName, slot);
 }
 
-bool NamePrototype::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    return getStaticFunctionDescriptor<Base>(exec, ExecState::privateNamePrototypeTable(exec), jsCast<NamePrototype*>(object), propertyName, descriptor);
-}
-
 // ------------------------------ Functions ---------------------------
 
 EncodedJSValue JSC_HOST_CALL privateNameProtoFuncToString(ExecState* exec)

@@ -1417,7 +1417,7 @@ const AtomicString& AccessibilityRenderObject::accessKey() const
 
 VisibleSelection AccessibilityRenderObject::selection() const
 {
-    return m_renderer->frame()->selection()->selection();
+    return m_renderer->frame()->selection().selection();
 }
 
 PlainTextRange AccessibilityRenderObject::selectedTextRange() const
@@ -1454,7 +1454,7 @@ void AccessibilityRenderObject::setSelectedTextRange(const PlainTextRange& range
     if (!frame)
         return;
     Node* node = m_renderer->node();
-    frame->selection()->setSelection(VisibleSelection(Position(node, range.start, Position::PositionIsOffsetInAnchor),
+    frame->selection().setSelection(VisibleSelection(Position(node, range.start, Position::PositionIsOffsetInAnchor),
         Position(node, range.start + range.length, Position::PositionIsOffsetInAnchor), DOWNSTREAM));
 }
 
@@ -1585,7 +1585,7 @@ bool AccessibilityRenderObject::isFocused() const
     // A web area is represented by the Document node in the DOM tree, which isn't focusable.
     // Check instead if the frame's selection controller is focused
     if (focusedElement == m_renderer->node()
-        || (roleValue() == WebAreaRole && document->frame()->selection()->isFocusedAndActive()))
+        || (roleValue() == WebAreaRole && document->frame()->selection().isFocusedAndActive()))
         return true;
     
     return false;
@@ -1952,7 +1952,7 @@ IntRect AccessibilityRenderObject::boundsForVisiblePositionRange(const VisiblePo
             ourrect = boundingBox;
     }
     
-#if PLATFORM(MAC)
+#if PLATFORM(MAC) && !PLATFORM(IOS)
     return m_renderer->document()->view()->contentsToScreen(pixelSnappedIntRect(ourrect));
 #else
     return pixelSnappedIntRect(ourrect);
@@ -1966,10 +1966,10 @@ void AccessibilityRenderObject::setSelectedVisiblePositionRange(const VisiblePos
     
     // make selection and tell the document to use it. if it's zero length, then move to that position
     if (range.start == range.end)
-        m_renderer->frame()->selection()->moveTo(range.start, UserTriggered);
+        m_renderer->frame()->selection().moveTo(range.start, UserTriggered);
     else {
         VisibleSelection newSelection = VisibleSelection(range.start, range.end);
-        m_renderer->frame()->selection()->setSelection(newSelection);
+        m_renderer->frame()->selection().setSelection(newSelection);
     }    
 }
 
@@ -2335,7 +2335,7 @@ void AccessibilityRenderObject::handleActiveDescendantChanged()
     if (!element)
         return;
     Document* doc = renderer()->document();
-    if (!doc->frame()->selection()->isFocusedAndActive() || doc->focusedElement() != element)
+    if (!doc->frame()->selection().isFocusedAndActive() || doc->focusedElement() != element)
         return; 
     AccessibilityRenderObject* activedescendant = static_cast<AccessibilityRenderObject*>(activeDescendant());
     
@@ -3143,6 +3143,7 @@ void AccessibilityRenderObject::tabChildren(AccessibilityChildrenVector& result)
     
 const String& AccessibilityRenderObject::actionVerb() const
 {
+#if !PLATFORM(IOS)
     // FIXME: Need to add verbs for select elements.
     DEFINE_STATIC_LOCAL(const String, buttonAction, (AXButtonActionVerb()));
     DEFINE_STATIC_LOCAL(const String, textFieldAction, (AXTextFieldActionVerb()));
@@ -3150,8 +3151,7 @@ const String& AccessibilityRenderObject::actionVerb() const
     DEFINE_STATIC_LOCAL(const String, checkedCheckBoxAction, (AXCheckedCheckBoxActionVerb()));
     DEFINE_STATIC_LOCAL(const String, uncheckedCheckBoxAction, (AXUncheckedCheckBoxActionVerb()));
     DEFINE_STATIC_LOCAL(const String, linkAction, (AXLinkActionVerb()));
-    DEFINE_STATIC_LOCAL(const String, noAction, ());
-    
+
     switch (roleValue()) {
     case ButtonRole:
     case ToggleButtonRole:
@@ -3167,8 +3167,11 @@ const String& AccessibilityRenderObject::actionVerb() const
     case WebCoreLinkRole:
         return linkAction;
     default:
-        return noAction;
+        return nullAtom;
     }
+#else
+    return nullAtom;
+#endif
 }
     
 void AccessibilityRenderObject::setAccessibleName(const AtomicString& name)

@@ -77,11 +77,6 @@ bool JSTestSerializedScriptValueInterfaceConstructor::getOwnPropertySlot(JSObjec
     return getStaticValueSlot<JSTestSerializedScriptValueInterfaceConstructor, JSDOMWrapper>(exec, &JSTestSerializedScriptValueInterfaceConstructorTable, jsCast<JSTestSerializedScriptValueInterfaceConstructor*>(object), propertyName, slot);
 }
 
-bool JSTestSerializedScriptValueInterfaceConstructor::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    return getStaticValueDescriptor<JSTestSerializedScriptValueInterfaceConstructor, JSDOMWrapper>(exec, &JSTestSerializedScriptValueInterfaceConstructorTable, jsCast<JSTestSerializedScriptValueInterfaceConstructor*>(object), propertyName, descriptor);
-}
-
 /* Hash table for prototype */
 
 static const HashTableValue JSTestSerializedScriptValueInterfacePrototypeTableValues[] =
@@ -132,13 +127,6 @@ bool JSTestSerializedScriptValueInterface::getOwnPropertySlot(JSObject* object, 
     JSTestSerializedScriptValueInterface* thisObject = jsCast<JSTestSerializedScriptValueInterface*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     return getStaticValueSlot<JSTestSerializedScriptValueInterface, Base>(exec, &JSTestSerializedScriptValueInterfaceTable, thisObject, propertyName, slot);
-}
-
-bool JSTestSerializedScriptValueInterface::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    JSTestSerializedScriptValueInterface* thisObject = jsCast<JSTestSerializedScriptValueInterface*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueDescriptor<JSTestSerializedScriptValueInterface, Base>(exec, &JSTestSerializedScriptValueInterfaceTable, thisObject, propertyName, descriptor);
 }
 
 JSValue jsTestSerializedScriptValueInterfaceValue(ExecState* exec, JSValue slotBase, PropertyName)

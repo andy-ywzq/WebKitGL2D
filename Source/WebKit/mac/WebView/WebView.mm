@@ -660,14 +660,6 @@ static bool shouldRestrictWindowFocus()
     [types release];
 }
 
-#if __MAC_OS_X_VERSION_MIN_REQUIRED == 1060
-// This method should be removed once we no longer want to keep Safari 5.0.x working with nightly builds.
-- (BOOL)_usesDocumentViews
-{
-    return true;
-}
-#endif
-
 static bool needsOutlookQuirksScript()
 {
     static bool isOutlookNeedingQuirksScript = !WebKitLinkedOnOrAfter(WEBKIT_FIRST_VERSION_WITH_HTML5_PARSER)
@@ -5446,7 +5438,7 @@ static NSAppleEventDescriptor* aeDescFromJSValue(ExecState* exec, JSC::JSValue j
         return;
 
     if (range == nil)
-        coreFrame->selection()->clear();
+        coreFrame->selection().clear();
     else {
         // Derive the frame to use from the range passed in.
         // Using _selectedOrMainFrame could give us a different document than
@@ -5455,7 +5447,7 @@ static NSAppleEventDescriptor* aeDescFromJSValue(ExecState* exec, JSC::JSValue j
         if (!coreFrame)
             return;
 
-        coreFrame->selection()->setSelectedRange(core(range), core(selectionAffinity), true);
+        coreFrame->selection().setSelectedRange(core(range), core(selectionAffinity), true);
     }
 }
 
@@ -5464,7 +5456,7 @@ static NSAppleEventDescriptor* aeDescFromJSValue(ExecState* exec, JSC::JSValue j
     Frame* coreFrame = core([self _selectedOrMainFrame]);
     if (!coreFrame)
         return nil;
-    return kit(coreFrame->selection()->toNormalizedRange().get());
+    return kit(coreFrame->selection().toNormalizedRange().get());
 }
 
 - (NSSelectionAffinity)selectionAffinity
@@ -5472,7 +5464,7 @@ static NSAppleEventDescriptor* aeDescFromJSValue(ExecState* exec, JSC::JSValue j
     Frame* coreFrame = core([self _selectedOrMainFrame]);
     if (!coreFrame)
         return NSSelectionAffinityDownstream;
-    return kit(coreFrame->selection()->affinity());
+    return kit(coreFrame->selection().affinity());
 }
 
 - (void)setEditable:(BOOL)flag
@@ -5487,7 +5479,7 @@ static NSAppleEventDescriptor* aeDescFromJSValue(ExecState* exec, JSC::JSValue j
                 mainFrame->editor().applyEditingStyleToBodyElement();
                 // If the WebView is made editable and the selection is empty, set it to something.
                 if (![self selectedDOMRange])
-                    mainFrame->selection()->setSelectionFromNone();
+                    mainFrame->selection().setSelectionFromNone();
             }
         }
     }
@@ -5854,7 +5846,7 @@ FOR_EACH_RESPONDER_SELECTOR(FORWARD)
     Frame* coreFrame = core([self _selectedOrMainFrame]);
     if (!coreFrame)
         return NO;
-    return coreFrame->selection()->isCaret();
+    return coreFrame->selection().isCaret();
 }
 
 - (BOOL)_selectionIsAll
@@ -5862,7 +5854,7 @@ FOR_EACH_RESPONDER_SELECTOR(FORWARD)
     Frame* coreFrame = core([self _selectedOrMainFrame]);
     if (!coreFrame)
         return NO;
-    return coreFrame->selection()->isAll(CanCrossEditingBoundary);
+    return coreFrame->selection().isAll(CanCrossEditingBoundary);
 }
 
 - (void)_simplifyMarkup:(DOMNode *)startNode endNode:(DOMNode *)endNode
@@ -5894,19 +5886,11 @@ static WebFrameView *containingFrameView(NSView *view)
 
     NSWindow *window = [self window];
     NSWindow *hostWindow = [self hostWindow];
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
     if (window)
         return [window backingScaleFactor];
     if (hostWindow)
         return [hostWindow backingScaleFactor];
     return [[NSScreen mainScreen] backingScaleFactor];
-#else
-    if (window)
-        return [window userSpaceScaleFactor];
-    if (hostWindow)
-        return [hostWindow userSpaceScaleFactor];
-    return [[NSScreen mainScreen] userSpaceScaleFactor];
-#endif
 }
 
 static inline uint64_t roundUpToPowerOf2(uint64_t num)

@@ -75,11 +75,6 @@ bool JSTestNodeConstructor::getOwnPropertySlot(JSObject* object, ExecState* exec
     return getStaticValueSlot<JSTestNodeConstructor, JSDOMWrapper>(exec, &JSTestNodeConstructorTable, jsCast<JSTestNodeConstructor*>(object), propertyName, slot);
 }
 
-bool JSTestNodeConstructor::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    return getStaticValueDescriptor<JSTestNodeConstructor, JSDOMWrapper>(exec, &JSTestNodeConstructorTable, jsCast<JSTestNodeConstructor*>(object), propertyName, descriptor);
-}
-
 ConstructType JSTestNodeConstructor::getConstructData(JSCell*, ConstructData& constructData)
 {
     constructData.native.function = constructJSTestNode;
@@ -124,13 +119,6 @@ bool JSTestNode::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyN
     JSTestNode* thisObject = jsCast<JSTestNode*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     return getStaticValueSlot<JSTestNode, Base>(exec, &JSTestNodeTable, thisObject, propertyName, slot);
-}
-
-bool JSTestNode::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    JSTestNode* thisObject = jsCast<JSTestNode*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueDescriptor<JSTestNode, Base>(exec, &JSTestNodeTable, thisObject, propertyName, descriptor);
 }
 
 JSValue jsTestNodeConstructor(ExecState* exec, JSValue slotBase, PropertyName)

@@ -1,3 +1,137 @@
+2013-08-20  Pratik Solanki  <psolanki@apple.com>
+
+        <https://webkit.org/b/120029> Document::markers() should return a reference
+
+        Reviewed by Andreas Kling.
+
+        Document::m_markers is never NULL so return a reference from Document::markers(). Also mark
+        m_markers as const and initialize it in member initialization.
+
+        * WebView/WebFrame.mm:
+        (-[WebFrame _unmarkAllBadGrammar]):
+        (-[WebFrame _unmarkAllMisspellings]):
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView unmarkAllTextMatches]):
+        (-[WebHTMLView rectsForTextMatches]):
+
+2013-08-19  Ryosuke Niwa  <rniwa@webkit.org>
+
+        <https://webkit.org/b/120049> Delete code for Snow Leopard
+
+        Reviewed by Benjamin Poulain.
+
+        * DefaultDelegates/WebDefaultContextMenuDelegate.mm:
+        (-[WebDefaultUIDelegate menuItemWithTag:target:representedObject:]):
+        (-[WebDefaultUIDelegate webView:contextMenuItemsForElement:defaultMenuItems:]):
+        * Misc/WebNSControlExtras.m:
+        (-[NSControl sizeToFitAndAdjustWindowHeight]):
+        * Misc/WebNSFileManagerExtras.mm:
+        * WebCoreSupport/WebEditorClient.mm:
+        (WebEditorClient::shouldEraseMarkersAfterChangeSelection):
+        (WebEditorClient::getGuessesForWord):
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        (WebFrameLoaderClient::dispatchDidLayout):
+        (WebFrameLoaderClient::provisionalLoadStarted):
+        * WebCoreSupport/WebSystemInterface.mm:
+        (InitWebCoreSystemInterface):
+        * WebKitPrefix.h:
+        * WebView/WebDynamicScrollBarsView.mm:
+        (-[WebDynamicScrollBarsView scrollWheel:]):
+        * WebView/WebFullScreenController.mm:
+        (convertRectToScreen):
+        (-[WebFullScreenController finishedEnterFullScreenAnimation:]):
+        (-[WebFullScreenController exitFullScreen]):
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _pasteWithPasteboard:allowPlainText:]):
+        (-[WebHTMLView removeMouseMovedObserver]):
+        (-[WebHTMLView windowDidBecomeKey:]):
+        (-[WebHTMLView windowDidResignKey:]):
+        * WebView/WebView.mm:
+        (-[WebView _deviceScaleFactor]):
+
+2013-08-19  Ryosuke Niwa  <rniwa@webkit.org>
+
+        <https://webkit.org/b/120051> Remove the Mail thread workaround
+
+        Reviewed by Sam Weinig.
+
+        Remove the workaround for a very old version of Mail added in r39455.
+
+        * WebView/WebArchive.mm:
+        (-[WebArchive initWithMainResource:subresources:subframeArchives:]):
+        (-[WebArchive mainResource]):
+        (-[WebArchive subresources]):
+        (-[WebArchive subframeArchives]):
+        * WebView/WebFrameView.mm:
+        (-[WebFrameView initWithFrame:]):
+        * WebView/WebResource.mm:
+        (-[WebResource data]):
+        (-[WebResource URL]):
+        (-[WebResource MIMEType]):
+        (-[WebResource textEncodingName]):
+        (-[WebResource frameName]):
+        (-[WebResource _ignoreWhenUnarchiving]):
+        (-[WebResource _initWithData:URL:MIMEType:textEncodingName:frameName:response:copyData:]):
+        (-[WebResource _suggestedFilename]):
+        (-[WebResource _response]):
+        (-[WebResource _stringValue]):
+
+2013-08-19  Pratik Solanki  <psolanki@apple.com>
+
+        <https://webkit.org/b/119918> Frame::selection() should return a reference
+
+        Reviewed by Darin Adler.
+
+        m_selection is never NULL so return a reference from Frame::selection(). Also removed some
+        unnecessary null checks and assert diff ts exposed as a result.
+
+        * Plugins/WebPluginController.mm:
+        * WebView/WebFrame.mm:
+        (-[WebFrame _hasSelection]):
+        (-[WebFrame _rangeByAlteringCurrentSelection:FrameSelection::direction:granularity:]):
+        (-[WebFrame _selectionGranularity]):
+        (-[WebFrame _convertToNSRange:]):
+        (-[WebFrame _convertToDOMRange:]):
+        (-[WebFrame _insertParagraphSeparatorInQuotedContent]):
+        (-[WebFrame _typingStyle]):
+        (-[WebFrame _selectedNSRange]):
+        (-[WebFrame _selectNSRange:]):
+        (-[WebFrame _replaceSelectionWithFragment:selectReplacement:smartReplace:matchStyle:]):
+        (-[WebFrame _replaceSelectionWithText:selectReplacement:smartReplace:]):
+        * WebView/WebHTMLRepresentation.mm:
+        (-[WebHTMLRepresentation currentForm]):
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView readSelectionFromPasteboard:]):
+        (-[WebHTMLView _selectedRange]):
+        (-[WebHTMLView _hasSelection]):
+        (-[WebHTMLView _hasSelectionOrInsertionPoint]):
+        (-[WebHTMLView _hasInsertionPoint]):
+        (-[WebHTMLView _isEditable]):
+        (-[WebHTMLView jumpToSelection:]):
+        (-[WebHTMLView validateUserInterfaceItemWithoutDelegate:]):
+        (-[WebHTMLView maintainsInactiveSelection]):
+        (isTextInput):
+        (isInPasswordField):
+        (-[WebHTMLView centerSelectionInVisibleArea:]):
+        (-[WebHTMLView _canSmartCopyOrDelete]):
+        (-[WebHTMLView _lookUpInDictionaryFromMenu:]):
+        (-[WebHTMLView _updateSelectionForInputManager]):
+        (-[WebHTMLView selectionRect]):
+        (-[WebHTMLView selectionTextRects]):
+        (-[WebHTMLView selectionImageRect]):
+        (-[WebHTMLView selectAll]):
+        (-[WebHTMLView deselectAll]):
+        (-[WebHTMLView selectedAttributedString]):
+        * WebView/WebTextCompletionController.mm:
+        (-[WebTextCompletionController doCompletion]):
+        * WebView/WebView.mm:
+        (-[WebView setSelectedDOMRange:affinity:]):
+        (-[WebView selectedDOMRange]):
+        (-[WebView selectionAffinity]):
+        (-[WebView setEditable:]):
+        (-[WebView _selectionIsCaret]):
+        (-[WebView _selectionIsAll]):
+
 2013-08-17  Darin Adler  <darin@apple.com>
 
         <https://webkit.org/b/119941> Make Page::dragController return a reference

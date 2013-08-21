@@ -88,11 +88,6 @@ bool InsertionPoint::shouldUseFallbackElements() const
     return isActive() && !hasDistribution();
 }
 
-bool InsertionPoint::isShadowBoundary() const
-{
-    return treeScope()->rootNode()->isShadowRoot() && isActive();
-}
-
 bool InsertionPoint::isActive() const
 {
     if (!containingShadowRoot())
@@ -107,9 +102,9 @@ bool InsertionPoint::isActive() const
     return true;
 }
 
-bool InsertionPoint::rendererIsNeeded(const NodeRenderingContext& context)
+bool InsertionPoint::rendererIsNeeded(const RenderStyle& style)
 {
-    return !isShadowBoundary() && HTMLElement::rendererIsNeeded(context);
+    return !isActive() && HTMLElement::rendererIsNeeded(style);
 }
 
 void InsertionPoint::childrenChanged(bool changedByParser, Node* beforeChange, Node* afterChange, int childCountDelta)
@@ -146,26 +141,6 @@ void InsertionPoint::removedFrom(ContainerNode* insertionPoint)
     clearDistribution();
 
     HTMLElement::removedFrom(insertionPoint);
-}
-
-void InsertionPoint::parseAttribute(const QualifiedName& name, const AtomicString& value)
-{
-    if (name == reset_style_inheritanceAttr) {
-        if (!inDocument() || !attached() || !isActive())
-            return;
-        containingShadowRoot()->hostElement()->setNeedsStyleRecalc();
-    } else
-        HTMLElement::parseAttribute(name, value);
-}
-
-bool InsertionPoint::resetStyleInheritance() const
-{
-    return fastHasAttribute(reset_style_inheritanceAttr);
-}
-
-void InsertionPoint::setResetStyleInheritance(bool value)
-{
-    setBooleanAttribute(reset_style_inheritanceAttr, value);
 }
     
 Node* InsertionPoint::firstDistributed() const
@@ -208,7 +183,7 @@ Node* InsertionPoint::previousDistributedTo(const Node* node) const
     return 0;
 }
 
-InsertionPoint* resolveReprojection(const Node* projectedNode)
+InsertionPoint* findInsertionPointOf(const Node* projectedNode)
 {
     if (ShadowRoot* shadowRoot = shadowRootOfParentForDistribution(projectedNode)) {
         if (ShadowRoot* root = projectedNode->containingShadowRoot())

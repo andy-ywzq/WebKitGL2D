@@ -70,7 +70,6 @@
 #include "NamedNodeMap.h"
 #include "NodeList.h"
 #include "NodeRenderStyle.h"
-#include "NodeRenderingContext.h"
 #include "Page.h"
 #include "PointerLockController.h"
 #include "PseudoElement.h"
@@ -1242,9 +1241,9 @@ const AtomicString& Element::imageSourceURL() const
     return getAttribute(srcAttr);
 }
 
-bool Element::rendererIsNeeded(const NodeRenderingContext& context)
+bool Element::rendererIsNeeded(const RenderStyle& style)
 {
-    return context.style()->display() != NONE;
+    return style.display() != NONE;
 }
 
 RenderObject* Element::createRenderer(RenderArena*, RenderStyle* style)
@@ -1283,12 +1282,6 @@ Node::InsertionNotificationRequest Element::insertedInto(ContainerNode* insertio
     if (containsFullScreenElement() && parentElement() && !parentElement()->containsFullScreenElement())
         setContainsFullScreenElementOnAncestorsCrossingFrameBoundaries(true);
 #endif
-
-    if (Element* before = pseudoElement(BEFORE))
-        before->insertedInto(insertionPoint);
-
-    if (Element* after = pseudoElement(AFTER))
-        after->insertedInto(insertionPoint);
 
     if (!insertionPoint->isInTreeScope())
         return InsertionDone;
@@ -1330,12 +1323,6 @@ void Element::removedFrom(ContainerNode* insertionPoint)
 #if ENABLE(SVG)
     bool wasInDocument = insertionPoint->document();
 #endif
-
-    if (Element* before = pseudoElement(BEFORE))
-        before->removedFrom(insertionPoint);
-
-    if (Element* after = pseudoElement(AFTER))
-        after->removedFrom(insertionPoint);
 
 #if ENABLE(DIALOG_ELEMENT)
     document()->removeFromTopLayer(this);
@@ -1970,15 +1957,15 @@ void Element::updateFocusAppearance(bool /*restorePreviousSelection*/)
             return;
         
         // When focusing an editable element in an iframe, don't reset the selection if it already contains a selection.
-        if (this == frame->selection()->rootEditableElement())
+        if (this == frame->selection().rootEditableElement())
             return;
 
         // FIXME: We should restore the previous selection if there is one.
         VisibleSelection newSelection = VisibleSelection(firstPositionInOrBeforeNode(this), DOWNSTREAM);
         
-        if (frame->selection()->shouldChangeSelection(newSelection)) {
-            frame->selection()->setSelection(newSelection);
-            frame->selection()->revealSelection();
+        if (frame->selection().shouldChangeSelection(newSelection)) {
+            frame->selection().setSelection(newSelection);
+            frame->selection().revealSelection();
         }
     } else if (renderer() && !renderer()->isWidget())
         renderer()->scrollRectToVisible(boundingBox());
@@ -2512,13 +2499,13 @@ const AtomicString& Element::UIActions() const
 
     
 #if ENABLE(SVG)
-bool Element::childShouldCreateRenderer(const NodeRenderingContext& childContext) const
+bool Element::childShouldCreateRenderer(const Node* child) const
 {
     // Only create renderers for SVG elements whose parents are SVG elements, or for proper <svg xmlns="svgNS"> subdocuments.
-    if (childContext.node()->isSVGElement())
-        return childContext.node()->hasTagName(SVGNames::svgTag) || isSVGElement();
+    if (child->isSVGElement())
+        return child->hasTagName(SVGNames::svgTag) || isSVGElement();
 
-    return ContainerNode::childShouldCreateRenderer(childContext);
+    return ContainerNode::childShouldCreateRenderer(child);
 }
 #endif
 

@@ -60,14 +60,6 @@ bool StringObject::getOwnPropertySlotByIndex(JSObject* object, ExecState* exec, 
     return JSObject::getOwnPropertySlot(thisObject, exec, Identifier::from(exec, propertyName), slot);
 }
 
-bool StringObject::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    StringObject* thisObject = jsCast<StringObject*>(object);
-    if (thisObject->internalValue()->getStringPropertyDescriptor(exec, propertyName, descriptor))
-        return true;    
-    return JSObject::getOwnPropertyDescriptor(thisObject, exec, propertyName, descriptor);
-}
-
 void StringObject::put(JSCell* cell, ExecState* exec, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
 {
     if (propertyName == exec->propertyNames().length) {

@@ -518,7 +518,7 @@ HRESULT STDMETHODCALLTYPE WebFrame::currentForm(
     *currentForm = 0;
 
     if (Frame* coreFrame = core(this)) {
-        if (HTMLFormElement* formElement = coreFrame->selection()->currentForm())
+        if (HTMLFormElement* formElement = coreFrame->selection().currentForm())
             *currentForm = DOMElement::createInstance(formElement);
     }
 
@@ -2550,7 +2550,7 @@ void WebFrame::unmarkAllMisspellings()
         if (!doc)
             return;
 
-        doc->markers()->removeMarkers(DocumentMarker::Spelling);
+        doc->markers().removeMarkers(DocumentMarker::Spelling);
     }
 }
 
@@ -2562,7 +2562,7 @@ void WebFrame::unmarkAllBadGrammar()
         if (!doc)
             return;
 
-        doc->markers()->removeMarkers(DocumentMarker::Grammar);
+        doc->markers().removeMarkers(DocumentMarker::Grammar);
     }
 }
 

@@ -729,12 +729,17 @@ private:
         case GetByIdFlush: {
             if (!node->child1()->shouldSpeculateCell())
                 break;
-            if (m_graph.identifiers()[node->identifierNumber()] == vm().propertyNames->length.impl()) {
+            StringImpl* impl = m_graph.identifiers()[node->identifierNumber()];
+            if (impl == vm().propertyNames->length.impl()) {
                 attemptToMakeGetArrayLength(node);
                 break;
             }
-            if (m_graph.identifiers()[node->identifierNumber()] == vm().propertyNames->byteLength.impl()) {
-                attemptToMakeGetByteLength(node);
+            if (impl == vm().propertyNames->byteLength.impl()) {
+                attemptToMakeGetTypedArrayByteLength(node);
+                break;
+            }
+            if (impl == vm().propertyNames->byteOffset.impl()) {
+                attemptToMakeGetTypedArrayByteOffset(node);
                 break;
             }
             setUseKindAndUnboxIfProfitable<CellUse>(node->child1());
@@ -825,6 +830,7 @@ private:
         case GetArgument:
         case PhantomPutStructure:
         case GetIndexedPropertyStorage:
+        case GetTypedArrayByteOffset:
         case LastNodeType:
         case MovHint:
         case MovHintAndCheck:
@@ -880,6 +886,7 @@ private:
         case CountExecution:
         case ForceOSRExit:
         case CheckWatchdogTimer:
+        case Unreachable:
             break;
 #else
         default:
@@ -1373,9 +1380,12 @@ private:
         ASSERT(value.isInt32());
         unsigned constantRegister;
         if (!codeBlock()->findConstant(value, constantRegister)) {
+            constantRegister = codeBlock()->addConstantLazily();
             initializeLazyWriteBarrierForConstant(
-                codeBlock(),
                 m_graph.m_plan.writeBarriers,
+                codeBlock()->constants()[constantRegister],
+                codeBlock(),
+                constantRegister,
                 codeBlock()->ownerExecutable(),
                 value);
         }
@@ -1451,7 +1461,7 @@ private:
         return true;
     }
     
-    bool attemptToMakeGetByteLength(Node* node)
+    bool attemptToMakeGetTypedArrayByteLength(Node* node)
     {
         if (!isInt32Speculation(node->prediction()))
             return false;
@@ -1475,7 +1485,6 @@ private:
         // We can use a BitLShift here because typed arrays will never have a byteLength
         // that overflows int32.
         node->setOp(BitLShift);
-        ASSERT(node->flags() & NodeMustGenerate);
         node->clearFlags(NodeMustGenerate | NodeClobbersWorld);
         observeUseKindOnNode(length, Int32Use);
         observeUseKindOnNode(shiftAmount, Int32Use);
@@ -1487,7 +1496,6 @@ private:
     void convertToGetArrayLength(Node* node, ArrayMode arrayMode)
     {
         node->setOp(GetArrayLength);
-        ASSERT(node->flags() & NodeMustGenerate);
         node->clearFlags(NodeMustGenerate | NodeClobbersWorld);
         setUseKindAndUnboxIfProfitable<KnownCellUse>(node->child1());
         node->setArrayMode(arrayMode);
@@ -1505,6 +1513,25 @@ private:
         return m_insertionSet.insertNode(
             m_indexInBlock, SpecInt32, GetArrayLength, codeOrigin,
             OpInfo(arrayMode.asWord()), Edge(child, KnownCellUse), Edge(storage));
+    }
+    
+    bool attemptToMakeGetTypedArrayByteOffset(Node* node)
+    {
+        if (!isInt32Speculation(node->prediction()))
+            return false;
+        
+        TypedArrayType type = typedArrayTypeFromSpeculation(node->child1()->prediction());
+        if (!isTypedView(type))
+            return false;
+        
+        checkArray(
+            ArrayMode(toArrayType(type)), node->codeOrigin, node->child1().node(),
+            0, neverNeedsStorage);
+        
+        node->setOp(GetTypedArrayByteOffset);
+        node->clearFlags(NodeMustGenerate | NodeClobbersWorld);
+        setUseKindAndUnboxIfProfitable<KnownCellUse>(node->child1());
+        return true;
     }
 
     BasicBlock* m_block;

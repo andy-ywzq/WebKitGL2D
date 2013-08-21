@@ -302,59 +302,6 @@ bool JSFunction::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyN
     return Base::getOwnPropertySlot(thisObject, exec, propertyName, slot);
 }
 
-bool JSFunction::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    JSFunction* thisObject = jsCast<JSFunction*>(object);
-    if (thisObject->isHostFunction())
-        return Base::getOwnPropertyDescriptor(thisObject, exec, propertyName, descriptor);
-    
-    if (propertyName == exec->propertyNames().prototype) {
-        PropertySlot slot(thisObject);
-        thisObject->methodTable()->getOwnPropertySlot(thisObject, exec, propertyName, slot);
-        return Base::getOwnPropertyDescriptor(thisObject, exec, propertyName, descriptor);
-    }
-    
-    if (propertyName == exec->propertyNames().arguments) {
-        if (thisObject->jsExecutable()->isStrictMode()) {
-            bool result = Base::getOwnPropertyDescriptor(thisObject, exec, propertyName, descriptor);
-            if (!result) {
-                thisObject->putDirectAccessor(exec, propertyName, thisObject->globalObject()->throwTypeErrorGetterSetter(exec), DontDelete | DontEnum | Accessor);
-                result = Base::getOwnPropertyDescriptor(thisObject, exec, propertyName, descriptor);
-                ASSERT(result);
-            }
-            return result;
-        }
-        descriptor.setDescriptor(retrieveArguments(exec, thisObject), ReadOnly | DontEnum | DontDelete);
-        return true;
-    }
-    
-    if (propertyName == exec->propertyNames().length) {
-        descriptor.setDescriptor(jsNumber(thisObject->jsExecutable()->parameterCount()), ReadOnly | DontEnum | DontDelete);
-        return true;
-    }
-    
-    if (propertyName == exec->propertyNames().name) {
-        descriptor.setDescriptor(thisObject->jsExecutable()->nameValue(), ReadOnly | DontEnum | DontDelete);
-        return true;
-    }
-
-    if (propertyName == exec->propertyNames().caller) {
-        if (thisObject->jsExecutable()->isStrictMode()) {
-            bool result = Base::getOwnPropertyDescriptor(thisObject, exec, propertyName, descriptor);
-            if (!result) {
-                thisObject->putDirectAccessor(exec, propertyName, thisObject->globalObject()->throwTypeErrorGetterSetter(exec), DontDelete | DontEnum | Accessor);
-                result = Base::getOwnPropertyDescriptor(thisObject, exec, propertyName, descriptor);
-                ASSERT(result);
-            }
-            return result;
-        }
-        descriptor.setDescriptor(retrieveCallerFunction(exec, thisObject), ReadOnly | DontEnum | DontDelete);
-        return true;
-    }
-    
-    return Base::getOwnPropertyDescriptor(thisObject, exec, propertyName, descriptor);
-}
-
 void JSFunction::getOwnNonIndexPropertyNames(JSObject* object, ExecState* exec, PropertyNameArray& propertyNames, EnumerationMode mode)
 {
     JSFunction* thisObject = jsCast<JSFunction*>(object);
@@ -438,14 +385,16 @@ bool JSFunction::defineOwnProperty(JSObject* object, ExecState* exec, PropertyNa
     bool valueCheck;
     if (propertyName == exec->propertyNames().arguments) {
         if (thisObject->jsExecutable()->isStrictMode()) {
-            if (!Base::getOwnPropertyDescriptor(thisObject, exec, propertyName, descriptor))
+            PropertySlot slot(thisObject);
+            if (!Base::getOwnPropertySlot(thisObject, exec, propertyName, slot))
                 thisObject->putDirectAccessor(exec, propertyName, thisObject->globalObject()->throwTypeErrorGetterSetter(exec), DontDelete | DontEnum | Accessor);
             return Base::defineOwnProperty(object, exec, propertyName, descriptor, throwException);
         }
         valueCheck = !descriptor.value() || sameValue(exec, descriptor.value(), retrieveArguments(exec, thisObject));
     } else if (propertyName == exec->propertyNames().caller) {
         if (thisObject->jsExecutable()->isStrictMode()) {
-            if (!Base::getOwnPropertyDescriptor(thisObject, exec, propertyName, descriptor))
+            PropertySlot slot(thisObject);
+            if (!Base::getOwnPropertySlot(thisObject, exec, propertyName, slot))
                 thisObject->putDirectAccessor(exec, propertyName, thisObject->globalObject()->throwTypeErrorGetterSetter(exec), DontDelete | DontEnum | Accessor);
             return Base::defineOwnProperty(object, exec, propertyName, descriptor, throwException);
         }

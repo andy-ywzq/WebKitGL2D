@@ -1,3 +1,103 @@
+2013-08-21  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        Disable maybe-uninitialized warning in GCC 4.8
+        https://bugs.webkit.org/show_bug.cgi?id=119835
+
+        Reviewed by Anders Carlsson.
+
+        Disable the maybe-uninitialized warning.
+
+        * wtf/Compiler.h:
+
+2013-08-20  Alex Christensen  <achristensen@apple.com>
+
+        Use PlatformArchitecture to distinguish between 32-bit and 64-bit builds on Windows.
+        https://bugs.webkit.org/show_bug.cgi?id=119512
+
+        Reviewed by Brent Fulgham.
+
+        * WTF.vcxproj/WTFGeneratedCommon.props:
+        Replaced obj32, bin32, and lib32 with macros for 64-bit build.
+
+2013-08-20  Víctor Manuel Jáquez Leal  <vjaquez@igalia.com>
+
+        <https://webkit.org/b/120056> [GTK][ARM] enable DFG_JIT
+
+        Reviewed by Martin Robinson.
+
+        Enable DFG_JIT in GTK+ platform for ARM/Thumb architecture
+
+        * wtf/Platform.h:
+
+2013-08-19  Ryosuke Niwa  <rniwa@webkit.org>
+
+        <https://webkit.org/b/120049> Delete code for Snow Leopard
+
+        Reviewed by Benjamin Poulain.
+
+        * wtf/FastMalloc.cpp:
+        (WTF::TCMalloc_ThreadCache::CreateCacheIfNecessary):
+        * wtf/FeatureDefines.h:
+        * wtf/Platform.h:
+
+2013-08-19  Joseph Pecoraro  <pecoraro@apple.com>
+
+        <https://webkit.org/b/120036> [iOS] Upstream Source/WTF Xcode project for iOS
+
+        Reviewed by David Kilzer.
+
+        Include iOS only WebCoreThread.* files in an ios group, and clean up
+        the included files a bit.
+
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/ios/WebCoreThread.cpp:
+        * wtf/ios/WebCoreThread.h:
+
+2013-08-19  Joseph Pecoraro  <pecoraro@apple.com>
+
+        <https://webkit.org/b/119905> [iOS] Upstream Source/WTF
+
+        Reviewed by Benjamin Poulain.
+
+        Upstream iOS WebKit Source/WTF.
+
+        * Configurations/Base.xcconfig:
+        JavaScriptCore.framework is a public framework.
+
+        * wtf/Assertions.h:
+        Define an export macro for iOS projects just including <wtf/Assertions.h>.
+
+        * wtf/Platform.h:
+        * wtf/FeatureDefines.h:
+        iOS ENABLE and USE defines.
+
+        * wtf/MainThread.h:
+        * wtf/mac/MainThreadMac.mm:
+        (WTF::initializeApplicationUIThreadIdentifier):
+        (WTF::initializeWebThreadIdentifier):
+        (WTF::canAccessThreadLocalDataForThread):
+        * wtf/WeakPtr.h:
+        (WTF::WeakReference::get):
+        (WTF::WeakReference::clear):
+        Shared WebThread and MainThread access to thread local data.
+
+        * wtf/WTFThreadData.cpp:
+        (WTF::WTFThreadData::WTFThreadData):
+        Shared WebThread and MainThread identifier tables.
+
+        * wtf/ThreadSpecific.h:
+        (WTF::::replace):
+        Used later on so that WebThread can share the MainThread's thread global data.
+
+        * wtf/text/StringStatics.cpp:
+        (WTF::AtomicString::init):
+        When USE(WEB_THREAD) assert AtomicString::init is initialized on the realMainThread.
+
+        * wtf/unicode/CharacterNames.h:
+        * wtf/unicode/icu/UnicodeIcu.h:
+        (WTF::Unicode::hasLineBreakingPropertyComplexContextOrIdeographic):
+        Minor iOS constants and functions used later by WebCore.
+
 2013-08-16  Arunprasad Rajkumar  <arurajku@cisco.com>
 
         <https://webkit.org/b/119785> Replace currentTime() with monotonicallyIncreasingTime() in WebCore

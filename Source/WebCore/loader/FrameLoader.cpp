@@ -590,7 +590,7 @@ void FrameLoader::clear(Document* newDocument, bool clearWindowProperties, bool 
         m_frame->script().clearWindowShell(newDocument->domWindow(), m_frame->document()->inPageCache());
     }
 
-    m_frame->selection()->prepareForDestruction();
+    m_frame->selection().prepareForDestruction();
     m_frame->eventHandler().clear();
     if (clearFrameView && m_frame->view())
         m_frame->view()->clear();
@@ -869,6 +869,7 @@ void FrameLoader::loadURLIntoChildFrame(const KURL& url, const String& referer, 
         && !m_frame->document()->loadEventFinished()) {
         HistoryItem* childItem = parentItem->childItemWithTarget(childFrame->tree()->uniqueName());
         if (childItem) {
+            childFrame->loader().m_requestedHistoryItem = childItem;
             childFrame->loader().loadDifferentDocumentItem(childItem, loadType(), MayAttemptCacheOnlyLoadForFormSubmissionItem);
             return;
         }

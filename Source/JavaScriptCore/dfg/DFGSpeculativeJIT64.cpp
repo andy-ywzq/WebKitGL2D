@@ -3945,6 +3945,11 @@ void SpeculativeJIT::compile(Node* node)
         break;
     }
         
+    case GetTypedArrayByteOffset: {
+        compileGetTypedArrayByteOffset(node);
+        break;
+    }
+        
     case GetByOffset: {
         StorageOperand storage(this, node->child1());
         GPRTemporary result(this, storage);
@@ -4640,6 +4645,10 @@ void SpeculativeJIT::compile(Node* node)
     case PhantomLocal:
         // This is a no-op.
         noResult(node);
+        break;
+
+    case Unreachable:
+        RELEASE_ASSERT_NOT_REACHED();
         break;
         
     case LastNodeType:

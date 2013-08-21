@@ -651,7 +651,7 @@ public:
     void resetLinkColor();
     void resetVisitedLinkColor();
     void resetActiveLinkColor();
-    VisitedLinkState* visitedLinkState() const { return m_visitedLinkState.get(); }
+    VisitedLinkState& visitedLinkState() const { return *m_visitedLinkState; }
 
     MouseEventWithHitTestResults prepareMouseEvent(const HitTestRequest&, const LayoutPoint&, const PlatformMouseEvent&);
 
@@ -844,7 +844,7 @@ public:
 
     HTMLHeadElement* head();
 
-    DocumentMarkerController* markers() const { return m_markers.get(); }
+    DocumentMarkerController& markers() const { return *m_markers; }
 
     bool directionSetOnDocumentElement() const { return m_directionSetOnDocumentElement; }
     bool writingModeSetOnDocumentElement() const { return m_writingModeSetOnDocumentElement; }
@@ -1350,7 +1350,7 @@ private:
     Color m_linkColor;
     Color m_visitedLinkColor;
     Color m_activeLinkColor;
-    OwnPtr<VisitedLinkState> m_visitedLinkState;
+    const OwnPtr<VisitedLinkState> m_visitedLinkState;
 
     bool m_visuallyOrdered;
     ReadyState m_readyState;
@@ -1380,7 +1380,7 @@ private:
     RefPtr<RenderArena> m_renderArena;
 
     OwnPtr<AXObjectCache> m_axObjectCache;
-    OwnPtr<DocumentMarkerController> m_markers;
+    const OwnPtr<DocumentMarkerController> m_markers;
     
     Timer<Document> m_updateFocusAppearanceTimer;
 

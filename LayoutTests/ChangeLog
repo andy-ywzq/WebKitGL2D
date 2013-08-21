@@ -1,3 +1,1025 @@
+2013-08-21  Brent Fulgham  <bfulgham@apple.com>
+
+        <https://webkit.org/b/120113> Enable CSS_IMAGE_SET
+
+        Reviewed by Anders Carlsson.
+
+        * platform/win/TestExpectations: Turn on two CSS_IMAGE_SET-based tests that
+        now pass on Windows.
+
+2013-08-21  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        Font’s fast code path doesn’t handle partial runs correctly when kerning or ligatures are enabled 
+        https://bugs.webkit.org/show_bug.cgi?id=100050
+
+        Reviewed by Antti Koivisto.
+
+        * fast/text/resources/PTS55F-webfont.ttf: Added.
+        * fast/text/partial-textruns-expected.html: Added.
+        * fast/text/partial-textruns.html: Added.
+
+2013-08-20  Antonio Gomes  <a1.gomes@sisa.samsung.com>
+
+        Harden RenderBox::canBeScrolledAndHasScrollableArea logic
+        https://bugs.webkit.org/show_bug.cgi?id=104373
+
+        Reviewed by Simon Fraser.
+
+        Patch adds a test to ensure autoscrolling only happens on a given
+        axis if it is scrollable in that direction, according to its style.
+
+        * fast/events/autoscroll-overflow-hidden-longhands-expected.txt: Added.
+        * fast/events/autoscroll-overflow-hidden-longhands.html: Added.
+
+2013-08-19  Antonio Gomes  <a1.gomes@sisa.samsung.com>
+
+        Text dragging can scroll overflow:hidden boxes
+        https://bugs.webkit.org/show_bug.cgi?id=119760
+
+        Reviewed by Darin Adler.
+        Patch by Antonio Gomes <a1.gomes@sisa.samsung.com>
+
+        * fast/events/autoscroll-upwards-propagation-expected.txt: Added.
+        * fast/events/autoscroll-upwards-propagation.html: Added.
+
+2013-08-20  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120086
+        REGRESSION (r154300): http/tests/security/cross-frame-access-getOwnPropertyDescriptor is failing or crashing on the bots
+
+        Reviewed by Geoff Garen.
+
+        Previously we allowed cross-frame access to these properties, but hid the descriptors.
+        Now we allow access, but make them read-only, non-configurable.
+
+        * http/tests/security/cross-frame-access-getOwnPropertyDescriptor-expected.txt:
+        * http/tests/security/cross-frame-access-getOwnPropertyDescriptor.html:
+        * platform/mac/TestExpectations:
+            - Update test/results/expectations.
+
+2013-08-20  Filip Pizlo  <fpizlo@apple.com>
+
+        fast/js/regress/emscripten-cube2hash is failing on all the Mac bots
+        https://bugs.webkit.org/show_bug.cgi?id=120083
+
+        Unreviewed.
+        
+        Fixed the test to work in web mode and removed the failure expectation.
+
+        * fast/js/regress/script-tests/emscripten-cube2hash.js:
+        (else.Module.string_appeared_here):
+        * platform/mac/TestExpectations:
+
+2013-08-20  Filip Pizlo  <fpizlo@apple.com>
+
+        Add emscripten memops benchmark.
+
+        Rubber stamped by Oliver Hunt.
+
+        * TestExpectations:
+        * fast/js/regress/emscripten-memops-expected.txt: Added.
+        * fast/js/regress/emscripten-memops.html: Added.
+        * fast/js/regress/script-tests/emscripten-memops.js: Added.
+        (.Module.string_appeared_here):
+        (else.Module.string_appeared_here):
+        (else.else.Module.string_appeared_here):
+        (else.else):
+        (globalEval):
+        (Runtime.stackSave):
+        (Runtime.stackRestore):
+        (Runtime.forceAlign):
+        (Runtime.isNumberType):
+        (Runtime.isPointerType):
+        (Runtime.isStructType):
+        (or64):
+        (and64):
+        (xor64):
+        (getNativeTypeSize):
+        (getNativeFieldSize):
+        (dedup):
+        (.set var):
+        (getAlignSize):
+        (calculateStructAlignment):
+        (.else.alignment):
+        (generateStructInfo):
+        (dynCall):
+        (addFunction):
+        (removeFunction):
+        (warnOnce):
+        (.Runtime.funcWrappers.func):
+        (getFuncWrapper):
+        (UTF8Processor.this.processCChar):
+        (UTF8Processor.this.processJSString):
+        (UTF8Processor):
+        (stackAlloc):
+        (staticAlloc):
+        (dynamicAlloc):
+        (alignMemory):
+        (makeBigInt):
+        (assert):
+        (ccall):
+        (getCFunc):
+        (.toC):
+        (.fromC):
+        (ccallFunc):
+        (setValue):
+        (getValue):
+        (.set else):
+        (.set return):
+        (allocate):
+        (Pointer_stringify):
+        (alignMemoryPage):
+        (enlargeMemory):
+        (callRuntimeCallbacks):
+        (preRun):
+        (ensureInitRuntime):
+        (preMain):
+        (exitRuntime):
+        (postRun):
+        (addOnPreRun):
+        (addOnInit):
+        (addOnPreMain):
+        (addOnExit):
+        (addOnPostRun):
+        (intArrayFromString):
+        (intArrayToString):
+        (writeStringToMemory):
+        (writeArrayToMemory):
+        (unSign):
+        (reSign):
+        (Math.string_appeared_here):
+        (addRunDependency):
+        (removeRunDependency):
+        (loadMemoryInitializer.applyData):
+        (loadMemoryInitializer.set addOnPreRun):
+        (__ATINIT__.push):
+        (STATIC_BASE):
+        (copyTempDouble):
+        (___setErrNo):
+        (PATH.splitPath):
+        (PATH.normalizeArray):
+        (PATH.normalize.join):
+        (PATH.normalize):
+        (PATH.dirname):
+        (PATH.basename):
+        (PATH.join):
+        (PATH.trim):
+        (PATH.relative):
+        (TTY.register):
+        (TTY.stream_ops.open):
+        (TTY.stream_ops.close):
+        (TTY.stream_ops.read):
+        (TTY.stream_ops.write):
+        (TTY.default_tty_ops.get_char):
+        (TTY.default_tty_ops.put_char):
+        (TTY.default_tty1_ops.put_char):
+        (MEMFS.mount):
+        (MEMFS.create_node):
+        (MEMFS.node_ops.getattr):
+        (MEMFS.node_ops.setattr):
+        (MEMFS.node_ops.lookup):
+        (MEMFS.node_ops.mknod):
+        (MEMFS.node_ops.rename):
+        (MEMFS.node_ops.unlink):
+        (MEMFS.node_ops.rmdir):
+        (MEMFS.node_ops.readdir):
+        (MEMFS.node_ops.symlink):
+        (MEMFS.node_ops.readlink):
+        (MEMFS.stream_ops.set else):
+        (MEMFS.stream_ops.read):
+        (MEMFS.stream_ops.write):
+        (MEMFS.stream_ops.llseek):
+        (MEMFS.stream_ops.allocate):
+        (MEMFS.stream_ops.set return):
+        (MEMFS.stream_ops.mmap):
+        (_fflush):
+        (FS.ErrnoError):
+        (FS.handleFSError):
+        (FS.hashName):
+        (FS.hashAddNode):
+        (FS.hashRemoveNode):
+        (FS.lookupNode):
+        (FS.):
+        (FS.destroyNode):
+        (FS.isRoot):
+        (FS.isMountpoint):
+        (FS.isFile):
+        (FS.isDir):
+        (FS.isLink):
+        (FS.isChrdev):
+        (FS.isBlkdev):
+        (FS.isFIFO):
+        (FS.cwd):
+        (FS.var):
+        (FS.lookupPath):
+        (FS.getPath):
+        (FS.modeStringToFlags):
+        (FS.flagsToPermissionString):
+        (FS.nodePermissions):
+        (FS.mayLookup):
+        (FS.mayMknod):
+        (FS.mayCreate):
+        (FS.mayDelete):
+        (FS.mayOpen):
+        (FS.chrdev_stream_ops.open):
+        (FS.chrdev_stream_ops.llseek):
+        (FS.major):
+        (FS.minor):
+        (FS.makedev):
+        (FS.registerDevice):
+        (FS.getDevice):
+        (FS.nextfd):
+        (FS.getStream):
+        (FS.closeStream):
+        (FS.getMode):
+        (FS.joinPath):
+        (FS.absolutePath):
+        (FS.standardizePath):
+        (FS.findObject):
+        (FS.analyzePath):
+        (FS.createFolder):
+        (FS.createPath):
+        (FS.createFile):
+        (FS.createDataFile):
+        (FS.createDevice):
+        (FS.createLink):
+        (FS.forceLoadFile):
+        (FS.LazyUint8Array):
+        (FS.LazyUint8Array.prototype.get if):
+        (FS.LazyUint8Array.prototype):
+        (FS.LazyUint8Array.prototype.setDataGetter):
+        (FS.LazyUint8Array.prototype.cacheLength.doXHR):
+        (FS.LazyUint8Array.prototype.cacheLength):
+        (FS.get Object):
+        (FS.get var):
+        (FS.keys.forEach):
+        (FS.processData.finish):
+        (FS.processData):
+        (FS.else):
+        (FS.createPreloadedFile):
+        (FS.createDefaultDirectories):
+        (FS.createDefaultDevices.):
+        (FS.createDefaultDevices):
+        (FS.createStandardStreams):
+        (FS.staticInit):
+        (FS.init):
+        (FS.quit):
+        (FS.mount):
+        (FS.lookup):
+        (FS.mknod):
+        (FS.create):
+        (FS.mkdir):
+        (FS.mkdev):
+        (FS.symlink):
+        (FS.rename):
+        (FS.rmdir):
+        (FS.readdir):
+        (FS.unlink):
+        (FS.readlink):
+        (FS.stat):
+        (FS.lstat):
+        (FS.chmod):
+        (FS.lchmod):
+        (FS.fchmod):
+        (FS.chown):
+        (FS.lchown):
+        (FS.fchown):
+        (FS.truncate):
+        (FS.ftruncate):
+        (FS.utime):
+        (FS.open):
+        (FS.close):
+        (FS.llseek):
+        (FS.read):
+        (FS.write):
+        (FS.allocate):
+        (FS.mmap):
+        (_send):
+        (_pwrite):
+        (_write):
+        (_fwrite):
+        (__reallyNegative):
+        (.getNextArg):
+        (.switch.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.break):
+        (.switch.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.break):
+        (_fprintf):
+        (_printf):
+        (_abort):
+        (___errno_location):
+        (_sbrk.Runtime.dynamicAlloc):
+        (_sbrk):
+        (_sysconf):
+        (_time):
+        (Browser.mainLoop.pause):
+        (Browser.mainLoop.resume):
+        (Browser.mainLoop.updateStatus):
+        (Browser.init.imagePlugin.string_appeared_here):
+        (Browser.init.img.onload):
+        (Browser.init.img.onerror):
+        (Browser.init.audioPlugin.string_appeared_here):
+        (Browser.init.finish):
+        (Browser.init.fail):
+        (Browser.init.audio.onerror.encode64):
+        (Browser.init.audio.onerror):
+        (Browser.init.audio):
+        (Browser.init.else):
+        (Browser.init.pointerLockChange):
+        (Browser.init.canvas):
+        (Browser.init):
+        (Browser.destroyContext):
+        (Browser.fullScreenChange):
+        (Browser.requestFullScreen):
+        (Browser.requestAnimationFrame):
+        (Browser.safeRequestAnimationFrame):
+        (Browser.safeSetTimeout):
+        (Browser.safeSetInterval):
+        (Browser.getMimetype):
+        (Browser.getUserMedia):
+        (Browser.getMovementX):
+        (Browser.getMovementY):
+        (Browser.calculateMouseEvent):
+        (Browser.xhr.onload):
+        (Browser.xhrLoad):
+        (Browser.updateResizeListeners):
+        (Browser.setCanvasSize):
+        (Browser.setFullScreenCanvasSize):
+        (Browser.setWindowedCanvasSize):
+        (__ATINIT__.unshift):
+        (__ATMAIN__.push):
+        (__ATEXIT__.push):
+        (Module.string_appeared_here):
+        (invoke_ii):
+        (invoke_v):
+        (invoke_iii):
+        (invoke_vi):
+        (asmPrintInt):
+        (asmPrintFloat):
+        (asm):
+        (Runtime.stackAlloc):
+        (ExitStatus):
+        (Module.string_appeared_here.Module.callMain.callMain.pad):
+        (Module.string_appeared_here.Module.callMain):
+        (run.doRun):
+        (run.else):
+        (run):
+        (exit):
+        (abort):
+
+2013-08-20  Seokju Kwon  <seokju@webkit.org>
+
+        Unreviewed gardening. Rebaseline after r154372.
+
+        * platform/qt-mac/TestExpectations: fast/css/giant-stylesheet-crash.html was removed.
+
+2013-08-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        <https://webkit.org/b/120095> Delete fast/css/giant-stylesheet-crash.html since it flakily timeout or crash
+
+        Reviewed by Antti Koivisto.
+
+        Deleted the test. This test was added in r82054 but it has been crashing since r154242.
+
+        Since our expected behavior is to crash at the moment, this test's description doesn't even match
+        the expected behavior anymore. Furthermore, it intermittently times out due to DRT taking too long to
+        allocate memory before it can crash.
+
+        * fast/css/giant-stylesheet-crash-expected.txt: Removed.
+        * fast/css/giant-stylesheet-crash.html: Removed.
+
+2013-08-20  Daniel Bates  <dabates@apple.com>
+
+        <https://webkit.org/b/120032> Add DRT test to ensure that AccessibilityObject::stringValue()
+        of <input type="file"> is meaningful
+
+        Following <http://trac.webkit.org/changeset/154332>, add GTK-specific expected results for test
+        LayoutTests/accessibility/file-upload-button-stringvalue.html.
+
+        * platform/gtk-wk2/accessibility/file-upload-button-stringvalue-expected.txt: Added; expected failure
+        results until we fix <https://webkit.org/b/64285>.
+        * platform/gtk/accessibility/file-upload-button-stringvalue-expected.txt: Added.
+
+2013-08-20  Tim Horton  <timothy_horton@apple.com>
+
+        Failing test expectations for two tests
+
+        One recently regressed:
+        webkit.org/b/120086 http/tests/security/cross-frame-access-getOwnPropertyDescriptor.html
+
+        One was recently added in a failing state:
+        webkit.org/b/120083 fast/js/regress/emscripten-cube2hash.html
+
+        * platform/mac/TestExpectations:
+
+2013-08-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        <https://webkit.org/b/120087> Lion: fast/forms/submit-to-url-fragment.html intermittently crashes
+
+        Add the test expectation.
+
+        * platform/mac/TestExpectations:
+
+2013-08-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Mac Lion rebaseline after r154072.
+
+        Also add an intermittent test failure expectation to http/tests/inspector/resource-tree/resource-tree-document-url.html
+
+        * platform/mac/TestExpectations:
+        * platform/mac-lion/fast/repaint/japanese-rl-selection-repaint-in-regions-expected.txt:
+
+2013-08-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Mark fast/css/giant-stylesheet-crash.html as slow after r154246
+        since allocating 2GB of RAM takes a long time sometimes.
+
+        * TestExpectations:
+
+2013-08-20  Hans Muller  <hmuller@adobe.com>
+        <https://webkit.org/b/119849> [CSS Shapes] Complete RasterShape::firstIncludedIntervalLogicalTop()
+
+        Reviewed by Alexandru Chiculita.
+
+        Verify that the first fit algorithm works correctly for complex image shapes.
+        For this set of tests the image is specified with an SVG file.
+
+        * fast/shapes/resources/svg-shape-001.svg: Added.
+        * fast/shapes/shape-inside/shape-inside-image-003-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-image-003.html: Added.
+        * fast/shapes/shape-inside/shape-inside-image-004-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-image-004.html: Added.
+        * fast/shapes/shape-inside/shape-inside-image-005-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-image-005.html: Added.
+
+2013-08-20  Michael Saboff  <msaboff@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120075
+        REGRESSION (r128400): BBC4 website not displaying pictures
+
+        Reviewed by Oliver Hunt.
+
+        Added regression tests for fix.
+
+        * fast/js/regress/regexp-match-reify-before-putbyval-expected.txt: Added.
+        * fast/js/regress/regexp-match-reify-before-putbyval.html: Added.
+        * fast/js/regress/script-tests/regexp-match-reify-before-putbyval.js: Added.
+
+2013-08-19  Filip Pizlo  <fpizlo@apple.com>
+
+        Incorrect behavior on emscripten-compiled cube2hash
+        https://bugs.webkit.org/show_bug.cgi?id=120033
+
+        Reviewed by Mark Hahnenberg.
+        
+        Add the test that actually failed as a JSRegress test. We should track its
+        performance anyway.
+        
+        Add a regression test for the actual failure.
+        
+        Add .html and -expected.txt files for a JSRegress test that is already in
+        the repo.
+
+        * fast/js/dfg-get-closure-var-put-closure-var-interference.html: Added.
+        * fast/js/dfg-get-closure-var-put-closure-var-interference-expected.txt: Added.
+        * fast/js/regress/array-nonarray-polymorhpic-access-expected.txt: Added.
+        * fast/js/regress/array-nonarray-polymorhpic-access.html: Added.
+        * fast/js/regress/emscripten-cube2hash-expected.txt: Added.
+        * fast/js/regress/emscripten-cube2hash.html: Added.
+        * fast/js/regress/script-tests/emscripten-cube2hash.js: Added.
+        (.Module.string_appeared_here):
+        (else.Module.string_appeared_here):
+        (else.else.Module.string_appeared_here):
+        (else.else):
+        (globalEval):
+        (Runtime.stackSave):
+        (Runtime.stackRestore):
+        (Runtime.forceAlign):
+        (Runtime.isNumberType):
+        (Runtime.isPointerType):
+        (Runtime.isStructType):
+        (or64):
+        (and64):
+        (xor64):
+        (getNativeTypeSize):
+        (getNativeFieldSize):
+        (dedup):
+        (.set var):
+        (getAlignSize):
+        (calculateStructAlignment):
+        (.else.alignment):
+        (generateStructInfo):
+        (dynCall):
+        (addFunction):
+        (removeFunction):
+        (warnOnce):
+        (.Runtime.funcWrappers.func):
+        (getFuncWrapper):
+        (UTF8Processor.this.processCChar):
+        (UTF8Processor.this.processJSString):
+        (UTF8Processor):
+        (stackAlloc):
+        (staticAlloc):
+        (dynamicAlloc):
+        (alignMemory):
+        (makeBigInt):
+        (assert):
+        (ccall):
+        (getCFunc):
+        (.toC):
+        (.fromC):
+        (ccallFunc):
+        (setValue):
+        (getValue):
+        (.set else):
+        (.set return):
+        (allocate):
+        (Pointer_stringify):
+        (alignMemoryPage):
+        (enlargeMemory):
+        (callRuntimeCallbacks):
+        (preRun):
+        (ensureInitRuntime):
+        (preMain):
+        (exitRuntime):
+        (postRun):
+        (addOnPreRun):
+        (addOnInit):
+        (addOnPreMain):
+        (addOnExit):
+        (addOnPostRun):
+        (intArrayFromString):
+        (intArrayToString):
+        (writeStringToMemory):
+        (writeArrayToMemory):
+        (unSign):
+        (reSign):
+        (Math.string_appeared_here):
+        (addRunDependency):
+        (removeRunDependency):
+        (loadMemoryInitializer.applyData):
+        (loadMemoryInitializer.set addOnPreRun):
+        (__ATINIT__.push):
+        (STATIC_BASE):
+        (copyTempDouble):
+        (___setErrNo):
+        (PATH.splitPath):
+        (PATH.normalizeArray):
+        (PATH.normalize.join):
+        (PATH.normalize):
+        (PATH.dirname):
+        (PATH.basename):
+        (PATH.join):
+        (PATH.trim):
+        (PATH.relative):
+        (TTY.register):
+        (TTY.stream_ops.open):
+        (TTY.stream_ops.close):
+        (TTY.stream_ops.read):
+        (TTY.stream_ops.write):
+        (TTY.default_tty_ops.get_char):
+        (TTY.default_tty_ops.put_char):
+        (TTY.default_tty1_ops.put_char):
+        (MEMFS.mount):
+        (MEMFS.create_node):
+        (MEMFS.node_ops.getattr):
+        (MEMFS.node_ops.setattr):
+        (MEMFS.node_ops.lookup):
+        (MEMFS.node_ops.mknod):
+        (MEMFS.node_ops.rename):
+        (MEMFS.node_ops.unlink):
+        (MEMFS.node_ops.rmdir):
+        (MEMFS.node_ops.readdir):
+        (MEMFS.node_ops.symlink):
+        (MEMFS.node_ops.readlink):
+        (MEMFS.stream_ops.set else):
+        (MEMFS.stream_ops.read):
+        (MEMFS.stream_ops.write):
+        (MEMFS.stream_ops.llseek):
+        (MEMFS.stream_ops.allocate):
+        (MEMFS.stream_ops.set return):
+        (MEMFS.stream_ops.mmap):
+        (_fflush):
+        (FS.ErrnoError):
+        (FS.handleFSError):
+        (FS.hashName):
+        (FS.hashAddNode):
+        (FS.hashRemoveNode):
+        (FS.lookupNode):
+        (FS.):
+        (FS.destroyNode):
+        (FS.isRoot):
+        (FS.isMountpoint):
+        (FS.isFile):
+        (FS.isDir):
+        (FS.isLink):
+        (FS.isChrdev):
+        (FS.isBlkdev):
+        (FS.isFIFO):
+        (FS.cwd):
+        (FS.var):
+        (FS.lookupPath):
+        (FS.getPath):
+        (FS.modeStringToFlags):
+        (FS.flagsToPermissionString):
+        (FS.nodePermissions):
+        (FS.mayLookup):
+        (FS.mayMknod):
+        (FS.mayCreate):
+        (FS.mayDelete):
+        (FS.mayOpen):
+        (FS.chrdev_stream_ops.open):
+        (FS.chrdev_stream_ops.llseek):
+        (FS.major):
+        (FS.minor):
+        (FS.makedev):
+        (FS.registerDevice):
+        (FS.getDevice):
+        (FS.nextfd):
+        (FS.getStream):
+        (FS.closeStream):
+        (FS.getMode):
+        (FS.joinPath):
+        (FS.absolutePath):
+        (FS.standardizePath):
+        (FS.findObject):
+        (FS.analyzePath):
+        (FS.createFolder):
+        (FS.createPath):
+        (FS.createFile):
+        (FS.createDataFile):
+        (FS.createDevice):
+        (FS.createLink):
+        (FS.forceLoadFile):
+        (FS.LazyUint8Array):
+        (FS.LazyUint8Array.prototype.get if):
+        (FS.LazyUint8Array.prototype):
+        (FS.LazyUint8Array.prototype.setDataGetter):
+        (FS.LazyUint8Array.prototype.cacheLength.doXHR):
+        (FS.LazyUint8Array.prototype.cacheLength):
+        (FS.get Object):
+        (FS.get var):
+        (FS.keys.forEach):
+        (FS.processData.finish):
+        (FS.processData):
+        (FS.else):
+        (FS.createPreloadedFile):
+        (FS.createDefaultDirectories):
+        (FS.createDefaultDevices.):
+        (FS.createDefaultDevices):
+        (FS.createStandardStreams):
+        (FS.staticInit):
+        (FS.init):
+        (FS.quit):
+        (FS.mount):
+        (FS.lookup):
+        (FS.mknod):
+        (FS.create):
+        (FS.mkdir):
+        (FS.mkdev):
+        (FS.symlink):
+        (FS.rename):
+        (FS.rmdir):
+        (FS.readdir):
+        (FS.unlink):
+        (FS.readlink):
+        (FS.stat):
+        (FS.lstat):
+        (FS.chmod):
+        (FS.lchmod):
+        (FS.fchmod):
+        (FS.chown):
+        (FS.lchown):
+        (FS.fchown):
+        (FS.truncate):
+        (FS.ftruncate):
+        (FS.utime):
+        (FS.open):
+        (FS.close):
+        (FS.llseek):
+        (FS.read):
+        (FS.write):
+        (FS.allocate):
+        (FS.mmap):
+        (_send):
+        (_pwrite):
+        (_write):
+        (_fwrite):
+        (__reallyNegative):
+        (.getNextArg):
+        (.switch.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.break):
+        (.switch.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.case.string_appeared_here.break):
+        (_fprintf):
+        (_printf):
+        (_fputs):
+        (_fputc):
+        (_puts):
+        (_abort):
+        (___errno_location):
+        (_sbrk.Runtime.dynamicAlloc):
+        (_sbrk):
+        (_sysconf):
+        (_time):
+        (Browser.mainLoop.pause):
+        (Browser.mainLoop.resume):
+        (Browser.mainLoop.updateStatus):
+        (Browser.init.imagePlugin.string_appeared_here):
+        (Browser.init.img.onload):
+        (Browser.init.img.onerror):
+        (Browser.init.audioPlugin.string_appeared_here):
+        (Browser.init.finish):
+        (Browser.init.fail):
+        (Browser.init.audio.onerror.encode64):
+        (Browser.init.audio.onerror):
+        (Browser.init.audio):
+        (Browser.init.else):
+        (Browser.init.pointerLockChange):
+        (Browser.init.canvas):
+        (Browser.init):
+        (Browser.destroyContext):
+        (Browser.fullScreenChange):
+        (Browser.requestFullScreen):
+        (Browser.requestAnimationFrame):
+        (Browser.safeRequestAnimationFrame):
+        (Browser.safeSetTimeout):
+        (Browser.safeSetInterval):
+        (Browser.getMimetype):
+        (Browser.getUserMedia):
+        (Browser.getMovementX):
+        (Browser.getMovementY):
+        (Browser.calculateMouseEvent):
+        (Browser.xhr.onload):
+        (Browser.xhrLoad):
+        (Browser.updateResizeListeners):
+        (Browser.setCanvasSize):
+        (Browser.setFullScreenCanvasSize):
+        (Browser.setWindowedCanvasSize):
+        (__ATINIT__.unshift):
+        (__ATMAIN__.push):
+        (__ATEXIT__.push):
+        (Module.string_appeared_here):
+        (invoke_ii):
+        (invoke_v):
+        (invoke_iii):
+        (invoke_vi):
+        (asmPrintInt):
+        (asmPrintFloat):
+        (asm):
+        (Runtime.stackAlloc):
+        (i64Math):
+        (i64Math.):
+        (Module.string_appeared_here.Module.callMain.callMain.pad):
+        (Module.string_appeared_here.Module.callMain):
+        (run.doRun):
+        (run.else):
+        (run):
+        (exit):
+        (abort):
+        * fast/js/script-tests/dfg-get-closure-var-put-closure-var-interference.js: Added.
+        (foo):
+        (thingy.return.bar):
+        (thingy.return.baz):
+        (thingy):
+        (runIt):
+
+2013-08-20  Bruno de Oliveira Abinader  <bruno.d@partner.samsung.com>
+
+        [css3-text] Implement CSS3 text-decoration shorthand
+        https://bugs.webkit.org/show_bug.cgi?id=92000
+
+        Reviewed by Darin Adler.
+
+        Added computed style tests for text-decoration shorthand.
+
+        * fast/css3-text/css3-text-decoration/getComputedStyle/getComputedStyle-text-decoration-shorthand-expected.txt: Added.
+        * fast/css3-text/css3-text-decoration/getComputedStyle/getComputedStyle-text-decoration-shorthand-ordering-expected.txt: Added.
+        * fast/css3-text/css3-text-decoration/getComputedStyle/getComputedStyle-text-decoration-shorthand-ordering.html: Added.
+        * fast/css3-text/css3-text-decoration/getComputedStyle/getComputedStyle-text-decoration-shorthand.html: Added.
+
+2013-08-20  Daniel Bates  <dabates@apple.com>
+
+        <https://webkit.org/b/120032> Add DRT test to ensure that AccessibilityObject::stringValue()
+        of <input type="file"> is meaningful
+
+        Reviewed by Chris Fleizach.
+
+        Adds a DRT test to ensure that AccessibilityObject::stringValue() returns a meaningful string
+        for a single file- and multiple files-file upload control.
+
+        * accessibility/file-upload-button-stringvalue.html: Added.
+        * platform/mac-wk2/accessibility/file-upload-button-stringvalue-expected.txt: Added.
+        * platform/mac/accessibility/file-upload-button-stringvalue-expected.txt: Added.
+
+2013-08-20  Antti Koivisto  <antti@apple.com>
+
+        <https://webkit.org/b/120025> REGRESSION (r154254): fast/frames/frameset-frameborder-inheritance.html failing on Apple MountainLion Debug WK1 (Tests)
+
+        Reviewed by Anders Carlsson.
+
+        * platform/mac/TestExpectations: Unskip.
+
+2013-08-20  Antti Koivisto  <antti@apple.com>
+
+        <https://webkit.org/b/120023> REGRESSION(r154257): svg/custom/bug78807.svg and svg/custom/use-invalid-style.svg failing
+
+        Reviewed by by Andreas Kling.
+
+        * TestExpectations: Unskip.
+
+2013-08-20  Antti Koivisto  <antti@apple.com>
+
+        <https://webkit.org/b/119969> REGRESSION (r154232): Crash on the japantimes.co.jp
+
+        Reviewed by Andreas Kling.
+
+        * fast/css-generated-content/insert-stylesheet-and-pseudo-crash-expected.txt: Added.
+        * fast/css-generated-content/insert-stylesheet-and-pseudo-crash.html: Added.
+
+2013-08-20  Simon Pena  <simon.pena@samsung.com>
+
+        <https://webkit.org/b/117584> [GTK][WK1] http/tests/loading/unfinished-load-back-to-cached-page-callbacks.html is failing
+
+        Reviewed by Alexey Proskuryakov.
+
+        Update DumpRenderTree to handle the WEBKIT_LOAD_FAILED status,
+        printing didFailLoadWithError.
+
+        Adding that print makes
+        http/tests/loading/unfinished-load-back-to-cached-page-callbacks.html
+        and
+        http/tests/loading/unfinished-main-resource-back-to-cached-page-callbacks.html,
+        although it requires to modify the expected results for
+        http/tests/loading/pdf-commit-load-callbacks.html.
+
+        * platform/gtk-wk1/TestExpectations: Unskip
+        http/tests/loading/unfinished-load-back-to-cached-page-callbacks.html
+        and
+        http/tests/loading/unfinished-main-resource-back-to-cached-page-callbacks.html
+        * platform/gtk/http/tests/loading/pdf-commit-load-callbacks-expected.txt:
+        Update the expected results.
+
+2013-08-19  Hurnjoo Lee  <hurnjoo.lee@samsung.com>
+
+        [Cairo] Canvas putImageData is not working as expected
+        https://bugs.webkit.org/show_bug.cgi?id=119992
+
+        Reviewed by Darin Adler.
+
+        Add a ref test that ensures that putImageData of canvas with zero alpha work correctly.
+
+        * fast/canvas/canvas-putImageData-zero-alpha-expected.html: Added.
+        * fast/canvas/canvas-putImageData-zero-alpha.html: Added.
+
+2013-08-19  James Craig  <james@cookiecrook.com>
+
+        <https://webkit.org/b/118754> AX: aria-required.html needs to test @required vs @aria-required mismatch reconciliation
+
+        Reviewed by Chris Fleizach.
+
+        More thorough testing of @required and @aria-required, especially regarding conflict resolution.
+        Found https://webkit.org/b/119988 as a result of the updated test.
+
+        * accessibility/aria-required-expected.txt:
+        * accessibility/aria-required.html:
+
+2013-08-19  Ryosuke Niwa  <rniwa@webkit.org>
+
+        <https://webkit.org/b/119930> input[type=range]: Fix a crash by changing input type in 'input' event handler
+
+        Reviewed by Kent Tamura.
+
+        Add a regresion test from https://chromium.googlesource.com/chromium/blink/+/99afc9b55ce176b4f5fe053070e19dbebc1891a5
+
+        * fast/forms/range/range-type-change-oninput-expected.txt: Added.
+        * fast/forms/range/range-type-change-oninput.html: Added.
+
+2013-08-19  Alexey Proskuryakov  <ap@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120028
+        ASSERTION FAILED: m_history->provisionalItem() == m_requestedHistoryItem.get()
+        when navigating to an uncached subframe
+
+        Reviewed by Brady Eidson.
+
+        Added a nearly identical version of http/tests/navigation/post-frames-goback1.html
+        that checks what happens when navigating back to an uncached main resource.
+
+        * http/tests/navigation/post-frames-goback1-uncached-expected.txt: Added.
+        * http/tests/navigation/post-frames-goback1-uncached.html: Copied from LayoutTests/http/tests/navigation/post-frames-goback1.html.
+        * http/tests/navigation/resources/form-target-uncached.pl: Copied from LayoutTests/http/tests/navigation/resources/form-target.pl.
+
+2013-08-18  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG should inline typedArray.byteOffset
+        https://bugs.webkit.org/show_bug.cgi?id=119962
+
+        Reviewed by Oliver Hunt.
+
+        * fast/js/dfg-byteOffset-neuter.html: Added.
+        * fast/js/dfg-byteOffset-neuter-expected.txt: Added.
+        * fast/js/regress/ArrayBuffer-Int32Array-byteOffset-expected.txt: Added.
+        * fast/js/regress/ArrayBuffer-Int32Array-byteOffset.html: Added.
+        * fast/js/regress/script-tests/ArrayBuffer-Int32Array-byteOffset.js: Added.
+        * fast/js/script-tests/dfg-byteOffset-neuter.js: Added.
+        (foo):
+
+2013-08-18  Filip Pizlo  <fpizlo@apple.com>
+
+        <https://webkit.org/b/119994> DFG new Array() inlining could get confused about global objects
+
+        Reviewed by Geoffrey Garen.
+
+        * fast/js/dfg-cross-global-object-new-array.html: Added.
+        * fast/js/dfg-cross-global-object-new-array-expected.txt: Added.
+        * fast/js/script-tests/dfg-cross-global-object-new-array.js: Added.
+        (foo):
+        (runTest):
+        (doit):
+
+2013-08-19  Alexey Proskuryakov  <ap@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=119915
+        REGRESSION(r154144): ASSERTION FAILED: m_history->provisionalItem() == m_requestedHistoryItem.get()
+
+        Reviewed by Darin Adler.
+
+        * platform/mac-wk2/TestExpectations: Unskipping the failing test.
+
+2013-08-19  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=119995
+        Start removing custom implementations of getOwnPropertyDescriptor
+
+        Reviewed by Sam Weinig.
+
+        This can now typically implemented in terms of getOwnPropertySlot.
+        Add a macro to PropertyDescriptor to define an implementation of GOPD in terms of GOPS.
+        Switch over most classes in JSC & the WebCore bindings generator to use this.
+
+        * http/tests/security/xss-DENIED-defineProperty-expected.txt:
+            - Remove erroneous error messages - cross frame access to reload is allowed - it's just read-only, non-configurable.
+
+2013-08-19  Jer Noble  <jer.noble@apple.com>
+
+        <https://bugs.webkit.org/show_bug.cgi?id=120025> REGRESSION (r154254): fast/frames/frameset-frameborder-inheritance.html failing on Apple MountainLion Debug WK1 (Tests)
+
+        Unreviewed gardening. Add failing test to TestExpectations.
+
+        * platform/mac/TestExpectations:
+
+2013-08-19  Antti Koivisto  <antti@apple.com>
+
+        Skip these failing tests pending fix:
+        
+        svg/custom/bug78807.svg
+        svg/custom/use-invalid-style.svg
+
+        * TestExpectations:
+
+2013-08-19  Jer Noble  <jer.noble@apple.com>
+
+        Unreviewed gardening. Partial revert of r154283 which caused test failures on all Mac ports.
+
+        * platform/mac/accessibility/lists-expected.txt:
+
+2013-08-16  Oliver Hunt  <oliver@apple.com>
+
+        <https://webkit.org/b/119860> Crash during exception unwinding
+
+        Reviewed by Filip Pizlo.
+
+        Add a test
+
+        * fast/js/dfg-activation-register-overwritten-in-throw-expected.txt: Added.
+        * fast/js/dfg-activation-register-overwritten-in-throw.html: Added.
+        * fast/js/script-tests/dfg-activation-register-overwritten-in-throw.js: Added.
+        (g):
+
+2013-08-19  Chris Fleizach  <cfleizach@apple.com>
+
+        <https://webkit.org/b/119916> AX: WebKit is not exposing AXLanguage correctly
+
+        Reviewed by Darin Adler.
+
+        * accessibility/transformed-element-expected.txt:
+        * platform/mac/accessibility/aria-columnrowheaders-expected.txt:
+        * platform/mac/accessibility/bounds-for-range-expected.txt:
+        * platform/mac/accessibility/document-attributes-expected.txt:
+        * platform/mac/accessibility/document-links-expected.txt:
+        * platform/mac/accessibility/image-link-expected.txt:
+        * platform/mac/accessibility/image-map2-expected.txt:
+        * platform/mac/accessibility/internal-link-anchors-expected.txt:
+        * platform/mac/accessibility/internal-link-anchors2-expected.txt:
+        * platform/mac/accessibility/lists-expected.txt:
+        * platform/mac/accessibility/plugin-expected.txt:
+        * platform/mac/accessibility/radio-button-group-members-expected.txt:
+        * platform/mac/accessibility/table-attributes-expected.txt:
+        * platform/mac/accessibility/table-cell-spans-expected.txt:
+        * platform/mac/accessibility/table-cells-expected.txt:
+        * platform/mac/accessibility/table-detection-expected.txt:
+        * platform/mac/accessibility/table-one-cell-expected.txt:
+        * platform/mac/accessibility/table-sections-expected.txt:
+        * platform/mac/accessibility/table-with-aria-role-expected.txt:
+        * platform/mac/accessibility/table-with-rules-expected.txt:
+
 2013-08-19  Darin Adler  <darin@apple.com>
 
         Clear executable bits from most HTML files.

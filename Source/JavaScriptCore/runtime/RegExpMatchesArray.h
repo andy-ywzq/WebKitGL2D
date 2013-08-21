@@ -44,7 +44,7 @@ namespace JSC {
 
         static Structure* createStructure(VM& vm, JSGlobalObject* globalObject, JSValue prototype)
         {
-            return Structure::create(vm, globalObject, prototype, TypeInfo(ObjectType, StructureFlags), info(), ArrayWithArrayStorage);
+            return Structure::create(vm, globalObject, prototype, TypeInfo(ObjectType, StructureFlags), info(), ArrayWithSlowPutArrayStorage);
         }
 
         static void visitChildren(JSCell*, SlotVisitor&);
@@ -82,13 +82,6 @@ namespace JSC {
             else
                 thisObject->reifyMatchPropertyIfNecessary(exec);
             return JSArray::getOwnPropertySlotByIndex(thisObject, exec, propertyName, slot);
-        }
-
-        static bool getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-        {
-            RegExpMatchesArray* thisObject = jsCast<RegExpMatchesArray*>(object);
-            thisObject->reifyAllPropertiesIfNecessary(exec);
-            return JSArray::getOwnPropertyDescriptor(thisObject, exec, propertyName, descriptor);
         }
 
         static void put(JSCell* cell, ExecState* exec, PropertyName propertyName, JSValue v, PutPropertySlot& slot)

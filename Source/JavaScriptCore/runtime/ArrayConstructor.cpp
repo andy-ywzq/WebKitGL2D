@@ -71,11 +71,6 @@ bool ArrayConstructor::getOwnPropertySlot(JSObject* object, ExecState* exec, Pro
     return getStaticFunctionSlot<InternalFunction>(exec, ExecState::arrayConstructorTable(exec), jsCast<ArrayConstructor*>(object), propertyName, slot);
 }
 
-bool ArrayConstructor::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    return getStaticFunctionDescriptor<InternalFunction>(exec, ExecState::arrayConstructorTable(exec), jsCast<ArrayConstructor*>(object), propertyName, descriptor);
-}
-
 // ------------------------------ Functions ---------------------------
 
 JSObject* constructArrayWithSizeQuirk(ExecState* exec, ArrayAllocationProfile* profile, JSGlobalObject* globalObject, JSValue length)

@@ -189,17 +189,6 @@ bool JSArray::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName
     return JSObject::getOwnPropertySlot(thisObject, exec, propertyName, slot);
 }
 
-bool JSArray::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    JSArray* thisObject = jsCast<JSArray*>(object);
-    if (propertyName == exec->propertyNames().length) {
-        descriptor.setDescriptor(jsNumber(thisObject->length()), thisObject->isLengthWritable() ? DontDelete | DontEnum : DontDelete | DontEnum | ReadOnly);
-        return true;
-    }
-
-    return JSObject::getOwnPropertyDescriptor(thisObject, exec, propertyName, descriptor);
-}
-
 // ECMA 15.4.5.1
 void JSArray::put(JSCell* cell, ExecState* exec, PropertyName propertyName, JSValue value, PutPropertySlot& slot)
 {

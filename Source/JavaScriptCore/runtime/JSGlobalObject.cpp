@@ -641,14 +641,6 @@ bool JSGlobalObject::getOwnPropertySlot(JSObject* object, ExecState* exec, Prope
     return symbolTableGet(thisObject, propertyName, slot);
 }
 
-bool JSGlobalObject::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    JSGlobalObject* thisObject = jsCast<JSGlobalObject*>(object);
-    if (getStaticFunctionDescriptor<Base>(exec, ExecState::globalObjectTable(exec), thisObject, propertyName, descriptor))
-        return true;
-    return symbolTableGet(thisObject, propertyName, descriptor);
-}
-
 void JSGlobalObject::clearRareData(JSCell* cell)
 {
     jsCast<JSGlobalObject*>(cell)->m_rareData.clear();

@@ -68,11 +68,6 @@ bool BooleanPrototype::getOwnPropertySlot(JSObject* object, ExecState* exec, Pro
     return getStaticFunctionSlot<BooleanObject>(exec, ExecState::booleanPrototypeTable(exec), jsCast<BooleanPrototype*>(object), propertyName, slot);
 }
 
-bool BooleanPrototype::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    return getStaticFunctionDescriptor<BooleanObject>(exec, ExecState::booleanPrototypeTable(exec), jsCast<BooleanPrototype*>(object), propertyName, descriptor);
-}
-
 // ------------------------------ Functions ---------------------------
 
 EncodedJSValue JSC_HOST_CALL booleanProtoFuncToString(ExecState* exec)

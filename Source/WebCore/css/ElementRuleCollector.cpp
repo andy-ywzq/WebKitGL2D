@@ -154,8 +154,7 @@ void ElementRuleCollector::collectMatchingRules(const MatchRequest& matchRequest
     TreeScope* treeScope = element->treeScope();
     if (!MatchingUARulesScope::isMatchingUARules()
         && !treeScope->applyAuthorStyles()
-        && (!matchRequest.scope || matchRequest.scope->treeScope() != treeScope)
-        && m_behaviorAtBoundary == SelectorChecker::DoesNotCrossBoundary)
+        && (!matchRequest.scope || matchRequest.scope->treeScope() != treeScope))
         return;
 
     // We need to collect the rules for id, class, tag, and everything else into a buffer and
@@ -180,11 +179,11 @@ void ElementRuleCollector::collectMatchingRulesForRegion(const MatchRequest& mat
     if (!m_regionForStyling)
         return;
 
-    unsigned size = matchRequest.ruleSet->m_regionSelectorsAndRuleSets.size();
+    unsigned size = matchRequest.ruleSet->regionSelectorsAndRuleSets().size();
     for (unsigned i = 0; i < size; ++i) {
-        const CSSSelector* regionSelector = matchRequest.ruleSet->m_regionSelectorsAndRuleSets.at(i).selector;
+        const CSSSelector* regionSelector = matchRequest.ruleSet->regionSelectorsAndRuleSets().at(i).selector;
         if (checkRegionSelector(regionSelector, toElement(m_regionForStyling->node()))) {
-            RuleSet* regionRules = matchRequest.ruleSet->m_regionSelectorsAndRuleSets.at(i).ruleSet.get();
+            RuleSet* regionRules = matchRequest.ruleSet->regionSelectorsAndRuleSets().at(i).ruleSet.get();
             ASSERT(regionRules);
             collectMatchingRules(MatchRequest(regionRules, matchRequest.includeEmptyRules, matchRequest.scope), ruleRange);
         }
@@ -374,7 +373,6 @@ inline bool ElementRuleCollector::ruleMatches(const RuleData& ruleData, const Co
     context.pseudoId = m_pseudoStyleRequest.pseudoId;
     context.scrollbar = m_pseudoStyleRequest.scrollbar;
     context.scrollbarPart = m_pseudoStyleRequest.scrollbarPart;
-    context.behaviorAtBoundary = m_behaviorAtBoundary;
     SelectorChecker::Match match = selectorChecker.match(context, dynamicPseudo);
     if (match != SelectorChecker::SelectorMatches)
         return false;

@@ -403,9 +403,12 @@ private:
 
     void addConstant(JSValue value)
     {
+        unsigned constantIndex = m_codeBlock->addConstantLazily();
         initializeLazyWriteBarrierForConstant(
+            m_graph.m_plan.writeBarriers,
+            m_codeBlock->constants()[constantIndex],
             m_codeBlock,
-            m_graph.m_plan.writeBarriers, 
+            constantIndex,
             m_codeBlock->ownerExecutable(), 
             value);
     }
@@ -1599,6 +1602,9 @@ bool ByteCodeParser::handleConstantInternalFunction(
     UNUSED_PARAM(prediction); // Remove this once we do more things.
     
     if (function->classInfo() == ArrayConstructor::info()) {
+        if (function->globalObject() != m_inlineStackTop->m_codeBlock->globalObject())
+            return false;
+        
         if (argumentCountIncludingThis == 2) {
             set(resultOperand,
                 addToGraph(NewArrayWithSize, OpInfo(ArrayWithUndecided), get(registerOffset + argumentToOperand(1))));
@@ -2864,13 +2870,15 @@ bool ByteCodeParser::parseBlock(unsigned limit)
             LAST_OPCODE(op_end);
 
         case op_throw:
-            flushAllArgumentsAndCapturedVariablesInInlineStack();
             addToGraph(Throw, get(currentInstruction[1].u.operand));
+            flushAllArgumentsAndCapturedVariablesInInlineStack();
+            addToGraph(Unreachable);
             LAST_OPCODE(op_throw);
             
         case op_throw_static_error:
-            flushAllArgumentsAndCapturedVariablesInInlineStack();
             addToGraph(ThrowReferenceError);
+            flushAllArgumentsAndCapturedVariablesInInlineStack();
+            addToGraph(Unreachable);
             LAST_OPCODE(op_throw_static_error);
             
         case op_call:
@@ -3285,16 +3293,20 @@ ByteCodeParser::InlineStackEntry::InlineStackEntry(
         ASSERT(callsiteBlockHead);
         
         InlineCallFrame inlineCallFrame;
-        initializeLazyWriteBarrier(
-            inlineCallFrame.executable,
+        initializeLazyWriteBarrierForInlineCallFrameExecutable(
             byteCodeParser->m_graph.m_plan.writeBarriers,
+            inlineCallFrame.executable,
+            byteCodeParser->m_codeBlock,
+            byteCodeParser->m_codeBlock->inlineCallFrames().size(),
             byteCodeParser->m_codeBlock->ownerExecutable(), 
             codeBlock->ownerExecutable());
         inlineCallFrame.stackOffset = inlineCallFrameStart + JSStack::CallFrameHeaderSize;
         if (callee) {
-            initializeLazyWriteBarrier(
-                inlineCallFrame.callee,
+            initializeLazyWriteBarrierForInlineCallFrameCallee(
                 byteCodeParser->m_graph.m_plan.writeBarriers,
+                inlineCallFrame.callee,
+                byteCodeParser->m_codeBlock,
+                byteCodeParser->m_codeBlock->inlineCallFrames().size(),
                 byteCodeParser->m_codeBlock->ownerExecutable(), 
                 callee);
         }

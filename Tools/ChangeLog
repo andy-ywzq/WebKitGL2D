@@ -1,3 +1,113 @@
+2013-08-21  Brian Holt  <brian.holt@samsung.com>
+
+        [GTK] Suppress irrelevant or known leaks for Valgrind
+        https://bugs.webkit.org/show_bug.cgi?id=119448
+
+        Reviewed by Martin Robinson.
+
+        Add a suppressions file to suppress known leaks for Valgrind.
+        Valgrind also takes longer when using suppressions and
+        times out unless the driver timeout is increased.
+
+        * Scripts/valgrind/suppressions.txt: Added.
+        * Scripts/webkitpy/port/gtk.py:
+        (GtkPort.driver_stop_timeout):
+        (GtkPort.setup_environ_for_server):
+
+2013-08-20  Alex Christensen  <achristensen@apple.com>
+
+        [Windows] Linking fix for Win64.
+
+        Rubberstamped by Brent Fulgham.
+
+        * win/DLLLauncher/DLLLauncherMain.cpp:
+        (wWinMain): Corrected 64-bit linker symbol for dllLauncherEntryPoint.
+
+2013-08-20  Brent Fulgham  <bfulgham@apple.com>
+
+        <https://webkit.org/b/120090> Report better error messages from WinLauncher/DRT
+
+        Reviewed by Tim Horton.
+
+        * win/DLLLauncher/DLLLauncherMain.cpp:
+        (getLastErrorString): New method to convert GetLastError to text.
+        (wWinMain): Use new error formatter to provide useful diagnostic text to user.
+
+2013-08-19  Gustavo Noronha Silva  <gns@gnome.org>
+
+        <https://webkit.org/b/120048> [GTK] Add stubs for APIs that went missing in the DOM bindings
+
+        Reviewed by Martin Robinson.
+
+        * Scripts/webkitpy/style/checker.py: add the bindings custom implementation files to be exempt
+        from naming/enum_casing rules, since it needs to provide GObject-style APIs.
+
+2013-08-20  Anton Obzhirov  <a.obzhirov@samsung.com>
+
+        <https://webkit.org/b/120009> [GTK] Stop button should be added to MiniBrowser
+
+        Reviewed by Martin Robinson.
+
+        Added stop button in MiniBrowser
+
+        * MiniBrowser/gtk/BrowserWindow.c:
+        (reloadOrStopCallback): Callback to handle stop or reload button click.
+        (webViewLoadProgressChanged): Update reload or stop button icon.
+        (browser_window_init): Save button pointer for further icon updates.
+
+2013-08-20  Simon Pena  <simon.pena@samsung.com>
+
+        <https://webkit.org/b/117584> [GTK][WK1] http/tests/loading/unfinished-load-back-to-cached-page-callbacks.html is failing
+
+        Reviewed by Alexey Proskuryakov.
+
+        Update DumpRenderTree to handle the WEBKIT_LOAD_FAILED status,
+        printing didFailLoadWithError.
+
+        Behave like other ports, and handle WEBKIT_LOAD_FAILED status in
+        DumpRenderTree, printing didFailLoadWithError.
+
+        * DumpRenderTree/gtk/DumpRenderTree.cpp:
+        (webFrameLoadStatusNotified):
+
+2013-08-19  Ryosuke Niwa  <rniwa@webkit.org>
+
+        <https://webkit.org/b/120049> Delete code for Snow Leopard
+
+        Reviewed by Benjamin Poulain.
+
+        * DumpRenderTree/mac/CheckedMalloc.cpp:
+        (protectionOfRegion):
+        (makeLargeMallocFailSilently):
+        * DumpRenderTree/mac/DumpRenderTree.mm:
+        (resetDefaultsToConsistentValues):
+        * DumpRenderTree/mac/DumpRenderTreeDraggingInfo.mm:
+        (-[DumpRenderTreeDraggingInfo enumerateDraggingItemsWithOptions:forView:classes:searchOptions:usingBlock:]):
+        * DumpRenderTree/mac/FrameLoadDelegate.mm:
+        (testPathFromURL):
+        (-[FrameLoadDelegate webView:didStartProvisionalLoadForFrame:]):
+        * DumpRenderTree/mac/LayoutTestHelper.m:
+        * DumpRenderTree/mac/TestRunnerMac.mm:
+        * WebKitTestRunner/InjectedBundle/mac/InjectedBundleMac.mm:
+        (WTR::InjectedBundle::platformInitialize):
+        * WebKitTestRunner/InjectedBundle/mac/InjectedBundlePageMac.mm:
+        (WTR::testPathFromURL):
+        (WTR::InjectedBundlePage::platformDidStartProvisionalLoadForFrame):
+
+2013-08-19  Alexey Proskuryakov  <ap@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=119915
+        REGRESSION(r154144): ASSERTION FAILED: m_history->provisionalItem() == m_requestedHistoryItem.get()
+
+        Reviewed by Darin Adler.
+
+        The issue was that we ended up having no CFNetwork cache in the testing session due
+        to an incorrect cache model. There is a number of things not implemented when it
+        comes to dynamically changing cache model as attempted by WebKitTestRunner, but
+        the easiest way to get this going is to initialize it to correct value upfront.
+
+        * WebKitTestRunner/TestController.cpp: (WTR::TestController::initialize):
+
 2013-08-19  Allan Sandfeld Jensen  <allan.jensen@digia.com>
 
         REGRESSION(r154275): webkitpy tests failing

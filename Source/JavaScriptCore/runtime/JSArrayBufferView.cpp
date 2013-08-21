@@ -139,26 +139,6 @@ bool JSArrayBufferView::getOwnPropertySlot(
     return Base::getOwnPropertySlot(thisObject, exec, propertyName, slot);
 }
 
-bool JSArrayBufferView::getOwnPropertyDescriptor(
-    JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    JSArrayBufferView* thisObject = jsCast<JSArrayBufferView*>(object);
-    if (propertyName == exec->propertyNames().byteOffset) {
-        descriptor.setDescriptor(jsNumber(thisObject->byteOffset()), DontDelete | ReadOnly);
-        return true;
-    }
-    
-    if (propertyName == exec->propertyNames().buffer) {
-        descriptor.setDescriptor(
-            exec->vm().m_typedArrayController->toJS(
-                exec, thisObject->globalObject(), thisObject->buffer()),
-            DontDelete | ReadOnly);
-        return true;
-    }
-    
-    return Base::getOwnPropertyDescriptor(thisObject, exec, propertyName, descriptor);
-}
-
 void JSArrayBufferView::put(
     JSCell* cell, ExecState* exec, PropertyName propertyName, JSValue value,
     PutPropertySlot& slot)

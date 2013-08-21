@@ -1,3 +1,547 @@
+2013-08-21  Julien Brianceau  <jbrianceau@nds.com>
+
+        <https://webkit.org/b/120106> Fix V_DFGOperation_EJPP signature in DFG.
+
+        Reviewed by Geoffrey Garen.
+
+        * dfg/DFGOperations.h:
+
+2013-08-20  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120093
+        Remove getOwnPropertyDescriptor trap
+
+        Reviewed by Geoff Garen.
+
+        All implementations of this method are now called via the method table, and equivalent in behaviour.
+        Remove all duplicate implementations (and the method table trap), and add a single member function implementation on JSObject.
+
+        * API/JSCallbackObject.h:
+        * API/JSCallbackObjectFunctions.h:
+        * debugger/DebuggerActivation.cpp:
+        * debugger/DebuggerActivation.h:
+        * runtime/Arguments.cpp:
+        * runtime/Arguments.h:
+        * runtime/ArrayConstructor.cpp:
+        * runtime/ArrayConstructor.h:
+        * runtime/ArrayPrototype.cpp:
+        * runtime/ArrayPrototype.h:
+        * runtime/BooleanPrototype.cpp:
+        * runtime/BooleanPrototype.h:
+            - remove getOwnPropertyDescriptor
+        * runtime/ClassInfo.h:
+            - remove getOwnPropertyDescriptor from MethodTable
+        * runtime/DateConstructor.cpp:
+        * runtime/DateConstructor.h:
+        * runtime/DatePrototype.cpp:
+        * runtime/DatePrototype.h:
+        * runtime/ErrorPrototype.cpp:
+        * runtime/ErrorPrototype.h:
+        * runtime/JSActivation.cpp:
+        * runtime/JSActivation.h:
+        * runtime/JSArray.cpp:
+        * runtime/JSArray.h:
+        * runtime/JSArrayBuffer.cpp:
+        * runtime/JSArrayBuffer.h:
+        * runtime/JSArrayBufferView.cpp:
+        * runtime/JSArrayBufferView.h:
+        * runtime/JSCell.cpp:
+        * runtime/JSCell.h:
+        * runtime/JSDataView.cpp:
+        * runtime/JSDataView.h:
+        * runtime/JSDataViewPrototype.cpp:
+        * runtime/JSDataViewPrototype.h:
+        * runtime/JSFunction.cpp:
+        * runtime/JSFunction.h:
+        * runtime/JSGenericTypedArrayView.h:
+        * runtime/JSGenericTypedArrayViewInlines.h:
+        * runtime/JSGlobalObject.cpp:
+        * runtime/JSGlobalObject.h:
+        * runtime/JSNotAnObject.cpp:
+        * runtime/JSNotAnObject.h:
+        * runtime/JSONObject.cpp:
+        * runtime/JSONObject.h:
+            - remove getOwnPropertyDescriptor
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::propertyIsEnumerable):
+            - switch to call new getOwnPropertyDescriptor member function
+        (JSC::JSObject::getOwnPropertyDescriptor):
+            - new, based on imlementation from GET_OWN_PROPERTY_DESCRIPTOR_IMPL
+        (JSC::JSObject::defineOwnNonIndexProperty):
+            - switch to call new getOwnPropertyDescriptor member function
+        * runtime/JSObject.h:
+        * runtime/JSProxy.cpp:
+        * runtime/JSProxy.h:
+        * runtime/NamePrototype.cpp:
+        * runtime/NamePrototype.h:
+        * runtime/NumberConstructor.cpp:
+        * runtime/NumberConstructor.h:
+        * runtime/NumberPrototype.cpp:
+        * runtime/NumberPrototype.h:
+            - remove getOwnPropertyDescriptor
+        * runtime/ObjectConstructor.cpp:
+        (JSC::objectConstructorGetOwnPropertyDescriptor):
+        (JSC::objectConstructorSeal):
+        (JSC::objectConstructorFreeze):
+        (JSC::objectConstructorIsSealed):
+        (JSC::objectConstructorIsFrozen):
+            - switch to call new getOwnPropertyDescriptor member function
+        * runtime/ObjectConstructor.h:
+            - remove getOwnPropertyDescriptor
+        * runtime/PropertyDescriptor.h:
+            - remove GET_OWN_PROPERTY_DESCRIPTOR_IMPL
+        * runtime/RegExpConstructor.cpp:
+        * runtime/RegExpConstructor.h:
+        * runtime/RegExpMatchesArray.cpp:
+        * runtime/RegExpMatchesArray.h:
+        * runtime/RegExpObject.cpp:
+        * runtime/RegExpObject.h:
+        * runtime/RegExpPrototype.cpp:
+        * runtime/RegExpPrototype.h:
+        * runtime/StringConstructor.cpp:
+        * runtime/StringConstructor.h:
+        * runtime/StringObject.cpp:
+        * runtime/StringObject.h:
+            - remove getOwnPropertyDescriptor
+
+2013-08-20  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        <https://webkit.org/b/120079> Flattening a dictionary can cause CopiedSpace corruption
+
+        Reviewed by Oliver Hunt.
+
+        When we flatten an object in dictionary mode, we compact its properties. If the object 
+        had out-of-line storage in the form of a Butterfly prior to this compaction, and after 
+        compaction its properties fit inline, the object's Structure "forgets" that the object 
+        has a non-zero Butterfly pointer. During GC, we check the Butterfly and reportLiveBytes 
+        with bytes = 0, which causes all sorts of badness in CopiedSpace.
+
+        Instead, after we flatten a dictionary, if properties fit inline we should clear the 
+        Butterfly pointer so that the GC doesn't get confused later.
+
+        This patch does this clearing, and it also adds JSObject::checkStructure, which overrides
+        JSCell::checkStructure to add an ASSERT that makes sure that the Structure being assigned
+        agrees with the whether or not the object has a Butterfly. Also added an ASSERT to check
+        that the number of bytes reported to SlotVisitor::copyLater is non-zero.
+
+        * heap/SlotVisitorInlines.h:
+        (JSC::SlotVisitor::copyLater):
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::notifyPresenceOfIndexedAccessors):
+        (JSC::JSObject::convertUndecidedToInt32):
+        (JSC::JSObject::convertUndecidedToDouble):
+        (JSC::JSObject::convertUndecidedToContiguous):
+        (JSC::JSObject::convertInt32ToDouble):
+        (JSC::JSObject::convertInt32ToContiguous):
+        (JSC::JSObject::genericConvertDoubleToContiguous):
+        (JSC::JSObject::switchToSlowPutArrayStorage):
+        (JSC::JSObject::setPrototype):
+        (JSC::JSObject::putDirectAccessor):
+        (JSC::JSObject::seal):
+        (JSC::JSObject::freeze):
+        (JSC::JSObject::preventExtensions):
+        (JSC::JSObject::reifyStaticFunctionsForDelete):
+        (JSC::JSObject::removeDirect):
+        * runtime/JSObject.h:
+        (JSC::JSObject::setButterfly):
+        (JSC::JSObject::putDirectInternal):
+        (JSC::JSObject::setStructure):
+        (JSC::JSObject::setStructureAndReallocateStorageIfNecessary):
+        * runtime/Structure.cpp:
+        (JSC::Structure::flattenDictionaryStructure):
+
+2013-08-20  Alex Christensen  <achristensen@apple.com>
+
+        Compile fix for Win64 after r154156.
+
+        Rubber stamped by Oliver Hunt.
+
+        * jit/JITStubsMSVC64.asm:
+        Renamed ctiVMThrowTrampolineSlowpath to ctiVMHandleException and
+        cti_vm_throw_slowpath to cti_vm_handle_exception.
+
+2013-08-20  Alex Christensen  <achristensen@apple.com>
+
+        <https://webkit.org/b/120076> More work towards a Win64 build
+
+        Reviewed by Brent Fulgham.
+
+        * JavaScriptCore.vcxproj/JavaScriptCoreGenerated.make:
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/LLIntAssembly.make:
+        * JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/LLIntDesiredOffsets.make:
+        * JavaScriptCore.vcxproj/copy-files.cmd:
+        * JavaScriptCore.vcxproj/jsc/jscCommon.props:
+        * JavaScriptCore.vcxproj/testRegExp/testRegExpCommon.props:
+        Use PlatformArchitecture macro instead of bin32, lib32, and obj32.
+
+2013-08-20  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        <https://webkit.org/b/119919> Concurrent JIT crashes in various fast/js/dfg-* tests while the main thread is setting innerHTML
+
+        Reviewed by Geoffrey Garen.
+
+        More fixes for WriteBarrier deferral during concurrent JIT-ing. This patch makes the use of DesiredWriteBarriers class and the 
+        initializeLazyWriteBarrierFor* wrapper functions more sane. 
+
+        Refactored DesiredWriteBarrier to require an owner, a type, a CodeBlock, and an index. The type indicates how to use the CodeBlock
+        and index when triggering the WriteBarrier at the end of compilation. 
+
+        The client code of initializeLazy* is now responsible for creating the WriteBarrier that will be initialized as well as passing
+        in the relevant index to be used at the end of compilation. Things were kind of muddled before in that one function did a 
+        little extra work that really shouldn't have been its responsibility.
+
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::addConstant):
+        (JSC::DFG::ByteCodeParser::InlineStackEntry::InlineStackEntry):
+        * dfg/DFGDesiredWriteBarriers.cpp:
+        (JSC::DFG::DesiredWriteBarrier::DesiredWriteBarrier):
+        (JSC::DFG::DesiredWriteBarrier::trigger):
+        * dfg/DFGDesiredWriteBarriers.h:
+        (JSC::DFG::DesiredWriteBarriers::add):
+        (JSC::DFG::initializeLazyWriteBarrierForInlineCallFrameExecutable):
+        (JSC::DFG::initializeLazyWriteBarrierForInlineCallFrameCallee):
+        (JSC::DFG::initializeLazyWriteBarrierForConstant):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::truncateConstantToInt32):
+        * dfg/DFGGraph.h:
+        (JSC::DFG::Graph::constantRegisterForConstant):
+
+2013-08-20  Michael Saboff  <msaboff@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120075
+        REGRESSION (r128400): BBC4 website not displaying pictures
+
+        Reviewed by Oliver Hunt.
+
+        * runtime/RegExpMatchesArray.h:
+        (JSC::RegExpMatchesArray::createStructure): Changed the array IndexingType to be ArrayWithSlowPutArrayStorage
+        so that the match results will be reified before any other modification to the results array.
+
+2013-08-19  Filip Pizlo  <fpizlo@apple.com>
+
+        Incorrect behavior on emscripten-compiled cube2hash
+        https://bugs.webkit.org/show_bug.cgi?id=120033
+
+        Reviewed by Mark Hahnenberg.
+        
+        If PutClosureVar is may-aliased to another PutClosureVar or GetClosureVar
+        then we should bail attempts to CSE.
+
+        * dfg/DFGCSEPhase.cpp:
+        (JSC::DFG::CSEPhase::scopedVarLoadElimination):
+        (JSC::DFG::CSEPhase::scopedVarStoreElimination):
+
+2013-08-20  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120073
+        Remove use of GOPD from JSFunction::defineProperty
+
+        Reviewed by Oliver Hunt.
+
+        Call getOwnPropertySlot to check for existing properties instead.
+
+        * runtime/JSFunction.cpp:
+        (JSC::JSFunction::defineOwnProperty):
+            - getOwnPropertyDescriptor -> getOwnPropertySlot
+
+2013-08-20  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120067
+        Remove getPropertyDescriptor
+
+        Reviewed by Oliver Hunt.
+
+        This is used by lookupGetter/lookupSetter - this can easily bee replaced by getPropertySlot.
+        Since we'll be getting the GetterSetter from the slot in the setter case, rename isGetter() to isAccessor().
+
+        * runtime/JSObject.cpp:
+        * runtime/JSObject.h:
+            - remove getPropertyDescriptor
+        * runtime/ObjectPrototype.cpp:
+        (JSC::objectProtoFuncLookupGetter):
+        (JSC::objectProtoFuncLookupSetter):
+            - replace call to getPropertyDescriptor with getPropertySlot
+        * runtime/PropertyDescriptor.h:
+        * runtime/PropertySlot.h:
+        (JSC::PropertySlot::isAccessor):
+        (JSC::PropertySlot::isCacheableGetter):
+        (JSC::PropertySlot::getterSetter):
+            - rename isGetter() to isAccessor()
+
+2013-08-20  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120054
+        Remove some dead code following getOwnPropertyDescriptor cleanup
+
+        Reviewed by Oliver Hunt.
+
+        * runtime/Lookup.h:
+        (JSC::getStaticFunctionSlot):
+            - remove getStaticPropertyDescriptor, getStaticFunctionDescriptor, getStaticValueDescriptor.
+
+2013-08-20  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120052
+        Remove custom getOwnPropertyDescriptor for JSProxy
+
+        Reviewed by Geoff Garen.
+
+        GET_OWN_PROPERTY_DESCRIPTOR_IMPL runs afoul with JSProxy due to the workaround for JSDOMWindow's broken behavior.
+        Because the window object incorrectly searches the prototype chain in getOwnPropertySlot we check that the base
+        object matches, but in the case of JSProxy we can end up comparing the window object to the window shell & falsely
+        assuming this is a prototype property. Add toThis conversion to correctly identify proxied own access. I've kept
+        the original slotBase check as a fast case, and also so that direct access on JSDOMWindow still works.
+
+        * runtime/JSProxy.cpp:
+            - Remove custom getOwnPropertyDescriptor implementation.
+        * runtime/PropertyDescriptor.h:
+            - Modify own property access check to perform toThis conversion.
+
+2013-08-20  Alex Christensen  <achristensen@apple.com>
+
+        Use PlatformArchitecture to distinguish between 32-bit and 64-bit builds on Windows.
+        https://bugs.webkit.org/show_bug.cgi?id=119512
+
+        Reviewed by Brent Fulgham.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.vcxproj/JavaScriptCoreCommon.props:
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/LLIntAssembly.vcxproj:
+        * JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/LLIntDesiredOffsets.vcxproj:
+        * JavaScriptCore.vcxproj/LLInt/LLIntOffsetsExtractor/LLIntOffsetsExtractor.vcxproj:
+        * JavaScriptCore.vcxproj/LLInt/LLIntOffsetsExtractor/LLIntOffsetsExtractorCommon.props:
+        Replaced obj32, bin32, and lib32 with macros for 64-bit build.
+
+2013-08-20  Julien Brianceau  <jbrianceau@nds.com>
+
+        <https://webkit.org/b/120062> Missing ensureSpace call in sh4 baseline JIT.
+
+        Reviewed by Allan Sandfeld Jensen.
+
+        branchPtrWithPatch() of baseline JIT must ensure that space is available for its
+        instructions and two constants now DFG is enabled for sh4 architecture.
+        These missing ensureSpace calls lead to random crashes.
+
+        * assembler/MacroAssemblerSH4.h:
+        (JSC::MacroAssemblerSH4::branchPtrWithPatch):
+
+2013-08-19  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120034
+        Remove custom getOwnPropertyDescriptor for global objects
+
+        Reviewed by Geoff Garen.
+
+        Fix attributes of JSC SynbolTableObject entries, ensure that cross frame access is safe, and suppress prototype chain walk.
+
+        * runtime/JSGlobalObject.cpp:
+            - Remove custom getOwnPropertyDescriptor implementation.
+        * runtime/JSSymbolTableObject.h:
+        (JSC::symbolTableGet):
+            - The symbol table does not store the DontDelete attribute, we should be adding it back in.
+        * runtime/PropertyDescriptor.h:
+            - JSDOMWindow walks the prototype chain on own access. This is bad, but for now workaround for the getOwnPropertyDescriptor case.
+        * runtime/PropertySlot.h:
+        (JSC::PropertySlot::setUndefined):
+            - This is used by WebCore when blocking access to properties on cross-frame access.
+              Mark blocked properties as read-only, non-configurable to prevent defineProperty.
+
+2013-08-17  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG should inline typedArray.byteOffset
+        https://bugs.webkit.org/show_bug.cgi?id=119962
+
+        Reviewed by Oliver Hunt.
+        
+        This adds a new node, GetTypedArrayByteOffset, which inlines
+        typedArray.byteOffset.
+        
+        Also, I improved a bunch of the clobbering logic related to typed arrays
+        and clobbering in general. For example, PutByOffset/PutStructure are not
+        clobber-world so they can be handled by most default cases in CSE. Also,
+        It's better to use the 'Class_field' notation for typed arrays now that
+        they no longer involve magical descriptor thingies.
+
+        * bytecode/SpeculatedType.h:
+        * dfg/DFGAbstractHeap.h:
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::::executeEffects):
+        * dfg/DFGArrayMode.h:
+        (JSC::DFG::neverNeedsStorage):
+        * dfg/DFGCSEPhase.cpp:
+        (JSC::DFG::CSEPhase::getByValLoadElimination):
+        (JSC::DFG::CSEPhase::getByOffsetLoadElimination):
+        (JSC::DFG::CSEPhase::getPropertyStorageLoadElimination):
+        (JSC::DFG::CSEPhase::checkArrayElimination):
+        (JSC::DFG::CSEPhase::getIndexedPropertyStorageLoadElimination):
+        (JSC::DFG::CSEPhase::getTypedArrayByteOffsetLoadElimination):
+        (JSC::DFG::CSEPhase::performNodeCSE):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        (JSC::DFG::FixupPhase::attemptToMakeGetTypedArrayByteLength):
+        (JSC::DFG::FixupPhase::convertToGetArrayLength):
+        (JSC::DFG::FixupPhase::attemptToMakeGetTypedArrayByteOffset):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileGetTypedArrayByteOffset):
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGTypeCheckHoistingPhase.cpp:
+        (JSC::DFG::TypeCheckHoistingPhase::identifyRedundantStructureChecks):
+        * runtime/ArrayBuffer.h:
+        (JSC::ArrayBuffer::offsetOfData):
+        * runtime/Butterfly.h:
+        (JSC::Butterfly::offsetOfArrayBuffer):
+        * runtime/IndexingHeader.h:
+        (JSC::IndexingHeader::offsetOfArrayBuffer):
+
+2013-08-18  Filip Pizlo  <fpizlo@apple.com>
+
+        <https://webkit.org/b/119994> DFG new Array() inlining could get confused about global objects
+
+        Reviewed by Geoffrey Garen.
+
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::handleConstantInternalFunction):
+
+2013-08-18  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=119995
+        Start removing custom implementations of getOwnPropertyDescriptor
+
+        Reviewed by Oliver Hunt.
+
+        This can now typically implemented in terms of getOwnPropertySlot.
+        Add a macro to PropertyDescriptor to define an implementation of GOPD in terms of GOPS.
+        Switch over most classes in JSC & the WebCore bindings generator to use this.
+
+        * API/JSCallbackObjectFunctions.h:
+        * debugger/DebuggerActivation.cpp:
+        * runtime/Arguments.cpp:
+        * runtime/ArrayConstructor.cpp:
+        * runtime/ArrayPrototype.cpp:
+        * runtime/BooleanPrototype.cpp:
+        * runtime/DateConstructor.cpp:
+        * runtime/DatePrototype.cpp:
+        * runtime/ErrorPrototype.cpp:
+        * runtime/JSActivation.cpp:
+        * runtime/JSArray.cpp:
+        * runtime/JSArrayBuffer.cpp:
+        * runtime/JSArrayBufferView.cpp:
+        * runtime/JSCell.cpp:
+        * runtime/JSDataView.cpp:
+        * runtime/JSDataViewPrototype.cpp:
+        * runtime/JSFunction.cpp:
+        * runtime/JSGenericTypedArrayViewInlines.h:
+        * runtime/JSNotAnObject.cpp:
+        * runtime/JSONObject.cpp:
+        * runtime/JSObject.cpp:
+        * runtime/NamePrototype.cpp:
+        * runtime/NumberConstructor.cpp:
+        * runtime/NumberPrototype.cpp:
+        * runtime/ObjectConstructor.cpp:
+            - Implement getOwnPropertySlot in terms of GET_OWN_PROPERTY_DESCRIPTOR_IMPL.
+        * runtime/PropertyDescriptor.h:
+            - Added GET_OWN_PROPERTY_DESCRIPTOR_IMPL macro.
+        * runtime/PropertySlot.h:
+        (JSC::PropertySlot::isValue):
+        (JSC::PropertySlot::isGetter):
+        (JSC::PropertySlot::isCustom):
+        (JSC::PropertySlot::isCacheableValue):
+        (JSC::PropertySlot::isCacheableGetter):
+        (JSC::PropertySlot::isCacheableCustom):
+        (JSC::PropertySlot::attributes):
+        (JSC::PropertySlot::getterSetter):
+            - Add accessors necessary to convert PropertySlot to descriptor.
+        * runtime/RegExpConstructor.cpp:
+        * runtime/RegExpMatchesArray.cpp:
+        * runtime/RegExpMatchesArray.h:
+        * runtime/RegExpObject.cpp:
+        * runtime/RegExpPrototype.cpp:
+        * runtime/StringConstructor.cpp:
+        * runtime/StringObject.cpp:
+            - Implement getOwnPropertySlot in terms of GET_OWN_PROPERTY_DESCRIPTOR_IMPL.
+
+2013-08-19  Michael Saboff  <msaboff@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120015 DFG 32Bit: Crash loading "Classic" site @ translate.google.com
+
+        Reviewed by Sam Weinig.
+
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::fillSpeculateCell): Added checks for spillFormat being
+        DataFormatInteger or DataFormatDouble similar to what is in the 64 bit code and in
+        all versions of fillSpeculateBoolean().
+
+2013-08-19  Michael Saboff  <msaboff@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120020 Change Set 154207 causes wrong register to be used for 32 bit tests
+
+        Reviewed by Benjamin Poulain.
+
+        Change branshTest32 to only use the byte for 8 bit test on the lower 4 registers.
+        Registers 4 through 7 as byte regisers are ah, ch, dh and bh instead of sp, bp, si and di.
+
+        * assembler/MacroAssemblerX86Common.h:
+        (JSC::MacroAssemblerX86Common::branchTest32):
+
+2013-08-16  Oliver Hunt  <oliver@apple.com>
+
+        <https://webkit.org/b/119860> Crash during exception unwinding
+
+        Reviewed by Filip Pizlo.
+
+        Add an "Unreachable" NodeType, and then rearrange op_throw and op_throw_reference_error
+        to plant Throw or ThrowReferenceError followed by a flush and then the Unreachable node.
+
+        We need this so that Throw and ThrowReferenceError no longer need to be treated as
+        terminals and the subsequent flush keeps the activation (and other registers) live.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::::executeEffects):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::isTerminal):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2013-08-19  Víctor Manuel Jáquez Leal  <vjaquez@igalia.com>
+
+        <https://webkit.org/b/120008> [GTK][ARM] javascriptcore compilation is broken
+
+        Reviewed by Oliver Hunt.
+
+        Guard the compilation of these files only if DFG_JIT is enabled.
+
+        * dfg/DFGDesiredTransitions.cpp:
+        * dfg/DFGDesiredTransitions.h:
+        * dfg/DFGDesiredWeakReferences.cpp:
+        * dfg/DFGDesiredWeakReferences.h:
+        * dfg/DFGDesiredWriteBarriers.cpp:
+        * dfg/DFGDesiredWriteBarriers.h:
+
 2013-08-17  Filip Pizlo  <fpizlo@apple.com>
 
         REGRESSION(r154218): DFG::FixupPhase no longer turns GetById's child1 into CellUse

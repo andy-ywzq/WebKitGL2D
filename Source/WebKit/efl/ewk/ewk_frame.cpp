@@ -518,7 +518,7 @@ Eina_Bool ewk_frame_text_matches_unmark_all(Evas_Object* ewkFrame)
     EWK_FRAME_SD_GET_OR_RETURN(ewkFrame, smartData, false);
     EINA_SAFETY_ON_NULL_RETURN_VAL(smartData->frame, false);
 
-    smartData->frame->document()->markers()->removeMarkers(WebCore::DocumentMarker::TextMatch);
+    smartData->frame->document()->markers().removeMarkers(WebCore::DocumentMarker::TextMatch);
     return true;
 }
 
@@ -558,7 +558,7 @@ Eina_Bool ewk_frame_text_matches_nth_pos_get(const Evas_Object* ewkFrame, size_t
     EWK_FRAME_SD_GET_OR_RETURN(ewkFrame, smartData, false);
     EINA_SAFETY_ON_NULL_RETURN_VAL(smartData->frame, false);
 
-    Vector<WebCore::IntRect> intRects = smartData->frame->document()->markers()->renderedRectsForMarkers(WebCore::DocumentMarker::TextMatch);
+    Vector<WebCore::IntRect> intRects = smartData->frame->document()->markers().renderedRectsForMarkers(WebCore::DocumentMarker::TextMatch);
 
     /* remove useless values */
     std::remove_if(intRects.begin(), intRects.end(), _ewk_frame_rect_is_negative_value);
@@ -1073,11 +1073,9 @@ Ewk_Text_Selection_Type ewk_frame_text_selection_type_get(const Evas_Object* ewk
     EWK_FRAME_SD_GET_OR_RETURN(ewkFrame, smartData, EWK_TEXT_SELECTION_NONE);
     EINA_SAFETY_ON_NULL_RETURN_VAL(smartData->frame, EWK_TEXT_SELECTION_NONE);
 
-    WebCore::FrameSelection* controller = smartData->frame->selection();
-    if (!controller)
-        return EWK_TEXT_SELECTION_NONE;
+    WebCore::FrameSelection& controller = smartData->frame->selection();
 
-    return static_cast<Ewk_Text_Selection_Type>(controller->selectionType());
+    return static_cast<Ewk_Text_Selection_Type>(controller.selectionType());
 }
 
 /* internal methods ****************************************************/

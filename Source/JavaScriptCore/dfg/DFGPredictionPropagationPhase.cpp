@@ -466,6 +466,7 @@ private:
             
         case PutByValAlias:
         case GetArrayLength:
+        case GetTypedArrayByteOffset:
         case Int32ToDouble:
         case DoubleAsInt32:
         case GetLocalUnlinked:
@@ -542,6 +543,7 @@ private:
         case Phantom:
         case PutGlobalVar:
         case CheckWatchdogTimer:
+        case Unreachable:
             break;
             
         // These gets ignored because it doesn't do anything.

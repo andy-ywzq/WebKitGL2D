@@ -301,7 +301,7 @@ public:
     void lazyReattach(ShouldSetAttached = SetAttached);
 
     virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
-    virtual bool rendererIsNeeded(const NodeRenderingContext&);
+    virtual bool rendererIsNeeded(const RenderStyle&);
     void didAffectSelector(AffectedSelectorMask);
 
     ShadowRoot* shadowRoot() const;
@@ -481,7 +481,7 @@ public:
 #endif
 
 #if ENABLE(SVG)
-    virtual bool childShouldCreateRenderer(const NodeRenderingContext&) const;
+    virtual bool childShouldCreateRenderer(const Node*) const;
     bool hasPendingResources() const;
     void setHasPendingResources();
     void clearHasPendingResources();

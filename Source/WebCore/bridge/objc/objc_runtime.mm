@@ -215,13 +215,6 @@ bool ObjcFallbackObjectImp::getOwnPropertySlot(JSObject*, ExecState*, PropertyNa
     return true;
 }
 
-bool ObjcFallbackObjectImp::getOwnPropertyDescriptor(JSObject*, ExecState*, PropertyName, PropertyDescriptor& descriptor)
-{
-    // keep the prototype from getting called instead of just returning false
-    descriptor.setUndefined();
-    return true;
-}
-
 void ObjcFallbackObjectImp::put(JSCell*, ExecState*, PropertyName, JSValue, PutPropertySlot&)
 {
 }

@@ -90,15 +90,6 @@ bool JSDataViewPrototype::getOwnPropertySlot(
         propertyName, slot);
 }
 
-bool JSDataViewPrototype::getOwnPropertyDescriptor(
-    JSObject* object, ExecState* exec, PropertyName propertyName,
-    PropertyDescriptor& descriptor)
-{
-    return getStaticFunctionDescriptor<JSObject>(
-        exec, ExecState::dataViewTable(exec), jsCast<JSDataViewPrototype*>(object),
-        propertyName, descriptor);
-}
-
 template<typename Adaptor>
 EncodedJSValue getData(ExecState* exec)
 {

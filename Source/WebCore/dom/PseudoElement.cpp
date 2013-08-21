@@ -29,7 +29,6 @@
 
 #include "ContentData.h"
 #include "InspectorInstrumentation.h"
-#include "NodeRenderingContext.h"
 #include "RenderObject.h"
 #include "RenderQuote.h"
 
@@ -97,9 +96,9 @@ void PseudoElement::didAttachRenderers()
     }
 }
 
-bool PseudoElement::rendererIsNeeded(const NodeRenderingContext& context)
+bool PseudoElement::rendererIsNeeded(const RenderStyle& style)
 {
-    return pseudoElementRendererIsNeeded(context.style());
+    return pseudoElementRendererIsNeeded(&style);
 }
 
 void PseudoElement::didRecalcStyle(Style::Change)

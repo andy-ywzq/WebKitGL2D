@@ -100,16 +100,6 @@ bool RegExpObject::getOwnPropertySlot(JSObject* object, ExecState* exec, Propert
     return getStaticValueSlot<RegExpObject, JSObject>(exec, ExecState::regExpTable(exec), jsCast<RegExpObject*>(object), propertyName, slot);
 }
 
-bool RegExpObject::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    if (propertyName == exec->propertyNames().lastIndex) {
-        RegExpObject* regExp = asRegExpObject(object);
-        descriptor.setDescriptor(regExp->getLastIndex(), regExp->m_lastIndexIsWritable ? DontDelete | DontEnum : DontDelete | DontEnum | ReadOnly);
-        return true;
-    }
-    return getStaticValueDescriptor<RegExpObject, JSObject>(exec, ExecState::regExpTable(exec), jsCast<RegExpObject*>(object), propertyName, descriptor);
-}
-
 bool RegExpObject::deleteProperty(JSCell* cell, ExecState* exec, PropertyName propertyName)
 {
     if (propertyName == exec->propertyNames().lastIndex)

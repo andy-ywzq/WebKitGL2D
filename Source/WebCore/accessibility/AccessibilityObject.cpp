@@ -1225,7 +1225,22 @@ AccessibilityObject* AccessibilityObject::anchorElementForNode(Node* node)
     
     return anchorRenderer->document()->axObjectCache()->getOrCreate(anchorRenderer);
 }
+
+AccessibilityObject* AccessibilityObject::headingElementForNode(Node* node)
+{
+    if (!node)
+        return 0;
     
+    RenderObject* renderObject = node->renderer();
+    if (!renderObject)
+        return 0;
+    
+    AccessibilityObject* axObject = renderObject->document()->axObjectCache()->getOrCreate(renderObject);
+    for (; axObject && axObject->roleValue() != HeadingRole; axObject = axObject->parentObject()) { }
+    
+    return axObject;
+}
+
 void AccessibilityObject::ariaTreeRows(AccessibilityChildrenVector& result)
 {
     AccessibilityChildrenVector axChildren = children();
@@ -1276,6 +1291,7 @@ void AccessibilityObject::ariaTreeItemDisclosedRows(AccessibilityChildrenVector&
 #if HAVE(ACCESSIBILITY)
 const String& AccessibilityObject::actionVerb() const
 {
+#if !PLATFORM(IOS)
     // FIXME: Need to add verbs for select elements.
     DEFINE_STATIC_LOCAL(const String, buttonAction, (AXButtonActionVerb()));
     DEFINE_STATIC_LOCAL(const String, textFieldAction, (AXTextFieldActionVerb()));
@@ -1286,7 +1302,6 @@ const String& AccessibilityObject::actionVerb() const
     DEFINE_STATIC_LOCAL(const String, menuListAction, (AXMenuListActionVerb()));
     DEFINE_STATIC_LOCAL(const String, menuListPopupAction, (AXMenuListPopupActionVerb()));
     DEFINE_STATIC_LOCAL(const String, listItemAction, (AXListItemActionVerb()));
-    DEFINE_STATIC_LOCAL(const String, noAction, ());
 
     switch (roleValue()) {
     case ButtonRole:
@@ -1309,8 +1324,11 @@ const String& AccessibilityObject::actionVerb() const
     case ListItemRole:
         return listItemAction;
     default:
-        return noAction;
+        return nullAtom;
     }
+#else
+    return nullAtom;
+#endif
 }
 #endif
 

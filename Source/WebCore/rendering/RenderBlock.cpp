@@ -1819,7 +1819,7 @@ void RenderBlock::computeOverflow(LayoutUnit oldClientAfterEdge, bool recomputeF
     LayoutUnit textIndent = textIndentOffset();
     if (textIndent < 0) {
         LayoutRect clientRect(clientBoxRect());
-        LayoutRect rectToApply = LayoutRect(clientRect.x() + min<LayoutUnit>(0, textIndent), clientRect.y(), clientRect.width() - min<LayoutUnit>(0, textIndent), clientRect.height());
+        LayoutRect rectToApply = LayoutRect(clientRect.x() + textIndent, clientRect.y(), clientRect.width() - min<LayoutUnit>(0, textIndent), clientRect.height());
         addVisualOverflow(rectToApply);
     }
 
@@ -3278,8 +3278,8 @@ void RenderBlock::paintCaret(PaintInfo& paintInfo, const LayoutPoint& paintOffse
     RenderObject* caretPainter;
     bool isContentEditable;
     if (type == CursorCaret) {
-        caretPainter = frame()->selection()->caretRenderer();
-        isContentEditable = frame()->selection()->rendererIsEditable();
+        caretPainter = frame()->selection().caretRenderer();
+        isContentEditable = frame()->selection().rendererIsEditable();
     } else {
         caretPainter = frame()->page()->dragCaretController().caretRenderer();
         isContentEditable = frame()->page()->dragCaretController().isContentEditable();
@@ -3287,7 +3287,7 @@ void RenderBlock::paintCaret(PaintInfo& paintInfo, const LayoutPoint& paintOffse
 
     if (caretPainter == this && (isContentEditable || caretBrowsing)) {
         if (type == CursorCaret)
-            frame()->selection()->paintCaret(paintInfo.context, paintOffset, paintInfo.rect);
+            frame()->selection().paintCaret(paintInfo.context, paintOffset, paintInfo.rect);
         else
             frame()->page()->dragCaretController().paintDragCaret(frame(), paintInfo.context, paintOffset, paintInfo.rect);
     }

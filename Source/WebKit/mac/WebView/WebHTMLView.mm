@@ -860,26 +860,11 @@ static NSURL* uniqueURLWithRelativePart(NSString *relativePart)
 
     DOMRange *range = [self _selectedRange];
     Frame* coreFrame = core([self _frame]);
-    
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
+
     DOMDocumentFragment *fragment = [self _documentFragmentFromPasteboard:pasteboard inContext:range allowPlainText:allowPlainText];
     if (fragment && [self _shouldInsertFragment:fragment replacingDOMRange:range givenAction:WebViewInsertActionPasted])
         coreFrame->editor().pasteAsFragment(core(fragment), [self _canSmartReplaceWithPasteboard:pasteboard], false);
-#else
-    // Mail is ignoring the frament passed to the delegate and creates a new one.
-    // We want to avoid creating the fragment twice.
-    if (applicationIsAppleMail()) {
-        if ([self _shouldInsertFragment:nil replacingDOMRange:range givenAction:WebViewInsertActionPasted]) {
-            DOMDocumentFragment *fragment = [self _documentFragmentFromPasteboard:pasteboard inContext:range allowPlainText:allowPlainText];
-            if (fragment)
-                coreFrame->editor().pasteAsFragment(core(fragment), [self _canSmartReplaceWithPasteboard:pasteboard], false);
-        }        
-    } else {
-        DOMDocumentFragment *fragment = [self _documentFragmentFromPasteboard:pasteboard inContext:range allowPlainText:allowPlainText];
-        if (fragment && [self _shouldInsertFragment:fragment replacingDOMRange:range givenAction:WebViewInsertActionPasted])
-            coreFrame->editor().pasteAsFragment(core(fragment), [self _canSmartReplaceWithPasteboard:pasteboard], false);
-    }
-#endif
+
     [webView _setInsertionPasteboard:nil];
     [webView release];
 }
@@ -903,7 +888,7 @@ static NSURL* uniqueURLWithRelativePart(NSString *relativePart)
     Frame* coreFrame = core([self _frame]); 
     if (!coreFrame) 
         return NO; 
-    if (coreFrame->selection()->isContentRichlyEditable()) 
+    if (coreFrame->selection().isContentRichlyEditable())
         [self _pasteWithPasteboard:pasteboard allowPlainText:YES]; 
     else 
         [self _pasteAsPlainTextWithPasteboard:pasteboard]; 
@@ -977,7 +962,7 @@ static NSURL* uniqueURLWithRelativePart(NSString *relativePart)
 - (DOMRange *)_selectedRange
 {
     Frame* coreFrame = core([self _frame]);
-    return coreFrame ? kit(coreFrame->selection()->toNormalizedRange().get()) : nil;
+    return coreFrame ? kit(coreFrame->selection().toNormalizedRange().get()) : nil;
 }
 
 - (BOOL)_shouldDeleteRange:(DOMRange *)range
@@ -1790,25 +1775,25 @@ static bool mouseEventIsPartOfClickOrDrag(NSEvent *event)
 - (BOOL)_hasSelection
 {
     Frame* coreFrame = core([self _frame]);
-    return coreFrame && coreFrame->selection()->isRange();
+    return coreFrame && coreFrame->selection().isRange();
 }
 
 - (BOOL)_hasSelectionOrInsertionPoint
 {
     Frame* coreFrame = core([self _frame]);
-    return coreFrame && coreFrame->selection()->isCaretOrRange();
+    return coreFrame && coreFrame->selection().isCaretOrRange();
 }
 
 - (BOOL)_hasInsertionPoint
 {
     Frame* coreFrame = core([self _frame]);
-    return coreFrame && coreFrame->selection()->isCaret();
+    return coreFrame && coreFrame->selection().isCaret();
 }
 
 - (BOOL)_isEditable
 {
     Frame* coreFrame = core([self _frame]);
-    return coreFrame && coreFrame->selection()->isContentEditable();
+    return coreFrame && coreFrame->selection().isContentEditable();
 }
 
 - (BOOL)_transparentBackground
@@ -2551,7 +2536,7 @@ WEBCORE_COMMAND(yankAndSelect)
     COMMAND_PROLOGUE
 
     if (Frame* coreFrame = core([self _frame]))
-        coreFrame->selection()->revealSelection(ScrollAlignment::alignCenterAlways);
+        coreFrame->selection().revealSelection(ScrollAlignment::alignCenterAlways);
 }
 
 - (BOOL)validateUserInterfaceItemWithoutDelegate:(id <NSValidatedUserInterfaceItem>)item
@@ -2660,7 +2645,7 @@ WEBCORE_COMMAND(yankAndSelect)
     
     if (action == @selector(pasteAsRichText:))
         return frame && (frame->editor().canDHTMLPaste()
-            || (frame->editor().canPaste() && frame->selection()->isContentRichlyEditable()));
+            || (frame->editor().canPaste() && frame->selection().isContentRichlyEditable()));
     
     if (action == @selector(performFindPanelAction:))
         return NO;
@@ -2798,7 +2783,7 @@ WEBCORE_COMMAND(yankAndSelect)
         return YES;
 
     Frame* coreFrame = core([self _frame]);
-    bool selectionIsEditable = coreFrame && coreFrame->selection()->isContentEditable();
+    bool selectionIsEditable = coreFrame && coreFrame->selection().isContentEditable();
     bool nextResponderIsInWebView = [nextResponder isKindOfClass:[NSView class]]
         && [nextResponder isDescendantOf:[[[self _webView] mainFrame] frameView]];
 
@@ -2832,11 +2817,9 @@ WEBCORE_COMMAND(yankAndSelect)
         return;
 #endif
 
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
     // Legacy scrollbars require tracking the mouse at all times.
     if (WKRecommendedScrollerStyle() == NSScrollerStyleLegacy)
         return;
-#endif
 
     [[self _webView] _mouseDidMoveOverElement:nil modifierFlags:0];
     [self _removeMouseMovedObserverUnconditionally];
@@ -3380,13 +3363,11 @@ static void setMenuTargets(NSMenu* menu)
         return;
     }
 
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
     if (_private->trackingAreaForNonKeyWindow) {
         [self removeTrackingArea:_private->trackingAreaForNonKeyWindow];
         [_private->trackingAreaForNonKeyWindow release];
         _private->trackingAreaForNonKeyWindow = nil;
     }
-#endif
 
     NSWindow *keyWindow = [notification object];
 
@@ -3413,7 +3394,6 @@ static void setMenuTargets(NSMenu* menu)
         [_private->completionController endRevertingChange:NO moveLeft:NO];
     }
 
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
     if (WKRecommendedScrollerStyle() == NSScrollerStyleLegacy) {
         // Legacy style scrollbars have design details that rely on tracking the mouse all the time.
         // It's easiest to do this with a tracking area, which we will remove when the window is key
@@ -3424,7 +3404,6 @@ static void setMenuTargets(NSMenu* menu)
                                                     userInfo:nil];
         [self addTrackingArea:_private->trackingAreaForNonKeyWindow];
     }
-#endif
 }
 
 - (void)windowWillOrderOnScreen:(NSNotification *)notification
@@ -3761,12 +3740,12 @@ static bool matchesExtensionOrEquivalent(NSString *filename, NSString *extension
 // API when an editable region is not currently focused.
 static BOOL isTextInput(Frame* coreFrame)
 {
-    return coreFrame && !coreFrame->selection()->isNone() && coreFrame->selection()->isContentEditable();
+    return coreFrame && !coreFrame->selection().isNone() && coreFrame->selection().isContentEditable();
 }
 
 static BOOL isInPasswordField(Frame* coreFrame)
 {
-    return coreFrame && coreFrame->selection()->isInPasswordField();
+    return coreFrame && coreFrame->selection().isInPasswordField();
 }
 
 static PassRefPtr<KeyboardEvent> currentKeyboardEvent(Frame* coreFrame)
@@ -4232,7 +4211,7 @@ static PassRefPtr<KeyboardEvent> currentKeyboardEvent(Frame* coreFrame)
     COMMAND_PROLOGUE
 
     if (Frame* coreFrame = core([self _frame]))
-        coreFrame->selection()->revealSelection(ScrollAlignment::alignCenterAlways);
+        coreFrame->selection().revealSelection(ScrollAlignment::alignCenterAlways);
 }
 
 - (NSData *)_selectionStartFontAttributesAsRTF
@@ -5058,7 +5037,7 @@ static BOOL writingDirectionKeyBindingsEnabled()
     if (![[self _webView] smartInsertDeleteEnabled])
         return NO;
     Frame* coreFrame = core([self _frame]);
-    return coreFrame && coreFrame->selection()->granularity() == WordGranularity;
+    return coreFrame && coreFrame->selection().granularity() == WordGranularity;
 }
 
 - (NSEvent *)_mouseDownEvent
@@ -5233,7 +5212,7 @@ static BOOL writingDirectionKeyBindingsEnabled()
     if (!coreFrame)
         return;
 
-    NSRect rect = coreFrame->selection()->bounds();
+    NSRect rect = coreFrame->selection().bounds();
 
     NSDictionary *attributes = [attrString fontAttributesInRange:NSMakeRange(0,1)];
     NSFont *font = [attributes objectForKey:NSFontAttributeName];
@@ -5895,7 +5874,7 @@ static void extractUnderlines(NSAttributedString *string, Vector<CompositionUnde
         _private->exposeInputContext = exposeInputContext;
         // Let AppKit cache a potentially changed input context.
         // WebCore routinely sets the selection to None when editing, and IMs become unhappy when an input context suddenly turns nil, see bug 26009.
-        if (!coreFrame->selection()->isNone())
+        if (!coreFrame->selection().isNone())
             [NSApp updateWindows];
     }
 
@@ -5922,7 +5901,7 @@ static void extractUnderlines(NSAttributedString *string, Vector<CompositionUnde
 {
     if (![self _hasSelection])
         return NSZeroRect;
-    return core([self _frame])->selection()->bounds();
+    return core([self _frame])->selection().bounds();
 }
 
 - (NSArray *)selectionTextRects
@@ -5932,7 +5911,7 @@ static void extractUnderlines(NSAttributedString *string, Vector<CompositionUnde
 
     Vector<FloatRect> list;
     if (Frame* coreFrame = core([self _frame]))
-        coreFrame->selection()->getClippedVisibleTextRectangles(list);
+        coreFrame->selection().getClippedVisibleTextRectangles(list);
 
     size_t size = list.size();
 
@@ -5960,7 +5939,7 @@ static void extractUnderlines(NSAttributedString *string, Vector<CompositionUnde
 {
     if (![self _hasSelection])
         return NSZeroRect;
-    return core([self _frame])->selection()->bounds();
+    return core([self _frame])->selection().bounds();
 }
 
 - (NSArray *)pasteboardTypesForSelection
@@ -5983,7 +5962,7 @@ static void extractUnderlines(NSAttributedString *string, Vector<CompositionUnde
 {
     Frame* coreFrame = core([self _frame]);
     if (coreFrame)
-        coreFrame->selection()->selectAll();
+        coreFrame->selection().selectAll();
 }
 
 - (void)deselectAll
@@ -5991,7 +5970,7 @@ static void extractUnderlines(NSAttributedString *string, Vector<CompositionUnde
     Frame* coreFrame = core([self _frame]);
     if (!coreFrame)
         return;
-    coreFrame->selection()->clear();
+    coreFrame->selection().clear();
 }
 
 - (NSString *)string
@@ -6035,7 +6014,7 @@ static void extractUnderlines(NSAttributedString *string, Vector<CompositionUnde
     if (!attributedString) {
         Frame* coreFrame = core([self _frame]);
         if (coreFrame) {
-            RefPtr<Range> range = coreFrame->selection()->selection().toNormalizedRange();
+            RefPtr<Range> range = coreFrame->selection().selection().toNormalizedRange();
             attributedString = [WebHTMLConverter editingAttributedStringFromRange:range.get()];
         }
     }
@@ -6102,7 +6081,7 @@ static void extractUnderlines(NSAttributedString *string, Vector<CompositionUnde
     Document* document = coreFrame->document();
     if (!document)
         return;
-    document->markers()->removeMarkers(DocumentMarker::TextMatch);
+    document->markers().removeMarkers(DocumentMarker::TextMatch);
 }
 
 - (NSArray *)rectsForTextMatches
@@ -6114,7 +6093,7 @@ static void extractUnderlines(NSAttributedString *string, Vector<CompositionUnde
     if (!document)
         return [NSArray array];
 
-    Vector<IntRect> rects = document->markers()->renderedRectsForMarkers(DocumentMarker::TextMatch);
+    Vector<IntRect> rects = document->markers().renderedRectsForMarkers(DocumentMarker::TextMatch);
     unsigned count = rects.size();
     NSMutableArray *result = [NSMutableArray arrayWithCapacity:count];
     for (unsigned index = 0; index < count; ++index)

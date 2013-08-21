@@ -67,7 +67,6 @@
 #include "MediaQueryEvaluator.h"
 #include "MouseEvent.h"
 #include "MIMETypeRegistry.h"
-#include "NodeRenderingContext.h"
 #include "Page.h"
 #include "PageActivityAssertionToken.h"
 #include "PageGroup.h"
@@ -545,7 +544,7 @@ void HTMLMediaElement::finishParsingChildren()
 #endif
 }
 
-bool HTMLMediaElement::rendererIsNeeded(const NodeRenderingContext& context)
+bool HTMLMediaElement::rendererIsNeeded(const RenderStyle& style)
 {
 #if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
     UNUSED_PARAM(context);
@@ -555,7 +554,7 @@ bool HTMLMediaElement::rendererIsNeeded(const NodeRenderingContext& context)
 
     return true;
 #else
-    return controls() ? HTMLElement::rendererIsNeeded(context) : false;
+    return controls() && HTMLElement::rendererIsNeeded(style);
 #endif
 }
 
@@ -576,7 +575,7 @@ RenderObject* HTMLMediaElement::createRenderer(RenderArena* arena, RenderStyle*)
 #endif
 }
 
-bool HTMLMediaElement::childShouldCreateRenderer(const NodeRenderingContext& childContext) const
+bool HTMLMediaElement::childShouldCreateRenderer(const Node* child) const
 {
     if (!hasMediaControls())
         return false;
@@ -584,8 +583,9 @@ bool HTMLMediaElement::childShouldCreateRenderer(const NodeRenderingContext& chi
     // be rendered. So this should return false for most of the children.
     // One exception is a shadow tree built for rendering controls which should be visible.
     // So we let them go here by comparing its subtree root with one of the controls.
-    return (mediaControls()->treeScope() == childContext.node()->treeScope()
-            && childContext.isOnUpperEncapsulationBoundary() && HTMLElement::childShouldCreateRenderer(childContext));
+    return mediaControls()->treeScope() == child->treeScope()
+        && hasShadowRootParent(child)
+        && HTMLElement::childShouldCreateRenderer(child);
 }
 
 Node::InsertionNotificationRequest HTMLMediaElement::insertedInto(ContainerNode* insertionPoint)
@@ -4148,6 +4148,10 @@ void HTMLMediaElement::clearMediaPlayer(int flags)
     if (m_textTracks)
         configureTextTrackDisplay();
 #endif
+
+#if PLATFORM(MAC)
+    updateDisableSleep();
+#endif
 }
 
 bool HTMLMediaElement::canSuspend() const
@@ -4180,6 +4184,10 @@ void HTMLMediaElement::stop()
     // the media player now. Note that userCancelledLoad will already have cleared the player
     // if the media was not fully loaded. This handles all other cases.
     m_player.clear();
+
+#if PLATFORM(MAC)
+    updateDisableSleep();
+#endif
 }
 
 void HTMLMediaElement::suspend(ReasonForSuspension why)
@@ -4651,7 +4659,7 @@ bool HTMLMediaElement::createMediaControls()
     if (isFullscreen())
         mediaControls->enteredFullscreen();
 
-    ensureUserAgentShadowRoot().appendChild(mediaControls, ASSERT_NO_EXCEPTION);
+    ensureUserAgentShadowRoot().appendChild(mediaControls, ASSERT_NO_EXCEPTION, AttachLazily);
 
     if (!controls() || !inDocument())
         mediaControls->hide();

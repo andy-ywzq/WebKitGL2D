@@ -131,7 +131,7 @@ protected:
 
     virtual void finishParsingChildren();
     virtual void attributeChanged(const QualifiedName&, const AtomicString&, AttributeModificationReason = ModifiedDirectly) OVERRIDE;
-    virtual bool childShouldCreateRenderer(const NodeRenderingContext&) const OVERRIDE;
+    virtual bool childShouldCreateRenderer(const Node*) const OVERRIDE;
     
     virtual void removedFrom(ContainerNode*) OVERRIDE;
 
@@ -151,7 +151,7 @@ private:
     virtual RenderStyle* virtualComputedStyle(PseudoId pseudoElementSpecifier = NOPSEUDO) { return computedStyle(pseudoElementSpecifier); }
     virtual bool willRecalcStyle(Style::Change);
 
-    virtual bool rendererIsNeeded(const NodeRenderingContext&) { return false; }
+    virtual bool rendererIsNeeded(const RenderStyle&) { return false; }
 
     virtual bool isSupported(StringImpl* feature, StringImpl* version) const;
 

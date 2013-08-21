@@ -101,11 +101,6 @@ bool JSTestTypedefsConstructor::getOwnPropertySlot(JSObject* object, ExecState* 
     return getStaticValueSlot<JSTestTypedefsConstructor, JSDOMWrapper>(exec, &JSTestTypedefsConstructorTable, jsCast<JSTestTypedefsConstructor*>(object), propertyName, slot);
 }
 
-bool JSTestTypedefsConstructor::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    return getStaticValueDescriptor<JSTestTypedefsConstructor, JSDOMWrapper>(exec, &JSTestTypedefsConstructorTable, jsCast<JSTestTypedefsConstructor*>(object), propertyName, descriptor);
-}
-
 ConstructType JSTestTypedefsConstructor::getConstructData(JSCell*, ConstructData& constructData)
 {
     constructData.native.function = constructJSTestTypedefs;
@@ -140,12 +135,6 @@ bool JSTestTypedefsPrototype::getOwnPropertySlot(JSObject* object, ExecState* ex
 {
     JSTestTypedefsPrototype* thisObject = jsCast<JSTestTypedefsPrototype*>(object);
     return getStaticFunctionSlot<JSObject>(exec, &JSTestTypedefsPrototypeTable, thisObject, propertyName, slot);
-}
-
-bool JSTestTypedefsPrototype::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    JSTestTypedefsPrototype* thisObject = jsCast<JSTestTypedefsPrototype*>(object);
-    return getStaticFunctionDescriptor<JSObject>(exec, &JSTestTypedefsPrototypeTable, thisObject, propertyName, descriptor);
 }
 
 const ClassInfo JSTestTypedefs::s_info = { "TestTypedefs", &Base::s_info, &JSTestTypedefsTable, 0 , CREATE_METHOD_TABLE(JSTestTypedefs) };
@@ -183,13 +172,6 @@ bool JSTestTypedefs::getOwnPropertySlot(JSObject* object, ExecState* exec, Prope
     JSTestTypedefs* thisObject = jsCast<JSTestTypedefs*>(object);
     ASSERT_GC_OBJECT_INHERITS(thisObject, info());
     return getStaticValueSlot<JSTestTypedefs, Base>(exec, &JSTestTypedefsTable, thisObject, propertyName, slot);
-}
-
-bool JSTestTypedefs::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor)
-{
-    JSTestTypedefs* thisObject = jsCast<JSTestTypedefs*>(object);
-    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
-    return getStaticValueDescriptor<JSTestTypedefs, Base>(exec, &JSTestTypedefsTable, thisObject, propertyName, descriptor);
 }
 
 JSValue jsTestTypedefsUnsignedLongLongAttr(ExecState* exec, JSValue slotBase, PropertyName)

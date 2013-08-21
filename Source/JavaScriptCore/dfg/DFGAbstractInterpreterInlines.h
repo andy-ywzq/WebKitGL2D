@@ -1376,6 +1376,12 @@ bool AbstractInterpreter<AbstractStateType>::executeEffects(unsigned clobberLimi
         forNode(node).clear();
         break; 
     }
+        
+    case GetTypedArrayByteOffset: {
+        forNode(node).setType(SpecInt32);
+        break;
+    }
+        
     case GetByOffset: {
         forNode(node).makeTop();
         break;
@@ -1492,7 +1498,11 @@ bool AbstractInterpreter<AbstractStateType>::executeEffects(unsigned clobberLimi
     case InlineStart:
     case CountExecution:
         break;
-        
+
+    case Unreachable:
+        RELEASE_ASSERT_NOT_REACHED();
+        break;
+
     case LastNodeType:
         RELEASE_ASSERT_NOT_REACHED();
         break;

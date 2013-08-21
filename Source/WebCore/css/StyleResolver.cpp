@@ -409,7 +409,7 @@ inline void StyleResolver::State::initElement(Element* e)
 {
     m_element = e;
     m_styledElement = e && e->isStyledElement() ? static_cast<StyledElement*>(e) : 0;
-    m_elementLinkState = e ? e->document()->visitedLinkState()->determineLinkState(e) : NotInsideLink;
+    m_elementLinkState = e ? e->document()->visitedLinkState().determineLinkState(e) : NotInsideLink;
 }
 
 inline void StyleResolver::initElement(Element* e)
@@ -433,11 +433,9 @@ inline void StyleResolver::State::initForStyleResolve(Document* document, Elemen
         m_parentStyle = context.resetStyleInheritance() ? 0 :
             parentStyle ? parentStyle :
             m_parentNode ? m_parentNode->renderStyle() : 0;
-        m_distributedToInsertionPoint = context.insertionPoint();
     } else {
         m_parentNode = 0;
         m_parentStyle = parentStyle;
-        m_distributedToInsertionPoint = false;
     }
 
     Node* docElement = e ? e->document()->documentElement() : 0;
@@ -809,7 +807,7 @@ PassRefPtr<RenderStyle> StyleResolver::styleForElement(Element* element, RenderS
     State& state = m_state;
     initElement(element);
     state.initForStyleResolve(document(), element, defaultParent, regionForStyling);
-    if (sharingBehavior == AllowStyleSharing && !state.distributedToInsertionPoint()) {
+    if (sharingBehavior == AllowStyleSharing) {
         RenderStyle* sharedStyle = locateSharedStyle();
         if (sharedStyle) {
             state.clear();
@@ -823,14 +821,6 @@ PassRefPtr<RenderStyle> StyleResolver::styleForElement(Element* element, RenderS
     } else {
         state.setStyle(defaultStyleForElement());
         state.setParentStyle(RenderStyle::clone(state.style()));
-    }
-    // contenteditable attribute (implemented by -webkit-user-modify) should
-    // be propagated from shadow host to distributed node.
-    if (state.distributedToInsertionPoint()) {
-        if (Element* parent = element->parentElement()) {
-            if (RenderStyle* styleOfShadowHost = parent->renderStyle())
-                state.style()->setUserModify(styleOfShadowHost->userModify());
-        }
     }
 
     if (element->isLink()) {
@@ -1432,18 +1422,18 @@ bool StyleResolver::checkRegionStyle(Element* regionElement)
     // FIXME (BUG 72472): We don't add @-webkit-region rules of scoped style sheets for the moment,
     // so all region rules are global by default. Verify whether that can stand or needs changing.
 
-    unsigned rulesSize = m_ruleSets.authorStyle()->m_regionSelectorsAndRuleSets.size();
+    unsigned rulesSize = m_ruleSets.authorStyle()->regionSelectorsAndRuleSets().size();
     for (unsigned i = 0; i < rulesSize; ++i) {
-        ASSERT(m_ruleSets.authorStyle()->m_regionSelectorsAndRuleSets.at(i).ruleSet.get());
-        if (checkRegionSelector(m_ruleSets.authorStyle()->m_regionSelectorsAndRuleSets.at(i).selector, regionElement))
+        ASSERT(m_ruleSets.authorStyle()->regionSelectorsAndRuleSets().at(i).ruleSet.get());
+        if (checkRegionSelector(m_ruleSets.authorStyle()->regionSelectorsAndRuleSets().at(i).selector, regionElement))
             return true;
     }
 
     if (m_ruleSets.userStyle()) {
-        rulesSize = m_ruleSets.userStyle()->m_regionSelectorsAndRuleSets.size();
+        rulesSize = m_ruleSets.userStyle()->regionSelectorsAndRuleSets().size();
         for (unsigned i = 0; i < rulesSize; ++i) {
-            ASSERT(m_ruleSets.userStyle()->m_regionSelectorsAndRuleSets.at(i).ruleSet.get());
-            if (checkRegionSelector(m_ruleSets.userStyle()->m_regionSelectorsAndRuleSets.at(i).selector, regionElement))
+            ASSERT(m_ruleSets.userStyle()->regionSelectorsAndRuleSets().at(i).ruleSet.get());
+            if (checkRegionSelector(m_ruleSets.userStyle()->regionSelectorsAndRuleSets().at(i).selector, regionElement))
                 return true;
         }
     }

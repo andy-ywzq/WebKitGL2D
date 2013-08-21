@@ -234,31 +234,6 @@ bool JSGenericTypedArrayView<Adaptor>::getOwnPropertySlot(
 }
 
 template<typename Adaptor>
-bool JSGenericTypedArrayView<Adaptor>::getOwnPropertyDescriptor(
-    JSObject* object, ExecState* exec, PropertyName propertyName,
-    PropertyDescriptor& descriptor)
-{
-    JSGenericTypedArrayView* thisObject = jsCast<JSGenericTypedArrayView*>(object);
-    if (propertyName == exec->propertyNames().length) {
-        descriptor.setDescriptor(jsNumber(thisObject->length()), DontDelete | ReadOnly);
-        return true;
-    }
-    
-    if (propertyName == exec->propertyNames().byteLength) {
-        descriptor.setDescriptor(jsNumber(thisObject->byteLength()), DontDelete | ReadOnly);
-        return true;
-    }
-    
-    unsigned index = propertyName.asIndex();
-    if (index != PropertyName::NotAnIndex && thisObject->canGetIndexQuickly(index)) {
-        descriptor.setDescriptor(thisObject->getIndexQuickly(index), DontDelete | ReadOnly);
-        return true;
-    }
-    
-    return Base::getOwnPropertyDescriptor(thisObject, exec, propertyName, descriptor);
-}
-
-template<typename Adaptor>
 void JSGenericTypedArrayView<Adaptor>::put(
     JSCell* cell, ExecState* exec, PropertyName propertyName, JSValue value,
     PutPropertySlot& slot)
