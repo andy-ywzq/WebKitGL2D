@@ -114,4 +114,9 @@ void WebGeolocationManagerProxy::stopUpdating()
     m_isUpdating = false;
 }
 
+void WebGeolocationManagerProxy::didChangeEnableHighAccuracy(bool value)
+{
+    m_provider.didChangeEnableHighAccuracy(this, value);
+}
+
 } // namespace WebKit

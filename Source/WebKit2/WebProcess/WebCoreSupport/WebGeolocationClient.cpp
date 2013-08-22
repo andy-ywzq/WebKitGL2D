@@ -58,8 +58,9 @@ void WebGeolocationClient::stopUpdating()
     WebProcess::shared().supplement<WebGeolocationManager>()->unregisterWebPage(m_page);
 }
 
-void WebGeolocationClient::setEnableHighAccuracy(bool)
+void WebGeolocationClient::setEnableHighAccuracy(bool value)
 {
+    WebProcess::shared().supplement<WebGeolocationManager>()->didChangeEnableHighAccuracy(value);
 }
 
 GeolocationPosition* WebGeolocationClient::lastPosition()

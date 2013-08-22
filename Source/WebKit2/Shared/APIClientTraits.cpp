@@ -102,4 +102,9 @@ const size_t APIClientTraits<WKIconDatabaseClient>::interfaceSizesByVersion[] = 
     sizeof(WKIconDatabaseClient)
 };
 
+const size_t APIClientTraits<WKGeolocationProvider>::interfaceSizesByVersion[] = {
+    offsetof(WKGeolocationProvider, didChangeEnableHighAccuracy),
+    sizeof(WKGeolocationProvider)
+};
+
 } // namespace WebKit

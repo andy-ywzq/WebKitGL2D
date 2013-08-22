@@ -102,6 +102,7 @@ set(webkit2TestList
     WebKit2/Find
     WebKit2/FrameMIMETypeHTML
     WebKit2/FrameMIMETypePNG
+    WebKit2/Geolocation
     WebKit2/GetInjectedBundleInitializationUserDataCallback
     WebKit2/HitTestResultNodeHandle
     WebKit2/InjectedBundleBasic

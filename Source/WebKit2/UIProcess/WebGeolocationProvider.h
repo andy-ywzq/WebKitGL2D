@@ -38,6 +38,7 @@ class WebGeolocationProvider : public APIClient<WKGeolocationProvider, kWKGeoloc
 public:
     void startUpdating(WebGeolocationManagerProxy*);
     void stopUpdating(WebGeolocationManagerProxy*);
+    void didChangeEnableHighAccuracy(WebGeolocationManagerProxy*, bool);
 };
 
 } // namespace WebKit

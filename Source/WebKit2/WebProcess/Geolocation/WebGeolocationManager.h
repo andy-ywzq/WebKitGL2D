@@ -53,6 +53,7 @@ public:
 
     void registerWebPage(WebPage*);
     void unregisterWebPage(WebPage*);
+    void didChangeEnableHighAccuracy(bool);
 
     void requestPermission(WebCore::Geolocation*);
 
