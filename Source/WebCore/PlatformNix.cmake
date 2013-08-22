@@ -152,7 +152,7 @@ if (WTF_USE_EGL)
     list(APPEND WebCore_SOURCES
         platform/graphics/GLContext.cpp
         platform/graphics/cairo/GraphicsContext3DCairo.cpp
-        platform/graphics/cairo/GraphicsContext3DPrivate.cpp
+        platform/graphics/GraphicsContext3DPrivate.cpp
         platform/graphics/egl/GLContextFromCurrentEGL.cpp
     )
     list(APPEND WebCore_LIBRARIES ${EGL_LIBRARY})
