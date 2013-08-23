@@ -4,12 +4,17 @@
 #include "GLUtilities.h"
 #include "TouchMocker.h"
 #include "WKArray.h"
+#include "WKAuthenticationChallenge.h"
+#include "WKAuthenticationDecisionListener.h"
 #include "WKContextNix.h"
+#include "WKCredential.h"
+#include "WKCredentialTypes.h"
 #include "WKErrorNix.h"
 #include "WKFrame.h"
 #include "WKPageNix.h"
 #include "WKPreferences.h"
 #include "WKPreferencesPrivate.h"
+#include "WKProtectionSpace.h"
 #include "WKString.h"
 
 #include <GL/gl.h>
@@ -20,6 +25,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unistd.h>
 
 #define NOCOLOR "\e[m"
 #define RED     "\e[38;05;9m"
@@ -147,6 +153,7 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     loadClient.didStartProvisionalLoadForFrame = MiniBrowser::didStartProvisionalLoadForFrame;
     loadClient.didFinishDocumentLoadForFrame = MiniBrowser::didFinishDocumentLoadForFrame;
     loadClient.didFailProvisionalLoadWithErrorForFrame = MiniBrowser::didFailProvisionalLoadWithErrorForFrame;
+    loadClient.didReceiveAuthenticationChallengeInFrame = MiniBrowser::didReceiveAuthenticationChallengeInFrame;
 
     WKPageSetPageLoaderClient(pageRef(), &loadClient);
 
@@ -920,6 +927,33 @@ void MiniBrowser::didFailProvisionalLoadWithErrorForFrame(WKPageRef page, WKFram
 
     WKRetainPtr<WKStringRef> wkErrorDescription = adoptWK(WKErrorCopyLocalizedDescription(error));
     WKPageLoadPlainTextString(page, wkErrorDescription.get());
+}
+
+void MiniBrowser::didReceiveAuthenticationChallengeInFrame(WKPageRef, WKFrameRef, WKAuthenticationChallengeRef authenticationChallenge, const void *)
+{
+    WKAuthenticationDecisionListenerRef authenticationListener = WKAuthenticationChallengeGetDecisionListener(authenticationChallenge);
+    WKProtectionSpaceRef protectionSpace = WKAuthenticationChallengeGetProtectionSpace(authenticationChallenge);
+    int previousFailureCount = WKAuthenticationChallengeGetPreviousFailureCount(authenticationChallenge);
+
+    cout << YELLOW "A username and password are being requested by " << createStdStringFromWKString(WKProtectionSpaceCopyHost(protectionSpace));
+    cout << ". The site says: \"" << createStdStringFromWKString(WKProtectionSpaceCopyRealm(protectionSpace)) << "\"" NOCOLOR << endl;
+    if (previousFailureCount)
+        cout << RED "Previous failures: " << previousFailureCount << NOCOLOR << endl;
+
+    std::string username;
+    cout << "Username: ";
+    getline(cin, username);
+
+    char *password = getpass("Password: ");
+
+    std::string yn;
+    cout << "Submit? [Yn]: ";
+    getline(cin, yn);
+    if (yn == "y" || yn == "Y" || yn == "") {
+        WKCredentialRef credential = WKCredentialCreate(WKStringCreateWithUTF8CString(username.c_str()), WKStringCreateWithUTF8CString(password), kWKCredentialPersistenceForSession);
+        WKAuthenticationDecisionListenerUseCredential(authenticationListener, credential);
+    } else
+        WKAuthenticationDecisionListenerCancel(authenticationListener);
 }
 
 std::string MiniBrowser::activeUrl()
