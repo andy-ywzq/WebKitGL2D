@@ -239,6 +239,10 @@ protected:
         init(thisValue);
     }
 
+    enum ConstantMode { IsConstant, IsVariable };
+    enum FunctionMode { IsFunctionToSpecialize, NotFunctionOrNotSpecializable };
+    int addGlobalVar(const Identifier&, ConstantMode, FunctionMode);
+
 public:
     JS_EXPORT_PRIVATE ~JSGlobalObject();
     JS_EXPORT_PRIVATE static void destroy(JSCell*);
@@ -251,15 +255,30 @@ public:
     bool hasOwnPropertyForWrite(ExecState*, PropertyName);
     JS_EXPORT_PRIVATE static void put(JSCell*, ExecState*, PropertyName, JSValue, PutPropertySlot&);
 
-    JS_EXPORT_PRIVATE static void putDirectVirtual(JSObject*, ExecState*, PropertyName, JSValue, unsigned attributes);
-
     JS_EXPORT_PRIVATE static void defineGetter(JSObject*, ExecState*, PropertyName, JSObject* getterFunc, unsigned attributes);
     JS_EXPORT_PRIVATE static void defineSetter(JSObject*, ExecState*, PropertyName, JSObject* setterFunc, unsigned attributes);
-    JS_EXPORT_PRIVATE static bool defineOwnProperty(JSObject*, ExecState*, PropertyName, PropertyDescriptor&, bool shouldThrow);
+    JS_EXPORT_PRIVATE static bool defineOwnProperty(JSObject*, ExecState*, PropertyName, const PropertyDescriptor&, bool shouldThrow);
 
     // We use this in the code generator as we perform symbol table
     // lookups prior to initializing the properties
     bool symbolTableHasProperty(PropertyName);
+
+    void addVar(ExecState* exec, const Identifier& propertyName)
+    {
+        if (!hasProperty(exec, propertyName))
+            addGlobalVar(propertyName, IsVariable, NotFunctionOrNotSpecializable);
+    }
+    void addConst(ExecState* exec, const Identifier& propertyName)
+    {
+        if (!hasProperty(exec, propertyName))
+            addGlobalVar(propertyName, IsConstant, NotFunctionOrNotSpecializable);
+    }
+    void addFunction(ExecState* exec, const Identifier& propertyName, JSValue value)
+    {
+        bool propertyDidExist = removeDirect(exec->vm(), propertyName); // Newly declared functions overwrite existing properties.
+        int index = addGlobalVar(propertyName, IsVariable, !propertyDidExist ? IsFunctionToSpecialize : NotFunctionOrNotSpecializable);
+        registerAt(index).set(exec->vm(), this, value);
+    }
 
     // The following accessors return pristine values, even if a script 
     // replaces the global object's associated property.

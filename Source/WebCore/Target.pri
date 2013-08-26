@@ -1575,6 +1575,7 @@ HEADERS += \
     dom/CDATASection.h \
     dom/CharacterData.h \
     dom/CheckedRadioButtons.h \
+    dom/ChildIterator.h \
     dom/ChildNodeList.h \
     dom/ClassNodeList.h \
     dom/ClientRect.h \
@@ -1588,6 +1589,7 @@ HEADERS += \
     dom/ContextFeatures.h \
     dom/CustomEvent.h \
     dom/default/PlatformMessagePortChannel.h \
+    dom/DescendantIterator.h \
     dom/DeviceMotionClient.h \
     dom/DeviceMotionController.h \
     dom/DeviceMotionData.h \
@@ -1612,7 +1614,7 @@ HEADERS += \
     dom/DatasetDOMStringMap.h \
     dom/Element.h \
     dom/ElementData.h \
-    dom/ElementTravesal.h \
+    dom/ElementTraversal.h \
     dom/Entity.h \
     dom/EntityReference.h \
     dom/Event.h \
@@ -2794,7 +2796,6 @@ HEADERS += \
     svg/SVGStopElement.h \
     svg/SVGStringList.h \
     svg/SVGStyleElement.h \
-    svg/SVGStyledElement.h \
     svg/SVGSVGElement.h \
     svg/SVGSwitchElement.h \
     svg/SVGSymbolElement.h \
@@ -2811,6 +2812,7 @@ HEADERS += \
     svg/SVGTRefElement.h \
     svg/SVGTSpanElement.h \
     svg/SVGURIReference.h \
+    svg/SVGUnknownElement.h \
     svg/SVGUseElement.h \
     svg/SVGViewElement.h \
     svg/SVGViewSpec.h \
@@ -3860,7 +3862,6 @@ enable?(SVG) {
         svg/SVGStopElement.cpp \
         svg/SVGStringList.cpp \
         svg/SVGStyleElement.cpp \
-        svg/SVGStyledElement.cpp \
         svg/SVGSwitchElement.cpp \
         svg/SVGSymbolElement.cpp \
         svg/SVGTRefElement.cpp \

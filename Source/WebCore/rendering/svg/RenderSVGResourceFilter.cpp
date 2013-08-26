@@ -44,7 +44,6 @@
 #include "SVGFilterPrimitiveStandardAttributes.h"
 #include "SVGNames.h"
 #include "SVGRenderingContext.h"
-#include "SVGStyledElement.h"
 #include "SVGUnitTypes.h"
 #include "Settings.h"
 #include "SourceAlpha.h"
@@ -233,7 +232,7 @@ bool RenderSVGResourceFilter::applyResource(RenderObject* object, RenderStyle*, 
     effectiveTransform.multiply(filterData->shearFreeAbsoluteTransform);
 
     OwnPtr<ImageBuffer> sourceGraphic;
-    RenderingMode renderingMode = object->document()->page()->settings().acceleratedFiltersEnabled() ? Accelerated : Unaccelerated;
+    RenderingMode renderingMode = object->document().page()->settings().acceleratedFiltersEnabled() ? Accelerated : Unaccelerated;
     if (!SVGRenderingContext::createImageBuffer(filterData->drawingRegion, effectiveTransform, sourceGraphic, ColorSpaceLinearRGB, renderingMode)) {
         ASSERT(!m_filter.contains(object));
         filterData->savedContext = context;

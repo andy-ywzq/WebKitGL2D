@@ -1411,7 +1411,7 @@ bool FrameSelection::recomputeCaretRect()
 bool CaretBase::shouldRepaintCaret(const RenderView* view, bool isContentEditable) const
 {
     ASSERT(view);
-    Frame* frame = view->frameView() ? &view->frameView()->frame() : 0; // The frame where the selection started.
+    Frame* frame = &view->frameView().frame(); // The frame where the selection started.
     bool caretBrowsing = frame && frame->settings().caretBrowsingEnabled();
     return (caretBrowsing || isContentEditable);
 }
@@ -1591,7 +1591,7 @@ bool FrameSelection::contains(const LayoutPoint& point)
 void FrameSelection::selectFrameElementInParentIfFullySelected()
 {
     // Find the parent frame; if there is none, then we have nothing to do.
-    Frame* parent = m_frame->tree()->parent();
+    Frame* parent = m_frame->tree().parent();
     if (!parent)
         return;
     Page* page = m_frame->page();
@@ -1970,11 +1970,11 @@ static HTMLFormElement* scanForForm(Node* start)
 {
     if (!start)
         return 0;
-    Element* element = start->isElementNode() ? toElement(start) : ElementTraversal::next(start);
-    for (; element; element = ElementTraversal::next(element)) {
+    HTMLElement* element = start->isHTMLElement() ? toHTMLElement(start) : Traversal<HTMLElement>::next(start);
+    for (; element; element = Traversal<HTMLElement>::next(element)) {
         if (isHTMLFormElement(element))
             return toHTMLFormElement(element);
-        if (element->isHTMLElement() && toHTMLElement(element)->isFormControlElement())
+        if (element->isFormControlElement())
             return static_cast<HTMLFormControlElement*>(element)->form();
         if (element->hasTagName(frameTag) || element->hasTagName(iframeTag))
             if (HTMLFormElement* frameResult = scanForForm(toHTMLFrameElementBase(element)->contentDocument()))

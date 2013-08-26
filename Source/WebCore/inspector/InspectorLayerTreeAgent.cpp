@@ -159,7 +159,7 @@ void InspectorLayerTreeAgent::gatherLayersUsingRenderLayerHierarchy(ErrorString*
 
 PassRefPtr<TypeBuilder::LayerTree::Layer> InspectorLayerTreeAgent::buildObjectForLayer(ErrorString* errorString, RenderLayer* renderLayer)
 {
-    RenderObject* renderer = renderLayer->renderer();
+    RenderObject* renderer = &renderLayer->renderer();
     RenderLayerBacking* backing = renderLayer->backing();
     Node* node = renderer->node();
 
@@ -245,7 +245,7 @@ void InspectorLayerTreeAgent::reasonsForCompositingLayer(ErrorString* errorStrin
         return;
     }
 
-    CompositingReasons reasonsBitmask = renderLayer->compositor()->reasonsForCompositing(renderLayer);
+    CompositingReasons reasonsBitmask = renderLayer->compositor().reasonsForCompositing(renderLayer);
     compositingReasons = TypeBuilder::LayerTree::CompositingReasons::create();
 
     if (reasonsBitmask & CompositingReason3DTransform)

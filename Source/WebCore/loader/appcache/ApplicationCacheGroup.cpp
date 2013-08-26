@@ -141,7 +141,7 @@ void ApplicationCacheGroup::selectCache(Frame* frame, const KURL& passedManifest
     if (!frame->settings().offlineWebApplicationCacheEnabled())
         return;
 
-    if (!frame->document()->securityOrigin()->canAccessApplicationCache(frame->tree()->top()->document()->securityOrigin()))
+    if (!frame->document()->securityOrigin()->canAccessApplicationCache(frame->tree().top()->document()->securityOrigin()))
         return;
     
     DocumentLoader* documentLoader = frame->loader().documentLoader();
@@ -179,7 +179,7 @@ void ApplicationCacheGroup::selectCache(Frame* frame, const KURL& passedManifest
             // Restart the current navigation from the top of the navigation algorithm, undoing any changes that were made
             // as part of the initial load.
             // The navigation will not result in the same resource being loaded, because "foreign" entries are never picked during navigation.
-            frame->navigationScheduler()->scheduleLocationChange(frame->document()->securityOrigin(), documentLoader->url(), frame->loader().referrer());
+            frame->navigationScheduler().scheduleLocationChange(frame->document()->securityOrigin(), documentLoader->url(), frame->loader().referrer());
         }
         
         return;
@@ -217,7 +217,7 @@ void ApplicationCacheGroup::selectCacheWithoutManifestURL(Frame* frame)
     if (!frame->settings().offlineWebApplicationCacheEnabled())
         return;
 
-    if (!frame->document()->securityOrigin()->canAccessApplicationCache(frame->tree()->top()->document()->securityOrigin()))
+    if (!frame->document()->securityOrigin()->canAccessApplicationCache(frame->tree().top()->document()->securityOrigin()))
         return;
 
     DocumentLoader* documentLoader = frame->loader().documentLoader();

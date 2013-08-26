@@ -281,7 +281,7 @@ bool RenderTheme::paint(RenderObject* o, const PaintInfo& paintInfo, const IntRe
     case DefaultButtonPart:
     case ButtonPart:
     case InnerSpinButtonPart:
-        m_theme->paint(part, controlStatesForRenderer(o), const_cast<GraphicsContext*>(paintInfo.context), r, o->style()->effectiveZoom(), o->view()->frameView());
+        m_theme->paint(part, controlStatesForRenderer(o), const_cast<GraphicsContext*>(paintInfo.context), r, o->style()->effectiveZoom(), &o->view().frameView());
         return false;
     default:
         break;
@@ -854,11 +854,7 @@ bool RenderTheme::isDefault(const RenderObject* o) const
     if (!isActive(o))
         return false;
 
-    if (!o->document())
-        return false;
-
-    Settings* settings = o->document()->settings();
-    if (!settings || !settings->applicationChromeMode())
+    if (!o->frame().settings().applicationChromeMode())
         return false;
     
     return o->style()->appearance() == DefaultButtonPart;

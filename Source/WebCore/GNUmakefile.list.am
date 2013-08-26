@@ -1140,8 +1140,6 @@ webcore_svg_built_sources += \
 	DerivedSources/WebCore/JSSVGStringList.h \
 	DerivedSources/WebCore/JSSVGStyleElement.cpp \
 	DerivedSources/WebCore/JSSVGStyleElement.h \
-	DerivedSources/WebCore/JSSVGStyledElement.cpp \
-	DerivedSources/WebCore/JSSVGStyledElement.h \
 	DerivedSources/WebCore/JSSVGSVGElement.cpp \
 	DerivedSources/WebCore/JSSVGSVGElement.h \
 	DerivedSources/WebCore/JSSVGSwitchElement.cpp \
@@ -1729,7 +1727,6 @@ dom_binding_idls += \
 	$(WebCore)/svg/SVGStopElement.idl \
 	$(WebCore)/svg/SVGStringList.idl \
 	$(WebCore)/svg/SVGStyleElement.idl \
-	$(WebCore)/svg/SVGStyledElement.idl \
 	$(WebCore)/svg/SVGSwitchElement.idl \
 	$(WebCore)/svg/SVGSymbolElement.idl \
 	$(WebCore)/svg/SVGTRefElement.idl \
@@ -2774,6 +2771,7 @@ webcore_sources += \
 	Source/WebCore/dom/CharacterData.h \
 	Source/WebCore/dom/CheckedRadioButtons.cpp \
 	Source/WebCore/dom/CheckedRadioButtons.h \
+	Source/WebCore/dom/ChildIterator.h \
 	Source/WebCore/dom/ChildListMutationScope.cpp \
 	Source/WebCore/dom/ChildListMutationScope.h \
 	Source/WebCore/dom/ChildNodeList.cpp \
@@ -2818,6 +2816,7 @@ webcore_sources += \
 	Source/WebCore/dom/DecodedDataDocumentParser.h \
 	Source/WebCore/dom/default/PlatformMessagePortChannel.cpp \
 	Source/WebCore/dom/default/PlatformMessagePortChannel.h \
+	Source/WebCore/dom/DescendantIterator.h \
 	Source/WebCore/dom/DeviceMotionClient.h \
 	Source/WebCore/dom/DeviceMotionController.cpp \
 	Source/WebCore/dom/DeviceMotionController.h \
@@ -5272,8 +5271,6 @@ webcore_svg_sources += \
 	Source/WebCore/svg/SVGStringList.h \
 	Source/WebCore/svg/SVGStyleElement.cpp \
 	Source/WebCore/svg/SVGStyleElement.h \
-	Source/WebCore/svg/SVGStyledElement.cpp \
-	Source/WebCore/svg/SVGStyledElement.h \
 	Source/WebCore/svg/SVGSVGElement.cpp \
 	Source/WebCore/svg/SVGSVGElement.h \
 	Source/WebCore/svg/SVGSwitchElement.cpp \
@@ -5307,6 +5304,7 @@ webcore_svg_sources += \
 	Source/WebCore/svg/SVGUnitTypes.h \
 	Source/WebCore/svg/SVGURIReference.cpp \
 	Source/WebCore/svg/SVGURIReference.h \
+	Source/WebCore/svg/SVGUnknownElement.h \
 	Source/WebCore/svg/SVGUseElement.cpp \
 	Source/WebCore/svg/SVGUseElement.h \
 	Source/WebCore/svg/SVGViewElement.cpp \

@@ -35,6 +35,7 @@
 #include "HTMLNames.h"
 #include "InlineTextBox.h"
 #include "PrintContext.h"
+#include "PseudoElement.h"
 #include "RenderBR.h"
 #include "RenderDetailsMarker.h"
 #include "RenderFileUploadControl.h"
@@ -631,7 +632,7 @@ static void write(TextStream& ts, RenderLayer& l,
             ts << " outlineClip " << adjustedOutlineClipRect;
     }
 
-    if (l.renderer()->hasOverflowClip()) {
+    if (l.renderer().hasOverflowClip()) {
         if (l.scrollXOffset())
             ts << " scrollX " << l.scrollXOffset();
         if (l.scrollYOffset())
@@ -659,7 +660,7 @@ static void write(TextStream& ts, RenderLayer& l,
     ts << "\n";
 
     if (paintPhase != LayerPaintPhaseBackground)
-        write(ts, *l.renderer(), indent + 1, behavior);
+        write(ts, l.renderer(), indent + 1, behavior);
 }
 
 static void writeRenderRegionList(const RenderRegionList& flowThreadRegionList, TextStream& ts, int indent)
@@ -798,8 +799,8 @@ static void writeLayers(TextStream& ts, const RenderLayer* rootLayer, RenderLaye
     
     // Altough the RenderFlowThread requires a layer, it is not collected by its parent,
     // so we have to treat it as a special case.
-    if (l->renderer()->isRenderView()) {
-        RenderView* renderView = toRenderView(l->renderer());
+    if (l->renderer().isRenderView()) {
+        RenderView* renderView = toRenderView(&l->renderer());
         writeRenderNamedFlowThreads(ts, renderView, rootLayer, paintDirtyRect, indent, behavior);
     }
 }
@@ -902,6 +903,8 @@ String externalRepresentation(Element* element, RenderAsTextBehavior behavior)
 
 static void writeCounterValuesFromChildren(TextStream& stream, RenderObject* parent, bool& isFirstCounter)
 {
+    if (!parent)
+        return;
     for (RenderObject* child = parent->firstChild(); child; child = child->nextSibling()) {
         if (child->isCounter()) {
             if (!isFirstCounter)
@@ -921,10 +924,10 @@ String counterValueForElement(Element* element)
     TextStream stream;
     bool isFirstCounter = true;
     // The counter renderers should be children of :before or :after pseudo-elements.
-    if (RenderObject* before = element->pseudoElementRenderer(BEFORE))
-        writeCounterValuesFromChildren(stream, before, isFirstCounter);
-    if (RenderObject* after = element->pseudoElementRenderer(AFTER))
-        writeCounterValuesFromChildren(stream, after, isFirstCounter);
+    if (PseudoElement* before = element->beforePseudoElement())
+        writeCounterValuesFromChildren(stream, before->renderer(), isFirstCounter);
+    if (PseudoElement* after = element->afterPseudoElement())
+        writeCounterValuesFromChildren(stream, after->renderer(), isFirstCounter);
     return stream.release();
 }
 

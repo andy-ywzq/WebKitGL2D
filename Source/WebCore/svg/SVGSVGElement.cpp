@@ -188,13 +188,10 @@ float SVGSVGElement::currentScale() const
     if (!frame)
         return 1;
 
-    FrameTree* frameTree = frame->tree();
-    ASSERT(frameTree);
-
     // The behaviour of currentScale() is undefined, when we're dealing with non-standalone SVG documents.
     // If the svg is embedded, the scaling is handled by the host renderer, so when asking from inside
     // the SVG document, a scale value of 1 seems reasonable, as it doesn't know anything about the parent scale.
-    return frameTree->parent() ? 1 : frame->pageZoomFactor();
+    return frame->tree().parent() ? 1 : frame->pageZoomFactor();
 }
 
 void SVGSVGElement::setCurrentScale(float scale)
@@ -206,13 +203,10 @@ void SVGSVGElement::setCurrentScale(float scale)
     if (!frame)
         return;
 
-    FrameTree* frameTree = frame->tree();
-    ASSERT(frameTree);
-
     // The behaviour of setCurrentScale() is undefined, when we're dealing with non-standalone SVG documents.
     // We choose the ignore this call, it's pretty useless to support calling setCurrentScale() from within
     // an embedded SVG document, for the same reasons as in currentScale() - needs resolution by SVG WG.
-    if (frameTree->parent())
+    if (frame->tree().parent())
         return;
 
     frame->setPageZoomFactor(scale);
@@ -342,20 +336,16 @@ void SVGSVGElement::forceRedraw()
 PassRefPtr<NodeList> SVGSVGElement::collectIntersectionOrEnclosureList(const FloatRect& rect, SVGElement* referenceElement, CollectIntersectionOrEnclosure collect) const
 {
     Vector<RefPtr<Node> > nodes;
-    Element* element = ElementTraversal::next(referenceElement ? referenceElement : this);
-    while (element) {
-        if (element->isSVGElement()) { 
-            SVGElement* svgElement = toSVGElement(element);
-            if (collect == CollectIntersectionList) {
-                if (checkIntersection(svgElement, rect))
-                    nodes.append(element);
-            } else {
-                if (checkEnclosure(svgElement, rect))
-                    nodes.append(element);
-            }
+    SVGElement* svgElement = Traversal<SVGElement>::firstWithin(referenceElement ? referenceElement : this);
+    while (svgElement) {
+        if (collect == CollectIntersectionList) {
+            if (checkIntersection(svgElement, rect))
+                nodes.append(svgElement);
+        } else {
+            if (checkEnclosure(svgElement, rect))
+                nodes.append(svgElement);
         }
-
-        element = ElementTraversal::next(element, referenceElement ? referenceElement : this);
+        svgElement = Traversal<SVGElement>::next(svgElement, referenceElement ? referenceElement : this);
     }
     return StaticNodeList::adopt(nodes);
 }
@@ -785,11 +775,7 @@ Element* SVGSVGElement::getElementById(const AtomicString& id) const
 
     // Fall back to traversing our subtree. Duplicate ids are allowed, the first found will
     // be returned.
-    for (Node* node = firstChild(); node; node = NodeTraversal::next(node, this)) {
-        if (!node->isElementNode())
-            continue;
-
-        Element* element = toElement(node);
+    for (Element* element = ElementTraversal::firstWithin(this); element; element = ElementTraversal::next(element, this)) {
         if (element->getIdAttribute() == id)
             return element;
     }

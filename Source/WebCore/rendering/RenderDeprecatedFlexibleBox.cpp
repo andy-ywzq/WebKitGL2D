@@ -126,13 +126,13 @@ RenderDeprecatedFlexibleBox::RenderDeprecatedFlexibleBox(Element* element)
     setChildrenInline(false); // All of our children must be block-level
     m_stretchingChildren = false;
     if (!isAnonymous()) {
-        const KURL& url = document()->url();
+        const KURL& url = document().url();
         if (url.protocolIs("chrome"))
-            FeatureObserver::observe(document(), FeatureObserver::DeprecatedFlexboxChrome);
+            FeatureObserver::observe(&document(), FeatureObserver::DeprecatedFlexboxChrome);
         else if (url.protocolIs("chrome-extension"))
-            FeatureObserver::observe(document(), FeatureObserver::DeprecatedFlexboxChromeExtension);
+            FeatureObserver::observe(&document(), FeatureObserver::DeprecatedFlexboxChromeExtension);
         else
-            FeatureObserver::observe(document(), FeatureObserver::DeprecatedFlexboxWebContent);
+            FeatureObserver::observe(&document(), FeatureObserver::DeprecatedFlexboxWebContent);
     }
 }
 
@@ -299,7 +299,7 @@ void RenderDeprecatedFlexibleBox::layoutBlock(bool relayoutChildren, LayoutUnit)
         return;
 
     LayoutRepainter repainter(*this, checkForRepaintDuringLayout());
-    LayoutStateMaintainer statePusher(view(), this, locationOffset(), hasTransform() || hasReflection() || style()->isFlippedBlocksWritingMode());
+    LayoutStateMaintainer statePusher(&view(), this, locationOffset(), hasTransform() || hasReflection() || style()->isFlippedBlocksWritingMode());
 
     // Regions changing widths can force us to relayout our children.
     RenderFlowThread* flowThread = flowThreadContainingBlock();
@@ -325,7 +325,7 @@ void RenderDeprecatedFlexibleBox::layoutBlock(bool relayoutChildren, LayoutUnit)
     initMaxMarginValues();
 
 #if !ASSERT_DISABLED
-    LayoutSize oldLayoutDelta = view()->layoutDelta();
+    LayoutSize oldLayoutDelta = view().layoutDelta();
 #endif
 
     ChildFrameRects oldChildRects;
@@ -339,7 +339,7 @@ void RenderDeprecatedFlexibleBox::layoutBlock(bool relayoutChildren, LayoutUnit)
         layoutVerticalBox(relayoutChildren);
 
     repaintChildrenDuringLayoutIfMoved(this, oldChildRects);
-    ASSERT(view()->layoutDeltaMatches(oldLayoutDelta));
+    ASSERT(view().layoutDeltaMatches(oldLayoutDelta));
 
     LayoutUnit oldClientAfterEdge = clientLogicalBottom();
     updateLogicalHeight();
@@ -375,8 +375,8 @@ void RenderDeprecatedFlexibleBox::layoutBlock(bool relayoutChildren, LayoutUnit)
 
     updateLayerTransform();
 
-    if (view()->layoutState()->pageLogicalHeight())
-        setPageLogicalOffset(view()->layoutState()->pageLogicalOffset(this, logicalTop()));
+    if (view().layoutState()->pageLogicalHeight())
+        setPageLogicalOffset(view().layoutState()->pageLogicalOffset(this, logicalTop()));
 
     // Update our scrollbars if we're overflow:auto/scroll/hidden now that we know if
     // we overflow or not.
@@ -416,9 +416,9 @@ static void layoutChildIfNeededApplyingDelta(RenderBox* child, const LayoutSize&
     if (!child->needsLayout())
         return;
     
-    child->view()->addLayoutDelta(layoutDelta);
+    child->view().addLayoutDelta(layoutDelta);
     child->layoutIfNeeded();
-    child->view()->addLayoutDelta(-layoutDelta);
+    child->view().addLayoutDelta(-layoutDelta);
 }
 
 void RenderDeprecatedFlexibleBox::layoutHorizontalBox(bool relayoutChildren)

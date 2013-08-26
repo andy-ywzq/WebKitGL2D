@@ -192,9 +192,7 @@ void RenderVideo::paintReplaced(PaintInfo& paintInfo, const LayoutPoint& paintOf
     MediaPlayer* mediaPlayer = mediaElement()->player();
     bool displayingPoster = videoElement()->shouldDisplayPosterImage();
 
-    Page* page = 0;
-    if (Frame* frame = this->frame())
-        page = frame->page();
+    Page* page = frame().page();
 
     if (!displayingPoster && !mediaPlayer) {
         if (page && paintInfo.phase == PaintPhaseForeground)
@@ -215,7 +213,7 @@ void RenderVideo::paintReplaced(PaintInfo& paintInfo, const LayoutPoint& paintOf
 
     if (displayingPoster)
         paintIntoRect(paintInfo.context, rect);
-    else if (document()->view() && document()->view()->paintBehavior() & PaintBehaviorFlattenCompositingLayers)
+    else if (view().frameView().paintBehavior() & PaintBehaviorFlattenCompositingLayers)
         mediaPlayer->paintCurrentFrameInContext(paintInfo.context, pixelSnappedIntRect(rect));
     else
         mediaPlayer->paint(paintInfo.context, pixelSnappedIntRect(rect));
@@ -257,7 +255,7 @@ void RenderVideo::updatePlayer()
 #endif
     
     IntRect videoBounds = videoBox(); 
-    mediaPlayer->setFrameView(document()->view());
+    mediaPlayer->setFrameView(&view().frameView());
     mediaPlayer->setSize(IntSize(videoBounds.width(), videoBounds.height()));
     mediaPlayer->setVisible(true);
 }
@@ -343,7 +341,13 @@ bool RenderVideo::foregroundIsKnownToBeOpaqueInRect(const LayoutRect& localRect,
     if (videoElement()->shouldDisplayPosterImage())
         return RenderImage::foregroundIsKnownToBeOpaqueInRect(localRect, maxDepthToTest);
 
-    return videoBox().contains(enclosingIntRect(localRect));
+    if (!videoBox().contains(enclosingIntRect(localRect)))
+        return false;
+
+    if (MediaPlayer* player = mediaElement()->player())
+        return player->hasAvailableVideoFrame();
+
+    return false;
 }
 
 } // namespace WebCore

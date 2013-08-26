@@ -406,7 +406,6 @@ public:
 #if ENABLE(PAGE_VISIBILITY_API)
     String visibilityState() const;
     bool hidden() const;
-    void dispatchVisibilityStateChangeEvent();
 #endif
 
 #if ENABLE(CSP_NEXT)
@@ -525,7 +524,7 @@ public:
 
     CachedResourceLoader* cachedResourceLoader() { return m_cachedResourceLoader.get(); }
 
-    virtual void attach();
+    void didBecomeCurrentDocumentInFrame();
     virtual void detach();
     void prepareForDestruction();
 
@@ -546,6 +545,8 @@ public:
         m_renderer = renderer;
         Node::setRenderer(renderer);
     }
+
+    bool renderTreeBeingDestroyed() const { return m_renderTreeBeingDestroyed; }
 
     AXObjectCache* existingAXObjectCache() const;
     AXObjectCache* axObjectCache() const;
@@ -1073,7 +1074,9 @@ public:
     PassRefPtr<Touch> createTouch(DOMWindow*, EventTarget*, int identifier, int pageX, int pageY, int screenX, int screenY, int radiusX, int radiusY, float rotationAngle, float force, ExceptionCode&) const;
 #endif
 
+#if ENABLE(WEB_TIMING)
     const DocumentTiming* timing() const { return &m_documentTiming; }
+#endif
 
 #if ENABLE(REQUEST_ANIMATION_FRAME)
     int requestAnimationFrame(PassRefPtr<RequestAnimationFrameCallback>);
@@ -1118,8 +1121,6 @@ public:
 
     void suspendScheduledTasks(ActiveDOMObject::ReasonForSuspension);
     void resumeScheduledTasks(ActiveDOMObject::ReasonForSuspension);
-
-    IntSize viewportSize() const;
 
 #if ENABLE(CSS_DEVICE_ADAPTATION)
     IntSize initialViewportSize() const;
@@ -1197,6 +1198,7 @@ private:
     friend class Node;
     friend class IgnoreDestructiveWriteCountIncrementer;
 
+    virtual void createRenderTree();
     virtual void dispose() OVERRIDE;
 
     void detachParser();
@@ -1494,7 +1496,10 @@ private:
     bool m_directionSetOnDocumentElement;
     bool m_writingModeSetOnDocumentElement;
 
+#if ENABLE(WEB_TIMING)
     DocumentTiming m_documentTiming;
+#endif
+
     RefPtr<MediaQueryMatcher> m_mediaQueryMatcher;
     bool m_writeRecursionIsTooDeep;
     unsigned m_writeRecursionDepth;
@@ -1558,6 +1563,7 @@ private:
     HashSet<RefPtr<Element> > m_associatedFormControls;
 
     bool m_hasInjectedPlugInsScript;
+    bool m_renderTreeBeingDestroyed;
 };
 
 inline void Document::notifyRemovePendingSheetIfNeeded()

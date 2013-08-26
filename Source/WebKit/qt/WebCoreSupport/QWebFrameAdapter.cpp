@@ -94,9 +94,9 @@ QWebFrameData::QWebFrameData(WebCore::Page* parentPage, WebCore::Frame* parentFr
     frame = Frame::create(page, ownerElement, frameLoaderClient);
 
     // FIXME: All of the below should probably be moved over into WebCore
-    frame->tree()->setName(name);
+    frame->tree().setName(name);
     if (parentFrame)
-        parentFrame->tree()->appendChild(frame);
+        parentFrame->tree().appendChild(frame);
 }
 
 QWebFrameAdapter::QWebFrameAdapter()
@@ -119,7 +119,7 @@ QWebFrameAdapter::~QWebFrameAdapter()
 
 void QWebFrameAdapter::load(const QNetworkRequest& req, QNetworkAccessManager::Operation operation, const QByteArray& body)
 {
-    if (frame->tree()->parent())
+    if (frame->tree().parent())
         pageAdapter->insideOpenCall = true;
 
     QUrl url = ensureAbsoluteUrl(req.url());
@@ -169,7 +169,7 @@ void QWebFrameAdapter::load(const QNetworkRequest& req, QNetworkAccessManager::O
 
     frame->loader().load(WebCore::FrameLoadRequest(frame, request));
 
-    if (frame->tree()->parent())
+    if (frame->tree().parent())
         pageAdapter->insideOpenCall = false;
 }
 
@@ -364,7 +364,7 @@ void QWebFrameAdapter::init(QWebPageAdapter* pageAdapter, QWebFrameData* frameDa
 
 QWebFrameAdapter* QWebFrameAdapter::kit(const Frame* frame)
 {
-    return static_cast<FrameLoaderClientQt*>(frame->loader().client())->webFrame();
+    return static_cast<FrameLoaderClientQt&>(frame->loader().client()).webFrame();
 }
 
 QUrl QWebFrameAdapter::ensureAbsoluteUrl(const QUrl& url)
@@ -464,7 +464,7 @@ QWebSecurityOrigin QWebFrameAdapter::securityOrigin() const
 
 QString QWebFrameAdapter::uniqueName() const
 {
-    return frame->tree()->uniqueName();
+    return frame->tree().uniqueName();
 }
 
 // This code is copied from ChromeClientGtk.cpp.
@@ -690,8 +690,7 @@ QList<QObject*> QWebFrameAdapter::childFrames() const
 {
     QList<QObject*> originatingObjects;
     if (frame) {
-        FrameTree* tree = frame->tree();
-        for (Frame* child = tree->firstChild(); child; child = child->tree()->nextSibling()) {
+        for (Frame* child = frame->tree().firstChild(); child; child = child->tree().nextSibling()) {
             FrameLoader& loader = child->loader();
             originatingObjects.append(loader.networkingContext()->originatingObject());
         }
@@ -808,7 +807,7 @@ void QWebFrameAdapter::updateBackgroundRecursively(const QColor& backgroundColor
 
 void QWebFrameAdapter::cancelLoad()
 {
-    frame->navigationScheduler()->cancel();
+    frame->navigationScheduler().cancel();
 }
 
 // ========== QWebHitTestResultPrivate implementation ===========

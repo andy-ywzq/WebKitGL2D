@@ -1,3 +1,247 @@
+2013-08-26  Oliver Hunt  <oliver@apple.com>
+
+        Building is so overrated.
+
+        * wtf/Compression.cpp:
+        (WTF::GenericCompressedData::decompress):
+
+2013-08-26  Oliver Hunt  <oliver@apple.com>
+
+        Disable compression under MSVC for now as we're getting
+        weird release-only failures.
+
+        * wtf/Compression.cpp:
+
+2013-08-24  Benjamin Poulain  <benjamin@webkit.org>
+
+        Save three bytes per CStringBuffer object
+        https://bugs.webkit.org/show_bug.cgi?id=120040
+
+        Reviewed by Darin Adler.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/894ae8eafdb64912aefd8f9c809f4ccda84f3b89
+
+        sizeof(CStringBuffer) was rounded up to 8 on account of struct size and
+        alignment rules. This is clearly not what was intended.
+
+        * wtf/text/CString.cpp:
+        (WTF::CStringBuffer::createUninitialized):
+        * wtf/text/CString.h:
+        (WTF::CStringBuffer::data):
+        (WTF::CStringBuffer::mutableData):
+
+2013-08-24  Darin Adler  <darin@apple.com>
+
+        RetainPtr lacks move constructor for case when argument is a RetainPtr of a different type
+        https://bugs.webkit.org/show_bug.cgi?id=120255
+
+        Reviewed by Andreas Kling.
+
+        * wtf/RetainPtr.h: Added missing move constructor, modeled on the other move constructor,
+        and the one from RetPtr.
+
+2013-08-24  Oliver Hunt  <oliver@apple.com>
+
+        Make the world build.
+
+        * wtf/Compression.h:
+
+2013-08-24  Oliver Hunt  <oliver@apple.com>
+
+        REGRESSION(r154498): Crashes on EFL, GTK, Qt on release configurations
+        https://bugs.webkit.org/show_bug.cgi?id=120246
+
+        Reviewed by Antti Koivisto.
+
+        Undestroy all the platforms that don't use the global new overload
+
+        * wtf/Compression.h:
+
+2013-08-21  Mark Rowe  <mrowe@apple.com>
+
+        <https://webkit.org/b/120141> Make RetainPtr work with ARC.
+
+        Have RetainPtr store the object its managing as a CFTypeRef and manage its lifetime with
+        CFRetain / CFRelease. This is necessary to have explicit control over the lifetime of
+        Objective-C objects when automatic reference counting is in use. Two helper methods are
+        introduced to convert between the pointer type that the RetainPtr manages and the CFTypeRef
+        that the pointer is stored as. For CF types and Objective-C types with ARC disabled,
+        these methods are simply casts. For Objective-C types under ARC they need to use the
+        special bridging casts to keep the compiler happy.
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/RetainPtr.h:
+        (WTF::RetainPtr::RetainPtr): Use the helper methods to convert to and from the storage
+        types when necessary.
+        (WTF::RetainPtr::~RetainPtr): Ditto.
+        (WTF::RetainPtr::get): Ditto.
+        (WTF::RetainPtr::operator->): Ditto.
+        (WTF::RetainPtr::operator PtrType): Ditto.
+        (WTF::::RetainPtr): Ditto.
+        (WTF::::clear): Ditto.
+        (WTF::::leakRef): Ditto.
+        (WTF::=): Ditto.
+
+        (WTF::RetainPtr::fromStorageTypeHelper): Use crazy template magic to determine whether to use
+        a bridging cast or not depending on the desired return type.
+        (WTF::RetainPtr::fromStorageType):
+        (WTF::RetainPtr::toStorageType): Overloading is sufficient here.
+
+2013-08-21  Mark Rowe  <mrowe@apple.com>
+
+        Revert r153637.
+
+        It didn't work with ARC like it said it would. We'll need to take a slightly different approach.
+
+        Rubber-stamped by Anders Carlsson.
+
+        * wtf/RetainPtr.h:
+        (WTF::RetainPtr::RetainPtr):
+        (WTF::RetainPtr::~RetainPtr):
+        (WTF::RetainPtr::operator UnspecifiedBoolType):
+        (WTF::::RetainPtr):
+        (WTF::::clear):
+        (WTF::=):
+        (WTF::adoptCF):
+        (WTF::adoptNS):
+
+2013-08-23  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build correction after r154513.
+
+        * WTF.vcxproj/build-generated-files.sh: Variable was missing '$' character.
+
+2013-08-23  Darin Adler  <darin@apple.com>
+
+        Cut down repeated code in RefPtr and RetainPtr by using copy/move-and-swap for assignment operators
+        https://bugs.webkit.org/show_bug.cgi?id=120223
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/RefPtr.h: Switch to copy-and-swap in the assignment operators. The move ones already were done
+        that way.
+        * wtf/RetainPtr.h: Ditto, except for the move ones too.
+
+2013-08-23  Oliver Hunt  <oliver@apple.com>
+
+        Add more validation logic to CompressibleVector
+        https://bugs.webkit.org/show_bug.cgi?id=120227
+
+        Reviewed by Brent Fulgham.
+
+        Add a pile of assertions to try on catch whatever is going wrong
+        in the windows environment or other platforms.
+
+        * wtf/Compression.cpp:
+        (WTF::GenericCompressedData::create):
+        (WTF::GenericCompressedData::decompress):
+        * wtf/Compression.h:
+        (WTF::CompressedVector::decompress):
+
+2013-08-23  Alex Christensen  <achristensen@apple.com>
+
+        Re-separating Win32 and Win64 builds.
+        https://bugs.webkit.org/show_bug.cgi?id=120178
+
+        Reviewed by Brent Fulgham.
+
+        * WTF.vcxproj/WTFGenerated.make:
+        Pass PlatformArchitecture as a command line parameter to bash scripts.
+        * WTF.vcxproj/build-generated-files.sh:
+        Use PlatformArchitecture from command line to determine which object directory to use (obj32 or obj64).
+
+2013-08-22  Filip Pizlo  <fpizlo@apple.com>
+
+        build-jsc --ftl-jit should work
+        https://bugs.webkit.org/show_bug.cgi?id=120194
+
+        Reviewed by Oliver Hunt.
+
+        * wtf/LLVMHeaders.h: I don't know what went wrong here. If HAVE(LLVM), then we need those headers!
+
+2013-08-23  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build correction after r154498.
+
+        * WTF.vcxproj/WTF.vcxproj.filters: Adjust files so they show up
+        in the proper folders.
+        * WTF.vcxproj/WTFCommon.props: Add search path for zlib header and
+        include link directive.
+
+2013-08-23  Oliver Hunt  <oliver@apple.com>
+
+        Attempt to appease windows bot.
+
+        * wtf/Compression.h:
+
+2013-08-23  Oliver Hunt  <oliver@apple.com>
+
+        Re-sort xcode project file
+
+        * WTF.xcodeproj/project.pbxproj:
+
+2013-08-23  Oliver Hunt  <oliver@apple.com>
+
+        Support in memory compression of rarely used data
+        https://bugs.webkit.org/show_bug.cgi?id=120143
+
+        Reviewed by Gavin Barraclough.
+
+        Adds a set of utility functions to wrap the use of zlib over a generic
+        type or a Vector<> as well as adding CompressibleVector that wraps
+        either a Vector<> or compressed data.
+
+        * GNUmakefile.list.am:
+        * WTF.pro:
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/CheckedArithmetic.h:
+        * wtf/Compression.cpp: Added.
+        (WTF::zAlloc):
+        (WTF::zFree):
+        (WTF::GenericCompressedData::create):
+        (WTF::GenericCompressedData::decompress):
+        * wtf/Compression.h: Added.
+        (WTF::GenericCompressedData::compressedSize):
+        (WTF::GenericCompressedData::originalSize):
+        (WTF::GenericCompressedData::GenericCompressedData):
+        (WTF::CompressedVector::create):
+        (WTF::CompressedVector::decompress):
+        (WTF::CompressedVector::size):
+        (WTF::CompressibleVector::CompressibleVector):
+        (WTF::CompressibleVector::shrinkToFit):
+        (WTF::CompressibleVector::size):
+        (WTF::CompressibleVector::operator[]):
+        (WTF::CompressibleVector::at):
+        (WTF::CompressibleVector::begin):
+        (WTF::CompressibleVector::end):
+        (WTF::CompressibleVector::data):
+        (WTF::CompressibleVector::decompressIfNecessary):
+
+2013-08-21  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r154416.
+        http://trac.webkit.org/changeset/154416
+        https://bugs.webkit.org/show_bug.cgi?id=120147
+
+        Broke Windows builds (Requested by rniwa on #webkit).
+
+        * WTF.vcxproj/WTFGenerated.make:
+        * WTF.vcxproj/build-generated-files.sh:
+
+2013-08-21  Alex Christensen  <achristensen@apple.com>
+
+        <https://webkit.org/b/120137> Separating Win32 and Win64 builds.
+
+        Reviewed by Brent Fulgham.
+
+        * WTF.vcxproj/WTFGenerated.make:
+        Pass PlatformArchitecture as a command line parameter to bash scripts.
+        * WTF.vcxproj/build-generated-files.sh:
+        Use PlatformArchitecture from command line to determine which object directory to use (obj32 or obj64).
+
 2013-08-21  Allan Sandfeld Jensen  <allan.jensen@digia.com>
 
         Disable maybe-uninitialized warning in GCC 4.8

@@ -178,7 +178,7 @@ static void applyAppleDictionaryApplicationQuirkNonInlinePart(WebFrameLoaderClie
     Frame* frame = core(client->webFrame());
     if (!frame)
         return;
-    if (frame->tree()->parent())
+    if (frame->tree().parent())
         return;
     Document* document = frame->document();
     if (!document)
@@ -1113,7 +1113,7 @@ void WebFrameLoaderClient::saveViewStateToItem(HistoryItem* item)
 
 void WebFrameLoaderClient::restoreViewState()
 {
-    HistoryItem* currentItem = core(m_webFrame.get())->loader().history()->currentItem();
+    HistoryItem* currentItem = core(m_webFrame.get())->loader().history().currentItem();
     ASSERT(currentItem);
 
     // FIXME: As the ASSERT attests, it seems we should always have a currentItem here.
@@ -1158,7 +1158,7 @@ void WebFrameLoaderClient::didFinishLoad()
 void WebFrameLoaderClient::prepareForDataSourceReplacement()
 {
     if (![m_webFrame.get() _dataSource]) {
-        ASSERT(!core(m_webFrame.get())->tree()->childCount());
+        ASSERT(!core(m_webFrame.get())->tree().childCount());
         return;
     }
     
@@ -1413,7 +1413,7 @@ PassRefPtr<Frame> WebFrameLoaderClient::createFrame(const KURL& url, const Strin
     core(m_webFrame.get())->loader().loadURLIntoChildFrame(url, referrer, result.get());
 
     // The frame's onload handler may have removed it from the document.
-    if (!result->tree()->parent())
+    if (!result->tree().parent())
         return 0;
 
     return result.release();

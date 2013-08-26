@@ -40,6 +40,7 @@
 #include "RenderSVGRoot.h"
 #include "RenderStyle.h"
 #include "SVGDocument.h"
+#include "SVGForeignObjectElement.h"
 #include "SVGImageChromeClient.h"
 #include "SVGSVGElement.h"
 #include "Settings.h"
@@ -74,10 +75,8 @@ bool SVGImage::hasSingleSecurityOrigin() const
         return true;
 
     // Don't allow foreignObject elements since they can leak information with arbitrary HTML (like spellcheck or control theme).
-    for (Element* current = ElementTraversal::firstWithin(rootElement); current; current = ElementTraversal::next(current, rootElement)) {
-        if (current->hasTagName(SVGNames::foreignObjectTag))
-            return false;
-    }
+    if (Traversal<SVGForeignObjectElement>::firstWithin(rootElement))
+        return false;
 
     // Because SVG image rendering disallows external resources and links,
     // these images effectively are restricted to a single security origin.
@@ -349,8 +348,6 @@ bool SVGImage::dataChanged(bool allDataReceived)
         return true;
 
     if (allDataReceived) {
-        static FrameLoaderClient* dummyFrameLoaderClient =  new EmptyFrameLoaderClient;
-
         Page::PageClients pageClients;
         fillWithEmptyClients(pageClients);
         m_chromeClient = adoptPtr(new SVGImageChromeClient(this));
@@ -367,7 +364,7 @@ bool SVGImage::dataChanged(bool allDataReceived)
         m_page->settings().setScriptEnabled(false);
         m_page->settings().setPluginsEnabled(false);
 
-        RefPtr<Frame> frame = Frame::create(m_page.get(), 0, dummyFrameLoaderClient);
+        RefPtr<Frame> frame = m_page->mainFrame();
         frame->setView(FrameView::create(frame.get()));
         frame->init();
         FrameLoader& loader = frame->loader();

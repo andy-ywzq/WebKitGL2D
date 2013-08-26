@@ -1,3 +1,346 @@
+2013-08-26  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Include most of the WebKit2 unit tests into the build and testing
+        https://bugs.webkit.org/show_bug.cgi?id=120307
+
+        Reviewed by Philippe Normand.
+
+        There are still various unit test source files that are not being included into
+        the build. This patch includes most of these, only leaving out tests that do not
+        compile or test features that are not supported by the GTK port.
+
+        * Scripts/run-gtk-tests: Skip four newly-added tests that are failing or timing out.
+        (TestRunner):
+        * TestWebKitAPI/GNUmakefile.am:
+
+2013-08-26  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Allow to run tests without Xvfb in run-gtk-tests
+        https://bugs.webkit.org/show_bug.cgi?id=120298
+
+        Reviewed by Philippe Normand.
+
+        Add --no-xvfb command line option to run tests in the current
+        display.
+
+        * Scripts/run-gtk-tests:
+        (TestRunner._run_xvfb): Return early if option --no-xvfb has been
+        passed.
+        (TestRunner._setup_testing_environment): Use helper function
+        _run_xvfb to start Xvfb if needed.
+        (TestRunner._tear_down_testing_environment): Check Xvfb is
+        actually running before trying to terminate it.
+
+2013-08-26  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        Adding Gabor Abraham to contributors.json.
+
+        Reviewed by Csaba Osztrogonác.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-08-26  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Add support for passing test directories to run-gtk-tests
+        https://bugs.webkit.org/show_bug.cgi?id=120296
+
+        Reviewed by Philippe Normand.
+
+        * Scripts/run-gtk-tests:
+        (TestRunner._get_tests_from_dir): Helper function to return all
+        unit tests found in a given directory.
+        (TestRunner._get_tests): Check the given tests passed in the
+        command line, so that if a directory is found the tests contained
+        in the directory are added to the list of tests to run.
+
+2013-08-26  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Improve the stop/reload button implementation in MiniBrowser
+        https://bugs.webkit.org/show_bug.cgi?id=120292
+
+        Reviewed by Philippe Normand.
+
+        - Use an instance member of BrowserWindow for the button widget
+          instead of a global variable.
+        - Use notify::is-loading to monitor the WebView load instead of
+          the estimated-load-progress property.
+        - Use webkit_web_view_is_loading() to check whether the view
+          is loading to change the button icon instead of a string
+          comparison of the gtk stock icon id.
+        - Use the right casts to fix compile warning.
+
+        * MiniBrowser/gtk/BrowserWindow.c:
+        (reloadOrStopCallback):
+        (webViewLoadProgressChanged):
+        (webViewIsLoadingChanged):
+        (browser_window_init):
+        (browserWindowConstructed):
+
+2013-08-26  Arunprasad Rajkumar  <arurajku@cisco.com>
+
+        [Qt] Remove the fix in QWebPage::javaScriptConsoleMessage introduced by (r61433)
+        https://bugs.webkit.org/show_bug.cgi?id=119791
+
+        Reviewed by Jocelyn Turcotte.
+        
+        Load empty url to send onunload event to currently running page. onunload event is 
+        mandatory for LayoutTests/plugins/open-and-close-window-with-plugin.html and
+        LayoutTests/plugins/geturlnotify-during-document-teardown.html.
+
+        * DumpRenderTree/qt/DumpRenderTreeQt.cpp:
+        (WebPage::~WebPage):
+
+2013-08-26  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Silence MiniBrowser compile warnings due to recent GTK+ deprecations
+        https://bugs.webkit.org/show_bug.cgi?id=120290
+
+        Reviewed by Philippe Normand.
+
+        * MiniBrowser/gtk/GNUmakefile.am: Add
+        -DGDK_VERSION_MIN_REQUIRED=GDK_VERSION_3_6 compile option.
+
+2013-08-26  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Add WillLoad test files to the TestWebKitAPI/TestWebKit2 program
+        https://bugs.webkit.org/show_bug.cgi?id=120288
+
+        Reviewed by Carlos Garcia Campos.
+
+        * TestWebKitAPI/GNUmakefile.am: Add the WillLoad.cpp build target that should be compiled
+        into the TestWebKit2 program. The InjectedBundle counterpart file is added to the build as well.
+        These unit tests are at the moment failing in debug configurations, so it would be nice to
+        have the GTK builds report these failures as well.
+
+2013-08-25  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL] EWebLauncher is executed as full screen with device pixel ratio
+        https://bugs.webkit.org/show_bug.cgi?id=120282
+
+        Reviewed by Gyuyoung Kim.
+
+        * EWebLauncher/main.c:
+        Use double instead of float for device_pixel_ratio which is passed to ECORE_GETOPT_VALUE_DOUBLE.
+
+2013-08-25  Zan Dobersek  <zdobersek@igalia.com>
+
+        [gdb] Remove the pretty printer for KURLGooglePrivate
+        https://bugs.webkit.org/show_bug.cgi?id=120263
+
+        Reviewed by Benjamin Poulain.
+
+        Remove the pretty printer for the WebCore::KURLGooglePrivate structure that
+        was usable inside the gdb debugger. The structure was remove from the codebase
+        along with the GoogleURL backend for KURL.
+
+        * gdb/webkit.py:
+        (JSCJSStringPrinter.to_string):
+        (add_pretty_printers):
+
+2013-08-24  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix build-webkit --ftl-jit in the case that you have your own llvm directory. We need to
+        prune 'libgtest' and friends from the llvm build, since WebKit builds its own and none of the llvm
+        libraries depend on libgtest anyway.
+
+        * Scripts/copy-webkitlibraries-to-product-directory:
+
+2013-08-24  Darin Adler  <darin@apple.com>
+
+        RetainPtr lacks move constructor for case when argument is a RetainPtr of a different type
+        https://bugs.webkit.org/show_bug.cgi?id=120255
+
+        Reviewed by Andreas Kling.
+
+        * TestWebKitAPI/Tests/WTF/ns/RetainPtr.mm: Added four tests covering move assignment and construction.
+
+2013-08-24  Anders Carlsson  <andersca@apple.com>
+
+        Don't treat NSLocalizedDescriptionKey and NSLocalizedRecoverySuggestionErrorKey as NSLocalized macros
+        https://bugs.webkit.org/show_bug.cgi?id=120249
+
+        Reviewed by Andreas Kling.
+
+        * Scripts/extract-localizable-strings:
+
+2013-08-24  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Expose WebKitFrame in WebKit2GTK+ web extensions API
+        https://bugs.webkit.org/show_bug.cgi?id=119743
+
+        Reviewed by Anders Carlsson.
+
+        * WebKitTestRunner/InjectedBundle/InjectedBundlePage.cpp:
+        (WTR::InjectedBundlePage::InjectedBundlePage): Add
+        willDestroyFrame.
+
+2013-08-23  Thiago de Barros Lacerda  <thiago.lacerda@openbossa.org>
+
+        Move TestWebKitAPI_LIBRARIES before platform specific cmake include
+        https://bugs.webkit.org/show_bug.cgi?id=120220
+
+        Reviewed by Martin Robinson.
+
+        * TestWebKitAPI/CMakeLists.txt:
+
+2013-08-22  Filip Pizlo  <fpizlo@apple.com>
+
+        build-jsc --ftl-jit should work
+        https://bugs.webkit.org/show_bug.cgi?id=120194
+
+        Reviewed by Oliver Hunt.
+
+        * Scripts/build-jsc: Need to pass the feature flag to xcodebuild
+
+2013-08-23  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r153534.
+        http://trac.webkit.org/changeset/153534
+        https://bugs.webkit.org/show_bug.cgi?id=120216
+
+        Too many tests failing just WinEWS bots (Requested by rfong on
+        #webkit).
+
+        * Scripts/webkitpy/common/config/ews.json:
+
+2013-08-23  Alex Christensen  <alex.christensen@flexsim.com>
+
+        Unreviewed.  Added my webkit.org email address.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-08-23  Peter Gal  <galpeter@inf.u-szeged.hu>
+
+        [WTR] Should dump as text when the mimetype is text/plain
+        https://bugs.webkit.org/show_bug.cgi?id=118306
+
+        Reviewed by Christophe Dumez.
+
+        Check for the text/plain mimetype and if true then mark it as
+        text dump.
+
+        * WebKitTestRunner/InjectedBundle/InjectedBundlePage.cpp:
+        (WTR::InjectedBundlePage::dump):
+
+2013-08-22  Filip Pizlo  <fpizlo@apple.com>
+
+        Update LLVM binary drops and scripts to the latest version from SVN
+        https://bugs.webkit.org/show_bug.cgi?id=120184
+
+        Reviewed by Mark Hahnenberg.
+
+        * ReducedFTL/build.sh:
+        * Scripts/configure-llvm: Added.
+        * Scripts/copy-webkitlibraries-to-product-directory:
+        * Scripts/export-llvm-build:
+
+2013-08-22  Andy Estes  <aestes@apple.com>
+
+        <https://webkit.org/b/120180> Fix issues with OTHER_LDFLAGS in various .xcconfig files
+
+        Reviewed by David Kilzer.
+
+        * TestWebKitAPI/Configurations/Base.xcconfig: Removed the definition of
+        OTHER_CPLUSPLUSFLAGS since -ftemplate-depth=256 is already set in
+        DebugRelease.xcconfig and TestWebKitAPI isn't built in Production.
+
+2013-08-22  Ryosuke Niwa  <rniwa@webkit.org>
+
+        NRWT: Add the ability to upload test results to new test results server
+        https://bugs.webkit.org/show_bug.cgi?id=120146
+
+        Reviewed by Andreas Kling.
+        
+        For the upcoming replacement for webkit-test-results.appspot.com, new-run-webkit-tests needs to use a new JSON format
+        that contains the full summary of the test run including information about passed tests.
+
+        Add this ability to NRWT so that I can start testing this feature. This patch adds the following optoins to NRWT:
+        --build-slave
+        --got-revision
+        --results-server-host
+
+        The last option is somewhat ambigious with --test-results-server but we're intending to deprecate the old server
+        so we should be able to delete --test-results-server in time.
+
+        * Scripts/webkitpy/layout_tests/controllers/manager.py:
+        (Manager.run):
+        (Manager._upload_json_files):
+        (Manager):
+        (Manager.upload_results):
+        * Scripts/webkitpy/layout_tests/models/test_run_results.py:
+        (summarize_results):
+        * Scripts/webkitpy/layout_tests/models/test_run_results_unittest.py:
+        (summarized_results):
+        (SummarizedResultsTest.test_summarized_results_wontfix):
+        (SummarizedResultsTest):
+        (SummarizedResultsTest.test_summarized_results_include_passes):
+        * Scripts/webkitpy/layout_tests/run_webkit_tests.py:
+        (parse_args):
+
+2013-08-22  Ryosuke Niwa  <rniwa@webkit.org>
+
+        WKR build fix. Somehow tool.bugs.quips() doesn't work in WKR so work around that.
+
+        * Scripts/webkitpy/tool/bot/irc_command.py:
+        (Hi.execute):
+
+2013-08-22  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] DRT bug revealed/caused by r154300
+        https://bugs.webkit.org/show_bug.cgi?id=120151
+
+        Reviewed by Simon Hausmann.
+
+        Since QtInstance had an implementation of getOwnPropertySlot and not getOwnPropertyDescriptor,
+        the behavior of getOwnPropertyDescriptor changed when it got implemented using getOwnPropertySlot
+        in r154300.
+
+        DRT relied on getOwnPropertyDescriptor returning undefined for JS set properties to distinguish
+        between native Qt methods and JSC bound methods. This patch changes the check to see if the 
+        property is writable since the Qt methods are ReadOnly.
+
+        * DumpRenderTree/qt/DumpRenderTreeQt.cpp:
+        (DumpRenderTree::initJSObjects):
+
+2013-08-21  Joseph Pecoraro  <pecoraro@apple.com>
+
+        <https://webkit.org/b/120134> [Tools] lldb_webkit.py helpers is incorrectly printing 8bit Strings
+
+        Reviewed by Benjamin Poulain.
+
+        WTFString moved the is8bit bit by one in r152201.
+
+        * lldb/lldb_webkit.py:
+        (WTFStringImplProvider.is_8bit):
+
+2013-08-21  Tim Horton  <timothy_horton@apple.com>
+
+        Revert http://trac.webkit.org/changeset/154022, as it failed to update
+        a variety of scripts that depended on the old format.
+
+        See https://bugs.webkit.org/show_bug.cgi?id=120131 for one such example.
+
+        * Scripts/prepare-ChangeLog:
+        (main):
+        (generateNewChangeLogs):
+
+2013-08-21  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed gardening: WebInspector should always be enabled for WinLauncher.
+
+        * WinLauncher/WinLauncher.cpp:
+        (setToDefaultPreferences): Activate Developer Extras on Release (as well as Debug) builds.
+
+2013-08-21  Zan Dobersek  <zdobersek@igalia.com>
+
+        <https://webkit.org/b/120116> [GTK] Fix a typo in ActivateFontsGtk.cpp
+
+        Reviewed by Andreas Kling.
+
+        * WebKitTestRunner/InjectedBundle/gtk/ActivateFontsGtk.cpp:
+        (WTR::initializeFontConfigSetting): Fix a typo - inititialize -> initialize.
+        (WTR::activateFonts): Ditto.
+
 2013-08-21  Brian Holt  <brian.holt@samsung.com>
 
         [GTK] Suppress irrelevant or known leaks for Valgrind

@@ -57,7 +57,7 @@
 #include "FloatQuad.h"
 #include "FocusController.h"
 #include "FrameLoader.h"
-#include "FrameLoaderClient.h"
+#include "FrameLoaderClientGtk.h"
 #include "FrameLoaderTypes.h"
 #include "FrameView.h"
 #include "GOwnPtrGtk.h"
@@ -3763,6 +3763,7 @@ static void webkit_web_view_init(WebKitWebView* webView)
     pageClients.dragClient = new WebKit::DragClient(webView);
 #endif
     pageClients.inspectorClient = new WebKit::InspectorClient(webView);
+    pageClients.loaderClientForMainFrame = new WebKit::FrameLoaderClient;
 
     priv->corePage = new Page(pageClients);
 
@@ -4394,7 +4395,7 @@ void webkit_web_view_set_highlight_text_matches(WebKitWebView* webView, gboolean
     Frame *frame = core(webView)->mainFrame();
     do {
         frame->editor().setMarkedTextMatchesAreHighlighted(shouldHighlight);
-        frame = frame->tree()->traverseNextWithWrap(false);
+        frame = frame->tree().traverseNextWithWrap(false);
     } while (frame);
 }
 
@@ -4692,7 +4693,7 @@ gboolean webkit_web_view_can_show_mime_type(WebKitWebView* webView, const gchar*
     g_return_val_if_fail(WEBKIT_IS_WEB_VIEW(webView), FALSE);
 
     Frame* frame = core(webkit_web_view_get_main_frame(webView));
-    return frame->loader().client()->canShowMIMEType(String::fromUTF8(mimeType));
+    return frame->loader().client().canShowMIMEType(String::fromUTF8(mimeType));
 }
 
 /**

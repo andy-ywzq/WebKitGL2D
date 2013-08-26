@@ -24,9 +24,9 @@
 #include "HTMLNames.h"
 #include "RenderSVGResourceContainer.h"
 #include "SVGDocumentExtensions.h"
+#include "SVGElement.h"
 #include "SVGResources.h"
 #include "SVGResourcesCycleSolver.h"
-#include "SVGStyledElement.h"
 
 namespace WebCore {
 
@@ -86,10 +86,7 @@ void SVGResourcesCache::removeResourcesFromRenderObject(RenderObject* object)
 
 static inline SVGResourcesCache* resourcesCacheFromRenderObject(const RenderObject* renderer)
 {
-    Document* document = renderer->document();
-    ASSERT(document);
-
-    SVGDocumentExtensions* extensions = document->accessSVGExtensions();
+    SVGDocumentExtensions* extensions = renderer->document().accessSVGExtensions();
     ASSERT(extensions);
 
     SVGResourcesCache* cache = extensions->resourcesCache();

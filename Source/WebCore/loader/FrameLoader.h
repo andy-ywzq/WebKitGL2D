@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007, 2008, 2009, 2011 Apple Inc. All rights reserved.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2011, 2013 Apple Inc. All rights reserved.
  * Copyright (C) 2008, 2009 Torch Mobile Inc. All rights reserved. (http://www.torchmobile.com/)
  * Copyright (C) Research In Motion Limited 2009. All rights reserved.
  * Copyright (C) 2011 Google Inc. All rights reserved.
@@ -84,15 +84,15 @@ bool isBackForwardLoadType(FrameLoadType);
 class FrameLoader {
     WTF_MAKE_NONCOPYABLE(FrameLoader);
 public:
-    FrameLoader(Frame*, FrameLoaderClient*);
+    FrameLoader(Frame&, FrameLoaderClient&);
     ~FrameLoader();
 
     void init();
 
-    Frame* frame() const { return m_frame; }
+    Frame& frame() const { return m_frame; }
 
     PolicyChecker* policyChecker() const { return m_policyChecker.get(); }
-    HistoryController* history() const { return m_history.get(); }
+    HistoryController& history() const { return *m_history; }
     ResourceLoadNotifier* notifier() const { return &m_notifer; }
     SubframeLoader* subframeLoader() const { return &m_subframeLoader; }
     IconController* icon() const { return m_icon.get(); }
@@ -195,7 +195,7 @@ public:
     
     static void addHTTPOriginIfNeeded(ResourceRequest&, const String& origin);
 
-    FrameLoaderClient* client() const { return m_client; }
+    FrameLoaderClient& client() const { return m_client; }
 
     void setDefersLoading(bool);
 
@@ -379,14 +379,14 @@ private:
 
     void dispatchGlobalObjectAvailableInAllWorlds();
 
-    Frame* m_frame;
-    FrameLoaderClient* m_client;
+    Frame& m_frame;
+    FrameLoaderClient& m_client;
 
     // FIXME: These should be OwnPtr<T> to reduce build times and simplify
     // header dependencies unless performance testing proves otherwise.
     // Some of these could be lazily created for memory savings on devices.
     OwnPtr<PolicyChecker> m_policyChecker;
-    OwnPtr<HistoryController> m_history;
+    const OwnPtr<HistoryController> m_history;
     mutable ResourceLoadNotifier m_notifer;
     mutable SubframeLoader m_subframeLoader;
     mutable FrameLoaderStateMachine m_stateMachine;

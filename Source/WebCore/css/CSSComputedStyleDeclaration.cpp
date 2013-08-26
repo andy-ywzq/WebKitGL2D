@@ -1634,11 +1634,15 @@ Node* ComputedStyleExtractor::styledNode() const
 {
     if (!m_node)
         return 0;
-    if (m_node->isElementNode()) {
-        if (PseudoElement* element = toElement(m_node.get())->pseudoElement(m_pseudoElementSpecifier))
-            return element;
-    }
-    return m_node.get();
+    if (!m_node->isElementNode())
+        return m_node.get();
+    Element* element = toElement(m_node.get());
+    PseudoElement* pseudoElement;
+    if (m_pseudoElementSpecifier == BEFORE && (pseudoElement = element->beforePseudoElement()))
+        return pseudoElement;
+    if (m_pseudoElementSpecifier == AFTER && (pseudoElement = element->afterPseudoElement()))
+        return pseudoElement;
+    return element;
 }
 
 PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(CSSPropertyID propertyID, EUpdateLayout updateLayout) const
@@ -1667,8 +1671,8 @@ static inline PassRefPtr<RenderStyle> computeRenderStyleForProperty(Node* styled
     RenderObject* renderer = styledNode->renderer();
 
     if (renderer && renderer->isComposited() && AnimationController::supportsAcceleratedAnimationOfProperty(propertyID)) {
-        AnimationUpdateBlock animationUpdateBlock(renderer->animation());
-        RefPtr<RenderStyle> style = renderer->animation()->getAnimatedStyleForRenderer(renderer);
+        AnimationUpdateBlock animationUpdateBlock(&renderer->animation());
+        RefPtr<RenderStyle> style = renderer->animation().getAnimatedStyleForRenderer(renderer);
         if (pseudoElementSpecifier && !styledNode->isPseudoElement()) {
             // FIXME: This cached pseudo style will only exist if the animation has been run at least once.
             return style->getCachedPseudoStyle(pseudoElementSpecifier);

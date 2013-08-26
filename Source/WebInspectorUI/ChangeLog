@@ -1,3 +1,86 @@
+2013-08-24  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Breakpoints in the editors gutter should have a contextmenu
+        https://bugs.webkit.org/show_bug.cgi?id=120169
+
+        Reviewed by Timothy Hatcher.
+
+        Updated CodeMirror now has a gutterContextMenu event. Use that to give
+        breakpoint related context menus. Add, Edit, Enable/Disable, Delete, and
+        Reveal in Debugger Navigation Sidebar.
+
+        * Localizations/en.lproj/localizedStrings.js:
+        "Add Breakpoint", and "Reveal in Debugger Navigation Sidebar".
+
+        * UserInterface/SourceCodeTextEditor.js:
+        (WebInspector.SourceCodeTextEditor.prototype.textEditorGutterContextMenu.addBreakpoint):
+        (WebInspector.SourceCodeTextEditor.prototype.textEditorGutterContextMenu.revealInSidebar):
+        (WebInspector.SourceCodeTextEditor.prototype.textEditorGutterContextMenu.removeBreakpoints):
+        (WebInspector.SourceCodeTextEditor.prototype.textEditorGutterContextMenu.toggleBreakpoints):
+        (WebInspector.SourceCodeTextEditor.prototype.textEditorGutterContextMenu):
+        Show a context menu when clicking on the gutter for 0 breakpoints,
+        1 breakpoint, or >1 breakpoints. The only tricky handler is addBreakpoint,
+        since that must update the TextEditor for the new breakpoint info.
+
+        * UserInterface/TextEditor.js:
+        (WebInspector.TextEditor):
+        (WebInspector.TextEditor.prototype._gutterContextMenu):
+        Send to delegate if the delegate implements textEditorGutterContextMenu.
+
+2013-08-23  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Fix js minification of updated CodeMirror
+        https://bugs.webkit.org/show_bug.cgi?id=120231
+
+        Reviewed by Andy Estes.
+
+        Workaround a jsmin issue with "return //.test();" lines when
+        minifying JavaScript in production builds.
+
+        * Scripts/copy-user-interface-resources.sh:
+        * UserInterface/External/CodeMirror/codemirror.js:
+        (window.CodeMirror):
+
+2013-08-22  Joseph Pecoraro  <pecoraro@apple.com>
+
+        <https://webkit.org/b/120165> Web Inspector: Update CodeMirror to 3.16.1
+
+        Reviewed by Andy Estes.
+
+        * Tools/PrettyPrinting/codemirror.css:
+        * Tools/PrettyPrinting/codemirror.js:
+        * Tools/PrettyPrinting/css.js:
+        * Tools/PrettyPrinting/javascript.js:
+        * UserInterface/External/CodeMirror/codemirror.css:
+        * UserInterface/External/CodeMirror/codemirror.js:
+        * UserInterface/External/CodeMirror/css.js:
+        * UserInterface/External/CodeMirror/javascript.js:
+        * UserInterface/External/CodeMirror/xml.js:
+
+2013-08-21  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Clean up project file after %PlatformArchitecture% change landed.
+
+        * WebInspectorUI.vcxproj/WebInspectorUI.vcxproj: Remove hard-coded settings covered
+        by our configuration files.
+        * WebInspectorUI.vcxproj/WebInspectorUIPostBuild.cmd: Use the %PlatformArchitecture%
+        macro to support 32- and 64-bit builds.
+
+2013-08-20  Brent Fulgham  <bfulgham@apple.com>
+
+        <http://webkit.org/b/120098> [Windows] Enable the New Web Inspector
+
+        Reviewed by Brian Weinstein.
+
+        Add a new project to copy files to the appropriate spots in the
+        Windows port.
+
+        * WebInspectorUI.vcxproj: Added.
+        * WebInspectorUI.vcxproj/WebInspectorUI.vcxproj: Added.
+        * WebInspectorUI.vcxproj/WebInspectorUI.vcxproj.filters: Added.
+        * WebInspectorUI.vcxproj/WebInspectorUIPostBuild.cmd: Added.
+        * WebInspectorUI.vcxproj/WebInspectorUIPreBuild.cmd: Added.
+
 2013-08-19  James Craig  <james@cookiecrook.com>
 
         <https://webkit.org/b/118106> Web Inspector: AX: Add additional contextual labels for Error/Warnings/Logs that will be spoken for screen readers

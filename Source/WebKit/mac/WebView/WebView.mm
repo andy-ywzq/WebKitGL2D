@@ -61,6 +61,7 @@
 #import "WebEditorClient.h"
 #import "WebFormDelegatePrivate.h"
 #import "WebFrameInternal.h"
+#import "WebFrameLoaderClient.h"
 #import "WebFrameNetworkingContext.h"
 #import "WebFrameViewInternal.h"
 #import "WebFullScreenController.h"
@@ -752,6 +753,7 @@ static bool shouldUseLegacyBackgroundSizeShorthandBehavior()
 #endif
     pageClients.inspectorClient = new WebInspectorClient(self);
     pageClients.alternativeTextClient = new WebAlternativeTextClient(self);
+    pageClients.loaderClientForMainFrame = new WebFrameLoaderClient;
     _private->page = new Page(pageClients);
 #if ENABLE(GEOLOCATION)
     WebCore::provideGeolocationTo(_private->page, new WebGeolocationClient(self));
@@ -1296,7 +1298,7 @@ static bool fastDocumentTeardownEnabled()
             // If this item is showing , save away its current scroll and form state,
             // since that might have changed since loading and it is normally not saved
             // until we leave that page.
-            otherView->_private->page->mainFrame()->loader().history()->saveDocumentAndScrollState();
+            otherView->_private->page->mainFrame()->loader().history().saveDocumentAndScrollState();
         }
         RefPtr<HistoryItem> newItem = otherBackForwardList->itemAtIndex(i)->copy();
         if (i == 0) 
@@ -2332,13 +2334,13 @@ static inline IMP getMethod(id o, SEL s)
 
 - (void)_attachScriptDebuggerToAllFrames
 {
-    for (Frame* frame = [self _mainCoreFrame]; frame; frame = frame->tree()->traverseNext())
+    for (Frame* frame = [self _mainCoreFrame]; frame; frame = frame->tree().traverseNext())
         [kit(frame) _attachScriptDebugger];
 }
 
 - (void)_detachScriptDebuggerFromAllFrames
 {
-    for (Frame* frame = [self _mainCoreFrame]; frame; frame = frame->tree()->traverseNext())
+    for (Frame* frame = [self _mainCoreFrame]; frame; frame = frame->tree().traverseNext())
         [kit(frame) _detachScriptDebugger];
 }
 
@@ -2454,7 +2456,7 @@ static inline IMP getMethod(id o, SEL s)
 
 - (void)_clearMainFrameName
 {
-    _private->page->mainFrame()->tree()->clearName();
+    _private->page->mainFrame()->tree().clearName();
 }
 
 - (void)setSelectTrailingWhitespaceEnabled:(BOOL)flag
@@ -2505,7 +2507,7 @@ static inline IMP getMethod(id o, SEL s)
 {
 #if USE(ACCELERATED_COMPOSITING)
     Frame* coreFrame = [self _mainCoreFrame];
-    for (Frame* frame = coreFrame; frame; frame = frame->tree()->traverseNext(coreFrame)) {
+    for (Frame* frame = coreFrame; frame; frame = frame->tree().traverseNext(coreFrame)) {
         NSView *documentView = [[kit(frame) frameView] documentView];
         if ([documentView isKindOfClass:[WebHTMLView class]] && [(WebHTMLView *)documentView _isUsingAcceleratedCompositing])
             return YES;
@@ -2543,7 +2545,7 @@ static inline IMP getMethod(id o, SEL s)
 {
 #if USE(ACCELERATED_COMPOSITING)
     Frame* coreFrame = [self _mainCoreFrame];
-    for (Frame* frame = coreFrame; frame; frame = frame->tree()->traverseNext(coreFrame)) {
+    for (Frame* frame = coreFrame; frame; frame = frame->tree().traverseNext(coreFrame)) {
         if (FrameView* view = frame->view()) {
             if (!view->isSoftwareRenderable())
                 return NO;
@@ -2779,7 +2781,7 @@ static Vector<String> toStringVector(NSArray* patterns)
 {
     Frame* frame = core([self mainFrame]);
     if (frame)
-        return frame->animation()->allowsNewAnimationsWhileSuspended();
+        return frame->animation().allowsNewAnimationsWhileSuspended();
 
     return false;
 }
@@ -2788,7 +2790,7 @@ static Vector<String> toStringVector(NSArray* patterns)
 {
     Frame* frame = core([self mainFrame]);
     if (frame)
-        frame->animation()->setAllowsNewAnimationsWhileSuspended(allowed);
+        frame->animation().setAllowsNewAnimationsWhileSuspended(allowed);
 }
 
 - (BOOL)cssAnimationsSuspended
@@ -2796,7 +2798,7 @@ static Vector<String> toStringVector(NSArray* patterns)
     // should ask the page!
     Frame* frame = core([self mainFrame]);
     if (frame)
-        return frame->animation()->isSuspended();
+        return frame->animation().isSuspended();
 
     return false;
 }
@@ -2804,13 +2806,13 @@ static Vector<String> toStringVector(NSArray* patterns)
 - (void)setCSSAnimationsSuspended:(BOOL)suspended
 {
     Frame* frame = core([self mainFrame]);
-    if (suspended == frame->animation()->isSuspended())
+    if (suspended == frame->animation().isSuspended())
         return;
         
     if (suspended)
-        frame->animation()->suspendAnimations();
+        frame->animation().suspendAnimations();
     else
-        frame->animation()->resumeAnimations();
+        frame->animation().resumeAnimations();
 }
 
 + (void)_setDomainRelaxationForbidden:(BOOL)forbidden forURLScheme:(NSString *)scheme
@@ -4212,7 +4214,7 @@ static NSString * const backingPropertyOldScaleFactorKey = @"NSBackingPropertyOl
         return;
 
     Frame* coreFrame = [self _mainCoreFrame];
-    for (Frame* frame = coreFrame; frame; frame = frame->tree()->traverseNext(coreFrame))
+    for (Frame* frame = coreFrame; frame; frame = frame->tree().traverseNext(coreFrame))
         [[[kit(frame) frameView] documentView] viewWillMoveToHostWindow:hostWindow];
     if (_private->hostWindow && [self window] != _private->hostWindow)
         [[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowWillCloseNotification object:_private->hostWindow];
@@ -4220,7 +4222,7 @@ static NSString * const backingPropertyOldScaleFactorKey = @"NSBackingPropertyOl
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_windowWillClose:) name:NSWindowWillCloseNotification object:hostWindow];
     [_private->hostWindow release];
     _private->hostWindow = [hostWindow retain];
-    for (Frame* frame = coreFrame; frame; frame = frame->tree()->traverseNext(coreFrame))
+    for (Frame* frame = coreFrame; frame; frame = frame->tree().traverseNext(coreFrame))
         [[[kit(frame) frameView] documentView] viewDidMoveToHostWindow];
     _private->page->setDeviceScaleFactor([self _deviceScaleFactor]);
 }
@@ -4416,8 +4418,8 @@ static WebFrame *incrementFrame(WebFrame *frame, WebFindOptions options = 0)
 {
     Frame* coreFrame = core(frame);
     return kit((options & WebFindOptionsBackwards)
-        ? coreFrame->tree()->traversePreviousWithWrap(options & WebFindOptionsWrapAround)
-        : coreFrame->tree()->traverseNextWithWrap(options & WebFindOptionsWrapAround));
+        ? coreFrame->tree().traversePreviousWithWrap(options & WebFindOptionsWrapAround)
+        : coreFrame->tree().traverseNextWithWrap(options & WebFindOptionsWrapAround));
 }
 
 - (BOOL)searchFor:(NSString *)string direction:(BOOL)forward caseSensitive:(BOOL)caseFlag wrap:(BOOL)wrapFlag

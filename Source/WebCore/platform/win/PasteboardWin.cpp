@@ -260,21 +260,21 @@ static void addMimeTypesForFormat(ListHashSet<String>& results, const FORMATETC&
     }
 }
 
-ListHashSet<String> Pasteboard::types()
+Vector<String> Pasteboard::types()
 {
     ListHashSet<String> results;
 
     if (!m_dataObject && m_dragDataMap.isEmpty())
-        return results;
+        return Vector<String>();
 
     if (m_dataObject) {
         COMPtr<IEnumFORMATETC> itr;
 
         if (FAILED(m_dataObject->EnumFormatEtc(DATADIR_GET, &itr)))
-            return results;
+            return Vector<String>();
 
         if (!itr)
-            return results;
+            return Vector<String>();
 
         FORMATETC data;
 
@@ -289,7 +289,9 @@ ListHashSet<String> Pasteboard::types()
         }
     }
 
-    return results;
+    Vector<String> vector;
+    copyToVector(results, vector);
+    return vector;
 }
 
 String Pasteboard::readString(const String& type)

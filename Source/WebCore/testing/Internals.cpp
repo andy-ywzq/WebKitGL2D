@@ -403,10 +403,7 @@ unsigned Internals::lastSpatialNavigationCandidateCount(ExceptionCode& ec) const
 
 unsigned Internals::numberOfActiveAnimations() const
 {
-    Frame* contextFrame = frame();
-    if (AnimationController* controller = contextFrame->animation())
-        return controller->numberOfActiveAnimations(contextFrame->document());
-    return 0;
+    return frame()->animation().numberOfActiveAnimations(frame()->document());
 }
 
 bool Internals::animationsAreSuspended(Document* document, ExceptionCode& ec) const
@@ -416,11 +413,7 @@ bool Internals::animationsAreSuspended(Document* document, ExceptionCode& ec) co
         return false;
     }
 
-    AnimationController* controller = document->frame()->animation();
-    if (!controller)
-        return false;
-
-    return controller->isSuspended();
+    return document->frame()->animation().isSuspended();
 }
 
 void Internals::suspendAnimations(Document* document, ExceptionCode& ec) const
@@ -430,11 +423,7 @@ void Internals::suspendAnimations(Document* document, ExceptionCode& ec) const
         return;
     }
 
-    AnimationController* controller = document->frame()->animation();
-    if (!controller)
-        return;
-
-    controller->suspendAnimations();
+    document->frame()->animation().suspendAnimations();
 }
 
 void Internals::resumeAnimations(Document* document, ExceptionCode& ec) const
@@ -444,11 +433,7 @@ void Internals::resumeAnimations(Document* document, ExceptionCode& ec) const
         return;
     }
 
-    AnimationController* controller = document->frame()->animation();
-    if (!controller)
-        return;
-
-    controller->resumeAnimations();
+    document->frame()->animation().resumeAnimations();
 }
 
 bool Internals::pauseAnimationAtTimeOnElement(const String& animationName, double pauseTime, Element* element, ExceptionCode& ec)
@@ -457,8 +442,7 @@ bool Internals::pauseAnimationAtTimeOnElement(const String& animationName, doubl
         ec = INVALID_ACCESS_ERR;
         return false;
     }
-    AnimationController* controller = frame()->animation();
-    return controller->pauseAnimationAtTime(element->renderer(), AtomicString(animationName), pauseTime);
+    return frame()->animation().pauseAnimationAtTime(element->renderer(), AtomicString(animationName), pauseTime);
 }
 
 bool Internals::pauseAnimationAtTimeOnPseudoElement(const String& animationName, double pauseTime, Element* element, const String& pseudoId, ExceptionCode& ec)
@@ -473,13 +457,13 @@ bool Internals::pauseAnimationAtTimeOnPseudoElement(const String& animationName,
         return false;
     }
 
-    PseudoElement* pseudoElement = element->pseudoElement(pseudoId == "before" ? BEFORE : AFTER);
+    PseudoElement* pseudoElement = pseudoId == "before" ? element->beforePseudoElement() : element->afterPseudoElement();
     if (!pseudoElement) {
         ec = INVALID_ACCESS_ERR;
         return false;
     }
 
-    return frame()->animation()->pauseAnimationAtTime(pseudoElement->renderer(), AtomicString(animationName), pauseTime);
+    return frame()->animation().pauseAnimationAtTime(pseudoElement->renderer(), AtomicString(animationName), pauseTime);
 }
 
 bool Internals::pauseTransitionAtTimeOnElement(const String& propertyName, double pauseTime, Element* element, ExceptionCode& ec)
@@ -488,8 +472,7 @@ bool Internals::pauseTransitionAtTimeOnElement(const String& propertyName, doubl
         ec = INVALID_ACCESS_ERR;
         return false;
     }
-    AnimationController* controller = frame()->animation();
-    return controller->pauseTransitionAtTime(element->renderer(), propertyName, pauseTime);
+    return frame()->animation().pauseTransitionAtTime(element->renderer(), propertyName, pauseTime);
 }
 
 bool Internals::pauseTransitionAtTimeOnPseudoElement(const String& property, double pauseTime, Element* element, const String& pseudoId, ExceptionCode& ec)
@@ -504,13 +487,13 @@ bool Internals::pauseTransitionAtTimeOnPseudoElement(const String& property, dou
         return false;
     }
 
-    PseudoElement* pseudoElement = element->pseudoElement(pseudoId == "before" ? BEFORE : AFTER);
+    PseudoElement* pseudoElement = pseudoId == "before" ? element->beforePseudoElement() : element->afterPseudoElement();
     if (!pseudoElement) {
         ec = INVALID_ACCESS_ERR;
         return false;
     }
 
-    return frame()->animation()->pauseTransitionAtTime(pseudoElement->renderer(), property, pauseTime);
+    return frame()->animation().pauseTransitionAtTime(pseudoElement->renderer(), property, pauseTime);
 }
 
 bool Internals::attached(Node* node, ExceptionCode& ec)
@@ -717,12 +700,12 @@ void Internals::selectColorInColorChooser(Element* element, const String& colorV
 
 Vector<String> Internals::formControlStateOfPreviousHistoryItem(ExceptionCode& ec)
 {
-    HistoryItem* mainItem = frame()->loader().history()->previousItem();
+    HistoryItem* mainItem = frame()->loader().history().previousItem();
     if (!mainItem) {
         ec = INVALID_ACCESS_ERR;
         return Vector<String>();
     }
-    String uniqueName = frame()->tree()->uniqueName();
+    String uniqueName = frame()->tree().uniqueName();
     if (mainItem->target() != uniqueName && !mainItem->childItemWithTarget(uniqueName)) {
         ec = INVALID_ACCESS_ERR;
         return Vector<String>();
@@ -732,12 +715,12 @@ Vector<String> Internals::formControlStateOfPreviousHistoryItem(ExceptionCode& e
 
 void Internals::setFormControlStateOfPreviousHistoryItem(const Vector<String>& state, ExceptionCode& ec)
 {
-    HistoryItem* mainItem = frame()->loader().history()->previousItem();
+    HistoryItem* mainItem = frame()->loader().history().previousItem();
     if (!mainItem) {
         ec = INVALID_ACCESS_ERR;
         return;
     }
-    String uniqueName = frame()->tree()->uniqueName();
+    String uniqueName = frame()->tree().uniqueName();
     if (mainItem->target() == uniqueName)
         mainItem->setDocumentState(state);
     else if (HistoryItem* subItem = mainItem->childItemWithTarget(uniqueName))
@@ -1595,7 +1578,7 @@ unsigned Internals::numberOfScrollableAreas(Document* document, ExceptionCode&)
     if (frame->view()->scrollableAreas())
         count += frame->view()->scrollableAreas()->size();
 
-    for (Frame* child = frame->tree()->firstChild(); child; child = child->tree()->nextSibling()) {
+    for (Frame* child = frame->tree().firstChild(); child; child = child->tree().nextSibling()) {
         if (child->view() && child->view()->scrollableAreas())
             count += child->view()->scrollableAreas()->size();
     }
@@ -1878,8 +1861,8 @@ PassRefPtr<MemoryInfo> Internals::memoryInfo() const
 
 Vector<String> Internals::getReferencedFilePaths() const
 {
-    frame()->loader().history()->saveDocumentAndScrollState();
-    return FormController::getReferencedFilePaths(frame()->loader().history()->currentItem()->documentState());
+    frame()->loader().history().saveDocumentAndScrollState();
+    return FormController::getReferencedFilePaths(frame()->loader().history().currentItem()->documentState());
 }
 
 void Internals::startTrackingRepaints(Document* document, ExceptionCode& ec)

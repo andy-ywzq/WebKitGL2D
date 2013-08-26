@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="DebugSuffix|Win32">
@@ -17603,20 +17603,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\svg\SVGStyledElement.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="..\svg\SVGStyleElement.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -20217,6 +20203,7 @@
     <ClInclude Include="..\dom\CDATASection.h" />
     <ClInclude Include="..\dom\CharacterData.h" />
     <ClInclude Include="..\dom\CheckedRadioButtons.h" />
+    <ClInclude Include="..\dom\ChildIterator.h" />
     <ClInclude Include="..\dom\ChildListMutationScope.h" />
     <ClInclude Include="..\dom\ChildNodeList.h" />
     <ClInclude Include="..\dom\ClassNodeList.h" />
@@ -20236,6 +20223,7 @@
     <ClInclude Include="..\dom\DataTransferItem.h" />
     <ClInclude Include="..\dom\DataTransferItemList.h" />
     <ClInclude Include="..\dom\DecodedDataDocumentParser.h" />
+    <ClInclude Include="..\dom\DescendantIterator.h" />
     <ClInclude Include="..\dom\DeviceMotionClient.h" />
     <ClInclude Include="..\dom\DeviceMotionController.h" />
     <ClInclude Include="..\dom\DeviceMotionData.h" />
@@ -20910,7 +20898,6 @@
     <ClInclude Include="..\svg\SVGSetElement.h" />
     <ClInclude Include="..\svg\SVGStopElement.h" />
     <ClInclude Include="..\svg\SVGStringList.h" />
-    <ClInclude Include="..\svg\SVGStyledElement.h" />
     <ClInclude Include="..\svg\SVGGraphicsElement.h" />
     <ClInclude Include="..\svg\SVGStyleElement.h" />
     <ClInclude Include="..\svg\SVGSVGElement.h" />
@@ -20930,6 +20917,7 @@
     <ClInclude Include="..\svg\SVGTSpanElement.h" />
     <ClInclude Include="..\svg\SVGUnitTypes.h" />
     <ClInclude Include="..\svg\SVGURIReference.h" />
+    <ClInclude Include="..\svg\SVGUnknownElement.h" />
     <ClInclude Include="..\svg\SVGUseElement.h" />
     <ClInclude Include="..\svg\SVGViewElement.h" />
     <ClInclude Include="..\svg\SVGViewSpec.h" />

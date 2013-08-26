@@ -81,8 +81,8 @@ using namespace WebCore;
 
 namespace WebKit {
 
-WebFrameLoaderClient::WebFrameLoaderClient(WebFrame* frame)
-    : m_frame(frame)
+WebFrameLoaderClient::WebFrameLoaderClient()
+    : m_frame(0)
     , m_hasSentResponseToPluginView(false)
     , m_didCompletePageTransitionAlready(false)
     , m_frameCameFromPageCache(false)
@@ -95,9 +95,12 @@ WebFrameLoaderClient::~WebFrameLoaderClient()
     
 void WebFrameLoaderClient::frameLoaderDestroyed()
 {
+    if (WebPage* webPage = m_frame->page())
+        webPage->injectedBundleLoaderClient().willDestroyFrame(webPage, m_frame);
+
     m_frame->invalidate();
 
-    // Balances explicit ref() in WebFrame::createMainFrame and WebFrame::createSubframe.
+    // Balances explicit ref() in WebFrame::create().
     m_frame->deref();
 }
 
@@ -539,9 +542,6 @@ void WebFrameLoaderClient::dispatchDidLayout(LayoutMilestones milestones)
 
     RefPtr<APIObject> userData;
 
-    webPage->injectedBundleLoaderClient().didLayout(webPage, milestones, userData);
-    webPage->send(Messages::WebPageProxy::DidLayout(milestones, InjectedBundleUserMessageEncoder(userData.get())));
-
     if (milestones & DidFirstLayout) {
         // FIXME: We should consider removing the old didFirstLayout API since this is doing double duty with the
         // new didLayout API.
@@ -560,6 +560,10 @@ void WebFrameLoaderClient::dispatchDidLayout(LayoutMilestones milestones)
         ASSERT(!webPage->useFixedLayout() || m_frame != m_frame->page()->mainWebFrame() || m_frame->coreFrame()->document()->didDispatchViewportPropertiesChanged());
 #endif
     }
+
+    // Send this after DidFirstLayout-specific calls since some clients expect to get those messages first.
+    webPage->injectedBundleLoaderClient().didLayout(webPage, milestones, userData);
+    webPage->send(Messages::WebPageProxy::DidLayout(milestones, InjectedBundleUserMessageEncoder(userData.get())));
 
     if (milestones & DidFirstVisuallyNonEmptyLayout) {
         // FIXME: We should consider removing the old didFirstVisuallyNonEmptyLayoutForFrame API since this is doing
@@ -1112,7 +1116,7 @@ void WebFrameLoaderClient::saveViewStateToItem(HistoryItem*)
 void WebFrameLoaderClient::restoreViewState()
 {
     // Inform the UI process of the scale factor.
-    double scaleFactor = m_frame->coreFrame()->loader().history()->currentItem()->pageScaleFactor();
+    double scaleFactor = m_frame->coreFrame()->loader().history().currentItem()->pageScaleFactor();
 
     // A scale factor of 0 means the history item has the default scale factor, thus we do not need to update it.
     if (scaleFactor)
@@ -1272,7 +1276,7 @@ PassRefPtr<Frame> WebFrameLoaderClient::createFrame(const KURL& url, const Strin
     if (!subframe->coreFrame())
         return 0;
     ASSERT(subframe->coreFrame() == coreSubframe);
-    if (!coreSubframe->tree()->parent())
+    if (!coreSubframe->tree().parent())
         return 0;
 
     return coreSubframe;

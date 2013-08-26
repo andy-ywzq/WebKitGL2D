@@ -1,3 +1,683 @@
+2013-08-26  Gavin Barraclough  <barraclough@apple.com>
+
+        RegExpMatchesArray should not call [[put]]
+        https://bugs.webkit.org/show_bug.cgi?id=120317
+
+        Reviewed by Oliver Hunt.
+
+        This will call accessors on the JSObject/JSArray prototypes - so adding an accessor or read-only
+        property called index or input to either of these prototypes will result in broken behavior.
+
+        * runtime/RegExpMatchesArray.cpp:
+        (JSC::RegExpMatchesArray::reifyAllProperties):
+            - put -> putDirect
+
+2013-08-24  Filip Pizlo  <fpizlo@apple.com>
+
+        FloatTypedArrayAdaptor::toJSValue should almost certainly not use jsNumber() since that attempts int conversions
+        https://bugs.webkit.org/show_bug.cgi?id=120228
+
+        Reviewed by Oliver Hunt.
+        
+        It turns out that there were three problems:
+        
+        - Using jsNumber() meant that we were converting doubles to integers and then
+          possibly back again whenever doing a set() between floating point arrays.
+        
+        - Slow-path accesses to double typed arrays were slower than necessary because
+          of the to-int conversion attempt.
+        
+        - The use of JSValue as an intermediate for converting between differen types
+          in typedArray.set() resulted in worse code than I had previously expected.
+        
+        This patch solves the problem by using template double-dispatch to ensure that
+        that C++ compiler sees the simplest possible combination of casts between any
+        combination of typed array types, while still preserving JS and typed array
+        conversion semantics. Conversions are done as follows:
+        
+            SourceAdaptor::convertTo<TargetAdaptor>(value)
+        
+        Internally, convertTo() calls one of three possible methods on TargetAdaptor,
+        with one method for each of int32_t, uint32_t, and double. This means that the
+        C++ compiler will at worst see a widening cast to one of those types followed
+        by a narrowing conversion (not necessarily a cast - may have clamping or the
+        JS toInt32() function).
+        
+        This change doesn't just affect typedArray.set(); it also affects slow-path
+        accesses to typed arrays as well. This patch also adds a bunch of new test
+        coverage.
+        
+        This change is a ~50% speed-up on typedArray.set() involving floating point
+        types.
+
+        * GNUmakefile.list.am:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * runtime/GenericTypedArrayView.h:
+        (JSC::GenericTypedArrayView::set):
+        * runtime/JSDataViewPrototype.cpp:
+        (JSC::setData):
+        * runtime/JSGenericTypedArrayView.h:
+        (JSC::JSGenericTypedArrayView::setIndexQuicklyToDouble):
+        (JSC::JSGenericTypedArrayView::setIndexQuickly):
+        * runtime/JSGenericTypedArrayViewInlines.h:
+        (JSC::::setWithSpecificType):
+        (JSC::::set):
+        * runtime/ToNativeFromValue.h: Added.
+        (JSC::toNativeFromValue):
+        * runtime/TypedArrayAdaptors.h:
+        (JSC::IntegralTypedArrayAdaptor::toJSValue):
+        (JSC::IntegralTypedArrayAdaptor::toDouble):
+        (JSC::IntegralTypedArrayAdaptor::toNativeFromInt32):
+        (JSC::IntegralTypedArrayAdaptor::toNativeFromUint32):
+        (JSC::IntegralTypedArrayAdaptor::toNativeFromDouble):
+        (JSC::IntegralTypedArrayAdaptor::convertTo):
+        (JSC::FloatTypedArrayAdaptor::toJSValue):
+        (JSC::FloatTypedArrayAdaptor::toDouble):
+        (JSC::FloatTypedArrayAdaptor::toNativeFromInt32):
+        (JSC::FloatTypedArrayAdaptor::toNativeFromUint32):
+        (JSC::FloatTypedArrayAdaptor::toNativeFromDouble):
+        (JSC::FloatTypedArrayAdaptor::convertTo):
+        (JSC::Uint8ClampedAdaptor::toJSValue):
+        (JSC::Uint8ClampedAdaptor::toDouble):
+        (JSC::Uint8ClampedAdaptor::toNativeFromInt32):
+        (JSC::Uint8ClampedAdaptor::toNativeFromUint32):
+        (JSC::Uint8ClampedAdaptor::toNativeFromDouble):
+        (JSC::Uint8ClampedAdaptor::convertTo):
+
+2013-08-24  Dan Bernstein  <mitz@apple.com>
+
+        [mac] link against libz in a more civilized manner
+        https://bugs.webkit.org/show_bug.cgi?id=120258
+
+        Reviewed by Darin Adler.
+
+        * Configurations/JavaScriptCore.xcconfig: Removed “-lz” from OTHER_LDFLAGS_BASE.
+        * JavaScriptCore.xcodeproj/project.pbxproj: Added libz.dylib to the JavaScriptCore target’s
+        Link Binary With Libraries build phase.
+
+2013-08-23  Laszlo Papp  <lpapp@kde.org>
+
+        Failure building with python3
+        https://bugs.webkit.org/show_bug.cgi?id=106645
+
+        Reviewed by Benjamin Poulain.
+
+        Use print functions instead of python statements to be compatible with python 3.X and 2.7 as well.
+        Archlinux has been using python3 and that is what causes issues while packaging QtWebKit along with Qt5.
+
+        * disassembler/udis86/itab.py:
+        (UdItabGenerator.genInsnTable):
+        * disassembler/udis86/ud_opcode.py:
+        (UdOpcodeTables.print_table):
+        * disassembler/udis86/ud_optable.py:
+        (UdOptableXmlParser.parseDef):
+        (UdOptableXmlParser.parse):
+        (printFn):
+
+2013-08-23  Filip Pizlo  <fpizlo@apple.com>
+
+        Incorrect TypedArray#set behavior
+        https://bugs.webkit.org/show_bug.cgi?id=83818
+
+        Reviewed by Oliver Hunt and Mark Hahnenberg.
+        
+        This was so much fun! typedArray.set() is like a memmove on steroids, and I'm
+        not smart enough to figure out optimal versions for *all* of the cases. But I
+        did come up with optimal implementations for most of the cases, and I wrote
+        spec-literal code (i.e. copy via a transfer buffer) for the cases I'm not smart
+        enough to write optimal code for.
+
+        * runtime/JSArrayBufferView.h:
+        (JSC::JSArrayBufferView::hasArrayBuffer):
+        * runtime/JSArrayBufferViewInlines.h:
+        (JSC::JSArrayBufferView::buffer):
+        (JSC::JSArrayBufferView::existingBufferInButterfly):
+        (JSC::JSArrayBufferView::neuter):
+        (JSC::JSArrayBufferView::byteOffset):
+        * runtime/JSGenericTypedArrayView.h:
+        * runtime/JSGenericTypedArrayViewInlines.h:
+        (JSC::::setWithSpecificType):
+        (JSC::::set):
+        (JSC::::existingBuffer):
+
+2013-08-23  Alex Christensen  <achristensen@apple.com>
+
+        Re-separating Win32 and Win64 builds.
+        https://bugs.webkit.org/show_bug.cgi?id=120178
+
+        Reviewed by Brent Fulgham.
+
+        * JavaScriptCore.vcxproj/JavaScriptCoreGenerated.make:
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/LLIntAssembly.make:
+        * JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/LLIntDesiredOffsets.make:
+        Pass PlatformArchitecture as a command line parameter to bash scripts.
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/build-LLIntAssembly.sh:
+        * JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/build-LLIntDesiredOffsets.sh:
+        * JavaScriptCore.vcxproj/build-generated-files.sh:
+        Use PlatformArchitecture from command line to determine which object directory to use (obj32 or obj64).
+
+2013-08-22  Filip Pizlo  <fpizlo@apple.com>
+
+        build-jsc --ftl-jit should work
+        https://bugs.webkit.org/show_bug.cgi?id=120194
+
+        Reviewed by Oliver Hunt.
+
+        * Configurations/Base.xcconfig: CPPFLAGS should include FEATURE_DEFINES
+        * Configurations/JSC.xcconfig: The 'jsc' tool includes headers where field layout may depend on FEATURE_DEFINES
+        * Configurations/ToolExecutable.xcconfig: All other tools include headers where field layout may depend on FEATURE_DEFINES
+        * ftl/FTLLowerDFGToLLVM.cpp: Build fix
+        (JSC::FTL::LowerDFGToLLVM::compilePutStructure):
+        (JSC::FTL::LowerDFGToLLVM::compilePhantomPutStructure):
+
+2013-08-23  Oliver Hunt  <oliver@apple.com>
+
+        Re-sort xcode project file
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
+2013-08-23  Oliver Hunt  <oliver@apple.com>
+
+        Support in memory compression of rarely used data
+        https://bugs.webkit.org/show_bug.cgi?id=120143
+
+        Reviewed by Gavin Barraclough.
+
+        Include zlib in LD_FLAGS and make UnlinkedCodeBlock make use of CompressibleVector.  This saves ~200k on google maps.
+
+        * Configurations/JavaScriptCore.xcconfig:
+        * bytecode/UnlinkedCodeBlock.cpp:
+        (JSC::UnlinkedCodeBlock::expressionRangeForBytecodeOffset):
+        (JSC::UnlinkedCodeBlock::addExpressionInfo):
+        * bytecode/UnlinkedCodeBlock.h:
+
+2013-08-22  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        JSObject and JSArray code shouldn't have to tiptoe around garbage collection
+        https://bugs.webkit.org/show_bug.cgi?id=120179
+
+        Reviewed by Geoffrey Garen.
+
+        There are many places in the code for JSObject and JSArray where they are manipulating their 
+        Butterfly/Structure, e.g. after expanding their out-of-line backing storage via allocating. Within 
+        these places there are certain "critical sections" where a GC would be disastrous. Gen GC looks 
+        like it will make this dance even more intricate. To make everybody's lives easier we should use 
+        the DeferGC mechanism in these functions to make these GC critical sections both obvious in the 
+        code and trivially safe. Deferring collections will usually only last marginally longer, thus we 
+        should not incur any additional overhead.
+
+        * heap/Heap.h:
+        * runtime/JSArray.cpp:
+        (JSC::JSArray::unshiftCountSlowCase):
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::enterDictionaryIndexingModeWhenArrayStorageAlreadyExists):
+        (JSC::JSObject::createInitialUndecided):
+        (JSC::JSObject::createInitialInt32):
+        (JSC::JSObject::createInitialDouble):
+        (JSC::JSObject::createInitialContiguous):
+        (JSC::JSObject::createArrayStorage):
+        (JSC::JSObject::convertUndecidedToArrayStorage):
+        (JSC::JSObject::convertInt32ToArrayStorage):
+        (JSC::JSObject::convertDoubleToArrayStorage):
+        (JSC::JSObject::convertContiguousToArrayStorage):
+        (JSC::JSObject::increaseVectorLength):
+        (JSC::JSObject::ensureLengthSlow):
+        * runtime/JSObject.h:
+        (JSC::JSObject::putDirectInternal):
+        (JSC::JSObject::setStructureAndReallocateStorageIfNecessary):
+        (JSC::JSObject::putDirectWithoutTransition):
+
+2013-08-22  Filip Pizlo  <fpizlo@apple.com>
+
+        Update LLVM binary drops and scripts to the latest version from SVN
+        https://bugs.webkit.org/show_bug.cgi?id=120184
+
+        Reviewed by Mark Hahnenberg.
+
+        * dfg/DFGPlan.cpp:
+        (JSC::DFG::Plan::compileInThreadImpl):
+
+2013-08-22  Gavin Barraclough  <barraclough@apple.com>
+
+        Don't leak registers for redeclared variables
+        https://bugs.webkit.org/show_bug.cgi?id=120174
+
+        Reviewed by Geoff Garen.
+
+        We currently always allocate registers for new global variables, but these are wasted when the variable is being redeclared.
+        Only allocate new registers when necessary.
+
+        No performance impact.
+
+        * interpreter/Interpreter.cpp:
+        (JSC::Interpreter::execute):
+        * runtime/Executable.cpp:
+        (JSC::ProgramExecutable::initializeGlobalProperties):
+            - Don't allocate the register here.
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::addGlobalVar):
+            - Allocate the register here instead.
+
+2013-08-22  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120128
+        Remove putDirectVirtual
+
+        Unreviewed, checked in commented out code. :-(
+
+        * interpreter/Interpreter.cpp:
+        (JSC::Interpreter::execute):
+            - delete commented out code
+
+2013-08-22  Gavin Barraclough  <barraclough@apple.com>
+
+        Error.stack should not be enumerable
+        https://bugs.webkit.org/show_bug.cgi?id=120171
+
+        Reviewed by Oliver Hunt.
+
+        Breaks ECMA tests.
+
+        * runtime/ErrorInstance.cpp:
+        (JSC::ErrorInstance::finishCreation):
+            - None -> DontEnum
+
+2013-08-21  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120128
+        Remove putDirectVirtual
+
+        Reviewed by Sam Weinig.
+
+        This could most generously be described as 'vestigial'.
+        No performance impact.
+
+        * API/JSObjectRef.cpp:
+        (JSObjectSetProperty):
+            - changed to use defineOwnProperty
+        * debugger/DebuggerActivation.cpp:
+        * debugger/DebuggerActivation.h:
+            - remove putDirectVirtual
+        * interpreter/Interpreter.cpp:
+        (JSC::Interpreter::execute):
+            - changed to use defineOwnProperty
+        * runtime/ClassInfo.h:
+        * runtime/JSActivation.cpp:
+        * runtime/JSActivation.h:
+        * runtime/JSCell.cpp:
+        * runtime/JSCell.h:
+        * runtime/JSGlobalObject.cpp:
+        * runtime/JSGlobalObject.h:
+        * runtime/JSObject.cpp:
+        * runtime/JSObject.h:
+        * runtime/JSProxy.cpp:
+        * runtime/JSProxy.h:
+        * runtime/JSSymbolTableObject.cpp:
+        * runtime/JSSymbolTableObject.h:
+            - remove putDirectVirtual
+        * runtime/PropertyDescriptor.h:
+        (JSC::PropertyDescriptor::PropertyDescriptor):
+            - added constructor for convenience
+
+2013-08-22  Chris Curtis  <chris_curtis@apple.com>
+
+        errorDescriptionForValue() should not assume error value is an Object
+        https://bugs.webkit.org/show_bug.cgi?id=119812
+
+        Reviewed by Geoffrey Garen.
+
+        Added a check to make sure that the JSValue was an object before casting it as an object. Also, in case the parameterized JSValue
+        has no type, the function now returns the empty string. 
+        * runtime/ExceptionHelpers.cpp:
+        (JSC::errorDescriptionForValue):
+
+2013-08-22  Julien Brianceau  <jbrianceau@nds.com>
+
+        Fix P_DFGOperation_EJS call for MIPS and ARM EABI.
+        https://bugs.webkit.org/show_bug.cgi?id=120107
+
+        Reviewed by Yong Li.
+
+        EncodedJSValue parameters must be aligned to even registers for MIPS and ARM EABI.
+
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::callOperation):
+
+2013-08-21  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r154416.
+        http://trac.webkit.org/changeset/154416
+        https://bugs.webkit.org/show_bug.cgi?id=120147
+
+        Broke Windows builds (Requested by rniwa on #webkit).
+
+        * JavaScriptCore.vcxproj/JavaScriptCoreGenerated.make:
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/LLIntAssembly.make:
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/build-LLIntAssembly.sh:
+        * JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/LLIntDesiredOffsets.make:
+        * JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/build-LLIntDesiredOffsets.sh:
+        * JavaScriptCore.vcxproj/build-generated-files.sh:
+
+2013-08-21  Gavin Barraclough  <barraclough@apple.com>
+
+        Clarify var/const/function declaration
+        https://bugs.webkit.org/show_bug.cgi?id=120144
+
+        Reviewed by Sam Weinig.
+
+        Add methods to JSGlobalObject to declare vars, consts, and functions.
+
+        * runtime/Executable.cpp:
+        (JSC::ProgramExecutable::initializeGlobalProperties):
+        * runtime/Executable.h:
+            - Moved declaration code to JSGlobalObject
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::addGlobalVar):
+            - internal implementation of addVar, addConst, addFunction
+        * runtime/JSGlobalObject.h:
+        (JSC::JSGlobalObject::addVar):
+        (JSC::JSGlobalObject::addConst):
+        (JSC::JSGlobalObject::addFunction):
+            - Added methods to declare vars, consts, and functions
+
+2013-08-21  Yi Shen  <max.hong.shen@gmail.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=119900
+        Exception in global setter doesn't unwind correctly
+
+        Reviewed by Geoffrey Garen.
+
+        Call VM_THROW_EXCEPTION_AT_END in op_put_to_scope if the setter throws exception.
+
+        * jit/JITStubs.cpp:
+        (JSC::DEFINE_STUB_FUNCTION):
+
+2013-08-21  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        Rename/refactor setButterfly/setStructure
+        https://bugs.webkit.org/show_bug.cgi?id=120138
+
+        Reviewed by Geoffrey Garen.
+
+        setButterfly becomes setStructureAndButterfly.
+
+        Also removed the Butterfly* argument from setStructure and just implicitly
+        used m_butterfly internally since that's what every single client of setStructure
+        was doing already.
+
+        * jit/JITStubs.cpp:
+        (JSC::DEFINE_STUB_FUNCTION):
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::notifyPresenceOfIndexedAccessors):
+        (JSC::JSObject::createInitialUndecided):
+        (JSC::JSObject::createInitialInt32):
+        (JSC::JSObject::createInitialDouble):
+        (JSC::JSObject::createInitialContiguous):
+        (JSC::JSObject::createArrayStorage):
+        (JSC::JSObject::convertUndecidedToInt32):
+        (JSC::JSObject::convertUndecidedToDouble):
+        (JSC::JSObject::convertUndecidedToContiguous):
+        (JSC::JSObject::convertUndecidedToArrayStorage):
+        (JSC::JSObject::convertInt32ToDouble):
+        (JSC::JSObject::convertInt32ToContiguous):
+        (JSC::JSObject::convertInt32ToArrayStorage):
+        (JSC::JSObject::genericConvertDoubleToContiguous):
+        (JSC::JSObject::convertDoubleToArrayStorage):
+        (JSC::JSObject::convertContiguousToArrayStorage):
+        (JSC::JSObject::switchToSlowPutArrayStorage):
+        (JSC::JSObject::setPrototype):
+        (JSC::JSObject::putDirectAccessor):
+        (JSC::JSObject::seal):
+        (JSC::JSObject::freeze):
+        (JSC::JSObject::preventExtensions):
+        (JSC::JSObject::reifyStaticFunctionsForDelete):
+        (JSC::JSObject::removeDirect):
+        * runtime/JSObject.h:
+        (JSC::JSObject::setStructureAndButterfly):
+        (JSC::JSObject::setStructure):
+        (JSC::JSObject::putDirectInternal):
+        (JSC::JSObject::setStructureAndReallocateStorageIfNecessary):
+        (JSC::JSObject::putDirectWithoutTransition):
+        * runtime/Structure.cpp:
+        (JSC::Structure::flattenDictionaryStructure):
+
+2013-08-21  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120127
+        Remove JSObject::propertyIsEnumerable
+
+        Unreviewed typo fix
+
+        * runtime/JSObject.h:
+            - fix typo
+
+2013-08-21  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120139
+        PropertyDescriptor argument to define methods should be const
+
+        Rubber stamped by Sam Weinig.
+
+        This should never be modified, and this way we can use rvalues.
+
+        * debugger/DebuggerActivation.cpp:
+        (JSC::DebuggerActivation::defineOwnProperty):
+        * debugger/DebuggerActivation.h:
+        * runtime/Arguments.cpp:
+        (JSC::Arguments::defineOwnProperty):
+        * runtime/Arguments.h:
+        * runtime/ClassInfo.h:
+        * runtime/JSArray.cpp:
+        (JSC::JSArray::defineOwnProperty):
+        * runtime/JSArray.h:
+        * runtime/JSArrayBuffer.cpp:
+        (JSC::JSArrayBuffer::defineOwnProperty):
+        * runtime/JSArrayBuffer.h:
+        * runtime/JSArrayBufferView.cpp:
+        (JSC::JSArrayBufferView::defineOwnProperty):
+        * runtime/JSArrayBufferView.h:
+        * runtime/JSCell.cpp:
+        (JSC::JSCell::defineOwnProperty):
+        * runtime/JSCell.h:
+        * runtime/JSFunction.cpp:
+        (JSC::JSFunction::defineOwnProperty):
+        * runtime/JSFunction.h:
+        * runtime/JSGenericTypedArrayView.h:
+        * runtime/JSGenericTypedArrayViewInlines.h:
+        (JSC::::defineOwnProperty):
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::defineOwnProperty):
+        * runtime/JSGlobalObject.h:
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::putIndexedDescriptor):
+        (JSC::JSObject::defineOwnIndexedProperty):
+        (JSC::putDescriptor):
+        (JSC::JSObject::defineOwnNonIndexProperty):
+        (JSC::JSObject::defineOwnProperty):
+        * runtime/JSObject.h:
+        * runtime/JSProxy.cpp:
+        (JSC::JSProxy::defineOwnProperty):
+        * runtime/JSProxy.h:
+        * runtime/RegExpMatchesArray.h:
+        (JSC::RegExpMatchesArray::defineOwnProperty):
+        * runtime/RegExpObject.cpp:
+        (JSC::RegExpObject::defineOwnProperty):
+        * runtime/RegExpObject.h:
+        * runtime/StringObject.cpp:
+        (JSC::StringObject::defineOwnProperty):
+        * runtime/StringObject.h:
+            - make PropertyDescriptor const
+
+2013-08-21  Filip Pizlo  <fpizlo@apple.com>
+
+        REGRESSION: Crash under JITCompiler::link while loading Gmail
+        https://bugs.webkit.org/show_bug.cgi?id=119872
+
+        Reviewed by Mark Hahnenberg.
+        
+        Apparently, unsigned + signed = unsigned. Work around it with a cast.
+
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock):
+
+2013-08-21  Alex Christensen  <achristensen@apple.com>
+
+        <https://webkit.org/b/120137> Separating Win32 and Win64 builds.
+
+        Reviewed by Brent Fulgham.
+
+        * JavaScriptCore.vcxproj/JavaScriptCoreGenerated.make:
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/LLIntAssembly.make:
+        * JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/LLIntDesiredOffsets.make:
+        Pass PlatformArchitecture as a command line parameter to bash scripts.
+        * JavaScriptCore.vcxproj/LLInt/LLIntAssembly/build-LLIntAssembly.sh:
+        * JavaScriptCore.vcxproj/LLInt/LLIntDesiredOffsets/build-LLIntDesiredOffsets.sh:
+        * JavaScriptCore.vcxproj/build-generated-files.sh:
+        Use PlatformArchitecture from command line to determine which object directory to use (obj32 or obj64).
+
+2013-08-21  Filip Pizlo  <fpizlo@apple.com>
+
+        Assertion failure in JSC::SlotVisitor::copyLater when marking JSDataView
+        https://bugs.webkit.org/show_bug.cgi?id=120099
+
+        Reviewed by Mark Hahnenberg.
+        
+        JSDataView should not store the ArrayBuffer* in the butterfly indexing header, since
+        JSDataView may have ordinary JS indexed properties.
+
+        * runtime/ClassInfo.h:
+        * runtime/JSArrayBufferView.cpp:
+        (JSC::JSArrayBufferView::ConstructionContext::ConstructionContext):
+        (JSC::JSArrayBufferView::finishCreation):
+        * runtime/JSArrayBufferView.h:
+        (JSC::hasArrayBuffer):
+        * runtime/JSArrayBufferViewInlines.h:
+        (JSC::JSArrayBufferView::buffer):
+        (JSC::JSArrayBufferView::neuter):
+        (JSC::JSArrayBufferView::byteOffset):
+        * runtime/JSCell.cpp:
+        (JSC::JSCell::slowDownAndWasteMemory):
+        * runtime/JSCell.h:
+        * runtime/JSDataView.cpp:
+        (JSC::JSDataView::JSDataView):
+        (JSC::JSDataView::create):
+        (JSC::JSDataView::slowDownAndWasteMemory):
+        * runtime/JSDataView.h:
+        (JSC::JSDataView::buffer):
+        * runtime/JSGenericTypedArrayView.h:
+        * runtime/JSGenericTypedArrayViewInlines.h:
+        (JSC::::visitChildren):
+        (JSC::::slowDownAndWasteMemory):
+
+2013-08-21  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        Remove incorrect ASSERT from CopyVisitor::visitItem
+
+        Rubber stamped by Filip Pizlo.
+
+        * heap/CopyVisitorInlines.h:
+        (JSC::CopyVisitor::visitItem):
+
+2013-08-21  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=120127
+        Remove JSObject::propertyIsEnumerable
+
+        Reviewed by Sam Weinig.
+
+        This method is just a wart - it contains unnecessary const-casting, function call overhead, and LOC.
+
+        * runtime/JSObject.cpp:
+        * runtime/JSObject.h:
+            - remove propertyIsEnumerable
+        * runtime/ObjectPrototype.cpp:
+        (JSC::objectProtoFuncPropertyIsEnumerable):
+            - Move implementation here using getOwnPropertyDescriptor directly.
+
+2013-08-20  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG should inline new typedArray()
+        https://bugs.webkit.org/show_bug.cgi?id=120022
+
+        Reviewed by Oliver Hunt.
+        
+        Adds inlining of typed array allocations in the DFG. Any operation of the
+        form:
+        
+            new foo(blah)
+        
+        or:
+        
+            foo(blah)
+        
+        where 'foo' is a typed array constructor and 'blah' is exactly one argument,
+        is turned into the NewTypedArray intrinsic. Later, of child1 (i.e. 'blah')
+        is predicted integer, we generate inline code for an allocation. Otherwise
+        it turns into a call to an operation that behaves like the constructor would
+        if it was passed one argument (i.e. it may wrap a buffer or it may create a
+        copy or another array, or it may allocate an array of that length).
+
+        * bytecode/SpeculatedType.cpp:
+        (JSC::speculationFromTypedArrayType):
+        (JSC::speculationFromClassInfo):
+        * bytecode/SpeculatedType.h:
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::::executeEffects):
+        * dfg/DFGBackwardsPropagationPhase.cpp:
+        (JSC::DFG::BackwardsPropagationPhase::propagate):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::handleTypedArrayConstructor):
+        (JSC::DFG::ByteCodeParser::handleConstantInternalFunction):
+        * dfg/DFGCCallHelpers.h:
+        (JSC::DFG::CCallHelpers::setupArgumentsWithExecState):
+        * dfg/DFGCSEPhase.cpp:
+        (JSC::DFG::CSEPhase::putStructureStoreElimination):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGGraph.cpp:
+        (JSC::DFG::Graph::dump):
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::hasTypedArrayType):
+        (JSC::DFG::Node::typedArrayType):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGOperations.cpp:
+        (JSC::DFG::newTypedArrayWithSize):
+        (JSC::DFG::newTypedArrayWithOneArgument):
+        * dfg/DFGOperations.h:
+        (JSC::DFG::operationNewTypedArrayWithSizeForType):
+        (JSC::DFG::operationNewTypedArrayWithOneArgumentForType):
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileNewTypedArray):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::callOperation):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_new_object):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_new_object):
+        * runtime/JSArray.h:
+        (JSC::JSArray::allocationSize):
+        * runtime/JSArrayBufferView.h:
+        (JSC::JSArrayBufferView::allocationSize):
+        * runtime/JSGenericTypedArrayViewConstructorInlines.h:
+        (JSC::constructGenericTypedArrayView):
+        * runtime/JSObject.h:
+        (JSC::JSFinalObject::allocationSize):
+        * runtime/TypedArrayType.cpp:
+        (JSC::constructorClassInfoForType):
+        * runtime/TypedArrayType.h:
+        (JSC::indexToTypedArrayType):
+
 2013-08-21  Julien Brianceau  <jbrianceau@nds.com>
 
         <https://webkit.org/b/120106> Fix V_DFGOperation_EJPP signature in DFG.

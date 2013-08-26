@@ -1166,7 +1166,7 @@ void PluginView::performJavaScriptURLRequest(URLRequest* request)
 
     if (!request->target().isNull()) {
         // For security reasons, only allow JS requests to be made on the frame that contains the plug-in.
-        if (frame->tree()->find(request->target()) != frame) {
+        if (frame->tree().find(request->target()) != frame) {
             // Let the plug-in know that its frame load failed.
             m_plugin->frameDidFail(request->requestID(), false);
             return;
@@ -1307,7 +1307,7 @@ String PluginView::userAgent()
     if (!frame)
         return String();
     
-    return frame->loader().client()->userAgent(KURL());
+    return frame->loader().client().userAgent(KURL());
 }
 
 void PluginView::loadURL(uint64_t requestID, const String& method, const String& urlString, const String& target, 

@@ -876,7 +876,7 @@ void DOMWindow::postMessageTimerFired(PassOwnPtr<PostMessageTimer> t)
     // Give the embedder a chance to intercept this postMessage because this
     // DOMWindow might be a proxy for another in browsers that support
     // postMessage calls across WebKit instances.
-    if (m_frame->loader().client()->willCheckAndDispatchMessageEvent(timer->targetOrigin(), event.get()))
+    if (m_frame->loader().client().willCheckAndDispatchMessageEvent(timer->targetOrigin(), event.get()))
         return;
 
     dispatchMessageEventWithOriginCheck(timer->targetOrigin(), event, timer->stackTrace());
@@ -1253,7 +1253,7 @@ unsigned DOMWindow::length() const
     if (!isCurrentlyDisplayedInFrame())
         return 0;
 
-    return m_frame->tree()->scopedChildCount();
+    return m_frame->tree().scopedChildCount();
 }
 
 String DOMWindow::name() const
@@ -1261,7 +1261,7 @@ String DOMWindow::name() const
     if (!m_frame)
         return String();
 
-    return m_frame->tree()->name();
+    return m_frame->tree().name();
 }
 
 void DOMWindow::setName(const String& string)
@@ -1269,8 +1269,8 @@ void DOMWindow::setName(const String& string)
     if (!m_frame)
         return;
 
-    m_frame->tree()->setName(string);
-    m_frame->loader().client()->didChangeName(string);
+    m_frame->tree().setName(string);
+    m_frame->loader().client().didChangeName(string);
 }
 
 void DOMWindow::setStatus(const String& string) 
@@ -1328,7 +1328,7 @@ DOMWindow* DOMWindow::parent() const
     if (!m_frame)
         return 0;
 
-    Frame* parent = m_frame->tree()->parent();
+    Frame* parent = m_frame->tree().parent();
     if (parent)
         return parent->document()->domWindow();
 
@@ -1344,7 +1344,7 @@ DOMWindow* DOMWindow::top() const
     if (!page)
         return 0;
 
-    return m_frame->tree()->top()->document()->domWindow();
+    return m_frame->tree().top()->document()->domWindow();
 }
 
 Document* DOMWindow::document() const
@@ -1810,7 +1810,7 @@ void DOMWindow::setLocation(const String& urlString, DOMWindow* activeWindow, DO
         return;
 
     // We want a new history item if we are processing a user gesture.
-    m_frame->navigationScheduler()->scheduleLocationChange(activeDocument->securityOrigin(),
+    m_frame->navigationScheduler().scheduleLocationChange(activeDocument->securityOrigin(),
         // FIXME: What if activeDocument()->frame() is 0?
         completedURL, activeDocument->frame()->loader().outgoingReferrer(),
         locking != LockHistoryBasedOnGestureState || !ScriptController::processingUserGesture(),
@@ -1929,7 +1929,7 @@ PassRefPtr<Frame> DOMWindow::createWindow(const String& urlString, const AtomicS
         newFrame->loader().changeLocation(activeWindow->document()->securityOrigin(), completedURL, referrer, false, false);
     else if (!urlString.isEmpty()) {
         bool lockHistory = !ScriptController::processingUserGesture();
-        newFrame->navigationScheduler()->scheduleLocationChange(activeWindow->document()->securityOrigin(), completedURL.string(), referrer, lockHistory, false);
+        newFrame->navigationScheduler().scheduleLocationChange(activeWindow->document()->securityOrigin(), completedURL.string(), referrer, lockHistory, false);
     }
 
     // Navigating the new frame could result in it being detached from its page by a navigation policy delegate.
@@ -1954,7 +1954,7 @@ PassRefPtr<DOMWindow> DOMWindow::open(const String& urlString, const AtomicStrin
     if (!firstWindow->allowPopUp()) {
         // Because FrameTree::find() returns true for empty strings, we must check for empty frame names.
         // Otherwise, illegitimate window.open() calls with no name will pass right through the popup blocker.
-        if (frameName.isEmpty() || !m_frame->tree()->find(frameName))
+        if (frameName.isEmpty() || !m_frame->tree().find(frameName))
             return 0;
     }
 
@@ -1962,9 +1962,9 @@ PassRefPtr<DOMWindow> DOMWindow::open(const String& urlString, const AtomicStrin
     // In those cases, we schedule a location change right now and return early.
     Frame* targetFrame = 0;
     if (frameName == "_top")
-        targetFrame = m_frame->tree()->top();
+        targetFrame = m_frame->tree().top();
     else if (frameName == "_parent") {
-        if (Frame* parent = m_frame->tree()->parent())
+        if (Frame* parent = m_frame->tree().parent())
             targetFrame = parent;
         else
             targetFrame = m_frame;
@@ -1984,7 +1984,7 @@ PassRefPtr<DOMWindow> DOMWindow::open(const String& urlString, const AtomicStrin
         // For whatever reason, Firefox uses the first window rather than the active window to
         // determine the outgoing referrer. We replicate that behavior here.
         bool lockHistory = !ScriptController::processingUserGesture();
-        targetFrame->navigationScheduler()->scheduleLocationChange(
+        targetFrame->navigationScheduler().scheduleLocationChange(
             activeDocument->securityOrigin(),
             completedURL,
             firstFrame->loader().outgoingReferrer(),

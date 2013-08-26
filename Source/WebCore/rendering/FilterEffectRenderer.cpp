@@ -129,8 +129,7 @@ PassRefPtr<FilterEffect> FilterEffectRenderer::buildReferenceFilter(RenderObject
     if (!renderer)
         return 0;
 
-    Document* document = renderer->document();
-    ASSERT(document);
+    Document* document = &renderer->document();
 
     CachedSVGDocumentReference* cachedSVGDocumentReference = filterOperation->cachedSVGDocumentReference();
     CachedSVGDocument* cachedSVGDocument = cachedSVGDocumentReference ? cachedSVGDocumentReference->document() : 0;
@@ -160,10 +159,7 @@ PassRefPtr<FilterEffect> FilterEffectRenderer::buildReferenceFilter(RenderObject
     // This may need a spec clarification.
     RefPtr<SVGFilterBuilder> builder = SVGFilterBuilder::create(previousEffect, SourceAlpha::create(this));
 
-    for (Element* element = ElementTraversal::firstWithin(filter); element; element = ElementTraversal::nextSibling(element)) {
-        if (!element->isSVGElement())
-            continue;
-        SVGElement* svgElement = toSVGElement(element);
+    for (SVGElement* svgElement = Traversal<SVGElement>::firstChild(filter); svgElement; svgElement = Traversal<SVGElement>::nextSibling(svgElement)) {
         if (!svgElement->isFilterEffect())
             continue;
         SVGFilterPrimitiveStandardAttributes* effectElement = static_cast<SVGFilterPrimitiveStandardAttributes*>(svgElement);
@@ -349,7 +345,7 @@ bool FilterEffectRenderer::build(RenderObject* renderer, const FilterOperations&
             break;
         case FilterOperation::VALIDATED_CUSTOM: {
             ValidatedCustomFilterOperation* customFilterOperation = static_cast<ValidatedCustomFilterOperation*>(filterOperation);
-            Document* document = renderer ? renderer->document() : 0;
+            Document* document = renderer ? &renderer->document() : 0;
             effect = createCustomFilterEffect(this, document, customFilterOperation);
             if (effect)
                 m_hasCustomShaderFilter = true;
@@ -516,7 +512,7 @@ void FilterEffectRendererHelper::applyFilterEffect(GraphicsContext* destinationC
     LayoutRect destRect = filter->outputRect();
     destRect.move(m_paintOffset.x(), m_paintOffset.y());
     
-    destinationContext->drawImageBuffer(filter->output(), m_renderLayer->renderer()->style()->colorSpace(), pixelSnappedIntRect(destRect), CompositeSourceOver);
+    destinationContext->drawImageBuffer(filter->output(), m_renderLayer->renderer().style()->colorSpace(), pixelSnappedIntRect(destRect), CompositeSourceOver);
     
     filter->clearIntermediateResults();
 }

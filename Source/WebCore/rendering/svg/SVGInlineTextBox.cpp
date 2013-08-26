@@ -194,7 +194,7 @@ void SVGInlineTextBox::paintSelectionBackground(PaintInfo& paintInfo)
 
     RenderObject* parentRenderer = parent()->renderer();
     ASSERT(parentRenderer);
-    ASSERT(!parentRenderer->document()->printing());
+    ASSERT(!parentRenderer->document().printing());
 
     // Determine whether or not we're selected.
     bool paintSelectedTextOnly = paintInfo.phase == PaintPhaseSelection;
@@ -267,7 +267,7 @@ void SVGInlineTextBox::paint(PaintInfo& paintInfo, const LayoutPoint&, LayoutUni
     ASSERT(parentRenderer);
 
     bool paintSelectedTextOnly = paintInfo.phase == PaintPhaseSelection;
-    bool hasSelection = !parentRenderer->document()->printing() && selectionState() != RenderObject::SelectionNone;
+    bool hasSelection = !parentRenderer->document().printing() && selectionState() != RenderObject::SelectionNone;
     if (!hasSelection && paintSelectedTextOnly)
         return;
 
@@ -300,7 +300,7 @@ void SVGInlineTextBox::paint(PaintInfo& paintInfo, const LayoutPoint&, LayoutUni
             selectionStyle = style;
     }
 
-    if (textRenderer->frame() && textRenderer->frame()->view() && textRenderer->frame()->view()->paintBehavior() & PaintBehaviorRenderingSVGMask) {
+    if (textRenderer->view().frameView().paintBehavior() & PaintBehaviorRenderingSVGMask) {
         hasFill = true;
         hasVisibleStroke = false;
     }

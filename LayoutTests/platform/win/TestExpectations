@@ -2622,10 +2622,6 @@ ietestcenter
 media/media-fragments
 media/W3C
 
-# Test fails because webkit-image-set is not implemented on Windows
-# The test unfortunately outputs system specific information on assertion failure
-cssom/cssvalue-comparison.html
-
 # CURSOR_VISIBILITY is not enabled on win
 webkit.org/b/107601 fullscreen/video-cursor-auto-hide.html [ Failure ]
 
@@ -2798,12 +2794,7 @@ media/track/track-legacyapi-with-automatic-mode.html
 fast/shapes
 
 # Skip failing tests to make EWS bots happy
-fast/dom/NodeList/nodelist-item-call-as-function.html [ Failure ]
 fast/dom/call-a-constructor-as-a-function.html [ Failure ]
 fast/forms/search-event-delay.html [ Failure ]
-fast/js/exception-thrown-from-new.html [ Failure ]
 fast/lists/inlineBoxWrapperNullCheck.html [ Failure ]
-fast/regex/cross-frame-callable.html [ Failure ]
-svg/dom/svgpath-out-of-bounds-getPathSeg.html [ Failure ]
 fast/js/global-constructors-attributes-dedicated-worker.html [ Failure ]
-fast/frames/seamless/seamless-nested-crash.html [ Failure ]

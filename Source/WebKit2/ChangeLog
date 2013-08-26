@@ -1,3 +1,470 @@
+2013-08-26  Andreas Kling  <akling@apple.com>
+
+        Unreviewed build fix.
+
+        * WebProcess/WebPage/WebFrame.cpp:
+        (WebKit::WebFrame::createWithCoreMainFrame):
+        (WebKit::WebFrame::createSubframe):
+
+2013-08-26  Pratik Solanki  <psolanki@apple.com>
+
+        PageGroup::groupSettings() should return a reference
+        https://bugs.webkit.org/show_bug.cgi?id=120319
+
+        Reviewed by Andreas Kling.
+
+        PageGroup::m_groupSettings is never NULL so we can just return a reference from groupSettings().
+
+        * WebProcess/Storage/StorageNamespaceImpl.cpp:
+        (WebKit::StorageNamespaceImpl::createLocalStorageNamespace):
+
+2013-08-26  Andreas Kling  <akling@apple.com>
+
+        WebCore: Let Page create the main Frame.
+        <https://webkit.org/b/119964>
+
+        Reviewed by Anders Carlsson.
+
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.h:
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::WebFrameLoaderClient):
+
+            This starts out with a null WebFrame* pointer now.
+
+        (WebKit::WebFrameLoaderClient::setWebFrame):
+
+            WebFrame hooks itself up through this as soon as it's constructed.
+
+        (WebKit::WebFrameLoaderClient::frameLoaderDestroyed):
+
+            Tweak an out-of-date comment. The ref() we're balancing out comes from
+            WebFrame::create().
+
+        * WebProcess/WebPage/WebFrame.cpp:
+        (WebKit::WebFrame::createWithCoreMainFrame):
+
+            Rewrote createMainFrame() as createWithCoreMainFrame(). The new method wraps
+            an existing WebCore::Frame instead of creating a new one.
+
+        (WebKit::WebFrame::createSubframe):
+
+            Merged WebFrame::init() into here since the logic isn't shared with main
+            Frame creation anymore.
+
+        (WebKit::WebFrame::create):
+        (WebKit::WebFrame::WebFrame):
+
+            Call WebFrameLoaderClient::setWebFrame(this).
+
+        * WebProcess/WebPage/WebFrame.h:
+
+            WebFrame::m_frameLoaderClient is now an OwnPtr rather than an inline member.
+            This way it can be created before the WebFrame.
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::WebPage):
+
+            Set up a WebFrameLoaderClient and pass it to the Page constructor along with
+            the other PageClients.
+
+2013-08-24  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Add WebKit2 API for isolated worlds
+        https://bugs.webkit.org/show_bug.cgi?id=103377
+
+        Reviewed by Anders Carlsson.
+
+        * GNUmakefile.list.am: Add new files to compilation.
+        * UIProcess/API/gtk/docs/webkit2gtk-sections.txt: Add new symbols.
+        * UIProcess/API/gtk/tests/TestWebExtensions.cpp:
+        (testWebExtensionWindowObjectCleared):
+        (scriptDialogCallback):
+        (runJavaScriptInIsolatedWorldFinishedCallback):
+        (testWebExtensionIsolatedWorld):
+        (beforeAll):
+        * UIProcess/API/gtk/tests/WebExtensionTest.cpp:
+        (echoCallback):
+        (windowObjectCleared):
+        (getWebPage):
+        (methodCallCallback):
+        * WebProcess/InjectedBundle/API/gtk/WebKitFrame.cpp:
+        (webkit_frame_get_javascript_context_for_script_world): New public
+        method to tget the JavaScript execution context for a given script
+        world.
+        * WebProcess/InjectedBundle/API/gtk/WebKitFrame.h:
+        * WebProcess/InjectedBundle/API/gtk/WebKitScriptWorld.cpp: Added.
+        (scriptWorlds): Global WebKitScriptWorld map.
+        (_WebKitScriptWorldPrivate::~_WebKitScriptWorldPrivate):
+        (webkitScriptWorldGet): Get the WebKitScriptWorld wrapping the
+        given injected bundle script world.
+        (webkitScriptWorldGetInjectedBundleScriptWorld): Get the injected
+        bundle script world wrapped by the given WebKitScriptWorld.
+        (webkitScriptWorldWindowObjectCleared): Emit
+        WebKitScriptWorld::window-object-cleared signal.
+        (webkitScriptWorldCreate): Create a new WebKitScriptWorld wrapping
+        the given injected bundle script world.
+        (createDefaultScriptWorld): Create the default WebKitScriptWorld
+        wrapping the normal world.
+        (webkit_script_world_get_default): Return the default WebKitScriptWorld.
+        (webkit_script_world_new): Create a new isolated WebKitScriptWorld.
+        * WebProcess/InjectedBundle/API/gtk/WebKitScriptWorld.h: Added.
+        * WebProcess/InjectedBundle/API/gtk/WebKitScriptWorldPrivate.h: Added.
+        * WebProcess/InjectedBundle/API/gtk/WebKitWebPage.cpp:
+        (didClearWindowObjectForFrame): Call webkitScriptWorldWindowObjectCleared().
+        (webkitWebPageCreate): Add implementation for callback
+        didClearWindowObjectForFrame in injected bundle loader client.
+        * WebProcess/InjectedBundle/API/gtk/webkit-web-extension.h:
+        Include WebKitScriptWorld.h.
+
+2013-08-26  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [WebKit2] Offsets for WKBundlePageLoaderClient in APIClientTraits are wrong
+        https://bugs.webkit.org/show_bug.cgi?id=120268
+
+        Reviewed by Anders Carlsson.
+
+        * Shared/APIClientTraits.cpp: Use always the first member of every
+        version as the offset of the version.
+
+2013-08-26  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Add missing initializer for pluginLoadPolicy in WKPageLoaderClient
+        https://bugs.webkit.org/show_bug.cgi?id=120289
+
+        Reviewed by Philippe Normand.
+
+        * UIProcess/API/gtk/WebKitLoaderClient.cpp:
+        (attachLoaderClientToView): Add initializer for pluginLoadPolicy
+        and rename the comment of the previous one as
+        pluginLoadPolicy_deprecatedForUseWithV2.
+
+2013-08-26  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] webkitCredentialGetCredential returns a temporary in g_return_val_if_fail
+        https://bugs.webkit.org/show_bug.cgi?id=120287
+
+        Reviewed by Philippe Normand.
+
+        * UIProcess/API/gtk/WebKitCredential.cpp:
+        (webkitCredentialGetCredential): Use ASSERT() instead of
+        g_return_val_if_fail() since this is a private function.
+
+2013-08-25  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK build fix after r154565.
+
+        * UIProcess/API/gtk/tests/TestInspector.cpp: Include the Vector header.
+        * UIProcess/API/gtk/tests/TestResources.cpp: Ditto.
+
+2013-08-24  Darin Adler  <darin@apple.com>
+
+        Frame::tree should return a reference instead of a pointer
+        https://bugs.webkit.org/show_bug.cgi?id=120259
+
+        Reviewed by Andreas Kling.
+
+        * WebProcess/Plugins/PluginView.cpp:
+        (WebKit::PluginView::performJavaScriptURLRequest):
+        * WebProcess/Storage/StorageAreaMap.cpp:
+        (WebKit::StorageAreaMap::dispatchSessionStorageEvent):
+        (WebKit::StorageAreaMap::dispatchLocalStorageEvent):
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::createFrame):
+        * WebProcess/WebCoreSupport/mac/WebContextMenuClientMac.mm:
+        (WebKit::WebContextMenuClient::searchWithSpotlight):
+        * WebProcess/WebPage/FindController.cpp:
+        (WebKit::frameWithSelection):
+        (WebKit::FindController::rectsForTextMatches):
+        * WebProcess/WebPage/WebFrame.cpp:
+        (WebKit::WebFrame::init):
+        (WebKit::WebFrame::contentsAsString):
+        (WebKit::WebFrame::name):
+        (WebKit::WebFrame::childFrames):
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::clearMainFrameName):
+        (WebKit::WebPage::setDrawsBackground):
+        (WebKit::WebPage::setDrawsTransparentBackground):
+        (WebKit::WebPage::setWindowResizerSize):
+        (WebKit::frameWithSelection):
+        (WebKit::WebPage::unmarkAllMisspellings):
+        (WebKit::WebPage::unmarkAllBadGrammar):
+        (WebKit::pageContainsAnyHorizontalScrollbars):
+        * WebProcess/WebPage/mac/TiledCoreAnimationDrawingArea.mm:
+        (WebKit::TiledCoreAnimationDrawingArea::forceRepaint):
+        Use tree(). instead of tree()->.
+
+2013-08-24  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r154545.
+        http://trac.webkit.org/changeset/154545
+        https://bugs.webkit.org/show_bug.cgi?id=120252
+
+        Broke WebKit2 API tests (Requested by andersca on #webkit).
+
+        * GNUmakefile.list.am:
+        * UIProcess/API/gtk/docs/webkit2gtk-sections.txt:
+        * UIProcess/API/gtk/tests/TestWebExtensions.cpp:
+        (beforeAll):
+        * UIProcess/API/gtk/tests/WebExtensionTest.cpp:
+        (methodCallCallback):
+        * WebProcess/InjectedBundle/API/gtk/WebKitFrame.cpp:
+        (webkit_frame_get_javascript_global_context):
+        * WebProcess/InjectedBundle/API/gtk/WebKitFrame.h:
+        * WebProcess/InjectedBundle/API/gtk/WebKitScriptWorld.cpp: Removed.
+        * WebProcess/InjectedBundle/API/gtk/WebKitScriptWorld.h: Removed.
+        * WebProcess/InjectedBundle/API/gtk/WebKitScriptWorldPrivate.h: Removed.
+        * WebProcess/InjectedBundle/API/gtk/WebKitWebPage.cpp:
+        (webkitWebPageCreate):
+        * WebProcess/InjectedBundle/API/gtk/webkit-web-extension.h:
+
+2013-08-24  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Add WebKit2 API for isolated worlds
+        https://bugs.webkit.org/show_bug.cgi?id=103377
+
+        Reviewed by Anders Carlsson.
+
+        * GNUmakefile.list.am: Add new files to compilation.
+        * UIProcess/API/gtk/docs/webkit2gtk-sections.txt: Add new symbols.
+        * UIProcess/API/gtk/tests/TestWebExtensions.cpp:
+        (testWebExtensionWindowObjectCleared):
+        (scriptDialogCallback):
+        (runJavaScriptInIsolatedWorldFinishedCallback):
+        (testWebExtensionIsolatedWorld):
+        (beforeAll):
+        * UIProcess/API/gtk/tests/WebExtensionTest.cpp:
+        (echoCallback):
+        (windowObjectCleared):
+        (getWebPage):
+        (methodCallCallback):
+        * WebProcess/InjectedBundle/API/gtk/WebKitFrame.cpp:
+        (webkit_frame_get_javascript_context_for_script_world): New public
+        method to tget the JavaScript execution context for a given script
+        world.
+        * WebProcess/InjectedBundle/API/gtk/WebKitFrame.h:
+        * WebProcess/InjectedBundle/API/gtk/WebKitScriptWorld.cpp: Added.
+        (scriptWorlds): Global WebKitScriptWorld map.
+        (_WebKitScriptWorldPrivate::~_WebKitScriptWorldPrivate):
+        (webkitScriptWorldGet): Get the WebKitScriptWorld wrapping the
+        given injected bundle script world.
+        (webkitScriptWorldGetInjectedBundleScriptWorld): Get the injected
+        bundle script world wrapped by the given WebKitScriptWorld.
+        (webkitScriptWorldWindowObjectCleared): Emit
+        WebKitScriptWorld::window-object-cleared signal.
+        (webkitScriptWorldCreate): Create a new WebKitScriptWorld wrapping
+        the given injected bundle script world.
+        (createDefaultScriptWorld): Create the default WebKitScriptWorld
+        wrapping the normal world.
+        (webkit_script_world_get_default): Return the default WebKitScriptWorld.
+        (webkit_script_world_new): Create a new isolated WebKitScriptWorld.
+        * WebProcess/InjectedBundle/API/gtk/WebKitScriptWorld.h: Added.
+        * WebProcess/InjectedBundle/API/gtk/WebKitScriptWorldPrivate.h: Added.
+        * WebProcess/InjectedBundle/API/gtk/WebKitWebPage.cpp:
+        (didClearWindowObjectForFrame): Call webkitScriptWorldWindowObjectCleared().
+        (webkitWebPageCreate): Add implementation for callback
+        didClearWindowObjectForFrame in injected bundle loader client.
+        * WebProcess/InjectedBundle/API/gtk/webkit-web-extension.h:
+        Include WebKitScriptWorld.h.
+
+2013-08-24  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Expose WebKitFrame in WebKit2GTK+ web extensions API
+        https://bugs.webkit.org/show_bug.cgi?id=119743
+
+        Reviewed by Anders Carlsson.
+
+        * GNUmakefile.list.am: Add new files to compilation.
+        * Shared/APIClientTraits.cpp: Update for new interface version.
+        * Shared/APIClientTraits.h: Ditto.
+        * UIProcess/API/gtk/docs/webkit2gtk-docs.sgml: Add WebKitFrame
+        section.
+        * UIProcess/API/gtk/docs/webkit2gtk-sections.txt: Add new public
+        symbols.
+        * UIProcess/API/gtk/docs/webkit2gtk.types: Add
+        webkit_frame_get_type.
+        * UIProcess/API/gtk/tests/FrameTest.cpp: Added.
+        (WebKitFrameTest::create):
+        (WebKitFrameTest::webPageFromArgs):
+        (WebKitFrameTest::testMainFrame):
+        (WebKitFrameTest::testURI):
+        (WebKitFrameTest::testJavaScriptContext):
+        (WebKitFrameTest::runTest):
+        (registerTests):
+        * UIProcess/API/gtk/tests/GNUmakefile.am: Add new test files.
+        * UIProcess/API/gtk/tests/TestFrame.cpp: Added.
+        (webkitFrameTestRun):
+        (testWebKitFrameMainFrame):
+        (testWebKitFrameURI):
+        (testWebKitFrameJavaScriptContext):
+        (beforeAll):
+        (afterAll):
+        * WebProcess/InjectedBundle/API/c/WKBundlePage.h: Add
+        willDestroyFrame callback to the injected bundle loader client, to
+        notify the client when a frame is about to be destroyed.
+        * WebProcess/InjectedBundle/API/gtk/WebKitFrame.cpp: Added.
+        (webkit_frame_class_init):
+        (webkitFrameCreate):
+        (webkit_frame_is_main_frame):
+        (webkit_frame_get_uri):
+        (webkit_frame_get_javascript_global_context):
+        * WebProcess/InjectedBundle/API/gtk/WebKitFrame.h: Added.
+        * WebProcess/InjectedBundle/API/gtk/WebKitFramePrivate.h: Added.
+        * WebProcess/InjectedBundle/API/gtk/WebKitWebPage.cpp:
+        (webkitFrameGetOrCreate): Helper function to create a WebKitFrame
+        wrapping the given WebFrame or returning the wrapper if it already
+        exists.
+        (willDestroyFrame): Remove the WebKitFrame wrapping the given
+        WebFrame if it exists.
+        (webkitWebPageCreate): Add willDestroyFrame implementation to
+        injected bundle loader client.
+        (webkit_web_page_get_main_frame): Return the main frame of the
+        page.
+        * WebProcess/InjectedBundle/API/gtk/WebKitWebPage.h:
+        * WebProcess/InjectedBundle/API/gtk/webkit-web-extension.h:
+        Include WebKitFrame.h.
+        * WebProcess/InjectedBundle/InjectedBundlePageLoaderClient.cpp:
+        (WebKit::InjectedBundlePageLoaderClient::willDestroyFrame): New
+        callback to be called when a frame is about to be destroyed.
+        * WebProcess/InjectedBundle/InjectedBundlePageLoaderClient.h:
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::frameLoaderDestroyed): Call
+        willDestroyFrame callback of injected bundle loader client.
+        * WebProcess/qt/QtBuiltinBundlePage.cpp:
+        (WebKit::QtBuiltinBundlePage::QtBuiltinBundlePage): Add
+        willDestroyFrame callback.
+
+2013-08-24  Antti Koivisto  <antti@apple.com>
+
+        Revert accidental change.
+        
+        Not reviewed.
+
+        * WebProcess/com.apple.WebProcess.sb.in:
+
+2013-08-23  Beth Dakin  <bdakin@apple.com>
+
+        REGRESSION (r132545): Some PDFs generated by WebKit are blank when viewed in 
+        Adobe Reader
+        https://bugs.webkit.org/show_bug.cgi?id=120240
+        -and corresponding-
+        <rdar://problem/14634453>
+
+        Reviewed by Anders Carlsson.
+
+        Hook up new WebSystemInterface API to find out if the current context is the PDF 
+        context. 
+
+        * WebProcess/WebCoreSupport/mac/WebSystemInterface.mm:
+        (InitWebCoreSystemInterface):
+
+2013-08-23  Alexey Proskuryakov  <ap@apple.com>
+
+        [WK2] Assertion failures when loading XSL stylesheets with NetworkProcess
+        https://bugs.webkit.org/show_bug.cgi?id=120186
+        <rdar://problem/14080273>
+
+        Reviewed by Brady Eidson.
+
+        Covered by many existing tests.
+
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.cpp:
+        (WebKit::WebPlatformStrategies::loadResourceSynchronously): Pass frame ID and page ID.
+        They are mostly needed for authentication, which is not supported with sync requests,
+        but it will be supported some day.
+
+        * WebProcess/WebCoreSupport/mac/WebFrameNetworkingContext.h:
+        * WebProcess/WebCoreSupport/mac/WebFrameNetworkingContext.mm:
+        (WebKit::WebFrameNetworkingContext::webFrameLoaderClient):
+        Added a way to get frame loader client from WebKit NetworkingContext subclass.
+
+2013-08-22  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Wrong interface version used in WebKitWebPage for loader client
+        https://bugs.webkit.org/show_bug.cgi?id=120199
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * WebProcess/InjectedBundle/API/gtk/WebKitWebPage.cpp:
+        (webkitWebPageCreate): Use kWKBundlePageLoaderClientCurrentVersion
+        instead of kWKBundlePageResourceLoadClientCurrentVersion in loader
+        client initialization.
+
+2013-08-22  Simon Cooper  <scooper@apple.com>
+
+        Need to disable FakeSYSVSHM when sandboxing is not enabled
+        https://bugs.webkit.org/show_bug.cgi?id=120182
+        <rdar://problem/14814461>
+
+        Reviewed by Alexey Proskuryakov.
+
+        When not in a sandbox do not enable the FakeSYSVSHIM. This
+        allows LocalConnection to work when Flash Player is run in
+        "Unsafe Mode".
+
+        * PluginProcess/mac/PluginProcessShim.mm:
+        (WebKit::shim_disabled):
+
+2013-08-22  Andy Estes  <aestes@apple.com>
+
+        <https://webkit.org/b/120180> Fix issues with OTHER_LDFLAGS in various .xcconfig files
+
+        Reviewed by David Kilzer.
+
+        Adding ld flags for ASAN overwrote the unexported symbol flags we were
+        previously specifying. Since the unexported symbol ld flags are only
+        needed for the framework target, move them to WebKit2.xcconfig where we
+        can add them to OTHER_LDFLAGS along with the ASAN values inherited from
+        DebugRelease.xcconfig (and other values).
+
+        * Configurations/Base.xcconfig: Removed the unexported symbol ld flags.
+        * Configurations/WebKit2.xcconfig: ... and moved them here.
+
+2013-08-21  Tim Horton  <timothy_horton@apple.com>
+
+        Another null-deref under WebDragClient::startDrag
+        https://bugs.webkit.org/show_bug.cgi?id=120145
+        <rdar://problem/14650652>
+
+        Reviewed by Simon Fraser.
+
+        convertImageToBitmap can legitimately return null, so don't dereference it.
+
+        * WebProcess/WebCoreSupport/mac/WebDragClientMac.mm:
+        (WebKit::WebDragClient::startDrag):
+
+2013-08-21  Beth Dakin  <bdakin@apple.com>
+
+        <https://webkit.org/b/120140> Clients expect didFirstLayout-related calls to 
+        happen before didLayout
+
+        Reviewed by Anders Carlsson.
+
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::dispatchDidLayout):
+
+2013-08-21  Alexey Proskuryakov  <ap@apple.com>
+
+        REGRESSION (r145458?): WebProcess doesn't respect UI process localization
+        https://bugs.webkit.org/show_bug.cgi?id=120096
+
+        Reviewed by Darin Adler.
+
+        We used to get into a situation where CFBundle thought that we had no good localization,
+        and used one passed as default. This is never the case with mixed localizations,
+        so default is just ignored now.
+
+        I think that the previous behavior was a bit of a hack. As WebProcess is not localized,
+        it's more honest to say that we want mixed localizations, and force the language
+        to match UI process localization.
+
+        * Shared/EntryPointUtilities/mac/LegacyProcess/ChildProcessEntryPoint.h:
+        (WebKit::ChildProcessMain): Don't set default localization, it's not taken into
+        consideration unless all other attempts to compute bundle localization fail.
+
+        * UIProcess/Launcher/mac/ProcessLauncherMac.mm: (WebKit::createProcess): Pass
+        UI process localization as -AppleLanguages argument, so that Core Foundation uses
+        that instead of actual user languages. We want to match UI process localization.
+
 2013-08-20  Gavin Barraclough  <barraclough@apple.com>
 
         https://bugs.webkit.org/show_bug.cgi?id=120093

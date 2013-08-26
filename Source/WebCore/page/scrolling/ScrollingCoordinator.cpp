@@ -151,9 +151,8 @@ Region ScrollingCoordinator::computeNonFastScrollableRegion(const Frame* frame, 
         }
     }
 
-    FrameTree* tree = frame->tree();
-    for (Frame* subFrame = tree->firstChild(); subFrame; subFrame = subFrame->tree()->nextSibling())
-        nonFastScrollableRegion.unite(computeNonFastScrollableRegion(subFrame, offset));
+    for (Frame* subframe = frame->tree().firstChild(); subframe; subframe = subframe->tree().nextSibling())
+        nonFastScrollableRegion.unite(computeNonFastScrollableRegion(subframe, offset));
 
     return nonFastScrollableRegion;
 }
@@ -235,7 +234,7 @@ unsigned ScrollingCoordinator::computeCurrentWheelEventHandlerCount()
 {
     unsigned wheelEventHandlerCount = 0;
 
-    for (Frame* frame = m_page->mainFrame(); frame; frame = frame->tree()->traverseNext()) {
+    for (Frame* frame = m_page->mainFrame(); frame; frame = frame->tree().traverseNext()) {
         if (frame->document())
             wheelEventHandlerCount += frame->document()->wheelEventHandlerCount();
     }
@@ -294,7 +293,7 @@ GraphicsLayer* ScrollingCoordinator::scrollLayerForFrameView(FrameView* frameVie
 {
 #if USE(ACCELERATED_COMPOSITING)
     if (RenderView* renderView = frameView->frame().contentRenderer())
-        return renderView->compositor()->scrollLayer();
+        return renderView->compositor().scrollLayer();
     return 0;
 #else
     UNUSED_PARAM(frameView);
@@ -306,7 +305,7 @@ GraphicsLayer* ScrollingCoordinator::headerLayerForFrameView(FrameView* frameVie
 {
 #if USE(ACCELERATED_COMPOSITING) && ENABLE(RUBBER_BANDING)
     if (RenderView* renderView = frameView->frame().contentRenderer())
-        renderView->compositor()->headerLayer();
+        renderView->compositor().headerLayer();
     return 0;
 #else
     UNUSED_PARAM(frameView);
@@ -318,7 +317,7 @@ GraphicsLayer* ScrollingCoordinator::footerLayerForFrameView(FrameView* frameVie
 {
 #if USE(ACCELERATED_COMPOSITING) && ENABLE(RUBBER_BANDING)
     if (RenderView* renderView = frameView->frame().contentRenderer())
-        return renderView->compositor()->footerLayer();
+        return renderView->compositor().footerLayer();
     return 0;
 #else
     UNUSED_PARAM(frameView);
@@ -330,7 +329,7 @@ GraphicsLayer* ScrollingCoordinator::counterScrollingLayerForFrameView(FrameView
 {
 #if USE(ACCELERATED_COMPOSITING)
     if (RenderView* renderView = frameView->frame().contentRenderer())
-        return renderView->compositor()->fixedRootBackgroundLayer();
+        return renderView->compositor().fixedRootBackgroundLayer();
     return 0;
 #else
     UNUSED_PARAM(frameView);

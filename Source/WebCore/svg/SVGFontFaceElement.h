@@ -61,13 +61,27 @@ private:
     virtual InsertionNotificationRequest insertedInto(ContainerNode*) OVERRIDE;
     virtual void removedFrom(ContainerNode*) OVERRIDE;
 
+    virtual bool rendererIsNeeded(const RenderStyle&) OVERRIDE { return false; }
+
     RefPtr<StyleRuleFontFace> m_fontFaceRule;
     SVGFontElement* m_fontElement;
 };
 
+inline bool isSVGFontFaceElement(const Node* node)
+{
+    return node->hasTagName(SVGNames::font_faceTag);
+}
+
+inline bool isSVGFontFaceElement(const Element* element)
+{
+    return element->hasTagName(SVGNames::font_faceTag);
+}
+
+template <> inline bool isElementOfType<SVGFontFaceElement>(const Element* element) { return isSVGFontFaceElement(element); }
+
 inline SVGFontFaceElement* toSVGFontFaceElement(Node* node)
 {
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->hasTagName(SVGNames::font_faceTag));
+    ASSERT_WITH_SECURITY_IMPLICATION(!node || isSVGFontFaceElement(node));
     return static_cast<SVGFontFaceElement*>(node);
 }
 

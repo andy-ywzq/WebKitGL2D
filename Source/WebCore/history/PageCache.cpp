@@ -136,7 +136,7 @@ static unsigned logCanCacheFrameDecision(Frame* frame, int indentLevel)
         rejectReasons |= 1 << HasSharedWorkers;
     }
 #endif
-    if (!frame->loader().history()->currentItem()) {
+    if (!frame->loader().history().currentItem()) {
         PCLOG("   -No current history item");
         rejectReasons |= 1 << NoHistoryItem;
     }
@@ -160,7 +160,7 @@ static unsigned logCanCacheFrameDecision(Frame* frame, int indentLevel)
         PCLOG("   -The DocumentLoader uses an application cache");
         rejectReasons |= 1 << DocumentLoaderUsesApplicationCache;
     }
-    if (!frame->loader().client()->canCachePage()) {
+    if (!frame->loader().client().canCachePage()) {
         PCLOG("   -The client says this frame cannot be cached");
         rejectReasons |= 1 << ClientDeniesCaching;
     }
@@ -175,7 +175,7 @@ static unsigned logCanCacheFrameDecision(Frame* frame, int indentLevel)
     }
     HistogramSupport::histogramEnumeration("PageCache.FrameRejectReasonCount", reasonCount, 1 + NumberOfReasonsFramesCannotBeInPageCache);
 
-    for (Frame* child = frame->tree()->firstChild(); child; child = child->tree()->nextSibling())
+    for (Frame* child = frame->tree().firstChild(); child; child = child->tree().nextSibling())
         rejectReasons |= logCanCacheFrameDecision(child, indentLevel + 1);
     
     PCLOG(rejectReasons ? " Frame CANNOT be cached" : " Frame CAN be cached");
@@ -303,7 +303,7 @@ PageCache::PageCache()
     
 bool PageCache::canCachePageContainingThisFrame(Frame* frame)
 {
-    for (Frame* child = frame->tree()->firstChild(); child; child = child->tree()->nextSibling()) {
+    for (Frame* child = frame->tree().firstChild(); child; child = child->tree().nextSibling()) {
         if (!canCachePageContainingThisFrame(child))
             return false;
     }
@@ -325,7 +325,7 @@ bool PageCache::canCachePageContainingThisFrame(Frame* frame)
 #if ENABLE(SHARED_WORKERS)
         && !SharedWorkerRepository::hasSharedWorkers(document)
 #endif
-        && frameLoader.history()->currentItem()
+        && frameLoader.history().currentItem()
         && !frameLoader.quickRedirectComing()
         && !documentLoader->isLoadingInAPISense()
         && !documentLoader->isStopping()
@@ -333,7 +333,7 @@ bool PageCache::canCachePageContainingThisFrame(Frame* frame)
         // FIXME: We should investigating caching frames that have an associated
         // application cache. <rdar://problem/5917899> tracks that work.
         && documentLoader->applicationCacheHost()->canCacheInPageCache()
-        && frameLoader.client()->canCachePage();
+        && frameLoader.client().canCachePage();
 }
     
 bool PageCache::canCache(Page* page) const

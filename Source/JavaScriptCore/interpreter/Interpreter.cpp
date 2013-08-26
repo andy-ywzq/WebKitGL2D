@@ -735,12 +735,9 @@ JSValue Interpreter::execute(ProgramExecutable* program, CallFrame* callFrame, J
             JSONPPath.swap(JSONPData[entry].m_path);
             JSValue JSONPValue = JSONPData[entry].m_value.get();
             if (JSONPPath.size() == 1 && JSONPPath[0].m_type == JSONPPathEntryTypeDeclare) {
-                if (globalObject->hasProperty(callFrame, JSONPPath[0].m_pathEntryName)) {
-                    PutPropertySlot slot;
-                    globalObject->methodTable()->put(globalObject, callFrame, JSONPPath[0].m_pathEntryName, JSONPValue, slot);
-                } else
-                    globalObject->methodTable()->putDirectVirtual(globalObject, callFrame, JSONPPath[0].m_pathEntryName, JSONPValue, DontEnum | DontDelete);
-                // var declarations return undefined
+                globalObject->addVar(callFrame, JSONPPath[0].m_pathEntryName);
+                PutPropertySlot slot;
+                globalObject->methodTable()->put(globalObject, callFrame, JSONPPath[0].m_pathEntryName, JSONPValue, slot);
                 result = jsUndefined();
                 continue;
             }

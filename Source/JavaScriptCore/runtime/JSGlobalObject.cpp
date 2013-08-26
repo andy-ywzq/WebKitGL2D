@@ -168,25 +168,7 @@ void JSGlobalObject::put(JSCell* cell, ExecState* exec, PropertyName propertyNam
     Base::put(thisObject, exec, propertyName, value, slot);
 }
 
-void JSGlobalObject::putDirectVirtual(JSObject* object, ExecState* exec, PropertyName propertyName, JSValue value, unsigned attributes)
-{
-    JSGlobalObject* thisObject = jsCast<JSGlobalObject*>(object);
-    ASSERT(!Heap::heap(value) || Heap::heap(value) == Heap::heap(thisObject));
-
-    if (symbolTablePutWithAttributes(thisObject, exec->vm(), propertyName, value, attributes))
-        return;
-
-    JSValue valueBefore = thisObject->getDirect(exec->vm(), propertyName);
-    PutPropertySlot slot;
-    Base::put(thisObject, exec, propertyName, value, slot);
-    if (!valueBefore) {
-        JSValue valueAfter = thisObject->getDirect(exec->vm(), propertyName);
-        if (valueAfter)
-            JSObject::putDirectVirtual(thisObject, exec, propertyName, valueAfter, attributes);
-    }
-}
-
-bool JSGlobalObject::defineOwnProperty(JSObject* object, ExecState* exec, PropertyName propertyName, PropertyDescriptor& descriptor, bool shouldThrow)
+bool JSGlobalObject::defineOwnProperty(JSObject* object, ExecState* exec, PropertyName propertyName, const PropertyDescriptor& descriptor, bool shouldThrow)
 {
     JSGlobalObject* thisObject = jsCast<JSGlobalObject*>(object);
     PropertySlot slot(thisObject);
@@ -196,6 +178,22 @@ bool JSGlobalObject::defineOwnProperty(JSObject* object, ExecState* exec, Proper
     return Base::defineOwnProperty(thisObject, exec, propertyName, descriptor, shouldThrow);
 }
 
+int JSGlobalObject::addGlobalVar(const Identifier& ident, ConstantMode constantMode, FunctionMode functionMode)
+{
+    ConcurrentJITLocker locker(symbolTable()->m_lock);
+    int index = symbolTable()->size(locker);
+    SymbolTableEntry newEntry(index, (constantMode == IsConstant) ? ReadOnly : 0);
+    if (functionMode == IsFunctionToSpecialize)
+        newEntry.attemptToWatch();
+    SymbolTable::Map::AddResult result = symbolTable()->add(locker, ident.impl(), newEntry);
+    if (result.isNewEntry)
+        addRegisters(1);
+    else {
+        result.iterator->value.notifyWrite();
+        index = result.iterator->value.getIndex();
+    }
+    return index;
+}
 
 static inline JSObject* lastInPrototypeChain(JSObject* object)
 {

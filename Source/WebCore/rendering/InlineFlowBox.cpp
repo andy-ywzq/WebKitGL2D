@@ -1078,7 +1078,7 @@ bool InlineFlowBox::nodeAtPoint(const HitTestRequest& request, HitTestResult& re
     LayoutUnit height = frameRect.height();
 
     // Constrain our hit testing to the line top and bottom if necessary.
-    bool noQuirksMode = renderer()->document()->inNoQuirksMode();
+    bool noQuirksMode = renderer()->document().inNoQuirksMode();
     if (!noQuirksMode && !hasTextChildren() && !(descendantsHaveSameLineHeightAndBaseline() && hasTextDescendants())) {
         RootInlineBox* rootBox = root();
         LayoutUnit& top = isHorizontal() ? minY : minX;
@@ -1248,7 +1248,7 @@ void InlineFlowBox::paintBoxShadow(const PaintInfo& info, RenderStyle* s, Shadow
 
 void InlineFlowBox::constrainToLineTopAndBottomIfNeeded(LayoutRect& rect) const
 {
-    bool noQuirksMode = renderer()->document()->inNoQuirksMode();
+    bool noQuirksMode = renderer()->document().inNoQuirksMode();
     if (!noQuirksMode && !hasTextChildren() && !(descendantsHaveSameLineHeightAndBaseline() && hasTextDescendants())) {
         const RootInlineBox* rootBox = root();
         LayoutUnit logicalTop = isHorizontal() ? rect.y() : rect.x();
@@ -1386,7 +1386,7 @@ void InlineFlowBox::paintMask(PaintInfo& paintInfo, const LayoutPoint& paintOffs
     // Figure out if we need to push a transparency layer to render our mask.
     bool pushTransparencyLayer = false;
     bool compositedMask = renderer()->hasLayer() && boxModelObject()->layer()->hasCompositedMask();
-    bool flattenCompositingLayers = renderer()->view()->frameView() && renderer()->view()->frameView()->paintBehavior() & PaintBehaviorFlattenCompositingLayers;
+    bool flattenCompositingLayers = renderer()->view().frameView().paintBehavior() & PaintBehaviorFlattenCompositingLayers;
     CompositeOperator compositeOp = CompositeSourceOver;
     if (!compositedMask || flattenCompositingLayers) {
         if ((maskBoxImage && renderer()->style()->maskLayers()->hasImage()) || renderer()->style()->maskLayers()->next())

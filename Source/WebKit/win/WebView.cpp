@@ -2740,7 +2740,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     m_mainFrame = webFrame;
     webFrame->Release(); // The WebFrame is owned by the Frame, so release our reference to it.
 
-    coreFrame->tree()->setName(toString(frameName));
+    coreFrame->tree().setName(toString(frameName));
     coreFrame->init();
     setGroupName(groupName);
 
@@ -2811,7 +2811,8 @@ void WebView::setToolTip(const String& toolTip)
         info.cbSize = sizeof(info);
         info.uFlags = TTF_IDISHWND;
         info.uId = reinterpret_cast<UINT_PTR>(m_viewWindow);
-        info.lpszText = const_cast<UChar*>(m_toolTip.charactersWithNullTermination().data());
+        Vector<UChar> toolTipCharacters = m_toolTip.charactersWithNullTermination(); // Retain buffer long enough to make the SendMessage call
+        info.lpszText = const_cast<UChar*>(toolTipCharacters.data());
         ::SendMessage(m_toolTipHwnd, TTM_UPDATETIPTEXT, 0, reinterpret_cast<LPARAM>(&info));
     }
 
@@ -3441,8 +3442,8 @@ HRESULT STDMETHODCALLTYPE WebView::hostWindow(
 static Frame *incrementFrame(Frame *curr, bool forward, bool wrapFlag)
 {
     return forward
-        ? curr->tree()->traverseNextWithWrap(wrapFlag)
-        : curr->tree()->traversePreviousWithWrap(wrapFlag);
+        ? curr->tree().traverseNextWithWrap(wrapFlag)
+        : curr->tree().traversePreviousWithWrap(wrapFlag);
 }
 
 HRESULT STDMETHODCALLTYPE WebView::searchFor( 
@@ -3500,7 +3501,7 @@ HRESULT STDMETHODCALLTYPE WebView::executeCoreCommandByName(BSTR name, BSTR valu
 
 HRESULT STDMETHODCALLTYPE WebView::clearMainFrameName()
 {
-    m_page->mainFrame()->tree()->clearName();
+    m_page->mainFrame()->tree().clearName();
 
     return S_OK;
 }
@@ -5382,7 +5383,7 @@ HRESULT STDMETHODCALLTYPE WebView::loadBackForwardListFromOtherView(
             // If this item is showing , save away its current scroll and form state,
             // since that might have changed since loading and it is normally not saved
             // until we leave that page.
-            otherWebView->m_page->mainFrame()->loader().history()->saveDocumentAndScrollState();
+            otherWebView->m_page->mainFrame()->loader().history().saveDocumentAndScrollState();
         }
         RefPtr<HistoryItem> newItem = otherBackForwardList->itemAtIndex(i)->copy();
         if (!i) 

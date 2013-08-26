@@ -179,10 +179,7 @@ void RootInlineBox::paintEllipsisBox(PaintInfo& paintInfo, const LayoutPoint& pa
 
 void RootInlineBox::addHighlightOverflow()
 {
-    Frame* frame = renderer()->frame();
-    if (!frame)
-        return;
-    Page* page = frame->page();
+    Page* page = renderer()->frame().page();
     if (!page)
         return;
 
@@ -197,10 +194,7 @@ void RootInlineBox::paintCustomHighlight(PaintInfo& paintInfo, const LayoutPoint
     if (!paintInfo.shouldPaintWithinRoot(renderer()) || renderer()->style()->visibility() != VISIBLE || paintInfo.phase != PaintPhaseForeground)
         return;
 
-    Frame* frame = renderer()->frame();
-    if (!frame)
-        return;
-    Page* page = frame->page();
+    Page* page = renderer()->frame().page();
     if (!page)
         return;
 
@@ -297,7 +291,7 @@ LayoutUnit RootInlineBox::alignBoxesInBlockDirection(LayoutUnit heightOfBlock, G
     bool setMaxDescent = false;
 
     // Figure out if we're in no-quirks mode.
-    bool noQuirksMode = renderer()->document()->inNoQuirksMode();
+    bool noQuirksMode = renderer()->document().inNoQuirksMode();
 
     m_baselineType = requiresIdeographicBaseline(textBoxDataMap) ? IdeographicBaseline : AlphabeticBaseline;
 
@@ -390,7 +384,7 @@ LayoutUnit RootInlineBox::lineSnapAdjustment(LayoutUnit delta) const
         return 0;
 
     // Get the current line grid and offset.
-    LayoutState* layoutState = block()->view()->layoutState();
+    LayoutState* layoutState = block()->view().layoutState();
     RenderBlock* lineGrid = layoutState->lineGrid();
     LayoutSize lineGridOffset = layoutState->lineGridOffset();
     if (!lineGrid || lineGrid->style()->writingMode() != block()->style()->writingMode())
@@ -891,7 +885,7 @@ LayoutUnit RootInlineBox::verticalPositionForBox(InlineBox* box, VerticalPositio
 
     // This method determines the vertical position for inline elements.
     bool firstLine = isFirstLineStyle();
-    if (firstLine && !renderer->document()->styleSheetCollection()->usesFirstLineRules())
+    if (firstLine && !renderer->document().styleSheetCollection()->usesFirstLineRules())
         firstLine = false;
 
     // Check the cache.
@@ -940,7 +934,7 @@ LayoutUnit RootInlineBox::verticalPositionForBox(InlineBox* box, VerticalPositio
                 lineHeight = renderer->style()->computedLineHeight();
             else
                 lineHeight = renderer->lineHeight(firstLine, lineDirection);
-            verticalPosition -= valueForLength(renderer->style()->verticalAlignLength(), lineHeight, renderer->view());
+            verticalPosition -= valueForLength(renderer->style()->verticalAlignLength(), lineHeight, &renderer->view());
         }
     }
 

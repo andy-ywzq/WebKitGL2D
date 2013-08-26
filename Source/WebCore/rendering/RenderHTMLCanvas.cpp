@@ -45,7 +45,7 @@ RenderHTMLCanvas::RenderHTMLCanvas(HTMLCanvasElement* element)
     : RenderReplaced(element, element->size())
 {
     // Actual size is not known yet, report the default intrinsic size.
-    view()->frameView()->incrementVisuallyNonEmptyPixelCount(roundedIntSize(intrinsicSize()));
+    view().frameView().incrementVisuallyNonEmptyPixelCount(roundedIntSize(intrinsicSize()));
 }
 
 bool RenderHTMLCanvas::requiresLayer() const
@@ -62,11 +62,9 @@ void RenderHTMLCanvas::paintReplaced(PaintInfo& paintInfo, const LayoutPoint& pa
     LayoutRect rect = contentBoxRect();
     rect.moveBy(paintOffset);
 
-    if (Frame* frame = this->frame()) {
-        if (Page* page = frame->page()) {
-            if (paintInfo.phase == PaintPhaseForeground)
-                page->addRelevantRepaintedObject(this, rect);
-        }
+    if (Page* page = frame().page()) {
+        if (paintInfo.phase == PaintPhaseForeground)
+            page->addRelevantRepaintedObject(this, rect);
     }
 
     bool useLowQualityScale = style()->imageRendering() == ImageRenderingCrispEdges || style()->imageRendering() == ImageRenderingOptimizeSpeed;

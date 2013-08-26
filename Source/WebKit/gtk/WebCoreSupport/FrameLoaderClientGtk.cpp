@@ -166,7 +166,7 @@ void FrameLoaderClient::committedLoad(WebCore::DocumentLoader* loader, const cha
 
         Frame* coreFrame = loader->frame();
         if (coreFrame && coreFrame->document()->isMediaDocument())
-            loader->cancelMainResourceLoad(coreFrame->loader().client()->pluginWillHandleLoadError(loader->response()));
+            loader->cancelMainResourceLoad(coreFrame->loader().client().pluginWillHandleLoadError(loader->response()));
     }
 
     if (m_pluginView) {
@@ -532,8 +532,8 @@ PassRefPtr<Frame> FrameLoaderClient::createFrame(const KURL& url, const String& 
     RefPtr<Frame> childFrame = Frame::create(page, ownerElement, new FrameLoaderClient(kitFrame));
     framePrivate->coreFrame = childFrame.get();
 
-    childFrame->tree()->setName(name);
-    parentFrame->tree()->appendChild(childFrame);
+    childFrame->tree().setName(name);
+    parentFrame->tree().appendChild(childFrame);
     childFrame->init();
 
     // The creation of the frame may have run arbitrary JavaScript that removed it from the page already.
@@ -545,7 +545,7 @@ PassRefPtr<Frame> FrameLoaderClient::createFrame(const KURL& url, const String& 
     parentFrame->loader().loadURLIntoChildFrame(url, referrer, childFrame.get());
 
     // The frame's onload handler may have removed it from the document.
-    if (!childFrame->tree()->parent())
+    if (!childFrame->tree().parent())
         return 0;
 
     return childFrame.release();

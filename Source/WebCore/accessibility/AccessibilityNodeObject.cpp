@@ -34,6 +34,7 @@
 #include "AccessibilityListBox.h"
 #include "AccessibilitySpinButton.h"
 #include "AccessibilityTable.h"
+#include "ChildIterator.h"
 #include "EventNames.h"
 #include "FloatRect.h"
 #include "Frame.h"
@@ -68,7 +69,6 @@
 #include "ProgressTracker.h"
 #include "SVGElement.h"
 #include "SVGNames.h"
-#include "SVGStyledElement.h"
 #include "Text.h"
 #include "TextControlInnerElements.h"
 #include "TextIterator.h"
@@ -417,12 +417,7 @@ bool AccessibilityNodeObject::canvasHasFallbackContent() const
     // If it has any children that are elements, we'll assume it might be fallback
     // content. If it has no children or its only children are not elements
     // (e.g. just text nodes), it doesn't have fallback content.
-    for (Node* child = node->firstChild(); child; child = child->nextSibling()) {
-        if (child->isElementNode())
-            return true;
-    }
-
-    return false;
+    return elementChildren(node).begin() != elementChildren(node).end();
 }
 
 bool AccessibilityNodeObject::isImageButton() const
@@ -1126,15 +1121,13 @@ static Element* siblingWithAriaRole(String role, Node* node)
     Node* parent = node->parentNode();
     if (!parent)
         return 0;
-    
-    for (Node* sibling = parent->firstChild(); sibling; sibling = sibling->nextSibling()) {
-        if (sibling->isElementNode()) {
-            const AtomicString& siblingAriaRole = toElement(sibling)->getAttribute(roleAttr);
-            if (equalIgnoringCase(siblingAriaRole, role))
-                return toElement(sibling);
-        }
+
+    for (auto sibling = elementChildren(parent).begin(), end = elementChildren(parent).end(); sibling != end; ++sibling) {
+        const AtomicString& siblingAriaRole = sibling->fastGetAttribute(roleAttr);
+        if (equalIgnoringCase(siblingAriaRole, role))
+            return &*sibling;
     }
-    
+
     return 0;
 }
 
@@ -1222,8 +1215,8 @@ void AccessibilityNodeObject::alternativeText(Vector<AccessibilityText>& textOrd
     
 #if ENABLE(SVG)
     // SVG elements all can have a <svg:title> element inside which should act as the descriptive text.
-    if (node->isSVGElement() && toSVGElement(node)->isSVGStyledElement())
-        textOrder.append(AccessibilityText(toSVGStyledElement(node)->title(), AlternativeText));
+    if (node->isSVGElement())
+        textOrder.append(AccessibilityText(toSVGElement(node)->title(), AlternativeText));
 #endif
     
 #if ENABLE(MATHML)
@@ -1421,8 +1414,8 @@ String AccessibilityNodeObject::accessibilityDescription() const
 
 #if ENABLE(SVG)
     // SVG elements all can have a <svg:title> element inside which should act as the descriptive text.
-    if (m_node && m_node->isSVGElement() && toSVGElement(m_node)->isSVGStyledElement())
-        return toSVGStyledElement(m_node)->title();
+    if (m_node && m_node->isSVGElement())
+        return toSVGElement(m_node)->title();
 #endif
     
 #if ENABLE(MATHML)

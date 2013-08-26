@@ -72,7 +72,7 @@ public:
 
     float zoomFactor() const;
 
-    FrameView* frameView() const { return m_frameView; }
+    FrameView& frameView() const { return m_frameView; }
 
     virtual LayoutRect visualOverflowRect() const OVERRIDE;
     virtual void computeRectForRepaint(const RenderLayerModelObject* repaintContainer, LayoutRect&, bool fixed = false) const OVERRIDE;
@@ -147,7 +147,7 @@ public:
     }
 #endif
 
-    bool doingFullRepaint() const { return m_frameView->needsFullRepaint(); }
+    bool doingFullRepaint() const { return frameView().needsFullRepaint(); }
 
     // Subtree push/pop
     void pushLayoutState(RenderObject*);
@@ -190,7 +190,7 @@ public:
     void setIsInWindow(bool);
 
 #if USE(ACCELERATED_COMPOSITING)
-    RenderLayerCompositor* compositor();
+    RenderLayerCompositor& compositor();
     bool usesCompositing() const;
 #endif
 
@@ -214,7 +214,7 @@ public:
 
     IntervalArena* intervalArena();
 
-    IntSize viewportSize() const { return document()->viewportSize(); }
+    IntSize viewportSize() const;
 
     void setRenderQuoteHead(RenderQuote* head) { m_renderQuoteHead = head; }
     RenderQuote* renderQuoteHead() const { return m_renderQuoteHead; }
@@ -296,7 +296,7 @@ private:
     friend class LayoutStateDisabler;
 
 protected:
-    FrameView* m_frameView;
+    FrameView& m_frameView;
 
     RenderObject* m_selectionStart;
     RenderObject* m_selectionEnd;
@@ -464,6 +464,11 @@ private:
     LayoutState* m_layoutState;
 #endif
 };
+
+inline Frame& RenderObject::frame() const
+{
+    return view().frameView().frame();
+}
 
 } // namespace WebCore
 

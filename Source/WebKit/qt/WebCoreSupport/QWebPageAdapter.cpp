@@ -422,10 +422,10 @@ bool QWebPageAdapter::findText(const QString& subString, FindFlag options)
 
     if (subString.isEmpty()) {
         page->mainFrame()->selection().clear();
-        Frame* frame = page->mainFrame()->tree()->firstChild();
+        Frame* frame = page->mainFrame()->tree().firstChild();
         while (frame) {
             frame->selection().clear();
-            frame = frame->tree()->traverseNextWithWrap(false);
+            frame = frame->tree().traverseNextWithWrap(false);
         }
     }
 
@@ -1091,10 +1091,10 @@ void QWebPageAdapter::triggerAction(QWebPageAdapter::MenuAction action, QWebHitT
         openNewWindow(hitTestResult->imageUrl, frame);
         break;
     case DownloadImageToDisk:
-        frame->loader().client()->startDownload(WebCore::ResourceRequest(hitTestResult->imageUrl, frame->loader().outgoingReferrer()));
+        frame->loader().client().startDownload(WebCore::ResourceRequest(hitTestResult->imageUrl, frame->loader().outgoingReferrer()));
         break;
     case DownloadLinkToDisk:
-        frame->loader().client()->startDownload(WebCore::ResourceRequest(hitTestResult->linkUrl, frame->loader().outgoingReferrer()));
+        frame->loader().client().startDownload(WebCore::ResourceRequest(hitTestResult->linkUrl, frame->loader().outgoingReferrer()));
         break;
     case Back:
         page->goBack();
