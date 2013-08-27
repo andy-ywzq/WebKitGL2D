@@ -1,3 +1,3 @@
 list(APPEND JSC_LIBRARIES
-    z
+    ${ZLIB_LIBRARIES}
 )
