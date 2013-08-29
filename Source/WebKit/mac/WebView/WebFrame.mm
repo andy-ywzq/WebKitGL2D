@@ -286,12 +286,12 @@ WebView *getWebView(WebFrame *webFrame)
     WebView *webView = kit(page);
 
     WebFrame *frame = [[self alloc] _initWithWebFrameView:frameView webView:webView];
-    frame->_private->coreFrame = page->mainFrame();
-    static_cast<WebFrameLoaderClient&>(page->mainFrame()->loader().client()).setWebFrame(frame);
+    frame->_private->coreFrame = &page->mainFrame();
+    static_cast<WebFrameLoaderClient&>(page->mainFrame().loader().client()).setWebFrame(frame);
     [frame release];
 
-    page->mainFrame()->tree().setName(name);
-    page->mainFrame()->init();
+    page->mainFrame().tree().setName(name);
+    page->mainFrame().init();
 
     [webView _setZoomMultiplier:[webView _realZoomMultiplier] isTextOnly:[webView _realZoomMultiplierIsTextOnly]];
 }
@@ -803,7 +803,7 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
 {
     Frame* frame = _private->coreFrame;
     String mimeType = frame->document()->loader()->writer()->mimeType();
-    PluginData* pluginData = frame->page() ? frame->page()->pluginData() : 0;
+    PluginData* pluginData = frame->page() ? &frame->page()->pluginData() : 0;
 
     if (WebCore::DOMImplementation::isTextMIMEType(mimeType)
         || Image::supportsType(mimeType)
@@ -1194,7 +1194,7 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
     if (!_private->coreFrame->view()->documentView())
         return [NSArray array];
 
-    RenderView* root = toRenderView(_private->coreFrame->document()->renderer());
+    RenderView* root = _private->coreFrame->document()->renderView();
     if (!root)
         return [NSArray array];
 

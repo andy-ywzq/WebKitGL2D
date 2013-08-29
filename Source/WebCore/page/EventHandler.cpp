@@ -1036,13 +1036,13 @@ HitTestResult EventHandler::hitTestResultAtPoint(const LayoutPoint& point, HitTe
     // We always send hitTestResultAtPoint to the main frame if we have one,
     // otherwise we might hit areas that are obscured by higher frames.
     if (Page* page = m_frame->page()) {
-        Frame* mainFrame = page->mainFrame();
-        if (m_frame != mainFrame) {
+        Frame& mainFrame = page->mainFrame();
+        if (m_frame != &mainFrame) {
             FrameView* frameView = m_frame->view();
-            FrameView* mainView = mainFrame->view();
+            FrameView* mainView = mainFrame.view();
             if (frameView && mainView) {
                 IntPoint mainFramePoint = mainView->rootViewToContents(frameView->contentsToRootView(roundedIntPoint(point)));
-                return mainFrame->eventHandler().hitTestResultAtPoint(mainFramePoint, hitType, padding);
+                return mainFrame.eventHandler().hitTestResultAtPoint(mainFramePoint, hitType, padding);
             }
         }
     }
@@ -1292,7 +1292,7 @@ OptionalCursor EventHandler::selectCursor(const HitTestResult& result, bool shif
     if (!page)
         return NoCursorChange;
 #if ENABLE(PAN_SCROLLING)
-    if (page->mainFrame()->eventHandler().panScrollInProgress())
+    if (page->mainFrame().eventHandler().panScrollInProgress())
         return NoCursorChange;
 #endif
 
@@ -1567,7 +1567,7 @@ bool EventHandler::handleMousePressEvent(const PlatformMouseEvent& mouseEvent)
 #if ENABLE(PAN_SCROLLING)
     // We store whether pan scrolling is in progress before calling stopAutoscrollTimer()
     // because it will set m_autoscrollType to NoAutoscroll on return.
-    bool isPanScrollInProgress = m_frame->page() && m_frame->page()->mainFrame()->eventHandler().panScrollInProgress();
+    bool isPanScrollInProgress = m_frame->page() && m_frame->page()->mainFrame().eventHandler().panScrollInProgress();
     stopAutoscrollTimer();
     if (isPanScrollInProgress) {
         // We invalidate the click when exiting pan scrolling so that we don't inadvertently navigate
@@ -1965,9 +1965,9 @@ bool EventHandler::handlePasteGlobalSelection(const PlatformMouseEvent& mouseEve
 
     if (!m_frame->page())
         return false;
-    Frame* focusFrame = m_frame->page()->focusController().focusedOrMainFrame();
+    Frame& focusFrame = m_frame->page()->focusController().focusedOrMainFrame();
     // Do not paste here if the focus was moved somewhere else.
-    if (m_frame == focusFrame && m_frame->editor().client()->supportsGlobalSelection())
+    if (m_frame == &focusFrame && m_frame->editor().client()->supportsGlobalSelection())
         return m_frame->editor().command(ASCIILiteral("PasteGlobalSelection")).execute();
 
     return false;
@@ -2074,7 +2074,7 @@ static bool findDropZone(Node* target, Clipboard* clipboard)
         dropZoneStr.makeLower();
         
         SpaceSplitString keywords(dropZoneStr, false);
-        if (keywords.isNull())
+        if (keywords.isEmpty())
             continue;
         
         DragOperation dragOperation = DragOperationNone;
@@ -2584,10 +2584,10 @@ void EventHandler::defaultWheelEventHandler(Node* startNode, WheelEvent* wheelEv
     
     // Break up into two scrolls if we need to.  Diagonal movement on 
     // a MacBook pro is an example of a 2-dimensional mouse wheel event (where both deltaX and deltaY can be set).
-    if (dominantDirection != DominantScrollDirectionVertical && scrollNode(wheelEvent->rawDeltaX(), granularity, ScrollLeft, ScrollRight, startNode, &stopNode))
+    if (dominantDirection != DominantScrollDirectionVertical && scrollNode(wheelEvent->deltaX(), granularity, ScrollRight, ScrollLeft, startNode, &stopNode))
         wheelEvent->setDefaultHandled();
     
-    if (dominantDirection != DominantScrollDirectionHorizontal && scrollNode(wheelEvent->rawDeltaY(), granularity, ScrollUp, ScrollDown, startNode, &stopNode))
+    if (dominantDirection != DominantScrollDirectionHorizontal && scrollNode(wheelEvent->deltaY(), granularity, ScrollDown, ScrollUp, startNode, &stopNode))
         wheelEvent->setDefaultHandled();
     
     if (!m_latchedWheelEventNode)
@@ -3284,7 +3284,7 @@ bool EventHandler::keyEvent(const PlatformKeyboardEvent& initialKeyEvent)
 
 #if ENABLE(PAN_SCROLLING)
     if (Page* page = m_frame->page()) {
-        if (page->mainFrame()->eventHandler().panScrollInProgress()) {
+        if (page->mainFrame().eventHandler().panScrollInProgress()) {
             // If a key is pressed while the panScroll is in progress then we want to stop
             if (initialKeyEvent.type() == PlatformEvent::KeyDown || initialKeyEvent.type() == PlatformEvent::RawKeyDown) 
                 stopAutoscrollTimer();
@@ -3302,7 +3302,7 @@ bool EventHandler::keyEvent(const PlatformKeyboardEvent& initialKeyEvent)
         return false;
 
     UserGestureIndicator gestureIndicator(DefinitelyProcessingUserGesture);
-    UserTypingGestureIndicator typingGestureIndicator(m_frame);
+    UserTypingGestureIndicator typingGestureIndicator(*m_frame);
 
     if (FrameView* view = m_frame->view())
         view->resetDeferredRepaintDelay();
@@ -3336,7 +3336,7 @@ bool EventHandler::keyEvent(const PlatformKeyboardEvent& initialKeyEvent)
     if (initialKeyEvent.type() == PlatformEvent::RawKeyDown) {
         node->dispatchEvent(keydown, IGNORE_EXCEPTION);
         // If frame changed as a result of keydown dispatch, then return true to avoid sending a subsequent keypress message to the new frame.
-        bool changedFocusedFrame = m_frame->page() && m_frame != m_frame->page()->focusController().focusedOrMainFrame();
+        bool changedFocusedFrame = m_frame->page() && m_frame != &m_frame->page()->focusController().focusedOrMainFrame();
         return keydown->defaultHandled() || keydown->defaultPrevented() || changedFocusedFrame;
     }
 
@@ -3358,7 +3358,7 @@ bool EventHandler::keyEvent(const PlatformKeyboardEvent& initialKeyEvent)
 
     node->dispatchEvent(keydown, IGNORE_EXCEPTION);
     // If frame changed as a result of keydown dispatch, then return early to avoid sending a subsequent keypress message to the new frame.
-    bool changedFocusedFrame = m_frame->page() && m_frame != m_frame->page()->focusController().focusedOrMainFrame();
+    bool changedFocusedFrame = m_frame->page() && m_frame != &m_frame->page()->focusController().focusedOrMainFrame();
     bool keydownResult = keydown->defaultHandled() || keydown->defaultPrevented() || changedFocusedFrame;
     if (handledByInputMethod || (keydownResult && !backwardCompatibilityMode))
         return keydownResult;

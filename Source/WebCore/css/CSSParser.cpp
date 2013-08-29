@@ -1423,9 +1423,9 @@ void CSSParser::parseSelector(const String& string, CSSSelectorList& selectorLis
 
 PassRefPtr<ImmutableStylePropertySet> CSSParser::parseInlineStyleDeclaration(const String& string, Element* element)
 {
-    CSSParserContext context = element->document()->elementSheet()->contents()->parserContext();
+    CSSParserContext context = element->document()->elementSheet().contents()->parserContext();
     context.mode = strictToCSSParserMode(element->isHTMLElement() && !element->document()->inQuirksMode());
-    return CSSParser(context).parseDeclaration(string, element->document()->elementSheet()->contents());
+    return CSSParser(context).parseDeclaration(string, element->document()->elementSheet().contents());
 }
 
 PassRefPtr<ImmutableStylePropertySet> CSSParser::parseDeclaration(const String& string, StyleSheetContents* contextStyleSheet)
@@ -2850,7 +2850,7 @@ bool CSSParser::parseValue(CSSPropertyID propId, bool important)
         return parseFillShorthand(propId, properties, WTF_ARRAY_LENGTH(properties), important);
     }
     case CSSPropertyWebkitMask: {
-        const CSSPropertyID properties[] = { CSSPropertyWebkitMaskImage, CSSPropertyWebkitMaskRepeat,
+        const CSSPropertyID properties[] = { CSSPropertyWebkitMaskImage, CSSPropertyWebkitMaskSourceType, CSSPropertyWebkitMaskRepeat,
             CSSPropertyWebkitMaskPosition, CSSPropertyWebkitMaskOrigin, CSSPropertyWebkitMaskClip, CSSPropertyWebkitMaskSize };
         return parseFillShorthand(propId, properties, WTF_ARRAY_LENGTH(properties), important);
     }
@@ -4925,7 +4925,7 @@ PassRefPtr<CSSPrimitiveValue> CSSParser::parseGridBreadth(CSSParserValue* curren
     if (currentValue->id == CSSValueWebkitMinContent || currentValue->id == CSSValueWebkitMaxContent)
         return cssValuePool().createIdentifierValue(currentValue->id);
 
-    if (!validUnit(currentValue, FLength | FPercent))
+    if (!validUnit(currentValue, FNonNeg | FLength | FPercent))
         return 0;
 
     return createPrimitiveNumericValue(currentValue);
@@ -11717,8 +11717,8 @@ bool CSSParser::isLoggingErrors()
 void CSSParser::logError(const String& message, int lineNumber)
 {
     // FIXME: <http://webkit.org/b/114313> CSS Parser ConsoleMessage errors should include column numbers
-    PageConsole* console = m_styleSheet->singleOwnerDocument()->page()->console();
-    console->addMessage(CSSMessageSource, WarningMessageLevel, message, m_styleSheet->baseURL().string(), lineNumber + 1, 0);
+    PageConsole& console = m_styleSheet->singleOwnerDocument()->page()->console();
+    console.addMessage(CSSMessageSource, WarningMessageLevel, message, m_styleSheet->baseURL().string(), lineNumber + 1, 0);
 }
 
 StyleRuleKeyframes* CSSParser::createKeyframesRule(const String& name, PassOwnPtr<Vector<RefPtr<StyleKeyframe> > > popKeyframes)

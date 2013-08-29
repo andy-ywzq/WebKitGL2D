@@ -2254,6 +2254,8 @@ webcore_sources += \
 	Source/WebCore/accessibility/AccessibilityScrollbar.h \
 	Source/WebCore/accessibility/AccessibilityScrollView.cpp \
 	Source/WebCore/accessibility/AccessibilityScrollView.h \
+	Source/WebCore/accessibility/AccessibilitySearchFieldButtons.cpp \
+	Source/WebCore/accessibility/AccessibilitySearchFieldButtons.h \
 	Source/WebCore/accessibility/AccessibilitySlider.cpp \
 	Source/WebCore/accessibility/AccessibilitySlider.h \
 	Source/WebCore/accessibility/AccessibilitySpinButton.cpp \
@@ -2332,6 +2334,8 @@ webcore_sources += \
 	Source/WebCore/bindings/js/JSDOMFormDataCustom.cpp \
 	Source/WebCore/bindings/js/JSDOMGlobalObject.cpp \
 	Source/WebCore/bindings/js/JSDOMGlobalObject.h \
+	Source/WebCore/bindings/js/JSDOMGlobalObjectTask.cpp \
+	Source/WebCore/bindings/js/JSDOMGlobalObjectTask.h \
 	Source/WebCore/bindings/js/JSDOMImplementationCustom.cpp \
 	Source/WebCore/bindings/js/JSDOMMimeTypeArrayCustom.cpp \
 	Source/WebCore/bindings/js/JSDOMPluginArrayCustom.cpp \
@@ -2817,6 +2821,7 @@ webcore_sources += \
 	Source/WebCore/dom/default/PlatformMessagePortChannel.cpp \
 	Source/WebCore/dom/default/PlatformMessagePortChannel.h \
 	Source/WebCore/dom/DescendantIterator.h \
+	Source/WebCore/dom/DescendantIteratorAssertions.h \
 	Source/WebCore/dom/DeviceMotionClient.h \
 	Source/WebCore/dom/DeviceMotionController.cpp \
 	Source/WebCore/dom/DeviceMotionController.h \

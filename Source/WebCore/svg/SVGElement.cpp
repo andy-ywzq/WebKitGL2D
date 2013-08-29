@@ -31,8 +31,8 @@
 #include "CSSCursorImageValue.h"
 #include "CSSParser.h"
 #include "DOMImplementation.h"
+#include "DescendantIterator.h"
 #include "Document.h"
-#include "ElementTraversal.h"
 #include "Event.h"
 #include "EventNames.h"
 #include "HTMLNames.h"
@@ -879,8 +879,10 @@ String SVGElement::title() const
     // If we aren't an instance in a <use> or the <use> title was not found, then find the first
     // <title> child of this element.
     // If a title child was found, return the text contents.
-    if (SVGTitleElement* titleElement = Traversal<SVGTitleElement>::firstWithin(this))
-        return titleElement->innerText();
+    auto titleDescendants = descendantsOfType<SVGTitleElement>(this);
+    auto firstTitle = titleDescendants.begin();
+    if (firstTitle != titleDescendants.end())
+        return const_cast<SVGTitleElement&>(*firstTitle).innerText();
 
     // Otherwise return a null/empty string.
     return String();
@@ -1120,6 +1122,9 @@ void SVGElement::updateRelativeLengthsInformation(bool hasRelativeLengths, SVGEl
 
         m_elementsWithRelativeLengths.remove(element);
     }
+
+    if (!element->isSVGGraphicsElement())
+        return;
 
     // Find first styled parent node, and notify it that we've changed our relative length state.
     ContainerNode* node = parentNode();

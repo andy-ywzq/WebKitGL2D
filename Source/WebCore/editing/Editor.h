@@ -129,10 +129,12 @@ public:
     void cut();
     void copy();
     void paste();
+    void paste(Pasteboard&);
     void pasteAsPlainText();
     void performDelete();
 
-    void copyURL(const KURL&, const String&);
+    void copyURL(const KURL&, const String& title);
+    void copyURL(const KURL&, const String& title, Pasteboard&);
     void copyImage(const HitTestResult&);
 
     void indent();
@@ -328,8 +330,8 @@ public:
 
     VisibleSelection selectionForCommand(Event*);
 
-    KillRing* killRing() const { return m_killRing.get(); }
-    SpellChecker* spellChecker() const { return m_spellChecker.get(); }
+    KillRing& killRing() const { return *m_killRing; }
+    SpellChecker& spellChecker() const { return *m_spellChecker; }
 
     EditingBehavior behavior() const;
 
@@ -427,9 +429,9 @@ private:
     bool m_ignoreCompositionSelectionChange;
     bool m_shouldStartNewKillRingSequence;
     bool m_shouldStyleWithCSS;
-    OwnPtr<KillRing> m_killRing;
-    OwnPtr<SpellChecker> m_spellChecker;
-    OwnPtr<AlternativeTextController> m_alternativeTextController;
+    const OwnPtr<KillRing> m_killRing;
+    const OwnPtr<SpellChecker> m_spellChecker;
+    const OwnPtr<AlternativeTextController> m_alternativeTextController;
     VisibleSelection m_mark;
     bool m_areMarkedTextMatchesHighlighted;
     EditorParagraphSeparator m_defaultParagraphSeparator;

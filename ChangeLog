@@ -1,3 +1,26 @@
+2013-08-28  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Add support for building JSC with FTL JIT enabled
+        https://bugs.webkit.org/show_bug.cgi?id=120270
+
+        Reviewed by Filip Pizlo.
+
+        * Source/autotools/FindDependencies.m4: Disable FTL JIT if the JIT itself is disabled or if the C++ compiler
+        being used is not Clang. Check for llvm-config and use it to properly test for the LLVM >= 3.4 dependency.
+        * Source/autotools/PrintBuildConfiguration.m4: Print out the status of the FTL JIT support.
+        * Source/autotools/ReadCommandLineArguments.m4: Add a configuration flag for enabling the feature, defaulting
+        to 'no' used as the default value for now. This should switch to 'auto' at some point in future.
+        * Source/autotools/SetupAutoconfHeader.m4: Define ENABLE_FTL_JIT to a specific value if possible.
+        Also define HAVE_LLVM to 1 if the LLVM dependency was satisfied.
+
+2013-08-28  Simon Hausmann  <simon.hausmann@digia.com>
+
+        [Qt] Unreviewed trivial build adjustment
+
+        * Source/sync.profile: Don't depend on qtjsbackend anymore. It's not needed in Qt 5.2
+        anymore (but this section of sync.profile is only used by the CI system, so no impact
+        anywhere else)
+
 2013-08-24  Carlos Garcia Campos  <cgarcia@igalia.com>
 
         Unreviewed. Fix GTK+ build after r154541.

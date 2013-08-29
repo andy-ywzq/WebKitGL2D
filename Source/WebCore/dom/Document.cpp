@@ -434,7 +434,7 @@ Document::Document(Frame* frame, const KURL& url, unsigned documentClasses)
     , m_xmlVersion(ASCIILiteral("1.0"))
     , m_xmlStandalone(StandaloneUnspecified)
     , m_hasXMLDeclaration(0)
-    , m_savedRenderer(0)
+    , m_savedRenderView(0)
     , m_designMode(inherit)
 #if ENABLE(DASHBOARD_SUPPORT) || ENABLE(DRAGGABLE_REGION)
     , m_hasAnnotatedRegions(false)
@@ -447,7 +447,7 @@ Document::Document(Frame* frame, const KURL& url, unsigned documentClasses)
     , m_isViewSource(false)
     , m_sawElementsInKnownNamespaces(false)
     , m_isSrcdocDocument(false)
-    , m_renderer(0)
+    , m_renderView(0)
     , m_eventQueue(DocumentEventQueue::create(this))
     , m_weakFactory(this)
     , m_idAttributeName(idAttr)
@@ -545,7 +545,7 @@ Document::~Document()
 {
     ASSERT(!renderer());
     ASSERT(!m_inPageCache);
-    ASSERT(!m_savedRenderer);
+    ASSERT(!m_savedRenderView);
     ASSERT(m_ranges.isEmpty());
     ASSERT(!m_styleRecalcTimer.isActive());
     ASSERT(!m_parentTreeScope);
@@ -593,8 +593,8 @@ Document::~Document()
 
     m_styleSheetCollection.clear();
 
-    if (m_elemSheet)
-        m_elemSheet->clearOwnerNode();
+    if (m_elementSheet)
+        m_elementSheet->clearOwnerNode();
 
     clearStyleResolver(); // We need to destroy CSSFontSelector before destroying m_cachedResourceLoader.
 
@@ -776,8 +776,12 @@ bool Document::hasManifest() const
 void Document::childrenChanged(bool changedByParser, Node* beforeChange, Node* afterChange, int childCountDelta)
 {
     ContainerNode::childrenChanged(changedByParser, beforeChange, afterChange, childCountDelta);
-    
-    Element* newDocumentElement = &*elementChildren(this).begin();
+
+    Element* newDocumentElement = 0;
+    auto firstElementChild = elementChildren(this).begin();
+    if (firstElementChild != elementChildren(this).end())
+        newDocumentElement = &*firstElementChild;
+
     if (newDocumentElement == m_documentElement)
         return;
     m_documentElement = newDocumentElement;
@@ -1270,7 +1274,7 @@ void Document::setVisualUpdatesAllowed(bool visualUpdatesAllowed)
         updateLayout();
 
     if (Page* page = this->page()) {
-        if (frame() == page->mainFrame()) {
+        if (page->frameIsMainFrame(frame())) {
             frameView->addPaintPendingMilestones(DidFirstPaintAfterSuppressedIncrementalRendering);
             if (page->requestedLayoutMilestones() & DidFirstLayoutAfterSuppressedIncrementalRendering)
                 frame()->loader().didLayout(DidFirstLayoutAfterSuppressedIncrementalRendering);
@@ -1565,8 +1569,9 @@ void Document::removeTitle(Element* titleElement)
 
     // Update title based on first title element in the head, if one exists.
     if (HTMLElement* headElement = head()) {
-        if (HTMLTitleElement* titleElement = Traversal<HTMLTitleElement>::firstWithin(headElement))
-            setTitleElement(titleElement->textWithDirection(), titleElement);
+        auto firstTitle = childrenOfType<HTMLTitleElement>(headElement).begin();
+        if (firstTitle != childrenOfType<HTMLTitleElement>(headElement).end())
+            setTitleElement(firstTitle->textWithDirection(), &*firstTitle);
     }
 
     if (!m_titleElement)
@@ -1748,7 +1753,7 @@ void Document::recalcStyle(Style::Change change)
 
     InspectorInstrumentationCookie cookie = InspectorInstrumentation::willRecalculateStyle(this);
 
-    if (m_elemSheet && m_elemSheet->contents()->usesRemUnits())
+    if (m_elementSheet && m_elementSheet->contents()->usesRemUnits())
         m_styleSheetCollection->setUsesRemUnit(true);
 
     m_inStyleRecalc = true;
@@ -1963,6 +1968,12 @@ void Document::clearStyleResolver()
     m_styleResolver.clear();
 }
 
+void Document::setRenderView(RenderView* renderView)
+{
+    m_renderView = renderView;
+    Node::setRenderer(renderView);
+}
+
 void Document::createRenderTree()
 {
     ASSERT(!attached());
@@ -1972,7 +1983,7 @@ void Document::createRenderTree()
     if (!m_renderArena)
         m_renderArena = RenderArena::create();
     
-    setRenderer(new (m_renderArena.get()) RenderView(this));
+    setRenderView(new (m_renderArena.get()) RenderView(this));
 #if USE(ACCELERATED_COMPOSITING)
     renderView()->setIsInWindow(true);
 #endif
@@ -1988,7 +1999,7 @@ void Document::createRenderTree()
 static void pageWheelEventHandlerCountChanged(Page& page)
 {
     unsigned count = 0;
-    for (const Frame* frame = page.mainFrame(); frame; frame = frame->tree().traverseNext()) {
+    for (const Frame* frame = &page.mainFrame(); frame; frame = frame->tree().traverseNext()) {
         if (Document* document = frame->document())
             count += document->wheelEventHandlerCount();
     }
@@ -2014,13 +2025,13 @@ void Document::didBecomeCurrentDocumentInFrame()
     // FIXME: Doing this every time is a waste. If the current document and its
     // subframes' documents have no wheel event handlers, then the count did not change,
     // unless the documents they are replacing had wheel event handlers.
-    if (page() && page()->mainFrame() == m_frame)
+    if (page() && page()->frameIsMainFrame(m_frame))
         pageWheelEventHandlerCountChanged(*page());
 
 #if ENABLE(TOUCH_EVENTS)
     // FIXME: Doing this only for the main frame is insufficient.
     // A subframe could have touch event handlers.
-    if (hasTouchEventHandlers() && page() && page()->mainFrame() == m_frame)
+    if (hasTouchEventHandlers() && page() && page()->frameIsMainFrame(m_frame))
         page()->chrome().client().needTouchEvents(true);
 #endif
 
@@ -2087,9 +2098,9 @@ void Document::detach()
 
     unscheduleStyleRecalc();
 
-    if (renderer())
-        renderer()->destroy();
-    setRenderer(0);
+    if (renderView())
+        renderView()->destroy();
+    setRenderView(0);
 
 #if ENABLE(TOUCH_EVENTS)
     if (m_touchEventTargets && m_touchEventTargets->size() && parentDocument())
@@ -2636,19 +2647,20 @@ void Document::updateBaseURL()
     if (!m_baseURL.isValid())
         m_baseURL = KURL();
 
-    if (m_elemSheet) {
+    if (m_elementSheet) {
         // Element sheet is silly. It never contains anything.
-        ASSERT(!m_elemSheet->contents()->ruleCount());
-        bool usesRemUnits = m_elemSheet->contents()->usesRemUnits();
-        m_elemSheet = CSSStyleSheet::createInline(this, m_baseURL);
+        ASSERT(!m_elementSheet->contents()->ruleCount());
+        bool usesRemUnits = m_elementSheet->contents()->usesRemUnits();
+        m_elementSheet = CSSStyleSheet::createInline(this, m_baseURL);
         // FIXME: So we are not really the parser. The right fix is to eliminate the element sheet completely.
-        m_elemSheet->contents()->parserSetUsesRemUnits(usesRemUnits);
+        m_elementSheet->contents()->parserSetUsesRemUnits(usesRemUnits);
     }
 
     if (!equalIgnoringFragmentIdentifier(oldBaseURL, m_baseURL)) {
         // Base URL change changes any relative visited links.
         // FIXME: There are other URLs in the tree that would need to be re-evaluated on dynamic base URL change. Style should be invalidated too.
-        for (HTMLAnchorElement* anchor = Traversal<HTMLAnchorElement>::firstWithin(this); anchor; anchor = Traversal<HTMLAnchorElement>::next(anchor))
+        auto anchorDescendants = descendantsOfType<HTMLAnchorElement>(this);
+        for (auto anchor = anchorDescendants.begin(), end = anchorDescendants.end(); anchor != end; ++anchor)
             anchor->invalidateCachedVisitedLinkHash();
     }
 }
@@ -2664,7 +2676,8 @@ void Document::processBaseElement()
     // Find the first href attribute in a base element and the first target attribute in a base element.
     const AtomicString* href = 0;
     const AtomicString* target = 0;
-    for (HTMLBaseElement* base = Traversal<HTMLBaseElement>::firstWithin(this); base && (!href || !target); base = Traversal<HTMLBaseElement>::next(base)) {
+    auto baseDescendants = descendantsOfType<HTMLBaseElement>(this);
+    for (auto base = baseDescendants.begin(), end = baseDescendants.end(); base != end && (!href || !target); ++base) {
         if (!href) {
             const AtomicString& value = base->fastGetAttribute(hrefAttr);
             if (!value.isNull())
@@ -2801,11 +2814,11 @@ void Document::didRemoveAllPendingStylesheet()
         view()->scrollToFragment(m_url);
 }
 
-CSSStyleSheet* Document::elementSheet()
+CSSStyleSheet& Document::elementSheet()
 {
-    if (!m_elemSheet)
-        m_elemSheet = CSSStyleSheet::createInline(this, m_baseURL);
-    return m_elemSheet.get();
+    if (!m_elementSheet)
+        m_elementSheet = CSSStyleSheet::createInline(this, m_baseURL);
+    return *m_elementSheet;
 }
 
 void Document::processHttpEquiv(const String& equiv, const String& content)
@@ -2942,7 +2955,7 @@ void Document::processViewport(const String& features, ViewportArguments::Type o
 
 void Document::updateViewportArguments()
 {
-    if (page() && page()->mainFrame() == frame()) {
+    if (page() && page()->frameIsMainFrame(frame())) {
 #ifndef NDEBUG
         m_didDispatchViewportPropertiesChanged = true;
 #endif
@@ -3985,8 +3998,8 @@ void Document::setInPageCache(bool flag)
     Page* page = this->page();
 
     if (flag) {
-        ASSERT(!m_savedRenderer);
-        m_savedRenderer = renderer();
+        ASSERT(!m_savedRenderView);
+        m_savedRenderView = renderView();
         if (v) {
             // FIXME: There is some scrolling related work that needs to happen whenever a page goes into the
             // page cache and similar work that needs to occur when it comes out. This is where we do the work
@@ -3996,7 +4009,7 @@ void Document::setInPageCache(bool flag)
             // function. It would be nice if there was more symmetry here.
             // https://bugs.webkit.org/show_bug.cgi?id=98698
             v->cacheCurrentScrollPosition();
-            if (page && page->mainFrame() == m_frame) {
+            if (page && page->frameIsMainFrame(m_frame)) {
                 v->resetScrollbarsAndClearContentsSize();
                 if (ScrollingCoordinator* scrollingCoordinator = page->scrollingCoordinator())
                     scrollingCoordinator->clearStateTree();
@@ -4005,10 +4018,10 @@ void Document::setInPageCache(bool flag)
         }
         m_styleRecalcTimer.stop();
     } else {
-        ASSERT(!renderer() || renderer() == m_savedRenderer);
+        ASSERT(!renderView() || renderView() == m_savedRenderView);
         ASSERT(m_renderArena);
-        setRenderer(m_savedRenderer);
-        m_savedRenderer = 0;
+        setRenderView(m_savedRenderView);
+        m_savedRenderView = 0;
 
         if (childNeedsStyleRecalc())
             scheduleStyleRecalc();
@@ -4749,7 +4762,7 @@ void Document::addConsoleMessage(MessageSource source, MessageLevel level, const
     }
 
     if (Page* page = this->page())
-        page->console()->addMessage(source, level, message, requestIdentifier, this);
+        page->console().addMessage(source, level, message, requestIdentifier, this);
 }
 
 void Document::addMessage(MessageSource source, MessageLevel level, const String& message, const String& sourceURL, unsigned lineNumber, unsigned columnNumber, PassRefPtr<ScriptCallStack> callStack, ScriptState* state, unsigned long requestIdentifier)
@@ -4760,7 +4773,7 @@ void Document::addMessage(MessageSource source, MessageLevel level, const String
     }
 
     if (Page* page = this->page())
-        page->console()->addMessage(source, level, message, sourceURL, lineNumber, columnNumber, callStack, state, requestIdentifier);
+        page->console().addMessage(source, level, message, sourceURL, lineNumber, columnNumber, callStack, state, requestIdentifier);
 }
 
 SecurityOrigin* Document::topOrigin() const
@@ -5613,7 +5626,7 @@ void Document::didRemoveTouchEventHandler(Node* handler)
 #endif
     if (m_touchEventTargets->size())
         return;
-    for (const Frame* frame = page->mainFrame(); frame; frame = frame->tree().traverseNext()) {
+    for (const Frame* frame = &page->mainFrame(); frame; frame = frame->tree().traverseNext()) {
         if (frame->document() && frame->document()->hasTouchEventHandlers())
             return;
     }
@@ -5997,7 +6010,7 @@ void Document::ensurePlugInsInjectedScript(DOMWrapperWorld* world)
     if (!jsString)
         jsString = plugInsJavaScript;
 
-    page()->mainFrame()->script().evaluateInWorld(ScriptSourceCode(jsString), world);
+    page()->mainFrame().script().evaluateInWorld(ScriptSourceCode(jsString), world);
 
     m_hasInjectedPlugInsScript = true;
 }

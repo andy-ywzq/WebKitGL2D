@@ -849,6 +849,8 @@ void MediaPlayerPrivateAVFoundationCF::tracksChanged()
     if (!avAsset(m_avfWrapper))
         return;
 
+    setDelayCharacteristicsChangedNotification(true);
+
     bool haveCCTrack = false;
     bool hasCaptions = false;
 
@@ -922,8 +924,10 @@ void MediaPlayerPrivateAVFoundationCF::tracksChanged()
 
     sizeChanged();
 
-    if (!primaryAudioTrackLanguage.isNull() && primaryAudioTrackLanguage != languageOfPrimaryAudioTrack())
-        player()->characteristicChanged();
+    if (primaryAudioTrackLanguage != languageOfPrimaryAudioTrack())
+        characteristicsChanged();
+
+    setDelayCharacteristicsChangedNotification(false);
 }
 
 void MediaPlayerPrivateAVFoundationCF::sizeChanged()
@@ -1104,6 +1108,12 @@ String MediaPlayerPrivateAVFoundationCF::languageOfPrimaryAudioTrack() const
 
     AVCFAssetTrackRef track = (AVCFAssetTrackRef)CFArrayGetValueAtIndex(tracks.get(), 0);
     RetainPtr<CFStringRef> language = adoptCF(AVCFAssetTrackCopyExtendedLanguageTag(track));
+
+    // If the language code is stored as a QuickTime 5-bit packed code there aren't enough bits for a full
+    // RFC 4646 language tag so extendedLanguageTag returns null. In this case languageCode will return the
+    // ISO 639-2/T language code so check it.
+    if (!language)
+        language = adoptCF(AVCFAssetTrackCopyLanguageCode(track));
 
     // Some legacy tracks have "und" as a language, treat that the same as no language at all.
     if (language && CFStringCompare(language.get(), CFSTR("und"), kCFCompareCaseInsensitive) != kCFCompareEqualTo) {
@@ -1622,14 +1632,14 @@ RetainPtr<CGImageRef> AVFWrapper::createImageForTimeInRect(float time, const Int
         return 0;
 
 #if !LOG_DISABLED
-    double start = WTF::currentTime();
+    double start = monotonicallyIncreasingTime();
 #endif
 
     AVCFAssetImageGeneratorSetMaximumSize(m_imageGenerator.get(), CGSize(rect.size()));
     CGImageRef image = AVCFAssetImageGeneratorCopyCGImageAtTime(m_imageGenerator.get(), CMTimeMakeWithSeconds(time, 600), 0, 0);
 
 #if !LOG_DISABLED
-    double duration = WTF::currentTime() - start;
+    double duration = monotonicallyIncreasingTime() - start;
     LOG(Media, "AVFWrapper::createImageForTimeInRect(%p) - creating image took %.4f", this, narrowPrecisionToFloat(duration));
 #endif
 

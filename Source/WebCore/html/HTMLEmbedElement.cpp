@@ -28,6 +28,7 @@
 #include "CSSPropertyNames.h"
 #include "Frame.h"
 #include "FrameLoader.h"
+#include "FrameView.h"
 #include "HTMLImageLoader.h"
 #include "HTMLNames.h"
 #include "HTMLObjectElement.h"
@@ -67,7 +68,9 @@ static inline RenderWidget* findWidgetRenderer(const Node* n)
 
 RenderWidget* HTMLEmbedElement::renderWidgetForJSBindings() const
 {
-    document()->updateLayoutIgnorePendingStylesheets();
+    FrameView* view = document()->view();
+    if (!view || (!view->isInLayout() && !view->isPainting()))
+        document()->updateLayoutIgnorePendingStylesheets();
     return findWidgetRenderer(this);
 }
 
@@ -183,7 +186,8 @@ bool HTMLEmbedElement::rendererIsNeeded(const RenderStyle& style)
     // should be ignored and not get a renderer.
     ContainerNode* p = parentNode();
     if (p && p->hasTagName(objectTag)) {
-        ASSERT(p->renderer());
+        if (!p->renderer())
+            return false;
         if (!static_cast<HTMLObjectElement*>(p)->useFallbackContent()) {
             ASSERT(!p->renderer()->isEmbeddedObject());
             return false;

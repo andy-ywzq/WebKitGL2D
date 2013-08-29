@@ -4482,6 +4482,9 @@
     <ClCompile Include="..\bindings\js\JSDOMGlobalObject.cpp">
       <Filter>bindings\js</Filter>
     </ClCompile>
+    <ClCompile Include="..\bindings\js\JSDOMGlobalObjectTask.cpp">
+      <Filter>bindings\js</Filter>
+    </ClCompile>
     <ClCompile Include="..\bindings\js\JSDOMImplementationCustom.cpp">
       <Filter>bindings\js</Filter>
     </ClCompile>
@@ -10969,6 +10972,9 @@
     <ClInclude Include="..\html\FormDataList.h">
       <Filter>html</Filter>
     </ClInclude>
+    <ClInclude Include="..\html\FormNamedItem.h">
+      <Filter>html</Filter>
+    </ClInclude>
     <ClInclude Include="..\html\FTPDirectoryDocument.h">
       <Filter>html</Filter>
     </ClInclude>
@@ -11576,6 +11582,9 @@
       <Filter>bindings\js</Filter>
     </ClInclude>
     <ClInclude Include="..\bindings\js\JSDOMGlobalObject.h">
+      <Filter>bindings\js</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bindings\js\JSDOMGlobalObjectTask.h">
       <Filter>bindings\js</Filter>
     </ClInclude>
     <ClInclude Include="..\bindings\js\JSErrorHandler.h">
@@ -14826,6 +14835,9 @@
     <ClInclude Include="..\rendering\style\StyleCachedImageSet.h">
       <Filter>rendering\style</Filter>
     </ClInclude>
+    <ClInclude Include="..\dom\ChildIterator.h" />
+    <ClInclude Include="..\dom\DescendantIterator.h" />
+    <ClInclude Include="..\dom\DescendantIteratorAssertions.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\css\CSSGrammar.y.in">

@@ -27,8 +27,8 @@
 #include "AffineTransform.h"
 #include "Attribute.h"
 #include "CSSHelper.h"
+#include "DescendantIterator.h"
 #include "Document.h"
-#include "ElementTraversal.h"
 #include "EventListener.h"
 #include "EventNames.h"
 #include "FloatConversion.h"
@@ -44,6 +44,7 @@
 #include "RenderSVGModelObject.h"
 #include "RenderSVGRoot.h"
 #include "RenderSVGViewportContainer.h"
+#include "RenderView.h"
 #include "SMILTimeContainer.h"
 #include "SVGAngle.h"
 #include "SVGElementInstance.h"
@@ -223,8 +224,8 @@ void SVGSVGElement::updateCurrentTranslate()
     if (RenderObject* object = renderer())
         object->setNeedsLayout(true);
 
-    if (parentNode() == document() && document()->renderer())
-        document()->renderer()->repaint();
+    if (parentNode() == document() && document()->renderView())
+        document()->renderView()->repaint();
 }
 
 void SVGSVGElement::parseAttribute(const QualifiedName& name, const AtomicString& value)
@@ -336,16 +337,17 @@ void SVGSVGElement::forceRedraw()
 PassRefPtr<NodeList> SVGSVGElement::collectIntersectionOrEnclosureList(const FloatRect& rect, SVGElement* referenceElement, CollectIntersectionOrEnclosure collect) const
 {
     Vector<RefPtr<Node> > nodes;
-    SVGElement* svgElement = Traversal<SVGElement>::firstWithin(referenceElement ? referenceElement : this);
-    while (svgElement) {
+
+    auto svgDescendants = descendantsOfType<SVGElement>(referenceElement ? referenceElement : this);
+    for (auto it = svgDescendants.begin(), end = svgDescendants.end(); it != end; ++it) {
+        const SVGElement* svgElement = &*it;
         if (collect == CollectIntersectionList) {
             if (checkIntersection(svgElement, rect))
-                nodes.append(svgElement);
+                nodes.append(const_cast<SVGElement*>(svgElement));
         } else {
             if (checkEnclosure(svgElement, rect))
-                nodes.append(svgElement);
+                nodes.append(const_cast<SVGElement*>(svgElement));
         }
-        svgElement = Traversal<SVGElement>::next(svgElement, referenceElement ? referenceElement : this);
     }
     return StaticNodeList::adopt(nodes);
 }
@@ -360,14 +362,14 @@ PassRefPtr<NodeList> SVGSVGElement::getEnclosureList(const FloatRect& rect, SVGE
     return collectIntersectionOrEnclosureList(rect, referenceElement, CollectEnclosureList);
 }
 
-bool SVGSVGElement::checkIntersection(SVGElement* element, const FloatRect& rect) const
+bool SVGSVGElement::checkIntersection(const SVGElement* element, const FloatRect& rect) const
 {
     if (!element)
         return false;
     return RenderSVGModelObject::checkIntersection(element->renderer(), rect);
 }
 
-bool SVGSVGElement::checkEnclosure(SVGElement* element, const FloatRect& rect) const
+bool SVGSVGElement::checkEnclosure(const SVGElement* element, const FloatRect& rect) const
 {
     if (!element)
         return false;
@@ -767,7 +769,7 @@ void SVGSVGElement::documentDidResumeFromPageCache()
 
 // getElementById on SVGSVGElement is restricted to only the child subtree defined by the <svg> element.
 // See http://www.w3.org/TR/SVG11/struct.html#InterfaceSVGSVGElement
-Element* SVGSVGElement::getElementById(const AtomicString& id) const
+Element* SVGSVGElement::getElementById(const AtomicString& id)
 {
     Element* element = treeScope()->getElementById(id);
     if (element && element->isDescendantOf(this))
@@ -775,9 +777,9 @@ Element* SVGSVGElement::getElementById(const AtomicString& id) const
 
     // Fall back to traversing our subtree. Duplicate ids are allowed, the first found will
     // be returned.
-    for (Element* element = ElementTraversal::firstWithin(this); element; element = ElementTraversal::next(element, this)) {
+    for (auto element = elementDescendants(this).begin(), end = elementDescendants(this).end(); element != end; ++element) {
         if (element->getIdAttribute() == id)
-            return element;
+            return &*element;
     }
     return 0;
 }

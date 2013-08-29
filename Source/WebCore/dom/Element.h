@@ -97,6 +97,7 @@ public:
     DEFINE_ATTRIBUTE_EVENT_LISTENER(scroll);
     DEFINE_ATTRIBUTE_EVENT_LISTENER(select);
     DEFINE_ATTRIBUTE_EVENT_LISTENER(submit);
+    DEFINE_ATTRIBUTE_EVENT_LISTENER(wheel);
 
     // These four attribute event handler attributes are overridden by HTMLBodyElement
     // and HTMLFrameSetElement to forward to the DOMWindow.
@@ -468,6 +469,7 @@ public:
     virtual bool isInRange() const { return false; }
     virtual bool isOutOfRange() const { return false; }
     virtual bool isFrameElementBase() const { return false; }
+    virtual bool isSearchFieldCancelButtonElement() const { return false; }
 
     virtual bool canContainRangeEndPoint() const { return true; }
 

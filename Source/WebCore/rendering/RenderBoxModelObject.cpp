@@ -37,6 +37,7 @@
 #include "RenderLayer.h"
 #include "RenderNamedFlowThread.h"
 #include "RenderRegion.h"
+#include "RenderTable.h"
 #include "RenderView.h"
 #include "ScrollingConstraints.h"
 #include "Settings.h"
@@ -490,7 +491,7 @@ LayoutPoint RenderBoxModelObject::adjustedPositionRelativeToOffsetParent(const L
     // return the distance between the canvas origin and the left border edge 
     // of the element and stop this algorithm.
     if (const RenderBoxModelObject* offsetParent = this->offsetParent()) {
-        if (offsetParent->isBox() && !offsetParent->isBody())
+        if (offsetParent->isBox() && !offsetParent->isBody() && !offsetParent->isTable())
             referencePoint.move(-toRenderBox(offsetParent)->borderLeft(), -toRenderBox(offsetParent)->borderTop());
         if (!isOutOfFlowPositioned() || flowThreadContainingBlock()) {
             if (isRelPositioned())
@@ -786,7 +787,7 @@ void RenderBoxModelObject::paintFillLayerExtended(const PaintInfo& paintInfo, co
     if (document().printing()) {
         if (style()->printColorAdjust() == PrintColorAdjustEconomy)
             forceBackgroundToWhite = true;
-        if (document().settings() && document().settings()->shouldPrintBackgrounds())
+        if (frame().settings().shouldPrintBackgrounds())
             forceBackgroundToWhite = false;
     }
 

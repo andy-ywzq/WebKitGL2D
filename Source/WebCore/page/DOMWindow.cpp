@@ -231,7 +231,7 @@ static bool allowsBeforeUnloadListeners(DOMWindow* window)
     Page* page = frame->page();
     if (!page)
         return false;
-    return frame == page->mainFrame();
+    return page->frameIsMainFrame(frame);
 }
 
 bool DOMWindow::dispatchAllPendingBeforeUnloadEvents()
@@ -316,7 +316,7 @@ FloatRect DOMWindow::adjustWindowRect(Page* page, const FloatRect& pendingChange
 {
     ASSERT(page);
 
-    FloatRect screen = screenAvailableRect(page->mainFrame()->view());
+    FloatRect screen = screenAvailableRect(page->mainFrame().view());
     FloatRect window = page->chrome().windowRect();
 
     // Make sure we're in a valid state before adjusting dimensions.
@@ -691,7 +691,7 @@ PageConsole* DOMWindow::pageConsole() const
 {
     if (!isCurrentlyDisplayedInFrame())
         return 0;
-    return m_frame->page() ? m_frame->page()->console() : 0;
+    return m_frame->page() ? &m_frame->page()->console() : 0;
 }
 
 DOMApplicationCache* DOMWindow::applicationCache() const
@@ -931,7 +931,7 @@ void DOMWindow::focus(ScriptExecutionContext* context)
     }
 
     // If we're a top level window, bring the window to the front.
-    if (m_frame == page->mainFrame() && allowFocus)
+    if (page->frameIsMainFrame(m_frame) && allowFocus)
         page->chrome().focus();
 
     if (!m_frame)
@@ -957,7 +957,7 @@ void DOMWindow::blur()
     if (m_frame->settings().windowFocusRestricted())
         return;
 
-    if (m_frame != page->mainFrame())
+    if (m_frame != &page->mainFrame())
         return;
 
     page->chrome().unfocus();
@@ -972,7 +972,7 @@ void DOMWindow::close(ScriptExecutionContext* context)
     if (!page)
         return;
 
-    if (m_frame != page->mainFrame())
+    if (m_frame != &page->mainFrame())
         return;
 
     if (context) {
@@ -1478,7 +1478,7 @@ bool DOMWindow::allowedToChangeWindowGeometry() const
     const Page* page = m_frame->page();
     if (!page)
         return false;
-    if (m_frame != page->mainFrame())
+    if (m_frame != &page->mainFrame())
         return false;
     // Prevent web content from tricking the user into initiating a drag.
     if (m_frame->eventHandler().mousePressed())
@@ -1506,7 +1506,7 @@ void DOMWindow::moveTo(float x, float y) const
 
     Page* page = m_frame->page();
     FloatRect fr = page->chrome().windowRect();
-    FloatRect sr = screenAvailableRect(page->mainFrame()->view());
+    FloatRect sr = screenAvailableRect(page->mainFrame().view());
     fr.setLocation(sr.location());
     FloatRect update = fr;
     update.move(x, y);
@@ -1624,7 +1624,7 @@ bool DOMWindow::addEventListener(const AtomicString& eventType, PassRefPtr<Event
 
     if (Document* document = this->document()) {
         document->addListenerTypeIfNeeded(eventType);
-        if (eventType == eventNames().mousewheelEvent)
+        if (eventType == eventNames().wheelEvent || eventType == eventNames().mousewheelEvent)
             document->didAddWheelEventHandler();
         else if (eventNames().isTouchEventType(eventType))
             document->didAddTouchEventHandler(document);
@@ -1662,7 +1662,7 @@ bool DOMWindow::removeEventListener(const AtomicString& eventType, EventListener
         return false;
 
     if (Document* document = this->document()) {
-        if (eventType == eventNames().mousewheelEvent)
+        if (eventType == eventNames().wheelEvent || eventType == eventNames().mousewheelEvent)
             document->didRemoveWheelEventHandler();
         else if (eventNames().isTouchEventType(eventType))
             document->didRemoveTouchEventHandler(document);

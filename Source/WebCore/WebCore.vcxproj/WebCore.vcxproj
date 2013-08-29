@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="DebugSuffix|Win32">
@@ -7014,6 +7014,20 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\accessibility\AccessibilitySearchFieldButtons.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\accessibility\AccessibilitySlider.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -7748,9 +7762,7 @@
     <ClCompile Include="..\platform\graphics\win\IntRectWin.cpp" />
     <ClCompile Include="..\platform\graphics\win\IntSizeWin.cpp" />
     <ClCompile Include="..\platform\graphics\win\MediaPlayerPrivateFullscreenWindow.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\platform\graphics\win\MediaPlayerPrivateQuickTimeVisualContext.cpp">
@@ -16138,6 +16150,20 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\bindings\js\JSDOMGlobalObjectTask.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\bindings\js\JSDOMImplementationCustom.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -18988,6 +19014,7 @@
     <ClInclude Include="..\accessibility\AccessibilityRenderObject.h" />
     <ClInclude Include="..\accessibility\AccessibilityScrollbar.h" />
     <ClInclude Include="..\accessibility\AccessibilityScrollView.h" />
+    <ClInclude Include="..\accessibility\AccessibilitySearchFieldButtons.h" />
     <ClInclude Include="..\accessibility\AccessibilitySlider.h" />
     <ClInclude Include="..\accessibility\AccessibilitySpinButton.h" />
     <ClInclude Include="..\accessibility\AccessibilitySVGRoot.h" />
@@ -20224,6 +20251,7 @@
     <ClInclude Include="..\dom\DataTransferItemList.h" />
     <ClInclude Include="..\dom\DecodedDataDocumentParser.h" />
     <ClInclude Include="..\dom\DescendantIterator.h" />
+    <ClInclude Include="..\dom\DescendantIteratorAssertions.h" />
     <ClInclude Include="..\dom\DeviceMotionClient.h" />
     <ClInclude Include="..\dom\DeviceMotionController.h" />
     <ClInclude Include="..\dom\DeviceMotionData.h" />
@@ -20475,6 +20503,7 @@
     <ClInclude Include="..\html\FormAssociatedElement.h" />
     <ClInclude Include="..\html\FormController.h" />
     <ClInclude Include="..\html\FormDataList.h" />
+    <ClInclude Include="..\html\FormNamedItem.h" />
     <ClInclude Include="..\html\FTPDirectoryDocument.h" />
     <ClInclude Include="..\html\HiddenInputType.h" />
     <ClInclude Include="..\html\HTMLAllCollection.h" />
@@ -20679,6 +20708,7 @@
     <ClInclude Include="..\bindings\js\JSDictionary.h" />
     <ClInclude Include="..\bindings\js\JSDOMBinding.h" />
     <ClInclude Include="..\bindings\js\JSDOMGlobalObject.h" />
+    <ClInclude Include="..\bindings\js\JSDOMGlobalObjectTask.h" />
     <ClInclude Include="..\bindings\js\JSDOMWindowBase.h" />
     <ClInclude Include="..\bindings\js\JSDOMWindowCustom.h" />
     <ClInclude Include="..\bindings\js\JSDOMWindowShell.h" />

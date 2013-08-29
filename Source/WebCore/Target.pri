@@ -54,6 +54,7 @@ SOURCES += \
     accessibility/AccessibilityRenderObject.cpp \
     accessibility/AccessibilityScrollbar.cpp \
     accessibility/AccessibilityScrollView.cpp \
+    accessibility/AccessibilitySearchFieldButtons.cpp \
     accessibility/AccessibilitySlider.cpp \
     accessibility/AccessibilitySpinButton.cpp \
     accessibility/AccessibilityARIAGrid.cpp \
@@ -102,6 +103,7 @@ SOURCES += \
      bindings/js/JSDOMBinding.cpp \
      bindings/js/JSDOMFormDataCustom.cpp \
      bindings/js/JSDOMGlobalObject.cpp \
+     bindings/js/JSDOMGlobalObjectTask.cpp \
      bindings/js/JSDOMImplementationCustom.cpp \
      bindings/js/JSDOMMimeTypeArrayCustom.cpp \
      bindings/js/JSDOMPluginArrayCustom.cpp \
@@ -1353,6 +1355,7 @@ HEADERS += \
     bindings/js/JSDictionary.h \
     bindings/js/JSDOMBinding.h \
     bindings/js/JSDOMGlobalObject.h \
+    bindings/js/JSDOMGlobalObjectTask.h \
     bindings/js/JSDOMWindowBase.h \
     bindings/js/JSDOMWindowCustom.h \
     bindings/js/JSDOMWindowShell.h \
@@ -1590,6 +1593,7 @@ HEADERS += \
     dom/CustomEvent.h \
     dom/default/PlatformMessagePortChannel.h \
     dom/DescendantIterator.h \
+    dom/DescendantIteratorAssertions.h \
     dom/DeviceMotionClient.h \
     dom/DeviceMotionController.h \
     dom/DeviceMotionData.h \
@@ -1796,6 +1800,7 @@ HEADERS += \
     html/FormAssociatedElement.h \
     html/FormController.h \
     html/FormDataList.h \
+    html/FormNamedItem.h \
     html/FTPDirectoryDocument.h \
     html/HTMLAllCollection.h \
     html/HTMLAnchorElement.h \

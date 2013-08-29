@@ -27,9 +27,9 @@
 #include "Attribute.h"
 #include "CSSValueKeywords.h"
 #include "CachedImage.h"
+#include "ChildIterator.h"
 #include "Chrome.h"
 #include "ChromeClient.h"
-#include "ElementTraversal.h"
 #include "EventNames.h"
 #include "ExceptionCode.h"
 #include "FormDataList.h"
@@ -153,7 +153,8 @@ void HTMLObjectElement::parametersForPlugin(Vector<String>& paramNames, Vector<S
     
     // Scan the PARAM children and store their name/value pairs.
     // Get the URL and type from the params if we don't already have them.
-    for (auto param = Traversal<HTMLParamElement>::firstChild(this); param; param = Traversal<HTMLParamElement>::nextSibling(param)) {
+    auto paramChildren = childrenOfType<HTMLParamElement>(this);
+    for (auto param = paramChildren.begin(), end = paramChildren.end(); param != end; ++param) {
         String name = param->name();
         if (name.isEmpty())
             continue;
@@ -460,14 +461,12 @@ bool HTMLObjectElement::containsJavaApplet() const
 {
     if (MIMETypeRegistry::isJavaAppletMIMEType(getAttribute(typeAttr)))
         return true;
-        
-    for (auto child = ElementTraversal::firstChild(this); child; child = ElementTraversal::nextSibling(child)) {
-        if (child->hasTagName(paramTag)
-                && equalIgnoringCase(child->getNameAttribute(), "type")
-                && MIMETypeRegistry::isJavaAppletMIMEType(child->getAttribute(valueAttr).string()))
+
+    for (auto child = elementChildren(this).begin(), end = elementChildren(this).end(); child != end; ++child) {
+        if (child->hasTagName(paramTag) && equalIgnoringCase(child->getNameAttribute(), "type")
+            && MIMETypeRegistry::isJavaAppletMIMEType(child->getAttribute(valueAttr).string()))
             return true;
-        if (child->hasTagName(objectTag)
-                && static_cast<HTMLObjectElement*>(child)->containsJavaApplet())
+        if (child->hasTagName(objectTag) && static_cast<const HTMLObjectElement&>(*child).containsJavaApplet())
             return true;
         if (child->hasTagName(appletTag))
             return true;

@@ -544,6 +544,7 @@ protected:
 
     virtual void computeIntrinsicLogicalWidths(LayoutUnit& minLogicalWidth, LayoutUnit& maxLogicalWidth) const OVERRIDE;
     virtual void computePreferredLogicalWidths() OVERRIDE;
+    void adjustIntrinsicLogicalWidthsForColumns(LayoutUnit& minLogicalWidth, LayoutUnit& maxLogicalWidth) const;
 
     virtual int firstLineBoxBaseline() const;
     virtual int inlineBlockBaseline(LineDirectionMode) const OVERRIDE;
@@ -736,12 +737,12 @@ private:
         bool isPlaced() const { return m_isPlaced; }
         void setIsPlaced(bool placed = true) { m_isPlaced = placed; }
 
-        inline LayoutUnit x() const { ASSERT(isPlaced()); return m_frameRect.x(); }
-        inline LayoutUnit maxX() const { ASSERT(isPlaced()); return m_frameRect.maxX(); }
-        inline LayoutUnit y() const { ASSERT(isPlaced()); return m_frameRect.y(); }
-        inline LayoutUnit maxY() const { ASSERT(isPlaced()); return m_frameRect.maxY(); }
-        inline LayoutUnit width() const { return m_frameRect.width(); }
-        inline LayoutUnit height() const { return m_frameRect.height(); }
+        LayoutUnit x() const { ASSERT(isPlaced()); return m_frameRect.x(); }
+        LayoutUnit maxX() const { ASSERT(isPlaced()); return m_frameRect.maxX(); }
+        LayoutUnit y() const { ASSERT(isPlaced()); return m_frameRect.y(); }
+        LayoutUnit maxY() const { ASSERT(isPlaced()); return m_frameRect.maxY(); }
+        LayoutUnit width() const { return m_frameRect.width(); }
+        LayoutUnit height() const { return m_frameRect.height(); }
 
         void setX(LayoutUnit x) { ASSERT(!isInPlacedTree()); m_frameRect.setX(x); }
         void setY(LayoutUnit y) { ASSERT(!isInPlacedTree()); m_frameRect.setY(y); }
@@ -1204,52 +1205,41 @@ protected:
     typedef PODFreeListArena<PODRedBlackTree<FloatingObjectInterval>::Node> IntervalArena;
     
     template <FloatingObject::Type FloatTypeValue>
-    class FloatIntervalSearchAdapter {
+    class ComputeFloatOffsetAdapter {
     public:
         typedef FloatingObjectInterval IntervalType;
         
-        FloatIntervalSearchAdapter(const RenderBlock* renderer, int lowValue, int highValue, LayoutUnit& offset, LayoutUnit* heightRemaining)
+        ComputeFloatOffsetAdapter(const RenderBlock* renderer, int lineTop, int lineBottom, LayoutUnit& offset)
             : m_renderer(renderer)
-            , m_lowValue(lowValue)
-            , m_highValue(highValue)
+            , m_lineTop(lineTop)
+            , m_lineBottom(lineBottom)
             , m_offset(offset)
-            , m_heightRemaining(heightRemaining)
-#if ENABLE(CSS_SHAPES)
-            , m_last(0)
-#endif
+            , m_outermostFloat(0)
         {
         }
         
-        inline int lowValue() const { return m_lowValue; }
-        inline int highValue() const { return m_highValue; }
-        void collectIfNeeded(const IntervalType&) const;
+        int lowValue() const { return m_lineTop; }
+        int highValue() const { return m_lineBottom; }
+        void collectIfNeeded(const IntervalType&);
 
 #if ENABLE(CSS_SHAPES)
         // When computing the offset caused by the floats on a given line, if
         // the outermost float on that line has a shape-outside, the inline
         // content that butts up against that float must be positioned using
         // the contours of the shape, not the margin box of the float.
-        // We save the last float encountered so that the offset can be
-        // computed correctly by the code using this adapter.
-        const FloatingObject* lastFloat() const { return m_last; }
+        const FloatingObject* outermostFloat() const { return m_outermostFloat; }
 #endif
+
+        LayoutUnit getHeightRemaining() const;
 
     private:
-        bool updateOffsetIfNeeded(const FloatingObject*) const;
+        bool updateOffsetIfNeeded(const FloatingObject*);
 
         const RenderBlock* m_renderer;
-        int m_lowValue;
-        int m_highValue;
+        int m_lineTop;
+        int m_lineBottom;
         LayoutUnit& m_offset;
-        LayoutUnit* m_heightRemaining;
-#if ENABLE(CSS_SHAPES)
-        // This member variable is mutable because the collectIfNeeded method
-        // is declared as const, even though it doesn't actually respect that
-        // contract. It modifies other member variables via loopholes in the
-        // const behavior. Instead of using loopholes, I decided it was better
-        // to make the fact that this is modified in a const method explicit.
-        mutable const FloatingObject* m_last;
-#endif
+        const FloatingObject* m_outermostFloat;
     };
 
     void createFloatingObjects();

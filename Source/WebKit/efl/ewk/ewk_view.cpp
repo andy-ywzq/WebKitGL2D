@@ -1573,7 +1573,7 @@ const char* ewk_view_selection_get(const Evas_Object* ewkView)
 {
     EWK_VIEW_SD_GET_OR_RETURN(ewkView, smartData, 0);
     EWK_VIEW_PRIV_GET_OR_RETURN(smartData, priv, 0);
-    CString selectedString = priv->page->focusController().focusedOrMainFrame()->editor().selectedText().utf8();
+    CString selectedString = priv->page->focusController().focusedOrMainFrame().editor().selectedText().utf8();
     if (selectedString.isNull())
         return 0;
     return eina_stringshare_add(selectedString.data());
@@ -1588,7 +1588,7 @@ Eina_Bool ewk_view_editor_command_execute(const Evas_Object* ewkView, const Ewk_
     if (!commandString)
         return false;
 
-    return priv->page->focusController().focusedOrMainFrame()->editor().command(commandString).execute(WTF::String::fromUTF8(value));
+    return priv->page->focusController().focusedOrMainFrame().editor().command(commandString).execute(WTF::String::fromUTF8(value));
 }
 
 Eina_Bool ewk_view_context_menu_forward_event(Evas_Object* ewkView, const Evas_Event_Mouse_Down* downEvent)
@@ -1602,18 +1602,18 @@ Eina_Bool ewk_view_context_menu_forward_event(Evas_Object* ewkView, const Evas_E
     if (priv->contextMenu)
         ewk_context_menu_free(priv->contextMenu);
 
-    WebCore::Frame* mainFrame = priv->page->mainFrame();
+    WebCore::Frame& mainFrame = priv->page->mainFrame();
     Evas_Coord x, y;
     evas_object_geometry_get(smartData->self, &x, &y, 0, 0);
 
     WebCore::PlatformMouseEvent event(downEvent, WebCore::IntPoint(x, y));
 
-    if (mainFrame->view()) {
+    if (mainFrame.view()) {
         mouse_press_handled =
-            mainFrame->eventHandler().handleMousePressEvent(event);
+            mainFrame.eventHandler().handleMousePressEvent(event);
     }
 
-    if (!mainFrame->eventHandler().sendContextMenuEvent(event))
+    if (!mainFrame.eventHandler().sendContextMenuEvent(event))
         return false;
 
     WebCore::ContextMenu* coreMenu =
@@ -2945,16 +2945,15 @@ void ewk_view_input_method_state_set(Evas_Object* ewkView, bool active)
 {
     EWK_VIEW_SD_GET_OR_RETURN(ewkView, smartData);
     EWK_VIEW_PRIV_GET(smartData, priv);
-    WebCore::Frame* focusedFrame = priv->page->focusController().focusedOrMainFrame();
+    WebCore::Frame& focusedFrame = priv->page->focusController().focusedOrMainFrame();
 
     priv->imh = 0;
-    if (focusedFrame
-        && focusedFrame->document()
-        && focusedFrame->document()->focusedElement()
-        && isHTMLInputElement(focusedFrame->document()->focusedElement())) {
+    if (focusedFrame.document()
+        && focusedFrame.document()->focusedElement()
+        && isHTMLInputElement(focusedFrame.document()->focusedElement())) {
         WebCore::HTMLInputElement* inputElement;
 
-        inputElement = static_cast<WebCore::HTMLInputElement*>(focusedFrame->document()->focusedElement());
+        inputElement = static_cast<WebCore::HTMLInputElement*>(focusedFrame.document()->focusedElement());
         if (inputElement) {
             // for password fields, active == false
             if (!active) {
@@ -4011,11 +4010,9 @@ void ewk_view_text_direction_set(Evas_Object* ewkView, Ewk_Text_Direction direct
     // the text direction of the selected node and updates its DOM "dir"
     // attribute and its CSS "direction" property.
     // So, we just call the function as Safari does.
-    WebCore::Frame* focusedFrame = priv->page->focusController().focusedOrMainFrame();
-    if (!focusedFrame)
-        return;
+    WebCore::Frame& focusedFrame = priv->page->focusController().focusedOrMainFrame();
 
-    WebCore::Editor& editor = focusedFrame->editor();
+    WebCore::Editor& editor = focusedFrame.editor();
     if (!editor.canEdit())
         return;
 
@@ -4151,8 +4148,8 @@ WebCore::FloatRect ewk_view_page_rect_get(const Evas_Object* ewkView)
     EWK_VIEW_SD_GET_OR_RETURN(ewkView, smartData, WebCore::FloatRect(-1.0, -1.0, -1.0, -1.0));
     EWK_VIEW_PRIV_GET_OR_RETURN(smartData, priv, WebCore::FloatRect(-1.0, -1.0, -1.0, -1.0));
 
-    WebCore::Frame* main_frame = priv->page->mainFrame();
-    return main_frame->view()->frameRect();
+    WebCore::Frame& main_frame = priv->page->mainFrame();
+    return main_frame.view()->frameRect();
 }
 
 #if ENABLE(TOUCH_EVENTS)

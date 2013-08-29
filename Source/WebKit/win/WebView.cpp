@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Apple, Inc.  All rights reserved.
+ * Copyright (C) 2006-2013 Apple, Inc.  All rights reserved.
  * Copyright (C) 2009, 2010, 2011 Appcelerator, Inc. All rights reserved.
  * Copyright (C) 2011 Brent Fulgham. All rights reserved.
  *
@@ -45,6 +45,7 @@
 #include "WebEditorClient.h"
 #include "WebElementPropertyBag.h"
 #include "WebFrame.h"
+#include "WebFrameLoaderClient.h"
 #include "WebFrameNetworkingContext.h"
 #include "WebGeolocationClient.h"
 #include "WebGeolocationPosition.h"
@@ -110,6 +111,7 @@
 #include <WebCore/Logging.h>
 #include <WebCore/MIMETypeRegistry.h>
 #include <WebCore/MemoryCache.h>
+#include <WebCore/NotImplemented.h>
 #include <WebCore/Page.h>
 #include <WebCore/PageCache.h>
 #include <WebCore/PageGroup.h>
@@ -704,10 +706,8 @@ HRESULT STDMETHODCALLTYPE WebView::close()
 
     removeFromAllWebViewsSet();
 
-    if (m_page) {
-        if (Frame* frame = m_page->mainFrame())
-            frame->loader().detachFromParent();
-    }
+    if (m_page)
+        m_page->mainFrame().loader().detachFromParent();
 
     if (m_mouseOutTracker) {
         m_mouseOutTracker->dwFlags = TME_CANCEL;
@@ -1335,8 +1335,8 @@ bool WebView::handleContextMenuEvent(WPARAM wParam, LPARAM lParam)
         // not run.
         m_page->contextMenuController().clearContextMenu();
 
-        Frame* focusedFrame = m_page->focusController().focusedOrMainFrame();
-        return focusedFrame->eventHandler().sendContextMenuEventForKey();
+        Frame& focusedFrame = m_page->focusController().focusedOrMainFrame();
+        return focusedFrame.eventHandler().sendContextMenuEventForKey();
 
     } else {
         if (!::ScreenToClient(m_viewWindow, &coords))
@@ -1347,9 +1347,9 @@ bool WebView::handleContextMenuEvent(WPARAM wParam, LPARAM lParam)
 
     m_page->contextMenuController().clearContextMenu();
 
-    IntPoint documentPoint(m_page->mainFrame()->view()->windowToContents(coords));
-    HitTestResult result = m_page->mainFrame()->eventHandler().hitTestResultAtPoint(documentPoint);
-    Frame* targetFrame = result.innerNonSharedNode() ? result.innerNonSharedNode()->document()->frame() : m_page->focusController().focusedOrMainFrame();
+    IntPoint documentPoint(m_page->mainFrame().view()->windowToContents(coords));
+    HitTestResult result = m_page->mainFrame().eventHandler().hitTestResultAtPoint(documentPoint);
+    Frame* targetFrame = result.innerNonSharedNode() ? result.innerNonSharedNode()->document()->frame() : &m_page->focusController().focusedOrMainFrame();
 
     targetFrame->view()->setCursor(pointerCursor());
     PlatformMouseEvent mouseEvent(m_viewWindow, WM_RBUTTONUP, wParam, lParam);
@@ -1477,7 +1477,7 @@ bool WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
     static LONG globalPrevMouseDownTime;
 
     if (message == WM_CANCELMODE) {
-        m_page->mainFrame()->eventHandler().lostMouseCapture();
+        m_page->mainFrame().eventHandler().lostMouseCapture();
         return true;
     }
 
@@ -1516,29 +1516,29 @@ bool WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
         globalPrevPoint = mouseEvent.position();
         
         mouseEvent.setClickCount(globalClickCount);
-        handled = m_page->mainFrame()->eventHandler().handleMousePressEvent(mouseEvent);
+        handled = m_page->mainFrame().eventHandler().handleMousePressEvent(mouseEvent);
     } else if (message == WM_LBUTTONDBLCLK || message == WM_MBUTTONDBLCLK || message == WM_RBUTTONDBLCLK) {
         globalClickCount++;
         mouseEvent.setClickCount(globalClickCount);
-        handled = m_page->mainFrame()->eventHandler().handleMousePressEvent(mouseEvent);
+        handled = m_page->mainFrame().eventHandler().handleMousePressEvent(mouseEvent);
     } else if (message == WM_LBUTTONUP || message == WM_MBUTTONUP || message == WM_RBUTTONUP) {
         // Record the global position and the button of the up.
         globalPrevButton = mouseEvent.button();
         globalPrevPoint = mouseEvent.position();
         mouseEvent.setClickCount(globalClickCount);
-        m_page->mainFrame()->eventHandler().handleMouseReleaseEvent(mouseEvent);
+        m_page->mainFrame().eventHandler().handleMouseReleaseEvent(mouseEvent);
         ::ReleaseCapture();
     } else if (message == WM_MOUSELEAVE && m_mouseOutTracker) {
         // Once WM_MOUSELEAVE is fired windows clears this tracker
         // so there is no need to disable it ourselves.
         m_mouseOutTracker.clear();
-        m_page->mainFrame()->eventHandler().mouseMoved(mouseEvent);
+        m_page->mainFrame().eventHandler().mouseMoved(mouseEvent);
         handled = true;
     } else if (message == WM_MOUSEMOVE) {
         if (!insideThreshold)
             globalClickCount = 0;
         mouseEvent.setClickCount(globalClickCount);
-        handled = m_page->mainFrame()->eventHandler().mouseMoved(mouseEvent);
+        handled = m_page->mainFrame().eventHandler().mouseMoved(mouseEvent);
         if (!m_mouseOutTracker) {
             m_mouseOutTracker = adoptPtr(new TRACKMOUSEEVENT);
             m_mouseOutTracker->cbSize = sizeof(TRACKMOUSEEVENT);
@@ -1568,7 +1568,7 @@ bool WebView::gestureNotify(WPARAM wParam, LPARAM lParam)
     bool hitScrollbar = false;
     POINT gestureBeginPoint = {gn->ptsLocation.x, gn->ptsLocation.y};
     HitTestRequest request(HitTestRequest::ReadOnly | HitTestRequest::DisallowShadowContent);
-    for (Frame* childFrame = m_page->mainFrame(); childFrame; childFrame = EventHandler::subframeForTargetNode(m_gestureTargetNode.get())) {
+    for (Frame* childFrame = &m_page->mainFrame(); childFrame; childFrame = EventHandler::subframeForTargetNode(m_gestureTargetNode.get())) {
         FrameView* frameView = childFrame->view();
         if (!frameView)
             break;
@@ -1787,8 +1787,8 @@ bool WebView::verticalScroll(WPARAM wParam, LPARAM /*lParam*/)
         break;
     }
     
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
-    return frame->eventHandler().scrollRecursively(direction, granularity);
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
+    return frame.eventHandler().scrollRecursively(direction, granularity);
 }
 
 bool WebView::horizontalScroll(WPARAM wParam, LPARAM /*lParam*/)
@@ -1816,21 +1816,21 @@ bool WebView::horizontalScroll(WPARAM wParam, LPARAM /*lParam*/)
         return false;
     }
 
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
-    return frame->eventHandler().scrollRecursively(direction, granularity);
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
+    return frame.eventHandler().scrollRecursively(direction, granularity);
 }
 
 
 bool WebView::execCommand(WPARAM wParam, LPARAM /*lParam*/)
 {
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
     switch (LOWORD(wParam)) {
         case SelectAll:
-            return frame->editor().command("SelectAll").execute();
+            return frame.editor().command("SelectAll").execute();
         case Undo:
-            return frame->editor().command("Undo").execute();
+            return frame.editor().command("Undo").execute();
         case Redo:
-            return frame->editor().command("Redo").execute();
+            return frame.editor().command("Redo").execute();
     }
     return false;
 }
@@ -1839,10 +1839,10 @@ bool WebView::keyUp(WPARAM virtualKeyCode, LPARAM keyData, bool systemKeyDown)
 {
     PlatformKeyboardEvent keyEvent(m_viewWindow, virtualKeyCode, keyData, PlatformEvent::KeyUp, systemKeyDown);
 
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
     m_currentCharacterCode = 0;
 
-    return frame->eventHandler().keyEvent(keyEvent);
+    return frame.eventHandler().keyEvent(keyEvent);
 }
 
 static const unsigned CtrlKey = 1 << 0;
@@ -2005,10 +2005,10 @@ bool WebView::keyDown(WPARAM virtualKeyCode, LPARAM keyData, bool systemKeyDown)
         return false;
     }
 #endif
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
 
     PlatformKeyboardEvent keyEvent(m_viewWindow, virtualKeyCode, keyData, PlatformEvent::RawKeyDown, systemKeyDown);
-    bool handled = frame->eventHandler().keyEvent(keyEvent);
+    bool handled = frame.eventHandler().keyEvent(keyEvent);
 
     // These events cannot be canceled, and we have no default handling for them.
     // FIXME: match IE list more closely, see <http://msdn2.microsoft.com/en-us/library/ms536938.aspx>.
@@ -2072,18 +2072,18 @@ bool WebView::keyDown(WPARAM virtualKeyCode, LPARAM keyData, bool systemKeyDown)
             return false;
     }
 
-    return frame->eventHandler().scrollRecursively(direction, granularity);
+    return frame.eventHandler().scrollRecursively(direction, granularity);
 }
 
 bool WebView::keyPress(WPARAM charCode, LPARAM keyData, bool systemKeyDown)
 {
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
 
     PlatformKeyboardEvent keyEvent(m_viewWindow, charCode, keyData, PlatformEvent::Char, systemKeyDown);
     // IE does not dispatch keypress event for WM_SYSCHAR.
     if (systemKeyDown)
-        return frame->eventHandler().handleAccessKey(keyEvent);
-    return frame->eventHandler().keyEvent(keyEvent);
+        return frame.eventHandler().handleAccessKey(keyEvent);
+    return frame.eventHandler().keyEvent(keyEvent);
 }
 
 void WebView::setIsBeingDestroyed()
@@ -2288,14 +2288,14 @@ LRESULT CALLBACK WebView::WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam,
                 uiDelegatePrivate->webViewLostFocus(webView, (OLE_HANDLE)(ULONG64)newFocusWnd);
 
             FocusController& focusController = webView->page()->focusController();
-            Frame* frame = focusController.focusedOrMainFrame();
-            webView->resetIME(frame);
+            Frame& frame = focusController.focusedOrMainFrame();
+            webView->resetIME(&frame);
             // Send blur events unless we're losing focus to a child of ours.
             if (!IsChild(hWnd, newFocusWnd))
                 focusController.setFocused(false);
 
             // If we are pan-scrolling when we lose focus, stop the pan scrolling.
-            frame->eventHandler().stopAutoscrollTimer();
+            frame.eventHandler().stopAutoscrollTimer();
 
             break;
         }
@@ -2531,39 +2531,51 @@ ULONG STDMETHODCALLTYPE WebView::Release(void)
 
 // IWebView --------------------------------------------------------------------
 
-HRESULT STDMETHODCALLTYPE WebView::canShowMIMEType( 
-    /* [in] */ BSTR mimeType,
-    /* [retval][out] */ BOOL* canShow)
+HRESULT WebView::canShowMIMEType(/* [in] */ BSTR mimeType, /* [retval][out] */ BOOL* canShow)
 {
-    String mimeTypeStr = toString(mimeType);
-
     if (!canShow)
         return E_POINTER;
 
-    Frame* coreFrame = core(m_mainFrame);
-    bool allowPlugins = coreFrame && coreFrame->loader().subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin);
-
-    *canShow = MIMETypeRegistry::isSupportedImageMIMEType(mimeTypeStr)
-        || MIMETypeRegistry::isSupportedNonImageMIMEType(mimeTypeStr);
-
-    if (!*canShow && m_page && m_page->pluginData()) {
-        *canShow = (m_page->pluginData()->supportsMimeType(mimeTypeStr, PluginData::AllPlugins) && allowPlugins)
-            || m_page->pluginData()->supportsMimeType(mimeTypeStr, PluginData::OnlyApplicationPlugins);
-    }
-
-    if (!*canShow)
-        *canShow = shouldUseEmbeddedView(mimeTypeStr);
+    *canShow = canShowMIMEType(toString(mimeType));
 
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE WebView::canShowMIMETypeAsHTML( 
-    /* [in] */ BSTR /*mimeType*/,
-    /* [retval][out] */ BOOL* canShow)
+bool WebView::canShowMIMEType(const String& mimeType)
+{
+    Frame* coreFrame = core(m_mainFrame);
+    bool allowPlugins = coreFrame && coreFrame->loader().subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin);
+
+    bool canShow = MIMETypeRegistry::isSupportedImageMIMEType(mimeType)
+        || MIMETypeRegistry::isSupportedNonImageMIMEType(mimeType)
+        || MIMETypeRegistry::isSupportedMediaMIMEType(mimeType);
+
+    if (!canShow && m_page) {
+        canShow = (m_page->pluginData().supportsMimeType(mimeType, PluginData::AllPlugins) && allowPlugins)
+            || m_page->pluginData().supportsMimeType(mimeType, PluginData::OnlyApplicationPlugins);
+    }
+
+    if (!canShow)
+        canShow = shouldUseEmbeddedView(mimeType);
+
+    return canShow;
+}
+
+HRESULT WebView::canShowMIMETypeAsHTML(/* [in] */ BSTR mimeType, /* [retval][out] */ BOOL* canShow)
+{
+    if (!canShow)
+        return E_POINTER;
+
+    *canShow = canShowMIMETypeAsHTML(toString(mimeType));
+
+    return S_OK;
+}
+
+bool WebView::canShowMIMETypeAsHTML(const String& /*mimeType*/)
 {
     // FIXME
-    *canShow = TRUE;
-    return S_OK;
+    notImplemented();
+    return true;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::MIMETypesShownAsHTML( 
@@ -2718,6 +2730,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
 #if ENABLE(INSPECTOR)
     pageClients.inspectorClient = m_inspectorClient;
 #endif // ENABLE(INSPECTOR)
+    pageClients.loaderClientForMainFrame = new WebFrameLoaderClient;
 
     m_page = new Page(pageClients);
     provideGeolocationTo(m_page, new WebGeolocationClient(this));
@@ -2736,12 +2749,13 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     }
 
     WebFrame* webFrame = WebFrame::createInstance();
-    RefPtr<Frame> coreFrame = webFrame->init(this, m_page, 0);
+    webFrame->initWithWebView(this, m_page);
+    static_cast<WebFrameLoaderClient&>(m_page->mainFrame().loader().client()).setWebFrame(webFrame);
     m_mainFrame = webFrame;
     webFrame->Release(); // The WebFrame is owned by the Frame, so release our reference to it.
 
-    coreFrame->tree().setName(toString(frameName));
-    coreFrame->init();
+    m_page->mainFrame().tree().setName(toString(frameName));
+    m_page->mainFrame().init();
     setGroupName(groupName);
 
     addToAllWebViewsSet();
@@ -3456,7 +3470,7 @@ HRESULT STDMETHODCALLTYPE WebView::searchFor(
     if (!found)
         return E_INVALIDARG;
     
-    if (!m_page || !m_page->mainFrame())
+    if (!m_page)
         return E_UNEXPECTED;
 
     if (!str || !SysStringLen(str))
@@ -3485,23 +3499,23 @@ HRESULT STDMETHODCALLTYPE WebView::updateFocusedAndActiveState()
     updateActiveState();
 
     bool active = m_page->focusController().isActive();
-    Frame* mainFrame = m_page->mainFrame();
-    Frame* focusedFrame = m_page->focusController().focusedOrMainFrame();
-    mainFrame->selection().setFocused(active && mainFrame == focusedFrame);
+    Frame& mainFrame = m_page->mainFrame();
+    Frame& focusedFrame = m_page->focusController().focusedOrMainFrame();
+    mainFrame.selection().setFocused(active && &mainFrame == &focusedFrame);
 
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::executeCoreCommandByName(BSTR name, BSTR value)
 {
-    m_page->focusController().focusedOrMainFrame()->editor().command(toString(name)).execute(toString(value));
+    m_page->focusController().focusedOrMainFrame().editor().command(toString(name)).execute(toString(value));
 
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::clearMainFrameName()
 {
-    m_page->mainFrame()->tree().clearName();
+    m_page->mainFrame().tree().clearName();
 
     return S_OK;
 }
@@ -3512,7 +3526,7 @@ HRESULT STDMETHODCALLTYPE WebView::markAllMatchesForText(
     if (!matches)
         return E_INVALIDARG;
 
-    if (!m_page || !m_page->mainFrame())
+    if (!m_page)
         return E_UNEXPECTED;
 
     if (!str || !SysStringLen(str))
@@ -3524,7 +3538,7 @@ HRESULT STDMETHODCALLTYPE WebView::markAllMatchesForText(
 
 HRESULT STDMETHODCALLTYPE WebView::unmarkAllTextMatches()
 {
-    if (!m_page || !m_page->mainFrame())
+    if (!m_page)
         return E_UNEXPECTED;
 
     m_page->unmarkAllTextMatches();
@@ -3535,7 +3549,7 @@ HRESULT STDMETHODCALLTYPE WebView::rectsForTextMatches(
     IEnumTextMatches** pmatches)
 {
     Vector<IntRect> allRects;
-    WebCore::Frame* frame = m_page->mainFrame();
+    WebCore::Frame* frame = &m_page->mainFrame();
     do {
         if (Document* document = frame->document()) {
             IntRect visibleRect = frame->view()->visibleContentRect();
@@ -3560,29 +3574,25 @@ HRESULT STDMETHODCALLTYPE WebView::generateSelectionImage(BOOL forceWhiteText, O
 {
     *hBitmap = 0;
 
-    WebCore::Frame* frame = m_page->focusController().focusedOrMainFrame();
+    WebCore::Frame& frame = m_page->focusController().focusedOrMainFrame();
 
-    if (frame) {
-        OwnPtr<HBITMAP> bitmap = imageFromSelection(frame, forceWhiteText ? TRUE : FALSE);
-        *hBitmap = static_cast<OLE_HANDLE>(reinterpret_cast<ULONG64>(bitmap.leakPtr()));
-    }
+    OwnPtr<HBITMAP> bitmap = imageFromSelection(&frame, forceWhiteText ? TRUE : FALSE);
+    *hBitmap = static_cast<OLE_HANDLE>(reinterpret_cast<ULONG64>(bitmap.leakPtr()));
 
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::selectionRect(RECT* rc)
 {
-    WebCore::Frame* frame = m_page->focusController().focusedOrMainFrame();
+    WebCore::Frame& frame = m_page->focusController().focusedOrMainFrame();
 
-    if (frame) {
-        IntRect ir = enclosingIntRect(frame->selection().bounds());
-        ir = frame->view()->convertToContainingWindow(ir);
-        ir.move(-frame->view()->scrollOffset().width(), -frame->view()->scrollOffset().height());
-        rc->left = ir.x();
-        rc->top = ir.y();
-        rc->bottom = rc->top + ir.height();
-        rc->right = rc->left + ir.width();
-    }
+    IntRect ir = enclosingIntRect(frame.selection().bounds());
+    ir = frame.view()->convertToContainingWindow(ir);
+    ir.move(-frame.view()->scrollOffset().width(), -frame.view()->scrollOffset().height());
+    rc->left = ir.x();
+    rc->top = ir.y();
+    rc->bottom = rc->top + ir.height();
+    rc->right = rc->left + ir.width();
 
     return S_OK;
 }
@@ -3717,7 +3727,7 @@ HRESULT STDMETHODCALLTYPE WebView::selectedText(
 
     *text = 0;
 
-    Frame* focusedFrame = m_page ? m_page->focusController().focusedOrMainFrame() : 0;
+    Frame* focusedFrame = m_page ? &m_page->focusController().focusedOrMainFrame() : 0;
     if (!focusedFrame)
         return E_FAIL;
 
@@ -4299,14 +4309,14 @@ HRESULT STDMETHODCALLTYPE WebView::styleDeclarationWithText(
 HRESULT STDMETHODCALLTYPE WebView::hasSelectedRange( 
         /* [retval][out] */ BOOL* hasSelectedRange)
 {
-    *hasSelectedRange = m_page->mainFrame()->selection().isRange();
+    *hasSelectedRange = m_page->mainFrame().selection().isRange();
     return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::cutEnabled( 
         /* [retval][out] */ BOOL* enabled)
 {
-    Editor& editor = m_page->focusController().focusedOrMainFrame()->editor();
+    Editor& editor = m_page->focusController().focusedOrMainFrame().editor();
     *enabled = editor.canCut() || editor.canDHTMLCut();
     return S_OK;
 }
@@ -4314,7 +4324,7 @@ HRESULT STDMETHODCALLTYPE WebView::cutEnabled(
 HRESULT STDMETHODCALLTYPE WebView::copyEnabled( 
         /* [retval][out] */ BOOL* enabled)
 {
-    Editor& editor = m_page->focusController().focusedOrMainFrame()->editor();
+    Editor& editor = m_page->focusController().focusedOrMainFrame().editor();
     *enabled = editor.canCopy() || editor.canDHTMLCopy();
     return S_OK;
 }
@@ -4322,7 +4332,7 @@ HRESULT STDMETHODCALLTYPE WebView::copyEnabled(
 HRESULT STDMETHODCALLTYPE WebView::pasteEnabled( 
         /* [retval][out] */ BOOL* enabled)
 {
-    Editor& editor = m_page->focusController().focusedOrMainFrame()->editor();
+    Editor& editor = m_page->focusController().focusedOrMainFrame().editor();
     *enabled = editor.canPaste() || editor.canDHTMLPaste();
     return S_OK;
 }
@@ -4330,14 +4340,14 @@ HRESULT STDMETHODCALLTYPE WebView::pasteEnabled(
 HRESULT STDMETHODCALLTYPE WebView::deleteEnabled( 
         /* [retval][out] */ BOOL* enabled)
 {
-    *enabled = m_page->focusController().focusedOrMainFrame()->editor().canDelete();
+    *enabled = m_page->focusController().focusedOrMainFrame().editor().canDelete();
     return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::editingEnabled( 
         /* [retval][out] */ BOOL* enabled)
 {
-    *enabled = m_page->focusController().focusedOrMainFrame()->editor().canEdit();
+    *enabled = m_page->focusController().focusedOrMainFrame().editor().canEdit();
     return S_OK;
 }
 
@@ -4388,9 +4398,9 @@ HRESULT STDMETHODCALLTYPE WebView::replaceSelectionWithNode(
 HRESULT STDMETHODCALLTYPE WebView::replaceSelectionWithText( 
         /* [in] */ BSTR text)
 {
-    Position start = m_page->mainFrame()->selection().selection().start();
-    m_page->focusController().focusedOrMainFrame()->editor().insertText(toString(text), 0);
-    m_page->mainFrame()->selection().setBase(start);
+    Position start = m_page->mainFrame().selection().selection().start();
+    m_page->focusController().focusedOrMainFrame().editor().insertText(toString(text), 0);
+    m_page->mainFrame().selection().setBase(start);
     return S_OK;
 }
     
@@ -4410,14 +4420,14 @@ HRESULT STDMETHODCALLTYPE WebView::replaceSelectionWithArchive(
     
 HRESULT STDMETHODCALLTYPE WebView::deleteSelection( void)
 {
-    Editor& editor = m_page->focusController().focusedOrMainFrame()->editor();
+    Editor& editor = m_page->focusController().focusedOrMainFrame().editor();
     editor.deleteSelectionWithSmartDelete(editor.canSmartCopyOrDelete());
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::clearSelection( void)
 {
-    m_page->focusController().focusedOrMainFrame()->selection().clear();
+    m_page->focusController().focusedOrMainFrame().selection().clear();
     return S_OK;
 }
     
@@ -4433,28 +4443,28 @@ HRESULT STDMETHODCALLTYPE WebView::applyStyle(
 HRESULT STDMETHODCALLTYPE WebView::copy( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    m_page->focusController().focusedOrMainFrame()->editor().command("Copy").execute();
+    m_page->focusController().focusedOrMainFrame().editor().command("Copy").execute();
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::cut( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    m_page->focusController().focusedOrMainFrame()->editor().command("Cut").execute();
+    m_page->focusController().focusedOrMainFrame().editor().command("Cut").execute();
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::paste( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    m_page->focusController().focusedOrMainFrame()->editor().command("Paste").execute();
+    m_page->focusController().focusedOrMainFrame().editor().command("Paste").execute();
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::copyURL( 
         /* [in] */ BSTR url)
 {
-    m_page->focusController().focusedOrMainFrame()->editor().copyURL(MarshallingHelpers::BSTRToKURL(url), "");
+    m_page->focusController().focusedOrMainFrame().editor().copyURL(MarshallingHelpers::BSTRToKURL(url), "");
     return S_OK;
 }
 
@@ -4476,7 +4486,7 @@ HRESULT STDMETHODCALLTYPE WebView::pasteFont(
 HRESULT STDMETHODCALLTYPE WebView::delete_( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    m_page->focusController().focusedOrMainFrame()->editor().command("Delete").execute();
+    m_page->focusController().focusedOrMainFrame().editor().command("Delete").execute();
     return S_OK;
 }
     
@@ -5136,7 +5146,7 @@ HRESULT STDMETHODCALLTYPE WebView::scrollOffset(
 {
     if (!offset)
         return E_POINTER;
-    IntSize offsetIntSize = m_page->mainFrame()->view()->scrollOffset();
+    IntSize offsetIntSize = m_page->mainFrame().view()->scrollOffset();
     offset->x = offsetIntSize.width();
     offset->y = offsetIntSize.height();
     return S_OK;
@@ -5147,7 +5157,7 @@ HRESULT STDMETHODCALLTYPE WebView::scrollBy(
 {
     if (!offset)
         return E_POINTER;
-    m_page->mainFrame()->view()->scrollBy(IntSize(offset->x, offset->y));
+    m_page->mainFrame().view()->scrollBy(IntSize(offset->x, offset->y));
     return S_OK;
 }
 
@@ -5156,7 +5166,7 @@ HRESULT STDMETHODCALLTYPE WebView::visibleContentRect(
 {
     if (!rect)
         return E_POINTER;
-    FloatRect visibleContent = m_page->mainFrame()->view()->visibleContentRect();
+    FloatRect visibleContent = m_page->mainFrame().view()->visibleContentRect();
     rect->left = (LONG) visibleContent.x();
     rect->top = (LONG) visibleContent.y();
     rect->right = (LONG) visibleContent.maxX();
@@ -5312,8 +5322,8 @@ HRESULT STDMETHODCALLTYPE WebView::setInitialFocus(
     /* [in] */ BOOL forward)
 {
     if (m_page) {
-        Frame* frame = m_page->focusController().focusedOrMainFrame();
-        frame->document()->setFocusedElement(0);
+        Frame& frame = m_page->focusController().focusedOrMainFrame();
+        frame.document()->setFocusedElement(0);
         m_page->focusController().setInitialFocus(forward ? FocusDirectionForward : FocusDirectionBackward, 0);
     }
     return S_OK;
@@ -5383,7 +5393,7 @@ HRESULT STDMETHODCALLTYPE WebView::loadBackForwardListFromOtherView(
             // If this item is showing , save away its current scroll and form state,
             // since that might have changed since loading and it is normally not saved
             // until we leave that page.
-            otherWebView->m_page->mainFrame()->loader().history().saveDocumentAndScrollState();
+            otherWebView->m_page->mainFrame().loader().history().saveDocumentAndScrollState();
         }
         RefPtr<HistoryItem> newItem = otherBackForwardList->itemAtIndex(i)->copy();
         if (!i) 
@@ -5398,8 +5408,8 @@ HRESULT STDMETHODCALLTYPE WebView::loadBackForwardListFromOtherView(
 
 HRESULT STDMETHODCALLTYPE WebView::clearUndoRedoOperations()
 {
-    if (Frame* frame = m_page->focusController().focusedOrMainFrame())
-        frame->editor().clearUndoRedoOperations();
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
+    frame.editor().clearUndoRedoOperations();
     return S_OK;
 }
 
@@ -5411,9 +5421,7 @@ HRESULT STDMETHODCALLTYPE WebView::shouldClose(
         return E_POINTER;
     }
 
-    *result = TRUE;
-    if (Frame* frame = m_page->mainFrame())
-        *result = frame->loader().shouldClose();
+    *result = m_page->mainFrame().loader().shouldClose();
     return S_OK;
 }
 
@@ -5436,7 +5444,7 @@ HRESULT WebView::setProhibitsMainFrameScrolling(BOOL b)
     if (!m_page)
         return E_FAIL;
 
-    m_page->mainFrame()->view()->setProhibitsScrolling(b);
+    m_page->mainFrame().view()->setProhibitsScrolling(b);
     return S_OK;
 }
 
@@ -5542,13 +5550,9 @@ void WebView::resetIME(Frame* targetFrame)
 
 void WebView::updateSelectionForIME()
 {
-    Frame* targetFrame = m_page->focusController().focusedOrMainFrame();
-    
-    if (!targetFrame)
-        return;
-
-    if (!targetFrame->editor().cancelCompositionIfSelectionIsInvalid())
-        resetIME(targetFrame);
+    Frame& targetFrame = m_page->focusController().focusedOrMainFrame();
+    if (!targetFrame.editor().cancelCompositionIfSelectionIsInvalid())
+        resetIME(&targetFrame);
 }
 
 void WebView::setInputMethodState(bool enabled)
@@ -5565,12 +5569,10 @@ bool WebView::onIMEStartComposition()
 {
     LOG(TextInput, "onIMEStartComposition");
     m_inIMEComposition++;
-    Frame* targetFrame = m_page->focusController().focusedOrMainFrame();
-    if (!targetFrame)
-        return true;
+    Frame& targetFrame = m_page->focusController().focusedOrMainFrame();
 
     HIMC hInputContext = getIMMContext();
-    prepareCandidateWindow(targetFrame, hInputContext);
+    prepareCandidateWindow(&targetFrame, hInputContext);
     releaseIMMContext(hInputContext);
     return true;
 }
@@ -5702,18 +5704,18 @@ bool WebView::onIMEComposition(LPARAM lparam)
     if (!hInputContext)
         return true;
 
-    Frame* targetFrame = m_page->focusController().focusedOrMainFrame();
-    if (!targetFrame || !targetFrame->editor().canEdit())
+    Frame& targetFrame = m_page->focusController().focusedOrMainFrame();
+    if (!targetFrame.editor().canEdit())
         return true;
 
-    prepareCandidateWindow(targetFrame, hInputContext);
+    prepareCandidateWindow(&targetFrame, hInputContext);
 
     if (lparam & GCS_RESULTSTR || !lparam) {
         String compositionString;
         if (!getCompositionString(hInputContext, GCS_RESULTSTR, compositionString) && lparam)
             return true;
         
-        targetFrame->editor().confirmComposition(compositionString);
+        targetFrame.editor().confirmComposition(compositionString);
     } else {
         String compositionString;
         if (!getCompositionString(hInputContext, GCS_COMPSTR, compositionString))
@@ -5734,7 +5736,7 @@ bool WebView::onIMEComposition(LPARAM lparam)
 
         int cursorPosition = LOWORD(IMMDict::dict().getCompositionString(hInputContext, GCS_CURSORPOS, 0, 0));
 
-        targetFrame->editor().setComposition(compositionString, underlines, cursorPosition, 0);
+        targetFrame.editor().setComposition(compositionString, underlines, cursorPosition, 0);
     }
 
     return true;
@@ -5745,9 +5747,9 @@ bool WebView::onIMEEndComposition()
     LOG(TextInput, "onIMEEndComposition");
     // If the composition hasn't been confirmed yet, it needs to be cancelled.
     // This happens after deleting the last character from inline input hole.
-    Frame* targetFrame = m_page->focusController().focusedOrMainFrame();
-    if (targetFrame && targetFrame->editor().hasComposition())
-        targetFrame->editor().confirmComposition(String());
+    Frame& targetFrame = m_page->focusController().focusedOrMainFrame();
+    if (targetFrame.editor().hasComposition())
+        targetFrame.editor().confirmComposition(String());
 
     if (m_inIMEComposition)
         m_inIMEComposition--;
@@ -5811,16 +5813,16 @@ LRESULT WebView::onIMERequestReconvertString(Frame* targetFrame, RECONVERTSTRING
 LRESULT WebView::onIMERequest(WPARAM request, LPARAM data)
 {
     LOG(TextInput, "onIMERequest %s", imeRequestName(request).latin1().data());
-    Frame* targetFrame = m_page->focusController().focusedOrMainFrame();
-    if (!targetFrame || !targetFrame->editor().canEdit())
+    Frame& targetFrame = m_page->focusController().focusedOrMainFrame();
+    if (!targetFrame.editor().canEdit())
         return 0;
 
     switch (request) {
         case IMR_RECONVERTSTRING:
-            return onIMERequestReconvertString(targetFrame, (RECONVERTSTRING*)data);
+            return onIMERequestReconvertString(&targetFrame, (RECONVERTSTRING*)data);
 
         case IMR_QUERYCHARPOSITION:
-            return onIMERequestCharPosition(targetFrame, (IMECHARPOSITION*)data);
+            return onIMERequestCharPosition(&targetFrame, (IMECHARPOSITION*)data);
     }
     return 0;
 }
@@ -6958,15 +6960,15 @@ HRESULT STDMETHODCALLTYPE WebView::setCompositionForTesting(
     if (!m_page)
         return E_FAIL;
 
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
-    if (!frame || !frame->editor().canEdit())
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
+    if (!frame.editor().canEdit())
         return E_FAIL;
 
     String compositionStr = toString(composition);
 
     Vector<CompositionUnderline> underlines;
     underlines.append(CompositionUnderline(0, compositionStr.length(), Color(Color::black), false));
-    frame->editor().setComposition(compositionStr, underlines, from, from + length);
+    frame.editor().setComposition(compositionStr, underlines, from, from + length);
 
     return S_OK;
 }
@@ -6976,12 +6978,8 @@ HRESULT STDMETHODCALLTYPE WebView::hasCompositionForTesting(/* [out, retval] */ 
     if (!m_page)
         return E_FAIL;
 
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
-     if (!frame)
-        return E_FAIL;
-
-    *result = frame && frame->editor().hasComposition();
-
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
+    *result = frame.editor().hasComposition();
     return S_OK;
 }
 
@@ -6990,16 +6988,16 @@ HRESULT STDMETHODCALLTYPE WebView::confirmCompositionForTesting(/* [in] */ BSTR 
     if (!m_page)
         return E_FAIL;
 
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
-    if (!frame || !frame->editor().canEdit())
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
+    if (!frame.editor().canEdit())
         return E_FAIL;
 
     String compositionStr = toString(composition);
 
     if (compositionStr.isNull())
-        frame->editor().confirmComposition();
+        frame.editor().confirmComposition();
 
-    frame->editor().confirmComposition(compositionStr);
+    frame.editor().confirmComposition(compositionStr);
 
     return S_OK;
 }
@@ -7009,11 +7007,11 @@ HRESULT STDMETHODCALLTYPE WebView::compositionRangeForTesting(/* [out] */ UINT* 
     if (!m_page)
         return E_FAIL;
 
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
-    if (!frame || !frame->editor().canEdit())
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
+    if (!frame.editor().canEdit())
         return E_FAIL;
 
-    RefPtr<Range> range = frame->editor().compositionRange();
+    RefPtr<Range> range = frame.editor().compositionRange();
 
     if (!range)
         return E_FAIL;
@@ -7033,10 +7031,6 @@ HRESULT STDMETHODCALLTYPE WebView::firstRectForCharacterRangeForTesting(
     if (!m_page)
         return E_FAIL;
 
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
-    if (!frame)
-        return E_FAIL;
-
     IntRect resultIntRect;
     resultIntRect.setLocation(IntPoint(0, 0));
     resultIntRect.setSize(IntSize(0, 0));
@@ -7046,7 +7040,8 @@ HRESULT STDMETHODCALLTYPE WebView::firstRectForCharacterRangeForTesting(
     if (length > INT_MAX || location + length > INT_MAX)
         length = INT_MAX - location;
         
-    RefPtr<Range> range = TextIterator::rangeFromLocationAndLength(frame->selection().rootEditableElementOrDocumentElement(), location, length);
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
+    RefPtr<Range> range = TextIterator::rangeFromLocationAndLength(frame.selection().rootEditableElementOrDocumentElement(), location, length);
 
     if (!range)
         return E_FAIL;
@@ -7054,8 +7049,8 @@ HRESULT STDMETHODCALLTYPE WebView::firstRectForCharacterRangeForTesting(
     ASSERT(range->startContainer());
     ASSERT(range->endContainer());
      
-    IntRect rect = frame->editor().firstRectForRange(range.get());
-    resultIntRect = frame->view()->contentsToWindow(rect);
+    IntRect rect = frame.editor().firstRectForRange(range.get());
+    resultIntRect = frame.view()->contentsToWindow(rect);
 
     resultRect->left = resultIntRect.x();
     resultRect->top = resultIntRect.y();
@@ -7070,15 +7065,13 @@ HRESULT STDMETHODCALLTYPE WebView::selectedRangeForTesting(/* [out] */ UINT* loc
     if (!m_page)
         return E_FAIL;
 
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
-    if (!frame)
-        return E_FAIL;
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
 
-    RefPtr<Range> range = frame->editor().selectedRange();
+    RefPtr<Range> range = frame.editor().selectedRange();
 
     size_t locationSize;
     size_t lengthSize;
-    if (range && TextIterator::getLocationAndLengthFromRange(frame->selection().rootEditableElementOrDocumentElement(), range.get(), locationSize, lengthSize)) {
+    if (range && TextIterator::getLocationAndLengthFromRange(frame.selection().rootEditableElementOrDocumentElement(), range.get(), locationSize, lengthSize)) {
         *location = static_cast<UINT>(locationSize);
         *length = static_cast<UINT>(lengthSize);
     }

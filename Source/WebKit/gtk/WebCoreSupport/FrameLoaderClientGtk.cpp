@@ -56,6 +56,7 @@
 #include "NotImplemented.h"
 #include "Page.h"
 #include "PluginDatabase.h"
+#include "PluginView.h"
 #include "ProgressTracker.h"
 #include "RenderPart.h"
 #include "RenderView.h"
@@ -110,7 +111,6 @@ FrameLoaderClient::FrameLoaderClient(WebKitWebFrame* frame)
     , m_pluginView(0)
     , m_hasSentResponseToPlugin(false)
 {
-    ASSERT(m_frame);
 }
 
 FrameLoaderClient::~FrameLoaderClient()
@@ -1225,7 +1225,7 @@ void FrameLoaderClient::transitionToCommittedFromCachedFrame(CachedFrame* cached
     ASSERT(cachedFrame->view());
 
     Frame* frame = core(m_frame);
-    if (frame != frame->page()->mainFrame())
+    if (frame != &frame->page()->mainFrame())
         return;
 
     postCommitFrameViewSetup(m_frame);
@@ -1245,7 +1245,7 @@ void FrameLoaderClient::transitionToCommittedForNewPage()
     frame->createView(size, backgroundColor, transparent);
 
     // We need to do further manipulation on the FrameView if it was the mainFrame
-    if (frame != frame->page()->mainFrame())
+    if (frame != &frame->page()->mainFrame())
         return;
 
     postCommitFrameViewSetup(m_frame);

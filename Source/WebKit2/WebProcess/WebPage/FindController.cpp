@@ -98,7 +98,7 @@ void FindController::countStringMatches(const String& string, FindOptions option
 
 static Frame* frameWithSelection(Page* page)
 {
-    for (Frame* frame = page->mainFrame(); frame; frame = frame->tree().traverseNext()) {
+    for (Frame* frame = &page->mainFrame(); frame; frame = frame->tree().traverseNext()) {
         if (frame->selection().isRange())
             return frame;
     }
@@ -328,11 +328,8 @@ void FindController::hideFindIndicator()
 
 void FindController::showFindIndicatorInSelection()
 {
-    Frame* selectedFrame = m_webPage->corePage()->focusController().focusedOrMainFrame();
-    if (!selectedFrame)
-        return;
-    
-    updateFindIndicator(selectedFrame, false);
+    Frame& selectedFrame = m_webPage->corePage()->focusController().focusedOrMainFrame();
+    updateFindIndicator(&selectedFrame, false);
 }
 
 void FindController::deviceScaleFactorDidChange()
@@ -350,7 +347,7 @@ Vector<IntRect> FindController::rectsForTextMatches()
 {
     Vector<IntRect> rects;
 
-    for (Frame* frame = m_webPage->corePage()->mainFrame(); frame; frame = frame->tree().traverseNext()) {
+    for (Frame* frame = &m_webPage->corePage()->mainFrame(); frame; frame = frame->tree().traverseNext()) {
         Document* document = frame->document();
         if (!document)
             continue;

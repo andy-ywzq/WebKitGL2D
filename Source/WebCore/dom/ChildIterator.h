@@ -28,8 +28,8 @@
 
 #include "ElementTraversal.h"
 
-#ifndef NDEBUG
-#include "Document.h"
+#if !ASSERT_DISABLED
+#include "DescendantIteratorAssertions.h"
 #endif
 
 namespace WebCore {
@@ -40,49 +40,76 @@ public:
     ChildIterator();
     ChildIterator(ElementType* current);
     ChildIterator& operator++();
-    ElementType& operator*() { return *m_current; }
-    ElementType* operator->() { return m_current; }
+    ElementType& operator*();
+    ElementType* operator->();
     bool operator!=(const ChildIterator& other) const;
 
 private:
     ElementType* m_current;
-#ifndef NDEBUG
-    OwnPtr<NoEventDispatchAssertion> m_noEventDispatchAssertion;
-    uint64_t m_initialDOMTreeVersion;
+
+#if !ASSERT_DISABLED
+    DescendantIteratorAssertions m_assertions;
 #endif
 };
 
-template <typename ElementType, typename ContainerType>
+template <typename ElementType>
+class ChildConstIterator {
+public:
+    ChildConstIterator();
+    ChildConstIterator(const ElementType* current);
+    ChildConstIterator& operator++();
+    const ElementType& operator*() const;
+    const ElementType* operator->() const;
+    bool operator!=(const ChildConstIterator& other) const;
+
+private:
+    const ElementType* m_current;
+
+#if !ASSERT_DISABLED
+    DescendantIteratorAssertions m_assertions;
+#endif
+};
+
+template <typename ElementType>
 class ChildIteratorAdapter {
 public:
-    ChildIteratorAdapter(ContainerType* root);
+    ChildIteratorAdapter(ContainerNode* root);
     ChildIterator<ElementType> begin();
     ChildIterator<ElementType> end();
 
 private:
-    const ContainerType* m_root;
+    const ContainerNode* m_root;
 };
 
-ChildIteratorAdapter<Element, ContainerNode> elementChildren(ContainerNode* root);
-ChildIteratorAdapter<Element, Node> elementChildren(Node* root);
-template <typename ElementType> ChildIteratorAdapter<ElementType, ContainerNode> childrenOfType(ContainerNode* root);
-template <typename ElementType> ChildIteratorAdapter<ElementType, Node> childrenOfType(Node* root);
+template <typename ElementType>
+class ChildConstIteratorAdapter {
+public:
+    ChildConstIteratorAdapter(const ContainerNode* root);
+    ChildConstIterator<ElementType> begin() const;
+    ChildConstIterator<ElementType> end() const;
+
+private:
+    const ContainerNode* m_root;
+};
+
+ChildIteratorAdapter<Element> elementChildren(ContainerNode* root);
+ChildConstIteratorAdapter<Element> elementChildren(const ContainerNode* root);
+template <typename ElementType> ChildIteratorAdapter<ElementType> childrenOfType(ContainerNode* root);
+template <typename ElementType> ChildConstIteratorAdapter<ElementType> childrenOfType(const ContainerNode* root);
+
+// ChildIterator
 
 template <typename ElementType>
 inline ChildIterator<ElementType>::ChildIterator()
     : m_current(nullptr)
-#ifndef NDEBUG
-    , m_initialDOMTreeVersion(0)
-#endif
 {
 }
 
 template <typename ElementType>
 inline ChildIterator<ElementType>::ChildIterator(ElementType* current)
     : m_current(current)
-#ifndef NDEBUG
-    , m_noEventDispatchAssertion(adoptPtr(new NoEventDispatchAssertion))
-    , m_initialDOMTreeVersion(m_current ? m_current->document()->domTreeVersion() : 0)
+#if !ASSERT_DISABLED
+    , m_assertions(current)
 #endif
 {
 }
@@ -91,55 +118,155 @@ template <typename ElementType>
 inline ChildIterator<ElementType>& ChildIterator<ElementType>::operator++()
 {
     ASSERT(m_current);
-    ASSERT(m_current->document()->domTreeVersion() == m_initialDOMTreeVersion);
+    ASSERT(!m_assertions.domTreeHasMutated());
     m_current = Traversal<ElementType>::nextSibling(m_current);
+#if !ASSERT_DISABLED
+    // Drop the assertion when the iterator reaches the end.
+    if (!m_current)
+        m_assertions.dropEventDispatchAssertion();
+#endif
     return *this;
+}
+
+template <typename ElementType>
+inline ElementType& ChildIterator<ElementType>::operator*()
+{
+    ASSERT(m_current);
+    ASSERT(!m_assertions.domTreeHasMutated());
+    return *m_current;
+}
+
+template <typename ElementType>
+inline ElementType* ChildIterator<ElementType>::operator->()
+{
+    ASSERT(m_current);
+    ASSERT(!m_assertions.domTreeHasMutated());
+    return m_current;
 }
 
 template <typename ElementType>
 inline bool ChildIterator<ElementType>::operator!=(const ChildIterator& other) const
 {
+    ASSERT(!m_assertions.domTreeHasMutated());
     return m_current != other.m_current;
 }
 
-template <typename ElementType, typename ContainerType>
-inline ChildIteratorAdapter<ElementType, ContainerType>::ChildIteratorAdapter(ContainerType* root)
+// ChildConstIterator
+
+template <typename ElementType>
+inline ChildConstIterator<ElementType>::ChildConstIterator()
+    : m_current(nullptr)
+{
+}
+
+template <typename ElementType>
+inline ChildConstIterator<ElementType>::ChildConstIterator(const ElementType* current)
+    : m_current(current)
+#if !ASSERT_DISABLED
+    , m_assertions(current)
+#endif
+{
+}
+
+template <typename ElementType>
+inline ChildConstIterator<ElementType>& ChildConstIterator<ElementType>::operator++()
+{
+    ASSERT(m_current);
+    ASSERT(!m_assertions.domTreeHasMutated());
+    m_current = Traversal<ElementType>::nextSibling(m_current);
+#if !ASSERT_DISABLED
+    // Drop the assertion when the iterator reaches the end.
+    if (!m_current)
+        m_assertions.dropEventDispatchAssertion();
+#endif
+    return *this;
+}
+
+template <typename ElementType>
+inline const ElementType& ChildConstIterator<ElementType>::operator*() const
+{
+    ASSERT(m_current);
+    ASSERT(!m_assertions.domTreeHasMutated());
+    return *m_current;
+}
+
+template <typename ElementType>
+inline const ElementType* ChildConstIterator<ElementType>::operator->() const
+{
+    ASSERT(m_current);
+    ASSERT(!m_assertions.domTreeHasMutated());
+    return m_current;
+}
+
+template <typename ElementType>
+inline bool ChildConstIterator<ElementType>::operator!=(const ChildConstIterator& other) const
+{
+    ASSERT(!m_assertions.domTreeHasMutated());
+    return m_current != other.m_current;
+}
+
+// ChildIteratorAdapter
+
+template <typename ElementType>
+inline ChildIteratorAdapter<ElementType>::ChildIteratorAdapter(ContainerNode* root)
     : m_root(root)
 {
 }
 
-template <typename ElementType, typename ContainerType>
-inline ChildIterator<ElementType> ChildIteratorAdapter<ElementType, ContainerType>::begin()
+template <typename ElementType>
+inline ChildIterator<ElementType> ChildIteratorAdapter<ElementType>::begin()
 {
     return ChildIterator<ElementType>(Traversal<ElementType>::firstChild(m_root));
 }
 
-template <typename ElementType, typename ContainerType>
-inline ChildIterator<ElementType> ChildIteratorAdapter<ElementType, ContainerType>::end()
+template <typename ElementType>
+inline ChildIterator<ElementType> ChildIteratorAdapter<ElementType>::end()
 {
     return ChildIterator<ElementType>();
 }
 
-inline ChildIteratorAdapter<Element, ContainerNode> elementChildren(ContainerNode* root)
-{
-    return ChildIteratorAdapter<Element, ContainerNode>(root);
-}
+// ChildConstIteratorAdapter
 
-inline ChildIteratorAdapter<Element, Node> elementChildren(Node* root)
+template <typename ElementType>
+inline ChildConstIteratorAdapter<ElementType>::ChildConstIteratorAdapter(const ContainerNode* root)
+    : m_root(root)
 {
-    return ChildIteratorAdapter<Element, Node>(root);
 }
 
 template <typename ElementType>
-inline ChildIteratorAdapter<ElementType, ContainerNode> childrenOfType(ContainerNode* root)
+inline ChildConstIterator<ElementType> ChildConstIteratorAdapter<ElementType>::begin() const
 {
-    return ChildIteratorAdapter<ElementType, ContainerNode>(root);
+    return ChildConstIterator<ElementType>(Traversal<ElementType>::firstChild(m_root));
 }
 
 template <typename ElementType>
-inline ChildIteratorAdapter<ElementType, Node> childrenOfType(Node* root)
+inline ChildConstIterator<ElementType> ChildConstIteratorAdapter<ElementType>::end() const
 {
-    return ChildIteratorAdapter<ElementType, Node>(root);
+    return ChildConstIterator<ElementType>();
+}
+
+// Standalone functions
+
+inline ChildIteratorAdapter<Element> elementChildren(ContainerNode* root)
+{
+    return ChildIteratorAdapter<Element>(root);
+}
+
+template <typename ElementType>
+inline ChildIteratorAdapter<ElementType> childrenOfType(ContainerNode* root)
+{
+    return ChildIteratorAdapter<ElementType>(root);
+}
+
+inline ChildConstIteratorAdapter<Element> elementChildren(const ContainerNode* root)
+{
+    return ChildConstIteratorAdapter<Element>(root);
+}
+
+template <typename ElementType>
+inline ChildConstIteratorAdapter<ElementType> childrenOfType(const ContainerNode* root)
+{
+    return ChildConstIteratorAdapter<ElementType>(root);
 }
 
 }

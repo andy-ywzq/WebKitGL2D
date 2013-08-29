@@ -1,3 +1,75 @@
+2013-08-28  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Add support for building JSC with FTL JIT enabled
+        https://bugs.webkit.org/show_bug.cgi?id=120270
+
+        Reviewed by Filip Pizlo.
+
+        * wtf/Platform.h: Define ENABLE_FTL_JIT to the value of 1 for the GTK port if building for the x86-64
+        architecture with LLVM present and the define not being previously defined. This is applicable when
+        configuring the Automake build with '--enable-ftl-jit=auto'.
+
+2013-08-27  Arunprasad Rajkumar  <arurajku@cisco.com>
+
+        Replace currentTime() with monotonicallyIncreasingTime() in WebCore
+        https://bugs.webkit.org/show_bug.cgi?id=119958
+
+        Reviewed by Alexey Proskuryakov.
+
+        WTF::currentTime() is prone to NTP and manual adjustments, so use
+        WTF::monotonicallyIncreasingTime() to measure elapsed time.
+
+        It is a continuation of r154201.
+
+        * wtf/CurrentTime.h: Edited comment.
+
+2013-08-27  Andre Moreira Magalhaes   <andre.magalhaes@collabora.co.uk>
+
+        [gstreamer] Make sure gstreamer source element is thread-safe
+        https://bugs.webkit.org/show_bug.cgi?id=115352
+
+        Reviewed by Philippe Normand.
+
+        Add convenience class that simplifies locking and unlocking a GMutex.
+
+        * GNUmakefile.list.am:
+        * wtf/gobject/GMutexLocker.h: Added.
+        (WebCore::GMutexLocker::GMutexLocker):
+        (WebCore::GMutexLocker::~GMutexLocker):
+        (WebCore::GMutexLocker::lock):
+        (WebCore::GMutexLocker::unlock):
+        (WebCore::GMutexLocker::mutex):
+
+2013-08-26  Andy Estes  <aestes@apple.com>
+
+        Don't leak objects in HardAutorelease when OBJC_NO_GC is undefined but
+        Objective-C GC is disabled at runtime.
+        
+        Reviewed by Darin Adler.
+
+        * wtf/ObjcRuntimeExtras.h:
+        (HardAutorelease):
+
+2013-08-23  Andy Estes  <aestes@apple.com>
+
+        Fix issues found by the Clang Static Analyzer
+        https://bugs.webkit.org/show_bug.cgi?id=120230
+
+        Reviewed by Darin Adler.
+
+        * wtf/ObjcRuntimeExtras.h:
+        (HardAutorelease): Added a canonical implementation of HardAutorelease.
+
+2013-08-26  Zan Dobersek  <zdobersek@igalia.com>
+
+        Undefine __STDC_LIMIT_MACROS and __STDC_CONSTANT_MACROS before redefining them
+        https://bugs.webkit.org/show_bug.cgi?id=120313
+
+        Reviewed by Darin Adler.
+
+        * wtf/LLVMHeaders.h: Undefine the two macros before they are defined again.
+        This way we avoid the compilation-time warnings about the macros being invalidly redefined.
+
 2013-08-26  Oliver Hunt  <oliver@apple.com>
 
         Building is so overrated.

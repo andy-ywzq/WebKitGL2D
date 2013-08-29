@@ -1,3 +1,174 @@
+2013-08-28  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Add support for building JSC with FTL JIT enabled
+        https://bugs.webkit.org/show_bug.cgi?id=120270
+
+        Reviewed by Filip Pizlo.
+
+        * GNUmakefile.am: Add LLVM_LIBS to the list of linker flags and LLVM_CFLAGS to the list of
+        compiler flags for the JSC library.
+        * GNUmakefile.list.am: Add the missing build targets.
+        * ftl/FTLAbbreviations.h: Include the <cstring> header and use std::strlen. This avoids compilation
+        failures when using the Clang compiler with the libstdc++ standard library.
+        (JSC::FTL::mdKindID):
+        (JSC::FTL::mdString):
+
+2013-08-23  Andy Estes  <aestes@apple.com>
+
+        Fix issues found by the Clang Static Analyzer
+        https://bugs.webkit.org/show_bug.cgi?id=120230
+
+        Reviewed by Darin Adler.
+
+        * API/JSValue.mm:
+        (valueToString): Don't leak every CFStringRef when in Objective-C GC.
+        * API/ObjCCallbackFunction.mm:
+        (JSC::ObjCCallbackFunctionImpl::~ObjCCallbackFunctionImpl): Don't
+        release m_invocation's target since NSInvocation will do it for us on
+        -dealloc.
+        (objCCallbackFunctionForBlock): Tell NSInvocation to retain its target
+        and -release our reference to the copied block.
+        * API/tests/minidom.c:
+        (createStringWithContentsOfFile): Free buffer before returning.
+        * API/tests/testapi.c:
+        (createStringWithContentsOfFile): Ditto.
+
+2013-08-26  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build fix after r154629.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj: Add missing build files.
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+
+2013-08-26  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Windows build fix attempt after r154629.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+
+2013-08-25  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        JSObject::putDirectIndexBeyondVectorLengthWithArrayStorage does a check on the length of the ArrayStorage after possible reallocing it
+        https://bugs.webkit.org/show_bug.cgi?id=120278
+
+        Reviewed by Geoffrey Garen.
+
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::putDirectIndexBeyondVectorLengthWithArrayStorage):
+
+2013-08-26  Filip Pizlo  <fpizlo@apple.com>
+
+        Fix indention of Executable.h.
+
+        Rubber stamped by Mark Hahnenberg.
+
+        * runtime/Executable.h:
+
+2013-08-26  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        Object.defineProperty should be able to create a PropertyDescriptor where m_attributes == 0
+        https://bugs.webkit.org/show_bug.cgi?id=120314
+
+        Reviewed by Darin Adler.
+
+        Currently with the way that defineProperty works, we leave a stray low bit set in 
+        PropertyDescriptor::m_attributes in the following code:
+
+        var o = {};
+        Object.defineProperty(o, 100, {writable:true, enumerable:true, configurable:true, value:"foo"});
+        
+        This is due to the fact that the lowest non-zero attribute (ReadOnly) is represented as 1 << 1 
+        instead of 1 << 0. We then calculate the default attributes as (DontDelete << 1) - 1, which is 0xF, 
+        but only the top three bits mean anything. Even in the case above, the top three bits are set 
+        to 0 but the bottom bit remains set, which causes us to think m_attributes is non-zero.
+
+        Since some of these attributes and their corresponding values are exposed in the JavaScriptCore 
+        framework's public C API, it's safer to just change how we calculate the default value, which is
+        where the weirdness was originating from in the first place.
+
+        * runtime/PropertyDescriptor.cpp:
+
+2013-08-24  Sam Weinig  <sam@webkit.org>
+
+        Add support for Promises
+        https://bugs.webkit.org/show_bug.cgi?id=120260
+
+        Reviewed by Darin Adler.
+
+        Add an initial implementation of Promises - http://dom.spec.whatwg.org/#promises.
+        - Despite Promises being defined in the DOM, the implementation is being put in JSC
+          in preparation for the Promises eventually being defined in ECMAScript.
+
+        * CMakeLists.txt:
+        * DerivedSources.make:
+        * DerivedSources.pri:
+        * GNUmakefile.list.am:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * Target.pri:
+        Add new files.
+
+        * jsc.cpp:
+        Update jsc's GlobalObjectMethodTable to stub out the new QueueTaskToEventLoop callback. This mean's
+        you can't quite use Promises with with the command line tool yet.
+    
+        * interpreter/CallFrame.h:
+        (JSC::ExecState::promisePrototypeTable):
+        (JSC::ExecState::promiseConstructorTable):
+        (JSC::ExecState::promiseResolverPrototypeTable):
+        * runtime/VM.cpp:
+        (JSC::VM::VM):
+        (JSC::VM::~VM):
+        * runtime/VM.h:
+        Add supporting code for the new static lookup tables.
+
+        * runtime/CommonIdentifiers.h:
+        Add 3 new identifiers, "Promise", "PromiseResolver", and "then".
+
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::reset):
+        (JSC::JSGlobalObject::visitChildren):
+        Add supporting code Promise and PromiseResolver's constructors and structures.
+
+        * runtime/JSGlobalObject.h:
+        (JSC::TaskContext::~TaskContext):
+        Add a new callback to the GlobalObjectMethodTable to post a task on the embedder's runloop.
+
+        (JSC::JSGlobalObject::promisePrototype):
+        (JSC::JSGlobalObject::promiseResolverPrototype):
+        (JSC::JSGlobalObject::promiseStructure):
+        (JSC::JSGlobalObject::promiseResolverStructure):
+        (JSC::JSGlobalObject::promiseCallbackStructure):
+        (JSC::JSGlobalObject::promiseWrapperCallbackStructure):
+        Add supporting code Promise and PromiseResolver's constructors and structures.
+
+        * runtime/JSPromise.cpp: Added.
+        * runtime/JSPromise.h: Added.
+        * runtime/JSPromiseCallback.cpp: Added.
+        * runtime/JSPromiseCallback.h: Added.
+        * runtime/JSPromiseConstructor.cpp: Added.
+        * runtime/JSPromiseConstructor.h: Added.
+        * runtime/JSPromisePrototype.cpp: Added.
+        * runtime/JSPromisePrototype.h: Added.
+        * runtime/JSPromiseResolver.cpp: Added.
+        * runtime/JSPromiseResolver.h: Added.
+        * runtime/JSPromiseResolverConstructor.cpp: Added.
+        * runtime/JSPromiseResolverConstructor.h: Added.
+        * runtime/JSPromiseResolverPrototype.cpp: Added.
+        * runtime/JSPromiseResolverPrototype.h: Added.
+        Add Promise implementation.
+
+2013-08-26  Zan Dobersek  <zdobersek@igalia.com>
+
+        Plenty of -Wcast-align warnings in KeywordLookup.h
+        https://bugs.webkit.org/show_bug.cgi?id=120316
+
+        Reviewed by Darin Adler.
+
+        * KeywordLookupGenerator.py: Use reinterpret_cast instead of a C-style cast when casting
+        the character pointers to types of larger size. This avoids spewing lots of warnings
+        in the KeywordLookup.h header when compiling with the -Wcast-align option.
+
 2013-08-26  Gavin Barraclough  <barraclough@apple.com>
 
         RegExpMatchesArray should not call [[put]]

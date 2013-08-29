@@ -48,6 +48,7 @@
 #include "AccessibilitySVGRoot.h"
 #include "AccessibilityScrollView.h"
 #include "AccessibilityScrollbar.h"
+#include "AccessibilitySearchFieldButtons.h"
 #include "AccessibilitySlider.h"
 #include "AccessibilitySpinButton.h"
 #include "AccessibilityTable.h"
@@ -161,7 +162,7 @@ AccessibilityObject* AXObjectCache::focusedUIElementForPage(const Page* page)
         return 0;
 
     // get the focused node in the page
-    Document* focusedDocument = page->focusController().focusedOrMainFrame()->document();
+    Document* focusedDocument = page->focusController().focusedOrMainFrame().document();
     Element* focusedElement = focusedDocument->focusedElement();
     if (focusedElement && isHTMLAreaElement(focusedElement))
         return focusedImageMapUIElement(toHTMLAreaElement(focusedElement));
@@ -276,6 +277,10 @@ static PassRefPtr<AccessibilityObject> createFromRenderer(RenderObject* renderer
         return AccessibilitySVGRoot::create(renderer);
 #endif
     
+    // Search field buttons
+    if (node && node->isElementNode() && toElement(node)->isSearchFieldCancelButtonElement())
+        return AccessibilitySearchFieldCancelButton::create(renderer);
+    
     if (renderer->isBoxModelObject()) {
         RenderBoxModelObject* cssBox = toRenderBoxModelObject(renderer);
         if (cssBox->isListBox())
@@ -330,7 +335,12 @@ AccessibilityObject* AXObjectCache::getOrCreate(Widget* widget)
 
     // Will crash later if we have two objects for the same widget.
     ASSERT(!get(widget));
-        
+
+    // Catch the case if an (unsupported) widget type is used. Only FrameView and ScrollBar are supported now.
+    ASSERT(newObj);
+    if (!newObj)
+        return 0;
+
     getAXID(newObj.get());
     
     m_widgetObjectMapping.set(widget, newObj->axObjectID());

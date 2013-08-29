@@ -288,7 +288,7 @@ void FrameLoaderClientQt::transitionToCommittedForNewPage()
         hScrollbar, hLock,
         vScrollbar, vLock);
 
-    bool isMainFrame = m_frame == m_frame->page()->mainFrame();
+    bool isMainFrame = m_frame == &m_frame->page()->mainFrame();
     if (isMainFrame &&m_webFrame->pageAdapter->client) {
         bool resizesToContents = m_webFrame->pageAdapter->client->viewResizesToContentsEnabled();
 
@@ -492,7 +492,7 @@ void FrameLoaderClientQt::dispatchDidCommitLoad()
     // This properly resets the title when we navigate to a URI without a title.
     emit titleChanged(QString());
 
-    bool isMainFrame = (m_frame == m_frame->page()->mainFrame());
+    bool isMainFrame = (m_frame == &m_frame->page()->mainFrame());
     if (!isMainFrame)
         return;
 
@@ -1358,10 +1358,10 @@ ObjectContentType FrameLoaderClientQt::objectContentType(const KURL& url, const 
     ObjectContentType plugInType = ObjectContentNone;
     if (arePluginsEnabled && PluginDatabase::installedPlugins()->isMIMETypeRegistered(mimeType))
         plugInType = ObjectContentNetscapePlugin;
-    else if (m_frame->page() && m_frame->page()->pluginData()) {
+    else if (m_frame->page()) {
         bool allowPlugins = m_frame->loader().subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin);
-        if ((m_frame->page()->pluginData()->supportsMimeType(mimeType, PluginData::AllPlugins) && allowPlugins)
-            || m_frame->page()->pluginData()->supportsMimeType(mimeType, PluginData::OnlyApplicationPlugins))
+        if ((m_frame->page()->pluginData().supportsMimeType(mimeType, PluginData::AllPlugins) && allowPlugins)
+            || m_frame->page()->pluginData().supportsMimeType(mimeType, PluginData::OnlyApplicationPlugins))
                 plugInType = ObjectContentOtherPlugin;
     }
 

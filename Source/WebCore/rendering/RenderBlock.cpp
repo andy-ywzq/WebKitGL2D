@@ -4439,43 +4439,47 @@ inline static bool rangesIntersect(int floatTop, int floatBottom, int objectTop,
 }
 
 template<>
-inline bool RenderBlock::FloatIntervalSearchAdapter<RenderBlock::FloatingObject::FloatLeft>::updateOffsetIfNeeded(const FloatingObject* floatingObject) const
+inline bool RenderBlock::ComputeFloatOffsetAdapter<RenderBlock::FloatingObject::FloatLeft>::updateOffsetIfNeeded(const FloatingObject* floatingObject)
 {
-    if (m_renderer->logicalRightForFloat(floatingObject) > m_offset) {
-        m_offset = m_renderer->logicalRightForFloat(floatingObject);
+    LayoutUnit logicalRight = m_renderer->logicalRightForFloat(floatingObject);
+    if (logicalRight > m_offset) {
+        m_offset = logicalRight;
         return true;
     }
     return false;
 }
 
 template<>
-inline bool RenderBlock::FloatIntervalSearchAdapter<RenderBlock::FloatingObject::FloatRight>::updateOffsetIfNeeded(const FloatingObject* floatingObject) const
+inline bool RenderBlock::ComputeFloatOffsetAdapter<RenderBlock::FloatingObject::FloatRight>::updateOffsetIfNeeded(const FloatingObject* floatingObject)
 {
-    if (m_renderer->logicalLeftForFloat(floatingObject) < m_offset) {
-        m_offset = m_renderer->logicalLeftForFloat(floatingObject);
+    LayoutUnit logicalLeft = m_renderer->logicalLeftForFloat(floatingObject);
+    if (logicalLeft < m_offset) {
+        m_offset = logicalLeft;
         return true;
     }
     return false;
 }
 
 template <RenderBlock::FloatingObject::Type FloatTypeValue>
-inline void RenderBlock::FloatIntervalSearchAdapter<FloatTypeValue>::collectIfNeeded(const IntervalType& interval) const
+inline void RenderBlock::ComputeFloatOffsetAdapter<FloatTypeValue>::collectIfNeeded(const IntervalType& interval)
 {
     const FloatingObject* floatingObject = interval.data();
-    if (floatingObject->type() != FloatTypeValue || !rangesIntersect(interval.low(), interval.high(), m_lowValue, m_highValue))
+    if (floatingObject->type() != FloatTypeValue || !rangesIntersect(interval.low(), interval.high(), m_lineTop, m_lineBottom))
         return;
 
     // All the objects returned from the tree should be already placed.
     ASSERT(floatingObject->isPlaced());
-    ASSERT(rangesIntersect(m_renderer->pixelSnappedLogicalTopForFloat(floatingObject), m_renderer->pixelSnappedLogicalBottomForFloat(floatingObject), m_lowValue, m_highValue));
+    ASSERT(rangesIntersect(m_renderer->pixelSnappedLogicalTopForFloat(floatingObject), m_renderer->pixelSnappedLogicalBottomForFloat(floatingObject), m_lineTop, m_lineBottom));
 
     bool floatIsNewExtreme = updateOffsetIfNeeded(floatingObject);
-    if (floatIsNewExtreme && m_heightRemaining)
-        *m_heightRemaining = m_renderer->logicalBottomForFloat(floatingObject) - m_lowValue;
+    if (floatIsNewExtreme)
+        m_outermostFloat = floatingObject;
+}
 
-#if ENABLE(CSS_SHAPES)
-    m_last = floatingObject;
-#endif
+template <RenderBlock::FloatingObject::Type FloatTypeValue>
+LayoutUnit RenderBlock::ComputeFloatOffsetAdapter<FloatTypeValue>::getHeightRemaining() const
+{
+    return m_outermostFloat ? m_renderer->logicalBottomForFloat(m_outermostFloat) - m_lineTop : LayoutUnit(1);
 }
 
 LayoutUnit RenderBlock::textIndentOffset() const
@@ -4515,17 +4519,17 @@ LayoutUnit RenderBlock::logicalLeftFloatOffsetForLine(LayoutUnit logicalTop, Lay
 #endif
     LayoutUnit left = fixedOffset;
     if (m_floatingObjects && m_floatingObjects->hasLeftObjects()) {
-        if (heightRemaining)
-            *heightRemaining = 1;
-
-        FloatIntervalSearchAdapter<FloatingObject::FloatLeft> adapter(this, roundToInt(logicalTop), roundToInt(logicalTop + logicalHeight), left, heightRemaining);
+        ComputeFloatOffsetAdapter<FloatingObject::FloatLeft> adapter(this, roundToInt(logicalTop), roundToInt(logicalTop + logicalHeight), left);
         m_floatingObjects->placedFloatsTree().allOverlapsWithAdapter(adapter);
 
+        if (heightRemaining)
+            *heightRemaining = adapter.getHeightRemaining();
+
 #if ENABLE(CSS_SHAPES)
-        const FloatingObject* lastFloat = adapter.lastFloat();
-        if (offsetMode == ShapeOutsideFloatShapeOffset && lastFloat) {
-            if (ShapeOutsideInfo* shapeOutside = lastFloat->renderer()->shapeOutsideInfo()) {
-                shapeOutside->computeSegmentsForContainingBlockLine(logicalTop, logicalTopForFloat(lastFloat), logicalHeight);
+        const FloatingObject* outermostFloat = adapter.outermostFloat();
+        if (offsetMode == ShapeOutsideFloatShapeOffset && outermostFloat) {
+            if (ShapeOutsideInfo* shapeOutside = outermostFloat->renderer()->shapeOutsideInfo()) {
+                shapeOutside->computeSegmentsForContainingBlockLine(logicalTop, logicalTopForFloat(outermostFloat), logicalHeight);
                 left += shapeOutside->rightSegmentMarginBoxDelta();
             }
         }
@@ -4582,18 +4586,18 @@ LayoutUnit RenderBlock::logicalRightFloatOffsetForLine(LayoutUnit logicalTop, La
 #endif
     LayoutUnit right = fixedOffset;
     if (m_floatingObjects && m_floatingObjects->hasRightObjects()) {
-        if (heightRemaining)
-            *heightRemaining = 1;
-
         LayoutUnit rightFloatOffset = fixedOffset;
-        FloatIntervalSearchAdapter<FloatingObject::FloatRight> adapter(this, roundToInt(logicalTop), roundToInt(logicalTop + logicalHeight), rightFloatOffset, heightRemaining);
+        ComputeFloatOffsetAdapter<FloatingObject::FloatRight> adapter(this, roundToInt(logicalTop), roundToInt(logicalTop + logicalHeight), rightFloatOffset);
         m_floatingObjects->placedFloatsTree().allOverlapsWithAdapter(adapter);
 
+        if (heightRemaining)
+            *heightRemaining = adapter.getHeightRemaining();
+
 #if ENABLE(CSS_SHAPES)
-        const FloatingObject* lastFloat = adapter.lastFloat();
-        if (offsetMode == ShapeOutsideFloatShapeOffset && lastFloat) {
-            if (ShapeOutsideInfo* shapeOutside = lastFloat->renderer()->shapeOutsideInfo()) {
-                shapeOutside->computeSegmentsForContainingBlockLine(logicalTop, logicalTopForFloat(lastFloat), logicalHeight);
+        const FloatingObject* outermostFloat = adapter.outermostFloat();
+        if (offsetMode == ShapeOutsideFloatShapeOffset && outermostFloat) {
+            if (ShapeOutsideInfo* shapeOutside = outermostFloat->renderer()->shapeOutsideInfo()) {
+                shapeOutside->computeSegmentsForContainingBlockLine(logicalTop, logicalTopForFloat(outermostFloat), logicalHeight);
                 rightFloatOffset += shapeOutside->leftSegmentMarginBoxDelta();
             }
         }
@@ -6035,6 +6039,8 @@ void RenderBlock::computeIntrinsicLogicalWidths(LayoutUnit& minLogicalWidth, Lay
 
     maxLogicalWidth = max(minLogicalWidth, maxLogicalWidth);
 
+    adjustIntrinsicLogicalWidthsForColumns(minLogicalWidth, maxLogicalWidth);
+
     if (!style()->autoWrap() && childrenInline()) {
         // A horizontal marquee with inline children has no minimum width.
         if (layer() && layer()->marquee() && layer()->marquee()->isHorizontal())
@@ -6089,6 +6095,33 @@ void RenderBlock::computePreferredLogicalWidths()
     m_maxPreferredLogicalWidth += borderAndPadding;
 
     setPreferredLogicalWidthsDirty(false);
+}
+
+void RenderBlock::adjustIntrinsicLogicalWidthsForColumns(LayoutUnit& minLogicalWidth, LayoutUnit& maxLogicalWidth) const
+{
+    // FIXME: make this method virtual and move the code to RenderMultiColumnBlock once the old
+    // multicol code is gone.
+
+    if (!style()->hasAutoColumnCount() || !style()->hasAutoColumnWidth()) {
+        // The min/max intrinsic widths calculated really tell how much space elements need when
+        // laid out inside the columns. In order to eventually end up with the desired column width,
+        // we need to convert them to values pertaining to the multicol container.
+        int columnCount = style()->hasAutoColumnCount() ? 1 : style()->columnCount();
+        LayoutUnit columnWidth;
+        LayoutUnit gapExtra = (columnCount - 1) * columnGap();
+        if (style()->hasAutoColumnWidth())
+            minLogicalWidth = minLogicalWidth * columnCount + gapExtra;
+        else {
+            columnWidth = style()->columnWidth();
+            minLogicalWidth = min(minLogicalWidth, columnWidth);
+        }
+        // FIXME: If column-count is auto here, we should resolve it to calculate the maximum
+        // intrinsic width, instead of pretending that it's 1. The only way to do that is by
+        // performing a layout pass, but this is not an appropriate time or place for layout. The
+        // good news is that if height is unconstrained and there are no explicit breaks, the
+        // resolved column-count really should be 1.
+        maxLogicalWidth = max(maxLogicalWidth, columnWidth) * columnCount + gapExtra;
+    }
 }
 
 struct InlineMinMaxIterator {

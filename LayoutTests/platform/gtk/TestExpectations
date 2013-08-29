@@ -782,9 +782,6 @@ webkit.org/b/61826 fast/events/drag-image-filename.html [ Timeout ]
 
 webkit.org/b/98350 accessibility/aria-invalid.html [ Timeout ]
 
-# Missing DRT AccessibilityController::addNotificationListener implementation
-webkit.org/b/70606 accessibility/aria-checkbox-sends-notification.html [ Timeout ]
-
 Bug(GTK) media/progress-events-generated-correctly.html [ Failure Timeout ]
 
 webkit.org/b/102257 fast/dom/Window/open-window-min-size.html [ Timeout ]
@@ -1277,6 +1274,7 @@ webkit.org/b/106924 accessibility/heading-level.html [ Failure ]
 
 webkit.org/b/103927 http/tests/w3c/webperf/submission/Intel/resource-timing/test_resource_timing_cross_origin_resource_request.html [ Failure ]
 webkit.org/b/103927 http/tests/w3c/webperf/submission/Intel/resource-timing/test_resource_timing_timing_allow_cross_origin_resource_request.html [ Failure ]
+webkit.org/b/103927 http/tests/w3c/webperf/submission/Google/resource-timing/html/test_resource_attribute_order.html [ Failure ]
 webkit.org/b/103927 http/tests/w3c/webperf/submission/Google/resource-timing/html/test_resource_frame_initiator_type.html [ Failure ]
 webkit.org/b/103927 http/tests/w3c/webperf/submission/Google/resource-timing/html/test_resource_initiator_types.html [ Failure ]
 webkit.org/b/103927 http/tests/w3c/webperf/submission/Google/resource-timing/html/test_resource_redirects.html [ Failure ]

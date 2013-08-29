@@ -37,9 +37,6 @@
 #include "ClipboardEvent.h"
 #include "CompositionEvent.h"
 #include "CreateLinkCommand.h"
-#if ENABLE(DELETION_UI)
-#include "DeleteButtonController.h"
-#endif
 #include "DeleteSelectionCommand.h"
 #include "DictationAlternative.h"
 #include "DictationCommand.h"
@@ -94,6 +91,10 @@
 #include "markup.h"
 #include <wtf/unicode/CharacterNames.h>
 #include <wtf/unicode/Unicode.h>
+
+#if ENABLE(DELETION_UI)
+#include "DeleteButtonController.h"
+#endif
 
 namespace WebCore {
 
@@ -414,7 +415,7 @@ void Editor::pasteAsFragment(PassRefPtr<DocumentFragment> pastingFragment, bool 
 
 void Editor::pasteAsPlainTextBypassingDHTML()
 {
-    pasteAsPlainTextWithPasteboard(Pasteboard::generalPasteboard());
+    pasteAsPlainTextWithPasteboard(Pasteboard::createForCopyAndPaste().get());
 }
 
 void Editor::pasteAsPlainTextWithPasteboard(Pasteboard* pasteboard)
@@ -706,7 +707,7 @@ bool Editor::dispatchCPPEvent(const AtomicString& eventType, ClipboardAccessPoli
     target->dispatchEvent(event, IGNORE_EXCEPTION);
     bool noDefaultProcessing = event->defaultPrevented();
     if (noDefaultProcessing && policy == ClipboardWritable) {
-        Pasteboard* pasteboard = Pasteboard::generalPasteboard();
+        OwnPtr<Pasteboard> pasteboard = Pasteboard::createForCopyAndPaste();
         pasteboard->clear();
         pasteboard->writePasteboard(clipboard->pasteboard());
     }
@@ -898,8 +899,8 @@ Editor::Editor(Frame& frame)
     // This is off by default, since most editors want this behavior (this matches IE but not FF).
     , m_shouldStyleWithCSS(false)
     , m_killRing(adoptPtr(new KillRing))
-    , m_spellChecker(adoptPtr(new SpellChecker(&frame)))
-    , m_alternativeTextController(adoptPtr(new AlternativeTextController(&frame)))
+    , m_spellChecker(adoptPtr(new SpellChecker(frame)))
+    , m_alternativeTextController(adoptPtr(new AlternativeTextController(frame)))
     , m_areMarkedTextMatchesHighlighted(false)
     , m_defaultParagraphSeparator(EditorParagraphSeparatorIsDiv)
     , m_overwriteModeEnabled(false)
@@ -984,7 +985,7 @@ bool Editor::insertTextWithoutSendingTextEvent(const String& text, bool selectIn
             // Reveal the current selection
             if (Frame* editedFrame = document->frame())
                 if (Page* page = editedFrame->page())
-                    page->focusController().focusedOrMainFrame()->selection().revealSelection(ScrollAlignment::alignCenterIfNeeded);
+                    page->focusController().focusedOrMainFrame().selection().revealSelection(ScrollAlignment::alignCenterIfNeeded);
         }
     }
 
@@ -1041,10 +1042,10 @@ void Editor::cut()
     if (shouldDeleteRange(selection.get())) {
         updateMarkersForWordsAffectedByEditing(true);
         if (enclosingTextFormControl(m_frame.selection().start())) {
-            Pasteboard::generalPasteboard()->writePlainText(selectedTextForClipboard(),
+            Pasteboard::createForCopyAndPaste()->writePlainText(selectedTextForClipboard(),
                 canSmartCopyOrDelete() ? Pasteboard::CanSmartReplace : Pasteboard::CannotSmartReplace);
         } else
-            Pasteboard::generalPasteboard()->writeSelection(selection.get(), canSmartCopyOrDelete(), &m_frame, IncludeImageAltTextForClipboard);
+            Pasteboard::createForCopyAndPaste()->writeSelection(selection.get(), canSmartCopyOrDelete(), &m_frame, IncludeImageAltTextForClipboard);
         didWriteSelectionToPasteboard();
         deleteSelectionWithSmartDelete(canSmartCopyOrDelete());
     }
@@ -1061,20 +1062,25 @@ void Editor::copy()
 
     willWriteSelectionToPasteboard(selectedRange());
     if (enclosingTextFormControl(m_frame.selection().start())) {
-        Pasteboard::generalPasteboard()->writePlainText(selectedTextForClipboard(),
+        Pasteboard::createForCopyAndPaste()->writePlainText(selectedTextForClipboard(),
             canSmartCopyOrDelete() ? Pasteboard::CanSmartReplace : Pasteboard::CannotSmartReplace);
     } else {
         Document* document = m_frame.document();
         if (HTMLImageElement* imageElement = imageElementFromImageDocument(document))
-            Pasteboard::generalPasteboard()->writeImage(imageElement, document->url(), document->title());
+            Pasteboard::createForCopyAndPaste()->writeImage(imageElement, document->url(), document->title());
         else
-            Pasteboard::generalPasteboard()->writeSelection(selectedRange().get(), canSmartCopyOrDelete(), &m_frame, IncludeImageAltTextForClipboard);
+            Pasteboard::createForCopyAndPaste()->writeSelection(selectedRange().get(), canSmartCopyOrDelete(), &m_frame, IncludeImageAltTextForClipboard);
     }
 
     didWriteSelectionToPasteboard();
 }
 
 void Editor::paste()
+{
+    paste(*Pasteboard::createForCopyAndPaste());
+}
+
+void Editor::paste(Pasteboard& pasteboard)
 {
     ASSERT(m_frame.document());
     if (tryDHTMLPaste())
@@ -1085,9 +1091,9 @@ void Editor::paste()
     CachedResourceLoader* loader = m_frame.document()->cachedResourceLoader();
     ResourceCacheValidationSuppressor validationSuppressor(loader);
     if (m_frame.selection().isContentRichlyEditable())
-        pasteWithPasteboard(Pasteboard::generalPasteboard(), true);
+        pasteWithPasteboard(&pasteboard, true);
     else
-        pasteAsPlainTextWithPasteboard(Pasteboard::generalPasteboard());
+        pasteAsPlainTextWithPasteboard(&pasteboard);
 }
 
 void Editor::pasteAsPlainText()
@@ -1097,7 +1103,7 @@ void Editor::pasteAsPlainText()
     if (!canPaste())
         return;
     updateMarkersForWordsAffectedByEditing(false);
-    pasteAsPlainTextWithPasteboard(Pasteboard::generalPasteboard());
+    pasteAsPlainTextWithPasteboard(Pasteboard::createForCopyAndPaste().get());
 }
 
 void Editor::performDelete()
@@ -1135,7 +1141,12 @@ void Editor::simplifyMarkup(Node* startNode, Node* endNode)
 
 void Editor::copyURL(const KURL& url, const String& title)
 {
-    Pasteboard::generalPasteboard()->writeURL(url, title, &m_frame);
+    copyURL(url, title, *Pasteboard::createForCopyAndPaste());
+}
+
+void Editor::copyURL(const KURL& url, const String& title, Pasteboard& pasteboard)
+{
+    pasteboard.writeURL(url, title, &m_frame);
 }
 
 void Editor::copyImage(const HitTestResult& result)
@@ -1144,7 +1155,7 @@ void Editor::copyImage(const HitTestResult& result)
     if (url.isEmpty())
         url = result.absoluteImageURL();
 
-    Pasteboard::generalPasteboard()->writeImage(result.innerNonSharedNode(), url, result.altDisplayString());
+    Pasteboard::createForCopyAndPaste()->writeImage(result.innerNonSharedNode(), url, result.altDisplayString());
 }
 
 bool Editor::isContinuousSpellCheckingEnabled() const
@@ -1450,7 +1461,7 @@ void Editor::confirmComposition(const String& text)
 void Editor::setComposition(const String& text, SetCompositionMode mode)
 {
     ASSERT(mode == ConfirmComposition || mode == CancelComposition);
-    UserTypingGestureIndicator typingGestureIndicator(&m_frame);
+    UserTypingGestureIndicator typingGestureIndicator(m_frame);
 
     setIgnoreCompositionSelectionChange(true);
 
@@ -1492,7 +1503,7 @@ void Editor::setComposition(const String& text, SetCompositionMode mode)
 
 void Editor::setComposition(const String& text, const Vector<CompositionUnderline>& underlines, unsigned selectionStart, unsigned selectionEnd)
 {
-    UserTypingGestureIndicator typingGestureIndicator(&m_frame);
+    UserTypingGestureIndicator typingGestureIndicator(m_frame);
 
     setIgnoreCompositionSelectionChange(true);
 
@@ -2557,13 +2568,13 @@ void Editor::transpose()
 void Editor::addToKillRing(Range* range, bool prepend)
 {
     if (m_shouldStartNewKillRingSequence)
-        killRing()->startNewSequence();
+        killRing().startNewSequence();
 
     String text = plainText(range);
     if (prepend)
-        killRing()->prepend(text);
+        killRing().prepend(text);
     else
-        killRing()->append(text);
+        killRing().append(text);
     m_shouldStartNewKillRingSequence = false;
 }
 

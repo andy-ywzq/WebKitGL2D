@@ -390,7 +390,10 @@ void MediaPlayerPrivateAVFoundationObjC::destroyVideoLayer()
 
 bool MediaPlayerPrivateAVFoundationObjC::hasAvailableVideoFrame() const
 {
-    return (m_videoFrameHasDrawn || (m_videoLayer && [m_videoLayer.get() isReadyForDisplay]));
+    if (currentRenderingMode() == MediaRenderingToLayer)
+        return m_videoLayer && [m_videoLayer.get() isReadyForDisplay];
+
+    return m_videoFrameHasDrawn;
 }
 
 void MediaPlayerPrivateAVFoundationObjC::createAVAssetForURL(const String& url)
@@ -787,14 +790,6 @@ void MediaPlayerPrivateAVFoundationObjC::paintCurrentFrameInContext(GraphicsCont
     if (!metaDataAvailable() || context->paintingDisabled())
         return;
 
-    paint(context, rect);
-}
-
-void MediaPlayerPrivateAVFoundationObjC::paint(GraphicsContext* context, const IntRect& rect)
-{
-    if (!metaDataAvailable() || context->paintingDisabled())
-        return;
-
     setDelayCallbacks(true);
     BEGIN_BLOCK_OBJC_EXCEPTIONS;
 
@@ -808,6 +803,18 @@ void MediaPlayerPrivateAVFoundationObjC::paint(GraphicsContext* context, const I
     setDelayCallbacks(false);
 
     m_videoFrameHasDrawn = true;
+}
+
+void MediaPlayerPrivateAVFoundationObjC::paint(GraphicsContext* context, const IntRect& rect)
+{
+    if (!metaDataAvailable() || context->paintingDisabled())
+        return;
+
+    // We can ignore the request if we are already rendering to a layer.
+    if (currentRenderingMode() == MediaRenderingToLayer)
+        return;
+
+    paintCurrentFrameInContext(context, rect);
 }
 
 #if __MAC_OS_X_VERSION_MIN_REQUIRED < 1080
@@ -850,14 +857,14 @@ RetainPtr<CGImageRef> MediaPlayerPrivateAVFoundationObjC::createImageForTimeInRe
     ASSERT(m_imageGenerator);
 
 #if !LOG_DISABLED
-    double start = WTF::currentTime();
+    double start = monotonicallyIncreasingTime();
 #endif
 
     [m_imageGenerator.get() setMaximumSize:CGSize(rect.size())];
     RetainPtr<CGImageRef> image = adoptCF([m_imageGenerator.get() copyCGImageAtTime:CMTimeMakeWithSeconds(time, 600) actualTime:nil error:nil]);
 
 #if !LOG_DISABLED
-    double duration = WTF::currentTime() - start;
+    double duration = monotonicallyIncreasingTime() - start;
     LOG(Media, "MediaPlayerPrivateAVFoundationObjC::createImageForTimeInRect(%p) - creating image took %.4f", this, narrowPrecisionToFloat(duration));
 #endif
 
@@ -1139,7 +1146,7 @@ RetainPtr<CVPixelBufferRef> MediaPlayerPrivateAVFoundationObjC::createPixelBuffe
     ASSERT(m_videoOutput);
 
 #if !LOG_DISABLED
-    double start = WTF::currentTime();
+    double start = monotonicallyIncreasingTime();
 #endif
 
     CMTime currentTime = [m_avPlayerItem.get() currentTime];
@@ -1166,7 +1173,7 @@ RetainPtr<CVPixelBufferRef> MediaPlayerPrivateAVFoundationObjC::createPixelBuffe
 #endif
 
 #if !LOG_DISABLED
-    double duration = WTF::currentTime() - start;
+    double duration = monotonicallyIncreasingTime() - start;
     LOG(Media, "MediaPlayerPrivateAVFoundationObjC::createPixelBuffer() - creating buffer took %.4f", this, narrowPrecisionToFloat(duration));
 #endif
 
@@ -1564,8 +1571,11 @@ NSArray* itemKVOProperties()
 
 - (id)initWithCallback:(MediaPlayerPrivateAVFoundationObjC*)callback
 {
+    self = [super init];
+    if (!self)
+        return nil;
     m_callback = callback;
-    return [super init];
+    return self;
 }
 
 - (void)disconnect
@@ -1688,8 +1698,11 @@ NSArray* itemKVOProperties()
 
 - (id)initWithCallback:(MediaPlayerPrivateAVFoundationObjC*)callback
 {
+    self = [super init];
+    if (!self)
+        return nil;
     m_callback = callback;
-    return [super init];
+    return self;
 }
 
 - (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest

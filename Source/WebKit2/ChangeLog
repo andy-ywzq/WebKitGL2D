@@ -1,3 +1,215 @@
+2013-08-28  Anders Carlsson  <andersca@apple.com>
+
+        Allow the Flash plug-in to open its preference pane
+        https://bugs.webkit.org/show_bug.cgi?id=120431
+        <rdar://problem/14857039>
+
+        Reviewed by Andreas Kling.
+
+        Forward the -[NSWorkspace openFile:] call to the UI process and allow opening
+        the Flash preference pane (if Flash asks for it).
+
+        * PluginProcess/PluginProcess.h:
+        * PluginProcess/mac/PluginProcessMac.mm:
+        (WebKit::replacedNSWorkspace_openFile):
+        (WebKit::initializeCocoaOverrides):
+        (WebKit::PluginProcess::openFile):
+        * UIProcess/Plugins/PluginProcessProxy.h:
+        * UIProcess/Plugins/PluginProcessProxy.messages.in:
+        * UIProcess/Plugins/mac/PluginProcessProxyMac.mm:
+        (WebKit::PluginProcessProxy::openURL):
+        (WebKit::shouldOpenFile):
+        (WebKit::PluginProcessProxy::openFile):
+
+2013-08-28  Tamas Czene  <tczene@inf.u-szeged.hu>
+
+        [wk2] Resolve unused parameters in WebPlatformStrategies.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=120410
+
+        Reviewed by Darin Adler.
+
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.cpp:
+        (WebKit::WebPlatformStrategies::getPluginInfo):
+        (WebKit::WebPlatformStrategies::transientLocalStorageNamespace):
+
+2013-08-28  Tamas Czene  <tczene@inf.u-szeged.hu>
+
+        [wk2] Resolve unused parameter warnings in the WebProcess.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=120412
+
+        Reviewed by Darin Adler.
+
+        * WebProcess/WebProcess.cpp:
+        (WebKit::WebProcess::startMemorySampler):
+
+2013-08-28  Darin Adler  <darin@apple.com>
+
+        Eliminate Pasteboard::generalPasteboard
+        https://bugs.webkit.org/show_bug.cgi?id=120392
+
+        Reviewed by Anders Carlsson.
+
+        * WebProcess/WebCoreSupport/WebEditorClient.cpp:
+        (WebKit::WebEditorClient::updateGlobalSelection):
+        Use createForGlobalSelection instead of generalPasteboard and setSelectionMode.
+
+2013-08-28  Ábrahám Gábor  <abrhm@inf.u-szeged.hu>
+
+        Fix unused variable warning.
+        https://bugs.webkit.org/show_bug.cgi?id=120396
+
+        Reviewed by Allan Sandfeld Jensen.
+
+        Fix unused variable compiler warning in PageOverlay.h
+
+        * WebProcess/WebPage/PageOverlay.h:
+        (WebKit::PageOverlay::Client::copyAccessibilityAttributeValue):
+        (WebKit::PageOverlay::Client::copyAccessibilityAttributeNames):
+
+
+2013-08-28  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK][WK2] Only set up a RedirectedXCompositeWindow if running under an X11 display
+        https://bugs.webkit.org/show_bug.cgi?id=120321
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Only set up the RedirectedXCompositeWindow member of the WebKitWebViewBasePrivate struct
+        if we're running under an X11 display. This is now done in the webkitWebViewBaseConstructed
+        function rather than the constructor, which is removed.
+
+        This allows for the UIProcess to run in a Wayland environment even when built with accelerated
+        compositing enabled. Of course, at the moment there's no support yet for accelerated compositing
+        under Wayland, so we fall back to rendering the backing store. No changes are introduced to
+        the behavior under X11 - accelerated compositing will be used where possible, if supported.
+
+        * UIProcess/API/gtk/WebKitWebViewBase.cpp:
+        (webkitWebViewBaseConstructed):
+
+2013-08-28  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK][WK2] Disable accelerated compositing under Wayland
+        https://bugs.webkit.org/show_bug.cgi?id=120347
+
+        Reviewed by Martin Robinson.
+
+        Accelerated compositing is not yet supported under the Wayland display protocol,
+        so it should be disabled. Since it is enabled by default and the GTK WK2 API does
+        not provide any way to change that, it's enough to disable it when attaching the
+        WebKitSettings object to the WebPageGroup if running under Wayland.
+
+        * UIProcess/API/gtk/WebKitWebViewGroup.cpp:
+        (webkitWebViewGroupAttachSettingsToPageGroup):
+
+2013-08-28  Alexandre Abreu  <alexandre.abreu@canonical.com>
+
+        Add a 'isMainFrame' parameter to QWebNavigationRequest.
+        https://bugs.webkit.org/show_bug.cgi?id=118860
+
+        Reviewed by Simon Hausmann.
+
+        * UIProcess/API/qt/qwebnavigationrequest.cpp:
+        (QWebNavigationRequestPrivate::QWebNavigationRequestPrivate):
+        (QWebNavigationRequest::QWebNavigationRequest):
+        (QWebNavigationRequest::navigationType):
+        (QWebNavigationRequest::isMainFrame):
+        * UIProcess/API/qt/qwebnavigationrequest_p.h:
+        * UIProcess/API/qt/tests/publicapi/tst_publicapi.cpp:
+        * UIProcess/qt/QtWebPagePolicyClient.cpp:
+        (WebKit::QtWebPagePolicyClient::decidePolicyForNavigationAction):
+        * UIProcess/qt/QtWebPagePolicyClient.h:
+
+2013-08-27  Luciano Wolf  <luciano.wolf@openbossa.org>
+
+        100% cpu usage for "transition: opacity" animation
+        https://bugs.webkit.org/show_bug.cgi?id=120012
+
+        Reviewed by Noam Rosenthal.
+
+        Schedule animation timer after scheduling a layer flush. This way it
+        won't overwrite animation timer with "0", thus avoiding 100% cpu usage.
+
+        * WebProcess/WebPage/CoordinatedGraphics/CoordinatedLayerTreeHost.cpp:
+        (WebKit::CoordinatedLayerTreeHost::scheduleAnimation):
+
+2013-08-27  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [WK2][Soup] Add WebFrameNetworkingContext::webFrameLoaderClient() after r154490
+        https://bugs.webkit.org/show_bug.cgi?id=120353
+
+        Reviewed by Alexey Proskuryakov.
+
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.cpp:
+        * WebProcess/WebCoreSupport/soup/WebFrameNetworkingContext.cpp:
+        (WebKit::WebFrameNetworkingContext::webFrameLoaderClient):
+        * WebProcess/WebCoreSupport/soup/WebFrameNetworkingContext.h:
+
+2013-08-26  Santosh Mahto  <santosh.ma@samsung.com>
+
+        Fixing compilation warning "unused parameter" in WebPageProxy.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=120205
+
+        Reviewed by Anders Carlsson.
+
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::findPlugin):
+        (WebKit::WebPageProxy::didBlockInsecurePluginVersion):
+        Added UNUSED_PARAM to avoid warning.
+
+2013-08-23  Andy Estes  <aestes@apple.com>
+
+        Fix issues found by the Clang Static Analyzer
+        https://bugs.webkit.org/show_bug.cgi?id=120230
+
+        Reviewed by Darin Adler.
+
+        * UIProcess/API/mac/WKBrowsingContextController.mm:
+        (autoreleased): Don't leak CFURLs when in Objective-C GC.
+        * WebProcess/WebPage/mac/WKAccessibilityWebPageObject.mm:
+        (-[WKAccessibilityWebPageObject accessibilityAttributeValue:forParameter:]):
+        Don't leak CFStrings when in Objective-C GC.
+
+2013-08-26  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [WK2] Buildfix for non Mac platforms
+        https://bugs.webkit.org/show_bug.cgi?id=120294
+
+        Reviewed by Darin Adler.
+
+        * NetworkProcess/AsynchronousNetworkLoaderClient.cpp:
+        (WebKit::AsynchronousNetworkLoaderClient::didReceiveBuffer):
+        * NetworkProcess/NetworkResourceLoader.h:
+
+2013-08-26  Alexey Proskuryakov  <ap@apple.com>
+
+        [Mac] can-read-in-dragstart-event.html and can-read-in-copy-and-cut-events.html fail
+        https://bugs.webkit.org/show_bug.cgi?id=113094
+
+        Reviewed by Darin Adler.
+
+        Return new pasteboard change count from all functions that change it.
+
+        * UIProcess/WebContext.h:
+        * UIProcess/WebContext.messages.in:
+        * UIProcess/mac/WebContextMac.mm:
+        (WebKit::WebContext::pasteboardCopy):
+        (WebKit::WebContext::addPasteboardTypes):
+        (WebKit::WebContext::setPasteboardTypes):
+        (WebKit::WebContext::setPasteboardPathnamesForType):
+        (WebKit::WebContext::setPasteboardStringForType):
+        (WebKit::WebContext::setPasteboardBufferForType):
+        * WebProcess/Plugins/PDF/PDFPlugin.mm:
+        (WebKit::PDFPlugin::writeItemsToPasteboard):
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.cpp:
+        (WebKit::WebPlatformStrategies::copy):
+        (WebKit::WebPlatformStrategies::changeCount):
+        (WebKit::WebPlatformStrategies::addTypes):
+        (WebKit::WebPlatformStrategies::setTypes):
+        (WebKit::WebPlatformStrategies::setBufferForType):
+        (WebKit::WebPlatformStrategies::setPathnamesForType):
+        (WebKit::WebPlatformStrategies::setStringForType):
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.h:
+
 2013-08-26  Andreas Kling  <akling@apple.com>
 
         Unreviewed build fix.

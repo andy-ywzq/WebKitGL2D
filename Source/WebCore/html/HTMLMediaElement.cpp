@@ -39,6 +39,7 @@
 #include "ContentType.h"
 #include "CSSPropertyNames.h"
 #include "CSSValueKeywords.h"
+#include "DescendantIterator.h"
 #include "DiagnosticLoggingKeys.h"
 #include "DocumentLoader.h"
 #include "Event.h"
@@ -537,7 +538,8 @@ void HTMLMediaElement::finishParsingChildren()
     if (!RuntimeEnabledFeatures::webkitVideoTrackEnabled())
         return;
 
-    if (Traversal<HTMLTrackElement>::firstWithin(this))
+    auto trackDescendants = descendantsOfType<HTMLTrackElement>(this);
+    if (trackDescendants.begin() != trackDescendants.end())
         scheduleDelayedAction(ConfigureTextTracks);
 #endif
 }
@@ -1651,7 +1653,8 @@ void HTMLMediaElement::cancelPendingEventsAndCallbacks()
     LOG(Media, "HTMLMediaElement::cancelPendingEventsAndCallbacks");
     m_asyncEventQueue->cancelAllEvents();
 
-    for (auto source = Traversal<HTMLSourceElement>::firstChild(this); source; source = Traversal<HTMLSourceElement>::nextSibling(source))
+    auto sourceChildren = childrenOfType<HTMLSourceElement>(this);
+    for (auto source = sourceChildren.begin(), end = sourceChildren.end(); source != end; ++source)
         source->cancelPendingErrorEvent();
 }
 
@@ -4792,6 +4795,9 @@ void HTMLMediaElement::createMediaPlayer()
         m_mediaSource->setReadyState(MediaSource::closedKeyword());
 #endif
 
+#if ENABLE(VIDEO_TRACK)
+    removeAllInbandTracks();
+#endif
     m_player = MediaPlayer::create(this);
 
 #if ENABLE(WEB_AUDIO)

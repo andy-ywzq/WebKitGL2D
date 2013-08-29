@@ -1,3 +1,249 @@
+2013-08-28  Denis Nomiyama  <d.nomiyama@samsung.com>
+
+        [GTK] accessibility/menu-list-sends-change-notification.html has incorrect expected results
+        https://bugs.webkit.org/show_bug.cgi?id=120419
+
+        Reviewed by Chris Fleizach.
+
+        Added a notification for AXFocusedUIElementChanged.
+
+        * DumpRenderTree/atk/AccessibilityCallbacksAtk.cpp:
+        (axObjectEventListener): Added a notification for AXFocusedUIElementChanged.
+
+2013-08-28  Roger Fong  <roger_fong@apple.com>
+
+        Decrease number of workers used in NRWT by the Windows port.
+        https://bugs.webkit.org/show_bug.cgi?id=120435.
+
+        Reviewed by Brent Fulgham.
+
+        * Scripts/webkitpy/port/win.py:
+        (WinPort.default_child_processes):
+
+2013-08-28  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        Http tests fails on Debian with Apache 2.4
+        https://bugs.webkit.org/show_bug.cgi?id=120352
+
+        Unreviewed fix-up.
+
+        Remember to update unit-test expectations and old-run-webkit-tests as well.
+
+        * Scripts/webkitperl/httpd.pm:
+        (getHTTPDConfigPathForTestDirectory):
+        * Scripts/webkitpy/port/port_testcase.py:
+        (test_apache_config_file_name_for_platform):
+
+2013-08-28  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        Http tests fails on Debian with Apache 2.4
+        https://bugs.webkit.org/show_bug.cgi?id=120352
+
+        Reviewed by Andreas Kling.
+
+        Select httpd.conf file for debian based on version, matching Fedora behavior.
+
+        * Scripts/webkitpy/port/base.py:
+        (Port._apache_config_file_name_for_platform):
+
+2013-08-28  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r154593.
+        http://trac.webkit.org/changeset/154593
+        https://bugs.webkit.org/show_bug.cgi?id=120403
+
+        Caused 50+ flaky tests on WebKit1 bots (Requested by carewolf
+        on #webkit).
+
+        * DumpRenderTree/qt/DumpRenderTreeQt.cpp:
+        (WebPage::~WebPage):
+
+2013-08-28  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt][Wk2] Many tests are flaky on Qt 5.1
+        https://bugs.webkit.org/show_bug.cgi?id=118232
+
+        Reviewed by Jocelyn Turcotte.
+
+        We need to set renderToOffscreenBuffer since we won't otherwise get
+        the paint calls necessary to synchronize UI- and Web-Process. It was
+        only disabled in Qt 5.0 because it conflicted with setRenderWithoutShowing
+        which is no longer supported or needed.
+
+        * WebKitTestRunner/qt/PlatformWebViewQt.cpp:
+        (WTR::WrapperWindow::handleStatusChanged):
+
+2013-08-27  Alexey Proskuryakov  <ap@apple.com>
+
+        [WK2] Remove USE_WEBPROCESS_EVENT_SIMULATION
+        https://bugs.webkit.org/show_bug.cgi?id=120379
+
+        Reviewed by Darin Adler.
+
+        All major platforms have implemented UI process eventSender support, keeping old
+        web process side code only adds confusion.
+
+        * WebKitTestRunner/InjectedBundle/EventSendingController.cpp:
+        (WTR::EventSendingController::EventSendingController):
+        (WTR::EventSendingController::mouseDown):
+        (WTR::EventSendingController::mouseUp):
+        (WTR::EventSendingController::mouseMoveTo):
+        (WTR::EventSendingController::leapForward):
+        * WebKitTestRunner/InjectedBundle/EventSendingController.h:
+        * WebKitTestRunner/TestController.cpp:
+        (WTR::TestController::resetStateToConsistentValues):
+        (WTR::TestController::didReceiveMessageFromInjectedBundle):
+        (WTR::TestController::didReceiveSynchronousMessageFromInjectedBundle):
+        * WebKitTestRunner/TestController.h:
+
+2013-08-27  Roger Fong  <roger_fong@apple.com>
+
+        NRWT on AppleWin port should delete semaphore lock files during cleanup tasks.
+        https://bugs.webkit.org/show_bug.cgi?id=120370.
+
+        Reviewed by Brent Fulgham.
+
+        * Scripts/webkitpy/port/win.py:
+        (WinPort.delete_sem_locks):
+        (WinPort.setup_test_run):
+
+2013-08-27  Denis Nomiyama  <d.nomiyama@samsung.com>
+
+        [GTK] Missing DRT AccessibilityUIElement::addNotificationListener implementation
+        https://bugs.webkit.org/show_bug.cgi?id=119883
+
+        Implemented the notification listener for AccessibilityUIElement. The signal is generated
+        by AXObjectCache::postPlatformNotification() and received by axObjectEventListener().
+        axObjectEventListener will then invoke JSObjectCallAsFunction() with the respective
+        callback function. The global callback function and callbacks for specific elements are
+        stored in a HashMap in AccessibilityCallbacksAtk.cpp.
+
+        Reviewed by Chris Fleizach.
+
+        * DumpRenderTree/AccessibilityUIElement.h: Added a notification handler for GTK+
+        * DumpRenderTree/atk/AccessibilityCallbacks.h: Added addAccessibilityNotificationListener()
+        and removeAccessibilityNotificationListener()
+        * DumpRenderTree/atk/AccessibilityCallbacksAtk.cpp:
+        (axObjectEventListener): Call JS callback for global notification or for a specific element
+        (disconnectAccessibilityCallbacks): Only disconnect if logging is off and there is no
+        notification handler
+        (addAccessibilityNotificationHandler): Add notification listener to the list
+        (removeAccessibilityNotificationHandler): Remove notification listener from the list
+        * DumpRenderTree/atk/AccessibilityControllerAtk.cpp:
+        (AccessibilityController::setLogAccessibilityEvents): Set logging off before disconnecting
+        * DumpRenderTree/atk/AccessibilityNotificationHandlerAtk.cpp: Added.
+        (AccessibilityNotificationHandler::AccessibilityNotificationHandler): Create handler
+        (AccessibilityNotificationHandler::~AccessibilityNotificationHandler): Destroy handler.
+        Remove handler from the list and disconnect callbacks
+        (AccessibilityNotificationHandler::setNotificationFunctionCallback): Set the notification
+        callback and connect callbacks to signals
+        * DumpRenderTree/atk/AccessibilityNotificationHandlerAtk.h: Added.
+        (AccessibilityNotificationHandler::setPlatformElement): Set platform element
+        (AccessibilityNotificationHandler::platformElement): Get platform element
+        (AccessibilityNotificationHandler::notificationFunctionCallback): Get notification callback
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (AccessibilityUIElement::addNotificationListener): Create notification handler, set the
+        platform element and the notification callback
+        (AccessibilityUIElement::removeNotificationListener):
+        * DumpRenderTree/efl/CMakeLists.txt: Added AccessibilityNotificationHandlerAtk.cpp/h
+        * GNUmakefile.am: Added AccessibilityNotificationHandlerAtk.cpp/h
+
+2013-08-27  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix GTK+ build after r154601.
+
+        * TestWebKitAPI/GNUmakefile.am: Remove mac specific file from
+        compilation added by mistake in r154601.
+
+2013-08-26  Alexey Proskuryakov  <ap@apple.com>
+
+        WebKitTestRunner needs to protect the user's pasteboard contents while running
+        https://bugs.webkit.org/show_bug.cgi?id=81419
+        <rdar://problem/11066794>
+
+        Reviewed by Darin Adler.
+
+        Mostly a copy/paste of DRT code.
+
+        Tested manually by making sure that editing/pasteboard/copy-image-with-alt-text.html
+        doesn't interfere with my clipboard while being run in a loop.
+
+        * WebKitTestRunner/WebKitTestRunner.xcodeproj/project.pbxproj:
+        * WebKitTestRunner/mac/PoseAsClass.h: Added.
+        * WebKitTestRunner/mac/PoseAsClass.mm: Added.
+        * WebKitTestRunner/mac/TestControllerMac.mm:
+        (WTR::TestController::platformInitialize):
+        (WTR::TestController::platformDestroy):
+        * WebKitTestRunner/mac/WebKitTestRunnerPasteboard.h: Added.
+        * WebKitTestRunner/mac/WebKitTestRunnerPasteboard.mm: Added.
+
+2013-08-26  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r154640.
+        http://trac.webkit.org/changeset/154640
+        https://bugs.webkit.org/show_bug.cgi?id=120329
+
+        Caused flaky crashes on a lot of editing tests (Requested by
+        rniwa on #webkit).
+
+        * WebKitTestRunner/WebKitTestRunner.xcodeproj/project.pbxproj:
+        * WebKitTestRunner/mac/PoseAsClass.h: Removed.
+        * WebKitTestRunner/mac/PoseAsClass.mm: Removed.
+        * WebKitTestRunner/mac/TestControllerMac.mm:
+        (WTR::TestController::platformInitialize):
+        (WTR::TestController::platformDestroy):
+        * WebKitTestRunner/mac/WebKitTestRunnerPasteboard.h: Removed.
+        * WebKitTestRunner/mac/WebKitTestRunnerPasteboard.mm: Removed.
+
+2013-08-26  Dan Bernstein  <mitz@apple.com>
+
+        Automatic bug reports case pain
+        https://bugs.webkit.org/show_bug.cgi?id=120330
+
+        Reviewed by Anders Carlsson.
+
+        * Scripts/webkitpy/tool/commands/download.py: Made the following changes to the Description
+        of bugs filed by the bot: changed “the sheriff-bot” to “webkitbot”, changed “case pain” to
+        “fail”, and removed “"Only you can prevent forest fires." -- Smokey the Bear”.
+
+2013-08-23  Andy Estes  <aestes@apple.com>
+
+        Fix issues found by the Clang Static Analyzer
+        https://bugs.webkit.org/show_bug.cgi?id=120230
+
+        Reviewed by Darin Adler.
+
+        * DumpRenderTree/mac/DumpRenderTreePasteboard.m:
+        (-[LocalPasteboard initWithName:]): Called [super init] first so that we
+        don't later use ivars from the wrong self.
+        * DumpRenderTree/mac/TestRunnerMac.mm:
+        (-[APITestDelegate initWithCompletionCondition:]): Ditto.
+        * TestWebKitAPI/Tests/WebKit2ObjC/CustomProtocolsTest.mm:
+        (TestWebKitAPI::TEST): Don't leak WKProcessGroups,
+        WKBrowsingContextGroups, and WKViews.
+
+2013-08-26  Alexey Proskuryakov  <ap@apple.com>
+
+        WebKitTestRunner needs to protect the user's pasteboard contents while running
+        https://bugs.webkit.org/show_bug.cgi?id=81419
+        <rdar://problem/11066794>
+
+        Reviewed by Darin Adler.
+
+        Mostly a copy/paste of DRT code.
+
+        Tested manually by making sure that editing/pasteboard/copy-image-with-alt-text.html
+        doesn't interfere with my clipboard while being run in a loop.
+
+        * WebKitTestRunner/WebKitTestRunner.xcodeproj/project.pbxproj:
+        * WebKitTestRunner/mac/PoseAsClass.h: Added.
+        * WebKitTestRunner/mac/PoseAsClass.mm: Added.
+        * WebKitTestRunner/mac/TestControllerMac.mm:
+        (WTR::TestController::platformInitialize):
+        (WTR::TestController::platformDestroy):
+        * WebKitTestRunner/mac/WebKitTestRunnerPasteboard.h: Added.
+        * WebKitTestRunner/mac/WebKitTestRunnerPasteboard.mm: Added.
+
 2013-08-26  Zan Dobersek  <zdobersek@igalia.com>
 
         [GTK] Include most of the WebKit2 unit tests into the build and testing

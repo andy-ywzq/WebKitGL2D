@@ -229,9 +229,9 @@ void NodeRenderingContext::moveToFlowThreadIfNeeded()
         return;
 
     ASSERT(m_node->document()->renderView());
-    FlowThreadController* flowThreadController = m_node->document()->renderView()->flowThreadController();
-    m_parentFlowRenderer = &flowThreadController->ensureRenderFlowThreadWithName(m_style->flowThread());
-    flowThreadController->registerNamedFlowContentNode(m_node, m_parentFlowRenderer);
+    FlowThreadController& flowThreadController = m_node->document()->renderView()->flowThreadController();
+    m_parentFlowRenderer = &flowThreadController.ensureRenderFlowThreadWithName(m_style->flowThread());
+    flowThreadController.registerNamedFlowContentNode(m_node, m_parentFlowRenderer);
 #endif
 }
 
@@ -282,45 +282,6 @@ void NodeRenderingContext::createRendererForElementIfNeeded()
     }
 #endif
     // Note: Adding newRenderer instead of renderer(). renderer() may be a child of newRenderer.
-    parentRenderer->addChild(newRenderer, nextRenderer);
-}
-
-void NodeRenderingContext::createRendererForTextIfNeeded()
-{
-    ASSERT(!m_node->renderer());
-
-    Text* textNode = toText(m_node);
-
-    if (!shouldCreateRenderer())
-        return;
-
-    RenderObject* parentRenderer = this->parentRenderer();
-    ASSERT(parentRenderer);
-    Document* document = textNode->document();
-
-    if (resetStyleInheritance())
-        m_style = document->ensureStyleResolver().defaultStyleForElement();
-    else
-        m_style = parentRenderer->style();
-
-    if (!textNode->textRendererIsNeeded(*this))
-        return;
-    RenderText* newRenderer = textNode->createTextRenderer(document->renderArena(), m_style.get());
-    if (!newRenderer)
-        return;
-    if (!parentRenderer->isChildAllowed(newRenderer, m_style.get())) {
-        newRenderer->destroy();
-        return;
-    }
-
-    // Make sure the RenderObject already knows it is going to be added to a RenderFlowThread before we set the style
-    // for the first time. Otherwise code using inRenderFlowThread() in the styleWillChange and styleDidChange will fail.
-    newRenderer->setFlowThreadState(parentRenderer->flowThreadState());
-
-    RenderObject* nextRenderer = this->nextRenderer();
-    textNode->setRenderer(newRenderer);
-    // Parent takes care of the animations, no need to call setAnimatableStyle.
-    newRenderer->setStyle(m_style.release());
     parentRenderer->addChild(newRenderer, nextRenderer);
 }
 
