@@ -29,12 +29,6 @@
 
 namespace WebCore {
 
-Pasteboard* Pasteboard::generalPasteboard()
-{
-    static Pasteboard* pasteboard = new Pasteboard();
-    return pasteboard;
-}
-
 Pasteboard::Pasteboard()
 {
     notImplemented();
