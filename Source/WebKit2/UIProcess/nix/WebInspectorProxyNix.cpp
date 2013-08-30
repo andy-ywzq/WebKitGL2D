@@ -124,7 +124,7 @@ void WebInspectorProxy::platformSetToolbarHeight(unsigned)
     notImplemented();
 }
 
-void WebInspectorProxy::platformSave(const String&, const String&, bool)
+void WebInspectorProxy::platformSave(const String&, const String&, bool, bool)
 {
     notImplemented();
 }
