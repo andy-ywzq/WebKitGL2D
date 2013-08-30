@@ -27,6 +27,7 @@
 
 #if ENABLE(MEDIA_STREAM)
 
+#include "ArrayBufferView.h"
 #include "EventTarget.h"
 #include "RTCDataChannelHandlerClient.h"
 #include "Timer.h"
