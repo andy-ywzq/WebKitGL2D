@@ -61,6 +61,7 @@ SOURCES += \
     bytecode/CodeOrigin.cpp \
     bytecode/CodeType.cpp \
     bytecode/DFGExitProfile.cpp \
+    bytecode/DeferredCompilationCallback.cpp \
     bytecode/ExecutionCounter.cpp \
     bytecode/ExitKind.cpp \
     bytecode/GetByIdStatus.cpp \
@@ -128,6 +129,8 @@ SOURCES += \
     dfg/DFGClobberSet.cpp \
     dfg/DFGCommon.cpp \
     dfg/DFGCommonData.cpp \
+    dfg/DFGCompilationKey.cpp \
+    dfg/DFGCompilationMode.cpp \
     dfg/DFGCFAPhase.cpp \
     dfg/DFGCFGSimplificationPhase.cpp \
     dfg/DFGCPSRethreadingPhase.cpp \
@@ -221,11 +224,12 @@ SOURCES += \
     jit/JITStubRoutine.cpp \
     jit/JITStubs.cpp \
     jit/JITThunks.cpp \
+    jit/JITToDFGDeferredCompilationCallback.cpp \
     jit/JumpReplacementWatchpoint.cpp \
     jit/ThunkGenerators.cpp \
     llint/LLIntCLoop.cpp \
     llint/LLIntData.cpp \
-    llint/LLIntEntrypoints.cpp \
+    llint/LLIntEntrypoint.cpp \
     llint/LLIntExceptions.cpp \
     llint/LLIntSlowPaths.cpp \
     llint/LLIntThunks.cpp \
@@ -319,6 +323,8 @@ SOURCES += \
     runtime/JSGlobalObject.cpp \
     runtime/JSGlobalObjectFunctions.cpp \
     runtime/JSLock.cpp \
+    runtime/JSMap.cpp \
+    runtime/JSNameScope.cpp \
     runtime/JSNameScope.cpp \
     runtime/JSNotAnObject.cpp \
     runtime/JSONObject.cpp \
@@ -345,6 +351,9 @@ SOURCES += \
     runtime/JSWrapperObject.cpp \
     runtime/LiteralParser.cpp \
     runtime/Lookup.cpp \
+    runtime/MapConstructor.cpp \
+    runtime/MapData.cpp \
+    runtime/MapPrototype.cpp \
     runtime/MathObject.cpp \
     runtime/MemoryStatistics.cpp \
     runtime/NameConstructor.cpp \

@@ -63,6 +63,7 @@ class JSPromisePrototype;
 class JSPromiseResolverPrototype;
 class JSStack;
 class LLIntOffsetsExtractor;
+class MapPrototype;
 class NativeErrorConstructor;
 class ProgramCodeBlock;
 class ProgramExecutable;
@@ -150,6 +151,7 @@ protected:
     WriteBarrier<ErrorPrototype> m_errorPrototype;
     WriteBarrier<JSPromisePrototype> m_promisePrototype;
     WriteBarrier<JSPromiseResolverPrototype> m_promiseResolverPrototype;
+    WriteBarrier<MapPrototype> m_mapPrototype;
 
     WriteBarrier<Structure> m_withScopeStructure;
     WriteBarrier<Structure> m_strictEvalActivationStructure;
@@ -183,11 +185,17 @@ protected:
     WriteBarrier<Structure> m_regExpStructure;
     WriteBarrier<Structure> m_stringObjectStructure;
     WriteBarrier<Structure> m_internalFunctionStructure;
+
+#if ENABLE(PROMISES)
     WriteBarrier<Structure> m_promiseStructure;
     WriteBarrier<Structure> m_promiseResolverStructure;
     WriteBarrier<Structure> m_promiseCallbackStructure;
     WriteBarrier<Structure> m_promiseWrapperCallbackStructure;
+#endif // ENABLE(PROMISES)
 
+    WriteBarrier<Structure> m_mapDataStructure;
+    WriteBarrier<Structure> m_mapStructure;
+    
     WriteBarrier<JSArrayBufferPrototype> m_arrayBufferPrototype;
     WriteBarrier<Structure> m_arrayBufferStructure;
     
@@ -378,13 +386,18 @@ public:
     Structure* numberObjectStructure() const { return m_numberObjectStructure.get(); }
     Structure* privateNameStructure() const { return m_privateNameStructure.get(); }
     Structure* internalFunctionStructure() const { return m_internalFunctionStructure.get(); }
+    Structure* mapStructure() const { return m_mapStructure.get(); }
+    Structure* mapDataStructure() const { return m_mapDataStructure.get(); }
     Structure* regExpMatchesArrayStructure() const { return m_regExpMatchesArrayStructure.get(); }
     Structure* regExpStructure() const { return m_regExpStructure.get(); }
     Structure* stringObjectStructure() const { return m_stringObjectStructure.get(); }
+
+#if ENABLE(PROMISES)
     Structure* promiseStructure() const { return m_promiseStructure.get(); }
     Structure* promiseResolverStructure() const { return m_promiseResolverStructure.get(); }
     Structure* promiseCallbackStructure() const { return m_promiseCallbackStructure.get(); }
     Structure* promiseWrapperCallbackStructure() const { return m_promiseWrapperCallbackStructure.get(); }
+#endif // ENABLE(PROMISES)
 
     JSArrayBufferPrototype* arrayBufferPrototype() const { return m_arrayBufferPrototype.get(); }
     Structure* arrayBufferStructure() const { return m_arrayBufferStructure.get(); }

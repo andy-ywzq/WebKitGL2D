@@ -34,6 +34,7 @@
 #include "CallLinkStatus.h"
 #include "DFGCapabilities.h"
 #include "DFGCommon.h"
+#include "DFGDriver.h"
 #include "DFGNode.h"
 #include "DFGRepatch.h"
 #include "DFGWorklist.h"
@@ -1634,7 +1635,7 @@ CodeBlock::CodeBlock(ScriptExecutable* ownerExecutable, UnlinkedCodeBlock* unlin
     // Allocate metadata buffers for the bytecode
 #if ENABLE(LLINT)
     if (size_t size = unlinkedCodeBlock->numberOfLLintCallLinkInfos())
-        m_llintCallLinkInfos.grow(size);
+        m_llintCallLinkInfos.resizeToFit(size);
 #endif
 #if ENABLE(DFG_JIT)
     if (size_t size = unlinkedCodeBlock->numberOfArrayProfiles())
@@ -2441,9 +2442,6 @@ void CodeBlock::expressionRangeForBytecodeOffset(unsigned bytecodeOffset, int& d
 
 void CodeBlock::shrinkToFit(ShrinkMode shrinkMode)
 {
-#if ENABLE(LLINT)
-    m_llintCallLinkInfos.shrinkToFit();
-#endif
 #if ENABLE(JIT)
     m_structureStubInfos.shrinkToFit();
     m_callLinkInfos.shrinkToFit();
@@ -2536,20 +2534,22 @@ void CodeBlock::linkIncomingCall(ExecState* callerFrame, CallLinkInfo* incoming)
     noticeIncomingCall(callerFrame);
     m_incomingCalls.push(incoming);
 }
+#endif // ENABLE(JIT)
 
 void CodeBlock::unlinkIncomingCalls()
 {
 #if ENABLE(LLINT)
     while (m_incomingLLIntCalls.begin() != m_incomingLLIntCalls.end())
         m_incomingLLIntCalls.begin()->unlink();
-#endif
+#endif // ENABLE(LLINT)
+#if ENABLE(JIT)
     if (m_incomingCalls.isEmpty())
         return;
     RepatchBuffer repatchBuffer(this);
     while (m_incomingCalls.begin() != m_incomingCalls.end())
         m_incomingCalls.begin()->unlink(*m_vm, repatchBuffer);
-}
 #endif // ENABLE(JIT)
+}
 
 #if ENABLE(LLINT)
 void CodeBlock::linkIncomingCall(ExecState* callerFrame, LLIntCallLinkInfo* incoming)
@@ -2689,6 +2689,16 @@ void CodeBlock::copyPostParseDataFromAlternative()
     copyPostParseDataFrom(m_alternative.get());
 }
 
+void CodeBlock::install()
+{
+    ownerExecutable()->installCode(this);
+}
+
+PassRefPtr<CodeBlock> CodeBlock::newReplacement()
+{
+    return ownerExecutable()->newReplacementCodeBlockFor(specializationKind());
+}
+
 #if ENABLE(JIT)
 void CodeBlock::reoptimize()
 {
@@ -2714,53 +2724,6 @@ CodeBlock* FunctionCodeBlock::replacement()
 {
     return &static_cast<FunctionExecutable*>(ownerExecutable())->generatedBytecodeFor(m_isConstructor ? CodeForConstruct : CodeForCall);
 }
-
-#if ENABLE(DFG_JIT)
-JSObject* ProgramCodeBlock::compileOptimized(ExecState* exec, JSScope* scope, CompilationResult& result, unsigned bytecodeIndex)
-{
-    if (JITCode::isHigherTier(replacement()->jitType(), jitType())) {
-        result = CompilationNotNeeded;
-        return 0;
-    }
-    JSObject* error = static_cast<ProgramExecutable*>(ownerExecutable())->compileOptimized(exec, scope, result, bytecodeIndex);
-    return error;
-}
-
-CompilationResult ProgramCodeBlock::replaceWithDeferredOptimizedCode(PassRefPtr<DFG::Plan> plan)
-{
-    return static_cast<ProgramExecutable*>(ownerExecutable())->replaceWithDeferredOptimizedCode(plan);
-}
-
-JSObject* EvalCodeBlock::compileOptimized(ExecState* exec, JSScope* scope, CompilationResult& result, unsigned bytecodeIndex)
-{
-    if (JITCode::isHigherTier(replacement()->jitType(), jitType())) {
-        result = CompilationNotNeeded;
-        return 0;
-    }
-    JSObject* error = static_cast<EvalExecutable*>(ownerExecutable())->compileOptimized(exec, scope, result, bytecodeIndex);
-    return error;
-}
-
-CompilationResult EvalCodeBlock::replaceWithDeferredOptimizedCode(PassRefPtr<DFG::Plan> plan)
-{
-    return static_cast<EvalExecutable*>(ownerExecutable())->replaceWithDeferredOptimizedCode(plan);
-}
-
-JSObject* FunctionCodeBlock::compileOptimized(ExecState* exec, JSScope* scope, CompilationResult& result, unsigned bytecodeIndex)
-{
-    if (JITCode::isHigherTier(replacement()->jitType(), jitType())) {
-        result = CompilationNotNeeded;
-        return 0;
-    }
-    JSObject* error = static_cast<FunctionExecutable*>(ownerExecutable())->compileOptimizedFor(exec, scope, result, bytecodeIndex, m_isConstructor ? CodeForConstruct : CodeForCall);
-    return error;
-}
-
-CompilationResult FunctionCodeBlock::replaceWithDeferredOptimizedCode(PassRefPtr<DFG::Plan> plan)
-{
-    return static_cast<FunctionExecutable*>(ownerExecutable())->replaceWithDeferredOptimizedCodeFor(plan, m_isConstructor ? CodeForConstruct : CodeForCall);
-}
-#endif // ENABLE(DFG_JIT)
 
 DFG::CapabilityLevel ProgramCodeBlock::capabilityLevelInternal()
 {
@@ -2803,27 +2766,6 @@ void EvalCodeBlock::jettisonImpl()
 void FunctionCodeBlock::jettisonImpl()
 {
     static_cast<FunctionExecutable*>(ownerExecutable())->jettisonOptimizedCodeFor(*vm(), m_isConstructor ? CodeForConstruct : CodeForCall);
-}
-
-CompilationResult ProgramCodeBlock::jitCompileImpl(ExecState* exec)
-{
-    ASSERT(jitType() == JITCode::InterpreterThunk);
-    ASSERT(this == replacement());
-    return static_cast<ProgramExecutable*>(ownerExecutable())->jitCompile(exec);
-}
-
-CompilationResult EvalCodeBlock::jitCompileImpl(ExecState* exec)
-{
-    ASSERT(jitType() == JITCode::InterpreterThunk);
-    ASSERT(this == replacement());
-    return static_cast<EvalExecutable*>(ownerExecutable())->jitCompile(exec);
-}
-
-CompilationResult FunctionCodeBlock::jitCompileImpl(ExecState* exec)
-{
-    ASSERT(jitType() == JITCode::InterpreterThunk);
-    ASSERT(this == replacement());
-    return static_cast<FunctionExecutable*>(ownerExecutable())->jitCompileFor(exec, m_isConstructor ? CodeForConstruct : CodeForCall);
 }
 #endif
 
@@ -3017,26 +2959,10 @@ static int32_t clipThreshold(double threshold)
     return static_cast<int32_t>(threshold);
 }
 
-int32_t CodeBlock::counterValueForOptimizeAfterWarmUp()
+int32_t CodeBlock::adjustedCounterValue(int32_t desiredThreshold)
 {
     return clipThreshold(
-        Options::thresholdForOptimizeAfterWarmUp() *
-        optimizationThresholdScalingFactor() *
-        (1 << reoptimizationRetryCounter()));
-}
-
-int32_t CodeBlock::counterValueForOptimizeAfterLongWarmUp()
-{
-    return clipThreshold(
-        Options::thresholdForOptimizeAfterLongWarmUp() *
-        optimizationThresholdScalingFactor() *
-        (1 << reoptimizationRetryCounter()));
-}
-
-int32_t CodeBlock::counterValueForOptimizeSoon()
-{
-    return clipThreshold(
-        Options::thresholdForOptimizeSoon() *
+        static_cast<double>(desiredThreshold) *
         optimizationThresholdScalingFactor() *
         (1 << reoptimizationRetryCounter()));
 }
@@ -3044,10 +2970,12 @@ int32_t CodeBlock::counterValueForOptimizeSoon()
 bool CodeBlock::checkIfOptimizationThresholdReached()
 {
 #if ENABLE(DFG_JIT)
-    if (m_vm->worklist
-        && m_vm->worklist->compilationState(this) == DFG::Worklist::Compiled) {
-        optimizeNextInvocation();
-        return true;
+    if (DFG::Worklist* worklist = m_vm->worklist.get()) {
+        if (worklist->compilationState(DFG::CompilationKey(this, DFG::DFGMode))
+            == DFG::Worklist::Compiled) {
+            optimizeNextInvocation();
+            return true;
+        }
     }
 #endif
     
@@ -3073,7 +3001,8 @@ void CodeBlock::optimizeAfterWarmUp()
     if (Options::verboseOSR())
         dataLog(*this, ": Optimizing after warm-up.\n");
 #if ENABLE(DFG_JIT)
-    m_jitExecuteCounter.setNewThreshold(counterValueForOptimizeAfterWarmUp(), this);
+    m_jitExecuteCounter.setNewThreshold(
+        adjustedCounterValue(Options::thresholdForOptimizeAfterWarmUp()), this);
 #endif
 }
 
@@ -3082,7 +3011,8 @@ void CodeBlock::optimizeAfterLongWarmUp()
     if (Options::verboseOSR())
         dataLog(*this, ": Optimizing after long warm-up.\n");
 #if ENABLE(DFG_JIT)
-    m_jitExecuteCounter.setNewThreshold(counterValueForOptimizeAfterLongWarmUp(), this);
+    m_jitExecuteCounter.setNewThreshold(
+        adjustedCounterValue(Options::thresholdForOptimizeAfterLongWarmUp()), this);
 #endif
 }
 
@@ -3091,7 +3021,8 @@ void CodeBlock::optimizeSoon()
     if (Options::verboseOSR())
         dataLog(*this, ": Optimizing soon.\n");
 #if ENABLE(DFG_JIT)
-    m_jitExecuteCounter.setNewThreshold(counterValueForOptimizeSoon(), this);
+    m_jitExecuteCounter.setNewThreshold(
+        adjustedCounterValue(Options::thresholdForOptimizeSoon()), this);
 #endif
 }
 

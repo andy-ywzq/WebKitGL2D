@@ -1,3 +1,906 @@
+2013-08-30  Antti Koivisto  <antti@apple.com>
+
+        Remove AttachContext
+        https://bugs.webkit.org/show_bug.cgi?id=120518
+
+        Reviewed by Andreas Kling.
+
+        This type is not useful anymore. Just pass the precomputed style to attachRenderTree and reattach-or-not flag to detachRenderTree.
+
+        * style/StyleResolveTree.cpp:
+        (WebCore::Style::createRendererIfNeeded):
+        (WebCore::Style::attachChildren):
+        (WebCore::Style::attachShadowRoot):
+        (WebCore::Style::attachRenderTree):
+        (WebCore::Style::detachChildren):
+        (WebCore::Style::detachShadowRoot):
+        (WebCore::Style::detachRenderTree):
+        (WebCore::Style::reattachRenderTree):
+        (WebCore::Style::resolveLocal):
+        * style/StyleResolveTree.h:
+
+2013-08-30  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r154826.
+        http://trac.webkit.org/changeset/154826
+        https://bugs.webkit.org/show_bug.cgi?id=120517
+
+        Still breaks icloud.com (Requested by mwenge_ on #webkit).
+
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::computePositionedLogicalWidth):
+        (WebCore::RenderBox::computePositionedLogicalHeight):
+        * rendering/RenderBox.h:
+        (WebCore::RenderBox::intrinsicSize):
+        * rendering/RenderButton.h:
+        * rendering/RenderFileUploadControl.cpp:
+        (WebCore::RenderFileUploadControl::computePreferredLogicalWidths):
+        * rendering/RenderListBox.cpp:
+        (WebCore::RenderListBox::RenderListBox):
+        (WebCore::RenderListBox::computePreferredLogicalWidths):
+        (WebCore::RenderListBox::computeLogicalHeight):
+        * rendering/RenderListBox.h:
+        * rendering/RenderMenuList.h:
+        * rendering/RenderSlider.cpp:
+        (WebCore::RenderSlider::computePreferredLogicalWidths):
+        * rendering/RenderTextControl.cpp:
+        (WebCore::RenderTextControl::RenderTextControl):
+        (WebCore::RenderTextControl::computeLogicalHeight):
+        * rendering/RenderTextControl.h:
+
+2013-08-29  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Unduplicate the code to convert between VisiblePosition and index
+        https://bugs.webkit.org/show_bug.cgi?id=120506
+
+        Reviewed by Darin Adler.
+
+        Encapsulate the conversion between VisiblePosition and index into indexForVisiblePosition
+        and visiblePositionForIndexUsingCharacterIterator. It's unfortunate that these two functions
+        are different from the two other existing functions of similar names but we've at least
+        confined problems into a single cpp file now.
+
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::visiblePositionForIndex):
+        (WebCore::AccessibilityRenderObject::indexForVisiblePosition):
+        * editing/Editor.cpp:
+        (WebCore::findFirstMarkable):
+        * editing/htmlediting.cpp:
+        (WebCore::indexForVisiblePosition):
+        (WebCore::visiblePositionForIndexUsingCharacterIterator):
+        * editing/htmlediting.h:
+        * html/HTMLTextFormControlElement.cpp:
+        (WebCore::hasVisibleTextArea):
+        (WebCore::HTMLTextFormControlElement::setSelectionRange):
+        (WebCore::HTMLTextFormControlElement::indexForVisiblePosition):
+        (WebCore::HTMLTextFormControlElement::visiblePositionForIndex):
+        * html/HTMLTextFormControlElement.h:
+        * rendering/RenderTextControl.cpp:
+        * rendering/RenderTextControl.h:
+
+2013-08-29  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Avoid Node references from AXObjectCache from leaking
+        https://bugs.webkit.org/show_bug.cgi?id=120501
+
+        Reviewed by Darin Adler.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/454f31497613b6d0fbcfb0df757254b64a177c06
+        without any tests since we don't have the same infrastructure to detect leaks in WebKit.
+
+        A real world example of this would be selecting an <option> item inside frame by keyboard. The node will not be deref()-ed until the topDocument() is detached. 
+
+        The issue was that AccessibilityMenuListOption is created in childrenChanged()
+        hook called when its RenderObject is being destroyed. This patch modifies AccessibilityMenuListPopup so it won't create AccessibilityMenuListOption if its
+        element is already detached.
+
+        * accessibility/AccessibilityMenuListPopup.cpp:
+        (WebCore::AccessibilityMenuListPopup::menuListOptionAccessibilityObject):
+        * rendering/RenderMenuList.cpp:
+        (WebCore::RenderMenuList::didUpdateActiveOption):
+
+2013-08-26  Simon Fraser  <simon.fraser@apple.com>
+
+        Implement object-fit CSS property
+        https://bugs.webkit.org/show_bug.cgi?id=52040
+
+        Reviewed by Antti Koivisto, Sam Weinig.
+        
+        Merge object-fit patch from Blink r156535, which started as a patch
+        by me.
+
+        Since then, the spec has gone to CR. This patch is an
+        implementation of object-fit as described in
+        http://www.w3.org/TR/2012/CR-css3-images-20120417/#object-fit
+
+        Object-fit is used to maintain the aspect ratio of replaced content
+        within its content box. All object-fit values but the initial one
+        ('fill') will always ensure that the aspect ratio is retained, in
+        different ways (fit inside the content box, cover the content box, or
+        use intrinsic size). Painting is always clipped against the content
+        box, regardless of the 'overflow' property.
+
+        Tests: fast/css/object-fit/object-fit-canvas.html
+               fast/css/object-fit/object-fit-embed.html
+               fast/css/object-fit/object-fit-grow-landscape.html
+               fast/css/object-fit/object-fit-grow-portrait.html
+               fast/css/object-fit/object-fit-img-svg.html
+               fast/css/object-fit/object-fit-img-svg2.html
+               fast/css/object-fit/object-fit-img.html
+               fast/css/object-fit/object-fit-input-image.html
+               fast/css/object-fit/object-fit-object.html
+               fast/css/object-fit/object-fit-shrink.html
+               fast/css/object-fit/object-fit-video-poster.html
+               fast/css/parsing-object-fit.html
+               http/tests/css/object-fit-delayed-img-svg.html
+               media/video-object-fit-change.html
+               media/video-object-fit.html
+
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::ComputedStyleExtractor::propertyValue):
+        * css/CSSParser.cpp:
+        (WebCore::isValidKeywordPropertyAndValue):
+        (WebCore::isKeywordPropertyID):
+        (WebCore::CSSParser::parseValue):
+        * css/CSSPrimitiveValueMappings.h:
+        (WebCore::CSSPrimitiveValue::CSSPrimitiveValue):
+        (WebCore::CSSPrimitiveValue::operator EObjectFit):
+        * css/CSSProperty.cpp:
+        (WebCore::CSSProperty::isInheritedProperty):
+        * css/CSSPropertyNames.in:
+        * css/CSSValueKeywords.in:
+        * css/DeprecatedStyleBuilder.cpp:
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::applyProperty):
+        * css/html.css:
+        (video): Set object-fit to 'contain'. This is how VIDEO elements
+        work, apparently.
+        * loader/cache/CachedImage.cpp:
+        (WebCore::CachedImage::imageSizeForRenderer):
+        * loader/cache/CachedImage.h:
+        * platform/graphics/LayoutSize.h:
+        (WebCore::fitLayoutSizeToAspectRatio): New function to grow or shrink
+        in one dimension to fit to the aspect ratio.
+        * rendering/RenderHTMLCanvas.cpp:
+        (WebCore::RenderHTMLCanvas::paintReplaced): Apply object-fit and
+        clip if necessary.
+        * rendering/RenderImage.cpp:
+        (WebCore::RenderImage::updateInnerContentRect):
+        (WebCore::RenderImage::imageDimensionsChanged): Update intrinsic
+        size properly, and recalculate the inner content rectangle (the
+        exact area occupied by the replaced content) again if appropriate.
+        (WebCore::RenderImage::paintReplaced): Apply object-fit and clip
+        if necessary.
+        (WebCore::RenderImage::foregroundIsKnownToBeOpaqueInRect):
+        object-fit may leave parts of the content box empty, in which case
+        it won't be fully obscured.
+        (WebCore::RenderImage::layout):
+        * rendering/RenderImage.h:
+        * rendering/RenderImageResource.cpp:
+        (WebCore::RenderImageResource::intrinsicSize): Need this to
+        differentiate between intrinsic and extrinsic size for SVG images.
+        * rendering/RenderImageResource.h:
+        * rendering/RenderImageResourceStyleImage.h:
+        * rendering/RenderReplaced.cpp:
+        (WebCore::RenderReplaced::replacedContentRect): Return the
+        rectangle occupied by the replaced content. This will be identical
+        to the content box if object-fit is 'fill', but will typically be
+        something else for other values.
+        * rendering/RenderReplaced.h:
+        * rendering/RenderVideo.cpp:
+        (WebCore::RenderVideo::videoBox): Not much left to do here, with
+        the new RenderReplaced::replacedContentRect() method in place.
+        (WebCore::RenderVideo::paintReplaced): Apply object-fit and clip
+        if necessary.
+        * rendering/style/RenderStyle.cpp:
+        (WebCore::RenderStyle::changeRequiresRepaint):
+        * rendering/style/RenderStyle.h:
+        * rendering/style/RenderStyleConstants.h:
+        * rendering/style/StyleRareNonInheritedData.cpp:
+        (WebCore::StyleRareNonInheritedData::StyleRareNonInheritedData):
+        (WebCore::StyleRareNonInheritedData::operator==):
+        * rendering/style/StyleRareNonInheritedData.h:
+
+2013-08-29  Tim Horton  <timothy_horton@apple.com>
+
+        SVG clipping, masking, and gradients-on-text do not respect the device scale factor
+        https://bugs.webkit.org/show_bug.cgi?id=120377
+        <rdar://problem/14777944>
+
+        Reviewed by Simon Fraser.
+
+        Tests: svg/custom/masking-clipping-hidpi.svg
+
+        calculateTransformationToOutermostCoordinateSystem should include the page's
+        device scale factor in its transform.
+
+        * rendering/svg/SVGRenderingContext.cpp:
+        (WebCore::SVGRenderingContext::calculateTransformationToOutermostCoordinateSystem):
+
+2013-08-29  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: Crash when VoiceOver reference a TextMarker from an iframe that has been removed
+        https://bugs.webkit.org/show_bug.cgi?id=120318
+
+        Reviewed by Darin Adler.
+
+        These crashes occur because an AXTextMarker is retrieved that reference a Node in an iframe.
+        The iframe goes away, but when it tries to clean up and remove that Node from the InUse cache,
+        the document() tree has already been detached, so it never clears the actual InUse cache.
+
+        The fix here is to pre-emptively clean up any nodes in the document going away when the frame is about to disconnect.
+
+        I'm removing the clearAXObjectCache() at the disconnectOwnerElement because it 
+           1) Cleared the AXObjectCache for the iframe document (which is always empty -- only the top level doc maintains the cache), because
+                the document() tree had already been detached... so it essentially did nothing.
+           2) And if it did work, we wouldn't want this behavior -- that is to say, when an iframe goes away, we don't want to clear the entire cache for all
+               the other documents (there's even an existing layout test to verify this behavior).
+
+        Test: platform/mac/accessibility/stale-textmarker-crash.html
+
+        * accessibility/AXObjectCache.cpp:
+        (WebCore::AXObjectCache::clearTextMarkerNodesInUse):
+        * accessibility/AXObjectCache.h:
+        * page/Frame.cpp:
+        (WebCore::Frame::disconnectOwnerElement):
+
+2013-08-29  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] More unreviewed gardening of project file.
+        Move css files inline with related source code.
+
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+
+2013-08-29  Sam Weinig  <sam@webkit.org>
+
+        Add ENABLE guards for Promises
+        https://bugs.webkit.org/show_bug.cgi?id=120488
+
+        Reviewed by Andreas Kling.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-08-29  Andreas Kling  <akling@apple.com>
+
+        Inspector: Use a bit of RefPtr::release() in generated code.
+        <https://webkit.org/b/120485>
+
+        Reviewed by Darin Adler.
+
+        Just something I spotted while reading InspectorBackendDispatcher.cpp.
+        Avoid 3 cases of reference count churnery.
+
+        * inspector/CodeGeneratorInspectorStrings.py:
+
+2013-08-29  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        According to DOM4, all DocType nodes should have a document
+        https://bugs.webkit.org/show_bug.cgi?id=99244
+
+        Reviewed by Darin Adler.
+
+        Doctypes now always have a node document and can be moved across document boundaries as per
+        the latest DOM4 specification:
+        http://dom.spec.whatwg.org/#dom-domimplementation-createdocumenttype
+        http://dom.spec.whatwg.org/#dom-node-ownerdocument
+
+        This means that DOMImplementation.createDocumentType() now sets the ownerDocument of the
+        new DocumentType Node to the associated document of the current "context" object. In
+        DOM4, all nodes have a document at all times. DocumentType nodes can now be moved across
+        document boundaries so that the node can be added to a Document after being created.
+
+        This means we will no longer need to special case DocumentType nodes in the code and
+        Node::document() can no longer return NULL, which means that we'll be able to remove
+        NULL checks in call sites.
+
+        Firefox stable and since recently Blink already follow DOM4 here while IE10 does not (yet).
+
+        Test: fast/dom/createDocumentType-ownerDocument.html
+
+        * dom/ContainerNode.cpp:
+        (WebCore::checkAcceptChild):
+        * dom/DOMImplementation.cpp:
+        (WebCore::DOMImplementation::createDocumentType):
+        (WebCore::DOMImplementation::createDocument):
+        * dom/Node.h:
+        (WebCore::Node::document):
+
+2013-08-29  Darin Adler  <darin@apple.com>
+
+        Pasteboard::writeSelection violates layering (first step, fixes it for Mac platform only)
+        https://bugs.webkit.org/show_bug.cgi?id=120483
+
+        Reviewed by Anders Carlsson.
+
+        * editing/Editor.cpp:
+        (WebCore::Editor::cut): Added some comments. Use the new writeSelectionToPasteboard
+        function on Mac instead of Pasteboard::writeSelection.
+        (WebCore::Editor::copy): Ditto.
+
+        * editing/Editor.h: Removed an old unused Mac-only writeSelectionToPasteboard function
+        that was a cover that called through to Pasteboard::writeSelectionForTypes. Added a new
+        Mac-only writeSelectionToPasteboard function that is destined to become cross-platform soon.
+
+        * editing/mac/EditorMac.mm:
+        (WebCore::Editor::writeSelectionToPasteboard): Added. Uses a new pattern where the Editor
+        puts all the data into a structure called PasteboardWebContent then calls the Pasteboard to
+        do the work. The platform-specific aspect of PasteboardWebContent is what formats are needed
+        for each platform.
+
+        * page/DragController.cpp:
+        (WebCore::DragController::startDrag): Added some comments. Use the new writeSelectionToPasteboard
+        function on Mac instead of Pasteboard::writeSelection.
+
+        * platform/Pasteboard.h: Remove some unneeded forward declarations. Added comments for all functions
+        that don't belong in this class because they are layering violations; this becomes the to do list for
+        the project we are beginning here. Added the new PasteboardWebContent structure, empty on all platforms
+        except for Mac for now. Removed writeSelectionForTypes, a Mac-only function that is no longer used.
+        Added setTypes and writeAfterSettingTypes, the two halves of the future function named writeWebContent.
+        Put the writeSelection function inside a "not Mac" if statement. Later to be deleted entirely.
+
+        * platform/mac/PasteboardMac.mm: Removed now-unneeded selectionPasteboardTypes,
+        Pasteboard::writeSelectionForTypes, and writeSelection functions.
+        (WebCore::Pasteboard::setTypes): Added. First half of writing web content to the pasteboard.
+        (WebCore::Pasteboard::writeAfterSettingTypes): Added. Second half of writing web content to the pasteboard.
+
+2013-08-29  Antti Koivisto  <antti@apple.com>
+
+        Remove code behind ENABLE(DIALOG_ELEMENT)
+        https://bugs.webkit.org/show_bug.cgi?id=120467
+
+        Reviewed by Darin Adler.
+
+        It is incomplete and no one is building it.
+
+        * CMakeLists.txt:
+        * Configurations/FeatureDefines.xcconfig:
+        * DerivedSources.make:
+        * DerivedSources.pri:
+        * GNUmakefile.list.am:
+        * Target.pri:
+        * WebCore.exp.in:
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/generic/RuntimeEnabledFeatures.cpp:
+        * bindings/generic/RuntimeEnabledFeatures.h:
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::adjustRenderStyle):
+        * css/html.css:
+        * dom/ContextFeatures.cpp:
+        * dom/ContextFeatures.h:
+        * dom/Document.cpp:
+        * dom/Document.h:
+        * dom/Element.cpp:
+        (WebCore::Element::removedFrom):
+        (WebCore::Element::setContainsFullScreenElementOnAncestorsCrossingFrameBoundaries):
+        * dom/Element.h:
+        (WebCore::Element::isDisabledFormControl):
+        * dom/ElementRareData.h:
+        (WebCore::ElementRareData::ElementRareData):
+        * html/HTMLDialogElement.cpp: Removed.
+        * html/HTMLDialogElement.h: Removed.
+        * html/HTMLDialogElement.idl: Removed.
+        * html/HTMLElementsAllInOne.cpp:
+        * html/HTMLTagNames.in:
+        * rendering/RenderDialog.cpp: Removed.
+        * rendering/RenderDialog.h: Removed.
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::rebuildZOrderLists):
+        (WebCore::RenderLayer::collectLayers):
+        * rendering/RenderLayer.h:
+        * rendering/RenderObject.h:
+        (WebCore::RenderObject::isCounter):
+        * rendering/RenderingAllInOne.cpp:
+        * testing/InternalSettings.cpp:
+        (WebCore::InternalSettings::Backup::Backup):
+        (WebCore::InternalSettings::Backup::restoreTo):
+        * testing/InternalSettings.h:
+
+2013-08-29  Simon Fraser  <simon.fraser@apple.com>
+
+        Fix slider thumb event handling to use local, not absolute coordinates
+        https://bugs.webkit.org/show_bug.cgi?id=120480
+
+        Reviewed by Darin Adler.
+        
+        SliderThumbElement::setPositionFromPoint() did all of its coordinate
+        math by mapping renderer rects into absolute coordinates, which was
+        unnecessary and expensive.
+        
+        Fix by doing all the math in the coordinate space of the input's
+        renderer. This simplified the code. Also, currentPosition
+        was computed but unused, so was removed.
+
+        No behavior change. Tested by fast/forms/range/slider-transformed.html
+
+        * html/shadow/SliderThumbElement.cpp:
+        (WebCore::SliderThumbElement::setPositionFromPoint):
+
+2013-08-29  Zan Dobersek  <zdobersek@igalia.com>
+
+        [Automake] libWebCoreDOM.la could use a better name
+        https://bugs.webkit.org/show_bug.cgi?id=120232
+
+        Reviewed by Martin Robinson.
+
+        * bindings/gobject/GNUmakefile.am: Rename the libWebCoreDOM library to libGObjectDOMBindings.
+
+2013-08-29  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Download Web Archive of Inspected Page
+        https://bugs.webkit.org/show_bug.cgi?id=119774
+
+        Reviewed by Timothy Hatcher.
+
+        Add PageAgent.archive which will return a Base-64 encoded web archive
+        when successful. In order to then allow saving non-string files, extend
+        InspectorFrontendHost.save to allow for Base-64 encoded data.
+
+        * inspector/Inspector.json:
+        * inspector/InspectorPageAgent.cpp:
+        (WebCore::InspectorPageAgent::archive):
+        * inspector/InspectorPageAgent.h:
+        Introduce and implement PageAgent.archive. Create a Web Archive of the
+        page's main frame.
+
+        * inspector/InspectorFrontendClient.h:
+        * inspector/InspectorFrontendClientLocal.h:
+        (WebCore::InspectorFrontendClientLocal::save):
+        * inspector/InspectorFrontendHost.cpp:
+        (WebCore::InspectorFrontendHost::save):
+        * inspector/InspectorFrontendHost.h:
+        * inspector/InspectorFrontendHost.idl:
+        Extend InspectorFrontendHost.save to include a base64Encoded param.
+
+        * inspector/front-end/FileManager.js:
+        * inspector/front-end/InspectorFrontendHostStub.js:
+        (.WebInspector.InspectorFrontendHostStub.prototype.save):
+        Misc. updates to the old inspector for function changes.
+
+2013-08-29  Robert Hogan  <robert@webkit.org>
+
+        Positioned Replaced Elements That Aren't RenderReplaced get Incorrect Width
+        https://bugs.webkit.org/show_bug.cgi?id=93735
+
+        Reviewed by David Hyatt.
+
+        Replaced elements that aren't RenderReplaced aren't |isReplaced| and don't have an 
+        intrinsic height or width. This causes them to go down the wrong height and width computation
+        path in RenderBox when they are absolute positioned. 
+        
+        The notion of |isReplaced| is entwined with the notion of being |isInline| so it isn't really 
+        possible to make them isReplaced without re-wiring a lot of code. So instead use an ad-hoc definition
+        of isReplacedElement in RenderBox to bring all replaced elements into the height and width calculation.
+        To make sure we get the right height and width in there, give non-RenderReplaced replaced renderers
+        the helpers for returning their approximation of intrinsic height and width.
+
+        The initial attempt at landing this patch had to be rolled out because it used LayoutUnit() for default
+        intrinsic height of some replaced elements and this made the layout of the elements unstable in some sites.
+        The fix for this issue is captured in intrinsic-button-and-input-height.html.
+
+        Tests: fast/replaced/intrinsic-button-and-input-height.html
+               fast/replaced/width-and-height-of-positioned-replaced-elements.html
+
+        * rendering/RenderBox.cpp:
+        (WebCore::isReplacedElement):
+        (WebCore::RenderBox::computePositionedLogicalWidth):
+        (WebCore::RenderBox::computePositionedLogicalHeight):
+        * rendering/RenderBox.h:
+        (WebCore::RenderBox::intrinsicSize):
+        * rendering/RenderButton.h:
+        * rendering/RenderFileUploadControl.cpp:
+        (WebCore::RenderFileUploadControl::computePreferredLogicalWidths):
+        * rendering/RenderListBox.cpp:
+        (WebCore::RenderListBox::RenderListBox):
+        (WebCore::RenderListBox::computePreferredLogicalWidths):
+        (WebCore::RenderListBox::computeLogicalHeight):
+        * rendering/RenderListBox.h:
+        * rendering/RenderMenuList.h:
+        * rendering/RenderReplaced.h:
+        * rendering/RenderSlider.cpp:
+        (WebCore::RenderSlider::computePreferredLogicalWidths):
+        * rendering/RenderTextControl.cpp:
+        (WebCore::RenderTextControl::RenderTextControl):
+        (WebCore::RenderTextControl::computeLogicalHeight):
+        * rendering/RenderTextControl.h:
+
+2013-08-29  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed gardening. Add missing *.css files from project.
+
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+
+2013-08-29  Pratik Solanki  <pratik.solanki@gmail.com>
+
+        SharedBuffer m_segments and m_dataArray must be exclusive
+        https://bugs.webkit.org/show_bug.cgi?id=77715
+
+        Reviewed by Benjamin Poulain.
+
+        When USE(NETWORK_CFDATA_ARRAY_CALLBACK) is enabled, we use m_dataArray to hold the incoming
+        data. We do not use m_segments. Since they are exclusive in practice, do not define or use
+        m_segments when NETWORK_CFDATA_ARRAY_CALLBACK is enabled.
+
+        No new tests because no functional changes.
+
+        * platform/SharedBuffer.cpp:
+        (WebCore::SharedBuffer::append):
+        (WebCore::SharedBuffer::clear):
+        (WebCore::SharedBuffer::copy):
+        (WebCore::SharedBuffer::buffer):
+        (WebCore::SharedBuffer::getSomeData):
+        * platform/SharedBuffer.h:
+
+2013-08-29  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Upstream changes to WebCore/style
+        https://bugs.webkit.org/show_bug.cgi?id=120173
+
+        Reviewed by Darin Adler.
+
+        * style/StyleResolveTree.cpp:
+        (WebCore::Style::elementImplicitVisibility): Added; specific to iOS.
+        (WebCore::Style::CheckForVisibilityChangeOnRecalcStyle::CheckForVisibilityChangeOnRecalcStyle): Added; specific to iOS.
+        (WebCore::Style::CheckForVisibilityChangeOnRecalcStyle::~CheckForVisibilityChangeOnRecalcStyle): Added; specific to iOS.
+        (WebCore::Style::resolveTree): Modified to instantiate CheckForVisibilityChangeOnRecalcStyle when building on iOS.
+
+2013-08-29  Arnaud Renevier  <a.renevier@samsung.com>
+
+        [cairo] canvas drawing on itself doesn't work with accelerated canvas
+        https://bugs.webkit.org/show_bug.cgi?id=118808
+
+        Reviewed by Martin Robinson.
+
+        When copying an accelerated image, we try to get its dimensions with
+        cairo_image_surface_get_width/cairo_image_surface_get_height. As
+        surface is not an image, this returns width and height of 0.
+
+        Many other places use cairo_image_surface_get although the surface may
+        be a gl surface. 
+        
+        This patch fixes those issues by implementing a cairoSurfaceSize
+        helper that returns the surface size whatever type it is.
+
+        It use cairo_surface_create_similar instead of
+        cairo_image_surface_create in copyCairoImageSurface. It also calls
+        cairo_paint in encodeImage when a drawing over a black background is
+        needed.
+
+        It copies the surface to an image surface if needed in extractImage.
+
+        No new tests. Covered by existing tests.
+
+        * platform/graphics/cairo/BitmapImageCairo.cpp:
+        (WebCore::BitmapImage::BitmapImage):
+        (WebCore::BitmapImage::draw):
+        (WebCore::BitmapImage::checkForSolidColor):
+        * platform/graphics/cairo/CairoUtilities.cpp:
+        (WebCore::copyCairoImageSurface):
+        (WebCore::cairoSurfaceSize):
+        * platform/graphics/cairo/CairoUtilities.h:
+        * platform/graphics/cairo/GraphicsContext3DCairo.cpp:
+        (WebCore::GraphicsContext3D::ImageExtractor::extractImage):
+        * platform/graphics/gtk/GdkCairoUtilities.cpp:
+        (cairoSurfaceToGdkPixbuf):
+        * platform/graphics/gtk/GdkCairoUtilities.h:
+        * platform/graphics/gtk/ImageBufferGtk.cpp:
+        (WebCore::encodeImage):
+        * platform/graphics/gtk/ImageGtk.cpp:
+        (WebCore::BitmapImage::getGdkPixbuf):
+        * platform/gtk/DragIcon.cpp:
+        (WebCore::DragIcon::setImage):
+
+2013-08-29  Tamas Czene  <tczene@inf.u-szeged.hu>
+
+        Buildfix after r154806 for !ENABLE(CSS_REGIONS) platforms.
+        https://bugs.webkit.org/show_bug.cgi?id=120461
+
+        Reviewed by Csaba Osztrogonác.
+
+        moveToFlowThreadIfNeeded() is used only inside of ENABLE(CSS_REGIONS)
+        block (and only once), so it should be guarded too.
+
+        * style/StyleResolveTree.cpp:
+
+2013-08-29  David Kilzer  <ddkilzer@apple.com>
+
+        BUILD FIX (r154778): AXSearchFieldCancelButtonText() is not defined on iOS
+
+        See: AX: Cancel button in search field not accessible.
+        <https://webkit.org/b/120322>
+
+        Fixes the following build error:
+
+            In file included from Source/WebCore/accessibility/AccessibilityAllInOne.cpp:44:
+            Source/WebCore/accessibility/AccessibilitySearchFieldButtons.cpp:46:12: error: use of undeclared identifier 'AXSearchFieldCancelButtonText'
+                return AXSearchFieldCancelButtonText();
+                       ^
+            1 error generated.
+
+        * accessibility/AccessibilitySearchFieldButtons.cpp:
+        (WebCore::AccessibilitySearchFieldCancelButton::accessibilityDescription):
+        Return String() instead of calling AXSearchFieldCancelButtonText() on iOS.
+
+2013-08-29  Antti Koivisto  <antti@apple.com>
+
+        Remove NodeRenderingContext
+        https://bugs.webkit.org/show_bug.cgi?id=120466
+
+        Reviewed by Andreas Kling.
+
+        Switch the few remaining clients of this class to call the underlying code directly.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * Target.pri:
+        * WebCore.exp.in:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.xcodeproj/project.pbxproj:
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::State::initForStyleResolve):
+        * dom/DOMAllInOne.cpp:
+        * dom/Node.cpp:
+        * dom/Node.h:
+        
+            Remove Node::parentNodeForRenderingAndStyle(). Make clients invoke NodeRenderingTraversal::parent() directly.
+
+        * dom/NodeRenderingContext.cpp: Removed.
+        * dom/NodeRenderingContext.h: Removed.
+        * dom/ShadowRoot.h:
+        * dom/Text.cpp:
+        * dom/Text.h:
+        * dom/TreeScope.cpp:
+        * dom/TreeScope.h:
+            
+            Remove virtual TreeScope::resetStyleInheritance. Make clients cast to ShadowRoot when needed.
+
+        * html/HTMLSummaryElement.cpp:
+        (WebCore::HTMLSummaryElement::detailsElement):
+        * style/StyleResolveTree.cpp:
+        (WebCore::Style::createTextRendererIfNeeded):
+        
+            For consistency switch resetStyleInheritance check to use parentNode() instead of renderingParentNode. This matches the NodeRenderingTraversal implementation.
+            This difference is probably not testable in current trunk.
+
+        (WebCore::Style::resolveTree):
+
+2013-08-29  Antti Koivisto  <antti@apple.com>
+
+        Move element renderer creation out of NodeRenderingContext
+        https://bugs.webkit.org/show_bug.cgi?id=120461
+
+        Reviewed by Andreas Kling.
+
+        Move NodeRenderingContext::createRendererIfNeeded() and the related utility functions to StyleResolveTree.
+        
+        Tighten typing and constness. Refactor sligthly to be more understandable.
+
+        * dom/Element.cpp:
+        (WebCore::Element::shouldMoveToFlowThread):
+        * dom/Element.h:
+        * dom/NodeRenderingContext.cpp:
+        (WebCore::NodeRenderingContext::NodeRenderingContext):
+        (WebCore::NodeRenderingContext::nextRenderer):
+        (WebCore::NodeRenderingContext::previousRenderer):
+        (WebCore::NodeRenderingContext::parentRenderer):
+        * dom/NodeRenderingContext.h:
+        * dom/PseudoElement.h:
+        * style/StyleResolveTree.cpp:
+        (WebCore::Style::nextSiblingRenderer):
+        (WebCore::Style::shouldCreateRenderer):
+        (WebCore::Style::elementInsideRegionNeedsRenderer):
+        (WebCore::Style::moveToFlowThreadIfNeeded):
+        (WebCore::Style::createRendererIfNeeded):
+        (WebCore::Style::attachRenderTree):
+        * svg/SVGElement.cpp:
+        (WebCore::SVGElement::shouldMoveToFlowThread):
+        * svg/SVGElement.h:
+
+2013-08-28  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: WebProcess at com.apple.WebCore: WebCore::AXObjectCache::rootObject + 27
+        https://bugs.webkit.org/show_bug.cgi?id=120434
+
+        Reviewed by Darin Adler.
+
+        Crash logs indicate that there's a null pointer access in rootObject. That seems like it could only
+        happen in Document was null. 
+
+        Unfortunately, there are no reproducible steps and no other information to construct a test case.
+
+        * accessibility/AXObjectCache.cpp:
+        (WebCore::AXObjectCache::rootObject):
+
+2013-08-28  Ryosuke Niwa  <rniwa@webkit.org>
+
+        The code to look for an ancestor form element is duplicated in three different places
+        https://bugs.webkit.org/show_bug.cgi?id=120391
+
+        Reviewed by Darin Adler.
+
+        Unduplicated the code by putting a single implementation in HTMLFormElement.cpp.
+
+        * WebCore.order:
+        * html/FormAssociatedElement.cpp:
+        (WebCore::FormAssociatedElement::findAssociatedForm):
+        (WebCore::FormAssociatedElement::formAttributeChanged):
+        * html/HTMLElement.cpp:
+        (WebCore::HTMLElement::virtualForm):
+        * html/HTMLElement.h:
+        * html/HTMLFormControlElement.cpp:
+        (WebCore::HTMLFormControlElement::HTMLFormControlElement):
+        * html/HTMLFormElement.cpp:
+        (WebCore::HTMLFormElement::findClosestFormAncestor):
+        * html/HTMLFormElement.h:
+        * html/HTMLImageElement.cpp:
+        (WebCore::HTMLImageElement::insertedInto):
+        * html/HTMLObjectElement.cpp:
+        (WebCore::HTMLObjectElement::HTMLObjectElement):
+        * html/parser/HTMLTreeBuilder.cpp:
+        (WebCore::HTMLTreeBuilder::HTMLTreeBuilder):
+
+2013-08-28  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Stop throwing DOM exceptions in internal 'XMLHttpRequest' response getters
+        https://bugs.webkit.org/show_bug.cgi?id=120446
+
+        Reviewed by Alexey Proskuryakov.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/c8188c21452501b68950a9fcc1f5cbc7b4de4df5
+
+        Unlike 'responseText' and 'responseXML', 'responseBlob' and
+        'responseArrayBuffer' are not exposed to JavaScript (they don't
+        appear in the IDL or in the specification). As they are only called from
+        custom bindings in response to a JavaScript call to the 'response' getter,
+        we can safely replace the exception-throwing code in the implementation
+        with an ASSERT that the request type is correct.
+
+        * bindings/js/JSXMLHttpRequestCustom.cpp:
+        (WebCore::JSXMLHttpRequest::response):
+        * xml/XMLHttpRequest.cpp:
+        (WebCore::XMLHttpRequest::responseBlob):
+        (WebCore::XMLHttpRequest::responseArrayBuffer):
+        * xml/XMLHttpRequest.h:
+
+2013-08-28  Chris Curtis  <chris_curtis@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=119548
+        Refactoring Exception throws.
+        
+        Reviewed by Geoffrey Garen.
+        
+        Gets column information from the error object for reporting exceptions.
+        * bindings/js/JSDOMBinding.cpp:
+        (WebCore::reportException): 
+        * bindings/js/ScriptCallStackFactory.cpp: 
+        (WebCore::createScriptCallStackFromException):
+ 
+        Moved setting an exception into the vm, These functions changed to use the new functionality.
+ 
+        * bindings/js/JSAudioBufferSourceNodeCustom.cpp:
+        (WebCore::JSAudioBufferSourceNode::setBuffer):
+        * bindings/js/JSBiquadFilterNodeCustom.cpp:
+        (WebCore::JSBiquadFilterNode::setType):
+        * bindings/js/JSCryptoCustom.cpp:
+        (WebCore::JSCrypto::getRandomValues):
+        * bindings/js/JSDOMBinding.cpp:
+        (WebCore::setDOMException):
+        * bindings/js/JSInjectedScriptHostCustom.cpp:
+        (WebCore::JSInjectedScriptHost::setFunctionVariableValue):
+        * bindings/js/JSJavaScriptCallFrameCustom.cpp:
+        (WebCore::JSJavaScriptCallFrame::evaluate):
+        (WebCore::JSJavaScriptCallFrame::setVariableValue):
+        * bindings/js/JSNodeFilterCondition.cpp:
+        (WebCore::JSNodeFilterCondition::acceptNode):
+        * bindings/js/JSOscillatorNodeCustom.cpp:
+        (WebCore::JSOscillatorNode::setType):
+        * bindings/js/JSPannerNodeCustom.cpp:
+        (WebCore::JSPannerNode::setPanningModel):
+        (WebCore::JSPannerNode::setDistanceModel):
+        * bindings/js/JSSVGLengthCustom.cpp:
+        (WebCore::JSSVGLength::convertToSpecifiedUnits):
+        * bindings/js/JSWebGLRenderingContextCustom.cpp:
+        (WebCore::getObjectParameter):
+        (WebCore::JSWebGLRenderingContext::getAttachedShaders):
+        (WebCore::JSWebGLRenderingContext::getExtension):
+        (WebCore::JSWebGLRenderingContext::getFramebufferAttachmentParameter):
+        (WebCore::JSWebGLRenderingContext::getParameter):
+        (WebCore::JSWebGLRenderingContext::getProgramParameter):
+        (WebCore::JSWebGLRenderingContext::getShaderParameter):
+        (WebCore::JSWebGLRenderingContext::getUniform):
+        (WebCore::dataFunctionf):
+        (WebCore::dataFunctioni):
+        (WebCore::dataFunctionMatrix):
+        * bindings/js/JSXMLHttpRequestCustom.cpp:
+        (WebCore::JSXMLHttpRequest::open):
+        * bindings/js/SerializedScriptValue.cpp:
+        (WebCore::CloneBase::throwStackOverflow):
+        (WebCore::CloneDeserializer::throwValidationError):
+        (WebCore::SerializedScriptValue::maybeThrowExceptionIfSerializationFailed):
+        * bindings/js/WorkerScriptController.cpp:
+        (WebCore::WorkerScriptController::evaluate):
+        (WebCore::WorkerScriptController::setException):
+        * bridge/c/c_instance.cpp:
+        (JSC::Bindings::CInstance::moveGlobalExceptionToExecState):
+        (JSC::Bindings::CInstance::invokeMethod):
+        (JSC::Bindings::CInstance::invokeDefaultMethod):
+        (JSC::Bindings::CInstance::invokeConstruct):
+        (JSC::Bindings::CInstance::toJSPrimitive):
+        * bridge/objc/objc_instance.mm:
+        (ObjcInstance::invokeMethod):
+        * bridge/objc/objc_runtime.mm:
+        (JSC::Bindings::ObjcArray::setValueAt):
+        (JSC::Bindings::ObjcArray::valueAt):
+        * bridge/objc/objc_utility.mm:
+        (JSC::Bindings::throwError):
+        * bridge/qt/qt_instance.cpp:
+        (JSC::Bindings::QtField::valueFromInstance):
+        (JSC::Bindings::QtField::setValueToInstance):
+        * bridge/runtime_array.cpp:
+        (JSC::RuntimeArray::put):
+        (JSC::RuntimeArray::putByIndex):
+        * bridge/runtime_object.cpp:
+        (JSC::Bindings::RuntimeObject::throwInvalidAccessError):
+
+2013-08-28  Alexey Proskuryakov  <ap@apple.com>
+
+        Remove an unused data member from Page.
+
+        Rubber-stamped by Brady Eidson.
+
+        * page/Page.cpp:
+        * page/Page.h:
+        Removed m_cookieEnabled. This was completely dead code, long obsoleted by PageSettings.
+
+2013-08-28  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed build fix - copy/paste failure, copied too much.
+
+        * bindings/gobject/WebKitDOMCustom.h:
+
+2013-08-28  Dean Jackson  <dino@apple.com>
+
+        [WebGL] CoreGraphics can provide greyscale image data
+        https://webkit.org/b/120443
+
+        Reviewed by Simon Fraser.
+
+        CoreGraphics can decode greyscale or greyscale+alpha images
+        while preserving the format. Our WebGL texture unpacker
+        was seeing this and assuming it meant the data did not come
+        from an <img> element. Since that method already special cased
+        CoreGraphics, the fix was to simply return true for these
+        extra types.
+
+        I also renamed srcFormatComeFromDOMElementOrImageData
+        to srcFormatComesFromDOMElementOrImageData.
+
+        Test: fast/canvas/webgl/tex-image-with-greyscale-image.html
+
+        * platform/graphics/GraphicsContext3D.cpp: Call new name.
+        * platform/graphics/GraphicsContext3D.h:
+        (WebCore::GraphicsContext3D::srcFormatComesFromDOMElementOrImageData):
+        Add support for R8, AR8, A8, and RA8 data formats.
+
+2013-08-28  Gustavo Noronha Silva  <gns@gnome.org>
+
+        [GTK] HTMLElement lost setID and getID - need to add compatibility symbols
+        https://bugs.webkit.org/show_bug.cgi?id=120440
+
+        Reviewed by Martin Robinson.
+
+        No tests, just adding compatibility symbols.
+
+        setID and getID were removed, and the parent class (Element) ones should be used instead.
+        We need to keep our ABI compatible, though, so add compatibility symbols.
+
+        * bindings/gobject/WebKitDOMCustom.cpp:
+        (webkit_dom_html_element_get_id):
+        (webkit_dom_html_element_set_id):
+        * bindings/gobject/WebKitDOMCustom.h:
+
 2013-08-28  Simon Fraser  <simon.fraser@apple.com>
 
         Fix compositing layers in columns

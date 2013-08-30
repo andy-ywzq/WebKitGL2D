@@ -302,6 +302,7 @@
     <ClCompile Include="..\bytecode\CodeBlockHash.cpp" />
     <ClCompile Include="..\bytecode\CodeOrigin.cpp" />
     <ClCompile Include="..\bytecode\CodeType.cpp" />
+    <ClCompile Include="..\bytecode\DeferredCompilationCallback.cpp" />
     <ClCompile Include="..\bytecode\ExecutionCounter.cpp" />
     <ClCompile Include="..\bytecode\ExitKind.cpp" />
     <ClCompile Include="..\bytecode\GetByIdStatus.cpp" />
@@ -324,6 +325,9 @@
     <ClCompile Include="..\debugger\Debugger.cpp" />
     <ClCompile Include="..\debugger\DebuggerActivation.cpp" />
     <ClCompile Include="..\debugger\DebuggerCallFrame.cpp" />
+    <ClCompile Include="..\dfg\DFGCompilationKey.cpp" />
+    <ClCompile Include="..\dfg\DFGCompilationMode.cpp" />
+    <ClCompile Include="..\dfg\DFGDriver.cpp" />
     <ClCompile Include="..\disassembler\Disassembler.cpp" />
     <ClCompile Include="..\heap\BlockAllocator.cpp" />
     <ClCompile Include="..\heap\ConservativeRoots.cpp" />
@@ -377,11 +381,12 @@
     <ClCompile Include="..\jit\JITStubRoutine.cpp" />
     <ClCompile Include="..\jit\JITStubs.cpp" />
     <ClCompile Include="..\jit\JITThunks.cpp" />
+    <ClCompile Include="..\jit\JITToDFGDeferredCompilationCallback.cpp" />
     <ClCompile Include="..\jit\JumpReplacementWatchpoint.cpp" />
     <ClCompile Include="..\jit\ThunkGenerators.cpp" />
     <ClCompile Include="..\llint\LLIntCLoop.cpp" />
     <ClCompile Include="..\llint\LLIntData.cpp" />
-    <ClCompile Include="..\llint\LLIntEntrypoints.cpp" />
+    <ClCompile Include="..\llint\LLIntEntrypoint.cpp" />
     <ClCompile Include="..\llint\LLIntExceptions.cpp" />
     <ClCompile Include="..\llint\LLIntOffsetsExtractor.cpp" />
     <ClCompile Include="..\llint\LLIntSlowPaths.cpp" />
@@ -464,6 +469,7 @@
     <ClCompile Include="..\runtime\JSGlobalObject.cpp" />
     <ClCompile Include="..\runtime\JSGlobalObjectFunctions.cpp" />
     <ClCompile Include="..\runtime\JSLock.cpp" />
+    <ClCompile Include="..\runtime\JSMap.cpp" />
     <ClCompile Include="..\runtime\JSNameScope.cpp" />
     <ClCompile Include="..\runtime\JSNotAnObject.cpp" />
     <ClCompile Include="..\runtime\JSONObject.cpp" />
@@ -490,6 +496,9 @@
     <ClCompile Include="..\runtime\JSWrapperObject.cpp" />
     <ClCompile Include="..\runtime\LiteralParser.cpp" />
     <ClCompile Include="..\runtime\Lookup.cpp" />
+    <ClCompile Include="..\runtime\MapConstructor.cpp" />
+    <ClCompile Include="..\runtime\MapData.cpp" />
+    <ClCompile Include="..\runtime\MapPrototype.cpp" />
     <ClCompile Include="..\runtime\MathObject.cpp" />
     <ClCompile Include="..\runtime\NameConstructor.cpp" />
     <ClCompile Include="..\runtime\NameInstance.cpp" />
@@ -623,6 +632,7 @@
     <ClInclude Include="..\bytecode\CodeType.h" />
     <ClInclude Include="..\bytecode\Comment.h" />
     <ClInclude Include="..\bytecode\DataFormat.h" />
+    <ClInclude Include="..\bytecode\DeferredCompilationCallback.h" />
     <ClInclude Include="..\bytecode\EvalCodeCache.h" />
     <ClInclude Include="..\bytecode\ExecutionCounter.h" />
     <ClInclude Include="..\bytecode\ExitKind.h" />
@@ -660,6 +670,8 @@
     <ClInclude Include="..\debugger\Debugger.h" />
     <ClInclude Include="..\debugger\DebuggerActivation.h" />
     <ClInclude Include="..\debugger\DebuggerCallFrame.h" />
+    <ClInclude Include="..\dfg\DFGCompilationKey.h" />
+    <ClInclude Include="..\dfg\DFGCompilationMode.h" />
     <ClInclude Include="..\dfg\DFGDriver.h" />
     <ClInclude Include="..\dfg\DFGOSREntry.h" />
     <ClInclude Include="..\disassembler\Disassembler.h" />
@@ -729,7 +741,6 @@
     <ClInclude Include="..\interpreter\JSStackInlines.h" />
     <ClInclude Include="..\interpreter\Register.h" />
     <ClInclude Include="..\interpreter\StackIterator.h" />
-    <ClInclude Include="..\interpreter\StackIteratorPrivate.h" />
     <ClInclude Include="..\interpreter\VMInspector.h" />
     <ClInclude Include="..\jit\ClosureCallStubRoutine.h" />
     <ClInclude Include="..\jit\CompactJITCodeMap.h" />
@@ -740,7 +751,6 @@
     <ClInclude Include="..\jit\JITCode.h" />
     <ClInclude Include="..\jit\JITCompilationEffort.h" />
     <ClInclude Include="..\jit\JITDisassembler.h" />
-    <ClInclude Include="..\jit\JITDriver.h" />
     <ClInclude Include="..\jit\JITExceptions.h" />
     <ClInclude Include="..\jit\JITInlines.h" />
     <ClInclude Include="..\jit\JITStubCall.h" />
@@ -750,6 +760,7 @@
     <ClInclude Include="..\jit\JITStubsX86Common.h" />
     <ClInclude Include="..\jit\JITStubsX86_64.h" />
     <ClInclude Include="..\jit\JITThunks.h" />
+    <ClInclude Include="..\jit\JITToDFGDeferredCompilationCallback.h" />
     <ClInclude Include="..\jit\JITWriteBarrier.h" />
     <ClInclude Include="..\jit\JSInterfaceJIT.h" />
     <ClInclude Include="..\jit\JumpReplacementWatchpoint.h" />
@@ -760,7 +771,7 @@
     <ClInclude Include="..\llint\LLIntCLoop.h" />
     <ClInclude Include="..\llint\LLIntCommon.h" />
     <ClInclude Include="..\llint\LLIntData.h" />
-    <ClInclude Include="..\llint\LLIntEntrypoints.h" />
+    <ClInclude Include="..\llint\LLIntEntrypoint.h" />
     <ClInclude Include="..\llint\LLIntExceptions.h" />
     <ClInclude Include="..\llint\LLIntOfflineAsmConfig.h" />
     <ClInclude Include="..\llint\LLIntOpcode.h" />
@@ -837,7 +848,6 @@
     <ClInclude Include="..\runtime\ErrorPrototype.h" />
     <ClInclude Include="..\runtime\ExceptionHelpers.h" />
     <ClInclude Include="..\runtime\Executable.h" />
-    <ClInclude Include="..\runtime\ExecutionHarness.h" />
     <ClInclude Include="..\runtime\Float32Array.h" />
     <ClInclude Include="..\runtime\Float64Array.h" />
     <ClInclude Include="..\runtime\FunctionConstructor.h" />
@@ -889,6 +899,7 @@
     <ClInclude Include="..\runtime\JSInt32Array.h" />
     <ClInclude Include="..\runtime\JSInt8Array.h" />
     <ClInclude Include="..\runtime\JSLock.h" />
+    <ClInclude Include="..\runtime\JSMap.h" />
     <ClInclude Include="..\runtime\JSNameScope.h" />
     <ClInclude Include="..\runtime\JSNotAnObject.h" />
     <ClInclude Include="..\runtime\JSONObject.h" />
@@ -922,6 +933,9 @@
     <ClInclude Include="..\runtime\JSWrapperObject.h" />
     <ClInclude Include="..\runtime\LiteralParser.h" />
     <ClInclude Include="..\runtime\Lookup.h" />
+    <ClInclude Include="..\runtime\MapConstructor.h" />
+    <ClInclude Include="..\runtime\MapData.h" />
+    <ClInclude Include="..\runtime\MapPrototype.h" />
     <ClInclude Include="..\runtime\MatchResult.h" />
     <ClInclude Include="..\runtime\MathObject.h" />
     <ClInclude Include="..\runtime\NameConstructor.h" />

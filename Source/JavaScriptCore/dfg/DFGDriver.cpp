@@ -29,8 +29,6 @@
 #include "JSObject.h"
 #include "JSString.h"
 
-#if ENABLE(DFG_JIT)
-
 #include "CodeBlock.h"
 #include "DFGJITCode.h"
 #include "DFGPlan.h"
@@ -55,7 +53,11 @@ unsigned getNumCompilations()
     return numCompilations;
 }
 
-static CompilationResult compile(CompileMode compileMode, ExecState* exec, CodeBlock* codeBlock, RefPtr<JSC::JITCode>& jitCode, MacroAssemblerCodePtr* jitCodeWithArityCheck, unsigned osrEntryBytecodeIndex)
+#if ENABLE(DFG_JIT)
+static CompilationResult compileImpl(
+    ExecState* exec, CodeBlock* codeBlock, CompilationMode mode,
+    unsigned osrEntryBytecodeIndex, PassRefPtr<DeferredCompilationCallback> callback,
+    Worklist* worklist)
 {
     SamplingRegion samplingRegion("DFG Compilation (Driver)");
     
@@ -99,12 +101,12 @@ static CompilationResult compile(CompileMode compileMode, ExecState* exec, CodeB
     else
         numVarsWithValues = 0;
     RefPtr<Plan> plan = adoptRef(
-        new Plan(compileMode, codeBlock, osrEntryBytecodeIndex, numVarsWithValues));
+        new Plan(codeBlock, mode, osrEntryBytecodeIndex, numVarsWithValues));
     for (size_t i = 0; i < plan->mustHandleValues.size(); ++i) {
         int operand = plan->mustHandleValues.operandForIndex(i);
         if (operandIsArgument(operand)
             && !operandToArgument(operand)
-            && compileMode == CompileFunction
+            && codeBlock->codeType() == FunctionCode
             && codeBlock->specializationKind() == CodeForConstruct) {
             // Ugh. If we're in a constructor, the 'this' argument may hold garbage. It will
             // also never be used. It doesn't matter what we put into the value for this,
@@ -115,35 +117,37 @@ static CompilationResult compile(CompileMode compileMode, ExecState* exec, CodeB
             plan->mustHandleValues[i] = exec->uncheckedR(operand).jsValue();
     }
     
-    if (enableConcurrentJIT()) {
-        if (!vm.worklist)
-            vm.worklist = globalWorklist();
+    if (worklist) {
+        plan->callback = callback;
         if (logCompilationChanges())
-            dataLog("Deferring DFG compilation of ", *codeBlock, " with queue length ", vm.worklist->queueLength(), ".\n");
-        vm.worklist->enqueue(plan);
+            dataLog("Deferring DFG compilation of ", *codeBlock, " with queue length ", worklist->queueLength(), ".\n");
+        worklist->enqueue(plan);
         return CompilationDeferred;
     }
     
     plan->compileInThread(*vm.dfgState);
-    return plan->finalize(jitCode, jitCodeWithArityCheck);
+    return plan->finalizeWithoutNotifyingCallback();
 }
-
-CompilationResult tryCompile(ExecState* exec, CodeBlock* codeBlock, RefPtr<JSC::JITCode>& jitCode, unsigned bytecodeIndex)
+#else // ENABLE(DFG_JIT)
+static CompilationResult compileImpl(
+    ExecState*, CodeBlock*, CompilationMode, unsigned,
+    PassRefPtr<DeferredCompilationCallback>, Worklist*)
 {
-    return compile(CompileOther, exec, codeBlock, jitCode, 0, bytecodeIndex);
+    return CompilationFailed;
 }
+#endif // ENABLE(DFG_JIT)
 
-CompilationResult tryCompileFunction(ExecState* exec, CodeBlock* codeBlock, RefPtr<JSC::JITCode>& jitCode, MacroAssemblerCodePtr& jitCodeWithArityCheck, unsigned bytecodeIndex)
+CompilationResult compile(
+    ExecState* exec, CodeBlock* codeBlock, CompilationMode mode,
+    unsigned osrEntryBytecodeIndex, PassRefPtr<DeferredCompilationCallback> passedCallback,
+    Worklist* worklist)
 {
-    return compile(CompileFunction, exec, codeBlock, jitCode, &jitCodeWithArityCheck, bytecodeIndex);
-}
-
-CompilationResult tryFinalizePlan(PassRefPtr<Plan> plan, RefPtr<JSC::JITCode>& jitCode, MacroAssemblerCodePtr* jitCodeWithArityCheck)
-{
-    return plan->finalize(jitCode, jitCodeWithArityCheck);
+    RefPtr<DeferredCompilationCallback> callback = passedCallback;
+    CompilationResult result = compileImpl(
+        exec, codeBlock, mode, osrEntryBytecodeIndex, callback, worklist);
+    if (result != CompilationDeferred)
+        callback->compilationDidComplete(codeBlock, result);
+    return result;
 }
 
 } } // namespace JSC::DFG
-
-#endif // ENABLE(DFG_JIT)
-

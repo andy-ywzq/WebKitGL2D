@@ -28,7 +28,7 @@
 #include "JSStack.h"
 #include "MacroAssemblerCodeRef.h"
 #include "Register.h"
-#include "StackIteratorPrivate.h"
+#include "StackIterator.h"
 
 namespace JSC  {
 
@@ -68,14 +68,14 @@ namespace JSC  {
         // pointer, so these are inefficient, and should be used sparingly in new code.
         // But they're used in many places in legacy code, so they're not going away any time soon.
 
-        void clearException() { vm().exception = JSValue(); }
+        void clearException() { vm().clearException(); }
         void clearSupplementaryExceptionInfo()
         {
             vm().clearExceptionStack();
         }
 
-        JSValue exception() const { return vm().exception; }
-        bool hadException() const { return vm().exception; }
+        JSValue exception() const { return vm().exception(); }
+        bool hadException() const { return vm().exception(); }
 
         const CommonIdentifiers& propertyNames() const { return *vm().propertyNames; }
         const MarkedArgumentBuffer& emptyList() const { return *vm().emptyList; }
@@ -101,9 +101,11 @@ namespace JSC  {
         static const HashTable* regExpConstructorTable(CallFrame* callFrame) { return callFrame->vm().regExpConstructorTable; }
         static const HashTable* regExpPrototypeTable(CallFrame* callFrame) { return callFrame->vm().regExpPrototypeTable; }
         static const HashTable* stringConstructorTable(CallFrame* callFrame) { return callFrame->vm().stringConstructorTable; }
+#if ENABLE(PROMISES)
         static const HashTable* promisePrototypeTable(CallFrame* callFrame) { return callFrame->vm().promisePrototypeTable; }
         static const HashTable* promiseConstructorTable(CallFrame* callFrame) { return callFrame->vm().promiseConstructorTable; }
         static const HashTable* promiseResolverPrototypeTable(CallFrame* callFrame) { return callFrame->vm().promiseResolverPrototypeTable; }
+#endif
 
         static CallFrame* create(Register* callFrameBase) { return static_cast<CallFrame*>(callFrameBase); }
         Register* registers() { return this; }
@@ -283,7 +285,7 @@ namespace JSC  {
 
         JS_EXPORT_PRIVATE StackIterator begin(StackIterator::FrameFilter = 0);
         JS_EXPORT_PRIVATE StackIterator find(JSFunction* calleeFunctionObj, StackIterator::FrameFilter = 0);
-        JS_EXPORT_PRIVATE StackIterator::Frame* end();
+        StackIterator end() { return StackIterator::end(); }
 
     private:
         static const intptr_t HostCallFrameFlag = 1;

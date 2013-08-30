@@ -1080,8 +1080,11 @@ webkit.org/b/49964 fast/canvas/canvas-fillPath-shadow.html [ Failure ]
 webkit.org/b/53707 http/tests/security/xss-DENIED-xsl-document-redirect.xml [ Failure ]
 webkit.org/b/53707 http/tests/security/xss-DENIED-xsl-external-entity-redirect.xml [ Failure ]
 
-# textInputController.hasGrammarMarker() is not implemented.
-Bug(GTK) editing/spelling/grammar.html [ Failure ]
+# Needs grammar checking implementation.
+Bug(GTK) editing/spelling/grammar.html [ Skip ]
+Bug(GTK) editing/spelling/grammar-edit-word.html [ Skip ]
+Bug(GTK) editing/spelling/grammar-markers.html [ Skip ]
+Bug(GTK) editing/spelling/grammar-markers-hidpi.html [ Skip ]
 Bug(GTK) editing/spelling/grammar-paste.html [ Skip ]
 Bug(GTK) editing/spelling/markers.html [ Skip ]
 
@@ -1177,8 +1180,6 @@ Bug(GTK) http/tests/misc/favicon-loads-with-icon-loading-override.html [ Failure
 
 webkit.org/b/88138 http/tests/media/video-buffered.html [ Failure ]
 
-webkit.org/b/89205 editing/spelling/grammar-edit-word.html [ Failure ]
-
 webkit.org/b/51027 [ Release ] plugins/refcount-leaks.html [ Failure ]
 
 webkit.org/b/57346 fast/text/justify-ideograph-leading-expansion.html [ Failure ]
@@ -1243,8 +1244,8 @@ webkit.org/b/98718 svg/animations/animate-css-xml-attributeType.html [ Failure ]
 webkit.org/b/100424 editing/selection/user-select-all-selection.html [ Failure ]
 webkit.org/b/100424 editing/selection/user-select-all-with-shift.html [ Failure ]
 
-webkit.org/b/100846 inspector-protocol/debugger-pause-dedicated-worker.html [ Skip ]
-webkit.org/b/100846 inspector-protocol/debugger-terminate-dedicated-worker-while-paused.html [ Skip ]
+webkit.org/b/100846 inspector-protocol/debugger/pause-dedicated-worker.html [ Skip ]
+webkit.org/b/100846 inspector-protocol/debugger/terminate-dedicated-worker-while-paused.html [ Skip ]
 
 webkit.org/b/101539 editing/execCommand/switch-list-type-with-orphaned-li.html [ Failure ]
 
@@ -1372,9 +1373,6 @@ webkit.org/b/105296 webaudio/delaynode-maxdelay.html [ Failure ]
 webkit.org/b/105296 webaudio/delaynode-scheduling.html [ Failure ]
 
 webkit.org/b/105299 webaudio/javascriptaudionode.html [ Failure ]
-
-webkit.org/b/105535 inspector-protocol/nmi-webaudio.html [ Failure ]
-webkit.org/b/105535 inspector-protocol/nmi-webaudio-leak-test.html [ Timeout ]
 
 webkit.org/b/115374 accessibility/corresponding-control-deleted-crash.html [ Failure ]
 webkit.org/b/115374 editing/text-iterator/basic-iteration-shadowdom.html [ Failure ]

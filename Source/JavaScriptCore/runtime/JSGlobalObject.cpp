@@ -64,21 +64,18 @@
 #include "JSGenericTypedArrayViewPrototypeInlines.h"
 #include "JSGlobalObjectFunctions.h"
 #include "JSLock.h"
+#include "JSMap.h"
 #include "JSNameScope.h"
 #include "JSONObject.h"
-#include "JSPromise.h"
-#include "JSPromiseCallback.h"
-#include "JSPromiseConstructor.h"
-#include "JSPromisePrototype.h"
-#include "JSPromiseResolver.h"
-#include "JSPromiseResolverConstructor.h"
-#include "JSPromiseResolverPrototype.h"
 #include "JSTypedArrayConstructors.h"
 #include "JSTypedArrayPrototypes.h"
 #include "JSTypedArrays.h"
 #include "JSWithScope.h"
 #include "LegacyProfiler.h"
 #include "Lookup.h"
+#include "MapConstructor.h"
+#include "MapData.h"
+#include "MapPrototype.h"
 #include "MathObject.h"
 #include "NameConstructor.h"
 #include "NameInstance.h"
@@ -99,6 +96,16 @@
 #include "StrictEvalActivation.h"
 #include "StringConstructor.h"
 #include "StringPrototype.h"
+
+#if ENABLE(PROMISES)
+#include "JSPromise.h"
+#include "JSPromiseCallback.h"
+#include "JSPromiseConstructor.h"
+#include "JSPromisePrototype.h"
+#include "JSPromiseResolver.h"
+#include "JSPromiseResolverConstructor.h"
+#include "JSPromiseResolverPrototype.h"
+#endif // ENABLE(PROMISES)
 
 #include "JSGlobalObject.lut.h"
 
@@ -304,6 +311,7 @@ void JSGlobalObject::reset(JSValue prototype)
     m_errorPrototype.set(exec->vm(), this, ErrorPrototype::create(exec, this, ErrorPrototype::createStructure(exec->vm(), this, m_objectPrototype.get())));
     m_errorStructure.set(exec->vm(), this, ErrorInstance::createStructure(exec->vm(), this, m_errorPrototype.get()));
 
+#if ENABLE(PROMISES)
     m_promisePrototype.set(exec->vm(), this, JSPromisePrototype::create(exec, this, JSPromisePrototype::createStructure(exec->vm(), this, m_objectPrototype.get())));
     m_promiseStructure.set(exec->vm(), this, JSPromise::createStructure(exec->vm(), this, m_promisePrototype.get()));
 
@@ -311,7 +319,13 @@ void JSGlobalObject::reset(JSValue prototype)
     m_promiseResolverStructure.set(exec->vm(), this, JSPromiseResolver::createStructure(exec->vm(), this, m_promiseResolverPrototype.get()));
     m_promiseCallbackStructure.set(exec->vm(), this, JSPromiseCallback::createStructure(exec->vm(), this, m_functionPrototype.get()));
     m_promiseWrapperCallbackStructure.set(exec->vm(), this, JSPromiseWrapperCallback::createStructure(exec->vm(), this, m_functionPrototype.get()));
-    
+#endif // ENABLE(PROMISES)
+
+
+    m_mapDataStructure.set(exec->vm(), this, MapData::createStructure(exec->vm(), this, jsNull()));
+    m_mapPrototype.set(exec->vm(), this, MapPrototype::create(exec, this, MapPrototype::createStructure(exec->vm(), this, m_objectPrototype.get())));
+    m_mapStructure.set(exec->vm(), this, JSMap::createStructure(exec->vm(), this, m_mapPrototype.get()));
+
     // Constructors
 
     JSCell* objectConstructor = ObjectConstructor::create(exec, this, ObjectConstructor::createStructure(exec->vm(), this, m_functionPrototype.get()), m_objectPrototype.get());
@@ -321,8 +335,12 @@ void JSGlobalObject::reset(JSValue prototype)
     JSCell* booleanConstructor = BooleanConstructor::create(exec, this, BooleanConstructor::createStructure(exec->vm(), this, m_functionPrototype.get()), m_booleanPrototype.get());
     JSCell* numberConstructor = NumberConstructor::create(exec, this, NumberConstructor::createStructure(exec->vm(), this, m_functionPrototype.get()), m_numberPrototype.get());
     JSCell* dateConstructor = DateConstructor::create(exec, this, DateConstructor::createStructure(exec->vm(), this, m_functionPrototype.get()), m_datePrototype.get());
+
+#if ENABLE(PROMISES)
     JSCell* promiseConstructor = JSPromiseConstructor::create(exec, this, JSPromiseConstructor::createStructure(exec->vm(), this, m_functionPrototype.get()), m_promisePrototype.get());
     JSCell* promiseResolverConstructor = JSPromiseResolverConstructor::create(exec, this, JSPromiseResolverConstructor::createStructure(exec->vm(), this, m_functionPrototype.get()), m_promiseResolverPrototype.get());
+#endif // ENABLE(PROMISES)
+    JSCell* mapConstructor = MapConstructor::create(exec, this, MapConstructor::createStructure(exec->vm(), this, m_functionPrototype.get()), m_mapPrototype.get());
 
     m_regExpConstructor.set(exec->vm(), this, RegExpConstructor::create(exec, this, RegExpConstructor::createStructure(exec->vm(), this, m_functionPrototype.get()), m_regExpPrototype.get()));
 
@@ -346,8 +364,11 @@ void JSGlobalObject::reset(JSValue prototype)
     m_datePrototype->putDirectWithoutTransition(exec->vm(), exec->propertyNames().constructor, dateConstructor, DontEnum);
     m_regExpPrototype->putDirectWithoutTransition(exec->vm(), exec->propertyNames().constructor, m_regExpConstructor.get(), DontEnum);
     m_errorPrototype->putDirectWithoutTransition(exec->vm(), exec->propertyNames().constructor, m_errorConstructor.get(), DontEnum);
+#if ENABLE(PROMISES)
     m_promisePrototype->putDirectWithoutTransition(exec->vm(), exec->propertyNames().constructor, promiseConstructor, DontEnum);
     m_promiseResolverPrototype->putDirectWithoutTransition(exec->vm(), exec->propertyNames().constructor, promiseResolverConstructor, DontEnum);
+#endif
+    m_mapPrototype->putDirectWithoutTransition(exec->vm(), exec->propertyNames().constructor, mapConstructor, DontEnum);
 
     putDirectWithoutTransition(exec->vm(), exec->propertyNames().Object, objectConstructor, DontEnum);
     putDirectWithoutTransition(exec->vm(), exec->propertyNames().Function, functionConstructor, DontEnum);
@@ -364,8 +385,11 @@ void JSGlobalObject::reset(JSValue prototype)
     putDirectWithoutTransition(exec->vm(), exec->propertyNames().SyntaxError, m_syntaxErrorConstructor.get(), DontEnum);
     putDirectWithoutTransition(exec->vm(), exec->propertyNames().TypeError, m_typeErrorConstructor.get(), DontEnum);
     putDirectWithoutTransition(exec->vm(), exec->propertyNames().URIError, m_URIErrorConstructor.get(), DontEnum);
+#if ENABLE(PROMISES)
     putDirectWithoutTransition(exec->vm(), exec->propertyNames().Promise, promiseConstructor, DontEnum);
     putDirectWithoutTransition(exec->vm(), exec->propertyNames().PromiseResolver, promiseResolverConstructor, DontEnum);
+#endif
+    putDirectWithoutTransition(exec->vm(), exec->propertyNames().Map, mapConstructor, DontEnum);
 
     m_evalFunction.set(exec->vm(), this, JSFunction::create(exec, this, 1, exec->propertyNames().eval.string(), globalFuncEval));
     putDirectWithoutTransition(exec->vm(), exec->propertyNames().eval, m_evalFunction.get(), DontEnum);
@@ -585,8 +609,10 @@ void JSGlobalObject::visitChildren(JSCell* cell, SlotVisitor& visitor)
     visitor.append(&thisObject->m_datePrototype);
     visitor.append(&thisObject->m_regExpPrototype);
     visitor.append(&thisObject->m_errorPrototype);
+#if ENABLE(PROMISES)
     visitor.append(&thisObject->m_promisePrototype);
     visitor.append(&thisObject->m_promiseResolverPrototype);
+#endif
 
     visitor.append(&thisObject->m_withScopeStructure);
     visitor.append(&thisObject->m_strictEvalActivationStructure);
@@ -617,10 +643,16 @@ void JSGlobalObject::visitChildren(JSCell* cell, SlotVisitor& visitor)
     visitor.append(&thisObject->m_regExpStructure);
     visitor.append(&thisObject->m_stringObjectStructure);
     visitor.append(&thisObject->m_internalFunctionStructure);
+
+#if ENABLE(PROMISES)
     visitor.append(&thisObject->m_promiseStructure);
     visitor.append(&thisObject->m_promiseResolverStructure);
     visitor.append(&thisObject->m_promiseCallbackStructure);
     visitor.append(&thisObject->m_promiseWrapperCallbackStructure);
+#endif // ENABLE(PROMISES)
+    visitor.append(&thisObject->m_mapPrototype);
+    visitor.append(&thisObject->m_mapDataStructure);
+    visitor.append(&thisObject->m_mapStructure);
 
     visitor.append(&thisObject->m_arrayBufferPrototype);
     visitor.append(&thisObject->m_arrayBufferStructure);

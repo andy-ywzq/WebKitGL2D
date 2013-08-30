@@ -48,6 +48,7 @@
 #include "DFGOSREntry.h"
 #include "DFGOSRExit.h"
 #include "DFGVariableEventStream.h"
+#include "DeferredCompilationCallback.h"
 #include "EvalCodeCache.h"
 #include "ExecutionCounter.h"
 #include "ExpressionRangeInfo.h"
@@ -202,6 +203,8 @@ public:
 
     unsigned bytecodeOffset(ExecState*, ReturnAddressPtr);
 
+    void unlinkIncomingCalls();
+
 #if ENABLE(JIT)
     unsigned bytecodeOffsetForCallAtIndex(unsigned index)
     {
@@ -230,8 +233,6 @@ public:
 #if ENABLE(LLINT)
     void linkIncomingCall(ExecState* callerFrame, LLIntCallLinkInfo*);
 #endif // ENABLE(LLINT)
-
-    void unlinkIncomingCalls();
 
 #if ENABLE(DFG_JIT) || ENABLE(LLINT)
     void setJITCodeMap(PassOwnPtr<CompactJITCodeMap> jitCodeMap)
@@ -264,7 +265,12 @@ public:
 
     int argumentIndexAfterCapture(size_t argument);
 
-#if ENABLE(JIT)
+    // Exactly equivalent to codeBlock->ownerExecutable()->installCode(codeBlock);
+    void install();
+    
+    // Exactly equivalent to codeBlock->ownerExecutable()->newReplacementCodeBlockFor(codeBlock->specializationKind())
+    PassRefPtr<CodeBlock> newReplacement();
+    
     void setJITCode(PassRefPtr<JITCode> code, MacroAssemblerCodePtr codeWithArityCheck)
     {
         ConcurrentJITLocker locker(m_lock);
@@ -286,23 +292,14 @@ public:
         WTF::loadLoadFence(); // This probably isn't needed. Oh well, paranoia is good.
         return result;
     }
+
+#if ENABLE(JIT)
     bool hasBaselineJITProfiling() const
     {
         return jitType() == JITCode::BaselineJIT;
     }
-#if ENABLE(DFG_JIT)
-    virtual JSObject* compileOptimized(ExecState*, JSScope*, CompilationResult&, unsigned bytecodeIndex) = 0;
-    virtual CompilationResult replaceWithDeferredOptimizedCode(PassRefPtr<DFG::Plan>) = 0;
-#endif // ENABLE(DFG_JIT)
     void jettison();
-    CompilationResult jitCompile(ExecState* exec)
-    {
-        if (jitType() != JITCode::InterpreterThunk) {
-            ASSERT(jitType() == JITCode::BaselineJIT);
-            return CompilationNotNeeded;
-        }
-        return jitCompileImpl(exec);
-    }
+    
     virtual CodeBlock* replacement() = 0;
 
     virtual DFG::CapabilityLevel capabilityLevelInternal() = 0;
@@ -315,8 +312,6 @@ public:
     DFG::CapabilityLevel capabilityLevelState() { return m_capabilityLevelState; }
 
     bool hasOptimizedReplacement();
-#else
-    JITCode::JITType jitType() const { return JITCode::InterpreterThunk; }
 #endif
 
     ScriptExecutable* ownerExecutable() const { return m_ownerExecutable.get(); }
@@ -832,9 +827,7 @@ public:
 
     int32_t codeTypeThresholdMultiplier() const;
 
-    int32_t counterValueForOptimizeAfterWarmUp();
-    int32_t counterValueForOptimizeAfterLongWarmUp();
-    int32_t counterValueForOptimizeSoon();
+    int32_t adjustedCounterValue(int32_t desiredThreshold);
 
     int32_t* addressOfJITExecuteCounter()
     {
@@ -969,7 +962,6 @@ public:
     
 protected:
 #if ENABLE(JIT)
-    virtual CompilationResult jitCompileImpl(ExecState*) = 0;
     virtual void jettisonImpl() = 0;
 #endif
     virtual void visitWeakReferences(SlotVisitor&);
@@ -1082,15 +1074,15 @@ private:
     unsigned m_codeType;
 
 #if ENABLE(LLINT)
-    SegmentedVector<LLIntCallLinkInfo, 8> m_llintCallLinkInfos;
+    Vector<LLIntCallLinkInfo> m_llintCallLinkInfos;
     SentinelLinkedList<LLIntCallLinkInfo, BasicRawSentinelNode<LLIntCallLinkInfo> > m_incomingLLIntCalls;
 #endif
+    RefPtr<JITCode> m_jitCode;
+    MacroAssemblerCodePtr m_jitCodeWithArityCheck;
 #if ENABLE(JIT)
     Vector<StructureStubInfo> m_structureStubInfos;
     Vector<ByValInfo> m_byValInfos;
     Vector<CallLinkInfo> m_callLinkInfos;
-    RefPtr<JITCode> m_jitCode;
-    MacroAssemblerCodePtr m_jitCodeWithArityCheck;
     SentinelLinkedList<CallLinkInfo, BasicRawSentinelNode<CallLinkInfo> > m_incomingCalls;
 #endif
 #if ENABLE(DFG_JIT) || ENABLE(LLINT)
@@ -1194,13 +1186,7 @@ public:
 
 #if ENABLE(JIT)
 protected:
-#if ENABLE(DFG_JIT)
-    virtual JSObject* compileOptimized(ExecState*, JSScope*, CompilationResult&, unsigned bytecodeIndex);
-    virtual CompilationResult replaceWithDeferredOptimizedCode(PassRefPtr<DFG::Plan>);
-#endif // ENABLE(DFG_JIT)
-
     virtual void jettisonImpl();
-    virtual CompilationResult jitCompileImpl(ExecState*);
     virtual CodeBlock* replacement();
     virtual DFG::CapabilityLevel capabilityLevelInternal();
 #endif
@@ -1223,13 +1209,7 @@ public:
     
 #if ENABLE(JIT)
 protected:
-#if ENABLE(DFG_JIT)
-    virtual JSObject* compileOptimized(ExecState*, JSScope*, CompilationResult&, unsigned bytecodeIndex);
-    virtual CompilationResult replaceWithDeferredOptimizedCode(PassRefPtr<DFG::Plan>);
-#endif // ENABLE(DFG_JIT)
-
     virtual void jettisonImpl();
-    virtual CompilationResult jitCompileImpl(ExecState*);
     virtual CodeBlock* replacement();
     virtual DFG::CapabilityLevel capabilityLevelInternal();
 #endif
@@ -1252,13 +1232,7 @@ public:
     
 #if ENABLE(JIT)
 protected:
-#if ENABLE(DFG_JIT)
-    virtual JSObject* compileOptimized(ExecState*, JSScope*, CompilationResult&, unsigned bytecodeIndex);
-    virtual CompilationResult replaceWithDeferredOptimizedCode(PassRefPtr<DFG::Plan>);
-#endif // ENABLE(DFG_JIT)
-
     virtual void jettisonImpl();
-    virtual CompilationResult jitCompileImpl(ExecState*);
     virtual CodeBlock* replacement();
     virtual DFG::CapabilityLevel capabilityLevelInternal();
 #endif

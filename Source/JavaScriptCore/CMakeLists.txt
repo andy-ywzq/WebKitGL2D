@@ -53,6 +53,7 @@ set(JavaScriptCore_SOURCES
     bytecode/CodeOrigin.cpp
     bytecode/CodeType.cpp
     bytecode/DFGExitProfile.cpp
+    bytecode/DeferredCompilationCallback.cpp
     bytecode/ExecutionCounter.cpp
     bytecode/ExitKind.cpp
     bytecode/GetByIdStatus.cpp
@@ -95,6 +96,8 @@ set(JavaScriptCore_SOURCES
     dfg/DFGClobberize.cpp
     dfg/DFGCommon.cpp
     dfg/DFGCommonData.cpp
+    dfg/DFGCompilationKey.cpp
+    dfg/DFGCompilationMode.cpp
     dfg/DFGConstantFoldingPhase.cpp
     dfg/DFGCriticalEdgeBreakingPhase.cpp
     dfg/DFGDCEPhase.cpp
@@ -243,6 +246,7 @@ set(JavaScriptCore_SOURCES
     jit/JITStubRoutine.cpp
     jit/JITStubs.cpp
     jit/JITThunks.cpp
+    jit/JITToDFGDeferredCompilationCallback.cpp
     jit/JumpReplacementWatchpoint.cpp
     jit/ThunkGenerators.cpp
 
@@ -330,6 +334,7 @@ set(JavaScriptCore_SOURCES
     runtime/JSGlobalObject.cpp
     runtime/JSGlobalObjectFunctions.cpp
     runtime/JSLock.cpp
+    runtime/JSMap.cpp
     runtime/JSNameScope.cpp
     runtime/JSNotAnObject.cpp
     runtime/JSONObject.cpp
@@ -357,6 +362,9 @@ set(JavaScriptCore_SOURCES
     runtime/JSWrapperObject.cpp
     runtime/LiteralParser.cpp
     runtime/Lookup.cpp
+    runtime/MapConstructor.cpp
+    runtime/MapData.cpp
+    runtime/MapPrototype.cpp
     runtime/MathObject.cpp
     runtime/MemoryStatistics.cpp
     runtime/NameConstructor.cpp
@@ -526,7 +534,7 @@ if (ENABLE_LLINT)
     list(APPEND JavaScriptCore_SOURCES
         llint/LLIntCLoop.cpp
         llint/LLIntData.cpp
-        llint/LLIntEntrypoints.cpp
+        llint/LLIntEntrypoint.cpp
         llint/LLIntExceptions.cpp
         llint/LLIntSlowPaths.cpp
         llint/LLIntThunks.cpp

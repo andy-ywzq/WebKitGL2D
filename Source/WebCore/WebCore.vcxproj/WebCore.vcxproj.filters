@@ -3384,9 +3384,6 @@
     <ClCompile Include="..\dom\NodeRareData.cpp">
       <Filter>dom</Filter>
     </ClCompile>
-    <ClCompile Include="..\dom\NodeRenderingContext.cpp">
-      <Filter>dom</Filter>
-    </ClCompile>
     <ClCompile Include="..\dom\NodeTraversal.cpp">
       <Filter>dom</Filter>
     </ClCompile>
@@ -7070,6 +7067,7 @@
     <ClCompile Include="..\rendering\style\StyleCachedImageSet.cpp">
       <Filter>rendering\style</Filter>
     </ClCompile>
+    <ClCompile Include="..\accessibility\AccessibilitySearchFieldButtons.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Modules\filesystem\AsyncFileWriter.h">
@@ -10448,9 +10446,6 @@
       <Filter>dom</Filter>
     </ClInclude>
     <ClInclude Include="..\dom\NodeIterator.h">
-      <Filter>dom</Filter>
-    </ClInclude>
-    <ClInclude Include="..\dom\NodeRenderingContext.h">
       <Filter>dom</Filter>
     </ClInclude>
     <ClInclude Include="..\dom\NodeTraversal.h">
@@ -14838,6 +14833,7 @@
     <ClInclude Include="..\dom\ChildIterator.h" />
     <ClInclude Include="..\dom\DescendantIterator.h" />
     <ClInclude Include="..\dom\DescendantIteratorAssertions.h" />
+    <ClInclude Include="..\accessibility\AccessibilitySearchFieldButtons.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\css\CSSGrammar.y.in">
@@ -15671,6 +15667,24 @@
     <None Include="WebCorePostBuild.cmd" />
     <None Include="WebCorePreBuild.cmd" />
     <None Include="..\Resources\plugIns.js" />
+    <None Include="..\css\mathml.css">
+      <Filter>css</Filter>
+    </None>
+    <None Include="..\css\view-source.css">
+      <Filter>css</Filter>
+    </None>
+    <None Include="..\css\mediaControlsQuickTime.css">
+      <Filter>css</Filter>
+    </None>
+    <None Include="..\css\svg.css">
+      <Filter>css</Filter>
+    </None>
+    <None Include="..\css\themeWin.css">
+      <Filter>css</Filter>
+    </None>
+    <None Include="..\css\themeWinQuirks.css">
+      <Filter>css</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuildStep Include="..\platform\graphics\win\MediaPlayerPrivateFullscreenWindow.h">

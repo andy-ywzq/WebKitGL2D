@@ -447,7 +447,6 @@ SOURCES += \
     dom/NodeFilter.cpp \
     dom/NodeIterator.cpp \
     dom/NodeRareData.cpp \
-    dom/NodeRenderingContext.cpp \
     dom/NodeRenderingTraversal.cpp \
     dom/NodeTraversal.cpp \
     dom/Notation.cpp \
@@ -614,7 +613,6 @@ SOURCES += \
     html/HTMLCollection.cpp \
     html/HTMLDListElement.cpp \
     html/HTMLDataListElement.cpp \
-    html/HTMLDialogElement.cpp \
     html/HTMLDirectoryElement.cpp \
     html/HTMLDetailsElement.cpp \
     html/HTMLDivElement.cpp \
@@ -1165,7 +1163,6 @@ SOURCES += \
     rendering/RenderCounter.cpp \
     rendering/RenderDeprecatedFlexibleBox.cpp \
     rendering/RenderDetailsMarker.cpp \
-    rendering/RenderDialog.cpp \
     rendering/RenderEmbeddedObject.cpp \
     rendering/RenderFieldset.cpp \
     rendering/RenderFileUploadControl.cpp \
@@ -1658,7 +1655,6 @@ HEADERS += \
     dom/Node.h \
     dom/NodeIterator.h \
     dom/NodeRareData.h \
-    dom/NodeRenderingContext.h \
     dom/NodeRenderingTraversal.h \
     dom/NodeTraversal.h \
     dom/Notation.h \
@@ -1815,7 +1811,6 @@ HEADERS += \
     html/HTMLButtonElement.h \
     html/HTMLCanvasElement.h \
     html/HTMLCollection.h \
-    html/HTMLDialogElement.h \
     html/HTMLDirectoryElement.h \
     html/HTMLDetailsElement.h \
     html/HTMLDivElement.h \

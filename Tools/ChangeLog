@@ -1,3 +1,122 @@
+2013-08-30  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] Remove qt-5.0-wk2 from the baseline search paths because the migration of expectations to qt-wk2 is done.
+        https://bugs.webkit.org/show_bug.cgi?id=120464
+
+        Reviewed by Jocelyn Turcotte.
+
+        * Scripts/webkitpy/port/qt.py:
+        (QtPort._search_paths):
+        * Scripts/webkitpy/port/qt_unittest.py:
+        (QtPortTest):
+
+2013-08-29  Filip Pizlo  <fpizlo@apple.com>
+
+        Just linking LLVM into JSC causes all plugin tests to fail
+        https://bugs.webkit.org/show_bug.cgi?id=113915
+
+        Reviewed by Oliver Hunt.
+        
+        Hide all LLVM symbols. This should prevent us from exporting LLVM's overrides for
+        raise/abort/__assert_rtn.
+
+        * Scripts/configure-llvm:
+
+2013-08-29  Joseph Pecoraro  <pecoraro@apple.com>
+
+        new-run-webkit-tests does not respect --no-sample-on-timeout switch
+        https://bugs.webkit.org/show_bug.cgi?id=120491
+
+        Reviewed by Darin Adler.
+
+        * Scripts/webkitpy/port/server_process.py:
+        (ServerProcess._handle_timeout):
+
+2013-08-29  Sam Weinig  <sam@webkit.org>
+
+        Add ENABLE guards for Promises
+        https://bugs.webkit.org/show_bug.cgi?id=120488
+
+        Reviewed by Andreas Kling.
+
+        * Scripts/webkitperl/FeatureList.pm:
+        * qmake/mkspecs/features/features.pri:
+
+2013-08-29  Andre Moreira Magalhaes   <andre.magalhaes@collabora.co.uk>
+
+        [GTK] Should enable WebGL by default on MiniBrowser
+        https://bugs.webkit.org/show_bug.cgi?id=120420
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Enable WebGL by default on MiniBrowser.
+
+        * MiniBrowser/gtk/main.c:
+        (main):
+
+2013-08-28  Simon Fraser  <simon.fraser@apple.com>
+
+        Add a Command-R shortcut in MiniBrowser
+        https://bugs.webkit.org/show_bug.cgi?id=120442
+
+        Reviewed by Dean Jackson.
+        
+        Add a "Reload Page" item to the View menu with a Command-R
+        shortcut.
+
+        * MiniBrowser/mac/MainMenu.xib:
+
+2013-08-29  Alberto Garcia  <berto@igalia.com>
+
+        [GTK] Update apt dependency list
+        https://bugs.webkit.org/show_bug.cgi?id=120399
+
+        Reviewed by Philippe Normand.
+
+        Remove bogus package gail-3.0, add xfonts-utils (needed by
+        xorg-xserver) and switch to the latest versions of libtiff and
+        libjpeg.
+
+        * gtk/install-dependencies:
+
+2013-08-28  Alexey Proskuryakov  <ap@apple.com>
+
+        [WK2][Mac] WebKitTestRunner doesn't force system appearance
+        https://bugs.webkit.org/show_bug.cgi?id=120437
+
+        Reviewed by Darin Adler.
+
+        * WebKitTestRunner/InjectedBundle/mac/InjectedBundleMac.mm:
+        (WTR::InjectedBundle::platformInitialize): Set AppleAquaColorVariant,
+        AppleHighlightColor and AppleOtherHighlightColor to the same values that DRT uses.
+        Fixed formatting.
+
+2013-08-16  Ryosuke Niwa  <rniwa@webkit.org>
+
+        <https://webkit.org/b/119806> [Mac] Add a way to easily test attributed string generation
+
+        Reviewed by Darin Adler.
+
+        Add textInputController.legacyAttributedString to retrieve the attributed string for copy & paste.
+
+        We can't use textInputController.attributedSubstringFromRange as it uses WebHTMLConverter's static
+        editingAttributedStringFromRange function, which doesn't implement the full converter at the moment.
+
+        Also NSMutableAttributedString.ranges and WebNSRange so that JavaScript can get a list of all
+        ranges in a given attributed string.
+
+        * DumpRenderTree/mac/TextInputController.m:
+        (-[WebNSRange initWithNSRange:]):
+        (-[WebNSRange location]):
+        (-[WebNSRange length]):
+        (+[WebNSRange isSelectorExcludedFromWebScript:]):
+        (+[NSMutableAttributedString isSelectorExcludedFromWebScript:]):
+        (+[NSMutableAttributedString webScriptNameForSelector:]):
+        (-[NSMutableAttributedString ranges]): Added.
+        (+[TextInputController isSelectorExcludedFromWebScript:]):
+        (+[TextInputController webScriptNameForSelector:]):
+        (-[TextInputController legacyAttributedString:]):
+
 2013-08-28  Denis Nomiyama  <d.nomiyama@samsung.com>
 
         [GTK] accessibility/menu-list-sends-change-notification.html has incorrect expected results
