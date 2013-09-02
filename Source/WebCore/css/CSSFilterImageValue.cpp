@@ -123,7 +123,7 @@ PassRefPtr<Image> CSSFilterImageValue::image(RenderObject* renderer, const IntSi
     filterRenderer->setSourceImageRect(FloatRect(FloatPoint(), size));
     filterRenderer->setFilterRegion(FloatRect(FloatPoint(), size));
     // FIXME: SVG Filter don't work at the moment.
-    if (!filterRenderer->build(0, m_filterOperations, true))
+    if (!filterRenderer->build(0, m_filterOperations, FilterFunction))
         return Image::nullImage();
     filterRenderer->apply();
 
@@ -162,8 +162,12 @@ bool CSSFilterImageValue::hasFailedOrCanceledSubresources() const
 
 bool CSSFilterImageValue::equals(const CSSFilterImageValue& other) const
 {
-    return compareCSSValuePtr(m_imageValue, other.m_imageValue)
-        && compareCSSValuePtr(m_filterValue, other.m_filterValue);
+    return equalInputImages(other) && compareCSSValuePtr(m_filterValue, other.m_filterValue);
+}
+
+bool CSSFilterImageValue::equalInputImages(const CSSFilterImageValue& other) const
+{
+    return compareCSSValuePtr(m_imageValue, other.m_imageValue);
 }
 
 } // namespace WebCore

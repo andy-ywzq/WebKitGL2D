@@ -2214,7 +2214,6 @@ set(WebCore_SOURCES
     rendering/shapes/Shape.cpp
     rendering/shapes/ShapeInfo.cpp
     rendering/shapes/ShapeInsideInfo.cpp
-    rendering/shapes/ShapeInterval.cpp
     rendering/shapes/ShapeOutsideInfo.cpp
 
     rendering/style/BasicShapes.cpp
@@ -2712,7 +2711,9 @@ if (ENABLE_VIDEO_TRACK)
     list(APPEND WebCore_SOURCES
         html/track/AudioTrack.cpp
         html/track/AudioTrackList.cpp
+        html/track/InbandGenericTextTrack.cpp
         html/track/InbandTextTrack.cpp
+        html/track/InbandWebVTTTextTrack.cpp
         html/track/LoadableTextTrack.cpp
         html/track/TextTrack.cpp
         html/track/TextTrackCue.cpp

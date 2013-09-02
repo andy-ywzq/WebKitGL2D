@@ -64,7 +64,7 @@ void InsertionPoint::willAttachRenderers()
             continue;
         }
         if (current->isElementNode())
-            Style::attachRenderTree(toElement(current));
+            Style::attachRenderTree(*toElement(current));
     }
 }
 
@@ -79,7 +79,7 @@ void InsertionPoint::willDetachRenderers()
             continue;
         }
         if (current->isElementNode())
-            Style::detachRenderTree(toElement(current));
+            Style::detachRenderTree(*toElement(current));
     }
 }
 
@@ -107,9 +107,9 @@ bool InsertionPoint::rendererIsNeeded(const RenderStyle& style)
     return !isActive() && HTMLElement::rendererIsNeeded(style);
 }
 
-void InsertionPoint::childrenChanged(bool changedByParser, Node* beforeChange, Node* afterChange, int childCountDelta)
+void InsertionPoint::childrenChanged(const ChildChange& change)
 {
-    HTMLElement::childrenChanged(changedByParser, beforeChange, afterChange, childCountDelta);
+    HTMLElement::childrenChanged(change);
     if (ShadowRoot* root = containingShadowRoot())
         root->invalidateDistribution();
 }

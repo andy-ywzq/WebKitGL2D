@@ -37,7 +37,6 @@
 #include "CSSStyleSheet.h"
 #include "CachedCSSStyleSheet.h"
 #include "CachedResourceLoader.h"
-#include "ChildIterator.h"
 #include "Chrome.h"
 #include "ChromeClient.h"
 #include "Comment.h"
@@ -50,7 +49,6 @@
 #include "DOMNamedFlowCollection.h"
 #include "DOMWindow.h"
 #include "DateComponents.h"
-#include "DescendantIterator.h"
 #include "Dictionary.h"
 #include "DocumentEventQueue.h"
 #include "DocumentFragment.h"
@@ -61,6 +59,7 @@
 #include "DocumentType.h"
 #include "Editor.h"
 #include "Element.h"
+#include "ElementIterator.h"
 #include "EntityReference.h"
 #include "Event.h"
 #include "EventFactory.h"
@@ -338,7 +337,7 @@ static bool acceptsEditingFocus(Node* node)
     ASSERT(node->rendererIsEditable());
 
     Node* root = node->rootEditableElement();
-    Frame* frame = node->document()->frame();
+    Frame* frame = node->document().frame();
     if (!frame || !root)
         return false;
 
@@ -536,7 +535,7 @@ static bool isAttributeOnAllOwners(const WebCore::QualifiedName& attribute, cons
     do {
         if (!(owner->hasAttribute(attribute) || owner->hasAttribute(prefixedAttribute)))
             return false;
-    } while ((owner = owner->document()->ownerElement()));
+    } while ((owner = owner->document().ownerElement()));
     return true;
 }
 #endif
@@ -624,7 +623,6 @@ void Document::dispose()
     ASSERT(!m_deletionHasBegun);
     // We must make sure not to be retaining any of our children through
     // these extra pointers or we will create a reference cycle.
-    m_docType = 0;
     m_focusedElement = 0;
     m_hoveredElement = 0;
     m_activeElement = 0;
@@ -745,22 +743,6 @@ void Document::resetActiveLinkColor()
     m_activeLinkColor.setNamedColor("red");
 }
 
-void Document::setDocType(PassRefPtr<DocumentType> docType)
-{
-    // This should never be called more than once.
-    ASSERT(!m_docType || !docType);
-    m_docType = docType;
-    if (m_docType) {
-        this->adoptIfNeeded(m_docType.get());
-#if ENABLE(LEGACY_VIEWPORT_ADAPTION)
-        if (m_docType->publicId().startsWith("-//wapforum//dtd xhtml mobile 1.", /* caseSensitive */ false))
-            processViewport("width=device-width, height=device-height", ViewportArguments::XHTMLMobileProfile);
-#endif
-    }
-    // Doctype affects the interpretation of the stylesheets.
-    clearStyleResolver();
-}
-
 DOMImplementation* Document::implementation()
 {
     if (!m_implementation)
@@ -773,9 +755,27 @@ bool Document::hasManifest() const
     return documentElement() && documentElement()->hasTagName(htmlTag) && documentElement()->hasAttribute(manifestAttr);
 }
 
-void Document::childrenChanged(bool changedByParser, Node* beforeChange, Node* afterChange, int childCountDelta)
+PassRefPtr<DocumentType> Document::doctype() const
 {
-    ContainerNode::childrenChanged(changedByParser, beforeChange, afterChange, childCountDelta);
+    for (Node* node = firstChild(); node; node = node->nextSibling()) {
+        if (node->isDocumentTypeNode())
+            return static_cast<DocumentType*>(node);
+    }
+    return 0;
+}
+
+void Document::childrenChanged(const ChildChange& change)
+{
+    ContainerNode::childrenChanged(change);
+
+    // NOTE: Per DOM, dynamically inserting/removing doctype nodes doesn't affect compatibility mode.
+
+#if ENABLE(LEGACY_VIEWPORT_ADAPTION)
+    if (RefPtr<DocumentType> documentType = doctype()) {
+        if (documentType->publicId().startsWith("-//wapforum//dtd xhtml mobile 1.", /* caseSensitive */ false))
+            processViewport("width=device-width, height=device-height", ViewportArguments::XHTMLMobileProfile);
+    }
+#endif
 
     Element* newDocumentElement = 0;
     auto firstElementChild = elementChildren(this).begin();
@@ -865,7 +865,7 @@ void Document::didCreateCustomElement(Element* element, CustomElementConstructor
 
 PassRefPtr<DocumentFragment> Document::createDocumentFragment()
 {
-    return DocumentFragment::create(document());
+    return DocumentFragment::create(&document());
 }
 
 PassRefPtr<Text> Document::createTextNode(const String& data)
@@ -1109,7 +1109,7 @@ PassRefPtr<Element> Document::createElement(const QualifiedName& qName, bool cre
     if (e)
         m_sawElementsInKnownNamespaces = true;
     else
-        e = Element::create(qName, document());
+        e = Element::create(qName, &document());
 
     // <image> uses imgTag so we need a special rule.
     ASSERT((qName.matches(imageTag) && e->tagQName().matches(imgTag) && e->tagQName().prefix() == qName.prefix()) || qName == e->tagQName());
@@ -1692,7 +1692,7 @@ void Document::scheduleStyleRecalc()
     if (shouldDisplaySeamlesslyWithParent()) {
         // When we're seamless, our parent document manages our style recalcs.
         ownerElement()->setNeedsStyleRecalc();
-        ownerElement()->document()->scheduleStyleRecalc();
+        ownerElement()->document().scheduleStyleRecalc();
         return;
     }
 
@@ -1734,9 +1734,14 @@ void Document::styleRecalcTimerFired(Timer<Document>*)
 
 void Document::recalcStyle(Style::Change change)
 {
-    // we should not enter style recalc while painting
     ASSERT(!view() || !view()->isPainting());
-    if (view() && view()->isPainting())
+
+    // NOTE: XSL code seems to be the only client stumbling in here without a RenderView.
+    if (!m_renderView)
+        return;
+
+    FrameView& frameView = m_renderView->frameView();
+    if (frameView.isPainting())
         return;
     
     if (m_inStyleRecalc)
@@ -1758,18 +1763,11 @@ void Document::recalcStyle(Style::Change change)
 
     m_inStyleRecalc = true;
     {
-        PostAttachCallbackDisabler disabler(this);
+        PostAttachCallbackDisabler disabler(*this);
         WidgetHierarchyUpdatesSuspensionScope suspendWidgetHierarchyUpdates;
 
-        RefPtr<FrameView> frameView = view();
-        if (frameView) {
-            frameView->pauseScheduledEvents();
-            frameView->beginDeferredRepaints();
-        }
-
-        ASSERT(!renderer() || renderArena());
-        if (!renderer() || !renderArena())
-            goto bailOut;
+        frameView.pauseScheduledEvents();
+        frameView.beginDeferredRepaints();
 
         if (m_pendingStyleRecalcShouldForce)
             change = Style::Force;
@@ -1779,14 +1777,12 @@ void Document::recalcStyle(Style::Change change)
             m_hasNodesWithPlaceholderStyle = false;
         }
 
-        resolveTree(this, change);
+        Style::resolveTree(*this, change);
 
 #if USE(ACCELERATED_COMPOSITING)
-        if (view())
-            view()->updateCompositingLayersAfterStyleChange();
+        frameView.updateCompositingLayersAfterStyleChange();
 #endif
 
-    bailOut:
         clearNeedsStyleRecalc();
         clearChildNeedsStyleRecalc();
         unscheduleStyleRecalc();
@@ -1797,10 +1793,8 @@ void Document::recalcStyle(Style::Change change)
         if (m_styleResolver)
             m_styleSheetCollection->resetCSSFeatureFlags();
 
-        if (frameView) {
-            frameView->resumeScheduledEvents();
-            frameView->endDeferredRepaints();
-        }
+        frameView.resumeScheduledEvents();
+        frameView.endDeferredRepaints();
     }
 
     // If we wanted to call implicitClose() during recalcStyle, do so now that we're finished.
@@ -1814,8 +1808,8 @@ void Document::recalcStyle(Style::Change change)
     // As a result of the style recalculation, the currently hovered element might have been
     // detached (for example, by setting display:none in the :hover style), schedule another mouseMove event
     // to check if any other elements ended up under the mouse pointer due to re-layout.
-    if (m_hoveredElement && !m_hoveredElement->renderer() && frame())
-        frame()->eventHandler().dispatchFakeMouseMoveEventSoon();
+    if (m_hoveredElement && !m_hoveredElement->renderer())
+        frameView.frame().eventHandler().dispatchFakeMouseMoveEventSoon();
 }
 
 void Document::updateStyleIfNeeded()
@@ -1845,7 +1839,7 @@ void Document::updateLayout()
     }
 
     if (Element* oe = ownerElement())
-        oe->document()->updateLayout();
+        oe->document().updateLayout();
 
     updateStyleIfNeeded();
 
@@ -1892,7 +1886,7 @@ void Document::updateLayoutIgnorePendingStylesheets()
 
 PassRefPtr<RenderStyle> Document::styleForElementIgnoringPendingStylesheets(Element* element)
 {
-    ASSERT_ARG(element, element->document() == this);
+    ASSERT_ARG(element, &element->document() == this);
 
     bool oldIgnore = m_ignorePendingStylesheets;
     m_ignorePendingStylesheets = true;
@@ -1959,7 +1953,7 @@ void Document::createStyleResolver()
     bool matchAuthorAndUserStyles = true;
     if (Settings* settings = this->settings())
         matchAuthorAndUserStyles = settings->authorAndUserStylesEnabled();
-    m_styleResolver = adoptPtr(new StyleResolver(this, matchAuthorAndUserStyles));
+    m_styleResolver = adoptPtr(new StyleResolver(*this, matchAuthorAndUserStyles));
     m_styleSheetCollection->combineCSSFeatureFlags();
 }
 
@@ -1991,7 +1985,7 @@ void Document::createRenderTree()
     recalcStyle(Style::Force);
 
     if (m_documentElement)
-        Style::attachRenderTree(m_documentElement.get());
+        Style::attachRenderTree(*m_documentElement);
 
     setAttached(true);
 }
@@ -2091,7 +2085,7 @@ void Document::detach()
     TemporaryChange<bool> change(m_renderTreeBeingDestroyed, true);
 
     if (m_documentElement)
-        Style::detachRenderTree(m_documentElement.get());
+        Style::detachRenderTree(*m_documentElement);
 
     clearChildNeedsStyleRecalc();
     setAttached(false);
@@ -2307,7 +2301,7 @@ void Document::setBody(PassRefPtr<HTMLElement> prpNewBody, ExceptionCode& ec)
         return;
     }
 
-    if (newBody->document() && newBody->document() != this) {
+    if (&newBody->document() != this) {
         ec = 0;
         RefPtr<Node> node = importNode(newBody.get(), true, ec);
         if (ec)
@@ -3230,7 +3224,7 @@ void Document::notifySeamlessChildDocumentsOfStylesheetUpdate() const
     for (Frame* child = frame()->tree().firstChild(); child; child = child->tree().nextSibling()) {
         Document* childDocument = child->document();
         if (childDocument->shouldDisplaySeamlesslyWithParent()) {
-            ASSERT(childDocument->seamlessParentIFrame()->document() == this);
+            ASSERT(&childDocument->seamlessParentIFrame()->document() == this);
             childDocument->seamlessParentUpdatedStylesheets();
         }
     }
@@ -3295,7 +3289,7 @@ bool Document::setFocusedElement(PassRefPtr<Element> prpNewFocusedElement, Focus
     RefPtr<Element> newFocusedElement = prpNewFocusedElement;
 
     // Make sure newFocusedElement is actually in this document
-    if (newFocusedElement && (newFocusedElement->document() != this))
+    if (newFocusedElement && (&newFocusedElement->document() != this))
         return true;
 
     if (m_focusedElement == newFocusedElement)
@@ -4301,7 +4295,7 @@ Document* Document::topDocument() const
     // The frame tree even has a top() function.
     Document* document = const_cast<Document*>(this);
     while (Element* element = document->ownerElement())
-        document = element->document();
+        document = &element->document();
     return document;
 }
 
@@ -4596,7 +4590,7 @@ void Document::initSecurityContext()
         securityOrigin()->setStorageBlockingPolicy(settings->storageBlockingPolicy());
     }
 
-    Document* parentDocument = ownerElement() ? ownerElement()->document() : 0;
+    Document* parentDocument = ownerElement() ? &ownerElement()->document() : 0;
     if (parentDocument && m_frame->loader().shouldTreatURLAsSrcdocDocument(url())) {
         m_isSrcdocDocument = true;
         setBaseURLOverride(parentDocument->baseURL());
@@ -4977,7 +4971,7 @@ MediaCanStartListener* Document::takeAnyMediaCanStartListener()
 bool Document::fullScreenIsAllowedForElement(Element* element) const
 {
     ASSERT(element);
-    return isAttributeOnAllOwners(allowfullscreenAttr, webkitallowfullscreenAttr, element->document()->ownerElement());
+    return isAttributeOnAllOwners(allowfullscreenAttr, webkitallowfullscreenAttr, element->document().ownerElement());
 }
 
 void Document::requestFullScreenForElement(Element* element, unsigned short flags, FullScreenCheckType checkType)
@@ -5050,7 +5044,7 @@ void Document::requestFullScreenForElement(Element* element, unsigned short flag
 
         do {
             docs.prepend(currentDoc);
-            currentDoc = currentDoc->ownerElement() ? currentDoc->ownerElement()->document() : 0;
+            currentDoc = currentDoc->ownerElement() ? &currentDoc->ownerElement()->document() : 0;
         } while (currentDoc);
 
         // 4. For each document in docs, run these substeps:
@@ -5155,7 +5149,7 @@ void Document::webkitExitFullscreen()
         //    If doc's fullscreen element stack is non-empty and the element now at the top is either
         //    not in a document or its node document is not doc, repeat this substep.
         newTop = currentDoc->webkitFullscreenElement();
-        if (newTop && (!newTop->inDocument() || newTop->document() != currentDoc))
+        if (newTop && (!newTop->inDocument() || &newTop->document() != currentDoc))
             continue;
 
         // 2. Queue a task to fire an event named fullscreenchange with its bubbles attribute set to true
@@ -5165,7 +5159,7 @@ void Document::webkitExitFullscreen()
         // 3. If doc's fullscreen element stack is empty and doc's browsing context has a browsing context
         // container, set doc to that browsing context container's node document.
         if (!newTop && currentDoc->ownerElement()) {
-            currentDoc = currentDoc->ownerElement()->document();
+            currentDoc = &currentDoc->ownerElement()->document();
             continue;
         }
 
@@ -5771,9 +5765,9 @@ void Document::updateHoverActiveState(const HitTestRequest& request, Element* in
     ASSERT(!request.readOnly());
 
     Element* innerElementInDocument = innerElement;
-    while (innerElementInDocument && innerElementInDocument->document() != this) {
-        innerElementInDocument->document()->updateHoverActiveState(request, innerElementInDocument);
-        innerElementInDocument = innerElementInDocument->document()->ownerElement();
+    while (innerElementInDocument && &innerElementInDocument->document() != this) {
+        innerElementInDocument->document().updateHoverActiveState(request, innerElementInDocument);
+        innerElementInDocument = innerElementInDocument->document().ownerElement();
     }
 
     Element* oldActiveElement = m_activeElement.get();

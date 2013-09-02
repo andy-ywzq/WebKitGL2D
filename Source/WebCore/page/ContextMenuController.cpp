@@ -151,7 +151,7 @@ PassOwnPtr<ContextMenu> ContextMenuController::createContextMenu(Event* event)
     MouseEvent* mouseEvent = static_cast<MouseEvent*>(event);
     HitTestResult result(mouseEvent->absoluteLocation());
 
-    if (Frame* frame = event->target()->toNode()->document()->frame())
+    if (Frame* frame = event->target()->toNode()->document().frame())
         result = frame->eventHandler().hitTestResultAtPoint(mouseEvent->absoluteLocation());
 
     if (!result.innerNonSharedNode())
@@ -219,7 +219,7 @@ void ContextMenuController::contextMenuItemSelected(ContextMenuItem* item)
         return;
     }
 
-    Frame* frame = m_hitTestResult.innerNonSharedNode()->document()->frame();
+    Frame* frame = m_hitTestResult.innerNonSharedNode()->document().frame();
     if (!frame)
         return;
 
@@ -353,7 +353,6 @@ void ContextMenuController::contextMenuItemSelected(ContextMenuItem* item)
     case ContextMenuItemTagSpellingGuess: {
         FrameSelection& frameSelection = frame->selection();
         if (frame->editor().shouldInsertText(item->title(), frameSelection.toNormalizedRange().get(), EditorInsertActionPasted)) {
-            Document* document = frame->document();
             ReplaceSelectionCommand::CommandOptions replaceOptions = ReplaceSelectionCommand::MatchStyle | ReplaceSelectionCommand::PreventNesting;
 
             if (frame->editor().behavior().shouldAllowSpellingSuggestionsWithoutSelection()) {
@@ -366,7 +365,9 @@ void ContextMenuController::contextMenuItemSelected(ContextMenuItem* item)
                 replaceOptions |= ReplaceSelectionCommand::SelectReplacement;
             }
 
-            RefPtr<ReplaceSelectionCommand> command = ReplaceSelectionCommand::create(document, createFragmentFromMarkup(document, item->title(), ""), replaceOptions);
+            Document* document = frame->document();
+            ASSERT(document);
+            RefPtr<ReplaceSelectionCommand> command = ReplaceSelectionCommand::create(*document, createFragmentFromMarkup(document, item->title(), ""), replaceOptions);
             applyCommand(command);
             frameSelection.revealSelection(ScrollAlignment::alignToEdgeIfNeeded);
         }
@@ -410,9 +411,9 @@ void ContextMenuController::contextMenuItemSelected(ContextMenuItem* item)
     case ContextMenuItemTagStartSpeaking: {
         RefPtr<Range> selectedRange = frame->selection().toNormalizedRange();
         if (!selectedRange || selectedRange->collapsed(IGNORE_EXCEPTION)) {
-            Document* document = m_hitTestResult.innerNonSharedNode()->document();
-            selectedRange = document->createRange();
-            selectedRange->selectNode(document->documentElement(), IGNORE_EXCEPTION);
+            Document& document = m_hitTestResult.innerNonSharedNode()->document();
+            selectedRange = document.createRange();
+            selectedRange->selectNode(document.documentElement(), IGNORE_EXCEPTION);
         }
         m_client->speak(plainText(selectedRange.get()));
         break;
@@ -820,7 +821,7 @@ void ContextMenuController::populate()
     if (!m_hitTestResult.isContentEditable() && (node->isElementNode() && toElement(node)->isFormControlElement()))
         return;
 #endif
-    Frame* frame = node->document()->frame();
+    Frame* frame = node->document().frame();
     if (!frame)
         return;
 
@@ -1101,7 +1102,7 @@ void ContextMenuController::addInspectElementItem()
     if (!node)
         return;
 
-    Frame* frame = node->document()->frame();
+    Frame* frame = node->document().frame();
     if (!frame)
         return;
 
@@ -1128,7 +1129,7 @@ void ContextMenuController::checkOrEnableIfNeeded(ContextMenuItem& item) const
     if (item.type() == SeparatorType)
         return;
     
-    Frame* frame = m_hitTestResult.innerNonSharedNode()->document()->frame();
+    Frame* frame = m_hitTestResult.innerNonSharedNode()->document().frame();
     if (!frame)
         return;
 

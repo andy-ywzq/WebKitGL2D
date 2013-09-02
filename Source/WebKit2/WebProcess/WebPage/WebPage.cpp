@@ -1608,7 +1608,7 @@ static bool handleContextMenuEvent(const PlatformMouseEvent& platformMouseEvent,
 
     Frame* frame = &page->corePage()->mainFrame();
     if (result.innerNonSharedNode())
-        frame = result.innerNonSharedNode()->document()->frame();
+        frame = result.innerNonSharedNode()->document().frame();
     
     bool handled = frame->eventHandler().sendContextMenuEvent(platformMouseEvent);
     if (handled)
@@ -2610,7 +2610,7 @@ bool WebPage::handleEditingKeyboardEvent(KeyboardEvent* evt)
 {
     Node* node = evt->target()->toNode();
     ASSERT(node);
-    Frame* frame = node->document()->frame();
+    Frame* frame = node->document().frame();
     ASSERT(frame);
 
     const PlatformKeyboardEvent* keyEvent = evt->keyEvent();

@@ -679,7 +679,7 @@ RootInlineBox* RenderBlock::constructLine(BidiRunList<BidiRun>& bidiRuns, const 
         if (!box)
             continue;
 
-        if (!rootHasSelectedChildren && box->renderer()->selectionState() != RenderObject::SelectionNone)
+        if (!rootHasSelectedChildren && box->renderer().selectionState() != RenderObject::SelectionNone)
             rootHasSelectedChildren = true;
 
         // If we have no parent box yet, or if the run is not simply a sibling,
@@ -691,7 +691,7 @@ RootInlineBox* RenderBlock::constructLine(BidiRunList<BidiRun>& bidiRuns, const 
 #else
         bool runStartsSegment = false;
 #endif
-        if (!parentBox || parentBox->renderer() != r->m_object->parent() || runStartsSegment)
+        if (!parentBox || &parentBox->renderer() != r->m_object->parent() || runStartsSegment)
             // Create new inline boxes all the way back to the appropriate insertion point.
             parentBox = createLineBoxes(r->m_object->parent(), lineInfo, box, runStartsSegment);
         else {
@@ -1599,9 +1599,9 @@ void RenderBlock::layoutRunsAndFloats(LineLayoutState& layoutState, bool hasInli
         // adjust the height accordingly.
         // A line break can be either the first or the last object on a line, depending on its direction.
         if (InlineBox* lastLeafChild = lastRootBox()->lastLeafChild()) {
-            RenderObject* lastObject = lastLeafChild->renderer();
+            RenderObject* lastObject = &lastLeafChild->renderer();
             if (!lastObject->isBR())
-                lastObject = lastRootBox()->firstLeafChild()->renderer();
+                lastObject = &lastRootBox()->firstLeafChild()->renderer();
             if (lastObject->isBR()) {
                 EClear clear = lastObject->style()->clear();
                 if (clear != CNONE)
@@ -2060,7 +2060,7 @@ void RenderBlock::linkToEndLineIfNeeded(LineLayoutState& layoutState)
         if (layoutState.checkForFloatsFromLastLine()) {
             LayoutUnit bottomVisualOverflow = lastRootBox()->logicalBottomVisualOverflow();
             LayoutUnit bottomLayoutOverflow = lastRootBox()->logicalBottomLayoutOverflow();
-            TrailingFloatsRootInlineBox* trailingFloatsLineBox = new (renderArena()) TrailingFloatsRootInlineBox(this);
+            TrailingFloatsRootInlineBox* trailingFloatsLineBox = new (renderArena()) TrailingFloatsRootInlineBox(*this);
             m_lineBoxes.appendLineBox(trailingFloatsLineBox);
             trailingFloatsLineBox->setConstructed();
             GlyphOverflowAndFallbackFontsMap textBoxDataMap;
@@ -2600,9 +2600,9 @@ void RenderBlock::LineBreaker::skipLeadingWhitespace(InlineBidiResolver& resolve
             m_block->setLogicalHeight(oldLogicalHeight + marginOffset);
             m_block->positionNewFloatOnLine(m_block->insertFloatingObject(toRenderBox(object)), lastFloatFromPreviousLine, lineInfo, width);
             m_block->setLogicalHeight(oldLogicalHeight);
-        } else if (object->isText() && object->style()->hasTextCombine() && object->isCombineText() && !toRenderCombineText(object)->isCombined()) {
-            toRenderCombineText(object)->combineText();
-            if (toRenderCombineText(object)->isCombined())
+        } else if (object->isText() && object->style()->hasTextCombine() && object->isCombineText() && !toRenderCombineText(*object).isCombined()) {
+            toRenderCombineText(*object).combineText();
+            if (toRenderCombineText(*object).isCombined())
                 continue;
         }
         resolver.increment();
@@ -2858,9 +2858,9 @@ InlineIterator RenderBlock::LineBreaker::nextLineBreak(InlineBidiResolver& resol
 #endif
 }
 
-static inline bool iteratorIsBeyondEndOfRenderCombineText(const InlineIterator& iter, RenderCombineText* renderer)
+static inline bool iteratorIsBeyondEndOfRenderCombineText(const InlineIterator& iter, RenderCombineText& renderer)
 {
-    return iter.m_obj == renderer && iter.m_pos >= renderer->textLength();
+    return iter.m_obj == &renderer && iter.m_pos >= renderer.textLength();
 }
 
 static inline void commitLineBreakAtCurrentWidth(LineWidth& width, InlineIterator& lBreak, RenderObject* object, unsigned offset = 0, int nextBreak = -1)
@@ -3114,7 +3114,7 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
                     currentCharacterIsWS = true;
                     ignoringSpaces = true;
                 }
-                if (toRenderListMarker(current.m_obj)->isInside())
+                if (toRenderListMarker(*current.m_obj).isInside())
                     width.addUncommittedWidth(replacedLogicalWidth);
             } else
                 width.addUncommittedWidth(replacedLogicalWidth);
@@ -3137,9 +3137,9 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
             if (autoWrap && !RenderStyle::autoWrap(lastWS) && ignoringSpaces)
                 commitLineBreakAtCurrentWidth(width, lBreak, current.m_obj);
 
-            if (t->style()->hasTextCombine() && current.m_obj->isCombineText() && !toRenderCombineText(current.m_obj)->isCombined()) {
-                RenderCombineText* combineRenderer = toRenderCombineText(current.m_obj);
-                combineRenderer->combineText();
+            if (t->style()->hasTextCombine() && current.m_obj->isCombineText() && !toRenderCombineText(*current.m_obj).isCombined()) {
+                RenderCombineText& combineRenderer = toRenderCombineText(*current.m_obj);
+                combineRenderer.combineText();
                 // The length of the renderer's text may have changed. Increment stale iterator positions
                 if (iteratorIsBeyondEndOfRenderCombineText(lBreak, combineRenderer)) {
                     ASSERT(iteratorIsBeyondEndOfRenderCombineText(resolver.position(), combineRenderer));
@@ -3476,7 +3476,7 @@ InlineIterator RenderBlock::LineBreaker::nextSegmentBreak(InlineBidiResolver& re
 
         if (!current.m_obj->isFloatingOrOutOfFlowPositioned()) {
             last = current.m_obj;
-            if (last->isReplaced() && autoWrap && (!last->isImage() || allowImagesToBreak) && (!last->isListMarker() || toRenderListMarker(last)->isInside()))
+            if (last->isReplaced() && autoWrap && (!last->isImage() || allowImagesToBreak) && (!last->isListMarker() || toRenderListMarker(*last).isInside()))
                 commitLineBreakAtCurrentWidth(width, lBreak, next);
         }
 
@@ -3706,7 +3706,7 @@ void RenderBlock::layoutLineGridBox()
     
     setLineGridBox(0);
 
-    RootInlineBox* lineGridBox = new (renderArena()) RootInlineBox(this);
+    RootInlineBox* lineGridBox = new (renderArena()) RootInlineBox(*this);
     lineGridBox->setHasTextChildren(); // Needed to make the line ascent/descent actually be honored in quirks mode.
     lineGridBox->setConstructed();
     GlyphOverflowAndFallbackFontsMap textBoxDataMap;

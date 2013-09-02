@@ -37,7 +37,7 @@
 #include "AccessibilityTable.h"
 #include "CachedImage.h"
 #include "Chrome.h"
-#include "DescendantIterator.h"
+#include "ElementIterator.h"
 #include "EventNames.h"
 #include "FloatRect.h"
 #include "Frame.h"
@@ -647,9 +647,9 @@ String AccessibilityRenderObject::textUnderElement(AccessibilityTextUnderElement
         // If possible, use a text iterator to get the text, so that whitespace
         // is handled consistently.
         if (Node* node = this->node()) {
-            if (Frame* frame = node->document()->frame()) {
+            if (Frame* frame = node->document().frame()) {
                 // catch stale WebCoreAXObject (see <rdar://problem/3960196>)
-                if (frame->document() != node->document())
+                if (frame->document() != &node->document())
                     return String();
 
                 return plainText(rangeOfContents(node).get(), textIteratorBehaviorForTextRange());
@@ -710,7 +710,7 @@ String AccessibilityRenderObject::stringValue() const
     }
     
     if (m_renderer->isListMarker())
-        return toRenderListMarker(m_renderer)->text();
+        return toRenderListMarker(*m_renderer).text();
     
     if (isWebArea())
         return String();
@@ -932,7 +932,7 @@ void AccessibilityRenderObject::addRadioButtonGroupMembers(AccessibilityChildren
                 linkedUIElements.append(object);        
         } 
     } else {
-        RefPtr<NodeList> list = node->document()->getElementsByTagName("input");
+        RefPtr<NodeList> list = node->document().getElementsByTagName("input");
         unsigned len = list->length();
         for (unsigned i = 0; i < len; ++i) {
             if (isHTMLInputElement(list->item(i))) {
@@ -1336,7 +1336,7 @@ int AccessibilityRenderObject::layoutCount() const
 {
     if (!m_renderer->isRenderView())
         return 0;
-    return toRenderView(m_renderer)->frameView().layoutCount();
+    return toRenderView(*m_renderer).frameView().layoutCount();
 }
 
 String AccessibilityRenderObject::text() const

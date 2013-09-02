@@ -327,7 +327,7 @@ public:
     void setReferrerPolicy(ReferrerPolicy referrerPolicy) { m_referrerPolicy = referrerPolicy; }
     ReferrerPolicy referrerPolicy() const { return m_referrerPolicy; }
 
-    DocumentType* doctype() const { return m_docType.get(); }
+    PassRefPtr<DocumentType> doctype() const;
 
     DOMImplementation* implementation();
     
@@ -885,8 +885,6 @@ public:
     void incDOMTreeVersion() { m_domTreeVersion = ++s_globalTreeVersion; }
     uint64_t domTreeVersion() const { return m_domTreeVersion; }
 
-    void setDocType(PassRefPtr<DocumentType>);
-
     // XPathEvaluator methods
     PassRefPtr<XPathExpression> createExpression(const String& expression,
                                                  XPathNSResolver* resolver,
@@ -1201,7 +1199,7 @@ private:
 
     virtual bool isDocument() const OVERRIDE { return true; }
 
-    virtual void childrenChanged(bool changedByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0);
+    virtual void childrenChanged(const ChildChange&) OVERRIDE;
 
     virtual String nodeName() const;
     virtual NodeType nodeType() const;
@@ -1306,7 +1304,6 @@ private:
 
     String m_baseTarget;
 
-    RefPtr<DocumentType> m_docType;
     OwnPtr<DOMImplementation> m_implementation;
 
     RefPtr<CSSStyleSheet> m_elementSheet;
@@ -1626,5 +1623,9 @@ inline Node::Node(Document* document, ConstructionType type)
 Node* eventTargetNodeForDocument(Document*);
 
 } // namespace WebCore
+
+namespace WTF {
+inline WebCore::Document* getPtr(WebCore::Document& p) { return &p; }
+}
 
 #endif // Document_h

@@ -393,8 +393,8 @@ void Editor::deleteSelectionWithSmartDelete(bool smartDelete)
 {
     if (m_frame.selection().isNone())
         return;
-    
-    applyCommand(DeleteSelectionCommand::create(m_frame.document(), smartDelete));
+
+    applyCommand(DeleteSelectionCommand::create(document(), smartDelete));
 }
 
 void Editor::pasteAsPlainText(const String& pastingText, bool smartReplace)
@@ -467,7 +467,8 @@ void Editor::replaceSelectionWithFragment(PassRefPtr<DocumentFragment> fragment,
         options |= ReplaceSelectionCommand::SmartReplace;
     if (matchStyle)
         options |= ReplaceSelectionCommand::MatchStyle;
-    applyCommand(ReplaceSelectionCommand::create(m_frame.document(), fragment, options, EditActionPaste));
+    ASSERT(m_frame.document());
+    applyCommand(ReplaceSelectionCommand::create(*m_frame.document(), fragment, options, EditActionPaste));
     revealSelectionAfterEditingOperation();
 
     if (m_frame.selection().isInPasswordField() || !isContinuousSpellCheckingEnabled())
@@ -615,7 +616,7 @@ PassRefPtr<Node> Editor::insertOrderedList()
     if (!canEditRichly())
         return 0;
         
-    RefPtr<Node> newList = InsertListCommand::insertList(m_frame.document(), InsertListCommand::OrderedList);
+    RefPtr<Node> newList = InsertListCommand::insertList(document(), InsertListCommand::OrderedList);
     revealSelectionAfterEditingOperation();
     return newList;
 }
@@ -625,7 +626,7 @@ PassRefPtr<Node> Editor::insertUnorderedList()
     if (!canEditRichly())
         return 0;
         
-    RefPtr<Node> newList = InsertListCommand::insertList(m_frame.document(), InsertListCommand::UnorderedList);
+    RefPtr<Node> newList = InsertListCommand::insertList(document(), InsertListCommand::UnorderedList);
     revealSelectionAfterEditingOperation();
     return newList;
 }
@@ -681,7 +682,7 @@ void Editor::decreaseSelectionListLevel()
 
 void Editor::removeFormattingAndStyle()
 {
-    applyCommand(RemoveFormatCommand::create(m_frame.document()));
+    applyCommand(RemoveFormatCommand::create(document()));
 }
 
 void Editor::clearLastEditCommand() 
@@ -745,7 +746,7 @@ void Editor::applyStyle(StylePropertySet* style, EditAction editingAction)
         break;
     case VisibleSelection::RangeSelection:
         if (style)
-            applyCommand(ApplyStyleCommand::create(m_frame.document(), EditingStyle::create(style).get(), editingAction));
+            applyCommand(ApplyStyleCommand::create(document(), EditingStyle::create(style).get(), editingAction));
         break;
     }
 }
@@ -764,7 +765,7 @@ void Editor::applyParagraphStyle(StylePropertySet* style, EditAction editingActi
     case VisibleSelection::CaretSelection:
     case VisibleSelection::RangeSelection:
         if (style)
-            applyCommand(ApplyStyleCommand::create(m_frame.document(), EditingStyle::create(style).get(), editingAction, ApplyStyleCommand::ForceBlockProperties));
+            applyCommand(ApplyStyleCommand::create(document(), EditingStyle::create(style).get(), editingAction, ApplyStyleCommand::ForceBlockProperties));
         break;
     }
 }
@@ -812,12 +813,12 @@ String Editor::selectionStartCSSPropertyValue(CSSPropertyID propertyID)
 
 void Editor::indent()
 {
-    applyCommand(IndentOutdentCommand::create(m_frame.document(), IndentOutdentCommand::Indent));
+    applyCommand(IndentOutdentCommand::create(document(), IndentOutdentCommand::Indent));
 }
 
 void Editor::outdent()
 {
-    applyCommand(IndentOutdentCommand::create(m_frame.document(), IndentOutdentCommand::Outdent));
+    applyCommand(IndentOutdentCommand::create(document(), IndentOutdentCommand::Outdent));
 }
 
 static void dispatchEditableContentChangedEvents(PassRefPtr<Element> prpStartRoot, PassRefPtr<Element> prpEndRoot)
@@ -832,7 +833,7 @@ static void dispatchEditableContentChangedEvents(PassRefPtr<Element> prpStartRoo
 
 void Editor::appliedEditing(PassRefPtr<CompositeEditCommand> cmd)
 {
-    m_frame.document()->updateLayout();
+    document().updateLayout();
 
     EditCommandComposition* composition = cmd->composition();
     ASSERT(composition);
@@ -864,7 +865,7 @@ void Editor::appliedEditing(PassRefPtr<CompositeEditCommand> cmd)
 
 void Editor::unappliedEditing(PassRefPtr<EditCommandComposition> cmd)
 {
-    m_frame.document()->updateLayout();
+    document().updateLayout();
 
     VisibleSelection newSelection(cmd->startingSelection());
     changeSelectionAfterCommand(newSelection, FrameSelection::CloseTyping | FrameSelection::ClearTypingStyle);
@@ -880,7 +881,7 @@ void Editor::unappliedEditing(PassRefPtr<EditCommandComposition> cmd)
 
 void Editor::reappliedEditing(PassRefPtr<EditCommandComposition> cmd)
 {
-    m_frame.document()->updateLayout();
+    document().updateLayout();
 
     VisibleSelection newSelection(cmd->endingSelection());
     changeSelectionAfterCommand(newSelection, FrameSelection::CloseTyping | FrameSelection::ClearTypingStyle);
@@ -968,7 +969,7 @@ bool Editor::insertTextWithoutSendingTextEvent(const String& text, bool selectIn
     selection = selectionForCommand(triggeringEvent);
     if (selection.isContentEditable()) {
         if (Node* selectionStart = selection.start().deprecatedNode()) {
-            RefPtr<Document> document = selectionStart->document();
+            RefPtr<Document> document = &selectionStart->document();
 
             // Insert the text
             if (triggeringEvent && triggeringEvent->isDictation())
@@ -1073,9 +1074,13 @@ void Editor::copy()
             canSmartCopyOrDelete() ? Pasteboard::CanSmartReplace : Pasteboard::CannotSmartReplace);
     } else {
         Document* document = m_frame.document();
-        if (HTMLImageElement* imageElement = imageElementFromImageDocument(document))
+        if (HTMLImageElement* imageElement = imageElementFromImageDocument(document)) {
+#if PLATFORM(MAC) && !PLATFORM(IOS)
+            writeImageToPasteboard(*Pasteboard::createForCopyAndPaste(), *imageElement, document->url(), document->title());
+#else
             Pasteboard::createForCopyAndPaste()->writeImage(imageElement, document->url(), document->title());
-        else {
+#endif
+        } else {
 #if PLATFORM(MAC) && !PLATFORM(IOS)
             writeSelectionToPasteboard(*Pasteboard::createForCopyAndPaste());
 #else
@@ -1139,7 +1144,7 @@ void Editor::simplifyMarkup(Node* startNode, Node* endNode)
     if (!startNode)
         return;
     if (endNode) {
-        if (startNode->document() != endNode->document())
+        if (&startNode->document() != &endNode->document())
             return;
         // check if start node is before endNode
         Node* node = startNode;
@@ -1149,7 +1154,7 @@ void Editor::simplifyMarkup(Node* startNode, Node* endNode)
             return;
     }
     
-    applyCommand(SimplifyMarkupCommand::create(m_frame.document(), startNode, (endNode) ? NodeTraversal::next(endNode) : 0));
+    applyCommand(SimplifyMarkupCommand::create(document(), startNode, (endNode) ? NodeTraversal::next(endNode) : 0));
 }
 
 void Editor::copyURL(const KURL& url, const String& title)
@@ -1159,16 +1164,28 @@ void Editor::copyURL(const KURL& url, const String& title)
 
 void Editor::copyURL(const KURL& url, const String& title, Pasteboard& pasteboard)
 {
+#if PLATFORM(MAC) && !PLATFORM(IOS)
+    writeURLToPasteboard(pasteboard, url, title);
+#else
     pasteboard.writeURL(url, title, &m_frame);
+#endif
 }
 
 void Editor::copyImage(const HitTestResult& result)
 {
+    Element* element = result.innerNonSharedElement();
+    if (!element)
+        return;
+
     KURL url = result.absoluteLinkURL();
     if (url.isEmpty())
         url = result.absoluteImageURL();
 
-    Pasteboard::createForCopyAndPaste()->writeImage(result.innerNonSharedNode(), url, result.altDisplayString());
+#if PLATFORM(MAC) && !PLATFORM(IOS)
+    writeImageToPasteboard(*Pasteboard::createForCopyAndPaste(), *element, url, result.altDisplayString());
+#else
+    Pasteboard::createForCopyAndPaste()->writeImage(element, url, result.altDisplayString());
+#endif
 }
 
 bool Editor::isContinuousSpellCheckingEnabled() const
@@ -1601,7 +1618,7 @@ void Editor::setComposition(const String& text, const Vector<CompositionUnderlin
 
             unsigned start = min(baseOffset + selectionStart, extentOffset);
             unsigned end = min(max(start, baseOffset + selectionEnd), extentOffset);
-            RefPtr<Range> selectedRange = Range::create(baseNode->document(), baseNode, start, baseNode, end);                
+            RefPtr<Range> selectedRange = Range::create(&baseNode->document(), baseNode, start, baseNode, end);
             m_frame.selection().setSelectedRange(selectedRange.get(), DOWNSTREAM, false);
         }
     }
@@ -2238,7 +2255,7 @@ void Editor::markAndReplaceFor(PassRefPtr<SpellCheckRequest> request, const Vect
             RefPtr<Range> misspellingRange = paragraph.subrange(resultLocation, resultLength);
             if (!m_alternativeTextController->isSpellingMarkerAllowed(misspellingRange))
                 continue;
-            misspellingRange->startContainer()->document()->markers().addMarker(misspellingRange.get(), DocumentMarker::Spelling, replacement);
+            misspellingRange->startContainer()->document().markers().addMarker(misspellingRange.get(), DocumentMarker::Spelling, replacement);
         } else if (shouldMarkGrammar && resultType == TextCheckingTypeGrammar && paragraph.checkingRangeCovers(resultLocation, resultLength)) {
             ASSERT(resultLength > 0 && resultLocation >= 0);
             const Vector<GrammarDetail>& details = results[i].details;
@@ -2247,7 +2264,7 @@ void Editor::markAndReplaceFor(PassRefPtr<SpellCheckRequest> request, const Vect
                 ASSERT(detail.length > 0 && detail.location >= 0);
                 if (paragraph.checkingRangeCovers(resultLocation + detail.location, detail.length)) {
                     RefPtr<Range> badGrammarRange = paragraph.subrange(resultLocation + detail.location, detail.length);
-                    badGrammarRange->startContainer()->document()->markers().addMarker(badGrammarRange.get(), DocumentMarker::Grammar, detail.userDescription);
+                    badGrammarRange->startContainer()->document().markers().addMarker(badGrammarRange.get(), DocumentMarker::Grammar, detail.userDescription);
                 }
             }
         } else if (resultEndLocation <= spellingRangeEndOffset && resultEndLocation >= paragraph.checkingStart()
@@ -2299,7 +2316,7 @@ void Editor::markAndReplaceFor(PassRefPtr<SpellCheckRequest> request, const Vect
                 selectionChanged = true;
                 restoreSelectionAfterChange = false;
                 if (canEditRichly())
-                    applyCommand(CreateLinkCommand::create(m_frame.document(), replacement));
+                    applyCommand(CreateLinkCommand::create(document(), replacement));
             } else if (canEdit() && shouldInsertText(replacement, rangeToReplace.get(), EditorInsertActionTyped)) {
                 correctSpellcheckingPreservingTextCheckingParagraph(paragraph, rangeToReplace, replacement, resultLocation, resultLength);
 
@@ -2356,7 +2373,7 @@ void Editor::changeBackToReplacedString(const String& replacedString)
     TextCheckingParagraph paragraph(selection);
     replaceSelectionWithText(replacedString, false, false);
     RefPtr<Range> changedRange = paragraph.subrange(paragraph.checkingStart(), replacedString.length());
-    changedRange->startContainer()->document()->markers().addMarker(changedRange.get(), DocumentMarker::Replacement, String());
+    changedRange->startContainer()->document().markers().addMarker(changedRange.get(), DocumentMarker::Replacement, String());
     m_alternativeTextController->markReversed(changedRange.get());
 }
 
@@ -2512,7 +2529,7 @@ PassRefPtr<Range> Editor::compositionRange() const
     unsigned end = min(max(start, m_compositionEnd), length);
     if (start >= end)
         return 0;
-    return Range::create(m_compositionNode->document(), m_compositionNode.get(), start, m_compositionNode.get(), end);
+    return Range::create(&m_compositionNode->document(), m_compositionNode.get(), start, m_compositionNode.get(), end);
 }
 
 bool Editor::getCompositionSelection(unsigned& selectionStart, unsigned& selectionEnd) const
@@ -2722,7 +2739,7 @@ void Editor::computeAndSetTypingStyle(StylePropertySet* style, EditAction editin
     // Handle block styles, substracting these from the typing style.
     RefPtr<EditingStyle> blockStyle = typingStyle->extractAndRemoveBlockProperties();
     if (!blockStyle->isEmpty())
-        applyCommand(ApplyStyleCommand::create(m_frame.document(), blockStyle.get(), editingAction));
+        applyCommand(ApplyStyleCommand::create(document(), blockStyle.get(), editingAction));
 
     // Set the remaining style as the typing style.
     m_frame.selection().setTypingStyle(typingStyle);
@@ -2897,8 +2914,8 @@ PassRefPtr<Range> Editor::rangeOfString(const String& target, Range* referenceRa
 static bool isFrameInRange(Frame* frame, Range* range)
 {
     bool inRange = false;
-    for (HTMLFrameOwnerElement* ownerElement = frame->ownerElement(); ownerElement; ownerElement = ownerElement->document()->ownerElement()) {
-        if (ownerElement->document() == range->ownerDocument()) {
+    for (HTMLFrameOwnerElement* ownerElement = frame->ownerElement(); ownerElement; ownerElement = ownerElement->document().ownerElement()) {
+        if (&ownerElement->document() == range->ownerDocument()) {
             inRange = range->intersectsNode(ownerElement, IGNORE_EXCEPTION);
             break;
         }
@@ -3140,6 +3157,12 @@ void Editor::toggleOverwriteModeEnabled()
 {
     m_overwriteModeEnabled = !m_overwriteModeEnabled;
     m_frame.selection().setShouldShowBlockCursor(m_overwriteModeEnabled);
+}
+
+Document& Editor::document() const
+{
+    ASSERT(m_frame.document());
+    return *m_frame.document();
 }
 
 } // namespace WebCore

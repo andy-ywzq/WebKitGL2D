@@ -23,50 +23,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DescendantIteratorAssertions_h
-#define DescendantIteratorAssertions_h
+#include "config.h"
+#include "JSSet.h"
 
-#include "Document.h"
-#include "Element.h"
+#include "JSCJSValueInlines.h"
+#include "MapData.h"
+#include "SlotVisitorInlines.h"
 
-namespace WebCore {
+namespace JSC {
 
-class DescendantIteratorAssertions {
-public:
-    DescendantIteratorAssertions();
-    DescendantIteratorAssertions(const Element* first);
-    bool domTreeHasMutated() const;
-    void dropEventDispatchAssertion();
+const ClassInfo JSSet::s_info = { "Set", &Base::s_info, 0, 0, CREATE_METHOD_TABLE(JSSet) };
 
-private:
-    const Document* m_document;
-    uint64_t m_initialDOMTreeVersion;
-    OwnPtr<NoEventDispatchAssertion> m_noEventDispatchAssertion;
-};
-
-inline DescendantIteratorAssertions::DescendantIteratorAssertions()
-    : m_document(nullptr)
-    , m_initialDOMTreeVersion(0)
+void JSSet::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
+    Base::visitChildren(cell, visitor);
+    JSSet* thisObject = jsCast<JSSet*>(cell);
+    visitor.append(&thisObject->m_mapData);
 }
 
-inline DescendantIteratorAssertions::DescendantIteratorAssertions(const Element* first)
-    : m_document(first ? first->document() : nullptr)
-    , m_initialDOMTreeVersion(m_document ? m_document->domTreeVersion() : 0)
-    , m_noEventDispatchAssertion(m_document ? adoptPtr(new NoEventDispatchAssertion) : nullptr)
+void JSSet::finishCreation(VM& vm, JSGlobalObject* globalObject)
 {
-}
-
-inline bool DescendantIteratorAssertions::domTreeHasMutated() const
-{
-    return m_initialDOMTreeVersion && m_document && m_document->domTreeVersion() != m_initialDOMTreeVersion;
-}
-
-inline void DescendantIteratorAssertions::dropEventDispatchAssertion()
-{
-    m_noEventDispatchAssertion = nullptr;
+    Base::finishCreation(vm);
+    m_mapData.set(vm, this, MapData::create(vm, globalObject));
 }
 
 }
-
-#endif

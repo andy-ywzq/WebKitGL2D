@@ -363,7 +363,7 @@ bool DragController::tryDocumentDrag(DragData* dragData, DragDestinationAction a
         if (!m_fileInputElementUnderMouse)
             m_page->dragCaretController().setCaretPosition(m_documentUnderMouse->frame()->visiblePositionForPoint(point));
 
-        Frame* innerFrame = element->document()->frame();
+        Frame* innerFrame = element->document().frame();
         dragSession.operation = dragIsMove(innerFrame->selection(), dragData) ? DragOperationMove : DragOperationCopy;
         dragSession.mouseIsOverFileInput = m_fileInputElementUnderMouse;
         dragSession.numberOfItemsToBeAccepted = 0;
@@ -461,7 +461,7 @@ bool DragController::concludeEditDrag(DragData* dragData)
     Element* element = elementUnderMouse(m_documentUnderMouse.get(), point);
     if (!element)
         return false;
-    RefPtr<Frame> innerFrame = element->document()->frame();
+    RefPtr<Frame> innerFrame = element->document().frame();
     ASSERT(innerFrame);
 
     if (m_page->dragCaretController().hasCaret() && !dispatchTextInputEventFor(innerFrame.get(), dragData))
@@ -528,7 +528,7 @@ bool DragController::concludeEditDrag(DragData* dragData)
                     options |= ReplaceSelectionCommand::SmartReplace;
                 if (chosePlainText)
                     options |= ReplaceSelectionCommand::MatchStyle;
-                applyCommand(ReplaceSelectionCommand::create(m_documentUnderMouse.get(), fragment, options));
+                applyCommand(ReplaceSelectionCommand::create(*m_documentUnderMouse, fragment, options));
             }
         }
     } else {
@@ -539,11 +539,11 @@ bool DragController::concludeEditDrag(DragData* dragData)
 
         m_client->willPerformDragDestinationAction(DragDestinationActionEdit, dragData);
         if (setSelectionToDragCaret(innerFrame.get(), dragCaret, range, point))
-            applyCommand(ReplaceSelectionCommand::create(m_documentUnderMouse.get(), createFragmentFromText(range.get(), text),  ReplaceSelectionCommand::SelectReplacement | ReplaceSelectionCommand::MatchStyle | ReplaceSelectionCommand::PreventNesting));
+            applyCommand(ReplaceSelectionCommand::create(*m_documentUnderMouse, createFragmentFromText(range.get(), text),  ReplaceSelectionCommand::SelectReplacement | ReplaceSelectionCommand::MatchStyle | ReplaceSelectionCommand::PreventNesting));
     }
 
     if (rootEditableElement) {
-        if (Frame* frame = rootEditableElement->document()->frame())
+        if (Frame* frame = rootEditableElement->document().frame())
             frame->eventHandler().updateDragStateAfterEditDragIfNeeded(rootEditableElement.get());
     }
 
@@ -701,9 +701,9 @@ static Image* getImage(Element* element)
 
 static void selectElement(Element* element)
 {
-    RefPtr<Range> range = element->document()->createRange();
+    RefPtr<Range> range = element->document().createRange();
     range->selectNode(element);
-    element->document()->frame()->selection().setSelection(VisibleSelection(range.get(), DOWNSTREAM));
+    element->document().frame()->selection().setSelection(VisibleSelection(range.get(), DOWNSTREAM));
 }
 
 static IntPoint dragLocForDHTMLDrag(const IntPoint& mouseDraggedPoint, const IntPoint& dragOrigin, const IntPoint& dragImageOffset, bool isLinkImage)
@@ -837,7 +837,11 @@ bool DragController::startDrag(Frame* src, const DragState& state, DragOperation
         if (!clipboard->pasteboard().hasData())
             // Simplify whitespace so the title put on the clipboard resembles what the user sees
             // on the web page. This includes replacing newlines with spaces.
+#if PLATFORM(MAC)
+            src->editor().writeURLToPasteboard(clipboard->pasteboard(), linkURL, hitTestResult.textContent().simplifyWhiteSpace());
+#else
             clipboard->pasteboard().writeURL(linkURL, hitTestResult.textContent().simplifyWhiteSpace(), src);
+#endif
 
         if (src->selection().isCaret() && src->selection().isContentEditable()) {
             // a user can initiate a drag on a link without having any text

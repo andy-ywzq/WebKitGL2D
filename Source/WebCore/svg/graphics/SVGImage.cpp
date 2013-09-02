@@ -31,8 +31,8 @@
 #include "SVGImage.h"
 
 #include "Chrome.h"
-#include "DescendantIterator.h"
 #include "DocumentLoader.h"
+#include "ElementIterator.h"
 #include "FrameView.h"
 #include "ImageBuffer.h"
 #include "ImageObserver.h"
@@ -201,6 +201,7 @@ void SVGImage::drawPatternForContainer(GraphicsContext* context, const FloatSize
         return;
     drawForContainer(buffer->context(), containerSize, zoom, imageBufferSize, zoomedContainerRect, ColorSpaceDeviceRGB, CompositeSourceOver, BlendModeNormal);
     RefPtr<Image> image = buffer->copyImage(DontCopyBackingStore, Unscaled);
+    image->setSpaceSize(spaceSize());
 
     // Adjust the source rect and transform due to the image buffer's scaling.
     FloatRect scaledSrcRect = srcRect;
@@ -386,7 +387,7 @@ bool isInSVGImage(const Element* element)
 {
     ASSERT(element);
 
-    Page* page = element->document()->page();
+    Page* page = element->document().page();
     if (!page)
         return false;
 

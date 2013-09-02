@@ -1238,7 +1238,6 @@ SOURCES += \
     rendering/shapes/Shape.cpp \
     rendering/shapes/ShapeInfo.cpp \
     rendering/shapes/ShapeInsideInfo.cpp \
-    rendering/shapes/ShapeInterval.cpp \
     rendering/shapes/ShapeOutsideInfo.cpp \
     rendering/style/BasicShapes.cpp \
     rendering/style/ContentData.cpp \
@@ -1575,7 +1574,6 @@ HEADERS += \
     dom/CDATASection.h \
     dom/CharacterData.h \
     dom/CheckedRadioButtons.h \
-    dom/ChildIterator.h \
     dom/ChildNodeList.h \
     dom/ClassNodeList.h \
     dom/ClientRect.h \
@@ -1589,8 +1587,6 @@ HEADERS += \
     dom/ContextFeatures.h \
     dom/CustomEvent.h \
     dom/default/PlatformMessagePortChannel.h \
-    dom/DescendantIterator.h \
-    dom/DescendantIteratorAssertions.h \
     dom/DeviceMotionClient.h \
     dom/DeviceMotionController.h \
     dom/DeviceMotionData.h \
@@ -1614,7 +1610,12 @@ HEADERS += \
     dom/DOMTimeStamp.h \
     dom/DatasetDOMStringMap.h \
     dom/Element.h \
+    dom/ElementAncestorIterator.h \
+    dom/ElementChildIterator.h \
     dom/ElementData.h \
+    dom/ElementDescendantIterator.h \
+    dom/ElementIterator.h \
+    dom/ElementIteratorAssertions.h \
     dom/ElementTraversal.h \
     dom/Entity.h \
     dom/EntityReference.h \
@@ -3334,6 +3335,16 @@ enable?(VIDEO) {
             platform/graphics/gstreamer/WebKitWebSourceGStreamer.cpp \
             platform/graphics/gstreamer/PlatformVideoWindowQt.cpp \
             platform/graphics/gstreamer/ImageGStreamerQt.cpp
+        enable?(VIDEO_TRACK) {
+            HEADERS += \
+                platform/graphics/gstreamer/InbandTextTrackPrivateGStreamer.h \
+                platform/graphics/gstreamer/TextCombinerGStreamer.h \
+                platform/graphics/gstreamer/TextSinkGStreamer.h
+            SOURCES += \
+                platform/graphics/gstreamer/InbandTextTrackPrivateGStreamer.cpp \
+                platform/graphics/gstreamer/TextCombinerGStreamer.cpp \
+                platform/graphics/gstreamer/TextSinkGStreamer.cpp
+        }
 
     } else:use?(QT_MULTIMEDIA) {
         HEADERS += \
@@ -3903,7 +3914,9 @@ enable?(VIDEO_TRACK) {
         html/HTMLTrackElement.h \
         html/track/AudioTrack.h \
         html/track/AudioTrackList.h \
+        html/track/InbandGenericTextTrack.h \
         html/track/InbandTextTrack.h \
+        html/track/InbandWebVTTTextTrack.h \
         html/track/LoadableTextTrack.h \
         html/track/TextTrack.h \
         html/track/TextTrackCue.h \
@@ -3937,7 +3950,9 @@ enable?(VIDEO_TRACK) {
         html/HTMLTrackElement.cpp \
         html/track/AudioTrack.cpp \
         html/track/AudioTrackList.cpp \
+        html/track/InbandGenericTextTrack.cpp \
         html/track/InbandTextTrack.cpp \
+        html/track/InbandWebVTTTextTrack.cpp \
         html/track/LoadableTextTrack.cpp \
         html/track/TextTrack.cpp \
         html/track/TextTrackCue.cpp \

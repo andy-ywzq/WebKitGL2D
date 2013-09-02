@@ -52,7 +52,7 @@ private:
     virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
     virtual const AtomicString& formControlType() const;
     virtual bool recalcWillValidate() const { return false; }
-    virtual void childrenChanged(bool changedByParser, Node* beforeChange, Node* afterChange, int childCountDelta) OVERRIDE;
+    virtual void childrenChanged(const ChildChange&) OVERRIDE;
     virtual bool areAuthorShadowsAllowed() const OVERRIDE { return false; }
 
     static void invalidateDisabledStateUnder(Element*);
@@ -62,6 +62,19 @@ private:
     // When dom tree is modified, we have to refresh the m_associatedElements array.
     mutable uint64_t m_documentVersion;
 };
+
+inline bool isHTMLFieldSetElement(const Node* node)
+{
+    return node->isElementNode() && toElement(node)->hasTagName(HTMLNames::fieldsetTag);
+}
+
+inline bool isHTMLFieldSetElement(const Element* element)
+{
+    return element->hasTagName(HTMLNames::fieldsetTag);
+}
+
+template <> inline bool isElementOfType<HTMLFieldSetElement>(const Element* element) { return isHTMLFieldSetElement(element); }
+
 
 } // namespace
 

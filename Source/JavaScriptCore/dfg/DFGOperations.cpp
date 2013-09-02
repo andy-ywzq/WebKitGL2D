@@ -677,7 +677,7 @@ EncodedJSValue DFG_OPERATION operationInOptimizeWithReturnAddress(ExecState* exe
     
     if (!base->isObject()) {
         vm->throwException(exec, createInvalidParameterError(exec, "in", base));
-        return jsUndefined();
+        return JSValue::encode(jsUndefined());
     }
     
     StructureStubInfo& stubInfo = exec->codeBlock()->getStubInfo(returnAddress);
@@ -704,7 +704,7 @@ EncodedJSValue DFG_OPERATION operationIn(ExecState* exec, JSCell* base, StringIm
 
     if (!base->isObject()) {
         vm->throwException(exec, createInvalidParameterError(exec, "in", base));
-        return jsUndefined();
+        return JSValue::encode(jsUndefined());
     }
 
     Identifier ident(vm, key);
@@ -1286,7 +1286,7 @@ inline char* linkFor(ExecState* execCallee, CodeSpecializationKind kind)
             vm->throwException(exec, createStackOverflowError(exec));
             return reinterpret_cast<char*>(vm->getCTIStub(throwExceptionFromCallSlowPathGenerator).code().executableAddress());
         }
-        codeBlock = &functionExecutable->generatedBytecodeFor(kind);
+        codeBlock = functionExecutable->codeBlockFor(kind);
         if (execCallee->argumentCountIncludingThis() < static_cast<size_t>(codeBlock->numParameters()))
             codePtr = functionExecutable->generatedJITCodeWithArityCheckFor(kind);
         else
@@ -1361,7 +1361,7 @@ static bool attemptToOptimizeClosureCall(ExecState* execCallee, JSCell* calleeAs
     if (callee->executable()->isHostFunction())
         codeBlock = 0;
     else {
-        codeBlock = &jsCast<FunctionExecutable*>(callee->executable())->generatedBytecodeForCall();
+        codeBlock = jsCast<FunctionExecutable*>(callee->executable())->codeBlockForCall();
         if (execCallee->argumentCountIncludingThis() < static_cast<size_t>(codeBlock->numParameters()))
             return false;
     }

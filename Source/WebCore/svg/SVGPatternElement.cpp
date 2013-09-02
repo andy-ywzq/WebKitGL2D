@@ -171,11 +171,11 @@ void SVGPatternElement::svgAttributeChanged(const QualifiedName& attrName)
         object->setNeedsLayout(true);
 }
 
-void SVGPatternElement::childrenChanged(bool changedByParser, Node* beforeChange, Node* afterChange, int childCountDelta)
+void SVGPatternElement::childrenChanged(const ChildChange& change)
 {
-    SVGElement::childrenChanged(changedByParser, beforeChange, afterChange, childCountDelta);
+    SVGElement::childrenChanged(change);
 
-    if (changedByParser)
+    if (change.source == ChildChangeSourceParser)
         return;
 
     if (RenderObject* object = renderer())
@@ -229,7 +229,7 @@ void SVGPatternElement::collectPatternAttributes(PatternAttributes& attributes) 
         processedPatterns.add(current);
 
         // Respect xlink:href, take attributes from referenced element
-        Node* refNode = SVGURIReference::targetElementFromIRIString(current->href(), document());
+        Node* refNode = SVGURIReference::targetElementFromIRIString(current->href(), &document());
         if (refNode && refNode->hasTagName(SVGNames::patternTag)) {
             current = static_cast<const SVGPatternElement*>(const_cast<const Node*>(refNode));
 

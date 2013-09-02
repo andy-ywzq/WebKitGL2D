@@ -66,14 +66,14 @@ private:
     virtual void parseAttribute(const QualifiedName&, const AtomicString&) OVERRIDE;
     virtual InsertionNotificationRequest insertedInto(ContainerNode*) OVERRIDE;
     virtual void removedFrom(ContainerNode*) OVERRIDE;
-    virtual void childrenChanged(bool changedByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0);
+    virtual void childrenChanged(const ChildChange&) OVERRIDE;
 
     virtual void finishParsingChildren();
 
     virtual bool isLoading() const { return m_styleSheetOwner.isLoading(); }
-    virtual bool sheetLoaded() { return m_styleSheetOwner.sheetLoaded(document()); }
+    virtual bool sheetLoaded() { return m_styleSheetOwner.sheetLoaded(&document()); }
     virtual void notifyLoadedSheetAndAllCriticalSubresources(bool errorOccurred);
-    virtual void startLoadingDynamicSheet() { m_styleSheetOwner.startLoadingDynamicSheet(document()); }
+    virtual void startLoadingDynamicSheet() { m_styleSheetOwner.startLoadingDynamicSheet(&document()); }
 
     virtual void addSubresourceAttributeURLs(ListHashSet<KURL>&) const;
 

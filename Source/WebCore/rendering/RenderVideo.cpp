@@ -128,7 +128,7 @@ LayoutSize RenderVideo::calculateIntrinsicSize()
     // size since they also have audio-only files. By setting the intrinsic
     // size to 300x1 the video will resize itself in these cases, and audio will
     // have the correct height (it needs to be > 0 for controls to render properly).
-    if (video->document() && video->document()->isMediaDocument())
+    if (video->document().isMediaDocument())
         return LayoutSize(defaultSize().width(), 1);
 
     return defaultSize();
@@ -246,6 +246,7 @@ void RenderVideo::updatePlayer()
     mediaPlayer->setFrameView(&view().frameView());
     mediaPlayer->setSize(IntSize(videoBounds.width(), videoBounds.height()));
     mediaPlayer->setVisible(true);
+    mediaPlayer->setShouldMaintainAspectRatio(style()->objectFit() != ObjectFitFill);
 }
 
 LayoutUnit RenderVideo::computeReplacedLogicalWidth(ShouldComputePreferred shouldComputePreferred) const
@@ -280,6 +281,12 @@ void RenderVideo::acceleratedRenderingStateChanged()
         p->acceleratedRenderingStateChanged();
 }
 #endif  // USE(ACCELERATED_COMPOSITING)
+
+bool RenderVideo::requiresImmediateCompositing() const
+{
+    MediaPlayer* player = mediaElement()->player();
+    return player && player->requiresImmediateCompositing();
+}
 
 #if ENABLE(FULLSCREEN_API)
 static const RenderBlock* rendererPlaceholder(const RenderObject* renderer)

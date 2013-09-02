@@ -238,7 +238,7 @@ void FindController::getImageForFindMatch(uint32_t matchIndex)
 {
     if (matchIndex >= m_findMatches.size())
         return;
-    Frame* frame = m_findMatches[matchIndex]->startContainer()->document()->frame();
+    Frame* frame = m_findMatches[matchIndex]->startContainer()->document().frame();
     if (!frame)
         return;
 
@@ -261,7 +261,7 @@ void FindController::selectFindMatch(uint32_t matchIndex)
 {
     if (matchIndex >= m_findMatches.size())
         return;
-    Frame* frame = m_findMatches[matchIndex]->startContainer()->document()->frame();
+    Frame* frame = m_findMatches[matchIndex]->startContainer()->document().frame();
     if (!frame)
         return;
     frame->selection().setSelection(VisibleSelection(m_findMatches[matchIndex].get()));
@@ -394,7 +394,7 @@ static const float overlayBackgroundGreen = 0.1;
 static const float overlayBackgroundBlue = 0.1;
 static const float overlayBackgroundAlpha = 0.25;
 
-void FindController::drawRect(PageOverlay* pageOverlay, GraphicsContext& graphicsContext, const IntRect& dirtyRect)
+void FindController::drawRect(PageOverlay* /*pageOverlay*/, GraphicsContext& graphicsContext, const IntRect& dirtyRect)
 {
     Color overlayBackgroundColor(overlayBackgroundRed, overlayBackgroundGreen, overlayBackgroundBlue, overlayBackgroundAlpha);
 

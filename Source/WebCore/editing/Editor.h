@@ -395,6 +395,8 @@ public:
     String stringSelectionForPasteboard();
     String stringSelectionForPasteboardWithImageAltText();
     PassRefPtr<SharedBuffer> dataSelectionForPasteboard(const String& pasteboardName);
+    void writeURLToPasteboard(Pasteboard&, const KURL&, const String& title);
+    void writeImageToPasteboard(Pasteboard&, Element& imageElement, const KURL&, const String& title);
 #endif
 
     void replaceSelectionWithFragment(PassRefPtr<DocumentFragment>, bool selectReplacement, bool smartReplace, bool matchStyle);
@@ -414,6 +416,13 @@ public:
 
 private:
     explicit Editor(Frame&);
+
+    Document& document() const;
+
+#if PLATFORM(MAC)
+    PassRefPtr<SharedBuffer> selectionInWebArchiveFormat();
+    PassRefPtr<Range> adjustedSelectionRange();
+#endif
 
     Frame& m_frame;
 #if ENABLE(DELETION_UI)

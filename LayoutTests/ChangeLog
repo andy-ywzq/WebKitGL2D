@@ -1,3 +1,400 @@
+2013-09-02  Anton Obzhirov  <a.obzhirov@samsung.com>
+
+        <https://webkit.org/b/98350> [GTK] accessibility/aria-invalid.html times out
+
+        Reviewed by Mario Sanchez Prada.
+
+        Unskipped accessibility/aria-invalid.html which is passing now.
+
+        * platform/gtk/TestExpectations: Removed passing test.
+        * platform/gtk-wk2/TestExpectations: Added test timing out in WK2 only.
+
+2013-09-02  Ádám Kallai  <kadam@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Skip some failing tests.
+
+        * platform/qt/TestExpectations:
+
+2013-09-02  Dirk Schulze  <krit@webkit.org>
+
+        Use edgeMode=duplicate for blurring on filter() function
+        https://bugs.webkit.org/show_bug.cgi?id=120590
+
+        Reviewed by Antti Koivisto.
+
+        Added test to check that filter(<image>, blur(<value>)) takes
+        the edgeMode 'duplicate' instead of none.
+
+        * fast/filter-image/filter-image-blur-expected.html: Added.
+        * fast/filter-image/filter-image-blur.html: Added.
+        * fast/filter-image/resources/svg-blur.svg: Added.
+        * fast/filter-image/resources/svg-noblur.svg: Added.
+
+2013-09-02  Gabor Abraham <abrhm@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening.
+        https://bugs.webkit.org/show_bug.cgi?id=120595
+
+        * platform/qt/TestExpectations: Skipping failing xss-DENIED tests.
+
+2013-09-01  Dirk Schulze  <krit@webkit.org>
+
+        Add edgeMode attribtue.
+
+        Add 'edgeMode' attribute to SVGFEGaussianBlur
+        https://bugs.webkit.org/show_bug.cgi?id=120582
+
+        Added DOM and SVGDOM tests for the attribute 'edgeMode'.
+        Also added a reftest to test edgeMode='duplicate'.
+
+        Reviewed by Rob Buis.
+
+        * platform/mac/svg/dynamic-updates/SVGFEGaussianBlurElement-svgdom-edgeMode-prop-expected.png: Added.
+        * svg/dynamic-updates/SVGFEGaussianBlurElement-dom-edgeMode-attr-expected.txt: Added.
+        * svg/dynamic-updates/SVGFEGaussianBlurElement-dom-edgeMode-attr.html: Added.
+        * svg/dynamic-updates/SVGFEGaussianBlurElement-svgdom-edgeMode-prop-expected.txt: Added.
+        * svg/dynamic-updates/SVGFEGaussianBlurElement-svgdom-edgeMode-prop.html: Added.
+        * svg/dynamic-updates/script-tests/SVGFEGaussianBlurElement-dom-edgeMode-attr.js: Added.
+        (repaintTest):
+        * svg/dynamic-updates/script-tests/SVGFEGaussianBlurElement-svgdom-edgeMode-prop.js: Added.
+        (repaintTest):
+        * svg/filters/svg-gaussianblur-edgeMode-duplicate-expected.svg: Added.
+        * svg/filters/svg-gaussianblur-edgeMode-duplicate.svg: Added.
+
+2013-09-01  Xabier Rodriguez Calvar  <calvaris@igalia.com>
+
+        Volume slider value should be 0 when audio is muted
+        https://bugs.webkit.org/show_bug.cgi?id=120553
+
+        Reviewed by Eric Carlson.
+
+        Added test to check if the volume slider value is 0 when the
+        element is muted even if volume is set to something else.
+
+        * media/volume-bar-empty-when-muted-expected.txt: Added.
+        * media/volume-bar-empty-when-muted.html: Added.
+
+2013-09-01  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: A little more test cleanup
+        https://bugs.webkit.org/show_bug.cgi?id=120575
+
+        Reviewed by Timothy Hatcher.
+
+        Give tests names and remove unnecessary script type attributes.
+
+        * inspector-protocol/debugger/removeBreakpoint-expected.txt:
+        * inspector-protocol/debugger/removeBreakpoint.html:
+        * inspector-protocol/debugger/setBreakpoint-autoContinue-expected.txt:
+        * inspector-protocol/debugger/setBreakpoint-autoContinue.html:
+        * inspector-protocol/debugger/setBreakpoint-column-expected.txt:
+        * inspector-protocol/debugger/setBreakpoint-column.html:
+        * inspector-protocol/debugger/setBreakpoint-condition-expected.txt:
+        * inspector-protocol/debugger/setBreakpoint-condition.html:
+        * inspector-protocol/debugger/setBreakpoint-expected.txt:
+        * inspector-protocol/debugger/setBreakpoint.html:
+
+2013-09-01  Xabier Rodriguez Calvar  <calvaris@igalia.com>
+
+        Fixed typo in media/video-volume-slider.html
+        https://bugs.webkit.org/show_bug.cgi?id=120578
+
+        Unreviewed.
+
+        * media/video-volume-slider.html: Fixed typo.
+        * platform/gtk/media/video-volume-slider-expected.png:
+        * platform/gtk/media/video-volume-slider-expected.txt:
+        * platform/mac/media/video-volume-slider-expected.png:
+        * platform/mac/media/video-volume-slider-expected.txt: New
+        baselines.
+
+2013-08-31  Rob Buis  <rwlbuis@webkit.org>
+
+        XMLSerializer-attribute-namespace-prefix-conflicts can't produce reliable results
+        https://bugs.webkit.org/show_bug.cgi?id=120490
+
+        Reviewed by Ryosuke Niwa.
+
+        Unskip these previously failing tests.
+
+        * TestExpectations:
+
+2013-08-30  Simon Fraser  <simon.fraser@apple.com>
+
+        Fix the Mac results.
+
+        * platform/mac/compositing/video/video-object-fit-expected.txt:
+
+2013-08-30  Simon Fraser  <simon.fraser@apple.com>
+
+        Video with object-fit: cover can spill outside the box
+        https://bugs.webkit.org/show_bug.cgi?id=52103
+
+        Reviewed by Dean Jackson.
+        
+        Test cases for directly composited image with object-fit, the same with
+        reflections, and one with video.
+        
+        Tests dump content GraphicsLayers, so have platform-specific results.
+
+        * compositing/images/direct-image-object-fit-expected.txt: Added.
+        * compositing/images/direct-image-object-fit.html: Added.
+        * compositing/reflections/direct-image-object-fit-reflected-expected.txt: Added.
+        * compositing/reflections/direct-image-object-fit-reflected.html: Added.
+        * compositing/video/video-object-fit-expected.txt: Added.
+        * compositing/video/video-object-fit.html: Added.
+        * media/video-object-fit-change.html: Fixed
+        * platform/mac/TestExpectations: Unskip two tests.
+        * platform/mac/compositing/images/direct-image-object-fit-expected.txt: Added.
+        * platform/mac/compositing/reflections/direct-image-object-fit-reflected-expected.txt: Added.
+        * platform/mac/compositing/video/video-object-fit-expected.txt: Added.
+
+2013-08-30  Oliver Hunt  <oliver@apple.com>
+
+        Fix expected output
+
+        * fast/js/basic-set-expected.txt:
+
+2013-08-30  Dean Jackson  <dino@apple.com>
+
+        http://webkit.org/b/120490
+        Skip some XML namespace serialization tests temporarily.
+
+        * TestExpectations: Skip these on debug builds:
+        fast/dom/XMLSerializer-attribute-namespace-prefix-conflicts.html
+        fast/dom/XMLSerializer-same-prefix-different-namespaces-conflict.html
+        fast/dom/XMLSerializer-setAttributeNS-namespace-no-prefix.html
+        svg/custom/xlink-prefix-generation-in-attributes.html
+
+2013-08-30  Oliver Hunt  <oliver@apple.com>
+
+        Implement ES6 Set class
+        https://bugs.webkit.org/show_bug.cgi?id=120549
+
+        Reviewed by Filip Pizlo.
+
+        Add tests
+
+        * fast/js/basic-set-expected.txt: Added.
+        * fast/js/basic-set.html: Added.
+        * fast/js/script-tests/basic-set.js: Added.
+        (set new):
+        (otherString.string_appeared_here.set add):
+        (try.set forEach):
+        (set forEach):
+        (set gc):
+
+2013-08-30  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: inspector/storage-panel-dom-storage-update.html is flakey on the bots
+        https://bugs.webkit.org/show_bug.cgi?id=120544
+
+        Take 2, remove some more runAfterPendingDispatches which were somehow
+        causing WebKit 2 tests to fail. This requires us to be a bit more
+        careful when running the pending handlers as well.
+
+        Unreviewed test fix.
+
+        * inspector/storage-panel-dom-storage-update.html:
+
+2013-08-30  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Breakpoints should have Automatically Continue Option
+        https://bugs.webkit.org/show_bug.cgi?id=120187
+
+        Reviewed by Timothy Hatcher.
+
+        * http/tests/inspector-protocol/resources/InspectorTest.js:
+        (InspectorTest.checkForError):
+        Helper for checking for, and logging, protocol error responses.
+
+        * inspector/debugger/set-breakpoint.html:
+        Update this test for the protocol change.
+
+        * inspector-protocol/debugger/removeBreakpoint-expected.txt: Added.
+        * inspector-protocol/debugger/removeBreakpoint.html: Added.
+        * inspector-protocol/debugger/resources/breakpoint.js: Added.
+        * inspector-protocol/debugger/setBreakpoint-autoContinue-expected.txt: Added.
+        * inspector-protocol/debugger/setBreakpoint-autoContinue.html: Added.
+        * inspector-protocol/debugger/setBreakpoint-column.html: Renamed from LayoutTests/inspector-protocol/debugger/column-breakpoint.html.
+        * inspector-protocol/debugger/setBreakpoint-column.txt: Renamed from LayoutTests/inspector-protocol/debugger/column-breakpoint-expected.txt.
+        * inspector-protocol/debugger/setBreakpoint-condition-expected.txt: Added.
+        * inspector-protocol/debugger/setBreakpoint-condition.html: Added.
+        * inspector-protocol/debugger/setBreakpoint-expected.txt: Added.
+        * inspector-protocol/debugger/setBreakpoint.html: Added.
+        Protocol tests for setting breakpoints. These test different aspects of
+        the Debugger domain (setBreakpoint variants and removeBreakpoint).
+
+2013-08-30  Brendan Long  <b.long@cablelabs.com>
+
+        <https://webkit.org/b/103771> [GStreamer] support in-band text tracks
+
+        Reviewed by Eric Carlson.
+
+        * media/content/counting-subtitled-kate.ogv: Added.
+        * media/content/counting-subtitled-srt.mkv: Added.
+        * media/in-band-cues.js: Added.
+        * media/track/in-band/track-in-band-kate-ogg-cues-added-once-expected.txt: Added.
+        * media/track/in-band/track-in-band-kate-ogg-cues-added-once.html: Added.
+        * media/track/in-band/track-in-band-kate-ogg-kind-expected.txt: Added.
+        * media/track/in-band/track-in-band-kate-ogg-kind.html: Added.
+        * media/track/in-band/track-in-band-kate-ogg-language-expected.txt: Added.
+        * media/track/in-band/track-in-band-kate-ogg-language.html: Added.
+        * media/track/in-band/track-in-band-kate-ogg-mode-expected.txt: Added.
+        * media/track/in-band/track-in-band-kate-ogg-mode.html: Added.
+        * media/track/in-band/track-in-band-kate-ogg-style-expected.txt: Added.
+        * media/track/in-band/track-in-band-kate-ogg-style.html: Added.
+        * media/track/in-band/track-in-band-kate-ogg-track-order-expected.txt: Added.
+        * media/track/in-band/track-in-band-kate-ogg-track-order.html: Added.
+        * media/track/in-band/track-in-band-srt-mkv-cues-added-once-expected.txt: Added.
+        * media/track/in-band/track-in-band-srt-mkv-cues-added-once.html: Added.
+        * media/track/in-band/track-in-band-srt-mkv-kind-expected.txt: Added.
+        * media/track/in-band/track-in-band-srt-mkv-kind.html: Added.
+        * media/track/in-band/track-in-band-srt-mkv-language-expected.txt: Added.
+        * media/track/in-band/track-in-band-srt-mkv-language.html: Added.
+        * media/track/in-band/track-in-band-srt-mkv-mode-expected.txt: Added.
+        * media/track/in-band/track-in-band-srt-mkv-mode.html: Added.
+        * media/track/in-band/track-in-band-srt-mkv-style-expected.txt: Added.
+        * media/track/in-band/track-in-band-srt-mkv-style.html: Added.
+        * media/track/in-band/track-in-band-srt-mkv-track-order-expected.txt: Added.
+        * media/track/in-band/track-in-band-srt-mkv-track-order.html: Added.
+        * platform/mac/TestExpectations: Skip MKV and OGG tests.
+
+2013-08-30  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: inspector/storage-panel-dom-storage-update.html is flakey on the bots
+        https://bugs.webkit.org/show_bug.cgi?id=120544
+
+        Reviewed by Dean Jackson.
+
+        Explicitly listen for events instead of running callbacks after a delay.
+
+        * inspector/storage-panel-dom-storage-update.html:
+
+2013-08-30  Dirk Schulze  <krit@webkit.org>
+
+        Animate CSS Image filter() function
+        https://bugs.webkit.org/show_bug.cgi?id=119938
+
+        Reviewed by Simon Fraser.
+
+        Add tests to test animation between two filter() function values.
+        Furthermore, extended animation-test-helpers.js to parse all kind of CSS
+        image function where we support animations. CSS Image function can be
+        deeply nested as well now:
+
+            -wekit-filter(-webkit-cross-fade(url(a.png), url(b.png), 50%), sepia(0.5))
+
+        Even the 50% can now be checked with a tolerance. If we should ever support
+        animations on nested CSS Images, the new code in animation-test-helpers.js
+        is prepared for it.
+
+        Fixed a bunch of tests that passed by accident or needed an update to the new
+        infrastructure.
+
+        * animations/resources/animation-test-helpers.js:
+        (parseCSSImage): For parsing of all kind of supported CSS Image functions.
+            Currently supported: -webkit-cross-fade, -webkit-filter, url, none
+            Still missing: linear and radial gradients (can not be animated yet).
+            CSS Image functions are allowed to be nested as deep JS allows.
+        (parseCrossFade): Add parsing of input CSS images.
+        (parseFilterImage): Parse -webkit-filter image function as well as input images.
+        (parseFilterFunctionList): Parse filter function list. We now parse the
+            function name as well. Added rudimentary support for drop-shadow and url.
+        (parseDeprecatedCustomFilterFunction): Special case old syntax of custom
+            filter function. Shall be removed in the future.
+        (compareCSSImages): Compares all kind (even deep nested) CSS images.
+        (compareFilterFunctions): Now compare filter function names as well.
+        (comparePropertyValue): Use new compareCSSImages function.
+        * fast/filter-image/filter-image-animation-expected.txt: Added.
+        * fast/filter-image/filter-image-animation.html: Added.
+
+2013-08-30  Rob Buis  <rwlbuis@webkit.org>
+
+        SVG error parsing empty path
+        https://bugs.webkit.org/show_bug.cgi?id=78980
+
+        Reviewed by Darin Adler.
+
+        Adapt fuzz-path-parser.html and dynamic-empty-path.svg to also test empty paths.
+        Adjust expectations to not expect an error message for empty paths.
+
+        * platform/gtk/svg/W3C-SVG-1.1-SE/paths-dom-02-f-expected.txt:
+        * platform/gtk/svg/custom/dynamic-empty-path-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1-SE/paths-dom-02-f-expected.txt:
+        * platform/qt/svg/W3C-SVG-1.1-SE/paths-dom-02-f-expected.txt:
+        * platform/qt/svg/custom/dynamic-empty-path-expected.txt:
+        * svg/W3C-SVG-1.1-SE/paths-dom-02-f-expected.txt:
+        * svg/custom/dynamic-empty-path-expected.txt:
+        * svg/dom/fuzz-path-parser-expected.txt:
+        * svg/dom/fuzz-path-parser.html: also test empty path
+        * svg/dom/path-parser-expected.txt:
+        * svg/dom/script-tests/path-parser.js: also test empty path
+
+2013-08-30  Arpita Bahuguna  <a.bah@samsung.com>
+
+        setAttributeNode() does not set the new value to an existing attribute if specified attribute is in a different case.
+        https://bugs.webkit.org/show_bug.cgi?id=120293
+
+        Reviewed by Darin Adler.
+
+        * fast/dom/Element/setAttributeNode-for-existing-attribute-expected.txt: Added.
+        * fast/dom/Element/setAttributeNode-for-existing-attribute.html: Added.
+        Layout testcase for verifying that the new attribute value is set properly
+        if an existing attribute with the same name exists.
+
+2013-08-30  Ádám Kallai  <kadam@inf.u-szeged.hu>
+
+        [Qt] Skip failing grammar checking test.
+        Unreviewed gardening.
+
+        * platform/qt/TestExpectations:
+
+2013-08-30  Ádám Kallai  <kadam@inf.u-szeged.hu>
+
+        [Qt] Added platform specific expected files after r15470 and r154780.
+        Unreviewed gardening.
+
+        * platform/qt-wk1/compositing/columns/composited-lr-paginated-repaint-expected.txt: Added.
+        * platform/qt-wk1/compositing/columns/composited-rl-paginated-repaint-expected.txt: Added.
+        * platform/qt-wk1/compositing/repaint/repaint-on-layer-grouping-change-expected.png: Added.
+        * platform/qt-wk1/compositing/repaint/repaint-on-layer-grouping-change-expected.txt: Added.
+        * platform/qt-wk2/compositing/columns/ancestor-clipped-in-paginated-expected.txt: Added.
+        * platform/qt-wk2/compositing/columns/clipped-in-paginated-expected.txt: Added.
+        * platform/qt-wk2/compositing/columns/composited-columns-expected.txt: Added.
+        * platform/qt-wk2/compositing/columns/composited-columns-vertical-rl-expected.txt: Added.
+        * platform/qt-wk2/compositing/columns/composited-in-paginated-rl-expected.txt: Added.
+        * platform/qt-wk2/compositing/columns/composited-in-paginated-writing-mode-rl-expected.txt: Added.
+        * platform/qt-wk2/compositing/columns/composited-lr-paginated-repaint-expected.txt: Added.
+        * platform/qt-wk2/compositing/columns/composited-nested-columns-expected.txt: Added.
+        * platform/qt-wk2/compositing/columns/composited-rl-paginated-repaint-expected.txt: Added.
+        * platform/qt-wk2/compositing/columns/hittest-composited-in-paginated-expected.txt: Added.
+        * platform/qt-wk2/compositing/columns/rotated-in-paginated-expected.txt: Added.
+        * platform/qt-wk2/compositing/columns/untransformed-composited-in-paginated-expected.txt: Added.
+        * platform/qt-wk2/compositing/repaint/repaint-on-layer-grouping-change-expected.txt: Added.
+
+2013-08-30  Andrei Parvu  <parvu@adobe.com>
+
+        [CSS Masking] -webkit-mask-repeat: space does not work
+        Added tests to verify correct usage of background-repeat: space and mask-repeat: space.
+        Added one test for each possible mask/background clip: border, padding and content
+        https://bugs.webkit.org/show_bug.cgi?id=119324
+
+        Reviewed by Dirk Schulze.
+
+        * css3/background/background-repeat-space-border-expected.html: Added.
+        * css3/background/background-repeat-space-border.html: Added.
+        * css3/background/background-repeat-space-content-expected.html: Added.
+        * css3/background/background-repeat-space-content.html: Added.
+        * css3/background/background-repeat-space-padding-expected.html: Added.
+        * css3/background/background-repeat-space-padding.html: Added.
+        * css3/masking/mask-repeat-space-border-expected.html: Added.
+        * css3/masking/mask-repeat-space-border.html: Added.
+        * css3/masking/mask-repeat-space-content-expected.html: Added.
+        * css3/masking/mask-repeat-space-content.html: Added.
+        * css3/masking/mask-repeat-space-padding-expected.html: Added.
+        * css3/masking/mask-repeat-space-padding.html: Added.
+
 2013-08-30  Commit Queue  <commit-queue@webkit.org>
 
         Unreviewed, rolling out r154826.

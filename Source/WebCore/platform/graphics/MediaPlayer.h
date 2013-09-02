@@ -262,6 +262,7 @@ public:
     bool supportsFullscreen() const;
     bool supportsSave() const;
     bool supportsScanning() const;
+    bool requiresImmediateCompositing() const;
     PlatformMedia platformMedia() const;
 #if USE(ACCELERATED_COMPOSITING)
     PlatformLayer* platformLayer() const;
@@ -413,6 +414,9 @@ public:
     // called when the rendering system flips the into or out of accelerated rendering mode.
     void acceleratedRenderingStateChanged();
 #endif
+
+    bool shouldMaintainAspectRatio() const;
+    void setShouldMaintainAspectRatio(bool);
 
 #if PLATFORM(WIN) && USE(AVFOUNDATION)
     GraphicsDeviceAdapter* graphicsDeviceAdapter() const;

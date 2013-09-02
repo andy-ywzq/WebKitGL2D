@@ -388,8 +388,8 @@ static guint accessibilityObjectLength(const AccessibilityObject* object)
     // separately (as in getAccessibilityObjectForOffset)
     RenderObject* renderer = object->renderer();
     if (renderer && renderer->isListMarker()) {
-        RenderListMarker* marker = toRenderListMarker(renderer);
-        return marker->text().length() + marker->suffix().length();
+        RenderListMarker& marker = toRenderListMarker(*renderer);
+        return marker.text().length() + marker.suffix().length();
     }
 
     return 0;
@@ -554,12 +554,12 @@ static void getSelectionOffsetsForObject(AccessibilityObject* coreObject, Visibl
 
     // Calculate position of the selected range inside the object.
     Position parentFirstPosition = firstPositionInOrBeforeNode(node);
-    RefPtr<Range> rangeInParent = Range::create(node->document(), parentFirstPosition, nodeRangeStart);
+    RefPtr<Range> rangeInParent = Range::create(&node->document(), parentFirstPosition, nodeRangeStart);
 
     // Set values for start offsets and calculate initial range length.
     // These values might be adjusted later to cover special cases.
     startOffset = webCoreOffsetToAtkOffset(coreObject, TextIterator::rangeLength(rangeInParent.get(), true));
-    RefPtr<Range> nodeRange = Range::create(node->document(), nodeRangeStart, nodeRangeEnd);
+    RefPtr<Range> nodeRange = Range::create(&node->document(), nodeRangeStart, nodeRangeEnd);
     int rangeLength = TextIterator::rangeLength(nodeRange.get(), true);
 
     // Special cases that are only relevant when working with *_END boundaries.
@@ -712,7 +712,7 @@ static VisiblePosition previousWordEndPosition(const VisiblePosition &position)
     return positionAtStartOfCurrentWord;
 }
 
-static VisibleSelection wordAtPositionForAtkBoundary(const AccessibilityObject* coreObject, const VisiblePosition& position, AtkTextBoundary boundaryType)
+static VisibleSelection wordAtPositionForAtkBoundary(const AccessibilityObject* /*coreObject*/, const VisiblePosition& position, AtkTextBoundary boundaryType)
 {
     VisiblePosition startPosition;
     VisiblePosition endPosition;

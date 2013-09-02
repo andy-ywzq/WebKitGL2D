@@ -104,6 +104,7 @@ public:
     void beginLoadingMetadata();
     
     void seekToTime(float);
+    void updateVideoLayerGravity();
 
     void setCurrentTrack(InbandTextTrackPrivateAVF*);
     InbandTextTrackPrivateAVF* currentTrack() const { return m_currentTrack; }
@@ -330,6 +331,14 @@ void MediaPlayerPrivateAVFoundationCF::cancelLoad()
 
     setIgnoreLoadStateChanges(false);
     setDelayCallbacks(false);
+}
+
+void MediaPlayerPrivateAVFoundationCF::updateVideoLayerGravity()
+{
+    ASSERT(supportsAcceleratedRendering());
+
+    if (m_avfWrapper)
+        m_avfWrapper->updateVideoLayerGravity();
 }
 
 bool MediaPlayerPrivateAVFoundationCF::hasLayerRenderer() const
@@ -960,6 +969,17 @@ void MediaPlayerPrivateAVFoundationCF::sizeChanged()
     setNaturalSize(IntSize(naturalSize));
 }
 
+bool MediaPlayerPrivateAVFoundationCF::requiresImmediateCompositing() const
+{
+    // The AVFoundationCF player needs to have the root compositor available at construction time
+    // so it can attach to the rendering device. Otherwise it falls back to CPU-only mode.
+    //
+    // It would be nice if AVCFPlayer had some way to switch to hardware-accelerated mode
+    // when asked, then we could follow AVFoundation's model and switch to compositing
+    // mode when beginning to play media.
+    return true;
+}
+
 #if !HAVE(AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT)
 void MediaPlayerPrivateAVFoundationCF::processLegacyClosedCaptionsTracks()
 {
@@ -1566,6 +1586,7 @@ PlatformLayer* AVFWrapper::platformLayer()
     CACFLayerInsertSublayer(m_videoLayerWrapper->platformLayer(), m_caVideoLayer.get(), 0);
     m_videoLayerWrapper->setAnchorPoint(FloatPoint3D());
     m_videoLayerWrapper->setNeedsLayout();
+    updateVideoLayerGravity();
 
     return m_videoLayerWrapper->platformLayer();
 }
@@ -1658,6 +1679,12 @@ AVCFMediaSelectionGroupRef AVFWrapper::safeMediaSelectionGroupForLegibleMedia() 
     return AVCFAssetGetSelectionGroupForMediaCharacteristic(avAsset(), AVCFMediaCharacteristicLegible);
 }
 #endif
+
+void AVFWrapper::updateVideoLayerGravity()
+{
+    // We should call AVCFPlayerLayerSetVideoGravity() here, but it is not yet implemented.
+    // FIXME: <rdar://problem/14884340>
+}
 
 void LayerClient::platformCALayerLayoutSublayersOfLayer(PlatformCALayer* wrapperLayer)
 {

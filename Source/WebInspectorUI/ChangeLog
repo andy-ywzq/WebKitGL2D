@@ -1,3 +1,94 @@
+2013-08-30  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Correct windows build. Get rid of unnecessary pre-build step. We don't build anything
+        in this project, just copy some files into the WebKit resource folder. This was fooling the
+        build system into thinking something failed, resulting in a build error.
+
+        * WebInspectorUI.vcxproj/WebInspectorUI.vcxproj: Remove reference to WebInspectorUIPreBuild.cmd
+        * WebInspectorUI.vcxproj/WebInspectorUI.vcxproj.filters:
+        * WebInspectorUI.vcxproj/WebInspectorUIPreBuild.cmd: Removed.
+
+2013-08-30  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Build correction after dependency change.
+
+        * WebInspectorUI.vcxproj/WebInspectorUI.vcxproj: Remove circular dependency on
+        WebKit, and control this at the solution level. The prior change broke external
+        builders.
+
+2013-08-30  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build gardening.
+
+        * WebInspectorUI.vcxproj/WebInspectorUI.vcxproj: Adjust build dependencies so
+        that WebInspectorUI 'builds' after WebKit so that the expected resource directory
+        structure is always in place.
+
+2013-08-30  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Breakpoints should have Automatically Continue Option
+        https://bugs.webkit.org/show_bug.cgi?id=120187
+
+        Reviewed by Timothy Hatcher.
+
+        * Localizations/en.lproj/localizedStrings.js:
+        * UserInterface/Breakpoint.css:
+        (#edit-breakpoint-popoover-auto-continue):
+        Misc. changes for UI.
+
+        * UserInterface/Breakpoint.js:
+        (WebInspector.Breakpoint):
+        (WebInspector.Breakpoint.prototype.get autoContinue):
+        (WebInspector.Breakpoint.prototype.set autoContinue):
+        (WebInspector.Breakpoint.prototype.get options):
+        (WebInspector.Breakpoint.prototype.get info):
+        General maintenance of the autoContinue state.
+
+        (WebInspector.Breakpoint.prototype._popoverToggleEnabledCheckboxChanged):
+        (WebInspector.Breakpoint.prototype._popoverToggleAutoContinueCheckboxChanged):
+        (WebInspector.Breakpoint.prototype._editBreakpointPopoverContentElement):
+        Edit Breakpoint UI for setting autoContinue state.
+
+        * UserInterface/InspectorBackend.js:
+        (InspectorBackendClass.prototype.registerCommand):
+        (InspectorBackendClass.prototype._supports):
+        Extension to check if a BackendCommands method supports a particular param.
+
+        * UserInterface/DebuggerManager.js:
+        (WebInspector.DebuggerManager):
+        (WebInspector.DebuggerManager.prototype._setBreakpoint):
+        * UserInterface/InspectorBackendCommands.js:
+        Change to backend agent calls for the new protocol API.
+
+2013-08-29  Timothy Hatcher  <timothy@apple.com>
+
+        Make incrementing and decrementing numbers by 0.1 require the control key, and not near zero numbers.
+
+        https://bugs.webkit.org/show_bug.cgi?id=120492
+        <rdar://problem/13738935> Incrementing and decrementing numbers near zero is annoying compared to earlier releases
+
+        Reviewed by Joseph Pecoraro.
+
+        * UserInterface/CodeMirrorAdditions.js:
+        (alterNumber): Remove near zero check.
+
+2013-08-29  Timothy Hatcher  <timothy@apple.com>
+
+        Only modify numbers if they are identified by CodeMirror as a number.
+
+        https://bugs.webkit.org/show_bug.cgi?id=120484
+
+        <rdar://problem/13877085> REGRESSION: Alt-up and Alt-down don't work when cursor is in unit
+        <rdar://problem/13058697> PARITY: Option-Up arrow in "translate3d" should not modify number to make" translate4d"
+
+        Reviewed by Joseph Pecoraro.
+
+        * UserInterface/CodeMirrorAdditions.js:
+        (CodeMirror.prototype.alterNumberInRange): Correctly preserve the selection, even if it differs from
+        the range passed in.
+        (alterNumber): Find number tokens and pass those to alterNumberInRange.
+        (alterNumber.findNumberToken): Added. Helper.
+
 2013-08-29  Timothy Hatcher  <timothy@apple.com>
 
         Make incrementing and decrementing numbers by 0.1 require the control key, and not near zero numbers.

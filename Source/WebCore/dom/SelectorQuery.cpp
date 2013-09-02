@@ -115,7 +115,7 @@ static const CSSSelector* selectorForIdLookup(const Node* rootNode, const CSSSel
 {
     if (!rootNode->inDocument())
         return 0;
-    if (rootNode->document()->inQuirksMode())
+    if (rootNode->document().inQuirksMode())
         return 0;
 
     do {

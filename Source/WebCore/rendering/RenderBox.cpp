@@ -1539,8 +1539,8 @@ bool RenderBox::repaintLayerRectsForImage(WrappedImagePtr image, const FillLayer
                 if (drawingRootBackground) {
                     layerRenderer = &view();
 
-                    LayoutUnit rw = toRenderView(layerRenderer)->frameView().contentsWidth();
-                    LayoutUnit rh = toRenderView(layerRenderer)->frameView().contentsHeight();
+                    LayoutUnit rw = toRenderView(*layerRenderer).frameView().contentsWidth();
+                    LayoutUnit rh = toRenderView(*layerRenderer).frameView().contentsHeight();
 
                     rendererRect = LayoutRect(-layerRenderer->marginLeft(),
                         -layerRenderer->marginTop(),
@@ -1933,7 +1933,7 @@ LayoutSize RenderBox::offsetFromContainer(RenderObject* o, const LayoutPoint& po
 
 InlineBox* RenderBox::createInlineBox()
 {
-    return new (renderArena()) InlineBox(this);
+    return new (renderArena()) InlineBox(*this);
 }
 
 void RenderBox::dirtyLineBoxes(bool fullLayout)
@@ -1957,7 +1957,7 @@ void RenderBox::positionLineBox(InlineBox* box)
             // our object was inline originally, since otherwise it would have ended up underneath
             // the inlines.
             RootInlineBox* root = box->root();
-            root->block()->setStaticInlinePositionForChild(this, root->lineTopWithLeading(), roundedLayoutUnit(box->logicalLeft()));
+            root->block().setStaticInlinePositionForChild(this, root->lineTopWithLeading(), roundedLayoutUnit(box->logicalLeft()));
             if (style()->hasStaticInlinePosition(box->isHorizontal()))
                 setChildNeedsLayout(true, MarkOnlyThis); // Just go ahead and mark the positioned object as needing layout, so it will update its position properly.
         } else {
