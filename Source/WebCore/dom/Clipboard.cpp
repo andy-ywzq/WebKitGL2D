@@ -205,11 +205,6 @@ void Clipboard::setDragImage(Element*, int, int)
 
 #else
 
-bool Clipboard::hasData()
-{
-    return m_pasteboard->hasData();
-}
-
 PassRefPtr<Clipboard> Clipboard::createForDragAndDrop()
 {
     return adoptRef(new Clipboard(ClipboardWritable, Pasteboard::createForDragAndDrop(), DragAndDrop));
