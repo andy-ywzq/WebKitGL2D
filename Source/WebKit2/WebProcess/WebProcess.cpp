@@ -132,6 +132,8 @@
 
 #if USE(SOUP)
 #include "WebSoupRequestManager.h"
+#elif USE(CURL)
+#include "WebCurlRequestManager.h"
 #endif
 
 using namespace JSC;
@@ -208,6 +210,8 @@ WebProcess::WebProcess()
 #endif
 #if USE(SOUP)
     addSupplement<WebSoupRequestManager>();
+#elif USE(CURL)
+    addSupplement<WebCurlRequestManager>();
 #endif
 }
 

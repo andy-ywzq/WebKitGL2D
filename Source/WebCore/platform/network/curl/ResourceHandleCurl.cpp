@@ -116,7 +116,7 @@ void ResourceHandle::cancel()
     ResourceHandleManager::sharedInstance()->cancel(this);
 }
 
-#if PLATFORM(WIN) && USE(CF)
+#if (PLATFORM(WIN) && USE(CF)) || PLATFORM(NIX)
 static HashSet<String>& allowsAnyHTTPSCertificateHosts()
 {
     static HashSet<String> hosts;
@@ -127,6 +127,14 @@ static HashSet<String>& allowsAnyHTTPSCertificateHosts()
 void ResourceHandle::setHostAllowsAnyHTTPSCertificate(const String& host)
 {
     allowsAnyHTTPSCertificateHosts().add(host.lower());
+}
+#endif
+
+#if PLATFORM(NIX)
+bool ResourceHandle::ignoreHTTPSCertificate()
+{
+    KURL url = firstRequest().url();
+    return allowsAnyHTTPSCertificateHosts().contains(url.host());
 }
 #endif
 

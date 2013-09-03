@@ -86,6 +86,8 @@
 
 #if USE(SOUP)
 #include "WebSoupRequestManagerProxy.h"
+#elif USE(CURL)
+#include "WebCurlRequestManagerProxy.h"
 #endif
 
 #ifndef NDEBUG
@@ -173,6 +175,8 @@ WebContext::WebContext(ProcessModel processModel, const String& injectedBundlePa
 #endif
 #if USE(SOUP)
     addSupplement<WebSoupRequestManagerProxy>();
+#elif USE(CURL)
+    addSupplement<WebCurlRequestManagerProxy>();
 #endif
 #if ENABLE(BATTERY_STATUS)
     addSupplement<WebBatteryManagerProxy>();

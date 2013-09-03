@@ -156,18 +156,27 @@ add_definitions(-DDEFAULT_THEME_PATH=\"${CMAKE_INSTALL_PREFIX}/${DATA_INSTALL_DI
 if (WTF_USE_CURL)
     list(APPEND WebKit2_SOURCES
         Shared/curl/WebCoreArgumentCodersCurl.cpp
+        WebProcess/curl/WebCurlRequestManager.cpp
         WebProcess/curl/WebProcessCurl.cpp
         WebProcess/Cookies/curl/WebCookieManagerCurl.cpp
-
+        UIProcess/API/C/curl/WKContextCurl.cpp
+        UIProcess/curl/WebCurlRequestManagerProxy.cpp
         Shared/Downloads/curl/DownloadCurl.cpp
 
         WebProcess/WebCoreSupport/curl/WebFrameNetworkingContext.cpp
+    )
+
+    list(APPEND WebKit2_MESSAGES_IN_FILES
+        WebProcess/curl/WebCurlRequestManager.messages.in
     )
 
     list(APPEND WebKit2_INCLUDE_DIRECTORIES
         "${WEBCORE_DIR}/platform/network/curl"
         "${WEBKIT2_DIR}/Shared/curl"
         "${WEBKIT2_DIR}/WebProcess/WebCoreSupport/curl"
+        WebProcess/curl
+        UIProcess/API/C/curl
+        UIProcess/curl
     )
 
     list(APPEND WebKit2_LIBRARIES

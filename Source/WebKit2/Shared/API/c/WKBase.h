@@ -37,6 +37,10 @@
 #include <WebKit2/WKBaseSoup.h>
 #endif
 
+#if defined(WTF_USE_CURL) && WTF_USE_CURL
+#include <WebKit2/WKBaseCurl.h>
+#endif
+
 #if defined(BUILDING_EFL__)
 #include <WebKit2/WKBaseEfl.h>
 #endif

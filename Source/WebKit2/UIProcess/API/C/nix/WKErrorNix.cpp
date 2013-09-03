@@ -31,7 +31,12 @@
 #if USE(SOUP)
 #include "soup/ResourceError.h"
 #include <gio/gio.h>
+#elif USE(CURL)
+#include "curl/ResourceError.h"
+#include <curl/curl.h>
+#endif
 
+#if USE(SOUP)
 static unsigned soupTlsErrorsToNixErrors(unsigned errors)
 {
     unsigned nixErrors = 0;
@@ -55,10 +60,13 @@ static unsigned soupTlsErrorsToNixErrors(unsigned errors)
 
 void WKErrorGetTLSErrors(WKErrorRef error, unsigned* tlsErrors)
 {
-#if USE(SOUP)
     const WebCore::ResourceError& resourceError = WebKit::toImpl(error)->platformError();
+#if USE(SOUP)
     *tlsErrors = soupTlsErrorsToNixErrors(resourceError.tlsErrors());
-#else
-    *tlsErrors = 0;
+#elif USE(CURL)
+    if (resourceError.errorCode() == CURLE_SSL_CACERT)
+        *tlsErrors = NIXTlsErrorUnkownCA | NIXTlsErrorCertificateGenericError;
+    else
+        *tlsErrors = 0;
 #endif
 }

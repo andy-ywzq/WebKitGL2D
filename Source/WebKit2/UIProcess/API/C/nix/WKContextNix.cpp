@@ -32,6 +32,9 @@
 #if USE(SOUP)
 #include "WebSoupRequestManagerProxy.h"
 #include "soup/WKContextSoup.h"
+#elif USE(CURL)
+#include "WebCurlRequestManagerProxy.h"
+#include "curl/WKContextCurl.h"
 #endif
 
 using namespace WebKit;
@@ -40,7 +43,8 @@ void WKContextSetHostAllowsAnyHTTPSCertificate(WKContextRef context, WKStringRef
 {
 #if USE(SOUP)
     WKSoupRequestManagerRef requestManager = WKContextGetSoupRequestManager(context);
-    toImpl(requestManager)->setHostAllowsAnyHTTPSCertificate(toWTFString(host));
-    WKRelease(requestManager);
+#elif USE(CURL)
+    WKCurlRequestManagerRef requestManager = WKContextGetCurlRequestManager(context);
 #endif
+    toImpl(requestManager)->setHostAllowsAnyHTTPSCertificate(toWTFString(host));
 }
