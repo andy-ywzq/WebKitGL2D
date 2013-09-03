@@ -905,10 +905,11 @@ bool MiniBrowser::handleTLSError(WKErrorRef error)
     if (tlsErrors & NIXTlsErrorCertificateGenericError)
         errorDescription += "- Some error occurred validating the certificate.\n";
 
+    string yn;
     std::cout << errorDescription;
     std::cout << "Do you want to continue anyway? [Yn]\n";
-    char yn = std::cin.get();
-    if (yn == 'y' || yn == 'Y' || yn == '\n') {
+    getline(cin, yn);
+    if (yn == "y" || yn == "Y" || yn == "") {
         WKRetainPtr<WKURLRef> url = adoptWK(WKErrorCopyFailingURL(error));
         WKRetainPtr<WKStringRef> hostname = adoptWK(WKURLCopyHostName(url.get()));
         WKContextSetHostAllowsAnyHTTPSCertificate(m_context.get(), hostname.get());
