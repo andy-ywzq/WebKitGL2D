@@ -60,10 +60,41 @@ static inline void scroll(Page* page, ScrollDirection direction, ScrollGranulari
     page->focusController().focusedOrMainFrame().eventHandler().scrollRecursively(direction, granularity);
 }
 
-bool WebPage::performDefaultBehaviorForKeyEvent(const WebKeyboardEvent&)
+bool WebPage::performDefaultBehaviorForKeyEvent(const WebKeyboardEvent& keyboardEvent)
 {
-    notImplemented();
-    return false;
+    if (keyboardEvent.type() != WebEvent::KeyDown && keyboardEvent.type() != WebEvent::RawKeyDown)
+        return false;
+
+    switch (keyboardEvent.windowsVirtualKeyCode()) {
+    case VK_LEFT:
+        scroll(m_page.get(), ScrollLeft, ScrollByLine);
+        break;
+    case VK_RIGHT:
+        scroll(m_page.get(), ScrollRight, ScrollByLine);
+        break;
+    case VK_UP:
+        scroll(m_page.get(), ScrollUp, ScrollByLine);
+        break;
+    case VK_DOWN:
+        scroll(m_page.get(), ScrollDown, ScrollByLine);
+        break;
+    case VK_HOME:
+        logicalScroll(m_page.get(), ScrollBlockDirectionBackward, ScrollByDocument);
+        break;
+    case VK_END:
+        logicalScroll(m_page.get(), ScrollBlockDirectionForward, ScrollByDocument);
+        break;
+    case VK_PRIOR:
+        logicalScroll(m_page.get(), ScrollBlockDirectionBackward, ScrollByPage);
+        break;
+    case VK_NEXT:
+        logicalScroll(m_page.get(), ScrollBlockDirectionForward, ScrollByPage);
+        break;
+    default:
+        return false;
+    }
+
+    return true;
 }
 
 bool WebPage::platformHasLocalDataForURL(const KURL&)
