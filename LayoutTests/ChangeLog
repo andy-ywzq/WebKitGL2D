@@ -1,3 +1,524 @@
+2013-09-04  Tim Horton  <timothy_horton@apple.com>
+
+        [mac] PDFDocumentImage should use PDFKit to draw
+        https://bugs.webkit.org/show_bug.cgi?id=120651
+        <rdar://problem/12810731>
+
+        Reviewed by Alexey Proskuryakov.
+
+        * fast/images/pdf-as-image-with-annotations-expected.html: Added.
+        * fast/images/pdf-as-image-with-annotations.html: Added.
+        * fast/images/resources/annotation.pdf: Added.
+        Add a test that ensures that PDF-in-<img> draws simple annotations.
+
+        * platform/mac/fast/images/pdf-as-image-landscape-expected.png:
+        * platform/mac/fast/images/pdf-as-image-landscape-expected.txt:
+        Extremely minor rebaselines probably due to PDFKit handling rotation in the new implementation.
+
+2013-09-04  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Check that XMLHttpRequest.response returns null or a json object as specified in the spec according to readyState value.
+        https://bugs.webkit.org/show_bug.cgi?id=120690
+
+        Reviewed by Darin Adler.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/d667a115b0fd8f5e11a24d8db44388a990abf543
+
+        * http/tests/xmlhttprequest/resources/test.json: Added.
+        * http/tests/xmlhttprequest/response-json-and-readystate-expected.txt: Added.
+        * http/tests/xmlhttprequest/response-json-and-readystate.html: Added.
+
+2013-09-04  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Remove HTMLDialogElement layout tests after r154835
+        https://bugs.webkit.org/show_bug.cgi?id=120680
+
+        Reviewed by Darin Adler.
+
+        * fast/dom/HTMLDialogElement/: Removed.
+        * platform/efl/TestExpectations:
+        * platform/gtk/TestExpectations:
+        * platform/mac/TestExpectations:
+        * platform/qt-mac/TestExpectations:
+        * platform/qt/TestExpectations:
+        * platform/win/TestExpectations:
+        * platform/wincairo/TestExpectations:
+
+2013-09-04  Oliver Hunt  <oliver@apple.com>
+
+        Actually land the new results
+
+        * fast/storage/serialized-script-value-expected.txt:
+
+2013-09-04  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: aria-valuetext property not exposing AXValueDescription
+        https://bugs.webkit.org/show_bug.cgi?id=120375
+
+        Reviewed by Darin Adler.
+
+        * platform/mac/accessibility/spinbutton-valuedescription-expected.txt: Added.
+        * platform/mac/accessibility/spinbutton-valuedescription.html: Added.
+
+2013-09-04  Javier Fernandez  <jfernandez@igalia.com>
+
+        <https://webkit.org/b/119622> [CSSRegions] Not possible to clear the selection when mixing content from different FlowThreads
+
+        Reviewed by David Hyatt.
+
+        * fast/regions/selecting-text-through-different-region-flows-2-expected.html: Added.
+        * fast/regions/selecting-text-through-different-region-flows-2.html: Added.
+
+2013-09-04  Oliver Hunt  <oliver@apple.com>
+
+        Fix fast/storage/serialized script value, and add new tests for Map and Set
+        https://bugs.webkit.org/show_bug.cgi?id=120688
+
+        Reviewed by Steve Falkenburg.
+
+        Update for new version number, and adding binary tests for Map and Set
+        serialisation
+
+        * fast/storage/serialized-script-value.html:
+
+2013-09-04  Danilo Cesar Lemes de Paula  <danilo.cesar@collabora.co.uk>
+
+        [GTK] add support for subtitles on webkit2GTK
+        https://bugs.webkit.org/show_bug.cgi?id=117008
+
+        By activating subtitles support on webkit2GTK, the video player
+        recognizes and use text <tracks> inside <video> elements.
+
+        Reviewed by Martin Robinson.
+
+        * platform/gtk/TestExpectations:
+
+2013-09-04  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed bot greening.
+
+        * platform/qt-wk1/TestExpectations: Skipping after r154988.
+        * platform/qt/TestExpectations: Skipping after r154828.
+
+2013-09-04  Krzysztof Czech  <k.czech@samsung.com>
+
+        [ATK] Adds an accessibility support to access a value of the color control element
+        https://bugs.webkit.org/show_bug.cgi?id=114354
+
+        Reviewed by Mario Sanchez Prada.
+
+        Moving mac's color-well-expected.txt result to base accessibility folder.
+        Unskipping accessibility/color-well.html for EFL port.
+
+        * accessibility/color-well-expected.txt: Renamed from LayoutTests/platform/mac/accessibility/color-well-expected.txt.
+        * platform/efl-wk1/TestExpectations:
+        * platform/efl-wk2/TestExpectations:
+
+2013-09-04  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/TestExpectations: Adding failure expectation for accessibility/image-map1.html after r155022.
+        * platform/gtk/fast/dom/Window/window-postmessage-clone-expected.txt: Rebaselining after 155008.
+
+2013-09-04  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed bot greening.
+
+        * platform/qt-wk2/compositing/images/direct-image-object-fit-expected.txt: Rebaselining after r154921.
+        * platform/qt-wk2/compositing/reflections/direct-image-object-fit-reflected-expected.txt: Ditto.
+        * platform/qt/TestExpectations: Skip after r155008.
+
+2013-09-04  Ádám Kallai  <kadam@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Skip failing tests and added platform specifix expected result.
+
+        * platform/qt-wk1/inspector/console/command-line-api-expected.txt: Added after r154998.
+        * platform/qt/TestExpectations:
+
+2013-09-04  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening. Rebaselining 7 accessibility tests after r154976.
+
+        * platform/gtk/accessibility/lists-expected.txt:
+        * platform/gtk/accessibility/plugin-expected.txt:
+        * platform/gtk/accessibility/table-detection-expected.txt:
+        * platform/gtk/accessibility/table-one-cell-expected.txt:
+        * platform/gtk/accessibility/table-with-aria-role-expected.txt:
+        * platform/gtk/accessibility/table-with-rules-expected.txt:
+        * platform/gtk/accessibility/transformed-element-expected.txt:
+
+2013-09-04  Andrei Bucur  <abucur@adobe.com>
+
+        [CSS Regions] Fix failing tests on ML WK2 after r154973
+        https://bugs.webkit.org/show_bug.cgi?id=120672
+
+        Reviewed by Antti Koivisto.
+
+        The two tests are failing because the reference tests create backings for the fixed elements layers.
+        Regions are not yet accelerated, don't create backings and this difference of behaviour causes a
+        slight shift in the background color of the fixed elements.
+
+        * fast/regions/fixed-inside-named-flow-zIndex-expected.html:
+        * fast/regions/fixed-inside-named-flow-zIndex.html:
+        * fast/regions/fixed-pos-region-in-nested-flow-expected.html:
+        * fast/regions/fixed-pos-region-in-nested-flow.html:
+
+2013-09-04  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/TestExpectations: Adding failure expectations for tests introduced in r154875, r154906 and r154954.
+        * platform/gtk/animations/cross-fade-background-image-expected.png: Rebaselining after r154906.
+        * platform/gtk/animations/cross-fade-background-image-expected.txt: Ditto.
+        * platform/gtk/animations/cross-fade-border-image-source-expected.png: Ditto.
+        * platform/gtk/animations/cross-fade-border-image-source-expected.txt: Ditto.
+        * platform/gtk/animations/cross-fade-list-style-image-expected.png: Ditto.
+        * platform/gtk/animations/cross-fade-list-style-image-expected.txt: Ditto.
+        * platform/gtk/animations/cross-fade-webkit-mask-box-image-expected.png: Ditto.
+        * platform/gtk/animations/cross-fade-webkit-mask-box-image-expected.txt: Ditto.
+        * platform/gtk/animations/cross-fade-webkit-mask-image-expected.png: Ditto.
+        * platform/gtk/animations/cross-fade-webkit-mask-image-expected.txt: Ditto.
+
+2013-09-04  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed bot greening.
+
+        * platform/qt-wk2/fast/regions/element-in-named-flow-absolute-from-fixed-expected.txt: Added.
+        * platform/qt-wk2/fast/regions/element-in-named-flow-fixed-from-absolute-expected.txt: Added.
+        * platform/qt-wk2/fast/regions/element-inflow-fixed-from-outflow-static-expected.txt: Added.
+        * platform/qt-wk2/fast/regions/element-outflow-static-from-inflow-fixed-expected.txt: Added.
+        * platform/qt/TestExpectations: Skip after r155014.
+
+2013-09-04  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/TestExpectations: Manage the current accessibility layout test failures
+        after r154697, r154781 and r154976.
+
+2013-09-04  Andrei Bucur  <abucur@adobe.com>
+
+        [CSS Regions] Extend the RenderRegionRange class to include overflow information + apply the layout overflow
+        https://bugs.webkit.org/show_bug.cgi?id=116299
+
+        Reviewed by David Hyatt.
+
+        Add tests for layout overflow propagation. Some tests disable the visual representation of the overflow.
+        This is because the visual overflow in regions is not yet fixed. The tests will be revisited when the
+        visual overflow is implemented.
+        Some repaint tests are rebased because a new repaint is issued on the regions when they compute the layout
+        overflow.
+
+        * fast/regions/element-in-named-flow-absolute-from-fixed-expected.txt: Rebased.
+        * fast/regions/element-in-named-flow-fixed-from-absolute-expected.txt: Rebased.
+        * fast/regions/element-inflow-fixed-from-outflow-static-expected.txt: Rebased.
+        * fast/regions/element-outflow-static-from-inflow-fixed-expected.txt: Rebased.
+        * fast/regions/overflow-scrollable-rel-pos-fragment-expected.html: Added.
+        * fast/regions/overflow-scrollable-rel-pos-fragment.html: Added.
+        * fast/regions/overflow-scrollable-rotated-fragment-expected.html: Added.
+        * fast/regions/overflow-scrollable-rotated-fragment.html: Added.
+        * fast/regions/overflow-scrollable-unsplittable-fragment-expected.html: Added.
+        * fast/regions/overflow-scrollable-unsplittable-fragment.html: Added.
+        * fast/regions/overflow-scrollable-varying-width-1-expected.html: Added.
+        * fast/regions/overflow-scrollable-varying-width-1.html: Added.
+        * fast/regions/overflow-scrollable-varying-width-2-expected.html: Added.
+        * fast/regions/overflow-scrollable-varying-width-2.html: Added.
+
+2013-09-04  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * platform/gtk/TestExpectations: Skipping the media/track/in-band test set that's failing on the GTK port.
+
+2013-09-03  Filip Pizlo  <fpizlo@apple.com>
+
+        The DFG should be able to tier-up and OSR enter into the FTL
+        https://bugs.webkit.org/show_bug.cgi?id=112838
+
+        Reviewed by Mark Hahnenberg.
+        
+        Fix marsaglia to check the result instead of printing, and add a second
+        version that relies on OSR entry.
+
+        * fast/js/regress/marsaglia-osr-entry-expected.txt: Added.
+        * fast/js/regress/marsaglia-osr-entry.html: Added.
+        * fast/js/regress/script-tests/marsaglia-osr-entry.js: Added.
+        (marsaglia):
+        * fast/js/regress/script-tests/marsaglia.js:
+
+2013-09-03  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: REGRESSION: @title is exposed as AXDescription when label label from contents already exists.
+        https://bugs.webkit.org/show_bug.cgi?id=120550
+
+        Reviewed by Mario Sanchez Prada.
+
+        * accessibility/image-map1.html:
+        * platform/mac/accessibility/document-links-expected.txt:
+        * platform/mac/accessibility/image-map1-expected.txt:
+        * platform/mac/accessibility/link-with-title-expected.txt: Added.
+        * platform/mac/accessibility/link-with-title.html: Added.
+
+2013-09-03  Enrica Casucci  <enrica@apple.com>
+
+        Can't select Katakana word by double-clicking.
+        <rdar://problem/14654926>
+
+        Reviewed by Alexey Proskuryakov and Ryosuke Niwa.
+
+        Added new test for this scenario.
+
+        * editing/selection/doubleclick-japanese-text-expected.txt: Added.
+        * editing/selection/doubleclick-japanese-text.html: Added.
+
+2013-09-03  Benjamin Poulain  <benjamin@webkit.org>
+
+        Try unskipping compositing/images/positioned-image-content-rect.html
+
+        Unreviewed.
+
+        * platform/mac/TestExpectations:
+        The test compositing/images/positioned-image-content-rect.html seems to pass reliably
+        on the bots and locally.
+        Try to unskip it.
+
+2013-09-03  Benjamin Poulain  <benjamin@webkit.org>
+
+        The test inspector/geolocation-success.html is unreliable
+        https://bugs.webkit.org/show_bug.cgi?id=120655
+
+        Reviewed by Alexey Proskuryakov.
+
+        * inspector/geolocation-success.html:
+        The test was expecting everything would be done in the page context
+        when InspectorTest.evaluateInPage invoke the callback.
+
+        This is not the case, geolocation APIs are asynchronous.
+        The callbacks printLocation() and printError() may or may not be executed.
+
+        To fix this, the execution of each step is changed to depends on the completion
+        of the geolocation callback.
+
+2013-09-03  Oliver Hunt  <oliver@apple.com>
+
+        Support structured clone of Map and Set
+        https://bugs.webkit.org/show_bug.cgi?id=120654
+
+        Reviewed by Simon Fraser.
+
+        Tests!
+
+        * fast/dom/Window/script-tests/postmessage-clone.js:
+        (set new):
+        (set add.set add):
+
+2013-09-03  Bear Travis  <betravis@adobe.com>
+
+        [CSS Shapes] Shape's content gets extra left offset when left-border is positive on the content box
+        https://bugs.webkit.org/show_bug.cgi?id=117573
+
+        Reviewed by David Hyatt.
+
+        Test that nested children with padding correctly apply an ancestor's shape-inside
+        across different writing modes.
+
+        * fast/shapes/shape-inside/shape-inside-offset-block-children-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-offset-block-children.html: Added.
+
+2013-09-03  Antoine Quint  <graouts@apple.com>
+
+        Web Inspector: exceptions triggered from console evaluation do not pause the debugger
+        https://bugs.webkit.org/show_bug.cgi?id=120460
+
+        Reviewed by Timothy Hatcher.
+
+        * platform/mac/inspector/console/command-line-api-expected.txt:
+        Take into account the addition of a sourceURL to inspector/InjectedScriptSource.js.
+
+2013-08-28  Sergio Villar Senin  <svillar@igalia.com>
+
+        [CSS Grid Layout] Add parsing for named grid lines
+        https://bugs.webkit.org/show_bug.cgi?id=119540
+
+        Reviewed by Andreas Kling.
+
+        From Blink r150381,r150587 by <jchaffraix@chromium.org>
+
+        Added several new test cases which include different types of
+        named grid lines, this means including the names at different
+        positions, multiple names per line or mixing names with keywords
+        like 'span'.
+
+        * fast/css-grid-layout/grid-item-column-row-get-set-expected.txt:
+        * fast/css-grid-layout/grid-item-column-row-get-set.html:
+
+2013-09-03  Alexey Proskuryakov  <ap@apple.com>
+
+        [Mac] Hyphenation respects regional format settings language instead of primary language
+        https://bugs.webkit.org/show_bug.cgi?id=120641
+
+        Reviewed by Dan Bernstein.
+
+        * platform/mac/fast/text/hyphenate-locale-expected.png: Added, this test only had
+        expected pixel results in mac-lion dorectory.
+
+2013-09-03  Daniel Bates  <dabates@apple.com>
+
+        Require layout when -webkit-overflow-scrolling changes
+        https://bugs.webkit.org/show_bug.cgi?id=120535
+
+        Reviewed by Darin Adler.
+
+        Add a test to ensure we perform a layout and repaint when the
+        value of -webkit-overflow-scrolling changes on an element.
+
+        At the time of writing, the iOS port enables ACCELERATED_OVERFLOW_SCROLLING.
+
+        * fast/repaint/overflow-scroll-touch-repaint-expected.txt: Added.
+        * fast/repaint/overflow-scroll-touch-repaint.html: Added.
+        * platform/efl/TestExpectations: Skip test fast/repaint/overflow-scroll-touch-repaint.html
+        since this platform doesn't enable ACCELERATED_OVERFLOW_SCROLLING.
+        * platform/gtk/TestExpectations: Ditto.
+        * platform/mac/TestExpectations: Ditto.
+        * platform/qt/TestExpectations: Ditto.
+        * platform/win/TestExpectations: Ditto.
+        * platform/wincairo/TestExpectations: Ditto.
+
+2013-09-02  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Support the "json" responseType and JSON response entity in XHR
+        https://bugs.webkit.org/show_bug.cgi?id=73648
+
+        Reviewed by Oliver Hunt.
+
+        Add regression tests for XMLHttpRequest.response of type 'json'.
+
+        Two of these tests (valid & invalid) come from Jarred Nicholls's original patch.
+
+        * fast/xmlhttprequest/resources/xmlhttprequest-responsetype-json-utf-16.json: Added.
+        * fast/xmlhttprequest/resources/xmlhttprequest-responsetype-json.json: Added.
+        * fast/xmlhttprequest/xmlhttprequest-responsetype-json-invalid-expected.txt: Added.
+        * fast/xmlhttprequest/xmlhttprequest-responsetype-json-invalid.html: Added.
+        * fast/xmlhttprequest/xmlhttprequest-responsetype-json-utf16-expected.txt: Added.
+        * fast/xmlhttprequest/xmlhttprequest-responsetype-json-utf16.html: Added.
+        * fast/xmlhttprequest/xmlhttprequest-responsetype-json-valid-expected.txt: Added.
+        * fast/xmlhttprequest/xmlhttprequest-responsetype-json-valid.html: Added.
+
+2013-09-03  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r154881.
+        http://trac.webkit.org/changeset/154881
+        https://bugs.webkit.org/show_bug.cgi?id=120643
+
+        Crashes on macworld.com (Requested by kling on #webkit).
+
+        * fast/dom/Element/setAttributeNode-for-existing-attribute-expected.txt: Removed.
+        * fast/dom/Element/setAttributeNode-for-existing-attribute.html: Removed.
+
+2013-09-03  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSSRegions] Pseudo-elements as regions should not be exposed to JS
+        https://bugs.webkit.org/show_bug.cgi?id=120633
+
+        Reviewed by Andreas Kling.
+
+        Add tests with pseudo-elements as regions checking the following API:
+        WebKitNamedFlow::getRegions(), WebKitNamedFlow::getRegionsByContent()
+        Because we do not return the pseudo-elements as regions in the region list,
+        i modified WebKitNamedFlow::firstEmptyRegionIndex to skip these regions too. 
+
+        * fast/regions/get-regions-by-content-pseudo-expected.txt: Added.
+        * fast/regions/get-regions-by-content-pseudo.html: Added.
+        * fast/regions/webkit-named-flow-get-regions-pseudo-expected.txt: Added.
+        * fast/regions/webkit-named-flow-get-regions-pseudo.html: Added.
+
+2013-09-03  Ádám Kallai  <kadam@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Skip some failing tests.
+
+        * platform/qt-wk1/TestExpectations:
+        * platform/qt/TestExpectations:
+
+2013-09-03  Krzysztof Czech  <k.czech@samsung.com>
+
+        [EFL] accessibility/aria-describedby-on-input.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=112027
+
+        Unreviewed EFL gardening.
+
+        accessibility/aria-describedby-on-input.html passes after r154976.
+
+        * platform/efl-wk2/TestExpectations:
+
+2013-09-03  Andre Moreira Magalhaes   <andre.magalhaes@collabora.co.uk>
+
+        [gstreamer] Disable HTTP request "Accept-Encoding:" header field on gstreamer source element to avoid receiving the wrong size when retrieving data
+        https://bugs.webkit.org/show_bug.cgi?id=115354
+
+        Reviewed by Philippe Normand.
+
+        Add test to check that video requests will send no "Accept-Encoding" header.
+
+        * http/tests/media/video-accept-encoding-expected.txt: Added.
+        * http/tests/media/video-accept-encoding.cgi: Added.
+        * http/tests/media/video-accept-encoding.html: Added.
+
+2013-09-03  Krzysztof Czech  <k.czech@samsung.com>
+
+        [AX][ATK] Added support for sort and help attributes
+        https://bugs.webkit.org/show_bug.cgi?id=120456
+
+        Reviewed by Chris Fleizach.
+
+        Sharing aria-sort.html specific mac test with efl and gtk.
+        Changing specific expectations of some accessibility tests.
+
+        * accessibility/aria-sort-expected.txt: Renamed from LayoutTests/platform/mac/accessibility/aria-sort-expected.txt.
+        * accessibility/aria-sort.html: Renamed from LayoutTests/platform/mac/accessibility/aria-sort.html.
+        * platform/efl-wk2/TestExpectations:
+        * platform/efl-wk2/accessibility/image-link-expected.txt:
+        * platform/efl-wk2/accessibility/image-map2-expected.txt:
+        * platform/efl-wk2/accessibility/table-cell-spans-expected.txt:
+        * platform/efl-wk2/accessibility/table-cells-expected.txt:
+        * platform/gtk/accessibility/image-link-expected.txt:
+        * platform/gtk/accessibility/image-map2-expected.txt:
+        * platform/gtk/accessibility/table-cell-spans-expected.txt:
+        * platform/gtk/accessibility/table-cells-expected.txt:
+
+2013-09-03  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSS Regions] position: fixed is computed relative to the first region, not the viewport
+        https://bugs.webkit.org/show_bug.cgi?id=111176
+
+        Reviewed by David Hyatt.
+
+        Added new tests and changed the existing ones that were relying on incorrect positioning
+        for fixed elements.
+
+        * fast/regions/element-in-named-flow-absolute-from-fixed-expected.txt: Added.
+        * fast/regions/element-in-named-flow-absolute-from-fixed.html: Added.
+        * fast/regions/element-in-named-flow-fixed-from-absolute-expected.txt: Added.
+        * fast/regions/element-in-named-flow-fixed-from-absolute.html: Added.
+        * fast/regions/element-inflow-fixed-from-outflow-static-expected.txt: Added.
+        * fast/regions/element-inflow-fixed-from-outflow-static.html: Added.
+        * fast/regions/element-outflow-static-from-inflow-fixed-expected.txt: Added.
+        * fast/regions/element-outflow-static-from-inflow-fixed.html: Added.
+        * fast/regions/fixed-element-transformed-parent-expected.txt: Added.
+        * fast/regions/fixed-element-transformed-parent.html: Added.
+        * fast/regions/fixed-in-named-flow-scroll-expected.txt: Added.
+        * fast/regions/fixed-in-named-flow-scroll.html: Added.
+        * fast/regions/fixed-inside-fixed-in-named-flow-expected.html: Added.
+        * fast/regions/fixed-inside-fixed-in-named-flow.html: Added.
+        * fast/regions/fixed-inside-named-flow-zIndex-expected.html: Added.
+        * fast/regions/fixed-inside-named-flow-zIndex.html: Added.
+        * fast/regions/fixed-pos-elem-in-namedflow-noregions-expected.html: Added.
+        * fast/regions/fixed-pos-elem-in-namedflow-noregions.html: Added.
+        * fast/regions/fixed-pos-elem-in-region-expected.html:
+        * fast/regions/fixed-pos-elem-in-region.html:
+        * fast/regions/fixed-pos-region-in-nested-flow-expected.html: Added.
+        * fast/regions/fixed-pos-region-in-nested-flow.html: Added.
+
 2013-09-02  Anton Obzhirov  <a.obzhirov@samsung.com>
 
         <https://webkit.org/b/98350> [GTK] accessibility/aria-invalid.html times out

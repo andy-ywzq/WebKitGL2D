@@ -48,6 +48,9 @@ compositing/visibility/visibility-composited.html
 
 webkit.org/b/112671 compositing/video/video-reflection.html [ Skip ]
 
+# [Qt][WK1] REGRESSION(r154988)
+webkit.org/b/120683 compositing/video/video-with-invalid-source.html [ Skip ]
+
 # Fullscreen API is not supported on WK1
 fullscreen
 plugins/fullscreen-plugins-dont-reload.html
@@ -122,6 +125,8 @@ webkit.org/b/98525 plugins/plugin-document-back-forward.html
 webkit.org/b/98525 plugins/reentrant-update-widget-positions.html
 webkit.org/b/98525 plugins/update-widgets-crash.html
 webkit.org/b/98525 plugins/window-open.html
+
+webkit.org/b/120628 plugins/destroy-on-setwindow.html [ Skip ]
 
 # TestRunner::overridePreference() does not support the 'WebKitSupportsMultipleWindows' preference
 fast/dom/HTMLAnchorElement/anchor-no-multiple-windows.html

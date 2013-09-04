@@ -165,6 +165,7 @@
 #include <wtf/CurrentTime.h>
 #include <wtf/MainThread.h>
 #include <wtf/PassRefPtr.h>
+#include <wtf/Ref.h>
 #include <wtf/TemporaryChange.h>
 #include <wtf/text/StringBuffer.h>
 
@@ -755,7 +756,7 @@ bool Document::hasManifest() const
     return documentElement() && documentElement()->hasTagName(htmlTag) && documentElement()->hasAttribute(manifestAttr);
 }
 
-PassRefPtr<DocumentType> Document::doctype() const
+DocumentType* Document::doctype() const
 {
     for (Node* node = firstChild(); node; node = node->nextSibling()) {
         if (node->isDocumentTypeNode())
@@ -771,7 +772,11 @@ void Document::childrenChanged(const ChildChange& change)
     // NOTE: Per DOM, dynamically inserting/removing doctype nodes doesn't affect compatibility mode.
 
 #if ENABLE(LEGACY_VIEWPORT_ADAPTION)
-    if (RefPtr<DocumentType> documentType = doctype()) {
+    // FIXME: It's a little strange to add these rules when a DocumentType with this prefix is added,
+    // but not remove these rules when a DocumentType with this prefix is removed. It seems this should
+    // be handled more the way the compatibility mode is, by fetching the doctype at the appropriate time,
+    // rather than by responding when a document type node is inserted.
+    if (DocumentType* documentType = doctype()) {
         if (documentType->publicId().startsWith("-//wapforum//dtd xhtml mobile 1.", /* caseSensitive */ false))
             processViewport("width=device-width, height=device-height", ViewportArguments::XHTMLMobileProfile);
     }
@@ -2372,7 +2377,7 @@ void Document::implicitClose()
         return;
 
     // Call to dispatchWindowLoadEvent can blow us from underneath.
-    RefPtr<Document> protect(this);
+    Ref<Document> protect(*this);
 
     m_processingLoadEvent = true;
 
@@ -5322,7 +5327,7 @@ void Document::fullScreenChangeDelayTimerFired(Timer<Document>*)
     // Since we dispatch events in this function, it's possible that the
     // document will be detached and GC'd. We protect it here to make sure we
     // can finish the function successfully.
-    RefPtr<Document> protectDocument(this);
+    Ref<Document> protect(*this);
     Deque<RefPtr<Node> > changeQueue;
     m_fullScreenChangeEventTargetQueue.swap(changeQueue);
     Deque<RefPtr<Node> > errorQueue;
@@ -5760,7 +5765,7 @@ static RenderObject* nearestCommonHoverAncestor(RenderObject* obj1, RenderObject
     return 0;
 }
 
-void Document::updateHoverActiveState(const HitTestRequest& request, Element* innerElement, const PlatformMouseEvent* event)
+void Document::updateHoverActiveState(const HitTestRequest& request, Element* innerElement, const PlatformMouseEvent* event, StyleResolverUpdateFlag updateFlag)
 {
     ASSERT(!request.readOnly());
 
@@ -5906,7 +5911,9 @@ void Document::updateHoverActiveState(const HitTestRequest& request, Element* in
         }
     }
 
-    updateStyleIfNeeded();
+    ASSERT(updateFlag == RecalcStyleIfNeeded || updateFlag == DeferRecalcStyleIfNeeded);
+    if (updateFlag == RecalcStyleIfNeeded)
+        updateStyleIfNeeded();
 }
 
 bool Document::haveStylesheetsLoaded() const

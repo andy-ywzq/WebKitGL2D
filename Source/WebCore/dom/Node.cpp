@@ -336,10 +336,7 @@ void Node::trackForDebugging()
 Node::~Node()
 {
 #ifndef NDEBUG
-    HashSet<Node*>::iterator it = ignoreSet.find(this);
-    if (it != ignoreSet.end())
-        ignoreSet.remove(it);
-    else
+    if (!ignoreSet.remove(this))
         nodeCounter.decrement();
 #endif
 
@@ -2180,7 +2177,7 @@ bool Node::dispatchBeforeLoadEvent(const String& sourceURL)
     if (!document().hasListenerType(Document::BEFORELOAD_LISTENER))
         return true;
 
-    RefPtr<Node> protector(this);
+    Ref<Node> protect(*this);
     RefPtr<BeforeLoadEvent> beforeLoadEvent = BeforeLoadEvent::create(sourceURL);
     dispatchEvent(beforeLoadEvent.get());
     return !beforeLoadEvent->defaultPrevented();

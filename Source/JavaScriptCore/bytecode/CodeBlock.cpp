@@ -1479,6 +1479,7 @@ CodeBlock::CodeBlock(CopyParsedBlockTag, CodeBlock& other)
     , m_numVars(other.m_numVars)
     , m_isConstructor(other.m_isConstructor)
     , m_shouldAlwaysBeInlined(true)
+    , m_didFailFTLCompilation(false)
     , m_unlinkedCode(*other.m_vm, other.m_ownerExecutable.get(), other.m_unlinkedCode.get())
     , m_ownerExecutable(*other.m_vm, other.m_ownerExecutable.get(), other.m_ownerExecutable.get())
     , m_vm(other.m_vm)
@@ -1504,6 +1505,7 @@ CodeBlock::CodeBlock(CopyParsedBlockTag, CodeBlock& other)
     , m_capabilityLevelState(DFG::CapabilityLevelNotSet)
 #endif
 {
+    ASSERT(m_heap->isDeferred());
     setNumParameters(other.numParameters());
     optimizeAfterWarmUp();
     jitAfterWarmUp();
@@ -1516,6 +1518,9 @@ CodeBlock::CodeBlock(CopyParsedBlockTag, CodeBlock& other)
         m_rareData->m_switchJumpTables = other.m_rareData->m_switchJumpTables;
         m_rareData->m_stringSwitchJumpTables = other.m_rareData->m_stringSwitchJumpTables;
     }
+    
+    m_heap->m_codeBlocks.add(this);
+    m_heap->reportExtraMemoryCost(sizeof(CodeBlock));
 }
 
 CodeBlock::CodeBlock(ScriptExecutable* ownerExecutable, UnlinkedCodeBlock* unlinkedCodeBlock, JSScope* scope, PassRefPtr<SourceProvider> sourceProvider, unsigned sourceOffset, unsigned firstLineColumnOffset)
@@ -1525,6 +1530,7 @@ CodeBlock::CodeBlock(ScriptExecutable* ownerExecutable, UnlinkedCodeBlock* unlin
     , m_numVars(unlinkedCodeBlock->m_numVars)
     , m_isConstructor(unlinkedCodeBlock->isConstructor())
     , m_shouldAlwaysBeInlined(true)
+    , m_didFailFTLCompilation(false)
     , m_unlinkedCode(m_globalObject->vm(), ownerExecutable, unlinkedCodeBlock)
     , m_ownerExecutable(m_globalObject->vm(), ownerExecutable, ownerExecutable)
     , m_vm(unlinkedCodeBlock->vm())
@@ -1544,7 +1550,7 @@ CodeBlock::CodeBlock(ScriptExecutable* ownerExecutable, UnlinkedCodeBlock* unlin
     , m_capabilityLevelState(DFG::CapabilityLevelNotSet)
 #endif
 {
-    m_vm->startedCompiling(this);
+    ASSERT(m_heap->isDeferred());
 
     ASSERT(m_source);
     setNumParameters(unlinkedCodeBlock->numParameters());
@@ -1842,19 +1848,14 @@ CodeBlock::CodeBlock(ScriptExecutable* ownerExecutable, UnlinkedCodeBlock* unlin
 
     if (Options::dumpGeneratedBytecodes())
         dumpBytecode();
-    m_vm->finishedCompiling(this);
+    m_heap->m_codeBlocks.add(this);
+    m_heap->reportExtraMemoryCost(sizeof(CodeBlock) + m_instructions.size() * sizeof(Instruction));
 }
 
 CodeBlock::~CodeBlock()
 {
     if (m_vm->m_perBytecodeProfiler)
         m_vm->m_perBytecodeProfiler->notifyDestruction(this);
-    
-#if ENABLE(DFG_JIT)
-    // Remove myself from the set of DFG code blocks. Note that I may not be in this set
-    // (because I'm not a DFG code block), in which case this is a no-op anyway.
-    m_vm->heap.m_dfgCodeBlocks.m_set.remove(this);
-#endif
     
 #if ENABLE(VERBOSE_VALUE_PROFILE)
     dumpValueProfiles();
@@ -1903,38 +1904,60 @@ void EvalCodeCache::visitAggregate(SlotVisitor& visitor)
         visitor.append(&ptr->value);
 }
 
+CodeBlock* CodeBlock::specialOSREntryBlockOrNull()
+{
+#if ENABLE(FTL_JIT)
+    if (jitType() != JITCode::DFGJIT)
+        return 0;
+    DFG::JITCode* jitCode = m_jitCode->dfg();
+    return jitCode->osrEntryBlock.get();
+#else // ENABLE(FTL_JIT)
+    return 0;
+#endif // ENABLE(FTL_JIT)
+}
+
 void CodeBlock::visitAggregate(SlotVisitor& visitor)
 {
-#if ENABLE(PARALLEL_GC) && ENABLE(DFG_JIT)
-    if (JITCode::isOptimizingJIT(jitType())) {
-        DFG::CommonData* dfgCommon = m_jitCode->dfgCommon();
-        
-        // I may be asked to scan myself more than once, and it may even happen concurrently.
-        // To this end, use a CAS loop to check if I've been called already. Only one thread
-        // may proceed past this point - whichever one wins the CAS race.
-        unsigned oldValue;
-        do {
-            oldValue = dfgCommon->visitAggregateHasBeenCalled;
-            if (oldValue) {
-                // Looks like someone else won! Return immediately to ensure that we don't
-                // trace the same CodeBlock concurrently. Doing so is hazardous since we will
-                // be mutating the state of ValueProfiles, which contain JSValues, which can
-                // have word-tearing on 32-bit, leading to awesome timing-dependent crashes
-                // that are nearly impossible to track down.
-                
-                // Also note that it must be safe to return early as soon as we see the
-                // value true (well, (unsigned)1), since once a GC thread is in this method
-                // and has won the CAS race (i.e. was responsible for setting the value true)
-                // it will definitely complete the rest of this method before declaring
-                // termination.
-                return;
-            }
-        } while (!WTF::weakCompareAndSwap(&dfgCommon->visitAggregateHasBeenCalled, 0, 1));
-    }
-#endif // ENABLE(PARALLEL_GC) && ENABLE(DFG_JIT)
+#if ENABLE(PARALLEL_GC)
+    // I may be asked to scan myself more than once, and it may even happen concurrently.
+    // To this end, use a CAS loop to check if I've been called already. Only one thread
+    // may proceed past this point - whichever one wins the CAS race.
+    unsigned oldValue;
+    do {
+        oldValue = m_visitAggregateHasBeenCalled;
+        if (oldValue) {
+            // Looks like someone else won! Return immediately to ensure that we don't
+            // trace the same CodeBlock concurrently. Doing so is hazardous since we will
+            // be mutating the state of ValueProfiles, which contain JSValues, which can
+            // have word-tearing on 32-bit, leading to awesome timing-dependent crashes
+            // that are nearly impossible to track down.
+            
+            // Also note that it must be safe to return early as soon as we see the
+            // value true (well, (unsigned)1), since once a GC thread is in this method
+            // and has won the CAS race (i.e. was responsible for setting the value true)
+            // it will definitely complete the rest of this method before declaring
+            // termination.
+            return;
+        }
+    } while (!WTF::weakCompareAndSwap(&m_visitAggregateHasBeenCalled, 0, 1));
+#endif // ENABLE(PARALLEL_GC)
     
     if (!!m_alternative)
         m_alternative->visitAggregate(visitor);
+    
+    if (CodeBlock* otherBlock = specialOSREntryBlockOrNull())
+        otherBlock->visitAggregate(visitor);
+
+    visitor.reportExtraMemoryUsage(sizeof(CodeBlock));
+    if (m_jitCode)
+        visitor.reportExtraMemoryUsage(m_jitCode->size());
+    if (m_instructions.size()) {
+        // Divide by refCount() because m_instructions points to something that is shared
+        // by multiple CodeBlocks, and we only want to count it towards the heap size once.
+        // Having each CodeBlock report only its proportional share of the size is one way
+        // of accomplishing this.
+        visitor.reportExtraMemoryUsage(m_instructions.size() * sizeof(Instruction) / m_instructions.refCount());
+    }
 
     visitor.append(&m_unlinkedCode);
 
@@ -2379,17 +2402,14 @@ CodeBlock* CodeBlock::baselineVersion()
 }
 
 #if ENABLE(JIT)
+bool CodeBlock::hasOptimizedReplacement(JITCode::JITType typeToReplace)
+{
+    return JITCode::isHigherTier(replacement()->jitType(), typeToReplace);
+}
+
 bool CodeBlock::hasOptimizedReplacement()
 {
-    ASSERT(JITCode::isBaselineCode(jitType()));
-    bool result = JITCode::isHigherTier(replacement()->jitType(), jitType());
-    if (result)
-        ASSERT(JITCode::isOptimizingJIT(replacement()->jitType()));
-    else {
-        ASSERT(JITCode::isBaselineCode(replacement()->jitType()));
-        ASSERT(replacement() == this);
-    }
-    return result;
+    return hasOptimizedReplacement(jitType());
 }
 #endif
 
@@ -2655,6 +2675,8 @@ void CodeBlock::clearEvalCache()
 {
     if (!!m_alternative)
         m_alternative->clearEvalCache();
+    if (CodeBlock* otherBlock = specialOSREntryBlockOrNull())
+        otherBlock->clearEvalCache();
     if (!m_rareData)
         return;
     m_rareData->m_evalCodeCache.clear();
@@ -2740,28 +2762,14 @@ DFG::CapabilityLevel FunctionCodeBlock::capabilityLevelInternal()
 
 void CodeBlock::jettison()
 {
+    DeferGC deferGC(*m_heap);
     ASSERT(JITCode::isOptimizingJIT(jitType()));
     ASSERT(this == replacement());
     alternative()->optimizeAfterWarmUp();
     tallyFrequentExitSites();
     if (DFG::shouldShowDisassembly())
         dataLog("Jettisoning ", *this, ".\n");
-    jettisonImpl();
-}
-
-void ProgramCodeBlock::jettisonImpl()
-{
-    static_cast<ProgramExecutable*>(ownerExecutable())->jettisonOptimizedCode(*vm());
-}
-
-void EvalCodeBlock::jettisonImpl()
-{
-    static_cast<EvalExecutable*>(ownerExecutable())->jettisonOptimizedCode(*vm());
-}
-
-void FunctionCodeBlock::jettisonImpl()
-{
-    static_cast<FunctionExecutable*>(ownerExecutable())->jettisonOptimizedCodeFor(*vm(), m_isConstructor ? CodeForConstruct : CodeForCall);
+    alternative()->install();
 }
 #endif
 
@@ -3038,10 +3046,10 @@ void CodeBlock::setOptimizationThresholdBasedOnCompilationResult(CompilationResu
     case CompilationSuccessful:
         RELEASE_ASSERT(JITCode::isOptimizingJIT(replacement()->jitType()));
         optimizeNextInvocation();
-        break;
+        return;
     case CompilationFailed:
         dontOptimizeAnytimeSoon();
-        break;
+        return;
     case CompilationDeferred:
         // We'd like to do dontOptimizeAnytimeSoon() but we cannot because
         // forceOptimizationSlowPathConcurrently() is inherently racy. It won't
@@ -3049,16 +3057,14 @@ void CodeBlock::setOptimizationThresholdBasedOnCompilationResult(CompilationResu
         // function ends up being a no-op, we still eventually retry and realize
         // that we have optimized code ready.
         optimizeAfterWarmUp();
-        break;
+        return;
     case CompilationInvalidated:
         // Retry with exponential backoff.
         countReoptimization();
         optimizeAfterWarmUp();
-        break;
-    default:
-        RELEASE_ASSERT_NOT_REACHED();
-        break;
+        return;
     }
+    RELEASE_ASSERT_NOT_REACHED();
 }
 
 #endif

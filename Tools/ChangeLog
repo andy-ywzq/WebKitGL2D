@@ -1,3 +1,121 @@
+2013-09-04  Krzysztof Czech  <k.czech@samsung.com>
+
+        [ATK] Adds an accessibility support to access a value of the color control element
+        https://bugs.webkit.org/show_bug.cgi?id=114354
+
+        Reviewed by Mario Sanchez Prada.
+
+        Added accessibility role of the color control element.
+
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (roleToString):
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::roleToString):
+
+2013-09-04  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        REGRESSION (r132328): /WebKit2APITests/TestWebKitAccessibility unit test is failing
+        https://bugs.webkit.org/show_bug.cgi?id=100408
+
+        Unreviewed gardening. Unskip TestWebKitAccessibility after
+        manually checking that it's running properly in the bot.
+
+        * Scripts/run-gtk-tests:
+        (TestRunner): Unskipped TestWebKitAccessibility.
+
+2013-09-04  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Add support for the Wayland build target
+        https://bugs.webkit.org/show_bug.cgi?id=120627
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * GNUmakefile.am: Define the additional macros also if building the Wayland target.
+
+2013-09-04  Andre Moreira Magalhaes   <andre.magalhaes@collabora.co.uk>
+
+        [GStreamer] cannot play live streams
+        https://bugs.webkit.org/show_bug.cgi?id=116831
+
+        Reviewed by Philippe Normand.
+
+        Fix timeout issues with rtspsrc/udpsrc gstreamer elements.
+
+        * gtk/jhbuild.modules:
+        * gtk/patches/rtspsrc-timeout-on-udpsrc-is-in-nanoseconds.patch: Added.
+        * gtk/patches/udpsrc-improve-timeouts.patch: Added.
+        Changed gstreamer jhbuild modules to use tarball repos (required to add patches)
+        and added 2 patches to gst-plugins-good to fix timeout issues with rtsp streams.
+        Both patches are applied upstream and can be removed once a new gstreamer release
+        is out (up to 1.0.10 the patches are not included) and we bump the requirements.
+
+2013-09-03  Alexey Proskuryakov  <ap@apple.com>
+
+        [Mac] WebKitTestRunner still beeps sometimes
+        https://bugs.webkit.org/show_bug.cgi?id=120652
+
+        Reviewed by Tim Horton.
+
+        In bug 107251, we disabled beeping in WebProcess, but some of the beeps happen in
+        UI process (notably, AppKit beeps when handling a key equivalent returns NO).
+
+        * WebKitTestRunner/mac/TestControllerMac.mm: (WTR::TestController::platformInitialize):
+        Use the same SPI that we use in DRT and in WebProcess to disable beeping.
+
+2013-09-03  Krzysztof Czech  <k.czech@samsung.com>
+
+        [AX][ATK] Added support for sort and help attributes
+        https://bugs.webkit.org/show_bug.cgi?id=120456
+
+        Reviewed by Chris Fleizach.
+
+        Added missing implementation to AccessibilityUIElement::helpText and support for
+        aria-sort attribute.
+
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (coreAttributeToAtkAttribute):
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::coreAttributeToAtkAttribute):
+        (WTR::AccessibilityUIElement::helpText):
+
+2013-09-03  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt][WK1] PageVisibility tests are flaky
+        https://bugs.webkit.org/show_bug.cgi?id=120418
+
+        Reviewed by Jocelyn Turcotte.
+
+        Implement resetPageVisibility so we can reset visibility without
+        emiting visibility state change events.
+
+        * DumpRenderTree/qt/TestRunnerQt.cpp:
+        (TestRunner::resetPageVisibility):
+
+2013-09-03  ChangSeok Oh  <changseok.oh@collabora.com>
+
+        [GTK] libsoup upversion to fix a gstreamer issue, bug115354
+        https://bugs.webkit.org/show_bug.cgi?id=120613
+
+        Reviewed by Philippe Normand.
+
+        Up version of libsoup to 2.43.90. But the exact version which we'll use is not 2.43.90.
+        To fix bug115354, we need the Andre's patch for libsoup, but the lastest release
+        does not contain it. https://bugzilla.gnome.org/show_bug.cgi?id=706338
+        For the reason, we'll use libsoup git repo directly for a while until the next
+        libsoup release.
+
+        * gtk/jhbuild.modules:
+
+2013-09-02  Darin Adler  <darin@apple.com>
+
+        [Mac] No need for HardAutorelease, which is same as CFBridgingRelease
+        https://bugs.webkit.org/show_bug.cgi?id=120569
+
+        Reviewed by Andy Estes.
+
+        * DumpRenderTree/mac/DumpRenderTree.mm:
+        (dump): Use CFBridgingRelease.
+
 2013-09-02  Anton Obzhirov  <a.obzhirov@samsung.com>
 
         <https://webkit.org/b/98350> [GTK] accessibility/aria-invalid.html times out

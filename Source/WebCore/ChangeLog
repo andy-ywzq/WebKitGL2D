@@ -1,3 +1,1596 @@
+2013-09-04  Pratik Solanki  <psolanki@apple.com>
+
+        Document::updateHoverActiveState() should allow for deferred style recalcs
+        https://bugs.webkit.org/show_bug.cgi?id=120700
+
+        Reviewed by Simon Fraser.
+
+        Add an extra argument to Document::updateHoverActiveState() to specify if a style recalc
+        should be done. The default value keeps the current behavior of doing a style recalc. iOS
+        touch handling code will pass in DeferRecalcStyleIfNeeded to avoid the work.
+
+        No new tests because no functional changes.
+
+        * dom/Document.cpp:
+        (WebCore::Document::updateHoverActiveState):
+        * dom/Document.h:
+
+2013-09-04  Tim Horton  <timothy_horton@apple.com>
+
+        [mac] PDFDocumentImage should use PDFKit to draw
+        https://bugs.webkit.org/show_bug.cgi?id=120651
+        <rdar://problem/12810731>
+
+        Reviewed by Alexey Proskuryakov.
+
+        Use PDFKit to draw PDF-in-<img> on Mac, so that annotations in PDF are painted.
+
+        Test: fast/images/pdf-as-image-with-annotations.html
+
+        * WebCore.xcodeproj/project.pbxproj:
+        Add PDFDocumentImageMac.mm.
+
+        * platform/graphics/cg/PDFDocumentImage.cpp:
+        (WebCore::PDFDocumentImage::PDFDocumentImage):
+        We don't need to initialize m_document anymore because it's now a RetainPtr.
+        Initialize m_hasPage to false.
+
+        (WebCore::PDFDocumentImage::~PDFDocumentImage):
+        We don't need to manually release our CGPDFDocumentRef anymore because it's now a RetainPtr.
+
+        (WebCore::PDFDocumentImage::size):
+        Use expandedIntSize for explicitness.
+
+        (WebCore::PDFDocumentImage::applyRotationForPainting):
+        Rename adjustCTM to applyRotationForPainting, and move the one non-rotation related transformation out.
+        We need to do this because PDFKit applies the rotation transformation itself, so we don't need to.
+        Also, explicitly use std::min instead of importing the whole std namespace.
+
+        (WebCore::PDFDocumentImage::dataChanged):
+        Assert that we don't re-enter dataChanged after we've created a document,
+        because it seems like that shouldn't happen - we only create a document when
+        we've supposedly received all data, and it would be nice if we didn't have
+        all this varying code to deal with SharedBuffers changing out from under each other.
+        Factor the code to create a CGPDFDocumentRef out into createPDFDocument, so we can
+        replace it with a different implementation that creates a PDFDocument.
+
+        (WebCore::PDFDocumentImage::setCurrentPage):
+        Make all page-number-related things unsigned, since they are in CG and PDFKit,
+        and add m_hasPage to denote whether we've acquired a valid page yet.
+        Factor code to retrieve the PDF box bounds into computeBoundsForCurrentPage.
+        Remove setCurrentPage itself, as we never use a page other than the first page;
+        we will call computeBoundsForCurrentPage and set hasPage in dataChanged, now.
+
+        (WebCore::PDFDocumentImage::draw):
+        Fix a weird comment.
+        Factor code that actually draws the PDF out into drawPDFPage.
+
+        The rest of the functions in this file are only built for USE(CG) && !PLATFORM(MAC):
+
+        (WebCore::PDFDocumentImage::createPDFDocument):
+        Factored out of dataChanged(); I only kept the !PLATFORM(MAC) branch.
+
+        (WebCore::PDFDocumentImage::computeBoundsForCurrentPage):
+        Factored out of setCurrentPage().
+        Use deg2rad since we have it.
+
+        (WebCore::PDFDocumentImage::pageCount):
+        (WebCore::PDFDocumentImage::drawPDFPage):
+        Factored out of draw().
+        Reduced an unnecessary transform (we were effectively doing mediaBox.origin - cropBox.origin - mediaBox.origin).
+
+        * platform/graphics/cg/PDFDocumentImage.h:
+        Unindent all the things, as we don't indent the first level inside a namespace scope.
+        Forward-declare PDFDocument.
+        Make m_currentPage unsigned as it should be.
+        Add m_hasPage.
+        Make m_document a PDFDocument on PLATFORM(MAC) and a CGPDFDocumentRef on other platforms.
+
+        * platform/graphics/mac/PDFDocumentImageMac.mm: Added.
+        Soft-link in PDFKit and specifically the PDFDocument class.
+
+        (WebCore::PDFDocumentImage::createPDFDocument):
+        Create our PDFDocument from the SharedBuffer's NSData directly. This shouldn't be a problem
+        (with respect to the SharedBuffer's data being appended to in secret), because we've waited
+        for the document to finish loading before getting here.
+
+        (WebCore::PDFDocumentImage::computeBoundsForCurrentPage):
+        Ask PDFKit for the page's media and crop boxes; it automatically performs the correct fallback.
+        Ask PDFKit for the page's rotation.
+
+        (WebCore::PDFDocumentImage::pageCount):
+        Ask PDFKit for the page count.
+
+        (WebCore::PDFDocumentImage::drawPDFPage):
+        Paint the current page of the PDF. Note that we do not apply the rotation here
+        via applyRotationForPainting because PDFKit will do it itself.
+
+        * platform/mac/SoftLinking.h:
+        I couldn't find any clients of SOFT_LINK_FRAMEWORK_IN_CORESERVICES_UMBRELLA,
+        so I made it the more generic SOFT_LINK_FRAMEWORK_IN_UMBRELLA, taking the name
+        of the umbrella framework and the subframework, so I could use it to soft link
+        Quartz.framework's PDFKit.framework.
+
+2013-09-04  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed Windows build fix.
+
+        * WebCore.vcxproj/WebCoreCommon.props:
+
+2013-09-04  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        FloatingObjects should manage cleaning it's line box tree pointers itself
+        https://bugs.webkit.org/show_bug.cgi?id=120692
+
+        Reviewed by David Hyatt.
+
+        This is another step in properly encapsulating FloatingObjects.
+        Instead of having RenderBlock walk and clear the line box tree
+        pointers, create a method for the behavior, and have RenderBlock call
+        that.
+
+        In addtion, add a proper destructor to FloatingObjects, so that
+        RenderBlock does not have to explicitly delete the set in
+        FloatingObjects.
+
+        And as a bonus, fix the ordering of an if to avoid the expensive
+        descendantChild check.
+
+        This is a port of a Blink patch by Eric Seidel.
+
+        No new tests, no behavior change.
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::~RenderBlock):
+        (WebCore::RenderBlock::deleteLineBoxTree):
+        (WebCore::RenderBlock::repaintOverhangingFloats):
+        (WebCore::RenderBlock::FloatingObjects::~FloatingObjects):
+        (WebCore::RenderBlock::FloatingObjects::clearLineBoxTreePointers):
+        (WebCore::RenderBlock::FloatingObjects::clear):
+        * rendering/RenderBlock.h:
+
+2013-09-04  Tim Horton  <timothy_horton@apple.com>
+
+        Rename customCssText -> customCSSText to match WebKit style
+        https://bugs.webkit.org/show_bug.cgi?id=120694
+
+        Reviewed by Simon Fraser.
+
+        No new tests, just a rename.
+
+        * WebCore.order:
+        * css/CSSAspectRatioValue.cpp:
+        (WebCore::CSSAspectRatioValue::customCSSText):
+        * css/CSSAspectRatioValue.h:
+        * css/CSSBorderImageSliceValue.cpp:
+        (WebCore::CSSBorderImageSliceValue::customCSSText):
+        * css/CSSBorderImageSliceValue.h:
+        * css/CSSCalculationValue.cpp:
+        (WebCore::CSSCalcValue::customCSSText):
+        (WebCore::CSSCalcPrimitiveValue::customCSSText):
+        (WebCore::CSSCalcBinaryOperation::customCSSText):
+        * css/CSSCalculationValue.h:
+        * css/CSSCanvasValue.cpp:
+        (WebCore::CSSCanvasValue::customCSSText):
+        * css/CSSCanvasValue.h:
+        * css/CSSCrossfadeValue.cpp:
+        (WebCore::CSSCrossfadeValue::customCSSText):
+        * css/CSSCrossfadeValue.h:
+        * css/CSSCursorImageValue.cpp:
+        (WebCore::CSSCursorImageValue::customCSSText):
+        * css/CSSCursorImageValue.h:
+        * css/CSSFilterImageValue.cpp:
+        (WebCore::CSSFilterImageValue::customCSSText):
+        * css/CSSFilterImageValue.h:
+        * css/CSSFontFaceSrcValue.cpp:
+        (WebCore::CSSFontFaceSrcValue::customCSSText):
+        * css/CSSFontFaceSrcValue.h:
+        * css/CSSFunctionValue.cpp:
+        (WebCore::CSSFunctionValue::customCSSText):
+        * css/CSSFunctionValue.h:
+        * css/CSSGradientValue.cpp:
+        (WebCore::CSSLinearGradientValue::customCSSText):
+        (WebCore::CSSRadialGradientValue::customCSSText):
+        * css/CSSGradientValue.h:
+        * css/CSSImageSetValue.cpp:
+        (WebCore::CSSImageSetValue::customCSSText):
+        * css/CSSImageSetValue.h:
+        * css/CSSImageValue.cpp:
+        (WebCore::CSSImageValue::customCSSText):
+        * css/CSSImageValue.h:
+        * css/CSSInheritedValue.cpp:
+        (WebCore::CSSInheritedValue::customCSSText):
+        * css/CSSInheritedValue.h:
+        * css/CSSInitialValue.cpp:
+        (WebCore::CSSInitialValue::customCSSText):
+        * css/CSSInitialValue.h:
+        * css/CSSLineBoxContainValue.cpp:
+        (WebCore::CSSLineBoxContainValue::customCSSText):
+        * css/CSSLineBoxContainValue.h:
+        * css/CSSPrimitiveValue.cpp:
+        (WebCore::CSSPrimitiveValue::customCSSText):
+        (WebCore::CSSPrimitiveValue::customSerializeResolvingVariables):
+        * css/CSSPrimitiveValue.h:
+        * css/CSSReflectValue.cpp:
+        (WebCore::CSSReflectValue::customCSSText):
+        * css/CSSReflectValue.h:
+        * css/CSSTimingFunctionValue.cpp:
+        (WebCore::CSSLinearTimingFunctionValue::customCSSText):
+        (WebCore::CSSCubicBezierTimingFunctionValue::customCSSText):
+        (WebCore::CSSStepsTimingFunctionValue::customCSSText):
+        * css/CSSTimingFunctionValue.h:
+        * css/CSSUnicodeRangeValue.cpp:
+        (WebCore::CSSUnicodeRangeValue::customCSSText):
+        * css/CSSUnicodeRangeValue.h:
+        * css/CSSValue.cpp:
+        (WebCore::CSSValue::cssText):
+        * css/CSSValueList.cpp:
+        (WebCore::CSSValueList::customCSSText):
+        * css/CSSValueList.h:
+        * css/FontFeatureValue.cpp:
+        (WebCore::FontFeatureValue::customCSSText):
+        * css/FontFeatureValue.h:
+        * css/FontValue.cpp:
+        (WebCore::FontValue::customCSSText):
+        * css/FontValue.h:
+        * css/ShadowValue.cpp:
+        (WebCore::ShadowValue::customCSSText):
+        * css/ShadowValue.h:
+        * css/WebKitCSSArrayFunctionValue.cpp:
+        (WebCore::WebKitCSSArrayFunctionValue::customCSSText):
+        * css/WebKitCSSArrayFunctionValue.h:
+        * css/WebKitCSSFilterValue.cpp:
+        (WebCore::WebKitCSSFilterValue::customCSSText):
+        * css/WebKitCSSFilterValue.h:
+        * css/WebKitCSSMatFunctionValue.cpp:
+        (WebCore::WebKitCSSMatFunctionValue::customCSSText):
+        * css/WebKitCSSMatFunctionValue.h:
+        * css/WebKitCSSMixFunctionValue.cpp:
+        (WebCore::WebKitCSSMixFunctionValue::customCSSText):
+        * css/WebKitCSSMixFunctionValue.h:
+        * css/WebKitCSSSVGDocumentValue.cpp:
+        (WebCore::WebKitCSSSVGDocumentValue::customCSSText):
+        * css/WebKitCSSSVGDocumentValue.h:
+        * css/WebKitCSSShaderValue.cpp:
+        (WebCore::WebKitCSSShaderValue::customCSSText):
+        * css/WebKitCSSShaderValue.h:
+        * css/WebKitCSSTransformValue.cpp:
+        (WebCore::WebKitCSSTransformValue::customCSSText):
+        * css/WebKitCSSTransformValue.h:
+        * svg/SVGColor.cpp:
+        (WebCore::SVGColor::customCSSText):
+        * svg/SVGColor.h:
+        * svg/SVGPaint.cpp:
+        (WebCore::SVGPaint::customCSSText):
+        * svg/SVGPaint.h:
+
+2013-09-04  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: aria-valuetext property not exposing AXValueDescription
+        https://bugs.webkit.org/show_bug.cgi?id=120375
+
+        Reviewed by Darin Adler.
+
+        Expose value based attributes for incrementor roles (which are called spinbuttons by ARIA).
+
+        Test: platform/mac/accessibility/spinbutton-valuedescription.html
+
+        * accessibility/mac/WebAccessibilityObjectWrapperMac.mm:
+        (-[WebAccessibilityObjectWrapper accessibilityAttributeNames]):
+
+2013-09-04  Javier Fernandez  <jfernandez@igalia.com>
+
+        <https://webkit.org/b/119622> [CSSRegions] Not possible to clear the selection when mixing content from different FlowThreads
+
+        Reviewed by David Hyatt.
+
+        When using CSS Regions is usual that the RenderTree doesn't match
+        the DOM Tree in terms of relative position of the nodes. Besides,
+        usually the content of a certain node is split and spread across
+        multiple blocks, rendered in different positions.
+
+        Regarding the Selection, this problem is even more important; the
+        selection direction changes when crossing the FlowThread
+        boundaries. This weird behavior is also present in other layouts
+        using non-regular positioning mechanisms, like absolute,
+        static. However, for those layouts the RenderTree preserves the
+        order of the nodes, unlike the CSS Regions layout model.
+
+        Because of how the RenderTree is generated with CSS Regions, the
+        RenderView::setSelection algorithm is not able to repaint some of
+        the rectangles defined during the selection process. In order to
+        face this issue, the proposed fix determines whether it should
+        backwards traversing the RenderTree, from the "stop" node to the
+        RenderView node.
+
+        Test: fast/regions/selecting-text-through-different-region-flows-2.html
+
+        * rendering/RenderView.cpp:
+        (WebCore::getNextOrPrevRenderObjectBasedOnDirection): Added.
+        (WebCore::RenderView::setSelection):
+
+2013-09-04  Eric Carlson  <eric.carlson@apple.com>
+
+        Get MEDIA_STREAM compiling on OSX
+        https://bugs.webkit.org/show_bug.cgi?id=120650
+
+        Reviewed by Darin Adler.
+
+        No new tests, the code changed doesn't run on OSX yet.
+
+        * DerivedSources.make: Add MediaStream idl files.
+
+        * Modules/mediastream/LocalMediaStream.h: Mark class as FINAL.
+
+        * Modules/mediastream/MediaConstraintsImpl.cpp:
+        (WebCore::MediaConstraintsImpl::getOptionalConstraints): append -> appendRange so we don't
+            need a MediaConstraint copy constructor.
+
+        * Modules/mediastream/RTCDataChannel.cpp:
+        (WebCore::RTCDataChannel::send): Remove an unused parameter name.
+        * Modules/mediastream/RTCDataChannel.h: ArrayBuffer and ArrayBufferView are in the JSC namespace.
+
+        * Modules/mediastream/RTCPeerConnection.cpp:
+        (WebCore::RTCPeerConnection::RTCPeerConnection): loader() doesn't return a pointer.
+        (WebCore::RTCPeerConnection::localDescription): Set the ExceptionCode on error.
+        (WebCore::RTCPeerConnection::remoteDescription): Ditto.
+
+        * Modules/mediastream/RTCSessionDescription.cpp:
+        (WebCore::RTCSessionDescription::setSdp): Remove the unused ExceptionCode parameter.
+        * Modules/mediastream/RTCSessionDescription.h: Ditto.
+        * Modules/mediastream/RTCSessionDescription.idl: Ditto.
+
+        * Modules/mediastream/RTCStatsResponse.cpp:
+        (WebCore::RTCStatsResponse::canGetItemsForName): Add so JSRTCStatsResponse::canGetItemsForName
+            doesn't cause ref count churn.
+        * Modules/mediastream/RTCStatsResponse.h: Mark class as FINAL. Declare canGetItemsForName.
+
+        * WebCore.xcodeproj/project.pbxproj: Add new files.
+
+        * bindings/js/JSRTCStatsResponseCustom.cpp:
+        (WebCore::JSRTCStatsResponse::canGetItemsForName): Use canGetItemsForName instead of namedItem.
+            Use propertyNameToAtomicString instead of propertyNameToString 
+        (WebCore::JSRTCStatsResponse::nameGetter): Use propertyNameToAtomicString instead of 
+            propertyNameToString because namedItem takes an AtomicString.
+
+        * platform/mediastream/mac: Added.
+        * platform/mediastream/mac/MediaStreamCenterMac.cpp: Added.
+        * platform/mediastream/mac/MediaStreamCenterMac.h: Added.
+
+2013-09-04  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Fix the build following <http://trac.webkit.org/changeset/154903>
+        (https://bugs.webkit.org/show_bug.cgi?id=120540)
+
+        * style/StyleResolveTree.cpp:
+        (WebCore::Style::resolveTree): Use address operator and dot-notation when
+        passing Element to CheckForVisibilityChangeOnRecalcStyle and calling
+        Element::renderStyle(), respectively.
+
+2013-09-04  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        Move logical dimension getters/setters to FloatingObject from RenderBlock
+        https://bugs.webkit.org/show_bug.cgi?id=120686
+
+        Reviewed by David Hyatt.
+
+        This is the first step in decoupling FloatingObject, FloatingObjects,
+        et al from RenderBlock. It is not ideal that the methods take a bool;
+        however, passing down the actual writing mode would require
+        refactoring the way that RenderBlock stores this information, which is
+        a task for the future.
+
+        No new tests, no behavior change.
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::repaintOverhangingFloats): Use new methods.
+        (WebCore::RenderBlock::insertFloatingObject):  Ditto.
+        (WebCore::RenderBlock::removeFloatingObject): Ditto.
+        (WebCore::RenderBlock::removeFloatingObjectsBelow): Ditto.
+        (WebCore::RenderBlock::computeLogicalLocationForFloat): Ditto.
+        (WebCore::RenderBlock::positionNewFloats): Ditto.
+        (WebCore::::updateOffsetIfNeeded): Ditto.
+        (WebCore::::collectIfNeeded): Ditto.
+        (WebCore::::getHeightRemaining): Ditto.
+        (WebCore::RenderBlock::logicalLeftFloatOffsetForLine): Ditto.
+        (WebCore::RenderBlock::logicalRightFloatOffsetForLine): Ditto.
+        (WebCore::RenderBlock::nextFloatLogicalBottomBelow): Ditto.
+        (WebCore::RenderBlock::lowestFloatLogicalBottom): Ditto.
+        (WebCore::RenderBlock::clearFloats): Ditto.
+        (WebCore::RenderBlock::addOverhangingFloats): Ditto.
+        (WebCore::RenderBlock::hasOverhangingFloat): Ditto.
+        (WebCore::RenderBlock::addIntrudingFloats): Ditto.
+        * rendering/RenderBlock.h:
+        (WebCore::RenderBlock::FloatingObject::logicalTop): Moved from RenderBlock::logicalTopForFloat
+        (WebCore::RenderBlock::FloatingObject::logicalBottom): Moved from RenderBlock::logicalBottomForFloat
+        (WebCore::RenderBlock::FloatingObject::logicalLeft): Moved from RenderBlock::logicalLeftForFloat
+        (WebCore::RenderBlock::FloatingObject::logicalRight): Moved from RenderBlock::logicalRightForFloat
+        (WebCore::RenderBlock::FloatingObject::logicalWidth): Moved from RenderBlock::logicalWidthForFloat
+        (WebCore::RenderBlock::FloatingObject::pixelSnappedLogicalTop): Moved from RenderBlock::pixelSnappedLogicalTopForFloat
+        (WebCore::RenderBlock::FloatingObject::pixelSnappedLogicalBottom): Moved from RenderBlock::pixelSnappedLogicalBottomForFloat
+        (WebCore::RenderBlock::FloatingObject::pixelSnappedLogicalLeft): Moved from RenderBlock::pixelSnappedLogicalLeftForFloat
+        (WebCore::RenderBlock::FloatingObject::pixelSnappedLogicalRight): Moved from RenderBlock::pixelSnappedLogicalRightForFloat
+        (WebCore::RenderBlock::FloatingObject::setLogicalTop): Moved from RenderBlock::setLogicalTopForFloat
+        (WebCore::RenderBlock::FloatingObject::setLogicalLeft): Moved from RenderBlock::setLogicalLeftForFloat
+        (WebCore::RenderBlock::FloatingObject::setLogicalHeight): Moved from RenderBlock::setLogicalHeightForFloat
+        (WebCore::RenderBlock::FloatingObject::setLogicalWidth): Moved from RenderBlock::setLogicalWidthForFloat
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::LineWidth::shrinkAvailableWidthForNewFloatIfNeeded): Use new methods.
+        (WebCore::RenderBlock::checkPaginationAndFloatsAtEndLine): Ditto.
+        (WebCore::RenderBlock::LineBreaker::nextSegmentBreak): Ditto.
+        (WebCore::RenderBlock::positionNewFloatOnLine): Ditto.
+
+2013-09-04  Andre Moreira Magalhaes   <andre.magalhaes@collabora.co.uk>
+
+        REGRESSION(r154977): Do not urlencode soup message on ResourceRequest::toSoupMessage()
+        https://bugs.webkit.org/show_bug.cgi?id=120681
+
+        Reviewed by Martin Robinson.
+
+        Do not call soup_message_set_uri with soupURI() (url encoded uri) on
+        ResourceRequest::toSoupMessage().
+
+        * platform/network/soup/ResourceRequest.h:
+        * platform/network/soup/ResourceRequestSoup.cpp:
+        (WebCore::ResourceRequest::updateSoupMessageMembers):
+        (WebCore::ResourceRequest::updateSoupMessage):
+        (WebCore::ResourceRequest::toSoupMessage):
+        Split common code from updateSoupMessage/toSoupMessage into updateSoupMessageMembers.
+
+2013-09-04  Danilo Cesar Lemes de Paula  <danilo.cesar@collabora.co.uk>
+
+        [GTK] add support for subtitles on webkit2GTK
+        https://bugs.webkit.org/show_bug.cgi?id=117008
+
+        By activating subtitles support on webkit2GTK, the video player
+        recognizes and use text <tracks> inside <video> elements.
+
+        Reviewed by Martin Robinson.
+
+        Layout tests (track-menu) should cover this change.
+
+        * css/mediaControlsGtk.css:
+        (audio::-webkit-media-controls-toggle-closed-captions-button, video::-webkit-media-controls-toggle-closed-captions-button):
+        (video::-webkit-media-controls-closed-captions-container):
+        (video::-webkit-media-controls-closed-captions-track-list):
+        (video::-webkit-media-controls-closed-captions-track-list h3):
+        (video::-webkit-media-controls-closed-captions-track-list ul):
+        (video::-webkit-media-controls-closed-captions-track-list li):
+        (video::-webkit-media-controls-closed-captions-track-list li.selected):
+        * html/shadow/MediaControlElements.cpp:
+        (WebCore::MediaControlToggleClosedCaptionsButtonElement::MediaControlToggleClosedCaptionsButtonElement):
+        (WebCore::MediaControlToggleClosedCaptionsButtonElement::defaultEventHandler):
+        * html/shadow/MediaControlElements.h:
+        * html/shadow/MediaControlsGtk.cpp:
+        (WebCore::MediaControlsGtkEventListener::create):
+        (WebCore::MediaControlsGtkEventListener::cast):
+        (WebCore::MediaControlsGtkEventListener::MediaControlsGtkEventListener):
+        (WebCore::MediaControlsGtk::MediaControlsGtk):
+        (WebCore::MediaControlsGtk::initializeControls):
+        (WebCore::MediaControlsGtk::setMediaController):
+        (WebCore::MediaControlsGtk::reset):
+        (WebCore::MediaControlsGtk::makeTransparent):
+        (WebCore::MediaControlsGtk::toggleClosedCaptionTrackList):
+        (WebCore::MediaControlsGtk::showClosedCaptionTrackList):
+        (WebCore::MediaControlsGtk::hideClosedCaptionTrackList):
+        (WebCore::MediaControlsGtk::handleClickEvent):
+        (WebCore::MediaControlsGtk::eventListener):
+        (WebCore::MediaControlsGtkEventListener::handleEvent):
+        (WebCore::MediaControlsGtkEventListener::operator==):
+        * html/shadow/MediaControlsGtk.h:
+        * page/CaptionUserPreferences.cpp:
+        (WebCore::trackDisplayName):
+        * platform/gtk/LocalizedStringsGtk.cpp:
+        (WebCore::textTrackSubtitlesText):
+        (WebCore::textTrackOffMenuItemText):
+        (WebCore::textTrackNoLabelText):
+        * platform/gtk/RenderThemeGtk.h:
+
+2013-09-03  Darin Adler  <darin@apple.com>
+
+        Use OwnPtr in the RenderLayerFilterInfo map
+        https://bugs.webkit.org/show_bug.cgi?id=120619
+
+        Reviewed by Anders Carlsson.
+
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::~RenderLayer): Use FilterInfo::remove directly instead of
+        going through removeFilterInfoIfNeeded function.
+        (WebCore::RenderLayer::paintsWithFilters): Rearranged #if a little bit and tweaked
+        the comment.
+        (WebCore::RenderLayer::requiresFullLayerImageForFilters): Use && instead of ternary.
+        (WebCore::RenderLayer::filterRenderer): Use FilterInfo::getIfExists directly instead
+        of going through filterInfo function.
+        (WebCore::RenderLayer::setFilterBackendNeedsRepaintingInRect): Use FilterInfo::get
+        directly instead of going through filterInfo function. Also use references instead
+        of pointers.
+        (WebCore::shouldDoSoftwarePaint): Marked this simple function, used only once, as
+        inline.
+        (WebCore::paintForFixedRootBackground): Ditto.
+        (WebCore::RenderLayer::setupFilters): Use FilterInfo::getIfExists directly instead
+        of going through filterInfo function. Also get rendererer out of filterInfo instead
+        of calling filterRenderer.
+        (WebCore::RenderLayer::updateOrRemoveFilterClients): Use FilterInfo::get and
+        FilterInfo::getIfExists directly instead of using ensureFilterInfo and
+        filterInfo functions.
+        (WebCore::RenderLayer::updateOrRemoveFilterEffectRenderer): Use FilterInfo::getIfExists
+        and FilterInfo::get directly instead of using filterInfo function.
+
+        * rendering/RenderLayer.h: Removed the ifdefs around forward declarations; overkill,
+        since there is no harm in a few extras. Marked the RenderLayer class FINAL. Removed the
+        no-longer-needed filterInfo, ensureFilterInfo, removeFilterInfoIfNeeded, hasFilterInfo,
+        and setHasFilterInfo functions. Mark everything private instead of protected since
+        there are no classes derived from this one. Made FilterInfo an embedded class so it
+        can get at the m_hasFilterInfo data member directly and has a shorter name.
+
+        * rendering/RenderLayerFilterInfo.cpp: Removed the ifs around includes, which were
+        overkill, since there is little harm including a few extra files.
+        (WebCore::RenderLayer::FilterInfo::map): Added. Returns the single global map.
+        (WebCore::RenderLayer::FilterInfo::getIfExists): Renamed from filterInfoForRenderLayer.
+        Also changed to take a reference instead of a pointer, and to use the new filterMap.
+        (WebCore::RenderLayer::FilterInfo::get): Renamed from createFilterInfoForRenderLayerIfNeeded.
+        Also changed to take a reference instead of a pointer, to use the new filterMap, and
+        to use add to avoid hashing twice when adding a new layer to the map.
+        (WebCore::RenderLayer::FilterInfo::remove): Renamed from removeFilterInfoForRenderLayer.
+        Also changed to take a reference instead of a pointer and eliminated the explicit
+        delete since we use OwnPtr now.
+        (WebCore::RenderLayer::FilterInfo::FilterInfo): Take a reference instead of a pointer.
+        (WebCore::RenderLayer::FilterInfo::~FilterInfo): Updated class name.
+        (WebCore::RenderLayer::FilterInfo::setRenderer): Ditto.
+        (WebCore::RenderLayer::FilterInfo::notifyFinished): Update since m_layer is a reference.
+        (WebCore::RenderLayer::FilterInfo::updateReferenceFilterClients): Update to iterate in a
+        slightly more idiomatic and efficient way. Also update since m_layer is a reference.
+        (WebCore::RenderLayer::FilterInfo::removeReferenceFilterClients): Ditto.
+        (WebCore::RenderLayer::FilterInfo::notifyCustomFilterProgramLoaded): Ditto.
+        (WebCore::RenderLayer::FilterInfo::updateCustomFilterClients): Ditto. Also switched to
+        a raw pointer for CustomFilterProgram*.
+        (WebCore::RenderLayer::FilterInfo::removeCustomFilterClients): Ditto.
+
+        * rendering/RenderLayerFilterInfo.h: Removed the ifs around includes, which were
+        overkill, since there is little harm including a few extra files. Changed to be a
+        member class of RenderLayer, marked the class FINAL, and changed the style of the
+        conditionals around the base classes. Renamed functions. Made overrides private and
+        used OVERRIDE. Changed functions to take references instead of pointers. Did some
+        small style cleanup. Made deleteOwnedPtr a friend so we can keep the destructor private.
+        Moved the typedef of RenderLayerFilterInfoMap into the class and named it just Map.
+        Got rid of s_filterMap and instead added a function named just map().
+
+2013-09-04  Andreas Kling  <akling@apple.com>
+
+        Simplify subtree relayout scheduling a bit.
+        <https://webkit.org/b/120684>
+
+        Reviewed by Antti Koivisto.
+
+        Subtree relayout scheduling should only happen while there's a render tree up,
+        the code can freely assume that there's a RenderView present.
+
+        Added an assertion that the render tree isn't being torn down. This should catch
+        renderers doing unnecessary work during document detach and could be a source
+        of "performance freebies."
+
+        I also un-nested scheduleRelayoutOfSubtree() with early-return style to make
+        the code more human-readable.
+
+        * page/FrameView.h:
+        * page/FrameView.cpp:
+        (WebCore::FrameView::scheduleRelayoutOfSubtree):
+        * rendering/RenderObject.cpp:
+        (WebCore::RenderObject::scheduleRelayout):
+
+2013-09-04  Jae Hyun Park  <jae.park@company100.net>
+
+        [Coordinated Graphics] Remove unused method in CoordinatedGraphicsLayer
+        https://bugs.webkit.org/show_bug.cgi?id=120664
+
+        Reviewed by Darin Adler.
+
+        CoordinatedGraphicsLayer::hasPendingVisibleChanges is not used as of
+        r148952.
+
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsLayer.cpp:
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsLayer.h:
+
+2013-09-04  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Shapes] Revise the ShapeInterval set operations' implementation
+        https://bugs.webkit.org/show_bug.cgi?id=120349
+
+        Reviewed by Alexandru Chiculita.
+
+        Revised the ShapeIntervals unite, intersect, and subtract operations to
+        improve efficiency and clarity.
+
+        No new tests are required, this is just an internal refactoring.
+
+        * rendering/shapes/PolygonShape.cpp:
+        (WebCore::computeOverlappingEdgeXProjections): Removed call to ShapeInterval<T>sortVector(), since calling std::sort directly is simpler.
+        * rendering/shapes/ShapeInterval.h:
+        (WebCore::ShapeInterval::contains): True if the interval parameter is within this interval.
+        (WebCore::ShapeInterval::intersect): Substantially revised version of the original method.
+        (WebCore::ShapeInterval::uniteVectors): Ditto.
+        (WebCore::ShapeInterval::intersectVectors): Ditto.
+        (WebCore::ShapeInterval::subtractVectors): Ditto.
+
+2013-09-04  Krzysztof Czech  <k.czech@samsung.com>
+
+        [ATK] Adds an accessibility support to access a value of the color control element
+        https://bugs.webkit.org/show_bug.cgi?id=114354
+
+        Reviewed by Mario Sanchez Prada.
+
+        Implements a possibility of retrieving a value of the color control element.
+
+        * accessibility/atk/WebKitAccessibleInterfaceText.cpp:
+        (webkitAccessibleTextGetText):
+        * accessibility/atk/WebKitAccessibleWrapperAtk.cpp:
+        (getInterfaceMaskFromObject):
+
+2013-09-04  Andreas Kling  <akling@apple.com>
+
+        Use Vector<Ref<T>> in three random WebCore loops.
+        <https://webkit.org/b/120661>
+
+        Reviewed by Darin Adler.
+
+        Clean up three little loops to use Refs to avoid null checking known-valid objects.
+        Also apply auto, reserveInitialCapacity and uncheckedAppend as appropriate.
+
+        * page/DOMWindow.cpp:
+        (WebCore::DOMWindow::dispatchAllPendingBeforeUnloadEvents):
+        (WebCore::DOMWindow::dispatchAllPendingUnloadEvents):
+        * platform/graphics/FontCache.cpp:
+        (WebCore::FontCache::invalidate):
+
+2013-09-04  Claudio Saavedra  <csaavedra@igalia.com>
+
+        [GTK] Color of input button's text broken with recent gnome-themes-standard
+        https://bugs.webkit.org/show_bug.cgi?id=120581
+
+        Reviewed by Carlos Garcia Campos.
+
+        * platform/gtk/RenderThemeGtk3.cpp:
+        (WebCore::getStyleContext): add the "text-button" class.
+        (WebCore::RenderThemeGtk::systemColor): Use the ACTIVE state flag,
+        as this is the one actually used for button labels.
+
+2013-09-04  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Add support for the Wayland build target
+        https://bugs.webkit.org/show_bug.cgi?id=120627
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * GNUmakefile.list.am: Reorder the Source/WebCore/plugins/np* source files.
+        The X11-specific source files should only be included if the X11 target is being built. PluginPackageNone and
+        PluginViewNone source files must be included in non-X11-target builds. Other source files that were previously
+        guarded with the TARGET_X11 conditional should also be built for the Wayland target, so the new TARGET_X11_OR_WAYLAND
+        conditional is used. If neither of those two targets is being built we fall back to adding source files to the build
+        as necessary by the actual build target.
+        * platform/gtk/GtkVersioning.c:
+        (gdk_screen_get_monitor_workarea): Additionally guard bits of code that depend on the GDK_WINDOWING_X11 macro being
+        defined - these should only be built when building the X11 target, checked for with PLATFORM(X11).
+
+2013-09-04  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [GTK] Reimplement atk_text_get_text_*_offset for SENTENCE boundaries
+        https://bugs.webkit.org/show_bug.cgi?id=114873
+
+        Reviewed by Chris Fleizach.
+
+        Re-implement these functions without using GailTextUtil nor Pango.
+
+        * accessibility/atk/WebKitAccessibleInterfaceText.cpp:
+        (webkitAccessibleTextWordForBoundary): Renamed from webkitAccessibleTextGetWordForBoundary,
+        to keep it consistent with names for new functions.
+        (isSentenceBoundary): Helper function to know when we are either
+        at the beginning or the end of a sentence.
+        (isWhiteSpaceBetweenSentences): It returns true if we are in the
+        middle of a white space between sentences. Useful for implementing
+        the SENTENCE_END boundary type.
+        (sentenceAtPositionForAtkBoundary): New helper function to find the
+        sentence at a given position considering values of AtkTextBoundary.
+        (webkitAccessibleTextSentenceForBoundary): New function,
+        implementing atk_text_get_text_*_offset for SENTENCE.
+        (webkitAccessibleTextGetTextForOffset): Replace usage of Gail for
+        SENTENCE boundaries with webkitAccessibleTextSentenceForBoundary().
+
+2013-09-04  Andrei Bucur  <abucur@adobe.com>
+
+        [CSS Regions] Extend the RenderRegionRange class to include overflow information + apply the layout overflow
+        https://bugs.webkit.org/show_bug.cgi?id=116299
+
+        Reviewed by David Hyatt.
+
+        Patch for computing overflow for boxes per region and applying it for layout overflow.
+        The approach is based on adding a RenderOverflow object inside the RenderBoxRegionInfo
+        structure. The RenderOverflow object is manipulated by the RenderRegion using some utility
+        functions that receive the target box as a parameter.
+        When computing the portion of a box inside a region it is necessary to split the border
+        rect of the box between regions. This means mapping the rectangle in the flow thread
+        coordinates, making the split and then remapping the fragment in the box coordinates.
+        For now, this is not optimized and walks the render tree to compute the block offsets.
+        The function getRegionRangeForBox is used to determine in what regions a box should
+        be rendered into. The range is computed at layout time and it depends on the height of
+        the box, if its unsplittable for fragmentation etc.
+        The patch also propagates the layout overflow to the regions. This enables to correctly
+        display scrollbars when chaining varying size regions (currently the horizontal overflow
+        is as wide as the widest region for all the regions). Unsplittable boxes will also generate
+        layout overflow in the start region so they can be scrolled and fully reachable. This
+        functionality depends on fixing the visual overflow and adapting the layout to take into
+        account the unsplittable box. Besides this, the relative positioning and transforms are applied
+        at a fragment level. This is in line with the CSS3 Break specification:
+        http://dev.w3.org/csswg/css-break/#transforms
+
+        Tests: fast/regions/overflow-scrollable-rel-pos-fragment.html
+               fast/regions/overflow-scrollable-rotated-fragment.html
+               fast/regions/overflow-scrollable-unsplittable-fragment.html
+               fast/regions/overflow-scrollable-varying-width-1.html
+               fast/regions/overflow-scrollable-varying-width-2.html
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::computeOverflow):
+        (WebCore::RenderBlock::clearLayoutOverflow):
+        (WebCore::RenderBlock::addVisualOverflowFromTheme):
+        (WebCore::RenderBlock::relayoutForPagination):
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::RenderBlock::addOverflowFromInlineChildren):
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::clientBoxRectInRegion):
+        (WebCore::RenderBox::addVisualEffectOverflow):
+        (WebCore::RenderBox::applyVisualEffectOverflow):
+        (WebCore::RenderBox::addOverflowFromChild):
+        (WebCore::RenderBox::clearOverflow):
+        * rendering/RenderBox.h:
+        * rendering/RenderBoxRegionInfo.h:
+        (WebCore::RenderBoxRegionInfo::createOverflow):
+        (WebCore::RenderBoxRegionInfo::overflow):
+        (WebCore::RenderBoxRegionInfo::clearOverflow):
+        * rendering/RenderEmbeddedObject.cpp:
+        (WebCore::RenderEmbeddedObject::layout):
+        * rendering/RenderFlowThread.cpp:
+        (WebCore::RenderFlowThread::updateLogicalWidth):
+        (WebCore::RenderFlowThread::markRegionsForOverflowLayoutIfNeeded):
+        (WebCore::RenderFlowThread::mapFromLocalToFlowThread):
+        (WebCore::RenderFlowThread::mapFromFlowThreadToLocal):
+        (WebCore::RenderFlowThread::addRegionsVisualEffectOverflow):
+        (WebCore::RenderFlowThread::addRegionsVisualOverflowFromTheme):
+        (WebCore::RenderFlowThread::addRegionsOverflowFromChild):
+        (WebCore::RenderFlowThread::addRegionsLayoutOverflow):
+        (WebCore::RenderFlowThread::clearRegionsOverflow):
+        * rendering/RenderFlowThread.h:
+        * rendering/RenderIFrame.cpp:
+        (WebCore::RenderIFrame::layout):
+        * rendering/RenderRegion.cpp:
+        (WebCore::RenderRegion::computeOverflowFromFlowThread):
+        (WebCore::RenderRegion::setRenderBoxRegionInfo):
+        (WebCore::RenderRegion::ensureOverflowForBox):
+        (WebCore::RenderRegion::rectFlowPortionForBox):
+        (WebCore::RenderRegion::addLayoutOverflowForBox):
+        (WebCore::RenderRegion::addVisualOverflowForBox):
+        (WebCore::RenderRegion::layoutOverflowRectForBox):
+        (WebCore::RenderRegion::visualOverflowRectForBox):
+        (WebCore::RenderRegion::layoutOverflowRectForBoxForPropagation):
+        (WebCore::RenderRegion::visualOverflowRectForBoxForPropagation):
+        * rendering/RenderRegion.h:
+        * rendering/RenderReplaced.cpp:
+        (WebCore::RenderReplaced::layout):
+        * rendering/RenderTableSection.cpp:
+        (WebCore::RenderTableSection::computeOverflowFromCells):
+
+2013-09-04  Andre Moreira Magalhaes   <andre.magalhaes@collabora.co.uk>
+
+        [GStreamer] cannot play live streams
+        https://bugs.webkit.org/show_bug.cgi?id=116831
+
+        Reviewed by Philippe Normand.
+
+        Fix issues with rtsp streams embedded on <video> not loading.
+
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamer.cpp:
+        Do not reset pipeline to READY state on STATE_CHANGE_ASYNC when entering PAUSED state for
+        live streams, otherwise we enter an endless loop of READY->PAUSED->READY->PAUSED when
+        starting playback.
+
+2013-09-03  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: REGRESSION: @title is exposed as AXDescription when label label from contents already exists.
+        https://bugs.webkit.org/show_bug.cgi?id=120550
+
+        Reviewed by Mario Sanchez Prada.
+
+        Resolve a FIXME from the accessible name computation refactoring so that alternative text for links do not
+        show up in the title field and do not duplicate naming when a title tag is used.
+
+        Effectively, this means that links no longer use AXTitle for alternative text. They use AXDescription
+        like all other elements.
+
+        Test: platform/mac/accessibility/link-with-title.html
+
+        * accessibility/mac/WebAccessibilityObjectWrapperMac.mm:
+        (-[WebAccessibilityObjectWrapper accessibilityTitle]):
+        (-[WebAccessibilityObjectWrapper accessibilityDescription]):
+
+2013-09-03  Darin Adler  <darin@apple.com>
+
+        Change type of Document::doctype back to a raw pointer
+        https://bugs.webkit.org/show_bug.cgi?id=120617
+
+        Reviewed by Andreas Kling.
+
+        * dom/Document.cpp:
+        (WebCore::Document::doctype): Return a raw pointer.
+        (WebCore::Document::childrenChanged): Use the raw pointer.
+        Also added a FIXME about this code that is probably in the wrong place.
+        * dom/Document.h: More of the same.
+
+        * editing/markup.cpp:
+        (WebCore::documentTypeString): Get rid of local variable entirely,
+        since null is already handled right by createMarkup, and also remove
+        the call to get since doctype is just a raw pointer.
+
+2013-09-03  Andreas Kling  <akling@apple.com>
+
+        ASSERTION FAILED: frame().view() == this closing a page with SVG or video
+        <https://webkit.org/b/120645>
+
+        Reviewed by Antti Koivisto.
+
+        Have RenderSVGResourceContainer check if the document is being destroyed before
+        triggering any repaints. This replaces the previous check for a null RenderView
+        which meant basically the same thing.
+
+        We could add more and better assertions to catch unnecessary work during tree
+        teardown, but let's do that separately.
+
+        * rendering/svg/RenderSVGResourceContainer.cpp:
+        (WebCore::RenderSVGResourceContainer::markClientForInvalidation):
+
+2013-09-03  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Fix uninitialized build warning in make_names.pl
+        https://bugs.webkit.org/show_bug.cgi?id=120658
+
+        Reviewed by Andreas Kling.
+
+        No new tests, no behavior change.
+
+        * dom/make_names.pl:
+        (printTypeChecks): Fixed a build warning since r154965.
+
+2013-09-03  Darin Adler  <darin@apple.com>
+
+        Fix backwards branch in ~Node from r154967
+        https://bugs.webkit.org/show_bug.cgi?id=120659
+
+        Reviewed by Andreas Kling.
+
+        * dom/Node.cpp:
+        (WebCore::Node::~Node): Fix backwards branch. The old code ran the code only
+        when we did not remove the item from the table. I removed a ! from this expression
+        after review; bad idea.
+
+2013-09-03  Enrica Casucci  <enrica@apple.com>
+
+        Can't select Katakana word by double-clicking.
+        <rdar://problem/14654926>
+
+        Reviewed by Alexey Proskuryakov and Ryosuke Niwa.
+
+        For some languages, like Japanese we need
+        to use more context for word breaking.
+
+        New test: editing/selection/doubleclick-japanese-text.html
+
+        * platform/text/TextBoundaries.h:
+        (WebCore::requiresContextForWordBoundary):
+
+2013-09-03  Mark Lam  <mark.lam@apple.com>
+
+        Converting StackIterator to a callback interface.
+        https://bugs.webkit.org/show_bug.cgi?id=120564.
+
+        Reviewed by Filip Pizlo.
+
+        No new tests.
+
+        * bindings/js/JSXMLHttpRequestCustom.cpp:
+        (WebCore::SendFunctor::SendFunctor):
+        (WebCore::SendFunctor::hasViableFrame):
+        (WebCore::SendFunctor::operator()):
+        (WebCore::JSXMLHttpRequest::send):
+        * bindings/js/ScriptCallStackFactory.cpp:
+        (WebCore::CreateScriptCallStackFunctor::CreateScriptCallStackFunctor):
+        (WebCore::CreateScriptCallStackFunctor::operator()):
+        (WebCore::createScriptCallStack):
+        (WebCore::CreateScriptCallStackForConsoleFunctor::CreateScriptCallStackForConsoleFunctor):
+        (WebCore::CreateScriptCallStackForConsoleFunctor::operator()):
+
+2013-09-03  Oliver Hunt  <oliver@apple.com>
+
+        Support structured clone of Map and Set
+        https://bugs.webkit.org/show_bug.cgi?id=120654
+
+        Reviewed by Simon Fraser.
+
+        Add support for cloning Map and Set.  Fairly self explanatory change.
+        Needed to add Forwarding headers for the JSMap, JSSet and MapData classes.
+
+        * ForwardingHeaders/runtime/JSMap.h: Added.
+        * ForwardingHeaders/runtime/JSSet.h: Added.
+        * ForwardingHeaders/runtime/MapData.h: Added.
+        * bindings/js/SerializedScriptValue.cpp:
+        (WebCore::CloneSerializer::isMap):
+        (WebCore::CloneSerializer::isSet):
+        (WebCore::CloneSerializer::startSet):
+        (WebCore::CloneSerializer::startMap):
+        (WebCore::CloneSerializer::serialize):
+        (WebCore::CloneDeserializer::consumeMapDataTerminationIfPossible):
+        (WebCore::CloneDeserializer::deserialize):
+
+2013-09-03  Bear Travis  <betravis@adobe.com>
+
+        [CSS Shapes] Shape's content gets extra left offset when left-border is positive on the content box
+        https://bugs.webkit.org/show_bug.cgi?id=117573
+
+        Reviewed by David Hyatt.
+
+        Nested blocks need to take into account their offset from the shape-inside container.
+        The new code calculates the offset from the shape-inside container, then applies the
+        offset to the computed segments. The line must be moved down by the offset's height,
+        and each segment must be moved left by the offset's width.
+
+        Test: fast/shapes/shape-inside/shape-inside-offset-block-children.html
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::relayoutShapeDescendantIfMoved): Relayout a block child if its
+        new logical left would cause it to rest at a new position within a shape container.
+        (WebCore::RenderBlock::logicalOffsetFromShapeAncestorContainer): Calculate the logical
+        offset form a shape inside ancestor container.
+        (WebCore::RenderBlock::layoutBlockChild): Call relayoutShapeDescendantIfMoved with the
+        new position offset.
+        * rendering/RenderBlock.h:
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::RenderBlock::updateShapeAndSegmentsForCurrentLine): Use layout offset, rather
+        than just vertical offset.
+        (WebCore::RenderBlock::updateShapeAndSegmentsForCurrentLineInFlowThread): Ditto.
+        (WebCore::RenderBlock::layoutRunsAndFloatsInRange): Ditto.
+        * rendering/shapes/ShapeInsideInfo.h:
+        (WebCore::ShapeInsideInfo::computeSegmentsForLine): Shift segments logically left when
+        there is an inline offset.
+
+2013-09-03  Antoine Quint  <graouts@apple.com>
+
+        Web Inspector: exceptions triggered from console evaluation do not pause the debugger
+        https://bugs.webkit.org/show_bug.cgi?id=120460
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/InjectedScriptSource.js:
+        Explicitly set a sourceURL such that the frontend may identify injected script when
+        processing call frames in order to hide such code from the debugger.
+
+2013-09-03  Andreas Kling  <akling@apple.com>
+
+        Support Vector<Ref<T>>.
+        <https://webkit.org/b/120637>
+
+        Reviewed by Antti Koivisto.
+
+        Use Vector<Ref<T>> internally in Page.
+
+        * page/Page.cpp:
+        (WebCore::networkStateChanged):
+        (WebCore::Page::refreshPlugins):
+
+            Clean up these functions and use Vector<Ref<Frame>> to store pointers to frames
+            since we know they are not going to be null.
+
+        (WebCore::Page::pluginViews):
+
+            Changed this to return a Vector<Ref<PluginView>> by value instead of passing a
+            writable vector as an argument. Clean up loops with 'auto'.
+
+        (WebCore::Page::storageBlockingStateChanged):
+        (WebCore::Page::privateBrowsingStateChanged):
+
+            Tweaked for pluginViews() returning a Vector now.
+
+        (WebCore::Page::setVisibilityState):
+
+            Store Documents that need a visibilitychange event in a Vector<Ref<Document>>.
+
+2013-08-28  Sergio Villar Senin  <svillar@igalia.com>
+
+        [CSS Grid Layout] Add parsing for named grid lines
+        https://bugs.webkit.org/show_bug.cgi?id=119540
+
+        Reviewed by Andreas Kling.
+
+        From Blink r150381,r150587 by <jchaffraix@chromium.org>
+
+        Adds parsing support for named grid lines at <grid-line> level,
+        i.e., inside grid-{row|column}-{start|end}. This change covers
+        only the parsing, layout changes coming in a follow up patch.
+
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::valueForGridPosition):
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::parseIntegerOrStringFromGridPosition):
+        (WebCore::CSSParser::parseGridPosition):
+        * css/CSSParser.h:
+        * css/StyleResolver.cpp:
+        (WebCore::createGridPosition):
+        * rendering/RenderGrid.cpp:
+        (WebCore::RenderGrid::resolveGridPositionFromStyle):
+        * rendering/style/GridPosition.h:
+        (WebCore::GridPosition::setExplicitPosition):
+        (WebCore::GridPosition::setSpanPosition):
+        (WebCore::GridPosition::integerPosition):
+        (WebCore::GridPosition::namedGridLine):
+
+2013-09-03  Alexey Proskuryakov  <ap@apple.com>
+
+        [Mac] Hyphenation respects regional format settings language instead of primary language
+        https://bugs.webkit.org/show_bug.cgi?id=120641
+
+        Reviewed by Dan Bernstein.
+
+        Fixes hyphenation tests on my machine with non-English regional format settings.
+
+        * platform/text/cf/HyphenationCF.cpp: (createValueForNullKey):
+        Use primary UI language for hyphenation, not regional settings language.
+
+2013-09-03  Danilo Cesar Lemes de Paula  <danilo.cesar@collabora.co.uk>
+
+        [GTK][EFL] include missing localized strings for subtitle auto track
+        https://bugs.webkit.org/show_bug.cgi?id=120629
+
+        those methods are necessary to show the "Auto" track on webkitgtk
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * platform/efl/LocalizedStringsEfl.cpp:
+        (WebCore::textTrackAutomaticMenuItemText):
+        * platform/gtk/LocalizedStringsGtk.cpp:
+        (WebCore::textTrackAutomaticMenuItemText):
+
+2013-09-03  Daniel Bates  <dabates@apple.com>
+
+        Require layout when -webkit-overflow-scrolling changes
+        https://bugs.webkit.org/show_bug.cgi?id=120535
+
+        Reviewed by Darin Adler.
+
+        Test: fast/repaint/overflow-scroll-touch-repaint.html
+
+        We want to require a layout when the value of -webkit-overflow-scrolling changes
+        since -webkit-overflow-scrolling creates a stacking context.
+
+        * rendering/style/RenderStyle.cpp:
+        (WebCore::RenderStyle::changeRequiresLayout):
+
+2013-09-02  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Support the "json" responseType and JSON response entity in XHR
+        https://bugs.webkit.org/show_bug.cgi?id=73648
+
+        Reviewed by Oliver Hunt.
+
+        Based on the patch written by Jarred Nicholls.
+
+        Implement 'json' type for XMLHttpRequest.response. We cache the result on JSC side as a cached attribute
+        unlike other response types like 'document' and 'blob' for which the parsed response object is cached
+        in XMLHttpRequest itself. In the long run, we should do the same for other types of response types.
+
+        Also refactored the various code to share the code.
+
+        Tests: fast/xmlhttprequest/xmlhttprequest-responsetype-json-invalid.html
+               fast/xmlhttprequest/xmlhttprequest-responsetype-json-utf16.html
+               fast/xmlhttprequest/xmlhttprequest-responsetype-json-valid.html
+
+        * ForwardingHeaders/runtime/JSONObject.h: Added.
+
+        * bindings/js/JSXMLHttpRequestCustom.cpp:
+        (WebCore::JSXMLHttpRequest::visitChildren):
+        (WebCore::JSXMLHttpRequest::response): Use JSONParse to parse the response text and cache the result.
+        Call didCacheResponseJSON to set the cache status and clear the original response buffer.
+
+        * xml/XMLHttpRequest.cpp:
+        (WebCore::XMLHttpRequest::XMLHttpRequest): Added m_responseCacheIsValid to invalidate the cache of
+        a json response.
+        (WebCore::XMLHttpRequest::responseText):
+        (WebCore::XMLHttpRequest::didCacheResponseJSON): Added; Updates m_responseCacheIsValid and clears the
+        response buffer to save memory.
+        (WebCore::XMLHttpRequest::responseXML):
+        (WebCore::XMLHttpRequest::setResponseType):
+        (WebCore::XMLHttpRequest::responseType):
+        (WebCore::XMLHttpRequest::clearResponseBuffers):
+        (WebCore::XMLHttpRequest::didReceiveData):
+
+        * xml/XMLHttpRequest.h:
+        (WebCore::XMLHttpRequest::doneWithoutErrors): Extracted from responseXML.
+        (WebCore::XMLHttpRequest::responseTextIgnoringResponseType): Extracted from responseText.
+        (WebCore::XMLHttpRequest::responseCacheIsValid): Added.
+        (WebCore::XMLHttpRequest::shouldDecodeResponse): Extracted from didReceiveData.
+        Also modified to decode when the response type is ResponseTypeJSON.
+
+        * xml/XMLHttpRequest.idl: Added CachedAttribute IDL extention on response property. This cache is
+        used when the response type is 'json'.
+
+2013-09-03  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r154881.
+        http://trac.webkit.org/changeset/154881
+        https://bugs.webkit.org/show_bug.cgi?id=120643
+
+        Crashes on macworld.com (Requested by kling on #webkit).
+
+        * dom/Element.cpp:
+        (WebCore::Element::setAttributeInternal):
+
+2013-09-03  Andre Moreira Magalhaes   <andre.magalhaes@collabora.co.uk>
+
+        [GStreamer] Don't set state to NULL until element is destroyed
+        https://bugs.webkit.org/show_bug.cgi?id=117354
+
+        Reviewed by Philippe Normand.
+
+        Don't set playbin to NULL until it is going to be destroyed or if we stay
+        for too long on the READY state. Instead only set the state to READY as this
+        allows much faster state changes to PAUSED/PLAYING again. playbin internally
+        caches some state that is destroyed when setting it to NULL.
+        This state is independent of the URI and it is even possible to change the
+        URI in READY state.
+
+        To avoid having resources (e.g. audio devices) open indefinitely,
+        when setting the state to READY we create a timeout and if the timeout
+        is reached we reset the pipeline state to NULL to free resources.
+
+        Also now all state changes use the changePipelineState method instead of setting
+        the playbin state directly with gst_element_set_state, so we have a better control
+        of when we are requesting state changes.
+
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamer.cpp:
+        (WebCore::mediaPlayerPrivateReadyStateTimeoutCallback):
+        (WebCore::MediaPlayerPrivateGStreamer::MediaPlayerPrivateGStreamer):
+        (WebCore::MediaPlayerPrivateGStreamer::~MediaPlayerPrivateGStreamer):
+        (WebCore::MediaPlayerPrivateGStreamer::commitLoad):
+        (WebCore::MediaPlayerPrivateGStreamer::changePipelineState):
+        (WebCore::MediaPlayerPrivateGStreamer::setRate):
+        (WebCore::MediaPlayerPrivateGStreamer::handlePluginInstallerResult):
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamer.h:
+
+2013-09-03  peavo@outlook.com  <peavo@outlook.com>
+
+        [WinCairo] Unneeded code in method GlyphPage::fill().
+        https://bugs.webkit.org/show_bug.cgi?id=120634
+
+        Reviewed by Andreas Kling.
+
+        * platform/graphics/win/GlyphPageTreeNodeCairoWin.cpp:
+        (WebCore::GlyphPage::fill): Remove unneeded call to GetTextMetrics() function.
+
+2013-09-03  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSSRegions] Pseudo-elements as regions should not be exposed to JS
+        https://bugs.webkit.org/show_bug.cgi?id=120633
+
+        Reviewed by Andreas Kling.
+
+        Until we properly implement the Region interface (http://dev.w3.org/csswg/css-regions/#the-region-interface)
+        for pseudo-elements, we should not return these as regions in JS.
+
+        Tests: fast/regions/get-regions-by-content-pseudo.html
+               fast/regions/webkit-named-flow-get-regions-pseudo.html
+
+        * dom/WebKitNamedFlow.cpp:
+        (WebCore::WebKitNamedFlow::firstEmptyRegionIndex): Skip pseudo-elements as regions here too,
+        otherwise we may get an index that cannot be used with getRegions().
+        (WebCore::WebKitNamedFlow::getRegionsByContent):
+        (WebCore::WebKitNamedFlow::getRegions):
+
+2013-09-03  Zan Dobersek  <zdobersek@igalia.com>
+
+        REGRESSION(r154967): http appcache tests crashing on WK1
+        https://bugs.webkit.org/show_bug.cgi?id=120620
+
+        Reviewed by Andreas Kling.
+
+        * loader/appcache/ApplicationCacheGroup.cpp:
+        (WebCore::ApplicationCacheGroup::cacheDestroyed): Reintroduce pre-r154967 behavior that returned early in
+        this method if the passed-in ApplicationCache object was not found in the ApplicationCacheGroup's HashSet
+        of all the caches. This is now done by checking that the HashSet<T>::remove(T) returns true (meaning the
+        object was found in the HashSet and removed from it) in addition to that HashSet being subsequently empty
+        before the method moves on to destroying its ApplicationCacheGroup instance.
+
+2013-09-03  Andre Moreira Magalhaes   <andre.magalhaes@collabora.co.uk>
+
+        [gstreamer] Disable HTTP request "Accept-Encoding:" header field on gstreamer source element to avoid receiving the wrong size when retrieving data
+        https://bugs.webkit.org/show_bug.cgi?id=115354
+
+        Reviewed by Philippe Normand.
+
+        Also disable Accept-Encoding on ResourceRequest::toSoupMessage accordingly.
+
+        * platform/network/soup/ResourceRequestSoup.cpp:
+        (WebCore::ResourceRequest::toSoupMessage):
+        Call ResourceRequest::updateSoupMessage from ResourceRequest::toSoupMessage so that the
+        Accept-Encoding header is also respected.
+
+2013-09-03  Krzysztof Czech  <k.czech@samsung.com>
+
+        [AX][ATK] Added support for sort and help attributes.
+        https://bugs.webkit.org/show_bug.cgi?id=120456
+
+        Reviewed by Chris Fleizach.
+
+        Added support for aria-sort and aria-help attributes.
+
+        Test: accessibility/aria-sort.html
+
+        * accessibility/atk/WebKitAccessibleWrapperAtk.cpp:
+        (webkitAccessibleGetAttributes):
+
+2013-09-03  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Remove dead code for QtXmlPatterns
+        https://bugs.webkit.org/show_bug.cgi?id=120624
+
+        Reviewed by Simon Hausmann.
+
+        Remove code supporting XSLT using QtXmlPatterns which has been
+        dead for some time.
+
+        * Target.pri:
+        * WebCore.pri:
+        * dom/TransformSourceQt.cpp: Removed.
+        * xml/XSLStyleSheetQt.cpp: Removed.
+        * xml/XSLTProcessorQt.cpp: Removed.
+        * xml/parser/XMLDocumentParserQt.cpp:
+        (WebCore::XMLDocumentParser::doEnd):
+        (WebCore::XMLDocumentParser::parseProcessingInstruction):
+
+2013-09-03  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSS Regions] position: fixed is computed relative to the first region, not the viewport
+        https://bugs.webkit.org/show_bug.cgi?id=111176
+
+        Reviewed by David Hyatt.
+
+        Fixed positioned elements inside a named flow should be positioned and sized relative to the viewport,
+        not on the first region, as described in the spec: http://dev.w3.org/csswg/css-regions/#the-flow-into-property.
+        While the flow thread will still act as containing block for the fixed positioned elements, the painting and hit
+        testing for the fixed positioned elements is done by RenderView. The layers for the fixed positioned elements
+        are collected by the flow thread.
+ 
+        Tests: fast/regions/element-in-named-flow-absolute-from-fixed.html
+               fast/regions/element-in-named-flow-fixed-from-absolute.html
+               fast/regions/element-inflow-fixed-from-outflow-static.html
+               fast/regions/element-outflow-static-from-inflow-fixed.html
+               fast/regions/fixed-element-transformed-parent.html
+               fast/regions/fixed-in-named-flow-scroll.html
+               fast/regions/fixed-inside-fixed-in-named-flow.html
+               fast/regions/fixed-inside-named-flow-zIndex.html
+               fast/regions/fixed-pos-elem-in-namedflow-noregions.html
+               fast/regions/fixed-pos-region-in-nested-flow.html
+
+        * rendering/FlowThreadController.cpp:
+        (WebCore::FlowThreadController::collectFixedPositionedLayers):
+        Return the list of layers for the fixed positioned elements with named flows as containing blocks.
+        Used in RenderLayer:: paintFixedLayersInNamedFlows and RenderLayer:: hitTestFixedLayersInNamedFlows.
+        * rendering/FlowThreadController.h:
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::mapLocalToContainer):
+        (WebCore::RenderBox::containingBlockLogicalWidthForPositioned):
+        (WebCore::RenderBox::containingBlockLogicalHeightForPositioned):
+        For fixed positioned elements, width and height are given by the view instead of the first region.
+        * rendering/RenderLayer.cpp:
+        (WebCore::accumulateOffsetTowardsAncestor):
+        Modified for the fixed positioned elements inside named flows with the named flows as containing block
+        to take into account the view scroll.
+        (WebCore::compareZIndex):
+        Moved upwards because it is used in RenderLayer::paintFixedLayersInNamedFlows.
+        (WebCore::RenderLayer::paintFixedLayersInNamedFlows):
+        Paint the list of fixed layers directly from the RenderView instead of painting them through regions -> named flows.
+        (WebCore::RenderLayer::paintLayerContents):
+        (WebCore::RenderLayer::paintList):
+        (WebCore::RenderLayer::hitTestFixedLayersInNamedFlows):
+        Hit test the layers for the fix positioned elements inside named flows from the RenderView layer
+        instead of the region -> named flow layer.
+        (WebCore::RenderLayer::hitTestLayer):
+        (WebCore::RenderLayer::calculateRects):
+        * rendering/RenderLayer.h:
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::RenderLayerCompositor::updateLayerTreeGeometry):
+        We do not support yet the accelerated compositing for elements in named flows,
+        so bail out early here. We need to revisit fixed elements once we finish accelerated compositing for elements in named flows.
+        * rendering/RenderObject.cpp:
+        (WebCore::RenderObject::fixedPositionedWithNamedFlowContainingBlock):
+        (WebCore::hasFixedPosInNamedFlowContainingBlock):
+        (WebCore::RenderObject::containerForRepaint):
+        Changed to take into account that RenderView should be the repaintContainer for the
+        fixed positioned elements with named flow as the containing block.
+        * rendering/RenderObject.h:
+
+2013-09-03  Arvid Nilsson  <anilsson@rim.com>
+
+        [BlackBerry] Remove LayerData::LayerProgram
+        https://bugs.webkit.org/show_bug.cgi?id=120601
+
+        Reviewed by Anders Carlsson.
+
+        JIRA 490672
+        All layer contents are RGBA now, so there's no need to support BGRA any
+        more and the LayerData::LayerProgram enum can be removed. Related dead
+        code was removed.
+
+        No new tests, no change in behavior.
+
+        * platform/graphics/blackberry/EGLImageLayerWebKitThread.cpp:
+        (WebCore::EGLImageLayerWebKitThread::EGLImageLayerWebKitThread):
+        * platform/graphics/blackberry/LayerData.h:
+        (WebCore::LayerData::LayerData):
+        * platform/graphics/blackberry/LayerRenderer.cpp:
+        (WebCore::LayerRenderer::compositeLayersRecursive):
+        (WebCore::LayerRenderer::createProgram):
+        * platform/graphics/blackberry/LayerRenderer.h:
+        * platform/graphics/blackberry/LayerWebKitThread.h:
+        * platform/graphics/blackberry/PluginLayerWebKitThread.cpp:
+        (WebCore::PluginLayerWebKitThread::setPluginView):
+
+2013-09-03  Xabier Rodriguez Calvar  <calvaris@igalia.com>
+
+        [GStreamer] Video player sets system volume to 100%
+        https://bugs.webkit.org/show_bug.cgi?id=118974
+
+        Reviewed by Philippe Normand.
+
+        In order to preserve the system volume we need to keep track of
+        the volume being initialized in the HTMLMediaElement and then just
+        setting the volume to the sink when initializing the pipeline if
+        that volume was changed before.
+
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::HTMLMediaElement): Initialized
+        attribute to false.
+        (WebCore::HTMLMediaElement::setVolume): Set the attribute to true
+        when volume is changed.
+        (WebCore::HTMLMediaElement::updateVolume): Set the volume only if
+        volume was initialized.
+        (WebCore::HTMLMediaElement::mediaPlayerPlatformVolumeConfigurationRequired):
+        Platform volume configuration is required only if volume was not
+        initialized before.
+        * html/HTMLMediaElement.h: Added attribute and interface method.
+        * platform/graphics/MediaPlayer.h:
+        (WebCore::MediaPlayerClient::mediaPlayerPlatformVolumeConfigurationRequired):
+        Declared and added default implementation for the interface method.
+        (WebCore::MediaPlayer::platformVolumeConfigurationRequired):
+        Asked the client, meaning the HTMLMediaElement if the platform
+        volume configuration is required.
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamerBase.cpp:
+        (WebCore::mediaPlayerPrivateVolumeChangedCallback): Added log.
+        (WebCore::MediaPlayerPrivateGStreamerBase::setVolume): Added log.
+        (WebCore::MediaPlayerPrivateGStreamerBase::setStreamVolumeElement):
+        Set the volume only if not platform volume is required and added log.
+
+2013-09-02  Darin Adler  <darin@apple.com>
+
+        * inspector/InspectorProfilerAgent.cpp:
+        (WebCore::InspectorProfilerAgent::removeProfile): Fix braces here; a review
+        comment I forgot to address in my last check-in.
+
+2013-09-02  Darin Adler  <darin@apple.com>
+
+        Cut down on double hashing and code needlessly using hash table iterators
+        https://bugs.webkit.org/show_bug.cgi?id=120611
+
+        Reviewed by Andreas Kling.
+
+        Some of these changes are primarily code cleanup, but others could provide
+        a small code size and speed improvement by avoiding extra hashing.
+
+        * Modules/geolocation/Geolocation.cpp:
+        (WebCore::Geolocation::Watchers::find): Use get instead of find.
+        (WebCore::Geolocation::Watchers::remove): Use take instead of find.
+        (WebCore::Geolocation::makeCachedPositionCallbacks): Use the return
+        value from remove to avoid hashing twice.
+
+        * Modules/webaudio/AudioContext.cpp:
+        (WebCore::AudioContext::addAutomaticPullNode): Use the return value from
+        add to avoid hashing twice.
+        (WebCore::AudioContext::removeAutomaticPullNode): Use the return value
+        from remove to avoid hashing twice.
+
+        * Modules/webaudio/AudioNodeInput.cpp:
+        (WebCore::AudioNodeInput::connect): Use the return value from add to avoid
+        hashing twice.
+        (WebCore::AudioNodeInput::disconnect): Use the return value from remove
+        to avoid hashing twice.
+
+        * Modules/webaudio/AudioParam.cpp:
+        (WebCore::AudioParam::connect): Use the return value from add to avoid
+        hashing twice.
+        (WebCore::AudioParam::disconnect): Use the return value from remove to
+        avoid hashing twice.
+
+        * bridge/NP_jsobject.cpp:
+        (ObjectMap::remove): Use remove instead of find/remove.
+
+        * dom/Node.cpp:
+        (WebCore::Node::~Node): Use the return value from remove instead of
+        find/remove.
+
+        * inspector/InspectorProfilerAgent.cpp:
+        (WebCore::InspectorProfilerAgent::removeProfile): Remove needless
+        calls to contains.
+
+        * loader/DocumentLoader.cpp:
+        (WebCore::DocumentLoader::removeSubresourceLoader): Use the return
+        value from remove instead of find/remove.
+
+        * loader/ResourceLoadScheduler.cpp:
+        (WebCore::ResourceLoadScheduler::HostInformation::remove): Use the
+        return value from remove to avoid hashing twice.
+
+        * loader/appcache/ApplicationCacheGroup.cpp:
+        (WebCore::ApplicationCacheGroup::disassociateDocumentLoader): Use
+        remove instead of find/remove.
+        (WebCore::ApplicationCacheGroup::cacheDestroyed): Removed a needless
+        call to contains to avoid hashing twice. It's fine to do the check
+        for an empty hash table unconditionally.
+
+        * page/DOMWindow.cpp:
+        (WebCore::addUnloadEventListener): Eliminated a local variable for clarity.
+        (WebCore::removeUnloadEventListener): Ditto. Also use remove instead
+        of find/remove.
+        (WebCore::removeAllUnloadEventListeners): Ditto. Also use removeAll instead
+        of find/removeAll.
+        (WebCore::addBeforeUnloadEventListener): Ditto.
+        (WebCore::removeBeforeUnloadEventListener): Ditto.
+        (WebCore::removeAllBeforeUnloadEventListeners): Ditto.
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::removeViewportConstrainedObject): Use the return
+        value from remove to avoid hashing twice.
+        (WebCore::FrameView::removeScrollableArea): Use the return value from
+        remove instead of find/remove.
+        (WebCore::FrameView::containsScrollableArea): Use && instead of an if
+        statement in a way that is idiomatic for this kind of function.
+
+        * page/Page.cpp:
+        (WebCore::Page::addRelevantRepaintedObject): Use the return value from
+        remove instead of find/remove.
+
+        * page/PageGroup.cpp:
+        (WebCore::PageGroup::removeUserScriptsFromWorld): Use remove instead
+        of find/remove.
+        (WebCore::PageGroup::removeUserStyleSheetsFromWorld): Use the return
+        value from remove instead of find/remove.
+
+        * page/PerformanceUserTiming.cpp:
+        (WebCore::clearPeformanceEntries): Removed a needless call to contains.
+
+        * platform/graphics/DisplayRefreshMonitor.cpp:
+        (WebCore::DisplayRefreshMonitor::removeClient): Use the return value
+        from remove instead of find/remove.
+        (WebCore::DisplayRefreshMonitorManager::displayDidRefresh): Use remove
+        instead of find/remove.
+
+        * platform/graphics/blackberry/LayerRenderer.cpp:
+        (WebCore::LayerRenderer::removeLayer): Use the return value from remove
+        instead of find/remove.
+
+        * platform/win/WindowMessageBroadcaster.cpp:
+        (WebCore::WindowMessageBroadcaster::removeListener): Use remove instead
+        of find/remove. It's fine to do the check for an empty hash table unconditionally.
+
+        * plugins/PluginDatabase.cpp:
+        (WebCore::PluginDatabase::removeDisabledPluginFile): Use the return value
+        from remove instead of find/remove.
+
+        * rendering/style/StyleCustomFilterProgramCache.cpp:
+        (WebCore::StyleCustomFilterProgramCache::lookup): Use get instead of find.
+        (WebCore::StyleCustomFilterProgramCache::add): Use contains instead of find
+        in an assertion.
+        (WebCore::StyleCustomFilterProgramCache::remove): Use remove instead of
+        find/remove.
+
+        * svg/SVGCursorElement.cpp:
+        (WebCore::SVGCursorElement::removeClient): Use the return value from remove
+        instead of find/remove.
+
+        * svg/SVGDocumentExtensions.cpp:
+        (WebCore::SVGDocumentExtensions::removeResource): Removed an unneeded call
+        to contains.
+        (WebCore::SVGDocumentExtensions::removeAllTargetReferencesForElement): Use
+        remove instead of find/remove. It's fine to do the check for an empty hash
+        table unconditionally.
+        (WebCore::SVGDocumentExtensions::removeAllElementReferencesForTarget): Use
+        remove instead of find/remove. Also removed unhelpful assertions. One is
+        already done by HashMap, and the other is just checking a basic invariant
+        of every HashMap that doesn't need to be checked.
+
+        * svg/graphics/SVGImageCache.cpp:
+        (WebCore::SVGImageCache::removeClientFromCache): Removed an unneeded call
+        to contains.
+
+        * svg/properties/SVGAnimatedProperty.cpp:
+        (WebCore::SVGAnimatedProperty::~SVGAnimatedProperty): Use the version of
+        remove that takes an iterator rather than the one that takes a key, so
+        we don't need to redo the hashing.
+
+2013-09-02  Andreas Kling  <akling@apple.com>
+
+        Generate isFooElement() functions from tagname data.
+        <https://webkit.org/b/120584>
+
+        Reviewed by Antti Koivisto.
+
+        Add a "generateTypeChecks" attribute that can be used in HTMLTagNames.in & friends.
+        If present, isFooElement() style helpers will be added to HTMLElementTypeChecks.h.
+        This also outputs an isElementOfType<T> check for the Element iterators.
+
+        Removed all the hand-written isFooElement() functions that only checked tag name.
+
+        * html/HTMLTagNames.in:
+        * svg/svgtags.in:
+
+            Added "generateTypeChecks" attribute as appropriate.
+
+        * GNUmakefile.am:
+        * GNUmakefile.list.am:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.xcodeproj/project.pbxproj:
+
+            Added to build systems based on how HTMLNames.h was done.
+            We're just outputting an additional header file in the generated code directory
+            so I suspect most ports will just pick this up automagically.
+
+        * dom/make_names.pl:
+        (defaultTagPropertyHash):
+        (printLicenseHeader):
+        (printTypeChecks):
+        (printTypeChecksHeaderFile):
+
+            Generate a separate file for each namespace with isFooElement() helpers for
+            elements with "generateTypeChecks" attribute set.
+
+2013-09-02  Darin Adler  <darin@apple.com>
+
+        [Mac] No need for HardAutorelease, which is same as CFBridgingRelease
+        https://bugs.webkit.org/show_bug.cgi?id=120569
+
+        Reviewed by Andy Estes.
+
+        * accessibility/mac/WebAccessibilityObjectWrapperMac.mm:
+        (AXTextMarkerRange):
+        (AXTextMarkerRangeStart):
+        (AXTextMarkerRangeEnd):
+        (textMarkerForVisiblePosition):
+        Use CFBridgingRelease.
+
+        * platform/mac/KURLMac.mm:
+        (WebCore::KURL::operator NSURL *): Use CFBridgingRelease.
+        (WebCore::KURL::createCFURL): Get rid of needless local variable.
+
+        * platform/mac/WebCoreNSURLExtras.mm:
+        (WebCore::mapHostNameWithRange):
+        (WebCore::URLWithData):
+        (WebCore::userVisibleString):
+        * platform/text/mac/StringImplMac.mm:
+        (WTF::StringImpl::operator NSString *):
+        Use CFBridgingRelease.
+
+2013-09-01  Andreas Kling  <akling@apple.com>
+
+        Ref: A smart pointer for the reference age.
+        <https://webkit.org/b/120570>
+
+        Reviewed by Antti Koivisto.
+
+        Use Ref<T> for various stack guards where null checking isn't needed.
+
 2013-09-02  Andreas Kling  <akling@apple.com>
 
         Simplify DocumentType handling.
@@ -2611,7 +4204,6 @@
         * page/EventHandler.cpp:
         (WebCore::findDropZone):
 
-<<<<<<< .mine
 2013-08-28  Benjamin Poulain  <benjamin@webkit.org>
 
         Simplify and clean SpaceSplitString
@@ -2657,7 +4249,6 @@
         * page/EventHandler.cpp:
         (WebCore::findDropZone):
 
-=======
 2013-08-28  Rob Buis  <rwlbuis@webkit.org>
 
         Namespace prefix is blindly followed when serializing
@@ -2740,7 +4331,6 @@
         * platform/qt/LocalizedStringsQt.cpp:
         (WebCore::AXSearchFieldCancelButtonText):
 
->>>>>>> .r154779
 2013-08-28  Eric Carlson  <eric.carlson@apple.com>
 
         MediaPlayerPrivateAVFoundationObjC is painting video frames under the video layer

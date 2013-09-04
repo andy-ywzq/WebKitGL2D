@@ -78,6 +78,7 @@
 #include "TextStream.h"
 
 #include <wtf/CurrentTime.h>
+#include <wtf/Ref.h>
 #include <wtf/TemporaryChange.h>
 
 #if USE(ACCELERATED_COMPOSITING)
@@ -1115,7 +1116,7 @@ void FrameView::layout(bool allowSubtree)
         return;
 
     // Protect the view from being deleted during layout (in recalcStyle)
-    RefPtr<FrameView> protector(this);
+    Ref<FrameView> protect(*this);
 
     // Every scroll that happens during layout is programmatic.
     TemporaryChange<bool> changeInProgrammaticScroll(m_inProgrammaticScroll, true);
@@ -1183,7 +1184,7 @@ void FrameView::layout(bool allowSubtree)
 
         // If there is only one ref to this view left, then its going to be destroyed as soon as we exit, 
         // so there's no point to continuing to layout
-        if (protector->hasOneRef())
+        if (hasOneRef())
             return;
 
         root = subtree ? m_layoutRoot : document->renderer();
@@ -1561,8 +1562,7 @@ void FrameView::addViewportConstrainedObject(RenderObject* object)
 
 void FrameView::removeViewportConstrainedObject(RenderObject* object)
 {
-    if (m_viewportConstrainedObjects && m_viewportConstrainedObjects->contains(object)) {
-        m_viewportConstrainedObjects->remove(object);
+    if (m_viewportConstrainedObjects && m_viewportConstrainedObjects->remove(object)) {
         if (Page* page = frame().page()) {
             if (ScrollingCoordinator* scrollingCoordinator = page->scrollingCoordinator())
                 scrollingCoordinator->frameViewFixedObjectsDidChange(this);
@@ -2417,46 +2417,61 @@ static bool isObjectAncestorContainerOf(RenderObject* ancestor, RenderObject* de
     return false;
 }
 
-void FrameView::scheduleRelayoutOfSubtree(RenderObject* relayoutRoot)
+void FrameView::scheduleRelayoutOfSubtree(RenderObject& newRelayoutRoot)
 {
+    ASSERT(renderView());
+    RenderView& renderView = *this->renderView();
+
+    // Try to catch unnecessary work during render tree teardown.
+    ASSERT(!renderView.documentBeingDestroyed());
     ASSERT(frame().view() == this);
 
-    RenderView* renderView = this->renderView();
-    if (renderView && renderView->needsLayout()) {
-        if (relayoutRoot)
-            relayoutRoot->markContainingBlocksForLayout(false);
+    if (renderView.needsLayout()) {
+        newRelayoutRoot.markContainingBlocksForLayout(false);
         return;
     }
 
-    if (layoutPending() || !m_layoutSchedulingEnabled) {
-        if (m_layoutRoot != relayoutRoot) {
-            if (isObjectAncestorContainerOf(m_layoutRoot, relayoutRoot)) {
-                // Keep the current root
-                relayoutRoot->markContainingBlocksForLayout(false, m_layoutRoot);
-                ASSERT(!m_layoutRoot->container() || !m_layoutRoot->container()->needsLayout());
-            } else if (m_layoutRoot && isObjectAncestorContainerOf(relayoutRoot, m_layoutRoot)) {
-                // Re-root at relayoutRoot
-                m_layoutRoot->markContainingBlocksForLayout(false, relayoutRoot);
-                m_layoutRoot = relayoutRoot;
-                ASSERT(!m_layoutRoot->container() || !m_layoutRoot->container()->needsLayout());
-                InspectorInstrumentation::didInvalidateLayout(&frame());
-            } else {
-                // Just do a full relayout
-                if (m_layoutRoot)
-                    m_layoutRoot->markContainingBlocksForLayout(false);
-                m_layoutRoot = 0;
-                relayoutRoot->markContainingBlocksForLayout(false);
-                InspectorInstrumentation::didInvalidateLayout(&frame());
-            }
-        }
-    } else if (m_layoutSchedulingEnabled) {
-        int delay = frame().document()->minimumLayoutDelay();
-        m_layoutRoot = relayoutRoot;
-        ASSERT(!m_layoutRoot->container() || !m_layoutRoot->container()->needsLayout());
+    if (!layoutPending() && m_layoutSchedulingEnabled) {
+        int delay = renderView.document().minimumLayoutDelay();
+        ASSERT(!newRelayoutRoot.container() || !newRelayoutRoot.container()->needsLayout());
+        m_layoutRoot = &newRelayoutRoot;
         InspectorInstrumentation::didInvalidateLayout(&frame());
         m_delayedLayout = delay != 0;
         m_layoutTimer.startOneShot(delay * 0.001);
+        return;
     }
+
+    if (m_layoutRoot == &newRelayoutRoot)
+        return;
+
+    if (!m_layoutRoot) {
+        // Just relayout the subtree.
+        newRelayoutRoot.markContainingBlocksForLayout(false);
+        InspectorInstrumentation::didInvalidateLayout(&frame());
+        return;
+    }
+
+    if (isObjectAncestorContainerOf(m_layoutRoot, &newRelayoutRoot)) {
+        // Keep the current root.
+        newRelayoutRoot.markContainingBlocksForLayout(false, m_layoutRoot);
+        ASSERT(!m_layoutRoot->container() || !m_layoutRoot->container()->needsLayout());
+        return;
+    }
+
+    if (isObjectAncestorContainerOf(&newRelayoutRoot, m_layoutRoot)) {
+        // Re-root at newRelayoutRoot.
+        m_layoutRoot->markContainingBlocksForLayout(false, &newRelayoutRoot);
+        m_layoutRoot = &newRelayoutRoot;
+        ASSERT(!m_layoutRoot->container() || !m_layoutRoot->container()->needsLayout());
+        InspectorInstrumentation::didInvalidateLayout(&frame());
+        return;
+    }
+
+    // Just do a full relayout.
+    m_layoutRoot->markContainingBlocksForLayout(false);
+    m_layoutRoot = 0;
+    newRelayoutRoot.markContainingBlocksForLayout(false);
+    InspectorInstrumentation::didInvalidateLayout(&frame());
 }
 
 bool FrameView::layoutPending() const
@@ -2759,7 +2774,7 @@ void FrameView::performPostLayoutTasks()
     
     // layout() protects FrameView, but it still can get destroyed when updateWidgets()
     // is called through the post layout timer.
-    RefPtr<FrameView> protector(this);
+    Ref<FrameView> protect(*this);
     for (unsigned i = 0; i < maxUpdateWidgetsIterations; i++) {
         if (updateWidgets())
             break;
@@ -4059,22 +4074,12 @@ bool FrameView::addScrollableArea(ScrollableArea* scrollableArea)
 
 bool FrameView::removeScrollableArea(ScrollableArea* scrollableArea)
 {
-    if (!m_scrollableAreas)
-        return false;
-
-    ScrollableAreaSet::iterator it = m_scrollableAreas->find(scrollableArea);
-    if (it == m_scrollableAreas->end())
-        return false;
-
-    m_scrollableAreas->remove(it);
-    return true;
+    return m_scrollableAreas && m_scrollableAreas->remove(scrollableArea);
 }
 
 bool FrameView::containsScrollableArea(ScrollableArea* scrollableArea) const
 {
-    if (!m_scrollableAreas)
-        return false;
-    return m_scrollableAreas->contains(scrollableArea);
+    return m_scrollableAreas && m_scrollableAreas->contains(scrollableArea);
 }
 
 void FrameView::removeChild(Widget* widget)

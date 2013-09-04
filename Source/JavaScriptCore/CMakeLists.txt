@@ -132,6 +132,7 @@ set(JavaScriptCore_SOURCES
     dfg/DFGNodeFlags.cpp
     dfg/DFGOSRAvailabilityAnalysisPhase.cpp
     dfg/DFGOSREntry.cpp
+    dfg/DFGOSREntrypointCreationPhase.cpp
     dfg/DFGOSRExit.cpp
     dfg/DFGOSRExitBase.cpp
     dfg/DFGOSRExitCompiler.cpp
@@ -151,6 +152,7 @@ set(JavaScriptCore_SOURCES
     dfg/DFGSpeculativeJIT32_64.cpp
     dfg/DFGSpeculativeJIT64.cpp
     dfg/DFGThunks.cpp
+    dfg/DFGTierUpCheckInjectionPhase.cpp
     dfg/DFGTypeCheckHoistingPhase.cpp
     dfg/DFGUnificationPhase.cpp
     dfg/DFGUseKind.cpp
@@ -169,14 +171,10 @@ set(JavaScriptCore_SOURCES
     disassembler/X86Disassembler.cpp
 
     heap/BlockAllocator.cpp
+    heap/CodeBlockSet.cpp
+    heap/ConservativeRoots.cpp
     heap/CopiedSpace.cpp
     heap/CopyVisitor.cpp
-    heap/ConservativeRoots.cpp
-    heap/DFGCodeBlocks.cpp
-    heap/GCIncomingRefCountedSet.h
-    heap/GCIncomingRefCounted.h
-    heap/GCIncomingRefCountedSetInlines.h
-    heap/GCIncomingRefCountedInlines.h
     heap/GCThread.cpp
     heap/GCThreadSharedData.cpp
     heap/HandleSet.cpp
@@ -185,21 +183,6 @@ set(JavaScriptCore_SOURCES
     heap/HeapStatistics.cpp
     heap/HeapTimer.cpp
     heap/IncrementalSweeper.cpp
-    heap/JITStubRoutineSet.cpp
-    heap/MachineStackMarker.cpp
-
-    heap/BlockAllocator.cpp
-    heap/ConservativeRoots.cpp
-    heap/CopiedSpace.cpp
-    heap/CopyVisitor.cpp
-    heap/DFGCodeBlocks.cpp
-    heap/GCThread.cpp
-    heap/GCThreadSharedData.cpp
-    heap/HandleSet.cpp
-    heap/HandleStack.cpp
-    heap/Heap.cpp
-    heap/HeapStatistics.cpp
-    heap/HeapTimer.cpp
     heap/JITStubRoutineSet.cpp
     heap/MachineStackMarker.cpp
     heap/MarkStack.cpp

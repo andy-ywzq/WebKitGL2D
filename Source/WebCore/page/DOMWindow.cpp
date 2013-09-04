@@ -105,6 +105,7 @@
 #include <wtf/CurrentTime.h>
 #include <wtf/MainThread.h>
 #include <wtf/MathExtras.h>
+#include <wtf/Ref.h>
 #include <wtf/text/Base64.h>
 #include <wtf/text/WTFString.h>
 
@@ -174,52 +175,38 @@ static DOMWindowSet& windowsWithBeforeUnloadEventListeners()
 
 static void addUnloadEventListener(DOMWindow* domWindow)
 {
-    DOMWindowSet& set = windowsWithUnloadEventListeners();
-    if (set.add(domWindow).isNewEntry)
+    if (windowsWithUnloadEventListeners().add(domWindow).isNewEntry)
         domWindow->disableSuddenTermination();
 }
 
 static void removeUnloadEventListener(DOMWindow* domWindow)
 {
-    DOMWindowSet& set = windowsWithUnloadEventListeners();
-    DOMWindowSet::iterator it = set.find(domWindow);
-    if (set.remove(it))
+    if (windowsWithUnloadEventListeners().remove(domWindow))
         domWindow->enableSuddenTermination();
 }
 
 static void removeAllUnloadEventListeners(DOMWindow* domWindow)
 {
-    DOMWindowSet& set = windowsWithUnloadEventListeners();
-    DOMWindowSet::iterator it = set.find(domWindow);
-    if (it == set.end())
-        return;
-    set.removeAll(it);
-    domWindow->enableSuddenTermination();
+    if (windowsWithUnloadEventListeners().removeAll(domWindow))
+        domWindow->enableSuddenTermination();
 }
 
 static void addBeforeUnloadEventListener(DOMWindow* domWindow)
 {
-    DOMWindowSet& set = windowsWithBeforeUnloadEventListeners();
-    if (set.add(domWindow).isNewEntry)
+    if (windowsWithBeforeUnloadEventListeners().add(domWindow).isNewEntry)
         domWindow->disableSuddenTermination();
 }
 
 static void removeBeforeUnloadEventListener(DOMWindow* domWindow)
 {
-    DOMWindowSet& set = windowsWithBeforeUnloadEventListeners();
-    DOMWindowSet::iterator it = set.find(domWindow);
-    if (set.remove(it))
+    if (windowsWithBeforeUnloadEventListeners().remove(domWindow))
         domWindow->enableSuddenTermination();
 }
 
 static void removeAllBeforeUnloadEventListeners(DOMWindow* domWindow)
 {
-    DOMWindowSet& set = windowsWithBeforeUnloadEventListeners();
-    DOMWindowSet::iterator it = set.find(domWindow);
-    if (it == set.end())
-        return;
-    set.removeAll(it);
-    domWindow->enableSuddenTermination();
+    if (windowsWithBeforeUnloadEventListeners().removeAll(domWindow))
+        domWindow->enableSuddenTermination();
 }
 
 static bool allowsBeforeUnloadListeners(DOMWindow* window)
@@ -245,25 +232,24 @@ bool DOMWindow::dispatchAllPendingBeforeUnloadEvents()
     if (alreadyDispatched)
         return true;
 
-    Vector<RefPtr<DOMWindow> > windows;
-    DOMWindowSet::iterator end = set.end();
-    for (DOMWindowSet::iterator it = set.begin(); it != end; ++it)
-        windows.append(it->key);
+    Vector<Ref<DOMWindow>> windows;
+    windows.reserveInitialCapacity(set.size());
+    for (auto it = set.begin(), end = set.end(); it != end; ++it)
+        windows.uncheckedAppend(*it->key);
 
-    size_t size = windows.size();
-    for (size_t i = 0; i < size; ++i) {
-        DOMWindow* window = windows[i].get();
-        if (!set.contains(window))
+    for (unsigned i = 0; i < windows.size(); ++i) {
+        DOMWindow& window = windows[i].get();
+        if (!set.contains(&window))
             continue;
 
-        Frame* frame = window->frame();
+        Frame* frame = window.frame();
         if (!frame)
             continue;
 
         if (!frame->loader().shouldClose())
             return false;
 
-        window->enableSuddenTermination();
+        window.enableSuddenTermination();
     }
 
     alreadyDispatched = true;
@@ -286,21 +272,20 @@ void DOMWindow::dispatchAllPendingUnloadEvents()
     if (alreadyDispatched)
         return;
 
-    Vector<RefPtr<DOMWindow> > windows;
-    DOMWindowSet::iterator end = set.end();
-    for (DOMWindowSet::iterator it = set.begin(); it != end; ++it)
-        windows.append(it->key);
+    Vector<Ref<DOMWindow>> windows;
+    windows.reserveInitialCapacity(set.size());
+    for (auto it = set.begin(), end = set.end(); it != end; ++it)
+        windows.uncheckedAppend(*it->key);
 
-    size_t size = windows.size();
-    for (size_t i = 0; i < size; ++i) {
-        DOMWindow* window = windows[i].get();
-        if (!set.contains(window))
+    for (unsigned i = 0; i < windows.size(); ++i) {
+        DOMWindow& window = windows[i].get();
+        if (!set.contains(&window))
             continue;
 
-        window->dispatchEvent(PageTransitionEvent::create(eventNames().pagehideEvent, false), window->document());
-        window->dispatchEvent(Event::create(eventNames().unloadEvent, false, false), window->document());
+        window.dispatchEvent(PageTransitionEvent::create(eventNames().pagehideEvent, false), window.document());
+        window.dispatchEvent(Event::create(eventNames().unloadEvent, false, false), window.document());
 
-        window->enableSuddenTermination();
+        window.enableSuddenTermination();
     }
 
     alreadyDispatched = true;
@@ -1718,7 +1703,7 @@ void DOMWindow::dispatchLoadEvent()
 
 bool DOMWindow::dispatchEvent(PassRefPtr<Event> prpEvent, PassRefPtr<EventTarget> prpTarget)
 {
-    RefPtr<EventTarget> protect = this;
+    Ref<EventTarget> protect(*this);
     RefPtr<Event> event = prpEvent;
 
     event->setTarget(prpTarget ? prpTarget : this);

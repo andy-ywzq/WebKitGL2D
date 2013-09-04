@@ -316,6 +316,8 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/dfg/DFGOSRAvailabilityAnalysisPhase.h \
 	Source/JavaScriptCore/dfg/DFGOSREntry.cpp \
 	Source/JavaScriptCore/dfg/DFGOSREntry.h \
+	Source/JavaScriptCore/dfg/DFGOSREntrypointCreationPhase.cpp \
+	Source/JavaScriptCore/dfg/DFGOSREntrypointCreationPhase.h \
 	Source/JavaScriptCore/dfg/DFGOSRExitCompilationInfo.h \
 	Source/JavaScriptCore/dfg/DFGOSRExitCompiler32_64.cpp \
 	Source/JavaScriptCore/dfg/DFGOSRExitCompiler64.cpp \
@@ -356,6 +358,8 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/dfg/DFGSSAConversionPhase.cpp \
 	Source/JavaScriptCore/dfg/DFGSSAConversionPhase.h \
 	Source/JavaScriptCore/dfg/DFGStructureAbstractValue.h \
+	Source/JavaScriptCore/dfg/DFGTierUpCheckInjectionPhase.cpp \
+	Source/JavaScriptCore/dfg/DFGTierUpCheckInjectionPhase.h \
 	Source/JavaScriptCore/dfg/DFGThunks.cpp \
 	Source/JavaScriptCore/dfg/DFGThunks.h \
 	Source/JavaScriptCore/dfg/DFGTypeCheckHoistingPhase.cpp \
@@ -442,6 +446,8 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/ftl/FTLValueFromBlock.h \
 	Source/JavaScriptCore/ftl/FTLValueSource.cpp \
 	Source/JavaScriptCore/ftl/FTLValueSource.h \
+	Source/JavaScriptCore/heap/CodeBlockSet.cpp \
+	Source/JavaScriptCore/heap/CodeBlockSet.h \
 	Source/JavaScriptCore/heap/CopiedAllocator.h \
 	Source/JavaScriptCore/heap/CopiedBlock.h \
 	Source/JavaScriptCore/heap/CopiedBlockInlines.h \
@@ -456,8 +462,6 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/heap/ConservativeRoots.cpp \
 	Source/JavaScriptCore/heap/ConservativeRoots.h \
 	Source/JavaScriptCore/heap/DeferGC.h \
-	Source/JavaScriptCore/heap/DFGCodeBlocks.cpp \
-	Source/JavaScriptCore/heap/DFGCodeBlocks.h \
 	Source/JavaScriptCore/heap/GCAssertions.h \
 	Source/JavaScriptCore/heap/GCIncomingRefCounted.h \
 	Source/JavaScriptCore/heap/GCIncomingRefCountedInlines.h \

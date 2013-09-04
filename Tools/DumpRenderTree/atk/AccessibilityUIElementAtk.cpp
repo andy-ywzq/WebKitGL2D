@@ -54,6 +54,9 @@ static String coreAttributeToAtkAttribute(JSStringRef attribute)
     if (attributeString == "AXPlaceholderValue")
         return "placeholder-text";
 
+    if (attributeString == "AXSortDirection")
+        return "aria-sort";
+
     return String();
 }
 
@@ -101,6 +104,8 @@ static inline const char* roleToString(AtkRole role)
         return "AXCanvas";
     case ATK_ROLE_CHECK_BOX:
         return "AXCheckBox";
+    case ATK_ROLE_COLOR_CHOOSER:
+        return "AXColorWell";
     case ATK_ROLE_COLUMN_HEADER:
         return "AXColumnHeader";
     case ATK_ROLE_COMBO_BOX:

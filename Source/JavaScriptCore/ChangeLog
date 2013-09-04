@@ -1,3 +1,420 @@
+2013-09-04  Benjamin Poulain  <benjamin@webkit.org>
+
+        JSGenericTypedArrayViewConstructor.h is referenced twice in the XCode project build section, causing warnings
+        https://bugs.webkit.org/show_bug.cgi?id=120698
+
+        Reviewed by Darin Adler.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
+2013-09-04  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        ASSERT in MarkedAllocator::allocateSlowCase is wrong
+        https://bugs.webkit.org/show_bug.cgi?id=120639
+
+        Reviewed by Oliver Hunt.
+
+        ASSERT(!m_heap->shouldCollect()) is no longer true due to our use of the GC 
+        deferral mechanism. We could technically be beyond our byte allocation limit, 
+        but still not try to collect due to deferral. This patch amends shouldCollect() 
+        to return false if GC is currently deferred.
+
+        * heap/Heap.h:
+        (JSC::Heap::shouldCollect):
+
+2013-09-03  Filip Pizlo  <fpizlo@apple.com>
+
+        The DFG should be able to tier-up and OSR enter into the FTL
+        https://bugs.webkit.org/show_bug.cgi?id=112838
+
+        Reviewed by Mark Hahnenberg.
+        
+        This adds the ability for the DFG to tier-up into the FTL. This works in both
+        of the expected tier-up modes:
+        
+        Replacement: frequently called functions eventually have their entrypoint
+        replaced with one that goes into FTL-compiled code. Note, this will be a
+        slow-down for now since we don't yet have LLVM calling convention integration.
+        
+        OSR entry: code stuck in hot loops gets OSR'd into the FTL from the DFG.
+        
+        This means that if the DFG detects that a function is an FTL candidate, it
+        inserts execution counting code similar to the kind that the baseline JIT
+        would use. If you trip on a loop count in a loop header that is an OSR
+        candidate (it's not an inlined loop), we do OSR; otherwise we do replacement.
+        OSR almost always also implies future replacement.
+        
+        OSR entry into the FTL is really cool. It uses a specialized FTL compile of
+        the code, where early in the DFG pipeline we replace the original root block
+        with an OSR entrypoint block that jumps to the pre-header of the hot loop.
+        The OSR entrypoint loads all live state at the loop pre-header using loads
+        from a scratch buffer, which gets populated by the runtime's OSR entry
+        preparation code (FTL::prepareOSREntry()). This approach appears to work well
+        with all of our subsequent optimizations, including prediction propagation,
+        CFA, and LICM. LLVM seems happy with it, too. Best of all, it works naturally
+        with concurrent compilation: when we hit the tier-up trigger we spawn a
+        compilation plan at the bytecode index from which we triggered; once the
+        compilation finishes the next trigger will try to enter, at that bytecode
+        index. If it can't - for example because the code has moved on to another
+        loop - then we just try again. Loops that get hot enough for OSR entry (about
+        25,000 iterations) will probably still be running when a concurrent compile
+        finishes, so this doesn't appear to be a big problem.
+        
+        This immediately gives us a 70% speed-up on imaging-gaussian-blur. We could
+        get a bigger speed-up by adding some more intelligence and tweaking LLVM to
+        compile code faster. Those things will happen eventually but this is a good
+        start. Probably this code will see more tuning as we get more coverage in the
+        FTL JIT, but I'll worry about that in future patches.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * Target.pri:
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::CodeBlock):
+        (JSC::CodeBlock::hasOptimizedReplacement):
+        (JSC::CodeBlock::setOptimizationThresholdBasedOnCompilationResult):
+        * bytecode/CodeBlock.h:
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::::executeEffects):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        (JSC::DFG::ByteCodeParser::parse):
+        * dfg/DFGCFGSimplificationPhase.cpp:
+        (JSC::DFG::CFGSimplificationPhase::run):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGDriver.cpp:
+        (JSC::DFG::compileImpl):
+        (JSC::DFG::compile):
+        * dfg/DFGDriver.h:
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGGraph.cpp:
+        (JSC::DFG::Graph::dump):
+        (JSC::DFG::Graph::killBlockAndItsContents):
+        (JSC::DFG::Graph::killUnreachableBlocks):
+        * dfg/DFGGraph.h:
+        * dfg/DFGInPlaceAbstractState.cpp:
+        (JSC::DFG::InPlaceAbstractState::initialize):
+        * dfg/DFGJITCode.cpp:
+        (JSC::DFG::JITCode::reconstruct):
+        (JSC::DFG::JITCode::checkIfOptimizationThresholdReached):
+        (JSC::DFG::JITCode::optimizeNextInvocation):
+        (JSC::DFG::JITCode::dontOptimizeAnytimeSoon):
+        (JSC::DFG::JITCode::optimizeAfterWarmUp):
+        (JSC::DFG::JITCode::optimizeSoon):
+        (JSC::DFG::JITCode::forceOptimizationSlowPathConcurrently):
+        (JSC::DFG::JITCode::setOptimizationThresholdBasedOnCompilationResult):
+        * dfg/DFGJITCode.h:
+        * dfg/DFGJITFinalizer.cpp:
+        (JSC::DFG::JITFinalizer::finalize):
+        (JSC::DFG::JITFinalizer::finalizeFunction):
+        (JSC::DFG::JITFinalizer::finalizeCommon):
+        * dfg/DFGLoopPreHeaderCreationPhase.cpp:
+        (JSC::DFG::createPreHeader):
+        (JSC::DFG::LoopPreHeaderCreationPhase::run):
+        * dfg/DFGLoopPreHeaderCreationPhase.h:
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::hasUnlinkedLocal):
+        (JSC::DFG::Node::unlinkedLocal):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGOSREntry.cpp:
+        (JSC::DFG::prepareOSREntry):
+        * dfg/DFGOSREntrypointCreationPhase.cpp: Added.
+        (JSC::DFG::OSREntrypointCreationPhase::OSREntrypointCreationPhase):
+        (JSC::DFG::OSREntrypointCreationPhase::run):
+        (JSC::DFG::performOSREntrypointCreation):
+        * dfg/DFGOSREntrypointCreationPhase.h: Added.
+        * dfg/DFGOperations.cpp:
+        * dfg/DFGOperations.h:
+        * dfg/DFGPlan.cpp:
+        (JSC::DFG::Plan::Plan):
+        (JSC::DFG::Plan::compileInThread):
+        (JSC::DFG::Plan::compileInThreadImpl):
+        * dfg/DFGPlan.h:
+        * dfg/DFGPredictionInjectionPhase.cpp:
+        (JSC::DFG::PredictionInjectionPhase::run):
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGTierUpCheckInjectionPhase.cpp: Added.
+        (JSC::DFG::TierUpCheckInjectionPhase::TierUpCheckInjectionPhase):
+        (JSC::DFG::TierUpCheckInjectionPhase::run):
+        (JSC::DFG::performTierUpCheckInjection):
+        * dfg/DFGTierUpCheckInjectionPhase.h: Added.
+        * dfg/DFGToFTLDeferredCompilationCallback.cpp: Added.
+        (JSC::DFG::ToFTLDeferredCompilationCallback::ToFTLDeferredCompilationCallback):
+        (JSC::DFG::ToFTLDeferredCompilationCallback::~ToFTLDeferredCompilationCallback):
+        (JSC::DFG::ToFTLDeferredCompilationCallback::create):
+        (JSC::DFG::ToFTLDeferredCompilationCallback::compilationDidBecomeReadyAsynchronously):
+        (JSC::DFG::ToFTLDeferredCompilationCallback::compilationDidComplete):
+        * dfg/DFGToFTLDeferredCompilationCallback.h: Added.
+        * dfg/DFGToFTLForOSREntryDeferredCompilationCallback.cpp: Added.
+        (JSC::DFG::ToFTLForOSREntryDeferredCompilationCallback::ToFTLForOSREntryDeferredCompilationCallback):
+        (JSC::DFG::ToFTLForOSREntryDeferredCompilationCallback::~ToFTLForOSREntryDeferredCompilationCallback):
+        (JSC::DFG::ToFTLForOSREntryDeferredCompilationCallback::create):
+        (JSC::DFG::ToFTLForOSREntryDeferredCompilationCallback::compilationDidBecomeReadyAsynchronously):
+        (JSC::DFG::ToFTLForOSREntryDeferredCompilationCallback::compilationDidComplete):
+        * dfg/DFGToFTLForOSREntryDeferredCompilationCallback.h: Added.
+        * dfg/DFGWorklist.cpp:
+        (JSC::DFG::globalWorklist):
+        * dfg/DFGWorklist.h:
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLCapabilities.h:
+        * ftl/FTLForOSREntryJITCode.cpp: Added.
+        (JSC::FTL::ForOSREntryJITCode::ForOSREntryJITCode):
+        (JSC::FTL::ForOSREntryJITCode::~ForOSREntryJITCode):
+        (JSC::FTL::ForOSREntryJITCode::ftlForOSREntry):
+        (JSC::FTL::ForOSREntryJITCode::initializeEntryBuffer):
+        * ftl/FTLForOSREntryJITCode.h: Added.
+        (JSC::FTL::ForOSREntryJITCode::entryBuffer):
+        (JSC::FTL::ForOSREntryJITCode::setBytecodeIndex):
+        (JSC::FTL::ForOSREntryJITCode::bytecodeIndex):
+        (JSC::FTL::ForOSREntryJITCode::countEntryFailure):
+        (JSC::FTL::ForOSREntryJITCode::entryFailureCount):
+        * ftl/FTLJITFinalizer.cpp:
+        (JSC::FTL::JITFinalizer::finalizeFunction):
+        * ftl/FTLLink.cpp:
+        (JSC::FTL::link):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileBlock):
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compileExtractOSREntryLocal):
+        (JSC::FTL::LowerDFGToLLVM::compileGetLocal):
+        (JSC::FTL::LowerDFGToLLVM::addWeakReference):
+        * ftl/FTLOSREntry.cpp: Added.
+        (JSC::FTL::prepareOSREntry):
+        * ftl/FTLOSREntry.h: Added.
+        * ftl/FTLOutput.h:
+        (JSC::FTL::Output::crashNonTerminal):
+        (JSC::FTL::Output::crash):
+        * ftl/FTLState.cpp:
+        (JSC::FTL::State::State):
+        * interpreter/Register.h:
+        (JSC::Register::unboxedDouble):
+        * jit/JIT.cpp:
+        (JSC::JIT::emitEnterOptimizationCheck):
+        * jit/JITCode.cpp:
+        (JSC::JITCode::ftlForOSREntry):
+        * jit/JITCode.h:
+        * jit/JITStubs.cpp:
+        (JSC::DEFINE_STUB_FUNCTION):
+        * runtime/Executable.cpp:
+        (JSC::ScriptExecutable::newReplacementCodeBlockFor):
+        * runtime/Options.h:
+        * runtime/VM.cpp:
+        (JSC::VM::ensureWorklist):
+        * runtime/VM.h:
+
+2013-09-03  Filip Pizlo  <fpizlo@apple.com>
+
+        CodeBlock memory cost reporting should be rationalized
+        https://bugs.webkit.org/show_bug.cgi?id=120615
+
+        Reviewed by Darin Adler.
+        
+        Report the size of the instruction stream, and then remind the GC that we're
+        using memory when we trace.
+        
+        This is a slight slow-down on some JSBench tests because it makes us GC a
+        bit more frequently. But I think it's well worth it; if we really want those
+        tests to GC less frequently then we can achieve that through other kinds of
+        tuning. It's better that the GC knows that CodeBlocks do in fact use memory;
+        what it does with that information is a somewhat orthogonal question.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::CodeBlock):
+        (JSC::CodeBlock::visitAggregate):
+
+2013-09-03  Mark Lam  <mark.lam@apple.com>
+
+        Converting StackIterator to a callback interface.
+        https://bugs.webkit.org/show_bug.cgi?id=120564.
+
+        Reviewed by Filip Pizlo.
+
+        * API/JSContextRef.cpp:
+        (BacktraceFunctor::BacktraceFunctor):
+        (BacktraceFunctor::operator()):
+        (JSContextCreateBacktrace):
+        * interpreter/CallFrame.cpp:
+        * interpreter/CallFrame.h:
+        * interpreter/Interpreter.cpp:
+        (JSC::DumpRegisterFunctor::DumpRegisterFunctor):
+        (JSC::DumpRegisterFunctor::operator()):
+        (JSC::Interpreter::dumpRegisters):
+        (JSC::unwindCallFrame):
+        (JSC::GetStackTraceFunctor::GetStackTraceFunctor):
+        (JSC::GetStackTraceFunctor::operator()):
+        (JSC::Interpreter::getStackTrace):
+        (JSC::Interpreter::stackTraceAsString):
+        (JSC::UnwindFunctor::UnwindFunctor):
+        (JSC::UnwindFunctor::operator()):
+        (JSC::Interpreter::unwind):
+        * interpreter/Interpreter.h:
+        * interpreter/StackIterator.cpp:
+        (JSC::StackIterator::numberOfFrames):
+        (JSC::StackIterator::gotoFrameAtIndex):
+        (JSC::StackIterator::gotoNextFrameWithFilter):
+        (JSC::StackIterator::resetIterator):
+        (JSC::StackIterator::Frame::print):
+        (debugPrintCallFrame):
+        (DebugPrintStackFunctor::operator()):
+        (debugPrintStack): Added for debugging convenience.
+        * interpreter/StackIterator.h:
+        (JSC::StackIterator::Frame::index):
+        (JSC::StackIterator::iterate):
+        * jsc.cpp:
+        (FunctionJSCStackFunctor::FunctionJSCStackFunctor):
+        (FunctionJSCStackFunctor::operator()):
+        (functionJSCStack):
+        * profiler/ProfileGenerator.cpp:
+        (JSC::AddParentForConsoleStartFunctor::AddParentForConsoleStartFunctor):
+        (JSC::AddParentForConsoleStartFunctor::foundParent):
+        (JSC::AddParentForConsoleStartFunctor::operator()):
+        (JSC::ProfileGenerator::addParentForConsoleStart):
+        * runtime/JSFunction.cpp:
+        (JSC::RetrieveArgumentsFunctor::RetrieveArgumentsFunctor):
+        (JSC::RetrieveArgumentsFunctor::result):
+        (JSC::RetrieveArgumentsFunctor::operator()):
+        (JSC::retrieveArguments):
+        (JSC::RetrieveCallerFunctionFunctor::RetrieveCallerFunctionFunctor):
+        (JSC::RetrieveCallerFunctionFunctor::result):
+        (JSC::RetrieveCallerFunctionFunctor::operator()):
+        (JSC::retrieveCallerFunction):
+        * runtime/JSGlobalObjectFunctions.cpp:
+        (JSC::GlobalFuncProtoGetterFunctor::GlobalFuncProtoGetterFunctor):
+        (JSC::GlobalFuncProtoGetterFunctor::result):
+        (JSC::GlobalFuncProtoGetterFunctor::operator()):
+        (JSC::globalFuncProtoGetter):
+        (JSC::GlobalFuncProtoSetterFunctor::GlobalFuncProtoSetterFunctor):
+        (JSC::GlobalFuncProtoSetterFunctor::allowsAccess):
+        (JSC::GlobalFuncProtoSetterFunctor::operator()):
+        (JSC::globalFuncProtoSetter):
+        * runtime/ObjectConstructor.cpp:
+        (JSC::ObjectConstructorGetPrototypeOfFunctor::ObjectConstructorGetPrototypeOfFunctor):
+        (JSC::ObjectConstructorGetPrototypeOfFunctor::result):
+        (JSC::ObjectConstructorGetPrototypeOfFunctor::operator()):
+        (JSC::objectConstructorGetPrototypeOf):
+
+2013-09-03  Oliver Hunt  <oliver@apple.com>
+
+        Support structured clone of Map and Set
+        https://bugs.webkit.org/show_bug.cgi?id=120654
+
+        Reviewed by Simon Fraser.
+
+        Make xcode copy the required headers, and add appropriate export attributes
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * runtime/JSMap.h:
+        * runtime/JSSet.h:
+        * runtime/MapData.h:
+
+2013-09-02  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Support the "json" responseType and JSON response entity in XHR
+        https://bugs.webkit.org/show_bug.cgi?id=73648
+
+        Reviewed by Oliver Hunt.
+
+        Based on the patch written by Jarred Nicholls.
+
+        Add JSC::JSONParse. This function will be used in XMLHttpRequest.response of type 'json'.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * runtime/JSONObject.cpp:
+        (JSC::JSONParse):
+        * runtime/JSONObject.h:
+
+2013-09-02  Filip Pizlo  <fpizlo@apple.com>
+
+        CodeBlock::jettison() should be implicit
+        https://bugs.webkit.org/show_bug.cgi?id=120567
+
+        Reviewed by Oliver Hunt.
+        
+        This is a risky change from a performance standpoint, but I believe it's
+        necessary. This makes all CodeBlocks get swept by GC. Nobody but the GC
+        can delete CodeBlocks because the GC always holds a reference to them.
+        Once a CodeBlock reaches just one reference (i.e. the one from the GC)
+        then the GC will free it only if it's not on the stack.
+        
+        This allows me to get rid of the jettisoning logic. We need this for FTL
+        tier-up. Well; we don't need it, but it will help prevent a lot of bugs.
+        Previously, if you wanted to to replace one code block with another, you
+        had to remember to tell the GC that the previous code block is
+        "jettisoned". We would need to do this when tiering up from DFG to FTL
+        and when dealing with DFG-to-FTL OSR entry code blocks. There are a lot
+        of permutations here - tiering up to the FTL, OSR entering into the FTL,
+        deciding that an OSR entry code block is not relevant anymore - just to
+        name a few. In each of these cases we'd have to jettison the previous
+        code block. It smells like a huge source of future bugs.
+        
+        So I made jettisoning implicit by making the GC always watch out for a
+        CodeBlock being owned solely by the GC.
+        
+        This change is performance neutral.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * Target.pri:
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::CodeBlock):
+        (JSC::CodeBlock::~CodeBlock):
+        (JSC::CodeBlock::visitAggregate):
+        (JSC::CodeBlock::jettison):
+        * bytecode/CodeBlock.h:
+        (JSC::CodeBlock::setJITCode):
+        (JSC::CodeBlock::shouldImmediatelyAssumeLivenessDuringScan):
+        (JSC::CodeBlockSet::mark):
+        * dfg/DFGCommonData.h:
+        (JSC::DFG::CommonData::CommonData):
+        * heap/CodeBlockSet.cpp: Added.
+        (JSC::CodeBlockSet::CodeBlockSet):
+        (JSC::CodeBlockSet::~CodeBlockSet):
+        (JSC::CodeBlockSet::add):
+        (JSC::CodeBlockSet::clearMarks):
+        (JSC::CodeBlockSet::deleteUnmarkedAndUnreferenced):
+        (JSC::CodeBlockSet::traceMarked):
+        * heap/CodeBlockSet.h: Added.
+        * heap/ConservativeRoots.cpp:
+        (JSC::ConservativeRoots::add):
+        * heap/ConservativeRoots.h:
+        * heap/DFGCodeBlocks.cpp: Removed.
+        * heap/DFGCodeBlocks.h: Removed.
+        * heap/Heap.cpp:
+        (JSC::Heap::markRoots):
+        (JSC::Heap::deleteAllCompiledCode):
+        (JSC::Heap::deleteUnmarkedCompiledCode):
+        * heap/Heap.h:
+        * interpreter/JSStack.cpp:
+        (JSC::JSStack::gatherConservativeRoots):
+        * interpreter/JSStack.h:
+        * runtime/Executable.cpp:
+        (JSC::ScriptExecutable::installCode):
+        * runtime/Executable.h:
+        * runtime/VM.h:
+
+2013-09-02  Darin Adler  <darin@apple.com>
+
+        [Mac] No need for HardAutorelease, which is same as CFBridgingRelease
+        https://bugs.webkit.org/show_bug.cgi?id=120569
+
+        Reviewed by Andy Estes.
+
+        * API/JSValue.mm:
+        (valueToString): Use CFBridgingRelease.
+
 2013-08-30  Filip Pizlo  <fpizlo@apple.com>
 
         CodeBlock refactoring broke profile dumping
