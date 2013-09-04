@@ -654,20 +654,6 @@ fast/dom/vertical-scrollbar-in-rtl.html [ Failure ]
 
 fast/dom/Element/getBoundingClientRect.html [ Skip ]
 
-fast/dom/HTMLDialogElement/dialog-enabled.html [ Skip ]
-fast/dom/HTMLDialogElement/dialog-open.html [ Skip ]
-fast/dom/HTMLDialogElement/dialog-show-modal.html [ Skip ]
-fast/dom/HTMLDialogElement/non-anchored-dialog-positioning.html [ Skip ]
-fast/dom/HTMLDialogElement/removed-element-is-removed-from-top-layer.html [ Skip ]
-fast/dom/HTMLDialogElement/top-layer-containing-block.html [ Skip ]
-fast/dom/HTMLDialogElement/top-layer-display-none.html [ Skip ]
-fast/dom/HTMLDialogElement/top-layer-nesting.html [ Skip ]
-fast/dom/HTMLDialogElement/top-layer-position-relative.html [ Skip ]
-fast/dom/HTMLDialogElement/top-layer-position-static.html [ Skip ]
-fast/dom/HTMLDialogElement/top-layer-stacking-correct-order-remove-readd.html [ Skip ]
-fast/dom/HTMLDialogElement/top-layer-stacking-dynamic.html [ Skip ]
-fast/dom/HTMLDialogElement/top-layer-stacking.html [ Skip ]
-
 fast/dom/HTMLInputElement/input-slider-update.html [ Skip ]
 
 fast/dom/HTMLLabelElement/focus-label.html [ Skip ]
@@ -3382,6 +3368,9 @@ editing/text-iterator/basic-iteration-shadowdom.html
 fast/dom/shadow
 fast/frames/detached-shadow-frame.html
 inspector/elements/update-shadowdom.html
+
+# Will be removed by - https://bugs.webkit.org/show_bug.cgi?id=120680
+fast/dom/HTMLDialogElement
 
 ################################################################################
 # UNIMPLEMENTED FEATURES
