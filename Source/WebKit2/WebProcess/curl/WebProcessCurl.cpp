@@ -27,13 +27,7 @@
 #include "config.h"
 #include "WebProcess.h"
 
-#include "WebCookieManager.h"
-#include "WebProcessCreationParameters.h"
-#include <WebCore/FileSystem.h>
 #include <WebCore/Language.h>
-#include <WebCore/MemoryCache.h>
-#include <WebCore/PageCache.h>
-#include <WebCore/ResourceHandle.h>
 
 namespace WebKit {
 
