@@ -24,8 +24,6 @@ fast/frames/seamless/seamless-window-location-href.html [ Skip ]
 fast/hidpi/image-set-without-specified-width.html [ Skip ]
 fast/hidpi/resize-corner-hidpi.html [ Skip ]
 fast/xmlhttprequest/xmlhttprequest-recursive-sync-event.html [ Skip ]
-inspector-protocol/debugger-terminate-dedicated-worker-while-paused.html [ Skip ]
-inspector-protocol/media-query-listener-exception.html [ Skip ]
 storage/indexeddb/keypath-fetch-key.html [ Skip ]
 
 # sometimes crash
@@ -3008,7 +3006,6 @@ fast/parser/document-write-onload-ordering.html [ Crash Pass ]
 fast/parser/double-write-from-closed-iframe.html [ Crash Pass ]
 
 # Some tests are failing since way before merge (e51e713 155bfb6), but now we're painting the bot green again.
-inspector-protocol/debugger-pause-dedicated-worker.html [ Failure Pass ]
 fast/events/only-valid-drop-targets-receive-file-drop.html [ Failure ]
 fast/events/touch/gesture/right-click-gestures-set-cursor-at-correct-position.html [ Skip ]
 http/tests/xmlhttprequest/access-control-preflight-credential-async.html [ Failure ]
@@ -3369,9 +3366,6 @@ fast/dom/shadow
 fast/frames/detached-shadow-frame.html
 inspector/elements/update-shadowdom.html
 
-# Will be removed by - https://bugs.webkit.org/show_bug.cgi?id=120680
-fast/dom/HTMLDialogElement
-
 ################################################################################
 # UNIMPLEMENTED FEATURES
 ################################################################################
@@ -3385,8 +3379,6 @@ http/tests/appcache/load-from-appcache-defer-resume-crash.html [ Failure ]
 
 # WebAudio: missing because we would need to decode data for running these
 webaudio [ Skip ]
-inspector-protocol/nmi-webaudio.html [ Skip ]
-inspector-protocol/nmi-webaudio-leak-test.html [ Skip ]
 
 css3/filters/composited-during-transition-layertree.html [ Missing ]
 css3/filters/effect-reference-ordering-hw.html [ Missing ]
@@ -3726,7 +3718,6 @@ css3/compositing/background-blend-mode-different-image-formats.html [ Missing ]
 css3/compositing/background-blend-mode-image-color.html [ Missing ]
 css3/compositing/background-blend-mode-image-image.html [ Missing ]
 css3/compositing/background-blend-mode-single-layer-no-blending.html [ Missing ]
-fast/hidpi/image-srcset-change-dynamically-from-js.html [ Missing ]
 fast/hidpi/image-srcset-data-src.html [ Missing ]
 fast/hidpi/image-srcset-data-srcset.html [ Missing ]
 fast/hidpi/image-srcset-invalid-inputs-correct-src.html [ Missing ]
@@ -3736,8 +3727,6 @@ fast/hidpi/image-srcset-nomodifier.html [ Missing ]
 fast/hidpi/image-srcset-only-src-attribute.html [ Missing ]
 fast/hidpi/image-srcset-remove-dynamically-from-js.html [ Missing ]
 fast/hidpi/image-srcset-same-alternative-for-both-attributes.html [ Missing ]
-fast/hidpi/image-srcset-simple.html [ Missing ]
-fast/hidpi/image-srcset-src-selection.html [ Missing ]
 fast/hidpi/image-srcset-viewport-modifiers.html [ Missing ]
 fast/multicol/pagination/BottomToTop-bt.html [ Missing ]
 fast/multicol/pagination/BottomToTop-lr.html [ Missing ]
@@ -3856,9 +3845,6 @@ fast/css/first-letter-removed-added.html
 fast/css/getComputedStyle/computed-style-without-renderer.html
 fast/css/getComputedStyle/computed-style.html
 fast/css/tab-size.html
-fast/dom/HTMLDialogElement/closed-dialog-does-not-block-mouse-events.html
-fast/dom/HTMLDialogElement/modal-dialog-blocks-mouse-events.html
-fast/dom/HTMLDialogElement/non-modal-dialog-does-not-block-mouse-events.html
 fast/dom/shadow/touch-event-retargeting.html
 fast/regions/seamless-iframe-flowed-into-regions.html
 http/tests/misc/delete-frame-during-readystatechange-with-gc-after-video-removal.html
