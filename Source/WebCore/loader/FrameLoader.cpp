@@ -1699,9 +1699,12 @@ void FrameLoader::clearProvisionalLoad()
 
 void FrameLoader::commitProvisionalLoad()
 {
-    RefPtr<CachedPage> cachedPage = m_loadingFromCachedPage ? pageCache()->get(history().provisionalItem()) : 0;
     RefPtr<DocumentLoader> pdl = m_provisionalDocumentLoader;
     Ref<Frame> protect(m_frame);
+
+    OwnPtr<CachedPage> cachedPage;
+    if (m_loadingFromCachedPage)
+        cachedPage = pageCache()->take(history().provisionalItem());
 
     LOG(PageCache, "WebCoreLoading %s: About to commit provisional load from previous URL '%s' to new URL '%s'", m_frame.tree().uniqueName().string().utf8().data(),
         m_frame.document() ? m_frame.document()->url().stringCenterEllipsizedToLength().utf8().data() : "",
@@ -1713,7 +1716,7 @@ void FrameLoader::commitProvisionalLoad()
     // We are doing this here because we know for sure that a new page is about to be loaded.
     HistoryItem* item = history().currentItem();
     if (!m_frame.tree().parent() && pageCache()->canCache(m_frame.page()) && !item->isInPageCache())
-        pageCache()->add(item, m_frame.page());
+        pageCache()->add(item, *m_frame.page());
 
     if (m_loadType != FrameLoadTypeReplace)
         closeOldDataSources();
@@ -1721,7 +1724,7 @@ void FrameLoader::commitProvisionalLoad()
     if (!cachedPage && !m_stateMachine.creatingInitialEmptyDocument())
         m_client.makeRepresentation(pdl.get());
 
-    transitionToCommitted(cachedPage);
+    transitionToCommitted(cachedPage.get());
 
     if (pdl && m_documentLoader) {
         // Check if the destination page is allowed to access the previous page's timing information.
@@ -1738,10 +1741,9 @@ void FrameLoader::commitProvisionalLoad()
     
     if (cachedPage && cachedPage->document()) {
         prepareForCachedPageRestore();
-        cachedPage->restore(m_frame.page());
 
-        // The page should be removed from the cache immediately after a restoration in order for the PageCache to be consistent.
-        pageCache()->remove(history().currentItem());
+        // FIXME: This API should be turned around so that we ground CachedPage into the Page.
+        cachedPage->restore(*m_frame.page());
 
         dispatchDidCommitLoad();
 
@@ -1751,11 +1753,8 @@ void FrameLoader::commitProvisionalLoad()
             m_client.dispatchDidReceiveTitle(title);
 
         checkCompleted();
-    } else {
-        if (cachedPage)
-            pageCache()->remove(history().currentItem());
+    } else
         didOpenURL();
-    }
 
     LOG(Loading, "WebCoreLoading %s: Finished committing provisional load to URL %s", m_frame.tree().uniqueName().string().utf8().data(),
         m_frame.document() ? m_frame.document()->url().stringCenterEllipsizedToLength().utf8().data() : "");
@@ -1789,7 +1788,7 @@ void FrameLoader::commitProvisionalLoad()
     }
 }
 
-void FrameLoader::transitionToCommitted(PassRefPtr<CachedPage> cachedPage)
+void FrameLoader::transitionToCommitted(CachedPage* cachedPage)
 {
     ASSERT(m_client.hasWebView());
     ASSERT(m_state == FrameStateProvisional);
@@ -2319,14 +2318,12 @@ void FrameLoader::frameLoadCompleted()
 
 void FrameLoader::detachChildren()
 {
-    typedef Vector<RefPtr<Frame> > FrameVector;
-    FrameVector childrenToDetach;
-    childrenToDetach.reserveCapacity(m_frame.tree().childCount());
+    Vector<Ref<Frame>, 16> childrenToDetach;
+    childrenToDetach.reserveInitialCapacity(m_frame.tree().childCount());
     for (Frame* child = m_frame.tree().lastChild(); child; child = child->tree().previousSibling())
-        childrenToDetach.append(child);
-    FrameVector::iterator end = childrenToDetach.end();
-    for (FrameVector::iterator it = childrenToDetach.begin(); it != end; ++it)
-        (*it)->loader().detachFromParent();
+        childrenToDetach.uncheckedAppend(*child);
+    for (unsigned i = 0; i < childrenToDetach.size(); ++i)
+        childrenToDetach[i]->loader().detachFromParent();
 }
 
 void FrameLoader::closeAndRemoveChild(Frame* child)
@@ -2349,16 +2346,18 @@ void FrameLoader::checkLoadComplete()
     
     m_shouldCallCheckLoadComplete = false;
 
+    if (!m_frame.page())
+        return;
+
     // FIXME: Always traversing the entire frame tree is a bit inefficient, but 
     // is currently needed in order to null out the previous history item for all frames.
-    if (Page* page = m_frame.page()) {
-        Vector<RefPtr<Frame>, 10> frames;
-        for (RefPtr<Frame> frame = &page->mainFrame(); frame; frame = frame->tree().traverseNext())
-            frames.append(frame);
-        // To process children before their parents, iterate the vector backwards.
-        for (size_t i = frames.size(); i; --i)
-            frames[i - 1]->loader().checkLoadCompleteForThisFrame();
-    }
+    Vector<Ref<Frame>, 16> frames;
+    for (Frame* frame = &m_frame.page()->mainFrame(); frame; frame = frame->tree().traverseNext())
+        frames.append(*frame);
+
+    // To process children before their parents, iterate the vector backwards.
+    for (unsigned i = frames.size(); i; --i)
+        frames[i - 1]->loader().checkLoadCompleteForThisFrame();
 }
 
 int FrameLoader::numPendingOrLoadingRequests(bool recurse) const
@@ -2723,10 +2722,10 @@ bool FrameLoader::shouldClose()
         return true;
 
     // Store all references to each subframe in advance since beforeunload's event handler may modify frame
-    Vector<RefPtr<Frame> > targetFrames;
-    targetFrames.append(&m_frame);
+    Vector<Ref<Frame>, 16> targetFrames;
+    targetFrames.append(m_frame);
     for (Frame* child = m_frame.tree().firstChild(); child; child = child->tree().traverseNext(&m_frame))
-        targetFrames.append(child);
+        targetFrames.append(*child);
 
     bool shouldClose = false;
     {

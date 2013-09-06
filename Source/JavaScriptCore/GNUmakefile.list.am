@@ -362,6 +362,10 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/dfg/DFGTierUpCheckInjectionPhase.h \
 	Source/JavaScriptCore/dfg/DFGThunks.cpp \
 	Source/JavaScriptCore/dfg/DFGThunks.h \
+	Source/JavaScriptCore/dfg/DFGToFTLDeferredCompilationCallback.cpp \
+	Source/JavaScriptCore/dfg/DFGToFTLDeferredCompilationCallback.h \
+	Source/JavaScriptCore/dfg/DFGToFTLForOSREntryDeferredCompilationCallback.cpp \
+	Source/JavaScriptCore/dfg/DFGToFTLForOSREntryDeferredCompilationCallback.h \
 	Source/JavaScriptCore/dfg/DFGTypeCheckHoistingPhase.cpp \
 	Source/JavaScriptCore/dfg/DFGTypeCheckHoistingPhase.h \
 	Source/JavaScriptCore/dfg/DFGUnificationPhase.cpp \
@@ -415,6 +419,8 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/ftl/FTLExitValue.h \
 	Source/JavaScriptCore/ftl/FTLFail.cpp \
 	Source/JavaScriptCore/ftl/FTLFail.h \
+	Source/JavaScriptCore/ftl/FTLForOSREntryJITCode.cpp \
+	Source/JavaScriptCore/ftl/FTLForOSREntryJITCode.h \
 	Source/JavaScriptCore/ftl/FTLFormattedValue.h \
 	Source/JavaScriptCore/ftl/FTLGeneratedFunction.h \
 	Source/JavaScriptCore/ftl/FTLIntrinsicRepository.cpp \
@@ -428,6 +434,8 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/ftl/FTLLowerDFGToLLVM.cpp \
 	Source/JavaScriptCore/ftl/FTLLowerDFGToLLVM.h \
 	Source/JavaScriptCore/ftl/FTLLoweredNodeValue.h \
+	Source/JavaScriptCore/ftl/FTLOSREntry.cpp \
+	Source/JavaScriptCore/ftl/FTLOSREntry.h \
 	Source/JavaScriptCore/ftl/FTLOSRExitCompilationInfo.h \
 	Source/JavaScriptCore/ftl/FTLOSRExitCompiler.cpp \
 	Source/JavaScriptCore/ftl/FTLOSRExitCompiler.h \
@@ -589,8 +597,8 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/interpreter/JSStack.h \
 	Source/JavaScriptCore/interpreter/JSStackInlines.h \
 	Source/JavaScriptCore/interpreter/Register.h \
-	Source/JavaScriptCore/interpreter/StackIterator.cpp \
-	Source/JavaScriptCore/interpreter/StackIterator.h \
+	Source/JavaScriptCore/interpreter/StackVisitor.cpp \
+	Source/JavaScriptCore/interpreter/StackVisitor.h \
 	Source/JavaScriptCore/interpreter/VMInspector.cpp \
 	Source/JavaScriptCore/interpreter/VMInspector.h \
 	Source/JavaScriptCore/JavaScriptCorePrefix.h \
@@ -1040,6 +1048,8 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/runtime/StructureTransitionTable.h \
 	Source/JavaScriptCore/runtime/SymbolTable.cpp \
 	Source/JavaScriptCore/runtime/SymbolTable.h \
+	Source/JavaScriptCore/runtime/TestRunnerUtils.cpp \
+	Source/JavaScriptCore/runtime/TestRunnerUtils.h \
 	Source/JavaScriptCore/runtime/ToNativeFromValue.h \
 	Source/JavaScriptCore/runtime/Tracing.h \
 	Source/JavaScriptCore/runtime/TypedArrayAdaptors.h \

@@ -1,3 +1,276 @@
+2013-09-06  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed build fix for the GTK port when building with FTL JIT enabled.
+
+        * GNUmakefile.list.am: Add the missing files to the build.
+
+2013-09-05  Oliver Hunt  <oliver@apple.com>
+
+        Make it simpler to introduce new data types to the global object
+        https://bugs.webkit.org/show_bug.cgi?id=120801
+
+        Reviewed by Gavin Barraclough.
+
+        Add an iterator macro that lists all the "simple" ES types (e.g. type
+        consists of instance, constructor, and prototype classes).  So that
+        we don't need to have every new type litter JSGlobalObject.{cpp,h} with
+        members, accessors, and manual GC visiting.
+
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::visitChildren):
+        * runtime/JSGlobalObject.h:
+
+2013-09-05  Michael Saboff  <msaboff@apple.com>
+
+        Cleanup formatting of byte code debug output
+        Source/JavaScriptCore/ChangeLog
+
+        Rubber stamped by Filip Pizlo.
+
+        Put the formatting of the byte code offset and operation into one common function to
+        simplify and unify formatting.  Changed CodeBlock::registerName() to return
+        "thist" for argument register 0, "argN" for other argument registers and "locN" for
+        local registers.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::registerName):
+        (JSC::CodeBlock::printUnaryOp):
+        (JSC::CodeBlock::printBinaryOp):
+        (JSC::CodeBlock::printConditionalJump):
+        (JSC::CodeBlock::printGetByIdOp):
+        (JSC::CodeBlock::printCallOp):
+        (JSC::CodeBlock::printPutByIdOp):
+        (JSC::CodeBlock::dumpBytecode):
+        * bytecode/CodeBlock.h:
+        (JSC::CodeBlock::printLocationAndOp):
+        (JSC::CodeBlock::printLocationOpAndRegisterOperand):
+
+2013-09-05  Anders Carlsson  <andersca@apple.com>
+
+        GCAssertions.h should use STL type traits and static_assert
+        https://bugs.webkit.org/show_bug.cgi?id=120785
+
+        Reviewed by Andreas Kling.
+
+        There's no need to rely on compiler specific support to figure out if a class is trivially destructable,
+        we can just use type traits from STL. Do this, fix the assert macro to use static_assert directly and
+        rename it from ASSERT_HAS_TRIVIAL_DESTRUCTOR to STATIC_ASSERT_IS_TRIVIALLY_DESTRUCTIBLE to clarify that
+        it's a static assert and to match the STL nomenclature.
+        
+        * API/JSCallbackFunction.cpp:
+        * debugger/DebuggerActivation.cpp:
+        * heap/GCAssertions.h:
+        * runtime/ArrayConstructor.cpp:
+        * runtime/BooleanConstructor.cpp:
+        * runtime/BooleanObject.cpp:
+        * runtime/BooleanPrototype.cpp:
+        * runtime/DateConstructor.cpp:
+        * runtime/ErrorConstructor.cpp:
+        * runtime/ErrorInstance.cpp:
+        * runtime/ErrorPrototype.cpp:
+        * runtime/ExceptionHelpers.cpp:
+        * runtime/FunctionConstructor.cpp:
+        * runtime/FunctionPrototype.cpp:
+        * runtime/GetterSetter.cpp:
+        * runtime/InternalFunction.cpp:
+        * runtime/JSAPIValueWrapper.cpp:
+        * runtime/JSArray.cpp:
+        * runtime/JSCell.cpp:
+        * runtime/JSNotAnObject.cpp:
+        * runtime/JSONObject.cpp:
+        * runtime/JSObject.cpp:
+        * runtime/JSPromiseConstructor.cpp:
+        * runtime/JSPromisePrototype.cpp:
+        * runtime/JSPromiseResolverConstructor.cpp:
+        * runtime/JSPromiseResolverPrototype.cpp:
+        * runtime/JSProxy.cpp:
+        * runtime/JSScope.cpp:
+        * runtime/JSWrapperObject.cpp:
+        * runtime/MathObject.cpp:
+        * runtime/NameConstructor.cpp:
+        * runtime/NativeErrorConstructor.cpp:
+        * runtime/NumberConstructor.cpp:
+        * runtime/NumberObject.cpp:
+        * runtime/NumberPrototype.cpp:
+        * runtime/ObjectConstructor.cpp:
+        * runtime/ObjectPrototype.cpp:
+        * runtime/RegExpObject.cpp:
+        * runtime/StrictEvalActivation.cpp:
+        * runtime/StringConstructor.cpp:
+        * runtime/StringObject.cpp:
+        * runtime/StringPrototype.cpp:
+
+2013-09-05  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build fix for DebugSuffix target.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters: Don't build 64-bit assembly in 32-bit build.
+        Also correct 'filters' file so that files appear in categories that match their on-disk locations.
+
+2013-09-04  Filip Pizlo  <fpizlo@apple.com>
+
+        jsc tests should have timeouts
+        https://bugs.webkit.org/show_bug.cgi?id=120725
+
+        Reviewed by Geoffrey Garen.
+        
+        Add the timeout logic directly to 'jsc' because that's easier to do than
+        writing shell/perl code for it.
+
+        * jsc.cpp:
+        (timeoutThreadMain):
+        (main):
+
+2013-09-04  Filip Pizlo  <fpizlo@apple.com>
+
+        fast/js/dfg-* tests should wait for the concurrent JIT
+        https://bugs.webkit.org/show_bug.cgi?id=120723
+
+        Reviewed by Geoffrey Garen.
+        
+        * runtime/TestRunnerUtils.cpp:
+        (JSC::numberOfDFGCompiles): This should also handle constructors.
+
+2013-09-04  Filip Pizlo  <fpizlo@apple.com>
+
+        run-fast-jsc should work with new-school fast/js tests that loop until the DFG tiers up
+        https://bugs.webkit.org/show_bug.cgi?id=120697
+
+        Reviewed by Mark Hahnenberg.
+
+        * API/JSCTestRunnerUtils.cpp:
+        (JSC::numberOfDFGCompiles):
+        (JSC::setNeverInline):
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * Target.pri:
+        * jsc.cpp:
+        (GlobalObject::finishCreation):
+        (functionNeverInlineFunction):
+        (functionNumberOfDFGCompiles):
+        * runtime/TestRunnerUtils.cpp: Added.
+        (JSC::getExecutable):
+        (JSC::numberOfDFGCompiles):
+        (JSC::setNeverInline):
+        * runtime/TestRunnerUtils.h: Added.
+
+2013-09-04  Mark Lam  <mark.lam@apple.com>
+
+        Renamed StackIterator to StackVisitor.
+        https://bugs.webkit.org/show_bug.cgi?id=120706.
+
+        Reviewed by Geoffrey Garen.
+
+        Also did some minor refactoring:
+        - Renamed StackIterator::iterate() to StackVisitor::visit().
+        - Make StackVisitor::visit() a static method.
+        - Move the instantiation of the StackVisitor instance into StackVisitor::visit()
+          from CallFrame::iterate().
+        - Removed StackIterator::resetIterator() and inline its body into the
+          StackVisitor constructor since this is the only remaining caller of it.
+
+        * API/JSContextRef.cpp:
+        (BacktraceFunctor::operator()):
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * Target.pri:
+        * interpreter/CallFrame.h:
+        (JSC::ExecState::iterate):
+        * interpreter/Interpreter.cpp:
+        (JSC::DumpRegisterFunctor::operator()):
+        (JSC::unwindCallFrame):
+        (JSC::getStackFrameCodeType):
+        (JSC::GetStackTraceFunctor::operator()):
+        (JSC::UnwindFunctor::operator()):
+        * interpreter/Interpreter.h:
+        * interpreter/StackIterator.cpp: Removed.
+        * interpreter/StackIterator.h: Removed.
+        * interpreter/StackVisitor.cpp: Copied from Source/JavaScriptCore/interpreter/StackIterator.cpp.
+        (JSC::StackVisitor::StackVisitor):
+        (JSC::StackVisitor::gotoNextFrame):
+        (JSC::StackVisitor::readFrame):
+        (JSC::StackVisitor::readNonInlinedFrame):
+        (JSC::StackVisitor::readInlinedFrame):
+        (JSC::StackVisitor::Frame::codeType):
+        (JSC::StackVisitor::Frame::functionName):
+        (JSC::StackVisitor::Frame::sourceURL):
+        (JSC::StackVisitor::Frame::toString):
+        (JSC::StackVisitor::Frame::arguments):
+        (JSC::StackVisitor::Frame::computeLineAndColumn):
+        (JSC::StackVisitor::Frame::retrieveExpressionInfo):
+        (JSC::StackVisitor::Frame::setToEnd):
+        (JSC::StackVisitor::Frame::print):
+        (DebugPrintFrameFunctor::operator()):
+        * interpreter/StackVisitor.h: Copied from Source/JavaScriptCore/interpreter/StackIterator.h.
+        (JSC::StackVisitor::visit):
+        * jsc.cpp:
+        (FunctionJSCStackFunctor::operator()):
+        * profiler/ProfileGenerator.cpp:
+        (JSC::AddParentForConsoleStartFunctor::operator()):
+        * runtime/JSFunction.cpp:
+        (JSC::RetrieveArgumentsFunctor::operator()):
+        (JSC::RetrieveCallerFunctionFunctor::operator()):
+        * runtime/JSGlobalObjectFunctions.cpp:
+        (JSC::GlobalFuncProtoGetterFunctor::operator()):
+        (JSC::GlobalFuncProtoSetterFunctor::operator()):
+        * runtime/ObjectConstructor.cpp:
+        (JSC::ObjectConstructorGetPrototypeOfFunctor::operator()):
+
+2013-09-04  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed Build fix for Windows DebugSuffix configuration.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+
+2013-09-04  Mark Lam  <mark.lam@apple.com>
+
+        Refining the StackIterator callback interface.
+        https://bugs.webkit.org/show_bug.cgi?id=120695.
+
+        Reviewed by Geoffrey Garen.
+
+        Introduce CallFrame::iterate() which instantiates a StackIterator and
+        invoke its iterate() method with the passed in functor. The only place
+        where the client code gets access to the StackIterator now is as an
+        argument to the client's functor.
+
+        * API/JSContextRef.cpp:
+        (JSContextCreateBacktrace):
+        * interpreter/CallFrame.cpp:
+        * interpreter/CallFrame.h:
+        (JSC::ExecState::iterate):
+        * interpreter/Interpreter.cpp:
+        (JSC::Interpreter::dumpRegisters):
+        (JSC::Interpreter::getStackTrace):
+        (JSC::Interpreter::unwind):
+        * interpreter/StackIterator.cpp:
+        (JSC::StackIterator::StackIterator):
+        (DebugPrintFrameFunctor::DebugPrintFrameFunctor):
+        (DebugPrintFrameFunctor::operator()):
+        (debugPrintCallFrame):
+        (debugPrintStack):
+        * interpreter/StackIterator.h:
+        (JSC::StackIterator::iterate):
+        * jsc.cpp:
+        (functionJSCStack):
+        * profiler/ProfileGenerator.cpp:
+        (JSC::ProfileGenerator::addParentForConsoleStart):
+        * runtime/JSFunction.cpp:
+        (JSC::retrieveArguments):
+        (JSC::RetrieveCallerFunctionFunctor::operator()):
+        (JSC::retrieveCallerFunction):
+        * runtime/JSGlobalObjectFunctions.cpp:
+        (JSC::globalFuncProtoGetter):
+        (JSC::globalFuncProtoSetter):
+        * runtime/ObjectConstructor.cpp:
+        (JSC::objectConstructorGetPrototypeOf):
+
 2013-09-04  Benjamin Poulain  <benjamin@webkit.org>
 
         JSGenericTypedArrayViewConstructor.h is referenced twice in the XCode project build section, causing warnings

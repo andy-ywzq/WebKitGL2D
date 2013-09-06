@@ -41,7 +41,7 @@
 #include "ScriptValue.h"
 #include <interpreter/CallFrame.h>
 #include <interpreter/CallFrameInlines.h>
-#include <interpreter/StackIterator.h>
+#include <interpreter/StackVisitor.h>
 #include <runtime/ArgList.h>
 #include <runtime/JSCJSValue.h>
 #include <runtime/JSFunction.h>
@@ -62,18 +62,18 @@ public:
     {
     }
 
-    StackIterator::Status operator()(StackIterator& iter)
+    StackVisitor::Status operator()(StackVisitor& visitor)
     {
         if (m_remainingCapacityForFrameCapture) {
             unsigned line;
             unsigned column;
-            iter->computeLineAndColumn(line, column);
-            m_frames.append(ScriptCallFrame(iter->functionName(), iter->sourceURL(), line, column));
+            visitor->computeLineAndColumn(line, column);
+            m_frames.append(ScriptCallFrame(visitor->functionName(), visitor->sourceURL(), line, column));
 
             m_remainingCapacityForFrameCapture--;
-            return StackIterator::Continue;
+            return StackVisitor::Continue;
         }
-        return StackIterator::Done;
+        return StackVisitor::Done;
     }
 
 private:
@@ -87,8 +87,7 @@ PassRefPtr<ScriptCallStack> createScriptCallStack(size_t maxStackSize, bool empt
     if (JSC::ExecState* exec = JSMainThreadExecState::currentState()) {
         CallFrame* frame = exec->vm().topCallFrame;
         CreateScriptCallStackFunctor functor(frames, maxStackSize);
-        StackIterator iter = frame->begin();
-        iter.iterate(functor);
+        frame->iterate(functor);
     }
     if (frames.isEmpty() && !emptyIsAllowed) {
         // No frames found. It may happen in the case where
@@ -108,29 +107,29 @@ public:
     {
     }
 
-    StackIterator::Status operator()(StackIterator& iter)
+    StackVisitor::Status operator()(StackVisitor& visitor)
     {
         if (m_needToSkipAFrame) {
             m_needToSkipAFrame = false;
-            return StackIterator::Continue;
+            return StackVisitor::Continue;
         }
 
         if (m_remainingCapacityForFrameCapture) {
             // This early exit is necessary to maintain our old behaviour
             // but the stack trace we produce now is complete and handles all
             // ways in which code may be running
-            if (!iter->callee() && m_frames.size())
-                return StackIterator::Done;
+            if (!visitor->callee() && m_frames.size())
+                return StackVisitor::Done;
 
             unsigned line;
             unsigned column;
-            iter->computeLineAndColumn(line, column);
-            m_frames.append(ScriptCallFrame(iter->functionName(), iter->sourceURL(), line, column));
+            visitor->computeLineAndColumn(line, column);
+            m_frames.append(ScriptCallFrame(visitor->functionName(), visitor->sourceURL(), line, column));
 
             m_remainingCapacityForFrameCapture--;
-            return StackIterator::Continue;
+            return StackVisitor::Continue;
         }
-        return StackIterator::Done;
+        return StackVisitor::Done;
     }
 
 private:
@@ -144,10 +143,12 @@ PassRefPtr<ScriptCallStack> createScriptCallStack(JSC::ExecState* exec, size_t m
     Vector<ScriptCallFrame> frames;
     ASSERT(exec);
     CallFrame* frame = exec->vm().topCallFrame;
-    StackIterator iter = frame->begin();
-    size_t numberOfFrames = iter.numberOfFrames();
-    CreateScriptCallStackForConsoleFunctor functor(numberOfFrames > 1, maxStackSize, frames);
-    iter.iterate(functor);
+    CreateScriptCallStackForConsoleFunctor functor(true, maxStackSize, frames);
+    frame->iterate(functor);
+    if (frames.isEmpty()) {
+        CreateScriptCallStackForConsoleFunctor functor(false, maxStackSize, frames);
+        frame->iterate(functor);
+    }
     return ScriptCallStack::create(frames);
 }
 

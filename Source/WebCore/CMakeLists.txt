@@ -2048,6 +2048,7 @@ set(WebCore_SOURCES
     platform/network/ResourceRequestBase.cpp
     platform/network/ResourceResponseBase.cpp
     platform/network/SocketStreamHandleBase.cpp
+    platform/network/SynchronousLoaderClient.cpp
 
     platform/sql/SQLValue.cpp
     platform/sql/SQLiteAuthorizer.cpp
@@ -2100,6 +2101,7 @@ set(WebCore_SOURCES
     rendering/HitTestingTransformState.cpp
     rendering/HitTestLocation.cpp
     rendering/HitTestResult.cpp
+    rendering/ImageQualityController.cpp
     rendering/InlineBox.cpp
     rendering/InlineFlowBox.cpp
     rendering/InlineTextBox.cpp

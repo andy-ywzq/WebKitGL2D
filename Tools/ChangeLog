@@ -1,3 +1,205 @@
+2013-09-06  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] REGRESSION(r155140) Pixel tests is still broken on Qt with QT_WEBKIT_DISABLE_UIPROCESS_DUMPPIXELS=1
+        https://bugs.webkit.org/show_bug.cgi?id=120847
+
+        Reviewed by Csaba Osztrogonác.
+
+        Move the force repaint code back to if (PlatformWebView::windowSnapshotEnabled()) block to support Qt.
+        Typo fixed: windowShapshotEnabled -> windowSnapshotEnabled.
+        Add a default PlatformWebView::windowSnapshotEnabled() to the !PLATFORM(QT).
+
+        * WebKitTestRunner/PlatformWebView.h:
+        (WTR::PlatformWebView::windowSnapshotEnabled):
+        * WebKitTestRunner/TestInvocation.cpp:
+        (WTR::TestInvocation::dumpResults):
+        * WebKitTestRunner/qt/PlatformWebViewQt.cpp:
+        (WTR::WrapperWindow::handleStatusChanged):
+        (WTR::PlatformWebView::windowSnapshotEnabled):
+        * WebKitTestRunner/qt/TestInvocationQt.cpp:
+        (WTR::TestInvocation::dumpPixelsAndCompareWithExpected):
+
+2013-09-06  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        REGRESSION(r155140) Broke pixel tests on EFL/GTK/Qt
+        https://bugs.webkit.org/show_bug.cgi?id=120843
+
+        Reviewed by Csaba Osztrogonác.
+
+        Call notifyDone like the platform specific forceRepaintDoneCallback methods
+        it replaced did. The method is empty on the Apple ports.
+
+        * WebKitTestRunner/TestInvocation.cpp:
+        (WTR::TestInvocation::forceRepaintDoneCallback):
+
+2013-09-06  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt][WK2] Window used by WebKitTestRunner loses active status
+        https://bugs.webkit.org/show_bug.cgi?id=120774
+
+        Reviewed by Jocelyn Turcotte.
+
+        When focusing the PlatformWebView which is done at the start of each test, we should
+        ensure the host window of PlatformWebView is also made active, otherwise we will
+        not receive the keyboard events send by EventSenderProxy.
+
+        * WebKitTestRunner/qt/PlatformWebViewQt.cpp:
+        (WTR::PlatformWebView::focus):
+
+2013-09-05  Seokju Kwon  <seokju@webkit.org>
+
+        Unreviewed build fix. VectorReverse.cpp was removed after r155151.
+
+        * TestWebKitAPI/CMakeLists.txt:
+
+2013-09-05  Anders Carlsson  <andersca@apple.com>
+
+        Make Vector::uncheckedAppend work with move-only types
+        https://bugs.webkit.org/show_bug.cgi?id=120799
+
+        Reviewed by Andreas Kling.
+
+        * TestWebKitAPI/Tests/WTF/Vector.cpp:
+        (TestWebKitAPI::MoveOnly):
+        Add a move-only class.
+
+        (TestWebKitAPI::TEST):
+        Add a test for Vector<MoveOnly>::uncheckedAppend.
+
+2013-09-05  Anders Carlsson  <andersca@apple.com>
+
+        Move all Vector tests into Vector.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=120797
+
+        Reviewed by Andreas Kling.
+
+        * TestWebKitAPI/CMakeLists.txt:
+        * TestWebKitAPI/GNUmakefile.am:
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPI.vcxproj:
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPI.vcxproj.filters:
+        * TestWebKitAPI/TestWebKitAPI.xcodeproj/project.pbxproj:
+        * TestWebKitAPI/Tests/WTF/Vector.cpp:
+        (TestWebKitAPI::TEST):
+        * TestWebKitAPI/Tests/WTF/VectorBasic.cpp: Removed.
+        * TestWebKitAPI/Tests/WTF/VectorReverse.cpp: Removed.
+        * TestWebKitAPI/Tests/WTF/WTF.pro:
+
+2013-09-05  Simon Fraser  <simon.fraser@apple.com>
+
+        Expected result images are sometimes blank in WKTR
+        https://bugs.webkit.org/show_bug.cgi?id=120715
+
+        Reviewed by Tim Horton.
+        
+        In WebKitTestRunner, snapshots obtained via windowSnapshotImage() were
+        sometimes blank if a previous test triggered compositing mode, and the
+        current test or reference did not require compositing. This happened
+        because the UI process didn't wait for the web process to complete
+        its compositing mode switch before snapshotting. Fix by calling
+        WKPageForceRepaint() before we take the snapshot; this is async,
+        so we have to spin the runloop for a while.
+        
+        Remove the Qt/EFL code that does the same thing.
+
+        * WebKitTestRunner/TestInvocation.cpp:
+        (WTR::TestInvocation::forceRepaintDoneCallback):
+        (WTR::TestInvocation::dumpResults):
+        * WebKitTestRunner/TestInvocation.h:
+        * WebKitTestRunner/cairo/TestInvocationCairo.cpp:
+        (WTR::TestInvocation::dumpPixelsAndCompareWithExpected):
+        * WebKitTestRunner/qt/TestInvocationQt.cpp:
+        (WTR::TestInvocation::dumpPixelsAndCompareWithExpected):
+
+2013-09-05  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Make build.webkit.org report the number of failing run-fast-jsc tests
+        https://bugs.webkit.org/show_bug.cgi?id=120766
+
+        Reviewed by Filip Pizlo.
+
+        * BuildSlaveSupport/build.webkit.org-config/master.cfg:
+        (RunJavaScriptCoreTests.commandComplete):
+        (RunJavaScriptCoreTests.getText2):
+        * BuildSlaveSupport/build.webkit.org-config/mastercfg_unittest.py:
+        (RunJavaScriptCoreTestsTest): Added.
+        (RunJavaScriptCoreTestsTest.assertResults):
+        (RunJavaScriptCoreTestsTest.test_no_regressions_old_output):
+        (RunJavaScriptCoreTestsTest.test_mozilla_failure_old_output):
+        (RunJavaScriptCoreTestsTest.test_mozilla_failure_new_output):
+        (RunJavaScriptCoreTestsTest.test_fast_js_failure_new_output):
+        (RunJavaScriptCoreTestsTest.test_fast_js_crash_new_output):
+        (RunJavaScriptCoreTestsTest.test_mozilla_and_fast_js_failure_new_output):
+
+2013-09-05  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Make run-fast-jsc script bash, dash and Darwin's /bin/sh friendly
+        https://bugs.webkit.org/show_bug.cgi?id=120759
+
+        Reviewed by Filip Pizlo.
+
+        * Scripts/run-fast-jsc: Remove bashisms to make bash, dash and Darwin's /bin/sh happy.
+        * Scripts/run-javascriptcore-tests: Enable run-fast-jsc tests everywhere, except Windows.
+
+2013-09-05  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, green the Mac bots by boosting the timeout on JSC tests. One of the
+        Mozilla tests appears to run for a longer time.
+        
+        I think we want to continue to allow a few tests here and there to be
+        longer-running, rather than excluding them. I seem to recall that those tests
+        catch good bugs.
+
+        * Scripts/run-javascriptcore-tests:
+
+2013-09-05  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, don't run fast/js tests in run-javascriptcore-tests on platforms that
+        can't support it because if non-bourne shells. This fixes part #2 of the Linux
+        bot breakage.
+
+        * Scripts/run-javascriptcore-tests:
+
+2013-09-05  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, don't rely on File::Slurp. This fixes part #1 of Linux bot breakage.
+
+        * Scripts/run-javascriptcore-tests:
+        (readAllLines):
+
+2013-09-04  Filip Pizlo  <fpizlo@apple.com>
+
+        jsc tests should have timeouts
+        https://bugs.webkit.org/show_bug.cgi?id=120725
+
+        Reviewed by Geoffrey Garen.
+        
+        Set the timeout to 20 seconds per test for now.
+
+        * Scripts/run-javascriptcore-tests:
+
+2013-09-04  Filip Pizlo  <fpizlo@apple.com>
+
+        run-javascriptcore-tests should run-fast-jsc as well
+        https://bugs.webkit.org/show_bug.cgi?id=120722
+
+        Reviewed by Geoffrey Garen.
+        
+        Makes run-javascriptcore-tests run the fast/js tests via run-fast-jsc tool.
+        Integrates run-fast-jsc's error reporting into run-javascriptcore-tests.
+
+        * Scripts/run-javascriptcore-tests:
+        (printThingsFound):
+
+2013-09-04  Sergio Correia  <sergio.correia@openbossa.org>
+
+        [EFL][WK2] Move ShouldGoToBackForwardListItem to the list of passing API tests
+        https://bugs.webkit.org/show_bug.cgi?id=120646
+
+        Reviewed by Gyuyoung Kim.
+
+        * TestWebKitAPI/PlatformEfl.cmake: Move ShouldGoToBackForwardListItem to the
+        list of passing tests, since it started to pass after r154045.
+
 2013-09-04  Krzysztof Czech  <k.czech@samsung.com>
 
         [ATK] Adds an accessibility support to access a value of the color control element

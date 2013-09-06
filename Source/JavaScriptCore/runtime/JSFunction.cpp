@@ -43,7 +43,7 @@
 #include "Operations.h"
 #include "Parser.h"
 #include "PropertyNameArray.h"
-#include "StackIterator.h"
+#include "StackVisitor.h"
 
 using namespace WTF;
 using namespace Unicode;
@@ -192,14 +192,14 @@ public:
 
     JSValue result() const { return m_result; }
 
-    StackIterator::Status operator()(StackIterator& iter)
+    StackVisitor::Status operator()(StackVisitor& visitor)
     {
-        JSObject* callee = iter->callee();
+        JSObject* callee = visitor->callee();
         if (callee != m_targetCallee)
-            return StackIterator::Continue;
+            return StackVisitor::Continue;
 
-        m_result = JSValue(iter->arguments());
-        return StackIterator::Done;
+        m_result = JSValue(visitor->arguments());
+        return StackVisitor::Done;
     }
 
 private:
@@ -210,8 +210,7 @@ private:
 static JSValue retrieveArguments(ExecState* exec, JSFunction* functionObj)
 {
     RetrieveArgumentsFunctor functor(functionObj);
-    StackIterator iter = exec->begin();
-    iter.iterate(functor);
+    exec->iterate(functor);
     return functor.result();
 }
 
@@ -221,13 +220,6 @@ JSValue JSFunction::argumentsGetter(ExecState* exec, JSValue slotBase, PropertyN
     ASSERT(!thisObj->isHostFunction());
 
     return retrieveArguments(exec, thisObj);
-}
-
-static bool skipOverBoundFunctions(StackIterator::Frame* frame)
-{
-    JSObject* callee = frame->callee();
-    bool shouldSkip = callee ? callee->inherits(JSBoundFunction::info()) : false;
-    return shouldSkip;
 }
 
 class RetrieveCallerFunctionFunctor {
@@ -242,21 +234,25 @@ public:
 
     JSValue result() const { return m_result; }
 
-    StackIterator::Status operator()(StackIterator& iter)
+    StackVisitor::Status operator()(StackVisitor& visitor)
     {
-        JSObject* callee = iter->callee();
+        JSObject* callee = visitor->callee();
+
+        if (callee && callee->inherits(JSBoundFunction::info()))
+            return StackVisitor::Continue;
+
         if (!m_hasFoundFrame && (callee != m_targetCallee))
-            return StackIterator::Continue;
+            return StackVisitor::Continue;
 
         m_hasFoundFrame = true;
         if (!m_hasSkippedToCallerFrame) {
             m_hasSkippedToCallerFrame = true;
-            return StackIterator::Continue;
+            return StackVisitor::Continue;
         }
 
         if (callee)
             m_result = callee;
-        return StackIterator::Done;
+        return StackVisitor::Done;
     }
 
 private:
@@ -269,8 +265,7 @@ private:
 static JSValue retrieveCallerFunction(ExecState* exec, JSFunction* functionObj)
 {
     RetrieveCallerFunctionFunctor functor(functionObj);
-    StackIterator iter = exec->begin(skipOverBoundFunctions);
-    iter.iterate(functor);
+    exec->iterate(functor);
     return functor.result();
 }
 

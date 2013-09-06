@@ -2046,6 +2046,8 @@ void Document::detach()
     ASSERT(attached());
     ASSERT(!m_inPageCache);
 
+    TemporaryChange<bool> change(m_renderTreeBeingDestroyed, true);
+
 #if ENABLE(POINTER_LOCK)
     if (page())
         page()->pointerLockController()->documentDetached(this);
@@ -2086,8 +2088,6 @@ void Document::detach()
     m_hoveredElement = 0;
     m_focusedElement = 0;
     m_activeElement = 0;
-
-    TemporaryChange<bool> change(m_renderTreeBeingDestroyed, true);
 
     if (m_documentElement)
         Style::detachRenderTree(*m_documentElement);
@@ -5958,6 +5958,13 @@ PassRefPtr<FontLoader> Document::fontloader()
 }
 #endif
 
+float Document::deviceScaleFactor() const
+{
+    float deviceScaleFactor = 1.0;
+    if (Page* documentPage = page())
+        deviceScaleFactor = documentPage->deviceScaleFactor();
+    return deviceScaleFactor;
+}
 void Document::didAssociateFormControl(Element* element)
 {
     if (!frame() || !frame()->page() || !frame()->page()->chrome().client().shouldNotifyOnFormChanges())

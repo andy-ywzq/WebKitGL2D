@@ -1,3 +1,436 @@
+2013-09-06  Radu Stavila  <stavila@adobe.com>
+
+        [CSS Regions] Remove orphan test results
+        https://bugs.webkit.org/show_bug.cgi?id=120845
+
+        Reviewed by Antti Koivisto.
+
+        Removed remaining orphan test results after https://bugs.webkit.org/show_bug.cgi?id=120760.
+
+        * platform/efl/fast/regions/overflow-not-moving-below-floats-in-variable-width-regions-expected.png: Removed.
+        * platform/efl/fast/regions/overflow-not-moving-below-floats-in-variable-width-regions-expected.txt: Removed.
+        * platform/gtk/fast/regions/overflow-not-moving-below-floats-in-variable-width-regions-expected.png: Removed.
+        * platform/gtk/fast/regions/overflow-not-moving-below-floats-in-variable-width-regions-expected.txt: Removed.
+        * platform/mac/fast/regions/overflow-not-moving-below-floats-in-variable-width-regions-expected.png: Removed.
+        * platform/mac/fast/regions/overflow-not-moving-below-floats-in-variable-width-regions-expected.txt: Removed.
+        * platform/qt-wk2/fast/regions/overflow-not-moving-below-floats-in-variable-width-regions-expected.png: Removed.
+        * platform/qt/fast/regions/overflow-not-moving-below-floats-in-variable-width-regions-expected.png: Removed.
+        * platform/qt/fast/regions/overflow-not-moving-below-floats-in-variable-width-regions-expected.txt: Removed.
+
+2013-09-06  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        [EFL] Unreviewed gardening. Added missing results.
+
+        * platform/efl/fast/css-generated-content/details-summary-before-after-expected.txt: Added.
+        * platform/efl/fast/regions/region-dynamic-after-before-expected.txt: Added.
+        * platform/efl/fast/regions/region-generated-content-before-after-expected.txt: Added.
+
+2013-09-06  Simon Pena  <simon.pena@samsung.com>
+
+        [GTK] Unreviewed gardening. Update TestExpectations.
+
+        * platform/gtk-wk2/TestExpectations: Skip speech input tests, mark as failing drag and drop tests.
+        * platform/gtk-wk2/plugins/npruntime/object-from-destroyed-plugin-expected.txt: Added.
+        * platform/gtk-wk2/plugins/npruntime/object-from-destroyed-plugin-in-subframe-expected.txt: Added.
+        * platform/gtk/TestExpectations: Updated failing tests.
+        * platform/gtk/animations/cross-fade-background-image-expected.png: Removed.
+        * platform/gtk/animations/cross-fade-background-image-expected.txt: Removed.
+        * platform/gtk/editing/spelling/spellcheck-paste-expected.txt: Rebaseline after r154869.
+
+2013-09-06  Sergio Villar Senin  <svillar@igalia.com>
+
+        [CSS Grid Layout] Resolve named grid lines
+        https://bugs.webkit.org/show_bug.cgi?id=119632
+
+        Reviewed by Andreas Kling.
+
+        From Blink r152659, r153794 by <jchaffraix@chromium.org>
+
+        Added a new test to check named grid lines resolution. This also
+        provides some more new test cases with named grid lines and
+        negative positions.
+
+        * fast/css-grid-layout/grid-item-named-grid-line-resolution-expected.txt: Added.
+        * fast/css-grid-layout/grid-item-named-grid-line-resolution.html: Added.
+        * fast/css-grid-layout/grid-item-negative-position-resolution-expected.txt:
+        * fast/css-grid-layout/grid-item-negative-position-resolution.html:
+
+2013-09-06  Dirk Schulze  <krit@webkit.org>
+
+        Allow string as image reference on filter()
+        https://bugs.webkit.org/show_bug.cgi?id=120829
+
+        Reviewed by Andreas Kling.
+
+        Check that string can be used as image reference, that we
+        interpolate between the same images once referenced by string
+        and once by url() and that other tokens are not excepted.
+
+        * fast/filter-image/filter-image-animation-expected.txt:
+        * fast/filter-image/filter-image-animation.html:
+        * fast/filter-image/parse-filter-image-expected.txt:
+        * fast/filter-image/parse-filter-image.html:
+
+2013-09-05  Dirk Schulze  <krit@webkit.org>
+
+        Support SVG filters on -webkit-filter() function
+        https://bugs.webkit.org/show_bug.cgi?id=120806
+
+        Reviewed by Darin Adler.
+
+        Test that the -webkit-filter() function can reference a SVG Filter
+        from the document.
+
+        * fast/filter-image/filter-image-svg-expected.html: Added.
+        * fast/filter-image/filter-image-svg.html: Added.
+
+2013-09-05  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        [EFL] Unreviewed gardening.
+
+        * platform/efl-wk1/TestExpectations: Failing after r155014.
+
+2013-09-04  Dean Jackson  <dino@apple.com>
+
+        Rename supportsContext to probablySupportsContext
+        https://bugs.webkit.org/show_bug.cgi?id=120716
+        <rdar://problem/14914499>
+
+        Reviewed by Antoine Quint.
+
+        As decided in: http://lists.whatwg.org/htdig.cgi/whatwg-whatwg.org/2013-September/040680.html
+
+        * fast/canvas/webgl/canvas-supports-context-expected.txt:
+        * fast/canvas/webgl/canvas-supports-context.html:
+
+2013-09-05  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Breakpoint Actions
+        https://bugs.webkit.org/show_bug.cgi?id=120576
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector-protocol/debugger/resources/breakpoint.js:
+        * inspector-protocol/debugger/setBreakpoint-actions-expected.txt: Added.
+        * inspector-protocol/debugger/setBreakpoint-actions.html: Added.
+        * inspector-protocol/debugger/setBreakpoint-options-exception-expected.txt: Added.
+        * inspector-protocol/debugger/setBreakpoint-options-exception.html: Added.
+        * inspector-protocol/resources/console-helper.js: Added.
+        (ConsoleHelper.simplifiedConsoleMessage):
+
+2013-09-05  Simon Fraser  <simon.fraser@apple.com>
+
+        Fix repaint issue on "paints into ancestor" filtered layers
+        https://bugs.webkit.org/show_bug.cgi?id=120780
+        <rdar://problem/14884148>
+
+        Reviewed by Tim Horton.
+        
+        Ref test for opacity change on a filtered layer which paints into its compositing ancestor.
+
+        * compositing/filters/opacity-change-on-filtered-paints-into-ancestor-expected.html: Added.
+        * compositing/filters/opacity-change-on-filtered-paints-into-ancestor.html: Added.
+
+2013-09-05  Danilo Cesar Lemes de Paula  <danilo.cesar@collabora.co.uk>
+
+        [GTK] improving tests expectations related to trackmenu
+        https://bugs.webkit.org/show_bug.cgi?id=120699
+
+        Adding tests expectations to the current GTK's trackmenu
+        implementation.
+
+        Also adding a in-band-track test expectation as failure since we don't
+        support in-band tracks yet.
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * platform/gtk/TestExpectations:
+        * platform/gtk/media/video-controls-captions-trackmenu-expected.txt: Added.
+        * platform/gtk/media/video-controls-captions-trackmenu-hide-on-click-expected.txt: Added.
+        * platform/gtk/media/video-controls-captions-trackmenu-localized-expected.txt: Added.
+        * platform/gtk/media/video-controls-captions-trackmenu-sorted-expected.txt: Added.
+
+2013-09-05  Filip Pizlo  <fpizlo@apple.com>
+
+        fast/js/dfg-* tests should wait for the concurrent JIT
+        https://bugs.webkit.org/show_bug.cgi?id=120723
+
+        Rubber stamped by Oliver Hunt.
+        
+        Convert more tests.
+
+        * fast/js/dfg-branch-logical-not-peephole-around-osr-exit-expected.txt:
+        * fast/js/dfg-branch-not-fail-expected.txt:
+        * fast/js/dfg-byte-array-put-expected.txt:
+        * fast/js/dfg-call-function-hit-watchpoint-expected.txt:
+        * fast/js/dfg-call-method-hit-watchpoint-expected.txt:
+        * fast/js/dfg-captured-var-get-local-expected.txt:
+        * fast/js/dfg-cfa-merge-with-dead-use-at-tail-expected.txt:
+        * fast/js/dfg-cfg-simplify-eliminate-set-local-type-check-then-branch-not-null-and-decrement-expected.txt:
+        * fast/js/dfg-cfg-simplify-eliminate-set-local-type-check-then-branch-not-null-expected.txt:
+        * fast/js/dfg-cfg-simplify-eliminate-set-local-type-check-then-typeof-expected.txt:
+        * fast/js/dfg-cfg-simplify-phantom-get-local-on-same-block-set-local-expected.txt:
+        * fast/js/dfg-cfg-simplify-redundant-dead-get-local-expected.txt:
+        * fast/js/dfg-check-function-change-structure-expected.txt:
+        * fast/js/jsc-test-list:
+        * fast/js/script-tests/dfg-branch-logical-not-peephole-around-osr-exit.js:
+        * fast/js/script-tests/dfg-branch-not-fail.js:
+        * fast/js/script-tests/dfg-byte-array-put.js:
+        * fast/js/script-tests/dfg-call-function-hit-watchpoint.js:
+        * fast/js/script-tests/dfg-call-method-hit-watchpoint.js:
+        * fast/js/script-tests/dfg-captured-var-get-local.js:
+        * fast/js/script-tests/dfg-cfa-merge-with-dead-use-at-tail.js:
+        * fast/js/script-tests/dfg-cfg-simplify-eliminate-set-local-type-check-then-branch-not-null-and-decrement.js:
+        * fast/js/script-tests/dfg-cfg-simplify-eliminate-set-local-type-check-then-branch-not-null.js:
+        * fast/js/script-tests/dfg-cfg-simplify-eliminate-set-local-type-check-then-typeof.js:
+        * fast/js/script-tests/dfg-cfg-simplify-phantom-get-local-on-same-block-set-local.js:
+        * fast/js/script-tests/dfg-cfg-simplify-redundant-dead-get-local.js:
+        * fast/js/script-tests/dfg-check-function-change-structure.js:
+
+2013-09-05  Mihai Maerean  <mmaerean@adobe.com>
+
+        [CSS Regions] Convert existing pixel tests in ref tests
+        https://bugs.webkit.org/show_bug.cgi?id=120760
+
+        Reviewed by Antti Koivisto.
+
+        I have also removed text-align:justify from the tests because its not relevant to the tested functionality and
+        it makes creating the expected results very difficult because of the way fragmented text is rendered when
+        it's aligned justified.
+
+        * fast/regions/overflow-in-uniform-regions-dynamic-expected.html: Added.
+        * fast/regions/overflow-in-uniform-regions-dynamic.html:
+        * fast/regions/overflow-in-variable-width-regions-expected.html: Added.
+        * fast/regions/overflow-in-variable-width-regions.html:
+        * fast/regions/overflow-moving-below-floats-in-variable-width-regions-expected.html: Added.
+        * fast/regions/overflow-moving-below-floats-in-variable-width-regions.html:
+        * fast/regions/overflow-not-moving-below-floats-in-variable-width-regions-expected.html: Added.
+        * fast/regions/overflow-not-moving-below-floats-in-variable-width-regions.html:
+        * fast/regions/overflow-rtl-in-variable-width-regions-expected.html: Added.
+        * fast/regions/overflow-rtl-in-variable-width-regions.html:
+        * fast/regions/overflow-size-change-in-variable-width-regions-expected.html: Added.
+        * fast/regions/overflow-size-change-in-variable-width-regions.html:
+        * platform/efl/fast/regions/overflow-in-uniform-regions-dynamic-expected.png: Removed.
+        * platform/efl/fast/regions/overflow-in-uniform-regions-dynamic-expected.txt: Removed.
+        * platform/efl/fast/regions/overflow-in-variable-width-regions-expected.png: Removed.
+        * platform/efl/fast/regions/overflow-in-variable-width-regions-expected.txt: Removed.
+        * platform/efl/fast/regions/overflow-moving-below-floats-in-variable-width-regions-expected.png: Removed.
+        * platform/efl/fast/regions/overflow-moving-below-floats-in-variable-width-regions-expected.txt: Removed.
+        * platform/efl/fast/regions/overflow-rtl-in-variable-width-regions-expected.png: Removed.
+        * platform/efl/fast/regions/overflow-rtl-in-variable-width-regions-expected.txt: Removed.
+        * platform/efl/fast/regions/overflow-size-change-in-variable-width-regions-expected.png: Removed.
+        * platform/efl/fast/regions/overflow-size-change-in-variable-width-regions-expected.txt: Removed.
+        * platform/gtk/fast/regions/overflow-in-uniform-regions-dynamic-expected.png: Removed.
+        * platform/gtk/fast/regions/overflow-in-uniform-regions-dynamic-expected.txt: Removed.
+        * platform/gtk/fast/regions/overflow-in-variable-width-regions-expected.png: Removed.
+        * platform/gtk/fast/regions/overflow-in-variable-width-regions-expected.txt: Removed.
+        * platform/gtk/fast/regions/overflow-moving-below-floats-in-variable-width-regions-expected.png: Removed.
+        * platform/gtk/fast/regions/overflow-moving-below-floats-in-variable-width-regions-expected.txt: Removed.
+        * platform/gtk/fast/regions/overflow-rtl-in-variable-width-regions-expected.png: Removed.
+        * platform/gtk/fast/regions/overflow-rtl-in-variable-width-regions-expected.txt: Removed.
+        * platform/gtk/fast/regions/overflow-size-change-in-variable-width-regions-expected.png: Removed.
+        * platform/gtk/fast/regions/overflow-size-change-in-variable-width-regions-expected.txt: Removed.
+        * platform/mac/fast/regions/overflow-in-uniform-regions-dynamic-expected.png: Removed.
+        * platform/mac/fast/regions/overflow-in-uniform-regions-dynamic-expected.txt: Removed.
+        * platform/mac/fast/regions/overflow-in-variable-width-regions-expected.png: Removed.
+        * platform/mac/fast/regions/overflow-in-variable-width-regions-expected.txt: Removed.
+        * platform/mac/fast/regions/overflow-moving-below-floats-in-variable-width-regions-expected.png: Removed.
+        * platform/mac/fast/regions/overflow-moving-below-floats-in-variable-width-regions-expected.txt: Removed.
+        * platform/mac/fast/regions/overflow-rtl-in-variable-width-regions-expected.png: Removed.
+        * platform/mac/fast/regions/overflow-rtl-in-variable-width-regions-expected.txt: Removed.
+        * platform/mac/fast/regions/overflow-size-change-in-variable-width-regions-expected.png: Removed.
+        * platform/mac/fast/regions/overflow-size-change-in-variable-width-regions-expected.txt: Removed.
+        * platform/qt-wk2/fast/regions/overflow-in-uniform-regions-dynamic-expected.png: Removed.
+        * platform/qt-wk2/fast/regions/overflow-in-variable-width-regions-expected.png: Removed.
+        * platform/qt-wk2/fast/regions/overflow-moving-below-floats-in-variable-width-regions-expected.png: Removed.
+        * platform/qt-wk2/fast/regions/overflow-rtl-in-variable-width-regions-expected.png: Removed.
+        * platform/qt-wk2/fast/regions/overflow-size-change-in-variable-width-regions-expected.png: Removed.
+        * platform/qt/fast/regions/overflow-in-uniform-regions-dynamic-expected.png: Removed.
+        * platform/qt/fast/regions/overflow-in-uniform-regions-dynamic-expected.txt: Removed.
+        * platform/qt/fast/regions/overflow-in-variable-width-regions-expected.png: Removed.
+        * platform/qt/fast/regions/overflow-in-variable-width-regions-expected.txt: Removed.
+        * platform/qt/fast/regions/overflow-moving-below-floats-in-variable-width-regions-expected.png: Removed.
+        * platform/qt/fast/regions/overflow-moving-below-floats-in-variable-width-regions-expected.txt: Removed.
+        * platform/qt/fast/regions/overflow-rtl-in-variable-width-regions-expected.png: Removed.
+        * platform/qt/fast/regions/overflow-rtl-in-variable-width-regions-expected.txt: Removed.
+        * platform/qt/fast/regions/overflow-size-change-in-variable-width-regions-expected.png: Removed.
+        * platform/qt/fast/regions/overflow-size-change-in-variable-width-regions-expected.txt: Removed.
+
+2013-09-05  Brendan Long  <b.long@cablelabs.com>
+
+        [GTK] media/track/in-band/ layout tests introduced in r154908 are failing
+        https://bugs.webkit.org/show_bug.cgi?id=120665
+
+        Reviewed by Philippe Normand.
+
+        * platform/efl/TestExpectations: Skip new media/track/in-band tests.
+
+2013-09-05  Zoltan Arvai  <zarvai@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening.
+
+        * platform/qt-wk1/TestExpectations: Unskipping after 155104.
+        * platform/qt/TestExpectations: Unskipping after r155061.
+
+2013-09-05  Dirk Schulze  <krit@webkit.org>
+
+        NULL ptr in WebCore::RefCountedPropertyWrapper<WebCore::ClipPathOperation>::blend
+        https://bugs.webkit.org/show_bug.cgi?id=105408
+
+        Reviewed by Dean Jackson.
+
+        Test that animation from none to a basic shape on -webkit-clip-path doesn't crash.
+
+        * css3/masking/clip-path-animation-expected.txt:
+        * css3/masking/clip-path-animation.html:
+
+2013-09-04  Dirk Schulze  <krit@webkit.org>
+
+        Support interpolation between cross-fade() images
+        https://bugs.webkit.org/show_bug.cgi?id=119955
+
+        Reviewed by Darin Adler.
+
+        Test interpolation from one cross-fade function to another. Changed pixel test
+        to a ref test.
+
+        * animations/cross-fade-background-image.html:
+        * animations/cross-fade-background-image-expected.html: Added.
+        * platform/mac/animations/cross-fade-background-image-expected.png: Removed.
+        * platform/mac/animations/cross-fade-background-image-expected.txt: Removed.
+
+2013-09-04  Zoltan Herczeg  <zherczeg@webkit.org>
+
+        <https://webkit.org/b/118553> Hash navigation doesn't affect history when the page is retrieved from appcache
+
+        Reviewed by Darin Adler.
+
+        * http/tests/appcache/history-test-expected.txt: Added.
+        * http/tests/appcache/history-test.html: Added.
+        * http/tests/appcache/resources/history-test.html: Added.
+        * http/tests/appcache/resources/history-test.manifest: Added.
+
+2013-09-04  Mihai Tica  <mitica@adobe.com>
+
+        Test background blend modes with animated gif background layers.
+        https://bugs.webkit.org/show_bug.cgi?id=120057
+
+        Reviewed by Darin Adler.
+
+        * css3/compositing/background-blend-mode-gif-color-2.html: Added.
+        * css3/compositing/background-blend-mode-gif-color.html: Added.
+        * css3/compositing/resources/squares.gif: Added.
+        * platform/mac/css3/compositing/background-blend-mode-gif-color-2-expected.png: Added.
+        * platform/mac/css3/compositing/background-blend-mode-gif-color-2-expected.txt: Added.
+        * platform/mac/css3/compositing/background-blend-mode-gif-color-expected.png: Added.
+        * platform/mac/css3/compositing/background-blend-mode-gif-color-expected.txt: Added.
+
+2013-09-04  Filip Pizlo  <fpizlo@apple.com>
+
+        fast/js/dfg-* tests should wait for the concurrent JIT
+        https://bugs.webkit.org/show_bug.cgi?id=120723
+
+        Reviewed by Geoffrey Garen.
+        
+        Add dfgShouldBe(), a handy function that covers a lot of common cases.
+        Also convert a bunch of tests.
+
+        * fast/js/dfg-activation-register-overwritten-in-throw-expected.txt:
+        * fast/js/dfg-add-not-number-expected.txt:
+        * fast/js/dfg-allocation-profile-watch-point-exit-expected.txt:
+        * fast/js/dfg-arguments-alias-escape-expected.txt:
+        * fast/js/dfg-arguments-cross-code-origin-expected.txt:
+        * fast/js/dfg-arguments-mixed-alias-expected.txt:
+        * fast/js/dfg-arguments-strict-mode-expected.txt:
+        * fast/js/dfg-arguments-unexpected-escape-expected.txt:
+        * fast/js/dfg-array-dead-expected.txt:
+        * fast/js/dfg-array-length-dead-expected.txt:
+        * fast/js/dfg-array-pop-value-clearing-expected.txt:
+        * fast/js/dfg-array-push-bad-time-expected.txt:
+        * fast/js/dfg-array-push-slow-put-expected.txt:
+        * fast/js/dfg-arrayify-when-late-prevent-extensions-expected.txt:
+        * fast/js/dfg-arrayify-when-prevent-extensions-expected.txt:
+        * fast/js/dfg-bool-to-int32-reuse-expected.txt:
+        * fast/js/jsc-test-list:
+        * fast/js/resources/js-test-pre.js:
+        (dfgShouldBe):
+        * fast/js/resources/standalone-pre.js:
+        (dfgShouldBe):
+        * fast/js/script-tests/dfg-activation-register-overwritten-in-throw.js:
+        (g):
+        * fast/js/script-tests/dfg-add-not-number.js:
+        * fast/js/script-tests/dfg-allocation-profile-watch-point-exit.js:
+        (foo):
+        * fast/js/script-tests/dfg-arguments-alias-escape.js:
+        * fast/js/script-tests/dfg-arguments-cross-code-origin.js:
+        * fast/js/script-tests/dfg-arguments-mixed-alias.js:
+        * fast/js/script-tests/dfg-arguments-strict-mode.js:
+        * fast/js/script-tests/dfg-arguments-unexpected-escape.js:
+        * fast/js/script-tests/dfg-array-dead.js:
+        * fast/js/script-tests/dfg-array-length-dead.js:
+        * fast/js/script-tests/dfg-array-pop-value-clearing.js:
+        * fast/js/script-tests/dfg-array-push-bad-time.js:
+        * fast/js/script-tests/dfg-array-push-slow-put.js:
+        * fast/js/script-tests/dfg-arrayify-when-late-prevent-extensions.js:
+        * fast/js/script-tests/dfg-arrayify-when-prevent-extensions.js:
+        * fast/js/script-tests/dfg-bool-to-int32-reuse.js:
+
+2013-09-04  Arpita Bahuguna  <a.bah@samsung.com>
+
+        setAttributeNode() does not set the new value to an existing attribute if specified attribute is in a different case.
+        https://bugs.webkit.org/show_bug.cgi?id=120293
+
+        Reviewed by Darin Adler.
+
+        * fast/dom/Element/setAttributeNode-for-existing-attribute-expected.txt: Added.
+        * fast/dom/Element/setAttributeNode-for-existing-attribute.html: Added.
+        Layout testcase for verifying that the new attribute value is set properly
+        if an existing attribute with the same name exists.
+
+2013-09-04  Filip Pizlo  <fpizlo@apple.com>
+
+        run-javascriptcore-tests should run-fast-jsc as well
+        https://bugs.webkit.org/show_bug.cgi?id=120722
+
+        Reviewed by Geoffrey Garen.
+        
+        Make all run-fast-jsc tests pass:
+        
+        - We should always define successfullyParsed and we shouldn't falsify it
+          when a test fails. This was already true in js-test-pre.
+        
+        - Object-defineProperty() depends on DOM-like global object behavior.
+          Remove the test from the run-fast-jsc list.
+
+        * fast/js/jsc-test-list:
+        * fast/js/resources/standalone-pre.js:
+        (testFailed):
+
+2013-09-04  Filip Pizlo  <fpizlo@apple.com>
+
+        run-fast-jsc should work with new-school fast/js tests that loop until the DFG tiers up
+        https://bugs.webkit.org/show_bug.cgi?id=120697
+
+        Reviewed by Mark Hahnenberg.
+
+        * fast/js/resources/standalone-pre.js:
+        (testPassed):
+        (testFailed):
+        (dfgCompiled):
+
+2013-09-04  Samuel White  <samuel_white@apple.com>
+
+        AX: when no other label on provided on form elements, WebKit should fall back to using @title
+        https://bugs.webkit.org/show_bug.cgi?id=112842
+
+        Reviewed by Chris Fleizach.
+
+        Added test to ensure that input elements are computing their
+        accessibility title as expected.
+
+        * platform/mac/accessibility/input-title-expected.txt: Added.
+        * platform/mac/accessibility/input-title.html: Added.
+
 2013-09-04  Tim Horton  <timothy_horton@apple.com>
 
         [mac] PDFDocumentImage should use PDFKit to draw

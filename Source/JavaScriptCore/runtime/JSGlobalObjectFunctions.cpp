@@ -37,7 +37,7 @@
 #include "Nodes.h"
 #include "Operations.h"
 #include "Parser.h"
-#include "StackIterator.h"
+#include "StackVisitor.h"
 #include <wtf/dtoa.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -717,17 +717,17 @@ public:
 
     EncodedJSValue result() { return m_result; }
 
-    StackIterator::Status operator()(StackIterator& iter)
+    StackVisitor::Status operator()(StackVisitor& visitor)
     {
         if (!m_hasSkippedFirstFrame) {
             m_hasSkippedFirstFrame = true;
-            return StackIterator::Continue;
+            return StackVisitor::Continue;
         }
 
-        if (m_thisObject->allowsAccessFrom(iter->callFrame()))
+        if (m_thisObject->allowsAccessFrom(visitor->callFrame()))
             m_result = JSValue::encode(m_thisObject->prototype());
 
-        return StackIterator::Done;
+        return StackVisitor::Done;
     }
 
 private:
@@ -744,8 +744,7 @@ EncodedJSValue JSC_HOST_CALL globalFuncProtoGetter(ExecState* exec)
         return JSValue::encode(exec->thisValue().synthesizePrototype(exec));
 
     GlobalFuncProtoGetterFunctor functor(thisObject);
-    StackIterator iter = exec->begin();
-    iter.iterate(functor);
+    exec->iterate(functor);
     return functor.result();
 }
 
@@ -760,15 +759,15 @@ public:
 
     bool allowsAccess() const { return m_allowsAccess; }
 
-    StackIterator::Status operator()(StackIterator& iter)
+    StackVisitor::Status operator()(StackVisitor& visitor)
     {
         if (!m_hasSkippedFirstFrame) {
             m_hasSkippedFirstFrame = true;
-            return StackIterator::Continue;
+            return StackVisitor::Continue;
         }
 
-        m_allowsAccess = m_thisObject->allowsAccessFrom(iter->callFrame());
-        return StackIterator::Done;
+        m_allowsAccess = m_thisObject->allowsAccessFrom(visitor->callFrame());
+        return StackVisitor::Done;
     }
 
 private:
@@ -788,8 +787,7 @@ EncodedJSValue JSC_HOST_CALL globalFuncProtoSetter(ExecState* exec)
         return JSValue::encode(jsUndefined());
 
     GlobalFuncProtoSetterFunctor functor(thisObject);
-    StackIterator iter = exec->begin();
-    iter.iterate(functor);
+    exec->iterate(functor);
     if (!functor.allowsAccess())
         return JSValue::encode(jsUndefined());
 

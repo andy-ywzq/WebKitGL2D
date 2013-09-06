@@ -45,7 +45,7 @@
 #include "JSEvent.h"
 #include "JSEventListener.h"
 #include "XMLHttpRequest.h"
-#include <interpreter/StackIterator.h>
+#include <interpreter/StackVisitor.h>
 #include <runtime/ArrayBuffer.h>
 #include <runtime/Error.h>
 #include <runtime/JSArrayBuffer.h>
@@ -116,26 +116,32 @@ class SendFunctor {
 public:
     SendFunctor()
         : m_hasSkippedFirstFrame(false)
-        , m_hasViableFrame(false)
+        , m_line(0)
     {
     }
 
-    bool hasViableFrame() const { return m_hasViableFrame; }
+    unsigned line() const { return m_line; }
+    String url() const { return m_url; }
 
-    StackIterator::Status operator()(StackIterator&)
+    StackVisitor::Status operator()(StackVisitor& visitor)
     {
         if (!m_hasSkippedFirstFrame) {
             m_hasSkippedFirstFrame = true;
-            return StackIterator::Continue;
+            return StackVisitor::Continue;
         }
 
-        m_hasViableFrame = true;
-        return StackIterator::Done;
+        unsigned line = 0;
+        unsigned unusedColumn = 0;
+        visitor->computeLineAndColumn(line, unusedColumn);
+        m_line = line;
+        m_url = visitor->sourceURL();
+        return StackVisitor::Done;
     }
 
 private:
     bool m_hasSkippedFirstFrame;
-    bool m_hasViableFrame;
+    unsigned m_line;
+    String m_url;
 };
 
 JSValue JSXMLHttpRequest::send(ExecState* exec)
@@ -165,18 +171,9 @@ JSValue JSXMLHttpRequest::send(ExecState* exec)
     }
 
     SendFunctor functor;
-    StackIterator iter = exec->begin();
-    iter.iterate(functor);
-    if (functor.hasViableFrame()) {
-        unsigned line = 0;
-        unsigned unusuedColumn = 0;
-        iter->computeLineAndColumn(line, unusuedColumn);
-        impl()->setLastSendLineNumber(line);
-        impl()->setLastSendURL(iter->sourceURL());
-    } else {
-        impl()->setLastSendLineNumber(0);
-        impl()->setLastSendURL(String());
-    }
+    exec->iterate(functor);
+    impl()->setLastSendLineNumber(functor.line());
+    impl()->setLastSendURL(functor.url());
     setDOMException(exec, ec);
     return jsUndefined();
 }

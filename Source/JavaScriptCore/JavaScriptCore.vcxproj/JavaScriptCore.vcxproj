@@ -360,7 +360,7 @@
     <ClCompile Include="..\interpreter\CallFrame.cpp" />
     <ClCompile Include="..\interpreter\Interpreter.cpp" />
     <ClCompile Include="..\interpreter\JSStack.cpp" />
-    <ClCompile Include="..\interpreter\StackIterator.cpp" />
+    <ClCompile Include="..\interpreter\StackVisitor.cpp" />
     <ClCompile Include="..\interpreter\VMInspector.cpp" />
     <ClCompile Include="..\jit\ClosureCallStubRoutine.cpp" />
     <ClCompile Include="..\jit\ExecutableAllocator.cpp" />
@@ -540,6 +540,7 @@
     <ClCompile Include="..\runtime\StructureChain.cpp" />
     <ClCompile Include="..\runtime\StructureRareData.cpp" />
     <ClCompile Include="..\runtime\SymbolTable.cpp" />
+    <ClCompile Include="..\runtime\TestRunnerUtils.cpp" />
     <ClCompile Include="..\runtime\TypedArrayController.cpp" />
     <ClCompile Include="..\runtime\TypedArrayType.cpp" />
     <ClCompile Include="..\runtime\VM.cpp" />
@@ -743,7 +744,7 @@
     <ClInclude Include="..\interpreter\JSStack.h" />
     <ClInclude Include="..\interpreter\JSStackInlines.h" />
     <ClInclude Include="..\interpreter\Register.h" />
-    <ClInclude Include="..\interpreter\StackIterator.h" />
+    <ClInclude Include="..\interpreter\StackVisitor.h" />
     <ClInclude Include="..\interpreter\VMInspector.h" />
     <ClInclude Include="..\jit\ClosureCallStubRoutine.h" />
     <ClInclude Include="..\jit\CompactJITCodeMap.h" />
@@ -993,6 +994,7 @@
     <ClInclude Include="..\runtime\StructureRareDataInlines.h" />
     <ClInclude Include="..\runtime\StructureTransitionTable.h" />
     <ClInclude Include="..\runtime\SymbolTable.h" />
+    <ClInclude Include="..\runtime\TestRunnerUtils.h" />
     <ClInclude Include="..\runtime\Tracing.h" />
     <ClInclude Include="..\runtime\ToNativeFromValue.h" />
     <ClInclude Include="..\runtime\TypedArrayAdaptors.h" />
@@ -1039,6 +1041,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|Win32'">true</ExcludedFromBuild>
     </MASM>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,3 +1,80 @@
+2013-09-05  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [CMAKE] Add c++0x into CXX_FLAGS as a default
+        https://bugs.webkit.org/show_bug.cgi?id=120812
+
+        Unreviewed build fix for EFL ports.
+
+        * UIProcess/API/efl/tests/UnitTestUtils/EWK2UnitTestBase.h: Added constexpr for in-class initialization.
+        * UIProcess/API/efl/tests/UnitTestUtils/EWK2UnitTestEnvironment.cpp: Added space between strings.
+        (EWK2UnitTest::EWK2UnitTestEnvironment::defaultTestPageUrl):
+        (EWK2UnitTest::EWK2UnitTestEnvironment::defaultTheme):
+        (EWK2UnitTest::EWK2UnitTestEnvironment::urlForResource):
+
+2013-09-05  Alexey Proskuryakov  <ap@apple.com>
+
+        WKFullScreenWindowController extends lifetime of WKView, deleting it at a wrong time
+        https://bugs.webkit.org/show_bug.cgi?id=120792
+        <rdar://problem/14884666>
+
+        Reviewed by Jer Noble.
+
+        * UIProcess/API/mac/WKView.mm: (-[WKView fullScreenWindowController]):
+        Use a newly minted initializer for the controller.
+
+        * UIProcess/mac/WKFullScreenWindowController.h: Removed unused web view accessors.
+        Changed the class to take web view at initialization time.
+
+        * UIProcess/mac/WKFullScreenWindowController.mm:
+        (-[WKFullScreenWindowController initWithWindow:webView:]): Initialize the controller
+        inone step.
+        (-[WKFullScreenWindowController dealloc]): WebView is now a raw pointer, no need
+        to zero it.
+        (-[WKFullScreenWindowController close]): Make sure to not leave a dangling WKView
+        pointer (this method is indirectly but inevitably called when WKView is deallocated).
+
+2013-09-05  Anders Carlsson  <andersca@apple.com>
+
+        Replace uses of CLANG_PRAGMA with #pragma
+
+        Rubber-stamped by Andreas Kling.
+
+        This file is only compiled by clang anyway.
+
+        * WebProcess/InjectedBundle/mac/InjectedBundleMac.mm:
+        (WebKit::InjectedBundle::load):
+
+2013-09-05  Anders Carlsson  <andersca@apple.com>
+
+        GCAssertions.h should use STL type traits and static_assert
+        https://bugs.webkit.org/show_bug.cgi?id=120785
+
+        Reviewed by Andreas Kling.
+
+        Update for JavaScriptCore changes.
+
+        * WebProcess/Plugins/Netscape/JSNPMethod.cpp:
+
+2013-09-05  Alberto Garcia  <berto@igalia.com>
+
+        [WK2] [GTK] Remove the test to disable AC under Wayland from WebKitWebViewGroup
+        https://bugs.webkit.org/show_bug.cgi?id=120762
+
+        Reviewed by Gustavo Noronha Silva.
+
+        The code to disable AC under Wayland is not run if we're using
+        WebKitTestRunner, so it would be better to move it to
+        WebKitWebViewBase.
+
+        However it's not really necessary to do that, instead it's much
+        simpler to disable accelerated compositing in all cases unless we
+        know we can support it.
+
+        * UIProcess/API/gtk/WebKitWebViewBase.cpp:
+        (webkitWebViewBaseUpdatePreferences):
+        * UIProcess/API/gtk/WebKitWebViewGroup.cpp:
+        (webkitWebViewGroupAttachSettingsToPageGroup):
+
 2013-09-04  Alberto Garcia  <berto@igalia.com>
 
         [WK2][GTK] ASSERTION in WebKit::LayerTreeHostGtk::invalidate

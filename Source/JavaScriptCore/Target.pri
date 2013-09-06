@@ -205,7 +205,7 @@ SOURCES += \
     interpreter/CallFrame.cpp \
     interpreter/Interpreter.cpp \
     interpreter/JSStack.cpp \
-    interpreter/StackIterator.cpp \
+    interpreter/StackVisitor.cpp \
     jit/ClosureCallStubRoutine.cpp \
     jit/ExecutableAllocatorFixedVMPool.cpp \
     jit/ExecutableAllocator.cpp \
@@ -398,6 +398,7 @@ SOURCES += \
     runtime/StructureChain.cpp \
     runtime/StructureRareData.cpp \
     runtime/SymbolTable.cpp \
+    runtime/TestRunnerUtils.cpp \
     runtime/TypedArrayController.cpp \
     runtime/TypedArrayType.cpp \
     runtime/VM.cpp \

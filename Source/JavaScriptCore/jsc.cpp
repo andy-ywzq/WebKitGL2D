@@ -39,8 +39,9 @@
 #include "JSString.h"
 #include "Operations.h"
 #include "SamplingTool.h"
-#include "StackIterator.h"
+#include "StackVisitor.h"
 #include "StructureRareDataInlines.h"
+#include "TestRunnerUtils.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -115,6 +116,8 @@ static EncodedJSValue JSC_HOST_CALL functionLoad(ExecState*);
 static EncodedJSValue JSC_HOST_CALL functionCheckSyntax(ExecState*);
 static EncodedJSValue JSC_HOST_CALL functionReadline(ExecState*);
 static EncodedJSValue JSC_HOST_CALL functionPreciseTime(ExecState*);
+static EncodedJSValue JSC_HOST_CALL functionNeverInlineFunction(ExecState*);
+static EncodedJSValue JSC_HOST_CALL functionNumberOfDFGCompiles(ExecState*);
 static NO_RETURN_WITH_VALUE EncodedJSValue JSC_HOST_CALL functionQuit(ExecState*);
 
 #if ENABLE(SAMPLING_FLAGS)
@@ -232,6 +235,8 @@ protected:
         addFunction(vm, "jscStack", functionJSCStack, 1);
         addFunction(vm, "readline", functionReadline, 0);
         addFunction(vm, "preciseTime", functionPreciseTime, 0);
+        addFunction(vm, "neverInlineFunction", functionNeverInlineFunction, 1);
+        addFunction(vm, "numberOfDFGCompiles", functionNumberOfDFGCompiles, 1);
 #if ENABLE(SAMPLING_FLAGS)
         addFunction(vm, "setSamplingFlags", functionSetSamplingFlags, 1);
         addFunction(vm, "clearSamplingFlags", functionClearSamplingFlags, 1);
@@ -333,10 +338,10 @@ public:
     {
     }
 
-    StackIterator::Status operator()(StackIterator& iter)
+    StackVisitor::Status operator()(StackVisitor& visitor)
     {
-        m_trace.append(String::format("    %zu   %s\n", iter->index(), iter->toString().utf8().data()));
-        return StackIterator::Continue;
+        m_trace.append(String::format("    %zu   %s\n", visitor->index(), visitor->toString().utf8().data()));
+        return StackVisitor::Continue;
     }
 
 private:
@@ -349,8 +354,7 @@ EncodedJSValue JSC_HOST_CALL functionJSCStack(ExecState* exec)
     trace.appendLiteral("--> Stack trace:\n");
 
     FunctionJSCStackFunctor functor(trace);
-    StackIterator iter = exec->begin();
-    iter.iterate(functor);
+    exec->iterate(functor);
     fprintf(stderr, "%s", trace.toString().utf8().data());
     return JSValue::encode(jsUndefined());
 }
@@ -479,6 +483,16 @@ EncodedJSValue JSC_HOST_CALL functionPreciseTime(ExecState*)
     return JSValue::encode(jsNumber(currentTime()));
 }
 
+EncodedJSValue JSC_HOST_CALL functionNeverInlineFunction(ExecState* exec)
+{
+    return JSValue::encode(setNeverInline(exec));
+}
+
+EncodedJSValue JSC_HOST_CALL functionNumberOfDFGCompiles(ExecState* exec)
+{
+    return JSValue::encode(numberOfDFGCompiles(exec));
+}
+
 EncodedJSValue JSC_HOST_CALL functionQuit(ExecState*)
 {
     exit(EXIT_SUCCESS);
@@ -503,6 +517,23 @@ EncodedJSValue JSC_HOST_CALL functionQuit(ExecState*)
 #endif
 
 int jscmain(int argc, char** argv);
+
+static double s_desiredTimeout;
+static double s_timeToWake;
+
+static NO_RETURN_DUE_TO_CRASH void timeoutThreadMain(void*)
+{
+    // WTF doesn't provide for a portable sleep(), so we use the ThreadCondition, which
+    // is close enough.
+    Mutex mutex;
+    ThreadCondition condition;
+    mutex.lock();
+    while (currentTime() < s_timeToWake)
+        condition.timedWait(mutex, s_timeToWake);
+    
+    dataLog("Timed out after ", s_desiredTimeout, " seconds!\n");
+    CRASH();
+}
 
 int main(int argc, char** argv)
 {
@@ -552,6 +583,17 @@ int main(int argc, char** argv)
     WTF::initializeMainThread();
 #endif
     JSC::initializeThreading();
+    
+    if (char* timeoutString = getenv("JSC_timeout")) {
+        if (sscanf(timeoutString, "%lf", &s_desiredTimeout) != 1) {
+            dataLog(
+                "WARNING: timeout string is malformed, got ", timeoutString,
+                " but expected a number. Not using a timeout.\n");
+        } else {
+            s_timeToWake = currentTime() + s_desiredTimeout;
+            createThread(timeoutThreadMain, 0, "jsc Timeout Thread");
+        }
+    }
 
     // We can't use destructors in the following code because it uses Windows
     // Structured Exception Handling

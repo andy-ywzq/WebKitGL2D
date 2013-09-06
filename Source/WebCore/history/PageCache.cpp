@@ -424,11 +424,10 @@ void PageCache::markPagesForCaptionPreferencesChanged()
 }
 #endif
 
-void PageCache::add(PassRefPtr<HistoryItem> prpItem, Page* page)
+void PageCache::add(PassRefPtr<HistoryItem> prpItem, Page& page)
 {
     ASSERT(prpItem);
-    ASSERT(page);
-    ASSERT(canCache(page));
+    ASSERT(canCache(&page));
     
     HistoryItem* item = prpItem.leakRef(); // Balanced in remove().
 
@@ -441,6 +440,29 @@ void PageCache::add(PassRefPtr<HistoryItem> prpItem, Page* page)
     ++m_size;
     
     prune();
+}
+
+PassOwnPtr<CachedPage> PageCache::take(HistoryItem* item)
+{
+    if (!item)
+        return nullptr;
+
+    OwnPtr<CachedPage> cachedPage = item->m_cachedPage.release();
+
+    removeFromLRUList(item);
+    --m_size;
+
+    item->deref(); // Balanced in add().
+
+    if (!cachedPage)
+        return nullptr;
+
+    if (cachedPage->hasExpired()) {
+        LOG(PageCache, "Not restoring page for %s from back/forward cache because cache entry has expired", item->url().string().ascii().data());
+        return nullptr;
+    }
+
+    return cachedPage.release();
 }
 
 CachedPage* PageCache::get(HistoryItem* item)

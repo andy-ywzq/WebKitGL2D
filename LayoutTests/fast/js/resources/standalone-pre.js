@@ -2,6 +2,16 @@ var wasPostTestScriptParsed = false;
 var errorMessage;
 var self = this;
 
+self.testRunner = {
+    neverInlineFunction: neverInlineFunction,
+    numberOfDFGCompiles: numberOfDFGCompiles
+};
+
+var silentTestPass, didPassSomeTestsSilently, didFailSomeTests, successfullyParsed;
+silentTestPass = false;
+didPassSomeTestsSilenty = false;
+didFaileSomeTests = false;
+
 function description(msg)
 {
     print(msg);
@@ -21,12 +31,15 @@ function escapeString(text)
 
 function testPassed(msg)
 {
-    print("PASS", escapeString(msg));
+    if (silentTestPass)
+        didPassSomeTestsSilently = true;
+    else
+        print("PASS", escapeString(msg));
 }
 
 function testFailed(msg)
 {
-    errorMessage = msg;
+    didFailSomeTests = true;
     print("FAIL", escapeString(msg));
 }
 
@@ -120,6 +133,48 @@ function shouldBe(_a, _b)
     testFailed(_a + " should be " + stringify(_bv) + " (of type " + typeof _bv + "). Was " + _av + " (of type " + typeof _av + ").");
 }
 
+function dfgShouldBe(theFunction, _a, _b)
+{
+  if (typeof theFunction != "function" || typeof _a != "string" || typeof _b != "string")
+    debug("WARN: dfgShouldBe() expects a function and two strings");
+  noInline(theFunction);
+  var exception;
+  var values = [];
+
+  // Defend against tests that muck with numeric properties on array.prototype.
+  values.__proto__ = null;
+  values.push = Array.prototype.push;
+  
+  try {
+    while (!dfgCompiled({f:theFunction}))
+      values.push(eval(_a));
+    values.push(eval(_a));
+  } catch (e) {
+    exception = e;
+  }
+
+  var _bv = eval(_b);
+  if (exception)
+    testFailed(_a + " should be " + stringify(_bv) + ". On iteration " + (values.length + 1) + ", threw exception " + exception);
+  else {
+    var allPassed = true;
+    for (var i = 0; i < values.length; ++i) {
+      var _av = values[i];
+      if (isResultCorrect(_av, _bv))
+        continue;
+      if (typeof(_av) == typeof(_bv))
+        testFailed(_a + " should be " + stringify(_bv) + ". On iteration " + (i + 1) + ", was " + stringify(_av) + ".");
+      else
+        testFailed(_a + " should be " + stringify(_bv) + " (of type " + typeof _bv + "). On iteration " + (i + 1) + ", was " + _av + " (of type " + typeof _av + ").");
+      allPassed = false;
+    }
+    if (allPassed)
+      testPassed(_a + " is " + _b + " on all iterations including after DFG tier-up.");
+  }
+  
+  return values.length;
+}
+
 function shouldBeTrue(_a) { shouldBe(_a, "true"); }
 function shouldBeFalse(_a) { shouldBe(_a, "false"); }
 function shouldBeNaN(_a) { shouldBe(_a, "NaN"); }
@@ -183,6 +238,10 @@ function isSuccessfullyParsed()
     if (!errorMessage)
         successfullyParsed = true;
     shouldBeTrue("successfullyParsed");
+    if (silentTestPass && didPassSomeTestsSilently)
+        debug("Passed some tests silently.");
+    if (silentTestPass && didFailSomeTests)
+        debug("Some tests failed.");
     debug("\nTEST COMPLETE\n");
 }
 
