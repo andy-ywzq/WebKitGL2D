@@ -316,6 +316,7 @@ else ()
         platform/network/soup/ResourceResponseSoup.cpp
         platform/network/soup/SocketStreamHandleSoup.cpp
         platform/network/soup/SoupURIUtils.cpp
+        platform/network/soup/SynchronousLoaderClientSoup.cpp
     )
 
     list(APPEND WebCore_INCLUDE_DIRECTORIES
