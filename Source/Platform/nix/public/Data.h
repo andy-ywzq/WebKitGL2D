@@ -69,12 +69,12 @@ public:
         return *this;
     }
 
-    WEBKIT_EXPORT void reset();
-    WEBKIT_EXPORT void assign(const Data&);
-    WEBKIT_EXPORT void assign(const char* data, size_t);
+    NIX_EXPORT void reset();
+    NIX_EXPORT void assign(const Data&);
+    NIX_EXPORT void assign(const char* data, size_t);
 
-    WEBKIT_EXPORT size_t size() const;
-    WEBKIT_EXPORT const char* data() const;
+    NIX_EXPORT size_t size() const;
+    NIX_EXPORT const char* data() const;
 
     bool isEmpty() const { return !size(); }
     bool isNull() const { return !m_private; }

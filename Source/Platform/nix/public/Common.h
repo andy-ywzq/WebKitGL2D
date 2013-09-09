@@ -32,8 +32,8 @@
 #define Nix_Common_h
 
 // -----------------------------------------------------------------------------
-// Exported symbols need to be annotated with WEBKIT_EXPORT
-#define WEBKIT_EXPORT __attribute__((visibility("default")))
+// Exported symbols need to be annotated with NIX_EXPORT
+#define NIX_EXPORT __attribute__((visibility("default")))
 
 // -----------------------------------------------------------------------------
 // Basic types
