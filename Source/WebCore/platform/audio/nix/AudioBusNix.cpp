@@ -29,8 +29,8 @@
 #include "AudioBus.h"
 
 #include "AudioFileReader.h"
-#include <public/Platform.h>
 #include <public/AudioBus.h>
+#include <public/Platform.h>
 #include <wtf/PassRefPtr.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/StringConcatenate.h>

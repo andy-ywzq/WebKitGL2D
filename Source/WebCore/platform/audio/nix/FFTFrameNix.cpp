@@ -29,9 +29,8 @@
 
 #include "VectorMath.h"
 #include <cmath>
-#include <public/Platform.h>
 #include <public/FFTFrame.h>
-
+#include <public/Platform.h>
 
 namespace WebCore {
 

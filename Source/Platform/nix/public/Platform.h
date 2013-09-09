@@ -41,12 +41,12 @@ class AudioBus;
 class FFTFrame;
 class ThemeEngine;
 
-class WEBKIT_EXPORT Platform {
+class NIX_EXPORT Platform {
 public:
 
-    WEBKIT_EXPORT static void initialize(Platform*);
-    WEBKIT_EXPORT static void shutdown();
-    WEBKIT_EXPORT static Platform* current();
+    NIX_EXPORT static void initialize(Platform*);
+    NIX_EXPORT static void shutdown();
+    NIX_EXPORT static Platform* current();
 
     // Audio --------------------------------------------------------------
     virtual float audioHardwareSampleRate() { return 0; }

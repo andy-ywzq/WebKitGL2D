@@ -47,20 +47,20 @@ public:
     ~AudioBus() { reset(); }
 
     // initialize() allocates memory of the given length for the given number of channels.
-    WEBKIT_EXPORT void initialize(unsigned numberOfChannels, size_t length, double sampleRate);
+    NIX_EXPORT void initialize(unsigned numberOfChannels, size_t length, double sampleRate);
 
     // resizeSmaller() can only be called after initialize() with a new length <= the initialization length.
     // The data stored in the bus will remain undisturbed.
-    WEBKIT_EXPORT void resizeSmaller(size_t newLength);
+    NIX_EXPORT void resizeSmaller(size_t newLength);
 
     // reset() releases the memory allocated from initialize().
-    WEBKIT_EXPORT void reset();
+    NIX_EXPORT void reset();
 
-    WEBKIT_EXPORT unsigned numberOfChannels() const;
-    WEBKIT_EXPORT size_t length() const;
-    WEBKIT_EXPORT double sampleRate() const;
+    NIX_EXPORT unsigned numberOfChannels() const;
+    NIX_EXPORT size_t length() const;
+    NIX_EXPORT double sampleRate() const;
 
-    WEBKIT_EXPORT float* channelData(unsigned channelIndex);
+    NIX_EXPORT float* channelData(unsigned channelIndex);
 
 #ifdef BUILDING_NIX__
     WTF::PassRefPtr<WebCore::AudioBus> audioBus();
