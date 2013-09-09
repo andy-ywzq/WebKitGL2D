@@ -57,7 +57,7 @@ public:
 
     // Creates a device for audio I/O.
     // Pass in (numberOfInputChannels > 0) if live/local audio input is desired.
-    virtual AudioDevice* createAudioDevice(size_t /*bufferSize*/, unsigned /*numberOfInputChannels*/, unsigned /*numberOfChannels*/, double /*sampleRate*/, AudioDevice::RenderCallback*) { return 0; }
+    virtual AudioDevice* createAudioDevice(const char* /*inputDeviceId*/, size_t /*bufferSize*/, unsigned /*numberOfInputChannels*/, unsigned /*numberOfChannels*/, double /*sampleRate*/, AudioDevice::RenderCallback*) { return 0; }
 
     // Gamepad
     virtual void sampleGamepads(Gamepads& into) { into.length = 0; }

@@ -36,6 +36,7 @@
 #include "AudioFIFO.h"
 #include "AudioPullFIFO.h"
 #include <public/Platform.h>
+#include <wtf/text/CString.h>
 
 namespace WebCore {
 
@@ -51,13 +52,14 @@ PassOwnPtr<AudioDestination> AudioDestination::create(AudioIOCallback& callback,
     return adoptPtr(new AudioDestinationNix(callback, inputDeviceId, numberOfInputChannels, numberOfOutputChannels, sampleRate));
 }
 
-AudioDestinationNix::AudioDestinationNix(AudioIOCallback& callback, const String&, unsigned numberOfInputChannels, unsigned numberOfOutputChannels, float sampleRate)
+AudioDestinationNix::AudioDestinationNix(AudioIOCallback& callback, const String& inputDeviceId, unsigned numberOfInputChannels, unsigned numberOfOutputChannels, float sampleRate)
     : m_callback(callback)
     , m_numberOfOutputChannels(numberOfOutputChannels)
     , m_inputBus(AudioBus::create(numberOfInputChannels, renderBufferSize))
     , m_renderBus(AudioBus::create(numberOfOutputChannels, renderBufferSize, false))
     , m_sampleRate(sampleRate)
     , m_isPlaying(false)
+    , m_inputDeviceId(inputDeviceId)
 {
     // Use the optimal buffer size recommended by the audio backend.
     m_callbackBufferSize = Nix::Platform::current()->audioHardwareBufferSize();
@@ -67,7 +69,8 @@ AudioDestinationNix::AudioDestinationNix(AudioIOCallback& callback, const String
     if (m_callbackBufferSize + renderBufferSize > fifoSize)
         return;
 
-    m_audioDevice = adoptPtr(Nix::Platform::current()->createAudioDevice(m_callbackBufferSize, numberOfInputChannels, numberOfOutputChannels, sampleRate, this));
+    m_audioDevice = adoptPtr(Nix::Platform::current()->createAudioDevice(m_inputDeviceId.utf8().data(), m_callbackBufferSize, numberOfInputChannels, numberOfOutputChannels, sampleRate, this));
+
     ASSERT(m_audioDevice);
 
     // Create a FIFO to handle the possibility of the callback size

@@ -79,7 +79,7 @@ public:
     virtual float audioHardwareSampleRate() OVERRIDE { return 44100; }
     virtual size_t audioHardwareBufferSize() OVERRIDE { return 1024; }
     virtual unsigned audioHardwareOutputChannels() OVERRIDE { return 2; }
-    virtual Nix::AudioDevice* createAudioDevice(size_t bufferSize, unsigned numberOfInputChannels, unsigned numberOfChannels, double sampleRate, Nix::AudioDevice::RenderCallback* renderCallback) OVERRIDE
+    virtual Nix::AudioDevice* createAudioDevice(const char*, size_t bufferSize, unsigned numberOfInputChannels, unsigned numberOfChannels, double sampleRate, Nix::AudioDevice::RenderCallback* renderCallback) OVERRIDE
     {
         return new MockAudioOutputDevice(bufferSize, numberOfInputChannels, numberOfChannels, sampleRate, renderCallback);
     }

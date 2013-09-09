@@ -68,6 +68,7 @@ private:
     bool m_isPlaying;
     OwnPtr<Nix::AudioDevice> m_audioDevice;
     size_t m_callbackBufferSize;
+    String m_inputDeviceId;
 
     OwnPtr<AudioFIFO> m_inputFifo;
     OwnPtr<AudioPullFIFO> m_fifo;
