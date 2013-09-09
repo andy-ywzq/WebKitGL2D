@@ -413,9 +413,6 @@
     <ClInclude Include="..\wtf\EnumClass.h">
       <Filter>wtf</Filter>
     </ClInclude>
-    <ClInclude Include="..\wtf\FastAllocBase.h">
-      <Filter>wtf</Filter>
-    </ClInclude>
     <ClInclude Include="..\wtf\FastBitVector.h">
       <Filter>wtf</Filter>
     </ClInclude>
@@ -473,6 +470,9 @@
     <ClInclude Include="..\wtf\MainThread.h">
       <Filter>wtf</Filter>
     </ClInclude>
+    <ClInclude Include="..\wtf\MallocPtr.h">
+      <Filter>wtf</Filter>
+    </ClInclude>
     <ClInclude Include="..\wtf\MathExtras.h">
       <Filter>wtf</Filter>
     </ClInclude>
@@ -498,12 +498,6 @@
       <Filter>wtf</Filter>
     </ClInclude>
     <ClInclude Include="..\wtf\Noncopyable.h">
-      <Filter>wtf</Filter>
-    </ClInclude>
-    <ClInclude Include="..\wtf\NonCopyingSort.h">
-      <Filter>wtf</Filter>
-    </ClInclude>
-    <ClInclude Include="..\wtf\NotFound.h">
       <Filter>wtf</Filter>
     </ClInclude>
     <ClInclude Include="..\wtf\NullPtr.h">
@@ -549,9 +543,6 @@
       <Filter>wtf</Filter>
     </ClInclude>
     <ClInclude Include="..\wtf\ParallelJobsOpenMP.h">
-      <Filter>wtf</Filter>
-    </ClInclude>
-    <ClInclude Include="..\wtf\PassOwnArrayPtr.h">
       <Filter>wtf</Filter>
     </ClInclude>
     <ClInclude Include="..\wtf\PassOwnPtr.h">

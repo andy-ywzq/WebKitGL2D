@@ -571,7 +571,7 @@ PassRefPtr<Range> extendRangeToWrappingNodes(PassRefPtr<Range> range, const Rang
         return range;
 
     // Create new range with the highest editable node contained within the range
-    RefPtr<Range> extendedRange = Range::create(range->ownerDocument());
+    RefPtr<Range> extendedRange = Range::create(&range->ownerDocument());
     extendedRange->selectNode(highestNode, IGNORE_EXCEPTION);
     return extendedRange.release();
 }
@@ -1290,7 +1290,7 @@ bool isBlockFlowElement(const Node* node)
     if (!node->isElementNode())
         return false;
     RenderObject* renderer = node->renderer();
-    return renderer && renderer->isBlockFlow();
+    return renderer && renderer->isBlockFlowFlexBoxOrGrid();
 }
 
 Element* deprecatedEnclosingBlockFlowElement(Node* node)

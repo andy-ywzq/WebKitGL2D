@@ -1,3 +1,222 @@
+2013-09-09  Julien Brianceau  <jbriance@cisco.com>
+
+        [Qt] Remove FastAllocBase.h from WTF.pro.
+        https://bugs.webkit.org/show_bug.cgi?id=121024
+
+        Reviewed by Jocelyn Turcotte.
+
+        * WTF.pro: Remove FastAllocBase.h as this file disappeared in r155251.
+
+2013-09-08  Darin Adler  <darin@apple.com>
+
+        Deprecate AdoptCF and AdoptNS (on all platforms except iOS for now)
+        https://bugs.webkit.org/show_bug.cgi?id=121017
+
+        Reviewed by Andreas Kling.
+
+        * wtf/RetainPtr.h: Use the preprocessor to rename AdoptCF and AdoptNS
+        to DeprecatedAdoptCF and DeprecatedAdoptNS on all platforms except
+        for iOS. Also removed an unneeded explicit conversion in the retainPtr
+        function. Also re-sorted the using lines at the end of the file.
+
+2013-09-08  Anders Carlsson  <andersca@apple.com>
+
+        Move WTF::notFound to Vector.h and delete NotFound.h
+        https://bugs.webkit.org/show_bug.cgi?id=120990
+
+        Reviewed by Sam Weinig.
+
+        * GNUmakefile.list.am:
+        * WTF.pro:
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/NotFound.h: Removed.
+        * wtf/Vector.h:
+
+2013-09-07  David Kilzer  <ddkilzer@apple.com>
+
+        gtest fails to build due to integer type mismatch in WTF::insertIntoBoundedVector()
+        <http://webkit.org/b/120983>
+
+        Reviewed by Dan Bernstein.
+
+        Fixes the following build failure:
+
+            WebKitBuild/Debug/usr/local/include/wtf/StdLibExtras.h:266:23: error: implicit conversion loses integer precision: 'size_t' (aka 'unsigned long') to 'unsigned int' [-Werror,-Wshorten-64-to-32]
+            for (unsigned i = size; i-- > index + 1;)
+                          ~   ^~~~
+
+        * wtf/StdLibExtras.h:
+        (WTF::insertIntoBoundedVector): Use size_t instead of unsigned
+        as for loop index variable.
+
+2013-09-07  Anders Carlsson  <andersca@apple.com>
+
+        Remove NonCopyableSort.h from WTF
+        https://bugs.webkit.org/show_bug.cgi?id=120984
+
+        Reviewed by Andreas Kling.
+
+        std::sort as defined by C++11 moves elements when possible, so there's no need for nonCopyableSort anymore.
+
+        * GNUmakefile.list.am:
+        * WTF.pro:
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/NonCopyingSort.h: Removed.
+
+2013-09-07  Anders Carlsson  <andersca@apple.com>
+
+        Get rid of PassOwnArrayPtr
+        https://bugs.webkit.org/show_bug.cgi?id=120964
+
+        Reviewed by Andreas Kling.
+
+        Make OwnArrayPtr a proper move-only type and get rid of PassOwnArrayPtr.
+        
+        Ultimately I'd like to get rid of OwnArrayPtr as well and just have it be a specialization
+        of OwnPtr<T[]>, but this is a step in the right direction.
+
+        * GNUmakefile.list.am:
+        * WTF.pro:
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/Assertions.cpp:
+        * wtf/CMakeLists.txt:
+        * wtf/DateMath.h:
+        * wtf/FastBitVector.h:
+        * wtf/Forward.h:
+        * wtf/OwnArrayPtr.h:
+        * wtf/PassOwnArrayPtr.h: Removed.
+
+2013-09-07  Anders Carlsson  <andersca@apple.com>
+
+        VectorMover should use std::move
+        https://bugs.webkit.org/show_bug.cgi?id=120959
+
+        Reviewed by Geoffrey Garen.
+
+        This lets the compiler use move constructors when moving data, which can be a performance improvement.
+        If the vector element type isn't movable it will be copied instead.
+
+        * wtf/Vector.h:
+        (WTF::VectorTypeOperations::move):
+        (WTF::VectorTypeOperations::moveOverlapping):
+
+2013-09-07  Anders Carlsson  <andersca@apple.com>
+
+        Get rid of FastAllocBase.h
+        https://bugs.webkit.org/show_bug.cgi?id=120952
+
+        Reviewed by Antti Koivisto.
+
+        FastAllocBase.h now only contains the WTF_MAKE_FAST_ALLOCATED macro. 
+        Move that macro to FastMalloc.h instead and remove FastAllocBase.h.
+
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/DeferrableRefCounted.h:
+        * wtf/FastAllocBase.h: Removed.
+        * wtf/FastMalloc.h:
+        * wtf/HashSet.h:
+        * wtf/MediaTime.h:
+        * wtf/PrintStream.h:
+        * wtf/RefCounted.h:
+        * wtf/RefPtr.h:
+        * wtf/ThreadingPrimitives.h:
+        * wtf/Vector.h:
+        * wtf/gobject/GMutexLocker.h:
+        * wtf/unicode/Collator.h:
+
+2013-09-06  Anders Carlsson  <andersca@apple.com>
+
+        Add a new smart pointer type for fastMalloc'ed memory
+        https://bugs.webkit.org/show_bug.cgi?id=120911
+
+        Reviewed by Andreas Kling.
+
+        Due to an oversight on my part, Vector::releaseBuffer() currently returns an OwnPtr
+        which means that its data will be freed with operator delete instead of fastFree.
+        
+        Fix this by introducing a new MllocPtr smart pointer class and change Vector::releaseBuffer() to return it instead.
+
+        * WTF.pro:
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/FastAllocBase.h:
+        * wtf/MallocPtr.h: Added.
+        * wtf/Vector.h:
+        * wtf/text/StringBuffer.h:
+        * wtf/text/StringImpl.h:
+
+2013-09-06  Andreas Kling  <akling@apple.com>
+
+        Remove old workaround for Nokia's Harmattan GCC on Qt/ARM.
+        <https://webkit.org/b/37253>
+
+        Reviewed by Anders Carlsson.
+
+        Apparently this was a workaround for GCC getting stuck in an infinite loop
+        when building for ARM in a Nokia SDK over 2 years ago.
+
+        I think it's safe to remove this now, but if I'm wrong, and you're reading
+        this ChangeLog wondering why I did this to you, feel free to put it back in.
+
+        * wtf/PassRefPtr.h:
+        (WTF::refIfNotNull):
+        (WTF::derefIfNotNull):
+
+2013-09-06  Andreas Kling  <akling@apple.com>
+
+        Remove unused RefPtr(PlacementNewAdopt) constructor.
+        <https://webkit.org/b/120914>
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/RefPtr.h:
+
+2013-09-06  David Kilzer  <ddkilzer@apple.com>
+
+        BUILD FIX (r155171): INSTALL_PATH_PREFIX should no longer be used beneath BUILT_PRODUCTS_DIR in HEADER_SEARCH_PATHS for iOS
+
+        * Configurations/Base.xcconfig:
+        (HEADER_SEARCH_PATHS): Change
+        $(BUILT_PRODUCTS_DIR)/$(INSTALL_PATH_PREFIX)/usr/local/include to
+        $(BUILT_PRODUCTS_DIR)/usr/local/include.
+
+2013-09-06  Anders Carlsson  <andersca@apple.com>
+
+        Remove fastNew/fastDelete
+        https://bugs.webkit.org/show_bug.cgi?id=120904
+
+        Reviewed by Andreas Kling.
+
+        Remove the various variants of fastNew and fastDelete.
+
+        * wtf/FastAllocBase.h:
+
+2013-09-06  Alberto Garcia  <berto@igalia.com>
+
+        [GTK] GlibUtilities: getCurrentExecutablePath() does not compile on GNU/Hurd
+        https://bugs.webkit.org/show_bug.cgi?id=120793
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Original patch by Svante Signell <svante.signell@telia.com>.
+
+        PATH_MAX is not defined in GNU/Hurd, this patch adds a dummy
+        implementation to make it compile.
+
+        * wtf/gobject/GlibUtilities.cpp:
+        (getCurrentExecutablePath):
+
 2013-09-05  Dan Bernstein  <mitz@apple.com>
 
         INSTALL_PATH_PREFIX is used even when not installing

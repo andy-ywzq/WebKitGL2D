@@ -75,6 +75,7 @@
 #include "ResourceResponse.h"
 #include "ScriptController.h"
 #include "Settings.h"
+#include "SubframeLoader.h"
 #include "ViewportArguments.h"
 #include "WebEventConversion.h"
 #include "qwebhistory.h"
@@ -243,7 +244,7 @@ void FrameLoaderClientQt::setFrame(QWebFrameAdapter* webFrame, Frame* frame)
 
 void FrameLoaderClientQt::callPolicyFunction(FramePolicyFunction function, PolicyAction action)
 {
-    (m_frame->loader().policyChecker()->*function)(action);
+    (m_frame->loader().policyChecker().*function)(action);
 }
 
 bool FrameLoaderClientQt::hasWebView() const
@@ -1359,7 +1360,7 @@ ObjectContentType FrameLoaderClientQt::objectContentType(const KURL& url, const 
     if (arePluginsEnabled && PluginDatabase::installedPlugins()->isMIMETypeRegistered(mimeType))
         plugInType = ObjectContentNetscapePlugin;
     else if (m_frame->page()) {
-        bool allowPlugins = m_frame->loader().subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin);
+        bool allowPlugins = m_frame->loader().subframeLoader().allowPlugins(NotAboutToInstantiatePlugin);
         if ((m_frame->page()->pluginData().supportsMimeType(mimeType, PluginData::AllPlugins) && allowPlugins)
             || m_frame->page()->pluginData().supportsMimeType(mimeType, PluginData::OnlyApplicationPlugins))
                 plugInType = ObjectContentOtherPlugin;

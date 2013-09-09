@@ -152,6 +152,8 @@ static inline const char* roleToString(AtkRole role)
         return "AXParagraph";
     case ATK_ROLE_PASSWORD_TEXT:
         return "AXPasswordField";
+    case ATK_ROLE_PROGRESS_BAR:
+        return "AXProgressIndicator";
     case ATK_ROLE_PUSH_BUTTON:
         return "AXButton";
     case ATK_ROLE_RADIO_BUTTON:
@@ -1050,7 +1052,7 @@ bool AccessibilityUIElement::addNotificationListener(JSObjectRef functionCallbac
     if (m_notificationHandler)
         return false;
 
-    m_notificationHandler = new AccessibilityNotificationHandler();
+    m_notificationHandler = AccessibilityNotificationHandler::create();
     m_notificationHandler->setPlatformElement(platformUIElement());
     m_notificationHandler->setNotificationFunctionCallback(functionCallback);
 

@@ -46,9 +46,11 @@ namespace JSC { namespace FTL {
 
 #define FOR_EACH_FUNCTION_TYPE(macro) \
     macro(I_DFGOperation_EJss, functionType(intPtr, intPtr, intPtr)) \
+    macro(J_DFGOperation_E, functionType(int64, intPtr)) \
     macro(P_DFGOperation_EC, functionType(intPtr, intPtr, intPtr)) \
     macro(V_DFGOperation_EOZD, functionType(voidType, intPtr, intPtr, int32, doubleType)) \
-    macro(V_DFGOperation_EOZJ, functionType(voidType, intPtr, intPtr, int32, int64))
+    macro(V_DFGOperation_EOZJ, functionType(voidType, intPtr, intPtr, int32, int64)) \
+    macro(Z_DFGOperation_D, functionType(int32, doubleType))
 
 class IntrinsicRepository : public CommonValues {
 public:

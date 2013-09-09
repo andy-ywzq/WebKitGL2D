@@ -398,7 +398,7 @@ static void appendAccessibilityObject(AccessibilityObject* object, Accessibility
             return;
         
         Document* doc = toFrameView(widget)->frame().document();
-        if (!doc || !doc->renderer())
+        if (!doc || !doc->renderView())
             return;
         
         object = object->axObjectCache()->getOrCreate(doc);
@@ -1544,12 +1544,22 @@ bool AccessibilityObject::isInsideARIALiveRegion() const
 
 bool AccessibilityObject::supportsARIAAttributes() const
 {
+    // This returns whether the element supports any global ARIA attributes.
     return supportsARIALiveRegion()
         || supportsARIADragging()
         || supportsARIADropping()
         || supportsARIAFlowTo()
         || supportsARIAOwns()
-        || hasAttribute(aria_labelAttr);
+        || hasAttribute(aria_atomicAttr)
+        || hasAttribute(aria_busyAttr)
+        || hasAttribute(aria_controlsAttr)
+        || hasAttribute(aria_describedbyAttr)
+        || hasAttribute(aria_disabledAttr)
+        || hasAttribute(aria_haspopupAttr)
+        || hasAttribute(aria_invalidAttr)
+        || hasAttribute(aria_labelAttr)
+        || hasAttribute(aria_labelledbyAttr)
+        || hasAttribute(aria_relevantAttr);
 }
     
 bool AccessibilityObject::supportsARIALiveRegion() const

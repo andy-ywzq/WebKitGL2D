@@ -54,6 +54,7 @@
 #include "ScriptEventListener.h"
 #include "Settings.h"
 #include "StylePropertySet.h"
+#include "SubframeLoader.h"
 #include "Text.h"
 #include "TextIterator.h"
 #include "XMLNames.h"
@@ -759,7 +760,7 @@ bool HTMLElement::rendererIsNeeded(const RenderStyle& style)
             return false;
     } else if (hasLocalName(noembedTag)) {
         Frame* frame = document().frame();
-        if (frame && frame->loader().subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin))
+        if (frame && frame->loader().subframeLoader().allowPlugins(NotAboutToInstantiatePlugin))
             return false;
     }
     return StyledElement::rendererIsNeeded(style);
@@ -913,7 +914,7 @@ void HTMLElement::calculateAndAdjustDirectionality()
 void HTMLElement::adjustDirectionalityIfNeededAfterChildrenChanged(Element* beforeChange, ChildChangeType changeType)
 {
     // FIXME: This function looks suspicious.
-    if (document().renderer() && (changeType == ElementRemoved || changeType == TextRemoved)) {
+    if (document().renderView() && (changeType == ElementRemoved || changeType == TextRemoved)) {
         Node* node = beforeChange ? beforeChange->nextSibling() : 0;
         for (; node; node = node->nextSibling()) {
             if (elementAffectsDirectionality(node))

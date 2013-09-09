@@ -89,9 +89,11 @@ public:
     template <class> friend struct ValueToString;
 #endif
 
+protected:
     explicit RenderBlock(ContainerNode*);
     virtual ~RenderBlock();
 
+public:
     static RenderBlock* createAnonymous(Document*);
 
     RenderObject* firstChild() const { ASSERT(children() == virtualChildren()); return children()->firstChild(); }
@@ -106,8 +108,8 @@ public:
     virtual LayoutUnit lineHeight(bool firstLine, LineDirectionMode, LinePositionMode = PositionOnContainingLine) const OVERRIDE FINAL;
     virtual int baselinePosition(FontBaseline, bool firstLine, LineDirectionMode, LinePositionMode = PositionOnContainingLine) const;
 
-    RenderLineBoxList* lineBoxes() { return &m_lineBoxes; }
-    const RenderLineBoxList* lineBoxes() const { return &m_lineBoxes; }
+    RenderLineBoxList& lineBoxes() { return m_lineBoxes; }
+    const RenderLineBoxList& lineBoxes() const { return m_lineBoxes; }
 
     InlineFlowBox* firstLineBox() const { return m_lineBoxes.firstLineBox(); }
     InlineFlowBox* lastLineBox() const { return m_lineBoxes.lastLineBox(); }
@@ -627,7 +629,6 @@ private:
     virtual const char* renderName() const;
 
     virtual bool isRenderBlock() const OVERRIDE FINAL { return true; }
-    virtual bool isBlockFlow() const OVERRIDE FINAL { return (!isInline() || isReplaced()) && !isTable(); }
     virtual bool isInlineBlockOrInlineTable() const OVERRIDE FINAL { return isInline() && isReplaced(); }
 
     void makeChildrenNonInline(RenderObject* insertionPoint = 0);

@@ -341,6 +341,12 @@ private:
         case GetButterfly:
             compileGetButterfly();
             break;
+        case GetIndexedPropertyStorage:
+            compileGetIndexedPropertyStorage();
+            break;
+        case CheckArray:
+            compileCheckArray();
+            break;
         case GetArrayLength:
             compileGetArrayLength();
             break;
@@ -362,6 +368,24 @@ private:
             break;
         case PutGlobalVar:
             compilePutGlobalVar();
+            break;
+        case GlobalVarWatchpoint:
+            compileGlobalVarWatchpoint();
+            break;
+        case GetMyScope:
+            compileGetMyScope();
+            break;
+        case SkipScope:
+            compileSkipScope();
+            break;
+        case GetClosureRegisters:
+            compileGetClosureRegisters();
+            break;
+        case GetClosureVar:
+            compileGetClosureVar();
+            break;
+        case PutClosureVar:
+            compilePutClosureVar();
             break;
         case CompareEq:
             compileCompareEq();
@@ -389,6 +413,10 @@ private:
             break;
         case LogicalNot:
             compileLogicalNot();
+            break;
+        case Call:
+        case Construct:
+            compileCallOrConstruct();
             break;
         case Jump:
             compileJump();
@@ -855,23 +883,26 @@ private:
             
             m_out.appendTo(continuation, done);
             
+            LValue remainder = m_out.rem(numerator, denominator);
+            
             if (!nodeCanIgnoreNegativeZero(m_node->arithNodeFlags())) {
-                LBasicBlock zeroNumerator = FTL_NEW_BLOCK(m_out, ("ArithMod zero numerator"));
+                LBasicBlock negativeNumerator = FTL_NEW_BLOCK(m_out, ("ArithMod negative numerator"));
                 LBasicBlock numeratorContinuation = FTL_NEW_BLOCK(m_out, ("ArithMod numerator continuation"));
                 
-                m_out.branch(m_out.isZero32(numerator), zeroNumerator, numeratorContinuation);
+                m_out.branch(
+                    m_out.lessThan(numerator, m_out.int32Zero),
+                    negativeNumerator, numeratorContinuation);
                 
-                LBasicBlock innerLastNext = m_out.appendTo(zeroNumerator, numeratorContinuation);
+                LBasicBlock innerLastNext = m_out.appendTo(negativeNumerator, numeratorContinuation);
                 
-                speculate(
-                    NegativeZero, noValue(), 0, m_out.lessThan(denominator, m_out.int32Zero));
+                speculate(NegativeZero, noValue(), 0, m_out.isZero32(remainder));
                 
                 m_out.jump(numeratorContinuation);
                 
                 m_out.appendTo(numeratorContinuation, innerLastNext);
             }
             
-            results.append(m_out.anchor(m_out.rem(numerator, denominator)));
+            results.append(m_out.anchor(remainder));
             m_out.jump(done);
             
             m_out.appendTo(done, lastNext);
@@ -984,6 +1015,7 @@ private:
                 LValue overflowResult = m_out.subWithOverflow32(m_out.int32Zero, value);
                 speculate(Overflow, noValue(), 0, m_out.extractValue(overflowResult, 1));
                 result = m_out.extractValue(overflowResult, 0);
+                speculate(NegativeZero, noValue(), 0, m_out.isZero32(result));
             }
             
             setInt32(result);
@@ -1192,6 +1224,24 @@ private:
         setStorage(m_out.loadPtr(lowCell(m_node->child1()), m_heaps.JSObject_butterfly));
     }
     
+    void compileGetIndexedPropertyStorage()
+    {
+        setStorage(m_out.loadPtr(lowCell(m_node->child1()), m_heaps.JSArrayBufferView_vector));
+    }
+    
+    void compileCheckArray()
+    {
+        Edge edge = m_node->child1();
+        LValue cell = lowCell(edge);
+        
+        if (m_node->arrayMode().alreadyChecked(m_graph, m_node, m_state.forNode(edge)))
+            return;
+        
+        speculate(
+            BadIndexingType, jsValueValue(cell), 0,
+            m_out.bitNot(isArrayType(cell, m_node->arrayMode())));
+    }
+    
     void compileGetArrayLength()
     {
         switch (m_node->arrayMode().type()) {
@@ -1199,12 +1249,18 @@ private:
         case Array::Double:
         case Array::Contiguous: {
             setInt32(m_out.load32(lowStorage(m_node->child2()), m_heaps.Butterfly_publicLength));
-            break;
+            return;
         }
             
         default:
+            if (isTypedView(m_node->arrayMode().typedArrayType())) {
+                setInt32(
+                    m_out.load32(lowCell(m_node->child1()), m_heaps.JSArrayBufferView_length));
+                return;
+            }
+            
             RELEASE_ASSERT_NOT_REACHED();
-            break;
+            return;
         }
     }
     
@@ -1270,10 +1326,90 @@ private:
             return;
         }
             
-        default:
+        default: {
+            TypedArrayType type = m_node->arrayMode().typedArrayType();
+            
+            if (isTypedView(type)) {
+                LValue array = lowCell(m_node->child1());
+                
+                speculate(
+                    OutOfBounds, noValue(), 0,
+                    m_out.aboveOrEqual(
+                        index, m_out.load32(array, m_heaps.JSArrayBufferView_length)));
+                
+                TypedPointer pointer = TypedPointer(
+                    m_heaps.typedArrayProperties,
+                    m_out.add(
+                        storage,
+                        m_out.shl(
+                            m_out.zeroExt(index, m_out.intPtr),
+                            m_out.constIntPtr(logElementSize(type)))));
+                
+                if (isInt(type)) {
+                    LValue result;
+                    switch (elementSize(type)) {
+                    case 1:
+                        result = m_out.load8(pointer);
+                        break;
+                    case 2:
+                        result = m_out.load16(pointer);
+                        break;
+                    case 4:
+                        result = m_out.load32(pointer);
+                        break;
+                    default:
+                        RELEASE_ASSERT_NOT_REACHED();
+                    }
+                    
+                    if (elementSize(type) < 4) {
+                        if (isSigned(type))
+                            result = m_out.signExt(result, m_out.int32);
+                        else
+                            result = m_out.zeroExt(result, m_out.int32);
+                        setInt32(result);
+                        return;
+                    }
+                    
+                    if (isSigned(type)) {
+                        setInt32(result);
+                        return;
+                    }
+                    
+                    if (m_node->shouldSpeculateInteger()) {
+                        speculateForward(
+                            Overflow, noValue(), 0, m_out.lessThan(result, m_out.int32Zero),
+                            uInt32Value(result));
+                        setInt32(result);
+                        return;
+                    }
+                    
+                    setDouble(m_out.unsignedToFP(result, m_out.doubleType));
+                    return;
+                }
+            
+                ASSERT(isFloat(type));
+                
+                LValue result;
+                switch (type) {
+                case TypeFloat32:
+                    result = m_out.fpCast(m_out.loadFloat(pointer), m_out.doubleType);
+                    break;
+                case TypeFloat64:
+                    result = m_out.loadDouble(pointer);
+                    break;
+                default:
+                    RELEASE_ASSERT_NOT_REACHED();
+                }
+                
+                result = m_out.select(
+                    m_out.doubleEqual(result, result), result, m_out.constDouble(QNaN));
+                setDouble(result);
+                return;
+            }
+            
             RELEASE_ASSERT_NOT_REACHED();
             return;
-        }
+        } }
     }
     
     void compilePutByVal()
@@ -1287,72 +1423,203 @@ private:
         LValue index = lowInt32(child2);
         LValue storage = lowStorage(child4);
         
-        LBasicBlock continuation = FTL_NEW_BLOCK(m_out, ("PutByVal continuation"));
-        LBasicBlock outerLastNext = m_out.appendTo(m_out.m_block, continuation);
-            
         switch (m_node->arrayMode().type()) {
         case Array::Int32:
+        case Array::Double:
         case Array::Contiguous: {
-            LValue value = lowJSValue(child3, ManualOperandSpeculation);
+            LBasicBlock continuation = FTL_NEW_BLOCK(m_out, ("PutByVal continuation"));
+            LBasicBlock outerLastNext = m_out.appendTo(m_out.m_block, continuation);
             
-            if (m_node->arrayMode().type() == Array::Int32)
-                FTL_TYPE_CHECK(jsValueValue(value), child3, SpecInt32, isNotInt32(value));
-            
-            TypedPointer elementPointer = m_out.baseIndex(
-                m_node->arrayMode().type() == Array::Int32 ?
-                m_heaps.indexedInt32Properties : m_heaps.indexedContiguousProperties,
-                storage, m_out.zeroExt(index, m_out.intPtr),
-                m_state.forNode(child2).m_value);
-            
-            if (m_node->op() == PutByValAlias) {
+            switch (m_node->arrayMode().type()) {
+            case Array::Int32:
+            case Array::Contiguous: {
+                LValue value = lowJSValue(child3, ManualOperandSpeculation);
+                
+                if (m_node->arrayMode().type() == Array::Int32)
+                    FTL_TYPE_CHECK(jsValueValue(value), child3, SpecInt32, isNotInt32(value));
+                
+                TypedPointer elementPointer = m_out.baseIndex(
+                    m_node->arrayMode().type() == Array::Int32 ?
+                    m_heaps.indexedInt32Properties : m_heaps.indexedContiguousProperties,
+                    storage, m_out.zeroExt(index, m_out.intPtr),
+                    m_state.forNode(child2).m_value);
+                
+                if (m_node->op() == PutByValAlias) {
+                    m_out.store64(value, elementPointer);
+                    break;
+                }
+                
+                contiguousPutByValOutOfBounds(
+                    codeBlock()->isStrictMode()
+                    ? operationPutByValBeyondArrayBoundsStrict
+                    : operationPutByValBeyondArrayBoundsNonStrict,
+                    base, storage, index, value, continuation);
+                
                 m_out.store64(value, elementPointer);
                 break;
             }
-            
-            contiguousPutByValOutOfBounds(
-                codeBlock()->isStrictMode()
-                    ? operationPutByValBeyondArrayBoundsStrict
-                    : operationPutByValBeyondArrayBoundsNonStrict,
-                base, storage, index, value, continuation);
-            
-            m_out.store64(value, elementPointer);
-            break;
-        }
-            
-        case Array::Double: {
-            LValue value = lowDouble(child3);
-            
-            FTL_TYPE_CHECK(
-                doubleValue(value), child3, SpecRealNumber,
-                m_out.doubleNotEqualOrUnordered(value, value));
-            
-            TypedPointer elementPointer = m_out.baseIndex(
-                m_heaps.indexedDoubleProperties,
-                storage, m_out.zeroExt(index, m_out.intPtr),
-                m_state.forNode(child2).m_value);
-
-            if (m_node->op() == PutByValAlias) {
+                
+            case Array::Double: {
+                LValue value = lowDouble(child3);
+                
+                FTL_TYPE_CHECK(
+                    doubleValue(value), child3, SpecRealNumber,
+                    m_out.doubleNotEqualOrUnordered(value, value));
+                
+                TypedPointer elementPointer = m_out.baseIndex(
+                    m_heaps.indexedDoubleProperties,
+                    storage, m_out.zeroExt(index, m_out.intPtr),
+                    m_state.forNode(child2).m_value);
+                
+                if (m_node->op() == PutByValAlias) {
+                    m_out.storeDouble(value, elementPointer);
+                    break;
+                }
+                
+                contiguousPutByValOutOfBounds(
+                    codeBlock()->isStrictMode()
+                    ? operationPutDoubleByValBeyondArrayBoundsStrict
+                    : operationPutDoubleByValBeyondArrayBoundsNonStrict,
+                    base, storage, index, value, continuation);
+                
                 m_out.storeDouble(value, elementPointer);
                 break;
             }
-            
-            contiguousPutByValOutOfBounds(
-                codeBlock()->isStrictMode()
-                    ? operationPutDoubleByValBeyondArrayBoundsStrict
-                    : operationPutDoubleByValBeyondArrayBoundsNonStrict,
-                base, storage, index, value, continuation);
-            
-            m_out.storeDouble(value, elementPointer);
-            break;
+                
+            default:
+                RELEASE_ASSERT_NOT_REACHED();
+            }
+
+            m_out.jump(continuation);
+            m_out.appendTo(continuation, outerLastNext);
+            return;
         }
             
         default:
+            TypedArrayType type = m_node->arrayMode().typedArrayType();
+            
+            if (isTypedView(type)) {
+                if (m_node->op() == PutByVal) {
+                    speculate(
+                        OutOfBounds, noValue(), 0,
+                        m_out.aboveOrEqual(
+                            index, m_out.load32(base, m_heaps.JSArrayBufferView_length)));
+                }
+                
+                TypedPointer pointer = TypedPointer(
+                    m_heaps.typedArrayProperties,
+                    m_out.add(
+                        storage,
+                        m_out.shl(
+                            m_out.zeroExt(index, m_out.intPtr),
+                            m_out.constIntPtr(logElementSize(type)))));
+                
+                if (isInt(type)) {
+                    LValue intValue;
+                    switch (child3.useKind()) {
+                    case Int32Use: {
+                        intValue = lowInt32(child3);
+                        if (isClamped(type)) {
+                            ASSERT(elementSize(type) == 1);
+                            
+                            LBasicBlock atLeastZero = FTL_NEW_BLOCK(m_out, ("PutByVal int clamp atLeastZero"));
+                            LBasicBlock continuation = FTL_NEW_BLOCK(m_out, ("PutByVal int clamp continuation"));
+                            
+                            Vector<ValueFromBlock, 2> intValues;
+                            intValues.append(m_out.anchor(m_out.int32Zero));
+                            m_out.branch(
+                                m_out.lessThan(intValue, m_out.int32Zero),
+                                continuation, atLeastZero);
+                            
+                            LBasicBlock lastNext = m_out.appendTo(atLeastZero, continuation);
+                            
+                            intValues.append(m_out.anchor(m_out.select(
+                                m_out.greaterThan(intValue, m_out.constInt32(255)),
+                                m_out.constInt32(255),
+                                intValue)));
+                            m_out.jump(continuation);
+                            
+                            m_out.appendTo(continuation, lastNext);
+                            intValue = m_out.phi(m_out.int32, intValues);
+                        }
+                        break;
+                    }
+                        
+                    case NumberUse: {
+                        LValue doubleValue = lowDouble(child3);
+                        
+                        if (isClamped(type)) {
+                            ASSERT(elementSize(type) == 1);
+                            
+                            LBasicBlock atLeastZero = FTL_NEW_BLOCK(m_out, ("PutByVal double clamp atLeastZero"));
+                            LBasicBlock withinRange = FTL_NEW_BLOCK(m_out, ("PutByVal double clamp withinRange"));
+                            LBasicBlock continuation = FTL_NEW_BLOCK(m_out, ("PutByVal double clamp continuation"));
+                            
+                            Vector<ValueFromBlock, 3> intValues;
+                            intValues.append(m_out.anchor(m_out.int32Zero));
+                            m_out.branch(
+                                m_out.doubleLessThanOrUnordered(doubleValue, m_out.doubleZero),
+                                continuation, atLeastZero);
+                            
+                            LBasicBlock lastNext = m_out.appendTo(atLeastZero, withinRange);
+                            intValues.append(m_out.anchor(m_out.constInt32(255)));
+                            m_out.branch(
+                                m_out.doubleGreaterThan(doubleValue, m_out.constDouble(255)),
+                                continuation, withinRange);
+                            
+                            m_out.appendTo(withinRange, continuation);
+                            intValues.append(m_out.anchor(m_out.fpToInt32(doubleValue)));
+                            m_out.jump(continuation);
+                            
+                            m_out.appendTo(continuation, lastNext);
+                            intValue = m_out.phi(m_out.int32, intValues);
+                        } else if (isSigned(type))
+                            intValue = doubleToInt32(doubleValue);
+                        else
+                            intValue = doubleToUInt32(doubleValue);
+                        break;
+                    }
+                        
+                    default:
+                        RELEASE_ASSERT_NOT_REACHED();
+                    }
+                    
+                    switch (elementSize(type)) {
+                    case 1:
+                        m_out.store8(m_out.intCast(intValue, m_out.int8), pointer);
+                        break;
+                    case 2:
+                        m_out.store16(m_out.intCast(intValue, m_out.int16), pointer);
+                        break;
+                    case 4:
+                        m_out.store32(intValue, pointer);
+                        break;
+                    default:
+                        RELEASE_ASSERT_NOT_REACHED();
+                    }
+                    
+                    return;
+                }
+                
+                ASSERT(isFloat(type));
+                
+                LValue value = lowDouble(child3);
+                switch (type) {
+                case TypeFloat32:
+                    m_out.storeFloat(m_out.fpCast(value, m_out.floatType), pointer);
+                    break;
+                case TypeFloat64:
+                    m_out.storeDouble(value, pointer);
+                    break;
+                default:
+                    RELEASE_ASSERT_NOT_REACHED();
+                }
+                return;
+            }
+            
             RELEASE_ASSERT_NOT_REACHED();
             break;
         }
-
-        m_out.jump(continuation);
-        m_out.appendTo(continuation, outerLastNext);
     }
     
     void compileGetByOffset()
@@ -1392,6 +1659,42 @@ private:
             lowJSValue(m_node->child1()), m_out.absolute(m_node->registerPointer()));
     }
     
+    void compileGlobalVarWatchpoint()
+    {
+        // FIXME: Implement watchpoints.
+        // https://bugs.webkit.org/show_bug.cgi?id=113647
+    }
+    
+    void compileGetMyScope()
+    {
+        setJSValue(m_out.loadPtr(addressFor(
+            m_node->codeOrigin.stackOffset() + JSStack::ScopeChain)));
+    }
+    
+    void compileSkipScope()
+    {
+        setJSValue(m_out.loadPtr(lowCell(m_node->child1()), m_heaps.JSScope_next));
+    }
+    
+    void compileGetClosureRegisters()
+    {
+        setStorage(m_out.loadPtr(
+            lowCell(m_node->child1()), m_heaps.JSVariableObject_registers));
+    }
+    
+    void compileGetClosureVar()
+    {
+        setJSValue(m_out.load64(
+            addressFor(lowStorage(m_node->child1()), m_node->varNumber())));
+    }
+    
+    void compilePutClosureVar()
+    {
+        m_out.store64(
+            lowJSValue(m_node->child3()),
+            addressFor(lowStorage(m_node->child2()), m_node->varNumber()));
+    }
+    
     void compileCompareEq()
     {
         if (m_node->isBinaryUseKind(Int32Use)
@@ -1424,6 +1727,7 @@ private:
         if (m_node->isBinaryUseKind(NumberUse)) {
             setBoolean(
                 m_out.doubleEqual(lowDouble(m_node->child1()), lowDouble(m_node->child2())));
+            return;
         }
         
         if (m_node->isBinaryUseKind(ObjectUse)) {
@@ -1535,6 +1839,39 @@ private:
     void compileLogicalNot()
     {
         setBoolean(m_out.bitNot(boolify(m_node->child1())));
+    }
+    
+    void compileCallOrConstruct()
+    {
+        // FIXME: This is unacceptably slow.
+        // https://bugs.webkit.org/show_bug.cgi?id=113621
+        
+        J_DFGOperation_E function =
+            m_node->op() == Call ? operationFTLCall : operationFTLConstruct;
+        
+        int dummyThisArgument = m_node->op() == Call ? 0 : 1;
+        
+        int numPassedArgs = m_node->numChildren() - 1;
+        
+        LValue calleeFrame = m_out.add(
+            m_callFrame,
+            m_out.constIntPtr(sizeof(Register) * codeBlock()->m_numCalleeRegisters));
+        
+        m_out.store32(
+            m_out.constInt32(numPassedArgs + dummyThisArgument),
+            payloadFor(calleeFrame, JSStack::ArgumentCount));
+        m_out.store64(m_callFrame, addressFor(calleeFrame, JSStack::CallerFrame));
+        m_out.store64(
+            lowJSValue(m_graph.varArgChild(m_node, 0)),
+            addressFor(calleeFrame, JSStack::Callee));
+        
+        for (int i = 0; i < numPassedArgs; ++i) {
+            m_out.store64(
+                lowJSValue(m_graph.varArgChild(m_node, 1 + i)),
+                addressFor(calleeFrame, argumentToOperand(i + dummyThisArgument)));
+        }
+        
+        setJSValue(vmCall(m_out.operation(function), calleeFrame));
     }
     
     void compileJump()
@@ -1887,6 +2224,55 @@ private:
         m_out.switchInstruction(switchValue, cases, lowBlock(data->fallThrough));
     }
     
+    LValue doubleToInt32(LValue doubleValue, double low, double high, bool isSigned = true)
+    {
+        // FIXME: Optimize double-to-int conversions.
+        // <rdar://problem/14938465>
+        
+        LBasicBlock greatEnough = FTL_NEW_BLOCK(m_out, ("doubleToInt32 greatEnough"));
+        LBasicBlock withinRange = FTL_NEW_BLOCK(m_out, ("doubleToInt32 withinRange"));
+        LBasicBlock slowPath = FTL_NEW_BLOCK(m_out, ("doubleToInt32 slowPath"));
+        LBasicBlock continuation = FTL_NEW_BLOCK(m_out, ("doubleToInt32 continuation"));
+        
+        Vector<ValueFromBlock, 2> results;
+        
+        m_out.branch(
+            m_out.greaterThanOrEqual(doubleValue, m_out.constDouble(low)),
+            greatEnough, slowPath);
+        
+        LBasicBlock lastNext = m_out.appendTo(greatEnough, withinRange);
+        m_out.branch(
+            m_out.lessThanOrEqual(doubleValue, m_out.constDouble(high)),
+            withinRange, slowPath);
+        
+        m_out.appendTo(withinRange, slowPath);
+        LValue fastResult;
+        if (isSigned)
+            fastResult = m_out.fpToInt32(doubleValue);
+        else
+            fastResult = m_out.fpToUInt32(doubleValue);
+        results.append(m_out.anchor(fastResult));
+        m_out.jump(continuation);
+        
+        m_out.appendTo(slowPath, continuation);
+        results.append(m_out.anchor(m_out.call(m_out.operation(toInt32), doubleValue)));
+        m_out.jump(continuation);
+        
+        m_out.appendTo(continuation, lastNext);
+        return m_out.phi(m_out.int32, results);
+    }
+    
+    LValue doubleToInt32(LValue doubleValue)
+    {
+        double limit = pow(2, 31) - 1;
+        return doubleToInt32(doubleValue, -limit, limit);
+    }
+    
+    LValue doubleToUInt32(LValue doubleValue)
+    {
+        return doubleToInt32(doubleValue, 0, pow(2, 32) - 1, false);
+    }
+    
     void speculateBackward(
         ExitKind kind, FormattedValue lowValue, Node* highValue, LValue failCondition)
     {
@@ -2208,6 +2594,9 @@ private:
         case ObjectUse:
             speculateObject(edge);
             break;
+        case ObjectOrOtherUse:
+            speculateObjectOrOther(edge);
+            break;
         case StringUse:
             speculateString(edge);
             break;
@@ -2221,6 +2610,7 @@ private:
             speculateBoolean(edge);
             break;
         default:
+            dataLog("Unsupported speculation use kind: ", edge.useKind(), "\n");
             RELEASE_ASSERT_NOT_REACHED();
         }
     }
@@ -2264,6 +2654,47 @@ private:
         return isString(cell);
     }
     
+    LValue isArrayType(LValue cell, ArrayMode arrayMode)
+    {
+        switch (arrayMode.type()) {
+        case Array::Int32:
+        case Array::Double:
+        case Array::Contiguous: {
+            LValue indexingType = m_out.load8(
+                m_out.loadPtr(cell, m_heaps.JSCell_structure),
+                m_heaps.Structure_indexingType);
+            
+            switch (arrayMode.arrayClass()) {
+            case Array::OriginalArray:
+                RELEASE_ASSERT_NOT_REACHED();
+                return 0;
+                
+            case Array::Array:
+                return m_out.equal(
+                    m_out.bitAnd(indexingType, m_out.constInt8(IsArray | IndexingShapeMask)),
+                    m_out.constInt8(IsArray | arrayMode.shapeMask()));
+                
+            default:
+                return m_out.equal(
+                    m_out.bitAnd(indexingType, m_out.constInt8(IndexingShapeMask)),
+                    m_out.constInt8(arrayMode.shapeMask()));
+            }
+        }
+            
+        default:
+            return hasClassInfo(cell, classInfoForType(arrayMode.typedArrayType()));
+        }
+    }
+    
+    LValue hasClassInfo(LValue cell, const ClassInfo* classInfo)
+    {
+        return m_out.equal(
+            m_out.loadPtr(
+                m_out.loadPtr(cell, m_heaps.JSCell_structure),
+                m_heaps.Structure_classInfo),
+            m_out.constIntPtr(classInfo));
+    }
+    
     void speculateObject(Edge edge, LValue cell)
     {
         FTL_TYPE_CHECK(jsValueValue(cell), edge, SpecObject, isNotObject(cell));
@@ -2272,6 +2703,42 @@ private:
     void speculateObject(Edge edge)
     {
         speculateObject(edge, lowCell(edge));
+    }
+    
+    void speculateObjectOrOther(Edge edge)
+    {
+        if (!m_interpreter.needsTypeCheck(edge))
+            return;
+        
+        LValue value = lowJSValue(edge);
+        
+        LBasicBlock cellCase = FTL_NEW_BLOCK(m_out, ("speculateObjectOrOther cell case"));
+        LBasicBlock primitiveCase = FTL_NEW_BLOCK(m_out, ("speculateObjectOrOther primitive case"));
+        LBasicBlock continuation = FTL_NEW_BLOCK(m_out, ("speculateObjectOrOther continuation"));
+        
+        m_out.branch(isNotCell(value), primitiveCase, cellCase);
+        
+        LBasicBlock lastNext = m_out.appendTo(cellCase, primitiveCase);
+        
+        FTL_TYPE_CHECK(
+            jsValueValue(value), edge, (~SpecCell) | SpecObject,
+            m_out.equal(
+                m_out.loadPtr(value, m_heaps.JSCell_structure),
+                m_out.constIntPtr(vm().stringStructure.get())));
+        
+        m_out.jump(continuation);
+        
+        m_out.appendTo(primitiveCase, continuation);
+        
+        FTL_TYPE_CHECK(
+            jsValueValue(value), edge, SpecCell | SpecOther,
+            m_out.notEqual(
+                m_out.bitAnd(value, m_out.constInt64(~TagBitUndefined)),
+                m_out.constInt64(ValueNull)));
+        
+        m_out.jump(continuation);
+        
+        m_out.appendTo(continuation, lastNext);
     }
     
     void speculateString(Edge edge, LValue cell)
@@ -2630,6 +3097,8 @@ private:
                 HashSet<Node*>::iterator end = m_live.end();
                 for (; iter != end; ++iter) {
                     Node* candidate = *iter;
+                    if (candidate->flags() & NodeHasVarArgs)
+                        continue;
                     if (!candidate->child1())
                         continue;
                     if (candidate->child1() != node)

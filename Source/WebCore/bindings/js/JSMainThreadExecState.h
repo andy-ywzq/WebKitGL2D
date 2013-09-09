@@ -26,16 +26,15 @@
 #ifndef JSMainThreadExecState_h
 #define JSMainThreadExecState_h
 
-#include "InspectorInstrumentation.h"
 #include "JSDOMBinding.h"
 #include <runtime/Completion.h>
-#include <runtime/Executable.h>
 #ifndef NDEBUG
 #include <wtf/MainThread.h>
 #endif
 
 namespace WebCore {
 
+class InspectorInstrumentationCookie;
 class ScriptExecutionContext;
 
 class JSMainThreadExecState {
@@ -53,19 +52,7 @@ public:
         return JSC::call(exec, functionObject, callType, callData, thisValue, args);
     };
 
-    static inline InspectorInstrumentationCookie instrumentFunctionCall(ScriptExecutionContext* context, JSC::CallType callType, const JSC::CallData& callData)
-    {
-        if (!InspectorInstrumentation::timelineAgentEnabled(context))
-            return InspectorInstrumentationCookie();
-        String resourceName;
-        int lineNumber = 1;
-        if (callType == JSC::CallTypeJS) {
-            resourceName = callData.js.functionExecutable->sourceURL();
-            lineNumber = callData.js.functionExecutable->lineNo();
-        } else
-            resourceName = "undefined";
-        return InspectorInstrumentation::willCallFunction(context, resourceName, lineNumber);
-    }
+    static InspectorInstrumentationCookie instrumentFunctionCall(ScriptExecutionContext*, JSC::CallType, const JSC::CallData&);
 
     static JSC::JSValue evaluate(JSC::ExecState* exec, const JSC::SourceCode& source, JSC::JSValue thisValue, JSC::JSValue* exception)
     {

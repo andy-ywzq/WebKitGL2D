@@ -25,7 +25,6 @@ set(WTF_HEADERS
     DoublyLinkedList.h
     DynamicAnnotations.h
     Encoder.h
-    FastAllocBase.h
     FastMalloc.h
     FeatureDefines.h
     FilePrintStream.h
@@ -48,16 +47,15 @@ set(WTF_HEADERS
     Locker.h
     MD5.h
     MainThread.h
+    MallocPtr.h
     MathExtras.h
     MediaTime.h
     MessageQueue.h
     MetaAllocator.h
     MetaAllocatorHandle.h
-    NonCopyingSort.h
     ThreadRestrictionVerifier.h
     Ref.h
     Noncopyable.h
-    NotFound.h
     NullPtr.h
     NumberOfCores.h
     RAMSize.h
@@ -70,7 +68,6 @@ set(WTF_HEADERS
     PageAllocationAligned.h
     PageBlock.h
     PageReservation.h
-    PassOwnArrayPtr.h
     PassOwnPtr.h
     PassRefPtr.h
     PassTraits.h

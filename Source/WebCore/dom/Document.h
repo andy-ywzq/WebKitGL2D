@@ -541,10 +541,6 @@ public:
     // returns renderer so callers can avoid verbose casts.
     RenderView* renderView() const { return m_renderView; }
 
-    // FIXME: Remove this, callers that have a Document* should call renderView().
-    // Shadow the implementations on Node to provide faster access for documents.
-    RenderView* renderer() const { return m_renderView; }
-
     bool renderTreeBeingDestroyed() const { return m_renderTreeBeingDestroyed; }
 
     AXObjectCache* existingAXObjectCache() const;
@@ -577,7 +573,7 @@ public:
 
     bool wellFormed() const { return m_wellFormed; }
 
-    const KURL& url() const { return m_url; }
+    virtual const KURL& url() const OVERRIDE FINAL { return m_url; }
     void setURL(const KURL&);
 
     // To understand how these concepts relate to one another, please see the
@@ -589,7 +585,7 @@ public:
     const String& baseTarget() const { return m_baseTarget; }
     void processBaseElement();
 
-    KURL completeURL(const String&) const;
+    virtual KURL completeURL(const String&) const OVERRIDE FINAL;
     KURL completeURL(const String&, const KURL& baseURLOverride) const;
 
     virtual String userAgent(const KURL&) const;
@@ -1188,6 +1184,7 @@ private:
     friend class Node;
     friend class IgnoreDestructiveWriteCountIncrementer;
 
+    RenderObject* renderer() const WTF_DELETED_FUNCTION;
     void setRenderer(RenderObject*) WTF_DELETED_FUNCTION;
     void setRenderView(RenderView*);
 
@@ -1210,9 +1207,6 @@ private:
 
     virtual void refScriptExecutionContext() { ref(); }
     virtual void derefScriptExecutionContext() { deref(); }
-
-    virtual const KURL& virtualURL() const; // Same as url(), but needed for ScriptExecutionContext to implement it without a performance loss for direct calls.
-    virtual KURL virtualCompleteURL(const String&) const; // Same as completeURL() for the same reason as above.
 
     virtual void addMessage(MessageSource, MessageLevel, const String& message, const String& sourceURL, unsigned lineNumber, unsigned columnNumber, PassRefPtr<ScriptCallStack>, ScriptState* = 0, unsigned long requestIdentifier = 0);
 

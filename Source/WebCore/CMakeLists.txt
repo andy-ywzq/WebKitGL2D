@@ -268,6 +268,7 @@ set(WebCore_IDL_FILES
     Modules/webaudio/DynamicsCompressorNode.idl
     Modules/webaudio/ScriptProcessorNode.idl
     Modules/webaudio/MediaElementAudioSourceNode.idl
+    Modules/webaudio/MediaStreamAudioDestinationNode.idl
     Modules/webaudio/MediaStreamAudioSourceNode.idl
     Modules/webaudio/OfflineAudioContext.idl
     Modules/webaudio/OfflineAudioCompletionEvent.idl
@@ -906,6 +907,7 @@ set(WebCore_SOURCES
     Modules/webaudio/ScriptProcessorNode.cpp
     Modules/webaudio/MediaElementAudioSourceNode.cpp
     Modules/webaudio/MediaStreamAudioSourceNode.cpp
+    Modules/webaudio/MediaStreamAudioDestinationNode.cpp
     Modules/webaudio/OfflineAudioContext.cpp
     Modules/webaudio/OfflineAudioCompletionEvent.cpp
     Modules/webaudio/OfflineAudioDestinationNode.cpp
@@ -1120,7 +1122,6 @@ set(WebCore_SOURCES
     dom/Clipboard.cpp
     dom/ClipboardEvent.cpp
     dom/Comment.cpp
-    dom/ComposedShadowTreeWalker.cpp
     dom/CompositionEvent.cpp
     dom/ContainerNode.cpp
     dom/ContainerNodeAlgorithms.cpp
@@ -1731,7 +1732,6 @@ set(WebCore_SOURCES
     page/FeatureObserver.cpp
     page/FocusController.cpp
     page/Frame.cpp
-    page/FrameActionScheduler.cpp
     page/FrameDestructionObserver.cpp
     page/FrameTree.cpp
     page/FrameView.cpp
@@ -2112,6 +2112,7 @@ set(WebCore_SOURCES
     rendering/RenderArena.cpp
     rendering/RenderBR.cpp
     rendering/RenderBlock.cpp
+    rendering/RenderBlockFlow.cpp
     rendering/RenderBlockLineLayout.cpp
     rendering/RenderBox.cpp
     rendering/RenderBoxModelObject.cpp

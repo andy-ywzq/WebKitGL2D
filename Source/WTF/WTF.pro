@@ -58,7 +58,6 @@ HEADERS += \
     Encoder.h \
     EnumClass.h \
     ExportMacros.h \
-    FastAllocBase.h \
     FastMalloc.h \
     FeatureDefines.h \
     FilePrintStream.h \
@@ -79,6 +78,7 @@ HEADERS += \
     ListHashSet.h \
     Locker.h \
     MainThread.h \
+    MallocPtr.h \
     MathExtras.h \
     MD5.h \
     MediaTime.h \
@@ -87,8 +87,6 @@ HEADERS += \
     MetaAllocatorHandle.h \
     Ref.h \
     Noncopyable.h \
-    NonCopyingSort.h \
-    NotFound.h \
     NullPtr.h \
     NumberOfCores.h \
     RAMSize.h \
@@ -106,7 +104,6 @@ HEADERS += \
     ParallelJobsGeneric.h \
     ParallelJobsLibdispatch.h \
     ParallelJobsOpenMP.h \
-    PassOwnArrayPtr.h \
     PassOwnPtr.h \
     PassRefPtr.h \
     PassTraits.h \

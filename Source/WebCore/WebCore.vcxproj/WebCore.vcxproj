@@ -7177,7 +7177,6 @@
     <ClCompile Include="..\page\FeatureObserver.cpp" />
     <ClCompile Include="..\page\FocusController.cpp" />
     <ClCompile Include="..\page\Frame.cpp" />
-    <ClCompile Include="..\page\FrameActionScheduler.cpp" />
     <ClCompile Include="..\page\FrameDestructionObserver.cpp" />
     <ClCompile Include="..\page\FrameTree.cpp" />
     <ClCompile Include="..\page\FrameView.cpp" />
@@ -7508,6 +7507,7 @@
     <ClCompile Include="..\platform\win\SharedBufferWin.cpp" />
     <ClCompile Include="..\platform\win\SharedTimerWin.cpp" />
     <ClCompile Include="..\platform\win\SoundWin.cpp" />
+    <ClCompile Include="..\platform\win\StructuredExceptionHandlerSuppressor.cpp" />
     <ClCompile Include="..\platform\win\SystemInfo.cpp" />
     <ClCompile Include="..\platform\win\TemporaryLinkStubs.cpp" />
     <ClCompile Include="..\platform\win\WCDataObject.cpp">
@@ -9670,6 +9670,20 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\rendering\RenderBlock.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\rendering\RenderBlockFlow.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">true</ExcludedFromBuild>
@@ -12151,7 +12165,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\dom\ComposedShadowTreeWalker.cpp" />
     <ClCompile Include="..\dom\CompositionEvent.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -19072,7 +19085,6 @@
     <ClInclude Include="..\page\FocusController.h" />
     <ClInclude Include="..\page\FocusDirection.h" />
     <ClInclude Include="..\page\Frame.h" />
-    <ClInclude Include="..\page\FrameActionScheduler.h" />
     <ClInclude Include="..\page\FrameDestructionObserver.h" />
     <ClInclude Include="..\page\FrameTree.h" />
     <ClInclude Include="..\page\FrameView.h" />
@@ -19347,7 +19359,7 @@
     <ClInclude Include="..\platform\win\ScrollbarThemeWin.h" />
     <ClInclude Include="..\platform\win\SearchPopupMenuWin.h" />
     <ClInclude Include="..\platform\win\SoftLinking.h" />
-    <ClInclude Include="..\platform\win\StructuredExceptionHandlerSupressor.h" />
+    <ClInclude Include="..\platform\win\StructuredExceptionHandlerSuppressor.h" />
     <ClInclude Include="..\platform\win\SystemInfo.h" />
     <ClInclude Include="..\platform\graphics\TextRenderingMode.h" />
     <ClInclude Include="..\platform\win\WCDataObject.h" />
@@ -20249,7 +20261,6 @@
     <ClInclude Include="..\dom\ClipboardAccessPolicy.h" />
     <ClInclude Include="..\dom\ClipboardEvent.h" />
     <ClInclude Include="..\dom\Comment.h" />
-    <ClInclude Include="..\dom\ComposedShadowTreeWalker.h" />
     <ClInclude Include="..\dom\CompositionEvent.h" />
     <ClInclude Include="..\dom\ContainerNode.h" />
     <ClInclude Include="..\dom\ContextDestructionObserver.h" />
@@ -20703,7 +20714,6 @@
     <ClInclude Include="..\bindings\ScriptControllerBase.h" />
     <ClInclude Include="..\bindings\generic\ActiveDOMCallback.h" />
     <ClInclude Include="..\bindings\generic\BindingSecurity.h" />
-    <ClInclude Include="..\bindings\generic\GenericBinding.h" />
     <ClInclude Include="..\bindings\generic\RuntimeEnabledFeatures.h" />
     <ClInclude Include="..\bindings\js\ArrayValue.h" />
     <ClInclude Include="..\bindings\js\BindingState.h" />
@@ -21417,6 +21427,14 @@
     <None Include="WebCorePreBuild.cmd" />
   </ItemGroup>
   <ItemGroup>
+    <MASM Include="..\platform\win\makesafeseh.asm">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|Win32'">/safeseh %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">/safeseh %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/safeseh %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">/safeseh %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|Win32'">/safeseh %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">/safeseh %(AdditionalOptions)</AdditionalOptions>
+    </MASM>
     <MASM Include="..\plugins\win\PaintHooks.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">true</ExcludedFromBuild>

@@ -37,6 +37,7 @@
 #include "MouseEvent.h"
 #include "NodeList.h"
 #include "NodeRenderStyle.h"
+#include "Page.h"
 #include "PlugInClient.h"
 #include "PluginViewBase.h"
 #include "RenderEmbeddedObject.h"
@@ -48,6 +49,7 @@
 #include "Settings.h"
 #include "ShadowRoot.h"
 #include "StyleResolver.h"
+#include "SubframeLoader.h"
 #include <JavaScriptCore/APICast.h>
 #include <JavaScriptCore/JSBase.h>
 #include <wtf/HashMap.h>
@@ -451,7 +453,7 @@ void HTMLPlugInImageElement::restartSimilarPlugIns()
         return;
 
     for (Frame* frame = &document().page()->mainFrame(); frame; frame = frame->tree().traverseNext()) {
-        if (!frame->loader().subframeLoader()->containsPlugins())
+        if (!frame->loader().subframeLoader().containsPlugins())
             continue;
         
         if (!frame->document())

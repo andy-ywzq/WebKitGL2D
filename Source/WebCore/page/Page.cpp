@@ -80,6 +80,7 @@
 #include "StorageArea.h"
 #include "StorageNamespace.h"
 #include "StyleResolver.h"
+#include "SubframeLoader.h"
 #include "TextResourceDecoder.h"
 #include "VisitedLinkState.h"
 #include "VoidCallback.h"
@@ -501,7 +502,7 @@ void Page::refreshPlugins(bool reload)
             continue;
         
         for (Frame* frame = &page.mainFrame(); frame; frame = frame->tree().traverseNext()) {
-            if (frame->loader().subframeLoader()->containsPlugins())
+            if (frame->loader().subframeLoader().containsPlugins())
                 framesNeedingReload.append(*frame);
         }
     }
@@ -629,11 +630,11 @@ PassRefPtr<Range> Page::rangeOfString(const String& target, Range* referenceRang
     if (target.isEmpty())
         return 0;
 
-    if (referenceRange && referenceRange->ownerDocument()->page() != this)
+    if (referenceRange && referenceRange->ownerDocument().page() != this)
         return 0;
 
     bool shouldWrap = options & WrapAround;
-    Frame* frame = referenceRange ? referenceRange->ownerDocument()->frame() : &mainFrame();
+    Frame* frame = referenceRange ? referenceRange->ownerDocument().frame() : &mainFrame();
     Frame* startFrame = frame;
     do {
         if (RefPtr<Range> resultRange = frame->editor().rangeOfString(target, frame == startFrame ? referenceRange : 0, options & ~WrapAround))
@@ -762,8 +763,8 @@ void Page::setPageScaleFactor(float scale, const IntPoint& origin)
     m_pageScaleFactor = scale;
 
     if (!m_settings->applyPageScaleFactorInCompositor()) {
-        if (document->renderer())
-            document->renderer()->setNeedsLayout(true);
+        if (document->renderView())
+            document->renderView()->setNeedsLayout(true);
 
         document->recalcStyle(Style::Force);
 
@@ -779,7 +780,7 @@ void Page::setPageScaleFactor(float scale, const IntPoint& origin)
         view->setViewportConstrainedObjectsNeedLayout();
 
     if (view && view->scrollPosition() != origin) {
-        if (!m_settings->applyPageScaleFactorInCompositor() && document->renderer() && document->renderer()->needsLayout() && view->didFirstLayout())
+        if (!m_settings->applyPageScaleFactorInCompositor() && document->renderView() && document->renderView()->needsLayout() && view->didFirstLayout())
             view->layout();
         view->setScrollPosition(origin);
     }

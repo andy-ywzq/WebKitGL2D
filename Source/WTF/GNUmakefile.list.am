@@ -91,9 +91,7 @@ wtf_sources += \
     Source/WTF/wtf/MetaAllocatorHandle.h \
     Source/WTF/wtf/NeverDestroyed.h \
     Source/WTF/wtf/NoLock.h \
-    Source/WTF/wtf/NonCopyingSort.h \
     Source/WTF/wtf/Noncopyable.h \
-    Source/WTF/wtf/NotFound.h \
     Source/WTF/wtf/NullPtr.h \
     Source/WTF/wtf/NumberOfCores.cpp \
     Source/WTF/wtf/NumberOfCores.h \
@@ -120,7 +118,6 @@ wtf_sources += \
     Source/WTF/wtf/ParallelJobsGeneric.h \
     Source/WTF/wtf/ParallelJobsLibdispatch.h \
     Source/WTF/wtf/ParallelJobsOpenMP.h \
-    Source/WTF/wtf/PassOwnArrayPtr.h \
     Source/WTF/wtf/PassOwnPtr.h \
     Source/WTF/wtf/PassRefPtr.h \
     Source/WTF/wtf/PassTraits.h \

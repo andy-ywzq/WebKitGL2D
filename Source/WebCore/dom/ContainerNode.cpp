@@ -865,7 +865,7 @@ void ContainerNode::cloneChildNodes(ContainerNode *clone)
 #if ENABLE(DELETION_UI)
     HTMLElement* deleteButtonContainerElement = 0;
     if (Frame* frame = document().frame())
-        deleteButtonContainerElement = frame->editor().deleteButtonController()->containerElement();
+        deleteButtonContainerElement = frame->editor().deleteButtonController().containerElement();
     cloneChildNodesAvoidingDeleteButton(this, clone, deleteButtonContainerElement);
 #else
     cloneChildNodesAvoidingDeleteButton(this, clone, 0);
@@ -915,7 +915,7 @@ bool ContainerNode::getUpperLeftCorner(FloatPoint& point) const
         } else if ((o->isText() && !o->isBR()) || o->isReplaced()) {
             point = FloatPoint();
             if (o->isText() && toRenderText(o)->firstTextBox()) {
-                point.move(toRenderText(o)->linesBoundingBox().x(), toRenderText(o)->firstTextBox()->root()->lineTop());
+                point.move(toRenderText(o)->linesBoundingBox().x(), toRenderText(o)->firstTextBox()->root().lineTop());
             } else if (o->isBox()) {
                 RenderBox* box = toRenderBox(o);
                 point.moveBy(box->location());

@@ -370,7 +370,6 @@ SOURCES += \
     dom/Clipboard.cpp \
     dom/ClipboardEvent.cpp \
     dom/Comment.cpp \
-    dom/ComposedShadowTreeWalker.cpp \
     dom/CompositionEvent.cpp \
     dom/ContainerNode.cpp \
     dom/ContainerNodeAlgorithms.cpp \
@@ -909,7 +908,6 @@ SOURCES += \
     page/FeatureObserver.cpp \
     page/FocusController.cpp \
     page/Frame.cpp \
-    page/FrameActionScheduler.cpp \
     page/FrameDestructionObserver.cpp \
     page/FrameTree.cpp \
     page/FrameView.cpp \
@@ -1155,6 +1153,7 @@ SOURCES += \
     rendering/RenderApplet.cpp \
     rendering/RenderArena.cpp \
     rendering/RenderBlock.cpp \
+    rendering/RenderBlockFlow.cpp \
     rendering/RenderBlockLineLayout.cpp \
     rendering/RenderBox.cpp \
     rendering/RenderBoxModelObject.cpp \
@@ -1582,7 +1581,6 @@ HEADERS += \
     dom/ClipboardEvent.h \
     dom/Clipboard.h \
     dom/Comment.h \
-    dom/ComposedShadowTreeWalker.h \
     dom/ContainerNode.h \
     dom/ContainerNodeAlgorithms.h \
     dom/ContextFeatures.h \

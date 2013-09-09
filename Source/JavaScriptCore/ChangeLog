@@ -1,3 +1,421 @@
+2013-09-08  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        Calculating the size of the Heap should not require walking over it
+        https://bugs.webkit.org/show_bug.cgi?id=120910
+
+        Reviewed by Geoffrey Garen.
+
+        Currently Heap::size() is O(sizeof(Heap)). This is too expensive to 
+        call during a collection. We should keep a count of visited and copied 
+        bytes as each collection progresses so as to avoid re-walking the Heap 
+        at the end of collection.
+
+        * heap/GCThreadSharedData.cpp:
+        (JSC::GCThreadSharedData::childBytesVisited):
+        (JSC::GCThreadSharedData::childBytesCopied):
+        * heap/GCThreadSharedData.h:
+        * heap/Heap.cpp:
+        (JSC::Heap::Heap):
+        (JSC::Heap::markRoots):
+        (JSC::Heap::sizeAfterCollect):
+        (JSC::Heap::collect):
+        * heap/Heap.h:
+        * heap/SlotVisitor.cpp:
+        (JSC::SlotVisitor::SlotVisitor):
+        (JSC::SlotVisitor::reset):
+        * heap/SlotVisitor.h:
+        (JSC::SlotVisitor::bytesVisited):
+        (JSC::SlotVisitor::bytesCopied):
+        * heap/SlotVisitorInlines.h:
+        (JSC::SlotVisitor::internalAppend):
+        (JSC::SlotVisitor::copyLater):
+
+2013-09-08  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        Clearing MarkedBlock::m_newlyAllocated should be separate from MarkedBlock::clearMarks
+        https://bugs.webkit.org/show_bug.cgi?id=121007
+
+        Reviewed by Oliver Hunt.
+
+        We call clearMarks on every MarkedBlock in the Heap, whereas we only need to clear 
+        m_newlyAllocated for the m_currentBlock at the time of the last canonicalizeCellLiveness() 
+        for each MarkedAllocator. We also need to call it on every block in the largeAllocators 
+        because each one of their blocks is canonicalized as it is used.
+
+        * heap/Heap.cpp:
+        (JSC::Heap::markRoots):
+        * heap/MarkedAllocator.h:
+        (JSC::MarkedAllocator::getAndClearCanonicalizedBlock):
+        (JSC::MarkedAllocator::MarkedAllocator):
+        (JSC::MarkedAllocator::canonicalizeCellLivenessData):
+        * heap/MarkedBlock.h:
+        (JSC::MarkedBlock::lastChanceToFinalize):
+        (JSC::MarkedBlock::clearMarks):
+        (JSC::MarkedBlock::clearNewlyAllocated):
+        * heap/MarkedSpace.cpp:
+        (JSC::clearNewlyAllocatedInBlock):
+        (JSC::ClearNewlyAllocated::operator()):
+        (JSC::MarkedSpace::clearNewlyAllocated):
+        * heap/MarkedSpace.h:
+
+2013-09-07  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL should support typed array PutByVal
+        https://bugs.webkit.org/show_bug.cgi?id=120972
+
+        Reviewed by Oliver Hunt.
+
+        Due to increased FTL coverage, this revealed a bug in LICM where we were trying to
+        have AI execute the tail of a block that !cfaDidFinish. We don't need to execute AI
+        for such blocks since LICM will bail for them anyway, and AI asserts that cfaDidFinish
+        is true.
+
+        * dfg/DFGLICMPhase.cpp:
+        (JSC::DFG::LICMPhase::attemptHoist):
+        * ftl/FTLAbbreviations.h:
+        (JSC::FTL::buildFPToUI):
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLIntrinsicRepository.h:
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compilePutByVal):
+        (JSC::FTL::LowerDFGToLLVM::doubleToInt32):
+        (JSC::FTL::LowerDFGToLLVM::doubleToUInt32):
+        * ftl/FTLOutput.h:
+        (JSC::FTL::Output::fpToUInt):
+        (JSC::FTL::Output::fpToUInt32):
+        (JSC::FTL::Output::store8):
+        (JSC::FTL::Output::store16):
+        (JSC::FTL::Output::storeFloat):
+
+2013-09-07  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL should support basic closure operations
+        https://bugs.webkit.org/show_bug.cgi?id=120987
+
+        Reviewed by Oliver Hunt.
+
+        * ftl/FTLAbstractHeapRepository.cpp:
+        * ftl/FTLAbstractHeapRepository.h:
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compileGetMyScope):
+        (JSC::FTL::LowerDFGToLLVM::compileSkipScope):
+        (JSC::FTL::LowerDFGToLLVM::compileGetClosureRegisters):
+        (JSC::FTL::LowerDFGToLLVM::compileGetClosureVar):
+        (JSC::FTL::LowerDFGToLLVM::compilePutClosureVar):
+
+2013-09-07  Filip Pizlo  <fpizlo@apple.com>
+
+        Only run FTL tests if we have the FTL
+        https://bugs.webkit.org/show_bug.cgi?id=120974
+
+        Reviewed by Geoffrey Garen.
+        
+        The test infrastructure is now smart enough to not pass --useExperimentalFTL=true
+        unless it knows that we have the FTL.
+
+        * dfg/DFGTierUpCheckInjectionPhase.cpp:
+        (JSC::DFG::TierUpCheckInjectionPhase::run):
+
+2013-09-07  Anders Carlsson  <andersca@apple.com>
+
+        Get rid of PassOwnArrayPtr
+        https://bugs.webkit.org/show_bug.cgi?id=120964
+
+        Reviewed by Andreas Kling.
+
+        Use OwnArrayPtr instead of PassOwnArrayPtr.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::BytecodeGenerator):
+        * runtime/SymbolTable.h:
+        (JSC::SharedSymbolTable::setSlowArguments):
+
+2013-09-07  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL should support typed array GetByVal and related ops
+        https://bugs.webkit.org/show_bug.cgi?id=120965
+
+        Reviewed by Oliver Hunt.
+        
+        This adds support for typed array instantiations of the following DFG IR ops:
+        
+        - GetByVal
+        
+        - GetIndexedPropertyStorage
+        
+        - CheckArray
+        
+        - GetArrayLength
+        
+        This also adds CheckArray for Int32/Double/Contiguous arrays.
+
+        * dfg/DFGArrayMode.cpp:
+        (JSC::DFG::toIndexingShape):
+        * dfg/DFGArrayMode.h:
+        (JSC::DFG::ArrayMode::shapeMask):
+        * ftl/FTLAbbreviations.h:
+        (JSC::FTL::floatType):
+        (JSC::FTL::buildSExt):
+        (JSC::FTL::buildFPCast):
+        * ftl/FTLAbstractHeapRepository.h:
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLCommonValues.cpp:
+        (JSC::FTL::CommonValues::CommonValues):
+        * ftl/FTLCommonValues.h:
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compileGetIndexedPropertyStorage):
+        (JSC::FTL::LowerDFGToLLVM::compileCheckArray):
+        (JSC::FTL::LowerDFGToLLVM::compileGetArrayLength):
+        (JSC::FTL::LowerDFGToLLVM::compileGetByVal):
+        (JSC::FTL::LowerDFGToLLVM::isArrayType):
+        (JSC::FTL::LowerDFGToLLVM::hasClassInfo):
+        * ftl/FTLOutput.h:
+        (JSC::FTL::Output::constIntPtr):
+        (JSC::FTL::Output::signExt):
+        (JSC::FTL::Output::fpCast):
+        (JSC::FTL::Output::loadFloat):
+
+2013-09-07  Anders Carlsson  <andersca@apple.com>
+
+        VectorMover should use std::move
+        https://bugs.webkit.org/show_bug.cgi?id=120959
+
+        Reviewed by Geoffrey Garen.
+
+        Work around a bug in GCC by changing the type of the callType bitfield 
+        in CallLinkInfo to be unsigned instead of CallType.
+
+        * bytecode/CallLinkInfo.h:
+
+2013-09-07  Anders Carlsson  <andersca@apple.com>
+
+        Get rid of FastAllocBase.h
+        https://bugs.webkit.org/show_bug.cgi?id=120952
+
+        Reviewed by Antti Koivisto.
+
+        Include FastMalloc.h instead of FastAllocBase.h.
+
+        * assembler/LinkBuffer.h:
+        * bytecode/CodeBlock.h:
+        * bytecode/StructureStubClearingWatchpoint.h:
+        * dfg/DFGFinalizer.h:
+        * dfg/DFGLongLivedState.h:
+        * dfg/DFGSlowPathGenerator.h:
+        * ftl/FTLAbstractHeap.h:
+        * heap/JITStubRoutineSet.h:
+        * jit/CompactJITCodeMap.h:
+        * profiler/ProfilerDatabase.h:
+        * profiler/ProfilerExecutionCounter.h:
+
+2013-09-06  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL should support Call/Construct in the worst way possible
+        https://bugs.webkit.org/show_bug.cgi?id=120916
+
+        Reviewed by Oliver Hunt.
+        
+        This adds support for Call/Construct by just calling out to C code that uses
+        the JSC::call/JSC::construct runtime functions for making calls. This is slow
+        and terrible, but it dramatically extends FTL coverage.
+        
+        Supporting calls in a meaningful way meant also supporting
+        GlobalVarWatchpoint.
+        
+        The extension of coverage helped to find a bunch of bugs:
+        
+        - ObjectOrOtherUse was claimed to be supported in the FTL but speculate()
+          didn't support it. That means that any node with an ObjectOrOtherUse edge
+          that got DCE'd would cause the FTL to ICE.
+        
+        - There was a bad fall-through compileCompareStrictEq() that led to ICE.
+        
+        - The OSR exit reconstruction code was assuming it could do fast checks on
+          node->child1() before even determining the type of node; that crashes if
+          the node is HasVarArgs. Fixed by checking HasVarArgs first.
+        
+        - The OSR exit compiler was using the wrong peekOffset for CArgumentGetter.
+          The default is 1, which assumes that you didn't push anything onto the
+          stack after getting called. The OSR exit thunks push FP, so the offset
+          should be 2.
+        
+        This passes stress tests and is probably huge performance regression if you
+        --useExperimentalFTL=true. The regression will be fixed in
+        https://bugs.webkit.org/show_bug.cgi?id=113621.
+
+        * dfg/DFGOperations.cpp:
+        * dfg/DFGOperations.h:
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLIntrinsicRepository.h:
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compileGlobalVarWatchpoint):
+        (JSC::FTL::LowerDFGToLLVM::compileCompareStrictEq):
+        (JSC::FTL::LowerDFGToLLVM::compileCallOrConstruct):
+        (JSC::FTL::LowerDFGToLLVM::speculate):
+        (JSC::FTL::LowerDFGToLLVM::speculateObjectOrOther):
+        (JSC::FTL::LowerDFGToLLVM::addExitArgumentForNode):
+        * ftl/FTLOSRExitCompiler.cpp:
+        (JSC::FTL::compileStub):
+
+2013-09-06  Filip Pizlo  <fpizlo@apple.com>
+
+        jsc shell should destroy VM as a workaround for LLVM's exit-time destructors
+        https://bugs.webkit.org/show_bug.cgi?id=120921
+
+        Reviewed by Oliver Hunt.
+        
+        LLVM's exit-time destructors will fire when we exit. If there is an on-going
+        FTL compile at exit, which will happen if the VM that triggered the compile
+        isn't shut down, then we will crash.
+        
+        We should get rid of LLVM's exit-time destructors. But before we do that, we
+        should just do a clean VM shutdown to suppress spurious crashes. This will
+        help in expanding LLVM coverage for now.
+
+        * jsc.cpp:
+        (jscmain):
+
+2013-09-06  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL ArithMod Int32Use doesn't check for negative zero correctly
+        https://bugs.webkit.org/show_bug.cgi?id=120905
+
+        Reviewed by Mark Hahnenberg.
+
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileArithMod):
+
+2013-09-06  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL ArithNeg Int32Use doesn't check negative zero
+        https://bugs.webkit.org/show_bug.cgi?id=120900
+
+        Reviewed by Mark Hahnenberg.
+
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileArithNegate):
+
+2013-09-06  Anders Carlsson  <andersca@apple.com>
+
+        Stop using fastNew/fastDelete in JavaScriptCore
+        https://bugs.webkit.org/show_bug.cgi?id=120898
+
+        Reviewed by Oliver Hunt.
+
+        Change all the hash table members in ExecState to be OwnPtrs and use
+        adoptPtr instead. Also, since none of the hash tables can be null, change their getters
+        to return references and propagate the reference types wherever we know that a HashTable can't be null.
+
+        * interpreter/CallFrame.h:
+        (JSC::ExecState::arrayConstructorTable):
+        (JSC::ExecState::arrayPrototypeTable):
+        (JSC::ExecState::booleanPrototypeTable):
+        (JSC::ExecState::dataViewTable):
+        (JSC::ExecState::dateTable):
+        (JSC::ExecState::dateConstructorTable):
+        (JSC::ExecState::errorPrototypeTable):
+        (JSC::ExecState::globalObjectTable):
+        (JSC::ExecState::jsonTable):
+        (JSC::ExecState::numberConstructorTable):
+        (JSC::ExecState::numberPrototypeTable):
+        (JSC::ExecState::objectConstructorTable):
+        (JSC::ExecState::privateNamePrototypeTable):
+        (JSC::ExecState::regExpTable):
+        (JSC::ExecState::regExpConstructorTable):
+        (JSC::ExecState::regExpPrototypeTable):
+        (JSC::ExecState::stringConstructorTable):
+        (JSC::ExecState::promisePrototypeTable):
+        (JSC::ExecState::promiseConstructorTable):
+        (JSC::ExecState::promiseResolverPrototypeTable):
+        * runtime/ClassInfo.h:
+        (JSC::ClassInfo::propHashTable):
+        * runtime/Lookup.h:
+        (JSC::getStaticPropertySlot):
+        (JSC::getStaticFunctionSlot):
+        (JSC::getStaticValueSlot):
+        (JSC::lookupPut):
+        * runtime/VM.cpp:
+        (JSC::VM::VM):
+        (JSC::VM::~VM):
+        * runtime/VM.h:
+
+2013-09-06  Filip Pizlo  <fpizlo@apple.com>
+
+        Concurrent FTL causes !hasOptimizedReplacement() asserts in cti_optimize
+        https://bugs.webkit.org/show_bug.cgi?id=120890
+
+        Reviewed by Mark Hahnenberg.
+        
+        Don't install an FTL code block if the DFG code block has already been jettisoned.
+
+        * dfg/DFGToFTLDeferredCompilationCallback.cpp:
+        (JSC::DFG::ToFTLDeferredCompilationCallback::compilationDidComplete):
+
+2013-09-06  Filip Pizlo  <fpizlo@apple.com>
+
+        REGRESSION(149636, merged in 153145): ToThis conversion doesn't work in the DFG
+        https://bugs.webkit.org/show_bug.cgi?id=120781
+
+        Reviewed by Mark Hahnenberg.
+        
+        Roll this back in with a build fix.
+        
+        - Use some method table hacks to detect if the CheckStructure optimization is
+          valid for to_this.
+        
+        - Introduce a FinalObjectUse and use it for ToThis->Identity conversion.
+        
+        This looks like it might be perf-neutral on the major benchmarks, but it
+        introduces some horrible performance cliffs. For example if you add methods to
+        the Array prototype, you'll get horrible performance cliffs. As in virtual calls
+        to C++ every time you call a JS function even if it's inlined.
+        LongSpider/3d-cube appears to hit this.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::::executeEffects):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGRepatch.cpp:
+        (JSC::DFG::emitPutTransitionStub):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::SafeToExecuteEdge::operator()):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::speculateFinalObject):
+        (JSC::DFG::SpeculativeJIT::speculate):
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGUseKind.cpp:
+        (WTF::printInternal):
+        * dfg/DFGUseKind.h:
+        (JSC::DFG::typeFilterFor):
+        (JSC::DFG::isCell):
+
+2013-09-05  Filip Pizlo  <fpizlo@apple.com>
+
+        Introduce a way to run benchmarks and JSRegress as stress tests with different jsc command-line options
+        https://bugs.webkit.org/show_bug.cgi?id=120808
+
+        Reviewed by Mark Hahnenberg and rubber stamped by Geoffrey Garen.
+        
+        Allow --useExperimentalFTL=true even if FTL isn't built since this simplifies
+        testing.
+
+        * dfg/DFGTierUpCheckInjectionPhase.cpp:
+        (JSC::DFG::TierUpCheckInjectionPhase::run):
+
 2013-09-06  Zan Dobersek  <zdobersek@igalia.com>
 
         Unreviewed build fix for the GTK port when building with FTL JIT enabled.
@@ -19,6 +437,10 @@
         * runtime/JSGlobalObject.cpp:
         (JSC::JSGlobalObject::visitChildren):
         * runtime/JSGlobalObject.h:
+
+2013-09-05  Mark Rowe  <mrowe@apple.com>
+        
+        Roll out r155149 since it broke the build.
 
 2013-09-05  Michael Saboff  <msaboff@apple.com>
 
@@ -44,6 +466,46 @@
         * bytecode/CodeBlock.h:
         (JSC::CodeBlock::printLocationAndOp):
         (JSC::CodeBlock::printLocationOpAndRegisterOperand):
+
+2013-09-05  Filip Pizlo  <fpizlo@apple.com>
+
+        REGRESSION(149636, merged in 153145): ToThis conversion doesn't work in the DFG
+        https://bugs.webkit.org/show_bug.cgi?id=120781
+
+        Reviewed by Mark Hahnenberg.
+        
+        - Use some method table hacks to detect if the CheckStructure optimization is
+          valid for to_this.
+        
+        - Introduce a FinalObjectUse and use it for ToThis->Identity conversion.
+        
+        This looks like it might be perf-neutral on the major benchmarks, but it
+        introduces some horrible performance cliffs. For example if you add methods to
+        the Array prototype, you'll get horrible performance cliffs. As in virtual calls
+        to C++ every time you call a JS function even if it's inlined.
+        LongSpider/3d-cube appears to hit this.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::::executeEffects):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::SafeToExecuteEdge::operator()):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::speculateFinalObject):
+        (JSC::DFG::SpeculativeJIT::speculate):
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGUseKind.cpp:
+        (WTF::printInternal):
+        * dfg/DFGUseKind.h:
+        (JSC::DFG::typeFilterFor):
+        (JSC::DFG::isCell):
 
 2013-09-05  Anders Carlsson  <andersca@apple.com>
 

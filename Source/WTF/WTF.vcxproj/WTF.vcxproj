@@ -161,7 +161,6 @@
     <ClInclude Include="..\wtf\DynamicAnnotations.h" />
     <ClInclude Include="..\wtf\Encoder.h" />
     <ClInclude Include="..\wtf\EnumClass.h" />
-    <ClInclude Include="..\wtf\FastAllocBase.h" />
     <ClInclude Include="..\wtf\FastBitVector.h" />
     <ClInclude Include="..\wtf\FastMalloc.h" />
     <ClInclude Include="..\wtf\FeatureDefines.h" />
@@ -184,6 +183,7 @@
     <ClInclude Include="..\wtf\ListHashSet.h" />
     <ClInclude Include="..\wtf\Locker.h" />
     <ClInclude Include="..\wtf\MainThread.h" />
+    <ClInclude Include="..\wtf\MallocPtr.h" />
     <ClInclude Include="..\wtf\MathExtras.h" />
     <ClInclude Include="..\wtf\MD5.h" />
     <ClInclude Include="..\wtf\MediaTime.h" />
@@ -192,8 +192,6 @@
     <ClInclude Include="..\wtf\MetaAllocatorHandle.h" />
     <ClInclude Include="..\wtf\NeverDestroyed.h" />
     <ClInclude Include="..\wtf\Noncopyable.h" />
-    <ClInclude Include="..\wtf\NonCopyingSort.h" />
-    <ClInclude Include="..\wtf\NotFound.h" />
     <ClInclude Include="..\wtf\NullPtr.h" />
     <ClInclude Include="..\wtf\NumberOfCores.h" />
     <ClInclude Include="..\wtf\OSRandomSource.h" />
@@ -209,7 +207,6 @@
     <ClInclude Include="..\wtf\ParallelJobsGeneric.h" />
     <ClInclude Include="..\wtf\ParallelJobsLibdispatch.h" />
     <ClInclude Include="..\wtf\ParallelJobsOpenMP.h" />
-    <ClInclude Include="..\wtf\PassOwnArrayPtr.h" />
     <ClInclude Include="..\wtf\PassOwnPtr.h" />
     <ClInclude Include="..\wtf\PassRefPtr.h" />
     <ClInclude Include="..\wtf\PassTraits.h" />

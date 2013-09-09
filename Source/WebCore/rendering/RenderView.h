@@ -25,7 +25,7 @@
 #include "FrameView.h"
 #include "LayoutState.h"
 #include "PODFreeListArena.h"
-#include "RenderBlock.h"
+#include "RenderBlockFlow.h"
 #include <wtf/OwnPtr.h>
 
 namespace WebCore {
@@ -43,7 +43,7 @@ class RenderLayerCompositor;
 class CustomFilterGlobalContext;
 #endif
 
-class RenderView FINAL : public RenderBlock {
+class RenderView FINAL : public RenderBlockFlow {
 public:
     explicit RenderView(Document*);
     virtual ~RenderView();
@@ -234,6 +234,11 @@ public:
 
     ImageQualityController& imageQualityController();
 
+#if ENABLE(CSS_FILTERS)
+    void setHasSoftwareFilters(bool hasSoftwareFilters) { m_hasSoftwareFilters = hasSoftwareFilters; }
+    bool hasSoftwareFilters() const { return m_hasSoftwareFilters; }
+#endif
+
 protected:
     virtual void mapLocalToContainer(const RenderLayerModelObject* repaintContainer, TransformState&, MapCoordinatesFlags = ApplyContainerFlip, bool* wasFixed = 0) const OVERRIDE;
     virtual const RenderObject* pushMappingToContainer(const RenderLayerModelObject* ancestorToStopAt, RenderGeometryMap&) const OVERRIDE;
@@ -253,7 +258,7 @@ private:
     {
         // We push LayoutState even if layoutState is disabled because it stores layoutDelta too.
         if (!doingFullRepaint() || m_layoutState->isPaginated() || renderer->hasColumns() || renderer->flowThreadContainingBlock()
-            || m_layoutState->lineGrid() || (renderer->style()->lineGrid() != RenderStyle::initialLineGrid() && renderer->isBlockFlow())
+            || m_layoutState->lineGrid() || (renderer->style()->lineGrid() != RenderStyle::initialLineGrid() && renderer->isBlockFlowFlexBoxOrGrid())
 #if ENABLE(CSS_SHAPES)
             || (renderer->isRenderBlock() && toRenderBlock(renderer)->shapeInsideInfo())
             || (m_layoutState->shapeInsideInfo() && renderer->isRenderBlock() && !toRenderBlock(renderer)->allowsShapeInsideInfoSharing())
@@ -350,6 +355,9 @@ private:
     unsigned m_renderCounterCount;
 
     bool m_selectionWasCaret;
+#if ENABLE(CSS_FILTERS)
+    bool m_hasSoftwareFilters;
+#endif
 };
 
 inline RenderView& toRenderView(RenderObject& object)

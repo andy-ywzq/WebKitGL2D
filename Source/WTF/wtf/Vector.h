@@ -23,17 +23,20 @@
 
 #include <wtf/Alignment.h>
 #include <wtf/CheckedArithmetic.h>
-#include <wtf/FastAllocBase.h>
+#include <wtf/FastMalloc.h>
+#include <wtf/MallocPtr.h>
 #include <wtf/Noncopyable.h>
-#include <wtf/NotFound.h>
 #include <wtf/OwnPtr.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/ValueCheck.h>
 #include <wtf/VectorTraits.h>
 #include <limits>
+#include <string.h>
 #include <utility>
 
 namespace WTF {
+
+const size_t notFound = static_cast<size_t>(-1);
 
 template <bool needsDestruction, typename T>
 struct VectorDestructor;
@@ -88,20 +91,16 @@ struct VectorMover;
 template<typename T>
 struct VectorMover<false, T>
 {
-    static void move(const T* src, const T* srcEnd, T* dst)
+    static void move(T* src, T* srcEnd, T* dst)
     {
         while (src != srcEnd) {
-            new (NotNull, dst) T(*src);
-#if COMPILER(SUNCC) && __SUNPRO_CC <= 0x590
-            const_cast<T*>(src)->~T(); // Work around obscure SunCC 12 compiler bug.
-#else
+            new (NotNull, dst) T(std::move(*src));
             src->~T();
-#endif
             ++dst;
             ++src;
         }
     }
-    static void moveOverlapping(const T* src, const T* srcEnd, T* dst)
+    static void moveOverlapping(T* src, T* srcEnd, T* dst)
     {
         if (src > dst)
             move(src, srcEnd, dst);
@@ -110,7 +109,7 @@ struct VectorMover<false, T>
             while (src != srcEnd) {
                 --srcEnd;
                 --dstEnd;
-                new (NotNull, dstEnd) T(*srcEnd);
+                new (NotNull, dstEnd) T(std::move(*srcEnd));
                 srcEnd->~T();
             }
         }
@@ -220,12 +219,12 @@ struct VectorTypeOperations
         VectorInitializer<VectorTraits<T>::needsInitialization, VectorTraits<T>::canInitializeWithMemset, T>::initialize(begin, end);
     }
 
-    static void move(const T* src, const T* srcEnd, T* dst)
+    static void move(T* src, T* srcEnd, T* dst)
     {
         VectorMover<VectorTraits<T>::canMoveWithMemcpy, T>::move(src, srcEnd, dst);
     }
 
-    static void moveOverlapping(const T* src, const T* srcEnd, T* dst)
+    static void moveOverlapping(T* src, T* srcEnd, T* dst)
     {
         VectorMover<VectorTraits<T>::canMoveWithMemcpy, T>::moveOverlapping(src, srcEnd, dst);
     }
@@ -308,12 +307,12 @@ public:
     const T* buffer() const { return m_buffer; }
     size_t capacity() const { return m_capacity; }
 
-    OwnPtr<T> releaseBuffer()
+    MallocPtr<T> releaseBuffer()
     {
         T* buffer = m_buffer;
         m_buffer = 0;
         m_capacity = 0;
-        return adoptPtr(buffer);
+        return adoptMallocPtr(buffer);
     }
 
 protected:
@@ -488,7 +487,7 @@ public:
     using Base::buffer;
     using Base::capacity;
 
-    OwnPtr<T> releaseBuffer()
+    MallocPtr<T> releaseBuffer()
     {
         if (buffer() == inlineBuffer())
             return nullptr;
@@ -666,7 +665,7 @@ public:
 
     template<typename Iterator> void appendRange(Iterator start, Iterator end);
 
-    OwnPtr<T> releaseBuffer();
+    MallocPtr<T> releaseBuffer();
 
     void swap(Vector<T, inlineCapacity, OverflowHandler>& other)
     {
@@ -1153,19 +1152,19 @@ inline void Vector<T, inlineCapacity, OverflowHandler>::reverse()
 }
 
 template<typename T, size_t inlineCapacity, typename OverflowHandler>
-inline OwnPtr<T> Vector<T, inlineCapacity, OverflowHandler>::releaseBuffer()
+inline MallocPtr<T> Vector<T, inlineCapacity, OverflowHandler>::releaseBuffer()
 {
-    OwnPtr<T> buffer = Base::releaseBuffer();
+    auto buffer = Base::releaseBuffer();
     if (inlineCapacity && !buffer && m_size) {
         // If the vector had some data, but no buffer to release,
         // that means it was using the inline buffer. In that case,
         // we create a brand new buffer so the caller always gets one.
         size_t bytes = m_size * sizeof(T);
-        buffer = adoptPtr(static_cast<T*>(fastMalloc(bytes)));
+        buffer = adoptMallocPtr(static_cast<T*>(fastMalloc(bytes)));
         memcpy(buffer.get(), data(), bytes);
     }
     m_size = 0;
-    return buffer.release();
+    return buffer;
 }
 
 template<typename T, size_t inlineCapacity, typename OverflowHandler>
@@ -1221,5 +1220,6 @@ template<typename T> struct ValueCheck<Vector<T> > {
 
 using WTF::Vector;
 using WTF::UnsafeVectorOverflow;
+using WTF::notFound;
 
 #endif // WTF_Vector_h

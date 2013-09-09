@@ -82,7 +82,6 @@
 #include <runtime/Uint8Array.h>
 #include <wtf/CurrentTime.h>
 #include <wtf/MathExtras.h>
-#include <wtf/NonCopyingSort.h>
 #include <wtf/Ref.h>
 #include <wtf/text/CString.h>
 
@@ -1310,7 +1309,7 @@ void HTMLMediaElement::updateActiveTextTrackCues(double movieTime)
 
     // 12 - Sort the tasks in events in ascending time order (tasks with earlier
     // times first).
-    nonCopyingSort(eventTasks.begin(), eventTasks.end(), eventTimeCueCompare);
+    std::sort(eventTasks.begin(), eventTasks.end(), eventTimeCueCompare);
 
     for (size_t i = 0; i < eventTasks.size(); ++i) {
         if (!affectedTracks.contains(eventTasks[i].second->track()))
@@ -1344,7 +1343,7 @@ void HTMLMediaElement::updateActiveTextTrackCues(double movieTime)
 
     // 14 - Sort affected tracks in the same order as the text tracks appear in
     // the media element's list of text tracks, and remove duplicates.
-    nonCopyingSort(affectedTracks.begin(), affectedTracks.end(), trackIndexCompare);
+    std::sort(affectedTracks.begin(), affectedTracks.end(), trackIndexCompare);
 
     // 15 - For each text track in affected tracks, in the list order, queue a
     // task to fire a simple event named cuechange at the TextTrack object, and, ...
@@ -4362,7 +4361,7 @@ void HTMLMediaElement::createMediaPlayerProxy()
     
     // Hang onto the proxy widget so it won't be destroyed if the plug-in is set to
     // display:none
-    m_proxyWidget = frame->loader().subframeLoader()->loadMediaPlayerProxyPlugin(this, url, paramNames, paramValues);
+    m_proxyWidget = frame->loader().subframeLoader().loadMediaPlayerProxyPlugin(this, url, paramNames, paramValues);
     if (m_proxyWidget)
         m_needWidgetUpdate = false;
 }
@@ -4378,8 +4377,8 @@ void HTMLMediaElement::updateWidget(PluginCreationOption)
 
     mediaElement->getPluginProxyParams(kurl, paramNames, paramValues);
     // FIXME: What if document().frame() is 0?
-    SubframeLoader* loader = document().frame()->loader().subframeLoader();
-    loader->loadMediaPlayerProxyPlugin(mediaElement, kurl, paramNames, paramValues);
+    SubframeLoader& loader = document().frame()->loader().subframeLoader();
+    loader.loadMediaPlayerProxyPlugin(mediaElement, kurl, paramNames, paramValues);
 }
 
 #endif // ENABLE(PLUGIN_PROXY_FOR_VIDEO)

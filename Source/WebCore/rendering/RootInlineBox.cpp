@@ -82,7 +82,7 @@ void RootInlineBox::detachEllipsisBox(RenderArena* arena)
     }
 }
 
-RenderLineBoxList* RootInlineBox::rendererLineBoxes() const
+RenderLineBoxList& RootInlineBox::rendererLineBoxes() const
 {
     return block().lineBoxes();
 }
@@ -593,14 +593,15 @@ LayoutUnit RootInlineBox::selectionTop() const
 
 LayoutUnit RootInlineBox::selectionTopAdjustedForPrecedingBlock() const
 {
+    const RootInlineBox& rootBox = root();
     LayoutUnit top = selectionTop();
 
-    RenderObject::SelectionState blockSelectionState = root()->block().selectionState();
+    RenderObject::SelectionState blockSelectionState = rootBox.block().selectionState();
     if (blockSelectionState != RenderObject::SelectionInside && blockSelectionState != RenderObject::SelectionEnd)
         return top;
 
     LayoutSize offsetToBlockBefore;
-    if (RenderBlock* block = root()->block().blockBeforeWithinSelectionRoot(offsetToBlockBefore)) {
+    if (RenderBlock* block = rootBox.block().blockBeforeWithinSelectionRoot(offsetToBlockBefore)) {
         if (RootInlineBox* lastLine = block->lastRootBox()) {
             RenderObject::SelectionState lastLineSelectionState = lastLine->selectionState();
             if (lastLineSelectionState != RenderObject::SelectionInside && lastLineSelectionState != RenderObject::SelectionStart)
@@ -724,17 +725,17 @@ EllipsisBox* RootInlineBox::ellipsisBox() const
 
 void RootInlineBox::removeLineBoxFromRenderObject()
 {
-    block().lineBoxes()->removeLineBox(this);
+    block().lineBoxes().removeLineBox(this);
 }
 
 void RootInlineBox::extractLineBoxFromRenderObject()
 {
-    block().lineBoxes()->extractLineBox(this);
+    block().lineBoxes().extractLineBox(this);
 }
 
 void RootInlineBox::attachLineBoxToRenderObject()
 {
-    block().lineBoxes()->attachLineBox(this);
+    block().lineBoxes().attachLineBox(this);
 }
 
 LayoutRect RootInlineBox::paddedLayoutOverflowRect(LayoutUnit endPadding) const

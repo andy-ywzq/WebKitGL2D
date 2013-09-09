@@ -1,3 +1,256 @@
+2013-09-09  Krzysztof Czech  <k.czech@samsung.com>
+
+        [AX][ATK] AccessibilityObject representing ProgressBar element should be ATK_VALUE type
+        https://bugs.webkit.org/show_bug.cgi?id=121023
+
+        Reviewed by Mario Sanchez Prada.
+
+        Added mappings to ATK's ProgressBar element.
+
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (roleToString):
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::roleToString):
+
+2013-09-08  Filip Pizlo  <fpizlo@apple.com>
+
+        run-jsc-stress-tests should be more paranoid about calling make
+        https://bugs.webkit.org/show_bug.cgi?id=121011
+
+        Reviewed by Oliver Hunt.
+        
+        If it returns with any kind of error then bail out.  Also print the command being used
+        in case we have to debug this, for example on the bots.  The extra verbosity isn't a
+        big deal.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-09-08  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, never pass Pathname to shellescape() as old versions of Ruby don't
+        like that. Pass a string instead.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-09-08  Filip Pizlo  <fpizlo@apple.com>
+
+        run-jsc-stress-tests should run tests in parallel if possible
+        https://bugs.webkit.org/show_bug.cgi?id=120996
+
+        Reviewed by Oliver Hunt.
+        
+        Run tests in parallel by using Makefile hacks. This lets make take care of all load
+        balancing. It's a really awesome speed-up for these tests.
+        
+        This reduces the FTL debug build stress test run time from 8m18s to 2m11s. The 
+        no-FTL debug build stress test time goes from 1m11s to 16s. This patch is pretty
+        much awesome.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-09-08  Filip Pizlo  <fpizlo@apple.com>
+
+        run-jsc-stress-tests should be smart enough to call JSRegress "regress/script-tests" rather than "script-tests"
+        https://bugs.webkit.org/show_bug.cgi?id=120994
+
+        Reviewed by Geoffrey Garen.
+        
+        run-jsc-stress-tests accepts a list of directories containing tests.  It needs to
+        come up with names for all of them.  Currently it uses the basename of the test
+        directory.  But that means that JSRegress gets called "script-tests", which is
+        unfortunate since any directory in LayoutTests containing .js files will be
+        called "script-tests".  So, this changes run-jsc-stress-tests to use more than
+        just the basename if the basename has the word "tests" in it.  This causes
+        JSRegress to be called "regress/script-tests".
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-09-08  Sergio Correia  <sergio.correia@openbossa.org>
+
+        [EFL][JHBUILD] Fix evas build with giflib5
+        https://bugs.webkit.org/show_bug.cgi?id=120863
+
+        Original patch from Doug Newgard, at https://phab.enlightenment.org/D200.
+
+        Reviewed by Anders Carlsson.
+
+        * efl/jhbuild.modules: Apply patch to fix evas build with giflib5.
+        * efl/patches/evas-fix-build-with-giflib5.patch: Added.
+
+2013-09-07  Filip Pizlo  <fpizlo@apple.com>
+
+        Only run FTL tests if we have the FTL
+        https://bugs.webkit.org/show_bug.cgi?id=120974
+
+        Reviewed by Geoffrey Garen.
+        
+        Pass --ftl-jit down into run-jsc-stress-tests so that it knows what test
+        variants to run.
+
+        * Scripts/build-jsc:
+        * Scripts/run-javascriptcore-tests:
+        * Scripts/run-jsc-stress-tests:
+
+2013-09-07  Santosh Mahto  <santosh.ma@samsung.com>
+
+        removing --dialog-element from build-webkit --help option message
+        https://bugs.webkit.org/show_bug.cgi?id=120955
+
+        Reviewed by Daniel Bates.
+
+        --dialog-element option is useless while building as
+        Dialog Element support has been removed in following changeset.
+        http://trac.webkit.org/changeset/154835
+        http://trac.webkit.org/changeset/154870
+
+        * Scripts/webkitperl/FeatureList.pm:
+        Removed --dialog-element option message.
+
+2013-09-06  Filip Pizlo  <fpizlo@apple.com>
+
+        It should be possible to run-javascriptcore-tests with only a subset of the test suites
+        https://bugs.webkit.org/show_bug.cgi?id=120918
+
+        Reviewed by Dan Bernstein.
+
+        * Scripts/run-javascriptcore-tests:
+
+2013-09-06  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r155196.
+        http://trac.webkit.org/changeset/155196
+        https://bugs.webkit.org/show_bug.cgi?id=120919
+
+        Broke 16 tests on build.webkit.org (Requested by rniwa on
+        #webkit).
+
+        * Scripts/webkitpy/layout_tests/controllers/manager.py:
+        (Manager._set_up_run):
+
+2013-09-06  Filip Pizlo  <fpizlo@apple.com>
+
+        The 'failed' file should report collectionName/testName rather than just
+        testName.
+
+        Rubber stamped by Mark Hahnenberg.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-09-06  Filip Pizlo  <fpizlo@apple.com>
+
+        Fix run-jsc-stress-tests to run on bots with old Ruby.
+        
+        Also make it create a repro file.
+
+        Rubber stamped by Mark Hahnenberg.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-09-06  Filip Pizlo  <fpizlo@apple.com>
+
+        Actually increment $numFailures
+
+        Reviewed by Mark Hahnenberg.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-09-06  Filip Pizlo  <fpizlo@apple.com>
+
+        Fix run-jsc-stress-tests to use Pathname instead of File.realpath.
+        
+        Also make it uses system() instead of popen(); that means that test output
+        will go to the console. This reduces error detection flakiness. It's fine
+        because stress tests don't print() unless they really have to.
+
+        Rubber stamped by Mark Hahnenberg.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-09-05  Filip Pizlo  <fpizlo@apple.com>
+
+        Introduce a way to run benchmarks and JSRegress as stress tests with different jsc command-line options
+        https://bugs.webkit.org/show_bug.cgi?id=120808
+
+        Reviewed by Mark Hahnenberg and rubber stamped by Geoffrey Garen.
+        
+        Add a script for running stress tests.  A stress test is a .js file that is run
+        through different configurations of JSC.  It can control which configurations it
+        runs by using "//@ <ruby code>" to guide the script.
+        
+        This script is now run as part of run-javascriptcore-tests, on Mac only.
+
+        * Scripts/run-javascriptcore-tests:
+        * Scripts/run-jsc-stress-tests: Added.
+
+2013-09-06  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [GTK] Desktop proxy settings are ignored inside the internal jhbuild
+        https://bugs.webkit.org/show_bug.cgi?id=120833
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Add dconf as an optional module for the internal jhbuild, along
+        with vala 0.17 as a dependency, and make sure we do not explicitly
+        set always the 'memory' backend, so we can have an easy way to
+        allow apps access desktop settings from the jhbuild. This is
+        useful for example to be able to run apps such as MiniBrowser
+        inside the jhbuild (by means of run-launcher, for instance) while
+        working behind a proxy, since those network settings have to be
+        read from the system global configuration in org.gnome.system.proxy.
+
+        * gtk/jhbuild-optional.modules: Added dconf 0.14 and vala 0.17.
+        * gtk/jhbuildrc: Do not explicitly choose the GSettings memory
+        backend here, since that will make more difficult to use the dconf
+        backend from inside the jhbuild if we need to do it so.
+
+2013-09-06  Alexey Proskuryakov  <ap@apple.com>
+
+        Lots of pixel tests are failing on first run, so tests cannot finish
+        https://bugs.webkit.org/show_bug.cgi?id=120755
+
+        Reviewed by Ryosuke Niwa.
+
+        For whatever reason, many reftests are color profile sensitive, and we only set
+        color profile to a known one for pixel tests, not for reftests.
+
+        Pixel testing mode is also enabled  when retrying tests, so these failures used to
+        be essentially hidden - the tests were "flaky", but that was not reported loudly enough.
+        But now, so many tests fail that it makes run-webkit-tests stop early, and never retry.
+
+        This probably shouldn't happen, as reftests should not be color profile sensitive.
+        The fix is a stopgap measure to unblock EWS until a better fix can be investigated.
+
+        * Scripts/webkitpy/layout_tests/controllers/manager.py:
+        (Manager._set_up_run): Roll out <http://trac.webkit.org/changeset/115601>.
+
+2013-09-06  Denis Nomiyama  <d.nomiyama@samsung.com>
+
+        [GTK] AccessibilityUIElement::addNotificationListener() crashes on debug build
+        https://bugs.webkit.org/show_bug.cgi?id=120416
+
+        Reviewed by Mario Sanchez Prada.
+
+        Fixed crashes when running debug DRT. Simplified loops at AccessibilityCallbackAtk.cpp where the HashMap
+        iterator was removed inside a loop. Fixed AccessibilityUIElement::addNotificationListener() where
+        m_notificationHandler expected RefPtr.
+
+        The global notification handler was stored in the HashMap with key 0. And this caused an assertion when
+        HashMap::add() or find() are called. To fix it, moved the global handler to a separated pointer.
+
+        * DumpRenderTree/atk/AccessibilityCallbacks.h: Removed the global notification key.
+        * DumpRenderTree/atk/AccessibilityCallbacksAtk.cpp:
+        (axObjectEventListener): Simplified the code by using HashMap::find() and a separate pointer for the
+        global notification handler.
+        (addAccessibilityNotificationHandler): Simplified the code by using HashMap::find() and a separate pointer
+        for the global notification handler.
+        (removeAccessibilityNotificationHandler): Added the removal for the global notification handler.
+        * DumpRenderTree/atk/AccessibilityNotificationHandlerAtk.h:
+        (AccessibilityNotificationHandler::create): Added static function to create
+        AccessibilityNotificationHandler.
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (AccessibilityUIElement::addNotificationListener): Assigned m_notificationHandler with
+        AccessibilityNotificationHandler::create().
+
 2013-09-06  Gabor Abraham  <abrhm@inf.u-szeged.hu>
 
         [Qt] REGRESSION(r155140) Pixel tests is still broken on Qt with QT_WEBKIT_DISABLE_UIPROCESS_DUMPPIXELS=1

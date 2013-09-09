@@ -57,7 +57,7 @@
 namespace WebCore {
 
 RenderView::RenderView(Document* document)
-    : RenderBlock(document)
+    : RenderBlockFlow(document)
     , m_frameView(*document->view())
     , m_selectionStart(0)
     , m_selectionEnd(0)
@@ -71,6 +71,9 @@ RenderView::RenderView(Document* document)
     , m_renderQuoteHead(0)
     , m_renderCounterCount(0)
     , m_selectionWasCaret(false)
+#if ENABLE(CSS_FILTERS)
+    , m_hasSoftwareFilters(false)
+#endif
 {
     // FIXME: We should find a way to enforce this at compile time.
     ASSERT(document->view());
