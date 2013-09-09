@@ -40,6 +40,7 @@ namespace Nix {
 
 class MultiChannelPCMData;
 class FFTFrame;
+class MediaStreamCenter;
 class ThemeEngine;
 class MediaPlayer;
 class MediaPlayerClient;
@@ -58,6 +59,9 @@ public:
     // Creates a device for audio I/O.
     // Pass in (numberOfInputChannels > 0) if live/local audio input is desired.
     virtual AudioDevice* createAudioDevice(const char* /*inputDeviceId*/, size_t /*bufferSize*/, unsigned /*numberOfInputChannels*/, unsigned /*numberOfOutputChannels*/, double /*sampleRate*/, AudioDevice::RenderCallback*) { return nullptr; }
+
+    // WebRTC
+    virtual MediaStreamCenter* createMediaStreamCenter() { return nullptr; }
 
     // Gamepad
     virtual void sampleGamepads(Gamepads& into) { into.length = 0; }

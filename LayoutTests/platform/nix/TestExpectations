@@ -3857,3 +3857,8 @@ http/tests/security/cross-origin-indexeddb.html [ Skip ]
 http/tests/security/cross-origin-worker-indexeddb-allowed.html [ Skip ]
 http/tests/security/cross-origin-worker-indexeddb.html [ Skip ]
 http/tests/security/no-indexeddb-from-sandbox.html [ Skip ]
+
+# Uncomment when Enabling media stream
+# fast/mediastream [ Skip ]
+# fast/mediastream/enabled.html [ Pass ]
+# fast/mediastream/no-interface-object.html [ Pass ]

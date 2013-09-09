@@ -103,7 +103,8 @@ list(APPEND WebCore_SOURCES
     platform/image-decoders/png/PNGImageDecoder.cpp
     platform/image-decoders/webp/WEBPImageDecoder.cpp
     platform/linux/GamepadDeviceLinux.cpp
-    platform/mediastream/gstreamer/MediaStreamCenterGStreamer.cpp
+
+    platform/mediastream/nix/MediaStreamCenterNix.cpp
     platform/PlatformStrategies.cpp
     platform/text/nix/TextBreakIteratorInternalICUNix.cpp
 
@@ -248,6 +249,23 @@ list(APPEND WebCore_INCLUDE_DIRECTORIES
 )
 
 add_definitions(-DDATA_DIR="${CMAKE_INSTALL_PREFIX}/${DATA_INSTALL_DIR}")
+
+if (ENABLE_MEDIA_STREAM)
+    list(APPEND WebCore_INCLUDE_DIRECTORIES
+        Modules/mediastream
+        platform/audio
+        platform/mediastream
+    )
+    list(APPEND WebCore_SOURCES
+        platform/mediastream/nix/UserMediaClientNix.cpp
+
+        platform/nix/support/MediaConstraintsNix.cpp
+        platform/nix/support/MediaStreamAudioSourceNix.cpp
+        platform/nix/support/MediaStreamCenterNix.cpp
+        platform/nix/support/MediaStreamNix.cpp
+        platform/nix/support/MediaStreamSourceNix.cpp
+    )
+endif ()
 
 if (ENABLE_WEB_AUDIO)
   list(APPEND WebCore_INCLUDE_DIRECTORIES
