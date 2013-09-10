@@ -19,7 +19,6 @@ set(Platform_HEADERS
     nix/public/Rect.h
     nix/public/Size.h
     nix/public/ThemeEngine.h
-    nix/public/Vector.h
 )
 
 set(Platform_SOURCES

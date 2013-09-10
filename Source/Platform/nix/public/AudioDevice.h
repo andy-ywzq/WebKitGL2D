@@ -29,17 +29,16 @@
 #ifndef Nix_AudioDevice_h
 #define Nix_AudioDevice_h
 
-#include "Vector.h"
+#include <cstddef>
+#include <vector>
 
 namespace Nix {
-
-// Abstract interface to the Chromium audio system.
 
 class AudioDevice {
 public:
     class RenderCallback {
     public:
-        virtual void render(const Vector<float*>& /*sourceData*/, const Vector<float*>& /*destinationData*/, size_t /*numberOfFrames*/) { }
+        virtual void render(const std::vector<float*>& /*sourceData*/, const std::vector<float*>& /*destinationData*/, size_t /*numberOfFrames*/) { }
 
     protected:
         virtual ~RenderCallback() { }

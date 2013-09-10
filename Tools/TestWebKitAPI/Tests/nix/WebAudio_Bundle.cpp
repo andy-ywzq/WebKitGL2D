@@ -49,8 +49,8 @@ public:
     {
         MockAudioOutputDevice* device = static_cast<MockAudioOutputDevice*>(userData);
         size_t bufferSize = device->m_bufferSize;
-        Nix::Vector<float*> sourceDataVector;
-        Nix::Vector<float*> audioDataVector((size_t) 2);
+        std::vector<float*> sourceDataVector;
+        std::vector<float*> audioDataVector(2);
         for (size_t i = 0; i < audioDataVector.size(); ++i) {
             audioDataVector[i] = new float[bufferSize];
             std::memset(audioDataVector[i], 0, bufferSize * sizeof(float));

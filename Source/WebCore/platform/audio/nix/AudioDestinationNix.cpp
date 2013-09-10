@@ -119,7 +119,7 @@ unsigned long AudioDestination::maxChannelCount()
     return Nix::Platform::current()->audioHardwareOutputChannels();
 }
 
-void AudioDestinationNix::render(const Nix::Vector<float*>& sourceData, const Nix::Vector<float*>& audioData, size_t numberOfFrames)
+void AudioDestinationNix::render(const std::vector<float*>& sourceData, const std::vector<float*>& audioData, size_t numberOfFrames)
 {
     bool isNumberOfChannelsGood = audioData.size() == m_numberOfOutputChannels;
     if (!isNumberOfChannelsGood) {
