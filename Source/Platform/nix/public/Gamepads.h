@@ -42,6 +42,6 @@ public:
     Gamepad items[itemsLengthCap];
 };
 
-}
+} // namespace Nix
 
-#endif
+#endif // Nix_Gamepads_h

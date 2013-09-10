@@ -66,6 +66,6 @@ public:
     float buttons[buttonsLengthCap];
 };
 
-}
+} // namespace Nix
 
-#endif
+#endif // Nix_Gamepad_h

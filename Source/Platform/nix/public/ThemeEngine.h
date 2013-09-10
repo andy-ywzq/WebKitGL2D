@@ -156,4 +156,4 @@ public:
 
 } // namespace Nix
 
-#endif
+#endif // Nix_ThemeEngine_h

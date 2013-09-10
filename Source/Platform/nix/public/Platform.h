@@ -84,4 +84,4 @@ protected:
 
 } // namespace Nix
 
-#endif
+#endif // Nix_Platform_h

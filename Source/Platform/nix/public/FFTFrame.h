@@ -50,4 +50,4 @@ public:
 
 } // namespace Nix
 
-#endif
+#endif // Nix_FFTFrame_h

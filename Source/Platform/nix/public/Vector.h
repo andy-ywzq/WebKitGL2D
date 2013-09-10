@@ -184,4 +184,4 @@ private:
 
 } // namespace Nix
 
-#endif
+#endif // Nix_Vector_h

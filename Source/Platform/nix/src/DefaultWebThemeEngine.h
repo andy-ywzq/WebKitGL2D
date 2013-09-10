@@ -46,5 +46,6 @@ public:
     virtual void paintSliderThumb(Canvas*, State, const Rect&) const;
 };
 
-}
-#endif
+} // namespace Nix
+
+#endif // DefaultWebThemeEngine_h

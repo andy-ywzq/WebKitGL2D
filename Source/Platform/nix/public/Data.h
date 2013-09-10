@@ -106,4 +106,4 @@ private:
 
 } // namespace Nix
 
-#endif
+#endif // Nix_Data_h

@@ -95,4 +95,4 @@ inline bool operator!=(const Color& a, const Color& b)
 
 } // namespace Nix
 
-#endif
+#endif // Nix_Color_h

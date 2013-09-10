@@ -42,5 +42,6 @@ public:
 #endif
 };
 
-}
-#endif
+} // namespace Nix
+
+#endif // Nix_Rect_h

@@ -4,7 +4,9 @@
 #include <cairo/cairo.h>
 
 namespace Nix {
-typedef cairo_t Canvas;
-}
 
-#endif
+typedef cairo_t Canvas;
+
+} // namespace Nix
+
+#endif // Nix_Canvas_h

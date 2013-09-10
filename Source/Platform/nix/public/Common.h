@@ -40,8 +40,10 @@
 #include <stddef.h> // For size_t
 
 namespace Nix {
+
 // UTF-16 character type
 typedef unsigned short UChar;
-}
 
-#endif
+} // namespace Nix
+
+#endif // Nix_Common_h

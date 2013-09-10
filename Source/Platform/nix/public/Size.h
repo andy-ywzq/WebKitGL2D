@@ -88,4 +88,4 @@ inline bool operator!=(const Size& a, const Size& b)
 
 } // namespace Nix
 
-#endif
+#endif // Nix_Size_h

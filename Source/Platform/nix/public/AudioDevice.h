@@ -54,4 +54,4 @@ public:
 
 } // namespace Nix
 
-#endif // WebAudioDevice_h
+#endif // Nix_AudioDevice_h
