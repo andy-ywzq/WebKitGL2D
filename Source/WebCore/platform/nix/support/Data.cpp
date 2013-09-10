@@ -38,6 +38,12 @@ namespace Nix {
 class Data::DataPrivate : public WebCore::SharedBuffer {
 };
 
+Data::Data(size_t size)
+    : m_private(0)
+{
+    assign(static_cast<DataPrivate*>(WebCore::SharedBuffer::create(size).leakRef()));
+}
+
 void Data::reset()
 {
     if (m_private) {
@@ -67,11 +73,11 @@ size_t Data::size() const
     return const_cast<DataPrivate*>(m_private)->size();
 }
 
-const char* Data::data() const
+char* Data::data() const
 {
     if (!m_private)
         return 0;
-    return const_cast<DataPrivate*>(m_private)->data();
+    return const_cast<char*>(m_private->data());
 }
 
 Data::Data(const PassRefPtr<WebCore::SharedBuffer>& buffer)

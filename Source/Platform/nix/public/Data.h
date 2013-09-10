@@ -50,6 +50,8 @@ public:
 
     Data() : m_private(0) { }
 
+    NIX_EXPORT explicit Data(size_t);
+
     Data(const char* data, size_t size) : m_private(0)
     {
         assign(data, size);
@@ -74,7 +76,7 @@ public:
     NIX_EXPORT void assign(const char* data, size_t);
 
     NIX_EXPORT size_t size() const;
-    NIX_EXPORT const char* data() const;
+    NIX_EXPORT char* data() const;
 
     bool isEmpty() const { return !size(); }
     bool isNull() const { return !m_private; }
@@ -83,19 +85,6 @@ public:
     Data(const WTF::PassRefPtr<WebCore::SharedBuffer>&);
     Data& operator=(const WTF::PassRefPtr<WebCore::SharedBuffer>&);
     operator WTF::PassRefPtr<WebCore::SharedBuffer>() const;
-#else
-    template <class C>
-    Data(const C& c) : m_private(0)
-    {
-        assign(c.data(), c.size());
-    }
-
-    template <class C>
-    Data& operator=(const C& c)
-    {
-        assign(c.data(), c.size());
-        return *this;
-    }
 #endif
 
 private:
