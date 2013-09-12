@@ -29,7 +29,6 @@
 #define WTF_PLATFORM_NIX 1
 #define ENABLE_GLOBAL_FASTMALLOC_NEW 0
 
-// Some bits can't be changed at all
 #define WTF_USE_3D_GRAPHICS 1
 #define WTF_USE_ACCELERATED_COMPOSITING 1
 #define WTF_USE_CAIRO 1
@@ -48,7 +47,6 @@
 #define WTF_USE_TILED_BACKING_STORE 1
 #define WTF_USE_UNIX_DOMAIN_SOCKETS 1
 
-// EGL/OpenGLES2 vs GLX
 #if !defined(WTF_USE_OPENGL_ES_2) || !WTF_USE_OPENGL_ES_2
 #define WTF_USE_OPENGL 1
 #define WTF_USE_GLX 1
@@ -58,7 +56,6 @@
 #define WTF_USE_EGL 1
 #endif
 
-// Soup vs libCurl
 #if !defined(WTF_USE_CURL) || !WTF_USE_CURL
 #define WTF_USE_SOUP 1
 #endif

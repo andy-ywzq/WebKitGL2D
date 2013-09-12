@@ -158,6 +158,8 @@ static inline const char* roleToString(AtkRole role)
         return "AXButton";
     case ATK_ROLE_RADIO_BUTTON:
         return "AXRadioButton";
+    case ATK_ROLE_RADIO_MENU_ITEM:
+        return "AXRadioMenuItem";
     case ATK_ROLE_ROW_HEADER:
         return "AXRowHeader";
     case ATK_ROLE_RULER:
@@ -1159,6 +1161,12 @@ void AccessibilityUIElement::scrollToMakeVisibleWithSubFocus(int x, int y, int w
 void AccessibilityUIElement::scrollToGlobalPoint(int x, int y)
 {
     // FIXME: implement
+}
+
+JSStringRef AccessibilityUIElement::classList() const
+{
+    // FIXME: implement
+    return 0;
 }
 
 #endif

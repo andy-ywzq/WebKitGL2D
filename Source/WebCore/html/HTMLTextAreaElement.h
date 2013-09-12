@@ -111,7 +111,6 @@ private:
     virtual void accessKeyAction(bool sendMouseEvents);
 
     virtual bool shouldUseInputMethod() OVERRIDE;
-    virtual void didAttachRenderers() OVERRIDE;
     virtual bool matchesReadOnlyPseudoClass() const OVERRIDE;
     virtual bool matchesReadWritePseudoClass() const OVERRIDE;
 
@@ -126,6 +125,8 @@ private:
     mutable bool m_isDirty;
     mutable bool m_wasModifiedByUser;
 };
+
+ELEMENT_TYPE_CASTS(HTMLTextAreaElement)
 
 } //namespace
 

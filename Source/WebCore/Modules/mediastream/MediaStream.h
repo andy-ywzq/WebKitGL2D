@@ -33,13 +33,14 @@
 #include "ExceptionBase.h"
 #include "MediaStreamDescriptor.h"
 #include "MediaStreamTrack.h"
+#include "ScriptWrappable.h"
 #include "Timer.h"
 #include <wtf/RefCounted.h>
 #include <wtf/RefPtr.h>
 
 namespace WebCore {
 
-class MediaStream : public RefCounted<MediaStream>, public MediaStreamDescriptorClient, public EventTarget, public ContextDestructionObserver {
+class MediaStream : public RefCounted<MediaStream>, public ScriptWrappable, public MediaStreamDescriptorClient, public EventTarget, public ContextDestructionObserver {
 public:
     static PassRefPtr<MediaStream> create(ScriptExecutionContext*);
     static PassRefPtr<MediaStream> create(ScriptExecutionContext*, PassRefPtr<MediaStream>);
@@ -60,6 +61,7 @@ public:
     MediaStreamTrackVector getVideoTracks() const { return m_videoTracks; }
 
     bool ended() const;
+    void stop();
 
     DEFINE_ATTRIBUTE_EVENT_LISTENER(ended);
     DEFINE_ATTRIBUTE_EVENT_LISTENER(addtrack);
@@ -68,8 +70,6 @@ public:
     // MediaStreamDescriptorClient
     virtual void trackEnded() OVERRIDE;
     virtual void streamEnded() OVERRIDE;
-
-    virtual bool isLocal() const { return false; }
 
     MediaStreamDescriptor* descriptor() const { return m_descriptor.get(); }
 

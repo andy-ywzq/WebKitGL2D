@@ -48,7 +48,7 @@ class GPRTemporary;
 class JSValueOperand;
 class SlowPathGenerator;
 class SpeculativeJIT;
-class SpeculateIntegerOperand;
+class SpeculateInt32Operand;
 class SpeculateStrictInt32Operand;
 class SpeculateDoubleOperand;
 class SpeculateCellOperand;
@@ -130,7 +130,7 @@ public:
         }
     }
     
-    GPRReg fillInteger(Edge, DataFormat& returnFormat);
+    GPRReg fillInt32(Edge, DataFormat& returnFormat);
 #if USE(JSVALUE64)
     GPRReg fillJSValue(Edge);
 #elif USE(JSVALUE32_64)
@@ -161,7 +161,7 @@ public:
     bool canReuse(Node* node)
     {
         VirtualRegister virtualRegister = node->virtualRegister();
-        GenerationInfo& info = m_generationInfo[virtualRegister];
+        GenerationInfo& info = generationInfoFromVirtualRegister(virtualRegister);
         return info.canReuse();
     }
     bool canReuse(Edge nodeUse)
@@ -189,7 +189,7 @@ public:
         GPRReg gpr = m_gprs.allocate(spillMe);
         if (spillMe != InvalidVirtualRegister) {
 #if USE(JSVALUE32_64)
-            GenerationInfo& info = m_generationInfo[spillMe];
+            GenerationInfo& info = generationInfoFromVirtualRegister(spillMe);
             RELEASE_ASSERT(info.registerFormat() != DataFormatJSDouble);
             if ((info.registerFormat() & DataFormatJS))
                 m_gprs.release(info.tagGPR() == gpr ? info.payloadGPR() : info.tagGPR());
@@ -206,7 +206,7 @@ public:
         VirtualRegister spillMe = m_gprs.allocateSpecific(specific);
         if (spillMe != InvalidVirtualRegister) {
 #if USE(JSVALUE32_64)
-            GenerationInfo& info = m_generationInfo[spillMe];
+            GenerationInfo& info = generationInfoFromVirtualRegister(spillMe);
             RELEASE_ASSERT(info.registerFormat() != DataFormatJSDouble);
             if ((info.registerFormat() & DataFormatJS))
                 m_gprs.release(info.tagGPR() == specific ? info.payloadGPR() : info.tagGPR());
@@ -239,13 +239,13 @@ public:
     bool isFilled(Node* node)
     {
         VirtualRegister virtualRegister = node->virtualRegister();
-        GenerationInfo& info = m_generationInfo[virtualRegister];
+        GenerationInfo& info = generationInfoFromVirtualRegister(virtualRegister);
         return info.registerFormat() != DataFormatNone;
     }
     bool isFilledDouble(Node* node)
     {
         VirtualRegister virtualRegister = node->virtualRegister();
-        GenerationInfo& info = m_generationInfo[virtualRegister];
+        GenerationInfo& info = generationInfoFromVirtualRegister(virtualRegister);
         return info.registerFormat() == DataFormatDouble;
     }
 
@@ -255,7 +255,7 @@ public:
         if (!node->hasResult())
             return;
         VirtualRegister virtualRegister = node->virtualRegister();
-        GenerationInfo& info = m_generationInfo[virtualRegister];
+        GenerationInfo& info = generationInfoFromVirtualRegister(virtualRegister);
 
         // use() returns true when the value becomes dead, and any
         // associated resources may be freed.
@@ -332,8 +332,8 @@ public:
 
     // Called by the speculative operand types, below, to fill operand to
     // machine registers, implicitly generating speculation checks as needed.
-    GPRReg fillSpeculateInt(Edge, DataFormat& returnFormat);
-    GPRReg fillSpeculateIntStrict(Edge);
+    GPRReg fillSpecualteInt32(Edge, DataFormat& returnFormat);
+    GPRReg fillSpecualteInt32Strict(Edge);
     FPRReg fillSpeculateDouble(Edge);
     GPRReg fillSpeculateCell(Edge);
     GPRReg fillSpeculateBoolean(Edge);
@@ -483,7 +483,7 @@ public:
     // Spill a VirtualRegister to the JSStack.
     void spill(VirtualRegister spillMe)
     {
-        GenerationInfo& info = m_generationInfo[spillMe];
+        GenerationInfo& info = generationInfoFromVirtualRegister(spillMe);
 
 #if USE(JSVALUE32_64)
         if (info.registerFormat() == DataFormatNone) // it has been spilled. JS values which have two GPRs can reach here
@@ -506,9 +506,9 @@ public:
             return;
         }
 
-        case DataFormatInteger: {
+        case DataFormatInt32: {
             m_jit.store32(info.gpr(), JITCompiler::payloadFor(spillMe));
-            info.spill(*m_stream, spillMe, DataFormatInteger);
+            info.spill(*m_stream, spillMe, DataFormatInt32);
             return;
         }
 
@@ -526,7 +526,7 @@ public:
             GPRReg reg = info.gpr();
             // We need to box int32 and cell values ...
             // but on JSVALUE64 boxing a cell is a no-op!
-            if (spillFormat == DataFormatInteger)
+            if (spillFormat == DataFormatInt32)
                 m_jit.or64(GPRInfo::tagTypeNumberRegister, reg);
             
             // Spill the value, and record it as spilled in its boxed form.
@@ -790,21 +790,21 @@ public:
 
     // These method called to initialize the the GenerationInfo
     // to describe the result of an operation.
-    void integerResult(GPRReg reg, Node* node, DataFormat format = DataFormatInteger, UseChildrenMode mode = CallUseChildren)
+    void integerResult(GPRReg reg, Node* node, DataFormat format = DataFormatInt32, UseChildrenMode mode = CallUseChildren)
     {
         if (mode == CallUseChildren)
             useChildren(node);
 
         VirtualRegister virtualRegister = node->virtualRegister();
-        GenerationInfo& info = m_generationInfo[virtualRegister];
+        GenerationInfo& info = generationInfoFromVirtualRegister(virtualRegister);
 
-        if (format == DataFormatInteger) {
+        if (format == DataFormatInt32) {
             m_jit.jitAssertIsInt32(reg);
             m_gprs.retain(reg, virtualRegister, SpillOrderInteger);
-            info.initInteger(node, node->refCount(), reg);
+            info.initInt32(node, node->refCount(), reg);
         } else {
 #if USE(JSVALUE64)
-            RELEASE_ASSERT(format == DataFormatJSInteger);
+            RELEASE_ASSERT(format == DataFormatJSInt32);
             m_jit.jitAssertIsJSInt32(reg);
             m_gprs.retain(reg, virtualRegister, SpillOrderJS);
             info.initJSValue(node, node->refCount(), reg, format);
@@ -815,7 +815,7 @@ public:
     }
     void integerResult(GPRReg reg, Node* node, UseChildrenMode mode)
     {
-        integerResult(reg, node, DataFormatInteger, mode);
+        integerResult(reg, node, DataFormatInt32, mode);
     }
     void noResult(Node* node, UseChildrenMode mode = CallUseChildren)
     {
@@ -830,7 +830,7 @@ public:
 
         VirtualRegister virtualRegister = node->virtualRegister();
         m_gprs.retain(reg, virtualRegister, SpillOrderCell);
-        GenerationInfo& info = m_generationInfo[virtualRegister];
+        GenerationInfo& info = generationInfoFromVirtualRegister(virtualRegister);
         info.initCell(node, node->refCount(), reg);
     }
     void booleanResult(GPRReg reg, Node* node, UseChildrenMode mode = CallUseChildren)
@@ -840,13 +840,13 @@ public:
 
         VirtualRegister virtualRegister = node->virtualRegister();
         m_gprs.retain(reg, virtualRegister, SpillOrderBoolean);
-        GenerationInfo& info = m_generationInfo[virtualRegister];
+        GenerationInfo& info = generationInfoFromVirtualRegister(virtualRegister);
         info.initBoolean(node, node->refCount(), reg);
     }
 #if USE(JSVALUE64)
     void jsValueResult(GPRReg reg, Node* node, DataFormat format = DataFormatJS, UseChildrenMode mode = CallUseChildren)
     {
-        if (format == DataFormatJSInteger)
+        if (format == DataFormatJSInt32)
             m_jit.jitAssertIsJSInt32(reg);
         
         if (mode == CallUseChildren)
@@ -854,7 +854,7 @@ public:
 
         VirtualRegister virtualRegister = node->virtualRegister();
         m_gprs.retain(reg, virtualRegister, SpillOrderJS);
-        GenerationInfo& info = m_generationInfo[virtualRegister];
+        GenerationInfo& info = generationInfoFromVirtualRegister(virtualRegister);
         info.initJSValue(node, node->refCount(), reg, format);
     }
     void jsValueResult(GPRReg reg, Node* node, UseChildrenMode mode)
@@ -870,7 +870,7 @@ public:
         VirtualRegister virtualRegister = node->virtualRegister();
         m_gprs.retain(tag, virtualRegister, SpillOrderJS);
         m_gprs.retain(payload, virtualRegister, SpillOrderJS);
-        GenerationInfo& info = m_generationInfo[virtualRegister];
+        GenerationInfo& info = generationInfoFromVirtualRegister(virtualRegister);
         info.initJSValue(node, node->refCount(), tag, payload, format);
     }
     void jsValueResult(GPRReg tag, GPRReg payload, Node* node, UseChildrenMode mode)
@@ -885,7 +885,7 @@ public:
         
         VirtualRegister virtualRegister = node->virtualRegister();
         m_gprs.retain(reg, virtualRegister, SpillOrderStorage);
-        GenerationInfo& info = m_generationInfo[virtualRegister];
+        GenerationInfo& info = generationInfoFromVirtualRegister(virtualRegister);
         info.initStorage(node, node->refCount(), reg);
     }
     void doubleResult(FPRReg reg, Node* node, UseChildrenMode mode = CallUseChildren)
@@ -895,13 +895,13 @@ public:
 
         VirtualRegister virtualRegister = node->virtualRegister();
         m_fprs.retain(reg, virtualRegister, SpillOrderDouble);
-        GenerationInfo& info = m_generationInfo[virtualRegister];
+        GenerationInfo& info = generationInfoFromVirtualRegister(virtualRegister);
         info.initDouble(node, node->refCount(), reg);
     }
     void initConstantInfo(Node* node)
     {
         ASSERT(isInt32Constant(node) || isNumberConstant(node) || isJSConstant(node));
-        m_generationInfo[node->virtualRegister()].initConstant(node, node->refCount());
+        generationInfoFromVirtualRegister(node->virtualRegister()).initConstant(node, node->refCount());
     }
     
     // These methods add calls to C++ helper functions.
@@ -1885,9 +1885,9 @@ public:
             return true;
 
         VirtualRegister virtualRegister = node->virtualRegister();
-        GenerationInfo& info = m_generationInfo[virtualRegister];
+        GenerationInfo& info = generationInfoFromVirtualRegister(virtualRegister);
         
-        return info.isJSInteger();
+        return info.isJSInt32();
     }
     
     bool compare(Node*, MacroAssembler::RelationalCondition, MacroAssembler::DoubleCondition, S_DFGOperation_EJJ);
@@ -2141,7 +2141,7 @@ public:
     void arrayify(Node*);
     
     template<bool strict>
-    GPRReg fillSpeculateIntInternal(Edge, DataFormat& returnFormat);
+    GPRReg fillSpecualteInt32Internal(Edge, DataFormat& returnFormat);
     
     // It is possible, during speculative generation, to reach a situation in which we
     // can statically determine a speculation will fail (for example, when two nodes
@@ -2172,11 +2172,12 @@ public:
             int argument = operandToArgument(operand);
             return m_arguments[argument];
         }
+
+        int local = operandToLocal(operand);
+        if ((unsigned)local >= m_variables.size())
+            m_variables.resize(local + 1);
         
-        if ((unsigned)operand >= m_variables.size())
-            m_variables.resize(operand + 1);
-        
-        return m_variables[operand];
+        return m_variables[local];
     }
     
     void recordSetLocal(int operand, ValueSource valueSource)
@@ -2184,7 +2185,12 @@ public:
         valueSourceReferenceForOperand(operand) = valueSource;
         m_stream->appendAndLog(VariableEvent::setLocal(operand, valueSource.dataFormat()));
     }
-    
+
+    GenerationInfo& generationInfoFromVirtualRegister(VirtualRegister virtualRegister)
+    {
+        return m_generationInfo[operandToLocal(virtualRegister)];
+    }
+
     // The JIT, while also provides MacroAssembler functionality.
     JITCompiler& m_jit;
 
@@ -2241,7 +2247,7 @@ public:
 
 // === Operand types ===
 //
-// IntegerOperand and JSValueOperand.
+// Int32Operand and JSValueOperand.
 //
 // These classes are used to lock the operands to a node into machine
 // registers. These classes implement of pattern of locking a value
@@ -2250,9 +2256,9 @@ public:
 // used. We do so in order to attempt to avoid spilling one operand
 // in order to make space available for another.
 
-class IntegerOperand {
+class Int32Operand {
 public:
-    explicit IntegerOperand(SpeculativeJIT* jit, Edge edge, OperandSpeculationMode mode = AutomaticOperandSpeculation)
+    explicit Int32Operand(SpeculativeJIT* jit, Edge edge, OperandSpeculationMode mode = AutomaticOperandSpeculation)
         : m_jit(jit)
         , m_edge(edge)
         , m_gprOrInvalid(InvalidGPRReg)
@@ -2266,7 +2272,7 @@ public:
             gpr();
     }
 
-    ~IntegerOperand()
+    ~Int32Operand()
     {
         ASSERT(m_gprOrInvalid != InvalidGPRReg);
         m_jit->unlock(m_gprOrInvalid);
@@ -2285,14 +2291,14 @@ public:
     DataFormat format()
     {
         gpr(); // m_format is set when m_gpr is locked.
-        ASSERT(m_format == DataFormatInteger || m_format == DataFormatJSInteger);
+        ASSERT(m_format == DataFormatInt32 || m_format == DataFormatJSInt32);
         return m_format;
     }
 
     GPRReg gpr()
     {
         if (m_gprOrInvalid == InvalidGPRReg)
-            m_gprOrInvalid = m_jit->fillInteger(m_edge, m_format);
+            m_gprOrInvalid = m_jit->fillInt32(m_edge, m_format);
         return m_gprOrInvalid;
     }
     
@@ -2488,11 +2494,11 @@ public:
     GPRTemporary();
     GPRTemporary(SpeculativeJIT*);
     GPRTemporary(SpeculativeJIT*, GPRReg specific);
-    GPRTemporary(SpeculativeJIT*, SpeculateIntegerOperand&);
-    GPRTemporary(SpeculativeJIT*, SpeculateIntegerOperand&, SpeculateIntegerOperand&);
+    GPRTemporary(SpeculativeJIT*, SpeculateInt32Operand&);
+    GPRTemporary(SpeculativeJIT*, SpeculateInt32Operand&, SpeculateInt32Operand&);
     GPRTemporary(SpeculativeJIT*, SpeculateStrictInt32Operand&);
-    GPRTemporary(SpeculativeJIT*, IntegerOperand&);
-    GPRTemporary(SpeculativeJIT*, IntegerOperand&, IntegerOperand&);
+    GPRTemporary(SpeculativeJIT*, Int32Operand&);
+    GPRTemporary(SpeculativeJIT*, Int32Operand&, Int32Operand&);
     GPRTemporary(SpeculativeJIT*, SpeculateCellOperand&);
     GPRTemporary(SpeculativeJIT*, SpeculateBooleanOperand&);
 #if USE(JSVALUE64)
@@ -2593,7 +2599,7 @@ private:
 
 // === Speculative Operand types ===
 //
-// SpeculateIntegerOperand, SpeculateStrictInt32Operand and SpeculateCellOperand.
+// SpeculateInt32Operand, SpeculateStrictInt32Operand and SpeculateCellOperand.
 //
 // These are used to lock the operands to a node into machine registers within the
 // SpeculativeJIT. The classes operate like those above, however these will
@@ -2601,9 +2607,9 @@ private:
 // determine the operand to have. If the operand does not have the requested type,
 // a bail-out to the non-speculative path will be taken.
 
-class SpeculateIntegerOperand {
+class SpeculateInt32Operand {
 public:
-    explicit SpeculateIntegerOperand(SpeculativeJIT* jit, Edge edge, OperandSpeculationMode mode = AutomaticOperandSpeculation)
+    explicit SpeculateInt32Operand(SpeculativeJIT* jit, Edge edge, OperandSpeculationMode mode = AutomaticOperandSpeculation)
         : m_jit(jit)
         , m_edge(edge)
         , m_gprOrInvalid(InvalidGPRReg)
@@ -2617,7 +2623,7 @@ public:
             gpr();
     }
 
-    ~SpeculateIntegerOperand()
+    ~SpeculateInt32Operand()
     {
         ASSERT(m_gprOrInvalid != InvalidGPRReg);
         m_jit->unlock(m_gprOrInvalid);
@@ -2636,14 +2642,14 @@ public:
     DataFormat format()
     {
         gpr(); // m_format is set when m_gpr is locked.
-        ASSERT(m_format == DataFormatInteger || m_format == DataFormatJSInteger);
+        ASSERT(m_format == DataFormatInt32 || m_format == DataFormatJSInt32);
         return m_format;
     }
 
     GPRReg gpr()
     {
         if (m_gprOrInvalid == InvalidGPRReg)
-            m_gprOrInvalid = m_jit->fillSpeculateInt(edge(), m_format);
+            m_gprOrInvalid = m_jit->fillSpecualteInt32(edge(), m_format);
         return m_gprOrInvalid;
     }
     
@@ -2691,7 +2697,7 @@ public:
     GPRReg gpr()
     {
         if (m_gprOrInvalid == InvalidGPRReg)
-            m_gprOrInvalid = m_jit->fillSpeculateIntStrict(edge());
+            m_gprOrInvalid = m_jit->fillSpecualteInt32Strict(edge());
         return m_gprOrInvalid;
     }
     

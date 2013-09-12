@@ -81,8 +81,8 @@ public:
 
     PassRefPtr<SVGFilterBuilder> buildPrimitives(SVGFilter*);
 
-    SVGUnitTypes::SVGUnitType filterUnits() const { return toSVGFilterElement(node())->filterUnits(); }
-    SVGUnitTypes::SVGUnitType primitiveUnits() const { return toSVGFilterElement(node())->primitiveUnits(); }
+    SVGUnitTypes::SVGUnitType filterUnits() const { return toSVGFilterElement(element())->filterUnits(); }
+    SVGUnitTypes::SVGUnitType primitiveUnits() const { return toSVGFilterElement(element())->primitiveUnits(); }
 
     void primitiveAttributeChanged(RenderObject*, const QualifiedName&);
 
@@ -93,7 +93,7 @@ public:
 private:
     bool fitsInMaximumImageSize(const FloatSize&, FloatSize&);
 
-    HashMap<RenderObject*, FilterData*> m_filter;
+    HashMap<RenderObject*, OwnPtr<FilterData>> m_filter;
 };
 
 inline RenderSVGResourceFilter* toRenderSVGFilter(RenderObject* object)

@@ -77,10 +77,10 @@ void RenderSVGEllipse::updateShapeFromElement()
 
 void RenderSVGEllipse::calculateRadiiAndCenter()
 {
-    ASSERT(node());
-    if (node()->hasTagName(SVGNames::circleTag)) {
+    ASSERT(element());
+    if (isSVGCircleElement(element())) {
 
-        SVGCircleElement* circle = static_cast<SVGCircleElement*>(node());
+        SVGCircleElement* circle = toSVGCircleElement(element());
 
         SVGLengthContext lengthContext(circle);
         float radius = circle->r().value(lengthContext);
@@ -89,8 +89,8 @@ void RenderSVGEllipse::calculateRadiiAndCenter()
         return;
     }
 
-    ASSERT(node()->hasTagName(SVGNames::ellipseTag));
-    SVGEllipseElement* ellipse = static_cast<SVGEllipseElement*>(node());
+    ASSERT(isSVGEllipseElement(element()));
+    SVGEllipseElement* ellipse = toSVGEllipseElement(element());
 
     SVGLengthContext lengthContext(ellipse);
     m_radii = FloatSize(ellipse->rx().value(lengthContext), ellipse->ry().value(lengthContext));

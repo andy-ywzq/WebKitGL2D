@@ -261,8 +261,6 @@ protected:
     }
 };
 
-COMPILE_ASSERT(!IsInteger<GlobalObject>::value, WTF_IsInteger_GlobalObject_false);
-
 const ClassInfo GlobalObject::s_info = { "global", &JSGlobalObject::s_info, 0, ExecState::globalObjectTable, CREATE_METHOD_TABLE(GlobalObject) };
 const GlobalObjectMethodTable GlobalObject::s_globalObjectMethodTable = { &allowsAccessFrom, &supportsProfiling, &supportsRichSourceInfo, &shouldInterruptScript, &javaScriptExperimentsEnabled, 0 };
 
@@ -390,6 +388,12 @@ EncodedJSValue JSC_HOST_CALL functionRun(ExecState* exec)
         return JSValue::encode(exec->vm().throwException(exec, createError(exec, "Could not open file.")));
 
     GlobalObject* globalObject = GlobalObject::create(exec->vm(), GlobalObject::createStructure(exec->vm(), jsNull()), Vector<String>());
+
+    JSArray* array = constructEmptyArray(globalObject->globalExec(), 0);
+    for (unsigned i = 1; i < exec->argumentCount(); ++i)
+        array->putDirectIndex(globalObject->globalExec(), i - 1, exec->argument(i));
+    globalObject->putDirect(
+        exec->vm(), Identifier(globalObject->globalExec(), "arguments"), array);
 
     JSValue exception;
     StopWatch stopWatch;

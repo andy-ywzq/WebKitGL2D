@@ -293,6 +293,8 @@ TextIterator::TextIterator(const Range* r, TextIteratorBehavior behavior)
     if (!r)
         return;
 
+    r->ownerDocument().updateLayoutIgnorePendingStylesheets();
+
     // get and validate the range endpoints
     Node* startContainer = r->startContainer();
     if (!startContainer)
@@ -918,7 +920,7 @@ bool TextIterator::shouldRepresentNodeOffsetZero()
     // Additionally, if the range we are iterating over contains huge sections of unrendered content, 
     // we would create VisiblePositions on every call to this function without this check.
     if (!m_node->renderer() || m_node->renderer()->style()->visibility() != VISIBLE
-        || (m_node->renderer()->isBlockFlowFlexBoxOrGrid() && !toRenderBlock(m_node->renderer())->height() && !m_node->hasTagName(bodyTag)))
+        || (m_node->renderer()->isRenderBlockFlow() && !toRenderBlock(m_node->renderer())->height() && !m_node->hasTagName(bodyTag)))
         return false;
 
     // The startPos.isNotNull() check is needed because the start could be before the body,
@@ -1117,6 +1119,8 @@ SimplifiedBackwardsTextIterator::SimplifiedBackwardsTextIterator(const Range* r,
 
     if (!r)
         return;
+
+    r->ownerDocument().updateLayoutIgnorePendingStylesheets();
 
     Node* startNode = r->startContainer();
     if (!startNode)
@@ -2427,7 +2431,6 @@ PassRefPtr<Range> TextIterator::rangeFromLocationAndLength(ContainerNode* scope,
             // FIXME: This is a workaround for the fact that the end of a run is often at the wrong
             // position for emitted '\n's.
             if (len == 1 && it.characterAt(0) == '\n') {
-                scope->document().updateLayoutIgnorePendingStylesheets();
                 it.advance();
                 if (!it.atEnd()) {
                     RefPtr<Range> range = it.range();
@@ -2593,9 +2596,6 @@ tryAgain:
 
 PassRefPtr<Range> findPlainText(const Range* range, const String& target, FindOptions options)
 {
-    // CharacterIterator requires renderers to be up-to-date
-    range->ownerDocument().updateLayout();
-
     // First, find the text.
     size_t matchStart;
     size_t matchLength;

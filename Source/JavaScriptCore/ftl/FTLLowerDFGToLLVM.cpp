@@ -569,41 +569,49 @@ private:
         observeMovHint(m_node);
         
         VariableAccessData* variable = m_node->variableAccessData();
-        SpeculatedType prediction = variable->argumentAwarePrediction();
-        
-        if (variable->shouldUnboxIfPossible()) {
-            if (variable->shouldUseDoubleFormat()) {
-                LValue value = lowDouble(m_node->child1());
-                m_out.storeDouble(value, addressFor(variable->local()));
-                m_valueSources.operand(variable->local()) = ValueSource(DoubleInJSStack);
-                return;
-            }
+        switch (variable->flushFormat()) {
+        case FlushedJSValue: {
+            LValue value = lowJSValue(m_node->child1());
+            m_out.store64(value, addressFor(variable->local()));
+            m_valueSources.operand(variable->local()) = ValueSource(ValueInJSStack);
+            return;
+        }
             
-            if (isInt32Speculation(prediction)) {
-                LValue value = lowInt32(m_node->child1());
-                m_out.store32(value, payloadFor(variable->local()));
-                m_valueSources.operand(variable->local()) = ValueSource(Int32InJSStack);
-                return;
-            }
-            if (isCellSpeculation(prediction)) {
-                LValue value = lowCell(m_node->child1());
-                m_out.store64(value, addressFor(variable->local()));
-                m_valueSources.operand(variable->local()) = ValueSource(ValueInJSStack);
-                return;
-            }
-            if (isBooleanSpeculation(prediction)) {
-                speculateBoolean(m_node->child1());
-                m_out.store64(
-                    lowJSValue(m_node->child1(), ManualOperandSpeculation),
-                    addressFor(variable->local()));
-                m_valueSources.operand(variable->local()) = ValueSource(ValueInJSStack);
-                return;
-            }
+        case FlushedDouble: {
+            LValue value = lowDouble(m_node->child1());
+            m_out.storeDouble(value, addressFor(variable->local()));
+            m_valueSources.operand(variable->local()) = ValueSource(DoubleInJSStack);
+            return;
+        }
+            
+        case FlushedInt32: {
+            LValue value = lowInt32(m_node->child1());
+            m_out.store32(value, payloadFor(variable->local()));
+            m_valueSources.operand(variable->local()) = ValueSource(Int32InJSStack);
+            return;
+        }
+            
+        case FlushedCell: {
+            LValue value = lowCell(m_node->child1());
+            m_out.store64(value, addressFor(variable->local()));
+            m_valueSources.operand(variable->local()) = ValueSource(ValueInJSStack);
+            return;
+        }
+            
+        case FlushedBoolean: {
+            speculateBoolean(m_node->child1());
+            m_out.store64(
+                lowJSValue(m_node->child1(), ManualOperandSpeculation),
+                addressFor(variable->local()));
+            m_valueSources.operand(variable->local()) = ValueSource(ValueInJSStack);
+            return;
+        }
+            
+        case DeadFlush:
+            RELEASE_ASSERT_NOT_REACHED();
         }
         
-        LValue value = lowJSValue(m_node->child1());
-        m_out.store64(value, addressFor(variable->local()));
-        m_valueSources.operand(variable->local()) = ValueSource(ValueInJSStack);
+        RELEASE_ASSERT_NOT_REACHED();
     }
     
     void compileMovHint()
@@ -636,7 +644,7 @@ private:
             LValue left = lowInt32(m_node->child1());
             LValue right = lowInt32(m_node->child2());
             
-            if (nodeCanTruncateInteger(m_node->arithNodeFlags())) {
+            if (bytecodeCanTruncateInteger(m_node->arithNodeFlags())) {
                 setInt32(m_out.add(left, right));
                 break;
             }
@@ -666,7 +674,7 @@ private:
             LValue left = lowInt32(m_node->child1());
             LValue right = lowInt32(m_node->child2());
             
-            if (nodeCanTruncateInteger(m_node->arithNodeFlags())) {
+            if (bytecodeCanTruncateInteger(m_node->arithNodeFlags())) {
                 setInt32(m_out.sub(left, right));
                 break;
             }
@@ -697,7 +705,7 @@ private:
             LValue right = lowInt32(m_node->child2());
             
             LValue result;
-            if (nodeCanTruncateInteger(m_node->arithNodeFlags()))
+            if (bytecodeCanTruncateInteger(m_node->arithNodeFlags()))
                 result = m_out.mul(left, right);
             else {
                 LValue overflowResult = m_out.mulWithOverflow32(left, right);
@@ -705,7 +713,7 @@ private:
                 result = m_out.extractValue(overflowResult, 0);
             }
             
-            if (!nodeCanIgnoreNegativeZero(m_node->arithNodeFlags())) {
+            if (!bytecodeCanIgnoreNegativeZero(m_node->arithNodeFlags())) {
                 LBasicBlock slowCase = FTL_NEW_BLOCK(m_out, ("ArithMul slow case"));
                 LBasicBlock continuation = FTL_NEW_BLOCK(m_out, ("ArithMul continuation"));
                 
@@ -755,7 +763,7 @@ private:
             
             LValue neg2ToThe31 = m_out.constInt32(-2147483647-1);
             
-            if (nodeUsedAsNumber(m_node->arithNodeFlags())) {
+            if (bytecodeUsesAsNumber(m_node->arithNodeFlags())) {
                 speculate(Overflow, noValue(), 0, m_out.isZero32(denominator));
                 speculate(Overflow, noValue(), 0, m_out.equal(numerator, neg2ToThe31));
                 m_out.jump(continuation);
@@ -785,7 +793,7 @@ private:
             
             m_out.appendTo(continuation, done);
             
-            if (!nodeCanIgnoreNegativeZero(m_node->arithNodeFlags())) {
+            if (!bytecodeCanIgnoreNegativeZero(m_node->arithNodeFlags())) {
                 LBasicBlock zeroNumerator = FTL_NEW_BLOCK(m_out, ("ArithDiv zero numerator"));
                 LBasicBlock numeratorContinuation = FTL_NEW_BLOCK(m_out, ("ArithDiv numerator continuation"));
                 
@@ -803,7 +811,7 @@ private:
             
             LValue divisionResult = m_out.div(numerator, denominator);
             
-            if (nodeUsedAsNumber(m_node->arithNodeFlags())) {
+            if (bytecodeUsesAsNumber(m_node->arithNodeFlags())) {
                 speculate(
                     Overflow, noValue(), 0,
                     m_out.notEqual(m_out.mul(divisionResult, denominator), numerator));
@@ -853,7 +861,7 @@ private:
             
             // FIXME: -2^31 / -1 will actually yield negative zero, so we could have a
             // separate case for that. But it probably doesn't matter so much.
-            if (nodeUsedAsNumber(m_node->arithNodeFlags())) {
+            if (bytecodeUsesAsNumber(m_node->arithNodeFlags())) {
                 speculate(Overflow, noValue(), 0, m_out.isZero32(denominator));
                 speculate(Overflow, noValue(), 0, m_out.equal(numerator, neg2ToThe31));
                 m_out.jump(continuation);
@@ -885,7 +893,7 @@ private:
             
             LValue remainder = m_out.rem(numerator, denominator);
             
-            if (!nodeCanIgnoreNegativeZero(m_node->arithNodeFlags())) {
+            if (!bytecodeCanIgnoreNegativeZero(m_node->arithNodeFlags())) {
                 LBasicBlock negativeNumerator = FTL_NEW_BLOCK(m_out, ("ArithMod negative numerator"));
                 LBasicBlock numeratorContinuation = FTL_NEW_BLOCK(m_out, ("ArithMod numerator continuation"));
                 
@@ -1007,7 +1015,7 @@ private:
             LValue value = lowInt32(m_node->child1());
             
             LValue result;
-            if (nodeCanTruncateInteger(m_node->arithNodeFlags()))
+            if (bytecodeCanTruncateInteger(m_node->arithNodeFlags()))
                 result = m_out.neg(value);
             else {
                 // We don't have a negate-with-overflow intrinsic. Hopefully this
@@ -1073,7 +1081,7 @@ private:
     {
         LValue value = lowInt32(m_node->child1());
 
-        if (!nodeCanSpeculateInteger(m_node->arithNodeFlags())) {
+        if (!nodeCanSpeculateInt32(m_node->arithNodeFlags())) {
             setDouble(m_out.unsignedToDouble(value));
             return;
         }
@@ -1375,7 +1383,7 @@ private:
                         return;
                     }
                     
-                    if (m_node->shouldSpeculateInteger()) {
+                    if (m_node->shouldSpeculateInt32()) {
                         speculateForward(
                             Overflow, noValue(), 0, m_out.lessThan(result, m_out.int32Zero),
                             uInt32Value(result));

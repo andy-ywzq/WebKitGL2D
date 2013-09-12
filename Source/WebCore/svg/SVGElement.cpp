@@ -220,7 +220,7 @@ SVGElementRareData& SVGElement::ensureSVGRareData()
 
 bool SVGElement::isOutermostSVGSVGElement() const
 {
-    if (!hasTagName(SVGNames::svgTag))
+    if (!isSVGSVGElement(this))
         return false;
 
     // If we're living in a shadow tree, we're a <svg> element that got created as replacement
@@ -584,7 +584,7 @@ void SVGElement::sendSVGLoadEventIfPossible(bool sendParentLoadEvents)
         if (hasLoadListener(currentTarget.get()))
             currentTarget->dispatchEvent(Event::create(eventNames().loadEvent, false, false));
         currentTarget = (parent && parent->isSVGElement()) ? static_pointer_cast<SVGElement>(parent) : RefPtr<SVGElement>();
-        SVGElement* element = toSVGElement(currentTarget.get());
+        SVGElement* element = currentTarget.get();
         if (!element || !element->isOutermostSVGSVGElement())
             continue;
 

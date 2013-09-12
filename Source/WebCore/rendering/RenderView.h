@@ -53,8 +53,6 @@ public:
 
     virtual const char* renderName() const OVERRIDE { return "RenderView"; }
 
-    virtual bool isRenderView() const OVERRIDE { return true; }
-
     virtual bool requiresLayer() const OVERRIDE { return true; }
 
     virtual bool isChildAllowed(RenderObject*, RenderStyle*) const OVERRIDE;
@@ -258,7 +256,7 @@ private:
     {
         // We push LayoutState even if layoutState is disabled because it stores layoutDelta too.
         if (!doingFullRepaint() || m_layoutState->isPaginated() || renderer->hasColumns() || renderer->flowThreadContainingBlock()
-            || m_layoutState->lineGrid() || (renderer->style()->lineGrid() != RenderStyle::initialLineGrid() && renderer->isBlockFlowFlexBoxOrGrid())
+            || m_layoutState->lineGrid() || (renderer->style()->lineGrid() != RenderStyle::initialLineGrid() && renderer->isRenderBlockFlow())
 #if ENABLE(CSS_SHAPES)
             || (renderer->isRenderBlock() && toRenderBlock(renderer)->shapeInsideInfo())
             || (m_layoutState->shapeInsideInfo() && renderer->isRenderBlock() && !toRenderBlock(renderer)->allowsShapeInsideInfoSharing())

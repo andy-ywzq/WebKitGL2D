@@ -77,7 +77,6 @@ public:
     SVGDocumentExtensions* accessDocumentSVGExtensions();
 
     virtual bool isSVGGraphicsElement() const { return false; }
-    virtual bool isSVGSVGElement() const { return false; }
     virtual bool isFilterEffect() const { return false; }
     virtual bool isGradientStop() const { return false; }
     virtual bool isTextContent() const { return false; }
@@ -217,6 +216,8 @@ inline const SVGElement* toSVGElement(const Node* node)
     ASSERT_WITH_SECURITY_IMPLICATION(!node || node->isSVGElement());
     return static_cast<const SVGElement*>(node);
 }
+
+void toSVGElement(const SVGElement*);
 
 template <> inline bool isElementOfType<SVGElement>(const Element* element) { return element->isSVGElement(); }
 

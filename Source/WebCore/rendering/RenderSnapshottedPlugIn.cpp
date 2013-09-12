@@ -62,7 +62,7 @@ RenderSnapshottedPlugIn::~RenderSnapshottedPlugIn()
 
 HTMLPlugInImageElement* RenderSnapshottedPlugIn::plugInImageElement() const
 {
-    return toHTMLPlugInImageElement(node());
+    return toHTMLPlugInImageElement(frameOwnerElement());
 }
 
 void RenderSnapshottedPlugIn::layout()
@@ -76,7 +76,7 @@ void RenderSnapshottedPlugIn::layout()
     if (newSize == oldSize)
         return;
 
-    view().frameView().addWidgetToUpdate(this);
+    view().frameView().addEmbeddedObjectToUpdate(*this);
 }
 
 void RenderSnapshottedPlugIn::updateSnapshot(PassRefPtr<Image> image)

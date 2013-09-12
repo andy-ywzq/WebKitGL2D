@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
- * Copyright (C) 2004, 2005, 2006, 2009, 2010 Apple Inc. All rights reserved.
+ * Copyright (C) 2004, 2005, 2006, 2009, 2010, 2013 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,6 +22,7 @@
 #ifndef RenderWidget_h
 #define RenderWidget_h
 
+#include "HTMLFrameOwnerElement.h"
 #include "OverlapTestRequestClient.h"
 #include "RenderReplaced.h"
 #include "Widget.h"
@@ -58,13 +59,14 @@ class RenderWidget : public RenderReplaced, private OverlapTestRequestClient {
 public:
     virtual ~RenderWidget();
 
+    HTMLFrameOwnerElement* frameOwnerElement() const { return toFrameOwnerElement(RenderObject::node()); }
+
     Widget* widget() const { return m_widget.get(); }
-    virtual void setWidget(PassRefPtr<Widget>);
+    void setWidget(PassRefPtr<Widget>);
 
     static RenderWidget* find(const Widget*);
 
     void updateWidgetPosition();
-    void widgetPositionsUpdated();
     IntRect windowClipRect() const;
 
     void notifyWidget(WidgetNotification);
@@ -72,8 +74,14 @@ public:
     RenderArena* ref() { ++m_refCount; return renderArena(); }
     void deref(RenderArena*);
 
+#if USE(ACCELERATED_COMPOSITING)
+    bool requiresAcceleratedCompositing() const;
+#endif
+
+    virtual void viewCleared() { }
+
 protected:
-    RenderWidget(Element*);
+    RenderWidget(HTMLFrameOwnerElement*);
 
     FrameView* frameView() const { return m_frameView; }
 
@@ -84,11 +92,18 @@ protected:
     virtual void paint(PaintInfo&, const LayoutPoint&) OVERRIDE;
     virtual CursorDirective getCursor(const LayoutPoint&, Cursor&) const OVERRIDE;
     virtual bool nodeAtPoint(const HitTestRequest&, HitTestResult&, const HitTestLocation& locationInContainer, const LayoutPoint& accumulatedOffset, HitTestAction) OVERRIDE;
-
     virtual void paintContents(PaintInfo&, const LayoutPoint&);
+#if USE(ACCELERATED_COMPOSITING)
+    virtual bool requiresLayer() const OVERRIDE;
+#endif
 
 private:
+    void element() const WTF_DELETED_FUNCTION;
+
     virtual bool isWidget() const OVERRIDE FINAL { return true; }
+
+    virtual bool needsPreferredWidthsRecalculation() const OVERRIDE FINAL;
+    virtual RenderBox* embeddedContentBox() const OVERRIDE FINAL;
 
     virtual void willBeDestroyed() OVERRIDE FINAL;
     virtual void destroy() OVERRIDE FINAL;

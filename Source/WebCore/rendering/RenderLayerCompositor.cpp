@@ -45,7 +45,6 @@
 #include "Logging.h"
 #include "NodeList.h"
 #include "Page.h"
-#include "RenderApplet.h"
 #include "RenderEmbeddedObject.h"
 #include "RenderFullScreen.h"
 #include "RenderGeometryMap.h"
@@ -739,8 +738,8 @@ bool RenderLayerCompositor::updateBacking(RenderLayer* layer, CompositingChangeR
     }
 #endif
 
-    if (layerChanged && layer->renderer().isRenderPart()) {
-        RenderLayerCompositor* innerCompositor = frameContentsCompositor(toRenderPart(&layer->renderer()));
+    if (layerChanged && layer->renderer().isWidget()) {
+        RenderLayerCompositor* innerCompositor = frameContentsCompositor(toRenderWidget(&layer->renderer()));
         if (innerCompositor && innerCompositor->inCompositingMode())
             innerCompositor->updateRootLayerAttachment();
     }
@@ -1256,8 +1255,8 @@ void RenderLayerCompositor::rebuildCompositingLayerTree(RenderLayer* layer, Vect
     
     if (layerBacking) {
         bool parented = false;
-        if (layer->renderer().isRenderPart())
-            parented = parentFrameContentLayers(toRenderPart(&layer->renderer()));
+        if (layer->renderer().isWidget())
+            parented = parentFrameContentLayers(toRenderWidget(&layer->renderer()));
 
         if (!parented)
             layerBacking->parentForSublayers()->setChildren(layerChildren);
@@ -1407,20 +1406,16 @@ String RenderLayerCompositor::layerTreeAsText(LayerTreeFlags flags)
     return layerTreeText;
 }
 
-RenderLayerCompositor* RenderLayerCompositor::frameContentsCompositor(RenderPart* renderer)
+RenderLayerCompositor* RenderLayerCompositor::frameContentsCompositor(RenderWidget* renderer)
 {
-    if (!renderer->node()->isFrameOwnerElement())
-        return 0;
-        
-    HTMLFrameOwnerElement* element = toFrameOwnerElement(renderer->node());
-    if (Document* contentDocument = element->contentDocument()) {
+    if (Document* contentDocument = renderer->frameOwnerElement()->contentDocument()) {
         if (RenderView* view = contentDocument->renderView())
             return &view->compositor();
     }
     return 0;
 }
 
-bool RenderLayerCompositor::parentFrameContentLayers(RenderPart* renderer)
+bool RenderLayerCompositor::parentFrameContentLayers(RenderWidget* renderer)
 {
     RenderLayerCompositor* innerCompositor = frameContentsCompositor(renderer);
     if (!innerCompositor || !innerCompositor->inCompositingMode() || innerCompositor->rootLayerAttachment() != RootLayerAttachedViaEnclosingFrame)
@@ -1744,7 +1739,7 @@ bool RenderLayerCompositor::shouldPropagateCompositingToEnclosingFrame() const
     if (!allowsIndependentlyCompositedFrames(&m_renderView.frameView()))
         return true;
 
-    if (!renderer || !renderer->isRenderPart())
+    if (!renderer || !renderer->isWidget())
         return false;
 
     // On Mac, only propagate compositing if the frame is overlapped in the parent
@@ -1753,7 +1748,7 @@ bool RenderLayerCompositor::shouldPropagateCompositingToEnclosingFrame() const
     if (page && page->pageScaleFactor() != 1)
         return true;
     
-    RenderPart* frameRenderer = toRenderPart(renderer);
+    RenderWidget* frameRenderer = toRenderWidget(renderer);
     if (frameRenderer->widget()) {
         ASSERT(frameRenderer->widget()->isFrameView());
         FrameView* view = toFrameView(frameRenderer->widget());
@@ -2081,12 +2076,12 @@ bool RenderLayerCompositor::requiresCompositingForVideo(RenderObject* renderer) 
         return (video.requiresImmediateCompositing() || video.shouldDisplayVideo()) && canAccelerateVideoRendering(video);
     }
 #if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
-    else if (renderer->isRenderPart()) {
+    else if (renderer->isRenderWidget()) {
         if (!m_hasAcceleratedCompositing)
             return false;
 
         Node* node = renderer->node();
-        if (!node || (!node->hasTagName(HTMLNames::videoTag) && !isHTMLAudioElement(node)))
+        if (!node || (!isHTMLVideoElement(node) && !isHTMLAudioElement(node)))
             return false;
 
         HTMLMediaElement* mediaElement = toHTMLMediaElement(node);
@@ -2139,10 +2134,10 @@ bool RenderLayerCompositor::requiresCompositingForPlugin(RenderObject* renderer)
 
 bool RenderLayerCompositor::requiresCompositingForFrame(RenderObject* renderer) const
 {
-    if (!renderer->isRenderPart())
+    if (!renderer->isWidget())
         return false;
     
-    RenderPart* frameRenderer = toRenderPart(renderer);
+    RenderWidget* frameRenderer = toRenderWidget(renderer);
 
     if (!frameRenderer->requiresAcceleratedCompositing())
         return false;

@@ -128,11 +128,7 @@ private:
     Timer<SVGElement> m_svgLoadEventTimer;
 };
 
-inline SVGUseElement* toSVGUseElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->hasTagName(SVGNames::useTag));
-    return static_cast<SVGUseElement*>(node);
-}
+ELEMENT_TYPE_CASTS(SVGUseElement)
 
 }
 

@@ -66,11 +66,7 @@ private:
     END_DECLARE_ANIMATED_PROPERTIES
 };
 
-inline SVGMPathElement* toSVGMPathElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->hasTagName(SVGNames::mpathTag));
-    return static_cast<SVGMPathElement*>(node);
-}
+ELEMENT_TYPE_CASTS(SVGMPathElement)
 
 } // namespace WebCore
 

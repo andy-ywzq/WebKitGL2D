@@ -69,6 +69,8 @@ webcore_built_sources += \
 	DerivedSources/WebCore/JSBatteryManager.h \
 	DerivedSources/WebCore/JSBeforeLoadEvent.cpp \
 	DerivedSources/WebCore/JSBeforeLoadEvent.h \
+	DerivedSources/WebCore/JSBeforeUnloadEvent.cpp \
+	DerivedSources/WebCore/JSBeforeUnloadEvent.h \
 	DerivedSources/WebCore/JSBiquadFilterNode.cpp \
 	DerivedSources/WebCore/JSBiquadFilterNode.h \
 	DerivedSources/WebCore/JSBlob.cpp \
@@ -486,8 +488,6 @@ webcore_built_sources += \
 	DerivedSources/WebCore/JSJavaScriptCallFrame.h \
 	DerivedSources/WebCore/JSKeyboardEvent.cpp \
 	DerivedSources/WebCore/JSKeyboardEvent.h \
-	DerivedSources/WebCore/JSLocalMediaStream.cpp \
-	DerivedSources/WebCore/JSLocalMediaStream.h \
 	DerivedSources/WebCore/JSLocation.cpp \
 	DerivedSources/WebCore/JSLocation.h \
 	DerivedSources/WebCore/JSMediaController.cpp \
@@ -1238,7 +1238,6 @@ dom_binding_idls += \
 	$(WebCore)/Modules/mediasource/MediaSource.idl \
 	$(WebCore)/Modules/mediasource/SourceBuffer.idl \
 	$(WebCore)/Modules/mediasource/SourceBufferList.idl \
-	$(WebCore)/Modules/mediastream/LocalMediaStream.idl \
 	$(WebCore)/Modules/mediastream/MediaStream.idl \
 	$(WebCore)/Modules/mediastream/MediaStreamEvent.idl \
 	$(WebCore)/Modules/mediastream/MediaStreamTrack.idl \
@@ -1358,6 +1357,7 @@ dom_binding_idls += \
 	$(WebCore)/css/WebKitCSSViewportRule.idl \
 	$(WebCore)/dom/Attr.idl \
 	$(WebCore)/dom/BeforeLoadEvent.idl \
+	$(WebCore)/dom/BeforeUnloadEvent.idl \
 	$(WebCore)/dom/CDATASection.idl \
 	$(WebCore)/dom/CharacterData.idl \
 	$(WebCore)/dom/ChildNode.idl \
@@ -1942,8 +1942,6 @@ webcore_modules_sources += \
 	Source/WebCore/Modules/mediasource/SourceBuffer.h \
 	Source/WebCore/Modules/mediasource/SourceBufferList.cpp \
 	Source/WebCore/Modules/mediasource/SourceBufferList.h \
-	Source/WebCore/Modules/mediastream/LocalMediaStream.cpp \
-	Source/WebCore/Modules/mediastream/LocalMediaStream.h \
 	Source/WebCore/Modules/mediastream/MediaConstraintsImpl.cpp \
 	Source/WebCore/Modules/mediastream/MediaConstraintsImpl.h \
 	Source/WebCore/Modules/mediastream/MediaStream.cpp \
@@ -3249,11 +3247,11 @@ webcore_sources += \
 	Source/WebCore/fileapi/ThreadableBlobRegistry.h \
 	Source/WebCore/fileapi/WebKitBlobBuilder.cpp \
 	Source/WebCore/fileapi/WebKitBlobBuilder.h \
+	Source/WebCore/history/BackForwardClient.h \
 	Source/WebCore/history/BackForwardController.cpp \
 	Source/WebCore/history/BackForwardController.h \
+	Source/WebCore/history/BackForwardList.cpp \
 	Source/WebCore/history/BackForwardList.h \
-	Source/WebCore/history/BackForwardListImpl.cpp \
-	Source/WebCore/history/BackForwardListImpl.h \
 	Source/WebCore/history/CachedFrame.cpp \
 	Source/WebCore/history/CachedFrame.h \
 	Source/WebCore/history/CachedFramePlatformData.h \
@@ -3927,8 +3925,6 @@ webcore_sources += \
 	Source/WebCore/inspector/ScriptGCEventListener.h \
 	Source/WebCore/inspector/TimelineRecordFactory.cpp \
 	Source/WebCore/inspector/TimelineRecordFactory.h \
-	Source/WebCore/inspector/TimelineTraceEventProcessor.cpp \
-	Source/WebCore/inspector/TimelineTraceEventProcessor.h \
 	Source/WebCore/inspector/WorkerConsoleAgent.cpp \
 	Source/WebCore/inspector/WorkerConsoleAgent.h \
 	Source/WebCore/inspector/WorkerDebuggerAgent.cpp \
@@ -4337,6 +4333,8 @@ webcore_sources += \
 	Source/WebCore/rendering/FilterEffectRenderer.h \
 	Source/WebCore/rendering/FixedTableLayout.cpp \
 	Source/WebCore/rendering/FixedTableLayout.h \
+	Source/WebCore/rendering/FloatingObjects.cpp \
+	Source/WebCore/rendering/FloatingObjects.h \
 	Source/WebCore/rendering/FlowThreadController.cpp \
 	Source/WebCore/rendering/FlowThreadController.h \
 	Source/WebCore/rendering/GapRects.h \
@@ -4361,6 +4359,9 @@ webcore_sources += \
 	Source/WebCore/rendering/LogicalSelectionOffsetCaches.h \
 	Source/WebCore/rendering/LayoutRepainter.h \
 	Source/WebCore/rendering/LayoutRepainter.cpp \
+	Source/WebCore/rendering/LineInfo.h \
+	Source/WebCore/rendering/LineWidth.h \
+	Source/WebCore/rendering/LineWidth.cpp \
 	Source/WebCore/rendering/OverlapTestRequestClient.h \
 	Source/WebCore/rendering/Pagination.h \
 	Source/WebCore/rendering/PaintInfo.h \
@@ -4368,8 +4369,6 @@ webcore_sources += \
 	Source/WebCore/rendering/PointerEventsHitRules.cpp \
 	Source/WebCore/rendering/PointerEventsHitRules.h \
 	Source/WebCore/rendering/RegionOversetState.h \
-	Source/WebCore/rendering/RenderApplet.cpp \
-	Source/WebCore/rendering/RenderApplet.h \
 	Source/WebCore/rendering/RenderArena.cpp \
 	Source/WebCore/rendering/RenderArena.h \
 	Source/WebCore/rendering/RenderBlock.cpp \
@@ -4472,8 +4471,6 @@ webcore_sources += \
 	Source/WebCore/rendering/RenderObject.cpp \
 	Source/WebCore/rendering/RenderObject.h \
 	Source/WebCore/rendering/RenderOverflow.h \
-	Source/WebCore/rendering/RenderPart.cpp \
-	Source/WebCore/rendering/RenderPart.h \
 	Source/WebCore/rendering/RenderProgress.cpp \
 	Source/WebCore/rendering/RenderProgress.h \
 	Source/WebCore/rendering/RenderQuote.cpp \
@@ -5445,7 +5442,9 @@ webcore_platform_sources += \
 	Source/WebCore/platform/mediastream/MediaConstraints.h \
 	Source/WebCore/platform/mediastream/MediaStreamCenter.cpp \
 	Source/WebCore/platform/mediastream/MediaStreamCenter.h \
+	Source/WebCore/platform/mediastream/MediaStreamComponent.cpp \
 	Source/WebCore/platform/mediastream/MediaStreamComponent.h \
+	Source/WebCore/platform/mediastream/MediaStreamDescriptor.cpp \
 	Source/WebCore/platform/mediastream/MediaStreamDescriptor.h \
 	Source/WebCore/platform/mediastream/MediaStreamSource.cpp \
 	Source/WebCore/platform/mediastream/MediaStreamSource.h \
@@ -6055,8 +6054,6 @@ platform_sources += \
 	Source/WebCore/platform/PlatformEvent.cpp \
 	Source/WebCore/platform/PlatformEvent.h \
 	Source/WebCore/platform/PlatformExportMacros.h \
-	Source/WebCore/platform/PlatformInstrumentation.cpp \
-	Source/WebCore/platform/PlatformInstrumentation.h \
 	Source/WebCore/platform/PlatformKeyboardEvent.h \
 	Source/WebCore/platform/PlatformMenuDescription.h \
 	Source/WebCore/platform/PlatformMouseEvent.h \

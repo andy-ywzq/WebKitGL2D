@@ -62,7 +62,7 @@ public:
     
     bool hitTestClipContent(const FloatRect&, const FloatPoint&);
 
-    SVGUnitTypes::SVGUnitType clipPathUnits() const { return static_cast<SVGClipPathElement*>(node())->clipPathUnits(); }
+    SVGUnitTypes::SVGUnitType clipPathUnits() const { return toSVGClipPathElement(element())->clipPathUnits(); }
 
     static RenderSVGResourceType s_resourceType;
 private:
@@ -71,7 +71,7 @@ private:
     void calculateClipContentRepaintRect();
 
     FloatRect m_clipBoundaries;
-    HashMap<RenderObject*, ClipperData*> m_clipper;
+    HashMap<RenderObject*, OwnPtr<ClipperData>> m_clipper;
 };
 
 }

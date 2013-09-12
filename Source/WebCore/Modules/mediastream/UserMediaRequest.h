@@ -63,9 +63,9 @@ public:
 
     void start();
 
-    void succeed(const MediaStreamSourceVector& audioSources, const MediaStreamSourceVector& videoSources);
     void succeed(PassRefPtr<MediaStreamDescriptor>);
-    void fail();
+    void fail(const String& description);
+    void failConstraint(const String& constraintName, const String& description);
 
     MediaConstraints* audioConstraints() const;
     MediaConstraints* videoConstraints() const;

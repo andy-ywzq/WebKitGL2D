@@ -102,13 +102,9 @@ media/video-seek-past-end-paused.html
 # <rdar://problem/6710625> Test media/video-error-abort.html doesn't work
 http/tests/media/video-error-abort.html
 
-# https://bugs.webkit.org/show_bug.cgi?id=38000 - already skipped on Mac because of a QuickTime problem
-http/tests/media/video-play-stall-seek.html
 
 # These tests requires fullscreen <video> support
 media/media-fullscreen-inline.html
-media/media-fullscreen-not-in-document.html
-
 # Times out https://bugs.webkit.org/show_bug.cgi?id=51787
 media/video-element-other-namespace-crash.html
 
@@ -212,7 +208,7 @@ fast/html/keygen.html
 fast/invalid/residual-style.html
 
 # Number LayoutTest fails on boomer <rdar://problem/5130681>
-fast/js/kde/Number.html
+js/kde/Number.html
 
 #<rdar://problem/5224271> Some LayoutTests fail when not run by themselves.
 http/tests/navigation/anchor-frames.html
@@ -282,7 +278,6 @@ fast/forms/file/input-file-entries.html
 fast/forms/file/recover-file-input-in-unposted-form.html
 http/tests/security/contentSecurityPolicy/blob-urls-match-self.html
 fast/workers/worker-domurl.html
-media/video-src-blob.html
 http/tests/xmlhttprequest/post-blob-content-type-async.html
 http/tests/xmlhttprequest/post-blob-content-type-sync.html
 
@@ -381,14 +376,6 @@ fast/text/international/thai-baht-space.html
 # Sensitive to load timing or PHP behavior (https://bugs.webkit.org/show_bug.cgi?id=44873)
 http/tests/css/css-image-loading.html
 
-# missing DRT feature, see also https://bugs.webkit.org/show_bug.cgi?id=39102
-editing/selection/context-menu-on-text.html
-# and https://bugs.webkit.org/show_bug.cgi?id=45021
-media/context-menu-actions.html
-
-# requires video.buffered to be able to return multiple timeranges
-http/tests/media/video-buffered.html
-
 # Assertion failure in replaySavedEvents http://webkit.org/b/21796
 editing/pasteboard/drop-text-events.html
 editing/selection/drag-in-iframe.html
@@ -437,7 +424,7 @@ webkit.org/b/106415 fast/workers/worker-lifecycle.html [ Pass Failure ]
 fast/frames/sandboxed-iframe-storage.html
 
 # Times out on apple-windows-3 http://webkit.org/b/48999
-fast/js/exceptions-thrown-in-callbacks.html
+js/exceptions-thrown-in-callbacks.html
 
 # Sometimes times out http://webkit.org/b/48753
 http/tests/security/window-events-clear-port.html
@@ -449,9 +436,6 @@ animations/play-state-suspend.html
 # Assertion failure http://webkit.org/b/48910
 http/tests/media/pdf-served-as-pdf.html
 http/tests/media/video-cancel-load.html
-
-# Sometimes crashes http://webkit.org/b/62024
-http/tests/media/video-cross-site.html
 
 # Sometimes times out http://webkit.org/b/48997
 animations/animation-iteration-event-destroy-renderer.html
@@ -719,7 +703,7 @@ fast/forms/select-change-popup-to-listbox.html
 fast/forms/select-initial-position.html
 fast/forms/select-item-background-clip.html
 fast/forms/select-list-box-with-height.html
-fast/js/sort-stability.html
+js/sort-stability.html
 fast/loader/main-document-url-for-non-http-loads.html
 fast/loader/null-request-after-willSendRequest.html
 fast/loader/stop-provisional-loads.html
@@ -786,7 +770,7 @@ plugins/npruntime/npruntime.html
 fast/cookies/local-file-can-set-cookies.html
 
 # Bug 12216: Stack overflow crash in JavaScript garbage collector mark pass <https://bugs.webkit.org/show_bug.cgi?id=12216>
-fast/js/toString-stack-overflow.html
+js/toString-stack-overflow.html
 
 # Failures following r42379
 fast/text/international/001.html
@@ -806,9 +790,6 @@ http/tests/xmlhttprequest/redirect-cross-origin-tripmine.html
 
 # Plain text controller currently in Mac DumpRenderTree only.
 editing/text-iterator
-
-# https://bugs.webkit.org/show_bug.cgi?id=25465 media/video-zoom-controls.html fails on Windows
-media/video-zoom-controls.html
 
 # Bug 25483: http/tests/navigation/redirect-cycle.html sometimes times out on Windows <https://bugs.webkit.org/show_bug.cgi?id=25483>
 http/tests/navigation/redirect-cycle.html
@@ -865,7 +846,6 @@ http/tests/notifications
 
 # These media tests regressed on the bots.  Skipping to make the bots green again.
 # https://bugs.webkit.org/show_bug.cgi?id=28281
-http/tests/media/video-play-stall.html
 media/video-loop.html
 media/video-seek-past-end-playing.html
 media/video-played-collapse.html
@@ -901,6 +881,11 @@ http/tests/local/blob/send-sliced-data-blob.html
 # BlodBuilder is not enabled
 http/tests/local/blob/send-data-blob.html
 
+webkit.org/b/112659 media/video-playing-and-pause.html [ Failure Pass ]
+
+# This test requires generation of progress events during loading
+webkit.org/b/97026 media/progress-events-generated-correctly.html [ Failure ]
+
 # CSS Device Adaptation is not enabled.
 webkit.org/b/95959 css3/device-adapt
 
@@ -924,7 +909,7 @@ platform/win/editing/selection/doubleclick-should-not-expand-across-lines.html
 fast/multicol/single-line.html
 
 # Needs rebaseline
-fast/js/constructor-length.html
+js/constructor-length.html
 
 # Need to add functionality to DumpRenderTree to handle error pages
 fast/history/back-forward-reset-after-error-handling.html
@@ -974,8 +959,7 @@ fast/css/non-standard-checkbox-size.html
 fast/dom/Window/window-properties-geolocation.html
 
 # Needs to pass cookies to the media player
-# See http://bugs.webkit.org/show_bug.cgi?id=33954
-http/tests/media/video-cookie.html
+webkit.org/b/33954 http/tests/media/video-cookie.html
 
 # Relies on WebKit API [WebView _loadBackForwardListFromOtherView:]
 fast/loader/crash-copying-backforwardlist.html
@@ -1049,15 +1033,13 @@ fast/forms/form-attribute.html
 
 # VIEW_MODE_CSS_MEDIA is not enabled on Windows.
 # DumpRenderTree requires testRunner.setViewModeMediaFeature()
-fast/media/view-mode-media-feature.html
-fast/media/media-query-list-02.html
-fast/media/media-query-list-03.html
-fast/media/media-query-list-04.html
-fast/media/media-query-list-05.html
-fast/media/media-query-list-06.html
-fast/media/media-query-list-07.html
-fast/media/mq-resolution.html
-fast/media/mq-resolution-dpi-dpcm-warning.html
+fast/media/view-mode-media-feature.html [ ImageOnlyFailure ]
+fast/media/media-query-list-02.html [ Failure ]
+fast/media/media-query-list-03.html [ Failure ]
+fast/media/media-query-list-04.html [ Failure ]
+fast/media/media-query-list-05.html [ Failure ]
+fast/media/media-query-list-06.html [ Failure ]
+#fast/media/media-query-list-07.html
 
 # Needs layoutTestController.enableAutoResizeMode()
 fast/autoresize
@@ -1147,7 +1129,7 @@ fast/harness/show-modal-dialog.html
 fast/events/scroll-event-during-modal-dialog.html
 inspector/console/console-long-eval-crash.html
 fast/dom/Window/open-window-min-size.html
-fast/js/function-length.html
+js/function-length.html
 
 # These tests fail when showModalDialog is unsupported, even though they don't
 # rely on it directly http://webkit.org/b/53676
@@ -1339,6 +1321,12 @@ fullscreen/
 
 # viewport meta tag support
 fast/viewport
+
+# needs enhanced eventSender.contextMenu() return value
+webkit.org/b/45021 media/context-menu-actions.html
+
+# requires video.buffered to be able to return multiple timeranges
+http/tests/media/video-buffered.html
 
 # Text Autosizing is not enabled (http://webkit.org/b/84186).
 fast/text-autosizing
@@ -1538,6 +1526,9 @@ inspector/profiler/webgl
 fast/images/webgl-teximage2d.html
 webgl
 
+webkit.org/b/62024 http/tests/media/video-cross-site.html [ Failure ]
+
+
 # CSS Grid Layout is not yet enabled. http://webkit.org/b/60731
 fast/css-grid-layout
 
@@ -1588,33 +1579,33 @@ webaudio/
 fast/css/draggable-region-parser.html
 
 # Opera-submitted tests to W3C for <track>, a lot of failures still.
-webkit.org/b/103926 media/track/opera/idl/media-idl-tests.html
-webkit.org/b/103926 media/track/opera/interfaces/HTMLElement/HTMLMediaElement/crossOrigin.html
-webkit.org/b/103926 media/track/opera/interfaces/HTMLElement/HTMLTrackElement/kind.html
-webkit.org/b/103926 media/track/opera/interfaces/HTMLElement/HTMLTrackElement/src.html
-webkit.org/b/103926 media/track/opera/interfaces/TextTrack/activeCues.html
-webkit.org/b/103926 media/track/opera/interfaces/TrackEvent/constructor.html
-webkit.org/b/103926 media/track/opera/interfaces/TrackEvent/createEvent.html
-webkit.org/b/103926 media/track/opera/interfaces/TextTrackCue/getCueAsHTML.html
-webkit.org/b/103926 media/track/opera/interfaces/TextTrackCue/line.html
-webkit.org/b/103926 media/track/opera/interfaces/TextTrackCue/onenter.html
-webkit.org/b/103926 media/track/opera/interfaces/TextTrackCue/onexit.html
-webkit.org/b/103926 media/track/opera/interfaces/TextTrackCue/snapToLines.html
-webkit.org/b/103926 media/track/opera/interfaces/TextTrackCue/text.html
-webkit.org/b/103926 media/track/opera/interfaces/TextTrackCue/vertical.html
-webkit.org/b/103926 media/track/opera/interfaces/TextTrackCueList/getter.html
-webkit.org/b/103926 media/track/opera/interfaces/TextTrackList/getter.html
-webkit.org/b/103926 media/track/opera/interfaces/TextTrackList/onremovetrack.html
-webkit.org/b/103926 media/track/opera/track/track-element/cloneNode.html
-webkit.org/b/103926 media/track/opera/track/track-element/src-clear-cues.html
-webkit.org/b/103926 media/track/opera/track/webvtt/parsing/001.html
-webkit.org/b/103926 media/track/opera/track/webvtt/parsing-cue-data/tests/entities.html
-webkit.org/b/103926 media/track/opera/track/webvtt/parsing-cue-data/tests/tags.html
-webkit.org/b/103926 media/track/opera/track/webvtt/rendering/adhoc/12345_timestamps.html
-webkit.org/b/103926 media/track/opera/track/webvtt/parsing-cue-data/tests/timestamps.html
-webkit.org/b/103926 media/track/opera/track/webvtt/parsing-cue-data/tests/tree-building.html
-webkit.org/b/103926 media/track/opera/track/webvtt/rendering/adhoc/cue_font_size_transition.html
-webkit.org/b/103926 media/track/opera/track/webvtt/rendering/adhoc/voice_with_evil_timestamp.html
+webkit.org/b/103926 media/track/opera/idl/media-idl-tests.html [ Skip ]
+webkit.org/b/103926 media/track/opera/interfaces/HTMLElement/HTMLMediaElement/crossOrigin.html [ Skip ]
+webkit.org/b/103926 media/track/opera/interfaces/HTMLElement/HTMLTrackElement/kind.html [ Skip ]
+webkit.org/b/103926 media/track/opera/interfaces/HTMLElement/HTMLTrackElement/src.html [ Skip ]
+webkit.org/b/103926 media/track/opera/interfaces/TextTrack/activeCues.html [ Skip ]
+webkit.org/b/103926 media/track/opera/interfaces/TrackEvent/constructor.html [ Skip ]
+webkit.org/b/103926 media/track/opera/interfaces/TrackEvent/createEvent.html [ Skip ]
+webkit.org/b/103926 media/track/opera/interfaces/TextTrackCue/getCueAsHTML.html [ Skip ]
+webkit.org/b/103926 media/track/opera/interfaces/TextTrackCue/line.html [ Skip ]
+webkit.org/b/103926 media/track/opera/interfaces/TextTrackCue/onenter.html [ Skip ]
+webkit.org/b/103926 media/track/opera/interfaces/TextTrackCue/onexit.html [ Skip ]
+webkit.org/b/103926 media/track/opera/interfaces/TextTrackCue/snapToLines.html [ Skip ]
+webkit.org/b/103926 media/track/opera/interfaces/TextTrackCue/text.html [ Skip ]
+webkit.org/b/103926 media/track/opera/interfaces/TextTrackCue/vertical.html [ Skip ]
+webkit.org/b/103926 media/track/opera/interfaces/TextTrackCueList/getter.html [ Skip ]
+webkit.org/b/103926 media/track/opera/interfaces/TextTrackList/getter.html [ Skip ]
+webkit.org/b/103926 media/track/opera/interfaces/TextTrackList/onremovetrack.html [ Skip ]
+webkit.org/b/103926 media/track/opera/track/track-element/cloneNode.html [ Skip ]
+webkit.org/b/103926 media/track/opera/track/track-element/src-clear-cues.html [ Skip ]
+webkit.org/b/103926 media/track/opera/track/webvtt/parsing/001.html [ Skip ]
+webkit.org/b/103926 media/track/opera/track/webvtt/parsing-cue-data/tests/entities.html [ Skip ] 
+webkit.org/b/103926 media/track/opera/track/webvtt/parsing-cue-data/tests/tags.html [ Skip ]
+webkit.org/b/103926 media/track/opera/track/webvtt/rendering/adhoc/12345_timestamps.html [ Skip ]
+webkit.org/b/103926 media/track/opera/track/webvtt/parsing-cue-data/tests/timestamps.html [ Skip ]
+webkit.org/b/103926 media/track/opera/track/webvtt/parsing-cue-data/tests/tree-building.html [ Skip ]
+webkit.org/b/103926 media/track/opera/track/webvtt/rendering/adhoc/cue_font_size_transition.html [ Skip ]
+webkit.org/b/103926 media/track/opera/track/webvtt/rendering/adhoc/voice_with_evil_timestamp.html [ Skip ]
 
 # Tests for MediaSource API. Feature is not yet functional.
 # https://bugs.webkit.org/show_bug.cgi?id=64731
@@ -1785,12 +1776,11 @@ svg/hittest/svg-ellipse-non-scale-stroke.xhtml
 # https://bugs.webkit.org/show_bug.cgi?id=78801
 touchadjustment
 
-# https://bugs.webkit.org/show_bug.cgi?id=62698
 # Needs BatteryClient implementation.
-batterystatus/
+webkit.org/b/62698 batterystatus/
 
-#Network Information is not supported yet. http://webkit.org/b/73528
-networkinformation
+#Network Information is not supported yet.
+webkit.org/b/73528 networkinformation
 
 # Proximity Events is not supported.
 proximity
@@ -1798,6 +1788,9 @@ fast/events/constructors/device-proximity-event-constructor.html
 
 # https://bugs.webkit.org/show_bug.cgi?id=43022
 tables/mozilla_expected_failures/bugs/bug85016.html
+
+webkit.org/b/103442 media/W3C/video/networkState/networkState_during_progress.html
+
 
 # https://bugs.webkit.org/show_bug.cgi?id=81276
 # Allowed to regress to fix a crash.
@@ -1883,7 +1876,7 @@ userscripts/user-script-plugin-document.html
 
 # JavaScript Experiments are not enabled on Windows
 # https://bugs.webkit.org/show_bug.cgi?id=87858
-fast/js/names.html
+js/names.html
 
 # New plugins/npruntime/delete-plugin-within-* tests introduced in r117012 fail/crash
 # https://bugs.webkit.org/show_bug.cgi?id=86443
@@ -1962,7 +1955,7 @@ fast/events/dropzone-005.html
 fast/harness/results.html
 fast/images/exif-orientation.html
 fast/images/support-broken-image-delegate.html
-fast/js/stack-trace.html
+js/stack-trace.html
 fast/layers/video-layer.html
 fast/loader/javascript-url-iframe-remove-on-navigate.html
 fast/dom/MutationObserver/inline-event-listener.html
@@ -1986,14 +1979,11 @@ fast/writing-mode/fallback-orientation.html
 inspector/styles/svg-style.xhtml
 media/controls-after-reload.html
 media/controls-strict.html
-media/controls-styling.html
 media/controls-without-preload.html
-media/media-document-audio-repaint.html
 media/video-controls-rendering.html
 media/video-display-toggle.html
 media/video-no-audio.html
 media/video-pause-immediately.html
-media/video-playing-and-pause.html
 media/video-play-require-user-gesture.html
 printing/iframe-print.html
 svg/as-image/img-preserveAspectRatio-support-1.html
@@ -2153,6 +2143,13 @@ fast/css/caption-width-fixed-position-offset-top.htm
 fast/table/border-collapsing/equal-precedence-resolution.html
 fast/table/border-collapsing/equal-precedence-resolution-vertical.html
 fast/text/apply-start-width-after-skipped-text.html
+
+# https://bugs.webkit.org/show_bug.cgi?id=38000 - already skipped on Mac because of a QuickTime problem
+http/tests/media/video-play-stall-seek.html
+http/tests/media/video-play-stall.html
+media/media-fullscreen-not-in-document.html
+
+
 compositing/iframes/invisible-nested-iframe-show.html
 compositing/overflow/overflow-auto-with-touch.html
 compositing/overflow/overflow-overlay-with-touch.html
@@ -2227,9 +2224,6 @@ fast/events/domactivate-sets-underlying-click-event-as-handled.html
 # https://bugs.webkit.org/show_bug.cgi?id=95388
 fast/css/nested-layers-with-hover.html
 
-# https://bugs.webkit.org/show_bug.cgi?id=95428
-media/video-controls-captions.html
-
 # https://bugs.webkit.org/show_bug.cgi?id=95795
 editing/style/apply-style-atomic.html
 
@@ -2302,8 +2296,20 @@ media/video-src-empty.html
 # Interactive form validation not enabled on Windows
 fast/forms/number/number-interactive-validation-required.html
 
+# --- Media ---
+media/controls-styling.html
+media/media-document-audio-repaint.html
+# https://bugs.webkit.org/show_bug.cgi?id=25465 media/video-zoom-controls.html fails on Windows
+media/video-zoom-controls.html
+
+
+
 # Windows does not have global selection.
 editing/pasteboard/paste-global-selection.html
+
+# Resolution media query is not yet enabled.
+webkit.org/b/85262 fast/media/mq-resolution.html [ Skip ]
+webkit.org/b/85262 fast/media/mq-resolution-dpi-dpcm-warning.html [ Skip ]
 
 # Skipping a large number of tests that have been failing on Windows for a long period of time
 # https://bugs.webkit.org/show_bug.cgi?id=97026
@@ -2462,22 +2468,13 @@ compositing/overflow/updating-scrolling-content.html
 
 # https://bugs.webkit.org/show_bug.cgi?id=103442
 media/video-size.html
-media/W3C/video/networkState/networkState_during_progress.html
 media/W3C/video/readyState/readyState_during_loadedmetadata.html
 
 # https://bugs.webkit.org/show_bug.cgi?id=101539
 editing/execCommand/switch-list-type-with-orphaned-li.html
 
 # https://bugs.webkit.org/show_bug.cgi?id=103962
-fast/js/kde/Array.html
-
-# No support for exposing in-band text tracks
-webkit.org/b/103770 media/track/track-in-band.html
-webkit.org/b/103770 media/track/track-in-band-cues-added-once.html
-webkit.org/b/103770 media/track/track-in-band-style.html
-webkit.org/b/103770 media/track/track-in-band-legacy-api.html
-webkit.org/b/103770 media/track/track-forced-subtitles-in-band.html
-webkit.org/b/103770 media/track/track-in-band-mode.html
+js/kde/Array.html
 
 # https://bugs.webkit.org/show_bug.cgi?id=97026
 fast/events/keydown-leftright-keys.html
@@ -2502,7 +2499,6 @@ media/track/track-cue-rendering-snap-to-lines-not-set.html
 media/track/track-cue-rendering-vertical.html
 
 # https://bugs.webkit.org/show_bug.cgi?id=106477
-media/track/track-user-preferences.html
 media/video-controls-captions-trackmenu-localized.html
 media/video-controls-captions-trackmenu-sorted.html
 media/video-controls-captions-trackmenu.html
@@ -2562,7 +2558,7 @@ media/video-transformed.html
 accessibility/heading-level.html
 accessibility/render-counter-text.html
 fast/images/style-access-during-imageChanged-crash.html
-fast/js/reentrant-caching.html
+js/reentrant-caching.html
 fast/repaint/caret-with-transformation.html
 http/tests/incremental/pause-in-script-element.pl
 fast/text/international/harfbuzz-buffer-overrun.html
@@ -2602,11 +2598,23 @@ webkit.org/b/84893 http/tests/w3c/webperf/submission/Intel/user-timing
 # Resource Timing is not enable yet, skip it.
 webkit.org/b/61138 http/tests/w3c/webperf/submission/Intel/resource-timing
 
+# Windows doesn't have a toggle for CC any more, it's based on a menu of choices.
+# https://bugs.webkit.org/show_bug.cgi?id=95428
+webkit.org/b/101670 media/video-controls-captions.html [ Skip ]
+
 # bugs.webkit.org/show_bug.cgi?id=111235
 css3/filters/custom-with-at-rule-syntax
 
 # bugs.webkit.org/show_bug.cgi?id=110447
 editing/spelling/spelling-changed-text.html
+
+# Windows does not support custom media data loading
+media/video-src-blob.html
+
+webkit.org/b/113106 media/track/track-prefer-captions.html [ Skip ]
+
+# The logic in this test is no longer correct for Apple ports
+webkit.org/b/112492 media/track/track-user-preferences.html [ Skip ]
 
 # Skip a bunch of tests to get EWS bots in a better state.
 accessibility
@@ -2644,19 +2652,20 @@ webkit.org/b/113075 media/video-seek-by-small-increment.html [ Pass Crash ]
 webkit.org/b/113076 media/video-volume.html [ Pass Crash ]
 
 
-webkit.org/b/113106 media/track/track-prefer-captions.html [ Failure ]
-
 # Need support for ResourceHandle::didChangePriority and DRT support
 webkit.org/b/111016 http/tests/loading/promote-img-preload-priority.html [ Failure ]
 
 # Feature not implemented
-webkit.org/b/112766 media/media-higher-prio-audio-stream.html [ Failure ]
+webkit.org/b/112766 media/media-higher-prio-audio-stream.html [ Skip ]
 
 # Snapshotted plugins not enabled on WK1
-webkit.org/b/98696 plugins/snapshotting
+webkit.org/b/98696 plugins/snapshotting [ Skip ]
 
 # dumpCreateView method not implemented on Windows
 fast/loader/url-selected-user-gesture.html
+
+# Don't run ogv and mkv tests on mac
+media/track/in-band [ WontFix ]
 
 # https://bugs.webkit.org/show_bug.cgi?id=113946
 compositing/contents-opaque/control-layer.html
@@ -2668,15 +2677,15 @@ compositing/filters/sw-shadow-overlaps-hw-shadow.html
 editing/secure-input [ Failure ]
 
 # Worker-specific crashes
-webkit.org/b/116560 fast/js/create-lots-of-workers.html
+webkit.org/b/116560 js/create-lots-of-workers.html
 webkit.org/b/116560 fast/workers
 
 # Disable crashing tests, being investigated under https://bugs.webkit.org/show_bug.cgi?id=116562
 webkit.org/b/116562 fast/css/font-face-data-uri-invalid.html
 webkit.org/b/116562 fast/dom/Window/window-postmessage-clone-deep-array.html
-webkit.org/b/116562 fast/js/callback-function-with-handle-event.html
-webkit.org/b/116562 fast/js/large-expressions.html
-webkit.org/b/116562 fast/js/string-replace-exception-crash.html
+webkit.org/b/116562 js/callback-function-with-handle-event.html
+webkit.org/b/116562 js/large-expressions.html
+webkit.org/b/116562 js/string-replace-exception-crash.html
 webkit.org/b/116562 fast/text/custom-font-data-crash.html
 webkit.org/b/116562 loader/go-back-cached-main-resource.html
 webkit.org/b/116562 media/video-beforeload-remove-source.html
@@ -2697,8 +2706,8 @@ webkit.org/b/116564 fast/dom/Window/window-postmessage-clone.html
 webkit.org/b/116564 fast/dom/Window/window-resize.html
 webkit.org/b/116564 fast/events/clientXY-in-zoom-and-scroll.html
 webkit.org/b/116564 fast/events/remove-target-with-shadow-in-drag.html
-webkit.org/b/116564 fast/js/global-constructors-attributes.html
-webkit.org/b/116564 fast/js/post-message-numeric-property.html
+webkit.org/b/116564 js/global-constructors-attributes.html
+webkit.org/b/116564 js/post-message-numeric-property.html
 webkit.org/b/116564 fast/overflow/infiniteRecursionGuard.html
 webkit.org/b/116564 fast/text/text-combine-different-fonts.html
 webkit.org/b/116564 fast/writing-mode/Kusa-Makura-background-canvas.html
@@ -2795,4 +2804,4 @@ fast/shapes
 fast/dom/call-a-constructor-as-a-function.html [ Failure ]
 fast/forms/search-event-delay.html [ Failure ]
 fast/lists/inlineBoxWrapperNullCheck.html [ Failure ]
-fast/js/global-constructors-attributes-dedicated-worker.html [ Failure ]
+js/global-constructors-attributes-dedicated-worker.html [ Failure ]

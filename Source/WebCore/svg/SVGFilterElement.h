@@ -76,11 +76,7 @@ private:
     END_DECLARE_ANIMATED_PROPERTIES
 };
 
-inline SVGFilterElement* toSVGFilterElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->hasTagName(SVGNames::filterTag));
-    return static_cast<SVGFilterElement*>(node);
-}
+ELEMENT_TYPE_CASTS(SVGFilterElement)
 
 }
 

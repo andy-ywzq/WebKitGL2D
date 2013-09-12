@@ -189,6 +189,18 @@ class FontLoader;
 
 typedef int ExceptionCode;
 
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+struct TextAutoSizingHash;
+class TextAutoSizingKey;
+class TextAutoSizingValue;
+
+struct TextAutoSizingTraits : WTF::GenericHashTraits<TextAutoSizingKey> {
+    static const bool emptyValueIsZero = true;
+    static void constructDeletedValue(TextAutoSizingKey& slot);
+    static bool isDeletedValue(const TextAutoSizingKey& value);
+};
+#endif
+
 enum PageshowEventPersistence {
     PageshowEventNotPersisted = 0,
     PageshowEventPersisted = 1
@@ -1010,7 +1022,7 @@ public:
     void enqueuePageshowEvent(PageshowEventPersistence);
     void enqueueHashchangeEvent(const String& oldURL, const String& newURL);
     void enqueuePopstateEvent(PassRefPtr<SerializedScriptValue> stateObject);
-    virtual DocumentEventQueue* eventQueue() const { return m_eventQueue.get(); }
+    DocumentEventQueue& eventQueue() const { return m_eventQueue; }
 
     void addMediaCanStartListener(MediaCanStartListener*);
     void removeMediaCanStartListener(MediaCanStartListener*);
@@ -1447,7 +1459,7 @@ private:
     bool m_isSrcdocDocument;
 
     RenderView* m_renderView;
-    RefPtr<DocumentEventQueue> m_eventQueue;
+    mutable DocumentEventQueue m_eventQueue;
 
     WeakPtrFactory<Document> m_weakFactory;
 
@@ -1500,6 +1512,17 @@ private:
 
     Timer<Document> m_pendingTasksTimer;
     Vector<OwnPtr<Task> > m_pendingTasks;
+
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+public:
+    void addAutoSizingNode(Node*, float size);
+    void validateAutoSizingNodes();
+    void resetAutoSizingNodes();
+
+private:
+    typedef HashMap<TextAutoSizingKey, RefPtr<TextAutoSizingValue>, TextAutoSizingHash, TextAutoSizingTraits> TextAutoSizingMap;
+    TextAutoSizingMap m_textAutoSizedNodes;
+#endif
 
 #if ENABLE(TEXT_AUTOSIZING)
     OwnPtr<TextAutosizer> m_textAutosizer;

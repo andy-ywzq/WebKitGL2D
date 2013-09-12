@@ -80,7 +80,7 @@ PassRefPtr<HTMLObjectElement> HTMLObjectElement::create(const QualifiedName& tag
 RenderWidget* HTMLObjectElement::renderWidgetForJSBindings() const
 {
     document().updateLayoutIgnorePendingStylesheets();
-    return renderPart(); // This will return 0 if the renderer is not a RenderPart.
+    return renderWidget(); // This will return 0 if the renderer is not a RenderWidget.
 }
 
 bool HTMLObjectElement::isPresentationAttribute(const QualifiedName& name) const
@@ -321,16 +321,6 @@ void HTMLObjectElement::updateWidget(PluginCreationOption pluginCreationOption)
     bool success = beforeLoadAllowedLoad && hasValidClassId() && loader.requestObject(this, url, getNameAttribute(), serviceType, paramNames, paramValues);
     if (!success && fallbackContent)
         renderFallbackContent();
-}
-
-bool HTMLObjectElement::rendererIsNeeded(const RenderStyle& style)
-{
-    // FIXME: This check should not be needed, detached documents never render!
-    Frame* frame = document().frame();
-    if (!frame)
-        return false;
-
-    return HTMLPlugInImageElement::rendererIsNeeded(style);
 }
 
 Node::InsertionNotificationRequest HTMLObjectElement::insertedInto(ContainerNode* insertionPoint)

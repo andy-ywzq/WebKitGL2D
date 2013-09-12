@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright (C) 2005, 2006, 2007, 2009 Apple Inc. All rights reserved.
+# Copyright (C) 2005, 2006, 2007, 2009, 2013 Apple Inc. All rights reserved.
 # Copyright (C) 2009, Julien Chaffraix <jchaffraix@webkit.org>
 # Copyright (C) 2009 Torch Mobile Inc. All rights reserved. (http://www.torchmobile.com/)
 # Copyright (C) 2011 Ericsson AB. All rights reserved.
@@ -628,15 +628,13 @@ sub printTypeHelpers
 
         my $class = $parsedTags{$name}{interfaceName};
         my $checkHelper = "is$class";
-        my $castingHelper = "to$class";
 
         print F "class $class;\n";
         print F "inline bool $checkHelper(const Element& element) { return element.hasTagName(".$parameters{namespace}."Names::".$name."Tag); }\n";
         print F "inline bool $checkHelper(const Element* element) { ASSERT(element); return $checkHelper(*element); }\n";
         print F "inline bool $checkHelper(const Node* node) { ASSERT(node); return node->isElementNode() && $checkHelper(toElement(node)); }\n";
+        print F "inline bool $checkHelper(const Node& node) { return node.isElementNode() && $checkHelper(toElement(node)); }\n";
         print F "template <> inline bool isElementOfType<$class>(const Element* element) { return $checkHelper(element); }\n";
-        print F "inline $class* $castingHelper(Node* node) { ASSERT_WITH_SECURITY_IMPLICATION(!node || $checkHelper(node)); return reinterpret_cast<".$class."*>(node); }\n";
-        print F "inline $class* $castingHelper(Element* element) { ASSERT_WITH_SECURITY_IMPLICATION(!element || $checkHelper(element)); return reinterpret_cast<".$class."*>(element); }\n";
 
         print F "\n";
     }
@@ -1232,7 +1230,9 @@ END
         }
 
         my $ucTag = $enabledTags{$tag}{JSInterfaceName};
-        print F "       map.set(${tag}Tag.localName().impl(), create${ucTag}Wrapper);\n";
+        # FIXME Remove unnecessary '&' from the following (print) line once we switch to a non-broken Visual Studio compiler.
+        # https://bugs.webkit.org/show_bug.cgi?id=121235:
+        print F "       map.set(${tag}Tag.localName().impl(), &create${ucTag}Wrapper);\n";
 
         if ($conditional) {
             print F "#endif\n";

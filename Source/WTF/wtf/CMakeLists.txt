@@ -1,7 +1,6 @@
 set(WTF_HEADERS
     ASCIICType.h
     AVLTree.h
-    Alignment.h
     Assertions.h
     Atomics.h
     BitArray.h
@@ -56,7 +55,6 @@ set(WTF_HEADERS
     ThreadRestrictionVerifier.h
     Ref.h
     Noncopyable.h
-    NullPtr.h
     NumberOfCores.h
     RAMSize.h
     OSAllocator.h
@@ -106,7 +104,6 @@ set(WTF_HEADERS
     ThreadSpecific.h
     Threading.h
     ThreadingPrimitives.h
-    TypeTraits.h
     VMTags.h
     ValueCheck.h
     Vector.h
@@ -166,7 +163,6 @@ set(WTF_SOURCES
     MainThread.cpp
     MediaTime.cpp
     MetaAllocator.cpp
-    NullPtr.cpp
     OSRandomSource.cpp
     NumberOfCores.cpp
     RAMSize.cpp
@@ -182,7 +178,6 @@ set(WTF_SOURCES
     StringPrintStream.cpp
     TCSystemAlloc.cpp
     Threading.cpp
-    TypeTraits.cpp
     WTFThreadData.cpp
     dtoa.cpp
 
@@ -252,8 +247,6 @@ if (WIN32)
         OSAllocatorWin.cpp
         ThreadSpecificWin.cpp
         ThreadingWin.cpp
-
-        win/OwnPtrWin.cpp
     )
 else ()
     list(APPEND WTF_HEADERS

@@ -1,3 +1,82 @@
+2013-09-11  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [GTK] Remove Gail dependency from build system for GTK3
+        https://bugs.webkit.org/show_bug.cgi?id=119673
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * Source/autotools/FindDependencies.m4: Don't look for GAIL at all.
+        * Source/autotools/Versions.m4: Removed any reference to GAIL.
+        * Source/cmake/FindGAIL3.cmake: Removed.
+        * Source/cmake/OptionsGTK.cmake: Don't look for the GAIL package.
+
+2013-09-11  Patrick Gansterer  <paroga@webkit.org>
+
+        [CMake] Split out generic Windows files into its own file
+        https://bugs.webkit.org/show_bug.cgi?id=119514
+
+        Reviewed by Gyuyoung Kim.
+
+        This allows us to add smaller CMakeLists.txt files when
+        adding additional Windows ports.
+
+        * Source/cmake/OptionsWinCE.cmake:
+        * Source/cmake/WebKitMacros.cmake:
+
+2013-09-11  Alberto Garcia  <berto@igalia.com>
+
+        autogen.sh: fix removal of autom4te.cache
+        https://bugs.webkit.org/show_bug.cgi?id=121150
+
+        Reviewed by Carlos Garcia Campos.
+
+        The removal of autom4te.cache is wrong, it uses 'rm -f' instead of
+        'rm -rf' and it relies on an undefined variable.
+
+        In addition to that, it should be done after running autoreconf,
+        which is when it's no longer needed.
+
+        * autogen.sh:
+
+2013-09-11  Alberto Garcia  <berto@igalia.com>
+
+        Unquoted $ORIGDIR in autogen.sh
+        https://bugs.webkit.org/show_bug.cgi?id=19512
+
+        Reviewed by Carlos Garcia Campos.
+
+        Quote all directory names. This doesn't mean that all possible
+        directory names are safe for building webkit, but the configure
+        script already runs a sanity check.
+
+        * autogen.sh:
+
+2013-09-11  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Stop disabling deprecated symbols in debug builds
+        https://bugs.webkit.org/show_bug.cgi?id=121145
+
+        Reviewed by Carlos Garcia Campos.
+
+        Disabling the dependencies' deprecated symbols in debug builds is only causing unnecessary
+        build failures. Compiler warnings are being thrown whenever a deprecated symbol is being
+        used, so a build failure is an overreach in this case.
+
+        * Source/autotools/SetupAutoconfHeader.m4:
+
+2013-09-10  Marcelo Morais  <m.morais@samsung.com>
+
+        [EFL] WebInspector: Move to new webinspector
+        https://bugs.webkit.org/show_bug.cgi?id=119559
+
+        Reviewed by Gyuyoung Kim.
+
+        Enabling the new Web Inspector on EFL port.
+        Co-author: Andre Loureiro <andre.vl@samsung.com>
+
+        * Source/PlatformEfl.cmake:
+        * Source/cmake/OptionsEfl.cmake:
+
 2013-09-06  Zan Dobersek  <zdobersek@igalia.com>
 
         REGRESSION(r155143): Build failures on GTK port with Clang and libstdc++ < 4.8.1

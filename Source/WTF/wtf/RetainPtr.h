@@ -24,9 +24,8 @@
 #if USE(CF) || defined(__OBJC__)
 
 #include <wtf/HashTraits.h>
-#include <wtf/NullPtr.h>
-#include <wtf/TypeTraits.h>
 #include <algorithm>
+#include <cstddef>
 
 #if USE(CF)
 #include <CoreFoundation/CoreFoundation.h>
@@ -75,7 +74,7 @@ namespace WTF {
 
     template<typename T> class RetainPtr {
     public:
-        typedef typename RemovePointer<T>::Type ValueType;
+        typedef typename std::remove_pointer<T>::type ValueType;
         typedef ValueType* PtrType;
         typedef CFTypeRef StorageType;
 

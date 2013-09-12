@@ -39,27 +39,26 @@
 #include "Shape.h"
 
 namespace WebCore {
-template<class RenderType, ShapeValue* (RenderStyle::*shapeGetter)() const, void (Shape::*intervalGetter)(LayoutUnit, LayoutUnit, SegmentList&) const>
-const Shape* ShapeInfo<RenderType, shapeGetter, intervalGetter>::computedShape() const
+template<class RenderType>
+const Shape* ShapeInfo<RenderType>::computedShape() const
 {
     if (Shape* shape = m_shape.get())
         return shape;
 
-    const LayoutSize logicalBoxSize(m_shapeLogicalWidth, m_shapeLogicalHeight);
     WritingMode writingMode = m_renderer->style()->writingMode();
     Length margin = m_renderer->style()->shapeMargin();
     Length padding = m_renderer->style()->shapePadding();
-    const ShapeValue* shapeValue = (m_renderer->style()->*shapeGetter)();
+    const ShapeValue* shapeValue = this->shapeValue();
     ASSERT(shapeValue);
 
     switch (shapeValue->type()) {
     case ShapeValue::Shape:
         ASSERT(shapeValue->shape());
-        m_shape = Shape::createShape(shapeValue->shape(), logicalBoxSize, writingMode, margin, padding);
+        m_shape = Shape::createShape(shapeValue->shape(), m_shapeLogicalSize, writingMode, margin, padding);
         break;
     case ShapeValue::Image:
         ASSERT(shapeValue->image());
-        m_shape = Shape::createShape(shapeValue->image(), 0, logicalBoxSize, writingMode, margin, padding);
+        m_shape = Shape::createShape(shapeValue->image(), 0, m_shapeLogicalSize, writingMode, margin, padding);
         break;
     default:
         ASSERT_NOT_REACHED();
@@ -69,8 +68,8 @@ const Shape* ShapeInfo<RenderType, shapeGetter, intervalGetter>::computedShape()
     return m_shape.get();
 }
 
-template<class RenderType, ShapeValue* (RenderStyle::*shapeGetter)() const, void (Shape::*intervalGetter)(LayoutUnit, LayoutUnit, SegmentList&) const>
-bool ShapeInfo<RenderType, shapeGetter, intervalGetter>::computeSegmentsForLine(LayoutUnit lineTop, LayoutUnit lineHeight)
+template<class RenderType>
+bool ShapeInfo<RenderType>::computeSegmentsForLine(LayoutUnit lineTop, LayoutUnit lineHeight)
 {
     ASSERT(lineHeight >= 0);
     m_shapeLineTop = lineTop - logicalTopOffset();
@@ -78,7 +77,7 @@ bool ShapeInfo<RenderType, shapeGetter, intervalGetter>::computeSegmentsForLine(
     m_segments.clear();
 
     if (lineOverlapsShapeBounds())
-        (computedShape()->*intervalGetter)(m_shapeLineTop, std::min(m_lineHeight, shapeLogicalBottom() - lineTop), m_segments);
+        getIntervals(m_shapeLineTop, std::min(m_lineHeight, shapeLogicalBottom() - lineTop), m_segments);
 
     LayoutUnit logicalLeftOffset = this->logicalLeftOffset();
     for (size_t i = 0; i < m_segments.size(); i++) {
@@ -89,7 +88,7 @@ bool ShapeInfo<RenderType, shapeGetter, intervalGetter>::computeSegmentsForLine(
     return m_segments.size();
 }
 
-template class ShapeInfo<RenderBlock, &RenderStyle::resolvedShapeInside, &Shape::getIncludedIntervals>;
-template class ShapeInfo<RenderBox, &RenderStyle::shapeOutside, &Shape::getExcludedIntervals>;
+template class ShapeInfo<RenderBlock>;
+template class ShapeInfo<RenderBox>;
 }
 #endif

@@ -41,7 +41,7 @@ private:
     virtual bool rendererIsNeeded(const RenderStyle&) { return false; }
 };
 
-template <> inline bool isElementOfType<SVGTitleElement>(const Element* element) { return element->hasTagName(SVGNames::titleTag); }
+ELEMENT_TYPE_CASTS(SVGTitleElement)
 
 } // namespace WebCore
 

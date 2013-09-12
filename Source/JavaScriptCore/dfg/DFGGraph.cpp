@@ -182,6 +182,8 @@ void Graph::dump(PrintStream& out, const char* prefix, Node* node, DumpContext* 
 
     if (toCString(NodeFlagsDump(node->flags())) != "<empty>")
         out.print(comma, NodeFlagsDump(node->flags()));
+    if (node->prediction())
+        out.print(comma, SpeculationDump(node->prediction()));
     if (node->hasArrayMode())
         out.print(comma, node->arrayMode());
     if (node->hasVarNumber())
@@ -290,7 +292,7 @@ void Graph::dump(PrintStream& out, const char* prefix, Node* node, DumpContext* 
 
     if (!skipped) {
         if (node->hasVariableAccessData(*this))
-            out.print("  predicting ", SpeculationDump(node->variableAccessData()->prediction()), node->variableAccessData()->shouldUseDoubleFormat() ? ", forcing double" : "");
+            out.print("  predicting ", SpeculationDump(node->variableAccessData()->prediction()));
         else if (node->hasHeapPrediction())
             out.print("  predicting ", SpeculationDump(node->getHeapPrediction()));
     }

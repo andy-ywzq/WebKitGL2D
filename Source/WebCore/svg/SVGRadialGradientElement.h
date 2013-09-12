@@ -57,11 +57,7 @@ private:
     END_DECLARE_ANIMATED_PROPERTIES
 };
 
-inline SVGRadialGradientElement* toSVGRadialGradientElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->hasTagName(SVGNames::radialGradientTag));
-    return static_cast<SVGRadialGradientElement*>(node);
-}
+ELEMENT_TYPE_CASTS(SVGRadialGradientElement)
 
 } // namespace WebCore
 

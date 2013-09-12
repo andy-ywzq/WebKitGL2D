@@ -25,6 +25,7 @@
 #include "Document.h"
 #include "Element.h"
 #include "FloatQuad.h"
+#include "FloatingObjects.h"
 #include "FlowThreadController.h"
 #include "Frame.h"
 #include "FrameSelection.h"
@@ -57,7 +58,7 @@
 namespace WebCore {
 
 RenderView::RenderView(Document* document)
-    : RenderBlockFlow(document)
+    : RenderBlockFlow(0)
     , m_frameView(*document->view())
     , m_selectionStart(0)
     , m_selectionEnd(0)
@@ -75,6 +76,9 @@ RenderView::RenderView(Document* document)
     , m_hasSoftwareFilters(false)
 #endif
 {
+    setIsRenderView();
+    setDocumentForAnonymous(document);
+
     // FIXME: We should find a way to enforce this at compile time.
     ASSERT(document->view());
 
@@ -985,9 +989,6 @@ void RenderView::updateWidgetPositions()
     for (size_t i = 0; i < size; ++i)
         renderWidgets[i]->updateWidgetPosition();
 
-    for (size_t i = 0; i < size; ++i)
-        renderWidgets[i]->widgetPositionsUpdated();
-
     releaseWidgets(renderWidgets);
 }
 
@@ -1239,7 +1240,7 @@ void RenderView::popLayoutStateForCurrentFlowThread()
     currentFlowThread->popFlowThreadLayoutState();
 }
 
-RenderBlock::IntervalArena* RenderView::intervalArena()
+IntervalArena* RenderView::intervalArena()
 {
     if (!m_intervalArena)
         m_intervalArena = IntervalArena::create();

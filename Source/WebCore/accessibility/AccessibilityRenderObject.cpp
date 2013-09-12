@@ -65,6 +65,7 @@
 #include "NodeList.h"
 #include "Page.h"
 #include "ProgressTracker.h"
+#include "RenderBR.h"
 #include "RenderButton.h"
 #include "RenderFieldset.h"
 #include "RenderFileUploadControl.h"
@@ -265,7 +266,7 @@ static inline RenderInline* startOfContinuations(RenderObject* r)
 
     // Blocks with a previous continuation always have a next continuation
     if (r->isRenderBlock() && toRenderBlock(r)->inlineElementContinuation())
-        return toRenderInline(toRenderBlock(r)->inlineElementContinuation()->node()->renderer());
+        return toRenderInline(toRenderBlock(r)->inlineElementContinuation()->element()->renderer());
 
     return 0;
 }
@@ -630,6 +631,10 @@ String AccessibilityRenderObject::textUnderElement(AccessibilityTextUnderElement
     if (m_renderer->isFileUploadControl())
         return toRenderFileUploadControl(m_renderer)->buttonValue();
     
+    // Reflect when a content author has explicitly marked a line break.
+    if (m_renderer->isBR())
+        return toRenderBR(*m_renderer).text();
+
 #if ENABLE(MATHML)
     // Math operators create RenderText nodes on the fly that are not tied into the DOM in a reasonable way,
     // so rangeOfContents does not work for them (nor does regular text selection).
@@ -671,10 +676,14 @@ String AccessibilityRenderObject::textUnderElement(AccessibilityTextUnderElement
 }
 
 Node* AccessibilityRenderObject::node() const
-{ 
-    return m_renderer ? m_renderer->node() : 0; 
+{
+    if (!m_renderer)
+        return 0;
+    if (m_renderer->isRenderView())
+        return &m_renderer->document();
+    return m_renderer->node();
 }    
-    
+
 String AccessibilityRenderObject::stringValue() const
 {
     if (!m_renderer)
@@ -966,10 +975,7 @@ bool AccessibilityRenderObject::hasTextAlternative() const
 {
     // ARIA: section 2A, bullet #3 says if aria-labeledby or aria-label appears, it should
     // override the "label" element association.
-    if (!ariaLabeledByAttribute().isEmpty() || !getAttribute(aria_labelAttr).isEmpty())
-        return true;
-        
-    return false;   
+    return ariaAccessibilityDescription().length();
 }
     
 bool AccessibilityRenderObject::ariaHasPopup() const
@@ -1038,12 +1044,6 @@ bool AccessibilityRenderObject::exposesTitleUIElement() const
     if (accessibilityIsIgnored())
         return true;
     
-    // Checkboxes and radio buttons use the text of their title ui element as their own AXTitle.
-    // This code controls whether the title ui element should appear in the AX tree (usually, no).
-    // It should appear if the control already has a label (which will be used as the AXTitle instead).
-    if (isCheckboxOrRadio())
-        return hasTextAlternative();
-
     // When controls have their own descriptions, the title element should be ignored.
     if (hasTextAlternative())
         return false;
@@ -1159,7 +1159,7 @@ bool AccessibilityRenderObject::computeAccessibilityIsIgnored() const
     if (m_renderer->isText()) {
         // static text beneath MenuItems and MenuButtons are just reported along with the menu item, so it's ignored on an individual level
         AccessibilityObject* parent = parentObjectUnignored();
-        if (parent && (parent->ariaRoleAttribute() == MenuItemRole || parent->ariaRoleAttribute() == MenuButtonRole))
+        if (parent && (parent->isMenuItem() || parent->ariaRoleAttribute() == MenuButtonRole))
             return true;
         RenderText* renderText = toRenderText(m_renderer);
         if (m_renderer->isBR() || !renderText->firstTextBox())
@@ -1225,7 +1225,7 @@ bool AccessibilityRenderObject::computeAccessibilityIsIgnored() const
     if (node && node->hasTagName(spanTag))
         return true;
     
-    if (m_renderer->isBlockFlowFlexBoxOrGrid() && m_renderer->childrenInline() && !canSetFocusAttribute())
+    if (m_renderer->isRenderBlockFlow() && m_renderer->childrenInline() && !canSetFocusAttribute())
         return !toRenderBlock(m_renderer)->firstLineBox() && !mouseButtonListener();
     
     // ignore images seemingly used as spacers
@@ -2562,7 +2562,7 @@ AccessibilityRole AccessibilityRenderObject::determineAccessibilityRole()
     if (node && node->hasTagName(footerTag) && !isDescendantOfElementType(articleTag) && !isDescendantOfElementType(sectionTag))
         return FooterRole;
 
-    if (m_renderer->isBlockFlowFlexBoxOrGrid())
+    if (m_renderer->isRenderBlockFlow())
         return GroupRole;
     
     // If the element does not have role, but it has ARIA attributes, accessibility should fallback to exposing it as a group.

@@ -105,6 +105,7 @@ experimentalNotificationsEnabled initial=false
 webGLEnabled initial=false
 webGLErrorsToConsoleEnabled initial=true
 openGLMultisamplingEnabled initial=true
+multithreadedWebGLEnabled initial=false
 privilegedWebGLExtensionsEnabled initial=false
 accelerated2dCanvasEnabled initial=false
 antialiased2dCanvasEnabled initial=true
@@ -200,3 +201,5 @@ selectTrailingWhitespaceEnabled initial=defaultSelectTrailingWhitespaceEnabled
 
 selectionIncludesAltImageText initial=true
 useLegacyBackgroundSizeShorthandBehavior initial=false
+
+minimumZoomFontSize type=float, initial=15, conditional=IOS_TEXT_AUTOSIZING

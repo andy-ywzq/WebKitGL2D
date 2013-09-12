@@ -570,7 +570,7 @@ SOURCES += \
     fileapi/ThreadableBlobRegistry.cpp \
     fileapi/WebKitBlobBuilder.cpp \
     history/BackForwardController.cpp \
-    history/BackForwardListImpl.cpp \
+    history/BackForwardList.cpp \
     history/CachedFrame.cpp \
     history/CachedPage.cpp \
     history/HistoryItem.cpp \
@@ -813,7 +813,6 @@ SOURCES += \
     inspector/ScriptCallFrame.cpp \
     inspector/ScriptCallStack.cpp \
     inspector/TimelineRecordFactory.cpp \
-    inspector/TimelineTraceEventProcessor.cpp \
     inspector/WorkerConsoleAgent.cpp \
     inspector/WorkerDebuggerAgent.cpp \
     inspector/WorkerInspectorController.cpp \
@@ -1088,7 +1087,6 @@ SOURCES += \
     platform/NotImplemented.cpp \
     platform/text/RegularExpression.cpp \
     platform/PlatformEvent.cpp \
-    platform/PlatformInstrumentation.cpp \
     platform/RuntimeApplicationChecks.cpp \
     platform/RunLoop.cpp \
     platform/SchemeRegistry.cpp \
@@ -1140,6 +1138,7 @@ SOURCES += \
     rendering/EllipsisBox.cpp \
     rendering/FilterEffectRenderer.cpp \
     rendering/FixedTableLayout.cpp \
+    rendering/FloatingObjects.cpp \
     rendering/FlowThreadController.cpp \
     rendering/HitTestingTransformState.cpp \
     rendering/HitTestLocation.cpp \
@@ -1150,7 +1149,7 @@ SOURCES += \
     rendering/InlineTextBox.cpp \
     rendering/LayoutState.cpp \
     rendering/LayoutRepainter.cpp \
-    rendering/RenderApplet.cpp \
+    rendering/LineWidth.cpp \
     rendering/RenderArena.cpp \
     rendering/RenderBlock.cpp \
     rendering/RenderBlockFlow.cpp \
@@ -1197,7 +1196,6 @@ SOURCES += \
     rendering/RenderNamedFlowThread.cpp \
     rendering/RenderObject.cpp \
     rendering/RenderObjectChildList.cpp \
-    rendering/RenderPart.cpp \
     rendering/RenderProgress.cpp \
     rendering/RenderQuote.cpp \
     rendering/RenderRegion.cpp \
@@ -1773,8 +1771,8 @@ HEADERS += \
     fileapi/FileThread.h \
     fileapi/FileThreadTask.h \
     fileapi/WebKitBlobBuilder.h \
+    history/BackForwardClient.h \
     history/BackForwardController.h \
-    history/BackForwardListImpl.h \
     history/BackForwardList.h \
     history/CachedFrame.h \
     history/CachedPage.h \
@@ -2394,6 +2392,7 @@ HEADERS += \
     rendering/EllipsisBox.h \
     rendering/FilterEffectRenderer.h \
     rendering/FixedTableLayout.h \
+    rendering/FloatingObjects.h \
     rendering/HitTestingTransformState.h \
     rendering/HitTestLocation.h \
     rendering/HitTestResult.h \
@@ -2403,6 +2402,8 @@ HEADERS += \
     rendering/InlineTextBox.h \
     rendering/LayoutRepainter.h \
     rendering/LayoutState.h \
+    rendering/LineInfo.h \
+    rendering/LineWidth.h \
     rendering/LogicalSelectionOffsetCaches.h \
     rendering/mathml/RenderMathMLBlock.h \
     rendering/mathml/RenderMathMLFenced.h \
@@ -2420,7 +2421,6 @@ HEADERS += \
     rendering/PaintPhase.h \
     rendering/PointerEventsHitRules.h \
     rendering/RegionOversetState.h \
-    rendering/RenderApplet.h \
     rendering/RenderArena.h \
     rendering/RenderBlock.h \
     rendering/RenderBox.h \
@@ -2464,7 +2464,6 @@ HEADERS += \
     rendering/RenderMultiColumnBlock.h \
     rendering/RenderObjectChildList.h \
     rendering/RenderObject.h \
-    rendering/RenderPart.h \
     rendering/RenderProgress.h \
     rendering/RenderQuote.h \
     rendering/RenderReplaced.h \

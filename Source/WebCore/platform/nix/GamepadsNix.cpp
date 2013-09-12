@@ -29,7 +29,6 @@
 #if ENABLE(GAMEPAD)
 
 #include "GamepadList.h"
-
 #include <public/Platform.h>
 
 namespace WebCore {

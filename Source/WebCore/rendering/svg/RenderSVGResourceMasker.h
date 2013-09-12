@@ -50,8 +50,8 @@ public:
     virtual bool applyResource(RenderObject*, RenderStyle*, GraphicsContext*&, unsigned short resourceMode);
     virtual FloatRect resourceBoundingBox(RenderObject*);
 
-    SVGUnitTypes::SVGUnitType maskUnits() const { return toSVGMaskElement(node())->maskUnits(); }
-    SVGUnitTypes::SVGUnitType maskContentUnits() const { return toSVGMaskElement(node())->maskContentUnits(); }
+    SVGUnitTypes::SVGUnitType maskUnits() const { return toSVGMaskElement(element())->maskUnits(); }
+    SVGUnitTypes::SVGUnitType maskContentUnits() const { return toSVGMaskElement(element())->maskContentUnits(); }
 
     virtual RenderSVGResourceType resourceType() const { return s_resourceType; }
     static RenderSVGResourceType s_resourceType;
@@ -61,7 +61,7 @@ private:
     void calculateMaskContentRepaintRect();
 
     FloatRect m_maskContentBoundaries;
-    HashMap<RenderObject*, MaskerData*> m_masker;
+    HashMap<RenderObject*, OwnPtr<MaskerData>> m_masker;
 };
 
 }

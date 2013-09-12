@@ -1,3 +1,88 @@
+2013-09-12  Mark Lam  <mark.lam@apple.com>
+
+        Change debug hooks to pass sourceID and position info via the DebuggerCallFrame.
+        https://bugs.webkit.org/show_bug.cgi?id=121214.
+
+        Reviewed by Geoffrey Garen.
+
+        * webview/WebScriptDebugger.h:
+        * WebView/WebScriptDebugger.mm:
+        (WebScriptDebugger::WebScriptDebugger):
+        (WebScriptDebugger::callEvent):
+        (WebScriptDebugger::atStatement):
+        (WebScriptDebugger::returnEvent):
+        (WebScriptDebugger::exception):
+        (WebScriptDebugger::willExecuteProgram):
+        (WebScriptDebugger::didExecuteProgram):
+        (WebScriptDebugger::didReachBreakpoint):
+
+2013-09-11  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Generate more HTML type checks and casting
+        https://bugs.webkit.org/show_bug.cgi?id=121080
+
+        Reviewed by Andreas Kling.
+
+        Clean-up remained functions of HTML elements using auto-generated isFooElement(),
+        and replace toFooElement() with ELEMENT_TYPE_CASTS() macro.
+
+        Besides this patch clean-up unnecessary checks which are being supported by
+        auto-generated isFooElement().
+
+        No new tests, no behavior change.
+
+        * Plugins/WebPluginController.mm:
+        * WebCoreSupport/WebChromeClient.mm:
+        (WebChromeClient::supportsFullscreenForNode):
+        * WebView/WebView.mm:
+        (-[WebView _enterFullscreenForNode:WebCore::]):
+
+2013-09-10  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Upstream text autosizing
+        https://bugs.webkit.org/show_bug.cgi?id=121111
+
+        Reviewed by Andy Estes and Sam Weinig.
+
+        * WebView/WebFrame.mm:
+        (-[WebFrame resetTextAutosizingBeforeLayout]): Added.
+        (-[WebFrame _setVisibleSize:]): Added.
+        (-[WebFrame _setTextAutosizingWidth:]): Added.
+        * WebView/WebFramePrivate.h:
+        * WebView/WebPreferenceKeysPrivate.h:
+        * WebView/WebPreferences.mm:
+        (+[WebPreferences initialize]):
+        (-[WebPreferences _setMinimumZoomFontSize:]): Added.
+        (-[WebPreferences _minimumZoomFontSize]): Added.
+
+2013-09-09  Dean Jackson  <dino@apple.com>
+
+        [WebGL] Allow multithreaded OpenGL contexts
+        https://bugs.webkit.org/show_bug.cgi?id=121062
+
+        Reviewed by Simon Fraser.
+
+        Expose a new preference "multithreadedWebGLEnabled".
+
+        * WebView/WebPreferenceKeysPrivate.h:
+        * WebView/WebPreferences.mm:
+        (+[WebPreferences initialize]):
+        (-[WebPreferences multithreadedWebGLEnabled]):
+        (-[WebPreferences setMultithreadedWebGLEnabled:]):
+        * WebView/WebPreferencesPrivate.h:
+        * WebView/WebView.mm:
+        (-[WebView _preferencesChanged:]):
+
+2013-09-09  Dean Jackson  <dino@apple.com>
+
+        Enable WebGL for OS X nightlies
+        https://bugs.webkit.org/show_bug.cgi?id=121040
+
+        Reviewed by Beth Dakin.
+
+        * WebView/WebPreferences.mm:
+        (+[WebPreferences initialize]): Set WebPreference to YES.
+
 2013-09-06  Ryosuke Niwa  <rniwa@webkit.org>
 
         Range::ownerDocument should return Document&

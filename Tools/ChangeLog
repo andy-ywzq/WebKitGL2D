@@ -1,3 +1,880 @@
+2013-09-12  Anders Carlsson  <andersca@apple.com>
+
+        Add rudimentary support for move-only types as values in HashMap
+        https://bugs.webkit.org/show_bug.cgi?id=121226
+
+        Reviewed by Andreas Kling.
+
+        * TestWebKitAPI/Tests/WTF/HashMap.cpp:
+        (TestWebKitAPI::TEST):
+        Add a HashMap<unsigned, MoveOnly> test.
+
+2013-09-12  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        Auto GDB backtrace generation for EFL/GTK/Qt bots.
+        https://bugs.webkit.org/show_bug.cgi?id=119338
+
+        Reviewed by Csaba Osztrogonác.
+
+        * Scripts/webkitpy/port/efl.py:
+        (EflPort.check_sys_deps):
+        (EflPort):
+        (EflPort._get_crash_log):
+        * Scripts/webkitpy/port/efl_unittest.py:
+        (EflPortTest.test_show_results_html_file):
+        (EflPortTest):
+        (EflPortTest.test_get_crash_log):
+        * Scripts/webkitpy/port/gtk.py:
+        (GtkPort._get_crash_log):
+        * Scripts/webkitpy/port/gtk_unittest.py:
+        (GtkPortTest.test_get_crash_log):
+        * Scripts/webkitpy/port/linux_get_crash_log.py: Added.
+        (GDBCrashLogGenerator):
+        (GDBCrashLogGenerator.__init__):
+        (GDBCrashLogGenerator._get_gdb_output):
+        (GDBCrashLogGenerator.generate_crash_log):
+        (GDBCrashLogGenerator.generate_crash_log.match_filename):
+        * Scripts/webkitpy/port/linux_get_crash_log_unittest.py: Added.
+        (GDBCrashLogGeneratorTest):
+        (GDBCrashLogGeneratorTest.test_generate_crash_log):
+        (_mock_gdb_output):
+        * Scripts/webkitpy/port/qt.py:
+        (QtPort.default_child_processes):
+        (QtPort):
+        (QtPort._get_crash_log):
+        * Scripts/webkitpy/port/qt_unittest.py:
+        (QtPortTest.test_check_sys_deps):
+        (QtPortTest):
+        (QtPortTest.test_get_crash_log):
+
+2013-09-12  Peter Gal  <galpeter@inf.u-szeged.hu>
+
+        Unreviewed. Moving myself to the commiters list.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-09-12  ChangSeok Oh  <changseok.oh@collabora.com>
+
+        [GTK] Add jhbuild-wayland.modules
+        https://bugs.webkit.org/show_bug.cgi?id=120455
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Current versions of gtk+, gdk-pixbuf and glib don't fit the requirement for wayland support.
+        With this patch, you can build extra gtk+, gdk-pixbuf and glib through jhbuild with exporting
+        WEBKIT_EXTRA_MODULESETS.
+
+        * gtk/jhbuild-wayland.modules: Added.
+
+2013-09-12  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [GTK][WK2] a11y tests unconditionally launching a11y daemons
+        https://bugs.webkit.org/show_bug.cgi?id=120299
+
+        Reviewed by Carlos Garcia Campos.
+
+        Use the right variable name to store a reference to the at-spi2
+        bus launcher process, so we can be sure we are terminating it when
+        calling _tear_down_testing_environment().
+
+        * Scripts/run-gtk-tests:
+        (TestRunner._start_accessibility_daemons): Use _spi_bus_launcher
+        instead of _ally_bus_launcher.
+
+2013-09-12  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] run-gtk-tests option --skipped=ignore doesn't work when the entire suite is skipped
+        https://bugs.webkit.org/show_bug.cgi?id=121218
+
+        Reviewed by Philippe Normand.
+
+        Skipping the entire suite was added to skip tests when they can't
+        be run because of the environment, for example to skip the a11y
+        tests when the at-spi daemons fail to start. This is no longer
+        true for all the cases, so we can disable the tests that are
+        impossible to run instead of skipping them.
+
+        * Scripts/run-gtk-tests:
+        (TestRunner.__init__): Initialize the skipped tests list.
+        (TestRunner._setup_testing_environment): Add
+        TestWebKitAccessibility path to the list of disabled tests when
+        at-spi daemon fail to start.
+        (TestRunner._should_run_test_program): Check first if the test
+        program is disabled and then whether it's skipped honoring the
+        skipped command line option.
+
+2013-09-12  Samuel White  <samuel_white@apple.com>
+
+        <meter> element text value exposed as AXTitle; should be exposing AXValueDescription
+        https://bugs.webkit.org/show_bug.cgi?id=117651
+
+        Reviewed by Mario Sanchez Prada.
+
+        Prepended 'AXValueDescription: ' to valueDescription output and updated impacted tests.
+
+        * DumpRenderTree/mac/AccessibilityUIElementMac.mm:
+        (AccessibilityUIElement::valueDescription):
+        * WebKitTestRunner/InjectedBundle/mac/AccessibilityUIElementMac.mm:
+        (WTR::AccessibilityUIElement::valueDescription):
+
+2013-09-12  Denis Nomiyama  <d.nomiyama@samsung.com>
+
+        REGRESSION(r154781): accessibility/notification-listeners.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=120669
+
+        Reviewed by Chris Fleizach.
+
+        Fixed 4 problems that were causing notification-listeners.html to fail.
+
+        Notifications for AXFocusedUIElementChanged and AXValueChanged had to be
+        implemented in axObjectEventListener().
+
+        A notification for AXFocusedUIElementChanged was incorrectly sent when
+        the element lost focus.
+
+        Global notification was not dispatched if an element notification was
+        present in the HashMap.
+
+        connectAccessibilityCallbacks() was connecting signals to callbacks
+        multiple times because it was not checking if
+        disconnectAccessibilityCallbacks() had an early return if there were
+        active handlers.
+
+        * DumpRenderTree/atk/AccessibilityCallbacks.h: Modified
+        disconnectAccessibilityCallbacks() to inform if the callbacks were
+        successfully disconnected.
+        * DumpRenderTree/atk/AccessibilityCallbacksAtk.cpp:
+        (axObjectEventListener): Implemented notifications for
+        AXFocusedUIElementChanged and AXValueChanged. Fixed the global
+        notification, which was not dispatched if an element notification
+        existed. Fixed the notification for AXFocusedUIElementChanged that was
+        incorrectly sent when the element lost focus. In addition, fixed a typo
+        where TRUE should be true.
+        (connectAccessibilityCallbacks): Added early return if
+        disconnectAccessibilityCallbacks() did not disconnect the callbacks.
+        (disconnectAccessibilityCallbacks): Added a return value to inform if
+        callbacks were successfully disconnected.
+
+2013-09-11  Anders Carlsson  <andersca@apple.com>
+
+        Try to fix GCC builds.
+
+        * TestWebKitAPI/Tests/WTF/MoveOnly.h:
+
+2013-09-11  Anders Carlsson  <andersca@apple.com>
+
+        Try to fix the build.
+
+        Move MoveOnly.h to Tests/WTF and fix the broken Xcode project that caused me to add the header
+        file in the Tests/ directory in the first place.
+
+        * TestWebKitAPI/CMakeLists.txt:
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPICommon.props:
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPICommonWinCairo.props:
+        * TestWebKitAPI/TestWebKitAPI.xcodeproj/project.pbxproj:
+        * TestWebKitAPI/Tests/WTF/MoveOnly.h: Renamed from Tools/TestWebKitAPI/Tests/MoveOnly.h.
+
+2013-09-11  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Build fix for MoveOnly
+
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPICommon.props: Add
+        Tests to include search path.
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPICommonWinCairo.props:
+        Ditto.
+
+2013-09-11  Anders Carlsson  <andersca@apple.com>
+
+        Add HashSet::take
+        https://bugs.webkit.org/show_bug.cgi?id=121192
+
+        Reviewed by Darin Adler.
+
+        Add a test for HashSet::take.
+
+        * TestWebKitAPI/Tests/WTF/HashSet.cpp:
+        (TestWebKitAPI::TEST):
+
+2013-09-11  Anders Carlsson  <andersca@apple.com>
+
+        HashSet should work with move only types
+        https://bugs.webkit.org/show_bug.cgi?id=121188
+
+        Reviewed by Geoffrey Garen.
+
+        * TestWebKitAPI/TestWebKitAPI.xcodeproj/project.pbxproj:
+        * TestWebKitAPI/Tests/MoveOnly.h: Added.
+        Move the MoveOnly class from Vector out into its own header.
+
+        * TestWebKitAPI/Tests/WTF/HashSet.cpp:
+        (TestWebKitAPI::TEST):
+        Add aHashSet<MoveOnly> test.
+
+        * TestWebKitAPI/Tests/WTF/Vector.cpp:
+        Include MoveOnly.h.
+
+2013-09-11  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Avoid converting from IntSize->SIZE->IntSize
+        https://bugs.webkit.org/show_bug.cgi?id=121180
+
+        Reviewed by Anders Carlsson.
+
+        * TestWebKitAPI/Tests/WebCore/win/BitmapImage.cpp:
+        (TestWebKitAPI::TEST): Use IntSize instead of SIZE struct.
+
+2013-09-11  Dan Bernstein  <mitz@apple.com>
+
+        REGRESSION (r155561): extract-localizable-strings can miss strings
+        https://bugs.webkit.org/show_bug.cgi?id=121184
+
+        Reviewed by Darin Adler.
+
+        * Scripts/extract-localizable-strings: Don’t discard lines if we are waiting for a closing
+        parenthesis or bracket.
+
+2013-09-11  Dan Bernstein  <mitz@apple.com>
+
+        update-webkit-localizable-strings is at least 5.8x slower than it should be
+        https://bugs.webkit.org/show_bug.cgi?id=121178
+
+        Reviewed by Darin Adler.
+
+        * Scripts/extract-localizable-strings: Quickly skip over lines that contain neither " nor /*.
+        Note that this does not change functionality, because the script already does not understand
+        the line continuation sequence (backslash followed by a newline).
+
+2013-09-11  Anders Carlsson  <andersca@apple.com>
+
+        Vector::append doesn't work if element type has overloaded operator&
+        https://bugs.webkit.org/show_bug.cgi?id=121175
+
+        Reviewed by Brent Fulgham.
+
+        Add a test case.
+
+        * TestWebKitAPI/Tests/WTF/Vector.cpp:
+        (TestWebKitAPI::TEST):
+
+2013-09-11  Anders Carlsson  <andersca@apple.com>
+
+        Implement Vector::append for move-only types
+        https://bugs.webkit.org/show_bug.cgi?id=120805
+
+        Reviewed by Sam Weinig.
+
+        Add a test for Vector<MoveOnly>::append.
+
+        * TestWebKitAPI/Tests/WTF/Vector.cpp:
+        (TestWebKitAPI::TEST):
+
+2013-09-11  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Unreviewed. Fix the indentation after r105848. Typo fix after r155523.
+
+        * BuildSlaveSupport/build.webkit.org-config/master.cfg:
+        (RunAndUploadPerfTests):
+        (RunAndUploadPerfTests.start):
+        (RunAndUploadPerfTests.getText2):
+
+2013-09-11  Anders Carlsson  <andersca@apple.com>
+
+        The style checker shouldn't complain about returning or passing OwnPtr
+        https://bugs.webkit.org/show_bug.cgi?id=121163
+
+        Reviewed by Antti Koivisto.
+
+        * Scripts/webkitpy/style/checkers/cpp.py:
+        (check_function_definition_and_pass_ptr):
+        * Scripts/webkitpy/style/checkers/cpp_unittest.py:
+        (PassPtrTest.test_pass_ref_ptr_return_value):
+        (PassPtrTest.test_own_ptr_parameter_value):
+
+2013-09-11  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [GTK] Remove Gail dependency from build system for GTK3
+        https://bugs.webkit.org/show_bug.cgi?id=119673
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * EWSTools/ubuntu-ews-packages: Removed libgail-dev package.
+        * Scripts/webkitpy/port/gtk.py:
+        (GtkPort.setup_environ_for_server): Do not load the 'gail' module anymore.
+        * TestWebKitAPI/GNUmakefile.am: Removed GAIL_LIBS.
+
+2013-09-11  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        Performance tester bots should report the number of failing tests
+        https://bugs.webkit.org/show_bug.cgi?id=120462
+
+        Reviewed by Csaba Osztrogonác.
+
+        * BuildSlaveSupport/build.webkit.org-config/master.cfg:
+        (RunAndUploadPerfTests.start.getText):
+        (RunAndUploadPerfTests.start):
+        (RunAndUploadPerfTests):
+        (RunAndUploadPerfTests.start.getText2):
+
+2013-09-11  Krzysztof Czech  <k.czech@samsung.com>
+
+        [ATK] Adds mapping MenuItemRadioRole to ATK
+        https://bugs.webkit.org/show_bug.cgi?id=121149
+
+        Reviewed by Mario Sanchez Prada.
+
+        Adds mapping MenuItemRadioRole to ATK.
+
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (roleToString):
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::roleToString):
+
+2013-09-10  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Unreviewed fix after the unreviewed r155498 to unbreak the failure
+        counter of run-javascriptcore-tests build step on build.webkit.org.
+
+        * BuildSlaveSupport/build.webkit.org-config/master.cfg:
+        (RunJavaScriptCoreTests.commandComplete):
+        * BuildSlaveSupport/build.webkit.org-config/mastercfg_unittest.py:
+
+2013-09-10  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, be a bit more clear about what we mean by 'js' tests. I think this
+        got a bit overlooked from the fast/js->js refactoring.
+
+        * Scripts/run-javascriptcore-tests:
+
+2013-09-10  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Upstream text autosizing
+        https://bugs.webkit.org/show_bug.cgi?id=121111
+
+        Reviewed by Andy Estes and Sam Weinig.
+
+        Implement infrastructure to test the iOS text autosizing code.
+
+        * DumpRenderTree/TestRunner.cpp:
+        (setTextAutosizingEnabledCallback): Added.
+        (TestRunner::staticFunctions):
+        * DumpRenderTree/TestRunner.h:
+        * DumpRenderTree/mac/DumpRenderTree.mm:
+        (resetDefaultsToConsistentValues):
+        * DumpRenderTree/mac/TestRunnerMac.mm:
+        (TestRunner::setTextAutosizingEnabled): Added.
+
+2013-09-10  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        run-jsc-stress-tests should have a mode for always running the copy phase
+        https://bugs.webkit.org/show_bug.cgi?id=121128
+
+        Reviewed by Geoffrey Garen.
+
+        This will increase test coverage of the copying phase, which might not always get 
+        triggered normally with our default parameters for required Heap/CopiedBlock utilization.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-09-10  Sergio Correia  <sergio.correia@openbossa.org>
+
+        [EFL][JHBUILD] Use a tarball for libseccomp, instead of git
+        https://bugs.webkit.org/show_bug.cgi?id=121114
+
+        Reviewed by Christophe Dumez.
+
+        Use a tarball for libseccomp instead of git to avoid network issues on
+        the buildbots while checking out the git repo. Using tarballs has the
+        advantage of them being cached if the checksum matches, in which case
+        there will be no need to download them again.
+
+        * efl/jhbuild.modules:
+
+2013-09-10  Mark Lam  <mark.lam@apple.com>
+
+        Replace remaining "fast js" names in scripts.
+        https://bugs.webkit.org/show_bug.cgi?id=120899.
+
+        Rubber stamped by Filip Pizlo.
+
+        * BuildSlaveSupport/build.webkit.org-config/mastercfg_unittest.py:
+        (test_layout_failure_new_output):
+        (test_layout_crash_new_output):
+        (test_mozilla_and_layout_failure_new_output):
+        * Scripts/run-fast-jsc: Removed.
+        * Scripts/run-javascriptcore-tests:
+        * Scripts/run-layout-jsc: Copied from Tools/Scripts/run-fast-jsc.
+
+2013-09-10  Zan Dobersek  <zdobersek@igalia.com>
+
+        Enable JSC stress tests for the rest of non-Windows platforms
+        https://bugs.webkit.org/show_bug.cgi?id=121021
+
+        Reviewed by Filip Pizlo.
+
+        The JSC stress tests can already be enabled on Linux-based ports.
+
+        * BuildSlaveSupport/build.webkit.org-config/master.cfg:
+        (RunJavaScriptCoreTests.commandComplete): Reformulate the regular expressions used to find the number of regressed
+        JSC tests of various test suites. The expressions now look for the suite-specific report compartment over the
+        complete output, with the number of failing or crashing tests properly extracted.
+        * BuildSlaveSupport/build.webkit.org-config/mastercfg_unittest.py: Add a couple of unit tests and expand the tested
+        output in other unit tests testing the parsing of the output in the new format.
+        (test_jsc_stress_failure_new_output):
+        (test_fast_js_crashes_and_jsc_stress_failures_new_output):
+        * Scripts/run-javascriptcore-tests: Enable the JSC stress tests on all but the Apple Win port.
+        * Scripts/run-jsc-stress-tests: `sysctl -n hw.availcpu` doesn't work on Linux-based ports but the numProcesses
+        variable is still gracefully assigned a zero value. In that case, try running `nproc --all` to gather the number
+        of available CPUs so the stress tests can be run in parallel.
+
+2013-09-10  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: Expose DOM ID and ClassList to AX APIs for automation and AT element hashes
+        https://bugs.webkit.org/show_bug.cgi?id=120552
+
+        Unreviewed build fix.
+
+        * DumpRenderTree/win/AccessibilityUIElementWin.cpp:
+        (AccessibilityUIElement::classList):
+
+2013-09-10  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: Expose DOM ID and ClassList to AX APIs for automation and AT element hashes
+        https://bugs.webkit.org/show_bug.cgi?id=120552
+
+        Reviewed by Darin Adler.
+
+        * DumpRenderTree/AccessibilityUIElement.cpp:
+        (getClassListCallback):
+        (AccessibilityUIElement::getJSClass):
+        * DumpRenderTree/AccessibilityUIElement.h:
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (AccessibilityUIElement::classList):
+        * DumpRenderTree/blackberry/AccessibilityUIElementBlackBerry.cpp:
+        (AccessibilityUIElement::classList):
+        * DumpRenderTree/mac/AccessibilityUIElementMac.mm:
+        (AccessibilityUIElement::classList):
+        * DumpRenderTree/win/AccessibilityUIElementWin.cpp:
+        (AccessibilityUIElement::classList):
+        * WebKitTestRunner/InjectedBundle/AccessibilityUIElement.cpp:
+        (WTR::AccessibilityUIElement::classList):
+        * WebKitTestRunner/InjectedBundle/AccessibilityUIElement.h:
+        * WebKitTestRunner/InjectedBundle/Bindings/AccessibilityUIElement.idl:
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::AccessibilityUIElement::classList):
+        * WebKitTestRunner/InjectedBundle/mac/AccessibilityUIElementMac.mm:
+        (WTR::AccessibilityUIElement::classList):
+
+2013-09-10  Denis Nomiyama  <d.nomiyama@samsung.com>
+
+        [GTK] accessibility/loading-iframe-sends-notification.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=98370
+
+        Reviewed by Chris Fleizach.
+
+        Added AXLayoutComplete for the GTK platform.
+
+        * DumpRenderTree/atk/AccessibilityCallbacksAtk.cpp:
+        (axObjectEventListener): Added notification AXLayoutComplete for
+        layout-complete signal.
+
+2013-09-09  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Change from using OwnPtr<GDI Stuff> to new GDIObject.
+        https://bugs.webkit.org/show_bug.cgi?id=120778
+
+        Reviewed by Anders Carlsson.
+
+        * DumpRenderTree/win/PixelDumpSupportWin.cpp:
+        (createBitmapContextFromWebView): Use GDIObject.
+        * Scripts/webkitpy/style/checkers/cpp.py:
+        (check_for_leaky_patterns): Update for GDIObject instead of adoptPtr and OwnPtr.
+        * Scripts/webkitpy/style/checkers/cpp_unittest.py:
+        (LeakyPatternTest.test_create_dc): Update for GDIObject instead of adoptPtr/OwnPtr.
+        (LeakyPatternTest.test_create_compatible_dc): Ditto.
+
+2013-09-10  Víctor Manuel Jáquez Leal  <vjaquez@igalia.com>
+
+        Unreviewed. Add myself as a committer.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-09-10  Mark Lam  <mark.lam@apple.com>
+
+        Move LayoutTests/fast/js to LayoutTests/js.
+        https://bugs.webkit.org/show_bug.cgi?id=120899.
+
+        Rubber stamped by Filip Pizlo.
+
+        Changed scripts to reflect the path change.
+
+        * BuildSlaveSupport/build.webkit.org-config/master.cfg:
+        (RunJavaScriptCoreTests.commandComplete):
+        * BuildSlaveSupport/build.webkit.org-config/mastercfg_unittest.py:
+        (test_fast_js_failure_new_output):
+        (test_fast_js_crash_new_output):
+        (test_mozilla_and_fast_js_failure_new_output):
+        * DumpRenderTree/blackberry/DumpRenderTree.cpp:
+        (BlackBerry::WebKit::DumpRenderTree::runTests):
+        * Scripts/make-script-test-wrappers:
+        (findTemplateFiles):
+        * Scripts/run-fast-jsc:
+        * Scripts/run-javascriptcore-tests:
+        * Scripts/webkitpy/layout_tests/models/test_expectations.py:
+        (TestExpectations):
+
+2013-09-10  Denis Nomiyama  <d.nomiyama@samsung.com>
+
+        [GTK] Missing DRT AccessibilityController::addNotificationListener implementation
+        https://bugs.webkit.org/show_bug.cgi?id=70606
+
+        Reviewed by Mario Sanchez Prada.
+
+        Implemented the global notification listener for
+        AccessibilityController. The signal is generated by
+        AXObjectCache::postPlatformNotification() and received by
+        axObjectEventListener(). axObjectEventListener will then invoke
+        JSObjectCallAsFunction() with the respective callback function.
+
+        There is no additional test for this patch since its implementation will
+        be tested by a11y layout tests that are currently skipped (e.g. bug
+        98370).
+
+        * DumpRenderTree/AccessibilityController.h: Added a global notification
+        handler for GTK+.
+        * DumpRenderTree/atk/AccessibilityControllerAtk.cpp:
+        (AccessibilityController::AccessibilityController): Initializes the
+        global handler with 0.
+        (AccessibilityController::addNotificationListener): Creates the
+        notification handler and sets the notification function callback.
+        (AccessibilityController::removeNotificationListener): Removes the
+        global handler.
+
+2013-09-10  Krzysztof Czech  <k.czech@samsung.com>
+
+        [ATK] Incorrect type for holding float value
+        https://bugs.webkit.org/show_bug.cgi?id=121091
+
+        Reviewed by Mario Sanchez Prada.
+
+        Variable is not set properly, because of it's type.
+
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::alterCurrentValue):
+
+2013-09-10  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] make use of qtHaveModule() 
+        https://bugs.webkit.org/show_bug.cgi?id=121090
+
+        Reviewed by Jocelyn Turcotte.
+        Patch by Oswald Buddenhagen <oswald.buddenhagen@digia.com>
+
+        Use qtHaveModule instead of our own haveQtModule.
+
+        * QtTestBrowser/QtTestBrowser.pro:
+        * qmake/mkspecs/features/configure.prf:
+        * qmake/mkspecs/features/features.prf:
+        * qmake/mkspecs/features/functions.prf:
+
+2013-09-10  Michał Pakuła vel Rutka  <m.pakula@samsung.com>
+
+        Unreviewed. Add myself as a committer.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-09-10  Radu Stavila  <stavila@adobe.com>
+
+        Unreviewed. Added myself as a committer.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-09-10  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [GTK] Test /webkit/atk/getTextInParagraphAndBodyModerate fails
+        https://bugs.webkit.org/show_bug.cgi?id=105538
+
+        Reviewed by Chris Fleizach.
+
+        Unskip passing test getTextInParagraphAndBodyModerate.
+
+        * Scripts/run-gtk-tests:
+        (TestRunner): Unskip pasing test.
+
+2013-09-09  Mark Lam  <mark.lam@apple.com>
+
+        Remove more references to the deleted js-test-style.css.
+        https://bugs.webkit.org/show_bug.cgi?id=120899.
+
+        Reviewed by Ryosuke Niwa.
+
+        * Scripts/webkitpy/to_be_moved/update_webgl_conformance_tests.py:
+        (translate_includes):
+
+2013-09-09  Mark Lam  <mark.lam@apple.com>
+
+        Re-landing r155392 (Point Tools scripts to LayoutTests/resources).
+        https://bugs.webkit.org/show_bug.cgi?id=120899.
+
+        Not reviewed.
+
+        The webkitpy test failure that resulted in the rollout is due to
+        update_webgl_conformance_tests_unittest.py referencing js-test-style.css
+        which is to be deleted. Deleting that line fixes the issue.
+
+        * Scripts/make-new-script-test:
+        (makePathToSharedSources):
+        * Scripts/run-fast-jsc:
+        * Scripts/webkitperl/httpd.pm:
+        (getDefaultConfigForTestDirectory):
+        * Scripts/webkitpy/layout_tests/servers/apache_http_server.py:
+        (LayoutTestApacheHttpd.__init__):
+        * Scripts/webkitpy/layout_tests/servers/http_server.py:
+        (Lighttpd.__init__):
+        * Scripts/webkitpy/layout_tests/servers/http_server_integrationtest.py:
+        (BaseTest.integration_test_port_and_root):
+        * Scripts/webkitpy/layout_tests/servers/http_server_unittest.py:
+        (TestHttpServer.test_start_cmd):
+        * Scripts/webkitpy/to_be_moved/update_webgl_conformance_tests.py:
+        (translate_includes):
+        * Scripts/webkitpy/to_be_moved/update_webgl_conformance_tests_unittest.py:
+        (TestTranslation.test_include_rewriting):
+
+2013-09-09  Mark Lam  <mark.lam@apple.com>
+
+        Rolling out r155392 (Point Tools scripts to LayoutTests/resources): breaks tests.
+        https://bugs.webkit.org/show_bug.cgi?id=120899.
+
+        Not reviewed.
+
+        * Scripts/make-new-script-test:
+        (makePathToSharedSources):
+        * Scripts/run-fast-jsc:
+        * Scripts/webkitperl/httpd.pm:
+        (getDefaultConfigForTestDirectory):
+        * Scripts/webkitpy/layout_tests/servers/apache_http_server.py:
+        (LayoutTestApacheHttpd.__init__):
+        * Scripts/webkitpy/layout_tests/servers/http_server.py:
+        (Lighttpd.__init__):
+        * Scripts/webkitpy/layout_tests/servers/http_server_integrationtest.py:
+        (BaseTest.integration_test_port_and_root):
+        * Scripts/webkitpy/layout_tests/servers/http_server_unittest.py:
+        (TestHttpServer.test_start_cmd):
+        * Scripts/webkitpy/to_be_moved/update_webgl_conformance_tests.py:
+        (translate_includes):
+        * Scripts/webkitpy/to_be_moved/update_webgl_conformance_tests_unittest.py:
+        (TestTranslation.test_include_rewriting):
+
+2013-09-09  Mark Lam  <mark.lam@apple.com>
+
+        Point Tools scripts to LayoutTests/resources.
+        https://bugs.webkit.org/show_bug.cgi?id=120899.
+
+        Reviewed by Ryosuke Niwa.
+
+        * Scripts/make-new-script-test:
+        (makePathToSharedSources):
+        * Scripts/run-fast-jsc:
+        * Scripts/webkitperl/httpd.pm:
+        (getDefaultConfigForTestDirectory):
+        * Scripts/webkitpy/layout_tests/servers/apache_http_server.py:
+        (LayoutTestApacheHttpd.__init__):
+        * Scripts/webkitpy/layout_tests/servers/http_server.py:
+        (Lighttpd.__init__):
+        * Scripts/webkitpy/layout_tests/servers/http_server_integrationtest.py:
+        (BaseTest.integration_test_port_and_root):
+        * Scripts/webkitpy/layout_tests/servers/http_server_unittest.py:
+        (TestHttpServer.test_start_cmd):
+        * Scripts/webkitpy/to_be_moved/update_webgl_conformance_tests.py:
+        (translate_includes):
+        * Scripts/webkitpy/to_be_moved/update_webgl_conformance_tests_unittest.py:
+        (TestTranslation.test_include_rewriting):
+
+2013-09-09  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed. Update Cygwin Downloader to include lighttpd and download setup-x86.exe.
+
+        * CygwinDownloader/cygwin-downloader.py:
+        * CygwinDownloader/cygwin-downloader.zip:
+
+2013-09-09  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix Ruby exception handling.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-09-09  Filip Pizlo  <fpizlo@apple.com>
+
+        Stress tests should test the jsc profiler (-p)
+        https://bugs.webkit.org/show_bug.cgi?id=121043
+
+        Reviewed by Mark Hahnenberg.
+        
+        Add a runProfiler command that all tests could use. This requires profiler-test-helper,
+        which first runs the JS test and then tries the output with display-profiler-output.
+        But if any of the things required for this to work aren't present, we just do a simpler
+        test that just uses "-p".
+        
+        Because I didn't want to pollute SunSpider with "//@ runProfiler", I added the ability
+        to create test collections using a yaml file that specifies the test path and the
+        command to run.
+
+        * Scripts/jsc-stress-test-helpers: Added.
+        * Scripts/jsc-stress-test-helpers/profiler-test-helper: Added.
+        * Scripts/run-javascriptcore-tests:
+        * Scripts/run-jsc-stress-tests:
+
+2013-09-09  Zan Dobersek  <zdobersek@igalia.com>
+
+        [webkitpy] Remove the DeprecatedPort class
+        https://bugs.webkit.org/show_bug.cgi?id=121030
+
+        Reviewed by Ryosuke Niwa.
+
+        Remove the remaining uses of DeprecatedPort, folding its functionality into the Port class.
+
+        The various methods returning commands are moved from the DeprecatedPort class into the Port class,
+        with the Port subclasses overriding specific methods as required.
+
+        * Scripts/webkitpy/common/config/ports.py: Removed.
+        * Scripts/webkitpy/common/config/ports_mock.py: Removed.
+        * Scripts/webkitpy/common/config/ports_unittest.py: Removed.
+        * Scripts/webkitpy/port/base.py:
+        (Port.tooling_flag): This method returns the command line argument that corresponds to the type of the port.
+        It's formatted as '--port=port_name', where port_name is the port's name that's additionally appended the '-wk2'
+        string if the port instance represents the WK2 variation of the port.
+        (Port.script_shell_command): Moved here from the DeprecatedPort interface.
+        (Port.make_args): Ditto.
+        (Port.update_webkit_command): Ditto.
+        (Port.check_webkit_style_command): Ditto.
+        (Port.prepare_changelog_command): Ditto.
+        (Port.build_webkit_command): Ditto.
+        (Port.run_javascriptcore_tests_command): Ditto.
+        (Port.run_webkit_unit_tests_command): Ditto.
+        (Port.run_webkit_tests_command): Ditto.
+        (Port.run_python_unittests_command): Ditto.
+        (Port.run_perl_unittests_command): Ditto.
+        (Port.run_bindings_tests_command): Ditto.
+        * Scripts/webkitpy/port/base_unittest.py:
+        (PortTest.test_build_webkit_command): Add a test for the Port.build_webkit_command() method that tests correct
+        return value with different build types passed to the method.
+        * Scripts/webkitpy/port/efl.py:
+        (EflPort.build_webkit_command): Override the Port.build_webkit_command() method, appending the necessary options
+        to the command line.
+        * Scripts/webkitpy/port/efl_unittest.py:
+        (EflPortTest.test_commands): A thorough test of return values for all the new methods, for both the WK1 and WK2
+        variations of the EflPort class.
+        * Scripts/webkitpy/port/gtk.py:
+        (GtkPort.build_webkit_command): Override the Port.build_webkit_command() method, appending the necessary options
+        to the command line.
+        (GtkPort.run_webkit_tests_command): Ditto for Port.run_webkit_tests_command().
+        * Scripts/webkitpy/port/gtk_unittest.py:
+        (GtkPortTest.test_commands): A thorough test of return values for all the new methods, for both the WK1
+        and WK2 variations of the GtkPort class.
+        * Scripts/webkitpy/port/mac_unittest.py:
+        (MacTest.test_commands): A thorough test of return values for all the new methods, for both the WK1 and WK2
+        variations of the MacPort class.
+        * Scripts/webkitpy/port/qt.py:
+        (QtPort.build_webkit_command): Override the Port.build_webkit_command() method, appending the necessary options
+        to the command line.
+        (QtPort.run_webkit_tests_command): Ditto for Port.run_webkit_tests_command().
+        * Scripts/webkitpy/port/qt_unittest.py:
+        (QtPortTest.test_commands): A thorough test of return values for all the new methods, for both the WK1 and WK2
+        variations of the QtPort class.
+        * Scripts/webkitpy/port/test.py:
+        (TestPort.make_args): Return a mock value that's intended for testing.
+        (TestPort.check_webkit_style_command): Return the script's name prepended with 'mock-'.
+        (TestPort.update_webkit_command): Ditto.
+        (TestPort.build_webkit_command): Ditto.
+        (TestPort.prepare_changelog_command): Ditto.
+        (TestPort.run_python_unittests_command): Ditto.
+        (TestPort.run_perl_unittests_command): Ditto.
+        (TestPort.run_javascriptcore_tests_command): Ditto.
+        (TestPort.run_webkit_unit_tests_command): Ditto.
+        (TestPort.run_webkit_tests_command): Ditto.
+        (TestPort.run_bindings_tests_command): Ditto.
+        * Scripts/webkitpy/tool/bot/flakytestreporter.py:
+        (FlakyTestReporter.__init__): WebKitPatch.port() should be called now.
+        * Scripts/webkitpy/tool/bot/irc_command.py:
+        (Rollout._update_working_copy): Ditto.
+        * Scripts/webkitpy/tool/commands/download_unittest.py:
+        (DownloadCommandsTest.test_land_cowhand): Fix a typo, javacriptcore -> javascriptcore.
+        * Scripts/webkitpy/tool/commands/earlywarningsystem.py:
+        (AbstractEarlyWarningSystem.run_command): Use the tooling flag as provided by the Port interface.
+        * Scripts/webkitpy/tool/commands/queues.py:
+        (PatchProcessingQueue.begin_work_queue): Remove the use of the DeprecatedPort. Create the port that will be used
+        by the PatchProcessingQueue through the tool's port factory, and also pass it to the tool, keeping the nasty
+        abstraction violation.
+        (CommitQueue.run_command): Use the tooling flag as provided by the Port interface.
+        * Scripts/webkitpy/tool/main.py:
+        (WebKitPatch.__init__): self._deprecated_port -> self._port.
+        (WebKitPatch.port): Replaces the WebKitPatch.deprecated_port() method, returns self._port.
+        (WebKitPatch.handle_global_options): Create the Port object through the PortFactory.
+        * Scripts/webkitpy/tool/mocktool.py:
+        (MockTool.__init__): self._deprecated_port -> self._port. The TestPort object also has its name method overridden
+        to return 'MockPort', as many output comparisons rely on the MockPort name. These should all be replaced later, in
+        a separate patch.
+        (MockTool.port): Mimicks WebKitPatch.port().
+        * Scripts/webkitpy/tool/steps/build.py:
+        (Build.build): WebKitPatch.port() should be called now.
+        * Scripts/webkitpy/tool/steps/checkstyle.py:
+        (CheckStyle.run): Ditto.
+        * Scripts/webkitpy/tool/steps/commit.py:
+        (Commit._check_test_expectations): Ditto.
+        * Scripts/webkitpy/tool/steps/preparechangelog.py:
+        (PrepareChangeLog.run): Ditto.
+        * Scripts/webkitpy/tool/steps/preparechangelogforrevert.py:
+        (PrepareChangeLogForRevert.run): Ditto.
+        * Scripts/webkitpy/tool/steps/runtests.py:
+        (RunTests.run): Ditto.
+        * Scripts/webkitpy/tool/steps/runtests_unittest.py:
+        (RunTestsTest.test_webkit_run_unit_tests): The unnecessary methods should now be overridden on MockTool._port.
+        * Scripts/webkitpy/tool/steps/steps_unittest.py:
+        (StepsTest.test_runtests_args): Remove the MockTool._deprecated_port override, but don't replace it. Rather than
+        that the expected test output is adjusted to contain the mock-* command names.
+        * Scripts/webkitpy/tool/steps/update.py:
+        (Update._update_command): WebKitPatch.port() should be called now.
+        * Scripts/webkitpy/tool/steps/update_unittest.py:
+        (UpdateTest.test_update_command_non_interactive): Override the MockTool._port for testing purposes with the port
+        that corresponds to the removed DeprecatedPort subclasses.
+        (UpdateTest.test_update_command_interactive): Ditto.
+
+2013-09-09  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] 32-bit builder should run the JSC tests
+        https://bugs.webkit.org/show_bug.cgi?id=119215
+
+        Reviewed by Philippe Normand.
+
+        Rename the TestClass member of the TestFactory and BuildAndTestFactory classes
+        to a more descriptive name, 'LayoutTestClass'. In these two factory classes, the layout testing-specific
+        steps are only added if the LayoutTestClass member was not overridden to the value of None in a
+        derived class.
+
+        Remove the BuildAndAPITestFactory class and replace it with the BuildAndNonLayoutTestFactory class that
+        is derived from the BuildAndTestFactory class and overrides the LayoutTestClass member to the value of None.
+        This allows for builders of the BuildAndNonLayoutTest type to run all but the layout tests. This type
+        is currently used by the GTK 32-bit builder - there's at the moment no interest to have the builder cover
+        layout testing while other types of testing are still expected to be performed.
+
+        * BuildSlaveSupport/build.webkit.org-config/config.json:
+        * BuildSlaveSupport/build.webkit.org-config/master.cfg:
+        (BuildFactory.__init__):
+        (TestFactory):
+        (TestFactory.__init__):
+        (BuildAndTestFactory):
+        (BuildAndTestFactory.__init__):
+        (BuildAndTestWebKit2Factory):
+        (BuildAndTestWebKit2OnlyFactory):
+        (BuildAndNonLayoutTestFactory):
+        (TestLeaksFactory):
+        (TestWebKit2Factory):
+
+2013-09-09  Manuel Rego Casasnovas  <rego@igalia.com>
+
+        Unreviewed. Add myself as a committer.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
 2013-09-09  Krzysztof Czech  <k.czech@samsung.com>
 
         [AX][ATK] AccessibilityObject representing ProgressBar element should be ATK_VALUE type

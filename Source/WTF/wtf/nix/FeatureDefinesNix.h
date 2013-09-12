@@ -206,10 +206,6 @@
 #define ENABLE_PROGRESS_ELEMENT 1
 #endif
 
-#if !defined(ENABLE_PROMISES)
-#define ENABLE_PROMISES 1
-#endif
-
 #if !defined(ENABLE_REQUEST_ANIMATION_FRAME)
 #define ENABLE_REQUEST_ANIMATION_FRAME 1
 #endif

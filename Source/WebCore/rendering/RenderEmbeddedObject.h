@@ -23,19 +23,22 @@
 #ifndef RenderEmbeddedObject_h
 #define RenderEmbeddedObject_h
 
-#include "RenderPart.h"
+#include "RenderWidget.h"
 
 namespace WebCore {
 
+class HTMLAppletElement;
 class MouseEvent;
 class TextRun;
 
 // Renderer for embeds and objects, often, but not always, rendered via plug-ins.
 // For example, <embed src="foo.html"> does not invoke a plug-in.
-class RenderEmbeddedObject : public RenderPart {
+class RenderEmbeddedObject : public RenderWidget {
 public:
-    RenderEmbeddedObject(Element*);
+    RenderEmbeddedObject(HTMLFrameOwnerElement*);
     virtual ~RenderEmbeddedObject();
+
+    static RenderEmbeddedObject* createForApplet(HTMLAppletElement&);
 
     enum PluginUnavailabilityReason {
         PluginMissing,

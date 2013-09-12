@@ -27,7 +27,9 @@
 #include "AnimationController.h"
 #include "Frame.h"
 #include "GraphicsContext.h"
+#include "HTMLFrameOwnerElement.h"
 #include "HitTestResult.h"
+#include "PluginViewBase.h"
 #include "RenderCounter.h"
 #include "RenderLayer.h"
 #include "RenderView.h"
@@ -87,7 +89,7 @@ static void moveWidgetToParentSoon(Widget* child, FrameView* parent)
     WidgetHierarchyUpdatesSuspensionScope::scheduleWidgetToMove(child, parent);
 }
 
-RenderWidget::RenderWidget(Element* element)
+RenderWidget::RenderWidget(HTMLFrameOwnerElement* element)
     : RenderReplaced(element)
     , m_widget(0)
     , m_frameView(element->document().view())
@@ -96,6 +98,7 @@ RenderWidget::RenderWidget(Element* element)
     // able to handle that.
     , m_refCount(1)
 {
+    setInline(false);
     view().addWidget(this);
 }
 
@@ -140,7 +143,7 @@ static inline IntRect roundedIntRect(const LayoutRect& rect)
 
 bool RenderWidget::setWidgetGeometry(const LayoutRect& frame)
 {
-    if (!node())
+    if (!frameOwnerElement())
         return false;
 
     IntRect clipRect = roundedIntRect(enclosingLayer()->childrenClipRect());
@@ -154,7 +157,7 @@ bool RenderWidget::setWidgetGeometry(const LayoutRect& frame)
     m_clipRect = clipRect;
 
     RenderWidgetProtector protector(this);
-    Ref<Node> protectNode(*node());
+    Ref<HTMLFrameOwnerElement> protectElement(*frameOwnerElement());
     m_widget->setFrameRect(newFrame);
 
     if (clipChanged && !boundsChanged)
@@ -212,6 +215,9 @@ void RenderWidget::setWidget(PassRefPtr<Widget> widget)
         }
         moveWidgetToParentSoon(m_widget.get(), m_frameView);
     }
+    // make sure the scrollbars are set correctly for restore
+    // ### find better fix
+    viewCleared();
 }
 
 void RenderWidget::layout()
@@ -342,7 +348,7 @@ void RenderWidget::deref(RenderArena *arena)
 
 void RenderWidget::updateWidgetPosition()
 {
-    if (!m_widget || !node()) // Check the node in case destroy() has been called.
+    if (!m_widget || !frameOwnerElement()) // Check the node in case destroy() has been called.
         return;
 
     bool boundsChanged = updateWidgetGeometry();
@@ -355,13 +361,6 @@ void RenderWidget::updateWidgetPosition()
         if ((boundsChanged || frameView->needsLayout()) && frameView->frame().page())
             frameView->layout();
     }
-}
-
-void RenderWidget::widgetPositionsUpdated()
-{
-    if (!m_widget)
-        return;
-    m_widget->widgetPositionsUpdated();
 }
 
 IntRect RenderWidget::windowClipRect() const
@@ -393,11 +392,32 @@ RenderWidget* RenderWidget::find(const Widget* widget)
 
 bool RenderWidget::nodeAtPoint(const HitTestRequest& request, HitTestResult& result, const HitTestLocation& locationInContainer, const LayoutPoint& accumulatedOffset, HitTestAction action)
 {
+    if (request.allowsChildFrameContent() && widget() && widget()->isFrameView() && toFrameView(widget())->renderView()) {
+        FrameView* childFrameView = toFrameView(widget());
+        RenderView* childRoot = childFrameView->renderView();
+
+        LayoutPoint adjustedLocation = accumulatedOffset + location();
+        LayoutPoint contentOffset = LayoutPoint(borderLeft() + paddingLeft(), borderTop() + paddingTop()) - childFrameView->scrollOffset();
+        HitTestLocation newHitTestLocation(locationInContainer, -adjustedLocation - contentOffset);
+        HitTestRequest newHitTestRequest(request.type() | HitTestRequest::ChildFrameHitTest);
+        HitTestResult childFrameResult(newHitTestLocation);
+
+        bool isInsideChildFrame = childRoot->hitTest(newHitTestRequest, newHitTestLocation, childFrameResult);
+
+        if (newHitTestLocation.isRectBasedTest())
+            result.append(childFrameResult);
+        else if (isInsideChildFrame)
+            result = childFrameResult;
+
+        if (isInsideChildFrame)
+            return true;
+    }
+
     bool hadResult = result.innerNode();
     bool inside = RenderReplaced::nodeAtPoint(request, result, locationInContainer, accumulatedOffset, action);
 
     // Check to see if we are really over the widget itself (and not just in the border/padding area).
-    if ((inside || result.isRectBasedTest()) && !hadResult && result.innerNode() == node())
+    if ((inside || result.isRectBasedTest()) && !hadResult && result.innerNode() == frameOwnerElement())
         result.setIsOverWidget(contentBoxRect().contains(result.localPoint()));
     return inside;
 }
@@ -409,6 +429,48 @@ CursorDirective RenderWidget::getCursor(const LayoutPoint& point, Cursor& cursor
         return DoNotSetCursor;
     }
     return RenderReplaced::getCursor(point, cursor);
+}
+
+
+#if USE(ACCELERATED_COMPOSITING)
+bool RenderWidget::requiresLayer() const
+{
+    return RenderReplaced::requiresLayer() || requiresAcceleratedCompositing();
+}
+
+bool RenderWidget::requiresAcceleratedCompositing() const
+{
+    // There are two general cases in which we can return true. First, if this is a plugin 
+    // renderer and the plugin has a layer, then we need a layer. Second, if this is 
+    // a renderer with a contentDocument and that document needs a layer, then we need
+    // a layer.
+    if (widget() && widget()->isPluginViewBase() && toPluginViewBase(widget())->platformLayer())
+        return true;
+
+    if (!frameOwnerElement())
+        return false;
+
+    if (Document* contentDocument = frameOwnerElement()->contentDocument()) {
+        if (RenderView* view = contentDocument->renderView())
+            return view->usesCompositing();
+    }
+
+    return false;
+}
+#endif
+
+bool RenderWidget::needsPreferredWidthsRecalculation() const
+{
+    if (RenderReplaced::needsPreferredWidthsRecalculation())
+        return true;
+    return embeddedContentBox();
+}
+
+RenderBox* RenderWidget::embeddedContentBox() const
+{
+    if (!frameOwnerElement() || !widget() || !widget()->isFrameView())
+        return 0;
+    return toFrameView(widget())->embeddedContentBox();
 }
 
 } // namespace WebCore

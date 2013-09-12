@@ -1,3 +1,261 @@
+2013-09-12  Anders Carlsson  <andersca@apple.com>
+
+        SharedBuffer::createCFData should return RetainPtr<CFDataRef>
+        https://bugs.webkit.org/show_bug.cgi?id=121230
+
+        Reviewed by Darin Adler.
+
+        * NetworkProcess/mac/NetworkResourceLoaderMac.mm:
+        (WebKit::NetworkResourceLoader::tryGetShareableHandleFromSharedBuffer):
+        * Shared/WebArchiveResource.cpp:
+        (WebKit::WebArchiveResource::data):
+
+2013-09-12  Zalan Bujtas  <zalan@apple.com>
+
+        REGRESSION: Inline PDF that are cached fail to appear in iframe.
+        https://bugs.webkit.org/show_bug.cgi?id=75449
+
+        Reviewed by Darin Adler.
+
+        Make sure 'frame is from page cache' flag is set for subframes too.
+
+        WebFrameLoaderClient::m_frameCameFromPageCache == true forces plugins
+        to be loaded manually. It ensures that the plugin raw data is fetched again
+        while the containing frame is being restored from the page cache.
+        (Plugins get destroyed when the frame goes to page cache.)
+
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::transitionToCommittedFromCachedFrame):
+        This gets called only on the frame where the actual history navigation happens.
+        (WebKit::WebFrameLoaderClient::didRestoreFromPageCache):
+        This gets called for all the restored frames.
+
+2013-09-11  Simon Fraser  <simon.fraser@apple.com>
+
+        Make sure that layout is up-to-date when moving a WKView into a window, to avoid !needsLayout() assertions in RenderView::paint()
+        https://bugs.webkit.org/show_bug.cgi?id=121196
+
+        Reviewed by Tim Horton.
+        
+        When a WKView was moved into a window, it was possible for us to paint
+        without ensuring that layout is up-to-date. Fix this by having
+        WebPage::setIsInWindow() update layout if we are moving to a window.
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::setIsInWindow):
+
+2013-09-11  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [GTK] Remove Gail dependency from build system for GTK3
+        https://bugs.webkit.org/show_bug.cgi?id=119673
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * GNUmakefile.am: Removed GAIL_LIBS.
+
+2013-09-11  Alberto Garcia  <berto@igalia.com>
+
+        [WK2] [GTK] LayerTreeHostGtk: don't set m_isValid to false if glContext() returns null
+        https://bugs.webkit.org/show_bug.cgi?id=120892
+
+        Reviewed by Martin Robinson.
+
+        If the GL context cannot be created then m_isValid is set to false
+        during the initialization of LayerTreeHostGtk.
+
+        This is not really necessary since the rest of the code already
+        deals with that situation, so it doesn't have any effect other
+        than breaking the assertion in invalidate().
+
+        * WebProcess/WebPage/gtk/LayerTreeHostGtk.cpp:
+        (WebKit::LayerTreeHostGtk::initialize):
+
+2013-09-11  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r154899.
+        http://trac.webkit.org/changeset/154899
+        https://bugs.webkit.org/show_bug.cgi?id=121162
+
+        It didn't fix the problem and broke other unit tests
+        (Requested by KaL on #webkit).
+
+        * UIProcess/API/gtk/tests/WebViewTest.cpp:
+        (WebViewTest::resizeView):
+
+2013-09-11  Mikhail Pozdnyakov  <mikhail.pozdnyakov@intel.com>
+
+        WTF::OwnPtr should behave similarly with the rest of WTF smart pointers
+        https://bugs.webkit.org/show_bug.cgi?id=120773
+
+        Reviewed by Anders Carlsson.
+
+        Before the change OwnPtr could take either the pointer type or the pointed-to type, which was bad
+        for the following reasons:
+        - It distinguished OwnPtr behaviour from other WTF smart pointer classes behaviour (so it was confusing for the Client).
+        - It was potential error-prone as it actually modified the type given by the Client in opaque way.
+
+        * UIProcess/API/efl/ewk_database_manager.cpp:
+        (getDatabaseOriginsCallback):
+        * UIProcess/API/efl/ewk_storage_manager.cpp:
+        (getStorageOriginsCallback):
+
+2013-09-11  ChangSeok Oh  <changseok.oh@collabora.com>
+
+        Unreviewed build fix.
+
+        * GNUmakefile.list.am: Duplicated NetscapePluginModuleNone.cpp & NetscapePluginNone.cpp.
+        They cause build breaks of multiple definitions when targeting wayland build.
+
+2013-09-11  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Generate more HTML type checks and casting
+        https://bugs.webkit.org/show_bug.cgi?id=121080
+
+        Reviewed by Andreas Kling.
+
+        Clean-up remained functions of HTML elements using auto-generated isFooElement(),
+        and replace toFooElement() with ELEMENT_TYPE_CASTS() macro.
+
+        Besides this patch clean-up unnecessary checks which are being supported by
+        auto-generated isFooElement().
+
+        * WebProcess/WebPage/WebFrame.cpp:
+        (WebKit::WebFrame::containsAnyFormControls):
+
+2013-09-10  Marcelo Morais  <m.morais@samsung.com>
+
+        [EFL] WebInspector: Move to new webinspector
+        https://bugs.webkit.org/show_bug.cgi?id=119559
+
+        Reviewed by Gyuyoung Kim.
+
+        Loading the new Web Inspector page instead of the old inspector.
+        Co-Author: Andre Loureiro <andre.vl@samsung.com>
+
+        * UIProcess/efl/WebInspectorProxyEfl.cpp:
+        (WebKit::WebInspectorProxy::inspectorPageURL):
+
+2013-09-10  Sergio Villar Senin  <svillar@igalia.com>
+
+        [WK2][GTK] Frequent crashes when showing context menus in Debug builds
+        https://bugs.webkit.org/show_bug.cgi?id=121099
+
+        Reviewed by Carlos Garcia Campos.
+
+        Disconnect signal handlers when destroying the context menu proxy
+        object. This avoids use-after-free crashes when opening several
+        context menus in a row.
+
+        * UIProcess/gtk/WebContextMenuProxyGtk.cpp:
+        (WebKit::WebContextMenuProxyGtk::append):
+        (WebKit::WebContextMenuProxyGtk::~WebContextMenuProxyGtk):
+        * UIProcess/gtk/WebContextMenuProxyGtk.h:
+
+2013-09-10  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] make use of qtHaveModule() 
+        https://bugs.webkit.org/show_bug.cgi?id=121090
+
+        Reviewed by Jocelyn Turcotte.
+        Patch by Oswald Buddenhagen <oswald.buddenhagen@digia.com>
+
+        Use qtHaveModule instead of our own haveQtModule.
+
+        * WebProcess.pro:
+
+2013-09-10  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] /webkit2/WebKitWebView/default-menu fails when GtkSettings:gtk-show-input-method-menu is disabled
+        https://bugs.webkit.org/show_bug.cgi?id=121088
+
+        Reviewed by Xan Lopez.
+
+        * UIProcess/API/gtk/tests/TestContextMenu.cpp: Always check
+        Unicode submenu is present in default context menu for editable
+        content.
+
+2013-09-09  Dean Jackson  <dino@apple.com>
+
+        [WebGL] Allow multithreaded OpenGL contexts
+        https://bugs.webkit.org/show_bug.cgi?id=121062
+
+        Reviewed by Simon Fraser.
+
+        Expose a new preference "multithreadedWebGLEnabled".
+
+        * Shared/WebPreferencesStore.h:
+        * UIProcess/API/C/WKPreferences.cpp:
+        (WKPreferencesSetMultithreadedWebGLEnabled):
+        (WKPreferencesGetMultithreadedWebGLEnabled):
+        * UIProcess/API/C/WKPreferencesPrivate.h:
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::updatePreferences):
+        * mac/WebKit2.order:
+
+2013-09-09  Dean Jackson  <dino@apple.com>
+
+        Enable WebGL for OS X nightlies
+        https://bugs.webkit.org/show_bug.cgi?id=121040
+
+        Reviewed by Beth Dakin.
+
+        * Shared/WebPreferencesStore.h: Set initial value to true.
+
+2013-09-08  Anders Carlsson  <andersca@apple.com>
+
+        Begin moving off of TypeTraits.h
+        https://bugs.webkit.org/show_bug.cgi?id=121006
+
+        Reviewed by Darin Adler.
+
+        Convert uses of WTF type traits to STL type traits.
+
+        * Platform/CoreIPC/ArgumentCoder.h:
+        * Platform/CoreIPC/ArgumentCoders.h:
+        * Platform/CoreIPC/ArgumentDecoder.h:
+        * Platform/CoreIPC/ArgumentEncoder.h:
+        * Platform/CoreIPC/Arguments.h:
+        * Shared/API/c/WKSharedAPICast.h:
+        (WebKit::toImpl):
+
+2013-09-09  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed build fix.
+
+        * GNUmakefile.list.am: Typo - left-over \ from a copy/paste, most likely.
+
+2013-09-09  Anton Obzhirov  <a.obzhirov@samsung.com>
+
+        [GTK] Cancel the current active WebKitAuthenticationRequest on load failed
+        https://bugs.webkit.org/show_bug.cgi?id=120350
+
+        Reviewed by Carlos Garcia Campos.
+
+        The default dialog does not get closed and the authentication is not cancelled
+        if loading fails or is stopped on a page which requires HTTP authentication.
+
+        This patch cancels the authentication request on load failed
+        and adds new authentication cancelled signal in WebKitAuthenticationRequest
+        to allow the application handling of authentication UI.
+
+        * UIProcess/API/gtk/WebKitAuthenticationDialog.cpp:
+        (authenticationCancelled):
+        (webkitAuthenticationDialogInitialize):
+        (webkitAuthenticationDialogDispose):
+        (webkitAuthenticationDialogNew):
+        * UIProcess/API/gtk/WebKitAuthenticationDialog.h:
+        * UIProcess/API/gtk/WebKitAuthenticationRequest.cpp:
+        (webkit_authentication_request_class_init):
+        (webkit_authentication_request_cancel):
+        * UIProcess/API/gtk/WebKitWebView.cpp:
+        (webkitWebViewAuthenticate):
+        (webkitWebViewLoadFailed):
+        (webkitWebViewHandleAuthenticationChallenge):
+        (webkitWebViewCancelAuthenticationRequest):
+        * UIProcess/API/gtk/tests/TestWebKitWebView.cpp:
+        (testWebViewAuthenticationLoadCancelled):
+        (beforeAll):
+
 2013-09-09  Brian Holt  <brian.holt@samsung.com>
 
         [GTK][WK2] Update ContextMenu Download API

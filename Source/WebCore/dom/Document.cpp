@@ -207,6 +207,10 @@
 #include "ScriptedAnimationController.h"
 #endif
 
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+#include "TextAutoSizing.h"
+#endif
+
 #if ENABLE(TEXT_AUTOSIZING)
 #include "TextAutosizer.h"
 #endif
@@ -385,6 +389,18 @@ uint64_t Document::s_globalTreeVersion = 0;
 
 static const double timeBeforeThrowingAwayStyleResolverAfterLastUseInSeconds = 30;
 
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+void TextAutoSizingTraits::constructDeletedValue(TextAutoSizingKey& slot)
+{
+    new (&slot) TextAutoSizingKey(TextAutoSizingKey::deletedKeyStyle(), TextAutoSizingKey::deletedKeyDoc());
+}
+
+bool TextAutoSizingTraits::isDeletedValue(const TextAutoSizingKey& value)
+{
+    return value.style() == TextAutoSizingKey::deletedKeyStyle() && value.doc() == TextAutoSizingKey::deletedKeyDoc();
+}
+#endif
+
 Document::Document(Frame* frame, const KURL& url, unsigned documentClasses)
     : ContainerNode(0, CreateDocument)
     , TreeScope(this)
@@ -430,7 +446,7 @@ Document::Document(Frame* frame, const KURL& url, unsigned documentClasses)
     , m_loadEventFinished(false)
     , m_startTime(monotonicallyIncreasingTimeMS())
     , m_overMinimumLayoutThreshold(false)
-    , m_scriptRunner(ScriptRunner::create(this))
+    , m_scriptRunner(createOwned<ScriptRunner>(*this))
     , m_xmlVersion(ASCIILiteral("1.0"))
     , m_xmlStandalone(StandaloneUnspecified)
     , m_hasXMLDeclaration(0)
@@ -448,7 +464,7 @@ Document::Document(Frame* frame, const KURL& url, unsigned documentClasses)
     , m_sawElementsInKnownNamespaces(false)
     , m_isSrcdocDocument(false)
     , m_renderView(0)
-    , m_eventQueue(DocumentEventQueue::create(this))
+    , m_eventQueue(*this)
     , m_weakFactory(this)
     , m_idAttributeName(idAttr)
 #if ENABLE(FULLSCREEN_API)
@@ -2057,7 +2073,7 @@ void Document::detach()
         clearAXObjectCache();
 
     stopActiveDOMObjects();
-    m_eventQueue->close();
+    m_eventQueue.close();
 #if ENABLE(FULLSCREEN_API)
     m_fullScreenChangeEventTargetQueue.clear();
     m_fullScreenErrorEventTargetQueue.clear();
@@ -2112,6 +2128,12 @@ void Document::detach()
     // or this setting of the frame to 0 could be made explicit in each of the
     // callers of Document::detach().
     m_frame = 0;
+
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+    // Do this before the arena is cleared, which is needed to deref the RenderStyle on TextAutoSizingKey.
+    m_textAutoSizedNodes.clear();
+#endif
+
     m_renderArena.clear();
 
     if (m_mediaQueryMatcher)
@@ -2460,7 +2482,7 @@ void Document::implicitClose()
 
     m_processingLoadEvent = false;
 
-#if PLATFORM(MAC) || PLATFORM(WIN)
+#if PLATFORM(MAC) || PLATFORM(WIN) || PLATFORM(GTK)
     if (f && renderView() && AXObjectCache::accessibilityEnabled()) {
         // The AX cache may have been cleared at this point, but we need to make sure it contains an
         // AX object to send the notification to. getOrCreate will make sure that an valid AX object
@@ -3630,13 +3652,13 @@ void Document::dispatchWindowLoadEvent()
 void Document::enqueueWindowEvent(PassRefPtr<Event> event)
 {
     event->setTarget(domWindow());
-    m_eventQueue->enqueueEvent(event);
+    m_eventQueue.enqueueEvent(event);
 }
 
 void Document::enqueueDocumentEvent(PassRefPtr<Event> event)
 {
     event->setTarget(this);
-    m_eventQueue->enqueueEvent(event);
+    m_eventQueue.enqueueEvent(event);
 }
 
 PassRefPtr<Event> Document::createEvent(const String& eventType, ExceptionCode& ec)
@@ -4716,6 +4738,47 @@ HTMLCanvasElement* Document::getCSSCanvasElement(const String& name)
     return element.get();
 }
 
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+void Document::addAutoSizingNode(Node* node, float candidateSize)
+{
+    TextAutoSizingKey key(node->renderer()->style(), &document());
+    TextAutoSizingMap::AddResult result = m_textAutoSizedNodes.add(key, nullptr);
+    if (result.isNewEntry)
+        result.iterator->value = TextAutoSizingValue::create();
+    result.iterator->value->addNode(node, candidateSize);
+}
+
+void Document::validateAutoSizingNodes()
+{
+    Vector<TextAutoSizingKey> nodesForRemoval;
+    for (auto it = m_textAutoSizedNodes.begin(), end = m_textAutoSizedNodes.end(); it != end; ++it) {
+        RefPtr<TextAutoSizingValue> value = it->value;
+        // Update all the nodes in the collection to reflect the new
+        // candidate size.
+        if (!value)
+            continue;
+
+        value->adjustNodeSizes();
+        if (!value->numNodes())
+            nodesForRemoval.append(it->key);
+    }
+    unsigned count = nodesForRemoval.size();
+    for (unsigned i = 0; i < count; i++)
+        m_textAutoSizedNodes.remove(nodesForRemoval[i]);
+}
+    
+void Document::resetAutoSizingNodes()
+{
+    for (auto it = m_textAutoSizedNodes.begin(), end = m_textAutoSizedNodes.end(); it != end; ++it) {
+        RefPtr<TextAutoSizingValue> value = it->value;
+        if (value)
+            value->reset();
+    }
+    m_textAutoSizedNodes.clear();
+}
+
+#endif // ENABLE(IOS_TEXT_AUTOSIZING)
+
 void Document::initDNSPrefetch()
 {
     Settings* settings = this->settings();
@@ -5759,7 +5822,7 @@ void Document::updateHoverActiveState(const HitTestRequest& request, Element* in
 
     Element* innerElementInDocument = innerElement;
     while (innerElementInDocument && &innerElementInDocument->document() != this) {
-        innerElementInDocument->document().updateHoverActiveState(request, innerElementInDocument);
+        innerElementInDocument->document().updateHoverActiveState(request, innerElementInDocument, event);
         innerElementInDocument = innerElementInDocument->document().ownerElement();
     }
 
@@ -5819,8 +5882,8 @@ void Document::updateHoverActiveState(const HitTestRequest& request, Element* in
     // Locate the common ancestor render object for the two renderers.
     RenderObject* ancestor = nearestCommonHoverAncestor(oldHoverObj, newHoverObj);
 
-    Vector<RefPtr<Node>, 32> nodesToRemoveFromChain;
-    Vector<RefPtr<Node>, 32> nodesToAddToChain;
+    Vector<RefPtr<Element>, 32> elementsToRemoveFromChain;
+    Vector<RefPtr<Element>, 32> elementsToAddToChain;
 
     // mouseenter and mouseleave events are only dispatched if there is a capturing eventhandler on an ancestor
     // or a normal eventhandler on the element itself (they don't bubble).
@@ -5847,55 +5910,54 @@ void Document::updateHoverActiveState(const HitTestRequest& request, Element* in
         // (for instance by setting display:none in the :hover pseudo-class). In this case, the old hovered element (and its ancestors)
         // must be updated, to ensure it's normal style is re-applied.
         if (oldHoveredElement && !oldHoverObj) {
-            for (Node* node = oldHoveredElement.get(); node; node = node->parentNode()) {
-                if (!mustBeInActiveChain || (node->isElementNode() && toElement(node)->inActiveChain()))
-                    nodesToRemoveFromChain.append(node);
+            for (Element* element= oldHoveredElement.get(); element; element = element->parentElement()) {
+                if (!mustBeInActiveChain || element->inActiveChain())
+                    elementsToRemoveFromChain.append(element);
             }
         }
 
         // The old hover path only needs to be cleared up to (and not including) the common ancestor;
         for (RenderObject* curr = oldHoverObj; curr && curr != ancestor; curr = curr->hoverAncestor()) {
-            if (!curr->node() || curr->isText())
+            if (!curr->node() || !curr->node()->isElementNode())
                 continue;
-            if (!mustBeInActiveChain || (curr->node()->isElementNode() && toElement(curr->node())->inActiveChain()))
-                nodesToRemoveFromChain.append(curr->node());
+            Element* element = toElement(curr->node());
+            if (!mustBeInActiveChain || element->inActiveChain())
+                elementsToRemoveFromChain.append(element);
         }
         // Unset hovered nodes in sub frame documents if the old hovered node was a frame owner.
         if (oldHoveredElement && oldHoveredElement->isFrameOwnerElement()) {
             if (Document* contentDocument = toFrameOwnerElement(oldHoveredElement.get())->contentDocument())
-                contentDocument->updateHoverActiveState(request, 0);
+                contentDocument->updateHoverActiveState(request, 0, event);
         }
     }
 
     // Now set the hover state for our new object up to the root.
     for (RenderObject* curr = newHoverObj; curr; curr = curr->hoverAncestor()) {
-        if (!curr->node() || curr->isText())
+        if (!curr->node() || !curr->node()->isElementNode())
             continue;
-        if (!mustBeInActiveChain || (curr->node()->isElementNode() && toElement(curr->node())->inActiveChain()))
-            nodesToAddToChain.append(curr->node());
+        Element* element = toElement(curr->node());
+        if (!mustBeInActiveChain || element->inActiveChain())
+            elementsToAddToChain.append(element);
     }
 
-    size_t removeCount = nodesToRemoveFromChain.size();
+    size_t removeCount = elementsToRemoveFromChain.size();
     for (size_t i = 0; i < removeCount; ++i) {
-        if (nodesToRemoveFromChain[i]->isElementNode())
-            toElement(nodesToRemoveFromChain[i].get())->setHovered(false);
-        if (event && (hasCapturingMouseLeaveListener || nodesToRemoveFromChain[i]->hasEventListeners(eventNames().mouseleaveEvent)))
-            nodesToRemoveFromChain[i]->dispatchMouseEvent(*event, eventNames().mouseleaveEvent, 0, newHoveredElement);
+        elementsToRemoveFromChain[i]->setHovered(false);
+        if (event && (hasCapturingMouseLeaveListener || elementsToRemoveFromChain[i]->hasEventListeners(eventNames().mouseleaveEvent)))
+            elementsToRemoveFromChain[i]->dispatchMouseEvent(*event, eventNames().mouseleaveEvent, 0, newHoveredElement);
     }
 
     bool sawCommonAncestor = false;
-    size_t addCount = nodesToAddToChain.size();
-    for (size_t i = 0; i < addCount; ++i) {
-        if (allowActiveChanges && nodesToAddToChain[i]->isElementNode())
-            toElement(nodesToAddToChain[i].get())->setActive(true);
-        if (ancestor && nodesToAddToChain[i] == ancestor->node())
+    for (size_t i = 0, size = elementsToAddToChain.size(); i < size; ++i) {
+        if (allowActiveChanges)
+            elementsToAddToChain[i]->setActive(true);
+        if (ancestor && elementsToAddToChain[i] == ancestor->node())
             sawCommonAncestor = true;
         if (!sawCommonAncestor) {
             // Elements after the common hover ancestor does not change hover state, but are iterated over because they may change active state.
-            if (nodesToAddToChain[i]->isElementNode())
-                toElement(nodesToAddToChain[i].get())->setHovered(true);
-            if (event && (hasCapturingMouseEnterListener || nodesToAddToChain[i]->hasEventListeners(eventNames().mouseenterEvent)))
-                nodesToAddToChain[i]->dispatchMouseEvent(*event, eventNames().mouseenterEvent, 0, oldHoveredElement.get());
+            elementsToAddToChain[i]->setHovered(true);
+            if (event && (hasCapturingMouseEnterListener || elementsToAddToChain[i]->hasEventListeners(eventNames().mouseenterEvent)))
+                elementsToAddToChain[i]->dispatchMouseEvent(*event, eventNames().mouseenterEvent, 0, oldHoveredElement.get());
         }
     }
 

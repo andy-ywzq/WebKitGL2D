@@ -26,6 +26,7 @@
 
 #include "DocumentFragment.h"
 #include "NotImplemented.h"
+#include <wtf/text/StringHash.h>
 
 namespace WebCore {
 

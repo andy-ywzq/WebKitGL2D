@@ -31,6 +31,7 @@
 #if ENABLE(DFG_JIT)
 
 #include "DFGCommon.h"
+#include "DFGFlushFormat.h"
 #include "DFGMinifiedID.h"
 #include "DataFormat.h"
 #include "SpeculatedType.h"
@@ -53,7 +54,7 @@ enum ValueSourceKind {
 static inline ValueSourceKind dataFormatToValueSourceKind(DataFormat dataFormat)
 {
     switch (dataFormat) {
-    case DataFormatInteger:
+    case DataFormatInt32:
         return Int32InJSStack;
     case DataFormatDouble:
         return DoubleInJSStack;
@@ -77,7 +78,7 @@ static inline DataFormat valueSourceKindToDataFormat(ValueSourceKind kind)
     case ValueInJSStack:
         return DataFormatJS;
     case Int32InJSStack:
-        return DataFormatInteger;
+        return DataFormatInt32;
     case CellInJSStack:
         return DataFormatCell;
     case BooleanInJSStack:
@@ -127,15 +128,24 @@ public:
         ASSERT(kind() == HaveNode);
     }
     
-    static ValueSource forSpeculation(SpeculatedType prediction)
+    static ValueSource forFlushFormat(FlushFormat format)
     {
-        if (isInt32Speculation(prediction))
+        switch (format) {
+        case DeadFlush:
+            return ValueSource(SourceIsDead);
+        case FlushedJSValue:
+            return ValueSource(ValueInJSStack);
+        case FlushedDouble:
+            return ValueSource(DoubleInJSStack);
+        case FlushedInt32:
             return ValueSource(Int32InJSStack);
-        if (isCellSpeculation(prediction))
+        case FlushedCell:
             return ValueSource(CellInJSStack);
-        if (isBooleanSpeculation(prediction))
+        case FlushedBoolean:
             return ValueSource(BooleanInJSStack);
-        return ValueSource(ValueInJSStack);
+        }
+        RELEASE_ASSERT_NOT_REACHED();
+        return ValueSource();
     }
     
     static ValueSource forDataFormat(DataFormat dataFormat)

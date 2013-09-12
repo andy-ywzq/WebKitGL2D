@@ -116,7 +116,6 @@ BINDING_IDLS = \
     $(WebCore)/Modules/mediasource/MediaSource.idl \
     $(WebCore)/Modules/mediasource/SourceBuffer.idl \
     $(WebCore)/Modules/mediasource/SourceBufferList.idl \
-    $(WebCore)/Modules/mediastream/LocalMediaStream.idl \
     $(WebCore)/Modules/mediastream/MediaStream.idl \
     $(WebCore)/Modules/mediastream/MediaStreamEvent.idl \
     $(WebCore)/Modules/mediastream/MediaStreamTrack.idl \
@@ -240,6 +239,7 @@ BINDING_IDLS = \
     $(WebCore)/css/WebKitCSSViewportRule.idl \
     $(WebCore)/dom/Attr.idl \
     $(WebCore)/dom/BeforeLoadEvent.idl \
+    $(WebCore)/dom/BeforeUnloadEvent.idl \
     $(WebCore)/dom/CDATASection.idl \
     $(WebCore)/dom/CharacterData.idl \
     $(WebCore)/dom/ChildNode.idl \

@@ -63,12 +63,12 @@
 #include "RenderIFrame.h"
 #include "RenderLayer.h"
 #include "RenderLayerBacking.h"
-#include "RenderPart.h"
 #include "RenderScrollbar.h"
 #include "RenderScrollbarPart.h"
 #include "RenderStyle.h"
 #include "RenderTheme.h"
 #include "RenderView.h"
+#include "RenderWidget.h"
 #include "ScrollAnimator.h"
 #include "ScrollingCoordinator.h"
 #include "Settings.h"
@@ -127,8 +127,8 @@ double FrameView::s_maxDeferredRepaintDelayDuringLoading = 0;
 double FrameView::s_deferredRepaintDelayIncrementDuringLoading = 0;
 #endif
 
-// The maximum number of updateWidgets iterations that should be done before returning.
-static const unsigned maxUpdateWidgetsIterations = 2;
+// The maximum number of updateEmbeddedObjects iterations that should be done before returning.
+static const unsigned maxUpdateEmbeddedObjectsIterations = 2;
 
 static RenderLayer::UpdateLayerPositionsFlags updateLayerPositionFlags(RenderLayer* layer, bool isRelayoutingSubtree, bool didFullRepaint)
 {
@@ -247,7 +247,9 @@ FrameView::~FrameView()
     ASSERT(m_scheduledEvents.isEmpty());
 
     ASSERT(frame().view() != this || !frame().contentRenderer());
-    RenderPart* renderer = frame().ownerRenderer();
+
+    // FIXME: How could this ever happen when RenderWidget retains the Widget!?
+    RenderWidget* renderer = frame().ownerRenderer();
     if (renderer && renderer->widget() == this)
         renderer->setWidget(0);
 }
@@ -402,7 +404,7 @@ void FrameView::clear()
     
     reset();
 
-    if (RenderPart* renderer = frame().ownerRenderer())
+    if (RenderWidget* renderer = frame().ownerRenderer())
         renderer->viewCleared();
 
     setScrollbarsSuppressed(true);
@@ -426,7 +428,7 @@ void FrameView::invalidateRect(const IntRect& rect)
         return;
     }
 
-    RenderPart* renderer = frame().ownerRenderer();
+    RenderWidget* renderer = frame().ownerRenderer();
     if (!renderer)
         return;
 
@@ -553,7 +555,7 @@ PassRefPtr<Scrollbar> FrameView::createScrollbar(ScrollbarOrientation orientatio
         return RenderScrollbar::createCustomScrollbar(this, orientation, docElement);
         
     // If we have an owning iframe/frame element, then it can set the custom scrollbar also.
-    RenderPart* frameRenderer = frame().ownerRenderer();
+    RenderWidget* frameRenderer = frame().ownerRenderer();
     if (frameRenderer && frameRenderer->style()->hasPseudoStyle(SCROLLBAR))
         return RenderScrollbar::createCustomScrollbar(this, orientation, 0, &frame());
     
@@ -1065,7 +1067,7 @@ RenderObject* FrameView::layoutRoot(bool onlyDuringLayout) const
 inline void FrameView::forceLayoutParentViewIfNeeded()
 {
 #if ENABLE(SVG)
-    RenderPart* ownerRenderer = frame().ownerRenderer();
+    RenderWidget* ownerRenderer = frame().ownerRenderer();
     if (!ownerRenderer)
         return;
 
@@ -1129,9 +1131,11 @@ void FrameView::layout(bool allowSubtree)
     }
 
     ASSERT(frame().view() == this);
+    ASSERT(frame().document());
 
-    Document* document = frame().document();
-    ASSERT(!document->inPageCache());
+    Document& document = *frame().document();
+    ASSERT(!document.inPageCache());
+
     bool subtree;
     RenderObject* root;
 
@@ -1147,13 +1151,13 @@ void FrameView::layout(bool allowSubtree)
         }
 
         // Viewport-dependent media queries may cause us to need completely different style information.
-        if (!document->styleResolverIfExists() || document->styleResolverIfExists()->affectedByViewportChange()) {
-            document->styleResolverChanged(DeferRecalcStyle);
-            // FIXME: This instrumentation event is not strictly accurate since cached media query results
-            //        do not persist across StyleResolver rebuilds.
-            InspectorInstrumentation::mediaQueryResultChanged(document);
+        StyleResolver* styleResolver = document.styleResolverIfExists();
+        if (!styleResolver || styleResolver->affectedByViewportChange()) {
+            document.styleResolverChanged(DeferRecalcStyle);
+            // FIXME: This instrumentation event is not strictly accurate since cached media query results do not persist across StyleResolver rebuilds.
+            InspectorInstrumentation::mediaQueryResultChanged(&document);
         } else
-            document->evaluateMediaQueryList();
+            document.evaluateMediaQueryList();
 
         // If there is any pagination to apply, it will affect the RenderView's style, so we should
         // take care of that now.
@@ -1162,7 +1166,7 @@ void FrameView::layout(bool allowSubtree)
         // Always ensure our style info is up-to-date. This can happen in situations where
         // the layout beats any sort of style recalc update that needs to occur.
         TemporaryChange<bool> changeDoingPreLayoutStyleUpdate(m_doingPreLayoutStyleUpdate, true);
-        document->updateStyleIfNeeded();
+        document.updateStyleIfNeeded();
 
         subtree = m_layoutRoot;
 
@@ -1171,25 +1175,27 @@ void FrameView::layout(bool allowSubtree)
         if (hasOneRef())
             return;
 
-        root = subtree ? m_layoutRoot : document->renderView();
+        root = subtree ? m_layoutRoot : document.renderView();
         if (!root) {
             // FIXME: Do we need to set m_size here?
             return;
         }
-    } // Reset m_layoutSchedulingEnabled to its previous value.
-    // The only reason the scoping was closed here is allow fontCachePurgePreventer
-    // to outlive the change and reset of m_layoutSchedulingEnabled.
+
+        // Close block here so we can set up the font cache purge preventer, which we will still
+        // want in scope even after we want m_layoutSchedulingEnabled to be restored again.
+        // The next block sets m_layoutSchedulingEnabled back to false once again.
+    }
 
     FontCachePurgePreventer fontCachePurgePreventer;
     RenderLayer* layer;
+
+    ++m_nestedLayoutCount;
+
     {
         TemporaryChange<bool> changeSchedulingEnabled(m_layoutSchedulingEnabled, false);
 
-        m_nestedLayoutCount++;
-
         if (!m_layoutRoot) {
-            Document* document = frame().document();
-            Node* body = document->body();
+            HTMLElement* body = document.body();
             if (body && body->renderer()) {
                 if (body->hasTagName(framesetTag) && !frameFlatteningEnabled()) {
                     body->renderer()->setChildNeedsLayout(true);
@@ -1201,24 +1207,20 @@ void FrameView::layout(bool allowSubtree)
 
 #ifdef INSTRUMENT_LAYOUT_SCHEDULING
             if (m_firstLayout && !frame().ownerElement())
-                printf("Elapsed time before first layout: %d\n", document->elapsedTime());
+                printf("Elapsed time before first layout: %d\n", document.elapsedTime());
 #endif        
         }
 
         autoSizeIfEnabled();
 
-        ScrollbarMode hMode;
-        ScrollbarMode vMode;    
-        calculateScrollbarModesForLayout(hMode, vMode);
-
         m_needsFullRepaint = !subtree && (m_firstLayout || toRenderView(*root).printing());
 
         if (!subtree) {
-            // Now set our scrollbar state for the layout.
-            ScrollbarMode currentHMode = horizontalScrollbarMode();
-            ScrollbarMode currentVMode = verticalScrollbarMode();
+            ScrollbarMode hMode;
+            ScrollbarMode vMode;    
+            calculateScrollbarModesForLayout(hMode, vMode);
 
-            if (m_firstLayout || (hMode != currentHMode || vMode != currentVMode)) {
+            if (m_firstLayout || (hMode != horizontalScrollbarMode() || vMode != verticalScrollbarMode())) {
                 if (m_firstLayout) {
                     setScrollbarsSuppressed(true);
 
@@ -1250,8 +1252,8 @@ void FrameView::layout(bool allowSubtree)
             if (oldSize != m_size) {
                 m_needsFullRepaint = true;
                 if (!m_firstLayout) {
-                    RenderBox* rootRenderer = document->documentElement() ? document->documentElement()->renderBox() : 0;
-                    RenderBox* bodyRenderer = rootRenderer && document->body() ? document->body()->renderBox() : 0;
+                    RenderBox* rootRenderer = document.documentElement() ? document.documentElement()->renderBox() : 0;
+                    RenderBox* bodyRenderer = rootRenderer && document.body() ? document.body()->renderBox() : 0;
                     if (bodyRenderer && bodyRenderer->stretchesToViewport())
                         bodyRenderer->setChildNeedsLayout(true);
                     else if (rootRenderer && rootRenderer->stretchesToViewport())
@@ -1264,31 +1266,41 @@ void FrameView::layout(bool allowSubtree)
 
         pauseScheduledEvents();
 
-        {
-            bool disableLayoutState = false;
-            if (subtree) {
-                disableLayoutState = root->view().shouldDisableLayoutStateForSubtree(root);
-                root->view().pushLayoutState(root);
-            }
-            LayoutStateDisabler layoutStateDisabler(disableLayoutState ? &root->view() : 0);
-
-            m_inLayout = true;
-            beginDeferredRepaints();
-            forceLayoutParentViewIfNeeded();
-            root->layout();
-#if ENABLE(TEXT_AUTOSIZING)
-            bool autosized = document->textAutosizer()->processSubtree(root);
-            if (autosized && root->needsLayout())
-                root->layout();
-#endif
-            endDeferredRepaints();
-            m_inLayout = false;
-
-            if (subtree)
-                root->view().popLayoutState(root);
+        bool disableLayoutState = false;
+        if (subtree) {
+            disableLayoutState = root->view().shouldDisableLayoutStateForSubtree(root);
+            root->view().pushLayoutState(root);
         }
+        LayoutStateDisabler layoutStateDisabler(disableLayoutState ? &root->view() : 0);
+
+        m_inLayout = true;
+        beginDeferredRepaints();
+        forceLayoutParentViewIfNeeded();
+        root->layout();
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+        float minZoomFontSize = frame().settings().minimumZoomFontSize();
+        float visWidth = frame().page()->mainFrame().textAutosizingWidth();
+        if (minZoomFontSize && visWidth && !root->view().printing()) {
+            root->adjustComputedFontSizesOnBlocks(minZoomFontSize, visWidth);    
+            bool needsLayout = root->needsLayout();
+            if (needsLayout)
+                root->layout();
+        }
+#endif
+#if ENABLE(TEXT_AUTOSIZING)
+        if (document.textAutosizer()->processSubtree(root) && root->needsLayout())
+            root->layout();
+#endif
+        endDeferredRepaints();
+        m_inLayout = false;
+
+        if (subtree)
+            root->view().popLayoutState(root);
+
         m_layoutRoot = 0;
-    } // Reset m_layoutSchedulingEnabled to its previous value.
+
+        // Close block here to end the scope of changeSchedulingEnabled and layoutStateDisabler.
+    }
 
     bool neededFullRepaint = m_needsFullRepaint;
 
@@ -1312,10 +1324,11 @@ void FrameView::layout(bool allowSubtree)
     
     m_layoutCount++;
 
-#if PLATFORM(MAC) || PLATFORM(WIN)
+#if PLATFORM(MAC) || PLATFORM(WIN) || PLATFORM(GTK)
     if (AXObjectCache* cache = root->document().existingAXObjectCache())
         cache->postNotification(root, AXObjectCache::AXLayoutComplete, true);
 #endif
+
 #if ENABLE(DASHBOARD_SUPPORT) || ENABLE(DRAGGABLE_REGION)
     updateAnnotatedRegions();
 #endif
@@ -1324,9 +1337,8 @@ void FrameView::layout(bool allowSubtree)
 
     updateCanBlitOnScrollRecursively();
 
-    if (document->hasListenerType(Document::OVERFLOWCHANGED_LISTENER))
-        updateOverflowStatus(layoutWidth() < contentsWidth(),
-                             layoutHeight() < contentsHeight());
+    if (document.hasListenerType(Document::OVERFLOWCHANGED_LISTENER))
+        updateOverflowStatus(layoutWidth() < contentsWidth(), layoutHeight() < contentsHeight());
 
     if (m_postLayoutTasksTimer.isActive())
         resumeScheduledEvents();
@@ -1337,12 +1349,11 @@ void FrameView::layout(bool allowSubtree)
                     renderView->updateWidgetPositions();
             } else {
                 m_inSynchronousPostLayout = true;
-                // Calls resumeScheduledEvents()
-                performPostLayoutTasks();
+                performPostLayoutTasks(); // Calls resumeScheduledEvents().
                 m_inSynchronousPostLayout = false;
             }
         }
-        
+
         if (!m_postLayoutTasksTimer.isActive() && (needsLayout() || m_inSynchronousPostLayout || inChildFrameLayoutWithFrameFlattening)) {
             // If we need layout or are already in a synchronous call to postLayoutTasks(), 
             // defer widget updates and event dispatch until after we return. postLayoutTasks()
@@ -1358,7 +1369,8 @@ void FrameView::layout(bool allowSubtree)
 
     InspectorInstrumentation::didLayout(cookie, root);
 
-    m_nestedLayoutCount--;
+    --m_nestedLayoutCount;
+
     if (m_nestedLayoutCount)
         return;
 
@@ -1385,28 +1397,29 @@ RenderBox* FrameView::embeddedContentBox() const
     return 0;
 }
 
-void FrameView::addWidgetToUpdate(RenderObject* object)
+void FrameView::addEmbeddedObjectToUpdate(RenderEmbeddedObject& embeddedObject)
 {
-    if (!m_widgetUpdateSet)
-        m_widgetUpdateSet = adoptPtr(new RenderObjectSet);
+    if (!m_embeddedObjectsToUpdate)
+        m_embeddedObjectsToUpdate = adoptPtr(new HashSet<RenderEmbeddedObject*>);
 
-    // Tell the DOM element that it needs a widget update.
-    Node* node = object->node();
-    if (node->hasTagName(objectTag) || node->hasTagName(embedTag)) {
-        HTMLPlugInImageElement* pluginElement = toHTMLPlugInImageElement(node);
-        if (!pluginElement->needsCheckForSizeChange())
-            pluginElement->setNeedsWidgetUpdate(true);
+    ASSERT(embeddedObject.frameOwnerElement());
+    Element& element = *embeddedObject.frameOwnerElement();
+    if (isHTMLObjectElement(element) || isHTMLEmbedElement(element)) {
+        // Tell the DOM element that it needs a widget update.
+        HTMLPlugInImageElement& pluginElement = toHTMLPlugInImageElement(element);
+        if (!pluginElement.needsCheckForSizeChange())
+            pluginElement.setNeedsWidgetUpdate(true);
     }
 
-    m_widgetUpdateSet->add(object);
+    m_embeddedObjectsToUpdate->add(&embeddedObject);
 }
 
-void FrameView::removeWidgetToUpdate(RenderObject* object)
+void FrameView::removeEmbeddedObjectToUpdate(RenderEmbeddedObject& embeddedObject)
 {
-    if (!m_widgetUpdateSet)
+    if (!m_embeddedObjectsToUpdate)
         return;
 
-    m_widgetUpdateSet->remove(object);
+    m_embeddedObjectsToUpdate->remove(&embeddedObject);
 }
 
 void FrameView::setMediaType(const String& mediaType)
@@ -1721,7 +1734,7 @@ void FrameView::scrollContentsSlowPath(const IntRect& updateRect)
 
     repaintSlowRepaintObjects();
 
-    if (RenderPart* frameRenderer = frame().ownerRenderer()) {
+    if (RenderWidget* frameRenderer = frame().ownerRenderer()) {
         if (isEnclosedInCompositingLayer()) {
             LayoutRect rect(frameRenderer->borderLeft() + frameRenderer->paddingLeft(),
                             frameRenderer->borderTop() + frameRenderer->paddingTop(),
@@ -2634,92 +2647,80 @@ void FrameView::scrollToAnchor()
     m_maintainScrollPositionAnchor = anchorNode;
 }
 
-void FrameView::updateWidget(RenderObject* object)
+void FrameView::updateEmbeddedObject(RenderEmbeddedObject& embeddedObject)
 {
-    ASSERT(!object->node() || object->node()->isElementNode());
-    Element* ownerElement = toElement(object->node());
-    // The object may have already been destroyed (thus node cleared),
+    ASSERT(m_embeddedObjectsToUpdate->contains(&embeddedObject));
+
+    // The object may have already been destroyed (thus element cleared),
     // but FrameView holds a manual ref, so it won't have been deleted.
-    ASSERT(m_widgetUpdateSet->contains(object));
-    if (!ownerElement)
+    if (!embeddedObject.frameOwnerElement())
         return;
 
-    if (object->isEmbeddedObject()) {
-        RenderEmbeddedObject* embeddedObject = static_cast<RenderEmbeddedObject*>(object);
-        // No need to update if it's already crashed or known to be missing.
-        if (embeddedObject->isPluginUnavailable())
-            return;
+    // No need to update if it's already crashed or known to be missing.
+    if (embeddedObject.isPluginUnavailable())
+        return;
 
-        if (object->isSnapshottedPlugIn()) {
-            if (ownerElement->hasTagName(objectTag) || ownerElement->hasTagName(embedTag)) {
-                HTMLPlugInImageElement* pluginElement = toHTMLPlugInImageElement(ownerElement);
-                pluginElement->checkSnapshotStatus();
-            }
-            return;
+    HTMLFrameOwnerElement& element = *embeddedObject.frameOwnerElement();
+
+    if (embeddedObject.isSnapshottedPlugIn()) {
+        if (isHTMLObjectElement(element) || isHTMLEmbedElement(element)) {
+            HTMLPlugInImageElement& pluginElement = toHTMLPlugInImageElement(element);
+            pluginElement.checkSnapshotStatus();
         }
-
-        // FIXME: This could turn into a real virtual dispatch if we defined
-        // updateWidget(PluginCreationOption) on HTMLElement.
-        if (ownerElement->hasTagName(objectTag) || ownerElement->hasTagName(embedTag) || ownerElement->hasTagName(appletTag)) {
-            HTMLPlugInImageElement* pluginElement = toHTMLPlugInImageElement(ownerElement);
-            if (pluginElement->needsCheckForSizeChange()) {
-                pluginElement->checkSnapshotStatus();
-                return;
-            }
-            if (pluginElement->needsWidgetUpdate())
-                pluginElement->updateWidget(CreateAnyWidgetType);
-        }
-        // FIXME: It is not clear that Media elements need or want this updateWidget() call.
-#if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
-        else if (ownerElement->isMediaElement())
-            toHTMLMediaElement(ownerElement)->updateWidget(CreateAnyWidgetType);
-#endif
-        else
-            ASSERT_NOT_REACHED();
-
-        // Caution: it's possible the object was destroyed again, since loading a
-        // plugin may run any arbitrary JavaScript.
-        embeddedObject->updateWidgetPosition();
+        return;
     }
+
+    // FIXME: This could turn into a real virtual dispatch if we defined
+    // updateWidget(PluginCreationOption) on HTMLElement.
+    if (isHTMLObjectElement(element) || isHTMLEmbedElement(element) || isHTMLAppletElement(element)) {
+        HTMLPlugInImageElement& pluginElement = toHTMLPlugInImageElement(element);
+        if (pluginElement.needsCheckForSizeChange()) {
+            pluginElement.checkSnapshotStatus();
+            return;
+        }
+        if (pluginElement.needsWidgetUpdate())
+            pluginElement.updateWidget(CreateAnyWidgetType);
+    }
+
+    // FIXME: It is not clear that Media elements need or want this updateWidget() call.
+#if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
+    else if (element.isMediaElement())
+        toHTMLMediaElement(element).updateWidget(CreateAnyWidgetType);
+#endif
+    else
+        ASSERT_NOT_REACHED();
+
+    // Caution: it's possible the object was destroyed again, since loading a
+    // plugin may run any arbitrary JavaScript.
+    embeddedObject.updateWidgetPosition();
 }
 
-bool FrameView::updateWidgets()
+bool FrameView::updateEmbeddedObjects()
 {
-    if (m_nestedLayoutCount > 1 || !m_widgetUpdateSet || m_widgetUpdateSet->isEmpty())
+    if (m_nestedLayoutCount > 1 || !m_embeddedObjectsToUpdate || m_embeddedObjectsToUpdate->isEmpty())
         return true;
-    
-    size_t size = m_widgetUpdateSet->size();
 
-    Vector<RenderObject*> objects;
-    objects.reserveInitialCapacity(size);
     // Protect RendereArena from getting wiped out, when Document is detached during updateWidget().
     RefPtr<RenderArena> protectedArena = frame().document()->renderArena();
 
-    RenderObjectSet::const_iterator end = m_widgetUpdateSet->end();
-    for (RenderObjectSet::const_iterator it = m_widgetUpdateSet->begin(); it != end; ++it) {
-        RenderObject* object = *it;
-        objects.uncheckedAppend(object);
-        if (object->isEmbeddedObject()) {
-            RenderEmbeddedObject* embeddedObject = static_cast<RenderEmbeddedObject*>(object);
-            embeddedObject->ref();
-        }
+    Vector<RenderEmbeddedObject*> embeddedObjects;
+    embeddedObjects.reserveInitialCapacity(m_embeddedObjectsToUpdate->size());
+    for (auto it = m_embeddedObjectsToUpdate->begin(), end = m_embeddedObjectsToUpdate->end(); it != end; ++it) {
+        RenderEmbeddedObject& object = **it;
+        embeddedObjects.uncheckedAppend(&object);
+        object.ref();
     }
 
-    for (size_t i = 0; i < size; ++i) {
-        RenderObject* object = objects[i];
-        updateWidget(object);
-        m_widgetUpdateSet->remove(object);
+    for (unsigned i = 0; i < embeddedObjects.size(); ++i) {
+        RenderEmbeddedObject& object = *embeddedObjects[i];
+        updateEmbeddedObject(object);
+        m_embeddedObjectsToUpdate->remove(&object);
     }
 
-    for (size_t i = 0; i < size; ++i) {
-        RenderObject* object = objects[i];
-        if (object->isEmbeddedObject()) {
-            RenderEmbeddedObject* embeddedObject = static_cast<RenderEmbeddedObject*>(object);
-            embeddedObject->deref(protectedArena.get());
-        }
-    }
+    for (unsigned i = 0; i < embeddedObjects.size(); ++i)
+        embeddedObjects[i]->deref(protectedArena.get());
     
-    return m_widgetUpdateSet->isEmpty();
+    return m_embeddedObjectsToUpdate->isEmpty();
 }
 
 void FrameView::flushAnyPendingPostLayoutTasks()
@@ -2780,8 +2781,8 @@ void FrameView::performPostLayoutTasks()
     // layout() protects FrameView, but it still can get destroyed when updateWidgets()
     // is called through the post layout timer.
     Ref<FrameView> protect(*this);
-    for (unsigned i = 0; i < maxUpdateWidgetsIterations; i++) {
-        if (updateWidgets())
+    for (unsigned i = 0; i < maxUpdateEmbeddedObjectsIterations; i++) {
+        if (updateEmbeddedObjects())
             break;
     }
 
@@ -3128,7 +3129,7 @@ ScrollableArea* FrameView::enclosingScrollableArea() const
 
 IntRect FrameView::scrollableAreaBoundingBox() const
 {
-    RenderPart* ownerRenderer = frame().ownerRenderer();
+    RenderWidget* ownerRenderer = frame().ownerRenderer();
     if (!ownerRenderer)
         return frameRect();
 
@@ -3290,7 +3291,7 @@ void FrameView::updateScrollCorner()
         
         if (!cornerStyle) {
             // If we have an owning iframe/frame element, then it can set the custom scrollbar also.
-            if (RenderPart* renderer = frame().ownerRenderer())
+            if (RenderWidget* renderer = frame().ownerRenderer())
                 cornerStyle = renderer->getUncachedPseudoStyle(PseudoStyleRequest(SCROLLBAR_CORNER), renderer->style());
         }
     }
@@ -3412,7 +3413,7 @@ bool FrameView::isInChildFrameWithFrameFlattening() const
     // Frame flattening applies when the owner element is either in a frameset or
     // an iframe with flattening parameters.
     if (frame().ownerElement()->hasTagName(iframeTag)) {
-        RenderIFrame* iframeRenderer = toRenderIFrame(frame().ownerElement()->renderPart());
+        RenderIFrame* iframeRenderer = toRenderIFrame(frame().ownerElement()->renderWidget());
         if (iframeRenderer->flattenFrame() || iframeRenderer->isSeamless())
             return true;
     }
@@ -3906,7 +3907,7 @@ IntRect FrameView::convertToContainingView(const IntRect& localRect) const
         if (parentScrollView->isFrameView()) {
             const FrameView* parentView = toFrameView(parentScrollView);
             // Get our renderer in the parent view
-            RenderPart* renderer = frame().ownerRenderer();
+            RenderWidget* renderer = frame().ownerRenderer();
             if (!renderer)
                 return localRect;
                 
@@ -3930,7 +3931,7 @@ IntRect FrameView::convertFromContainingView(const IntRect& parentRect) const
             const FrameView* parentView = toFrameView(parentScrollView);
 
             // Get our renderer in the parent view
-            RenderPart* renderer = frame().ownerRenderer();
+            RenderWidget* renderer = frame().ownerRenderer();
             if (!renderer)
                 return parentRect;
 
@@ -3954,7 +3955,7 @@ IntPoint FrameView::convertToContainingView(const IntPoint& localPoint) const
             const FrameView* parentView = toFrameView(parentScrollView);
 
             // Get our renderer in the parent view
-            RenderPart* renderer = frame().ownerRenderer();
+            RenderWidget* renderer = frame().ownerRenderer();
             if (!renderer)
                 return localPoint;
                 
@@ -3979,7 +3980,7 @@ IntPoint FrameView::convertFromContainingView(const IntPoint& parentPoint) const
             const FrameView* parentView = toFrameView(parentScrollView);
 
             // Get our renderer in the parent view
-            RenderPart* renderer = frame().ownerRenderer();
+            RenderWidget* renderer = frame().ownerRenderer();
             if (!renderer)
                 return parentPoint;
 

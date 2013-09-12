@@ -354,7 +354,7 @@ void RenderSVGText::layout()
 
     bool updateCachedBoundariesInParents = false;
     if (m_needsTransformUpdate) {
-        SVGTextElement* text = static_cast<SVGTextElement*>(node());
+        SVGTextElement* text = toSVGTextElement(element());
         m_localTransform = text->animatedLocalTransform();
         m_needsTransformUpdate = false;
         updateCachedBoundariesInParents = true;
@@ -414,7 +414,10 @@ void RenderSVGText::layout()
     // FIXME: We need to find a way to only layout the child boxes, if needed.
     FloatRect oldBoundaries = objectBoundingBox();
     ASSERT(childrenInline());
-    forceLayoutInlineChildren();
+    LayoutUnit repaintLogicalTop = 0;
+    LayoutUnit repaintLogicalBottom = 0;
+    clearFloats();
+    layoutInlineChildren(true, repaintLogicalTop, repaintLogicalBottom);
 
     if (m_needsReordering)
         m_needsReordering = false;
@@ -512,9 +515,9 @@ FloatRect RenderSVGText::strokeBoundingBox() const
     if (!svgStyle->hasStroke())
         return strokeBoundaries;
 
-    ASSERT(node());
-    ASSERT(node()->isSVGElement());
-    SVGLengthContext lengthContext(toSVGElement(node()));
+    ASSERT(element());
+    ASSERT(element()->isSVGElement());
+    SVGLengthContext lengthContext(toSVGElement(element()));
     strokeBoundaries.inflate(svgStyle->strokeWidth().value(lengthContext));
     return strokeBoundaries;
 }

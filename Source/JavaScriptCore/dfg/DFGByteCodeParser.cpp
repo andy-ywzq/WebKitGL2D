@@ -214,8 +214,9 @@ private:
             return getArgument(operand);
 
         // Must be a local.
-        return getLocal((unsigned)operand);
+        return getLocal(operand);
     }
+
     Node* get(int operand)
     {
         if (operand == JSStack::Callee) {
@@ -227,6 +228,7 @@ private:
         
         return getDirect(m_inlineStackTop->remapOperand(operand));
     }
+
     enum SetMode { NormalSet, SetOnEntry };
     void setDirect(int operand, Node* value, SetMode setMode = NormalSet)
     {
@@ -237,8 +239,9 @@ private:
         }
 
         // Must be a local.
-        setLocal((unsigned)operand, value, setMode);
+        setLocal(operand, value, setMode);
     }
+
     void set(int operand, Node* value, SetMode setMode = NormalSet)
     {
         setDirect(m_inlineStackTop->remapOperand(operand), value, setMode);
@@ -259,9 +262,10 @@ private:
     }
 
     // Used in implementing get/set, above, where the operand is a local variable.
-    Node* getLocal(unsigned operand)
+    Node* getLocal(int operand)
     {
-        Node* node = m_currentBlock->variablesAtTail.local(operand);
+        unsigned local = operandToLocal(operand);
+        Node* node = m_currentBlock->variablesAtTail.local(local);
         bool isCaptured = m_codeBlock->isCaptured(operand, inlineCallFrame());
         
         // This has two goals: 1) link together variable access datas, and 2)
@@ -287,16 +291,18 @@ private:
                 }
             }
         } else {
-            m_preservedVars.set(operand);
+            m_preservedVars.set(local);
             variable = newVariableAccessData(operand, isCaptured);
         }
         
         node = injectLazyOperandSpeculation(addToGraph(GetLocal, OpInfo(variable)));
-        m_currentBlock->variablesAtTail.local(operand) = node;
+        m_currentBlock->variablesAtTail.local(local) = node;
         return node;
     }
-    void setLocal(unsigned operand, Node* value, SetMode setMode = NormalSet)
+
+    void setLocal(int operand, Node* value, SetMode setMode = NormalSet)
     {
+        unsigned local = operandToLocal(operand);
         bool isCaptured = m_codeBlock->isCaptured(operand, inlineCallFrame());
         
         if (setMode == NormalSet) {
@@ -311,7 +317,7 @@ private:
         variableAccessData->mergeCheckArrayHoistingFailed(
             m_inlineStackTop->m_exitProfile.hasExitSite(m_currentIndex, BadIndexingType));
         Node* node = addToGraph(SetLocal, OpInfo(variableAccessData), value);
-        m_currentBlock->variablesAtTail.local(operand) = node;
+        m_currentBlock->variablesAtTail.local(local) = node;
     }
 
     // Used in implementing get/set, above, where the operand is an argument.
@@ -431,7 +437,7 @@ private:
         ASSERT(operand < FirstConstantRegisterIndex);
         
         if (!operandIsArgument(operand))
-            m_preservedVars.set(operand);
+            m_preservedVars.set(operandToLocal(operand));
         
         Node* node = m_currentBlock->variablesAtTail.operand(operand);
         
@@ -459,9 +465,9 @@ private:
         for (unsigned argument = numArguments; argument-- > 1;)
             flushDirect(inlineStackEntry->remapOperand(argumentToOperand(argument)));
         for (int local = 0; local < inlineStackEntry->m_codeBlock->m_numVars; ++local) {
-            if (!inlineStackEntry->m_codeBlock->isCaptured(local))
+            if (!inlineStackEntry->m_codeBlock->isCaptured(localToOperand(local)))
                 continue;
-            flushDirect(inlineStackEntry->remapOperand(local));
+            flushDirect(inlineStackEntry->remapOperand(localToOperand(local)));
         }
     }
 
@@ -1280,11 +1286,11 @@ bool ByteCodeParser::handleInlining(Node* callTargetNode, int resultOperand, con
     int inlineCallFrameStart = m_inlineStackTop->remapOperand(registerOffset) - JSStack::CallFrameHeaderSize;
     
     // Make sure that the area used by the call frame is reserved.
-    for (int arg = inlineCallFrameStart + JSStack::CallFrameHeaderSize + codeBlock->m_numVars; arg-- > inlineCallFrameStart;)
+    for (int arg = operandToLocal(inlineCallFrameStart) + JSStack::CallFrameHeaderSize + codeBlock->m_numVars; arg-- > operandToLocal(inlineCallFrameStart);)
         m_preservedVars.set(arg);
     
     // Make sure that we have enough locals.
-    unsigned newNumLocals = inlineCallFrameStart + JSStack::CallFrameHeaderSize + codeBlock->m_numCalleeRegisters;
+    unsigned newNumLocals = operandToLocal(inlineCallFrameStart) + JSStack::CallFrameHeaderSize + codeBlock->m_numCalleeRegisters;
     if (newNumLocals > m_numLocals) {
         m_numLocals = newNumLocals;
         for (size_t i = 0; i < m_graph.numBlocks(); ++i)
@@ -1884,7 +1890,7 @@ bool ByteCodeParser::parseBlock(unsigned limit)
         case op_enter:
             // Initialize all locals to undefined.
             for (int i = 0; i < m_inlineStackTop->m_codeBlock->m_numVars; ++i)
-                set(i, constantUndefined(), SetOnEntry);
+                set(localToOperand(i), constantUndefined(), SetOnEntry);
             NEXT_OPCODE(op_enter);
 
         case op_to_this: {
@@ -2087,14 +2093,14 @@ bool ByteCodeParser::parseBlock(unsigned limit)
         // === Increment/Decrement opcodes ===
 
         case op_inc: {
-            unsigned srcDst = currentInstruction[1].u.operand;
+            int srcDst = currentInstruction[1].u.operand;
             Node* op = get(srcDst);
             set(srcDst, makeSafe(addToGraph(ArithAdd, op, one())));
             NEXT_OPCODE(op_inc);
         }
 
         case op_dec: {
-            unsigned srcDst = currentInstruction[1].u.operand;
+            int srcDst = currentInstruction[1].u.operand;
             Node* op = get(srcDst);
             set(srcDst, makeSafe(addToGraph(ArithSub, op, one())));
             NEXT_OPCODE(op_dec);
@@ -2994,7 +3000,7 @@ bool ByteCodeParser::parseBlock(unsigned limit)
             LAST_OPCODE(op_jneq_ptr);
 
         case op_resolve_scope: {
-            unsigned dst = currentInstruction[1].u.operand;
+            int dst = currentInstruction[1].u.operand;
             ResolveType resolveType = static_cast<ResolveType>(currentInstruction[3].u.operand);
             unsigned depth = currentInstruction[4].u.operand;
 
@@ -3021,7 +3027,7 @@ bool ByteCodeParser::parseBlock(unsigned limit)
         }
 
         case op_get_from_scope: {
-            unsigned dst = currentInstruction[1].u.operand;
+            int dst = currentInstruction[1].u.operand;
             unsigned scope = currentInstruction[2].u.operand;
             unsigned identifierNumber = m_inlineStackTop->m_identifierRemap[currentInstruction[3].u.operand];
             StringImpl* uid = m_graph.identifiers()[identifierNumber];
@@ -3151,8 +3157,8 @@ bool ByteCodeParser::parseBlock(unsigned limit)
             
         case op_init_lazy_reg: {
             set(currentInstruction[1].u.operand, getJSConstantForValue(JSValue()));
-            ASSERT(currentInstruction[1].u.operand >= 0);
-            m_graph.m_lazyVars.set(currentInstruction[1].u.operand);
+            ASSERT(operandIsLocal(currentInstruction[1].u.operand));
+            m_graph.m_lazyVars.set(operandToLocal(currentInstruction[1].u.operand));
             NEXT_OPCODE(op_init_lazy_reg);
         }
             
@@ -3381,18 +3387,19 @@ ByteCodeParser::InlineStackEntry::InlineStackEntry(
             inlineCallFrame.capturedVars = inlineCallFrame.caller.inlineCallFrame->capturedVars;
         else {
             for (int i = byteCodeParser->m_codeBlock->m_numVars; i--;) {
-                if (byteCodeParser->m_codeBlock->isCaptured(i))
+                if (byteCodeParser->m_codeBlock->isCaptured(localToOperand(i)))
                     inlineCallFrame.capturedVars.set(i);
             }
         }
 
         for (int i = argumentCountIncludingThis; i--;) {
             if (codeBlock->isCaptured(argumentToOperand(i)))
-                inlineCallFrame.capturedVars.set(argumentToOperand(i) + inlineCallFrame.stackOffset);
+                inlineCallFrame.capturedVars.set(operandToLocal(argumentToOperand(i) + inlineCallFrame.stackOffset));
         }
         for (size_t i = codeBlock->m_numVars; i--;) {
-            if (codeBlock->isCaptured(i))
-                inlineCallFrame.capturedVars.set(i + inlineCallFrame.stackOffset);
+            int localOperand = localToOperand(i);
+            if (codeBlock->isCaptured(localOperand))
+                inlineCallFrame.capturedVars.set(operandToLocal(localOperand + inlineCallFrame.stackOffset));
         }
 
 #if DFG_ENABLE(DEBUG_VERBOSE)

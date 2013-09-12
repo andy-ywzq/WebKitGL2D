@@ -211,7 +211,6 @@ set(WebCore_IDL_FILES
     Modules/mediasource/SourceBuffer.idl
     Modules/mediasource/SourceBufferList.idl
 
-    Modules/mediastream/LocalMediaStream.idl
     Modules/mediastream/MediaStream.idl
     Modules/mediastream/MediaStreamEvent.idl
     Modules/mediastream/MediaStreamTrack.idl
@@ -335,6 +334,7 @@ set(WebCore_IDL_FILES
 
     dom/Attr.idl
     dom/BeforeLoadEvent.idl
+    dom/BeforeUnloadEvent.idl
     dom/CDATASection.idl
     dom/CharacterData.idl
     dom/ChildNode.idl
@@ -832,7 +832,6 @@ set(WebCore_SOURCES
     Modules/mediasource/SourceBuffer.cpp
     Modules/mediasource/SourceBufferList.cpp
 
-    Modules/mediastream/LocalMediaStream.cpp
     Modules/mediastream/MediaConstraintsImpl.cpp
     Modules/mediastream/MediaStream.cpp
     Modules/mediastream/MediaStreamEvent.cpp
@@ -1328,7 +1327,7 @@ set(WebCore_SOURCES
     fileapi/WebKitBlobBuilder.cpp
 
     history/BackForwardController.cpp
-    history/BackForwardListImpl.cpp
+    history/BackForwardList.cpp
     history/CachedFrame.cpp
     history/CachedPage.cpp
     history/HistoryItem.cpp
@@ -1621,7 +1620,6 @@ set(WebCore_SOURCES
     inspector/ScriptCallFrame.cpp
     inspector/ScriptCallStack.cpp
     inspector/TimelineRecordFactory.cpp
-    inspector/TimelineTraceEventProcessor.cpp
     inspector/WorkerConsoleAgent.cpp
     inspector/WorkerDebuggerAgent.cpp
     inspector/WorkerInspectorController.cpp
@@ -1817,7 +1815,6 @@ set(WebCore_SOURCES
     platform/MemoryPressureHandler.cpp
     platform/NotImplemented.cpp
     platform/PlatformEvent.cpp
-    platform/PlatformInstrumentation.cpp
     platform/PlatformStrategies.cpp
     platform/RunLoop.cpp
     platform/RuntimeApplicationChecks.cpp
@@ -2013,6 +2010,8 @@ set(WebCore_SOURCES
     platform/leveldb/LevelDBWriteBatch.cpp
 
     platform/mediastream/MediaStreamCenter.cpp
+    platform/mediastream/MediaStreamComponent.cpp
+    platform/mediastream/MediaStreamDescriptor.cpp
     platform/mediastream/MediaStreamSource.cpp
     platform/mediastream/RTCIceCandidateDescriptor.cpp
     platform/mediastream/RTCPeerConnectionHandler.cpp
@@ -2097,6 +2096,7 @@ set(WebCore_SOURCES
     rendering/EllipsisBox.cpp
     rendering/FilterEffectRenderer.cpp
     rendering/FixedTableLayout.cpp
+    rendering/FloatingObjects.cpp
     rendering/FlowThreadController.cpp
     rendering/HitTestingTransformState.cpp
     rendering/HitTestLocation.cpp
@@ -2107,8 +2107,8 @@ set(WebCore_SOURCES
     rendering/InlineTextBox.cpp
     rendering/LayoutState.cpp
     rendering/LayoutRepainter.cpp
+    rendering/LineWidth.cpp
     rendering/PointerEventsHitRules.cpp
-    rendering/RenderApplet.cpp
     rendering/RenderArena.cpp
     rendering/RenderBR.cpp
     rendering/RenderBlock.cpp
@@ -2159,7 +2159,6 @@ set(WebCore_SOURCES
     rendering/RenderNamedFlowThread.cpp
     rendering/RenderObject.cpp
     rendering/RenderObjectChildList.cpp
-    rendering/RenderPart.cpp
     rendering/RenderProgress.cpp
     rendering/RenderQuote.cpp
     rendering/RenderRegion.cpp

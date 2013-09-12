@@ -73,7 +73,6 @@ private:
     virtual InsertionNotificationRequest insertedInto(ContainerNode*) OVERRIDE;
     virtual void removedFrom(ContainerNode*) OVERRIDE;
 
-    virtual bool rendererIsNeeded(const RenderStyle&);
     virtual void didMoveToNewDocument(Document* oldDocument) OVERRIDE;
 
     virtual void childrenChanged(const ChildChange&) OVERRIDE;
@@ -109,11 +108,7 @@ private:
     bool m_useFallbackContent : 1;
 };
 
-inline HTMLObjectElement* toHTMLObjectElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->hasTagName(HTMLNames::objectTag));
-    return static_cast<HTMLObjectElement*>(node);
-}
+ELEMENT_TYPE_CASTS(HTMLObjectElement)
 
 }
 

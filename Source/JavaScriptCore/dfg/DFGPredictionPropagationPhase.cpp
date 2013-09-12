@@ -141,7 +141,10 @@ private:
         switch (op) {
         case JSConstant:
         case WeakJSConstant: {
-            changed |= setPrediction(speculationFromValue(m_graph.valueOfJSConstant(node)));
+            SpeculatedType type = speculationFromValue(m_graph.valueOfJSConstant(node));
+            if (type == SpecInt48AsDouble)
+                type = SpecInt48;
+            changed |= setPrediction(type);
             break;
         }
             
@@ -197,7 +200,7 @@ private:
         }
 
         case UInt32ToNumber: {
-            if (nodeCanSpeculateInteger(node->arithNodeFlags()))
+            if (nodeCanSpeculateInt32(node->arithNodeFlags()))
                 changed |= mergePrediction(SpecInt32);
             else
                 changed |= mergePrediction(SpecNumber);
@@ -210,8 +213,10 @@ private:
             
             if (left && right) {
                 if (isNumberSpeculationExpectingDefined(left) && isNumberSpeculationExpectingDefined(right)) {
-                    if (m_graph.addSpeculationMode(node) != DontSpeculateInteger)
+                    if (m_graph.addSpeculationMode(node) != DontSpeculateInt32)
                         changed |= mergePrediction(SpecInt32);
+                    else if (m_graph.addShouldSpeculateMachineInt(node))
+                        changed |= mergePrediction(SpecInt48);
                     else
                         changed |= mergePrediction(speculatedDoubleTypeForPredictions(left, right));
                 } else if (!(left & SpecNumber) || !(right & SpecNumber)) {
@@ -228,8 +233,10 @@ private:
             SpeculatedType right = node->child2()->prediction();
             
             if (left && right) {
-                if (m_graph.addSpeculationMode(node) != DontSpeculateInteger)
+                if (m_graph.addSpeculationMode(node) != DontSpeculateInt32)
                     changed |= mergePrediction(SpecInt32);
+                else if (m_graph.addShouldSpeculateMachineInt(node))
+                    changed |= mergePrediction(SpecInt48);
                 else
                     changed |= mergePrediction(speculatedDoubleTypeForPredictions(left, right));
             }
@@ -241,8 +248,10 @@ private:
             SpeculatedType right = node->child2()->prediction();
             
             if (left && right) {
-                if (m_graph.addSpeculationMode(node) != DontSpeculateInteger)
+                if (m_graph.addSpeculationMode(node) != DontSpeculateInt32)
                     changed |= mergePrediction(SpecInt32);
+                else if (m_graph.addShouldSpeculateMachineInt(node))
+                    changed |= mergePrediction(SpecInt48);
                 else
                     changed |= mergePrediction(speculatedDoubleTypeForPredictions(left, right));
             }
@@ -251,8 +260,10 @@ private:
             
         case ArithNegate:
             if (node->child1()->prediction()) {
-                if (m_graph.negateShouldSpeculateInteger(node))
+                if (m_graph.negateShouldSpeculateInt32(node))
                     changed |= mergePrediction(SpecInt32);
+                else if (m_graph.negateShouldSpeculateMachineInt(node))
+                    changed |= mergePrediction(SpecInt48);
                 else
                     changed |= mergePrediction(speculatedDoubleTypeForPrediction(node->child1()->prediction()));
             }
@@ -264,8 +275,8 @@ private:
             SpeculatedType right = node->child2()->prediction();
             
             if (left && right) {
-                if (Node::shouldSpeculateIntegerForArithmetic(node->child1().node(), node->child2().node())
-                    && nodeCanSpeculateInteger(node->arithNodeFlags()))
+                if (Node::shouldSpeculateInt32ForArithmetic(node->child1().node(), node->child2().node())
+                    && nodeCanSpeculateInt32(node->arithNodeFlags()))
                     changed |= mergePrediction(SpecInt32);
                 else
                     changed |= mergePrediction(speculatedDoubleTypeForPredictions(left, right));
@@ -278,8 +289,10 @@ private:
             SpeculatedType right = node->child2()->prediction();
             
             if (left && right) {
-                if (m_graph.mulShouldSpeculateInteger(node))
+                if (m_graph.mulShouldSpeculateInt32(node))
                     changed |= mergePrediction(SpecInt32);
+                else if (m_graph.mulShouldSpeculateMachineInt(node))
+                    changed |= mergePrediction(SpecInt48);
                 else
                     changed |= mergePrediction(speculatedDoubleTypeForPredictions(left, right));
             }
@@ -291,8 +304,8 @@ private:
             SpeculatedType right = node->child2()->prediction();
             
             if (left && right) {
-                if (Node::shouldSpeculateIntegerForArithmetic(node->child1().node(), node->child2().node())
-                    && nodeCanSpeculateInteger(node->arithNodeFlags()))
+                if (Node::shouldSpeculateInt32ForArithmetic(node->child1().node(), node->child2().node())
+                    && nodeCanSpeculateInt32(node->arithNodeFlags()))
                     changed |= mergePrediction(SpecInt32);
                 else
                     changed |= mergePrediction(SpecDouble);
@@ -305,8 +318,8 @@ private:
             SpeculatedType right = node->child2()->prediction();
             
             if (left && right) {
-                if (Node::shouldSpeculateIntegerForArithmetic(node->child1().node(), node->child2().node())
-                    && nodeCanSpeculateInteger(node->arithNodeFlags()))
+                if (Node::shouldSpeculateInt32ForArithmetic(node->child1().node(), node->child2().node())
+                    && nodeCanSpeculateInt32(node->arithNodeFlags()))
                     changed |= mergePrediction(SpecInt32);
                 else
                     changed |= mergePrediction(SpecDouble);
@@ -322,7 +335,7 @@ private:
         case ArithAbs: {
             SpeculatedType child = node->child1()->prediction();
             if (isInt32SpeculationForArithmetic(child)
-                && nodeCanSpeculateInteger(node->arithNodeFlags()))
+                && nodeCanSpeculateInt32(node->arithNodeFlags()))
                 changed |= mergePrediction(SpecInt32);
             else
                 changed |= mergePrediction(speculatedDoubleTypeForPrediction(child));
@@ -427,7 +440,7 @@ private:
         
         case StringFromCharCode: {
             changed |= setPrediction(SpecString);
-            changed |= node->child1()->mergeFlags(NodeUsedAsNumber | NodeUsedAsInt);            
+            changed |= node->child1()->mergeFlags(NodeBytecodeUsesAsNumber | NodeBytecodeUsesAsInt);            
             break;
         }
         case StringCharAt:
@@ -628,7 +641,7 @@ private:
             DoubleBallot ballot;
                 
             if (isNumberSpeculationExpectingDefined(left) && isNumberSpeculationExpectingDefined(right)
-                && !m_graph.addShouldSpeculateInteger(node))
+                && !m_graph.addShouldSpeculateInt32(node))
                 ballot = VoteDouble;
             else
                 ballot = VoteValue;
@@ -645,7 +658,7 @@ private:
             DoubleBallot ballot;
                 
             if (isNumberSpeculation(left) && isNumberSpeculation(right)
-                && !m_graph.mulShouldSpeculateInteger(node))
+                && !m_graph.mulShouldSpeculateInt32(node))
                 ballot = VoteDouble;
             else
                 ballot = VoteValue;
@@ -665,7 +678,7 @@ private:
             DoubleBallot ballot;
                 
             if (isNumberSpeculation(left) && isNumberSpeculation(right)
-                && !(Node::shouldSpeculateIntegerForArithmetic(node->child1().node(), node->child2().node()) && node->canSpeculateInteger()))
+                && !(Node::shouldSpeculateInt32ForArithmetic(node->child1().node(), node->child2().node()) && node->canSpeculateInt32()))
                 ballot = VoteDouble;
             else
                 ballot = VoteValue;
@@ -677,7 +690,7 @@ private:
                 
         case ArithAbs:
             DoubleBallot ballot;
-            if (!(node->child1()->shouldSpeculateIntegerForArithmetic() && node->canSpeculateInteger()))
+            if (!(node->child1()->shouldSpeculateInt32ForArithmetic() && node->canSpeculateInt32()))
                 ballot = VoteDouble;
             else
                 ballot = VoteValue;

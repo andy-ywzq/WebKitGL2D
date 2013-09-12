@@ -1,3 +1,98 @@
+2013-09-11  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Avoid converting from IntSize->SIZE->IntSize
+        https://bugs.webkit.org/show_bug.cgi?id=121180
+
+        Reviewed by Anders Carlsson.
+
+        * WebIconDatabase.cpp:
+        (WebIconDatabase::iconForURL): Guard against null SIZE argument.
+        This was dereferenced with checking before! Use IntSize arguments.
+        (WebIconDatabase::defaultIconWithSize): Used passed-in IntSize.
+        (createDIB): Take an IntSize argument.
+        (WebIconDatabase::getOrCreateSharedBitmap): Take IntSize argument.
+        (WebIconDatabase::getOrCreateDefaultIconBitmap): Ditto.
+        * WebIconDatabase.h: Update for IntSize arguments.
+        * WebView.cpp:
+        (WebView::dispatchDidReceiveIconFromWebFrame): Pass address of
+        IntSize directly, rather than casting to SIZE first.
+
+2013-09-11  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build correction after r155507.
+
+        * WebCoreSupport/WebChromeClient.cpp: Add missing header include
+        to define isHTMLVideoElement.
+
+2013-09-11  peavo@outlook.com  <peavo@outlook.com>
+
+        [Win] Compile error when VIDEO is not enabled.
+        https://bugs.webkit.org/show_bug.cgi?id=121156
+
+        Reviewed by Andreas Kling.
+
+        * WebView.cpp:
+        (WebView::enterFullscreenForNode): Protect isHTMLVideoElement() function with ENABLE(VIDEO) guard.
+
+2013-09-11  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Generate more HTML type checks and casting
+        https://bugs.webkit.org/show_bug.cgi?id=121080
+
+        Reviewed by Andreas Kling.
+
+        Clean-up remained functions of HTML elements using auto-generated isFooElement(),
+        and replace toFooElement() with ELEMENT_TYPE_CASTS() macro.
+
+        Besides this patch clean-up unnecessary checks which are being supported by
+        auto-generated isFooElement().
+
+        * WebCoreSupport/WebChromeClient.cpp:
+        (WebChromeClient::supportsFullscreenForNode):
+        * WebView.cpp:
+        (WebView::enterFullscreenForNode):
+
+2013-09-10  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Create SharedGDIObject Class Template
+        https://bugs.webkit.org/show_bug.cgi?id=121037
+
+        Reviewed by Anders Carlsson.
+
+        * WebView.cpp: Change implementations to use the new SharedGDIObject
+        class.
+        (WebView::addToDirtyRegion):
+        (WebView::scrollBackingStore):
+        (WebView::updateBackingStore):
+        (WebView::performLayeredWindowUpdate):
+        (WebView::paint):
+        (WebView::backingStore):
+        * WebView.h: Ditto.
+
+2013-09-09  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Change from using OwnPtr<GDI Stuff> to new GDIObject template.
+        https://bugs.webkit.org/show_bug.cgi?id=120778
+
+        Reviewed by Anders Carlsson.
+
+        * FullscreenVideoController.cpp:
+        (FullscreenVideoController::createHUDWindow): Switch to GDIObject.
+        (FullscreenVideoController::draw): Ditto.
+        * FullscreenVideoController.h:
+        * WebCoreSupport/EmbeddedWidget.cpp:
+        (EmbeddedWidget::frameRectsChanged): Switch to GDIObject.
+        * WebNodeHighlight.cpp:
+        (WebNodeHighlight::update): Switch to GDIObject.
+        * WebView.cpp:
+        (WebView::scrollBackingStore): Switch to GDIObject.
+        (WebView::updateBackingStore): Ditto.
+        (WebView::performLayeredWindowUpdate): Ditto.
+        (WebView::paint): Ditto.
+        (WebView::paintIntoBackingStore): Ditto.
+        (WebView::paintIntoWindow): Ditto.
+        (WebView::generateSelectionImage): Ditto.
+
 2013-09-05  Roger Fong  <roger_fong@apple.com>
 
         [Windows] Implement text offset methods of IAccessibleText interface.

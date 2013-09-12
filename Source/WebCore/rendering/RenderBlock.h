@@ -24,6 +24,7 @@
 #define RenderBlock_h
 
 #include "ColumnInfo.h"
+#include "FloatingObjects.h"
 #include "GapRects.h"
 #include "PODIntervalTree.h"
 #include "RenderBox.h"
@@ -73,6 +74,12 @@ typedef Vector<WordMeasurement, 64> WordMeasurements;
 enum CaretType { CursorCaret, DragCaret };
 enum ContainingBlockState { NewContainingBlock, SameContainingBlock };
 
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+enum LineCount {
+    NOT_SET = 0, NO_LINE = 1, ONE_LINE = 2, MULTI_LINE = 3
+};
+#endif
+
 enum TextRunFlag {
     DefaultTextRunFlags = 0,
     RespectDirection = 1 << 0,
@@ -90,7 +97,7 @@ public:
 #endif
 
 protected:
-    explicit RenderBlock(ContainerNode*);
+    explicit RenderBlock(Element*);
     virtual ~RenderBlock();
 
 public:
@@ -342,7 +349,7 @@ public:
     void setLineGridBox(RootInlineBox* box)
     {
         if (!m_rareData)
-            m_rareData = adoptPtr(new RenderBlockRareData(this));
+            m_rareData = adoptPtr(new RenderBlockRareData());
         if (m_rareData->m_lineGridBox)
             m_rareData->m_lineGridBox->destroy(renderArena());
         m_rareData->m_lineGridBox = box;
@@ -370,33 +377,6 @@ public:
     void updateLogicalWidthForAlignment(const ETextAlign&, BidiRun* trailingSpaceRun, float& logicalLeft, float& totalLogicalWidth, float& availableLogicalWidth, int expansionOpportunityCount);
 
     virtual void updateFirstLetter();
-
-    class MarginValues {
-    public:
-        MarginValues(LayoutUnit beforePos, LayoutUnit beforeNeg, LayoutUnit afterPos, LayoutUnit afterNeg)
-            : m_positiveMarginBefore(beforePos)
-            , m_negativeMarginBefore(beforeNeg)
-            , m_positiveMarginAfter(afterPos)
-            , m_negativeMarginAfter(afterNeg)
-        { }
-        
-        LayoutUnit positiveMarginBefore() const { return m_positiveMarginBefore; }
-        LayoutUnit negativeMarginBefore() const { return m_negativeMarginBefore; }
-        LayoutUnit positiveMarginAfter() const { return m_positiveMarginAfter; }
-        LayoutUnit negativeMarginAfter() const { return m_negativeMarginAfter; }
-        
-        void setPositiveMarginBefore(LayoutUnit pos) { m_positiveMarginBefore = pos; }
-        void setNegativeMarginBefore(LayoutUnit neg) { m_negativeMarginBefore = neg; }
-        void setPositiveMarginAfter(LayoutUnit pos) { m_positiveMarginAfter = pos; }
-        void setNegativeMarginAfter(LayoutUnit neg) { m_negativeMarginAfter = neg; }
-    
-    private:
-        LayoutUnit m_positiveMarginBefore;
-        LayoutUnit m_negativeMarginBefore;
-        LayoutUnit m_positiveMarginAfter;
-        LayoutUnit m_negativeMarginAfter;
-    };
-    MarginValues marginValuesForChild(RenderBox* child) const;
 
     virtual void scrollbarsChanged(bool /*horizontalScrollbarChanged*/, bool /*verticalScrollbarChanged*/) { };
 
@@ -451,6 +431,16 @@ public:
     void showLineTreeAndMark(const InlineBox* = 0, const char* = 0, const InlineBox* = 0, const char* = 0, const RenderObject* = 0) const;
 #endif
 
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+    int immediateLineCount();
+    void adjustComputedFontSizes(float size, float visibleWidth);
+    void resetComputedFontSize()
+    {
+        m_widthForTextAutosizing = -1;
+        m_lineCountForTextAutosizing = NOT_SET;
+    }
+#endif
+
 #if ENABLE(CSS_SHAPES)
     ShapeInsideInfo* ensureShapeInsideInfo()
     {
@@ -468,7 +458,7 @@ public:
     void setShapeInsideInfo(PassOwnPtr<ShapeInsideInfo> value)
     {
         if (!m_rareData)
-            m_rareData = adoptPtr(new RenderBlockRareData(this));
+            m_rareData = adoptPtr(new RenderBlockRareData());
         m_rareData->m_shapeInsideInfo = value;
     }
     void markShapeInsideDescendantsForLayout();
@@ -479,38 +469,6 @@ public:
 
 protected:
     virtual void willBeDestroyed();
-
-    LayoutUnit maxPositiveMarginBefore() const { return m_rareData ? m_rareData->m_margins.positiveMarginBefore() : RenderBlockRareData::positiveMarginBeforeDefault(this); }
-    LayoutUnit maxNegativeMarginBefore() const { return m_rareData ? m_rareData->m_margins.negativeMarginBefore() : RenderBlockRareData::negativeMarginBeforeDefault(this); }
-    LayoutUnit maxPositiveMarginAfter() const { return m_rareData ? m_rareData->m_margins.positiveMarginAfter() : RenderBlockRareData::positiveMarginAfterDefault(this); }
-    LayoutUnit maxNegativeMarginAfter() const { return m_rareData ? m_rareData->m_margins.negativeMarginAfter() : RenderBlockRareData::negativeMarginAfterDefault(this); }
-    
-    void setMaxMarginBeforeValues(LayoutUnit pos, LayoutUnit neg);
-    void setMaxMarginAfterValues(LayoutUnit pos, LayoutUnit neg);
-
-    void setMustDiscardMarginBefore(bool = true);
-    void setMustDiscardMarginAfter(bool = true);
-
-    bool mustDiscardMarginBefore() const;
-    bool mustDiscardMarginAfter() const;
-
-    bool mustDiscardMarginBeforeForChild(const RenderBox*) const;
-    bool mustDiscardMarginAfterForChild(const RenderBox*) const;
-
-    bool mustSeparateMarginBeforeForChild(const RenderBox*) const;
-    bool mustSeparateMarginAfterForChild(const RenderBox*) const;
-
-    void initMaxMarginValues()
-    {
-        if (m_rareData) {
-            m_rareData->m_margins = MarginValues(RenderBlockRareData::positiveMarginBeforeDefault(this) , RenderBlockRareData::negativeMarginBeforeDefault(this),
-                                                 RenderBlockRareData::positiveMarginAfterDefault(this), RenderBlockRareData::negativeMarginAfterDefault(this));
-            m_rareData->m_paginationStrut = 0;
-
-            m_rareData->m_discardMarginBefore = false;
-            m_rareData->m_discardMarginAfter = false;
-        }
-    }
 
     virtual void layout();
 
@@ -587,17 +545,6 @@ protected:
 
     virtual void addFocusRingRects(Vector<IntRect>&, const LayoutPoint& additionalOffset, const RenderLayerModelObject* paintContainer = 0) OVERRIDE;
 
-#if ENABLE(SVG)
-    // Only used by RenderSVGText, which explicitely overrides RenderBlock::layoutBlock(), do NOT use for anything else.
-    void forceLayoutInlineChildren()
-    {
-        LayoutUnit repaintLogicalTop = 0;
-        LayoutUnit repaintLogicalBottom = 0;
-        clearFloats();
-        layoutInlineChildren(true, repaintLogicalTop, repaintLogicalBottom);
-    }
-#endif
-
     bool updateShapesBeforeBlockLayout();
     void updateShapesAfterBlockLayout(bool heightChanged = false);
     void computeRegionRangeForBoxChild(const RenderBox*) const;
@@ -610,8 +557,6 @@ protected:
     virtual void checkForPaginationLogicalHeightChange(LayoutUnit& pageLogicalHeight, bool& pageLogicalHeightChanged, bool& hasSpecifiedPageLogicalHeight);
 
 private:
-    enum ShapeOutsideFloatOffsetMode { ShapeOutsideFloatShapeOffset, ShapeOutsideFloatMarginBoxOffset };
-
     LayoutUnit logicalRightFloatOffsetForLine(LayoutUnit logicalTop, LayoutUnit fixedOffset, LayoutUnit* heightRemaining, LayoutUnit logicalHeight, ShapeOutsideFloatOffsetMode) const;
     LayoutUnit logicalLeftFloatOffsetForLine(LayoutUnit logicalTop, LayoutUnit fixedOffset, LayoutUnit* heightRemaining, LayoutUnit logicalHeight, ShapeOutsideFloatOffsetMode) const;
     LayoutUnit adjustLogicalRightOffsetForLine(LayoutUnit offsetFromFloats, bool applyTextIndent) const;
@@ -646,13 +591,8 @@ private:
     
     virtual bool isSelfCollapsingBlock() const OVERRIDE FINAL;
 
-    virtual LayoutUnit collapsedMarginBefore() const OVERRIDE FINAL { return maxPositiveMarginBefore() - maxNegativeMarginBefore(); }
-    virtual LayoutUnit collapsedMarginAfter() const OVERRIDE FINAL { return maxPositiveMarginAfter() - maxNegativeMarginAfter(); }
-
     virtual void repaintOverhangingFloats(bool paintAllDescendants) OVERRIDE FINAL;
 
-    void layoutBlockChildren(bool relayoutChildren, LayoutUnit& maxFloatLogicalBottom);
-    void layoutInlineChildren(bool relayoutChildren, LayoutUnit& repaintLogicalTop, LayoutUnit& repaintLogicalBottom);
     BidiRun* handleTrailingSpaces(BidiRunList<BidiRun>&, BidiContext*);
 
     void insertIntoTrackedRendererMaps(RenderBox* descendant, TrackedDescendantsMap*&, TrackedContainerMap*&);
@@ -681,151 +621,6 @@ private:
         RenderBox* object;
         LayoutRect rect;
         bool everHadLayout;
-    };
-
-    class FloatingObject {
-        WTF_MAKE_NONCOPYABLE(FloatingObject); WTF_MAKE_FAST_ALLOCATED;
-    public:
-        // Note that Type uses bits so you can use FloatLeftRight as a mask to query for both left and right.
-        enum Type { FloatLeft = 1, FloatRight = 2, FloatLeftRight = 3 };
-
-        FloatingObject(EFloat type)
-            : m_renderer(0)
-            , m_originatingLine(0)
-            , m_paginationStrut(0)
-            , m_shouldPaint(true)
-            , m_isDescendant(false)
-            , m_isPlaced(false)
-#ifndef NDEBUG
-            , m_isInPlacedTree(false)
-#endif
-        {
-            ASSERT(type != NoFloat);
-            if (type == LeftFloat)
-                m_type = FloatLeft;
-            else if (type == RightFloat)
-                m_type = FloatRight;  
-        }
-
-        FloatingObject(Type type, const LayoutRect& frameRect)
-            : m_renderer(0)
-            , m_originatingLine(0)
-            , m_frameRect(frameRect)
-            , m_paginationStrut(0)
-            , m_type(type)
-            , m_shouldPaint(true)
-            , m_isDescendant(false)
-            , m_isPlaced(true)
-#ifndef NDEBUG
-            , m_isInPlacedTree(false)
-#endif
-        {
-        }
-
-        FloatingObject* clone() const
-        {
-            FloatingObject* cloneObject = new FloatingObject(type(), m_frameRect);
-            cloneObject->m_renderer = m_renderer;
-            cloneObject->m_originatingLine = m_originatingLine;
-            cloneObject->m_paginationStrut = m_paginationStrut;
-            cloneObject->m_shouldPaint = m_shouldPaint;
-            cloneObject->m_isDescendant = m_isDescendant;
-            cloneObject->m_isPlaced = m_isPlaced;
-            return cloneObject;
-        }
-
-        Type type() const { return static_cast<Type>(m_type); }
-        RenderBox* renderer() const { return m_renderer; }
-        
-        bool isPlaced() const { return m_isPlaced; }
-        void setIsPlaced(bool placed = true) { m_isPlaced = placed; }
-
-        LayoutUnit x() const { ASSERT(isPlaced()); return m_frameRect.x(); }
-        LayoutUnit maxX() const { ASSERT(isPlaced()); return m_frameRect.maxX(); }
-        LayoutUnit y() const { ASSERT(isPlaced()); return m_frameRect.y(); }
-        LayoutUnit maxY() const { ASSERT(isPlaced()); return m_frameRect.maxY(); }
-        LayoutUnit width() const { return m_frameRect.width(); }
-        LayoutUnit height() const { return m_frameRect.height(); }
-
-        void setX(LayoutUnit x) { ASSERT(!isInPlacedTree()); m_frameRect.setX(x); }
-        void setY(LayoutUnit y) { ASSERT(!isInPlacedTree()); m_frameRect.setY(y); }
-        void setWidth(LayoutUnit width) { ASSERT(!isInPlacedTree()); m_frameRect.setWidth(width); }
-        void setHeight(LayoutUnit height) { ASSERT(!isInPlacedTree()); m_frameRect.setHeight(height); }
-
-        const LayoutRect& frameRect() const { ASSERT(isPlaced()); return m_frameRect; }
-        void setFrameRect(const LayoutRect& frameRect) { ASSERT(!isInPlacedTree()); m_frameRect = frameRect; }
-
-        int paginationStrut() const { return m_paginationStrut; }
-        void setPaginationStrut(int strut) { m_paginationStrut = strut; }
-
-#ifndef NDEBUG
-        bool isInPlacedTree() const { return m_isInPlacedTree; }
-        void setIsInPlacedTree(bool value) { m_isInPlacedTree = value; }
-#endif
-
-        bool shouldPaint() const { return m_shouldPaint; }
-        void setShouldPaint(bool shouldPaint) { m_shouldPaint = shouldPaint; }
-        bool isDescendant() const { return m_isDescendant; }
-        void setIsDescendant(bool isDescendant) { m_isDescendant = isDescendant; }
-
-        // FIXME: Callers of these methods are dangerous and should be whitelisted explicitly or removed.
-        void setRenderer(RenderBox* renderer) { m_renderer = renderer; }
-        RootInlineBox* originatingLine() const { return m_originatingLine; }
-        void setOriginatingLine(RootInlineBox* line) { m_originatingLine = line; }
-
-        LayoutUnit logicalTop(bool isHorizontalWritingMode) const { return isHorizontalWritingMode ? y() : x(); }
-        LayoutUnit logicalBottom(bool isHorizontalWritingMode) const { return isHorizontalWritingMode ? maxY() : maxX(); }
-        LayoutUnit logicalLeft(bool isHorizontalWritingMode) const { return isHorizontalWritingMode ? x() : y(); }
-        LayoutUnit logicalRight(bool isHorizontalWritingMode) const { return isHorizontalWritingMode ? maxX() : maxY(); }
-        LayoutUnit logicalWidth(bool isHorizontalWritingMode) const { return isHorizontalWritingMode ? width() : height(); }
-
-        int pixelSnappedLogicalTop(bool isHorizontalWritingMode) const { return isHorizontalWritingMode ? frameRect().pixelSnappedY() : frameRect().pixelSnappedX(); }
-        int pixelSnappedLogicalBottom(bool isHorizontalWritingMode) const { return isHorizontalWritingMode ? frameRect().pixelSnappedMaxY() : frameRect().pixelSnappedMaxX(); }
-        int pixelSnappedLogicalLeft(bool isHorizontalWritingMode) const { return isHorizontalWritingMode ? frameRect().pixelSnappedX() : frameRect().pixelSnappedY(); }
-        int pixelSnappedLogicalRight(bool isHorizontalWritingMode) const { return isHorizontalWritingMode ? frameRect().pixelSnappedMaxX() : frameRect().pixelSnappedMaxY(); }
-
-        void setLogicalTop(LayoutUnit logicalTop, bool isHorizontalWritingMode)
-        {
-            if (isHorizontalWritingMode)
-                setY(logicalTop);
-            else
-                setX(logicalTop);
-        }
-        void setLogicalLeft(LayoutUnit logicalLeft, bool isHorizontalWritingMode)
-        {
-            if (isHorizontalWritingMode)
-                setX(logicalLeft);
-            else
-                setY(logicalLeft);
-        }
-        void setLogicalHeight(LayoutUnit logicalHeight, bool isHorizontalWritingMode)
-        {
-            if (isHorizontalWritingMode)
-                setHeight(logicalHeight);
-            else
-                setWidth(logicalHeight);
-        }
-        void setLogicalWidth(LayoutUnit logicalWidth, bool isHorizontalWritingMode)
-        {
-            if (isHorizontalWritingMode)
-                setWidth(logicalWidth);
-            else
-                setHeight(logicalWidth);
-        }
-
-    private:
-        RenderBox* m_renderer;
-        RootInlineBox* m_originatingLine;
-        LayoutRect m_frameRect;
-        int m_paginationStrut; // FIXME: This should be a LayoutUnit, since it's a vertical offset.
-
-        unsigned m_type : 2; // Type (left or right aligned)
-        unsigned m_shouldPaint : 1;
-        unsigned m_isDescendant : 1;
-        unsigned m_isPlaced : 1;
-#ifndef NDEBUG
-        unsigned m_isInPlacedTree : 1;
-#endif
     };
 
     LayoutPoint flipFloatForWritingModeForChild(const FloatingObject*, const LayoutPoint&) const;
@@ -926,8 +721,6 @@ private:
     // Returns true if and only if it has positioned any floats.
     bool positionNewFloats();
 
-    void clearFloats();
-
     LayoutUnit getClearDelta(RenderBox* child, LayoutUnit yPos);
 
     virtual bool avoidsFloats() const;
@@ -1021,100 +814,9 @@ private:
     RenderBlock* containingColumnsBlock(bool allowAnonymousColumnBlock = true);
     RenderBlock* columnsBlockForSpanningElement(RenderObject* newChild);
 
-    class MarginInfo {
-        // Collapsing flags for whether we can collapse our margins with our children's margins.
-        bool m_canCollapseWithChildren : 1;
-        bool m_canCollapseMarginBeforeWithChildren : 1;
-        bool m_canCollapseMarginAfterWithChildren : 1;
-
-        // Whether or not we are a quirky container, i.e., do we collapse away top and bottom
-        // margins in our container.  Table cells and the body are the common examples. We
-        // also have a custom style property for Safari RSS to deal with TypePad blog articles.
-        bool m_quirkContainer : 1;
-
-        // This flag tracks whether we are still looking at child margins that can all collapse together at the beginning of a block.  
-        // They may or may not collapse with the top margin of the block (|m_canCollapseTopWithChildren| tells us that), but they will
-        // always be collapsing with one another.  This variable can remain set to true through multiple iterations 
-        // as long as we keep encountering self-collapsing blocks.
-        bool m_atBeforeSideOfBlock : 1;
-
-        // This flag is set when we know we're examining bottom margins and we know we're at the bottom of the block.
-        bool m_atAfterSideOfBlock : 1;
-
-        // These variables are used to detect quirky margins that we need to collapse away (in table cells
-        // and in the body element).
-        bool m_hasMarginBeforeQuirk : 1;
-        bool m_hasMarginAfterQuirk : 1;
-        bool m_determinedMarginBeforeQuirk : 1;
-
-        bool m_discardMargin : 1;
-
-        // These flags track the previous maximal positive and negative margins.
-        LayoutUnit m_positiveMargin;
-        LayoutUnit m_negativeMargin;
-
-    public:
-        MarginInfo(RenderBlock*, LayoutUnit beforeBorderPadding, LayoutUnit afterBorderPadding);
-
-        void setAtBeforeSideOfBlock(bool b) { m_atBeforeSideOfBlock = b; }
-        void setAtAfterSideOfBlock(bool b) { m_atAfterSideOfBlock = b; }
-        void clearMargin()
-        {
-            m_positiveMargin = 0;
-            m_negativeMargin = 0;
-        }
-        void setHasMarginBeforeQuirk(bool b) { m_hasMarginBeforeQuirk = b; }
-        void setHasMarginAfterQuirk(bool b) { m_hasMarginAfterQuirk = b; }
-        void setDeterminedMarginBeforeQuirk(bool b) { m_determinedMarginBeforeQuirk = b; }
-        void setPositiveMargin(LayoutUnit p) { ASSERT(!m_discardMargin); m_positiveMargin = p; }
-        void setNegativeMargin(LayoutUnit n) { ASSERT(!m_discardMargin); m_negativeMargin = n; }
-        void setPositiveMarginIfLarger(LayoutUnit p)
-        {
-            ASSERT(!m_discardMargin);
-            if (p > m_positiveMargin)
-                m_positiveMargin = p;
-        }
-        void setNegativeMarginIfLarger(LayoutUnit n)
-        {
-            ASSERT(!m_discardMargin);
-            if (n > m_negativeMargin)
-                m_negativeMargin = n;
-        }
-
-        void setMargin(LayoutUnit p, LayoutUnit n) { ASSERT(!m_discardMargin); m_positiveMargin = p; m_negativeMargin = n; }
-        void setCanCollapseMarginAfterWithChildren(bool collapse) { m_canCollapseMarginAfterWithChildren = collapse; }
-        void setDiscardMargin(bool value) { m_discardMargin = value; }
-
-        bool atBeforeSideOfBlock() const { return m_atBeforeSideOfBlock; }
-        bool canCollapseWithMarginBefore() const { return m_atBeforeSideOfBlock && m_canCollapseMarginBeforeWithChildren; }
-        bool canCollapseWithMarginAfter() const { return m_atAfterSideOfBlock && m_canCollapseMarginAfterWithChildren; }
-        bool canCollapseMarginBeforeWithChildren() const { return m_canCollapseMarginBeforeWithChildren; }
-        bool canCollapseMarginAfterWithChildren() const { return m_canCollapseMarginAfterWithChildren; }
-        bool quirkContainer() const { return m_quirkContainer; }
-        bool determinedMarginBeforeQuirk() const { return m_determinedMarginBeforeQuirk; }
-        bool hasMarginBeforeQuirk() const { return m_hasMarginBeforeQuirk; }
-        bool hasMarginAfterQuirk() const { return m_hasMarginAfterQuirk; }
-        LayoutUnit positiveMargin() const { return m_positiveMargin; }
-        LayoutUnit negativeMargin() const { return m_negativeMargin; }
-        bool discardMargin() const { return m_discardMargin; }
-        LayoutUnit margin() const { return m_positiveMargin - m_negativeMargin; }
-    };
-
-    void layoutBlockChild(RenderBox* child, MarginInfo&, LayoutUnit& previousFloatLogicalBottom, LayoutUnit& maxFloatLogicalBottom);
-    void adjustPositionedBlock(RenderBox* child, const MarginInfo&);
-    void adjustFloatingBlock(const MarginInfo&);
-
     RenderBoxModelObject* createReplacementRunIn(RenderBoxModelObject* runIn);
     void moveRunInUnderSiblingBlockIfNeeded(RenderObject* runIn);
     void moveRunInToOriginalPosition(RenderObject* runIn);
-
-    LayoutUnit collapseMargins(RenderBox* child, MarginInfo&);
-    LayoutUnit clearFloatsIfNeeded(RenderBox* child, MarginInfo&, LayoutUnit oldTopPosMargin, LayoutUnit oldTopNegMargin, LayoutUnit yPos);
-    LayoutUnit estimateLogicalTopPosition(RenderBox* child, const MarginInfo&, LayoutUnit& estimateWithoutPagination);
-    void marginBeforeEstimateForChild(RenderBox*, LayoutUnit&, LayoutUnit&, bool&) const;
-    void handleAfterSideOfBlock(LayoutUnit top, LayoutUnit bottom, MarginInfo&);
-    void setCollapsedBottomMargin(const MarginInfo&);
-    // End helper functions and structs used by layoutBlockChildren.
 
     // Helper function for layoutInlineChildren()
     RootInlineBox* createLineBoxesFromBidiRuns(BidiRunList<BidiRun>&, const InlineIterator& end, LineInfo&, VerticalPositionCache&, BidiRun* trailingSpaceRun, WordMeasurements&);
@@ -1148,9 +850,6 @@ protected:
 
     virtual ColumnInfo::PaginationUnit paginationUnit() const;
 
-    LayoutUnit applyBeforeBreak(RenderBox* child, LayoutUnit logicalOffset); // If the child has a before break, then return a new yPos that shifts to the top of the next page/column.
-    LayoutUnit applyAfterBreak(RenderBox* child, LayoutUnit logicalOffset, MarginInfo&); // If the child has an after break, then return a new offset that shifts to the top of the next page/column.
-
 public:
     LayoutUnit pageLogicalTopForOffset(LayoutUnit offset) const;
     LayoutUnit pageLogicalHeightForOffset(LayoutUnit offset) const;
@@ -1169,7 +868,6 @@ protected:
 
     LayoutUnit adjustForUnsplittableChild(RenderBox* child, LayoutUnit logicalOffset, bool includeMargins = false); // If the child is unsplittable and can't fit on the current page, return the top of the next page/column.
     void adjustLinePositionForPagination(RootInlineBox*, LayoutUnit& deltaOffset, RenderFlowThread*); // Computes a deltaOffset value that put a line at the top of the next page if it doesn't fit on the current page.
-    LayoutUnit adjustBlockChildForPagination(LayoutUnit logicalTopAfterClear, LayoutUnit estimateWithoutPagination, RenderBox* child, bool atBeforeSideOfBlock);
 
     // Adjust from painting offsets to the local coords of this renderer
     void offsetForContents(LayoutPoint&) const;
@@ -1191,141 +889,27 @@ public:
     virtual LayoutUnit offsetFromLogicalTopOfFirstPage() const;
     RenderRegion* regionAtBlockOffset(LayoutUnit) const;
 
+    // FIXME: This is temporary to allow us to move code from RenderBlock into RenderBlockFlow that accesses member variables that we haven't moved out of
+    // RenderBlock yet.
+    friend class RenderBlockFlow;
+
 protected:
-    struct FloatingObjectHashFunctions {
-        static unsigned hash(FloatingObject* key) { return DefaultHash<RenderBox*>::Hash::hash(key->renderer()); }
-        static bool equal(FloatingObject* a, FloatingObject* b) { return a->renderer() == b->renderer(); }
-        static const bool safeToCompareToEmptyOrDeleted = true;
-    };
-    struct FloatingObjectHashTranslator {
-        static unsigned hash(RenderBox* key) { return DefaultHash<RenderBox*>::Hash::hash(key); }
-        static bool equal(FloatingObject* a, RenderBox* b) { return a->renderer() == b; }
-    };
-    typedef ListHashSet<FloatingObject*, 4, FloatingObjectHashFunctions> FloatingObjectSet;
-    typedef FloatingObjectSet::const_iterator FloatingObjectSetIterator;
-    typedef PODInterval<int, FloatingObject*> FloatingObjectInterval;
-    typedef PODIntervalTree<int, FloatingObject*> FloatingObjectTree;
-    typedef PODFreeListArena<PODRedBlackTree<FloatingObjectInterval>::Node> IntervalArena;
-    
-    template <FloatingObject::Type FloatTypeValue>
-    class ComputeFloatOffsetAdapter {
-    public:
-        typedef FloatingObjectInterval IntervalType;
-        
-        ComputeFloatOffsetAdapter(const RenderBlock* renderer, int lineTop, int lineBottom, LayoutUnit& offset)
-            : m_renderer(renderer)
-            , m_lineTop(lineTop)
-            , m_lineBottom(lineBottom)
-            , m_offset(offset)
-            , m_outermostFloat(0)
-        {
-        }
-        
-        int lowValue() const { return m_lineTop; }
-        int highValue() const { return m_lineBottom; }
-        void collectIfNeeded(const IntervalType&);
-
-#if ENABLE(CSS_SHAPES)
-        // When computing the offset caused by the floats on a given line, if
-        // the outermost float on that line has a shape-outside, the inline
-        // content that butts up against that float must be positioned using
-        // the contours of the shape, not the margin box of the float.
-        const FloatingObject* outermostFloat() const { return m_outermostFloat; }
-#endif
-
-        LayoutUnit getHeightRemaining() const;
-
-    private:
-        bool updateOffsetIfNeeded(const FloatingObject*);
-
-        const RenderBlock* m_renderer;
-        int m_lineTop;
-        int m_lineBottom;
-        LayoutUnit& m_offset;
-        const FloatingObject* m_outermostFloat;
-    };
-
     void createFloatingObjects();
 
 public:
-
-    class FloatingObjects {
-        WTF_MAKE_NONCOPYABLE(FloatingObjects); WTF_MAKE_FAST_ALLOCATED;
-    public:
-        ~FloatingObjects();
-
-        void clear();
-        void add(FloatingObject*);
-        void remove(FloatingObject*);
-        void addPlacedObject(FloatingObject*);
-        void removePlacedObject(FloatingObject*);
-        void setHorizontalWritingMode(bool b = true) { m_horizontalWritingMode = b; }
-
-        bool hasLeftObjects() const { return m_leftObjectsCount > 0; }
-        bool hasRightObjects() const { return m_rightObjectsCount > 0; }
-        const FloatingObjectSet& set() const { return m_set; }
-        const FloatingObjectTree& placedFloatsTree()
-        {
-            computePlacedFloatsTreeIfNeeded();
-            return m_placedFloatsTree; 
-        }
-        void clearLineBoxTreePointers();
-    private:
-        FloatingObjects(const RenderBlock*, bool horizontalWritingMode);
-        void computePlacedFloatsTree();
-        inline void computePlacedFloatsTreeIfNeeded()
-        {
-            if (!m_placedFloatsTree.isInitialized())
-                computePlacedFloatsTree();
-        }
-        void increaseObjectsCount(FloatingObject::Type);
-        void decreaseObjectsCount(FloatingObject::Type);
-        FloatingObjectInterval intervalForFloatingObject(FloatingObject*);
-
-        FloatingObjectSet m_set;
-        FloatingObjectTree m_placedFloatsTree;
-        unsigned m_leftObjectsCount;
-        unsigned m_rightObjectsCount;
-        bool m_horizontalWritingMode;
-        const RenderBlock* m_renderer;
-
-        friend void RenderBlock::createFloatingObjects();
-    };
-
     // Allocated only when some of these fields have non-default values
     struct RenderBlockRareData {
         WTF_MAKE_NONCOPYABLE(RenderBlockRareData); WTF_MAKE_FAST_ALLOCATED;
     public:
-        RenderBlockRareData(const RenderBlock* block) 
-            : m_margins(positiveMarginBeforeDefault(block), negativeMarginBeforeDefault(block), positiveMarginAfterDefault(block), negativeMarginAfterDefault(block))
-            , m_paginationStrut(0)
+        RenderBlockRareData() 
+            : m_paginationStrut(0)
             , m_pageLogicalOffset(0)
             , m_lineGridBox(0)
             , m_lineBreakToAvoidWidow(-1)
             , m_shouldBreakAtLineToAvoidWidow(false)
-            , m_discardMarginBefore(false)
-            , m_discardMarginAfter(false)
         { 
         }
 
-        static LayoutUnit positiveMarginBeforeDefault(const RenderBlock* block)
-        { 
-            return std::max<LayoutUnit>(block->marginBefore(), 0);
-        }
-        static LayoutUnit negativeMarginBeforeDefault(const RenderBlock* block)
-        { 
-            return std::max<LayoutUnit>(-block->marginBefore(), 0);
-        }
-        static LayoutUnit positiveMarginAfterDefault(const RenderBlock* block)
-        {
-            return std::max<LayoutUnit>(block->marginAfter(), 0);
-        }
-        static LayoutUnit negativeMarginAfterDefault(const RenderBlock* block)
-        {
-            return std::max<LayoutUnit>(-block->marginAfter(), 0);
-        }
-        
-        MarginValues m_margins;
         LayoutUnit m_paginationStrut;
         LayoutUnit m_pageLogicalOffset;
         
@@ -1336,8 +920,6 @@ public:
         OwnPtr<ShapeInsideInfo> m_shapeInsideInfo;
 #endif
         bool m_shouldBreakAtLineToAvoidWidow : 1;
-        bool m_discardMarginBefore : 1;
-        bool m_discardMarginAfter : 1;
      };
 
 protected:
@@ -1355,6 +937,11 @@ protected:
     unsigned m_hasMarkupTruncation : 1;
     unsigned m_hasBorderOrPaddingLogicalWidthChanged : 1;
 
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+    int m_widthForTextAutosizing;
+    unsigned m_lineCountForTextAutosizing : 2;
+#endif
+    
     // RenderRubyBase objects need to be able to split and merge, moving their children around
     // (calling moveChildTo, moveAllChildrenTo, and makeChildrenNonInline).
     friend class RenderRubyBase;
@@ -1392,16 +979,6 @@ inline const RenderBlock* toRenderBlock(const RenderObject* object)
 // This will catch anyone doing an unnecessary cast.
 void toRenderBlock(const RenderBlock*);
 void toRenderBlock(const RenderBlock&);
-
-#ifndef NDEBUG
-// These structures are used by PODIntervalTree for debugging purposes.
-template <> struct ValueToString<int> {
-    static String string(const int value);
-};
-template<> struct ValueToString<RenderBlock::FloatingObject*> {
-    static String string(const RenderBlock::FloatingObject*);
-};
-#endif
 
 } // namespace WebCore
 

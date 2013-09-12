@@ -906,7 +906,7 @@ ObjectContentType FrameLoader::defaultObjectContentType(const KURL& url, const S
     if (mimeType.isEmpty())
         mimeType = mimeTypeFromURL(url);
 
-#if !PLATFORM(MAC) && !PLATFORM(EFL) && !PLATFORM(NIX) // Mac has no PluginDatabase, nor does Chromium or EFL
+#if !PLATFORM(MAC) && !PLATFORM(EFL) && !PLATFORM(NIX) // Mac has no PluginDatabase, nor does Nix or EFL
     if (mimeType.isEmpty()) {
         String decodedPath = decodeURLEscapeSequences(url.path());
         mimeType = PluginDatabase::installedPlugins()->MIMETypeForExtension(decodedPath.substring(decodedPath.reverseFind('.') + 1));
@@ -916,7 +916,7 @@ ObjectContentType FrameLoader::defaultObjectContentType(const KURL& url, const S
     if (mimeType.isEmpty())
         return ObjectContentFrame; // Go ahead and hope that we can display the content.
 
-#if !PLATFORM(MAC) && !PLATFORM(EFL) && !PLATFORM(NIX) // Mac has no PluginDatabase, nor does Chromium or EFL
+#if !PLATFORM(MAC) && !PLATFORM(EFL) && !PLATFORM(NIX) // Mac has no PluginDatabase, nor does Nix or EFL
     bool plugInSupportsMIMEType = PluginDatabase::installedPlugins()->isMIMETypeRegistered(mimeType);
 #else
     bool plugInSupportsMIMEType = false;
@@ -1123,7 +1123,7 @@ void FrameLoader::prepareForHistoryNavigation()
         currentItem = HistoryItem::create();
         currentItem->setLastVisitWasFailure(true);
         history().setCurrentItem(currentItem.get());
-        m_frame.page()->backForward()->setCurrentItem(currentItem.get());
+        m_frame.page()->backForward().setCurrentItem(currentItem.get());
 
         ASSERT(stateMachine()->isDisplayingInitialEmptyDocument());
         stateMachine()->advanceTo(FrameLoaderStateMachine::DisplayingInitialEmptyDocumentPostCommit);
@@ -2149,7 +2149,7 @@ void FrameLoader::checkLoadCompleteForThisFrame()
             }
             if (shouldReset && item)
                 if (Page* page = m_frame.page()) {
-                    page->backForward()->setCurrentItem(item.get());
+                    page->backForward().setCurrentItem(item.get());
                     m_frame.loader().client().updateGlobalHistoryItemForPage();
                 }
             return;
@@ -2236,11 +2236,11 @@ static KURL originatingURLFromBackForwardList(Page* page)
     // It has the same meaning of "page a user thinks is the current one".
 
     KURL originalURL;
-    int backCount = page->backForward()->backCount();
+    int backCount = page->backForward().backCount();
     for (int backIndex = 0; backIndex <= backCount; backIndex++) {
         // FIXME: At one point we had code here to check a "was user gesture" flag.
         // Do we need to restore that logic?
-        HistoryItem* historyItem = page->backForward()->itemAtIndex(-backIndex);
+        HistoryItem* historyItem = page->backForward().itemAtIndex(-backIndex);
         if (!historyItem)
             continue;
 
@@ -2396,7 +2396,7 @@ void FrameLoader::frameDetached()
 
 void FrameLoader::detachFromParent()
 {
-    RefPtr<Frame> protect(&m_frame);
+    Ref<Frame> protect(m_frame);
 
     closeURL();
     history().saveScrollPositionAndViewStateToItem(history().currentItem());
@@ -2774,7 +2774,7 @@ bool FrameLoader::handleBeforeUnloadEvent(Chrome& chrome, FrameLoader* frameLoad
 
     if (!beforeUnloadEvent->defaultPrevented())
         document->defaultEventHandler(beforeUnloadEvent.get());
-    if (beforeUnloadEvent->result().isNull())
+    if (beforeUnloadEvent->returnValue().isNull())
         return true;
 
     // If the navigating FrameLoader has already shown a beforeunload confirmation panel for the current navigation attempt,
@@ -2810,7 +2810,7 @@ bool FrameLoader::handleBeforeUnloadEvent(Chrome& chrome, FrameLoader* frameLoad
 
     frameLoaderBeingNavigated->m_currentNavigationHasShownBeforeUnloadConfirmPanel = true;
 
-    String text = document->displayStringModifiedByEncoding(beforeUnloadEvent->result());
+    String text = document->displayStringModifiedByEncoding(beforeUnloadEvent->returnValue());
     return chrome.runBeforeUnloadConfirmPanel(text, &m_frame);
 }
 
@@ -2843,7 +2843,7 @@ void FrameLoader::continueLoadAfterNavigationPolicy(const ResourceRequest&, Pass
         if ((isTargetItem || isLoadingMainFrame()) && isBackForwardLoadType(policyChecker().loadType())) {
             if (Page* page = m_frame.page()) {
                 if (HistoryItem* resetItem = page->mainFrame().loader().history().currentItem()) {
-                    page->backForward()->setCurrentItem(resetItem);
+                    page->backForward().setCurrentItem(resetItem);
                     m_frame.loader().client().updateGlobalHistoryItemForPage();
                 }
             }
@@ -3060,7 +3060,7 @@ void FrameLoader::checkDidPerformFirstNavigation()
     if (!page)
         return;
 
-    if (!m_didPerformFirstNavigation && page->backForward()->currentItem() && !page->backForward()->backItem() && !page->backForward()->forwardItem()) {
+    if (!m_didPerformFirstNavigation && page->backForward().currentItem() && !page->backForward().backItem() && !page->backForward().forwardItem()) {
         m_didPerformFirstNavigation = true;
         m_client.didPerformFirstNavigation();
     }

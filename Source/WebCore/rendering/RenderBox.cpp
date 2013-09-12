@@ -95,8 +95,8 @@ static bool skipBodyBackground(const RenderBox* bodyElementRenderer)
         && (documentElementRenderer == bodyElementRenderer->parent());
 }
 
-RenderBox::RenderBox(ContainerNode* node)
-    : RenderBoxModelObject(node)
+RenderBox::RenderBox(Element* element)
+    : RenderBoxModelObject(element)
     , m_minPreferredLogicalWidth(-1)
     , m_maxPreferredLogicalWidth(-1)
     , m_inlineBoxWrapper(0)
@@ -438,7 +438,7 @@ void RenderBox::updateFromStyle()
             // (2) We are the primary <body> (can be checked by looking at document.body).
             // (3) The root element has visible overflow.
             if (document().documentElement()->hasTagName(htmlTag)
-                && document().body() == node()
+                && document().body() == element()
                 && document().documentElement()->renderer()->style()->overflowX() == OVISIBLE) {
                 boxHasOverflowClip = false;
             }
@@ -751,11 +751,11 @@ bool RenderBox::scroll(ScrollDirection direction, ScrollGranularity granularity,
     RenderLayer* l = layer();
     if (l && l->scroll(direction, granularity, multiplier)) {
         if (stopNode)
-            *stopNode = node();
+            *stopNode = element();
         return true;
     }
 
-    if (stopNode && *stopNode && *stopNode == node())
+    if (stopNode && *stopNode && *stopNode == element())
         return true;
 
     RenderBlock* b = containingBlock();
@@ -780,12 +780,12 @@ bool RenderBox::logicalScroll(ScrollLogicalDirection direction, ScrollGranularit
         
         if (scrolled) {
             if (stopNode)
-                *stopNode = node();
+                *stopNode = element();
             return true;
         }
     }
 
-    if (stopNode && *stopNode && *stopNode == node())
+    if (stopNode && *stopNode && *stopNode == element())
         return true;
 
     RenderBlock* b = containingBlock();
@@ -801,8 +801,7 @@ bool RenderBox::canBeScrolledAndHasScrollableArea() const
     
 bool RenderBox::canBeProgramaticallyScrolled() const
 {
-    Node* node = this->node();
-    if (node && node->isDocumentNode())
+    if (isRenderView())
         return true;
 
     if (!hasOverflowClip())
@@ -812,7 +811,7 @@ bool RenderBox::canBeProgramaticallyScrolled() const
     if (scrollsOverflow() && hasScrollableOverflow)
         return true;
 
-    return node && node->rendererIsEditable();
+    return element() && element()->rendererIsEditable();
 }
 
 bool RenderBox::usesCompositedScrolling() const
@@ -829,7 +828,7 @@ void RenderBox::autoscroll(const IntPoint& position)
 // There are two kinds of renderer that can autoscroll.
 bool RenderBox::canAutoscroll() const
 {
-    if (node() && node()->isDocumentNode())
+    if (isRenderView())
         return view().frameView().isScrollable();
 
     // Check for a box that can be scrolled in its own right.
@@ -862,7 +861,7 @@ IntSize RenderBox::calculateAutoscrollDirection(const IntPoint& windowPoint) con
 RenderBox* RenderBox::findAutoscrollable(RenderObject* renderer)
 {
     while (renderer && !(renderer->isBox() && toRenderBox(renderer)->canAutoscroll())) {
-        if (!renderer->parent() && renderer->node() == &renderer->document() && renderer->document().ownerElement())
+        if (renderer->isRenderView() && renderer->document().ownerElement())
             renderer = renderer->document().ownerElement()->renderer();
         else
             renderer = renderer->parent();
@@ -1097,7 +1096,7 @@ bool RenderBox::nodeAtPoint(const HitTestRequest& request, HitTestResult& result
     boundsRect.moveBy(adjustedLocation);
     if (visibleToHitTesting() && action == HitTestForeground && locationInContainer.intersects(boundsRect)) {
         updateHitTestResult(result, locationInContainer.point() - toLayoutSize(adjustedLocation));
-        if (!result.addNodeToRectBasedTestResult(node(), request, locationInContainer, boundsRect))
+        if (!result.addNodeToRectBasedTestResult(element(), request, locationInContainer, boundsRect))
             return true;
     }
 
@@ -1594,10 +1593,10 @@ void RenderBox::paintCustomHighlight(const LayoutPoint& paintOffset, const Atomi
     if (r) {
         FloatRect rootRect(paintOffset.x() + r->x(), paintOffset.y() + r->selectionTop(), r->logicalWidth(), r->selectionHeight());
         FloatRect imageRect(paintOffset.x() + x(), rootRect.y(), width(), rootRect.height());
-        page->chrome().client().paintCustomHighlight(node(), type, imageRect, rootRect, behindText, false);
+        page->chrome().client().paintCustomHighlight(element(), type, imageRect, rootRect, behindText, false);
     } else {
         FloatRect imageRect(paintOffset.x() + x(), paintOffset.y() + y(), width(), height());
-        page->chrome().client().paintCustomHighlight(node(), type, imageRect, imageRect, behindText, false);
+        page->chrome().client().paintCustomHighlight(element(), type, imageRect, imageRect, behindText, false);
     }
 }
 
@@ -2103,7 +2102,7 @@ void RenderBox::computeRectForRepaint(const RenderLayerModelObject* repaintConta
         topLeft += layer()->offsetForInFlowPosition();
     }
     
-    if (position != AbsolutePosition && position != FixedPosition && o->hasColumns() && o->isBlockFlowFlexBoxOrGrid()) {
+    if (position != AbsolutePosition && position != FixedPosition && o->hasColumns() && o->isRenderBlockFlow()) {
         LayoutRect repaintRect(topLeft, rect.size());
         toRenderBlock(o)->adjustRectForColumns(repaintRect);
         topLeft = repaintRect.location();
@@ -2175,7 +2174,7 @@ void RenderBox::computeLogicalWidthInRegion(LogicalExtentComputedValues& compute
     }
 
     // If layout is limited to a subtree, the subtree root's logical width does not change.
-    if (node() && view().frameView().layoutRoot(true) == this)
+    if (element() && view().frameView().layoutRoot(true) == this)
         return;
 
     // The parent box is flexing us, so it has increased or decreased our
@@ -2374,7 +2373,7 @@ bool RenderBox::sizesLogicalWidthToFitContent(SizeType widthType) const
     // stretching column flexbox.
     // FIXME: Think about block-flow here.
     // https://bugs.webkit.org/show_bug.cgi?id=46473
-    if (logicalWidth.type() == Auto && !isStretchingColumnFlexItem(this) && node() && (isHTMLInputElement(node()) || node()->hasTagName(selectTag) || node()->hasTagName(buttonTag) || isHTMLTextAreaElement(node()) || node()->hasTagName(legendTag)))
+    if (logicalWidth.type() == Auto && !isStretchingColumnFlexItem(this) && element() && (isHTMLInputElement(element()) || element()->hasTagName(selectTag) || element()->hasTagName(buttonTag) || isHTMLTextAreaElement(element()) || element()->hasTagName(legendTag)))
         return true;
 
     if (isHorizontalWritingMode() != containingBlock()->isHorizontalWritingMode())
@@ -2843,7 +2842,7 @@ LayoutUnit RenderBox::computeReplacedLogicalHeightUsing(Length logicalHeight) co
         case Calculated:
         {
             RenderObject* cb = isOutOfFlowPositioned() ? container() : containingBlock();
-            while (cb->isAnonymous()) {
+            while (cb->isAnonymous() && !cb->isRenderView()) {
                 cb = cb->containingBlock();
                 toRenderBlock(cb)->addPercentHeightDescendant(const_cast<RenderBox*>(this));
             }
@@ -4057,7 +4056,7 @@ LayoutRect RenderBox::localCaretRect(InlineBox* box, int caretOffset, LayoutUnit
     // FIXME: Border/padding should be added for all elements but this workaround
     // is needed because we use offsets inside an "atomic" element to represent
     // positions before and after the element in deprecated editing offsets.
-    if (node() && !(editingIgnoresContent(node()) || isTableElement(node()))) {
+    if (element() && !(editingIgnoresContent(element()) || isTableElement(element()))) {
         rect.setX(rect.x() + borderLeft() + paddingLeft());
         rect.setY(rect.y() + paddingTop() + borderTop());
     }
@@ -4093,7 +4092,7 @@ VisiblePosition RenderBox::positionForPoint(const LayoutPoint& point)
         adjustedPoint.moveBy(location());
 
     for (RenderObject* renderObject = firstChild(); renderObject; renderObject = renderObject->nextSibling()) {
-        if ((!renderObject->firstChild() && !renderObject->isInline() && !renderObject->isBlockFlowFlexBoxOrGrid() )
+        if ((!renderObject->firstChild() && !renderObject->isInline() && !renderObject->isRenderBlockFlow() )
             || renderObject->style()->visibility() != VISIBLE)
             continue;
         

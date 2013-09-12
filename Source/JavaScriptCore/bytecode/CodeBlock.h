@@ -324,7 +324,7 @@ public:
 
     void setArgumentsRegister(int argumentsRegister)
     {
-        ASSERT(argumentsRegister != -1);
+        ASSERT(argumentsRegister != (int)InvalidVirtualRegister);
         m_argumentsRegister = argumentsRegister;
         ASSERT(usesArguments());
     }
@@ -354,7 +354,7 @@ public:
             return InvalidVirtualRegister;
         return activationRegister();
     }
-    bool usesArguments() const { return m_argumentsRegister != -1; }
+    bool usesArguments() const { return m_argumentsRegister != (int)InvalidVirtualRegister; }
 
     bool needsActivation() const
     {
@@ -367,7 +367,7 @@ public:
             return operandToArgument(operand) && usesArguments();
 
         if (inlineCallFrame)
-            return inlineCallFrame->capturedVars.get(operand);
+            return inlineCallFrame->capturedVars.get(operandToLocal(operand));
 
         // The activation object isn't in the captured region, but it's "captured"
         // in the sense that stores to its location can be observed indirectly.
