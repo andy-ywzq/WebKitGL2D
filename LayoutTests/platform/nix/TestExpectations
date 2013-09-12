@@ -2886,8 +2886,6 @@ css3/line-break/line-break-normal-half-kana.html [ ImageOnlyFailure ]
 css3/line-break/line-break-normal-hyphens.html [ ImageOnlyFailure ]
 css3/line-break/line-break-normal-sound-marks.html [ ImageOnlyFailure ]
 css3/line-break/line-break-strict-sound-marks.html [ ImageOnlyFailure ]
-fast/sub-pixel/clip-rect-box-consistent-rounding.html [ ImageOnlyFailure ]
-
 
 # Regressions after merge (005e102 c1ff4a8)
 fast/events/keydown-1.html [ Failure Pass ]
@@ -3714,16 +3712,9 @@ css3/compositing/background-blend-mode-different-image-formats.html [ Missing ]
 css3/compositing/background-blend-mode-image-color.html [ Missing ]
 css3/compositing/background-blend-mode-image-image.html [ Missing ]
 css3/compositing/background-blend-mode-single-layer-no-blending.html [ Missing ]
-fast/hidpi/image-srcset-data-src.html [ Missing ]
-fast/hidpi/image-srcset-data-srcset.html [ Missing ]
-fast/hidpi/image-srcset-invalid-inputs-correct-src.html [ Missing ]
-fast/hidpi/image-srcset-invalid-inputs-except-one.html [ Missing ]
 fast/hidpi/image-srcset-invalid-inputs.html [ Missing ]
 fast/hidpi/image-srcset-nomodifier.html [ Missing ]
 fast/hidpi/image-srcset-only-src-attribute.html [ Missing ]
-fast/hidpi/image-srcset-remove-dynamically-from-js.html [ Missing ]
-fast/hidpi/image-srcset-same-alternative-for-both-attributes.html [ Missing ]
-fast/hidpi/image-srcset-viewport-modifiers.html [ Missing ]
 fast/multicol/pagination/BottomToTop-bt.html [ Missing ]
 fast/multicol/pagination/BottomToTop-lr.html [ Missing ]
 fast/multicol/pagination/BottomToTop-rl.html [ Missing ]
@@ -3782,8 +3773,6 @@ pointer-lock [ Skip ]
 fast/events/mouse-click-events.html [ Failure ]
 fast/events/touch/touch-input-element-change-documents.html [ Failure ]
 
-# Flakey and failing tests after merge from 2013-01-03
-http/tests/security/sandboxed-iframe-form-top.html [ Failure Timeout ]
 # 0 range(s) selected.
 fast/events/drag-selects-image.html [ Failure ]
 # 'undefined' is not an object (evaluating 'template.content.appendChild').
@@ -3881,7 +3870,6 @@ svg/animations/animate-text-nested-transforms.html [ Failure ]
 compositing/patterns/direct-pattern-compositing-contain.html [ Crash Failure ]
 fast/parser/document-write-basic.html [ Crash ]
 storage/indexeddb/keypath-intrinsic-properties.html [ Crash ]
-storage/indexeddb/mozilla/remove-objectstore.html [ Crash ]
 fast/forms/validation-message-appearance.html [ Missing ]
 
 # Failing or flakey tests after merge ceff3a0 09daeb9
