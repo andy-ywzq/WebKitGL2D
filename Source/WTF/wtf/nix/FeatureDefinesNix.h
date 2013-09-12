@@ -38,6 +38,10 @@
 #define ENABLE_ACCELERATED_OVERFLOW_SCROLLING 1
 #endif
 
+#if !defined(ENABLE_BATTERY_STATUS)
+#define ENABLE_BATTERY_STATUS 1
+#endif
+
 #if !defined(ENABLE_BLOB)
 #define ENABLE_BLOB 1
 #endif
@@ -240,6 +244,10 @@
 
 #if !defined(ENABLE_UNDO_MANAGER)
 #define ENABLE_UNDO_MANAGER 0
+#endif
+
+#if !defined(ENABLE_VIBRATION)
+#define ENABLE_VIBRATION 1
 #endif
 
 #if !defined(ENABLE_VIDEO)
