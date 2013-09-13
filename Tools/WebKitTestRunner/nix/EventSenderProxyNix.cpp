@@ -191,6 +191,7 @@ void EventSenderProxy::leapForward(int milliseconds)
 NIXKeyEvent* EventSenderProxy::createKeyEvent(NIXInputEventType type, unsigned code, unsigned nixModifiers, bool shouldUseUpperCase, bool isKeypad)
 {
     NIXKeyEvent* ev = new NIXKeyEvent;
+    memset(ev, 0, sizeof(NIXKeyEvent));
     ev->type = type;
     ev->key = static_cast<NIXKeyEventKey>(code);
     ev->modifiers = nixModifiers;
