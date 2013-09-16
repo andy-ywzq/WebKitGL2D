@@ -276,6 +276,7 @@ set(WebKitNix_WebKit2_HEADERS
     Shared/API/c/WKContextMenuItem.h
     Shared/API/c/WKContextMenuItemTypes.h
     Shared/API/c/WKData.h
+    Shared/API/c/WKDeclarationSpecifiers.h
     Shared/API/c/WKDictionary.h
     Shared/API/c/WKError.h
     Shared/API/c/WKEvent.h
@@ -301,7 +302,9 @@ set(WebKitNix_WebKit2_HEADERS
     Shared/API/c/WKURL.h
     Shared/API/c/WKURLRequest.h
     Shared/API/c/WKURLResponse.h
+    Shared/API/c/WKUserContentInjectedFrames.h
     Shared/API/c/WKUserContentURLPattern.h
+    Shared/API/c/WKUserScriptInjectionTime.h
 
     Shared/API/c/nix/WKBaseNix.h
 
