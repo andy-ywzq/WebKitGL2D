@@ -113,6 +113,7 @@ list(APPEND WebCore_SOURCES
     plugins/PluginViewNone.cpp
 
     editing/SmartReplaceICU.cpp
+    editing/nix/EditorNix.cpp
     platform/text/LocaleNone.cpp
 
     platform/nix/support/AudioBusNix.cpp

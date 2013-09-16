@@ -1,3 +1,649 @@
+2013-09-16  Julien Brianceau  <jbriance@cisco.com>
+
+        [sh4] Fix typo in subp implementation in LLINT.
+        https://bugs.webkit.org/show_bug.cgi?id=121438
+
+        Reviewed by Andreas Kling.
+
+        * offlineasm/sh4.rb:
+
+2013-09-16  Julien Brianceau  <jbriance@cisco.com>
+
+        [sh4] Handle subp opcode with 3 operands and bpbeq opcode in LLINT.
+        https://bugs.webkit.org/show_bug.cgi?id=121412
+
+        Reviewed by Andreas Kling.
+
+        * offlineasm/sh4.rb:
+
+2013-09-15  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed make distcheck fix.
+
+        * GNUmakefile.list.am:
+
+2013-09-15  Filip Pizlo  <fpizlo@apple.com>
+
+        Deoptimize deoptimization: make DFGOSRExitCompiler64.cpp more hackable
+        https://bugs.webkit.org/show_bug.cgi?id=121374
+
+        Reviewed by Geoffrey Garen.
+        
+        This reduces the size of DFGOSRExitCompiler64.cpp by almost 50%, and makes it
+        super easy to add new recovery kinds. For recoveries that involve reboxing, it
+        allows you to keep most of the code common between the on-stack and in-reg
+        cases: they all get funneled through the "load from scratch buffer, convert,
+        and then store to stack" logic.
+        
+        This opens up a bunch of possibilities. It'll make adding Int48 much easier,
+        and it probably will come in handy as we do various DFG stack layout changes in
+        support of the FTL.
+
+        * bytecode/ValueRecovery.h:
+        (JSC::ValueRecovery::dumpInContext):
+        (JSC::ValueRecovery::dump):
+        * dfg/DFGOSRExitCompiler.cpp:
+        (JSC::DFG::shortOperandsDump):
+        * dfg/DFGOSRExitCompiler64.cpp:
+        (JSC::DFG::OSRExitCompiler::compileExit):
+
+2013-09-14  Filip Pizlo  <fpizlo@apple.com>
+
+        It should be easy to add new nodes that do OSR forward rewiring in both DFG and FTL
+        https://bugs.webkit.org/show_bug.cgi?id=121371
+
+        Reviewed by Sam Weinig.
+        
+        Forward rewiring is a tricky part of OSR that handles the following:
+        
+            a: Something(...)
+               SetLocal(@a, locX)
+            b: Int32ToDouble(@a)
+            c: SomethingThatExits(@b)
+               <no further uses of @a or @b>
+
+        Note that at @c, OSR will think that locX->@a, but @a will be dead. So it must be
+        smart enough to find @b, which contains an equivalent value. It must do this for
+        any identity functions we support. Currently we support four such functions.
+        
+        Currently the code for doing this is basically duplicated between the DFG and the
+        FTL. Also both versions of the code have some really weirdly written logic for
+        picking the "best" identity function to use.
+        
+        We should fix this by simply having a way to ask "is this node an identity
+        function, and if so, then how good is it?"  Then both the DFG and FTL could use
+        this and have no hard-wired knowledge of those identity functions.
+        
+        While we're at it, this also changes some terminology because I found the use of
+        the word "needs" confusing. Note that this retains the somewhat confusing behavior
+        that we don't search all possible forward/backward uses. We only search one step
+        in each direction. This is because we only need to handle cases that FixupPhase
+        and the parser insert. All other code that tries to insert intermediate conversion
+        nodes should ensure to Phantom the original node. For example, the following
+        transformation is illegal:
+        
+        Before:
+            x: SomethingThatExits(@a)
+        
+        After:
+            w: Conversion(@a)
+            x: SomethingThatExits(@w)
+        
+        The correct form of that transformation is one of these:
+        
+        Correct #1:
+        
+            v: DoAllChecks(@a) // exit here
+            w: Conversion(@a)
+            x: Something(@w) // no exit
+        
+        Correct #2:
+        
+            w: Conversion(@a)
+            x: SomethingThatExits(@w)
+            y: Phantom(@a)
+        
+        Correct #3:
+        
+            w: Conversion(@a)
+            x: SomethingThatExits(@w, @a)
+        
+        Note that we use #3 for some heap accesses, but of course it requires that the
+        node you're using has an extra slot for a "dummy" use child.
+        
+        Broadly speaking though, such transformations should be relegated to something
+        below DFG IR, like LLVM IR.
+
+        * dfg/DFGNodeType.h:
+        (JSC::DFG::forwardRewiringSelectionScore):
+        (JSC::DFG::needsOSRForwardRewiring):
+        * dfg/DFGVariableEventStream.cpp:
+        (JSC::DFG::VariableEventStream::reconstruct):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::addExitArgumentForNode):
+
+2013-09-14  Filip Pizlo  <fpizlo@apple.com>
+
+        Rename IntegerBranch/IntegerCompare to Int32Branch/Int32Compare.
+
+        Rubber stamped by Mark Hahnenberg.
+
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compilePeepHoleInt32Branch):
+        (JSC::DFG::SpeculativeJIT::compilePeepHoleBranch):
+        (JSC::DFG::SpeculativeJIT::compare):
+        (JSC::DFG::SpeculativeJIT::compileStrictEq):
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compileInt32Compare):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compileInt32Compare):
+
+2013-09-13  Filip Pizlo  <fpizlo@apple.com>
+
+        Rename SpeculativeJIT::integerResult() to int32Result().
+
+        Rubber stamped by Mark Hahnenberg.
+
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileGetCharCodeAt):
+        (JSC::DFG::SpeculativeJIT::compileValueToInt32):
+        (JSC::DFG::SpeculativeJIT::compileUInt32ToNumber):
+        (JSC::DFG::SpeculativeJIT::compileDoubleAsInt32):
+        (JSC::DFG::SpeculativeJIT::compileGetByValOnIntTypedArray):
+        (JSC::DFG::SpeculativeJIT::compileAdd):
+        (JSC::DFG::SpeculativeJIT::compileArithSub):
+        (JSC::DFG::SpeculativeJIT::compileArithNegate):
+        (JSC::DFG::SpeculativeJIT::compileArithIMul):
+        (JSC::DFG::SpeculativeJIT::compileArithMul):
+        (JSC::DFG::SpeculativeJIT::compileArithDiv):
+        (JSC::DFG::SpeculativeJIT::compileArithMod):
+        (JSC::DFG::SpeculativeJIT::compileGetTypedArrayByteOffset):
+        (JSC::DFG::SpeculativeJIT::compileGetArgumentsLength):
+        (JSC::DFG::SpeculativeJIT::compileGetArrayLength):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::int32Result):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2013-09-13  Michael Saboff  <msaboff@apple.com>
+
+        FTL JIT broke after r155711
+        https://bugs.webkit.org/show_bug.cgi?id=121332
+
+        Reviewed by Geoffrey Garen.
+
+        Fixed OSR entry to use the local variable's index instead of its VirtualRegister.
+        Initialized ExitArgumentForOperand::m_operand to InvalidVirtualRegister instead of -1.
+        Fixed compileCallOrConstruct() to update locals on callframe going down.
+        Fixed prepareOSREntry() to grow stack down if needed.
+
+        * ftl/FTLExitArgumentForOperand.h:
+        (JSC::FTL::ExitArgumentForOperand::ExitArgumentForOperand):
+        * ftl/FTLLink.cpp:
+        (JSC::FTL::link):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileExtractOSREntryLocal):
+        (JSC::FTL::LowerDFGToLLVM::compileCallOrConstruct):
+        * ftl/FTLOSREntry.cpp:
+        (JSC::FTL::prepareOSREntry):
+
+2013-09-13  Anders Carlsson  <andersca@apple.com>
+
+        Avoid a couple of zero-sized fastMalloc calls
+        https://bugs.webkit.org/show_bug.cgi?id=121333
+
+        Reviewed by Geoffrey Garen.
+
+        * API/JSStringRefCF.cpp:
+        (JSStringCopyCFString):
+        Return an empty constant CFStringRef if the JSStringRef is empty.
+
+        * runtime/JSPropertyNameIterator.cpp:
+        (JSC::JSPropertyNameIterator::JSPropertyNameIterator):
+        Don't allocate an empty m_jsStrings array if m_jsStringsSize is 0.
+
+2013-09-13  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG AI assumes that ToThis can never return non-object if it is passed an object, and operationToThis will get the wrong value of isStrictMode() if there's inlining
+        https://bugs.webkit.org/show_bug.cgi?id=121330
+
+        Reviewed by Mark Hahnenberg and Oliver Hunt.
+        
+        Also print whether a function is strict mode in debug dumps.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::dumpAssumingJITType):
+        * bytecode/CodeOrigin.cpp:
+        (JSC::InlineCallFrame::dumpInContext):
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::::executeEffects):
+        * dfg/DFGOperations.cpp:
+        * dfg/DFGOperations.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2013-09-13  Anders Carlsson  <andersca@apple.com>
+
+        Use nullptr instead of 0 in calls to HashMap::add
+        https://bugs.webkit.org/show_bug.cgi?id=121322
+
+        Reviewed by Sam Weinig.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::emitLoad):
+        (JSC::BytecodeGenerator::addStringConstant):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::cellConstant):
+
+2013-09-13  Oliver Hunt  <oliver@apple.com>
+
+        Try to kill initialiser expression in for-in statements
+        https://bugs.webkit.org/show_bug.cgi?id=121311
+
+        Reviewed by Gavin Barraclough.
+
+        We'd like to get rid of this pointless initialiser expression
+        in for-in statements.  Unfortunately we have to keep the no_in
+        variant of expression parsing to avoid ambiguity in the grammar.
+        There's a possibility that this will need to be rolled out, but
+        we'll need to live on it to see.
+
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ForInNode::emitBytecode):
+        * parser/ASTBuilder.h:
+        (JSC::ASTBuilder::createForInLoop):
+        * parser/NodeConstructors.h:
+        (JSC::ForInNode::ForInNode):
+        * parser/Nodes.h:
+        * parser/Parser.cpp:
+        (JSC::::parseForStatement):
+        * parser/SyntaxChecker.h:
+        (JSC::SyntaxChecker::createForInLoop):
+
+2013-09-12  Michael Saboff  <msaboff@apple.com>
+
+        fourthTier: Change JSStack to grow from high to low addresses
+        https://bugs.webkit.org/show_bug.cgi?id=118758
+
+        Reviewed by Oliver Hunt.
+
+        Changed the JSC stack to grow down.  Effectively the JSC stack frame is flipped from
+        what it was.  See JSStack.h for the new offsets.  Changed JSStack begin() and end()
+        to be getBaseOfStack() and getLimitOfStack().  Most of the changes are address or offset
+        calculation changes.  Decoupled a local register ordinal (loop variable or array index)
+        from the offset into the callFrame using localToOperand() and the inverse operandToLocal().
+
+        * assembler/MacroAssembler.h:
+        (JSC::MacroAssembler::trustedImm32ForShift):
+        (JSC::MacroAssembler::lshiftPtr): Added to create scaled addresses with a negative index
+        * assembler/MacroAssemblerX86_64.h:
+        (JSC::MacroAssemblerX86_64::lshift64): Added to create scaled addresses with a negative index
+        * assembler/X86Assembler.h:
+        (JSC::X86Assembler::shlq_i8r): Added to create scaled addresses with a negative index
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::dumpBytecode):
+        * bytecode/CodeBlock.h:
+        (JSC::unmodifiedArgumentsRegister):
+        (JSC::CodeBlock::isCaptured):
+        * bytecode/CodeOrigin.h:
+        (JSC::CodeOrigin::stackOffset):
+        * bytecode/Operands.h:
+        (JSC::localToOperand):
+        (JSC::operandIsLocal):
+        (JSC::operandToLocal):
+        (JSC::operandIsArgument):
+        (JSC::operandToArgument):
+        (JSC::argumentToOperand):
+        * bytecode/VirtualRegister.h: Made InvalidVirtualRegister a positive value that fits in
+        31 bits since it can be placed into the 31 bit field "stackOffset" in struct InlineCallFrame.
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::addVar):
+        (JSC::BytecodeGenerator::BytecodeGenerator):
+        (JSC::BytecodeGenerator::createLazyRegisterIfNecessary):
+        (JSC::BytecodeGenerator::newRegister):
+        (JSC::BytecodeGenerator::emitNewArray):
+        * bytecompiler/BytecodeGenerator.h:
+        (JSC::CallArguments::registerOffset):
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::CallArguments::CallArguments):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::findArgumentPositionForLocal):
+        (JSC::DFG::ByteCodeParser::addCall):
+        (JSC::DFG::ByteCodeParser::handleCall):
+        (JSC::DFG::ByteCodeParser::handleInlining):
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        (JSC::DFG::ByteCodeParser::InlineStackEntry::InlineStackEntry):
+        * dfg/DFGJITCompiler.cpp:
+        (JSC::DFG::JITCompiler::compileFunction):
+        * dfg/DFGOSREntry.cpp:
+        (JSC::DFG::prepareOSREntry):
+        * dfg/DFGOSRExitCompiler32_64.cpp:
+        (JSC::DFG::OSRExitCompiler::compileExit):
+        * dfg/DFGOSRExitCompiler64.cpp:
+        (JSC::DFG::OSRExitCompiler::compileExit):
+        * dfg/DFGOperations.cpp:
+        * dfg/DFGScoreBoard.h:
+        (JSC::DFG::ScoreBoard::allocate):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileGetByValOnArguments):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::callFrameSlot):
+        (JSC::DFG::SpeculativeJIT::argumentSlot):
+        (JSC::DFG::SpeculativeJIT::callFrameTagSlot):
+        (JSC::DFG::SpeculativeJIT::callFramePayloadSlot):
+        (JSC::DFG::SpeculativeJIT::argumentTagSlot):
+        (JSC::DFG::SpeculativeJIT::argumentPayloadSlot):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGValidate.cpp:
+        (JSC::DFG::Validate::reportValidationContext):
+        * ftl/FTLLink.cpp:
+        (JSC::FTL::link):
+        * heap/ConservativeRoots.cpp:
+        (JSC::ConservativeRoots::genericAddSpan):
+        * interpreter/CallFrame.cpp:
+        (JSC::CallFrame::frameExtentInternal):
+        * interpreter/CallFrame.h:
+        (JSC::ExecState::init):
+        (JSC::ExecState::argumentOffset):
+        (JSC::ExecState::argumentOffsetIncludingThis):
+        (JSC::ExecState::argIndexForRegister):
+        * interpreter/Interpreter.cpp:
+        (JSC::loadVarargs):
+        (JSC::Interpreter::dumpRegisters):
+        * interpreter/JSStack.cpp:
+        (JSC::JSStack::JSStack):
+        (JSC::JSStack::~JSStack):
+        (JSC::JSStack::growSlowCase):
+        (JSC::JSStack::gatherConservativeRoots):
+        (JSC::JSStack::releaseExcessCapacity):
+        (JSC::JSStack::disableErrorStackReserve):
+        * interpreter/JSStack.h:
+        (JSC::JSStack::getBaseOfStack):
+        (JSC::JSStack::getLimitOfStack):
+        (JSC::JSStack::size):
+        (JSC::JSStack::end):
+        (JSC::JSStack::containsAddress):
+        (JSC::JSStack::lowAddress):
+        (JSC::JSStack::highAddress):
+        (JSC::JSStack::reservationEnd):
+        (JSC::JSStack::shrink):
+        (JSC::JSStack::grow):
+        * interpreter/JSStackInlines.h:
+        (JSC::JSStack::getTopOfFrame):
+        (JSC::JSStack::pushFrame):
+        (JSC::JSStack::popFrame):
+        (JSC::JSStack::installTrapsAfterFrame):
+        * interpreter/StackVisitor.cpp:
+        (JSC::inlinedFrameOffset):
+        (JSC::StackVisitor::readInlinedFrame):
+        * jit/JIT.cpp:
+        (JSC::JIT::privateCompile):
+        * jit/JITCall.cpp:
+        (JSC::JIT::compileLoadVarargs):
+        (JSC::JIT::compileOpCall):
+        * jit/JITCall32_64.cpp:
+        (JSC::JIT::compileLoadVarargs):
+        (JSC::JIT::compileOpCall):
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_create_activation):
+        (JSC::JIT::emit_op_get_argument_by_val):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_get_argument_by_val):
+        * jit/JITStubs.cpp:
+        (JSC::throwExceptionFromOpCall):
+        (JSC::DEFINE_STUB_FUNCTION):
+        * jit/ThunkGenerators.cpp:
+        (JSC::arityFixup):
+        * llint/LLIntData.cpp:
+        (JSC::LLInt::Data::performAssertions):
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        (JSC::LLInt::genericCall):
+        * llint/LowLevelInterpreter.asm:
+        * llint/LowLevelInterpreter32_64.asm:
+        * llint/LowLevelInterpreter64.asm:
+        * runtime/ArgList.cpp:
+        (JSC::ArgList::getSlice):
+        (JSC::MarkedArgumentBuffer::slowAppend):
+        * runtime/ArgList.h:
+        (JSC::MarkedArgumentBuffer::MarkedArgumentBuffer):
+        (JSC::MarkedArgumentBuffer::slotFor):
+        (JSC::MarkedArgumentBuffer::mallocBase):
+        (JSC::ArgList::at):
+        * runtime/Arguments.cpp:
+        (JSC::Arguments::tearOff):
+        * runtime/ArrayConstructor.cpp:
+        (JSC::constructArrayWithSizeQuirk):
+        * runtime/CommonSlowPaths.cpp:
+        (JSC::SLOW_PATH_DECL):
+        * runtime/JSActivation.h:
+        (JSC::JSActivation::registersOffset):
+        (JSC::JSActivation::tearOff):
+        (JSC::JSActivation::isValidIndex):
+        * runtime/JSArray.h:
+        (JSC::constructArrayNegativeIndexed): New method to create an array from registers that grow down.
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::globalExec):
+        * runtime/JSGlobalObject.h:
+        (JSC::constructArrayNegativeIndexed):
+        * runtime/JSString.h:
+        * runtime/Operations.h:
+        (JSC::jsStringFromRegisterArray):
+        * runtime/SymbolTable.h:
+        (JSC::SharedSymbolTable::captureCount):
+
+2013-09-13  Csaba Osztrogonác  <ossy@webkit.org>
+
+        ARM EABI hardfp buildfix after r155675
+        https://bugs.webkit.org/show_bug.cgi?id=121287
+
+        Reviewed by Geoffrey Garen.
+
+        * dfg/DFGCCallHelpers.h:
+        (JSC::DFG::CCallHelpers::setupArgumentsWithExecState):
+
+2013-09-13  Youngho Yoo  <youngho33.yoo@lge.com>
+
+        Fixed crash in V8 benchmark suite in ARM,softp,EABI environment. 
+        https://bugs.webkit.org/show_bug.cgi?id=117281
+
+        Reviewed by Michael Saboff.
+
+        Fix the missing EABI_32BIT_DUMMY_ARG in FPRReg using callOperation function.
+
+        Test 1 : fast/js/array-with-double-assign.html
+        Test 2 : fast/js/array-with-double-push.html
+
+        * dfg/DFGCCallHelpers.h:
+        (JSC::DFG::CCallHelpers::setupArgumentsWithExecState):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::callOperation):
+
+2013-09-12  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG::Int32Operand and fillInt32() should go away and all uses should be replaced with SpeculateInt32Operand
+        https://bugs.webkit.org/show_bug.cgi?id=121268
+
+        Reviewed by Oliver Hunt.
+
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileUInt32ToNumber):
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeUInt32ToNumber):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeUInt32ToNumber):
+
+2013-09-12  Geoffrey Garen  <ggaren@apple.com>
+
+        Web Inspector shouldn't artificially allocate the arguments object in functions that don't use it
+        https://bugs.webkit.org/show_bug.cgi?id=121206
+        <rdar://problem/6911886>
+
+        Reviewed by Joseph Pecoraro.
+
+        This is a step toward better tools, and a 23% speedup in a simple
+        JavaScript benchmark run with the Web Inspector open.
+
+        We want the Web Inspector to be fast, and we want it to produce reliable
+        CPU and memory profiles. We can't do that if just opening the Web Inspector
+        incurs huge CPU/memory penalties like the arguments object.
+
+        Also, since use of the 'arguments' identifier is an API for allocating
+        an object, I think it's good for the UI to let developers know when
+        they've invoked that API and when they haven't.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::BytecodeGenerator): No need to allocate the
+        arguments object artificially for the debugger's sake. The activation
+        object no longer assumes that the stack frame is laid out for one.
+
+        (Long-term, this code will move out of the activation object, into a
+        special object for interfacing with the debugger.)
+
+        * runtime/JSActivation.cpp:
+        (JSC::JSActivation::getOwnNonIndexPropertyNames):
+        (JSC::JSActivation::getOwnPropertySlot): Don't advertise or provide an
+        arguments object if the user function didn't include one. The bytecode
+        generator will not have laid out the stack frame to support one.
+
+        (Eventually, we do want the Web Inspector to see an arguments
+        object in scope in the console. That's a one-line change in JSActivation,
+        but it's blocked by https://bugs.webkit.org/show_bug.cgi?id=121208.)
+
+        (JSC::JSActivation::argumentsGetter):
+        * runtime/JSActivation.h: Removed this obsolete performance
+        work-around. C++ property access to an activation object is no longer
+        hot.
+
+2013-09-12  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        Rolling out r155632
+
+        Broke some tests.
+
+        * heap/MarkedAllocator.cpp:
+        (JSC::MarkedAllocator::tryAllocateHelper):
+        * heap/MarkedBlock.h:
+
+2013-09-12  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Qt build fix. Add a return to make the compiler happy.
+
+        * dfg/DFGGPRInfo.h:
+        (JSC::DFG::JSValueRegs::gpr):
+
+2013-09-12  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG::GenerationInfo init/fill methods shouldn't duplicate a bunch of logic
+        https://bugs.webkit.org/show_bug.cgi?id=121253
+
+        Reviewed by Oliver Hunt.
+
+        * dfg/DFGGenerationInfo.h:
+        (JSC::DFG::GenerationInfo::initGPR):
+        (JSC::DFG::GenerationInfo::initInt32):
+        (JSC::DFG::GenerationInfo::initJSValue):
+        (JSC::DFG::GenerationInfo::initCell):
+        (JSC::DFG::GenerationInfo::initBoolean):
+        (JSC::DFG::GenerationInfo::initStorage):
+        (JSC::DFG::GenerationInfo::fillGPR):
+        (JSC::DFG::GenerationInfo::fillJSValue):
+        (JSC::DFG::GenerationInfo::fillCell):
+        (JSC::DFG::GenerationInfo::fillInt32):
+        (JSC::DFG::GenerationInfo::fillBoolean):
+        (JSC::DFG::GenerationInfo::fillStorage):
+
+2013-09-12  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix mispelling (Specualte -> Speculate) that I introduced in an
+        earlier patch.
+
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculateInt32Operand::gpr):
+        (JSC::DFG::SpeculateStrictInt32Operand::gpr):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::fillSpeculateInt32Internal):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateInt32):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateInt32Strict):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::fillSpeculateInt32Internal):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateInt32):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateInt32Strict):
+
+2013-09-12  Filip Pizlo  <fpizlo@apple.com>
+
+        GPRTemporary's reuse constructor should be templatized to reduce code duplication, and the bool to denote tag or payload should be replaced with an enum
+        https://bugs.webkit.org/show_bug.cgi?id=121250
+
+        Reviewed by Oliver Hunt.
+
+        * dfg/DFGGPRInfo.h:
+        (JSC::DFG::JSValueRegs::gpr):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::GPRTemporary::GPRTemporary):
+        (JSC::DFG::SpeculativeJIT::compileValueToInt32):
+        (JSC::DFG::SpeculativeJIT::compileAdd):
+        (JSC::DFG::SpeculativeJIT::compileStringEquality):
+        (JSC::DFG::SpeculativeJIT::compileGetArgumentsLength):
+        (JSC::DFG::SpeculativeJIT::compileGetArrayLength):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::JSValueOperand::gpr):
+        (JSC::DFG::GPRTemporary::GPRTemporary):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeUInt32ToNumber):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeNonPeepholeCompareNull):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativePeepholeBranchNull):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeNonPeepholeCompare):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativePeepholeStrictEq):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeNonPeepholeStrictEq):
+        (JSC::DFG::SpeculativeJIT::compileObjectEquality):
+        (JSC::DFG::SpeculativeJIT::compileLogicalNot):
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeUInt32ToNumber):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeNonPeepholeCompareNull):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativePeepholeBranchNull):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativePeepholeBranch):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeNonPeepholeCompare):
+        (JSC::DFG::SpeculativeJIT::compileObjectEquality):
+        (JSC::DFG::SpeculativeJIT::compileIntegerCompare):
+        (JSC::DFG::SpeculativeJIT::compileLogicalNot):
+        (JSC::DFG::SpeculativeJIT::compile):
+        * runtime/JSCJSValue.h:
+
+2013-09-12  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        MarkedBlocks shouldn't be put in Allocated state if they didn't produce a FreeList
+        https://bugs.webkit.org/show_bug.cgi?id=121236
+
+        Reviewed by Geoffrey Garen.
+
+        Right now, after a collection all MarkedBlocks are in the Marked block state. When lazy sweeping 
+        happens, if a block returns an empty free list after being swept, we call didConsumeFreeList(), 
+        which moves the block into the Allocated block state. This happens to both the block that was 
+        just being allocated out of (i.e. m_currentBlock) as well as any blocks who are completely full. 
+        We should distinguish between these two cases: m_currentBlock should transition to 
+        Allocated (because we were just allocating out of it) and any subsequent block that returns an 
+        empty free list should transition back to the Marked state. This will make the block state more 
+        consistent with the actual state the block is in, and it will also allow us to speed up moving 
+        all blocks to the Marked state during generational collection.
+
+        * heap/MarkedAllocator.cpp:
+        (JSC::MarkedAllocator::tryAllocateHelper):
+        * heap/MarkedBlock.h:
+        (JSC::MarkedBlock::didConsumeEmptyFreeList):
+
 2013-09-12  Mark Lam  <mark.lam@apple.com>
 
         Change debug hooks to pass sourceID and position info via the DebuggerCallFrame.

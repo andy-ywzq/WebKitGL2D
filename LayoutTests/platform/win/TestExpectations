@@ -1503,13 +1503,6 @@ http/tests/xmlhttprequest/basic-auth-nouser.html
 # https://bugs.webkit.org/show_bug.cgi?id=60206
 http/tests/navigation/response204.html
 
-# This platform does not support the Page Visibility API.
-fast/events/page-visibility-iframe-delete-test.html
-fast/events/page-visibility-iframe-move-test.html
-fast/events/page-visibility-iframe-propagation-test.html
-fast/events/page-visibility-null-view.html
-fast/events/page-visibility-transition-test.html
-
 # Unskip after implementing LayoutTestController::setDefersLoading and ::goBack.
 loader/navigation-while-deferring-loads.html
 
@@ -2232,7 +2225,6 @@ inspector/timeline/timeline-decode-resize.html
 
 # Flaky inspector tests
 # https://bugs.webkit.org/show_bug.cgi?id=95802
-http/tests/inspector/appcache/appcache-manifest-with-non-existing-file.html
 http/tests/inspector/console-resource-errors.html
 http/tests/inspector/resource-tree/resource-request-content-while-loading.html
 http/tests/inspector/search/resources-search-match-index.html

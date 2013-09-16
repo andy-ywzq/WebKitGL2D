@@ -42,11 +42,14 @@
 #include "WritingDirection.h"
 
 #if PLATFORM(MAC)
+OBJC_CLASS NSAttributedString;
 OBJC_CLASS NSDictionary;
 #endif
 
 namespace WebCore {
 
+class AlternativeTextController;
+class ArchiveResource;
 class Clipboard;
 class CompositeEditCommand;
 class DeleteButtonController;
@@ -59,15 +62,17 @@ class HTMLElement;
 class HitTestResult;
 class KillRing;
 class Pasteboard;
-class SimpleFontData;
-class SpellChecker;
-class SpellCheckRequest;
-class AlternativeTextController;
 class SharedBuffer;
+class SimpleFontData;
+class SpellCheckRequest;
+class SpellChecker;
 class StylePropertySet;
 class Text;
 class TextCheckerClient;
 class TextEvent;
+
+struct PasteboardPlainText;
+struct PasteboardURL;
 struct TextCheckingResult;
 
 struct CompositionUnderline {
@@ -124,6 +129,8 @@ public:
     void copyURL(const KURL&, const String& title);
     void copyURL(const KURL&, const String& title, Pasteboard&);
     void copyImage(const HitTestResult&);
+
+    String readPlainTextFromPasteboard(Pasteboard&);
 
     void indent();
     void outdent();
@@ -397,25 +404,30 @@ public:
     NSDictionary* fontAttributesForSelectionStart() const;
     bool canCopyExcludingStandaloneImages();
     void takeFindStringFromSelection();
-    void writeSelectionToPasteboard(Pasteboard&);
     void readSelectionFromPasteboard(const String& pasteboardName);
     String stringSelectionForPasteboard();
     String stringSelectionForPasteboardWithImageAltText();
     PassRefPtr<SharedBuffer> dataSelectionForPasteboard(const String& pasteboardName);
-    void writeURLToPasteboard(Pasteboard&, const KURL&, const String& title);
+    PassRefPtr<DocumentFragment> webContentFromPasteboard(Pasteboard&, Range& context, bool allowPlainText, bool& chosePlainText);
+#endif
+
+#if PLATFORM(MAC) || PLATFORM(EFL) || PLATFORM(NIX)
+    void writeSelectionToPasteboard(Pasteboard&);
     void writeImageToPasteboard(Pasteboard&, Element& imageElement, const KURL&, const String& title);
-    String readPlainTextFromPasteboard(Pasteboard&);
 #endif
 
 private:
+    class WebContentReader;
+
     explicit Editor(Frame&);
 
     Document& document() const;
 
     bool canDeleteRange(Range*) const;
-    bool canSmartReplaceWithPasteboard(Pasteboard*);
+    bool canSmartReplaceWithPasteboard(Pasteboard&);
     void pasteAsPlainTextWithPasteboard(Pasteboard&);
     void pasteWithPasteboard(Pasteboard*, bool allowPlainText);
+    String plainTextFromPasteboard(const PasteboardPlainText&);
 
     void revealSelectionAfterEditingOperation(const ScrollAlignment& = ScrollAlignment::alignCenterIfNeeded, RevealExtentOption = DoNotRevealExtent);
     void markMisspellingsOrBadGrammar(const VisibleSelection&, bool checkSpelling, RefPtr<Range>& firstMisspellingRange);
@@ -437,6 +449,9 @@ private:
 #if PLATFORM(MAC)
     PassRefPtr<SharedBuffer> selectionInWebArchiveFormat();
     PassRefPtr<Range> adjustedSelectionRange();
+    PassRefPtr<DocumentFragment> createFragmentForImageResourceAndAddResource(PassRefPtr<ArchiveResource>);
+    PassRefPtr<DocumentFragment> createFragmentAndAddResources(NSAttributedString *);
+    void fillInUserVisibleForm(PasteboardURL&);
 #endif
 
     Frame& m_frame;

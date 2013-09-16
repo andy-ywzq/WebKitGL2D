@@ -540,7 +540,8 @@ public:
     CachedResourceLoader* cachedResourceLoader() { return m_cachedResourceLoader.get(); }
 
     void didBecomeCurrentDocumentInFrame();
-    virtual void detach();
+    void destroyRenderTree();
+    void disconnectFromFrame();
     void prepareForDestruction();
 
     // Override ScriptExecutionContext methods to do additional work
@@ -1138,8 +1139,8 @@ public:
 #if ENABLE(CUSTOM_ELEMENTS)
     PassRefPtr<Element> createElement(const AtomicString& localName, const AtomicString& typeExtension, ExceptionCode&);
     PassRefPtr<Element> createElementNS(const AtomicString& namespaceURI, const String& qualifiedName, const AtomicString& typeExtension, ExceptionCode&);
-    PassRefPtr<CustomElementConstructor> registerElement(WebCore::ScriptState*, const AtomicString& name, ExceptionCode&);
-    PassRefPtr<CustomElementConstructor> registerElement(WebCore::ScriptState*, const AtomicString& name, const Dictionary& options, ExceptionCode&);
+    PassRefPtr<CustomElementConstructor> registerElement(JSC::ExecState*, const AtomicString& name, ExceptionCode&);
+    PassRefPtr<CustomElementConstructor> registerElement(JSC::ExecState*, const AtomicString& name, const Dictionary& options, ExceptionCode&);
     CustomElementRegistry* registry() const { return m_registry.get(); }
     void didCreateCustomElement(Element*, CustomElementConstructor*);
 #endif
@@ -1201,7 +1202,7 @@ private:
     void setRenderView(RenderView*);
 
     virtual void createRenderTree();
-    virtual void dispose() OVERRIDE;
+    virtual void dropChildren() OVERRIDE;
 
     void detachParser();
 
@@ -1220,7 +1221,7 @@ private:
     virtual void refScriptExecutionContext() { ref(); }
     virtual void derefScriptExecutionContext() { deref(); }
 
-    virtual void addMessage(MessageSource, MessageLevel, const String& message, const String& sourceURL, unsigned lineNumber, unsigned columnNumber, PassRefPtr<ScriptCallStack>, ScriptState* = 0, unsigned long requestIdentifier = 0);
+    virtual void addMessage(MessageSource, MessageLevel, const String& message, const String& sourceURL, unsigned lineNumber, unsigned columnNumber, PassRefPtr<ScriptCallStack>, JSC::ExecState* = 0, unsigned long requestIdentifier = 0);
 
     virtual double minimumTimerInterval() const;
 
@@ -1377,7 +1378,7 @@ private:
     bool m_titleSetExplicitly;
     RefPtr<Element> m_titleElement;
 
-    RefPtr<RenderArena> m_renderArena;
+    OwnPtr<RenderArena> m_renderArena;
 
     OwnPtr<AXObjectCache> m_axObjectCache;
     const OwnPtr<DocumentMarkerController> m_markers;
@@ -1625,17 +1626,16 @@ inline bool Node::isDocumentNode() const
 inline Node::Node(Document* document, ConstructionType type)
     : m_nodeFlags(type)
     , m_parentNode(0)
-    , m_treeScope(document)
+    , m_treeScope(document ? document : TreeScope::noDocumentInstance())
     , m_previous(0)
     , m_next(0)
 {
-    if (!m_treeScope)
-        m_treeScope = TreeScope::noDocumentInstance();
-    m_treeScope->guardRef();
+    m_treeScope->selfOnlyRef();
 
 #if !defined(NDEBUG) || (defined(DUMP_NODE_STATISTICS) && DUMP_NODE_STATISTICS)
     trackForDebugging();
 #endif
+
     InspectorCounters::incrementCounter(InspectorCounters::NodeCounter);
 }
 

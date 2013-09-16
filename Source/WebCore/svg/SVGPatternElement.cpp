@@ -73,7 +73,7 @@ BEGIN_REGISTER_ANIMATED_PROPERTIES(SVGPatternElement)
     REGISTER_PARENT_ANIMATED_PROPERTIES(SVGTests)
 END_REGISTER_ANIMATED_PROPERTIES
 
-inline SVGPatternElement::SVGPatternElement(const QualifiedName& tagName, Document* document)
+inline SVGPatternElement::SVGPatternElement(const QualifiedName& tagName, Document& document)
     : SVGElement(tagName, document)
     , m_x(LengthModeWidth)
     , m_y(LengthModeHeight)
@@ -86,7 +86,7 @@ inline SVGPatternElement::SVGPatternElement(const QualifiedName& tagName, Docume
     registerAnimatedPropertiesForSVGPatternElement();
 }
 
-PassRefPtr<SVGPatternElement> SVGPatternElement::create(const QualifiedName& tagName, Document* document)
+PassRefPtr<SVGPatternElement> SVGPatternElement::create(const QualifiedName& tagName, Document& document)
 {
     return adoptRef(new SVGPatternElement(tagName, document));
 }
@@ -184,7 +184,7 @@ void SVGPatternElement::childrenChanged(const ChildChange& change)
 
 RenderObject* SVGPatternElement::createRenderer(RenderArena* arena, RenderStyle*)
 {
-    return new (arena) RenderSVGResourcePattern(this);
+    return new (arena) RenderSVGResourcePattern(*this);
 }
 
 void SVGPatternElement::collectPatternAttributes(PatternAttributes& attributes) const

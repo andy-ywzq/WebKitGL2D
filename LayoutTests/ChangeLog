@@ -1,3 +1,580 @@
+2013-09-16  Alexey Proskuryakov  <ap@apple.com>
+
+        http/tests/misc/submit-post-keygen.html is extremely slow on bots, often timing out
+        https://bugs.webkit.org/show_bug.cgi?id=121331
+
+        Marking as possibly failing too, because when DRT detects a timeout, run-webkit-tests
+        thinks that it's a failure.
+
+        * platform/mac/TestExpectations:
+
+2013-09-16  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Shapes] Winding rule polygon issues
+        https://bugs.webkit.org/show_bug.cgi?id=120236
+
+        Reviewed by Dirk Schulze.
+
+        Verify that self-intersecting rectilinear shape-inside polygons work
+        correctly for the evenodd and nonzero fill rules.
+
+        The shape for tests 001 and 002 contains a loop (the vertices are
+        numbered in the figure):
+
+        0----4----1----5
+        |    |    |    |
+        |    3----2    |
+        7--------------6
+
+        When the fillRule is nonzero the entire rectangle is filled because
+        edges 7-0 and 3-4 wind in same direction. When fillRule is evenodd the
+        1-2-3-4 rectangle is not filled, leaving a U shape.
+
+        The shape for tests 003 and 004 is similar, but the adjacent vertical edges
+        wind in opposite directions. As a result both nonzero and evenodd fills
+        produce the same U shaped result.
+
+        0----2---1,5---6
+        |    |    |    |
+        |    3----4    |
+        8--------------7
+
+
+        * fast/shapes/shape-inside/shape-inside-complex-polygon-001-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-complex-polygon-001.html: Added.
+        * fast/shapes/shape-inside/shape-inside-complex-polygon-002-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-complex-polygon-002.html: Added.
+        * fast/shapes/shape-inside/shape-inside-complex-polygon-003-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-complex-polygon-003.html: Added.
+        * fast/shapes/shape-inside/shape-inside-complex-polygon-004-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-complex-polygon-004.html: Added.
+
+2013-09-16  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r155851.
+        http://trac.webkit.org/changeset/155851
+        https://bugs.webkit.org/show_bug.cgi?id=121429
+
+        checkbox states should be exposed through AtkState, not
+        AtkValue (Requested by msanchez on #webkit).
+
+        * platform/mac/accessibility/mixed-checkbox-expected.txt: Renamed from LayoutTests/accessibility/mixed-checkbox-expected.txt.
+        * platform/mac/accessibility/mixed-checkbox.html: Renamed from LayoutTests/accessibility/mixed-checkbox.html.
+        * platform/mac/accessibility/native-vs-nonnative-checkboxes-expected.txt: Renamed from LayoutTests/accessibility/native-vs-nonnative-checkboxes-expected.txt.
+        * platform/mac/accessibility/native-vs-nonnative-checkboxes.html: Renamed from LayoutTests/accessibility/native-vs-nonnative-checkboxes.html.
+
+2013-09-16  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Skipping and rebase failing tests on Qt bots.
+
+        * platform/qt-wk1/TestExpectations:
+        * platform/qt-wk1/fast/events/before-unload-returnValue-expected.txt: Added r155367.
+        * platform/qt-wk1/inspector/console/command-line-api-expected.txt:
+        * platform/qt/TestExpectations:
+        * platform/qt/compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants-expected.txt: Added r155607.
+        * platform/qt/compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants2-expected.txt: Added r155607.
+
+2013-09-16  Krzysztof Czech  <k.czech@samsung.com>
+
+        [ATK] Extends atk value interface to return proper checkbox states
+        https://bugs.webkit.org/show_bug.cgi?id=121413
+
+        Reviewed by Mario Sanchez Prada.
+
+        Sharing mac tests with other ports (GTK/EFL).
+
+        * accessibility/mixed-checkbox-expected.txt: Renamed from LayoutTests/platform/mac/accessibility/mixed-checkbox-expected.txt.
+        * accessibility/mixed-checkbox.html: Renamed from LayoutTests/platform/mac/accessibility/mixed-checkbox.html.
+        * accessibility/native-vs-nonnative-checkboxes-expected.txt: Renamed from LayoutTests/platform/mac/accessibility/native-vs-nonnative-checkboxes-expected.txt.
+        * accessibility/native-vs-nonnative-checkboxes.html: Renamed from LayoutTests/platform/mac/accessibility/native-vs-nonnative-checkboxes.html.
+
+2013-09-16  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        Unreviewed gardening. Removed fail expectations for test in
+        the GTK & EFL ports, consistently passing after r155374.
+
+        * platform/efl/TestExpectations: Removed test.
+        * platform/gtk/TestExpectations: Ditto.
+
+2013-09-16  Wojciech Bielawski  <w.bielawski@samsung.com>
+
+        [WKTR] Add implementation of click() method of objects returned by eventSender.contextClick().
+        https://bugs.webkit.org/show_bug.cgi?id=98410
+
+        Reviewed by Darin Adler.
+
+        Unskipping tests related with click() method.
+
+        * platform/efl-wk2/TestExpectations: Corrected bug number for tests:
+         editing/pasteboard/can-read-in-copy-and-cut-events.html
+         editing/pasteboard/can-read-in-dragstart-event.html
+        * platform/gtk-wk2/TestExpectations:
+
+2013-09-15  Zalan Bujtas  <zalan@apple.com>
+
+        Attempt to fix a local flakiness on Lion.
+
+        Rubber stamped by Andreas Kling.
+
+        * fast/history/history-back-while-pdf-in-pagecache.html:
+
+2013-09-15  Frédéric Wang  <fred.wang@free.fr>
+
+        Implement the mmultiscripts tag
+        https://bugs.webkit.org/show_bug.cgi?id=99618
+
+        Reviewed by Chris Fleizach.
+
+        Add many tests for script msub/msup/msubsup/mmultiscripts:
+        - invalid markup
+        - equivalence between mmultiscripts without scripts and mrow
+        - equivalence between mmultiscripts and msub/msup/msubsup
+        - position of scripts in mmultiscripts
+        - baseline alignment of msub/msup/msubsup elements
+        - horizontal/vertical alignment of scripts
+        - adding/removing children with the DOM
+
+        * TestExpectations: Some remaining MathML pixel tests are broken by this patch.
+        * mathml/invalid-scripts-crash-expected.txt: Added.
+        * mathml/invalid-scripts-crash.html: Added.
+        * mathml/presentation/multiscripts-equivalence-expected.html: Added.
+        * mathml/presentation/multiscripts-equivalence.html: Added.
+        * mathml/presentation/multiscripts-noscripts-expected.html: Added.
+        * mathml/presentation/multiscripts-noscripts.html: Added.
+        * mathml/presentation/multiscripts-positions-expected.html: Added.
+        * mathml/presentation/multiscripts-positions.html: Added.
+        * mathml/presentation/scripts-base-alignment-expected.html: Added.
+        * mathml/presentation/scripts-base-alignment.html: Added.
+        * mathml/presentation/scripts-horizontal-alignment-expected.html: Added.
+        * mathml/presentation/scripts-horizontal-alignment.html: Added.
+        * mathml/presentation/scripts-vertical-alignment-expected.html: Added.
+        * mathml/presentation/scripts-vertical-alignment.html: Added.
+        * mathml/scripts-addChild-expected.html: Added.
+        * mathml/scripts-addChild.html: Added.
+        * mathml/scripts-removeChild-expected.html: Added.
+        * mathml/scripts-removeChild.html: Added.
+        * platform/mac/accessibility/mathml-multiscript-expected.txt: Reference updated.
+
+
+2013-09-14  Eric Carlson  <eric.carlson@apple.com>
+
+        MediaStream API: Update RTCDataChannel
+        https://bugs.webkit.org/show_bug.cgi?id=121102
+
+        Reviewed by Sam Weinig.
+
+        * fast/mediastream/RTCPeerConnection-datachannel-expected.txt:
+        * fast/mediastream/RTCPeerConnection-datachannel.html:
+
+2013-09-14  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening. Rebaselining after r155324.
+
+        * platform/gtk/fast/forms/placeholder-position-expected.png:
+        * platform/gtk/fast/forms/placeholder-position-expected.txt:
+
+2013-09-14  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening. Rebaselining after r155408.
+
+        * platform/gtk/fast/forms/input-placeholder-visibility-1-expected.txt:
+        * platform/gtk/fast/forms/input-placeholder-visibility-3-expected.txt:
+        * platform/gtk/fast/forms/textarea-placeholder-pseudo-style-expected.txt:
+        * platform/gtk/fast/forms/textarea-placeholder-visibility-1-expected.txt:
+        * platform/gtk/fast/forms/textarea-placeholder-visibility-2-expected.txt:
+
+2013-09-14  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening. Rebaselining after r155253.
+
+        * platform/gtk/editing/pasteboard/4989774-expected.txt:
+        * platform/gtk/editing/pasteboard/paste-match-style-001-expected.txt:
+        * platform/gtk/editing/selection/caret-ltr-2-expected.txt:
+        * platform/gtk/editing/selection/caret-ltr-2-left-expected.txt:
+        * platform/gtk/editing/selection/caret-ltr-expected.txt:
+        * platform/gtk/editing/selection/caret-ltr-right-expected.txt:
+        * platform/gtk/editing/selection/caret-rtl-2-expected.txt:
+        * platform/gtk/editing/selection/caret-rtl-2-left-expected.txt:
+        * platform/gtk/editing/selection/caret-rtl-expected.txt:
+        * platform/gtk/editing/selection/caret-rtl-right-expected.txt:
+        * platform/gtk/editing/selection/vertical-rl-ltr-extend-line-backward-wrap-expected.txt:
+        * platform/gtk/editing/selection/vertical-rl-ltr-extend-line-forward-wrap-expected.txt:
+        * platform/gtk/editing/style/style-boundary-005-expected.txt:
+        * platform/gtk/fast/forms/formmove3-expected.txt:
+        * platform/gtk/fast/forms/input-align-image-expected.txt:
+        * platform/gtk/fast/forms/preserveFormDuringResidualStyle-expected.txt:
+        * platform/gtk/fast/invalid/003-expected.txt:
+        * platform/gtk/tables/mozilla/bugs/bug647-expected.txt:
+
+2013-09-14  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        Skip additional inspector tests that are failing after switching to the new Web Inspector.
+
+        * platform/gtk-wk1/TestExpectations:
+        * platform/gtk/TestExpectations:
+
+2013-09-14  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: InjectedScriptSource_js and InjectedScriptCanvasModuleSource_js should be minified
+        https://bugs.webkit.org/show_bug.cgi?id=121183
+
+        Reviewed by Timothy Hatcher.
+
+        Now that the file is minified, a line number changed.
+
+        * platform/mac/inspector/console/command-line-api-expected.txt:
+
+2013-09-13  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Enable Page Visibility API
+        https://bugs.webkit.org/show_bug.cgi?id=121340
+
+        Reviewed by Anders Carlsson.
+
+        * platform/win/TestExpectations: Enable some Page Visibility tests on Windows.
+
+2013-09-13  Alexey Proskuryakov  <ap@apple.com>
+
+        REGRESSION (r155719?): http/tests/inspector/network/network-size-chunked.html and
+        http/tests/inspector/network/network-size-sync.html fail on bots
+        https://bugs.webkit.org/show_bug.cgi?id=121343
+
+        * platform/mac/TestExpectations: Marking these as failing.
+
+2013-09-13  Alexey Proskuryakov  <ap@apple.com>
+
+        svg/dom/SVGScriptElement/script-load-and-error-events.svg is flakey
+        https://bugs.webkit.org/show_bug.cgi?id=25817
+
+        Reviewed by Tim Horton.
+
+        * svg/dom/SVGScriptElement/script-load-and-error-events.svg: Let test 5 finish
+        before starting test 6.
+
+2013-09-13  Alexey Proskuryakov  <ap@apple.com>
+
+        http/tests/misc/submit-post-keygen.html is extremely slow on bots, often timing out
+        https://bugs.webkit.org/show_bug.cgi?id=121331
+
+        * platform/mac/TestExpectations: Marked the test as sometimes timing out.
+
+2013-09-13  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG AI assumes that ToThis can never return non-object if it is passed an object, and operationToThis will get the wrong value of isStrictMode() if there's inlining
+        https://bugs.webkit.org/show_bug.cgi?id=121330
+
+        Reviewed by Mark Hahnenberg and Oliver Hunt.
+
+        * js/dfg-strict-mode-to-this-expected.txt: Added.
+        * js/dfg-strict-mode-to-this.html: Added.
+        * js/jsc-test-list:
+        * js/script-tests/dfg-strict-mode-to-this.js: Added.
+        (thingy.bar):
+        (thingy.foo):
+        (thingy):
+
+2013-09-13  Alexey Proskuryakov  <ap@apple.com>
+
+        svg/animations/smil-leak-*.svg tests are flaky
+        https://bugs.webkit.org/show_bug.cgi?id=114280
+
+        Approved in person by Geoff Garen.
+
+        Increased the number of nodes in the test 10x to see what happens with the number
+        of leaked nodes.
+
+        * svg/animations/smil-leak-dynamically-added-element-instances.svg:
+        * svg/animations/smil-leak-element-instances-noBaseValRef.svg:
+        * svg/animations/smil-leak-element-instances.svg:
+        * svg/animations/smil-leak-elements.svg:
+
+2013-09-13  Alexey Proskuryakov  <ap@apple.com>
+
+        Flaky Test: svg/dom/SVGScriptElement/script-load-and-error-events.svg
+        https://bugs.webkit.org/show_bug.cgi?id=25817
+
+        Reviewed by Tim Horton.
+
+        * svg/dom/SVGScriptElement/script-load-and-error-events.svg: Made test output
+        a bit more verbose to see what's happening on bots.
+
+2013-09-13  Alexey Proskuryakov  <ap@apple.com>
+
+        Layout Test fast/dom/Window/window-postmessage-clone.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=111898
+
+        Reviewed by Oliver Hunt.
+
+        * fast/dom/Window/script-tests/postmessage-clone.js: The test was checking
+        modification times of non-existent files. When you do this, you get current time,
+        and current time changes over time, making comparisons non-reliable.
+
+        * fast/dom/Window/resources/file1.txt: Added.
+        * fast/dom/Window/resources/file2.txt: Added.
+
+2013-09-13  Oliver Hunt  <oliver@apple.com>
+
+        Try to kill initialiser expression in for-in statements
+        https://bugs.webkit.org/show_bug.cgi?id=121311
+
+        Reviewed by Gavin Barraclough.
+
+        Update test cases to represent the new reality
+
+        * js/line-column-numbers-expected.txt:
+        * js/line-column-numbers.html:
+        * js/parser-syntax-check-expected.txt:
+        * js/script-tests/function-declaration-statement.js:
+        * js/script-tests/line-column-numbers.js:
+        (try.toFuzz22b):
+        * js/script-tests/parser-syntax-check.js:
+        * js/script-tests/toString-for-var-decl.js:
+        (f1):
+
+2013-09-13  Alexey Proskuryakov  <ap@apple.com>
+
+        Flaky Test: http/tests/inspector/appcache/appcache-manifest-with-non-existing-file.html
+        https://bugs.webkit.org/show_bug.cgi?id=114209
+
+        Reviewed by Joseph Pecoraro.
+
+        * TestExpectations: Marked the test as WontFix. It is hopelessly broken, and
+        doesn't test anything specific anyway.
+
+        * platform/win/TestExpectations:
+        * platform/wincairo/TestExpectations:
+        Removed from the lists, as the test is now skipped globally.
+
+2013-09-13  Gustavo Noronha Silva  <gustavo.noronha@collabora.com>
+
+        [GTK] Move to the new web inspector
+        https://bugs.webkit.org/show_bug.cgi?id=120647
+
+        Reviewed by Carlos Garcia Campos.
+
+        * platform/gtk/TestExpectations: the new inspector UI does not support the current
+        inspector testing harness so keep it skipped, a new one will eventually be landed.
+
+2013-09-13  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: AXPress does not work in SVG
+        https://bugs.webkit.org/show_bug.cgi?id=121248
+
+        Reviewed by Mario Sanchez Prada.
+
+        * accessibility/svg-element-press-expected.txt: Added.
+        * accessibility/svg-element-press.html: Added.
+
+2013-09-13  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] REGRESSION(r154444): xss-DENIED test results changed
+        https://bugs.webkit.org/show_bug.cgi?id=120595
+
+        Reviewed by Jocelyn Turcotte.
+
+        * platform/qt/TestExpectations:
+
+2013-09-13  Csaba Osztrogonác  <ossy@webkit.org>
+
+        One more Unreviewed fix after r155675.
+
+        * js/array-with-double-assign-expected.txt: 
+        * js/array-with-double-assign.html: Path fixed.
+        * js/array-with-double-push-expected.txt:
+        * js/array-with-double-push.html: Path fixed.
+
+2013-09-13  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Unreviewed fix after r155675. Move new tests from fast/js to js.
+
+        * js/array-with-double-assign-expected.txt: Renamed from LayoutTests/fast/js/array-with-double-assign-expected.txt.
+        * js/array-with-double-assign.html: Renamed from LayoutTests/fast/js/array-with-double-assign.html.
+        * js/array-with-double-push-expected.txt: Renamed from LayoutTests/fast/js/array-with-double-push-expected.txt.
+        * js/array-with-double-push.html: Renamed from LayoutTests/fast/js/array-with-double-push.html.
+        * js/script-tests/array-with-double-assign.js: Renamed from LayoutTests/fast/js/script-tests/array-with-double-assign.js.
+        (foo):
+        * js/script-tests/array-with-double-push.js: Renamed from LayoutTests/fast/js/script-tests/array-with-double-push.js.
+        (foo):
+
+2013-09-13  Ádám Kallai  <kadam@inf.u-szeged.hu>
+
+        [Qt] unreviewed gardening. Rebaseline after r155253.
+
+        * platform/qt-wk2/editing/selection/caret-rtl-2-expected.png: Removed.
+        * platform/qt-wk2/editing/selection/caret-rtl-2-left-expected.png: Removed.
+        * platform/qt-wk2/editing/selection/caret-rtl-expected.png: Removed.
+        * platform/qt-wk2/editing/selection/caret-rtl-right-expected.png: Removed.
+        * platform/qt-wk2/editing/selection/caret-rtl-right-expected.txt: Removed.
+        * platform/qt/editing/selection/caret-rtl-2-expected.txt:
+        * platform/qt/editing/selection/caret-rtl-2-left-expected.txt:
+        * platform/qt/editing/selection/caret-rtl-expected.txt:
+        * platform/qt/editing/selection/caret-rtl-right-expected.txt:
+
+2013-09-13  Ádám Kallai  <kadam@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Rebaseline tests after r155408.
+
+        * platform/qt/fast/forms/control-restrict-line-height-expected.png:
+        * platform/qt/fast/forms/control-restrict-line-height-expected.txt:
+        * platform/qt/fast/forms/input-placeholder-visibility-1-expected.png:
+        * platform/qt/fast/forms/input-placeholder-visibility-1-expected.txt:
+        * platform/qt/fast/forms/input-placeholder-visibility-3-expected.png:
+        * platform/qt/fast/forms/input-placeholder-visibility-3-expected.txt:
+        * platform/qt/fast/forms/placeholder-position-expected.png:
+        * platform/qt/fast/forms/placeholder-position-expected.txt:
+        * platform/qt/fast/forms/textarea-placeholder-pseudo-style-expected.png:
+        * platform/qt/fast/forms/textarea-placeholder-pseudo-style-expected.txt:
+        * platform/qt/fast/forms/textarea-placeholder-visibility-1-expected.png:
+        * platform/qt/fast/forms/textarea-placeholder-visibility-1-expected.txt:
+        * platform/qt/fast/forms/textarea-placeholder-visibility-2-expected.png:
+        * platform/qt/fast/forms/textarea-placeholder-visibility-2-expected.txt:
+
+2013-09-13  Ádám Kallai  <kadam@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Skip some failing tests.
+        https://bugs.webkit.org/show_bug.cgi?id=120848.
+
+        * platform/qt/TestExpectations:
+
+2013-09-13  Youngho Yoo  <youngho33.yoo@lge.com>
+
+        Fixed crash in V8 benchmark suite in ARM,softp,EABI environment. 
+        https://bugs.webkit.org/show_bug.cgi?id=117281
+
+        Reviewed by Michael Saboff.
+
+        Fix the missing EABI_32BIT_DUMMY_ARG in FPRReg using callOperation function.
+
+        * fast/js/array-with-double-assign-expected.txt: Added.
+        * fast/js/array-with-double-assign.html: Added.
+        * fast/js/array-with-double-push-expected.txt: Added.
+        * fast/js/array-with-double-push.html: Added.
+        * fast/js/script-tests/array-with-double-assign.js: Added.
+        (foo):
+        * fast/js/script-tests/array-with-double-push.js: Added.
+        (foo):
+
+2013-09-12  Santosh Mahto  <santosh.ma@samsung.com>
+
+        [EFL] Background Style of element not visible because of default theme style
+        https://bugs.webkit.org/show_bug.cgi?id=117405
+
+        Reviewed by Gyuyoung Kim.
+
+        Updating expected image oputput of pixel test reflecting the
+        background image visible over combo box.
+
+        * platform/efl/fast/forms/menulist-narrow-width-expected.png:
+        * platform/efl/fast/forms/menulist-restrict-line-height-expected.png:
+        * platform/efl/fast/forms/menulist-style-color-expected.png:
+        * platform/efl/fast/forms/select-background-none-expected.png:
+        * platform/efl/fast/forms/select-style-expected.png:
+
+2013-09-12  Tim Horton  <timothy_horton@apple.com>
+
+        [mac] Cache rendered image in PDFDocumentImage
+        https://bugs.webkit.org/show_bug.cgi?id=121207
+
+        Reviewed by Simon Fraser.
+
+        Add a test ensuring that very large PDF-in-<img> elements don't crash.
+
+        * fast/images/pdf-as-image-too-big-expected.txt: Added.
+        * fast/images/pdf-as-image-too-big.html: Added.
+
+2013-09-12  Geoffrey Garen  <ggaren@apple.com>
+
+        Web Inspector shouldn't artificially allocate the arguments object in functions that don't use it
+        https://bugs.webkit.org/show_bug.cgi?id=121206
+
+        Reviewed by Joseph Pecoraro.
+        <rdar://problem/6911886>
+
+        * inspector/debugger/debugger-expand-scope-expected.txt: Updated these
+        results to reflect the fact that it's correct to exclude the 'arguments'
+        identifier from function scopes that don't use it.
+
+        * inspector/debugger/debugger-expand-scope.html: Edited this test to
+        include one frame that uses the 'arguments' identifier and one frame
+        that doesn't, so we test both cases.
+
+2013-09-12  Samuel White  <samuel_white@apple.com>
+
+        <meter> element AXValue is listed as a writable value
+        https://bugs.webkit.org/show_bug.cgi?id=117650
+
+        Reviewed by Chris Fleizach.
+
+        Added writability check to meter element test.
+
+        * accessibility/meter-element.html:
+        * platform/mac/accessibility/meter-element-expected.txt:
+
+2013-09-12  Renata Hodovan  <reni@webkit.org>
+
+        [Qt] SHOULD NEVER BE REACHED is touched WebCore::InputType::createStepRange
+        https://bugs.webkit.org/show_bug.cgi?id=121148
+
+        Reviewed by Kent Tamura.
+
+        Trying to render text input as slider-vertical. Expecting to run without crash.
+
+        * platform/qt/fast/forms/range/slider-crash-on-input.html: Added.
+        * platform/qt/platform/qt/fast/forms/range/slider-crash-on-input-expected.txt: Added.
+
+2013-09-12  Alexey Proskuryakov  <ap@apple.com>
+
+        Canvas fillText and measureText handle ideographic spaces differently
+        https://bugs.webkit.org/show_bug.cgi?id=108881
+
+        Fixing the test:
+        1. Updated paths to js-test scripts.
+        2. Removed "meta charcode" - we don't need to specify a charset here, and it's
+        "charset", not "charcode" anyway.
+
+        * fast/canvas/canvas-measureText-ideographicSpace.html:
+
+2013-09-12  Alexey Proskuryakov  <ap@apple.com>
+
+        svg/animations/smil-leak-*.svg tests are flaky
+        https://bugs.webkit.org/show_bug.cgi?id=114280
+
+        Reviewed by Tim Horton.
+
+        Moved garbage collection out of the function that touches nodes to be collected,
+        making sure that they are definitely not on the stack.
+
+        I could not reproduce locally, so this is a speculative fix.
+
+        * svg/animations/smil-leak-dynamically-added-element-instances.svg:
+        * svg/animations/smil-leak-element-instances-noBaseValRef.svg:
+        * svg/animations/smil-leak-element-instances.svg:
+        * svg/animations/smil-leak-elements.svg:
+
+2013-09-12  Alexey Proskuryakov  <ap@apple.com>
+
+        Flaky Test: plugins/mouse-events.html
+        https://bugs.webkit.org/show_bug.cgi?id=116665
+
+        Reviewed by Anders Carlsson.
+
+        * plugins/mouse-events-expected.txt:
+        * plugins/mouse-events.html:
+        This test used async calls for events, and then usually logged responses while waiting
+        for a plg.eventLoggingEnabled setter synchronously. Depending on sync/async event
+        order is not reliable, especially with old WebKit1 plug-in IPC code.
+
+        * platform/mac-wk2/plugins/mouse-events-expected.txt: For some unclear reason,
+        focus works differently in WebKit2.
+
+        * platform/gtk/plugins/mouse-events-expected.txt: Removed.
+        * platform/qt/plugins/mouse-events-expected.txt: Removed.
+        * platform/win/plugins/mouse-events-expected.txt: Removed.
+        These results looked similar to new cross-platform ones, hopefully custom results
+        won't be needed any more.
+
 2013-09-12  Gurpreet Kaur  <k.gurpreet@samsung.com>
 
         CSS Unit vw in border-width maps to 0px.

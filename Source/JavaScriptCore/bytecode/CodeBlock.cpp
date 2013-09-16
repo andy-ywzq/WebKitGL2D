@@ -139,6 +139,8 @@ void CodeBlock::dumpAssumingJITType(PrintStream& out, JITCode::JITType jitType) 
         out.print(" (SABI)");
     if (ownerExecutable()->neverInline())
         out.print(" (NeverInline)");
+    if (ownerExecutable()->isStrictMode())
+        out.print(" (StrictMode)");
     out.print("]");
 }
 
@@ -507,7 +509,7 @@ void CodeBlock::dumpBytecode(PrintStream& out)
     if (symbolTable() && symbolTable()->captureCount()) {
         out.printf(
             "; %d captured var(s) (from r%d to r%d, inclusive)",
-            symbolTable()->captureCount(), symbolTable()->captureStart(), symbolTable()->captureEnd() - 1);
+            symbolTable()->captureCount(), symbolTable()->captureStart(), symbolTable()->captureEnd() + 1);
     }
     if (usesArguments()) {
         out.printf(

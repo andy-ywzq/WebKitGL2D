@@ -42,7 +42,7 @@ enum TranslateAttributeMode {
 
 class HTMLElement : public StyledElement {
 public:
-    static PassRefPtr<HTMLElement> create(const QualifiedName& tagName, Document*);
+    static PassRefPtr<HTMLElement> create(const QualifiedName& tagName, Document&);
 
     PassRefPtr<HTMLCollection> children();
 
@@ -97,7 +97,7 @@ public:
     virtual FormNamedItem* asFormNamedItem() { return 0; }
 
 protected:
-    HTMLElement(const QualifiedName& tagName, Document*, ConstructionType);
+    HTMLElement(const QualifiedName& tagName, Document&, ConstructionType);
 
     void addHTMLLengthToStyle(MutableStylePropertySet*, CSSPropertyID, const String& value);
     void addHTMLColorToStyle(MutableStylePropertySet*, CSSPropertyID, const String& color);
@@ -131,11 +131,9 @@ private:
     TextDirection directionality(Node** strongDirectionalityTextNode= 0) const;
 
     TranslateAttributeMode translateAttributeMode() const;
-
-    AtomicString eventNameForAttributeName(const QualifiedName& attrName) const;
 };
 
-inline HTMLElement::HTMLElement(const QualifiedName& tagName, Document* document, ConstructionType type = CreateHTMLElement)
+inline HTMLElement::HTMLElement(const QualifiedName& tagName, Document& document, ConstructionType type = CreateHTMLElement)
     : StyledElement(tagName, document, type)
 {
     ASSERT(tagName.localName().impl());

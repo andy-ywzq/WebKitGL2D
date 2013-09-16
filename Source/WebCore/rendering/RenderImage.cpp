@@ -62,9 +62,9 @@ RenderImage::RenderImage(Element* element)
     updateAltText();
 }
 
-RenderImage* RenderImage::createAnonymous(Document* document)
+RenderImage* RenderImage::createAnonymous(Document& document)
 {
-    RenderImage* image = new (document->renderArena()) RenderImage(0);
+    RenderImage* image = new (document.renderArena()) RenderImage(0);
     image->setDocumentForAnonymous(document);
     return image;
 }

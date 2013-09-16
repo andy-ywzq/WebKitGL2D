@@ -381,7 +381,7 @@ public:
     virtual bool willRespondToMouseClickEvents() OVERRIDE;
 
 protected:
-    HTMLMediaElement(const QualifiedName&, Document*, bool);
+    HTMLMediaElement(const QualifiedName&, Document&, bool);
     virtual ~HTMLMediaElement();
 
     virtual void parseAttribute(const QualifiedName&, const AtomicString&) OVERRIDE;
@@ -802,11 +802,20 @@ inline bool isMediaElement(Node* node)
     return node && node->isElementNode() && toElement(node)->isMediaElement();
 }
 
+inline HTMLMediaElement& toHTMLMediaElement(Node& node)
+{
+    ASSERT_WITH_SECURITY_IMPLICATION(isMediaElement(&node));
+    return static_cast<HTMLMediaElement&>(node);
+}
+
 inline HTMLMediaElement* toHTMLMediaElement(Node* node)
 {
     ASSERT_WITH_SECURITY_IMPLICATION(!node || isMediaElement(node));
     return static_cast<HTMLMediaElement*>(node);
 }
+
+void toHTMLMediaElement(const HTMLMediaElement&);
+void toHTMLMediaElement(const HTMLMediaElement*);
 
 } //namespace
 

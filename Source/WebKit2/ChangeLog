@@ -1,3 +1,298 @@
+2013-09-16  Andre Moreira Magalhaes   <andre.magalhaes@collabora.co.uk>
+
+        Web Inspector: Do not try to parse incomplete HTTP requests
+        https://bugs.webkit.org/show_bug.cgi?id=121123
+
+        Reviewed by Carlos Garcia Campos.
+
+        Update to incorporate additional review suggestions.
+
+        * UIProcess/API/gtk/tests/TestInspectorServer.cpp:
+        (sendIncompleteRequest):
+        Fix memory leaks, change test timeout from 2 seconds to 1 second,
+        use "0" instead of "NULL" and use g_assert_no_error when checking
+        for GError.
+
+2013-09-16  Eunmi Lee  <eunmi15.lee@samsung.com>
+
+        [EFL][WK2] Implement pan and flick gesture.
+        https://bugs.webkit.org/show_bug.cgi?id=107101
+
+        Reviewed by Gyuyoung Kim.
+
+        Implement pan gesture to scroll page by movement of point and stop
+        scrolling smoothly using ease-in-out-quad algorithm after touched
+        point is removed from the screen.
+
+        Use Ecore_Animator in order to process movement once per each framing
+        time slot instead of processing all movement.
+
+        * PlatformEfl.cmake:
+        * UIProcess/API/efl/EwkView.cpp:
+        (EwkView::scrollBy):
+        * UIProcess/API/efl/EwkView.h:
+        * UIProcess/API/efl/GestureRecognizer.cpp:
+        (WebKit::GestureHandler::view):
+        (WebKit::GestureHandler::GestureHandler):
+        (WebKit::GestureHandler::~GestureHandler):
+        (WebKit::GestureHandler::reset):
+        (WebKit::GestureHandler::panAnimatorCallback):
+        (WebKit::GestureHandler::handlePanStarted):
+        (WebKit::GestureHandler::handlePan):
+        (WebKit::GestureHandler::handlePanFinished):
+        (WebKit::GestureHandler::flickAnimatorCallback):
+        (WebKit::GestureHandler::handleFlick):
+        (WebKit::GestureRecognizer::noGesture):
+        (WebKit::GestureRecognizer::reset):
+        * UIProcess/efl/EasingCurves.cpp: Added.
+        (WebKit::easeInOutQuad):
+        * UIProcess/efl/EasingCurves.h: Added.
+
+2013-09-16  Wojciech Bielawski  <w.bielawski@samsung.com>
+
+        [WKTR] WebKitTestRunner's eventSender.contextClick() returns objects without implemented click() method.
+        https://bugs.webkit.org/show_bug.cgi?id=98410
+
+        Reviewed by Darin Adler.
+
+        Add API required to implement click() method for context menu entry, used by WebkitTestRunner::EventSender.
+
+        * WebProcess/InjectedBundle/API/c/WKBundlePage.cpp:
+        (WKBundlePageClickMenuItem):
+        (WKBundlePageCopyContextMenuItemTitle):
+        (WKBundlePageGetContextMenuItems):
+        * WebProcess/InjectedBundle/API/c/WKBundlePagePrivate.h:
+
+2013-09-15  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed make distcheck fix.
+
+        * GNUmakefile.list.am:
+
+2013-09-15  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] The web inspector is not rendered when docked in WebKit2 when AC is used
+        https://bugs.webkit.org/show_bug.cgi?id=121381
+
+        Reviewed by Martin Robinson.
+
+        When accelerated compositing results are rendered we return early
+        from webkitWebViewBaseDraw and other WebView children are not
+        drawn. We need to chain up the draw signal handler, so that the
+        GtkContainer propagates the draw to all its children.
+
+        * UIProcess/API/gtk/WebKitWebViewBase.cpp:
+        (webkitWebViewBaseDraw):
+
+2013-09-14  Dan Bernstein  <mitz@apple.com>
+
+        Remove non-Apple cruft from the installed WKBase.h
+        https://bugs.webkit.org/show_bug.cgi?id=121370
+
+        Reviewed by Darin Adler.
+
+        * Configurations/WebKit2.xcconfig: Set INSTALLHDRS_SCRIPT_PHASE to YES.
+        * WebKit2.xcodeproj/project.pbxproj: Added a script build phase that runs unifdef on
+        the installed WKBase.h with __APPLE__ defined and various BUILDING_* and WTF_USE_* symbols
+        undefined.
+
+2013-09-14  Dan Bernstein  <mitz@apple.com>
+
+        Build fix after r155770.
+
+        * UIProcess/API/mac/WKViewPrivate.h: Added WKBase.h import.
+
+2013-09-14  Dan Bernstein  <mitz@apple.com>
+
+        [mac] Public header WKBase.h imports a private header, WKBaseMac.h
+        https://bugs.webkit.org/show_bug.cgi?id=121216
+
+        Reviewed by Darin Adler.
+
+        * Shared/API/c/WKBase.h: Moved definitions of enums and WK_EXPORT and WK_INLINE macros
+        out of this files.
+        * Shared/API/c/WKDeclarationSpecifiers.h: Copied from Source/WebKit2/Shared/API/c/WKBase.h.
+        Contains definitions of WK_EXPORT and WK_INLINE.
+        * Shared/API/c/WKSharedAPICast.h: Added #includes.
+        * Shared/API/c/WKUserContentInjectedFrames.h: Copied from Source/WebKit2/Shared/API/c/WKBase.h.
+        Contains enum definition.
+        * Shared/API/c/WKUserScriptInjectionTime.h: Copied from Source/WebKit2/Shared/API/c/WKBase.h.
+        Contains enum definition.
+        * UIProcess/API/C/WKPageGroup.h: Added #includes.
+        * UIProcess/API/mac/WKBrowsingContextController.h: Removed WKBase.h import from this public
+        header, replacing it with WKDeclarationSpecifiers.h import.
+        * UIProcess/API/mac/WKBrowsingContextControllerPrivate.h: Added WKBase.h import.
+        * UIProcess/API/mac/WKBrowsingContextGroup.h: Removed WKBase.h import from this public
+        header, added necessary public imports.
+        * UIProcess/API/mac/WKBrowsingContextGroupPrivate.h: Added WKBase.h import.
+        * UIProcess/API/mac/WKBrowsingContextLoadDelegate.h: Removed WKBase.h import from public
+        header.
+        * UIProcess/API/mac/WKConnection.h: Ditto. Added WKDeclarationSpecifiers.h import.
+        * UIProcess/API/mac/WKConnectionInternal.h: Added WKBase.h import.
+        * UIProcess/API/mac/WKProcessGroup.h: Removed WKBase.h import from public header, added
+        WKDeclarationSpecifiers.h import.
+        * UIProcess/API/mac/WKProcessGroupPrivate.h: Added WKBase.h import.
+        * UIProcess/API/mac/WKView.h: Removed WKBase.h import from public header, added
+        WKDeclarationSpecifiers.h import.
+        * WebKit2.xcodeproj/project.pbxproj: Added new public header files, made WKBase.h private.
+        * WebProcess/InjectedBundle/API/mac/WKDOMNode.h: Removed WKBase.h import from public header,
+        added WKDeclarationSpecifiers.h import.
+        * WebProcess/InjectedBundle/API/mac/WKDOMNodePrivate.h: Added WKBase.h import.
+        * WebProcess/InjectedBundle/API/mac/WKDOMRange.h: Removed WKBase.h import from public
+        header, added WKDeclarationSpecifiers.h import.
+        * WebProcess/InjectedBundle/API/mac/WKDOMRangePrivate.h: Added WKBase.h import.
+        * WebProcess/InjectedBundle/API/mac/WKDOMTextIterator.h: Removed WKBase.h import from public
+        header, added WKDeclarationSpecifiers.h import.
+        * WebProcess/InjectedBundle/API/mac/WKWebProcessPlugInBrowserContextController.h: Ditto.
+        * WebProcess/InjectedBundle/API/mac/WKWebProcessPlugInBrowserContextControllerInternal.h:
+        Added WKBase.h import.
+
+2013-09-14  Alberto Garcia  <berto@igalia.com>
+
+        [GTK] WebKitGTK+ is linking against libxslt in too many places
+        https://bugs.webkit.org/show_bug.cgi?id=121356
+
+        Reviewed by Martin Robinson.
+
+        Don't use LIBXSLT_CFLAGS when compiling libWebCoreGtk2, no source
+        files use libxslt there.
+
+        * GNUmakefile.am:
+
+2013-09-13  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        Unreviewed build fix attempt for WK2 build.
+
+        * WebProcess/Plugins/PluginView.cpp: Changed ScriptState to ExecState.
+        (WebKit::PluginView::performJavaScriptURLRequest):
+
+2013-09-13  Anders Carlsson  <andersca@apple.com>
+
+        Use nullptr instead of 0 in calls to HashMap::add
+        https://bugs.webkit.org/show_bug.cgi?id=121322
+
+        Reviewed by Sam Weinig.
+
+        * Platform/CoreIPC/Connection.cpp:
+        (CoreIPC::Connection::SyncMessageState::getOrCreate):
+        * UIProcess/Storage/StorageManager.cpp:
+        (WebKit::StorageManager::createLocalStorageMap):
+        (WebKit::StorageManager::createSessionStorageMap):
+        (WebKit::StorageManager::getOrCreateLocalStorageNamespace):
+        * UIProcess/WebProcessProxy.cpp:
+        (WebKit::WebProcessProxy::addBackForwardItem):
+        * WebProcess/InjectedBundle/DOM/InjectedBundleNodeHandle.cpp:
+        (WebKit::InjectedBundleNodeHandle::getOrCreate):
+        * WebProcess/InjectedBundle/DOM/InjectedBundleRangeHandle.cpp:
+        (WebKit::InjectedBundleRangeHandle::getOrCreate):
+        * WebProcess/Storage/StorageNamespaceImpl.cpp:
+        (WebKit::StorageNamespaceImpl::createLocalStorageNamespace):
+        * WebProcess/WebProcess.cpp:
+        (WebKit::WebProcess::createWebPage):
+        (WebKit::WebProcess::webPageGroup):
+
+2013-09-13  Gustavo Noronha Silva  <gustavo.noronha@collabora.com>
+
+        [GTK] Move to the new web inspector
+        https://bugs.webkit.org/show_bug.cgi?id=120647
+
+        Reviewed by Carlos Garcia Campos.
+
+        * GNUmakefile.am: bundle the remote inspector page list HTML into libwebkit2gtk as a GResource.
+        * UIProcess/API/gtk/tests/GNUmakefile.am: no need to set WEBKIT_INSPECTOR_PATH anymore.
+        * UIProcess/API/gtk/tests/InspectorTestServer.cpp:
+        (main): ditto.
+        * UIProcess/API/gtk/tests/TestInspector.cpp:
+        (beforeAll): ditto.
+        * UIProcess/API/gtk/tests/TestInspectorServer.cpp:
+        (testInspectorServerPageList): update paths to the internal resource ones.
+        * UIProcess/InspectorServer/WebInspectorServer.h:
+        * UIProcess/InspectorServer/gtk/WebInspectorServerGtk.cpp:
+        (WebKit::WebInspectorServer::platformResourceForPath): ditto.
+        (WebKit::WebInspectorServer::buildPageList): ditto.
+        * UIProcess/WebInspectorProxy.cpp:
+        (WebKit::isMainInspectorPage): factor out checking for the inspector main resource, to make
+        the code more readable.
+        (WebKit::decidePolicyForNavigationAction): use SchemeRegistry to figure out whether the
+        request is for a local resource instead of KURL::isLocalFile() to allow using schemes
+        other than file:// for the inspector resources.
+        * UIProcess/gtk/WebInspectorProxyGtk.cpp:
+        (WebKit::WebInspectorProxy::inspectorPageURL): use the new internal resource URL; since it's now
+        static we no longer need to generate and store the string.
+        (WebKit::WebInspectorProxy::inspectorBaseURL): ditto.
+        * WebProcess/WebPage/gtk/WebInspectorGtk.cpp:
+        (WebKit::WebInspector::localizedStringsURL): use the new internal resource URL.
+        * UIProcess/gtk/WebContextGtk.cpp:
+        (WebKit::WebContext::platformInitializeWebProcess): register resource as a local scheme.
+
+2013-09-13  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        Fix build with namespaced Qt.
+
+        Unreviewed build fix.
+
+        One forward declaration of QUrl was missing proper namespace macros.
+
+        * UIProcess/API/qt/qquickurlschemedelegate_p.h:
+
+2013-09-12  Simon Fraser  <simon.fraser@apple.com>
+
+        Avoid extra scrollbar-related layouts for overlay scrollbars
+        https://bugs.webkit.org/show_bug.cgi?id=121267
+
+        Reviewed by Beth Dakin.
+        
+        view->resize() will call setNeedsLayout() if necessary, and may already have
+        done layout, so the extra setNeedsLayout() here was bad.
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::setSize):
+
+2013-09-12  Andre Moreira Magalhaes   <andre.magalhaes@collabora.co.uk>
+
+        Web Inspector: Do not try to parse incomplete HTTP requests
+        https://bugs.webkit.org/show_bug.cgi?id=121123
+
+        Reviewed by Darin Adler.
+
+        When working on a patch for bug #121121 I found an issue with the InspectorServer where it would try
+        to parse an HTTP message before receiving the full message and thus fail connecting with the
+        chromedevtools plugin.
+
+        What happens is that the WebSocketServerConnection receives buffers on
+        WebSocketServerConnection::didReceiveSocketStreamData and calls
+        WebSocketServerConnection::readHTTPMessage which then checks if we have a valid request by calling
+        HTTPRequest::parseHTTPRequestFromBuffer. If the request is valid it tries to parse the message and
+        clears the buffer, otherwise it continues adding data to the internal buffer until we have a valid
+        request.
+
+        The problem is that currently HTTPRequest::parseHTTPRequestFromBuffer considers the request as valid
+        before receiving the full message. To solve this we should make the method check if the request
+        headers end with a blank line otherwise we consider the request as invalid (see also
+        http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html).
+
+        * UIProcess/API/gtk/tests/TestInspectorServer.cpp:
+        (sendIncompleteRequest):
+        (beforeAll):
+        Add GTK specific test to check if the inspector server replies to incomplete requests.
+        * UIProcess/InspectorServer/HTTPRequest.cpp:
+        (WebKit::HTTPRequest::parseHeaders):
+        Do not consider request valid if headers didn't end with a blank line.
+
+2013-09-12  Anders Carlsson  <andersca@apple.com>
+
+        SharedBuffer::createNSData should return a RetainPtr<NSData>
+        https://bugs.webkit.org/show_bug.cgi?id=121237
+
+        Reviewed by Darin Adler.
+
+        Update for WebCore changes.
+
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView writeSelectionToPasteboard:types:]):
+        (-[WKView _setPromisedData:WebCore::withFileName:withExtension:withTitle:withURL:withVisibleURL:withArchive:WebCore::forPasteboard:]):
+        (-[WKView namesOfPromisedFilesDroppedAtDestination:]):
+
 2013-09-12  Anders Carlsson  <andersca@apple.com>
 
         SharedBuffer::createCFData should return RetainPtr<CFDataRef>

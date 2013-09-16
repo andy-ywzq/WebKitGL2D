@@ -96,7 +96,6 @@ SOURCES += \
      bindings/js/JSCanvasRenderingContext2DCustom.cpp \
      bindings/js/JSCanvasRenderingContextCustom.cpp \
      bindings/js/JSClipboardCustom.cpp \
-     bindings/js/JSConsoleCustom.cpp \
      bindings/js/JSCryptoCustom.cpp \
      bindings/js/JSCustomXPathNSResolver.cpp \
      bindings/js/JSDictionary.cpp \
@@ -2404,6 +2403,7 @@ HEADERS += \
     rendering/LayoutState.h \
     rendering/LineInfo.h \
     rendering/LineWidth.h \
+    rendering/LineLayoutState.h \
     rendering/LogicalSelectionOffsetCaches.h \
     rendering/mathml/RenderMathMLBlock.h \
     rendering/mathml/RenderMathMLFenced.h \
@@ -2414,7 +2414,7 @@ HEADERS += \
     rendering/mathml/RenderMathMLRow.h \
     rendering/mathml/RenderMathMLSpace.h \
     rendering/mathml/RenderMathMLSquareRoot.h \
-    rendering/mathml/RenderMathMLSubSup.h \
+    rendering/mathml/RenderMathMLScripts.h \
     rendering/mathml/RenderMathMLUnderOver.h \
     rendering/Pagination.h \
     rendering/PaintInfo.h \
@@ -2952,8 +2952,6 @@ use?(LIBXML2) {
     SOURCES += \
             xml/parser/XMLDocumentParserLibxml2.cpp \
             xml/parser/XMLDocumentParserScope.cpp
-} else {
-    SOURCES += xml/parser/XMLDocumentParserQt.cpp
 }
 
 enable?(SMOOTH_SCROLLING) {
@@ -3636,7 +3634,7 @@ enable?(MATHML) {
         rendering/mathml/RenderMathMLRow.cpp \
         rendering/mathml/RenderMathMLSpace.cpp \
         rendering/mathml/RenderMathMLSquareRoot.cpp \
-        rendering/mathml/RenderMathMLSubSup.cpp \
+        rendering/mathml/RenderMathMLScripts.cpp \
         rendering/mathml/RenderMathMLUnderOver.cpp
 
     ALL_IN_ONE_SOURCES +=
@@ -3700,7 +3698,6 @@ enable?(SVG) {
         rendering/svg/RenderSVGResourceRadialGradient.cpp \
         rendering/svg/RenderSVGResourceSolidColor.cpp \
         rendering/svg/RenderSVGRoot.cpp \
-        rendering/svg/RenderSVGTSpan.cpp \
         rendering/svg/RenderSVGText.cpp \
         rendering/svg/RenderSVGTextPath.cpp \
         rendering/svg/RenderSVGTransformableContainer.cpp \

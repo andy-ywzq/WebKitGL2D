@@ -1,3 +1,2892 @@
+2013-09-16  Thiago de Barros Lacerda  <thiago.lacerda@openbossa.org>
+
+        MediaStream API: Storing the constraints in MediaStreamSource
+        https://bugs.webkit.org/show_bug.cgi?id=120882
+
+        based on: https://chromium.googlesource.com/chromium/blink/+/04ac7655b54ae98f55774afde3f8e92b6c6302e6
+
+        Reviewed by Eric Carlson.
+
+        No new tests needed.
+
+        * Modules/mediastream/UserMediaRequest.cpp:
+        (WebCore::UserMediaRequest::succeed):
+        * platform/mediastream/MediaStreamSource.h:
+        (WebCore::MediaStreamSource::setConstraints):
+        (WebCore::MediaStreamSource::constraints):
+
+2013-09-16  Andreas Kling  <akling@apple.com>
+
+        Rebaseline bindings tests after Sam's Document& changes.
+
+2013-09-16  Andreas Kling  <akling@apple.com>
+
+        Destroying a Document's render tree shouldn't make it impossible to recreate.
+        <https://webkit.org/b/121437>
+
+        Reviewed by Antti Koivisto.
+
+        Rename Document::detach() to destroyRenderTree() and stop automatically
+        disconnecting Document from its Frame after the deforestation.
+
+        Added Document::disconnectFromFrame() and do that after every call to
+        destroyRenderTree() that we currently have.
+
+        This change doesn't alter any behavior on its own, but is a step towards
+        being able to destroy and rebuild the render tree.
+
+2013-09-16  Brent Fulgham  <bfulgham@apple.com>
+
+        Unreviewed warning correction. Avoid uninitialized renderer.
+
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::ComputedStyleExtractor::propertyValue): Renderer can be uninitialized.
+
+2013-09-16  Brent Fulgham  <bfulgham@apple.com>
+
+        Unreviewed warning correction.
+
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::parseFilter): Don't use 'value' as the input argument
+        to the method, and the internal loop variable for the parser.
+
+2013-09-16  peavo@outlook.com  <peavo@outlook.com>
+
+        [Win] Compile errors in WebCore derived sources.
+        https://bugs.webkit.org/show_bug.cgi?id=121420
+
+        Reviewed by Brent Fulgham.
+
+        * dom/make_names.pl:
+        (printNamesCppFile): Added const modifier.
+        (printDefinitions): Use C style cast.
+
+2013-09-16  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Shapes] Winding rule polygon issues
+        https://bugs.webkit.org/show_bug.cgi?id=120236
+
+        Reviewed by Dirk Schulze.
+
+        This patch corrects some of the problems with shape-inside and
+        self-intersecting polygons and eliminates the layout flashing behavior
+        that prompted the original bug report. The FloatPolygon::contains()
+        method now respoects the polygon's fillRule and the PolygonShape code
+        used to find shape-inside intervals for the top and bottom of a line
+        now also handles fillRule correctly.
+
+        Tests: fast/shapes/shape-inside/shape-inside-complex-polygon-001.html
+               fast/shapes/shape-inside/shape-inside-complex-polygon-002.html
+               fast/shapes/shape-inside/shape-inside-complex-polygon-003.html
+               fast/shapes/shape-inside/shape-inside-complex-polygon-004.html
+
+        * platform/graphics/FloatPolygon.cpp:
+        (WebCore::FloatPolygon::containsEvenOdd):
+        (WebCore::FloatPolygon::containsNonZero):
+        (WebCore::FloatPolygon::contains):
+        * platform/graphics/FloatPolygon.h:
+        * rendering/shapes/PolygonShape.cpp:
+        (WebCore::computeXIntersections):
+
+2013-09-16  Andreas Kling  <akling@apple.com>
+
+        AXObjectCache::m_document should be a reference.
+        <https://webkit.org/b/121425>
+
+        Reviewed by Antti Koivisto.
+
+        AXObjectCache is always owned by a Document so remove the uncertainty
+        by turning its m_document into a Document&.
+
+2013-09-16  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r155851.
+        http://trac.webkit.org/changeset/155851
+        https://bugs.webkit.org/show_bug.cgi?id=121429
+
+        checkbox states should be exposed through AtkState, not
+        AtkValue (Requested by msanchez on #webkit).
+
+        * accessibility/atk/WebKitAccessibleInterfaceValue.cpp:
+        (webkitAccessibleValueGetCurrentValue):
+        * accessibility/atk/WebKitAccessibleWrapperAtk.cpp:
+        (getInterfaceMaskFromObject):
+
+2013-09-16  Krzysztof Czech  <k.czech@samsung.com>
+
+        [ATK] Extends atk value interface to return proper checkbox states
+        https://bugs.webkit.org/show_bug.cgi?id=121413
+
+        Reviewed by Mario Sanchez Prada.
+
+        Tests: accessibility/mixed-checkbox.html
+               accessibility/native-vs-nonnative-checkboxes.html
+
+        * accessibility/atk/WebKitAccessibleInterfaceValue.cpp:
+        (webkitAccessibleValueValueForAccessibilityObject):
+        (webkitAccessibleValueGetCurrentValue):
+        * accessibility/atk/WebKitAccessibleWrapperAtk.cpp:
+        (getInterfaceMaskFromObject):
+
+2013-09-16  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Check DOM bindings API compatibility while building
+        https://bugs.webkit.org/show_bug.cgi?id=101224
+
+        Reviewed by Gustavo Noronha Silva.
+
+        A .symbols file is now generated for every DOM binding public API
+        object. It contains the signature of all public methods. We keep a
+        single file with the signature of all public methods in the source
+        tree. When DOM bindings are generated, a new symbols file is
+        created concatenating all .symbols files generated and it's
+        compared with the symbols file in the source tree using a script
+        that checks if the changes are API compatible or not. In case of
+        API break the build finishes showing the differences found in the
+        symbol files. If API compatible changes are found, the diff is
+        shown in stdout, suggesting to run the gobject-run-api-break-test
+        with the --reset-results option to update the symbols file, and
+        the build continues. If there aren't API changes the build
+        continues silently.
+
+        * GNUmakefile.am:
+        * bindings/gobject/GNUmakefile.am:
+        * bindings/gobject/WebKitDOMCustom.symbols: Added.
+        * bindings/gobject/WebKitDOMEventTarget.symbols: Added.
+        * bindings/gobject/WebKitDOMObject.symbols: Added.
+        * bindings/gobject/webkitdom.symbols: Added.
+        * bindings/scripts/CodeGeneratorGObject.pm:
+        (GenerateFunction):
+        (WriteData):
+        * bindings/scripts/gobject-run-api-break-test: Added.
+        (check_api):
+
+2013-09-16  Andreas Kling  <akling@apple.com>
+
+        Devirtualize Document::detach().
+        <https://webkit.org/b/121418>
+
+        Reviewed by Antti Koivisto.
+
+        The only override was in PluginDocument which needs to decouple itself
+        from the plugin element at the start of detach.
+
+        Added PluginDocument::detachFromPluginElement() and call it from detach().
+
+2013-09-15  Andreas Kling  <akling@apple.com>
+
+        CTTE: RenderCombineText always has a Text node.
+        <https://webkit.org/b/121411>
+
+        Reviewed by Antti Koivisto.
+
+        This renderer is never anonymous and always has a corresponding Text node.
+        Replaced node() with a textNode() reference getter.
+
+2013-09-15  Andreas Kling  <akling@apple.com>
+
+        CTTE: RenderSVGInlineText always has a Text node.
+        <https://webkit.org/b/121409>
+
+        Reviewed by Antti Koivisto.
+
+        This renderer is never anonymous and always has a corresponding Text node.
+        Replaced node() with a textNode() reference getter.
+
+        Only one null check was harmed in the making of this patch.
+
+2013-09-15  Darin Adler  <darin@apple.com>
+
+        Try to fix the Windows build.
+
+        * dom/make_names.pl: The static_cast here was running into const-correctness
+        issues, so for now change it back to a C-style cast.
+
+2013-09-15  Santosh Mahto  <santosh.ma@samsung.com>
+
+        Adding "explicit" keyword in rendering related constructors
+        https://bugs.webkit.org/show_bug.cgi?id=121398
+
+        Reviewed by Andreas Kling.
+
+        Adding explicit in below constructor.
+        All files belong to Source/WebCore/rendering/ path.
+
+        * rendering/AutoTableLayout.h:
+        * rendering/ClipPathOperation.h:
+        (WebCore::ClipPathOperation::ClipPathOperation):
+        (WebCore::ShapeClipPathOperation::ShapeClipPathOperation):
+        * rendering/FixedTableLayout.h:
+        * rendering/FloatingObjects.h:
+        (WebCore::FloatingObject::FloatingObject):
+        * rendering/FlowThreadController.h:
+        * rendering/HitTestResult.h:
+        * rendering/ImageQualityController.h:
+        * rendering/InlineBox.h:
+        (WebCore::InlineBox::InlineBox):
+        (WebCore::InlineBox::InlineBoxBitfields::InlineBoxBitfields):
+        * rendering/InlineFlowBox.h:
+        (WebCore::InlineFlowBox::InlineFlowBox):
+        * rendering/InlineTextBox.h:
+        (WebCore::InlineTextBox::InlineTextBox):
+        * rendering/LayoutState.h:
+        * rendering/LogicalSelectionOffsetCaches.h:
+        (WebCore::LogicalSelectionOffsetCaches::LogicalSelectionOffsetCaches):
+        * rendering/RenderBoxModelObject.h:
+        * rendering/RenderFlexibleBox.h:
+        * rendering/RenderFrameSet.h:
+        (WebCore::FrameEdgeInfo::FrameEdgeInfo):
+        * rendering/RenderGeometryMap.h:
+        * rendering/RenderImage.h:
+        * rendering/RenderImageResourceStyleImage.h:
+        * rendering/RenderLayerFilterInfo.h:
+        * rendering/RenderMultiColumnSet.h:
+        * rendering/RenderNamedFlowThread.h:
+        * rendering/RenderReplaced.h:
+        * rendering/RenderSearchField.h:
+        * rendering/RenderSelectionInfo.h:
+        (WebCore::RenderSelectionInfoBase::RenderSelectionInfoBase):
+        (WebCore::RenderBlockSelectionInfo::RenderBlockSelectionInfo):
+        * rendering/RenderTableSection.h:
+        * rendering/RenderTextControl.h:
+        * rendering/RenderTextControlSingleLine.h:
+        * rendering/TrailingFloatsRootInlineBox.h:
+
+2013-09-15  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed make distcheck fix.
+
+        * GNUmakefile.am:
+        * GNUmakefile.list.am:
+
+2013-09-15  Patrick Gansterer  <paroga@webkit.org>
+
+        [WIN] Fix build without precompiled header after r154146.
+
+        * platform/win/WebCoreBundleWin.h:
+
+2013-09-15  Andreas Kling  <akling@apple.com>
+
+        CTTE: EllipsisBox owner renderer is always a RenderBlock.
+        <https://webkit.org/b/121402>
+
+        Reviewed by Antti Koivisto.
+
+        Let the constructor reflect this. Also out-of-line it because reasons.
+
+2013-09-15  Sam Weinig  <sam@webkit.org>
+
+        CTTE: RenderObject's createAnonymous() and setDocumentForAnonymous() should take Document references
+        https://bugs.webkit.org/show_bug.cgi?id=121400
+
+        Reviewed by Andreas Kling.
+
+        The Document used for anonymous renderers is never null.
+
+        * dom/Document.cpp:
+        * page/FrameView.cpp:
+        * rendering/FlowThreadController.cpp:
+        * rendering/RenderBlock.cpp:
+        * rendering/RenderBlock.h:
+        * rendering/RenderFlexibleBox.cpp:
+        * rendering/RenderFlexibleBox.h:
+        * rendering/RenderFullScreen.cpp:
+        * rendering/RenderFullScreen.h:
+        * rendering/RenderImage.cpp:
+        * rendering/RenderInline.cpp:
+        * rendering/RenderInline.h:
+        * rendering/RenderLayer.cpp:
+        * rendering/RenderListMarker.cpp:
+        * rendering/RenderMultiColumnBlock.cpp:
+        * rendering/RenderMultiColumnFlowThread.cpp:
+        * rendering/RenderMultiColumnFlowThread.h:
+        * rendering/RenderMultiColumnSet.cpp:
+        * rendering/RenderMultiColumnSet.h:
+        * rendering/RenderNamedFlowThread.cpp:
+        * rendering/RenderNamedFlowThread.h:
+        * rendering/RenderObject.h:
+        * rendering/RenderReplica.cpp:
+        * rendering/RenderReplica.h:
+        * rendering/RenderRuby.cpp:
+        * rendering/RenderRubyBase.cpp:
+        * rendering/RenderRubyBase.h:
+        * rendering/RenderRubyRun.cpp:
+        * rendering/RenderScrollbar.cpp:
+        * rendering/RenderScrollbarPart.cpp:
+        * rendering/RenderScrollbarPart.h:
+        * rendering/RenderTable.cpp:
+        * rendering/RenderTableCell.cpp:
+        * rendering/RenderTableCell.h:
+        * rendering/RenderTableRow.cpp:
+        * rendering/RenderTableRow.h:
+        * rendering/RenderTableSection.cpp:
+        * rendering/RenderText.cpp:
+        * rendering/RenderView.cpp:
+        * rendering/RenderView.h:
+        * rendering/mathml/RenderMathMLBlock.cpp:
+        * rendering/mathml/RenderMathMLRow.cpp:
+        * rendering/mathml/RenderMathMLScripts.cpp:
+
+2013-09-15  Sam Weinig  <sam@webkit.org>
+
+        CTTE: ContentData::createRenderer() should take references
+        https://bugs.webkit.org/show_bug.cgi?id=121399
+
+        Reviewed by Andreas Kling.
+
+        - Convert createRenderer(Document*, RenderStyle*) to createRenderer(Document&, RenderStyle&)
+        - Do a drive by final-ing of ContentData derived classes.
+
+        * dom/PseudoElement.cpp:
+        (WebCore::PseudoElement::didAttachRenderers):
+        * rendering/RenderImage.cpp:
+        (WebCore::RenderImage::createAnonymous):
+        * rendering/RenderImage.h:
+        * rendering/style/ContentData.cpp:
+        (WebCore::ImageContentData::createRenderer):
+        (WebCore::TextContentData::createRenderer):
+        (WebCore::CounterContentData::createRenderer):
+        (WebCore::QuoteContentData::createRenderer):
+        * rendering/style/ContentData.h:
+
+2013-09-15  Andreas Kling  <akling@apple.com>
+
+        CTTE: RenderFrameSet is never anonymous.
+        <https://webkit.org/b/121396>
+
+        Reviewed by Antti Koivisto.
+
+        This renderer is never anonymous, and always has a corresponding HTMLFrameSetElement.
+        Replaced element() with a frameSetElement().
+
+2013-09-15  Sam Weinig  <sam@webkit.org>
+
+        CTTE: Node subclasses should take a Document by reference in their constructor (Part 10)
+        https://bugs.webkit.org/show_bug.cgi?id=121397
+
+        Reviewed by Andreas Kling.
+
+        Convert the bindings code to pass a Document reference for named constructors.
+
+        * bindings/js/JSImageConstructor.cpp:
+        (WebCore::constructImage):
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (GenerateConstructorDefinition):
+        * html/HTMLAudioElement.cpp:
+        (WebCore::HTMLAudioElement::createForJSConstructor):
+        * html/HTMLAudioElement.h:
+        * html/HTMLImageElement.cpp:
+        (WebCore::HTMLImageElement::createForJSConstructor):
+        * html/HTMLImageElement.h:
+        * html/HTMLOptionElement.cpp:
+        (WebCore::HTMLOptionElement::createForJSConstructor):
+        * html/HTMLOptionElement.h:
+
+2013-09-15  Sam Weinig  <sam@webkit.org>
+
+        CTTE: Node subclasses should take a Document by reference in their constructor (Part 9)
+        https://bugs.webkit.org/show_bug.cgi?id=121394
+
+        Reviewed by Andreas Kling.
+
+        Remove the 'constructorTakesDocumentReference' property. It is the default now.
+
+        * dom/make_names.pl:
+        Always use a Document reference.
+
+        * html/HTMLTagNames.in:
+        * mathml/mathtags.in:
+        * svg/svgtags.in:
+        Remove the 'constructorTakesDocumentReference' property.
+
+2013-09-15  Andreas Kling  <akling@apple.com>
+
+        RenderWidget doesn't need to cache a FrameView pointer.
+        <https://webkit.org/b/121158>
+
+        Reviewed by Antti Koivisto.
+
+        The FrameView can be found through RenderObject::view().frameView().
+        This way also gets you a reference, so no need for null-checking.
+
+2013-09-15  Sam Weinig  <sam@webkit.org>
+
+        CTTE: Node subclasses should take a Document by reference in their constructor (Part 8)
+        https://bugs.webkit.org/show_bug.cgi?id=121393
+
+        Reviewed by Andreas Kling.
+
+        Converts the following to take a Document reference:
+            - All of SVG
+
+2013-09-15  Sam Weinig  <sam@webkit.org>
+
+        [CTTE] Node subclasses should take a Document by reference in their constructor (Part 7)
+        https://bugs.webkit.org/show_bug.cgi?id=121389
+
+        Reviewed by Andreas Kling.
+
+        Converts the following to take a Document reference:
+            - Element
+            - MathMLElement
+            - MathMLInlineContainerElement
+            - MathMLMathElement
+            - MathMLTextElement
+
+2013-09-15  Andreas Kling  <akling@apple.com>
+
+        CTTE: RenderMedia and RenderVideo are never anonymous.
+        <https://webkit.org/b/121388>
+
+        Reviewed by Sam Weinig.
+
+        Codify the following:
+
+        - RenderMedia always has an HTMLMediaElement.
+        - RenderVideo always has an HTMLVideoElement.
+
+        None of these renderers are ever anonymous, so delete element() and provide
+        strongly typed reference getters instead.
+
+2013-09-15  Andreas Kling  <akling@apple.com>
+
+        Unreviewed, rolling out r155809.
+        http://trac.webkit.org/changeset/155809
+        https://bugs.webkit.org/show_bug.cgi?id=121388
+
+        Accidentally removed files, let's redo this.
+
+2013-09-15  Andreas Kling  <akling@apple.com>
+
+        CTTE: RenderMedia and RenderVideo are never anonymous.
+        <https://webkit.org/b/121388>
+
+        Reviewed by Sam Weinig.
+
+        Codify the following:
+
+        - RenderMedia always has an HTMLMediaElement.
+        - RenderVideo always has an HTMLVideoElement.
+
+        None of these renderers are ever anonymous, so delete element() and provide
+        strongly typed reference getters instead.
+
+2013-09-15  Sam Weinig  <sam@webkit.org>
+
+        [CTTE] Node subclasses should take a Document by reference in their constructor (Part 6)
+        https://bugs.webkit.org/show_bug.cgi?id=121387
+
+        Reviewed by Andreas Kling.
+
+        Converts the following to take a Document reference:
+            - Attr
+            - CDATASection
+            - CharacterData
+            - Comment
+            - DOMImplementation
+            - DocumentFragment
+            - DocumentType
+            - EntityReference
+            - Notation
+            - ProcessingInstruction
+            - ShadowRoot
+            - TemplateContentDocumentFragment
+            - Text
+
+2013-09-15  Andreas Kling  <akling@apple.com>
+
+        Remove RenderObject::clearNode().
+        <https://webkit.org/b/121386>
+
+        Reviewed by Anders Carlsson.
+
+        This was used by ref-counted RenderWidgets after getting removed from their
+        parent renderer but kept alive by an external ref. We have no need for this
+        awkward state anymore, so remove clearNode().
+
+2013-09-15  Andreas Kling  <akling@apple.com>
+
+        CTTE: RenderWidgets are never anonymous.
+        <https://webkit.org/b/121385>
+
+        Reviewed by Anders Carlsson.
+
+        Codify the following:
+
+        - RenderWidget always has an HTMLFrameOwnerElement.
+        - RenderEmbeddedObject always has an HTMLFrameOwnerElement.
+        - RenderSnapshottedPlugIn always has an HTMLPlugInImageElement.
+        - RenderFrame always has an HTMLFrameElement.
+        - RenderIFrame always has an HTMLIFrameElement.
+
+        None of these renderers are ever anonymous, so delete element() and provide
+        strongly typed reference getters instead.
+
+2013-09-14  Darin Adler  <darin@apple.com>
+
+        Use FINAL instead of virtualChildren trick in render tree classes
+        https://bugs.webkit.org/show_bug.cgi?id=121373
+
+        Reviewed by Andreas Kling.
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::updateFirstLetterStyle): Use children instead of
+        virtualChildren.
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::splitAnonymousBoxesAroundChild): Ditto.
+        * rendering/RenderBoxModelObject.cpp:
+        (WebCore::RenderBoxModelObject::moveChildTo): Ditto.
+        * rendering/RenderObject.cpp:
+        (WebCore::RenderObject::addChild): Ditto.
+        (WebCore::RenderObject::removeChild): Ditto.
+        (WebCore::RenderObject::handleDynamicFloatPositionChange): Ditto.
+        (WebCore::RenderObject::willBeDestroyed): Ditto.
+        (WebCore::RenderObject::removeFromRenderFlowThreadRecursive): Ditto.
+
+        * rendering/RenderBlock.h: Changed firstChild and lastChild to use
+        m_children directly instead of a function. Made the children function
+        a final virtual override. Deleted the virtualChildren override. Added
+        override keywords to other virtual functions.
+        * rendering/RenderEmbeddedObject.h: Ditto.
+        * rendering/RenderFrameSet.h: Ditto.
+        * rendering/RenderInline.h: Ditto.
+        * rendering/RenderMedia.h: Ditto.
+        * rendering/RenderTableCol.h: Ditto.
+        * rendering/RenderTableRow.h: Ditto.
+        * rendering/RenderTableSection.h: Ditto.
+        * rendering/svg/RenderSVGContainer.h: Ditto.
+        * rendering/svg/RenderSVGRoot.h: Ditto.
+
+        * rendering/RenderObject.h:
+        (WebCore::RenderObject::firstChild): Use children instead of virtualChildren.
+        (WebCore::RenderObject::lastChild): Ditto.
+        (WebCore::RenderObject::children): Renamed from virtualChildren.
+        (WebCore::RenderObject::canHaveChildren): Use children instead of virtualChildren.
+
+2013-09-15  Darin Adler  <darin@apple.com>
+
+        Shrink factory functions
+        https://bugs.webkit.org/show_bug.cgi?id=121378
+
+        Reviewed by Andreas Kling.
+
+        This makes the functions that builds four different types of per-element tables
+        all have smaller code size.
+
+        * DerivedSources.make: Tweaked how HTML and SVG wrapper factories are made a bit.
+        It was OK, but a little sloppy.
+
+        * dom/Document.cpp:
+        (WebCore::Document::createElement): Changed to call the createElement functions
+        in the factories. Also did some style improvement.
+
+        * dom/make_names.pl:
+        (printConstructorSignature): Make constructors take a Document& instead of
+        a Document*.
+        (printConstructorInterior): Updated for Document& instead of Document*.
+        (printFunctionTable): Renamed from printFunctionInits, because this now
+        creates table entries. The actual code to add each function is now done
+        in a loop instead.
+        (printNamesHeaderFile): Made the table const.
+        (printNamesCppFile): Made the table const.
+        (printDefinitions): Generate a table, table entries, and a loop that calls
+        createQualifiedName, rather than an "unrolled loop".
+        (printFactoryCppFile): Tweaked indentation. Updated to take Document& instead
+        of Document*. Generate a table, table entries, and a loop that builds a map,
+        rather than an "unrolled" loop.
+        (printFactoryHeaderFile): Eliminated the unused createElement member function
+        that was part of a dream of factory objects in a namespace registry, giving
+        the name createElement to the static member function so it would be less
+        redundant. Also made the function takes a Document& instead of Document*.
+        Also made the default "not created by parser", since the parser is the simpler
+        use case, outnumbered by the non-parser uses, at least at the moment. Also,
+        use nullptr instead of 0.
+        (printWrapperFactoryCppFile): Generate a table, table entries, and a loop
+        that builds a map rather than an "unrolled" loop.
+
+        * editing/htmlediting.cpp:
+        (WebCore::createHTMLElement): Put the null check here that used to be in
+        HTMLElementFactory::createElement, and call with a reference instead of a
+        pointer. Also don't need to pass "0, false" since "not created by the parser"
+        is now the default.
+        * html/HTMLDocument.cpp:
+        (WebCore::HTMLDocument::createElement): Ditto.
+
+        * html/HTMLElement.cpp:
+        (WebCore::populateEventNameForAttributeLocalNameMap): Changed to use an
+        AtomicStringImpl* as the key instead of AtomicString, since all the strings
+        come from the local names of tags, and so don't need to be ref'd. This saves
+        a bit of reference count churn when building the map and is the same pattern
+        used in some maps in the make_names.pl script above.
+        (WebCore::HTMLElement::parseAttribute): Updated for change above.
+
+        * html/HTMLObjectElement.cpp:
+        (WebCore::isRecognizedTagName): More const.
+
+        * html/parser/HTMLConstructionSite.cpp:
+        (WebCore::HTMLConstructionSite::createHTMLElement): Changed to call the
+        HTMLElementFactory::createElement function under its new name with a reference
+        rather than a pointer.
+
+        * html/parser/HTMLIdentifier.cpp:
+        (WebCore::nameForIndex): More const.
+        (WebCore::HTMLIdentifier::addNames): More const.
+
+        * html/parser/HTMLTreeBuilder.cpp:
+        (WebCore::mapLoweredLocalNameToName): More const.
+        (WebCore::adjustSVGTagNameCase): Eliminated local variable so we would not have
+        to utter type with more const.
+        (WebCore::adjustAttributes): Ditto.
+        (WebCore::addNamesWithPrefix): More const. Also tweaked to use a bit more reference,
+        and a bit less pointer. Also used array instead of pointer for argument since they
+        are synonyms and this use is more array-like and const array is slightly easier to
+        understand than the double const pointer.
+        (WebCore::adjustForeignAttributes): Eliminated local variable so we would not have
+        to utter type with more const.
+
+        * html/track/TextTrackCue.cpp:
+        (WebCore::TextTrackCue::copyWebVTTNodeToDOMTree): Pass a reference to
+        WebVTTElement::createEquivalentHTMLElement.
+
+        * html/track/WebVTTElement.cpp:
+        (WebCore::WebVTTElement::WebVTTElement): Take a reference instead of a pointer.
+        (WebCore::WebVTTElement::create): Ditto.
+        (WebCore::WebVTTElement::cloneElementWithoutAttributesAndChildren): Pass a
+        reference instead of a pointer to create.
+        (WebCore::WebVTTElement::createEquivalentHTMLElement): Take a reference instead
+        of a pointer, and update uses of HTMLElementFactory::createElement. Also made
+        this return null when a bad node type is passed in, which should never happen.
+
+        * html/track/WebVTTElement.h: Use Document& instead of Document*. Removed unused
+        and undefined create/constructor overloads.
+
+        * html/track/WebVTTParser.cpp:
+        (WebCore::WebVTTParser::constructTreeFromToken): Pass document reference rather than
+        pointer to WebVTTElement::create.
+
+2013-09-15  Andreas Kling  <akling@apple.com>
+
+        Get rid of ref-counting on RenderArena.
+        <https://webkit.org/b/121379>
+
+        Reviewed by Darin Adler.
+
+        This was used to guard the arena during ref-counted RenderWidget teardown.
+
+2013-09-15  Darin Adler  <darin@apple.com>
+
+        Fix Qt build.
+
+        * css/CSSSelector.cpp:
+        (WebCore::populatePseudoTypeByNameMap): Removed stray line that was breaking
+        the build for any platform with !ENABLE(VIDEO_TRACK).
+
+2013-09-15  Andreas Kling  <akling@apple.com>
+
+        Restore two-pass mechanism for FrameView::updateEmbeddedObjects().
+        <https://webkit.org/b/121380>
+
+        Reviewed by Darin Adler.
+
+        Restore the code to make a second pass over the embedded objects needing
+        an update in case more objects were added to the set during the first pass.
+
+2013-09-15  Frédéric Wang  <fred.wang@free.fr>
+
+        Implement the mmultiscripts tag
+        https://bugs.webkit.org/show_bug.cgi?id=99618
+
+        Reviewed by Chris Fleizach.
+
+        Tests: mathml/invalid-scripts-crash.html
+               mathml/presentation/multiscripts-equivalence.html
+               mathml/presentation/multiscripts-noscripts.html
+               mathml/presentation/multiscripts-positions.html
+               mathml/presentation/scripts-base-alignment.html
+               mathml/presentation/scripts-horizontal-alignment.html
+               mathml/presentation/scripts-vertical-alignment.html
+               mathml/scripts-addChild.html
+               mathml/scripts-removeChild.html
+
+        This relies on the existing msub/msup/msubsup code to implement the mmultiscripts tag. This also improves dynamic addition/removal of children for these MathML elements and adds a specific style for invalid children, so that they render like an merror tag. Finally, this fixes a bad memory access in the Accessibility render object of msubsup.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * Target.pri:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::isMathSubscriptSuperscript):
+        (WebCore::AccessibilityRenderObject::mathSuperscriptObject):
+        * css/mathml.css:
+        (mo, mrow, mfenced, mfrac, msub, msup, msubsup, mmultiscripts, mprescripts, none, munder, mover, munderover, msqrt, mroot):
+        (mover > :last-child, munderover > :last-child):
+        (msub > * + *, msup > * + *, msubsup > * + *, mmultiscripts > * + *, munder > * + *, mover > * + *, munderover > * + *):
+        (merror, msub > * + * + *, msup > * + * + *, msubsup > * + * + * + *, msub > mprescripts, msup > mprescripts, msubsup > mprescripts, msub > none, msup > none, msubsup > none, mmultiscripts > mprescripts ~ mprescripts, mmultiscripts > mprescripts ~ mprescripts ~ *):
+        * mathml/MathMLInlineContainerElement.cpp:
+        (WebCore::MathMLInlineContainerElement::createRenderer):
+        * mathml/mathtags.in:
+        * rendering/mathml/RenderMathMLBlock.h:
+        (WebCore::RenderMathMLBlock::isRenderMathMLScripts):
+        (WebCore::RenderMathMLBlock::isRenderMathMLScriptsWrapper):
+        * rendering/mathml/RenderMathMLScripts.cpp: Added.
+        (WebCore::isMPrescripts):
+        (WebCore::RenderMathMLScripts::RenderMathMLScripts):
+        (WebCore::RenderMathMLScripts::base):
+        (WebCore::RenderMathMLScripts::fixAnonymousStyleForSubSupPair):
+        (WebCore::RenderMathMLScripts::fixAnonymousStyles):
+        (WebCore::RenderMathMLScripts::addChildInternal):
+        (WebCore::RenderMathMLScripts::removeChildInternal):
+        (WebCore::RenderMathMLScripts::addChild):
+        (WebCore::RenderMathMLScripts::removeChild):
+        (WebCore::RenderMathMLScripts::styleDidChange):
+        (WebCore::RenderMathMLScripts::unembellishedOperator):
+        (WebCore::RenderMathMLScripts::layout):
+        (WebCore::RenderMathMLScripts::firstLineBoxBaseline):
+        (WebCore::RenderMathMLScriptsWrapper::createAnonymousWrapper):
+        (WebCore::RenderMathMLScriptsWrapper::addChildInternal):
+        (WebCore::RenderMathMLScriptsWrapper::addChild):
+        (WebCore::RenderMathMLScriptsWrapper::removeChildInternal):
+        (WebCore::RenderMathMLScriptsWrapper::removeChild):
+        * rendering/mathml/RenderMathMLScripts.h: Added.
+        (WebCore::RenderMathMLScriptsWrapper::RenderMathMLScriptsWrapper):
+        (WebCore::RenderMathMLScriptsWrapper::renderName):
+        (WebCore::RenderMathMLScriptsWrapper::isRenderMathMLScriptsWrapper):
+        (WebCore::toRenderMathMLScriptsWrapper):
+        (WebCore::RenderMathMLScripts::isRenderMathMLScripts):
+        (WebCore::RenderMathMLScripts::renderName):
+        (WebCore::toRenderMathMLScripts):
+        * rendering/mathml/RenderMathMLSubSup.cpp: Removed.
+        * rendering/mathml/RenderMathMLSubSup.h: Removed.
+
+2013-09-15  Andreas Kling  <akling@apple.com>
+
+        Get rid of ref-counting on RenderWidget.
+        <https://webkit.org/b/121357>
+
+        Reviewed by Darin Adler.
+
+        Instead of RenderView tracking RenderWidgets, have FrameView track Widgets
+        that are currently in the render tree.
+
+        To protect ourselves during NPAPI tomfoolery, we now let RenderWidget hand
+        out weak pointers through a createWeakPtr() method so call sites can monitor
+        the renderer for deletion without having to take shared ownership.
+
+        This works out quite nicely since instead of keeping a limping object alive
+        for a little longer just so we can call methods on it (to accomplish nothing),
+        we're forced to check right away if it's gone, and take immediate action.
+
+        De-virtualized RenderObject::destroy() since it's no longer needed for
+        RenderWidget to defer destruction.
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::layout):
+        (WebCore::FrameView::repaintFixedElementsAfterScrolling):
+
+            Call updateWidgetPositions() on FrameView instead of RenderView.
+
+        (WebCore::FrameView::updateEmbeddedObject):
+
+            Turn null checking of embedded object's element backpointer into an
+            assertion. This will eventually go away completely once that renderer
+            can return a HTMLFrameOwnerElement&.
+
+            Use WeakPtr to check for renderer destruction following the call out
+            to updateWidget().
+
+        (WebCore::FrameView::updateEmbeddedObjects):
+
+            Slap a WidgetHierarchyUpdatesSuspensionScope guard on this function
+            to defer Widget updates until all the updateEmbeddedObject calls are
+            done. This avoids RenderWidget::setWidget() having to handle 'this'
+            disappearing from underneath.
+
+            Also use a ListHashSet with a null sentinel to avoid looping forever.
+
+        (WebCore::FrameView::performPostLayoutTasks):
+
+            Only call updateEmbeddedObjects() once since that function no longer
+            operates in chunks.
+
+        (WebCore::FrameView::notifyWidgetsInAllFrames):
+
+            Call notifyWidgets() on FrameView instead of RenderView.
+
+        (WebCore::FrameView::didAddWidgetToRenderTree):
+        (WebCore::FrameView::willRemoveWidgetFromRenderTree):
+
+            Added. These are called by RenderWidget when a Widget is being
+            added or removed from a RenderWidget.
+
+        (WebCore::collectWidgets):
+
+            Helper to collect raw Widget pointers into a Vector and ref them.
+
+        (WebCore::FrameView::updateWidgetPositions):
+
+            Moved here from RenderView. This function holds a ref on all the
+            attached Widgets and calls RenderWidget::updateWidgetPosition() on
+            their corresponding renderers.
+
+        (WebCore::FrameView::notifyWidgets):
+
+            Moved here from RenderView. Holds a ref on all the widgets while
+            calling Widget::notifyWidget() on each one.
+
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::scrollTo):
+
+            Call updateWidgetPositions() on FrameView instead of RenderView.
+
+        * rendering/RenderObject.h:
+
+            De-virtualized destroy().
+
+        * rendering/RenderView.cpp:
+        * rendering/RenderView.h:
+
+            Moved a bunch of things to FrameView. Made protected section private
+            since nothing inherits from RenderView.
+
+        * rendering/RenderWidget.h:
+        (WebCore::RenderWidget::createWeakPtr):
+
+            Added a WeakPtr factory for clients that want to monitor this object
+            for destruction.
+            
+        * rendering/RenderWidget.cpp:
+        (WebCore::RenderWidget::RenderWidget):
+        (WebCore::RenderWidget::willBeDestroyed):
+        (WebCore::RenderWidget::~RenderWidget):
+
+            Removed ref counting.
+            Removed registration with RenderView in ctor/willBeDestroyed.
+
+        (WebCore::RenderWidget::setWidgetGeometry):
+
+            Monitor the RenderWidget itself through a WeakPtr and check on it
+            after each step that we're still alive. In that case just bail out.
+
+        (WebCore::RenderWidget::setWidget):
+
+            Register the incoming/outgoing Widget with the FrameView.
+            Use a WeakPtr to check on 'this' after updateWidgetGeometry().
+
+        (WebCore::RenderWidget::updateWidgetPosition):
+
+            Use a WeakPtr to check on 'this' after updateWidgetGeometry().
+
+        * GNUmakefile.list.am:
+        * rendering/RenderWidgetProtector.h:
+
+            Removed.
+
+
+2013-09-14  Sam Weinig  <sam@webkit.org>
+
+        [CTTE] Node subclasses should take a Document by reference in their constructor (Part 5)
+        https://bugs.webkit.org/show_bug.cgi?id=121375
+
+        Reviewed by Andreas Kling.
+
+        * dom/make_names.pl:
+        Add support for a top level 'constructorTakesDocumentReference' property to
+        force using a Document reference for the whole factory.
+
+        * html/HTMLTagNames.in:
+        Replace per-tag 'constructorTakesDocumentReference' with a top level declaration
+        now that all of the HTML tag names are supported.
+
+        Converts the following to take a Document reference:
+            - HTMLContentElement
+            - HTMLElement
+            - HTMLFrameElementBase
+            - HTMLFrameOwnerElement
+            - HTMLPlugInElement
+            - HTMLPlugInImageElement
+            - HTMLUnknownElement
+            - InsertionPoint
+            - StyledElement
+            - TextTrackCueBox
+            - TextTrackCueGenericBoxElement
+
+2013-09-14  Eric Carlson  <eric.carlson@apple.com>
+
+        MediaStream API: Update RTCDataChannel
+        https://bugs.webkit.org/show_bug.cgi?id=121102
+
+        Reviewed by Sam Weinig.
+
+        Based on https://chromium.googlesource.com/chromium/blink/+/c6975c41956acded7cf0363012d7d6b69d0c6d96,
+        and https://chromium.googlesource.com/chromium/blink/+/214dab0bd6385f573c918ba5ce58a5aa206ce186.
+
+        No new tests, existing tests updated.
+
+        * Modules/mediastream/RTCDataChannel.cpp:
+        (WebCore::RTCDataChannel::create): Take an options Dictionary.
+        (WebCore::RTCDataChannel::didChangeReadyState): String -> AtomicString. Early return if the
+            state hasn't changed.
+        (WebCore::RTCDataChannel::binaryType): String -> AtomicString.
+        (WebCore::RTCDataChannel::setBinaryType): String -> AtomicString.
+        * Modules/mediastream/RTCDataChannel.h:
+        * Modules/mediastream/RTCDataChannel.idl:
+
+        * Modules/mediastream/RTCPeerConnection.cpp:
+        (WebCore::RTCPeerConnection::createDataChannel): Take an options struct.
+        * platform/mediastream/RTCDataChannelHandler.h:
+
+        * platform/mediastream/RTCPeerConnectionHandler.h:
+        (WebCore::RTCDataChannelInit::RTCDataChannelInit): Take an options struct.
+
+2013-09-14  Thiago de Barros Lacerda  <thiago.lacerda@openbossa.org>
+
+        MediaStream API: Update RTCDataChannel to match the specification
+        https://bugs.webkit.org/show_bug.cgi?id=120889
+
+        Reviewed by Eric Carlson
+
+        Merged from https://chromium.googlesource.com/chromium/blink/+/c3862b0a83e20fc8b1f770c7e4a886a7cceb80d2
+        by Tommy Widenflycht.
+
+        According to WebRTC specification, RTCDataChannel must have the following new attributes:
+        boolean ordered
+        unsigned short maxRetransmitTime
+        unsigned short maxRetransmits
+        DOMString protocol
+        boolean negotiated
+        unsigned short id
+
+        and the following one was deprecated:
+        boolean reliable
+
+        Test updates will be landed with https://webkit.org/b/121102.
+
+        * Modules/mediastream/RTCDataChannel.cpp:
+        (WebCore::RTCDataChannel::ordered):
+        (WebCore::RTCDataChannel::maxRetransmitTime):
+        (WebCore::RTCDataChannel::maxRetransmits):
+        (WebCore::RTCDataChannel::protocol):
+        (WebCore::RTCDataChannel::negotiated):
+        (WebCore::RTCDataChannel::id):
+        * Modules/mediastream/RTCDataChannel.h:
+        * Modules/mediastream/RTCDataChannel.idl:
+        * platform/mediastream/RTCDataChannelHandler.h:
+
+2013-09-14  Sam Weinig  <sam@webkit.org>
+
+        [CTTE] Node subclasses should take a Document by reference in their constructor (Part 4)
+        https://bugs.webkit.org/show_bug.cgi?id=121372
+
+        Reviewed by Eric Carlson.
+
+        Converts the following to take a Document reference:
+            - HTMLFormControlElement
+            - HTMLFormControlElementWithState
+            - HTMLMapElement
+            - HTMLMarqueeElement
+            - HTMLMediaElement
+            - HTMLMenuElement
+            - HTMLMetaElement
+            - HTMLMeterElement
+            - HTMLOListElement
+            - HTMLObjectElement
+            - HTMLOptGroupElement
+            - HTMLOptionElement
+            - HTMLOutputElement
+            - HTMLParagraphElement
+            - HTMLParamElement
+            - HTMLProgressElement
+            - HTMLScriptElement
+            - HTMLSelectElement
+            - HTMLSourceElement
+            - HTMLSpanElement
+            - HTMLStyleElement
+            - HTMLSummaryElement
+            - HTMLTableCellElement
+            - HTMLTableElement
+            - HTMLTableRowElement
+            - HTMLTableSectionElement
+            - HTMLTemplateElement
+            - HTMLTextAreaElement
+            - HTMLTextFormControlElement
+            - HTMLTitleElement
+            - HTMLTrackElement
+            - HTMLUListElement
+            - InlineStyleSheetOwner
+            - LabelableElement
+            - All the MediaControl elements
+
+2013-09-14  Joseph Pecoraro  <pecoraro@apple.com>
+
+        XMLViewer_js and XMLViewer_css should be minified
+        https://bugs.webkit.org/show_bug.cgi?id=121334
+
+        Reviewed by Timothy Hatcher.
+
+        * CMakeLists.txt:
+        * DerivedSources.make:
+        * DerivedSources.pri:
+        * GNUmakefile.am:
+        * xml/XMLViewer.css:
+        * xml/XMLViewer.js:
+
+2013-09-14  Eric Carlson  <eric.carlson@apple.com>
+
+        [MediaStream] remove MediaStream.label
+        https://bugs.webkit.org/show_bug.cgi?id=121337
+
+        Reviewed by Sam Weinig.
+
+        No new tests or modified tests, this attribute was apparently never tested.
+
+        * Modules/mediastream/MediaStream.h:
+        * Modules/mediastream/MediaStream.idl:
+
+2013-09-14  Sam Weinig  <sam@webkit.org>
+
+        [CTTE] Node subclasses should take a Document by reference in their constructor (Part 3)
+        https://bugs.webkit.org/show_bug.cgi?id=121368
+
+        Reviewed by Darin Adler.
+
+        Converts the following to take a Document reference:
+            - DeleteButton
+            - DetailsContentElement
+            - DetailsMarkerControl
+            - DetailsSummaryElement
+            - HTMLBDIElement
+            - HTMLBRElement
+            - HTMLBaseElement
+            - HTMLBaseFontElement
+            - HTMLButtonElement
+            - HTMLCanvasElement
+            - HTMLDListElement
+            - HTMLDataListElement
+            - HTMLDetailsElement
+            - HTMLDirectoryElement
+            - HTMLDivElement
+            - HTMLEmbedElement
+            - HTMLFieldSetElement
+            - HTMLFontElement
+            - HTMLFormElement
+            - HTMLFrameElement
+            - HTMLFrameSetElement
+            - HTMLHRElement
+            - HTMLHeadElement
+            - HTMLHeadingElement
+            - HTMLHtmlElement
+            - HTMLIFrameElement
+            - HTMLImageElement
+            - HTMLInputElement
+            - HTMLKeygenElement
+            - HTMLLIElement
+            - HTMLLabelElement
+            - HTMLLegendElement
+            - HTMLLinkElement
+            - HTMLModElement
+            - HTMLPreElement
+            - HTMLQuoteElement
+            - HTMLTableCaptionElement
+            - HTMLTableColElement
+            - ImageDocumentElement
+            - KeygenSelectElement
+            - SummaryContentElement
+            - UploadButtonElement
+
+
+2013-09-14  Zan Dobersek  <zdobersek@igalia.com>
+
+        REGRESSION(r155228): Call to DragData::asFragment() nullifies PassRefPtr<Range> in documentFragmentFromDragData
+        https://bugs.webkit.org/show_bug.cgi?id=121359
+
+        Reviewed by Darin Adler.
+
+        * page/DragController.cpp:
+        (WebCore::documentFragmentFromDragData): Pass the naked pointer as the PassRefPtr<Range> argument to the DragData::asFragment()
+        call. The naked pointer will get wrapped and protected by a new PassRefPtr. Passing the original PassRefPtr will also create
+        a new PassRefPtr, but will leak the reference of the original one, leaving its pointer nullified.
+
+2013-09-14  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK build fix after r155774.
+
+        * bindings/scripts/CodeGeneratorGObject.pm:
+        (SkipFunction): Temporarily skip generation of bindings for the Console::profile() and Console::profileEnd() methods
+        as they're not correctly generated for the moment.
+
+2013-09-14  Darin Adler  <darin@apple.com>
+
+        Shrink the nameToPseudoTypeMap function
+        https://bugs.webkit.org/show_bug.cgi?id=121367
+
+        Reviewed by Andreas Kling.
+
+        * css/CSSSelector.cpp:
+        (WebCore::populatePseudoTypeByNameMap): Replaces the old nameToPseudoTypeMap
+        function. Use a table instead of lots of globals and unrolled code to set up
+        the map.
+        (WebCore::CSSSelector::parsePseudoType): Updated to use the code above, and
+        also use a different style that's tighter.
+
+2013-09-14  Darin Adler  <darin@apple.com>
+
+        Shrink the listMarkerText function
+        https://bugs.webkit.org/show_bug.cgi?id=121364
+
+        Reviewed by Andreas Kling.
+
+        Changed code to use StringBuilder, which is a better fit for what we are
+        doing here. But mainly, inlining was out of hand, so hit that with the
+        NEVER_INLINE stick. Might be worth revisiting this to optimize further for
+        speed by making StringBuilder better at this.
+
+        * rendering/RenderListMarker.cpp:
+        (WebCore::toRoman): NEVER_INLINE and use StringBuilder.
+        (WebCore::toAlphabeticOrNumeric): Use StringBuilder.
+        (WebCore::toSymbolic): NEVER_INLINE and use StringBuilder.
+        (WebCore::toAlphabetic): Ditto.
+        (WebCore::toNumeric): Ditto.
+        (WebCore::toHebrewUnder1000): NEVER_INLINE.
+        (WebCore::toHebrew): NEVER_INLINE and use StringBuilder.
+        (WebCore::toArmenianUnder10000): NEVER_INLINE.
+        (WebCore::toArmenian): NEVER_INLINE and use StringBuilder.
+        (WebCore::toGeorgian): NEVER_INLINE and use StringBuilder.
+        (WebCore::toCJKIdeographic): NEVER_INLINE and use StringBuilder.
+        (WebCore::listMarkerText): Use StringBuilder.
+
+2013-09-14  Sam Weinig  <sam@webkit.org>
+
+        [CTTE] Node subclasses should take a Document by reference in their 
+        constructor (HTMLAnchorElement, HTMLAppletElement, HTMLAreaElement, HTMLAudioElement)
+        https://bugs.webkit.org/show_bug.cgi?id=121365
+
+        Reviewed by Andreas Kling.
+
+        * editing/CreateLinkCommand.cpp:
+        (WebCore::CreateLinkCommand::doApply):
+        * editing/UnlinkCommand.cpp:
+        (WebCore::UnlinkCommand::doApply):
+        * html/HTMLAnchorElement.cpp:
+        (WebCore::HTMLAnchorElement::HTMLAnchorElement):
+        (WebCore::HTMLAnchorElement::create):
+        * html/HTMLAnchorElement.h:
+        * html/HTMLAppletElement.cpp:
+        (WebCore::HTMLAppletElement::HTMLAppletElement):
+        (WebCore::HTMLAppletElement::create):
+        * html/HTMLAppletElement.h:
+        * html/HTMLAreaElement.cpp:
+        (WebCore::HTMLAreaElement::HTMLAreaElement):
+        (WebCore::HTMLAreaElement::create):
+        * html/HTMLAreaElement.h:
+        * html/HTMLAudioElement.cpp:
+        (WebCore::HTMLAudioElement::HTMLAudioElement):
+        (WebCore::HTMLAudioElement::create):
+        (WebCore::HTMLAudioElement::createForJSConstructor):
+        * html/HTMLAudioElement.h:
+        * html/HTMLTagNames.in:
+        * html/HTMLViewSourceDocument.cpp:
+        (WebCore::HTMLViewSourceDocument::addLink):
+        * page/DragController.cpp:
+        (WebCore::documentFragmentFromDragData):
+
+2013-09-14  Thiago de Barros Lacerda  <thiago.lacerda@openbossa.org>
+
+        Get INPUT_SPEECH compiling for Nix, EFL and GTK
+        https://bugs.webkit.org/show_bug.cgi?id=121362
+
+        r154257 was not applied completely in HTMLInputElement.cpp and there was a wrong method signature
+        in TextControlInnerElements.
+        Also adding the files needed to build INPUT_SPEECH to each build system files.
+
+        Reviewed by Andreas Kling.
+
+        No new tests needed.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * html/HTMLInputElement.cpp:
+        (WebCore::HTMLInputElement::parseAttribute):
+        * html/shadow/TextControlInnerElements.h:
+
+2013-09-14  Alberto Garcia  <berto@igalia.com>
+
+        Missing  allow-none introspection annotation for DomDocument.evaluate method
+        https://bugs.webkit.org/show_bug.cgi?id=118310
+
+        Reviewed by Martin Robinson.
+
+        Add (allow-none) introspection annotation to parameters that can
+        be NULL.
+
+        * bindings/scripts/CodeGeneratorGObject.pm:
+        (GenerateFunction):
+
+2013-09-14  Sam Weinig  <sam@webkit.org>
+
+        [CTTE] Node subclasses should take a Document by reference in their constructor (HTMLBodyElement)
+        https://bugs.webkit.org/show_bug.cgi?id=121363
+
+        Reviewed by Andreas Kling.
+
+        * dom/make_names.pl:
+        (defaultTagPropertyHash):
+        (printConstructorInterior):
+        Add a new property, 'constructorTakesDocumentReference', to indicate that the class
+        has been converted to take a Document by reference. Once all classes are converted, this
+        will go away.
+
+        * html/HTMLTagNames.in:
+        Add the 'constructorTakesDocumentReference' property to the <body> tag as an initial
+        step.
+
+        * html/HTMLBodyElement.cpp:
+        (WebCore::HTMLBodyElement::HTMLBodyElement):
+        (WebCore::HTMLBodyElement::create):
+        * html/HTMLBodyElement.h:
+        Modify the constructor and create functions of HTMLBodyElement to take a Document reference.
+
+        * editing/markup.cpp:
+        (WebCore::createFragmentFromMarkup):
+        (WebCore::createFragmentForTransformToFragment):
+        * html/HTMLViewSourceDocument.cpp:
+        (WebCore::HTMLViewSourceDocument::createContainingTable):
+        Update callers of HTMLBodyElement::create() to pass a Document reference.
+
+2013-09-14  Darin Adler  <darin@apple.com>
+
+        * rendering/RenderListMarker.cpp: Roll out accidentally-checked-in-code.
+
+2013-09-14  Darin Adler  <darin@apple.com>
+
+        Add NeverDestroyed::get
+        https://bugs.webkit.org/show_bug.cgi?id=121358
+
+        Reviewed by Anders Carlsson.
+
+        * html/HTMLElement.cpp:
+        (WebCore::HTMLElement::parseAttribute): Use auto and the new get
+        function to make this code less repetitive.
+
+2013-09-14  Sam Weinig  <sam@webkit.org>
+
+        There is no need for any custom bindings for Console
+        https://bugs.webkit.org/show_bug.cgi?id=121338
+
+        Reviewed by Timothy Hatcher.
+
+        * GNUmakefile.list.am:
+        * Target.pri:
+        * UseJSC.cmake:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/js/JSBindingsAllInOne.cpp:
+        Remove JSConsoleCustom.cpp from project files.
+
+        * bindings/js/JSConsoleCustom.cpp:
+        Removed.
+
+        * page/Console.cpp:
+        (WebCore::Console::profile):
+        (WebCore::Console::profileEnd):
+        * page/Console.h:
+        Swap the order of the arguments to appease the bindings generator.
+
+        * page/Console.idl:
+        Add the [CallWith=ScriptState] attribute to pass the ExecState
+        and [TreatNullAs=NullString, TreatUndefinedAs=NullString] to get
+        the right stringification.
+
+2013-09-14  Anders Carlsson  <andersca@apple.com>
+
+        AnimationBase::m_animation is never null
+        https://bugs.webkit.org/show_bug.cgi?id=121360
+
+        Reviewed by Darin Adler.
+
+        Enforce this by using references instead of pointers.
+
+        * page/animation/AnimationBase.cpp:
+        * page/animation/AnimationBase.h:
+        * page/animation/CompositeAnimation.cpp:
+        * page/animation/ImplicitAnimation.cpp:
+        * page/animation/ImplicitAnimation.h:
+        * page/animation/KeyframeAnimation.cpp:
+        * page/animation/KeyframeAnimation.h:
+
+2013-09-14  Darin Adler  <darin@apple.com>
+
+        Shrink the function that builds the event listener attribute name map
+        https://bugs.webkit.org/show_bug.cgi?id=121354
+
+        Reviewed by Andreas Kling.
+
+        * html/HTMLElement.cpp:
+        (WebCore::populateEventNameForAttributeLocalNameMap): Added. Uses a
+        table to populate the map.
+        (WebCore::eventNameForAttributeLocalNameMap): Added. Uses NeverDestroyed
+        to allocate a map, but does not initialize it.
+        (WebCore::HTMLElement::parseAttribute): Put code to use map in here.
+
+        * html/HTMLElement.h: Removed eventNameForAttributeName, no longer
+        a member function.
+
+2013-09-14  Alberto Garcia  <berto@igalia.com>
+
+        [GTK] WebKitGTK+ is linking against libxslt in too many places
+        https://bugs.webkit.org/show_bug.cgi?id=121356
+
+        Reviewed by Martin Robinson.
+
+        Don't use LIBXSLT_CFLAGS when compiling libWebCorePlatform and
+        libWebCoreGtk, no source files use libxslt there.
+
+        * GNUmakefile.am:
+
+2013-09-14  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: InjectedScriptSource_js and InjectedScriptCanvasModuleSource_js should be minified
+        https://bugs.webkit.org/show_bug.cgi?id=121183
+
+        Reviewed by Timothy Hatcher.
+
+        * CMakeLists.txt:
+        * DerivedSources.make:
+        * DerivedSources.pri:
+        * GNUmakefile.am:
+        Minify files at build time before running xxd.pl.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * inspector/InjectedScriptCanvasModuleSource.js:
+        * inspector/InjectedScriptSource.js:
+        Strip trailing whitespace (touching the files so the derived sources are regenerated).
+
+        * inspector/InspectorOverlayPage.css: Added.
+        * inspector/InspectorOverlayPage.html:
+        * inspector/InspectorOverlayPage.js: Copied from Source/WebCore/inspector/InspectorOverlayPage.html.
+        Move JS and CSS to external files. They are inlined and minified at build time.
+
+        * inspector/Scripts/cssmin.py: Added.
+        * inspector/Scripts/jsmin.py: Added.
+        Copied from WebInspectorUI/Scripts.
+
+        * inspector/Scripts/inline-and-minify-stylesheets-and-scripts.py: Added.
+        Add a script that can inline stylesheets and scripts. For minifying InspectorOverlayPage.html.
+
+2013-09-14  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed, fixing debug GTK builds after r155709.
+
+        * platform/gtk/PasteboardGtk.cpp:
+        (WebCore::Pasteboard::write): Assert that the PasteboardURL's URL is not empty.
+
+2013-09-14  Andreas Kling  <akling@apple.com>
+
+        CTTE: RenderDetailsMarker is never anonymous.
+        <https://webkit.org/b/121355>
+
+        Reviewed by Darin Adler.
+
+        This renderer is never anonymous, and always has a corresponding DetailsMarkerControl.
+        Couldn't resist cleaning up the class a little bit, adding OVERRIDE and making
+        toRenderDetailsMarker() into a reference version.
+
+2013-09-14  Andreas Kling  <akling@apple.com>
+
+        CTTE: RenderRubyAs{Block,Inline} are never anonymous.
+        <https://webkit.org/b/121353>
+
+        Reviewed by Darin Adler.
+
+        Replace element() with existingElement() and spam class with OVERRIDE.
+        Removed bogus removeLeftoverAnonymousBlock() override in RenderRubyAsInline
+        since it didn't override anything from a parent class.
+
+2013-09-14  Andreas Kling  <akling@apple.com>
+
+        CTTE: RenderRubyText is never anonymous.
+        <https://webkit.org/b/121352>
+
+        Reviewed by Darin Adler.
+
+        Replace element() with existingElement() and spam class with OVERRIDE.
+
+2013-09-14  Andreas Kling  <akling@apple.com>
+
+        CTTE: RenderSVGBlock renderers are never anonymous.
+        <https://webkit.org/b/121351>
+
+        Reviewed by Antti Koivisto.
+
+        RenderSVGBlock inherits from RenderBlockFlow, so needs separate treatment
+        from RenderSVGModelObject.
+
+        But like RSMO, these renderers are never anonymous, so add strongly typed
+        reference getters and do away with some magical type casts.
+
+2013-09-14  Andreas Kling  <akling@apple.com>
+
+        CTTE: RenderSVGModelObject renderers are never anonymous.
+        <https://webkit.org/b/121350>
+
+        Reviewed by Darin Adler.
+
+        Flip the switch, turning RenderSVGModelObject::element() into a reference.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        CTTE: RenderSVGResourceClipper always has an SVGClipPathElement.
+        <https://webkit.org/b/121349>
+
+        Reviewed by Darin Adler.
+
+        This renderer is never anonymous. Tighten things up with a clipPathElement()
+        reference getter. Removed some unnecessary null checks and type casts.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        CTTE: RenderSVGResourceFilter always has an SVGFilterElement.
+        <https://webkit.org/b/121348>
+
+        Reviewed by Darin Adler.
+
+        This renderer is never anonymous. Tighten things up with a filterElement()
+        reference getter. Removed some unnecessary null checks and type casts.
+
+2013-09-13  Darin Adler  <darin@apple.com>
+
+        Use a better name than m_invertibleCTM
+        https://bugs.webkit.org/show_bug.cgi?id=121341
+
+        Reviewed by Andreas Kling.
+
+        Rename isTransformInvertible to hasInvertibleTransform, and
+        m_invertibleCTM to m_hasInvertibleTransform.
+
+        * html/canvas/CanvasPathMethods.cpp:
+        (WebCore::CanvasPathMethods::moveTo):
+        (WebCore::CanvasPathMethods::lineTo):
+        (WebCore::CanvasPathMethods::quadraticCurveTo):
+        (WebCore::CanvasPathMethods::bezierCurveTo):
+        (WebCore::CanvasPathMethods::arcTo):
+        (WebCore::CanvasPathMethods::arc):
+        (WebCore::CanvasPathMethods::rect):
+        Updated for name change. Not really sure the name is good here,
+        because DOMPath doesn't have a transform at all; should switch
+        to a better name some day.
+
+        * html/canvas/CanvasPathMethods.h: Renamed, added a new constructor,
+        and made the virtual function private.
+
+        * html/canvas/CanvasRenderingContext2D.cpp:
+        (WebCore::CanvasRenderingContext2D::State::State):
+        (WebCore::CanvasRenderingContext2D::State::operator=):
+        (WebCore::CanvasRenderingContext2D::scale):
+        (WebCore::CanvasRenderingContext2D::rotate):
+        (WebCore::CanvasRenderingContext2D::translate):
+        (WebCore::CanvasRenderingContext2D::transform):
+        (WebCore::CanvasRenderingContext2D::setTransform):
+        (WebCore::CanvasRenderingContext2D::fill):
+        (WebCore::CanvasRenderingContext2D::stroke):
+        (WebCore::CanvasRenderingContext2D::clip):
+        (WebCore::CanvasRenderingContext2D::isPointInPath):
+        (WebCore::CanvasRenderingContext2D::isPointInStroke):
+        (WebCore::CanvasRenderingContext2D::clearRect):
+        (WebCore::CanvasRenderingContext2D::fillRect):
+        (WebCore::CanvasRenderingContext2D::strokeRect):
+        (WebCore::CanvasRenderingContext2D::drawImage):
+        (WebCore::CanvasRenderingContext2D::didDraw):
+        (WebCore::CanvasRenderingContext2D::drawTextInternal):
+        Updated for name change.
+
+        * html/canvas/CanvasRenderingContext2D.h: Updated for name change.
+        Also got rid of unneeded conditional around forward class declaration.
+
+        * html/canvas/DOMPath.h: Moved SVG-specific include into a
+        separate paragraph. Removed unneeded invocation  of WTF_MAKE_NONCOPYABLE,
+        which is already true since we inherit from RefCounted. Changed create
+        function argument to be a const*. Eliminated extra constructors that were
+        unneeded. Made the path-parsing create function SVG-only, rather than
+        compiling a useless empty one when compiling without SVG.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        CTTE: Tighter element types for RenderSVGResourceGradient and subclasses.
+        <https://webkit.org/b/121346>
+
+        Reviewed by Darin Adler
+
+        Codify the following:
+
+        - RenderSVGResourceGradient always has an SVGGradientElement.
+        - RenderSVGResourceLinearGradient always has an SVGLinearGradientElement.
+        - RenderSVGResourceRadialGradient always has an SVGRadialGradientElement.
+
+        None of these renderers are ever anonymous, so delete element() and provide
+        strongly typed reference getters instead.
+
+        Also made RenderSVGResourceGradient constructor protected since it should
+        never be instantiated directly.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        CTTE: RenderSVGResourceMarker always has an SVGMarkerElement.
+        <https://webkit.org/b/121345>
+
+        Reviewed by Brent Fulgham.
+
+        This renderer is never anonymous. Tighten things up with a maskElement()
+        reference getter. Removed some unnecessary type casts and assertions.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        CTTE: RenderSVGResourceMasker always has an SVGMaskElement.
+        <https://webkit.org/b/121344>
+
+        Reviewed by Brent Fulgham.
+
+        This renderer is never anonymous. Tighten things up with a maskElement()
+        reference getter. Removed some unnecessary null checks and assertions.
+
+2013-09-13  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r155738.
+        http://trac.webkit.org/changeset/155738
+        https://bugs.webkit.org/show_bug.cgi?id=121342
+
+        Broke many tests (Requested by ap on #webkit).
+
+        * GNUmakefile.list.am:
+        * Target.pri:
+        * UseJSC.cmake:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/js/JSBindingsAllInOne.cpp:
+        * bindings/js/JSConsoleCustom.cpp: Added.
+        (WebCore::JSConsole::profile):
+        (WebCore::JSConsole::profileEnd):
+        * bindings/js/ScriptState.h:
+        * page/Console.cpp:
+        (WebCore::Console::profile):
+        (WebCore::Console::profileEnd):
+        * page/Console.h:
+        * page/Console.idl:
+
+2013-09-12  Ryosuke Niwa  <rniwa@webkit.org>
+
+        CSSPropertyAnimation::ensurePropertyMap() is large
+        https://bugs.webkit.org/show_bug.cgi?id=121199
+
+        Reviewed by Darin Adler.
+
+        The bug was caused by repeated calls to Vector::append. Avoid it by storing pointers in a local array
+        and then adding them as we traverse them through to fill m_propertyToIdMap. Also reserve the full
+        initial capacity at once to avoid repeated calls to FastMalloc and FastFree.
+
+        * page/animation/CSSPropertyAnimation.cpp:
+        (WebCore::CSSPropertyAnimationWrapperMap::instance):
+        (WebCore::CSSPropertyAnimationWrapperMap::wrapperForProperty):
+        (WebCore::CSSPropertyAnimationWrapperMap::wrapperForIndex):
+        (WebCore::CSSPropertyAnimationWrapperMap::indexFromPropertyID):
+        (WebCore::CSSPropertyAnimationWrapperMap::CSSPropertyAnimationWrapperMap): Renamed from ensurePropertyMap.
+        Also merged addShorthandProperties into it since they have to access local variables of the other.
+
+2013-09-13  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        Unreviewed build fix for EFL port.
+
+        * editing/efl/EditorEfl.cpp:
+        * platform/efl/PasteboardEfl.cpp:
+        (WebCore::Pasteboard::read):
+        (WebCore::Pasteboard::write):
+
+2013-09-13  Sam Weinig  <sam@webkit.org>
+
+        Fix a few lingering ScriptStates.
+
+        Reviewed by Andy Estes.
+
+        * Modules/indexeddb/IDBCursor.cpp:
+        (WebCore::IDBCursor::update):
+        * Modules/indexeddb/IDBObjectStore.cpp:
+        (WebCore::IDBObjectStore::add):
+        (WebCore::IDBObjectStore::put):
+        * bindings/cpp/WebNativeNodeFilterCondition.cpp:
+        (WebNativeNodeFilterCondition::acceptNode):
+        * bindings/cpp/WebNativeNodeFilterCondition.h:
+        * dom/CustomElementConstructor.cpp:
+        (WebCore::CustomElementConstructor::create):
+        * dom/CustomElementConstructor.h:
+        * dom/CustomElementRegistry.cpp:
+        (WebCore::CustomElementRegistry::registerElement):
+        * dom/CustomElementRegistry.h:
+        * plugins/PluginView.cpp:
+        (WebCore::PluginView::performRequest):
+
+2013-09-13  Darin Adler  <darin@apple.com>
+
+        Rename confusingly named "runtimeObject" functions
+        https://bugs.webkit.org/show_bug.cgi?id=121339
+
+        Also CTTE: HTMLElement.
+
+        Reviewed by Sam Weinig.
+
+        * bindings/js/JSHTMLAppletElementCustom.cpp:
+        (WebCore::JSHTMLAppletElement::putDelegate): Renamed.
+        (WebCore::JSHTMLAppletElement::getCallData): Renamed.
+        * bindings/js/JSHTMLEmbedElementCustom.cpp:
+        (WebCore::JSHTMLEmbedElement::putDelegate): Renamed.
+        (WebCore::JSHTMLEmbedElement::getCallData): Renamed.
+        * bindings/js/JSHTMLObjectElementCustom.cpp:
+        (WebCore::JSHTMLObjectElement::putDelegate): Renamed.
+        (WebCore::JSHTMLObjectElement::getCallData): Renamed.
+
+        * bindings/js/JSPluginElementFunctions.cpp:
+        (WebCore::isPluginElement): Changed to take HTMLElement&.
+        (WebCore::pluginInstance): Ditto.
+        (WebCore::pluginScriptObjectFromPluginViewBase): Updated for name and type change.
+        (WebCore::pluginScriptObject): Ditto.
+        (WebCore::pluginElementPropertyGetter): Ditto.
+        (WebCore::pluginElementCustomGetOwnPropertySlot): Ditto.
+        (WebCore::pluginElementCustomPut): Ditto.
+        (WebCore::pluginElementGetCallData): Ditto.
+
+        * bindings/js/JSPluginElementFunctions.h: Updated names and types.
+
+        * bindings/objc/WebScriptObject.mm:
+        (+[WebScriptObject _convertValueToObjcValue:JSC::originRootObject:rootObject:]):
+        Updated for type change.
+        * bridge/runtime_method.cpp:
+        (JSC::callRuntimeMethod): Ditto.
+
+2013-09-13  Sam Weinig  <sam@webkit.org>
+
+        There is no need for any custom bindings for Console
+        https://bugs.webkit.org/show_bug.cgi?id=121338
+
+        Reviewed by Joseph Pecoraro.
+
+        * GNUmakefile.list.am:
+        * Target.pri:
+        * UseJSC.cmake:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/js/JSBindingsAllInOne.cpp:
+        Remove JSConsoleCustom.cpp from project files.
+
+        * bindings/js/JSConsoleCustom.cpp:
+        Removed.
+
+        * page/Console.cpp:
+        (WebCore::Console::profile):
+        (WebCore::Console::profileEnd):
+        * page/Console.h:
+        Swap the order of the arguments to appease the bindings generator.
+
+        * page/Console.idl:
+        Add the [CallWith=ScriptState] attribute to pass the ExecState
+        and [TreatNullAs=NullString, TreatUndefinedAs=NullString] to get
+        the right stringification.
+
+2013-09-13  Sam Weinig  <sam@webkit.org>
+
+        Part 2 of Replace ScriptState with JSC::ExecState
+        https://bugs.webkit.org/show_bug.cgi?id=121336
+
+        * dom/Document.h:
+        There is no WebCore::JSC namespace!
+
+2013-09-13  Sam Weinig  <sam@webkit.org>
+
+        Replace ScriptState with JSC::ExecState
+        https://bugs.webkit.org/show_bug.cgi?id=121336
+
+        Reviewed by Darin Adler.
+
+        * Modules/indexeddb/IDBCursor.h:
+        * Modules/indexeddb/IDBObjectStore.h:
+        * bindings/js/JSInjectedScriptHostCustom.cpp:
+        * bindings/js/JSInjectedScriptManager.cpp:
+        * bindings/js/JSNodeCustom.cpp:
+        * bindings/js/JSNodeFilterCondition.h:
+        * bindings/js/ScriptController.cpp:
+        * bindings/js/ScriptDebugServer.cpp:
+        * bindings/js/ScriptDebugServer.h:
+        * bindings/js/ScriptEventListener.cpp:
+        * bindings/js/ScriptEventListener.h:
+        * bindings/js/ScriptFunctionCall.cpp:
+        * bindings/js/ScriptFunctionCall.h:
+        * bindings/js/ScriptObject.cpp:
+        * bindings/js/ScriptObject.h:
+        * bindings/js/ScriptProfiler.cpp:
+        * bindings/js/ScriptProfiler.h:
+        * bindings/js/ScriptState.cpp:
+        * bindings/js/ScriptState.h:
+        * bindings/js/ScriptValue.cpp:
+        * bindings/js/ScriptValue.h:
+        * bindings/js/SerializedScriptValue.cpp:
+        * bindings/js/SerializedScriptValue.h:
+        * dom/Document.cpp:
+        * dom/Document.h:
+        * dom/NodeFilter.cpp:
+        * dom/NodeFilter.h:
+        * dom/NodeFilterCondition.cpp:
+        * dom/NodeFilterCondition.h:
+        * dom/NodeIterator.cpp:
+        * dom/NodeIterator.h:
+        * dom/ScriptExecutionContext.cpp:
+        * dom/ScriptExecutionContext.h:
+        * dom/Traversal.cpp:
+        * dom/Traversal.h:
+        * dom/TreeWalker.cpp:
+        * dom/TreeWalker.h:
+        * inspector/ConsoleMessage.cpp:
+        * inspector/ConsoleMessage.h:
+        * inspector/InjectedScript.h:
+        * inspector/InjectedScriptBase.cpp:
+        * inspector/InjectedScriptBase.h:
+        * inspector/InjectedScriptCanvasModule.cpp:
+        * inspector/InjectedScriptCanvasModule.h:
+        * inspector/InjectedScriptHost.cpp:
+        * inspector/InjectedScriptHost.h:
+        * inspector/InjectedScriptManager.cpp:
+        * inspector/InjectedScriptManager.h:
+        * inspector/InjectedScriptModule.cpp:
+        * inspector/InjectedScriptModule.h:
+        * inspector/InspectorAgent.cpp:
+        * inspector/InspectorCanvasAgent.cpp:
+        * inspector/InspectorCanvasAgent.h:
+        * inspector/InspectorConsoleAgent.cpp:
+        * inspector/InspectorConsoleAgent.h:
+        * inspector/InspectorConsoleInstrumentation.h:
+        * inspector/InspectorDOMAgent.cpp:
+        * inspector/InspectorDebuggerAgent.cpp:
+        * inspector/InspectorDebuggerAgent.h:
+        * inspector/InspectorFrontendClientLocal.cpp:
+        * inspector/InspectorFrontendHost.cpp:
+        * inspector/InspectorIndexedDBAgent.cpp:
+        * inspector/InspectorInstrumentation.cpp:
+        * inspector/InspectorInstrumentation.h:
+        * inspector/PageConsoleAgent.cpp:
+        * inspector/PageDebuggerAgent.cpp:
+        * inspector/PageRuntimeAgent.cpp:
+        * inspector/PageRuntimeAgent.h:
+        * inspector/ScriptArguments.cpp:
+        * inspector/ScriptArguments.h:
+        * inspector/ScriptDebugListener.h:
+        * inspector/WorkerDebuggerAgent.cpp:
+        * inspector/WorkerRuntimeAgent.cpp:
+        * page/Console.cpp:
+        * page/Console.h:
+        * page/ContentSecurityPolicy.cpp:
+        * page/ContentSecurityPolicy.h:
+        * page/PageConsole.cpp:
+        * page/PageConsole.h:
+        * workers/WorkerGlobalScope.cpp:
+        * workers/WorkerGlobalScope.h:
+
+2013-09-13  Sam Weinig  <sam@webkit.org>
+
+        Chrome, DragController and FocusController should hold onto a Page&
+        https://bugs.webkit.org/show_bug.cgi?id=121325
+
+        Reviewed by Anders Carlsson.
+
+        * editing/FrameSelection.cpp:
+        * editing/FrameSelection.h:
+        * page/Chrome.cpp:
+        (WebCore::Chrome::Chrome):
+        (WebCore::Chrome::scroll):
+        (WebCore::Chrome::createWindow):
+        (WebCore::canRunModalIfDuringPageDismissal):
+        (WebCore::Chrome::runBeforeUnloadConfirmPanel):
+        (WebCore::Chrome::runJavaScriptAlert):
+        (WebCore::Chrome::runJavaScriptConfirm):
+        (WebCore::Chrome::runJavaScriptPrompt):
+        (WebCore::Chrome::mouseDidMoveOverElement):
+        (WebCore::Chrome::setToolTip):
+        (WebCore::Chrome::windowScreenDidChange):
+        * page/Chrome.h:
+        * page/DragController.cpp:
+        * page/DragController.h:
+        * page/mac/DragControllerMac.mm:
+        * page/FocusController.cpp:
+        * page/FocusController.h:
+        * page/Page.cpp:
+        (WebCore::Page::Page):
+        * page/PageGroupLoadDeferrer.cpp:
+        * page/PageGroupLoadDeferrer.h:
+        Take references where possible.
+
+2013-09-13  Anders Carlsson  <andersca@apple.com>
+
+        Use nullptr instead of 0 in calls to HashMap::add
+        https://bugs.webkit.org/show_bug.cgi?id=121322
+
+        Reviewed by Sam Weinig.
+
+        * bridge/IdentifierRep.cpp:
+        (WebCore::IdentifierRep::get):
+        * css/CSSFontFaceSource.cpp:
+        (WebCore::CSSFontFaceSource::getFontData):
+        * css/CSSFontSelector.cpp:
+        (WebCore::CSSFontSelector::getFontFace):
+        * css/CSSSegmentedFontFace.cpp:
+        (WebCore::CSSSegmentedFontFace::getFontData):
+        * css/CSSValuePool.cpp:
+        (WebCore::CSSValuePool::createFontFamilyValue):
+        (WebCore::CSSValuePool::createFontFaceValue):
+        * dom/ChildListMutationScope.cpp:
+        (WebCore::ChildListMutationAccumulator::getOrCreate):
+        * dom/Document.cpp:
+        (WebCore::Document::getCSSCanvasElement):
+        * dom/NodeRareData.h:
+        (WebCore::NodeListsNodeData::addCacheWithAtomicName):
+        (WebCore::NodeListsNodeData::addCacheWithName):
+        (WebCore::NodeListsNodeData::addCacheWithQualifiedName):
+        * loader/appcache/ApplicationCacheStorage.cpp:
+        (WebCore::ApplicationCacheStorage::findOrCreateCacheGroup):
+        * page/PageGroup.cpp:
+        (WebCore::PageGroup::pageGroup):
+        * page/animation/AnimationController.cpp:
+        (WebCore::AnimationControllerPrivate::ensureCompositeAnimation):
+        * platform/mac/ScrollbarThemeMac.mm:
+        (WebCore::ScrollbarThemeMac::registerScrollbar):
+        * storage/StorageNamespaceImpl.cpp:
+        (WebCore::StorageNamespaceImpl::localStorageNamespace):
+
+2013-09-13  Sam Weinig  <sam@webkit.org>
+
+        ContextMenuController should hold onto a Page&
+        https://bugs.webkit.org/show_bug.cgi?id=121320
+
+        Reviewed by Anders Carlsson.
+
+        * page/ContextMenuController.cpp:
+        (WebCore::ContextMenuController::ContextMenuController):
+        (WebCore::ContextMenuController::~ContextMenuController):
+        (WebCore::ContextMenuController::showContextMenu):
+        (WebCore::ContextMenuController::contextMenuItemSelected):
+        (WebCore::ContextMenuController::checkOrEnableIfNeeded):
+        (WebCore::ContextMenuController::showContextMenuAt):
+        * page/ContextMenuController.h:
+        Store the Page and ContextMenuClient as references.
+
+        * page/Page.cpp:
+        (WebCore::Page::Page):
+        Pass the Page and ContextMenuClient as references and switch to using createOwned<>().
+
+2013-09-13  Tim Horton  <timothy_horton@apple.com>
+
+        Apply OVERRIDE and FINAL to Image subclasses and clean them up
+        https://bugs.webkit.org/show_bug.cgi?id=121086
+
+        Reviewed by Alexey Proskuryakov.
+
+        Everything other than the copious application of OVERRIDE and FINAL
+        is explicitly called out below.
+
+        * WebCore.exp.in:
+        Export the correct version of getCGImageRef for use by WebKit2.
+
+        * platform/graphics/BitmapImage.cpp:
+        * platform/graphics/BitmapImage.h:
+        Drive-by inline isBitmapImage.
+        Move create(HBITMAP) to be near the other create() functions.
+        Move all of the members private.
+        Devirtualize frameCount().
+        Move notSolidColor() near the other solid color functions.
+
+        * platform/graphics/CrossfadeGeneratedImage.cpp:
+        (WebCore::CrossfadeGeneratedImage::CrossfadeGeneratedImage):
+        (WebCore::CrossfadeGeneratedImage::drawPattern):
+        * platform/graphics/GeneratorGeneratedImage.cpp:
+        (WebCore::GeneratorGeneratedImage::draw):
+        (WebCore::GeneratorGeneratedImage::drawPattern):
+        Use size() and setContainerSize() instead of directly accessing a
+        superclass' (now private, previously protected) members.
+
+        * platform/graphics/CrossfadeGeneratedImage.h:
+        * platform/graphics/GeneratedImage.h:
+        Make m_size private, I don't think we do protected members.
+        
+        * platform/graphics/GeneratorGeneratedImage.h:
+        Make all the members private.
+
+        * svg/graphics/SVGImage.h:
+        * svg/graphics/SVGImageForContainer.h:
+
+2013-09-13  Alexey Proskuryakov  <ap@apple.com>
+
+        [Mac] WebCore Web Inspector files are only copied as part of clean build
+        https://bugs.webkit.org/show_bug.cgi?id=121316
+
+        Reviewed by Timothy Hatcher.
+
+        Removed insufficient dependencies to make the phase run unconditionally.
+
+        * WebCore.xcodeproj/project.pbxproj:
+
+2013-09-13  Eric Carlson  <eric.carlson@apple.com>
+
+        CodeGeneratorJS doesn't generate header includes for sequence<type>
+        https://bugs.webkit.org/show_bug.cgi?id=121314
+
+        Reviewed by Dean Jackson.
+
+        * bindings/scripts/CodeGeneratorJS.pm:
+        (SkipIncludeHeader): Don't return false for sequence and array types.
+        (AddIncludesForType): Do add includes for sequence and array types.
+        (GenerateCallbackImplementation):
+        * bindings/scripts/test/JS/JSTestTypedefs.cpp: Regenerated
+        * bindings/scripts/test/JS/JSTestTypedefs.h: Ditto.
+        * bindings/scripts/test/TestTypedefs.idl: Add a method that takes a sequence<TestEventTarget>.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        CTTE: RenderSVGResourcePattern always has an SVGPatternElement.
+        <https://webkit.org/b/121313>
+
+        Reviewed by Anders Carlsson.
+
+        This renderer is never anonymous. Tighten things up with a patternElement()
+        reference getter. Removed some unnecessary null checks and assertions.
+
+2013-09-13  Darin Adler  <darin@apple.com>
+
+        Remove layering-violating Pasteboard::plainText function (for all platforms now)
+        https://bugs.webkit.org/show_bug.cgi?id=121312
+
+        Reviewed by Antti Koivisto.
+
+        * editing/Editor.cpp:
+        (WebCore::Editor::pasteAsPlainTextWithPasteboard): Call readPlainTextFromPasteboard
+        on all platforms, not just Mac and EFL. Also call canSmartReplaceWithPasteboard with
+        a reference instead of a pointer.
+        (WebCore::Editor::readPlainTextFromPasteboard): Added. This is a cross-platform
+        version of what was previously a Mac-only function.
+        (WebCore::Editor::plainTextFromPasteboard): Added. This is the simple non-Mac version
+        of this function.
+        (WebCore::Editor::pasteWithPasteboard): Updated to call canSmartReplaceWithPasteboard
+        with a reference.
+        (WebCore::Editor::canSmartReplaceWithPasteboard): Updated to take a reference.
+
+        * editing/Editor.h: Make readPlainTextFromPasteboard cross-platform instead of
+        Mac-only. Also changed argument to canSmartReplaceWithPasteboard to be a reference.
+        Also added private plainTextFromPasteboard function.
+
+        * editing/mac/EditorMac.mm:
+        (WebCore::Editor::pasteWithPasteboard): Updated to call canSmartReplaceWithPasteboard
+        with a reference.
+        (WebCore::Editor::plainTextFromPasteboard): Added. Contains the Mac-specific parts
+        of the readPlainTextFromPasteboard function.
+
+        * platform/Pasteboard.h: Fixed a conditional in the PasteboardPlainText struct to
+        omit iOS. Removed the layering-voiolating plainText function.
+
+        * platform/blackberry/PasteboardBlackBerry.cpp:
+        (WebCore::Pasteboard::read): Renamed from plainText and updated to new calling
+        convention.
+        * platform/gtk/PasteboardGtk.cpp:
+        (WebCore::Pasteboard::read): Ditto.
+        * platform/ios/PasteboardIOS.mm:
+        (WebCore::Pasteboard::read): Ditto.
+        * platform/nix/PasteboardNix.cpp:
+        (WebCore::Pasteboard::read): Ditto.
+        * platform/qt/PasteboardQt.cpp:
+        (WebCore::Pasteboard::read): Ditto.
+        * platform/win/PasteboardWin.cpp:
+        (WebCore::Pasteboard::read): Ditto.
+
+2013-09-13  Gustavo Noronha Silva  <gustavo.noronha@collabora.com>
+
+        [GTK] Move to the new web inspector
+        https://bugs.webkit.org/show_bug.cgi?id=120647
+
+        Reviewed by Carlos Garcia Campos.
+
+        No tests for the new inspector UI as of yet.
+
+        * GNUmakefile.am: no longer install the deprecated inspector UI files.
+        * WebCore.exp.in: add SchemeRegistry symbol that is now used.
+
+2013-09-13  Darin Adler  <darin@apple.com>
+
+        Try to fix Qt build.
+
+        * platform/qt/PasteboardQt.cpp:
+        (WebCore::Pasteboard::write): Update variable name at one place I missed.
+
+2013-09-13  Arvid Nilsson  <anilsson@rim.com>
+
+        [BlackBerry] Scrolling and zooming is slow when Flash plugin visible
+        https://bugs.webkit.org/show_bug.cgi?id=120618
+
+        Reviewed by Anders Carlsson.
+        Internally reviewed by Jacky Jiang.
+
+        JIRA 490823
+        Compositing Flash plugin content triggered a workaround for a graphics
+        driver quirk. The workaround was actually related to WebGL, not Flash,
+        back when we used glCopyTexImage to implement WebGL double buffering
+        (see PR 148933 and 150228 for more details of the old implementation).
+
+        Originally, both WebGL and plugin layers added themselves to the
+        LayerRenderer::m_layersLockingTextureResources list. Now only plugin
+        layers use this list.
+        The glCopyTexImage code was removed long ago, and WebGL now uses the
+        EGLImage-based double buffering approach implemented in
+        EGLImageLayerWebKitThread and EGLImageLayerCompositingThreadClient.
+
+        Fixed by removing the now obsolete workaround, a call to "glFinish".
+        This considerably improves the frame rate of zooming and scrolling when
+        Flash content is visible.
+
+        Improvement in frame rate not appropriate to test using layout tests,
+        could easily result in flaky test.
+
+        * platform/graphics/blackberry/LayerRenderer.cpp:
+        (WebCore::LayerRenderer::compositeLayers):
+
+2013-09-13  Zoltan Horvath  <zoltan@webkit.org>
+
+        Move LineLayoutState class to LineLayoutState.h
+        https://bugs.webkit.org/show_bug.cgi?id=121263
+
+        Reviewed by Ryosuke Niwa.
+
+        I added bitfields, reordered the members and a functions too.
+
+        No new tests, no behavior change.
+
+        * rendering/LineLayoutState.h: Added.
+        (WebCore::LineLayoutState::LineLayoutState):
+        (WebCore::LineLayoutState::markForFullLayout):
+        (WebCore::LineLayoutState::isFullLayout):
+        (WebCore::LineLayoutState::usesRepaintBounds):
+        (WebCore::LineLayoutState::setRepaintRange):
+        (WebCore::LineLayoutState::updateRepaintRangeFromBox):
+        (WebCore::LineLayoutState::endLineMatched):
+        (WebCore::LineLayoutState::setEndLineMatched):
+        (WebCore::LineLayoutState::checkForFloatsFromLastLine):
+        (WebCore::LineLayoutState::setCheckForFloatsFromLastLine):
+        (WebCore::LineLayoutState::lineInfo):
+        (WebCore::LineLayoutState::endLineLogicalTop):
+        (WebCore::LineLayoutState::setEndLineLogicalTop):
+        (WebCore::LineLayoutState::endLine):
+        (WebCore::LineLayoutState::setEndLine):
+        (WebCore::LineLayoutState::lastFloat):
+        (WebCore::LineLayoutState::setLastFloat):
+        (WebCore::LineLayoutState::floats):
+        (WebCore::LineLayoutState::floatIndex):
+        (WebCore::LineLayoutState::setFloatIndex):
+        (WebCore::LineLayoutState::adjustedLogicalLineTop):
+        (WebCore::LineLayoutState::setAdjustedLogicalLineTop):
+        (WebCore::LineLayoutState::flowThread):
+        (WebCore::LineLayoutState::setFlowThread):
+        * rendering/RenderBlockLineLayout.cpp: Remove LineLayoutState.
+
+2013-09-13  Darin Adler  <darin@apple.com>
+
+        Remove layering-violating Pasteboard::writeURL (for all platforms now)
+        https://bugs.webkit.org/show_bug.cgi?id=121306
+
+        Reviewed by Antti Koivisto.
+
+        * editing/Editor.cpp:
+        (WebCore::Editor::copyURL): Move the contents of the writeURLToPasteboard function
+        in here.
+
+        * editing/Editor.h: Removed Mac-specific writeURLToPasteboard, added private
+        Mac-specific fillInUserVisibleForm function for the one Mac-specific part of writing URLs.
+
+        * editing/efl/EditorEfl.cpp: Deleted Editor::writeURLToPasteboard.
+
+        * editing/mac/EditorMac.mm: Deleted Editor::writeURLToPasteboard, moving the code
+        into copyURL.
+        (WebCore::Editor::fillInUserVisibleForm): Added.
+
+        * page/DragController.cpp:
+        (WebCore::DragController::startDrag): Call copyURL instead of writeURL or
+        writeURLToPasteboard.
+
+        * platform/Pasteboard.h: Fixed up the PasteboardURL struct so it's suitable for
+        cross-platform use. Removed the writeURL function. Removed the Frame* argument from
+        the Windows-specific writeURLToDataObject function.
+
+        * platform/blackberry/PasteboardBlackBerry.cpp:
+        (WebCore::Pasteboard::write): Renamed/refactored from writeURL.
+        * platform/gtk/PasteboardGtk.cpp:
+        (WebCore::Pasteboard::write): Ditto.
+        * platform/nix/PasteboardNix.cpp:
+        (WebCore::Pasteboard::write): Ditto.
+        * platform/qt/PasteboardQt.cpp:
+        (WebCore::Pasteboard::write): Ditto.
+        * platform/win/PasteboardWin.cpp:
+        (WebCore::Pasteboard::writeURLToDataObject): Removed unused Frame* argument.
+        (WebCore::Pasteboard::write): Renamed/refactored from writeURL.
+
+2013-09-13  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: AXPress does not work in SVG
+        https://bugs.webkit.org/show_bug.cgi?id=121248
+
+        Reviewed by Mario Sanchez Prada.
+
+        Implement accessKeyAction() on SVGElements, which is what accessibility code
+        uses in order to activate Elements.
+
+        Test: accessibility/svg-element-press.html
+
+        * svg/SVGElement.cpp:
+        (WebCore::SVGElement::accessKeyAction):
+        * svg/SVGElement.h:
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderSVGTransformableContainer is never anonymous.
+        <https://webkit.org/b/121304>
+
+        Reviewed by Anders Carlsson.
+
+        This renderer is never anonymous. Tighten things up with a graphicsElement()
+        reference getter.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderSVGImage always has a SVGImageElement.
+        <https://webkit.org/b/121301>
+
+        Reviewed by Anders Carlsson.
+
+        This renderer is never anonymous, and always has a corresponding SVGImageElement.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        [CTTE] Tighter element types for RenderSVGShape and subclasses.
+        <https://webkit.org/b/121302>
+
+        Reviewed by Antti Koivisto.
+
+        Codify the following:
+
+        - RenderSVGPath always has an SVGGraphicsElement.
+        - RenderSVGEllipse always has an SVGGraphicsElement.
+        - RenderSVGRect always has an SVGRectElement.
+        - RenderSVGShape always has an SVGGraphicsElement.
+
+        None of these renderers are ever anonymous, so delete element() and provide
+        strongly typed reference getters instead.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderSVGResourceFilterPrimitive always has an SVGFilterPrimitiveStandardAttributes.
+        <https://webkit.org/b/121300>
+
+        Reviewed by Anders Carlsson.
+
+        This renderer is never anonymous, and always has a corresponding SVGFilterPrimitiveStandardAttributes element. 
+
+2013-09-12  Darin Adler  <darin@apple.com>
+
+        Finish removing layer-violating code from Pasteboard (just for Mac during this first step)
+        https://bugs.webkit.org/show_bug.cgi?id=121279
+
+        Reviewed by Anders Carlsson.
+
+        * editing/Editor.h: Added webContentFromPasteboard member function, private nested class
+        WebContentReader, private createFragmentForImageResourceAndAddResource and
+        createFragmentAndAddResources member functions.
+
+        * editing/mac/EditorMac.mm: Re-sorted includes and added some.
+        (WebCore::Editor::pasteWithPasteboard): Call the new webContentFromPasteboard function.
+        (WebCore::Editor::insertParagraphSeparatorInQuotedContent): Comment tweak.
+        (WebCore::styleForSelectionStart): Removed an unneeded call to String::impl.
+        (WebCore::Editor::readPlainTextFromPasteboard): Updated to use an isURL boolean instead
+        of a separate string named "url".
+        (WebCore::Editor::WebContentReader::readWebArchive): Added. Contains reworked code that
+        was originally in Pasteboard::documentFragment.
+        (WebCore::Editor::WebContentReader::readFilenames): Ditto.
+        (WebCore::Editor::WebContentReader::readHTML): Ditto.
+        (WebCore::Editor::WebContentReader::readRTFD): Ditto.
+        (WebCore::Editor::WebContentReader::readRTF): Ditto.
+        (WebCore::Editor::WebContentReader::readImage): Ditto.
+        (WebCore::Editor::WebContentReader::readURL): Ditto.
+        (WebCore::Editor::WebContentReader::readPlainText): Ditto.
+        (WebCore::Editor::webContentFromPasteboard): Added. Uses WebContentReader to read the
+        content from the pasteboard.
+        (WebCore::Editor::createFragmentForImageResourceAndAddResource): Added. Helper used
+        by code above.
+        (WebCore::Editor::createFragmentAndAddResources): Ditto.
+
+        * platform/Pasteboard.h: Added new PasteboardWebContentReader abstract class so
+        client can get the various types of pasteboard content and stop on the kind it
+        can handle. Improved comments and formatting a bit. Removed documentFragment
+        when compiling for PLATFORM(MAC).
+
+        * platform/mac/DragDataMac.mm:
+        (WebCore::DragData::asFragment): Changed to use Editor::webContentFromPasteboard.
+
+        * platform/mac/PasteboardMac.mm:
+        (WebCore::Pasteboard::read): Updated the plain text overload of this for changes
+        to the struct that holds the result. Added a new web content overload of this,
+        which retains the pasteboard-reading part of Pasteboard::documentFragment, but
+        omits the document fragment construction part.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderSVGText always has a SVGTextElement.
+        <https://webkit.org/b/121299>
+
+        Reviewed by Antti Koivisto.
+
+        This renderer is never anonymous, and always has a corresponding <svg> element.
+        Tighten this up and remove some pointless assertions.
+
+2013-09-13  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        Remove support for QXmlStream as the XML parser.
+        https://bugs.webkit.org/show_bug.cgi?id=121229
+
+        Reviewed by Andreas Kling.
+
+        Remove the implementation and all the #ifdef related to it.
+
+        * Target.pri:
+        * WebCore.pri:
+        * dom/TransformSource.h:
+        * xml/XMLErrors.h:
+        * xml/XSLStyleSheet.h:
+        * xml/XSLTProcessor.h:
+        * xml/parser/XMLDocumentParser.cpp:
+        (WebCore::XMLDocumentParser::enterText):
+        (WebCore::toString):
+        (WebCore::XMLDocumentParser::exitText):
+        (WebCore::XMLDocumentParser::insertErrorMessageBlock):
+        * xml/parser/XMLDocumentParser.h:
+        * xml/parser/XMLDocumentParserQt.cpp: Removed.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderSVGViewportContainer always has a SVGSVGElement.
+        <https://webkit.org/b/121297>
+
+        Reviewed by Antti Koivisto.
+
+        This renderer is never anonymous, and always has a corresponding <svg> element.
+        Tighten this up and remove some pointless null checks and type checks.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderSVGRoot always has a SVGSVGElement.
+        <https://webkit.org/b/121293>
+
+        Reviewed by Antti Koivisto.
+
+        This renderer is never anonymous, and always has a corresponding <svg> element.
+        Tighten this up and remove some pointless null checks and assertions.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        Remove support for anonymous deprecated flexboxes.
+        <https://webkit.org/b/121288>
+
+        Reviewed by Antti Koivisto.
+
+        There are no remaining internal clients of RenderDeprecatedFlexibleBox,
+        Nuke a FIXME from r143643 where the move to basing renderers on new flexbox started.
+
+        This was the only user of anonymous deprecated flexbox, so removed the ability to
+        construct those.
+
+        Also removed some Chrome-related feature observation gunk from constructor.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderMultiColumnBlock is never anonymous.
+        <https://webkit.org/b/121292>
+
+        Reviewed by Antti Koivisto.
+
+        Hide element() and provide existingElement() instead, returning an Element&.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderGrid is never anonymous.
+        <https://webkit.org/b/121290>
+
+        Reviewed by Antti Koivisto.
+
+        Hide element() and provide existingElement() instead, returning an Element&.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderTableCaption is never anonymous.
+        <https://webkit.org/b/121289>
+
+        Reviewed by Antti Koivisto.
+
+        Hide element() and provide existingElement() instead, returning an Element&.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderTableCol is never anonymous.
+        <https://webkit.org/b/121286>
+
+        Reviewed by Antti Koivisto.
+
+        Hide element() and provide existingElement() instead, returning an Element&.
+        Removed one bogus null check that was exposed.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderListItem is never anonymous.
+        <https://webkit.org/b/121285>
+
+        Reviewed by Antti Koivisto.
+
+        Hide element() and provide existingElement() instead, returning an Element&.
+        Removed some bogus assertions that were exposed by this.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        [CTTE] Tighter element types for RenderSVGInline and subclasses.
+        <https://webkit.org/b/121283>
+
+        Reviewed by Antti Koivisto.
+
+        Codify the following:
+
+        - RenderSVGInline always has an SVGGraphicsElement.
+        - RenderSVGTextPath always has an SVGTextPathElement.
+        - RenderSVGTSpan always has an SVGTextPositioningElement.
+
+        None of these renderers are ever anonymous, so delete element() and provide
+        strongly typed reference getters instead.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderFileUploadControl always has a HTMLInputElement.
+        <https://webkit.org/b/121278>
+
+        Reviewed by Darin Adler.
+
+        RenderFileUploadControl is never anonymous and always has a corresponding HTMLInputElement.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderFieldset always has a HTMLFieldSetElement.
+        <https://webkit.org/b/121277>
+
+        Reviewed by Darin Adler.
+
+        RenderFieldset is never anonymous and always has a corresponding HTMLFieldSetElement.
+
+2013-09-13  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderButton always has a HTMLFormControlElement.
+        <https://webkit.org/b/121281>
+
+        Reviewed by Antti Koivisto.
+
+        RenderButton is never anonymous and has either a <button> or an <input> element,
+        and their nearest shared ancestor is HTMLFormControlElement.
+
+2013-09-13  Darin Adler  <darin@apple.com>
+
+        Give actions in Range class NON_SHOUTING_NAMES
+        https://bugs.webkit.org/show_bug.cgi?id=121280
+
+        Reviewed by Andreas Kling.
+
+        * dom/Range.cpp:
+        (WebCore::Range::deleteContents):
+        (WebCore::Range::processContents):
+        (WebCore::Range::processContentsBetweenOffsets):
+        (WebCore::Range::processNodes):
+        (WebCore::Range::processAncestorsAndTheirSiblings):
+        (WebCore::Range::extractContents):
+        (WebCore::Range::cloneContents):
+        * dom/Range.h:
+        Just let do-webcore-rename do its thing.
+        - DELETE_CONTENTS -> Delete
+        - EXTRACT_CONTENTS -> Extract
+        - CLONE_CONTENTS -> Clone
+
+2013-09-12  Santosh Mahto  <santosh.ma@samsung.com>
+
+        [EFL]Background Style of element not visible because of  default theme style
+        https://bugs.webkit.org/show_bug.cgi?id=117405
+
+        Reviewed by Gyuyoung Kim.
+
+        When select element is styled with css background property(color/image) the styling
+        gets hidden by Combo box non transparent image. This patch handle the
+        case and transparent images are used when select image is styled. So
+        now background-color and background-image are visible across the Combo box
+        
+        The code is added to support css styling of other theme control,
+        Basically an extra signal is emitted to edje which change the state 
+        of edje object whenever the control is styled.
+
+        Covered by existing test case, updated the test expected image.
+
+        * platform/efl/DefaultTheme/CMakeLists.txt:
+        * platform/efl/DefaultTheme/widget/combo/combo.edc:
+        * platform/efl/DefaultTheme/widget/combo/combo_focus_button_transparent.png: Added.
+        * platform/efl/DefaultTheme/widget/combo/combo_focus_transparent.png: Added.
+        * platform/efl/DefaultTheme/widget/combo/combo_hover_button_transparent.png: Added.
+        * platform/efl/DefaultTheme/widget/combo/combo_hover_transparent.png: Added.
+        * platform/efl/DefaultTheme/widget/combo/combo_normal_button_transparent.png: Added.
+        * platform/efl/DefaultTheme/widget/combo/combo_normal_transparent.png: Added.
+        * platform/efl/DefaultTheme/widget/combo/combo_press_button_transparent.png: Added.
+        * platform/efl/DefaultTheme/widget/combo/combo_press_transparent.png: Added.
+        * platform/efl/RenderThemeEfl.cpp:
+        (WebCore::RenderThemeEfl::applyEdjeStateFromForm):
+        (WebCore::RenderThemeEfl::isControlStyled):
+        (WebCore::RenderThemeEfl::paintThemePart):
+        * platform/efl/RenderThemeEfl.h:
+
+2013-09-12  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderMenuList always has a HTMLSelectElement.
+        <https://webkit.org/b/121276>
+
+        Reviewed by Anders Carlsson.
+
+        This renderer is never anonymous and always has a corresponding HTMLSelectElement.
+        Deleted element() in favor of HTMLSelectElement& selectElement().
+
+2013-09-12  Andreas Kling  <akling@apple.com>
+
+        [CTTE] Tighten RenderTextControl element typing.
+        <https://webkit.org/b/121275>
+
+        Reviewed by Anders Carlsson.
+
+        Codify these invariants:
+
+        - RenderTextControl always has a HTMLTextFormControl.
+        - RenderSearchField always has a HTMLInputElement.
+        - RenderTextControlSingleLine always has a HTMLInputElement.
+
+        None of these renderers are ever anonymous. Deleted element() and added
+        strongly typed reference getters instead.
+
+2013-09-12  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderListMarker is always anonymous and owned by RenderListItem.
+        <https://webkit.org/b/121274>
+
+        Reviewed by Anders Carlsson.
+
+        Store a RenderListItem& instead of a pointer in RenderListMarker.
+        Deleted the element() function since list markers are always anonymous.
+
+2013-09-12  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderListBox's element is always a HTMLSelectElement.
+        <https://webkit.org/b/121273>
+
+        Reviewed by Anders Carlsson.
+
+        Hide element() on RenderListBox and make selectElement() return a reference
+        since this renderer cannot be anonymous.
+
+2013-09-12  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderHTMLCanvas's element is always a HTMLCanvasElement.
+        <https://webkit.org/b/121272>
+
+        Reviewed by Anders Carlsson.
+
+        Add RenderHTMLCanvas::canvasElement(), hiding element().
+        This function also returns a reference since this renderer cannot be anonymous.
+
+2013-09-12  Andreas Kling  <akling@apple.com>
+
+        [CTTE] RenderTextControlMultiLine's element is always a HTMLTextAreaElement.
+        <https://webkit.org/b/121271>
+
+        Reviewed by Anders Carlsson.
+
+        Add RenderTextControlMultiLine::textAreaElement(), hiding element().
+        This function also returns a reference since this renderer cannot be anonymous.
+
+2013-09-12  Tim Horton  <timothy_horton@apple.com>
+
+        [mac] Cache rendered image in PDFDocumentImage
+        https://bugs.webkit.org/show_bug.cgi?id=121207
+
+        Reviewed by Simon Fraser.
+
+        Tests: fast/images/pdf-as-image-too-big.html
+
+        * loader/cache/CachedImage.cpp:
+        (WebCore::CachedImage::createImage):
+        PDFDocumentImage takes a ImageObserver now so that it can report
+        decoded data size changes to the memory cache.
+
+        * platform/graphics/Image.h:
+        (WebCore::Image::isPDFDocumentImage): Added.
+
+        * platform/graphics/cg/PDFDocumentImage.cpp:
+        (WebCore::PDFDocumentImage::PDFDocumentImage):
+        PDFDocumentImage takes a ImageObserver now so that it can report
+        decoded data size changes to the memory cache.
+
+        (WebCore::PDFDocumentImage::applyRotationForPainting):
+        Fix up some comments, and use GraphicsContext instead of CG API.
+
+        (WebCore::PDFDocumentImage::cacheParametersMatch):
+        Determine whether our cached image is still valid, given the new
+        destination's size, CTM scale, and source rect.
+
+        (WebCore::transformContextForPainting): Added.
+
+        (WebCore::PDFDocumentImage::updateCachedImageIfNeeded):
+        Cache a rendered bitmap of the PDF. Invalidate the cache if cacheParametersMatch
+        decides that the parameters don't match, unless we're painting in low quality mode,
+        in which case we'll scale the existing image (and then fully repaint when the
+        high-quality repaint timer fires).
+        Inform the memory cache of our new size.
+
+        (WebCore::PDFDocumentImage::draw):
+        Update the cached image if needed.
+        Paint the cached image into the context if it's available (which it might not be,
+        if the image is way too big and the allocation fails). Otherwise, paint straight
+        into the context as we previously did.
+
+        (WebCore::PDFDocumentImage::destroyDecodedData):
+        Throw away the cached image if requested.
+
+        (WebCore::PDFDocumentImage::decodedSize):
+        (WebCore::PDFDocumentImage::drawPDFPage):
+        Drive-by use GraphicsContext instead of CG directly.
+
+        * platform/graphics/cg/PDFDocumentImage.h:
+        (WebCore::PDFDocumentImage::create):
+        Override isPDFDocumentImage().
+        Add storage for the cached image buffer and various cache parameters.
+
+        * rendering/ImageQualityController.cpp:
+        (WebCore::ImageQualityController::shouldPaintAtLowQuality):
+        PDFDocumentImage is also interested in/capable of low-quality painting now.
+
+2013-09-12  Tim Horton  <timothy_horton@apple.com>
+
+        Image doesn't always repaint at high quality in all tiles after a live resize
+        https://bugs.webkit.org/show_bug.cgi?id=121244
+
+        Reviewed by Darin Adler.
+
+        Currently, ImageQualityController removes an image from its low-quality-images
+        list from inside shouldPaintAtLowQuality, if this is the first paint outside
+        of a live resize, but does not force the renderer to repaint in its entirety.
+
+        However, there's no guarantee we've invalidated the whole renderer, so this can
+        leave some parts of the image painted in low-quality.
+
+        This just removes a short-circuit, instead using the ordinary high-quality-repaint
+        timer to ensure that the entire renderer is repainted.
+
+        No new test; all attempts have failed, as this depends on tiled drawing
+        and a live resize occurring.
+
+        * rendering/ImageQualityController.cpp:
+        (WebCore::ImageQualityController::shouldPaintAtLowQuality):
+
+2013-09-12  Brent Fulgham  <bfulgham@apple.com>
+
+        [EFL] Speculative build fix after r155638.
+
+        * platform/efl/PasteboardEfl.cpp: Add include for PassRefPtr, which
+        is no longer implicitly included.
+
+2013-09-12  Simon Fraser  <simon.fraser@apple.com>
+
+        Avoid extra scrollbar-related layouts for overlay scrollbars
+        https://bugs.webkit.org/show_bug.cgi?id=121267
+
+        Reviewed by Beth Dakin.
+
+        If ScrollView::updateScrollbars() detected that scrollbars were added
+        and removed, it would call contentsResized(), which calls setNeedsLayout(),
+        followed by visibleContentsResized() which would trigger layout. There is no
+        point doing this with overlay scrollbars, so avoid it by having 
+        setHas*Scrollbar() return true if the addition/removal of a scrollbar changed
+        the available width.
+        
+        No tests: we can't test overlay scrollbars in tests.
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::setContentsSize): Drive-by assertion that
+        checks that the unsigned m_deferSetNeedsLayouts doesn't wrap when
+        decremented.
+        * platform/ScrollView.cpp:
+        (WebCore::ScrollView::setHasHorizontalScrollbar): Return true if the addition/removal
+        changed available space.
+        (WebCore::ScrollView::setHasVerticalScrollbar): Ditto.
+        (WebCore::ScrollView::updateScrollbars): Only set sendContentResizedNotification
+        if available space was changed by addition/removal of scrollbars.
+        * platform/ScrollView.h:
+
+2013-09-12  Zoltan Horvath  <zoltan@webkit.org>
+
+        [CSS Shapes] Rename shapeContainingBlockHeight to shapeContainingBlockLogicalHeight
+        https://bugs.webkit.org/show_bug.cgi?id=121252
+
+        Reviewed by Oliver Hunt.
+
+        No new tests, no behavior change.
+
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::pushShapeContentOverflowBelowTheContentBox):
+        * rendering/shapes/ShapeInfo.h:
+        (WebCore::ShapeInfo::shapeContainingBlockLogicalHeight):
+
+2013-09-12  Samuel White  <samuel_white@apple.com>
+
+        <meter> element AXValue is listed as a writable value
+        https://bugs.webkit.org/show_bug.cgi?id=117650
+
+        Reviewed by Chris Fleizach.
+
+        No new tests, updated existing accessibility/meter-element.html test
+        to check writability. Changed meter element value to be unwritable.
+
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::canSetValueAttribute):
+
+2013-09-12  Renata Hodovan  <reni@webkit.org>
+
+        [Qt] SHOULD NEVER BE REACHED is touched WebCore::InputType::createStepRange
+        https://bugs.webkit.org/show_bug.cgi?id=121148
+
+        Reviewed by Kent Tamura.
+
+        Non-steppable input types must not rendered as slider even if its webkit-apperance style
+        property is set to slider-vertical/horizontal.
+
+        Test: platform/qt/fast/forms/range/slider-crash-on-input.html
+
+        * platform/qt/RenderThemeQStyle.cpp:
+        (WebCore::RenderThemeQStyle::paintSliderTrack):
+
+2013-09-12  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Qt and Windows build fix.
+
+        * page/animation/CSSPropertyAnimation.cpp:
+
+2013-09-11  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Encapsulate globals in CSSPropertyAnimation.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=121205
+
+        Reviewed by Antti Koivisto.
+
+        Encapsulated the globals inside a newly added CSSPropertyAnimationWrapperMap. Also removed the circular
+        dependency from ShorthandPropertyWrapper's constructor to CSSPropertyAnimationWrapperMap::instance().
+        The circular dependency still exists in ensurePropertyMap but I'm going to remove it in the bug 121199.
+
+        * page/animation/CSSPropertyAnimation.cpp:
+        (WebCore::ShorthandPropertyWrapper::ShorthandPropertyWrapper): Takes a Vector of longhand wrappers instead of
+        calling wrapperForProperty in the middle of constructing the very table. This circular dependency is now
+        encapsulated in CSSPropertyAnimationWrapperMap::ensurePropertyMap.
+        (WebCore::CSSPropertyAnimationWrapperMap::instance): Added.
+        (WebCore::CSSPropertyAnimationWrapperMap::wrapperForProperty): Renamed from WebCore::wrapperForProperty.
+        (WebCore::CSSPropertyAnimationWrapperMap::wrapperForIndex): Added.
+        (WebCore::CSSPropertyAnimationWrapperMap::size): Added.
+        (WebCore::CSSPropertyAnimationWrapperMap::addPropertyWrapper): Renamed from WebCore::addPropertyWrapper. Also
+        cleaned up boolean logics to use early exits instead of nested ifs.
+        (WebCore::CSSPropertyAnimationWrapperMap::addShorthandProperties): Renamed from WebCore::addShorthandProperties.
+        (WebCore::CSSPropertyAnimationWrapperMap::ensurePropertyMap): Renamed from WebCore::ensurePropertyMap.
+        Added an alias gPropertyWrappers for m_propertyWrappers; this aliasing will be removed in the bug 121199.
+        (WebCore::CSSPropertyAnimation::blendProperties):
+        (WebCore::CSSPropertyAnimation::animationOfPropertyIsAccelerated):
+        (WebCore::CSSPropertyAnimation::animatableShorthandsAffectingProperty):
+        (WebCore::CSSPropertyAnimation::propertiesEqual):
+        (WebCore::CSSPropertyAnimation::getPropertyAtIndex):
+        (WebCore::CSSPropertyAnimation::getNumProperties):
+        * page/animation/CSSPropertyAnimation.h:
+        * rendering/style/RenderStyle.h:
+
+2013-09-12  Anders Carlsson  <andersca@apple.com>
+
+        SharedBuffer::createNSData should return a RetainPtr<NSData>
+        https://bugs.webkit.org/show_bug.cgi?id=121237
+
+        Reviewed by Darin Adler.
+
+        This makes memory management cleared and fixes a leak in PDFDocumentImage::createPDFDocument.
+        We use a RetainPtr subclass as a stopgap measure to prevent code that does [buffer->createNSData() autorelease]
+        from compiling and crashing due to the NSData object being overreleased.
+
+        * loader/ResourceBuffer.h:
+        * loader/mac/ResourceBuffer.mm:
+        (WebCore::ResourceBuffer::createNSData):
+        * platform/SharedBuffer.h:
+        (WebCore::SharedBuffer::NSDataRetainPtr::NSDataRetainPtr):
+        * platform/graphics/mac/PDFDocumentImageMac.mm:
+        (WebCore::PDFDocumentImage::createPDFDocument):
+        * platform/mac/HTMLConverter.mm:
+        (-[WebHTMLConverter _addAttachmentForElement:URL:needsParagraph:usePlaceholder:]):
+        (fileWrapperForURL):
+        * platform/mac/PasteboardMac.mm:
+        (WebCore::fileWrapper):
+        (WebCore::Pasteboard::read):
+        (WebCore::documentFragmentWithRTF):
+        (WebCore::fragmentFromWebArchive):
+        * platform/mac/PlatformPasteboardMac.mm:
+        (WebCore::PlatformPasteboard::setBufferForType):
+        * platform/mac/SharedBufferMac.mm:
+        (WebCore::SharedBuffer::createNSData):
+
+2013-09-12  Timothy Hatcher  <timothy@apple.com>
+
+        Remove more Timeline stuff we don't use
+        https://bugs.webkit.org/show_bug.cgi?id=121246
+
+        Reviewed by Joseph Pecoraro.
+
+        * inspector/InspectorController.cpp:
+        * inspector/InspectorController.h:
+        * inspector/InspectorDOMDebuggerAgent.cpp:
+        * inspector/InspectorDOMDebuggerAgent.h:
+        * inspector/InspectorProfilerAgent.cpp:
+        (WebCore::InspectorProfilerAgent::InspectorProfilerAgent):
+        * inspector/InspectorProfilerAgent.h:
+        * inspector/InspectorTimelineAgent.cpp:
+        (WebCore::InspectorTimelineAgent::innerAddRecordToTimeline):
+        * inspector/InspectorTimelineAgent.h:
+
+2013-09-12  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        [EFL] Get rid of layering violations in PasteboardEfl.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=121241
+
+        Reviewed by Darin Adler.
+
+        Get rid of layering violations in PasteboardEfl.cpp. For now, just mimic
+        the Mac port to avoid divergences and leave port-specific functions
+        unimplemented as the EFL port does not support the pasteboard functionality
+        yet.
+
+        No new tests, no behavior change.
+
+        * PlatformEfl.cmake:
+        * editing/Editor.cpp:
+        (WebCore::Editor::pasteAsPlainTextWithPasteboard):
+        (WebCore::Editor::cut):
+        (WebCore::Editor::copy):
+        (WebCore::Editor::copyURL):
+        (WebCore::Editor::copyImage):
+        * editing/Editor.h:
+        * editing/efl/EditorEfl.cpp: Added.
+        (WebCore::Editor::writeSelectionToPasteboard):
+        (WebCore::Editor::writeURLToPasteboard):
+        (WebCore::Editor::writeImageToPasteboard):
+        (WebCore::Editor::readPlainTextFromPasteboard):
+        (WebCore::Editor::pasteWithPasteboard):
+        * page/DragController.cpp:
+        (WebCore::DragController::startDrag):
+        * platform/Pasteboard.h:
+        * platform/efl/PasteboardEfl.cpp:
+
+2013-09-12  Alberto Garcia  <berto@igalia.com>
+
+        [GTK] Unreviewed build fix after r155635.
+
+        Include DragData.h
+
+        * platform/gtk/PasteboardGtk.cpp:
+
+2013-09-12  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Build fix after r155635.
+
+        Rubber Stamped by Darin Adler.
+
+        * platform/Pasteboard.h: Add missing compile guards for Windows port.
+
+2013-09-12  Darin Adler  <darin@apple.com>
+
+        Reorganize Pasteboard.h to make it easier to read, and express plan for future work
+        https://bugs.webkit.org/show_bug.cgi?id=121234
+
+        Reviewed by Anders Carlsson.
+
+        * platform/Pasteboard.h: Move Mac/iOS-specific pasteboard names to the bottom of the
+        file rather than putting them up with forward declarations before the class. Removed
+        unneeded forward class declarations. Changed #if statements about migration to the
+        more modern non-layering-violation API to list platforms not yet migrated, rather than
+        listing platforms that have migrated (Mac). Move conditional code down below the
+        uncondiditional code so it's easier to see what the class is doing. Move layering-
+        violation code down to the bottom too, so it's easier to see the future class without
+        having the design mistakes mixed in. Sort platform-specific sections in alphabetical
+        order instead of random order. Did the destructor in a cleaner way so the #if is out
+        of the way after the class rather than in the class. Removed WebSmartPastePboardType,
+        WebURLPboardType, and WebURLsWithTitlesPboard declarations, since they are only used
+        inside the PasteboardMac.mm source file.
+
+        * platform/ios/PasteboardIOS.mm: Aded a FIXME comment.
+        * platform/mac/PasteboardMac.mm: Made the constants for pasteboard types be actual
+        constants, rather than global variables.
+
+2013-09-12  Tamas Czene  <tczene@inf.u-szeged.hu>
+
+        [curl] Use utf8 for headers in CurlDownload.
+        https://bugs.webkit.org/show_bug.cgi?id=120413
+
+        Reviewed by Brent Fulgham.
+
+        * platform/network/curl/CurlDownload.cpp:
+        (WebCore::CurlDownload::headerCallback):
+
+2013-09-12  Peter Gal  <galpeter@inf.u-szeged.hu>
+
+        [curl] Improve multipart response handling
+        https://bugs.webkit.org/show_bug.cgi?id=117735
+
+        Reviewed by Brent Fulgham.
+
+        The multipart/x-mixed-replace mime type in responses are ignored
+        with the curl network backend. To handle such responses the
+        MultipartHandle is introduced which will split the content using
+        the boundary specified by the mime type.
+
+        There are already existing tests (http/tests/multipart).
+
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * platform/network/HTTPParsers.cpp:
+        (WebCore::parseHTTPHeader):
+        * platform/network/HTTPParsers.h:
+        * platform/network/ResourceHandleInternal.h:
+        * platform/network/curl/MultipartHandle.cpp: Added.
+        (WebCore::MultipartHandle::extractBoundary):
+        (WebCore::MultipartHandle::matchForBoundary):
+        (WebCore::MultipartHandle::checkForBoundary):
+        (WebCore::MultipartHandle::parseHeadersIfPossible):
+        (WebCore::MultipartHandle::contentReceived):
+        (WebCore::MultipartHandle::processContent):
+        (WebCore::MultipartHandle::contentEnded):
+        (WebCore::MultipartHandle::didReceiveData):
+        (WebCore::MultipartHandle::didReceiveResponse):
+        * platform/network/curl/MultipartHandle.h: Added.
+        (WebCore::MultipartHandle::MultipartHandle):
+        (WebCore::MultipartHandle::~MultipartHandle):
+        * platform/network/curl/ResourceHandleManager.cpp:
+        (WebCore::writeCallback):
+        (WebCore::headerCallback):
+        (WebCore::ResourceHandleManager::downloadTimerCallback):
+
 2013-09-12  Andreas Kling  <akling@apple.com>
 
         Remove RenderApplet.

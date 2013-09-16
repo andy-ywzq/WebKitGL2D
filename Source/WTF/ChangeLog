@@ -1,3 +1,164 @@
+2013-09-15  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed make distcheck fix.
+
+        * GNUmakefile.list.am:
+
+2013-09-15  Patrick Gansterer  <paroga@webkit.org>
+
+        Fix build with Visual Studio 2012 after r153764.
+        https://bugs.webkit.org/show_bug.cgi?id=121406
+
+        Reviewed by Brent Fulgham.
+
+        * wtf/MathExtras.h:
+
+2013-09-15  Alberto Garcia  <berto@igalia.com>
+
+        Unreviewed GTK gardening.
+
+        * GNUmakefile.list.am: remove FastAllocBase.h, this file disappeared
+        in r155251.
+
+2013-09-15  Patrick Gansterer  <paroga@webkit.org>
+
+        [WIN] Fix build without precompiled header after r155454.
+
+        * wtf/win/GDIObject.h: Added missing windows.h include.
+
+2013-09-15  Andreas Kling  <akling@apple.com>
+
+        Remove Ref(const T&) constructor.
+        <https://webkit.org/b/121384>
+
+        Reviewed by Anders Carlsson.
+
+        This constructor was added as a stopgap measure until we got better support
+        for move semantics in Vector.
+
+        * wtf/Ref.h:
+
+2013-09-15  Andreas Kling  <akling@apple.com>
+
+        Unreviewed, fix ridiculous bug in WeakPtr.
+
+        I made operator!() null check the pointer to the WeakReference. :|
+
+        Caught by plugins/destroy-on-setwindow.html on bots.
+
+        * wtf/WeakPtr.h:
+        (WTF::WeakPtr::operator!):
+
+2013-09-14  Andreas Kling  <akling@apple.com>
+
+        Get rid of ref-counting on RenderWidget.
+        <https://webkit.org/b/121357>
+
+        Reviewed by Darin Adler.
+
+        * wtf/WeakPtr.h:
+        (WTF::WeakPtr::operator!):
+
+            Add operator! to WeakPtr.
+
+2013-09-14  Darin Adler  <darin@apple.com>
+
+        Add NeverDestroyed::get
+        https://bugs.webkit.org/show_bug.cgi?id=121358
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/NeverDestroyed.h: Removed code to make this non-copyable, since we also
+        use a macro to accomplish that.
+        (WTF::NeverDestroyed::get): Added. Useful in conjuction with auto to avoid
+        having to repeat the type when we want to put one of these into a reference.
+
+2013-09-13  Anders Carlsson  <andersca@apple.com>
+
+        Pick the correct overload when a const reference is passed to appendSlowCase.
+        https://bugs.webkit.org/show_bug.cgi?id=121326
+
+        Reviewed by Darin Adler.
+
+        * wtf/Vector.h:
+        (WTF::Vector::appendSlowCase):
+        Make sure that the pointer to the element isn't const so we'll pick the right expandCapacity overload.
+
+2013-09-13  Anders Carlsson  <andersca@apple.com>
+
+        Avoid a couple of zero-sized fastMalloc calls
+        https://bugs.webkit.org/show_bug.cgi?id=121333
+
+        Reviewed by Geoffrey Garen.
+
+        * wtf/text/StringBuffer.h:
+        (WTF::StringBuffer::StringBuffer):
+        Initialize m_data to null if m_length is null, and use Checked<size_t> to check for
+        overflow when multiplying m_length with the character size.
+
+2013-09-13  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Activate FastMalloc hardening
+        https://bugs.webkit.org/show_bug.cgi?id=121307
+
+        Reviewed by Oliver Hunt.
+
+        * wtf/FastMalloc.cpp: 
+        (WTF::SLL_Next): Add workaround for MSVC compiler bug.
+
+2013-09-13  Mikhail Pozdnyakov  <mikhail.pozdnyakov@intel.com>
+
+        OwnArrayPtr: Never allow implicit pointer conversion
+        https://bugs.webkit.org/show_bug.cgi?id=121291
+
+        Reviewed by Anders Carlsson.
+
+        We should never allow implicit pointer conversion in OwnArrayPtr 
+        and remove its template copy constructor & template assignment operator, as:
+        - these methods are never used
+        - these methods are inappropriate to have in OwnArrayPtr as arrays do not
+          interact well with polymorphism.
+
+        * wtf/OwnArrayPtr.h:
+
+2013-09-13  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        Remove support for QXmlStream as the XML parser.
+        https://bugs.webkit.org/show_bug.cgi?id=121229
+
+        Reviewed by Andreas Kling.
+
+        Removed USE flags.
+
+        * wtf/Platform.h:
+
+2013-09-12  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        Bitmap's WordType should be a template parameter
+        https://bugs.webkit.org/show_bug.cgi?id=121238
+
+        Reviewed by Darin Adler.
+
+        The code is written as if it already is. We just need to lift it out of the class.
+        This simplifies code that wants to load, for example, a single byte rather than an 
+        entire 32-bit word. 
+
+        * wtf/Bitmap.h:
+        (WTF::Bitmap::Bitmap):
+        (WTF::Bitmap::get):
+        (WTF::Bitmap::set):
+        (WTF::Bitmap::testAndSet):
+        (WTF::Bitmap::testAndClear):
+        (WTF::Bitmap::concurrentTestAndSet):
+        (WTF::Bitmap::concurrentTestAndClear):
+        (WTF::Bitmap::clear):
+        (WTF::Bitmap::clearAll):
+        (WTF::Bitmap::nextPossiblyUnset):
+        (WTF::Bitmap::findRunOfZeros):
+        (WTF::Bitmap::count):
+        (WTF::Bitmap::isEmpty):
+        (WTF::Bitmap::isFull):
+
 2013-09-12  Anders Carlsson  <andersca@apple.com>
 
         Add rudimentary support for move-only types as values in HashMap

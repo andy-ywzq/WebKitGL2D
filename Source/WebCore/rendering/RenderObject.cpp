@@ -187,13 +187,13 @@ RenderObject* RenderObject::createObject(Element* element, RenderStyle* style)
 
     if (element->hasTagName(rubyTag)) {
         if (style->display() == INLINE)
-            return new (arena) RenderRubyAsInline(element);
+            return new (arena) RenderRubyAsInline(*element);
         else if (style->display() == BLOCK)
-            return new (arena) RenderRubyAsBlock(element);
+            return new (arena) RenderRubyAsBlock(*element);
     }
     // treat <rt> as ruby text ONLY if it still has its default treatment of block
     if (element->hasTagName(rtTag) && style->display() == BLOCK)
-        return new (arena) RenderRubyText(element);
+        return new (arena) RenderRubyText(*element);
     if (document.cssRegionsEnabled() && style->isDisplayRegionType() && !style->regionThread().isEmpty())
         return new (arena) RenderRegion(element, 0);
     switch (style->display()) {
@@ -206,10 +206,10 @@ RenderObject* RenderObject::createObject(Element* element, RenderStyle* style)
     case RUN_IN:
     case COMPACT:
         if ((!style->hasAutoColumnCount() || !style->hasAutoColumnWidth()) && document.regionBasedColumnsEnabled())
-            return new (arena) RenderMultiColumnBlock(element);
+            return new (arena) RenderMultiColumnBlock(*element);
         return new (arena) RenderBlockFlow(element);
     case LIST_ITEM:
-        return new (arena) RenderListItem(element);
+        return new (arena) RenderListItem(*element);
     case TABLE:
     case INLINE_TABLE:
         return new (arena) RenderTable(element);
@@ -221,20 +221,20 @@ RenderObject* RenderObject::createObject(Element* element, RenderStyle* style)
         return new (arena) RenderTableRow(element);
     case TABLE_COLUMN_GROUP:
     case TABLE_COLUMN:
-        return new (arena) RenderTableCol(element);
+        return new (arena) RenderTableCol(*element);
     case TABLE_CELL:
         return new (arena) RenderTableCell(element);
     case TABLE_CAPTION:
-        return new (arena) RenderTableCaption(element);
+        return new (arena) RenderTableCaption(*element);
     case BOX:
     case INLINE_BOX:
-        return new (arena) RenderDeprecatedFlexibleBox(element);
+        return new (arena) RenderDeprecatedFlexibleBox(*element);
     case FLEX:
     case INLINE_FLEX:
         return new (arena) RenderFlexibleBox(element);
     case GRID:
     case INLINE_GRID:
-        return new (arena) RenderGrid(element);
+        return new (arena) RenderGrid(*element);
     }
 
     return 0;
@@ -319,7 +319,7 @@ void RenderObject::setFlowThreadStateIncludingDescendants(FlowThreadState state)
 
 void RenderObject::addChild(RenderObject* newChild, RenderObject* beforeChild)
 {
-    RenderObjectChildList* children = virtualChildren();
+    RenderObjectChildList* children = this->children();
     ASSERT(children);
     if (!children)
         return;
@@ -373,7 +373,7 @@ void RenderObject::addChild(RenderObject* newChild, RenderObject* beforeChild)
 
 void RenderObject::removeChild(RenderObject* oldChild)
 {
-    RenderObjectChildList* children = virtualChildren();
+    RenderObjectChildList* children = this->children();
     ASSERT(children);
     if (!children)
         return;
@@ -1899,7 +1899,7 @@ void RenderObject::handleDynamicFloatPositionChange()
         else {
             // An anonymous block must be made to wrap this inline.
             RenderBlock* block = toRenderBlock(parent())->createAnonymousBlock();
-            RenderObjectChildList* childlist = parent()->virtualChildren();
+            RenderObjectChildList* childlist = parent()->children();
             childlist->insertChildNode(parent(), block, this);
             block->children()->appendChildNode(block, childlist->removeChildNode(parent(), this));
         }
@@ -2647,7 +2647,7 @@ inline void RenderObject::clearLayoutRootIfNeeded() const
 void RenderObject::willBeDestroyed()
 {
     // Destroy any leftover anonymous children.
-    RenderObjectChildList* children = virtualChildren();
+    RenderObjectChildList* children = this->children();
     if (children)
         children->destroyLeftoverChildren();
 
@@ -2787,7 +2787,7 @@ void RenderObject::removeFromRenderFlowThread()
 
 void RenderObject::removeFromRenderFlowThreadRecursive(RenderFlowThread* renderFlowThread)
 {
-    if (const RenderObjectChildList* children = virtualChildren()) {
+    if (const RenderObjectChildList* children = this->children()) {
         for (RenderObject* child = children->firstChild(); child; child = child->nextSibling())
             child->removeFromRenderFlowThreadRecursive(renderFlowThread);
     }

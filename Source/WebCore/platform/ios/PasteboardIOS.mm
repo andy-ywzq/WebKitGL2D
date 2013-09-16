@@ -98,6 +98,7 @@ SOFT_LINK(AppSupport, CPSharedResourcesDirectory, CFStringRef, (void), ())
 
 namespace WebCore {
 
+// FIXME: Does this need to be declared in the header file?
 NSString *WebArchivePboardType = @"Apple Web Archive pasteboard type";
 
 Pasteboard::Pasteboard()
@@ -219,19 +220,17 @@ bool Pasteboard::canSmartReplace()
     return false;
 }
 
-String Pasteboard::plainText(Frame* frame)
+void Pasteboard::read(PasteboardPlainText& text)
 {
-    RetainPtr<NSArray> pasteboardItem = frame->editor().client()->readDataFromPasteboard((NSString *)kUTTypeText, 0);
+    RetainPtr<NSArray> pasteboardItem = m_frame->editor().client()->readDataFromPasteboard((NSString *)kUTTypeText, 0);
 
     if ([pasteboardItem.get() count] == 0)
-        return String();
+        return;
 
     id value = [pasteboardItem.get() objectAtIndex:0];
-    if ([value isKindOfClass:[NSString class]])
-        return String(value);
-
     ASSERT([value isKindOfClass:[NSString class]]);
-    return String();
+    if ([value isKindOfClass:[NSString class]])
+        text.text = (NSString *)value;
 }
 
 static NSArray* supportedImageTypes()

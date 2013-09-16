@@ -152,7 +152,7 @@ static inline AttributeToPropertyTypeMap& cssPropertyToTypeMap()
     return s_cssPropertyMap;
 }
 
-SVGElement::SVGElement(const QualifiedName& tagName, Document* document)
+SVGElement::SVGElement(const QualifiedName& tagName, Document& document)
     : StyledElement(tagName, document, CreateSVGElement)
 {
     registerAnimatedPropertiesForSVGElement();
@@ -1146,6 +1146,11 @@ bool SVGElement::isMouseFocusable() const
 bool SVGElement::isKeyboardFocusable(KeyboardEvent*) const
 {
     return isMouseFocusable();
+}
+    
+void SVGElement::accessKeyAction(bool sendMouseEvents)
+{
+    dispatchSimulatedClick(0, sendMouseEvents ? SendMouseUpDownEvents : SendNoEvents);
 }
 
 }

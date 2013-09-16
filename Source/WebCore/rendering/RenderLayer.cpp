@@ -2246,7 +2246,7 @@ void RenderLayer::scrollTo(int x, int y)
 #if ENABLE(DASHBOARD_SUPPORT) || ENABLE(DRAGGABLE_REGION)
         view.frameView().updateAnnotatedRegions();
 #endif
-        view.updateWidgetPositions();
+        view.frameView().updateWidgetPositions();
 
         if (!m_updatingMarqueePosition) {
             // Avoid updating compositing layers if, higher on the stack, we're already updating layer
@@ -6304,7 +6304,7 @@ void RenderLayer::updateScrollCornerStyle()
     RefPtr<RenderStyle> corner = renderer().hasOverflowClip() ? actualRenderer->getUncachedPseudoStyle(PseudoStyleRequest(SCROLLBAR_CORNER), actualRenderer->style()) : PassRefPtr<RenderStyle>(0);
     if (corner) {
         if (!m_scrollCorner) {
-            m_scrollCorner = RenderScrollbarPart::createAnonymous(&renderer().document());
+            m_scrollCorner = RenderScrollbarPart::createAnonymous(renderer().document());
             m_scrollCorner->setParent(&renderer());
         }
         m_scrollCorner->setStyle(corner.release());
@@ -6320,7 +6320,7 @@ void RenderLayer::updateResizerStyle()
     RefPtr<RenderStyle> resizer = renderer().hasOverflowClip() ? actualRenderer->getUncachedPseudoStyle(PseudoStyleRequest(RESIZER), actualRenderer->style()) : PassRefPtr<RenderStyle>(0);
     if (resizer) {
         if (!m_resizer) {
-            m_resizer = RenderScrollbarPart::createAnonymous(&renderer().document());
+            m_resizer = RenderScrollbarPart::createAnonymous(renderer().document());
             m_resizer->setParent(&renderer());
         }
         m_resizer->setStyle(resizer.release());
@@ -6338,7 +6338,7 @@ RenderLayer* RenderLayer::reflectionLayer() const
 void RenderLayer::createReflection()
 {
     ASSERT(!m_reflection);
-    m_reflection = RenderReplica::createAnonymous(&renderer().document());
+    m_reflection = RenderReplica::createAnonymous(renderer().document());
     m_reflection->setParent(&renderer()); // We create a 1-way connection.
 }
 

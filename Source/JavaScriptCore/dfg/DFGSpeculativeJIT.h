@@ -130,7 +130,6 @@ public:
         }
     }
     
-    GPRReg fillInt32(Edge, DataFormat& returnFormat);
 #if USE(JSVALUE64)
     GPRReg fillJSValue(Edge);
 #elif USE(JSVALUE32_64)
@@ -332,8 +331,8 @@ public:
 
     // Called by the speculative operand types, below, to fill operand to
     // machine registers, implicitly generating speculation checks as needed.
-    GPRReg fillSpecualteInt32(Edge, DataFormat& returnFormat);
-    GPRReg fillSpecualteInt32Strict(Edge);
+    GPRReg fillSpeculateInt32(Edge, DataFormat& returnFormat);
+    GPRReg fillSpeculateInt32Strict(Edge);
     FPRReg fillSpeculateDouble(Edge);
     GPRReg fillSpeculateCell(Edge);
     GPRReg fillSpeculateBoolean(Edge);
@@ -751,33 +750,33 @@ public:
     // Access to our fixed callee CallFrame.
     MacroAssembler::Address callFrameSlot(int slot)
     {
-        return MacroAssembler::Address(GPRInfo::callFrameRegister, (m_jit.codeBlock()->m_numCalleeRegisters + slot) * static_cast<int>(sizeof(Register)));
+        return MacroAssembler::Address(GPRInfo::callFrameRegister, (-m_jit.codeBlock()->m_numCalleeRegisters + slot) * static_cast<int>(sizeof(Register)));
     }
 
     // Access to our fixed callee CallFrame.
     MacroAssembler::Address argumentSlot(int argument)
     {
-        return MacroAssembler::Address(GPRInfo::callFrameRegister, (m_jit.codeBlock()->m_numCalleeRegisters + argumentToOperand(argument)) * static_cast<int>(sizeof(Register)));
+        return MacroAssembler::Address(GPRInfo::callFrameRegister, (-m_jit.codeBlock()->m_numCalleeRegisters + argumentToOperand(argument)) * static_cast<int>(sizeof(Register)));
     }
 
     MacroAssembler::Address callFrameTagSlot(int slot)
     {
-        return MacroAssembler::Address(GPRInfo::callFrameRegister, (m_jit.codeBlock()->m_numCalleeRegisters + slot) * static_cast<int>(sizeof(Register)) + OBJECT_OFFSETOF(EncodedValueDescriptor, asBits.tag));
+        return MacroAssembler::Address(GPRInfo::callFrameRegister, (-m_jit.codeBlock()->m_numCalleeRegisters + slot) * static_cast<int>(sizeof(Register)) + OBJECT_OFFSETOF(EncodedValueDescriptor, asBits.tag));
     }
 
     MacroAssembler::Address callFramePayloadSlot(int slot)
     {
-        return MacroAssembler::Address(GPRInfo::callFrameRegister, (m_jit.codeBlock()->m_numCalleeRegisters + slot) * static_cast<int>(sizeof(Register)) + OBJECT_OFFSETOF(EncodedValueDescriptor, asBits.payload));
+        return MacroAssembler::Address(GPRInfo::callFrameRegister, (-m_jit.codeBlock()->m_numCalleeRegisters + slot) * static_cast<int>(sizeof(Register)) + OBJECT_OFFSETOF(EncodedValueDescriptor, asBits.payload));
     }
 
     MacroAssembler::Address argumentTagSlot(int argument)
     {
-        return MacroAssembler::Address(GPRInfo::callFrameRegister, (m_jit.codeBlock()->m_numCalleeRegisters + argumentToOperand(argument)) * static_cast<int>(sizeof(Register)) + OBJECT_OFFSETOF(EncodedValueDescriptor, asBits.tag));
+        return MacroAssembler::Address(GPRInfo::callFrameRegister, (-m_jit.codeBlock()->m_numCalleeRegisters + argumentToOperand(argument)) * static_cast<int>(sizeof(Register)) + OBJECT_OFFSETOF(EncodedValueDescriptor, asBits.tag));
     }
 
     MacroAssembler::Address argumentPayloadSlot(int argument)
     {
-        return MacroAssembler::Address(GPRInfo::callFrameRegister, (m_jit.codeBlock()->m_numCalleeRegisters + argumentToOperand(argument)) * static_cast<int>(sizeof(Register)) + OBJECT_OFFSETOF(EncodedValueDescriptor, asBits.payload));
+        return MacroAssembler::Address(GPRInfo::callFrameRegister, (-m_jit.codeBlock()->m_numCalleeRegisters + argumentToOperand(argument)) * static_cast<int>(sizeof(Register)) + OBJECT_OFFSETOF(EncodedValueDescriptor, asBits.payload));
     }
 
     void emitCall(Node*);
@@ -790,7 +789,7 @@ public:
 
     // These method called to initialize the the GenerationInfo
     // to describe the result of an operation.
-    void integerResult(GPRReg reg, Node* node, DataFormat format = DataFormatInt32, UseChildrenMode mode = CallUseChildren)
+    void int32Result(GPRReg reg, Node* node, DataFormat format = DataFormatInt32, UseChildrenMode mode = CallUseChildren)
     {
         if (mode == CallUseChildren)
             useChildren(node);
@@ -813,9 +812,9 @@ public:
 #endif
         }
     }
-    void integerResult(GPRReg reg, Node* node, UseChildrenMode mode)
+    void int32Result(GPRReg reg, Node* node, UseChildrenMode mode)
     {
-        integerResult(reg, node, DataFormatInt32, mode);
+        int32Result(reg, node, DataFormatInt32, mode);
     }
     void noResult(Node* node, UseChildrenMode mode = CallUseChildren)
     {
@@ -1072,12 +1071,6 @@ public:
         return appendCallWithExceptionCheck(operation);
     }
 
-    JITCompiler::Call callOperation(V_DFGOperation_EOZD operation, GPRReg arg1, GPRReg arg2, FPRReg arg3)
-    {
-        m_jit.setupArgumentsWithExecState(arg1, arg2, arg3);
-        return appendCallWithExceptionCheck(operation);
-    }
-
     JITCompiler::Call callOperation(V_DFGOperation_W operation, WatchpointSet* watchpointSet)
     {
         m_jit.setupArguments(TrustedImmPtr(watchpointSet));
@@ -1309,6 +1302,12 @@ public:
         return appendCallWithExceptionCheckSetResult(operation, result);
     }
 
+    JITCompiler::Call callOperation(V_DFGOperation_EOZD operation, GPRReg arg1, GPRReg arg2, FPRReg arg3)
+    {
+        m_jit.setupArgumentsWithExecState(arg1, arg2, arg3);
+        return appendCallWithExceptionCheck(operation);
+    }
+
     JITCompiler::Call callOperation(V_DFGOperation_EJPP operation, GPRReg arg1, GPRReg arg2, void* pointer)
     {
         m_jit.setupArgumentsWithExecState(arg1, arg2, TrustedImmPtr(pointer));
@@ -1456,7 +1455,7 @@ public:
     }
     JITCompiler::Call callOperation(J_DFGOperation_EDA operation, GPRReg resultTag, GPRReg resultPayload, FPRReg arg1, GPRReg arg2)
     {
-        m_jit.setupArgumentsWithExecState(arg1, arg2);
+        m_jit.setupArgumentsWithExecState(EABI_32BIT_DUMMY_ARG arg1, arg2);
         return appendCallWithExceptionCheckSetResult(operation, resultPayload, resultTag);
     }
     JITCompiler::Call callOperation(J_DFGOperation_EJA operation, GPRReg resultTag, GPRReg resultPayload, GPRReg arg1Tag, GPRReg arg1Payload, GPRReg arg2)
@@ -1558,6 +1557,12 @@ public:
     {
         m_jit.setupArgumentsWithExecState(arg1, arg2);
         return appendCallWithExceptionCheckSetResult(operation, resultPayload, resultTag);
+    }
+
+    JITCompiler::Call callOperation(V_DFGOperation_EOZD operation, GPRReg arg1, GPRReg arg2, FPRReg arg3)
+    {
+        m_jit.setupArgumentsWithExecState(arg1, arg2, EABI_32BIT_DUMMY_ARG arg3);
+        return appendCallWithExceptionCheck(operation);
     }
 
     JITCompiler::Call callOperation(V_DFGOperation_EJPP operation, GPRReg arg1Tag, GPRReg arg1Payload, GPRReg arg2, void* pointer)
@@ -1892,7 +1897,7 @@ public:
     
     bool compare(Node*, MacroAssembler::RelationalCondition, MacroAssembler::DoubleCondition, S_DFGOperation_EJJ);
     bool compilePeepHoleBranch(Node*, MacroAssembler::RelationalCondition, MacroAssembler::DoubleCondition, S_DFGOperation_EJJ);
-    void compilePeepHoleIntegerBranch(Node*, Node* branchNode, JITCompiler::RelationalCondition);
+    void compilePeepHoleInt32Branch(Node*, Node* branchNode, JITCompiler::RelationalCondition);
     void compilePeepHoleBooleanBranch(Node*, Node* branchNode, JITCompiler::RelationalCondition);
     void compilePeepHoleDoubleBranch(Node*, Node* branchNode, JITCompiler::DoubleCondition);
     void compilePeepHoleObjectEquality(Node*, Node* branchNode);
@@ -1939,7 +1944,7 @@ public:
     
     void compileNewTypedArray(Node*);
     
-    void compileIntegerCompare(Node*, MacroAssembler::RelationalCondition);
+    void compileInt32Compare(Node*, MacroAssembler::RelationalCondition);
     void compileBooleanCompare(Node*, MacroAssembler::RelationalCondition);
     void compileDoubleCompare(Node*, MacroAssembler::DoubleCondition);
     
@@ -2141,7 +2146,7 @@ public:
     void arrayify(Node*);
     
     template<bool strict>
-    GPRReg fillSpecualteInt32Internal(Edge, DataFormat& returnFormat);
+    GPRReg fillSpeculateInt32Internal(Edge, DataFormat& returnFormat);
     
     // It is possible, during speculative generation, to reach a situation in which we
     // can statically determine a speculation will fail (for example, when two nodes
@@ -2247,72 +2252,12 @@ public:
 
 // === Operand types ===
 //
-// Int32Operand and JSValueOperand.
-//
 // These classes are used to lock the operands to a node into machine
 // registers. These classes implement of pattern of locking a value
 // into register at the point of construction only if it is already in
 // registers, and otherwise loading it lazily at the point it is first
 // used. We do so in order to attempt to avoid spilling one operand
 // in order to make space available for another.
-
-class Int32Operand {
-public:
-    explicit Int32Operand(SpeculativeJIT* jit, Edge edge, OperandSpeculationMode mode = AutomaticOperandSpeculation)
-        : m_jit(jit)
-        , m_edge(edge)
-        , m_gprOrInvalid(InvalidGPRReg)
-#ifndef NDEBUG
-        , m_format(DataFormatNone)
-#endif
-    {
-        ASSERT(m_jit);
-        ASSERT_UNUSED(mode, mode == ManualOperandSpeculation || edge.useKind() == KnownInt32Use);
-        if (jit->isFilled(edge.node()))
-            gpr();
-    }
-
-    ~Int32Operand()
-    {
-        ASSERT(m_gprOrInvalid != InvalidGPRReg);
-        m_jit->unlock(m_gprOrInvalid);
-    }
-
-    Edge edge() const
-    {
-        return m_edge;
-    }
-    
-    Node* node() const
-    {
-        return edge().node();
-    }
-
-    DataFormat format()
-    {
-        gpr(); // m_format is set when m_gpr is locked.
-        ASSERT(m_format == DataFormatInt32 || m_format == DataFormatJSInt32);
-        return m_format;
-    }
-
-    GPRReg gpr()
-    {
-        if (m_gprOrInvalid == InvalidGPRReg)
-            m_gprOrInvalid = m_jit->fillInt32(m_edge, m_format);
-        return m_gprOrInvalid;
-    }
-    
-    void use()
-    {
-        m_jit->use(node());
-    }
-
-private:
-    SpeculativeJIT* m_jit;
-    Edge m_edge;
-    GPRReg m_gprOrInvalid;
-    DataFormat m_format;
-};
 
 class JSValueOperand {
 public:
@@ -2398,10 +2343,15 @@ public:
         ASSERT(!m_isDouble);
         return m_register.pair.payloadGPR;
     }
-
+    
     JSValueRegs jsValueRegs()
     {
         return JSValueRegs(tagGPR(), payloadGPR());
+    }
+
+    GPRReg gpr(WhichValueWord which)
+    {
+        return jsValueRegs().gpr(which);
     }
 
     FPRReg fpr()
@@ -2489,24 +2439,38 @@ private:
 // currently allocated to child nodes whose value is consumed
 // by, and not live after, this operation.
 
+enum ReuseTag { Reuse };
+
 class GPRTemporary {
 public:
     GPRTemporary();
     GPRTemporary(SpeculativeJIT*);
     GPRTemporary(SpeculativeJIT*, GPRReg specific);
-    GPRTemporary(SpeculativeJIT*, SpeculateInt32Operand&);
-    GPRTemporary(SpeculativeJIT*, SpeculateInt32Operand&, SpeculateInt32Operand&);
-    GPRTemporary(SpeculativeJIT*, SpeculateStrictInt32Operand&);
-    GPRTemporary(SpeculativeJIT*, Int32Operand&);
-    GPRTemporary(SpeculativeJIT*, Int32Operand&, Int32Operand&);
-    GPRTemporary(SpeculativeJIT*, SpeculateCellOperand&);
-    GPRTemporary(SpeculativeJIT*, SpeculateBooleanOperand&);
-#if USE(JSVALUE64)
-    GPRTemporary(SpeculativeJIT*, JSValueOperand&);
-#elif USE(JSVALUE32_64)
-    GPRTemporary(SpeculativeJIT*, JSValueOperand&, bool tag = true);
+    template<typename T>
+    GPRTemporary(SpeculativeJIT* jit, ReuseTag, T& operand)
+        : m_jit(jit)
+        , m_gpr(InvalidGPRReg)
+    {
+        if (m_jit->canReuse(operand.node()))
+            m_gpr = m_jit->reuse(operand.gpr());
+        else
+            m_gpr = m_jit->allocate();
+    }
+    template<typename T1, typename T2>
+    GPRTemporary(SpeculativeJIT* jit, ReuseTag, T1& op1, T2& op2)
+        : m_jit(jit)
+        , m_gpr(InvalidGPRReg)
+    {
+        if (m_jit->canReuse(op1.node()))
+            m_gpr = m_jit->reuse(op1.gpr());
+        else if (m_jit->canReuse(op2.node()))
+            m_gpr = m_jit->reuse(op2.gpr());
+        else
+            m_gpr = m_jit->allocate();
+    }
+#if USE(JSVALUE32_64)
+    GPRTemporary(SpeculativeJIT*, ReuseTag, JSValueOperand&, WhichValueWord);
 #endif
-    GPRTemporary(SpeculativeJIT*, StorageOperand&);
 
     void adopt(GPRTemporary&);
 
@@ -2649,7 +2613,7 @@ public:
     GPRReg gpr()
     {
         if (m_gprOrInvalid == InvalidGPRReg)
-            m_gprOrInvalid = m_jit->fillSpecualteInt32(edge(), m_format);
+            m_gprOrInvalid = m_jit->fillSpeculateInt32(edge(), m_format);
         return m_gprOrInvalid;
     }
     
@@ -2697,7 +2661,7 @@ public:
     GPRReg gpr()
     {
         if (m_gprOrInvalid == InvalidGPRReg)
-            m_gprOrInvalid = m_jit->fillSpecualteInt32Strict(edge());
+            m_gprOrInvalid = m_jit->fillSpeculateInt32Strict(edge());
         return m_gprOrInvalid;
     }
     

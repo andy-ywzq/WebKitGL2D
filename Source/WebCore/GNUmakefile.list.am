@@ -2291,6 +2291,7 @@ webcore_sources += \
 	Source/WebCore/bindings/js/CachedScriptSourceProvider.h \
 	Source/WebCore/bindings/js/CallbackFunction.cpp \
 	Source/WebCore/bindings/js/CallbackFunction.h \
+	Source/WebCore/bindings/js/DOMConstructorWithDocument.h \
 	Source/WebCore/bindings/js/DOMObjectHashTableMap.cpp \
 	Source/WebCore/bindings/js/DOMObjectHashTableMap.h \
 	Source/WebCore/bindings/js/DOMRequestState.h \
@@ -2325,7 +2326,6 @@ webcore_sources += \
 	Source/WebCore/bindings/js/JSCanvasRenderingContext2DCustom.cpp \
 	Source/WebCore/bindings/js/JSCanvasRenderingContextCustom.cpp \
 	Source/WebCore/bindings/js/JSClipboardCustom.cpp \
-	Source/WebCore/bindings/js/JSConsoleCustom.cpp \
 	Source/WebCore/bindings/js/JSCryptoCustom.cpp \
 	Source/WebCore/bindings/js/JSCustomSQLStatementErrorCallback.cpp \
 	Source/WebCore/bindings/js/JSCustomXPathNSResolver.cpp \
@@ -2385,6 +2385,7 @@ webcore_sources += \
 	Source/WebCore/bindings/js/JSHTMLInputElementCustom.cpp \
 	Source/WebCore/bindings/js/JSHTMLInputElementCustom.h \
 	Source/WebCore/bindings/js/JSHTMLLinkElementCustom.cpp \
+	Source/WebCore/bindings/js/JSMainThreadExecStateInstrumentation.h \
 	Source/WebCore/bindings/js/JSHTMLMediaElementCustom.cpp \
 	Source/WebCore/bindings/js/JSHTMLObjectElementCustom.cpp \
 	Source/WebCore/bindings/js/JSHTMLOptionsCollectionCustom.cpp \
@@ -3390,6 +3391,7 @@ webcore_sources += \
 	Source/WebCore/html/FormController.h \
 	Source/WebCore/html/FormDataList.cpp \
 	Source/WebCore/html/FormDataList.h \
+	Source/WebCore/html/FormNamedItem.h \
 	Source/WebCore/html/FTPDirectoryDocument.cpp \
 	Source/WebCore/html/FTPDirectoryDocument.h \
 	Source/WebCore/html/HTMLAllCollection.cpp \
@@ -3746,6 +3748,8 @@ webcore_sources += \
 	Source/WebCore/html/track/TextTrackCueList.h \
 	Source/WebCore/html/track/TextTrackList.cpp \
 	Source/WebCore/html/track/TextTrackList.h \
+	Source/WebCore/html/track/TextTrackRegion.h \
+	Source/WebCore/html/track/TextTrackRegionList.h \
 	Source/WebCore/html/track/TrackBase.cpp \
 	Source/WebCore/html/track/TrackBase.h \
 	Source/WebCore/html/track/TrackEvent.cpp \
@@ -4360,6 +4364,7 @@ webcore_sources += \
 	Source/WebCore/rendering/LayoutRepainter.h \
 	Source/WebCore/rendering/LayoutRepainter.cpp \
 	Source/WebCore/rendering/LineInfo.h \
+	Source/WebCore/rendering/LineLayoutState.h \
 	Source/WebCore/rendering/LineWidth.h \
 	Source/WebCore/rendering/LineWidth.cpp \
 	Source/WebCore/rendering/OverlapTestRequestClient.h \
@@ -4427,6 +4432,8 @@ webcore_sources += \
 	Source/WebCore/rendering/RenderImageResourceStyleImage.h \
 	Source/WebCore/rendering/RenderInline.cpp \
 	Source/WebCore/rendering/RenderInline.h \
+	Source/WebCore/rendering/RenderInputSpeech.cpp \
+	Source/WebCore/rendering/RenderInputSpeech.h \
 	Source/WebCore/rendering/RenderLayerBacking.h \
 	Source/WebCore/rendering/RenderLayer.cpp \
 	Source/WebCore/rendering/RenderLayer.h \
@@ -4538,7 +4545,6 @@ webcore_sources += \
 	Source/WebCore/rendering/RenderView.h \
 	Source/WebCore/rendering/RenderWidget.cpp \
 	Source/WebCore/rendering/RenderWidget.h \
-	Source/WebCore/rendering/RenderWidgetProtector.h \
 	Source/WebCore/rendering/RenderWordBreak.cpp \
 	Source/WebCore/rendering/RenderWordBreak.h \
 	Source/WebCore/rendering/RootInlineBox.cpp \
@@ -4566,8 +4572,8 @@ webcore_sources += \
 	Source/WebCore/rendering/mathml/RenderMathMLSpace.h \
 	Source/WebCore/rendering/mathml/RenderMathMLSquareRoot.cpp \
 	Source/WebCore/rendering/mathml/RenderMathMLSquareRoot.h \
-	Source/WebCore/rendering/mathml/RenderMathMLSubSup.cpp \
-	Source/WebCore/rendering/mathml/RenderMathMLSubSup.h \
+	Source/WebCore/rendering/mathml/RenderMathMLScripts.cpp \
+	Source/WebCore/rendering/mathml/RenderMathMLScripts.h \
 	Source/WebCore/rendering/mathml/RenderMathMLUnderOver.cpp \
 	Source/WebCore/rendering/mathml/RenderMathMLUnderOver.h \
 	Source/WebCore/rendering/shapes/PolygonShape.cpp \
@@ -4878,7 +4884,6 @@ webcore_svg_sources += \
 	Source/WebCore/rendering/svg/RenderSVGRoot.h \
 	Source/WebCore/rendering/svg/RenderSVGShape.cpp \
 	Source/WebCore/rendering/svg/RenderSVGShape.h \
-	Source/WebCore/rendering/svg/RenderSVGTSpan.cpp \
 	Source/WebCore/rendering/svg/RenderSVGTSpan.h \
 	Source/WebCore/rendering/svg/RenderSVGText.cpp \
 	Source/WebCore/rendering/svg/RenderSVGText.h \

@@ -52,7 +52,7 @@ public:
     virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
 
 protected:
-    SVGGraphicsElement(const QualifiedName&, Document*);
+    SVGGraphicsElement(const QualifiedName&, Document&);
 
     bool isSupportedAttribute(const QualifiedName&);
     virtual void parseAttribute(const QualifiedName&, const AtomicString&) OVERRIDE;
@@ -73,6 +73,12 @@ private:
     // Used by <animateMotion>
     OwnPtr<AffineTransform> m_supplementalTransform;
 };
+
+inline SVGGraphicsElement& toSVGGraphicsElement(SVGElement& element)
+{
+    ASSERT_WITH_SECURITY_IMPLICATION(element.isSVGGraphicsElement());
+    return static_cast<SVGGraphicsElement&>(element);
+}
 
 inline SVGGraphicsElement* toSVGGraphicsElement(Node* node)
 {

@@ -273,7 +273,7 @@ sub SkipFunction {
         return 1;
     }
 
-    if ($function->signature->name eq "timeEnd") {
+    if ($function->signature->name eq "timeEnd" || $function->signature->name eq "profile" || $function->signature->name eq "profileEnd") {
         return 1;
     }
 
@@ -895,6 +895,7 @@ sub GenerateFunction {
     my @parentConditionalWarn = GenerateConditionalWarning($parentNode);
 
     my $functionSig = "${className}* self";
+    my $symbolSig = "${className}*";
 
     my @callImplParams;
 
@@ -910,6 +911,7 @@ sub GenerateFunction {
         my $paramName = $param->name;
 
         $functionSig .= ", ${const}$paramType $paramName";
+        $symbolSig .= ", ${const}$paramType";
 
         my $paramIsGDOMType = IsGDOMClassType($paramIDLType);
         if ($paramIsGDOMType) {
@@ -928,6 +930,9 @@ sub GenerateFunction {
     }
 
     $functionSig .= ", GError** error" if $raisesException;
+    $symbolSig .= ", GError**" if $raisesException;
+
+    push(@symbols, "$returnType $functionName($symbolSig)\n");
 
     # Insert introspection annotations
     push(@hBody, "/**\n");
@@ -939,7 +944,11 @@ sub GenerateFunction {
         # $paramType can have a trailing * in some cases
         $paramType =~ s/\*$//;
         my $paramName = $param->name;
-        push(@hBody, " * \@${paramName}: A #${paramType}\n");
+        my $paramAnnotations = "";
+        if (ParamCanBeNull($functionName, $paramName)) {
+            $paramAnnotations = " (allow-none):";
+        }
+        push(@hBody, " * \@${paramName}:${paramAnnotations} A #${paramType}\n");
     }
     push(@hBody, " * \@error: #GError\n") if $raisesException;
     push(@hBody, " *\n");
@@ -1537,6 +1546,12 @@ EOF
 
     close(IMPL);
 
+    # Write a symbols file.
+    my $symbolsFileName = "$outputDir/" . $basename . ".symbols";
+    open(SYM, ">$symbolsFileName") or die "Couldn't open file $symbolsFileName";
+    print SYM @symbols;
+    close(SYM);
+
     %implIncludes = ();
     %hdrIncludes = ();
     @hPrefix = ();
@@ -1547,6 +1562,8 @@ EOF
     @cBodyPriv = ();
     @cBodyProperties = ();
     @cStructPriv = ();
+
+    @symbols = ();
 }
 
 sub GenerateInterface {

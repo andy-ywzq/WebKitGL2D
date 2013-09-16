@@ -24,9 +24,9 @@
 #include "config.h"
 #include "Pasteboard.h"
 
-#include "DocumentFragment.h"
 #include "NotImplemented.h"
-#include <wtf/text/StringHash.h>
+
+using namespace WTF;
 
 namespace WebCore {
 
@@ -40,17 +40,7 @@ void Pasteboard::writePlainText(const String&, SmartReplaceOption)
     notImplemented();
 }
 
-void Pasteboard::writeSelection(Range*, bool, Frame*, ShouldSerializeSelectedTextForClipboard)
-{
-    notImplemented();
-}
-
-void Pasteboard::writeURL(const KURL&, const String&, Frame*)
-{
-    notImplemented();
-}
-
-void Pasteboard::writeImage(Node*, const KURL&, const String&)
+void Pasteboard::write(const PasteboardURL&)
 {
     notImplemented();
 }
@@ -66,16 +56,9 @@ bool Pasteboard::canSmartReplace()
     return false;
 }
 
-PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame*, PassRefPtr<Range>, bool, bool&)
+void Pasteboard::read(PasteboardPlainText&)
 {
     notImplemented();
-    return 0;
-}
-
-String Pasteboard::plainText(Frame*)
-{
-    notImplemented();
-    return String();
 }
 
 PassOwnPtr<Pasteboard> Pasteboard::createForCopyAndPaste()

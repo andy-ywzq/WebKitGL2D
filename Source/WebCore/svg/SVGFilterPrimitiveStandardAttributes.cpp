@@ -52,7 +52,7 @@ BEGIN_REGISTER_ANIMATED_PROPERTIES(SVGFilterPrimitiveStandardAttributes)
     REGISTER_PARENT_ANIMATED_PROPERTIES(SVGElement)
 END_REGISTER_ANIMATED_PROPERTIES
 
-SVGFilterPrimitiveStandardAttributes::SVGFilterPrimitiveStandardAttributes(const QualifiedName& tagName, Document* document)
+SVGFilterPrimitiveStandardAttributes::SVGFilterPrimitiveStandardAttributes(const QualifiedName& tagName, Document& document)
     : SVGElement(tagName, document)
     , m_x(LengthModeWidth, "0%")
     , m_y(LengthModeHeight, "0%")
@@ -144,7 +144,7 @@ void SVGFilterPrimitiveStandardAttributes::setStandardAttributes(FilterEffect* f
 
 RenderObject* SVGFilterPrimitiveStandardAttributes::createRenderer(RenderArena* arena, RenderStyle*)
 {
-    return new (arena) RenderSVGResourceFilterPrimitive(this);
+    return new (arena) RenderSVGResourceFilterPrimitive(*this);
 }
 
 bool SVGFilterPrimitiveStandardAttributes::rendererIsNeeded(const RenderStyle& style)

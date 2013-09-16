@@ -1760,6 +1760,10 @@ set(WebCore_SOURCES
     page/SecurityOrigin.cpp
     page/SecurityPolicy.cpp
     page/Settings.cpp
+    page/SpeechInput.cpp
+    page/SpeechInputEvent.cpp
+    page/SpeechInputResult.cpp
+    page/SpeechInputResultList.cpp
     page/SpatialNavigation.cpp
     page/SuspendableTimer.cpp
     page/TouchAdjustment.cpp
@@ -2138,6 +2142,7 @@ set(WebCore_SOURCES
     rendering/RenderImageResource.cpp
     rendering/RenderImageResourceStyleImage.cpp
     rendering/RenderInline.cpp
+    rendering/RenderInputSpeech.cpp
     rendering/RenderLayer.cpp
     rendering/RenderLayerBacking.cpp
     rendering/RenderLayerCompositor.cpp
@@ -2207,7 +2212,7 @@ set(WebCore_SOURCES
     rendering/mathml/RenderMathMLRow.cpp
     rendering/mathml/RenderMathMLSpace.cpp
     rendering/mathml/RenderMathMLSquareRoot.cpp
-    rendering/mathml/RenderMathMLSubSup.cpp
+    rendering/mathml/RenderMathMLScripts.cpp
     rendering/mathml/RenderMathMLUnderOver.cpp
 
     rendering/shapes/PolygonShape.cpp
@@ -2277,7 +2282,6 @@ set(WebCore_SOURCES
     rendering/svg/RenderSVGResourceSolidColor.cpp
     rendering/svg/RenderSVGRoot.cpp
     rendering/svg/RenderSVGShape.cpp
-    rendering/svg/RenderSVGTSpan.cpp
     rendering/svg/RenderSVGText.cpp
     rendering/svg/RenderSVGTextPath.cpp
     rendering/svg/RenderSVGTransformableContainer.cpp
@@ -3008,27 +3012,34 @@ list(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorBackendDispa
 
 # Generate InspectorOverlayPage.h
 add_custom_command(
-    OUTPUT ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorOverlayPage.h
+    OUTPUT ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorOverlayPage.h ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorOverlayPage.combined.html
     MAIN_DEPENDENCY inspector/InspectorOverlayPage.html
-    COMMAND ${PERL_EXECUTABLE} ${WEBCORE_DIR}/inspector/xxd.pl InspectorOverlayPage_html ${WEBCORE_DIR}/inspector/InspectorOverlayPage.html ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorOverlayPage.h
+    DEPENDS ${WEBCORE_DIR}/inspector/xxd.pl ${WEBCORE_DIR}/inspector/Scripts/inline-and-minify-stylesheets-and-scripts.py
+    DEPENDS inspector/InspectorOverlayPage.css inspector/InspectorOverlayPage.js
+    COMMAND ${PYTHON_EXECUTABLE} ${WEBCORE_DIR}/inspector/Scripts/inline-and-minify-stylesheets-and-scripts.py ${WEBCORE_DIR}/inspector/InspectorOverlayPage.html ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorOverlayPage.combined.html
+    COMMAND ${PERL_EXECUTABLE} ${WEBCORE_DIR}/inspector/xxd.pl InspectorOverlayPage_html ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorOverlayPage.combined.html ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorOverlayPage.h
     VERBATIM)
 list(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorOverlayPage.h)
 
 
 # Generate InjectedScriptSource.h
 add_custom_command(
-    OUTPUT ${DERIVED_SOURCES_WEBCORE_DIR}/InjectedScriptSource.h
+    OUTPUT ${DERIVED_SOURCES_WEBCORE_DIR}/InjectedScriptSource.h ${DERIVED_SOURCES_WEBCORE_DIR}/InjectedScriptSource.min.js
     MAIN_DEPENDENCY inspector/InjectedScriptSource.js
-    COMMAND ${PERL_EXECUTABLE} ${WEBCORE_DIR}/inspector/xxd.pl InjectedScriptSource_js ${WEBCORE_DIR}/inspector/InjectedScriptSource.js ${DERIVED_SOURCES_WEBCORE_DIR}/InjectedScriptSource.h
+    DEPENDS ${WEBCORE_DIR}/inspector/xxd.pl ${WEBCORE_DIR}/inspector/Scripts/jsmin.py
+    COMMAND ${PYTHON_EXECUTABLE} ${WEBCORE_DIR}/inspector/Scripts/jsmin.py <${WEBCORE_DIR}/inspector/InjectedScriptSource.js > ${DERIVED_SOURCES_WEBCORE_DIR}/InjectedScriptSource.min.js
+    COMMAND ${PERL_EXECUTABLE} ${WEBCORE_DIR}/inspector/xxd.pl InjectedScriptSource_js ${DERIVED_SOURCES_WEBCORE_DIR}/InjectedScriptSource.min.js ${DERIVED_SOURCES_WEBCORE_DIR}/InjectedScriptSource.h
     VERBATIM)
 list(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/InjectedScriptSource.h)
 
 
 # Generate InjectedScriptCanvasModuleSource.h
 add_custom_command(
-    OUTPUT ${DERIVED_SOURCES_WEBCORE_DIR}/InjectedScriptCanvasModuleSource.h
+    OUTPUT ${DERIVED_SOURCES_WEBCORE_DIR}/InjectedScriptCanvasModuleSource.h ${DERIVED_SOURCES_WEBCORE_DIR}/InjectedScriptCanvasModuleSource.min.js
     MAIN_DEPENDENCY inspector/InjectedScriptCanvasModuleSource.js
-    COMMAND ${PERL_EXECUTABLE} ${WEBCORE_DIR}/inspector/xxd.pl InjectedScriptCanvasModuleSource_js ${WEBCORE_DIR}/inspector/InjectedScriptCanvasModuleSource.js ${DERIVED_SOURCES_WEBCORE_DIR}/InjectedScriptCanvasModuleSource.h
+    DEPENDS ${WEBCORE_DIR}/inspector/xxd.pl ${WEBCORE_DIR}/inspector/Scripts/jsmin.py
+    COMMAND ${PYTHON_EXECUTABLE} ${WEBCORE_DIR}/inspector/Scripts/jsmin.py <${WEBCORE_DIR}/inspector/InjectedScriptCanvasModuleSource.js > ${DERIVED_SOURCES_WEBCORE_DIR}/InjectedScriptCanvasModuleSource.min.js
+    COMMAND ${PERL_EXECUTABLE} ${WEBCORE_DIR}/inspector/xxd.pl InjectedScriptCanvasModuleSource_js ${DERIVED_SOURCES_WEBCORE_DIR}/InjectedScriptCanvasModuleSource.min.js ${DERIVED_SOURCES_WEBCORE_DIR}/InjectedScriptCanvasModuleSource.h
     VERBATIM)
 list(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/InjectedScriptCanvasModuleSource.h)
 
@@ -3039,18 +3050,22 @@ list(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/ColorData.cpp)
 
 # Generate XMLViewerCSS.h
 add_custom_command(
-    OUTPUT ${DERIVED_SOURCES_WEBCORE_DIR}/XMLViewerCSS.h
+    OUTPUT ${DERIVED_SOURCES_WEBCORE_DIR}/XMLViewerCSS.h ${DERIVED_SOURCES_WEBCORE_DIR}/XMLViewer.min.css
     MAIN_DEPENDENCY xml/XMLViewer.css
-    COMMAND ${PERL_EXECUTABLE} ${WEBCORE_DIR}/inspector/xxd.pl XMLViewer_css ${WEBCORE_DIR}/xml/XMLViewer.css ${DERIVED_SOURCES_WEBCORE_DIR}/XMLViewerCSS.h
+    DEPENDS ${WEBCORE_DIR}/inspector/xxd.pl ${WEBCORE_DIR}/inspector/Scripts/cssmin.py
+    COMMAND ${PYTHON_EXECUTABLE} ${WEBCORE_DIR}/inspector/Scripts/cssmin.py <${WEBCORE_DIR}/xml/XMLViewer.css > ${DERIVED_SOURCES_WEBCORE_DIR}/XMLViewer.min.css
+    COMMAND ${PERL_EXECUTABLE} ${WEBCORE_DIR}/inspector/xxd.pl XMLViewer_css ${DERIVED_SOURCES_WEBCORE_DIR}/XMLViewer.min.css ${DERIVED_SOURCES_WEBCORE_DIR}/XMLViewerCSS.h
     VERBATIM)
 list(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/XMLViewerCSS.h)
 
 
 # Generate XMLViewerJS.h
 add_custom_command(
-    OUTPUT ${DERIVED_SOURCES_WEBCORE_DIR}/XMLViewerJS.h
+    OUTPUT ${DERIVED_SOURCES_WEBCORE_DIR}/XMLViewerJS.h ${DERIVED_SOURCES_WEBCORE_DIR}/XMLViewer.min.js
     MAIN_DEPENDENCY xml/XMLViewer.js
-    COMMAND ${PERL_EXECUTABLE} ${WEBCORE_DIR}/inspector/xxd.pl XMLViewer_js ${WEBCORE_DIR}/xml/XMLViewer.js ${DERIVED_SOURCES_WEBCORE_DIR}/XMLViewerJS.h
+    DEPENDS ${WEBCORE_DIR}/inspector/xxd.pl ${WEBCORE_DIR}/inspector/Scripts/jsmin.py
+    COMMAND ${PYTHON_EXECUTABLE} ${WEBCORE_DIR}/inspector/Scripts/cssmin.py <${WEBCORE_DIR}/xml/XMLViewer.js > ${DERIVED_SOURCES_WEBCORE_DIR}/XMLViewer.min.js
+    COMMAND ${PERL_EXECUTABLE} ${WEBCORE_DIR}/inspector/xxd.pl XMLViewer_js ${DERIVED_SOURCES_WEBCORE_DIR}/XMLViewer.min.js ${DERIVED_SOURCES_WEBCORE_DIR}/XMLViewerJS.h
     VERBATIM)
 list(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/XMLViewerJS.h)
 

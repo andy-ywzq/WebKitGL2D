@@ -36,20 +36,20 @@
 #include "RenderMathMLFraction.h"
 #include "RenderMathMLRoot.h"
 #include "RenderMathMLRow.h"
+#include "RenderMathMLScripts.h"
 #include "RenderMathMLSquareRoot.h"
-#include "RenderMathMLSubSup.h"
 #include "RenderMathMLUnderOver.h"
 
 namespace WebCore {
     
 using namespace MathMLNames;
 
-MathMLInlineContainerElement::MathMLInlineContainerElement(const QualifiedName& tagName, Document* document)
+MathMLInlineContainerElement::MathMLInlineContainerElement(const QualifiedName& tagName, Document& document)
     : MathMLElement(tagName, document)
 {
 }
 
-PassRefPtr<MathMLInlineContainerElement> MathMLInlineContainerElement::create(const QualifiedName& tagName, Document* document)
+PassRefPtr<MathMLInlineContainerElement> MathMLInlineContainerElement::create(const QualifiedName& tagName, Document& document)
 {
     return adoptRef(new MathMLInlineContainerElement(tagName, document));
 }
@@ -59,11 +59,13 @@ RenderObject* MathMLInlineContainerElement::createRenderer(RenderArena* arena, R
     if (hasLocalName(mrowTag))
         return new (arena) RenderMathMLRow(this);
     if (hasLocalName(msubTag))
-        return new (arena) RenderMathMLSubSup(this);
+        return new (arena) RenderMathMLScripts(this);
     if (hasLocalName(msupTag))
-        return new (arena) RenderMathMLSubSup(this);
+        return new (arena) RenderMathMLScripts(this);
     if (hasLocalName(msubsupTag))
-        return new (arena) RenderMathMLSubSup(this);
+        return new (arena) RenderMathMLScripts(this);
+    if (hasLocalName(mmultiscriptsTag))
+        return new (arena) RenderMathMLScripts(this);
     if (hasLocalName(moverTag))
         return new (arena) RenderMathMLUnderOver(this);
     if (hasLocalName(munderTag))

@@ -66,7 +66,7 @@ using namespace HTMLNames;
 // Upper limit agreed upon with representatives of Opera and Mozilla.
 static const unsigned maxSelectItems = 10000;
 
-HTMLSelectElement::HTMLSelectElement(const QualifiedName& tagName, Document* document, HTMLFormElement* form)
+HTMLSelectElement::HTMLSelectElement(const QualifiedName& tagName, Document& document, HTMLFormElement* form)
     : HTMLFormControlElementWithState(tagName, document, form)
     , m_typeAhead(this)
     , m_size(0)
@@ -81,7 +81,7 @@ HTMLSelectElement::HTMLSelectElement(const QualifiedName& tagName, Document* doc
     ASSERT(hasTagName(selectTag));
 }
 
-PassRefPtr<HTMLSelectElement> HTMLSelectElement::create(const QualifiedName& tagName, Document* document, HTMLFormElement* form)
+PassRefPtr<HTMLSelectElement> HTMLSelectElement::create(const QualifiedName& tagName, Document& document, HTMLFormElement* form)
 {
     ASSERT(tagName.matches(selectTag));
     return adoptRef(new HTMLSelectElement(tagName, document, form));
@@ -340,8 +340,8 @@ bool HTMLSelectElement::canSelectAll() const
 RenderObject* HTMLSelectElement::createRenderer(RenderArena* arena, RenderStyle*)
 {
     if (usesMenuList())
-        return new (arena) RenderMenuList(this);
-    return new (arena) RenderListBox(this);
+        return new (arena) RenderMenuList(*this);
+    return new (arena) RenderListBox(*this);
 }
 
 bool HTMLSelectElement::childShouldCreateRenderer(const Node* child) const

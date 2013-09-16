@@ -98,7 +98,7 @@ static const String subtitleText(Page* page, String mimeType)
     return subtitleText;
 };
 
-HTMLPlugInImageElement::HTMLPlugInImageElement(const QualifiedName& tagName, Document* document, bool createdByParser, PreferPlugInsForImagesOption preferPlugInsForImagesOption)
+HTMLPlugInImageElement::HTMLPlugInImageElement(const QualifiedName& tagName, Document& document, bool createdByParser, PreferPlugInsForImagesOption preferPlugInsForImagesOption)
     : HTMLPlugInElement(tagName, document)
     // m_needsWidgetUpdate(!createdByParser) allows HTMLObjectElement to delay
     // widget updates until after all children are parsed.  For HTMLEmbedElement
@@ -204,7 +204,7 @@ RenderObject* HTMLPlugInImageElement::createRenderer(RenderArena* arena, RenderS
     }
 
     if (displayState() == DisplayingSnapshot) {
-        RenderSnapshottedPlugIn* renderSnapshottedPlugIn = new (arena) RenderSnapshottedPlugIn(this);
+        RenderSnapshottedPlugIn* renderSnapshottedPlugIn = new (arena) RenderSnapshottedPlugIn(*this);
         renderSnapshottedPlugIn->updateSnapshot(m_snapshotImage);
         return renderSnapshottedPlugIn;
     }
@@ -221,7 +221,7 @@ RenderObject* HTMLPlugInImageElement::createRenderer(RenderArena* arena, RenderS
         return image;
     }
 
-    return new (arena) RenderEmbeddedObject(this);
+    return new (arena) RenderEmbeddedObject(*this);
 }
 
 bool HTMLPlugInImageElement::willRecalcStyle(Style::Change)

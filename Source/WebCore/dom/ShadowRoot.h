@@ -49,7 +49,7 @@ public:
         AuthorShadowRoot
     };
 
-    static PassRefPtr<ShadowRoot> create(Document* document, ShadowRootType type)
+    static PassRefPtr<ShadowRoot> create(Document& document, ShadowRootType type)
     {
         return adoptRef(new ShadowRoot(document, type));
     }
@@ -82,9 +82,9 @@ public:
     void removeAllEventListeners();
 
 private:
-    ShadowRoot(Document*, ShadowRootType);
+    ShadowRoot(Document&, ShadowRootType);
 
-    virtual void dispose() OVERRIDE;
+    virtual void dropChildren() OVERRIDE;
     virtual bool childTypeAllowed(NodeType) const OVERRIDE;
     virtual void childrenChanged(const ChildChange&) OVERRIDE;
 

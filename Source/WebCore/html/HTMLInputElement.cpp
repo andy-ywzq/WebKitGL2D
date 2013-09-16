@@ -110,7 +110,7 @@ const int HTMLInputElement::maximumLength = 524288;
 const int defaultSize = 20;
 const int maxSavedResults = 256;
 
-HTMLInputElement::HTMLInputElement(const QualifiedName& tagName, Document* document, HTMLFormElement* form, bool createdByParser)
+HTMLInputElement::HTMLInputElement(const QualifiedName& tagName, Document& document, HTMLFormElement* form, bool createdByParser)
     : HTMLTextFormControlElement(tagName, document, form)
     , m_size(defaultSize)
     , m_maxLength(maximumLength)
@@ -139,7 +139,7 @@ HTMLInputElement::HTMLInputElement(const QualifiedName& tagName, Document* docum
     setHasCustomStyleResolveCallbacks();
 }
 
-PassRefPtr<HTMLInputElement> HTMLInputElement::create(const QualifiedName& tagName, Document* document, HTMLFormElement* form, bool createdByParser)
+PassRefPtr<HTMLInputElement> HTMLInputElement::create(const QualifiedName& tagName, Document& document, HTMLFormElement* form, bool createdByParser)
 {
     RefPtr<HTMLInputElement> inputElement = adoptRef(new HTMLInputElement(tagName, document, form, createdByParser));
     inputElement->ensureUserAgentShadowRoot();
@@ -749,11 +749,11 @@ void HTMLInputElement::parseAttribute(const QualifiedName& name, const AtomicStr
             // This renderer and its children have quite different layouts and styles depending on
             // whether the speech button is visible or not. So we reset the whole thing and recreate
             // to get the right styles and layout.
-            detach();
+            Style::detachRenderTree(*this);
             m_inputType->destroyShadowSubtree();
             m_inputType->createShadowSubtree();
             if (!attached())
-                attach();
+                Style::attachRenderTree(*this);
         } else {
             m_inputType->destroyShadowSubtree();
             m_inputType->createShadowSubtree();

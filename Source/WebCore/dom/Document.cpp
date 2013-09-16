@@ -565,7 +565,6 @@ Document::~Document()
     ASSERT(m_ranges.isEmpty());
     ASSERT(!m_styleRecalcTimer.isActive());
     ASSERT(!m_parentTreeScope);
-    ASSERT(!hasGuardRefCount());
 
 #if ENABLE(TEMPLATE_ELEMENT)
     if (m_templateDocument)
@@ -635,9 +634,10 @@ Document::~Document()
     InspectorCounters::decrementCounter(InspectorCounters::DocumentCounter);
 }
 
-void Document::dispose()
+void Document::dropChildren()
 {
     ASSERT(!m_deletionHasBegun);
+
     // We must make sure not to be retaining any of our children through
     // these extra pointers or we will create a reference cycle.
     m_focusedElement = 0;
@@ -659,7 +659,9 @@ void Document::dispose()
 #endif
 
     // removeDetachedChildren() doesn't always unregister IDs,
-    // so tear down scope information upfront to avoid having stale references in the map.
+    // so tear down scope information up front to avoid having
+    // stale references in the map.
+
     destroyTreeScopeData();
     removeDetachedChildren();
     m_formController.clear();
@@ -763,7 +765,7 @@ void Document::resetActiveLinkColor()
 DOMImplementation* Document::implementation()
 {
     if (!m_implementation)
-        m_implementation = DOMImplementation::create(this);
+        m_implementation = DOMImplementation::create(*this);
     return m_implementation.get();
 }
 
@@ -818,7 +820,7 @@ PassRefPtr<Element> Document::createElement(const AtomicString& name, ExceptionC
     }
 
     if (isXHTMLDocument())
-        return HTMLElementFactory::createHTMLElement(QualifiedName(nullAtom, name, xhtmlNamespaceURI), this, 0, false);
+        return HTMLElementFactory::createElement(QualifiedName(nullAtom, name, xhtmlNamespaceURI), *this);
 
     return createElement(QualifiedName(nullAtom, name, nullAtom), false);
 }
@@ -859,12 +861,12 @@ PassRefPtr<Element> Document::createElementNS(const AtomicString& namespaceURI, 
     return setTypeExtension(createElementNS(namespaceURI, qualifiedName, ec), typeExtension);
 }
 
-PassRefPtr<CustomElementConstructor> Document::registerElement(WebCore::ScriptState* state, const AtomicString& name, ExceptionCode& ec)
+PassRefPtr<CustomElementConstructor> Document::registerElement(JSC::ExecState* state, const AtomicString& name, ExceptionCode& ec)
 {
     return registerElement(state, name, Dictionary(), ec);
 }
 
-PassRefPtr<CustomElementConstructor> Document::registerElement(WebCore::ScriptState* state, const AtomicString& name, const Dictionary& options, ExceptionCode& ec)
+PassRefPtr<CustomElementConstructor> Document::registerElement(JSC::ExecState* state, const AtomicString& name, const Dictionary& options, ExceptionCode& ec)
 {
     if (!isHTMLDocument() && !isXHTMLDocument()) {
         ec = NOT_SUPPORTED_ERR;
@@ -878,7 +880,7 @@ PassRefPtr<CustomElementConstructor> Document::registerElement(WebCore::ScriptSt
 
 void Document::didCreateCustomElement(Element* element, CustomElementConstructor* constructor)
 {
-    // m_registry is cleared Document::dispose() and can be null here.
+    // m_registry is cleared Document::releaseChildren() and can be null here.
     if (m_registry)
         m_registry->didCreateElement(element);
 }
@@ -886,17 +888,17 @@ void Document::didCreateCustomElement(Element* element, CustomElementConstructor
 
 PassRefPtr<DocumentFragment> Document::createDocumentFragment()
 {
-    return DocumentFragment::create(&document());
+    return DocumentFragment::create(document());
 }
 
 PassRefPtr<Text> Document::createTextNode(const String& data)
 {
-    return Text::create(this, data);
+    return Text::create(*this, data);
 }
 
 PassRefPtr<Comment> Document::createComment(const String& data)
 {
-    return Comment::create(this, data);
+    return Comment::create(*this, data);
 }
 
 PassRefPtr<CDATASection> Document::createCDATASection(const String& data, ExceptionCode& ec)
@@ -905,7 +907,7 @@ PassRefPtr<CDATASection> Document::createCDATASection(const String& data, Except
         ec = NOT_SUPPORTED_ERR;
         return 0;
     }
-    return CDATASection::create(this, data);
+    return CDATASection::create(*this, data);
 }
 
 PassRefPtr<ProcessingInstruction> Document::createProcessingInstruction(const String& target, const String& data, ExceptionCode& ec)
@@ -918,7 +920,7 @@ PassRefPtr<ProcessingInstruction> Document::createProcessingInstruction(const St
         ec = NOT_SUPPORTED_ERR;
         return 0;
     }
-    return ProcessingInstruction::create(this, target, data);
+    return ProcessingInstruction::create(*this, target, data);
 }
 
 PassRefPtr<EntityReference> Document::createEntityReference(const String& name, ExceptionCode& ec)
@@ -931,12 +933,12 @@ PassRefPtr<EntityReference> Document::createEntityReference(const String& name, 
         ec = NOT_SUPPORTED_ERR;
         return 0;
     }
-    return EntityReference::create(this, name);
+    return EntityReference::create(*this, name);
 }
 
 PassRefPtr<Text> Document::createEditingTextNode(const String& text)
 {
-    return Text::createEditingText(this, text);
+    return Text::createEditingText(*this, text);
 }
 
 PassRefPtr<CSSStyleDeclaration> Document::createCSSStyleDeclaration()
@@ -990,7 +992,7 @@ PassRefPtr<Node> Document::importNode(Node* importedNode, bool deep, ExceptionCo
         return newElement.release();
     }
     case ATTRIBUTE_NODE:
-        return Attr::create(this, QualifiedName(nullAtom, static_cast<Attr*>(importedNode)->name(), nullAtom), static_cast<Attr*>(importedNode)->value());
+        return Attr::create(*this, QualifiedName(nullAtom, static_cast<Attr*>(importedNode)->name(), nullAtom), static_cast<Attr*>(importedNode)->value());
     case DOCUMENT_FRAGMENT_NODE: {
         if (importedNode->isShadowRoot()) {
             // ShadowRoot nodes should not be explicitly importable.
@@ -1110,32 +1112,32 @@ bool Document::hasValidNamespaceForAttributes(const QualifiedName& qName)
     return hasValidNamespaceForElements(qName);
 }
 
-// FIXME: This should really be in a possible ElementFactory class
-PassRefPtr<Element> Document::createElement(const QualifiedName& qName, bool createdByParser)
+// FIXME: This should really be in a possible ElementFactory class.
+PassRefPtr<Element> Document::createElement(const QualifiedName& name, bool createdByParser)
 {
-    RefPtr<Element> e;
+    RefPtr<Element> element;
 
     // FIXME: Use registered namespaces and look up in a hash to find the right factory.
-    if (qName.namespaceURI() == xhtmlNamespaceURI)
-        e = HTMLElementFactory::createHTMLElement(qName, this, 0, createdByParser);
+    if (name.namespaceURI() == xhtmlNamespaceURI)
+        element = HTMLElementFactory::createElement(name, *this, nullptr, createdByParser);
 #if ENABLE(SVG)
-    else if (qName.namespaceURI() == SVGNames::svgNamespaceURI)
-        e = SVGElementFactory::createSVGElement(qName, this, createdByParser);
+    else if (name.namespaceURI() == SVGNames::svgNamespaceURI)
+        element = SVGElementFactory::createElement(name, *this, createdByParser);
 #endif
 #if ENABLE(MATHML)
-    else if (qName.namespaceURI() == MathMLNames::mathmlNamespaceURI)
-        e = MathMLElementFactory::createMathMLElement(qName, this, createdByParser);
+    else if (name.namespaceURI() == MathMLNames::mathmlNamespaceURI)
+        element = MathMLElementFactory::createElement(name, *this, createdByParser);
 #endif
 
-    if (e)
+    if (element)
         m_sawElementsInKnownNamespaces = true;
     else
-        e = Element::create(qName, &document());
+        element = Element::create(name, document());
 
     // <image> uses imgTag so we need a special rule.
-    ASSERT((qName.matches(imageTag) && e->tagQName().matches(imgTag) && e->tagQName().prefix() == qName.prefix()) || qName == e->tagQName());
+    ASSERT((name.matches(imageTag) && element->tagQName().matches(imgTag) && element->tagQName().prefix() == name.prefix()) || name == element->tagQName());
 
-    return e.release();
+    return element.release();
 }
 
 bool Document::regionBasedColumnsEnabled() const
@@ -1996,9 +1998,9 @@ void Document::createRenderTree()
     ASSERT(!m_axObjectCache || this != topDocument());
 
     if (!m_renderArena)
-        m_renderArena = RenderArena::create();
+        m_renderArena = createOwned<RenderArena>();
     
-    setRenderView(new (m_renderArena.get()) RenderView(this));
+    setRenderView(new (m_renderArena.get()) RenderView(*this));
 #if USE(ACCELERATED_COMPOSITING)
     renderView()->setIsInWindow(true);
 #endif
@@ -2057,12 +2059,20 @@ void Document::didBecomeCurrentDocumentInFrame()
     }
 }
 
-void Document::detach()
+void Document::disconnectFromFrame()
+{
+    m_frame = 0;
+}
+
+void Document::destroyRenderTree()
 {
     ASSERT(attached());
     ASSERT(!m_inPageCache);
 
     TemporaryChange<bool> change(m_renderTreeBeingDestroyed, true);
+
+    if (isPluginDocument())
+        toPluginDocument(this)->detachFromPluginElement();
 
 #if ENABLE(POINTER_LOCK)
     if (page())
@@ -2122,13 +2132,6 @@ void Document::detach()
         parentDocument()->didRemoveEventTargetNode(this);
 #endif
 
-    // This is required, as our Frame might delete itself as soon as it detaches
-    // us. However, this violates Node::detach() semantics, as it's never
-    // possible to re-attach. Eventually Document::detach() should be renamed,
-    // or this setting of the frame to 0 could be made explicit in each of the
-    // callers of Document::detach().
-    m_frame = 0;
-
 #if ENABLE(IOS_TEXT_AUTOSIZING)
     // Do this before the arena is cleared, which is needed to deref the RenderStyle on TextAutoSizingKey.
     m_textAutoSizedNodes.clear();
@@ -2145,7 +2148,8 @@ void Document::prepareForDestruction()
     disconnectDescendantFrames();
     if (DOMWindow* window = this->domWindow())
         window->willDetachDocumentFromFrame();
-    detach();
+    destroyRenderTree();
+    disconnectFromFrame();
 }
 
 void Document::removeAllEventListeners()
@@ -2206,7 +2210,7 @@ AXObjectCache* Document::axObjectCache() const
 
     ASSERT(topDocument == this || !m_axObjectCache);
     if (!topDocument->m_axObjectCache)
-        topDocument->m_axObjectCache = adoptPtr(new AXObjectCache(topDocument));
+        topDocument->m_axObjectCache = adoptPtr(new AXObjectCache(*topDocument));
     return topDocument->m_axObjectCache.get();
 }
 
@@ -4332,7 +4336,7 @@ PassRefPtr<Attr> Document::createAttributeNS(const String& namespaceURI, const S
         return 0;
     }
 
-    return Attr::create(this, qName, emptyString());
+    return Attr::create(*this, qName, emptyString());
 }
 
 #if ENABLE(SVG)
@@ -4732,9 +4736,9 @@ CanvasRenderingContext* Document::getCSSCanvasContext(const String& type, const 
 
 HTMLCanvasElement* Document::getCSSCanvasElement(const String& name)
 {
-    RefPtr<HTMLCanvasElement>& element = m_cssCanvasElements.add(name, 0).iterator->value;
+    RefPtr<HTMLCanvasElement>& element = m_cssCanvasElements.add(name, nullptr).iterator->value;
     if (!element)
-        element = HTMLCanvasElement::create(this);
+        element = HTMLCanvasElement::create(*this);
     return element.get();
 }
 
@@ -4815,7 +4819,7 @@ void Document::addConsoleMessage(MessageSource source, MessageLevel level, const
         page->console().addMessage(source, level, message, requestIdentifier, this);
 }
 
-void Document::addMessage(MessageSource source, MessageLevel level, const String& message, const String& sourceURL, unsigned lineNumber, unsigned columnNumber, PassRefPtr<ScriptCallStack> callStack, ScriptState* state, unsigned long requestIdentifier)
+void Document::addMessage(MessageSource source, MessageLevel level, const String& message, const String& sourceURL, unsigned lineNumber, unsigned columnNumber, PassRefPtr<ScriptCallStack> callStack, JSC::ExecState* state, unsigned long requestIdentifier)
 {
     if (!isContextThread()) {
         postTask(AddConsoleMessageTask::create(source, level, message));

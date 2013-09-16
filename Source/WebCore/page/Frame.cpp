@@ -275,7 +275,8 @@ void Frame::setDocument(PassRefPtr<Document> newDocument)
 
     if (m_doc && m_doc->attached() && !m_doc->inPageCache()) {
         // FIXME: We don't call willRemove here. Why is that OK?
-        m_doc->detach();
+        m_doc->destroyRenderTree();
+        m_doc->disconnectFromFrame();
     }
 
     m_doc = newDocument.get();
@@ -584,10 +585,8 @@ Frame* Frame::frameForWidget(const Widget* widget)
 {
     ASSERT_ARG(widget, widget);
 
-    if (RenderWidget* renderer = RenderWidget::find(widget)) {
-        if (HTMLFrameOwnerElement* element = renderer->frameOwnerElement())
-            return element->document().frame();
-    }
+    if (RenderWidget* renderer = RenderWidget::find(widget))
+        return renderer->frameOwnerElement().document().frame();
 
     // Assume all widgets are either a FrameView or owned by a RenderWidget.
     // FIXME: That assumption is not right for scroll bars!

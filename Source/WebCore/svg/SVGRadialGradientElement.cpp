@@ -58,7 +58,7 @@ BEGIN_REGISTER_ANIMATED_PROPERTIES(SVGRadialGradientElement)
     REGISTER_PARENT_ANIMATED_PROPERTIES(SVGGradientElement)
 END_REGISTER_ANIMATED_PROPERTIES
 
-inline SVGRadialGradientElement::SVGRadialGradientElement(const QualifiedName& tagName, Document* document)
+inline SVGRadialGradientElement::SVGRadialGradientElement(const QualifiedName& tagName, Document& document)
     : SVGGradientElement(tagName, document)
     , m_cx(LengthModeWidth, "50%")
     , m_cy(LengthModeHeight, "50%")
@@ -72,7 +72,7 @@ inline SVGRadialGradientElement::SVGRadialGradientElement(const QualifiedName& t
     registerAnimatedPropertiesForSVGRadialGradientElement();
 }
 
-PassRefPtr<SVGRadialGradientElement> SVGRadialGradientElement::create(const QualifiedName& tagName, Document* document)
+PassRefPtr<SVGRadialGradientElement> SVGRadialGradientElement::create(const QualifiedName& tagName, Document& document)
 {
     return adoptRef(new SVGRadialGradientElement(tagName, document));
 }
@@ -132,7 +132,7 @@ void SVGRadialGradientElement::svgAttributeChanged(const QualifiedName& attrName
 
 RenderObject* SVGRadialGradientElement::createRenderer(RenderArena* arena, RenderStyle*)
 {
-    return new (arena) RenderSVGResourceRadialGradient(this);
+    return new (arena) RenderSVGResourceRadialGradient(*this);
 }
 
 bool SVGRadialGradientElement::collectGradientAttributes(RadialGradientAttributes& attributes)

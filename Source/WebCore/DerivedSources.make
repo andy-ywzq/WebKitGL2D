@@ -684,6 +684,7 @@ all : \
     HTMLElementFactory.cpp \
     HTMLEntityTable.cpp \
     HTMLNames.cpp \
+    JSHTMLElementWrapperFactory.cpp \
     JSSVGElementWrapperFactory.cpp \
     PlugInsResources.h \
     SVGElementFactory.cpp \
@@ -766,7 +767,9 @@ CSSValueKeywords.h : $(WEBCORE_CSS_VALUE_KEYWORDS) css/makevalues.pl $(PLATFORM_
 all : XMLViewerCSS.h
 
 XMLViewerCSS.h : xml/XMLViewer.css
-	perl $(WebCore)/inspector/xxd.pl XMLViewer_css $(WebCore)/xml/XMLViewer.css XMLViewerCSS.h
+	python "$(WebCore)/inspector/Scripts/cssmin.py" <"$(WebCore)/xml/XMLViewer.css" > ./XMLViewer.min.css
+	perl $(WebCore)/inspector/xxd.pl XMLViewer_css ./XMLViewer.min.css XMLViewerCSS.h
+	rm -f ./XMLViewer.min.css
 
 # --------
 
@@ -775,7 +778,9 @@ XMLViewerCSS.h : xml/XMLViewer.css
 all : XMLViewerJS.h
 
 XMLViewerJS.h : xml/XMLViewer.js
-	perl $(WebCore)/inspector/xxd.pl XMLViewer_js $(WebCore)/xml/XMLViewer.js XMLViewerJS.h
+	python "$(WebCore)/inspector/Scripts/jsmin.py" <"$(WebCore)/xml/XMLViewer.js" > ./XMLViewer.min.js
+	perl $(WebCore)/inspector/xxd.pl XMLViewer_js ./XMLViewer.min.js XMLViewerJS.h
+	rm -f ./XMLViewer.min.js
 
 # --------
 
@@ -897,17 +902,15 @@ endif
 
 ifdef HTML_FLAGS
 
-HTMLElementFactory.cpp HTMLNames.cpp : dom/make_names.pl bindings/scripts/Hasher.pm bindings/scripts/StaticString.pm html/HTMLTagNames.in html/HTMLAttributeNames.in
+HTMLElementFactory.cpp HTMLNames.cpp JSHTMLElementWrapperFactory.cpp : dom/make_names.pl bindings/scripts/Hasher.pm bindings/scripts/StaticString.pm html/HTMLTagNames.in html/HTMLAttributeNames.in
 	perl -I $(WebCore)/bindings/scripts $< --tags $(WebCore)/html/HTMLTagNames.in --attrs $(WebCore)/html/HTMLAttributeNames.in --factory --wrapperFactory --extraDefines "$(HTML_FLAGS)"
 
 else
 
-HTMLElementFactory.cpp HTMLNames.cpp : dom/make_names.pl bindings/scripts/Hasher.pm bindings/scripts/StaticString.pm html/HTMLTagNames.in html/HTMLAttributeNames.in
+HTMLElementFactory.cpp HTMLNames.cpp JSHTMLElementWrapperFactory.cpp : dom/make_names.pl bindings/scripts/Hasher.pm bindings/scripts/StaticString.pm html/HTMLTagNames.in html/HTMLAttributeNames.in
 	perl -I $(WebCore)/bindings/scripts $< --tags $(WebCore)/html/HTMLTagNames.in --attrs $(WebCore)/html/HTMLAttributeNames.in --factory --wrapperFactory
 
 endif
-
-JSHTMLElementWrapperFactory.cpp : HTMLNames.cpp
 
 XMLNSNames.cpp : dom/make_names.pl bindings/scripts/Hasher.pm bindings/scripts/StaticString.pm xml/xmlnsattrs.in
 	perl -I $(WebCore)/bindings/scripts $< --attrs $(WebCore)/xml/xmlnsattrs.in
@@ -931,16 +934,14 @@ endif
 
 ifdef SVG_FLAGS
 
-SVGElementFactory.cpp SVGNames.cpp : dom/make_names.pl bindings/scripts/Hasher.pm bindings/scripts/StaticString.pm svg/svgtags.in svg/svgattrs.in
+JSSVGElementWrapperFactory.cpp SVGElementFactory.cpp SVGNames.cpp : dom/make_names.pl bindings/scripts/Hasher.pm bindings/scripts/StaticString.pm svg/svgtags.in svg/svgattrs.in
 	perl -I $(WebCore)/bindings/scripts $< --tags $(WebCore)/svg/svgtags.in --attrs $(WebCore)/svg/svgattrs.in --extraDefines "$(SVG_FLAGS)" --factory --wrapperFactory
 else
 
-SVGElementFactory.cpp SVGNames.cpp : dom/make_names.pl bindings/scripts/Hasher.pm bindings/scripts/StaticString.pm svg/svgtags.in svg/svgattrs.in
+JSSVGElementWrapperFactory.cpp SVGElementFactory.cpp SVGNames.cpp : dom/make_names.pl bindings/scripts/Hasher.pm bindings/scripts/StaticString.pm svg/svgtags.in svg/svgattrs.in
 	perl -I $(WebCore)/bindings/scripts $< --tags $(WebCore)/svg/svgtags.in --attrs $(WebCore)/svg/svgattrs.in --factory --wrapperFactory
 
 endif
-
-JSSVGElementWrapperFactory.cpp : SVGNames.cpp
 
 XLinkNames.cpp : dom/make_names.pl bindings/scripts/Hasher.pm bindings/scripts/StaticString.pm svg/xlinkattrs.in
 	perl -I $(WebCore)/bindings/scripts $< --attrs $(WebCore)/svg/xlinkattrs.in
@@ -1052,18 +1053,24 @@ InspectorFrontend.h : Inspector.json $(INSPECTOR_GENERATOR_SCRIPTS)
 
 all : InspectorOverlayPage.h
 
-InspectorOverlayPage.h : InspectorOverlayPage.html
-	perl $(WebCore)/inspector/xxd.pl InspectorOverlayPage_html $(WebCore)/inspector/InspectorOverlayPage.html InspectorOverlayPage.h
+InspectorOverlayPage.h : InspectorOverlayPage.html InspectorOverlayPage.css InspectorOverlayPage.js
+	python "$(WebCore)/inspector/Scripts/inline-and-minify-stylesheets-and-scripts.py" "$(WebCore)/inspector/InspectorOverlayPage.html" ./InspectorOverlayPage.combined.html
+	perl "$(WebCore)/inspector/xxd.pl" InspectorOverlayPage_html ./InspectorOverlayPage.combined.html InspectorOverlayPage.h
+	rm -f ./InspectorOverlayPage.combined.html
 
 all : InjectedScriptSource.h
 
 InjectedScriptSource.h : InjectedScriptSource.js
-	perl $(WebCore)/inspector/xxd.pl InjectedScriptSource_js $(WebCore)/inspector/InjectedScriptSource.js InjectedScriptSource.h
+	python "$(WebCore)/inspector/Scripts/jsmin.py" <"$(WebCore)/inspector/InjectedScriptSource.js" > ./InjectedScriptSource.min.js
+	perl "$(WebCore)/inspector/xxd.pl" InjectedScriptSource_js ./InjectedScriptSource.min.js InjectedScriptSource.h
+	rm -f ./InjectedScriptSource.min.js
 
 all : InjectedScriptCanvasModuleSource.h
 
 InjectedScriptCanvasModuleSource.h : InjectedScriptCanvasModuleSource.js
-	perl $(WebCore)/inspector/xxd.pl InjectedScriptCanvasModuleSource_js $(WebCore)/inspector/InjectedScriptCanvasModuleSource.js InjectedScriptCanvasModuleSource.h
+	python "$(WebCore)/inspector/Scripts/jsmin.py" <"$(WebCore)/inspector/InjectedScriptCanvasModuleSource.js" > ./InjectedScriptCanvasModuleSource.min.js
+	perl "$(WebCore)/inspector/xxd.pl" InjectedScriptCanvasModuleSource_js ./InjectedScriptCanvasModuleSource.min.js InjectedScriptCanvasModuleSource.h
+	rm -f ./InjectedScriptCanvasModuleSource.min.js
 
 -include $(JS_DOM_HEADERS:.h=.dep)
 

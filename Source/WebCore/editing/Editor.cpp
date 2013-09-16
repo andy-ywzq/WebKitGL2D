@@ -417,29 +417,41 @@ void Editor::pasteAsPlainTextBypassingDHTML()
 
 void Editor::pasteAsPlainTextWithPasteboard(Pasteboard& pasteboard)
 {
-#if PLATFORM(MAC) && !PLATFORM(IOS)
     String text = readPlainTextFromPasteboard(pasteboard);
-#else
-    String text = pasteboard.plainText(&m_frame);
-#endif
     if (client() && client()->shouldInsertText(text, selectedRange().get(), EditorInsertActionPasted))
-        pasteAsPlainText(text, canSmartReplaceWithPasteboard(&pasteboard));
+        pasteAsPlainText(text, canSmartReplaceWithPasteboard(pasteboard));
 }
 
-#if !PLATFORM(MAC)
+String Editor::readPlainTextFromPasteboard(Pasteboard& pasteboard)
+{
+    PasteboardPlainText text;
+    pasteboard.read(text);
+    return plainTextFromPasteboard(text);
+}
+
+#if !(PLATFORM(MAC) && !PLATFORM(IOS))
+
+String Editor::plainTextFromPasteboard(const PasteboardPlainText& text)
+{
+    return text.text;
+}
+
+#endif
+
+#if !PLATFORM(MAC) && !PLATFORM(EFL) && !PLATFORM(NIX)
 void Editor::pasteWithPasteboard(Pasteboard* pasteboard, bool allowPlainText)
 {
     RefPtr<Range> range = selectedRange();
     bool chosePlainText;
     RefPtr<DocumentFragment> fragment = pasteboard->documentFragment(&m_frame, range, allowPlainText, chosePlainText);
     if (fragment && shouldInsertFragment(fragment, range, EditorInsertActionPasted))
-        pasteAsFragment(fragment, canSmartReplaceWithPasteboard(pasteboard), chosePlainText);
+        pasteAsFragment(fragment, canSmartReplaceWithPasteboard(*pasteboard), chosePlainText);
 }
 #endif
 
-bool Editor::canSmartReplaceWithPasteboard(Pasteboard* pasteboard)
+bool Editor::canSmartReplaceWithPasteboard(Pasteboard& pasteboard)
 {
-    return client() && client()->smartInsertDeleteEnabled() && pasteboard->canSmartReplace();
+    return client() && client()->smartInsertDeleteEnabled() && pasteboard.canSmartReplace();
 }
 
 bool Editor::shouldInsertFragment(PassRefPtr<DocumentFragment> fragment, PassRefPtr<Range> replacingDOMRange, EditorInsertAction givenAction)
@@ -1052,7 +1064,7 @@ void Editor::cut()
         if (enclosingTextFormControl(m_frame.selection().start()))
             Pasteboard::createForCopyAndPaste()->writePlainText(selectedTextForClipboard(), canSmartCopyOrDelete() ? Pasteboard::CanSmartReplace : Pasteboard::CannotSmartReplace);
         else {
-#if PLATFORM(MAC) && !PLATFORM(IOS)
+#if (PLATFORM(MAC) && !PLATFORM(IOS)) || PLATFORM(EFL) || PLATFORM(NIX)
             writeSelectionToPasteboard(*Pasteboard::createForCopyAndPaste());
 #else
             // FIXME: Convert all other platforms to match Mac and delete this.
@@ -1080,13 +1092,13 @@ void Editor::copy()
     } else {
         Document* document = m_frame.document();
         if (HTMLImageElement* imageElement = imageElementFromImageDocument(document)) {
-#if PLATFORM(MAC) && !PLATFORM(IOS)
+#if (PLATFORM(MAC) && !PLATFORM(IOS)) || PLATFORM(EFL) || PLATFORM(NIX)
             writeImageToPasteboard(*Pasteboard::createForCopyAndPaste(), *imageElement, document->url(), document->title());
 #else
             Pasteboard::createForCopyAndPaste()->writeImage(imageElement, document->url(), document->title());
 #endif
         } else {
-#if PLATFORM(MAC) && !PLATFORM(IOS)
+#if (PLATFORM(MAC) && !PLATFORM(IOS)) || PLATFORM(EFL) || PLATFORM(NIX)
             writeSelectionToPasteboard(*Pasteboard::createForCopyAndPaste());
 #else
             // FIXME: Convert all other platforms to match Mac and delete this.
@@ -1169,11 +1181,15 @@ void Editor::copyURL(const KURL& url, const String& title)
 
 void Editor::copyURL(const KURL& url, const String& title, Pasteboard& pasteboard)
 {
+    PasteboardURL pasteboardURL;
+    pasteboardURL.url = url;
+    pasteboardURL.title = title;
+
 #if PLATFORM(MAC) && !PLATFORM(IOS)
-    writeURLToPasteboard(pasteboard, url, title);
-#else
-    pasteboard.writeURL(url, title, &m_frame);
+    fillInUserVisibleForm(pasteboardURL);
 #endif
+
+    pasteboard.write(pasteboardURL);
 }
 
 void Editor::copyImage(const HitTestResult& result)
@@ -1186,7 +1202,7 @@ void Editor::copyImage(const HitTestResult& result)
     if (url.isEmpty())
         url = result.absoluteImageURL();
 
-#if PLATFORM(MAC) && !PLATFORM(IOS)
+#if (PLATFORM(MAC) && !PLATFORM(IOS)) || PLATFORM(EFL) || PLATFORM(NIX)
     writeImageToPasteboard(*Pasteboard::createForCopyAndPaste(), *element, url, result.altDisplayString());
 #else
     Pasteboard::createForCopyAndPaste()->writeImage(element, url, result.altDisplayString());

@@ -39,14 +39,14 @@ BEGIN_REGISTER_ANIMATED_PROPERTIES(SVGGElement)
     REGISTER_PARENT_ANIMATED_PROPERTIES(SVGGraphicsElement)
 END_REGISTER_ANIMATED_PROPERTIES
 
-SVGGElement::SVGGElement(const QualifiedName& tagName, Document* document)
+SVGGElement::SVGGElement(const QualifiedName& tagName, Document& document)
     : SVGGraphicsElement(tagName, document)
 {
     ASSERT(hasTagName(SVGNames::gTag));
     registerAnimatedPropertiesForSVGGElement();
 }
 
-PassRefPtr<SVGGElement> SVGGElement::create(const QualifiedName& tagName, Document* document)
+PassRefPtr<SVGGElement> SVGGElement::create(const QualifiedName& tagName, Document& document)
 {
     return adoptRef(new SVGGElement(tagName, document));
 }
@@ -96,9 +96,9 @@ RenderObject* SVGGElement::createRenderer(RenderArena* arena, RenderStyle* style
     // subtree may be hidden - we only want the resource renderers to exist so they can be
     // referenced from somewhere else.
     if (style->display() == NONE)
-        return new (arena) RenderSVGHiddenContainer(this);
+        return new (arena) RenderSVGHiddenContainer(*this);
 
-    return new (arena) RenderSVGTransformableContainer(this);
+    return new (arena) RenderSVGTransformableContainer(*this);
 }
 
 bool SVGGElement::rendererIsNeeded(const RenderStyle&)

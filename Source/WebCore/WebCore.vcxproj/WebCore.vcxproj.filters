@@ -1968,6 +1968,9 @@
     <ClCompile Include="..\platform\network\curl\FormDataStreamCurl.cpp">
       <Filter>platform\network\curl</Filter>
     </ClCompile>
+    <ClCompile Include="..\platform\network\curl\MultipartHandle.cpp">
+      <Filter>platform\network\curl</Filter>
+    </ClCompile>
     <ClCompile Include="..\platform\network\curl\ProxyServerCurl.cpp">
       <Filter>platform\network\curl</Filter>
     </ClCompile>
@@ -2859,7 +2862,7 @@
     <ClCompile Include="..\rendering\mathml\RenderMathMLSquareRoot.cpp">
       <Filter>rendering\mathml</Filter>
     </ClCompile>
-    <ClCompile Include="..\rendering\mathml\RenderMathMLSubSup.cpp">
+    <ClCompile Include="..\rendering\mathml\RenderMathMLScripts.cpp">
       <Filter>rendering\mathml</Filter>
     </ClCompile>
     <ClCompile Include="..\rendering\mathml\RenderMathMLUnderOver.cpp">
@@ -2977,9 +2980,6 @@
       <Filter>rendering\svg</Filter>
     </ClCompile>
     <ClCompile Include="..\rendering\svg\RenderSVGTextPath.cpp">
-      <Filter>rendering\svg</Filter>
-    </ClCompile>
-    <ClCompile Include="..\rendering\svg\RenderSVGTSpan.cpp">
       <Filter>rendering\svg</Filter>
     </ClCompile>
     <ClCompile Include="..\rendering\svg\SVGInlineFlowBox.cpp">
@@ -4408,9 +4408,6 @@
       <Filter>bindings\js</Filter>
     </ClCompile>
     <ClCompile Include="..\bindings\js\JSClipboardCustom.cpp">
-      <Filter>bindings\js</Filter>
-    </ClCompile>
-    <ClCompile Include="..\bindings\js\JSConsoleCustom.cpp">
       <Filter>bindings\js</Filter>
     </ClCompile>
     <ClCompile Include="..\bindings\js\JSCSSFontFaceRuleCustom.cpp">
@@ -9843,7 +9840,7 @@
     <ClInclude Include="..\rendering\mathml\RenderMathMLSquareRoot.h">
       <Filter>rendering\mathml</Filter>
     </ClInclude>
-    <ClInclude Include="..\rendering\mathml\RenderMathMLSubSup.h">
+    <ClInclude Include="..\rendering\mathml\RenderMathMLScripts.h">
       <Filter>rendering\mathml</Filter>
     </ClInclude>
     <ClInclude Include="..\rendering\mathml\RenderMathMLUnderOver.h">
@@ -15793,6 +15790,9 @@
       <Filter>platform\network\curl</Filter>
     </CustomBuildStep>
     <CustomBuildStep Include="..\platform\network\curl\FormDataStreamCurl.h">
+      <Filter>platform\network\curl</Filter>
+    </CustomBuildStep>
+    <CustomBuildStep Include="..\platform\network\curl\MultipartHandle.h">
       <Filter>platform\network\curl</Filter>
     </CustomBuildStep>
     <CustomBuildStep Include="..\platform\network\curl\ResourceError.h">

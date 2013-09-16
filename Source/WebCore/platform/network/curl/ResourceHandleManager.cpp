@@ -40,6 +40,7 @@
 #include "DataURL.h"
 #include "HTTPParsers.h"
 #include "MIMETypeRegistry.h"
+#include "MultipartHandle.h"
 #include "NotImplemented.h"
 #include "ResourceError.h"
 #include "ResourceHandle.h"
@@ -222,8 +223,11 @@ static size_t writeCallback(void* ptr, size_t size, size_t nmemb, void* data)
             return 0;
     }
 
-    if (d->client())
+    if (d->m_multipartHandle)
+        d->m_multipartHandle->contentReceived(static_cast<const char*>(ptr), totalSize);
+    else if (d->client())
         d->client()->didReceiveData(job, static_cast<char*>(ptr), totalSize, 0);
+
     return totalSize;
 }
 
@@ -398,6 +402,13 @@ static size_t headerCallback(char* ptr, size_t size, size_t nmemb, void* data)
         d->m_response.setTextEncodingName(extractCharsetFromMediaType(d->m_response.httpHeaderField("Content-Type")));
         d->m_response.setSuggestedFilename(filenameFromHTTPContentDisposition(d->m_response.httpHeaderField("Content-Disposition")));
 
+        if (d->m_response.isMultipart()) {
+            String boundary;
+            bool parsed = MultipartHandle::extractBoundary(d->m_response.httpHeaderField("Content-Type"), boundary);
+            if (parsed)
+                d->m_multipartHandle = MultipartHandle::create(job, boundary);
+        }
+
         // HTTP redirection
         if (isHttpRedirect(httpCode)) {
             String location = d->m_response.httpHeaderField("location");
@@ -570,6 +581,9 @@ void ResourceHandleManager::downloadTimerCallback(Timer<ResourceHandleManager>* 
                     continue;
                 }
             }
+
+            if (d->m_multipartHandle)
+                d->m_multipartHandle->contentEnded();
 
             if (d->client())
                 d->client()->didFinishLoading(job, 0);
