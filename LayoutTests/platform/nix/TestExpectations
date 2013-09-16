@@ -125,40 +125,9 @@ css2.1/t1604-c542-letter-sp-00-b-a.html
 css3/compositing/blend-mode-property-parsing.html
 css3/compositing/blend-mode-property.html
 css3/compositing/should-have-compositing-layer.html
-css3/device-adapt/opera/cascading-001.xhtml
-css3/device-adapt/opera/cascading-002.xhtml
-css3/device-adapt/opera/cascading-003.xhtml
-css3/device-adapt/opera/cascading-004.xhtml
-css3/device-adapt/opera/constrain-001.xhtml
-css3/device-adapt/opera/constrain-004.xhtml
-css3/device-adapt/opera/constrain-005.xhtml
-css3/device-adapt/opera/constrain-006.xhtml
-css3/device-adapt/opera/constrain-007.xhtml
-css3/device-adapt/opera/constrain-008.xhtml
-css3/device-adapt/opera/constrain-009.xhtml
-css3/device-adapt/opera/constrain-010.xhtml
-css3/device-adapt/opera/constrain-011.xhtml
-css3/device-adapt/opera/constrain-013.xhtml
-css3/device-adapt/opera/constrain-014.xhtml
-css3/device-adapt/opera/constrain-015.xhtml
-css3/device-adapt/opera/constrain-016.xhtml
-css3/device-adapt/opera/constrain-017.xhtml
-css3/device-adapt/opera/constrain-018.xhtml
-css3/device-adapt/opera/constrain-019.xhtml
-css3/device-adapt/opera/constrain-020.xhtml
-css3/device-adapt/opera/constrain-021.xhtml
-css3/device-adapt/opera/constrain-022.xhtml
-css3/device-adapt/opera/constrain-023.xhtml
-css3/device-adapt/opera/constrain-024.xhtml
-css3/device-adapt/opera/cssom-001.xhtml
-css3/device-adapt/opera/orientation-001.xhtml
-css3/device-adapt/opera/syntax-001.xhtml
-css3/device-adapt/opera/syntax-002.xhtml
-css3/device-adapt/opera/syntax-003.xhtml
-css3/device-adapt/viewport-at-rule-parsing.html
-css3/device-adapt/viewport-properties-validation.html
-css3/device-adapt/viewport-width-check-window-innerwidth-correct.html
-css3/device-adapt/viewport-width-not-affecting-next-page.html
+css3/device-adapt/opera/constrain-021.xhtml [ Failure ]
+css3/device-adapt/opera/constrain-022.xhtml [ Failure ]
+css3/device-adapt/opera/orientation-001.xhtml [ Skip ]
 css3/filters/filtered-compositing-descendant.html
 css3/filters/null-effect-check.html
 css3/filters/should-not-have-compositing-layer.html [ Failure ]
