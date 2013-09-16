@@ -139,6 +139,7 @@ static unsigned convertToNixModifiers(WKEventModifiers modifiersRef)
 NIXMouseEvent* EventSenderProxy::createMouseEvent(NIXInputEventType type, unsigned button, WKEventModifiers wkModifiers)
 {
     NIXMouseEvent* ev = new NIXMouseEvent;
+    memset(ev, 0, sizeof(NIXMouseEvent));
     ev->type = type;
     ev->modifiers = convertToNixModifiers(wkModifiers);
     ev->timestamp = convertToNixTimestamp(m_time);
