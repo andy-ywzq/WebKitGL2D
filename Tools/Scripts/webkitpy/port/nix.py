@@ -54,7 +54,7 @@ class NixPort(Port):
 
         self._jhbuild_wrapper_path = [self.path_from_webkit_base('Tools', 'jhbuild', 'jhbuild-wrapper'), '--nix', 'run']
 
-        self.set_option_default('wrapper', self._jhbuild_wrapper_path)
+        self.set_option_default('wrapper', ' '.join(self._jhbuild_wrapper_path))
         self.set_option_default('webkit_test_runner', True)
         self.webprocess_cmd_prefix = self.get_option('webprocess_cmd_prefix')
 
@@ -100,7 +100,7 @@ class NixPort(Port):
         return self._build_path('bin', 'ImageDiff')
 
     def _image_diff_command(self, *args, **kwargs):
-        return [self._jhbuild_wrapper_path] + super(NixPort, self)._image_diff_command(*args, **kwargs)
+        return self._jhbuild_wrapper_path + super(NixPort, self)._image_diff_command(*args, **kwargs)
 
     def _search_paths(self):
         return [self.port_name]
