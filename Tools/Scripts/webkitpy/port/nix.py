@@ -52,7 +52,7 @@ class NixPort(Port):
     def __init__(self, *args, **kwargs):
         super(NixPort, self).__init__(*args, **kwargs)
 
-        self._jhbuild_wrapper_path = self.path_from_webkit_base('Tools', 'nix', 'run-with-jhbuild')
+        self._jhbuild_wrapper_path = [self.path_from_webkit_base('Tools', 'jhbuild', 'jhbuild-wrapper'), '--nix', 'run']
 
         self.set_option_default('wrapper', self._jhbuild_wrapper_path)
         self.set_option_default('webkit_test_runner', True)
