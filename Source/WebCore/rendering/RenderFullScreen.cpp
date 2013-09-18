@@ -66,7 +66,7 @@ RenderFullScreen::RenderFullScreen()
 
 RenderFullScreen* RenderFullScreen::createAnonymous(Document& document)
 {
-    RenderFullScreen* renderer = new (document.renderArena()) RenderFullScreen();
+    RenderFullScreen* renderer = new (*document.renderArena()) RenderFullScreen();
     renderer->setDocumentForAnonymous(document);
     return renderer;
 }

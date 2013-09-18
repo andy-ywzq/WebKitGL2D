@@ -1886,6 +1886,9 @@ sub runAutogenForAutotoolsProjectIfNecessary($@)
     # Always enable introspection when building WebKitGTK+.
     unshift(@buildArgs, "--enable-introspection");
 
+    # Also, always enable developer mode for developer/test builds.
+    unshift(@buildArgs, "--enable-developer-mode");
+
     my $joinedBuildArgs = join(" ", @buildArgs);
 
     if (-e "GNUmakefile") {
@@ -2492,7 +2495,8 @@ EOF
 sub argumentsForRunAndDebugMacWebKitApp()
 {
     my @args = ();
-    push @args, ("-ApplePersistenceIgnoreState", "YES") if !isSnowLeopard() && checkForArgumentAndRemoveFromArrayRef("--no-saved-state", \@args);
+    use constant ignoreStateWithLoggingSuppressed => "-1";
+    push @args, ("-ApplePersistenceIgnoreState", ignoreStateWithLoggingSuppressed) if checkForArgumentAndRemoveFromARGV("--no-saved-state");
     push @args, ("-WebKit2UseXPCServiceForWebProcess", "YES") if shouldUseXPCServiceForWebProcess();
     unshift @args, @ARGV;
 

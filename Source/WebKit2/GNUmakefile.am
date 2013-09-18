@@ -214,10 +214,14 @@ endif
 libwebkit2gtk_@WEBKITGTK_API_MAJOR_VERSION@_@WEBKITGTK_API_MINOR_VERSION@_ladir = \
 	$(libwebkit2gtkincludedir)/WebKit2
 
-libwebkit2gtk_@WEBKITGTK_API_MAJOR_VERSION@_@WEBKITGTK_API_MINOR_VERSION@_la_LDFLAGS = \
+libwebkit2gtk_@WEBKITGTK_API_MAJOR_VERSION@_@WEBKITGTK_API_MINOR_VERSION@_la_LDFLAGS := \
 	-version-info @LIBWEBKIT2GTK_VERSION@ \
-	$(version_script) \
 	$(no_undefined)
+
+if !ENABLE_DEVELOPER_MODE
+libwebkit2gtk_@WEBKITGTK_API_MAJOR_VERSION@_@WEBKITGTK_API_MINOR_VERSION@_la_LDFLAGS += \
+	$(version_script)
+endif
 
 libwebkit2gtk_@WEBKITGTK_API_MAJOR_VERSION@_@WEBKITGTK_API_MINOR_VERSION@_la_LIBADD := \
 	-lpthread \
@@ -360,6 +364,7 @@ vpath %.messages.in = \
 	$(WebKit2)/UIProcess/ApplicationCache \
 	$(WebKit2)/UIProcess/Downloads \
 	$(WebKit2)/UIProcess/Geolocation \
+	$(WebKit2)/UIProcess/Network/CustomProtocols \
 	$(WebKit2)/UIProcess/Plugins \
 	$(WebKit2)/UIProcess/ResourceCache \
 	$(WebKit2)/UIProcess/Storage \
@@ -372,6 +377,7 @@ vpath %.messages.in = \
 	$(WebKit2)/WebProcess/Geolocation \
 	$(WebKit2)/WebProcess/IconDatabase \
 	$(WebKit2)/WebProcess/MediaCache \
+	$(WebKit2)/WebProcess/Network \
 	$(WebKit2)/WebProcess/NetworkInfo \
 	$(WebKit2)/WebProcess/Notifications \
 	$(WebKit2)/WebProcess/Plugins \
@@ -734,6 +740,7 @@ EXTRA_DIST += \
 	$(shell ls $(WebKit2)/WebProcess/Geolocation/*.in) \
 	$(shell ls $(WebKit2)/WebProcess/IconDatabase/*.in) \
 	$(shell ls $(WebKit2)/WebProcess/MediaCache/*.in) \
+	$(shell ls $(WebKit2)/WebProcess/Network/*.in) \
 	$(shell ls $(WebKit2)/WebProcess/NetworkInfo/*.in) \
 	$(shell ls $(WebKit2)/WebProcess/Notifications/*.in) \
 	$(shell ls $(WebKit2)/WebProcess/Plugins/*.in) \

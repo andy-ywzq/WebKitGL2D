@@ -69,8 +69,10 @@ public:
 
     Element* activeElement() const;
 
+#if ENABLE(STYLE_SCOPED)
     virtual void registerScopedHTMLStyleChild() OVERRIDE;
     virtual void unregisterScopedHTMLStyleChild() OVERRIDE;
+#endif
 
     ShadowRootType type() const { return static_cast<ShadowRootType>(m_type); }
 
@@ -94,7 +96,9 @@ private:
     // FIXME: This shouldn't happen. https://bugs.webkit.org/show_bug.cgi?id=88834
     bool isOrphan() const { return !hostElement(); }
 
+#if ENABLE(STYLE_SCOPED)
     unsigned m_numberOfStyles : 28;
+#endif
     unsigned m_applyAuthorStyles : 1;
     unsigned m_resetStyleInheritance : 1;
     unsigned m_type : 1;

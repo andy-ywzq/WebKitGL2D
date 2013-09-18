@@ -1135,7 +1135,7 @@ RenderListMarker::~RenderListMarker()
 RenderListMarker* RenderListMarker::createAnonymous(RenderListItem& listItem)
 {
     Document& document = listItem.document();
-    RenderListMarker* renderer = new (document.renderArena()) RenderListMarker(listItem);
+    RenderListMarker* renderer = new (*document.renderArena()) RenderListMarker(listItem);
     renderer->setDocumentForAnonymous(document);
     return renderer;
 }
@@ -1164,7 +1164,7 @@ void RenderListMarker::styleDidChange(StyleDifference diff, const RenderStyle* o
 InlineBox* RenderListMarker::createInlineBox()
 {
     InlineBox* result = RenderBox::createInlineBox();
-    result->setIsText(isText());
+    result->setBehavesLikeText(isText());
     return result;
 }
 

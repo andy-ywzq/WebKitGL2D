@@ -49,7 +49,7 @@
 #include "HTMLTemplateElement.h"
 #include "HTMLTextFormControlElement.h"
 #include "NodeTraversal.h"
-#include "RenderWordBreak.h"
+#include "RenderLineBreak.h"
 #include "ScriptController.h"
 #include "ScriptEventListener.h"
 #include "Settings.h"
@@ -212,9 +212,9 @@ void HTMLElement::collectStyleForPresentationAttribute(const QualifiedName& name
         StyledElement::collectStyleForPresentationAttribute(name, value, style);
 }
 
-static void populateEventNameForAttributeLocalNameMap(HashMap<AtomicStringImpl*, AtomicString>& map)
+static NEVER_INLINE void populateEventNameForAttributeLocalNameMap(HashMap<AtomicStringImpl*, AtomicString>& map)
 {
-    const QualifiedName* const simpleTable[] = {
+    static const QualifiedName* const simpleTable[] = {
         &onabortAttr,
         &onbeforecopyAttr,
         &onbeforecutAttr,
@@ -788,11 +788,11 @@ bool HTMLElement::rendererIsNeeded(const RenderStyle& style)
     return StyledElement::rendererIsNeeded(style);
 }
 
-RenderObject* HTMLElement::createRenderer(RenderArena* arena, RenderStyle* style)
+RenderObject* HTMLElement::createRenderer(RenderArena& arena, RenderStyle& style)
 {
     if (hasLocalName(wbrTag))
-        return new (arena) RenderWordBreak(this);
-    return RenderObject::createObject(this, style);
+        return new (arena) RenderLineBreak(*this);
+    return RenderObject::createObject(*this, style);
 }
 
 HTMLFormElement* HTMLElement::virtualForm() const

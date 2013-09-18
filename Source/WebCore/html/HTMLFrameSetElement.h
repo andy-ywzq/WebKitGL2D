@@ -24,8 +24,8 @@
 #ifndef HTMLFrameSetElement_h
 #define HTMLFrameSetElement_h
 
-#include <wtf/OwnArrayPtr.h>
 #include "HTMLElement.h"
+#include <memory>
 
 namespace WebCore {
 
@@ -75,7 +75,7 @@ private:
 
     virtual void willAttachRenderers() OVERRIDE;
     virtual bool rendererIsNeeded(const RenderStyle&);
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
+    virtual RenderObject* createRenderer(RenderArena&, RenderStyle&);
     
     virtual void defaultEventHandler(Event*);
 
@@ -84,8 +84,8 @@ private:
     virtual InsertionNotificationRequest insertedInto(ContainerNode*) OVERRIDE;
     virtual void removedFrom(ContainerNode*) OVERRIDE;
 
-    OwnArrayPtr<Length> m_rowLengths;
-    OwnArrayPtr<Length> m_colLengths;
+    std::unique_ptr<Length[]> m_rowLengths;
+    std::unique_ptr<Length[]> m_colLengths;
 
     int m_totalRows;
     int m_totalCols;

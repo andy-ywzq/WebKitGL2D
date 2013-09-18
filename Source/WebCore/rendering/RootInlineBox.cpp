@@ -66,13 +66,13 @@ RootInlineBox::RootInlineBox(RenderBlock& block)
 }
 
 
-void RootInlineBox::destroy(RenderArena* arena)
+void RootInlineBox::destroy(RenderArena& arena)
 {
     detachEllipsisBox(arena);
     InlineFlowBox::destroy(arena);
 }
 
-void RootInlineBox::detachEllipsisBox(RenderArena* arena)
+void RootInlineBox::detachEllipsisBox(RenderArena& arena)
 {
     if (hasEllipsisBox()) {
         EllipsisBox* box = gEllipsisBoxMap->take(this);
@@ -521,6 +521,59 @@ GapRects RootInlineBox::lineSelectionGap(RenderBlock* rootBlock, const LayoutPoi
     return result;
 }
 
+IntRect RootInlineBox::computeCaretRect(float logicalLeftPosition, unsigned caretWidth, LayoutUnit* extraWidthToEndOfLine) const
+{
+    int height = selectionHeight();
+    int top = selectionTop();
+
+    // Distribute the caret's width to either side of the offset.
+    float left = logicalLeftPosition;
+    int caretWidthLeftOfOffset = caretWidth / 2;
+    left -= caretWidthLeftOfOffset;
+    int caretWidthRightOfOffset = caretWidth - caretWidthLeftOfOffset;
+    left = roundf(left);
+
+    float rootLeft = logicalLeft();
+    float rootRight = logicalRight();
+
+    if (extraWidthToEndOfLine)
+        *extraWidthToEndOfLine = (logicalWidth() + rootLeft) - (left + caretWidth);
+
+    RenderStyle* blockStyle = block().style();
+
+    bool rightAligned = false;
+    switch (blockStyle->textAlign()) {
+    case RIGHT:
+    case WEBKIT_RIGHT:
+        rightAligned = true;
+        break;
+    case LEFT:
+    case WEBKIT_LEFT:
+    case CENTER:
+    case WEBKIT_CENTER:
+        break;
+    case JUSTIFY:
+    case TASTART:
+        rightAligned = !blockStyle->isLeftToRightDirection();
+        break;
+    case TAEND:
+        rightAligned = blockStyle->isLeftToRightDirection();
+        break;
+    }
+
+    float leftEdge = std::min<float>(0, rootLeft);
+    float rightEdge = std::max<float>(block().logicalWidth(), rootRight);
+
+    if (rightAligned) {
+        left = std::max(left, leftEdge);
+        left = std::min(left, rootRight - caretWidth);
+    } else {
+        left = std::min(left, rightEdge - caretWidthRightOfOffset);
+        left = std::max(left, rootLeft);
+    }
+    return blockStyle->isHorizontalWritingMode() ? IntRect(left, top, caretWidth, height) : IntRect(top, left, height, caretWidth);
+}
+
 RenderObject::SelectionState RootInlineBox::selectionState()
 {
     // Walk over all of the selected boxes.
@@ -793,7 +846,7 @@ void RootInlineBox::ascentAndDescentForBox(InlineBox* box, GlyphOverflowAndFallb
 
     Vector<const SimpleFontData*>* usedFonts = 0;
     GlyphOverflow* glyphOverflow = 0;
-    if (box->isText()) {
+    if (box->isInlineTextBox()) {
         GlyphOverflowAndFallbackFontsMap::iterator it = textBoxDataMap.find(toInlineTextBox(box));
         usedFonts = it == textBoxDataMap.end() ? 0 : &it->value.first;
         glyphOverflow = it == textBoxDataMap.end() ? 0 : &it->value.second;
@@ -862,7 +915,7 @@ void RootInlineBox::ascentAndDescentForBox(InlineBox* box, GlyphOverflowAndFallb
     if (includeMarginForBox(box)) {
         LayoutUnit ascentWithMargin = box->renderer().style(isFirstLineStyle())->fontMetrics().ascent(baselineType());
         LayoutUnit descentWithMargin = box->renderer().style(isFirstLineStyle())->fontMetrics().descent(baselineType());
-        if (box->parent() && !box->renderer().isText()) {
+        if (box->parent() && !box->renderer().isTextOrLineBreak()) {
             ascentWithMargin += box->boxModelObject()->borderAndPaddingBefore() + box->boxModelObject()->marginBefore();
             descentWithMargin += box->boxModelObject()->borderAndPaddingAfter() + box->boxModelObject()->marginAfter();
         }
@@ -876,7 +929,7 @@ void RootInlineBox::ascentAndDescentForBox(InlineBox* box, GlyphOverflowAndFallb
 
 LayoutUnit RootInlineBox::verticalPositionForBox(InlineBox* box, VerticalPositionCache& verticalPositionCache)
 {
-    if (box->renderer().isText())
+    if (box->renderer().isTextOrLineBreak())
         return box->parent()->logicalTop();
     
     RenderBoxModelObject* renderer = box->boxModelObject();
@@ -948,7 +1001,7 @@ LayoutUnit RootInlineBox::verticalPositionForBox(InlineBox* box, VerticalPositio
 
 bool RootInlineBox::includeLeadingForBox(InlineBox* box) const
 {
-    if (box->renderer().isReplaced() || (box->renderer().isText() && !box->isText()))
+    if (box->renderer().isReplaced() || (box->renderer().isTextOrLineBreak() && !box->behavesLikeText()))
         return false;
 
     LineBoxContain lineBoxContain = renderer().style()->lineBoxContain();
@@ -957,10 +1010,10 @@ bool RootInlineBox::includeLeadingForBox(InlineBox* box) const
 
 bool RootInlineBox::includeFontForBox(InlineBox* box) const
 {
-    if (box->renderer().isReplaced() || (box->renderer().isText() && !box->isText()))
+    if (box->renderer().isReplaced() || (box->renderer().isTextOrLineBreak() && !box->behavesLikeText()))
         return false;
     
-    if (!box->isText() && box->isInlineFlowBox() && !toInlineFlowBox(box)->hasTextChildren())
+    if (!box->behavesLikeText() && box->isInlineFlowBox() && !toInlineFlowBox(box)->hasTextChildren())
         return false;
 
     // For now map "glyphs" to "font" in vertical text mode until the bounds returned by glyphs aren't garbage.
@@ -970,10 +1023,10 @@ bool RootInlineBox::includeFontForBox(InlineBox* box) const
 
 bool RootInlineBox::includeGlyphsForBox(InlineBox* box) const
 {
-    if (box->renderer().isReplaced() || (box->renderer().isText() && !box->isText()))
+    if (box->renderer().isReplaced() || (box->renderer().isTextOrLineBreak() && !box->behavesLikeText()))
         return false;
     
-    if (!box->isText() && box->isInlineFlowBox() && !toInlineFlowBox(box)->hasTextChildren())
+    if (!box->behavesLikeText() && box->isInlineFlowBox() && !toInlineFlowBox(box)->hasTextChildren())
         return false;
 
     // FIXME: We can't fit to glyphs yet for vertical text, since the bounds returned are garbage.
@@ -983,7 +1036,7 @@ bool RootInlineBox::includeGlyphsForBox(InlineBox* box) const
 
 bool RootInlineBox::includeMarginForBox(InlineBox* box) const
 {
-    if (box->renderer().isReplaced() || (box->renderer().isText() && !box->isText()))
+    if (box->renderer().isReplaced() || (box->renderer().isTextOrLineBreak() && !box->behavesLikeText()))
         return false;
 
     LineBoxContain lineBoxContain = renderer().style()->lineBoxContain();

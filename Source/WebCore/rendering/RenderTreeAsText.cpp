@@ -36,11 +36,11 @@
 #include "InlineTextBox.h"
 #include "PrintContext.h"
 #include "PseudoElement.h"
-#include "RenderBR.h"
 #include "RenderDetailsMarker.h"
 #include "RenderFileUploadControl.h"
 #include "RenderInline.h"
 #include "RenderLayer.h"
+#include "RenderLineBreak.h"
 #include "RenderListItem.h"
 #include "RenderListMarker.h"
 #include "RenderNamedFlowThread.h"
@@ -251,9 +251,15 @@ void RenderTreeAsText::writeRenderObject(TextStream& ts, const RenderObject& o, 
         r = IntRect(text.firstRunX(), text.firstRunY(), linesBox.width(), linesBox.height());
         if (adjustForTableCells && !text.firstTextBox())
             adjustForTableCells = false;
+    } else if (o.isBR()) {
+        const RenderLineBreak& br = toRenderLineBreak(o);
+        IntRect linesBox = br.linesBoundingBox();
+        r = IntRect(linesBox.x(), linesBox.y(), linesBox.width(), linesBox.height());
+        if (!br.inlineBoxWrapper())
+            adjustForTableCells = false;
     } else if (o.isRenderInline()) {
-        // FIXME: Would be better not to just dump 0, 0 as the x and y here.
         const RenderInline& inlineFlow = toRenderInline(o);
+        // FIXME: Would be better not to just dump 0, 0 as the x and y here.
         r = IntRect(0, 0, inlineFlow.linesBoundingBox().width(), inlineFlow.linesBoundingBox().height());
         adjustForTableCells = false;
     } else if (o.isTableCell()) {
@@ -273,7 +279,7 @@ void RenderTreeAsText::writeRenderObject(TextStream& ts, const RenderObject& o, 
     // for consistency with old results.
     ts << " " << enclosingIntRect(r);
 
-    if (!(o.isText() && !o.isBR())) {
+    if (!o.isText()) {
         if (o.isFileUploadControl())
             ts << " " << quoteAndEscapeNonPrintables(toRenderFileUploadControl(&o)->fileTextValue());
 
@@ -302,7 +308,7 @@ void RenderTreeAsText::writeRenderObject(TextStream& ts, const RenderObject& o, 
                 ts << " [textStrokeWidth=" << o.style()->textStrokeWidth() << "]";
         }
 
-        if (!o.isBoxModelObject())
+        if (!o.isBoxModelObject() || o.isLineBreak())
             return;
 
         const RenderBoxModelObject& box = toRenderBoxModelObject(o);
@@ -583,7 +589,7 @@ void write(TextStream& ts, const RenderObject& o, int indent, RenderAsTextBehavi
     RenderTreeAsText::writeRenderObject(ts, o, behavior);
     ts << "\n";
 
-    if (o.isText() && !o.isBR()) {
+    if (o.isText()) {
         const RenderText& text = toRenderText(o);
         for (InlineTextBox* box = text.firstTextBox(); box; box = box->nextTextBox()) {
             writeIndent(ts, indent + 1);

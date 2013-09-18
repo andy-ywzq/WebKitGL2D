@@ -189,11 +189,6 @@ bool RenderText::isTextFragment() const
     return false;
 }
 
-bool RenderText::isWordBreak() const
-{
-    return false;
-}
-
 void RenderText::updateNeedsTranscoding()
 {
     const TextEncoding* encoding = document().decoder() ? &document().decoder()->encoding() : 0;
@@ -231,11 +226,6 @@ void RenderText::removeAndDestroyTextBoxes()
 {
     if (!documentBeingDestroyed()) {
         if (firstTextBox()) {
-            if (isBR()) {
-                RootInlineBox* next = firstTextBox()->root().nextRootBox();
-                if (next)
-                    next->markDirty();
-            }
             for (InlineTextBox* box = firstTextBox(); box; box = box->nextTextBox())
                 box->remove();
         } else if (parent())
@@ -307,7 +297,7 @@ void RenderText::removeTextBox(InlineTextBox* box)
 void RenderText::deleteTextBoxes()
 {
     if (firstTextBox()) {
-        RenderArena* arena = renderArena();
+        RenderArena& arena = renderArena();
         InlineTextBox* next;
         for (InlineTextBox* curr = firstTextBox(); curr; curr = next) {
             next = curr->nextTextBox();
@@ -659,71 +649,9 @@ LayoutRect RenderText::localCaretRect(InlineBox* inlineBox, int caretOffset, Lay
     if (!inlineBox)
         return LayoutRect();
 
-    ASSERT(inlineBox->isInlineTextBox());
-    if (!inlineBox->isInlineTextBox())
-        return LayoutRect();
-
     InlineTextBox* box = toInlineTextBox(inlineBox);
-
-    const RootInlineBox& rootBox = box->root();
-    int height = rootBox.selectionHeight();
-    int top = rootBox.selectionTop();
-
-    // Go ahead and round left to snap it to the nearest pixel.
     float left = box->positionForOffset(caretOffset);
-
-    // Distribute the caret's width to either side of the offset.
-    int caretWidthLeftOfOffset = caretWidth / 2;
-    left -= caretWidthLeftOfOffset;
-    int caretWidthRightOfOffset = caretWidth - caretWidthLeftOfOffset;
-
-    left = roundf(left);
-
-    float rootLeft = rootBox.logicalLeft();
-    float rootRight = rootBox.logicalRight();
-
-    // FIXME: should we use the width of the root inline box or the
-    // width of the containing block for this?
-    if (extraWidthToEndOfLine)
-        *extraWidthToEndOfLine = (rootBox.logicalWidth() + rootLeft) - (left + 1);
-
-    RenderBlock* cb = containingBlock();
-    RenderStyle* cbStyle = cb->style();
-
-    float leftEdge;
-    float rightEdge;
-    leftEdge = min<float>(0, rootLeft);
-    rightEdge = max<float>(cb->logicalWidth(), rootRight);
-
-    bool rightAligned = false;
-    switch (cbStyle->textAlign()) {
-    case RIGHT:
-    case WEBKIT_RIGHT:
-        rightAligned = true;
-        break;
-    case LEFT:
-    case WEBKIT_LEFT:
-    case CENTER:
-    case WEBKIT_CENTER:
-        break;
-    case JUSTIFY:
-    case TASTART:
-        rightAligned = !cbStyle->isLeftToRightDirection();
-        break;
-    case TAEND:
-        rightAligned = cbStyle->isLeftToRightDirection();
-        break;
-    }
-
-    if (rightAligned) {
-        left = max(left, leftEdge);
-        left = min(left, rootRight - caretWidth);
-    } else {
-        left = min(left, rightEdge - caretWidthRightOfOffset);
-        left = max(left, rootLeft);
-    }
-
-    return style()->isHorizontalWritingMode() ? IntRect(left, top, caretWidth, height) : IntRect(top, left, height, caretWidth);
+    return box->root().computeCaretRect(left, caretWidth, extraWidthToEndOfLine);
 }
 
 ALWAYS_INLINE float RenderText::widthFromCache(const Font& f, int start, int len, float xPos, HashSet<const SimpleFontData*>* fallbackFonts, GlyphOverflow* glyphOverflow) const
@@ -949,9 +877,6 @@ void RenderText::computePreferredLogicalWidths(float leadWidth, HashSet<const Si
     m_beginMinWidth = 0;
     m_endMinWidth = 0;
     m_maxWidth = 0;
-
-    if (isBR())
-        return;
 
     float currMinWidth = 0;
     float currMaxWidth = 0;
@@ -1427,7 +1352,6 @@ void RenderText::setTextInternal(PassRefPtr<StringImpl> text)
     }
 
     ASSERT(m_text);
-    ASSERT(!isBR() || (textLength() == 1 && m_text[0] == '\n'));
 
     m_isAllASCII = m_text.containsOnlyASCII();
     m_canUseSimpleFontCodePath = computeCanUseSimpleFontCodePath();
@@ -1509,7 +1433,7 @@ InlineTextBox* RenderText::createInlineTextBox()
         textBox->setPreviousTextBox(m_lastTextBox);
         m_lastTextBox = textBox;
     }
-    textBox->setIsText(true);
+    textBox->setBehavesLikeText(true);
     return textBox;
 }
 

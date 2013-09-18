@@ -65,7 +65,6 @@
 #include "NodeList.h"
 #include "Page.h"
 #include "ProgressTracker.h"
-#include "RenderBR.h"
 #include "RenderButton.h"
 #include "RenderFieldset.h"
 #include "RenderFileUploadControl.h"
@@ -73,6 +72,7 @@
 #include "RenderImage.h"
 #include "RenderInline.h"
 #include "RenderLayer.h"
+#include "RenderLineBreak.h"
 #include "RenderListBox.h"
 #include "RenderListMarker.h"
 #include "RenderMathMLBlock.h"
@@ -633,7 +633,7 @@ String AccessibilityRenderObject::textUnderElement(AccessibilityTextUnderElement
     
     // Reflect when a content author has explicitly marked a line break.
     if (m_renderer->isBR())
-        return toRenderBR(*m_renderer).text();
+        return ASCIILiteral("\n");
 
 #if ENABLE(MATHML)
     // Math operators create RenderText nodes on the fly that are not tied into the DOM in a reasonable way,
@@ -1154,15 +1154,17 @@ bool AccessibilityRenderObject::computeAccessibilityIsIgnored() const
     AccessibilityObject* controlObject = correspondingControlForLabelElement();
     if (controlObject && !controlObject->exposesTitleUIElement() && controlObject->isCheckboxOrRadio())
         return true;
-        
-    // NOTE: BRs always have text boxes now, so the text box check here can be removed
+
+    if (m_renderer->isBR())
+        return true;
+
     if (m_renderer->isText()) {
         // static text beneath MenuItems and MenuButtons are just reported along with the menu item, so it's ignored on an individual level
         AccessibilityObject* parent = parentObjectUnignored();
         if (parent && (parent->isMenuItem() || parent->ariaRoleAttribute() == MenuButtonRole))
             return true;
         RenderText* renderText = toRenderText(m_renderer);
-        if (m_renderer->isBR() || !renderText->firstTextBox())
+        if (!renderText->firstTextBox())
             return true;
 
         // static text beneath TextControls is reported along with the text control text so it's ignored.

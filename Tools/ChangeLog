@@ -1,3 +1,273 @@
+2013-09-18  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix for Ruby 1.8.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-09-17  Filip Pizlo  <fpizlo@apple.com>
+
+        run-jsc-stress-tests should make it easier to look at error spew from tests
+        https://bugs.webkit.org/show_bug.cgi?id=121531
+
+        Reviewed by Mark Hahnenberg.
+        
+        This makes two changes:
+        
+        - The out/err spew from each test is now saved to a .out file in jsc-stress-results.
+        
+        - The same spew also goes to the console but is prefixed by the test's name.
+        
+        This required some tee and awk hacks, and then some sh hacks to work around the fact
+        that if you do "(foo | bar) || baz", and foo fails, then baz won't run - the ||
+        operator will only see a failure of bar failed. So to pass output to tee and awk, I
+        needed to do weird things.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-09-18  Alexey Proskuryakov  <ap@apple.com>
+
+        REGRESSION (r129451): run-safari --no-saved-state is broken
+        https://bugs.webkit.org/show_bug.cgi?id=121566
+
+        Reviewed by Mark Rowe.
+
+        * Scripts/webkitdirs.pm: (argumentsForRunAndDebugMacWebKitApp):
+        Check arguments, not the newly created empty array. Pass a value that silences warnings.
+        While at it, removed a check for Snow Leopard.
+
+2013-09-18  Alex Christensen  <achristensen@webkit.org>
+
+        Improved WinLauncher's URL handling.
+        https://bugs.webkit.org/show_bug.cgi?id=121535
+
+        Reviewed by Brent Fulgham.
+
+        * WinLauncher/WinLauncher.cpp:
+        (EditProc):
+        Use INTERNET_MAX_URL_LENGTH instead of our MAX_URL_LENGTH.
+        (loadURL):
+        Prepend "http://" to URLs with no scheme.
+
+2013-09-18  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG should support Int52 for local variables
+        https://bugs.webkit.org/show_bug.cgi?id=121064
+
+        Reviewed by Oliver Hunt.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-09-18  peavo@outlook.com  <peavo@outlook.com>
+
+        [Win] TestWebKitAPI does not compile.
+        https://bugs.webkit.org/show_bug.cgi?id=121485
+
+        Reviewed by Brent Fulgham.
+
+        It is no longer possible to inherit from WebCore::BitmapImage, which the test relies on.
+        Instead, load a bitmap, then destroy the decoded data, which will cause WebCore::frameAtIndex()
+        to return null, which is the case we want to test.
+
+        * TestWebKitAPI/Tests/WebCore/win/BitmapImage.cpp:
+        (TestWebKitAPI::TEST):
+
+2013-09-18  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [ATK] Expose aria-haspopup and aria-sort without the 'aria-' prefix
+        https://bugs.webkit.org/show_bug.cgi?id=121495
+
+        Reviewed by Chris Fleizach.
+
+        Adapted DRT and WKTR to deal with the new names for the ATK object
+        attributes being exposed for 'aria-haspopup' and 'aria-sort'.
+
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (coreAttributeToAtkAttribute): Updated translation between ATK and DRT.
+        (AccessibilityUIElement::stringAttributeValue): Ditto.
+        (AccessibilityUIElement::hasPopup): Ditto.
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::coreAttributeToAtkAttribute): Updated translation between ATK and WKTR.
+        (WTR::AccessibilityUIElement::stringAttributeValue): Ditto.
+        (WTR::AccessibilityUIElement::hasPopup): Ditto.
+
+2013-09-18  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r156019 and r156020.
+        http://trac.webkit.org/changeset/156019
+        http://trac.webkit.org/changeset/156020
+        https://bugs.webkit.org/show_bug.cgi?id=121540
+
+        Broke tests (Requested by ap on #webkit).
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-09-17  Gwang Yoon Hwang  <ryumiel@company100.net>
+
+        Unreviewed. Add myself as a committer.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-09-17  Jae Hyun Park  <jae.park@company100.net>
+
+        Unreviewed. Add myself as a committer.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-09-17  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG should support Int52 for local variables
+        https://bugs.webkit.org/show_bug.cgi?id=121064
+
+        Reviewed by Oliver Hunt.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-09-17  Alex Christensen  <alex.christensen@flexsim.com>
+
+        Added back and forward buttons to WinLauncher.
+        https://bugs.webkit.org/show_bug.cgi?id=121212
+
+        Reviewed by Brent Fulgham.
+
+        * WinLauncher/WinLauncher.cpp:
+        (resizeSubViews):
+        Move new back and forward buttons to correct positions before URL bar.
+        (dllLauncherEntryPoint): 
+        Store the default button window procedure and replace with my button procedures.
+        (EditProc): Updated style and renamed from MyEditProc.
+        (BackButtonProc): Added.
+        (ForwardButtonProc): Added.
+
+2013-09-17  Michael Saboff  <msaboff@apple.com>
+
+        Unreviewed typo fix after r155999
+
+        Changed en_US.UTB-8 to en_US.UTF-8
+
+        * Scripts/run-javascriptcore-tests:
+
+2013-09-17  Michael Saboff  <msaboff@apple.com>
+
+        run-jsc-stress-tests fails with ruby version 2
+        https://bugs.webkit.org/show_bug.cgi?id=121521
+
+        Reviewed by Jessie Berlin.
+
+        Explicitly set LANG to en_US.UTB-8 before starting run-jsc-stress-tests.
+
+        * Scripts/run-javascriptcore-tests:
+
+2013-09-17  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build fix after r155963.
+
+        * DumpRenderTree/win/TestRunnerWin.cpp:
+        (TestRunner::evaluateScriptInIsolatedWorld): Pass nullptr rather than 0.
+
+2013-09-17  Anders Carlsson  <andersca@apple.com>
+
+        Fix a typo.
+
+        * TestWebKitAPI/Tests/WTF/HashMap.cpp:
+        (TestWebKitAPI::TEST):
+
+2013-09-16  Anders Carlsson  <andersca@apple.com>
+
+        HashMap should work with move-only keys
+        https://bugs.webkit.org/show_bug.cgi?id=121310
+
+        Reviewed by Darin Adler.
+
+        * TestWebKitAPI/Tests/WTF/HashMap.cpp:
+        (TestWebKitAPI::TEST):
+        Add test.
+
+2013-09-17  YuTeh Shen  <shenyute@hotmail.com>
+
+        BrowserMarshal.h build fail
+        https://bugs.webkit.org/show_bug.cgi?id=102938
+
+        Reviewed by Carlos Garcia Campos.
+
+        Fix variable name.
+
+        * MiniBrowser/gtk/GNUmakefile.am:
+
+2013-09-16  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Clean up WinLauncher by using smart pointers
+        https://bugs.webkit.org/show_bug.cgi?id=121467
+
+        Reviewed by Anders Carlsson.
+
+        * WinLauncher/PrintWebUIDelegate.cpp:
+        (PrintWebUIDelegate::webViewPrintingMarginRect): Switch to smart pointers.
+        * WinLauncher/WinLauncher.cpp:
+        (WinLauncherWebHost::updateAddressBar): Use _bstr_t and smart pointers.
+        (WinLauncherWebHost::didFailProvisionalLoadWithError): Ditto.
+        (showLastVisitedSites): Smart pointer updates.
+        (WinLauncherWebHost::didFinishLoadForFrame): Ditto.
+        (setToDefaultPreferences): Ditto.
+        (dllLauncherEntryPoint): Ditto.
+        (PrintView): Ditto.
+        (LaunchInspector): Ditto.
+        (NavigateToHistory): Ditto.
+        (MyEditProc): Ditto.
+        (loadURL): Ditto.
+
+2013-09-16  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Add rudimentary history to WinLauncher.
+        https://bugs.webkit.org/show_bug.cgi?id=121463
+
+        Reviewed by Anders Carlsson.
+
+        * WinLauncher/WinLauncher.cpp:
+        (updateMenuItemForHistoryItem): Added
+        (showLastVisitedSites): Added
+        (WinLauncherWebHost::didFinishLoadForFrame): Add history item once
+        a new page has been visited.
+        (dllLauncherEntryPoint): Deallocate history on exit.
+        (NavigateToHistory): Added
+        (WndProc): Add handler for history entries
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherLib.rc: Add menu items to hold
+        up to 10 history slots.
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherLibCommon.props: Link against
+        Windows utility library to allow use of _bstr_t type.
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherLibResource.h: Add menu items
+        to hold up to 10 history slots.
+        * WinLauncher/stdafx.h: Add <comutil.h> to precompiled headers.
+
+2013-09-16  Gustavo Noronha Silva  <gns@gnome.org>
+
+        [GTK] Make symbol export filter more strict, and disable for dev/test builds
+        https://bugs.webkit.org/show_bug.cgi?id=120586
+
+        Reviewed by Martin Robinson.
+
+        * GNUmakefile.am: moved GtkLauncher and documentation builds to their own
+        makefiles, so they can be included unconditionally.
+        * GtkLauncher/GNUmakefile.am: added.
+        * Scripts/webkitdirs.pm:
+        (runAutogenForAutotoolsProjectIfNecessary): always pass --enable-developer-mode
+        to configure, since we consider builds done through build-webkit to be development
+        and test builds.
+        * gtk/GNUmakefile.am: added.
+        * gtk/common.py: do not use the Scripts directory as a reference to the top path;
+        it's not necessary and it will not work now that the Scripts directory is not
+        shipped in the tarball.
+
+2013-09-16  Anders Carlsson  <andersca@apple.com>
+
+        WTF::Deque should work with move only types
+        https://bugs.webkit.org/show_bug.cgi?id=121446
+
+        Reviewed by Andreas Kling.
+
+        * TestWebKitAPI/Tests/WTF/Deque.cpp:
+        (TestWebKitAPI::TEST):
+        Add a test.
+
 2013-09-16  Wojciech Bielawski  <w.bielawski@samsung.com>
 
         [WKTR] WebKitTestRunner's eventSender.contextClick() returns objects without implemented click() method.

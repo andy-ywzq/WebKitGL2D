@@ -438,7 +438,7 @@ String Editor::plainTextFromPasteboard(const PasteboardPlainText& text)
 
 #endif
 
-#if !PLATFORM(MAC) && !PLATFORM(EFL) && !PLATFORM(NIX)
+#if !(PLATFORM(MAC) && !PLATFORM(IOS)) && !PLATFORM(EFL) && !PLATFORM(NIX)
 void Editor::pasteWithPasteboard(Pasteboard* pasteboard, bool allowPlainText)
 {
     RefPtr<Range> range = selectedRange();
@@ -3085,7 +3085,7 @@ static Node* findFirstMarkable(Node* node)
     while (node) {
         if (!node->renderer())
             return 0;
-        if (node->renderer()->isText())
+        if (node->renderer()->isTextOrLineBreak())
             return node;
         if (isHTMLTextFormControlElement(node))
             node = toHTMLTextFormControlElement(node)->visiblePositionForIndex(1).deepEquivalent().deprecatedNode();

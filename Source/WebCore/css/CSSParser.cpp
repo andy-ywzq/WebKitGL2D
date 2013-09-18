@@ -89,6 +89,7 @@
 #include <limits.h>
 #include <wtf/BitArray.h>
 #include <wtf/HexNumber.h>
+#include <wtf/StdLibExtras.h>
 #include <wtf/dtoa.h>
 #include <wtf/text/StringBuffer.h>
 #include <wtf/text/StringBuilder.h>
@@ -406,7 +407,7 @@ void CSSParser::setupParser(const char* prefix, unsigned prefixLength, const Str
     m_length = length;
 
     if (!stringLength || string.is8Bit()) {
-        m_dataStart8 = adoptArrayPtr(new LChar[length]);
+        m_dataStart8 = std::make_unique<LChar[]>(length);
         for (unsigned i = 0; i < m_parsedTextPrefixLength; i++)
             m_dataStart8[i] = prefix[i];
 
@@ -428,7 +429,7 @@ void CSSParser::setupParser(const char* prefix, unsigned prefixLength, const Str
         return;
     }
 
-    m_dataStart16 = adoptArrayPtr(new UChar[length]);
+    m_dataStart16 = std::make_unique<UChar[]>(length);
     for (unsigned i = 0; i < m_parsedTextPrefixLength; i++)
         m_dataStart16[i] = prefix[i];
 
@@ -2476,7 +2477,7 @@ bool CSSParser::parseValue(CSSPropertyID propId, bool important)
     case CSSPropertyWebkitBorderRadius:
         return parseBorderRadius(propId, important);
     case CSSPropertyOutlineOffset:
-        validPrimitive = validUnit(value, FLength | FPercent);
+        validPrimitive = validUnit(value, FLength);
         break;
     case CSSPropertyTextShadow: // CSS2 property, dropped in CSS2.1, back in CSS3, so treat as CSS3
     case CSSPropertyBoxShadow:
@@ -10183,7 +10184,7 @@ inline UChar*& CSSParser::currentCharacter<UChar>()
 UChar*& CSSParser::currentCharacter16()
 {
     if (!m_currentCharacter16) {
-        m_dataStart16 = adoptArrayPtr(new UChar[m_length]);
+        m_dataStart16 = std::make_unique<UChar[]>(m_length);
         m_currentCharacter16 = m_dataStart16.get();
     }
 

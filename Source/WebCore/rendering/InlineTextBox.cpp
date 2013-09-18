@@ -37,9 +37,9 @@
 #include "PaintInfo.h"
 #include "RenderedDocumentMarker.h"
 #include "RenderArena.h"
-#include "RenderBR.h"
 #include "RenderBlock.h"
 #include "RenderCombineText.h"
+#include "RenderLineBreak.h"
 #include "RenderRubyRun.h"
 #include "RenderRubyText.h"
 #include "RenderTheme.h"
@@ -65,7 +65,7 @@ COMPILE_ASSERT(sizeof(InlineTextBox) == sizeof(SameSizeAsInlineTextBox), InlineT
 typedef WTF::HashMap<const InlineTextBox*, LayoutRect> InlineTextBoxOverflowMap;
 static InlineTextBoxOverflowMap* gTextBoxesWithOverflow;
 
-void InlineTextBox::destroy(RenderArena* arena)
+void InlineTextBox::destroy(RenderArena& arena)
 {
     if (!knownToHaveNoOverflow() && gTextBoxesWithOverflow)
         gTextBoxesWithOverflow->remove(this);
@@ -98,7 +98,7 @@ void InlineTextBox::setLogicalOverflowRect(const LayoutRect& rect)
 
 int InlineTextBox::baselinePosition(FontBaseline baselineType) const
 {
-    if (!isText() || !parent())
+    if (!behavesLikeText() || !parent())
         return 0;
     if (&parent()->renderer() == renderer().parent())
         return parent()->baselinePosition(baselineType);
@@ -107,10 +107,8 @@ int InlineTextBox::baselinePosition(FontBaseline baselineType) const
 
 LayoutUnit InlineTextBox::lineHeight() const
 {
-    if (!isText() || !renderer().parent())
+    if (!behavesLikeText() || !renderer().parent())
         return 0;
-    if (renderer().isBR())
-        return toRenderBR(renderer()).lineHeight(isFirstLineStyle());
     if (&parent()->renderer() == renderer().parent())
         return parent()->lineHeight();
     return toRenderBoxModelObject(renderer().parent())->lineHeight(isFirstLineStyle(), isHorizontal() ? HorizontalLine : VerticalLine, PositionOnContainingLine);
@@ -232,7 +230,7 @@ LayoutRect InlineTextBox::localSelectionRect(int startPos, int endPos)
     return LayoutRect(topPoint, LayoutSize(width, height));
 }
 
-void InlineTextBox::deleteLine(RenderArena* arena)
+void InlineTextBox::deleteLine(RenderArena& arena)
 {
     textRenderer().removeTextBox(this);
     destroy(arena);
@@ -367,7 +365,7 @@ void updateGraphicsContext(GraphicsContext* context, const Color& fillColor, con
 
 bool InlineTextBox::isLineBreak() const
 {
-    return renderer().isBR() || (renderer().style()->preserveNewline() && len() == 1 && (*textRenderer().text())[start()] == '\n');
+    return renderer().style()->preserveNewline() && len() == 1 && (*textRenderer().text())[start()] == '\n';
 }
 
 bool InlineTextBox::nodeAtPoint(const HitTestRequest& request, HitTestResult& result, const HitTestLocation& locationInContainer, const LayoutPoint& accumulatedOffset, LayoutUnit /* lineTop */, LayoutUnit /*lineBottom*/)

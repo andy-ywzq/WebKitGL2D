@@ -337,7 +337,7 @@ void MediaControlTimelineContainerElement::setTimeDisplaysHidden(bool hidden)
     }
 }
 
-RenderObject* MediaControlTimelineContainerElement::createRenderer(RenderArena* arena, RenderStyle*)
+RenderObject* MediaControlTimelineContainerElement::createRenderer(RenderArena& arena, RenderStyle&)
 {
     return new (arena) RenderMediaControlTimelineContainer(this);
 }
@@ -356,7 +356,7 @@ PassRefPtr<MediaControlVolumeSliderContainerElement> MediaControlVolumeSliderCon
     return element.release();
 }
 
-RenderObject* MediaControlVolumeSliderContainerElement::createRenderer(RenderArena* arena, RenderStyle*)
+RenderObject* MediaControlVolumeSliderContainerElement::createRenderer(RenderArena& arena, RenderStyle&)
 {
     return new (arena) RenderMediaVolumeSliderContainer(this);
 }
@@ -1209,7 +1209,7 @@ PassRefPtr<MediaControlTextTrackContainerElement> MediaControlTextTrackContainer
     return element.release();
 }
 
-RenderObject* MediaControlTextTrackContainerElement::createRenderer(RenderArena* arena, RenderStyle*)
+RenderObject* MediaControlTextTrackContainerElement::createRenderer(RenderArena& arena, RenderStyle&)
 {
     return new (arena) RenderTextTrackContainerElement(this);
 }
@@ -1375,7 +1375,7 @@ void MediaControlTextTrackContainerElement::updateSizes(bool forceUpdate)
         videoBox = m_textTrackRepresentation->bounds();
     else {
 #if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
-        if (!mediaElement->renderer() || !mediaElement->renderer()->isRenderWidget())
+        if (!mediaElement->renderer() || !mediaElement->renderer()->isWidget())
             return;
         videoBox = pixelSnappedIntRect(toRenderWidget(mediaElement->renderer())->contentBoxRect());
 #else

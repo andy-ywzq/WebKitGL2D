@@ -1,3 +1,808 @@
+2013-09-18  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Fix svg/masking/* tests
+        https://bugs.webkit.org/show_bug.cgi?id=121570
+
+        Reviewed by Rob Buis.
+
+        Merge https://chromium.googlesource.com/chromium/blink/+/975b3219677968706cbddb9295ceada05c092dd6
+
+        "rx" is not a valid <circle> attribute - these tests were not drawing anything.
+        Also switching to rects to avoid reftest antialiasing issues.
+        For non-alpha variants, using a 50% luminance to capture the effect on the output color.
+
+        * svg/masking/mask-type-alpha-expected.svg:
+        * svg/masking/mask-type-alpha.svg:
+        * svg/masking/mask-type-luminance-expected.svg:
+        * svg/masking/mask-type-luminance.svg:
+        * svg/masking/mask-type-not-set-expected.svg:
+        * svg/masking/mask-type-not-set.svg:
+
+2013-09-18  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] Throw exception when setting timestampOffset while 'updating' state is set.
+        https://bugs.webkit.org/show_bug.cgi?id=121561
+
+        Reviewed by Eric Carlson.
+
+        * http/tests/media/media-source/mediasource-append-buffer-expected.txt:
+        * http/tests/media/media-source/mediasource-append-buffer.html:
+
+2013-09-18  Robert Hogan  <robert@webkit.org>
+
+        Quirksmode: Break Tag Extra Space Bug
+        https://bugs.webkit.org/show_bug.cgi?id=11943
+
+        Reviewed by David Hyatt.
+
+        * fast/text/whitespace/trailing-space-before-br-in-right-aligned-text-expected.html: Added.
+        * fast/text/whitespace/trailing-space-before-br-in-right-aligned-text.html: Added.
+
+2013-09-18  Jer Noble  <jer.noble@apple.com>
+
+        Merge blink MediaSource changes since fork.
+        https://bugs.webkit.org/show_bug.cgi?id=118752
+
+        Rubber-stamped by Eric Carlson.
+
+        * http/tests/media/media-source/mediasource-addsourcebuffer-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-addsourcebuffer.html: Added.
+        * http/tests/media/media-source/mediasource-append-buffer-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-append-buffer.html: Added.
+        * http/tests/media/media-source/mediasource-buffered-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-buffered.html: Added.
+        * http/tests/media/media-source/mediasource-closed-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-closed.html: Added.
+        * http/tests/media/media-source/mediasource-config-change-mp4-a-bitrate-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-config-change-mp4-a-bitrate.html: Added.
+        * http/tests/media/media-source/mediasource-config-change-mp4-av-audio-bitrate-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-config-change-mp4-av-audio-bitrate.html: Added.
+        * http/tests/media/media-source/mediasource-config-change-mp4-av-framesize-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-config-change-mp4-av-framesize.html: Added.
+        * http/tests/media/media-source/mediasource-config-change-mp4-av-video-bitrate-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-config-change-mp4-av-video-bitrate.html: Added.
+        * http/tests/media/media-source/mediasource-config-change-mp4-v-bitrate-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-config-change-mp4-v-bitrate.html: Added.
+        * http/tests/media/media-source/mediasource-config-change-mp4-v-framerate-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-config-change-mp4-v-framerate.html: Added.
+        * http/tests/media/media-source/mediasource-config-change-mp4-v-framesize-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-config-change-mp4-v-framesize.html: Added.
+        * http/tests/media/media-source/mediasource-config-change-webm-a-bitrate-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-config-change-webm-a-bitrate.html: Added.
+        * http/tests/media/media-source/mediasource-config-change-webm-av-audio-bitrate-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-config-change-webm-av-audio-bitrate.html: Added.
+        * http/tests/media/media-source/mediasource-config-change-webm-av-framesize-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-config-change-webm-av-framesize.html: Added.
+        * http/tests/media/media-source/mediasource-config-change-webm-av-video-bitrate-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-config-change-webm-av-video-bitrate.html: Added.
+        * http/tests/media/media-source/mediasource-config-change-webm-v-bitrate-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-config-change-webm-v-bitrate.html: Added.
+        * http/tests/media/media-source/mediasource-config-change-webm-v-framerate-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-config-change-webm-v-framerate.html: Added.
+        * http/tests/media/media-source/mediasource-config-change-webm-v-framesize-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-config-change-webm-v-framesize.html: Added.
+        * http/tests/media/media-source/mediasource-config-changes.js: Added.
+        * http/tests/media/media-source/mediasource-is-type-supported-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-is-type-supported.html: Added.
+        * http/tests/media/media-source/mediasource-multiple-attach-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-multiple-attach.html: Added.
+        * http/tests/media/media-source/mediasource-play-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-play.html: Added.
+        * http/tests/media/media-source/mediasource-sourcebufferlist-expected.txt: Added.
+        * http/tests/media/media-source/mediasource-sourcebufferlist.html: Added.
+        * http/tests/media/media-source/mediasource-util.js: Added.
+        * http/tests/media/media-source/video-media-source-objects-expected.txt:
+        * http/tests/media/resources/media-source/generate-config-change-tests.py: Added.
+        * http/tests/media/resources/media-source/mp4/test-a-128k-44100Hz-1ch-manifest.json: Added.
+        * http/tests/media/resources/media-source/mp4/test-a-192k-44100Hz-1ch-manifest.json: Added.
+        * http/tests/media/resources/media-source/mp4/test-av-384k-44100Hz-1ch-320x240-30fps-10kfr-manifest.json: Added.
+        * http/tests/media/resources/media-source/mp4/test-av-384k-44100Hz-1ch-640x480-30fps-10kfr-manifest.json: Added.
+        * http/tests/media/resources/media-source/mp4/test-av-448k-44100Hz-1ch-640x480-30fps-10kfr-manifest.json: Added.
+        * http/tests/media/resources/media-source/mp4/test-av-640k-44100Hz-1ch-640x480-30fps-10kfr-manifest.json: Added.
+        * http/tests/media/resources/media-source/mp4/test-v-128k-320x240-24fps-8kfr-manifest.json: Added.
+        * http/tests/media/resources/media-source/mp4/test-v-128k-320x240-30fps-10kfr-manifest.json: Added.
+        * http/tests/media/resources/media-source/mp4/test-v-128k-640x480-30fps-10kfr-manifest.json: Added.
+        * http/tests/media/resources/media-source/mp4/test-v-256k-320x240-30fps-10kfr-manifest.json: Added.
+        * http/tests/media/resources/media-source/webm/test-a-128k-44100Hz-1ch-manifest.json: Added.
+        * http/tests/media/resources/media-source/webm/test-a-192k-44100Hz-1ch-manifest.json: Added.
+        * http/tests/media/resources/media-source/webm/test-av-384k-44100Hz-1ch-320x240-30fps-10kfr-manifest.json: Added.
+        * http/tests/media/resources/media-source/webm/test-av-384k-44100Hz-1ch-640x480-30fps-10kfr-manifest.json: Added.
+        * http/tests/media/resources/media-source/webm/test-av-448k-44100Hz-1ch-640x480-30fps-10kfr-manifest.json: Added.
+        * http/tests/media/resources/media-source/webm/test-av-640k-44100Hz-1ch-640x480-30fps-10kfr-manifest.json: Added.
+        * http/tests/media/resources/media-source/webm/test-v-128k-320x240-24fps-8kfr-manifest.json: Added.
+        * http/tests/media/resources/media-source/webm/test-v-128k-320x240-30fps-10kfr-manifest.json: Added.
+        * http/tests/media/resources/media-source/webm/test-v-128k-640x480-30fps-10kfr-manifest.json: Added.
+        * http/tests/media/resources/media-source/webm/test-v-256k-320x240-30fps-10kfr-manifest.json: Added.
+
+2013-09-18  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG should support Int52 for local variables
+        https://bugs.webkit.org/show_bug.cgi?id=121064
+
+        Reviewed by Oliver Hunt.
+
+        * js/dfg-int-overflow-large-constants-in-a-line-expected.txt:
+        * js/regress/large-int-captured-expected.txt: Added.
+        * js/regress/large-int-captured.html: Added.
+        * js/regress/large-int-expected.txt: Added.
+        * js/regress/large-int-neg-expected.txt: Added.
+        * js/regress/large-int-neg.html: Added.
+        * js/regress/large-int.html: Added.
+        * js/regress/marsaglia-larger-ints-expected.txt: Added.
+        * js/regress/marsaglia-larger-ints.html: Added.
+        * js/regress/script-tests/large-int-captured.js: Added.
+        (.bar):
+        (foo):
+        * js/regress/script-tests/large-int-neg.js: Added.
+        (foo):
+        * js/regress/script-tests/large-int.js: Added.
+        (foo):
+        * js/regress/script-tests/marsaglia-larger-ints.js: Added.
+        (uint):
+        (marsaglia):
+        * js/script-tests/dfg-int-overflow-large-constants-in-a-line.js:
+
+2013-09-18  Andreas Kling  <akling@apple.com>
+
+        Missed one rebaseline for the RenderMenuList change.
+
+        * platform/mac/fast/forms/select-empty-option-height-expected.txt:
+
+2013-09-18  Andreas Kling  <akling@apple.com>
+
+        Avoid using RenderBR internally in RenderMenuList.
+        <https://webkit.org/b/121550>
+
+        Reviewed by Antti Koivisto.
+
+        Update expected results for RenderMenuLists with empty text.
+        They now have a RenderText inside them instead of a RenderBR.
+
+2013-09-18  Csaba Osztrogonác  <ossy@webkit.org>
+
+        ASSERT_NOT_REACHED is touched in WebCore::CSSPrimitiveValue::computeLengthDouble
+        https://bugs.webkit.org/show_bug.cgi?id=120469
+
+        Reviewed by Dirk Schulze.
+
+        * fast/css/outline-offset-parsing-assert-expected.txt: Added.
+        * fast/css/outline-offset-parsing-assert.html: Added.
+        * fast/css/outline-offset-parsing-expected.txt: Added.
+        * fast/css/outline-offset-parsing.html: Added.
+        * fast/css/script-tests/outline-offset-parsing.js: Added.
+        (test):
+
+2013-09-18  Gurpreet Kaur  <k.gurpreet@samsung.com>
+
+        [MathML] Implement the subscriptshift and superscriptshift attributes
+        https://bugs.webkit.org/show_bug.cgi?id=120069
+
+        Reviewed by Darin Adler.
+
+        * mathml/presentation/msub-subscriptshift-expected.txt: Added.
+        * mathml/presentation/msub-subscriptshift.html: Added.
+        * mathml/presentation/msubsup-subscriptshift-expected.txt: Added.
+        * mathml/presentation/msubsup-subscriptshift.html: Added.
+        * mathml/presentation/msubsup-superscriptshift-expected.txt: Added.
+        * mathml/presentation/msubsup-superscriptshift.html: Added.
+        * mathml/presentation/msup-superscriptshift-expected.txt: Added.
+        * mathml/presentation/msup-superscriptshift.html: Added.
+        * mathml/presentation/multiscript-subscriptshift-expected.txt: Added.
+        * mathml/presentation/multiscript-subscriptshift.html: Added.
+        * mathml/presentation/multiscript-superscriptshift-expected.txt: Added.
+        * mathml/presentation/multiscript-superscriptshift.html: Added.
+        Added new tests for verifying that subscriptshift and superscriptshift are
+        being applied properly to the script base.
+
+2013-09-18  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [ATK] Expose aria-haspopup and aria-sort without the 'aria-' prefix
+        https://bugs.webkit.org/show_bug.cgi?id=121495
+
+        Reviewed by Chris Fleizach.
+
+        Rebaseline test expectations that were displaying the 'aria-sort'
+        attributes incorrectly, when they shouldn't due to that ARIA
+        attribute not being explicitly used in the HTML.
+
+        * platform/efl-wk1/accessibility/lists-expected.txt: Removed output for 'aria-sort'.
+        * platform/efl-wk1/accessibility/plugin-expected.txt: Ditto.
+        * platform/efl-wk1/accessibility/table-with-aria-role-expected.txt: Ditto.
+        * platform/efl-wk1/accessibility/transformed-element-expected.txt: Ditto.
+        * platform/efl-wk2/accessibility/image-link-expected.txt: Ditto.
+        * platform/efl-wk2/accessibility/image-map2-expected.txt: Ditto.
+        * platform/efl-wk2/accessibility/lists-expected.txt: Ditto.
+        * platform/efl-wk2/accessibility/plugin-expected.txt: Ditto.
+        * platform/efl-wk2/accessibility/table-cell-spans-expected.txt: Ditto.
+        * platform/efl-wk2/accessibility/table-cells-expected.txt: Ditto.
+        * platform/efl-wk2/accessibility/table-with-aria-role-expected.txt: Ditto.
+        * platform/efl-wk2/accessibility/transformed-element-expected.txt: Ditto.
+        * platform/gtk/accessibility/image-link-expected.txt: Ditto.
+        * platform/gtk/accessibility/image-map2-expected.txt: Ditto.
+        * platform/gtk/accessibility/lists-expected.txt: Ditto.
+        * platform/gtk/accessibility/plugin-expected.txt: Ditto.
+        * platform/gtk/accessibility/table-cell-spans-expected.txt: Ditto.
+        * platform/gtk/accessibility/table-cells-expected.txt: Ditto.
+        * platform/gtk/accessibility/table-detection-expected.txt: Ditto.
+        * platform/gtk/accessibility/table-one-cell-expected.txt: Ditto.
+        * platform/gtk/accessibility/table-with-aria-role-expected.txt: Ditto.
+        * platform/gtk/accessibility/table-with-rules-expected.txt: Ditto.
+        * platform/gtk/accessibility/transformed-element-expected.txt: Ditto.
+
+2013-09-18  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r156019 and r156020.
+        http://trac.webkit.org/changeset/156019
+        http://trac.webkit.org/changeset/156020
+        https://bugs.webkit.org/show_bug.cgi?id=121540
+
+        Broke tests (Requested by ap on #webkit).
+
+        * js/regress/large-int-captured-expected.txt: Removed.
+        * js/regress/large-int-captured.html: Removed.
+        * js/regress/large-int-expected.txt: Removed.
+        * js/regress/large-int-neg-expected.txt: Removed.
+        * js/regress/large-int-neg.html: Removed.
+        * js/regress/large-int.html: Removed.
+        * js/regress/marsaglia-larger-ints-expected.txt: Removed.
+        * js/regress/marsaglia-larger-ints.html: Removed.
+        * js/regress/script-tests/large-int-captured.js: Removed.
+        * js/regress/script-tests/large-int-neg.js: Removed.
+        * js/regress/script-tests/large-int.js: Removed.
+        * js/regress/script-tests/marsaglia-larger-ints.js: Removed.
+
+2013-09-17  Zoltan Horvath  <zoltan@webkit.org>
+
+        [CSS Shapes] Use the float height to determine position in shape-inside
+        https://bugs.webkit.org/show_bug.cgi?id=102846
+
+        Reviewed by Darin Adler.
+
+        Float positioning inside shape-inside has been working only for simple cases when the float boundaries didn't overlap with the shape.
+        This patch fixes the behavior for left floats and shapes with inline content. I want to add this work step by step, therefore the next
+        step would be to add support for block content with inline content (e.g. paragraphs) then cover cases with right floats.
+
+        * fast/shapes/shape-inside/shape-inside-left-float-in-lower-left-triangle-inline-content-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-left-float-in-lower-left-triangle-inline-content.html: Added.
+        * fast/shapes/shape-inside/shape-inside-left-float-in-lower-right-triangle-inline-content-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-left-float-in-lower-right-triangle-inline-content.html: Added.
+        * fast/shapes/shape-inside/shape-inside-left-float-in-upper-left-triangle-inline-content-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-left-float-in-upper-left-triangle-inline-content.html: Added.
+        * fast/shapes/shape-inside/shape-inside-left-float-in-upper-right-triangle-inline-content-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-left-float-in-upper-right-triangle-inline-content.html: Added.
+
+2013-09-17  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG should support Int52 for local variables
+        https://bugs.webkit.org/show_bug.cgi?id=121064
+
+        Reviewed by Oliver Hunt.
+
+        * js/regress/large-int-captured-expected.txt: Added.
+        * js/regress/large-int-captured.html: Added.
+        * js/regress/large-int-expected.txt: Added.
+        * js/regress/large-int-neg-expected.txt: Added.
+        * js/regress/large-int-neg.html: Added.
+        * js/regress/large-int.html: Added.
+        * js/regress/marsaglia-larger-ints-expected.txt: Added.
+        * js/regress/marsaglia-larger-ints.html: Added.
+        * js/regress/script-tests/large-int-captured.js: Added.
+        (.bar):
+        (foo):
+        * js/regress/script-tests/large-int-neg.js: Added.
+        (foo):
+        * js/regress/script-tests/large-int.js: Added.
+        (foo):
+        * js/regress/script-tests/marsaglia-larger-ints.js: Added.
+        (uint):
+        (marsaglia):
+
+2013-09-17  Alexey Proskuryakov  <ap@apple.com>
+
+        Removed some Lion specific results - these tests are failing on Lion bots despite these,
+        and it looks like Lion now matches cross-platform results.
+
+        * platform/mac-lion/editing/selection/vertical-rl-ltr-extend-line-backward-wrap-expected.png: Removed.
+        * platform/mac-lion/editing/selection/vertical-rl-ltr-extend-line-backward-wrap-expected.txt: Removed.
+        * platform/mac-lion/editing/selection/vertical-rl-ltr-extend-line-forward-wrap-expected.png: Removed.
+        * platform/mac-lion/editing/selection/vertical-rl-ltr-extend-line-forward-wrap-expected.txt: Removed.
+
+2013-09-17  Alexey Proskuryakov  <ap@apple.com>
+
+        compositing/images/positioned-image-content-rect.html is failing on some bots
+        https://bugs.webkit.org/show_bug.cgi?id=121526
+
+        * platform/mac/TestExpectations: Marked as failing or passing for now, should
+        be fixed with upcoming color management improvements.
+
+2013-09-17  Samuel White  <samuel_white@apple.com>
+
+        AX: Mac AXARIABusy should be AXElementBusy (not ARIA specific)
+        https://bugs.webkit.org/show_bug.cgi?id=121442
+
+        Reviewed by Chris Fleizach.
+
+        Mac platform attribute name change only (AXARIABusy => AXElementBusy). Updated existing tests using this attribute.
+
+        * accessibility/transformed-element-expected.txt:
+        * platform/mac/accessibility/aria-columnrowheaders-expected.txt:
+        * platform/mac/accessibility/aria-liveregions-attributes-expected.txt:
+        * platform/mac/accessibility/aria-liveregions-attributes.html:
+        * platform/mac/accessibility/bounds-for-range-expected.txt:
+        * platform/mac/accessibility/document-attributes-expected.txt:
+        * platform/mac/accessibility/document-links-expected.txt:
+        * platform/mac/accessibility/image-link-expected.txt:
+        * platform/mac/accessibility/image-map2-expected.txt:
+        * platform/mac/accessibility/internal-link-anchors-expected.txt:
+        * platform/mac/accessibility/internal-link-anchors2-expected.txt:
+        * platform/mac/accessibility/lists-expected.txt:
+        * platform/mac/accessibility/plugin-expected.txt:
+        * platform/mac/accessibility/table-attributes-expected.txt:
+        * platform/mac/accessibility/table-cell-spans-expected.txt:
+        * platform/mac/accessibility/table-cells-expected.txt:
+        * platform/mac/accessibility/table-detection-expected.txt:
+        * platform/mac/accessibility/table-one-cell-expected.txt:
+        * platform/mac/accessibility/table-sections-expected.txt:
+        * platform/mac/accessibility/table-with-aria-role-expected.txt:
+        * platform/mac/accessibility/table-with-rules-expected.txt:
+
+2013-09-17  Simon Fraser  <simon.fraser@apple.com>
+
+        Rebaseline a test.
+
+        * platform/mac-wk2/compositing/visible-rect/iframe-no-layers-expected.txt: Copied from LayoutTests/platform/mac/compositing/visible-rect/iframe-no-layers-expected.txt.
+        * platform/mac/compositing/visible-rect/iframe-no-layers-expected.txt:
+
+2013-09-17  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Adjust test list further to make the bots green.
+
+        * platform/win/TestExpectations:
+
+2013-09-17  Alexey Proskuryakov  <ap@apple.com>
+
+        ScriptProcessorNode is garbage collected while still active if unreachable (breaks
+        webaudio/javascriptaudionode.html test)
+        https://bugs.webkit.org/show_bug.cgi?id=112521
+
+        * TestExpectations: Marking test as failing/asserting.
+
+2013-09-17  Alexey Proskuryakov  <ap@apple.com>
+
+        Web Inspector: inspector/storage-panel-dom-storage-update.html is flakey on the bots
+        https://bugs.webkit.org/show_bug.cgi?id=120544
+
+        * platform/mac-wk2/TestExpectations:
+        * platform/mac/TestExpectations:
+        Marking as such again.
+
+2013-09-17  Simon Fraser  <simon.fraser@apple.com>
+
+        Hardware accelerated CSS transitions appear pixelated when scaled up using transform
+        https://bugs.webkit.org/show_bug.cgi?id=27684
+        <rdar://problem/6134606>
+
+        Reviewed by Dean Jackson.
+        
+        New tests that dump contentsScale under various scaling scenarios:
+
+        * compositing/contents-scale/animating-expected.txt: Added.
+        * compositing/contents-scale/animating.html: Added.
+        * compositing/contents-scale/scaled-ancestor-expected.txt: Added.
+        * compositing/contents-scale/scaled-ancestor.html: Added.
+        * compositing/contents-scale/simple-scale-expected.txt: Added.
+        * compositing/contents-scale/simple-scale.html: Added.
+        * compositing/contents-scale/z-translate-expected.txt: Added.
+        * compositing/contents-scale/z-translate.html: Added.
+        
+        These tests had Mac-specific results (which include visible rects and now
+        contents scale) in the cross-platform directory, so cleaned up the cross-platform
+        results and moved the Mac results to platform-mac.
+
+        * compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants-expected.txt:
+        * compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants2-expected.txt:
+        * compositing/visible-rect/2d-transformed-expected.txt:
+        * compositing/visible-rect/3d-transform-style-expected.txt:
+        * compositing/visible-rect/3d-transformed-expected.txt:
+        * compositing/visible-rect/animated-expected.txt:
+        * compositing/visible-rect/animated-from-none-expected.txt:
+        * compositing/visible-rect/clipped-by-viewport-expected.txt:
+        * compositing/visible-rect/clipped-visible-rect-expected.txt:
+        * compositing/visible-rect/flipped-preserve-3d-expected.txt:
+        * compositing/visible-rect/iframe-and-layers-expected.txt:
+        * compositing/visible-rect/iframe-no-layers-expected.txt:
+        * compositing/visible-rect/nested-transform-expected.txt:
+        * compositing/visible-rect/scrolled-expected.txt:
+        * platform/mac-wk2/compositing/visible-rect/iframe-no-layers-expected.txt: Removed.
+        * platform/mac-wk2/tiled-drawing/fixed-background/fixed-body-background-zoomed-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tile-coverage-after-scroll-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tile-coverage-after-scroll-speculative-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tile-coverage-scroll-to-bottom-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tile-coverage-slow-scrolling-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tile-coverage-speculative-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tile-size-slow-zoomed-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tiled-drawing-scroll-position-page-cache-restoration-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tiled-drawing-zoom-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tiled-drawing-zoom-scrolled-expected.txt:
+        * platform/mac-wk2/tiled-drawing/use-tiled-drawing-expected.txt:
+        * platform/mac/compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants-expected.txt: Copied from LayoutTests/compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants-expected.txt.
+        * platform/mac/compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants2-expected.txt: Copied from LayoutTests/compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants2-expected.txt.
+        * platform/mac/compositing/tiling/rotated-tiled-clamped-expected.txt:
+        * platform/mac/compositing/tiling/rotated-tiled-preserve3d-clamped-expected.txt:
+        * platform/mac/compositing/tiling/tile-cache-zoomed-expected.txt:
+        * platform/mac/compositing/visible-rect/2d-transformed-expected.txt: Copied from LayoutTests/compositing/visible-rect/2d-transformed-expected.txt.
+        * platform/mac/compositing/visible-rect/3d-transform-style-expected.txt: Copied from LayoutTests/compositing/visible-rect/3d-transform-style-expected.txt.
+        * platform/mac/compositing/visible-rect/3d-transformed-expected.txt: Copied from LayoutTests/compositing/visible-rect/3d-transformed-expected.txt.
+        * platform/mac/compositing/visible-rect/animated-expected.txt: Copied from LayoutTests/compositing/visible-rect/animated-expected.txt.
+        * platform/mac/compositing/visible-rect/animated-from-none-expected.txt: Copied from LayoutTests/compositing/visible-rect/animated-from-none-expected.txt.
+        * platform/mac/compositing/visible-rect/clipped-by-viewport-expected.txt: Copied from LayoutTests/compositing/visible-rect/clipped-by-viewport-expected.txt.
+        * platform/mac/compositing/visible-rect/clipped-visible-rect-expected.txt: Copied from LayoutTests/compositing/visible-rect/clipped-visible-rect-expected.txt.
+        * platform/mac/compositing/visible-rect/flipped-preserve-3d-expected.txt: Copied from LayoutTests/compositing/visible-rect/flipped-preserve-3d-expected.txt.
+        * platform/mac/compositing/visible-rect/iframe-and-layers-expected.txt: Copied from LayoutTests/compositing/visible-rect/iframe-and-layers-expected.txt.
+        * platform/mac/compositing/visible-rect/iframe-no-layers-expected.txt:
+        * platform/mac/compositing/visible-rect/nested-transform-expected.txt: Copied from LayoutTests/compositing/visible-rect/nested-transform-expected.txt.
+        * platform/mac/compositing/visible-rect/scrolled-expected.txt: Copied from LayoutTests/compositing/visible-rect/scrolled-expected.txt.
+
+2013-09-17  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r155977.
+        http://trac.webkit.org/changeset/155977
+        https://bugs.webkit.org/show_bug.cgi?id=121515
+
+        Broke over a dozen tests on Mac WK2 (Requested by ap on
+        #webkit).
+
+        * compositing/contents-scale/animating-expected.txt: Removed.
+        * compositing/contents-scale/animating.html: Removed.
+        * compositing/contents-scale/scaled-ancestor-expected.txt: Removed.
+        * compositing/contents-scale/scaled-ancestor.html: Removed.
+        * compositing/contents-scale/simple-scale-expected.txt: Removed.
+        * compositing/contents-scale/simple-scale.html: Removed.
+        * compositing/contents-scale/z-translate-expected.txt: Removed.
+        * compositing/contents-scale/z-translate.html: Removed.
+        * compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants-expected.txt:
+        * compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants2-expected.txt:
+        * compositing/visible-rect/2d-transformed-expected.txt:
+        * compositing/visible-rect/3d-transform-style-expected.txt:
+        * compositing/visible-rect/3d-transformed-expected.txt:
+        * compositing/visible-rect/animated-expected.txt:
+        * compositing/visible-rect/animated-from-none-expected.txt:
+        * compositing/visible-rect/clipped-by-viewport-expected.txt:
+        * compositing/visible-rect/clipped-visible-rect-expected.txt:
+        * compositing/visible-rect/flipped-preserve-3d-expected.txt:
+        * compositing/visible-rect/iframe-and-layers-expected.txt:
+        * compositing/visible-rect/nested-transform-expected.txt:
+        * compositing/visible-rect/scrolled-expected.txt:
+        * platform/mac/compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants-expected.txt: Removed.
+        * platform/mac/compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants2-expected.txt: Removed.
+        * platform/mac/compositing/tiling/rotated-tiled-clamped-expected.txt:
+        * platform/mac/compositing/tiling/rotated-tiled-preserve3d-clamped-expected.txt:
+        * platform/mac/compositing/tiling/tile-cache-zoomed-expected.txt:
+        * platform/mac/compositing/visible-rect/2d-transformed-expected.txt: Removed.
+        * platform/mac/compositing/visible-rect/3d-transform-style-expected.txt: Removed.
+        * platform/mac/compositing/visible-rect/3d-transformed-expected.txt: Removed.
+        * platform/mac/compositing/visible-rect/animated-expected.txt: Removed.
+        * platform/mac/compositing/visible-rect/animated-from-none-expected.txt: Removed.
+        * platform/mac/compositing/visible-rect/clipped-by-viewport-expected.txt: Removed.
+        * platform/mac/compositing/visible-rect/clipped-visible-rect-expected.txt: Removed.
+        * platform/mac/compositing/visible-rect/flipped-preserve-3d-expected.txt: Removed.
+        * platform/mac/compositing/visible-rect/iframe-and-layers-expected.txt: Removed.
+        * platform/mac/compositing/visible-rect/iframe-no-layers-expected.txt:
+        * platform/mac/compositing/visible-rect/nested-transform-expected.txt: Removed.
+        * platform/mac/compositing/visible-rect/scrolled-expected.txt: Removed.
+
+2013-09-17  Eric Carlson  <eric.carlson@apple.com>
+
+        MediaStream API: Changing the device enumeration to be async
+        https://bugs.webkit.org/show_bug.cgi?id=120883
+
+        Reviewed by Darin Adler.
+
+        * fast/mediastream/MediaStreamTrack-getSources-expected.txt: Added.
+        * fast/mediastream/MediaStreamTrack-getSources.html: Added.
+
+2013-09-17  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r155976.
+        http://trac.webkit.org/changeset/155976
+        https://bugs.webkit.org/show_bug.cgi?id=121512
+
+        Broke a test, needs cleanup (Requested by ap_ on #webkit).
+
+        * platform/mac/accessibility/element-busy-changed-expected.txt: Removed.
+        * platform/mac/accessibility/element-busy-changed.html: Removed.
+
+2013-09-17  Romain Perier  <romain.perier@gmail.com>
+
+        Improve srcset parser
+        https://bugs.webkit.org/show_bug.cgi?id=119423
+
+        Reviewed by Benjamin Poulain.
+
+        * fast/hidpi/image-srcset-data-srcset-invalid-inputs.html: Ensures that a various invalid
+          form of data uri schemes are supported by the srcset attribute.
+        * fast/hidpi/image-srcset-data-srcset-valid-inputs.html: Ensures that a various valid
+          form of data uri schemes are supported by the srcset attribute.
+        * fast/hidpi/image-srcset-data-srcset.html: Use comma instead of %.
+        * fast/hidpi/image-srcset-fraction-1.5x.html: Added.
+        * fast/hidpi/image-srcset-invalid-inputs-except-one.html: Missing srcset-helper.js. Adding more invalid cases.
+        * fast/hidpi/image-srcset-invalid-inputs.html: Adding more invalid cases.
+        * fast/hidpi/image-srcset-nomodifier.html: Updated output as behaviour changed for this case.
+        * fast/hidpi/image-srcset-space-suffix-nomodifier.html: Ensures that a single candidate with no scale modifier
+          is supported by the srcset attribute, even if a space is left at the end.
+        * fast/hidpi/image-srcset-space-prefix-nomodifier.html: Ensures that a single candidate with no scale modifier
+          is supported by the srcset attribute, even if a space is left at the beginning.
+        * fast/hidpi/image-srcset-space-surrounded-nomodifier.html: Ensures that a single candidate with no scale modifier
+          is supported by the srcset attribute, even if it is surrounded by spaces.
+        * fast/hidpi/image-srcset-data-escaped-srcset.html: Ensures that data uri schemes with escaped characters
+          are supported by the srcset attribute.
+
+2013-09-17  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] More bot cleanup.
+
+        * platform/win/TestExpectations: Turn off a few more tests to get bots green.
+
+2013-09-17  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Disable a number of crashing tests to help the EWS system run more rapidly.
+        https://bugs.webkit.org/show_bug.cgi?id=121509
+
+        * platform/win/TestExpectations:
+
+2013-09-17  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Disable a number of failing tests to help the EWS system run more rapidly.
+        https://bugs.webkit.org/show_bug.cgi?id=121509
+
+        * platform/win/TestExpectations:
+
+2013-09-16  Simon Fraser  <simon.fraser@apple.com>
+
+        Hardware accelerated CSS transitions appear pixelated when scaled up using transform
+        https://bugs.webkit.org/show_bug.cgi?id=27684
+        <rdar://problem/6134606>
+
+        Reviewed by Dean Jackson.
+        
+        New tests that dump contentsScale under various scaling scenarios:
+
+        * compositing/contents-scale/animating-expected.txt: Added.
+        * compositing/contents-scale/animating.html: Added.
+        * compositing/contents-scale/scaled-ancestor-expected.txt: Added.
+        * compositing/contents-scale/scaled-ancestor.html: Added.
+        * compositing/contents-scale/simple-scale-expected.txt: Added.
+        * compositing/contents-scale/simple-scale.html: Added.
+        * compositing/contents-scale/z-translate-expected.txt: Added.
+        * compositing/contents-scale/z-translate.html: Added.
+        
+        These tests had Mac-specific results (which include visible rects and now
+        contents scale) in the cross-platform directory, so cleaned up the cross-platform
+        results and moved the Mac results to platform-mac.
+
+        * compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants-expected.txt:
+        * compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants2-expected.txt:
+        * compositing/visible-rect/2d-transformed-expected.txt:
+        * compositing/visible-rect/3d-transform-style-expected.txt:
+        * compositing/visible-rect/3d-transformed-expected.txt:
+        * compositing/visible-rect/animated-expected.txt:
+        * compositing/visible-rect/animated-from-none-expected.txt:
+        * compositing/visible-rect/clipped-by-viewport-expected.txt:
+        * compositing/visible-rect/clipped-visible-rect-expected.txt:
+        * compositing/visible-rect/flipped-preserve-3d-expected.txt:
+        * compositing/visible-rect/iframe-and-layers-expected.txt:
+        * compositing/visible-rect/nested-transform-expected.txt:
+        * compositing/visible-rect/scrolled-expected.txt:
+        * platform/mac/compositing/tiling/rotated-tiled-clamped-expected.txt:
+        * platform/mac/compositing/tiling/rotated-tiled-preserve3d-clamped-expected.txt:
+        * platform/mac/compositing/tiling/tile-cache-zoomed-expected.txt:
+        * platform/mac/compositing/visible-rect/2d-transformed-expected.txt: Copied from LayoutTests/compositing/visible-rect/2d-transformed-expected.txt.
+        * platform/mac/compositing/visible-rect/3d-transform-style-expected.txt: Copied from LayoutTests/compositing/visible-rect/3d-transform-style-expected.txt.
+        * platform/mac/compositing/visible-rect/3d-transformed-expected.txt: Copied from LayoutTests/compositing/visible-rect/3d-transformed-expected.txt.
+        * platform/mac/compositing/visible-rect/animated-expected.txt: Copied from LayoutTests/compositing/visible-rect/animated-expected.txt.
+        * platform/mac/compositing/visible-rect/animated-from-none-expected.txt: Copied from LayoutTests/compositing/visible-rect/animated-from-none-expected.txt.
+        * platform/mac/compositing/visible-rect/clipped-by-viewport-expected.txt: Copied from LayoutTests/compositing/visible-rect/clipped-by-viewport-expected.txt.
+        * platform/mac/compositing/visible-rect/clipped-visible-rect-expected.txt: Copied from LayoutTests/compositing/visible-rect/clipped-visible-rect-expected.txt.
+        * platform/mac/compositing/visible-rect/flipped-preserve-3d-expected.txt: Copied from LayoutTests/compositing/visible-rect/flipped-preserve-3d-expected.txt.
+        * platform/mac/compositing/visible-rect/iframe-and-layers-expected.txt: Copied from LayoutTests/compositing/visible-rect/iframe-and-layers-expected.txt.
+        * platform/mac/compositing/visible-rect/iframe-no-layers-expected.txt:
+        * platform/mac/compositing/visible-rect/nested-transform-expected.txt: Copied from LayoutTests/compositing/visible-rect/nested-transform-expected.txt.
+        * platform/mac/compositing/visible-rect/scrolled-expected.txt: Copied from LayoutTests/compositing/visible-rect/scrolled-expected.txt.
+
+2013-09-17  Samuel White  <samuel_white@apple.com>
+
+        AX: Expose ARIA Busy Notifications
+        https://bugs.webkit.org/show_bug.cgi?id=121451
+
+        Reviewed by Darin Adler.
+
+        Added test to verify that elements post AXElementBusyChanged notifications when aria-busy is toggled.
+
+        * platform/mac/accessibility/element-busy-changed-expected.txt: Added.
+        * platform/mac/accessibility/element-busy-changed.html: Added.
+
+2013-09-17  Manuel Rego Casasnovas  <rego@igalia.com>
+
+        [CSS Regions] Layout Test for selection direction
+        https://bugs.webkit.org/show_bug.cgi?id=121501
+
+        Reviewed by Darin Adler.
+
+        Selection follows DOM tree, so the highlighted text in this test case is
+        the opposite to what the user is actually selecting. This was not
+        working properly from r139197 to r155058, so adding a Layout Test to
+        prevent future breaks. It is a reftest comparing regions and absolute
+        positions behavior.
+
+        * fast/regions/selection-direction-expected.html: Added.
+        * fast/regions/selection-direction.html: Added.
+
+2013-09-17  Hans Muller  <hmuller@adobe.com>
+
+        Bad ASSERT() in RasterShapeIntervals::firstIncludedIntervalY()
+        https://bugs.webkit.org/show_bug.cgi?id=121455
+
+        Reviewed by Darin Adler.
+
+        Simple regression test, it crashes in the bad ASSERT().
+
+        * fast/shapes/shape-inside/shape-inside-first-fit-crash-expected.txt: Added.
+        * fast/shapes/shape-inside/shape-inside-first-fit-crash.html: Added.
+
+2013-09-17  Gabor Abraham  <abrhm@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Skip and rebase tests.
+
+        * platform/qt-wk2/TestExpectations:
+        * platform/qt-wk2/compositing/geometry/negative-text-indent-with-overflow-hidden-layer-expected.txt: Added r155546.
+        * platform/qt-wk2/compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants-expected.txt: Added r155607.
+        * platform/qt-wk2/compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants2-expected.txt: Added r155607.
+        * platform/qt-wk2/fast/repaint/negative-text-indent-with-overflow-hidden-expected.txt: Added r155546.
+        * platform/qt-wk2/fast/replaced/border-radius-clip-expected.txt: Removed.
+        * platform/qt/TestExpectations:
+
+2013-09-17  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Set MessageEvent.source to the newly created port for shared workers' connect events
+        https://bugs.webkit.org/show_bug.cgi?id=121390
+
+        Reviewed by Darin Adler.
+
+        Add layout test to check that MessageEvent.source is set to the newly created port
+        for shared workers' connect events.
+
+        * fast/events/constructors/message-event-constructor-expected.txt:
+        * fast/events/constructors/message-event-constructor.html:
+        * fast/workers/resources/messageevent-source.js: Added.
+        (onconnect):
+        * fast/workers/shared-worker-messageevent-source-expected.txt: Added.
+        * fast/workers/shared-worker-messageevent-source.html: Added.
+
+2013-09-17  Antti Koivisto  <antti@apple.com>
+
+        RenderBR should not be RenderText
+        https://bugs.webkit.org/show_bug.cgi?id=121221
+
+        Reviewed by Darin Adler.
+
+        * editing/selection/move-by-word-visually-mac-expected.txt:
+        
+            This is a progression. A previously failing subtest passes.
+
+        * platform/mac/css3/selectors3/html/css3-modsel-179a-expected.txt:
+        * platform/mac/css3/selectors3/xhtml/css3-modsel-179a-expected.txt:
+        * platform/mac/css3/selectors3/xml/css3-modsel-179a-expected.txt:
+        
+            Changes in render tree dump that don't affect rendering.
+
+        * platform/mac/fast/css/pseudo-first-line-border-width-expected.txt:
+        
+            This is a progression. The new rendering matches Firefox.
+
+        * platform/mac/fast/css/word-space-extra-expected.txt:
+        * platform/mac/fast/text/whitespace/pre-wrap-spaces-after-newline-expected.txt:
+        
+            Changes in render tree dump that don't affect rendering.
+
+2013-09-17  Eric Carlson  <eric.carlson@apple.com>
+
+        MediaStream API: Adding an async RTCPeerConnection::addIceCandidate
+        https://bugs.webkit.org/show_bug.cgi?id=121403
+
+        Reviewed by Darin Adler.
+
+        * fast/mediastream/RTCPeerConnection-ice-expected.txt:
+        * fast/mediastream/RTCPeerConnection-ice.html:
+
+2013-09-17  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSSRegions] Flowed fixed element without its transformed parent positioned relative to viewport
+        https://bugs.webkit.org/show_bug.cgi?id=121478
+
+        Reviewed by Antti Koivisto.
+
+        A fixed positioned element collected into a named flow without its transformed parent should be positioned relative to the viewport instead of the transformed parent. Add a test for this behavior.
+
+        * fast/regions/flow-fixed-element-transformed-parent-expected.txt: Added.
+        * fast/regions/flow-fixed-element-transformed-parent.html: Added.
+
+2013-09-17  Ádám Kallai  <kadam@inf.u-szeged.hu>
+
+        [Qt] Unreviewed gardening. Skip failing tests.
+
+        * platform/qt-wk1/TestExpectations:
+
+2013-09-16  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: ARIA tablist is disabled, but VoiceOver does not speak the tabs as dimmed
+        https://bugs.webkit.org/show_bug.cgi?id=121408
+
+        Reviewed by Darin Adler.
+
+        * accessibility/aria-disabled-propagated-to-children-expected.txt: Added.
+        * accessibility/aria-disabled-propagated-to-children.html: Added.
+
+2013-09-16  Alexey Proskuryakov  <ap@apple.com>
+
+        Flaky Test: svg/batik/masking/maskRegions.svg
+        https://bugs.webkit.org/show_bug.cgi?id=114120
+
+        Fails in the same way as many other batik tests.
+
+        * platform/mac/TestExpectations: Marking as flaky.
+
+2013-09-16  Alexey Proskuryakov  <ap@apple.com>
+
+        Marked a few tests that are too slow in debug builds, and frequently fail.
+
+        * platform/mac/TestExpectations:
+
+2013-09-16  Alexey Proskuryakov  <ap@apple.com>
+
+        svg/animations/smil-leak-*.svg tests are flaky
+        https://bugs.webkit.org/show_bug.cgi?id=114280
+
+        The tests are still flaky. Ran out of ideas, so marking them as such and leaving them there.
+
+        * platform/mac/TestExpectations:
+
+2013-09-16  Alexey Proskuryakov  <ap@apple.com>
+
+        svg/animations/smil-leak-*.svg tests are flaky
+        https://bugs.webkit.org/show_bug.cgi?id=114280
+
+        The tests were still flaky. Changed retry timeout from 0 to 100 ms as previously
+        suggested by Geoff.
+
+        * svg/animations/smil-leak-dynamically-added-element-instances.svg:
+        * svg/animations/smil-leak-element-instances-noBaseValRef.svg:
+        * svg/animations/smil-leak-element-instances.svg:
+        * svg/animations/smil-leak-elements.svg:
+
+2013-09-16  Alexey Proskuryakov  <ap@apple.com>
+
+        Flaky Test: svg/batik/filters/feTile.svg
+        https://bugs.webkit.org/show_bug.cgi?id=114375
+
+        * platform/mac/TestExpectations: Marking as flaky. We already have a lot of these
+        batik tests marked as flaky, with similar symptoms.
+
+2013-09-16  Alexey Proskuryakov  <ap@apple.com>
+
+        svg/animations/smil-leak-*.svg tests are flaky
+        https://bugs.webkit.org/show_bug.cgi?id=114280
+
+        Reviewed by Geoffrey Garen.
+
+        Try garbage collection multiple times, who knows which queues the deleted nodes
+        could still be in. Also, removed last week's experimental change to make 10x more
+        nodes to see how that affects the number of leaks (it didn't).
+
+        * svg/animations/smil-leak-dynamically-added-element-instances.svg:
+        * svg/animations/smil-leak-element-instances-noBaseValRef.svg:
+        * svg/animations/smil-leak-element-instances.svg:
+        * svg/animations/smil-leak-elements.svg:
+
 2013-09-16  Alexey Proskuryakov  <ap@apple.com>
 
         http/tests/misc/submit-post-keygen.html is extremely slow on bots, often timing out

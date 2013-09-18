@@ -145,6 +145,7 @@ const int showTreeCharacterOffset = 39;
 // Base class for all rendering tree objects.
 class RenderObject : public CachedImageClient {
     friend class RenderBlock;
+    friend class RenderBlockFlow;
     friend class RenderLayer;
     friend class RenderObjectChildList;
 public:
@@ -325,11 +326,11 @@ public:
     void showRenderTreeAndMark(const RenderObject* markedObject1 = 0, const char* markedLabel1 = 0, const RenderObject* markedObject2 = 0, const char* markedLabel2 = 0, int depth = 0) const;
 #endif
 
-    static RenderObject* createObject(Element*, RenderStyle*);
+    static RenderObject* createObject(Element&, RenderStyle&);
 
     // Overloaded new operator.  Derived classes must override operator new
     // in order to allocate out of the RenderArena.
-    void* operator new(size_t, RenderArena*);
+    void* operator new(size_t, RenderArena&);
 
     // Overridden to prevent the normal delete from being called.
     void operator delete(void*, size_t);
@@ -339,11 +340,10 @@ private:
     void* operator new(size_t) throw();
 
 public:
-    RenderArena* renderArena() const { return document().renderArena(); }
+    RenderArena& renderArena() const { return *document().renderArena(); }
 
     bool isPseudoElement() const { return node() && node()->isPseudoElement(); }
 
-    virtual bool isBR() const { return false; }
     virtual bool isBoxModelObject() const { return false; }
     virtual bool isCounter() const { return false; }
     virtual bool isQuote() const { return false; }
@@ -568,6 +568,10 @@ public:
     bool isPositioned() const { return m_bitfields.isPositioned(); }
 
     bool isText() const  { return !m_bitfields.isBox() && m_bitfields.isTextOrRenderView(); }
+    bool isLineBreak() const { return m_bitfields.isLineBreak(); }
+    bool isBR() const { return isLineBreak() && !isWBR(); }
+    bool isLineBreakOpportunity() const { return isLineBreak() && isWBR(); }
+    bool isTextOrLineBreak() const { return isText() || isLineBreak(); }
     bool isBox() const { return m_bitfields.isBox(); }
     bool isRenderView() const  { return m_bitfields.isBox() && m_bitfields.isTextOrRenderView(); }
     bool isInline() const { return m_bitfields.isInline(); } // inline object
@@ -700,6 +704,7 @@ public:
     virtual bool computeBackgroundIsKnownToBeObscured() { return false; }
 
     void setIsText() { ASSERT(!isBox()); m_bitfields.setIsTextOrRenderView(true); }
+    void setIsLineBreak() { m_bitfields.setIsLineBreak(true); }
     void setIsBox() { m_bitfields.setIsBox(true); }
     void setIsRenderView() { ASSERT(isBox()); m_bitfields.setIsTextOrRenderView(true); }
     void setReplaced(bool b = true) { m_bitfields.setIsReplaced(b); }
@@ -1023,7 +1028,7 @@ protected:
 
     void clearLayoutRootIfNeeded() const;
     virtual void willBeDestroyed();
-    void arenaDelete(RenderArena*, void* objectBase);
+    void arenaDelete(RenderArena&, void* objectBase);
 
     virtual bool canBeReplacedWithInlineRunIn() const;
 
@@ -1046,6 +1051,8 @@ private:
     Color selectionColor(int colorProperty) const;
 
     Node* generatingPseudoHostElement() const;
+
+    virtual bool isWBR() const { ASSERT_NOT_REACHED(); return false; }
 
 #if ENABLE(CSS_SHAPES)
     void removeShapeImageClient(ShapeValue*);
@@ -1099,6 +1106,7 @@ private:
             , m_isBox(false)
             , m_isInline(true)
             , m_isReplaced(false)
+            , m_isLineBreak(false)
             , m_horizontalWritingMode(true)
             , m_isDragging(false)
             , m_hasLayer(false)
@@ -1116,7 +1124,7 @@ private:
         {
         }
         
-        // 31 bits have been used here. There is one bit available.
+        // 32 bits have been used here. There are no bits available.
         ADD_BOOLEAN_BITFIELD(needsLayout, NeedsLayout);
         ADD_BOOLEAN_BITFIELD(needsPositionedMovementLayout, NeedsPositionedMovementLayout);
         ADD_BOOLEAN_BITFIELD(normalChildNeedsLayout, NormalChildNeedsLayout);
@@ -1130,6 +1138,7 @@ private:
         ADD_BOOLEAN_BITFIELD(isBox, IsBox);
         ADD_BOOLEAN_BITFIELD(isInline, IsInline);
         ADD_BOOLEAN_BITFIELD(isReplaced, IsReplaced);
+        ADD_BOOLEAN_BITFIELD(isLineBreak, IsLineBreak);
         ADD_BOOLEAN_BITFIELD(horizontalWritingMode, HorizontalWritingMode);
         ADD_BOOLEAN_BITFIELD(isDragging, IsDragging);
 
@@ -1201,7 +1210,7 @@ inline bool RenderObject::isBeforeContent() const
     if (style()->styleType() != BEFORE)
         return false;
     // Text nodes don't have their own styles, so ignore the style on a text node.
-    if (isText() && !isBR())
+    if (isText())
         return false;
     return true;
 }
@@ -1211,7 +1220,7 @@ inline bool RenderObject::isAfterContent() const
     if (style()->styleType() != AFTER)
         return false;
     // Text nodes don't have their own styles, so ignore the style on a text node.
-    if (isText() && !isBR())
+    if (isText())
         return false;
     return true;
 }

@@ -901,6 +901,16 @@
             "grzegorz"
          ]
       },
+      "Gwang Yoon Hwang" : {
+         "emails" : [
+            "ryumiel@company100.net",
+            "ryumiel@company100.com"
+         ],
+         "expertise" : "Accelerated Compositing",
+         "nicks" : [
+            "ryumiel"
+         ]
+      },
       "Hans Muller" : {
          "emails" : [
             "giles_joplin@yahoo.com",
@@ -1020,6 +1030,14 @@
          "expertise" : "The EFLWebKit port",
          "nicks" : [
             "jaehun"
+         ]
+      },
+      "Jae Hyun Park" : {
+         "emails" : [
+            "jae.park@company100.net"
+         ],
+         "nicks" : [
+            "jaepark"
          ]
       },
       "Jakob Petsovits" : {
@@ -2757,15 +2775,6 @@
             "gregsimon"
          ]
       },
-      "Gwang Yoon Hwang" : {
-         "emails" : [
-            "ryumiel@company100.net",
-            "ryumiel@company100.com"
-         ],
-         "nicks" : [
-            "ryumiel"
-         ]
-      },
       "Hao Zheng" : {
          "emails" : [
             "zhenghao@chromium.org"
@@ -2785,14 +2794,6 @@
          ],
          "nicks" : [
             "hixie"
-         ]
-      },
-      "Jae Hyun Park" : {
-         "emails" : [
-            "jae.park@company100.net"
-         ],
-         "nicks" : [
-            "jaepark"
          ]
       },
       "James Craig" : {

@@ -1,3 +1,82 @@
+2013-09-18  Sam Weinig  <sam@webkit.org>
+
+        Replace use of OwnArrayPtr<Foo> with std::unique_ptr<Foo[]> in WebKit and WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=121568
+
+        Reviewed by Andreas Kling.
+
+        * WebHistory.cpp:
+        (WebHistory::removeAllItems):
+        (WebHistory::orderedLastVisitedDays):
+        (WebHistory::addItemToDateCaches):
+        (WebHistory::removeItemFromDateCaches):
+        * WebHistory.h:
+        * WebPreferences.cpp:
+        (WebPreferences::copyWebKitPreferencesToCFPreferences):
+
+2013-09-18  Patrick Gansterer  <paroga@webkit.org>
+
+        Make WebHistory more type safe
+        https://bugs.webkit.org/show_bug.cgi?id=119389
+
+        Reviewed by Brent Fulgham.
+
+        Use a WTF::HashMap instead of a CFMutableDictionary to avoid
+        casting from void* all the time when accessing the entries.
+        This reduces the dependencies on CoreFoundation too.
+
+        * WebHistory.cpp:
+        (WebHistory::WebHistory):
+        (WebHistory::removeAllItems):
+        (WebHistory::allItems):
+        (WebHistory::removeItem):
+        (WebHistory::addItem):
+        (WebHistory::visitedURL):
+        (WebHistory::itemForURL):
+        (WebHistory::removeItemForURLString):
+        (WebHistory::itemForURLString):
+        (WebHistory::addVisitedLinksToPageGroup):
+        * WebHistory.h:
+
+2013-09-17  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Speculative build fix after r155963
+
+        * WebKitCOMAPI.cpp:
+        (classFactory): Use nullptr rather than 0 for HashMap.
+
+2013-09-16  Enrica Casucci  <enrica@apple.com>
+
+        Remove unused function didSetSelectionTypesForPasteboard from EditorClient.
+        https://bugs.webkit.org/show_bug.cgi?id=121464
+
+        Reviewed by Darin Adler.
+
+        * WebCoreSupport/WebEditorClient.cpp:
+        * WebCoreSupport/WebEditorClient.h:
+
+2013-09-16  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Rendering stops when mouse is moving for some types of animations.
+        https://bugs.webkit.org/show_bug.cgi?id=121329
+
+        Reviewed by Anders Carlsson.
+
+        * WebView.cpp:
+        (WebView::WebView): Add new display flag.
+        (WebView::repaint): Mark view as needing a display operation.
+        (WebView::addToDirtyRegion): Ditto
+        (WebView::scrollBackingStore): Ditto
+        (WebView::sizeChanged): Ditto
+        (WebView::updateBackingStore): Ditto
+        (WebView::performLayeredWindowUpdate): Mark the WebView as having been
+        moved to screen.
+        (WebView::paintIntoWindow): Ditto
+        (WebView::WebViewWndProc): If the view needs display, and it was not done during
+        this message loop iteration, draw the screen.
+        * WebView.h:
+        (WebView::needsDisplay): Added
+
 2013-09-15  Patrick Gansterer  <paroga@webkit.org>
 
         Remove dependency on CoreFoundation from WebIconDatabase

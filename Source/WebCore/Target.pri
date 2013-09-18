@@ -373,7 +373,6 @@ SOURCES += \
     dom/ContainerNode.cpp \
     dom/ContainerNodeAlgorithms.cpp \
     dom/ContextDestructionObserver.cpp \
-    dom/ContextFeatures.cpp \
     dom/CustomEvent.cpp \
     dom/DecodedDataDocumentParser.cpp \
     dom/DeviceMotionController.cpp \
@@ -694,6 +693,7 @@ SOURCES += \
     html/NumberInputType.cpp \
     html/PasswordInputType.cpp \
     html/PluginDocument.cpp \
+    html/PublicURLManager.cpp \
     html/RadioInputType.cpp \
     html/RadioNodeList.cpp \
     html/RangeInputType.cpp \
@@ -1155,7 +1155,6 @@ SOURCES += \
     rendering/RenderBlockLineLayout.cpp \
     rendering/RenderBox.cpp \
     rendering/RenderBoxModelObject.cpp \
-    rendering/RenderBR.cpp \
     rendering/RenderButton.cpp \
     rendering/RenderCombineText.cpp \
     rendering/RenderCounter.cpp \
@@ -1183,6 +1182,7 @@ SOURCES += \
     rendering/RenderLayerFilterInfo.cpp \
     rendering/RenderLayerModelObject.cpp \
     rendering/RenderLineBoxList.cpp \
+    rendering/RenderLineBreak.cpp \
     rendering/RenderListBox.cpp \
     rendering/RenderListItem.cpp \
     rendering/RenderListMarker.cpp \
@@ -1226,7 +1226,6 @@ SOURCES += \
     rendering/RenderTreeAsText.cpp \
     rendering/RenderView.cpp \
     rendering/RenderWidget.cpp \
-    rendering/RenderWordBreak.cpp \
     rendering/RootInlineBox.cpp \
     rendering/ScrollBehavior.cpp \
     rendering/shapes/PolygonShape.cpp \
@@ -1580,7 +1579,6 @@ HEADERS += \
     dom/Comment.h \
     dom/ContainerNode.h \
     dom/ContainerNodeAlgorithms.h \
-    dom/ContextFeatures.h \
     dom/CustomEvent.h \
     dom/default/PlatformMessagePortChannel.h \
     dom/DeviceMotionClient.h \
@@ -2392,6 +2390,7 @@ HEADERS += \
     rendering/FilterEffectRenderer.h \
     rendering/FixedTableLayout.h \
     rendering/FloatingObjects.h \
+    rendering/FlowThreadController.h \
     rendering/HitTestingTransformState.h \
     rendering/HitTestLocation.h \
     rendering/HitTestResult.h \
@@ -2425,7 +2424,6 @@ HEADERS += \
     rendering/RenderBlock.h \
     rendering/RenderBox.h \
     rendering/RenderBoxModelObject.h \
-    rendering/RenderBR.h \
     rendering/RenderButton.h \
     rendering/RenderCombineText.h \
     rendering/RenderCounter.h \
@@ -2452,6 +2450,7 @@ HEADERS += \
     rendering/RenderLayerCompositor.h \
     rendering/RenderLayerModelObject.h \
     rendering/RenderLineBoxList.h \
+    rendering/RenderLineBreak.h \
     rendering/RenderListBox.h \
     rendering/RenderListItem.h \
     rendering/RenderListMarker.h \
@@ -2494,7 +2493,6 @@ HEADERS += \
     rendering/RenderVideo.h \
     rendering/RenderView.h \
     rendering/RenderWidget.h \
-    rendering/RenderWordBreak.h \
     rendering/RootInlineBox.h \
     rendering/ScrollBehavior.h \
     rendering/shapes/PolygonShape.h \

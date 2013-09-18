@@ -27,6 +27,7 @@
 #ifndef WTF_StdLibExtras_h
 #define WTF_StdLibExtras_h
 
+#include <memory>
 #include <wtf/Assertions.h>
 #include <wtf/CheckedArithmetic.h>
 
@@ -129,23 +130,23 @@ inline bool is8ByteAligned(void* p)
 /*
  * C++'s idea of a reinterpret_cast lacks sufficient cojones.
  */
-template<typename TO, typename FROM>
-inline TO bitwise_cast(FROM from)
+template<typename ToType, typename FromType>
+inline ToType bitwise_cast(FromType from)
 {
-    COMPILE_ASSERT(sizeof(TO) == sizeof(FROM), WTF_bitwise_cast_sizeof_casted_types_is_equal);
+    static_assert(sizeof(FromType) == sizeof(ToType), "bitwise_cast size of FromType and ToType must be equal!");
     union {
-        FROM from;
-        TO to;
+        FromType from;
+        ToType to;
     } u;
     u.from = from;
     return u.to;
 }
 
-template<typename To, typename From>
-inline To safeCast(From value)
+template<typename ToType, typename FromType>
+inline ToType safeCast(FromType value)
 {
-    ASSERT(isInBounds<To>(value));
-    return static_cast<To>(value);
+    ASSERT(isInBounds<ToType>(value));
+    return static_cast<ToType>(value);
 }
 
 // Returns a count of the number of bits set in 'bits'.
@@ -171,9 +172,10 @@ inline size_t roundUpToMultipleOf(size_t divisor, size_t x)
     size_t remainderMask = divisor - 1;
     return (x + remainderMask) & ~remainderMask;
 }
+
 template<size_t divisor> inline size_t roundUpToMultipleOf(size_t x)
 {
-    COMPILE_ASSERT(divisor && !(divisor & (divisor - 1)), divisor_is_a_power_of_two);
+    static_assert(divisor && !(divisor & (divisor - 1)), "divisor must be a power of two!");
     return roundUpToMultipleOf(divisor, x);
 }
 
@@ -301,6 +303,65 @@ inline void* operator new(size_t, NotNullTag, void* location)
 {
     ASSERT(location);
     return location;
+}
+
+
+// For standard libraries that do not yet include it, this adds the std::make_unique
+// type. It is defined in the same namespaces as it would be in library that had the
+// support.
+
+namespace std {
+
+    template<class T> struct _Unique_if {
+        typedef unique_ptr<T> _Single_object;
+    };
+
+    template<class T> struct _Unique_if<T[]> {
+        typedef unique_ptr<T[]> _Unknown_bound;
+    };
+
+    template<class T, size_t N> struct _Unique_if<T[N]> {
+        typedef void _Known_bound;
+    };
+
+#if COMPILER_SUPPORTS(CXX_VARIADIC_TEMPLATES)
+    template<class T, class... Args> typename _Unique_if<T>::_Single_object
+    make_unique(Args&&... args)
+    {
+        return unique_ptr<T>(new T(std::forward<Args>(args)...));
+    }
+#else
+    template<class T> typename _Unique_if<T>::_Single_object
+    make_unique()
+    {
+        return unique_ptr<T>(new T);
+    }
+
+    template<class T, class A1> typename _Unique_if<T>::_Single_object
+    make_unique(A1&& a1)
+    {
+        return unique_ptr<T>(new T(std::forward<A1>(a1)));
+    }
+
+    template<class T, class A1, class A2> typename _Unique_if<T>::_Single_object
+    make_unique(A1&& a1, A1&& a2)
+    {
+        return unique_ptr<T>(new T(std::forward<A1>(a1), std::forward<A2>(a2)));
+    }
+#endif
+
+    template<class T> typename _Unique_if<T>::_Unknown_bound
+    make_unique(size_t n)
+    {
+        typedef typename remove_extent<T>::type U;
+        return unique_ptr<T>(new U[n]());
+    }
+    
+#if COMPILER_SUPPORTS(CXX_VARIADIC_TEMPLATES)
+    template<class T, class... Args> typename _Unique_if<T>::_Known_bound
+    make_unique(Args&&...) = delete;
+#endif
+
 }
 
 using WTF::KB;

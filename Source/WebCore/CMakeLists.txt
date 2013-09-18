@@ -210,11 +210,16 @@ set(WebCore_IDL_FILES
     Modules/mediasource/MediaSource.idl
     Modules/mediasource/SourceBuffer.idl
     Modules/mediasource/SourceBufferList.idl
+    Modules/mediasource/URLMediaSource.idl
+    Modules/mediasource/WebKitMediaSource.idl
+    Modules/mediasource/WebKitSourceBuffer.idl
+    Modules/mediasource/WebKitSourceBufferList.idl
 
     Modules/mediastream/MediaStream.idl
     Modules/mediastream/MediaStreamEvent.idl
     Modules/mediastream/MediaStreamTrack.idl
     Modules/mediastream/MediaStreamTrackEvent.idl
+    Modules/mediastream/MediaStreamTrackSourcesCallback.idl
     Modules/mediastream/NavigatorMediaStream.idl
     Modules/mediastream/NavigatorUserMediaError.idl
     Modules/mediastream/NavigatorUserMediaErrorCallback.idl
@@ -232,6 +237,7 @@ set(WebCore_IDL_FILES
     Modules/mediastream/RTCStatsCallback.idl
     Modules/mediastream/RTCStatsReport.idl
     Modules/mediastream/RTCStatsResponse.idl
+    Modules/mediastream/SourceInfo.idl
 
     Modules/navigatorcontentutils/NavigatorContentUtils.idl
 
@@ -838,6 +844,7 @@ set(WebCore_SOURCES
     Modules/mediastream/MediaStreamRegistry.cpp
     Modules/mediastream/MediaStreamTrack.cpp
     Modules/mediastream/MediaStreamTrackEvent.cpp
+    Modules/mediastream/MediaStreamTrackSourcesRequest.cpp
     Modules/mediastream/NavigatorMediaStream.cpp
     Modules/mediastream/RTCDTMFSender.cpp
     Modules/mediastream/RTCDTMFToneChangeEvent.cpp
@@ -852,6 +859,7 @@ set(WebCore_SOURCES
     Modules/mediastream/RTCStatsRequestImpl.cpp
     Modules/mediastream/RTCStatsResponse.cpp
     Modules/mediastream/RTCVoidRequestImpl.cpp
+    Modules/mediastream/SourceInfo.cpp
     Modules/mediastream/UserMediaController.cpp
     Modules/mediastream/UserMediaRequest.cpp
 
@@ -1125,7 +1133,6 @@ set(WebCore_SOURCES
     dom/ContainerNode.cpp
     dom/ContainerNodeAlgorithms.cpp
     dom/ContextDestructionObserver.cpp
-    dom/ContextFeatures.cpp
     dom/CustomEvent.cpp
     dom/DatasetDOMStringMap.cpp
     dom/DataTransferItem.cpp
@@ -1459,6 +1466,7 @@ set(WebCore_SOURCES
     html/NumberInputType.cpp
     html/PasswordInputType.cpp
     html/PluginDocument.cpp
+    html/PublicURLManager.cpp
     html/RadioInputType.cpp
     html/RadioNodeList.cpp
     html/RangeInputType.cpp
@@ -2114,7 +2122,6 @@ set(WebCore_SOURCES
     rendering/LineWidth.cpp
     rendering/PointerEventsHitRules.cpp
     rendering/RenderArena.cpp
-    rendering/RenderBR.cpp
     rendering/RenderBlock.cpp
     rendering/RenderBlockFlow.cpp
     rendering/RenderBlockLineLayout.cpp
@@ -2149,6 +2156,7 @@ set(WebCore_SOURCES
     rendering/RenderLayerFilterInfo.cpp
     rendering/RenderLayerModelObject.cpp
     rendering/RenderLineBoxList.cpp
+    rendering/RenderLineBreak.cpp
     rendering/RenderListBox.cpp
     rendering/RenderListItem.cpp
     rendering/RenderListMarker.cpp
@@ -2197,7 +2205,6 @@ set(WebCore_SOURCES
     rendering/RenderVideo.cpp
     rendering/RenderView.cpp
     rendering/RenderWidget.cpp
-    rendering/RenderWordBreak.cpp
     rendering/RootInlineBox.cpp
     rendering/ScrollBehavior.cpp
     rendering/TextAutosizer.cpp

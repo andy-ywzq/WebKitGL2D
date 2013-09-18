@@ -52,7 +52,6 @@
 #include "CachedImage.h"
 #include "CalculationValue.h"
 #include "ContentData.h"
-#include "ContextFeatures.h"
 #include "Counter.h"
 #include "CounterContent.h"
 #include "CursorList.h"
@@ -463,8 +462,10 @@ Node* StyleResolver::locateCousinList(Element* parent, unsigned& visitedNodeCoun
         return 0;
     if (!parent || !parent->isStyledElement())
         return 0;
+#if ENABLE(STYLE_SCOPED)
     if (parent->hasScopedHTMLStyleChild())
         return 0;
+#endif
     StyledElement* p = static_cast<StyledElement*>(parent);
     if (p->inlineStyle())
         return 0;
@@ -654,8 +655,10 @@ bool StyleResolver::canShareStyleWithElement(StyledElement* element) const
 
     if (element->hasID() && m_ruleSets.features().idsInRules.contains(element->idForStyleResolution().impl()))
         return false;
+#if ENABLE(STYLE_SCOPED)
     if (element->hasScopedHTMLStyleChild())
         return false;
+#endif
 
     // FIXME: We should share style for option and optgroup whenever possible.
     // Before doing so, we need to resolve issues in HTMLSelectElement::recalcListItems
@@ -739,8 +742,10 @@ RenderStyle* StyleResolver::locateSharedStyle()
         return 0;
     if (parentElementPreventsSharing(state.element()->parentElement()))
         return 0;
+#if ENABLE(STYLE_SCOPED)
     if (state.styledElement()->hasScopedHTMLStyleChild())
         return 0;
+#endif
     if (state.element() == state.document().cssTarget())
         return 0;
     if (elementHasDirectionAuto(state.element()))

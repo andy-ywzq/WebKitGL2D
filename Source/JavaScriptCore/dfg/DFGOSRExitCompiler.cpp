@@ -40,14 +40,6 @@
 
 namespace JSC { namespace DFG {
 
-static CString shortOperandsDump(const Operands<ValueRecovery>& operands)
-{
-    DumpContext context;
-    StringPrintStream out;
-    out.print(inContext(operands, &context));
-    return out.toCString();
-}
-
 extern "C" {
 
 void compileOSRExit(ExecState* exec)
@@ -61,6 +53,10 @@ void compileOSRExit(ExecState* exec)
     
     VM* vm = &exec->vm();
     
+    // It's sort of preferable that we don't GC while in here. Anyways, doing so wouldn't
+    // really be profitable.
+    DeferGCForAWhile deferGC(vm->heap);
+
     uint32_t exitIndex = vm->osrExitIndex;
     OSRExit& exit = codeBlock->jitCode()->dfg()->osrExit[exitIndex];
     
@@ -113,7 +109,7 @@ void compileOSRExit(ExecState* exec)
             ("DFG OSR exit #%u (%s, %s) from %s, with operands = %s",
                 exitIndex, toCString(exit.m_codeOrigin).data(),
                 exitKindToString(exit.m_kind), toCString(*codeBlock).data(),
-                shortOperandsDump(operands).data()));
+                toCString(ignoringContext<DumpContext>(operands)).data()));
     }
     
     {

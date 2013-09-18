@@ -26,6 +26,7 @@
 #include "config.h"
 #include "WebProcessProxy.h"
 
+#include "CustomProtocolManagerProxyMessages.h"
 #include "DataReference.h"
 #include "DownloadProxyMap.h"
 #include "PluginInfoStore.h"
@@ -41,15 +42,11 @@
 #include "WebProcessMessages.h"
 #include "WebProcessProxyMessages.h"
 #include <WebCore/KURL.h>
+#include <WebCore/RunLoop.h>
 #include <WebCore/SuddenTermination.h>
 #include <stdio.h>
-#include <wtf/MainThread.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/WTFString.h>
-
-#if ENABLE(CUSTOM_PROTOCOLS)
-#include "CustomProtocolManagerProxyMessages.h"
-#endif
 
 #if PLATFORM(MAC)
 #include "PDFPlugin.h"
@@ -74,7 +71,7 @@ static uint64_t generatePageID()
 
 static WebProcessProxy::WebPageProxyMap& globalPageMap()
 {
-    ASSERT(isMainThread());
+    ASSERT(RunLoop::isMain());
     DEFINE_STATIC_LOCAL(WebProcessProxy::WebPageProxyMap, pageMap, ());
     return pageMap;
 }

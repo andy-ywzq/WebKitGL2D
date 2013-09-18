@@ -130,7 +130,7 @@ if (length($fontNamesIn)) {
         # FIXME: Would like to use static_cast here, but there are differences in const
         # depending on whether SKIP_STATIC_CONSTRUCTORS_ON_GCC is used, so stick with a
         # C-style cast for now.
-        print F "    new (NotNull, (void*)&$name) AtomicString(${name}Impl);\n";
+        print F "    new (NotNull, (void*)&$name) AtomicString(reinterpret_cast<StringImpl*>(&${name}Data));\n";
     }
 
     print F "}\n}\n}\n";
@@ -191,7 +191,6 @@ sub defaultTagPropertyHash
         'mapToTagName' => '',
         'wrapperOnlyIfMediaIsAvailable' => 0,
         'conditional' => 0,
-        'contextConditional' => 0,
         'runtimeConditional' => 0,
         'generateTypeHelpers' => 0
     );
@@ -404,15 +403,6 @@ sub printConstructorInterior
     if (!MediaPlayer::isAvailable() || (settings && !settings->mediaEnabled()))
         return 0;
     
-END
-;
-    }
-
-    my $contextConditional = $enabledTags{$tagName}{contextConditional};
-    if ($contextConditional) {
-        print F <<END
-    if (!ContextFeatures::${contextConditional}Enabled(document))
-        return 0;
 END
 ;
     }
@@ -859,11 +849,11 @@ print F <<END
         StringImpl& name;
     };
 
-    const ${capitalizedType}TableEntry ${type}Table[] = {
+    static const ${capitalizedType}TableEntry ${type}Table[] = {
 END
 ;
     for my $name (sort keys %$namesRef) {
-        print F "        { (void*)&$name$shortCamelType, *${name}Impl },\n";
+        print F "        { (void*)&$name$shortCamelType, *reinterpret_cast<StringImpl*>(&${name}Data) },\n";
     }
 
 print F <<END
@@ -914,7 +904,6 @@ END
 
     print F <<END
 
-#include "ContextFeatures.h"
 #include "Document.h"
 #include "RuntimeEnabledFeatures.h"
 #include "Settings.h"
@@ -940,14 +929,14 @@ END
     printConstructors($F, \%tagConstructorMap);
 
     print F <<END
-static void populate$parameters{namespace}FactoryMap(HashMap<AtomicStringImpl*, $parameters{namespace}ConstructorFunction>& map)
+static NEVER_INLINE void populate$parameters{namespace}FactoryMap(HashMap<AtomicStringImpl*, $parameters{namespace}ConstructorFunction>& map)
 {
     struct TableEntry {
         const QualifiedName& name;
         $parameters{namespace}ConstructorFunction function;
     };
 
-    const TableEntry table[] = {
+    static const TableEntry table[] = {
 END
     ;
 
@@ -989,7 +978,7 @@ END
 
     static NeverDestroyed<HashMap<AtomicStringImpl*, $parameters{namespace}ConstructorFunction>> functions;
     if (functions.get().isEmpty())
-        populate$parameters{namespace}FactoryMap(functions.get());
+        populate$parameters{namespace}FactoryMap(functions);
     if ($parameters{namespace}ConstructorFunction function = functions.get().get(name.localName().impl())) {
 END
     ;
@@ -1102,20 +1091,6 @@ static JSDOMWrapper* create${JSInterfaceName}Wrapper(ExecState* exec, JSDOMGloba
 
 END
     ;
-        } elsif ($enabledTags{$tagName}{contextConditional}) {
-            my $contextConditional = $enabledTags{$tagName}{contextConditional};
-            print F <<END
-static JSDOMWrapper* create${JSInterfaceName}Wrapper(ExecState* exec, JSDOMGlobalObject* globalObject, PassRefPtr<$parameters{namespace}Element> element)
-{
-    if (!ContextFeatures::${contextConditional}Enabled(&element->document())) {
-        ASSERT(!element || element->is$parameters{fallbackInterfaceName}());
-        return CREATE_DOM_WRAPPER(exec, globalObject, $parameters{fallbackJSInterfaceName}, element.get());
-    }
-
-    return CREATE_DOM_WRAPPER(exec, globalObject, ${JSInterfaceName}, element.get());
-}
-END
-    ;
         } elsif ($enabledTags{$tagName}{runtimeConditional}) {
             my $runtimeConditional = $enabledTags{$tagName}{runtimeConditional};
             print F <<END
@@ -1167,7 +1142,6 @@ sub printWrapperFactoryCppFile
     print F "\n#include \"$parameters{namespace}Names.h\"\n";
     print F <<END
 
-#include "ContextFeatures.h"
 #include "Document.h"
 #include "RuntimeEnabledFeatures.h"
 #include "Settings.h"
@@ -1195,14 +1169,14 @@ END
 
 print F <<END
 
-static void populate$parameters{namespace}WrapperMap(HashMap<AtomicStringImpl*, Create$parameters{namespace}ElementWrapperFunction>& map)
+static NEVER_INLINE void populate$parameters{namespace}WrapperMap(HashMap<AtomicStringImpl*, Create$parameters{namespace}ElementWrapperFunction>& map)
 {
     struct TableEntry {
         const QualifiedName& name;
         Create$parameters{namespace}ElementWrapperFunction function;
     };
 
-    const TableEntry table[] = {
+    static const TableEntry table[] = {
 END
 ;
 
@@ -1238,7 +1212,7 @@ JSDOMWrapper* createJS$parameters{namespace}Wrapper(ExecState* exec, JSDOMGlobal
 {
     static NeverDestroyed<HashMap<AtomicStringImpl*, Create$parameters{namespace}ElementWrapperFunction>> functions;
     if (functions.get().isEmpty())
-        populate$parameters{namespace}WrapperMap(functions.get());
+        populate$parameters{namespace}WrapperMap(functions);
     if (auto function = functions.get().get(element->localName().impl()))
         return function(exec, globalObject, element);
     return CREATE_DOM_WRAPPER(exec, globalObject, $parameters{fallbackJSInterfaceName}, element.get());

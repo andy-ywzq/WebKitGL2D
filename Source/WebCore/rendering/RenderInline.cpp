@@ -35,6 +35,7 @@
 #include "RenderFullScreen.h"
 #include "RenderGeometryMap.h"
 #include "RenderLayer.h"
+#include "RenderLineBreak.h"
 #include "RenderTheme.h"
 #include "RenderView.h"
 #include "StyleInheritedData.h"
@@ -58,7 +59,7 @@ RenderInline::RenderInline(Element* element)
 
 RenderInline* RenderInline::createAnonymous(Document& document)
 {
-    RenderInline* renderer = new (document.renderArena()) RenderInline(0);
+    RenderInline* renderer = new (*document.renderArena()) RenderInline(0);
     renderer->setDocumentForAnonymous(document);
     return renderer;
 }
@@ -605,6 +606,17 @@ void RenderInline::generateCulledLineBoxRects(GeneratorContext& yield, const Ren
                 else
                     yield(FloatRect(logicalTop, childText->y(), logicalHeight, childText->logicalWidth()));
             }
+        } else if (curr->isLineBreak()) {
+            if (InlineBox* inlineBox = toRenderLineBreak(curr)->inlineBoxWrapper()) {
+                // FIXME: This could use a helper to share these with text path.
+                const RootInlineBox& rootBox = inlineBox->root();
+                int logicalTop = rootBox.logicalTop() + (rootBox.renderer().style(rootBox.isFirstLineStyle())->font().fontMetrics().ascent() - container->style(rootBox.isFirstLineStyle())->font().fontMetrics().ascent());
+                int logicalHeight = container->style(rootBox.isFirstLineStyle())->font().fontMetrics().height();
+                if (isHorizontal)
+                    yield(FloatRect(inlineBox->x(), logicalTop, inlineBox->logicalWidth(), logicalHeight));
+                else
+                    yield(FloatRect(logicalTop, inlineBox->y(), logicalHeight, inlineBox->logicalWidth()));
+            }
         }
     }
 }
@@ -895,7 +907,11 @@ InlineBox* RenderInline::culledInlineFirstLineBox() const
         // direction (aligned to the root box's baseline).
         if (curr->isBox())
             return toRenderBox(curr)->inlineBoxWrapper();
-        if (curr->isRenderInline()) {
+        if (curr->isLineBreak()) {
+            RenderLineBreak* renderBR = toRenderLineBreak(curr);
+            if (renderBR->inlineBoxWrapper())
+                return renderBR->inlineBoxWrapper();
+        } else if (curr->isRenderInline()) {
             RenderInline* currInline = toRenderInline(curr);
             InlineBox* result = currInline->firstLineBoxIncludingCulling();
             if (result)
@@ -919,7 +935,11 @@ InlineBox* RenderInline::culledInlineLastLineBox() const
         // direction (aligned to the root box's baseline).
         if (curr->isBox())
             return toRenderBox(curr)->inlineBoxWrapper();
-        if (curr->isRenderInline()) {
+        if (curr->isLineBreak()) {
+            RenderLineBreak* renderBR = toRenderLineBreak(curr);
+            if (renderBR->inlineBoxWrapper())
+                return renderBR->inlineBoxWrapper();
+        } else if (curr->isRenderInline()) {
             RenderInline* currInline = toRenderInline(curr);
             InlineBox* result = currInline->lastLineBoxIncludingCulling();
             if (result)
@@ -1294,6 +1314,10 @@ void RenderInline::dirtyLineBoxes(bool fullLayout)
                     RenderText* currText = toRenderText(curr);
                     for (InlineTextBox* childText = currText->firstTextBox(); childText; childText = childText->nextTextBox())
                         childText->root().markDirty();
+                } else if (curr->isLineBreak()) {
+                    RenderLineBreak* currBR = toRenderLineBreak(curr);
+                    if (currBR->inlineBoxWrapper())
+                        currBR->inlineBoxWrapper()->root().markDirty();
                 }
             }
         }

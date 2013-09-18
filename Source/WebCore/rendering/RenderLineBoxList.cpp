@@ -34,6 +34,7 @@
 #include "PaintInfo.h"
 #include "RenderArena.h"
 #include "RenderInline.h"
+#include "RenderLineBreak.h"
 #include "RenderView.h"
 #include "RootInlineBox.h"
 
@@ -64,7 +65,7 @@ void RenderLineBoxList::appendLineBox(InlineFlowBox* box)
     checkConsistency();
 }
 
-void RenderLineBoxList::deleteLineBoxTree(RenderArena* arena)
+void RenderLineBoxList::deleteLineBoxTree(RenderArena& arena)
 {
     InlineFlowBox* line = m_firstLineBox;
     InlineFlowBox* nextLine;
@@ -127,7 +128,7 @@ void RenderLineBoxList::removeLineBox(InlineFlowBox* box)
     checkConsistency();
 }
 
-void RenderLineBoxList::deleteLineBoxes(RenderArena* arena)
+void RenderLineBoxList::deleteLineBoxes(RenderArena& arena)
 {
     if (m_firstLineBox) {
         InlineFlowBox* next;
@@ -339,6 +340,10 @@ void RenderLineBoxList::dirtyLinesFromChangedChild(RenderObject* container, Rend
 
         if (curr->isReplaced()) {
             InlineBox* wrapper = toRenderBox(curr)->inlineBoxWrapper();
+            if (wrapper)
+                box = &wrapper->root();
+        } if (curr->isLineBreak()) {
+            InlineBox* wrapper = toRenderLineBreak(curr)->inlineBoxWrapper();
             if (wrapper)
                 box = &wrapper->root();
         } else if (curr->isText()) {

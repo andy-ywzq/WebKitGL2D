@@ -138,7 +138,7 @@ public:
     PassRefPtr<MessageEvent> event(ScriptExecutionContext* context)
     {
         OwnPtr<MessagePortArray> messagePorts = MessagePort::entanglePorts(*context, m_channels.release());
-        return MessageEvent::create(messagePorts.release(), m_message, m_origin, "", m_source);
+        return MessageEvent::create(messagePorts.release(), m_message, m_origin, String(), m_source);
     }
     SecurityOrigin* targetOrigin() const { return m_targetOrigin.get(); }
     ScriptCallStack* stackTrace() const { return m_stackTrace.get(); }
@@ -1331,7 +1331,7 @@ DOMWindow* DOMWindow::top() const
     if (!page)
         return 0;
 
-    return m_frame->tree().top()->document()->domWindow();
+    return m_frame->tree().top().document()->domWindow();
 }
 
 Document* DOMWindow::document() const
@@ -1949,7 +1949,7 @@ PassRefPtr<DOMWindow> DOMWindow::open(const String& urlString, const AtomicStrin
     // In those cases, we schedule a location change right now and return early.
     Frame* targetFrame = 0;
     if (frameName == "_top")
-        targetFrame = m_frame->tree().top();
+        targetFrame = &m_frame->tree().top();
     else if (frameName == "_parent") {
         if (Frame* parent = m_frame->tree().parent())
             targetFrame = parent;

@@ -1,3 +1,223 @@
+2013-09-18  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build correction.
+
+        * WTF.vcxproj/WTFGeneratedCommon.props: Export PLATFORMARCHITECTURE macro for use in
+        Makefiles and shell scripts.
+        * WTF.vcxproj/build-generated-files.sh: Output header search path to identify when the build
+        is confused about build architecture.
+
+2013-09-18  Anders Carlsson  <andersca@apple.com>
+
+        RefPtrHashMap should work with move only types
+        https://bugs.webkit.org/show_bug.cgi?id=121564
+
+        Reviewed by Andreas Kling.
+
+        Add the same rvalue references and std::forward calls that already exist in HashMap.
+
+        * wtf/RefPtrHashMap.h:
+
+2013-09-18  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG should support Int52 for local variables
+        https://bugs.webkit.org/show_bug.cgi?id=121064
+
+        Reviewed by Oliver Hunt.
+
+        * wtf/PrintStream.h:
+        (WTF::ValueIgnoringContext::ValueIgnoringContext):
+        (WTF::ValueIgnoringContext::dump):
+        (WTF::ignoringContext):
+
+2013-09-18  Andreas Kling  <akling@apple.com>
+
+        Put constant CachedPower table in read-only memory.
+        <https://webkit.org/b/121546>
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/dtoa/cached-powers.cc:
+
+2013-09-18  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r156019 and r156020.
+        http://trac.webkit.org/changeset/156019
+        http://trac.webkit.org/changeset/156020
+        https://bugs.webkit.org/show_bug.cgi?id=121540
+
+        Broke tests (Requested by ap on #webkit).
+
+        * wtf/PrintStream.h:
+
+2013-09-16  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG should support Int52 for local variables
+        https://bugs.webkit.org/show_bug.cgi?id=121064
+
+        Reviewed by Oliver Hunt.
+
+        * wtf/PrintStream.h:
+        (WTF::ValueIgnoringContext::ValueIgnoringContext):
+        (WTF::ValueIgnoringContext::dump):
+        (WTF::ignoringContext):
+
+2013-09-17  Anders Carlsson  <andersca@apple.com>
+
+        Stop explicitly using PassOwnPtr in WebCore/html
+        https://bugs.webkit.org/show_bug.cgi?id=121511
+
+        Reviewed by Andreas Kling.
+
+        Make operator= work work for different types of OwnPtrs.
+
+        * wtf/OwnPtr.h:
+
+2013-09-17  Sam Weinig  <sam@webkit.org>
+
+        Add make_unique and start using it
+        https://bugs.webkit.org/show_bug.cgi?id=121523
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/StdLibExtras.h:
+        (std::make_unique):
+        Add temporary implementation of std::make_unique that we can use until our standard
+        libraries have support for it.
+
+2013-09-17  Darin Adler  <darin@apple.com>
+
+        Make SVGTransform::valueAsString use StringBuilder
+        https://bugs.webkit.org/show_bug.cgi?id=121498
+
+        Reviewed by Andreas Kling.
+
+        * wtf/text/StringBuilder.cpp: Added appendNumber functions corresponding to all remaining
+        String::number functions. If we find we don't need all of these we can delete them later,
+        but I don't want to give clients a reason to prefer less-efficient API to StringBuilder.
+        * wtf/text/StringBuilder.h: Ditto.
+
+2013-09-16  Anders Carlsson  <andersca@apple.com>
+
+        HashMap should work with move-only keys
+        https://bugs.webkit.org/show_bug.cgi?id=121310
+
+        Reviewed by Darin Adler.
+
+        Add extra overloads for add and set where the key is an rvalue reference, but not a
+        template parameter rvalue reference. This way we'll coerce the key parameter to have the expected
+        type instead of the passed in type, causing map.add(StringImpl::create("Hello"), 123) work when the
+        type of map is HashMap<String, unsigned>.
+
+        Also, sprinkle && and std::forward where appropriate.
+
+        * wtf/HashMap.h:
+        * wtf/HashTable.h:
+
+2013-09-17  Sergio Martins  <sergio.martins@kdab.com>
+
+        Fix Windows CE build on ARM.
+        https://bugs.webkit.org/show_bug.cgi?id=121490
+
+        Reviewed by Darin Adler.
+
+        * wtf/dtoa/utils.h:
+
+2013-09-17  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        REGRESSION(r155910): WebKit nightly builds don't load any page
+        https://bugs.webkit.org/show_bug.cgi?id=121482
+
+        Reviewed by Andreas Kling.
+
+        Replaced C++ style comments with C style comments.
+
+        * wtf/Platform.h:
+
+2013-09-16  Joseph Pecoraro  <pecoraro@apple.com>
+
+        USE(WEB_THREAD): More explicit WebThread initialization
+        https://bugs.webkit.org/show_bug.cgi?id=121454
+
+        Reviewed by Benjamin Poulain.
+
+        Be more explicit when initializing WebThread only data.
+
+        * wtf/MainThread.h:
+        * wtf/MainThread.cpp:
+        (WTF::initializeWebThreadOnce):
+        (WTF::initializeWebThread):
+        Ensure one time initialization.
+
+        * wtf/mac/MainThreadMac.mm:
+        (WTF::initializeMainThreadPlatform):
+        (WTF::initializeWebThreadPlatform):
+        Move WebThread value initialization to its own function.
+
+        (WTF::isMainThread):
+        Remove no longer invalid assert if WebThread was not initialized.
+
+2013-09-16  Benjamin Poulain  <benjamin@webkit.org>
+
+        Fix WebKit1 build after r155910
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/Platform.h: Some files in WebKit include system headers before
+        WTF headers, causing the macro to be defined twice. #undef the macro
+        to support that case.
+
+2013-09-16  Benjamin Poulain  <benjamin@webkit.org>
+
+        Disable OS X's unprefixed debug macro
+        https://bugs.webkit.org/show_bug.cgi?id=121460
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/Platform.h: OS X defines a series of platform macros for debugging.
+        Some of them are really annoying because they use common names (e.g. check()).
+
+        Disable those macros so that we are not limited in how we name methods and functions.
+
+2013-09-16  Anders Carlsson  <andersca@apple.com>
+
+        MessageQueue should use a Deque of OwnPtrs
+        https://bugs.webkit.org/show_bug.cgi?id=121450
+
+        Reviewed by Andreas Kling.
+
+        * wtf/MessageQueue.h:
+
+2013-09-16  Anders Carlsson  <andersca@apple.com>
+
+        WTF::Deque should work with move only types
+        https://bugs.webkit.org/show_bug.cgi?id=121446
+
+        Reviewed by Andreas Kling.
+
+        * wtf/Deque.h:
+        Use std::move and std::forward where appropriate and get rid of the PassTraits include.
+
+2013-09-16  Anders Carlsson  <andersca@apple.com>
+
+        Change a couple of COMPILE_ASSERTs to static_assert
+        https://bugs.webkit.org/show_bug.cgi?id=121441
+
+        Reviewed by Andreas Kling.
+
+        * wtf/BloomFilter.h:
+        * wtf/PackedIntVector.h:
+        (WTF::PackedIntVector::PackedIntVector):
+        * wtf/StdLibExtras.h:
+        (WTF::bitwise_cast):
+        (WTF::safeCast):
+        (WTF::roundUpToMultipleOf):
+        * wtf/StringHasher.h:
+        (WTF::StringHasher::hashMemory):
+        * wtf/Vector.h:
+        * wtf/text/AtomicString.cpp:
+        * wtf/unicode/Unicode.h:
+
 2013-09-15  Gustavo Noronha Silva  <gns@gnome.org>
 
         Unreviewed make distcheck fix.
