@@ -121,6 +121,9 @@ unsigned long AudioDestination::maxChannelCount()
 
 void AudioDestinationNix::render(const std::vector<float*>& sourceData, const std::vector<float*>& audioData, size_t numberOfFrames)
 {
+    if (!m_isPlaying || !m_audioDevice)
+        return;
+
     bool isNumberOfChannelsGood = audioData.size() == m_numberOfOutputChannels;
     if (!isNumberOfChannelsGood) {
         ASSERT_NOT_REACHED();
