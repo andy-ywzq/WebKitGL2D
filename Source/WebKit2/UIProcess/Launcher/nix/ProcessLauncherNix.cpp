@@ -105,11 +105,24 @@ void ProcessLauncher::launchProcess()
     }
 
     String processCmdPrefix, executablePath, pluginPath;
-    if (m_launchOptions.processType == WebProcess)
+    switch (m_launchOptions.processType) {
+    case WebProcess:
         executablePath = executablePathOfWebProcess();
-    else {
+        break;
+#if ENABLE(PLUGIN_PROCESS)
+    case PluginProcess:
         executablePath = executablePathOfPluginProcess();
         pluginPath = m_launchOptions.extraInitializationData.get("plugin-path");
+        break;
+#endif
+#if ENABLE(NETWORK_PROCESS)
+    case NetworkProcess:
+        executablePath = executablePathOfNetworkProcess();
+        break;
+#endif
+    default:
+        ASSERT_NOT_REACHED();
+        return;
     }
 
 #ifndef NDEBUG
