@@ -1160,6 +1160,7 @@ SOURCES += \
     rendering/RenderCounter.cpp \
     rendering/RenderDeprecatedFlexibleBox.cpp \
     rendering/RenderDetailsMarker.cpp \
+    rendering/RenderElement.cpp \
     rendering/RenderEmbeddedObject.cpp \
     rendering/RenderFieldset.cpp \
     rendering/RenderFileUploadControl.cpp \
@@ -2429,6 +2430,7 @@ HEADERS += \
     rendering/RenderCounter.h \
     rendering/RenderDeprecatedFlexibleBox.h \
     rendering/RenderDetailsMarker.h \
+    rendering/RenderElement.h \
     rendering/RenderEmbeddedObject.h \
     rendering/RenderFieldset.h \
     rendering/RenderFileUploadControl.h \
@@ -3733,6 +3735,7 @@ enable?(SVG) {
         svg/properties/SVGAnimatedProperty.cpp \
         svg/properties/SVGAttributeToPropertyMap.cpp \
         svg/properties/SVGPathSegListPropertyTearOff.cpp \
+        svg/properties/SVGPropertyInfo.cpp \
         svg/SVGDocumentExtensions.cpp \
         svg/ColorDistance.cpp \
         svg/SVGAElement.cpp \

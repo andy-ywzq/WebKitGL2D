@@ -38,7 +38,6 @@
 
 #include <unistd.h>
 #include <wtf/CurrentTime.h>
-#include <wtf/OwnArrayPtr.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/WTFString.h>
 #include <API/nix/NIXView.h>

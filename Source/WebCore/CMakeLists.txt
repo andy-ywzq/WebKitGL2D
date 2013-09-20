@@ -846,6 +846,7 @@ set(WebCore_SOURCES
     Modules/mediastream/MediaStreamTrackEvent.cpp
     Modules/mediastream/MediaStreamTrackSourcesRequest.cpp
     Modules/mediastream/NavigatorMediaStream.cpp
+    Modules/mediastream/NavigatorUserMediaError.cpp
     Modules/mediastream/RTCDTMFSender.cpp
     Modules/mediastream/RTCDTMFToneChangeEvent.cpp
     Modules/mediastream/RTCDataChannel.cpp
@@ -2132,6 +2133,7 @@ set(WebCore_SOURCES
     rendering/RenderCounter.cpp
     rendering/RenderDeprecatedFlexibleBox.cpp
     rendering/RenderDetailsMarker.cpp
+    rendering/RenderElement.cpp
     rendering/RenderEmbeddedObject.cpp
     rendering/RenderFieldset.cpp
     rendering/RenderFileUploadControl.cpp
@@ -2501,6 +2503,7 @@ set(WebCore_SOURCES
     svg/properties/SVGAnimatedProperty.cpp
     svg/properties/SVGAttributeToPropertyMap.cpp
     svg/properties/SVGPathSegListPropertyTearOff.cpp
+    svg/properties/SVGPropertyInfo.cpp
 
     workers/AbstractWorker.cpp
     workers/DedicatedWorkerGlobalScope.cpp
@@ -3214,10 +3217,10 @@ list(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/WebKitVersion.h)
 WEBKIT_WRAP_SOURCELIST(${WebCore_IDL_FILES} ${WebCore_SOURCES})
 WEBKIT_WRAP_SOURCELIST(${WebCoreTestSupport_IDL_FILES} ${WebCoreTestSupport_SOURCES})
 
-add_definitions(-DBUILDING_WebCore)
 include_directories(${WebCore_INCLUDE_DIRECTORIES} ${WebCoreTestSupport_INCLUDE_DIRECTORIES})
 
 add_library(WebCore ${WebCore_LIBRARY_TYPE} ${WebCore_SOURCES})
+set_target_properties(WebCore PROPERTIES COMPILE_DEFINITIONS "BUILDING_WebCore")
 set_target_properties(WebCore PROPERTIES FOLDER "WebCore")
 set_target_properties(WebCore PROPERTIES LINK_INTERFACE_LIBRARIES "")
 

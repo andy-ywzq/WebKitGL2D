@@ -445,7 +445,7 @@ webkit.org/b/86176 [ Debug ] ietestcenter/css3/valuesandunits/units-000.htm [ Cr
 
 webkit.org/b/93812 [ Debug ] svg/custom/use-instanceRoot-as-event-target.xhtml [ Crash Pass ]
 
-webkit.org/b/90957 [ Release ] js/random-array-gc-stress.html [ Crash Pass ]
+webkit.org/b/90957 [ Release ] js/dom/random-array-gc-stress.html [ Crash Pass ]
 
 webkit.org/b/94458 [ Debug ] fast/events/message-port-context-destroyed.html [ Crash Pass ]
 
@@ -721,7 +721,7 @@ Bug(GTK) css3/flexbox/position-absolute-child.html [ Pass Slow ]
 Bug(GTK) css3/flexbox/multiline-justify-content.html [ Pass Slow ]
 Bug(GTK) [ Debug ] editing/selection/move-by-word-visually-crash-test-5.html [ Pass Slow ]
 Bug(GTK) [ Debug ] fast/css/visited-link-hang.html [ Pass Slow ]
-Bug(GTK) js/create-lots-of-workers.html [ Pass Slow ]
+Bug(GTK) js/dom/create-lots-of-workers.html [ Pass Slow ]
 Bug(GTK) [ Debug ] js/dfg-double-vote-fuzz.html [ Pass Slow ]
 Bug(GTK) [ Debug ] js/dfg-float32array.html [ Pass Slow ]
 Bug(GTK) [ Debug ] js/dfg-float64array.html [ Pass Slow ]
@@ -734,7 +734,7 @@ Bug(GTK) [ Debug ] js/dfg-uint32array.html [ Pass Slow ]
 Bug(GTK) [ Debug ] js/dfg-uint32array-overflow-values.html [ Pass Slow ]
 Bug(GTK) [ Debug ] js/dfg-uint8array.html [ Pass Slow ]
 Bug(GTK) [ Debug ] js/dfg-uint8clampedarray.html [ Pass Slow ]
-Bug(GTK) [ Debug ] js/random-array-gc-stress.html [ Pass Slow ]
+Bug(GTK) [ Debug ] js/dom/random-array-gc-stress.html [ Pass Slow ]
 Bug(GTK) [ Debug ] js/regress/method-on-number.html [ Pass Slow ]
 Bug(GTK) [ Debug ] js/string-replacement-outofmemory.html [ Pass Slow ]
 Bug(GTK) [ Debug ] js/toString-and-valueOf-override.html [ Pass Slow ]
@@ -1423,8 +1423,11 @@ webkit.org/b/84045 accessibility/image-map1.html [ Failure ]
 
 webkit.org/b/120836 fast/regions/text-region-split-vertical-rl.html [ Failure ]
 
-webkit.org/b/120776 fast/hidpi/image-srcset-fraction.html [ Failure ]
 webkit.org/b/120776 fast/hidpi/image-srcset-change-dynamically-from-js-2x.html [ Failure ]
+webkit.org/b/120776 fast/hidpi/image-srcset-fraction.html [ Failure ]
+webkit.org/b/120776 fast/hidpi/image-srcset-fraction-1.5x.html [ Failure ]
+webkit.org/b/120776 fast/hidpi/image-srcset-invalid-inputs-correct-src.html [ Failure ]
+webkit.org/b/120776 fast/hidpi/image-srcset-invalid-inputs-except-one.html [ Failure ]
 webkit.org/b/120776 fast/hidpi/image-srcset-simple-2x.html [ Failure ]
 webkit.org/b/120776 fast/hidpi/image-srcset-src-selection-2x.html [ Failure ]
 
@@ -1434,6 +1437,10 @@ webkit.org/b/120842 fast/regions/overflow-in-uniform-regions-dynamic.html [ Imag
 webkit.org/b/120842 fast/regions/overflow-moving-below-floats-in-variable-width-regions.html [ ImageOnlyFailure ]
 
 webkit.org/b/120846 svg/custom/masking-clipping-hidpi.svg [ ImageOnlyFailure ]
+
+webkit.org/b/121593 accessibility/radio-button-title-label.html  [ Failure ]
+
+webkit.org/b/121594 accessibility/self-referencing-aria-labelledby.html [ Failure ]
 
 #////////////////////////////////////////////////////////////////////////////////////////
 # End of Tests failing

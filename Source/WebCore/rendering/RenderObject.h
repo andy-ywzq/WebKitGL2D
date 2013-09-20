@@ -54,6 +54,7 @@ class PseudoStyleRequest;
 class RenderBoxModelObject;
 class RenderInline;
 class RenderBlock;
+class RenderElement;
 class RenderFlowThread;
 class RenderGeometryMap;
 class RenderLayer;
@@ -158,7 +159,7 @@ public:
 
     virtual const char* renderName() const = 0;
 
-    RenderObject* parent() const { return m_parent; }
+    RenderElement* parent() const { return m_parent; }
     bool isDescendantOf(const RenderObject*) const;
 
     RenderObject* previousSibling() const { return m_previous; }
@@ -219,14 +220,7 @@ public:
     void resetTextAutosizing();
 #endif
 
-    // The following six functions are used when the render tree hierarchy changes to make sure layers get
-    // properly added and removed.  Since containership can be implemented by any subclass, and since a hierarchy
-    // can contain a mixture of boxes and other object types, these functions need to be in the base class.
     RenderLayer* enclosingLayer() const;
-    void addLayers(RenderLayer* parentLayer);
-    void removeLayers(RenderLayer* parentLayer);
-    void moveLayers(RenderLayer* oldParent, RenderLayer* newParent);
-    RenderLayer* findNextLayer(RenderLayer* parentLayer, RenderObject* startPoint, bool checkParent = true);
 
     // Scrolling is a RenderBox concept, however some code just cares about recursively scrolling our enclosing ScrollableArea(s).
     bool scrollRectToVisible(const LayoutRect&, const ScrollAlignment& alignX = ScrollAlignment::alignCenterIfNeeded, const ScrollAlignment& alignY = ScrollAlignment::alignCenterIfNeeded);
@@ -278,10 +272,6 @@ public:
     //////////////////////////////////////////
     virtual bool canHaveChildren() const { return children(); }
     virtual bool canHaveGeneratedChildren() const;
-    virtual bool isChildAllowed(RenderObject*, RenderStyle*) const { return true; }
-    virtual void addChild(RenderObject* newChild, RenderObject* beforeChild = 0);
-    virtual void addChildIgnoringContinuation(RenderObject* newChild, RenderObject* beforeChild = 0) { return addChild(newChild, beforeChild); }
-    virtual void removeChild(RenderObject*);
     virtual bool createsAnonymousWrapper() const { return false; }
     //////////////////////////////////////////
 
@@ -290,18 +280,7 @@ protected:
     // Helper functions. Dangerous to use!
     void setPreviousSibling(RenderObject* previous) { m_previous = previous; }
     void setNextSibling(RenderObject* next) { m_next = next; }
-    void setParent(RenderObject* parent)
-    {
-        m_parent = parent;
-        
-        // Only update if our flow thread state is different from our new parent and if we're not a RenderFlowThread.
-        // A RenderFlowThread is always considered to be inside itself, so it never has to change its state
-        // in response to parent changes.
-        FlowThreadState newState = parent ? parent->flowThreadState() : NotInsideFlowThread;
-        if (newState != flowThreadState() && !isRenderFlowThread())
-            setFlowThreadStateIncludingDescendants(newState);
-    }
-
+    void setParent(RenderElement*);
     //////////////////////////////////////////
 private:
 #ifndef NDEBUG
@@ -326,8 +305,6 @@ public:
     void showRenderTreeAndMark(const RenderObject* markedObject1 = 0, const char* markedLabel1 = 0, const RenderObject* markedObject2 = 0, const char* markedLabel2 = 0, int depth = 0) const;
 #endif
 
-    static RenderObject* createObject(Element&, RenderStyle&);
-
     // Overloaded new operator.  Derived classes must override operator new
     // in order to allocate out of the RenderArena.
     void* operator new(size_t, RenderArena&);
@@ -344,6 +321,7 @@ public:
 
     bool isPseudoElement() const { return node() && node()->isPseudoElement(); }
 
+    bool isRenderElement() const { return !isText(); }
     virtual bool isBoxModelObject() const { return false; }
     virtual bool isCounter() const { return false; }
     virtual bool isQuote() const { return false; }
@@ -973,7 +951,7 @@ public:
 
     void selectionStartEnd(int& spos, int& epos) const;
     
-    void remove() { if (parent()) parent()->removeChild(this); }
+    void removeFromParent();
 
     AnimationController& animation() const;
 
@@ -1007,8 +985,6 @@ public:
     RespectImageOrientationEnum shouldRespectImageOrientation() const;
 
 protected:
-    inline bool layerCreationAllowedForSubtree() const;
-
     // Overrides should call the superclass at the end
     virtual void styleWillChange(StyleDifference, const RenderStyle* newStyle);
     // Overrides should call the superclass at the start
@@ -1021,6 +997,8 @@ protected:
     void paintFocusRing(PaintInfo&, const LayoutPoint&, RenderStyle*);
     void paintOutline(PaintInfo&, const LayoutRect&);
     void addPDFURLRect(GraphicsContext*, const LayoutRect&);
+    Node& nodeForNonAnonymous() const { ASSERT(!isAnonymous()); return *m_node; }
+
     
     virtual LayoutRect viewRect() const;
 
@@ -1066,7 +1044,7 @@ private:
 
     Node* m_node;
 
-    RenderObject* m_parent;
+    RenderElement* m_parent;
     RenderObject* m_previous;
     RenderObject* m_next;
 
@@ -1307,20 +1285,6 @@ inline bool RenderObject::preservesNewline() const
 #endif
         
     return style()->preserveNewline();
-}
-
-inline bool RenderObject::layerCreationAllowedForSubtree() const
-{
-#if ENABLE(SVG)
-    RenderObject* parentRenderer = parent();
-    while (parentRenderer) {
-        if (parentRenderer->isSVGHiddenContainer())
-            return false;
-        parentRenderer = parentRenderer->parent();
-    }
-#endif
-
-    return true;
 }
 
 inline void RenderObject::setSelectionStateIfNeeded(SelectionState state)

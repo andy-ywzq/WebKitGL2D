@@ -101,7 +101,7 @@ static bool isList(const Element* element)
 // Returns the enclosing list with respect to the DOM order.
 static Element* enclosingList(const RenderListItem* listItem)
 {
-    Element& listItemElement = listItem->existingElement();
+    Element& listItemElement = listItem->element();
     Element* firstNode = 0;
     Element* parent = listItemElement.isPseudoElement() ? toPseudoElement(listItemElement).hostElement() : listItemElement.parentElement();
     // We use parentNode because the enclosing list could be a ShadowRoot that's not Element.
@@ -124,7 +124,7 @@ static RenderListItem* nextListItem(const Element* listNode, const RenderListIte
     if (!listNode)
         return 0;
 
-    const Element* current = item ? &item->existingElement() : listNode;
+    const Element* current = item ? &item->element() : listNode;
     current = ElementTraversal::nextIncludingPseudo(current, listNode);
 
     while (current) {
@@ -148,7 +148,7 @@ static RenderListItem* nextListItem(const Element* listNode, const RenderListIte
 // Returns the previous list item with respect to the DOM order.
 static RenderListItem* previousListItem(const Element* listNode, const RenderListItem* item)
 {
-    Element* current = &item->existingElement();
+    Element* current = &item->element();
     for (current = ElementTraversal::previousIncludingPseudo(current, listNode); current; current = ElementTraversal::previousIncludingPseudo(current, listNode)) {
         RenderObject* renderer = current->renderer();
         if (!renderer || (renderer && !renderer->isListItem()))
@@ -219,7 +219,7 @@ bool RenderListItem::isEmpty() const
     return lastChild() == m_marker;
 }
 
-static RenderObject* getParentOfFirstLineBox(RenderBlock* curr, RenderObject* marker)
+static RenderBlock* getParentOfFirstLineBox(RenderBlock* curr, RenderObject* marker)
 {
     RenderObject* firstChild = curr->firstChild();
     if (!firstChild)
@@ -243,7 +243,7 @@ static RenderObject* getParentOfFirstLineBox(RenderBlock* curr, RenderObject* ma
             (currChild->node()->hasTagName(ulTag)|| currChild->node()->hasTagName(olTag)))
             break;
 
-        RenderObject* lineBox = getParentOfFirstLineBox(toRenderBlock(currChild), marker);
+        RenderBlock* lineBox = getParentOfFirstLineBox(toRenderBlock(currChild), marker);
         if (lineBox)
             return lineBox;
     }
@@ -274,8 +274,8 @@ void RenderListItem::insertOrMoveMarkerRendererIfNeeded()
     if (!m_marker)
         return;
 
-    RenderObject* currentParent = m_marker->parent();
-    RenderObject* newParent = getParentOfFirstLineBox(this, m_marker);
+    RenderElement* currentParent = m_marker->parent();
+    RenderBlock* newParent = getParentOfFirstLineBox(this, m_marker);
     if (!newParent) {
         // If the marker is currently contained inside an anonymous box,
         // then we are the only item in that anonymous box (since no line box
@@ -290,7 +290,7 @@ void RenderListItem::insertOrMoveMarkerRendererIfNeeded()
         // Removing and adding the marker can trigger repainting in
         // containers other than ourselves, so we need to disable LayoutState.
         LayoutStateDisabler layoutStateDisabler(&view());
-        m_marker->remove();
+        m_marker->removeFromParent();
         newParent->addChild(m_marker, firstNonMarkerChild(newParent));
         m_marker->updateMarginsAndContent();
         // If current parent is an anonymous block that has lost all its children, destroy it.

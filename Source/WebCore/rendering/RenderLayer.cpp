@@ -1484,7 +1484,12 @@ RenderLayer* RenderLayer::enclosingFilterLayer(IncludeSelfOrNot includeSelf) con
 RenderLayer* RenderLayer::enclosingFilterRepaintLayer() const
 {
     for (const RenderLayer* curr = this; curr; curr = curr->parent()) {
-        if ((curr != this && curr->requiresFullLayerImageForFilters()) || compositedWithOwnBackingStore(curr) || curr->isRootLayer())
+        if ((curr != this && curr->requiresFullLayerImageForFilters())
+#if USE(ACCELERATED_COMPOSITING)
+            || compositedWithOwnBackingStore(curr)
+#endif
+            || curr->isRootLayer()
+        )
             return const_cast<RenderLayer*>(curr);
     }
     return 0;
@@ -1893,8 +1898,10 @@ void RenderLayer::insertOnlyThisLayer()
     }
 
     // Remove all descendant layers from the hierarchy and add them to the new position.
-    for (RenderObject* curr = renderer().firstChild(); curr; curr = curr->nextSibling())
-        curr->moveLayers(m_parent, this);
+    for (RenderObject* curr = renderer().firstChild(); curr; curr = curr->nextSibling()) {
+        if (curr->isRenderElement())
+            toRenderElement(curr)->moveLayers(m_parent, this);
+    }
 
     // Clear out all the clip rects.
     clearClipRectsIncludingDescendants();

@@ -1,3 +1,526 @@
+2013-09-20  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        Clobberize phase forgets to indicate that it writes GCState for several node types
+        https://bugs.webkit.org/show_bug.cgi?id=121702
+
+        Reviewed by Oliver Hunt.
+
+        Added read and write for GCState to the nodes that could end up allocating (and thereby
+        cause a garbage collection).
+
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+
+2013-09-19  Filip Pizlo  <fpizlo@apple.com>
+
+        Move CCallHelpers and AssemblyHelpers into jit/ and have JSInterfaceJIT use them
+        https://bugs.webkit.org/show_bug.cgi?id=121637
+
+        Rubber stamped by Michael Saboff.
+        
+        Also moved GPRInfo/FPRInfo into jit/. Rolling back in after fixing JIT-only build
+        and tests.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * Target.pri:
+        * bytecode/ValueRecovery.h:
+        (JSC::ValueRecovery::dumpInContext):
+        * dfg/DFGAssemblyHelpers.cpp: Removed.
+        * dfg/DFGAssemblyHelpers.h: Removed.
+        * dfg/DFGBinarySwitch.h:
+        * dfg/DFGByteCodeParser.cpp:
+        * dfg/DFGCCallHelpers.h: Removed.
+        * dfg/DFGDisassembler.cpp:
+        * dfg/DFGFPRInfo.h: Removed.
+        * dfg/DFGGPRInfo.h: Removed.
+        * dfg/DFGGraph.cpp:
+        * dfg/DFGGraph.h:
+        * dfg/DFGJITCompiler.h:
+        * dfg/DFGOSRExit.cpp:
+        * dfg/DFGOSRExit.h:
+        * dfg/DFGOSRExitCompiler.h:
+        * dfg/DFGOSRExitCompilerCommon.h:
+        * dfg/DFGRegisterBank.h:
+        * dfg/DFGRegisterSet.h:
+        * dfg/DFGRepatch.cpp:
+        * dfg/DFGSilentRegisterSavePlan.h:
+        * dfg/DFGThunks.cpp:
+        * dfg/DFGVariableEvent.cpp:
+        * ftl/FTLCArgumentGetter.h:
+        (JSC::FTL::CArgumentGetter::CArgumentGetter):
+        (JSC::FTL::CArgumentGetter::loadNext8):
+        (JSC::FTL::CArgumentGetter::loadNext32):
+        (JSC::FTL::CArgumentGetter::loadNext64):
+        (JSC::FTL::CArgumentGetter::loadNextPtr):
+        (JSC::FTL::CArgumentGetter::loadNextDouble):
+        * ftl/FTLCompile.cpp:
+        * ftl/FTLExitThunkGenerator.h:
+        * ftl/FTLLink.cpp:
+        * ftl/FTLThunks.cpp:
+        * jit/AssemblyHelpers.cpp: Copied from Source/JavaScriptCore/dfg/DFGAssemblyHelpers.cpp.
+        * jit/AssemblyHelpers.h: Copied from Source/JavaScriptCore/dfg/DFGAssemblyHelpers.h.
+        (JSC::AssemblyHelpers::AssemblyHelpers):
+        (JSC::AssemblyHelpers::debugCall):
+        * jit/CCallHelpers.h: Copied from Source/JavaScriptCore/dfg/DFGCCallHelpers.h.
+        * jit/FPRInfo.h: Copied from Source/JavaScriptCore/dfg/DFGFPRInfo.h.
+        (WTF::printInternal):
+        * jit/GPRInfo.h: Copied from Source/JavaScriptCore/dfg/DFGGPRInfo.h.
+        (WTF::printInternal):
+        * jit/JIT.cpp:
+        (JSC::JIT::JIT):
+        * jit/JIT.h:
+        * jit/JITPropertyAccess.cpp:
+        (JSC::JIT::stringGetByValStubGenerator):
+        * jit/JITPropertyAccess32_64.cpp:
+        (JSC::JIT::stringGetByValStubGenerator):
+        * jit/JSInterfaceJIT.h:
+        (JSC::JSInterfaceJIT::JSInterfaceJIT):
+        * jit/SpecializedThunkJIT.h:
+        (JSC::SpecializedThunkJIT::SpecializedThunkJIT):
+        (JSC::SpecializedThunkJIT::finalize):
+        * jit/ThunkGenerators.cpp:
+        (JSC::linkForGenerator):
+        (JSC::virtualForGenerator):
+        (JSC::stringLengthTrampolineGenerator):
+        (JSC::nativeForGenerator):
+        (JSC::arityFixup):
+        (JSC::charCodeAtThunkGenerator):
+        (JSC::charAtThunkGenerator):
+        (JSC::fromCharCodeThunkGenerator):
+        (JSC::sqrtThunkGenerator):
+        (JSC::floorThunkGenerator):
+        (JSC::ceilThunkGenerator):
+        (JSC::roundThunkGenerator):
+        (JSC::expThunkGenerator):
+        (JSC::logThunkGenerator):
+        (JSC::absThunkGenerator):
+        (JSC::powThunkGenerator):
+        (JSC::imulThunkGenerator):
+        * llint/LLIntThunks.cpp:
+        (JSC::LLInt::generateThunkWithJumpTo):
+        * runtime/JSCJSValue.h:
+
+2013-09-20  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        Inline method exported
+        https://bugs.webkit.org/show_bug.cgi?id=121664
+
+        Reviewed by Darin Adler.
+
+        WatchDog::didFire() is marked as an exported symbol eventhough it is
+        defined inline. This breaks the build on MinGW since it results in dllimport
+        being declared on a definition.
+
+        * runtime/Watchdog.h:
+        (JSC::Watchdog::didFire):
+
+2013-09-20  Patrick Gansterer  <paroga@webkit.org>
+
+        [CMake] Use COMPILE_DEFINITIONS target property for setting BUILDING_* defines
+        https://bugs.webkit.org/show_bug.cgi?id=121672
+
+        Reviewed by Gyuyoung Kim.
+
+        Since the scope of add_definitions() is always a whole file, we need to use
+        target properties instead to set definitions only for specific targets.
+
+        * CMakeLists.txt:
+
+2013-09-19  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r156120.
+        http://trac.webkit.org/changeset/156120
+        https://bugs.webkit.org/show_bug.cgi?id=121651
+
+        Broke windows runtime and all tests (Requested by bfulgham on
+        #webkit).
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * Target.pri:
+        * bytecode/ValueRecovery.h:
+        (JSC::ValueRecovery::dumpInContext):
+        * dfg/DFGAssemblyHelpers.cpp: Renamed from Source/JavaScriptCore/jit/AssemblyHelpers.cpp.
+        (JSC::DFG::AssemblyHelpers::executableFor):
+        (JSC::DFG::AssemblyHelpers::decodedCodeMapFor):
+        (JSC::DFG::AssemblyHelpers::setSamplingFlag):
+        (JSC::DFG::AssemblyHelpers::clearSamplingFlag):
+        (JSC::DFG::AssemblyHelpers::jitAssertIsInt32):
+        (JSC::DFG::AssemblyHelpers::jitAssertIsJSInt32):
+        (JSC::DFG::AssemblyHelpers::jitAssertIsJSNumber):
+        (JSC::DFG::AssemblyHelpers::jitAssertIsJSDouble):
+        (JSC::DFG::AssemblyHelpers::jitAssertIsCell):
+        (JSC::DFG::AssemblyHelpers::jitAssertHasValidCallFrame):
+        * dfg/DFGAssemblyHelpers.h: Renamed from Source/JavaScriptCore/jit/AssemblyHelpers.h.
+        (JSC::DFG::AssemblyHelpers::AssemblyHelpers):
+        (JSC::DFG::AssemblyHelpers::codeBlock):
+        (JSC::DFG::AssemblyHelpers::vm):
+        (JSC::DFG::AssemblyHelpers::assembler):
+        (JSC::DFG::AssemblyHelpers::preserveReturnAddressAfterCall):
+        (JSC::DFG::AssemblyHelpers::restoreReturnAddressBeforeReturn):
+        (JSC::DFG::AssemblyHelpers::emitGetFromCallFrameHeaderPtr):
+        (JSC::DFG::AssemblyHelpers::emitPutToCallFrameHeader):
+        (JSC::DFG::AssemblyHelpers::emitPutImmediateToCallFrameHeader):
+        (JSC::DFG::AssemblyHelpers::branchIfNotCell):
+        (JSC::DFG::AssemblyHelpers::addressFor):
+        (JSC::DFG::AssemblyHelpers::tagFor):
+        (JSC::DFG::AssemblyHelpers::payloadFor):
+        (JSC::DFG::AssemblyHelpers::branchIfNotObject):
+        (JSC::DFG::AssemblyHelpers::selectScratchGPR):
+        (JSC::DFG::AssemblyHelpers::debugCall):
+        (JSC::DFG::AssemblyHelpers::jitAssertIsInt32):
+        (JSC::DFG::AssemblyHelpers::jitAssertIsJSInt32):
+        (JSC::DFG::AssemblyHelpers::jitAssertIsJSNumber):
+        (JSC::DFG::AssemblyHelpers::jitAssertIsJSDouble):
+        (JSC::DFG::AssemblyHelpers::jitAssertIsCell):
+        (JSC::DFG::AssemblyHelpers::jitAssertHasValidCallFrame):
+        (JSC::DFG::AssemblyHelpers::boxDouble):
+        (JSC::DFG::AssemblyHelpers::unboxDouble):
+        (JSC::DFG::AssemblyHelpers::boxInt52):
+        (JSC::DFG::AssemblyHelpers::emitExceptionCheck):
+        (JSC::DFG::AssemblyHelpers::emitCount):
+        (JSC::DFG::AssemblyHelpers::globalObjectFor):
+        (JSC::DFG::AssemblyHelpers::strictModeFor):
+        (JSC::DFG::AssemblyHelpers::baselineCodeBlockFor):
+        (JSC::DFG::AssemblyHelpers::baselineCodeBlock):
+        (JSC::DFG::AssemblyHelpers::argumentsRegisterFor):
+        (JSC::DFG::AssemblyHelpers::symbolTableFor):
+        (JSC::DFG::AssemblyHelpers::offsetOfLocals):
+        (JSC::DFG::AssemblyHelpers::offsetOfArgumentsIncludingThis):
+        * dfg/DFGBinarySwitch.h:
+        * dfg/DFGByteCodeParser.cpp:
+        * dfg/DFGCCallHelpers.h: Renamed from Source/JavaScriptCore/jit/CCallHelpers.h.
+        (JSC::DFG::CCallHelpers::CCallHelpers):
+        (JSC::DFG::CCallHelpers::resetCallArguments):
+        (JSC::DFG::CCallHelpers::addCallArgument):
+        (JSC::DFG::CCallHelpers::setupArguments):
+        (JSC::DFG::CCallHelpers::setupArgumentsExecState):
+        (JSC::DFG::CCallHelpers::setupArgumentsWithExecState):
+        (JSC::DFG::CCallHelpers::setupTwoStubArgs):
+        (JSC::DFG::CCallHelpers::setupStubArguments):
+        (JSC::DFG::CCallHelpers::setupResults):
+        * dfg/DFGDisassembler.cpp:
+        * dfg/DFGFPRInfo.h: Renamed from Source/JavaScriptCore/jit/FPRInfo.h.
+        (JSC::DFG::FPRInfo::toRegister):
+        (JSC::DFG::FPRInfo::toIndex):
+        (JSC::DFG::FPRInfo::toArgumentRegister):
+        (JSC::DFG::FPRInfo::debugName):
+        * dfg/DFGGPRInfo.h: Renamed from Source/JavaScriptCore/jit/GPRInfo.h.
+        (JSC::DFG::JSValueRegs::JSValueRegs):
+        (JSC::DFG::JSValueRegs::payloadOnly):
+        (JSC::DFG::JSValueRegs::operator!):
+        (JSC::DFG::JSValueRegs::gpr):
+        (JSC::DFG::JSValueRegs::payloadGPR):
+        (JSC::DFG::JSValueSource::JSValueSource):
+        (JSC::DFG::JSValueSource::unboxedCell):
+        (JSC::DFG::JSValueSource::operator!):
+        (JSC::DFG::JSValueSource::isAddress):
+        (JSC::DFG::JSValueSource::offset):
+        (JSC::DFG::JSValueSource::base):
+        (JSC::DFG::JSValueSource::gpr):
+        (JSC::DFG::JSValueSource::asAddress):
+        (JSC::DFG::JSValueSource::notAddress):
+        (JSC::DFG::JSValueRegs::tagGPR):
+        (JSC::DFG::JSValueSource::tagGPR):
+        (JSC::DFG::JSValueSource::payloadGPR):
+        (JSC::DFG::JSValueSource::hasKnownTag):
+        (JSC::DFG::JSValueSource::tag):
+        (JSC::DFG::GPRInfo::toRegister):
+        (JSC::DFG::GPRInfo::toIndex):
+        (JSC::DFG::GPRInfo::debugName):
+        (JSC::DFG::GPRInfo::toArgumentRegister):
+        * dfg/DFGGraph.cpp:
+        * dfg/DFGGraph.h:
+        * dfg/DFGJITCompiler.h:
+        * dfg/DFGOSRExit.cpp:
+        * dfg/DFGOSRExit.h:
+        * dfg/DFGOSRExitCompiler.h:
+        * dfg/DFGOSRExitCompilerCommon.h:
+        * dfg/DFGRegisterBank.h:
+        * dfg/DFGRegisterSet.h:
+        * dfg/DFGRepatch.cpp:
+        * dfg/DFGSilentRegisterSavePlan.h:
+        * dfg/DFGThunks.cpp:
+        * dfg/DFGVariableEvent.cpp:
+        * ftl/FTLCArgumentGetter.h:
+        (JSC::FTL::CArgumentGetter::CArgumentGetter):
+        (JSC::FTL::CArgumentGetter::loadNext8):
+        (JSC::FTL::CArgumentGetter::loadNext32):
+        (JSC::FTL::CArgumentGetter::loadNext64):
+        (JSC::FTL::CArgumentGetter::loadNextPtr):
+        (JSC::FTL::CArgumentGetter::loadNextDouble):
+        * ftl/FTLCompile.cpp:
+        * ftl/FTLExitThunkGenerator.h:
+        * ftl/FTLLink.cpp:
+        * ftl/FTLThunks.cpp:
+        * jit/JIT.cpp:
+        (JSC::JIT::JIT):
+        * jit/JIT.h:
+        * jit/JITPropertyAccess.cpp:
+        (JSC::JIT::stringGetByValStubGenerator):
+        * jit/JITPropertyAccess32_64.cpp:
+        (JSC::JIT::stringGetByValStubGenerator):
+        * jit/JSInterfaceJIT.h:
+        (JSC::JSInterfaceJIT::preserveReturnAddressAfterCall):
+        (JSC::JSInterfaceJIT::restoreReturnAddressBeforeReturn):
+        * jit/SpecializedThunkJIT.h:
+        (JSC::SpecializedThunkJIT::SpecializedThunkJIT):
+        (JSC::SpecializedThunkJIT::finalize):
+        * jit/ThunkGenerators.cpp:
+        (JSC::linkForGenerator):
+        (JSC::virtualForGenerator):
+        (JSC::stringLengthTrampolineGenerator):
+        (JSC::nativeForGenerator):
+        (JSC::arityFixup):
+        (JSC::charCodeAtThunkGenerator):
+        (JSC::charAtThunkGenerator):
+        (JSC::fromCharCodeThunkGenerator):
+        (JSC::sqrtThunkGenerator):
+        (JSC::floorThunkGenerator):
+        (JSC::ceilThunkGenerator):
+        (JSC::roundThunkGenerator):
+        (JSC::expThunkGenerator):
+        (JSC::logThunkGenerator):
+        (JSC::absThunkGenerator):
+        (JSC::powThunkGenerator):
+        (JSC::imulThunkGenerator):
+        * llint/LLIntThunks.cpp:
+        (JSC::LLInt::generateThunkWithJumpTo):
+        * runtime/JSCJSValue.h:
+
+2013-09-19  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix Windows build part 2. m_jitCodeMap should always be there.
+
+        * bytecode/CodeBlock.h:
+        (JSC::CodeBlock::jitCodeMap):
+
+2013-09-19  Filip Pizlo  <fpizlo@apple.com>
+
+        Remove some of the tautologies in DFGRepatch function naming.
+
+        Rubber stamped by Mark Hahnenberg.
+        
+        For example change DFG::dfgLinkFor() to be DFG::linkFor().
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::resetStubInternal):
+        * dfg/DFGOperations.cpp:
+        * dfg/DFGRepatch.cpp:
+        (JSC::DFG::repatchCall):
+        (JSC::DFG::repatchByIdSelfAccess):
+        (JSC::DFG::tryCacheGetByID):
+        (JSC::DFG::repatchGetByID):
+        (JSC::DFG::buildGetByIDList):
+        (JSC::DFG::tryCachePutByID):
+        (JSC::DFG::repatchPutByID):
+        (JSC::DFG::buildPutByIdList):
+        (JSC::DFG::repatchIn):
+        (JSC::DFG::linkFor):
+        (JSC::DFG::linkSlowFor):
+        (JSC::DFG::linkClosureCall):
+        (JSC::DFG::resetGetByID):
+        (JSC::DFG::resetPutByID):
+        (JSC::DFG::resetIn):
+        * dfg/DFGRepatch.h:
+        (JSC::DFG::resetGetByID):
+        (JSC::DFG::resetPutByID):
+        (JSC::DFG::resetIn):
+
+2013-09-19  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix Windows build. ScratchBuffer should always be available regardless of
+        ENABLE_DFG_JIT.
+
+        * runtime/VM.h:
+
+2013-09-19  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Add more iOS logic to the JavaScriptCore build configuration files
+        https://bugs.webkit.org/show_bug.cgi?id=121635
+
+        Reviewed by Geoffrey Garen.
+
+        Towards building JavaScriptCore for both OS X and iOS using the same
+        set of configuration files, add more iOS logic.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/JSC.xcconfig:
+        * Configurations/JavaScriptCore.xcconfig:
+        * Configurations/ToolExecutable.xcconfig:
+
+2013-09-19  Filip Pizlo  <fpizlo@apple.com>
+
+        Move CCallHelpers and AssemblyHelpers into jit/ and have JSInterfaceJIT use them
+        https://bugs.webkit.org/show_bug.cgi?id=121637
+
+        Rubber stamped by Michael Saboff.
+        
+        Also moved GPRInfo/FPRInfo into jit/.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * Target.pri:
+        * bytecode/ValueRecovery.h:
+        (JSC::ValueRecovery::dumpInContext):
+        * dfg/DFGAssemblyHelpers.cpp: Removed.
+        * dfg/DFGAssemblyHelpers.h: Removed.
+        * dfg/DFGBinarySwitch.h:
+        * dfg/DFGByteCodeParser.cpp:
+        * dfg/DFGCCallHelpers.h: Removed.
+        * dfg/DFGDisassembler.cpp:
+        * dfg/DFGFPRInfo.h: Removed.
+        * dfg/DFGGPRInfo.h: Removed.
+        * dfg/DFGGraph.cpp:
+        * dfg/DFGGraph.h:
+        * dfg/DFGJITCompiler.h:
+        * dfg/DFGOSRExit.cpp:
+        * dfg/DFGOSRExit.h:
+        * dfg/DFGOSRExitCompiler.h:
+        * dfg/DFGOSRExitCompilerCommon.h:
+        * dfg/DFGRegisterBank.h:
+        * dfg/DFGRegisterSet.h:
+        * dfg/DFGRepatch.cpp:
+        * dfg/DFGSilentRegisterSavePlan.h:
+        * dfg/DFGThunks.cpp:
+        * dfg/DFGVariableEvent.cpp:
+        * ftl/FTLCArgumentGetter.h:
+        (JSC::FTL::CArgumentGetter::CArgumentGetter):
+        (JSC::FTL::CArgumentGetter::loadNext8):
+        (JSC::FTL::CArgumentGetter::loadNext32):
+        (JSC::FTL::CArgumentGetter::loadNext64):
+        (JSC::FTL::CArgumentGetter::loadNextPtr):
+        (JSC::FTL::CArgumentGetter::loadNextDouble):
+        * ftl/FTLCompile.cpp:
+        * ftl/FTLExitThunkGenerator.h:
+        * ftl/FTLLink.cpp:
+        * ftl/FTLThunks.cpp:
+        * jit/AssemblyHelpers.cpp: Copied from Source/JavaScriptCore/dfg/DFGAssemblyHelpers.cpp.
+        * jit/AssemblyHelpers.h: Copied from Source/JavaScriptCore/dfg/DFGAssemblyHelpers.h.
+        (JSC::AssemblyHelpers::AssemblyHelpers):
+        (JSC::AssemblyHelpers::debugCall):
+        * jit/CCallHelpers.h: Copied from Source/JavaScriptCore/dfg/DFGCCallHelpers.h.
+        * jit/FPRInfo.h: Copied from Source/JavaScriptCore/dfg/DFGFPRInfo.h.
+        (WTF::printInternal):
+        * jit/GPRInfo.h: Copied from Source/JavaScriptCore/dfg/DFGGPRInfo.h.
+        (WTF::printInternal):
+        * jit/JIT.cpp:
+        (JSC::JIT::JIT):
+        * jit/JIT.h:
+        * jit/JITPropertyAccess.cpp:
+        (JSC::JIT::stringGetByValStubGenerator):
+        * jit/JITPropertyAccess32_64.cpp:
+        (JSC::JIT::stringGetByValStubGenerator):
+        * jit/JSInterfaceJIT.h:
+        (JSC::JSInterfaceJIT::JSInterfaceJIT):
+        * jit/SpecializedThunkJIT.h:
+        (JSC::SpecializedThunkJIT::SpecializedThunkJIT):
+        (JSC::SpecializedThunkJIT::finalize):
+        * jit/ThunkGenerators.cpp:
+        (JSC::linkForGenerator):
+        (JSC::virtualForGenerator):
+        (JSC::stringLengthTrampolineGenerator):
+        (JSC::nativeForGenerator):
+        (JSC::arityFixup):
+        (JSC::charCodeAtThunkGenerator):
+        (JSC::charAtThunkGenerator):
+        (JSC::fromCharCodeThunkGenerator):
+        (JSC::sqrtThunkGenerator):
+        (JSC::floorThunkGenerator):
+        (JSC::ceilThunkGenerator):
+        (JSC::roundThunkGenerator):
+        (JSC::expThunkGenerator):
+        (JSC::logThunkGenerator):
+        (JSC::absThunkGenerator):
+        (JSC::powThunkGenerator):
+        (JSC::imulThunkGenerator):
+        * llint/LLIntThunks.cpp:
+        (JSC::LLInt::generateThunkWithJumpTo):
+        * runtime/JSCJSValue.h:
+
+2013-09-19  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Substitute UNREACHABLE_FOR_PLATFORM() for RELEASE_ASSERT_NOT_REACHED()
+
+        Rubber-stamped by Joseph Pecoraro.
+
+        Use UNREACHABLE_FOR_PLATFORM() instead of RELEASE_ASSERT_NOT_REACHED() in
+        the non-x86/x86-64 variant of JIT::emitSlow_op_mod() so as to avoid a missing
+        noreturn warning in Clang while simultaneously asserting unreachable code.
+
+        * jit/JITArithmetic.cpp:
+        (JSC::JIT::emitSlow_op_mod):
+
+2013-09-19  Michael Saboff  <msaboff@apple.com>
+
+        JSC: X86 disassembler shows 16, 32 and 64 bit displacements as unsigned
+        https://bugs.webkit.org/show_bug.cgi?id=121625
+
+        Rubber-stamped by Filip Pizlo.
+
+        Chenged 16, 32 and 64 bit offsets to be signed.  Kept the original tab indented
+        spacing to match the rest of the file.
+
+        * disassembler/udis86/udis86_syn-att.c:
+        (gen_operand):
+
+2013-09-19  Daniel Bates  <dabates@apple.com>
+
+        Remove names of unused arguments from the non-x86/x86-64 function prototype
+        for JIT::emitSlow_op_mod()
+
+        Rubber-stamped by Ryosuke Niwa.
+
+        * jit/JITArithmetic.cpp:
+        (JSC::JIT::emitSlow_op_mod):
+
+2013-09-18  Sam Weinig  <sam@webkit.org>
+
+        Replace use of OwnArrayPtr<Foo> with std::unique_ptr<Foo[]> in JavaScriptCore
+        https://bugs.webkit.org/show_bug.cgi?id=121583
+
+        Reviewed by Anders Carlsson.
+
+        * API/JSStringRefCF.cpp:
+        (JSStringCreateWithCFString):
+        * API/JSStringRefQt.cpp:
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::BytecodeGenerator):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        * dfg/DFGDisassembler.cpp:
+        (JSC::DFG::Disassembler::dumpDisassembly):
+        * runtime/Arguments.cpp:
+        (JSC::Arguments::tearOff):
+        * runtime/Arguments.h:
+        (JSC::Arguments::isTornOff):
+        (JSC::Arguments::allocateSlowArguments):
+        * runtime/JSPropertyNameIterator.cpp:
+        (JSC::JSPropertyNameIterator::JSPropertyNameIterator):
+        * runtime/JSPropertyNameIterator.h:
+        * runtime/JSSegmentedVariableObject.h:
+        * runtime/JSVariableObject.h:
+        * runtime/PropertyNameArray.h:
+        * runtime/RegExp.cpp:
+        * runtime/StructureChain.h:
+        (JSC::StructureChain::finishCreation):
+        * runtime/SymbolTable.h:
+        (JSC::SharedSymbolTable::setSlowArguments):
+
+2013-09-18  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build fix after r156064.
+
+        * jsc.cpp:
+        (jscmain): Need a temporary to perform '&' in VS2010.
+
 2013-09-18  Filip Pizlo  <fpizlo@apple.com>
 
         Give 'jsc' commandline an option to disable deleting the VM.

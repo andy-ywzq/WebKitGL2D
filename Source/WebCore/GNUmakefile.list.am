@@ -1985,6 +1985,7 @@ webcore_modules_sources += \
 	Source/WebCore/Modules/mediastream/MediaStreamTrackSourcesRequest.h \
 	Source/WebCore/Modules/mediastream/NavigatorMediaStream.cpp \
 	Source/WebCore/Modules/mediastream/NavigatorMediaStream.h \
+	Source/WebCore/Modules/mediastream/NavigatorUserMediaError.cpp \
 	Source/WebCore/Modules/mediastream/NavigatorUserMediaError.h \
 	Source/WebCore/Modules/mediastream/NavigatorUserMediaErrorCallback.h \
 	Source/WebCore/Modules/mediastream/NavigatorUserMediaSuccessCallback.h \
@@ -4426,6 +4427,8 @@ webcore_sources += \
 	Source/WebCore/rendering/RenderDeprecatedFlexibleBox.h \
 	Source/WebCore/rendering/RenderDetailsMarker.cpp \
 	Source/WebCore/rendering/RenderDetailsMarker.h \
+	Source/WebCore/rendering/RenderElement.cpp \
+	Source/WebCore/rendering/RenderElement.h \
 	Source/WebCore/rendering/RenderEmbeddedObject.cpp \
 	Source/WebCore/rendering/RenderEmbeddedObject.h \
 	Source/WebCore/rendering/RenderFieldset.cpp \
@@ -5007,6 +5010,7 @@ webcore_svg_sources += \
 	Source/WebCore/svg/properties/SVGPathSegListPropertyTearOff.cpp \
 	Source/WebCore/svg/properties/SVGPathSegListPropertyTearOff.h \
 	Source/WebCore/svg/properties/SVGProperty.h \
+	Source/WebCore/svg/properties/SVGPropertyInfo.cpp \
 	Source/WebCore/svg/properties/SVGPropertyInfo.h \
 	Source/WebCore/svg/properties/SVGPropertyTearOff.h \
 	Source/WebCore/svg/properties/SVGPropertyTraits.h \

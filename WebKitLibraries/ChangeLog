@@ -1,3 +1,23 @@
+2013-09-19  Bear Travis  <betravis@adobe.com>
+
+        CSS_SHAPES not supported on AppleWin port
+        https://bugs.webkit.org/show_bug.cgi?id=118810
+
+        Reviewed by Brent Fulgham.
+
+        * win/tools/vsprops/FeatureDefines.props: Add the CSS_SHAPES compile flag on Windows.
+
+2013-09-19  Dan Bernstein  <mitz@apple.com>
+
+        Removed WebCoreSQLite3. It has been unused for years.
+
+        Rubber-stamped by Mark Rowe.
+
+        * WebCoreSQLite3: Removed.
+        * WebCoreSQLite3/sqlite3.h: Removed.
+        * WebCoreSQLite3/sqlite3ext.h: Removed.
+        * libWebCoreSQLite3.a: Removed.
+
 2013-09-18  Brent Fulgham  <bfulgham@apple.com>
 
         [Windows] Unreviewed build fix: Expose PlatformArchitecture macro to build system.

@@ -462,6 +462,8 @@ public:
     virtual void imageChanged(WrappedImagePtr, const IntRect* = 0) OVERRIDE;
 #endif
 
+    virtual void updateHitTestResult(HitTestResult&, const LayoutPoint&) OVERRIDE;
+
 protected:
     virtual void willBeDestroyed();
 
@@ -504,8 +506,6 @@ protected:
     virtual int firstLineBoxBaseline() const;
     virtual int inlineBlockBaseline(LineDirectionMode) const OVERRIDE;
     int lastLineBoxBaseline(LineDirectionMode) const;
-
-    virtual void updateHitTestResult(HitTestResult&, const LayoutPoint&);
 
     // Delay update scrollbar until finishDelayRepaint() will be
     // called. This function is used when a flexbox is laying out its
@@ -596,7 +596,7 @@ private:
     // Called to lay out the legend for a fieldset or the ruby text of a ruby run.
     virtual RenderObject* layoutSpecialExcludedChild(bool /*relayoutChildren*/) { return 0; }
 
-    void createFirstLetterRenderer(RenderObject* firstLetterBlock, RenderObject* currentChild);
+    void createFirstLetterRenderer(RenderObject* firstLetterBlock, RenderText* currentTextChild);
     void updateFirstLetterStyle(RenderObject* firstLetterBlock, RenderObject* firstLetterContainer);
 
     Node* nodeForHitTest() const;

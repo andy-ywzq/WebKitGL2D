@@ -22,6 +22,7 @@
 #define RenderCombineText_h
 
 #include "Font.h"
+#include "RenderElement.h"
 #include "RenderText.h"
 #include "Text.h"
 
@@ -31,7 +32,7 @@ class RenderCombineText FINAL : public RenderText {
 public:
     RenderCombineText(Text&, PassRefPtr<StringImpl>);
 
-    Text& textNode() const { return *toText(RenderText::node()); }
+    Text& textNode() const { return toText(nodeForNonAnonymous()); }
 
     void combineText();
     void adjustTextOrigin(FloatPoint& textOrigin, const FloatRect& boxRect) const;
@@ -47,7 +48,7 @@ private:
     virtual float width(unsigned from, unsigned length, const Font&, float xPosition, HashSet<const SimpleFontData*>* fallbackFonts = 0, GlyphOverflow* = 0) const;
     virtual const char* renderName() const { return "RenderCombineText"; }
     virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle);
-    virtual void setTextInternal(PassRefPtr<StringImpl>);
+    virtual void setTextInternal(const String&) OVERRIDE;
 
     float m_combinedTextWidth;
     bool m_isCombined : 1;

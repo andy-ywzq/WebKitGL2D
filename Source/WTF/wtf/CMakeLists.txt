@@ -59,7 +59,6 @@ set(WTF_HEADERS
     RAMSize.h
     OSAllocator.h
     OSRandomSource.h
-    OwnArrayPtr.h
     OwnPtr.h
     OwnPtrCommon.h
     PageAllocation.h
@@ -263,9 +262,9 @@ WEBKIT_INCLUDE_CONFIG_FILES_IF_EXISTS()
 
 WEBKIT_WRAP_SOURCELIST(${WTF_SOURCES})
 include_directories(${WTF_INCLUDE_DIRECTORIES})
-add_definitions(-DBUILDING_WTF)
 add_library(WTF STATIC ${WTF_HEADERS} ${WTF_SOURCES})
 target_link_libraries(WTF ${WTF_LIBRARIES})
+set_target_properties(WTF PROPERTIES COMPILE_DEFINITIONS "BUILDING_WTF")
 set_target_properties(WTF PROPERTIES FOLDER "JavaScriptCore")
 
 if (WTF_OUTPUT_NAME)

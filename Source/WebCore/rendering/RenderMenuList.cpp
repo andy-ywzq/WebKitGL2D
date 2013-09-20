@@ -131,8 +131,7 @@ void RenderMenuList::adjustInnerStyle()
 
 HTMLSelectElement& RenderMenuList::selectElement() const
 {
-    ASSERT(RenderObject::node());
-    return toHTMLSelectElement(*RenderObject::node());
+    return toHTMLSelectElement(nodeForNonAnonymous());
 }
 
 void RenderMenuList::addChild(RenderObject* newChild, RenderObject* beforeChild)
@@ -188,7 +187,7 @@ void RenderMenuList::updateOptionsWidth()
             // Add in the option's text indent.  We can't calculate percentage values for now.
             float optionWidth = 0;
             if (RenderStyle* optionStyle = element->renderStyle())
-                optionWidth += minimumValueForLength(optionStyle->textIndent(), 0, &view());
+                optionWidth += minimumValueForLength(optionStyle->textIndent(), 0);
             if (!text.isEmpty())
                 optionWidth += style()->font().width(text);
             maxOptionWidth = max(maxOptionWidth, optionWidth);
@@ -244,7 +243,7 @@ void RenderMenuList::setText(const String& s)
     if (m_buttonText)
         m_buttonText->setText(textToUse.impl(), true);
     else {
-        m_buttonText = new (renderArena()) RenderText(&document(), textToUse.impl());
+        m_buttonText = RenderText::createAnonymous(document(), textToUse);
         m_buttonText->setStyle(style());
         addChild(m_buttonText);
     }

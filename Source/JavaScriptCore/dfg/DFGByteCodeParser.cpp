@@ -34,6 +34,7 @@
 #include "CodeBlockWithJITType.h"
 #include "DFGArrayMode.h"
 #include "DFGCapabilities.h"
+#include "DFGJITCode.h"
 #include "GetByIdStatus.h"
 #include "Operations.h"
 #include "PreciseJumpTargets.h"
@@ -42,6 +43,7 @@
 #include <wtf/CommaPrinter.h>
 #include <wtf/HashMap.h>
 #include <wtf/MathExtras.h>
+#include <wtf/StdLibExtras.h>
 
 namespace JSC { namespace DFG {
 
@@ -2242,7 +2244,7 @@ bool ByteCodeParser::parseBlock(unsigned limit)
 #else
             const unsigned maxRopeArguments = 3;
 #endif
-            OwnArrayPtr<Node*> toStringNodes = adoptArrayPtr(new Node*[numOperands]);
+            auto toStringNodes = std::make_unique<Node*[]>(numOperands);
             for (int i = 0; i < numOperands; i++)
                 toStringNodes[i] = addToGraph(ToString, get(startOperand - i));
 

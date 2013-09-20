@@ -569,6 +569,12 @@ JSRetainPtr<JSStringRef> AccessibilityUIElement::stringAttributeValue(JSStringRe
 
     String attributeValue = getAttributeSetValueForId(ATK_OBJECT(m_element.get()), atkAttributeName.utf8().data());
 
+    // In case of 'aria-invalid' when the attribute empty or has "false" for ATK
+    // according to http://www.w3.org/WAI/PF/aria-implementation/#mapping attribute
+    // is not mapped but layout tests will expect 'false'.
+    if (attributeValue.isEmpty() && atkAttributeName == "aria-invalid")
+        return JSStringCreateWithUTF8CString("false");
+
     // We need to translate ATK values exposed for 'aria-sort' (e.g. 'ascending')
     // into those expected by the layout tests (e.g. 'AXAscendingSortDirection').
     if (atkAttributeName == "sort") {
@@ -1119,13 +1125,26 @@ JSRetainPtr<JSStringRef> AccessibilityUIElement::url()
 
 bool AccessibilityUIElement::addNotificationListener(JSValueRef functionCallback)
 {
-    // FIXME: implement
+    if (!functionCallback)
+        return false;
+
+    // Only one notification listener per element.
+    if (m_notificationHandler)
+        return false;
+
+    m_notificationHandler = AccessibilityNotificationHandler::create();
+    m_notificationHandler->setPlatformElement(platformUIElement());
+    m_notificationHandler->setNotificationFunctionCallback(functionCallback);
+
     return true;
 }
 
 bool AccessibilityUIElement::removeNotificationListener()
 {
-    // FIXME: implement
+    // Programmers should not be trying to remove a listener that's already removed.
+    ASSERT(m_notificationHandler);
+    m_notificationHandler = 0;
+
     return true;
 }
 

@@ -44,6 +44,7 @@ class HTMLDocument;
 class IntSize;
 class Locale;
 class PseudoElement;
+class RenderElement;
 class RenderRegion;
 class ShadowRoot;
 
@@ -126,6 +127,8 @@ public:
     DEFINE_ATTRIBUTE_EVENT_LISTENER(webkitfullscreenchange);
     DEFINE_ATTRIBUTE_EVENT_LISTENER(webkitfullscreenerror);
 #endif
+
+    RenderElement* renderer() const;
 
     bool hasAttribute(const QualifiedName&) const;
     const AtomicString& getAttribute(const QualifiedName&) const;
@@ -301,7 +304,7 @@ public:
     void lazyAttach(ShouldSetAttached = SetAttached);
     void lazyReattach(ShouldSetAttached = SetAttached);
 
-    virtual RenderObject* createRenderer(RenderArena&, RenderStyle&);
+    virtual RenderElement* createRenderer(RenderArena&, RenderStyle&);
     virtual bool rendererIsNeeded(const RenderStyle&);
     void didAffectSelector(AffectedSelectorMask);
 

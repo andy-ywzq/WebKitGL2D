@@ -47,8 +47,7 @@ RenderButton::~RenderButton()
 
 HTMLFormControlElement& RenderButton::formControlElement() const
 {
-    ASSERT(RenderObject::node());
-    return *toHTMLFormControlElement(RenderObject::node());
+    return toHTMLFormControlElement(nodeForNonAnonymous());
 }
 
 bool RenderButton::canBeSelectionLeaf() const
@@ -156,7 +155,7 @@ void RenderButton::setText(const String& str)
         if (m_buttonText)
             m_buttonText->setText(str.impl());
         else {
-            m_buttonText = new (renderArena()) RenderTextFragment(&document(), str.impl());
+            m_buttonText = RenderTextFragment::createAnonymous(document(), str);
             m_buttonText->setStyle(style());
             addChild(m_buttonText);
         }

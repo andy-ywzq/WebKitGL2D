@@ -61,7 +61,7 @@
 #include "RadioInputType.h"
 #include "RangeInputType.h"
 #include "RegularExpression.h"
-#include "RenderObject.h"
+#include "RenderElement.h"
 #include "RenderTheme.h"
 #include "ResetInputType.h"
 #include "RuntimeEnabledFeatures.h"
@@ -468,9 +468,9 @@ PassRefPtr<HTMLFormElement> InputType::formForSubmission() const
     return element().form();
 }
 
-RenderObject* InputType::createRenderer(RenderArena&, RenderStyle& style) const
+RenderElement* InputType::createRenderer(RenderArena&, RenderStyle& style) const
 {
-    return RenderObject::createObject(element(), style);
+    return RenderElement::createFor(element(), style);
 }
 
 void InputType::blur()

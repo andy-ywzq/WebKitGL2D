@@ -156,10 +156,10 @@ bool HTMLFrameSetElement::rendererIsNeeded(const RenderStyle& style)
     return style.isStyleAvailable();
 }
 
-RenderObject* HTMLFrameSetElement::createRenderer(RenderArena& arena, RenderStyle& style)
+RenderElement* HTMLFrameSetElement::createRenderer(RenderArena& arena, RenderStyle& style)
 {
     if (style.hasContent())
-        return RenderObject::createObject(*this, style);
+        return RenderElement::createFor(*this, style);
     
     return new (arena) RenderFrameSet(*this);
 }

@@ -194,7 +194,7 @@ public:
 
     CallLinkInfo& getCallLinkInfo(unsigned bytecodeIndex)
     {
-        ASSERT(JITCode::isBaselineCode(jitType()));
+        ASSERT(!JITCode::isOptimizingJIT(jitType()));
         return *(binarySearch<CallLinkInfo, unsigned>(m_callLinkInfos, m_callLinkInfos.size(), bytecodeIndex, getCallLinkInfoBytecodeIndex));
     }
 #endif // ENABLE(JIT)
@@ -232,7 +232,6 @@ public:
     void linkIncomingCall(ExecState* callerFrame, LLIntCallLinkInfo*);
 #endif // ENABLE(LLINT)
 
-#if ENABLE(DFG_JIT) || ENABLE(LLINT)
     void setJITCodeMap(PassOwnPtr<CompactJITCodeMap> jitCodeMap)
     {
         m_jitCodeMap = jitCodeMap;
@@ -241,7 +240,6 @@ public:
     {
         return m_jitCodeMap.get();
     }
-#endif
     
     unsigned bytecodeOffset(Instruction* returnAddress)
     {
@@ -1095,9 +1093,7 @@ private:
     Vector<CallLinkInfo> m_callLinkInfos;
     SentinelLinkedList<CallLinkInfo, BasicRawSentinelNode<CallLinkInfo> > m_incomingCalls;
 #endif
-#if ENABLE(DFG_JIT) || ENABLE(LLINT)
     OwnPtr<CompactJITCodeMap> m_jitCodeMap;
-#endif
 #if ENABLE(DFG_JIT)
     // This is relevant to non-DFG code blocks that serve as the profiled code block
     // for DFG code blocks.

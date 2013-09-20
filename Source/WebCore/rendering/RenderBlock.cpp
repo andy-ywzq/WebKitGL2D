@@ -756,7 +756,7 @@ RenderBlock* RenderBlock::columnsBlockForSpanningElement(RenderObject* newChild)
 void RenderBlock::addChildIgnoringAnonymousColumnBlocks(RenderObject* newChild, RenderObject* beforeChild)
 {
     if (beforeChild && beforeChild->parent() != this) {
-        RenderObject* beforeChildContainer = beforeChild->parent();
+        RenderElement* beforeChildContainer = beforeChild->parent();
         while (beforeChildContainer->parent() != this)
             beforeChildContainer = beforeChildContainer->parent();
         ASSERT(beforeChildContainer);
@@ -764,7 +764,7 @@ void RenderBlock::addChildIgnoringAnonymousColumnBlocks(RenderObject* newChild, 
         if (beforeChildContainer->isAnonymous()) {
             // If the requested beforeChild is not one of our children, then this is because
             // there is an anonymous container within this object that contains the beforeChild.
-            RenderObject* beforeChildAnonymousContainer = beforeChildContainer;
+            RenderElement* beforeChildAnonymousContainer = beforeChildContainer;
             if (beforeChildAnonymousContainer->isAnonymousBlock()
 #if ENABLE(FULLSCREEN_API)
                 // Full screen renderers and full screen placeholders act as anonymous blocks, not tables:
@@ -861,7 +861,7 @@ void RenderBlock::addChildIgnoringAnonymousColumnBlocks(RenderObject* newChild, 
         RenderObject* afterChild = beforeChild ? beforeChild->previousSibling() : lastChild();
 
         if (afterChild && afterChild->isAnonymousBlock()) {
-            afterChild->addChild(newChild);
+            toRenderBlock(afterChild)->addChild(newChild);
             return;
         }
 
@@ -1788,15 +1788,16 @@ void RenderBlock::moveRunInUnderSiblingBlockIfNeeded(RenderObject* runIn)
     if (!curr || !curr->isRenderBlock() || !curr->childrenInline())
         return;
 
-    if (toRenderBlock(curr)->beingDestroyed())
+    RenderBlock& nextSiblingBlock = toRenderBlock(*curr);
+    if (nextSiblingBlock.beingDestroyed())
         return;
 
     // Per CSS3, "A run-in cannot run in to a block that already starts with a
     // run-in or that itself is a run-in".
-    if (curr->isRunIn() || (curr->firstChild() && curr->firstChild()->isRunIn()))
+    if (nextSiblingBlock.isRunIn() || (nextSiblingBlock.firstChild() && nextSiblingBlock.firstChild()->isRunIn()))
         return;
 
-    if (curr->isAnonymous() || curr->isFloatingOrOutOfFlowPositioned())
+    if (nextSiblingBlock.isAnonymous() || nextSiblingBlock.isFloatingOrOutOfFlowPositioned())
         return;
 
     RenderBoxModelObject* oldRunIn = toRenderBoxModelObject(runIn);
@@ -1806,10 +1807,10 @@ void RenderBlock::moveRunInUnderSiblingBlockIfNeeded(RenderObject* runIn)
     // Now insert the new child under |curr| block. Use addChild instead of insertChildNode
     // since it handles correct placement of the children, especially where we cannot insert
     // anything before the first child. e.g. details tag. See https://bugs.webkit.org/show_bug.cgi?id=58228.
-    curr->addChild(newRunIn, curr->firstChild());
+    nextSiblingBlock.addChild(newRunIn, nextSiblingBlock.firstChild());
 
     // Make sure that |this| get a layout since its run-in child moved.
-    curr->setNeedsLayoutAndPrefWidthsRecalc();
+    nextSiblingBlock.setNeedsLayoutAndPrefWidthsRecalc();
 }
 
 bool RenderBlock::runInIsPlacedIntoSiblingBlock(RenderObject* runIn)
@@ -3615,12 +3616,9 @@ void RenderBlock::clearPercentHeightDescendantsFrom(RenderBox* parent)
 LayoutUnit RenderBlock::textIndentOffset() const
 {
     LayoutUnit cw = 0;
-    RenderView* renderView = 0;
     if (style()->textIndent().isPercent())
         cw = containingBlock()->availableLogicalWidth();
-    else if (style()->textIndent().isViewportPercentage())
-        renderView = &view();
-    return minimumValueForLength(style()->textIndent(), cw, renderView);
+    return minimumValueForLength(style()->textIndent(), cw);
 }
 
 LayoutUnit RenderBlock::logicalLeftOffsetForContent(RenderRegion* region) const
@@ -3887,8 +3885,8 @@ void RenderBlock::addIntrudingFloats(RenderBlock* prev, LayoutUnit logicalLeftOf
                 // into account.  Only apply this code if prev is the parent, since otherwise the left margin
                 // will get applied twice.
                 LayoutSize offset = isHorizontalWritingMode()
-                    ? LayoutSize(logicalLeftOffset + (prev != parent() ? prev->marginLeft() : LayoutUnit()), logicalTopOffset)
-                    : LayoutSize(logicalTopOffset, logicalLeftOffset + (prev != parent() ? prev->marginTop() : LayoutUnit()));
+                    ? LayoutSize(logicalLeftOffset - (prev != parent() ? prev->marginLeft() : LayoutUnit()), logicalTopOffset)
+                    : LayoutSize(logicalTopOffset, logicalLeftOffset - (prev != parent() ? prev->marginTop() : LayoutUnit()));
 
                 m_floatingObjects->add(r->copyToNewContainer(offset));
             }
@@ -4315,7 +4313,7 @@ Position RenderBlock::positionForBox(InlineBox *box, bool start) const
         return Position();
 
     if (!box->renderer().nonPseudoNode())
-        return createLegacyEditingPosition(nonPseudoNode(), start ? caretMinOffset() : caretMaxOffset());
+        return createLegacyEditingPosition(nonPseudoElement(), start ? caretMinOffset() : caretMaxOffset());
 
     if (!box->isInlineTextBox())
         return createLegacyEditingPosition(box->renderer().nonPseudoNode(), start ? box->renderer().caretMinOffset() : box->renderer().caretMaxOffset());
@@ -4345,8 +4343,8 @@ static VisiblePosition positionForPointRespectingEditingBoundaries(RenderBlock* 
     LayoutPoint pointInChildCoordinates(toLayoutPoint(pointInParentCoordinates - childLocation));
 
     // If this is an anonymous renderer, we just recur normally
-    Node* childNode = child->nonPseudoNode();
-    if (!childNode)
+    Element* childElement= child->nonPseudoElement();
+    if (!childElement)
         return child->positionForPoint(pointInChildCoordinates);
 
     // Otherwise, first make sure that the editability of the parent and child agree.
@@ -4363,8 +4361,8 @@ static VisiblePosition positionForPointRespectingEditingBoundaries(RenderBlock* 
     LayoutUnit childMiddle = parent->logicalWidthForChild(child) / 2;
     LayoutUnit logicalLeft = parent->isHorizontalWritingMode() ? pointInChildCoordinates.x() : pointInChildCoordinates.y();
     if (logicalLeft < childMiddle)
-        return ancestor->createVisiblePosition(childNode->nodeIndex(), DOWNSTREAM);
-    return ancestor->createVisiblePosition(childNode->nodeIndex() + 1, UPSTREAM);
+        return ancestor->createVisiblePosition(childElement->nodeIndex(), DOWNSTREAM);
+    return ancestor->createVisiblePosition(childElement->nodeIndex() + 1, UPSTREAM);
 }
 
 VisiblePosition RenderBlock::positionForPointWithInlineChildren(const LayoutPoint& pointInLogicalContents)
@@ -5206,7 +5204,7 @@ void RenderBlock::computeInlinePreferredLogicalWidths(LayoutUnit& minLogicalWidt
     // Signals the text indent was more negative than the min preferred width
     bool hasRemainingNegativeTextIndent = false;
 
-    LayoutUnit textIndent = minimumValueForLength(styleToUse->textIndent(), cw, &view());
+    LayoutUnit textIndent = minimumValueForLength(styleToUse->textIndent(), cw);
     RenderObject* prevFloat = 0;
     bool isPrevChildInlineFlow = false;
     bool shouldBreakLineAfterText = false;
@@ -5804,8 +5802,8 @@ static inline RenderObject* findFirstLetterBlock(RenderBlock* start)
 
 void RenderBlock::updateFirstLetterStyle(RenderObject* firstLetterBlock, RenderObject* currentChild)
 {
-    RenderObject* firstLetter = currentChild->parent();
-    RenderObject* firstLetterContainer = firstLetter->parent();
+    RenderElement* firstLetter = currentChild->parent();
+    RenderElement* firstLetterContainer = firstLetter->parent();
     RenderStyle* pseudoStyle = styleForFirstLetter(firstLetterBlock, firstLetterContainer);
     ASSERT(firstLetter->isFloating() || firstLetter->isInline());
 
@@ -5829,7 +5827,7 @@ void RenderBlock::updateFirstLetterStyle(RenderObject* firstLetterBlock, RenderO
 
         RenderObject* nextSibling = firstLetter->nextSibling();
         if (RenderTextFragment* remainingText = toRenderBoxModelObject(firstLetter)->firstLetterRemainingText()) {
-            ASSERT(remainingText->isAnonymous() || remainingText->node()->renderer() == remainingText);
+            ASSERT(remainingText->isAnonymous() || remainingText->textNode()->renderer() == remainingText);
             // Replace the old renderer with the new one.
             remainingText->setFirstLetter(newFirstLetter);
             newFirstLetter->setFirstLetterRemainingText(remainingText);
@@ -5849,31 +5847,29 @@ void RenderBlock::updateFirstLetterStyle(RenderObject* firstLetterBlock, RenderO
     }
 }
 
-void RenderBlock::createFirstLetterRenderer(RenderObject* firstLetterBlock, RenderObject* currentChild)
+void RenderBlock::createFirstLetterRenderer(RenderObject* firstLetterBlock, RenderText* currentTextChild)
 {
-    RenderObject* firstLetterContainer = currentChild->parent();
+    RenderElement* firstLetterContainer = currentTextChild->parent();
     RenderStyle* pseudoStyle = styleForFirstLetter(firstLetterBlock, firstLetterContainer);
-    RenderObject* firstLetter = 0;
+    RenderBoxModelObject* firstLetter = 0;
     if (pseudoStyle->display() == INLINE)
         firstLetter = RenderInline::createAnonymous(document());
     else
         firstLetter = RenderBlock::createAnonymous(document());
     firstLetter->setStyle(pseudoStyle);
-    firstLetterContainer->addChild(firstLetter, currentChild);
-
-    RenderText* textObj = toRenderText(currentChild);
+    firstLetterContainer->addChild(firstLetter, currentTextChild);
 
     // The original string is going to be either a generated content string or a DOM node's
     // string.  We want the original string before it got transformed in case first-letter has
     // no text-transform or a different text-transform applied to it.
-    RefPtr<StringImpl> oldText = textObj->originalText();
-    ASSERT(oldText);
+    String oldText = currentTextChild->originalText();
+    ASSERT(!oldText.isNull());
 
-    if (oldText && oldText->length() > 0) {
+    if (!oldText.isEmpty()) {
         unsigned length = 0;
 
         // Account for leading spaces and punctuation.
-        while (length < oldText->length() && shouldSkipForFirstLetter((*oldText)[length]))
+        while (length < oldText.length() && shouldSkipForFirstLetter(oldText[length]))
             length++;
 
         // Account for first letter.
@@ -5881,8 +5877,8 @@ void RenderBlock::createFirstLetterRenderer(RenderObject* firstLetterBlock, Rend
         
         // Keep looking for whitespace and allowed punctuation, but avoid
         // accumulating just whitespace into the :first-letter.
-        for (unsigned scanLength = length; scanLength < oldText->length(); ++scanLength) {
-            UChar c = (*oldText)[scanLength]; 
+        for (unsigned scanLength = length; scanLength < oldText.length(); ++scanLength) {
+            UChar c = oldText[scanLength];
             
             if (!shouldSkipForFirstLetter(c))
                 break;
@@ -5893,24 +5889,32 @@ void RenderBlock::createFirstLetterRenderer(RenderObject* firstLetterBlock, Rend
          
         // Construct a text fragment for the text after the first letter.
         // This text fragment might be empty.
-        RenderTextFragment* remainingText = 
-            new (renderArena()) RenderTextFragment(textObj->node() ? textObj->node() : &textObj->document(), oldText.get(), length, oldText->length() - length);
-        remainingText->setStyle(textObj->style());
-        if (remainingText->node())
-            remainingText->node()->setRenderer(remainingText);
+        RenderTextFragment* remainingText;
+        if (currentTextChild->textNode())
+            remainingText = new (renderArena()) RenderTextFragment(currentTextChild->textNode(), oldText, length, oldText.length() - length);
+        else
+            remainingText = RenderTextFragment::createAnonymous(document(), oldText, length, oldText.length() - length);
 
-        firstLetterContainer->addChild(remainingText, textObj);
-        firstLetterContainer->removeChild(textObj);
+        remainingText->setStyle(currentTextChild->style());
+        if (remainingText->textNode())
+            remainingText->textNode()->setRenderer(remainingText);
+
+        firstLetterContainer->addChild(remainingText, currentTextChild);
+        firstLetterContainer->removeChild(currentTextChild);
         remainingText->setFirstLetter(firstLetter);
-        toRenderBoxModelObject(firstLetter)->setFirstLetterRemainingText(remainingText);
+        firstLetter->setFirstLetterRemainingText(remainingText);
         
         // construct text fragment for the first letter
-        RenderTextFragment* letter = 
-            new (renderArena()) RenderTextFragment(remainingText->node() ? remainingText->node() : &remainingText->document(), oldText.get(), 0, length);
+        RenderTextFragment* letter;
+        if (remainingText->textNode())
+            letter = new (renderArena()) RenderTextFragment(remainingText->textNode(), oldText, 0, length);
+        else
+            letter = RenderTextFragment::createAnonymous(document(), oldText, 0, length);
+
         letter->setStyle(pseudoStyle);
         firstLetter->addChild(letter);
 
-        textObj->destroy();
+        currentTextChild->destroy();
     }
 }
 
@@ -5968,7 +5972,7 @@ void RenderBlock::updateFirstLetter()
     // adding and removing children of firstLetterContainer.
     LayoutStateDisabler layoutStateDisabler(&view());
 
-    createFirstLetterRenderer(firstLetterBlock, currChild);
+    createFirstLetterRenderer(firstLetterBlock, toRenderText(currChild));
 }
 
 // Helper methods for obtaining the last line, computing line counts and heights for line counts
