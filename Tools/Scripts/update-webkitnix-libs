@@ -20,5 +20,34 @@ use FindBin;
 use lib $FindBin::Bin;
 use webkitdirs;
 
+use constant WEBRTC_VERSION => 4804;
+
 my $scriptsDir = relativeScriptsDir();
 system("perl", "$scriptsDir/update-webkit-libs-jhbuild", "--nix") == 0 or die $!;
+
+# jhbuild doesn't support exotic things used by libwebrtc
+# so we try to do all the stuff with our own bare hands
+my $originalCwd = getcwd();
+my $sourcePath = getJhbuildPath().'/Source';
+
+my $depotToolsDir = "$sourcePath/depot_tools";
+my $depotToolsUrl = "https://chromium.googlesource.com/chromium/tools/depot_tools.git";
+
+if (-d $depotToolsDir) {
+    chdir $depotToolsDir;
+    system("git pull origin master");
+    chdir $originalCwd;
+} else {
+    system("git clone $depotToolsUrl $depotToolsDir") == 0 or die $!
+}
+
+my $webRTCDir = "$sourcePath/webrtc";
+File::Path::mkpath($webRTCDir) if (not -d $webRTCDir);
+chdir $webRTCDir;
+system("$depotToolsDir/gclient config http://webrtc.googlecode.com/svn/trunk") == 0 or die $!;
+system("$depotToolsDir/gclient sync --revision ${\WEBRTC_VERSION} --force") == 0 or die $!;
+
+chdir "trunk" or dir $!;
+system("python build/gyp_chromium --depth=. -Dextra_gyp_flag=0 -Dinclude_tests=0 -Denable_google_now=0 -Dlogging=0 all.gyp") == 0 or die $!;
+system("patch -f -p0 -i ../../../../../Tools/nix/patches/fix_jnipeerconnection.patch");
+system("$depotToolsDir/ninja -C out/Release") == 0 or dir $!;
