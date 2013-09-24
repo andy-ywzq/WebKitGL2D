@@ -1,3 +1,334 @@
+2013-09-24  Andrei Parvu  <parvu@adobe.com>
+
+        [CSS Background] repeat: round should round the number of tiles to the nearest natural number
+        https://bugs.webkit.org/show_bug.cgi?id=120668
+
+        Changed the sizes of the images/masks in the tests to be compliant with the new behaviour.
+
+        Reviewed by Darin Adler.
+
+        * css3/background/background-repeat-round-auto1-expected.html:
+        * css3/background/background-repeat-round-auto2-expected.html:
+        * css3/background/background-repeat-round-border-expected.html:
+        * css3/background/background-repeat-round-content-expected.html:
+        * css3/background/background-repeat-round-padding-expected.html:
+        * css3/background/background-repeat-round-padding.html:
+        * css3/masking/mask-repeat-round-auto1-expected.html:
+        * css3/masking/mask-repeat-round-auto2-expected.html:
+        * css3/masking/mask-repeat-round-border-expected.html:
+        * css3/masking/mask-repeat-round-content-expected.html:
+        * css3/masking/mask-repeat-round-padding-expected.html:
+        * css3/masking/mask-repeat-round-padding.html:
+
+2013-09-23  Gurpreet Kaur  <k.gurpreet@samsung.com>
+
+        CSS Unit vh, vw, vmin and vmax in box-shadow are not applied.
+        https://bugs.webkit.org/show_bug.cgi?id=121422
+
+        Reviewed by Darin Adler.
+
+        * fast/css/box-shadow-negative-viewportlength-expected-mismatch.html: Added.
+        * fast/css/box-shadow-negative-viewportlength.html: Added.
+        * fast/css/box-shadow-viewport-height-expected-mismatch.html: Added.
+        * fast/css/box-shadow-viewport-height.html: Added.
+        * fast/css/box-shadow-viewport-vmax-expected-mismatch.html: Added.
+        * fast/css/box-shadow-viewport-vmax.html: Added.
+        * fast/css/box-shadow-viewport-vmin-expected-mismatch.html: Added.
+        * fast/css/box-shadow-viewport-vmin.html: Added.
+        * fast/css/box-shadow-viewport-width-expected-mismatch.html: Added.
+        * fast/css/box-shadow-viewport-width.html: Added.
+        Added new tests for verifying that box-shadow properties are
+        applied when its values are viewport units.
+        * fast/css/shadow-viewport-units-expected.txt:
+        * fast/css/shadow-viewport-units.html:
+        Rebaselining existing tests as per the new behavior. Support for shadow
+        properties with viewport units is added so modified the test case.
+
+2013-09-23  Simon Fraser  <simon.fraser@apple.com>
+
+        REGRESSION (r155998): when zooming in, tiles are too small
+        https://bugs.webkit.org/show_bug.cgi?id=121765
+
+        Reviewed by Dean Jackson.
+        
+        Fix results of tests that showed that we had incorrect tiling
+        behavior on zooming.
+
+        * platform/mac-wk2/tiled-drawing/fixed-background/fixed-body-background-zoomed-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tile-size-slow-zoomed-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tiled-drawing-zoom-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tiled-drawing-zoom-scrolled-expected.txt:
+        * platform/mac/compositing/tiling/tile-cache-zoomed-expected.txt:
+
+2013-09-23  Antonio Gomes  <a1.gomes@sisa.samsung.com>
+
+        iframe and scrollbar with "overflow:auto" should support autoscroll with mousedrag
+        https://bugs.webkit.org/show_bug.cgi?id=40981
+
+        Reviewed by Darin Adler.
+
+        Test ensures that dragging an element close to the boundary of
+        scrollable Frames, scroll its content in that direction.
+
+        * fast/events/drag-and-drop-autoscroll-inner-frame-expected.txt: Added.
+        * fast/events/drag-and-drop-autoscroll-inner-frame.html: Added.
+
+2013-09-23  Alexey Proskuryakov  <ap@apple.com>
+
+        video-object-fit tests are flaky
+        https://bugs.webkit.org/show_bug.cgi?id=121803
+
+        Rubber-stamped by Simon Fraser.
+
+        Removing an ad hoc 1.5 second timeout that these tests had. Loading video can take
+        longer.
+
+        * compositing/video/video-object-fit.html:
+        * media/video-object-fit-change.html:
+        * media/video-object-fit.html:
+
+2013-09-23  Alexandru Chiculita  <achicu@adobe.com>
+
+        Web Inspector: [CSS Regions] Display CSS Regions flow name in the inspector overlay
+        https://bugs.webkit.org/show_bug.cgi?id=121794
+
+        Reviewed by Joseph Pecoraro.
+
+        Updated the expected results after moving the regions to the elementInfo.flowInfo property.
+        Also, the test is now logging the name of the flow container in the output.
+
+        * http/tests/inspector/elements-test.js:
+        * inspector/elements/highlight-node-regions-expected.txt:
+
+2013-09-23  ChangSeok Oh  <changseok.oh@collabora.com>
+
+        [Texmap] Reloading a webgl page doesn't work
+        https://bugs.webkit.org/show_bug.cgi?id=120593
+
+        Reviewed by Noam Rosenthal.
+
+        Add a new test case to check if a crash occurs while reloading a page which contains webgl.
+
+        * fast/canvas/webgl/webgl-reload-crash-expected.txt: Added.
+        * fast/canvas/webgl/webgl-reload-crash.html: Added.
+
+2013-09-23  Alexey Proskuryakov  <ap@apple.com>
+
+        Audio object garbage collection is incorrect (media/audio-garbage-collect.html test is flaky)
+        https://bugs.webkit.org/show_bug.cgi?id=72698
+
+        Skipping the test. It frequently times out, and when it doesn't, that's only
+        because if fails to detect incorrect behavior.
+
+        * TestExpectations:
+
+2013-09-23  Krzysztof Czech  <k.czech@samsung.com>
+
+        [EFL] accessibility/aria-invalid is failing
+        https://bugs.webkit.org/show_bug.cgi?id=111986
+
+        Reviewed by Mario Sanchez Prada.
+
+        Test passes on both efk-wk2 and efl-wk1, because of the patches from bugs: 119883 and 120421.
+
+        * platform/efl-wk1/TestExpectations: Removed accessibility/aria-invalid.html
+        * platform/efl-wk2/TestExpectations: Removed accessibility/aria-invalid.html
+
+2013-09-23  Krzysztof Czech  <k.czech@samsung.com>
+
+        [EFL] accessibility/selection-states.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=112007
+
+        Unreviewed EFL gardening. Passes after r156149.
+
+        * platform/efl-wk2/TestExpectations:
+
+2013-09-22  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r156257.
+        http://trac.webkit.org/changeset/156257
+        https://bugs.webkit.org/show_bug.cgi?id=121777
+
+        The test from this patch fails (Requested by ap on #webkit).
+
+        * fast/events/drag-and-drop-autoscroll-inner-frame-expected.txt: Removed.
+        * fast/events/drag-and-drop-autoscroll-inner-frame.html: Removed.
+
+2013-09-22  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Unreviewed EFL gardening. Rebaselining after r156040.
+
+        * platform/efl/fast/forms/HTMLOptionElement_label06-expected.txt:
+        * platform/efl/fast/forms/HTMLOptionElement_label07-expected.txt:
+        * platform/efl/fast/forms/form-element-geometry-expected.txt:
+        * platform/efl/fast/forms/menulist-separator-painting-expected.txt:
+        * platform/efl/fast/forms/select-baseline-expected.txt:
+        * platform/efl/fast/forms/select-empty-option-height-expected.txt:
+        * platform/efl/fast/forms/selectlist-minsize-expected.txt:
+        * platform/efl/fast/html/keygen-expected.txt:
+        * platform/efl/fast/replaced/three-selects-break-expected.txt:
+
+2013-09-22  Antonio Gomes  <a1.gomes@sisa.samsung.com>
+
+        iframe and scrollbar with "overflow:auto" should support autoscroll with mousedrag
+        https://bugs.webkit.org/show_bug.cgi?id=40981
+
+        Reviewed by Darin Adler.
+
+        Test ensures that dragging an element close to the boundary of
+        scrollable Frames, scroll its content in that direction.
+
+        * fast/events/drag-and-drop-autoscroll-inner-frame-expected.txt: Added.
+        * fast/events/drag-and-drop-autoscroll-inner-frame.html: Added.
+
+2013-09-22  Arunprasad Rajkumar  <ararunprasad@gmail.com>
+
+        Hiding a focused element should unfocus it and fire a blur event
+        https://bugs.webkit.org/show_bug.cgi?id=29241
+
+        Reviewed by Darin Adler.
+
+        * fast/dom/HTMLDocument/active-element-gets-unfocusable-expected.txt: Added.
+        * fast/dom/HTMLDocument/active-element-gets-unfocusable.html: Added.
+
+        LayoutTest reused from https://chromium.googlesource.com/chromium/blink/+/c58f636fd18fc27944c42e27d6a92a36867c57e1
+        with little modification.
+
+2013-09-22  Darin Adler  <darin@apple.com>
+
+        Fix accessibility-node-memory-management.html to use normal style for
+        GC-related tests, making it more robust
+        https://bugs.webkit.org/show_bug.cgi?id=121760
+
+        Rubber-stamped by Alexey Proskuryakov.
+
+        Change was accidentally landed in previous commit, this is the change log
+        that goes with it.
+
+        * accessibility/accessibility-node-memory-management.html:
+        Use jsTestIsAsync and setTimeout to do the garbage collection without the
+        rest of the script state on the stack. Also removed a lot of unneeded
+        "window." since the test works fine without them and tweaked comments.
+
+2013-09-21  Filip Pizlo  <fpizlo@apple.com>
+
+        Get rid of IsInlinedCodeTag and its associated methods since it's unused
+        https://bugs.webkit.org/show_bug.cgi?id=121737
+
+        Reviewed by Sam Weinig.
+
+        * js/dfg-inline-arguments-capture-throw-exception-expected.txt: Added.
+        * js/dfg-inline-arguments-capture-throw-exception.html: Added.
+        * js/script-tests/dfg-inline-arguments-capture-throw-exception.js: Added.
+        (foo):
+        (bar):
+        (makeF):
+        (recurse):
+
+2013-09-20  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Bad cast from CSSInitialValue to CSSValueList
+        https://bugs.webkit.org/show_bug.cgi?id=121729
+
+        Reviewed by Beth Dakin.
+        
+        Add a regression test. This is not a merge since the test in the Blink change involves
+        superfluous execCommand calls.
+
+        * fast/css/crash-inherit-value-font-family-expected.txt: Added.
+        * fast/css/crash-inherit-value-font-family.html: Added.
+
+2013-09-20  Alexandru Chiculita  <achicu@adobe.com>
+
+        Web Inspector: [CSS Regions] Display CSS Regions chain when highlighting a CSS Region node
+        https://bugs.webkit.org/show_bug.cgi?id=121719
+
+        Reviewed by Joseph Pecoraro.
+
+        Added test to check the position of the CSS Regions part of the same flow thread with
+        the highlighted CSS Region node.
+
+        * http/tests/inspector/elements-test.js:
+        * inspector/elements/highlight-node-regions-expected.txt: Added.
+        * inspector/elements/highlight-node-regions.html: Added.
+
+2013-09-20  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        (un)shiftCountWithAnyIndexingType will start over in the middle of copying if it sees a hole
+        https://bugs.webkit.org/show_bug.cgi?id=121717
+
+        Reviewed by Oliver Hunt.
+
+        Added test to make sure that splicing an array with holes works correctly.
+
+        * js/array-splice-with-holes-expected.txt: Added.
+        * js/array-splice-with-holes.html: Added.
+        * js/script-tests/array-splice-with-holes.js: Added.
+
+2013-09-20  Alexey Proskuryakov  <ap@apple.com>
+
+        Fix test after <http://trac.webkit.org/changeset/156203>
+
+        * platform/mac/accessibility/aria-help.html: Correct paths to JS tests.
+
+2013-09-20  Filip Pizlo  <fpizlo@apple.com>
+
+        REGRESSION(r156047): WebCore hangs inside JSC::toInt32(double)
+        https://bugs.webkit.org/show_bug.cgi?id=121648
+
+        Reviewed by Mark Hahnenberg.
+
+        * js/dfg-int52-change-format-expected.txt: Added.
+        * js/dfg-int52-change-format.html: Added.
+        * js/script-tests/dfg-int52-change-format.js: Added.
+        (foo):
+
+2013-09-20  Oliver Hunt  <oliver@apple.com>
+
+        REGRESSION(r153215): New iCloud site crashes
+        https://bugs.webkit.org/show_bug.cgi?id=121710
+
+        Reviewed by Filip Pizlo.
+
+        New test case
+
+        * js/dfg-arguments-mutated-structure-expected.txt: Added.
+        * js/dfg-arguments-mutated-structure.html: Added.
+        * js/script-tests/dfg-arguments-mutated-structure.js: Added.
+        (foo):
+
+2013-09-20  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r156185.
+        http://trac.webkit.org/changeset/156185
+        https://bugs.webkit.org/show_bug.cgi?id=121727
+
+        Caused a lot of crashes in tests (Requested by ap on #webkit).
+
+        * fast/dom/HTMLDocument/active-element-gets-unfocusable-expected.txt: Removed.
+        * fast/dom/HTMLDocument/active-element-gets-unfocusable.html: Removed.
+
+2013-09-20  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [ATK] Do not expose aria-help in ATK based platforms
+        https://bugs.webkit.org/show_bug.cgi?id=121675
+
+        Reviewed by Chris Fleizach.
+
+        Moved test based in helpText() into the Mac directory, and update
+        expectations for platforms as needed.
+
+        * platform/mac/accessibility/aria-help-expected.txt: Renamed from LayoutTests/accessibility/aria-help-expected.txt.
+        * platform/mac/accessibility/aria-help.html: Renamed from LayoutTests/accessibility/aria-help.html.
+        * platform/gtk-wk2/TestExpectations: Removed failure expectation
+        for aria-help, now moved to Mac, and for aria-describedby-on-input,
+        which is now moved to the generic TestExpectations file for GTK.
+        * platform/gtk/TestExpectations: Added aria-describedby-on-input,
+        linking it to the newly filed bug 121684.
+        * platform/gtk-wk2/TestExpectations: Removed failure expectation.
+        * platform/win/TestExpectations: Removed failure expectation.
+        * platform/wincairo/TestExpectations: Ditto.
+
 2013-09-20  Bem Jones-Bey  <bjonesbe@adobe.com>
 
         Move tests to new import location

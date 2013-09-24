@@ -1,3 +1,162 @@
+2013-09-23  Patrick Gansterer  <paroga@webkit.org>
+
+        use NOMINMAX instead of #define min min
+        https://bugs.webkit.org/show_bug.cgi?id=73563
+
+        Reviewed by Brent Fulgham.
+
+        Use NOMINMAX instead of #define min/max as a cleaner
+        way of ensuring that Windows system header files don't
+        define min/max as macro in the first place.
+
+        * DumpRenderTree/DumpRenderTreePrefix.h:
+        * DumpRenderTree/cg/ImageDiffCG.cpp:
+        * DumpRenderTree/config.h:
+        * DumpRenderTree/win/ImageDiffCairo.cpp:
+        * WebKitTestRunner/WebKitTestRunnerPrefix.h:
+        * WebKitTestRunner/config.h:
+
+2013-09-23  Benjamin Poulain  <benjamin@webkit.org>
+
+        Delete TestWebKitAPI domain or some keys before running TestWebKitAPI
+        https://bugs.webkit.org/show_bug.cgi?id=121715 & <rdar://problem/14269434>
+
+        Reviewed by Alexey Proskuryakov.
+
+        Previously, initalizing a WebPreference would change the cache model
+        to WebCacheModelDocumentBrowser. That behavior was due to a stale
+        preference file on disk.
+
+        This patch fixes the tests by resetting the default, and using the proper
+        default values after initializing WebPreference.
+
+        * TestWebKitAPI/Tests/mac/SetAndUpdateCacheModel.mm:
+        (TestWebKitAPI::TEST): Use the proper initial value, unrelated
+        to the previous runs.
+
+        * TestWebKitAPI/Tests/mac/SetAndUpdateCacheModel.mm:
+        (TestWebKitAPI::TEST): This test needs b/f cache to be enabled, so change
+        cache model to the one required.
+
+        * TestWebKitAPI/ios/mainIOS.mm:
+        (main): Reset the preferences before testing.
+        * TestWebKitAPI/mac/mainMac.mm:
+        (main): Ditto.
+
+2013-09-23  Benjamin Poulain  <benjamin@webkit.org>
+
+        Delete TestWebKitAPI domain or some keys before running TestWebKitAPI
+        https://bugs.webkit.org/show_bug.cgi?id=121715 & <rdar://problem/14269434>
+
+        Reviewed by Alexey Proskuryakov.
+
+        Previously, initalizing a WebPreference would change the cache model
+        to WebCacheModelDocumentBrowser. That behavior was due to a stale
+        preference file on disk.
+
+        This patch fixes the tests by resetting the default, and using the proper
+        default values after initializing WebPreference.
+
+        * TestWebKitAPI/Tests/mac/SetAndUpdateCacheModel.mm:
+        (TestWebKitAPI::TEST): Use the proper initial value, unrelated
+        to the previous runs.
+
+        * TestWebKitAPI/ios/mainIOS.mm:
+        (main): Reset the preferences before testing.
+        * TestWebKitAPI/mac/mainMac.mm:
+        (main): Ditto.
+
+2013-09-23  Anders Carlsson  <andersca@apple.com>
+
+        ListHashSet should work with move-only types
+        https://bugs.webkit.org/show_bug.cgi?id=121802
+
+        Reviewed by Andreas Kling.
+
+        * TestWebKitAPI/Tests/WTF/ListHashSet.cpp:
+        (TestWebKitAPI::TEST):
+        Add a test for move-only types.
+
+2013-09-23  Alex Christensen  <alex.christensen@flexsim.com>
+
+        Added --64-bit option for Windows build.
+        https://bugs.webkit.org/show_bug.cgi?id=121799
+
+        Reviewed by Brent Fulgham.
+
+        * Scripts/webkitdirs.pm:
+        (determinePassedConfiguration): Add "|x64" for 64-bit configuration.
+        (isWin64): Added.
+        (determineIsWin64): Added.
+
+2013-09-23  Anders Carlsson  <andersca@apple.com>
+
+        ListHashSet should use std::reverse_iterator for reverse iterators
+        https://bugs.webkit.org/show_bug.cgi?id=121795
+
+        Reviewed by Antti Koivisto.
+
+        Add test for reverse iterators.
+
+        * TestWebKitAPI/Tests/WTF/ListHashSet.cpp:
+        (TestWebKitAPI::TEST):
+
+2013-09-23  Krzysztof Czech  <k.czech@samsung.com>
+
+        [EFL] accessibility/aria-invalid is failing
+        https://bugs.webkit.org/show_bug.cgi?id=111986
+
+        Reviewed by Mario Sanchez Prada.
+
+        Adds possibility to retrieve JS context.
+        This is part of the implementation of AccessibilityUIElement::addNotificationListener
+        from 119883 and 120421.
+
+        * DumpRenderTree/atk/AccessibilityCallbacksAtk.cpp:
+        (axObjectEventListener):
+        (addAccessibilityNotificationHandler):
+        (removeAccessibilityNotificationHandler):
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityNotificationHandlerAtk.cpp:
+        (WTR::AccessibilityNotificationHandler::setNotificationFunctionCallback):
+        (WTR::AccessibilityNotificationHandler::removeAccessibilityNotificationHandler):
+
+2013-09-20  Mark Rowe  <mrowe@apple.com>
+
+        <https://webkit.org/b/90090> build-webkit should verify that your tools are up-to-date
+
+        Enforce a minimum OS version of 10.7.5 and Xcode version of 4.6.
+
+        Reviewed by David Kilzer.
+
+        * Scripts/webkitdirs.pm:
+        (checkRequiredSystemConfig):
+
+2013-09-20  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [ATK] Do not expose aria-help in ATK based platforms
+        https://bugs.webkit.org/show_bug.cgi?id=121675
+
+        Reviewed by Chris Fleizach.
+
+        Remove the implementations for AccessibilityUIElement::helpText()
+        from DRT and WKTR for GTK and EFL, since they are based on the
+        AccessibilityObject::helpText() method and the 'aria-help'
+        attributes, which is wrong since they should not depend on that
+        but in ATK specific API (see also http://webkit.org/b/121684).
+
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (AccessibilityUIElement::helpText): Added a new and empty
+        implementation, now that we are no longer using this in ATK.
+        * DumpRenderTree/efl/AccessibilityUIElementEfl.cpp: Removed file
+        as the only function provided here was helpText().
+        * DumpRenderTree/gtk/AccessibilityUIElementGtk.cpp: Ditto.
+        * DumpRenderTree/efl/CMakeLists.txt: AccessibilityUIElementEfl.cpp
+        removed from the list of sources to compile.
+        * GNUmakefile.am: Likewise, but for AccessibilityUIElementGtk.cpp.
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::AccessibilityUIElement::helpText): Replaced old implementation
+        based in DumpRenderTreeSupportGtk with an empty one.
+
 2013-09-20  Dan Bernstein  <mitz@apple.com>
 
         Make extract-localizable-strings available to WebCore clients

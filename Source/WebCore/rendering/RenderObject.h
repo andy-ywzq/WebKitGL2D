@@ -32,7 +32,6 @@
 #include "FloatQuad.h"
 #include "LayoutRect.h"
 #include "PaintPhase.h"
-#include "RenderObjectChildList.h"
 #include "RenderStyle.h"
 #include "ScrollBehavior.h"
 #include "StyleInheritedData.h"
@@ -147,8 +146,8 @@ const int showTreeCharacterOffset = 39;
 class RenderObject : public CachedImageClient {
     friend class RenderBlock;
     friend class RenderBlockFlow;
+    friend class RenderElement;
     friend class RenderLayer;
-    friend class RenderObjectChildList;
 public:
     // Anonymous objects should pass the document as their node, and they will then automatically be
     // marked as anonymous in the constructor.
@@ -165,26 +164,9 @@ public:
     RenderObject* previousSibling() const { return m_previous; }
     RenderObject* nextSibling() const { return m_next; }
 
-    // FIXME: These should be renamed slowFirstChild, slowLastChild, etc.
-    // to discourage their use. The virtual call to children inside these
-    // can be slow for hot code paths.
-    // Derived classes like RenderBlock override these non-virtual
-    // functions to make them fast when we already have a more specific pointer type.
-    RenderObject* firstChild() const
-    {
-        if (const RenderObjectChildList* children = this->children())
-            return children->firstChild();
-        return 0;
-    }
-    RenderObject* lastChild() const
-    {
-        if (const RenderObjectChildList* children = this->children())
-            return children->lastChild();
-        return 0;
-    }
-
-    virtual RenderObjectChildList* children() { return 0; }
-    virtual const RenderObjectChildList* children() const { return 0; }
+    // Use RenderElement versions instead.
+    virtual RenderObject* firstChildSlow() const { return nullptr; }
+    virtual RenderObject* lastChildSlow() const { return nullptr; }
 
     RenderObject* nextInPreOrder() const;
     RenderObject* nextInPreOrder(const RenderObject* stayWithin) const;
@@ -241,7 +223,8 @@ public:
 
     RenderNamedFlowThread* renderNamedFlowThreadWrapper() const;
 
-    virtual bool isEmpty() const { return firstChild() == 0; }
+    // FIXME: The meaning of this function is unclear.
+    virtual bool isEmpty() const { return !firstChildSlow(); }
 
 #ifndef NDEBUG
     void setHasAXObject(bool flag) { m_hasAXObject = flag; }
@@ -270,7 +253,7 @@ public:
     
     // RenderObject tree manipulation
     //////////////////////////////////////////
-    virtual bool canHaveChildren() const { return children(); }
+    virtual bool canHaveChildren() const = 0;
     virtual bool canHaveGeneratedChildren() const;
     virtual bool createsAnonymousWrapper() const { return false; }
     //////////////////////////////////////////
@@ -647,7 +630,7 @@ public:
     // Returns the object containing this one. Can be different from parent for positioned elements.
     // If repaintContainer and repaintContainerSkipped are not null, on return *repaintContainerSkipped
     // is true if the renderer returned is an ancestor of repaintContainer.
-    RenderObject* container(const RenderLayerModelObject* repaintContainer = 0, bool* repaintContainerSkipped = 0) const;
+    RenderElement* container(const RenderLayerModelObject* repaintContainer = 0, bool* repaintContainerSkipped = 0) const;
 
     virtual RenderObject* hoverAncestor() const;
 
@@ -979,17 +962,13 @@ public:
         return outlineBoundsForRepaint(0);
     }
 
-    // Return the renderer whose background style is used to paint the root background. Should only be called on the renderer for which isRoot() is true.
-    RenderObject* rendererForRootBackground();
-
     RespectImageOrientationEnum shouldRespectImageOrientation() const;
 
 protected:
     // Overrides should call the superclass at the end
-    virtual void styleWillChange(StyleDifference, const RenderStyle* newStyle);
+    virtual void styleWillChange(StyleDifference, const RenderStyle*) { }
     // Overrides should call the superclass at the start
-    virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle);
-    void propagateStyleToAnonymousChildren(bool blockChildrenOnly = false);
+    virtual void styleDidChange(StyleDifference, const RenderStyle*) { }
 
     void drawLineForBoxSide(GraphicsContext*, int x1, int y1, int x2, int y2, BoxSide,
                             Color, EBorderStyle, int adjbw1, int adjbw2, bool antialias = false);
@@ -1171,11 +1150,6 @@ private:
     void setNeedsSimplifiedNormalFlowLayout(bool b) { m_bitfields.setNeedsSimplifiedNormalFlowLayout(b); }
     void setIsDragging(bool b) { m_bitfields.setIsDragging(b); }
     void setEverHadLayout(bool b) { m_bitfields.setEverHadLayout(b); }
-
-private:
-    // Store state between styleWillChange and styleDidChange
-    static bool s_affectsParentBlock;
-    static bool s_noLongerAffectsParentBlock;
 };
 
 inline bool RenderObject::documentBeingDestroyed() const

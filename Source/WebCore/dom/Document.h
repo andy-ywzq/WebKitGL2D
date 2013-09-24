@@ -709,9 +709,9 @@ public:
     void attachRange(Range*);
     void detachRange(Range*);
 
-    void updateRangesAfterChildrenChanged(ContainerNode*);
+    void updateRangesAfterChildrenChanged(ContainerNode&);
     // nodeChildrenWillBeRemoved is used when removing all node children at once.
-    void nodeChildrenWillBeRemoved(ContainerNode*);
+    void nodeChildrenWillBeRemoved(ContainerNode&);
     // nodeWillBeRemoved is only safe when removing one node at a time.
     void nodeWillBeRemoved(Node*);
     bool canReplaceChild(Node* newChild, Node* oldChild);
@@ -729,6 +729,7 @@ public:
     DOMWindow* defaultView() const { return domWindow(); } 
 
     // Helper functions for forwarding DOMWindow event related tasks to the DOMWindow if it exists.
+    void setWindowAttributeEventListener(const AtomicString& eventType, const QualifiedName& attributeName, const AtomicString& value);
     void setWindowAttributeEventListener(const AtomicString& eventType, PassRefPtr<EventListener>);
     EventListener* getWindowAttributeEventListener(const AtomicString& eventType);
     void dispatchWindowEvent(PassRefPtr<Event>, PassRefPtr<EventTarget> = 0);
@@ -1634,6 +1635,11 @@ inline Node::Node(Document* document, ConstructionType type)
 #endif
 
     InspectorCounters::incrementCounter(InspectorCounters::NodeCounter);
+}
+
+inline ScriptExecutionContext* Node::scriptExecutionContext() const
+{
+    return &document();
 }
 
 Node* eventTargetNodeForDocument(Document*);

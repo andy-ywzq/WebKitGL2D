@@ -81,7 +81,7 @@ private:
     virtual void refreshPlugins() OVERRIDE;
     virtual void getPluginInfo(const WebCore::Page*, Vector<WebCore::PluginInfo>&) OVERRIDE;
 
-    // WebCore::SharedWorkerStrategy.
+    // WebCore::SharedWorkerStrategy
     virtual bool isAvailable() const OVERRIDE;
 
     // WebCore::StorageStrategy.

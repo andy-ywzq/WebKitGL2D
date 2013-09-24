@@ -64,6 +64,7 @@
 #include "InspectorFrontendClientLocal.h"
 #include "InspectorInstrumentation.h"
 #include "InspectorOverlay.h"
+#include "InspectorValues.h"
 #include "InstrumentingAgents.h"
 #include "InternalSettings.h"
 #include "IntRect.h"
@@ -734,6 +735,22 @@ PassRefPtr<ClientRectList> Internals::inspectorHighlightRects(Document* document
 #endif
 }
 
+String Internals::inspectorHighlightObject(Document* document, ExceptionCode& ec)
+{
+#if ENABLE(INSPECTOR)
+    if (!document || !document->page() || !document->page()->inspectorController()) {
+        ec = INVALID_ACCESS_ERR;
+        return String();
+    }
+    RefPtr<InspectorObject> object = document->page()->inspectorController()->buildObjectForHighlightedNode();
+    return object ? object->toJSONString() : String();
+#else
+    UNUSED_PARAM(document);
+    UNUSED_PARAM(ec);
+    return String();
+#endif
+}
+
 unsigned Internals::markerCountForNode(Node* node, const String& markerType, ExceptionCode& ec)
 {
     if (!node) {
@@ -1229,7 +1246,7 @@ PassRefPtr<NodeList> Internals::nodesFromRect(Document* document, int centerX, i
     if (!request.ignoreClipping() && !frameView->visibleContentRect().intersects(HitTestLocation::rectForPoint(point, topPadding, rightPadding, bottomPadding, leftPadding)))
         return 0;
 
-    Vector<RefPtr<Node> > matches;
+    Vector<Ref<Node>> matches;
 
     // Need padding to trigger a rect based hit test, but we want to return a NodeList
     // so we special case this.
@@ -1237,11 +1254,15 @@ PassRefPtr<NodeList> Internals::nodesFromRect(Document* document, int centerX, i
         HitTestResult result(point);
         renderView->hitTest(request, result);
         if (result.innerNode())
-            matches.append(result.innerNode()->deprecatedShadowAncestorNode());
+            matches.append(*result.innerNode()->deprecatedShadowAncestorNode());
     } else {
         HitTestResult result(point, topPadding, rightPadding, bottomPadding, leftPadding);
         renderView->hitTest(request, result);
-        copyToVector(result.rectBasedTestResult(), matches);
+        
+        const HitTestResult::NodeSet& nodeSet = result.rectBasedTestResult();
+        matches.reserveInitialCapacity(nodeSet.size());
+        for (auto it = nodeSet.begin(), end = nodeSet.end(); it != end; ++it)
+            matches.uncheckedAppend(*it->get());
     }
 
     return StaticNodeList::adopt(matches);

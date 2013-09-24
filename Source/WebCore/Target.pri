@@ -191,7 +191,6 @@ SOURCES += \
      bindings/js/ScriptController.cpp \
      bindings/js/ScriptControllerQt.cpp \
      bindings/js/ScriptDebugServer.cpp \
-     bindings/js/ScriptEventListener.cpp \
      bindings/js/ScriptFunctionCall.cpp \
      bindings/js/ScriptGCEvent.cpp \
      bindings/js/ScriptObject.cpp \
@@ -993,9 +992,9 @@ SOURCES += \
     platform/graphics/LayoutBoxExtent.cpp \
     platform/graphics/LayoutRect.cpp \
     platform/graphics/GeneratedImage.cpp \
-    platform/graphics/GeneratorGeneratedImage.cpp \
     platform/graphics/GlyphPageTreeNode.cpp \
     platform/graphics/Gradient.cpp \
+    platform/graphics/GradientImage.cpp \
     platform/graphics/GraphicsContext.cpp \
     platform/graphics/GraphicsLayer.cpp \
     platform/graphics/GraphicsLayerAnimation.cpp \
@@ -1195,7 +1194,6 @@ SOURCES += \
     rendering/RenderMultiColumnSet.cpp \
     rendering/RenderNamedFlowThread.cpp \
     rendering/RenderObject.cpp \
-    rendering/RenderObjectChildList.cpp \
     rendering/RenderProgress.cpp \
     rendering/RenderQuote.cpp \
     rendering/RenderRegion.cpp \
@@ -1370,7 +1368,6 @@ HEADERS += \
     bindings/js/ScriptCachedFrameData.h \
     bindings/js/ScriptController.h \
     bindings/js/ScriptDebugServer.h \
-    bindings/js/ScriptEventListener.h \
     bindings/js/ScriptFunctionCall.h \
     bindings/js/ScriptGCEvent.h \
     bindings/js/ScriptHeapSnapshot.h \
@@ -2194,10 +2191,10 @@ HEADERS += \
     platform/graphics/FontFeatureSettings.h \
     platform/graphics/FontMetrics.h \
     platform/graphics/Font.h \
-    platform/graphics/GeneratorGeneratedImage.h \
     platform/graphics/GeneratedImage.h \
     platform/graphics/GlyphPageTreeNode.h \
     platform/graphics/Gradient.h \
+    platform/graphics/GradientImage.h \
     platform/graphics/GraphicsContext.h \
     platform/graphics/GraphicsLayer.h \
     platform/graphics/GraphicsLayerAnimation.h \
@@ -2463,7 +2460,6 @@ HEADERS += \
     rendering/RenderMenuList.h \
     rendering/RenderMeter.h \
     rendering/RenderMultiColumnBlock.h \
-    rendering/RenderObjectChildList.h \
     rendering/RenderObject.h \
     rendering/RenderProgress.h \
     rendering/RenderQuote.h \

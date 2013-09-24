@@ -489,15 +489,15 @@ void RenderRegion::setRegionObjectsRegionStyle()
     // Start from content nodes and recursively compute the style in region for the render objects below.
     // If the style in region was already computed, used that style instead of computing a new one.
     const RenderNamedFlowThread& namedFlow = view().flowThreadController().ensureRenderFlowThreadWithName(style()->regionThread());
-    const NamedFlowContentNodes& contentNodes = namedFlow.contentNodes();
+    const NamedFlowContentElements& contentElements = namedFlow.contentElements();
 
-    for (NamedFlowContentNodes::const_iterator iter = contentNodes.begin(), end = contentNodes.end(); iter != end; ++iter) {
-        const Node* node = *iter;
+    for (auto iter = contentElements.begin(), end = contentElements.end(); iter != end; ++iter) {
+        const Element* element = *iter;
         // The list of content nodes contains also the nodes with display:none.
-        if (!node->renderer())
+        if (!element->renderer())
             continue;
 
-        RenderObject* object = node->renderer();
+        RenderObject* object = element->renderer();
         // If the content node does not flow any of its children in this region,
         // we do not compute any style for them in this region.
         if (!flowThread()->objectInFlowRegion(object, this))
@@ -580,7 +580,7 @@ PassRefPtr<RenderStyle> RenderRegion::computeStyleInRegion(const RenderObject* o
 
 void RenderRegion::computeChildrenStyleInRegion(const RenderObject* object)
 {
-    for (RenderObject* child = object->firstChild(); child; child = child->nextSibling()) {
+    for (RenderObject* child = object->firstChildSlow(); child; child = child->nextSibling()) {
 
         RenderObjectRegionStyleMap::iterator it = m_renderObjectRegionStyle.find(child);
 
@@ -632,7 +632,7 @@ void RenderRegion::clearObjectStyleInRegion(const RenderObject* object)
     m_renderObjectRegionStyle.remove(object);
 
     // Clear the style for the children of this object.
-    for (RenderObject* child = object->firstChild(); child; child = child->nextSibling())
+    for (RenderObject* child = object->firstChildSlow(); child; child = child->nextSibling())
         clearObjectStyleInRegion(child);
 }
 

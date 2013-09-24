@@ -287,6 +287,17 @@ void StackVisitor::Frame::computeLineAndColumn(unsigned& line, unsigned& column)
     column = divotColumn + (divotLine ? 1 : codeBlock->firstLineColumnOffset());
 }
 
+Register& StackVisitor::Frame::r(int index)
+{
+    int offset = 0;
+
+#if ENABLE(DFG_JIT)
+    if (isInlinedFrame())
+        offset = inlineCallFrame()->stackOffset;
+#endif
+    return callFrame()->r(offset + index);
+}
+
 void StackVisitor::Frame::retrieveExpressionInfo(int& divot, int& startOffset, int& endOffset, unsigned& line, unsigned& column)
 {
     CodeBlock* codeBlock = this->codeBlock();

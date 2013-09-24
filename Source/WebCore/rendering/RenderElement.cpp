@@ -25,13 +25,21 @@
 #include "config.h"
 #include "RenderElement.h"
 
+#include "AXObjectCache.h"
 #include "ContentData.h"
+#include "CursorList.h"
+#include "EventHandler.h"
+#include "Frame.h"
+#include "HTMLElement.h"
+#include "HTMLNames.h"
+#include "RenderCounter.h"
 #include "RenderDeprecatedFlexibleBox.h"
 #include "RenderFlexibleBox.h"
 #include "RenderGrid.h"
 #include "RenderImage.h"
 #include "RenderImageResourceStyleImage.h"
 #include "RenderLayer.h"
+#include "RenderLineBreak.h"
 #include "RenderListItem.h"
 #include "RenderMultiColumnBlock.h"
 #include "RenderRegion.h"
@@ -42,12 +50,22 @@
 #include "RenderTableCol.h"
 #include "RenderTableRow.h"
 #include "RenderText.h"
+#include "RenderView.h"
 #include "SVGRenderSupport.h"
+
+#if USE(ACCELERATED_COMPOSITING)
+#include "RenderLayerCompositor.h"
+#endif
 
 namespace WebCore {
 
+bool RenderElement::s_affectsParentBlock = false;
+bool RenderElement::s_noLongerAffectsParentBlock = false;
+
 RenderElement::RenderElement(Element* element)
     : RenderObject(element)
+    , m_firstChild(nullptr)
+    , m_lastChild(nullptr)
 {
 }
 
@@ -136,9 +154,6 @@ RenderElement* RenderElement::createFor(Element& element, RenderStyle& style)
 
 void RenderElement::addChild(RenderObject* newChild, RenderObject* beforeChild)
 {
-    ASSERT(children());
-    RenderObjectChildList& children = *this->children();
-
     bool needsTable = false;
 
     if (newChild->isRenderTableCol()) {
@@ -156,7 +171,7 @@ void RenderElement::addChild(RenderObject* newChild, RenderObject* beforeChild)
 
     if (needsTable) {
         RenderTable* table;
-        RenderObject* afterChild = beforeChild ? beforeChild->previousSibling() : children.lastChild();
+        RenderObject* afterChild = beforeChild ? beforeChild->previousSibling() : m_lastChild;
         if (afterChild && afterChild->isAnonymous() && afterChild->isTable() && !afterChild->isBeforeContent())
             table = toRenderTable(afterChild);
         else {
@@ -165,7 +180,7 @@ void RenderElement::addChild(RenderObject* newChild, RenderObject* beforeChild)
         }
         table->addChild(newChild);
     } else
-        children.insertChildNode(this, newChild, beforeChild);
+        insertChildInternal(newChild, beforeChild, NotifyChildren);
 
     if (newChild->isText() && newChild->style()->textTransform() == CAPITALIZE)
         toRenderText(newChild)->transformText();
@@ -188,11 +203,142 @@ void RenderElement::addChild(RenderObject* newChild, RenderObject* beforeChild)
 
 void RenderElement::removeChild(RenderObject* oldChild)
 {
-    ASSERT(children());
-    children()->removeChildNode(this, oldChild);
+    removeChildInternal(oldChild, NotifyChildren);
 }
 
-static void addLayers(RenderObject* obj, RenderLayer* parentLayer, RenderElement*& newObject, RenderLayer*& beforeChild)
+void RenderElement::destroyLeftoverChildren()
+{
+    while (m_firstChild) {
+        if (m_firstChild->isListMarker() || (m_firstChild->style()->styleType() == FIRST_LETTER && !m_firstChild->isText()))
+            m_firstChild->removeFromParent(); // List markers are owned by their enclosing list and so don't get destroyed by this container. Similarly, first letters are destroyed by their remaining text fragment.
+        else if (m_firstChild->isRunIn() && m_firstChild->node()) {
+            m_firstChild->node()->setRenderer(0);
+            m_firstChild->node()->setNeedsStyleRecalc();
+            m_firstChild->destroy();
+        } else {
+            // Destroy any anonymous children remaining in the render tree, as well as implicit (shadow) DOM elements like those used in the engine-based text fields.
+            if (m_firstChild->node())
+                m_firstChild->node()->setRenderer(0);
+            m_firstChild->destroy();
+        }
+    }
+}
+
+void RenderElement::insertChildInternal(RenderObject* newChild, RenderObject* beforeChild, NotifyChildrenType notifyChildren)
+{
+    ASSERT(canHaveChildren() || canHaveGeneratedChildren());
+    ASSERT(!newChild->parent());
+    ASSERT(!isRenderBlockFlow() || (!newChild->isTableSection() && !newChild->isTableRow() && !newChild->isTableCell()));
+
+    while (beforeChild && beforeChild->parent() && beforeChild->parent() != this)
+        beforeChild = beforeChild->parent();
+
+    // This should never happen, but if it does prevent render tree corruption
+    // where child->parent() ends up being owner but child->nextSibling()->parent()
+    // is not owner.
+    if (beforeChild && beforeChild->parent() != this) {
+        ASSERT_NOT_REACHED();
+        return;
+    }
+
+    newChild->setParent(this);
+
+    if (m_firstChild == beforeChild)
+        m_firstChild = newChild;
+
+    if (beforeChild) {
+        RenderObject* previousSibling = beforeChild->previousSibling();
+        if (previousSibling)
+            previousSibling->setNextSibling(newChild);
+        newChild->setPreviousSibling(previousSibling);
+        newChild->setNextSibling(beforeChild);
+        beforeChild->setPreviousSibling(newChild);
+    } else {
+        if (lastChild())
+            lastChild()->setNextSibling(newChild);
+        newChild->setPreviousSibling(lastChild());
+        m_lastChild = newChild;
+    }
+
+    if (!documentBeingDestroyed()) {
+        if (notifyChildren == NotifyChildren)
+            newChild->insertedIntoTree();
+        RenderCounter::rendererSubtreeAttached(newChild);
+    }
+
+    newChild->setNeedsLayoutAndPrefWidthsRecalc();
+    setPreferredLogicalWidthsDirty(true);
+    if (!normalChildNeedsLayout())
+        setChildNeedsLayout(true); // We may supply the static position for an absolute positioned child.
+
+    if (AXObjectCache* cache = document().axObjectCache())
+        cache->childrenChanged(this);
+}
+
+void RenderElement::removeChildInternal(RenderObject* oldChild, NotifyChildrenType notifyChildren)
+{
+    ASSERT(canHaveChildren() || canHaveGeneratedChildren());
+    ASSERT(oldChild->parent() == this);
+
+    if (oldChild->isFloatingOrOutOfFlowPositioned())
+        toRenderBox(oldChild)->removeFloatingOrPositionedChildFromBlockLists();
+
+    // So that we'll get the appropriate dirty bit set (either that a normal flow child got yanked or
+    // that a positioned child got yanked). We also repaint, so that the area exposed when the child
+    // disappears gets repainted properly.
+    if (!documentBeingDestroyed() && notifyChildren == NotifyChildren && oldChild->everHadLayout()) {
+        oldChild->setNeedsLayoutAndPrefWidthsRecalc();
+        // We only repaint |oldChild| if we have a RenderLayer as its visual overflow may not be tracked by its parent.
+        if (oldChild->isBody())
+            view().repaintRootContents();
+        else
+            oldChild->repaint();
+    }
+
+    // If we have a line box wrapper, delete it.
+    if (oldChild->isBox())
+        toRenderBox(oldChild)->deleteLineBoxWrapper();
+    else if (oldChild->isLineBreak())
+        toRenderLineBreak(oldChild)->deleteInlineBoxWrapper();
+
+    // If oldChild is the start or end of the selection, then clear the selection to
+    // avoid problems of invalid pointers.
+    // FIXME: The FrameSelection should be responsible for this when it
+    // is notified of DOM mutations.
+    if (!documentBeingDestroyed() && oldChild->isSelectionBorder())
+        view().clearSelection();
+
+    if (!documentBeingDestroyed() && notifyChildren == NotifyChildren)
+        oldChild->willBeRemovedFromTree();
+
+    // WARNING: There should be no code running between willBeRemovedFromTree and the actual removal below.
+    // This is needed to avoid race conditions where willBeRemovedFromTree would dirty the tree's structure
+    // and the code running here would force an untimely rebuilding, leaving |oldChild| dangling.
+
+    if (oldChild->previousSibling())
+        oldChild->previousSibling()->setNextSibling(oldChild->nextSibling());
+    if (oldChild->nextSibling())
+        oldChild->nextSibling()->setPreviousSibling(oldChild->previousSibling());
+
+    if (m_firstChild == oldChild)
+        m_firstChild = oldChild->nextSibling();
+    if (m_lastChild == oldChild)
+        m_lastChild = oldChild->previousSibling();
+
+    oldChild->setPreviousSibling(0);
+    oldChild->setNextSibling(0);
+    oldChild->setParent(0);
+
+    // rendererRemovedFromTree walks the whole subtree. We can improve performance
+    // by skipping this step when destroying the entire tree.
+    if (!documentBeingDestroyed())
+        RenderCounter::rendererRemovedFromTree(oldChild);
+
+    if (AXObjectCache* cache = document().existingAXObjectCache())
+        cache->childrenChanged(this);
+}
+
+static void addLayers(RenderElement* obj, RenderLayer* parentLayer, RenderElement*& newObject, RenderLayer*& beforeChild)
 {
     if (obj->hasLayer()) {
         if (!beforeChild && newObject) {
@@ -206,8 +352,10 @@ static void addLayers(RenderObject* obj, RenderLayer* parentLayer, RenderElement
         return;
     }
 
-    for (RenderObject* curr = obj->firstChild(); curr; curr = curr->nextSibling())
-        addLayers(curr, parentLayer, newObject, beforeChild);
+    for (RenderObject* current = obj->firstChild(); current; current = current->nextSibling()) {
+        if (current->isRenderElement())
+            addLayers(toRenderElement(current), parentLayer, newObject, beforeChild);
+    }
 }
 
 void RenderElement::addLayers(RenderLayer* parentLayer)
@@ -306,6 +454,209 @@ bool RenderElement::layerCreationAllowedForSubtree() const
     return true;
 }
 
+void RenderElement::propagateStyleToAnonymousChildren(StylePropagationType propagationType)
+{
+    // FIXME: We could save this call when the change only affected non-inherited properties.
+    for (RenderObject* child = firstChild(); child; child = child->nextSibling()) {
+        if (!child->isAnonymous() || child->style()->styleType() != NOPSEUDO)
+            continue;
+
+        if (propagationType == PropagateToBlockChildrenOnly && !child->isRenderBlock())
+            continue;
+
+#if ENABLE(FULLSCREEN_API)
+        if (child->isRenderFullScreen() || child->isRenderFullScreenPlaceholder())
+            continue;
+#endif
+
+        RefPtr<RenderStyle> newStyle = RenderStyle::createAnonymousStyleWithDisplay(style(), child->style()->display());
+        if (style()->specifiesColumns()) {
+            if (child->style()->specifiesColumns())
+                newStyle->inheritColumnPropertiesFrom(style());
+            if (child->style()->columnSpan())
+                newStyle->setColumnSpan(ColumnSpanAll);
+        }
+
+        // Preserve the position style of anonymous block continuations as they can have relative or sticky position when
+        // they contain block descendants of relative or sticky positioned inlines.
+        if (child->isInFlowPositioned() && toRenderBlock(child)->isAnonymousBlockContinuation())
+            newStyle->setPosition(child->style()->position());
+
+        child->setStyle(newStyle.release());
+    }
+}
+
+// On low-powered/mobile devices, preventing blitting on a scroll can cause noticeable delays
+// when scrolling a page with a fixed background image. As an optimization, assuming there are
+// no fixed positoned elements on the page, we can acclerate scrolling (via blitting) if we
+// ignore the CSS property "background-attachment: fixed".
+static bool shouldRepaintFixedBackgroundsOnScroll(FrameView* frameView)
+{
+#if !ENABLE(FAST_MOBILE_SCROLLING) || !PLATFORM(QT)
+    UNUSED_PARAM(frameView);
+#endif
+
+    bool repaintFixedBackgroundsOnScroll = true;
+#if ENABLE(FAST_MOBILE_SCROLLING)
+#if PLATFORM(QT)
+    if (frameView->delegatesScrolling())
+        repaintFixedBackgroundsOnScroll = false;
+#else
+    repaintFixedBackgroundsOnScroll = false;
+#endif
+#endif
+    return repaintFixedBackgroundsOnScroll;
+}
+
+static inline bool rendererHasBackground(const RenderObject* renderer)
+{
+    return renderer && renderer->hasBackground();
+}
+
+void RenderElement::styleWillChange(StyleDifference diff, const RenderStyle* newStyle)
+{
+    if (m_style) {
+        // If our z-index changes value or our visibility changes,
+        // we need to dirty our stacking context's z-order list.
+        if (newStyle) {
+            bool visibilityChanged = m_style->visibility() != newStyle->visibility() 
+                || m_style->zIndex() != newStyle->zIndex() 
+                || m_style->hasAutoZIndex() != newStyle->hasAutoZIndex();
+#if ENABLE(DASHBOARD_SUPPORT) || ENABLE(DRAGGABLE_REGION)
+            if (visibilityChanged)
+                document().setAnnotatedRegionsDirty(true);
+#endif
+            if (visibilityChanged) {
+                if (AXObjectCache* cache = document().existingAXObjectCache())
+                    cache->childrenChanged(parent());
+            }
+
+            // Keep layer hierarchy visibility bits up to date if visibility changes.
+            if (m_style->visibility() != newStyle->visibility()) {
+                if (RenderLayer* layer = enclosingLayer()) {
+                    if (newStyle->visibility() == VISIBLE)
+                        layer->setHasVisibleContent();
+                    else if (layer->hasVisibleContent() && (this == &layer->renderer() || layer->renderer().style()->visibility() != VISIBLE)) {
+                        layer->dirtyVisibleContentStatus();
+                        if (diff > StyleDifferenceRepaintLayer)
+                            repaint();
+                    }
+                }
+            }
+        }
+
+        if (m_parent && (newStyle->outlineSize() < m_style->outlineSize() || shouldRepaintForStyleDifference(diff)))
+            repaint();
+        if (isFloating() && (m_style->floating() != newStyle->floating()))
+            // For changes in float styles, we need to conceivably remove ourselves
+            // from the floating objects list.
+            toRenderBox(this)->removeFloatingOrPositionedChildFromBlockLists();
+        else if (isOutOfFlowPositioned() && (m_style->position() != newStyle->position()))
+            // For changes in positioning styles, we need to conceivably remove ourselves
+            // from the positioned objects list.
+            toRenderBox(this)->removeFloatingOrPositionedChildFromBlockLists();
+
+        s_affectsParentBlock = isFloatingOrOutOfFlowPositioned()
+            && (!newStyle->isFloating() && !newStyle->hasOutOfFlowPosition())
+            && parent() && (parent()->isRenderBlockFlow() || parent()->isRenderInline());
+
+        s_noLongerAffectsParentBlock = ((!isFloating() && newStyle->isFloating()) || (!isOutOfFlowPositioned() && newStyle->hasOutOfFlowPosition()))
+            && parent() && parent()->isRenderBlock();
+
+        // reset style flags
+        if (diff == StyleDifferenceLayout || diff == StyleDifferenceLayoutPositionedMovementOnly) {
+            setFloating(false);
+            clearPositionedState();
+        }
+        setHorizontalWritingMode(true);
+        setHasBoxDecorations(false);
+        setHasOverflowClip(false);
+        setHasTransform(false);
+        setHasReflection(false);
+    } else {
+        s_affectsParentBlock = false;
+        s_noLongerAffectsParentBlock = false;
+    }
+
+    bool repaintFixedBackgroundsOnScroll = shouldRepaintFixedBackgroundsOnScroll(&view().frameView());
+
+    bool newStyleSlowScroll = newStyle && repaintFixedBackgroundsOnScroll && newStyle->hasFixedBackgroundImage();
+    bool oldStyleSlowScroll = m_style && repaintFixedBackgroundsOnScroll && m_style->hasFixedBackgroundImage();
+
+#if USE(ACCELERATED_COMPOSITING)
+    bool drawsRootBackground = isRoot() || (isBody() && !rendererHasBackground(document().documentElement()->renderer()));
+    if (drawsRootBackground && repaintFixedBackgroundsOnScroll) {
+        if (view().compositor().supportsFixedRootBackgroundCompositing()) {
+            if (newStyleSlowScroll && newStyle->hasEntirelyFixedBackground())
+                newStyleSlowScroll = false;
+
+            if (oldStyleSlowScroll && m_style->hasEntirelyFixedBackground())
+                oldStyleSlowScroll = false;
+        }
+    }
+#endif
+    if (oldStyleSlowScroll != newStyleSlowScroll) {
+        if (oldStyleSlowScroll)
+            view().frameView().removeSlowRepaintObject(this);
+
+        if (newStyleSlowScroll)
+            view().frameView().addSlowRepaintObject(this);
+    }
+}
+
+static bool areNonIdenticalCursorListsEqual(const RenderStyle* a, const RenderStyle* b)
+{
+    ASSERT(a->cursors() != b->cursors());
+    return a->cursors() && b->cursors() && *a->cursors() == *b->cursors();
+}
+
+static inline bool areCursorsEqual(const RenderStyle* a, const RenderStyle* b)
+{
+    return a->cursor() == b->cursor() && (a->cursors() == b->cursors() || areNonIdenticalCursorListsEqual(a, b));
+}
+
+void RenderElement::styleDidChange(StyleDifference diff, const RenderStyle* oldStyle)
+{
+    if (s_affectsParentBlock)
+        handleDynamicFloatPositionChange();
+
+    if (s_noLongerAffectsParentBlock)
+        removeAnonymousWrappersForInlinesIfNecessary();
+#if ENABLE(SVG)
+    SVGRenderSupport::styleChanged(this);
+#endif
+
+    if (!m_parent)
+        return;
+    
+    if (diff == StyleDifferenceLayout || diff == StyleDifferenceSimplifiedLayout) {
+        RenderCounter::rendererStyleChanged(this, oldStyle, m_style.get());
+
+        // If the object already needs layout, then setNeedsLayout won't do
+        // any work. But if the containing block has changed, then we may need
+        // to mark the new containing blocks for layout. The change that can
+        // directly affect the containing block of this object is a change to
+        // the position style.
+        if (needsLayout() && oldStyle->position() != m_style->position())
+            markContainingBlocksForLayout();
+
+        if (diff == StyleDifferenceLayout)
+            setNeedsLayoutAndPrefWidthsRecalc();
+        else
+            setNeedsSimplifiedNormalFlowLayout();
+    } else if (diff == StyleDifferenceSimplifiedLayoutAndPositionedMovement) {
+        setNeedsPositionedMovementLayout(oldStyle);
+        setNeedsSimplifiedNormalFlowLayout();
+    } else if (diff == StyleDifferenceLayoutPositionedMovementOnly)
+        setNeedsPositionedMovementLayout(oldStyle);
+
+    // Don't check for repaint here; we need to wait until the layer has been
+    // updated by subclasses before we know if we have to repaint (in setStyle()).
+
+    if (oldStyle && !areCursorsEqual(oldStyle, style()))
+        frame().eventHandler().scheduleCursorUpdate();
+}
+
 void RenderElement::insertedIntoTree()
 {
     RenderObject::insertedIntoTree();
@@ -343,8 +694,38 @@ void RenderElement::willBeRemovedFromTree()
         removeLayers(layer);
     }
 
+    bool repaintFixedBackgroundsOnScroll = shouldRepaintFixedBackgroundsOnScroll(&view().frameView());
+    if (repaintFixedBackgroundsOnScroll && m_style && m_style->hasFixedBackgroundImage())
+        view().frameView().removeSlowRepaintObject(this);
+
+    if (isOutOfFlowPositioned() && parent()->childrenInline())
+        parent()->dirtyLinesFromChangedChild(this);
+
     RenderObject::willBeRemovedFromTree();
 }
 
+void RenderElement::willBeDestroyed()
+{
+    destroyLeftoverChildren();
+
+    RenderObject::willBeDestroyed();
+}
+
+RenderElement* RenderElement::rendererForRootBackground()
+{
+    ASSERT(isRoot());
+    if (!hasBackground() && element() && element()->hasTagName(HTMLNames::htmlTag)) {
+        // Locate the <body> element using the DOM. This is easier than trying
+        // to crawl around a render tree with potential :before/:after content and
+        // anonymous blocks created by inline <body> tags etc. We can locate the <body>
+        // render object very easily via the DOM.
+        HTMLElement* body = document().body();
+        RenderElement* bodyObject = (body && body->hasLocalName(HTMLNames::bodyTag)) ? body->renderer() : 0;
+        if (bodyObject)
+            return bodyObject;
+    }
+
+    return this;
+}
 
 }

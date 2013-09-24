@@ -1,3 +1,31 @@
+2013-09-23  Patrick Gansterer  <paroga@webkit.org>
+
+        Cleanup CMake files in WebKit
+        https://bugs.webkit.org/show_bug.cgi?id=121763
+
+        Reviewed by Gyuyoung Kim.
+
+        Sort files and unify style.
+
+        * PlatformBlackBerry.cmake:
+        * PlatformEfl.cmake:
+        * PlatformWinCE.cmake:
+
+2013-09-20  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build fix after r156216.
+
+        * WebKit.vcxproj/WebKitExportGenerator/WebKitExports.def.in: I
+        accidentally exposed the symbol of the calling function, not
+        the missing symbol!
+
+2013-09-20  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build fix after r156215.
+
+        * WebKit.vcxproj/WebKitExportGenerator/WebKitExports.def.in: Expose
+        missing symbols needed by DRT.
+
 2013-09-20  Patrick Gansterer  <paroga@webkit.org>
 
         [CMake] Use COMPILE_DEFINITIONS target property for setting BUILDING_* defines

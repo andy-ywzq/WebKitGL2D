@@ -1,3 +1,89 @@
+2013-09-21  Timothy Hatcher  <timothy@apple.com>
+
+        Hook up the initiator info and show it in the Resource details sidebar.
+
+        https://bugs.webkit.org/show_bug.cgi?id=121741
+
+        Reviewed by Joseph Pecoraro.
+
+        * UserInterface/FrameResourceManager.js:
+        (WebInspector.FrameResourceManager.prototype.resourceRequestWillBeSent):
+        (WebInspector.FrameResourceManager.prototype.resourceRequestWasServedFromMemoryCache):
+        (WebInspector.FrameResourceManager.prototype._addNewResourceToFrame):
+        (WebInspector.FrameResourceManager.prototype._initiatorSourceCodeLocationFromPayload):
+        * UserInterface/NetworkObserver.js:
+        (WebInspector.NetworkObserver.prototype.requestWillBeSent):
+        (WebInspector.NetworkObserver.prototype.requestServedFromMemoryCache):
+        * UserInterface/Resource.js:
+        (WebInspector.Resource):
+        (WebInspector.Resource.prototype.get initiatorSourceCodeLocation):
+        * UserInterface/ResourceDetailsSidebarPanel.js:
+        (WebInspector.ResourceDetailsSidebarPanel):
+        (WebInspector.ResourceDetailsSidebarPanel.prototype._refreshURL):
+
+2013-09-20  Timothy Hatcher  <timothy@apple.com>
+
+        Parse MIME-types and strip them down to the base type when needed.
+
+        The use of charset in a MIME-type interferes with our type maps,
+        preventing the right syntax highlighting mode and pretty printing.
+
+        https://bugs.webkit.org/show_bug.cgi?id=121723
+
+        Reviewed by Joseph Pecoraro.
+
+        * UserInterface/ConsolePrompt.js:
+        (WebInspector.ConsolePrompt):
+        * UserInterface/FontResourceContentView.js:
+        * UserInterface/Resource.js:
+        (WebInspector.Resource.Type.fromMIMEType):
+        (WebInspector.Resource.prototype.get mimeTypeComponents):
+        (WebInspector.Resource.prototype.get syntheticMIMEType):
+        (WebInspector.Resource.prototype.get contentURL):
+        (WebInspector.Resource.prototype.updateForResponse):
+        * UserInterface/ResourceDetailsSidebarPanel.js:
+        (WebInspector.ResourceDetailsSidebarPanel.prototype._refreshRequestDataSection):
+        * UserInterface/SourceMapResource.js:
+        (WebInspector.SourceMapResource.prototype.requestContentFromBackend):
+        * UserInterface/SyntaxHighlightingSupport.js:
+        (WebInspector.syntaxHighlightStringAsDocumentFragment):
+        * UserInterface/TextEditor.js:
+        (WebInspector.TextEditor.prototype.set mimeType):
+        * UserInterface/Utilities.js:
+        (parseMIMEType): Added.
+
+2013-09-20  Marcelo Morais  <m.morais@samsung.com>
+
+        Web Inspector: Fix keyboard shortcuts for other platforms
+        https://bugs.webkit.org/show_bug.cgi?id=120657
+
+        Reviewed by Timothy Hatcher.
+
+        Handling keyboard shortcuts according to the current platform.
+
+        * UserInterface/InspectorFrontendHostStub.js:
+        (.WebInspector.InspectorFrontendHostStub.prototype.loadResourceSynchronously):
+        (.WebInspector.InspectorFrontendHostStub.prototype.platform): Added. Return the
+        current platform.
+        * UserInterface/KeyboardShortcut.js:
+        (WebInspector.KeyboardShortcut.Modifier.get CommandOrControl): Added. Created keyboard
+        modifier to return Control or Command key according to current platform.
+        * UserInterface/ContentBrowser.js:
+        (WebInspector.ContentBrowser): Returning Control or Command key for keyboard
+        shortcuts according to current platform.
+        * UserInterface/DebuggerSidebarPanel.js:
+        (WebInspector.DebuggerSidebarPanel): Ditto.
+        * UserInterface/FindBanner.js:
+        (WebInspector.FindBanner): Ditto.
+        * UserInterface/JavaScriptLogViewController.js:
+        (WebInspector.JavaScriptLogViewController): Ditto.
+        * UserInterface/LogContentView.js:
+        (WebInspector.LogContentView): Ditto.
+        * UserInterface/Main.js:
+        (WebInspector.contentLoaded): Ditto.
+        * UserInterface/ResourceSidebarPanel.js:
+        (WebInspector.ResourceSidebarPanel): Ditto.
+
 2013-09-20  Brent Fulgham  <bfulgham@apple.com>
 
         [Windows] Unreviewed gardening. Teach WebInspectorUI.vcxproj folder to

@@ -190,7 +190,7 @@ static RenderNamedFlowThread* moveToFlowThreadIfNeeded(Element& element, const R
         return 0;
     FlowThreadController& flowThreadController = element.document().renderView()->flowThreadController();
     RenderNamedFlowThread& parentFlowRenderer = flowThreadController.ensureRenderFlowThreadWithName(style.flowThread());
-    flowThreadController.registerNamedFlowContentNode(&element, &parentFlowRenderer);
+    flowThreadController.registerNamedFlowContentElement(element, parentFlowRenderer);
     return &parentFlowRenderer;
 }
 #endif
@@ -340,7 +340,7 @@ static bool textRendererIsNeeded(const Text& textNode, const RenderObject& paren
         if (parentRenderer.isRenderBlock() && !parentRenderer.childrenInline() && (!previousRenderer || !previousRenderer->isInline()))
             return false;
         
-        RenderObject* first = parentRenderer.firstChild();
+        RenderObject* first = parentRenderer.firstChildSlow();
         while (first && first->isFloatingOrOutOfFlowPositioned())
             first = first->nextSibling();
         RenderObject* nextRenderer = nextSiblingRenderer(textNode);

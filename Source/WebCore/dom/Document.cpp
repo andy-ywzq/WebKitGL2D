@@ -101,6 +101,7 @@
 #include "ImageLoader.h"
 #include "InspectorCounters.h"
 #include "InspectorInstrumentation.h"
+#include "JSLazyEventListener.h"
 #include "Language.h"
 #include "Logging.h"
 #include "MediaCanStartListener.h"
@@ -2072,40 +2073,13 @@ void Document::destroyRenderTree()
 
     TemporaryChange<bool> change(m_renderTreeBeingDestroyed, true);
 
-    if (isPluginDocument())
-        toPluginDocument(this)->detachFromPluginElement();
-
-#if ENABLE(POINTER_LOCK)
-    if (page())
-        page()->pointerLockController()->documentDetached(this);
-#endif
-
     if (this == topDocument())
         clearAXObjectCache();
 
-    stopActiveDOMObjects();
-    m_eventQueue.close();
-#if ENABLE(FULLSCREEN_API)
-    m_fullScreenChangeEventTargetQueue.clear();
-    m_fullScreenErrorEventTargetQueue.clear();
-#endif
-
-#if ENABLE(REQUEST_ANIMATION_FRAME)
-    clearScriptedAnimationController();
-#endif
-
     documentWillBecomeInactive();
 
-#if ENABLE(SHARED_WORKERS)
-    SharedWorkerRepository::documentDetached(this);
-#endif
-
-    if (m_frame) {
-        FrameView* view = m_frame->view();
-        if (view)
-            view->detachCustomScrollbars();
-
-    }
+    if (FrameView* frameView = view())
+        frameView->detachCustomScrollbars();
 
 #if ENABLE(FULLSCREEN_API)
     if (m_fullScreenRenderer)
@@ -2128,28 +2102,53 @@ void Document::destroyRenderTree()
         renderView()->destroy();
     setRenderView(0);
 
-#if ENABLE(TOUCH_EVENTS)
-    if (m_touchEventTargets && m_touchEventTargets->size() && parentDocument())
-        parentDocument()->didRemoveEventTargetNode(this);
-#endif
-
 #if ENABLE(IOS_TEXT_AUTOSIZING)
     // Do this before the arena is cleared, which is needed to deref the RenderStyle on TextAutoSizingKey.
     m_textAutoSizedNodes.clear();
 #endif
 
     m_renderArena.clear();
-
-    if (m_mediaQueryMatcher)
-        m_mediaQueryMatcher->documentDestroyed();
 }
 
 void Document::prepareForDestruction()
 {
     disconnectDescendantFrames();
-    if (DOMWindow* window = this->domWindow())
-        window->willDetachDocumentFromFrame();
+    if (m_domWindow && m_frame)
+        m_domWindow->willDetachDocumentFromFrame();
+
     destroyRenderTree();
+
+    if (isPluginDocument())
+        toPluginDocument(this)->detachFromPluginElement();
+
+#if ENABLE(POINTER_LOCK)
+    if (page())
+        page()->pointerLockController()->documentDetached(this);
+#endif
+
+    stopActiveDOMObjects();
+    m_eventQueue.close();
+#if ENABLE(FULLSCREEN_API)
+    m_fullScreenChangeEventTargetQueue.clear();
+    m_fullScreenErrorEventTargetQueue.clear();
+#endif
+
+#if ENABLE(REQUEST_ANIMATION_FRAME)
+    clearScriptedAnimationController();
+#endif
+
+#if ENABLE(SHARED_WORKERS)
+    SharedWorkerRepository::documentDetached(this);
+#endif
+
+#if ENABLE(TOUCH_EVENTS)
+    if (m_touchEventTargets && m_touchEventTargets->size() && parentDocument())
+        parentDocument()->didRemoveEventTargetNode(this);
+#endif
+
+    if (m_mediaQueryMatcher)
+        m_mediaQueryMatcher->documentDestroyed();
+
     disconnectFromFrame();
 }
 
@@ -2157,8 +2156,8 @@ void Document::removeAllEventListeners()
 {
     EventTarget::removeAllEventListeners();
 
-    if (DOMWindow* domWindow = this->domWindow())
-        domWindow->removeAllEventListeners();
+    if (m_domWindow)
+        m_domWindow->removeAllEventListeners();
     for (Node* node = firstChild(); node; node = NodeTraversal::next(node))
         node->removeAllEventListeners();
 }
@@ -2618,7 +2617,7 @@ double Document::timerAlignmentInterval() const
 
 EventTarget* Document::errorEventTarget()
 {
-    return domWindow();
+    return m_domWindow.get();
 }
 
 void Document::logExceptionToConsole(const String& errorMessage, const String& sourceURL, int lineNumber, int columnNumber, PassRefPtr<ScriptCallStack> callStack)
@@ -3491,31 +3490,28 @@ void Document::moveNodeIteratorsToNewDocument(Node* node, Document* newDocument)
     }
 }
 
-void Document::updateRangesAfterChildrenChanged(ContainerNode* container)
+void Document::updateRangesAfterChildrenChanged(ContainerNode& container)
 {
     if (!m_ranges.isEmpty()) {
-        HashSet<Range*>::const_iterator end = m_ranges.end();
-        for (HashSet<Range*>::const_iterator it = m_ranges.begin(); it != end; ++it)
+        for (auto it = m_ranges.begin(), end = m_ranges.end(); it != end; ++it)
             (*it)->nodeChildrenChanged(container);
     }
 }
 
-void Document::nodeChildrenWillBeRemoved(ContainerNode* container)
+void Document::nodeChildrenWillBeRemoved(ContainerNode& container)
 {
     if (!m_ranges.isEmpty()) {
-        HashSet<Range*>::const_iterator end = m_ranges.end();
-        for (HashSet<Range*>::const_iterator it = m_ranges.begin(); it != end; ++it)
+        for (auto it = m_ranges.begin(), end = m_ranges.end(); it != end; ++it)
             (*it)->nodeChildrenWillBeRemoved(container);
     }
 
-    HashSet<NodeIterator*>::const_iterator nodeIteratorsEnd = m_nodeIterators.end();
-    for (HashSet<NodeIterator*>::const_iterator it = m_nodeIterators.begin(); it != nodeIteratorsEnd; ++it) {
-        for (Node* n = container->firstChild(); n; n = n->nextSibling())
+    for (auto it = m_nodeIterators.begin(), end = m_nodeIterators.end(); it != end; ++it) {
+        for (Node* n = container.firstChild(); n; n = n->nextSibling())
             (*it)->nodeWillBeRemoved(n);
     }
 
     if (Frame* frame = this->frame()) {
-        for (Node* n = container->firstChild(); n; n = n->nextSibling()) {
+        for (Node* n = container.firstChild(); n; n = n->nextSibling()) {
             frame->eventHandler().nodeWillBeRemoved(n);
             frame->selection().nodeWillBeRemoved(n);
             frame->page()->dragCaretController().nodeWillBeRemoved(n);
@@ -3605,7 +3601,7 @@ void Document::takeDOMWindowFrom(Document* document)
 {
     ASSERT(m_frame);
     ASSERT(!m_domWindow);
-    ASSERT(document->domWindow());
+    ASSERT(document->m_domWindow);
     // A valid DOMWindow is needed by CachedFrame for its documents.
     ASSERT(!document->inPageCache());
 
@@ -3618,42 +3614,45 @@ void Document::takeDOMWindowFrom(Document* document)
 
 void Document::setWindowAttributeEventListener(const AtomicString& eventType, PassRefPtr<EventListener> listener)
 {
-    DOMWindow* domWindow = this->domWindow();
-    if (!domWindow)
+    if (!m_domWindow)
         return;
-    domWindow->setAttributeEventListener(eventType, listener);
+    m_domWindow->setAttributeEventListener(eventType, listener);
+}
+
+void Document::setWindowAttributeEventListener(const AtomicString& eventType, const QualifiedName& attributeName, const AtomicString& attributeValue)
+{
+    if (!m_frame)
+        return;
+    setWindowAttributeEventListener(eventType, JSLazyEventListener::createForDOMWindow(*m_frame, attributeName, attributeValue));
 }
 
 EventListener* Document::getWindowAttributeEventListener(const AtomicString& eventType)
 {
-    DOMWindow* domWindow = this->domWindow();
-    if (!domWindow)
+    if (!m_domWindow)
         return 0;
-    return domWindow->getAttributeEventListener(eventType);
+    return m_domWindow->getAttributeEventListener(eventType);
 }
 
 void Document::dispatchWindowEvent(PassRefPtr<Event> event,  PassRefPtr<EventTarget> target)
 {
     ASSERT(!NoEventDispatchAssertion::isEventDispatchForbidden());
-    DOMWindow* domWindow = this->domWindow();
-    if (!domWindow)
+    if (!m_domWindow)
         return;
-    domWindow->dispatchEvent(event, target);
+    m_domWindow->dispatchEvent(event, target);
 }
 
 void Document::dispatchWindowLoadEvent()
 {
     ASSERT(!NoEventDispatchAssertion::isEventDispatchForbidden());
-    DOMWindow* domWindow = this->domWindow();
-    if (!domWindow)
+    if (!m_domWindow)
         return;
-    domWindow->dispatchLoadEvent();
+    m_domWindow->dispatchLoadEvent();
     m_loadEventFinished = true;
 }
 
 void Document::enqueueWindowEvent(PassRefPtr<Event> event)
 {
-    event->setTarget(domWindow());
+    event->setTarget(m_domWindow.get());
     m_eventQueue.enqueueEvent(event);
 }
 
@@ -4695,7 +4694,7 @@ void Document::cancelFocusAppearanceUpdate()
 
 void Document::resetHiddenFocusElementSoon()
 {
-    if (!m_resetHiddenFocusElementTimer.isActive() && m_focusedElement && !m_focusedElement->isFocusable())
+    if (!m_resetHiddenFocusElementTimer.isActive() && m_focusedElement)
         m_resetHiddenFocusElementTimer.startOneShot(0);
 }
 
@@ -4712,6 +4711,9 @@ void Document::updateFocusAppearanceTimerFired(Timer<Document>*)
 
 void Document::resetHiddenFocusElementTimer(Timer<Document>*)
 {
+    if (view() && view()->needsLayout())
+        return;
+
     if (m_focusedElement && !m_focusedElement->isFocusable())
         setFocusedElement(0);
 }
@@ -5003,7 +5005,7 @@ void Document::enqueueHashchangeEvent(const String& oldURL, const String& newURL
 void Document::enqueuePopstateEvent(PassRefPtr<SerializedScriptValue> stateObject)
 {
     // FIXME: https://bugs.webkit.org/show_bug.cgi?id=36202 Popstate event needs to fire asynchronously
-    dispatchWindowEvent(PopStateEvent::create(stateObject, domWindow() ? domWindow()->history() : 0));
+    dispatchWindowEvent(PopStateEvent::create(stateObject, m_domWindow ? m_domWindow->history() : 0));
 }
 
 void Document::addMediaCanStartListener(MediaCanStartListener* listener)

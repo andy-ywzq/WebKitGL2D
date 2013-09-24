@@ -53,6 +53,7 @@ class RenderText;
 
 struct BidiRun;
 struct PaintInfo;
+class LineBreaker;
 class LineInfo;
 class RenderRubyRun;
 #if ENABLE(CSS_SHAPES)
@@ -103,17 +104,13 @@ protected:
 public:
     static RenderBlock* createAnonymous(Document&);
 
-    RenderObject* firstChild() const { return m_children.firstChild(); }
-    RenderObject* lastChild() const { return m_children.lastChild(); }
-
-    virtual const RenderObjectChildList* children() const OVERRIDE FINAL { return &m_children; }
-    virtual RenderObjectChildList* children() OVERRIDE FINAL { return &m_children; }
-
     bool beingDestroyed() const { return m_beingDestroyed; }
 
     // These two functions are overridden for inline-block.
     virtual LayoutUnit lineHeight(bool firstLine, LineDirectionMode, LinePositionMode = PositionOnContainingLine) const OVERRIDE FINAL;
     virtual int baselinePosition(FontBaseline, bool firstLine, LineDirectionMode, LinePositionMode = PositionOnContainingLine) const OVERRIDE;
+
+    LayoutUnit minLineHeightForReplacedRenderer(bool isFirstLine, LayoutUnit replacedHeight) const;
 
     RenderLineBoxList& lineBoxes() { return m_lineBoxes; }
     const RenderLineBoxList& lineBoxes() const { return m_lineBoxes; }
@@ -289,7 +286,7 @@ public:
     RenderBlock* createAnonymousBlock(EDisplay display = BLOCK) const { return createAnonymousWithParentRendererAndDisplay(this, display); }
     RenderBlock* createAnonymousColumnsBlock() const { return createAnonymousColumnsWithParentRenderer(this); }
     RenderBlock* createAnonymousColumnSpanBlock() const { return createAnonymousColumnSpanWithParentRenderer(this); }
-    static void collapseAnonymousBoxChild(RenderBlock* parent, RenderObject* child);
+    static void collapseAnonymousBoxChild(RenderBlock* parent, RenderBlock* child);
 
     virtual RenderBox* createAnonymousBoxWithSameTypeAs(const RenderObject* parent) const OVERRIDE;
 
@@ -568,6 +565,7 @@ private:
 
     virtual bool isRenderBlock() const OVERRIDE FINAL { return true; }
     virtual bool isInlineBlockOrInlineTable() const OVERRIDE FINAL { return isInline() && isReplaced(); }
+    virtual bool canHaveChildren() const OVERRIDE { return true; }
 
     void makeChildrenNonInline(RenderObject* insertionPoint = 0);
     virtual void removeLeftoverAnonymousBlock(RenderBlock* child);
@@ -619,58 +617,20 @@ private:
     LayoutUnit xPositionForFloatIncludingMargin(const FloatingObject* child) const
     {
         if (isHorizontalWritingMode())
-            return child->x() + child->renderer()->marginLeft();
+            return child->x() + child->renderer().marginLeft();
         else
-            return child->x() + marginBeforeForChild(child->renderer());
+            return child->x() + marginBeforeForChild(&child->renderer());
     }
         
     LayoutUnit yPositionForFloatIncludingMargin(const FloatingObject* child) const
     {
         if (isHorizontalWritingMode())
-            return child->y() + marginBeforeForChild(child->renderer());
+            return child->y() + marginBeforeForChild(&child->renderer());
         else
-            return child->y() + child->renderer()->marginTop();
+            return child->y() + child->renderer().marginTop();
     }
 
     LayoutPoint computeLogicalLocationForFloat(const FloatingObject*, LayoutUnit logicalTopOffset) const;
-
-    // The following functions' implementations are in RenderBlockLineLayout.cpp.
-    struct RenderTextInfo {
-        // Destruction of m_layout requires TextLayout to be a complete type, so the constructor and destructor are made non-inline to avoid compilation errors.
-        RenderTextInfo();
-        ~RenderTextInfo();
-
-        RenderText* m_text;
-        OwnPtr<TextLayout> m_layout;
-        LazyLineBreakIterator m_lineBreakIterator;
-        const Font* m_font;
-    };
-
-    class LineBreaker {
-    public:
-        LineBreaker(RenderBlock* block)
-            : m_block(block)
-        {
-            reset();
-        }
-
-        InlineIterator nextLineBreak(InlineBidiResolver&, LineInfo&, RenderTextInfo&, FloatingObject* lastFloatFromPreviousLine, unsigned consecutiveHyphenatedLines, WordMeasurements&);
-
-        bool lineWasHyphenated() { return m_hyphenated; }
-        const Vector<RenderBox*>& positionedObjects() { return m_positionedObjects; }
-        EClear clear() { return m_clear; }
-    private:
-        void reset();
-        
-        InlineIterator nextSegmentBreak(InlineBidiResolver&, LineInfo&, RenderTextInfo&, FloatingObject* lastFloatFromPreviousLine, unsigned consecutiveHyphenatedLines, WordMeasurements&);
-        void skipTrailingWhitespace(InlineIterator&, const LineInfo&);
-        void skipLeadingWhitespace(InlineBidiResolver&, LineInfo&, FloatingObject* lastFloatFromPreviousLine, LineWidth&);
-        
-        RenderBlock* m_block;
-        bool m_hyphenated;
-        EClear m_clear;
-        Vector<RenderBox*> m_positionedObjects;
-    };
 
     void checkFloatsInCleanLine(RootInlineBox*, Vector<FloatWithRect>&, size_t& floatIndex, bool& encounteredNewFloat, bool& dirtiedByFloat);
     RootInlineBox* determineStartPosition(LineLayoutState&, InlineBidiResolver&);
@@ -913,7 +873,6 @@ protected:
     OwnPtr<FloatingObjects> m_floatingObjects;
     OwnPtr<RenderBlockRareData> m_rareData;
 
-    RenderObjectChildList m_children;
     RenderLineBoxList m_lineBoxes;   // All of the root line boxes created for this block flow.  For example, <div>Hello<br>world.</div> will have two total lines for the <div>.
 
     mutable signed m_lineHeight : 27;
@@ -931,6 +890,7 @@ protected:
     // RenderRubyBase objects need to be able to split and merge, moving their children around
     // (calling moveChildTo, moveAllChildrenTo, and makeChildrenNonInline).
     friend class RenderRubyBase;
+    friend class LineBreaker;
     friend class LineWidth; // Needs to know FloatingObject
 
 private:

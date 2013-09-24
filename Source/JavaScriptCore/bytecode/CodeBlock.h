@@ -199,25 +199,9 @@ public:
     }
 #endif // ENABLE(JIT)
 
-    unsigned bytecodeOffset(ExecState*, ReturnAddressPtr);
-
     void unlinkIncomingCalls();
 
 #if ENABLE(JIT)
-    unsigned bytecodeOffsetForCallAtIndex(unsigned index)
-    {
-        if (!m_rareData)
-            return 1;
-        Vector<CallReturnOffsetToBytecodeOffset, 0, UnsafeVectorOverflow>& callIndices = m_rareData->m_callReturnIndexVector;
-        if (!callIndices.size())
-            return 1;
-        // FIXME: Fix places in DFG that call out to C that don't set the CodeOrigin. https://bugs.webkit.org/show_bug.cgi?id=118315
-        ASSERT(index < m_rareData->m_callReturnIndexVector.size());
-        if (index >= m_rareData->m_callReturnIndexVector.size())
-            return 1;
-        return m_rareData->m_callReturnIndexVector[index].bytecodeOffset;
-    }
-
     void unlinkCalls();
         
     void linkIncomingCall(ExecState* callerFrame, CallLinkInfo*);
@@ -581,52 +565,28 @@ public:
 
     bool hasExpressionInfo() { return m_unlinkedCode->hasExpressionInfo(); }
 
-#if ENABLE(JIT)
-    Vector<CallReturnOffsetToBytecodeOffset, 0, UnsafeVectorOverflow>& callReturnIndexVector()
-    {
-        createRareDataIfNecessary();
-        return m_rareData->m_callReturnIndexVector;
-    }
-#endif
-
 #if ENABLE(DFG_JIT)
-    SegmentedVector<InlineCallFrame, 4>& inlineCallFrames()
-    {
-        createRareDataIfNecessary();
-        return m_rareData->m_inlineCallFrames;
-    }
-        
     Vector<CodeOrigin, 0, UnsafeVectorOverflow>& codeOrigins()
     {
-        createRareDataIfNecessary();
-        return m_rareData->m_codeOrigins;
+        return m_jitCode->dfgCommon()->codeOrigins;
     }
     
-    unsigned addCodeOrigin(CodeOrigin codeOrigin)
-    {
-        createRareDataIfNecessary();
-        unsigned result = m_rareData->m_codeOrigins.size();
-        m_rareData->m_codeOrigins.append(codeOrigin);
-        return result;
-    }
-        
     // Having code origins implies that there has been some inlining.
     bool hasCodeOrigins()
     {
-        return m_rareData && !!m_rareData->m_codeOrigins.size();
+        return JITCode::isOptimizingJIT(jitType());
     }
         
     bool canGetCodeOrigin(unsigned index)
     {
-        if (!m_rareData)
+        if (!hasCodeOrigins())
             return false;
-        return m_rareData->m_codeOrigins.size() > index;
+        return index < codeOrigins().size();
     }
 
     CodeOrigin codeOrigin(unsigned index)
     {
-        RELEASE_ASSERT(m_rareData);
-        return m_rareData->m_codeOrigins[index];
+        return codeOrigins()[index];
     }
 
     bool addFrequentExitSite(const DFG::FrequentExitSite& site)
@@ -1144,14 +1104,6 @@ private:
         Vector<StringJumpTable> m_stringSwitchJumpTables;
 
         EvalCodeCache m_evalCodeCache;
-
-#if ENABLE(JIT)
-        Vector<CallReturnOffsetToBytecodeOffset, 0, UnsafeVectorOverflow> m_callReturnIndexVector;
-#endif
-#if ENABLE(DFG_JIT)
-        SegmentedVector<InlineCallFrame, 4> m_inlineCallFrames;
-        Vector<CodeOrigin, 0, UnsafeVectorOverflow> m_codeOrigins;
-#endif
     };
 #if COMPILER(MSVC)
     friend void WTF::deleteOwnedPtr<RareData>(RareData*);

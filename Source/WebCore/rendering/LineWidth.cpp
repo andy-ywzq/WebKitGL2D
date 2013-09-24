@@ -30,6 +30,9 @@
 #include "config.h"
 #include "LineWidth.h"
 
+#include "RenderBlock.h"
+#include "RenderRubyRun.h"
+
 namespace WebCore {
 
 LineWidth::LineWidth(RenderBlock& block, bool isFirstLine, IndentTextOrNot shouldIndentText)
@@ -72,7 +75,7 @@ bool LineWidth::fitsOnLineExcludingTrailingWhitespace(float extra) const
 void LineWidth::updateAvailableWidth(LayoutUnit replacedHeight)
 {
     LayoutUnit height = m_block.logicalHeight();
-    LayoutUnit logicalHeight = logicalHeightForLine(&m_block, m_isFirstLine, replacedHeight);
+    LayoutUnit logicalHeight = m_block.minLineHeightForReplacedRenderer(m_isFirstLine, replacedHeight);
     m_left = m_block.logicalLeftOffsetForLine(height, shouldIndentText(), logicalHeight);
     m_right = m_block.logicalRightOffsetForLine(height, shouldIndentText(), logicalHeight);
 
@@ -100,21 +103,22 @@ void LineWidth::shrinkAvailableWidthForNewFloatIfNeeded(FloatingObject* newFloat
     // the first previous float that is on the same side as our newFloat.
     ShapeOutsideInfo* previousShapeOutsideInfo = 0;
     const FloatingObjectSet& floatingObjectSet = m_block.m_floatingObjects->set();
-    FloatingObjectSetIterator it = floatingObjectSet.end();
-    FloatingObjectSetIterator begin = floatingObjectSet.begin();
+    auto it = floatingObjectSet.end();
+    auto begin = floatingObjectSet.begin();
+    LayoutUnit lineHeight = m_block.lineHeight(m_isFirstLine, m_block.isHorizontalWritingMode() ? HorizontalLine : VerticalLine, PositionOfInteriorLineBoxes);
     for (--it; it != begin; --it) {
-        FloatingObject* previousFloat = *it;
+        FloatingObject* previousFloat = it->get();
         if (previousFloat != newFloat && previousFloat->type() == newFloat->type()) {
-            previousShapeOutsideInfo = previousFloat->renderer()->shapeOutsideInfo();
+            previousShapeOutsideInfo = previousFloat->renderer().shapeOutsideInfo();
             if (previousShapeOutsideInfo)
-                previousShapeOutsideInfo->updateDeltasForContainingBlockLine(&m_block, previousFloat, m_block.logicalHeight(), logicalHeightForLine(&m_block, m_isFirstLine));
+                previousShapeOutsideInfo->updateDeltasForContainingBlockLine(&m_block, previousFloat, m_block.logicalHeight(), lineHeight);
             break;
         }
     }
 
-    ShapeOutsideInfo* shapeOutsideInfo = newFloat->renderer()->shapeOutsideInfo();
+    ShapeOutsideInfo* shapeOutsideInfo = newFloat->renderer().shapeOutsideInfo();
     if (shapeOutsideInfo)
-        shapeOutsideInfo->updateDeltasForContainingBlockLine(&m_block, newFloat, m_block.logicalHeight(), logicalHeightForLine(&m_block, m_isFirstLine));
+        shapeOutsideInfo->updateDeltasForContainingBlockLine(&m_block, newFloat, m_block.logicalHeight(), lineHeight);
 #endif
 
     if (newFloat->type() == FloatingObject::FloatLeft) {

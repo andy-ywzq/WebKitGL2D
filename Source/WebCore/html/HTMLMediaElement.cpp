@@ -73,7 +73,6 @@
 #include "RenderVideo.h"
 #include "RenderView.h"
 #include "ScriptController.h"
-#include "ScriptEventListener.h"
 #include "SecurityPolicy.h"
 #include "Settings.h"
 #include "ShadowRoot.h"
@@ -472,55 +471,55 @@ void HTMLMediaElement::parseAttribute(const QualifiedName& name, const AtomicStr
     } else if (name == mediagroupAttr)
         setMediaGroup(value);
     else if (name == onabortAttr)
-        setAttributeEventListener(eventNames().abortEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().abortEvent, name, value);
     else if (name == onbeforeloadAttr)
-        setAttributeEventListener(eventNames().beforeloadEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().beforeloadEvent, name, value);
     else if (name == oncanplayAttr)
-        setAttributeEventListener(eventNames().canplayEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().canplayEvent, name, value);
     else if (name == oncanplaythroughAttr)
-        setAttributeEventListener(eventNames().canplaythroughEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().canplaythroughEvent, name, value);
     else if (name == ondurationchangeAttr)
-        setAttributeEventListener(eventNames().durationchangeEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().durationchangeEvent, name, value);
     else if (name == onemptiedAttr)
-        setAttributeEventListener(eventNames().emptiedEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().emptiedEvent, name, value);
     else if (name == onendedAttr)
-        setAttributeEventListener(eventNames().endedEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().endedEvent, name, value);
     else if (name == onerrorAttr)
-        setAttributeEventListener(eventNames().errorEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().errorEvent, name, value);
     else if (name == onloadeddataAttr)
-        setAttributeEventListener(eventNames().loadeddataEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().loadeddataEvent, name, value);
     else if (name == onloadedmetadataAttr)
-        setAttributeEventListener(eventNames().loadedmetadataEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().loadedmetadataEvent, name, value);
     else if (name == onloadstartAttr)
-        setAttributeEventListener(eventNames().loadstartEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().loadstartEvent, name, value);
     else if (name == onpauseAttr)
-        setAttributeEventListener(eventNames().pauseEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().pauseEvent, name, value);
     else if (name == onplayAttr)
-        setAttributeEventListener(eventNames().playEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().playEvent, name, value);
     else if (name == onplayingAttr)
-        setAttributeEventListener(eventNames().playingEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().playingEvent, name, value);
     else if (name == onprogressAttr)
-        setAttributeEventListener(eventNames().progressEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().progressEvent, name, value);
     else if (name == onratechangeAttr)
-        setAttributeEventListener(eventNames().ratechangeEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().ratechangeEvent, name, value);
     else if (name == onseekedAttr)
-        setAttributeEventListener(eventNames().seekedEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().seekedEvent, name, value);
     else if (name == onseekingAttr)
-        setAttributeEventListener(eventNames().seekingEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().seekingEvent, name, value);
     else if (name == onstalledAttr)
-        setAttributeEventListener(eventNames().stalledEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().stalledEvent, name, value);
     else if (name == onsuspendAttr)
-        setAttributeEventListener(eventNames().suspendEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().suspendEvent, name, value);
     else if (name == ontimeupdateAttr)
-        setAttributeEventListener(eventNames().timeupdateEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().timeupdateEvent, name, value);
     else if (name == onvolumechangeAttr)
-        setAttributeEventListener(eventNames().volumechangeEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().volumechangeEvent, name, value);
     else if (name == onwaitingAttr)
-        setAttributeEventListener(eventNames().waitingEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().waitingEvent, name, value);
     else if (name == onwebkitbeginfullscreenAttr)
-        setAttributeEventListener(eventNames().webkitbeginfullscreenEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().webkitbeginfullscreenEvent, name, value);
     else if (name == onwebkitendfullscreenAttr)
-        setAttributeEventListener(eventNames().webkitendfullscreenEvent, createAttributeEventListener(this, name, value));
+        setAttributeEventListener(eventNames().webkitendfullscreenEvent, name, value);
     else
         HTMLElement::parseAttribute(name, value);
 }
@@ -3451,7 +3450,6 @@ KURL HTMLMediaElement::selectNextSourceChild(ContentType* contentType, String* k
     }
 
     KURL mediaURL;
-    Node* node;
     HTMLSourceElement* source = 0;
     String type;
     String system;
@@ -3460,20 +3458,20 @@ KURL HTMLMediaElement::selectNextSourceChild(ContentType* contentType, String* k
     bool okToLoadSourceURL;
 
     NodeVector potentialSourceNodes;
-    getChildNodes(this, potentialSourceNodes);
+    getChildNodes(*this, potentialSourceNodes);
 
     for (unsigned i = 0; !canUseSourceElement && i < potentialSourceNodes.size(); ++i) {
-        node = potentialSourceNodes[i].get();
-        if (lookingForStartNode && m_nextChildNodeToConsider != node)
+        Node& node = potentialSourceNodes[i].get();
+        if (lookingForStartNode && m_nextChildNodeToConsider != &node)
             continue;
         lookingForStartNode = false;
 
-        if (!node->hasTagName(sourceTag))
+        if (!node.hasTagName(sourceTag))
             continue;
-        if (node->parentNode() != this)
+        if (node.parentNode() != this)
             continue;
 
-        source = static_cast<HTMLSourceElement*>(node);
+        source = static_cast<HTMLSourceElement*>(&node);
 
         // If candidate does not have a src attribute, or if its src attribute's value is the empty string ... jump down to the failed step below
         mediaURL = source->getNonEmptyURLAttribute(srcAttr);
@@ -3512,7 +3510,7 @@ KURL HTMLMediaElement::selectNextSourceChild(ContentType* contentType, String* k
         okToLoadSourceURL = isSafeToLoadURL(mediaURL, actionIfInvalid) && dispatchBeforeLoadEvent(mediaURL.string());
 
         // A 'beforeload' event handler can mutate the DOM, so check to see if the source element is still a child node.
-        if (node->parentNode() != this) {
+        if (node.parentNode() != this) {
             LOG(Media, "HTMLMediaElement::selectNextSourceChild : 'beforeload' removed current element");
             source = 0;
             goto check_again;

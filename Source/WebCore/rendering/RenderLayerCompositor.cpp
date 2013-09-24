@@ -355,6 +355,8 @@ void RenderLayerCompositor::scheduleLayerFlushNow()
 
 void RenderLayerCompositor::scheduleLayerFlush(bool canThrottle)
 {
+    ASSERT(!m_flushingLayers);
+
     if (canThrottle && isThrottlingLayerFlushes()) {
         m_hasPendingLayerFlush = true;
         return;
@@ -1319,8 +1321,11 @@ void RenderLayerCompositor::frameViewDidScroll()
 
     // If there's a scrolling coordinator that manages scrolling for this frame view,
     // it will also manage updating the scroll layer position.
-    if (hasCoordinatedScrolling())
+    if (hasCoordinatedScrolling()) {
+        // We have to schedule a flush in order for the main TiledBacking to update its tile coverage.
+        scheduleLayerFlushNow();
         return;
+    }
 
     FrameView& frameView = m_renderView.frameView();
     IntPoint scrollPosition = frameView.scrollPosition();
@@ -1335,6 +1340,11 @@ void RenderLayerCompositor::frameViewDidScroll()
 
     if (GraphicsLayer* fixedBackgroundLayer = fixedRootBackgroundLayer())
         fixedBackgroundLayer->setPosition(IntPoint(frameView.scrollOffsetForFixedPosition()));
+}
+
+void RenderLayerCompositor::frameViewDidAddOrRemoveScrollbars()
+{
+    updateOverflowControlsLayers();
 }
 
 void RenderLayerCompositor::frameViewDidLayout()
@@ -2267,7 +2277,7 @@ bool RenderLayerCompositor::requiresCompositingForPosition(RenderObject* rendere
     if (isSticky)
         return hasCoordinatedScrolling() && isViewportConstrainedFixedOrStickyLayer(layer);
 
-    RenderObject* container = renderer->container();
+    RenderElement* container = renderer->container();
     // If the renderer is not hooked up yet then we have to wait until it is.
     if (!container) {
         m_reevaluateCompositingAfterLayout = true;
@@ -2737,7 +2747,7 @@ void RenderLayerCompositor::updateOverflowControlsLayers()
             m_layerForVerticalScrollbar->setName("vertical scrollbar");
 #endif
 #if PLATFORM(MAC) && USE(CA)
-        m_layerForVerticalScrollbar->setAcceleratesDrawing(acceleratedDrawingEnabled());
+            m_layerForVerticalScrollbar->setAcceleratesDrawing(acceleratedDrawingEnabled());
 #endif
             m_overflowControlsHostLayer->addChild(m_layerForVerticalScrollbar.get());
 

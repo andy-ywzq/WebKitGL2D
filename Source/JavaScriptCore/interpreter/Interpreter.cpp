@@ -407,15 +407,22 @@ static bool unwindCallFrame(StackVisitor& visitor, JSValue exceptionValue)
 
     JSValue activation;
     if (oldCodeBlock->codeType() == FunctionCode && oldCodeBlock->needsActivation()) {
+#if ENABLE(DFG_JIT)
+        RELEASE_ASSERT(!visitor->isInlinedFrame());
+#endif
         activation = callFrame->uncheckedR(oldCodeBlock->activationRegister()).jsValue();
         if (activation)
             jsCast<JSActivation*>(activation)->tearOff(*scope->vm());
     }
 
     if (oldCodeBlock->codeType() == FunctionCode && oldCodeBlock->usesArguments()) {
-        if (JSValue arguments = callFrame->uncheckedR(unmodifiedArgumentsRegister(oldCodeBlock->argumentsRegister())).jsValue()) {
+        if (JSValue arguments = visitor->r(unmodifiedArgumentsRegister(oldCodeBlock->argumentsRegister())).jsValue()) {
             if (activation)
                 jsCast<Arguments*>(arguments)->didTearOffActivation(callFrame, jsCast<JSActivation*>(activation));
+#if ENABLE(DFG_JIT)
+            else if (visitor->isInlinedFrame())
+                jsCast<Arguments*>(arguments)->tearOff(callFrame, visitor->inlineCallFrame());
+#endif
             else
                 jsCast<Arguments*>(arguments)->tearOff(callFrame);
         }
@@ -632,7 +639,7 @@ private:
     HandlerInfo*& m_handler;
 };
 
-NEVER_INLINE HandlerInfo* Interpreter::unwind(CallFrame*& callFrame, JSValue& exceptionValue, unsigned bytecodeOffset)
+NEVER_INLINE HandlerInfo* Interpreter::unwind(CallFrame*& callFrame, JSValue& exceptionValue)
 {
     CodeBlock* codeBlock = callFrame->codeBlock();
     bool isTermination = false;
@@ -655,6 +662,11 @@ NEVER_INLINE HandlerInfo* Interpreter::unwind(CallFrame*& callFrame, JSValue& ex
         // We need to clear the exception and the exception stack here in order to see if a new exception happens.
         // Afterwards, the values are put back to continue processing this error.
         ClearExceptionScope scope(&callFrame->vm());
+        // This code assumes that if the debugger is enabled then there is no inlining.
+        // If that assumption turns out to be false then we'll ignore the inlined call
+        // frames.
+        // https://bugs.webkit.org/show_bug.cgi?id=121754
+        unsigned bytecodeOffset = callFrame->bytecodeOffset();
         int line = codeBlock->lineNumberForBytecodeOffset(bytecodeOffset);
         int column = codeBlock->columnNumberForBytecodeOffset(bytecodeOffset);
         DebuggerCallFrame debuggerCallFrame(callFrame, line, column, exceptionValue);

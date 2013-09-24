@@ -1904,7 +1904,7 @@ JSCell* DFG_OPERATION operationStringFromCharCode(ExecState* exec, int32_t op1)
     return JSC::stringFromCharCode(exec, op1);
 }
 
-DFGHandlerEncoded DFG_OPERATION lookupExceptionHandler(ExecState* exec, uint32_t callIndex)
+DFGHandlerEncoded DFG_OPERATION lookupExceptionHandler(ExecState* exec)
 {
     VM* vm = &exec->vm();
     NativeCallFrameTracer tracer(vm, exec);
@@ -1912,25 +1912,7 @@ DFGHandlerEncoded DFG_OPERATION lookupExceptionHandler(ExecState* exec, uint32_t
     JSValue exceptionValue = exec->exception();
     ASSERT(exceptionValue);
     
-    unsigned vPCIndex = exec->codeBlock()->bytecodeOffsetForCallAtIndex(callIndex);
-    ExceptionHandler handler = genericUnwind(vm, exec, exceptionValue, vPCIndex);
-    ASSERT(handler.catchRoutine);
-    return dfgHandlerEncoded(handler.callFrame, handler.catchRoutine);
-}
-
-DFGHandlerEncoded DFG_OPERATION lookupExceptionHandlerInStub(ExecState* exec, StructureStubInfo* stubInfo)
-{
-    VM* vm = &exec->vm();
-    NativeCallFrameTracer tracer(vm, exec);
-
-    JSValue exceptionValue = exec->exception();
-    ASSERT(exceptionValue);
-    
-    CodeOrigin codeOrigin = stubInfo->codeOrigin;
-    while (codeOrigin.inlineCallFrame)
-        codeOrigin = codeOrigin.inlineCallFrame->caller;
-    
-    ExceptionHandler handler = genericUnwind(vm, exec, exceptionValue, codeOrigin.bytecodeIndex);
+    ExceptionHandler handler = genericUnwind(vm, exec, exceptionValue);
     ASSERT(handler.catchRoutine);
     return dfgHandlerEncoded(handler.callFrame, handler.catchRoutine);
 }

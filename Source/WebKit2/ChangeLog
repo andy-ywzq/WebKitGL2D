@@ -1,3 +1,72 @@
+2013-09-23  Patrick Gansterer  <paroga@webkit.org>
+
+        use NOMINMAX instead of #define min min
+        https://bugs.webkit.org/show_bug.cgi?id=73563
+
+        Reviewed by Brent Fulgham.
+
+        Use NOMINMAX instead of #define min/max as a cleaner
+        way of ensuring that Windows system header files don't
+        define min/max as macro in the first place.
+
+        * config.h:
+
+2013-09-23  ChangSeok Oh  <changseok.oh@collabora.com>
+
+        [GTK][WK2] A plugin dirtyRect within iframe remains after moving to a different page.
+        https://bugs.webkit.org/show_bug.cgi?id=121600
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Nowhere to destroy NetscapePlugin::m_platformPluginWidget even after destroying
+        an instance of NetscapePlugin. So the created GtkWidget remains visible.
+
+        * WebProcess/Plugins/Netscape/x11/NetscapePluginX11.cpp:
+        (WebKit::NetscapePlugin::platformDestroy):
+
+2013-09-23  Sam Weinig  <sam@webkit.org>
+
+        Add back the SharedWorkerStrategy to prevent crashing.
+
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.cpp:
+        (WebKit::WebPlatformStrategies::createSharedWorkerStrategy):
+        (WebKit::WebPlatformStrategies::isAvailable):
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.h:
+
+2013-09-23  Sam Weinig  <sam@webkit.org>
+
+        SharedWorkerProcess code is dead
+        https://bugs.webkit.org/show_bug.cgi?id=121563
+
+        Reviewed by Alexey Proskuryakov.
+
+        Remove SharedWorkerProcess code.
+
+2013-09-23  Patrick Gansterer  <paroga@webkit.org>
+
+        Cleanup CMake files in WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=121767
+
+        Reviewed by Gyuyoung Kim.
+
+        Sort files and unify style.
+
+        * CMakeLists.txt:
+        * PlatformEfl.cmake:
+        * PlatformGTK.cmake:
+
+2013-09-21  Darin Adler  <darin@apple.com>
+
+        Add ExecState::uncheckedArgument and use where possible to shrink a bit
+        https://bugs.webkit.org/show_bug.cgi?id=121750
+
+        Reviewed by Andreas Kling.
+
+        * WebProcess/Plugins/Netscape/JSNPObject.cpp:
+        (WebKit::JSNPObject::callMethod): In a loop.
+        (WebKit::JSNPObject::callObject): Ditto.
+        (WebKit::JSNPObject::callConstructor): Ditto.
+
 2013-09-18  Anders Carlsson  <andersca@apple.com>
 
         Remove the ENABLE_PLUGIN_PROCESS #define

@@ -1,3 +1,182 @@
+2013-09-23  Anders Carlsson  <andersca@apple.com>
+
+        Remove WTF_USE_SCROLLBAR_PAINTER #define
+        https://bugs.webkit.org/show_bug.cgi?id=121819
+
+        Reviewed by Sam Weinig.
+
+        All our supported systems use the scrollbar painter now, so get rid of the #ifdef.
+
+        * wtf/Platform.h:
+
+2013-09-23  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r156307.
+        http://trac.webkit.org/changeset/156307
+        https://bugs.webkit.org/show_bug.cgi?id=121817
+
+        Broke the build, and crashes the compiler (Requested by ap on
+        #webkit).
+
+        * wtf/ListDump.h:
+        (WTF::lessThan):
+        (WTF::sortedListDump):
+
+2013-09-23  Anders Carlsson  <andersca@apple.com>
+
+        Test the waters and begin using lambdas
+        https://bugs.webkit.org/show_bug.cgi?id=121809
+
+        Reviewed by Andreas Kling.
+
+        * wtf/ListDump.h:
+        (WTF::sortedListDump):
+        Use std::less instead of a custom lessThan function.
+
+2013-09-23  Anders Carlsson  <andersca@apple.com>
+
+        ListHashSet::removeLast should only remove one element.
+        
+        * wtf/ListHashSet.h:
+        (WTF::ListHashSet::removeLast):
+
+2013-09-23  Anders Carlsson  <andersca@apple.com>
+
+        Add hash traits for std::unique_ptr
+        https://bugs.webkit.org/show_bug.cgi?id=121807
+
+        Reviewed by Antti Koivisto.
+
+        Also, convert the thread map over to using std::unique_ptr instead of OwnPtr.
+
+        * wtf/HashMap.h:
+        Remove unnecessary typedefs and add missing calls to std::forward.
+
+        * wtf/HashTraits.h:
+        Add hash trait for std::unique_ptr.
+        
+        * wtf/RefPtrHashMap.h:
+        Use std::add_lvalue_reference.
+
+        * wtf/ThreadingPthreads.cpp:
+        (WTF::establishIdentifierForPthreadHandle):
+        Change ThreadMap to be a hash map from ThreadIdentifier to std::unique_ptr<PthreadState>.
+
+2013-09-23  Patrick Gansterer  <paroga@webkit.org>
+
+        use NOMINMAX instead of #define min min
+        https://bugs.webkit.org/show_bug.cgi?id=73563
+
+        Reviewed by Brent Fulgham.
+
+        Use NOMINMAX instead of #define min/max as a cleaner
+        way of ensuring that Windows system header files don't
+        define min/max as macro in the first place.
+
+        * config.h:
+
+2013-09-23  Anders Carlsson  <andersca@apple.com>
+
+        Remove PassTraits.h
+        https://bugs.webkit.org/show_bug.cgi?id=121805
+
+        Reviewed by Andreas Kling.
+
+        We no longer need PassTraits.h, get rid of it.
+
+        * GNUmakefile.list.am:
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.vcxproj/WTF.vcxproj.filters:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/CMakeLists.txt:
+        * wtf/PassTraits.h: Removed.
+
+2013-09-23  Anders Carlsson  <andersca@apple.com>
+
+        ListHashSet should work with move-only types
+        https://bugs.webkit.org/show_bug.cgi?id=121802
+
+        Reviewed by Andreas Kling.
+
+        Add rvalue reference overloads and calls to std::forward and std::move where appropriate.
+
+        * wtf/ListHashSet.h:
+        (WTF::::removeFirst):
+        Implement this in terms of takeFirst.
+
+        (WTF::::takeFirst):
+        Look up the iterator before we move out the value so we won't break the hash invariant.
+        
+        (WTF::::removeLast):
+        Implement this in terms of takeLast.
+
+        (WTF::::takeLast):
+        Look up the iterator before we move out the value so we won't break the hash invariant.
+
+2013-09-23  Anders Carlsson  <andersca@apple.com>
+
+        Clean up ListHashSet
+        https://bugs.webkit.org/show_bug.cgi?id=121797
+
+        Reviewed by Antti Koivisto.
+
+        * wtf/ListHashSet.h:
+
+2013-09-23  Anders Carlsson  <andersca@apple.com>
+
+        ListHashSet should use std::reverse_iterator for reverse iterators
+        https://bugs.webkit.org/show_bug.cgi?id=121795
+
+        Reviewed by Antti Koivisto.
+
+        Get rid of the custom reverse iterators and just use std::reverse_iterator instead.
+
+        * wtf/ListHashSet.h:
+
+2013-09-23  Anders Carlsson  <andersca@apple.com>
+
+        De-indent ListHashSet in preparation of more changes.
+
+        Rubber-stamped by Sam Weinig.
+
+        * wtf/ListHashSet.h:
+
+2013-09-23  Patrick Gansterer  <paroga@webkit.org>
+
+        Cleanup CMake files in WTF
+        https://bugs.webkit.org/show_bug.cgi?id=121761
+
+        Reviewed by Gyuyoung Kim.
+
+        Sort files and unify the style.
+
+        * wtf/CMakeLists.txt:
+        * wtf/PlatformEfl.cmake:
+        * wtf/PlatformGTK.cmake:
+
+2013-09-22  Andreas Kling  <akling@apple.com>
+
+        Give purity hints to compiler to avoid penalizing repeated calls to some functions.
+        <https://webkit.org/b/121744>
+
+        Reviewed by Darin Adler.
+
+        Added a PURE_FUNCTION macro. This is supported on GCC and Clang for now.
+        Marking a function pure means that the compiler's CSE pass is free to coalesce
+        multiple calls to this function because it has no globally observable side
+        effects beyond the first call.
+
+2013-09-20  Anders Carlsson  <andersca@apple.com>
+
+        Add an implementation of std::index_sequence from C++14
+        https://bugs.webkit.org/show_bug.cgi?id=121718
+
+        Reviewed by Ryosuke Niwa.
+
+        This will make it easier to do things like pack expansion of tuple elements.
+
+        * wtf/StdLibExtras.h:
+
 2013-09-20  Allan Sandfeld Jensen  <allan.jensen@digia.com>
 
         Atomics.h does not build on MinGW

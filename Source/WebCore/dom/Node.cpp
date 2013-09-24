@@ -95,7 +95,6 @@
 #include "SelectorQuery.h"
 #include "Settings.h"
 #include "ShadowRoot.h"
-#include "StaticNodeList.h"
 #include "StorageEvent.h"
 #include "StyleResolver.h"
 #include "TagNodeList.h"
@@ -959,11 +958,6 @@ bool Node::canStartSelection() const
     return parentOrShadowHostNode() ? parentOrShadowHostNode()->canStartSelection() : true;
 }
 
-bool Node::isRegisteredWithNamedFlow() const
-{
-    return document().renderView()->flowThreadController().isContentNodeRegisteredWithAnyNamedFlow(this);
-}
-
 Element* Node::shadowHost() const
 {
     if (ShadowRoot* root = containingShadowRoot())
@@ -1440,7 +1434,7 @@ void Node::setTextContent(const String& text, ExceptionCode& ec)
         case ENTITY_REFERENCE_NODE:
         case DOCUMENT_FRAGMENT_NODE: {
             Ref<ContainerNode> container(*toContainerNode(this));
-            ChildListMutationScope mutation(this);
+            ChildListMutationScope mutation(container.get());
             container->removeChildren();
             if (!text.isEmpty())
                 container->appendChild(document().createTextNode(text), ec);
@@ -1823,14 +1817,9 @@ Node* Node::enclosingLinkEventParentOrSelf()
     return 0;
 }
 
-const AtomicString& Node::interfaceName() const
+EventTargetInterface Node::eventTargetInterface() const
 {
-    return eventNames().interfaceForNode;
-}
-
-ScriptExecutionContext* Node::scriptExecutionContext() const
-{
-    return &document();
+    return NodeEventTargetInterfaceType;
 }
 
 void Node::didMoveToNewDocument(Document* oldDocument)
@@ -2197,7 +2186,7 @@ void Node::defaultEventHandler(Event* event)
                 page->contextMenuController().handleContextMenuEvent(event);
 #endif
     } else if (eventType == eventNames().textInputEvent) {
-        if (event->hasInterface(eventNames().interfaceForTextEvent))
+        if (event->eventInterface() == TextEventInterfaceType)
             if (Frame* frame = document().frame())
                 frame->eventHandler().defaultTextInputEventHandler(static_cast<TextEvent*>(event));
 #if ENABLE(PAN_SCROLLING)
@@ -2217,7 +2206,7 @@ void Node::defaultEventHandler(Event* event)
             }
         }
 #endif
-    } else if ((eventType == eventNames().wheelEvent || eventType == eventNames().mousewheelEvent) && event->hasInterface(eventNames().interfaceForWheelEvent)) {
+    } else if ((eventType == eventNames().wheelEvent || eventType == eventNames().mousewheelEvent) && event->eventInterface() == WheelEventInterfaceType) {
         WheelEvent* wheelEvent = static_cast<WheelEvent*>(event);
         
         // If we don't have a renderer, send the wheel event to the first node we find with a renderer.

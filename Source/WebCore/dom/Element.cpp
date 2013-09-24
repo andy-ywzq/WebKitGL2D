@@ -1363,10 +1363,10 @@ void Element::removedFrom(ContainerNode* insertionPoint)
 #endif
 }
 
-void Element::unregisterNamedFlowContentNode()
+void Element::unregisterNamedFlowContentElement()
 {
     if (document().cssRegionsEnabled() && inNamedFlow() && document().renderView())
-        document().renderView()->flowThreadController().unregisterNamedFlowContentNode(this);
+        document().renderView()->flowThreadController().unregisterNamedFlowContentElement(*this);
 }
 
 void Element::lazyReattach(ShouldSetAttached shouldSetAttached)
@@ -1436,7 +1436,7 @@ void Element::addShadowRoot(PassRefPtr<ShadowRoot> newShadowRoot)
     shadowRoot->setParentTreeScope(treeScope());
     shadowRoot->distributor().didShadowBoundaryChange(this);
 
-    ChildNodeInsertionNotifier(this).notify(shadowRoot);
+    ChildNodeInsertionNotifier(*this).notify(*shadowRoot);
 
     resetNeedsNodeRenderingTraversalSlowPath();
 
@@ -1464,7 +1464,7 @@ void Element::removeShadowRoot()
     oldRoot->setHostElement(0);
     oldRoot->setParentTreeScope(&document());
 
-    ChildNodeRemovalNotifier(this).notify(oldRoot.get());
+    ChildNodeRemovalNotifier(*this).notify(*oldRoot);
 
     oldRoot->distributor().invalidateDistribution(this);
 }
@@ -2645,7 +2645,7 @@ bool Element::shouldMoveToFlowThread(const RenderStyle& styleToUse) const
     if (styleToUse.flowThread().isEmpty())
         return false;
 
-    return !isRegisteredWithNamedFlow();
+    return !document().renderView()->flowThreadController().isContentElementRegisteredWithAnyNamedFlow(*this);
 }
 
 const AtomicString& Element::webkitRegionOverset() const
@@ -2848,8 +2848,8 @@ void Element::willModifyAttribute(const QualifiedName& name, const AtomicString&
             setNeedsStyleRecalc();
     }
 
-    if (OwnPtr<MutationObserverInterestGroup> recipients = MutationObserverInterestGroup::createForAttributesMutation(this, name))
-        recipients->enqueueMutationRecord(MutationRecord::createAttributes(this, name, oldValue));
+    if (OwnPtr<MutationObserverInterestGroup> recipients = MutationObserverInterestGroup::createForAttributesMutation(*this, name))
+        recipients->enqueueMutationRecord(MutationRecord::createAttributes(*this, name, oldValue));
 
 #if ENABLE(INSPECTOR)
     InspectorInstrumentation::willModifyDOMAttr(&document(), this, oldValue, newValue);
@@ -2972,7 +2972,7 @@ void Element::resetComputedStyle()
 
 void Element::clearStyleDerivedDataBeforeDetachingRenderer()
 {
-    unregisterNamedFlowContentNode();
+    unregisterNamedFlowContentElement();
     cancelFocusAppearanceUpdate();
     clearBeforePseudoElement();
     clearAfterPseudoElement();

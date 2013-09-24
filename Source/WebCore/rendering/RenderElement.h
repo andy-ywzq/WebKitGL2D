@@ -38,6 +38,9 @@ public:
     Element* nonPseudoElement() const { return toElement(RenderObject::nonPseudoNode()); }
     Element* generatingElement() const { return toElement(RenderObject::generatingNode()); }
 
+    RenderObject* firstChild() const { return m_firstChild; }
+    RenderObject* lastChild() const { return m_lastChild; }
+
     virtual bool isChildAllowed(RenderObject*, RenderStyle*) const { return true; }
     virtual void addChild(RenderObject* newChild, RenderObject* beforeChild = 0);
     virtual void addChildIgnoringContinuation(RenderObject* newChild, RenderObject* beforeChild = 0) { return addChild(newChild, beforeChild); }
@@ -51,22 +54,51 @@ public:
     void moveLayers(RenderLayer* oldParent, RenderLayer* newParent);
     RenderLayer* findNextLayer(RenderLayer* parentLayer, RenderObject* startPoint, bool checkParent = true);
 
+    enum NotifyChildrenType { NotifyChildren, DontNotifyChildren };
+    void insertChildInternal(RenderObject*, RenderObject* beforeChild, NotifyChildrenType);
+    void removeChildInternal(RenderObject*, NotifyChildrenType);
+
+    // Return the renderer whose background style is used to paint the root background. Should only be called on the renderer for which isRoot() is true.
+    RenderElement* rendererForRootBackground();
+
 protected:
     explicit RenderElement(Element*);
 
     bool layerCreationAllowedForSubtree() const;
 
+    enum StylePropagationType { PropagateToAllChildren, PropagateToBlockChildrenOnly };
+    void propagateStyleToAnonymousChildren(StylePropagationType);
+
     LayoutUnit valueForLength(const Length&, LayoutUnit maximumValue, bool roundPercentages = false) const;
     LayoutUnit minimumValueForLength(const Length&, LayoutUnit maximumValue, bool roundPercentages = false) const;
 
+    void setFirstChild(RenderObject* child) { m_firstChild = child; }
+    void setLastChild(RenderObject* child) { m_lastChild = child; }
+    void destroyLeftoverChildren();
+
+    virtual void styleWillChange(StyleDifference, const RenderStyle*) OVERRIDE;
+    virtual void styleDidChange(StyleDifference, const RenderStyle*) OVERRIDE;
     virtual void insertedIntoTree() OVERRIDE;
     virtual void willBeRemovedFromTree() OVERRIDE;
+    virtual void willBeDestroyed() OVERRIDE;
 
 private:
     void node() const WTF_DELETED_FUNCTION;
     void nonPseudoNode() const WTF_DELETED_FUNCTION;
     void generatingNode() const WTF_DELETED_FUNCTION;
     void isText() const WTF_DELETED_FUNCTION;
+    void isRenderElement() const WTF_DELETED_FUNCTION;
+
+    virtual RenderObject* firstChildSlow() const OVERRIDE FINAL { return firstChild(); }
+    virtual RenderObject* lastChildSlow() const OVERRIDE FINAL { return lastChild(); }
+
+    RenderObject* m_firstChild;
+    RenderObject* m_lastChild;
+
+    // FIXME: Get rid of this hack.
+    // Store state between styleWillChange and styleDidChange
+    static bool s_affectsParentBlock;
+    static bool s_noLongerAffectsParentBlock;
 };
 
 inline LayoutUnit RenderElement::valueForLength(const Length& length, LayoutUnit maximumValue, bool roundPercentages) const

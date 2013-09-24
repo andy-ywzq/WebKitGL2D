@@ -51,7 +51,6 @@
 #include "NodeTraversal.h"
 #include "RenderLineBreak.h"
 #include "ScriptController.h"
-#include "ScriptEventListener.h"
 #include "Settings.h"
 #include "StylePropertySet.h"
 #include "SubframeLoader.h"
@@ -340,7 +339,7 @@ void HTMLElement::parseAttribute(const QualifiedName& name, const AtomicString& 
             populateEventNameForAttributeLocalNameMap(eventNames);
         const AtomicString& eventName = eventNames.get(name.localName().impl());
         if (!eventName.isNull())
-            setAttributeEventListener(eventName, createAttributeEventListener(this, name, value));
+            setAttributeEventListener(eventName, name, value);
     }
 }
 
@@ -362,7 +361,7 @@ void HTMLElement::setInnerHTML(const String& html, ExceptionCode& ec)
         if (hasLocalName(templateTag))
             container = toHTMLTemplateElement(this)->content();
 #endif
-        replaceChildrenWithFragment(container, fragment.release(), ec);
+        replaceChildrenWithFragment(*container, fragment.release(), ec);
     }
 }
 
@@ -460,7 +459,7 @@ void HTMLElement::setInnerText(const String& text, ExceptionCode& ec)
             removeChildren();
             return;
         }
-        replaceChildrenWithText(this, text, ec);
+        replaceChildrenWithText(*this, text, ec);
         return;
     }
 
@@ -470,13 +469,13 @@ void HTMLElement::setInnerText(const String& text, ExceptionCode& ec)
     RenderObject* r = renderer();
     if (r && r->style()->preserveNewline()) {
         if (!text.contains('\r')) {
-            replaceChildrenWithText(this, text, ec);
+            replaceChildrenWithText(*this, text, ec);
             return;
         }
         String textWithConsistentLineBreaks = text;
         textWithConsistentLineBreaks.replace("\r\n", "\n");
         textWithConsistentLineBreaks.replace('\r', '\n');
-        replaceChildrenWithText(this, textWithConsistentLineBreaks, ec);
+        replaceChildrenWithText(*this, textWithConsistentLineBreaks, ec);
         return;
     }
 
@@ -484,7 +483,7 @@ void HTMLElement::setInnerText(const String& text, ExceptionCode& ec)
     ec = 0;
     RefPtr<DocumentFragment> fragment = textToFragment(text, ec);
     if (!ec)
-        replaceChildrenWithFragment(this, fragment.release(), ec);
+        replaceChildrenWithFragment(*this, fragment.release(), ec);
 }
 
 void HTMLElement::setOuterText(const String &text, ExceptionCode& ec)
