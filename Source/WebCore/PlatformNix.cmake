@@ -289,6 +289,7 @@ if (WTF_USE_CURL)
         platform/network/curl/CredentialStorageCurl.cpp
         platform/network/curl/DNSCurl.cpp
         platform/network/curl/FormDataStreamCurl.cpp
+        platform/network/curl/MultipartHandle.cpp
         platform/network/curl/ParsedCookie.cpp
         platform/network/curl/ProxyServerCurl.cpp
         platform/network/curl/ResourceHandleCurl.cpp
