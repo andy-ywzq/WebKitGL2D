@@ -295,6 +295,7 @@ if (WTF_USE_CURL)
         platform/network/curl/ResourceHandleCurl.cpp
         platform/network/curl/ResourceHandleManager.cpp
         platform/network/curl/SocketStreamHandleCurl.cpp
+        platform/network/curl/SynchronousLoaderClientCurl.cpp
     )
 
     list(APPEND WebCore_LIBRARIES
