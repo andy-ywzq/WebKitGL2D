@@ -248,7 +248,7 @@ static void createRendererIfNeeded(Element& element, RenderStyle* resolvedStyle)
 
 #if ENABLE(FULLSCREEN_API)
     if (document.webkitIsFullScreen() && document.webkitCurrentFullScreenElement() == &element) {
-        newRenderer = RenderFullScreen::wrapRenderer(newRenderer, parentRenderer, &document);
+        newRenderer = RenderFullScreen::wrapRenderer(newRenderer, parentRenderer, document);
         if (!newRenderer)
             return;
     }
@@ -340,7 +340,7 @@ static bool textRendererIsNeeded(const Text& textNode, const RenderObject& paren
         if (parentRenderer.isRenderBlock() && !parentRenderer.childrenInline() && (!previousRenderer || !previousRenderer->isInline()))
             return false;
         
-        RenderObject* first = parentRenderer.firstChildSlow();
+        RenderObject* first = toRenderElement(parentRenderer).firstChild();
         while (first && first->isFloatingOrOutOfFlowPositioned())
             first = first->nextSibling();
         RenderObject* nextRenderer = nextSiblingRenderer(textNode);
@@ -617,7 +617,7 @@ static Change resolveLocal(Element& current, Change inheritedChange)
 
     // If "rem" units are used anywhere in the document, and if the document element's font size changes, then go ahead and force font updating
     // all the way down the tree. This is simpler than having to maintain a cache of objects (and such font size changes should be rare anyway).
-    if (document.styleSheetCollection()->usesRemUnits() && document.documentElement() == &current && localChange != NoChange && currentStyle && newStyle && currentStyle->fontSize() != newStyle->fontSize()) {
+    if (document.styleSheetCollection().usesRemUnits() && document.documentElement() == &current && localChange != NoChange && currentStyle && newStyle && currentStyle->fontSize() != newStyle->fontSize()) {
         // Cached RenderStyles may depend on the re units.
         if (StyleResolver* styleResolver = document.styleResolverIfExists())
             styleResolver->invalidateMatchedPropertiesCache();

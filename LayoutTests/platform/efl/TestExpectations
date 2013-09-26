@@ -449,7 +449,6 @@ editing/inserting/before-after-input-element.html [ Missing ]
 editing/inserting/break-blockquote-after-delete.html [ Missing ]
 editing/selection/contains-boundaries.html [ Missing ]
 editing/selection/designmode-no-caret.html [ Missing ]
-editing/selection/paragraph-granularity.html [ Missing ]
 editing/selection/replaced-boundaries-3.html [ Missing ]
 editing/selection/selection-background.html [ Missing ]
 editing/style/5065910.html [ Missing ]
@@ -1179,9 +1178,6 @@ webkit.org/b/108507 printing/standards-percentage-heights.html [ ImageOnlyFailur
 
 webkit.org/b/79757 fast/selectors/selection-window-inactive.html [ ImageOnlyFailure ]
 
-# Font kerning issue, fails on GTK as well.
-webkit.org/b/76048 fast/text/font-kerning.html [ ImageOnlyFailure ]
-
 # Fails on GTK as well
 webkit.org/b/84678 fast/spatial-navigation/snav-container-white-space.html [ Failure ]
 webkit.org/b/84678 fast/spatial-navigation/snav-fully-aligned-horizontally.html [ Failure ]
@@ -1405,7 +1401,6 @@ Bug(EFL) animations/negative-delay.html [ Failure Pass ]
 Bug(EFL) compositing/bounds-in-flipped-writing-mode.html [ Failure ]
 Bug(EFL) compositing/iframes/leave-compositing-iframe.html [ Failure ]
 Bug(EFL) compositing/visibility/visibility-composited.html [ Failure ]
-Bug(EFL) editing/selection/caret-at-bidi-boundary.html [ Crash Pass ]
 Bug(EFL) fast/dynamic/012.html [ Failure ]
 Bug(EFL) fast/dynamic/layer-hit-test-crash.html [ Failure ]
 Bug(EFL) fast/layers/layer-visibility-sublayer.html [ Failure ]

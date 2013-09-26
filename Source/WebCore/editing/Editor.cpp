@@ -557,7 +557,7 @@ void Editor::respondToChangedContents(const VisibleSelection& endingSelection)
     if (AXObjectCache::accessibilityEnabled()) {
         Node* node = endingSelection.start().deprecatedNode();
         if (AXObjectCache* cache = m_frame.document()->existingAXObjectCache())
-            cache->postNotification(node, AXObjectCache::AXValueChanged, false);
+            cache->postNotification(node, AXObjectCache::AXValueChanged, TargetObservableParent);
     }
 
     updateMarkersForWordsAffectedByEditing(true);
@@ -1064,7 +1064,7 @@ void Editor::cut()
         if (enclosingTextFormControl(m_frame.selection().start()))
             Pasteboard::createForCopyAndPaste()->writePlainText(selectedTextForClipboard(), canSmartCopyOrDelete() ? Pasteboard::CanSmartReplace : Pasteboard::CannotSmartReplace);
         else {
-#if (PLATFORM(MAC) && !PLATFORM(IOS)) || PLATFORM(EFL) || PLATFORM(NIX)
+#if PLATFORM(MAC) || PLATFORM(EFL) || PLATFORM(NIX)
             writeSelectionToPasteboard(*Pasteboard::createForCopyAndPaste());
 #else
             // FIXME: Convert all other platforms to match Mac and delete this.
@@ -1202,7 +1202,7 @@ void Editor::copyImage(const HitTestResult& result)
     if (url.isEmpty())
         url = result.absoluteImageURL();
 
-#if (PLATFORM(MAC) && !PLATFORM(IOS)) || PLATFORM(EFL) || PLATFORM(NIX)
+#if PLATFORM(MAC) || PLATFORM(EFL) || PLATFORM(NIX)
     writeImageToPasteboard(*Pasteboard::createForCopyAndPaste(), *element, url, result.altDisplayString());
 #else
     Pasteboard::createForCopyAndPaste()->writeImage(element, url, result.altDisplayString());
@@ -2343,7 +2343,7 @@ void Editor::markAndReplaceFor(PassRefPtr<SpellCheckRequest> request, const Vect
 
                 if (AXObjectCache* cache = m_frame.document()->existingAXObjectCache()) {
                     if (Element* root = m_frame.selection().selection().rootEditableElement())
-                        cache->postNotification(root, AXObjectCache::AXAutocorrectionOccured, true);
+                        cache->postNotification(root, AXObjectCache::AXAutocorrectionOccured);
                 }
 
                 // Skip all other results for the replaced text.

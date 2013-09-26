@@ -48,7 +48,7 @@ SpeculativeJIT::SpeculativeJIT(JITCompiler& jit)
     , m_generationInfo(m_jit.codeBlock()->m_numCalleeRegisters)
     , m_arguments(jit.codeBlock()->numParameters())
     , m_variables(jit.graph().m_localVars)
-    , m_lastSetOperand(std::numeric_limits<int>::max())
+    , m_lastSetOperand(VirtualRegister())
     , m_state(m_jit.graph())
     , m_interpreter(m_jit.graph(), m_state)
     , m_stream(&jit.jitCode()->variableEventStream)
@@ -895,22 +895,6 @@ void SpeculativeJIT::useChildren(Node* node)
     }
 }
 
-void SpeculativeJIT::writeBarrier(MacroAssembler& jit, GPRReg owner, GPRReg scratch1, GPRReg scratch2, WriteBarrierUseKind useKind)
-{
-    UNUSED_PARAM(jit);
-    UNUSED_PARAM(owner);
-    UNUSED_PARAM(scratch1);
-    UNUSED_PARAM(scratch2);
-    UNUSED_PARAM(useKind);
-    ASSERT(owner != scratch1);
-    ASSERT(owner != scratch2);
-    ASSERT(scratch1 != scratch2);
-
-#if ENABLE(WRITE_BARRIER_PROFILING)
-    JITCompiler::emitCount(jit, WriteBarrierCounters::jitCounterFor(useKind));
-#endif
-}
-
 void SpeculativeJIT::writeBarrier(GPRReg ownerGPR, GPRReg valueGPR, Edge valueUse, WriteBarrierUseKind useKind, GPRReg scratch1, GPRReg scratch2)
 {
     UNUSED_PARAM(ownerGPR);
@@ -1017,7 +1001,7 @@ void SpeculativeJIT::compileIn(Node* node)
 #endif
 }
 
-bool SpeculativeJIT::nonSpeculativeCompare(Node* node, MacroAssembler::RelationalCondition cond, S_DFGOperation_EJJ helperFunction)
+bool SpeculativeJIT::nonSpeculativeCompare(Node* node, MacroAssembler::RelationalCondition cond, S_JITOperation_EJJ helperFunction)
 {
     unsigned branchIndexInBlock = detectPeepHoleBranch();
     if (branchIndexInBlock != UINT_MAX) {
@@ -1183,7 +1167,7 @@ void SpeculativeJIT::checkConsistency()
 
     for (gpr_iterator iter = m_gprs.begin(); iter != m_gprs.end(); ++iter) {
         VirtualRegister virtualRegister = iter.name();
-        if (virtualRegister == InvalidVirtualRegister)
+        if (!virtualRegister.isValid())
             continue;
 
         GenerationInfo& info = generationInfoFromVirtualRegister(virtualRegister);
@@ -1209,7 +1193,7 @@ void SpeculativeJIT::checkConsistency()
 
     for (fpr_iterator iter = m_fprs.begin(); iter != m_fprs.end(); ++iter) {
         VirtualRegister virtualRegister = iter.name();
-        if (virtualRegister == InvalidVirtualRegister)
+        if (!virtualRegister.isValid())
             continue;
 
         GenerationInfo& info = generationInfoFromVirtualRegister(virtualRegister);
@@ -1465,7 +1449,7 @@ void SpeculativeJIT::compilePeepHoleInt32Branch(Node* node, Node* branchNode, JI
 }
 
 // Returns true if the compare is fused with a subsequent branch.
-bool SpeculativeJIT::compilePeepHoleBranch(Node* node, MacroAssembler::RelationalCondition condition, MacroAssembler::DoubleCondition doubleCondition, S_DFGOperation_EJJ operation)
+bool SpeculativeJIT::compilePeepHoleBranch(Node* node, MacroAssembler::RelationalCondition condition, MacroAssembler::DoubleCondition doubleCondition, S_JITOperation_EJJ operation)
 {
     // Fused compare & branch.
     unsigned branchIndexInBlock = detectPeepHoleBranch();
@@ -1538,7 +1522,7 @@ void SpeculativeJIT::compileMovHint(Node* node)
     if (child->op() == UInt32ToNumber)
         noticeOSRBirth(child->child1().node());
     
-    m_stream->appendAndLog(VariableEvent::movHint(MinifiedID(child), node->local()));
+    m_stream->appendAndLog(VariableEvent::movHint(MinifiedID(child), node->local().offset()));
 }
 
 void SpeculativeJIT::compileMovHintAndCheck(Node* node)
@@ -1556,7 +1540,7 @@ void SpeculativeJIT::compileInlineStart(Node* node)
     CodeBlock* codeBlock = baselineCodeBlockForInlineCallFrame(inlineCallFrame);
     for (int i = 0; i < argumentCountIncludingThis; ++i) {
         ValueRecovery recovery;
-        if (codeBlock->isCaptured(argumentToOperand(i)))
+        if (codeBlock->isCaptured(virtualRegisterForArgument(i)))
             recovery = ValueRecovery::alreadyInJSStack();
         else {
             ArgumentPosition& argumentPosition =
@@ -1639,7 +1623,7 @@ void SpeculativeJIT::compileCurrentBlock()
     for (size_t i = 0; i < m_arguments.size(); ++i) {
         ValueSource valueSource = ValueSource(ValueInJSStack);
         m_arguments[i] = valueSource;
-        m_stream->appendAndLog(VariableEvent::setLocal(argumentToOperand(i), valueSource.dataFormat()));
+        m_stream->appendAndLog(VariableEvent::setLocal(virtualRegisterForArgument(i), valueSource.dataFormat()));
     }
     
     m_state.reset();
@@ -1659,10 +1643,10 @@ void SpeculativeJIT::compileCurrentBlock()
             valueSource = ValueSource::forFlushFormat(node->variableAccessData()->flushFormat());
         m_variables[i] = valueSource;
         // FIXME: Don't emit SetLocal(Dead). https://bugs.webkit.org/show_bug.cgi?id=108019
-        m_stream->appendAndLog(VariableEvent::setLocal(localToOperand(i), valueSource.dataFormat()));
+        m_stream->appendAndLog(VariableEvent::setLocal(virtualRegisterForLocal(i), valueSource.dataFormat()));
     }
     
-    m_lastSetOperand = std::numeric_limits<int>::max();
+    m_lastSetOperand = VirtualRegister();
     m_codeOriginForExitTarget = CodeOrigin();
     m_codeOriginForExitProfile = CodeOrigin();
     
@@ -3842,7 +3826,7 @@ void SpeculativeJIT::compileArithMod(Node* node)
 }
 
 // Returns true if the compare is fused with a subsequent branch.
-bool SpeculativeJIT::compare(Node* node, MacroAssembler::RelationalCondition condition, MacroAssembler::DoubleCondition doubleCondition, S_DFGOperation_EJJ operation)
+bool SpeculativeJIT::compare(Node* node, MacroAssembler::RelationalCondition condition, MacroAssembler::DoubleCondition doubleCondition, S_JITOperation_EJJ operation)
 {
     if (compilePeepHoleBranch(node, condition, doubleCondition, operation))
         return true;

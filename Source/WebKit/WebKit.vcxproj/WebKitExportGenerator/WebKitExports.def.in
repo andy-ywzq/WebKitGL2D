@@ -111,6 +111,7 @@ EXPORTS
         symbolWithPointer(?fastFree@WTF@@YAXPAX@Z, ?fastFree@WTF@@YAXPEAX@Z)
         symbolWithPointer(?fastCalloc@WTF@@YAPAXII@Z, ?fastCalloc@WTF@@YAPEAX_K0@Z)
         symbolWithPointer(??0CSSComputedStyleDeclaration@WebCore@@AAE@V?$PassRefPtr@VNode@WebCore@@@WTF@@_NABVString@3@@Z, ??0CSSComputedStyleDeclaration@WebCore@@AEAA@V?$PassRefPtr@VNode@WebCore@@@WTF@@_NAEBVString@3@@Z)
+        symbolWithPointer(??0CSSParserContext@WebCore@@QAE@AAVDocument@1@ABVKURL@1@ABVString@WTF@@@Z, ??0CSSParserContext@WebCore@@QAE@AAVDocument@1@ABVKURL@1@AEBVString@WTF@@@Z)
         symbolWithPointer(??0Mutex@WTF@@QAE@XZ, ??0Mutex@WTF@@QEAA@XZ)
         symbolWithPointer(??0ThreadCondition@WTF@@QAE@XZ, ??0ThreadCondition@WTF@@QEAA@XZ)
         symbolWithPointer(??1HitTestResult@WebCore@@QAE@XZ, ??1HitTestResult@WebCore@@QEAA@XZ)
@@ -237,8 +238,6 @@ EXPORTS
         symbolWithPointer(?disconnectFrontend@InspectorController@WebCore@@QAEXXZ, ?disconnectFrontend@InspectorController@WebCore@@QEAAXXZ)
 #endif
         symbolWithPointer(?isActiveInsertionPoint@WebCore@@YA_NPBVNode@1@@Z, ?isActiveInsertionPoint@WebCore@@YA_NPEBVNode@1@@Z)
-        ?isCSSExclusionsEnabled@RuntimeEnabledFeatures@WebCore@@0_NA
-        ?isCSSShapesEnabled@RuntimeEnabledFeatures@WebCore@@0_NA
         symbolWithPointer(?isPreloaded@CachedResourceLoader@WebCore@@QBE_NABVString@WTF@@@Z, ?isPreloaded@CachedResourceLoader@WebCore@@QEBA_NAEBVString@WTF@@@Z)
         symbolWithPointer(?jsArray@WebCore@@YA?AVJSValue@JSC@@PAVExecState@3@PAVJSDOMGlobalObject@1@V?$PassRefPtr@VDOMStringList@WebCore@@@WTF@@@Z, ?jsArray@WebCore@@YA?AVJSValue@JSC@@PEAVExecState@3@PEAVJSDOMGlobalObject@1@V?$PassRefPtr@VDOMStringList@WebCore@@@WTF@@@Z)
         symbolWithPointer(?lastChangeWasUserEdit@HTMLTextFormControlElement@WebCore@@QBE_NXZ, ?lastChangeWasUserEdit@HTMLTextFormControlElement@WebCore@@QEBA_NXZ)
@@ -299,6 +298,7 @@ EXPORTS
         symbolWithPointer(?setPseudo@Element@WebCore@@QAEXABVAtomicString@WTF@@@Z, ?setPseudo@Element@WebCore@@QEAAXAEBVAtomicString@WTF@@@Z)
         symbolWithPointer(?setMediaTypeOverride@Settings@WebCore@@QAEXABVString@WTF@@@Z, ?setMediaTypeOverride@Settings@WebCore@@QEAAXAEBVString@WTF@@@Z)
         symbolWithPointer(?settings@Document@WebCore@@QBEPAVSettings@2@XZ, ?settings@Document@WebCore@@QEBAPEAVSettings@2@XZ)
+        ?sharedFeatures@RuntimeEnabledFeatures@WebCore@@SAAAV12@XZ
         symbolWithPointer(?substring@String@WTF@@QBE?AV12@II@Z, ?substring@String@WTF@@QEBA?AV12@II@Z)
         symbolWithPointer(?suggestedValue@HTMLInputElement@WebCore@@QBEABVString@WTF@@XZ, ?suggestedValue@HTMLInputElement@WebCore@@QEBAAEBVString@WTF@@XZ)
         symbolWithPointer(?target@HistoryItem@WebCore@@QBEABVString@WTF@@XZ, ?target@HistoryItem@WebCore@@QEBAAEBVString@WTF@@XZ)
@@ -392,7 +392,6 @@ EXPORTS
         symbolWithPointer(?frameOrientationAtIndex@BitmapImage@WebCore@@IAE?AVImageOrientation@2@I@Z, ?frameOrientationAtIndex@BitmapImage@WebCore@@IEAA?AVImageOrientation@2@_K@Z)
         symbolWithPointer(?addAuthorSheet@DocumentStyleSheetCollection@WebCore@@QAEXV?$PassRefPtr@VStyleSheetContents@WebCore@@@WTF@@@Z, ?addAuthorSheet@DocumentStyleSheetCollection@WebCore@@QEAAXV?$PassRefPtr@VStyleSheetContents@WebCore@@@WTF@@@Z)
         symbolWithPointer(?parseString@StyleSheetContents@WebCore@@QAE_NABVString@WTF@@@Z, ?parseString@StyleSheetContents@WebCore@@QEAA_NAEBVString@WTF@@@Z)
-        symbolWithPointer(??0CSSParserContext@WebCore@@QAE@PAVDocument@1@ABVKURL@1@ABVString@WTF@@@Z, ??0CSSParserContext@WebCore@@QEAA@PEAVDocument@1@AEBVKURL@1@AEBVString@WTF@@@Z)
         symbolWithPointer(?emptyString@WTF@@YAABVString@1@XZ, ?emptyString@WTF@@YAAEBVString@1@XZ)
         symbolWithPointer(?invalidate@KURL@WebCore@@AAEXXZ, ?invalidate@KURL@WebCore@@AEAAXXZ)
         symbolWithPointer(??0StyleSheetContents@WebCore@@AAE@PAVStyleRuleImport@1@ABVString@WTF@@ABUCSSParserContext@1@@Z, ??0StyleSheetContents@WebCore@@AEAA@PEAVStyleRuleImport@1@AEBVString@WTF@@AEBUCSSParserContext@1@@Z)
@@ -455,3 +454,10 @@ EXPORTS
 #endif
         symbolWithPointer(?toJSONString@InspectorValue@WebCore@@QBE?AVString@WTF@@XZ, ?toJSONString@InspectorValue@WebCore@@QBE?AVString@WTF@@XZ)
         symbolWithPointer(?buildObjectForHighlightedNode@InspectorController@WebCore@@QBE?AV?$PassRefPtr@VInspectorObject@WebCore@@@WTF@@XZ, ?buildObjectForHighlightedNode@InspectorController@WebCore@@QBE?AV?$PassRefPtr@VInspectorObject@WebCore@@@WTF@@XZ)
+        ?standardFontFamily@Settings@WebCore@@QBEABVAtomicString@WTF@@W4UScriptCode@@@Z
+        ?serifFontFamily@Settings@WebCore@@QBEABVAtomicString@WTF@@W4UScriptCode@@@Z
+        ?sansSerifFontFamily@Settings@WebCore@@QBEABVAtomicString@WTF@@W4UScriptCode@@@Z
+        ?pictographFontFamily@Settings@WebCore@@QBEABVAtomicString@WTF@@W4UScriptCode@@@Z
+        ?fixedFontFamily@Settings@WebCore@@QBEABVAtomicString@WTF@@W4UScriptCode@@@Z
+        ?fantasyFontFamily@Settings@WebCore@@QBEABVAtomicString@WTF@@W4UScriptCode@@@Z
+        ?cursiveFontFamily@Settings@WebCore@@QBEABVAtomicString@WTF@@W4UScriptCode@@@Z

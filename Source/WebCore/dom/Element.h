@@ -43,6 +43,7 @@ class ElementRareData;
 class HTMLDocument;
 class IntSize;
 class Locale;
+class PlatformWheelEvent;
 class PseudoElement;
 class RenderElement;
 class RenderRegion;
@@ -534,6 +535,8 @@ public:
     IntSize savedLayerScrollOffset() const;
     void setSavedLayerScrollOffset(const IntSize&);
 
+    bool dispatchWheelEvent(const PlatformWheelEvent&);
+    bool dispatchKeyEvent(const PlatformKeyboardEvent&);
     void dispatchSimulatedClick(Event* underlyingEvent, SimulatedClickMouseEventOptions = SendNoEvents, SimulatedClickVisualOptions = ShowPressedLook);
     void dispatchFocusInEvent(const AtomicString& eventType, PassRefPtr<Element> oldFocusedElement);
     void dispatchFocusOutEvent(const AtomicString& eventType, PassRefPtr<Element> newFocusedElement);
@@ -614,11 +617,11 @@ private:
 
     void updateName(const AtomicString& oldName, const AtomicString& newName);
     void updateNameForTreeScope(TreeScope*, const AtomicString& oldName, const AtomicString& newName);
-    void updateNameForDocument(HTMLDocument*, const AtomicString& oldName, const AtomicString& newName);
+    void updateNameForDocument(HTMLDocument&, const AtomicString& oldName, const AtomicString& newName);
     void updateId(const AtomicString& oldId, const AtomicString& newId);
     void updateIdForTreeScope(TreeScope*, const AtomicString& oldId, const AtomicString& newId);
     enum HTMLDocumentNamedItemMapsUpdatingCondition { AlwaysUpdateHTMLDocumentNamedItemMaps, UpdateHTMLDocumentNamedItemMapsOnlyIfDiffersFromNameAttribute };
-    void updateIdForDocument(HTMLDocument*, const AtomicString& oldId, const AtomicString& newId, HTMLDocumentNamedItemMapsUpdatingCondition);
+    void updateIdForDocument(HTMLDocument&, const AtomicString& oldId, const AtomicString& newId, HTMLDocumentNamedItemMapsUpdatingCondition);
     void updateLabel(TreeScope*, const AtomicString& oldForAttributeValue, const AtomicString& newForAttributeValue);
 
     void scrollByUnits(int units, ScrollGranularity);

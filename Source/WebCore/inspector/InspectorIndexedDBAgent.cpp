@@ -241,6 +241,7 @@ static PassRefPtr<IDBIndex> indexForObjectStore(IDBObjectStore* idbObjectStore, 
     return idbIndex;
 }
 
+#if !PLATFORM(MAC)
 static PassRefPtr<KeyPath> keyPathFromIDBKeyPath(const IDBKeyPath& idbKeyPath)
 {
     RefPtr<KeyPath> keyPath;
@@ -267,6 +268,7 @@ static PassRefPtr<KeyPath> keyPathFromIDBKeyPath(const IDBKeyPath& idbKeyPath)
 
     return keyPath.release();
 }
+#endif // !PLATFORM(MAC)
 
 class DatabaseLoader : public ExecutableWithDatabase {
 public:
@@ -279,6 +281,9 @@ public:
 
     virtual void execute(PassRefPtr<IDBDatabase> prpDatabase)
     {
+#if PLATFORM(MAC)
+        ASSERT_UNUSED(prpDatabase, prpDatabase);
+#else
         RefPtr<IDBDatabase> idbDatabase = prpDatabase;
         if (!requestCallback()->isActive())
             return;
@@ -317,6 +322,7 @@ public:
             .setObjectStores(objectStores);
 
         m_requestCallback->sendSuccess(result);
+#endif // PLATFORM(MAC)
     }
 
     virtual RequestCallback* requestCallback() { return m_requestCallback.get(); }

@@ -109,8 +109,6 @@ public:
     bool pauseTransitionAtTimeOnElement(const String& propertyName, double pauseTime, Element*, ExceptionCode&);
     bool pauseTransitionAtTimeOnPseudoElement(const String& property, double pauseTime, Element*, const String& pseudoId, ExceptionCode&);
 
-    PassRefPtr<Element> createContentElement(ExceptionCode&);
-    bool isValidContentSelect(Element* insertionPoint, ExceptionCode&);
     Node* treeScopeRootNode(Node*, ExceptionCode&);
     Node* parentTreeScope(Node*, ExceptionCode&);
     bool hasSelectorForIdInShadow(Element* host, const String& idValue, ExceptionCode&);
@@ -233,8 +231,8 @@ public:
 
     void allowRoundingHacks() const;
 
-    void insertAuthorCSS(Document*, const String&) const;
-    void insertUserCSS(Document*, const String&) const;
+    void insertAuthorCSS(Document*, const String&, ExceptionCode&) const;
+    void insertUserCSS(Document*, const String&, ExceptionCode&) const;
 
 #if ENABLE(INSPECTOR)
     unsigned numberOfLiveNodes() const;

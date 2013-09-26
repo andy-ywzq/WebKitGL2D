@@ -407,6 +407,7 @@ void JIT::privateCompileSlowCases()
         DEFINE_SLOWCASE_OP(op_create_this)
         DEFINE_SLOWCASE_OP(op_div)
         DEFINE_SLOWCASE_OP(op_eq)
+        DEFINE_SLOWCASE_OP(op_get_callee)
         case op_get_by_id_out_of_line:
         case op_get_array_length:
         DEFINE_SLOWCASE_OP(op_get_by_id)
@@ -796,23 +797,23 @@ void JIT::linkFor(ExecState* exec, JSFunction* callee, CodeBlock* callerCodeBloc
         ASSERT(callLinkInfo->callType == CallLinkInfo::Call
                || callLinkInfo->callType == CallLinkInfo::CallVarargs);
         if (callLinkInfo->callType == CallLinkInfo::Call) {
-            repatchBuffer.relink(callLinkInfo->callReturnLocation, vm->getCTIStub(linkClosureCallGenerator).code());
+            repatchBuffer.relink(callLinkInfo->callReturnLocation, vm->getCTIStub(oldStyleLinkClosureCallGenerator).code());
             return;
         }
 
-        repatchBuffer.relink(callLinkInfo->callReturnLocation, vm->getCTIStub(virtualCallGenerator).code());
+        repatchBuffer.relink(callLinkInfo->callReturnLocation, vm->getCTIStub(oldStyleVirtualCallGenerator).code());
         return;
     }
 
     ASSERT(kind == CodeForConstruct);
-    repatchBuffer.relink(callLinkInfo->callReturnLocation, vm->getCTIStub(virtualConstructGenerator).code());
+    repatchBuffer.relink(callLinkInfo->callReturnLocation, vm->getCTIStub(oldStyleVirtualConstructGenerator).code());
 }
 
 void JIT::linkSlowCall(CodeBlock* callerCodeBlock, CallLinkInfo* callLinkInfo)
 {
     RepatchBuffer repatchBuffer(callerCodeBlock);
 
-    repatchBuffer.relink(callLinkInfo->callReturnLocation, callerCodeBlock->vm()->getCTIStub(virtualCallGenerator).code());
+    repatchBuffer.relink(callLinkInfo->callReturnLocation, callerCodeBlock->vm()->getCTIStub(oldStyleVirtualCallGenerator).code());
 }
 
 } // namespace JSC

@@ -33,6 +33,7 @@
 #include "DecoderAdapter.h"
 #include "DrawingArea.h"
 #include "DrawingAreaMessages.h"
+#include "EventDispatcher.h"
 #include "InjectedBundle.h"
 #include "InjectedBundleBackForwardList.h"
 #include "InjectedBundleUserMessageCoders.h"
@@ -291,6 +292,7 @@ WebPage::WebPage(uint64_t pageID, const WebPageCreationParameters& parameters)
     , m_backgroundColor(Color::white)
     , m_maximumRenderingSuppressionToken(0)
     , m_scrollPinningBehavior(DoNotPin)
+    , m_useThreadedScrolling(false)
 {
     ASSERT(m_pageID);
     // FIXME: This is a non-ideal location for this Setting and
@@ -318,6 +320,9 @@ WebPage::WebPage(uint64_t pageID, const WebPageCreationParameters& parameters)
     pageClients.loaderClientForMainFrame = new WebFrameLoaderClient;
 
     m_page = adoptPtr(new Page(pageClients));
+
+    m_useThreadedScrolling = parameters.store.getBoolValueForKey(WebPreferencesKey::threadedScrollingEnabledKey());
+    m_page->settings().setScrollingCoordinatorEnabled(m_useThreadedScrolling);
 
     m_drawingArea = DrawingArea::create(this, parameters);
     m_drawingArea->setPaintingEnabled(false);
@@ -418,6 +423,11 @@ WebPage::WebPage(uint64_t pageID, const WebPageCreationParameters& parameters)
 #ifndef NDEBUG
     webPageCounter.increment();
 #endif
+
+#if ENABLE(THREADED_SCROLLING)
+    if (m_useThreadedScrolling)
+        WebProcess::shared().eventDispatcher().addScrollingTreeForPage(this);
+#endif
 }
 
 WebPage::~WebPage()
@@ -426,6 +436,11 @@ WebPage::~WebPage()
         m_backForwardList->detach();
 
     ASSERT(!m_page);
+
+#if ENABLE(THREADED_SCROLLING)
+    if (m_useThreadedScrolling)
+        WebProcess::shared().eventDispatcher().removeScrollingTreeForPage(this);
+#endif
 
     m_sandboxExtensionTracker.invalidate();
 
@@ -2484,8 +2499,8 @@ void WebPage::updatePreferences(const WebPreferencesStore& store)
     settings.setShowTiledScrollingIndicator(store.getBoolValueForKey(WebPreferencesKey::tiledScrollingIndicatorVisibleKey()));
     settings.setAggressiveTileRetentionEnabled(store.getBoolValueForKey(WebPreferencesKey::aggressiveTileRetentionEnabledKey()));
     settings.setCSSCustomFilterEnabled(store.getBoolValueForKey(WebPreferencesKey::cssCustomFilterEnabledKey()));
-    RuntimeEnabledFeatures::setCSSRegionsEnabled(store.getBoolValueForKey(WebPreferencesKey::cssRegionsEnabledKey()));
-    RuntimeEnabledFeatures::setCSSCompositingEnabled(store.getBoolValueForKey(WebPreferencesKey::cssCompositingEnabledKey()));
+    RuntimeEnabledFeatures::sharedFeatures().setCSSRegionsEnabled(store.getBoolValueForKey(WebPreferencesKey::cssRegionsEnabledKey()));
+    RuntimeEnabledFeatures::sharedFeatures().setCSSCompositingEnabled(store.getBoolValueForKey(WebPreferencesKey::cssCompositingEnabledKey()));
     settings.setCSSGridLayoutEnabled(store.getBoolValueForKey(WebPreferencesKey::cssGridLayoutEnabledKey()));
     settings.setRegionBasedColumnsEnabled(store.getBoolValueForKey(WebPreferencesKey::regionBasedColumnsEnabledKey()));
     settings.setWebGLEnabled(store.getBoolValueForKey(WebPreferencesKey::webGLEnabledKey()));
@@ -3165,7 +3180,7 @@ void WebPage::didReceiveMessage(CoreIPC::Connection* connection, CoreIPC::Messag
     didReceiveWebPageMessage(connection, decoder);
 }
 
-void WebPage::didReceiveSyncMessage(CoreIPC::Connection* connection, CoreIPC::MessageDecoder& decoder, OwnPtr<CoreIPC::MessageEncoder>& replyEncoder)
+void WebPage::didReceiveSyncMessage(CoreIPC::Connection* connection, CoreIPC::MessageDecoder& decoder, std::unique_ptr<CoreIPC::MessageEncoder>& replyEncoder)
 {   
     didReceiveSyncWebPageMessage(connection, decoder, replyEncoder);
 }

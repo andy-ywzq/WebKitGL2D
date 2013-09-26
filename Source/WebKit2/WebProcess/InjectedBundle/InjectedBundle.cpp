@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Apple Inc. All rights reserved.
+ * Copyright (C) 2010, 2013 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -101,11 +101,11 @@ void InjectedBundle::initializeClient(WKBundleClient* client)
 
 void InjectedBundle::postMessage(const String& messageName, APIObject* messageBody)
 {
-    OwnPtr<CoreIPC::MessageEncoder> encoder = CoreIPC::MessageEncoder::create(WebContextLegacyMessages::messageReceiverName(), WebContextLegacyMessages::postMessageMessageName(), 0);
+    auto encoder = std::make_unique<CoreIPC::MessageEncoder>(WebContextLegacyMessages::messageReceiverName(), WebContextLegacyMessages::postMessageMessageName(), 0);
     encoder->encode(messageName);
     encoder->encode(InjectedBundleUserMessageEncoder(messageBody));
 
-    WebProcess::shared().parentProcessConnection()->sendMessage(encoder.release());
+    WebProcess::shared().parentProcessConnection()->sendMessage(std::move(encoder));
 }
 
 void InjectedBundle::postSynchronousMessage(const String& messageName, APIObject* messageBody, RefPtr<APIObject>& returnData)
@@ -113,11 +113,11 @@ void InjectedBundle::postSynchronousMessage(const String& messageName, APIObject
     InjectedBundleUserMessageDecoder messageDecoder(returnData);
 
     uint64_t syncRequestID;
-    OwnPtr<CoreIPC::MessageEncoder> encoder = WebProcess::shared().parentProcessConnection()->createSyncMessageEncoder(WebContextLegacyMessages::messageReceiverName(), WebContextLegacyMessages::postSynchronousMessageMessageName(), 0, syncRequestID);
+    std::unique_ptr<CoreIPC::MessageEncoder> encoder = WebProcess::shared().parentProcessConnection()->createSyncMessageEncoder(WebContextLegacyMessages::messageReceiverName(), WebContextLegacyMessages::postSynchronousMessageMessageName(), 0, syncRequestID);
     encoder->encode(messageName);
     encoder->encode(InjectedBundleUserMessageEncoder(messageBody));
 
-    OwnPtr<CoreIPC::MessageDecoder> replyDecoder = WebProcess::shared().parentProcessConnection()->sendSyncMessage(syncRequestID, encoder.release(), CoreIPC::Connection::NoTimeout);
+    std::unique_ptr<CoreIPC::MessageDecoder> replyDecoder = WebProcess::shared().parentProcessConnection()->sendSyncMessage(syncRequestID, std::move(encoder), CoreIPC::Connection::NoTimeout);
     if (!replyDecoder || !replyDecoder->decode(messageDecoder)) {
         returnData = nullptr;
         return;
@@ -191,12 +191,12 @@ void InjectedBundle::overrideBoolPreferenceForTestRunner(WebPageGroupProxy* page
 
 #if ENABLE(CSS_REGIONS)
     if (preference == "WebKitCSSRegionsEnabled")
-        RuntimeEnabledFeatures::setCSSRegionsEnabled(enabled);
+        RuntimeEnabledFeatures::sharedFeatures().setCSSRegionsEnabled(enabled);
 #endif
 
 #if ENABLE(CSS_COMPOSITING)
     if (preference == "WebKitCSSCompositingEnabled")
-        RuntimeEnabledFeatures::setCSSCompositingEnabled(enabled);
+        RuntimeEnabledFeatures::sharedFeatures().setCSSCompositingEnabled(enabled);
 #endif
 
     // Map the names used in LayoutTests with the names used in WebCore::Settings and WebPreferencesStore.
@@ -646,7 +646,7 @@ void InjectedBundle::setSerialLoadingEnabled(bool enabled)
 void InjectedBundle::setShadowDOMEnabled(bool enabled)
 {
 #if ENABLE(SHADOW_DOM)
-    RuntimeEnabledFeatures::setShadowDOMEnabled(enabled);
+    RuntimeEnabledFeatures::sharedFeatures().setShadowDOMEnabled(enabled);
 #else
     UNUSED_PARAM(enabled);
 #endif
@@ -655,7 +655,7 @@ void InjectedBundle::setShadowDOMEnabled(bool enabled)
 void InjectedBundle::setCSSRegionsEnabled(bool enabled)
 {
 #if ENABLE(CSS_REGIONS)
-    RuntimeEnabledFeatures::setCSSRegionsEnabled(enabled);
+    RuntimeEnabledFeatures::sharedFeatures().setCSSRegionsEnabled(enabled);
 #else
     UNUSED_PARAM(enabled);
 #endif
@@ -664,7 +664,7 @@ void InjectedBundle::setCSSRegionsEnabled(bool enabled)
 void InjectedBundle::setCSSCompositingEnabled(bool enabled)
 {
 #if ENABLE(CSS_COMPOSITING)
-    RuntimeEnabledFeatures::setCSSCompositingEnabled(enabled);
+    RuntimeEnabledFeatures::sharedFeatures().setCSSCompositingEnabled(enabled);
 #else
     UNUSED_PARAM(enabled);
 #endif
@@ -673,7 +673,7 @@ void InjectedBundle::setCSSCompositingEnabled(bool enabled)
 void InjectedBundle::setSeamlessIFramesEnabled(bool enabled)
 {
 #if ENABLE(IFRAME_SEAMLESS)
-    RuntimeEnabledFeatures::setSeamlessIFramesEnabled(enabled);
+    RuntimeEnabledFeatures::sharedFeatures().setSeamlessIFramesEnabled(enabled);
 #else
     UNUSED_PARAM(enabled);
 #endif

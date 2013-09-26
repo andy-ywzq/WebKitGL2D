@@ -1,3 +1,51 @@
+2013-09-25  Brent Fulgham  <bfulgham@apple.com>
+
+        Refactor RuntimeEnabledFeatures as a Singleton.
+        https://bugs.webkit.org/show_bug.cgi?id=121883.
+
+        Reviewed by Jer Noble.
+
+        * Api/qwebsettings.cpp:
+        (QWebSettingsPrivate::apply): Use singleton accessor.
+        * WebCoreSupport/DumpRenderTreeSupportQt.cpp:
+        (DumpRenderTreeSupportQt::setSeamlessIFramesEnabled): Ditto.
+
+2013-09-25  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Fix build with Qt 5.2 QtPosition module
+        https://bugs.webkit.org/show_bug.cgi?id=121089
+
+        Reviewed by Simon Hausmann.
+
+        QtLocation -> QtPositioning
+
+        * WebCoreSupport/GeolocationClientQt.cpp:
+
+2013-09-24  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Crash when trying to download blob url
+        https://bugs.webkit.org/show_bug.cgi?id=121681
+
+        Reviewed by Simon Hausmann.
+
+        Do not crash if a download was triggered on a resource WebCore handles internally.
+
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+        (WebCore::FrameLoaderClientQt::convertMainResourceLoadToDownload):
+
+2013-09-24  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] RepaintRequested signal sometimes not emitted
+        https://bugs.webkit.org/show_bug.cgi?id=121790
+
+        Reviewed by Simon Hausmann.
+
+        We should also emit repaintRequested after calling PageClient::update().
+
+        * WidgetSupport/PageClientQt.cpp:
+        (WebCore::PageClientQWidget::repaintViewport):
+        (WebCore::PageClientQGraphicsWidget::repaintViewport):
+
 2013-09-22  Sam Weinig  <sam@webkit.org>
 
         CTTE: Use references more in ContainerNode, ContainerNodeAlgorithms and related classes

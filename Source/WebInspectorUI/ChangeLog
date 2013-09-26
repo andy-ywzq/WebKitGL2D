@@ -1,3 +1,73 @@
+2013-09-26  Antoine Quint  <graouts@apple.com>
+
+        Web Inspector: Activity viewer not properly reset when reloading
+        https://bugs.webkit.org/show_bug.cgi?id=121958
+
+        Reviewed by Darin Adler.
+
+        Reset the resources count and accumulated size when we detect the main frame
+        has changed, which will work with documents where there are no resources besides
+        frames in which case WebInspector.Frame.Event.AllResourcesRemoved was not fired
+        and our counts wouldn't be reset correctly.
+
+        * UserInterface/DashboardManager.js:
+        (WebInspector.DashboardManager):
+        (WebInspector.DashboardManager.prototype._mainResourceDidChange):
+
+2013-09-26  Antoine Quint  <graouts@apple.com>
+
+        Web Inspector: Keep DOM tree expanded on page reload
+        https://bugs.webkit.org/show_bug.cgi?id=121665
+
+        Reviewed by Darin Adler.
+
+        Allow the node that was selected before reloading the page to be selected
+        at the page is reloaded. Credit goes to Joseph Pecoraro for the fix.
+
+        * UserInterface/DOMTreeContentView.js:
+        (WebInspector.DOMTreeContentView.prototype._rootDOMNodeAvailable.selectNode):
+
+2013-09-24  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Using Breakpoint Actions Breaks iOS inspection
+        https://bugs.webkit.org/show_bug.cgi?id=121862
+
+        Reviewed by Timothy Hatcher.
+
+        Only use DebuggerAgent.BreakpointActionType if it is available.
+        Otherwise leave options undefined for breakpoints since the backend
+        does not support it.
+
+        * UserInterface/DebuggerManager.js:
+        (WebInspector.DebuggerManager.prototype._setBreakpoint):
+
+2013-09-24  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Include iOS 7 Inspector.json Version
+        https://bugs.webkit.org/show_bug.cgi?id=121852
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/Legacy/7.0/InspectorBackendCommands.js: Added.
+        * Versions/Inspector-iOS-7.0.json: Added.
+
+2013-09-24  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/14971518> WebKit should build against the Xcode default toolchain when targeting OS X 10.8
+
+        Reviewed by Dan Bernstein.
+
+        * Configurations/Base.xcconfig:
+
+2013-09-24  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Breakpoint Actions input should disable spellchecking
+        https://bugs.webkit.org/show_bug.cgi?id=121846
+
+        Reviewed by Timothy Hatcher.
+
+        * UserInterface/BreakpointActionView.js:
+
 2013-09-21  Timothy Hatcher  <timothy@apple.com>
 
         Hook up the initiator info and show it in the Resource details sidebar.

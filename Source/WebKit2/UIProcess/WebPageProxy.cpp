@@ -1682,7 +1682,7 @@ void WebPageProxy::terminateProcess()
 #if !USE(CF) || defined(BUILDING_QT__)
 PassRefPtr<WebData> WebPageProxy::sessionStateData(WebPageProxySessionStateFilterCallback filter, void* context) const
 {
-    OwnPtr<CoreIPC::ArgumentEncoder> encoder = CoreIPC::ArgumentEncoder::create();
+    auto encoder = createOwned<CoreIPC::ArgumentEncoder>();
     unsigned index = m_backForwardList->currentIndex();
     const BackForwardListItemVector& entries = m_backForwardList->entries();
     BackForwardListItemVector filtered;
@@ -1707,7 +1707,7 @@ void WebPageProxy::restoreFromSessionStateData(WebData* data)
     if (!data)
         return;
 
-    OwnPtr<CoreIPC::ArgumentDecoder> decoder = CoreIPC::ArgumentDecoder::create(data->bytes(), data->size());
+    auto decoder = createOwned<CoreIPC::ArgumentDecoder>(data->bytes(), data->size());
 
     SessionState state;
     if (!SessionState::decode(*(decoder.get()), state))

@@ -287,13 +287,9 @@ bool Connection::processMessage()
     if (messageInfo.isMessageBodyIsOutOfLine())
         messageBody = reinterpret_cast<uint8_t*>(oolMessageBody->data());
 
-    OwnPtr<MessageDecoder> decoder;
-    if (attachments.isEmpty())
-        decoder = MessageDecoder::create(DataReference(messageBody, messageInfo.bodySize()));
-    else
-        decoder = MessageDecoder::create(DataReference(messageBody, messageInfo.bodySize()), attachments);
+    auto decoder = std::make_unique<MessageDecoder>(DataReference(messageBody, messageInfo.bodySize()), std::move(attachments));
 
-    processIncomingMessage(decoder.release());
+    processIncomingMessage(std::move(decoder));
 
     if (m_readBufferSize > messageLength) {
         memmove(m_readBuffer.data(), m_readBuffer.data() + messageLength, m_readBufferSize - messageLength);
@@ -445,7 +441,7 @@ bool Connection::platformCanSendOutgoingMessages() const
     return m_isConnected;
 }
 
-bool Connection::sendOutgoingMessage(OwnPtr<MessageEncoder> encoder)
+bool Connection::sendOutgoingMessage(std::unique_ptr<MessageEncoder> encoder)
 {
 #if PLATFORM(QT)
     ASSERT(m_socketNotifier);

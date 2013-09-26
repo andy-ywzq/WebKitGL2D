@@ -1,3 +1,311 @@
+2013-09-26  Brian J. Burg  <burg@cs.washington.edu>
+
+        build-webkit --inspector-frontend should copy WebInspectorUI files
+        https://bugs.webkit.org/show_bug.cgi?id=117851
+
+        Reviewed by Joseph Pecoraro.
+
+        Change the --inspector-frontend build option to additionally build/copy 
+        WebInspectorUI by setting it as the only project that needs to be built.
+
+        * Scripts/build-webkit:
+
+2013-09-26  Zan Dobersek  <zdobersek@igalia.com>
+
+        XvfbDriver should set up Xvfb instances providing screens of 8-bit depth
+        https://bugs.webkit.org/show_bug.cgi?id=121951
+
+        Reviewed by Carlos Garcia Campos.
+
+        Screens with 24-bit depth are causing problems as it doesn't seem to be possible to fall back to
+        software rendering successfully on the GTK 64-bit release builder, resulting in crashes in almost
+        500 layout tests that trigger accelerated compositing to be used.
+
+        * Scripts/webkitpy/port/xvfbdriver.py:
+        (XvfbDriver._start):
+        * Scripts/webkitpy/port/xvfbdriver_unittest.py: Update unit test baselines.
+        (XvfbDriverTest.test_start_no_pixel_tests):
+        (XvfbDriverTest.test_start_pixel_tests):
+        (XvfbDriverTest.test_start_arbitrary_worker_number):
+        (XvfbDriverTest.test_next_free_display):
+        (XvfbDriverTest.test_start_next_worker):
+
+2013-09-26  Tim Horton  <timothy_horton@apple.com>
+
+        Tiled drawing should not imply threaded scrolling
+        https://bugs.webkit.org/show_bug.cgi?id=121874
+        <rdar://problem/15071494>
+
+        Reviewed by Sam Weinig.
+
+        * WebKitTestRunner/mac/PlatformWebViewMac.mm:
+        (WTR::PlatformWebView::PlatformWebView):
+        The existing tiled-drawing layout tests require threaded scrolling to be enabled.
+
+2013-09-26  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r156457.
+        http://trac.webkit.org/changeset/156457
+        https://bugs.webkit.org/show_bug.cgi?id=121960
+
+        Broke webkitpy tests. (Requested by kling on #webkit).
+
+        * Scripts/webkitpy/port/xvfbdriver.py:
+        (XvfbDriver._start):
+
+2013-09-26  Zan Dobersek  <zdobersek@igalia.com>
+
+        XvfbDriver should set up Xvfb instances providing screens of 8-bit depth
+        https://bugs.webkit.org/show_bug.cgi?id=121951
+
+        Reviewed by Carlos Garcia Campos.
+
+        Screens with 24-bit depth are causing problems as it doesn't seem to be possible to fall back to
+        software rendering successfully on the GTK 64-bit release builder, resulting in crashes in almost
+        500 layout tests that trigger accelerated compositing to be used.
+
+        * Scripts/webkitpy/port/xvfbdriver.py:
+        (XvfbDriver._start):
+
+2013-09-25  Alex Christensen  <achristensen@webkit.org>
+
+        Removed check for Apple Application Support directory in WinCairo port.
+        https://bugs.webkit.org/show_bug.cgi?id=121869
+
+        Reviewed by Brent Fulgham.
+
+        * DumpRenderTree/DumpRenderTree.vcxproj/DumpRenderTree/DumpRenderTreeLauncher.vcxproj:
+        * DumpRenderTree/DumpRenderTree.vcxproj/ImageDiff/ImageDiffLauncher.vcxproj:
+        * WinLauncher/WinLauncher.vcxproj/WinLauncher.vcxproj:
+        Use DLLLauncherWinCairo.props for WinCairo ports.
+        * win/DLLLauncher/DLLLauncherMain.cpp:
+        (wWinMain):
+        Don't call modifyPath to check for AAS in the WinCairo port.
+        * win/DLLLauncher/DLLLauncherWinCairo.props: Added to define WIN_CAIRO.
+
+2013-09-25  Alex Christensen  <achristensen@webkit.org>
+
+        Enabled AssembleBuildLogs on WinCairo port.
+        https://bugs.webkit.org/show_bug.cgi?id=121923
+
+        Reviewed by Brent Fulgham.
+
+        * win/AssembleBuildLogs/AssembleBuildLogs.vcxproj:
+        Fixed reference to README, added WinCairo configurations.
+        * win/AssembleBuildLogs/AssembleBuildLogs.vcxproj.filters:
+        Fixed reference to README.
+        * win/AssembleBuildLogs/AssembleLogs.cmd:
+        Added ANGLE projects, skipped QTMovieWin for WinCairo, use PlatformArchitecture for Win64.
+        * win/AssembleBuildLogs/README: Fixed spelling.
+
+2013-09-25  Patrick Gansterer  <paroga@webkit.org>
+
+        [WIN] Fix MSVC C4146 compiler warning
+        https://bugs.webkit.org/show_bug.cgi?id=121838
+
+        Reviewed by Brent Fulgham.
+
+        Fix some variables from unsinged to int to fix the compiler warning
+        "unary minus operator applied to unsigned type, result still unsigned".
+
+        * DumpRenderTree/WorkQueueItem.h:
+        (BackItem::BackItem):
+        (ForwardItem::ForwardItem):
+        * DumpRenderTree/win/DumpRenderTree.cpp:
+        (createWebViewAndOffscreenWindow):
+
+2013-09-25  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Switch the 64-bit Release builder to testing layout tests under WK2
+        https://bugs.webkit.org/show_bug.cgi?id=121256
+
+        Reviewed by Martin Robinson.
+
+        Switch the GTK 64-bit Release builder to testing the layout tests under WebKit2.
+        The GTK 64-bit Release WK2 testing builder is switched to now run layout tests under WebKit1.
+
+        * BuildSlaveSupport/build.webkit.org-config/config.json:
+
+2013-09-25  Patrick Gansterer  <paroga@webkit.org>
+
+        Add style checker for CMake lists
+        https://bugs.webkit.org/show_bug.cgi?id=121764
+
+        Reviewed by Ryosuke Niwa.
+
+        Add an additional check to make sure that list of files are sorted.
+        Exclude lists of include directories for now, since the order
+        can be importent for compilation of some files.
+
+        * Scripts/webkitpy/style/checkers/cmake.py:
+        (CMakeChecker.check):
+        (CMakeChecker._check_indent):
+        (CMakeChecker):
+        (CMakeChecker._check_list_order):
+        (CMakeChecker._list_item_path):
+        * Scripts/webkitpy/style/checkers/cmake_unittest.py:
+        (CMakeCheckerTest.test_check):
+
+2013-09-25  Patrick Gansterer  <paroga@webkit.org>
+
+        CMakeChecker takes unusually long time to run
+        https://bugs.webkit.org/show_bug.cgi?id=105662
+
+        Reviewed by Ryosuke Niwa.
+
+        Move the caching mechanism for regular expression of the C++ checker into
+        a common file and use it for the CMake and ChangeLog checkers too.
+
+        * Scripts/webkitpy/style/checkers/changelog.py:
+        (ChangeLogChecker.check_entry):
+        * Scripts/webkitpy/style/checkers/cmake.py:
+        (CMakeChecker._process_line):
+        (CMakeChecker._check_no_space_cmds):
+        (CMakeChecker._check_one_space_cmds):
+        (CMakeChecker._check_non_lowercase_cmd):
+        * Scripts/webkitpy/style/checkers/common.py:
+        (match):
+        (search):
+        (searchIgnorecase):
+        (sub):
+        (subn):
+        * Scripts/webkitpy/style/checkers/cpp.py:
+
+2013-09-25  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Fix build with Qt 5.2 QtPosition module
+        https://bugs.webkit.org/show_bug.cgi?id=121089
+
+        Reviewed by Simon Hausmann.
+
+        QtLocation -> QtPositioning. Make sure we set build type before doing configure checks
+        that might depend on them.
+
+        * qmake/mkspecs/features/default_pre.prf:
+        * qmake/mkspecs/features/features.prf:
+
+2013-09-25  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [ATK] Fix style issues in AccessibilityUIElementAtk
+        https://bugs.webkit.org/show_bug.cgi?id=121898
+
+        Reviewed by Chris Fleizach.
+
+        Avoid the '.f' suffix for float literals and use G_VALUE_INIT
+        instead of { 0, { { 0 } } } to initialize a GValue.
+
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (AccessibilityUIElement::clickPointX): Remove suffix.
+        (AccessibilityUIElement::clickPointY): Ditto.
+        (AccessibilityUIElement::intValue): Use G_VALUE_INIT and remove suffix.
+        (AccessibilityUIElement::minValue): Ditto.
+        (AccessibilityUIElement::maxValue): Ditto.
+        (AccessibilityUIElement::numberAttributeValue): Remove suffix.
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::AccessibilityUIElement::numberAttributeValue): Remove suffix.
+        (WTR::AccessibilityUIElement::x): Ditto.
+        (WTR::AccessibilityUIElement::y): Ditto.
+        (WTR::AccessibilityUIElement::width): Ditto.
+        (WTR::AccessibilityUIElement::height): Ditto.
+        (WTR::AccessibilityUIElement::clickPointX): Ditto.
+        (WTR::AccessibilityUIElement::clickPointY): Ditto.
+        (WTR::AccessibilityUIElement::intValue): Ditto.
+        (WTR::AccessibilityUIElement::minValue): Ditto.
+        (WTR::AccessibilityUIElement::maxValue): Ditto.
+
+2013-09-25  Krzysztof Czech  <k.czech@samsung.com>
+
+        [EFL] accessibility/loading-iframe-sends-notification.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=112003
+
+        Reviewed by Mario Sanchez Prada.
+
+        Enabled addNotificationListener and removeNotificationListener for EFL port.
+
+        * WebKitTestRunner/InjectedBundle/AccessibilityController.cpp:
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityControllerAtk.cpp:
+        (WTR::AccessibilityController::removeNotificationListener):
+
+2013-09-24  Filip Pizlo  <fpizlo@apple.com>
+
+        Crashing under JSC::DFG::SpeculativeJIT::spill visiting citicards.com
+        https://bugs.webkit.org/show_bug.cgi?id=121844
+
+        Reviewed by Mark Hahnenberg.
+
+        * Scripts/run-javascriptcore-tests: Be more clear about what test suite failed.
+
+2013-09-24  Alexey Proskuryakov  <ap@apple.com>
+
+        [Mac][WK2] Multiple font tests fail is there is a global setting for font antialiasing threshold
+        https://bugs.webkit.org/show_bug.cgi?id=121854
+
+        Reviewed by Anders Carlsson.
+
+        * WebKitTestRunner/InjectedBundle/mac/InjectedBundleMac.mm:
+        (WTR::InjectedBundle::platformInitialize): Post a notification to update cached
+        settings in underlying frameworks.
+
+2013-09-24  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/14971518> WebKit should build against the Xcode default toolchain when targeting OS X 10.8
+
+        Reviewed by Dan Bernstein.
+
+        * DumpRenderTree/mac/Configurations/Base.xcconfig:
+        * MiniBrowser/Configurations/Base.xcconfig:
+        * TestWebKitAPI/Configurations/Base.xcconfig:
+        * WebKitLauncher/Configurations/Base.xcconfig:
+        * WebKitTestRunner/Configurations/Base.xcconfig:
+
+2013-09-24  Denis Nomiyama  <d.nomiyama@samsung.com>
+
+        [ATK] Missing WTR AccessibilityController::addNotificationListener implementation
+        https://bugs.webkit.org/show_bug.cgi?id=121674
+
+        Reviewed by Mario Sanchez Prada.
+
+        Implemented the global notification listener for
+        AccessibilityController. The signal is generated by
+        AXObjectCache::postPlatformNotification() and received by
+        axObjectEventListener(). axObjectEventListener will then invoke
+        JSObjectCallAsFunction() with the respective callback function.
+
+        There is no additional test for this patch since its implementation will
+        be tested by an accessibility layout test that is currently failing
+        (accessibility/loading-iframe-sends-notification.html).
+
+        * WebKitTestRunner/InjectedBundle/AccessibilityController.cpp: Removed
+        stub implementations of addNotificationListener and
+        removeNotificationListener for the GTK port.
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityControllerAtk.cpp:
+        (WTR::AccessibilityController::addNotificationListener): Creates the
+        notification handler and sets the notification function callback.
+        (WTR::AccessibilityController::removeNotificationListener): Removes the
+        global handler.
+
+2013-09-24  Anton Obzhirov  <a.obzhirov@samsung.com>
+
+        [GTK] fast/images/exif-orientation-composited.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=119731
+
+        Reviewed by Carlos Garcia Campos.
+
+        Add handling respect image orientation property in DRT.
+
+        * DumpRenderTree/gtk/TestRunnerGtk.cpp:
+        (TestRunner::overridePreference):
+
+2013-09-24  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] Bump the GTK+ dependency in the Wayland-specific Jhbuild moduleset
+        https://bugs.webkit.org/show_bug.cgi?id=121787
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * gtk/jhbuild-wayland.modules: Bump the GTK+ dependency that's intended for use when building
+        with the Wayland target enabled to version 3.10.0.
+
 2013-09-23  Patrick Gansterer  <paroga@webkit.org>
 
         use NOMINMAX instead of #define min min

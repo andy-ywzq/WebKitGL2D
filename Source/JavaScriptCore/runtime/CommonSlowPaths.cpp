@@ -193,13 +193,21 @@ SLOW_PATH_DECL(slow_path_construct_arityCheck)
     RETURN_TWO(0, reinterpret_cast<ExecState*>(SlotsToAdd));
 }
 
+SLOW_PATH_DECL(slow_path_get_callee)
+{
+    BEGIN();
+    JSFunction* callee = jsCast<JSFunction*>(exec->callee());
+    pc[2].u.jsCell.set(exec->vm(), exec->codeBlock()->ownerExecutable(), callee);
+    RETURN(callee);
+}
+
 SLOW_PATH_DECL(slow_path_create_arguments)
 {
     BEGIN();
     JSValue arguments = JSValue(Arguments::create(vm, exec));
     CHECK_EXCEPTION();
     exec->uncheckedR(pc[1].u.operand) = arguments;
-    exec->uncheckedR(unmodifiedArgumentsRegister(pc[1].u.operand)) = arguments;
+    exec->uncheckedR(unmodifiedArgumentsRegister(VirtualRegister(pc[1].u.operand)).offset()) = arguments;
     END();
 }
 
@@ -222,10 +230,10 @@ SLOW_PATH_DECL(slow_path_to_this)
 {
     BEGIN();
     JSValue v1 = OP(1).jsValue();
-#if ENABLE(VALUE_PROFILER)
-    pc[OPCODE_LENGTH(op_to_this) - 1].u.profile->m_buckets[0] =
-        JSValue::encode(v1.structureOrUndefined());
-#endif
+    if (v1.isCell())
+        pc[2].u.structure.set(exec->vm(), exec->codeBlock()->ownerExecutable(), v1.asCell()->structure());
+    else
+        pc[2].u.structure.clear();
     RETURN(v1.toThis(exec, exec->codeBlock()->isStrictMode() ? StrictMode : NotStrictMode));
 }
 

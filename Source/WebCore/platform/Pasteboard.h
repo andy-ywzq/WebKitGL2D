@@ -27,7 +27,9 @@
 #define Pasteboard_h
 
 #include "DragImage.h"
+#include "Image.h"
 #include "KURL.h"
+#include "SharedBuffer.h"
 #include <wtf/Noncopyable.h>
 #include <wtf/Vector.h>
 #include <wtf/PassOwnPtr.h>
@@ -49,6 +51,11 @@ typedef struct _GtkClipboard GtkClipboard;
 typedef struct HWND__* HWND;
 #endif
 
+#if PLATFORM(IOS)
+OBJC_CLASS NSArray;
+OBJC_CLASS NSString;
+#endif
+
 // FIXME: This class uses the DOM and makes calls to Editor.
 // It should be divested of its knowledge of the frame and editor.
 
@@ -68,7 +75,7 @@ enum ShouldSerializeSelectedTextForClipboard { DefaultSelectedTextType, IncludeI
 // For writing to the pasteboard. Generally sorted with the richest formats on top.
 
 struct PasteboardWebContent {
-#if !(PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(IOS) || PLATFORM(QT) || PLATFORM(WIN))
+#if !(PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(QT) || PLATFORM(WIN))
     bool canSmartCopyOrDelete;
     RefPtr<SharedBuffer> dataInWebArchiveFormat;
     RefPtr<SharedBuffer> dataInRTFDFormat;
@@ -88,11 +95,9 @@ struct PasteboardURL {
 };
 
 struct PasteboardImage {
-#if !(PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(IOS) || PLATFORM(QT) || PLATFORM(WIN))
-    PasteboardURL url;
-#endif
     RefPtr<Image> image;
-#if !(PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(IOS) || PLATFORM(QT) || PLATFORM(WIN))
+#if !(PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(QT) || PLATFORM(WIN))
+    PasteboardURL url;
     RefPtr<SharedBuffer> resourceData;
     String resourceMIMEType;
 #endif
@@ -163,11 +168,11 @@ public:
 
 #if PLATFORM(GTK) || PLATFORM(IOS) || PLATFORM(QT) || PLATFORM(WIN)
     PassRefPtr<DocumentFragment> documentFragment(Frame*, PassRefPtr<Range>, bool allowPlainText, bool& chosePlainText); // FIXME: Layering violation.
-    void writeSelection(Range*, bool canSmartCopyOrDelete, Frame*, ShouldSerializeSelectedTextForClipboard = DefaultSelectedTextType); // FIXME: Layering violation.
 #endif
 
 #if PLATFORM(GTK) || PLATFORM(QT) || PLATFORM(WIN)
     void writeImage(Node*, const KURL&, const String& title); // FIXME: Layering violation.
+    void writeSelection(Range*, bool canSmartCopyOrDelete, Frame*, ShouldSerializeSelectedTextForClipboard = DefaultSelectedTextType); // FIXME: Layering violation.
 #endif
 
 #if PLATFORM(GTK)
@@ -183,10 +188,8 @@ public:
 #if PLATFORM(IOS)
     void setFrame(Frame*); // FIXME: Layering violation.
 
-    void writeImage(Node*, Frame*); // FIXME: Layering violation.
-    void writePlainText(const String&, Frame*); // FIXME: Layering violation.
-
     static NSArray* supportedPasteboardTypes();
+    static String resourceMIMEType(NSString *mimeType);
 #endif
 
 #if PLATFORM(MAC) && !PLATFORM(IOS)

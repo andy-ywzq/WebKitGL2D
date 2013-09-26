@@ -1,3 +1,137 @@
+2013-09-26  Anders Carlsson  <andersca@apple.com>
+
+        Remove needsDestruction from vector and hash traits
+        https://bugs.webkit.org/show_bug.cgi?id=121983
+
+        Reviewed by Sam Weinig.
+
+        For Vector, use std::is_trivially_destructible to determine whether to call the destructor.
+        For HashTable, always call the destructor; if it is trivial then no code will be generated for it and the loops will be folded away. 
+
+        Removing this does break the ability to store objects with non-trivial destructors in vectors and hash maps
+        and have their destructors not be called when removed, but we've never used this feature in WebKit so the extra
+        code complexity is not worth it.
+
+        * wtf/HashTable.h:
+        (WTF::::deallocateTable):
+        * wtf/HashTraits.h:
+        * wtf/Vector.h:
+        (WTF::VectorTypeOperations::destruct):
+        * wtf/VectorTraits.h:
+
+2013-09-26  Anders Carlsson  <andersca@apple.com>
+
+        Build fixes.
+
+        Fix a paste-o.
+
+        * wtf/StdLibExtras.h:
+        (std::make_unique):
+
+2013-09-26  Anders Carlsson  <andersca@apple.com>
+
+        Remove the hash table mover
+        https://bugs.webkit.org/show_bug.cgi?id=121980
+
+        Reviewed by Andreas Kling.
+
+        Use std::move instead.
+
+        * wtf/HashTable.h:
+
+2013-09-26  Anders Carlsson  <andersca@apple.com>
+
+        Change a couple of HashMap value types from OwnPtr to std::unique_ptr
+        https://bugs.webkit.org/show_bug.cgi?id=121973
+
+        Reviewed by Andreas Kling.
+
+        * wtf/RefPtrHashMap.h:
+        Add a missing std::forward.
+
+        * wtf/StdLibExtras.h:
+        (std::make_unique):
+        Add more overloads.
+
+2013-09-26  Julien Brianceau  <jbriance@cisco.com>
+
+        [Qt] Remove PassTraits.h from WTF.pro.
+        https://bugs.webkit.org/show_bug.cgi?id=121946
+
+        Reviewed by Andreas Kling.
+
+        * WTF.pro: Remove PassTraits.h as this file disappeared in r156298.
+
+2013-09-25  Patrick Gansterer  <paroga@webkit.org>
+
+        Fix compilation with new MSVC compiler for Windows CE
+        https://bugs.webkit.org/show_bug.cgi?id=121914
+
+        Reviewed by Darin Adler.
+
+        Remove code to support older Windows CE versions, since those old
+        versions do not support C+11, which is required in the meantime.
+
+        * wtf/Atomics.h:
+        * wtf/Platform.h:
+
+2013-09-25  Anders Carlsson  <andersca@apple.com>
+
+        Move KeyValuePairTraits inside HashMap
+        https://bugs.webkit.org/show_bug.cgi?id=121931
+
+        Reviewed by Sam Weinig.
+
+        Also rename the ValueType typedef to KeyValuePairType since it's always a key value pair.
+
+        * wtf/HashMap.h:
+        (WTF::HashMap::KeyValuePairTraits::isEmptyValue):
+        (WTF::HashMap::find):
+        (WTF::HashMap::contains):
+
+2013-09-25  Anders Carlsson  <andersca@apple.com>
+
+        Un-indent HashMap.h.
+
+        Rubber-stamped by Andreas Kling.
+
+        * wtf/HashMap.h:
+
+2013-09-25  Anders Carlsson  <andersca@apple.com>
+
+        Un-indent HashTraits.h.
+
+        Rubber-stamped by Andreas Kling.
+
+        * wtf/HashTraits.h:
+
+2013-09-25  Patrick Gansterer  <paroga@webkit.org>
+
+        Fix template deduction for CollatorDefault
+
+        * wtf/unicode/CollatorDefault.cpp:
+        (WTF::Collator::userDefault): Use nullptr instead of 0.
+
+2013-09-24  Anders Carlsson  <andersca@apple.com>
+
+        Remove encoder create functions
+        https://bugs.webkit.org/show_bug.cgi?id=121853
+
+        Reviewed by Sam Weinig.
+
+        Add a variadic version of createOwned.
+
+        * wtf/OwnPtr.h:
+        (WTF::createOwned):
+
+2013-09-24  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/14971518> WebKit should build against the Xcode default toolchain when targeting OS X 10.8
+
+        Reviewed by Dan Bernstein.
+
+        * Configurations/Base.xcconfig:
+
 2013-09-23  Anders Carlsson  <andersca@apple.com>
 
         Remove WTF_USE_SCROLLBAR_PAINTER #define

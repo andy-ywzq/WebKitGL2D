@@ -2464,6 +2464,19 @@ bool RenderLayerCompositor::keepLayersPixelAligned() const
     return true;
 }
 
+bool RenderLayerCompositor::mainFrameBackingIsTiled() const
+{
+    RenderLayer* layer = m_renderView.layer();
+    if (!layer)
+        return false;
+
+    RenderLayerBacking* backing = layer->backing();
+    if (!backing)
+        return false;
+
+    return backing->usingTiledBacking();
+}
+
 bool RenderLayerCompositor::shouldCompositeOverflowControls() const
 {
     FrameView& frameView = m_renderView.frameView();
@@ -2471,7 +2484,7 @@ bool RenderLayerCompositor::shouldCompositeOverflowControls() const
     if (frameView.platformWidget())
         return false;
 
-    if (hasCoordinatedScrolling())
+    if (mainFrameBackingIsTiled())
         return true;
 
     if (!frameView.hasOverlayScrollbars())
@@ -2502,8 +2515,8 @@ bool RenderLayerCompositor::requiresOverhangAreasLayer() const
     if (m_renderView.document().ownerElement())
         return false;
 
-    // We do want a layer if we have a scrolling coordinator and can scroll.
-    if (scrollingCoordinator() && m_renderView.frameView().hasOpaqueBackground() && !m_renderView.frameView().prohibitsScrolling())
+    // We do want a layer if we're using tiled drawing and can scroll.
+    if (mainFrameBackingIsTiled() && m_renderView.frameView().hasOpaqueBackground() && !m_renderView.frameView().prohibitsScrolling())
         return true;
 
     return false;
@@ -2519,8 +2532,8 @@ bool RenderLayerCompositor::requiresContentShadowLayer() const
     if (viewHasTransparentBackground())
         return false;
 
-    // On Mac, we want a content shadow layer if we have a scrolling coordinator and can scroll.
-    if (scrollingCoordinator() && !m_renderView.frameView().prohibitsScrolling())
+    // On Mac, we want a content shadow layer if we're using tiled drawing and can scroll.
+    if (mainFrameBackingIsTiled() && !m_renderView.frameView().prohibitsScrolling())
         return true;
 #endif
 

@@ -405,7 +405,7 @@ namespace JSC {
         RegisterID* emitPushWithScope(RegisterID* scope);
         void emitPopScope();
 
-        void emitDebugHook(DebugHookID, unsigned firstLine, unsigned lastLine, unsigned charOffset, unsigned lineStart);
+        void emitDebugHook(DebugHookID, unsigned line, unsigned charOffset, unsigned lineStart);
 
         int scopeDepth() { return m_localScopeDepth + m_finallyDepth; }
         bool hasFinaliser() { return m_finallyDepth != 0; }
@@ -499,13 +499,13 @@ namespace JSC {
         RegisterID& registerFor(int index)
         {
             if (operandIsLocal(index))
-                return m_calleeRegisters[operandToLocal(index)];
+                return m_calleeRegisters[VirtualRegister(index).toLocal()];
 
             if (index == JSStack::Callee)
                 return m_calleeRegister;
 
             ASSERT(m_parameters.size());
-            return m_parameters[operandToArgument(index)];
+            return m_parameters[VirtualRegister(index).toArgument()];
         }
 
         unsigned addConstant(const Identifier&);

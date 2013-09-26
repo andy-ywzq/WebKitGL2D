@@ -79,18 +79,12 @@ SOURCES += \
      bindings/js/DOMWrapperWorld.cpp \
      bindings/js/Dictionary.cpp \
      bindings/js/GCController.cpp \
-     bindings/js/JSAudioBufferCustom.cpp \
      bindings/js/JSAttrCustom.cpp \
      bindings/js/JSBlobCustom.cpp \
      bindings/js/JSCDATASectionCustom.cpp \
-     bindings/js/JSCSSFontFaceRuleCustom.cpp \
-     bindings/js/JSCSSImportRuleCustom.cpp \
-     bindings/js/JSCSSMediaRuleCustom.cpp \
-     bindings/js/JSCSSPageRuleCustom.cpp \
      bindings/js/JSCSSRuleCustom.cpp \
      bindings/js/JSCSSRuleListCustom.cpp \
      bindings/js/JSCSSStyleDeclarationCustom.cpp \
-     bindings/js/JSCSSStyleRuleCustom.cpp \
      bindings/js/JSCSSValueCustom.cpp \
      bindings/js/JSCallbackData.cpp \
      bindings/js/JSCanvasRenderingContext2DCustom.cpp \
@@ -103,13 +97,11 @@ SOURCES += \
      bindings/js/JSDOMFormDataCustom.cpp \
      bindings/js/JSDOMGlobalObject.cpp \
      bindings/js/JSDOMGlobalObjectTask.cpp \
-     bindings/js/JSDOMImplementationCustom.cpp \
      bindings/js/JSDOMMimeTypeArrayCustom.cpp \
      bindings/js/JSDOMPluginArrayCustom.cpp \
      bindings/js/JSDOMPluginCustom.cpp \
      bindings/js/JSDOMStringListCustom.cpp \
      bindings/js/JSDOMStringMapCustom.cpp \
-     bindings/js/JSDOMTokenListCustom.cpp \
      bindings/js/JSDOMWindowBase.cpp \
      bindings/js/JSDOMWindowCustom.cpp \
      bindings/js/JSDOMWindowShell.cpp \
@@ -142,7 +134,6 @@ SOURCES += \
      bindings/js/JSHTMLObjectElementCustom.cpp \
      bindings/js/JSHTMLOptionsCollectionCustom.cpp \
      bindings/js/JSHTMLSelectElementCustom.cpp \
-     bindings/js/JSHTMLStyleElementCustom.cpp \
      bindings/js/JSHTMLTemplateElementCustom.cpp \
      bindings/js/JSHistoryCustom.cpp \
      bindings/js/JSImageConstructor.cpp \
@@ -153,7 +144,6 @@ SOURCES += \
      bindings/js/JSLazyEventListener.cpp \
      bindings/js/JSLocationCustom.cpp \
      bindings/js/JSMainThreadExecState.cpp \
-     bindings/js/JSMediaListCustom.cpp \
      bindings/js/JSMessageChannelCustom.cpp \
      bindings/js/JSMessageEventCustom.cpp \
      bindings/js/JSMessagePortCustom.cpp \
@@ -168,7 +158,6 @@ SOURCES += \
      bindings/js/JSNodeListCustom.cpp \
      bindings/js/JSPluginElementFunctions.cpp \
      bindings/js/JSPopStateEventCustom.cpp \
-     bindings/js/JSProcessingInstructionCustom.cpp \
      bindings/js/JSRequestAnimationFrameCallbackCustom.cpp \
      bindings/js/JSRTCStatsResponseCustom.cpp \
      bindings/js/JSStorageCustom.cpp \
@@ -178,11 +167,8 @@ SOURCES += \
      bindings/js/JSTouchCustom.cpp \
      bindings/js/JSTouchListCustom.cpp \
      bindings/js/JSTreeWalkerCustom.cpp \
-     bindings/js/JSWebKitCSSKeyframeRuleCustom.cpp \
-     bindings/js/JSWebKitCSSKeyframesRuleCustom.cpp \
      bindings/js/JSWebKitPointCustom.cpp \
      bindings/js/JSXMLHttpRequestCustom.cpp \
-     bindings/js/JSXMLHttpRequestUploadCustom.cpp \
      bindings/js/JSXPathResultCustom.cpp \
      bindings/js/PageScriptDebugServer.cpp \
      bindings/js/ScheduledAction.cpp \
@@ -409,7 +395,6 @@ SOURCES += \
     dom/EventException.cpp \
     dom/EventListenerMap.cpp \
     dom/EventNames.cpp \
-    dom/EventPathWalker.cpp \
     dom/EventRetargeter.cpp \
     dom/EventTarget.cpp \
     dom/ExceptionBase.cpp \
@@ -748,7 +733,6 @@ SOURCES += \
     html/parser/XSSAuditorDelegate.cpp \
     html/shadow/ContentDistributor.cpp \
     html/shadow/DetailsMarkerControl.cpp \
-    html/shadow/HTMLContentElement.cpp \
     html/shadow/InsertionPoint.cpp \
     html/shadow/MediaControls.cpp \
     html/shadow/MediaControlsApple.cpp \
@@ -1615,7 +1599,6 @@ HEADERS += \
     dom/EventDispatchMediator.h \
     dom/EventListenerMap.h \
     dom/EventNames.h \
-    dom/EventPathWalker.h \
     dom/EventQueue.h \
     dom/EventSender.h \
     dom/EventTarget.h \
@@ -1916,7 +1899,6 @@ HEADERS += \
     html/parser/XSSAuditor.h \
     html/parser/XSSAuditorDelegate.h \
     html/shadow/ContentDistributor.h \
-    html/shadow/HTMLContentElement.h \
     html/shadow/MediaControlElementTypes.h \
     html/shadow/MediaControlElements.h \
     html/shadow/MediaControls.h \
@@ -3063,23 +3045,23 @@ enable?(INDEXED_DATABASE) {
         Modules/indexeddb/IDBAny.h \
         Modules/indexeddb/IDBCallbacks.h \
         Modules/indexeddb/IDBCursor.h \
-        Modules/indexeddb/IDBCursorBackendImpl.h \
+        Modules/indexeddb/leveldb/IDBCursorBackendLevelDB.h \
         Modules/indexeddb/IDBCursorBackendInterface.h \
         Modules/indexeddb/IDBDatabase.h \
-        Modules/indexeddb/IDBDatabaseBackendImpl.h \
+        Modules/indexeddb/leveldb/IDBDatabaseBackendLevelDB.h \
         Modules/indexeddb/IDBDatabaseBackendInterface.h \
         Modules/indexeddb/IDBDatabaseError.h \
         Modules/indexeddb/IDBDatabaseException.h \
         Modules/indexeddb/IDBEventDispatcher.h \
         Modules/indexeddb/IDBFactory.h \
-        Modules/indexeddb/IDBFactoryBackendImpl.h \
+        Modules/indexeddb/leveldb/IDBFactoryBackendLevelDB.h \
         Modules/indexeddb/IDBFactoryBackendInterface.h \
         Modules/indexeddb/IDBHistograms.h \
         Modules/indexeddb/IDBIndex.h \
         Modules/indexeddb/IDBKey.h \
         Modules/indexeddb/IDBKeyRange.h \
         Modules/indexeddb/IDBObjectStore.h \
-        Modules/indexeddb/IDBObjectStoreBackendImpl.h \
+        Modules/indexeddb/leveldb/IDBObjectStoreBackendLevelDB.h \
         Modules/indexeddb/IDBRequest.h \
         Modules/indexeddb/IDBTransaction.h \
         Modules/indexeddb/IndexedDB.h
@@ -3092,19 +3074,19 @@ enable?(INDEXED_DATABASE) {
         Modules/indexeddb/DOMWindowIndexedDatabase.cpp \
         Modules/indexeddb/IDBAny.cpp \
         Modules/indexeddb/IDBCursor.cpp \
-        Modules/indexeddb/IDBCursorBackendImpl.cpp \
+        Modules/indexeddb/leveldb/IDBCursorBackendLevelDB.cpp \
         Modules/indexeddb/IDBDatabase.cpp \
-        Modules/indexeddb/IDBDatabaseBackendImpl.cpp \
+        Modules/indexeddb/leveldb/IDBDatabaseBackendLevelDB.cpp \
         Modules/indexeddb/IDBDatabaseException.cpp \
         Modules/indexeddb/IDBEventDispatcher.cpp \
         Modules/indexeddb/IDBFactory.cpp \
         Modules/indexeddb/IDBFactoryBackendInterface.cpp \
-        Modules/indexeddb/IDBFactoryBackendImpl.cpp \
+        Modules/indexeddb/leveldb/IDBFactoryBackendLevelDB.cpp \
         Modules/indexeddb/IDBIndex.cpp \
         Modules/indexeddb/IDBKey.cpp \
         Modules/indexeddb/IDBKeyRange.cpp \
         Modules/indexeddb/IDBObjectStore.cpp \
-        Modules/indexeddb/IDBObjectStoreBackendImpl.cpp \
+        Modules/indexeddb/leveldb/IDBObjectStoreBackendLevelDB.cpp \
         Modules/indexeddb/IDBRequest.cpp \
         Modules/indexeddb/IDBTransaction.cpp \
         Modules/indexeddb/PageGroupIndexedDatabase.cpp \

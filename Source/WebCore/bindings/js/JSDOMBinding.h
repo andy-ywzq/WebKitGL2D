@@ -94,22 +94,22 @@ class DOMStringList;
         return JSC::jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject());
     }
 
-    template<class WrapperClass> inline JSC::Structure* getDOMStructure(JSC::ExecState* exec, JSDOMGlobalObject* globalObject)
+    template<class WrapperClass> inline JSC::Structure* getDOMStructure(JSC::VM& vm, JSDOMGlobalObject* globalObject)
     {
         if (JSC::Structure* structure = getCachedDOMStructure(globalObject, WrapperClass::info()))
             return structure;
-        return cacheDOMStructure(globalObject, WrapperClass::createStructure(exec->vm(), globalObject, WrapperClass::createPrototype(exec, globalObject)), WrapperClass::info());
+        return cacheDOMStructure(globalObject, WrapperClass::createStructure(vm, globalObject, WrapperClass::createPrototype(vm, globalObject)), WrapperClass::info());
     }
 
     template<class WrapperClass> inline JSC::Structure* deprecatedGetDOMStructure(JSC::ExecState* exec)
     {
         // FIXME: This function is wrong.  It uses the wrong global object for creating the prototype structure.
-        return getDOMStructure<WrapperClass>(exec, deprecatedGlobalObjectForPrototype(exec));
+        return getDOMStructure<WrapperClass>(exec->vm(), deprecatedGlobalObjectForPrototype(exec));
     }
 
-    template<class WrapperClass> inline JSC::JSObject* getDOMPrototype(JSC::ExecState* exec, JSC::JSGlobalObject* globalObject)
+    template<class WrapperClass> inline JSC::JSObject* getDOMPrototype(JSC::VM& vm, JSC::JSGlobalObject* globalObject)
     {
-        return JSC::jsCast<JSC::JSObject*>(asObject(getDOMStructure<WrapperClass>(exec, JSC::jsCast<JSDOMGlobalObject*>(globalObject))->storedPrototype()));
+        return JSC::jsCast<JSC::JSObject*>(asObject(getDOMStructure<WrapperClass>(vm, JSC::jsCast<JSDOMGlobalObject*>(globalObject))->storedPrototype()));
     }
 
     inline JSC::WeakHandleOwner* wrapperOwner(DOMWrapperWorld* world, JSC::ArrayBuffer*)
@@ -144,7 +144,7 @@ class DOMStringList;
     {
         if (!world->isNormal())
             return false;
-        domObject->setWrapper(*world->vm(), wrapper, wrapperOwner, context);
+        domObject->setWrapper(wrapper, wrapperOwner, context);
         return true;
     }
 
@@ -152,7 +152,7 @@ class DOMStringList;
     {
         if (!world->isNormal())
             return false;
-        domObject->m_wrapper = JSC::PassWeak<JSC::JSArrayBuffer>(wrapper, wrapperOwner, context);
+        domObject->m_wrapper = JSC::Weak<JSC::JSArrayBuffer>(wrapper, wrapperOwner, context);
         return true;
     }
 
@@ -185,8 +185,7 @@ class DOMStringList;
         void* context = wrapperContext(world, domObject);
         if (setInlineCachedWrapper(world, domObject, wrapper, owner, context))
             return;
-        JSC::PassWeak<JSC::JSObject> passWeak(wrapper, owner, context);
-        weakAdd(world->m_wrappers, (void*)domObject, passWeak);
+        weakAdd(world->m_wrappers, (void*)domObject, JSC::Weak<JSC::JSObject>(wrapper, owner, context));
     }
 
     template <typename DOMClass, typename WrapperClass> inline void uncacheWrapper(DOMWrapperWorld* world, DOMClass* domObject, WrapperClass* wrapper)
@@ -201,7 +200,7 @@ class DOMStringList;
     {
         ASSERT(node);
         ASSERT(!getCachedWrapper(currentWorld(exec), node));
-        WrapperClass* wrapper = WrapperClass::create(getDOMStructure<WrapperClass>(exec, globalObject), globalObject, node);
+        WrapperClass* wrapper = WrapperClass::create(getDOMStructure<WrapperClass>(exec->vm(), globalObject), globalObject, node);
         // FIXME: The entire function can be removed, once we fix caching.
         // This function is a one-off hack to make Nodes cache in the right global object.
         cacheWrapper(currentWorld(exec), node, wrapper);
@@ -617,22 +616,16 @@ class DOMStringList;
             char padding[8];
         };
 
-        struct BaseMixin {
-            size_t memoryCost();
-        };
-
-        struct Base : public T, public BaseMixin { };
-
-        template<typename U, U> struct
-        TypeChecker { };
+        template<typename U>
+        static decltype(static_cast<U*>(nullptr)->memoryCost(), YesType()) test(int);
 
         template<typename U>
-        static NoType dummy(U*, TypeChecker<size_t (BaseMixin::*)(), &U::memoryCost>* = 0);
-        static YesType dummy(...);
+        static NoType test(...);
 
     public:
-        static const bool value = sizeof(dummy(static_cast<Base*>(0))) == sizeof(YesType);
+        static const bool value = sizeof(test<T>(0)) == sizeof(YesType);
     };
+
     template <typename T, bool hasReportCostFunction = HasMemoryCostMemberFunction<T>::value > struct ReportMemoryCost;
     template <typename T> struct ReportMemoryCost<T, true> {
         static void reportMemoryCost(JSC::ExecState* exec, T* impl)

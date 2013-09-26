@@ -39,6 +39,7 @@
 #include "JSPropertyNameIterator.h"
 #include "LinkBuffer.h"
 #include "SlowPathCall.h"
+#include "VirtualRegister.h"
 
 namespace JSC {
 
@@ -257,9 +258,9 @@ void JIT::emit_op_tear_off_arguments(Instruction* currentInstruction)
     int arguments = currentInstruction[1].u.operand;
     int activation = currentInstruction[2].u.operand;
 
-    Jump argsNotCreated = branchTest64(Zero, Address(callFrameRegister, sizeof(Register) * (unmodifiedArgumentsRegister(arguments))));
+    Jump argsNotCreated = branchTest64(Zero, Address(callFrameRegister, sizeof(Register) * (unmodifiedArgumentsRegister(VirtualRegister(arguments)).offset())));
     JITStubCall stubCall(this, cti_op_tear_off_arguments);
-    stubCall.addArgument(unmodifiedArgumentsRegister(arguments), regT2);
+    stubCall.addArgument(unmodifiedArgumentsRegister(VirtualRegister(arguments)).offset(), regT2);
     stubCall.addArgument(activation, regT2);
     stubCall.call();
     argsNotCreated.link(this);
@@ -507,7 +508,7 @@ void JIT::emit_op_get_pnames(Instruction* currentInstruction)
     emitGetVirtualRegister(base, regT0);
     if (!m_codeBlock->isKnownNotImmediate(base))
         isNotObject.append(emitJumpIfNotJSCell(regT0));
-    if (base != m_codeBlock->thisRegister() || m_codeBlock->isStrictMode()) {
+    if (base != m_codeBlock->thisRegister().offset() || m_codeBlock->isStrictMode()) {
         loadPtr(Address(regT0, JSCell::structureOffset()), regT2);
         isNotObject.append(emitJumpIfNotObject(regT2));
     }
@@ -757,9 +758,6 @@ void JIT::emit_op_debug(Instruction* currentInstruction)
 #else
     JITStubCall stubCall(this, cti_op_debug);
     stubCall.addArgument(TrustedImm32(currentInstruction[1].u.operand));
-    stubCall.addArgument(TrustedImm32(currentInstruction[2].u.operand));
-    stubCall.addArgument(TrustedImm32(currentInstruction[3].u.operand));
-    stubCall.addArgument(TrustedImm32(currentInstruction[4].u.operand));
     stubCall.call();
 #endif
 }
@@ -836,7 +834,7 @@ void JIT::emit_op_enter(Instruction*)
     // object lifetime and increasing GC pressure.
     size_t count = m_codeBlock->m_numVars;
     for (size_t j = 0; j < count; ++j)
-        emitInitRegister(localToOperand(j));
+        emitInitRegister(virtualRegisterForLocal(j).offset());
 }
 
 void JIT::emit_op_create_activation(Instruction* currentInstruction)
@@ -855,7 +853,7 @@ void JIT::emit_op_create_arguments(Instruction* currentInstruction)
     Jump argsCreated = branchTest64(NonZero, Address(callFrameRegister, sizeof(Register) * dst));
     JITStubCall(this, cti_op_create_arguments).call();
     emitPutVirtualRegister(dst);
-    emitPutVirtualRegister(unmodifiedArgumentsRegister(dst));
+    emitPutVirtualRegister(unmodifiedArgumentsRegister(VirtualRegister(dst)));
     argsCreated.link(this);
 }
 
@@ -868,22 +866,36 @@ void JIT::emit_op_init_lazy_reg(Instruction* currentInstruction)
 
 void JIT::emit_op_to_this(Instruction* currentInstruction)
 {
+    WriteBarrierBase<Structure>* cachedStructure = &currentInstruction[2].u.structure;
     emitGetVirtualRegister(currentInstruction[1].u.operand, regT1);
 
     emitJumpSlowCaseIfNotJSCell(regT1);
     loadPtr(Address(regT1, JSCell::structureOffset()), regT0);
-    if (shouldEmitProfiling())
-        emitValueProfilingSite(regT4);
 
     addSlowCase(branch8(NotEqual, Address(regT0, Structure::typeInfoTypeOffset()), TrustedImm32(FinalObjectType)));
+    loadPtr(cachedStructure, regT2);
+    addSlowCase(branchPtr(NotEqual, regT0, regT2));
 }
 
 void JIT::emit_op_get_callee(Instruction* currentInstruction)
 {
     int result = currentInstruction[1].u.operand;
+    WriteBarrierBase<JSCell>* cachedFunction = &currentInstruction[2].u.jsCell;
     emitGetFromCallFrameHeaderPtr(JSStack::Callee, regT0);
-    emitValueProfilingSite(regT4);
+
+    loadPtr(cachedFunction, regT2);
+    addSlowCase(branchPtr(NotEqual, regT0, regT2));
+
     emitPutVirtualRegister(result);
+}
+
+void JIT::emitSlow_op_get_callee(Instruction* currentInstruction, Vector<SlowCaseEntry>::iterator& iter)
+{
+    linkSlowCase(iter);
+
+    JITSlowPathCall slowPathCall(this, currentInstruction, slow_path_get_callee);
+    slowPathCall.call();
+    emitGetVirtualRegister(currentInstruction[1].u.operand, regT0);
 }
 
 void JIT::emit_op_create_this(Instruction* currentInstruction)
@@ -933,6 +945,7 @@ void JIT::emit_op_profile_did_call(Instruction* currentInstruction)
 
 void JIT::emitSlow_op_to_this(Instruction* currentInstruction, Vector<SlowCaseEntry>::iterator& iter)
 {
+    linkSlowCase(iter);
     linkSlowCase(iter);
     linkSlowCase(iter);
 
@@ -1133,7 +1146,7 @@ void JIT::emitSlow_op_get_argument_by_val(Instruction* currentInstruction, Vecto
     linkSlowCase(iter);
     JITStubCall(this, cti_op_create_arguments).call();
     emitPutVirtualRegister(arguments);
-    emitPutVirtualRegister(unmodifiedArgumentsRegister(arguments));
+    emitPutVirtualRegister(unmodifiedArgumentsRegister(VirtualRegister(arguments)));
     
     skipArgumentsCreation.link(this);
     JITStubCall stubCall(this, cti_op_get_by_val_generic);

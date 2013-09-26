@@ -1,3 +1,584 @@
+2013-09-26  Anders Carlsson  <andersca@apple.com>
+
+        Remove Windows code
+        https://bugs.webkit.org/show_bug.cgi?id=121988
+
+        Reviewed by Antti Koivisto.
+
+        * Platform/CoreIPC/Connection.h:
+        * Platform/CoreIPC/win/ConnectionWin.cpp: Removed.
+        * Platform/SharedMemory.h:
+        * Platform/WorkQueue.h:
+        * Platform/win/SharedMemoryWin.cpp: Removed.
+        * Platform/win/WorkQueueWin.cpp: Removed.
+        * Shared/ChildProcess.cpp:
+        * Shared/ChildProcessProxy.cpp:
+        (WebKit::ChildProcessProxy::didFinishLaunching):
+        * UIProcess/Plugins/PluginInfoStore.cpp:
+        (WebKit::PluginInfoStore::loadPluginsIfNecessary):
+        * WebProcess/WebProcess.cpp:
+
+2013-09-26  Anders Carlsson  <andersca@apple.com>
+
+        Stop using PassWeak
+        https://bugs.webkit.org/show_bug.cgi?id=121968
+
+        Reviewed by Sam Weinig.
+
+        Update for JavaScriptCore changes.
+
+        * WebProcess/Plugins/Netscape/NPRuntimeObjectMap.cpp:
+        (WebKit::NPRuntimeObjectMap::getOrCreateJSObject):
+
+2013-09-25  Jer Noble  <jer.noble@apple.com>
+
+        [WK2] Crash at at com.apple.WebKit2: WebKit::VoidCallback::invalidate + 46
+        https://bugs.webkit.org/show_bug.cgi?id=121910
+
+        Reviewed by Darin Adler.
+
+        Store a copy of the VoidCallback passed to WKPage, and invalidate the callback
+        during dealloc. The VoidCallback class assumes that it will only ever be
+        invalidated or invoked once, so change the ASSERTs into an early return.
+
+        * UIProcess/GenericCallback.h:
+        (WebKit::VoidCallback::performCallback): Exit early if previously invalidated.
+        (WebKit::VoidCallback::invalidate): Ditto.
+        * UIProcess/mac/WKFullScreenWindowController.h:
+        * UIProcess/mac/WKFullScreenWindowController.mm:
+        (-[WKFullScreenWindowController dealloc]): Invalidate the repaint callback if present.
+        (-[WKFullScreenWindowController finishedExitFullScreenAnimation:]): Ditto & create a new callback.
+        (-[WKFullScreenWindowController completeFinishExitFullScreenAnimationAfterRepaint]): Clear the callback.
+
+2013-09-26  Tim Horton  <timothy_horton@apple.com>
+
+        Tiled drawing should not imply threaded scrolling
+        https://bugs.webkit.org/show_bug.cgi?id=121874
+        <rdar://problem/15071494>
+
+        Reviewed by Sam Weinig.
+
+        * Shared/DrawingAreaInfo.h:
+        We can have DrawingAreaTypeTiledCoreAnimation without threaded scrolling.
+
+        * Shared/WebPreferencesStore.h:
+        * UIProcess/API/C/WKPreferences.cpp:
+        (WKPreferencesSetThreadedScrollingEnabled):
+        (WKPreferencesGetThreadedScrollingEnabled):
+        * UIProcess/API/C/WKPreferencesPrivate.h:
+        Add a preference for threaded scrolling.
+
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView WebKit::]):
+        * UIProcess/mac/TiledCoreAnimationDrawingAreaProxy.h:
+        * UIProcess/mac/TiledCoreAnimationDrawingAreaProxy.mm:
+        * WebProcess/WebPage/DrawingArea.cpp:
+        (WebKit::DrawingArea::create):
+        * WebProcess/WebPage/DrawingArea.h:
+        Make it so we can use TiledCoreAnimationDrawingArea without ENABLE(THREADED_SCROLLING).
+
+        * WebProcess/WebCoreSupport/WebChromeClient.cpp:
+        (WebKit::WebChromeClient::shouldUseTiledBackingForFrame):
+        * WebProcess/WebCoreSupport/WebChromeClient.h:
+        Override shouldUseTiledBackingForFrame; ask the drawing area if we want a tiled backing for the given frame.
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::WebPage):
+        (WebKit::WebPage::~WebPage):
+        * WebProcess/WebPage/WebPage.h:
+        Move attaching and detaching the scrolling tree into WebPage.
+        Store whether or not this page is going to use threaded scrolling once, as this
+        cannot change through the life of a page.
+
+        * WebProcess/WebPage/mac/TiledCoreAnimationDrawingArea.h:
+        * WebProcess/WebPage/mac/TiledCoreAnimationDrawingArea.mm:
+        (WebKit::TiledCoreAnimationDrawingArea::TiledCoreAnimationDrawingArea):
+        (WebKit::TiledCoreAnimationDrawingArea::~TiledCoreAnimationDrawingArea):
+        Move attaching and detaching the scrolling tree into WebPage.
+
+        (WebKit::TiledCoreAnimationDrawingArea::didInstallPageOverlay):
+        (WebKit::TiledCoreAnimationDrawingArea::didUninstallPageOverlay):
+        (WebKit::TiledCoreAnimationDrawingArea::updatePreferences):
+        (WebKit::TiledCoreAnimationDrawingArea::dispatchAfterEnsuringUpdatedScrollPosition):
+        Only do scrolling coordinator work if we have a scrolling coordinator.
+
+        (WebKit::TiledCoreAnimationDrawingArea::shouldUseTiledBackingForFrame):
+        TiledCoreAnimationDrawingArea always wants a tiled backing for the main frame.
+
+2013-09-25  Minju Kim  <pmuarteo@gmail.com>
+
+        8 bytes memory leaks in WebProcessMainQt.cpp when proxy is initialized
+        https://bugs.webkit.org/show_bug.cgi?id=118515
+
+        Reviewed by Christophe Dumez.
+
+        * WebProcess/qt/WebProcessMainQt.cpp:
+        (WebKit::initializeProxy): Handled EnvHttpProxyFactory by using OwnPtr
+        to avoid memory leak when it isn't handled by NetworkProxyFactory
+
+2013-09-25  Brady Eidson  <beidson@apple.com>
+
+        Enable the IndexedDB build on Mac, but leave the feature non-functional
+        https://bugs.webkit.org/show_bug.cgi?id=121918
+
+        Reviewed by Alexey Proskuryakov.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-09-25  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r156432.
+        http://trac.webkit.org/changeset/156432
+        https://bugs.webkit.org/show_bug.cgi?id=121932
+
+        some integer conversion things that need brady to fix
+        (Requested by thorton on #webkit).
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-09-25  Brady Eidson  <beidson@apple.com>
+
+        Enable the IndexedDB build on Mac, but leave the feature non-functional
+        https://bugs.webkit.org/show_bug.cgi?id=121918
+
+        Reviewed by Alexey Proskuryakov.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-09-25  Brent Fulgham  <bfulgham@apple.com>
+
+        Refactor RuntimeEnabledFeatures as a Singleton.
+        https://bugs.webkit.org/show_bug.cgi?id=121883.
+
+        Reviewed by Jer Noble.
+
+        * WebProcess/InjectedBundle/InjectedBundle.cpp:
+        (WebKit::InjectedBundle::overrideBoolPreferenceForTestRunner): Use
+        Singleton accessor.
+        (WebKit::InjectedBundle::setShadowDOMEnabled):
+        (WebKit::InjectedBundle::setCSSRegionsEnabled):
+        (WebKit::InjectedBundle::setCSSCompositingEnabled):
+        (WebKit::InjectedBundle::setSeamlessIFramesEnabled):
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::updatePreferences): Ditto.
+        * WebProcess/qt/WebProcessQt.cpp:
+        (WebKit::WebProcess::platformInitializeWebProcess): Ditto.
+
+2013-09-25  Brady Eidson  <beidson@apple.com>
+
+        FeatureDefine.xcconfig cleanup (They should all be identical).
+        https://bugs.webkit.org/show_bug.cgi?id=121921
+
+        Reviewed by Mark Rowe.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-09-25  Anders Carlsson  <andersca@apple.com>
+
+        Use tuples for encoding IPC messages
+        https://bugs.webkit.org/show_bug.cgi?id=121924
+
+        Reviewed by Andreas Kling.
+
+        Yet another step towards getting rid of the Arguments hierarchy.
+
+        * Platform/CoreIPC/Connection.h:
+        (CoreIPC::Connection::send):
+        (CoreIPC::Connection::sendSync):
+        * Platform/CoreIPC/HandleMessage.h:
+        (CoreIPC::handleMessage):
+        (CoreIPC::handleMessageVariadic):
+        (CoreIPC::handleMessageDelayed):
+        * Platform/CoreIPC/MessageSender.h:
+        (CoreIPC::MessageSender::send):
+        * Scripts/webkit2/messages.py:
+        (arguments_type_old):
+        (arguments_type):
+        (reply_type):
+        (decode_type):
+        (delayed_reply_type):
+        (message_to_struct_declaration):
+        * Scripts/webkit2/messages_unittest.py:
+        (LoadURL):
+        (std):
+        (TouchEvent):
+        (DidReceivePolicyDecision):
+        (Close):
+        (PreferencesDidChange):
+        (SendDoubleAndFloat):
+        (SendInts):
+        (CreatePlugin):
+        (RunJavaScriptAlert):
+        (GetPlugins):
+        (GetPluginProcessConnection):
+        (TestMultipleAttributes):
+        (TestParameterAttributes):
+        (TemplateTest):
+        (DidCreateWebProcessConnection):
+        (InterpretKeyEvent):
+        (DeprecatedOperation):
+        (ExperimentalOperation):
+        * Shared/ChildProcessProxy.h:
+        (WebKit::ChildProcessProxy::send):
+
+2013-09-25  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Fix build with Qt 5.2 QtPosition module
+        https://bugs.webkit.org/show_bug.cgi?id=121089
+
+        Reviewed by Simon Hausmann.
+
+        QtLocation -> QtPositioning
+
+        * Target.pri:
+        * UIProcess/qt/WebGeolocationProviderQt.cpp:
+        * WebKit2.pri:
+
+2013-09-24  Sam Weinig  <sam@webkit.org>
+
+        Remove erroneous reference to libWTF.a in the WebKit2 Xcode project file.
+
+        Rubber-stamped by Alexey Proskuryakov.
+
+        * WebKit2.xcodeproj/project.pbxproj:
+
+2013-09-24  Sam Weinig  <sam@webkit.org>
+
+        Remove the Windows-specific rules from WebKit2's DerivedSources.make, Windows is not supported anymore
+        https://bugs.webkit.org/show_bug.cgi?id=121895
+
+        Reviewed by Alexey Proskuryakov.
+
+        * DerivedSources.make:
+        Remove Windows-specific rules, and, now that only the Mac is using this file, remove the
+        Mac checks.
+
+2013-09-24  Anders Carlsson  <andersca@apple.com>
+
+        Only allow rvalues to be passed as synchronous message replies
+        https://bugs.webkit.org/show_bug.cgi?id=121870
+
+        Reviewed by Andreas Kling.
+
+        This lets us get rid of a nasty const cast and is more logical.
+
+        * Platform/CoreIPC/Connection.h:
+        (CoreIPC::Connection::sendSync):
+        * Platform/CoreIPC/MessageSender.h:
+        (CoreIPC::MessageSender::send):
+        (CoreIPC::MessageSender::sendSync):
+        * Shared/ChildProcessProxy.h:
+        (WebKit::ChildProcessProxy::sendSync):
+
+2013-09-24  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Unreviewed buildfix.
+
+        * UIProcess/WebNetworkInfoManagerProxy.h:
+
+2013-09-24  Alexey Proskuryakov  <ap@apple.com>
+
+        Fix Mac build now.
+        
+        * UIProcess/WebContext.messages.in:
+
+2013-09-24  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Unreviewed buildfix after r156350.
+
+        It seems that nested ifdefs don't work in messages.in files, so don't use them.
+
+        * UIProcess/WebContext.messages.in:
+
+2013-09-24  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Unreviewed buildfix after r156354 and r156360.
+
+        * Platform/CoreIPC/unix/ConnectionUnix.cpp:
+        (CoreIPC::Connection::processMessage):
+        (CoreIPC::Connection::sendOutgoingMessage):
+
+2013-09-24  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Unreviewed buildfix after r156349.
+
+        * Platform/CoreIPC/unix/ConnectionUnix.cpp:
+        (CoreIPC::Connection::processMessage):
+
+2013-09-24  Anders Carlsson  <andersca@apple.com>
+
+        Use std::unique_ptr for decoders as well
+        https://bugs.webkit.org/show_bug.cgi?id=121868
+
+        Reviewed by Andreas Kling.
+
+        * Platform/CoreIPC/Connection.cpp:
+        (CoreIPC::Connection::SyncMessageState::processIncomingMessage):
+        (CoreIPC::Connection::SyncMessageState::dispatchMessages):
+        (CoreIPC::Connection::waitForMessage):
+        (CoreIPC::Connection::sendSyncMessage):
+        (CoreIPC::Connection::sendSyncMessageFromSecondaryThread):
+        (CoreIPC::Connection::waitForSyncReply):
+        (CoreIPC::Connection::processIncomingSyncReply):
+        (CoreIPC::Connection::processIncomingMessage):
+        (CoreIPC::Connection::enqueueIncomingMessage):
+        (CoreIPC::Connection::dispatchMessage):
+        (CoreIPC::Connection::dispatchOneMessage):
+        * Platform/CoreIPC/Connection.h:
+        (CoreIPC::Connection::sendSync):
+        (CoreIPC::Connection::waitForAndDispatchImmediately):
+        * Platform/CoreIPC/mac/ConnectionMac.cpp:
+        (CoreIPC::createMessageDecoder):
+        (CoreIPC::Connection::receiveSourceEventHandler):
+        * WebProcess/InjectedBundle/InjectedBundle.cpp:
+        (WebKit::InjectedBundle::postSynchronousMessage):
+
+2013-09-24  Anders Carlsson  <andersca@apple.com>
+
+        Move MessageEncoder and ArgumentEncoder to std::unique_ptr
+        https://bugs.webkit.org/show_bug.cgi?id=121861
+
+        Reviewed by Andreas Kling.
+
+        * NetworkProcess/NetworkConnectionToWebProcess.cpp:
+        (WebKit::NetworkConnectionToWebProcess::didReceiveSyncMessage):
+        * NetworkProcess/NetworkConnectionToWebProcess.h:
+        * NetworkProcess/NetworkProcess.cpp:
+        (WebKit::NetworkProcess::didReceiveSyncMessage):
+        * NetworkProcess/NetworkProcess.h:
+        * Platform/CoreIPC/Connection.cpp:
+        (CoreIPC::Connection::dispatchWorkQueueMessageReceiverMessage):
+        (CoreIPC::Connection::createSyncMessageEncoder):
+        (CoreIPC::Connection::sendMessage):
+        (CoreIPC::Connection::sendSyncReply):
+        (CoreIPC::Connection::sendSyncMessage):
+        (CoreIPC::Connection::sendSyncMessageFromSecondaryThread):
+        (CoreIPC::Connection::sendOutgoingMessages):
+        (CoreIPC::Connection::dispatchSyncMessage):
+        * Platform/CoreIPC/Connection.h:
+        (CoreIPC::Connection::send):
+        (CoreIPC::Connection::sendSync):
+        * Platform/CoreIPC/HandleMessage.h:
+        (CoreIPC::handleMessageDelayed):
+        * Platform/CoreIPC/MessageReceiver.h:
+        (CoreIPC::MessageReceiver::didReceiveSyncMessage):
+        * Platform/CoreIPC/MessageReceiverMap.cpp:
+        (CoreIPC::MessageReceiverMap::dispatchSyncMessage):
+        * Platform/CoreIPC/MessageReceiverMap.h:
+        * Platform/CoreIPC/MessageSender.cpp:
+        (CoreIPC::MessageSender::sendMessage):
+        * Platform/CoreIPC/MessageSender.h:
+        (CoreIPC::MessageSender::send):
+        * Platform/CoreIPC/mac/ConnectionMac.cpp:
+        (CoreIPC::Connection::open):
+        (CoreIPC::Connection::sendOutgoingMessage):
+        * PluginProcess/PluginControllerProxy.h:
+        * PluginProcess/WebProcessConnection.cpp:
+        (WebKit::WebProcessConnection::didReceiveSyncMessage):
+        * PluginProcess/WebProcessConnection.h:
+        * Scripts/webkit2/messages.py:
+        (message_to_struct_declaration):
+        (generate_message_handler):
+        * Scripts/webkit2/messages_unittest.py:
+        * Shared/ChildProcessProxy.cpp:
+        (WebKit::ChildProcessProxy::sendMessage):
+        (WebKit::ChildProcessProxy::dispatchSyncMessage):
+        (WebKit::ChildProcessProxy::didFinishLaunching):
+        * Shared/ChildProcessProxy.h:
+        (WebKit::ChildProcessProxy::send):
+        * Shared/Plugins/NPObjectMessageReceiver.h:
+        * Shared/Plugins/NPRemoteObjectMap.cpp:
+        (WebKit::NPRemoteObjectMap::didReceiveSyncMessage):
+        * Shared/Plugins/NPRemoteObjectMap.h:
+        * Shared/WebConnection.cpp:
+        (WebKit::WebConnection::postMessage):
+        * UIProcess/Downloads/DownloadProxy.h:
+        * UIProcess/Network/NetworkProcessProxy.cpp:
+        (WebKit::NetworkProcessProxy::didReceiveSyncMessage):
+        * UIProcess/Network/NetworkProcessProxy.h:
+        * UIProcess/Plugins/PluginProcessProxy.h:
+        * UIProcess/Storage/StorageManager.h:
+        * UIProcess/WebContext.cpp:
+        (WebKit::WebContext::dispatchSyncMessage):
+        (WebKit::WebContext::didReceiveSyncMessage):
+        * UIProcess/WebContext.h:
+        * UIProcess/WebFullScreenManagerProxy.h:
+        * UIProcess/WebIconDatabase.h:
+        * UIProcess/WebInspectorProxy.h:
+        * UIProcess/WebPageProxy.h:
+        * UIProcess/WebProcessProxy.cpp:
+        (WebKit::WebProcessProxy::didReceiveSyncMessage):
+        * UIProcess/WebProcessProxy.h:
+        * WebProcess/InjectedBundle/InjectedBundle.cpp:
+        (WebKit::InjectedBundle::postMessage):
+        (WebKit::InjectedBundle::postSynchronousMessage):
+        * WebProcess/Network/NetworkProcessConnection.cpp:
+        (WebKit::NetworkProcessConnection::didReceiveSyncMessage):
+        * WebProcess/Network/NetworkProcessConnection.h:
+        * WebProcess/Plugins/PluginProcessConnection.cpp:
+        (WebKit::PluginProcessConnection::didReceiveSyncMessage):
+        * WebProcess/Plugins/PluginProcessConnection.h:
+        * WebProcess/Plugins/PluginProxy.h:
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::didReceiveSyncMessage):
+        * WebProcess/WebPage/WebPage.h:
+        * WebProcess/WebProcess.cpp:
+        (WebKit::WebProcess::didReceiveSyncMessage):
+        * WebProcess/WebProcess.h:
+
+2013-09-24  Anders Carlsson  <andersca@apple.com>
+
+        Remove encoder create functions
+        https://bugs.webkit.org/show_bug.cgi?id=121853
+
+        Reviewed by Sam Weinig.
+
+        * Platform/CoreIPC/ArgumentEncoder.cpp:
+        * Platform/CoreIPC/ArgumentEncoder.h:
+        * Platform/CoreIPC/Connection.cpp:
+        (CoreIPC::Connection::dispatchWorkQueueMessageReceiverMessage):
+        (CoreIPC::Connection::createSyncMessageEncoder):
+        (CoreIPC::Connection::dispatchSyncMessage):
+        * Platform/CoreIPC/Connection.h:
+        (CoreIPC::Connection::send):
+        * Platform/CoreIPC/MessageEncoder.cpp:
+        (CoreIPC::MessageEncoder::setIsSyncMessage):
+        * Platform/CoreIPC/MessageEncoder.h:
+        * Platform/CoreIPC/MessageSender.h:
+        (CoreIPC::MessageSender::send):
+        * Platform/CoreIPC/mac/ConnectionMac.cpp:
+        (CoreIPC::Connection::open):
+        * Shared/ChildProcessProxy.h:
+        (WebKit::ChildProcessProxy::send):
+        * Shared/WebConnection.cpp:
+        (WebKit::WebConnection::postMessage):
+        * UIProcess/WebContext.cpp:
+        (WebKit::WebContext::createNewWebProcess):
+        (WebKit::WebContext::postMessageToInjectedBundle):
+        * WebProcess/InjectedBundle/InjectedBundle.cpp:
+        (WebKit::InjectedBundle::postMessage):
+        * WebProcess/WebPage/EncoderAdapter.cpp:
+        (WebKit::EncoderAdapter::EncoderAdapter):
+        (WebKit::EncoderAdapter::dataReference):
+        (WebKit::EncoderAdapter::encodeBytes):
+        (WebKit::EncoderAdapter::encodeBool):
+        (WebKit::EncoderAdapter::encodeUInt16):
+        (WebKit::EncoderAdapter::encodeUInt32):
+        (WebKit::EncoderAdapter::encodeUInt64):
+        (WebKit::EncoderAdapter::encodeInt32):
+        (WebKit::EncoderAdapter::encodeInt64):
+        (WebKit::EncoderAdapter::encodeFloat):
+        (WebKit::EncoderAdapter::encodeDouble):
+        (WebKit::EncoderAdapter::encodeString):
+        * WebProcess/WebPage/EncoderAdapter.h:
+
+2013-09-24  Enrica Casucci  <enrica@apple.com>
+
+        Upstream changes to Pasteboard implementation for iOS.
+        https://bugs.webkit.org/show_bug.cgi?id=121818
+
+        Reviewed by Darin Adler.
+
+        * Scripts/webkit2/messages.py:
+        (struct_or_class):
+        (headers_for_type):
+        * Shared/WebCoreArgumentCoders.cpp:
+        (CoreIPC::encodeSharedBuffer):
+        (CoreIPC::decodeSharedBuffer):
+        (CoreIPC::::encode):
+        (CoreIPC::::decode):
+        * Shared/WebCoreArgumentCoders.h:
+        * UIProcess/WebContext.h:
+        * UIProcess/WebContext.messages.in:
+        * UIProcess/mac/WebContextMac.mm:
+        (WebKit::WebContext::writeWebContentToPasteboard):
+        (WebKit::WebContext::writeImageToPasteboard):
+        (WebKit::WebContext::writeStringToPasteboard):
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.cpp:
+        (WebKit::WebPlatformStrategies::writeToPasteboard):
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.h:
+
+2013-09-24  Anders Carlsson  <andersca@apple.com>
+
+        Remove create functions from MessageDecoder and ArgumentDecoder
+        https://bugs.webkit.org/show_bug.cgi?id=121850
+
+        Reviewed by Antti Koivisto.
+
+        * Platform/CoreIPC/ArgumentDecoder.cpp:
+        (CoreIPC::ArgumentDecoder::ArgumentDecoder):
+        * Platform/CoreIPC/ArgumentDecoder.h:
+        * Platform/CoreIPC/MessageDecoder.cpp:
+        (CoreIPC::MessageDecoder::MessageDecoder):
+        * Platform/CoreIPC/MessageDecoder.h:
+        * Platform/CoreIPC/mac/ConnectionMac.cpp:
+        (CoreIPC::createMessageDecoder):
+        * WebProcess/WebPage/DecoderAdapter.cpp:
+        (WebKit::DecoderAdapter::DecoderAdapter):
+        (WebKit::DecoderAdapter::decodeBytes):
+        (WebKit::DecoderAdapter::decodeBool):
+        (WebKit::DecoderAdapter::decodeUInt16):
+        (WebKit::DecoderAdapter::decodeUInt32):
+        (WebKit::DecoderAdapter::decodeUInt64):
+        (WebKit::DecoderAdapter::decodeInt32):
+        (WebKit::DecoderAdapter::decodeInt64):
+        (WebKit::DecoderAdapter::decodeFloat):
+        (WebKit::DecoderAdapter::decodeDouble):
+        (WebKit::DecoderAdapter::decodeString):
+        * WebProcess/WebPage/DecoderAdapter.h:
+        * WebProcess/WebProcess.cpp:
+        (WebKit::WebProcess::postInjectedBundleMessage):
+
+2013-09-24  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/14971518> WebKit should build against the Xcode default toolchain when targeting OS X 10.8
+
+        Reviewed by Dan Bernstein.
+
+        * Configurations/Base.xcconfig:
+
+2013-09-24  Lorenzo Tilve  <ltilve@igalia.com>
+
+        [GTK] Fix compilation problems when setting ENABLE_DRAG_SUPPORT = FALSE
+        https://bugs.webkit.org/show_bug.cgi?id=121782
+
+        Reviewed by Martin Robinson.
+
+        Disabled drag functions.
+
+        * UIProcess/API/gtk/WebKitWebViewBase.cpp:
+        (webkit_web_view_base_class_init):
+        * WebProcess/WebCoreSupport/gtk/WebDragClientGtk.cpp:
+
+2013-09-24  Anders Carlsson  <andersca@apple.com>
+
+        Begin adopting std::tuple for IPC decoding
+        https://bugs.webkit.org/show_bug.cgi?id=121848
+
+        Reviewed by Sam Weinig.
+
+        This is the first step towards getting rid of the horrible Arguments class hierarchy.
+
+        * Platform/CoreIPC/Arguments.h:
+        (CoreIPC::TupleCoder::encode):
+        (CoreIPC::TupleCoder::decode):
+        * Platform/CoreIPC/HandleMessage.h:
+        (CoreIPC::callMemberFunction):
+        (CoreIPC::handleMessage):
+        (CoreIPC::handleMessageVariadic):
+        (CoreIPC::handleMessageDelayed):
+
+2013-09-24  ChangSeok Oh  <changseok.oh@collabora.com>
+
+        [EFL] Build failed at ProcessLauncherEfl.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=121826
+
+        Reviewed by Gyuyoung Kim.
+
+        Fixed a build failure with adding socket.h.
+
+        * UIProcess/Launcher/efl/ProcessLauncherEfl.cpp:
+
 2013-09-23  Patrick Gansterer  <paroga@webkit.org>
 
         use NOMINMAX instead of #define min min

@@ -61,7 +61,7 @@ HTMLStyleElement::~HTMLStyleElement()
 {
     // During tear-down, willRemove isn't called, so m_scopedStyleRegistrationState may still be RegisteredAsScoped or RegisteredInShadowRoot here.
     // Therefore we can't ASSERT(m_scopedStyleRegistrationState == NotRegistered).
-    m_styleSheetOwner.clearDocumentData(&document(), this);
+    m_styleSheetOwner.clearDocumentData(document(), *this);
 
     styleLoadEventSender().cancelEvent(this);
 }
@@ -76,7 +76,7 @@ void HTMLStyleElement::parseAttribute(const QualifiedName& name, const AtomicStr
     if (name == titleAttr && sheet())
         sheet()->setTitle(value);
 #if ENABLE(STYLE_SCOPED)
-    else if (name == scopedAttr && RuntimeEnabledFeatures::styleScopedEnabled())
+    else if (name == scopedAttr && RuntimeEnabledFeatures::sharedFeatures().styleScopedEnabled())
         scopedAttributeChanged(!value.isNull());
 #endif
     else if (name == mediaAttr) {
@@ -94,14 +94,14 @@ void HTMLStyleElement::parseAttribute(const QualifiedName& name, const AtomicStr
 
 void HTMLStyleElement::finishParsingChildren()
 {
-    m_styleSheetOwner.finishParsingChildren(this);
+    m_styleSheetOwner.finishParsingChildren(*this);
     HTMLElement::finishParsingChildren();
 }
 
 #if ENABLE(STYLE_SCOPED)
 void HTMLStyleElement::scopedAttributeChanged(bool scoped)
 {
-    ASSERT(RuntimeEnabledFeatures::styleScopedEnabled());
+    ASSERT(RuntimeEnabledFeatures::sharedFeatures().styleScopedEnabled());
 
     if (!inDocument())
         return;
@@ -159,7 +159,7 @@ void HTMLStyleElement::registerWithScopingNode(bool scoped)
 
 void HTMLStyleElement::unregisterWithScopingNode(ContainerNode* scope)
 {
-    ASSERT(m_scopedStyleRegistrationState != NotRegistered || !RuntimeEnabledFeatures::styleScopedEnabled());
+    ASSERT(m_scopedStyleRegistrationState != NotRegistered || !RuntimeEnabledFeatures::sharedFeatures().styleScopedEnabled());
     if (!isRegisteredAsScoped())
         return;
 
@@ -177,7 +177,7 @@ void HTMLStyleElement::unregisterWithScopingNode(ContainerNode* scope)
 
 bool HTMLStyleElement::scoped() const
 {
-    return RuntimeEnabledFeatures::styleScopedEnabled() && fastHasAttribute(scopedAttr);
+    return RuntimeEnabledFeatures::sharedFeatures().styleScopedEnabled() && fastHasAttribute(scopedAttr);
 }
 
 void HTMLStyleElement::setScoped(bool scopedValue)
@@ -205,7 +205,7 @@ Node::InsertionNotificationRequest HTMLStyleElement::insertedInto(ContainerNode*
 {
     HTMLElement::insertedInto(insertionPoint);
     if (insertionPoint->inDocument()) {
-        m_styleSheetOwner.insertedIntoDocument(&document(), this);
+        m_styleSheetOwner.insertedIntoDocument(document(), *this);
 #if ENABLE(STYLE_SCOPED)
         if (m_scopedStyleRegistrationState == NotRegistered && (scoped() || isInShadowTree()))
             registerWithScopingNode(scoped());
@@ -237,13 +237,13 @@ void HTMLStyleElement::removedFrom(ContainerNode* insertionPoint)
 #endif
 
     if (insertionPoint->inDocument())
-        m_styleSheetOwner.removedFromDocument(&document(), this);
+        m_styleSheetOwner.removedFromDocument(document(), *this);
 }
 
 void HTMLStyleElement::childrenChanged(const ChildChange& change)
 {
     HTMLElement::childrenChanged(change);
-    m_styleSheetOwner.childrenChanged(this);
+    m_styleSheetOwner.childrenChanged(*this);
 }
 
 void HTMLStyleElement::dispatchPendingLoadEvents()

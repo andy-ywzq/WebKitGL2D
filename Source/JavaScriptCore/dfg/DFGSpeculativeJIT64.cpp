@@ -32,6 +32,7 @@
 #include "ArrayPrototype.h"
 #include "DFGAbstractInterpreterInlines.h"
 #include "DFGCallArrayAllocatorSlowPathGenerator.h"
+#include "DFGOperations.h"
 #include "DFGSlowPathGenerator.h"
 #include "JSCJSValueInlines.h"
 #include "ObjectPrototype.h"
@@ -253,7 +254,7 @@ void SpeculativeJIT::cachedPutById(CodeOrigin codeOrigin, GPRReg baseGPR, GPRReg
 
     JITCompiler::Label doneLabel = m_jit.label();
     
-    V_DFGOperation_EJCI optimizedCall;
+    V_JITOperation_EJCI optimizedCall;
     if (m_jit.strictModeFor(m_currentNode->codeOrigin)) {
         if (putKind == Direct)
             optimizedCall = operationPutByIdDirectStrictOptimize;
@@ -428,7 +429,7 @@ bool SpeculativeJIT::nonSpeculativeCompareNull(Node* node, Edge operand, bool in
     return false;
 }
 
-void SpeculativeJIT::nonSpeculativePeepholeBranch(Node* node, Node* branchNode, MacroAssembler::RelationalCondition cond, S_DFGOperation_EJJ helperFunction)
+void SpeculativeJIT::nonSpeculativePeepholeBranch(Node* node, Node* branchNode, MacroAssembler::RelationalCondition cond, S_JITOperation_EJJ helperFunction)
 {
     BasicBlock* taken = branchNode->takenBlock();
     BasicBlock* notTaken = branchNode->notTakenBlock();
@@ -498,12 +499,12 @@ void SpeculativeJIT::nonSpeculativePeepholeBranch(Node* node, Node* branchNode, 
 
 template<typename JumpType>
 class CompareAndBoxBooleanSlowPathGenerator
-    : public CallSlowPathGenerator<JumpType, S_DFGOperation_EJJ, GPRReg> {
+    : public CallSlowPathGenerator<JumpType, S_JITOperation_EJJ, GPRReg> {
 public:
     CompareAndBoxBooleanSlowPathGenerator(
         JumpType from, SpeculativeJIT* jit,
-        S_DFGOperation_EJJ function, GPRReg result, GPRReg arg1, GPRReg arg2)
-        : CallSlowPathGenerator<JumpType, S_DFGOperation_EJJ, GPRReg>(
+        S_JITOperation_EJJ function, GPRReg result, GPRReg arg1, GPRReg arg2)
+        : CallSlowPathGenerator<JumpType, S_JITOperation_EJJ, GPRReg>(
             from, jit, function, NeedToSpill, result)
         , m_arg1(arg1)
         , m_arg2(arg2)
@@ -525,7 +526,7 @@ private:
     GPRReg m_arg2;
 };
 
-void SpeculativeJIT::nonSpeculativeNonPeepholeCompare(Node* node, MacroAssembler::RelationalCondition cond, S_DFGOperation_EJJ helperFunction)
+void SpeculativeJIT::nonSpeculativeNonPeepholeCompare(Node* node, MacroAssembler::RelationalCondition cond, S_JITOperation_EJJ helperFunction)
 {
     JSValueOperand arg1(this, node->child1());
     JSValueOperand arg2(this, node->child2());
@@ -919,6 +920,7 @@ GPRReg SpeculativeJIT::fillSpeculateInt32Internal(Edge edge, DataFormat& returnF
     case DataFormatInt52: {
         GPRReg gpr = info.gpr();
         GPRReg result;
+        DataFormat oldFormat = info.registerFormat();
         if (m_gprs.isLocked(gpr)) {
             result = allocate();
             m_jit.move(gpr, result);
@@ -928,7 +930,7 @@ GPRReg SpeculativeJIT::fillSpeculateInt32Internal(Edge edge, DataFormat& returnF
             result = gpr;
         }
         RELEASE_ASSERT(!(type & ~SpecMachineInt));
-        if (info.registerFormat() == DataFormatInt52)
+        if (oldFormat == DataFormatInt52)
             m_jit.rshift64(TrustedImm32(JSValue::int52ShiftAmount), result);
         if (type & SpecInt52) {
             GPRReg temp = allocate();
@@ -3901,7 +3903,7 @@ void SpeculativeJIT::compile(Node* node)
             MacroAssembler::Address(tempGPR, Structure::typeInfoTypeOffset()),
             TrustedImm32(FinalObjectType)));
         m_jit.move(thisValueGPR, tempGPR);
-        J_DFGOperation_EJ function;
+        J_JITOperation_EJ function;
         if (m_jit.graph().executableFor(node->codeOrigin)->isStrictMode())
             function = operationToThisStrict;
         else
@@ -4779,7 +4781,7 @@ void SpeculativeJIT::compile(Node* node)
         addSlowPathGenerator(
             slowPathCall(
                 created, this, operationGetArgumentsLength, resultGPR,
-                m_jit.argumentsRegisterFor(node->codeOrigin)));
+                m_jit.argumentsRegisterFor(node->codeOrigin).offset()));
         
         jsValueResult(resultGPR, node);
         break;
@@ -4918,14 +4920,14 @@ void SpeculativeJIT::compile(Node* node)
             addSlowPathGenerator(
                 slowPathCall(
                     slowPath, this, operationGetInlinedArgumentByVal, resultGPR, 
-                    m_jit.argumentsRegisterFor(node->codeOrigin),
+                    m_jit.argumentsRegisterFor(node->codeOrigin).offset(),
                     node->codeOrigin.inlineCallFrame,
                     indexGPR));
         } else {
             addSlowPathGenerator(
                 slowPathCall(
                     slowPath, this, operationGetArgumentByVal, resultGPR, 
-                    m_jit.argumentsRegisterFor(node->codeOrigin),
+                    m_jit.argumentsRegisterFor(node->codeOrigin).offset(),
                     indexGPR));
         }
         

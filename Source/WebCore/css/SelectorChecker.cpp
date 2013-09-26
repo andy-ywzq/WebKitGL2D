@@ -170,7 +170,7 @@ SelectorChecker::Match SelectorChecker::matchRecursively(const SelectorCheckingC
 
             PseudoId pseudoId = CSSSelector::pseudoId(context.selector->pseudoType());
             if (pseudoId == FIRST_LETTER)
-                context.element->document().styleSheetCollection()->setUsesFirstLetterRules(true);
+                context.element->document().styleSheetCollection().setUsesFirstLetterRules(true);
             if (pseudoId != NOPSEUDO)
                 dynamicPseudo = pseudoId;
         }
@@ -447,7 +447,7 @@ bool SelectorChecker::checkOne(const SelectorCheckingContext& context) const
                     element->setStyleAffectedByEmpty();
                     if (context.elementStyle)
                         context.elementStyle->setEmptyState(result);
-                    else if (element->renderStyle() && (element->document().styleSheetCollection()->usesSiblingRules() || element->renderStyle()->unique()))
+                    else if (element->renderStyle() && (element->document().styleSheetCollection().usesSiblingRules() || element->renderStyle()->unique()))
                         element->renderStyle()->setEmptyState(result);
                 }
                 return result;
@@ -624,7 +624,7 @@ bool SelectorChecker::checkOne(const SelectorCheckingContext& context) const
         case CSSSelector::PseudoHover:
             // If we're in quirks mode, then hover should never match anchors with no
             // href and *:hover should not match anything. This is important for sites like wsj.com.
-            if (m_strictParsing || context.isSubSelector || (selector->m_match == CSSSelector::Tag && selector->tagQName() != anyQName() && !isHTMLAnchorElement(element)) || element->isLink()) {
+            if (m_strictParsing || context.isSubSelector || element->isLink()) {
                 if (m_mode == ResolvingStyle) {
                     if (context.elementStyle)
                         context.elementStyle->setAffectedByHover();
@@ -638,7 +638,7 @@ bool SelectorChecker::checkOne(const SelectorCheckingContext& context) const
         case CSSSelector::PseudoActive:
             // If we're in quirks mode, then :active should never match anchors with no
             // href and *:active should not match anything.
-            if (m_strictParsing || context.isSubSelector || (selector->m_match == CSSSelector::Tag && selector->tagQName() != anyQName() && !isHTMLAnchorElement(element)) || element->isLink()) {
+            if (m_strictParsing || context.isSubSelector || element->isLink()) {
                 if (m_mode == ResolvingStyle) {
                     if (context.elementStyle)
                         context.elementStyle->setAffectedByActive();

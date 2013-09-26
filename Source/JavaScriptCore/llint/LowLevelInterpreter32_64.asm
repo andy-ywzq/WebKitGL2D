@@ -414,11 +414,15 @@ _llint_op_get_callee:
     traceExecution()
     loadi 4[PC], t0
     loadp PayloadOffset + Callee[cfr], t1
-    valueProfile(CellTag, t1, 8, t2)
+    loadpFromInstruction(2, t2)
+    bpneq t1, t2, .opGetCalleeSlow
     storei CellTag, TagOffset[cfr, t0, 8]
     storei t1, PayloadOffset[cfr, t0, 8]
     dispatch(3)
 
+.opGetCalleeSlow:
+    callSlowPath(_slow_path_get_callee)
+    dispatch(3)
 
 _llint_op_to_this:
     traceExecution()
@@ -427,7 +431,8 @@ _llint_op_to_this:
     loadi PayloadOffset[cfr, t0, 8], t0
     loadp JSCell::m_structure[t0], t0
     bbneq Structure::m_typeInfo + TypeInfo::m_type[t0], FinalObjectType, .opToThisSlow
-    valueProfile(CellTag, t0, 8, t1)
+    loadpFromInstruction(2, t2)
+    bpneq t0, t2, .opToThisSlow
     dispatch(3)
 
 .opToThisSlow:

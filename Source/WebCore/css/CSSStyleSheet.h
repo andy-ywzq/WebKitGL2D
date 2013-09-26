@@ -48,7 +48,7 @@ class CSSStyleSheet FINAL : public StyleSheet {
 public:
     static PassRefPtr<CSSStyleSheet> create(PassRefPtr<StyleSheetContents>, CSSImportRule* ownerRule = 0);
     static PassRefPtr<CSSStyleSheet> create(PassRefPtr<StyleSheetContents>, Node* ownerNode);
-    static PassRefPtr<CSSStyleSheet> createInline(Node*, const KURL&, const String& encoding = String());
+    static PassRefPtr<CSSStyleSheet> createInline(Node&, const KURL&, const String& encoding = String());
 
     virtual ~CSSStyleSheet();
 
@@ -110,6 +110,8 @@ public:
     void reattachChildRuleCSSOMWrappers();
 
     StyleSheetContents* contents() const { return m_contents.get(); }
+
+    void detachFromDocument() { m_ownerNode = nullptr; }
 
 private:
     CSSStyleSheet(PassRefPtr<StyleSheetContents>, CSSImportRule* ownerRule);

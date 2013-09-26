@@ -406,6 +406,8 @@ private:
     void logLayerInfo(const RenderLayer*, int depth);
 #endif
 
+    bool mainFrameBackingIsTiled() const;
+
 private:
     RenderView& m_renderView;
     OwnPtr<GraphicsLayer> m_rootContentLayer;
@@ -431,7 +433,7 @@ private:
     bool m_inPostLayoutUpdate; // true when it's OK to trust layout information (e.g. layer sizes and positions)
 
     bool m_isTrackingRepaints; // Used for testing.
-    
+
     unsigned m_layersWithTiledBackingCount;
 
     RootLayerAttachment m_rootLayerAttachment;

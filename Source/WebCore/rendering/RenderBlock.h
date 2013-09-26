@@ -273,7 +273,7 @@ public:
     bool paintsContinuationOutline(RenderInline*);
 
     virtual RenderBoxModelObject* virtualContinuation() const OVERRIDE FINAL { return continuation(); }
-    bool isAnonymousBlockContinuation() const { return continuation() && isAnonymousBlock(); }
+    bool isAnonymousBlockContinuation() const { return isAnonymousBlock() && continuation(); }
     RenderInline* inlineElementContinuation() const;
     RenderBlock* blockElementContinuation() const;
 
@@ -682,7 +682,7 @@ private:
     LayoutUnit addOverhangingFloats(RenderBlock* child, bool makeChildPaintOtherFloats);
 
     LayoutUnit lowestFloatLogicalBottom(FloatingObject::Type = FloatingObject::FloatLeftRight) const; 
-    LayoutUnit nextFloatLogicalBottomBelow(LayoutUnit) const;
+    LayoutUnit nextFloatLogicalBottomBelow(LayoutUnit, ShapeOutsideFloatOffsetMode = ShapeOutsideFloatMarginBoxOffset) const;
 
     void updateLocalFloatingObjectsForPaintingContainer(RenderBox* floatToUpdate, bool& didFindPaintContainer);
     void updateFloatingObjectsPaintingContainer(RenderBox* floatToUpdate, bool& didFindPaintContainer);
@@ -706,7 +706,7 @@ private:
     virtual LayoutRect rectWithOutlineForRepaint(const RenderLayerModelObject* repaintContainer, LayoutUnit outlineWidth) const OVERRIDE FINAL;
     virtual RenderStyle* outlineStyleForRepaint() const OVERRIDE FINAL;
     
-    virtual RenderObject* hoverAncestor() const OVERRIDE FINAL;
+    virtual RenderElement* hoverAncestor() const OVERRIDE FINAL;
     virtual void updateDragState(bool dragOn) OVERRIDE FINAL;
     virtual void childBecameNonInline(RenderObject* child) OVERRIDE FINAL;
 

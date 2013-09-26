@@ -79,6 +79,7 @@
 #include <WebCore/SecurityOrigin.h>
 #include <WebCore/Settings.h>
 #include <WebCore/StorageTracker.h>
+#include <unistd.h>
 #include <wtf/CurrentTime.h>
 #include <wtf/HashCountedSet.h>
 #include <wtf/PassRefPtr.h>
@@ -94,9 +95,6 @@
 #include "NetworkProcessConnection.h"
 #endif
 
-#if !OS(WINDOWS)
-#include <unistd.h>
-#endif
 
 #if ENABLE(CUSTOM_PROTOCOLS)
 #include "CustomProtocolManager.h"
@@ -627,7 +625,7 @@ void WebProcess::terminate()
     ChildProcess::terminate();
 }
 
-void WebProcess::didReceiveSyncMessage(CoreIPC::Connection* connection, CoreIPC::MessageDecoder& decoder, OwnPtr<CoreIPC::MessageEncoder>& replyEncoder)
+void WebProcess::didReceiveSyncMessage(CoreIPC::Connection* connection, CoreIPC::MessageDecoder& decoder, std::unique_ptr<CoreIPC::MessageEncoder>& replyEncoder)
 {
     messageReceiverMap().dispatchSyncMessage(connection, decoder, replyEncoder);
 }
@@ -977,15 +975,15 @@ void WebProcess::postInjectedBundleMessage(const CoreIPC::DataReference& message
     if (!injectedBundle)
         return;
 
-    OwnPtr<CoreIPC::ArgumentDecoder> decoder = CoreIPC::ArgumentDecoder::create(messageData.data(), messageData.size());
+    CoreIPC::ArgumentDecoder decoder(messageData.data(), messageData.size());
 
     String messageName;
-    if (!decoder->decode(messageName))
+    if (!decoder.decode(messageName))
         return;
 
     RefPtr<APIObject> messageBody;
     InjectedBundleUserMessageDecoder messageBodyDecoder(messageBody);
-    if (!decoder->decode(messageBodyDecoder))
+    if (!decoder.decode(messageBodyDecoder))
         return;
 
     injectedBundle->didReceiveMessage(messageName, messageBody.get());

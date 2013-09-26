@@ -33,6 +33,8 @@ public:
 
     static RenderElement* createFor(Element&, RenderStyle&);
 
+    virtual void setStyle(PassRefPtr<RenderStyle>) OVERRIDE;
+
     // This is null for anonymous renderers.
     Element* element() const { return toElement(RenderObject::node()); }
     Element* nonPseudoElement() const { return toElement(RenderObject::nonPseudoNode()); }
@@ -58,6 +60,8 @@ public:
     void insertChildInternal(RenderObject*, RenderObject* beforeChild, NotifyChildrenType);
     void removeChildInternal(RenderObject*, NotifyChildrenType);
 
+    virtual RenderElement* hoverAncestor() const;
+
     // Return the renderer whose background style is used to paint the root background. Should only be called on the renderer for which isRoot() is true.
     RenderElement* rendererForRootBackground();
 
@@ -76,8 +80,9 @@ protected:
     void setLastChild(RenderObject* child) { m_lastChild = child; }
     void destroyLeftoverChildren();
 
-    virtual void styleWillChange(StyleDifference, const RenderStyle*) OVERRIDE;
-    virtual void styleDidChange(StyleDifference, const RenderStyle*) OVERRIDE;
+    virtual void styleWillChange(StyleDifference, const RenderStyle*);
+    virtual void styleDidChange(StyleDifference, const RenderStyle*);
+
     virtual void insertedIntoTree() OVERRIDE;
     virtual void willBeRemovedFromTree() OVERRIDE;
     virtual void willBeDestroyed() OVERRIDE;
@@ -91,6 +96,17 @@ private:
 
     virtual RenderObject* firstChildSlow() const OVERRIDE FINAL { return firstChild(); }
     virtual RenderObject* lastChildSlow() const OVERRIDE FINAL { return lastChild(); }
+
+    bool shouldRepaintForStyleDifference(StyleDifference) const;
+    bool hasImmediateNonWhitespaceTextChild() const;
+
+    void updateFillImages(const FillLayer*, const FillLayer*);
+    void updateImage(StyleImage*, StyleImage*);
+#if ENABLE(CSS_SHAPES)
+    void updateShapeImage(const ShapeValue*, const ShapeValue*);
+#endif
+
+    StyleDifference adjustStyleDifference(StyleDifference, unsigned contextSensitiveProperties) const;
 
     RenderObject* m_firstChild;
     RenderObject* m_lastChild;

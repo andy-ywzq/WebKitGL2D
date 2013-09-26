@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004, 2005, 2006, 2009 Apple Inc. All rights reserved.
+ * Copyright (C) 2004, 2005, 2006, 2009, 2013 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -97,7 +97,7 @@ Position::Position(PassRefPtr<Node> anchorNode, LegacyEditingOffset offset)
     , m_isLegacyEditingPosition(true)
 {
 #if ENABLE(SHADOW_DOM)
-    ASSERT((m_anchorNode && RuntimeEnabledFeatures::shadowDOMEnabled()) || !m_anchorNode || !m_anchorNode->isShadowRoot() || m_anchorNode == containerNode());
+    ASSERT((m_anchorNode && RuntimeEnabledFeatures::sharedFeatures().shadowDOMEnabled()) || !m_anchorNode || !m_anchorNode->isShadowRoot() || m_anchorNode == containerNode());
 #else
     ASSERT(!m_anchorNode || !m_anchorNode->isShadowRoot() || m_anchorNode == containerNode());
 #endif
@@ -111,7 +111,7 @@ Position::Position(PassRefPtr<Node> anchorNode, AnchorType anchorType)
     , m_isLegacyEditingPosition(false)
 {
 #if ENABLE(SHADOW_DOM)
-    ASSERT((m_anchorNode && RuntimeEnabledFeatures::shadowDOMEnabled()) || !m_anchorNode || !m_anchorNode->isShadowRoot() || m_anchorNode == containerNode());
+    ASSERT((m_anchorNode && RuntimeEnabledFeatures::sharedFeatures().shadowDOMEnabled()) || !m_anchorNode || !m_anchorNode->isShadowRoot() || m_anchorNode == containerNode());
 #else
     ASSERT(!m_anchorNode || !m_anchorNode->isShadowRoot() || m_anchorNode == containerNode());
 #endif
@@ -130,7 +130,7 @@ Position::Position(PassRefPtr<Node> anchorNode, int offset, AnchorType anchorTyp
     , m_isLegacyEditingPosition(false)
 {
 #if ENABLE(SHADOW_DOM)
-    ASSERT((m_anchorNode && RuntimeEnabledFeatures::shadowDOMEnabled())
+    ASSERT((m_anchorNode && RuntimeEnabledFeatures::sharedFeatures().shadowDOMEnabled())
            || !m_anchorNode || !editingIgnoresContent(m_anchorNode.get()) || !m_anchorNode->isShadowRoot());
 #else
     ASSERT(!m_anchorNode || !editingIgnoresContent(m_anchorNode.get()) || !m_anchorNode->isShadowRoot());
@@ -851,10 +851,10 @@ static int boundingBoxLogicalHeight(RenderObject *o, const IntRect &rect)
     return o->style()->isHorizontalWritingMode() ? rect.height() : rect.width();
 }
 
-bool Position::hasRenderedNonAnonymousDescendantsWithHeight(RenderObject* renderer)
+bool Position::hasRenderedNonAnonymousDescendantsWithHeight(const RenderElement& renderer)
 {
-    RenderObject* stop = renderer->nextInPreOrderAfterChildren();
-    for (RenderObject *o = renderer->firstChildSlow(); o && o != stop; o = o->nextInPreOrder())
+    RenderObject* stop = renderer.nextInPreOrderAfterChildren();
+    for (RenderObject* o = renderer.firstChild(); o && o != stop; o = o->nextInPreOrder())
         if (o->nonPseudoNode()) {
             if ((o->isText() && boundingBoxLogicalHeight(o, toRenderText(o)->linesBoundingBox()))
                 || (o->isLineBreak() && boundingBoxLogicalHeight(o, toRenderLineBreak(o)->linesBoundingBox()))
@@ -875,7 +875,7 @@ ContainerNode* Position::findParent(const Node* node)
     // FIXME: See http://web.ug/82697
 
 #if ENABLE(SHADOW_DOM)
-    if (RuntimeEnabledFeatures::shadowDOMEnabled())
+    if (RuntimeEnabledFeatures::sharedFeatures().shadowDOMEnabled())
         return node->parentNode();
 #endif
 
@@ -937,8 +937,9 @@ bool Position::isCandidate() const
         return false;
         
     if (renderer->isRenderBlockFlow()) {
-        if (toRenderBlock(renderer)->logicalHeight() || m_anchorNode->hasTagName(bodyTag)) {
-            if (!Position::hasRenderedNonAnonymousDescendantsWithHeight(renderer))
+        RenderBlock& block = toRenderBlock(*renderer);
+        if (block.logicalHeight() || m_anchorNode->hasTagName(bodyTag)) {
+            if (!Position::hasRenderedNonAnonymousDescendantsWithHeight(block))
                 return atFirstEditingPositionForNode() && !Position::nodeIsUserSelectNone(deprecatedNode());
             return m_anchorNode->rendererIsEditable() && !Position::nodeIsUserSelectNone(deprecatedNode()) && atEditingBoundary();
         }
@@ -1229,7 +1230,7 @@ void Position::getInlineBoxAndOffset(EAffinity affinity, TextDirection primaryDi
         inlineBox = box ? box : candidate;
     } else {
         inlineBox = 0;
-        if (canHaveChildrenForEditing(deprecatedNode()) && renderer->isRenderBlockFlow() && hasRenderedNonAnonymousDescendantsWithHeight(renderer)) {
+        if (canHaveChildrenForEditing(deprecatedNode()) && renderer->isRenderBlockFlow() && hasRenderedNonAnonymousDescendantsWithHeight(toRenderBlock(*renderer))) {
             // Try a visually equivalent position with possibly opposite editability. This helps in case |this| is in
             // an editable block but surrounded by non-editable positions. It acts to negate the logic at the beginning
             // of RenderObject::createVisiblePosition().
