@@ -305,6 +305,15 @@ inline void* operator new(size_t, NotNullTag, void* location)
     return location;
 }
 
+#if (defined(_MSC_VER) && _MSC_VER < 1700) || (COMPILER(GCC) && !COMPILER(CLANG) && !GCC_VERSION_AT_LEAST(4, 8, 1))
+
+// Work-around for Pre-C++11 syntax in MSVC 2010, and prior as well as GCC < 4.8.1.
+namespace std {
+    template<class T> struct is_trivially_destructible {
+        static const bool value = std::has_trivial_destructor<T>::value;
+    };
+}
+#endif
 
 // This adds various C++14 features for versions of the STL that may not yet have them.
 namespace std {
