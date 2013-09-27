@@ -43,8 +43,10 @@ static const EGLint contextRobustnessAttributes[] = {
 #if USE(OPENGL_ES_2)
     EGL_CONTEXT_CLIENT_VERSION, 2,
 #endif
+#if !USE(GL2D)
     EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT,
     EGL_LOSE_CONTEXT_ON_RESET_EXT,
+#endif
     EGL_NONE
 };
 

@@ -26,8 +26,12 @@
 #include "FontPlatformData.h"
 
 #include "FontDescription.h"
+#if USE(CAIRO)
 #include <cairo-ft.h>
 #include <cairo.h>
+#elif USE(GL2D)
+#include "fontconfigGL2D.h"
+#endif
 #include <fontconfig/fcfreetype.h>
 #include <wtf/text/WTFString.h>
 
@@ -37,6 +41,7 @@
 
 namespace WebCore {
 
+#if USE(CAIRO)
 cairo_subpixel_order_t convertFontConfigSubpixelOrder(int fontConfigOrder)
 {
     switch (fontConfigOrder) {
@@ -111,6 +116,7 @@ static cairo_font_options_t* getDefaultFontOptions()
 #endif
     return cairo_font_options_create();
 }
+#endif //USE(CAIRO)
 
 FontPlatformData::FontPlatformData(FcPattern* pattern, const FontDescription& fontDescription)
     : m_pattern(pattern)
@@ -121,9 +127,12 @@ FontPlatformData::FontPlatformData(FcPattern* pattern, const FontDescription& fo
     , m_fixedWidth(false)
     , m_scaledFont(0)
 {
+#if USE(CAIRO)
     RefPtr<cairo_font_face_t> fontFace = adoptRef(cairo_ft_font_face_create_for_pattern(m_pattern.get()));
     initializeWithFontFace(fontFace.get(), fontDescription);
-
+#elif USE(GL2D)
+    m_scaledFont = ScaledFont::create(m_pattern.get());
+#endif
     int spacing;
     if (FcPatternGetInteger(pattern, FC_SPACING, 0, &spacing) == FcResultMatch && spacing == FC_MONO)
         m_fixedWidth = true;
@@ -152,6 +161,7 @@ FontPlatformData::FontPlatformData(float size, bool bold, bool italic)
     // We cannot create a scaled font here.
 }
 
+#if USE(CAIRO)
 FontPlatformData::FontPlatformData(cairo_font_face_t* fontFace, float size, bool bold, bool italic)
     : m_fallbacks(0)
     , m_size(size)
@@ -168,6 +178,7 @@ FontPlatformData::FontPlatformData(cairo_font_face_t* fontFace, float size, bool
         cairo_ft_scaled_font_unlock_face(m_scaledFont);
     }
 }
+#endif
 
 FontPlatformData& FontPlatformData::operator=(const FontPlatformData& other)
 {
@@ -186,12 +197,18 @@ FontPlatformData& FontPlatformData::operator=(const FontPlatformData& other)
         // This will be re-created on demand.
         m_fallbacks = 0;
     }
-
+#if USE(CAIRO)
     if (m_scaledFont && m_scaledFont != hashTableDeletedFontValue())
         cairo_scaled_font_destroy(m_scaledFont);
     m_scaledFont = cairo_scaled_font_reference(other.m_scaledFont);
-
     m_harfBuzzFace = other.m_harfBuzzFace;
+#elif USE(GL2D)
+    if (m_scaledFont && m_scaledFont != hashTableDeletedFontValue())
+        m_scaledFont->deref();
+    m_scaledFont = other.m_scaledFont;
+    if (m_scaledFont)
+        m_scaledFont->ref();
+#endif
 
     return *this;
 }
@@ -199,20 +216,24 @@ FontPlatformData& FontPlatformData::operator=(const FontPlatformData& other)
 FontPlatformData::FontPlatformData(const FontPlatformData& other)
     : m_fallbacks(0)
     , m_scaledFont(0)
-    , m_harfBuzzFace(other.m_harfBuzzFace)
+//     , m_harfBuzzFace(other.m_harfBuzzFace)
 {
     *this = other;
 }
 
 FontPlatformData::FontPlatformData(const FontPlatformData& other, float size)
-    : m_harfBuzzFace(other.m_harfBuzzFace)
+//     : m_harfBuzzFace(other.m_harfBuzzFace)
 {
     *this = other;
 
     // We need to reinitialize the instance, because the difference in size 
     // necessitates a new scaled font instance.
     m_size = size;
+#if USE(CAIRO)
     initializeWithFontFace(cairo_scaled_font_get_font_face(m_scaledFont));
+#elif USE(GL2D)
+    m_scaledFont = ScaledFont::create(0);
+#endif
 }
 
 FontPlatformData::~FontPlatformData()
@@ -221,11 +242,16 @@ FontPlatformData::~FontPlatformData()
         FcFontSetDestroy(m_fallbacks);
         m_fallbacks = 0;
     }
-
+#if USE(CAIRO)
     if (m_scaledFont && m_scaledFont != hashTableDeletedFontValue())
         cairo_scaled_font_destroy(m_scaledFont);
+#elif USE(GL2D)
+    if (m_scaledFont && m_scaledFont != hashTableDeletedFontValue())
+        m_scaledFont->deref();
+#endif
 }
 
+#if USE(CAIRO)
 HarfBuzzFace* FontPlatformData::harfBuzzFace() const
 {
     if (!m_harfBuzzFace)
@@ -233,6 +259,7 @@ HarfBuzzFace* FontPlatformData::harfBuzzFace() const
 
     return m_harfBuzzFace.get();
 }
+#endif
 
 bool FontPlatformData::isFixedPitch()
 {
@@ -260,6 +287,7 @@ String FontPlatformData::description() const
 }
 #endif
 
+#if USE(CAIRO)
 void FontPlatformData::initializeWithFontFace(cairo_font_face_t* fontFace, const FontDescription& fontDescription)
 {
     cairo_font_options_t* options = getDefaultFontOptions();
@@ -306,15 +334,22 @@ void FontPlatformData::initializeWithFontFace(cairo_font_face_t* fontFace, const
     m_scaledFont = cairo_scaled_font_create(fontFace, &fontMatrix, &ctm, options);
     cairo_font_options_destroy(options);
 }
+#endif
 
 bool FontPlatformData::hasCompatibleCharmap()
 {
     ASSERT(m_scaledFont);
+#if USE(CAIRO)
     FT_Face freeTypeFace = cairo_ft_scaled_font_lock_face(m_scaledFont);
+#elif USE(GL2D)
+    FT_Face freeTypeFace = m_scaledFont->fontFace();
+#endif
     bool hasCompatibleCharmap = !(FT_Select_Charmap(freeTypeFace, ft_encoding_unicode)
                                 && FT_Select_Charmap(freeTypeFace, ft_encoding_symbol)
                                 && FT_Select_Charmap(freeTypeFace, ft_encoding_apple_roman));
+#if USE(CAIRO)
     cairo_ft_scaled_font_unlock_face(m_scaledFont);
+#endif
     return hasCompatibleCharmap;
 }
 

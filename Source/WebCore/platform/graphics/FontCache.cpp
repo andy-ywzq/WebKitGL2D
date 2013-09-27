@@ -334,7 +334,6 @@ PassRefPtr<SimpleFontData> FontCache::getCachedFontData(const FontPlatformData* 
         // gInactiveFontData (above) and re-add here to update LRU position.
         gInactiveFontData->add(result.get()->value.first);
     }
-
     return result.get()->value.first;
 }
 

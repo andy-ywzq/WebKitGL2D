@@ -28,7 +28,11 @@
 #include "WebView.h"
 
 #include "../BrowserControl.h"
+#if WTF_USE_OPENGL_ES_2
+#include <GLES2/gl2.h>
+#else
 #include <GL/gl.h>
+#endif
 
 WebView::WebView(Display* display, Window parent, XContext context, BrowserControl* control, WKRect size)
     : VisualComponent(display, control, size)

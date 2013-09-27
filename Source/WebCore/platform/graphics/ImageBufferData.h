@@ -29,6 +29,8 @@
 #include "ImageBufferDataCairo.h"
 #elif PLATFORM(QT)
 #include "ImageBufferDataQt.h"
+#elif USE(GL2D)
+#include "ImageBufferDataGL2D.h"
 #elif USE(WINGDI)
 #include "ImageBufferDataWince.h"
 #elif PLATFORM(BLACKBERRY)

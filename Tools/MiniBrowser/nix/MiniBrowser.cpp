@@ -12,7 +12,12 @@
 #include "WKPreferencesPrivate.h"
 #include "WKString.h"
 
+#if WTF_USE_OPENGL_ES_2
+#include <GLES2/gl2.h>
+#else
 #include <GL/gl.h>
+#endif
+
 #include <cassert>
 #include <cmath>
 #include <cstring>

@@ -21,7 +21,7 @@ elseif ("${PORT}" STREQUAL "GTK")
     endif ()
 elseif ("${PORT}" STREQUAL "WinCE")
     add_subdirectory(WinCELauncher)
-elseif ("${PORT}" STREQUAL "Nix" AND NOT WTF_USE_OPENGL_ES_2)
+elseif ("${PORT}" STREQUAL "Nix")
     add_subdirectory(MiniBrowser/nix)
 endif ()
 

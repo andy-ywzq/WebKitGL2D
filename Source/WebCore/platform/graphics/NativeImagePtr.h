@@ -38,6 +38,8 @@ class QPixmap;
 QT_END_NAMESPACE
 #elif USE(CAIRO)
 #include "RefPtrCairo.h"
+#elif USE(GL2D)
+#include "NativeImageGL2D.h"
 #elif USE(WINGDI)
 #include "SharedBitmap.h"
 #elif PLATFORM(BLACKBERRY)
@@ -61,6 +63,8 @@ typedef QPixmap* NativeImagePtr;
 #elif USE(CAIRO)
 typedef RefPtr<cairo_surface_t> NativeImagePtr;
 typedef PassRefPtr<cairo_surface_t> PassNativeImagePtr;
+#elif USE(GL2D)
+typedef WebCore::NativeImageGL2D* NativeImagePtr;
 #elif USE(WINGDI)
 typedef RefPtr<SharedBitmap> NativeImagePtr;
 #elif PLATFORM(BLACKBERRY)

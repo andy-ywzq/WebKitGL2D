@@ -52,6 +52,11 @@ namespace BlackBerry { namespace Platform { namespace Graphics {
     class Path;
 } } }
 typedef BlackBerry::Platform::Graphics::Path PlatformPath;
+#elif USE(GL2D)
+namespace WebCore { namespace GL2D {
+    class PathData;
+} }
+typedef WebCore::GL2D::PathData PlatformPath;
 #else
 typedef void PlatformPath;
 #endif

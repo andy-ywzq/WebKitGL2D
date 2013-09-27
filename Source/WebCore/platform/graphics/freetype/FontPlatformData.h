@@ -29,13 +29,23 @@
 #include "FontDescription.h"
 #include "FontOrientation.h"
 #include "GlyphBuffer.h"
+
+#if USE(CAIRO)
 #include "HarfBuzzFace.h"
 #include "RefPtrCairo.h"
+typedef cairo_scaled_font_t scaled_font;
+#elif USE(GL2D)
+#include <fontconfig/fontconfig.h>
+#include <fontconfig/fcfreetype.h>
+#include "fontconfigGL2D.h"
+typedef WebCore::ScaledFont scaled_font;
+#endif
+
 #include <wtf/Forward.h>
 #include <wtf/HashFunctions.h>
 
 typedef struct _FcFontSet FcFontSet;
-class HarfBuzzFace;
+// class HarfBuzzFace;
 
 namespace WebCore {
 
@@ -58,14 +68,16 @@ public:
         { }
 
     FontPlatformData(FcPattern*, const FontDescription&);
+#if USE(CAIRO)
     FontPlatformData(cairo_font_face_t* fontFace, float size, bool bold, bool italic);
+#endif
     FontPlatformData(float size, bool bold, bool italic);
     FontPlatformData(const FontPlatformData&);
     FontPlatformData(const FontPlatformData&, float size);
 
     ~FontPlatformData();
 
-    HarfBuzzFace* harfBuzzFace() const;
+//     HarfBuzzFace* harfBuzzFace() const;
 
     bool isFixedPitch();
     float size() const { return m_size; }
@@ -76,12 +88,11 @@ public:
 
     FontOrientation orientation() const { return Horizontal; } // FIXME: Implement.
     void setOrientation(FontOrientation) { } // FIXME: Implement.
-
-    cairo_scaled_font_t* scaledFont() const { return m_scaledFont; }
+    scaled_font* scaledFont() const { return m_scaledFont; }
 
     unsigned hash() const
     {
-        return PtrHash<cairo_scaled_font_t*>::hash(m_scaledFont);
+        return PtrHash<scaled_font*>::hash(scaledFont());
     }
 
     bool operator==(const FontPlatformData&) const;
@@ -101,12 +112,16 @@ public:
     bool m_syntheticBold;
     bool m_syntheticOblique;
     bool m_fixedWidth;
-    cairo_scaled_font_t* m_scaledFont;
+    scaled_font* m_scaledFont;
+#if USE(CAIRO)
     mutable RefPtr<HarfBuzzFace> m_harfBuzzFace;
+#endif
 
 private:
+#if USE(CAIRO)
     void initializeWithFontFace(cairo_font_face_t*, const FontDescription& = FontDescription());
-    static cairo_scaled_font_t* hashTableDeletedFontValue() { return reinterpret_cast<cairo_scaled_font_t*>(-1); }
+#endif
+    static scaled_font* hashTableDeletedFontValue() { return reinterpret_cast<scaled_font*>(-1); }
 };
 
 }

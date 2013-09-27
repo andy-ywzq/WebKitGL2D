@@ -1,3 +1,42 @@
+2013-09-06  Gabor Loki  <loki@webkit.org>
+
+        [gl2d] Initial commit of WebKitGL2D port.
+
+        Patch by Kristof Kosztyo <kkristof@inf.u-szeged.hu>,
+        Szilard Ledan-Muntean <szledan@inf.u-szeged.hu> and
+        Zoltan Herczeg <zherczeg@webkit.org>.
+
+        Reviewed by Gabor Loki
+
+        * PlatformNix.cmake:
+        * Shared/API/c/gtk/WKGraphicsContextGtk.cpp:
+        (WKGraphicsContextGetGtkContext):
+        * Shared/API/c/gtk/WKGraphicsContextGtk.h:
+        * Shared/CoordinatedGraphics/WebCoordinatedSurface.cpp:
+        (WebKit::WebCoordinatedSurface::createGraphicsContext):
+        * Shared/ShareableBitmap.cpp:
+        (WebKit::ShareableBitmap::Handle::encode):
+        (WebKit::ShareableBitmap::Handle::decode):
+        (WebKit::ShareableBitmap::create):
+        (WebKit::ShareableBitmap::createShareable):
+        (WebKit::ShareableBitmap::createHandle):
+        (WebKit::ShareableBitmap::ShareableBitmap):
+        (WebKit::ShareableBitmap::~ShareableBitmap):
+        * Shared/ShareableBitmap.h:
+        (WebKit::ShareableBitmap::Handle::isNull):
+        (WebKit::ShareableBitmap::sharedImage):
+        * Shared/WebGraphicsContext.cpp:
+        * Shared/WebGraphicsContext.h:
+        (WebKit::WebGraphicsContext::platformContext):
+        * Shared/gl2d/ShareableBitmapGL2D.cpp: Copied from Tools/MiniBrowser/nix/Components/BrowserWindow.h.
+        (WebKit::ShareableBitmap::createGraphicsContext):
+        (WebKit::ShareableBitmap::paint):
+        (WebKit::ShareableBitmap::createImage):
+        * UIProcess/BackingStore.h:
+        * UIProcess/gl2d/BackingStoreGL2D.cpp: Copied from Source/WebCore/platform/graphics/ImageBufferData.h.
+        (WebKit::BackingStore::paint):
+        (WebKit::BackingStore::incorporateUpdate):
+
 2013-08-20  Gavin Barraclough  <barraclough@apple.com>
 
         https://bugs.webkit.org/show_bug.cgi?id=120093

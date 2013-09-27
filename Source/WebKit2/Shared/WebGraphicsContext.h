@@ -34,6 +34,10 @@
 #include <wtf/RetainPtr.h>
 #elif USE(CAIRO)
 #include <WebCore/RefPtrCairo.h>
+#elif USE(GL2D)
+namespace WebCore {
+class PlatformContextGL2D;
+}
 #endif
 
 namespace WebKit {
@@ -49,6 +53,8 @@ public:
     CGContextRef platformContext() { return m_platformContext.get(); }
 #elif USE(CAIRO)
     cairo_t* platformContext() { return m_platformContext.get(); }
+#elif USE(GL2D)
+    WebCore::PlatformContextGL2D* platformContext() { return m_platformContext.get(); }
 #endif
 
 
@@ -59,6 +65,8 @@ private:
     RetainPtr<CGContextRef> m_platformContext;
 #elif USE(CAIRO)
     RefPtr<cairo_t> m_platformContext;
+#elif USE(GL2D)
+    RefPtr<WebCore::PlatformContextGL2D> m_platformContext;
 #endif
 };
 

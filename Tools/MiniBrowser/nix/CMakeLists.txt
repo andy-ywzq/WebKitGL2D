@@ -23,7 +23,6 @@ set(MiniBrowser_SOURCES
 
 set(MiniBrowser_LIBRARIES
     WebKit2
-    ${OPENGL_LIBRARIES}
     ${GLIB_LIBRARIES}
     ${GLIB_GIO_LIBRARIES}
     ${GLIB_GOBJECT_LIBRARIES}
@@ -58,8 +57,10 @@ if (WTF_USE_EGL)
   list(APPEND MiniBrowser_SOURCES ${MiniBrowser_DIR}/Components/EGLWebView.cpp)
   list(APPEND MiniBrowser_LIBRARIES ${EGL_LIBRARY})
   list(APPEND MiniBrowser_INCLUDE_DIRECTORIES ${EGL_INCLUDE_DIR})
+  list(APPEND MiniBrowser_LIBRARIES ${OPENGLES2_LIBRARIES})
 else ()
   list(APPEND MiniBrowser_SOURCES ${MiniBrowser_DIR}/Components/GLXWebView.cpp)
+  list(APPEND MiniBrowser_LIBRARIES ${OPENGL_LIBRARIES})
 endif ()
 
 include_directories(${MiniBrowser_INCLUDE_DIRECTORIES})

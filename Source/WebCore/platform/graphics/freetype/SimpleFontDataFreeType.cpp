@@ -40,8 +40,10 @@
 #include "FontDescription.h"
 #include "GlyphBuffer.h"
 #include "UTF16UChar32Iterator.h"
+#if USE(CAIRO)
 #include <cairo-ft.h>
 #include <cairo.h>
+#endif
 #include <fontconfig/fcfreetype.h>
 #include <unicode/normlzr.h>
 #include <wtf/MathExtras.h>

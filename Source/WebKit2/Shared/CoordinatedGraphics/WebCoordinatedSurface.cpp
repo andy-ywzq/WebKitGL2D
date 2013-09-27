@@ -31,6 +31,10 @@
 #include "TextureMapperGL.h"
 #endif
 
+#if USE(GL2D)
+#include "PlatformContextGL2D.h"
+#endif
+
 using namespace WebCore;
 
 namespace WebKit {
@@ -112,6 +116,7 @@ PassOwnPtr<WebCore::GraphicsContext> WebCoordinatedSurface::createGraphicsContex
 
     ASSERT(m_bitmap);
     OwnPtr<GraphicsContext> graphicsContext = m_bitmap->createGraphicsContext();
+
     graphicsContext->clip(rect);
     graphicsContext->translate(rect.x(), rect.y());
     return graphicsContext.release();

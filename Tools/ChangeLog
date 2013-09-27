@@ -1,3 +1,36 @@
+2013-09-06  Gabor Loki  <loki@webkit.org>
+
+        [gl2d] Initial commit of WebKitGL2D port.
+
+        Patch by Kristof Kosztyo <kkristof@inf.u-szeged.hu>,
+        Szilard Ledan-Muntean <szledan@inf.u-szeged.hu> and
+        Zoltan Herczeg <zherczeg@webkit.org>.
+
+        Reviewed by Gabor Loki
+
+        * CMakeLists.txt:
+        * MiniBrowser/nix/BrowserControl.cpp:
+        (BrowserControl::BrowserControl):
+        * MiniBrowser/nix/CMakeLists.txt:
+        * MiniBrowser/nix/Components/BrowserWindow.cpp:
+        (BrowserWindow::createXWindow):
+        * MiniBrowser/nix/Components/BrowserWindow.h:
+        (BrowserWindow::saveContext):
+        * MiniBrowser/nix/Components/EGLWebView.cpp:
+        (WebView::setupXVisualID):
+        (WebView::createGLContext):
+        * MiniBrowser/nix/Components/WebView.cpp:
+        * MiniBrowser/nix/MiniBrowser.cpp:
+        * MiniBrowser/nix/TouchMocker.cpp:
+        (TouchMocker::paintTouchPoints):
+        * Scripts/build-webkit:
+        * Scripts/webkitperl/FeatureList.pm:
+        * WebKitTestRunner/PlatformNix.cmake:
+        * WebKitTestRunner/gl2d/TestInvocationGL2D.cpp: Added.
+        (WTR::TestInvocation::dumpPixelsAndCompareWithExpected):
+        * WebKitTestRunner/nix/PlatformWebViewNix.cpp:
+        (WTR::PlatformWebView::windowSnapshotImage):
+
 2013-08-21  Brian Holt  <brian.holt@samsung.com>
 
         [GTK] Suppress irrelevant or known leaks for Valgrind

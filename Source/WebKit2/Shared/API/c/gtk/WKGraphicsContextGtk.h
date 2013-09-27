@@ -28,13 +28,22 @@
 
 #include <WebKit2/WKBase.h>
 
+#if USE(CAIRO)
 #include <cairo.h>
+#elif USE(GL2D)
+#include <PlatformContextGL2D.h>
+typedef WebCore::PlatformContextGL2D gl2dcontext;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#if USE(CAIRO)
 WK_EXPORT cairo_t* WKGraphicsContextGetGtkContext(WKGraphicsContextRef);
+#elif USE(GL2D)
+WK_EXPORT gl2dcontext* WKGraphicsContextGetGtkContext(WKGraphicsContextRef);
+#endif
 
 #ifdef __cplusplus
 }

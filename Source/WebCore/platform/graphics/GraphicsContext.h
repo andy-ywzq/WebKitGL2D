@@ -41,6 +41,12 @@
 
 #if USE(CG)
 typedef struct CGContext PlatformGraphicsContext;
+#elif USE(GL2D)
+namespace WebCore {
+class PlatformContextGL2D;
+}
+typedef WebCore::PlatformContextGL2D PlatformGraphicsContext;
+typedef WebCore::PlatformContextGL2D GraphicsContextPlatformPrivate;
 #elif USE(CAIRO)
 namespace WebCore {
 class PlatformContextCairo;

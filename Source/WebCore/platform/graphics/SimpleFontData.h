@@ -150,7 +150,7 @@ public:
     float adjustedSpaceWidth() const { return m_adjustedSpaceWidth; }
     void setSpaceWidth(float spaceWidth) { m_spaceWidth = spaceWidth; }
 
-#if USE(CG) || USE(CAIRO)
+#if USE(CG) || USE(CAIRO) || USE(GL2D)
     float syntheticBoldOffset() const { return m_syntheticBoldOffset; }
 #endif
 
@@ -307,7 +307,7 @@ private:
 
     mutable OwnPtr<DerivedFontData> m_derivedFontData;
 
-#if USE(CG) || USE(CAIRO)
+#if USE(CG) || USE(CAIRO) || USE(GL2D)
     float m_syntheticBoldOffset;
 #endif
 
@@ -360,7 +360,7 @@ ALWAYS_INLINE float SimpleFontData::widthForGlyph(Glyph glyph) const
         width = m_fontData->widthForSVGGlyph(glyph, m_platformData.size());
 #if ENABLE(OPENTYPE_VERTICAL)
     else if (m_verticalData)
-#if USE(CG) || USE(CAIRO)
+#if USE(CG) || USE(CAIRO) || USE(GL2D)
         width = m_verticalData->advanceHeight(this, glyph) + m_syntheticBoldOffset;
 #else
         width = m_verticalData->advanceHeight(this, glyph);

@@ -105,6 +105,8 @@ class IntRect;
 class IntSize;
 #if USE(CAIRO)
 class PlatformContextCairo;
+#elif USE(GL2D)
+class PlatformContextGL2D;
 #elif PLATFORM(BLACKBERRY)
 class GraphicsContext;
 #endif
@@ -783,6 +785,9 @@ public:
 #elif PLATFORM(BLACKBERRY) || USE(CG)
     void paintToCanvas(const unsigned char* imagePixels, int imageWidth, int imageHeight,
                        int canvasWidth, int canvasHeight, GraphicsContext*);
+#elif USE(GL2D)
+    void paintToCanvas(const unsigned char* imagePixels, int imageWidth, int imageHeight,
+                       int canvasWidth, int canvasHeight, PlatformContextGL2D* context);
 #endif
 
     void markContextChanged();

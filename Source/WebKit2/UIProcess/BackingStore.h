@@ -44,6 +44,10 @@
 #include <WebCore/WidgetBackingStore.h>
 #endif
 
+#if USE(GL2D)
+#include <PlatformContextGL2D.h>
+#endif
+
 namespace WebKit {
 
 class ShareableBitmap;
@@ -66,6 +70,8 @@ public:
     typedef QPainter* PlatformGraphicsContext;
 #elif USE(CAIRO)
     typedef cairo_t* PlatformGraphicsContext;
+#elif USE(GL2D)
+    typedef WebCore::PlatformContextGL2D* PlatformGraphicsContext;
 #endif
 
     void paint(PlatformGraphicsContext, const WebCore::IntRect&);

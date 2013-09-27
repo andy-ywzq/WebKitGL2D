@@ -52,6 +52,9 @@ BrowserControl::BrowserControl(BrowserControlClient * client, int width, int hei
     m_toolBar = new ToolBar(m_display, m_browserWindow->window(), m_context, this, WKRectMake(0, 0, width, toolBarHeight));
     m_webView = new WebView(m_display, m_browserWindow->window(), m_context, this, WKRectMake(0, toolBarHeight, width, height - toolBarHeight));
 
+    // the egl has problems when any XContext has been saved before the egl display is initialized
+    m_browserWindow->saveContext(m_context);
+
     // create navigation buttons
     m_backButton = new Button(m_display, m_toolBar->window(), m_context, this, WKRectMake(backButtonX, toolBarElementY, buttonWidth, buttonHeight), Button::Back);
     m_forwardButton = new Button(m_display, m_toolBar->window(), m_context, this, WKRectMake(forwardButtonX, toolBarElementY, buttonWidth, buttonHeight), Button::Forward);

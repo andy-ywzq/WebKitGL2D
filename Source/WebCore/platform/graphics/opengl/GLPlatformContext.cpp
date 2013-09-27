@@ -104,10 +104,8 @@ static void resolveResetStatusExtension()
 
 PassOwnPtr<GLPlatformContext> GLPlatformContext::createContext(GraphicsContext3D::RenderStyle renderStyle)
 {
-#if !USE(OPENGL_ES_2)
     if (!initializeOpenGLShims())
         return nullptr;
-#endif
 
     switch (renderStyle) {
     case GraphicsContext3D::RenderOffscreen:

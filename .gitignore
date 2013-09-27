@@ -117,3 +117,5 @@ tags
 .project
 .cproject
 .settings
+
+/Tools/nix/glib-autoconf-arm.cache

@@ -11,14 +11,13 @@ list(APPEND WebKit2_SOURCES
     Platform/CoreIPC/unix/ConnectionUnix.cpp
     Platform/CoreIPC/unix/AttachmentUnix.cpp
 
-    Shared/API/c/cairo/WKImageCairo.cpp
-
     Shared/API/c/gtk/WKGraphicsContextGtk.cpp
 
     Shared/API/c/nix/WKPopupItem.cpp
     Shared/API/c/nix/WKPopupMenuListener.cpp
 
-    Shared/cairo/ShareableBitmapCairo.cpp
+    #Shared/cairo/ShareableBitmapCairo.cpp
+    Shared/gl2d/ShareableBitmapGL2D.cpp
 
     Shared/nix/LayerTreeContextNix.cpp
     Shared/nix/NativeWebMouseEventNix.cpp
@@ -37,8 +36,6 @@ list(APPEND WebKit2_SOURCES
     UIProcess/API/C/nix/WKErrorNix.cpp
     UIProcess/API/C/nix/WKPageNix.cpp
     UIProcess/API/nix/NIXView.cpp
-
-    UIProcess/cairo/BackingStoreCairo.cpp
 
     UIProcess/CoordinatedGraphics/WebView.cpp
     UIProcess/CoordinatedGraphics/WebViewClient.cpp
@@ -75,6 +72,27 @@ list(APPEND WebKit2_SOURCES
     UIProcess/DefaultUndoController.cpp
 )
 
+if (WTF_USE_GL2D)
+    list(APPEND WebKit2_SOURCES
+        Shared/gl2d/ShareableBitmapGL2D.cpp
+        UIProcess/gl2d/BackingStoreGL2D.cpp
+    )
+
+    list(APPEND WebKit2_INCLUDE_DIRECTORIES
+        "${WEBCORE_DIR}/platform/graphics/gl2d"
+    )
+else()
+    list(APPEND WebKit2_SOURCES
+        Shared/API/c/cairo/WKImageCairo.cpp
+        Shared/cairo/ShareableBitmapCairo.cpp
+        UIProcess/cairo/BackingStoreCairo.cpp
+    )
+
+    list(APPEND WebKit2_INCLUDE_DIRECTORIES
+        "${WEBCORE_DIR}/platform/graphics/cairo"
+    )
+endif()
+
 list(APPEND WebKit2_INCLUDE_DIRECTORIES
     Shared/nix
     Shared/API/c/nix
@@ -86,8 +104,9 @@ list(APPEND WebKit2_INCLUDE_DIRECTORIES
     UIProcess/API/C/CoordinatedGraphics
     "${JAVASCRIPTCORE_DIR}/llint"
     "${WEBCORE_DIR}/platform/nix"
-    "${WEBCORE_DIR}/platform/graphics/cairo"
     "${WEBCORE_DIR}/platform/graphics/filters/texmap"
+    "${WEBCORE_DIR}/platform/graphics/opengl"
+    "${WEBCORE_DIR}/platform/graphics/surfaces/efl"
     "${WEBCORE_DIR}/svg/graphics"
     "${WTF_DIR}/wtf/gobject"
     ${CAIRO_INCLUDE_DIRS}

@@ -30,6 +30,10 @@
 #include <WebCore/PlatformContextCairo.h>
 #endif
 
+#if USE(GL2D)
+#include <WebCore/PlatformContextGL2D.h>
+#endif
+
 using namespace WebCore;
 
 namespace WebKit {

@@ -1,3 +1,15 @@
+2013-09-06  Gabor Loki  <loki@webkit.org>
+
+        [gl2d] Initial commit of WebKitGL2D port.
+
+        Patch by Kristof Kosztyo <kkristof@inf.u-szeged.hu>,
+        Szilard Ledan-Muntean <szledan@inf.u-szeged.hu> and
+        Zoltan Herczeg <zherczeg@webkit.org>.
+
+        Reviewed by Gabor Loki
+
+        * wtf/nix/PlatformNix.h:
+
 2013-08-21  Allan Sandfeld Jensen  <allan.jensen@digia.com>
 
         Disable maybe-uninitialized warning in GCC 4.8

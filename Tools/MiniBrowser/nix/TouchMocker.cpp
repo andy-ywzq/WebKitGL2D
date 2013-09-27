@@ -26,7 +26,11 @@
 #include "TouchMocker.h"
 #include "touchTexture.h"
 
+#if WTF_USE_OPENGL_ES_2
+#include <GLES2/gl2.h>
+#else
 #include <GL/gl.h>
+#endif
 #include <cassert>
 #include <cstring>
 
@@ -62,47 +66,7 @@ TouchMocker::~TouchMocker()
 
 void TouchMocker::paintTouchPoints(const WKSize& size)
 {
-    static float vertexData[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-    static const float texCoords[] = { 0, 0, 1, 0, 0, 1, 1, 1};
-
-    if (m_touchPoints.empty())
-        return;
-
-    glPushMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, size.width, size.height, 0, -1, 1);
-
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY_EXT);
-    glTexCoordPointer(2, GL_FLOAT, 0, texCoords);
-    glVertexPointer(3, GL_FLOAT, 0, vertexData);
-
-    glBindTexture(GL_TEXTURE_2D, m_touchTextureId);
-
-    TouchMap::const_iterator it;
-    for (it = m_touchPoints.begin(); it != m_touchPoints.end(); ++it) {
-        const MockedTouchPoint& touch = it->second;
-        double x1 = touch.windowX - touch.horizontalRadius;
-        double y1 = touch.windowY - touch.verticalRadius;
-        double x2 = touch.windowX + touch.horizontalRadius;
-        double y2 = touch.windowY + touch.verticalRadius;
-
-        vertexData[0] = x1;
-        vertexData[1] = y1;
-        vertexData[3] = x2;
-        vertexData[4] = y1;
-        vertexData[6] = x1;
-        vertexData[7] = y2;
-        vertexData[9] = x2;
-        vertexData[10] = y2;
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    }
-    glPopMatrix();
+    
 }
 
 bool TouchMocker::handleMousePress(const NIXMouseEvent& event, const WKPoint& windowPos)

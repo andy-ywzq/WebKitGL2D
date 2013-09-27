@@ -1,3 +1,497 @@
+2013-09-06  Gabor Loki  <loki@webkit.org>
+
+        [gl2d] Initial commit of WebKitGL2D port.
+
+        Patch by Kristof Kosztyo <kkristof@inf.u-szeged.hu>,
+        Szilard Ledan-Muntean <szledan@inf.u-szeged.hu> and
+        Zoltan Herczeg <zherczeg@webkit.org>.
+
+        Reviewed by Gabor Loki
+
+        * PlatformNix.cmake:
+        * platform/graphics/FontCache.cpp:
+        (WebCore::FontCache::getCachedFontData):
+        * platform/graphics/GraphicsContext.h:
+        * platform/graphics/GraphicsContext3D.h:
+        * platform/graphics/ImageBufferData.h:
+        * platform/graphics/NativeImagePtr.h:
+        * platform/graphics/OpenGLShims.cpp:
+        * platform/graphics/Path.h:
+        * platform/graphics/Pattern.h:
+        * platform/graphics/SimpleFontData.h:
+        (WebCore::SimpleFontData::widthForGlyph):
+        * platform/graphics/TiledBackingStore.cpp:
+        (WebCore::TiledBackingStore::updateTileBuffers):
+        * platform/graphics/freetype/FontCacheFreeType.cpp:
+        * platform/graphics/freetype/FontCustomPlatformDataFreeType.cpp:
+        * platform/graphics/freetype/FontPlatformData.h:
+        (WebCore::FontPlatformData::scaledFont):
+        (WebCore::FontPlatformData::hash):
+        (WebCore::FontPlatformData::hashTableDeletedFontValue):
+        * platform/graphics/freetype/FontPlatformDataFreeType.cpp:
+        (WebCore::FontPlatformData::FontPlatformData):
+        (WebCore::FontPlatformData::operator=):
+        (WebCore::FontPlatformData::~FontPlatformData):
+        (WebCore::FontPlatformData::hasCompatibleCharmap):
+        * platform/graphics/freetype/SimpleFontDataFreeType.cpp:
+        * platform/graphics/gl2d/ArenaGL2D.cpp: Copied from Source/WebCore/platform/graphics/ImageBufferData.h.
+        (WebCore::GL2D::Arena::alloc):
+        (WebCore::GL2D::Arena::Arena):
+        (WebCore::GL2D::Arena::~Arena):
+        * platform/graphics/gl2d/ArenaGL2D.h: Copied from Tools/MiniBrowser/nix/Components/BrowserWindow.h.
+        (WebCore::GL2D::Arena::create):
+        (WebCore::GL2D::Arena::ArenaElements::ArenaElements):
+        * platform/graphics/gl2d/BitmapImageGL2D.cpp: Added.
+        (WebCore::BitmapImage::BitmapImage):
+        (WebCore::BitmapImage::checkForSolidColor):
+        (WebCore::BitmapImage::draw):
+        * platform/graphics/gl2d/ClipRectGL2D.cpp: Added.
+        (WebCore::GL2D::ClipRect::ClipRect):
+        (WebCore::GL2D::ClipRect::intersect):
+        (WebCore::GL2D::ClipRect::setDimension):
+        * platform/graphics/gl2d/ClipRectGL2D.h: Added.
+        (WebCore::GL2D::ClipRect::createRect):
+        (WebCore::GL2D::ClipRect::leftInteger):
+        (WebCore::GL2D::ClipRect::bottomInteger):
+        (WebCore::GL2D::ClipRect::rightInteger):
+        (WebCore::GL2D::ClipRect::topInteger):
+        (WebCore::GL2D::ClipRect::left):
+        (WebCore::GL2D::ClipRect::bottom):
+        (WebCore::GL2D::ClipRect::right):
+        (WebCore::GL2D::ClipRect::top):
+        (WebCore::GL2D::ClipRect::intersect):
+        * platform/graphics/gl2d/DrawingBufferGL2D.cpp: Copied from Source/WebCore/platform/graphics/ImageBufferData.h.
+        (WebCore::DrawingBuffer::DrawingBuffer):
+        (WebCore::DrawingBuffer::~DrawingBuffer):
+        * platform/graphics/gl2d/EGLDisplayGL2D.cpp: Added.
+        (WebCore::displayManagers):
+        (WebCore::EGLDisplayOpenVG::currentSurface):
+        (WebCore::EGLDisplayOpenVG::registerPlatformSurface):
+        (WebCore::EGLDisplayOpenVG::unregisterPlatformSurface):
+        (WebCore::EGLDisplayOpenVG::setCurrentDisplay):
+        (WebCore::EGLDisplayOpenVG::current):
+        (WebCore::EGLDisplayOpenVG::forDisplay):
+        (WebCore::EGLDisplayOpenVG::EGLDisplayOpenVG):
+        (WebCore::EGLDisplayOpenVG::~EGLDisplayOpenVG):
+        (WebCore::EGLDisplayOpenVG::setDefaultPbufferConfig):
+        (WebCore::EGLDisplayOpenVG::defaultPbufferConfig):
+        (WebCore::EGLDisplayOpenVG::setDefaultWindowConfig):
+        (WebCore::EGLDisplayOpenVG::defaultWindowConfig):
+        (WebCore::EGLDisplayOpenVG::sharedPlatformSurface):
+        (WebCore::EGLDisplayOpenVG::createPbufferSurface):
+        (WebCore::EGLDisplayOpenVG::createPbufferFromClientBuffer):
+        (WebCore::EGLDisplayOpenVG::surfaceForWindow):
+        (WebCore::EGLDisplayOpenVG::surfacesCompatible):
+        (WebCore::EGLDisplayOpenVG::destroySurface):
+        (WebCore::EGLDisplayOpenVG::contextForSurface):
+        * platform/graphics/gl2d/EGLDisplayGL2D.h: Added.
+        (WebCore::EGLDisplayOpenVG::display):
+        * platform/graphics/gl2d/FontCacheGL2D.cpp: Copied from Tools/MiniBrowser/nix/Components/BrowserWindow.h.
+        (WebCore::FontCache::platformInit):
+        (WebCore::FontCache::getFontDataForCharacters):
+        (WebCore::FontCache::getSimilarFontPlatformData):
+        (WebCore::FontCache::getLastResortFallbackFont):
+        (WebCore::FontCache::createFontPlatformData):
+        (WebCore::FontCache::getTraitsInFamily):
+        * platform/graphics/gl2d/FontCustomPlatformData.cpp: Copied from Source/WebCore/platform/graphics/ImageBufferData.h.
+        (WebCore::createFontCustomPlatformData):
+        (WebCore::FontCustomPlatformData::~FontCustomPlatformData):
+        (WebCore::FontCustomPlatformData::supportsFormat):
+        (WebCore::FontCustomPlatformData::fontPlatformData):
+        * platform/graphics/gl2d/FontCustomPlatformData.h: Added.
+        * platform/graphics/gl2d/FontGL2D.cpp: Added.
+        (WebCore::Font::selectionRectForComplexText):
+        (WebCore::Font::canExpandAroundIdeographsInComplexText):
+        (WebCore::Font::canReturnFallbackFontsForComplexText):
+        (WebCore::Font::floatWidthForComplexText):
+        (WebCore::Font::drawComplexText):
+        (WebCore::Font::offsetForPositionForComplexText):
+        (WebCore::Font::drawGlyphs):
+        (WebCore::Font::drawEmphasisMarksForComplexText):
+        * platform/graphics/gl2d/FontPlatformDataGL2D.cpp: Copied from Source/WebCore/platform/graphics/ImageBufferData.h.
+        (WebCore::FontPlatformData::~FontPlatformData):
+        (WebCore::FontPlatformData::platformDataInit):
+        (WebCore::FontPlatformData::platformDataAssign):
+        (WebCore::FontPlatformData::platformIsEqual):
+        (WebCore::FontPlatformData::description):
+        * platform/graphics/gl2d/GL2DDefs.h: Copied from Tools/MiniBrowser/nix/Components/BrowserWindow.h.
+        (WebCore::GL2D::max):
+        (WebCore::GL2D::min):
+        (WebCore::GL2D::clamp):
+        * platform/graphics/gl2d/GLContext.h: Added.
+        * platform/graphics/gl2d/GlyphPageTreeNodeGL2D.cpp: Copied from Tools/MiniBrowser/nix/Components/BrowserWindow.h.
+        (WebCore::GlyphPage::fill):
+        * platform/graphics/gl2d/GradientGL2D.cpp: Copied from Source/WebCore/platform/graphics/ImageBufferData.h.
+        (WebCore::Gradient::platformDestroy):
+        (WebCore::Gradient::fill):
+        * platform/graphics/gl2d/GraphicsContext3DGL2D.cpp: Added.
+        (WebCore::GraphicsContext3D::create):
+        (WebCore::GraphicsContext3D::GraphicsContext3D):
+        (WebCore::GraphicsContext3D::~GraphicsContext3D):
+        (WebCore::GraphicsContext3D::platformGraphicsContext3D):
+        (WebCore::GraphicsContext3D::paintToCanvas):
+        (WebCore::GraphicsContext3D::createGraphicsSurfaces):
+        (WebCore::GraphicsContext3D::makeContextCurrent):
+        (WebCore::GraphicsContext3D::setContextLostCallback):
+        (WebCore::GraphicsContext3D::setErrorMessageCallback):
+        (WebCore::GraphicsContext3D::isGLES2Compliant):
+        (WebCore::GraphicsContext3D::ImageExtractor::~ImageExtractor):
+        (WebCore::GraphicsContext3D::ImageExtractor::extractImage):
+        (WebCore::GraphicsContext3D::platformLayer):
+        * platform/graphics/gl2d/GraphicsContext3DPrivate.h: Added.
+        * platform/graphics/gl2d/GraphicsContextGL2D.cpp: Added.
+        (WebCore::GraphicsContext::platformInit):
+        (WebCore::GraphicsContext::platformContext):
+        (WebCore::GraphicsContext::platformDestroy):
+        (WebCore::GraphicsContext::getCTM):
+        (WebCore::GraphicsContext::savePlatformState):
+        (WebCore::GraphicsContext::restorePlatformState):
+        (WebCore::GraphicsContext::drawRect):
+        (WebCore::GraphicsContext::drawLine):
+        (WebCore::GraphicsContext::drawEllipse):
+        (WebCore::GraphicsContext::drawConvexPolygon):
+        (WebCore::GraphicsContext::clipConvexPolygon):
+        (WebCore::GraphicsContext::fillPath):
+        (WebCore::GraphicsContext::strokePath):
+        (WebCore::GraphicsContext::fillRect):
+        (WebCore::GraphicsContext::fillRoundedRect):
+        (WebCore::GraphicsContext::clip):
+        (WebCore::GraphicsContext::clipPath):
+        (WebCore::GraphicsContext::setPlatformCompositeOperation):
+        (WebCore::GraphicsContext::canvasClip):
+        (WebCore::GraphicsContext::drawFocusRing):
+        (WebCore::GraphicsContext::drawLineForText):
+        (WebCore::GraphicsContext::drawLineForDocumentMarker):
+        (WebCore::GraphicsContext::roundToDevicePixels):
+        (WebCore::GraphicsContext::setPlatformShadow):
+        (WebCore::GraphicsContext::clearPlatformShadow):
+        (WebCore::GraphicsContext::beginPlatformTransparencyLayer):
+        (WebCore::GraphicsContext::endPlatformTransparencyLayer):
+        (WebCore::GraphicsContext::supportsTransparencyLayers):
+        (WebCore::GraphicsContext::clearRect):
+        (WebCore::GraphicsContext::strokeRect):
+        (WebCore::GraphicsContext::setLineCap):
+        (WebCore::GraphicsContext::setLineDash):
+        (WebCore::GraphicsContext::setLineJoin):
+        (WebCore::GraphicsContext::setMiterLimit):
+        (WebCore::GraphicsContext::setAlpha):
+        (WebCore::GraphicsContext::clipOut):
+        (WebCore::GraphicsContext::translate):
+        (WebCore::GraphicsContext::rotate):
+        (WebCore::GraphicsContext::scale):
+        (WebCore::GraphicsContext::concatCTM):
+        (WebCore::GraphicsContext::setCTM):
+        (WebCore::GraphicsContext::get3DTransform):
+        (WebCore::GraphicsContext::concat3DTransform):
+        (WebCore::GraphicsContext::set3DTransform):
+        (WebCore::GraphicsContext::setURLForRect):
+        (WebCore::GraphicsContext::setPlatformStrokeColor):
+        (WebCore::GraphicsContext::setPlatformStrokeThickness):
+        (WebCore::GraphicsContext::setPlatformFillColor):
+        (WebCore::GraphicsContext::setPlatformShouldAntialias):
+        (WebCore::GraphicsContext::setImageInterpolationQuality):
+        (WebCore::GraphicsContext::imageInterpolationQuality):
+        * platform/graphics/gl2d/GraphicsContextPlatformPrivateGL2D.cpp: Copied from Source/WebCore/platform/graphics/ImageBufferData.h.
+        (WebCore::platformContextIsOwned):
+        (WebCore::GraphicsContextPlatformPrivate::~GraphicsContextPlatformPrivate):
+        * platform/graphics/gl2d/GraphicsContextPlatformPrivateGL2D.h: Copied from Tools/MiniBrowser/nix/Components/BrowserWindow.h.
+        (WebCore::GraphicsContextPlatformPrivate::p):
+        (WebCore::GraphicsContextPlatformPrivate::clipBoundingRect):
+        (WebCore::GraphicsContextPlatformPrivate::GraphicsContextPlatformPrivate):
+        (WebCore::GraphicsContextPlatformPrivate::~GraphicsContextPlatformPrivate):
+        * platform/graphics/gl2d/ImageBufferDataGL2D.h: Copied from Source/WebCore/platform/graphics/ImageBufferData.h.
+        * platform/graphics/gl2d/ImageBufferGL2D.cpp: Added.
+        (WebCore::ImageBufferData::ImageBufferData):
+        (WebCore::ImageBuffer::ImageBuffer):
+        (WebCore::ImageBuffer::~ImageBuffer):
+        (WebCore::ImageBuffer::context):
+        (WebCore::ImageBuffer::copyImage):
+        (WebCore::ImageBuffer::clip):
+        (WebCore::ImageBuffer::draw):
+        (WebCore::ImageBuffer::drawPattern):
+        (WebCore::ImageBuffer::platformTransformColorSpace):
+        (WebCore::ImageBuffer::toDataURL):
+        (WebCore::ImageBuffer::getUnmultipliedImageData):
+        (WebCore::ImageBuffer::getPremultipliedImageData):
+        (WebCore::ImageBuffer::putByteArray):
+        * platform/graphics/gl2d/ImageDecoderGL2D.cpp: Copied from Tools/MiniBrowser/nix/Components/BrowserWindow.h.
+        (WebCore::ImageFrame::asNewNativeImage):
+        * platform/graphics/gl2d/ImageGL2D.cpp: Copied from Source/WebCore/platform/graphics/ImageBufferData.h.
+        (WebCore::Image::drawPattern):
+        (WebCore::FrameData::clear):
+        * platform/graphics/gl2d/NativeImageGL2D.cpp: Added.
+        (WebCore::NativeImageGL2D::NativeImageGL2D):
+        (WebCore::NativeImageGL2D::~NativeImageGL2D):
+        (WebCore::NativeImageGL2D::bindFbo):
+        * platform/graphics/gl2d/NativeImageGL2D.h: Added.
+        (WebCore::NativeImageGL2D::createPtr):
+        (WebCore::NativeImageGL2D::create):
+        (WebCore::NativeImageGL2D::createShared):
+        (WebCore::NativeImageGL2D::size):
+        (WebCore::NativeImageGL2D::width):
+        (WebCore::NativeImageGL2D::height):
+        (WebCore::NativeImageGL2D::sharedImageHandle):
+        (WebCore::NativeImageGL2D::texture):
+        (WebCore::NativeImageGL2D::sizeInBytes):
+        (WebCore::NativeImageGL2D::hasAlpha):
+        (WebCore::NativeImageGL2D::fbo):
+        (WebCore::NativeImageGL2D::bindTexture):
+        * platform/graphics/gl2d/PathGL2D.cpp: Added.
+        (WebCore::GL2D::PathData::alloc):
+        (WebCore::GL2D::PathData::moveTo):
+        (WebCore::GL2D::PathData::addLineTo):
+        (WebCore::GL2D::PathData::addQuadCurveTo):
+        (WebCore::GL2D::PathData::addBezierCurveTo):
+        (WebCore::GL2D::PathData::addArcTo):
+        (WebCore::GL2D::PathData::closeSubpath):
+        (WebCore::GL2D::PathData::addArc):
+        (WebCore::GL2D::PathData::appendBoundingBox):
+        (WebCore::GL2D::root):
+        (WebCore::GL2D::calculateRoots):
+        (WebCore::GL2D::bezierCurve):
+        (WebCore::GL2D::bezierBoundingBox):
+        (WebCore::GL2D::PathData::fillTrapezoidList):
+        (WebCore::GL2D::PathData::strokeTrapezoidList):
+        (WebCore::GL2D::PathData::addRect):
+        (WebCore::GL2D::PathData::clone):
+        (WebCore::GL2D::PathData::transform):
+        (WebCore::Path::Path):
+        (WebCore::Path::~Path):
+        (WebCore::Path::operator=):
+        (WebCore::Path::isEmpty):
+        (WebCore::Path::contains):
+        (WebCore::Path::hasCurrentPoint):
+        (WebCore::Path::currentPoint):
+        (WebCore::Path::strokeContains):
+        (WebCore::Path::boundingRect):
+        (WebCore::Path::strokeBoundingRect):
+        (WebCore::Path::moveTo):
+        (WebCore::Path::addRect):
+        (WebCore::Path::addLineTo):
+        (WebCore::Path::addQuadCurveTo):
+        (WebCore::Path::addBezierCurveTo):
+        (WebCore::Path::addEllipse):
+        (WebCore::Path::addArc):
+        (WebCore::Path::addArcTo):
+        (WebCore::Path::apply):
+        (WebCore::Path::closeSubpath):
+        (WebCore::Path::clear):
+        (WebCore::Path::transform):
+        (WebCore::Path::translate):
+        * platform/graphics/gl2d/PathGL2D.h: Added.
+        (WebCore::GL2D::PathElement::PathElement):
+        (WebCore::GL2D::PathElement::type):
+        (WebCore::GL2D::PathElement::isMoveTo):
+        (WebCore::GL2D::PathElement::end):
+        (WebCore::GL2D::PathElement::next):
+        (WebCore::GL2D::PathElement::setNext):
+        (WebCore::GL2D::PathElement::setEnd):
+        (WebCore::GL2D::MoveToElement::MoveToElement):
+        (WebCore::GL2D::LineToElement::LineToElement):
+        (WebCore::GL2D::QuadCurveToElement::QuadCurveToElement):
+        (WebCore::GL2D::QuadCurveToElement::control):
+        (WebCore::GL2D::QuadCurveToElement::setControl):
+        (WebCore::GL2D::CurveToElement::CurveToElement):
+        (WebCore::GL2D::CurveToElement::control1):
+        (WebCore::GL2D::CurveToElement::setControl1):
+        (WebCore::GL2D::CurveToElement::control2):
+        (WebCore::GL2D::CurveToElement::setControl2):
+        (WebCore::GL2D::ArcToElement::ArcToElement):
+        (WebCore::GL2D::ArcToElement::center):
+        (WebCore::GL2D::ArcToElement::radius):
+        (WebCore::GL2D::ArcToElement::startAngle):
+        (WebCore::GL2D::ArcToElement::endAngle):
+        (WebCore::GL2D::ArcToElement::anticlockwise):
+        (WebCore::GL2D::ArcToElement::transform):
+        (WebCore::GL2D::ArcToElement::multiply):
+        (WebCore::GL2D::AutoCloseSubpathElement::AutoCloseSubpathElement):
+        (WebCore::GL2D::PathData::PathData):
+        (WebCore::GL2D::PathData::isEmpty):
+        (WebCore::GL2D::PathData::boundingBox):
+        (WebCore::GL2D::PathData::firstElement):
+        * platform/graphics/gl2d/PlatformContextGL2D.cpp: Added.
+        (WebCore::PlatformContextGL2D::PlatformContextGL2D):
+        (WebCore::PlatformContextGL2D::createGLContext):
+        (WebCore::PlatformContextGL2D::save):
+        (WebCore::PlatformContextGL2D::restore):
+        (WebCore::PlatformContextGL2D::setStrokeColor):
+        (WebCore::PlatformContextGL2D::setFillColor):
+        (WebCore::PlatformContextGL2D::setCompositeOperation):
+        (WebCore::PlatformContextGL2D::translate):
+        (WebCore::PlatformContextGL2D::scale):
+        (WebCore::PlatformContextGL2D::rotate):
+        (WebCore::PlatformContextGL2D::clip):
+        (WebCore::PlatformContextGL2D::compileShaderInternal):
+        * platform/graphics/gl2d/PlatformContextGL2D.h: Added.
+        (WebCore::PlatformContextGL2D::create):
+        (WebCore::PlatformContextGL2D::release):
+        (WebCore::PlatformContextGL2D::createGLContextIfNeed):
+        (WebCore::PlatformContextGL2D::offScreenContext):
+        (WebCore::PlatformContextGL2D::offScreenSurface):
+        (WebCore::PlatformContextGL2D::targetTexture):
+        (WebCore::PlatformContextGL2D::transform):
+        (WebCore::PlatformContextGL2D::boundingClipRect):
+        (WebCore::PlatformContextGL2D::setTransform):
+        (WebCore::PlatformContextGL2D::multiplyTransform):
+        (WebCore::PlatformContextGL2D::compileAndUseShader):
+        (WebCore::PlatformContextGL2D::setColorUniform):
+        (WebCore::PlatformContextGL2D::isInteger):
+        (WebCore::PlatformContextGL2D::addTexture):
+        (WebCore::PlatformContextGL2D::absolutePosition):
+        * platform/graphics/gl2d/ShaderCommonGL2D.h: Added.
+        * platform/graphics/gl2d/ShaderImageGL2D.cpp: Added.
+        (WebCore::PlatformContextGL2D::copyImageFastPath):
+        (WebCore::PlatformContextGL2D::imageSetShaderArgument):
+        (WebCore::PlatformContextGL2D::copyImage):
+        (WebCore::PlatformContextGL2D::transformedImageSetShaderArgument):
+        * platform/graphics/gl2d/ShaderPathGL2D.cpp: Added.
+        (WebCore::setupAttributes):
+        (WebCore::PlatformContextGL2D::createPathAlphaTexture):
+        (WebCore::PlatformContextGL2D::fillPath):
+        (WebCore::PlatformContextGL2D::pathSetShaderArgument):
+        * platform/graphics/gl2d/ShaderPipelineGL2D.cpp: Added.
+        (WebCore::PlatformContextGL2D::paint):
+        * platform/graphics/gl2d/ShaderRectGL2D.cpp: Added.
+        (WebCore::PlatformContextGL2D::fillRectFastPath):
+        (WebCore::PlatformContextGL2D::rectSetShaderArgument):
+        (WebCore::PlatformContextGL2D::fillRect):
+        * platform/graphics/gl2d/SimpleFontDataGL2D.cpp: Added.
+        (WebCore::SimpleFontData::platformInit):
+        (WebCore::SimpleFontData::platformDestroy):
+        (WebCore::SimpleFontData::determinePitch):
+        (WebCore::SimpleFontData::platformCreateScaledFontData):
+        (WebCore::SimpleFontData::platformBoundsForGlyph):
+        (WebCore::SimpleFontData::platformWidthForGlyph):
+        (WebCore::SimpleFontData::platformCharWidthInit):
+        (WebCore::SimpleFontData::containsCharacters):
+        * platform/graphics/gl2d/SurfaceGL2D.cpp: Added.
+        (WebCore::SurfaceGL2D::SurfaceGL2D):
+        (WebCore::SurfaceGL2D::getEGLConfig):
+        (WebCore::SurfaceGL2D::isValid):
+        (WebCore::SurfaceGL2D::defaultWindowConfig):
+        (WebCore::SurfaceGL2D::clipBoundingRect):
+        (WebCore::SurfaceGL2D::qpainter):
+        (WebCore::SurfaceGL2D::operator QPainter&):
+        (WebCore::SurfaceGL2D::operator QPainter*):
+        * platform/graphics/gl2d/SurfaceGL2D.h: Added.
+        * platform/graphics/gl2d/TileGL2D.cpp: Copied from Source/WebCore/platform/graphics/ImageBufferData.h.
+        (WebCore::TiledBackingStoreBackend::createTile):
+        (WebCore::TiledBackingStoreBackend::paintCheckerPattern):
+        * platform/graphics/gl2d/TransformGL2D.cpp: Added.
+        (WebCore::GL2D::AffineTransform::inlineAutoDetectType):
+        (WebCore::GL2D::AffineTransform::multiply):
+        (WebCore::GL2D::AffineTransform::translate):
+        (WebCore::GL2D::AffineTransform::scale):
+        (WebCore::GL2D::AffineTransform::rotate):
+        (WebCore::GL2D::AffineTransform::autoDetectType):
+        * platform/graphics/gl2d/TransformGL2D.h: Added.
+        (WebCore::GL2D::AffineTransform::AffineTransform):
+        (WebCore::GL2D::AffineTransform::type):
+        (WebCore::GL2D::AffineTransform::transform):
+        (WebCore::GL2D::AffineTransform::isIdentity):
+        (WebCore::GL2D::AffineTransform::apply):
+        (WebCore::GL2D::AffineTransform::operator= ):
+        (WebCore::GL2D::AffineTransform::operator*= ):
+        * platform/graphics/gl2d/TrapezoidBuilderGL2D.cpp: Added.
+        (WebCore::GL2D::TrapezoidBuilder::ScanStripe::addOrCombineTrapezoid):
+        (WebCore::GL2D::TrapezoidBuilder::trapezoidIteratorInit):
+        (WebCore::GL2D::TrapezoidBuilder::trapezoidIteratorNext):
+        (WebCore::GL2D::TrapezoidBuilder::trapezoidList):
+        (WebCore::GL2D::TrapezoidBuilder::splitScanStripe):
+        (WebCore::GL2D::calculateX):
+        (WebCore::GL2D::TrapezoidBuilder::insertLine):
+        (WebCore::GL2D::TrapezoidBuilder::insertQuadCurve):
+        (WebCore::GL2D::abs):
+        (WebCore::GL2D::isCurveLinear):
+        (WebCore::GL2D::splitCubicCurve):
+        (WebCore::GL2D::TrapezoidBuilder::insertCubeCurve):
+        (WebCore::GL2D::calculateSegments):
+        (WebCore::GL2D::arcToCurve):
+        (WebCore::GL2D::TrapezoidBuilder::insertArc):
+        (WebCore::GL2D::TrapezoidBuilder::Line::compareLines):
+        (WebCore::GL2D::TrapezoidBuilder::ScanStripe::addLine):
+        (WebCore::GL2D::fuzzyCompare):
+        (WebCore::GL2D::TrapezoidBuilder::Trapezoid::isCombined):
+        * platform/graphics/gl2d/TrapezoidBuilderGL2D.h: Added.
+        (WebCore::GL2D::TrapezoidBuilder::TrapezoidBuilder):
+        (WebCore::GL2D::TrapezoidBuilder::roundToInt):
+        (WebCore::GL2D::TrapezoidBuilder::Line::Line):
+        (WebCore::GL2D::TrapezoidBuilder::Line::create):
+        (WebCore::GL2D::TrapezoidBuilder::Line::direction):
+        (WebCore::GL2D::TrapezoidBuilder::Line::x0Precise):
+        (WebCore::GL2D::TrapezoidBuilder::Line::x1Precise):
+        (WebCore::GL2D::TrapezoidBuilder::Line::slope):
+        (WebCore::GL2D::TrapezoidBuilder::Line::x0Rounded):
+        (WebCore::GL2D::TrapezoidBuilder::Line::x1Rounded):
+        (WebCore::GL2D::TrapezoidBuilder::Line::next):
+        (WebCore::GL2D::TrapezoidBuilder::Line::setX0):
+        (WebCore::GL2D::TrapezoidBuilder::Line::setX1):
+        (WebCore::GL2D::TrapezoidBuilder::Line::setNext):
+        (WebCore::GL2D::TrapezoidBuilder::Trapezoid::Trapezoid):
+        (WebCore::GL2D::TrapezoidBuilder::Trapezoid::create):
+        (WebCore::GL2D::TrapezoidBuilder::Trapezoid::slopes):
+        (WebCore::GL2D::TrapezoidBuilder::Trapezoid::top):
+        (WebCore::GL2D::TrapezoidBuilder::Trapezoid::next):
+        (WebCore::GL2D::TrapezoidBuilder::Trapezoid::trapezoid):
+        (WebCore::GL2D::TrapezoidBuilder::Trapezoid::fill):
+        (WebCore::GL2D::TrapezoidBuilder::Trapezoid::firstTop):
+        (WebCore::GL2D::TrapezoidBuilder::Trapezoid::setTop):
+        (WebCore::GL2D::TrapezoidBuilder::Trapezoid::setNext):
+        (WebCore::GL2D::TrapezoidBuilder::ScanStripe::ScanStripe):
+        (WebCore::GL2D::TrapezoidBuilder::ScanStripe::create):
+        (WebCore::GL2D::TrapezoidBuilder::ScanStripe::y):
+        (WebCore::GL2D::TrapezoidBuilder::ScanStripe::lines):
+        (WebCore::GL2D::TrapezoidBuilder::ScanStripe::trapezoids):
+        (WebCore::GL2D::TrapezoidBuilder::ScanStripe::next):
+        (WebCore::GL2D::TrapezoidBuilder::ScanStripe::setY):
+        (WebCore::GL2D::TrapezoidBuilder::ScanStripe::setNext):
+        (WebCore::GL2D::TrapezoidBuilder::createScanStripe):
+        * platform/graphics/gl2d/TrapezoidListGL2D.cpp: Copied from Source/WebCore/platform/graphics/ImageBufferData.h.
+        (WebCore::GL2D::TrapezoidList::insertTrapezoid):
+        * platform/graphics/gl2d/TrapezoidListGL2D.h: Added.
+        (WebCore::GL2D::TrapezoidList::create):
+        (WebCore::GL2D::TrapezoidList::Trapezoid::setPoints):
+        (WebCore::GL2D::TrapezoidList::Trapezoid::points):
+        (WebCore::GL2D::TrapezoidList::Trapezoid::at):
+        (WebCore::GL2D::TrapezoidList::Trapezoid::operator[]):
+        (WebCore::GL2D::TrapezoidList::trapezoidCount):
+        (WebCore::GL2D::TrapezoidList::trapezoids):
+        (WebCore::GL2D::TrapezoidList::boundingBox):
+        (WebCore::GL2D::TrapezoidList::TrapezoidList):
+        * platform/graphics/gl2d/fontconfigGL2D.cpp: Copied from Tools/MiniBrowser/nix/Components/BrowserWindow.h.
+        (WTF::refIfNotNull):
+        (WTF::derefIfNotNull):
+        (WebCore::ScaledFont::ScaledFont):
+        (WebCore::ScaledFont::fontFace):
+        * platform/graphics/gl2d/fontconfigGL2D.h: Copied from Tools/MiniBrowser/nix/Components/BrowserWindow.h.
+        (WebCore::ScaledFont::create):
+        * platform/graphics/opengl/GLDefs.h:
+        * platform/graphics/opengl/GLPlatformContext.cpp:
+        (WebCore::GLPlatformContext::createContext):
+        * platform/graphics/opengl/GraphicsContext3DOpenGLCommon.cpp:
+        (WebCore::GraphicsContext3D::compileShader):
+        * platform/graphics/surfaces/egl/EGLContext.cpp:
+        * platform/graphics/surfaces/egl/EGLSurface.cpp:
+        * platform/graphics/surfaces/egl/EGLSurface.h:
+        (WebCore::EGLOffScreenSurface::configSelector):
+        * platform/graphics/surfaces/egl/EGLXSurface.cpp:
+        * platform/graphics/surfaces/egl/EGLXSurface.h:
+        * platform/graphics/surfaces/glx/X11Helper.cpp:
+        (WebCore::X11Helper::createPixmap):
+        * platform/graphics/surfaces/glx/X11Helper.h:
+        * platform/graphics/texmap/TextureMapperGL.cpp:
+        (WebCore::driverSupportsExternalTextureBGRA):
+        (WebCore::BitmapTextureGL::updateContents):
+        * platform/graphics/texmap/TextureMapperGL.h:
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsScene.cpp:
+        * platform/nix/RenderThemeNix.cpp:
+        (WebCore::webCanvas):
+        (WebCore::RenderThemeNix::paintButton):
+        (WebCore::RenderThemeNix::paintTextField):
+        (WebCore::RenderThemeNix::paintCheckbox):
+        (WebCore::RenderThemeNix::paintRadio):
+        (WebCore::RenderThemeNix::paintMenuList):
+
 2013-08-21  Brent Fulgham  <bfulgham@apple.com>
 
         <https://webkit.org/b/120113> [Windows] Enable CSS_IMAGE_SET

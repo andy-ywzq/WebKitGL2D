@@ -1,3 +1,16 @@
+2013-09-06  Gabor Loki  <loki@webkit.org>
+
+        [gl2d] Initial commit of WebKitGL2D port.
+
+        Patch by Kristof Kosztyo <kkristof@inf.u-szeged.hu>,
+        Szilard Ledan-Muntean <szledan@inf.u-szeged.hu> and
+        Zoltan Herczeg <zherczeg@webkit.org>.
+
+        Reviewed by Gabor Loki
+
+        * .gitignore:
+        * Source/cmake/OptionsNix.cmake:
+
 2013-08-15  Zan Dobersek  <zdobersek@igalia.com>
 
         Unreviewed GTK build fix after r154106.

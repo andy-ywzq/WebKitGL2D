@@ -32,7 +32,11 @@
 
 using namespace WebKit;
 
+#if USE(CAIRO)
 cairo_t* WKGraphicsContextGetGtkContext(WKGraphicsContextRef graphicsContextRef)
+#elif USE(GL2D)
+gl2dcontext* WKGraphicsContextGetGtkContext(WKGraphicsContextRef graphicsContextRef)
+#endif
 {
     return toImpl(graphicsContextRef)->platformContext();
 }

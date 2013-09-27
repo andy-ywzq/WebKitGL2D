@@ -439,7 +439,6 @@ void GraphicsContext3D::compileShader(Platform3DObject shader)
 {
     ASSERT(shader);
     makeContextCurrent();
-
     String translatedShaderSource = m_extensions->getTranslatedShaderSourceANGLE(shader);
 
     if (!translatedShaderSource.length())

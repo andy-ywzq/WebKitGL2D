@@ -41,15 +41,24 @@ ShareableBitmap::Handle::Handle()
 
 void ShareableBitmap::Handle::encode(CoreIPC::ArgumentEncoder& encoder) const
 {
+#if USE(GL2D)
+    encoder << m_imageHandle;
+#else
     encoder << m_handle;
+#endif
     encoder << m_size;
     encoder << m_flags;
 }
 
 bool ShareableBitmap::Handle::decode(CoreIPC::ArgumentDecoder& decoder, Handle& handle)
 {
+#if USE(GL2D)
+    if (!decoder.decode(handle.m_imageHandle))
+        return false;
+#else
     if (!decoder.decode(handle.m_handle))
         return false;
+#endif
     if (!decoder.decode(handle.m_size))
         return false;
     if (!decoder.decode(handle.m_flags))
@@ -59,6 +68,9 @@ bool ShareableBitmap::Handle::decode(CoreIPC::ArgumentDecoder& decoder, Handle& 
 
 PassRefPtr<ShareableBitmap> ShareableBitmap::create(const IntSize& size, Flags flags)
 {
+#if USE(GL2D)
+    return adoptRef(new ShareableBitmap(size, flags, WebCore::NativeImageGL2D::create(size.width(), size.height())));
+#else
     size_t numBytes = numBytesForSize(size);
     
     void* data = 0;
@@ -66,10 +78,14 @@ PassRefPtr<ShareableBitmap> ShareableBitmap::create(const IntSize& size, Flags f
         return 0;
 
     return adoptRef(new ShareableBitmap(size, flags, data));
+#endif
 }
 
 PassRefPtr<ShareableBitmap> ShareableBitmap::createShareable(const IntSize& size, Flags flags)
 {
+#if USE(GL2D)
+    return adoptRef(new ShareableBitmap(size, flags, WebCore::NativeImageGL2D::createShared(size)));
+#else
     size_t numBytes = numBytesForSize(size);
 
     RefPtr<SharedMemory> sharedMemory = SharedMemory::create(numBytes);
@@ -77,8 +93,10 @@ PassRefPtr<ShareableBitmap> ShareableBitmap::createShareable(const IntSize& size
         return 0;
 
     return adoptRef(new ShareableBitmap(size, flags, sharedMemory));
+#endif
 }
 
+#if !USE(GL2D)
 PassRefPtr<ShareableBitmap> ShareableBitmap::create(const IntSize& size, Flags flags, PassRefPtr<SharedMemory> sharedMemory)
 {
     ASSERT(sharedMemory);
@@ -88,27 +106,52 @@ PassRefPtr<ShareableBitmap> ShareableBitmap::create(const IntSize& size, Flags f
     
     return adoptRef(new ShareableBitmap(size, flags, sharedMemory));
 }
+#endif
 
 PassRefPtr<ShareableBitmap> ShareableBitmap::create(const Handle& handle, SharedMemory::Protection protection)
 {
+#if USE(GL2D)
+    return adoptRef(new ShareableBitmap(handle.m_size, handle.m_flags,
+        WebCore::NativeImageGL2D::createShared(handle.m_size, handle.m_imageHandle)));
+#else
     // Create the shared memory.
     RefPtr<SharedMemory> sharedMemory = SharedMemory::create(handle.m_handle, protection);
     if (!sharedMemory)
         return 0;
 
     return create(handle.m_size, handle.m_flags, sharedMemory.release());
+#endif
 }
 
 bool ShareableBitmap::createHandle(Handle& handle, SharedMemory::Protection protection)
 {
     ASSERT(isBackedBySharedMemory());
 
+#if USE(GL2D)
+    handle.m_imageHandle = m_sharedImage->sharedImageHandle();
+#else
     if (!m_sharedMemory->createHandle(handle.m_handle, protection))
         return false;
+#endif
     handle.m_size = m_size;
     handle.m_flags = m_flags;
     return true;
 }
+
+#if USE(GL2D)
+ShareableBitmap::ShareableBitmap(const WebCore::IntSize& size, Flags flags, PassOwnPtr<WebCore::NativeImageGL2D> nativeImage)
+    : m_size(size)
+    , m_flags(flags)
+    , m_data(0)
+    , m_sharedImage(nativeImage)
+{
+}
+
+ShareableBitmap::~ShareableBitmap()
+{
+}
+
+#else
 
 ShareableBitmap::ShareableBitmap(const IntSize& size, Flags flags, void* data)
     : m_size(size)
@@ -162,5 +205,7 @@ void* ShareableBitmap::data() const
     ASSERT(m_data);
     return m_data;
 }
+
+#endif // GL2D
 
 } // namespace WebKit

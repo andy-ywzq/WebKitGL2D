@@ -84,6 +84,7 @@ my (
     $fullscreenAPISupport,
     $gamepadSupport,
     $geolocationSupport,
+    $gl2d,
     $highDPICanvasSupport,
     $icondatabaseSupport,
     $iframeSeamlessSupport,
@@ -280,6 +281,9 @@ my @features = (
 
     { option => "geolocation", desc => "Toggle Geolocation support",
       define => "ENABLE_GEOLOCATION", default => (isAppleWebKit() || isGtk() || isBlackBerry()), value => \$geolocationSupport },
+
+    { option => "gl2d", desc => "Toggle Geolocation support",
+      define => "USE_GL2D", default => 0, value => \$gl2d },
 
     { option => "high-dpi-canvas", desc => "Toggle High DPI Canvas support",
       define => "ENABLE_HIGH_DPI_CANVAS", default => (isAppleWebKit()), value => \$highDPICanvasSupport },

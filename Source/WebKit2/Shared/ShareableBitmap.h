@@ -50,13 +50,17 @@ namespace WebKit { using WebCore::Region; }
 #endif
 #endif
 
+#if USE(GL2D)
+#include <WebCore/NativeImageGL2D.h>
+#endif
+
 namespace WebCore {
     class Image;
     class GraphicsContext;
 }
 
 namespace WebKit {
-    
+
 class ShareableBitmap : public RefCounted<ShareableBitmap> {
 public:
     enum Flag {
@@ -70,7 +74,11 @@ public:
     public:
         Handle();
 
+#if USE(GL2D)
+        bool isNull() const { return m_imageHandle; }
+#else
         bool isNull() const { return m_handle.isNull(); }
+#endif
 
         void encode(CoreIPC::ArgumentEncoder&) const;
         static bool decode(CoreIPC::ArgumentDecoder&, Handle&);
@@ -78,7 +86,11 @@ public:
     private:
         friend class ShareableBitmap;
 
+#if USE(GL2D)
+        uintptr_t m_imageHandle;
+#else
         mutable SharedMemory::Handle m_handle;
+#endif
         WebCore::IntSize m_size;
         Flags m_flags;
     };
@@ -89,8 +101,10 @@ public:
     // Create a shareable bitmap whose backing memory can be shared with another process.
     static PassRefPtr<ShareableBitmap> createShareable(const WebCore::IntSize&, Flags);
 
+#if !USE(GL2D)
     // Create a shareable bitmap from an already existing shared memory block.
     static PassRefPtr<ShareableBitmap> create(const WebCore::IntSize&, Flags, PassRefPtr<SharedMemory>);
+#endif
 
     // Create a shareable bitmap from a handle.
     static PassRefPtr<ShareableBitmap> create(const Handle&, SharedMemory::Protection = SharedMemory::ReadWrite);
@@ -103,7 +117,9 @@ public:
     const WebCore::IntSize& size() const { return m_size; }
     WebCore::IntRect bounds() const { return WebCore::IntRect(WebCore::IntPoint(), size()); }
 
+#if !USE(GL2D)
     bool resize(const WebCore::IntSize& size);
+#endif
 
     // Create a graphics context that can be used to paint into the backing store.
     PassOwnPtr<WebCore::GraphicsContext> createGraphicsContext();
@@ -134,11 +150,17 @@ public:
     // This is only safe to use when we know that the contents of the shareable bitmap won't change.
     QImage createQImage();
     static void releaseSharedMemoryData(void* typelessBitmap);
+#elif USE(GL2D)
+    WebCore::NativeImageGL2D* sharedImage() { return m_sharedImage.get(); }
 #endif
 
 private:
+#if USE(GL2D)
+    ShareableBitmap(const WebCore::IntSize&, Flags, PassOwnPtr<WebCore::NativeImageGL2D>);
+#else
     ShareableBitmap(const WebCore::IntSize&, Flags, void*);
     ShareableBitmap(const WebCore::IntSize&, Flags, PassRefPtr<SharedMemory>);
+#endif
 
 #if USE(CAIRO)
     static size_t numBytesForSize(const WebCore::IntSize&);
@@ -156,7 +178,9 @@ private:
     static void releaseSurfaceData(void* typelessBitmap);
 #endif
 
+#if !USE(GL2D)
     void* data() const;
+#endif
     size_t sizeInBytes() const { return numBytesForSize(m_size); }
 
     WebCore::IntSize m_size;
@@ -167,6 +191,10 @@ private:
 
     // If the shareable bitmap is backed by fastMalloced memory, this points to the data.
     void* m_data;
+
+#if USE(GL2D)
+    OwnPtr<WebCore::NativeImageGL2D> m_sharedImage;
+#endif // GL2D
 };
 
 } // namespace WebKit

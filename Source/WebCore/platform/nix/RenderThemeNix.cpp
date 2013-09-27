@@ -28,7 +28,7 @@
 
 #include "InputTypeNames.h"
 #include "PaintInfo.h"
-#include "PlatformContextCairo.h"
+//#include "PlatformContextCairo.h"
 #include "public/Canvas.h"
 #include "public/Platform.h"
 #include "public/Rect.h"
@@ -65,7 +65,9 @@ static Nix::ThemeEngine* themeEngine()
 
 static Nix::Canvas* webCanvas(const PaintInfo& info)
 {
+#if 0
     return info.context->platformContext()->cr();
+#endif
 }
 
 PassRefPtr<RenderTheme> RenderTheme::themeForPage(Page*)
@@ -183,6 +185,7 @@ static Nix::ThemeEngine::State getWebThemeState(const RenderTheme* theme, const 
 
 bool RenderThemeNix::paintButton(RenderObject* o, const PaintInfo& i, const IntRect& rect)
 {
+#if 0
     Nix::ThemeEngine::ButtonExtraParams extraParams;
     extraParams.isDefault = isDefault(o);
     extraParams.hasBorder = true;
@@ -191,17 +194,20 @@ bool RenderThemeNix::paintButton(RenderObject* o, const PaintInfo& i, const IntR
         extraParams.backgroundColor = o->style()->visitedDependentColor(CSSPropertyBackgroundColor).rgb();
 
     themeEngine()->paintButton(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
+#endif
     return false;
 }
 
 bool RenderThemeNix::paintTextField(RenderObject* o, const PaintInfo& i, const IntRect& rect)
 {
+#if 0
     // WebThemeEngine does not handle border rounded corner and background image
     // so return true to draw CSS border and background.
     if (o->style()->hasBorderRadius() || o->style()->hasBackgroundImage())
         return true;
 
     themeEngine()->paintTextField(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect));
+#endif
     return false;
 }
 
@@ -212,11 +218,13 @@ bool RenderThemeNix::paintTextArea(RenderObject* o, const PaintInfo& i, const In
 
 bool RenderThemeNix::paintCheckbox(RenderObject* o, const PaintInfo& i, const IntRect& rect)
 {
+#if 0
     Nix::ThemeEngine::ButtonExtraParams extraParams;
     extraParams.checked = isChecked(o);
     extraParams.indeterminate = isIndeterminate(o);
 
     themeEngine()->paintCheckbox(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
+#endif
     return false;
 }
 
@@ -232,11 +240,13 @@ void RenderThemeNix::setCheckboxSize(RenderStyle* style) const
 
 bool RenderThemeNix::paintRadio(RenderObject* o, const PaintInfo& i, const IntRect& rect)
 {
+#if 0
     Nix::ThemeEngine::ButtonExtraParams extraParams;
     extraParams.checked = isChecked(o);
     extraParams.indeterminate = isIndeterminate(o);
 
     themeEngine()->paintRadio(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
+#endif
     return false;
 }
 
@@ -252,7 +262,9 @@ void RenderThemeNix::setRadioSize(RenderStyle* style) const
 
 bool RenderThemeNix::paintMenuList(RenderObject* o, const PaintInfo& i, const IntRect& rect)
 {
+#if 0
     themeEngine()->paintMenuList(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect));
+#endif
     return false;
 }
 

@@ -38,10 +38,14 @@ public:
 
     virtual void handleEvent(const XEvent&);
 
+    void saveContext(XContext context)
+    {
+        XSaveContext(m_display, m_window, context, (XPointer)this);
+    };
+
 private:
     virtual void createXWindow(Window parent, XContext);
     void updateSizeIfNeeded(int width, int height);
-
 };
 
 class ToolBar : public VisualComponent {

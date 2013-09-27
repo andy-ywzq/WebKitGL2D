@@ -26,7 +26,7 @@
 #include "WebView.h"
 
 #include <EGL/egl.h>
-#include <GL/gl.h>
+#include <GLES2/gl2.h>
 
 struct WebView::GLContextData {
     EGLDisplay eglDisplay;
@@ -48,7 +48,7 @@ VisualID WebView::setupXVisualID()
 
     static const EGLint attributes[] = {
         EGL_DEPTH_SIZE, 24,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE
     };
 
@@ -65,8 +65,13 @@ VisualID WebView::setupXVisualID()
 
 void WebView::createGLContext()
 {
-    eglBindAPI(EGL_OPENGL_API);
-    m_glContextData->context = eglCreateContext(m_glContextData->eglDisplay, m_glContextData->config, EGL_NO_CONTEXT, 0);
+    static const EGLint contextAttributes[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE,
+    };
+
+    eglBindAPI(EGL_OPENGL_ES_API);
+    m_glContextData->context = eglCreateContext(m_glContextData->eglDisplay, m_glContextData->config, EGL_NO_CONTEXT, contextAttributes);
     if (!m_glContextData->context)
         fatalError("eglCreateContext failed\n");
 

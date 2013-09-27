@@ -52,11 +52,20 @@ if (WTF_USE_OPENGL_ES_2)
     find_package(OpenGLES2 REQUIRED)
     find_package(EGL REQUIRED)
     set(WTF_USE_EGL ON)
-    add_definitions(-DWTF_USE_OPENGL_ES_2=1)
+#    add_definitions(-DWTF_USE_OPENGL_ES_2=1)
+    set(WTF_USE_OPENGL_ES_2 ON)
 else ()
     find_package(X11 REQUIRED)
     find_package(OpenGL REQUIRED)
     add_definitions(-DHAVE_GLX=1)
+endif ()
+
+if (WTF_USE_GL2D)
+    add_definitions(-DWTF_USE_GL2D=1)
+    find_package(X11 REQUIRED)
+    set(WTF_PLATFORM_X11)
+else ()
+    set(WTF_USE_CAIRO)
 endif ()
 
 if (NOT ENABLE_SVG)
@@ -64,6 +73,3 @@ if (NOT ENABLE_SVG)
 endif ()
 
 PROCESS_WEBKIT_OPTIONS()
-
-
-

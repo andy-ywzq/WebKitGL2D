@@ -134,6 +134,11 @@ void TiledBackingStore::updateTileBuffers()
         dirtyTiles[n]->swapBackBufferToFront();
     }
 
+    // Until an inter-process synchronization is not available,
+    // we need to flush all commands here. This is a major
+    // performance bottleneck at the moment.
+    glFlush();
+
     m_client->tiledBackingStorePaintEnd(paintedArea);
 }
 

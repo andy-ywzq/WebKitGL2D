@@ -55,7 +55,6 @@ void BrowserWindow::createXWindow(Window parent, XContext context)
     XSetWMProtocols(m_display, m_window, &wmDeleteMessageAtom, 1);
 
     XSelectInput(m_display, m_window, ExposureMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask);
-    XSaveContext(m_display, m_window, context, (XPointer)this);
     XMapWindow(m_display, m_window);
 }
 
