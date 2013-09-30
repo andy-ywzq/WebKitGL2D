@@ -1,3 +1,322 @@
+2013-09-30  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Fix force_static_libs_as_shared in WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=121961
+
+        Reviewed by Csaba Osztrogonác.
+
+        Get rid of the unused WebKit2QML library
+
+        * Target.pri:
+        * WebKit2.pro:
+        * WebKit2QML.pri: Removed.
+
+2013-09-29  Mark Rowe  <mrowe@apple.com>
+
+        Fix the Lion build.
+
+        Ensure that C++ and Objective-C++ files build with the right compiler flags.
+
+        * Configurations/BaseTarget.xcconfig:
+
+2013-09-29  Sam Weinig  <sam@webkit.org>
+
+        Fix the build.
+
+        * WebProcess/Plugins/Netscape/NPRuntimeObjectMap.cpp:
+        (WebKit::NPRuntimeObjectMap::evaluate):
+
+2013-09-28  Mark Rowe  <mrowe@apple.com>
+
+        Fix some failures with newer versions of clang.
+
+        Some CoreGraphics headers generate warnings under newer versions of clang. Since they're system headers the warnings would
+        usually be suppressed, but we're adding the frameworks to the non-system framework search path so they're no longer treated
+        as system headers. We address this by removing the system paths from FRAMEWORK_SEARCH_PATHS and using the -iframework compiler
+        flag in OTHER_CFLAGS to add the paths to the system framework search path. We have to set OTHER_CFLAGS at the target level
+        in order for it to coexist with the ASAN-related OTHER_CFLAGS that's set in DebugRelease.xcconfig.
+
+        Reviewed by Dan Bernstein.
+
+        * Configurations/BaseTarget.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+
+2013-09-28  Mark Rowe  <mrowe@apple.com>
+
+        Take Xcode's advice and enable some extra warnings.
+
+        Reviewed by Sam Weinig.
+
+        * Configurations/Base.xcconfig:
+        * WebKit2.xcodeproj/project.pbxproj:
+
+2013-09-28  Darin Adler  <darin@apple.com>
+
+        Add Frame::mainFrame and Frame::isMainFrame
+        https://bugs.webkit.org/show_bug.cgi?id=122064
+
+        Reviewed by Andreas Kling.
+
+        * WebProcess/WebPage/mac/TiledCoreAnimationDrawingArea.mm:
+        (WebKit::TiledCoreAnimationDrawingArea::shouldUseTiledBackingForFrameView):
+        Call isMainFrame.
+
+2013-09-27  Anders Carlsson  <andersca@apple.com>
+
+        Message sending functions should only accept rvalues
+        https://bugs.webkit.org/show_bug.cgi?id=122041
+
+        Reviewed by Andreas Kling.
+
+        In order to safely encode move-only types, make all send variants accept rvalues only, except
+        for the "send to all processes" ones. For them, copy the message before sending. This ensures that trying
+        to send a move-only type in a message will fail to compile.
+
+        * NetworkProcess/NetworkResourceLoader.h:
+        (WebKit::NetworkResourceLoader::sendAbortingOnFailure):
+        * Platform/CoreIPC/Connection.h:
+        (CoreIPC::Connection::send):
+        (CoreIPC::Connection::sendSync):
+        * Platform/CoreIPC/MessageSender.h:
+        (CoreIPC::MessageSender::sendSync):
+        * Shared/ChildProcessProxy.h:
+        (WebKit::ChildProcessProxy::send):
+        (WebKit::ChildProcessProxy::sendSync):
+        * UIProcess/WebContext.h:
+        (WebKit::WebContext::sendToNetworkingProcess):
+        (WebKit::WebContext::sendToNetworkingProcessRelaunchingIfNecessary):
+        (WebKit::WebContext::sendToAllProcesses):
+        (WebKit::WebContext::sendToAllProcessesRelaunchingThemIfNecessary):
+        (WebKit::WebContext::sendToOneProcess):
+        * UIProcess/WebPageGroup.h:
+        (WebKit::WebPageGroup::sendToAllProcessesInGroup):
+
+2013-09-28  Philippe Normand  <pnormand@igalia.com>
+
+        Unreviewed GTK build fix after r156560.
+
+        * WebProcess/WebPage/gtk/LayerTreeHostGtk.cpp:
+        (WebKit::LayerTreeHostGtk::paintContents):
+        (WebKit::LayerTreeHostGtk::createPageOverlayLayer):
+        (WebKit::LayerTreeHostGtk::destroyPageOverlayLayer):
+        * WebProcess/WebPage/gtk/LayerTreeHostGtk.h:
+
+2013-09-28  Mark Rowe  <mrowe@apple.com>
+
+        WebKit2 fails to build with newer versions of clang.
+
+        Reviewed by Anders Carlsson.
+
+        * Shared/VisitedLinkTable.cpp: #if a function that's only used inside an ASSERT.
+        * UIProcess/Plugins/mac/PluginInfoStoreMac.mm: Remove an unused constant.
+        * UIProcess/mac/WKFullScreenWindowController.mm: Ditto.
+        * WebProcess/Plugins/Netscape/mac/NetscapePluginMac.mm: Ditto.
+        * WebProcess/WebPage/FindController.cpp: Ditto.
+        * WebProcess/WebPage/WebBackForwardListProxy.cpp: Remove two unused constants.
+
+2013-09-27  Csaba Osztrogonác  <ossy@webkit.org>
+
+        CookieStorageShim should be PLATFORM(MAC) guarded
+        https://bugs.webkit.org/show_bug.cgi?id=121423
+
+        Reviewed by Darin Adler.
+
+        Original patch by Kwang Yul Seo <skyul@company100.com>.
+
+        * WebProcess/WebProcess.cpp:
+        (WebKit::WebProcess::initializeWebProcess):
+
+2013-09-27  Enrica Casucci  <enrica@apple.com>
+
+        Upstream changes to Pasteboard implementation for iOS.
+        https://bugs.webkit.org/show_bug.cgi?id=121818
+
+        Reviewed by Benjamin Poulain.
+
+        * Shared/WebCoreArgumentCoders.cpp:
+        (CoreIPC::decodeSharedBuffer):
+        * Shared/WebCoreArgumentCoders.h:
+        * UIProcess/WebContext.h:
+        * UIProcess/WebContext.messages.in:
+        * UIProcess/mac/WebContextMac.mm:
+        (WebKit::WebContext::writeWebContentToPasteboard):
+        (WebKit::WebContext::writeImageToPasteboard):
+        (WebKit::WebContext::writeStringToPasteboard):
+        (WebKit::WebContext::readStringFromPasteboard):
+        (WebKit::WebContext::readURLFromPasteboard):
+        (WebKit::WebContext::readBufferFromPasteboard):
+        (WebKit::WebContext::getPasteboardItemsCount):
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.cpp:
+        (WebKit::WebPlatformStrategies::writeToPasteboard):
+        (WebKit::WebPlatformStrategies::getPasteboardItemsCount):
+        (WebKit::WebPlatformStrategies::readBufferFromPasteboard):
+        (WebKit::WebPlatformStrategies::readURLFromPasteboard):
+        (WebKit::WebPlatformStrategies::readStringFromPasteboard):
+        (WebKit::WebPlatformStrategies::changeCount):
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.h:
+
+2013-09-27  Ralph Thomas  <ralpht@gmail.com>
+
+        [WK2][CoordinatedGraphics] fix build after r156560
+        https://bugs.webkit.org/show_bug.cgi?id=122028
+
+        Fixing build.
+
+        Reviewed by Anders Carlsson.
+
+        * WebProcess/WebPage/CoordinatedGraphics/CoordinatedLayerTreeHost.cpp:
+        (WebKit::CoordinatedLayerTreeHost::paintLayerContents):
+        * WebProcess/WebPage/CoordinatedGraphics/CoordinatedLayerTreeHost.h:
+
+2013-09-27  Anders Carlsson  <andersca@apple.com>
+
+        Use std::unique_ptr for GraphicsLayer creation
+        https://bugs.webkit.org/show_bug.cgi?id=122020
+
+        Reviewed by Antti Koivisto.
+
+        * UIProcess/mac/RemoteLayerTreeHost.h:
+        * UIProcess/mac/RemoteLayerTreeHost.mm:
+        (WebKit::RemoteLayerTreeHost::getOrCreateLayer):
+        * WebProcess/WebPage/mac/LayerTreeHostMac.h:
+        * WebProcess/WebPage/mac/LayerTreeHostMac.mm:
+        (WebKit::LayerTreeHostMac::paintContents):
+        (WebKit::LayerTreeHostMac::createPageOverlayLayer):
+        (WebKit::LayerTreeHostMac::destroyPageOverlayLayer):
+        * WebProcess/WebPage/mac/RemoteGraphicsLayer.h:
+        * WebProcess/WebPage/mac/RemoteGraphicsLayer.mm:
+        * WebProcess/WebPage/mac/RemoteLayerTreeContext.h:
+        * WebProcess/WebPage/mac/RemoteLayerTreeContext.mm:
+        (WebKit::RemoteLayerTreeContext::createGraphicsLayer):
+        * WebProcess/WebPage/mac/TiledCoreAnimationDrawingArea.h:
+        * WebProcess/WebPage/mac/TiledCoreAnimationDrawingArea.mm:
+        (WebKit::TiledCoreAnimationDrawingArea::paintContents):
+        (WebKit::TiledCoreAnimationDrawingArea::createPageOverlayLayer):
+        (WebKit::TiledCoreAnimationDrawingArea::destroyPageOverlayLayer):
+
+2013-09-27  Beth Dakin  <bdakin@apple.com>
+
+        ScrollbarPainterController should adopt the api to lock overlay scrollbar state
+        https://bugs.webkit.org/show_bug.cgi?id=121928
+
+        Reviewed by Sam Weinig.
+
+        This function no longer needs to be implemented by ScrollablArea subclasses.
+        * WebProcess/Plugins/PDF/PDFPlugin.h:
+        * WebProcess/Plugins/PDF/PDFPlugin.mm:
+
+2013-09-27  Andre Moreira Magalhaes   <andre.magalhaes@collabora.co.uk>
+
+        Web Inspector: Make WebKitGTK+ port work with Eclipse chromedevtools plugin
+        https://bugs.webkit.org/show_bug.cgi?id=121121
+
+        Reviewed by Gustavo Noronha Silva.
+
+        The chromedevtools plugin (http://code.google.com/p/chromedevtools/) requires a specific
+        json format to connect to the webkit inspector.
+
+        The current format is missing some required fields that make the connection with the plugin
+        fail.
+
+        The format expected by the plugin is as follows:
+          {
+           "title": "Foo",
+           "url": "http://foo",
+           "devtoolsFrontendUrl": "/Main.html?ws=localhost:9222/devtools/page/1",
+           "webSocketDebuggerUrl": "ws://localhost:9222/devtools/page/1"
+          }
+
+        The current format is missing the entries for "devtoolsFrontendUrl" and
+        "webSocketDebuggerUrl".
+
+        The plugin also sends an HTTP GET request to http://host:port/json instead of
+        http://host:port/pagelist.json when retrieving the pages list.
+
+        This patch fixes the issues by adding support for the missing fields and accepting requests
+        for "/json" alongside "/pagelist.json".
+
+        * UIProcess/InspectorServer/gtk/WebInspectorServerGtk.cpp:
+        (WebKit::WebInspectorServer::platformResourceForPath):
+        Also accept requests for "/json" alongside "pagelist.json".
+        (WebKit::WebInspectorServer::buildPageList):
+        Add fields required by chromedevtools plugin.
+
+2013-09-26  Darin Adler  <darin@apple.com>
+
+        rename KURL to URL
+        https://bugs.webkit.org/show_bug.cgi?id=16214
+
+        Reviewed by Andreas Kling.
+
+        * many files: Renamed, using script.
+
+2013-09-27  Peter Gal  <galpeter@inf.u-szeged.hu>
+
+        Remove unused method parameters from TupleCoder.
+        https://bugs.webkit.org/show_bug.cgi?id=122009
+
+        Reviewed by Anders Carlsson.
+
+        In case of TupleCoder<0, Elements...> the parameter
+        names for encoder, decoder and tuple are not used.
+        By removing the paramter names the unusued paramter
+        warning will disappear.
+
+        * Platform/CoreIPC/Arguments.h:
+
+2013-09-06  Jer Noble  <jer.noble@apple.com>
+
+        [Mac] Implement the media controls in JavaScript.
+        https://bugs.webkit.org/show_bug.cgi?id=120895
+
+        Reviewed by Dean Jackson.
+
+        Define and turn on ENABLE_MEDIA_CONTROLS_SCRIPT.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-09-27  Darin Adler  <darin@apple.com>
+
+        Add empty MainFrame class
+        https://bugs.webkit.org/show_bug.cgi?id=121770
+
+        Reviewed by Andreas Kling.
+
+        * WebProcess/FullScreen/WebFullScreenManager.cpp:
+        * WebProcess/InjectedBundle/API/c/WKBundlePage.cpp:
+        * WebProcess/InjectedBundle/InjectedBundle.cpp:
+        * WebProcess/Plugins/PluginView.cpp:
+        * WebProcess/Storage/StorageAreaMap.cpp:
+        * WebProcess/WebCoreSupport/WebChromeClient.cpp:
+        * WebProcess/WebCoreSupport/WebContextMenuClient.cpp:
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.cpp:
+        * WebProcess/WebCoreSupport/mac/WebContextMenuClientMac.mm:
+        * WebProcess/WebPage/FindController.cpp:
+        * WebProcess/WebPage/PageOverlay.cpp:
+        * WebProcess/WebPage/WebInspector.cpp:
+        * WebProcess/WebPage/WebPage.cpp:
+        * WebProcess/WebPage/atk/WebPageAccessibilityObjectAtk.cpp:
+        * WebProcess/WebPage/gtk/LayerTreeHostGtk.cpp:
+        * WebProcess/WebPage/mac/LayerTreeHostMac.mm:
+        * WebProcess/WebPage/mac/RemoteLayerTreeContext.mm:
+        * WebProcess/WebPage/mac/TiledCoreAnimationDrawingArea.mm:
+        * WebProcess/WebPage/mac/WKAccessibilityWebPageObject.mm:
+        * WebProcess/WebPage/mac/WebPageMac.mm:
+        Include MainFrame.h instead of Frame.h as needed.
+
+2013-09-27  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Fix force_static_libs_as_shared in WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=121961
+
+        Reviewed by Csaba Osztrogonác.
+
+        Do not add strict ordering for webkit2qml. It is not needed and causes
+        Target.pri to be built out of order.
+
+        * WebKit2.pro:
+
 2013-09-26  Anders Carlsson  <andersca@apple.com>
 
         Remove Windows code

@@ -53,6 +53,7 @@
 #include "RenderText.h"
 #include "RenderView.h"
 #include "SVGRenderSupport.h"
+#include "StyleResolver.h"
 
 #if USE(ACCELERATED_COMPOSITING)
 #include "RenderLayerCompositor.h"
@@ -65,6 +66,7 @@ bool RenderElement::s_noLongerAffectsParentBlock = false;
 
 RenderElement::RenderElement(Element* element)
     : RenderObject(element)
+    , m_ancestorLineBoxDirty(false)
     , m_firstChild(nullptr)
     , m_lastChild(nullptr)
     , m_style(0)
@@ -91,7 +93,10 @@ RenderElement::~RenderElement()
             maskBoxImage->removeClient(this);
 
 #if ENABLE(CSS_SHAPES)
-        removeShapeImageClient(m_style->shapeInside());
+        if (auto shapeValue = m_style->shapeInside()) {
+            if (auto shapeImage = shapeValue->image())
+                shapeImage->removeClient(this);
+        }
 #endif
     }
 }
@@ -175,6 +180,56 @@ RenderElement* RenderElement::createFor(Element& element, RenderStyle& style)
     return nullptr;
 }
 
+enum StyleCacheState {
+    Cached,
+    Uncached
+};
+
+static PassRefPtr<RenderStyle> firstLineStyleForCachedUncachedType(StyleCacheState type, const RenderObject* renderer, RenderStyle* style)
+{
+    const RenderObject* rendererForFirstLineStyle = renderer;
+    if (renderer->isBeforeOrAfterContent())
+        rendererForFirstLineStyle = renderer->parent();
+
+    if (rendererForFirstLineStyle->isRenderBlockFlow() || rendererForFirstLineStyle->isRenderButton()) {
+        if (RenderBlock* firstLineBlock = rendererForFirstLineStyle->firstLineBlock()) {
+            if (type == Cached)
+                return firstLineBlock->getCachedPseudoStyle(FIRST_LINE, style);
+            return firstLineBlock->getUncachedPseudoStyle(PseudoStyleRequest(FIRST_LINE), style, firstLineBlock == renderer ? style : 0);
+        }
+    } else if (!rendererForFirstLineStyle->isAnonymous() && rendererForFirstLineStyle->isRenderInline()) {
+        RenderStyle* parentStyle = rendererForFirstLineStyle->parent()->firstLineStyle();
+        if (parentStyle != rendererForFirstLineStyle->parent()->style()) {
+            if (type == Cached) {
+                // A first-line style is in effect. Cache a first-line style for ourselves.
+                rendererForFirstLineStyle->style()->setHasPseudoStyle(FIRST_LINE_INHERITED);
+                return rendererForFirstLineStyle->getCachedPseudoStyle(FIRST_LINE_INHERITED, parentStyle);
+            }
+            return rendererForFirstLineStyle->getUncachedPseudoStyle(PseudoStyleRequest(FIRST_LINE_INHERITED), parentStyle, style);
+        }
+    }
+    return 0;
+}
+
+PassRefPtr<RenderStyle> RenderElement::uncachedFirstLineStyle(RenderStyle* style) const
+{
+    if (!document().styleSheetCollection().usesFirstLineRules())
+        return 0;
+
+    return firstLineStyleForCachedUncachedType(Uncached, this, style);
+}
+
+RenderStyle* RenderElement::cachedFirstLineStyle() const
+{
+    ASSERT(document().styleSheetCollection().usesFirstLineRules());
+
+    RenderStyle* style = this->style();
+    if (RefPtr<RenderStyle> firstLineStyle = firstLineStyleForCachedUncachedType(Cached, this, style))
+        return firstLineStyle.get();
+
+    return style;
+}
+
 StyleDifference RenderElement::adjustStyleDifference(StyleDifference diff, unsigned contextSensitiveProperties) const
 {
 #if USE(ACCELERATED_COMPOSITING)
@@ -233,10 +288,12 @@ StyleDifference RenderElement::adjustStyleDifference(StyleDifference diff, unsig
     return diff;
 }
 
-inline bool RenderElement::hasImmediateNonWhitespaceTextChild() const
+inline bool RenderElement::hasImmediateNonWhitespaceTextChildOrBorderOrOutline() const
 {
     for (const RenderObject* renderer = firstChild(); renderer; renderer = renderer->nextSibling()) {
         if (renderer->isText() && !toRenderText(renderer)->isAllCollapsibleWhitespace())
+            return true;
+        if (renderer->style()->hasOutline() || renderer->style()->hasBorder())
             return true;
     }
     return false;
@@ -244,7 +301,7 @@ inline bool RenderElement::hasImmediateNonWhitespaceTextChild() const
 
 inline bool RenderElement::shouldRepaintForStyleDifference(StyleDifference diff) const
 {
-    return diff == StyleDifferenceRepaint || (diff == StyleDifferenceRepaintIfText && hasImmediateNonWhitespaceTextChild());
+    return diff == StyleDifferenceRepaint || (diff == StyleDifferenceRepaintIfTextOrBorderOrOutline && hasImmediateNonWhitespaceTextChildOrBorderOrOutline());
 }
 
 void RenderElement::updateFillImages(const FillLayer* oldLayers, const FillLayer* newLayers)
@@ -939,6 +996,8 @@ void RenderElement::willBeRemovedFromTree()
 
 void RenderElement::willBeDestroyed()
 {
+    animation().cancelAnimations(this);
+
     destroyLeftoverChildren();
 
     RenderObject::willBeDestroyed();
@@ -952,12 +1011,13 @@ RenderElement* RenderElement::rendererForRootBackground()
         // to crawl around a render tree with potential :before/:after content and
         // anonymous blocks created by inline <body> tags etc. We can locate the <body>
         // render object very easily via the DOM.
-        HTMLElement* body = document().body();
-        RenderElement* bodyObject = (body && body->hasLocalName(HTMLNames::bodyTag)) ? body->renderer() : 0;
-        if (bodyObject)
-            return bodyObject;
+        if (auto body = document().body()) {
+            if (body->hasLocalName(HTMLNames::bodyTag)) {
+                if (auto renderer = body->renderer())
+                    return renderer;
+            }
+        }
     }
-
     return this;
 }
 
@@ -976,11 +1036,9 @@ RenderElement* RenderElement::hoverAncestor() const
 
     if (hoverAncestor && hoverAncestor->isRenderNamedFlowThread()) {
         hoverAncestor = nullptr;
-
         if (Element* element = this->element()) {
-            ContainerNode* domAncestorNode = element->parentNode();
-            if (domAncestorNode)
-                hoverAncestor = toRenderElement(domAncestorNode->renderer());
+            if (auto parent = element->parentNode())
+                hoverAncestor = parent->renderer();
         }
     }
 

@@ -113,7 +113,6 @@ fast/events/mouseout-on-window.html
 # BUG: wrong test results that need investigation
 compositing/images/direct-pdf-image.html
 compositing/reflections/backface-hidden-reflection.html
-editing/selection/extend-selection-after-double-click.html
 fast/forms/listbox-onchange.html
 fast/forms/onselect-textfield.html
 fast/forms/option-mouseevents.html
@@ -187,9 +186,6 @@ media/video-size-intrinsic-scale.html
 
 # BUG: the theme probably has a different thumb value
 fast/forms/range/slider-zoomed.html
-
-# BUG: wrong textarea sizes
-fast/forms/textarea-metrics.html
 
 # BUG: <select> element is not being scrolled as expected.
 fast/forms/listbox-selection-2.html
@@ -429,6 +425,8 @@ webkit.org/b/86623 http/tests/security/drag-drop-different-origin.html
 webkit.org/b/86623 http/tests/security/drag-over-remote-content-iframe.html
 webkit.org/b/86623 editing/pasteboard/cleanup-on-move.html [ Failure ]
 webkit.org/b/86623 editing/pasteboard/drag-list-item.html [ Failure ]
+webkit.org/b/86623 editing/pasteboard/copy-inside-h1-preserves-h1.html [ Failure ]
+webkit.org/b/86623 editing/pasteboard/copy-without-selection.html [ Failure ]
 
 # Missing drag'n'drop, needs baselines
 webkit.org/b/86623 editing/pasteboard/4947130.html [ Missing ]
@@ -1165,8 +1163,6 @@ webkit.org/b/85594 fast/dom/navigator-detached-no-crash.html [ Failure ]
 webkit.org/b/85689 fast/animation/request-animation-frame-disabled.html [ Skip ]
 
 # EFL's DumpRenderTree should support LayoutTestController's dumpEditingCallbacks()
-webkit.org/b/84835 editing/pasteboard/copy-inside-h1-preserves-h1.html [ Failure ]
-webkit.org/b/84835 editing/pasteboard/copy-without-selection.html [ Failure ]
 webkit.org/b/84835 editing/execCommand/findString-diacriticals.html [ Failure ]
 
 # DRT doesn't check for isPrinting().
@@ -1523,9 +1519,6 @@ webkit.org/b/106316 accessibility/render-counter-text.html [ Failure ]
 
 # New accessibility test added in r147801 that is failing for EFL.
 webkit.org/b/114151 accessibility/svg-group-element-with-title.html [ Failure ]
-
-# Newly added test in r144727 failing.
-webkit.org/b/111850 accessibility/table-with-hidden-head-section.html [ Failure ]
 
 # Newly added test at r139111 is failing.
 webkit.org/b/106439 editing/pasteboard/paste-noplugin.html [ Failure ]

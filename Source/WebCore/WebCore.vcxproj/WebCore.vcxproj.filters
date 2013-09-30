@@ -25,6 +25,9 @@
     <Filter Include="Modules\quota">
       <UniqueIdentifier>{47f62e6e-87ae-4091-993d-d1d78f2c8ba9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Modules\mediacontrols">
+      <UniqueIdentifier>{63ec45f2-29a3-4f42-90af-dd4fedaca99b}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Modules\mediasource">
       <UniqueIdentifier>{614031cc-d79e-45b1-939e-dabeefe1fc9d}</UniqueIdentifier>
     </Filter>
@@ -447,6 +450,9 @@
     <ClCompile Include="..\Modules\quota\StorageInfo.cpp">
       <Filter>Modules\quota</Filter>
     </ClCompile>
+    <ClCompile Include="..\Modules\mediacontrols\MediaControlsHost.cpp">
+      <Filter>Modules\mediacontrols</Filter>
+    </CLCompile>
     <ClCompile Include="..\Modules\mediasource\MediaSource.cpp">
       <Filter>Modules\mediasource</Filter>
     </ClCompile>
@@ -792,6 +798,9 @@
     <ClCompile Include="..\page\Location.cpp">
       <Filter>page</Filter>
     </ClCompile>
+    <ClCompile Include="..\page\MainFrame.cpp">
+      <Filter>page</Filter>
+    </ClCompile>
     <ClCompile Include="..\page\PrintContext.cpp">
       <Filter>page</Filter>
     </ClCompile>
@@ -1125,7 +1134,7 @@
     <ClCompile Include="..\platform\KillRingNone.cpp">
       <Filter>platform</Filter>
     </ClCompile>
-    <ClCompile Include="..\platform\KURL.cpp">
+    <ClCompile Include="..\platform\URL.cpp">
       <Filter>platform</Filter>
     </ClCompile>
     <ClCompile Include="..\platform\Language.cpp">
@@ -4350,9 +4359,6 @@
     <ClCompile Include="..\html\track\WebVTTTokenizer.cpp">
       <Filter>html\track</Filter>
     </ClCompile>
-    <ClCompile Include="..\bindings\ScriptControllerBase.cpp">
-      <Filter>bindings</Filter>
-    </ClCompile>
     <ClCompile Include="..\bindings\generic\ActiveDOMCallback.cpp">
       <Filter>bindings\generic</Filter>
     </ClCompile>
@@ -5109,7 +5115,7 @@
     <ClCompile Include="..\platform\cf\FileSystemCF.cpp">
       <Filter>platform\cf</Filter>
     </ClCompile>
-    <ClCompile Include="..\platform\cf\KURLCFNet.cpp">
+    <ClCompile Include="..\platform\cf\URLCF.cpp">
       <Filter>platform\cf</Filter>
     </ClCompile>
     <ClCompile Include="..\platform\cf\win\CertificateCFWin.cpp">
@@ -5971,7 +5977,10 @@
     <ClCompile Include="$(ConfigurationBuildDir)\obj$(PlatformArchitecture)\$(ProjectName)\DerivedSources\JSLocation.cpp">
       <Filter>DerivedSources</Filter>
     </ClCompile>
-    <ClCompile Include="$(ConfigurationBuildDir)\obj$(PlatformArchitecture)\$(ProjectName)\DerivedSources\JSMediaError.cpp">
+    <ClCompile Include="$(ConfigurationBuildDir)\obj$(PlatformArchitecture)\$(ProjectName)\DerivedSources\JSMediaControlsHost.cpp">
+      <Filter>DerivedSources</Filter>
+    </ClCompile>
+     <ClCompile Include="$(ConfigurationBuildDir)\obj$(PlatformArchitecture)\$(ProjectName)\DerivedSources\JSMediaError.cpp">
       <Filter>DerivedSources</Filter>
     </ClCompile>
     <ClCompile Include="$(ConfigurationBuildDir)\obj$(PlatformArchitecture)\$(ProjectName)\DerivedSources\JSMediaList.cpp">
@@ -7296,6 +7305,9 @@
     <ClInclude Include="..\Modules\quota\StorageUsageCallback.h">
       <Filter>Modules\quota</Filter>
     </ClInclude>
+    <ClInclude Include="..\Modules\mediacontrols\MediaControlsHost.h">
+      <Filter>Modules\mediacontrols</Filter>
+    </CLCompile>
     <ClInclude Include="..\Modules\mediasource\MediaSource.h">
       <Filter>Modules\mediasource</Filter>
     </ClInclude>
@@ -7713,6 +7725,9 @@
     <ClInclude Include="..\page\Location.h">
       <Filter>page</Filter>
     </ClInclude>
+    <ClInclude Include="..\page\MainFrame.h">
+      <Filter>page</Filter>
+    </ClInclude>
     <ClInclude Include="..\page\PrintContext.h">
       <Filter>page</Filter>
     </ClInclude>
@@ -8115,10 +8130,10 @@
     <ClInclude Include="..\platform\KillRing.h">
       <Filter>platform</Filter>
     </ClInclude>
-    <ClInclude Include="..\platform\KURL.h">
+    <ClInclude Include="..\platform\URL.h">
       <Filter>platform</Filter>
     </ClInclude>
-    <ClInclude Include="..\platform\KURLHash.h">
+    <ClInclude Include="..\platform\URLHash.h">
       <Filter>platform</Filter>
     </ClInclude>
     <ClInclude Include="..\platform\Language.h">
@@ -11481,9 +11496,6 @@
     <ClInclude Include="..\html\track\WebVTTTokenizer.h">
       <Filter>html\track</Filter>
     </ClInclude>
-    <ClInclude Include="..\bindings\ScriptControllerBase.h">
-      <Filter>bindings</Filter>
-    </ClInclude>
     <ClInclude Include="..\bindings\generic\ActiveDOMCallback.h">
       <Filter>bindings\generic</Filter>
     </ClInclude>
@@ -13731,6 +13743,9 @@
       <Filter>DerivedSources</Filter>
     </ClInclude>
     <ClInclude Include="$(ConfigurationBuildDir)\obj$(PlatformArchitecture)\$(ProjectName)\DerivedSources\JSLocation.h">
+      <Filter>DerivedSources</Filter>
+    </ClInclude>
+    <ClInclude Include="$(ConfigurationBuildDir)\obj$(PlatformArchitecture)\$(ProjectName)\DerivedSources\JSMediaControlsHost.h">
       <Filter>DerivedSources</Filter>
     </ClInclude>
     <ClInclude Include="$(ConfigurationBuildDir)\obj$(PlatformArchitecture)\$(ProjectName)\DerivedSources\JSMediaError.h">

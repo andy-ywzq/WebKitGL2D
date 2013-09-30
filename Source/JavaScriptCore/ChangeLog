@@ -1,3 +1,247 @@
+2013-09-30  Patrick Gansterer  <paroga@webkit.org>
+
+        Fix compilation for COMPILER(MSVC) && !CPU(X86) after r156490.
+        https://bugs.webkit.org/show_bug.cgi?id=122102
+
+        Reviewed by Geoffrey Garen.
+
+        _AddressOfReturnAddress() is supported for all platforms of
+        ths Microsoft compiler, so we can use it for !CPU(X86) too.
+
+        * jit/JITOperationWrappers.h:
+
+2013-09-30  Gabor Rapcsanyi  <rgabor@webkit.org>
+
+        Unreviewed. Build fix for DEBUG_VERBOSE mode after r156511.
+
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileCurrentBlock):
+
+2013-09-30  Gabor Rapcsanyi  <rgabor@webkit.org>
+
+        Unreviewed. Speculative build fix on ARMv7 Thumb2 after r156490.
+
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::fmodAsDFGOperation):
+
+2013-09-29  Nadav Rotem  <nrotem@apple.com>
+
+        FTL: refactor compileAdd and compileArithSub into one function.
+        https://bugs.webkit.org/show_bug.cgi?id=122081
+
+        Reviewed by Geoffrey Garen.
+
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compileAddSub):
+
+2013-09-29  Andreas Kling  <akling@apple.com>
+
+        Pass VM instead of JSGlobalObject to function constructors.
+        <https://webkit.org/b/122082>
+
+        Reviewed by Darin Adler.
+
+        Functions don't need anything from the global object during their
+        construction and only use it to get to the VM. Reduce loads by
+        simply passing the VM around instead.
+
+        This patch is mostly mechanical, I just changed the signature of
+        InternalFunction and worked my way from there until it built.
+
+        JSC release binary size -= 4840 bytes.
+
+2013-09-29  Andreas Kling  <akling@apple.com>
+
+        Pass VM instead of JSGlobalObject to ArrayPrototype constructor.
+        <https://webkit.org/b/122079>
+
+        Reviewed by Geoffrey Garen.
+
+        ArrayPrototype doesn't need the global object for anything during
+        construction, so reduce the amount of loads by just passing the VM.
+
+2013-09-29  Andreas Kling  <akling@apple.com>
+
+        Pass VM instead of ExecState to simple builtin constructors.
+        <https://webkit.org/b/122077>
+
+        Reviewed by Sam Weinig.
+
+        None of the simple builtins need the ExecState for anything during
+        their construction, so reduce the amount of loads by just passing
+        the VM around instead.
+
+2013-09-29  Nadav Rotem  <nrotem@apple.com>
+
+        Refactor code for finding x86 scratch register.
+        https://bugs.webkit.org/show_bug.cgi?id=122072
+
+        Reviewed by Geoffrey Garen.
+
+        * assembler/MacroAssemblerX86Common.h:
+        (JSC::MacroAssemblerX86Common::getUnusedRegister):
+        (JSC::MacroAssemblerX86Common::store8):
+        (JSC::MacroAssemblerX86Common::store16):
+
+2013-09-28  Mark Rowe  <mrowe@apple.com>
+
+        Take Xcode's advice and enable some extra warnings.
+
+        Reviewed by Sam Weinig.
+
+        * Configurations/Base.xcconfig:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
+2013-09-28  Andreas Kling  <akling@apple.com>
+
+        Pass VM instead of ExecState to JSFunction constructors.
+        <https://webkit.org/b/122014>
+
+        Reviewed by Geoffrey Garen.
+
+        JSFunction doesn't need the ExecState for anything during its
+        construction, so reduce the amount of loads by just passing the
+        VM around instead.
+
+        Factored out putDirectNonIndexAccessor() from the existing
+        putDirectAccessor() to avoid snowballing the patch (and because
+        it's kinda neat to avoid the extra branch.)
+
+        JSC release binary size -= 9680 bytes.
+
+2013-09-28  Mark Rowe  <mrowe@apple.com>
+
+        JavaScriptCore fails to build with newer versions of clang.
+
+        Reviewed by Sam Weinig.
+
+        * interpreter/Interpreter.cpp: Remove an unused function.
+        * parser/SourceProvider.cpp: Ditto.
+        * runtime/GCActivityCallback.cpp: #if a constant that's only used on non-CF platforms.
+        * runtime/JSCJSValue.cpp: Remove an unused constant.
+        * runtime/JSString.cpp: Ditto.
+
+2013-09-27  Filip Pizlo  <fpizlo@apple.com>
+
+        Get rid of SetMyScope/SetCallee; use normal variables for the scope and callee of inlined call frames of closures
+        https://bugs.webkit.org/show_bug.cgi?id=122047
+
+        Reviewed by Oliver Hunt.
+        
+        Currently we have the DFG reserve space for inline call frames at exactly the same stack
+        offsets that you would have gotten if the baseline interpreter/JIT had made the calls.
+        We need to get rid of that. One of the weirder parts of this is that we have special DFG
+        operations for accessing these inlined call frame headers. It's really hard for any
+        analysis of DFG IR to see what the liveness of any of those frame header "variables" is;
+        the liveness behaves like flushed arguments (it's all live until end of the inlinee) but
+        we don't have anything like a Flush node for those special variables.
+        
+        This patch gets rid of the special operations for accessing inline call frame headers.
+        GetMyScope and GetCallee still remain, and are only for accessing the machine call
+        frame's scope/callee entries. The inline call frame's scope/callee now behave like
+        normal variables, and have Flush behavior just like inline arguments.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::::executeEffects):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::getDirect):
+        (JSC::DFG::ByteCodeParser::get):
+        (JSC::DFG::ByteCodeParser::setDirect):
+        (JSC::DFG::ByteCodeParser::set):
+        (JSC::DFG::ByteCodeParser::setLocal):
+        (JSC::DFG::ByteCodeParser::setArgument):
+        (JSC::DFG::ByteCodeParser::flush):
+        (JSC::DFG::ByteCodeParser::InlineStackEntry::remapOperand):
+        (JSC::DFG::ByteCodeParser::handleInlining):
+        (JSC::DFG::ByteCodeParser::getScope):
+        * dfg/DFGCSEPhase.cpp:
+        (JSC::DFG::CSEPhase::getCalleeLoadElimination):
+        (JSC::DFG::CSEPhase::getMyScopeLoadElimination):
+        (JSC::DFG::CSEPhase::performNodeCSE):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2013-09-27  Filip Pizlo  <fpizlo@apple.com>
+
+        Deoptimize 32-bit deoptimization
+        https://bugs.webkit.org/show_bug.cgi?id=122025
+
+        Reviewed by Oliver Hunt.
+        
+        Just simplifying a bunch of code. I don't want the old, super-complicated,
+        deoptimization code to get in the way of changes I'll be making to DFG stack layout.
+
+        * bytecode/ValueRecovery.h:
+        (JSC::ValueRecovery::inGPR):
+        (JSC::ValueRecovery::isInRegisters):
+        (JSC::ValueRecovery::gpr):
+        (JSC::ValueRecovery::dumpInContext):
+        * dfg/DFGOSRExitCompiler32_64.cpp:
+        (JSC::DFG::OSRExitCompiler::compileExit):
+        * dfg/DFGOSRExitCompiler64.cpp:
+        (JSC::DFG::OSRExitCompiler::compileExit):
+
+2013-09-27  Alex Christensen  <alex.christensen@flexsim.com>
+
+        Fixed Win64 build after r156184.
+        https://bugs.webkit.org/show_bug.cgi?id=121994
+
+        Reviewed by Oliver Hunt.
+
+        * jit/CCallHelpers.h:
+        (JSC::CCallHelpers::setupTwoStubArgsGPR):
+        (JSC::CCallHelpers::setupTwoStubArgsFPR):
+        Renamed from setupTwoStubArgs.
+        Visual Studio x64 compiler fails to see that this is an overloaded template function.
+        (JSC::CCallHelpers::setupStubArguments):
+        (JSC::CCallHelpers::setupArguments):
+        (JSC::CCallHelpers::setupArgumentsWithExecState):
+        Use setupTwoStubArgsGPR or setupTwoStubArgsFPR instead of setupTwoStubArgs.
+
+2013-09-27  Gabor Rapcsanyi  <rgabor@webkit.org>
+
+        LLInt alignment problem on ARM in debug mode
+        https://bugs.webkit.org/show_bug.cgi?id=122012
+
+        Reviewed by Michael Saboff.
+
+        Force GCC to put the LLInt code to .text section.
+
+        * llint/LowLevelInterpreter.cpp:
+
+2013-09-06  Jer Noble  <jer.noble@apple.com>
+
+        [Mac] Implement the media controls in JavaScript.
+        https://bugs.webkit.org/show_bug.cgi?id=120895
+
+        Reviewed by Dean Jackson.
+
+        Define and turn on ENABLE_MEDIA_CONTROLS_SCRIPT.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-09-27  Andreas Kling  <akling@apple.com>
+
+        Pass VM instead of ExecState to JSDateMath functions.
+        <https://webkit.org/b/121997>
+
+        Reviewed by Geoffrey Garen.
+
+        The JSC date math functions only need the VM, so pass that from
+        callers instead of the whole ExecState.
+
 2013-09-26  Andreas Kling  <akling@apple.com>
 
         GetterSetter construction should take a VM instead of ExecState.

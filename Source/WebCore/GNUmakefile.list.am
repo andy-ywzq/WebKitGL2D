@@ -2536,8 +2536,6 @@ webcore_sources += \
 	Source/WebCore/bindings/js/WorkerScriptController.h \
 	Source/WebCore/bindings/js/WorkerScriptDebugServer.cpp \
 	Source/WebCore/bindings/js/WorkerScriptDebugServer.h \
-	Source/WebCore/bindings/ScriptControllerBase.cpp \
-	Source/WebCore/bindings/ScriptControllerBase.h \
 	Source/WebCore/bridge/Bridge.h \
 	Source/WebCore/bridge/c/c_class.cpp \
 	Source/WebCore/bridge/c/c_class.h \
@@ -4211,6 +4209,8 @@ webcore_sources += \
 	Source/WebCore/page/LayoutMilestones.h \
 	Source/WebCore/page/Location.cpp \
 	Source/WebCore/page/Location.h \
+	Source/WebCore/page/MainFrame.cpp \
+	Source/WebCore/page/MainFrame.h \
 	Source/WebCore/page/MediaCanStartListener.h \
 	Source/WebCore/page/MouseEventWithHitTestResults.cpp \
 	Source/WebCore/page/MouseEventWithHitTestResults.h \
@@ -5957,8 +5957,6 @@ platform_sources += \
 	Source/WebCore/platform/network/ProxyServer.h \
 	Source/WebCore/platform/text/enchant/TextCheckerEnchant.h \
 	Source/WebCore/platform/text/enchant/TextCheckerEnchant.cpp \
-	Source/WebCore/platform/text/transcoder/FontTranscoder.cpp \
-	Source/WebCore/platform/text/transcoder/FontTranscoder.h \
 	Source/WebCore/platform/text/BidiContext.cpp \
 	Source/WebCore/platform/text/BidiContext.h \
 	Source/WebCore/platform/text/BidiResolver.h \
@@ -6057,9 +6055,9 @@ platform_sources += \
 	Source/WebCore/platform/HistogramSupport.cpp \
 	Source/WebCore/platform/HistogramSupport.h \
 	Source/WebCore/platform/HostWindow.h \
-	Source/WebCore/platform/KURL.cpp \
-	Source/WebCore/platform/KURL.h \
-	Source/WebCore/platform/KURLHash.h \
+	Source/WebCore/platform/URL.cpp \
+	Source/WebCore/platform/URL.h \
+	Source/WebCore/platform/URLHash.h \
 	Source/WebCore/platform/KillRing.h \
 	Source/WebCore/platform/KillRingNone.cpp \
 	Source/WebCore/platform/Language.cpp \

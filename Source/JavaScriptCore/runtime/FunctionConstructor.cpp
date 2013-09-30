@@ -39,8 +39,8 @@ STATIC_ASSERT_IS_TRIVIALLY_DESTRUCTIBLE(FunctionConstructor);
 
 const ClassInfo FunctionConstructor::s_info = { "Function", &Base::s_info, 0, 0, CREATE_METHOD_TABLE(FunctionConstructor) };
 
-FunctionConstructor::FunctionConstructor(JSGlobalObject* globalObject, Structure* structure)
-    : InternalFunction(globalObject, structure)
+FunctionConstructor::FunctionConstructor(VM& vm, Structure* structure)
+    : InternalFunction(vm, structure)
 {
 }
 
@@ -118,7 +118,7 @@ JSObject* constructFunctionSkippingEvalEnabledCheck(ExecState* exec, JSGlobalObj
         return exec->vm().throwException(exec, exception);
     }
 
-    return JSFunction::create(exec, function, globalObject);
+    return JSFunction::create(exec->vm(), function, globalObject);
 }
 
 // ECMA 15.3.2 The Function Constructor

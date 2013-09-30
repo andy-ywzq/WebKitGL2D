@@ -102,8 +102,6 @@ struct SameSizeAsRenderObject {
 
 COMPILE_ASSERT(sizeof(RenderObject) == sizeof(SameSizeAsRenderObject), RenderObject_should_stay_small);
 
-RenderObjectAncestorLineboxDirtySet* RenderObject::s_ancestorLineboxDirtySet = 0;
-
 void* RenderObject::operator new(size_t sz, RenderArena& renderArena)
 {
     return renderArena.allocate(sz);
@@ -732,7 +730,7 @@ void RenderObject::setLayerNeedsFullRepaintForPositionedMovementLayout()
 
 RenderBlock* RenderObject::containingBlock() const
 {
-    RenderObject* o = parent();
+    RenderElement* o = parent();
     if (!o && isRenderScrollbarPart())
         o = toRenderScrollbarPart(this)->rendererOwningScrollbar();
 
@@ -757,8 +755,8 @@ static bool mustRepaintFillLayers(const RenderObject* renderer, const FillLayer*
         return true;
 
     // Make sure we have a valid image.
-    StyleImage* img = layer->image();
-    if (!img || !img->canRender(renderer, renderer->style()->effectiveZoom()))
+    StyleImage* image = layer->image();
+    if (!image || !image->canRender(renderer, renderer->style()->effectiveZoom()))
         return false;
 
     if (!layer->xPosition().isZero() || !layer->yPosition().isZero())
@@ -774,9 +772,9 @@ static bool mustRepaintFillLayers(const RenderObject* renderer, const FillLayer*
         if (size.width().isPercent() || size.height().isPercent())
             return true;
         // If the image has neither an intrinsic width nor an intrinsic height, its size is determined as for 'contain'.
-        if ((size.width().isAuto() || size.height().isAuto()) && img->isGeneratedImage())
+        if ((size.width().isAuto() || size.height().isAuto()) && image->isGeneratedImage())
             return true;
-    } else if (img->usesImageContainerSize())
+    } else if (image->usesImageContainerSize())
         return true;
 
     return false;
@@ -787,7 +785,7 @@ bool RenderObject::borderImageIsLoadedAndCanBeRendered() const
     ASSERT(style()->hasBorder());
 
     StyleImage* borderImage = style()->borderImage().image();
-    return borderImage && borderImage->canRender(this, style()->effectiveZoom()) && borderImage->isLoaded();
+    return borderImage && borderImage->canRender(toRenderElement(this), style()->effectiveZoom()) && borderImage->isLoaded();
 }
 
 bool RenderObject::mustRepaintBackgroundOrBorder() const
@@ -1498,10 +1496,6 @@ void RenderObject::computeFloatRectForRepaint(const RenderLayerModelObject*, Flo
     ASSERT_NOT_REACHED();
 }
 
-void RenderObject::dirtyLinesFromChangedChild(RenderObject*)
-{
-}
-
 #ifndef NDEBUG
 
 void RenderObject::showTreeForThis() const
@@ -1985,8 +1979,6 @@ void RenderObject::willBeDestroyed()
     if (frame().eventHandler().autoscrollRenderer() == this)
         frame().eventHandler().stopAutoscrollTimer(true);
 
-    animation().cancelAnimations(this);
-
     // For accessibility management, notify the parent of the imminent change to its child set.
     // We do it now, before remove(), while the parent pointer is still available.
     if (AXObjectCache* cache = document().existingAXObjectCache())
@@ -1994,7 +1986,7 @@ void RenderObject::willBeDestroyed()
 
     removeFromParent();
 
-    ASSERT(documentBeingDestroyed() || !view().frameView().hasSlowRepaintObject(this));
+    ASSERT(documentBeingDestroyed() || !isRenderElement() || !view().frameView().hasSlowRepaintObject(toRenderElement(this)));
 
     // The remove() call above may invoke axObjectCache()->childrenChanged() on the parent, which may require the AX render
     // object for this renderer. So we remove the AX render object now, after the renderer is removed.
@@ -2027,8 +2019,6 @@ void RenderObject::willBeDestroyed()
         setHasLayer(false);
         toRenderLayerModelObject(this)->destroyLayer();
     }
-
-    setAncestorLineBoxDirty(false);
 
     clearLayoutRootIfNeeded();
 }
@@ -2113,16 +2103,6 @@ void RenderObject::destroy()
     willBeDestroyed();
     arenaDelete(renderArena(), this);
 }
-
-#if ENABLE(CSS_SHAPES)
-void RenderObject::removeShapeImageClient(ShapeValue* shapeValue)
-{
-    if (!shapeValue)
-        return;
-    if (StyleImage* shapeImage = shapeValue->image())
-        shapeImage->removeClient(this);
-}
-#endif
 
 void RenderObject::arenaDelete(RenderArena& arena, void* base)
 {
@@ -2232,58 +2212,6 @@ void RenderObject::layout()
     setNeedsLayout(false);
 }
 
-enum StyleCacheState {
-    Cached,
-    Uncached
-};
-
-static PassRefPtr<RenderStyle> firstLineStyleForCachedUncachedType(StyleCacheState type, const RenderObject* renderer, RenderStyle* style)
-{
-    const RenderObject* rendererForFirstLineStyle = renderer;
-    if (renderer->isBeforeOrAfterContent())
-        rendererForFirstLineStyle = renderer->parent();
-
-    if (rendererForFirstLineStyle->isRenderBlockFlow() || rendererForFirstLineStyle->isRenderButton()) {
-        if (RenderBlock* firstLineBlock = rendererForFirstLineStyle->firstLineBlock()) {
-            if (type == Cached)
-                return firstLineBlock->getCachedPseudoStyle(FIRST_LINE, style);
-            return firstLineBlock->getUncachedPseudoStyle(PseudoStyleRequest(FIRST_LINE), style, firstLineBlock == renderer ? style : 0);
-        }
-    } else if (!rendererForFirstLineStyle->isAnonymous() && rendererForFirstLineStyle->isRenderInline()) {
-        RenderStyle* parentStyle = rendererForFirstLineStyle->parent()->firstLineStyle();
-        if (parentStyle != rendererForFirstLineStyle->parent()->style()) {
-            if (type == Cached) {
-                // A first-line style is in effect. Cache a first-line style for ourselves.
-                rendererForFirstLineStyle->style()->setHasPseudoStyle(FIRST_LINE_INHERITED);
-                return rendererForFirstLineStyle->getCachedPseudoStyle(FIRST_LINE_INHERITED, parentStyle);
-            }
-            return rendererForFirstLineStyle->getUncachedPseudoStyle(PseudoStyleRequest(FIRST_LINE_INHERITED), parentStyle, style);
-        }
-    }
-    return 0;
-}
-
-PassRefPtr<RenderStyle> RenderObject::uncachedFirstLineStyle(RenderStyle* style) const
-{
-    if (!document().styleSheetCollection().usesFirstLineRules())
-        return 0;
-
-    ASSERT(!isText());
-
-    return firstLineStyleForCachedUncachedType(Uncached, this, style);
-}
-
-RenderStyle* RenderObject::cachedFirstLineStyle() const
-{
-    ASSERT(document().styleSheetCollection().usesFirstLineRules());
-
-    RenderStyle* style = this->style();
-    if (RefPtr<RenderStyle> firstLineStyle = firstLineStyleForCachedUncachedType(Cached, isText() ? parent() : this, style))
-        return firstLineStyle.get();
-
-    return style;
-}
-
 RenderStyle* RenderObject::getCachedPseudoStyle(PseudoId pseudo, RenderStyle* parentStyle) const
 {
     if (pseudo < FIRST_INTERNAL_PSEUDOID && !style()->hasPseudoStyle(pseudo))
@@ -2354,7 +2282,7 @@ void RenderObject::getTextDecorationColors(int decorations, Color& underline, Co
     TextDecoration currDecs = TextDecorationNone;
     Color resultColor;
     do {
-        styleToUse = curr->style(firstlineStyle);
+        styleToUse = firstlineStyle ? curr->firstLineStyle() : curr->style();
         currDecs = styleToUse->textDecoration();
         resultColor = decorationColor(styleToUse);
         // Parameter 'decorations' is cast as an int to enable the bitwise operations below.
@@ -2381,7 +2309,7 @@ void RenderObject::getTextDecorationColors(int decorations, Color& underline, Co
 
     // If we bailed out, use the element we bailed out at (typically a <font> or <a> element).
     if (decorations && curr) {
-        styleToUse = curr->style(firstlineStyle);
+        styleToUse = firstlineStyle ? curr->firstLineStyle() : curr->style();
         resultColor = decorationColor(styleToUse);
         if (decorations & TextDecorationUnderline)
             underline = resultColor;

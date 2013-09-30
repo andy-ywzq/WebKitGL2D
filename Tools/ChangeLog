@@ -1,3 +1,315 @@
+2013-09-30  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Fix force_static_libs_as_shared in WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=121961
+
+        Reviewed by Csaba Osztrogonác.
+
+        Get rid of the unused WebKit2QML library
+
+        * qmake/mkspecs/features/webkit_modules.prf:
+        * qmake/mkspecs/modules/webkit2qml.prf: Removed.
+
+2013-09-30  Krzysztof Wolanski  <k.wolanski@samsung.com>
+
+        [EFL] Fix incorrect click counting in EventSenderProxy
+        https://bugs.webkit.org/show_bug.cgi?id=122098
+
+        Reviewed by Gyuyoung Kim.
+
+        Previously used two types of recording time, which conflicted with each other.
+
+        * WebKitTestRunner/efl/EventSenderProxyEfl.cpp:
+        (WTR::EventSenderProxy::mouseUp):
+
+2013-09-30  Zan Dobersek  <zdobersek@igalia.com>
+
+        [webkitpy] Make the Xvfb screen depth overridable
+        https://bugs.webkit.org/show_bug.cgi?id=122089
+
+        Reviewed by Gyuyoung Kim.
+
+        Make the Xvfb screen depth overridable by checking if the XVFB_SCREEN_DEPTH environment variable
+        was set. The default value that's used if the variable wasn't set is 24.
+
+        * Scripts/webkitpy/port/xvfbdriver.py:
+        (XvfbDriver._xvfb_screen_depth):
+        (XvfbDriver._start):
+        * Scripts/webkitpy/port/xvfbdriver_unittest.py:
+        (XvfbDriverTest.make_driver):
+        (XvfbDriverTest.test_start_no_pixel_tests):
+        (XvfbDriverTest.test_start_pixel_tests):
+        (XvfbDriverTest.test_start_arbitrary_worker_number):
+        (XvfbDriverTest.test_next_free_display):
+        (XvfbDriverTest.test_start_next_worker):
+
+2013-09-29  Mark Rowe  <mrowe@apple.com>
+
+        Fix the Lion build.
+
+        Ensure that C++ and Objective-C++ files build with the right compiler flags.
+
+        * DumpRenderTree/mac/Configurations/BaseTarget.xcconfig:
+        * WebKitTestRunner/Configurations/BaseTarget.xcconfig:
+
+2013-09-28  Mark Rowe  <mrowe@apple.com>
+
+        Fix some failures with newer versions of clang.
+
+        Some CoreGraphics headers generate warnings under newer versions of clang. Since they're system headers the warnings would
+        usually be suppressed, but we're adding the frameworks to the non-system framework search path so they're no longer treated
+        as system headers. We address this by removing the system paths from FRAMEWORK_SEARCH_PATHS and using the -iframework compiler
+        flag in OTHER_CFLAGS to add the paths to the system framework search path. We have to set OTHER_CFLAGS at the target level
+        in order for it to coexist with the ASAN-related OTHER_CFLAGS that's set in DebugRelease.xcconfig.
+
+        Reviewed by Dan Bernstein.
+
+        * DumpRenderTree/mac/Configurations/Base.xcconfig:
+        * DumpRenderTree/mac/Configurations/BaseTarget.xcconfig: A new .xcconfig file that's included by all target-specific .xcconfig files.
+        * DumpRenderTree/mac/Configurations/DebugRelease.xcconfig:
+        * DumpRenderTree/mac/Configurations/DumpRenderTree.xcconfig:
+        * DumpRenderTree/mac/Configurations/ImageDiff.xcconfig:
+        * DumpRenderTree/mac/Configurations/TestNetscapePlugIn.xcconfig:
+        * WebKitTestRunner/Configurations/Base.xcconfig:
+        * WebKitTestRunner/Configurations/BaseTarget.xcconfig: A new .xcconfig file that's included by all target-specific .xcconfig files.
+        * WebKitTestRunner/Configurations/DebugRelease.xcconfig:
+        * WebKitTestRunner/Configurations/InjectedBundle.xcconfig:
+        * WebKitTestRunner/Configurations/WebKitTestRunner.xcconfig:
+
+2013-09-27  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r156569.
+        http://trac.webkit.org/changeset/156569
+        https://bugs.webkit.org/show_bug.cgi?id=122035
+
+        broke a lot of mismatch tests (Requested by thorton on
+        #webkit).
+
+        * WebKitTestRunner/mac/PlatformWebViewMac.mm:
+        (WTR::PlatformWebView::PlatformWebView):
+
+2013-09-27  Alexey Proskuryakov  <ap@apple.com>
+
+        Don't retry failures on Apple MountainLion Release WK1 tester
+        https://bugs.webkit.org/show_bug.cgi?id=122026
+
+        Reviewed by Mark Rowe.
+
+        * BuildSlaveSupport/build.webkit.org-config/config.json: Added --no-retry-failures
+        on this bot.
+
+2013-09-27  Alexey Proskuryakov  <ap@apple.com>
+
+        Don't hardcode builder specific configuration in buildbot master.cfg
+        https://bugs.webkit.org/show_bug.cgi?id=122023
+
+        Reviewed by Mark Rowe.
+
+        * BuildSlaveSupport/build.webkit.org-config/config.json: Added an additionalArguments
+        property to Qt Mountain Lion Release, making it run pixel tests.
+
+        * BuildSlaveSupport/build.webkit.org-config/master.cfg:
+        (RunWebKitTests.start): Use additionalArguments.
+        (RunWebKit2Tests.start): Don't hardcode individual bot behavior here.
+
+2013-09-27  Tim Horton  <timothy_horton@apple.com>
+
+        [wk2] WebKitTestRunner's window snapshots are blank with tiled drawing
+        https://bugs.webkit.org/show_bug.cgi?id=122006
+        <rdar://problem/15095197>
+
+        Reviewed by Dean Jackson.
+
+        * WebKitTestRunner/mac/PlatformWebViewMac.mm:
+        (WTR::PlatformWebView::PlatformWebView):
+        Layer-back the root view in WebKitTestRunner's window, to work around a bug
+        where the window server snapshot API returns blank snapshots.
+
+2013-09-27  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [GTK] GTK does not expose heading level correctly. Was: accessibility/heading-level.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=106924
+
+        Reviewed by Chris Fleizach.
+
+        Consider headings levels as values to be returned in intValue()
+        both in DRT and WKTR, so we can share more tests with other ports.
+
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (AccessibilityUIElement::intValue): Consider headings too.
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::AccessibilityUIElement::intValue): Ditto.
+
+2013-09-26  Darin Adler  <darin@apple.com>
+
+        rename KURL to URL
+        https://bugs.webkit.org/show_bug.cgi?id=16214
+
+        Reviewed by Andreas Kling.
+
+        * many files: Renamed, using script.
+
+2013-09-27  Darin Adler  <darin@apple.com>
+
+        Fix Python scripts test failures.
+
+        * Scripts/webkitpy/style/checkers/cpp.py:
+        (_FunctionState.modifiers_and_return_type): Added this back. Used only by tests
+        now, not by the checker itself.
+
+2013-09-27  Denis Nomiyama  <d.nomiyama@samsung.com>
+
+        [GTK][WK2] Logging of accessibility events is not disabled between tests
+        https://bugs.webkit.org/show_bug.cgi?id=121957
+
+        Reviewed by Mario Sanchez Prada.
+
+        Fixed an issue in AccessibilityNotificationHandler where the destructor
+        was not disconnecting accessibility event callbacks if logging was on.
+        The decision of disconnecting events can solely rely on the existence of
+        notification handlers because logging uses the global notification
+        handler.
+
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityNotificationHandlerAtk.cpp:
+        (WTR::AccessibilityNotificationHandler::disconnectAccessibilityCallbacks): Fixed
+        disconnection when logging is on.
+
+2013-09-27  Patrick Gansterer  <paroga@webkit.org>
+
+        Add general CMakeLists.txt for DRT
+        https://bugs.webkit.org/show_bug.cgi?id=119268
+
+        Reviewed by Gyuyoung Kim.
+
+        The new file allows better sharing between ports.
+
+        * CMakeLists.txt:
+        * DumpRenderTree/CMakeLists.txt: Added.
+        * DumpRenderTree/PlatformEfl.cmake: Added.
+        * DumpRenderTree/efl/CMakeLists.txt: Removed.
+
+2013-09-27  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Fix force_static_libs_as_shared in WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=121961
+
+        Reviewed by Csaba Osztrogonác.
+
+        Reenable force_static_libs_as_shared when building WebKit2.
+
+        * qmake/mkspecs/features/default_post.prf:
+
+2013-09-27  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        [Qt] Mock implementations of positioning and orientation not used
+        https://bugs.webkit.org/show_bug.cgi?id=121956
+
+        Reviewed by Csaba Osztrogonác.
+
+        Move production_build checks to sanitizeFeatures where its value is actually known.
+
+        * qmake/mkspecs/features/features.prf:
+        * qmake/mkspecs/features/features.pri:
+
+2013-09-27  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [ATK] Normalize checks in entry points for DRT and WKTR
+        https://bugs.webkit.org/show_bug.cgi?id=121959
+
+        Reviewed by Chris Fleizach.
+
+        Always check if we have a proper instance of AtkObject,
+        implementing the interfaces that we might need for each case, at
+        the entry point of every method of AccessibilityUIElement for ATK,
+        and do those checks in an uniform way across DRT and WKTR, to
+        avoid confusion and issues when modifying these files in the future.
+
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (AccessibilityUIElement::getChildren): Use normalized checks.
+        (AccessibilityUIElement::getChildrenWithRange): Ditto.
+        (AccessibilityUIElement::rowCount): Ditto.
+        (AccessibilityUIElement::columnCount): Ditto.
+        (AccessibilityUIElement::childrenCount): Ditto.
+        (AccessibilityUIElement::elementAtPoint): Ditto.
+        (AccessibilityUIElement::getChildAtIndex): Ditto.
+        (AccessibilityUIElement::allAttributes): Ditto.
+        (AccessibilityUIElement::titleUIElement): Ditto.
+        (AccessibilityUIElement::parentElement): Ditto.
+        (AccessibilityUIElement::attributesOfChildren): Ditto.
+        (AccessibilityUIElement::role): Ditto.
+        (AccessibilityUIElement::title): Ditto.
+        (AccessibilityUIElement::description): Ditto.
+        (AccessibilityUIElement::stringValue): Ditto.
+        (AccessibilityUIElement::language): Ditto.
+        (AccessibilityUIElement::x): Ditto.
+        (AccessibilityUIElement::y): Ditto.
+        (AccessibilityUIElement::width): Ditto.
+        (AccessibilityUIElement::height): Ditto.
+        (AccessibilityUIElement::orientation): Ditto.
+        (AccessibilityUIElement::intValue): Ditto.
+        (AccessibilityUIElement::minValue): Ditto.
+        (AccessibilityUIElement::maxValue): Ditto.
+        (indexRangeInTable): Ditto.
+        (AccessibilityUIElement::cellForColumnAndRow): Ditto.
+        (AccessibilityUIElement::stringAttributeValue): Ditto.
+        (alterCurrentValue): Ditto.
+        (AccessibilityUIElement::press): Ditto.
+        (AccessibilityUIElement::documentEncoding): Ditto.
+        (AccessibilityUIElement::documentURI): Ditto.
+        (AccessibilityUIElement::hasPopup): Ditto.
+
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::indexRangeInTable): Use normalized checks.
+        (WTR::alterCurrentValue): Ditto.
+        (WTR::AccessibilityUIElement::getChildren): Ditto.
+        (WTR::AccessibilityUIElement::getChildrenWithRange): Ditto.
+        (WTR::AccessibilityUIElement::childrenCount): Ditto.
+        (WTR::AccessibilityUIElement::elementAtPoint): Ditto.
+        (WTR::AccessibilityUIElement::indexOfChild): Ditto.
+        (WTR::AccessibilityUIElement::childAtIndex): Ditto.
+        (WTR::AccessibilityUIElement::titleUIElement): Ditto.
+        (WTR::AccessibilityUIElement::parentElement): Ditto.
+        (WTR::AccessibilityUIElement::attributesOfChildren): Ditto.
+        (WTR::AccessibilityUIElement::allAttributes): Ditto.
+        (WTR::AccessibilityUIElement::stringAttributeValue): Ditto.
+        (WTR::AccessibilityUIElement::role): Ditto.
+        (WTR::AccessibilityUIElement::title): Ditto.
+        (WTR::AccessibilityUIElement::description): Ditto.
+        (WTR::AccessibilityUIElement::orientation): Ditto.
+        (WTR::AccessibilityUIElement::stringValue): Ditto.
+        (WTR::AccessibilityUIElement::language): Ditto.
+        (WTR::AccessibilityUIElement::x): Ditto.
+        (WTR::AccessibilityUIElement::y): Ditto.
+        (WTR::AccessibilityUIElement::width): Ditto.
+        (WTR::AccessibilityUIElement::height): Ditto.
+        (WTR::AccessibilityUIElement::intValue): Ditto.
+        (WTR::AccessibilityUIElement::minValue): Ditto.
+        (WTR::AccessibilityUIElement::maxValue): Ditto.
+        (WTR::AccessibilityUIElement::rowCount): Ditto.
+        (WTR::AccessibilityUIElement::columnCount): Ditto.
+        (WTR::AccessibilityUIElement::cellForColumnAndRow): Ditto.
+        (WTR::AccessibilityUIElement::press): Ditto.
+        (WTR::AccessibilityUIElement::documentEncoding): Ditto.
+        (WTR::AccessibilityUIElement::documentURI): Ditto.
+        (WTR::AccessibilityUIElement::hasPopup): Ditto.
+
+2013-09-27  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [ATK] accessibility/aria-sort.html is failing after r156409
+        https://bugs.webkit.org/show_bug.cgi?id=121947
+
+        Reviewed by Chris Fleizach.
+
+        Implement AccessibilityUIElement::isSupported for the ATK
+        platforms, just by checking whether we have an associated object
+        attribute exposed for the wrapper object matching the required
+        attribute in the layout test (e.g "AXSortDirection" -> "sort").
+
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (AccessibilityUIElement::isAttributeSupported): Implemented.
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::AccessibilityUIElement::isAttributeSupported): Implemented.
+
 2013-09-26  Eric Carlson  <eric.carlson@apple.com>
 
         [MediaStream] make MediaStream testable

@@ -30,7 +30,6 @@
 #include "EventListener.h"
 #include "EventNames.h"
 #include "ExceptionCodePlaceholder.h"
-#include "Frame.h"
 #include "FrameLoader.h"
 #include "FrameLoaderClient.h"
 #include "FrameView.h"
@@ -38,6 +37,7 @@
 #include "HTMLImageElement.h"
 #include "HTMLNames.h"
 #include "LocalizedStrings.h"
+#include "MainFrame.h"
 #include "MouseEvent.h"
 #include "NotImplemented.h"
 #include "Page.h"
@@ -177,7 +177,7 @@ void ImageDocumentParser::finish()
     
 // --------
 
-ImageDocument::ImageDocument(Frame* frame, const KURL& url)
+ImageDocument::ImageDocument(Frame* frame, const URL& url)
     : HTMLDocument(frame, url, ImageDocumentClass)
     , m_imageElement(0)
     , m_imageSizeIsKnown(false)
@@ -374,7 +374,7 @@ CachedImage* ImageDocument::cachedImage()
 
 bool ImageDocument::shouldShrinkToFit() const
 {
-    return frame()->settings().shrinksStandaloneImagesToFit() && frame()->page()->frameIsMainFrame(frame());
+    return frame()->settings().shrinksStandaloneImagesToFit() && frame()->isMainFrame();
 }
 
 void ImageEventListener::handleEvent(ScriptExecutionContext*, Event* event)

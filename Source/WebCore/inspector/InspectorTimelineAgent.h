@@ -44,6 +44,7 @@
 #include <wtf/WeakPtr.h>
 
 namespace WebCore {
+
 class Event;
 class FloatQuad;
 class Frame;
@@ -54,7 +55,7 @@ class InspectorPageAgent;
 class InspectorState;
 class InstrumentingAgents;
 class IntRect;
-class KURL;
+class URL;
 class Page;
 class RenderObject;
 class ResourceRequest;
@@ -216,7 +217,7 @@ public:
     void didFireAnimationFrame();
 
 #if ENABLE(WEB_SOCKETS)
-    void didCreateWebSocket(unsigned long identifier, const KURL&, const String& protocol, Frame*);
+    void didCreateWebSocket(unsigned long identifier, const URL&, const String& protocol, Frame*);
     void willSendWebSocketHandshakeRequest(unsigned long identifier, Frame*);
     void didReceiveWebSocketHandshakeResponse(unsigned long identifier, Frame*);
     void didDestroyWebSocket(unsigned long identifier, Frame*);
@@ -259,7 +260,7 @@ private:
     void innerAddRecordToTimeline(PassRefPtr<InspectorObject>, TimelineRecordType);
     void clearRecordStack();
 
-    void localToPageQuad(const RenderObject& renderer, const LayoutRect&, FloatQuad*);
+    void localToPageQuad(const RenderObject&, const LayoutRect&, FloatQuad*);
     const TimelineTimeConverter& timeConverter() const { return m_timeConverter; }
     double timestamp();
     Page* page();

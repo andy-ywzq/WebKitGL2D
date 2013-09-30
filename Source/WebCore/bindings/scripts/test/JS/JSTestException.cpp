@@ -21,8 +21,8 @@
 #include "config.h"
 #include "JSTestException.h"
 
-#include "KURL.h"
 #include "TestException.h"
+#include "URL.h"
 #include <runtime/JSString.h>
 #include <wtf/GetPtr.h>
 

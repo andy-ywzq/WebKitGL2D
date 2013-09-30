@@ -136,8 +136,6 @@ struct AnnotatedRegionValue {
 };
 #endif
 
-typedef WTF::HashSet<const RenderObject*> RenderObjectAncestorLineboxDirtySet;
-
 #ifndef NDEBUG
 const int showTreeCharacterOffset = 39;
 #endif
@@ -403,23 +401,6 @@ public:
     void setChildrenInline(bool b) { m_bitfields.setChildrenInline(b); }
     bool hasColumns() const { return m_bitfields.hasColumns(); }
     void setHasColumns(bool b = true) { m_bitfields.setHasColumns(b); }
-
-    bool ancestorLineBoxDirty() const { return s_ancestorLineboxDirtySet && s_ancestorLineboxDirtySet->contains(this); }
-    void setAncestorLineBoxDirty(bool b = true)
-    {
-        if (b) {
-            if (!s_ancestorLineboxDirtySet)
-                s_ancestorLineboxDirtySet = new RenderObjectAncestorLineboxDirtySet;
-            s_ancestorLineboxDirtySet->add(this);
-            setNeedsLayout(true);
-        } else if (s_ancestorLineboxDirtySet) {
-            s_ancestorLineboxDirtySet->remove(this);
-            if (s_ancestorLineboxDirtySet->isEmpty()) {
-                delete s_ancestorLineboxDirtySet;
-                s_ancestorLineboxDirtySet = 0;
-            }
-        }
-    }
 
     enum FlowThreadState {
         NotInsideFlowThread = 0,
@@ -702,8 +683,6 @@ public:
     VisiblePosition createVisiblePosition(int offset, EAffinity);
     VisiblePosition createVisiblePosition(const Position&);
 
-    virtual void dirtyLinesFromChangedChild(RenderObject*);
-
     // returns the containing block level element for this element.
     RenderBlock* containingBlock() const;
 
@@ -759,12 +738,7 @@ public:
     virtual LayoutUnit maxPreferredLogicalWidth() const { return 0; }
 
     RenderStyle* style() const;
-    RenderStyle* firstLineStyle() const { return document().styleSheetCollection().usesFirstLineRules() ? cachedFirstLineStyle() : style(); }
-    RenderStyle* style(bool firstLine) const { return firstLine ? firstLineStyle() : style(); }
-
-    // Used only by Element::pseudoStyleCacheIsInvalid to get a first line style based off of a
-    // given new style, without accessing the cache.
-    PassRefPtr<RenderStyle> uncachedFirstLineStyle(RenderStyle*) const;
+    RenderStyle* firstLineStyle() const;
 
     // Anonymous blocks that are part of of a continuation chain will return their inline continuation's outline style instead.
     // This is typically only relevant when repainting.
@@ -971,17 +945,11 @@ private:
     void removeFromRenderFlowThread();
     void removeFromRenderFlowThreadRecursive(RenderFlowThread*);
 
-    RenderStyle* cachedFirstLineStyle() const;
-
     Color selectionColor(int colorProperty) const;
 
     Node* generatingPseudoHostElement() const;
 
     virtual bool isWBR() const { ASSERT_NOT_REACHED(); return false; }
-
-#if ENABLE(CSS_SHAPES)
-    void removeShapeImageClient(ShapeValue*);
-#endif
 
 #ifndef NDEBUG
     void checkBlockPositionedObjectsNeedLayout();
@@ -992,8 +960,6 @@ private:
     RenderElement* m_parent;
     RenderObject* m_previous;
     RenderObject* m_next;
-
-    static RenderObjectAncestorLineboxDirtySet* s_ancestorLineboxDirtySet;
 
 #ifndef NDEBUG
     bool m_hasAXObject             : 1;
@@ -1146,31 +1112,6 @@ inline bool RenderObject::isAfterContent() const
 inline bool RenderObject::isBeforeOrAfterContent() const
 {
     return isBeforeContent() || isAfterContent();
-}
-
-inline void RenderObject::setNeedsLayout(bool needsLayout, MarkingBehavior markParents)
-{
-    bool alreadyNeededLayout = m_bitfields.needsLayout();
-    m_bitfields.setNeedsLayout(needsLayout);
-    if (needsLayout) {
-        ASSERT(!isSetNeedsLayoutForbidden());
-        if (!alreadyNeededLayout) {
-            if (markParents == MarkContainingBlockChain)
-                markContainingBlocksForLayout();
-            if (hasLayer())
-                setLayerNeedsFullRepaint();
-        }
-    } else {
-        setEverHadLayout(true);
-        setPosChildNeedsLayout(false);
-        setNeedsSimplifiedNormalFlowLayout(false);
-        setNormalChildNeedsLayout(false);
-        setNeedsPositionedMovementLayout(false);
-        setAncestorLineBoxDirty(false);
-#ifndef NDEBUG
-        checkBlockPositionedObjectsNeedLayout();
-#endif
-    }
 }
 
 inline void RenderObject::setChildNeedsLayout(bool childNeedsLayout, MarkingBehavior markParents)

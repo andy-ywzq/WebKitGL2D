@@ -35,7 +35,6 @@
 #include "CachedPage.h"
 #include "Document.h"
 #include "DocumentLoader.h"
-#include "Frame.h"
 #include "FrameLoader.h"
 #include "FrameLoaderClient.h"
 #include "FrameLoaderStateMachine.h"
@@ -43,6 +42,7 @@
 #include "FrameView.h"
 #include "HistoryItem.h"
 #include "Logging.h"
+#include "MainFrame.h"
 #include "Page.h"
 #include "PageCache.h"
 #include "PageGroup.h"
@@ -54,7 +54,7 @@
 
 namespace WebCore {
 
-static inline void addVisitedLink(Page* page, const KURL& url)
+static inline void addVisitedLink(Page* page, const URL& url)
 {
     platformStrategies()->visitedLinkStrategy()->addVisitedLink(page, visitedLinkHash(url.string()));
 }
@@ -81,7 +81,7 @@ void HistoryController::saveScrollPositionAndViewStateToItem(HistoryItem* item)
         item->setScrollPoint(m_frame.view()->scrollPosition());
 
     Page* page = m_frame.page();
-    if (page && page->frameIsMainFrame(&m_frame))
+    if (page && m_frame.isMainFrame())
         item->setPageScaleFactor(page->pageScaleFactor());
 
     // FIXME: It would be great to work out a way to put this code in WebCore instead of calling through to the client.
@@ -134,7 +134,7 @@ void HistoryController::restoreScrollPositionAndViewState()
     // https://bugs.webkit.org/show_bug.cgi?id=98698
     if (FrameView* view = m_frame.view()) {
         Page* page = m_frame.page();
-        if (page && page->frameIsMainFrame(&m_frame)) {
+        if (page && m_frame.isMainFrame()) {
             if (ScrollingCoordinator* scrollingCoordinator = page->scrollingCoordinator())
                 scrollingCoordinator->frameViewRootLayerDidChange(view);
         }
@@ -145,7 +145,7 @@ void HistoryController::restoreScrollPositionAndViewState()
         IntPoint previousScrollPoint = m_previousItem ? m_previousItem->scrollPoint() : currentScrollPoint;
 
         if (previousScaleFactor != currentScaleFactor || previousScrollPoint != currentScrollPoint) {
-            if (page && page->frameIsMainFrame(&m_frame) && currentScaleFactor)
+            if (page && m_frame.isMainFrame() && currentScaleFactor)
                 page->setPageScaleFactor(currentScaleFactor, currentScrollPoint);
             else
                 view->setScrollPosition(currentScrollPoint);
@@ -352,7 +352,7 @@ void HistoryController::updateForStandardLoad(HistoryUpdateType updateType)
     FrameLoader& frameLoader = m_frame.loader();
 
     bool needPrivacy = m_frame.settings().privateBrowsingEnabled();
-    const KURL& historyURL = frameLoader.documentLoader()->urlForHistory();
+    const URL& historyURL = frameLoader.documentLoader()->urlForHistory();
 
     if (!frameLoader.documentLoader()->isClientRedirect()) {
         if (!historyURL.isEmpty()) {
@@ -389,7 +389,7 @@ void HistoryController::updateForRedirectWithLockedBackForwardList()
 #endif
     
     bool needPrivacy = m_frame.settings().privateBrowsingEnabled();
-    const KURL& historyURL = m_frame.loader().documentLoader()->urlForHistory();
+    const URL& historyURL = m_frame.loader().documentLoader()->urlForHistory();
 
     if (m_frame.loader().documentLoader()->isClientRedirect()) {
         if (!m_currentItem && !m_frame.tree().parent()) {
@@ -437,7 +437,7 @@ void HistoryController::updateForClientRedirect()
     }
 
     bool needPrivacy = m_frame.settings().privateBrowsingEnabled();
-    const KURL& historyURL = m_frame.loader().documentLoader()->urlForHistory();
+    const URL& historyURL = m_frame.loader().documentLoader()->urlForHistory();
 
     if (!historyURL.isEmpty() && !needPrivacy) {
         if (Page* page = m_frame.page())
@@ -469,9 +469,7 @@ void HistoryController::updateForCommit()
         // Tell all other frames in the tree to commit their provisional items and
         // restore their scroll position.  We'll avoid this frame (which has already
         // committed) and its children (which will be replaced).
-        Page* page = m_frame.page();
-        ASSERT(page);
-        page->mainFrame().loader().history().recursiveUpdateForCommit();
+        m_frame.mainFrame().loader().history().recursiveUpdateForCommit();
     }
 }
 
@@ -536,7 +534,7 @@ void HistoryController::updateForSameDocumentNavigation()
         return;
 
     addVisitedLink(page, m_frame.document()->url());
-    page->mainFrame().loader().history().recursiveUpdateForSameDocumentNavigation();
+    m_frame.mainFrame().loader().history().recursiveUpdateForSameDocumentNavigation();
 
     if (m_currentItem) {
         m_currentItem->setURL(m_frame.document()->url());
@@ -608,10 +606,10 @@ void HistoryController::initializeItem(HistoryItem* item)
     DocumentLoader* documentLoader = m_frame.loader().documentLoader();
     ASSERT(documentLoader);
 
-    KURL unreachableURL = documentLoader->unreachableURL();
+    URL unreachableURL = documentLoader->unreachableURL();
 
-    KURL url;
-    KURL originalURL;
+    URL url;
+    URL originalURL;
 
     if (!unreachableURL.isEmpty()) {
         url = unreachableURL;
@@ -801,7 +799,7 @@ void HistoryController::updateBackForwardListClippedAtTarget(bool doClip)
     if (m_frame.loader().documentLoader()->urlForHistory().isEmpty())
         return;
 
-    FrameLoader& frameLoader = page->mainFrame().loader();
+    FrameLoader& frameLoader = m_frame.mainFrame().loader();
 
     frameLoader.checkDidPerformFirstNavigation();
 
@@ -844,7 +842,7 @@ void HistoryController::pushState(PassRefPtr<SerializedScriptValue> stateObject,
     ASSERT(page);
 
     // Get a HistoryItem tree for the current frame tree.
-    RefPtr<HistoryItem> topItem = page->mainFrame().loader().history().createItemTree(m_frame, false);
+    RefPtr<HistoryItem> topItem = m_frame.mainFrame().loader().history().createItemTree(m_frame, false);
     
     // Override data in the current item (created by createItemTree) to reflect
     // the pushState() arguments.
@@ -857,7 +855,7 @@ void HistoryController::pushState(PassRefPtr<SerializedScriptValue> stateObject,
     if (m_frame.settings().privateBrowsingEnabled())
         return;
 
-    addVisitedLink(page, KURL(ParsedURLString, urlString));
+    addVisitedLink(page, URL(ParsedURLString, urlString));
     m_frame.loader().client().updateGlobalHistory();
 
 }
@@ -878,7 +876,7 @@ void HistoryController::replaceState(PassRefPtr<SerializedScriptValue> stateObje
         return;
 
     ASSERT(m_frame.page());
-    addVisitedLink(m_frame.page(), KURL(ParsedURLString, urlString));
+    addVisitedLink(m_frame.page(), URL(ParsedURLString, urlString));
     m_frame.loader().client().updateGlobalHistory();
 }
 

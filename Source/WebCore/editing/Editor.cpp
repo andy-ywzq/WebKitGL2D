@@ -438,7 +438,7 @@ String Editor::plainTextFromPasteboard(const PasteboardPlainText& text)
 
 #endif
 
-#if !(PLATFORM(MAC) && !PLATFORM(IOS)) && !PLATFORM(EFL) && !PLATFORM(NIX)
+#if !PLATFORM(MAC) && !PLATFORM(EFL) && !PLATFORM(NIX)
 void Editor::pasteWithPasteboard(Pasteboard* pasteboard, bool allowPlainText)
 {
     RefPtr<Range> range = selectedRange();
@@ -580,7 +580,7 @@ bool Editor::hasBidiSelection() const
     } else
         startNode = m_frame.selection().selection().visibleStart().deepEquivalent().deprecatedNode();
 
-    RenderObject* renderer = startNode->renderer();
+    auto renderer = startNode->renderer();
     while (renderer && !renderer->isRenderBlock())
         renderer = renderer->parent();
 
@@ -712,10 +712,6 @@ bool Editor::dispatchCPPEvent(const AtomicString& eventType, ClipboardAccessPoli
         return true;
 
     RefPtr<Clipboard> clipboard = Clipboard::createForCopyAndPaste(policy);
-
-#if PLATFORM(IOS)
-    clipboard->pasteboard().setFrame(m_frame);
-#endif
 
     RefPtr<Event> event = ClipboardEvent::create(eventType, true, true, clipboard);
     target->dispatchEvent(event, IGNORE_EXCEPTION);
@@ -1174,12 +1170,12 @@ void Editor::simplifyMarkup(Node* startNode, Node* endNode)
     applyCommand(SimplifyMarkupCommand::create(document(), startNode, (endNode) ? NodeTraversal::next(endNode) : 0));
 }
 
-void Editor::copyURL(const KURL& url, const String& title)
+void Editor::copyURL(const URL& url, const String& title)
 {
     copyURL(url, title, *Pasteboard::createForCopyAndPaste());
 }
 
-void Editor::copyURL(const KURL& url, const String& title, Pasteboard& pasteboard)
+void Editor::copyURL(const URL& url, const String& title, Pasteboard& pasteboard)
 {
     PasteboardURL pasteboardURL;
     pasteboardURL.url = url;
@@ -1198,7 +1194,7 @@ void Editor::copyImage(const HitTestResult& result)
     if (!element)
         return;
 
-    KURL url = result.absoluteLinkURL();
+    URL url = result.absoluteLinkURL();
     if (url.isEmpty())
         url = result.absoluteImageURL();
 
@@ -1442,7 +1438,7 @@ WritingDirection Editor::baseWritingDirectionForSelectionStart() const
     if (!node)
         return result;
 
-    RenderObject* renderer = node->renderer();
+    auto renderer = node->renderer();
     if (!renderer)
         return result;
 

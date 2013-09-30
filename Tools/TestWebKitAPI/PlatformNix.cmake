@@ -85,7 +85,7 @@ endif ()
 
 set(test_webcore_BINARIES
     LayoutUnit
-    KURL
+    URL
 )
 
 set(test_webkit2_api_BINARIES

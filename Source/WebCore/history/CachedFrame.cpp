@@ -35,13 +35,13 @@
 #include "EventNames.h"
 #include "ExceptionCode.h"
 #include "FocusController.h"
-#include "Frame.h"
 #include "FrameLoader.h"
 #include "FrameLoaderClient.h"
 #include "FrameView.h"
 #include "HistoryController.h"
 #include "HistoryItem.h"
 #include "Logging.h"
+#include "MainFrame.h"
 #include "Page.h"
 #include "PageTransitionEvent.h"
 #include "ScriptController.h"
@@ -157,7 +157,7 @@ CachedFrame::CachedFrame(Frame& frame)
     ASSERT(m_view);
 
     if (frame.page()->focusController().focusedFrame() == &frame)
-        frame.page()->focusController().setFocusedFrame(&frame.page()->mainFrame());
+        frame.page()->focusController().setFocusedFrame(&frame.mainFrame());
 
     // Custom scrollbar renderers will get reattached when the document comes out of the page cache
     m_view->detachCustomScrollbars();
@@ -239,7 +239,7 @@ void CachedFrame::clear()
     m_document = 0;
     m_view = 0;
     m_mousePressNode = 0;
-    m_url = KURL();
+    m_url = URL();
 
     m_cachedFramePlatformData.clear();
     m_cachedFrameScriptData.clear();

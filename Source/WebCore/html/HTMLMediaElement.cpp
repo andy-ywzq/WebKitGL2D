@@ -45,7 +45,6 @@
 #include "EventNames.h"
 #include "ExceptionCode.h"
 #include "ExceptionCodePlaceholder.h"
-#include "Frame.h"
 #include "FrameLoader.h"
 #include "FrameLoaderClient.h"
 #include "FrameView.h"
@@ -53,8 +52,10 @@
 #include "HTMLNames.h"
 #include "HTMLSourceElement.h"
 #include "HTMLVideoElement.h"
+#include "JSHTMLMediaElement.h"
 #include "Language.h"
 #include "Logging.h"
+#include "MainFrame.h"
 #include "MediaController.h"
 #include "MediaControls.h"
 #include "MediaDocument.h"
@@ -70,9 +71,11 @@
 #include "Page.h"
 #include "PageActivityAssertionToken.h"
 #include "PageGroup.h"
+#include "RenderTheme.h"
 #include "RenderVideo.h"
 #include "RenderView.h"
 #include "ScriptController.h"
+#include "ScriptSourceCode.h"
 #include "SecurityPolicy.h"
 #include "Settings.h"
 #include "ShadowRoot.h"
@@ -139,6 +142,13 @@
 #include "AudioSessionManager.h"
 #endif
 
+#if ENABLE(MEDIA_CONTROLS_SCRIPT)
+#include "JSMediaControlsHost.h"
+#include "MediaControlsHost.h"
+#include "ScriptObject.h"
+#include "UserAgentScripts.h"
+#endif
+
 using namespace std;
 
 namespace WebCore {
@@ -154,7 +164,7 @@ static void clearFlags(unsigned& value, unsigned flags)
 }
     
 #if !LOG_DISABLED
-static String urlForLoggingMedia(const KURL& url)
+static String urlForLoggingMedia(const URL& url)
 {
     static const unsigned maximumURLLengthForLogging = 128;
 
@@ -538,8 +548,7 @@ void HTMLMediaElement::finishParsingChildren()
     if (!RuntimeEnabledFeatures::sharedFeatures().webkitVideoTrackEnabled())
         return;
 
-    auto trackDescendants = descendantsOfType<HTMLTrackElement>(this);
-    if (trackDescendants.begin() != trackDescendants.end())
+    if (descendantsOfType<HTMLTrackElement>(this).first())
         scheduleDelayedAction(ConfigureTextTracks);
 #endif
 }
@@ -573,6 +582,9 @@ RenderElement* HTMLMediaElement::createRenderer(RenderArena& arena, RenderStyle&
 
 bool HTMLMediaElement::childShouldCreateRenderer(const Node* child) const
 {
+#if ENABLE(MEDIA_CONTROLS_SCRIPT)
+    return hasShadowRootParent(child) && HTMLElement::childShouldCreateRenderer(child);
+#else
     if (!hasMediaControls())
         return false;
     // <media> doesn't allow its content, including shadow subtree, to
@@ -582,6 +594,7 @@ bool HTMLMediaElement::childShouldCreateRenderer(const Node* child) const
     return mediaControls()->treeScope() == child->treeScope()
         && hasShadowRootParent(child)
         && HTMLElement::childShouldCreateRenderer(child);
+#endif
 }
 
 Node::InsertionNotificationRequest HTMLMediaElement::insertedInto(ContainerNode* insertionPoint)
@@ -740,7 +753,7 @@ HTMLMediaElement::NetworkState HTMLMediaElement::networkState() const
     return m_networkState;
 }
 
-String HTMLMediaElement::canPlayType(const String& mimeType, const String& keySystem, const KURL& url) const
+String HTMLMediaElement::canPlayType(const String& mimeType, const String& keySystem, const URL& url) const
 {
     MediaPlayer::SupportsType support = MediaPlayer::supportsType(ContentType(mimeType), keySystem, url, this);
     String canPlay;
@@ -925,10 +938,9 @@ void HTMLMediaElement::selectMediaResource()
         // Otherwise, if the media element does not have a src attribute but has a source 
         // element child, then let mode be children and let candidate be the first such 
         // source element child in tree order.
-        auto source = childrenOfType<HTMLSourceElement>(this).begin();
-        if (source != childrenOfType<HTMLSourceElement>(this).end()) {
+        if (auto firstSource = childrenOfType<HTMLSourceElement>(this).first()) {
             mode = children;
-            m_nextChildNodeToConsider = &*source;
+            m_nextChildNodeToConsider = firstSource;
             m_currentSourceNode = 0;
         } else {
             // Otherwise the media element has neither a src attribute nor a source element 
@@ -956,7 +968,7 @@ void HTMLMediaElement::selectMediaResource()
         m_loadState = LoadingFromSrcAttr;
 
         // If the src attribute's value is the empty string ... jump down to the failed step below
-        KURL mediaURL = getNonEmptyURLAttribute(srcAttr);
+        URL mediaURL = getNonEmptyURLAttribute(srcAttr);
         if (mediaURL.isEmpty()) {
             mediaLoadingFailed(MediaPlayer::FormatError);
             LOG(Media, "HTMLMediaElement::selectMediaResource, empty 'src'");
@@ -985,7 +997,7 @@ void HTMLMediaElement::loadNextSourceChild()
 {
     ContentType contentType((String()));
     String keySystem;
-    KURL mediaURL = selectNextSourceChild(&contentType, &keySystem, Complain);
+    URL mediaURL = selectNextSourceChild(&contentType, &keySystem, Complain);
     if (!mediaURL.isValid()) {
         waitForSourceChange();
         return;
@@ -1000,18 +1012,18 @@ void HTMLMediaElement::loadNextSourceChild()
     loadResource(mediaURL, contentType, keySystem);
 }
 
-static KURL createFileURLForApplicationCacheResource(const String& path)
+static URL createFileURLForApplicationCacheResource(const String& path)
 {
-    // KURL should have a function to create a url from a path, but it does not. This function
-    // is not suitable because KURL::setPath uses encodeWithURLEscapeSequences, which it notes
+    // URL should have a function to create a url from a path, but it does not. This function
+    // is not suitable because URL::setPath uses encodeWithURLEscapeSequences, which it notes
     // does not correctly escape '#' and '?'. This function works for our purposes because
     // app cache media files are always created with encodeForFileName(createCanonicalUUIDString()).
 
 #if USE(CF) && PLATFORM(WIN)
     RetainPtr<CFURLRef> cfURL = adoptCF(CFURLCreateWithFileSystemPath(0, path.createCFString().get(), kCFURLWindowsPathStyle, false));
-    KURL url(cfURL.get());
+    URL url(cfURL.get());
 #else
-    KURL url;
+    URL url;
 
     url.setProtocol(ASCIILiteral("file"));
     url.setPath(path);
@@ -1019,7 +1031,7 @@ static KURL createFileURLForApplicationCacheResource(const String& path)
     return url;
 }
 
-void HTMLMediaElement::loadResource(const KURL& initialURL, ContentType& contentType, const String& keySystem)
+void HTMLMediaElement::loadResource(const URL& initialURL, ContentType& contentType, const String& keySystem)
 {
     ASSERT(isSafeToLoadURL(initialURL, Complain));
 
@@ -1031,7 +1043,7 @@ void HTMLMediaElement::loadResource(const KURL& initialURL, ContentType& content
         return;
     }
 
-    KURL url = initialURL;
+    URL url = initialURL;
     if (!frame->loader().willLoadMediaElementURL(url)) {
         mediaLoadingFailed(MediaPlayer::FormatError);
         return;
@@ -1527,7 +1539,7 @@ void HTMLMediaElement::textTrackRemoveCue(TextTrack*, PassRefPtr<TextTrackCue> c
 
 #endif
 
-bool HTMLMediaElement::isSafeToLoadURL(const KURL& url, InvalidURLAction actionIfInvalid)
+bool HTMLMediaElement::isSafeToLoadURL(const URL& url, InvalidURLAction actionIfInvalid)
 {
     if (!url.isValid()) {
         LOG(Media, "HTMLMediaElement::isSafeToLoadURL(%s) -> FALSE because url is invalid", urlForLoggingMedia(url).utf8().data());
@@ -1983,7 +1995,7 @@ void HTMLMediaElement::mediaPlayerKeyError(MediaPlayer*, const String& keySystem
     m_asyncEventQueue.enqueueEvent(event.release());
 }
 
-void HTMLMediaElement::mediaPlayerKeyMessage(MediaPlayer*, const String& keySystem, const String& sessionId, const unsigned char* message, unsigned messageLength, const KURL& defaultURL)
+void HTMLMediaElement::mediaPlayerKeyMessage(MediaPlayer*, const String& keySystem, const String& sessionId, const unsigned char* message, unsigned messageLength, const URL& defaultURL)
 {
     MediaKeyEventInit initializer;
     initializer.keySystem = keySystem;
@@ -3189,7 +3201,7 @@ void HTMLMediaElement::didRemoveTextTrack(HTMLTrackElement* trackElement)
 
 #if !LOG_DISABLED
     if (trackElement->hasTagName(trackTag)) {
-        KURL url = trackElement->getNonEmptyURLAttribute(srcAttr);
+        URL url = trackElement->getNonEmptyURLAttribute(srcAttr);
         LOG(Media, "HTMLMediaElement::didRemoveTrack - 'src' is %s", urlForLoggingMedia(url).utf8().data());
     }
 #endif
@@ -3424,7 +3436,7 @@ bool HTMLMediaElement::havePotentialSourceChild()
     RefPtr<HTMLSourceElement> currentSourceNode = m_currentSourceNode;
     RefPtr<Node> nextNode = m_nextChildNodeToConsider;
 
-    KURL nextURL = selectNextSourceChild(0, 0, DoNothing);
+    URL nextURL = selectNextSourceChild(0, 0, DoNothing);
 
     m_currentSourceNode = currentSourceNode;
     m_nextChildNodeToConsider = nextNode;
@@ -3432,7 +3444,7 @@ bool HTMLMediaElement::havePotentialSourceChild()
     return nextURL.isValid();
 }
 
-KURL HTMLMediaElement::selectNextSourceChild(ContentType* contentType, String* keySystem, InvalidURLAction actionIfInvalid)
+URL HTMLMediaElement::selectNextSourceChild(ContentType* contentType, String* keySystem, InvalidURLAction actionIfInvalid)
 {
 #if !LOG_DISABLED
     // Don't log if this was just called to find out if there are any valid <source> elements.
@@ -3446,10 +3458,10 @@ KURL HTMLMediaElement::selectNextSourceChild(ContentType* contentType, String* k
         if (shouldLog)
             LOG(Media, "HTMLMediaElement::selectNextSourceChild -> 0x0000, \"\"");
 #endif
-        return KURL();
+        return URL();
     }
 
-    KURL mediaURL;
+    URL mediaURL;
     HTMLSourceElement* source = 0;
     String type;
     String system;
@@ -3543,7 +3555,7 @@ check_again:
     if (shouldLog)
         LOG(Media, "HTMLMediaElement::selectNextSourceChild -> %p, %s", m_currentSourceNode.get(), canUseSourceElement ? urlForLoggingMedia(mediaURL).utf8().data() : "");
 #endif
-    return canUseSourceElement ? mediaURL : KURL();
+    return canUseSourceElement ? mediaURL : URL();
 }
 
 void HTMLMediaElement::sourceWasAdded(HTMLSourceElement* source)
@@ -3552,7 +3564,7 @@ void HTMLMediaElement::sourceWasAdded(HTMLSourceElement* source)
 
 #if !LOG_DISABLED
     if (source->hasTagName(sourceTag)) {
-        KURL url = source->getNonEmptyURLAttribute(srcAttr);
+        URL url = source->getNonEmptyURLAttribute(srcAttr);
         LOG(Media, "HTMLMediaElement::sourceWasAdded - 'src' is %s", urlForLoggingMedia(url).utf8().data());
     }
 #endif
@@ -3600,7 +3612,7 @@ void HTMLMediaElement::sourceWasRemoved(HTMLSourceElement* source)
 
 #if !LOG_DISABLED
     if (source->hasTagName(sourceTag)) {
-        KURL url = source->getNonEmptyURLAttribute(srcAttr);
+        URL url = source->getNonEmptyURLAttribute(srcAttr);
         LOG(Media, "HTMLMediaElement::sourceWasRemoved - 'src' is %s", urlForLoggingMedia(url).utf8().data());
     }
 #endif
@@ -4252,12 +4264,11 @@ void HTMLMediaElement::mediaVolumeDidChange()
 void HTMLMediaElement::defaultEventHandler(Event* event)
 {
 #if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
-    RenderObject* r = renderer();
-    if (!r || !r->isWidget())
+    auto renderer = this->renderer();
+    if (!renderer || !renderer->isWidget())
         return;
 
-    Widget* widget = toRenderWidget(r)->widget();
-    if (widget)
+    if (Widget* widget = toRenderWidget(renderer)->widget())
         widget->handleEvent(event);
 #else
     HTMLElement::defaultEventHandler(event);
@@ -4311,7 +4322,7 @@ void HTMLMediaElement::setMediaPlayerProxy(WebMediaPlayerProxy* proxy)
     m_player->setMediaPlayerProxy(proxy);
 }
 
-void HTMLMediaElement::getPluginProxyParams(KURL& url, Vector<String>& names, Vector<String>& values)
+void HTMLMediaElement::getPluginProxyParams(URL& url, Vector<String>& names, Vector<String>& values)
 {
     Ref<HTMLMediaElement> protect(*this); // selectNextSourceChild may fire 'beforeload', which can make arbitrary DOM mutations.
 
@@ -4319,7 +4330,7 @@ void HTMLMediaElement::getPluginProxyParams(KURL& url, Vector<String>& names, Ve
 
     if (isVideo()) {
         HTMLVideoElement* video = toHTMLVideoElement(this);
-        KURL posterURL = video->posterImageURL();
+        URL posterURL = video->posterImageURL();
         if (!posterURL.isEmpty() && frame && frame->loader().willLoadMediaElementURL(posterURL)) {
             names.append(ASCIILiteral("_media_element_poster_"));
             values.append(posterURL.string());
@@ -4355,7 +4366,7 @@ void HTMLMediaElement::createMediaPlayerProxy()
 
     LOG(Media, "HTMLMediaElement::createMediaPlayerProxy");
 
-    KURL url;
+    URL url;
     Vector<String> paramNames;
     Vector<String> paramValues;
 
@@ -4375,7 +4386,7 @@ void HTMLMediaElement::updateWidget(PluginCreationOption)
     Vector<String> paramNames;
     Vector<String> paramValues;
     // FIXME: Rename kurl to something more sensible.
-    KURL kurl;
+    URL kurl;
 
     mediaElement->getPluginProxyParams(kurl, paramNames, paramValues);
     // FIXME: What if document().frame() is 0?
@@ -4505,6 +4516,10 @@ bool HTMLMediaElement::closedCaptionsVisible() const
 #if ENABLE(VIDEO_TRACK)
 void HTMLMediaElement::updateTextTrackDisplay()
 {
+#if ENABLE(MEDIA_CONTROLS_SCRIPT)
+    ensureUserAgentShadowRoot();
+    return;
+#endif
     if (!hasMediaControls() && !createMediaControls())
         return;
     
@@ -4634,11 +4649,19 @@ void HTMLMediaElement::privateBrowsingStateDidChange()
 
 MediaControls* HTMLMediaElement::mediaControls() const
 {
+#if ENABLE(MEDIA_CONTROLS_SCRIPT)
+    return 0;
+#else
     return toMediaControls(userAgentShadowRoot()->firstChild());
+#endif
 }
 
 bool HTMLMediaElement::hasMediaControls() const
 {
+#if ENABLE(MEDIA_CONTROLS_SCRIPT)
+    return false;
+#else
+
     if (ShadowRoot* userAgent = userAgentShadowRoot()) {
         Node* node = userAgent->firstChild();
         ASSERT_WITH_SECURITY_IMPLICATION(!node || node->isMediaControls());
@@ -4646,10 +4669,15 @@ bool HTMLMediaElement::hasMediaControls() const
     }
 
     return false;
+#endif
 }
 
 bool HTMLMediaElement::createMediaControls()
 {
+#if ENABLE(MEDIA_CONTROLS_SCRIPT)
+    ensureUserAgentShadowRoot();
+    return false;
+#else
     if (hasMediaControls())
         return true;
 
@@ -4668,11 +4696,18 @@ bool HTMLMediaElement::createMediaControls()
         mediaControls->hide();
 
     return true;
+#endif
 }
 
 void HTMLMediaElement::configureMediaControls()
 {
-#if !ENABLE(PLUGIN_PROXY_FOR_VIDEO)
+#if ENABLE(MEDIA_CONTROLS_SCRIPT)
+    if (!controls() || !inDocument())
+        return;
+
+    ensureUserAgentShadowRoot();
+    return;
+#elif !ENABLE(PLUGIN_PROXY_FOR_VIDEO)
     if (!controls() || !inDocument()) {
         if (hasMediaControls())
             mediaControls()->hide();
@@ -4683,7 +4718,7 @@ void HTMLMediaElement::configureMediaControls()
         return;
 
     mediaControls()->show();
-#else
+#else 
     if (m_player)
         m_player->setControls(controls());
 
@@ -4717,6 +4752,14 @@ void HTMLMediaElement::configureTextTrackDisplay(TextTrackVisibilityCheckType ch
 
     m_haveVisibleTextTrack = haveVisibleTextTrack;
     m_closedCaptionsVisible = m_haveVisibleTextTrack;
+
+#if ENABLE(MEDIA_CONTROLS_SCRIPT)
+    if (!m_haveVisibleTextTrack)
+        return;
+
+    ensureUserAgentShadowRoot();
+    return;
+#endif
 
     if (!m_haveVisibleTextTrack && !hasMediaControls())
         return;
@@ -5120,5 +5163,85 @@ void HTMLMediaElement::removeBehaviorsRestrictionsAfterFirstUserGesture()
     m_restrictions = NoRestrictions;
 }
 
+#if ENABLE(MEDIA_CONTROLS_SCRIPT)
+DOMWrapperWorld* HTMLMediaElement::ensureIsolatedWorld()
+{
+    if (!m_isolatedWorld)
+        m_isolatedWorld = DOMWrapperWorld::create(JSDOMWindow::commonVM());
+    return m_isolatedWorld.get();
 }
+
+bool HTMLMediaElement::ensureMediaControlsInjectedScript()
+{
+    Page* page = document().page();
+    if (!page)
+        return false;
+
+    String mediaControlsScript = RenderTheme::themeForPage(page)->mediaControlsScript();
+    if (!mediaControlsScript.length())
+        return false;
+
+    DOMWrapperWorld* world = ensureIsolatedWorld();
+    ScriptController& scriptController = page->mainFrame().script();
+    JSDOMGlobalObject* globalObject = JSC::jsCast<JSDOMGlobalObject*>(scriptController.globalObject(world));
+    JSC::ExecState* exec = globalObject->globalExec();
+
+    JSC::JSValue overlayValue = globalObject->get(exec, JSC::Identifier(exec, "createControls"));
+    if (overlayValue.isFunction())
+        return true;
+
+    scriptController.evaluateInWorld(ScriptSourceCode(mediaControlsScript), world);
+    if (exec->hadException()) {
+        exec->clearException();
+        return false;
+    }
+
+    return true;
+}
+
+void HTMLMediaElement::didAddUserAgentShadowRoot(ShadowRoot* root)
+{
+    Page* page = document().page();
+    if (!page)
+        return;
+
+    DOMWrapperWorld* world = ensureIsolatedWorld();
+    if (!world)
+        return;
+
+    if (!ensureMediaControlsInjectedScript())
+        return;
+
+    ScriptController& scriptController = page->mainFrame().script();
+    JSDOMGlobalObject* globalObject = JSC::jsCast<JSDOMGlobalObject*>(scriptController.globalObject(world));
+    JSC::ExecState* exec = globalObject->globalExec();
+    JSC::JSLockHolder lock(exec);
+
+    // It is expected the JS file provides a createControls(shadowRoot, video, mediaControlsHost) function.
+    JSC::JSValue overlayValue = globalObject->get(exec, JSC::Identifier(exec, "createControls"));
+    if (overlayValue.isUndefinedOrNull())
+        return;
+
+    if (!m_mediaControlsHost)
+        m_mediaControlsHost = MediaControlsHost::create(this);
+
+    JSC::MarkedArgumentBuffer argList;
+    argList.append(toJS(exec, globalObject, root));
+    argList.append(toJS(exec, globalObject, this));
+    argList.append(toJS(exec, globalObject, m_mediaControlsHost.get()));
+
+    JSC::JSObject* overlay = overlayValue.toObject(exec);
+    JSC::CallData callData;
+    JSC::CallType callType = overlay->methodTable()->getCallData(overlay, callData);
+    if (callType == JSC::CallTypeNone)
+        return;
+
+    JSC::call(exec, overlay, callType, callData, globalObject, argList);
+    if (exec->hadException())
+        exec->clearException();
+}
+#endif
+
+}
+
 #endif

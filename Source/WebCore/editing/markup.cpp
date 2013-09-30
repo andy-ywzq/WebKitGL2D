@@ -48,11 +48,10 @@
 #include "HTMLTableElement.h"
 #include "HTMLTextAreaElement.h"
 #include "HTMLTextFormControlElement.h"
-#include "KURL.h"
+#include "URL.h"
 #include "MarkupAccumulator.h"
 #include "Range.h"
 #include "RenderBlock.h"
-#include "RenderObject.h"
 #include "StylePropertySet.h"
 #include "TextIterator.h"
 #include "VisibleSelection.h"
@@ -100,7 +99,7 @@ static void completeURLs(DocumentFragment* fragment, const String& baseURL)
 {
     Vector<AttributeChange> changes;
 
-    KURL parsedBaseURL(ParsedURLString, baseURL);
+    URL parsedBaseURL(ParsedURLString, baseURL);
 
     for (auto element = elementDescendants(fragment).begin(), end = elementDescendants(fragment).end(); element != end; ++element) {
         if (!element->hasAttributes())
@@ -109,7 +108,7 @@ static void completeURLs(DocumentFragment* fragment, const String& baseURL)
         for (unsigned i = 0; i < length; i++) {
             const Attribute& attribute = element->attributeAt(i);
             if (element->isURLAttribute(attribute) && !attribute.value().isEmpty())
-                changes.append(AttributeChange(&*element, attribute.name(), KURL(parsedBaseURL, attribute.value()).string()));
+                changes.append(AttributeChange(&*element, attribute.name(), URL(parsedBaseURL, attribute.value()).string()));
         }
     }
 
@@ -723,7 +722,7 @@ PassRefPtr<DocumentFragment> createFragmentFromMarkupWithContext(Document* docum
     taggedMarkup.append(markup.substring(fragmentEnd));
 
     RefPtr<DocumentFragment> taggedFragment = createFragmentFromMarkup(document, taggedMarkup.toString(), baseURL, parserContentPolicy);
-    RefPtr<Document> taggedDocument = Document::create(0, KURL());
+    RefPtr<Document> taggedDocument = Document::create(0, URL());
     taggedDocument->takeAllChildrenFrom(taggedFragment.get());
 
     RefPtr<Node> nodeBeforeContext;
@@ -952,7 +951,7 @@ String createFullMarkup(const Range* range)
     return documentTypeString(node->document()) + createMarkup(range, 0, AnnotateForInterchange);
 }
 
-String urlToMarkup(const KURL& url, const String& title)
+String urlToMarkup(const URL& url, const String& title)
 {
     StringBuilder markup;
     markup.append("<a href=\"");

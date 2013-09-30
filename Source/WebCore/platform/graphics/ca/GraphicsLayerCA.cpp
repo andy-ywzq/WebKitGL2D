@@ -256,8 +256,8 @@ static float maxScaleFromTransform(const TransformationMatrix& t)
     if (t.isIdentityOrTranslation())
         return 1;
 
-    TransformationMatrix::DecomposedType decomposeData;
-    t.decompose(decomposeData);
+    TransformationMatrix::Decomposed4Type decomposeData;
+    t.decompose4(decomposeData);
     return std::max(fabsf(decomposeData.scaleX), fabsf(decomposeData.scaleY));
 }
 
@@ -273,10 +273,10 @@ static inline bool supportsAcceleratedFilterAnimations()
 }
 #endif
 
-PassOwnPtr<GraphicsLayer> GraphicsLayer::create(GraphicsLayerFactory* factory, GraphicsLayerClient* client)
+std::unique_ptr<GraphicsLayer> GraphicsLayer::create(GraphicsLayerFactory* factory, GraphicsLayerClient* client)
 {
     if (!factory)
-        return adoptPtr(new GraphicsLayerCA(client));
+        return std::make_unique<GraphicsLayerCA>(client);
 
     return factory->createGraphicsLayer(client);
 }

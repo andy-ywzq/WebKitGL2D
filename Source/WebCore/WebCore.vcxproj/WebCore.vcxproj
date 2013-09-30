@@ -3330,6 +3330,20 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="$(ConfigurationBuildDir)\obj$(PlatformArchitecture)\$(ProjectName)\DerivedSources\JSMediaControlsHost.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="$(ConfigurationBuildDir)\obj$(PlatformArchitecture)\$(ProjectName)\DerivedSources\JSMediaError.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -6764,6 +6778,7 @@
     <ClCompile Include="..\Modules\quota\StorageErrorCallback.cpp" />
     <ClCompile Include="..\Modules\quota\StorageInfo.cpp" />
     <ClCompile Include="..\Modules\quota\StorageQuota.cpp" />
+    <ClInclude Include="..\Modules\mediacontrols\MediaControlsHost.cpp" />
     <ClCompile Include="..\Modules\mediasource\MediaSource.cpp" />
     <ClCompile Include="..\Modules\mediasource\MediaSourceRegistry.cpp" />
     <ClCompile Include="..\Modules\mediasource\SourceBuffer.cpp" />
@@ -7177,6 +7192,7 @@
     <ClCompile Include="..\page\animation\ImplicitAnimation.cpp" />
     <ClCompile Include="..\page\animation\KeyframeAnimation.cpp" />
     <ClCompile Include="..\page\Location.cpp" />
+    <ClCompile Include="..\page\MainFrame.cpp" />
     <ClCompile Include="..\page\MouseEventWithHitTestResults.cpp" />
     <ClCompile Include="..\page\Navigator.cpp" />
     <ClCompile Include="..\page\NavigatorBase.cpp" />
@@ -7420,7 +7436,7 @@
     </ClCompile>
     <ClCompile Include="..\platform\HistogramSupport.cpp" />
     <ClCompile Include="..\platform\KillRingNone.cpp" />
-    <ClCompile Include="..\platform\KURL.cpp" />
+    <ClCompile Include="..\platform\URL.cpp" />
     <ClCompile Include="..\platform\Language.cpp" />
     <ClCompile Include="..\platform\Length.cpp" />
     <ClCompile Include="..\platform\LengthBox.cpp" />
@@ -7604,7 +7620,7 @@
     <ClCompile Include="..\platform\win\WindowMessageBroadcaster.cpp" />
     <ClCompile Include="..\platform\cf\CFURLExtras.cpp" />
     <ClCompile Include="..\platform\cf\FileSystemCF.cpp" />
-    <ClCompile Include="..\platform\cf\KURLCFNet.cpp" />
+    <ClCompile Include="..\platform\cf\URLCF.cpp" />
     <ClCompile Include="..\platform\cf\SharedBufferCF.cpp" />
     <ClCompile Include="..\platform\cf\win\CertificateCFWin.cpp" />
     <ClCompile Include="..\platform\graphics\BitmapImage.cpp" />
@@ -8487,7 +8503,6 @@
     <ClCompile Include="..\platform\text\cf\StringCF.cpp" />
     <ClCompile Include="..\platform\text\cf\StringImplCF.cpp" />
     <ClCompile Include="..\platform\text\win\TextBreakIteratorInternalICUWin.cpp" />
-    <ClCompile Include="..\platform\text\transcoder\FontTranscoder.cpp" />
     <ClCompile Include="..\platform\image-decoders\ImageDecoder.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -15613,7 +15628,6 @@
     <ClCompile Include="..\html\track\TrackEvent.cpp" />
     <ClCompile Include="..\html\track\WebVTTParser.cpp" />
     <ClCompile Include="..\html\track\WebVTTTokenizer.cpp" />
-    <ClCompile Include="..\bindings\ScriptControllerBase.cpp" />
     <ClCompile Include="..\bindings\generic\ActiveDOMCallback.cpp" />
     <ClCompile Include="..\bindings\generic\BindingSecurity.cpp" />
     <ClCompile Include="..\bindings\generic\RuntimeEnabledFeatures.cpp" />
@@ -18219,6 +18233,7 @@
     <ClInclude Include="$(ConfigurationBuildDir)\obj$(PlatformArchitecture)\$(ProjectName)\DerivedSources\JSJavaScriptCallFrame.h" />
     <ClInclude Include="$(ConfigurationBuildDir)\obj$(PlatformArchitecture)\$(ProjectName)\DerivedSources\JSKeyboardEvent.h" />
     <ClInclude Include="$(ConfigurationBuildDir)\obj$(PlatformArchitecture)\$(ProjectName)\DerivedSources\JSLocation.h" />
+    <ClInclude Include="$(ConfigurationBuildDir)\obj$(PlatformArchitecture)\$(ProjectName)\DerivedSources\JSMediaControlsHost.h" />
     <ClInclude Include="$(ConfigurationBuildDir)\obj$(PlatformArchitecture)\$(ProjectName)\DerivedSources\JSMediaError.h" />
     <ClInclude Include="$(ConfigurationBuildDir)\obj$(PlatformArchitecture)\$(ProjectName)\DerivedSources\JSMediaList.h" />
     <ClInclude Include="$(ConfigurationBuildDir)\obj$(PlatformArchitecture)\$(ProjectName)\DerivedSources\JSMediaQueryList.h" />
@@ -18673,6 +18688,7 @@
     <ClInclude Include="..\Modules\quota\StorageQuota.h" />
     <ClInclude Include="..\Modules\quota\StorageQuotaCallback.h" />
     <ClInclude Include="..\Modules\quota\StorageUsageCallback.h" />
+    <ClInclude Include="..\Modules\mediacontrols\MediaControlsHost.h" />
     <ClInclude Include="..\Modules\mediasource\MediaSource.h" />
     <ClInclude Include="..\Modules\mediasource\MediaSourceRegistry.h" />
     <ClInclude Include="..\Modules\mediasource\SourceBuffer.h" />
@@ -18821,6 +18837,7 @@
     <ClInclude Include="..\page\animation\ImplicitAnimation.h" />
     <ClInclude Include="..\page\animation\KeyframeAnimation.h" />
     <ClInclude Include="..\page\Location.h" />
+    <ClInclude Include="..\page\MainFrame.h" />
     <ClInclude Include="..\page\MouseEventWithHitTestResults.h" />
     <ClInclude Include="..\page\Navigator.h" />
     <ClInclude Include="..\page\NavigatorBase.h" />
@@ -19015,8 +19032,8 @@
     <ClInclude Include="..\platform\HistogramSupport.h" />
     <ClInclude Include="..\platform\HostWindow.h" />
     <ClInclude Include="..\platform\KillRing.h" />
-    <ClInclude Include="..\platform\KURL.h" />
-    <ClInclude Include="..\platform\KURLHash.h" />
+    <ClInclude Include="..\platform\URL.h" />
+    <ClInclude Include="..\platform\URLHash.h" />
     <ClInclude Include="..\platform\Language.h" />
     <ClInclude Include="..\platform\LayoutUnit.h" />
     <ClInclude Include="..\platform\Length.h" />
@@ -19524,7 +19541,6 @@
     <ClInclude Include="..\platform\graphics\WidthCache.h" />
     <ClInclude Include="..\platform\graphics\WidthIterator.h" />
     <ClInclude Include="..\platform\text\WritingMode.h" />
-    <ClInclude Include="..\platform\text\transcoder\FontTranscoder.h" />
     <ClInclude Include="..\platform\image-decoders\ImageDecoder.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -20446,7 +20462,6 @@
     <ClInclude Include="..\html\track\WebVTTParser.h" />
     <ClInclude Include="..\html\track\WebVTTToken.h" />
     <ClInclude Include="..\html\track\WebVTTTokenizer.h" />
-    <ClInclude Include="..\bindings\ScriptControllerBase.h" />
     <ClInclude Include="..\bindings\generic\ActiveDOMCallback.h" />
     <ClInclude Include="..\bindings\generic\BindingSecurity.h" />
     <ClInclude Include="..\bindings\generic\RuntimeEnabledFeatures.h" />
@@ -20879,11 +20894,9 @@
     <None Include="..\css\CSSPropertyNames.in" />
     <None Include="..\css\CSSValueKeywords.in" />
     <None Include="..\css\fullscreen.css" />
-    <None Include="..\css\fullscreenQuickTime.css" />
     <None Include="..\css\html.css" />
     <None Include="..\css\mathml.css" />
     <None Include="..\css\mediaControls.css" />
-    <None Include="..\css\mediaControlsQuickTime.css" />
     <None Include="..\css\plugIns.css" />
     <None Include="..\css\quirks.css" />
     <None Include="..\css\svg.css" />

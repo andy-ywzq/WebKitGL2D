@@ -27,13 +27,14 @@
 #import "DragController.h"
 
 #if ENABLE(DRAG_SUPPORT)
+
 #import "Clipboard.h"
 #import "DOMElementInternal.h"
 #import "DragClient.h"
 #import "DragData.h"
 #import "Element.h"
-#import "Frame.h"
 #import "FrameView.h"
+#import "MainFrame.h"
 #import "Page.h"
 #import "Pasteboard.h"
 
@@ -84,7 +85,7 @@ void DragController::cleanupAfterSystemDrag()
         dragEnded();
 }
 
-void DragController::declareAndWriteDragImage(Clipboard* clipboard, Element* element, const KURL& url, const String& label)
+void DragController::declareAndWriteDragImage(Clipboard* clipboard, Element* element, const URL& url, const String& label)
 {
     m_client.declareAndWriteDragImage(clipboard->pasteboard().name(), kit(element), url, label, element->document().frame());
 }

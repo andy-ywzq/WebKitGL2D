@@ -120,6 +120,7 @@
                     },
                     { "name": "Apple MountainLion Release WK1 (Tests)", "type": "Test", "builddir": "mountainlion-release-tests-wk1",
                       "platform": "mac-mountainlion", "configuration": "release", "architectures": ["x86_64"],
+                      "additionalArguments": ["--no-retry-failures"],
                       "slavenames": ["apple-mini-208"]
                     },
                     { "name": "Apple MountainLion Release WK2 (Tests)", "type": "TestWebKit2", "builddir": "mountainlion-release-tests-wk2",
@@ -229,6 +230,7 @@
                     {
                       "name": "Qt Mountain Lion Release", "type": "BuildAndTestWebKit2", "builddir": "qt-mountainlion-release",
                       "platform": "qt-5.0-mac-wk2", "configuration": "release", "architectures": ["x86_64"],
+                      "additionalArguments": ["--pixel"],
                       "slavenames": ["oslo-mountainlion"]
                     },
                     {

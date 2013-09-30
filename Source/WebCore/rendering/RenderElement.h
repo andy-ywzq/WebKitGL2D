@@ -34,7 +34,7 @@ public:
     static RenderElement* createFor(Element&, RenderStyle&);
 
     RenderStyle* style() const { return m_style.get(); }
-    RenderStyle* style(bool firstLine) const { return firstLine ? firstLineStyle() : style(); }
+    RenderStyle* firstLineStyle() const;
 
     virtual void setStyle(PassRefPtr<RenderStyle>);
     // Called to update a style that is allowed to trigger animations.
@@ -69,8 +69,17 @@ public:
 
     virtual RenderElement* hoverAncestor() const;
 
+    virtual void dirtyLinesFromChangedChild(RenderObject*) { }
+
+    bool ancestorLineBoxDirty() const { return m_ancestorLineBoxDirty; }
+    void setAncestorLineBoxDirty(bool f = true);
+
     // Return the renderer whose background style is used to paint the root background. Should only be called on the renderer for which isRoot() is true.
     RenderElement* rendererForRootBackground();
+
+    // Used only by Element::pseudoStyleCacheIsInvalid to get a first line style based off of a
+    // given new style, without accessing the cache.
+    PassRefPtr<RenderStyle> uncachedFirstLineStyle(RenderStyle*) const;
 
     // Updates only the local style ptr of the object. Does not update the state of the object,
     // and so only should be called when the style is known not to have changed (or from setStyle).
@@ -109,7 +118,7 @@ private:
     virtual RenderObject* lastChildSlow() const OVERRIDE FINAL { return lastChild(); }
 
     bool shouldRepaintForStyleDifference(StyleDifference) const;
-    bool hasImmediateNonWhitespaceTextChild() const;
+    bool hasImmediateNonWhitespaceTextChildOrBorderOrOutline() const;
 
     void updateFillImages(const FillLayer*, const FillLayer*);
     void updateImage(StyleImage*, StyleImage*);
@@ -118,6 +127,9 @@ private:
 #endif
 
     StyleDifference adjustStyleDifference(StyleDifference, unsigned contextSensitiveProperties) const;
+    RenderStyle* cachedFirstLineStyle() const;
+
+    bool m_ancestorLineBoxDirty : 1;
 
     RenderObject* m_firstChild;
     RenderObject* m_lastChild;
@@ -129,6 +141,18 @@ private:
     static bool s_affectsParentBlock;
     static bool s_noLongerAffectsParentBlock;
 };
+
+inline RenderStyle* RenderElement::firstLineStyle() const
+{
+    return document().styleSheetCollection().usesFirstLineRules() ? cachedFirstLineStyle() : style();
+}
+
+inline void RenderElement::setAncestorLineBoxDirty(bool f)
+{
+    m_ancestorLineBoxDirty = f;
+    if (m_ancestorLineBoxDirty)
+        setNeedsLayout(true);
+}
 
 inline LayoutUnit RenderElement::valueForLength(const Length& length, LayoutUnit maximumValue, bool roundPercentages) const
 {
@@ -175,7 +199,40 @@ inline RenderStyle* RenderObject::style() const
     return toRenderElement(this)->style();
 }
 
-inline RenderElement* Element::renderer() const
+inline RenderStyle* RenderObject::firstLineStyle() const
+{
+    if (isText())
+        return m_parent->firstLineStyle();
+    return toRenderElement(this)->firstLineStyle();
+}
+
+inline void RenderObject::setNeedsLayout(bool needsLayout, MarkingBehavior markParents)
+{
+    bool alreadyNeededLayout = m_bitfields.needsLayout();
+    m_bitfields.setNeedsLayout(needsLayout);
+    if (needsLayout) {
+        ASSERT(!isSetNeedsLayoutForbidden());
+        if (!alreadyNeededLayout) {
+            if (markParents == MarkContainingBlockChain)
+                markContainingBlocksForLayout();
+            if (hasLayer())
+                setLayerNeedsFullRepaint();
+        }
+    } else {
+        setEverHadLayout(true);
+        setPosChildNeedsLayout(false);
+        setNeedsSimplifiedNormalFlowLayout(false);
+        setNormalChildNeedsLayout(false);
+        setNeedsPositionedMovementLayout(false);
+        if (isRenderElement())
+            toRenderElement(this)->setAncestorLineBoxDirty(false);
+#ifndef NDEBUG
+        checkBlockPositionedObjectsNeedLayout();
+#endif
+    }
+}
+
+inline RenderElement* ContainerNode::renderer() const
 {
     return toRenderElement(Node::renderer());
 }

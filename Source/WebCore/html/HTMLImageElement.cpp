@@ -309,7 +309,7 @@ void HTMLImageElement::setHeight(int value)
     setAttribute(heightAttr, String::number(value));
 }
 
-KURL HTMLImageElement::src() const
+URL HTMLImageElement::src() const
 {
     return document().completeURL(getAttribute(srcAttr));
 }
@@ -326,24 +326,22 @@ void HTMLImageElement::setWidth(int value)
 
 int HTMLImageElement::x() const
 {
-    RenderObject* r = renderer();
-    if (!r)
+    auto renderer = this->renderer();
+    if (!renderer)
         return 0;
 
     // FIXME: This doesn't work correctly with transforms.
-    FloatPoint absPos = r->localToAbsolute();
-    return absPos.x();
+    return renderer->localToAbsolute().x();
 }
 
 int HTMLImageElement::y() const
 {
-    RenderObject* r = renderer();
-    if (!r)
+    auto renderer = this->renderer();
+    if (!renderer)
         return 0;
 
     // FIXME: This doesn't work correctly with transforms.
-    FloatPoint absPos = r->localToAbsolute();
-    return absPos.y();
+    return renderer->localToAbsolute().y();
 }
 
 bool HTMLImageElement::complete() const
@@ -351,7 +349,7 @@ bool HTMLImageElement::complete() const
     return m_imageLoader.imageComplete();
 }
 
-void HTMLImageElement::addSubresourceAttributeURLs(ListHashSet<KURL>& urls) const
+void HTMLImageElement::addSubresourceAttributeURLs(ListHashSet<URL>& urls) const
 {
     HTMLElement::addSubresourceAttributeURLs(urls);
 
@@ -384,7 +382,7 @@ bool HTMLImageElement::isServerMap() const
 // FIXME: This is a workaround for <rdar://problem/7725158>. We should find a better place for the touchCalloutEnabled() logic.
 bool HTMLImageElement::willRespondToMouseClickEvents()
 {
-    RenderObject* renderer = this->renderer();
+    auto renderer = this->renderer();
     RenderStyle* style = renderer ? renderer->style() : nullptr;
     if (!style || style->touchCalloutEnabled())
         return true;

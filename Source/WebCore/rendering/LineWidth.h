@@ -31,14 +31,16 @@
 #define LineWidth_h
 
 #include "LayoutUnit.h"
+#include <wtf/HashMap.h>
 
 namespace WebCore {
 
 class FloatingObject;
-struct LineSegment;
 class RenderBlock;
 class RenderObject;
 class RenderRubyRun;
+
+struct LineSegment;
 
 enum IndentTextOrNot { DoNotIndentText, IndentText };
 
@@ -53,12 +55,13 @@ public:
     float currentWidth() const { return m_committedWidth + m_uncommittedWidth; }
     // FIXME: We should eventually replace these three functions by ones that work on a higher abstraction.
     float uncommittedWidth() const { return m_uncommittedWidth; }
+    float uncommittedWidthForObject(const RenderObject&) const;
     float committedWidth() const { return m_committedWidth; }
     float availableWidth() const { return m_availableWidth; }
 
     void updateAvailableWidth(LayoutUnit minimumHeight = 0);
     void shrinkAvailableWidthForNewFloatIfNeeded(FloatingObject*);
-    void addUncommittedWidth(float delta) { m_uncommittedWidth += delta; }
+    void addUncommittedWidth(float delta, const RenderObject&);
     void commit();
     void applyOverhang(RenderRubyRun*, RenderObject* startRenderer, RenderObject* endRenderer);
     void fitBelowFloats();
@@ -88,6 +91,7 @@ private:
 #endif
     bool m_isFirstLine;
     IndentTextOrNot m_shouldIndentText;
+    HashMap<const RenderObject*, float> m_uncommittedWidthMap;
 };
 
 }

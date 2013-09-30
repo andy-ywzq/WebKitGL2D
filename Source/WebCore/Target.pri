@@ -71,7 +71,6 @@ SOURCES += \
     bindings/generic/RuntimeEnabledFeatures.cpp
 
 SOURCES += \
-     bindings/ScriptControllerBase.cpp \
      bindings/js/ArrayValue.cpp \
      bindings/js/BindingState.cpp \
      bindings/js/CallbackFunction.cpp \
@@ -896,6 +895,7 @@ SOURCES += \
     page/GroupSettings.cpp \
     page/History.cpp \
     page/Location.cpp \
+    page/MainFrame.cpp \
     page/MouseEventWithHitTestResults.cpp \
     page/Navigator.cpp \
     page/NavigatorBase.cpp \
@@ -1026,7 +1026,7 @@ SOURCES += \
     platform/image-decoders/gif/GIFImageDecoder.cpp \
     platform/image-decoders/gif/GIFImageReader.cpp\
     platform/KillRingNone.cpp \
-    platform/KURL.cpp \
+    platform/URL.cpp \
     platform/Language.cpp \
     platform/Length.cpp \
     platform/LengthBox.cpp \
@@ -1103,7 +1103,6 @@ SOURCES += \
     platform/ThreadTimers.cpp \
     platform/Timer.cpp \
     platform/text/UnicodeRange.cpp \
-    platform/text/transcoder/FontTranscoder.cpp \
     platform/UUID.cpp \
     platform/Widget.cpp \
     platform/PlatformStrategies.cpp \
@@ -1312,7 +1311,6 @@ HEADERS += \
     accessibility/AccessibilityTableHeaderContainer.h \
     accessibility/AccessibilityTableRow.h \
     accessibility/AXObjectCache.h \
-    bindings/ScriptControllerBase.h \
     bindings/generic/ActiveDOMCallback.h \
     bindings/generic/BindingSecurity.h \
     bindings/generic/RuntimeEnabledFeatures.h
@@ -2243,7 +2241,7 @@ HEADERS += \
     platform/image-decoders/gif/GIFImageReader.h \
     platform/image-decoders/png/PNGImageDecoder.h \
     platform/KillRing.h \
-    platform/KURL.h \
+    platform/URL.h \
     platform/Length.h \
     platform/LengthBox.h \
     platform/leveldb/LevelDBComparator.h \
@@ -2343,7 +2341,6 @@ HEADERS += \
     platform/text/TextEncodingRegistry.h \
     platform/text/TextStream.h \
     platform/text/UnicodeRange.h \
-    platform/text/transcoder/FontTranscoder.h \
     platform/ThreadGlobalData.h \
     platform/ThreadTimers.h \
     platform/Timer.h \
@@ -2904,7 +2901,7 @@ SOURCES += \
     platform/graphics/qt/GlyphPageTreeNodeQt.cpp \
     platform/graphics/qt/SimpleFontDataQt.cpp \
     platform/graphics/qt/TileQt.cpp \
-    platform/qt/KURLQt.cpp \
+    platform/qt/URLQt.cpp \
     platform/qt/MIMETypeRegistryQt.cpp \
     platform/qt/PasteboardQt.cpp \
     platform/qt/PlatformKeyboardEventQt.cpp \

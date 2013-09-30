@@ -74,7 +74,6 @@ set(WebCore_INCLUDE_DIRECTORIES
     "${WEBCORE_DIR}/platform/network"
     "${WEBCORE_DIR}/platform/sql"
     "${WEBCORE_DIR}/platform/text"
-    "${WEBCORE_DIR}/platform/text/transcoder"
     "${WEBCORE_DIR}/plugins"
     "${WEBCORE_DIR}/rendering"
     "${WEBCORE_DIR}/rendering/mathml"
@@ -1002,8 +1001,6 @@ set(WebCore_SOURCES
     accessibility/AccessibilityTableHeaderContainer.cpp
     accessibility/AccessibilityTableRow.cpp
 
-    bindings/ScriptControllerBase.cpp
-
     bindings/generic/ActiveDOMCallback.cpp
     bindings/generic/BindingSecurity.cpp
     bindings/generic/RuntimeEnabledFeatures.cpp
@@ -1745,6 +1742,7 @@ set(WebCore_SOURCES
     page/GroupSettings.cpp
     page/History.cpp
     page/Location.cpp
+    page/MainFrame.cpp
     page/MouseEventWithHitTestResults.cpp
     page/Navigator.cpp
     page/NavigatorBase.cpp
@@ -1817,7 +1815,7 @@ set(WebCore_SOURCES
     platform/FileStream.cpp
     platform/FileSystem.cpp
     platform/HistogramSupport.cpp
-    platform/KURL.cpp
+    platform/URL.cpp
     platform/KillRingNone.cpp
     platform/Language.cpp
     platform/Length.cpp
@@ -2096,8 +2094,6 @@ set(WebCore_SOURCES
     platform/text/TextEncodingRegistry.cpp
     platform/text/TextStream.cpp
     platform/text/UnicodeRange.cpp
-
-    platform/text/transcoder/FontTranscoder.cpp
 
     plugins/DOMMimeType.cpp
     plugins/DOMMimeTypeArray.cpp
