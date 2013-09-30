@@ -23,57 +23,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef libwebrtc_h
-#define libwebrtc_h
+#include "config.h"
 
 #if ENABLE(MEDIA_STREAM) && USE(WEBRTCLIB)
 
-// webrtc librarty already define OVERRIDE and LOG.
-// Here we are temporarily disabling it when including webrtc's headers
-#undef OVERRIDE
-#undef LOG
+#include "CreateSessionDescriptionObserver.h"
 
-#ifndef _DEBUG
-#define _DEBUG 0
-#endif
+#include "RTCSessionDescriptionDescriptor.h"
+#include "RTCSessionDescriptionRequest.h"
 
-#ifndef POSIX
-#define POSIX 1
-#endif
+namespace WebCore {
 
-#ifndef LOGGING
-#define LOGGING 0
-#endif
+void CreateSessionDescriptionObserver::OnSuccess(webrtc::SessionDescriptionInterface* desc)
+{
+    std::string sdp;
+    desc->ToString(&sdp);
+    RefPtr<RTCSessionDescriptionDescriptor> sessionDescriptor;
+    sessionDescriptor = RTCSessionDescriptionDescriptor::create(WTF::String::fromUTF8(desc->type().c_str()), WTF::String(sdp.c_str()));
+    m_webKitRequest->requestSucceeded(sessionDescriptor);
+    m_webKitRequest.clear();
+}
 
-#include "talk/app/webrtc/jsep.h"
-#include "talk/app/webrtc/mediaconstraintsinterface.h"
-#include "talk/app/webrtc/peerconnectionfactory.h"
-#include "talk/app/webrtc/peerconnectioninterface.h"
-#include "talk/base/scoped_ref_ptr.h"
+void CreateSessionDescriptionObserver::OnFailure(const std::string& error)
+{
+    m_webKitRequest->requestFailed(WTF::String(error.c_str()));
+    m_webKitRequest.clear();
+}
 
-// Disabling webrtc's OVERRIDE and LOG macros
-#ifdef OVERRIDE
-#undef OVERRIDE
-#endif
+void CreateSessionDescriptionObserver::setWebKitRequest(PassRefPtr<RTCSessionDescriptionRequest> request)
+{
+    m_webKitRequest = request;
+}
 
-#ifdef LOG
-#undef LOG
-#endif
-
-// Enabling them again just as WTF defines it
-#if COMPILER_SUPPORTS(CXX_OVERRIDE_CONTROL)
-#define OVERRIDE override
-#else
-#define OVERRIDE
-#endif
-
-#if LOG_DISABLED
-#define LOG(channel, ...) ((void)0)
-#else
-#define LOG(channel, ...) WTFLog(&JOIN_LOG_CHANNEL_WITH_PREFIX(LOG_CHANNEL_PREFIX, channel), __VA_ARGS__)
-#define JOIN_LOG_CHANNEL_WITH_PREFIX(prefix, channel) JOIN_LOG_CHANNEL_WITH_PREFIX_LEVEL_2(prefix, channel)
-#define JOIN_LOG_CHANNEL_WITH_PREFIX_LEVEL_2(prefix, channel) prefix ## channel
-#endif
+} // namespace WebCore
 
 #endif // ENABLE(MEDIA_STREAM) && USE(WEBRTCLIB)
-#endif // libwebrtc_h

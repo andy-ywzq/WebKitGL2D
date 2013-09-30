@@ -31,6 +31,7 @@
 #include "RTCPeerConnectionHandler.h"
 #include "RTCSessionDescriptionDescriptor.h"
 #include "libwebrtc.h"
+#include "observers/CreateSessionDescriptionObserver.h"
 #include "observers/RTCPeerConnectionObserver.h"
 
 namespace WebCore {
@@ -62,6 +63,7 @@ private:
     RTCPeerConnectionObserver m_connectionObserver;
     talk_base::scoped_refptr<webrtc::PeerConnectionInterface> m_webRTCPeerConnection;
     talk_base::scoped_refptr<webrtc::PeerConnectionFactoryInterface> m_pcFactory;
+    talk_base::scoped_refptr<CreateSessionDescriptionObserver> m_createSessionObserver;
 };
 
 } // namespace WebCore
