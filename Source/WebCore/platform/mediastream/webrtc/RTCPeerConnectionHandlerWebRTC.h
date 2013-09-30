@@ -33,6 +33,8 @@
 #include "libwebrtc.h"
 #include "observers/CreateSessionDescriptionObserver.h"
 #include "observers/RTCPeerConnectionObserver.h"
+#include "observers/SetSessionDescriptionObserver.h"
+#include "talk/app/webrtc/peerconnectioninterface.h"
 
 namespace WebCore {
 
@@ -57,6 +59,7 @@ public:
     ~RTCPeerConnectionHandlerWebRTC() { }
 private:
     bool createPeerConnection(const webrtc::PeerConnectionInterface::IceServers&, const webrtc::MediaConstraintsInterface&);
+    webrtc::SessionDescriptionInterface* getWebRTCSessionDescription(PassRefPtr<RTCVoidRequest>, PassRefPtr<RTCSessionDescriptionDescriptor>);
     void addWebRTCStream(webrtc::MediaStreamInterface*, MediaStreamSource*);
     webrtc::MediaStreamInterface* getWebRTCMediaStream(const std::string&);
 
@@ -64,6 +67,10 @@ private:
     talk_base::scoped_refptr<webrtc::PeerConnectionInterface> m_webRTCPeerConnection;
     talk_base::scoped_refptr<webrtc::PeerConnectionFactoryInterface> m_pcFactory;
     talk_base::scoped_refptr<CreateSessionDescriptionObserver> m_createSessionObserver;
+    talk_base::scoped_refptr<SetSessionDescriptionObserver> m_setSessionObserver;
+
+    RefPtr<RTCSessionDescriptionDescriptor> m_localSessionDescription;
+    RefPtr<RTCSessionDescriptionDescriptor> m_remoteSessionDescription;
 };
 
 } // namespace WebCore
