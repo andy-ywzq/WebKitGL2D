@@ -125,6 +125,21 @@ RTCPeerConnectionHandlerClient::IceConnectionState toWebKitIceConnectionState(we
     }
 }
 
+webrtc::MediaStreamTrackInterface::TrackState toWebRTCTrackState(MediaStreamSource::ReadyState state)
+{
+    switch (state) {
+    case MediaStreamSource::New:
+        return webrtc::MediaStreamTrackInterface::kInitializing;
+    case MediaStreamSource::Live:
+        return webrtc::MediaStreamTrackInterface::kLive;
+    case MediaStreamSource::Ended:
+        return webrtc::MediaStreamTrackInterface::kEnded;
+    default:
+        ASSERT_NOT_REACHED();
+        return webrtc::MediaStreamTrackInterface::kEnded;
+    }
+}
+
 } // namespace WebRTCUtils
 
 } // namespace WebCore
