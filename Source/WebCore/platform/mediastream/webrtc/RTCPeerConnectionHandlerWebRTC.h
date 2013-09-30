@@ -30,6 +30,8 @@
 
 #include "RTCPeerConnectionHandler.h"
 #include "RTCSessionDescriptionDescriptor.h"
+#include "libwebrtc.h"
+#include "observers/RTCPeerConnectionObserver.h"
 
 namespace WebCore {
 
@@ -50,8 +52,14 @@ public:
     virtual PassOwnPtr<RTCDataChannelHandler> createDataChannel(const String&, const RTCDataChannelInit&) OVERRIDE;
     virtual PassOwnPtr<RTCDTMFSenderHandler> createDTMFSender(PassRefPtr<MediaStreamSource>) OVERRIDE;
     virtual void stop() OVERRIDE;
-    RTCPeerConnectionHandlerWebRTC();
+    RTCPeerConnectionHandlerWebRTC(RTCPeerConnectionHandlerClient*);
     ~RTCPeerConnectionHandlerWebRTC() { }
+private:
+    bool createPeerConnection(const webrtc::PeerConnectionInterface::IceServers&, const webrtc::MediaConstraintsInterface&);
+
+    talk_base::scoped_refptr<webrtc::PeerConnectionInterface> m_webRTCPeerConnection;
+    talk_base::scoped_refptr<webrtc::PeerConnectionFactoryInterface> m_pcFactory;
+    RTCPeerConnectionObserver m_connectionObserver;
 };
 
 } // namespace WebCore

@@ -29,14 +29,21 @@
 #if ENABLE(MEDIA_STREAM) && USE(WEBRTCLIB)
 
 #include "MediaConstraints.h"
+#include "RTCPeerConnectionHandlerClient.h"
 #include "libwebrtc.h"
 #include <wtf/Vector.h>
 
 namespace WebCore {
 
+class RTCConfiguration;
+
 namespace WebRTCUtils {
 
 void toMediaConstraintsWebRTC(const WTF::Vector<MediaConstraint>, webrtc::MediaConstraintsInterface::Constraints*);
+void toWebRTCIceServers(PassRefPtr<RTCConfiguration>, webrtc::PeerConnectionInterface::IceServers*);
+RTCPeerConnectionHandlerClient::SignalingState toWebKitSignalingState(webrtc::PeerConnectionInterface::SignalingState);
+RTCPeerConnectionHandlerClient::IceGatheringState toWebKitIceGatheringState(webrtc::PeerConnectionInterface::IceGatheringState);
+RTCPeerConnectionHandlerClient::IceConnectionState toWebKitIceConnectionState(webrtc::PeerConnectionInterface::IceConnectionState);
 
 } // namespace WebRTCUtils
 

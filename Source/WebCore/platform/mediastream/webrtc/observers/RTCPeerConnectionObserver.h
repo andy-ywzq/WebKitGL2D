@@ -23,56 +23,40 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef libwebrtc_h
-#define libwebrtc_h
+#ifndef RTCPeerConnectionObserver_h
+#define RTCPeerConnectionObserver_h
 
 #if ENABLE(MEDIA_STREAM) && USE(WEBRTCLIB)
 
-// webrtc librarty already define OVERRIDE and LOG.
-// Here we are temporarily disabling it when including webrtc's headers
-#undef OVERRIDE
-#undef LOG
+#include "libwebrtc.h"
+#include <wtf/PassRefPtr.h>
 
-#ifndef _DEBUG
-#define _DEBUG 0
-#endif
+namespace WebCore {
 
-#ifndef POSIX
-#define POSIX 1
-#endif
+class MediaStreamDescriptor;
+class RTCPeerConnectionHandlerClient;
 
-#ifndef LOGGING
-#define LOGGING 0
-#endif
+class RTCPeerConnectionObserver : public webrtc::PeerConnectionObserver {
+public:
+    RTCPeerConnectionObserver(RTCPeerConnectionHandlerClient*);
 
-#include "talk/app/webrtc/mediaconstraintsinterface.h"
-#include "talk/app/webrtc/peerconnectionfactory.h"
-#include "talk/app/webrtc/peerconnectioninterface.h"
-#include "talk/base/scoped_ref_ptr.h"
+    virtual void OnError() OVERRIDE;
+    virtual void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState) OVERRIDE;
+    virtual void OnStateChange(webrtc::PeerConnectionObserver::StateType) OVERRIDE;
+    virtual void OnAddStream(webrtc::MediaStreamInterface*) OVERRIDE;
+    virtual void OnRemoveStream(webrtc::MediaStreamInterface*) OVERRIDE;
+    virtual void OnRenegotiationNeeded() OVERRIDE;
+    virtual void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState) OVERRIDE;
+    virtual void OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState) OVERRIDE;
+    virtual void OnIceCandidate(const webrtc::IceCandidateInterface*) OVERRIDE;
 
-// Disabling webrtc's OVERRIDE and LOG macros
-#ifdef OVERRIDE
-#undef OVERRIDE
-#endif
+private:
+    PassRefPtr<MediaStreamDescriptor> mediaStreamDescriptorFromMediaStreamInterface(webrtc::MediaStreamInterface*);
+    RTCPeerConnectionHandlerClient* m_client;
+};
 
-#ifdef LOG
-#undef LOG
-#endif
-
-// Enabling them again just as WTF defines it
-#if COMPILER_SUPPORTS(CXX_OVERRIDE_CONTROL)
-#define OVERRIDE override
-#else
-#define OVERRIDE
-#endif
-
-#if LOG_DISABLED
-#define LOG(channel, ...) ((void)0)
-#else
-#define LOG(channel, ...) WTFLog(&JOIN_LOG_CHANNEL_WITH_PREFIX(LOG_CHANNEL_PREFIX, channel), __VA_ARGS__)
-#define JOIN_LOG_CHANNEL_WITH_PREFIX(prefix, channel) JOIN_LOG_CHANNEL_WITH_PREFIX_LEVEL_2(prefix, channel)
-#define JOIN_LOG_CHANNEL_WITH_PREFIX_LEVEL_2(prefix, channel) prefix ## channel
-#endif
+} // namespace WebCore
 
 #endif // ENABLE(MEDIA_STREAM) && USE(WEBRTCLIB)
-#endif // libwebrtc_h
+
+#endif // RTCPeerConnectionObserver_h
