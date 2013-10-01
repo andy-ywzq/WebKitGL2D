@@ -29,7 +29,7 @@
 #define CookieManager_h
 
 #include "Cookie.h"
-#include "KURL.h"
+#include "URL.h"
 #include "ParsedCookie.h"
 #include <wtf/HashSet.h>
 #include <wtf/OwnPtr.h>
@@ -66,20 +66,20 @@ class CookieManager {
 public:
     static CookieManager& getInstance();
 
-    String cookiesForSession(const KURL&, CookieFilter);
-    String cookiesForSessionWithPrivateModeCookies(const KURL&, CookieFilter);
+    String cookiesForSession(const URL&, CookieFilter);
+    String cookiesForSessionWithPrivateModeCookies(const URL&, CookieFilter);
 
-    void setCookie(const KURL&, const String&, CookieFilter, CookieStoragePolicy = InMemoryAndBackingStore);
-    void setCookieInPrivateMode(const KURL&, const String&, CookieFilter);
+    void setCookie(const URL&, const String&, CookieFilter, CookieStoragePolicy = InMemoryAndBackingStore);
+    void setCookieInPrivateMode(const URL&, const String&, CookieFilter);
 
-    void getRawCookies(const KURL&, Vector<RefPtr<ParsedCookie> >&, CookieFilter = WithHttpOnlyCookies, bool = false);
+    void getRawCookies(const URL&, Vector<RefPtr<ParsedCookie> >&, CookieFilter = WithHttpOnlyCookies, bool = false);
     void getHostnames(HashSet<String>&);
 
     void removeAllCookies(CookieStoragePolicy = InMemoryAndBackingStore);
-    void removeCookieWithName(const KURL&, const String&, CookieStoragePolicy = InMemoryAndBackingStore);
+    void removeCookieWithName(const URL&, const String&, CookieStoragePolicy = InMemoryAndBackingStore);
     void removeCookiesWithHostname(const String&, CookieStoragePolicy = InMemoryAndBackingStore);
 
-    PassRefPtr<ParsedCookie> parseOneCookie(const KURL&, const String&);
+    PassRefPtr<ParsedCookie> parseOneCookie(const URL&, const String&);
 
     void setCookieAcceptPolicy(CookieAcceptPolicy acceptPolicy) { m_acceptPolicy = acceptPolicy; }
     CookieAcceptPolicy cookieAcceptPolicy() { return m_acceptPolicy; }

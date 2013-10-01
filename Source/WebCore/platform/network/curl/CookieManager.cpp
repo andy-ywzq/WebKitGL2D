@@ -31,7 +31,7 @@
 #include "Cookie.h"
 #include "CookieDatabaseBackingStore.h"
 #include "CookieNode.h"
-#include "KURL.h"
+#include "URL.h"
 #include "Logging.h"
 #include "ParsedCookie.h"
 #include <arpa/inet.h>
@@ -114,7 +114,7 @@ CookieManager& CookieManager::getInstance()
     return cookieManager;
 }
 
-void CookieManager::setCookie(const KURL& url, const String& value, CookieFilter filter, CookieStoragePolicy policy)
+void CookieManager::setCookie(const URL& url, const String& value, CookieFilter filter, CookieStoragePolicy policy)
 {
     if (m_acceptPolicy == Never)
         return;
@@ -137,7 +137,7 @@ void CookieManager::setCookie(const KURL& url, const String& value, CookieFilter
         m_cookieChangeCallback();
 }
 
-void CookieManager::setCookieInPrivateMode(const KURL& url, const String& value, CookieFilter filter)
+void CookieManager::setCookieInPrivateMode(const URL& url, const String& value, CookieFilter filter)
 {
     if (m_acceptPolicy == Never)
         return;
@@ -159,7 +159,7 @@ void CookieManager::setCookieInPrivateMode(const KURL& url, const String& value,
         m_cookieChangeCallback();
 }
 
-void CookieManager::getRawCookies(const KURL& url, Vector<RefPtr<ParsedCookie> >& cookies, CookieFilter filter, bool privateMode)
+void CookieManager::getRawCookies(const URL& url, Vector<RefPtr<ParsedCookie> >& cookies, CookieFilter filter, bool privateMode)
 {
     Vector<String> domain;
     url.host().split(".", false, domain);
@@ -187,7 +187,7 @@ void CookieManager::getHostnames(HashSet<String>& hostnames)
     m_tree->getDomains("", hostnames);
 }
 
-String CookieManager::cookiesForSession(const KURL& url, CookieFilter filter)
+String CookieManager::cookiesForSession(const URL& url, CookieFilter filter)
 {
     Vector<RefPtr<ParsedCookie> > cookies;
     getRawCookies(url, cookies, filter);
@@ -195,7 +195,7 @@ String CookieManager::cookiesForSession(const KURL& url, CookieFilter filter)
     return getCookieString(cookies);
 }
 
-String CookieManager::cookiesForSessionWithPrivateModeCookies(const KURL& url, CookieFilter filter)
+String CookieManager::cookiesForSessionWithPrivateModeCookies(const URL& url, CookieFilter filter)
 {
     Vector<RefPtr<ParsedCookie> > cookies;
     getRawCookies(url, cookies, filter, false);
@@ -212,7 +212,7 @@ void CookieManager::removeAllCookies(CookieStoragePolicy policy)
         m_backingStore->removeAll();
 }
 
-void CookieManager::removeCookieWithName(const KURL& url, const String& name, CookieStoragePolicy policy)
+void CookieManager::removeCookieWithName(const URL& url, const String& name, CookieStoragePolicy policy)
 {
     Vector<String> domain;
     url.host().split(".", false, domain);
@@ -226,7 +226,7 @@ void CookieManager::removeCookiesWithHostname(const String& hostname, CookieStor
     m_tree->removeWithHostName(domain, m_backingStore.get(), policy);
 }
 
-PassRefPtr<ParsedCookie> CookieManager::parseOneCookie(const KURL& url, const String& cookie)
+PassRefPtr<ParsedCookie> CookieManager::parseOneCookie(const URL& url, const String& cookie)
 {
     unsigned start = 0;
     unsigned end = cookie.length();
@@ -354,7 +354,7 @@ PassRefPtr<ParsedCookie> CookieManager::parseOneCookie(const KURL& url, const St
         case 'P':
         case 'p' : {
             if (length >= 4 && ((cookie.find("ath", tokenStartSvg + 1, false) - tokenStartSvg) == 1)) {
-                // We need the path to be decoded to match those returned from KURL::path().
+                // We need the path to be decoded to match those returned from URL::path().
                 // The path attribute may or may not include percent-encoded characters. Fortunately
                 // if there are no percent-encoded characters, decoding the url is a no-op.
                 res->setPath(curl_unescape(parsedValue.utf8().data(), parsedValue.length()));

@@ -336,8 +336,8 @@ static void handleSetCookie(ResourceHandle* job, const String& value)
     if (error != CURLE_OK)
         return;
 
-    KURL url(ParsedURLString, hdr);
-    const KURL firstPartyUrl = job->firstRequest().firstPartyForCookies();
+    URL url(ParsedURLString, hdr);
+    const URL firstPartyUrl = job->firstRequest().firstPartyForCookies();
 
     if ((manager.cookieAcceptPolicy() == OnlyFromMainDocumentDomain)
         && (firstPartyUrl.host() != url.host()))
@@ -962,7 +962,7 @@ void ResourceHandleManager::initializeHandle(ResourceHandle* job)
         }
     }
 
-    String cookies = CookieManager::getInstance().cookiesForSession(KURL(ParsedURLString, d->m_url), WithHttpOnlyCookies);
+    String cookies = CookieManager::getInstance().cookiesForSession(URL(ParsedURLString, d->m_url), WithHttpOnlyCookies);
     if (!cookies.isEmpty()) {
         String header("Cookie: ");
         header.append(cookies);

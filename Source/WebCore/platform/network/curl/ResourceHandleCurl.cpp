@@ -133,7 +133,7 @@ void ResourceHandle::setHostAllowsAnyHTTPSCertificate(const String& host)
 #if PLATFORM(NIX)
 bool ResourceHandle::ignoreHTTPSCertificate()
 {
-    KURL url = firstRequest().url();
+    URL url = firstRequest().url();
     return allowsAnyHTTPSCertificateHosts().contains(url.host());
 }
 #endif
