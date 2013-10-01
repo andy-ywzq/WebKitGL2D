@@ -116,8 +116,8 @@ String WebContext::platformDefaultDiskCacheDirectory() const
 
 String WebContext::platformDefaultCookieStorageDirectory() const
 {
-    notImplemented();
-    return String();
+    GOwnPtr<gchar> cookieStorageDirectory(g_build_filename(g_get_user_data_dir(), "webkitnix", "cookies", NULL));
+    return WebCore::filenameToString(cookieStorageDirectory.get());
 }
 
 } // namespace WebKit

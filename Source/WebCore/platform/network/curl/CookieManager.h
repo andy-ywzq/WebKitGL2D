@@ -66,6 +66,9 @@ class CookieManager {
 public:
     static CookieManager& getInstance();
 
+    void setCookieJarPath(const String&);
+    String cookieJarFileName() { return m_cookieJarFileName; }
+
     String cookiesForSession(const URL&, CookieFilter);
     String cookiesForSessionWithPrivateModeCookies(const URL&, CookieFilter);
 
@@ -94,6 +97,8 @@ private:
     CookieManager(CookieManager const&);
     CookieManager& operator=(CookieManager const&);
     virtual ~CookieManager();
+
+    String m_cookieJarFileName;
 
     OwnPtr<CookieNode> m_tree;
     OwnPtr<CookieNode> m_privateCookiesTree;

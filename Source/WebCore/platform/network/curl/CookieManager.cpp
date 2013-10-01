@@ -31,6 +31,7 @@
 #include "Cookie.h"
 #include "CookieDatabaseBackingStore.h"
 #include "CookieNode.h"
+#include "FileSystem.h"
 #include "URL.h"
 #include "Logging.h"
 #include "ParsedCookie.h"
@@ -96,10 +97,8 @@ static String getCookieString(const Vector<RefPtr<ParsedCookie> >& cookies)
 CookieManager::CookieManager()
     : m_tree(WTF::adoptPtr(new CookieNode()))
     , m_privateCookiesTree(WTF::adoptPtr(new CookieNode()))
-    , m_backingStore(WTF::adoptPtr(new CookieDatabaseBackingStore()))
     , m_acceptPolicy(OnlyFromMainDocumentDomain)
 {
-    m_backingStore->init(m_tree.get());
 }
 
 CookieManager::~CookieManager()
@@ -112,6 +111,24 @@ CookieManager& CookieManager::getInstance()
 {
     static CookieManager cookieManager;
     return cookieManager;
+}
+
+void CookieManager::setCookieJarPath(const String& cookieDirectory)
+{
+    if (m_backingStore.get())
+        m_backingStore.clear();
+
+    StringBuilder fileName;
+    fileName.append(cookieDirectory);
+    if (!cookieDirectory.isEmpty() && !cookieDirectory.endsWith("/"))
+        fileName.append("/");
+
+    makeAllDirectories(fileName.toString());
+
+    fileName.append("cookies.db");
+    m_cookieJarFileName = fileName.toString();
+
+    m_backingStore = WTF::adoptPtr(new CookieDatabaseBackingStore(m_cookieJarFileName, m_tree.get()));
 }
 
 void CookieManager::setCookie(const URL& url, const String& value, CookieFilter filter, CookieStoragePolicy policy)

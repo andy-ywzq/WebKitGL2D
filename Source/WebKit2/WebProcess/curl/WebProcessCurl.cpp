@@ -27,6 +27,8 @@
 #include "config.h"
 #include "WebProcess.h"
 
+#include "WebProcessCreationParameters.h"
+#include <WebCore/CookieManager.h>
 #include <WebCore/Language.h>
 
 namespace WebKit {
@@ -41,10 +43,9 @@ void WebProcess::platformClearResourceCaches(ResourceCachesToClear cachesToClear
     // implement
 }
 
-
 void WebProcess::platformInitializeWebProcess(const WebProcessCreationParameters& parameters, CoreIPC::MessageDecoder&)
 {
-    // implement
+    WebCore::CookieManager::getInstance().setCookieJarPath(parameters.cookieStorageDirectory);
 }
 
 void WebProcess::platformTerminate()

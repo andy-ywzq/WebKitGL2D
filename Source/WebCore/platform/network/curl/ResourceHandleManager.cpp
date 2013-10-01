@@ -160,16 +160,6 @@ CURLSH* ResourceHandleManager::getCurlShareHandle() const
     return m_curlShareHandle;
 }
 
-void ResourceHandleManager::setCookieJarFileName(const char* cookieJarFileName)
-{
-    m_cookieJarFileName = fastStrDup(cookieJarFileName);
-}
-
-const char* ResourceHandleManager::getCookieJarFileName() const
-{
-    return m_cookieJarFileName;
-}
-
 ResourceHandleManager* ResourceHandleManager::sharedInstance()
 {
     static ResourceHandleManager* sharedInstance = 0;

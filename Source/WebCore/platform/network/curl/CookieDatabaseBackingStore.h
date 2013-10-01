@@ -43,7 +43,7 @@ class CookieNode;
 class CookieDatabaseBackingStore {
 public:
 
-    CookieDatabaseBackingStore();
+    CookieDatabaseBackingStore(const String&, CookieNode*);
     ~CookieDatabaseBackingStore();
     void init(CookieNode*);
 

@@ -82,7 +82,7 @@ void CookieNode::insert(PassRefPtr<ParsedCookie> cookie, Vector<String>& splitte
             if (cookie->name() == currentCookie->name() && cookie->path() == currentCookie->path()) {
                 if (!(currentCookie->isHttpOnly() && filter == NoHttpOnlyCookies)) {
                     m_cookies[i] = getPtr(cookie);
-                    if (policy == InMemoryAndBackingStore)
+                    if (backingStore && policy == InMemoryAndBackingStore)
                         backingStore->update(cookie);
                 }
                 return;
@@ -94,11 +94,11 @@ void CookieNode::insert(PassRefPtr<ParsedCookie> cookie, Vector<String>& splitte
 
         if (size == s_maxCookieCountPerHost) {
             m_cookies[oldestIndex] = getPtr(cookie);
-            if (policy == InMemoryAndBackingStore)
+            if (backingStore && policy == InMemoryAndBackingStore)
                 backingStore->update(cookie);
         } else {
             m_cookies.append(getPtr(cookie));
-            if (policy == InMemoryAndBackingStore)
+            if (backingStore && policy == InMemoryAndBackingStore)
                 backingStore->insert(cookie);
         }
     }
@@ -153,7 +153,7 @@ void CookieNode::removeWithName(Vector<String>& splittedHost, const String& name
         for (unsigned i = 0; i < size; ++i) {
             RefPtr<ParsedCookie> current = m_cookies.at(i);
             if (current->name() == name) {
-                if (policy == InMemoryAndBackingStore)
+                if (backingStore && policy == InMemoryAndBackingStore)
                     backingStore->remove(current);
                 m_cookies.remove(i);
                 return;
@@ -174,7 +174,7 @@ void CookieNode::removeWithHostName(Vector<String>& splittedHost, CookieDatabase
     } else {
         unsigned size = m_cookies.size();
         for (unsigned i = 0; i < size; ++i)
-            if (policy == InMemoryAndBackingStore)
+            if (backingStore && policy == InMemoryAndBackingStore)
                 backingStore->remove(m_cookies.at(i));
 
         m_cookies.clear();
