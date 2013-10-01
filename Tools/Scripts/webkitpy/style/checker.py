@@ -273,6 +273,10 @@ _PATH_RULES_SPECIFIER = [
     ([# On some systems the trailing CR is causing parser failure.
       "Source/JavaScriptCore/parser/Keywords.table"],
      ["+whitespace/carriage_return"]),
+    ([# The list used here if for static libraries, and the link order matter.
+      "Source/cmake/FindWebRTC.cmake"],
+     ["-list/order",
+      "-list/emptyline"]),
 ]
 
 

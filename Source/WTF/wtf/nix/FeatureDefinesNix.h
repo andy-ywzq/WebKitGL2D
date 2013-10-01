@@ -158,6 +158,10 @@
 #define ENABLE_INSPECTOR_SERVER 1
 #endif
 
+#if !defined(ENABLE_INPUT_SPEECH)
+#define ENABLE_INPUT_SPEECH 1
+#endif
+
 #if !defined(ENABLE_JAVASCRIPT_DEBUGGER)
 #define ENABLE_JAVASCRIPT_DEBUGGER 1
 #endif
@@ -180,6 +184,10 @@
 
 #if !defined(ENABLE_MATHML)
 #define ENABLE_MATHML 1
+#endif
+
+#if !defined(ENABLE_MEDIA_STREAM)
+#define ENABLE_MEDIA_STREAM 1
 #endif
 
 #if !defined(ENABLE_METER_ELEMENT)

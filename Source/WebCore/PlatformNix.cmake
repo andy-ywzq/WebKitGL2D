@@ -128,6 +128,14 @@ list(APPEND WebCore_SOURCES
     rendering/style/StyleCustomFilterProgramCache.cpp
 )
 
+if (ENABLE_MEDIA_STREAM)
+    list(APPEND WebCore_LIBRARIES ${WEBRTCLIB_LIBRARIES})
+    list(APPEND WebCore_INCLUDE_DIRECTORIES
+        "${WEBCORE_DIR}/platform/mediastream/webrtc"
+        ${WEBRTCLIB_INCLUDE_DIRS}
+    )
+endif ()
+
 if (WTF_USE_OPENGL_ES_2)
     list(APPEND WebCore_SOURCES
         platform/graphics/opengl/Extensions3DOpenGLES.cpp
