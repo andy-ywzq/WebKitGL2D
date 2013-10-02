@@ -23,58 +23,47 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef libwebrtc_h
-#define libwebrtc_h
+#include "config.h"
 
 #if ENABLE(MEDIA_STREAM) && USE(WEBRTCLIB)
 
-// webrtc librarty already define OVERRIDE and LOG.
-// Here we are temporarily disabling it when including webrtc's headers
-#undef OVERRIDE
-#undef LOG
+#include "RTCDataChannelObserver.h"
 
-#ifndef _DEBUG
-#define _DEBUG 0
-#endif
+#include "WebRTCUtils.h"
+#include <wtf/Functional.h>
+#include <wtf/MainThread.h>
+#include <wtf/text/CString.h>
 
-#ifndef POSIX
-#define POSIX 1
-#endif
+namespace WebCore {
 
-#ifndef LOGGING
-#define LOGGING 0
-#endif
+RTCDataChannelObserver::RTCDataChannelObserver(webrtc::DataChannelInterface* channel)
+    : m_client(0)
+    , m_channel(channel)
+{
+}
 
-#include "talk/app/webrtc/datachannelinterface.h"
-#include "talk/app/webrtc/jsep.h"
-#include "talk/app/webrtc/mediaconstraintsinterface.h"
-#include "talk/app/webrtc/peerconnectionfactory.h"
-#include "talk/app/webrtc/peerconnectioninterface.h"
-#include "talk/base/scoped_ref_ptr.h"
+void RTCDataChannelObserver::setClient(RTCDataChannelHandlerClient* client)
+{
+    m_client = client;
+}
 
-// Disabling webrtc's OVERRIDE and LOG macros
-#ifdef OVERRIDE
-#undef OVERRIDE
-#endif
+void RTCDataChannelObserver::OnStateChange()
+{
+    RTCDataChannelHandlerClient::ReadyState webKitState = WebRTCUtils::toWebKitDataChannelReadyState(m_channel->state());
+    callOnMainThread(bind(&RTCDataChannelHandlerClient::didChangeReadyState, m_client, webKitState));
+}
 
-#ifdef LOG
-#undef LOG
-#endif
+void RTCDataChannelObserver::OnMessage(const webrtc::DataBuffer& dataBuffer)
+{
+    if (dataBuffer.binary)
+        callOnMainThread(bind(&RTCDataChannelHandlerClient::didReceiveRawData, m_client, dataBuffer.data.data(), dataBuffer.data.length()));
+    else {
+        std::string str(dataBuffer.data.data());
+        String wtfString = WTF::String::fromUTF8(str.c_str());
+        callOnMainThread(bind(&RTCDataChannelHandlerClient::didReceiveStringData, m_client, wtfString));
+    }
+}
 
-// Enabling them again just as WTF defines it
-#if COMPILER_SUPPORTS(CXX_OVERRIDE_CONTROL)
-#define OVERRIDE override
-#else
-#define OVERRIDE
-#endif
-
-#if LOG_DISABLED
-#define LOG(channel, ...) ((void)0)
-#else
-#define LOG(channel, ...) WTFLog(&JOIN_LOG_CHANNEL_WITH_PREFIX(LOG_CHANNEL_PREFIX, channel), __VA_ARGS__)
-#define JOIN_LOG_CHANNEL_WITH_PREFIX(prefix, channel) JOIN_LOG_CHANNEL_WITH_PREFIX_LEVEL_2(prefix, channel)
-#define JOIN_LOG_CHANNEL_WITH_PREFIX_LEVEL_2(prefix, channel) prefix ## channel
-#endif
+} // namespace WebCore
 
 #endif // ENABLE(MEDIA_STREAM) && USE(WEBRTCLIB)
-#endif // libwebrtc_h

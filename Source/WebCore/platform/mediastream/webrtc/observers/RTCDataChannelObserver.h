@@ -23,58 +23,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef libwebrtc_h
-#define libwebrtc_h
+#ifndef RTCDataChannelObserver_h
+#define RTCDataChannelObserver_h
 
 #if ENABLE(MEDIA_STREAM) && USE(WEBRTCLIB)
 
-// webrtc librarty already define OVERRIDE and LOG.
-// Here we are temporarily disabling it when including webrtc's headers
-#undef OVERRIDE
-#undef LOG
+#include "libwebrtc.h"
 
-#ifndef _DEBUG
-#define _DEBUG 0
-#endif
+namespace WebCore {
 
-#ifndef POSIX
-#define POSIX 1
-#endif
+class RTCDataChannelHandlerClient;
 
-#ifndef LOGGING
-#define LOGGING 0
-#endif
+class RTCDataChannelObserver : public webrtc::DataChannelObserver {
+public:
+    RTCDataChannelObserver(webrtc::DataChannelInterface*);
 
-#include "talk/app/webrtc/datachannelinterface.h"
-#include "talk/app/webrtc/jsep.h"
-#include "talk/app/webrtc/mediaconstraintsinterface.h"
-#include "talk/app/webrtc/peerconnectionfactory.h"
-#include "talk/app/webrtc/peerconnectioninterface.h"
-#include "talk/base/scoped_ref_ptr.h"
+    void setClient(RTCDataChannelHandlerClient*);
+    virtual void OnStateChange() OVERRIDE;
+    virtual void OnMessage(const webrtc::DataBuffer&) OVERRIDE;
 
-// Disabling webrtc's OVERRIDE and LOG macros
-#ifdef OVERRIDE
-#undef OVERRIDE
-#endif
+private:
+    RTCDataChannelHandlerClient* m_client;
+    talk_base::scoped_refptr<webrtc::DataChannelInterface> m_channel;
+};
 
-#ifdef LOG
-#undef LOG
-#endif
-
-// Enabling them again just as WTF defines it
-#if COMPILER_SUPPORTS(CXX_OVERRIDE_CONTROL)
-#define OVERRIDE override
-#else
-#define OVERRIDE
-#endif
-
-#if LOG_DISABLED
-#define LOG(channel, ...) ((void)0)
-#else
-#define LOG(channel, ...) WTFLog(&JOIN_LOG_CHANNEL_WITH_PREFIX(LOG_CHANNEL_PREFIX, channel), __VA_ARGS__)
-#define JOIN_LOG_CHANNEL_WITH_PREFIX(prefix, channel) JOIN_LOG_CHANNEL_WITH_PREFIX_LEVEL_2(prefix, channel)
-#define JOIN_LOG_CHANNEL_WITH_PREFIX_LEVEL_2(prefix, channel) prefix ## channel
-#endif
+} // namespace WebCore
 
 #endif // ENABLE(MEDIA_STREAM) && USE(WEBRTCLIB)
-#endif // libwebrtc_h
+
+#endif // RTCDataChannelObserver_h

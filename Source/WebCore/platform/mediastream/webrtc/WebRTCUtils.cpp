@@ -140,6 +140,23 @@ webrtc::MediaStreamTrackInterface::TrackState toWebRTCTrackState(MediaStreamSour
     }
 }
 
+RTCDataChannelHandlerClient::ReadyState toWebKitDataChannelReadyState(webrtc::DataChannelInterface::DataState state)
+{
+    switch (state) {
+    case webrtc::DataChannelInterface::kConnecting:
+        return RTCDataChannelHandlerClient::ReadyStateConnecting;
+    case webrtc::DataChannelInterface::kOpen:
+        return RTCDataChannelHandlerClient::ReadyStateOpen;
+    case webrtc::DataChannelInterface::kClosing:
+        return RTCDataChannelHandlerClient::ReadyStateClosing;
+    case webrtc::DataChannelInterface::kClosed:
+        return RTCDataChannelHandlerClient::ReadyStateClosed;
+    default:
+        ASSERT_NOT_REACHED();
+        return RTCDataChannelHandlerClient::ReadyStateClosed;
+    }
+}
+
 } // namespace WebRTCUtils
 
 } // namespace WebCore

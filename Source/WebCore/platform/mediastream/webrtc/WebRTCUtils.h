@@ -30,6 +30,7 @@
 
 #include "MediaConstraints.h"
 #include "MediaStreamSource.h"
+#include "RTCDataChannelHandlerClient.h"
 #include "RTCPeerConnectionHandlerClient.h"
 #include "libwebrtc.h"
 #include <wtf/Vector.h>
@@ -38,11 +39,11 @@ namespace WebCore {
 
 class RTCConfiguration;
 
-<<<<<<< HEAD
 namespace WebRTCUtils {
 
 void toMediaConstraintsWebRTC(const WTF::Vector<MediaConstraint>, webrtc::MediaConstraintsInterface::Constraints*);
 void toWebRTCIceServers(PassRefPtr<RTCConfiguration>, webrtc::PeerConnectionInterface::IceServers*);
+RTCDataChannelHandlerClient::ReadyState toWebKitDataChannelReadyState(webrtc::DataChannelInterface::DataState);
 RTCPeerConnectionHandlerClient::SignalingState toWebKitSignalingState(webrtc::PeerConnectionInterface::SignalingState);
 RTCPeerConnectionHandlerClient::IceGatheringState toWebKitIceGatheringState(webrtc::PeerConnectionInterface::IceGatheringState);
 RTCPeerConnectionHandlerClient::IceConnectionState toWebKitIceConnectionState(webrtc::PeerConnectionInterface::IceConnectionState);
