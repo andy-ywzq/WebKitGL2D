@@ -50,4 +50,4 @@ system("$depotToolsDir/gclient sync --revision ${\WEBRTC_VERSION} --force") == 0
 chdir "trunk" or dir $!;
 system("python build/gyp_chromium --depth=. -Dextra_gyp_flag=0 -Dinclude_tests=0 -Denable_google_now=0 -Dlogging=0 all.gyp") == 0 or die $!;
 system("patch -f -p0 -i ../../../../../Tools/nix/patches/fix_jnipeerconnection.patch");
-system("$depotToolsDir/ninja -C out/Release") == 0 or dir $!;
+system("$depotToolsDir/ninja -C out/Release") == 0 or die $!;
