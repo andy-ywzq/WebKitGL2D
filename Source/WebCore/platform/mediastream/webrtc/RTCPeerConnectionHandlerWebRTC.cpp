@@ -35,6 +35,7 @@
 #include "RTCConfiguration.h"
 #include "RTCDTMFSenderHandler.h"
 #include "RTCDataChannelHandler.h"
+#include "RTCDataChannelHandlerWebRTC.h"
 #include "RTCIceCandidateDescriptor.h"
 #include "RTCSessionDescriptionRequest.h"
 #include "RTCStatsRequest.h"
@@ -247,10 +248,22 @@ void RTCPeerConnectionHandlerWebRTC::getStats(PassRefPtr<RTCStatsRequest> reques
     }
 }
 
-PassOwnPtr<RTCDataChannelHandler> RTCPeerConnectionHandlerWebRTC::createDataChannel(const String&, const RTCDataChannelInit&)
+PassOwnPtr<RTCDataChannelHandler> RTCPeerConnectionHandlerWebRTC::createDataChannel(const String& label, const RTCDataChannelInit& init)
 {
-    notImplemented();
-    return 0;
+    webrtc::DataChannelInit config;
+    config.ordered = init.ordered;
+    config.maxRetransmitTime = init.maxRetransmitTime;
+    config.maxRetransmits = init.maxRetransmits;
+    config.protocol = init.protocol.utf8().data();
+    config.negotiated = init.negotiated;
+    config.id = init.id;
+
+    std::string channelLabel = label.utf8().data();
+    talk_base::scoped_refptr<webrtc::DataChannelInterface> channel(m_webRTCPeerConnection->CreateDataChannel(channelLabel, &config));
+    if (!channel)
+        return 0;
+
+    return adoptPtr(new RTCDataChannelHandlerWebRTC(channel));
 }
 
 PassOwnPtr<RTCDTMFSenderHandler> RTCPeerConnectionHandlerWebRTC::createDTMFSender(PassRefPtr<MediaStreamSource>)

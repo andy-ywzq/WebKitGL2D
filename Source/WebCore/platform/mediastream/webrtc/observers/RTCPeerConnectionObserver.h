@@ -49,6 +49,7 @@ public:
     virtual void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState) OVERRIDE;
     virtual void OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState) OVERRIDE;
     virtual void OnIceCandidate(const webrtc::IceCandidateInterface*) OVERRIDE;
+    virtual void OnDataChannel(webrtc::DataChannelInterface*) OVERRIDE;
 
 private:
     PassRefPtr<MediaStreamDescriptor> mediaStreamDescriptorFromMediaStreamInterface(webrtc::MediaStreamInterface*);
