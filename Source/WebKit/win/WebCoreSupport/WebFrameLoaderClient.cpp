@@ -529,7 +529,7 @@ void WebFrameLoaderClient::dispatchDidLayout(LayoutMilestones milestones)
     }
 }
 
-Frame* WebFrameLoaderClient::dispatchCreatePage(const NavigationAction&)
+Frame* WebFrameLoaderClient::dispatchCreatePage(const NavigationAction& navigationAction)
 {
     WebView* webView = m_webFrame->webView();
 
@@ -538,7 +538,8 @@ Frame* WebFrameLoaderClient::dispatchCreatePage(const NavigationAction&)
         return 0;
 
     COMPtr<IWebView> newWebView;
-    if (FAILED(ui->createWebViewWithRequest(webView, 0, &newWebView)))
+    COMPtr<WebMutableURLRequest> request = adoptCOM(WebMutableURLRequest::createInstance(ResourceRequest(navigationAction.url())));
+    if (FAILED(ui->createWebViewWithRequest(webView, request.get(), &newWebView)) || !newWebView)
         return 0;
 
     COMPtr<IWebFrame> mainFrame;
@@ -1261,7 +1262,7 @@ void WebFrameLoaderClient::documentElementAvailable()
 {
 }
 
-void WebFrameLoaderClient::dispatchDidClearWindowObjectInWorld(DOMWrapperWorld* world)
+void WebFrameLoaderClient::dispatchDidClearWindowObjectInWorld(DOMWrapperWorld& world)
 {
     Frame* coreFrame = core(m_webFrame);
     ASSERT(coreFrame);
@@ -1278,7 +1279,7 @@ void WebFrameLoaderClient::dispatchDidClearWindowObjectInWorld(DOMWrapperWorld* 
     if (delegatePrivate && delegatePrivate->didClearWindowObjectForFrameInScriptWorld(webView, m_webFrame, WebScriptWorld::findOrCreateWorld(world).get()) != E_NOTIMPL)
         return;
 
-    if (world != mainThreadNormalWorld())
+    if (&world != &mainThreadNormalWorld())
         return;
 
     JSContextRef context = toRef(coreFrame->script().globalObject(world)->globalExec());

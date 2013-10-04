@@ -303,7 +303,13 @@ public:
     bool isPseudoElement() const { return node() && node()->isPseudoElement(); }
 
     bool isRenderElement() const { return !isText(); }
-    virtual bool isBoxModelObject() const { return false; }
+    bool isRenderReplaced() const;
+    bool isBoxModelObject() const;
+    bool isRenderBlock() const;
+    bool isRenderBlockFlow() const;
+    bool isRenderInline() const;
+    bool isRenderLayerModelObject() const;
+
     virtual bool isCounter() const { return false; }
     virtual bool isQuote() const { return false; }
 
@@ -317,7 +323,6 @@ public:
     virtual bool isFrameSet() const { return false; }
     virtual bool isImage() const { return false; }
     virtual bool isInlineBlockOrInlineTable() const { return false; }
-    virtual bool isLayerModelObject() const { return false; }
     virtual bool isListBox() const { return false; }
     virtual bool isListItem() const { return false; }
     virtual bool isListMarker() const { return false; }
@@ -330,15 +335,11 @@ public:
 #if ENABLE(PROGRESS_ELEMENT)
     virtual bool isProgress() const { return false; }
 #endif
-    virtual bool isRenderBlock() const { return false; }
-    virtual bool isRenderBlockFlow() const { return false; }
     virtual bool isRenderSVGBlock() const { return false; };
     virtual bool isRenderButton() const { return false; }
     virtual bool isRenderIFrame() const { return false; }
     virtual bool isRenderImage() const { return false; }
-    virtual bool isRenderInline() const { return false; }
     virtual bool isRenderRegion() const { return false; }
-    virtual bool isRenderReplaced() const { return false; }
     virtual bool isReplica() const { return false; }
 
     virtual bool isRuby() const { return false; }
@@ -616,16 +617,14 @@ public:
     RenderBoxModelObject* offsetParent() const;
 
     void markContainingBlocksForLayout(bool scheduleRelayout = true, RenderObject* newRoot = 0);
-    void setNeedsLayout(bool needsLayout, MarkingBehavior = MarkContainingBlockChain);
-    void setChildNeedsLayout(bool childNeedsLayout, MarkingBehavior = MarkContainingBlockChain);
-    void setNeedsPositionedMovementLayout(const RenderStyle* oldStyle);
-    void setNeedsSimplifiedNormalFlowLayout();
+    void setNeedsLayout(MarkingBehavior = MarkContainingBlockChain);
+    void clearNeedsLayout();
     void setPreferredLogicalWidthsDirty(bool, MarkingBehavior = MarkContainingBlockChain);
     void invalidateContainerPreferredLogicalWidths();
     
     void setNeedsLayoutAndPrefWidthsRecalc()
     {
-        setNeedsLayout(true);
+        setNeedsLayout();
         setPreferredLogicalWidthsDirty(true);
     }
 
@@ -940,6 +939,11 @@ protected:
 
     void setDocumentForAnonymous(Document& document) { ASSERT(isAnonymous()); m_node = &document; }
 
+    void setNeedsPositionedMovementLayoutBit(bool b) { m_bitfields.setNeedsPositionedMovementLayout(b); }
+    void setNormalChildNeedsLayoutBit(bool b) { m_bitfields.setNormalChildNeedsLayout(b); }
+    void setPosChildNeedsLayoutBit(bool b) { m_bitfields.setPosChildNeedsLayout(b); }
+    void setNeedsSimplifiedNormalFlowLayoutBit(bool b) { m_bitfields.setNeedsSimplifiedNormalFlowLayout(b); }
+
 private:
     RenderFlowThread* locateFlowThreadContainingBlock() const;
     void removeFromRenderFlowThread();
@@ -1076,10 +1080,6 @@ private:
 
     RenderObjectBitfields m_bitfields;
 
-    void setNeedsPositionedMovementLayout(bool b) { m_bitfields.setNeedsPositionedMovementLayout(b); }
-    void setNormalChildNeedsLayout(bool b) { m_bitfields.setNormalChildNeedsLayout(b); }
-    void setPosChildNeedsLayout(bool b) { m_bitfields.setPosChildNeedsLayout(b); }
-    void setNeedsSimplifiedNormalFlowLayout(bool b) { m_bitfields.setNeedsSimplifiedNormalFlowLayout(b); }
     void setIsDragging(bool b) { m_bitfields.setIsDragging(b); }
     void setEverHadLayout(bool b) { m_bitfields.setEverHadLayout(b); }
 };
@@ -1114,48 +1114,16 @@ inline bool RenderObject::isBeforeOrAfterContent() const
     return isBeforeContent() || isAfterContent();
 }
 
-inline void RenderObject::setChildNeedsLayout(bool childNeedsLayout, MarkingBehavior markParents)
+inline void RenderObject::setNeedsLayout(MarkingBehavior markParents)
 {
-    bool alreadyNeededLayout = normalChildNeedsLayout();
-    setNormalChildNeedsLayout(childNeedsLayout);
-    if (childNeedsLayout) {
-        ASSERT(!isSetNeedsLayoutForbidden());
-        if (!alreadyNeededLayout && markParents == MarkContainingBlockChain)
-            markContainingBlocksForLayout();
-    } else {
-        setPosChildNeedsLayout(false);
-        setNeedsSimplifiedNormalFlowLayout(false);
-        setNormalChildNeedsLayout(false);
-        setNeedsPositionedMovementLayout(false);
-    }
-}
-
-inline void RenderObject::setNeedsPositionedMovementLayout(const RenderStyle* oldStyle)
-{
-    bool alreadyNeededLayout = needsPositionedMovementLayout();
-    setNeedsPositionedMovementLayout(true);
     ASSERT(!isSetNeedsLayoutForbidden());
-    if (!alreadyNeededLayout) {
+    if (m_bitfields.needsLayout())
+        return;
+    m_bitfields.setNeedsLayout(true);
+    if (markParents == MarkContainingBlockChain)
         markContainingBlocksForLayout();
-        if (hasLayer()) {
-            if (oldStyle && style()->diffRequiresRepaint(oldStyle))
-                setLayerNeedsFullRepaint();
-            else
-                setLayerNeedsFullRepaintForPositionedMovementLayout();
-        }
-    }
-}
-
-inline void RenderObject::setNeedsSimplifiedNormalFlowLayout()
-{
-    bool alreadyNeededLayout = needsSimplifiedNormalFlowLayout();
-    setNeedsSimplifiedNormalFlowLayout(true);
-    ASSERT(!isSetNeedsLayoutForbidden());
-    if (!alreadyNeededLayout) {
-        markContainingBlocksForLayout();
-        if (hasLayer())
-            setLayerNeedsFullRepaint();
-    }
+    if (hasLayer())
+        setLayerNeedsFullRepaint();
 }
 
 inline bool RenderObject::preservesNewline() const

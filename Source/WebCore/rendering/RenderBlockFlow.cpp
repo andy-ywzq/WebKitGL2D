@@ -76,7 +76,7 @@ RenderBlockFlow::MarginInfo::MarginInfo(RenderBlockFlow* block, LayoutUnit befor
 }
 
 RenderBlockFlow::RenderBlockFlow(Element* element)
-    : RenderBlock(element)
+    : RenderBlock(element, RenderBlockFlowFlag)
 {
     COMPILE_ASSERT(sizeof(RenderBlockFlow::MarginInfo) == sizeof(SameSizeAsMarginInfo), MarginInfo_should_stay_small);
 }
@@ -392,7 +392,7 @@ void RenderBlockFlow::layoutBlock(bool relayoutChildren, LayoutUnit pageLogicalH
         }
     }
 
-    setNeedsLayout(false);
+    clearNeedsLayout();
 }
 
 void RenderBlockFlow::layoutBlockChildren(bool relayoutChildren, LayoutUnit& maxFloatLogicalBottom)
@@ -536,7 +536,7 @@ void RenderBlockFlow::layoutBlockChild(RenderBox* child, MarginInfo& marginInfo,
             // When the child shifts to clear an item, its width can
             // change (because it has more available line width).
             // So go ahead and mark the item as dirty.
-            child->setChildNeedsLayout(true, MarkOnlyThis);
+            child->setChildNeedsLayout(MarkOnlyThis);
         }
         
         if (childBlockFlow) {
@@ -551,7 +551,7 @@ void RenderBlockFlow::layoutBlockChild(RenderBox* child, MarginInfo& marginInfo,
     }
 
     if (updateRegionRangeForBoxChild(child)) {
-        child->setNeedsLayout(true, MarkOnlyThis);
+        child->setNeedsLayout(MarkOnlyThis);
         child->layoutIfNeeded();
     }
 
@@ -624,7 +624,7 @@ void RenderBlockFlow::adjustPositionedBlock(RenderBox* child, const MarginInfo& 
     if (childLayer->staticBlockPosition() != logicalTop) {
         childLayer->setStaticBlockPosition(logicalTop);
         if (hasStaticBlockPosition)
-            child->setChildNeedsLayout(true, MarkOnlyThis);
+            child->setChildNeedsLayout(MarkOnlyThis);
     }
 }
 
@@ -1265,7 +1265,7 @@ LayoutUnit RenderBlockFlow::adjustBlockChildForPagination(LayoutUnit logicalTopA
             // When the child shifts to clear an item, its width can
             // change (because it has more available line width).
             // So go ahead and mark the item as dirty.
-            child->setChildNeedsLayout(true, MarkOnlyThis);
+            child->setChildNeedsLayout(MarkOnlyThis);
         }
         
         if (childRenderBlock) {
@@ -1389,8 +1389,10 @@ void RenderBlockFlow::adjustLinePositionForPagination(RootInlineBox* lineBox, La
 
     int lineIndex = lineCount(lineBox);
     if (remainingLogicalHeight < lineHeight || (shouldBreakAtLineToAvoidWidow() && lineBreakToAvoidWidow() == lineIndex)) {
-        if (shouldBreakAtLineToAvoidWidow() && lineBreakToAvoidWidow() == lineIndex)
+        if (shouldBreakAtLineToAvoidWidow() && lineBreakToAvoidWidow() == lineIndex) {
             clearShouldBreakAtLineToAvoidWidow();
+            setDidBreakAtLineToAvoidWidow();
+        }
         // If we have a non-uniform page height, then we have to shift further possibly.
         if (!hasUniformPageLogicalHeight && !pushToNextPageWithMinimumLogicalHeight(remainingLogicalHeight, logicalOffset, lineHeight))
             return;
@@ -1415,18 +1417,37 @@ void RenderBlockFlow::adjustLinePositionForPagination(RootInlineBox* lineBox, La
 
 void RenderBlockFlow::setBreakAtLineToAvoidWidow(int lineToBreak)
 {
-    ASSERT(lineToBreak);
+    ASSERT(lineToBreak >= 0);
     if (!m_rareData)
         m_rareData = adoptPtr(new RenderBlockFlowRareData(this));
-    m_rareData->m_shouldBreakAtLineToAvoidWidow = true;
+
+    ASSERT(!m_rareData->m_didBreakAtLineToAvoidWidow);
     m_rareData->m_lineBreakToAvoidWidow = lineToBreak;
+}
+
+void RenderBlockFlow::setDidBreakAtLineToAvoidWidow()
+{
+    ASSERT(!shouldBreakAtLineToAvoidWidow());
+    if (!m_rareData)
+        return;
+
+    m_rareData->m_didBreakAtLineToAvoidWidow = true;
+}
+
+void RenderBlockFlow::clearDidBreakAtLineToAvoidWidow()
+{
+    if (!m_rareData)
+        return;
+
+    m_rareData->m_didBreakAtLineToAvoidWidow = false;
 }
 
 void RenderBlockFlow::clearShouldBreakAtLineToAvoidWidow() const
 {
+    ASSERT(shouldBreakAtLineToAvoidWidow());
     if (!m_rareData)
         return;
-    m_rareData->m_shouldBreakAtLineToAvoidWidow = false;
+
     m_rareData->m_lineBreakToAvoidWidow = -1;
 }
 

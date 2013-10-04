@@ -1,3 +1,734 @@
+2013-10-03  Mark Rowe  <mrowe@apple.com>
+
+        REGRESSION (r156811): WebCore rebuilds from scratch when doing an incremental build
+
+        The change in r156811 resulted in several public headers in the JavaScriptCore framework having their modification
+        date touched on every build, even if their contents had not changed. This resulted in a large portion of WebCore
+        needing to rebuilt after an incremental build of JavaScriptCore.
+
+        Reviewed by Dan Bernstein.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj: Have unifdef generate its output to a temporary file. If its exit status
+        indicates that the content did not change, remove the temporary file. If the content changed, moved the temporary file
+        over the destination.
+
+2013-10-03  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed gardening.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters: Clean up the
+        paths for various files added outside of Visual Studio. They are all
+        displayed in the root of the project, rather than the proper sub-folder.
+
+2013-10-03  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Update solutions and projects to support 64-bit builds.
+        https://bugs.webkit.org/show_bug.cgi?id=122225
+
+        Reviewed by Anders Carlsson.
+
+        Revise ordering of CPU(X86) and CPU(X86_64) tests, because MSVC always defines
+        both when targeting a 64-bit build.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.submit.sln: Add an x64 target
+        for 64-bit builds.
+
+2013-10-03  Michael Saboff  <msaboff@apple.com>
+
+        Eliminate unused JITStub function declarations
+        https://bugs.webkit.org/show_bug.cgi?id=122288
+
+        Reviewed by Geoffrey Garen.
+
+        Removed unused JITStub declarations.
+
+        * jit/JITStubs.h:
+
+2013-10-03  Sergio Correia  <sergio.correia@openbossa.org>
+
+        [EFL] [DEBUG] JavaScriptCore fails to build
+        https://bugs.webkit.org/show_bug.cgi?id=122267
+
+        Reviewed by Michael Saboff.
+
+        Build fails due to an expression containing comparison between signed
+        and unsigned integer.
+
+        * llint/LLIntData.cpp:
+        (JSC::LLInt::Data::performAssertions): Add cast to avoid signed vs.
+        unsigned comparison warning.
+
+2013-10-03  Nadav Rotem  <nrotem@apple.com>
+
+        DFG: ConstProp the pattern ValueToInt32(Bool(x)) -> Int32(x)
+        https://bugs.webkit.org/show_bug.cgi?id=122263
+
+        Reviewed by Geoffrey Garen.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::::executeEffects):
+
+2013-10-02  Dan Bernstein  <mitz@apple.com>
+
+        REGRESSION (r156811): Objective-C JavaScriptCore API test failing on Mountain Lion bots
+        https://bugs.webkit.org/show_bug.cgi?id=122260
+
+        Reviewed by Mark Rowe.
+
+        For the API to work, the tests need to be compiled with a newer version of the LLVM
+        compiler. Until the bots are updated to that version, disable the tests on 10.8.
+
+        * API/tests/testapi.mm:
+
+2013-10-02  Mark Lam  <mark.lam@apple.com>
+
+        Make LLINT exception stack unwinding consistent with the JIT.
+        https://bugs.webkit.org/show_bug.cgi?id=122255.
+
+        Reviewed by Filip Pizlo.
+
+        Previously, the CommonSlowPaths code is expected to behave in an
+        inconsistent way in terms of whether to unwind the stack when handling
+        exceptions or not. For the LLINT, the slow path should unwind the stack
+        before returning. For the JIT, the slow path should not unwind the stack.
+        This can result in the stack being unwound twice when the exception
+        being handled is a TerminationException.
+
+        This patch fixes the LLINT's expectation so that it expects the same
+        slow path behavior as the JIT does.
+
+        * llint/LLIntExceptions.cpp:
+        (JSC::LLInt::returnToThrow):
+        (JSC::LLInt::callToThrow):
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        * llint/LLIntSlowPaths.h:
+        * llint/LowLevelInterpreter32_64.asm:
+        * llint/LowLevelInterpreter64.asm:
+        * runtime/CommonSlowPathsExceptions.cpp:
+        (JSC::CommonSlowPaths::interpreterThrowInCaller):
+
+2013-10-02  Filip Pizlo  <fpizlo@apple.com>
+
+        The DFG should use always DFG::Graph methods for determining where special registers are
+        https://bugs.webkit.org/show_bug.cgi?id=122248
+
+        Reviewed by Michael Saboff.
+        
+        This makes it possible to have the DFG use different registers than the other engines
+        for things like activation and arguments.
+
+        * dfg/DFGCSEPhase.cpp:
+        (JSC::DFG::CSEPhase::setLocalStoreElimination):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGGraph.h:
+        (JSC::DFG::Graph::activationRegister):
+        (JSC::DFG::Graph::uncheckedActivationRegister):
+        * dfg/DFGOSRExitCompiler32_64.cpp:
+        (JSC::DFG::OSRExitCompiler::compileExit):
+        * dfg/DFGOSRExitCompiler64.cpp:
+        (JSC::DFG::OSRExitCompiler::compileExit):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * jit/AssemblyHelpers.h:
+        (JSC::AssemblyHelpers::baselineArgumentsRegisterFor):
+
+2013-10-02  Dan Bernstein  <mitz@apple.com>
+
+        The Objective-C API should be available in 10.8 builds
+        https://bugs.webkit.org/show_bug.cgi?id=122245
+
+        Reviewed by Mark Rowe.
+
+        Enabled the Objective-C API when building on OS X 10.8 with the modern Objective-C runtime,
+        but kept the availability attributes in API headers for 10.9 and later as they were.
+
+        * API/JSBase.h: When JSC_OBJC_API_AVAILABLE_MAC_OS_X_1080 is defined, made
+        JSC_OBJC_API_ENABLED true on 10.8 and above.
+        * API/JSContext.h: When JSC_OBJC_API_AVAILABLE_MAC_OS_X_1080 is defined, marked the class
+        as available on all OS X versions.
+        * API/JSManagedValue.h: Ditto.
+        * API/JSValue.h: Ditto.
+        * API/JSVirtualMachine.h: Ditto.
+        * Configurations/Base.xcconfig: Added JSC_OBJC_API_AVAILABLE_MAC_OS_X_1080 to
+        GCC_PREPROCESSOR_DEFINITIONS.
+        * JavaScriptCore.xcodeproj/project.pbxproj: Added a script build phase to unifdef the
+        above header files with JSC_OBJC_API_AVAILABLE_MAC_OS_X_1080 either defined or not based on
+        the OS X version we are targeting.
+
+2013-10-02  Michael Saboff  <msaboff@apple.com>
+
+        Make Baseline JIT exception handling work like the DFG JIT
+        https://bugs.webkit.org/show_bug.cgi?id=122244
+
+        Reviewed by Filip Pizlo.
+
+        Added a jump list (m_exceptionChecks) to JIT as a common place for exception processing within
+        generated code.  Added exceptionCheck() helpers that check for an exception which add a branch
+        to the list.
+
+        * jit/JIT.cpp:
+        (JSC::JIT::privateCompile):
+        (JSC::JIT::privateCompileExceptionHandlers):
+        * jit/JIT.h:
+        (JSC::JIT::exceptionCheck):
+
+2013-10-02  Oliver Hunt  <oliver@apple.com>
+
+        Fix MSVC build
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+
+2013-10-02  Geoffrey Garen  <ggaren@apple.com>
+
+        Optimized VM access from C++ code
+        https://bugs.webkit.org/show_bug.cgi?id=122241
+
+        Reviewed by Filip Pizlo.
+
+        * runtime/JSScope.h:
+        (JSC::JSScope::vm): Use MarkedBlock instead of Heap, since both have a
+        pointer to the VM, and Heap is one extra load.
+
+2013-10-02  Michael Saboff  <msaboff@apple.com>
+
+        The LLInt should not use JITStackFrame
+        https://bugs.webkit.org/show_bug.cgi?id=122231
+
+        Reviewed by Filip Pizlo.
+
+        Replaced uses of JITStackFrame::vm with code to either access the vm via the CodeBlock from
+        known JavaScript call frames or via the JSScope* for host call frames.  This eliminates
+        all uses of JITStackFrame from the LLInt.
+
+        * heap/MarkedBlock.h: Made LLIntOffsetsExtractor a friend to access member offsets.
+        * heap/WeakSet.h: Made LLIntOffsetsExtractor a friend to access member offsets.
+        * llint/LLIntData.cpp:
+        (JSC::LLInt::Data::performAssertions): Added an ASSERT for the newly added MarkedBlockMask
+        * llint/LowLevelInterpreter.asm:
+        * llint/LowLevelInterpreter32_64.asm:
+        * llint/LowLevelInterpreter64.asm:
+
+2013-10-01  Oliver Hunt  <oliver@apple.com>
+
+        Implement Array key, value and entries iterators
+        https://bugs.webkit.org/show_bug.cgi?id=122195
+
+        Reviewed by Filip Pizlo.
+
+        Add implementation of ES6 Array iterators for keys(), values() and entries()
+
+        Fairly self explanatory as we just need a simple implementation so that we can
+        implement and test other features.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * runtime/ArrayIteratorConstructor.cpp: Added.
+        (JSC::ArrayIteratorConstructor::finishCreation):
+        * runtime/ArrayIteratorConstructor.h: Added.
+        (JSC::ArrayIteratorConstructor::create):
+        (JSC::ArrayIteratorConstructor::createStructure):
+        (JSC::ArrayIteratorConstructor::ArrayIteratorConstructor):
+        * runtime/ArrayIteratorPrototype.cpp: Added.
+        (JSC::ArrayIteratorPrototype::finishCreation):
+        (JSC::createIteratorResult):
+        (JSC::arrayIteratorPrototypeNext):
+        * runtime/ArrayIteratorPrototype.h: Added.
+        (JSC::ArrayIteratorPrototype::create):
+        (JSC::ArrayIteratorPrototype::createStructure):
+        (JSC::ArrayIteratorPrototype::ArrayIteratorPrototype):
+        * runtime/ArrayPrototype.cpp:
+        (JSC::arrayProtoFuncValues):
+        (JSC::arrayProtoFuncEntries):
+        (JSC::arrayProtoFuncKeys):
+        * runtime/CommonIdentifiers.h:
+        * runtime/Identifier.h:
+        (JSC::Identifier::createEmptyUnique):
+        * runtime/JSArrayIterator.cpp: Added.
+        (JSC::JSArrayIterator::finishCreation):
+        * runtime/JSArrayIterator.h: Added.
+        (JSC::JSArrayIterator::createStructure):
+        (JSC::JSArrayIterator::create):
+        (JSC::JSArrayIterator::iterationKind):
+        (JSC::JSArrayIterator::iteratedObject):
+        (JSC::JSArrayIterator::nextIndex):
+        (JSC::JSArrayIterator::setNextIndex):
+        (JSC::JSArrayIterator::finish):
+        (JSC::JSArrayIterator::JSArrayIterator):
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::reset):
+        * runtime/JSGlobalObject.h:
+        (JSC::JSGlobalObject::iteratorResultStructure):
+
+2013-10-02  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        get_callee and to_this aren't properly cleared during finalizeUnconditionally
+        https://bugs.webkit.org/show_bug.cgi?id=122224
+
+        Reviewed by Geoffrey Garen.
+
+        Even though there is code to clear unmarked inline cache objects in finalizeUnconditionally,
+        it will never run because get_callee and to_this weren't added to the proper Vector in the 
+        UnlinkedCodeBlock that is iterated during finalizeUnconditionally.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::BytecodeGenerator):
+        (JSC::BytecodeGenerator::emitCreateThis):
+
+2013-09-25  Oliver Hunt  <oliver@apple.com>
+
+        Implement prefixed-destructuring assignment
+        https://bugs.webkit.org/show_bug.cgi?id=121930
+
+        Reviewed by Mark Hahnenberg.
+
+        Relanding with fix after rollout - it helps to not completely destroy
+        optimisations for no reason.
+
+2013-10-02  Nadav Rotem  <nrotem@apple.com>
+
+        FTL: Refactor compileArithDiv and compileArithMod into one function.
+        https://bugs.webkit.org/show_bug.cgi?id=122205
+
+        Reviewed by Filip Pizlo.
+
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compileAddSub):
+        (JSC::FTL::LowerDFGToLLVM::compileArithDivMod):
+
+2013-10-02  Anders Carlsson  <andersca@apple.com>
+
+        Get rid of Qt code from JavaScriptCore
+        https://bugs.webkit.org/show_bug.cgi?id=122223
+
+        Reviewed by Oliver Hunt.
+
+        * API/JSStringRefQt.cpp: Removed.
+        * API/JSStringRefQt.h: Removed.
+        * API/OpaqueJSString.h:
+        * DerivedSources.pri: Removed.
+        * JavaScriptCore.pri: Removed.
+        * JavaScriptCore.pro: Removed.
+        * LLIntOffsetsExtractor.pro: Removed.
+        * Target.pri: Removed.
+        * assembler/AbstractMacroAssembler.h:
+        * assembler/MacroAssembler.h:
+        (JSC::MacroAssembler::urshift32):
+        * assembler/MacroAssemblerARMv7.h:
+        (JSC::MacroAssemblerARMv7::shouldBlindForSpecificArch):
+        * assembler/MacroAssemblerX86Common.h:
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileArithSub):
+        * heap/HeapTimer.cpp:
+        (JSC::HeapTimer::timerEvent):
+        * heap/HeapTimer.h:
+        * heap/IncrementalSweeper.cpp:
+        (JSC::IncrementalSweeper::scheduleTimer):
+        * heap/IncrementalSweeper.h:
+        * jit/JITArithmetic32_64.cpp:
+        (JSC::JIT::emitSub32Constant):
+        * jsc.cpp:
+        (main):
+        * jsc.pro: Removed.
+        * runtime/DateConstructor.cpp:
+        * runtime/GCActivityCallback.cpp:
+        (JSC::DefaultGCActivityCallback::DefaultGCActivityCallback):
+        (JSC::DefaultGCActivityCallback::cancelTimer):
+        * runtime/GCActivityCallback.h:
+        * testRegExp.cpp:
+        (main):
+        * yarr/yarr.pri: Removed.
+
+2013-10-01  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL should use the new version of LLVM MCJIT memory manager APIs that take a SectionName
+        https://bugs.webkit.org/show_bug.cgi?id=122193
+
+        Reviewed by Geoffrey Garen.
+        
+        Update our usage of the LLVM C API since the API is about to change.
+
+        * ftl/FTLCompile.cpp:
+        (JSC::FTL::mmAllocateCodeSection):
+        (JSC::FTL::mmAllocateDataSection):
+
+2013-10-01  Filip Pizlo  <fpizlo@apple.com>
+
+        REGRESSION(156464): 50% regression on SunSpider/string-fasta
+        https://bugs.webkit.org/show_bug.cgi?id=122202
+
+        Unreviewed, roll out r156464.
+        
+        This is a progression on string-fasta, since it fixes the regression.
+
+        * bytecode/UnlinkedCodeBlock.cpp:
+        (JSC::UnlinkedFunctionExecutable::paramString):
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::BytecodeGenerator):
+        * bytecompiler/BytecodeGenerator.h:
+        (JSC::BytecodeGenerator::emitExpressionInfo):
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ForInNode::emitBytecode):
+        (JSC::FuncExprNode::emitBytecode):
+        * parser/ASTBuilder.h:
+        (JSC::ASTBuilder::createFormalParameterList):
+        (JSC::ASTBuilder::createForInLoop):
+        (JSC::ASTBuilder::addVar):
+        * parser/NodeConstructors.h:
+        (JSC::CommaNode::CommaNode):
+        (JSC::ParameterNode::ParameterNode):
+        (JSC::ForInNode::ForInNode):
+        * parser/Nodes.cpp:
+        (JSC::FunctionParameters::create):
+        (JSC::FunctionParameters::FunctionParameters):
+        (JSC::FunctionParameters::~FunctionParameters):
+        * parser/Nodes.h:
+        (JSC::ExpressionNode::isDotAccessorNode):
+        (JSC::CommaNode::append):
+        (JSC::ParameterNode::ident):
+        (JSC::FunctionParameters::at):
+        (JSC::FunctionParameters::identifiers):
+        * parser/Parser.cpp:
+        (JSC::::Parser):
+        (JSC::::parseVarDeclaration):
+        (JSC::::parseVarDeclarationList):
+        (JSC::::parseForStatement):
+        (JSC::::parseFormalParameters):
+        (JSC::::parseAssignmentExpression):
+        * parser/Parser.h:
+        (JSC::Scope::declareParameter):
+        (JSC::Parser::declareParameter):
+        * parser/SyntaxChecker.h:
+        (JSC::SyntaxChecker::createFormalParameterList):
+        (JSC::SyntaxChecker::createForInLoop):
+        (JSC::SyntaxChecker::operatorStackPop):
+        * runtime/JSONObject.cpp:
+        * runtime/JSONObject.h:
+
+2013-10-01  Filip Pizlo  <fpizlo@apple.com>
+
+        Variable event stream (for DFG OSR exit) should be explicit about where on the stack a SetLocal put a value
+        https://bugs.webkit.org/show_bug.cgi?id=122178
+
+        Reviewed by Geoffrey Garen.
+        
+        Now if the DFG stores the value of a variable into the stack explicitly via a SetLocal,
+        it will record where on the stack it stored the value in addition to recording where on
+        the stack the bytecode would have done the SetLocal. Previously it just recorded the
+        format and the bytecode variable. Recording just the bytecode variable is currently fine
+        since the DFG always executes SetLocal's to the same stack location that the bytecode
+        would have used. But that prevents stack compression (webkit.org/b/122024) so this patch
+        allows the SetLocal to say both the bytecode variable that we're speaking of and the
+        actual stack location to which the SetLocal stored the value.
+        
+        This had to touch a lot of code, so I took the opportunity to also resolve
+        webkit.org/b/108019.
+
+        * bytecode/Operands.h:
+        (JSC::Operands::hasOperand):
+        * dfg/DFGFlushFormat.h:
+        (JSC::DFG::dataFormatFor):
+        * dfg/DFGMinifiedID.h:
+        (JSC::DFG::MinifiedID::bits):
+        (JSC::DFG::MinifiedID::invalidID):
+        (JSC::DFG::MinifiedID::otherInvalidID):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileMovHint):
+        (JSC::DFG::SpeculativeJIT::compileInlineStart):
+        (JSC::DFG::SpeculativeJIT::compileCurrentBlock):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::recordSetLocal):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGValueSource.cpp:
+        (JSC::DFG::ValueSource::dump):
+        * dfg/DFGValueSource.h:
+        (JSC::DFG::ValueSource::ValueSource):
+        (JSC::DFG::ValueSource::forFlushFormat):
+        (JSC::DFG::ValueSource::forDataFormat):
+        (JSC::DFG::ValueSource::isSet):
+        (JSC::DFG::ValueSource::kind):
+        (JSC::DFG::ValueSource::valueRecovery):
+        (JSC::DFG::ValueSource::id):
+        (JSC::DFG::ValueSource::virtualRegister):
+        * dfg/DFGVariableEvent.cpp:
+        (JSC::DFG::VariableEvent::dump):
+        (JSC::DFG::VariableEvent::dumpSpillInfo):
+        * dfg/DFGVariableEvent.h:
+        (JSC::DFG::VariableEvent::fillGPR):
+        (JSC::DFG::VariableEvent::fillPair):
+        (JSC::DFG::VariableEvent::fillFPR):
+        (JSC::DFG::VariableEvent::spill):
+        (JSC::DFG::VariableEvent::death):
+        (JSC::DFG::VariableEvent::setLocal):
+        (JSC::DFG::VariableEvent::movHint):
+        (JSC::DFG::VariableEvent::id):
+        (JSC::DFG::VariableEvent::gpr):
+        (JSC::DFG::VariableEvent::tagGPR):
+        (JSC::DFG::VariableEvent::payloadGPR):
+        (JSC::DFG::VariableEvent::fpr):
+        (JSC::DFG::VariableEvent::spillRegister):
+        (JSC::DFG::VariableEvent::bytecodeRegister):
+        (JSC::DFG::VariableEvent::machineRegister):
+        (JSC::DFG::VariableEvent::variableRepresentation):
+        * dfg/DFGVariableEventStream.cpp:
+        (JSC::DFG::VariableEventStream::reconstruct):
+
+2013-10-01  Nadav Rotem  <nrotem@apple.com>
+
+        FTL: split overflow checks into non-overflow arithmetic and an additional call to the overflow intrinsic check.
+        https://bugs.webkit.org/show_bug.cgi?id=122170
+
+        Reviewed by Filip Pizlo.
+
+        Overflow intrinsics are preventing SCEV and other LLVM analysis passes from analyzing loops. This patch changes the FTL-IR gen by splitting arithmetic calculations into two parts:
+        1. Generate the arithmetic calculation (that may overflow)
+        2. Generate the overflow check (that is only used by the OSR-exit logic).
+
+        We trust LLVM (SelectionDAG) to merge these calculations into a single opcode.
+
+        This JS function:
+
+        function foo() {
+            for (i=0; i < 10000000; i++) { }
+        }
+
+        Is now compiled into this LLVM-IR: 
+
+        "OSR exit continuation for @24<Int32>":           ; preds = %"Block #0", %"OSR exit continuation for @24<Int32>2"
+          %4 = phi i64 [ %10, %"OSR exit continuation for @24<Int32>2" ], [ -281474976710656, %"Block #0" ]
+          %5 = trunc i64 %4 to i32
+          %6 = add i32 %5, 1
+          %7 = tail call { i32, i1 } @llvm.sadd.with.overflow.i32(i32 %5, i32 1)
+          %8 = extractvalue { i32, i1 } %7, 1
+          br i1 %8, label %"OSR exit failCase for @24<Int32>1", label %"OSR exit continuation for @24<Int32>2"
+
+         And into this assembly:
+
+        LBB0_1:                                 ## %OSR exit continuation for @24<Int32>
+                                        ## =>This Inner Loop Header: Depth=1
+            movl  %ecx, %esi
+            incl  %esi
+            jo  LBB0_4
+
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileAddSub):
+        (JSC::FTL::LowerDFGToLLVM::compileArithMul):
+        (JSC::FTL::LowerDFGToLLVM::compileArithNegate):
+
+2013-10-01  Nadav Rotem  <nrotem@apple.com>
+
+        Consolidate multiple OSRExit calls into one.
+        https://bugs.webkit.org/show_bug.cgi?id=122168
+
+        Reviewed by Filip Pizlo.
+
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileArithMul):
+        (JSC::FTL::LowerDFGToLLVM::compileArithDiv):
+        (JSC::FTL::LowerDFGToLLVM::compileArithMod):
+
+2013-09-30  Filip Pizlo  <fpizlo@apple.com>
+
+        SpeculativeJIT::m_arguments/m_variables are vestiges of a time long gone
+        https://bugs.webkit.org/show_bug.cgi?id=122140
+
+        Reviewed by Darin Adler.
+        
+        Just killing code.
+
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::SpeculativeJIT):
+        (JSC::DFG::SpeculativeJIT::compileInlineStart):
+        (JSC::DFG::SpeculativeJIT::compileCurrentBlock):
+        (JSC::DFG::SpeculativeJIT::checkArgumentTypes):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::recordSetLocal):
+
+2013-10-01  Daniel Bates  <dabates@apple.com>
+
+        [iOS] JavaScriptCore fails to build with newer versions of clang
+        https://bugs.webkit.org/show_bug.cgi?id=122162
+
+        Reviewed by Darin Adler.
+
+        * runtime/GCActivityCallback.cpp: Add !PLATFORM(IOS)-guard around constant pagingTimeOut
+        as we don't compile the code that uses it on iOS.
+
+2013-09-30  Sam Weinig  <sam@webkit.org>
+
+        Remove support for DOMFileSystem
+        https://bugs.webkit.org/show_bug.cgi?id=122137
+
+        Reviewed by Anders Carlsson.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-09-30  Dan Bernstein  <mitz@apple.com>
+
+        <rdar://problem/15114974> Assertion failure under -[JSObjCClassInfo allocateConstructorAndPrototypeWithSuperClassInfo:] if no classes conform to JSExport
+        https://bugs.webkit.org/show_bug.cgi?id=122124
+
+        Reviewed by Darin Adler.
+
+        * API/JSWrapperMap.mm: Defined an empty class that conforms to the JSExport protocol, to
+        ensure that the protocol is always registered with the runtime by the time
+        getJSExportProtocol() is called.
+
+2013-09-30  Benjamin Poulain  <benjamin@webkit.org>
+
+        Remove the code guarded by STYLE_SCOPED
+        https://bugs.webkit.org/show_bug.cgi?id=122123
+
+        Reviewed by Anders Carlsson.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-09-30  Andreas Kling  <akling@apple.com>
+
+        Pass VM instead of ExecState to ObjectPrototype constructor.
+        <https://webkit.org/b/122116>
+
+        Reviewed by Geoffrey Garen.
+
+        The ObjectPrototype constructor was only using the ExecState to get
+        to the VM.
+
+2013-09-30  Andreas Kling  <akling@apple.com>
+
+        Pass VM instead of JSGlobalObject to MathObject constructor.
+        <https://webkit.org/b/122119>
+
+        Reviewed by Geoffrey Garen.
+
+        The MathObject constructor was only using the global object to get
+        to the VM. finishCreation() still uses it to set up functions.
+
+2013-09-30  Filip Pizlo  <fpizlo@apple.com>
+
+        Get rid of the AlreadyInJSStack recoveries since they are totally redundant with the DisplacedInJSStack recoveries
+        https://bugs.webkit.org/show_bug.cgi?id=122065
+
+        Reviewed by Mark Hahnenberg.
+        
+        This mostly just kills a bunch of code.
+        
+        But incidentaly while killing that code, I uncovered a bug in our FTL OSR entrypoint
+        creation phase. The phase inserts a sequence of SetLocal(ExtractOSREntryLocal) nodes.
+        If we hoist some type check into the local, then we might inject a conversion node
+        between the ExtractOSREntryLocal and the SetLocal - for example we might put in a
+        Int32ToDouble node. But currently the FixupPhase will make all conversion nodes placed
+        on an edge of a SetLocal use forward exit. This then confuses the OSR exit machinery.
+        When OSR exit sees a forward exit, it tries to "roll forward" execution from the exiting
+        node to the first node that has a different CodeOrigin. This only works if the nodes
+        after the forward exit are MovHints or other tnings that the OSR exit compiler can
+        forward-execute. But here, it will see a bunch of SetLocal and ExtractOSREntryLocal
+        nodes for the same bytecode index. Two possible solutions exist. We could teach the
+        forward-execution logic how to deal with multiple SetLocals and ExtractOSREntryLocals.
+        This would be a lot of complexity; right now it just needs to deal with exactly one
+        SetLocal-like operation. The alternative is to make sure that the conversion node that
+        we inject ends up exiting *backward* rather than forward.
+        
+        But making the conversion nodes exit backward is somewhat tricky. Before this patch,
+        conversion nodes always exit forward for SetLocals and backwards otherwise. It turns out
+        that the solution is to rationalize how we choose the speculation direciton for a
+        conversion node. The conversion node's speculation direction should be the same as the
+        speculation direction of the node for which it is doing a conversion. Since SetLocal's
+        already exit forward by default, this policy preserves our previous behavior. But it
+        also allows the OSR entrypoint creation phase to make its SetLocals exit backward
+        instead.
+        
+        Of course, if the SetLocal(ExtractOSREntryLocal) sequences exit backward, then we need
+        to make sure that the OSR exit machine knows that the local variables are indeed live.
+        Consider that if we have:
+        
+            a: ExtractOSREntryLocal(loc1)
+            b: SetLocal(@a, loc1)
+            c: ExtractOSRentryLocal(loc2)
+            d: SetLocal(@c, loc2)
+        
+        Without additional magic, the exit at @b will think that loc2 is dead and the OSR exit
+        compiler will clobber loc2 with Undefined. So we need to make sure that we actually
+        emit code like:
+        
+            a: ExtractOSREntryLocal(loc1)
+            b: ExtractOSREntryLocal(loc2)
+            c: SetLocal(@a, loc1)
+            d: SetLocal(@b, loc2)
+            e: SetLocal(@a, loc1)
+            f: SetLocal(@b, loc2)
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * Target.pri:
+        * bytecode/CodeOrigin.h:
+        * bytecode/ValueRecovery.cpp: Added.
+        (JSC::ValueRecovery::recover):
+        (JSC::ValueRecovery::dumpInContext):
+        (JSC::ValueRecovery::dump):
+        * bytecode/ValueRecovery.h:
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupSetLocalsInBlock):
+        (JSC::DFG::FixupPhase::fixEdge):
+        * dfg/DFGJITCode.cpp:
+        (JSC::DFG::JITCode::reconstruct):
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::speculationDirection):
+        (JSC::DFG::Node::setSpeculationDirection):
+        * dfg/DFGOSREntrypointCreationPhase.cpp:
+        (JSC::DFG::OSREntrypointCreationPhase::run):
+        * dfg/DFGOSRExitCompiler32_64.cpp:
+        (JSC::DFG::OSRExitCompiler::compileExit):
+        * dfg/DFGOSRExitCompiler64.cpp:
+        (JSC::DFG::OSRExitCompiler::compileExit):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileInlineStart):
+        (JSC::DFG::SpeculativeJIT::computeValueRecoveryFor):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::computeValueRecoveryFor):
+        * dfg/DFGValueSource.h:
+        (JSC::DFG::ValueSource::valueRecovery):
+        * dfg/DFGVariableEventStream.cpp:
+        (JSC::DFG::VariableEventStream::reconstruct):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::speculate):
+        (JSC::FTL::LowerDFGToLLVM::speculateMachineInt):
+        * interpreter/Register.h:
+        (JSC::Register::unboxedStrictInt52):
+        * runtime/Arguments.cpp:
+        (JSC::Arguments::tearOff):
+        * runtime/Arguments.h:
+
+2013-09-30  Alex Christensen  <alex.christensen@flexsim.com>
+
+        Win64 compile fix after r1256490.
+        https://bugs.webkit.org/show_bug.cgi?id=122117
+
+        Reviewed by Michael Saboff.
+
+        * jit/JITStubsMSVC64.asm:
+        Implemented getHostCallReturnValue for Windows x86_64 processors.
+
+2013-09-30  Andreas Kling  <akling@apple.com>
+
+        Pass VM instead of JSGlobalObject to RegExp constructor.
+        <https://webkit.org/b/122113>
+
+        Reviewed by Darin Adler.
+
+        RegExps don't need anything from the global object during their
+        construction and only use it to get to the VM. Reduce loads by
+        simply passing the VM around instead.
+
+        JSC release binary size -= 120 bytes(!)
+
 2013-09-30  Patrick Gansterer  <paroga@webkit.org>
 
         Fix compilation for COMPILER(MSVC) && !CPU(X86) after r156490.

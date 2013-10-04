@@ -32,6 +32,8 @@
 
 #include "Arguments.h"
 #include "ArrayConstructor.h"
+#include "ArrayIteratorConstructor.h"
+#include "ArrayIteratorPrototype.h"
 #include "ArrayPrototype.h"
 #include "BooleanConstructor.h"
 #include "BooleanPrototype.h"
@@ -53,6 +55,7 @@
 #include "JSArrayBuffer.h"
 #include "JSArrayBufferConstructor.h"
 #include "JSArrayBufferPrototype.h"
+#include "JSArrayIterator.h"
 #include "JSBoundFunction.h"
 #include "JSCallbackConstructor.h"
 #include "JSCallbackFunction.h"
@@ -238,7 +241,7 @@ void JSGlobalObject::reset(JSValue prototype)
     m_functionPrototype->addFunctionProperties(exec, this, &callFunction, &applyFunction);
     m_callFunction.set(vm, this, callFunction);
     m_applyFunction.set(vm, this, applyFunction);
-    m_objectPrototype.set(vm, this, ObjectPrototype::create(exec, this, ObjectPrototype::createStructure(vm, this, jsNull())));
+    m_objectPrototype.set(vm, this, ObjectPrototype::create(vm, this, ObjectPrototype::createStructure(vm, this, jsNull())));
     GetterSetter* protoAccessor = GetterSetter::create(vm);
     protoAccessor->setGetter(vm, JSFunction::create(vm, this, 0, String(), globalFuncProtoGetter));
     protoAccessor->setSetter(vm, JSFunction::create(vm, this, 0, String(), globalFuncProtoSetter));
@@ -298,7 +301,7 @@ void JSGlobalObject::reset(JSValue prototype)
 
     RegExp* emptyRegex = RegExp::create(vm, "", NoFlags);
     
-    m_regExpPrototype.set(vm, this, RegExpPrototype::create(exec, this, RegExpPrototype::createStructure(vm, this, m_objectPrototype.get()), emptyRegex));
+    m_regExpPrototype.set(vm, this, RegExpPrototype::create(vm, RegExpPrototype::createStructure(vm, this, m_objectPrototype.get()), emptyRegex));
     m_regExpStructure.set(vm, this, RegExpObject::createStructure(vm, this, m_regExpPrototype.get()));
 
 #if ENABLE(PROMISES)
@@ -382,13 +385,18 @@ void JSGlobalObject::reset(JSValue prototype)
     FOR_EACH_SIMPLE_BUILTIN_TYPE(PUT_CONSTRUCTOR_FOR_SIMPLE_TYPE)
 
 #undef PUT_CONSTRUCTOR_FOR_SIMPLE_TYPE
-
+    PrototypeMap& prototypeMap = vm.prototypeMap;
+    Structure* iteratorResultStructure = prototypeMap.emptyObjectStructureForPrototype(m_objectPrototype.get(), JSFinalObject::defaultInlineCapacity());
+    PropertyOffset offset;
+    iteratorResultStructure = Structure::addPropertyTransition(vm, iteratorResultStructure, vm.propertyNames->done, 0, 0, offset);
+    iteratorResultStructure = Structure::addPropertyTransition(vm, iteratorResultStructure, vm.propertyNames->value, 0, 0, offset);
+    m_iteratorResultStructure.set(vm, this, iteratorResultStructure);
 
     m_evalFunction.set(vm, this, JSFunction::create(vm, this, 1, vm.propertyNames->eval.string(), globalFuncEval));
     putDirectWithoutTransition(vm, vm.propertyNames->eval, m_evalFunction.get(), DontEnum);
 
     putDirectWithoutTransition(vm, vm.propertyNames->JSON, JSONObject::create(exec, this, JSONObject::createStructure(vm, this, m_objectPrototype.get())), DontEnum);
-    putDirectWithoutTransition(vm, vm.propertyNames->Math, MathObject::create(exec, this, MathObject::createStructure(vm, this, m_objectPrototype.get())), DontEnum);
+    putDirectWithoutTransition(vm, vm.propertyNames->Math, MathObject::create(vm, this, MathObject::createStructure(vm, this, m_objectPrototype.get())), DontEnum);
     
     FixedArray<InternalFunction*, NUMBER_OF_TYPED_ARRAY_TYPES> typedArrayConstructors;
     typedArrayConstructors[toIndex(TypeInt8)] = JSInt8ArrayConstructor::create(vm, JSInt8ArrayConstructor::createStructure(vm, this, m_functionPrototype.get()), m_typedArrays[toIndex(TypeInt8)].prototype.get(), "Int8Array");

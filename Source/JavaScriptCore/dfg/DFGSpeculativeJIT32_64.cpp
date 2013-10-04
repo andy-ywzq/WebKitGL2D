@@ -2026,7 +2026,7 @@ void SpeculativeJIT::compile(Node* node)
             // Indicate that it's no longer necessary to retrieve the value of
             // this bytecode variable from registers or other locations in the stack,
             // but that it is stored as a double.
-            recordSetLocal(node->local(), ValueSource(DoubleInJSStack));
+            recordSetLocal(DataFormatDouble);
             break;
         }
             
@@ -2034,7 +2034,7 @@ void SpeculativeJIT::compile(Node* node)
             SpeculateInt32Operand value(this, node->child1());
             m_jit.store32(value.gpr(), JITCompiler::payloadFor(node->local()));
             noResult(node);
-            recordSetLocal(node->local(), ValueSource(Int32InJSStack));
+            recordSetLocal(DataFormatInt32);
             break;
         }
             
@@ -2043,7 +2043,7 @@ void SpeculativeJIT::compile(Node* node)
             GPRReg cellGPR = cell.gpr();
             m_jit.storePtr(cellGPR, JITCompiler::payloadFor(node->local()));
             noResult(node);
-            recordSetLocal(node->local(), ValueSource(CellInJSStack));
+            recordSetLocal(DataFormatCell);
             break;
         }
             
@@ -2051,7 +2051,7 @@ void SpeculativeJIT::compile(Node* node)
             SpeculateBooleanOperand value(this, node->child1());
             m_jit.store32(value.gpr(), JITCompiler::payloadFor(node->local()));
             noResult(node);
-            recordSetLocal(node->local(), ValueSource(BooleanInJSStack));
+            recordSetLocal(DataFormatBoolean);
             break;
         }
             
@@ -2060,7 +2060,7 @@ void SpeculativeJIT::compile(Node* node)
                 SpeculateDoubleOperand value(this, node->child1(), ManualOperandSpeculation);
                 m_jit.storeDouble(value.fpr(), JITCompiler::addressFor(node->local()));
                 noResult(node);
-                recordSetLocal(node->local(), ValueSource(DoubleInJSStack));
+                recordSetLocal(DataFormatDouble);
                 break;
             }
             
@@ -2068,7 +2068,7 @@ void SpeculativeJIT::compile(Node* node)
             m_jit.store32(value.payloadGPR(), JITCompiler::payloadFor(node->local()));
             m_jit.store32(value.tagGPR(), JITCompiler::tagFor(node->local()));
             noResult(node);
-            recordSetLocal(node->local(), ValueSource(ValueInJSStack));
+            recordSetLocal(DataFormatJS);
             
             // If we're storing an arguments object that has been optimized away,
             // our variable event stream for OSR exit now reflects the optimized
@@ -3718,7 +3718,7 @@ void SpeculativeJIT::compile(Node* node)
             m_jit.branchTestPtr(
                 JITCompiler::Zero,
                 JITCompiler::payloadFor(
-                    static_cast<VirtualRegister>(m_jit.codeBlock()->activationRegister())));
+                    static_cast<VirtualRegister>(m_jit.graph().activationRegister())));
         m_jit.loadPtr(JITCompiler::Address(resultGPR, JSScope::offsetOfNext()), resultGPR);
         activationNotCreated.link(&m_jit);
         cellResult(resultGPR, node);
@@ -4467,7 +4467,7 @@ void SpeculativeJIT::compile(Node* node)
             Uncountable, JSValueRegs(), 0,
             m_jit.branch32(
                 JITCompiler::NotEqual,
-                JITCompiler::tagFor(m_jit.argumentsRegisterFor(node->codeOrigin)),
+                JITCompiler::tagFor(m_jit.graph().argumentsRegisterFor(node->codeOrigin)),
                 TrustedImm32(JSValue::EmptyValueTag)));
         noResult(node);
         break;
@@ -4484,7 +4484,7 @@ void SpeculativeJIT::compile(Node* node)
                 ArgumentsEscaped, JSValueRegs(), 0,
                 m_jit.branch32(
                     JITCompiler::NotEqual,
-                    JITCompiler::tagFor(m_jit.argumentsRegisterFor(node->codeOrigin)),
+                    JITCompiler::tagFor(m_jit.graph().argumentsRegisterFor(node->codeOrigin)),
                     TrustedImm32(JSValue::EmptyValueTag)));
         }
         
@@ -4503,7 +4503,7 @@ void SpeculativeJIT::compile(Node* node)
         
         JITCompiler::Jump created = m_jit.branch32(
             JITCompiler::NotEqual,
-            JITCompiler::tagFor(m_jit.argumentsRegisterFor(node->codeOrigin)),
+            JITCompiler::tagFor(m_jit.graph().argumentsRegisterFor(node->codeOrigin)),
             TrustedImm32(JSValue::EmptyValueTag));
         
         if (node->codeOrigin.inlineCallFrame) {
@@ -4524,7 +4524,7 @@ void SpeculativeJIT::compile(Node* node)
             slowPathCall(
                 created, this, operationGetArgumentsLength,
                 JSValueRegs(resultTagGPR, resultPayloadGPR),
-                m_jit.argumentsRegisterFor(node->codeOrigin).offset()));
+                m_jit.graph().argumentsRegisterFor(node->codeOrigin).offset()));
         
         jsValueResult(resultTagGPR, resultPayloadGPR, node);
         break;
@@ -4545,7 +4545,7 @@ void SpeculativeJIT::compile(Node* node)
                 ArgumentsEscaped, JSValueRegs(), 0,
                 m_jit.branch32(
                     JITCompiler::NotEqual,
-                    JITCompiler::tagFor(m_jit.argumentsRegisterFor(node->codeOrigin)),
+                    JITCompiler::tagFor(m_jit.graph().argumentsRegisterFor(node->codeOrigin)),
                     TrustedImm32(JSValue::EmptyValueTag)));
         }
             
@@ -4624,7 +4624,7 @@ void SpeculativeJIT::compile(Node* node)
         slowPath.append(
             m_jit.branch32(
                 JITCompiler::NotEqual,
-                JITCompiler::tagFor(m_jit.argumentsRegisterFor(node->codeOrigin)),
+                JITCompiler::tagFor(m_jit.graph().argumentsRegisterFor(node->codeOrigin)),
                 TrustedImm32(JSValue::EmptyValueTag)));
         
         m_jit.add32(TrustedImm32(1), indexGPR, resultPayloadGPR);
@@ -4687,14 +4687,14 @@ void SpeculativeJIT::compile(Node* node)
                 slowPathCall(
                     slowPath, this, operationGetInlinedArgumentByVal,
                     JSValueRegs(resultTagGPR, resultPayloadGPR),
-                    m_jit.argumentsRegisterFor(node->codeOrigin).offset(),
+                    m_jit.graph().argumentsRegisterFor(node->codeOrigin).offset(),
                     node->codeOrigin.inlineCallFrame, indexGPR));
         } else {
             addSlowPathGenerator(
                 slowPathCall(
                     slowPath, this, operationGetArgumentByVal,
                     JSValueRegs(resultTagGPR, resultPayloadGPR),
-                    m_jit.argumentsRegisterFor(node->codeOrigin).offset(), indexGPR));
+                    m_jit.graph().argumentsRegisterFor(node->codeOrigin).offset(), indexGPR));
         }
         
         slowArgument.link(&m_jit);

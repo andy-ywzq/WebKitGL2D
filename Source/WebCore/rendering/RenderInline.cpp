@@ -51,7 +51,7 @@ using namespace std;
 namespace WebCore {
 
 RenderInline::RenderInline(Element* element)
-    : RenderBoxModelObject(element)
+    : RenderBoxModelObject(element, RenderInlineFlag)
     , m_alwaysCreateLineBoxes(false)
 {
     setChildrenInline(true);
@@ -197,7 +197,7 @@ void RenderInline::styleDidChange(StyleDifference diff, const RenderStyle* oldSt
         bool alwaysCreateLineBoxes = hasSelfPaintingLayer() || hasBoxDecorations() || newStyle->hasPadding() || newStyle->hasMargin() || hasOutline();
         if (oldStyle && alwaysCreateLineBoxes) {
             dirtyLineBoxes(false);
-            setNeedsLayout(true);
+            setNeedsLayout();
         }
         m_alwaysCreateLineBoxes = alwaysCreateLineBoxes;
     }

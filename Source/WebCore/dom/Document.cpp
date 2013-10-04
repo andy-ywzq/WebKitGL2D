@@ -85,6 +85,7 @@
 #include "HTMLHeadElement.h"
 #include "HTMLIFrameElement.h"
 #include "HTMLLinkElement.h"
+#include "HTMLMediaElement.h"
 #include "HTMLNameCollection.h"
 #include "HTMLNames.h"
 #include "HTMLParserIdioms.h"
@@ -5387,9 +5388,14 @@ void Document::fullScreenChangeDelayTimerFired(Timer<Document>*)
     m_fullScreenChangeEventTargetQueue.swap(changeQueue);
     Deque<RefPtr<Node> > errorQueue;
     m_fullScreenErrorEventTargetQueue.swap(errorQueue);
+    dispatchFullScreenChangeOrErrorEvent(changeQueue, eventNames().webkitfullscreenchangeEvent, /* shouldNotifyMediaElement */ true);
+    dispatchFullScreenChangeOrErrorEvent(errorQueue, eventNames().webkitfullscreenerrorEvent, /* shouldNotifyMediaElement */ false);
+}
 
-    while (!changeQueue.isEmpty()) {
-        RefPtr<Node> node = changeQueue.takeFirst();
+void Document::dispatchFullScreenChangeOrErrorEvent(Deque<RefPtr<Node>>& queue, const AtomicString& eventName, bool shouldNotifyMediaElement)
+{
+    while (!queue.isEmpty()) {
+        RefPtr<Node> node = queue.takeFirst();
         if (!node)
             node = documentElement();
         // The dispatchEvent below may have blown away our documentElement.
@@ -5398,26 +5404,14 @@ void Document::fullScreenChangeDelayTimerFired(Timer<Document>*)
 
         // If the element was removed from our tree, also message the documentElement. Since we may
         // have a document hierarchy, check that node isn't in another document.
-        if (!contains(node.get()) && !node->inDocument())
-            changeQueue.append(documentElement());
-        
-        node->dispatchEvent(Event::create(eventNames().webkitfullscreenchangeEvent, true, false));
-    }
+        if (!node->inDocument())
+            queue.append(documentElement());
 
-    while (!errorQueue.isEmpty()) {
-        RefPtr<Node> node = errorQueue.takeFirst();
-        if (!node)
-            node = documentElement();
-        // The dispatchEvent below may have blown away our documentElement.
-        if (!node)
-            continue;
-        
-        // If the element was removed from our tree, also message the documentElement. Since we may
-        // have a document hierarchy, check that node isn't in another document.
-        if (!contains(node.get()) && !node->inDocument())
-            errorQueue.append(documentElement());
-        
-        node->dispatchEvent(Event::create(eventNames().webkitfullscreenerrorEvent, true, false));
+#if ENABLE(VIDEO)
+        if (shouldNotifyMediaElement && isMediaElement(node.get()))
+            toHTMLMediaElement(node.get())->enteredOrExitedFullscreen();
+#endif
+        node->dispatchEvent(Event::create(eventName, true, false));
     }
 }
 
@@ -6037,7 +6031,7 @@ void Document::didAssociateFormControlsTimerFired(Timer<Document>* timer)
     m_associatedFormControls.clear();
 }
 
-void Document::ensurePlugInsInjectedScript(DOMWrapperWorld* world)
+void Document::ensurePlugInsInjectedScript(DOMWrapperWorld& world)
 {
     if (m_hasInjectedPlugInsScript)
         return;

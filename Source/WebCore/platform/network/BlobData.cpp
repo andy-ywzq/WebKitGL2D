@@ -60,11 +60,6 @@ void BlobDataItem::detachFromCurrentThread()
     url = url.copy();
 }
 
-PassOwnPtr<BlobData> BlobData::create()
-{
-    return adoptPtr(new BlobData());
-}
-
 void BlobData::detachFromCurrentThread()
 {
     m_contentType = m_contentType.isolatedCopy();
@@ -99,24 +94,17 @@ void BlobData::appendBlob(const URL& url, long long offset, long long length)
     m_items.append(BlobDataItem(url, offset, length));
 }
 
-#if ENABLE(FILE_SYSTEM)
-void BlobData::appendURL(const URL& url, long long offset, long long length, double expectedModificationTime)
-{
-    m_items.append(BlobDataItem(url, offset, length, expectedModificationTime));
-}
-#endif
-
 void BlobData::swapItems(BlobDataItemList& items)
 {
     m_items.swap(items);
 }
 
 
-BlobDataHandle::BlobDataHandle(PassOwnPtr<BlobData> data, long long size)
+BlobDataHandle::BlobDataHandle(std::unique_ptr<BlobData> data, long long size)
 {
     UNUSED_PARAM(size);
     m_internalURL = BlobURL::createInternalURL();
-    ThreadableBlobRegistry::registerBlobURL(m_internalURL, data);
+    ThreadableBlobRegistry::registerBlobURL(m_internalURL, std::move(data));
 }
 
 BlobDataHandle::~BlobDataHandle()

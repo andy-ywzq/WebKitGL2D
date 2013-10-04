@@ -35,10 +35,6 @@
 #include <wtf/PassRefPtr.h>
 #include <wtf/text/WTFString.h>
 
-#if PLATFORM(QT)
-#include <QLibrary>
-#endif
-
 #if PLATFORM(GTK) || PLATFORM(NIX)
 typedef struct _GModule GModule;
 #endif
@@ -60,8 +56,6 @@ namespace WebKit {
 
 #if PLATFORM(MAC)
 typedef NSBundle *PlatformBundle;
-#elif PLATFORM(QT)
-typedef QLibrary PlatformBundle;
 #elif PLATFORM(GTK) || PLATFORM(NIX)
 typedef ::GModule* PlatformBundle;
 #elif PLATFORM(EFL)

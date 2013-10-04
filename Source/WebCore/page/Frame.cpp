@@ -535,12 +535,12 @@ void Frame::injectUserScripts(UserScriptInjectionTime injectionTime)
     const UserScriptMap* userScripts = m_page->group().userScripts();
     if (!userScripts)
         return;
-    UserScriptMap::const_iterator end = userScripts->end();
-    for (UserScriptMap::const_iterator it = userScripts->begin(); it != end; ++it)
-        injectUserScriptsForWorld(it->key.get(), *it->value, injectionTime);
+
+    for (auto it = userScripts->begin(), end = userScripts->end(); it != end; ++it)
+        injectUserScriptsForWorld(*it->key.get(), *it->value, injectionTime);
 }
 
-void Frame::injectUserScriptsForWorld(DOMWrapperWorld* world, const UserScriptVector& userScripts, UserScriptInjectionTime injectionTime)
+void Frame::injectUserScriptsForWorld(DOMWrapperWorld& world, const UserScriptVector& userScripts, UserScriptInjectionTime injectionTime)
 {
     if (userScripts.isEmpty())
         return;

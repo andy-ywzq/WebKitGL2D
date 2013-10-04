@@ -180,11 +180,6 @@ public:
     bool webkitSpeechGrammarListEnabled() const { return m_isScriptedSpeechEnabled; }
 #endif
 
-#if ENABLE(FILE_SYSTEM)
-    bool fileSystemEnabled() const;
-    void setFileSystemEnabled(bool isEnabled) { m_isFileSystemEnabled = isEnabled; }
-#endif
-
 #if ENABLE(JAVASCRIPT_I18N_API)
     bool javaScriptI18NAPIEnabled() const;
     void setJavaScriptI18NAPIEnabled(bool isEnabled) { m_isJavaScriptI18NAPIEnabled = isEnabled; }
@@ -242,11 +237,6 @@ public:
 #if ENABLE(CUSTOM_ELEMENTS)
     bool customDOMElementsEnabled() const { return m_isCustomDOMElementsEnabled; }
     void setCustomDOMElements(bool isEnabled) { m_isCustomDOMElementsEnabled = isEnabled; }
-#endif
-
-#if ENABLE(STYLE_SCOPED)
-    bool styleScopedEnabled() const { return m_isStyleScopedEnabled; }
-    void setStyleScopedEnabled(bool isEnabled) { m_isStyleScopedEnabled = isEnabled; }
 #endif
 
 #if ENABLE(INPUT_TYPE_DATE)
@@ -319,9 +309,6 @@ private:
 #if ENABLE(SCRIPTED_SPEECH)
     bool m_isScriptedSpeechEnabled;
 #endif
-#if ENABLE(FILE_SYSTEM)
-    bool m_isFileSystemEnabled;
-#endif
 
 #if ENABLE(JAVASCRIPT_I18N_API)
     bool m_isJavaScriptI18NAPIEnabled;
@@ -367,10 +354,6 @@ private:
 
 #if ENABLE(CUSTOM_ELEMENTS)
     bool m_isCustomDOMElementsEnabled;
-#endif
-
-#if ENABLE(STYLE_SCOPED)
-    bool m_isStyleScopedEnabled;
 #endif
 
 #if ENABLE(INPUT_TYPE_DATE)

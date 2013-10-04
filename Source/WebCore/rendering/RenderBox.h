@@ -44,7 +44,7 @@ enum ShouldComputePreferred { ComputeActual, ComputePreferred };
 
 class RenderBox : public RenderBoxModelObject {
 public:
-    explicit RenderBox(Element*);
+    explicit RenderBox(Element*, unsigned baseTypeFlags);
     virtual ~RenderBox();
 
     // hasAutoZIndex only returns true if the element is positioned or a flex-item since
@@ -504,8 +504,6 @@ public:
     virtual VisiblePosition positionForPoint(const LayoutPoint&);
 
     RenderBlock* outermostBlockContainingFloatingObject();
-    void updatePaintingContainerForFloatingObject();
-    virtual bool updateLayerIfNeeded();
 
     void removeFloatingOrPositionedChildFromBlockLists();
     

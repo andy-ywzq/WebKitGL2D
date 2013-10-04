@@ -196,8 +196,6 @@ public:
     
     virtual void numWheelEventHandlersChanged(unsigned) OVERRIDE { }
     
-    virtual bool shouldRubberBandInDirection(WebCore::ScrollDirection) const { return false; }
-    
     virtual bool isEmptyChromeClient() const { return true; }
 
     virtual void didAssociateFormControls(const Vector<RefPtr<Element> >&) { }
@@ -354,7 +352,7 @@ public:
     virtual String overrideMediaType() const { return String(); }
 
     virtual void redirectDataToPlugin(Widget*) { }
-    virtual void dispatchDidClearWindowObjectInWorld(DOMWrapperWorld*) { }
+    virtual void dispatchDidClearWindowObjectInWorld(DOMWrapperWorld&) { }
     virtual void documentElementAvailable() { }
     virtual void didPerformFirstNavigation() const { }
 

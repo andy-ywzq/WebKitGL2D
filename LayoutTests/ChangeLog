@@ -1,3 +1,1249 @@
+2013-10-04  Lorenzo Tilve  <ltilve@igalia.com>
+
+        [GTK] Enable text edition UndoOperations support in WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=122305
+
+        Reviewed by Carlos Garcia Campos.
+
+        * platform/gtk-wk2/TestExpectations: Corrected the expectations
+        with the new results.
+
+2013-10-04  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSSRegions] Regions as stacking contexts should paint over positioned sibling
+        https://bugs.webkit.org/show_bug.cgi?id=122321
+
+        Reviewed by Alexandru Chiculita.
+
+        Add a new test and modify existing tests to take into account the stacking context behavior
+        for non-positioned regions.
+
+        * fast/regions/autoheight-regions-mark-expected.txt:
+        * fast/regions/layers/region-normalflow-stacking-context-expected.html: Added.
+        * fast/regions/layers/region-normalflow-stacking-context.html: Added.
+        * fast/regions/shape-inside/shape-inside-on-regions-block-content-overflow-bottom-positioned-multiple-shapes-expected.html:
+        * fast/regions/shape-inside/shape-inside-on-regions-inline-content-overflow-bottom-positioned-multiple-shapes-expected.html:
+
+2013-10-04  Michał Pakuła vel Rutka  <m.pakula@samsung.com>
+
+        Unreviewed EFL gardening
+
+        Remove failure expectations from tests that are passing.
+
+        * platform/efl-wk2/TestExpectations: update js/dom/create-lots-of-workers.html path.
+        * platform/efl/TestExpectations:
+
+2013-10-04  Krzysztof Wolanski  <k.wolanski@samsung.com>
+
+        [EFL] Enable correct behaviour for deleting regional indicator symbols
+        https://bugs.webkit.org/show_bug.cgi?id=122209
+
+        Reviewed by Gyuyoung Kim.
+
+        Now editing/deleting/regional-indicators.html is passing on EFL port.
+
+        * platform/efl/TestExpectations:
+
+2013-10-04  Andrei Bucur  <abucur@adobe.com>
+
+        [CSS Regions] Infinite loop when computing widows
+        https://bugs.webkit.org/show_bug.cgi?id=122215
+
+        Reviewed by David Hyatt.
+
+        Test there is no stack overflow when trying to break for widows that are caused by other widows.
+
+        * fast/regions/regions-widows-stack-overflow-expected.html: Added.
+        * fast/regions/regions-widows-stack-overflow.html: Added.
+
+2013-10-03  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Fix the HTMLSelectElement.prototype.remove() method
+        https://bugs.webkit.org/show_bug.cgi?id=121586
+
+        Reviewed by Darin Adler.
+
+        Add test to make sure calling HTMLSelectElement.prototype.remove() detaches the
+        select element from its parent, as Element::remove() would.
+
+        * js/dom/select-options-remove-expected.txt:
+        * js/resources/select-options-remove.js:
+
+2013-10-03  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Re-remove Qt TestExpectations re-added in r156841 after r156866.
+
+        * platform/qt: Removed.
+        * platform/qt/TestExpectations: Removed.
+
+2013-10-03  Samuel White  <samuel_white@apple.com>
+
+        Regression: AX: <table><caption> no longer exposed as AXTitle.
+        https://bugs.webkit.org/show_bug.cgi?id=121977
+
+        Reviewed by Darin Adler.
+
+        Added test to verify that table elements correctly derive their AXTitle from their associated caption element.
+
+        * accessibility/table-title-expected.txt: Added.
+        * accessibility/table-title.html: Added.
+
+2013-10-03  Nadav Rotem  <nrotem@apple.com>
+
+        Add a testcase for a bug that I had during the development. This code uses the asm.js style.
+        https://bugs.webkit.org/show_bug.cgi?id=122286
+
+        Reviewed by Filip Pizlo.
+
+        * js/regress/asmjs_bool_bug-expected.txt: Added.
+        * js/regress/asmjs_bool_bug.html: Added.
+        * js/regress/script-tests/asmjs_bool_bug.js: Added.
+        (strlen):
+
+2013-10-03  Manuel Rego Casasnovas  <rego@igalia.com>
+
+        [CSS Regions] Layout Test for selecting text in 2 regions
+        https://bugs.webkit.org/show_bug.cgi?id=121841
+
+        Reviewed by Alexandru Chiculita.
+
+        Add new reftest for selecting text in 2 regions. It compares the
+        behavior (highlighted text and selected content) in regions and absolute
+        positions.
+
+        * fast/regions/resources/helper.js: Add new function to set selected
+        content in an element onmouseup.
+        (onMouseUpLogSelection.document.onmouseup):
+        (onMouseUpLogSelection):
+        * fast/regions/resources/region-style.css: Define some styles that could
+        be reused in other tests.
+        * fast/regions/selection/selecting-text-in-2-regions-expected.html:
+        Added.
+        * fast/regions/selection/selecting-text-in-2-regions.html: Added.
+
+2013-10-03  Alexey Proskuryakov  <ap@apple.com>
+
+        Flaky Test: fast/history/history-back-while-pdf-in-pagecache.html
+        https://bugs.webkit.org/show_bug.cgi?id=121628
+
+        * platform/mac/TestExpectations: Marking as such.
+
+2013-10-03  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Shapes] Support the shape-image-threshold property
+        https://bugs.webkit.org/show_bug.cgi?id=122254
+
+        Reviewed by Andreas Kling.
+
+        Verify that a shape-outside image whose pixels' alpha channels are all above shape-image-threshold causes
+        layout to skirt the shape, and similarly that an image whose pixels' alpha channels are all below the threshold
+        has no effect on the layout.
+
+        * fast/shapes/shape-outside-floats/shape-outside-floats-image-threshold-001-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-image-threshold-001.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-image-threshold-002-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-image-threshold-002.html: Added.
+
+2013-10-03  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Shapes] Revise the CSS property parsing tests
+        https://bugs.webkit.org/show_bug.cgi?id=122251
+
+        Reviewed by Andreas Kling.
+
+        Flattened the shapes CSS property parsing tests by inserting the code from
+        the fast/shapes/parsing/script-tests subdirectory into the test HTML source
+        files. The subdirectory is now empty and the tests are easier to read.
+
+        * fast/shapes/parsing/parsing-shape-image-threshold.html: Inserted parsing-shape-image-threshold.js instead of referring to it with script src.
+        * fast/shapes/parsing/parsing-shape-inside.html: Likewise
+        * fast/shapes/parsing/parsing-shape-lengths.html: Likewise
+        * fast/shapes/parsing/parsing-shape-margin.html: Likewise
+        * fast/shapes/parsing/parsing-shape-outside.html: Likewise
+        * fast/shapes/parsing/parsing-shape-padding.html: Likewise
+        * fast/shapes/parsing/parsing-test-utils.js: Renamed from LayoutTests/fast/shapes/parsing/script-tests/parsing-test-utils.js.
+        (getCSSText):
+        (getComputedStyleValue):
+        (getParentAndChildComputedStyles):
+        (getParentAndChildComputedStylesString):
+        (getChildComputedStyle):
+        (testShapeSpecifiedProperty):
+        (testShapeComputedProperty):
+        (testNotInheritedShapeChildProperty):
+        (property):
+        * fast/shapes/parsing/script-tests/parsing-shape-image-threshold.js: Removed.
+        * fast/shapes/parsing/script-tests/parsing-shape-inside.js: Removed.
+        * fast/shapes/parsing/script-tests/parsing-shape-lengths.js: Removed.
+        * fast/shapes/parsing/script-tests/parsing-shape-margin.js: Removed.
+        * fast/shapes/parsing/script-tests/parsing-shape-outside.js: Removed.
+        * fast/shapes/parsing/script-tests/parsing-shape-padding.js: Removed.
+
+2013-10-03  Alexey Proskuryakov  <ap@apple.com>
+
+        video-object-fit tests are flaky
+        https://bugs.webkit.org/show_bug.cgi?id=121803
+
+        I'm not quite sure what's going on, but [ Pass Failure ] expectations didn't cut it.
+        Trying [ Pass ImageOnlyFailure ], as the failures are always image only anyway.
+
+        * platform/mac/TestExpectations:
+
+2013-10-03  Zoltan Horvath  <zoltan@webkit.org>
+
+        [CSS Shapes] Support block content with inline content around floats in shape-inside
+        https://bugs.webkit.org/show_bug.cgi?id=121616
+
+        Reviewed by David Hyatt.
+
+        In r156022 and r156364, I added support for floats inside shape-inside with inline content. This change extends
+        the existing implementation to support block content with inline content (paragraphs). I added an extra text for
+        positioning a float inside shape-inside without text content around it.
+
+        * fast/shapes/shape-inside/shape-inside-left-float-in-lower-left-triangle-block-content-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-left-float-in-lower-left-triangle-block-content.html: Added.
+        * fast/shapes/shape-inside/shape-inside-left-float-in-lower-right-triangle-block-content-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-left-float-in-lower-right-triangle-block-content.html: Added.
+        * fast/shapes/shape-inside/shape-inside-left-float-in-lower-right-triangle-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-left-float-in-lower-right-triangle.html: Added.
+        * fast/shapes/shape-inside/shape-inside-left-float-in-upper-left-triangle-block-content-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-left-float-in-upper-left-triangle-block-content.html: Added.
+        * fast/shapes/shape-inside/shape-inside-left-float-in-upper-right-triangle-block-content-expected.html: Added.
+        * fast/shapes/shape-inside/shape-inside-left-float-in-upper-right-triangle-block-content.html: Added.
+
+2013-10-03  Tim Horton  <timothy_horton@apple.com>
+
+        Add test expectation for one more test having color space issues after r156793.
+        (css3/filters/custom/custom-filter-composite-fractional-source-alpha.html)
+
+        * platform/mac-wk2/TestExpectations:
+
+2013-10-03  Alexey Proskuryakov  <ap@apple.com>
+
+        Layout Test media/click-volume-bar-not-pausing.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=122126
+
+        * platform/mac/TestExpectations: Marked it as such.
+
+2013-10-03  Alexey Proskuryakov  <ap@apple.com>
+
+        Re-add Qt TestExpectations. Without it, the flakiness dashboard page loads as blank.
+
+        * platform/qt: Added.
+        * platform/qt/TestExpectations: Added.
+
+2013-10-03  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Shapes] add shape-margin support for image valued shapes
+        https://bugs.webkit.org/show_bug.cgi?id=121619
+
+        Reviewed by Alexandru Chiculita.
+
+        Verify that the shape-outside margin-boundary is computed correctly for image valued shapes.
+
+        * fast/shapes/shape-outside-floats/shape-outside-floats-image-margin-001-expected.txt: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-image-margin-001.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-image-margin-002-expected.txt: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-image-margin-002.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-image-margin-003-expected.txt: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-image-margin-003.html: Added.
+
+2013-10-02  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [ATK] Expose aria-invalid as a text attribute (not object attribute)
+        https://bugs.webkit.org/show_bug.cgi?id=122015
+
+        Reviewed by Chris Fleizach.
+
+        Updated the aria-invalid.html layout test to make sure that it
+        behaves as defined by the WAI-ARIA specification for values other
+        than 'false', 'true', 'grammar' and 'spelling'.
+
+        * accessibility/aria-invalid.html: Updated test.
+        * accessibility/aria-invalid-expected.txt: Updated expectations.
+
+2013-10-03  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Add back .htaccess files erroneously removed in r156827.
+
+        * http/tests/appcache/resources/intercept: Copied from LayoutTests/http/tests/appcache/resources/intercept.
+        * http/tests/uri/intercept: Copied from LayoutTests/http/tests/uri/intercept.
+
+2013-10-02  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Shapes] Implement the shape-image-threshold property
+        https://bugs.webkit.org/show_bug.cgi?id=122216
+
+        Reviewed by Andreas Kling.
+
+        Check parsing of the non-inherited CSS shape-image-threshold number property.
+        The property is defined here:
+        http://dev.w3.org/csswg/css-shapes-1/#shape-image-threshold-property
+
+        * fast/shapes/parsing/parsing-shape-image-threshold-expected.txt: Added.
+        * fast/shapes/parsing/parsing-shape-image-threshold.html: Added.
+        * fast/shapes/parsing/script-tests/parsing-shape-image-threshold.js: Added.
+
+2013-10-02  Manuel Rego Casasnovas  <rego@igalia.com>
+
+        [CSS Regions] Helper functions for selection layout tests
+        https://bugs.webkit.org/show_bug.cgi?id=122128
+
+        Reviewed by Alexandru Chiculita.
+
+        Create new common JavaScript methods for CSS Regions layout tests
+        related to selection. Refactored tests in order to use them.
+
+        * fast/regions/resources/helper.js: Added new functions.
+        (selectContentByRange): Select from start to end position.
+        (selectContentByIds): Select from the beginning of the first element to the end
+        of the second one.
+        (selectBaseAndExtent): Select from start to end with given offsets using
+        Selection.setBaseAndExtent() method.
+        (mouseClick): Clicks in a given position.
+        * fast/regions/selection/selecting-text-in-empty-region.html: Refactored
+        test in order to use the new functions.
+        * fast/regions/selection/selecting-text-through-different-region-flows-2-expected.html:
+        Ditto.
+        * fast/regions/selection/selecting-text-through-different-region-flows-2.html:
+        Ditto.
+        * fast/regions/selection/selecting-text-through-different-region-flows.html:
+        Ditto.
+        * fast/regions/selection/selection-direction-expected.html: Ditto.
+        * fast/regions/selection/selection-direction.html: Ditto.
+
+2013-10-02  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [css-shapes] shape-outside does not properly handle the container and the float having different writing modes
+        https://bugs.webkit.org/show_bug.cgi?id=122243
+
+        Reviewed by Alexandru Chiculita.
+
+        Test that the margins and width are properly computed in the case of
+        different writing modes.
+
+        * fast/shapes/shape-outside-floats/shape-outside-floats-different-writing-modes-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-floats-different-writing-modes.html: Added.
+
+2013-10-02  Tim Horton  <timothy_horton@apple.com>
+
+        Unreviewed rebaseline, try to add newlines back that keep disappearing on me.
+
+        * platform/mac-wk2/compositing/contents-opaque/body-background-painted-expected.txt:
+        * platform/mac-wk2/compositing/contents-opaque/body-background-skipped-expected.txt:
+        * platform/mac-wk2/compositing/repaint/fixed-background-scroll-expected.txt:
+        * platform/mac-wk2/compositing/rtl/rtl-absolute-expected.txt:
+        * platform/mac-wk2/compositing/rtl/rtl-absolute-overflow-expected.txt:
+        * platform/mac-wk2/compositing/rtl/rtl-absolute-overflow-scrolled-expected.txt:
+        * platform/mac-wk2/compositing/tiling/rotated-tiled-clamped-expected.txt:
+        * platform/mac-wk2/compositing/tiling/rotated-tiled-preserve3d-clamped-expected.txt:
+        * platform/mac-wk2/compositing/tiling/tile-cache-zoomed-expected.txt:
+        * platform/mac-wk2/compositing/tiling/tiled-layer-resize-expected.txt:
+
+2013-10-02  Manuel Rego Casasnovas  <rego@igalia.com>
+
+        [CSS Regions] Selection layout tests moved to specific folder
+        https://bugs.webkit.org/show_bug.cgi?id=122099
+
+        Reviewed by Alexandru Chiculita.
+
+        Moved CSS Regions layout tests related to selection to
+        "fast/regions/selection/".
+
+        * fast/regions/selection/selecting-text-in-empty-region-expected.txt: Renamed from LayoutTests/fast/regions/selecting-text-in-empty-region-expected.txt.
+        * fast/regions/selection/selecting-text-in-empty-region.html: Renamed from LayoutTests/fast/regions/selecting-text-in-empty-region.html.
+        * fast/regions/selection/selecting-text-through-different-region-flows-2-expected.html: Renamed from LayoutTests/fast/regions/selecting-text-through-different-region-flows-2-expected.html.
+        * fast/regions/selection/selecting-text-through-different-region-flows-2.html: Renamed from LayoutTests/fast/regions/selecting-text-through-different-region-flows-2.html.
+        * fast/regions/selection/selecting-text-through-different-region-flows-expected.html: Renamed from LayoutTests/fast/regions/selecting-text-through-different-region-flows-expected.html.
+        * fast/regions/selection/selecting-text-through-different-region-flows.html: Renamed from LayoutTests/fast/regions/selecting-text-through-different-region-flows.html.
+        * fast/regions/selection/selection-direction-expected.html: Renamed from LayoutTests/fast/regions/selection-direction-expected.html.
+        * fast/regions/selection/selection-direction.html: Renamed from LayoutTests/fast/regions/selection-direction.html.
+        * platform/gtk-wk2/TestExpectations: Update path in skipped tests.
+        * platform/qt-wk2/TestExpectations: Ditto.
+
+2013-10-02  Tim Horton  <timothy_horton@apple.com>
+
+        [mac] Stop using DrawingAreaImpl on PLATFORM(MAC) 
+        https://bugs.webkit.org/show_bug.cgi?id=121859
+        <rdar://problem/15069359>
+
+        Reviewed by Anders Carlsson.
+
+        * platform/mac-wk2/TestExpectations:
+
+        * platform/mac-wk2/compositing/contents-opaque/body-background-painted-expected.txt: Added.
+        * platform/mac-wk2/compositing/contents-opaque/body-background-skipped-expected.txt: Added.
+        * platform/mac-wk2/compositing/rtl/rtl-absolute-expected.txt: Added.
+        * platform/mac-wk2/compositing/rtl/rtl-absolute-overflow-expected.txt: Added.
+        * platform/mac-wk2/compositing/rtl/rtl-absolute-overflow-scrolled-expected.txt: Added.
+        Add WebKit2 results, because we dump non-white background color on the root layer now.
+
+        * platform/mac-wk2/compositing/repaint/fixed-background-scroll-expected.txt: Added.
+        New WebKit2 result; repaint rects are showing up now.
+        
+        * platform/mac-wk2/compositing/rtl/rtl-fixed-expected.txt:
+        * platform/mac-wk2/compositing/rtl/rtl-fixed-overflow-expected.txt:
+        Slightly adjusted results.
+
+        * platform/mac-wk2/compositing/tiling/rotated-tiled-clamped-expected.txt: Added.
+        * platform/mac-wk2/compositing/tiling/rotated-tiled-preserve3d-clamped-expected.txt: Added.
+        * platform/mac-wk2/compositing/tiling/tile-cache-zoomed-expected.txt: Added.
+        * platform/mac-wk2/compositing/tiling/tiled-layer-resize-expected.txt: Added.
+        New WebKit2 results; we show the root tile cache if layerTreeAsText is asked to dump tile caches.
+        
+        * platform/mac-wk2/editing/input/caret-at-the-edge-of-contenteditable-expected.txt: Added.
+        * platform/mac-wk2/editing/input/reveal-caret-of-multiline-contenteditable-expected.txt: Added.
+        * platform/mac-wk2/fast/block/basic/020-expected.txt: Added.
+        * platform/mac-wk2/fast/dynamic/012-expected.txt: Added.
+        * platform/mac-wk2/fast/dynamic/layer-hit-test-crash-expected.txt: Added.
+        * platform/mac-wk2/fast/repaint/layer-hide-when-needs-layout-expected.txt: Added.
+        * platform/mac-wk2/fast/text/whitespace/028-expected.txt: Added.
+        * platform/mac-wk2/fast/layers/layer-visibility-expected.txt: Added.
+        * platform/mac-wk2/fast/layers/layer-visibility-sublayer-expected.txt: Added.
+        * platform/mac-wk2/fast/repaint/invisible-objects-expected.txt: Added.
+        New WebKit2 results; additional compositing layers.
+        
+        * platform/mac-wk2/tiled-drawing/window-server-snapshots-work-expected-mismatch.html: Added.
+        * platform/mac-wk2/tiled-drawing/window-server-snapshots-work.html: Added.
+        New test to ensure that window-server snapshots work with tiled drawing.
+
+2013-10-01  Oliver Hunt  <oliver@apple.com>
+
+        Implement Array key, value and entries iterators
+        https://bugs.webkit.org/show_bug.cgi?id=122195
+
+        Reviewed by Filip Pizlo.
+
+        Add tests
+
+        * js/Object-getOwnPropertyNames-expected.txt:
+        * js/array-iterators-expected.txt: Added.
+        * js/array-iterators.html: Added.
+        * js/script-tests/Object-getOwnPropertyNames.js:
+        * js/script-tests/array-iterators.js: Added.
+
+2013-09-25  Oliver Hunt  <oliver@apple.com>
+
+        Implement prefixed-destructuring assignment
+        https://bugs.webkit.org/show_bug.cgi?id=121930
+
+        Reviewed by Mark Hahnenberg.
+
+        Relanding with fix after rollout - it helps to not completely destroy
+        optimisations for no reason.
+
+2013-10-02  Alexey Proskuryakov  <ap@apple.com>
+
+        video-object-fit tests are flaky
+        https://bugs.webkit.org/show_bug.cgi?id=121803
+
+        * platform/mac/TestExpectations: Marking as such.
+
+2013-10-02  Alexey Proskuryakov  <ap@apple.com>
+
+        Quirksmode: CSS1: WebKit fails dynamic :first-letter test
+        https://bugs.webkit.org/show_bug.cgi?id=15602
+
+        * platform/mac/TestExpectations: Correcting Mac expectations too, now that we have results.
+
+2013-10-02  Alexey Proskuryakov  <ap@apple.com>
+
+        Quirksmode: CSS1: WebKit fails dynamic :first-letter test
+        https://bugs.webkit.org/show_bug.cgi?id=15602
+
+        * platform/mac/fast/css/first-letter-block-change-expected.png: Added.
+        * platform/mac/fast/css/first-letter-block-change-expected.txt: Added.
+        Added expected results for Mac.
+
+        * platform/efl/TestExpectations: Corrected the expectation. This test is not
+        failing, it has no results.
+
+2013-10-02  Mihai Maerean  <mmaerean@adobe.com>
+
+        [CSS Regions] Activate all regions to have layers, as CSS Regions create a new stacking context
+        https://bugs.webkit.org/show_bug.cgi?id=121828
+
+        Reviewed by Darin Adler.
+
+        For the ref tests, the divs in the expected results coresponding to the regions now have a CSS style causing
+        them to also create Stacking Contexts.
+
+        Most of the tests in fast/regions/layers/ have been deleted because they aren't relevant anymore.
+
+        The change in most of the *-expected.txt files is that the " hasLayer" part has been removed (since all regions
+        now have layers).
+        
+        Platform (efl, efl-wk2, gtk, mac-lion, mac-wk2, qt, qt-wk2) specific expectated results need to be generated again.
+
+        * fast/regions/autoheight-regions-mark-expected.txt:
+        * fast/regions/flow-content-basic-expected.html: Added. The test is now a ref test.
+        * fast/regions/flow-content-basic-vertical-expected.html: Added. The test is now a ref test.
+        * fast/regions/flow-content-basic-vertical-rl-expected.html: Added.The test is now a ref test.
+        * fast/regions/flow-content-basic-vertical-rl.html:
+        * fast/regions/flow-content-basic-vertical.html:
+        * fast/regions/flow-content-basic.html:
+        * fast/regions/flows-dependency-dynamic-remove-expected.txt:
+        * fast/regions/flows-dependency-same-flow-expected.txt:
+        * fast/regions/layers/dynamic-layer-added-with-no-layout-expected.png: Removed.
+        * fast/regions/layers/dynamic-layer-added-with-no-layout-expected.txt: Removed.
+        * fast/regions/layers/dynamic-layer-added-with-no-layout.html: Removed.
+        * fast/regions/layers/dynamic-layer-removed-with-no-layout-expected.png: Removed.
+        * fast/regions/layers/dynamic-layer-removed-with-no-layout-expected.txt: Removed.
+        * fast/regions/layers/dynamic-layer-removed-with-no-layout.html: Removed.
+        * fast/regions/layers/regions-promoted-to-layers-expected.png: Removed.
+        * fast/regions/layers/regions-promoted-to-layers-expected.txt: Removed.
+        * fast/regions/layers/regions-promoted-to-layers-horizontal-bt-expected.png: Removed.
+        * fast/regions/layers/regions-promoted-to-layers-horizontal-bt-expected.txt: Removed.
+        * fast/regions/layers/regions-promoted-to-layers-horizontal-bt.html: Removed.
+        * fast/regions/layers/regions-promoted-to-layers-vertical-lr-expected.png: Removed.
+        * fast/regions/layers/regions-promoted-to-layers-vertical-lr-expected.txt: Removed.
+        * fast/regions/layers/regions-promoted-to-layers-vertical-lr.html: Removed.
+        * fast/regions/layers/regions-promoted-to-layers-vertical-rl-expected.png: Removed.
+        * fast/regions/layers/regions-promoted-to-layers-vertical-rl-expected.txt: Removed.
+        * fast/regions/layers/regions-promoted-to-layers-vertical-rl.html: Removed.
+        * fast/regions/layers/regions-promoted-to-layers.html: Removed.
+        * fast/regions/layers/stacking-context-paint-order-expected.html: Added.
+        * fast/regions/layers/stacking-context-paint-order.html: Added. While the existing region-sibling-paint-order.html
+        test verifies that regions paint correctly when the next sibling also creates a stacking context, this new test
+        verifies that regions paint correctly when the next sibling doesn't create a stacking context.
+        * fast/regions/region-sibling-paint-order-expected.html:
+        * fast/regions/region-sibling-paint-order.html:
+        * fast/repaint/overflow-flipped-writing-mode-block-in-regions-expected.txt:
+        * fast/repaint/region-painting-composited-element-expected.html:
+        * fast/repaint/region-painting-in-composited-view-expected.html:
+        * fast/repaint/region-painting-in-composited-view.html:
+        * fast/repaint/region-painting-via-layout-expected.txt:
+        * platform/efl-wk2/TestExpectations:
+        * platform/efl-wk2/fast/repaint/japanese-rl-selection-repaint-in-regions-expected.png: Removed.
+        * platform/efl-wk2/fast/repaint/japanese-rl-selection-repaint-in-regions-expected.txt: Removed.
+        * platform/efl/TestExpectations:
+        * platform/efl/fast/regions/autoheight-regions-mark-expected.png: Removed.
+        * platform/efl/fast/regions/autoheight-regions-mark-expected.txt: Removed.
+        * platform/efl/fast/regions/flow-content-basic-expected.png: Removed. The test is now a ref test.
+        * platform/efl/fast/regions/flow-content-basic-expected.txt: Removed.
+        * platform/efl/fast/regions/flow-content-basic-vertical-expected.png: Removed.
+        * platform/efl/fast/regions/flow-content-basic-vertical-expected.txt: Removed.
+        * platform/efl/fast/regions/flow-content-basic-vertical-rl-expected.png: Removed.
+        * platform/efl/fast/regions/flow-content-basic-vertical-rl-expected.txt: Removed.
+        * platform/efl/fast/regions/flows-dependency-dynamic-remove-expected.png: Removed.
+        * platform/efl/fast/regions/flows-dependency-dynamic-remove-expected.txt: Removed.
+        * platform/efl/fast/regions/multiple-directionality-changes-in-variable-width-regions-expected.png: Removed.
+        * platform/efl/fast/regions/multiple-directionality-changes-in-variable-width-regions-expected.txt: Removed.
+        * platform/efl/fast/regions/region-dynamic-after-before-expected.txt:
+        * platform/efl/fast/regions/region-generated-content-before-after-expected.txt:
+        * platform/efl/fast/regions/text-region-split-small-pagination-expected.png: Removed.
+        * platform/efl/fast/regions/text-region-split-small-pagination-expected.txt: Removed.
+        * platform/efl/fast/regions/top-overflow-out-of-second-region-expected.png: Removed.
+        * platform/efl/fast/regions/top-overflow-out-of-second-region-expected.txt: Removed.
+        * platform/efl/fast/repaint/japanese-rl-selection-repaint-in-regions-expected.png: Removed.
+        * platform/efl/fast/repaint/japanese-rl-selection-repaint-in-regions-expected.txt: Removed.
+        * platform/efl/fast/repaint/region-painting-invalidation-expected.png: Removed.
+        * platform/efl/fast/repaint/region-painting-invalidation-expected.txt: Removed.
+        * platform/efl/fast/repaint/region-painting-via-layout-expected.png: Removed.
+        * platform/efl/fast/repaint/region-painting-via-layout-expected.txt: Removed.
+        * platform/gtk/TestExpectations:
+        * platform/gtk/fast/regions/autoheight-regions-mark-expected.png: Removed.
+        * platform/gtk/fast/regions/autoheight-regions-mark-expected.txt: Removed.
+        * platform/gtk/fast/regions/flow-content-basic-expected.png: Removed.
+        * platform/gtk/fast/regions/flow-content-basic-expected.txt: Removed.
+        * platform/gtk/fast/regions/flow-content-basic-vertical-expected.png: Removed.
+        * platform/gtk/fast/regions/flow-content-basic-vertical-expected.txt: Removed.
+        * platform/gtk/fast/regions/flow-content-basic-vertical-rl-expected.png: Removed.
+        * platform/gtk/fast/regions/flow-content-basic-vertical-rl-expected.txt: Removed.
+        * platform/gtk/fast/regions/flows-dependency-dynamic-remove-expected.png: Removed.
+        * platform/gtk/fast/regions/flows-dependency-dynamic-remove-expected.txt: Removed.
+        * platform/gtk/fast/regions/multiple-directionality-changes-in-variable-width-regions-expected.png: Removed.
+        * platform/gtk/fast/regions/multiple-directionality-changes-in-variable-width-regions-expected.txt: Removed.
+        * platform/gtk/fast/regions/region-dynamic-after-before-expected.txt:
+        * platform/gtk/fast/regions/region-generated-content-before-after-expected.txt:
+        * platform/gtk/fast/regions/text-region-split-small-pagination-expected.png: Removed.
+        * platform/gtk/fast/regions/text-region-split-small-pagination-expected.txt: Removed.
+        * platform/gtk/fast/regions/top-overflow-out-of-second-region-expected.png: Removed.
+        * platform/gtk/fast/regions/top-overflow-out-of-second-region-expected.txt: Removed.
+        * platform/gtk/fast/repaint/japanese-rl-selection-repaint-in-regions-expected.png: Removed.
+        * platform/gtk/fast/repaint/japanese-rl-selection-repaint-in-regions-expected.txt: Removed.
+        * platform/gtk/fast/repaint/line-flow-with-floats-in-regions-expected.txt:
+        * platform/gtk/fast/repaint/overflow-flipped-writing-mode-block-in-regions-expected.txt:
+        * platform/gtk/fast/repaint/region-painting-invalidation-expected.png: Removed.
+        * platform/gtk/fast/repaint/region-painting-invalidation-expected.txt: Removed.
+        * platform/gtk/fast/repaint/region-painting-via-layout-expected.png: Removed.
+        * platform/gtk/fast/repaint/region-painting-via-layout-expected.txt: Removed.
+        * platform/mac-lion/TestExpectations:
+        * platform/mac-lion/fast/repaint/japanese-rl-selection-repaint-in-regions-expected.png: Removed.
+        * platform/mac-lion/fast/repaint/japanese-rl-selection-repaint-in-regions-expected.txt: Removed.
+        * platform/mac-wk2/TestExpectations:
+        * platform/mac/fast/regions/flow-content-basic-expected.png: Removed.
+        * platform/mac/fast/regions/flow-content-basic-expected.txt: Removed.
+        * platform/mac/fast/regions/flow-content-basic-vertical-expected.png: Removed.
+        * platform/mac/fast/regions/flow-content-basic-vertical-expected.txt: Removed.
+        * platform/mac/fast/regions/flow-content-basic-vertical-rl-expected.png: Removed.
+        * platform/mac/fast/regions/flow-content-basic-vertical-rl-expected.txt: Removed.
+        * platform/mac/fast/regions/multiple-directionality-changes-in-variable-width-regions-expected.txt:
+        * platform/mac/fast/regions/region-dynamic-after-before-expected.txt:
+        * platform/mac/fast/regions/region-generated-content-before-after-expected.txt:
+        * platform/mac/fast/regions/text-region-split-small-pagination-expected.txt:
+        * platform/mac/fast/regions/top-overflow-out-of-second-region-expected.txt:
+        * platform/mac/fast/repaint/japanese-rl-selection-repaint-in-regions-expected.png: Removed.
+        * platform/mac/fast/repaint/japanese-rl-selection-repaint-in-regions-expected.txt:
+        * platform/mac/fast/repaint/line-flow-with-floats-in-regions-expected.txt:
+        * platform/mac/fast/repaint/region-painting-invalidation-expected.txt:
+        * platform/qt-wk2/TestExpectations:
+        * platform/qt-wk2/fast/regions/flow-content-basic-expected.png: Removed.
+        * platform/qt-wk2/fast/regions/flow-content-basic-vertical-expected.png: Removed.
+        * platform/qt-wk2/fast/regions/flow-content-basic-vertical-rl-expected.png: Removed.
+        * platform/qt-wk2/fast/regions/multiple-directionality-changes-in-variable-width-regions-expected.png: Removed.
+        * platform/qt-wk2/fast/regions/text-region-split-small-pagination-expected.png: Removed.
+        * platform/qt-wk2/fast/regions/top-overflow-out-of-second-region-expected.png: Removed.
+        * platform/qt-wk2/fast/repaint/region-painting-invalidation-expected.png: Removed.
+        * platform/qt-wk2/fast/repaint/region-painting-invalidation-expected.txt: Removed.
+        * platform/qt-wk2/fast/repaint/region-painting-via-layout-expected.png: Removed.
+        * platform/qt/TestExpectations:
+        * platform/qt/fast/regions/autoheight-regions-mark-expected.png: Removed.
+        * platform/qt/fast/regions/autoheight-regions-mark-expected.txt: Removed.
+        * platform/qt/fast/regions/flow-content-basic-expected.png: Removed.
+        * platform/qt/fast/regions/flow-content-basic-expected.txt: Removed.
+        * platform/qt/fast/regions/flow-content-basic-vertical-expected.png: Removed.
+        * platform/qt/fast/regions/flow-content-basic-vertical-expected.txt: Removed.
+        * platform/qt/fast/regions/flow-content-basic-vertical-rl-expected.png: Removed.
+        * platform/qt/fast/regions/flow-content-basic-vertical-rl-expected.txt: Removed.
+        * platform/qt/fast/regions/flows-dependency-dynamic-remove-expected.png: Removed.
+        * platform/qt/fast/regions/flows-dependency-dynamic-remove-expected.txt: Removed.
+        * platform/qt/fast/regions/multiple-directionality-changes-in-variable-width-regions-expected.png: Removed.
+        * platform/qt/fast/regions/multiple-directionality-changes-in-variable-width-regions-expected.txt: Removed.
+        * platform/qt/fast/regions/text-region-split-small-pagination-expected.png: Removed.
+        * platform/qt/fast/regions/text-region-split-small-pagination-expected.txt: Removed.
+        * platform/qt/fast/regions/top-overflow-out-of-second-region-expected.png: Removed.
+        * platform/qt/fast/regions/top-overflow-out-of-second-region-expected.txt: Removed.
+        * platform/qt/fast/repaint/line-flow-with-floats-in-regions-expected.txt:
+        * platform/qt/fast/repaint/overflow-flipped-writing-mode-block-in-regions-expected.txt:
+        * platform/qt/fast/repaint/region-painting-invalidation-expected.png: Removed.
+        * platform/qt/fast/repaint/region-painting-invalidation-expected.txt: Removed.
+        * platform/qt/fast/repaint/region-painting-via-layout-expected.png: Removed.
+        * platform/qt/fast/repaint/region-painting-via-layout-expected.txt: Removed.
+        * platform/win/fast/repaint/japanese-rl-selection-repaint-in-regions-expected.png: Removed.
+        * platform/win/fast/repaint/japanese-rl-selection-repaint-in-regions-expected.txt: Removed.
+
+2013-10-02  Renata Hodovan  <reni@webkit.org>
+
+        HTML listbox is not resized horizontally when zooming
+        https://bugs.webkit.org/show_bug.cgi?id=20445
+
+        Reviewed by Darin Adler.
+
+        A test with a zoomed listbox is added to check whether the styleChange is catched.
+
+        * fast/transforms/listbox-zoom.html: Added.
+        * fast/transforms/listbox-zoom-expected.txt: Added.
+
+2013-10-01  Santosh Mahto  <santosh.ma@samsung.com>
+
+        contenteditable justify commands applied to next paragraph as well
+        https://bugs.webkit.org/show_bug.cgi?id=90611
+
+        Reviewed by Ryosuke Niwa.
+
+        Added a test for selecting one paragraph and the beginning of another
+        paragraph to ensure that only the first fully-selected paragraph should
+        be justified when justifying the selection.
+
+        * editing/execCommand/align-in-span-expected.txt: Updated.
+        * editing/execCommand/contenteditable-justify-next-paragraph-expected.txt: Added.
+        * editing/execCommand/contenteditable-justify-next-paragraph.html: Added.
+
+2013-10-01  Alexey Proskuryakov  <ap@apple.com>
+
+        Flaky Test: media/media-element-play-after-eos.html
+        https://bugs.webkit.org/show_bug.cgi?id=115048
+
+        * platform/mac/TestExpectations: Marking as such.
+
+2013-10-01  Filip Pizlo  <fpizlo@apple.com>
+
+        REGRESSION(156464): 50% regression on SunSpider/string-fasta
+        https://bugs.webkit.org/show_bug.cgi?id=122202
+
+        Unreviewed, roll out r156464.
+
+        * js/destructuring-assignment-expected.txt: Removed.
+        * js/destructuring-assignment.html: Removed.
+        * js/mozilla/strict/13.1-expected.txt:
+        * js/mozilla/strict/regress-532254-expected.txt:
+        * js/mozilla/strict/script-tests/13.1.js:
+        * js/regress/destructuring-arguments-expected.txt: Removed.
+        * js/regress/destructuring-arguments-length-expected.txt: Removed.
+        * js/regress/destructuring-arguments-length.html: Removed.
+        * js/regress/destructuring-arguments.html: Removed.
+        * js/regress/destructuring-swap-expected.txt: Removed.
+        * js/regress/destructuring-swap.html: Removed.
+        * js/regress/script-tests/destructuring-arguments-length.js: Removed.
+        * js/regress/script-tests/destructuring-arguments.js: Removed.
+        * js/regress/script-tests/destructuring-swap.js: Removed.
+        * js/script-tests/destructuring-assignment.js: Removed.
+        * sputnik/Conformance/13_Function_Definition/S13_A5.html:
+
+2013-10-01  Tim Horton  <timothy_horton@apple.com>
+
+        Tiled drawing GraphicsLayer tree dumps should match non-tiled more closely
+        https://bugs.webkit.org/show_bug.cgi?id=122172
+
+        Reviewed by Anders Carlsson.
+
+        * platform/mac-wk2/tiled-drawing/fixed-background/fixed-background-no-image-expected.txt:
+        * platform/mac-wk2/tiled-drawing/fixed-background/fixed-body-background-body-layer-expected.txt:
+        * platform/mac-wk2/tiled-drawing/fixed-background/fixed-body-background-expected.txt:
+        * platform/mac-wk2/tiled-drawing/fixed-background/fixed-body-background-opacity-html-expected.txt:
+        * platform/mac-wk2/tiled-drawing/fixed-background/fixed-body-background-positioned-expected.txt:
+        * platform/mac-wk2/tiled-drawing/fixed-background/fixed-body-background-transformed-html-expected.txt:
+        * platform/mac-wk2/tiled-drawing/fixed-background/fixed-body-background-zoomed-expected.txt:
+        * platform/mac-wk2/tiled-drawing/fixed-background/fixed-html-background-expected.txt:
+        * platform/mac-wk2/tiled-drawing/fixed-background/fixed-non-propagated-body-background-expected.txt:
+        * platform/mac-wk2/tiled-drawing/sticky/sticky-layers-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tile-coverage-after-scroll-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tile-coverage-after-scroll-speculative-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tile-coverage-scroll-to-bottom-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tile-coverage-slow-scrolling-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tile-coverage-speculative-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tile-size-slow-zoomed-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tiled-drawing-scroll-position-page-cache-restoration-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tiled-drawing-zoom-expected.txt:
+        * platform/mac-wk2/tiled-drawing/tiled-drawing-zoom-scrolled-expected.txt:
+        * platform/mac-wk2/tiled-drawing/use-tiled-drawing-expected.txt:
+        Rebaseline some tests given these changes.
+
+2013-10-01  Joone Hur  <joone.hur@intel.com>
+
+        Quirksmode: CSS1: WebKit fails dynamic :first-letter test
+        https://bugs.webkit.org/show_bug.cgi?id=15602
+
+        Reviewed by David Hyatt.
+
+        Add a test case that ensures that CSS first-letter property should work 
+        properly when the first letter is changed by DOM scripting.
+
+        * fast/css/first-letter-block-change.html: Added.
+        * platform/efl/TestExpectations:
+        * platform/gtk-wk1/fast/css/first-letter-block-change-expected.png: Added.
+        * platform/gtk-wk2/fast/css/first-letter-block-change-expected.png: Added.
+        * platform/gtk/fast/css/first-letter-block-change-expected.txt: Added.
+        * platform/mac/TestExpectations:
+
+2013-10-01  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed gardening.
+
+        * platform/win/TestExpectations: Update TestExpectations for two crashes that were not
+        previously logged, one image-only failure, another broken test due to the media changes.
+
+2013-10-01  Roger Fong  <roger_fong@apple.com>
+
+        [Windows] Unreviewed gardening. Skip fast/events/drag-and-drop-autoscroll-inner-frame.html.
+
+		Drag and drop does not work on Windows DRT.
+
+        * platform/win/TestExpectations:
+
+2013-10-01  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed build fix after r156730.
+        https://bugs.webkit.org/show_bug.cgi?id=122021
+
+        * platform/win/TestExpectations: Disable a number of tests broken by the switch to the new
+        CSS/JS-based media controls.
+
+2013-10-01  Alexey Proskuryakov  <ap@apple.com>
+
+        fast/forms/search-event-delay.html is flakey
+        https://bugs.webkit.org/show_bug.cgi?id=53990
+
+        * TestExpectations: Marking as such.
+
+2013-10-01  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r156725.
+        http://trac.webkit.org/changeset/156725
+        https://bugs.webkit.org/show_bug.cgi?id=122176
+
+        broke all the mismatch tests again (Requested by thorton on
+        #webkit).
+
+        * platform/mac-wk2/tiled-drawing/window-server-snapshots-work-expected-mismatch.html: Removed.
+        * platform/mac-wk2/tiled-drawing/window-server-snapshots-work.html: Removed.
+
+2013-10-01  Tim Horton  <timothy_horton@apple.com>
+
+        [wk2] WebKitTestRunner's window snapshots are blank with tiled drawing
+        https://bugs.webkit.org/show_bug.cgi?id=122006
+        <rdar://problem/15095197>
+
+        Reviewed by Dean Jackson.
+
+        Add a test that ensures that WebKitTestRunner's snapshots are not
+        completely blank with tiled drawing enabled.
+
+        * platform/mac-wk2/tiled-drawing/window-server-snapshots-work-expected-mismatch.html: Added.
+        * platform/mac-wk2/tiled-drawing/window-server-snapshots-work.html: Added.
+
+2013-09-30  Jer Noble  <jer.noble@apple.com>
+
+        [Mac] Add support for VideoTrack to MediaPlayerPrivateAVFObjC
+        https://bugs.webkit.org/show_bug.cgi?id=122122
+
+        Reviewed by Eric Carlson.
+
+        * media/track/video-track-expected.txt: Added.
+        * media/track/video-track.html: Added.
+
+2013-10-01  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Center misspelling dots across width of word
+        https://bugs.webkit.org/show_bug.cgi?id=122046
+
+        Reviewed by Darin Adler.
+
+        This patch only rebaselines a single test. I would have rebaselined
+        the rest of the tests, but they seem to be affected by
+        webkit.org/b/122146. I don't want to commit incorrect expected results.
+
+        * platform/mac/editing/spelling/spelling-expected.png:
+
+2013-10-01  Brendan Long  <b.long@cablelabs.com>
+
+        [GStreamer] Support "chapter" text tracks
+        https://bugs.webkit.org/show_bug.cgi?id=122000
+
+        Reviewed by Eric Carlson.
+
+        * media/content/counting-subtitled-srt.mkv: Added chapters metadata.
+        * media/track/in-band/track-in-band-mkv-chapters-expected.txt: New test, similar to cues-added-one, but uses "chapters" track.
+        * media/track/in-band/track-in-band-mkv-chapters.html: Same.
+        * media/in-band-cues.js: Updated tests to handle the new "chapters" track.
+        * media/track/in-band/track-in-band-kate-ogg-cues-added-once-expected.txt: Same.
+        * media/track/in-band/track-in-band-kate-ogg-cues-added-once.html: Same.
+        * media/track/in-band/track-in-band-kate-ogg-mode-expected.txt: Same.
+        * media/track/in-band/track-in-band-kate-ogg-mode.html: Same.
+        * media/track/in-band/track-in-band-kate-ogg-style-expected.txt: Same.
+        * media/track/in-band/track-in-band-kate-ogg-track-order-expected.txt: Same.
+        * media/track/in-band/track-in-band-kate-ogg-track-order.html: Same.
+        * media/track/in-band/track-in-band-srt-mkv-cues-added-once-expected.txt: Same.
+        * media/track/in-band/track-in-band-srt-mkv-cues-added-once.html: Same.
+        * media/track/in-band/track-in-band-srt-mkv-kind-expected.txt: Same.
+        * media/track/in-band/track-in-band-srt-mkv-kind.html: Same.
+        * media/track/in-band/track-in-band-srt-mkv-language-expected.txt: Same.
+        * media/track/in-band/track-in-band-srt-mkv-language.html: Same.
+        * media/track/in-band/track-in-band-srt-mkv-mode-expected.txt: Same.
+        * media/track/in-band/track-in-band-srt-mkv-mode.html: Same.
+        * media/track/in-band/track-in-band-srt-mkv-style-expected.txt: Same.
+        * media/track/in-band/track-in-band-srt-mkv-track-order-expected.txt: Same.
+        * media/track/in-band/track-in-band-srt-mkv-track-order.html: Same.
+
+2013-10-01  Darin Adler  <darin@apple.com>
+
+        Try to get another Windows test to pass.
+
+        * platform/win/js/dom/global-constructors-attributes-expected.txt: Removed one
+        more class (Notification) for a feature turned off for the Windows platform.
+
+2013-10-01  Darin Adler  <darin@apple.com>
+
+        Try to get another Windows test to pass.
+
+        * platform/win/js/dom/global-constructors-attributes-expected.txt: Added.
+        Copy of the platform-independent results file, with items deleted for features
+        that are currently turned off for the Windows platform.
+
+2013-10-01  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening. Adding failure expectations for currently failing tests.
+
+        * platform/gtk/TestExpectations:
+
+2013-10-01  Darin Adler  <darin@apple.com>
+
+        Move platform-specific test results from js to js/dom to match moves in r156066.
+
+        I see multiple check-ins with people doing this for some files, but these seem to have been missed.
+        Maybe some of these are unneeded and can be removed.
+
+        My hope is that this might help with some failures seen on the Windows bot.
+
+        * platform/blackberry/js/dom/constructor-length-expected.txt: Renamed from LayoutTests/platform/blackberry/js/constructor-length-expected.txt.
+        * platform/efl/js/dom/constructor-length-expected.txt: Renamed from LayoutTests/platform/efl/js/constructor-length-expected.txt.
+        * platform/efl/js/dom/dom-static-property-for-in-iteration-expected.txt: Renamed from LayoutTests/platform/efl/js/dom-static-property-for-in-iteration-expected.txt.
+        * platform/efl/js/dom/exception-linenums-in-html-3-expected.png: Renamed from LayoutTests/platform/efl/js/exception-linenums-in-html-3-expected.png.
+        * platform/efl/js/dom/global-constructors-attributes-dedicated-worker-expected.txt: Renamed from LayoutTests/platform/efl/js/global-constructors-attributes-dedicated-worker-expected.txt.
+        * platform/efl/js/dom/global-constructors-attributes-shared-worker-expected.txt: Renamed from LayoutTests/platform/efl/js/global-constructors-attributes-shared-worker-expected.txt.
+        * platform/efl/js/dom/missing-style-end-tag-js-expected.png: Renamed from LayoutTests/platform/efl/js/missing-style-end-tag-js-expected.png.
+        * platform/efl/js/dom/missing-title-end-tag-js-expected.png: Renamed from LayoutTests/platform/efl/js/missing-title-end-tag-js-expected.png.
+        * platform/gtk/js/dom/constructor-length-expected.txt: Renamed from LayoutTests/platform/gtk/js/constructor-length-expected.txt.
+        * platform/gtk/js/dom/exception-linenums-in-html-3-expected.png: Renamed from LayoutTests/platform/gtk/js/exception-linenums-in-html-3-expected.png.
+        * platform/gtk/js/dom/missing-style-end-tag-js-expected.png: Renamed from LayoutTests/platform/gtk/js/missing-style-end-tag-js-expected.png.
+        * platform/gtk/js/dom/missing-title-end-tag-js-expected.png: Renamed from LayoutTests/platform/gtk/js/missing-title-end-tag-js-expected.png.
+        * platform/mac/js/dom/exception-linenums-in-html-3-expected.png: Renamed from LayoutTests/platform/mac/js/exception-linenums-in-html-3-expected.png.
+        * platform/mac/js/dom/missing-style-end-tag-js-expected.png: Renamed from LayoutTests/platform/mac/js/missing-style-end-tag-js-expected.png.
+        * platform/mac/js/dom/missing-title-end-tag-js-expected.png: Renamed from LayoutTests/platform/mac/js/missing-title-end-tag-js-expected.png.
+        * platform/qt/js/dom/constructor-length-expected.txt: Renamed from LayoutTests/platform/qt/js/constructor-length-expected.txt.
+        * platform/qt/js/dom/date-DST-time-cusps-expected.txt: Renamed from LayoutTests/platform/qt/js/date-DST-time-cusps-expected.txt.
+        * platform/qt/js/dom/dom-static-property-for-in-iteration-expected.txt: Renamed from LayoutTests/platform/qt/js/dom-static-property-for-in-iteration-expected.txt.
+        * platform/qt/js/dom/exception-linenums-in-html-3-expected.png: Renamed from LayoutTests/platform/qt/js/exception-linenums-in-html-3-expected.png.
+        * platform/qt/js/dom/missing-style-end-tag-js-expected.png: Renamed from LayoutTests/platform/qt/js/missing-style-end-tag-js-expected.png.
+        * platform/qt/js/dom/missing-title-end-tag-js-expected.png: Renamed from LayoutTests/platform/qt/js/missing-title-end-tag-js-expected.png.
+        * platform/qt/js/dom/switch-behaviour-expected.txt: Renamed from LayoutTests/platform/qt/js/switch-behaviour-expected.txt.
+        * platform/win/js/dom/dom-static-property-for-in-iteration-expected.txt: Renamed from LayoutTests/platform/win/js/dom-static-property-for-in-iteration-expected.txt.
+        * platform/win/js/dom/global-constructors-attributes-dedicated-worker-expected.txt: Renamed from LayoutTests/platform/win/js/global-constructors-attributes-dedicated-worker-expected.txt.
+        * platform/win/js/dom/global-constructors-attributes-shared-worker-expected.txt: Renamed from LayoutTests/platform/win/js/global-constructors-attributes-shared-worker-expected.txt.
+
+2013-10-01  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed GTK gardening. Rebaselining after r156527, moving baselines specific to GTK WK1
+        under the platform/gtk-wk1 directory.
+
+        * platform/gtk-wk1/js: Added.
+        * platform/gtk-wk1/js/dom: Added.
+        * platform/gtk-wk1/js/dom/function-length-expected.txt: Added.
+        * platform/gtk-wk1/scrollingcoordinator: Added.
+        * platform/gtk-wk1/scrollingcoordinator/non-fast-scrollable-region-scaled-iframe-expected.txt: Added.
+        * platform/gtk-wk1/scrollingcoordinator/non-fast-scrollable-region-transformed-iframe-expected.txt: Added.
+        * platform/gtk/js/dom/function-length-expected.txt: Removed.
+        * platform/gtk/scrollingcoordinator: Removed.
+        * platform/gtk/scrollingcoordinator/non-fast-scrollable-region-scaled-iframe-expected.txt: Removed.
+        * platform/gtk/scrollingcoordinator/non-fast-scrollable-region-transformed-iframe-expected.txt: Removed.
+        * platform/gtk/svg/custom/SVGPoint-matrixTransform-expected.txt:
+        * platform/gtk/svg/custom/getTransformToElement-expected.txt:
+        * platform/gtk/svg/custom/text-ctm-expected.txt:
+        * platform/gtk/svg/custom/text-hit-test-expected.txt:
+        * platform/gtk/svg/text/append-text-node-to-tspan-expected.txt:
+
+2013-09-30  Alexey Proskuryakov  <ap@apple.com>
+
+        Layout Test media/click-volume-bar-not-pausing.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=122126
+
+        Reviewed by Darin Adler.
+
+        Speculative partial fix.
+
+        I'm not sure if it's possible to make this test completely controlled without
+        DOMFrameContentLoaded support - we need to do work when the <video> element is
+        already present, but playback hasn't started yet. As media documents use autoplay,
+        there is a race between load and playing events.
+
+        * media/click-volume-bar-not-pausing-expected.txt:
+        * media/click-volume-bar-not-pausing.html:
+          - Add video URL after initial content fully loads to avoid races with that.
+          - Added some state logging for clarity.
+          - Only listen for "playing" event once. If playback already started, we have a
+          playing event already queued, and would add another one with pause()/play().
+
+2013-09-30  Sam White  <samuel_white@apple.com>
+
+        AX: Expose ARIA Busy Notifications
+        https://bugs.webkit.org/show_bug.cgi?id=121451
+
+        Reviewed by Chris Fleizach.
+
+        Added test to verify that elements post AXElementBusyChanged notifications when aria-busy is toggled.
+
+        * platform/mac/accessibility/element-busy-changed-expected.txt: Added.
+        * platform/mac/accessibility/element-busy-changed.html: Added.
+
+2013-09-30  Sam Weinig  <sam@webkit.org>
+
+        Remove support for DOMFileSystem
+        https://bugs.webkit.org/show_bug.cgi?id=122137
+
+        Reviewed by Anders Carlsson.
+
+        * fast/dom/MutationObserver/filesystem-callback-delivery-expected.txt: Removed.
+        * fast/dom/MutationObserver/filesystem-callback-delivery.html: Removed.
+        * fast/filesystem: Removed.
+        * fast/filesystem/async-operations-expected.txt: Removed.
+        * fast/filesystem/async-operations.html: Removed.
+        * fast/filesystem/cross-filesystem-op-expected.txt: Removed.
+        * fast/filesystem/cross-filesystem-op.html: Removed.
+        * fast/filesystem/directory-entry-to-uri-expected.txt: Removed.
+        * fast/filesystem/directory-entry-to-uri.html: Removed.
+        * fast/filesystem/entry-points-missing-arguments-expected.txt: Removed.
+        * fast/filesystem/entry-points-missing-arguments.html: Removed.
+        * fast/filesystem/file-after-reload-crash-expected.txt: Removed.
+        * fast/filesystem/file-after-reload-crash.html: Removed.
+        * fast/filesystem/file-entry-to-uri-expected.txt: Removed.
+        * fast/filesystem/file-entry-to-uri.html: Removed.
+        * fast/filesystem/file-from-file-entry-expected.txt: Removed.
+        * fast/filesystem/file-from-file-entry.html: Removed.
+        * fast/filesystem/file-metadata-after-write-expected.txt: Removed.
+        * fast/filesystem/file-metadata-after-write.html: Removed.
+        * fast/filesystem/file-writer-abort-continue-expected.txt: Removed.
+        * fast/filesystem/file-writer-abort-continue.html: Removed.
+        * fast/filesystem/file-writer-abort-depth-expected.txt: Removed.
+        * fast/filesystem/file-writer-abort-depth.html: Removed.
+        * fast/filesystem/file-writer-abort-expected.txt: Removed.
+        * fast/filesystem/file-writer-abort.html: Removed.
+        * fast/filesystem/file-writer-empty-blob-expected.txt: Removed.
+        * fast/filesystem/file-writer-empty-blob.html: Removed.
+        * fast/filesystem/file-writer-events-expected.txt: Removed.
+        * fast/filesystem/file-writer-events.html: Removed.
+        * fast/filesystem/file-writer-gc-blob-expected.txt: Removed.
+        * fast/filesystem/file-writer-gc-blob.html: Removed.
+        * fast/filesystem/file-writer-truncate-extend-expected.txt: Removed.
+        * fast/filesystem/file-writer-truncate-extend.html: Removed.
+        * fast/filesystem/file-writer-write-overlapped-expected.txt: Removed.
+        * fast/filesystem/file-writer-write-overlapped.html: Removed.
+        * fast/filesystem/filesystem-missing-arguments-expected.txt: Removed.
+        * fast/filesystem/filesystem-missing-arguments.html: Removed.
+        * fast/filesystem/filesystem-no-callback-null-ptr-crash-expected.txt: Removed.
+        * fast/filesystem/filesystem-no-callback-null-ptr-crash.html: Removed.
+        * fast/filesystem/filesystem-reference-expected.txt: Removed.
+        * fast/filesystem/filesystem-reference.html: Removed.
+        * fast/filesystem/filesystem-unserializable-expected.txt: Removed.
+        * fast/filesystem/filesystem-unserializable.html: Removed.
+        * fast/filesystem/filesystem-uri-origin-expected.txt: Removed.
+        * fast/filesystem/filesystem-uri-origin.html: Removed.
+        * fast/filesystem/flags-passing-expected.txt: Removed.
+        * fast/filesystem/flags-passing.html: Removed.
+        * fast/filesystem/input-access-entries-expected.txt: Removed.
+        * fast/filesystem/input-access-entries.html: Removed.
+        * fast/filesystem/not-enough-arguments-expected.txt: Removed.
+        * fast/filesystem/not-enough-arguments.html: Removed.
+        * fast/filesystem/op-copy-expected.txt: Removed.
+        * fast/filesystem/op-copy.html: Removed.
+        * fast/filesystem/op-get-entry-expected.txt: Removed.
+        * fast/filesystem/op-get-entry.html: Removed.
+        * fast/filesystem/op-get-metadata-expected.txt: Removed.
+        * fast/filesystem/op-get-metadata.html: Removed.
+        * fast/filesystem/op-get-parent-expected.txt: Removed.
+        * fast/filesystem/op-get-parent.html: Removed.
+        * fast/filesystem/op-move-expected.txt: Removed.
+        * fast/filesystem/op-move.html: Removed.
+        * fast/filesystem/op-read-directory-expected.txt: Removed.
+        * fast/filesystem/op-read-directory.html: Removed.
+        * fast/filesystem/op-remove-expected.txt: Removed.
+        * fast/filesystem/op-remove.html: Removed.
+        * fast/filesystem/op-restricted-chars-expected.txt: Removed.
+        * fast/filesystem/op-restricted-chars.html: Removed.
+        * fast/filesystem/op-restricted-names-expected.txt: Removed.
+        * fast/filesystem/op-restricted-names.html: Removed.
+        * fast/filesystem/op-restricted-unicode-expected.txt: Removed.
+        * fast/filesystem/op-restricted-unicode.html: Removed.
+        * fast/filesystem/read-directory-expected.txt: Removed.
+        * fast/filesystem/read-directory.html: Removed.
+        * fast/filesystem/resources: Removed.
+        * fast/filesystem/resources/async-operations.js: Removed.
+        * fast/filesystem/resources/directory-entry-to-uri.js: Removed.
+        * fast/filesystem/resources/file-entry-to-uri-sync.js: Removed.
+        * fast/filesystem/resources/file-entry-to-uri.js: Removed.
+        * fast/filesystem/resources/file-from-file-entry-sync.js: Removed.
+        * fast/filesystem/resources/file-from-file-entry.js: Removed.
+        * fast/filesystem/resources/file-writer-abort-continue.js: Removed.
+        * fast/filesystem/resources/file-writer-abort-depth.js: Removed.
+        * fast/filesystem/resources/file-writer-abort.js: Removed.
+        * fast/filesystem/resources/file-writer-empty-blob.js: Removed.
+        * fast/filesystem/resources/file-writer-events.js: Removed.
+        * fast/filesystem/resources/file-writer-gc-blob.js: Removed.
+        * fast/filesystem/resources/file-writer-sync-truncate-extend.js: Removed.
+        * fast/filesystem/resources/file-writer-sync-write-overlapped.js: Removed.
+        * fast/filesystem/resources/file-writer-truncate-extend.js: Removed.
+        * fast/filesystem/resources/file-writer-utils.js: Removed.
+        * fast/filesystem/resources/file-writer-write-overlapped.js: Removed.
+        * fast/filesystem/resources/fs-test-util.js: Removed.
+        * fast/filesystem/resources/fs-worker-common.js: Removed.
+        * fast/filesystem/resources/op-copy.js: Removed.
+        * fast/filesystem/resources/op-get-entry.js: Removed.
+        * fast/filesystem/resources/op-get-metadata.js: Removed.
+        * fast/filesystem/resources/op-get-parent.js: Removed.
+        * fast/filesystem/resources/op-move.js: Removed.
+        * fast/filesystem/resources/op-read-directory.js: Removed.
+        * fast/filesystem/resources/op-remove.js: Removed.
+        * fast/filesystem/resources/op-restricted-chars.js: Removed.
+        * fast/filesystem/resources/op-restricted-names.js: Removed.
+        * fast/filesystem/resources/op-restricted-unicode.js: Removed.
+        * fast/filesystem/resources/op-tests-helper.js: Removed.
+        * fast/filesystem/resources/shared-worker-stub.js: Removed.
+        * fast/filesystem/resources/simple-persistent-sync.js: Removed.
+        * fast/filesystem/resources/simple-persistent.js: Removed.
+        * fast/filesystem/resources/simple-readonly.js: Removed.
+        * fast/filesystem/resources/simple-required-arguments-getdirectory.js: Removed.
+        * fast/filesystem/resources/simple-required-arguments-getfile.js: Removed.
+        * fast/filesystem/resources/simple-required-arguments-getmetadata.js: Removed.
+        * fast/filesystem/resources/simple-required-arguments-remove.js: Removed.
+        * fast/filesystem/resources/simple-temporary-sync.js: Removed.
+        * fast/filesystem/resources/simple-temporary.js: Removed.
+        * fast/filesystem/resources/sync-operations.js: Removed.
+        * fast/filesystem/script-tests: Removed.
+        * fast/filesystem/script-tests/TEMPLATE.html: Removed.
+        * fast/filesystem/script-tests/filesystem-reference.js: Removed.
+        * fast/filesystem/script-tests/filesystem-unserializable.js: Removed.
+        * fast/filesystem/script-tests/flags-passing.js: Removed.
+        * fast/filesystem/script-tests/read-directory.js: Removed.
+        * fast/filesystem/simple-persistent-expected.txt: Removed.
+        * fast/filesystem/simple-persistent.html: Removed.
+        * fast/filesystem/simple-readonly-expected.txt: Removed.
+        * fast/filesystem/simple-readonly-file-object-expected.txt: Removed.
+        * fast/filesystem/simple-readonly-file-object.html: Removed.
+        * fast/filesystem/simple-readonly.html: Removed.
+        * fast/filesystem/simple-required-arguments-getdirectory-expected.txt: Removed.
+        * fast/filesystem/simple-required-arguments-getdirectory.html: Removed.
+        * fast/filesystem/simple-required-arguments-getfile-expected.txt: Removed.
+        * fast/filesystem/simple-required-arguments-getfile.html: Removed.
+        * fast/filesystem/simple-required-arguments-getmetadata-expected.txt: Removed.
+        * fast/filesystem/simple-required-arguments-getmetadata.html: Removed.
+        * fast/filesystem/simple-required-arguments-remove-expected.txt: Removed.
+        * fast/filesystem/simple-required-arguments-remove.html: Removed.
+        * fast/filesystem/simple-temporary-expected.txt: Removed.
+        * fast/filesystem/simple-temporary.html: Removed.
+        * fast/filesystem/workers: Removed.
+        * fast/filesystem/workers/async-operations-expected.txt: Removed.
+        * fast/filesystem/workers/async-operations.html: Removed.
+        * fast/filesystem/workers/detached-frame-crash-expected.txt: Removed.
+        * fast/filesystem/workers/detached-frame-crash.html: Removed.
+        * fast/filesystem/workers/file-entry-to-uri-sync-expected.txt: Removed.
+        * fast/filesystem/workers/file-entry-to-uri-sync.html: Removed.
+        * fast/filesystem/workers/file-from-file-entry-expected.txt: Removed.
+        * fast/filesystem/workers/file-from-file-entry-sync-expected.txt: Removed.
+        * fast/filesystem/workers/file-from-file-entry-sync.html: Removed.
+        * fast/filesystem/workers/file-from-file-entry.html: Removed.
+        * fast/filesystem/workers/file-writer-empty-blob-expected.txt: Removed.
+        * fast/filesystem/workers/file-writer-empty-blob.html: Removed.
+        * fast/filesystem/workers/file-writer-events-expected.txt: Removed.
+        * fast/filesystem/workers/file-writer-events-shared-worker-expected.txt: Removed.
+        * fast/filesystem/workers/file-writer-events-shared-worker.html: Removed.
+        * fast/filesystem/workers/file-writer-events.html: Removed.
+        * fast/filesystem/workers/file-writer-gc-blob-expected.txt: Removed.
+        * fast/filesystem/workers/file-writer-gc-blob.html: Removed.
+        * fast/filesystem/workers/file-writer-sync-truncate-extend-expected.txt: Removed.
+        * fast/filesystem/workers/file-writer-sync-truncate-extend.html: Removed.
+        * fast/filesystem/workers/file-writer-sync-write-overlapped-expected.txt: Removed.
+        * fast/filesystem/workers/file-writer-sync-write-overlapped.html: Removed.
+        * fast/filesystem/workers/file-writer-truncate-extend-expected.txt: Removed.
+        * fast/filesystem/workers/file-writer-truncate-extend.html: Removed.
+        * fast/filesystem/workers/file-writer-write-overlapped-expected.txt: Removed.
+        * fast/filesystem/workers/file-writer-write-overlapped.html: Removed.
+        * fast/filesystem/workers/resources: Removed.
+        * fast/filesystem/workers/resources/detached-frame-crash-frame.html: Removed.
+        * fast/filesystem/workers/resources/detached-frame-crash-worker.js: Removed.
+        * fast/filesystem/workers/simple-persistent-expected.txt: Removed.
+        * fast/filesystem/workers/simple-persistent-sync-expected.txt: Removed.
+        * fast/filesystem/workers/simple-persistent-sync.html: Removed.
+        * fast/filesystem/workers/simple-persistent.html: Removed.
+        * fast/filesystem/workers/simple-temporary-expected.txt: Removed.
+        * fast/filesystem/workers/simple-temporary-sync-expected.txt: Removed.
+        * fast/filesystem/workers/simple-temporary-sync.html: Removed.
+        * fast/filesystem/workers/simple-temporary.html: Removed.
+        * fast/filesystem/workers/sync-operations-expected.txt: Removed.
+        * fast/filesystem/workers/sync-operations.html: Removed.
+        * fast/forms/file/input-file-entries-expected.txt: Removed.
+        * fast/forms/file/input-file-entries.html: Removed.
+        * http/tests/filesystem: Removed.
+        * http/tests/filesystem/no-cache-filesystem-url-expected.txt: Removed.
+        * http/tests/filesystem/no-cache-filesystem-url.html: Removed.
+        * http/tests/filesystem/resolve-uri-expected.txt: Removed.
+        * http/tests/filesystem/resolve-uri.html: Removed.
+        * http/tests/filesystem/resources: Removed.
+        * http/tests/filesystem/resources/fs-test-util.js: Removed.
+        * http/tests/filesystem/resources/fs-worker-common.js: Removed.
+        * http/tests/filesystem/resources/fs-worker-test-util.js: Removed.
+        * http/tests/filesystem/script-tests: Removed.
+        * http/tests/filesystem/script-tests/TEMPLATE.html: Removed.
+        * http/tests/filesystem/script-tests/resolve-uri.js: Removed.
+        * http/tests/filesystem/workers: Removed.
+        * http/tests/filesystem/workers/resolve-url-expected.txt: Removed.
+        * http/tests/filesystem/workers/resolve-url-sync-expected.txt: Removed.
+        * http/tests/filesystem/workers/resolve-url-sync.html: Removed.
+        * http/tests/filesystem/workers/resolve-url.html: Removed.
+        * http/tests/filesystem/workers/script-tests: Removed.
+        * http/tests/filesystem/workers/script-tests/TEMPLATE.html: Removed.
+        * http/tests/filesystem/workers/script-tests/resolve-url-sync.js: Removed.
+        * http/tests/inspector/filesystem: Removed.
+        * http/tests/inspector/filesystem/delete-entry-expected.txt: Removed.
+        * http/tests/inspector/filesystem/delete-entry.html: Removed.
+        * http/tests/inspector/filesystem/directory-tree-expected.txt: Removed.
+        * http/tests/inspector/filesystem/directory-tree.html: Removed.
+        * http/tests/inspector/filesystem/filesystem-test.js: Removed.
+        * http/tests/inspector/filesystem/request-directory-content-expected.txt: Removed.
+        * http/tests/inspector/filesystem/request-directory-content.html: Removed.
+        * http/tests/inspector/filesystem/request-file-content-expected.txt: Removed.
+        * http/tests/inspector/filesystem/request-file-content.html: Removed.
+        * http/tests/inspector/filesystem/request-filesystem-root-expected.txt: Removed.
+        * http/tests/inspector/filesystem/request-filesystem-root.html: Removed.
+        * http/tests/inspector/filesystem/request-metadata-expected.txt: Removed.
+        * http/tests/inspector/filesystem/request-metadata.html: Removed.
+        * http/tests/security/contentSecurityPolicy/filesystem-urls-match-self-expected.txt: Removed.
+        * http/tests/security/contentSecurityPolicy/filesystem-urls-match-self.html: Removed.
+        * http/tests/security/filesystem-iframe-from-remote-expected.txt: Removed.
+        * http/tests/security/filesystem-iframe-from-remote.html: Removed.
+        * http/tests/security/mixedContent/filesystem-url-in-iframe-expected.txt: Removed.
+        * http/tests/security/mixedContent/filesystem-url-in-iframe.html: Removed.
+        * http/tests/websocket/tests/hybi/send-file-blob-expected.txt: Removed.
+        * http/tests/websocket/tests/hybi/send-file-blob-fail-expected.txt: Removed.
+        * http/tests/websocket/tests/hybi/send-file-blob-fail.html: Removed.
+        * http/tests/websocket/tests/hybi/send-file-blob.html: Removed.
+        * http/tests/workers/resources/sync-operations.js:
+        (onmessage):
+        * http/tests/workers/terminate-during-sync-operation-expected.txt: Removed.
+        * http/tests/workers/terminate-during-sync-operation.html: Removed.
+        * platform/efl/TestExpectations:
+        * platform/gtk/TestExpectations:
+        * platform/mac/TestExpectations:
+        * platform/qt/TestExpectations:
+        * platform/win/TestExpectations:
+        * platform/wincairo/TestExpectations:
+
+2013-09-30  Alexey Proskuryakov  <ap@apple.com>
+
+        Remove timeout from shouldBecome* functions in js-test-pre
+        https://bugs.webkit.org/show_bug.cgi?id=122121
+
+        Reviewed by Ryosuke Niwa.
+
+        Removed timeout. A 0.5 sec timeout never makes sense, and if something is stuck,
+        a test should just time out normally.
+
+        * resources/js-test-pre.js:
+        (_waitForCondition):
+        (shouldBecomeEqual):
+        (shouldBecomeEqualToString):
+        (shouldBecomeDifferent):
+
+2013-09-30  Jer Noble  <jer.noble@apple.com>
+
+        Unreviewed, roll back in r156546 with rebaselined tests.
+        https://bugs.webkit.org/show_bug.cgi?id=122111
+
+        * platform/mac/TestExpectations:
+        * platform/mac/fast/hidpi/video-controls-in-hidpi-expected.png:
+        * platform/mac/fast/hidpi/video-controls-in-hidpi-expected.txt:
+        * platform/mac/fast/layers/video-layer-expected.png:
+        * platform/mac/fast/layers/video-layer-expected.txt:
+        * platform/mac/media/media-controls-clone-expected.png:
+        * platform/mac/media/media-controls-clone-expected.txt:
+        * platform/mac/media/video-no-audio-expected.txt:
+
+2013-09-30  Robert Plociennik  <r.plociennik@samsung.com>
+
+        editing/execCommand/findString-diacriticals.html expects to fail
+        https://bugs.webkit.org/show_bug.cgi?id=122100
+
+        Reviewed by Alexey Proskuryakov.
+
+        Since all major platforms pass editing/execCommand/findString-diacriticals.html,
+        the test now globally expects "PASS" instead of "FAIL" rendering the individual
+        platform expectation files obsolete.
+
+        * editing/execCommand/findString-diacriticals-expected.txt: "PASS" -> "FAIL"
+        * platform/efl/TestExpectations: EFL passes editing/execCommand/findString-diacriticals.
+        * platform/gtk/editing/execCommand/findString-diacriticals-expected.txt: Removed.
+        * platform/mac/editing/execCommand/findString-diacriticals-expected.txt: Removed.
+        * platform/qt/editing/execCommand/findString-diacriticals-expected.txt: Removed.
+
+2013-09-30  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r156656.
+        http://trac.webkit.org/changeset/156656
+        https://bugs.webkit.org/show_bug.cgi?id=122111
+
+        Broke several media tests (Requested by ap on #webkit).
+
+        * platform/mac/TestExpectations:
+        * platform/mac/media/video-no-audio-expected.txt:
+
 2013-09-30  Krzysztof Czech  <k.czech@samsung.com>
 
         [EFL] Changed expectation for accessibility/file-upload-button-stringvalue.html after r156532

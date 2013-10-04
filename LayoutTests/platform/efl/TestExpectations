@@ -268,10 +268,6 @@ editing/unsupported-content/table-delete-003.html
 fast/dom/rtl-scroll-to-leftmost-and-resize.html
 fast/text/unicode-variation-selector.html
 
-# Requires ENABLE(FILE_SYSTEM)
-fast/forms/file/input-file-entries.html
-http/tests/security/contentSecurityPolicy/filesystem-urls-match-self.html
-
 # X-Content-Type-Options (ENABLE_NOSNIFF) is not enabled.
 http/tests/security/contentTypeOptions
 
@@ -1048,7 +1044,6 @@ webkit.org/b/79766 compositing/iframes/iframe-size-from-zero.html [ Failure ]
 webkit.org/b/79766 compositing/iframes/iframe-size-to-zero.html [ Failure ]
 webkit.org/b/79766 compositing/iframes/iframe-src-change.html [ Failure ]
 webkit.org/b/79766 compositing/iframes/resizer.html [ Missing ]
-webkit.org/b/79766 compositing/iframes/iframe-position-absolute-with-padding-percentage-crash.html [ Failure ]
 webkit.org/b/79766 compositing/layer-creation/spanOverlapsCanvas.html [ Failure ]
 webkit.org/b/79766 compositing/overflow/clipping-ancestor-with-accelerated-scrolling-ancestor.html [ Skip ]
 webkit.org/b/79766 compositing/overflow/nested-scrolling.html [ Skip ]
@@ -1162,9 +1157,6 @@ webkit.org/b/85594 fast/dom/navigator-detached-no-crash.html [ Failure ]
 # Interferes with the rAF tests that are enabled
 webkit.org/b/85689 fast/animation/request-animation-frame-disabled.html [ Skip ]
 
-# EFL's DumpRenderTree should support LayoutTestController's dumpEditingCallbacks()
-webkit.org/b/84835 editing/execCommand/findString-diacriticals.html [ Failure ]
-
 # DRT doesn't check for isPrinting().
 webkit.org/b/87226 printing/iframe-print.html [ Failure ]
 
@@ -1196,16 +1188,6 @@ webkit.org/b/88191 fast/viewport/viewport-legacy-ordering-5.html [ Failure ]
 webkit.org/b/88191 fast/viewport/viewport-legacy-ordering-6.html [ Failure ]
 webkit.org/b/88191 fast/viewport/viewport-legacy-xhtmlmp.html [ Failure ]
 webkit.org/b/88191 fast/viewport/viewport-legacy-xhtmlmp-remove-and-add.html [ Failure ]
-
-# The EFL port has no support for the FileSystem API
-webkit.org/b/68591 fast/filesystem
-webkit.org/b/68591 fast/dom/MutationObserver/filesystem-callback-delivery.html
-webkit.org/b/68591 http/tests/filesystem
-webkit.org/b/68591 http/tests/security/filesystem-iframe-from-remote.html
-webkit.org/b/68591 http/tests/security/mixedContent/filesystem-url-in-iframe.html
-webkit.org/b/68591 http/tests/inspector/filesystem
-webkit.org/b/68591 http/tests/websocket/tests/hybi/send-file-blob-fail.html
-webkit.org/b/68591 http/tests/websocket/tests/hybi/send-file-blob.html
 
 # WKTR / EFL's DRT do not support setViewModeMediaFeature().
 Bug(EFL) fast/media/view-mode-media-feature.html [ ImageOnlyFailure ]
@@ -1380,9 +1362,6 @@ webkit.org/b/99691 gamepad/gamepad-out-of-range-crasher.html [ Failure ]
 # Resource Timing is not enable yet, skip it.
 webkit.org/b/61138 http/tests/w3c/webperf/submission/Intel/resource-timing [ Skip ]
 
-# Entering into full screen playback mode fails when triggered by context menu
-Bug(EFL) media/context-menu-actions.html [ Failure ]
-
 # Tests that create an extra graphics layer
 webkit.org/b/102697 compositing/overflow/overflow-auto-with-touch-no-overflow.html [ Failure ]
 webkit.org/b/102697 compositing/overflow/overflow-hidden-with-touch.html [ Failure ]
@@ -1430,8 +1409,6 @@ webkit.org/b/101456 fast/repaint/block-selection-gap-in-table-cell.html [ Missin
 
 # Identical failures on GTK, EFL and Qt.
 webkit.org/b/101539 editing/execCommand/switch-list-type-with-orphaned-li.html [ Failure ]
-
-webkit.org/b/66268 editing/deleting/regional-indicators.html [ Failure ]
 
 # Wrong video colors.
 webkit.org/b/102091 media/video-colorspace-yuv420.html [ Skip ]
@@ -1651,7 +1628,6 @@ webkit.org/b/114612 editing/style/block-style-005.html [ Failure ]
 webkit.org/b/115419 http/tests/media/video-redirect.html [ Failure ]
 webkit.org/b/115419 media/media-can-play-ogg.html [ Failure ]
 webkit.org/b/115419 media/track/track-automatic-subtitles.html [ Failure ]
-webkit.org/b/115419 media/video-poster-background.html [ ImageOnlyFailure ]
 
 webkit.org/b/115439 fast/text/complex-initial-advance.html [ ImageOnlyFailure ]
 webkit.org/b/115440 svg/stroke/animated-non-scaling-stroke.html [ ImageOnlyFailure ]
@@ -1672,3 +1648,14 @@ webkit.org/b/118378 vibration/cancelVibration-after-pagevisibility-changed-to-hi
 
 webkit.org/b/119782 fast/forms/search-styled.html [ Failure ]
 
+webkit.org/b/15602 fast/css/first-letter-block-change.html [ Missing ]
+
+# Tests need new generated expected results
+webkit.org/b/121828 fast/regions/autoheight-regions-mark.html [ Missing ]
+webkit.org/b/121828 fast/regions/flows-dependency-dynamic-remove.html [ Missing ]
+webkit.org/b/121828 fast/regions/multiple-directionality-changes-in-variable-width-regions.html [ Missing ]
+webkit.org/b/121828 fast/regions/text-region-split-small-pagination.html [ Missing ]
+webkit.org/b/121828 fast/regions/top-overflow-out-of-second-region.html [ Missing ]
+webkit.org/b/121828 fast/repaint/japanese-rl-selection-repaint-in-regions.html [ Missing ]
+webkit.org/b/121828 fast/repaint/region-painting-invalidation.html [ Missing ]
+webkit.org/b/121828 fast/repaint/region-painting-via-layout.html [ Missing ]

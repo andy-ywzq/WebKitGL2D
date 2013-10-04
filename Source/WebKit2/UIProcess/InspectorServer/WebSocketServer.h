@@ -38,15 +38,6 @@
 #include <wtf/gobject/GRefPtr.h>
 #endif
 
-#if PLATFORM(QT)
-namespace WebKit {
-class QtTcpServerHandler;
-}
-#elif PLATFORM(GTK) || PLATFORM(NIX) //FIXME: should be USE(SOUP) instead
-#include <gio/gio.h>
-#include <wtf/gobject/GRefPtr.h>
-#endif
-
 namespace WebCore {
 class SocketStreamHandle;
 }
@@ -84,9 +75,7 @@ private:
     WebSocketServerClient* m_client;
     String m_bindAddress;
     unsigned short m_port;
-#if PLATFORM(QT)
-    OwnPtr<QtTcpServerHandler> m_tcpServerHandler;
-#elif USE(SOUP) || USE(CURL)
+#if USE(SOUP) || USE(CURL)
     GRefPtr<GSocketService> m_socketService;
 #endif
 

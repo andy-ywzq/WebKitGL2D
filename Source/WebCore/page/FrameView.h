@@ -198,7 +198,6 @@ public:
     void scrollPositionChangedViaPlatformWidget();
     virtual void repaintFixedElementsAfterScrolling() OVERRIDE;
     virtual void updateFixedElementsAfterScrolling() OVERRIDE;
-    virtual bool shouldRubberBandInDirection(ScrollDirection) const OVERRIDE;
     virtual bool requestScrollPositionUpdate(const IntPoint&) OVERRIDE;
     virtual bool isRubberBandInProgress() const OVERRIDE;
     virtual IntPoint minimumScrollPosition() const OVERRIDE;
@@ -434,6 +433,8 @@ public:
     void updateWidgetPositions();
     void didAddWidgetToRenderTree(Widget&);
     void willRemoveWidgetFromRenderTree(Widget&);
+
+    void addTrackedRepaintRect(const IntRect&);
 
 protected:
     virtual bool scrollContentsFastPath(const IntSize& scrollDelta, const IntRect& rectToScroll, const IntRect& clipRect) OVERRIDE;

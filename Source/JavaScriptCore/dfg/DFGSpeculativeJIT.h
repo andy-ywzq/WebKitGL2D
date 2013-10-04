@@ -2185,41 +2185,16 @@ public:
     // flag is cleared, indicating no further code generation should take place.
     bool m_compileOkay;
     
-    // Tracking for which nodes are currently holding the values of arguments and bytecode
-    // operand-indexed variables.
-    
-    ValueSource valueSourceForOperand(VirtualRegister operand)
+    void recordSetLocal(
+        VirtualRegister bytecodeReg, VirtualRegister machineReg, DataFormat format)
     {
-        return valueSourceReferenceForOperand(operand);
+        m_stream->appendAndLog(VariableEvent::setLocal(bytecodeReg, machineReg, format));
     }
     
-    void setNodeForOperand(Node* node, VirtualRegister operand)
+    void recordSetLocal(DataFormat format)
     {
-        valueSourceReferenceForOperand(operand) = ValueSource(MinifiedID(node));
-    }
-    
-    // Call this with care, since it both returns a reference into an array
-    // and potentially resizes the array. So it would not be right to call this
-    // twice and then perform operands on both references, since the one from
-    // the first call may no longer be valid.
-    ValueSource& valueSourceReferenceForOperand(VirtualRegister operand)
-    {
-        if (operand.isArgument()) {
-            int argument = operand.toArgument();
-            return m_arguments[argument];
-        }
-
-        int local = operand.toLocal();
-        if ((unsigned)local >= m_variables.size())
-            m_variables.resize(local + 1);
-        
-        return m_variables[local];
-    }
-    
-    void recordSetLocal(VirtualRegister operand, ValueSource valueSource)
-    {
-        valueSourceReferenceForOperand(operand) = valueSource;
-        m_stream->appendAndLog(VariableEvent::setLocal(operand, valueSource.dataFormat()));
+        VariableAccessData* variable = m_currentNode->variableAccessData();
+        recordSetLocal(variable->local(), variable->local(), format);
     }
 
     GenerationInfo& generationInfoFromVirtualRegister(VirtualRegister virtualRegister)
@@ -2265,8 +2240,6 @@ public:
     };
     Vector<BranchRecord, 8> m_branches;
 
-    Vector<ValueSource, 0> m_arguments;
-    Vector<ValueSource, 0> m_variables;
     VirtualRegister m_lastSetOperand;
     CodeOrigin m_codeOriginForExitTarget;
     CodeOrigin m_codeOriginForExitProfile;
@@ -2281,13 +2254,6 @@ public:
     
     Vector<OwnPtr<SlowPathGenerator>, 8> m_slowPathGenerators;
     Vector<SilentRegisterSavePlan> m_plans;
-    
-    ValueRecovery computeValueRecoveryFor(const ValueSource&);
-
-    ValueRecovery computeValueRecoveryFor(int operand)
-    {
-        return computeValueRecoveryFor(valueSourceForOperand(VirtualRegister(operand)));
-    }
 };
 
 

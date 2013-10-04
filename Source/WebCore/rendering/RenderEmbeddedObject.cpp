@@ -475,7 +475,7 @@ void RenderEmbeddedObject::layout()
         view().frameView().addEmbeddedObjectToUpdate(*this);
     }
 
-    setNeedsLayout(false);
+    clearNeedsLayout();
 
     LayoutSize newSize = contentBoxRect().size();
 
@@ -515,9 +515,9 @@ void RenderEmbeddedObject::layout()
     childBox->setLocation(LayoutPoint(borderLeft(), borderTop()) + LayoutSize(paddingLeft(), paddingTop()));
     childBox->style()->setHeight(Length(newSize.height(), Fixed));
     childBox->style()->setWidth(Length(newSize.width(), Fixed));
-    childBox->setNeedsLayout(true, MarkOnlyThis);
+    childBox->setNeedsLayout(MarkOnlyThis);
     childBox->layout();
-    setChildNeedsLayout(false);
+    clearChildNeedsLayout();
     
     statePusher.pop();
 }
@@ -615,7 +615,7 @@ void RenderEmbeddedObject::handleUnavailablePluginIndicatorEvent(Event* event)
     if (event->type() == eventNames().mousedownEvent && static_cast<MouseEvent*>(event)->button() == LeftButton) {
         m_mouseDownWasInUnavailablePluginIndicator = isInUnavailablePluginIndicator(mouseEvent);
         if (m_mouseDownWasInUnavailablePluginIndicator) {
-            frame().eventHandler().setCapturingMouseEventsNode(&element);
+            frame().eventHandler().setCapturingMouseEventsElement(&element);
             element.setIsCapturingMouseEvents(true);
             setUnavailablePluginIndicatorIsPressed(true);
         }
@@ -623,7 +623,7 @@ void RenderEmbeddedObject::handleUnavailablePluginIndicatorEvent(Event* event)
     }
     if (event->type() == eventNames().mouseupEvent && static_cast<MouseEvent*>(event)->button() == LeftButton) {
         if (m_unavailablePluginIndicatorIsPressed) {
-            frame().eventHandler().setCapturingMouseEventsNode(0);
+            frame().eventHandler().setCapturingMouseEventsElement(nullptr);
             element.setIsCapturingMouseEvents(false);
             setUnavailablePluginIndicatorIsPressed(false);
         }

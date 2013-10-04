@@ -48,13 +48,11 @@
 #include <wtf/text/CString.h>
 #include <wtf/text/StringBuilder.h>
 
-#if USE(CF) && !PLATFORM(QT)
+#if USE(CF)
 #include "WebArchiveDumpSupport.h"
 #endif
 
-#if PLATFORM(QT)
-#include "DumpRenderTreeSupportQt.h"
-#elif PLATFORM(NIX)
+#if PLATFORM(NIX)
 #include <WebKit2/NixTestSupport.h>
 #endif
 
@@ -430,9 +428,7 @@ void InjectedBundlePage::resetAfterTest()
 {
     WKBundleFrameRef frame = WKBundlePageGetMainFrame(m_page);
     JSGlobalContextRef context = WKBundleFrameGetJavaScriptContext(frame);
-#if PLATFORM(QT)
-    DumpRenderTreeSupportQt::resetInternalsObject(context);
-#elif PLATFORM(NIX)
+#if PLATFORM(NIX)
     Nix::resetInternalsObject(context);
 #else
     WebCoreTestSupport::resetInternalsObject(context);
@@ -831,14 +827,11 @@ void InjectedBundlePage::dumpAllFramesText(StringBuilder& stringBuilder)
 
 void InjectedBundlePage::dumpDOMAsWebArchive(WKBundleFrameRef frame, StringBuilder& stringBuilder)
 {
-#if USE(CF) && !PLATFORM(QT)
+#if USE(CF)
     WKRetainPtr<WKDataRef> wkData = adoptWK(WKBundleFrameCopyWebArchive(frame));
     RetainPtr<CFDataRef> cfData = adoptCF(CFDataCreate(0, WKDataGetBytes(wkData.get()), WKDataGetSize(wkData.get())));
     RetainPtr<CFStringRef> cfString = adoptCF(createXMLStringFromWebArchiveData(cfData.get()));
     stringBuilder.append(cfString.get());
-#else
-    UNUSED_PARAM(frame);
-    UNUSED_PARAM(stringBuilder);
 #endif
 }
 
@@ -967,12 +960,11 @@ void InjectedBundlePage::didClearWindowForFrame(WKBundleFrameRef frame, WKBundle
     InjectedBundle::shared().eventSendingController()->makeWindowObject(context, window, &exception);
     InjectedBundle::shared().textInputController()->makeWindowObject(context, window, &exception);
     InjectedBundle::shared().accessibilityController()->makeWindowObject(context, window, &exception);
+
 #if ENABLE(GAMEPAD)
     InjectedBundle::shared().gamepadController()->makeWindowObject(context, window, &exception);
 #endif
-#if PLATFORM(QT)
-    DumpRenderTreeSupportQt::injectInternalsObject(context);
-#elif PLATFORM(NIX)
+#if PLATFORM(NIX)
     Nix::injectInternalsObject(context);
 #else
     WebCoreTestSupport::injectInternalsObject(context);

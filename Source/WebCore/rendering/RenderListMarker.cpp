@@ -1118,7 +1118,7 @@ String listMarkerText(EListStyleType type, int value)
 }
 
 RenderListMarker::RenderListMarker(RenderListItem& listItem)
-    : RenderBox(0)
+    : RenderBox(nullptr, 0)
     , m_listItem(listItem)
 {
     // init RenderObject attributes
@@ -1407,7 +1407,7 @@ void RenderListMarker::layout()
     if (endMargin.isFixed())
         setMarginEnd(endMargin.value());
 
-    setNeedsLayout(false);
+    clearNeedsLayout();
 }
 
 void RenderListMarker::imageChanged(WrappedImagePtr o, const IntRect*)

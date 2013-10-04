@@ -50,7 +50,7 @@
 #include <WebKit2/WKBaseNix.h>
 #endif
 
-#if defined(__APPLE__) && !defined(BUILDING_QT__)
+#if defined(__APPLE__)
 #include <WebKit2/WKBaseMac.h>
 #endif
 

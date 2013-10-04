@@ -37,8 +37,8 @@ bool RenderLayerModelObject::s_hadLayer = false;
 bool RenderLayerModelObject::s_hadTransform = false;
 bool RenderLayerModelObject::s_layerWasSelfPainting = false;
 
-RenderLayerModelObject::RenderLayerModelObject(Element* element)
-    : RenderElement(element)
+RenderLayerModelObject::RenderLayerModelObject(Element* element, unsigned baseTypeFlags)
+    : RenderElement(element, baseTypeFlags | RenderLayerModelObjectFlag)
     , m_layer(0)
 {
 }
@@ -142,7 +142,7 @@ void RenderLayerModelObject::styleDidChange(StyleDifference diff, const RenderSt
     if (requiresLayer()) {
         if (!layer() && layerCreationAllowedForSubtree()) {
             if (s_wasFloating && isFloating())
-                setChildNeedsLayout(true);
+                setChildNeedsLayout();
             ensureLayer();
             if (parent() && !needsLayout() && containingBlock()) {
                 layer()->setRepaintStatus(NeedsFullRepaint);
@@ -156,7 +156,7 @@ void RenderLayerModelObject::styleDidChange(StyleDifference diff, const RenderSt
         setHasReflection(false);
         layer()->removeOnlyThisLayer(); // calls destroyLayer() which clears m_layer
         if (s_wasFloating && isFloating())
-            setChildNeedsLayout(true);
+            setChildNeedsLayout();
         if (s_hadTransform)
             setNeedsLayoutAndPrefWidthsRecalc();
     }
@@ -164,7 +164,7 @@ void RenderLayerModelObject::styleDidChange(StyleDifference diff, const RenderSt
     if (layer()) {
         layer()->styleChanged(diff, oldStyle);
         if (s_hadLayer && layer()->isSelfPaintingLayer() != s_layerWasSelfPainting)
-            setChildNeedsLayout(true);
+            setChildNeedsLayout();
     }
 
     bool newStyleIsViewportConstained = style()->hasViewportConstrainedPosition();
@@ -175,33 +175,6 @@ void RenderLayerModelObject::styleDidChange(StyleDifference diff, const RenderSt
         else
             view().frameView().removeViewportConstrainedObject(this);
     }
-}
-
-bool RenderLayerModelObject::updateLayerIfNeeded()
-{
-    LayoutStateDisabler layoutStateDisabler(&view());
-
-    bool hadLayer = hasLayer();
-    if (requiresLayer()) {
-        if (!layer() && layerCreationAllowedForSubtree()) {
-            ensureLayer();
-            if (parent() && containingBlock()) {
-                layer()->setRepaintStatus(NeedsFullRepaint);
-                // There is only one layer to update, it is not worth using |cachedOffset| since
-                // we are not sure the value will be used.
-                layer()->updateLayerPositions(0);
-            }
-        }
-    } else if (layer() && layer()->parent())
-        layer()->removeOnlyThisLayer(); // calls destroyLayer() which clears m_layer
-
-    if (hadLayer == hasLayer())
-        return false;
-
-    if (layer())
-        layer()->styleChanged(StyleDifferenceEqual, 0);
-
-    return true;
 }
 
 } // namespace WebCore

@@ -383,6 +383,8 @@ public:
 
     virtual bool willRespondToMouseClickEvents() OVERRIDE;
 
+    void enteredOrExitedFullscreen() { configureMediaControls(); }
+
 protected:
     HTMLMediaElement(const QualifiedName&, Document&, bool);
     virtual ~HTMLMediaElement();
@@ -607,8 +609,6 @@ private:
     void prepareMediaFragmentURI();
     void applyMediaFragmentURI();
 
-    virtual void* preDispatchEventHandler(Event*);
-
     void changeNetworkStateFromLoadingToIdle();
 
     void removeBehaviorsRestrictionsAfterFirstUserGesture();
@@ -627,7 +627,7 @@ private:
 
 #if ENABLE(MEDIA_CONTROLS_SCRIPT)
     virtual void didAddUserAgentShadowRoot(ShadowRoot*) OVERRIDE;
-    DOMWrapperWorld* ensureIsolatedWorld();
+    DOMWrapperWorld& ensureIsolatedWorld();
     bool ensureMediaControlsInjectedScript();
 #endif
 

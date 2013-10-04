@@ -1,3 +1,48 @@
+2013-10-03  Sam Weinig  <sam@webkit.org>
+
+        Remove shouldRubberBandInDirection from the WKBundlePageUIClient
+        https://bugs.webkit.org/show_bug.cgi?id=122309
+
+        Reviewed by Andreas Kling.
+
+        * WebCoreSupport/WebChromeClient.h:
+
+2013-10-02  Roger Fong  <roger_fong@apple.com>
+
+        [Windows] Unreviewed build fix.
+
+        * WebScriptWorld.cpp:
+        (WebScriptWorld::findOrCreateWorld):
+
+2013-10-01  Sam Weinig  <sam@webkit.org>
+
+        CTTE: DOMWrapperWorlds should be passed around by reference
+        https://bugs.webkit.org/show_bug.cgi?id=122206
+
+        Reviewed by Andreas Kling.
+
+        * WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebFrameLoaderClient::dispatchDidClearWindowObjectInWorld):
+        * WebCoreSupport/WebFrameLoaderClient.h:
+        * WebScriptWorld.cpp:
+        (WebScriptWorld::standardWorld):
+        (WebScriptWorld::findOrCreateWorld):
+        * WebScriptWorld.h:
+        (WebScriptWorld::world):
+
+2013-10-01  Alex Christensen  <achristensen@webkit.org>
+
+        Implemented createWebViewWithRequest in WinLauncher.
+        https://bugs.webkit.org/show_bug.cgi?id=122069
+
+        Reviewed by Brent Fulgham.
+
+        * WebCoreSupport/WebChromeClient.cpp:
+        (WebChromeClient::createWindow):
+        * WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebFrameLoaderClient::dispatchCreatePage):
+        Pass request url from the NavigationAction to createWebViewWithRequest.
+
 2013-09-30  Andreas Kling  <akling@apple.com>
 
         Try to fix the Windows build.

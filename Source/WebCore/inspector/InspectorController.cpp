@@ -51,7 +51,6 @@
 #include "InspectorDOMStorageAgent.h"
 #include "InspectorDatabaseAgent.h"
 #include "InspectorDebuggerAgent.h"
-#include "InspectorFileSystemAgent.h"
 #include "InspectorFrontend.h"
 #include "InspectorFrontendClient.h"
 #include "InspectorHeapProfilerAgent.h"
@@ -112,9 +111,6 @@ InspectorController::InspectorController(Page* page, InspectorClient* inspectorC
     m_agents.append(InspectorIndexedDBAgent::create(m_instrumentingAgents.get(), m_state.get(), m_injectedScriptManager.get(), pageAgent));
 #endif
 
-#if ENABLE(FILE_SYSTEM)
-    m_agents.append(InspectorFileSystemAgent::create(m_instrumentingAgents.get(), pageAgent, m_state.get()));
-#endif
     OwnPtr<InspectorDOMStorageAgent> domStorageAgentPtr(InspectorDOMStorageAgent::create(m_instrumentingAgents.get(), m_pageAgent, m_state.get()));
     InspectorDOMStorageAgent* domStorageAgent = domStorageAgentPtr.get();
     m_agents.append(domStorageAgentPtr.release());
@@ -215,9 +211,9 @@ bool InspectorController::hasInspectorFrontendClient() const
     return m_inspectorFrontendClient;
 }
 
-void InspectorController::didClearWindowObjectInWorld(Frame* frame, DOMWrapperWorld* world)
+void InspectorController::didClearWindowObjectInWorld(Frame* frame, DOMWrapperWorld& world)
 {
-    if (world != mainThreadNormalWorld())
+    if (&world != &mainThreadNormalWorld())
         return;
 
     // If the page is supposed to serve as InspectorFrontend notify inspector frontend

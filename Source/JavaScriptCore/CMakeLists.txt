@@ -72,6 +72,7 @@ set(JavaScriptCore_SOURCES
     bytecode/StructureStubClearingWatchpoint.cpp
     bytecode/StructureStubInfo.cpp
     bytecode/UnlinkedCodeBlock.cpp
+    bytecode/ValueRecovery.cpp
     bytecode/Watchpoint.cpp
 
     bytecompiler/BytecodeGenerator.cpp
@@ -265,6 +266,8 @@ set(JavaScriptCore_SOURCES
     runtime/ArrayBuffer.cpp
     runtime/ArrayBufferView.cpp
     runtime/ArrayConstructor.cpp
+    runtime/ArrayIteratorConstructor.cpp
+    runtime/ArrayIteratorPrototype.cpp
     runtime/ArrayPrototype.cpp
     runtime/BooleanConstructor.cpp
     runtime/BooleanObject.cpp
@@ -308,6 +311,7 @@ set(JavaScriptCore_SOURCES
     runtime/JSArrayBufferConstructor.cpp
     runtime/JSArrayBufferPrototype.cpp
     runtime/JSArrayBufferView.cpp
+    runtime/JSArrayIterator.cpp
     runtime/JSBoundFunction.cpp
     runtime/JSCJSValue.cpp
     runtime/JSCell.cpp

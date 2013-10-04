@@ -1726,9 +1726,26 @@ void ForInNode::emitBytecode(BytecodeGenerator& generator, RegisterID* dst)
     } else {
         ASSERT(m_lexpr->isDeconstructionNode());
         DeconstructingAssignmentNode* assignNode = static_cast<DeconstructingAssignmentNode*>(m_lexpr);
-        propertyName = generator.newTemporary();
-        RefPtr<RegisterID> protect(propertyName);
-        assignNode->bindings()->emitBytecode(generator, propertyName);
+        auto binding = assignNode->bindings();
+        if (binding->isBindingNode()) {
+            auto simpleBinding = static_cast<BindingNode*>(binding);
+            Identifier ident = simpleBinding->boundProperty();
+            Local local = generator.local(ident);
+            propertyName = local.get();
+            if (!propertyName)
+                goto genericBinding;
+            expectedSubscript = generator.emitMove(generator.newTemporary(), propertyName);
+            generator.pushOptimisedForIn(expectedSubscript.get(), iter.get(), i.get(), propertyName);
+            optimizedForinAccess = true;
+            goto completedSimpleBinding;
+        } else {
+        genericBinding:
+            propertyName = generator.newTemporary();
+            RefPtr<RegisterID> protect(propertyName);
+            assignNode->bindings()->emitBytecode(generator, propertyName);
+        }
+        completedSimpleBinding:
+        ;
     }
 
     generator.emitNode(dst, m_statement);

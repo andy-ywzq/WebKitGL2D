@@ -1,3 +1,666 @@
+2013-10-03  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed. Add myself to some watchlists.
+
+        * Scripts/webkitpy/common/config/watchlist:
+
+2013-10-03  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Remove Qt builders from the flakiness dashboard.
+
+        * TestResultServer/static-dashboards/builders.jsonp:
+        * TestResultServer/static-dashboards/flakiness_dashboard.js:
+        * TestResultServer/static-dashboards/flakiness_dashboard_unittests.js:
+        * TestResultServer/static-dashboards/loader_unittests.js:
+
+2013-10-03  Tim Horton  <timothy_horton@apple.com>
+
+        [mac][wk2] ScrollPinningBehaviors, SpacebarScrolling, and ScrollByLineCommands fail after r156793
+        https://bugs.webkit.org/show_bug.cgi?id=122299
+
+        Reviewed by Beth Dakin.
+
+        * TestWebKitAPI/Tests/WebKit2/ScrollPinningBehaviors.cpp:
+        Disable threaded scrolling.
+
+        * TestWebKitAPI/Tests/WebKit2/SpacebarScrolling.cpp:
+        * TestWebKitAPI/Tests/WebKit2/mac/EditorCommands.mm:
+        Synchronously wait for the scrolling thread to inform the main thread of the new scroll position.
+
+2013-10-03  Anders Carlsson  <andersca@apple.com>
+
+        Use numeric strings in the OS version dictionary
+        https://bugs.webkit.org/show_bug.cgi?id=122300
+
+        Reviewed by Mark Rowe.
+
+        * Scripts/webkitpy/common/system/platforminfo.py:
+        (PlatformInfo._determine_mac_version):
+
+2013-10-03  Alexey Proskuryakov  <ap@apple.com>
+
+        Fix LeaksViewer to load leaks results from MountainLion, not Lion.
+
+        Rubber-stamped by Tim Horton.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/LeaksViewer/LeaksViewer.js:
+        (LeaksViewer._displayURLPrompt):
+
+2013-10-03  Dan Bernstein  <mitz@apple.com>
+
+        REGRESSION (r156811): Objective-C JavaScriptCore API test failing on Mountain Lion bots
+        https://bugs.webkit.org/show_bug.cgi?id=122260
+
+        Reviewed by Alexey Proskuryakov.
+
+        For the API to work, the tests need to be compiled with a newer version of the LLVM
+        compiler. Until the bots are updated to that version, disable the tests on 10.8.
+
+        * TestWebKitAPI/Tests/mac/WebViewDidCreateJavaScriptContext.mm:
+
+2013-10-02  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [ATK] Expose aria-invalid as a text attribute (not object attribute)
+        https://bugs.webkit.org/show_bug.cgi?id=122015
+
+        Reviewed by Chris Fleizach.
+
+        Adapted DRT and WKTR to check the exposure of the aria-invalid
+        attribute as a text attribute, instead of an object attribute.
+
+        Also, done some refactoring of the code to try to keep things
+        simpler and more coherent, by defining new helper functions,
+        simplifying code, moving static variables and functions into
+        unnammed namespaces and so on, without altering the logic other
+        than for checking the text attribute for aria-invalid.
+
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (coreAttributeToAtkAttribute): Consider 'invalid' as the name of
+        the attribute exposed by the ATK wrapper, not 'aria-invalid'.
+        Also, never return an empty string if not falling through any of
+        the cases checked here, and return the original attribute instead.
+        (atkAttributeValueToCoreAttributeValue): New helper function to
+        match the attributes values returned by the ATK wrapper with the
+        values expected by the layout tests. Moved the mappings for the
+        values of AXSortDirection here as well.
+        (getAttributeSet): New helper function to retrieve a list of
+        attributes (an AtkAttributeSet) from an AtkObject using the right
+        API depending on whether we want the object attributes or the text
+        attributes (in case the object implements AtkText).
+        (getAttributeSetValueForId): Simplified by using getAttributeSet
+        and atkAttributeValueToCoreAttributeValue. Also, added a new
+        parameter to indicater whether we are interested in object
+        attributes or text attributes.
+        (getAtkAttributeSetAsString): Ditto.
+        (attributesOfElement): Updated to pass the new required parameter
+        to getAtkAttributeSetAsString, indicating that we want the object
+        attributes in this case, for backwards compatibility.
+        (indexRangeInTable): Moved up in the file into the unnammed namespace.
+        (alterCurrentValue): Ditto.
+        (AccessibilityUIElement::stringAttributeValue): After moving most
+        of the code here to the new helper functions, simplified it by
+        just checking whether the required attribute is provided as an
+        object attribute or, if that's not the case, as a text attribute.
+        (AccessibilityUIElement::isAttributeSupported): Ditto.
+        (AccessibilityUIElement::intValue): Updated to pass the new
+        required parameter to getAttributeSetValueForId, indicating that
+        we want the object attributes in this case.
+        (AccessibilityUIElement::hasPopup): Ditto.
+
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::coreAttributeToAtkAttribute): Same changes than for DRT.
+        (WTR::atkAttributeValueToCoreAttributeValue): Ditto.
+        (WTR::getAttributeSet): Ditto.
+        (WTR::getAttributeSetValueForId): Ditto.
+        (WTR::getAtkAttributeSetAsString): Ditto.
+        (WTR::attributesOfElement): Ditto.
+        (WTR::AccessibilityUIElement::stringAttributeValue): Ditto.
+        (WTR::AccessibilityUIElement::isAttributeSupported): Ditto.
+        (WTR::AccessibilityUIElement::intValue): Ditto.
+        (WTR::AccessibilityUIElement::hasPopup): Ditto.
+
+2013-10-02  Ryosuke Niwa  <rniwa@webkit.org>
+
+        EWS build fix after the Qt EWS removal.
+
+        * QueueStatusServer/model/attachment.py:
+        (Attachment._calculate_queue_positions):
+
+2013-10-02  Anders Carlsson  <andersca@apple.com>
+
+        Remove Qt code from Tools/
+        https://bugs.webkit.org/show_bug.cgi?id=122227
+
+        Reviewed by Andreas Kling.
+
+        * DumpRenderTree/WorkQueue.cpp:
+        * DumpRenderTree/blackberry/src.pro: Removed.
+        * DumpRenderTree/qt/DumpRenderTree.pro: Removed.
+        * DumpRenderTree/qt/DumpRenderTree.qrc: Removed.
+        * DumpRenderTree/qt/DumpRenderTreeMain.cpp: Removed.
+        * DumpRenderTree/qt/DumpRenderTreeQt.cpp: Removed.
+        * DumpRenderTree/qt/DumpRenderTreeQt.h: Removed.
+        * DumpRenderTree/qt/EventSenderQt.cpp: Removed.
+        * DumpRenderTree/qt/EventSenderQt.h: Removed.
+        * DumpRenderTree/qt/GCControllerQt.cpp: Removed.
+        * DumpRenderTree/qt/TestNetscapePlugin/TestNetscapePlugin.pro: Removed.
+        * DumpRenderTree/qt/TestRunnerQt.cpp: Removed.
+        * DumpRenderTree/qt/TestRunnerQt.h: Removed.
+        * DumpRenderTree/qt/TextInputControllerQt.cpp: Removed.
+        * DumpRenderTree/qt/TextInputControllerQt.h: Removed.
+        * DumpRenderTree/qt/WorkQueueItemQt.cpp: Removed.
+        * DumpRenderTree/qt/WorkQueueItemQt.h: Removed.
+        * DumpRenderTree/qt/fonts/AHEM____.TTF: Removed.
+        * DumpRenderTree/qt/resources/user.css: Removed.
+        * DumpRenderTree/qt/testplugin.cpp: Removed.
+        * DumpRenderTree/qt/testplugin.h: Removed.
+        * ImageDiff/ImageDiff.pro: Removed.
+        * ImageDiff/qt/ImageDiff.cpp: Removed.
+        * MiniBrowser/qt/BrowserWindow.cpp: Removed.
+        * MiniBrowser/qt/BrowserWindow.h: Removed.
+        * MiniBrowser/qt/MiniBrowser.pro: Removed.
+        * MiniBrowser/qt/MiniBrowser.qrc: Removed.
+        * MiniBrowser/qt/MiniBrowserApplication.cpp: Removed.
+        * MiniBrowser/qt/MiniBrowserApplication.h: Removed.
+        * MiniBrowser/qt/UrlLoader.cpp: Removed.
+        * MiniBrowser/qt/UrlLoader.h: Removed.
+        * MiniBrowser/qt/icons/checkbox_checked.png: Removed.
+        * MiniBrowser/qt/icons/checkbox_unchecked.png: Removed.
+        * MiniBrowser/qt/icons/contents_width.png: Removed.
+        * MiniBrowser/qt/icons/favicon.png: Removed.
+        * MiniBrowser/qt/icons/find.png: Removed.
+        * MiniBrowser/qt/icons/folder.png: Removed.
+        * MiniBrowser/qt/icons/info.png: Removed.
+        * MiniBrowser/qt/icons/next.png: Removed.
+        * MiniBrowser/qt/icons/plus.png: Removed.
+        * MiniBrowser/qt/icons/previous.png: Removed.
+        * MiniBrowser/qt/icons/refresh.png: Removed.
+        * MiniBrowser/qt/icons/stop.png: Removed.
+        * MiniBrowser/qt/icons/titlebar.png: Removed.
+        * MiniBrowser/qt/icons/touch.png: Removed.
+        * MiniBrowser/qt/icons/touchpoint.png: Removed.
+        * MiniBrowser/qt/icons/up.png: Removed.
+        * MiniBrowser/qt/js/MultiSelect.js: Removed.
+        * MiniBrowser/qt/main.cpp: Removed.
+        * MiniBrowser/qt/qml/AlertDialog.qml: Removed.
+        * MiniBrowser/qt/qml/AuthenticationDialog.qml: Removed.
+        * MiniBrowser/qt/qml/BrowserWindow.qml: Removed.
+        * MiniBrowser/qt/qml/CheckBox.qml: Removed.
+        * MiniBrowser/qt/qml/ColorChooser.qml: Removed.
+        * MiniBrowser/qt/qml/ConfirmDialog.qml: Removed.
+        * MiniBrowser/qt/qml/Dialog.qml: Removed.
+        * MiniBrowser/qt/qml/DialogButton.qml: Removed.
+        * MiniBrowser/qt/qml/DialogLineInput.qml: Removed.
+        * MiniBrowser/qt/qml/FilePicker.qml: Removed.
+        * MiniBrowser/qt/qml/ItemSelector.qml: Removed.
+        * MiniBrowser/qt/qml/MockTouchPoint.qml: Removed.
+        * MiniBrowser/qt/qml/PromptDialog.qml: Removed.
+        * MiniBrowser/qt/qml/ProxyAuthenticationDialog.qml: Removed.
+        * MiniBrowser/qt/qml/ScrollIndicator.qml: Removed.
+        * MiniBrowser/qt/qml/ViewportInfoItem.qml: Removed.
+        * MiniBrowser/qt/raw/DerivedSources.pri: Removed.
+        * MiniBrowser/qt/raw/MiniBrowserRaw.pro: Removed.
+        * MiniBrowser/qt/raw/Target.pri: Removed.
+        * MiniBrowser/qt/raw/View.cpp: Removed.
+        * MiniBrowser/qt/raw/View.h: Removed.
+        * MiniBrowser/qt/utils.cpp: Removed.
+        * MiniBrowser/qt/utils.h: Removed.
+        * QtTestBrowser/QtTestBrowser.pro: Removed.
+        * QtTestBrowser/QtTestBrowser.qrc: Removed.
+        * QtTestBrowser/cookiejar.cpp: Removed.
+        * QtTestBrowser/cookiejar.h: Removed.
+        * QtTestBrowser/favicon.png: Removed.
+        * QtTestBrowser/fpstimer.cpp: Removed.
+        * QtTestBrowser/fpstimer.h: Removed.
+        * QtTestBrowser/launcherwindow.cpp: Removed.
+        * QtTestBrowser/launcherwindow.h: Removed.
+        * QtTestBrowser/locationedit.cpp: Removed.
+        * QtTestBrowser/locationedit.h: Removed.
+        * QtTestBrowser/mainwindow.cpp: Removed.
+        * QtTestBrowser/mainwindow.h: Removed.
+        * QtTestBrowser/qttestbrowser.cpp: Removed.
+        * QtTestBrowser/urlloader.cpp: Removed.
+        * QtTestBrowser/urlloader.h: Removed.
+        * QtTestBrowser/useragentlist.txt: Removed.
+        * QtTestBrowser/utils.cpp: Removed.
+        * QtTestBrowser/utils.h: Removed.
+        * QtTestBrowser/webinspector.h: Removed.
+        * QtTestBrowser/webpage.cpp: Removed.
+        * QtTestBrowser/webpage.h: Removed.
+        * QtTestBrowser/webview.cpp: Removed.
+        * QtTestBrowser/webview.h: Removed.
+        * TestWebKitAPI/DerivedSources.pri: Removed.
+        * TestWebKitAPI/InjectedBundle.pri: Removed.
+        * TestWebKitAPI/PlatformWebView.h:
+        * TestWebKitAPI/TestWebKitAPI.pri: Removed.
+        * TestWebKitAPI/TestWebKitAPI.pro: Removed.
+        * TestWebKitAPI/Tests.pri: Removed.
+        * TestWebKitAPI/Tests/JavaScriptCore/JavaScriptCore.pro: Removed.
+        * TestWebKitAPI/Tests/WTF/IntegerToStringConversion.cpp:
+        * TestWebKitAPI/Tests/WTF/WTF.pro: Removed.
+        * TestWebKitAPI/Tests/WebKit2/WebKit2.pro: Removed.
+        * TestWebKitAPI/qt/InjectedBundleControllerQt.cpp: Removed.
+        * TestWebKitAPI/qt/PlatformUtilitiesQt.cpp: Removed.
+        * TestWebKitAPI/qt/PlatformWebViewQt.cpp: Removed.
+        * TestWebKitAPI/qt/main.cpp: Removed.
+        * Tools.pro: Removed.
+        * WebKitTestRunner/DerivedSources.pri: Removed.
+        * WebKitTestRunner/EventSenderProxy.h:
+        * WebKitTestRunner/InjectedBundle/DerivedSources.pri: Removed.
+        * WebKitTestRunner/InjectedBundle/InjectedBundle.pro: Removed.
+        * WebKitTestRunner/InjectedBundle/InjectedBundlePage.cpp:
+        (WTR::InjectedBundlePage::resetAfterTest):
+        (WTR::InjectedBundlePage::dumpDOMAsWebArchive):
+        (WTR::InjectedBundlePage::didClearWindowForFrame):
+        * WebKitTestRunner/InjectedBundle/Target.pri: Removed.
+        * WebKitTestRunner/InjectedBundle/TestRunner.h:
+        * WebKitTestRunner/InjectedBundle/qt/ActivateFontsQt.cpp: Removed.
+        * WebKitTestRunner/InjectedBundle/qt/InjectedBundleQt.cpp: Removed.
+        * WebKitTestRunner/InjectedBundle/qt/TestRunnerQt.cpp: Removed.
+        * WebKitTestRunner/PlatformWebView.h:
+        * WebKitTestRunner/Target.pri: Removed.
+        * WebKitTestRunner/TestController.cpp:
+        (WTR::TestController::resetStateToConsistentValues):
+        * WebKitTestRunner/TestController.h:
+        * WebKitTestRunner/WebKitTestRunner.pro: Removed.
+        * WebKitTestRunner/qt/EventSenderProxyQt.cpp: Removed.
+        * WebKitTestRunner/qt/PlatformWebViewQt.cpp: Removed.
+        * WebKitTestRunner/qt/TestControllerQt.cpp: Removed.
+        * WebKitTestRunner/qt/TestInvocationQt.cpp: Removed.
+        * WebKitTestRunner/qt/WebKitTestRunner.qrc: Removed.
+        * WebKitTestRunner/qt/main.cpp: Removed.
+        * WebKitTestRunner/qt/resources/user.css: Removed.
+        * qmake/.qmake.cache: Removed.
+        * qmake/.qmake.conf: Removed.
+        * qmake/README: Removed.
+        * qmake/config.tests/README: Removed.
+        * qmake/config.tests/fontconfig/fontconfig.cpp: Removed.
+        * qmake/config.tests/fontconfig/fontconfig.pro: Removed.
+        * qmake/config.tests/gccdepends/empty.cpp: Removed.
+        * qmake/config.tests/gccdepends/gccdepends.pro: Removed.
+        * qmake/config.tests/glx/glx.cpp: Removed.
+        * qmake/config.tests/glx/glx.pro: Removed.
+        * qmake/config.tests/gnuld/gnuld.pro: Removed.
+        * qmake/config.tests/gnuld/main.cpp: Removed.
+        * qmake/config.tests/libXcomposite/libXcomposite.cpp: Removed.
+        * qmake/config.tests/libXcomposite/libXcomposite.pro: Removed.
+        * qmake/config.tests/libXrender/libXrender.cpp: Removed.
+        * qmake/config.tests/libXrender/libXrender.pro: Removed.
+        * qmake/config.tests/libwebp/libwebp.cpp: Removed.
+        * qmake/config.tests/libwebp/libwebp.pro: Removed.
+        * qmake/config.tests/libxml2/libxml2.cpp: Removed.
+        * qmake/config.tests/libxml2/libxml2.pro: Removed.
+        * qmake/config.tests/libxslt/libxslt.cpp: Removed.
+        * qmake/config.tests/libxslt/libxslt.pro: Removed.
+        * qmake/config.tests/libzlib/libzlib.cpp: Removed.
+        * qmake/config.tests/libzlib/libzlib.pro: Removed.
+        * qmake/dump-features.pl: Removed.
+        * qmake/mkspecs/features/configure.prf: Removed.
+        * qmake/mkspecs/features/default_post.prf: Removed.
+        * qmake/mkspecs/features/default_pre.prf: Removed.
+        * qmake/mkspecs/features/features.prf: Removed.
+        * qmake/mkspecs/features/features.pri: Removed.
+        * qmake/mkspecs/features/force_static_libs_as_shared.prf: Removed.
+        * qmake/mkspecs/features/functions.prf: Removed.
+        * qmake/mkspecs/features/gprof.prf: Removed.
+        * qmake/mkspecs/features/mac/default_post.prf: Removed.
+        * qmake/mkspecs/features/mac/default_pre.prf: Removed.
+        * qmake/mkspecs/features/minimal_qt.prf: Removed.
+        * qmake/mkspecs/features/production_build.prf: Removed.
+        * qmake/mkspecs/features/rpath.prf: Removed.
+        * qmake/mkspecs/features/unix/default_post.prf: Removed.
+        * qmake/mkspecs/features/unix/default_pre.prf: Removed.
+        * qmake/mkspecs/features/unix/icc.prf: Removed.
+        * qmake/mkspecs/features/use_all_in_one_files.prf: Removed.
+        * qmake/mkspecs/features/valgrind.prf: Removed.
+        * qmake/mkspecs/features/webkit_modules.prf: Removed.
+        * qmake/mkspecs/features/win32/default_post.prf: Removed.
+        * qmake/mkspecs/features/win32/default_pre.prf: Removed.
+        * qmake/mkspecs/modules/angle.prf: Removed.
+        * qmake/mkspecs/modules/javascriptcore.prf: Removed.
+        * qmake/mkspecs/modules/webcore.prf: Removed.
+        * qmake/mkspecs/modules/webkit1.prf: Removed.
+        * qmake/mkspecs/modules/webkit2.prf: Removed.
+        * qmake/mkspecs/modules/wtf.prf: Removed.
+
+2013-10-02  Tim Horton  <timothy_horton@apple.com>
+
+        [mac] Stop using DrawingAreaImpl on PLATFORM(MAC) 
+        https://bugs.webkit.org/show_bug.cgi?id=121859
+        <rdar://problem/15069359>
+
+        Reviewed by Anders Carlsson.
+
+        * WebKitTestRunner/TestInvocation.cpp:
+        (WTR::shouldUseThreadedScrolling):
+        (WTR::updateThreadedScrollingForCurrentTest):
+        (WTR::TestInvocation::invoke):
+        * WebKitTestRunner/mac/PlatformWebViewMac.mm:
+        (-[TestRunnerWKView initWithFrame:contextRef:pageGroupRef:relatedToPage:useThreadedScrolling:]):
+        (WTR::PlatformWebView::PlatformWebView):
+        (WTR::PlatformWebView::viewSupportsOptions):
+        Rename the tiled drawing switch to threaded scrolling, since that's really
+        all it switches now that we use tiled drawing everywhere.
+
+        Use an unbuffered window, as well, to avoid snapshotting issues on some platforms
+        and to more closely match the case we're interested in testing.
+
+2013-10-02  Anders Carlsson  <andersca@apple.com>
+
+        Move AHEM____.TTF from qt/fonts/ to fonts/.
+
+        Rubber-stamped by Andreas Kling.
+
+        * DumpRenderTree/DumpRenderTree.xcodeproj/project.pbxproj:
+        * DumpRenderTree/fonts/AHEM____.TTF: Renamed from Tools/DumpRenderTree/qt/fonts/AHEM____.TTF.
+
+2013-10-02  Ádám Kallai  <kadam@inf.u-szeged.hu>
+
+        Remove Qt bots and EWS from trunk.
+        https://bugs.webkit.org/show_bug.cgi?id=122210.
+
+        Reviewed by Allan Sandfeld Jensen.
+
+        Remove Qt buil dbots.
+
+        * BuildSlaveSupport/build.webkit.org-config/config.json:
+        * BuildSlaveSupport/build.webkit.org-config/master.cfg:
+        (appendCustomBuildFlags):
+        (RunGtkAPITests.getText2):
+        (Factory.__init__):
+        (TestFactory.__init__):
+        (BuildAndTestFactory.__init__):
+        (loadBuilderConfig):
+        * BuildSlaveSupport/build.webkit.org-config/mastercfg_unittest.py:
+
+2013-10-02  Ádám Kallai  <kadam@inf.u-szeged.hu>
+
+        Remove Qt bots and EWS from trunk.
+        https://bugs.webkit.org/show_bug.cgi?id=122210.
+
+        Reviewed by Allan Sandfeld Jensen.
+
+        Remove Qt EWS bots.
+
+        * QueueStatusServer/config/queues.py:
+        * Scripts/webkitpy/common/config/ews.json:
+
+2013-10-01  Timothy Hatcher  <timothy@apple.com>
+
+        Fix singular labels for test failures.
+
+        https://bugs.webkit.org/show_bug.cgi?id=122200
+
+        Reviewed by Joseph Pecoraro.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotTesterQueueView.js:
+        (BuildbotTesterQueueView.prototype.update.appendBuilderQueueStatus):
+
+2013-10-01  Timothy Hatcher  <timothy@apple.com>
+
+        Don't keep appending iterations each time the queue updates.
+
+        https://bugs.webkit.org/show_bug.cgi?id=122198
+
+        Reviewed by Joseph Pecoraro.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotQueue.js:
+        (BuildbotQueue.prototype.update):
+
+2013-10-01  Timothy Hatcher  <timothy@apple.com>
+
+        Properly sort iterations in the Dashboard by revision for out-of-order queues.
+
+        https://bugs.webkit.org/show_bug.cgi?id=122196
+
+        Reviewed by Brent Fulgham.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotIteration.js:
+        (BuildbotIteration):
+        (BuildbotIteration.prototype.update):
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotQueue.js:
+        (BuildbotQueue.prototype.update):
+        (BuildbotQueue.prototype.sortIterations):
+
+2013-10-01  Timothy Hatcher  <timothy@apple.com>
+
+        Fix some exceptions seen in the Buildbot Dashboard when looking at unloaded iterations.
+
+        Also fix some URLs to not have extras slashes and add a page title.
+
+        https://bugs.webkit.org/show_bug.cgi?id=122192
+
+        Reviewed by Joseph Pecoraro.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotTesterQueueView.js:
+        (BuildbotTesterQueueView.prototype.update.appendBuilderQueueStatus):
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/WebKitBuildbot.js:
+        (WebKitBuildbot.prototype.buildLogURLForIteration):
+        (WebKitBuildbot.prototype.layoutTestResultsURLForIteration):
+        (WebKitBuildbot.prototype.javascriptTestResultsURLForIteration):
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/index.html:
+
+2013-10-01  Alexey Proskuryakov  <ap@apple.com>
+
+        [Mac] Set NSApplication current event while sending events directly to views
+        https://bugs.webkit.org/show_bug.cgi?id=122179
+
+        Reviewed by Darin Adler.
+
+        DumpRenderTree and WebKitTestRunner send events directly to WebHMTLView or WKView,
+        which doesn't update [NSApp currentEvent]. But there are many places in WebKit that
+        use the current event.
+
+        * DumpRenderTree/mac/EventSendingController.mm:
+        (-[EventSendingController mouseDown:withModifiers:]):
+        (-[EventSendingController mouseUp:withModifiers:]):
+        (-[EventSendingController mouseMoveToX:Y:]):
+        (-[EventSendingController mouseScrollByX:andY:continuously:]):
+        (-[EventSendingController contextClick]):
+        (-[EventSendingController keyDown:withModifiers:withLocation:]):
+        * WebKitTestRunner/mac/EventSenderProxy.mm:
+        (WTR::EventSenderProxy::mouseDown):
+        (WTR::EventSenderProxy::mouseUp):
+        (WTR::EventSenderProxy::mouseMoveTo):
+        (WTR::EventSenderProxy::keyDown):
+        (WTR::EventSenderProxy::mouseScrollBy):
+        Update the current event. We were already using the SPI in WebKit.
+
+2013-10-01  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Buildbot Dashboard: Fix JSHint issue: 'perlTestResults' used out of scope.
+        https://bugs.webkit.org/show_bug.cgi?id=122183
+
+        Reviewed by Timothy Hatcher.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotIteration.js:
+        (BuildbotIteration.prototype.update):
+
+2013-10-01  Timothy Hatcher  <timothy@apple.com>
+
+        Tweaks to the Buildbot Dashboard
+
+        https://bugs.webkit.org/show_bug.cgi?id=122169
+
+        Reviewed by Alexey Proskuryakov.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotBuilderQueueView.js:
+        (BuildbotBuilderQueueView.prototype.update.appendBuilderQueueStatus):
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotQueueView.js:
+        (BuildbotQueueView.prototype.revisionLinksForIteration):
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotTesterQueueView.js:
+        (BuildbotTesterQueueView.prototype.update.appendBuilderQueueStatus):
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/Initialization.js: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/Main.js:
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/WebKitBuildbot.js:
+        (WebKitBuildbot.prototype.buildLogURLForIteration):
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/index.html:
+
+2013-10-01  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r156725.
+        http://trac.webkit.org/changeset/156725
+        https://bugs.webkit.org/show_bug.cgi?id=122176
+
+        broke all the mismatch tests again (Requested by thorton on
+        #webkit).
+
+        * WebKitTestRunner/mac/PlatformWebViewMac.mm:
+        (WTR::PlatformWebView::PlatformWebView):
+
+2013-10-01  Alex Christensen  <achristensen@webkit.org>
+
+        Implemented createWebViewWithRequest in WinLauncher.
+        https://bugs.webkit.org/show_bug.cgi?id=122069
+
+        Reviewed by Brent Fulgham.
+
+        * WinLauncher/PrintWebUIDelegate.cpp:
+        (PrintWebUIDelegate::createWebViewWithRequest): Added.
+        * WinLauncher/PrintWebUIDelegate.h:
+        Removed createWebViewWithRequest stub.
+
+2013-10-01  Tim Horton  <timothy_horton@apple.com>
+
+        [wk2] WebKitTestRunner's window snapshots are blank with tiled drawing
+        https://bugs.webkit.org/show_bug.cgi?id=122006
+        <rdar://problem/15095197>
+
+        Reviewed by Dean Jackson.
+
+        * WebKitTestRunner/mac/PlatformWebViewMac.mm:
+        (WTR::PlatformWebView::PlatformWebView):
+        Layer-back the root view in WebKitTestRunner's window, to work around a bug
+        where the window server snapshot API returns blank snapshots.
+
+        Re-landing after r156724, this should not break everything now.
+
+2013-10-01  Tim Horton  <timothy_horton@apple.com>
+
+        [mac] 1x emulation on Retina hardware shouldn't use SPI
+        https://bugs.webkit.org/show_bug.cgi?id=122152
+        <rdar://problem/15119384>
+
+        Reviewed by Anders Carlsson.
+
+        * DumpRenderTree/mac/DumpRenderTree.mm:
+        (createWebViewAndOffscreenWindow):
+        (main):
+        * DumpRenderTree/mac/DumpRenderTreeWindow.h:
+        * DumpRenderTree/mac/DumpRenderTreeWindow.mm:
+        * WebKitTestRunner/mac/PlatformWebViewMac.mm:
+        (WTR::PlatformWebView::PlatformWebView):
+        * WebKitTestRunner/mac/main.mm:
+        (main):
+        Register for AppleMagnifiedMode instead of using _setWindowResolution:displayIfChanged:.
+
+2013-09-30  Sam Weinig  <sam@webkit.org>
+
+        check-webkit-style should not warn about use of C++11 “>>”  instead of “> >"
+        https://bugs.webkit.org/show_bug.cgi?id=116474
+
+        Reviewed by Ryosuke Niwa.
+
+        * Scripts/webkitpy/style/checkers/cpp.py:
+        * Scripts/webkitpy/style/checkers/cpp_unittest.py:
+
+2013-09-30  Sam Weinig  <sam@webkit.org>
+
+        Remove support for DOMFileSystem
+        https://bugs.webkit.org/show_bug.cgi?id=122137
+
+        Reviewed by Anders Carlsson.
+
+        * Scripts/webkitperl/FeatureList.pm:
+        * Scripts/webkitpy/style/checkers/cpp.py:
+        (check_spacing):
+        * Scripts/webkitpy/style/checkers/cpp_unittest.py:
+        (CppStyleTest.test_spacing_for_binary_ops):
+        * qmake/mkspecs/features/features.pri:
+
+2013-09-30  Mark Rowe  <mrowe@apple.com>
+
+        More build fixage for builds with SDKs.
+
+        * WebKitTestRunner/Configurations/Base.xcconfig:
+        * WebKitTestRunner/Configurations/BaseTarget.xcconfig:
+
+2013-09-30  Timothy Hatcher  <timothy@apple.com>
+
+        Add initial version of a new Buildbot dashboard view.
+
+        https://bugs.webkit.org/show_bug.cgi?id=122131
+
+        Reviewed by Alexey Proskuryakov.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Images/Lion.png: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Images/Lion@2x.png: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Images/Mavericks.png: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Images/Mavericks@2x.png: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Images/MountainLion.png: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Images/MountainLion@2x.png: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Images/PlatformRing.png: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Images/PlatformRing@2x.png: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Images/Windows7.png: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Images/Windows7@2x.png: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Images/Windows8.png: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Images/Windows8@2x.png: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Images/WindowsXP.png: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Images/WindowsXP@2x.png: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BaseObject.js: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/Buildbot.js: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotBuilderQueueView.js: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotIteration.js: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotQueue.js: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotQueueView.js: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotTestResults.js: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotTesterQueueView.js: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/Main.js: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/StatusLineView.js: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/Utilities.js: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/WebKitBuildbot.js: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Styles/BuildbotBuilderQueueView.css: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Styles/BuildbotQueueView.css: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Styles/BuildbotTesterQueueView.css: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Styles/Main.css: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Styles/StatusLineView.css: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/index.html: Added.
+
+2013-09-30  Benjamin Poulain  <benjamin@webkit.org>
+
+        Remove the code guarded by STYLE_SCOPED
+        https://bugs.webkit.org/show_bug.cgi?id=122123
+
+        Reviewed by Anders Carlsson.
+
+        * DumpRenderTree/gtk/DumpRenderTree.cpp:
+        (resetDefaultsToConsistentValues):
+        * Scripts/webkitperl/FeatureList.pm:
+        * qmake/mkspecs/features/features.pri:
+
+2013-09-30  Mark Rowe  <mrowe@apple.com>
+
+        Fix the build when building against an SDK.
+
+        Xcode helpfully prepends $(SDKROOT) to the paths in FRAMEWORK_SEARCH_PATHS when generating
+        the compiler command lines. It can't know to do this for the system framework search paths
+        we add manually via OTHER_CFLAGS though, so we need to prefix them with $(SDKROOT) ourself.
+
+        * DumpRenderTree/mac/Configurations/BaseTarget.xcconfig:
+        * WebKitTestRunner/Configurations/BaseTarget.xcconfig:
+
+2013-09-30  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed test fix. Prevent crash when changing URL paths during testing.
+
+        A shared BSTR value (_bstr_t) was being reallocated outside the smart pointer, causing
+        it to be double-freed.
+
+        * WinLauncher/WinLauncher.cpp:
+        (EditProc): Be explicit about type passed to loadURL.
+        (loadURL): Create a shallow copy of the BSTR so we only allocate memory if needed. Use _bstr_t so
+        that reallocating the BSTR is done with the knowledge of the smart pointer.
+
 2013-09-30  Allan Sandfeld Jensen  <allan.jensen@digia.com>
 
         [Qt] Fix force_static_libs_as_shared in WebKit2

@@ -304,17 +304,6 @@
 
 #endif /* PLATFORM(GTK) */
 
-/* --------- Qt port (Unix, Windows, Mac, WinCE) --------- */
-#if PLATFORM(QT)
-
-#if OS(UNIX)
-#if !defined(ENABLE_PLUGIN_PACKAGE_SIMPLE_HASH)
-#define ENABLE_PLUGIN_PACKAGE_SIMPLE_HASH 1
-#endif
-#endif
-
-#endif /* PLATFORM(QT) */
-
 /* --------- Blackberry port (QNX) --------- */
 #if PLATFORM(BLACKBERRY)
 
@@ -477,10 +466,6 @@
 
 #if !defined(ENABLE_FAST_MOBILE_SCROLLING)
 #define ENABLE_FAST_MOBILE_SCROLLING 0
-#endif
-
-#if !defined(ENABLE_FILE_SYSTEM)
-#define ENABLE_FILE_SYSTEM 0
 #endif
 
 #if !defined(ENABLE_FILTERS)
@@ -765,10 +750,6 @@
 
 #if !defined(ENABLE_SQL_DATABASE)
 #define ENABLE_SQL_DATABASE 1
-#endif
-
-#if !defined(ENABLE_STYLE_SCOPED)
-#define ENABLE_STYLE_SCOPED 0
 #endif
 
 #if !defined(ENABLE_SUBPIXEL_LAYOUT)

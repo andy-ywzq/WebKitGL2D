@@ -86,6 +86,14 @@ PassRefPtr<HTMLSelectElement> HTMLSelectElement::create(const QualifiedName& tag
     return adoptRef(new HTMLSelectElement(tagName, document, form));
 }
 
+void HTMLSelectElement::didRecalcStyle(Style::Change styleChange)
+{
+    // Even though the options didn't necessarily change, we will call setOptionsChangedOnRenderer for its side effect
+    // of recomputing the width of the element. We need to do that if the style change included a change in zoom level.
+    setOptionsChangedOnRenderer();
+    HTMLFormControlElement::didRecalcStyle(styleChange);
+}
+
 const AtomicString& HTMLSelectElement::formControlType() const
 {
     DEFINE_STATIC_LOCAL(const AtomicString, selectMultiple, ("select-multiple", AtomicString::ConstructFromLiteral));
@@ -218,7 +226,7 @@ void HTMLSelectElement::add(HTMLElement* element, HTMLElement* before, Exception
     setNeedsValidityCheck();
 }
 
-void HTMLSelectElement::remove(int optionIndex)
+void HTMLSelectElement::removeByIndex(int optionIndex)
 {
     int listIndex = optionToListIndex(optionIndex);
     if (listIndex < 0)
@@ -434,7 +442,7 @@ void HTMLSelectElement::setOption(unsigned index, HTMLOptionElement* option, Exc
         // Replace an existing entry?
     } else if (diff < 0) {
         before = toHTMLElement(options()->item(index+1));
-        remove(index);
+        removeByIndex(index);
     }
     // Finally add the new element.
     if (!ec) {

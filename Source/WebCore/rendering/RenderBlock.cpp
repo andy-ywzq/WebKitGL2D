@@ -149,8 +149,8 @@ private:
 
 // -------------------------------------------------------------------------------------------------------
 
-RenderBlock::RenderBlock(Element* element)
-    : RenderBox(element)
+RenderBlock::RenderBlock(Element* element, unsigned baseTypeFlags)
+    : RenderBox(element, baseTypeFlags | RenderBlockFlag)
     , m_lineHeight(-1)
     , m_hasMarginBeforeQuirk(false)
     , m_hasMarginAfterQuirk(false)
@@ -1400,7 +1400,7 @@ void RenderBlock::relayoutShapeDescendantIfMoved(RenderBlock* child, LayoutSize 
         return;
     // Propagate layout markers only up to the child, as we are still in the middle
     // of a layout pass
-    child->setNormalChildNeedsLayout(true);
+    child->setNormalChildNeedsLayoutBit(true);
     child->markShapeInsideDescendantsForLayout();
     child->layoutIfNeeded();
 }
@@ -1472,7 +1472,7 @@ void RenderBlock::markShapeInsideDescendantsForLayout()
     if (!everHadLayout())
         return;
     if (childrenInline()) {
-        setNeedsLayout(true);
+        setNeedsLayout();
         return;
     }
     for (RenderObject* child = firstChild(); child; child = child->nextSibling()) {
@@ -1592,7 +1592,7 @@ void RenderBlock::checkForPaginationLogicalHeightChange(LayoutUnit& pageLogicalH
 void RenderBlock::layoutBlock(bool, LayoutUnit)
 {
     ASSERT_NOT_REACHED();
-    setNeedsLayout(false);
+    clearNeedsLayout();
 }
 
 void RenderBlock::addOverflowFromChildren()
@@ -1940,7 +1940,7 @@ void RenderBlock::updateBlockChildDirtyBitsBeforeLayout(bool relayoutChildren, R
     // FIXME: Technically percentage height objects only need a relayout if their percentage isn't going to be turned into
     // an auto value. Add a method to determine this, so that we can avoid the relayout.
     if (relayoutChildren || (child->hasRelativeLogicalHeight() && !isRenderView()) || child->hasViewportPercentageLogicalHeight())
-        child->setChildNeedsLayout(true, MarkOnlyThis);
+        child->setChildNeedsLayout(MarkOnlyThis);
 
     // If relayoutChildren is set and the child has percentage padding or an embedded content box, we also need to invalidate the childs pref widths.
     if (relayoutChildren && child->needsPreferredWidthsRecalculation())
@@ -1962,7 +1962,7 @@ void RenderBlock::dirtyForLayoutFromPercentageHeightDescendants()
         while (box != this) {
             if (box->normalChildNeedsLayout())
                 break;
-            box->setChildNeedsLayout(true, MarkOnlyThis);
+            box->setChildNeedsLayout(MarkOnlyThis);
             
             // If the width of an image is affected by the height of a child (e.g., an image with an aspect ratio),
             // then we have to dirty preferred widths, since even enclosing blocks can become dirty as a result.
@@ -1989,7 +1989,7 @@ void RenderBlock::simplifiedNormalFlowLayout()
                 if (toRenderBox(o)->inlineBoxWrapper())
                     lineBoxes.add(&toRenderBox(o)->inlineBoxWrapper()->root());
             } else if (o->isText() || (o->isRenderInline() && !walker.atEndOfInline()))
-                o->setNeedsLayout(false);
+                o->clearNeedsLayout();
         }
 
         // FIXME: Glyph overflow will get lost in this case, but not really a big deal.
@@ -2051,7 +2051,7 @@ bool RenderBlock::simplifiedLayout()
 
     updateScrollInfoAfterLayout();
 
-    setNeedsLayout(false);
+    clearNeedsLayout();
     return true;
 }
 
@@ -2077,12 +2077,12 @@ void RenderBlock::markFixedPositionObjectForLayoutIfNeeded(RenderObject* child)
         box->computeLogicalWidthInRegion(computedValues);
         LayoutUnit newLeft = computedValues.m_position;
         if (newLeft != box->logicalLeft())
-            child->setChildNeedsLayout(true, MarkOnlyThis);
+            box->setChildNeedsLayout(MarkOnlyThis);
     } else if (hasStaticBlockPosition) {
         LayoutUnit oldTop = box->logicalTop();
         box->updateLogicalHeight();
         if (box->logicalTop() != oldTop)
-            child->setChildNeedsLayout(true, MarkOnlyThis);
+            box->setChildNeedsLayout(MarkOnlyThis);
     }
 }
 
@@ -2116,7 +2116,7 @@ void RenderBlock::layoutPositionedObjects(bool relayoutChildren, bool fixedPosit
         // objects that are positioned implicitly like this.  Such objects are rare, and so in typical DHTML menu usage (where everything is
         // positioned explicitly) this should not incur a performance penalty.
         if (relayoutChildren || (r->style()->hasStaticBlockPosition(isHorizontalWritingMode()) && r->parent() != this))
-            r->setChildNeedsLayout(true, MarkOnlyThis);
+            r->setChildNeedsLayout(MarkOnlyThis);
             
         // If relayoutChildren is set and the child has percentage padding or an embedded content box, we also need to invalidate the childs pref widths.
         if (relayoutChildren && r->needsPreferredWidthsRecalculation())
@@ -2128,7 +2128,7 @@ void RenderBlock::layoutPositionedObjects(bool relayoutChildren, bool fixedPosit
         // We don't have to do a full layout.  We just have to update our position. Try that first. If we have shrink-to-fit width
         // and we hit the available width constraint, the layoutIfNeeded() will catch it and do a full layout.
         if (r->needsPositionedMovementLayoutOnly() && r->tryLayoutDoingPositionedMovementOnly())
-            r->setNeedsLayout(false);
+            r->clearNeedsLayout();
             
         // If we are paginated or in a line grid, go ahead and compute a vertical position for our object now.
         // If it's wrong we'll lay out again.
@@ -2146,12 +2146,12 @@ void RenderBlock::layoutPositionedObjects(bool relayoutChildren, bool fixedPosit
 
         // Lay out again if our estimate was wrong.
         if (needsBlockDirectionLocationSetBeforeLayout && logicalTopForChild(r) != oldLogicalTop) {
-            r->setChildNeedsLayout(true, MarkOnlyThis);
+            r->setChildNeedsLayout(MarkOnlyThis);
             r->layoutIfNeeded();
         }
 
         if (updateRegionRangeForBoxChild(r)) {
-            r->setNeedsLayout(true, MarkOnlyThis);
+            r->setNeedsLayout(MarkOnlyThis);
             r->layoutIfNeeded();
         }
     }
@@ -2168,7 +2168,7 @@ void RenderBlock::markPositionedObjectsForLayout()
         TrackedRendererListHashSet::iterator end = positionedDescendants->end();
         for (TrackedRendererListHashSet::iterator it = positionedDescendants->begin(); it != end; ++it) {
             r = *it;
-            r->setChildNeedsLayout(true);
+            r->setChildNeedsLayout();
         }
     }
 }
@@ -2180,7 +2180,7 @@ void RenderBlock::markForPaginationRelayoutIfNeeded()
         return;
 
     if (view().layoutState()->pageLogicalHeightChanged() || (view().layoutState()->pageLogicalHeight() && view().layoutState()->pageLogicalOffset(this, logicalTop()) != pageLogicalOffset()))
-        setChildNeedsLayout(true, MarkOnlyThis);
+        setChildNeedsLayout(MarkOnlyThis);
 }
 
 void RenderBlock::repaintOverhangingFloats(bool paintAllDescendants)
@@ -3238,15 +3238,15 @@ void RenderBlock::removePositionedObjects(RenderBlock* o, ContainingBlockState c
         r = *it;
         if (!o || r->isDescendantOf(o)) {
             if (containingBlockState == NewContainingBlock)
-                r->setChildNeedsLayout(true, MarkOnlyThis);
+                r->setChildNeedsLayout(MarkOnlyThis);
             
             // It is parent blocks job to add positioned child to positioned objects list of its containing block
             // Parent layout needs to be invalidated to ensure this happens.
-            RenderObject* p = r->parent();
+            RenderElement* p = r->parent();
             while (p && !p->isRenderBlock())
                 p = p->parent();
             if (p)
-                p->setChildNeedsLayout(true);
+                p->setChildNeedsLayout();
             
             deadObjects.append(r);
         }
@@ -3287,7 +3287,7 @@ FloatingObject* RenderBlock::insertFloatingObject(RenderBox* o)
     // Just go ahead and lay out the float.
     bool isChildRenderBlock = o->isRenderBlock();
     if (isChildRenderBlock && !o->needsLayout() && view().layoutState()->pageLogicalHeightChanged())
-        o->setChildNeedsLayout(true, MarkOnlyThis);
+        o->setChildNeedsLayout(MarkOnlyThis);
             
     bool needsBlockDirectionLocationSetBeforeLayout = isChildRenderBlock && view().layoutState()->needsBlockDirectionLocationSetBeforeLayout();
     if (!needsBlockDirectionLocationSetBeforeLayout || isWritingModeRoot()) // We are unsplittable if we're a block flow root.
@@ -3365,10 +3365,10 @@ LayoutPoint RenderBlock::computeLogicalLocationForFloat(const FloatingObject* fl
     LayoutUnit logicalRightOffset; // Constant part of right offset.
 #if ENABLE(CSS_SHAPES)
     // FIXME Bug 102948: This only works for shape outside directly set on this block.
-    ShapeInsideInfo* shapeInsideInfo = this->shapeInsideInfo();
+    ShapeInsideInfo* shapeInsideInfo = this->layoutShapeInsideInfo();
     // FIXME: Implement behavior for right floats.
     if (shapeInsideInfo) {
-        LayoutSize floatLogicalSize = LayoutSize(floatingObject->logicalWidth(isHorizontalWritingMode()), floatingObject->logicalHeight(isHorizontalWritingMode()));
+        LayoutSize floatLogicalSize = LayoutSize(childBox->logicalWidth(), childBox->logicalHeight());
         // FIXME: If the float doesn't fit in the shape we should push it under the content box
         logicalTopOffset = shapeInsideInfo->computeFirstFitPositionForFloat(floatLogicalSize);
         if (logicalHeight() > logicalTopOffset)
@@ -3523,12 +3523,12 @@ bool RenderBlock::positionNewFloats()
                 setLogicalTopForChild(childBox, floatLogicalLocation.y() + marginBeforeForChild(childBox));
         
                 if (childBlock)
-                    childBlock->setChildNeedsLayout(true, MarkOnlyThis);
+                    childBlock->setChildNeedsLayout(MarkOnlyThis);
                 childBox->layoutIfNeeded();
             }
 
             if (updateRegionRangeForBoxChild(childBox)) {
-                childBox->setNeedsLayout(true, MarkOnlyThis);
+                childBox->setNeedsLayout(MarkOnlyThis);
                 childBox->layoutIfNeeded();
             }
         }
@@ -3931,7 +3931,7 @@ void RenderBlock::markAllDescendantsWithFloatsForLayout(RenderBox* floatToRemove
         return;
 
     MarkingBehavior markParents = inLayout ? MarkOnlyThis : MarkContainingBlockChain;
-    setChildNeedsLayout(true, markParents);
+    setChildNeedsLayout(markParents);
  
     if (floatToRemove)
         removeFloatingObject(floatToRemove);
@@ -3968,64 +3968,6 @@ void RenderBlock::markSiblingsWithFloatsForLayout(RenderBox* floatToRemove)
             if (nextBlock->containsFloat(floatingBox))
                 nextBlock->markAllDescendantsWithFloatsForLayout(floatingBox);
         }
-    }
-}
-
-void RenderBlock::updateFloatingObjectsPaintingContainer(RenderBox* floatToUpdate)
-{
-    bool didFindPaintContainer = false;
-    updateFloatingObjectsPaintingContainer(floatToUpdate, didFindPaintContainer);
-    ASSERT(didFindPaintContainer || floatToUpdate->hasSelfPaintingLayer());
-}
-
-void RenderBlock::updateFloatingObjectsPaintingContainer(RenderBox* floatToUpdate, bool& didFindPaintContainer)
-{
-    if (needsLayout()) {
-        // The floating object update should only be required after the layout is already complete.
-        ASSERT_NOT_REACHED();
-        return;
-    }
-    if (!m_floatingObjects)
-        return;
-    updateAllDescendantsFloatingObjectsPaintingContainer(floatToUpdate, didFindPaintContainer);
-    for (RenderObject* next = nextSibling(); next; next = next->nextSibling()) {
-        if (!next->isRenderBlock() || next->isFloatingOrOutOfFlowPositioned() || toRenderBlock(next)->avoidsFloats())
-            continue;
-        RenderBlock* nextBlock = toRenderBlock(next);
-        if (nextBlock->containsFloat(floatToUpdate))
-            nextBlock->updateAllDescendantsFloatingObjectsPaintingContainer(floatToUpdate, didFindPaintContainer);
-    }
-}
-
-void RenderBlock::updateLocalFloatingObjectsForPaintingContainer(RenderBox* floatToUpdate, bool& foundPaintContainer)
-{
-    ASSERT(!needsLayout());
-    if (!m_floatingObjects)
-        return;
-    auto iterator = m_floatingObjects->set().find<RenderBox&, FloatingObjectHashTranslator>(*floatToUpdate);
-    if (iterator != m_floatingObjects->set().end()) {
-        bool shouldPaint = !foundPaintContainer && !floatToUpdate->hasSelfPaintingLayer() && floatToUpdate->enclosingFloatPaintingLayer() == enclosingFloatPaintingLayer();
-        foundPaintContainer |= shouldPaint;
-        (*iterator)->setShouldPaint(shouldPaint);
-    }
-}
-
-void RenderBlock::updateAllDescendantsFloatingObjectsPaintingContainer(RenderBox* floatToUpdate, bool& didFindPaintContainer)
-{
-    if (needsLayout()) {
-        // The floating object update should only be required after the layout is already complete.
-        ASSERT_NOT_REACHED();
-        return;
-    }
-    updateLocalFloatingObjectsForPaintingContainer(floatToUpdate, didFindPaintContainer);
-    if (childrenInline())
-        return;
-    for (RenderObject* child = firstChild(); child; child = child->nextSibling()) {
-        if (!child->isRenderBlock())
-            continue;
-        RenderBlock* childBlock = toRenderBlock(child);
-        if (childBlock->containsFloat(floatToUpdate))
-            childBlock->updateAllDescendantsFloatingObjectsPaintingContainer(floatToUpdate, didFindPaintContainer);
     }
 }
 
@@ -4087,7 +4029,7 @@ LayoutUnit RenderBlock::getClearDelta(RenderBox* child, LayoutUnit logicalTop)
                 // we need to force a relayout as though we shifted. This happens because of the dynamic addition of overhanging floats
                 // from previous siblings when negative margins exist on a child (see the addOverhangingFloats call at the end of collapseMargins).
                 if (childLogicalWidthAtOldLogicalTopOffset != childLogicalWidthAtNewLogicalTopOffset)
-                    child->setChildNeedsLayout(true, MarkOnlyThis);
+                    child->setChildNeedsLayout(MarkOnlyThis);
                 return newLogicalTop - logicalTop;
             }
 
@@ -5954,8 +5896,6 @@ void RenderBlock::updateFirstLetter()
     if (style()->styleType() == FIRST_LETTER)
         return;
 
-    // FIXME: We need to destroy the first-letter object if it is no longer the first child. Need to find
-    // an efficient way to check for that situation though before implementing anything.
     RenderElement* firstLetterBlock = findFirstLetterBlock(this);
     if (!firstLetterBlock)
         return;
@@ -5987,9 +5927,24 @@ void RenderBlock::updateFirstLetter()
     if (!descendant)
         return;
 
-    // If the child already has style, then it has already been created, so we just want
-    // to update it.
     if (descendant->parent()->style()->styleType() == FIRST_LETTER) {
+        // Destroy the first-letter object if it is no longer the first child.
+        RenderObject* remainingText = descendant->parent()->nextSibling();
+        if (remainingText && descendant->node() != remainingText->node()) {
+            if (!remainingText->isText() || remainingText->isBR())
+                return;
+
+            LayoutStateDisabler layoutStateDisabler(&view());
+
+            if (RenderObject* oldRemainingText = toRenderBoxModelObject(descendant->parent())->firstLetterRemainingText())
+                toRenderText(oldRemainingText)->setText(toText(oldRemainingText->node())->data().impl());
+
+            createFirstLetterRenderer(firstLetterBlock, toRenderText(remainingText));
+            return;
+        }    
+
+        // If the child already has style, then it has already been created, so we just want
+        // to update it.
         updateFirstLetterStyle(firstLetterBlock, descendant);
         return;
     }

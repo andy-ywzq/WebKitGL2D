@@ -28,9 +28,7 @@
 
 #include "WebEvent.h"
 
-#if PLATFORM(QT)
-#include <QTouchEvent>
-#elif PLATFORM(EFL)
+#if PLATFORM(EFL)
 #include "EwkTouchEvent.h"
 #include <WebCore/AffineTransform.h>
 #include <wtf/RefPtr.h>
@@ -42,26 +40,18 @@ namespace WebKit {
 
 class NativeWebTouchEvent : public WebTouchEvent {
 public:
-#if PLATFORM(QT)
-    explicit NativeWebTouchEvent(const QTouchEvent*, const QTransform& fromItemTransform);
-#elif PLATFORM(EFL)
+#if PLATFORM(EFL)
     NativeWebTouchEvent(EwkTouchEvent*, const WebCore::AffineTransform&);
-#elif PLATFORM(NIX)
-    NativeWebTouchEvent(const NIXTouchEvent& event);
-#endif
-
-#if PLATFORM(QT)
-    const QTouchEvent* nativeEvent() const { return &m_nativeEvent; }
-#elif PLATFORM(EFL)
     const EwkTouchEvent* nativeEvent() const { return m_nativeEvent.get(); }
+
 #elif PLATFORM(NIX)
+    // TODO: Why not have a typedef called NativeTouchEvent to avoid these #ifs?
+    NativeWebTouchEvent(const NIXTouchEvent& event);
     const NIXTouchEvent* nativeEvent() const { return &m_nativeEvent; }
 #endif
 
 private:
-#if PLATFORM(QT)
-    const QTouchEvent m_nativeEvent;
-#elif PLATFORM(EFL)
+#if PLATFORM(EFL)
     RefPtr<EwkTouchEvent> m_nativeEvent;
 #elif PLATFORM(NIX)
     NIXTouchEvent m_nativeEvent;

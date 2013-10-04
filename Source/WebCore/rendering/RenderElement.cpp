@@ -64,8 +64,9 @@ namespace WebCore {
 bool RenderElement::s_affectsParentBlock = false;
 bool RenderElement::s_noLongerAffectsParentBlock = false;
 
-RenderElement::RenderElement(Element* element)
+RenderElement::RenderElement(Element* element, unsigned baseTypeFlags)
     : RenderObject(element)
+    , m_baseTypeFlags(baseTypeFlags)
     , m_ancestorLineBoxDirty(false)
     , m_firstChild(nullptr)
     , m_lastChild(nullptr)
@@ -273,7 +274,7 @@ StyleDifference RenderElement::adjustStyleDifference(StyleDifference diff, unsig
     // The answer to requiresLayer() for plugins, iframes, and canvas can change without the actual
     // style changing, since it depends on whether we decide to composite these elements. When the
     // layer status of one of these elements changes, we need to force a layout.
-    if (diff == StyleDifferenceEqual && style() && isLayerModelObject()) {
+    if (diff == StyleDifferenceEqual && style() && isRenderLayerModelObject()) {
         if (hasLayer() != toRenderLayerModelObject(this)->requiresLayer())
             diff = StyleDifferenceLayout;
     }
@@ -557,7 +558,7 @@ void RenderElement::insertChildInternal(RenderObject* newChild, RenderObject* be
     newChild->setNeedsLayoutAndPrefWidthsRecalc();
     setPreferredLogicalWidthsDirty(true);
     if (!normalChildNeedsLayout())
-        setChildNeedsLayout(true); // We may supply the static position for an absolute positioned child.
+        setChildNeedsLayout(); // We may supply the static position for an absolute positioned child.
 
     if (AXObjectCache* cache = document().axObjectCache())
         cache->childrenChanged(this);
@@ -780,22 +781,13 @@ void RenderElement::propagateStyleToAnonymousChildren(StylePropagationType propa
 // when scrolling a page with a fixed background image. As an optimization, assuming there are
 // no fixed positoned elements on the page, we can acclerate scrolling (via blitting) if we
 // ignore the CSS property "background-attachment: fixed".
-static bool shouldRepaintFixedBackgroundsOnScroll(FrameView* frameView)
+static bool shouldRepaintFixedBackgroundsOnScroll()
 {
-#if !ENABLE(FAST_MOBILE_SCROLLING) || !PLATFORM(QT)
-    UNUSED_PARAM(frameView);
-#endif
-
-    bool repaintFixedBackgroundsOnScroll = true;
 #if ENABLE(FAST_MOBILE_SCROLLING)
-#if PLATFORM(QT)
-    if (frameView->delegatesScrolling())
-        repaintFixedBackgroundsOnScroll = false;
+    return false;
 #else
-    repaintFixedBackgroundsOnScroll = false;
+    return true;
 #endif
-#endif
-    return repaintFixedBackgroundsOnScroll;
 }
 
 static inline bool rendererHasBackground(const RenderObject* renderer)
@@ -868,7 +860,7 @@ void RenderElement::styleWillChange(StyleDifference diff, const RenderStyle* new
         s_noLongerAffectsParentBlock = false;
     }
 
-    bool repaintFixedBackgroundsOnScroll = shouldRepaintFixedBackgroundsOnScroll(&view().frameView());
+    bool repaintFixedBackgroundsOnScroll = shouldRepaintFixedBackgroundsOnScroll();
 
     bool newStyleSlowScroll = newStyle && repaintFixedBackgroundsOnScroll && newStyle->hasFixedBackgroundImage();
     bool oldStyleSlowScroll = m_style && repaintFixedBackgroundsOnScroll && m_style->hasFixedBackgroundImage();
@@ -984,7 +976,7 @@ void RenderElement::willBeRemovedFromTree()
         removeLayers(layer);
     }
 
-    bool repaintFixedBackgroundsOnScroll = shouldRepaintFixedBackgroundsOnScroll(&view().frameView());
+    bool repaintFixedBackgroundsOnScroll = shouldRepaintFixedBackgroundsOnScroll();
     if (repaintFixedBackgroundsOnScroll && m_style && m_style->hasFixedBackgroundImage())
         view().frameView().removeSlowRepaintObject(this);
 
@@ -1001,6 +993,41 @@ void RenderElement::willBeDestroyed()
     destroyLeftoverChildren();
 
     RenderObject::willBeDestroyed();
+}
+
+void RenderElement::setNeedsPositionedMovementLayout(const RenderStyle* oldStyle)
+{
+    ASSERT(!isSetNeedsLayoutForbidden());
+    if (needsPositionedMovementLayout())
+        return;
+    setNeedsPositionedMovementLayoutBit(true);
+    markContainingBlocksForLayout();
+    if (hasLayer()) {
+        if (oldStyle && style()->diffRequiresRepaint(oldStyle))
+            setLayerNeedsFullRepaint();
+        else
+            setLayerNeedsFullRepaintForPositionedMovementLayout();
+    }
+}
+
+void RenderElement::clearChildNeedsLayout()
+{
+    setNormalChildNeedsLayoutBit(false);
+    setPosChildNeedsLayoutBit(false);
+    setNeedsSimplifiedNormalFlowLayoutBit(false);
+    setNormalChildNeedsLayoutBit(false);
+    setNeedsPositionedMovementLayoutBit(false);
+}
+
+void RenderElement::setNeedsSimplifiedNormalFlowLayout()
+{
+    ASSERT(!isSetNeedsLayoutForbidden());
+    if (needsSimplifiedNormalFlowLayout())
+        return;
+    setNeedsSimplifiedNormalFlowLayoutBit(true);
+    markContainingBlocksForLayout();
+    if (hasLayer())
+        setLayerNeedsFullRepaint();
 }
 
 RenderElement* RenderElement::rendererForRootBackground()

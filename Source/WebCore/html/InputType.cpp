@@ -682,12 +682,11 @@ bool InputType::canSetValue(const String&)
     return true;
 }
 
-OwnPtr<ClickHandlingState> InputType::willDispatchClick()
+void InputType::willDispatchClick(InputElementClickState&)
 {
-    return nullptr;
 }
 
-void InputType::didDispatchClick(Event*, const ClickHandlingState&)
+void InputType::didDispatchClick(Event*, const InputElementClickState&)
 {
 }
 
@@ -711,14 +710,6 @@ bool InputType::receiveDroppedFiles(const DragData*)
     ASSERT_NOT_REACHED();
     return false;
 }
-
-#if ENABLE(FILE_SYSTEM)
-String InputType::droppedFileSystemId()
-{
-    ASSERT_NOT_REACHED();
-    return String();
-}
-#endif
 
 Icon* InputType::icon() const
 {

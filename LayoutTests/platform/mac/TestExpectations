@@ -285,17 +285,6 @@ webkit.org/b/116651 media/context-menu-actions.html
 # requires video.buffered to be able to return multiple timeranges
 http/tests/media/video-buffered.html
 
-# FileSystem API is not supported.
-fast/filesystem
-http/tests/filesystem
-http/tests/inspector/filesystem
-http/tests/security/contentSecurityPolicy/filesystem-urls-match-self.html
-http/tests/security/filesystem-iframe-from-remote.html
-http/tests/security/mixedContent/filesystem-url-in-iframe.html
-http/tests/websocket/tests/hybi/send-file-blob.html
-http/tests/websocket/tests/hybi/send-file-blob-fail.html
-fast/dom/MutationObserver/filesystem-callback-delivery.html
-
 # The WebKit plugin implementation does not support iframe shims.
 webkit.org/b/46223 plugins/iframe-shims.html
 
@@ -1374,3 +1363,13 @@ webkit.org/b/122039 media/track/track-cue-overlap-snap-to-lines-not-set.html [ P
 webkit.org/b/122040 animations/combo-transform-translate+scale.html [ Pass Failure ]
 
 webkit.org/b/122042 media/media-controller-playback.html [ Pass Failure ]
+
+webkit.org/b/115048 media/media-element-play-after-eos.html [ Pass Failure ]
+
+webkit.org/b/121803 media/video-object-fit.html [ Pass ImageOnlyFailure ]
+webkit.org/b/121803 media/video-object-fit-change.html [ Pass ImageOnlyFailure ]
+webkit.org/b/121803 compositing/video/video-object-fit.html [ Pass ImageOnlyFailure ]
+
+webkit.org/b/122126 media/click-volume-bar-not-pausing.html [ Pass Failure Timeout ]
+
+webkit.org/b/121628 fast/history/history-back-while-pdf-in-pagecache.html [ Pass ImageOnlyFailure ]

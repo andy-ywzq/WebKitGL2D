@@ -112,7 +112,6 @@ class IntPoint;
 class LayoutPoint;
 class LayoutRect;
 class LiveNodeListBase;
-class DOMWrapperWorld;
 class JSNode;
 class Locale;
 class MediaCanStartListener;
@@ -1182,7 +1181,7 @@ public:
     PassRefPtr<FontLoader> fontloader();
 #endif
 
-    void ensurePlugInsInjectedScript(DOMWrapperWorld*);
+    void ensurePlugInsInjectedScript(DOMWrapperWorld&);
 
     void setVisualUpdatesAllowedByClient(bool);
 
@@ -1253,6 +1252,7 @@ private:
     PassRefPtr<HTMLCollection> ensureCachedCollection(CollectionType);
 
 #if ENABLE(FULLSCREEN_API)
+    void dispatchFullScreenChangeOrErrorEvent(Deque<RefPtr<Node>>&, const AtomicString& eventName, bool shouldNotifyMediaElement);
     void clearFullscreenElementStack();
     void popFullscreenElementStack();
     void pushFullscreenElementStack(Element*);
@@ -1473,8 +1473,8 @@ private:
     Vector<RefPtr<Element> > m_fullScreenElementStack;
     RenderFullScreen* m_fullScreenRenderer;
     Timer<Document> m_fullScreenChangeDelayTimer;
-    Deque<RefPtr<Node> > m_fullScreenChangeEventTargetQueue;
-    Deque<RefPtr<Node> > m_fullScreenErrorEventTargetQueue;
+    Deque<RefPtr<Node>> m_fullScreenChangeEventTargetQueue;
+    Deque<RefPtr<Node>> m_fullScreenErrorEventTargetQueue;
     bool m_isAnimatingFullScreen;
     LayoutRect m_savedPlaceholderFrameRect;
     RefPtr<RenderStyle> m_savedPlaceholderRenderStyle;

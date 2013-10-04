@@ -98,7 +98,7 @@ public:
 #endif
 
 protected:
-    explicit RenderBlock(Element*);
+    explicit RenderBlock(Element*, unsigned baseTypeFlags);
     virtual ~RenderBlock();
 
 public:
@@ -161,8 +161,6 @@ public:
     RootInlineBox* createAndAppendRootInlineBox();
 
     bool generatesLineBoxesForInlineChild(RenderObject*);
-
-    void updateFloatingObjectsPaintingContainer(RenderBox* floatToUpdate);
 
     void markAllDescendantsWithFloatsForLayout(RenderBox* floatToRemove = 0, bool inLayout = true);
     void markSiblingsWithFloatsForLayout(RenderBox* floatToRemove = 0);
@@ -445,6 +443,7 @@ public:
     void markShapeInsideDescendantsForLayout();
     ShapeInsideInfo* layoutShapeInsideInfo() const;
     bool allowsShapeInsideInfoSharing() const { return !isInline() && !isFloating(); }
+    LayoutSize logicalOffsetFromShapeAncestorContainer(const RenderBlock* container) const;
     virtual void imageChanged(WrappedImagePtr, const IntRect* = 0) OVERRIDE;
 #endif
 
@@ -547,12 +546,10 @@ private:
     void computeShapeSize();
     void updateShapeInsideInfoAfterStyleChange(const ShapeValue*, const ShapeValue* oldShape);
     void relayoutShapeDescendantIfMoved(RenderBlock* child, LayoutSize offset);
-    LayoutSize logicalOffsetFromShapeAncestorContainer(const RenderBlock* container) const;
 #endif
 
     virtual const char* renderName() const OVERRIDE;
 
-    virtual bool isRenderBlock() const OVERRIDE FINAL { return true; }
     virtual bool isInlineBlockOrInlineTable() const OVERRIDE FINAL { return isInline() && isReplaced(); }
     virtual bool canHaveChildren() const OVERRIDE { return true; }
 
@@ -670,11 +667,6 @@ private:
 
     LayoutUnit lowestFloatLogicalBottom(FloatingObject::Type = FloatingObject::FloatLeftRight) const; 
     LayoutUnit nextFloatLogicalBottomBelow(LayoutUnit, ShapeOutsideFloatOffsetMode = ShapeOutsideFloatMarginBoxOffset) const;
-
-    void updateLocalFloatingObjectsForPaintingContainer(RenderBox* floatToUpdate, bool& didFindPaintContainer);
-    void updateFloatingObjectsPaintingContainer(RenderBox* floatToUpdate, bool& didFindPaintContainer);
-    void updateAllDescendantsFloatingObjectsPaintingContainer(RenderBox* floatToUpdate, bool& didFindPaintContainer);
-
     
     bool hitTestColumns(const HitTestRequest&, HitTestResult&, const HitTestLocation& locationInContainer, const LayoutPoint& accumulatedOffset, HitTestAction);
     virtual bool hitTestContents(const HitTestRequest&, HitTestResult&, const HitTestLocation& locationInContainer, const LayoutPoint& accumulatedOffset, HitTestAction);

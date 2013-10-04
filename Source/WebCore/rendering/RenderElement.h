@@ -50,6 +50,14 @@ public:
     RenderObject* firstChild() const { return m_firstChild; }
     RenderObject* lastChild() const { return m_lastChild; }
 
+    // FIXME: Make these standalone and move to relevant files.
+    bool isRenderLayerModelObject() const;
+    bool isBoxModelObject() const;
+    bool isRenderBlock() const;
+    bool isRenderBlockFlow() const;
+    bool isRenderReplaced() const;
+    bool isRenderInline() const;
+
     virtual bool isChildAllowed(RenderObject*, RenderStyle*) const { return true; }
     virtual void addChild(RenderObject* newChild, RenderObject* beforeChild = 0);
     virtual void addChildIgnoringContinuation(RenderObject* newChild, RenderObject* beforeChild = 0) { return addChild(newChild, beforeChild); }
@@ -74,6 +82,11 @@ public:
     bool ancestorLineBoxDirty() const { return m_ancestorLineBoxDirty; }
     void setAncestorLineBoxDirty(bool f = true);
 
+    void setChildNeedsLayout(MarkingBehavior = MarkContainingBlockChain);
+    void clearChildNeedsLayout();
+    void setNeedsPositionedMovementLayout(const RenderStyle* oldStyle);
+    void setNeedsSimplifiedNormalFlowLayout();
+
     // Return the renderer whose background style is used to paint the root background. Should only be called on the renderer for which isRoot() is true.
     RenderElement* rendererForRootBackground();
 
@@ -86,7 +99,16 @@ public:
     void setStyleInternal(PassRefPtr<RenderStyle> style) { m_style = style; }
 
 protected:
-    explicit RenderElement(Element*);
+    enum BaseTypeFlags {
+        RenderLayerModelObjectFlag = 1 << 0,
+        RenderBoxModelObjectFlag = 1 << 1,
+        RenderInlineFlag = 1 << 2,
+        RenderReplacedFlag = 1 << 3,
+        RenderBlockFlag = 1 << 4,
+        RenderBlockFlowFlag = 1 << 5,
+    };
+
+    explicit RenderElement(Element*, unsigned baseTypeFlags);
 
     bool layerCreationAllowedForSubtree() const;
 
@@ -129,6 +151,7 @@ private:
     StyleDifference adjustStyleDifference(StyleDifference, unsigned contextSensitiveProperties) const;
     RenderStyle* cachedFirstLineStyle() const;
 
+    unsigned m_baseTypeFlags : 6;
     bool m_ancestorLineBoxDirty : 1;
 
     RenderObject* m_firstChild;
@@ -151,7 +174,17 @@ inline void RenderElement::setAncestorLineBoxDirty(bool f)
 {
     m_ancestorLineBoxDirty = f;
     if (m_ancestorLineBoxDirty)
-        setNeedsLayout(true);
+        setNeedsLayout();
+}
+
+inline void RenderElement::setChildNeedsLayout(MarkingBehavior markParents)
+{
+    ASSERT(!isSetNeedsLayoutForbidden());
+    if (normalChildNeedsLayout())
+        return;
+    setNormalChildNeedsLayoutBit(true);
+    if (markParents == MarkContainingBlockChain)
+        markContainingBlocksForLayout();
 }
 
 inline LayoutUnit RenderElement::valueForLength(const Length& length, LayoutUnit maximumValue, bool roundPercentages) const
@@ -162,6 +195,36 @@ inline LayoutUnit RenderElement::valueForLength(const Length& length, LayoutUnit
 inline LayoutUnit RenderElement::minimumValueForLength(const Length& length, LayoutUnit maximumValue, bool roundPercentages) const
 {
     return WebCore::minimumValueForLength(length, maximumValue, &view(), roundPercentages);
+}
+
+inline bool RenderElement::isRenderLayerModelObject() const
+{
+    return m_baseTypeFlags & RenderLayerModelObjectFlag;
+}
+
+inline bool RenderElement::isBoxModelObject() const
+{
+    return m_baseTypeFlags & RenderBoxModelObjectFlag;
+}
+
+inline bool RenderElement::isRenderBlock() const
+{
+    return m_baseTypeFlags & RenderBlockFlag;
+}
+
+inline bool RenderElement::isRenderBlockFlow() const
+{
+    return m_baseTypeFlags & RenderBlockFlowFlag;
+}
+
+inline bool RenderElement::isRenderReplaced() const
+{
+    return m_baseTypeFlags & RenderReplacedFlag;
+}
+
+inline bool RenderElement::isRenderInline() const
+{
+    return m_baseTypeFlags & RenderInlineFlag;
 }
 
 inline RenderElement& toRenderElement(RenderObject& object)
@@ -192,6 +255,36 @@ inline const RenderElement* toRenderElement(const RenderObject* object)
 void toRenderElement(const RenderElement*);
 void toRenderElement(const RenderElement&);
 
+inline bool RenderObject::isRenderLayerModelObject() const
+{
+    return isRenderElement() && toRenderElement(this)->isRenderLayerModelObject();
+}
+
+inline bool RenderObject::isBoxModelObject() const
+{
+    return isRenderElement() && toRenderElement(this)->isBoxModelObject();
+}
+
+inline bool RenderObject::isRenderBlock() const
+{
+    return isRenderElement() && toRenderElement(this)->isRenderBlock();
+}
+
+inline bool RenderObject::isRenderBlockFlow() const
+{
+    return isRenderElement() && toRenderElement(this)->isRenderBlockFlow();
+}
+
+inline bool RenderObject::isRenderReplaced() const
+{
+    return isRenderElement() && toRenderElement(this)->isRenderReplaced();
+}
+
+inline bool RenderObject::isRenderInline() const
+{
+    return isRenderElement() && toRenderElement(this)->isRenderInline();
+}
+
 inline RenderStyle* RenderObject::style() const
 {
     if (isText())
@@ -204,32 +297,6 @@ inline RenderStyle* RenderObject::firstLineStyle() const
     if (isText())
         return m_parent->firstLineStyle();
     return toRenderElement(this)->firstLineStyle();
-}
-
-inline void RenderObject::setNeedsLayout(bool needsLayout, MarkingBehavior markParents)
-{
-    bool alreadyNeededLayout = m_bitfields.needsLayout();
-    m_bitfields.setNeedsLayout(needsLayout);
-    if (needsLayout) {
-        ASSERT(!isSetNeedsLayoutForbidden());
-        if (!alreadyNeededLayout) {
-            if (markParents == MarkContainingBlockChain)
-                markContainingBlocksForLayout();
-            if (hasLayer())
-                setLayerNeedsFullRepaint();
-        }
-    } else {
-        setEverHadLayout(true);
-        setPosChildNeedsLayout(false);
-        setNeedsSimplifiedNormalFlowLayout(false);
-        setNormalChildNeedsLayout(false);
-        setNeedsPositionedMovementLayout(false);
-        if (isRenderElement())
-            toRenderElement(this)->setAncestorLineBoxDirty(false);
-#ifndef NDEBUG
-        checkBlockPositionedObjectsNeedLayout();
-#endif
-    }
 }
 
 inline RenderElement* ContainerNode::renderer() const

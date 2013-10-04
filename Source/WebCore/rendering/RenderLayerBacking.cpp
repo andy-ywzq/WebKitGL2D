@@ -1904,6 +1904,10 @@ void RenderLayerBacking::setBlendMode(BlendMode)
 void RenderLayerBacking::setContentsNeedDisplay()
 {
     ASSERT(!paintsIntoCompositedAncestor());
+
+    FrameView& frameView = owningLayer()->renderer().view().frameView();
+    if (m_isMainFrameRenderViewLayer && frameView.isTrackingRepaints())
+        frameView.addTrackedRepaintRect(owningLayer()->absoluteBoundingBox());
     
     if (m_graphicsLayer && m_graphicsLayer->drawsContent())
         m_graphicsLayer->setNeedsDisplay();
@@ -1925,6 +1929,10 @@ void RenderLayerBacking::setContentsNeedDisplay()
 void RenderLayerBacking::setContentsNeedDisplayInRect(const IntRect& r)
 {
     ASSERT(!paintsIntoCompositedAncestor());
+
+    FrameView& frameView = owningLayer()->renderer().view().frameView();
+    if (m_isMainFrameRenderViewLayer && frameView.isTrackingRepaints())
+        frameView.addTrackedRepaintRect(pixelSnappedIntRect(r));
 
     if (m_graphicsLayer && m_graphicsLayer->drawsContent()) {
         IntRect layerDirtyRect = r;
@@ -2087,6 +2095,33 @@ bool RenderLayerBacking::getCurrentTransform(const GraphicsLayer* graphicsLayer,
 bool RenderLayerBacking::isTrackingRepaints() const
 {
     return static_cast<GraphicsLayerClient&>(compositor()).isTrackingRepaints();
+}
+
+bool RenderLayerBacking::shouldSkipLayerInDump(const GraphicsLayer* layer) const
+{
+    // Skip the root tile cache's flattening layer.
+    return m_isMainFrameRenderViewLayer && layer && layer == m_childContainmentLayer.get();
+}
+
+bool RenderLayerBacking::shouldDumpPropertyForLayer(const GraphicsLayer* layer, const char* propertyName) const
+{
+    // For backwards compatibility with WebKit1 and other platforms,
+    // skip some properties on the root tile cache.
+    if (m_isMainFrameRenderViewLayer && layer == m_graphicsLayer.get()) {
+        if (!strcmp(propertyName, "drawsContent"))
+            return false;
+
+        // Background color could be of interest to tests or other dumpers if it's non-white.
+        if (!strcmp(propertyName, "backgroundColor") && layer->backgroundColor() == Color::white)
+            return false;
+
+        // The root tile cache's repaints will show up at the top with FrameView's,
+        // so don't dump them twice.
+        if (!strcmp(propertyName, "repaintRects"))
+            return false;
+    }
+
+    return true;
 }
 
 #ifndef NDEBUG

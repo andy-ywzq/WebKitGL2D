@@ -57,7 +57,10 @@ public:
     bool usesMenuList() const;
 
     void add(HTMLElement*, HTMLElement* beforeElement, ExceptionCode&);
-    void remove(int index);
+
+    using Node::remove;
+    // Should be remove(int) but it conflicts with Node::remove(ExceptionCode&).
+    void removeByIndex(int);
     void remove(HTMLOptionElement*);
 
     String value() const;
@@ -137,7 +140,9 @@ private:
     virtual void defaultEventHandler(Event*);
 
     void dispatchChangeEventForMenuList();
-    
+
+    virtual void didRecalcStyle(Style::Change) OVERRIDE FINAL;
+
     void recalcListItems(bool updateSelectedStates = true) const;
 
     void deselectItems(HTMLOptionElement* excludeElement = 0);
