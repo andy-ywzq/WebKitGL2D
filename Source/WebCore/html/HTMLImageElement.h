@@ -59,6 +59,8 @@ public:
 
     void setLoadManually(bool loadManually) { m_imageLoader.setLoadManually(loadManually); }
 
+    bool matchesLowercasedUsemap(const AtomicStringImpl&) const;
+
     const AtomicString& alt() const;
 
     void setHeight(int);
@@ -106,8 +108,8 @@ private:
 
     virtual void addSubresourceAttributeURLs(ListHashSet<URL>&) const;
 
-    virtual InsertionNotificationRequest insertedInto(ContainerNode*) OVERRIDE;
-    virtual void removedFrom(ContainerNode*) OVERRIDE;
+    virtual InsertionNotificationRequest insertedInto(ContainerNode&) OVERRIDE;
+    virtual void removedFrom(ContainerNode&) OVERRIDE;
 
     virtual bool isFormAssociatedElement() OVERRIDE FINAL { return false; }
     virtual FormNamedItem* asFormNamedItem() OVERRIDE FINAL { return this; }
@@ -117,6 +119,7 @@ private:
     HTMLFormElement* m_form;
     CompositeOperator m_compositeOperator;
     AtomicString m_bestFitImageURL;
+    AtomicString m_lowercasedUsemap;
 };
 
 ELEMENT_TYPE_CASTS(HTMLImageElement)

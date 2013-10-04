@@ -1,3 +1,146 @@
+2013-10-04  Oliver Hunt  <oliver@apple.com>
+
+        Update all the tests, and include new file.
+        
+        * js/script-tests/basic-for-of.js: Added.
+        * sputnik/Conformance/07_Lexical_Conventions/7.9_Automatic_Semicolon_Insertion/S7.9_A6.3_T4-expected.txt:
+        * sputnik/Conformance/07_Lexical_Conventions/7.9_Automatic_Semicolon_Insertion/S7.9_A6.3_T5-expected.txt:
+        * sputnik/Conformance/07_Lexical_Conventions/7.9_Automatic_Semicolon_Insertion/S7.9_A6.3_T6-expected.txt:
+        * sputnik/Conformance/07_Lexical_Conventions/7.9_Automatic_Semicolon_Insertion/S7.9_A6.3_T7-expected.txt:
+
+2013-10-04  Bear Travis  <betravis@adobe.com>
+
+        [CSS Shapes] Basic shapes should be animatable for shape-outside
+        https://bugs.webkit.org/show_bug.cgi?id=122343
+
+        Reviewed by Dirk Schulze.
+
+        Add tests checking that shape-outside basic shape values correctly tween
+        between values.
+
+        * animations/resources/animation-test-helpers.js:
+        (getPropertyValue): Add shape-outside to list of properties that do not parse
+        with the default behavior.
+        (comparePropertyValue): Compare shape-outsides after parsing their shape notation.
+        * fast/shapes/shape-outside-floats/shape-outside-animation-expected.txt: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-animation.html: Added.
+
+2013-10-04  Manuel Rego Casasnovas  <rego@igalia.com>
+
+        [CSS Regions] Layout Tests for selecting text in 2 regions for other writing modes
+        https://bugs.webkit.org/show_bug.cgi?id=122327
+
+        Reviewed by Alexandru Chiculita.
+
+        Add versions for other writing modes (horizontal-bt, vertical-lr and
+        vertical-rl) for test
+        fast/regions/selection/selecting-text-in-2-regions.html.
+
+        * fast/regions/resources/helper.js:
+        (selectContentByIdsVert): Add new method when selecting context in a
+        vertical writing mode.
+        * fast/regions/resources/region-style.css: Add some new CSS classes for
+        vertical writing mode.
+        * fast/regions/selection/selecting-text-in-2-regions-horiz-bt-expected.html:
+        Added.
+        * fast/regions/selection/selecting-text-in-2-regions-horiz-bt.html:
+        Added.
+        * fast/regions/selection/selecting-text-in-2-regions-vert-lr-expected.html:
+        Added.
+        * fast/regions/selection/selecting-text-in-2-regions-vert-lr.html:
+        Added.
+        * fast/regions/selection/selecting-text-in-2-regions-vert-rl-expected.html:
+        Added.
+        * fast/regions/selection/selecting-text-in-2-regions-vert-rl.html:
+        Added.
+
+2013-10-04  Oliver Hunt  <oliver@apple.com>
+
+        Support for-of syntax
+        https://bugs.webkit.org/show_bug.cgi?id=122339
+
+        Reviewed by Geoffrey Garen.
+
+        Add test cases for the one type that supports for-of so far
+
+        * js/basic-for-of-expected.txt: Added.
+        * js/basic-for-of.html: Added.
+        * js/regress/for-of-iterate-array-entries.html: Added.
+        * js/regress/for-of-iterate-array-keys.html: Added.
+        * js/regress/for-of-iterate-array-values.html: Added.
+        * js/regress/script-tests/for-of-iterate-array-entries.js: Added.
+        (foo):
+        * js/regress/script-tests/for-of-iterate-array-keys.js: Added.
+        (foo):
+        * js/regress/script-tests/for-of-iterate-array-values.js: Added.
+        (foo):
+
+2013-10-04  Bear Travis  <betravis@adobe.com>
+
+        [CSS Shapes] Shape Outside should relayout when set dynamically
+        https://bugs.webkit.org/show_bug.cgi?id=122197
+
+        Reviewed by Alexandru Chiculita.
+
+        Test that a shape can be dynamically added, modified, or removed and that
+        content does a proper relayout.
+
+        * fast/shapes/shape-outside-floats/shape-outside-dynamic-shape-overhang-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-dynamic-shape-overhang.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-dynamic-shape-expected.html: Added.
+        * fast/shapes/shape-outside-floats/shape-outside-dynamic-shape.html: Added.
+
+2013-10-04  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        Tests added in r141354 erroneously assume correction suggestion to be in the context menu
+        https://bugs.webkit.org/show_bug.cgi?id=113742
+
+        Reviewed by Ryosuke Niwa.
+
+        Tests from r141354 erroneously assume that all WebKit ports populate
+        spell checking suggestion in the context menu.
+
+        Remove verification of spell checking suggestion and all context menu stuff from tests
+        that do that unnecessarily. Instead of that check whether spelling markers behave correctly,
+        for example, after deleting a text, double click or selecting a misspellings.
+
+        However, two tests are adapted to verify spell checking suggestions (their availability
+        rather than correctness, similarly to context-menu-suggestions.html).
+        Those are useful for ports which populate spelling suggestion in the context menu.
+
+        * editing/spelling/resources/util.js:
+        (initSpellTest):
+        Do not assume that the tests are running with "Windows" editing behavior.
+        Unix ports do not make a selection for the misspelled word and they don't
+        require selection to get spell checking suggestions.
+
+        * editing/spelling/spelling-changed-text-expected.txt:
+        * editing/spelling/spelling-changed-text.html:
+        * editing/spelling/spelling-double-clicked-word-expected.txt:
+        * editing/spelling/spelling-double-clicked-word.html:
+        * editing/spelling/spelling-exactly-selected-word-expected.txt:
+        * editing/spelling/spelling-exactly-selected-word.html:
+        Remove verification of correction suggestion.
+        Instead of that check whether the spelling markers behave correctly.
+
+        * editing/spelling/context-menu-suggestions-multiword-selection-expected.txt: Renamed from LayoutTests/editing/spelling/spelling-multiword-selection-expected.txt.
+        * editing/spelling/context-menu-suggestions-multiword-selection.html: Renamed from LayoutTests/editing/spelling/spelling-multiword-selection.html.
+        * editing/spelling/context-menu-suggestions-subword-selection-expected.txt: Renamed from LayoutTests/editing/spelling/spelling-subword-selection-expected.txt.
+        * editing/spelling/context-menu-suggestions-subword-selection.html: Renamed from LayoutTests/editing/spelling/spelling-subword-selection.html.
+        Adapt those tests for platforms which populate spell check suggestion
+        in the context menu.
+
+        * platform/efl-wk2/TestExpectations:
+        Now context-menu-suggestions-multiword-selection.html and
+        context-menu-suggestions-subword-selection.html are passing for EFL.
+
+        * platform/gtk-wk2/TestExpectations:
+        * platform/gtk/TestExpectations:
+        * platform/mac-wk2/TestExpectations:
+        * platform/win/TestExpectations:
+        * platform/wincairo/TestExpectations:
+        Update tests path due to rename.
+
 2013-10-04  Lorenzo Tilve  <ltilve@igalia.com>
 
         [GTK] Enable text edition UndoOperations support in WebKit2

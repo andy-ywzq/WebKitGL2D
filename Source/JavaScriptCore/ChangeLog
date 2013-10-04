@@ -1,3 +1,132 @@
+2013-10-04  Nadav Rotem  <nrotem@apple.com>
+
+        FTL: Add support for ValueToInt32(bool(x))
+        https://bugs.webkit.org/show_bug.cgi?id=122346
+
+        Reviewed by Geoffrey Garen.
+
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compileValueToInt32):
+
+2013-10-04  Oliver Hunt  <oliver@apple.com>
+
+        Build fix.
+
+        * runtime/JSArrayIterator.cpp:
+
+2013-10-04  Oliver Hunt  <oliver@apple.com>
+
+        Support for-of syntax
+        https://bugs.webkit.org/show_bug.cgi?id=122339
+
+        Reviewed by Geoffrey Garen.
+
+        Add support for for-of syntax to JSC.  As part of doing this I had to make
+        us support unique empty strings as identifiers.  In a follow on patch i'm
+        going to remove the distinction entirely as it's purely a complicating
+        separation.
+
+        Otherwise the logic here is fairly self-explanatory.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::addConstant):
+        (JSC::BytecodeGenerator::emitCall):
+        * bytecompiler/BytecodeGenerator.h:
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::CallArguments::CallArguments):
+        (JSC::ForOfNode::emitBytecode):
+        * jit/JITOperations.cpp:
+        * parser/ASTBuilder.h:
+        (JSC::ASTBuilder::createForOfLoop):
+        * parser/NodeConstructors.h:
+        (JSC::EnumerationNode::EnumerationNode):
+        (JSC::ForInNode::ForInNode):
+        (JSC::ForOfNode::ForOfNode):
+        * parser/Nodes.h:
+        * parser/Parser.cpp:
+        (JSC::::parseVarDeclarationList):
+        (JSC::::parseForStatement):
+        * parser/Parser.h:
+        (JSC::Parser::isofToken):
+        * parser/SyntaxChecker.h:
+        (JSC::SyntaxChecker::createForOfLoop):
+        * runtime/ArrayIteratorPrototype.cpp:
+        (JSC::ArrayIteratorPrototype::finishCreation):
+        (JSC::arrayIteratorPrototypeIterate):
+        * runtime/ArrayPrototype.cpp:
+        (JSC::ArrayPrototype::create):
+        (JSC::ArrayPrototype::finishCreation):
+        * runtime/ArrayPrototype.h:
+        * runtime/CommonIdentifiers.cpp:
+        (JSC::CommonIdentifiers::CommonIdentifiers):
+        * runtime/CommonIdentifiers.h:
+        * runtime/Identifier.h:
+        (JSC::Identifier::from):
+        * runtime/JSCJSValue.cpp:
+        (JSC::JSValue::dumpInContext):
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::reset):
+        * runtime/JSObject.cpp:
+        (JSC::JSObject::putDirectNativeFunction):
+        * runtime/PrivateName.h:
+        (JSC::PrivateName::PrivateName):
+        * runtime/PropertyName.h:
+        (JSC::PropertyName::PropertyName):
+
+2013-10-04  Michael Saboff  <msaboff@apple.com>
+
+        FTL::OSRExit::convertToForward() shouldn't misuse Operands<>::operator[]
+        https://bugs.webkit.org/show_bug.cgi?id=122336
+
+        Reviewed by Geoffrey Garen.
+
+        Changed code in change set r156900 to use the operand() accessor instead of operator[].
+
+        * ftl/FTLOSRExit.cpp:
+        (JSC::FTL::OSRExit::convertToForward):
+
+2013-10-04  Michael Saboff  <msaboff@apple.com>
+
+        FTL: Crash in OSRExit::convertToForward() using VirtualRegister.offset() as array index
+        https://bugs.webkit.org/show_bug.cgi?id=122332
+
+        Reviewed by Oliver Hunt.
+
+        Changed the uses of .offset(), which returns a negative number for locals, to be
+        toLocal() which returns a local's ordinal number.
+
+        * ftl/FTLOSRExit.cpp:
+        (JSC::FTL::OSRExit::convertToForward):
+
+2013-10-04  Michael Saboff  <msaboff@apple.com>
+
+        Add callOperation to Baseline JIT
+        https://bugs.webkit.org/show_bug.cgi?id=122306
+
+        Reviewed by Geoffrey Garen.
+
+        Created baseline JIT compatible versions for a few flavors of callOperation().
+        Migrated cti_op_new_regexp() and its caller to callOperation(operationNewRegexp()).
+
+        * dfg/DFGOperations.cpp: Moved operationNewRegexp() to JITOperations
+        * dfg/DFGOperations.h:
+        * jit/JIT.h:
+        (JSC::JIT::appendCall):
+        * jit/JITInlines.h:
+        (JSC::JIT::appendCallWithExceptionCheck):
+        (JSC::JIT::appendCallWithExceptionCheckSetJSValueResult):
+        (JSC::JIT::callOperation):
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_new_regexp):
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        * jit/JITStubs.cpp:
+        * jit/JITStubs.h:
+        * jit/JSInterfaceJIT.h:
+
 2013-10-03  Mark Rowe  <mrowe@apple.com>
 
         REGRESSION (r156811): WebCore rebuilds from scratch when doing an incremental build

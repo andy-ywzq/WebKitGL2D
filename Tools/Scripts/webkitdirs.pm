@@ -89,8 +89,6 @@ my $debugger;
 my $nmPath;
 my $osXVersion;
 my $generateDsym;
-my $isQt;
-my $qmakebin = "qmake"; # Allow override of the qmake binary from $PATH
 my $isGtk;
 my $isWinCE;
 my $isWinCairo;
@@ -117,6 +115,9 @@ my $willUseVCExpressWhenBuilding = 0;
 # Defined in VCSUtils.
 sub exitStatus($);
 
+sub findMatchingArguments($$);
+sub hasArgument($$);
+
 sub determineSourceDir
 {
     return if $sourceDir;
@@ -142,11 +143,6 @@ sub currentPerlPath()
         $thisPerl .= $Config{_exe} unless $thisPerl =~ m/$Config{_exe}$/i;
     }
     return $thisPerl;
-}
-
-sub setQmakeBinaryPath($)
-{
-    ($qmakebin) = @_;
 }
 
 # used for scripts which are stored in a non-standard location
@@ -380,8 +376,7 @@ sub argumentsForConfiguration()
     my @args = ();
     push(@args, '--debug') if $configuration eq "Debug";
     push(@args, '--release') if $configuration eq "Release";
-    push(@args, '--32-bit') if $architecture ne "x86_64";
-    push(@args, '--qt') if isQt();
+    push(@args, '--32-bit') if ($architecture ne "x86_64" and !hasArgument('--64-bit', \@ARGV));
     push(@args, '--gtk') if isGtk();
     push(@args, '--efl') if isEfl();
     push(@args, '--nix') if isNix();
@@ -539,7 +534,7 @@ sub productDir
 sub jscProductDir
 {
     my $productDir = productDir();
-    $productDir .= "/bin" if (isQt() || isEfl() || isNix());
+    $productDir .= "/bin" if (isEfl() || isNix());
     $productDir .= "/Programs" if isGtk();
 
     return $productDir;
@@ -799,48 +794,6 @@ sub builtDylibPathForName
         my $libraryExtension = $libraryName =~ /^WebKit$/i ? ".so" : ".a";
         return "$configurationProductDir/$libraryName/lib" . lc($libraryName) . $libraryExtension;
     }
-    if (isQt()) {
-        my $isSearchingForWebCore = $libraryName =~ "WebCore";
-        if (isDarwin()) {
-            $libraryName = "QtWebKitWidgets";
-        } else {
-            $libraryName = "Qt5WebKitWidgets";
-        }
-        my $result;
-        if (isDarwin() and -d "$configurationProductDir/lib/$libraryName.framework") {
-            $result = "$configurationProductDir/lib/$libraryName.framework/$libraryName";
-        } elsif (isDarwin() and -d "$configurationProductDir/lib") {
-            $result = "$configurationProductDir/lib/lib$libraryName.dylib";
-        } elsif (isWindows()) {
-            if (configuration() eq "Debug") {
-                # On Windows, there is a "d" suffix to the library name. See <http://trac.webkit.org/changeset/53924/>.
-                $libraryName .= "d";
-            }
-
-            chomp(my $mkspec = `$qmakebin -query QT_HOST_DATA`);
-            $mkspec .= "/mkspecs";
-            my $qtMajorVersion = retrieveQMakespecVar("$mkspec/qconfig.pri", "QT_MAJOR_VERSION");
-            if (not $qtMajorVersion) {
-                $qtMajorVersion = "";
-            }
-
-            $result = "$configurationProductDir/lib/$libraryName$qtMajorVersion.dll";
-        } else {
-            $result = "$configurationProductDir/lib/lib$libraryName.so";
-        }
-
-        if ($isSearchingForWebCore) {
-            # With CONFIG+=force_static_libs_as_shared we have a shared library for each subdir.
-            # For feature detection to work it is necessary to return the path of the WebCore library here.
-            my $replacedWithWebCore = $result;
-            $replacedWithWebCore =~ s/$libraryName/WebCore/g;
-            if (-e $replacedWithWebCore) {
-                return $replacedWithWebCore;
-            }
-        }
-
-        return $result;
-    }
     if (isGtk()) {
         # WebKitGTK+ for GTK2, WebKitGTK+ for GTK3, and WebKit2 respectively.
         my @libraries = ("libwebkitgtk-1.0", "libwebkitgtk-3.0", "libwebkit2gtk-3.0");
@@ -905,56 +858,6 @@ sub determineIsInspectorFrontend()
     $isInspectorFrontend = checkForArgumentAndRemoveFromARGV("--inspector-frontend");
 }
 
-sub isQt()
-{
-    determineIsQt();
-    return $isQt;
-}
-
-sub getQtVersion()
-{
-    my $qtVersion = `$qmakebin --version`;
-    $qtVersion =~ s/^(.*)Qt version (\d\.\d)(.*)/$2/s ;
-    return $qtVersion;
-}
-
-sub qtFeatureDefaults
-{
-    die "ERROR: qmake missing but required to build WebKit.\n" if not commandExists($qmakebin);
-
-    my $oldQmakeEval = $ENV{QMAKE_CACHE_EVAL};
-    $ENV{QMAKE_CACHE_EVAL} = "CONFIG+=print_defaults";
-
-    my $originalCwd = getcwd();
-    my $qmakepath = File::Spec->catfile(sourceDir(), "Tools", "qmake");
-    chdir $qmakepath or die "Failed to cd into " . $qmakepath . "\n";
-
-    my $file = File::Spec->catfile(sourceDir(), "WebKit.pro");
-
-    my @buildArgs;
-    @buildArgs = (@buildArgs, @{$_[0]}) if (@_);
-
-    my @defaults = `$qmakebin @buildArgs $file 2>&1`;
-
-    my %qtFeatureDefaults;
-    for (@defaults) {
-        if (/DEFINES: /) {
-            while (/(\S+?)=(\S+?)/gi) {
-                $qtFeatureDefaults{$1}=$2;
-            }
-        } elsif (/Done computing defaults/) {
-            last;
-        } elsif (@_) {
-            print $_;
-        }
-    }
-
-    chdir $originalCwd;
-    $ENV{QMAKE_CACHE_EVAL} = $oldQmakeEval;
-
-    return %qtFeatureDefaults;
-}
-
 sub commandExists($)
 {
     my $command = shift;
@@ -968,20 +871,35 @@ sub checkForArgumentAndRemoveFromARGV
     return checkForArgumentAndRemoveFromArrayRef($argToCheck, \@ARGV);
 }
 
-sub checkForArgumentAndRemoveFromArrayRef
+sub findMatchingArguments($$)
 {
     my ($argToCheck, $arrayRef) = @_;
-    my @indicesToRemove;
+    my @matchingIndices;
     foreach my $index (0 .. $#$arrayRef) {
         my $opt = $$arrayRef[$index];
         if ($opt =~ /^$argToCheck$/i ) {
-            push(@indicesToRemove, $index);
+            push(@matchingIndices, $index);
         }
     }
+    return @matchingIndices; 
+}
+
+sub hasArgument($$)
+{
+    my ($argToCheck, $arrayRef) = @_;
+    my @matchingIndices = findMatchingArguments($argToCheck, $arrayRef);
+    my $far = scalar @matchingIndices;
+    return scalar @matchingIndices > 0;
+}
+
+sub checkForArgumentAndRemoveFromArrayRef
+{
+    my ($argToCheck, $arrayRef) = @_;
+    my @indicesToRemove = findMatchingArguments($argToCheck, $arrayRef);
     foreach my $index (@indicesToRemove) {
         splice(@$arrayRef, $index, 1);
     }
-    return $#indicesToRemove > -1;
+    return scalar @indicesToRemove > 0;
 }
 
 sub isWK2()
@@ -995,25 +913,6 @@ sub isWK2()
         $isWK2 = 0;
     }
     return $isWK2;
-}
-
-sub determineIsQt()
-{
-    return if defined($isQt);
-
-    # Allow override in case QTDIR is not set.
-    if (checkForArgumentAndRemoveFromARGV("--qt")) {
-        $isQt = 1;
-        return;
-    }
-
-    if (isGtk() || isEfl() || isBlackBerry() || isWinCairo() || isNix()) {
-    # The presence of QTDIR only means Qt if --gtk or --efl or --blackberry or --wincairo or --nix are not on the command-line
-        $isQt = 0;
-        return;
-    }
-
-    $isQt = defined($ENV{'QTDIR'});
 }
 
 sub isBlackBerry()
@@ -1320,7 +1219,7 @@ sub isCrossCompilation()
 
 sub isAppleWebKit()
 {
-    return !(isQt() or isGtk() or isEfl() or isWinCE() or isBlackBerry() or isNix());
+    return !(isGtk() or isEfl() or isWinCE() or isBlackBerry() or isNix());
 }
 
 sub isAppleMacWebKit()
@@ -1511,7 +1410,7 @@ sub relativeScriptsDir()
 sub launcherPath()
 {
     my $relativeScriptsPath = relativeScriptsDir();
-    if (isGtk() || isQt() || isEfl() || isWinCE() || isNix()) {
+    if (isGtk() || isEfl() || isWinCE() || isNix()) {
         return "$relativeScriptsPath/run-launcher";
     } elsif (isAppleWebKit()) {
         return "$relativeScriptsPath/run-safari";
@@ -1522,8 +1421,6 @@ sub launcherName()
 {
     if (isGtk()) {
         return "GtkLauncher";
-    } elsif (isQt()) {
-        return "QtTestBrowser";
     } elsif (isAppleWebKit()) {
         return "Safari";
     } elsif (isEfl()) {
@@ -1554,22 +1451,10 @@ sub checkRequiredSystemConfig
             print "most likely fail. The latest Xcode is available from the App Store.\n";
             print "*************************************************************\n";
         }
-    } elsif (isGtk() or isQt() or isEfl() or isNix()) {
-        my @cmds = qw(bison gperf);
-        if (isQt() and isWindows()) {
-            push @cmds, "win_flex";
-        } else {
-            push @cmds, "flex";
-        }
+    } elsif (isGtk() or isEfl() or isNix()) {
+        my @cmds = qw(bison gperf flex);
         my @missing = ();
         my $oldPath = $ENV{PATH};
-        if (isQt() and isWindows()) {
-            chomp(my $gnuWin32Dir = `$qmakebin -query QT_HOST_DATA`);
-            $gnuWin32Dir = File::Spec->catfile($gnuWin32Dir, "..", "gnuwin32", "bin");
-            if (-d "$gnuWin32Dir") {
-                $ENV{PATH} = $gnuWin32Dir . ";" . $ENV{PATH};
-            }
-        }
         foreach my $cmd (@cmds) {
             push @missing, $cmd if not commandExists($cmd);
         }
@@ -1577,9 +1462,6 @@ sub checkRequiredSystemConfig
         if (@missing) {
             my $list = join ", ", @missing;
             die "ERROR: $list missing but required to build WebKit.\n";
-        }
-        if (isQt() and isWindows()) {
-            $ENV{PATH} = $oldPath;
         }
     }
     # Win32 and other platforms may want to check for minimum config
@@ -1689,16 +1571,6 @@ sub setupCygwinEnv()
         $willUseVCExpressWhenBuilding = 1;
     }
 
-    my $qtSDKPath = File::Spec->catdir($programFilesPath, "QuickTime SDK");
-    if (0 && ! -e $qtSDKPath) {
-        print "*************************************************************\n";
-        print "Cannot find '$qtSDKPath'\n";
-        print "Please download the QuickTime SDK for Windows from\n";
-        print "http://developer.apple.com/quicktime/download/\n";
-        print "*************************************************************\n";
-        die;
-    }
-
     print "Building results into: ", baseProductDir(), "\n";
     print "WEBKIT_OUTPUTDIR is set to: ", $ENV{"WEBKIT_OUTPUTDIR"}, "\n";
     print "WEBKIT_LIBRARIES is set to: ", $ENV{"WEBKIT_LIBRARIES"}, "\n";
@@ -1753,7 +1625,7 @@ sub copyInspectorFrontendFiles
         }
     } elsif (isAppleWinWebKit()) {
         $inspectorResourcesDirPath = $productDir . "/WebKit.resources/inspector";
-    } elsif (isQt() || isGtk() || isNix()) {
+    } elsif (isGtk() || isNix()) {
         my $prefix = $ENV{"WebKitInstallationPrefix"};
         $inspectorResourcesDirPath = (defined($prefix) ? $prefix : "/usr/share") . "/webkit-1.0/webinspector";
     } elsif (isEfl()) {
@@ -1783,7 +1655,7 @@ sub copyInspectorFrontendFiles
         system "ditto", $sourceLocalizedStrings, $destinationLocalizedStrings;
     }
 
-    my $exitStatus = system "rsync", "-aut", "--exclude=/.DS_Store", "--exclude=*.re2js", "--exclude=.svn/", !isQt() ? "--exclude=/WebKit.qrc" : "", $sourceInspectorPath, $inspectorResourcesDirPath;
+    my $exitStatus = system "rsync", "-aut", "--exclude=/.DS_Store", "--exclude=*.re2js", "--exclude=.svn/", $sourceInspectorPath, $inspectorResourcesDirPath;
     return $exitStatus if $exitStatus;
 
     if (isIOSWebKit()) {
@@ -1860,27 +1732,6 @@ sub retrieveQMakespecVar
     }
     close SPEC;
     return $varvalue;
-}
-
-sub qtMakeCommand($)
-{
-    my ($qmakebin) = @_;
-    chomp(my $hostDataPath = `$qmakebin -query QT_HOST_DATA`);
-    my $mkspecPath = $hostDataPath . "/mkspecs/default/qmake.conf";
-    if (! -e $mkspecPath) {
-        chomp(my $mkspec= `$qmakebin -query QMAKE_XSPEC`);
-        $mkspecPath = $hostDataPath . "/mkspecs/" . $mkspec . "/qmake.conf";
-    }
-    my $compiler = retrieveQMakespecVar($mkspecPath, "QMAKE_CC");
-
-    #print "default spec: " . $mkspec . "\n";
-    #print "compiler found: " . $compiler . "\n";
-
-    if ($compiler && $compiler eq "cl") {
-        return "nmake";
-    }
-
-    return "make";
 }
 
 sub autotoolsFlag($$)
@@ -2250,199 +2101,6 @@ sub promptUser
     return $input ? $input : $default;
 }
 
-sub buildQMakeProjects
-{
-    my ($projects, $clean, @buildParams) = @_;
-
-    my @buildArgs = ();
-    my $qconfigs = "";
-
-    my $make = qtMakeCommand($qmakebin);
-    my $makeargs = "";
-    my $command;
-    my $installHeaders;
-    my $installLibs;
-    for my $i (0 .. $#buildParams) {
-        my $opt = $buildParams[$i];
-        if ($opt =~ /^--qmake=(.*)/i ) {
-            $qmakebin = $1;
-        } elsif ($opt =~ /^--qmakearg=(.*)/i ) {
-            push @buildArgs, $1;
-        } elsif ($opt =~ /^--makeargs=(.*)/i ) {
-            $makeargs = $1;
-        } elsif ($opt =~ /^--install-headers=(.*)/i ) {
-            $installHeaders = $1;
-        } elsif ($opt =~ /^--install-libs=(.*)/i ) {
-            $installLibs = $1;
-        } else {
-            push @buildArgs, $opt;
-        }
-    }
-
-    # Automatically determine the number of CPUs for make only if this make argument haven't already been specified.
-    if ($make eq "make" && $makeargs !~ /-[^\s]*?j\s*\d+/i && (!defined $ENV{"MAKEFLAGS"} || ($ENV{"MAKEFLAGS"} !~ /-[^\s]*?j\s*\d+/i ))) {
-        $makeargs .= " -j" . numberOfCPUs();
-    }
-
-    $make = "$make $makeargs";
-    $make =~ s/\s+$//;
-
-    my $originalCwd = getcwd();
-    my $dir = File::Spec->canonpath(productDir());
-    File::Path::mkpath($dir);
-    chdir $dir or die "Failed to cd into " . $dir . "\n";
-
-    if ($clean) {
-        $command = "$make distclean";
-        print "\nCalling '$command' in " . $dir . "\n\n";
-        return system $command;
-    }
-
-    my $qmakepath = File::Spec->catfile(sourceDir(), "Tools", "qmake");
-    my $qmakecommand = $qmakebin;
-
-    my $config = configuration();
-    push @buildArgs, "INSTALL_HEADERS=" . $installHeaders if defined($installHeaders);
-    push @buildArgs, "INSTALL_LIBS=" . $installLibs if defined($installLibs);
-
-    my $passedConfig = passedConfiguration() || "";
-    if ($passedConfig =~ m/debug/i) {
-        push @buildArgs, "CONFIG-=release";
-        push @buildArgs, "CONFIG+=debug";
-    } elsif ($passedConfig =~ m/release/i) {
-        push @buildArgs, "CONFIG+=release";
-        push @buildArgs, "CONFIG-=debug";
-    } elsif ($passedConfig) {
-        die "Build type $passedConfig is not supported with --qt.\n";
-    }
-
-    # Using build-webkit to build assumes you want a developer-build
-    push @buildArgs, "CONFIG-=production_build";
-
-    my $svnRevision = currentSVNRevision();
-    my $previousSvnRevision = "unknown";
-
-    my $buildHint = "";
-
-    my $pathToBuiltRevisions = File::Spec->catfile($dir, ".builtRevisions.cache");
-    if (-e $pathToBuiltRevisions && open(BUILTREVISIONS, $pathToBuiltRevisions)) {
-        while (<BUILTREVISIONS>) {
-            if ($_ =~ m/^SVN_REVISION\s=\s(\d+)$/) {
-                $previousSvnRevision = $1;
-            }
-        }
-        close(BUILTREVISIONS);
-    }
-
-    my $result = 0;
-
-    # Run qmake, regadless of having a makefile or not, so that qmake can
-    # detect changes to the configuration.
-
-    push @buildArgs, "-after OVERRIDE_SUBDIRS=\"@{$projects}\"" if @{$projects};
-    unshift @buildArgs, File::Spec->catfile(sourceDir(), "WebKit.pro");
-    $command = "$qmakecommand @buildArgs";
-    print "Calling '$command' in " . $dir . "\n\n";
-    print "Installation headers directory: $installHeaders\n" if(defined($installHeaders));
-    print "Installation libraries directory: $installLibs\n" if(defined($installLibs));
-
-    my $configChanged = 0;
-    open(QMAKE, "$command 2>&1 |") || die "Could not execute qmake";
-    while (<QMAKE>) {
-        $configChanged = 1 if $_ =~ m/The configuration was changed since the last build/;
-        print $_;
-    }
-
-    close(QMAKE);
-    $result = $?;
-
-    if ($result ne 0) {
-       die "\nFailed to set up build environment using $qmakebin!\n";
-    }
-
-    my $maybeNeedsCleanBuild = 0;
-    my $needsIncrementalBuild = 0;
-
-    # Full incremental build (run qmake) needed on buildbots and EWS bots always.
-    if (grep(/CONFIG\+=buildbot/,@buildParams)) {
-        $needsIncrementalBuild = 1;
-    }
-
-    if ($svnRevision ne $previousSvnRevision) {
-        print "Last built revision was " . $previousSvnRevision .
-            ", now at revision $svnRevision. Full incremental build needed.\n";
-        $needsIncrementalBuild = 1;
-
-        my @fileList = listOfChangedFilesBetweenRevisions(sourceDir(), $previousSvnRevision, $svnRevision);
-
-        foreach (@fileList) {
-            if (m/\.pr[oif]$/ or
-                m/\.qmake.conf$/ or
-                m/^Tools\/qmake\//
-               ) {
-                print "Change to $_ detected, clean build may be needed.\n";
-                $maybeNeedsCleanBuild = 1;
-                last;
-            }
-        }
-    }
-
-    if ($configChanged) {
-        print "Calling '$make wipeclean' in " . $dir . "\n\n";
-        $result = system "$make wipeclean";
-    }
-
-    $command = "$make";
-    if ($needsIncrementalBuild) {
-        $command .= " incremental";
-    }
-
-    print "\nCalling '$command' in " . $dir . "\n\n";
-    $result = system $command;
-
-    chdir ".." or die;
-
-    if ($result eq 0) {
-        # Now that the build completed successfully we can save the SVN revision
-        open(BUILTREVISIONS, ">>$pathToBuiltRevisions");
-        print BUILTREVISIONS "SVN_REVISION = $svnRevision\n";
-        close(BUILTREVISIONS);
-    } elsif (!$command =~ /incremental/ && exitStatus($result)) {
-        my $exitCode = exitStatus($result);
-        my $failMessage = <<EOF;
-
-===== BUILD FAILED ======
-
-The build failed with exit code $exitCode. This may have been because you
-
-  - added an #include to a source/header
-  - added a Q_OBJECT macro to a class
-  - added a new resource to a qrc file
-
-as dependencies are not automatically re-computed for local developer builds.
-You may try computing dependencies manually by running 'make qmake_all' in:
-
-  $dir
-
-or passing --makeargs="qmake_all" to build-webkit.
-
-=========================
-
-EOF
-        print "$failMessage";
-    } elsif ($maybeNeedsCleanBuild) {
-        print "\nIncremental build failed, clean build needed. \n";
-        print "Calling '$make wipeclean' in " . $dir . "\n\n";
-        chdir $dir or die;
-        system "$make wipeclean";
-
-        print "\nCalling '$make' in " . $dir . "\n\n";
-        $result = system $make;
-    }
-
-    return $result;
-}
-
 sub buildGtkProject
 {
     my ($project, $clean, $prefix, $makeArgs, $noWebKit1, $noWebKit2, @features) = @_;
@@ -2472,10 +2130,6 @@ sub setPathForRunningWebKitApp
 
     if (isAppleWinWebKit()) {
         $env->{PATH} = join(':', productDir(), dirname(installedSafariPath()), appleApplicationSupportPath(), $env->{PATH} || "");
-    } elsif (isQt()) {
-        my $qtLibs = `$qmakebin -query QT_INSTALL_LIBS`;
-        $qtLibs =~ s/[\n|\r]$//g;
-        $env->{PATH} = join(';', $qtLibs, productDir() . "/lib", $env->{PATH} || "");
     }
 }
 

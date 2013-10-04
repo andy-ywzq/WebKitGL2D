@@ -27,6 +27,7 @@
 #include "JITOperations.h"
 
 #include "CommonSlowPaths.h"
+#include "Error.h"
 #include "GetterSetter.h"
 #include "HostCallReturnValue.h"
 #include "JITOperationWrappers.h"
@@ -73,8 +74,7 @@ EncodedJSValue JIT_OPERATION operationGetByIdOptimizeWithReturnAddress(ExecState
 {
     VM* vm = &exec->vm();
     NativeCallFrameTracer tracer(vm, exec);
-
-    Identifier ident(vm, uid);
+    Identifier ident = uid->isEmptyUnique() ? Identifier::from(PrivateName(uid)) : Identifier(vm, uid);
     StructureStubInfo& stubInfo = exec->codeBlock()->getStubInfo(returnAddress);
     AccessType accessType = static_cast<AccessType>(stubInfo.accessType);
 
@@ -585,6 +585,19 @@ char* JIT_OPERATION operationVirtualCall(ExecState* execCallee)
 char* JIT_OPERATION operationVirtualConstruct(ExecState* execCallee)
 {
     return virtualFor(execCallee, CodeForConstruct);
+}
+
+EncodedJSValue JIT_OPERATION operationNewRegexp(ExecState* exec, void* regexpPtr)
+{
+    VM& vm = exec->vm();
+    NativeCallFrameTracer tracer(&vm, exec);
+    RegExp* regexp = static_cast<RegExp*>(regexpPtr);
+    if (!regexp->isValid()) {
+        vm.throwException(exec, createSyntaxError(exec, "Invalid flags supplied to RegExp constructor."));
+        return JSValue::encode(jsUndefined());
+    }
+
+    return JSValue::encode(RegExpObject::create(vm, exec->lexicalGlobalObject()->regExpStructure(), regexp));
 }
 
 JITHandlerEncoded JIT_OPERATION lookupExceptionHandler(ExecState* exec)

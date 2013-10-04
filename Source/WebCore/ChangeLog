@@ -1,3 +1,362 @@
+2013-10-03  Ryosuke Niwa  <rniwa@webkit.org>
+
+        FocusController::advanceFocus spends a lot of time in HTMLMapElement::imageElement
+        https://bugs.webkit.org/show_bug.cgi?id=122313
+
+        Reviewed by Andreas Kling.
+
+        The bug was caused by HTMLMapElement::imageElement traversing the entire document to look for
+        the image element associated with a given map element. Because HTMLCollection used to find the
+        image element is not cached, it traversed the entire document on every area element we visit,
+        resulting in O(n^2) behavior.
+
+        Fixed the bug by adding the name-to-image-element map on document to avoid the traversal in
+        HTMLMapElement::imageElement.
+
+        * dom/Document.cpp:
+        (WebCore::Document::addImageElementByLowercasedUsemap): Added.
+        (WebCore::Document::removeImageElementByLowercasedUsemap): Added.
+        (WebCore::Document::imageElementByLowercasedUsemap): Added.
+
+        * dom/Document.h: Added m_imagesByUsemap.
+
+        * dom/DocumentOrderedMap.cpp:
+        (WebCore::keyMatchesLowercasedUsemap): Added.
+        (WebCore::DocumentOrderedMap::getElementByLowercasedUsemap): Added.
+
+        * dom/DocumentOrderedMap.h:
+        * html/HTMLImageElement.cpp:
+        (WebCore::HTMLImageElement::parseAttribute): Update the name-to-usemap map. The code to parse
+        the usemap attribute and strip # was moved from HTMLMapElement::imageElement.
+        (WebCore::HTMLImageElement::insertedInto): Ditto.
+        (WebCore::HTMLImageElement::removedFrom): Ditto.
+        (WebCore::HTMLImageElement::matchesLowercasedUsemap): Added; called by DocumentOrderedMap.
+
+        * html/HTMLImageElement.h:
+
+        * html/HTMLMapElement.cpp:
+        (WebCore::HTMLMapElement::imageElement): Call Document::imageElementByUsemap instead of
+        looking through all image elements in the document.
+
+2013-10-04  Sam Weinig  <sam@webkit.org>
+
+        Unify rubberband control
+        https://bugs.webkit.org/show_bug.cgi?id=122341
+
+        Reviewed by Tim Horton.
+
+        - Consolidates the two ways we were passing state about whether
+          to rubber-band on a particular edge down to one.
+
+        * WebCore.exp.in:
+        * page/Page.cpp:
+        * page/Page.h:
+        * page/scrolling/ScrollingCoordinator.h:
+        (WebCore::ScrollingCoordinator::isRubberBandInProgress):
+        * page/scrolling/ScrollingTree.cpp:
+        (WebCore::ScrollingTree::ScrollingTree):
+        (WebCore::ScrollingTree::setCanRubberBandState):
+        (WebCore::ScrollingTree::rubberBandsAtLeft):
+        (WebCore::ScrollingTree::rubberBandsAtRight):
+        (WebCore::ScrollingTree::rubberBandsAtBottom):
+        (WebCore::ScrollingTree::rubberBandsAtTop):
+        (WebCore::ScrollingTree::willWheelEventStartSwipeGesture):
+        * page/scrolling/ScrollingTree.h:
+        * page/scrolling/mac/ScrollingCoordinatorMac.h:
+        * page/scrolling/mac/ScrollingCoordinatorMac.mm:
+        * page/scrolling/mac/ScrollingTreeScrollingNodeMac.mm:
+        (WebCore::ScrollingTreeScrollingNodeMac::shouldRubberBandInDirection):
+
+2013-10-04  Andreas Kling  <akling@apple.com>
+
+        CTTE: SubframeLoader backpointer to Frame should be a reference.
+        <https://webkit.org/b/122350>
+
+        Reviewed by Anders Carlsson.
+
+        SubframeLoader is tied to the lifetime of FrameLoader, which in turn
+        is tied to the lifetime of Frame.
+
+2013-10-04  Anders Carlsson  <andersca@apple.com>
+
+        Remove some unneeded code from WidgetMac
+        https://bugs.webkit.org/show_bug.cgi?id=122355
+
+        Reviewed by Dan Bernstein.
+
+        Remove code to manage the visible rect, it's not needed anymore.
+
+        * platform/Widget.h:
+        * platform/mac/WidgetMac.mm:
+        (WebCore::Widget::~Widget):
+        (WebCore::Widget::setFrameRect):
+        (WebCore::Widget::setPlatformWidget):
+
+2013-10-04  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Upstream disk image cache
+        https://bugs.webkit.org/show_bug.cgi?id=121985
+
+        Reviewed by Joseph Pecoraro.
+
+        * WebCore.exp.in:
+        * WebCore.xcodeproj/project.pbxproj:
+        * loader/ResourceBuffer.cpp:
+        (WebCore::ResourceBuffer::isUsingDiskImageCache):
+        * loader/ResourceBuffer.h:
+        * loader/cache/CachedImage.cpp:
+        (WebCore::CachedImage::canUseDiskImageCache): Added.
+        (WebCore::CachedImage::useDiskImageCache): Added.
+        * loader/cache/CachedImage.h:
+        * loader/cache/CachedResource.cpp:
+        (WebCore::CachedResource::isSafeToMakePurgeable):
+        (WebCore::CachedResource::isUsingDiskImageCache): Added.
+        * loader/cache/CachedResource.h:
+        (WebCore::CachedResource::canUseDiskImageCache): Added.
+        (WebCore::CachedResource::useDiskImageCache): Added.
+        * loader/cache/MemoryCache.cpp:
+        (WebCore::MemoryCache::flushCachedImagesToDisk): Added.
+        (WebCore::MemoryCache::TypeStatistic::addResource):
+        (WebCore::MemoryCache::dumpStats):
+        (WebCore::MemoryCache::dumpLRULists):
+        * loader/cache/MemoryCache.h:
+        (WebCore::MemoryCache::TypeStatistic::TypeStatistic):
+        * loader/ios/DiskImageCacheClientIOS.h: Added.
+        * loader/ios/DiskImageCacheIOS.h: Added.
+        * loader/ios/DiskImageCacheIOS.mm: Added.
+        * platform/Logging.h:
+        * platform/SharedBuffer.cpp:
+        (WebCore::SharedBuffer::SharedBuffer):
+        (WebCore::SharedBuffer::~SharedBuffer):
+        (WebCore::SharedBuffer::isAllowedToBeMemoryMapped): Added.
+        (WebCore::SharedBuffer::allowToBeMemoryMapped): Added.
+        (WebCore::SharedBuffer::failedMemoryMap): Added.
+        (WebCore::SharedBuffer::markAsMemoryMapped): Added.
+        (WebCore::SharedBuffer::memoryMappedNotificationCallbackData): Added.
+        (WebCore::SharedBuffer::memoryMappedNotificationCallback): Added.
+        (WebCore::SharedBuffer::setMemoryMappedNotificationCallback): Added.
+        (WebCore::SharedBuffer::data):
+        (WebCore::SharedBuffer::append):
+        (WebCore::SharedBuffer::buffer):
+        (WebCore::SharedBuffer::getSomeData):
+        * platform/SharedBuffer.h:
+        (WebCore::SharedBuffer::isMemoryMapped): Added.
+        * platform/cf/SharedBufferCF.cpp:
+        (WebCore::SharedBuffer::SharedBuffer):
+
+2013-10-04  Bear Travis  <betravis@adobe.com>
+
+        [CSS Shapes] Basic shapes should be animatable for shape-outside
+        https://bugs.webkit.org/show_bug.cgi?id=122343
+
+        Reviewed by Dirk Schulze.
+
+        Test: fast/shapes/shape-outside-floats/shape-outside-animation.html
+
+        Add shape outside to the list of animatable properties. The infrastructure
+        is already in place for animating basic shapes on shape-inside and clipping
+        paths. See https://bugs.webkit.org/show_bug.cgi?id=101854.
+
+        * page/animation/CSSPropertyAnimation.cpp:
+        (WebCore::CSSPropertyAnimationWrapperMap::CSSPropertyAnimationWrapperMap):
+
+2013-10-04  Andreas Kling  <akling@apple.com>
+
+        Tighten typing in some RenderLayer code.
+        <https://webkit.org/b/122342>
+
+        Reviewed by Antti Koivisto.
+
+        Use tighter types instead of Node and RenderObject inside RenderLayer
+        where applicable.
+
+2013-10-04  Ralph Thomas  <ralpht@gmail.com>
+
+        Inserting a JS generated keyframe animation shouldn't trigger a whole document style recalc
+        https://bugs.webkit.org/show_bug.cgi?id=119479
+
+        Reviewed by Antti Koivisto.
+
+        Change CSSStyleSheet::didMutateRules to not invalidate all node's styles when inserting a
+        @-webkit-keyframes rule, and to instead insert the rule directly into the StyleResolver.
+
+        Test: animation/keyframes-dynamic.html: adds and removes keyframe rules using JavaScript and
+        validates that the correct elements are animated.
+
+        * css/CSSStyleSheet.cpp:
+        (WebCore::CSSStyleSheet::didMutateRules):
+        (WebCore::CSSStyleSheet::insertRule):
+        * css/CSSStyleSheet.h:
+
+2013-10-04  Zan Dobersek  <zdobersek@igalia.com>
+
+        [WebIDL] Annotate IDL interfaces under Source/WebCore/fileapi/ with the OperationsNotDeletable attribute
+        https://bugs.webkit.org/show_bug.cgi?id=122275
+
+        Reviewed by Darin Adler.
+
+        Before changing the JSC bindings generator to enforce WebIDL operations to be configurable, all the
+        interfaces are being annotated with the OperationsNotDeletable attribute. The attribute currently
+        doesn't have any effect, but will keep the operations not configurable after the generator is modified
+        to preserve the original behavior. The attribute will be removed from each interface after checking
+        conformity with other browsers (in terms of configurability of operations of that interface) and the
+        WebKit's existing test suites.
+
+        This patch covers IDL interfaces under Source/WebCore/fileapi/.
+
+        * fileapi/Blob.idl:
+        * fileapi/FileException.idl:
+        * fileapi/FileList.idl:
+        * fileapi/FileReader.idl:
+        * fileapi/FileReaderSync.idl:
+
+2013-10-04  Zan Dobersek  <zdobersek@igalia.com>
+
+        [WebIDL] Annotate IDL interfaces under Source/WebCore/dom/ with the OperationsNotDeletable attribute
+        https://bugs.webkit.org/show_bug.cgi?id=122271
+
+        Reviewed by Darin Adler.
+
+        Before changing the JSC bindings generator to enforce WebIDL operations to be configurable, all the
+        interfaces are being annotated with the OperationsNotDeletable attribute. The attribute currently
+        doesn't have any effect, but will keep the operations not configurable after the generator is modified
+        to preserve the original behavior. The attribute will be removed from each interface after checking
+        conformity with other browsers (in terms of configurability of operations of that interface) and the
+        WebKit's existing test suites.
+
+        This patch covers IDL interfaces under Source/WebCore/dom/.
+
+        * dom/CharacterData.idl:
+        * dom/ChildNode.idl:
+        * dom/ClientRectList.idl:
+        * dom/Clipboard.idl:
+        * dom/CompositionEvent.idl:
+        * dom/CustomEvent.idl:
+        * dom/DOMCoreException.idl:
+        * dom/DOMImplementation.idl:
+        * dom/DOMNamedFlowCollection.idl:
+        * dom/DOMStringList.idl:
+        * dom/DOMStringMap.idl:
+        * dom/DataTransferItem.idl:
+        * dom/DataTransferItemList.idl:
+        * dom/DeviceMotionEvent.idl:
+        * dom/DeviceOrientationEvent.idl:
+        * dom/Document.idl:
+        * dom/DocumentFragment.idl:
+        * dom/DocumentType.idl:
+        * dom/Element.idl:
+        * dom/Event.idl:
+        * dom/EventException.idl:
+        * dom/EventListener.idl:
+        * dom/EventTarget.idl:
+        * dom/KeyboardEvent.idl:
+        * dom/MessageEvent.idl:
+        * dom/MessagePort.idl:
+        * dom/MouseEvent.idl:
+        * dom/MutationEvent.idl:
+        * dom/MutationObserver.idl:
+        * dom/NamedNodeMap.idl:
+        * dom/Node.idl:
+        * dom/NodeFilter.idl:
+        * dom/NodeIterator.idl:
+        * dom/NodeList.idl:
+        * dom/Range.idl:
+        * dom/RangeException.idl:
+        * dom/ShadowRoot.idl:
+        * dom/Text.idl:
+        * dom/TextEvent.idl:
+        * dom/TouchEvent.idl:
+        * dom/TouchList.idl:
+        * dom/TreeWalker.idl:
+        * dom/UIEvent.idl:
+        * dom/WebKitNamedFlow.idl:
+        * dom/WheelEvent.idl:
+
+2013-10-04  Zan Dobersek  <zdobersek@igalia.com>
+
+        [WebIDL] Annotate IDL interfaces under Source/WebCore/xml/ with the OperationsNotDeletable attribute
+        https://bugs.webkit.org/show_bug.cgi?id=122269
+
+        Reviewed by Darin Adler.
+
+        Before changing the JSC bindings generator to enforce WebIDL operations to be configurable, all the
+        interfaces are being annotated with the OperationsNotDeletable attribute. The attribute currently
+        doesn't have any effect, but will keep the operations not configurable after the generator is modified
+        to preserve the original behavior. The attribute will be removed from each interface after checking
+        conformity with other browsers (in terms of configurability of operations of that interface) and the
+        WebKit's existing test suites.
+
+        This patch covers IDL interfaces under Source/WebCore/xml/.
+
+        * xml/DOMParser.idl:
+        * xml/XMLHttpRequest.idl:
+        * xml/XMLHttpRequestException.idl:
+        * xml/XMLHttpRequestUpload.idl:
+        * xml/XMLSerializer.idl:
+        * xml/XPathEvaluator.idl:
+        * xml/XPathException.idl:
+        * xml/XPathExpression.idl:
+        * xml/XPathNSResolver.idl:
+        * xml/XPathResult.idl:
+        * xml/XSLTProcessor.idl:
+
+2013-10-04  Bear Travis  <betravis@adobe.com>
+
+        [CSS Shapes] Shape Outside should relayout when set dynamically
+        https://bugs.webkit.org/show_bug.cgi?id=122197
+
+        Reviewed by Alexandru Chiculita.
+
+        Tests: fast/shapes/shape-outside-floats/shape-outside-dynamic-shape.html
+               fast/shapes/shape-outside-floats/shape-outside-dynamic-shape-overhang.html
+
+        When shape outside is modified, dependent content needs to relayout. This patch
+        removes the float from the float lists and marks dependents for layout using
+        RenderBox::removeFloatingOrPositionedChildFromBlockLists(). This is the same
+        method used when switching from float: left to float: right and vice versa
+        (see RenderElement::styleWillChange).
+
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::updateShapeOutsideInfoAfterStyleChange): Mark shape-outside dependents
+        for layout.
+        * rendering/RenderBox.h:
+        (WebCore::RenderBox::markShapeOutsideDependentsForLayout): Mark all the items that may be
+        affected by this shape-outside for relayout.
+
+2013-10-04  Antti Koivisto  <antti@apple.com>
+
+        Tighten markContainingBlocksForLayout
+        https://bugs.webkit.org/show_bug.cgi?id=122326
+
+        Reviewed by Anders Carlsson.
+
+2013-10-04  Andreas Kling  <akling@apple.com>
+
+        Node: removedFrom() and insertedInto() should use references.
+        <https://webkit.org/b/122315>
+
+        Reviewed by Anders Carlsson.
+
+        ContainerNode* -> ContainerNode&
+
+2013-10-04  Romain Perier  <romain.perier@gmail.com>
+
+        Optimize strings copies in srcset parser
+        https://bugs.webkit.org/show_bug.cgi?id=121899
+
+        Reviewed by Alexey Proskuryakov.
+
+        No new tests, covered by existing ones.
+
+        * html/parser/HTMLParserIdioms.cpp:
+        (WebCore::parseImagesWithScaleFromSrcsetAttribute): Don't copy
+        image.imageURL at each loop iteration, save indexes instead.
+        (WebCore::bestFitSourceForImageAttributes): Make a String for
+        the URL only when the corresponding candidate is chosen
+        by the selection algorithm. It reduces the number of copies
+        significantly and improves performance
+        (around 30% with the "Release" profile and 60% with the "Debug" one).
+
 2013-10-04  Alexey Proskuryakov  <ap@apple.com>
 
         Add svn:ignore to *.pyc files in inspector/Scripts directory, so that they don't

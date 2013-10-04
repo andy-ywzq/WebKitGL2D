@@ -1,3 +1,151 @@
+2013-10-04  Brent Fulgham  <bfulgham@apple.com>
+
+        Teach webkitdirs.pm to honor the --64-bit flag
+        https://bugs.webkit.org/show_bug.cgi?id=122357
+
+        Reviewed by David Kilzer.
+
+        * Scripts/webkitdirs.pm:
+        (argumentsForConfiguration): Modify to check if --64-bit is supplied
+        by the user.
+        (findMatchingArguments): Added.
+        (hasArgument): Added.
+        (checkForArgumentAndRemoveFromArrayRef): Refactor to use the new
+        findMatchingArguments subroutine.
+
+2013-10-04  Alexey Proskuryakov  <ap@apple.com>
+
+        Update svn-config for new Visual Studio extensions
+        https://bugs.webkit.org/show_bug.cgi?id=122344
+
+        Reviewed by Brent Fulgham.
+
+        * svn-config: Add new Visual Studio extensions.
+
+2013-10-04  Alex Christensen  <achristensen@webkit.org>
+
+        Made WinLauncher have better error handling, crash reporting, and modifiability.
+        https://bugs.webkit.org/show_bug.cgi?id=122319
+
+        Reviewed by Brent Fulgham.
+
+        * WinLauncher/WinLauncher.cpp:
+        (WinLauncherWebHost::didFailProvisionalLoadWithError):
+        Don't display the numerous "Cancelled" messages that are obviously from the user.
+        (createCrashReport): Added.
+        (dllLauncherEntryPoint):
+        Made main loop back into while loop and write a crash report if it crashes.
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherLib.vcxproj:
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherLib.vcxproj.filters:
+        Added WinLauncherReplace.h.
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherLibCommon.props:
+        Added linking to DbgHelp.lib.
+        * WinLauncher/WinLauncherReplace.h:
+        Added to make modifying WinLauncher behaviour and appearance easy.
+        (processCrashDump): Added.
+
+2013-10-04  Dirk Pranke  <dpranke@chromium.org>
+
+        remove dpranke from webkitpy watchlist
+        https://bugs.webkit.org/show_bug.cgi?id=122331
+
+        Reviewed by Brent Fulgham.
+
+        * Scripts/webkitpy/common/config/watchlist:
+
+2013-10-04  Tim Horton  <timothy_horton@apple.com>
+
+        [mac][wk2] ScrollPinningBehaviors, SpacebarScrolling, and ScrollByLineCommands fail after r156793
+        https://bugs.webkit.org/show_bug.cgi?id=122299
+
+        Reviewed by Beth Dakin.
+
+        * TestWebKitAPI/Tests/WebKit2/SpacebarScrolling.cpp:
+        * TestWebKitAPI/Tests/WebKit2/mac/EditorCommands.mm:
+        The last fix didn't work; instead of trying to block, turn off threaded scrolling for all three tests.
+
+2013-10-04  Alexey Proskuryakov  <ap@apple.com>
+
+        Watchlist is broken after <http://trac.webkit.org/r156880>
+
+        * Scripts/webkitpy/common/config/watchlist: Remove an incorrect change.
+
+2013-10-04  Brent Fulgham  <bfulgham@apple.com>
+
+        Remove Qt features from build and test tools
+        https://bugs.webkit.org/show_bug.cgi?id=122312
+
+        Reviewed by Anders Carlsson.
+
+        * Scripts/build-dumprendertree:
+        * Scripts/build-jsc:
+        * Scripts/build-webkit:
+        * Scripts/build-webkittestrunner:
+        * Scripts/old-run-webkit-tests:
+        (openDumpTool):
+        (buildPlatformResultHierarchy):
+        (buildPlatformTestHierarchy):
+        (readSkippedFiles):
+        * Scripts/run-launcher:
+        * Scripts/run-qtwebkit-tests: Removed.
+        * Scripts/run-webkit-tests:
+        (useNewRunWebKitTests):
+        * Scripts/update-webkit:
+        * Scripts/webkit-build-directory:
+        * Scripts/webkitdirs.pm:
+        (argumentsForConfiguration):
+        (jscProductDir):
+        (builtDylibPathForName):
+        (isAppleWebKit):
+        (launcherPath):
+        (launcherName):
+        (checkRequiredSystemConfig):
+        (setupCygwinEnv):
+        (copyInspectorFrontendFiles):
+        (setPathForRunningWebKitApp):
+        * Scripts/webkitpy/common/checkout/baselineoptimizer.py:
+        * Scripts/webkitpy/common/checkout/baselineoptimizer_unittest.py:
+        (BaselineOptimizerTest.test_mac_future):
+        (BaselineOptimizerTest.test_win_does_not_drop_to_win_7sp0):
+        (BaselineOptimizerTest.test_common_directory_includes_root):
+        (BaselineOptimizerTest.test_virtual_ports_filtered):
+        * Scripts/webkitpy/common/checkout/changelog_unittest.py:
+        (test_parse_reviewer_text):
+        * Scripts/webkitpy/common/config/watchlist:
+        * Scripts/webkitpy/layout_tests/run_webkit_tests_integrationtest.py:
+        (PortTest.disabled_test_chromium_mac_lion_in_test_shell_mode):
+        * Scripts/webkitpy/port/base.py:
+        (Port.__init__):
+        (Port._port_flag_for_scripts):
+        (Port._wk2_port_name):
+        * Scripts/webkitpy/port/builders.py:
+        * Scripts/webkitpy/port/factory.py:
+        (platform_options):
+        (PortFactory):
+        (PortFactory._default_port):
+        * Scripts/webkitpy/port/factory_unittest.py:
+        (FactoryTest.test_gtk):
+        * Scripts/webkitpy/port/qt.py: Removed.
+        * Scripts/webkitpy/port/qt_unittest.py: Removed.
+        * Scripts/webkitpy/style/checker.py:
+        * Scripts/webkitpy/style/checker_unittest.py:
+        (GlobalVariablesTest.test_path_rules_specifier):
+        * Scripts/webkitpy/style/checkers/cmake.py:
+        (CMakeChecker):
+        * Scripts/webkitpy/style/checkers/cpp.py:
+        (_classify_include):
+        (check_include_line):
+        (check_identifier_name_in_declaration):
+        * Scripts/webkitpy/style/checkers/cpp_unittest.py:
+        (OrderOfIncludesTest.test_classify_include):
+        (WebKitStyleTest.test_names):
+        * Scripts/webkitpy/style/checkers/test_expectations_unittest.py:
+        (TestExpectationsTestCase.test_determine_port_from_expectations_path):
+        * Scripts/webkitpy/tool/commands/rebaseline_unittest.py:
+        (TestRebaselineTest.test_baseline_directory):
+        * Scripts/webkitpy/tool/main.py:
+        (WebKitPatch):
+
 2013-10-03  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
 
         Unreviewed. Add myself to some watchlists.

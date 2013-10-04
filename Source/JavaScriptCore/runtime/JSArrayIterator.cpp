@@ -28,6 +28,7 @@
 
 #include "JSCJSValueInlines.h"
 #include "JSCellInlines.h"
+#include "SlotVisitorInlines.h"
 
 namespace JSC {
 
@@ -38,6 +39,19 @@ void JSArrayIterator::finishCreation(VM& vm, JSGlobalObject*, ArrayIterationKind
     Base::finishCreation(vm);
     m_iterationKind = kind;
     m_iteratedObject.set(vm, this, iteratedObject);
+}
+    
+    
+void JSArrayIterator::visitChildren(JSCell* cell, SlotVisitor& visitor)
+{
+    JSArrayIterator* thisObject = jsCast<JSArrayIterator*>(cell);
+    ASSERT_GC_OBJECT_INHERITS(thisObject, info());
+    COMPILE_ASSERT(StructureFlags & OverridesVisitChildren, OverridesVisitChildrenWithoutSettingFlag);
+    ASSERT(thisObject->structure()->typeInfo().overridesVisitChildren());
+        
+    Base::visitChildren(thisObject, visitor);
+    visitor.append(&thisObject->m_iteratedObject);
+
 }
 
 }
