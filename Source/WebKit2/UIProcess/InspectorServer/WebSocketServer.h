@@ -33,7 +33,7 @@
 #include <wtf/OwnPtr.h>
 #include <wtf/text/WTFString.h>
 
-#if USE(SOUP)
+#if USE(SOUP) || USE(CURL)
 #include <gio/gio.h>
 #include <wtf/gobject/GRefPtr.h>
 #endif
