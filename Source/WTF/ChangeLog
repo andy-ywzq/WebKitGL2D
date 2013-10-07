@@ -1,3 +1,187 @@
+2013-10-06  Anders Carlsson  <andersca@apple.com>
+
+        Add OVERRIDE and virtual where appropriate
+        https://bugs.webkit.org/show_bug.cgi?id=122439
+
+        Reviewed by Antti Koivisto.
+
+        * wtf/Compiler.h:
+        * wtf/FilePrintStream.h:
+        * wtf/StringPrintStream.h:
+
+2013-10-06  Andreas Kling  <akling@apple.com>
+
+        Range constructors should take a Document&.
+        <https://webkit.org/b/122435>
+
+        Reviewed by Sam Weinig.
+
+        Give Ref an assignment operator.
+
+2013-10-05  Anders Carlsson  <andersca@apple.com>
+
+        Clean up MessageQueue.h
+        https://bugs.webkit.org/show_bug.cgi?id=122392
+
+        Reviewed by Andreas Kling.
+
+        Make MessageQueue use std::unique_ptr and change findIf and removeIf to take const references.
+
+        * wtf/Deque.h:
+        Change findIf to take an rvalue reference.
+
+        * wtf/MessageQueue.h:
+        (WTF::::append):
+        (WTF::::appendAndKill):
+        (WTF::::appendAndCheckEmpty):
+        (WTF::::prepend):
+        (WTF::::removeIf):
+
+2013-10-05  Anders Carlsson  <andersca@apple.com>
+
+        Try to #define final to sealed when building with MSVC
+        https://bugs.webkit.org/show_bug.cgi?id=122386
+
+        Reviewed by Darin Adler.
+
+        * wtf/Compiler.h:
+
+2013-10-05  Anders Carlsson  <andersca@apple.com>
+
+        Remove createOwned
+        https://bugs.webkit.org/show_bug.cgi?id=122388
+
+        Reviewed by Darin Adler.
+
+        Since we're going with std::unique_ptr instead of OwnPtr, there's no need for makeOwned to exist.
+        Get rid of it and replace it with calls to std::make_unique.
+
+        * wtf/FilePrintStream.cpp:
+        (WTF::FilePrintStream::open):
+        * wtf/FilePrintStream.h:
+        * wtf/HashTable.h:
+        (WTF::::HashTable):
+        * wtf/ListHashSet.h:
+        (WTF::::ListHashSet):
+        * wtf/OwnPtr.h:
+        * wtf/Threading.cpp:
+        (WTF::compatEntryPoint):
+        (WTF::createThread):
+        * wtf/ThreadingPthreads.cpp:
+        (WTF::wtfThreadEntryPoint):
+        (WTF::createThreadInternal):
+        * wtf/unicode/Collator.h:
+        * wtf/unicode/CollatorDefault.cpp:
+        (WTF::Collator::userDefault):
+        * wtf/unicode/icu/CollatorICU.cpp:
+        (WTF::Collator::userDefault):
+
+2013-10-05  Darin Adler  <darin@apple.com>
+
+        Remove COMPILER_SUPPORTS(CXX_RVALUE_REFERENCES) since it's required now
+        https://bugs.webkit.org/show_bug.cgi?id=122387
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/RefPtr.h:
+        * wtf/RetainPtr.h:
+        * wtf/Vector.h:
+        * wtf/text/AtomicString.h:
+        * wtf/text/WTFString.h:
+        Take out conditionals.
+
+2013-10-05  Darin Adler  <darin@apple.com>
+
+        Add AtomicString::number and use it
+        https://bugs.webkit.org/show_bug.cgi?id=122384
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/text/AtomicString.cpp:
+        (WTF::AtomicString::number): Added.
+        * wtf/text/AtomicString.h: Ditto.
+
+        * wtf/text/IntegerToStringConversion.h: Simplify includes, renamed ConversionTrait to
+        IntegerToStringConversionTrait. Changed String version to use String since we no longer
+        need to use PassRefPtr to efficiently handle return values. Replaced UnsignedIntegerTrait
+        with std::make_unsigned. Added AtomicString support. Use nullptr instead of 0.
+
+2013-10-05  Darin Adler  <darin@apple.com>
+
+        Cut down on use of String::number
+        https://bugs.webkit.org/show_bug.cgi?id=122382
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/DateMath.cpp:
+        (WTF::appendTwoDigitNumber): Added. Replaces twoDigitStringFromNumber, which returned a
+        String and also allocated a temporary string for any number 10 or higher.
+        (WTF::makeRFC2822DateString): Updated to use the new function.
+
+2013-10-05  Anders Carlsson  <andersca@apple.com>
+
+        Test the waters and begin using lambdas
+        https://bugs.webkit.org/show_bug.cgi?id=121809
+
+        Reviewed by Andreas Kling.
+
+        * wtf/ListDump.h:
+        (WTF::sortedListDump):
+        Use std::less instead of a custom lessThan function.
+
+2013-10-04  Darin Adler  <darin@apple.com>
+
+        text-transform: lowercase is not lang-dependent (Turkish languages : tr,az)
+        https://bugs.webkit.org/show_bug.cgi?id=21312
+
+        Reviewed by Ryosuke Niwa.
+
+        * wtf/text/StringImpl.cpp:
+        (WTF::StringImpl::upper): Removed an extra call that would unnecessarily reallocate
+        a StringImpl in the general non-ASCII case. Added an overload that takes a locale identifier.
+        (WTF::StringImpl::lower): Ditto.
+        * wtf/text/StringImpl.h: Ditto.
+        * wtf/text/WTFString.cpp:
+        (WTF::String::lower): Ditto.
+        (WTF::String::upper): Ditto.
+        * wtf/text/WTFString.h: Ditto. Also deleted the makeLower and makeUpper functions since they
+        offer no advantages over the lower and upper functions. Also added a constructor that takes
+        a RefPtr<StringImpl> with move construction to help.
+
+2013-10-04  Brent Fulgham  <bfulgham@apple.com>
+
+        Remove Qt definitions from Platform.h
+        https://bugs.webkit.org/show_bug.cgi?id=122349
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/Platform.h: Remove unused PLATFORM(QT) stanzas from file.
+
+2013-10-04  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Turn off FastMalloc on Windows
+        https://bugs.webkit.org/show_bug.cgi?id=122352
+
+        Reviewed by Darin Adler.
+
+        * wtf/Platform.h: Enable USE_SYSTEM_MALLOC when building on
+        Windows to stick to the MSVCRT allocator/deallocator.
+
+2013-10-04  Mikhail Pozdnyakov  <mikhail.pozdnyakov@intel.com>
+
+        Remove WTF smart pointers 'const_pointer_cast'
+        https://bugs.webkit.org/show_bug.cgi?id=122325
+
+        Reviewed by Darin Adler.
+
+        Removed WTF smart pointers 'const_pointer_cast' functions as:
+        - they were not used
+        - their implementation was wrong as they tried to cast to a different pointer type
+
+        * wtf/PassOwnPtr.h:
+        * wtf/PassRefPtr.h:
+        * wtf/RefPtr.h:
+
 2013-10-04  Oliver Hunt  <oliver@apple.com>
 
         Support for-of syntax

@@ -122,6 +122,7 @@ public:
     // Construct a string referencing an existing StringImpl.
     String(StringImpl* impl) : m_impl(impl) { }
     String(PassRefPtr<StringImpl> impl) : m_impl(impl) { }
+    String(RefPtr<StringImpl>&& impl) : m_impl(impl) { }
 
     // Construct a string from a constant string literal.
     WTF_EXPORT_STRING_API String(ASCIILiteral characters);
@@ -132,14 +133,12 @@ public:
     template<unsigned charactersCount>
     String(const char (&characters)[charactersCount], ConstructFromLiteralTag) : m_impl(StringImpl::createFromLiteral<charactersCount>(characters)) { }
 
-#if COMPILER_SUPPORTS(CXX_RVALUE_REFERENCES)
     // We have to declare the copy constructor and copy assignment operator as well, otherwise
     // they'll be implicitly deleted by adding the move constructor and move assignment operator.
     String(const String& other) : m_impl(other.m_impl) { }
     String(String&& other) : m_impl(other.m_impl.release()) { }
     String& operator=(const String& other) { m_impl = other.m_impl; return *this; }
     String& operator=(String&& other) { m_impl = other.m_impl.release(); return *this; }
-#endif
 
     // Inline the destructor.
     ALWAYS_INLINE ~String() { }
@@ -318,8 +317,6 @@ public:
         return *this;
     }
 
-    void makeLower() { if (m_impl) m_impl = m_impl->lower(); }
-    void makeUpper() { if (m_impl) m_impl = m_impl->upper(); }
     void fill(UChar c) { if (m_impl) m_impl = m_impl->fill(c); }
 
     WTF_EXPORT_STRING_API void truncate(unsigned len);
@@ -333,6 +330,9 @@ public:
     // Returns a lowercase/uppercase version of the string
     WTF_EXPORT_STRING_API String lower() const;
     WTF_EXPORT_STRING_API String upper() const;
+
+    WTF_EXPORT_STRING_API String lower(const AtomicString& localeIdentifier) const;
+    WTF_EXPORT_STRING_API String upper(const AtomicString& localeIdentifier) const;
 
     WTF_EXPORT_STRING_API String stripWhiteSpace() const;
     WTF_EXPORT_STRING_API String stripWhiteSpace(IsWhiteSpaceFunctionPtr) const;

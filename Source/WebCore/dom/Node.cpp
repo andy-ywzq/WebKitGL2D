@@ -975,7 +975,7 @@ Node* Node::deprecatedShadowAncestorNode() const
 
 ShadowRoot* Node::containingShadowRoot() const
 {
-    ContainerNode* root = treeScope()->rootNode();
+    ContainerNode* root = treeScope().rootNode();
     return root && root->isShadowRoot() ? toShadowRoot(root) : 0;
 }
 
@@ -1035,7 +1035,7 @@ void Node::removedFrom(ContainerNode& insertionPoint)
     ASSERT(insertionPoint.inDocument() || isContainerNode());
     if (insertionPoint.inDocument())
         clearFlag(InDocumentFlag);
-    if (isInShadowTree() && !treeScope()->rootNode()->isShadowRoot())
+    if (isInShadowTree() && !treeScope().rootNode()->isShadowRoot())
         clearFlag(IsInShadowTreeFlag);
 }
 
@@ -1530,7 +1530,7 @@ unsigned short Node::compareDocumentPosition(Node* otherNode)
     // If the nodes have different owning documents, they must be disconnected.  Note that we avoid
     // comparing Attr nodes here, since they return false from inDocument() all the time (which seems like a bug).
     if (start1->inDocument() != start2->inDocument() ||
-        start1->treeScope() != start2->treeScope())
+        &start1->treeScope() != &start2->treeScope())
         return compareDetachedElementsPosition(this, otherNode);
 
     // We need to find a common ancestor container, and then compare the indices of the two immediate children.
@@ -1804,14 +1804,14 @@ void Node::getSubresourceURLs(ListHashSet<URL>& urls) const
     addSubresourceAttributeURLs(urls);
 }
 
-Node* Node::enclosingLinkEventParentOrSelf()
+Element* Node::enclosingLinkEventParentOrSelf()
 {
     for (Node* node = this; node; node = node->parentOrShadowHostNode()) {
-        // For imagemaps, the enclosing link node is the associated area element not the image itself.
-        // So we don't let images be the enclosingLinkNode, even though isLink sometimes returns true
-        // for them.
+        // For imagemaps, the enclosing link element is the associated area element not the image itself.
+        // So we don't let images be the enclosing link element, even though isLink sometimes returns
+        // true for them.
         if (node->isLink() && !isHTMLImageElement(node))
-            return node;
+            return toElement(node);
     }
 
     return 0;
@@ -2265,7 +2265,7 @@ void Node::removedLastRef()
     // faster for non-Document nodes, and because the call to removedLastRef that is inlined
     // at all deref call sites is smaller if it's a non-virtual function.
     if (isTreeScope()) {
-        treeScope()->removedLastRefToScope();
+        treeScope().removedLastRefToScope();
         return;
     }
 
@@ -2277,7 +2277,7 @@ void Node::removedLastRef()
 
 void Node::textRects(Vector<IntRect>& rects) const
 {
-    RefPtr<Range> range = Range::create(&document());
+    RefPtr<Range> range = Range::create(document());
     range->selectNodeContents(const_cast<Node*>(this), IGNORE_EXCEPTION);
     range->textRects(rects);
 }

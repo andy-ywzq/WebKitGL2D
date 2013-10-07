@@ -447,7 +447,7 @@ Document::Document(Frame* frame, const URL& url, unsigned documentClasses)
     , m_loadEventFinished(false)
     , m_startTime(monotonicallyIncreasingTimeMS())
     , m_overMinimumLayoutThreshold(false)
-    , m_scriptRunner(createOwned<ScriptRunner>(*this))
+    , m_scriptRunner(std::make_unique<ScriptRunner>(*this))
     , m_xmlVersion(ASCIILiteral("1.0"))
     , m_xmlStandalone(StandaloneUnspecified)
     , m_hasXMLDeclaration(0)
@@ -579,7 +579,7 @@ Document::~Document()
     if (m_domWindow)
         m_domWindow->resetUnlessSuspendedForPageCache();
 
-    m_scriptRunner.clear();
+    m_scriptRunner = nullptr;
 
     histogramMutationEventUsage(m_listenerTypes);
 
@@ -594,7 +594,7 @@ Document::~Document()
     ASSERT(!m_parser || m_parser->refCount() == 1);
     detachParser();
 
-    m_renderArena.clear();
+    m_renderArena = nullptr;
 
     if (this == topDocument())
         clearAXObjectCache();
@@ -707,19 +707,19 @@ void Document::invalidateAccessKeyMap()
     m_elementsByAccessKey.clear();
 }
 
-void Document::addImageElementByLowercasedUsemap(const AtomicString& name, HTMLImageElement& element)
+void Document::addImageElementByLowercasedUsemap(const AtomicStringImpl& name, HTMLImageElement& element)
 {
-    return m_imagesByUsemap.add(name.impl(), &element);
+    return m_imagesByUsemap.add(name, element);
 }
 
-void Document::removeImageElementByLowercasedUsemap(const AtomicString& name, HTMLImageElement& element)
+void Document::removeImageElementByLowercasedUsemap(const AtomicStringImpl& name, HTMLImageElement& element)
 {
-    return m_imagesByUsemap.remove(name.impl(), &element);
+    return m_imagesByUsemap.remove(name, element);
 }
 
-HTMLImageElement* Document::imageElementByLowercasedUsemap(const AtomicString& name) const
+HTMLImageElement* Document::imageElementByLowercasedUsemap(const AtomicStringImpl& name) const
 {
-    return m_imagesByUsemap.getElementByLowercasedUsemap(name.impl(), this);
+    return m_imagesByUsemap.getElementByLowercasedUsemap(name, *this);
 }
 
 SelectorQueryCache& Document::selectorQueryCache()
@@ -1461,7 +1461,7 @@ PassRefPtr<Range> Document::caretRangeFromPoint(int x, int y)
     if (shadowAncestorNode != node) {
         unsigned offset = shadowAncestorNode->nodeIndex();
         ContainerNode* container = shadowAncestorNode->parentNode();
-        return Range::create(this, container, offset, container, offset);
+        return Range::create(*this, container, offset, container, offset);
     }
 
     RenderObject* renderer = node->renderer();
@@ -1472,7 +1472,7 @@ PassRefPtr<Range> Document::caretRangeFromPoint(int x, int y)
         return 0;
 
     Position rangeCompliantPosition = visiblePosition.deepEquivalent().parentAnchoredEquivalent();
-    return Range::create(this, rangeCompliantPosition, rangeCompliantPosition);
+    return Range::create(*this, rangeCompliantPosition, rangeCompliantPosition);
 }
 
 /*
@@ -1688,7 +1688,7 @@ Settings* Document::settings() const
 
 PassRefPtr<Range> Document::createRange()
 {
-    return Range::create(this);
+    return Range::create(*this);
 }
 
 PassRefPtr<NodeIterator> Document::createNodeIterator(Node* root, unsigned whatToShow, 
@@ -2011,7 +2011,7 @@ void Document::createRenderTree()
     ASSERT(!m_axObjectCache || this != topDocument());
 
     if (!m_renderArena)
-        m_renderArena = createOwned<RenderArena>();
+        m_renderArena = std::make_unique<RenderArena>();
     
     setRenderView(new (*m_renderArena) RenderView(*this));
 #if USE(ACCELERATED_COMPOSITING)
@@ -2118,7 +2118,7 @@ void Document::destroyRenderTree()
     m_textAutoSizedNodes.clear();
 #endif
 
-    m_renderArena.clear();
+    m_renderArena = nullptr;
 }
 
 void Document::prepareForDestruction()
@@ -2233,7 +2233,7 @@ void Document::setVisuallyOrdered()
 PassRefPtr<DocumentParser> Document::createParser()
 {
     // FIXME: this should probably pass the frame instead
-    return XMLDocumentParser::create(this, view());
+    return XMLDocumentParser::create(*this, view());
 }
 
 ScriptableDocumentParser* Document::scriptableDocumentParser() const
@@ -3262,7 +3262,7 @@ void Document::removeFocusedNodeOfSubtree(Node* node, bool amongChildrenOnly)
     if (!m_focusedElement || this->inPageCache()) // If the document is in the page cache, then we don't need to clear out the focused node.
         return;
 
-    Element* focusedElement = node->treeScope()->focusedElement();
+    Element* focusedElement = node->treeScope().focusedElement();
     if (!focusedElement)
         return;
 
@@ -4267,7 +4267,7 @@ void Document::applyXSLTransform(ProcessingInstruction* pi)
     String resultMIMEType;
     String newSource;
     String resultEncoding;
-    if (!processor->transformToString(this, resultMIMEType, newSource, resultEncoding))
+    if (!processor->transformToString(*this, resultMIMEType, newSource, resultEncoding))
         return;
     // FIXME: If the transform failed we should probably report an error (like Mozilla does).
     Frame* ownerFrame = frame();

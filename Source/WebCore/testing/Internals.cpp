@@ -348,7 +348,7 @@ Node* Internals::treeScopeRootNode(Node* node, ExceptionCode& ec)
         return 0;
     }
 
-    return node->treeScope()->rootNode();
+    return node->treeScope().rootNode();
 }
 
 Node* Internals::parentTreeScope(Node* node, ExceptionCode& ec)
@@ -357,7 +357,7 @@ Node* Internals::parentTreeScope(Node* node, ExceptionCode& ec)
         ec = INVALID_ACCESS_ERR;
         return 0;
     }
-    const TreeScope* parentTreeScope = node->treeScope()->parentTreeScope();
+    const TreeScope* parentTreeScope = node->treeScope().parentTreeScope();
     return parentTreeScope ? parentTreeScope->rootNode() : 0;
 }
 
@@ -744,7 +744,7 @@ PassRefPtr<Range> Internals::markerRangeForNode(Node* node, const String& marker
     DocumentMarker* marker = markerAt(node, markerType, index, ec);
     if (!marker)
         return 0;
-    return Range::create(&node->document(), node, marker->startOffset(), node, marker->endOffset());
+    return Range::create(node->document(), node, marker->startOffset(), node, marker->endOffset());
 }
 
 String Internals::markerDescriptionForNode(Node* node, const String& markerType, unsigned index, ExceptionCode& ec)

@@ -571,7 +571,7 @@ bool EventHandler::handleMousePressEventTripleClick(const MouseEventWithHitTestR
 
 static int textDistance(const Position& start, const Position& end)
 {
-    RefPtr<Range> range = Range::create(&start.anchorNode()->document(), start, end);
+    RefPtr<Range> range = Range::create(start.anchorNode()->document(), start, end);
     return TextIterator::rangeLength(range.get(), true);
 }
 
@@ -2061,7 +2061,7 @@ static bool findDropZone(Node* target, Clipboard* clipboard)
         if (dropZoneStr.isEmpty())
             continue;
         
-        dropZoneStr.makeLower();
+        dropZoneStr = dropZoneStr.lower();
         
         SpaceSplitString keywords(dropZoneStr, false);
         if (keywords.isEmpty())

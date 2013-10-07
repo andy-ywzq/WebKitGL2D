@@ -36,6 +36,8 @@
 #include "CSSCursorImageValue.h"
 #include "CSSFilterImageValue.h"
 #include "CSSFontFaceSrcValue.h"
+#include "CSSFontFeatureValue.h"
+#include "CSSFontValue.h"
 #include "CSSFunctionValue.h"
 #include "CSSGradientValue.h"
 #include "CSSImageGeneratorValue.h"
@@ -46,15 +48,10 @@
 #include "CSSLineBoxContainValue.h"
 #include "CSSPrimitiveValue.h"
 #include "CSSReflectValue.h"
+#include "CSSShadowValue.h"
 #include "CSSTimingFunctionValue.h"
 #include "CSSUnicodeRangeValue.h"
 #include "CSSValueList.h"
-#if ENABLE(CSS_VARIABLES)
-#include "CSSVariableValue.h"
-#endif
-#include "FontValue.h"
-#include "FontFeatureValue.h"
-#include "ShadowValue.h"
 #include "SVGColor.h"
 #include "SVGPaint.h"
 #include "WebKitCSSArrayFunctionValue.h"
@@ -63,6 +60,10 @@
 #include "WebKitCSSMixFunctionValue.h"
 #include "WebKitCSSShaderValue.h"
 #include "WebKitCSSTransformValue.h"
+
+#if ENABLE(CSS_VARIABLES)
+#include "CSSVariableValue.h"
+#endif
 
 #if ENABLE(SVG)
 #include "WebKitCSSSVGDocumentValue.h"
@@ -178,11 +179,11 @@ bool CSSValue::equals(const CSSValue& other) const
             return compareCSSValues<CSSFilterImageValue>(*this, other);
 #endif
         case FontClass:
-            return compareCSSValues<FontValue>(*this, other);
+            return compareCSSValues<CSSFontValue>(*this, other);
         case FontFaceSrcClass:
             return compareCSSValues<CSSFontFaceSrcValue>(*this, other);
         case FontFeatureClass:
-            return compareCSSValues<FontFeatureValue>(*this, other);
+            return compareCSSValues<CSSFontFeatureValue>(*this, other);
         case FunctionClass:
             return compareCSSValues<CSSFunctionValue>(*this, other);
         case LinearGradientClass:
@@ -202,7 +203,7 @@ bool CSSValue::equals(const CSSValue& other) const
         case ReflectClass:
             return compareCSSValues<CSSReflectValue>(*this, other);
         case ShadowClass:
-            return compareCSSValues<ShadowValue>(*this, other);
+            return compareCSSValues<CSSShadowValue>(*this, other);
         case CubicBezierTimingFunctionClass:
             return compareCSSValues<CSSCubicBezierTimingFunctionValue>(*this, other);
         case StepsTimingFunctionClass:
@@ -280,11 +281,11 @@ String CSSValue::cssText() const
         return static_cast<const CSSFilterImageValue*>(this)->customCSSText();
 #endif
     case FontClass:
-        return static_cast<const FontValue*>(this)->customCSSText();
+        return static_cast<const CSSFontValue*>(this)->customCSSText();
     case FontFaceSrcClass:
         return static_cast<const CSSFontFaceSrcValue*>(this)->customCSSText();
     case FontFeatureClass:
-        return static_cast<const FontFeatureValue*>(this)->customCSSText();
+        return static_cast<const CSSFontFeatureValue*>(this)->customCSSText();
     case FunctionClass:
         return static_cast<const CSSFunctionValue*>(this)->customCSSText();
     case LinearGradientClass:
@@ -304,7 +305,7 @@ String CSSValue::cssText() const
     case ReflectClass:
         return static_cast<const CSSReflectValue*>(this)->customCSSText();
     case ShadowClass:
-        return static_cast<const ShadowValue*>(this)->customCSSText();
+        return static_cast<const CSSShadowValue*>(this)->customCSSText();
     case CubicBezierTimingFunctionClass:
         return static_cast<const CSSCubicBezierTimingFunctionValue*>(this)->customCSSText();
     case StepsTimingFunctionClass:
@@ -392,16 +393,16 @@ void CSSValue::destroy()
         delete toCSSCanvasValue(this);
         return;
     case CursorImageClass:
-        delete static_cast<CSSCursorImageValue*>(this);
+        delete toCSSCursorImageValue(this);
         return;
     case FontClass:
-        delete static_cast<FontValue*>(this);
+        delete toCSSFontValue(this);
         return;
     case FontFaceSrcClass:
         delete toCSSFontFaceSrcValue(this);
         return;
     case FontFeatureClass:
-        delete static_cast<FontFeatureValue*>(this);
+        delete toCSSFontFeatureValue(this);
         return;
     case FunctionClass:
         delete toCSSFunctionValue(this);
@@ -431,16 +432,16 @@ void CSSValue::destroy()
         delete toCSSReflectValue(this);
         return;
     case ShadowClass:
-        delete static_cast<ShadowValue*>(this);
+        delete toCSSShadowValue(this);
         return;
     case CubicBezierTimingFunctionClass:
-        delete static_cast<CSSCubicBezierTimingFunctionValue*>(this);
+        delete toCSSCubicBezierTimingFunctionValue(this);
         return;
     case StepsTimingFunctionClass:
-        delete static_cast<CSSStepsTimingFunctionValue*>(this);
+        delete toCSSStepsTimingFunctionValue(this);
         return;
     case UnicodeRangeClass:
-        delete static_cast<CSSUnicodeRangeValue*>(this);
+        delete toCSSUnicodeRangeValue(this);
         return;
     case ValueListClass:
         delete toCSSValueList(this);
@@ -477,7 +478,7 @@ void CSSValue::destroy()
         delete toWebKitCSSMixFunctionValue(this);
         return;
     case WebKitCSSShaderClass:
-        delete static_cast<WebKitCSSShaderValue*>(this);
+        delete toWebKitCSSShaderValue(this);
         return;
 #endif
 #endif

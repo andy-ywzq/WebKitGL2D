@@ -76,9 +76,9 @@ private:
     ImageDocument* m_doc;
 };
     
-class ImageDocumentParser : public RawDataDocumentParser {
+class ImageDocumentParser FINAL : public RawDataDocumentParser {
 public:
-    static PassRefPtr<ImageDocumentParser> create(ImageDocument* document)
+    static PassRefPtr<ImageDocumentParser> create(ImageDocument& document)
     {
         return adoptRef(new ImageDocumentParser(document));
     }
@@ -89,12 +89,12 @@ public:
     }
     
 private:
-    ImageDocumentParser(ImageDocument* document)
+    ImageDocumentParser(ImageDocument& document)
         : RawDataDocumentParser(document)
     {
     }
 
-    virtual void appendBytes(DocumentWriter*, const char*, size_t);
+    virtual void appendBytes(DocumentWriter&, const char*, size_t);
     virtual void finish();
 };
 
@@ -128,7 +128,7 @@ static float pageZoomFactor(const Document* document)
     return frame ? frame->pageZoomFactor() : 1;
 }
 
-void ImageDocumentParser::appendBytes(DocumentWriter*, const char*, size_t)
+void ImageDocumentParser::appendBytes(DocumentWriter&, const char*, size_t)
 {
     Frame* frame = document()->frame();
     if (!frame->loader().client().allowImage(frame->settings().areImagesEnabled(), document()->url()))
@@ -190,7 +190,7 @@ ImageDocument::ImageDocument(Frame* frame, const URL& url)
     
 PassRefPtr<DocumentParser> ImageDocument::createParser()
 {
-    return ImageDocumentParser::create(this);
+    return ImageDocumentParser::create(*this);
 }
 
 void ImageDocument::createDocumentStructure()

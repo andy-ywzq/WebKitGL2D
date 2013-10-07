@@ -245,6 +245,9 @@ public:
     unsigned instructionCount() { return m_instructions.size(); }
 
     int argumentIndexAfterCapture(size_t argument);
+    
+    bool hasSlowArguments();
+    const SlowArgument* machineSlowArguments();
 
     // Exactly equivalent to codeBlock->ownerExecutable()->installCode(codeBlock);
     void install();
@@ -347,34 +350,10 @@ public:
         return m_needsActivation;
     }
 
-    bool isCaptured(VirtualRegister operand, InlineCallFrame* inlineCallFrame = 0) const
-    {
-        if (operand.isArgument())
-            return operand.toArgument() && usesArguments();
-
-        if (inlineCallFrame)
-            return inlineCallFrame->capturedVars.get(operand.toLocal());
-
-        // The activation object isn't in the captured region, but it's "captured"
-        // in the sense that stores to its location can be observed indirectly.
-        if (needsActivation() && operand == activationRegister())
-            return true;
-
-        // Ditto for the arguments object.
-        if (usesArguments() && operand == argumentsRegister())
-            return true;
-
-        // Ditto for the arguments object.
-        if (usesArguments() && operand == unmodifiedArgumentsRegister(argumentsRegister()))
-            return true;
-
-        // We're in global code so there are no locals to capture
-        if (!symbolTable())
-            return false;
-
-        return operand.offset() <= symbolTable()->captureStart()
-            && operand.offset() > symbolTable()->captureEnd();
-    }
+    bool isCaptured(VirtualRegister operand, InlineCallFrame* = 0) const;
+    
+    int framePointerOffsetToGetActivationRegisters(int machineCaptureStart);
+    int framePointerOffsetToGetActivationRegisters();
 
     CodeType codeType() const { return m_unlinkedCode->codeType(); }
     PutPropertySlot::Context putByIdContext() const
@@ -922,8 +901,8 @@ public:
     bool m_didFailFTLCompilation;
     
 protected:
-    virtual void visitWeakReferences(SlotVisitor&);
-    virtual void finalizeUnconditionally();
+    virtual void visitWeakReferences(SlotVisitor&) OVERRIDE;
+    virtual void finalizeUnconditionally() OVERRIDE;
 
 #if ENABLE(DFG_JIT)
     void tallyFrequentExitSites();
@@ -1148,8 +1127,8 @@ public:
 
 #if ENABLE(JIT)
 protected:
-    virtual CodeBlock* replacement();
-    virtual DFG::CapabilityLevel capabilityLevelInternal();
+    virtual CodeBlock* replacement() OVERRIDE;
+    virtual DFG::CapabilityLevel capabilityLevelInternal() OVERRIDE;
 #endif
 };
 
@@ -1170,8 +1149,8 @@ public:
     
 #if ENABLE(JIT)
 protected:
-    virtual CodeBlock* replacement();
-    virtual DFG::CapabilityLevel capabilityLevelInternal();
+    virtual CodeBlock* replacement() OVERRIDE;
+    virtual DFG::CapabilityLevel capabilityLevelInternal() OVERRIDE;
 #endif
     
 private:
@@ -1192,8 +1171,8 @@ public:
     
 #if ENABLE(JIT)
 protected:
-    virtual CodeBlock* replacement();
-    virtual DFG::CapabilityLevel capabilityLevelInternal();
+    virtual CodeBlock* replacement() OVERRIDE;
+    virtual DFG::CapabilityLevel capabilityLevelInternal() OVERRIDE;
 #endif
 };
 
@@ -1223,6 +1202,11 @@ inline int CodeBlock::argumentIndexAfterCapture(size_t argument)
     
     ASSERT(slowArguments[argument].status == SlowArgument::Captured);
     return slowArguments[argument].index;
+}
+
+inline bool CodeBlock::hasSlowArguments()
+{
+    return !!symbolTable()->slowArguments();
 }
 
 inline Register& ExecState::r(int index)

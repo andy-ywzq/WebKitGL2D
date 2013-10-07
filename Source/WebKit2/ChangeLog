@@ -1,3 +1,89 @@
+2013-10-05  Anders Carlsson  <andersca@apple.com>
+
+        Try to fix the GTK+ build.
+
+        * UIProcess/gtk/WebPageProxyGtk.cpp:
+        (WebKit::WebPageProxy::platformInitialize):
+
+2013-10-05  Anders Carlsson  <andersca@apple.com>
+
+        Remove createOwned
+        https://bugs.webkit.org/show_bug.cgi?id=122388
+
+        Reviewed by Darin Adler.
+
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView _setFindIndicator:fadeOut:animate:]):
+        * WebProcess/InjectedBundle/API/c/WKBundlePageOverlay.cpp:
+        (WKBundlePageOverlayCreate):
+
+2013-10-05  Darin Adler  <darin@apple.com>
+
+        Remove COMPILER_SUPPORTS(CXX_RVALUE_REFERENCES) since it's required now
+        https://bugs.webkit.org/show_bug.cgi?id=122387
+
+        Reviewed by Anders Carlsson.
+
+        * UIProcess/API/cpp/WKRetainPtr.h: Take out conditionals.
+
+2013-10-05  Darin Adler  <darin@apple.com>
+
+        Cut down on use of String::number
+        https://bugs.webkit.org/show_bug.cgi?id=122382
+
+        Reviewed by Anders Carlsson.
+
+        * Shared/mac/RemoteLayerTreeTransaction.mm:
+        (WebKit::dumpChangedLayers): Use StringBuilder::appendNumber.
+
+2013-10-05  Anders Carlsson  <andersca@apple.com>
+
+        Fix cut and paste errors.
+
+        * Configurations/WebKit2.xcconfig:
+
+2013-10-05  Anders Carlsson  <andersca@apple.com>
+
+        Add the rest of the std::function weak symbols in an attempt to fix the Lion build.
+
+        * Configurations/WebKit2.xcconfig:
+
+2013-10-05  Anders Carlsson  <andersca@apple.com>
+
+        Another attempt at fixing the Lion build.
+
+        * Configurations/WebKit2.xcconfig:
+
+2013-10-05  Anders Carlsson  <andersca@apple.com>
+
+        Attempt to fix the Lion build.
+        
+        * Configurations/WebKit2.xcconfig:
+        Try unexporting one of the weak symbols for now. If this succeeds, I'll add the rest.
+
+2013-10-04  Anders Carlsson  <andersca@apple.com>
+
+        FramePolicyFunction should be an std::function
+        https://bugs.webkit.org/show_bug.cgi?id=122362
+
+        Reviewed by Darin Adler.
+
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::dispatchDecidePolicyForResponse):
+        (WebKit::WebFrameLoaderClient::dispatchDecidePolicyForNewWindowAction):
+        (WebKit::WebFrameLoaderClient::dispatchDecidePolicyForNavigationAction):
+        (WebKit::WebFrameLoaderClient::dispatchWillSubmitForm):
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.h:
+        * WebProcess/WebPage/WebFrame.cpp:
+        (WebKit::WebFrame::didReceivePolicyDecision):
+
+2013-10-04  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        Unreviewed EFL build fix after r156924
+
+        * UIProcess/efl/WebPageProxyEfl.cpp:
+        (WebKit::WebPageProxy::platformInitialize):
+
 2013-10-04  Sam Weinig  <sam@webkit.org>
 
         Unify rubber-band control

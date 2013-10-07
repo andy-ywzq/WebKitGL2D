@@ -1312,7 +1312,7 @@ void HTMLInputElement::setMaxLength(int maxLength, ExceptionCode& ec)
     if (maxLength < 0)
         ec = INDEX_SIZE_ERR;
     else
-        setAttribute(maxlengthAttr, String::number(maxLength));
+        setIntegralAttribute(maxlengthAttr, maxLength);
 }
 
 bool HTMLInputElement::multiple() const
@@ -1322,7 +1322,7 @@ bool HTMLInputElement::multiple() const
 
 void HTMLInputElement::setSize(unsigned size)
 {
-    setAttribute(sizeAttr, String::number(size));
+    setUnsignedIntegralAttribute(sizeAttr, size);
 }
 
 void HTMLInputElement::setSize(unsigned size, ExceptionCode& ec)
@@ -1599,7 +1599,7 @@ HTMLDataListElement* HTMLInputElement::dataList() const
     if (!m_inputType->shouldRespectListAttribute())
         return 0;
 
-    Element* element = treeScope()->getElementById(fastGetAttribute(listAttr));
+    Element* element = treeScope().getElementById(fastGetAttribute(listAttr));
     if (!element)
         return 0;
     if (!element->hasTagName(datalistTag))
@@ -1880,12 +1880,12 @@ unsigned HTMLInputElement::width() const
 
 void HTMLInputElement::setHeight(unsigned height)
 {
-    setAttribute(heightAttr, String::number(height));
+    setUnsignedIntegralAttribute(heightAttr, height);
 }
 
 void HTMLInputElement::setWidth(unsigned width)
 {
-    setAttribute(widthAttr, String::number(width));
+    setUnsignedIntegralAttribute(widthAttr, width);
 }
 
 #if ENABLE(DATALIST_ELEMENT)
@@ -1895,7 +1895,7 @@ OwnPtr<ListAttributeTargetObserver> ListAttributeTargetObserver::create(const At
 }
 
 ListAttributeTargetObserver::ListAttributeTargetObserver(const AtomicString& id, HTMLInputElement* element)
-    : IdTargetObserver(element->treeScope()->idTargetObserverRegistry(), id)
+    : IdTargetObserver(element->treeScope().idTargetObserverRegistry(), id)
     , m_element(element)
 {
 }

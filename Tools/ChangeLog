@@ -1,3 +1,140 @@
+2013-10-07  Gustavo Noronha Silva  <gustavo.noronha@collabora.com>
+
+        [GTK] Fails to build with jhbuild with newer system glib
+        https://bugs.webkit.org/show_bug.cgi?id=122132
+
+        Reviewed by Martin Robinson.
+
+        Newer glib includes new symbols that some system libraries which we depend on, such as pango, have
+        started relying on. glib is not a dependency that should change test results, and is provided in
+        jhbuild with the intention of supporting the other bits that do, so using a newer stable release
+        should not be an issue.
+
+        * gtk/jhbuild.modules:
+
+2013-10-06  Filip Pizlo  <fpizlo@apple.com>
+
+        run-jsc-stress-tests shouldn't print its goofy progress meter when running on the bots
+        https://bugs.webkit.org/show_bug.cgi?id=122437
+
+        Reviewed by Antoine Quint.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-10-06  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix build on old Rubies.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-10-06  Filip Pizlo  <fpizlo@apple.com>
+
+        Unified test infrastructure via the jsc shell
+        https://bugs.webkit.org/show_bug.cgi?id=120696
+
+        Reviewed by Oliver Hunt.
+        
+        Make run-jsc-stress-tests smart enough to be able to handle different styles of test
+        output (silent or noisy) and different styles of test failure (just bad exit code,
+        text diff, filtering for some magical text, etc.). This allows me to get rid of the
+        layout-test-helper. It also allows me to switch all of the old Mozilla tests to
+        running in run-jsc-stress-tests.
+        
+        Also removes all of the code paths that defended against not having shellwords. Just
+        install the shellwords gem if you want to run tests.
+        
+        Also removes the non-parallel test running code. No reason for it to exist anymore.
+        
+        This is a massive increase in test coverage. It uncovered bugs. I fixed two of them
+        as part of this patch, and left three more as new bugzillas.
+
+        * Scripts/create-mozilla-js-test-list: Added.
+        * Scripts/jsc-stress-test-helpers/check-mozilla-failure: Added.
+        * Scripts/jsc-stress-test-helpers/layout-test-helper: Removed.
+        * Scripts/run-javascriptcore-tests:
+        * Scripts/run-jsc-stress-tests:
+
+2013-10-05  Filip Pizlo  <fpizlo@apple.com>
+
+        run-jsc-stress-tests should be less verbose
+        https://bugs.webkit.org/show_bug.cgi?id=122397
+
+        Reviewed by Sam Weinig.
+        
+        It now just prints something like:
+        
+         965/1831 ....
+        
+        Where the first number is the number of tests that completed, the second number is the
+        number of tests total, and the dots are the number of tests running right now - which is
+        useful towards the end when you're waiting for the last slow tests to finish.
+        
+        It will also print out the output from failing tests and it will print a line for skipped
+        tests (to annoy you into getting them into a shape where they can be unskipped). For
+        example, for LayoutTests, it will print just the diff, if the test fails. It's cool.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-10-05  Filip Pizlo  <fpizlo@apple.com>
+
+        Allow skipping of run-jsc-stress-tests that are configured using yaml files
+        https://bugs.webkit.org/show_bug.cgi?id=122385
+
+        Reviewed by Sam Wieinig.
+        
+        Make tests run via YAML be able to do the parse-for-commands trick that allows
+        us to skip tests and do other custom per-test stuff.
+
+        * Scripts/jsc-stress-test-helpers/layout-test-helper:
+        * Scripts/run-jsc-stress-tests:
+
+2013-10-05  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix tests on older Rubies.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-10-05  Anders Carlsson  <andersca@apple.com>
+
+        Don't filter the weak symbols.
+
+        * Scripts/check-for-weak-vtables-and-externals:
+
+2013-10-04  Filip Pizlo  <fpizlo@apple.com>
+
+        Have run-javascriptcore-tests run JS LayoutTests using run-jsc-stress-tests so that it runs in parallel
+        https://bugs.webkit.org/show_bug.cgi?id=122376
+
+        Reviewed by Mark Hahnenberg.
+
+        * Scripts/jsc-stress-test-helpers/layout-test-helper: Added.
+        * Scripts/run-javascriptcore-tests:
+        (printThingsFound):
+        * Scripts/run-jsc-stress-tests:
+
+2013-10-04  Filip Pizlo  <fpizlo@apple.com>
+
+        It should be even easier to run and debug a failing JSC stress test
+        https://bugs.webkit.org/show_bug.cgi?id=122337
+
+        Reviewed by Oliver Hunt.
+        
+        If a test fails, you can now just say:
+
+        sh WebKitBuild/Debug/jsc-stress-results/regress/script-tests/emscripten-cube2hash.js.ftl-eager-no-cjit
+
+        and get the reproduction. You don't have to set any environment variables like before.
+        Also if you want to debug the failing test you can now just say:
+
+        sh WebKitBuild/Debug/jsc-stress-results/regress/script-tests/emscripten-cube2hash.js.ftl-eager-no-cjit lldb --
+
+        Broadly, any arguments passed to the reproduction script are prepended to the command to
+        run the test. This is sort of quirky and won't work for some tests (for example the
+        profiler tests run a ruby script that runs some other stuff) but it'll work for most of
+        them and that's good enough for now.
+
+        * Scripts/run-jsc-stress-tests:
+
 2013-10-04  Brent Fulgham  <bfulgham@apple.com>
 
         [Windows] Correct run-path when using 64-bit binaries.

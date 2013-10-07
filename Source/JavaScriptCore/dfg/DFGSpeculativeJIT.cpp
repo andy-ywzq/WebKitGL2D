@@ -1533,14 +1533,32 @@ void SpeculativeJIT::compileMovHintAndCheck(Node* node)
 void SpeculativeJIT::compileInlineStart(Node* node)
 {
     InlineCallFrame* inlineCallFrame = node->codeOrigin.inlineCallFrame;
+    InlineStartData* data = node->inlineStartData();
     int argumentCountIncludingThis = inlineCallFrame->arguments.size();
-    unsigned argumentPositionStart = node->argumentPositionStart();
     for (int i = 0; i < argumentCountIncludingThis; ++i) {
-        ValueSource source = ValueSource::forFlushFormat(
-            VirtualRegister(inlineCallFrame->stackOffset + virtualRegisterForArgument(i).offset()),
-            m_jit.graph().m_argumentPositions[argumentPositionStart + i].flushFormat());
+        ArgumentPosition& position = m_jit.graph().m_argumentPositions[
+            data->argumentPositionStart + i];
+        VariableAccessData* variable = position.someVariable();
+        ValueSource source;
+        if (!variable)
+            source = ValueSource(SourceIsDead);
+        else {
+            source = ValueSource::forFlushFormat(
+                variable->machineLocal(),
+                m_jit.graph().m_argumentPositions[data->argumentPositionStart + i].flushFormat());
+        }
         inlineCallFrame->arguments[i] = source.valueRecovery();
     }
+    
+    RELEASE_ASSERT(inlineCallFrame->isClosureCall == !!data->calleeVariable);
+    
+    if (inlineCallFrame->isClosureCall) {
+        ValueSource source = ValueSource::forFlushFormat(
+            data->calleeVariable->machineLocal(),
+            data->calleeVariable->flushFormat());
+        inlineCallFrame->calleeRecovery = source.valueRecovery();
+    } else
+        RELEASE_ASSERT(inlineCallFrame->calleeRecovery.isConstant());
 }
 
 void SpeculativeJIT::bail()
@@ -1559,6 +1577,8 @@ void SpeculativeJIT::compileCurrentBlock()
     
     ASSERT(m_block->isReachable);
     
+    m_jit.blockHeads()[m_block->index] = m_jit.label();
+
     if (!m_block->cfaHasVisited) {
         // Don't generate code for basic blocks that are unreachable according to CFA.
         // But to be sure that nobody has generated a jump to this block, drop in a
@@ -1567,7 +1587,6 @@ void SpeculativeJIT::compileCurrentBlock()
         return;
     }
 
-    m_jit.blockHeads()[m_block->index] = m_jit.label();
 #if DFG_ENABLE(JIT_BREAK_ON_EVERY_BLOCK)
     m_jit.breakpoint();
 #endif
@@ -1603,7 +1622,7 @@ void SpeculativeJIT::compileCurrentBlock()
         else
             format = dataFormatFor(variable->flushFormat());
         m_stream->appendAndLog(
-            VariableEvent::setLocal(virtualRegisterForLocal(i), variable->local(), format));
+            VariableEvent::setLocal(virtualRegisterForLocal(i), variable->machineLocal(), format));
     }
     
     m_lastSetOperand = VirtualRegister();
@@ -1687,6 +1706,11 @@ void SpeculativeJIT::compileCurrentBlock()
             m_speculationDirection = (m_currentNode->flags() & NodeExitsForward) ? ForwardSpeculation : BackwardSpeculation;
             
             compile(m_currentNode);
+
+#if ENABLE(DFG_REGISTER_ALLOCATION_VALIDATION)
+            m_jit.clearRegisterAllocationOffsets();
+#endif
+
             if (!m_compileOkay) {
                 bail();
                 return;
@@ -1832,7 +1856,7 @@ void SpeculativeJIT::createOSREntries()
             continue;
         if (!block->isOSRTarget)
             continue;
-
+        
         // Currently we don't have OSR entry trampolines. We could add them
         // here if need be.
         m_osrEntryHeads.append(m_jit.blockHeads()[blockIndex]);
@@ -3422,7 +3446,7 @@ void SpeculativeJIT::compileArithDiv(Node* node)
             notZero.link(&m_jit);
             JITCompiler::Jump notNeg2ToThe31 =
                 m_jit.branch32(JITCompiler::NotEqual, op1GPR, TrustedImm32(-2147483647-1));
-            m_jit.move(op1GPR, eax.gpr());
+            m_jit.zeroExtend32ToPtr(op1GPR, eax.gpr());
             done.append(m_jit.jump());
         
             notNeg2ToThe31.link(&m_jit);
@@ -4233,18 +4257,18 @@ void SpeculativeJIT::compileGetByValOnArguments(Node* node)
         Uncountable, JSValueSource(), 0,
         m_jit.branch32(
             MacroAssembler::AboveOrEqual, propertyReg,
-            MacroAssembler::Address(baseReg, OBJECT_OFFSETOF(Arguments, m_numArguments))));
+            MacroAssembler::Address(baseReg, Arguments::offsetOfNumArguments())));
     speculationCheck(
         Uncountable, JSValueSource(), 0,
         m_jit.branchTestPtr(
             MacroAssembler::NonZero,
             MacroAssembler::Address(
-                baseReg, OBJECT_OFFSETOF(Arguments, m_slowArguments))));
+                baseReg, Arguments::offsetOfSlowArgumentData())));
     
     m_jit.move(propertyReg, resultReg);
     m_jit.signExtend32ToPtr(resultReg, resultReg);
     m_jit.loadPtr(
-        MacroAssembler::Address(baseReg, OBJECT_OFFSETOF(Arguments, m_registers)),
+        MacroAssembler::Address(baseReg, Arguments::offsetOfRegisters()),
         scratchReg);
     
 #if USE(JSVALUE32_64)
@@ -4288,10 +4312,10 @@ void SpeculativeJIT::compileGetArgumentsLength(Node* node)
         Uncountable, JSValueSource(), 0,
         m_jit.branchTest8(
             MacroAssembler::NonZero,
-            MacroAssembler::Address(baseReg, OBJECT_OFFSETOF(Arguments, m_overrodeLength))));
+            MacroAssembler::Address(baseReg, Arguments::offsetOfOverrodeLength())));
     
     m_jit.load32(
-        MacroAssembler::Address(baseReg, OBJECT_OFFSETOF(Arguments, m_numArguments)),
+        MacroAssembler::Address(baseReg, Arguments::offsetOfNumArguments()),
         resultReg);
     int32Result(resultReg, node);
 }

@@ -237,6 +237,8 @@ void OSRExitCompiler::compileExit(const OSRExit& exit, const Operands<ValueRecov
         
         switch (recovery.technique()) {
         case DisplacedInJSStack:
+        case CellDisplacedInJSStack:
+        case BooleanDisplacedInJSStack:
         case Int32DisplacedInJSStack:
         case DoubleDisplacedInJSStack:
         case Int52DisplacedInJSStack:
@@ -262,6 +264,8 @@ void OSRExitCompiler::compileExit(const OSRExit& exit, const Operands<ValueRecov
         case InGPR:
         case UnboxedCellInGPR:
         case DisplacedInJSStack:
+        case CellDisplacedInJSStack:
+        case BooleanDisplacedInJSStack:
             m_jit.load64(scratch + index, GPRInfo::regT0);
             m_jit.store64(GPRInfo::regT0, AssemblyHelpers::addressFor(operand));
             break;
@@ -313,6 +317,11 @@ void OSRExitCompiler::compileExit(const OSRExit& exit, const Operands<ValueRecov
             
         case ArgumentsThatWereNotCreated:
             haveArguments = true;
+            // We can't restore this yet but we can make sure that the stack appears
+            // sane.
+            m_jit.store64(
+                AssemblyHelpers::TrustedImm64(JSValue::encode(JSValue())),
+                AssemblyHelpers::addressFor(operand));
             break;
             
         default:
@@ -379,7 +388,7 @@ void OSRExitCompiler::compileExit(const OSRExit& exit, const Operands<ValueRecov
             for (InlineCallFrame* current = exit.m_codeOrigin.inlineCallFrame;
                  current;
                  current = current->caller.inlineCallFrame) {
-                if (current->stackOffset <= operand) {
+                if (current->stackOffset >= operand) {
                     inlineCallFrame = current;
                     break;
                 }

@@ -946,29 +946,47 @@ Element* AccessibilityNodeObject::anchorElement() const
     return 0;
 }
 
+static bool isNodeActionElement(Node* node)
+{
+    if (isHTMLInputElement(node)) {
+        HTMLInputElement* input = toHTMLInputElement(node);
+        if (!input->isDisabledFormControl() && (input->isRadioButton() || input->isCheckbox() || input->isTextButton() || input->isFileUpload() || input->isImageButton()))
+            return true;
+    } else if (node->hasTagName(buttonTag) || node->hasTagName(selectTag))
+        return true;
+
+    return false;
+}
+    
+static Element* nativeActionElement(Node* start)
+{
+    if (!start)
+        return 0;
+    
+    // Do a deep-dive to see if any nodes should be used as the action element.
+    // We have to look at Nodes, since this method should only be called on objects that do not have children (like buttons).
+    // It solves the problem when authors put role="button" on a group and leave the actual button inside the group.
+    
+    for (Node* child = start->firstChild(); child; child = child->nextSibling()) {
+        if (isNodeActionElement(child))
+            return toElement(child);
+
+        if (Element* subChild = nativeActionElement(child))
+            return subChild;
+    }
+    return 0;
+}
+    
 Element* AccessibilityNodeObject::actionElement() const
 {
     Node* node = this->node();
     if (!node)
         return 0;
 
-    if (isHTMLInputElement(node)) {
-        HTMLInputElement* input = toHTMLInputElement(node);
-        if (!input->isDisabledFormControl() && (isCheckboxOrRadio() || input->isTextButton()))
-            return input;
-    } else if (node->hasTagName(buttonTag))
-        return toElement(node);
-
-    if (isFileUploadButton())
-        return toElement(node);
-            
-    if (AccessibilityObject::isARIAInput(ariaRoleAttribute()))
-        return toElement(node);
-
-    if (isImageButton())
+    if (isNodeActionElement(node))
         return toElement(node);
     
-    if (node->hasTagName(selectTag))
+    if (AccessibilityObject::isARIAInput(ariaRoleAttribute()))
         return toElement(node);
 
     switch (roleValue()) {
@@ -980,6 +998,9 @@ Element* AccessibilityNodeObject::actionElement() const
     case MenuItemCheckboxRole:
     case MenuItemRadioRole:
     case ListItemRole:
+        // Check if the author is hiding the real control element inside the ARIA element.
+        if (Element* nativeElement = nativeActionElement(node))
+            return nativeElement;
         return toElement(node);
     default:
         break;
@@ -1111,13 +1132,11 @@ HTMLLabelElement* AccessibilityNodeObject::labelForElement(Element* element) con
 
     const AtomicString& id = element->getIdAttribute();
     if (!id.isEmpty()) {
-        if (HTMLLabelElement* label = element->treeScope()->labelElementForId(id))
+        if (HTMLLabelElement* label = element->treeScope().labelElementForId(id))
             return label;
     }
 
-    auto labelAncestors = ancestorsOfType<HTMLLabelElement>(element);
-    auto enclosingLabel = labelAncestors.begin();
-    return enclosingLabel != labelAncestors.end() ? &*enclosingLabel : nullptr;
+    return ancestorsOfType<HTMLLabelElement>(element).first();
 }
 
 String AccessibilityNodeObject::ariaAccessibilityDescription() const
@@ -1819,9 +1838,7 @@ void AccessibilityNodeObject::elementsFromAttribute(Vector<Element*>& elements, 
     if (!node || !node->isElementNode())
         return;
 
-    TreeScope* scope = node->treeScope();
-    if (!scope)
-        return;
+    TreeScope& treeScope = node->treeScope();
 
     String idList = getAttribute(attribute).string();
     if (idList.isEmpty())
@@ -1834,7 +1851,7 @@ void AccessibilityNodeObject::elementsFromAttribute(Vector<Element*>& elements, 
     unsigned size = idVector.size();
     for (unsigned i = 0; i < size; ++i) {
         AtomicString idName(idVector[i]);
-        Element* idElement = scope->getElementById(idName);
+        Element* idElement = treeScope.getElementById(idName);
         if (idElement)
             elements.append(idElement);
     }

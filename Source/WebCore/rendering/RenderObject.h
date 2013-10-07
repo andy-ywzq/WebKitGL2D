@@ -653,8 +653,6 @@ public:
     void setHasTransform(bool b = true) { m_bitfields.setHasTransform(b); }
     void setHasReflection(bool b = true) { m_bitfields.setHasReflection(b); }
 
-    virtual void paint(PaintInfo&, const LayoutPoint&);
-
     // Recursive function that computes the size and position of this object and all its descendants.
     virtual void layout();
 
@@ -876,9 +874,9 @@ public:
     virtual int previousOffsetForBackwardDeletion(int current) const;
     virtual int nextOffset(int current) const;
 
-    virtual void imageChanged(CachedImage*, const IntRect* = 0);
+    virtual void imageChanged(CachedImage*, const IntRect* = 0) OVERRIDE;
     virtual void imageChanged(WrappedImagePtr, const IntRect* = 0) { }
-    virtual bool willRenderImage(CachedImage*);
+    virtual bool willRenderImage(CachedImage*) OVERRIDE;
 
     void selectionStartEnd(int& spos, int& epos) const;
     

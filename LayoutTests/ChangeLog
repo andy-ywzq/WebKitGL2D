@@ -1,3 +1,273 @@
+2013-10-07  Tim Horton  <timothy_horton@apple.com>
+
+        -webkit-cross-fade paints SVGs at full opacity during cross-fade
+        https://bugs.webkit.org/show_bug.cgi?id=122441
+        <rdar://problem/13973162>
+
+        Reviewed by Simon Fraser.
+
+        Add a test that ensures that -cross-fade with SVG images draws correctly.
+
+        * css3/images/cross-fade-svg-with-opacity-expected.html: Added.
+        * css3/images/cross-fade-svg-with-opacity.html: Added.
+
+2013-10-07  Filip Pizlo  <fpizlo@apple.com>
+
+        Trap 5 (most likely int $3) in jsc-layout-tests.yaml/js/script-tests/integer-division-neg2tothe32-by-neg1.js.layout-dfg-eager-no-cjit
+        https://bugs.webkit.org/show_bug.cgi?id=122420
+
+        Reviewed by Michael Saboff.
+
+        * js/script-tests/integer-division-neg2tothe32-by-neg1.js:
+
+2013-10-07  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: Facebook wrapped a file upload button in an unfocusable ARIA button, which doesn't work with AXPress.
+        https://bugs.webkit.org/show_bug.cgi?id=122252
+
+        Reviewed by Mario Sanchez Prada.
+
+        * accessibility/axpress-on-aria-button-expected.txt: Added.
+        * accessibility/axpress-on-aria-button.html: Added.
+
+2013-10-06  Filip Pizlo  <fpizlo@apple.com>
+
+        ASSERTION FAILED: bitwise_cast<WriteBarrier<Unknown>*>(callFrame) == m_registers in jsc-layout-tests.yaml/js/script-tests/dfg-inline-arguments-capture-throw-exception.js.layout-dfg-eager-no-cjit
+        https://bugs.webkit.org/show_bug.cgi?id=122418
+
+        Reviewed by Oliver Hunt.
+
+        * js/script-tests/dfg-arguments-osr-exit-multiple-blocks-before-exit.js:
+        * js/script-tests/dfg-arguments-osr-exit-multiple-blocks.js:
+        * js/script-tests/dfg-arguments-osr-exit.js:
+        * js/script-tests/dfg-inline-arguments-capture-throw-exception.js:
+
+2013-10-07  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        context-menu-suggestions-multiword-selection.html and context-menu-suggestions-subword-selection.html are flaky after r156901.
+        https://bugs.webkit.org/show_bug.cgi?id=122414
+
+        Unreviewed gardening.
+
+        * platform/mac/TestExpectations:
+        Similarly to r156990, mark context-menu-suggestions-subword-selection.html as flaky.
+
+2013-10-06  Tim Horton  <timothy_horton@apple.com>
+
+        Remove an unnecessary test expectation, as the test was removed
+        along with the code it tested.
+
+        * platform/mac/TestExpectations:
+
+2013-10-06  Tim Horton  <timothy_horton@apple.com>
+
+        results.html doesn't support non-HTML reference tests or references with external resources
+        https://bugs.webkit.org/show_bug.cgi?id=122426
+
+        Reviewed by Ryosuke Niwa.
+
+        * fast/harness/results.html:
+        Factor splitExtension() out of stripExtension(), so we can retrieve
+        the extension as well as strip it.
+
+        Factor layoutTestsBasePath() out of testLink(), so we can use it for
+        ref test expectation files as well.
+
+        Use layoutTestsBasePath() to link to ref test expectation files, and
+        use the extension of the test for the expectation, instead of hardcoding
+        HTML reference files.
+
+        This will work on the bots because we already use the same mechanism for
+        the link to the test itself.
+
+        * fast/harness/resources/results-test.js:
+        Update the harness result viewer test results.
+
+2013-10-06  Filip Pizlo  <fpizlo@apple.com>
+
+        jsc-layout-tests.yaml/js/script-tests/dfg-arguments-osr-exit.js.layout-dfg-eager-no-cjit fails in release mode on the bots
+        https://bugs.webkit.org/show_bug.cgi?id=122436
+
+        Unreviewed, green the bots by not running the eager variants of these tests.
+        
+        Will unskip when I land the fix for https://bugs.webkit.org/show_bug.cgi?id=122418.
+
+        * js/script-tests/dfg-arguments-osr-exit-multiple-blocks-before-exit.js:
+        * js/script-tests/dfg-arguments-osr-exit-multiple-blocks.js:
+        * js/script-tests/dfg-arguments-osr-exit.js:
+
+2013-10-06  Filip Pizlo  <fpizlo@apple.com>
+
+        Unified test infrastructure via the jsc shell
+        https://bugs.webkit.org/show_bug.cgi?id=120696
+
+        Reviewed by Oliver Hunt.
+        
+        Suppress running the no-cjit and dfg-eager variants of these tests because there are
+        still some hard bugs to fix; they were revealed by the increase in test coverage.
+
+        * js/script-tests/dfg-inline-arguments-capture-throw-exception.js:
+        * js/script-tests/dfg-uint32-to-number-in-middle-of-copy-propagation.js:
+        * js/script-tests/integer-division-neg2tothe32-by-neg1.js:
+
+2013-10-06  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSSRegions] Rename parsing tests to match current css properties
+        https://bugs.webkit.org/show_bug.cgi?id=122413
+
+        Reviewed by Sam Weinig.
+
+        Simple renaming of files, inline with the current stable version of properties.
+
+        * fast/regions/script-tests/webkit-flow-from-parsing.js: Renamed from LayoutTests/fast/regions/script-tests/content-webkit-from-flow-parsing.js.
+        * fast/regions/script-tests/webkit-flow-into-parsing.js: Renamed from LayoutTests/fast/regions/script-tests/webkit-flow-parsing.js.
+        * fast/regions/webkit-flow-from-parsing-expected.txt: Renamed from LayoutTests/fast/regions/content-webkit-from-flow-parsing-expected.txt.
+        * fast/regions/webkit-flow-from-parsing.html: Renamed from LayoutTests/fast/regions/content-webkit-from-flow-parsing.html.
+        * fast/regions/webkit-flow-into-parsing-expected.txt: Renamed from LayoutTests/fast/regions/webkit-flow-parsing-expected.txt.
+        * fast/regions/webkit-flow-into-parsing.html: Renamed from LayoutTests/fast/regions/webkit-flow-parsing.html.
+
+2013-10-06  Alexey Proskuryakov  <ap@apple.com>
+
+        Layout Test editing/spelling/context-menu-suggestions-multiword-selection.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=122414
+
+        * platform/mac/TestExpectations: Marked as such.
+
+2013-10-05  Filip Pizlo  <fpizlo@apple.com>
+
+        Allow skipping of run-jsc-stress-tests that are configured using yaml files
+        https://bugs.webkit.org/show_bug.cgi?id=122385
+
+        Reviewed by Sam Weinig.
+        
+        The way that we "skip" tests is by having a custom command at the top using //@ notation,
+        and then use "//@ skip". But the machinery to do that also allows us to do things like
+        run tests in a no-concurrent-JIT mode - so I've also implemented that in this patch.
+        
+        Use the skip machinery to skip large-expressions.js.
+
+        * js/script-tests/large-expressions.js:
+        * jsc-layout-tests.yaml:
+
+2013-10-05  Manuel Rego Casasnovas  <rego@igalia.com>
+
+        [CSS Regions] Layout Test for selecting text ignoring region content
+        https://bugs.webkit.org/show_bug.cgi?id=122353
+
+        Reviewed by Darin Adler.
+
+        Add new reftests for selecting text in texts wrapping a region, where
+        the region content is ignored. It compares the behavior (highlighted
+        text and selected content) in regions and absolute positions.
+
+        Absolute positioned elements do not fill the gaps on the right during
+        the selection, unlike regular elements. This is the reason why some
+        regular elements are floated in order to avoid such problems in the
+        reftests.
+
+        Provided layout tests for different writing models.
+
+        * fast/regions/resources/region-style.css: New CSS classes required for these tests.
+        * fast/regions/selection/selecting-text-ignoring-region-expected.html: Added.
+        * fast/regions/selection/selecting-text-ignoring-region-horiz-bt-expected.html: Added.
+        * fast/regions/selection/selecting-text-ignoring-region-horiz-bt.html: Added.
+        * fast/regions/selection/selecting-text-ignoring-region-vert-lr-expected.html: Added.
+        * fast/regions/selection/selecting-text-ignoring-region-vert-lr.html: Added.
+        * fast/regions/selection/selecting-text-ignoring-region-vert-rl-expected.html: Added.
+        * fast/regions/selection/selecting-text-ignoring-region-vert-rl.html: Added.
+        * fast/regions/selection/selecting-text-ignoring-region.html: Added.
+
+2013-10-04  Filip Pizlo  <fpizlo@apple.com>
+
+        Have run-javascriptcore-tests run JS LayoutTests using run-jsc-stress-tests so that it runs in parallel
+        https://bugs.webkit.org/show_bug.cgi?id=122376
+
+        Reviewed by Mark Hahnenberg.
+        
+        Add a yaml file describing which directories contain JS LayoutTests. run-jsc-stress-tests
+        will use this file.
+
+        * jsc-layout-tests.yaml: Added.
+
+2013-10-05  Darin Adler  <darin@apple.com>
+
+        Need to check if some HTML child elements are HTMLUnknownElement
+        https://bugs.webkit.org/show_bug.cgi?id=120297
+
+        Reviewed by Andreas Kling.
+
+        Based on a test written by Zan Dobersek <zdobersek@igalia.com>.
+
+        * fast/media/media-disable-crash-expected.txt: Added.
+        * fast/media/media-disable-crash.html: Added.
+
+2013-10-04  Darin Adler  <darin@apple.com>
+
+        text-transform: lowercase is not lang-dependent (Turkish languages : tr,az)
+        https://bugs.webkit.org/show_bug.cgi?id=21312
+
+        Reviewed by Ryosuke Niwa.
+
+        * fast/text/text-transform-turkish-and-azeri-expected.html: Added.
+        * fast/text/text-transform-turkish-and-azeri.html: Added.
+
+2013-10-04  Alexey Proskuryakov  <ap@apple.com>
+
+        Roll out r156930 and r156937, they caused 34 assertion failures on bots.
+
+        * TestExpectations:
+        * mathml/presentation/mo-minus-expected.html: Removed.
+        * mathml/presentation/mo-minus.html: Removed.
+        * mathml/presentation/mo-stacked-glyphs-expected.html: Removed.
+        * mathml/presentation/mo-stacked-glyphs.html: Removed.
+        * mathml/presentation/mo-stretchy-vertical-bar-expected-mismatch.html: Removed.
+        * mathml/presentation/mo-stretchy-vertical-bar.html: Removed.
+        * mathml/very-large-stretchy-operators-expected.txt: Removed.
+        * mathml/very-large-stretchy-operators.html: Removed.
+        * platform/gtk/TestExpectations:
+        * platform/mac/TestExpectations:
+        * platform/win/TestExpectations:
+
+2013-10-04  Mark Lam  <mark.lam@apple.com>
+
+        Change ScriptDebugServer to use DebuggerCallFrame instead of JavaScriptCallFrame.
+        https://bugs.webkit.org/show_bug.cgi?id=121969.
+
+        Reviewed by Geoffrey Garen.
+
+        * http/tests/inspector/debugger-test.js:
+        (initialize_DebuggerTest):
+        * inspector-protocol/debugger/call-frame-function-name-expected.txt: Added.
+        * inspector-protocol/debugger/call-frame-function-name.html: Added.
+        * inspector-protocol/debugger/call-frame-this-host-expected.txt: Added.
+        * inspector-protocol/debugger/call-frame-this-host.html: Added.
+        * inspector-protocol/debugger/call-frame-this-nonstrict-expected.txt: Added.
+        * inspector-protocol/debugger/call-frame-this-nonstrict.html: Added.
+        * inspector-protocol/debugger/call-frame-this-strict-expected.txt: Added.
+        * inspector-protocol/debugger/call-frame-this-strict.html: Added.
+        * inspector/debugger/pause-in-internal-script-expected.txt:
+
+2013-10-04  Frédéric Wang  <fred.wang@free.fr>
+
+        [MathML] Remove RenderTree modification during layout and refactor the StretchyOp code
+        https://bugs.webkit.org/show_bug.cgi?id=121416
+
+        Reviewed by David Hyatt.
+
+        Add some reftests for stretchy operators.
+
+        * TestExpectations: The remaining MathML pixel tests are broken by this patch.
+        * LayoutTests/platform/gtk/TestExpectations:
+        * LayoutTests/platform/mac/TestExpectations:
+        * LayoutTests/platform/win/TestExpectations:
+        * mathml/presentation/mo-minus.html: Added.
+        * mathml/presentation/mo-stacked-glyphs-expected.html: Added.
+        * mathml/presentation/mo-stacked-glyphs.html: Added.
+        * mathml/presentation/mo-stretchy-vertical-bar-expected-mismatch.html: Added.
+        * mathml/presentation/mo-stretchy-vertical-bar.html: Added.
+        * mathml/very-large-stretchy-operators-expected.txt: Added.
+        * mathml/very-large-stretchy-operators.html: Added.
+
 2013-10-04  Oliver Hunt  <oliver@apple.com>
 
         Update all the tests, and include new file.

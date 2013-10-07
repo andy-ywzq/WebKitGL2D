@@ -253,14 +253,14 @@ public:
 
     Element* getElementById(const AtomicString& id) const;
 
-    virtual bool canContainRangeEndPoint() const { return true; }
+    virtual bool canContainRangeEndPoint() const OVERRIDE { return true; }
 
     Element* getElementByAccessKey(const String& key);
     void invalidateAccessKeyMap();
 
-    void addImageElementByLowercasedUsemap(const AtomicString&, HTMLImageElement&);
-    void removeImageElementByLowercasedUsemap(const AtomicString&, HTMLImageElement&);
-    HTMLImageElement* imageElementByLowercasedUsemap(const AtomicString&) const;
+    void addImageElementByLowercasedUsemap(const AtomicStringImpl&, HTMLImageElement&);
+    void removeImageElementByLowercasedUsemap(const AtomicStringImpl&, HTMLImageElement&);
+    HTMLImageElement* imageElementByLowercasedUsemap(const AtomicStringImpl&) const;
 
     SelectorQueryCache& selectorQueryCache();
 
@@ -418,7 +418,7 @@ public:
     String documentURI() const { return m_documentURI; }
     void setDocumentURI(const String&);
 
-    virtual URL baseURI() const;
+    virtual URL baseURI() const OVERRIDE;
 
 #if ENABLE(PAGE_VISIBILITY_API)
     String visibilityState() const;
@@ -603,9 +603,9 @@ public:
     virtual URL completeURL(const String&) const OVERRIDE FINAL;
     URL completeURL(const String&, const URL& baseURLOverride) const;
 
-    virtual String userAgent(const URL&) const;
+    virtual String userAgent(const URL&) const OVERRIDE;
 
-    virtual void disableEval(const String& errorMessage);
+    virtual void disableEval(const String& errorMessage) OVERRIDE;
 
     bool canNavigate(Frame* targetFrame);
     Frame* findUnsafeParentScrollPropagationBoundary();
@@ -934,7 +934,7 @@ public:
     bool isDNSPrefetchEnabled() const { return m_isDNSPrefetchEnabled; }
     void parseDNSPrefetchControlHeader(const String&);
 
-    virtual void postTask(PassOwnPtr<Task>); // Executes the task on context's thread asynchronously.
+    virtual void postTask(PassOwnPtr<Task>) OVERRIDE; // Executes the task on context's thread asynchronously.
 
     void suspendScriptedAnimationControllerCallbacks();
     void resumeScriptedAnimationControllerCallbacks();
@@ -1001,7 +1001,7 @@ public:
     void setAnnotatedRegions(const Vector<AnnotatedRegionValue>&);
 #endif
 
-    virtual void removeAllEventListeners();
+    virtual void removeAllEventListeners() OVERRIDE;
 
 #if ENABLE(SVG)
     const SVGDocumentExtensions* svgExtensions();
@@ -1017,8 +1017,8 @@ public:
     bool processingLoadEvent() const { return m_processingLoadEvent; }
     bool loadEventFinished() const { return m_loadEventFinished; }
 
-    virtual bool isContextThread() const;
-    virtual bool isJSExecutionForbidden() const { return false; }
+    virtual bool isContextThread() const OVERRIDE;
+    virtual bool isJSExecutionForbidden() const OVERRIDE { return false; }
 
     bool containsValidityStyleRules() const { return m_containsValidityStyleRules; }
     void setContainsValidityStyleRules() { m_containsValidityStyleRules = true; }
@@ -1028,7 +1028,7 @@ public:
     void enqueuePageshowEvent(PageshowEventPersistence);
     void enqueueHashchangeEvent(const String& oldURL, const String& newURL);
     void enqueuePopstateEvent(PassRefPtr<SerializedScriptValue> stateObject);
-    DocumentEventQueue& eventQueue() const { return m_eventQueue; }
+    virtual DocumentEventQueue& eventQueue() const OVERRIDE { return m_eventQueue; }
 
     void addMediaCanStartListener(MediaCanStartListener*);
     void removeMediaCanStartListener(MediaCanStartListener*);
@@ -1095,8 +1095,8 @@ public:
     void serviceScriptedAnimations(double monotonicAnimationStartTime);
 #endif
 
-    virtual EventTarget* errorEventTarget();
-    virtual void logExceptionToConsole(const String& errorMessage, const String& sourceURL, int lineNumber, int columnNumber, PassRefPtr<ScriptCallStack>);
+    virtual EventTarget* errorEventTarget() OVERRIDE;
+    virtual void logExceptionToConsole(const String& errorMessage, const String& sourceURL, int lineNumber, int columnNumber, PassRefPtr<ScriptCallStack>) OVERRIDE;
 
     void initDNSPrefetch();
 
@@ -1178,7 +1178,7 @@ public:
 
     void didAssociateFormControl(Element*);
 
-    virtual void addConsoleMessage(MessageSource, MessageLevel, const String& message, unsigned long requestIdentifier = 0);
+    virtual void addConsoleMessage(MessageSource, MessageLevel, const String& message, unsigned long requestIdentifier = 0) OVERRIDE;
 
     virtual SecurityOrigin* topOrigin() const OVERRIDE;
 
@@ -1215,19 +1215,19 @@ private:
 
     virtual void childrenChanged(const ChildChange&) OVERRIDE;
 
-    virtual String nodeName() const;
-    virtual NodeType nodeType() const;
-    virtual bool childTypeAllowed(NodeType) const;
-    virtual PassRefPtr<Node> cloneNode(bool deep);
+    virtual String nodeName() const OVERRIDE;
+    virtual NodeType nodeType() const OVERRIDE;
+    virtual bool childTypeAllowed(NodeType) const OVERRIDE;
+    virtual PassRefPtr<Node> cloneNode(bool deep) OVERRIDE;
 
-    virtual void refScriptExecutionContext() { ref(); }
-    virtual void derefScriptExecutionContext() { deref(); }
+    virtual void refScriptExecutionContext() OVERRIDE { ref(); }
+    virtual void derefScriptExecutionContext() OVERRIDE { deref(); }
 
-    virtual void addMessage(MessageSource, MessageLevel, const String& message, const String& sourceURL, unsigned lineNumber, unsigned columnNumber, PassRefPtr<ScriptCallStack>, JSC::ExecState* = 0, unsigned long requestIdentifier = 0);
+    virtual void addMessage(MessageSource, MessageLevel, const String& message, const String& sourceURL, unsigned lineNumber, unsigned columnNumber, PassRefPtr<ScriptCallStack>, JSC::ExecState* = 0, unsigned long requestIdentifier = 0) OVERRIDE;
 
-    virtual double minimumTimerInterval() const;
+    virtual double minimumTimerInterval() const OVERRIDE;
 
-    virtual double timerAlignmentInterval() const;
+    virtual double timerAlignmentInterval() const OVERRIDE;
 
     void updateTitle(const StringWithDirection&);
     void updateFocusAppearanceTimerFired(Timer<Document>*);
@@ -1381,7 +1381,7 @@ private:
     bool m_titleSetExplicitly;
     RefPtr<Element> m_titleElement;
 
-    OwnPtr<RenderArena> m_renderArena;
+    std::unique_ptr<RenderArena> m_renderArena;
 
     OwnPtr<AXObjectCache> m_axObjectCache;
     const OwnPtr<DocumentMarkerController> m_markers;
@@ -1402,9 +1402,9 @@ private:
     double m_startTime;
     bool m_overMinimumLayoutThreshold;
     
-    OwnPtr<ScriptRunner> m_scriptRunner;
+    std::unique_ptr<ScriptRunner> m_scriptRunner;
 
-    Vector<RefPtr<HTMLScriptElement> > m_currentScriptStack;
+    Vector<RefPtr<HTMLScriptElement>> m_currentScriptStack;
 
 #if ENABLE(XSLT)
     OwnPtr<TransformSource> m_transformSource;
@@ -1595,33 +1595,6 @@ inline const Document* Document::templateDocument() const
 }
 #endif
 
-inline Document* toDocument(ScriptExecutionContext* scriptExecutionContext)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!scriptExecutionContext || scriptExecutionContext->isDocument());
-    return static_cast<Document*>(scriptExecutionContext);
-}
-
-inline const Document* toDocument(const ScriptExecutionContext* scriptExecutionContext)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!scriptExecutionContext || scriptExecutionContext->isDocument());
-    return static_cast<const Document*>(scriptExecutionContext);
-}
-
-inline Document* toDocument(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->isDocumentNode());
-    return static_cast<Document*>(node);
-}
-
-inline const Document* toDocument(const Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->isDocumentNode());
-    return static_cast<const Document*>(node);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toDocument(const Document*);
-
 // Put these methods here, because they require the Document definition, but we really want to inline them.
 
 inline bool Node::isDocumentNode() const
@@ -1632,7 +1605,7 @@ inline bool Node::isDocumentNode() const
 inline Node::Node(Document* document, ConstructionType type)
     : m_nodeFlags(type)
     , m_parentNode(0)
-    , m_treeScope(document ? document : TreeScope::noDocumentInstance())
+    , m_treeScope(document ? document : &TreeScope::noDocumentInstance())
     , m_previous(0)
     , m_next(0)
 {
@@ -1651,6 +1624,25 @@ inline ScriptExecutionContext* Node::scriptExecutionContext() const
 }
 
 Element* eventTargetElementForDocument(Document*);
+
+inline Document* toDocument(ScriptExecutionContext* scriptExecutionContext)
+{
+    ASSERT_WITH_SECURITY_IMPLICATION(!scriptExecutionContext || scriptExecutionContext->isDocument());
+    return static_cast<Document*>(scriptExecutionContext);
+}
+
+inline const Document* toDocument(const ScriptExecutionContext* scriptExecutionContext)
+{
+    ASSERT_WITH_SECURITY_IMPLICATION(!scriptExecutionContext || scriptExecutionContext->isDocument());
+    return static_cast<const Document*>(scriptExecutionContext);
+}
+
+inline bool isDocument(const Node& node)
+{
+    return node.isDocumentNode();
+}
+
+NODE_TYPE_CASTS(Document)
 
 } // namespace WebCore
 

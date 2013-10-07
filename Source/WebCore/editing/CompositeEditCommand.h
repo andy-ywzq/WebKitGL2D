@@ -44,7 +44,7 @@ public:
 
     virtual void unapply() OVERRIDE;
     virtual void reapply() OVERRIDE;
-    EditAction editingAction() const OVERRIDE { return m_editAction; }
+    virtual EditAction editingAction() const OVERRIDE { return m_editAction; }
     void append(SimpleEditCommand*);
     bool wasCreateLinkCommand() const { return m_editAction == EditActionCreateLink; }
 
@@ -152,7 +152,7 @@ protected:
 
     PassRefPtr<Node> moveParagraphContentsToNewBlockIfNecessary(const Position&);
     
-    void pushAnchorElementDown(Node*);
+    void pushAnchorElementDown(Element&);
     
     void moveParagraph(const VisiblePosition&, const VisiblePosition&, const VisiblePosition&, bool preserveSelection = false, bool preserveStyle = true);
     void moveParagraphs(const VisiblePosition&, const VisiblePosition&, const VisiblePosition&, bool preserveSelection = false, bool preserveStyle = true);
@@ -170,7 +170,7 @@ protected:
     Vector<RefPtr<EditCommand> > m_commands;
 
 private:
-    bool isCompositeEditCommand() const OVERRIDE { return true; }
+    virtual bool isCompositeEditCommand() const OVERRIDE { return true; }
 
     RefPtr<EditCommandComposition> m_composition;
 };

@@ -8648,6 +8648,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\css\CSSFontFeatureValue.cpp" />
     <ClCompile Include="..\css\CSSFontSelector.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -8662,6 +8663,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\css\CSSFontValue.cpp" />
     <ClCompile Include="..\css\CSSFunctionValue.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -8972,6 +8974,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\css\CSSShadowValue.cpp" />
     <ClCompile Include="..\css\CSSStyleRule.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -9085,9 +9088,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\css\FontFeatureValue.cpp" />
     <ClCompile Include="..\css\FontLoader.cpp" />
-    <ClCompile Include="..\css\FontValue.cpp" />
     <ClCompile Include="..\css\LengthFunctions.cpp" />
     <ClCompile Include="..\css\MediaAllInOne.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -9156,7 +9157,6 @@
     <ClCompile Include="..\css\PropertySetCSSStyleDeclaration.cpp" />
     <ClCompile Include="..\css\RGBColor.cpp" />
     <ClCompile Include="..\css\SelectorChecker.cpp" />
-    <ClCompile Include="..\css\ShadowValue.cpp" />
     <ClCompile Include="..\css\StyleInvalidationAnalysis.cpp" />
     <ClCompile Include="..\css\StyleMedia.cpp" />
     <ClCompile Include="..\css\StylePropertySet.cpp">
@@ -10801,6 +10801,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\rendering\TextPaintStyle.cpp" />
     <ClCompile Include="..\rendering\shapes\PolygonShape.cpp" />
     <ClCompile Include="..\rendering\shapes\RasterShape.cpp" />
     <ClCompile Include="..\rendering\shapes\RectangleShape.cpp" />
@@ -16982,20 +16983,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\bindings\js\ScriptGCEvent.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugSuffix|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="..\bindings\js\ScriptObject.cpp" />
     <ClCompile Include="..\bindings\js\ScriptProfile.cpp" />
     <ClCompile Include="..\bindings\js\ScriptProfiler.cpp">
@@ -19357,7 +19344,9 @@
     <ClInclude Include="..\css\CSSFontFaceRule.h" />
     <ClInclude Include="..\css\CSSFontFaceSource.h" />
     <ClInclude Include="..\css\CSSFontFaceSrcValue.h" />
+    <ClInclude Include="..\css\CSSFontFeatureValue.h" />
     <ClInclude Include="..\css\CSSFontSelector.h" />
+    <ClInclude Include="..\css\CSSFontValue.h" />
     <ClInclude Include="..\css\CSSFunctionValue.h" />
     <ClInclude Include="..\css\CSSGradientValue.h" />
     <ClInclude Include="..\css\CSSGroupingRule.h" />
@@ -19385,6 +19374,7 @@
     <ClInclude Include="..\css\CSSSegmentedFontFace.h" />
     <ClInclude Include="..\css\CSSSelector.h" />
     <ClInclude Include="..\css\CSSSelectorList.h" />
+    <ClInclude Include="..\css\CSSShadowValue.h" />
     <ClInclude Include="..\css\CSSStyleDeclaration.h" />
     <ClInclude Include="..\css\CSSStyleRule.h" />
     <ClInclude Include="..\css\CSSStyleSheet.h" />
@@ -19398,9 +19388,7 @@
     <ClInclude Include="..\css\CSSValuePool.h" />
     <ClInclude Include="..\css\CSSVariableValue.h" />
     <ClInclude Include="..\css\DashboardRegion.h" />
-    <ClInclude Include="..\css\FontFeatureValue.h" />
     <ClInclude Include="..\css\FontLoader.h" />
-    <ClInclude Include="..\css\FontValue.h" />
     <ClInclude Include="..\css\LengthFunctions.h" />
     <ClInclude Include="..\css\MediaFeatureNames.h" />
     <ClInclude Include="..\css\MediaList.h" />
@@ -19415,7 +19403,6 @@
     <ClInclude Include="..\css\Rect.h" />
     <ClInclude Include="..\css\RGBColor.h" />
     <ClInclude Include="..\css\SelectorChecker.h" />
-    <ClInclude Include="..\css\ShadowValue.h" />
     <ClInclude Include="..\css\StyleInvalidationAnalysis.h" />
     <ClInclude Include="..\css\StyleMedia.h" />
     <ClInclude Include="..\css\StylePropertySet.h" />
@@ -19589,6 +19576,7 @@
     <ClInclude Include="..\rendering\svg\SVGResourcesCache.h" />
     <ClInclude Include="..\rendering\svg\SVGResourcesCycleSolver.h" />
     <ClInclude Include="..\rendering\TableLayout.h" />
+    <ClInclude Include="..\rendering\TextPaintStyle.h" />
     <ClInclude Include="..\rendering\TrailingFloatsRootInlineBox.h" />
     <ClInclude Include="..\rendering\mathml\RenderMathMLBlock.h" />
     <ClInclude Include="..\rendering\mathml\RenderMathMLFenced.h" />
@@ -20218,7 +20206,6 @@
     <ClInclude Include="..\bindings\js\ScriptController.h" />
     <ClInclude Include="..\bindings\js\ScriptDebugServer.h" />
     <ClInclude Include="..\bindings\js\ScriptFunctionCall.h" />
-    <ClInclude Include="..\bindings\js\ScriptGCEvent.h" />
     <ClInclude Include="..\bindings\js\ScriptHeapSnapshot.h" />
     <ClInclude Include="..\bindings\js\ScriptObject.h" />
     <ClInclude Include="..\bindings\js\ScriptProfile.h" />

@@ -533,9 +533,9 @@ void CompositeEditCommand::replaceTextInNodePreservingMarkers(PassRefPtr<Text> p
     RefPtr<Text> node(prpNode);
     DocumentMarkerController& markerController = document().markers();
     Vector<DocumentMarker> markers;
-    copyMarkers(markerController.markersInRange(Range::create(&document(), node, offset, node, offset + count).get(), DocumentMarker::AllMarkers()), markers);
+    copyMarkers(markerController.markersInRange(Range::create(document(), node, offset, node, offset + count).get(), DocumentMarker::AllMarkers()), markers);
     replaceTextInNode(node, offset, count, replacementText);
-    RefPtr<Range> newRange = Range::create(&document(), node, offset, node, offset + replacementText.length());
+    RefPtr<Range> newRange = Range::create(document(), node, offset, node, offset + replacementText.length());
     for (size_t i = 0; i < markers.size(); ++i)
         markerController.addMarker(newRange.get(), markers[i].type(), markers[i].description());
 }
@@ -971,18 +971,15 @@ PassRefPtr<Node> CompositeEditCommand::moveParagraphContentsToNewBlockIfNecessar
     return newBlock.release();
 }
 
-void CompositeEditCommand::pushAnchorElementDown(Node* anchorNode)
+void CompositeEditCommand::pushAnchorElementDown(Element& anchorElement)
 {
-    if (!anchorNode)
-        return;
+    ASSERT(anchorElement.isLink());
     
-    ASSERT(anchorNode->isLink());
-    
-    setEndingSelection(VisibleSelection::selectionFromContentsOfNode(anchorNode));
-    applyStyledElement(toElement(anchorNode));
-    // Clones of anchorNode have been pushed down, now remove it.
-    if (anchorNode->inDocument())
-        removeNodePreservingChildren(anchorNode);
+    setEndingSelection(VisibleSelection::selectionFromContentsOfNode(&anchorElement));
+    applyStyledElement(&anchorElement);
+    // Clones of anchorElement have been pushed down, now remove it.
+    if (anchorElement.inDocument())
+        removeNodePreservingChildren(&anchorElement);
 }
 
 // Clone the paragraph between start and end under blockElement,
@@ -1168,13 +1165,13 @@ void CompositeEditCommand::moveParagraphs(const VisiblePosition& startOfParagrap
             
             startIndex = 0;
             if (startInParagraph) {
-                RefPtr<Range> startRange = Range::create(&document(), startOfParagraphToMove.deepEquivalent().parentAnchoredEquivalent(), visibleStart.deepEquivalent().parentAnchoredEquivalent());
+                RefPtr<Range> startRange = Range::create(document(), startOfParagraphToMove.deepEquivalent().parentAnchoredEquivalent(), visibleStart.deepEquivalent().parentAnchoredEquivalent());
                 startIndex = TextIterator::rangeLength(startRange.get(), true);
             }
 
             endIndex = 0;
             if (endInParagraph) {
-                RefPtr<Range> endRange = Range::create(&document(), startOfParagraphToMove.deepEquivalent().parentAnchoredEquivalent(), visibleEnd.deepEquivalent().parentAnchoredEquivalent());
+                RefPtr<Range> endRange = Range::create(document(), startOfParagraphToMove.deepEquivalent().parentAnchoredEquivalent(), visibleEnd.deepEquivalent().parentAnchoredEquivalent());
                 endIndex = TextIterator::rangeLength(endRange.get(), true);
             }
         }
@@ -1191,14 +1188,14 @@ void CompositeEditCommand::moveParagraphs(const VisiblePosition& startOfParagrap
     // start and end can't be used directly to create a Range; they are "editing positions"
     Position startRangeCompliant = start.parentAnchoredEquivalent();
     Position endRangeCompliant = end.parentAnchoredEquivalent();
-    RefPtr<Range> range = Range::create(&document(), startRangeCompliant.deprecatedNode(), startRangeCompliant.deprecatedEditingOffset(), endRangeCompliant.deprecatedNode(), endRangeCompliant.deprecatedEditingOffset());
+    RefPtr<Range> range = Range::create(document(), startRangeCompliant.deprecatedNode(), startRangeCompliant.deprecatedEditingOffset(), endRangeCompliant.deprecatedNode(), endRangeCompliant.deprecatedEditingOffset());
 
     // FIXME: This is an inefficient way to preserve style on nodes in the paragraph to move. It
     // shouldn't matter though, since moved paragraphs will usually be quite small.
     RefPtr<DocumentFragment> fragment;
     // This used to use a ternary for initialization, but that confused some versions of GCC, see bug 37912
     if (startOfParagraphToMove != endOfParagraphToMove)
-        fragment = createFragmentFromMarkup(&document(), createMarkup(range.get(), 0, DoNotAnnotateForInterchange, true), "");
+        fragment = createFragmentFromMarkup(document(), createMarkup(*range, 0, DoNotAnnotateForInterchange, true), "");
 
     // A non-empty paragraph's style is moved when we copy and move it.  We don't move 
     // anything if we're given an empty paragraph, but an empty paragraph can have style
@@ -1237,7 +1234,7 @@ void CompositeEditCommand::moveParagraphs(const VisiblePosition& startOfParagrap
         document().updateLayoutIgnorePendingStylesheets();
     }
 
-    RefPtr<Range> startToDestinationRange(Range::create(&document(), firstPositionInNode(document().documentElement()), destination.deepEquivalent().parentAnchoredEquivalent()));
+    RefPtr<Range> startToDestinationRange(Range::create(document(), firstPositionInNode(document().documentElement()), destination.deepEquivalent().parentAnchoredEquivalent()));
     destinationIndex = TextIterator::rangeLength(startToDestinationRange.get(), true);
 
     setEndingSelection(VisibleSelection(destination, originalIsDirectional));
@@ -1397,7 +1394,7 @@ Position CompositeEditCommand::positionAvoidingSpecialElementBoundary(const Posi
         return original;
         
     VisiblePosition visiblePos(original);
-    Node* enclosingAnchor = enclosingAnchorElement(original);
+    Element* enclosingAnchor = enclosingAnchorElement(original);
     Position result = original;
 
     if (!enclosingAnchor)
@@ -1413,7 +1410,7 @@ Position CompositeEditCommand::positionAvoidingSpecialElementBoundary(const Posi
             // Make sure anchors are pushed down before avoiding them so that we don't
             // also avoid structural elements like lists and blocks (5142012).
             if (original.deprecatedNode() != enclosingAnchor && original.deprecatedNode()->parentNode() != enclosingAnchor) {
-                pushAnchorElementDown(enclosingAnchor);
+                pushAnchorElementDown(*enclosingAnchor);
                 enclosingAnchor = enclosingAnchorElement(original);
                 if (!enclosingAnchor)
                     return original;
@@ -1432,7 +1429,7 @@ Position CompositeEditCommand::positionAvoidingSpecialElementBoundary(const Posi
             // Make sure anchors are pushed down before avoiding them so that we don't
             // also avoid structural elements like lists and blocks (5142012).
             if (original.deprecatedNode() != enclosingAnchor && original.deprecatedNode()->parentNode() != enclosingAnchor) {
-                pushAnchorElementDown(enclosingAnchor);
+                pushAnchorElementDown(*enclosingAnchor);
                 enclosingAnchor = enclosingAnchorElement(original);
             }
             if (!enclosingAnchor)

@@ -30,6 +30,8 @@
 #include "CSSAspectRatioValue.h"
 #include "CSSBasicShapes.h"
 #include "CSSBorderImage.h"
+#include "CSSFontFeatureValue.h"
+#include "CSSFontValue.h"
 #include "CSSFunctionValue.h"
 #include "CSSLineBoxContainValue.h"
 #include "CSSParser.h"
@@ -38,6 +40,7 @@
 #include "CSSPropertyNames.h"
 #include "CSSReflectValue.h"
 #include "CSSSelector.h"
+#include "CSSShadowValue.h"
 #include "CSSTimingFunctionValue.h"
 #include "CSSValueList.h"
 #include "CSSValuePool.h"
@@ -47,8 +50,6 @@
 #include "Document.h"
 #include "ExceptionCode.h"
 #include "FontFeatureSettings.h"
-#include "FontFeatureValue.h"
-#include "FontValue.h"
 #include "HTMLFrameOwnerElement.h"
 #include "Pair.h"
 #include "PseudoElement.h"
@@ -56,7 +57,6 @@
 #include "RenderBox.h"
 #include "RenderStyle.h"
 #include "RenderView.h"
-#include "ShadowValue.h"
 #include "StyleInheritedData.h"
 #include "StylePropertySet.h"
 #include "StylePropertyShorthand.h"
@@ -930,7 +930,7 @@ PassRefPtr<CSSValue> ComputedStyleExtractor::valueForShadow(const ShadowData* sh
         RefPtr<CSSPrimitiveValue> spread = propertyID == CSSPropertyTextShadow ? PassRefPtr<CSSPrimitiveValue>() : adjustLengthForZoom(currShadowData->spread(), style, adjust);
         RefPtr<CSSPrimitiveValue> style = propertyID == CSSPropertyTextShadow || currShadowData->style() == Normal ? PassRefPtr<CSSPrimitiveValue>() : cssValuePool().createIdentifierValue(CSSValueInset);
         RefPtr<CSSPrimitiveValue> color = cssValuePool().createColorValue(currShadowData->color().rgb());
-        list->prepend(ShadowValue::create(x.release(), y.release(), blur.release(), spread.release(), style.release(), color.release()));
+        list->prepend(CSSShadowValue::create(x.release(), y.release(), blur.release(), spread.release(), style.release(), color.release()));
     }
     return list.release();
 }
@@ -2082,7 +2082,7 @@ PassRefPtr<CSSValue> ComputedStyleExtractor::propertyValue(CSSPropertyID propert
                 return cssValuePool().createIdentifierValue(CSSValueNone);
             return cssValuePool().createValue(style->floating());
         case CSSPropertyFont: {
-            RefPtr<FontValue> computedFont = FontValue::create();
+            RefPtr<CSSFontValue> computedFont = CSSFontValue::create();
             computedFont->style = fontStyleFromStyle(style.get());
             computedFont->variant = fontVariantFromStyle(style.get());
             computedFont->weight = fontWeightFromStyle(style.get());
@@ -2114,7 +2114,7 @@ PassRefPtr<CSSValue> ComputedStyleExtractor::propertyValue(CSSPropertyID propert
             RefPtr<CSSValueList> list = CSSValueList::createCommaSeparated();
             for (unsigned i = 0; i < featureSettings->size(); ++i) {
                 const FontFeature& feature = featureSettings->at(i);
-                RefPtr<FontFeatureValue> featureValue = FontFeatureValue::create(feature.tag(), feature.value());
+                RefPtr<CSSFontFeatureValue> featureValue = CSSFontFeatureValue::create(feature.tag(), feature.value());
                 list->append(featureValue.release());
             }
             return list.release();

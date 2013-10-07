@@ -185,7 +185,6 @@ FrameView::FrameView(Frame& frame)
     , m_inProgrammaticScroll(false)
     , m_safeToPropagateScrollToParent(true)
     , m_deferredRepaintTimer(this, &FrameView::deferredRepaintTimerFired)
-    , m_disableRepaints(0)
     , m_isTrackingRepaints(false)
     , m_shouldUpdateWhileOffscreen(true)
     , m_deferSetNeedsLayouts(0)
@@ -293,7 +292,6 @@ void FrameView::reset()
     m_isVisuallyNonEmpty = false;
     m_firstVisuallyNonEmptyLayoutCallbackPending = true;
     m_maintainScrollPositionAnchor = 0;
-    m_disableRepaints = 0;
 }
 
 void FrameView::removeFromAXObjectCache()
@@ -1075,7 +1073,7 @@ inline void FrameView::forceLayoutParentViewIfNeeded()
     // FrameView for a layout. After that the RenderEmbeddedObject (ownerRenderer) carries the
     // correct size, which RenderSVGRoot::computeReplacedLogicalWidth/Height rely on, when laying
     // out for the first time, or when the RenderSVGRoot size has changed dynamically (eg. via <script>).
-    RefPtr<FrameView> frameView = &ownerRenderer->view().frameView();
+    Ref<FrameView> frameView(ownerRenderer->view().frameView());
 
     // Mark the owner renderer as needing layout.
     ownerRenderer->setNeedsLayoutAndPrefWidthsRecalc();
@@ -2210,9 +2208,6 @@ void FrameView::startDeferredRepaintTimer(double delay)
     if (m_deferredRepaintTimer.isActive())
         return;
 
-    if (m_disableRepaints)
-        return;
-
     m_deferredRepaintTimer.startOneShot(delay);
 }
 
@@ -2237,9 +2232,6 @@ void FrameView::flushDeferredRepaints()
 
 void FrameView::doDeferredRepaints()
 {
-    if (m_disableRepaints)
-        return;
-
     ASSERT(!m_deferringRepaints);
     if (!shouldUpdate()) {
         m_repaintRects.clear();
@@ -2313,17 +2305,6 @@ double FrameView::adjustedDeferredRepaintDelay() const
 void FrameView::deferredRepaintTimerFired(Timer<FrameView>*)
 {
     doDeferredRepaints();
-}
-
-void FrameView::beginDisableRepaints()
-{
-    m_disableRepaints++;
-}
-
-void FrameView::endDisableRepaints()
-{
-    ASSERT(m_disableRepaints > 0);
-    m_disableRepaints--;
 }
 
 void FrameView::updateLayerFlushThrottlingInAllFrames()
@@ -2787,6 +2768,8 @@ void FrameView::sendResizeEventIfNeeded()
 {
     RenderView* renderView = this->renderView();
     if (!renderView || renderView->printing())
+        return;
+    if (frame().page() && frame().page()->chrome().client().isSVGImageChromeClient())
         return;
 
     IntSize currentSize;

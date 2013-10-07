@@ -36,6 +36,8 @@
 #include "CSSFilterImageValue.h"
 #include "CSSFontFaceRule.h"
 #include "CSSFontFaceSrcValue.h"
+#include "CSSFontFeatureValue.h"
+#include "CSSFontValue.h"
 #include "CSSFunctionValue.h"
 #include "CSSGradientValue.h"
 #include "CSSImageValue.h"
@@ -48,20 +50,16 @@
 #include "CSSPropertySourceData.h"
 #include "CSSReflectValue.h"
 #include "CSSSelector.h"
+#include "CSSShadowValue.h"
 #include "CSSStyleSheet.h"
 #include "CSSTimingFunctionValue.h"
 #include "CSSUnicodeRangeValue.h"
 #include "CSSValueKeywords.h"
 #include "CSSValueList.h"
 #include "CSSValuePool.h"
-#if ENABLE(CSS_VARIABLES)
-#include "CSSVariableValue.h"
-#endif
 #include "Counter.h"
 #include "Document.h"
 #include "FloatConversion.h"
-#include "FontFeatureValue.h"
-#include "FontValue.h"
 #include "HTMLParserIdioms.h"
 #include "HashTools.h"
 #include "HistogramSupport.h"
@@ -75,7 +73,6 @@
 #include "RuntimeEnabledFeatures.h"
 #include "SVGParserUtilities.h"
 #include "Settings.h"
-#include "ShadowValue.h"
 #include "StylePropertySet.h"
 #include "StylePropertyShorthand.h"
 #include "StyleRule.h"
@@ -97,6 +94,10 @@
 
 #if ENABLE(CSS_IMAGE_SET)
 #include "CSSImageSetValue.h"
+#endif
+
+#if ENABLE(CSS_VARIABLES)
+#include "CSSVariableValue.h"
 #endif
 
 #if ENABLE(CSS_FILTERS)
@@ -6505,7 +6506,7 @@ struct ShadowParseContext {
                 values = CSSValueList::createCommaSeparated();
 
             // Construct the current shadow value and add it to the list.
-            values->append(ShadowValue::create(x.release(), y.release(), blur.release(), spread.release(), style.release(), color.release()));
+            values->append(CSSShadowValue::create(x.release(), y.release(), blur.release(), spread.release(), style.release(), color.release()));
         }
 
         // Now reset for the next shadow value.
@@ -9830,7 +9831,7 @@ bool CSSParser::parseFontFeatureTag(CSSValueList* settings)
             m_valueList->next();
         }
     }
-    settings->append(FontFeatureValue::create(tag, tagValue));
+    settings->append(CSSFontFeatureValue::create(tag, tagValue));
     return true;
 }
 
@@ -11883,7 +11884,7 @@ PassRefPtr<StyleKeyframe> CSSParser::createKeyframe(CSSParserValueList& keys)
         }
         if (i != 0)
             keyString.append(',');
-        keyString.append(String::number(key));
+        keyString.appendNumber(key);
         keyString.append('%');
     }
 

@@ -2382,8 +2382,6 @@ webcore_sources += \
 	Source/WebCore/bindings/js/ScriptDebugServer.h \
 	Source/WebCore/bindings/js/ScriptFunctionCall.cpp \
 	Source/WebCore/bindings/js/ScriptFunctionCall.h \
-	Source/WebCore/bindings/js/ScriptGCEvent.cpp \
-	Source/WebCore/bindings/js/ScriptGCEvent.h \
 	Source/WebCore/bindings/js/ScriptHeapSnapshot.h \
 	Source/WebCore/bindings/js/ScriptObject.cpp \
 	Source/WebCore/bindings/js/ScriptObject.h \
@@ -2475,8 +2473,12 @@ webcore_sources += \
 	Source/WebCore/css/CSSFontFaceSource.h \
 	Source/WebCore/css/CSSFontFaceSrcValue.cpp \
 	Source/WebCore/css/CSSFontFaceSrcValue.h \
+	Source/WebCore/css/CSSFontFeatureValue.cpp \
+	Source/WebCore/css/CSSFontFeatureValue.h \
 	Source/WebCore/css/CSSFontSelector.cpp \
 	Source/WebCore/css/CSSFontSelector.h \
+	Source/WebCore/css/CSSFontValue.cpp \
+	Source/WebCore/css/CSSFontValue.h \
 	Source/WebCore/css/CSSFunctionValue.cpp \
 	Source/WebCore/css/CSSFunctionValue.h \
 	Source/WebCore/css/CSSGradientValue.cpp \
@@ -2531,6 +2533,8 @@ webcore_sources += \
 	Source/WebCore/css/CSSSelector.h \
 	Source/WebCore/css/CSSSelectorList.cpp \
 	Source/WebCore/css/CSSSelectorList.h \
+	Source/WebCore/css/CSSShadowValue.cpp \
+	Source/WebCore/css/CSSShadowValue.h \
 	Source/WebCore/css/CSSStyleDeclaration.h \
 	Source/WebCore/css/CSSStyleRule.cpp \
 	Source/WebCore/css/CSSStyleRule.h \
@@ -2561,12 +2565,8 @@ webcore_sources += \
 	Source/WebCore/css/DocumentRuleSets.h \
 	Source/WebCore/css/ElementRuleCollector.cpp \
 	Source/WebCore/css/ElementRuleCollector.h \
-	Source/WebCore/css/FontFeatureValue.cpp \
-	Source/WebCore/css/FontFeatureValue.h \
 	Source/WebCore/css/FontLoader.cpp \
 	Source/WebCore/css/FontLoader.h \
-	Source/WebCore/css/FontValue.cpp \
-	Source/WebCore/css/FontValue.h \
 	Source/WebCore/css/InspectorCSSOMWrappers.cpp \
 	Source/WebCore/css/InspectorCSSOMWrappers.h \
 	Source/WebCore/css/LengthFunctions.cpp \
@@ -2604,8 +2604,6 @@ webcore_sources += \
 	Source/WebCore/css/SelectorCheckerFastPath.h \
 	Source/WebCore/css/SelectorFilter.cpp \
 	Source/WebCore/css/SelectorFilter.h \
-	Source/WebCore/css/ShadowValue.cpp \
-	Source/WebCore/css/ShadowValue.h \
 	Source/WebCore/css/StyleInvalidationAnalysis.cpp \
 	Source/WebCore/css/StyleInvalidationAnalysis.h \
 	Source/WebCore/css/StyleMedia.cpp \
@@ -3812,7 +3810,6 @@ webcore_sources += \
 	Source/WebCore/inspector/ScriptCallStack.cpp \
 	Source/WebCore/inspector/ScriptCallStack.h \
 	Source/WebCore/inspector/ScriptDebugListener.h \
-	Source/WebCore/inspector/ScriptGCEventListener.h \
 	Source/WebCore/inspector/TimelineRecordFactory.cpp \
 	Source/WebCore/inspector/TimelineRecordFactory.h \
 	Source/WebCore/inspector/WorkerConsoleAgent.cpp \
@@ -4439,6 +4436,8 @@ webcore_sources += \
 	Source/WebCore/rendering/ScrollBehavior.h \
 	Source/WebCore/rendering/TextAutosizer.cpp \
 	Source/WebCore/rendering/TextAutosizer.h \
+	Source/WebCore/rendering/TextPaintStyle.cpp \
+	Source/WebCore/rendering/TextPaintStyle.h \
 	Source/WebCore/rendering/VerticalPositionCache.h \
 	Source/WebCore/rendering/mathml/RenderMathMLBlock.cpp \
 	Source/WebCore/rendering/mathml/RenderMathMLBlock.h \

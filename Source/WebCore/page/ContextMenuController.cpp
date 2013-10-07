@@ -192,7 +192,8 @@ static void insertUnicodeCharacter(UChar character, Frame* frame)
     if (!frame->editor().shouldInsertText(text, frame->selection().toNormalizedRange().get(), EditorInsertActionTyped))
         return;
 
-    TypingCommand::insertText(frame->document(), text, 0, TypingCommand::TextCompositionNone);
+    ASSERT(frame->document());
+    TypingCommand::insertText(*frame->document(), text, 0, TypingCommand::TextCompositionNone);
 }
 #endif
 
@@ -359,7 +360,7 @@ void ContextMenuController::contextMenuItemSelected(ContextMenuItem* item)
 
             Document* document = frame->document();
             ASSERT(document);
-            RefPtr<ReplaceSelectionCommand> command = ReplaceSelectionCommand::create(*document, createFragmentFromMarkup(document, item->title(), ""), replaceOptions);
+            RefPtr<ReplaceSelectionCommand> command = ReplaceSelectionCommand::create(*document, createFragmentFromMarkup(*document, item->title(), ""), replaceOptions);
             applyCommand(command);
             frameSelection.revealSelection(ScrollAlignment::alignToEdgeIfNeeded);
         }

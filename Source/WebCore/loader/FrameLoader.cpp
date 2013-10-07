@@ -214,11 +214,11 @@ private:
 FrameLoader::FrameLoader(Frame& frame, FrameLoaderClient& client)
     : m_frame(frame)
     , m_client(client)
-    , m_policyChecker(adoptPtr(new PolicyChecker(&frame)))
+    , m_policyChecker(adoptPtr(new PolicyChecker(frame)))
     , m_history(adoptPtr(new HistoryController(frame)))
-    , m_notifer(&frame)
+    , m_notifier(frame)
     , m_subframeLoader(adoptPtr(new SubframeLoader(frame)))
-    , m_icon(adoptPtr(new IconController(&frame)))
+    , m_icon(adoptPtr(new IconController(frame)))
     , m_mixedContentChecker(&frame)
     , m_state(FrameStateProvisional)
     , m_loadType(FrameLoadTypeStandard)
@@ -1445,7 +1445,7 @@ bool FrameLoader::willLoadMediaElementURL(URL& url)
     unsigned long identifier;
     ResourceError error;
     requestFromDelegate(request, identifier, error);
-    notifier()->sendRemainingDelegateMessages(m_documentLoader.get(), identifier, request, ResourceResponse(url, String(), -1, String(), String()), 0, -1, -1, error);
+    notifier().sendRemainingDelegateMessages(m_documentLoader.get(), identifier, request, ResourceResponse(url, String(), -1, String(), String()), 0, -1, -1, error);
 
     url = request.url();
 
@@ -1781,7 +1781,7 @@ void FrameLoader::commitProvisionalLoad()
             // FIXME: If we get a resource with more than 2B bytes, this code won't do the right thing.
             // However, with today's computers and networking speeds, this won't happen in practice.
             // Could be an issue with a giant local file.
-            notifier()->sendRemainingDelegateMessages(m_documentLoader.get(), identifier, request, response, 0, static_cast<int>(response.expectedContentLength()), 0, error);
+            notifier().sendRemainingDelegateMessages(m_documentLoader.get(), identifier, request, response, 0, static_cast<int>(response.expectedContentLength()), 0, error);
         }
 
         // FIXME: Why only this frame and not parent frames?
@@ -1892,7 +1892,7 @@ void FrameLoader::transitionToCommitted(CachedPage* cachedPage)
             ASSERT_NOT_REACHED();
     }
 
-    m_documentLoader->writer()->setMIMEType(dl->responseMIMEType());
+    m_documentLoader->writer().setMIMEType(dl->responseMIMEType());
 
     // Tell the client we've committed this URL.
     ASSERT(m_frame.view());
@@ -2594,7 +2594,7 @@ unsigned long FrameLoader::loadResourceSynchronously(const ResourceRequest& requ
             documentLoader()->applicationCacheHost()->maybeLoadFallbackSynchronously(newRequest, error, response, data);
         }
     }
-    notifier()->sendRemainingDelegateMessages(m_documentLoader.get(), identifier, request, response, data.data(), data.size(), -1, error);
+    notifier().sendRemainingDelegateMessages(m_documentLoader.get(), identifier, request, response, data.data(), data.size(), -1, error);
     return identifier;
 }
 
@@ -2869,10 +2869,14 @@ void FrameLoader::continueLoadAfterNavigationPolicy(const ResourceRequest&, Pass
         return;
     }
 
-    if (formState)
-        m_client.dispatchWillSubmitForm(&PolicyChecker::continueLoadAfterWillSubmitForm, formState);
-    else
+    if (!formState) {
         continueLoadAfterWillSubmitForm();
+        return;
+    }
+
+    m_client.dispatchWillSubmitForm(formState, [this](PolicyAction action) {
+        policyChecker().continueLoadAfterWillSubmitForm(action);
+    });
 }
 
 void FrameLoader::callContinueLoadAfterNewWindowPolicy(void* argument,
@@ -2888,7 +2892,7 @@ void FrameLoader::continueLoadAfterNewWindowPolicy(const ResourceRequest& reques
     if (!shouldContinue)
         return;
 
-    RefPtr<Frame> frame = &m_frame;
+    Ref<Frame> frame(m_frame);
     RefPtr<Frame> mainFrame = m_client.dispatchCreatePage(action);
     if (!mainFrame)
         return;
@@ -2899,7 +2903,7 @@ void FrameLoader::continueLoadAfterNewWindowPolicy(const ResourceRequest& reques
     mainFrame->page()->setOpenedByDOM();
     mainFrame->loader().m_client.dispatchShow();
     if (!m_suppressOpenerInNewFrame) {
-        mainFrame->loader().setOpener(frame.get());
+        mainFrame->loader().setOpener(&frame.get());
         mainFrame->document()->setReferrerPolicy(frame->document()->referrerPolicy());
     }
     mainFrame->loader().loadWithNavigationAction(request, NavigationAction(request), false, FrameLoadTypeStandard, formState);
@@ -2912,11 +2916,11 @@ void FrameLoader::requestFromDelegate(ResourceRequest& request, unsigned long& i
     identifier = 0;
     if (Page* page = m_frame.page()) {
         identifier = page->progress().createUniqueIdentifier();
-        notifier()->assignIdentifierToInitialRequest(identifier, m_documentLoader.get(), request);
+        notifier().assignIdentifierToInitialRequest(identifier, m_documentLoader.get(), request);
     }
 
     ResourceRequest newRequest(request);
-    notifier()->dispatchWillSendRequest(m_documentLoader.get(), identifier, newRequest, ResourceResponse());
+    notifier().dispatchWillSendRequest(m_documentLoader.get(), identifier, newRequest, ResourceResponse());
 
     if (newRequest.isNull())
         error = cancelledError(request);
@@ -2958,7 +2962,7 @@ void FrameLoader::loadedResourceFromMemoryCache(CachedResource* resource, Resour
     ResourceError error;
     requestFromDelegate(newRequest, identifier, error);
     InspectorInstrumentation::markResourceAsCached(page, identifier);
-    notifier()->sendRemainingDelegateMessages(m_documentLoader.get(), identifier, newRequest, resource->response(), 0, resource->encodedSize(), 0, error);
+    notifier().sendRemainingDelegateMessages(m_documentLoader.get(), identifier, newRequest, resource->response(), 0, resource->encodedSize(), 0, error);
 }
 
 void FrameLoader::applyUserAgent(ResourceRequest& request)

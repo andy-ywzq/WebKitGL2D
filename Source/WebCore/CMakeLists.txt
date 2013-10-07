@@ -970,7 +970,9 @@ set(WebCore_SOURCES
     css/CSSFontFaceRule.cpp
     css/CSSFontFaceSource.cpp
     css/CSSFontFaceSrcValue.cpp
+    css/CSSFontFeatureValue.cpp
     css/CSSFontSelector.cpp
+    css/CSSFontValue.cpp
     css/CSSFunctionValue.cpp
     css/CSSGradientValue.cpp
     css/CSSGroupingRule.cpp
@@ -996,6 +998,7 @@ set(WebCore_SOURCES
     css/CSSSegmentedFontFace.cpp
     css/CSSSelector.cpp
     css/CSSSelectorList.cpp
+    css/CSSShadowValue.cpp
     css/CSSStyleRule.cpp
     css/CSSStyleSheet.cpp
     css/CSSSupportsRule.cpp
@@ -1009,9 +1012,7 @@ set(WebCore_SOURCES
     css/DeprecatedStyleBuilder.cpp
     css/DocumentRuleSets.cpp
     css/ElementRuleCollector.cpp
-    css/FontFeatureValue.cpp
     css/FontLoader.cpp
-    css/FontValue.cpp
     css/InspectorCSSOMWrappers.cpp
     css/LengthFunctions.cpp
     css/MediaFeatureNames.cpp
@@ -1032,7 +1033,6 @@ set(WebCore_SOURCES
     css/SelectorChecker.cpp
     css/SelectorCheckerFastPath.cpp
     css/SelectorFilter.cpp
-    css/ShadowValue.cpp
     css/StyleInvalidationAnalysis.cpp
     css/StyleMedia.cpp
     css/StylePropertySet.cpp
@@ -2157,6 +2157,7 @@ set(WebCore_SOURCES
     rendering/RootInlineBox.cpp
     rendering/ScrollBehavior.cpp
     rendering/TextAutosizer.cpp
+    rendering/TextPaintStyle.cpp
     rendering/break_lines.cpp
 
     rendering/mathml/RenderMathMLBlock.cpp

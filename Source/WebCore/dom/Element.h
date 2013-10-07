@@ -254,7 +254,7 @@ public:
 
     virtual URL baseURI() const OVERRIDE FINAL;
 
-    virtual String nodeName() const;
+    virtual String nodeName() const OVERRIDE;
 
     PassRefPtr<Element> cloneElementWithChildren();
     PassRefPtr<Element> cloneElementWithoutChildren();
@@ -423,7 +423,7 @@ public:
 #endif
 
     bool isFinishedParsingChildren() const { return isParsingChildrenFinished(); }
-    virtual void finishParsingChildren();
+    virtual void finishParsingChildren() OVERRIDE;
     virtual void beginParsingChildren() OVERRIDE FINAL;
 
     PseudoElement* beforePseudoElement() const;
@@ -474,7 +474,7 @@ public:
     virtual bool isFrameElementBase() const { return false; }
     virtual bool isSearchFieldCancelButtonElement() const { return false; }
 
-    virtual bool canContainRangeEndPoint() const { return true; }
+    virtual bool canContainRangeEndPoint() const OVERRIDE { return true; }
 
     // Used for disabled form elements; if true, prevents mouse events from being dispatched
     // to event listeners, and prevents DOMActivate events from being sent at all.
@@ -482,7 +482,7 @@ public:
 
 
 #if ENABLE(SVG)
-    virtual bool childShouldCreateRenderer(const Node*) const;
+    virtual bool childShouldCreateRenderer(const Node*) const OVERRIDE;
     bool hasPendingResources() const;
     void setHasPendingResources();
     void clearHasPendingResources();
@@ -616,13 +616,13 @@ private:
     void synchronizeAttribute(const AtomicString& localName) const;
 
     void updateName(const AtomicString& oldName, const AtomicString& newName);
-    void updateNameForTreeScope(TreeScope*, const AtomicString& oldName, const AtomicString& newName);
+    void updateNameForTreeScope(TreeScope&, const AtomicString& oldName, const AtomicString& newName);
     void updateNameForDocument(HTMLDocument&, const AtomicString& oldName, const AtomicString& newName);
     void updateId(const AtomicString& oldId, const AtomicString& newId);
-    void updateIdForTreeScope(TreeScope*, const AtomicString& oldId, const AtomicString& newId);
+    void updateIdForTreeScope(TreeScope&, const AtomicString& oldId, const AtomicString& newId);
     enum HTMLDocumentNamedItemMapsUpdatingCondition { AlwaysUpdateHTMLDocumentNamedItemMaps, UpdateHTMLDocumentNamedItemMapsOnlyIfDiffersFromNameAttribute };
     void updateIdForDocument(HTMLDocument&, const AtomicString& oldId, const AtomicString& newId, HTMLDocumentNamedItemMapsUpdatingCondition);
-    void updateLabel(TreeScope*, const AtomicString& oldForAttributeValue, const AtomicString& newForAttributeValue);
+    void updateLabel(TreeScope&, const AtomicString& oldForAttributeValue, const AtomicString& newForAttributeValue);
 
     void scrollByUnits(int units, ScrollGranularity);
 
@@ -636,12 +636,12 @@ private:
     void attributeChangedFromParserOrByCloning(const QualifiedName&, const AtomicString&, AttributeModificationReason);
 
 #ifndef NDEBUG
-    virtual void formatForDebugger(char* buffer, unsigned length) const;
+    virtual void formatForDebugger(char* buffer, unsigned length) const OVERRIDE;
 #endif
 
     void cancelFocusAppearanceUpdate();
 
-    virtual RenderStyle* virtualComputedStyle(PseudoId pseudoElementSpecifier = NOPSEUDO) { return computedStyle(pseudoElementSpecifier); }
+    virtual RenderStyle* virtualComputedStyle(PseudoId pseudoElementSpecifier = NOPSEUDO) OVERRIDE { return computedStyle(pseudoElementSpecifier); }
     
     // cloneNode is private so that non-virtual cloneElementWithChildren and cloneElementWithoutChildren
     // are used instead.
