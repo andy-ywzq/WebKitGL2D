@@ -3,7 +3,7 @@ find_package(EXPAT REQUIRED)
 
 # Try to find webrtc code based on PKG_CONFIG_PATH
 # This hack is needed because there's no way to install libWebRTC.
-string(REPLACE ":" "/../../../Source/webrtc/trunk;" _hints $ENV{PKG_CONFIG_PATH})
+string(REPLACE ":" "/../../../Source/webrtc/trunk;" _hints "$ENV{PKG_CONFIG_PATH}")
 find_path(WEBRTCLIB_INCLUDE_DIRS
     NAMES talk/app/webrtc/mediaconstraintsinterface.h
     HINTS ${_hints}
