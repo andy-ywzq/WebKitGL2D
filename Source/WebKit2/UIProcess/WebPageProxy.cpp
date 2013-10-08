@@ -1691,7 +1691,7 @@ void WebPageProxy::restoreFromSessionStateData(WebData* data)
     if (!data)
         return;
 
-    auto decoder = createOwned<CoreIPC::ArgumentDecoder>(data->bytes(), data->size());
+    auto decoder = std::make_unique<CoreIPC::ArgumentDecoder>(data->bytes(), data->size());
 
     SessionState state;
     if (!SessionState::decode(*(decoder.get()), state))
