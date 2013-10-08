@@ -45,7 +45,6 @@ class NIX_EXPORT Platform {
 public:
 
     NIX_EXPORT static void initialize(Platform*);
-    NIX_EXPORT static void shutdown();
     NIX_EXPORT static Platform* current();
 
     // Audio --------------------------------------------------------------

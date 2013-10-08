@@ -37,12 +37,6 @@ void Platform::initialize(Platform* platform)
     s_platform = platform;
 }
 
-void Platform::shutdown()
-{
-    delete s_platform;
-    s_platform = 0;
-}
-
 Platform* Platform::current()
 {
     static Platform emptyPlatform;
