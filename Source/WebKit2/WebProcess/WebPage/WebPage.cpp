@@ -613,7 +613,9 @@ EditorState WebPage::editorState() const
     size_t location = 0;
     size_t length = 0;
 
-    Element* selectionRoot = frame.selection().rootEditableElementRespectingShadowTree();
+    Element* selectionRoot = frame.selection().rootEditableElement();
+    if (selectionRoot && selectionRoot->isInShadowTree())
+        selectionRoot = selectionRoot->shadowHost();
     Element* scope = selectionRoot ? selectionRoot : frame.document()->documentElement();
 
     if (!scope)
