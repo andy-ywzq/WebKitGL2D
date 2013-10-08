@@ -369,27 +369,7 @@ void DefaultWebThemeEngine::paintSliderThumb(Canvas* canvas, State state, const 
     cairo_restore(canvas);
 }
 
-// Media player stubs
-static void paintRoundedRectangle(Canvas* canvas, const Rect& rect, int radius, double r, double g, double b)
-{
-    cairo_save(canvas);
-    cairo_set_source_rgb(canvas, r, g, b);
-
-    int top = rect.y;
-    int left = rect.x;
-    int bottom = top + rect.height;
-    int right = left +rect.width;
-
-    cairo_arc(canvas, left + radius, top + radius, radius, 2*(Pi/2), 3*(Pi/2));
-    cairo_arc(canvas, right - radius, top + radius, radius, 3*(Pi/2), 4*(Pi/2));
-    cairo_arc(canvas, right - radius, bottom - radius, radius, 0*(Pi/2), 1*(Pi/2));
-    cairo_arc(canvas, left + radius, bottom - radius, radius, 1*(Pi/2), 2*(Pi/2));
-
-    cairo_close_path(canvas);
-    cairo_fill(canvas);
-}
-
-void DefaultWebThemeEngine::paintMediaPlayButton(Canvas* canvas, State state, const Rect& rect) const
+void DefaultWebThemeEngine::paintMediaPlayButton(Canvas* canvas, MediaPlayerState state, const Rect& rect) const
 {
     cairo_save(canvas);
     cairo_set_source_rgb(canvas, 1, 1, 1);
@@ -408,12 +388,7 @@ void DefaultWebThemeEngine::paintMediaPlayButton(Canvas* canvas, State state, co
     cairo_restore(canvas);
 }
 
-void DefaultWebThemeEngine::paintMediaOverlayPlayButton(Canvas*, State, const Rect&) const
-{
-
-}
-
-void DefaultWebThemeEngine::paintMediaMuteButton(Canvas* canvas, State state, const Rect& rect) const
+void DefaultWebThemeEngine::paintMediaMuteButton(Canvas* canvas, MediaPlayerState state, const Rect& rect) const
 {
     cairo_save(canvas);
     if (state == StateMuted) {
@@ -427,7 +402,7 @@ void DefaultWebThemeEngine::paintMediaMuteButton(Canvas* canvas, State state, co
         cairo_move_to(canvas, rect.x + (rect.width * 0.87), rect.y + (rect.height * 0.67));
         cairo_line_to(canvas, rect.x + (rect.width * 0.59), rect.y + (rect.height * 0.34));
         cairo_stroke(canvas);
-    } else { // If state is StateNormal.
+    } else { // If state is StateNotMuted
         cairo_set_line_width(canvas, 5);
         cairo_set_source_rgb(canvas, 1, 1, 1);
 
@@ -500,23 +475,9 @@ void DefaultWebThemeEngine::paintMediaSeekForwardButton(Canvas* canvas, const Re
     cairo_restore(canvas);
 }
 
-void DefaultWebThemeEngine::paintMediaSliderThumb(Canvas* canvas, const Rect& rect) const
-{
-    Rect r = Rect(rect.x, rect.y + (rect.height * 0.2), rect.width, rect.height * 0.6);
-    paintRoundedRectangle(canvas, r, 3, 1, 1, 1);
-    cairo_restore(canvas);
-}
-
 void DefaultWebThemeEngine::paintMediaVolumeSliderContainer(Canvas*, State, const Rect&) const
 {
 
-}
-
-void DefaultWebThemeEngine::paintMediaVolumeSliderThumb(Canvas* canvas, const Rect& rect) const
-{
-    Rect r = Rect(rect.x + (rect.width * 0.25), rect.y, rect.width * 0.5, rect.height);
-    paintRoundedRectangle(canvas, r, 3, 1, 1, 1);
-    cairo_restore(canvas);
 }
 
 void DefaultWebThemeEngine::paintMediaRewindButton(Canvas* canvas, const Rect& rect) const
@@ -534,20 +495,6 @@ void DefaultWebThemeEngine::paintMediaRewindButton(Canvas* canvas, const Rect& r
     cairo_fill(canvas);
 
     cairo_restore(canvas);
-}
-
-void DefaultWebThemeEngine::paintMediaReturnToRealtimeButton(Canvas*, State, const Rect&) const
-{
-
-}
-
-void DefaultWebThemeEngine::paintMediaToggleClosedCaptionsButton(Canvas*, State, const Rect&) const
-{
-
-}
-
-void DefaultWebThemeEngine::paintMediaTimeRemaining(Canvas*, State, const Rect&) const
-{
 }
 
 }

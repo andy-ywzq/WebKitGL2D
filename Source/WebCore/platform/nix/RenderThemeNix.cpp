@@ -454,14 +454,9 @@ bool RenderThemeNix::paintMediaPlayButton(RenderObject* o, const PaintInfo& i, c
     return false;
 }
 
-bool RenderThemeNix::paintMediaOverlayPlayButton(RenderObject*, const PaintInfo&, const IntRect&)
-{
-    return false;
-}
-
 bool RenderThemeNix::paintMediaMuteButton(RenderObject* o, const PaintInfo& i, const IntRect& rect)
 {
-    auto state = toHTMLMediaElement(o->node()->shadowHost())->muted() ? Nix::ThemeEngine::StateMuted : Nix::ThemeEngine::StateNormal;
+    auto state = toHTMLMediaElement(o->node()->shadowHost())->muted() ? Nix::ThemeEngine::StateMuted : Nix::ThemeEngine::StateNotMuted;
     themeEngine()->paintMediaMuteButton(webCanvas(i), state, rect);
     return false;
 }
@@ -483,12 +478,6 @@ bool RenderThemeNix::paintMediaSliderTrack(RenderObject*, const PaintInfo&, cons
     return false;
 }
 
-bool RenderThemeNix::paintMediaSliderThumb(RenderObject*, const PaintInfo& i, const IntRect& rect)
-{
-    themeEngine()->paintMediaSliderThumb(webCanvas(i), rect);
-    return false;
-}
-
 bool RenderThemeNix::paintMediaVolumeSliderContainer(RenderObject*, const PaintInfo&, const IntRect&)
 {
     return false;
@@ -499,40 +488,9 @@ bool RenderThemeNix::paintMediaVolumeSliderTrack(RenderObject*, const PaintInfo&
     return false;
 }
 
-bool RenderThemeNix::paintMediaVolumeSliderThumb(RenderObject*, const PaintInfo& i, const IntRect& rect)
-{
-    themeEngine()->paintMediaVolumeSliderThumb(webCanvas(i), rect);
-    return false;
-}
-
 bool RenderThemeNix::paintMediaRewindButton(RenderObject*, const PaintInfo& i, const IntRect& rect)
 {
     themeEngine()->paintMediaRewindButton(webCanvas(i), rect);
-    return false;
-}
-
-bool RenderThemeNix::paintMediaReturnToRealtimeButton(RenderObject*, const PaintInfo&, const IntRect&)
-{
-    return false;
-}
-
-bool RenderThemeNix::paintMediaToggleClosedCaptionsButton(RenderObject*, const PaintInfo&, const IntRect&)
-{
-    return false;
-}
-
-bool RenderThemeNix::paintMediaControlsBackground(RenderObject*, const PaintInfo&, const IntRect&)
-{
-    return false;
-}
-
-bool RenderThemeNix::paintMediaCurrentTime(RenderObject*, const PaintInfo&, const IntRect&)
-{
-    return false;
-}
-
-bool RenderThemeNix::paintMediaTimeRemaining(RenderObject*, const PaintInfo&, const IntRect&)
-{
     return false;
 }
 

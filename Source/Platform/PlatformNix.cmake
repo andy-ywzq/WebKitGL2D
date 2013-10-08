@@ -15,6 +15,7 @@ set(Platform_HEADERS
     nix/public/FFTFrame.h
     nix/public/Gamepad.h
     nix/public/Gamepads.h
+    nix/public/MediaPlayer.h
     nix/public/Platform.h
     nix/public/Rect.h
     nix/public/Size.h

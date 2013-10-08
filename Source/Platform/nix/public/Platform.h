@@ -34,18 +34,28 @@
 #include "AudioDevice.h"
 #include "Data.h"
 #include "Gamepads.h"
+#include <stdint.h>
 
 namespace Nix {
 
 class AudioBus;
 class FFTFrame;
 class ThemeEngine;
+class MediaPlayer;
+class MediaPlayerClient;
 
 class NIX_EXPORT Platform {
 public:
 
+    enum Capabilities {
+        None,
+        MediaElement = 1
+    };
+
     NIX_EXPORT static void initialize(Platform*);
     NIX_EXPORT static Platform* current();
+
+    virtual uint64_t capabilities() { return None; }
 
     // Audio --------------------------------------------------------------
     virtual float audioHardwareSampleRate() { return 0; }
@@ -77,6 +87,8 @@ public:
     // Theme engine
     virtual ThemeEngine* themeEngine();
 
+    // Create a MediaPlayer, used to... play media :-)
+    virtual MediaPlayer* createMediaPlayer(MediaPlayerClient*) { return 0; }
 protected:
     virtual ~Platform() { }
 };

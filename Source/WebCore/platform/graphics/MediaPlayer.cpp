@@ -70,6 +70,9 @@
 #elif PLATFORM(BLACKBERRY)
 #include "MediaPlayerPrivateBlackBerry.h"
 #define PlatformMediaEngineClassName MediaPlayerPrivate
+#elif PLATFORM(NIX)
+#include "MediaPlayerPrivateNix.h"
+#define PlatformMediaEngineClassName MediaPlayerPrivateNix
 #endif
 
 namespace WebCore {

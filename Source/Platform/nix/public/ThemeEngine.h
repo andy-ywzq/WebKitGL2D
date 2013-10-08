@@ -52,7 +52,8 @@ public:
     enum MediaPlayerState {
         StatePlaying,
         StatePaused,
-        StateMuted
+        StateMuted,
+        StateNotMuted
     };
 
     // Extra parameters for drawing the PartScrollbarHorizontalTrack and
@@ -161,17 +162,11 @@ public:
 
     // MediaPlayer (audio and video elements)
     virtual void paintMediaPlayButton(Canvas*, MediaPlayerState, const Rect&) const { }
-    virtual void paintMediaOverlayPlayButton(Canvas*, State, const Rect&) const { }
     virtual void paintMediaMuteButton(Canvas*, MediaPlayerState, const Rect&) const { }
     virtual void paintMediaSeekBackButton(Canvas*, const Rect&) const { }
     virtual void paintMediaSeekForwardButton(Canvas*, const Rect&) const { }
-    virtual void paintMediaSliderThumb(Canvas*, const Rect&) const { }
     virtual void paintMediaVolumeSliderContainer(Canvas*, State, const Rect&) const { }
-    virtual void paintMediaVolumeSliderThumb(Canvas*, const Rect&) const { }
     virtual void paintMediaRewindButton(Canvas*, const Rect&) const { }
-    virtual void paintMediaReturnToRealtimeButton(Canvas*, State, const Rect&) const { }
-    virtual void paintMediaToggleClosedCaptionsButton(Canvas*, State, const Rect&) const { }
-    virtual void paintMediaTimeRemaining(Canvas*, State, const Rect&) const { }
 };
 
 } // namespace Nix

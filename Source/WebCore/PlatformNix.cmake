@@ -6,6 +6,7 @@ list(APPEND WebCore_INCLUDE_DIRECTORIES
     "${WEBCORE_DIR}/platform/graphics/glx"
     "${WEBCORE_DIR}/platform/graphics/harfbuzz/"
     "${WEBCORE_DIR}/platform/graphics/harfbuzz/ng"
+    "${WEBCORE_DIR}/platform/graphics/nix"
     "${WEBCORE_DIR}/platform/graphics/opengl"
     "${WEBCORE_DIR}/platform/graphics/surfaces"
     "${WEBCORE_DIR}/platform/graphics/texmap"
@@ -15,6 +16,7 @@ list(APPEND WebCore_INCLUDE_DIRECTORIES
 )
 
 list(APPEND WebCore_SOURCES
+    html/shadow/MediaControlsNix.cpp
     page/nix/EventHandlerNix.cpp
     platform/Cursor.cpp
     platform/ContextMenuNone.cpp
@@ -63,6 +65,7 @@ list(APPEND WebCore_SOURCES
     platform/graphics/cairo/TiledBackingStoreBackendCairo.cpp
     platform/graphics/cairo/TransformationMatrixCairo.cpp
 
+    platform/graphics/nix/MediaPlayerPrivateNix.cpp
     platform/image-decoders/cairo/ImageDecoderCairo.cpp
 
     platform/graphics/WOFFFileFormat.cpp
@@ -242,43 +245,6 @@ list(APPEND WebCore_INCLUDE_DIRECTORIES
     ${ZLIB_INCLUDE_DIRS}
     ${HARFBUZZ_INCLUDE_DIRS}
 )
-
-if (ENABLE_VIDEO)
-  LIST(APPEND WebCore_INCLUDE_DIRECTORIES
-    "${WEBCORE_DIR}/platform/graphics/gstreamer"
-
-        ${GSTREAMER_INCLUDE_DIRS}
-        ${GSTREAMER_BASE_INCLUDE_DIRS}
-        ${GSTREAMER_APP_INCLUDE_DIRS}
-        ${GSTREAMER_PBUTILS_INCLUDE_DIRS}
-    )
-    list(APPEND WebCore_SOURCES
-        platform/graphics/gstreamer/GRefPtrGStreamer.cpp
-        platform/graphics/gstreamer/GStreamerUtilities.cpp
-        platform/graphics/gstreamer/GStreamerVersioning.cpp
-    )
-    list(APPEND WebCore_LIBRARIES
-        ${GSTREAMER_LIBRARIES}
-        ${GSTREAMER_BASE_LIBRARIES}
-        ${GSTREAMER_APP_LIBRARIES}
-        ${GSTREAMER_PBUTILS_LIBRARIES}
-    )
-
-    list(APPEND WebCore_INCLUDE_DIRECTORIES
-        ${GSTREAMER_VIDEO_INCLUDE_DIRS}
-    )
-    list(APPEND WebCore_SOURCES
-        platform/graphics/gstreamer/GStreamerGWorld.cpp
-        platform/graphics/gstreamer/ImageGStreamerCairo.cpp
-        platform/graphics/gstreamer/MediaPlayerPrivateGStreamer.cpp
-        platform/graphics/gstreamer/PlatformVideoWindowNix.cpp
-        platform/graphics/gstreamer/VideoSinkGStreamer.cpp
-        platform/graphics/gstreamer/WebKitWebSourceGStreamer.cpp
-    )
-    list(APPEND WebCore_LIBRARIES
-        ${GSTREAMER_VIDEO_LIBRARIES}
-    )
-endif ()
 
 add_definitions(-DDATA_DIR="${CMAKE_INSTALL_PREFIX}/${DATA_INSTALL_DIR}")
 
