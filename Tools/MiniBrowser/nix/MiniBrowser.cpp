@@ -439,13 +439,10 @@ void MiniBrowser::didChangeContentsSize(WKViewRef, WKSize size, const void* clie
         mb->adjustScrollPosition();
 }
 
-void MiniBrowser::didChangeViewportAttributes(WKViewRef view, WKViewportAttributesRef attributes, const void* clientInfo)
+void MiniBrowser::didChangeViewportAttributes(WKViewRef, WKViewportAttributesRef attributes, const void* clientInfo)
 {
     MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
 
-    WKSize viewportSize = NIXViewportAttributesGetSize(attributes);
-    mb->m_viewportWidth = viewportSize.width;
-    mb->m_viewportHeight = viewportSize.height;
     mb->m_viewportMinScale = NIXViewportAttributesGetMinimumScale(attributes);
     mb->m_viewportMaxScale = NIXViewportAttributesGetMaximumScale(attributes);
     mb->m_viewportInitScale = NIXViewportAttributesGetInitialScale(attributes);

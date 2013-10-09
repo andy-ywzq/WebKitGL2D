@@ -152,8 +152,6 @@ private:
     double m_scaleBeforeFocus;
     WKPoint m_scrollPositionBeforeFocus;
 
-    float m_viewportWidth;
-    float m_viewportHeight;
     float m_viewportMinScale;
     float m_viewportMaxScale;
     float m_viewportInitScale;
