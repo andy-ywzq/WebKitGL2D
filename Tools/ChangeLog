@@ -1,3 +1,239 @@
+2013-10-09  Gustavo Noronha Silva  <gustavo.noronha@collabora.com>
+
+        Add GTK 64 bits release to the buildbot dashboard
+        https://bugs.webkit.org/show_bug.cgi?id=122548
+
+        Reviewed by Darin Adler.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Images/GTK.png: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/WebKitBuildbot.js:
+        (WebKitBuildbot): add 64 bits release wk2 and wk1 testers.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Styles/Main.css:
+        (table.queue-grid tr.platform.linux-gtk img.logo): use the GTK+ logo in its dashboard line.
+
+2013-10-09  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [ATK] Implement new API in AtkText: atk_text_get_string_at_offset()
+        https://bugs.webkit.org/show_bug.cgi?id=120638
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * gtk/jhbuild.modules: Raised ATK and AT-SPI versions to 2.10.0, so we
+        can check both the old and new APIs to retrieve text at a given offset.
+
+2013-10-08  Alex Christensen  <achristensen@webkit.org>
+
+        Improved WinLauncher.
+        https://bugs.webkit.org/show_bug.cgi?id=122536
+
+        Reviewed by Brent Fulgham.
+
+        * WinLauncher/PrintWebUIDelegate.cpp:
+        (PrintWebUIDelegate::runJavaScriptAlertPanelWithMessage): Added.
+        (PrintWebUIDelegate::runJavaScriptConfirmPanelWithMessage): Added.
+        * WinLauncher/PrintWebUIDelegate.h: Removed stubs.
+        * WinLauncher/WinLauncher.cpp:
+        (createCrashReport): Use the executable name instead of "WinLauncher".
+        * WinLauncher/WinLauncher.vcxproj/WinLauncher.exe.manifest: Removed.
+        * WinLauncher/WinLauncher.vcxproj/WinLauncherLibCommon.props: Link to Wininet.lib.
+        * win/DLLLauncher/DLLLauncherMain.cpp: Remove VS2005 dependency for WinCairo.
+
+2013-10-08  Mark Lam  <mark.lam@apple.com>
+
+        Fix ruby LoadError when running run-javascriptcore-tests.
+        https://bugs.webkit.org/show_bug.cgi?id=122519.
+
+        Reviewed by Mark Hahnenberg.
+
+        The scripts needed to explicitly require 'rubygems' for older versions of ruby
+        (versions before 1.9).
+
+        * Scripts/jsc-stress-test-helpers/profiler-test-helper:
+        * Scripts/run-jsc-stress-tests:
+
+2013-10-08  Christophe Dumez  <ch.dumez@sisa.samsung.com>
+
+        Unreviewed, add my new email to contributors.json.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-10-08  Brent Fulgham  <bfulgham@apple.com>
+
+        Unreviewed build correction.
+
+        * Scripts/webkitpy/port/win.py:
+        (WinPort.write_registry_value): Use string representation of error message to avoid
+        format conversion problem.
+
+2013-10-07  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Add checks for proper build and test environment
+        https://bugs.webkit.org/show_bug.cgi?id=122466
+
+        Reviewed by Darin Adler.
+
+        This patch makes two changes:
+        1. Update webkitdirs.pm to check for some common misconfigurations and provide helpful warnings or
+           error messages so that people know what to fix to get things working.
+        2. Modify the win.py port to handle the 32-bit and 64-bit test environments, as well as making sure
+           the various environment settings are properly configured for our test environment.
+
+        * Scripts/webkitdirs.pm:
+        (checkInstalledTools): Add checks for some common Cygwin configuration problems that have
+        caused problems in the past.
+        (setupAppleWinEnv):
+        * Scripts/webkitpy/port/win.py:
+        (WinPort):
+        (WinPort.read_registry_string): Parameterize for run architecture and registry root.
+        (WinPort.write_registry_value): Parameterize registry writing by data type (string versus
+        DWORD, etc.)
+        (WinPort.write_registry_string): Revise to call new generic registry write function.
+        (WinPort.setup_crash_log_saving): Revise for new API
+        (WinPort.restore_crash_log_saving): Ditto
+        (WinPort.prevent_error_dialogs): Add new methods to prevent Windows dialogs that block our test
+        servers from running.
+        (WinPort.allow_error_dialogs): Ditto.
+        (WinPort.setup_test_run): Call new API to turn off user input dialogs on program failure.
+        (WinPort.clean_up_test_run): Call new API to reactivatea user input dialogs after test run finished.
+
+2013-10-08  Philippe Normand  <pnormand@igalia.com>
+
+        [GStreamer] enable v4l2 plugin
+        https://bugs.webkit.org/show_bug.cgi?id=122503
+
+        Reviewed by Martin Robinson.
+
+        * gtk/jhbuild.modules: Enable the plugin, it now builds fine since
+        we updated our GStreamer version to 1.0.8.
+
+2013-10-08  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [ATK] Expose state of aria-invalid as ATK_STATE_INVALID_ENTRY
+        https://bugs.webkit.org/show_bug.cgi?id=122104
+
+        Reviewed by Chris Fleizach.
+
+        Updated stringAttributeValue to double check that the exposure of
+        aria-invalid as a state is consistent with its exposure as a text
+        attribute as well, when it applies (implementations of AtkText).
+
+        * DumpRenderTree/atk/AccessibilityUIElementAtk.cpp:
+        (AccessibilityUIElement::stringAttributeValue): Add double check.
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityUIElementAtk.cpp:
+        (WTR::AccessibilityUIElement::stringAttributeValue): Ditto.
+
+2013-10-07  Filip Pizlo  <fpizlo@apple.com>
+
+        run-jsc-stress-tests progress meter should update more quickly on older Rubies
+        https://bugs.webkit.org/show_bug.cgi?id=122459
+
+        Reviewed by Darin Adler.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-10-07  Gustavo Noronha Silva  <gns@gnome.org>
+
+        [buildbot] parse tests that are reported as crashed correctly for GTK+
+        https://bugs.webkit.org/show_bug.cgi?id=122476
+
+        Reviewed by Martin Robinson.
+
+        * BuildSlaveSupport/build.webkit.org-config/master.cfg:
+        (RunGtkAPITests.commandComplete): parse the crashed tests output so that is reported
+        as a failure of the API tests.
+
+2013-10-07  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed. Skipping API test that is causing the next one to crash,
+        see https://bugs.webkit.org/show_bug.cgi?id=121970.
+
+        * Scripts/run-gtk-tests:
+        (TestRunner):
+
+2013-10-07  Gustavo Noronha Silva  <gustavo.noronha@collabora.com>
+
+        [GTK] run-gtk-tests does not distinguish between failure and crashes
+        https://bugs.webkit.org/show_bug.cgi?id=122135
+
+        Reviewed by Martin Robinson.
+
+        The GTK+ API test runner does not distinguish between failures and crashes. This change
+        makes it do that, so it's easier for us to spot the more important/higher priority crash
+        case.
+
+        * Scripts/run-gtk-tests:
+        (TestRunner._run_test_command): return the exit code instead of a boolean true/false,
+        so we have more information on how the process ended.
+        (TestRunner._run_test): check the exit code to distinguish between crashes and failures.
+        (TestRunner.run_tests): report crashes.
+
+2013-10-07  Gustavo Noronha Silva  <gns@gnome.org>
+
+        [GTK] Missing packages for APT on install-dependencies
+        https://bugs.webkit.org/show_bug.cgi?id=121555
+
+        Reviewed by Martin Robinson.
+
+        * gtk/install-dependencies: add packages that are needed for
+        building WebKit itself and the jhbuild dependencies.
+
+2013-10-07  Anders Carlsson  <andersca@apple.com>
+
+        Fix test failures.
+
+        * Scripts/webkitpy/port/base.py:
+        (Port.to.start_helper):
+        * Scripts/webkitpy/port/mock_drt.py:
+        (MockDRTPort.start_helper):
+
+2013-10-07  Anders Carlsson  <andersca@apple.com>
+
+        Always force discrete mode when running layout tests
+        https://bugs.webkit.org/show_bug.cgi?id=122465
+
+        Reviewed by Tim Horton.
+
+        This should speed up WebGL tests and hopefully prevent race conditions that may cause window server crashes from happening.
+        
+        * DumpRenderTree/DumpRenderTree.xcodeproj/project.pbxproj:
+        Link with IOKit.
+
+        * DumpRenderTree/mac/LayoutTestHelper.m:
+        (installLayoutTestColorProfile):
+        Check installColorProfile.
+
+        (restoreUserColorProfile):
+        Check installColorProfile.
+
+        (lockDownDiscreteGraphics):
+        New function to force discrete graphics.
+
+        (main):
+        Add '--install-color-profile' option.
+
+        * Scripts/webkitpy/layout_tests/controllers/manager.py:
+        (Manager._set_up_run):
+        Always start the helper, but pass self._options.pixel_tests to it.
+
+        * Scripts/webkitpy/port/mac.py:
+        (MacPort.start_helper):
+        Pass --install-color-profile' to the helper if pixel_tests is true.
+
+2013-10-07  Timothy Hatcher  <timothy@apple.com>
+
+        Properly count binding test failures as failures.
+
+        Fix the total for multiple failures in different steps too by avoiding undefined.
+
+        https://bugs.webkit.org/show_bug.cgi?id=122232
+
+        Reviewed by Alexey Proskuryakov.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotTestResults.js:
+        (BuildbotTestResults):
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotTesterQueueView.js:
+        (BuildbotTesterQueueView.prototype.update.appendBuilderQueueStatus):
+
 2013-10-07  Gustavo Noronha Silva  <gustavo.noronha@collabora.com>
 
         [GTK] Fails to build with jhbuild with newer system glib

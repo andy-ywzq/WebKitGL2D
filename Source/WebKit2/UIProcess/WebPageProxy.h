@@ -579,10 +579,10 @@ public:
 
 #if ENABLE(DRAG_SUPPORT)    
     // Drag and drop support.
-    void dragEntered(WebCore::DragData*, const String& dragStorageName = String());
-    void dragUpdated(WebCore::DragData*, const String& dragStorageName = String());
-    void dragExited(WebCore::DragData*, const String& dragStorageName = String());
-    void performDrag(WebCore::DragData*, const String& dragStorageName, const SandboxExtension::Handle&, const SandboxExtension::HandleArray&);
+    void dragEntered(WebCore::DragData&, const String& dragStorageName = String());
+    void dragUpdated(WebCore::DragData&, const String& dragStorageName = String());
+    void dragExited(WebCore::DragData&, const String& dragStorageName = String());
+    void performDrag(WebCore::DragData&, const String& dragStorageName, const SandboxExtension::Handle&, const SandboxExtension::HandleArray&);
 
     void didPerformDragControllerAction(WebCore::DragSession);
     void dragEnded(const WebCore::IntPoint& clientPosition, const WebCore::IntPoint& globalPosition, uint64_t operation);
@@ -772,6 +772,7 @@ private:
     WebPageProxy(PageClient*, PassRefPtr<WebProcessProxy>, WebPageGroup*, uint64_t pageID);
     void platformInitialize();
 
+    void resetState();
     void resetStateAfterProcessExited();
 
     // CoreIPC::MessageReceiver
@@ -1020,7 +1021,7 @@ private:
 
     void clearLoadDependentCallbacks();
 
-    void performDragControllerAction(DragControllerAction, WebCore::DragData*, const String& dragStorageName, const SandboxExtension::Handle&, const SandboxExtension::HandleArray&);
+    void performDragControllerAction(DragControllerAction, WebCore::DragData&, const String& dragStorageName, const SandboxExtension::Handle&, const SandboxExtension::HandleArray&);
 
     void updateBackingStoreDiscardableState();
 

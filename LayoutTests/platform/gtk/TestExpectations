@@ -42,7 +42,7 @@
 #////////////////////////////////////////////////////////////////////////////////////////
 
 # Tests need new generated expected results
-webkit.org/b/121828 fast/regions/autoheight-regions-mark.html [ Missing ]
+webkit.org/b/121828 fast/regions/auto-size/autoheight-regions-mark.html [ Missing ]
 webkit.org/b/121828 fast/regions/flows-dependency-dynamic-remove.html [ Missing ]
 webkit.org/b/121828 fast/regions/multiple-directionality-changes-in-variable-width-regions.html [ Missing ]
 webkit.org/b/121828 fast/regions/text-region-split-small-pagination.html [ Missing ]
@@ -57,6 +57,9 @@ webkit.org/b/121828 fast/repaint/region-painting-via-layout.html [ Missing ]
 
 # This test verifies that a mismatch reftest will fail as intended if both results are same.
 fast/harness/sample-fail-mismatch-reftest.html [ WontFix ImageOnlyFailure ]
+
+# Color bleeds through; might work with newer cairo (works when running with Fedora 20's system cairo).
+fast/backgrounds/background-opaque-images-over-color.html [ ImageOnlyFailure ]
 
 # Ignored because we do not have OBJC bindings (via Chromium).
 editing/pasteboard/paste-RTFD.html [ WontFix Missing ]
@@ -111,6 +114,9 @@ fast/events/option-tab.html [ WontFix Failure ]
 fast/images/embed-image.html [ WontFix Pass ]
 fast/images/object-image.html [ WontFix Pass ]
 
+# The 64 bits release bot has been made to use 8 bpp depth, so this won't pass there.
+webkit.org/b/121951 fast/dom/Window/window-screen-properties.html [ Failure Pass ]
+
 # This test requires Mac ObjC bindings, although it currently passes
 Bug(GTK) http/tests/security/dataTransfer-set-data-file-url.html [ WontFix Pass ]
 
@@ -148,6 +154,12 @@ media/media-fullscreen-not-in-document.html [ WontFix Timeout ]
 
 # Pre-HMTL5 parser quirks only apply to the mac port for now.
 fast/parser/pre-html5-parser-quirks.html [ WontFix Failure ]
+
+# Text rendering overflowing region it should not
+webkit.org/b/122511 fast/regions/selection/selecting-text-ignoring-region-horiz-bt.html [ ImageOnlyFailure ]
+webkit.org/b/122511 fast/regions/selection/selecting-text-ignoring-region-vert-lr.html [ ImageOnlyFailure ]
+webkit.org/b/122511 fast/regions/selection/selecting-text-in-2-regions-horiz-bt.html [ ImageOnlyFailure ]
+webkit.org/b/122511 fast/regions/selection/selecting-text-in-2-regions-vert-lr.html [ ImageOnlyFailure ]
 
 # Features that we want eventually:
 # DeviceMotion and DeviceOrientation are not enabled by default.
@@ -233,6 +245,10 @@ webkit.org/b/98942 fast/workers/shared-worker-storagequota-query-usage.html [ Fa
 # GTK doesn't support smart replace.
 webkit.org/b/61661 editing/pasteboard/drag-drop-list.html [ Failure ]
 
+# GStreamer support for audio and video tracks does not exist yet
+webkit.org/b/117039 media/track/audio-track.html [ Skip ]
+webkit.org/b/117039 media/track/video-track.html [ Skip ]
+
 # Tests for MediaSource API. Feature is not yet functional.
 webkit.org/b/99065 http/tests/media/media-source [ Skip ]
 
@@ -261,7 +277,10 @@ webkit.org/b/99028 fast/autoresize [ Failure ]
 webkit.org/b/71849 compositing [ Skip ]
 webkit.org/b/71849 css3/compositing [ Skip ]
 webkit.org/b/71849 fast/canvas/webgl [ Skip ]
+webkit.org/b/71849 fast/images/webgl-teximage2d.html [ Skip ]
 webkit.org/b/71849 fast/transforms/selection-bounds-in-transformed-view.html [ Skip ]
+webkit.org/b/71849 fast/media/mq-transform-02.html [ Skip ]
+webkit.org/b/71849 fast/media/mq-transform-03.html [ Skip ]
 webkit.org/b/71849 http/tests/canvas/webgl [ Skip ]
 webkit.org/b/71849 http/tests/security/webgl-remote-read-remote-image-allowed.html [ Skip ]
 webkit.org/b/71849 http/tests/security/webgl-remote-read-remote-image-allowed-with-credentials.html [ Skip ]
@@ -498,6 +517,7 @@ webkit.org/b/120200 [ Debug ] http/tests/security/XFrameOptions/x-frame-options-
 
 webkit.org/b/55126 media/video-aspect-ratio.html [ Failure Pass ]
 
+webkit.org/b/122481 svg/animations/svglengthlist-animation-3.html [ Failure Pass ]
 webkit.org/b/56561 svg/custom/clip-path-referencing-use2.svg [ Failure Pass ]
 webkit.org/b/62204 svg/custom/circular-marker-reference-4.svg [ Failure Pass ]
 
@@ -848,6 +868,8 @@ Bug(GTK) fast/dom/HTMLDocument/hasFocus.html [ Failure ]
 Bug(GTK) fast/dom/Window/window-onFocus.html [ Failure ]
 Bug(GTK) fast/events/frame-tab-focus.html [ Failure ]
 
+Bug(GTK) fast/history/go-back-to-iframe-with-plugin.html [ Timeout Pass ]
+
 # Looks like a bug in the LayoutTestController global history support due to missing API.
 Bug(GTK) fast/history/window-open.html [ Failure ]
 
@@ -894,6 +916,9 @@ Bug(GTK) media/video-size-intrinsic-scale.html [ Failure ]
 
 # eventSender.keyDown call does not get executed from the TestNetscapePlugin
 webkit.org/b/90383 http/tests/plugins/plugin-document-has-focus.html [ Skip ]
+
+# Needs to make sure the redirect-chain scenario in https://bugs.webkit.org/show_bug.cgi?id=31410 works
+webkit.org/b/35300 http/tests/loading/307-after-303-after-post.html [ Failure ]
 
 # Missing resource load callback ability in DRT
 webkit.org/b/27905 http/tests/loading/redirect-methods.html [ Failure ]
@@ -1186,8 +1211,6 @@ webkit.org/b/101539 editing/execCommand/switch-list-type-with-orphaned-li.html [
 webkit.org/b/102349 fast/dom/shadow/pseudoclass-update-enabled-anchor.html [ ImageOnlyFailure ]
 webkit.org/b/102349 fast/dom/shadow/pseudoclass-update-enabled-area.html [ ImageOnlyFailure ]
 
-webkit.org/b/102586 media/video-src-blob.html [ Failure ]
-
 # Fix for https://bugs.webkit.org/show_bug.cgi?id=97192 introduces these regressions
 webkit.org/b/102776 webkit.org/b/102993 media/media-document-audio-repaint.html [ Failure Timeout ]
 webkit.org/b/102776 media/track/track-cue-rendering-horizontal.html [ Failure ]
@@ -1339,11 +1362,13 @@ webkit.org/b/118419 fast/css/style-scoped/registering.html [ Failure ]
 
 webkit.org/b/118420 [ Release ] fast/dom/gc-dom-tree-lifetime.html [ Failure ]
 
-webkit.org/b/118595 fast/regions/autoheight-correct-region-for-lines-2.html [ ImageOnlyFailure ]
+webkit.org/b/118595 fast/regions/auto-size/autoheight-correct-region-for-lines-2.html [ ImageOnlyFailure ]
+
+# May take too long on the bots.
+Bug(GTK) mathml/very-large-stretchy-operators.html [ Pass Timeout ]
 
 # MathML tests failing after MathML pixel tests were replaced with ref tests
 webkit.org/b/118904 mathml/presentation/bug95404.html [ ImageOnlyFailure ]
-webkit.org/b/119004 mathml/presentation/fenced-mi.html [ ImageOnlyFailure ]
 
 webkit.org/b/119730 fast/dom/Window/open-zero-size-as-default.html [ Failure ]
 

@@ -236,8 +236,6 @@ public:
     bool tabKeyCyclesThroughElements() const { return m_tabKeyCyclesThroughElements; }
 
     bool findString(const String&, FindOptions);
-    // FIXME: Switch callers over to the FindOptions version and retire this one.
-    bool findString(const String&, TextCaseSensitivity, FindDirection, bool shouldWrap);
 
     PassRefPtr<Range> rangeOfString(const String&, Range*, FindOptions);
 
@@ -352,6 +350,7 @@ public:
 #if ENABLE(PAGE_VISIBILITY_API) || ENABLE(HIDDEN_PAGE_DOM_TIMER_THROTTLING)
     void setVisibilityState(PageVisibilityState, bool);
 #endif
+    void resumeAnimatingImages();
 
     void addLayoutMilestones(LayoutMilestones);
     void removeLayoutMilestones(LayoutMilestones);

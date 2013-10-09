@@ -540,8 +540,6 @@ webkit.org/b/61630 fast/events/dropzone-005.html
 
 # Spelling tests that are flakey.
 webkit.org/b/82555 editing/spelling/spellcheck-async-mutation.html [ Pass Failure ]
-webkit.org/b/122414 editing/spelling/context-menu-suggestions-multiword-selection.html [ Pass Failure ]
-webkit.org/b/122414 editing/spelling/context-menu-suggestions-subword-selection.html [ Pass Failure ]
 
 webkit.org/b/82665 http/tests/webarchive/test-css-url-encoding-shift-jis.html [ Failure ]
 webkit.org/b/82665 http/tests/webarchive/test-css-url-encoding-utf-8.html [ Failure ]
@@ -1108,6 +1106,8 @@ webkit.org/b/112492 media/track/track-prefer-captions.html [ Skip ]
 # The logic in this test is no longer correct for Apple ports
 webkit.org/b/112492 media/track/track-user-preferences.html [ Skip ]
 
+webkit.org/b/122507 media/track/track-cue-rendering.html [ Pass Failure ]
+
 # Only failing on WK1
 webkit.org/b/104104 fast/overflow/scrollbar-click-retains-focus.html [ Failure ]
 
@@ -1134,7 +1134,6 @@ webkit.org/b/106415 fast/workers/worker-lifecycle.html [ Pass Failure ]
 webkit.org/b/119374 fast/workers/termination-early.html [ Pass Crash ]
 webkit.org/b/119375 fast/workers/worker-call.html [ Failure ]
  
-webkit.org/b/108370 editing/spelling/spelling-changed-text.html [ Skip ]
 webkit.org/b/114470 editing/spelling/spelling-exactly-selected-multiple-words.html [ Skip ]
 webkit.org/b/114470 editing/spelling/spelling-should-select-multiple-words.html [ Skip ]
 
@@ -1272,7 +1271,6 @@ webkit.org/b/118269 compositing/geometry/fixed-position-flipped-writing-mode.htm
 webkit.org/b/118479 fast/repaint/fixed-right-in-page-scale.html [ Pass Crash ]
 
 webkit.org/b/118900 mathml/presentation/mspace-units.html [ ImageOnlyFailure ]
-webkit.org/b/118856 mathml/presentation/fenced-mi.html [ ImageOnlyFailure ]
 
 # Plug-in blocking callback doesn't exist in WebKit1, so skip and re-enable for WebKit2.
 plugins/unavailable-plugin-indicator-obscurity.html
@@ -1372,3 +1370,13 @@ webkit.org/b/121803 compositing/video/video-object-fit.html [ Pass ImageOnlyFail
 webkit.org/b/122126 media/click-volume-bar-not-pausing.html [ Pass Failure Timeout ]
 
 webkit.org/b/121628 fast/history/history-back-while-pdf-in-pagecache.html [ Pass ImageOnlyFailure ]
+
+webkit.org/b/114744 media/video-layer-crash.html [ Pass Failure Timeout ]
+
+webkit.org/b/122490 [ Debug ] mathml/very-large-stretchy-operators.html [ Skip ]
+
+webkit.org/b/122508 compositing/video/video-reflection.html [ Pass Timeout ]
+
+webkit.org/b/122509 inspector/debugger/debugger-activation-crash2.html [ Pass Failure ]
+
+webkit.org/b/122510 inspector/styles/add-new-rule-with-style-after-body.html [ Pass Failure ]

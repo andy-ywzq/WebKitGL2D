@@ -1,3 +1,677 @@
+2013-10-09  Krzysztof Czech  <k.czech@samsung.com>
+
+        [EFL] Some accessibility tests are failing
+        https://bugs.webkit.org/show_bug.cgi?id=122553
+
+        Unreviewed EFL gardening
+
+        * platform/efl-wk2/TestExpectations:
+        * platform/efl/TestExpectations:
+
+2013-10-09  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed gardening. Add timeout as expected result for fast/history/go-back-to-iframe-with-plugin.html,
+        since it times out sometimes.
+
+        * platform/gtk/TestExpectations:
+
+2013-10-09  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed gardening. Add timeout as expected result for mathml/very-large-stretchy-operators.html,
+        since it times out on the bots.
+
+        * platform/gtk/TestExpectations:
+
+2013-10-09  Krzysztof Czech  <k.czech@samsung.com>
+
+        [EFL] accessibility/table-cells.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=122544
+
+        Unreviewed EFL gardening
+
+        Changed expectations so that they show proper name of the parent (the table)
+
+        * platform/efl-wk1/accessibility/table-cells-expected.txt:
+        * platform/efl-wk2/accessibility/table-cells-expected.txt:
+
+2013-10-08  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Fix expectation for geolocation test that has been timing out.
+
+        * platform/gtk-wk2/TestExpectations:
+
+2013-10-08  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed gardening. Move http/tests/loading/307-after-303-after-post.html failure
+        expectation to the global gtk expectations file, since it's also true for gtk-wk2.
+
+        * platform/gtk-wk1/TestExpectations:
+        * platform/gtk/TestExpectations:
+
+2013-10-08  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed gardening. The 64 bits release bot has been made to use 8 bpp depth, so
+        fast/dom/Window/window-screen-properties.html won't pass there.
+
+        * platform/gtk/TestExpectations:
+
+2013-10-08  Oliver Hunt  <oliver@apple.com>
+
+        Convert for-of iteration to in-band signalling so we can trivially avoid unnecessary object allocation
+        https://bugs.webkit.org/show_bug.cgi?id=122532
+
+        Reviewed by Michael Saboff.
+
+        Update tests to reflect our non-exposure of .next()
+
+        * js/array-iterators-expected.txt:
+        * js/script-tests/array-iterators.js:
+
+2013-10-08  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed gardening. Make platform-specific expectation file apply only to gtk-wk1, since
+        gtk-wk2 gets the output right.
+
+        * platform/gtk-wk1/fast/loader/show-only-one-beforeunload-dialog-expected.txt: Renamed from LayoutTests/platform/gtk/fast/loader/show-only-one-beforeunload-dialog-expected.txt.
+
+2013-10-08  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed gardening. Update gtk-wk2-specific expectations for a couple of
+        fast/dom/Window tests:
+
+          - fast/dom/Window/window-postmessage-clone.html (times out)
+          - fast/dom/Window/open-window-min-size.html (fails)
+
+        * platform/gtk-wk2/TestExpectations:
+
+2013-10-08  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Upgrade accessibility/title-ui-element-correctness.html from crash (wk2-specific)
+        to fail (gtk-wide) expectation.
+
+        * platform/gtk-wk2/TestExpectations:
+
+2013-10-08  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSSRegions] Move autoheight* tests into fast/regions/auto-size
+        https://bugs.webkit.org/show_bug.cgi?id=122514
+
+        Reviewed by Sam Weinig.
+
+        Move tests, fix include paths, change TestExpectations when necessary.
+
+        * fast/regions/auto-size/abspos-autoheight-nested-region-expected.txt: Renamed from LayoutTests/fast/regions/abspos-autoheight-nested-region-expected.txt.
+        * fast/regions/auto-size/abspos-autoheight-nested-region.html: Renamed from LayoutTests/fast/regions/abspos-autoheight-nested-region.html.
+        * fast/regions/auto-size/autoheight-abspos-bottom-align-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-abspos-bottom-align-expected.txt.
+        * fast/regions/auto-size/autoheight-abspos-bottom-align.html: Renamed from LayoutTests/fast/regions/autoheight-abspos-bottom-align.html.
+        * fast/regions/auto-size/autoheight-abspos-region-expected.html: Renamed from LayoutTests/fast/regions/autoheight-abspos-region-expected.html.
+        * fast/regions/auto-size/autoheight-abspos-region.html: Renamed from LayoutTests/fast/regions/autoheight-abspos-region.html.
+        * fast/regions/auto-size/autoheight-allregions-expected.html: Renamed from LayoutTests/fast/regions/autoheight-allregions-expected.html.
+        * fast/regions/auto-size/autoheight-allregions-nobreaks-expected.html: Renamed from LayoutTests/fast/regions/autoheight-allregions-nobreaks-expected.html.
+        * fast/regions/auto-size/autoheight-allregions-nobreaks.html: Renamed from LayoutTests/fast/regions/autoheight-allregions-nobreaks.html.
+        * fast/regions/auto-size/autoheight-allregions.html: Renamed from LayoutTests/fast/regions/autoheight-allregions.html.
+        * fast/regions/auto-size/autoheight-break-after-expected.html: Renamed from LayoutTests/fast/regions/autoheight-break-after-expected.html.
+        * fast/regions/auto-size/autoheight-break-after.html: Renamed from LayoutTests/fast/regions/autoheight-break-after.html.
+        * fast/regions/auto-size/autoheight-breakafteralways-maxheight-expected.html: Renamed from LayoutTests/fast/regions/autoheight-breakafteralways-maxheight-expected.html.
+        * fast/regions/auto-size/autoheight-breakafteralways-maxheight.html: Renamed from LayoutTests/fast/regions/autoheight-breakafteralways-maxheight.html.
+        * fast/regions/auto-size/autoheight-breakbefore-wrongheight-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-breakbefore-wrongheight-expected.txt.
+        * fast/regions/auto-size/autoheight-breakbefore-wrongheight.html: Renamed from LayoutTests/fast/regions/autoheight-breakbefore-wrongheight.html.
+        * fast/regions/auto-size/autoheight-breakbeforealways-expected.html: Renamed from LayoutTests/fast/regions/autoheight-breakbeforealways-expected.html.
+        * fast/regions/auto-size/autoheight-breakbeforealways.html: Renamed from LayoutTests/fast/regions/autoheight-breakbeforealways.html.
+        * fast/regions/auto-size/autoheight-correct-region-for-lines-2-expected.html: Renamed from LayoutTests/fast/regions/autoheight-correct-region-for-lines-2-expected.html.
+        * fast/regions/auto-size/autoheight-correct-region-for-lines-2.html: Renamed from LayoutTests/fast/regions/autoheight-correct-region-for-lines-2.html.
+        * fast/regions/auto-size/autoheight-correct-region-for-lines-expected.html: Renamed from LayoutTests/fast/regions/autoheight-correct-region-for-lines-expected.html.
+        * fast/regions/auto-size/autoheight-correct-region-for-lines.html: Renamed from LayoutTests/fast/regions/autoheight-correct-region-for-lines.html.
+        * fast/regions/auto-size/autoheight-definedheight-changenotdetected-expected.html: Renamed from LayoutTests/fast/regions/autoheight-definedheight-changenotdetected-expected.html.
+        * fast/regions/auto-size/autoheight-definedheight-changenotdetected.html: Renamed from LayoutTests/fast/regions/autoheight-definedheight-changenotdetected.html.
+        * fast/regions/auto-size/autoheight-dynamic-update-expected.html: Renamed from LayoutTests/fast/regions/autoheight-dynamic-update-expected.html.
+        * fast/regions/auto-size/autoheight-dynamic-update.html: Renamed from LayoutTests/fast/regions/autoheight-dynamic-update.html.
+        * fast/regions/auto-size/autoheight-firstregion-breakalways-expected.html: Renamed from LayoutTests/fast/regions/autoheight-firstregion-breakalways-expected.html.
+        * fast/regions/auto-size/autoheight-firstregion-breakalways.html: Renamed from LayoutTests/fast/regions/autoheight-firstregion-breakalways.html.
+        * fast/regions/auto-size/autoheight-flexbox-expected.html: Renamed from LayoutTests/fast/regions/autoheight-flexbox-expected.html.
+        * fast/regions/auto-size/autoheight-flexbox.html: Renamed from LayoutTests/fast/regions/autoheight-flexbox.html.
+        * fast/regions/auto-size/autoheight-floatright-region-expected.html: Renamed from LayoutTests/fast/regions/autoheight-floatright-region-expected.html.
+        * fast/regions/auto-size/autoheight-floatright-region.html: Renamed from LayoutTests/fast/regions/autoheight-floatright-region.html.
+        * fast/regions/auto-size/autoheight-horizontal-bt-expected.html: Renamed from LayoutTests/fast/regions/autoheight-horizontal-bt-expected.html.
+        * fast/regions/auto-size/autoheight-horizontal-bt.html: Renamed from LayoutTests/fast/regions/autoheight-horizontal-bt.html.
+        * fast/regions/auto-size/autoheight-inlineblock-normalflow-region-expected.html: Renamed from LayoutTests/fast/regions/autoheight-inlineblock-normalflow-region-expected.html.
+        * fast/regions/auto-size/autoheight-inlineblock-normalflow-region.html: Renamed from LayoutTests/fast/regions/autoheight-inlineblock-normalflow-region.html.
+        * fast/regions/auto-size/autoheight-lastregion-overflowauto-breaksignored-expected.html: Renamed from LayoutTests/fast/regions/autoheight-lastregion-overflowauto-breaksignored-expected.html.
+        * fast/regions/auto-size/autoheight-lastregion-overflowauto-breaksignored.html: Renamed from LayoutTests/fast/regions/autoheight-lastregion-overflowauto-breaksignored.html.
+        * fast/regions/auto-size/autoheight-lastregion-overflowauto-expected.html: Renamed from LayoutTests/fast/regions/autoheight-lastregion-overflowauto-expected.html.
+        * fast/regions/auto-size/autoheight-lastregion-overflowauto.html: Renamed from LayoutTests/fast/regions/autoheight-lastregion-overflowauto.html.
+        * fast/regions/auto-size/autoheight-maxheight-mixed-break-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-maxheight-mixed-break-expected.txt.
+        * fast/regions/auto-size/autoheight-maxheight-mixed-break.html: Renamed from LayoutTests/fast/regions/autoheight-maxheight-mixed-break.html.
+        * fast/regions/auto-size/autoheight-maxheight-region-expected.html: Renamed from LayoutTests/fast/regions/autoheight-maxheight-region-expected.html.
+        * fast/regions/auto-size/autoheight-maxheight-region.html: Renamed from LayoutTests/fast/regions/autoheight-maxheight-region.html.
+        * fast/regions/auto-size/autoheight-maxheight-simple-break-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-maxheight-simple-break-expected.txt.
+        * fast/regions/auto-size/autoheight-maxheight-simple-break.html: Renamed from LayoutTests/fast/regions/autoheight-maxheight-simple-break.html.
+        * fast/regions/auto-size/autoheight-maxheight-simple-nobreak-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-maxheight-simple-nobreak-expected.txt.
+        * fast/regions/auto-size/autoheight-maxheight-simple-nobreak.html: Renamed from LayoutTests/fast/regions/autoheight-maxheight-simple-nobreak.html.
+        * fast/regions/auto-size/autoheight-middleregion-expected.html: Renamed from LayoutTests/fast/regions/autoheight-middleregion-expected.html.
+        * fast/regions/auto-size/autoheight-middleregion.html: Renamed from LayoutTests/fast/regions/autoheight-middleregion.html.
+        * fast/regions/auto-size/autoheight-minheight-region-expected.html: Renamed from LayoutTests/fast/regions/autoheight-minheight-region-expected.html.
+        * fast/regions/auto-size/autoheight-minheight-region.html: Renamed from LayoutTests/fast/regions/autoheight-minheight-region.html.
+        * fast/regions/auto-size/autoheight-minmaxheight-mixed-break-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-minmaxheight-mixed-break-expected.txt.
+        * fast/regions/auto-size/autoheight-minmaxheight-mixed-break-hbt-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-minmaxheight-mixed-break-hbt-expected.txt.
+        * fast/regions/auto-size/autoheight-minmaxheight-mixed-break-hbt.html: Renamed from LayoutTests/fast/regions/autoheight-minmaxheight-mixed-break-hbt.html.
+        * fast/regions/auto-size/autoheight-minmaxheight-mixed-break-vlr-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-minmaxheight-mixed-break-vlr-expected.txt.
+        * fast/regions/auto-size/autoheight-minmaxheight-mixed-break-vlr.html: Renamed from LayoutTests/fast/regions/autoheight-minmaxheight-mixed-break-vlr.html.
+        * fast/regions/auto-size/autoheight-minmaxheight-mixed-break-vrl-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-minmaxheight-mixed-break-vrl-expected.txt.
+        * fast/regions/auto-size/autoheight-minmaxheight-mixed-break-vrl.html: Renamed from LayoutTests/fast/regions/autoheight-minmaxheight-mixed-break-vrl.html.
+        * fast/regions/auto-size/autoheight-minmaxheight-mixed-break.html: Renamed from LayoutTests/fast/regions/autoheight-minmaxheight-mixed-break.html.
+        * fast/regions/auto-size/autoheight-minmaxheight-simple-break-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-minmaxheight-simple-break-expected.txt.
+        * fast/regions/auto-size/autoheight-minmaxheight-simple-break.html: Renamed from LayoutTests/fast/regions/autoheight-minmaxheight-simple-break.html.
+        * fast/regions/auto-size/autoheight-minmaxheight-simple-nobreak-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-minmaxheight-simple-nobreak-expected.txt.
+        * fast/regions/auto-size/autoheight-minmaxheight-simple-nobreak.html: Renamed from LayoutTests/fast/regions/autoheight-minmaxheight-simple-nobreak.html.
+        * fast/regions/auto-size/autoheight-mixed-nested-complex-regions-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-mixed-nested-complex-regions-expected.txt.
+        * fast/regions/auto-size/autoheight-mixed-nested-complex-regions.html: Renamed from LayoutTests/fast/regions/autoheight-mixed-nested-complex-regions.html.
+        * fast/regions/auto-size/autoheight-mixed-nested-regions-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-mixed-nested-regions-expected.txt.
+        * fast/regions/auto-size/autoheight-mixed-nested-regions.html: Renamed from LayoutTests/fast/regions/autoheight-mixed-nested-regions.html.
+        * fast/regions/auto-size/autoheight-mixed-parallel-regions-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-mixed-parallel-regions-expected.txt.
+        * fast/regions/auto-size/autoheight-mixed-parallel-regions.html: Renamed from LayoutTests/fast/regions/autoheight-mixed-parallel-regions.html.
+        * fast/regions/auto-size/autoheight-nested-regions-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-nested-regions-expected.txt.
+        * fast/regions/auto-size/autoheight-nested-regions.html: Renamed from LayoutTests/fast/regions/autoheight-nested-regions.html.
+        * fast/regions/auto-size/autoheight-normalflow-region-expected.html: Renamed from LayoutTests/fast/regions/autoheight-normalflow-region-expected.html.
+        * fast/regions/auto-size/autoheight-normalflow-region.html: Renamed from LayoutTests/fast/regions/autoheight-normalflow-region.html.
+        * fast/regions/auto-size/autoheight-region-decrease-maxheight-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-region-decrease-maxheight-expected.txt.
+        * fast/regions/auto-size/autoheight-region-decrease-maxheight.html: Renamed from LayoutTests/fast/regions/autoheight-region-decrease-maxheight.html.
+        * fast/regions/auto-size/autoheight-region-decrease-minheight-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-region-decrease-minheight-expected.txt.
+        * fast/regions/auto-size/autoheight-region-decrease-minheight.html: Renamed from LayoutTests/fast/regions/autoheight-region-decrease-minheight.html.
+        * fast/regions/auto-size/autoheight-region-decrease-width-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-region-decrease-width-expected.txt.
+        * fast/regions/auto-size/autoheight-region-decrease-width.html: Renamed from LayoutTests/fast/regions/autoheight-region-decrease-width.html.
+        * fast/regions/auto-size/autoheight-region-increase-maxheight-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-region-increase-maxheight-expected.txt.
+        * fast/regions/auto-size/autoheight-region-increase-maxheight.html: Renamed from LayoutTests/fast/regions/autoheight-region-increase-maxheight.html.
+        * fast/regions/auto-size/autoheight-region-increase-minheight-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-region-increase-minheight-expected.txt.
+        * fast/regions/auto-size/autoheight-region-increase-minheight.html: Renamed from LayoutTests/fast/regions/autoheight-region-increase-minheight.html.
+        * fast/regions/auto-size/autoheight-region-increase-width-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-region-increase-width-expected.txt.
+        * fast/regions/auto-size/autoheight-region-increase-width.html: Renamed from LayoutTests/fast/regions/autoheight-region-increase-width.html.
+        * fast/regions/auto-size/autoheight-region-new-maxheight-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-region-new-maxheight-expected.txt.
+        * fast/regions/auto-size/autoheight-region-new-maxheight-vrl-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-region-new-maxheight-vrl-expected.txt.
+        * fast/regions/auto-size/autoheight-region-new-maxheight-vrl.html: Renamed from LayoutTests/fast/regions/autoheight-region-new-maxheight-vrl.html.
+        * fast/regions/auto-size/autoheight-region-new-maxheight.html: Renamed from LayoutTests/fast/regions/autoheight-region-new-maxheight.html.
+        * fast/regions/auto-size/autoheight-region-new-minheight-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-region-new-minheight-expected.txt.
+        * fast/regions/auto-size/autoheight-region-new-minheight-vlr-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-region-new-minheight-vlr-expected.txt.
+        * fast/regions/auto-size/autoheight-region-new-minheight-vlr.html: Renamed from LayoutTests/fast/regions/autoheight-region-new-minheight-vlr.html.
+        * fast/regions/auto-size/autoheight-region-new-minheight.html: Renamed from LayoutTests/fast/regions/autoheight-region-new-minheight.html.
+        * fast/regions/auto-size/autoheight-region-remove-maxheight-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-region-remove-maxheight-expected.txt.
+        * fast/regions/auto-size/autoheight-region-remove-maxheight.html: Renamed from LayoutTests/fast/regions/autoheight-region-remove-maxheight.html.
+        * fast/regions/auto-size/autoheight-region-remove-minheight-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-region-remove-minheight-expected.txt.
+        * fast/regions/auto-size/autoheight-region-remove-minheight.html: Renamed from LayoutTests/fast/regions/autoheight-region-remove-minheight.html.
+        * fast/regions/auto-size/autoheight-regionlayoutupdate-multipletimes-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-regionlayoutupdate-multipletimes-expected.txt.
+        * fast/regions/auto-size/autoheight-regionlayoutupdate-multipletimes.html: Renamed from LayoutTests/fast/regions/autoheight-regionlayoutupdate-multipletimes.html.
+        * fast/regions/auto-size/autoheight-regions-mark-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-regions-mark-expected.txt.
+        * fast/regions/auto-size/autoheight-regions-mark.html: Renamed from LayoutTests/fast/regions/autoheight-regions-mark.html.
+        * fast/regions/auto-size/autoheight-secondregion-breakoutside-expected.html: Renamed from LayoutTests/fast/regions/autoheight-secondregion-breakoutside-expected.html.
+        * fast/regions/auto-size/autoheight-secondregion-breakoutside.html: Renamed from LayoutTests/fast/regions/autoheight-secondregion-breakoutside.html.
+        * fast/regions/auto-size/autoheight-secondregion-expected.html: Renamed from LayoutTests/fast/regions/autoheight-secondregion-expected.html.
+        * fast/regions/auto-size/autoheight-secondregion.html: Renamed from LayoutTests/fast/regions/autoheight-secondregion.html.
+        * fast/regions/auto-size/autoheight-singleregion-breakafteralways-expected.html: Renamed from LayoutTests/fast/regions/autoheight-singleregion-breakafteralways-expected.html.
+        * fast/regions/auto-size/autoheight-singleregion-breakafteralways-maxheight-expected.html: Renamed from LayoutTests/fast/regions/autoheight-singleregion-breakafteralways-maxheight-expected.html.
+        * fast/regions/auto-size/autoheight-singleregion-breakafteralways-maxheight.html: Renamed from LayoutTests/fast/regions/autoheight-singleregion-breakafteralways-maxheight.html.
+        * fast/regions/auto-size/autoheight-singleregion-breakafteralways.html: Renamed from LayoutTests/fast/regions/autoheight-singleregion-breakafteralways.html.
+        * fast/regions/auto-size/autoheight-singleregion-breakaftermargin-expected.html: Renamed from LayoutTests/fast/regions/autoheight-singleregion-breakaftermargin-expected.html.
+        * fast/regions/auto-size/autoheight-singleregion-breakaftermargin.html: Renamed from LayoutTests/fast/regions/autoheight-singleregion-breakaftermargin.html.
+        * fast/regions/auto-size/autoheight-singleregion-breakbeforealways-expected.html: Renamed from LayoutTests/fast/regions/autoheight-singleregion-breakbeforealways-expected.html.
+        * fast/regions/auto-size/autoheight-singleregion-breakbeforealways-minheight-expected.html: Renamed from LayoutTests/fast/regions/autoheight-singleregion-breakbeforealways-minheight-expected.html.
+        * fast/regions/auto-size/autoheight-singleregion-breakbeforealways-minheight.html: Renamed from LayoutTests/fast/regions/autoheight-singleregion-breakbeforealways-minheight.html.
+        * fast/regions/auto-size/autoheight-singleregion-breakbeforealways.html: Renamed from LayoutTests/fast/regions/autoheight-singleregion-breakbeforealways.html.
+        * fast/regions/auto-size/autoheight-singleregion-multiplebreaks-expected.html: Renamed from LayoutTests/fast/regions/autoheight-singleregion-multiplebreaks-expected.html.
+        * fast/regions/auto-size/autoheight-singleregion-multiplebreaks.html: Renamed from LayoutTests/fast/regions/autoheight-singleregion-multiplebreaks.html.
+        * fast/regions/auto-size/autoheight-singleregion-overflowauto-breaksignored-expected.html: Renamed from LayoutTests/fast/regions/autoheight-singleregion-overflowauto-breaksignored-expected.html.
+        * fast/regions/auto-size/autoheight-singleregion-overflowauto-breaksignored.html: Renamed from LayoutTests/fast/regions/autoheight-singleregion-overflowauto-breaksignored.html.
+        * fast/regions/auto-size/autoheight-singleregion-overflowauto-expected.html: Renamed from LayoutTests/fast/regions/autoheight-singleregion-overflowauto-expected.html.
+        * fast/regions/auto-size/autoheight-singleregion-overflowauto.html: Renamed from LayoutTests/fast/regions/autoheight-singleregion-overflowauto.html.
+        * fast/regions/auto-size/autoheight-two-pass-layout-complex-001-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-two-pass-layout-complex-001-expected.txt.
+        * fast/regions/auto-size/autoheight-two-pass-layout-complex-001.html: Renamed from LayoutTests/fast/regions/autoheight-two-pass-layout-complex-001.html.
+        * fast/regions/auto-size/autoheight-two-pass-layout-complex-002-expected.txt: Renamed from LayoutTests/fast/regions/autoheight-two-pass-layout-complex-002-expected.txt.
+        * fast/regions/auto-size/autoheight-two-pass-layout-complex-002.html: Renamed from LayoutTests/fast/regions/autoheight-two-pass-layout-complex-002.html.
+        * fast/regions/auto-size/autoheight-vertical-lr-expected.html: Renamed from LayoutTests/fast/regions/autoheight-vertical-lr-expected.html.
+        * fast/regions/auto-size/autoheight-vertical-lr.html: Renamed from LayoutTests/fast/regions/autoheight-vertical-lr.html.
+        * fast/regions/auto-size/autoheight-vertical-rl-expected.html: Renamed from LayoutTests/fast/regions/autoheight-vertical-rl-expected.html.
+        * fast/regions/auto-size/autoheight-vertical-rl.html: Renamed from LayoutTests/fast/regions/autoheight-vertical-rl.html.
+        * platform/efl/TestExpectations:
+        * platform/gtk/TestExpectations:
+
+2013-10-08  Dean Jackson  <dino@apple.com>
+
+        Unreviewed followup to https://bugs.webkit.org/show_bug.cgi?id=122523
+        This test now passes, so updating expected file.
+
+        * fast/canvas/webgl/webgl-unprefixed-context-id-expected.txt:
+
+2013-10-08  Dean Jackson  <dino@apple.com>
+
+        Support unprefixed WebGL context creation
+        https://bugs.webkit.org/show_bug.cgi?id=122523
+        <rdar://problem/15179463>
+
+        Reviewed by Simon Fraser.
+
+        Tests that we can create a context without the
+        "experimental-" prefix. Meanwhile, most of the other
+        WebGL tests should start to use the unprefixed
+        form automatically (the helper script attempts
+        "webgl" first).
+
+        * fast/canvas/webgl/unprefixed-context-expected.txt: Added.
+        * fast/canvas/webgl/unprefixed-context.html: Added.
+
+2013-10-08  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Skip a new WebGL test along with the others.
+
+        * platform/gtk/TestExpectations:
+
+2013-10-07  Dean Jackson  <dino@apple.com>
+
+        Video -> pixel buffer output should not manage color spaces
+        https://bugs.webkit.org/show_bug.cgi?id=122486
+
+        Reviewed by Tim Horton.
+
+        * media/video-canvas-drawing-output-expected.txt: Added.
+        * media/video-canvas-drawing-output.html: Added.
+
+2013-10-08  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed gardening.
+
+        * platform/gtk/TestExpectations: fast/backgrounds/background-opaque-images-over-color.html
+        failing.
+
+2013-10-08  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSSRegions] Regions with overflow: hidden should paint over positioned sibling
+        https://bugs.webkit.org/show_bug.cgi?id=122389
+
+        Reviewed by Alexandru Chiculita.
+
+        Add overflow: hidden to the region to test that it does not move to the normal flow layers.
+
+        * fast/regions/layers/region-normalflow-stacking-context.html:
+
+2013-10-08  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed gardening, these tests had a couple pixels shift at some point,
+        needing a new baseline.
+
+        * platform/gtk/fast/hidpi/clip-text-in-hidpi-expected.txt:
+        * platform/gtk/fast/hidpi/image-set-background-dynamic-expected.txt:
+        * platform/gtk/fast/hidpi/image-set-border-image-dynamic-expected.txt:
+
+2013-10-08  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        [Mac] Unskip editing/spelling/spelling-changed-text.html
+        https://bugs.webkit.org/show_bug.cgi?id=122502
+
+        Unreviewed gardening.
+
+        * platform/mac/TestExpectations:
+        spelling-changed.html is passing after r156901.
+
+2013-10-08  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed gardening. A couple of media-query tests rely on 3d transforms,
+        so skip them along with the 3d transforms tests.
+
+        * platform/gtk/TestExpectations:
+
+2013-10-08  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSSRegions] Computed z-Index should return 0 instead of auto for a region
+        https://bugs.webkit.org/show_bug.cgi?id=122405
+
+        Reviewed by David Hyatt.
+
+        * fast/regions/layers/region-zIndex-computedStyle-expected.txt: Added.
+        * fast/regions/layers/region-zIndex-computedStyle.html: Added.
+
+2013-10-08  Andrei Bucur  <abucur@adobe.com>
+
+        [CSS Regions] Widows don't work if the first line in a region is aligned with the top of the region
+        https://bugs.webkit.org/show_bug.cgi?id=122450
+
+        Reviewed by David Hyatt.
+
+        Simple test veryfing that widows are correctly computed when there is a float affecting the lines
+        and when they are vertically aligned with the regions height.
+
+        * fast/regions/regions-widows-float-top-aligned-expected.html: Added.
+        * fast/regions/regions-widows-float-top-aligned.html: Added.
+
+2013-10-08  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed gardening. Adding ImageOnlyFailure expectations to:
+
+            - fast/regions/selection/selecting-text-ignoring-region-horiz-bt.html
+            - fast/regions/selection/selecting-text-ignoring-region-vert-lr.html
+            - fast/regions/selection/selecting-text-in-2-regions-horiz-bt.html
+            - fast/regions/selection/selecting-text-in-2-regions-vert-lr.html
+
+        * platform/gtk/TestExpectations:
+
+2013-10-08  Alexey Proskuryakov  <ap@apple.com>
+
+        Layout Test inspector/styles/add-new-rule-with-style-after-body.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=122510
+
+        * platform/mac/TestExpectations: Marking as such.
+
+2013-10-08  Alexey Proskuryakov  <ap@apple.com>
+
+        Layout Test inspector/debugger/debugger-activation-crash2.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=122509
+
+        * platform/mac/TestExpectations: Marking as such.
+
+2013-10-08  Alexey Proskuryakov  <ap@apple.com>
+
+        Layout Test compositing/video/video-reflection.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=122508
+
+        * platform/mac/TestExpectations: Marking as such.
+
+2013-10-08  Alexey Proskuryakov  <ap@apple.com>
+
+        Layout Test media/track/track-cue-rendering.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=122507
+
+        * platform/mac/TestExpectations: Marking as such.
+
+2013-10-08  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed, rolling out r157080.
+        http://trac.webkit.org/changeset/157080
+
+        Not a proper baseline
+
+        * platform/gtk/fast/regions/selection/selecting-text-ignoring-region-horiz-bt-expected.png: Removed.
+        * platform/gtk/fast/regions/selection/selecting-text-ignoring-region-vert-lr-expected.png: Removed.
+        * platform/gtk/fast/regions/selection/selecting-text-in-2-regions-horiz-bt-expected.png: Removed.
+        * platform/gtk/fast/regions/selection/selecting-text-in-2-regions-vert-lr-expected.png: Removed.
+
+2013-10-08  Alexey Proskuryakov  <ap@apple.com>
+
+        Flaky Test: media/video-layer-crash.html
+        https://bugs.webkit.org/show_bug.cgi?id=114744
+
+        * platform/mac/TestExpectations: Marking as such.
+
+2013-10-08  Hurnjoo Lee  <hurnjoo.lee@samsung.com>
+
+        Composited layer that painted into composited ancestor is not repainted after moving
+        https://bugs.webkit.org/show_bug.cgi?id=114655
+
+        Reviewed by Simon Fraser.
+
+        Add a text repaint test to check the repainting of composited layer
+        that painted into composited ancestor.
+
+        * compositing/repaint/absolute-painted-into-composited-ancestor-expected.txt: Added.
+        * compositing/repaint/absolute-painted-into-composited-ancestor.html: Added.
+
+2013-10-08  Zalan Bujtas  <zalan@apple.com>
+
+        Unreviewed. Rollout of r156536. ~5% regression in inline layout performance.
+
+        * fast/css/unexpected-word-wrapping-with-non-empty-spans-expected.html: Removed.
+        * fast/css/unexpected-word-wrapping-with-non-empty-spans.html: Removed.
+
+2013-10-08  Michał Pakuła vel Rutka  <m.pakula@samsung.com>
+
+        Unreviewed EFL gardening
+
+        Unskip tests that are already passing.
+
+        * platform/efl-wk1/TestExpectations: Mark unskipped test as failing for WK1.
+        * platform/efl/TestExpectations:
+
+2013-10-08  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        Unreviewed GTK gardening. Name for tables are now properly showing
+        up when exposing information for the parent of a table's cell.
+
+        * platform/gtk/accessibility/table-cells-expected.txt: Updated.
+
+2013-10-07  Grzegorz Czajkowski  <g.czajkowski@samsung.com>
+
+        context-menu-suggestions-multiword-selection.html and context-menu-suggestions-subword-selection.html are flaky after r156901
+        https://bugs.webkit.org/show_bug.cgi?id=122414
+
+        Reviewed by Ryosuke Niwa.
+
+        On Mac, first call of 'initSpellTest' from spelling/resources/util.js
+        often fails while checking spelling marker.
+        Use shouldBecomeDifferent instead of calling timers in the tests.
+        It should have been done at r156137 when shouldBecomeEqual/Different
+        was used in asynchronous spell checking tests.
+
+        * editing/spelling/resources/util.js:
+        Use shouldBecomeDifferent instead of timers.
+
+        * editing/spelling/context-menu-suggestions-multiword-selection-expected.txt:
+        * editing/spelling/context-menu-suggestions-subword-selection-expected.txt:
+        * editing/spelling/spelling-changed-text-expected.txt:
+        * editing/spelling/spelling-double-clicked-word-expected.txt:
+        * editing/spelling/spelling-exactly-selected-multiple-words-expected.txt:
+        * editing/spelling/spelling-exactly-selected-word-expected.txt:
+        * editing/spelling/spelling-should-select-multiple-words-expected.txt:
+        * editing/spelling/spelling-with-punctuation-selection-expected.txt:
+        * editing/spelling/spelling-with-whitespace-selection-expected.txt:
+        Rebaseline the tests which include util.js due to
+        shouldBecomeDifferent outputs more logs.
+
+        * platform/mac/TestExpectations:
+        Now context-menu-suggestions-multiword-selection.html and
+        context-menu-suggestions-subword-selection.html are passing for Mac.
+
+2013-10-08  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSSRegions] Move autosize and autowidth tests into fast/regions/auto-size
+        https://bugs.webkit.org/show_bug.cgi?id=122493
+
+        Reviewed by Andreas Kling.
+
+        Simple move, changed paths in 2 tests.
+
+        * fast/regions/auto-size/autosize-abspos-anchoredregion-expected.txt: Renamed from LayoutTests/fast/regions/autosize-abspos-anchoredregion-expected.txt.
+        * fast/regions/auto-size/autosize-abspos-anchoredregion-vertlr-expected.txt: Renamed from LayoutTests/fast/regions/autosize-abspos-anchoredregion-vertlr-expected.txt.
+        * fast/regions/auto-size/autosize-abspos-anchoredregion-vertlr.html: Renamed from LayoutTests/fast/regions/autosize-abspos-anchoredregion-vertlr.html.
+        * fast/regions/auto-size/autosize-abspos-anchoredregion.html: Renamed from LayoutTests/fast/regions/autosize-abspos-anchoredregion.html.
+        * fast/regions/auto-size/autosize-region-container-resize-expected.html: Renamed from LayoutTests/fast/regions/autosize-region-container-resize-expected.html.
+        * fast/regions/auto-size/autosize-region-container-resize.html: Renamed from LayoutTests/fast/regions/autosize-region-container-resize.html.
+        * fast/regions/auto-size/autosize-region-window-resize-expected.html: Renamed from LayoutTests/fast/regions/autosize-region-window-resize-expected.html.
+        * fast/regions/auto-size/autosize-region-window-resize.html: Renamed from LayoutTests/fast/regions/autosize-region-window-resize.html.
+        * fast/regions/auto-size/autowidth-abspos-expected.html: Renamed from LayoutTests/fast/regions/autowidth-abspos-expected.html.
+        * fast/regions/auto-size/autowidth-abspos-regionchain-expected.html: Renamed from LayoutTests/fast/regions/autowidth-abspos-regionchain-expected.html.
+        * fast/regions/auto-size/autowidth-abspos-regionchain.html: Renamed from LayoutTests/fast/regions/autowidth-abspos-regionchain.html.
+        * fast/regions/auto-size/autowidth-abspos.html: Renamed from LayoutTests/fast/regions/autowidth-abspos.html.
+        * fast/regions/auto-size/autowidth-attachedinvalidregion-expected.txt: Renamed from LayoutTests/fast/regions/autowidth-attachedinvalidregion-expected.txt.
+        * fast/regions/auto-size/autowidth-attachedinvalidregion.html: Renamed from LayoutTests/fast/regions/autowidth-attachedinvalidregion.html.
+        * fast/regions/auto-size/autowidth-float-expected.html: Renamed from LayoutTests/fast/regions/autowidth-float-expected.html.
+        * fast/regions/auto-size/autowidth-float.html: Renamed from LayoutTests/fast/regions/autowidth-float.html.
+        * fast/regions/auto-size/autowidth-inlineblock-expected.html: Renamed from LayoutTests/fast/regions/autowidth-inlineblock-expected.html.
+        * fast/regions/auto-size/autowidth-inlineblock.html: Renamed from LayoutTests/fast/regions/autowidth-inlineblock.html.
+        * fast/regions/auto-size/autowidth-nonreplaced-abspos-expected.html: Renamed from LayoutTests/fast/regions/autowidth-nonreplaced-abspos-expected.html.
+        * fast/regions/auto-size/autowidth-nonreplaced-abspos.html: Renamed from LayoutTests/fast/regions/autowidth-nonreplaced-abspos.html.
+        * fast/regions/auto-size/autowidth-nonreplacedblock-normalflow-expected.html: Renamed from LayoutTests/fast/regions/autowidth-nonreplacedblock-normalflow-expected.html.
+        * fast/regions/auto-size/autowidth-nonreplacedblock-normalflow.html: Renamed from LayoutTests/fast/regions/autowidth-nonreplacedblock-normalflow.html.
+        * fast/regions/auto-size/autowidth-normalflow-expected.html: Renamed from LayoutTests/fast/regions/autowidth-normalflow-expected.html.
+        * fast/regions/auto-size/autowidth-normalflow-maxwidth-expected.html: Renamed from LayoutTests/fast/regions/autowidth-normalflow-maxwidth-expected.html.
+        * fast/regions/auto-size/autowidth-normalflow-maxwidth.html: Renamed from LayoutTests/fast/regions/autowidth-normalflow-maxwidth.html.
+        * fast/regions/auto-size/autowidth-normalflow-minmaxwidth-expected.html: Renamed from LayoutTests/fast/regions/autowidth-normalflow-minmaxwidth-expected.html.
+        * fast/regions/auto-size/autowidth-normalflow-minmaxwidth.html: Renamed from LayoutTests/fast/regions/autowidth-normalflow-minmaxwidth.html.
+        * fast/regions/auto-size/autowidth-normalflow-minwidth-expected.html: Renamed from LayoutTests/fast/regions/autowidth-normalflow-minwidth-expected.html.
+        * fast/regions/auto-size/autowidth-normalflow-minwidth.html: Renamed from LayoutTests/fast/regions/autowidth-normalflow-minwidth.html.
+        * fast/regions/auto-size/autowidth-normalflow-vertrl-expected.html: Renamed from LayoutTests/fast/regions/autowidth-normalflow-vertrl-expected.html.
+        * fast/regions/auto-size/autowidth-normalflow-vertrl.html: Renamed from LayoutTests/fast/regions/autowidth-normalflow-vertrl.html.
+        * fast/regions/auto-size/autowidth-normalflow.html: Renamed from LayoutTests/fast/regions/autowidth-normalflow.html.
+
+2013-10-07  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] media/video-src-blob.html
+        https://bugs.webkit.org/show_bug.cgi?id=102586
+
+        Reviewed by Martin Robinson.
+
+        * platform/gtk/TestExpectations: Unskip
+        media/video-src-blob.html.
+
+2013-10-07  Alexey Proskuryakov  <ap@apple.com>
+
+        webaudio/javascriptaudionode-upmix2-8channel-input.html is flaky on Mac WK2
+        https://bugs.webkit.org/show_bug.cgi?id=120148
+
+        * platform/mac-wk2/TestExpectations: Removed a duplicate expectation that I overlooked
+        at first. Note that having separate expectations for Debug and Release doesn't
+        appear to work.
+
+2013-10-07  Alexey Proskuryakov  <ap@apple.com>
+
+        webaudio/javascriptaudionode-upmix2-8channel-input.html is flaky on Mac WK2
+        https://bugs.webkit.org/show_bug.cgi?id=120148
+
+        * platform/mac-wk2/TestExpectations: Updated expectations to cover debug assertions,
+        and that this is not limited to Lion.
+
+2013-10-07  Alexey Proskuryakov  <ap@apple.com>
+
+        Layout Test mathml/very-large-stretchy-operators.html is failing
+        https://bugs.webkit.org/show_bug.cgi?id=122490
+
+        * platform/mac/TestExpectations: Skipped the test. It's faiing with a timeout and
+        taking up to 80 seconds.
+
+2013-10-07  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Gardening: add baselines for new tests.
+
+        * platform/gtk/fast/regions/selection/selecting-text-ignoring-region-horiz-bt-expected.png: Added.
+        * platform/gtk/fast/regions/selection/selecting-text-ignoring-region-vert-lr-expected.png: Added.
+        * platform/gtk/fast/regions/selection/selecting-text-in-2-regions-horiz-bt-expected.png: Added.
+        * platform/gtk/fast/regions/selection/selecting-text-in-2-regions-vert-lr-expected.png: Added.
+
+2013-10-07  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Gardening: skip audio/video track tests, since those are not yet supported by our
+        media player.
+
+        * platform/gtk/TestExpectations:
+
+2013-10-07  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed. Marking svg/animations/svglengthlist-animation-3.html as flaky.
+
+        * platform/gtk/TestExpectations:
+
+2013-10-04  Frédéric Wang  <fred.wang@free.fr>
+
+        [MathML] Remove RenderTree modification during layout and refactor the StretchyOp code
+        https://bugs.webkit.org/show_bug.cgi?id=121416
+
+        Reviewed by David Hyatt.
+
+        Add some reftests for stretchy operators.
+
+        * TestExpectations: The remaining MathML pixel tests are broken by this patch.
+        * LayoutTests/platform/gtk/TestExpectations:
+        * LayoutTests/platform/mac/TestExpectations:
+        * LayoutTests/platform/win/TestExpectations:
+        * mathml/presentation/mo-minus.html: Added.
+        * mathml/presentation/mo-stacked-glyphs-expected.html: Added.
+        * mathml/presentation/mo-stacked-glyphs.html: Added.
+        * mathml/presentation/mo-stretchy-vertical-bar-expected-mismatch.html: Added.
+        * mathml/presentation/mo-stretchy-vertical-bar.html: Added.
+        * mathml/very-large-stretchy-operators-expected.txt: Added.
+        * mathml/very-large-stretchy-operators.html: Added.
+
+2013-10-07  Eric Carlson  <eric.carlson@apple.com>
+
+        [MediaStream API] update MediaStreamTrack object to match spec
+        https://bugs.webkit.org/show_bug.cgi?id=121940
+
+        Reviewed by Jer Noble.
+
+        * fast/mediastream/MediaStreamTrack-expected.txt:
+        * fast/mediastream/MediaStreamTrack.html:
+        * fast/mediastream/MediaStreamTrack-getSources-expected.txt:
+        * fast/mediastream/MediaStreamTrack-getSources.html:
+
+2013-10-07  Jer Noble  <jer.noble@apple.com>
+
+        [Mac] Drawing video into canvas doesn't work on the first attempt
+        https://bugs.webkit.org/show_bug.cgi?id=122404
+
+        Reviewed by Eric Carlson.
+
+        * media/video-canvas-drawing-expected.png: Added.
+        * media/video-canvas-drawing-expected.txt: Added.
+        * media/video-canvas-drawing.html: Added.
+
+2013-10-07  Tim Horton  <timothy_horton@apple.com>
+
+        css3/images/cross-fade-svg-with-opacity.html fails with colorspace mismatch on Mountain Lion
+        https://bugs.webkit.org/show_bug.cgi?id=122456
+
+        * platform/mac-wk2/TestExpectations:
+        Mark the test as failing for now.
+
+2013-10-07  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSSRegions] Move region styling tests into fast/regions/region-styling
+        https://bugs.webkit.org/show_bug.cgi?id=122451
+
+        Reviewed by Sam Weinig.
+
+        Create region-styling folder under fast/regions and move related region styling tests.
+
+        * fast/regions/region-styling/parse-incomplete-region-rule-expected.txt: Renamed from LayoutTests/fast/regions/parse-incomplete-region-rule-expected.txt.
+        * fast/regions/region-styling/parse-incomplete-region-rule.html: Renamed from LayoutTests/fast/regions/parse-incomplete-region-rule.html.
+        * fast/regions/region-styling/parsing-region-style-rule-expected.txt: Renamed from LayoutTests/fast/regions/parsing-region-style-rule-expected.txt.
+        * fast/regions/region-styling/parsing-region-style-rule.html: Renamed from LayoutTests/fast/regions/parsing-region-style-rule.html.
+        * fast/regions/region-styling/region-rule-nested-region-rule-expected.html: Renamed from LayoutTests/fast/regions/region-rule-nested-region-rule-expected.html.
+        * fast/regions/region-styling/region-rule-nested-region-rule.html: Renamed from LayoutTests/fast/regions/region-rule-nested-region-rule.html.
+        * fast/regions/region-styling/region-style-block-background-color-expected.html: Renamed from LayoutTests/fast/regions/region-style-block-background-color-expected.html.
+        * fast/regions/region-styling/region-style-block-background-color.html: Renamed from LayoutTests/fast/regions/region-style-block-background-color.html.
+        * fast/regions/region-styling/region-style-block-background-color2-expected.html: Renamed from LayoutTests/fast/regions/region-style-block-background-color2-expected.html.
+        * fast/regions/region-styling/region-style-block-background-color2.html: Renamed from LayoutTests/fast/regions/region-style-block-background-color2.html.
+        * fast/regions/region-styling/region-style-color-expected.html: Renamed from LayoutTests/fast/regions/region-style-color-expected.html.
+        * fast/regions/region-styling/region-style-color.html: Renamed from LayoutTests/fast/regions/region-style-color.html.
+        * fast/regions/region-styling/region-style-image-background-color-expected.html: Renamed from LayoutTests/fast/regions/region-style-image-background-color-expected.html.
+        * fast/regions/region-styling/region-style-image-background-color.html: Renamed from LayoutTests/fast/regions/region-style-image-background-color.html.
+        * fast/regions/region-styling/region-style-in-columns-expected.html: Renamed from LayoutTests/fast/regions/region-style-in-columns-expected.html.
+        * fast/regions/region-styling/region-style-in-columns.html: Renamed from LayoutTests/fast/regions/region-style-in-columns.html.
+        * fast/regions/region-styling/region-style-inline-background-color-expected.html: Renamed from LayoutTests/fast/regions/region-style-inline-background-color-expected.html.
+        * fast/regions/region-styling/region-style-inline-background-color.html: Renamed from LayoutTests/fast/regions/region-style-inline-background-color.html.
+        * fast/regions/region-styling/region-style-not-supported-properties-expected.html: Renamed from LayoutTests/fast/regions/region-style-not-supported-properties-expected.html.
+        * fast/regions/region-styling/region-style-not-supported-properties.html: Renamed from LayoutTests/fast/regions/region-style-not-supported-properties.html.
+        * fast/regions/region-styling/region-style-rule-position-expected.html: Renamed from LayoutTests/fast/regions/region-style-rule-position-expected.html.
+        * fast/regions/region-styling/region-style-rule-position.html: Renamed from LayoutTests/fast/regions/region-style-rule-position.html.
+        * fast/regions/region-styling/region-style-rule-specificity-expected.html: Renamed from LayoutTests/fast/regions/region-style-rule-specificity-expected.html.
+        * fast/regions/region-styling/region-style-rule-specificity.html: Renamed from LayoutTests/fast/regions/region-style-rule-specificity.html.
+        * fast/regions/region-styling/region-styling-mediaquery-expected.html: Renamed from LayoutTests/fast/regions/region-styling-mediaquery-expected.html.
+        * fast/regions/region-styling/region-styling-mediaquery.html: Renamed from LayoutTests/fast/regions/region-styling-mediaquery.html.
+        * fast/regions/region-styling/remove-leftover-anon-block-crash-expected.txt: Renamed from LayoutTests/fast/regions/remove-leftover-anon-block-crash-expected.txt.
+        * fast/regions/region-styling/remove-leftover-anon-block-crash.html: Renamed from LayoutTests/fast/regions/remove-leftover-anon-block-crash.html.
+        * fast/regions/region-styling/removed-element-style-in-region-crash-expected.txt: Renamed from LayoutTests/fast/regions/removed-element-style-in-region-crash-expected.txt.
+        * fast/regions/region-styling/removed-element-style-in-region-crash.html: Renamed from LayoutTests/fast/regions/removed-element-style-in-region-crash.html.
+        * fast/regions/region-styling/render-region-custom-style-mark-expected.html: Renamed from LayoutTests/fast/regions/render-region-custom-style-mark-expected.html.
+        * fast/regions/region-styling/render-region-custom-style-mark.html: Renamed from LayoutTests/fast/regions/render-region-custom-style-mark.html.
+        * fast/regions/region-styling/set-box-style-in-region-crash-expected.txt: Renamed from LayoutTests/fast/regions/set-box-style-in-region-crash-expected.txt.
+        * fast/regions/region-styling/set-box-style-in-region-crash.html: Renamed from LayoutTests/fast/regions/set-box-style-in-region-crash.html.
+        * fast/regions/region-styling/webkit-region-rule-expected.txt: Renamed from LayoutTests/fast/regions/webkit-region-rule-expected.txt.
+        * fast/regions/region-styling/webkit-region-rule.html: Renamed from LayoutTests/fast/regions/webkit-region-rule.html.
+
+2013-10-07  Filip Pizlo  <fpizlo@apple.com>
+
+        ASSERTION FAILED: isUInt32() in jsc-layout-tests.yaml/js/script-tests/dfg-uint32-to-number-in-middle-of-copy-propagation.js.layout-dfg-eager-no-cjit
+        https://bugs.webkit.org/show_bug.cgi?id=122419
+
+        Reviewed by Oliver Hunt.
+
+        * js/script-tests/dfg-uint32-to-number-in-middle-of-copy-propagation.js:
+
 2013-10-07  Tim Horton  <timothy_horton@apple.com>
 
         -webkit-cross-fade paints SVGs at full opacity during cross-fade

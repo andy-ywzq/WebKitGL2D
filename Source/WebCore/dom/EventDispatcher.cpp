@@ -49,27 +49,27 @@ bool EventDispatcher::dispatchEvent(Node* node, PassRefPtr<EventDispatchMediator
     if (!mediator->event())
         return true;
     EventDispatcher dispatcher(node, mediator->event());
-    return mediator->dispatchEvent(&dispatcher);
+    return mediator->mediateAndDispatchEvent(&dispatcher);
 }
 
 EventDispatcher::EventDispatcher(Node* node, PassRefPtr<Event> event)
-    : m_node(node)
+    : m_eventPath(*node, *event)
+    , m_node(node)
     , m_event(event)
 #ifndef NDEBUG
     , m_eventDispatched(false)
 #endif
 {
-    ASSERT(node);
-    ASSERT(m_event.get());
+    ASSERT(m_node);
+    ASSERT(m_event);
     ASSERT(!m_event->type().isNull()); // JavaScript code can create an event with an empty name, but not null.
     m_view = node->document().view();
-    EventRetargeter::calculateEventPath(m_node.get(), m_event.get(), m_eventPath);
 }
 
-void EventDispatcher::dispatchScopedEvent(Node* node, PassRefPtr<EventDispatchMediator> mediator)
+void EventDispatcher::dispatchScopedEvent(Node& node, PassRefPtr<EventDispatchMediator> mediator)
 {
     // We need to set the target here because it can go away by the time we actually fire the event.
-    mediator->event()->setTarget(EventRetargeter::eventTargetRespectingTargetRules(node));
+    mediator->event()->setTarget(&EventRetargeter::eventTargetRespectingTargetRules(node));
     ScopedEventQueue::instance()->enqueueEventDispatchMediator(mediator);
 }
 
@@ -106,7 +106,8 @@ bool EventDispatcher::dispatch()
 #endif
     ChildNodesLazySnapshot::takeChildNodesLazySnapshot();
 
-    m_event->setTarget(EventRetargeter::eventTargetRespectingTargetRules(m_node.get()));
+    ASSERT(m_node);
+    m_event->setTarget(&EventRetargeter::eventTargetRespectingTargetRules(*m_node));
     ASSERT(!NoEventDispatchAssertion::isEventDispatchForbidden());
     ASSERT(m_event->target());
     WindowEventContext windowEventContext(m_event.get(), m_node.get(), topEventContext());
@@ -143,7 +144,7 @@ inline EventDispatchContinuation EventDispatcher::dispatchEventAtCapturing(Windo
         return DoneDispatching;
 
     for (size_t i = m_eventPath.size() - 1; i > 0; --i) {
-        const EventContext& eventContext = *m_eventPath[i];
+        const EventContext& eventContext = m_eventPath.contextAt(i);
         if (eventContext.currentTargetSameAsTarget())
             continue;
         eventContext.handleLocalEvents(m_event.get());
@@ -157,7 +158,7 @@ inline EventDispatchContinuation EventDispatcher::dispatchEventAtCapturing(Windo
 inline EventDispatchContinuation EventDispatcher::dispatchEventAtTarget()
 {
     m_event->setEventPhase(Event::AT_TARGET);
-    m_eventPath[0]->handleLocalEvents(m_event.get());
+    m_eventPath.contextAt(0).handleLocalEvents(m_event.get());
     return m_event->propagationStopped() ? DoneDispatching : ContinueDispatching;
 }
 
@@ -166,7 +167,7 @@ inline void EventDispatcher::dispatchEventAtBubbling(WindowEventContext& windowC
     // Trigger bubbling event handlers, starting at the bottom and working our way up.
     size_t size = m_eventPath.size();
     for (size_t i = 1; i < size; ++i) {
-        const EventContext& eventContext = *m_eventPath[i];
+        const EventContext& eventContext = m_eventPath.contextAt(i);
         if (eventContext.currentTargetSameAsTarget())
             m_event->setEventPhase(Event::AT_TARGET);
         else if (m_event->bubbles() && !m_event->cancelBubble())
@@ -185,7 +186,8 @@ inline void EventDispatcher::dispatchEventAtBubbling(WindowEventContext& windowC
 
 inline void EventDispatcher::dispatchEventPostProcess(const InputElementClickState& InputElementClickState)
 {
-    m_event->setTarget(EventRetargeter::eventTargetRespectingTargetRules(m_node.get()));
+    ASSERT(m_node);
+    m_event->setTarget(&EventRetargeter::eventTargetRespectingTargetRules(*m_node));
     m_event->setCurrentTarget(0);
     m_event->setEventPhase(0);
 
@@ -206,7 +208,7 @@ inline void EventDispatcher::dispatchEventPostProcess(const InputElementClickSta
         if (m_event->bubbles()) {
             size_t size = m_eventPath.size();
             for (size_t i = 1; i < size; ++i) {
-                m_eventPath[i]->node()->defaultEventHandler(m_event.get());
+                m_eventPath.contextAt(i).node()->defaultEventHandler(m_event.get());
                 ASSERT(!m_event->defaultPrevented());
                 if (m_event->defaultHandled())
                     return;
@@ -217,7 +219,17 @@ inline void EventDispatcher::dispatchEventPostProcess(const InputElementClickSta
 
 const EventContext* EventDispatcher::topEventContext()
 {
-    return m_eventPath.isEmpty() ? 0 : m_eventPath.last().get();
+    return m_eventPath.lastContextIfExists();
+}
+
+bool EventPath::hasEventListeners(const AtomicString& eventType) const
+{
+    for (size_t i = 0; i < m_path.size(); i++) {
+        if (m_path[i]->node()->hasEventListeners(eventType))
+            return true;
+    }
+
+    return false;
 }
 
 }

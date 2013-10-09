@@ -1,3 +1,293 @@
+2013-10-09  Julien Brianceau  <jbriance@cisco.com>
+
+        [arm] Inverted src and dest FP registers in DFG speculative JIT when using hardfp.
+        https://bugs.webkit.org/show_bug.cgi?id=122555
+
+        Reviewed by Michael Saboff.
+
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::appendCallWithExceptionCheckSetResult):
+        (JSC::DFG::SpeculativeJIT::appendCallSetResult):
+
+2013-10-08  Michael Saboff  <msaboff@apple.com>
+
+        Transition call and construct JITStubs to CCallHelper functions
+        https://bugs.webkit.org/show_bug.cgi?id=122453
+
+        Reviewed by Geoffrey Garen.
+
+        Transitioned cti_op_call_eval to operationCallEval.  Migrated baseline JIT to use the same 
+        call thunks as the DFG.  Eliminated all of the "oldStyle" thunks and related functions.
+
+        * bytecode/CallLinkInfo.cpp:
+        (JSC::CallLinkInfo::unlink):
+        * jit/JIT.cpp:
+        (JSC::JIT::linkFor):
+        (JSC::JIT::linkSlowCall):
+        * jit/JIT.h:
+        * jit/JITCall.cpp:
+        (JSC::JIT::compileCallEval):
+        (JSC::JIT::compileCallEvalSlowCase):
+        (JSC::JIT::compileOpCallSlowCase):
+        (JSC::JIT::privateCompileClosureCall):
+        * jit/JITCall32_64.cpp:
+        (JSC::JIT::compileCallEval):
+        (JSC::JIT::compileCallEvalSlowCase):
+        (JSC::JIT::compileOpCallSlowCase):
+        (JSC::JIT::privateCompileClosureCall):
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperationWithCallFrameRollbackOnException):
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        * jit/JITStubs.cpp:
+        * jit/JITStubs.h:
+        * jit/ThunkGenerators.cpp:
+        * jit/ThunkGenerators.h:
+
+2013-10-09  Julien Brianceau  <jbriance@cisco.com>
+
+        [sh4] Fix lots of unused parameter warnings.
+        https://bugs.webkit.org/show_bug.cgi?id=122545
+
+        Reviewed by Csaba Osztrogonác.
+
+        * assembler/MacroAssemblerSH4.h:
+        (JSC::MacroAssemblerSH4::revertJumpReplacementToPatchableBranchPtrWithPatch):
+        * assembler/SH4Assembler.h:
+        (JSC::SH4Assembler::andlImm8r):
+        (JSC::SH4Assembler::orlImm8r):
+        (JSC::SH4Assembler::xorlImm8r):
+        (JSC::SH4Assembler::cmpEqImmR0):
+        (JSC::SH4Assembler::testlImm8r):
+        (JSC::SH4Assembler::movwPCReg):
+        (JSC::SH4Assembler::movwMemReg):
+        (JSC::SH4Assembler::movbMemReg):
+        (JSC::SH4Assembler::printInstr):
+        (JSC::SH4Assembler::printBlockInstr):
+
+2013-10-09  Julien Brianceau  <jbriance@cisco.com>
+
+        [sh4] Add sh4 support when building with CMake.
+        https://bugs.webkit.org/show_bug.cgi?id=122542
+
+        Reviewed by Csaba Osztrogonác.
+
+        * CMakeLists.txt:
+
+2013-10-08  Oliver Hunt  <oliver@apple.com>
+
+        Convert for-of iteration to in-band signalling so we can trivially avoid unnecessary object allocation
+        https://bugs.webkit.org/show_bug.cgi?id=122532
+
+        Reviewed by Michael Saboff.
+
+        Switch for-of enumeration to use in band signalling to determine the end
+        of iteration.  This allows us to trivially remove an otherwise unnecessary
+        object allocation, and paves the way for optimised thunks in future.
+
+        We can re-add explicit .next() functions in future that would marshall
+        the true iteration functions, but for now we'll ignore them.
+
+        This results in a huge improvement in the performance of for-of (in the order
+        of 2x) but there's still a long way to go in order to get the performance to
+        a satisfactory level.
+
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ForOfNode::emitBytecode):
+        * runtime/ArrayIteratorPrototype.cpp:
+        (JSC::ArrayIteratorPrototype::finishCreation):
+        (JSC::createIteratorResult):
+        * runtime/CommonIdentifiers.cpp:
+        (JSC::CommonIdentifiers::CommonIdentifiers):
+        * runtime/CommonIdentifiers.h:
+        * runtime/Identifier.cpp:
+        (JSC::Identifier::addSlowCase):
+        * runtime/JSObject.h:
+        (JSC::JSFinalObject::create):
+        * runtime/VM.cpp:
+        (JSC::VM::VM):
+        * runtime/VM.h:
+
+2013-10-08  Alex Christensen  <achristensen@webkit.org>
+
+        Fixed compile errors while compiling without the JIT enabled.
+        https://bugs.webkit.org/show_bug.cgi?id=122530
+
+        Reviewed by Brent Fulgham.
+
+        * jit/JITOperations.cpp:
+        Protected with #if ENABLE(JIT) like the rest of the JIT source.
+
+2013-10-07  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        JSManagedValue should be able to store non-object JSValues
+        https://bugs.webkit.org/show_bug.cgi?id=122351
+
+        Reviewed by Oliver Hunt.
+
+        We decided not to support this because we thought it didn't make sense to have a 
+        "weak" JSValue that wasn't an object.
+
+        Our general thought process was if you have a JSObject-ObjC object pair (i.e. an 
+        Obj-C object that you exported to JavaScript-land), it makes more sense to store 
+        a non-object JSValue on the JavaScript-land version of the object rather than as 
+        an ivar in the Objective-C object.
+
+        In retrospect, this may not have been a good decision at least w.r.t. consistency 
+        in client code. If you're storing a bag of JSValues off an Obj-C object, you'd 
+        like to store all of them either in ObjC-land or JavaScript-land, but doing some 
+        in one and some in the other doesn't sound too good. Also, what if the object you 
+        want to hang these values off of doesn't have a corresponding object in JavaScript-
+        land in which to store them?
+
+        The solution is to fix JSManagedValue to be able to reference non-object JSValues. 
+        Right now, all JSManagedValues contain a Weak<JSObject>. We'll change this so that
+        they can contain either a non-cell JSValue or a JSObject*, along with a weak 
+        reference to the JSGlobalObject for reconstructing a JSValue later on.
+
+        * API/JSManagedValue.mm:
+        (PrimitiveOrObject::PrimitiveOrObject):
+        (PrimitiveOrObject::~PrimitiveOrObject):
+        (PrimitiveOrObject::clear):
+        (PrimitiveOrObject::isClear):
+        (PrimitiveOrObject::isSet):
+        (PrimitiveOrObject::isPrimitive):
+        (PrimitiveOrObject::isObject):
+        (PrimitiveOrObject::setPrimitive):
+        (PrimitiveOrObject::setObject):
+        (PrimitiveOrObject::object):
+        (PrimitiveOrObject::primitive):
+        (-[JSManagedValue initWithValue:]):
+        (-[JSManagedValue value]):
+        (-[JSManagedValue disconnectValue]):
+
+2013-10-08  Robert Plociennik  <r.plociennik@samsung.com>
+
+        JavaScriptCore fails to build
+        https://bugs.webkit.org/show_bug.cgi?id=122440
+
+        Reviewed by Darin Adler.
+
+        Compilation fails in debug due to 'comparison of unsigned expression >= 0 is
+        always true'.
+
+        * debugger/DebuggerCallFrame.cpp:
+        (JSC::DebuggerCallFrame::positionForCallFrame): Removed the offending ASSERTS.
+
+2013-10-07  Andreas Kling  <akling@apple.com>
+
+        Pass VM instead of ExecState to JSNotAnObject constructor.
+        <https://webkit.org/b/122474>
+
+        Reviewed by Sam Weinig.
+
+        JSNotAnObject was only using the ExecState to find the VM.
+
+2013-10-07  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL memory allocator should be able to allocate data sections in non-executable memory
+        https://bugs.webkit.org/show_bug.cgi?id=116189
+
+        Reviewed by Sam Weinig.
+        
+        Use a RefCountedArray<int64_t> for data sections. This works out great because
+        RefCountedArray<> knows its own size and because the reference counting makes passing
+        it around very easy (you don't have to stress out about ownership).
+
+        * ftl/FTLCompile.cpp:
+        (JSC::FTL::mmAllocateDataSection):
+        (JSC::FTL::compile):
+        * ftl/FTLJITCode.cpp:
+        (JSC::FTL::JITCode::addDataSection):
+        * ftl/FTLJITCode.h:
+        (JSC::FTL::JITCode::dataSections):
+
+2013-10-07  Roger Fong  <roger_fong@apple.com>
+
+        Modify JavascriptCore makefile for x64 build.
+        https://bugs.webkit.org/show_bug.cgi?id=122467.
+        <rdar://problem/15169174>.
+
+        Reviewed by Brent Fulgham.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.make:
+
+2013-10-07  Nadav Rotem  <nrotem@apple.com>
+
+        FTL: Optimize IsString(@2<String>) -> JSConst(true) + Phantom()
+        https://bugs.webkit.org/show_bug.cgi?id=122363
+
+        Reviewed by Filip Pizlo.
+
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+
+2013-10-04  Michael Saboff  <msaboff@apple.com>
+
+        Transition stack check JITStubs to CCallHelper functions
+        https://bugs.webkit.org/show_bug.cgi?id=122289
+
+        Reviewed by Filip Pizlo.
+
+        Replaced jit stubs cti_stack_check, cti_op_call_arityCheck and cti_op_construct_arityCheck with
+        jit operations operationStackCheck, operationCallArityCheck & operationConstructArityCheck.
+        Added new callOperationWithCallFrameRollbackOnException() in baseline and DFG JITs to call
+        these new functions.  Added code to unwind one frame in JIT::privateCompileExceptionHandlers() 
+        and JITCompiler::compileExceptionHandlers() for these cases that need to throw exceptions in
+        their caller frame when the stack is exhausted.
+
+        * assembler/MacroAssembler.h:
+        (JSC::MacroAssembler::andPtr): Added to handle masking a pointer with a literal.
+        * assembler/MacroAssemblerX86_64.h:
+        (JSC::MacroAssemblerX86_64::and64): Added to handle masking a pointer with a literal.
+        * dfg/DFGJITCompiler.cpp:
+        (JSC::DFG::JITCompiler::compileExceptionHandlers):
+        (JSC::DFG::JITCompiler::compileFunction):
+        (JSC::DFG::JITCompiler::linkFunction):
+        * dfg/DFGJITCompiler.h:
+        (JSC::DFG::JITCompiler::exceptionCheckWithCallFrameRollback):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::callOperationWithCallFrameRollbackOnException):
+        (JSC::DFG::SpeculativeJIT::appendCallWithExceptionCheck):
+        (JSC::DFG::SpeculativeJIT::appendCallWithCallFrameRollbackOnException):
+        (JSC::DFG::SpeculativeJIT::appendCallWithExceptionCheckSetResult):
+        (JSC::DFG::SpeculativeJIT::appendCallWithCallFrameRollbackOnExceptionSetResult):
+        * ftl/FTLLink.cpp:
+        (JSC::FTL::link):
+        * interpreter/CallFrame.h:
+        (JSC::ExecState::hostCallFrameFlag):
+        * jit/AssemblyHelpers.cpp:
+        (JSC::AssemblyHelpers::jitAssertIsNull):
+        * jit/AssemblyHelpers.h:
+        (JSC::AssemblyHelpers::jitAssertIsNull):
+        * jit/JIT.cpp:
+        (JSC::JIT::privateCompile):
+        (JSC::JIT::privateCompileExceptionHandlers):
+        * jit/JIT.h:
+        (JSC::JIT::exceptionCheckWithCallFrameRollback):
+        * jit/JITInlines.h:
+        (JSC::JIT::appendCallWithCallFrameRollbackOnException):
+        (JSC::JIT::callOperationWithCallFrameRollbackOnException):
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        * jit/JITStubs.cpp:
+        * jit/JITStubs.h:
+
+2013-10-07  Filip Pizlo  <fpizlo@apple.com>
+
+        ASSERTION FAILED: isUInt32() in jsc-layout-tests.yaml/js/script-tests/dfg-uint32-to-number-in-middle-of-copy-propagation.js.layout-dfg-eager-no-cjit
+        https://bugs.webkit.org/show_bug.cgi?id=122419
+
+        Reviewed by Oliver Hunt.
+        
+        AI was using JSValue::asUInt32() incorrectly. That method presumes that the input is
+        both a int32 and a uint32 (it's in the range [0, 2^31)). The UInt32ToNumber node is
+        instead dealing with an input that is always represented as a int32 but that has the
+        meaning of a uint32 - so AI should use JSValue::asInt32() and then do the cast.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::::executeEffects):
+
 2013-10-07  Julien Brianceau  <jbriance@cisco.com>
 
         [sh4] Jump over maxJumpReplacementSize in revertJumpToMove.

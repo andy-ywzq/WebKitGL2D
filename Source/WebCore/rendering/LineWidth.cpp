@@ -30,12 +30,12 @@
 #include "config.h"
 #include "LineWidth.h"
 
-#include "RenderBlock.h"
+#include "RenderBlockFlow.h"
 #include "RenderRubyRun.h"
 
 namespace WebCore {
 
-LineWidth::LineWidth(RenderBlock& block, bool isFirstLine, IndentTextOrNot shouldIndentText)
+LineWidth::LineWidth(RenderBlockFlow& block, bool isFirstLine, IndentTextOrNot shouldIndentText)
     : m_block(block)
     , m_uncommittedWidth(0)
     , m_committedWidth(0)
@@ -148,23 +148,6 @@ void LineWidth::shrinkAvailableWidthForNewFloatIfNeeded(FloatingObject* newFloat
     }
 
     computeAvailableWidthFromLeftAndRight();
-}
-
-float LineWidth::uncommittedWidthForObject(const RenderObject& object) const
-{
-    auto result = m_uncommittedWidthMap.find(&object);
-    if (result != m_uncommittedWidthMap.end())
-        return result->value;
-    return -1;
-}
-
-void LineWidth::addUncommittedWidth(float delta, const RenderObject& current)
-{
-    m_uncommittedWidth += delta;
-
-    auto result = m_uncommittedWidthMap.add(&current, delta);
-    if (!result.isNewEntry)
-        result.iterator->value += delta;
 }
 
 void LineWidth::commit()

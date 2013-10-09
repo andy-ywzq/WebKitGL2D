@@ -48,6 +48,7 @@ end
 $canRunDisplayProfilerOutput = false
 
 begin
+    require 'rubygems'
     require 'json'
     require 'highline'
     $canRunDisplayProfilerOutput = true
@@ -775,6 +776,7 @@ Dir.chdir(parallelDir) {
                 print string
                 prevStringLength = string.length
                 blankLine = false
+                $stdout.flush
             }
         }
         puts

@@ -1423,7 +1423,7 @@ inline bool RenderLayer::shouldRepaintAfterLayout() const
     // Composited layers that were moved during a positioned movement only
     // layout, don't need to be repainted. They just need to be recomposited.
     ASSERT(m_repaintStatus == NeedsFullRepaintForPositionedMovementLayout);
-    return !isComposited();
+    return !isComposited() || backing()->paintsIntoCompositedAncestor();
 #else
     return true;
 #endif
@@ -5970,6 +5970,7 @@ bool RenderLayer::shouldBeNormalFlowOnly() const
 #endif
         && !isTransparent()
         && !needsCompositedScrolling()
+        && !renderer().isRenderRegion()
         ;
 }
 

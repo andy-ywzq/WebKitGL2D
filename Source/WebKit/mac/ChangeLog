@@ -1,3 +1,116 @@
+2013-10-08  Darin Adler  <darin@apple.com>
+
+        WebNetscapePluginView should no longer use deleteAllValues
+        https://bugs.webkit.org/show_bug.cgi?id=122495
+
+        Reviewed by Anders Carlsson.
+
+        * Plugins/WebNetscapePluginView.h: Use unique_ptr for both the pointer to
+        the timers hash table, and for the values in the hash table.
+
+        * Plugins/WebNetscapePluginView.mm:
+        (-[WebNetscapePluginView stopTimers]): Rewrote loop so it works with unique_ptr.
+        (-[WebNetscapePluginView startTimers]): Ditto.
+        (-[WebNetscapePluginView fini]): Removed unneeded code to delete timers.
+        (-[WebNetscapePluginView scheduleTimerWithInterval:repeat:timerFunc:]): Make
+        the timers hash table with make-unique. Fixed the loop that chooses the timer
+        ID so it won't ever try to use a deleted value, although that never happens
+        in practice. Use HashMap::add instead of using both contains and set.
+        Rearranged code so we don't need to make a raw pointer for the timer.
+        (-[WebNetscapePluginView unscheduleTimer:]): Use remove instead of take/delete,
+        since remove takes care of the deletion automatically since we are using the
+        unique_ptr class.
+
+2013-10-08  Darin Adler  <darin@apple.com>
+
+        Eliminate use of deleteAllValues in ProxyInstance
+        https://bugs.webkit.org/show_bug.cgi?id=122499
+
+        Reviewed by Anders Carlsson.
+
+        * Plugins/Hosted/ProxyInstance.h: Use unique_ptr for map values in m_fields and m_methods.
+
+        * Plugins/Hosted/ProxyInstance.mm:
+        (WebKit::ProxyInstance::~ProxyInstance): Removed calls to deleteAllValues.
+        (WebKit::ProxyInstance::methodNamed): Use make_unique and get to deal with map entries
+        that are unique_ptr. Also fixed a bug where this would do an expensive no-op if the map
+        already had an entry with a null in it. We would call the plug-in, but eventually
+        isNewEntry would be false so we would return null.
+        (WebKit::ProxyInstance::fieldNamed): Use make_unique and get to deal with map entries
+        that are unique_ptr.
+
+2013-10-08  Darin Adler  <darin@apple.com>
+
+        Change NetscapePluginInstanceProxy::m_replies to use unique_ptr instead of deleteAllValues
+        https://bugs.webkit.org/show_bug.cgi?id=122492
+
+        Reviewed by Andreas Kling.
+
+        * Plugins/Hosted/NetscapePluginHostManager.mm:
+        (WebKit::NetscapePluginHostManager::instantiatePlugin): Use auto so this works with
+        unique_ptr instead of auto_ptr.
+        * Plugins/Hosted/NetscapePluginHostProxy.mm:
+        (WKPCGetScriptableNPObjectReply): Use make_unique instead of using new directly.
+        (WKPCBooleanReply): Ditto.
+        (WKPCBooleanAndDataReply): Ditto.
+        (WKPCInstantiatePluginReply): Ditto.
+        * Plugins/Hosted/NetscapePluginInstanceProxy.h: Changed m_replies to map to unique_ptr
+        instead of to a raw pointer.
+        (WebKit::NetscapePluginInstanceProxy::setCurrentReply): Changed to take a unique_ptr
+        instead of a raw pointer since this takes ownership of the pointer.
+        (WebKit::NetscapePluginInstanceProxy::waitForReply): Changed to return a unique_ptr
+        instead of a auto_ptr because that's better. Use unique_ptr inside the function
+        too to avoid the need for an explicit delete.
+        * Plugins/Hosted/NetscapePluginInstanceProxy.mm:
+        (WebKit::NetscapePluginInstanceProxy::~NetscapePluginInstanceProxy): Removed the call to
+        deleteAllValues.
+        (WebKit::NetscapePluginInstanceProxy::cancelStreamLoad): Removed unneeded initialization
+        of a local variable that was already set in all code paths.
+        (WebKit::NetscapePluginInstanceProxy::wheelEvent): Use auto so this works with unique_ptr
+        instead of auto_ptr.
+        (WebKit::NetscapePluginInstanceProxy::print): Ditto.
+        (WebKit::NetscapePluginInstanceProxy::snapshot): Ditto. Ditto.
+        (WebKit::NetscapePluginInstanceProxy::processRequestsAndWaitForReply): Changed to return
+        a unique_ptr. Also removed an unneeded assertion.
+        (WebKit::NetscapePluginInstanceProxy::createBindingsInstance): Use auto so this works
+        with unique_ptr instead of auto_ptr.
+
+        * Plugins/Hosted/ProxyInstance.h: Changed return type of waitForReply to unique_ptr.
+
+        * Plugins/Hosted/ProxyInstance.mm:
+        (WebKit::ProxyInstance::invoke): Use auto so this works with unique_ptr instead of auto_ptr.
+        (WebKit::ProxyInstance::supportsInvokeDefaultMethod): Ditto.
+        (WebKit::ProxyInstance::supportsConstruct): Ditto.
+        (WebKit::ProxyInstance::getPropertyNames): Ditto.
+        (WebKit::ProxyInstance::methodNamed): Ditto.
+        (WebKit::ProxyInstance::fieldNamed): Ditto.
+        (WebKit::ProxyInstance::fieldValue): Ditto.
+        (WebKit::ProxyInstance::setFieldValue): Ditto.
+
+2013-10-07  Sam Weinig  <sam@webkit.org>
+
+        CTTE: Use references in and around DragController
+        https://bugs.webkit.org/show_bug.cgi?id=122427
+
+        Reviewed by Andreas Kling.
+
+        * WebCoreSupport/WebDragClient.h:
+        * WebCoreSupport/WebDragClient.mm:
+        (WebDragClient::actionMaskForDrag):
+        (WebDragClient::willPerformDragDestinationAction):
+        (WebDragClient::willPerformDragSourceAction):
+        (WebDragClient::startDrag):
+        (WebDragClient::declareAndWriteDragImage):
+        * WebView/WebFrame.mm:
+        (-[WebFrame _replaceSelectionWithText:selectReplacement:smartReplace:]):
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _documentFragmentFromPasteboard:forType:inContext:subresources:]):
+        * WebView/WebView.mm:
+        (-[WebView draggingEntered:]):
+        (-[WebView draggingUpdated:]):
+        (-[WebView draggingExited:]):
+        (-[WebView performDragOperation:]):
+
 2013-10-05  Sam Weinig  <sam@webkit.org>
 
         CTTE: Thread references through markup.h

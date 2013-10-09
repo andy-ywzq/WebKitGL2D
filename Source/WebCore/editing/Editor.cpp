@@ -440,8 +440,11 @@ String Editor::plainTextFromPasteboard(const PasteboardPlainText& text)
 void Editor::pasteWithPasteboard(Pasteboard* pasteboard, bool allowPlainText)
 {
     RefPtr<Range> range = selectedRange();
+    if (!range)
+        return;
+
     bool chosePlainText;
-    RefPtr<DocumentFragment> fragment = pasteboard->documentFragment(&m_frame, range, allowPlainText, chosePlainText);
+    RefPtr<DocumentFragment> fragment = pasteboard->documentFragment(m_frame, *range, allowPlainText, chosePlainText);
     if (fragment && shouldInsertFragment(fragment, range, EditorInsertActionPasted))
         pasteAsFragment(fragment, canSmartReplaceWithPasteboard(*pasteboard), chosePlainText);
 }
@@ -493,7 +496,11 @@ void Editor::replaceSelectionWithFragment(PassRefPtr<DocumentFragment> fragment,
 
 void Editor::replaceSelectionWithText(const String& text, bool selectReplacement, bool smartReplace)
 {
-    replaceSelectionWithFragment(createFragmentFromText(selectedRange().get(), text), selectReplacement, smartReplace, true); 
+    RefPtr<Range> range = selectedRange();
+    if (!range)
+        return;
+
+    replaceSelectionWithFragment(createFragmentFromText(*range, text), selectReplacement, smartReplace, true);
 }
 
 PassRefPtr<Range> Editor::selectedRange()
@@ -1061,7 +1068,7 @@ void Editor::cut()
             writeSelectionToPasteboard(*Pasteboard::createForCopyAndPaste());
 #else
             // FIXME: Convert all other platforms to match Mac and delete this.
-            Pasteboard::createForCopyAndPaste()->writeSelection(selection.get(), canSmartCopyOrDelete(), &m_frame, IncludeImageAltTextForClipboard);
+            Pasteboard::createForCopyAndPaste()->writeSelection(*selection, canSmartCopyOrDelete(), m_frame, IncludeImageAltTextForClipboard);
 #endif
         }
         didWriteSelectionToPasteboard();
@@ -1087,14 +1094,14 @@ void Editor::copy()
 #if (PLATFORM(MAC) && !PLATFORM(IOS)) || PLATFORM(EFL) || PLATFORM(NIX)
             writeImageToPasteboard(*Pasteboard::createForCopyAndPaste(), *imageElement, document().url(), document().title());
 #else
-            Pasteboard::createForCopyAndPaste()->writeImage(imageElement, document().url(), document().title());
+            Pasteboard::createForCopyAndPaste()->writeImage(*imageElement, document().url(), document().title());
 #endif
         } else {
 #if (PLATFORM(MAC) && !PLATFORM(IOS)) || PLATFORM(EFL) || PLATFORM(NIX)
             writeSelectionToPasteboard(*Pasteboard::createForCopyAndPaste());
 #else
             // FIXME: Convert all other platforms to match Mac and delete this.
-            Pasteboard::createForCopyAndPaste()->writeSelection(selectedRange().get(), canSmartCopyOrDelete(), &m_frame, IncludeImageAltTextForClipboard);
+            Pasteboard::createForCopyAndPaste()->writeSelection(*selectedRange(), canSmartCopyOrDelete(), m_frame, IncludeImageAltTextForClipboard);
 #endif
         }
     }
@@ -1196,7 +1203,7 @@ void Editor::copyImage(const HitTestResult& result)
 #if PLATFORM(MAC) || PLATFORM(EFL) || PLATFORM(NIX)
     writeImageToPasteboard(*Pasteboard::createForCopyAndPaste(), *element, url, result.altDisplayString());
 #else
-    Pasteboard::createForCopyAndPaste()->writeImage(element, url, result.altDisplayString());
+    Pasteboard::createForCopyAndPaste()->writeImage(*element, url, result.altDisplayString());
 #endif
 }
 
@@ -2816,13 +2823,6 @@ void Editor::applyEditingStyleToElement(Element* element) const
     style->setPropertyInternal(CSSPropertyWordWrap, "break-word", false, IGNORE_EXCEPTION);
     style->setPropertyInternal(CSSPropertyWebkitNbspMode, "space", false, IGNORE_EXCEPTION);
     style->setPropertyInternal(CSSPropertyWebkitLineBreak, "after-white-space", false, IGNORE_EXCEPTION);
-}
-
-// Searches from the beginning of the document if nothing is selected.
-bool Editor::findString(const String& target, bool forward, bool caseFlag, bool wrapFlag, bool startInSelection)
-{
-    FindOptions options = (forward ? 0 : Backwards) | (caseFlag ? 0 : CaseInsensitive) | (wrapFlag ? WrapAround : 0) | (startInSelection ? StartInSelection : 0);
-    return findString(target, options);
 }
 
 bool Editor::findString(const String& target, FindOptions options)
