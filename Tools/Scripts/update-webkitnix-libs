@@ -23,7 +23,7 @@ use webkitdirs;
 
 use constant WEBRTC_VERSION => 4804;
 my $showHelp = 0;
-my $useWebrtc = 1;
+my $useWebrtc = 0;
 
 my $programName = basename($0);
 my $usage = <<EOF;
