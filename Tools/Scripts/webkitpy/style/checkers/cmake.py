@@ -32,6 +32,21 @@ class CMakeChecker(object):
 
     """Processes CMake lines for checking style."""
 
+    # This list is used to--
+    #
+    # (1) generate an explicit list of all possible categories,
+    # (2) unit test that all checked categories have valid names, and
+    # (3) unit test that all categories are getting unit tested.
+    #
+    categories = set([
+        'command/lowercase',
+        'list/emptyline',
+        'list/order',
+        'list/parentheses',
+        'whitespace/trailing',
+        'whitespace/parentheses',
+        ])
+
     # NO_SPACE_CMDS list are based on commands section of CMake document.
     # Now it is generated from
     # http://www.cmake.org/cmake/help/v2.8.10/cmake.html#section_Commands.

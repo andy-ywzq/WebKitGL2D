@@ -187,7 +187,7 @@
 #endif
 
 #if !defined(ENABLE_MEDIA_STREAM)
-#define ENABLE_MEDIA_STREAM 1
+#define ENABLE_MEDIA_STREAM 0
 #endif
 
 #if !defined(ENABLE_METER_ELEMENT)

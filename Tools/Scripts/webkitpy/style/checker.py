@@ -354,6 +354,7 @@ def _all_categories():
     categories = categories.union(TestExpectationsChecker.categories)
     categories = categories.union(ChangeLogChecker.categories)
     categories = categories.union(PNGChecker.categories)
+    categories = categories.union(CMakeChecker.categories)
 
     # FIXME: Consider adding all of the pep8 categories.  Since they
     #        are not too meaningful for documentation purposes, for

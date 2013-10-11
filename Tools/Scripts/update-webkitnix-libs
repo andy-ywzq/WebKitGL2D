@@ -18,12 +18,43 @@
 
 use FindBin;
 use lib $FindBin::Bin;
+use Getopt::Long qw(:config pass_through no_auto_abbrev);
 use webkitdirs;
 
 use constant WEBRTC_VERSION => 4804;
+my $showHelp = 0;
+my $useWebrtc = 0;
+
+my $programName = basename($0);
+my $usage = <<EOF;
+Usage: $programName [options]
+  --help                            Show this help message
+
+  --[no-]webrtc                     Enable/Disable building webrtc libraries (default: enabled).
+
+EOF
+
+%options = (
+    "help" => \$showHelp,
+    "webrtc!" => \$useWebrtc,
+);
+
+GetOptions(%options);
+
+if ($showHelp) {
+    print STDERR $usage;
+    exit 1;
+}
 
 my $scriptsDir = relativeScriptsDir();
 system("perl", "$scriptsDir/update-webkit-libs-jhbuild", "--nix") == 0 or die $!;
+
+if (!$useWebrtc) {
+    print "Building webrtc libraries are disabled.\n";
+    exit 0;
+}
+
+print "Started checkout of webrtc libraries and dependencies.\n";
 
 # jhbuild doesn't support exotic things used by libwebrtc
 # so we try to do all the stuff with our own bare hands
@@ -49,6 +80,7 @@ system("$depotToolsDir/gclient sync --revision ${\WEBRTC_VERSION} --force") == 0
 
 my $toolsDir = "$originalCwd/$scriptsDir/..";
 chdir "trunk" or die $!;
+print "Started building the webrtc libraries.\n";
 system("python build/gyp_chromium --depth=. -Dextra_gyp_flag=0 -Dinclude_tests=0 -Denable_google_now=0 -Dlogging=0 all.gyp") == 0 or die $!;
 system("patch -f -r - --no-backup-if-mismatch -p0 -i $toolsDir/nix/patches/fix_jnipeerconnection.patch");
 system("$depotToolsDir/ninja -C out/Release") == 0 or die $!;
