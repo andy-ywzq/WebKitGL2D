@@ -1293,7 +1293,10 @@ void AccessibilityNodeObject::visibleText(Vector<AccessibilityText>& textOrder) 
     case ToggleButtonRole:
     case CheckBoxRole:
     case ListBoxOptionRole:
+    // MacOS does not expect native <li> elements to expose label information, it only expects leaf node elements to do that.
+#if !PLATFORM(MAC)
     case ListItemRole:
+#endif
     case MenuButtonRole:
     case MenuItemRole:
     case MenuItemCheckboxRole:
@@ -1309,8 +1312,13 @@ void AccessibilityNodeObject::visibleText(Vector<AccessibilityText>& textOrder) 
     
     // If it's focusable but it's not content editable or a known control type, then it will appear to
     // the user as a single atomic object, so we should use its text as the default title.
-    if (isHeading() || isLink() || isGenericFocusableElement())
+    if (isHeading() || isLink())
         useTextUnderElement = true;
+    else if (isGenericFocusableElement()) {
+        // If a node uses a negative tabindex, do not expose it as a generic focusable element, because keyboard focus management
+        // will never land on this specific element.
+        useTextUnderElement = !(node && node->isElementNode() && toElement(node)->tabIndex() < 0);
+    }
     
     if (useTextUnderElement) {
         AccessibilityTextUnderElementMode mode;
@@ -1688,8 +1696,15 @@ String AccessibilityNodeObject::title() const
 
     // If it's focusable but it's not content editable or a known control type, then it will appear to
     // the user as a single atomic object, so we should use its text as the default title.                              
-    if (isGenericFocusableElement())
+    if (isGenericFocusableElement()) {
+        // If a node uses a negative tabindex, do not expose it as a generic focusable element, because keyboard focus management
+        // will never land on this specific element.
+        Node* node = this->node();
+        if (node && node->isElementNode() && toElement(node)->tabIndex() < 0)
+            return String();
+        
         return textUnderElement();
+    }
 
     return String();
 }
@@ -1800,7 +1815,15 @@ static String accessibleNameForNode(Node* node)
     if (isHTMLInputElement(node))
         return toHTMLInputElement(node)->value();
     
-    String text = node->document().axObjectCache()->getOrCreate(node)->textUnderElement();
+    // If the node can be turned into an AX object, we can use standard name computation rules.
+    // If however, the node cannot (because there's no renderer e.g.) fallback to using the basic text underneath.
+    AccessibilityObject* axObject = node->document().axObjectCache()->getOrCreate(node);
+    String text;
+    if (axObject)
+        text = axObject->textUnderElement();
+    else if (node->isElementNode())
+        text = toElement(node)->innerText();
+    
     if (!text.isEmpty())
         return text;
     

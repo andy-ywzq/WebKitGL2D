@@ -35,9 +35,9 @@
 #include "FTLJITCode.h"
 #include "JITOperations.h"
 #include "JITStubs.h"
+#include "LLVMAPI.h"
 #include "LinkBuffer.h"
 #include "VirtualRegister.h"
-#include <wtf/LLVMHeaders.h>
 
 namespace JSC { namespace FTL {
 
@@ -174,10 +174,10 @@ void link(State& state)
         break;
     }
     
-    state.finalizer->initializeEntrypointLinkBuffer(linkBuffer.release());
-    state.finalizer->initializeFunction(state.generatedFunction);
-    state.finalizer->initializeArityCheck(arityCheck);
-    state.finalizer->initializeJITCode(state.jitCode);
+    state.finalizer->entrypointLinkBuffer = linkBuffer.release();
+    state.finalizer->function = state.generatedFunction;
+    state.finalizer->arityCheck = arityCheck;
+    state.finalizer->jitCode = state.jitCode;
 }
 
 } } // namespace JSC::FTL

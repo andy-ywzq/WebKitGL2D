@@ -1,3 +1,221 @@
+2013-10-10  Gustavo Noronha Silva  <gustavo.noronha@collabora.com>
+
+        webkit-patch failure-reason has a quite low limit for 'too many failures'
+        https://bugs.webkit.org/show_bug.cgi?id=122556
+
+        Reviewed by Darin Adler.
+
+        * Scripts/webkitpy/tool/commands/queries.py:
+        (FailureReason._explain_failures_for_builder): adjust the number of too many failures
+        to match what the layout test runners use these days.
+
+2013-10-10  Gustavo Noronha Silva  <gustavo.noronha@collabora.com>
+
+        webkit-patch failure-reason should allow specifying failures one is interested in
+        https://bugs.webkit.org/show_bug.cgi?id=122554
+
+        Reviewed by Darin Adler.
+
+        * Scripts/webkitpy/tool/commands/queries.py:
+        (FailureReason):
+        (FailureReason._explain_failures_for_builder): keep track of explained failures and drop out of the
+        loop if the ones we're interested in been explained.
+        (FailureReason._done_explaining): check the failures we're interested in have been explained, if any.
+        (FailureReason.execute): initialize failures to explain and the explained set.
+
+2013-10-10  Filip Pizlo  <fpizlo@apple.com>
+
+        Make sure that DataTypes.h is in the binary drop.
+
+        Rubber stamped by Michael Saboff.
+
+        * Scripts/export-llvm-build:
+
+2013-10-10  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL: Soft-link LLVM as a workaround for LLVM's static initializers and exit-time destructors
+        https://bugs.webkit.org/show_bug.cgi?id=122566
+
+        Reviewed by Mark Rowe.
+
+        * Scripts/configure-llvm:
+
+2013-10-10  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/13341666> WebKit should always build against an SDK.
+
+        Have all projects default to building against the OS X Internal SDK for the Production
+        configuration. For the Debug and Release configurations, look for UseInternalSDK.xcconfig
+        to determine whether the OS X Internal SDK should be used. If not, use the normal OS X SDK.
+
+        Reviewed by Dan Bernstein.
+
+        * DumpRenderTree/mac/Configurations/Base.xcconfig:
+        * DumpRenderTree/mac/Configurations/DebugRelease.xcconfig:
+        * MiniBrowser/Configurations/Base.xcconfig:
+        * MiniBrowser/Configurations/DebugRelease.xcconfig:
+        * TestWebKitAPI/Configurations/Base.xcconfig:
+        * TestWebKitAPI/Configurations/DebugRelease.xcconfig:
+        * WebKitTestRunner/Configurations/Base.xcconfig:
+        * WebKitTestRunner/Configurations/DebugRelease.xcconfig:
+
+2013-10-10  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed gardening, the inspector protocol timeouts are also affecting TestInspectorServer.
+
+        * Scripts/run-gtk-tests:
+        (TestRunner): skip TestInspectorServer.
+
+2013-10-10  Andres Gomez  <agomez@igalia.com>
+
+        [GTK] Provide search functionality to MiniBrowser
+        https://bugs.webkit.org/show_bug.cgi?id=117631
+
+        Reviewed by Carlos Garcia Campos.
+
+        Adds a search bar to MiniBrowser with the minimum functionality
+        and a new button to the toolbar for showing the new search
+        bar. Typical keyboard shortcuts are also added.
+
+        * MiniBrowser/gtk/BrowserSearchBar.c: Added.
+        (doSearch):
+        (searchNext):
+        (searchPrevious):
+        (searchCloseButtonClickedCallback):
+        (searchEntryMenuIconPressedCallback):
+        (searchEntryClearIconReleasedCallback):
+        (searchEntryChangedCallback):
+        (searchEntryActivatedCallback):
+        (searchPrevButtonClickedCallback):
+        (searchNextButtonClickedCallback):
+        (searchMenuCheckButtonToggledCallback):
+        (browser_search_bar_init):
+        (browserSearchBarFinalize):
+        (browser_search_bar_class_init):
+        (browser_search_bar_new):
+        (browser_search_bar_add_accelerators):
+        (browser_search_bar_open):
+        (browser_search_bar_close):
+        * MiniBrowser/gtk/BrowserSearchBar.h: Added.
+        * MiniBrowser/gtk/BrowserWindow.c:
+        (webViewEnterFullScreen): Closes new search bar.
+        (webViewLeaveFullScreen): Opens new search bar if previously
+        visible.
+        (searchCallback): Added. Shows and hides the new search bar.
+        (browser_window_init): Added search button to the toolbar.
+        (browserWindowConstructed): Creates the new search bar.
+        * MiniBrowser/gtk/GNUmakefile.am: Added new files to compilation.
+
+2013-10-09  Gustavo Noronha Silva  <gustavo.noronha@collabora.com>
+
+        webkit-patch failure-reason fails with UnicodeDecodeError when name has non-ascii characters
+        https://bugs.webkit.org/show_bug.cgi?id=122552
+
+        Reviewed by Darin Adler.
+
+        * Scripts/webkitpy/common/checkout/commitinfo.py:
+        (CommitInfo.blame_string): ensure objects are made into unicode strings, not regular ones that
+        will cause UnicodeDecodeError for non-ascii characters.
+
+2013-10-09  Alexey Proskuryakov  <ap@apple.com>
+
+        Would like a link to dashboard from build.webkit.org main page
+        https://bugs.webkit.org/show_bug.cgi?id=122577
+
+        Reviewed by Tim Hatcher.
+
+        * BuildSlaveSupport/build.webkit.org-config/templates/root.html: Added.
+
+2013-10-09  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Check for MathML fonts and warn user if they are missing.
+        https://bugs.webkit.org/show_bug.cgi?id=122568
+
+        Reviewed by Tim Horton.
+
+        * Scripts/webkitdirs.pm:
+        (checkRequiredSystemConfig): Use common gperf/bison/flex tests, rather than
+        Windows-specific code I added previously.
+        (fontExists): Added
+        (checkInstalledTools): Add check for MathML fonts.
+
+2013-10-09  Alexey Proskuryakov  <ap@apple.com>
+
+        http://build.webkit.org/dashboard/ doesn't link to webkitpy failures
+        https://bugs.webkit.org/show_bug.cgi?id=122471
+
+        Reviewed by Tim Hatcher.
+
+        Added links to webkitpy, webkitperl and bindings-tests results.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/Buildbot.js:
+        (Buildbot.prototype.apiTestResultsURLForIteration):
+        (Buildbot.prototype.webkitpyTestResultsURLForIteration):
+        (Buildbot.prototype.webkitperlTestResultsURLForIteration):
+        (Buildbot.prototype.bindingsTestResultsURLForIteration):
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotTesterQueueView.js:
+        (BuildbotTesterQueueView.prototype.update.appendBuilderQueueStatus):
+
+2013-10-09  Alexey Proskuryakov  <ap@apple.com>
+
+        Move some functions from WebKitBuildbot to Buildbot class.
+
+        Suggested by Tim Hatcher.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/Buildbot.js:
+        (Buildbot.prototype.javascriptTestResultsURLForIteration):
+        (Buildbot.prototype.apiTestResultsURLForIteration):
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/WebKitBuildbot.js:
+        (WebKitBuildbot.prototype.layoutTestResultsURLForIteration):
+
+2013-10-09  Timothy Hatcher  <timothy@apple.com>
+
+        Add API tests to the Dashbord page.
+
+        https://bugs.webkit.org/show_bug.cgi?id=122283
+
+        Reviewed by Timothy Hatcher.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotTesterQueueView.js:
+        (BuildbotTesterQueueView.prototype.update.appendBuilderQueueStatus):
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/WebKitBuildbot.js:
+        (WebKitBuildbot.prototype.apiTestResultsURLForIteration):
+
+2013-10-09  Timothy Hatcher  <timothy@apple.com>
+
+        Attempt to fix faulty Dashboard iteration updating by always rebuilding test result objects.
+
+        https://bugs.webkit.org/show_bug.cgi?id=122515
+
+        Reviewed by Alexey Proskuryakov.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotIteration.js:
+        (BuildbotIteration.prototype.update):
+
+2013-10-09  Alexey Proskuryakov  <ap@apple.com>
+
+        build.webkit.org/dashboard doesn't provide a results link when there issues at multiple steps
+        https://bugs.webkit.org/show_bug.cgi?id=122573
+
+        Reviewed by Tim Hatcher.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotTesterQueueView.js:
+        (BuildbotTesterQueueView.prototype.update.appendBuilderQueueStatus): Provide a URL.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/Buildbot.js:
+        (Buildbot.prototype.buildPageURLForIteration): Added.
+
+2013-10-09  Alexey Proskuryakov  <ap@apple.com>
+
+        http://build.webkit.org/dashboard/ links to a wrong jscore-test results page
+        https://bugs.webkit.org/show_bug.cgi?id=122569
+
+        Reviewed by Tim Hatcher.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/WebKitBuildbot.js:
+        (WebKitBuildbot.prototype.javascriptTestResultsURLForIteration): "actual.html" used
+        to be produced by the old Mozilla test harness that we don't use any more.
+
 2013-10-09  Gustavo Noronha Silva  <gustavo.noronha@collabora.com>
 
         Add GTK 64 bits release to the buildbot dashboard

@@ -1,3 +1,70 @@
+2013-10-09  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL: Soft-link LLVM as a workaround for LLVM's static initializers and exit-time destructors
+        https://bugs.webkit.org/show_bug.cgi?id=122566
+
+        Reviewed by Mark Rowe.
+        
+        Remove all LLVM stuff from WTF since to get LLVM you need to soft-link and it's
+        entirely the responsibility of JSC to do that.
+        
+        Also fixed an export goof that I found after fixing the weak thingy script in JSC.
+
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/LLVMHeaders.h: Removed.
+        * wtf/text/CString.h:
+        (WTF::CStringHash::hash):
+
+2013-10-10  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/13341666> WebKit should always build against an SDK.
+
+        Have all projects default to building against the OS X Internal SDK for the Production
+        configuration. For the Debug and Release configurations, look for UseInternalSDK.xcconfig
+        to determine whether the OS X Internal SDK should be used. If not, use the normal OS X SDK.
+
+        Reviewed by Dan Bernstein.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+
+2013-10-10  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Shapes] clampToUnsigned() should return unsigned, not int
+        https://bugs.webkit.org/show_bug.cgi?id=122601
+
+        Corrected the return type for clampToUnsigned() in MathExtras.h. It's now unsigned.
+
+        Reviewed by Andreas Kling.
+
+        * wtf/MathExtras.h:
+        (clampToUnsigned):
+
+2013-10-08  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL should be able to do simple OSR exits using llvm.webkit.stackmap
+        https://bugs.webkit.org/show_bug.cgi?id=122538
+
+        Reviewed by Oliver Hunt.
+
+        * wtf/PrintStream.cpp:
+        (WTF::printInternal):
+        * wtf/PrintStream.h:
+        * wtf/RefCountedArray.h:
+        (WTF::RefCountedArray::byteSize):
+
+2013-10-09  Michael Saboff  <msaboff@apple.com>
+
+        Change to std::unique_ptr breaks wtf/DataLog.cpp when DATA_LOG_TO_FILE set to 1
+        https://bugs.webkit.org/show_bug.cgi?id=122557
+
+        Reviewed by Filip Pizlo.
+
+        Changed the leakPtr() to release().
+
+        * wtf/DataLog.cpp:
+        (WTF::initializeLogFileOnce):
+
 2013-10-08  Tim Horton  <timothy_horton@apple.com>
 
         Turn threaded scrolling on for all Mac ports.

@@ -68,4 +68,34 @@ Buildbot.BuildArchitecture = {
 Buildbot.prototype = {
     constructor: Buildbot,
     __proto__: BaseObject.prototype,
+
+    buildPageURLForIteration: function(iteration)
+    {
+        return this.baseURL + "builders/" + encodeURIComponent(iteration.queue.id) + "/builds/" + iteration.id;
+    },
+
+    javascriptTestResultsURLForIteration: function(iteration)
+    {
+        return this.baseURL + "builders/" + encodeURIComponent(iteration.queue.id) + "/builds/" + iteration.id + "/steps/jscore-test/logs/stdio";
+    },
+
+    apiTestResultsURLForIteration: function(iteration)
+    {
+        return this.baseURL + "builders/" + encodeURIComponent(iteration.queue.id) + "/builds/" + iteration.id + "/steps/run-api-tests/logs/stdio";
+    },
+
+    webkitpyTestResultsURLForIteration: function(iteration)
+    {
+        return this.baseURL + "builders/" + encodeURIComponent(iteration.queue.id) + "/builds/" + iteration.id + "/steps/webkitpy-test/logs/stdio";
+    },
+
+    webkitperlTestResultsURLForIteration: function(iteration)
+    {
+        return this.baseURL + "builders/" + encodeURIComponent(iteration.queue.id) + "/builds/" + iteration.id + "/steps/webkitperl-test/logs/stdio";
+    },
+
+    bindingsTestResultsURLForIteration: function(iteration)
+    {
+        return this.baseURL + "builders/" + encodeURIComponent(iteration.queue.id) + "/builds/" + iteration.id + "/steps/bindings-generation-test/logs/stdio";
+    }
 };

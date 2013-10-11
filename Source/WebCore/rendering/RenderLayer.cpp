@@ -1159,22 +1159,19 @@ void RenderLayer::updateDescendantDependentFlags(HashSet<const RenderObject*>* o
 }
 
 #if USE(ACCELERATED_COMPOSITING)
-// Return true if clipping change requires layer update.
-bool RenderLayer::updateDescendantClippingContext(bool addClipping)
+// Return true if the new clipping behaviour requires layer update.
+bool RenderLayer::checkIfDescendantClippingContextNeedsUpdate(bool isClipping)
 {
-    bool layerNeedsRebuild = false;
     for (RenderLayer* child = firstChild(); child; child = child->nextSibling()) {
         RenderLayerBacking* backing = child->backing();
-        // Update layer context when new clipping is added or existing clipping is removed.
-        if (backing && (addClipping || backing->hasAncestorClippingLayer())) {
-            if (backing->updateAncestorClippingLayer(compositor().clippedByAncestor(*child)))
-                layerNeedsRebuild = true;
-        }
+        // Layer subtree needs update when new clipping is added or existing clipping is removed.
+        if (backing && (isClipping || backing->hasAncestorClippingLayer()))
+            return true;
 
-        if (child->updateDescendantClippingContext(addClipping))
-            layerNeedsRebuild = true;
+        if (child->checkIfDescendantClippingContextNeedsUpdate(isClipping))
+            return true;
     }
-    return layerNeedsRebuild;
+    return false;
 }
 #endif
 
@@ -1732,25 +1729,6 @@ void RenderLayer::beginTransparencyLayers(GraphicsContext* context, const Render
         context->fillRect(clipRect);
 #endif
     }
-}
-
-void* RenderLayer::operator new(size_t sz, RenderArena& renderArena)
-{
-    return renderArena.allocate(sz);
-}
-
-void RenderLayer::operator delete(void* ptr, size_t sz)
-{
-    // Stash size where destroy can find it.
-    *(size_t *)ptr = sz;
-}
-
-void RenderLayer::destroy(RenderArena& renderArena)
-{
-    delete this;
-
-    // Recover the size left there for us by operator delete and free the memory.
-    renderArena.free(*(size_t *)this, this);
 }
 
 void RenderLayer::addChild(RenderLayer* child, RenderLayer* beforeChild)
@@ -6252,7 +6230,7 @@ void RenderLayer::styleChanged(StyleDifference, const RenderStyle* oldStyle)
         bool wasClipping = oldStyle->hasClip() || oldStyle->overflowX() != OVISIBLE || oldStyle->overflowY() != OVISIBLE;
         bool isClipping = style->hasClip() || style->overflowX() != OVISIBLE || style->overflowY() != OVISIBLE;
         if (isClipping != wasClipping) {
-            if (updateDescendantClippingContext(isClipping))
+            if (checkIfDescendantClippingContextNeedsUpdate(isClipping))
                 compositor().setCompositingLayersNeedRebuild();
         }
     }

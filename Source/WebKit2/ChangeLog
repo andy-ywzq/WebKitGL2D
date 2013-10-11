@@ -1,3 +1,241 @@
+2013-10-10  Byungwoo Lee  <bw80.lee@samsung.com>
+
+        [EFL][WK2] Separate dispatch context from WorkQueue.
+        https://bugs.webkit.org/show_bug.cgi?id=115332
+
+        Reviewed by Anders Carlsson.
+
+        Refactor WorkQueue to prevent dangling workqueue access.
+
+        Previously, the WorkQueue class had all context about dispatch.
+        WorkQueue had dispatch item queue and socket event handler,
+        and those were accessed on the work queue thread through WorkQueue
+        instance.
+
+        With reference countable WorkQueue concept, this implementation
+        complicates handling workqueue ref-counting and causes dangling
+        workqueue access problem.
+
+        To make it easy to handle WorkQueue reference count and to prevent
+        dangling access problem, DispatchQueue class is added to handle
+        dispatch tasks, and the WorkQueue instance and DispatchQueue thread
+        will have the reference count of the DispatchQueue instance to prevent
+        dangling access.
+
+        * Platform/WorkQueue.h:
+        * Platform/efl/DispatchQueueEfl.cpp: Added.
+        (DispatchQueue::ThreadContext::start):
+        (DispatchQueue::ThreadContext::ThreadContext):
+        (DispatchQueue::ThreadContext::function):
+        (DispatchQueue::create):
+        (DispatchQueue::DispatchQueue):
+        (DispatchQueue::~DispatchQueue):
+        (DispatchQueue::dispatch):
+        (DispatchQueue::stopThread):
+        (DispatchQueue::setSocketEventHandler):
+        (DispatchQueue::clearSocketEventHandler):
+        (DispatchQueue::performWork):
+        (DispatchQueue::performTimerWork):
+        (DispatchQueue::performFileDescriptorWork):
+        (DispatchQueue::insertTimerWorkItem):
+        (DispatchQueue::dispatchQueueThread):
+        (DispatchQueue::wakeUpThread):
+        (DispatchQueue::getNextTimeOut):
+        * Platform/efl/DispatchQueueEfl.h: Added.
+        * Platform/efl/DispatchQueueWorkItemEfl.h: Added.
+        (WorkItem::create):
+        (WorkItem::dispatch):
+        (WorkItem::WorkItem):
+        (TimerWorkItem::create):
+        (TimerWorkItem::expirationTimeSeconds):
+        (TimerWorkItem::hasExpired):
+        (TimerWorkItem::TimerWorkItem):
+        * Platform/efl/WorkQueueEfl.cpp:
+        (WorkQueue::platformInitialize):
+        (WorkQueue::platformInvalidate):
+        (WorkQueue::registerSocketEventHandler):
+        (WorkQueue::unregisterSocketEventHandler):
+        (WorkQueue::dispatch):
+        (WorkQueue::dispatchAfterDelay):
+        * PlatformEfl.cmake:
+
+2013-10-10  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [WK2][Soup] Add platform specific stubs for NetworkProcess
+        https://bugs.webkit.org/show_bug.cgi?id=110115
+
+        Reviewed by Carlos Garcia Campos.
+
+        Original patch by Balazs Kelemen <kbalazs@webkit.org> and Kwang Yul Seo  <skyul@company100.net>.
+
+        * CMakeLists.txt:
+        * GNUmakefile.am:
+        * GNUmakefile.list.am:
+        * NetworkProcess/gtk/NetworkProcessSoup.cpp: Added.
+        (WebKit::NetworkProcess::platformInitializeNetworkProcess):
+        (WebKit::NetworkProcess::platformSetCacheModel):
+        (WebKit::NetworkProcess::allowSpecificHTTPSCertificateForHost):
+        Stubs.
+        (WebKit::NetworkProcess::clearCacheForAllOrigins):
+        (WebKit::NetworkProcess::platformTerminate):
+        * NetworkProcess/soup/NetworkResourceLoadSchedulerSoup.cpp: Added.
+        (WebKit::NetworkResourceLoadScheduler::platformInitializeMaximumHTTPConnectionCountPerHost):
+        Added platform default based on the comment in ResourceRequestSoup.cpp.
+        * UIProcess/Network/soup/NetworkProcessProxySoup.cpp: Added.
+        (WebKit::NetworkProcessProxy::platformGetLaunchOptions):
+        Stub.
+        * UIProcess/soup/WebContextSoup.cpp: Added.
+        (WebKit::WebContext::platformInitializeNetworkProcess):
+        Stub.
+
+2013-10-10  Beth Dakin  <bdakin@apple.com>
+
+        Scrollbars are updated on the main thread rather than the scrolling thread 
+        (causing scroll bars not to appear/update quickly in some cases)
+        https://bugs.webkit.org/show_bug.cgi?id=122585
+        -and corresponding-
+        <rdar://problem/10710775>
+
+        Reviewed by Simon Fraser.
+
+        New pure virtual function.
+        * WebProcess/Plugins/PDF/PDFPlugin.h:
+
+2013-10-10  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [WK2] Port RemoteNetworkingContext for Soup
+        https://bugs.webkit.org/show_bug.cgi?id=110097
+
+        Reviewed by Darin Adler.
+
+        Original patch by Balazs Kelemen <kbalazs@webkit.org> and Kwang Yul Seo <skyul@company100.net>.
+
+        This should be a cross-platform interface so I lifted the header from
+        the mac directory. Removed mac specific arguments from constructor,
+        added setters instead. Moved platform things behind ifdefs and added
+        Soup specific bits.
+
+        The following things were fixed by Csaba Osztrogonác:
+        - solved conflicts in project.pbxproj
+        - removed the change in the non-existent SyncNetworkResourceLoader.cpp
+        - marked RemoteNetworkingContext class as FINAL
+        - reordered the members for platform specific initialization
+        - added initializers to m_needsSiteSpecificQuirks and m_localFileContentSniffingEnabled members on PLATFORM(MAC)
+
+        * NetworkProcess/NetworkResourceLoader.cpp:
+        (WebKit::NetworkResourceLoader::start):
+        * NetworkProcess/RemoteNetworkingContext.h: Renamed from Source/WebKit2/NetworkProcess/mac/RemoteNetworkingContext.h.
+        (WebKit::RemoteNetworkingContext::create):
+        (WebKit::RemoteNetworkingContext::RemoteNetworkingContext):
+        (WebKit::RemoteNetworkingContext::setNeedsSiteSpecificQuirks):
+        (WebKit::RemoteNetworkingContext::setLocalFileContentSniffingEnabled):
+        * NetworkProcess/mac/RemoteNetworkingContext.mm:
+        * NetworkProcess/soup/RemoteNetworkingContextSoup.cpp: Added.
+        (WebKit::RemoteNetworkingContext::~RemoteNetworkingContext):
+        (WebKit::RemoteNetworkingContext::isValid):
+        (WebKit::RemoteNetworkingContext::initiatingPageID):
+        (WebKit::RemoteNetworkingContext::setPrivateBrowsingStorageSessionIdentifierBase):
+        (WebKit::RemoteNetworkingContext::ensurePrivateBrowsingSession):
+        (WebKit::RemoteNetworkingContext::destroyPrivateBrowsingSession):
+        (WebKit::RemoteNetworkingContext::storageSession):
+        (WebKit::RemoteNetworkingContext::privateBrowsingSession):
+        * WebKit2.xcodeproj/project.pbxproj:
+
+2013-10-10  Sergio Correia  <sergio.correia@openbossa.org>
+
+        Convert some OwnPtr/PassOwnPtr in CoordinatedGraphics code to std::unique_ptr's
+        https://bugs.webkit.org/show_bug.cgi?id=122614
+
+        Reviewed by Anders Carlsson.
+
+        * WebProcess/WebPage/CoordinatedGraphics/CoordinatedLayerTreeHost.cpp:
+        (WebKit::CoordinatedLayerTreeHost::CoordinatedLayerTreeHost):
+        * WebProcess/WebPage/CoordinatedGraphics/CoordinatedLayerTreeHost.h:
+
+2013-10-10  Csaba Osztrogonác  <ossy@webkit.org>
+
+        generate-message-receiver.py can't handle nested #ifs
+        https://bugs.webkit.org/show_bug.cgi?id=121877
+
+        Reviewed by Alexey Proskuryakov.
+
+        * Scripts/webkit2/parser.py:
+        (parse): Exit early until proper fix instead of generating buggy output.
+
+2013-10-10  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/13341666> WebKit should always build against an SDK.
+
+        Have all projects default to building against the OS X Internal SDK for the Production
+        configuration. For the Debug and Release configurations, look for UseInternalSDK.xcconfig
+        to determine whether the OS X Internal SDK should be used. If not, use the normal OS X SDK.
+
+        Reviewed by Dan Bernstein.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+
+2013-10-10  Ralph Thomas  <ralpht@gmail.com>
+
+        [CoordinatedGraphics][CSS Shaders] marshal color and matrix custom filter parameters
+        https://bugs.webkit.org/show_bug.cgi?id=117904
+
+        Correctly encode and decode the "matrix" and "color" custom filter parameter types.
+        No port currently enables this code, however with this change the relevant layout tests now pass when enabled in EFL.
+        Reviewed by Noam Rosenthal.
+
+        * Shared/CoordinatedGraphics/CoordinatedGraphicsArgumentCoders.cpp:
+        (CoreIPC::::encode):
+        (CoreIPC::::decode):
+
+2013-10-10  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/13871522> WebKit2 fails to build with C++ 98 conformance changes
+
+        Reviewed by Andreas Kling.
+
+        * Shared/mac/SandboxExtensionMac.mm:
+        (WebKit::resolveSymlinksInPath): strrchr returns a const char* when passed one.
+        Update the type of the local variable to accommodate that.
+
+2013-10-10  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Buildfix for non Mac platforms with enabled NetworkProcess
+        https://bugs.webkit.org/show_bug.cgi?id=121793
+
+        Reviewed by Anders Carlsson.
+
+        * Shared/ShareableResource.cpp:
+        * Shared/ShareableResource.h:
+        * Shared/WebResourceBuffer.cpp:
+        * Shared/WebResourceBuffer.h:
+        * WebKit2Prefix.h:
+        * WebProcess/Network/NetworkProcessConnection.cpp:
+        * WebProcess/Network/NetworkProcessConnection.h:
+        * WebProcess/Network/NetworkProcessConnection.messages.in:
+        * WebProcess/Network/WebResourceLoader.cpp:
+        * WebProcess/Network/WebResourceLoader.h:
+        * WebProcess/Network/WebResourceLoader.messages.in:
+
+2013-10-09  Sergio Correia  <sergio.correia@openbossa.org>
+
+        Set view to active in ViewClientEfl after WebProcess has relaunched
+        https://bugs.webkit.org/show_bug.cgi?id=118650
+
+        Reviewed by Noam Rosenthal.
+
+        Once WebProcess relaunches, the underlying scene from the view is recreated
+        and is not active by default, which means it will be in `background'. In
+        practice, from that point on we are going to get a blank screen, unless we
+        set it to active.
+
+        In the normal flow, the view is set to active during its initialization; this
+        patch sets it to active also in ViewClientEfl, in the webProcessDidRelaunch
+        callback.
+
+        * UIProcess/efl/ViewClientEfl.cpp:
+        (WebKit::ViewClientEfl::webProcessDidRelaunch): Added WKViewSetIsActive call.
+
 2013-10-09  Commit Queue  <commit-queue@webkit.org>
 
         Unreviewed, rolling out r157157.

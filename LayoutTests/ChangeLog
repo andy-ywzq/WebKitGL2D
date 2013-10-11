@@ -1,3 +1,398 @@
+2013-10-10  Dean Jackson  <dino@apple.com>
+
+        Use after free in WebCore::DisplayRefreshMonitorClient::fireDisplayRefreshIfNeeded
+        http://webkit.org/b/121033
+
+        Update test to indicate it no longer crashes.
+
+        * TestExpectations: Mark test as passing.
+        * fast/animation/request-animation-frame-remove-client-expected.txt:
+        * fast/animation/request-animation-frame-remove-client.html:
+
+2013-10-10  Dean Jackson  <dino@apple.com>
+
+        Use after free in WebCore::DisplayRefreshMonitorClient::fireDisplayRefreshIfNeeded
+        http://webkit.org/b/121033
+
+        Reviewed by Darin Adler.
+
+        Test that assertion fires if you try to remove potential client while in a
+        animation dispatch.
+
+        * TestExpectations: Mark test as crashing.
+        * fast/animation/request-animation-frame-remove-client-expected.txt: Added.
+        * fast/animation/request-animation-frame-remove-client.html: Added.
+
+2013-10-11  Zalan Bujtas  <zalan@apple.com>
+
+        REGRESSION (r155607): Javascript site does not load visually on panerabread.com
+        https://bugs.webkit.org/show_bug.cgi?id=122461
+
+        Reviewed by Simon Fraser.
+        
+        Do not modify the composited layer backing's internal layer structure directly 
+        when the clipping behaviour changes.
+        
+        When we directly create/destroy RenderLayerBacking::m_ancestorClippingLayer to 
+        reflect the new clipping state, other, depending layers need updating. In order to
+        not to corrupt the internal hierarchy, mark the compositing layers dirty and let
+        the normal updating mechanism take care of creating/destroying the ancestor layers.
+
+        * compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants-expected.txt:
+        * compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants.html:
+        * compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants2-expected.txt:
+        * compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants2.html:
+        * platform/mac/compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants-expected.txt:
+        * platform/mac/compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants2-expected.txt:
+
+2013-10-10  Santosh Mahto  <santosh.ma@samsung.com>
+
+        contentEditable with "position:relative" paragraphs is buggy
+        https://bugs.webkit.org/show_bug.cgi?id=33950
+
+        Reviewed by Darin Adler.
+
+        LayoutTests:
+
+        Added a testcase to verify that when paragraph is relative positioned
+        then deleting the all content of paragraph should not incorrectly collapse the
+        others(below) paragraphs.
+        And Rebaseline the test expectation.
+
+        * editing/deleting/5546763-expected.txt: Updated.
+        * editing/deleting/deleting-relative-positioned-special-element-expected.txt: Added.
+        * editing/deleting/deleting-relative-positioned-special-element.html: Added.
+        * editing/unsupported-content/table-delete-001.html: Adjusted to dump
+        as markup.
+        * editing/unsupported-content/table-delete-003.html: Adjusted to dump
+        as markup.
+
+        Below tests had wrong cursor position previously now corrected and
+        both expected file has been changed to markup dump.
+        * platform/mac/editing/unsupported-content/table-delete-001-expected.txt:
+        * platform/mac/editing/unsupported-content/table-delete-003-expected.txt:
+
+2013-10-10  Alexey Proskuryakov  <ap@apple.com>
+
+        Layout Test fast/css/font-face-download-error.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=122636
+
+        Reviewed by Darin Adler.
+
+        * fast/css/font-face-download-error-expected.txt: TEST COMPLETE is now printed
+        after the test is complete.
+
+        * fast/css/font-face-download-error.html: Changed to properly wait for fonts to load.
+        Also, updated to use a proper async test implementation.
+
+2013-10-10  Brendan Long  <b.long@cablelabs.com>
+
+        Track controls show metadata and chapter tracks
+        https://bugs.webkit.org/show_bug.cgi?id=122468
+
+        Reviewed by Darin Adler.
+
+        Add a test to make sure we don't show metadata and chapter tracks in the track controls.
+
+        * media/video-controls-captions-trackmenu-only-captions-descriptions-and-subtitles-expected.txt: Added.
+        * media/video-controls-captions-trackmenu-only-captions-descriptions-and-subtitles.html: Added.
+        * platform/efl/TestExpectations: Skip, uses caption button, not track menu.
+        * platform/mac/TestExpectations: Skip, track menu tests all fail on Mac.
+        * platform/win/TestExpectations: Same.
+
+2013-10-10  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Add failing expectations to some tests on Mac Lion.
+
+        * platform/mac-lion/TestExpectations:
+
+2013-10-10  Thiago de Barros Lacerda  <thiago.lacerda@openbossa.org>
+
+        [MediaStream API] update MediaStream object to match spec
+        https://bugs.webkit.org/show_bug.cgi?id=121939
+
+        Reviewed by Jer Noble.
+
+        * TestExpectations:
+        * fast/mediastream/MediaStream-add-remove-tracks-expected.txt:
+        * fast/mediastream/MediaStream-add-remove-tracks.html:
+        * fast/mediastream/MediaStream-clone.html: Added.
+        * fast/mediastream/MediaStreamConstructor-expected.txt:
+        * fast/mediastream/MediaStreamConstructor.html:
+
+2013-10-10  Thiago de Barros Lacerda  <thiago.lacerda@openbossa.org>
+
+        Create MediaStream object with ended attribute set if all tracks that are being used on its creation are ended
+        https://bugs.webkit.org/show_bug.cgi?id=122358
+
+        Reviewed by Jer Noble.
+
+        Since there is no port supporting MediaStream yet, we are skipping this test for now.
+
+        * TestExpectations:
+        * fast/mediastream/MediaStream-construct-with-ended-tracks.html: Added.
+
+2013-10-09  Oliver Hunt  <oliver@apple.com>
+
+        Further improve ArrayIterator performance
+        https://bugs.webkit.org/show_bug.cgi?id=122575
+
+        Reviewed by Mark Hahnenberg.
+
+        Add a few new tests to make sure the new asm thunk correctly
+        handles non-arrays.
+
+        * js/array-iterators-expected.txt:
+        * js/script-tests/array-iterators.js:
+
+2013-10-10  Andy Estes  <aestes@apple.com>
+
+        Add SPI for telling WebKit to prefer pictograph glyphs over monochrome ones
+        https://bugs.webkit.org/show_bug.cgi?id=122608
+
+        Reviewed by Dan Bernstein.
+
+        Based on patches by Dan Bernstein.
+
+        * fonts/font-fallback-prefers-pictographs-expected.html: Added.
+        * fonts/font-fallback-prefers-pictographs.html: Added.
+
+2013-10-10  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed gardening. Add timeout annotation to gtk-wk2-specific expectation for
+        editing/spelling/spellcheck-paste.html.
+
+        * platform/gtk-wk2/TestExpectations:
+
+2013-10-10  Marcelo Morais  <m.morais@samsung.com>
+
+        Web Inspector: Remove the old front-end from WebKit
+        https://bugs.webkit.org/show_bug.cgi?id=122295
+
+        Reviewed by Timothy Hatcher.
+
+        Skipping the tests of the old Inspector UI for all ports.
+
+        * TestExpectations:
+        * platform/efl-wk1/TestExpectations:
+        * platform/efl-wk2/TestExpectations:
+        * platform/efl/TestExpectations:
+        * platform/gtk-wk1/TestExpectations:
+        * platform/gtk/TestExpectations:
+        * platform/mac-lion/TestExpectations:
+        * platform/mac-wk2/TestExpectations:
+        * platform/mac/TestExpectations:
+        * platform/win-xp/TestExpectations:
+        * platform/win/TestExpectations:
+        * platform/wincairo/TestExpectations:
+        * platform/wk2/TestExpectations:
+
+2013-10-10  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] New positioning model: Shape cropped to margin box
+        https://bugs.webkit.org/show_bug.cgi?id=118092
+
+        Reviewed by Alexandru Chiculita.
+
+        Add tests for shapes that extend out left/right of the margin box.
+
+        Fix polygon and image threshold tests so that they have a large enough
+        margin box so the shape isn't clipped.
+
+        Also update some of the top/bottom tests to have a better reference,
+        they should be more likely to break if the implementation fails now.
+
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/resources/w3c-import.log:
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-001-expected.html:
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-001-ref-expected.html: Copied from LayoutTests/csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-003.html.
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-001-ref.html: Copied from LayoutTests/csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-003.html.
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-001.html:
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-003-expected.html:
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-003.html:
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-004-expected.html: Copied from LayoutTests/csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-001-expected.html.
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-004.html: Copied from LayoutTests/csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-003.html.
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-005-expected.html: Copied from LayoutTests/csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-001-expected.html.
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-005.html: Copied from LayoutTests/csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-003.html.
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-006-expected.html: Copied from LayoutTests/csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-001-expected.html.
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-006.html: Added.
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-polygon-000.html:
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-polygon-001.html:
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-polygon-002.html:
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/w3c-import.log:
+        * fast/shapes/shape-outside-floats/shape-outside-floats-image-threshold-001.html:
+
+2013-10-10  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed gardening. plugins/document-open.html will some times timeout.
+
+        * platform/gtk-wk2/TestExpectations:
+
+2013-10-09  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: VoiceOver speaking too much when group elements with tabindex=-1 are used
+        https://bugs.webkit.org/show_bug.cgi?id=122574
+
+        Reviewed by Mario Sanchez Prada.
+
+        * accessibility/negative-tabindex-does-not-expose-label-expected.txt: Added.
+        * accessibility/negative-tabindex-does-not-expose-label.html: Added.
+
+2013-10-10  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Remove duplicate entry for editing/spelling/spellcheck-paste.html.
+
+        * platform/gtk/TestExpectations:
+
+2013-10-10  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: Crash at WebCore::accessibleNameForNode when visiting Facebook
+        https://bugs.webkit.org/show_bug.cgi?id=122572
+
+        Reviewed by Mario Sanchez Prada.
+
+        * accessibility/aria-labeled-with-hidden-node-expected.txt: Added.
+        * accessibility/aria-labeled-with-hidden-node.html: Added.
+
+2013-10-10  Alberto Garcia  <berto@igalia.com>
+
+        Unreviewed gardening.
+
+        Move the tests that only fail in wk1 to their file, and unskip the
+        ones that are passing in all cases.
+
+        * platform/gtk-wk1/TestExpectations:
+        * platform/gtk-wk2/TestExpectations:
+        * platform/gtk/TestExpectations:
+
+2013-10-10  Alberto Garcia  <berto@igalia.com>
+
+        Unreviewed gardening.
+
+        dom/xhtml/level2/html/HTMLInputElement20.xhtml no longer crashes.
+
+        * platform/gtk/TestExpectations:
+
+2013-10-08  Sergio Villar Senin  <svillar@igalia.com>
+
+        [CSS Grid Layout] Implement support for grid-template
+        https://bugs.webkit.org/show_bug.cgi?id=103313
+
+        Reviewed by Dean Jackson.
+
+        From Blink r153427, r155199 and r155712  by <jchaffraix@chromium.org>
+
+        Added a test to verify that we properly recognize, parse, store
+        and return the value of grid-template.
+
+        * fast/css-grid-layout/grid-template-get-set-expected.txt: Added.
+        * fast/css-grid-layout/grid-template-get-set.html: Added.
+
+2013-10-09  Alexandru Chiculita  <achicu@adobe.com>
+
+        Web Inspector: [CSS Regions] Display the correct fragment boxes for content inside flow threads
+        https://bugs.webkit.org/show_bug.cgi?id=122291
+
+        Reviewed by Timothy Hatcher.
+
+        Added tests to check the result of the InspectorOverlay when it inspects nodes inside RenderFlowThreads.
+
+        * http/tests/inspector/elements-test.js:
+        * inspector/elements/highlight-regions-flow-expected.txt: Added.
+        * inspector/elements/highlight-regions-flow-horiz-bt-expected.txt: Added.
+        * inspector/elements/highlight-regions-flow-horiz-bt.html: Added.
+        * inspector/elements/highlight-regions-flow-transform-expected.txt: Added.
+        * inspector/elements/highlight-regions-flow-transform-horiz-bt-expected.txt: Added.
+        * inspector/elements/highlight-regions-flow-transform-horiz-bt.html: Added.
+        * inspector/elements/highlight-regions-flow-transform-vert-lr-expected.txt: Added.
+        * inspector/elements/highlight-regions-flow-transform-vert-lr.html: Added.
+        * inspector/elements/highlight-regions-flow-transform-vert-rl-expected.txt: Added.
+        * inspector/elements/highlight-regions-flow-transform-vert-rl.html: Added.
+        * inspector/elements/highlight-regions-flow-transform.html: Added.
+        * inspector/elements/highlight-regions-flow-vert-lr-expected.txt: Added.
+        * inspector/elements/highlight-regions-flow-vert-lr.html: Added.
+        * inspector/elements/highlight-regions-flow-vert-rl-expected.txt: Added.
+        * inspector/elements/highlight-regions-flow-vert-rl.html: Added.
+        * inspector/elements/highlight-regions-flow.html: Added.
+
+2013-10-09  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] Lines that don't intersect shape-outside should ignore both left and right margins
+        https://bugs.webkit.org/show_bug.cgi?id=122570
+
+        Reviewed by Alexandru Chiculita.
+
+        Update tests to work with the proper behavior for margins. Yes, the
+        tests were not correct before.
+
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/resources/w3c-import.log:
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-margin-000.html:
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-margin-007.html:
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-margin-009.html:
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/w3c-import.log:
+        * fast/shapes/shape-outside-floats/shape-outside-floats-different-writing-modes.html:
+
+2013-10-09  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] Clip shape-outside to the bottom of the margin box
+        https://bugs.webkit.org/show_bug.cgi?id=122562
+
+        Reviewed by Alexandru Chiculita.
+
+        Test that the shape is properly clipped to the bottom of the float.
+
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/resources/w3c-import.log:
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-000-expected.html: Added.
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-000.html: Added.
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-001-expected.html: Added.
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-001.html: Added.
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-002-expected.html: Added.
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-002.html: Added.
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-003-expected.html: Added.
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-003.html: Added.
+        * csswg/contributors/adobe/submitted/shapes/shape-outside/w3c-import.log:
+
+2013-10-09  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: VoiceOver double speaks all items in <li> nodes
+        https://bugs.webkit.org/show_bug.cgi?id=122564
+
+        Reviewed by Brent Fulgham.
+
+        Make a mac specific expectation for listitem-title on Mac.
+        Make a more directed test for Mac regarding listitem labeling.
+
+        * platform/mac/accessibility/lists-expected.txt:
+        * platform/mac/accessibility/listitem-title-expected.txt: Added.
+        * platform/mac/accessibility/native-list-item-should-not-expose-label-expected.txt: Added.
+        * platform/mac/accessibility/native-list-item-should-not-expose-label.html: Added.
+
+2013-10-09  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed gardening. Many inspector protocol tests are timing out on the bots, unreproducible locally.
+
+        * platform/gtk/TestExpectations:
+
+2013-10-09  Gustavo Noronha Silva  <gns@gnome.org>
+
+        Unreviewed gardening. A couple of paste tests began timing out after
+        http://trac.webkit.org/changeset/156678.
+
+        * platform/gtk/TestExpectations:
+
+2013-10-09  Sergio Correia  <sergio.correia@openbossa.org>
+
+        CoordinatedGraphics: Fix integer rounding when computing pixel alignment
+        https://bugs.webkit.org/show_bug.cgi?id=122565
+
+        Reviewed by Noam Rosenthal.
+
+        Added test that rotates 45 degrees a very long text in a dt tag that
+        might crash the browser depending on how it handles the integer
+        rounding when computing pixel alignment.
+
+        * transforms/3d/general/rotate-45-degrees-long-inner-text-in-dt-expected.txt: Added.
+        * transforms/3d/general/rotate-45-degrees-long-inner-text-in-dt.html: Added.
+
 2013-10-09  Krzysztof Czech  <k.czech@samsung.com>
 
         [EFL] Some accessibility tests are failing

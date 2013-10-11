@@ -990,6 +990,7 @@ set(WebCore_SOURCES
     css/CSSFontValue.cpp
     css/CSSFunctionValue.cpp
     css/CSSGradientValue.cpp
+    css/CSSGridTemplateValue.cpp
     css/CSSGroupingRule.cpp
     css/CSSHostRule.cpp
     css/CSSImageGeneratorValue.cpp
@@ -1127,12 +1128,10 @@ set(WebCore_SOURCES
     dom/ErrorEvent.cpp
     dom/Event.cpp
     dom/EventContext.cpp
-    dom/EventDispatchMediator.cpp
     dom/EventDispatcher.cpp
     dom/EventException.cpp
     dom/EventListenerMap.cpp
     dom/EventNames.cpp
-    dom/EventRetargeter.cpp
     dom/EventTarget.cpp
     dom/ExceptionBase.cpp
     dom/ExceptionCodePlaceholder.cpp
@@ -1217,7 +1216,6 @@ set(WebCore_SOURCES
     dom/WebKitNamedFlow.cpp
     dom/WebKitTransitionEvent.cpp
     dom/WheelEvent.cpp
-    dom/WindowEventContext.cpp
 
     dom/default/PlatformMessagePortChannel.cpp
 

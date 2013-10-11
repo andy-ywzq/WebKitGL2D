@@ -1,7 +1,11 @@
 list(APPEND WebKit2_SOURCES
+    NetworkProcess/soup/NetworkProcessSoup.cpp
+    NetworkProcess/soup/NetworkResourceLoadSchedulerSoup.cpp
+
     Platform/CoreIPC/unix/AttachmentUnix.cpp
     Platform/CoreIPC/unix/ConnectionUnix.cpp
 
+    Platform/efl/DispatchQueueEfl.cpp
     Platform/efl/LoggingEfl.cpp
     Platform/efl/ModuleEfl.cpp
     Platform/efl/WorkQueueEfl.cpp
@@ -109,6 +113,8 @@ list(APPEND WebKit2_SOURCES
 
     UIProcess/Launcher/efl/ProcessLauncherEfl.cpp
 
+    UIProcess/Network/soup/NetworkProcessProxySoup.cpp
+
     UIProcess/Plugins/unix/PluginInfoStoreUnix.cpp
     UIProcess/Plugins/unix/PluginProcessProxyUnix.cpp
 
@@ -148,6 +154,7 @@ list(APPEND WebKit2_SOURCES
     UIProcess/efl/WebUIPopupMenuClient.cpp
     UIProcess/efl/WebViewEfl.cpp
 
+    UIProcess/soup/WebContextSoup.cpp
     UIProcess/soup/WebCookieManagerProxySoup.cpp
     UIProcess/soup/WebSoupRequestManagerClient.cpp
     UIProcess/soup/WebSoupRequestManagerProxy.cpp
@@ -193,6 +200,7 @@ list(APPEND WebKit2_INCLUDE_DIRECTORIES
     "${WEBCORE_DIR}/platform/graphics/cairo"
     "${WEBCORE_DIR}/platform/network/soup"
     "${WEBCORE_DIR}/platform/text/enchant"
+    "${WEBKIT2_DIR}/Platform/efl"
     "${WEBKIT2_DIR}/Shared/API/c/efl"
     "${WEBKIT2_DIR}/Shared/Downloads/soup"
     "${WEBKIT2_DIR}/Shared/efl"

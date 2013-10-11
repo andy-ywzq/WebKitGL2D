@@ -1,3 +1,626 @@
+2013-10-11  Julien Brianceau  <jbriance@cisco.com>
+
+        [sh4] Fix build after r157209.
+        https://bugs.webkit.org/show_bug.cgi?id=122643
+
+        Reviewed by Ryosuke Niwa.
+
+        * assembler/MacroAssemblerSH4.h: Add framePointerRegister declaration.
+        * assembler/SH4Assembler.h: Add firstRegister() declaration.
+        (JSC::SH4Assembler::firstRegister):
+
+2013-10-10  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL shouldn't pass i1's into llvm.webkit.stackmap's
+        https://bugs.webkit.org/show_bug.cgi?id=122629
+        <rdar://problem/15203037>
+
+        Reviewed by Sam Weinig and Nadav Rotem.
+        
+        LLVM's stackmap support requires that we only pass operands with legal types (i.e. types
+        that are hardware-representable). i1, which the FTL previously used for Booleans, is not
+        legal.
+        
+        We have two options: either add support in LLVM to legalize stackmap operands, or add
+        support to the FTL to legalize stackmap operands. It's easier to fix this in FTL, and
+        that's what this patch does.
+
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::addExitArgumentForNode):
+
+2013-10-09  Oliver Hunt  <oliver@apple.com>
+
+        Further improve ArrayIterator performance
+        https://bugs.webkit.org/show_bug.cgi?id=122575
+
+        Reviewed by Mark Hahnenberg.
+
+        Add an assembly thunk for ArrayIterator.@@next so that we
+        can avoid marshalling costs when iterating arrays.
+
+        * jit/SpecializedThunkJIT.h:
+        (JSC::SpecializedThunkJIT::SpecializedThunkJIT):
+        (JSC::SpecializedThunkJIT::loadSpecificClassArgument):
+        * jit/ThunkGenerators.cpp:
+        (JSC::arrayIteratorNextThunkGenerator):
+        * jit/ThunkGenerators.h:
+        * runtime/ArrayIteratorPrototype.cpp:
+        (JSC::ArrayIteratorPrototype::finishCreation):
+        * runtime/Intrinsic.h:
+        * runtime/JSArrayIterator.h:
+        (JSC::JSArrayIterator::offsetOfIterationKind):
+        (JSC::JSArrayIterator::offsetOfIteratedObject):
+        (JSC::JSArrayIterator::offsetOfNextIndex):
+        * runtime/JSCJSValue.h:
+        (JSC::JSValue::offsetOfPayload):
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::reset):
+        * runtime/JSGlobalObject.h:
+        (JSC::JSGlobalObject::iteratorResultStructureOffset):
+        * runtime/VM.cpp:
+        (JSC::thunkGeneratorForIntrinsic):
+
+2013-10-10  Michael Saboff  <msaboff@apple.com>
+
+        transition cti_op_* methods returning int to JIT operations.
+        https://bugs.webkit.org/show_bug.cgi?id=122563
+
+        Reviewed by Oliver Hunt.
+
+        Moved serveral operationCompare* functions from DFGOperations to JITOperations as well as changing
+        dfgConvertJSValueToBoolean to operationConvertJSValueToBoolean so that they can be shared with the baseline JIT.
+        Added JITOperation operationHasProperty().  Added needed callOperation helpers and transitioned baseline JIT code
+        to use the new operations.
+        
+        * dfg/DFGOperations.cpp:
+        * dfg/DFGOperations.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compileLogicalNot):
+        (JSC::DFG::SpeculativeJIT::emitBranch):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compileLogicalNot):
+        (JSC::DFG::SpeculativeJIT::emitBranch):
+        * jit/JIT.h:
+        * jit/JITArithmetic.cpp:
+        (JSC::JIT::emitSlow_op_jless):
+        (JSC::JIT::emitSlow_op_jlesseq):
+        (JSC::JIT::emitSlow_op_jgreater):
+        (JSC::JIT::emitSlow_op_jgreatereq):
+        (JSC::JIT::emitSlow_op_jnless):
+        (JSC::JIT::emitSlow_op_jnlesseq):
+        (JSC::JIT::emitSlow_op_jngreater):
+        (JSC::JIT::emitSlow_op_jngreatereq):
+        (JSC::JIT::emit_compareAndJumpSlow):
+        * jit/JITArithmetic32_64.cpp:
+        (JSC::JIT::emit_compareAndJumpSlow):
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation):
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_next_pname):
+        (JSC::JIT::emitSlow_op_jfalse):
+        (JSC::JIT::emitSlow_op_jtrue):
+        (JSC::JIT::emitSlow_op_eq):
+        (JSC::JIT::emitSlow_op_neq):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emitSlow_op_jfalse):
+        (JSC::JIT::emitSlow_op_jtrue):
+        (JSC::JIT::emitSlow_op_eq):
+        (JSC::JIT::emitSlow_op_neq):
+        (JSC::JIT::emit_op_next_pname):
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        * jit/JITStubs.cpp:
+        * jit/JITStubs.h:
+
+2013-10-10  Filip Pizlo  <fpizlo@apple.com>
+
+        OSR exit using llvm.webkit.stackmap should pass more tests
+        https://bugs.webkit.org/show_bug.cgi?id=122518
+
+        Reviewed by Mark Hahnenberg.
+        
+        - Make the X86Assembler capable of dealing with all XMM registers.
+        
+        - Make the StackMaps code on WebKit's side capable of dealing with XMM registers.
+        
+        - Factor out most of the smarts of StackMaps::Location into a self-contained object.
+          Previously you needed both StackMaps::Location and a StackMaps reference to do most
+          things since the Location might have referred to a constant. Now you can just get a
+          self-contained Location object.
+        
+        - Fix a bug where OSR exit generation thunk generator was assuming that the call frame
+          register is already in argumentGPR0. In the future, the call frame will just be the
+          machine FP and we won't have to do anything special. But for now the "call frame" is
+          just a normal value in LLVM IR and may end up in any register. Make the OSR exit
+          generation thunk generator polymorphic over the call frame argument's Location.
+        
+        - Move the stuff that depends on the polymorphic OSR exit generation thunk generator
+          into the finalizer, since generating and linking one of those thunks requires a cache
+          flush and we need to do that on the main thread.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * assembler/ARMv7Assembler.h:
+        (JSC::ARMv7Assembler::firstRegister):
+        (JSC::ARMv7Assembler::lastRegister):
+        (JSC::ARMv7Assembler::firstFPRegister):
+        (JSC::ARMv7Assembler::lastFPRegister):
+        * assembler/AbstractMacroAssembler.h:
+        (JSC::AbstractMacroAssembler::firstFPRegister):
+        (JSC::AbstractMacroAssembler::lastFPRegister):
+        * assembler/MacroAssembler.h:
+        (JSC::MacroAssembler::nextFPRegister):
+        * assembler/MacroAssemblerARMv7.h:
+        * assembler/MacroAssemblerX86Common.h:
+        * assembler/X86Assembler.h:
+        (JSC::X86Assembler::firstFPRegister):
+        (JSC::X86Assembler::lastFPRegister):
+        * dfg/DFGDriver.cpp:
+        (JSC::DFG::compileImpl):
+        * ftl/FTLCompile.cpp:
+        (JSC::FTL::fixFunctionBasedOnStackMaps):
+        * ftl/FTLExitThunkGenerator.cpp:
+        (JSC::FTL::ExitThunkGenerator::emitThunk):
+        (JSC::FTL::ExitThunkGenerator::emitThunks):
+        * ftl/FTLJITFinalizer.cpp:
+        (JSC::FTL::JITFinalizer::finalizeFunction):
+        * ftl/FTLJITFinalizer.h:
+        * ftl/FTLLink.cpp:
+        (JSC::FTL::link):
+        * ftl/FTLLocation.cpp: Added.
+        (JSC::FTL::Location::forStackmaps):
+        (JSC::FTL::Location::dump):
+        (JSC::FTL::Location::involvesGPR):
+        (JSC::FTL::Location::isGPR):
+        (JSC::FTL::Location::gpr):
+        (JSC::FTL::Location::isFPR):
+        (JSC::FTL::Location::fpr):
+        (JSC::FTL::Location::restoreInto):
+        (WTF::printInternal):
+        * ftl/FTLLocation.h: Added.
+        (JSC::FTL::Location::Location):
+        (JSC::FTL::Location::forRegister):
+        (JSC::FTL::Location::forIndirect):
+        (JSC::FTL::Location::forConstant):
+        (JSC::FTL::Location::kind):
+        (JSC::FTL::Location::hasDwarfRegNum):
+        (JSC::FTL::Location::dwarfRegNum):
+        (JSC::FTL::Location::hasOffset):
+        (JSC::FTL::Location::offset):
+        (JSC::FTL::Location::hasConstant):
+        (JSC::FTL::Location::constant):
+        (JSC::FTL::Location::operator!):
+        (JSC::FTL::Location::isHashTableDeletedValue):
+        (JSC::FTL::Location::operator==):
+        (JSC::FTL::Location::hash):
+        (JSC::FTL::LocationHash::hash):
+        (JSC::FTL::LocationHash::equal):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::appendOSRExit):
+        (JSC::FTL::LowerDFGToLLVM::linkOSRExitsAndCompleteInitializationBlocks):
+        * ftl/FTLSaveRestore.cpp:
+        (JSC::FTL::bytesForFPRs):
+        (JSC::FTL::requiredScratchMemorySizeInBytes):
+        (JSC::FTL::offsetOfFPR):
+        (JSC::FTL::saveAllRegisters):
+        (JSC::FTL::restoreAllRegisters):
+        * ftl/FTLSaveRestore.h:
+        * ftl/FTLStackMaps.cpp:
+        (JSC::FTL::StackMaps::Location::restoreInto):
+        * ftl/FTLStackMaps.h:
+        * ftl/FTLState.h:
+        * ftl/FTLThunks.cpp:
+        (JSC::FTL::osrExitGenerationWithoutStackMapThunkGenerator):
+        (JSC::FTL::osrExitGenerationWithStackMapThunkGenerator):
+        * ftl/FTLThunks.h:
+        (JSC::FTL::generateIfNecessary):
+        (JSC::FTL::Thunks::getOSRExitGenerationThunk):
+        * runtime/VM.cpp:
+        (JSC::VM::VM):
+        * runtime/VM.h:
+
+2013-10-09  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL: Soft-link LLVM as a workaround for LLVM's static initializers and exit-time destructors
+        https://bugs.webkit.org/show_bug.cgi?id=122566
+
+        Reviewed by Mark Rowe.
+        
+        The JSC project now builds a libllvmForJSC.dylib. If FTL is enabled, this
+        gets copied into JavaScriptCore.framework/Versions/A/Libraries. JSC will
+        load the dylib by finding it using NSBundle APIs and then doing dlopen().
+        That will only happen lazily, when something happens that requires LLVM.
+        
+        This mostly takes care of LLVM static initialization overhead by deferring
+        it until it's really needed.
+        
+        This takes care of LLVM's exit-time destructors because inside
+        libllvmForJSC.dylib, we override __cxa_atexit.
+        
+        * Configurations/JavaScriptCore.xcconfig:
+        * Configurations/LLVMForJSC.xcconfig: Added.
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * dfg/DFGPlan.cpp:
+        (JSC::DFG::Plan::compileInThreadImpl):
+        * disassembler/LLVMDisassembler.cpp:
+        (JSC::tryToDisassembleWithLLVM):
+        * ftl/FTLAbbreviatedTypes.h:
+        * ftl/FTLAbbreviations.h:
+        (JSC::FTL::voidType):
+        (JSC::FTL::int1Type):
+        (JSC::FTL::int8Type):
+        (JSC::FTL::int16Type):
+        (JSC::FTL::int32Type):
+        (JSC::FTL::int64Type):
+        (JSC::FTL::intPtrType):
+        (JSC::FTL::floatType):
+        (JSC::FTL::doubleType):
+        (JSC::FTL::pointerType):
+        (JSC::FTL::structType):
+        (JSC::FTL::functionType):
+        (JSC::FTL::typeOf):
+        (JSC::FTL::mdKindID):
+        (JSC::FTL::mdString):
+        (JSC::FTL::mdNode):
+        (JSC::FTL::setMetadata):
+        (JSC::FTL::addFunction):
+        (JSC::FTL::setLinkage):
+        (JSC::FTL::setFunctionCallingConv):
+        (JSC::FTL::getParam):
+        (JSC::FTL::constInt):
+        (JSC::FTL::constReal):
+        (JSC::FTL::constIntToPtr):
+        (JSC::FTL::constBitCast):
+        (JSC::FTL::appendBasicBlock):
+        (JSC::FTL::insertBasicBlock):
+        (JSC::FTL::buildPhi):
+        (JSC::FTL::addIncoming):
+        (JSC::FTL::buildAlloca):
+        (JSC::FTL::buildAdd):
+        (JSC::FTL::buildSub):
+        (JSC::FTL::buildMul):
+        (JSC::FTL::buildDiv):
+        (JSC::FTL::buildRem):
+        (JSC::FTL::buildNeg):
+        (JSC::FTL::buildFAdd):
+        (JSC::FTL::buildFSub):
+        (JSC::FTL::buildFMul):
+        (JSC::FTL::buildFDiv):
+        (JSC::FTL::buildFRem):
+        (JSC::FTL::buildFNeg):
+        (JSC::FTL::buildAnd):
+        (JSC::FTL::buildOr):
+        (JSC::FTL::buildXor):
+        (JSC::FTL::buildShl):
+        (JSC::FTL::buildAShr):
+        (JSC::FTL::buildLShr):
+        (JSC::FTL::buildNot):
+        (JSC::FTL::buildLoad):
+        (JSC::FTL::buildStore):
+        (JSC::FTL::buildSExt):
+        (JSC::FTL::buildZExt):
+        (JSC::FTL::buildFPToSI):
+        (JSC::FTL::buildFPToUI):
+        (JSC::FTL::buildSIToFP):
+        (JSC::FTL::buildUIToFP):
+        (JSC::FTL::buildIntCast):
+        (JSC::FTL::buildFPCast):
+        (JSC::FTL::buildIntToPtr):
+        (JSC::FTL::buildPtrToInt):
+        (JSC::FTL::buildBitCast):
+        (JSC::FTL::buildICmp):
+        (JSC::FTL::buildFCmp):
+        (JSC::FTL::buildCall):
+        (JSC::FTL::setTailCall):
+        (JSC::FTL::buildExtractValue):
+        (JSC::FTL::buildSelect):
+        (JSC::FTL::buildBr):
+        (JSC::FTL::buildCondBr):
+        (JSC::FTL::buildSwitch):
+        (JSC::FTL::addCase):
+        (JSC::FTL::buildRet):
+        (JSC::FTL::buildUnreachable):
+        (JSC::FTL::dumpModule):
+        (JSC::FTL::verifyModule):
+        * ftl/FTLCompile.cpp:
+        (JSC::FTL::compile):
+        * ftl/FTLFail.cpp:
+        (JSC::FTL::fail):
+        * ftl/FTLJITCode.h:
+        * ftl/FTLJITFinalizer.h:
+        * ftl/FTLLink.cpp:
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::lower):
+        * ftl/FTLOutput.cpp:
+        (JSC::FTL::Output::Output):
+        (JSC::FTL::Output::~Output):
+        * ftl/FTLOutput.h:
+        (JSC::FTL::Output::appendTo):
+        * ftl/FTLState.cpp:
+        (JSC::FTL::State::State):
+        (JSC::FTL::State::~State):
+        * ftl/WebKitLLVMLibraryAnchor.cpp: Removed.
+        * jsc.cpp:
+        (jscmain):
+        * llvm: Added.
+        * llvm/InitializeLLVM.cpp: Added.
+        (JSC::initializeLLVM):
+        * llvm/InitializeLLVM.h: Added.
+        * llvm/InitializeLLVMMac.mm: Added.
+        (JSC::initializeLLVMImpl):
+        * llvm/InitializeLLVMPOSIX.cpp: Added.
+        (JSC::initializeLLVMPOSIX):
+        * llvm/InitializeLLVMPOSIX.h: Added.
+        * llvm/LLVMAPI.cpp: Added.
+        * llvm/LLVMAPI.h: Added.
+        * llvm/LLVMAPIFunctions.h: Added.
+        * llvm/LLVMHeaders.h: Added.
+        * llvm/library: Added.
+        * llvm/library/LLVMAnchor.cpp: Added.
+        * llvm/library/LLVMExports.cpp: Added.
+        (initializeAndGetJSCLLVMAPI):
+        * llvm/library/LLVMOverrides.cpp: Added.
+        (__cxa_atexit):
+        * llvm/library/config_llvm.h: Added.
+        * runtime/InitializeThreading.cpp:
+        (JSC::initializeThreadingOnce):
+        * runtime/Options.h:
+
+2013-10-10  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        currentThis and currentArguments crash if called from outside a callback
+        https://bugs.webkit.org/show_bug.cgi?id=122620
+
+        Reviewed by Filip Pizlo.
+
+        The documentation for these methods claims that they will return nil if called 
+        from somewhere other than an API callback, but currently they both crash.
+
+        * API/JSContext.mm:
+        (+[JSContext currentThis]):
+        (+[JSContext currentArguments]):
+        * API/tests/testapi.mm:
+
+2013-10-10  Filip Pizlo  <fpizlo@apple.com>
+
+        Minor clean-ups in the JSC Xcode project.
+
+        Rubber stamped by Mark Rowe.
+        
+        - When we copy the jsc binary into the framework,
+          $(BUILT_PRODUCTS_DIR)/JavaScriptCore.framework/Resources/jsc is the *output* file not
+          the input file. The input file is $(BUILT_PRODUCTS_DIR)/jsc.
+        
+        - Correct capitalization of "JavaScriptcore.framework" in a comment in a shell script in
+          the project.
+        
+        Roll back in after confirming that Mark's fixes make this work right.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
+2013-10-10  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        CallbackData unnecessarily caches the JSValue for currentThis
+        https://bugs.webkit.org/show_bug.cgi?id=122616
+
+        Reviewed by Oliver Hunt.
+
+        CallbackData implements its own version of caching the JSValue* for the JSValueRef it stores. 
+        +[JSValue valueWithJSValueRef:inContext:] already does caching, thus obviating the need for 
+        CallbackData to do its own caching.
+
+        * API/JSContext.mm:
+        (+[JSContext currentThis]):
+        (-[JSContext beginCallbackWithData:thisValue:argumentCount:arguments:]):
+        (-[JSContext endCallbackWithData:]):
+        * API/JSContextInternal.h:
+
+2013-10-10  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, roll out r157193. It broke some builds.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
+2013-10-10  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/13341666> WebKit should always build against an SDK.
+
+        Have all projects default to building against the OS X Internal SDK for the Production
+        configuration. For the Debug and Release configurations, look for UseInternalSDK.xcconfig
+        to determine whether the OS X Internal SDK should be used. If not, use the normal OS X SDK.
+
+        Reviewed by Dan Bernstein.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+
+2013-10-10  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/13871507> JavaScriptCore fails to build with C++ 98 conformance changes
+
+        Reviewed by Andreas Kling.
+
+        * heap/VTableSpectrum.cpp:
+        (JSC::VTableSpectrum::dump): strrchr returns a const char* when passed one.
+        Update the type of the local variable to accommodate that.
+
+2013-10-10  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        Objective-C API: blocks aren't callable via 'new'
+        https://bugs.webkit.org/show_bug.cgi?id=122561
+
+        Reviewed by Oliver Hunt.
+
+        Currently the only way for clients to vend new native objects to JavaScript code 
+        is via factory methods in the form of exported class methods or blocks. Blocks can 
+        be called like normal functions from JavaScript code, but they cannot be invoked 
+        with 'new'. This would give a simple way for clients to expose constructor-like 
+        behavior to their JavaScript code.
+
+        This patch adds the ability for blocks to be invoked as if they were a constructor.
+        Blocks invoked as constructors are required to return an object. If the block doesn't
+        return an object then an error is thrown. The 'this' object is not provided to the 
+        block and must be created within the block itself. 
+
+        This patch also unifies the native 'construct' callback used in both the C and Obj-C
+        APIs under the APICallbackFunction struct, similar to how we unified the 'call' callback
+        between ObjCCallbackFunction and JSCallbackFunction before.
+
+        This patch also adds tests to make sure that different blocks generate objects that
+        correctly behave when queried with instanceof. It also makes sure that the correct 
+        JS exception is thrown when a block fails to return an object.
+
+        * API/APICallbackFunction.h:
+        (JSC::APICallbackFunction::call):
+        (JSC::APICallbackFunction::construct):
+        * API/JSCallbackConstructor.cpp:
+        (JSC::JSCallbackConstructor::getConstructData):
+        * API/JSCallbackConstructor.h:
+        (JSC::JSCallbackConstructor::constructCallback):
+        * API/JSCallbackFunction.h:
+        (JSC::JSCallbackFunction::functionCallback):
+        * API/ObjCCallbackFunction.h:
+        (JSC::ObjCCallbackFunction::functionCallback):
+        (JSC::ObjCCallbackFunction::constructCallback):
+        * API/ObjCCallbackFunction.mm:
+        (JSC::objCCallbackFunctionCallAsConstructor):
+        (JSC::ObjCCallbackFunction::ObjCCallbackFunction):
+        (JSC::ObjCCallbackFunction::create):
+        (JSC::ObjCCallbackFunction::getConstructData):
+        * API/tests/testapi.mm:
+
+2013-10-08  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL should be able to do simple OSR exits using llvm.webkit.stackmap
+        https://bugs.webkit.org/show_bug.cgi?id=122538
+
+        Reviewed by Oliver Hunt.
+        
+        This gives the FTL the ability to OSR exit using the llvm.webkit.stackmap intrinsic.
+        
+        - The FTL compiles all OSR exit calls as calls to llvm.webkit.stackmap with a unique
+          ID, passing a requested size that is big enough for own jump replacement.
+        
+        - After LLVM compilation, we parse the new LLVM stackmap section.
+        
+        - For all llvm.webkit.stackmaps that we used for OSR exits, we do a jumpReplacement,
+          which targets exit thunks that we generate.
+        
+        - If an exit thunk fires, it causes JSC to compile an exit off-ramp that uses a
+          combination of the JSC-internal OSR exit accounting (FTL::ExitValue and friends) and
+          LLVM stackmap's accounting of where data actually ended up (register, indirect,
+          constant) to reconstruct bytecode state.
+        
+        This still has shortcomings; for example it cannot handle XMM or YMM registers. Handling
+        YMM registers will require adding some basic YMM support to our assemblers - really we
+        just need the ability to move a YMM's value into a GPR.
+        
+        This patch preserves all of the old, intrinsic-less, FTL OSR exit support. Hence it
+        manages to pass all existing FTL tests even despite its incompleteness. I think that's
+        the right way to go since this is already a big patch, and anyway it would be great to
+        keep the intrinsic-less FTL OSR exit support so long as the LLVM side of this hasn't
+        landed.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * assembler/AbstractMacroAssembler.h:
+        (JSC::AbstractMacroAssembler::firstRegister):
+        (JSC::AbstractMacroAssembler::lastRegister):
+        * assembler/MacroAssembler.h:
+        (JSC::MacroAssembler::isStackRelated):
+        (JSC::MacroAssembler::firstRealRegister):
+        (JSC::MacroAssembler::nextRegister):
+        (JSC::MacroAssembler::secondRealRegister):
+        * assembler/MacroAssemblerX86Common.h:
+        * assembler/X86Assembler.h:
+        (JSC::X86Assembler::firstRegister):
+        (JSC::X86Assembler::lastRegister):
+        * dfg/DFGPlan.cpp:
+        (JSC::DFG::Plan::compileInThreadImpl):
+        * ftl/FTLCArgumentGetter.cpp:
+        (JSC::FTL::CArgumentGetter::loadNextAndBox):
+        * ftl/FTLCArgumentGetter.h:
+        (JSC::FTL::CArgumentGetter::loadNextDoubleIntoGPR):
+        * ftl/FTLCompile.cpp:
+        (JSC::FTL::mmAllocateCodeSection):
+        (JSC::FTL::mmAllocateDataSection):
+        (JSC::FTL::dumpDataSection):
+        (JSC::FTL::fixFunctionBasedOnStackMaps):
+        (JSC::FTL::compile):
+        * ftl/FTLExitThunkGenerator.cpp:
+        (JSC::FTL::ExitThunkGenerator::emitThunk):
+        (JSC::FTL::ExitThunkGenerator::emitThunks):
+        * ftl/FTLExitThunkGenerator.h:
+        * ftl/FTLExitValue.h:
+        (JSC::FTL::ExitValue::isInJSStackSomehow):
+        (JSC::FTL::ExitValue::valueFormat):
+        * ftl/FTLFail.cpp:
+        (JSC::FTL::fail):
+        * ftl/FTLIntrinsicRepository.h:
+        * ftl/FTLJITCode.h:
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::generateExitThunks):
+        (JSC::FTL::LowerDFGToLLVM::LowerDFGToLLVM):
+        (JSC::FTL::LowerDFGToLLVM::appendOSRExit):
+        (JSC::FTL::LowerDFGToLLVM::emitOSRExitCall):
+        (JSC::FTL::LowerDFGToLLVM::linkOSRExitsAndCompleteInitializationBlocks):
+        * ftl/FTLOSRExit.h:
+        * ftl/FTLOSRExitCompilationInfo.h:
+        (JSC::FTL::OSRExitCompilationInfo::OSRExitCompilationInfo):
+        * ftl/FTLOSRExitCompiler.cpp:
+        (JSC::FTL::compileStubWithOSRExitStackmap):
+        (JSC::FTL::compileStubWithoutOSRExitStackmap):
+        (JSC::FTL::compileFTLOSRExit):
+        * ftl/FTLSaveRestore.cpp: Added.
+        (JSC::FTL::bytesForGPRs):
+        (JSC::FTL::requiredScratchMemorySizeInBytes):
+        (JSC::FTL::offsetOfGPR):
+        (JSC::FTL::saveAllRegisters):
+        (JSC::FTL::restoreAllRegisters):
+        * ftl/FTLSaveRestore.h: Added.
+        * ftl/FTLStackMaps.cpp: Added.
+        (JSC::FTL::readObject):
+        (JSC::FTL::StackMaps::Constant::parse):
+        (JSC::FTL::StackMaps::Constant::dump):
+        (JSC::FTL::StackMaps::Location::parse):
+        (JSC::FTL::StackMaps::Location::dump):
+        (JSC::FTL::StackMaps::Location::involvesGPR):
+        (JSC::FTL::StackMaps::Location::isGPR):
+        (JSC::FTL::StackMaps::Location::gpr):
+        (JSC::FTL::StackMaps::Location::restoreInto):
+        (JSC::FTL::StackMaps::Record::parse):
+        (JSC::FTL::StackMaps::Record::dump):
+        (JSC::FTL::StackMaps::parse):
+        (JSC::FTL::StackMaps::dump):
+        (JSC::FTL::StackMaps::dumpMultiline):
+        (JSC::FTL::StackMaps::getRecordMap):
+        (WTF::printInternal):
+        * ftl/FTLStackMaps.h: Added.
+        * ftl/FTLState.h:
+        * ftl/FTLThunks.cpp:
+        (JSC::FTL::osrExitGenerationThunkGenerator):
+        * ftl/FTLValueFormat.cpp:
+        (JSC::FTL::reboxAccordingToFormat):
+        * ftl/FTLValueFormat.h:
+        * runtime/DataView.cpp:
+        (JSC::DataView::create):
+        * runtime/DataView.h:
+        (JSC::DataView::read):
+        * runtime/Options.h:
+
+2013-10-09  Filip Pizlo  <fpizlo@apple.com>
+
+        Minor clean-ups in the JSC Xcode project.
+
+        Rubber stamped by Mark Rowe.
+        
+        - When we copy the jsc binary into the framework,
+          $(BUILT_PRODUCTS_DIR)/JavaScriptCore.framework/Resources/jsc is the *output* file not
+          the input file. The input file is $(BUILT_PRODUCTS_DIR)/jsc.
+        
+        - Correct capitalization of "JavaScriptcore.framework" in a comment in a shell script in
+          the project.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
 2013-10-09  Julien Brianceau  <jbriance@cisco.com>
 
         [arm] Inverted src and dest FP registers in DFG speculative JIT when using hardfp.

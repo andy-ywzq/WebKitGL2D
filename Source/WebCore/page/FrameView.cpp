@@ -1113,7 +1113,7 @@ void FrameView::layout(bool allowSubtree)
     ASSERT(!document.inPageCache());
 
     bool subtree;
-    RenderObject* root;
+    RenderElement* root;
 
     {
         TemporaryChange<bool> changeSchedulingEnabled(m_layoutSchedulingEnabled, false);
@@ -3012,6 +3012,16 @@ bool FrameView::isActive() const
 {
     Page* page = frame().page();
     return page && page->focusController().isActive();
+}
+
+bool FrameView::updatesScrollLayerPositionOnMainThread() const
+{
+    if (Page* page = frame().page()) {
+        if (ScrollingCoordinator* scrollingCoordinator = page->scrollingCoordinator())
+            return scrollingCoordinator->shouldUpdateScrollLayerPositionOnMainThread();
+    }
+
+    return true;
 }
 
 void FrameView::scrollTo(const IntSize& newOffset)

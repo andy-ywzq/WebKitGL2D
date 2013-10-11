@@ -72,6 +72,7 @@
 #include "NodeList.h"
 #include "NodeRenderStyle.h"
 #include "Page.h"
+#include "PlatformWheelEvent.h"
 #include "PointerLockController.h"
 #include "PseudoElement.h"
 #include "RenderRegion.h"
@@ -240,19 +241,68 @@ bool Element::shouldUseInputMethod()
     return isContentEditable(UserSelectAllIsAlwaysNonEditable);
 }
 
-bool Element::dispatchMouseEvent(const PlatformMouseEvent& event, const AtomicString& eventType, int detail, Element* relatedTarget)
+bool Element::dispatchMouseEvent(const PlatformMouseEvent& platformEvent, const AtomicString& eventType, int detail, Element* relatedTarget)
 {
-    return EventDispatcher::dispatchEvent(this, MouseEventDispatchMediator::create(MouseEvent::create(eventType, document().defaultView(), event, detail, relatedTarget)));
+    if (isDisabledFormControl())
+        return false;
+
+    RefPtr<MouseEvent> mouseEvent = MouseEvent::create(eventType, document().defaultView(), platformEvent, detail, relatedTarget);
+
+    if (mouseEvent->type().isEmpty())
+        return true; // Shouldn't happen.
+
+    ASSERT(!mouseEvent->target() || mouseEvent->target() != relatedTarget);
+    bool didNotSwallowEvent = dispatchEvent(mouseEvent) && !mouseEvent->defaultHandled();
+
+    if (mouseEvent->type() == eventNames().clickEvent && mouseEvent->detail() == 2) {
+        // Special case: If it's a double click event, we also send the dblclick event. This is not part
+        // of the DOM specs, but is used for compatibility with the ondblclick="" attribute. This is treated
+        // as a separate event in other DOM-compliant browsers like Firefox, and so we do the same.
+        RefPtr<MouseEvent> doubleClickEvent = MouseEvent::create();
+        doubleClickEvent->initMouseEvent(eventNames().dblclickEvent,
+            mouseEvent->bubbles(), mouseEvent->cancelable(), mouseEvent->view(), mouseEvent->detail(),
+            mouseEvent->screenX(), mouseEvent->screenY(), mouseEvent->clientX(), mouseEvent->clientY(),
+            mouseEvent->ctrlKey(), mouseEvent->altKey(), mouseEvent->shiftKey(), mouseEvent->metaKey(),
+            mouseEvent->button(), relatedTarget);
+
+        if (mouseEvent->defaultHandled())
+            doubleClickEvent->setDefaultHandled();
+
+        dispatchEvent(doubleClickEvent);
+        if (doubleClickEvent->defaultHandled() || doubleClickEvent->defaultPrevented())
+            return false;
+    }
+    return didNotSwallowEvent;
+}
+
+inline static unsigned deltaMode(const PlatformWheelEvent& event)
+{
+    return event.granularity() == ScrollByPageWheelEvent ? WheelEvent::DOM_DELTA_PAGE : WheelEvent::DOM_DELTA_PIXEL;
 }
 
 bool Element::dispatchWheelEvent(const PlatformWheelEvent& event)
 {
-    return EventDispatcher::dispatchEvent(this, WheelEventDispatchMediator::create(event, document().defaultView()));
+    if (!(event.deltaX() || event.deltaY()))
+        return true;
+
+    RefPtr<WheelEvent> wheelEvent = WheelEvent::create(
+        FloatPoint(event.wheelTicksX(), event.wheelTicksY()),
+        FloatPoint(event.deltaX(), event.deltaY()),
+        deltaMode(event),
+        document().defaultView(),
+        event.globalPosition(),
+        event.position(),
+        event.ctrlKey(), event.altKey(), event.shiftKey(), event.metaKey(),
+        event.directionInvertedFromDevice(),
+        event.timestamp());
+
+    return EventDispatcher::dispatchEvent(this, wheelEvent) && !wheelEvent->defaultHandled();
 }
 
-bool Element::dispatchKeyEvent(const PlatformKeyboardEvent& event)
+bool Element::dispatchKeyEvent(const PlatformKeyboardEvent& platformEvent)
 {
-    return EventDispatcher::dispatchEvent(this, KeyboardEventDispatchMediator::create(KeyboardEvent::create(event, document().defaultView())));
+    RefPtr<KeyboardEvent> event = KeyboardEvent::create(platformEvent, document().defaultView());
+    return EventDispatcher::dispatchEvent(this, event) && !event->defaultHandled();
 }
 
 void Element::dispatchSimulatedClick(Event* underlyingEvent, SimulatedClickMouseEventOptions eventOptions, SimulatedClickVisualOptions visualOptions)
@@ -2021,14 +2071,14 @@ void Element::dispatchFocusInEvent(const AtomicString& eventType, PassRefPtr<Ele
 {
     ASSERT(!NoEventDispatchAssertion::isEventDispatchForbidden());
     ASSERT(eventType == eventNames().focusinEvent || eventType == eventNames().DOMFocusInEvent);
-    dispatchScopedEventDispatchMediator(FocusInEventDispatchMediator::create(FocusEvent::create(eventType, true, false, document().defaultView(), 0, oldFocusedElement)));
+    dispatchScopedEvent(FocusEvent::create(eventType, true, false, document().defaultView(), 0, oldFocusedElement));
 }
 
 void Element::dispatchFocusOutEvent(const AtomicString& eventType, PassRefPtr<Element> newFocusedElement)
 {
     ASSERT(!NoEventDispatchAssertion::isEventDispatchForbidden());
     ASSERT(eventType == eventNames().focusoutEvent || eventType == eventNames().DOMFocusOutEvent);
-    dispatchScopedEventDispatchMediator(FocusOutEventDispatchMediator::create(FocusEvent::create(eventType, true, false, document().defaultView(), 0, newFocusedElement)));
+    dispatchScopedEvent(FocusEvent::create(eventType, true, false, document().defaultView(), 0, newFocusedElement));
 }
 
 void Element::dispatchFocusEvent(PassRefPtr<Element> oldFocusedElement, FocusDirection)
@@ -2037,7 +2087,7 @@ void Element::dispatchFocusEvent(PassRefPtr<Element> oldFocusedElement, FocusDir
         document().page()->chrome().client().elementDidFocus(this);
 
     RefPtr<FocusEvent> event = FocusEvent::create(eventNames().focusEvent, false, false, document().defaultView(), 0, oldFocusedElement);
-    EventDispatcher::dispatchEvent(this, FocusEventDispatchMediator::create(event.release()));
+    EventDispatcher::dispatchEvent(this, event.release());
 }
 
 void Element::dispatchBlurEvent(PassRefPtr<Element> newFocusedElement)
@@ -2046,7 +2096,7 @@ void Element::dispatchBlurEvent(PassRefPtr<Element> newFocusedElement)
         document().page()->chrome().client().elementDidBlur(this);
 
     RefPtr<FocusEvent> event = FocusEvent::create(eventNames().blurEvent, false, false, document().defaultView(), 0, newFocusedElement);
-    EventDispatcher::dispatchEvent(this, BlurEventDispatchMediator::create(event.release()));
+    EventDispatcher::dispatchEvent(this, event.release());
 }
 
 
@@ -2058,7 +2108,7 @@ String Element::innerText()
     if (!renderer())
         return textContent(true);
 
-    return plainText(rangeOfContents(const_cast<Element*>(this)).get());
+    return plainText(rangeOfContents(*this).get());
 }
 
 String Element::outerText()

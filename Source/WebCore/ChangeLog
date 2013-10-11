@@ -1,3 +1,2145 @@
+2013-10-10  Darin Adler  <darin@apple.com>
+
+        Use after free in WebCore::DisplayRefreshMonitorClient::fireDisplayRefreshIfNeeded
+        https://bugs.webkit.org/show_bug.cgi?id=121033
+
+        Reviewed by Dean Jackson.
+
+        For safe iteration, use a set rather than a vector, and remove the clients from
+        the set if they are removed during iteration.
+
+        Test: fast/animation/request-animation-frame-remove-client.html
+
+        * platform/graphics/DisplayRefreshMonitor.cpp:
+        (WebCore::DisplayRefreshMonitor::DisplayRefreshMonitor): Initialize the
+        m_clientsToBeNotified pointer to null.
+        (WebCore::DisplayRefreshMonitor::removeClient): If there is a m_clientsToBeNotified
+        set, remove from it as well as the real m_clients set.
+        (WebCore::DisplayRefreshMonitor::displayDidRefresh): Use a HashSet instead of a
+        vector for the copy of the clients set we iterate.
+
+        * platform/graphics/DisplayRefreshMonitor.h: Moved some of the BlackBerry-specific
+        part of this out of the header. Added a new HashSet pointer, m_clientsToBeNotified,
+        to be used to remove clients during the notification process. Also added a FIXME.
+
+        * platform/graphics/blackberry/DisplayRefreshMonitorBlackBerry.cpp: Moved the
+        DisplayAnimationClient class in here.
+
+2013-10-10  Dean Jackson  <dino@apple.com>
+
+        Use after free in WebCore::DisplayRefreshMonitorClient::fireDisplayRefreshIfNeeded
+        http://webkit.org/b/121033
+
+        Reviewed by Darin Adler.
+
+        Add an ASSERT to detect if an animation client will be removed
+        during the callback dispatch.
+
+        Test: fast/animation/request-animation-frame-remove-client.html
+
+        * platform/graphics/DisplayRefreshMonitor.cpp:
+        (WebCore::DisplayRefreshMonitor::displayDidRefresh):
+
+2013-10-11  Andreas Kling  <akling@apple.com>
+
+        Make RenderLayer not arena-allocated.
+        <https://webkit.org/b/87523>
+
+        Reviewed by Antti Koivisto.
+
+        Let RenderLayerModelObject store its RenderLayer in a unique_ptr.
+        Layers are relatively low-volume objects and this looks neutral
+        on our performance tests.
+
+2013-10-11  Zalan Bujtas  <zalan@apple.com>
+
+        REGRESSION (r155607): Javascript site does not load visually on panerabread.com
+        https://bugs.webkit.org/show_bug.cgi?id=122461
+
+        Reviewed by Simon Fraser.
+        
+        Do not modify the composited layer backing's internal layer structure directly 
+        when the clipping behaviour changes.
+        
+        When we directly create/destroy RenderLayerBacking::m_ancestorClippingLayer to 
+        reflect the new clipping state, other, depending layers need updating. In order to
+        not to corrupt the internal hierarchy, mark the compositing layers dirty and let
+        the normal updating mechanism take care of creating/destroying the ancestor layers.
+
+        Existing tests are extended.
+
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::checkIfDescendantClippingContextNeedsUpdate):
+        (WebCore::RenderLayer::styleChanged):
+        * rendering/RenderLayer.h:
+        * rendering/RenderLayerBacking.h:
+
+2013-10-10  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Make EventPath private to EventDispatcher.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=122638
+
+        Reviewed by Darin Adler.
+
+        Move the declaration of EventPath into EventDispatcher.cpp since EventPath is only used in this file.
+        Also make EventDispatcher a namespace since it is never instantiated since r157250.
+
+        * dom/EventDispatcher.cpp:
+        (WebCore::EventPath::isEmpty):
+        (WebCore::EventPath::size):
+        (WebCore::EventPath::contextAt):
+        (WebCore::EventPath::lastContextIfExists):
+        * dom/EventDispatcher.h:
+        * inspector/InspectorInstrumentation.h:
+        (WebCore::InspectorInstrumentation::willDispatchEvent):
+
+2013-10-10  Santosh Mahto  <santosh.ma@samsung.com>
+
+        contentEditable with "position:relative" paragraphs is buggy
+        https://bugs.webkit.org/show_bug.cgi?id=33950
+
+        Reviewed by Darin Adler.
+
+        When paragraph is positioned(relative/absolute/fixed) then deleting
+        that paragraph cause wrong merging of other(below) paragraphs. This is
+        happening because positioned element is treated as special element and
+        on deletion complete paragraph element is removed. The ranges become
+        paragraph. This issue happens when all the content of special element
+        are deleted. So the merging of paragraph is avoided in this scenario.
+
+        Test: editing/deleting/deleting-relative-positioned-special-element.html
+
+        * editing/DeleteSelectionCommand.cpp:
+        (WebCore::DeleteSelectionCommand::initializeStartEnd):Avoid merging
+        block when special candidate are included in deletion range
+
+2013-10-10  Brendan Long  <b.long@cablelabs.com>
+
+        Track controls show metadata and chapter tracks
+        https://bugs.webkit.org/show_bug.cgi?id=122468
+
+        Reviewed by Darin Adler.
+
+        Test: media/video-controls-captions-trackmenu-only-captions-descriptions-and-subtitles.html
+
+        * page/CaptionUserPreferences.cpp:
+        (WebCore::CaptionUserPreferences::sortedTrackListForMenu): Only show captions, descriptions and subtitles in the track controls.
+
+2013-10-10  Ryosuke Niwa  <rniwa@webkit.org>
+
+        EventContext should be used only in EventDispatcher.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=122631
+
+        Reviewed by Anders Carlsson.
+
+        Merged WindowEventContext into EventDispatcher. Moved the code to avoid dispatching load event on
+        window into dispatchEventInDOM so that WindowEventContext's constructor doesn't need Event.
+
+        Also replaced DOMWindow, Node, and EventPath arguments to InspectorInstrumentation::willDispatchEvent
+        by a single boolean indicating whether window, the origin, or the event path has an event listener.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * dom/DOMAllInOne.cpp:
+        * dom/EventDispatcher.cpp:
+        (WebCore::WindowEventContext::window): Moved from WindowEventContext.
+        (WebCore::WindowEventContext::target): Ditto.
+        (WebCore::WindowEventContext::WindowEventContext): Ditto; removed the code to avoid dispatching load
+        event on window since that's checked in dispatchEventInDOM now.
+        (WebCore::WindowEventContext::handleLocalEvents): Ditto.
+        (WebCore::dispatchEventInDOM): Avoid calling handleLocalEvent on a load event with WindowEventContext.
+        (WebCore::EventDispatcher::dispatchEvent): Pass a boolean to indicate whether window, the origin, or
+        the event path contains any event listener to InspectorInstrumentation::willDispatchEvent to hide
+        EventPath from the inspector code.
+        * dom/EventDispatcher.h:
+        * dom/Node.cpp:
+        * dom/Node.h:
+        * dom/WindowEventContext.cpp: Removed.
+        * dom/WindowEventContext.h: Removed.
+        * inspector/InspectorDOMAgent.cpp:
+        * inspector/InspectorInstrumentation.cpp:
+        (WebCore::InspectorInstrumentation::willDispatchEventImpl):
+        * inspector/InspectorInstrumentation.h:
+        (WebCore::InspectorInstrumentation::willDispatchEvent):
+
+2013-10-10  Darin Adler  <darin@apple.com>
+
+        REGRESSION (r157205?): Leaks in XPath
+        https://bugs.webkit.org/show_bug.cgi?id=122609
+
+        Reviewed by Andreas Kling.
+
+        * xml/XPathGrammar.y: Fixed warnings by adding missing "$$ = $1" to various rules.
+        Added local unique_ptr for NodeTest and ArgumentList in three rules, so they
+        won't be leaked.
+
+2013-10-10  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Add toSVGColor|Paint() to cleanup static_cast<>, and use it 
+        https://bugs.webkit.org/show_bug.cgi?id=122630
+
+        Reviewed by Andreas Kling.
+
+        SVGColor and SVGPaint can't use CSS_VALUE_TYPE_CASTS(), this cl adds
+        toSVGColor() and toSVGPaint() manually. Those functions will help to
+        detect bad type cast.
+
+        * css/CSSValue.cpp:
+        (WebCore::CSSValue::cssText):
+        (WebCore::CSSValue::destroy):
+        (WebCore::CSSValue::cloneForCSSOM):
+        * css/SVGCSSStyleSelector.cpp:
+        (WebCore::StyleResolver::applySVGProperty):
+        * svg/SVGColor.h:
+        (WebCore::toSVGColor):
+        * svg/SVGPaint.h:
+        (WebCore::toSVGPaint):
+
+2013-10-10  Andreas Kling  <akling@apple.com>
+
+        Kill WebCore::BindingState.
+        <https://webkit.org/b/122606>
+
+        Reviewed by Darin Adler.
+
+        Just use JSC::ExecState directly instead.
+
+2013-10-10  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Remove EventRetargeter.h/cpp
+        https://bugs.webkit.org/show_bug.cgi?id=122625
+
+        Reviewed by Anders Carlsson.
+
+        Merged the remaining contents of EventRetargeter.h and EventRetargter.cpp into EventDispatcher.cpp.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * Modules/indieui/UIRequestEvent.cpp:
+        * WebCore.xcodeproj/project.pbxproj:
+        * dom/DOMAllInOne.cpp:
+        * dom/Event.cpp:
+        * dom/Event.h:
+        * dom/EventDispatcher.cpp:
+        (WebCore::eventTargetRespectingTargetRules):
+        (WebCore::shouldEventCrossShadowBoundary):
+        (WebCore::nodeOrHostIfPseudoElement):
+        (WebCore::EventPath::EventPath):
+        (WebCore::buildRelatedNodeMap):
+        (WebCore::addRelatedNodeForUnmapedTreeScopes):
+        (WebCore::calculateAdjustedNodes):
+        (WebCore::updateTouchListsInEventPath):
+        (WebCore::EventPath::updateTouchLists):
+        (WebCore::EventPath::setRelatedTarget):
+        * dom/EventRetargeter.cpp: Removed.
+        * dom/EventRetargeter.h: Removed.
+        * dom/FocusEvent.cpp:
+        * dom/GestureEvent.h:
+        * dom/KeyboardEvent.h:
+        * dom/MouseEvent.cpp:
+        * dom/MouseEvent.h:
+        * dom/TouchEvent.cpp:
+        * dom/UIEvent.cpp:
+        * dom/WheelEvent.cpp:
+
+2013-10-10  Thiago de Barros Lacerda  <thiago.lacerda@openbossa.org>
+
+        Making the base implementation of isAudioStreamSource, in MediaStreamSource, return the correct value
+        https://bugs.webkit.org/show_bug.cgi?id=122612
+
+        Reviewed by Jer Noble.
+
+        There is no reason for this implementation, in the base class, to always return false
+        if we already have the information about the type of the source.
+
+        No new tests needed.
+
+        * Modules/webaudio/MediaStreamAudioSource.h:
+        * platform/mediastream/MediaStreamSource.h:
+        (WebCore::MediaStreamSource::isAudioStreamSource):
+
+2013-10-10  Timothy Hatcher  <timothy@apple.com>
+
+        Web Inspector: Remove the old front-end from WebKit.
+
+        https://bugs.webkit.org/show_bug.cgi?id=122295
+
+        * inspector/front-end/AceTextEditor.js: Removed.
+        * inspector/front-end/AdvancedSearchController.js: Removed.
+        * inspector/front-end/ApplicationCacheItemsView.js: Removed.
+        * inspector/front-end/ApplicationCacheModel.js: Removed.
+        * inspector/front-end/AuditCategories.js: Removed.
+        * inspector/front-end/AuditController.js: Removed.
+        * inspector/front-end/AuditFormatters.js: Removed.
+        * inspector/front-end/AuditLauncherView.js: Removed.
+        * inspector/front-end/AuditResultView.js: Removed.
+        * inspector/front-end/AuditRules.js: Removed.
+        * inspector/front-end/AuditsPanel.js: Removed.
+        * inspector/front-end/BottomUpProfileDataGridTree.js: Removed.
+        * inspector/front-end/BreakpointManager.js: Removed.
+        * inspector/front-end/BreakpointsSidebarPane.js: Removed.
+        * inspector/front-end/CPUProfileView.js: Removed.
+        * inspector/front-end/CSSMetadata.js: Removed.
+        * inspector/front-end/CSSNamedFlowCollectionsView.js: Removed.
+        * inspector/front-end/CSSNamedFlowView.js: Removed.
+        * inspector/front-end/CSSSelectorProfileView.js: Removed.
+        * inspector/front-end/CSSStyleModel.js: Removed.
+        * inspector/front-end/CallStackSidebarPane.js: Removed.
+        * inspector/front-end/CanvasProfileView.js: Removed.
+        * inspector/front-end/Checkbox.js: Removed.
+        * inspector/front-end/CodeMirrorTextEditor.js: Removed.
+        * inspector/front-end/Color.js: Removed.
+        * inspector/front-end/CompilerScriptMapping.js: Removed.
+        * inspector/front-end/ConsoleMessage.js: Removed.
+        * inspector/front-end/ConsoleModel.js: Removed.
+        * inspector/front-end/ConsolePanel.js: Removed.
+        * inspector/front-end/ConsoleView.js: Removed.
+        * inspector/front-end/ContentProvider.js: Removed.
+        * inspector/front-end/ContentProviderBasedProjectDelegate.js: Removed.
+        * inspector/front-end/ContentProviders.js: Removed.
+        * inspector/front-end/ContextMenu.js: Removed.
+        * inspector/front-end/CookieItemsView.js: Removed.
+        * inspector/front-end/CookieParser.js: Removed.
+        * inspector/front-end/CookiesTable.js: Removed.
+        * inspector/front-end/DOMAgent.js: Removed.
+        * inspector/front-end/DOMBreakpointsSidebarPane.js: Removed.
+        * inspector/front-end/DOMCountersGraph.js: Removed.
+        * inspector/front-end/DOMExtension.js: Removed.
+        * inspector/front-end/DOMPresentationUtils.js: Removed.
+        * inspector/front-end/DOMStorage.js: Removed.
+        * inspector/front-end/DOMStorageItemsView.js: Removed.
+        * inspector/front-end/DOMSyntaxHighlighter.js: Removed.
+        * inspector/front-end/DataGrid.js: Removed.
+        * inspector/front-end/Database.js: Removed.
+        * inspector/front-end/DatabaseQueryView.js: Removed.
+        * inspector/front-end/DatabaseTableView.js: Removed.
+        * inspector/front-end/DebuggerModel.js: Removed.
+        * inspector/front-end/DebuggerScriptMapping.js: Removed.
+        * inspector/front-end/DefaultScriptMapping.js: Removed.
+        * inspector/front-end/DefaultTextEditor.js: Removed.
+        * inspector/front-end/Dialog.js: Removed.
+        * inspector/front-end/DirectoryContentView.js: Removed.
+        * inspector/front-end/DockController.js: Removed.
+        * inspector/front-end/Drawer.js: Removed.
+        * inspector/front-end/ElementsPanel.js: Removed.
+        * inspector/front-end/ElementsPanelDescriptor.js: Removed.
+        * inspector/front-end/ElementsTreeOutline.js: Removed.
+        * inspector/front-end/EmptyView.js: Removed.
+        * inspector/front-end/EventListenersSidebarPane.js: Removed.
+        * inspector/front-end/ExtensionAPI.js: Removed.
+        * inspector/front-end/ExtensionAuditCategory.js: Removed.
+        * inspector/front-end/ExtensionPanel.js: Removed.
+        * inspector/front-end/ExtensionRegistryStub.js: Removed.
+        * inspector/front-end/ExtensionServer.js: Removed.
+        * inspector/front-end/ExtensionView.js: Removed.
+        * inspector/front-end/FileContentView.js: Removed.
+        * inspector/front-end/FileManager.js: Removed.
+        * inspector/front-end/FileMapping.js: Removed.
+        * inspector/front-end/FileSystemMapping.js: Removed.
+        * inspector/front-end/FileSystemModel.js: Removed.
+        * inspector/front-end/FileSystemProjectDelegate.js: Removed.
+        * inspector/front-end/FileSystemView.js: Removed.
+        * inspector/front-end/FileUtils.js: Removed.
+        * inspector/front-end/FilteredItemSelectionDialog.js: Removed.
+        * inspector/front-end/FlameChart.js: Removed.
+        * inspector/front-end/FontView.js: Removed.
+        * inspector/front-end/GoToLineDialog.js: Removed.
+        * inspector/front-end/HAREntry.js: Removed.
+        * inspector/front-end/HandlerRegistry.js: Removed.
+        * inspector/front-end/HeapSnapshot.js: Removed.
+        * inspector/front-end/HeapSnapshotDataGrids.js: Removed.
+        * inspector/front-end/HeapSnapshotGridNodes.js: Removed.
+        * inspector/front-end/HeapSnapshotLoader.js: Removed.
+        * inspector/front-end/HeapSnapshotProxy.js: Removed.
+        * inspector/front-end/HeapSnapshotView.js: Removed.
+        * inspector/front-end/HeapSnapshotWorker.js: Removed.
+        * inspector/front-end/HeapSnapshotWorkerDispatcher.js: Removed.
+        * inspector/front-end/HelpScreen.js: Removed.
+        * inspector/front-end/ImageView.js: Removed.
+        * inspector/front-end/Images/addIcon.png: Removed.
+        * inspector/front-end/Images/applicationCache.png: Removed.
+        * inspector/front-end/Images/back.png: Removed.
+        * inspector/front-end/Images/breakpointBorder.png: Removed.
+        * inspector/front-end/Images/breakpointConditionalBorder.png: Removed.
+        * inspector/front-end/Images/breakpointConditionalCounterBorder.png: Removed.
+        * inspector/front-end/Images/breakpointCounterBorder.png: Removed.
+        * inspector/front-end/Images/checker.png: Removed.
+        * inspector/front-end/Images/closeButtons.png: Removed.
+        * inspector/front-end/Images/cookie.png: Removed.
+        * inspector/front-end/Images/database.png: Removed.
+        * inspector/front-end/Images/databaseTable.png: Removed.
+        * inspector/front-end/Images/debuggerContinue.png: Removed.
+        * inspector/front-end/Images/debuggerPause.png: Removed.
+        * inspector/front-end/Images/debuggerStepInto.png: Removed.
+        * inspector/front-end/Images/debuggerStepOut.png: Removed.
+        * inspector/front-end/Images/debuggerStepOver.png: Removed.
+        * inspector/front-end/Images/deleteIcon.png: Removed.
+        * inspector/front-end/Images/disclosureTriangleSmallDown.png: Removed.
+        * inspector/front-end/Images/disclosureTriangleSmallDownBlack.png: Removed.
+        * inspector/front-end/Images/disclosureTriangleSmallDownWhite.png: Removed.
+        * inspector/front-end/Images/disclosureTriangleSmallRight.png: Removed.
+        * inspector/front-end/Images/disclosureTriangleSmallRightBlack.png: Removed.
+        * inspector/front-end/Images/disclosureTriangleSmallRightDown.png: Removed.
+        * inspector/front-end/Images/disclosureTriangleSmallRightDownBlack.png: Removed.
+        * inspector/front-end/Images/disclosureTriangleSmallRightDownWhite.png: Removed.
+        * inspector/front-end/Images/disclosureTriangleSmallRightWhite.png: Removed.
+        * inspector/front-end/Images/domain.png: Removed.
+        * inspector/front-end/Images/errorIcon.png: Removed.
+        * inspector/front-end/Images/errorMediumIcon.png: Removed.
+        * inspector/front-end/Images/errorRedDot.png: Removed.
+        * inspector/front-end/Images/fileSystem.png: Removed.
+        * inspector/front-end/Images/forward.png: Removed.
+        * inspector/front-end/Images/frame.png: Removed.
+        * inspector/front-end/Images/glossyHeader.png: Removed.
+        * inspector/front-end/Images/glossyHeaderPressed.png: Removed.
+        * inspector/front-end/Images/glossyHeaderSelected.png: Removed.
+        * inspector/front-end/Images/glossyHeaderSelectedPressed.png: Removed.
+        * inspector/front-end/Images/goArrow.png: Removed.
+        * inspector/front-end/Images/graphLabelCalloutLeft.png: Removed.
+        * inspector/front-end/Images/graphLabelCalloutRight.png: Removed.
+        * inspector/front-end/Images/indexedDB.png: Removed.
+        * inspector/front-end/Images/indexedDBIndex.png: Removed.
+        * inspector/front-end/Images/indexedDBObjectStore.png: Removed.
+        * inspector/front-end/Images/localStorage.png: Removed.
+        * inspector/front-end/Images/namedFlowOverflow.png: Removed.
+        * inspector/front-end/Images/navigatorShowHideButton.png: Removed.
+        * inspector/front-end/Images/paneAddButtons.png: Removed.
+        * inspector/front-end/Images/paneBottomGrow.png: Removed.
+        * inspector/front-end/Images/paneBottomGrowActive.png: Removed.
+        * inspector/front-end/Images/paneElementStateButtons.png: Removed.
+        * inspector/front-end/Images/paneFilterButtons.png: Removed.
+        * inspector/front-end/Images/paneGrowHandleLine.png: Removed.
+        * inspector/front-end/Images/paneRefreshButtons.png: Removed.
+        * inspector/front-end/Images/paneSettingsButtons.png: Removed.
+        * inspector/front-end/Images/popoverArrows.png: Removed.
+        * inspector/front-end/Images/popoverBackground.png: Removed.
+        * inspector/front-end/Images/profileGroupIcon.png: Removed.
+        * inspector/front-end/Images/profileIcon.png: Removed.
+        * inspector/front-end/Images/profileSmallIcon.png: Removed.
+        * inspector/front-end/Images/profilesSilhouette.png: Removed.
+        * inspector/front-end/Images/programCounterBorder.png: Removed.
+        * inspector/front-end/Images/radioDot.png: Removed.
+        * inspector/front-end/Images/regionEmpty.png: Removed.
+        * inspector/front-end/Images/regionFit.png: Removed.
+        * inspector/front-end/Images/regionOverset.png: Removed.
+        * inspector/front-end/Images/resourceCSSIcon.png: Removed.
+        * inspector/front-end/Images/resourceDocumentIcon.png: Removed.
+        * inspector/front-end/Images/resourceDocumentIconSmall.png: Removed.
+        * inspector/front-end/Images/resourceJSIcon.png: Removed.
+        * inspector/front-end/Images/resourcePlainIcon.png: Removed.
+        * inspector/front-end/Images/resourcePlainIconSmall.png: Removed.
+        * inspector/front-end/Images/resourcesSizeGraphIcon.png: Removed.
+        * inspector/front-end/Images/resourcesTimeGraphIcon.png: Removed.
+        * inspector/front-end/Images/scriptsSilhouette.png: Removed.
+        * inspector/front-end/Images/searchNext.png: Removed.
+        * inspector/front-end/Images/searchPrev.png: Removed.
+        * inspector/front-end/Images/searchSmallBlue.png: Removed.
+        * inspector/front-end/Images/searchSmallBrightBlue.png: Removed.
+        * inspector/front-end/Images/searchSmallGray.png: Removed.
+        * inspector/front-end/Images/searchSmallWhite.png: Removed.
+        * inspector/front-end/Images/segment.png: Removed.
+        * inspector/front-end/Images/segmentEnd.png: Removed.
+        * inspector/front-end/Images/segmentHover.png: Removed.
+        * inspector/front-end/Images/segmentHoverEnd.png: Removed.
+        * inspector/front-end/Images/segmentSelected.png: Removed.
+        * inspector/front-end/Images/segmentSelectedEnd.png: Removed.
+        * inspector/front-end/Images/sessionStorage.png: Removed.
+        * inspector/front-end/Images/spinner.gif: Removed.
+        * inspector/front-end/Images/spinnerActive.gif: Removed.
+        * inspector/front-end/Images/spinnerActiveSelected.gif: Removed.
+        * inspector/front-end/Images/spinnerInactive.gif: Removed.
+        * inspector/front-end/Images/spinnerInactiveSelected.gif: Removed.
+        * inspector/front-end/Images/splitviewDimple.png: Removed.
+        * inspector/front-end/Images/splitviewDividerBackground.png: Removed.
+        * inspector/front-end/Images/statusbarButtonGlyphs.png: Removed.
+        * inspector/front-end/Images/statusbarButtonGlyphs2x.png: Removed.
+        * inspector/front-end/Images/statusbarResizerHorizontal.png: Removed.
+        * inspector/front-end/Images/statusbarResizerVertical.png: Removed.
+        * inspector/front-end/Images/successGreenDot.png: Removed.
+        * inspector/front-end/Images/thumbActiveHoriz.png: Removed.
+        * inspector/front-end/Images/thumbActiveVert.png: Removed.
+        * inspector/front-end/Images/thumbHoriz.png: Removed.
+        * inspector/front-end/Images/thumbHoverHoriz.png: Removed.
+        * inspector/front-end/Images/thumbHoverVert.png: Removed.
+        * inspector/front-end/Images/thumbVert.png: Removed.
+        * inspector/front-end/Images/tickMark.png: Removed.
+        * inspector/front-end/Images/timelineHollowPillBlue.png: Removed.
+        * inspector/front-end/Images/timelineHollowPillGray.png: Removed.
+        * inspector/front-end/Images/timelineHollowPillGreen.png: Removed.
+        * inspector/front-end/Images/timelineHollowPillOrange.png: Removed.
+        * inspector/front-end/Images/timelineHollowPillPurple.png: Removed.
+        * inspector/front-end/Images/timelineHollowPillRed.png: Removed.
+        * inspector/front-end/Images/timelineHollowPillYellow.png: Removed.
+        * inspector/front-end/Images/timelinePillBlue.png: Removed.
+        * inspector/front-end/Images/timelinePillGray.png: Removed.
+        * inspector/front-end/Images/timelinePillGreen.png: Removed.
+        * inspector/front-end/Images/timelinePillOrange.png: Removed.
+        * inspector/front-end/Images/timelinePillPurple.png: Removed.
+        * inspector/front-end/Images/timelinePillRed.png: Removed.
+        * inspector/front-end/Images/timelinePillYellow.png: Removed.
+        * inspector/front-end/Images/toolbarIcons.png: Removed.
+        * inspector/front-end/Images/toolbarIconsSmall.png: Removed.
+        * inspector/front-end/Images/toolbarItemSelected.png: Removed.
+        * inspector/front-end/Images/trackHoriz.png: Removed.
+        * inspector/front-end/Images/trackVert.png: Removed.
+        * inspector/front-end/Images/treeDownTriangleBlack.png: Removed.
+        * inspector/front-end/Images/treeDownTriangleWhite.png: Removed.
+        * inspector/front-end/Images/treeRightTriangleBlack.png: Removed.
+        * inspector/front-end/Images/treeRightTriangleWhite.png: Removed.
+        * inspector/front-end/Images/treeUpTriangleBlack.png: Removed.
+        * inspector/front-end/Images/treeUpTriangleWhite.png: Removed.
+        * inspector/front-end/Images/userInputIcon.png: Removed.
+        * inspector/front-end/Images/userInputPreviousIcon.png: Removed.
+        * inspector/front-end/Images/userInputResultIcon.png: Removed.
+        * inspector/front-end/Images/warningIcon.png: Removed.
+        * inspector/front-end/Images/warningMediumIcon.png: Removed.
+        * inspector/front-end/Images/warningOrangeDot.png: Removed.
+        * inspector/front-end/Images/warningsErrors.png: Removed.
+        * inspector/front-end/IndexedDBModel.js: Removed.
+        * inspector/front-end/IndexedDBViews.js: Removed.
+        * inspector/front-end/InspectElementModeController.js: Removed.
+        * inspector/front-end/InspectorBackend.js: Removed.
+        * inspector/front-end/InspectorBackendCommands.qrc: Removed.
+        * inspector/front-end/InspectorFrontendAPI.js: Removed.
+        * inspector/front-end/InspectorFrontendHostStub.js: Removed.
+        * inspector/front-end/InspectorView.js: Removed.
+        * inspector/front-end/IsolatedFileSystem.js: Removed.
+        * inspector/front-end/IsolatedFileSystemManager.js: Removed.
+        * inspector/front-end/JSHeapSnapshot.js: Removed.
+        * inspector/front-end/JavaScriptFormatter.js: Removed.
+        * inspector/front-end/JavaScriptSourceFrame.js: Removed.
+        * inspector/front-end/KeyboardShortcut.js: Removed.
+        * inspector/front-end/Linkifier.js: Removed.
+        * inspector/front-end/LiveEditSupport.js: Removed.
+        * inspector/front-end/MemoryStatistics.js: Removed.
+        * inspector/front-end/MetricsSidebarPane.js: Removed.
+        * inspector/front-end/NativeBreakpointsSidebarPane.js: Removed.
+        * inspector/front-end/NativeHeapSnapshot.js: Removed.
+        * inspector/front-end/NativeMemoryGraph.js: Removed.
+        * inspector/front-end/NavigatorOverlayController.js: Removed.
+        * inspector/front-end/NavigatorView.js: Removed.
+        * inspector/front-end/NetworkItemView.js: Removed.
+        * inspector/front-end/NetworkLog.js: Removed.
+        * inspector/front-end/NetworkManager.js: Removed.
+        * inspector/front-end/NetworkPanel.js: Removed.
+        * inspector/front-end/NetworkPanelDescriptor.js: Removed.
+        * inspector/front-end/NetworkRequest.js: Removed.
+        * inspector/front-end/NetworkUISourceCodeProvider.js: Removed.
+        * inspector/front-end/Object.js: Removed.
+        * inspector/front-end/ObjectPopoverHelper.js: Removed.
+        * inspector/front-end/ObjectPropertiesSection.js: Removed.
+        * inspector/front-end/OverridesView.js: Removed.
+        * inspector/front-end/OverviewGrid.js: Removed.
+        * inspector/front-end/Panel.js: Removed.
+        * inspector/front-end/PanelEnablerView.js: Removed.
+        * inspector/front-end/ParsedURL.js: Removed.
+        * inspector/front-end/Placard.js: Removed.
+        * inspector/front-end/Popover.js: Removed.
+        * inspector/front-end/PresentationConsoleMessageHelper.js: Removed.
+        * inspector/front-end/ProfileDataGridTree.js: Removed.
+        * inspector/front-end/ProfileLauncherView.js: Removed.
+        * inspector/front-end/ProfilesPanel.js: Removed.
+        * inspector/front-end/ProfilesPanelDescriptor.js: Removed.
+        * inspector/front-end/Progress.js: Removed.
+        * inspector/front-end/ProgressIndicator.js: Removed.
+        * inspector/front-end/PropertiesSection.js: Removed.
+        * inspector/front-end/PropertiesSidebarPane.js: Removed.
+        * inspector/front-end/RawSourceCode.js: Removed.
+        * inspector/front-end/RemoteObject.js: Removed.
+        * inspector/front-end/RequestCookiesView.js: Removed.
+        * inspector/front-end/RequestHTMLView.js: Removed.
+        * inspector/front-end/RequestHeadersView.js: Removed.
+        * inspector/front-end/RequestJSONView.js: Removed.
+        * inspector/front-end/RequestPreviewView.js: Removed.
+        * inspector/front-end/RequestResponseView.js: Removed.
+        * inspector/front-end/RequestTimingView.js: Removed.
+        * inspector/front-end/RequestView.js: Removed.
+        * inspector/front-end/Resource.js: Removed.
+        * inspector/front-end/ResourceScriptMapping.js: Removed.
+        * inspector/front-end/ResourceTreeModel.js: Removed.
+        * inspector/front-end/ResourceType.js: Removed.
+        * inspector/front-end/ResourceUtils.js: Removed.
+        * inspector/front-end/ResourceView.js: Removed.
+        * inspector/front-end/ResourceWebSocketFrameView.js: Removed.
+        * inspector/front-end/ResourcesPanel.js: Removed.
+        * inspector/front-end/RevisionHistoryView.js: Removed.
+        * inspector/front-end/RuntimeModel.js: Removed.
+        * inspector/front-end/SASSSourceMapping.js: Removed.
+        * inspector/front-end/ScopeChainSidebarPane.js: Removed.
+        * inspector/front-end/Script.js: Removed.
+        * inspector/front-end/ScriptFormatter.js: Removed.
+        * inspector/front-end/ScriptFormatterWorker.js: Removed.
+        * inspector/front-end/ScriptSnippetModel.js: Removed.
+        * inspector/front-end/ScriptsNavigator.js: Removed.
+        * inspector/front-end/ScriptsPanel.js: Removed.
+        * inspector/front-end/ScriptsPanelDescriptor.js: Removed.
+        * inspector/front-end/ScriptsSearchScope.js: Removed.
+        * inspector/front-end/SearchController.js: Removed.
+        * inspector/front-end/Section.js: Removed.
+        * inspector/front-end/Settings.js: Removed.
+        * inspector/front-end/SettingsScreen.js: Removed.
+        * inspector/front-end/ShortcutsScreen.js: Removed.
+        * inspector/front-end/ShowMoreDataGridNode.js: Removed.
+        * inspector/front-end/SidebarOverlay.js: Removed.
+        * inspector/front-end/SidebarPane.js: Removed.
+        * inspector/front-end/SidebarTreeElement.js: Removed.
+        * inspector/front-end/SidebarView.js: Removed.
+        * inspector/front-end/SimpleWorkspaceProvider.js: Removed.
+        * inspector/front-end/SnippetJavaScriptSourceFrame.js: Removed.
+        * inspector/front-end/SnippetStorage.js: Removed.
+        * inspector/front-end/SoftContextMenu.js: Removed.
+        * inspector/front-end/SourceCSSTokenizer.js: Removed.
+        * inspector/front-end/SourceCSSTokenizer.re2js: Removed.
+        * inspector/front-end/SourceFrame.js: Removed.
+        * inspector/front-end/SourceHTMLTokenizer.js: Removed.
+        * inspector/front-end/SourceHTMLTokenizer.re2js: Removed.
+        * inspector/front-end/SourceJavaScriptTokenizer.js: Removed.
+        * inspector/front-end/SourceJavaScriptTokenizer.re2js: Removed.
+        * inspector/front-end/SourceMap.js: Removed.
+        * inspector/front-end/SourceMapping.js: Removed.
+        * inspector/front-end/SourceTokenizer.js: Removed.
+        * inspector/front-end/Spectrum.js: Removed.
+        * inspector/front-end/SplitView.js: Removed.
+        * inspector/front-end/StatusBarButton.js: Removed.
+        * inspector/front-end/StyleSheetOutlineDialog.js: Removed.
+        * inspector/front-end/StylesSidebarPane.js: Removed.
+        * inspector/front-end/StylesSourceMapping.js: Removed.
+        * inspector/front-end/SuggestBox.js: Removed.
+        * inspector/front-end/TabbedEditorContainer.js: Removed.
+        * inspector/front-end/TabbedPane.js: Removed.
+        * inspector/front-end/TestController.js: Removed.
+        * inspector/front-end/TextEditor.js: Removed.
+        * inspector/front-end/TextEditorHighlighter.js: Removed.
+        * inspector/front-end/TextEditorModel.js: Removed.
+        * inspector/front-end/TextPrompt.js: Removed.
+        * inspector/front-end/TextUtils.js: Removed.
+        * inspector/front-end/TimelineFrameController.js: Removed.
+        * inspector/front-end/TimelineGrid.js: Removed.
+        * inspector/front-end/TimelineManager.js: Removed.
+        * inspector/front-end/TimelineModel.js: Removed.
+        * inspector/front-end/TimelineOverviewPane.js: Removed.
+        * inspector/front-end/TimelinePanel.js: Removed.
+        * inspector/front-end/TimelinePanelDescriptor.js: Removed.
+        * inspector/front-end/TimelinePresentationModel.js: Removed.
+        * inspector/front-end/Toolbar.js: Removed.
+        * inspector/front-end/TopDownProfileDataGridTree.js: Removed.
+        * inspector/front-end/UISourceCode.js: Removed.
+        * inspector/front-end/UISourceCodeFrame.js: Removed.
+        * inspector/front-end/UIString.js: Removed.
+        * inspector/front-end/UIUtils.js: Removed.
+        * inspector/front-end/UglifyJS/parse-js.js: Removed.
+        * inspector/front-end/UserAgentSupport.js: Removed.
+        * inspector/front-end/UserMetrics.js: Removed.
+        * inspector/front-end/View.js: Removed.
+        * inspector/front-end/ViewportControl.js: Removed.
+        * inspector/front-end/WatchExpressionsSidebarPane.js: Removed.
+        * inspector/front-end/WebKit.qrc: Removed.
+        * inspector/front-end/WorkerManager.js: Removed.
+        * inspector/front-end/WorkersSidebarPane.js: Removed.
+        * inspector/front-end/Workspace.js: Removed.
+        * inspector/front-end/ace/LICENSE.txt: Removed.
+        * inspector/front-end/ace/ace.js: Removed.
+        * inspector/front-end/ace/acedevtools.css: Removed.
+        * inspector/front-end/ace/mode_css.js: Removed.
+        * inspector/front-end/ace/mode_html.js: Removed.
+        * inspector/front-end/ace/mode_javascript.js: Removed.
+        * inspector/front-end/ace/theme_textmate.js: Removed.
+        * inspector/front-end/auditsPanel.css: Removed.
+        * inspector/front-end/breadcrumbList.css: Removed.
+        * inspector/front-end/breakpointsList.css: Removed.
+        * inspector/front-end/buildSystemOnly.js: Removed.
+        * inspector/front-end/canvasProfiler.css: Removed.
+        * inspector/front-end/cm/LICENSE: Removed.
+        * inspector/front-end/cm/closebrackets.js: Removed.
+        * inspector/front-end/cm/cmdevtools.css: Removed.
+        * inspector/front-end/cm/codemirror.css: Removed.
+        * inspector/front-end/cm/codemirror.js: Removed.
+        * inspector/front-end/cm/css.js: Removed.
+        * inspector/front-end/cm/htmlmixed.js: Removed.
+        * inspector/front-end/cm/javascript.js: Removed.
+        * inspector/front-end/cm/matchbrackets.js: Removed.
+        * inspector/front-end/cm/xml.js: Removed.
+        * inspector/front-end/cssNamedFlows.css: Removed.
+        * inspector/front-end/dataGrid.css: Removed.
+        * inspector/front-end/dialog.css: Removed.
+        * inspector/front-end/elementsPanel.css: Removed.
+        * inspector/front-end/externs.js: Removed.
+        * inspector/front-end/filteredItemSelectionDialog.css: Removed.
+        * inspector/front-end/flameChart.css: Removed.
+        * inspector/front-end/heapProfiler.css: Removed.
+        * inspector/front-end/helpScreen.css: Removed.
+        * inspector/front-end/indexedDBViews.css: Removed.
+        * inspector/front-end/inspector.css: Removed.
+        * inspector/front-end/inspector.html: Removed.
+        * inspector/front-end/inspector.js: Removed.
+        * inspector/front-end/inspectorCommon.css: Removed.
+        * inspector/front-end/inspectorSyntaxHighlight.css: Removed.
+        * inspector/front-end/jsdifflib.js: Removed.
+        * inspector/front-end/navigatorView.css: Removed.
+        * inspector/front-end/networkLogView.css: Removed.
+        * inspector/front-end/networkPanel.css: Removed.
+        * inspector/front-end/panelEnablerView.css: Removed.
+        * inspector/front-end/popover.css: Removed.
+        * inspector/front-end/profilesPanel.css: Removed.
+        * inspector/front-end/resourceView.css: Removed.
+        * inspector/front-end/resourcesPanel.css: Removed.
+        * inspector/front-end/revisionHistory.css: Removed.
+        * inspector/front-end/scriptsPanel.css: Removed.
+        * inspector/front-end/sidebarPane.css: Removed.
+        * inspector/front-end/spectrum.css: Removed.
+        * inspector/front-end/splitView.css: Removed.
+        * inspector/front-end/tabbedPane.css: Removed.
+        * inspector/front-end/test-runner.html: Removed.
+        * inspector/front-end/textEditor.css: Removed.
+        * inspector/front-end/textPrompt.css: Removed.
+        * inspector/front-end/timelinePanel.css: Removed.
+        * inspector/front-end/treeoutline.js: Removed.
+        * inspector/front-end/utilities.js: Removed.
+
+2013-10-10  Marcelo Morais  <m.morais@samsung.com>
+
+        Web Inspector: Remove the old front-end from WebKit
+        https://bugs.webkit.org/show_bug.cgi?id=122295
+
+        Reviewed by Timothy Hatcher.
+
+        Updating the project files to remove all references from the old 
+        inspector front-end.
+
+        * WebCore.vcxproj/WebCore.vcxproj: Removed the references for the old
+        inspector front-end.
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Ditto.
+        * WebCore.xcodeproj/project.pbxproj: Ditto.
+        * inspector/compile-front-end.py: Removed.
+
+2013-10-10  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        Unreviewed build fix with ENABLE_DEVICE_ORIENTATION after r157215
+
+        Now, impl() return reference instead of a pointer.
+
+        * bindings/js/JSDeviceMotionEventCustom.cpp:
+        (WebCore::JSDeviceMotionEvent::acceleration):
+        (WebCore::JSDeviceMotionEvent::accelerationIncludingGravity):
+        (WebCore::JSDeviceMotionEvent::rotationRate):
+        (WebCore::JSDeviceMotionEvent::interval):
+        (WebCore::JSDeviceMotionEvent::initDeviceMotionEvent):
+        * bindings/js/JSDeviceOrientationEventCustom.cpp:
+        (WebCore::JSDeviceOrientationEvent::alpha):
+        (WebCore::JSDeviceOrientationEvent::beta):
+        (WebCore::JSDeviceOrientationEvent::gamma):
+        (WebCore::JSDeviceOrientationEvent::absolute):
+        (WebCore::JSDeviceOrientationEvent::initDeviceOrientationEvent):
+
+2013-10-10  Thiago de Barros Lacerda  <thiago.lacerda@openbossa.org>
+
+        [MediaStream API] update MediaStream object to match spec
+        https://bugs.webkit.org/show_bug.cgi?id=121939
+
+        Reviewed by Jer Noble.
+
+        Test: fast/mediastream/MediaStream-clone.html
+
+        * Modules/mediastream/MediaStream.cpp:
+        (WebCore::MediaStream::MediaStream):
+        (WebCore::MediaStream::ended):
+        (WebCore::MediaStream::clone):
+        (WebCore::MediaStream::cloneMediaStreamTrackVector):
+        (WebCore::MediaStream::contextDestroyed):
+        (WebCore::MediaStream::scheduledEventTimerFired):
+        * Modules/mediastream/MediaStream.h:
+        * Modules/mediastream/MediaStream.idl:
+
+2013-10-10  Beth Dakin  <bdakin@apple.com>
+
+        Calling setUsePresentationValue on MountainLion results in unrecognized selector 
+        warnings
+        https://bugs.webkit.org/show_bug.cgi?id=122624
+
+        Reviewed by Tim Horton.
+
+        Only call setUsePresentationValue if the scrollbar supports updates on a secondary 
+        thread.
+        * platform/mac/ScrollAnimatorMac.mm:
+        (-[WebScrollbarPainterDelegate scrollerImp:animateKnobAlphaTo:duration:]):
+
+2013-10-10  Seokju Kwon  <seokju@webkit.org>
+
+        Unreviewed build fix after r157250
+
+        * dom/EventDispatcher.cpp:
+        (WebCore::EventDispatcher::dispatchEvent):
+
+2013-10-10  Thiago de Barros Lacerda  <thiago.lacerda@openbossa.org>
+
+        Create MediaStream object with ended attribute set if all tracks that are being used on its creation are ended
+        https://bugs.webkit.org/show_bug.cgi?id=122358
+
+        Reviewed by Jer Noble.
+
+        Spec tells that if all tracks that belongs to a new MediaStream object being created are ended,
+        then the ended attribute of this MediaStream must be set to true.
+        http://www.w3.org/TR/mediacapture-streams/#widl-MediaStream-ended
+
+        Since there is no port supporting MediaStream yet, we are skipping this test for now.
+
+        Test: fast/mediastream/MediaStream-construct-with-ended-tracks.html
+
+        * Modules/mediastream/MediaStream.cpp:
+        (WebCore::createFromSourceVectors):
+        (WebCore::MediaStream::create):
+        * Modules/webaudio/MediaStreamAudioDestinationNode.cpp:
+        (WebCore::MediaStreamAudioDestinationNode::MediaStreamAudioDestinationNode):
+        * platform/mediastream/MediaStreamDescriptor.cpp:
+        (WebCore::MediaStreamDescriptor::create):
+        (WebCore::MediaStreamDescriptor::MediaStreamDescriptor):
+        * platform/mediastream/MediaStreamDescriptor.h:
+        * platform/mock/MockMediaStreamCenter.cpp:
+        (WebCore::MockMediaStreamCenter::createMediaStream):
+
+2013-10-10  Andy Estes  <aestes@apple.com>
+
+        Add SPI for telling WebKit to prefer pictograph glyphs over monochrome ones
+        https://bugs.webkit.org/show_bug.cgi?id=122608
+
+        Reviewed by Dan Bernstein.
+
+        Based on patches by Dan Bernstein.
+
+        Test: fonts/font-fallback-prefers-pictographs.html
+
+        Created a mechanism to append a font to the end of a font's fallback
+        list, before the system fallback list. This mechanism is used when
+        Settings::fontFallbackPrefersPictographs() is true to insert a
+        pictograph font ahead of a monochrome one from the system fallback list.
+
+        * WebCore.exp.in: Moved
+        __ZN7WebCore8Settings33setFontFallbackPrefersPictographsEb outside of
+        an iOS platform guard.
+        * css/CSSFontSelector.cpp:
+        (WebCore::CSSFontSelector::fallbackFontDataCount): Retuned 1 if
+        pictograph fonts are preferred.
+        (WebCore::CSSFontSelector::getFallbackFontData): Returned the
+        pictograph font's FontData if it is preferred.
+        * css/CSSFontSelector.h:
+        * page/Settings.cpp:
+        (WebCore::Settings::Settings): Initialized
+        m_fontFallbackPrefersPictographs to false.
+        (WebCore::Settings::setFontFallbackPrefersPictographs): Set
+        m_fontFallbackPrefersPictographs and called
+        Page::setNeedsRecalcStyleInAllFrames().
+        * page/Settings.h:
+        (WebCore::Settings::fontFallbackPrefersPictographs):
+        * platform/graphics/FontGlyphs.cpp:
+        (WebCore::FontGlyphs::realizeFontDataAt): Realized the selector's
+        fallback font if necessary.
+        * platform/graphics/FontSelector.h:
+        * style/StyleResolveTree.cpp:
+        (WebCore::Style::resolveTree): Removed iOS platform guards.
+        * testing/InternalSettings.cpp:
+        (WebCore::InternalSettings::setFontFallbackPrefersPictographs): Set the
+        corresponding WebCore::Setting.
+        * testing/InternalSettings.h: Defined an internal setting for the test.
+        * testing/InternalSettings.idl: Ditto.
+
+2013-10-10  Sergio Correia  <sergio.correia@openbossa.org>
+
+        Remove unused attribute in CoordinatedTile class
+        https://bugs.webkit.org/show_bug.cgi?id=122619
+
+        Reviewed by Noam Rosenthal.
+
+        No new tests, covered by existing ones.
+
+        * platform/graphics/texmap/coordinated/CoordinatedTile.h: Remove
+        m_localBuffer.
+
+2013-10-10  Beth Dakin  <bdakin@apple.com>
+
+        Scrollbars are updated on the main thread rather than the scrolling thread 
+        (causing scroll bars not to appear/update quickly in some cases)
+        https://bugs.webkit.org/show_bug.cgi?id=122585
+        -and corresponding-
+        <rdar://problem/10710775>
+
+        Reviewed by Simon Fraser.
+
+        This patch does a few things in order to allow scrollbars to be updated on the 
+        scrolling thread:
+
+        1. This patch adds the ability to know if the lower-level APIs necessary to get 
+        this to work right are available, AND if the content is actually capable of taking 
+        advantage of this feature. This is currently implemented as 
+        Scrollbar::supportsUpdateOnSecondaryThread() which makes use of a new 
+        ScrollableArea function called updatesScrollLayerPositionOnMainThread()
+        
+        2. To update on the scrolling thread, the scrolling tree needs to know about the 
+        ScrollbarPainters.
+        
+        3. Once it knows about them, it should update the presentation value whenever the 
+        layer position changes.
+        
+        4. Presentation value is basically the same thing as double value. There is a bit 
+        of code we maintain currently to compute that. This patch moves that code to a 
+        static function on ScrollableArea that can be called from both the main thread and 
+        the scrolling thread.
+        
+        5. ScrollbarPainter API needs to know about the layers we have created for the 
+        vertical and horizontal scrollbars, then they will use those layers and the 
+        presentation value that we set on the scrolling thread to move the layers around.
+
+        This is part of #1 above. 
+        * page/FrameView.cpp:
+        (WebCore::FrameView::updatesScrollLayerPositionOnMainThread):
+        * page/FrameView.h:
+
+        This is part of #2. ScrollingStateScrollingNodes now have vertical and horizontal 
+        ScrollbarPainters for Mac only.
+        * page/scrolling/ScrollingStateScrollingNode.cpp:
+        (WebCore::ScrollingStateScrollingNode::ScrollingStateScrollingNode):
+        * page/scrolling/ScrollingStateScrollingNode.h:
+        (WebCore::ScrollingStateScrollingNode::verticalScrollbarPainter):
+        (WebCore::ScrollingStateScrollingNode::horizontalScrollbarPainter):
+
+        Also part of #2. Make sure to set the ScrollbarPainters for scrolling nodes when 
+        appropriate.
+        * page/scrolling/mac/ScrollingCoordinatorMac.h:
+        * page/scrolling/mac/ScrollingCoordinatorMac.mm:
+        (WebCore::ScrollingCoordinatorMac::frameViewLayoutUpdated):
+
+        Implement this function that was just stubbed out before. This is part of #5 in 
+        that is will allow the ScrollbarPainter API to know about any layer changes. 
+        (WebCore::ScrollingCoordinatorMac::scrollableAreaScrollbarLayerDidChange):
+
+        Back to #2, making sure we properly set the ScrollbarPainters to send over to the 
+        scrolling thread.
+        (WebCore::ScrollingCoordinatorMac::setScrollbarPaintersForNode):
+        * page/scrolling/mac/ScrollingStateScrollingNodeMac.mm:
+        (WebCore::ScrollingStateScrollingNode::setScrollbarPainters):
+
+        This code achieves #3. It uses new ScrollbarPainter API to adjust the position of 
+        the scrollbars from the scrolling thread.
+        * page/scrolling/mac/ScrollingTreeScrollingNodeMac.h:
+        * page/scrolling/mac/ScrollingTreeScrollingNodeMac.mm:
+        (WebCore::ScrollingTreeScrollingNodeMac::ScrollingTreeScrollingNodeMac):
+        (WebCore::ScrollingTreeScrollingNodeMac::updateBeforeChildren):
+        (WebCore::ScrollingTreeScrollingNodeMac::setScrollLayerPosition):
+
+        This is for #5. ScrollbarPainter needs to know about our scrollbar layers.
+        * platform/ScrollAnimator.h:
+        (WebCore::ScrollAnimator::verticalScrollbarLayerDidChange):
+        (WebCore::ScrollAnimator::horizontalScrollbarLayerDidChange):
+        * platform/ScrollableArea.cpp:
+        (WebCore::ScrollableArea::verticalScrollbarLayerDidChange):
+        (WebCore::ScrollableArea::horizontalScrollbarLayerDidChange):
+
+        This is for #4. This code computes the scrollbar’s value and current overhang 
+        amount.
+        (WebCore::ScrollableArea::computeScrollbarValueAndOverhang):
+        * platform/ScrollableArea.h:
+        (WebCore::ScrollableArea::layerForHorizontalScrollbar):
+        (WebCore::ScrollableArea::layerForVerticalScrollbar):
+        (WebCore::ScrollableArea::layerForScrolling):
+
+        This is for #1. We need to know if we have the ability to update scrollbars on a 
+        different thread. We can do that only on certain versions of the OS, only when 
+        threaded scrolling is enabled, and only when the current page is actually using 
+        the scrolling thread to scroll.
+        * platform/Scrollbar.cpp:
+        (WebCore::Scrollbar::supportsUpdateOnSecondaryThread):
+        * platform/Scrollbar.h:
+        * platform/ScrollbarThemeClient.h:
+
+        New ScrollbarPainter APIs.
+        * platform/mac/NSScrollerImpDetails.h:
+
+        This is for #5, letting the ScrollbarPainter API  know about the layers.
+        * platform/mac/ScrollAnimatorMac.h:
+        * platform/mac/ScrollAnimatorMac.mm:
+        (-[WebScrollbarPainterDelegate layer]):
+        (-[WebScrollbarPainterDelegate convertRectToLayer:]):
+        (-[WebScrollbarPainterDelegate shouldUseLayerPerPartForScrollerImp:]):
+
+        Before we kick off a scroll animation, set the current painting characteristics so 
+        they are up-to-date in case we are scrolling on the scrolling thread.
+        (-[WebScrollbarPainterDelegate setUpAlphaAnimation:scrollerPainter:part:WebCore::animateAlphaTo:duration:]):
+        (-[WebScrollbarPainterDelegate scrollerImp:animateKnobAlphaTo:duration:]):
+        (-[WebScrollbarPainterDelegate scrollerImp:animateTrackAlphaTo:duration:]):
+        (WebCore::ScrollAnimatorMac::didAddVerticalScrollbar):
+        (WebCore::ScrollAnimatorMac::didAddHorizontalScrollbar):
+        (WebCore::ScrollAnimatorMac::verticalScrollbarLayerDidChange):
+        (WebCore::ScrollAnimatorMac::horizontalScrollbarLayerDidChange):
+
+        Only paint the scrollbars through ScrollbarThemeMac if they are NOT being updated 
+        by the scrolling thread.
+        * platform/mac/ScrollbarThemeMac.h:
+        * platform/mac/ScrollbarThemeMac.mm:
+        (WebCore::ScrollbarThemeMac::setCurrentPaintCharacteristics):
+        (WebCore::scrollbarPainterPaint):
+        (WebCore::ScrollbarThemeMac::paint):
+
+        Back to #1.
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::updatesScrollLayerPositionOnMainThread):
+        * rendering/RenderLayer.h:
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::RenderLayerCompositor::updateOverflowControlsLayers):
+        * rendering/RenderListBox.h:
+
+2013-10-10  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Unreviewed build fix after r157228
+
+        The changes in r157228 trigger a bug in VS2010. This patch works around the compiler bug
+        to allow this platform to build.
+
+        * dom/Range.cpp: Move implementation to header file.
+        * dom/Range.h: Inline the method.
+        * page/DOMWindow.cpp:
+        (WebCore::DOMWindow::open): Add stub method (with pointer arguments) to call the real
+        method with references.
+        * page/DOMWindow.h: Declare stub method taking pointer arguments to avoid compiler bug.
+        * testing/Internals.cpp:
+        (WebCore::Internals::openDummyInspectorFrontend): Use work-around method when building under
+        the buggy version of Visual Studio.
+
+2013-10-10  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Make all functions of EventDispatcher static
+        https://bugs.webkit.org/show_bug.cgi?id=122591
+
+        Reviewed by Antti Koivisto.
+
+        Now that EventDispatchMediator is gone, we don't have to have an EventDispatcher object.
+        Turn EventDispatcher into an empty class with a bunch of static functions.
+
+        We can convert it to a namespace or whatever later.
+
+        * dom/EventDispatcher.cpp:
+        (WebCore::EventDispatcher::dispatchSimulatedClick):
+        (WebCore::EventDispatcher::dispatchEvent):
+        * dom/EventDispatcher.h:
+
+2013-10-10  Sergio Correia  <sergio.correia@openbossa.org>
+
+        Convert some OwnPtr/PassOwnPtr in CoordinatedGraphics code to std::unique_ptr's
+        https://bugs.webkit.org/show_bug.cgi?id=122614
+
+        Reviewed by Anders Carlsson.
+
+        No new tests, covered by existing ones.
+
+        * platform/graphics/texmap/coordinated/CompositingCoordinator.cpp:
+        (WebCore::CompositingCoordinator::paintToSurface):
+        (WebCore::CompositingCoordinator::releaseInactiveAtlasesTimerFired):
+        * platform/graphics/texmap/coordinated/CompositingCoordinator.h:
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsLayer.cpp:
+        (WebCore::CoordinatedGraphicsLayer::adjustContentsScale):
+        (WebCore::CoordinatedGraphicsLayer::createBackingStore):
+        (WebCore::CoordinatedGraphicsLayer::updateContentBuffers):
+        (WebCore::CoordinatedGraphicsLayer::purgeBackingStores):
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsLayer.h:
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsScene.cpp:
+        (WebCore::CoordinatedGraphicsScene::createLayer):
+        (WebCore::CoordinatedGraphicsScene::deleteLayer):
+        (WebCore::CoordinatedGraphicsScene::ensureRootLayer):
+        (WebCore::CoordinatedGraphicsScene::purgeGLResources):
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsScene.h:
+        * platform/graphics/texmap/coordinated/ThreadSafeCoordinatedSurface.cpp:
+        (WebCore::ThreadSafeCoordinatedSurface::ThreadSafeCoordinatedSurface):
+        * platform/graphics/texmap/coordinated/ThreadSafeCoordinatedSurface.h:
+        * platform/graphics/texmap/coordinated/UpdateAtlas.cpp:
+        (WebCore::UpdateAtlas::buildLayoutIfNeeded):
+        (WebCore::UpdateAtlas::didSwapBuffers):
+        * platform/graphics/texmap/coordinated/UpdateAtlas.h:
+        (WebCore::UpdateAtlas::isInUse):
+
+2013-10-10  Roger Fong  <roger_fong@apple.com>
+
+        Validate uniform input when setting texture sampler uniforms.
+        https://bugs.webkit.org/show_bug.cgi?id=122610.
+
+        Reviewed by Dean Jackson.
+
+        Covered by Khronos Conformance Suite 1.0.2.
+        Specifically, conformance/uniforms/uniform-samplers-test.html.
+
+        * html/canvas/WebGLRenderingContext.cpp:
+        (WebCore::WebGLRenderingContext::uniform1i):
+        (WebCore::WebGLRenderingContext::uniform1iv):
+
+2013-10-10  Roger Fong  <roger_fong@apple.com>
+
+        Store uniform type information in WebGLUniformationLocation.
+        https://bugs.webkit.org/show_bug.cgi?id=122607.
+
+        Reviewed by Dean Jackson.
+
+        Covered by Khronos Conformance Suite 1.0.2.
+
+        * html/canvas/WebGLRenderingContext.cpp:
+        (WebCore::WebGLRenderingContext::getUniform):
+        (WebCore::WebGLRenderingContext::getUniformLocation):
+        * html/canvas/WebGLUniformLocation.cpp:
+        (WebCore::WebGLUniformLocation::create):
+        (WebCore::WebGLUniformLocation::WebGLUniformLocation):
+        (WebCore::WebGLUniformLocation::type):
+        * html/canvas/WebGLUniformLocation.h:
+
+2013-10-10  Ryosuke Niwa  <rniwa@webkit.org>
+
+        REGRESSION(r157203): WebKit crashes after dispatching gesture event
+        https://bugs.webkit.org/show_bug.cgi?id=122615
+
+        Reviewed by Anders Carlsson.
+
+        Don't release the event until the end of the function where we call member functions on it.
+
+        * dom/Node.cpp:
+        (WebCore::Node::dispatchGestureEvent):
+
+2013-10-10  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Move the rest of EventRetargeter functions to EventPath
+        https://bugs.webkit.org/show_bug.cgi?id=122586
+
+        Reviewed by Andreas Kling.
+
+        Moved the rest of EventRetargeter functiosn either static local or EventPath member functions.
+
+        * dom/EventDispatcher.cpp:
+        (WebCore::EventDispatcher::dispatchScopedEvent):
+        (WebCore::EventDispatcher::dispatch):
+        (WebCore::EventDispatcher::dispatchEventPostProcess):
+        * dom/EventDispatcher.h:
+        * dom/EventRetargeter.cpp:
+        (WebCore::EventPath::EventPath):
+        (WebCore::calculateAdjustedNodes): Made static local. Also takes const EventPath and returns the size
+        to which EventPath should be shrunk; this allows us to remove EventPath::shrink.
+        (WebCore::updateTouchListsInEventPath): Moved and renamed from EventRetargeter::adjustTouchList.
+        (WebCore::EventPath::updateTouchLists): Moved and renamed from EventRetargeter::adjustForTouchEvent.
+        (WebCore::EventPath::setRelatedTarget): Moved.
+        * dom/EventRetargeter.h:
+        (WebCore::eventTargetRespectingTargetRules): Renamed from EventRetargeter::eventTargetRespectingTargetRules.
+
+2013-10-10  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/13341666> WebKit should always build against an SDK.
+
+        Have all projects default to building against the OS X Internal SDK for the Production
+        configuration. For the Debug and Release configurations, look for UseInternalSDK.xcconfig
+        to determine whether the OS X Internal SDK should be used. If not, use the normal OS X SDK.
+
+        Reviewed by Dan Bernstein.
+
+
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+
+2013-10-10  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Shapes] clampToUnsigned() should return unsigned, not int
+        https://bugs.webkit.org/show_bug.cgi?id=122601
+
+        Reviewed by Andreas Kling.
+
+        Corrected the return type for clampToUnsigned() in MathExtras.h. It's now unsigned.
+        No new tests since this is just an internal refactoring of existing code.
+
+        * rendering/shapes/RasterShape.cpp:
+        (WebCore::RasterShape::marginIntervals): Use the redefined clampToUnsigned method.
+
+2013-10-10  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] New positioning model: Shape cropped to margin box
+        https://bugs.webkit.org/show_bug.cgi?id=118092
+
+        Reviewed by Alexandru Chiculita.
+
+        Clip the shape to the margin box when it extends out the left or right
+        edges. Also added a few local variables to make the code easier to
+        read.
+
+        Tests: csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-001-ref.html
+               csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-004.html
+               csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-005.html
+               csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-006.html
+
+        * rendering/shapes/ShapeOutsideInfo.cpp:
+        (WebCore::ShapeOutsideInfo::updateDeltasForContainingBlockLine):
+
+2013-10-10  Daniel Bates  <dabates@apple.com>
+
+        Avoid resizing the internal buffer of SharedBuffer when creating a PurgeableBuffer
+        https://bugs.webkit.org/show_bug.cgi?id=122516
+
+        Reviewed by Darin Adler.
+
+        Currently when we create a PurgeableBuffer from a SharedBuffer we may
+        resize the internal buffer of the SharedBuffer so that it can fit the
+        concatenated contents of all of its segments before copying this
+        internal buffer to the internal buffer of the PurgeableBuffer. Instead,
+        we can avoid resizing the internal buffer of SharedBuffer by allocating
+        a PurgeableBuffer and then copying the internal buffer of SharedBuffer
+        and its segments directly into it.
+
+        * platform/PurgeableBuffer.h:
+        (WebCore::PurgeableBuffer::createUninitialized): Add inline implementation
+        when building with ENABLE_PURGEABLE_MEMORY disabled.
+        * platform/SharedBuffer.cpp:
+        (WebCore::SharedBuffer::createPurgeableBuffer): Implemented in terms of
+        SharedBuffer::{copyBufferAndClear, createUninitialized}().
+        (WebCore::SharedBuffer::copyBufferAndClear): Added.
+        (WebCore::SharedBuffer::buffer): Moved logic to copy segments/data array to
+        SharedBuffer::copyBufferAndClear() and modified this function to use it.
+        * platform/SharedBuffer.h:
+        * platform/cf/SharedBufferCF.cpp:
+        (WebCore::SharedBuffer::copyBufferAndClear): Renamed; formerly called SharedBuffer::copyDataArrayAndClear.
+        * platform/mac/PurgeableBufferMac.cpp:
+        (WebCore::allocatePurgeableBuffer): Added.
+        (WebCore::PurgeableBuffer::createUninitialized): Added.
+        (WebCore::PurgeableBuffer::create): Moved logic to allocate a purgeable buffer into
+        PurgeableBuffer::createUninitialized() and modified this function to use it.
+
+2013-10-09  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: VoiceOver speaking too much when group elements with tabindex=-1 are used
+        https://bugs.webkit.org/show_bug.cgi?id=122574
+
+        Reviewed by Mario Sanchez Prada.
+
+        Tests: accessibility/negative-tabindex-does-not-expose-label.html
+
+        Elements that expose tabindex=-1 are being identified as generic focusable elements for accessibility.
+        Which among other things, determines whether to create an accessible name for the object. 
+        This has the negative effect of causing VoiceOver to speak way too much information when navigating inside
+        a <div> with this attribute.
+
+        * accessibility/AccessibilityNodeObject.cpp:
+        (WebCore::AccessibilityNodeObject::visibleText):
+        (WebCore::AccessibilityNodeObject::title):
+
+2013-10-10  Andreas Kling  <akling@apple.com>
+
+        Remove custom finalizer for Node JS wrappers.
+        <https://webkit.org/b/122603>
+
+        Reviewed by Geoff Garen.
+
+        Node can just use the auto-generated finalizer, the custom one was
+        identical to what the generator would output.
+
+2013-10-10  Andreas Kling  <akling@apple.com>
+
+        CTTE: activeDOMWindow() and firstDOMWindow() should return references.
+        <https://webkit.org/b/122598>
+
+        Reviewed by Anders Carlsson.
+
+        Now that wrappers vend references to their WebCore objects, follow
+        up and make these two return references as well.
+
+2013-10-10  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [ATK] Missing checks in returnIfWebKitAccessibleIsInvalid
+        https://bugs.webkit.org/show_bug.cgi?id=122600
+
+        Reviewed by Chris Fleizach.
+
+        Check that the AccessibilityObject associated to the ATK wrapper
+        is not NULL and contains a valid reference to the document before
+        calling AccessibilityObject::updateBackingStore().
+
+        * accessibility/atk/WebKitAccessibleUtil.h: Add extra checks.
+
+2013-10-10  Andreas Kling  <akling@apple.com>
+
+        Clean up JSDOMWindowShell a little.
+        <https://webkit.org/b/122599>
+
+        Reviewed by Anders Carlsson.
+
+        - Have impl() return a DOMWindow& instead of a pointer.
+        - Store the DOMWrapperWorld in a Ref instead of a RefPtr.
+        - Reuse TRY_TO_UNWRAP_WITH_INTERFACE in EventTarget bindings.
+
+2013-10-10  Sergio Correia  <sergio.correia@openbossa.org>
+
+        Make XPathGrammar.y bison3-friendly again after r157205
+        https://bugs.webkit.org/show_bug.cgi?id=122595
+
+        Reviewed by Anders Carlsson.
+
+        No new tests, build fix.
+
+        * xml/XPathGrammar.y: Replace YYLEX_PARAM with %lex-param, as the
+        former was removed in bison3.
+
+2013-10-10  Andreas Kling  <akling@apple.com>
+
+        SVGUseElement: Use iterative traversal to find disallowed elements.
+        <https://webkit.org/b/122596>
+
+        Reviewed by Antti Koivisto.
+
+        Rewrote subtreeContainsDisallowedElement() in SVGUseElement.cpp to
+        use iterative traversal with descendantsOfType<Element> instead of
+        recursing through the tree.
+
+2013-10-10  Andreas Kling  <akling@apple.com>
+
+        Move RenderObject::layout() to RenderElement.
+        <https://webkit.org/b/122537>
+
+        Reviewed by Antti Koivisto.
+
+        RenderText will ASSERT_NOT_REACHED() in its layout(), so move this
+        to RenderElement. This allows us to use the fast firstChild()
+        instead of virtual dispatch.
+
+        The needsLayout() bit remains on RenderObject for now. Moving that
+        to RenderElement is a far more involved change.
+
+2013-10-10  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: Crash at WebCore::accessibleNameForNode when visiting Facebook
+        https://bugs.webkit.org/show_bug.cgi?id=122572
+
+        Reviewed by Mario Sanchez Prada.
+
+        Test: accessibility/aria-labeled-with-hidden-node.html
+
+        Handle the case where aria-labelledby references a non-rendered node.
+
+        * accessibility/AccessibilityNodeObject.cpp:
+        (WebCore::accessibleNameForNode):
+
+2013-10-10  Zan Dobersek  <zdobersek@igalia.com>
+
+        REGRESSION(r157210): Crashes in WebCore::ScopedEventQueue::dispatchEvent for platforms using GCC
+        https://bugs.webkit.org/show_bug.cgi?id=122592
+
+        Reviewed by Gustavo Noronha Silva.
+
+        * dom/ScopedEventQueue.cpp:
+        (WebCore::ScopedEventQueue::dispatchEvent): When calling EventDispatcher::dispatchEvent(), the GCC-compiled code
+        first creates a copy of the PassRefPtr<Event> object that's being passed into the method call. The copy will be used
+        in that method while the original is left with a null pointer. Only after that is the original queried for its pointer
+        while trying to get the Event's target, resulting in a crash due to calling the Event::target() on a null pointer.
+        To avoid it, pass a naked Event pointer to the method call. This will create a new PassRefPtr object without nullifying
+        the original one.
+
+2013-10-10  Andreas Kling  <akling@apple.com>
+
+        Use more Element iterators in SVG code.
+        <http://webkit.org/b/121127>
+
+        Reviewed by Antti Koivisto.
+
+        Use childrenOfType to iterate over only SVGElement (or even more
+        specific) children in a bunch of places.
+
+        Also auto-generate type helpers for SVGElement and SVGStopElement.
+
+2013-10-10  Andreas Kling  <akling@apple.com>
+
+        JS DOM wrappers' impl() functions should return references.
+        <https://webkit.org/b/122497>
+
+        Reviewed by Antti Koivisto.
+
+        JS DOM wrappers always have a corresponding WebCore object during
+        their lifetime, so make impl() return a reference.
+
+2013-10-10  Sergio Correia  <sergio.correia@openbossa.org>
+
+        Fix debug build after r157210
+        https://bugs.webkit.org/show_bug.cgi?id=122593
+
+        Reviewed by Andreas Kling.
+
+        No new tests, build fix.
+
+        * dom/EventContext.cpp:
+        (WebCore::TouchEventContext::handleLocalEvents): Fix ASSERT, now that
+        event is a reference instead of a pointer.
+
+2013-10-10  Andreas Kling  <akling@apple.com>
+
+        Tighten some renderer access in Document.
+        <https://webkit.org/b/121865>
+
+        Reviewed by Antti Koivisto.
+
+        A bit of Node/Element and RenderObject/RenderElement tightening.
+
+2013-10-08  Andreas Kling  <akling@apple.com>
+
+        rangeOfContents() should take a Node&.
+        <https://webkit.org/b/122438>
+
+        Reviewed by Darin Adler.
+
+        All callers of rangeOfContents() either have a Node& already,
+        or do some kind of null-checking before calling it.
+
+2013-10-08  Sergio Villar Senin  <svillar@igalia.com>
+
+        [CSS Grid Layout] Implement support for grid-template
+        https://bugs.webkit.org/show_bug.cgi?id=103313
+
+        Reviewed by Dean Jackson.
+
+        Based on Blink r153427, r155199 and r155712 by <jchaffraix@chromium.org>
+
+        Test: fast/css-grid-layout/grid-template-get-set.html
+
+        Recognize, parse, store and return properly the value of
+        grid-template. It required some extra parsing code because the
+        specs mandates to check that the defined grid areas are indeed
+        rectangular. Named grid areas are still not fully supported, will
+        be done in a follow up patch.
+
+        As validating involves building the grid areas a new CSSValue was
+        added to hold the computed value. Note that we have to track the
+        explicit size of the named grid areas as the named grid areas
+        (".") are not tracked in our HashMap of grid areas.
+
+        This change also involves moving GridCoordinate and GridSpan to a
+        separate file in order to share the code that describes the grid
+        area coordinates.
+
+        * CMakeLists.txt: Added new files to the build.
+        * GNUmakefile.list.am: Ditto.
+        * WebCore.vcxproj/WebCore.vcxproj: Ditto.
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Ditto.
+        * WebCore.xcodeproj/project.pbxproj: Ditto.
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::ComputedStyleExtractor::propertyValue):
+        * css/CSSGridTemplateValue.cpp: Added.
+        (WebCore::CSSGridTemplateValue::CSSGridTemplateValue):
+        (WebCore::stringForPosition):
+        (WebCore::CSSGridTemplateValue::customCSSText):
+        * css/CSSGridTemplateValue.h: Added.
+        (WebCore::CSSGridTemplateValue::create):
+        (WebCore::CSSGridTemplateValue::~CSSGridTemplateValue):
+        (WebCore::CSSGridTemplateValue::gridAreaMap):
+        (WebCore::CSSGridTemplateValue::rowCount):
+        (WebCore::CSSGridTemplateValue::columnCount):
+        (WebCore::toCSSGridTemplateValue):
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::parseValue):
+        (WebCore::CSSParser::parseGridTemplate): create the grid areas and
+        validate that they define rectangular sections.
+        * css/CSSParser.h:
+        * css/CSSPropertyNames.in: Added -webkit-grid-template.
+        * css/CSSValue.cpp:
+        (WebCore::CSSValue::equals): add support for the new CSSGridTemplateValue.
+        (WebCore::CSSValue::cssText): Ditto.
+        (WebCore::CSSValue::destroy): Ditto.
+        * css/CSSValue.h:
+        (WebCore::CSSValue::isGridTemplateValue):
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::applyProperty):
+        * rendering/RenderGrid.cpp:
+        (WebCore::RenderGrid::cachedGridCoordinate): Replaced RenderGrid::GridSpan by WebCore::GridSpan.
+        (WebCore::RenderGrid::resolveGridPositionsFromAutoPlacementPosition): Ditto.
+        (WebCore::RenderGrid::resolveGridPositionsFromStyle): Ditto.
+        (WebCore::RenderGrid::resolveGridPositionAgainstOppositePosition): Ditto.
+        (WebCore::RenderGrid::resolveNamedGridLinePositionAgainstOppositePosition): Ditto.
+        (WebCore::RenderGrid::resolveRowStartColumnStartNamedGridLinePositionAgainstOppositePosition): Ditto.
+        (WebCore::RenderGrid::resolveRowEndColumnEndNamedGridLinePositionAgainstOppositePosition): Ditto.
+        * rendering/RenderGrid.h: Took GridSpan and GridCoordinate out.
+        * rendering/style/GridCoordinate.h: Added.
+        (WebCore::GridSpan::create):
+        (WebCore::GridSpan::GridSpan):
+        (WebCore::GridSpan::operator==):
+        (WebCore::GridCoordinate::GridCoordinate):
+        (WebCore::GridCoordinate::operator==):
+        (WebCore::GridCoordinate::operator!=):
+        * rendering/style/RenderStyle.h:
+        * rendering/style/StyleGridData.cpp:
+        (WebCore::StyleGridData::StyleGridData):
+        * rendering/style/StyleGridData.h:
+        (WebCore::StyleGridData::operator==):
+
+2013-10-09  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Make EventDispatcher::dispatch comprehensible
+        https://bugs.webkit.org/show_bug.cgi?id=122588
+
+        Reviewed by Andreas Kling.
+
+        Merged EventDispatcher::dispatchEventAtCapturing, EventDispatcher::dispatchEventAtTarget,
+        EventDispatcher::dispatchEventAtBubbling, and EventDispatcher::dispatchEventPostProcess into EventDispatcher::dispatch,
+        and extracted static local callDefaultEventHandlersInTheBubblingOrder and dispatchEventInDOM out of it.
+
+        Also made handleLocalEvents of subclasses of EventContext and Node take Event& instead of Event*.
+
+        * dom/EventContext.cpp: The following functions now take Event& instead of Event*.
+        (WebCore::EventContext::handleLocalEvents):
+        (WebCore::MouseOrFocusEventContext::handleLocalEvents):
+        (WebCore::TouchEventContext::handleLocalEvents):
+        * dom/EventContext.h:
+
+        * dom/EventDispatcher.cpp:
+        (WebCore::callDefaultEventHandlersInTheBubblingOrder): Extracted from EventDispatcher::dispatchEventPostProcess,
+        which is now merged into EventDispatcher::dispatch.
+        (WebCore::dispatchEventInDOM): Extracted out of EventDispatcher::dispatch, EventDispatcher::dispatchEventAtCapturing,
+        EventDispatcher::dispatchEventAtTarget and EventDispatcher::dispatchEventAtBubbling. This function is responsible for
+        dispatching the event for capturing, at the target, and then bubbling through the event path chain.
+        (WebCore::EventDispatcher::dispatch): EventDispatcher::dispatchEventPostProcess got merged into this. The calls to
+        dispatchEventAtCapturing, dispatchEventAtTarget, and dispatchEventAtBubbling are replaced by a single call to
+        dispatchEventInDOM.
+        * dom/EventDispatcher.h:
+
+        * dom/FocusEvent.h:
+        (WebCore::toFocusEvent): Added the version that takes a reference.
+        * dom/MouseEvent.h:
+        (WebCore::toMouseEvent): Ditto.
+        * dom/TouchEvent.h:
+        (WebCore::toTouchEvent): Ditto.
+        * dom/Node.cpp:
+        (WebCore::Node::handleLocalEvents): Now takes Event& instead of Event*.
+        * dom/Node.h:
+        * dom/WindowEventContext.cpp:
+        (WebCore::WindowEventContext::handleLocalEvents): Ditto.
+        * dom/WindowEventContext.h:
+        * html/HTMLFormElement.cpp:
+        (WebCore::HTMLFormElement::handleLocalEvents): Ditto.
+        * html/HTMLFormElement.h:
+
+2013-10-09  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Another build fix after r157204.
+
+        * dom/EventDispatcher.cpp:
+        (WebCore::EventDispatcher::dispatch):
+
+2013-10-09  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Build fix after r157204.
+
+        * dom/EventDispatcher.cpp:
+        (WebCore::EventDispatcher::dispatch):
+
+2013-10-07  Darin Adler  <darin@apple.com>
+
+        Use unique_ptr instead of deleteAllValues in XPath
+        https://bugs.webkit.org/show_bug.cgi?id=121082
+
+        Reviewed by Anders Carlsson.
+
+        * dom/Attr.h: Made the namespaceURI function public so it can be called by
+        code in XPath. Since the class is FINAL, calls won't do virtual dispatch.
+
+        * xml/XPathExpression.cpp:
+        (WebCore::XPathExpression::XPathExpression): Added. Use std::move.
+        (WebCore::XPathExpression::createExpression): Use the new Parser::parseStatement
+        and more std::move.
+        (WebCore::XPathExpression::~XPathExpression): Removed now-unneeded delete.
+        * xml/XPathExpression.h: Removed unused create function. Use std::unique_ptr.
+
+        * xml/XPathExpressionNode.cpp:
+        (WebCore::XPath::Expression::evaluationContext): Use NeverDestroyed instead of
+        DEFINE_STATIC_LOCAL.
+        (WebCore::XPath::Expression::setSubexpressions): Added. Used to set all the
+        subexpressions at once rather than adding one at a time.
+
+        * xml/XPathExpressionNode.h: Use plain unsigned instead of unsigned long.
+        Eliminated the ParseNode class, used only by the parser to delete objects,
+        which we now do with %destructor. Made more functions protected. Fixed the
+        capitalization of the word "subexpression". Made m_subexpressions be a Vector
+        of std::unique_ptr.
+
+        * xml/XPathFunctions.cpp: Marked all the classes FINAL and all their virtual
+        functions OVERRIDE. Reduced some of the boilerplate.
+        (WebCore::XPath::Function::setArguments): Passed in the name so we don't have
+        to store the function names in all the function objects.
+        (WebCore::XPath::FunId::evaluate): Use std::move instead of Value::adopt.
+        (WebCore::XPath::FunLocalName::evaluate): Use emptyString instead of "".
+        (WebCore::XPath::FunNamespaceURI::evaluate): Ditto.
+        (WebCore::XPath::FunName::evaluate): Ditto.
+        (WebCore::XPath::FunSubstringBefore::evaluate): Ditto.
+        (WebCore::XPath::FunSubstringAfter::evaluate): Ditto.
+        (WebCore::XPath::FunSubstring::evaluate): Ditto.
+        (WebCore::XPath::FunLang::evaluate): Use Value(false) so we can make the
+        constructor that takes a boolean explicit.
+        (WebCore::XPath::FunFalse::evaluate): Ditto.
+        (WebCore::XPath::populateFunctionMap): Changed idiom slightly to match other
+        maps we set up.
+        (WebCore::XPath::Function::create): Refactored createFunction into three
+        member functions of this name.
+
+        * xml/XPathFunctions.h: Made all the Function members private or protected
+        except for Function::create.
+
+        * xml/XPathGrammar.y: Changed the parser to use a reference instead of
+        a pointer, and to pass the reference through to yylex as well. Break up
+        the union into pieces and add %destructor as needed to make sure everything
+        gets deallocated if parsing fails. Added a new top level rule "Top" so that
+        we would not try to set the parse result multiple times during parsing.
+        Call setParseResult instead of setting m_topExpr directly. Use std::unique_ptr
+        to adopt pointers from the union. Removed all the register/unregister calls
+        that used to be used to manage storage. Also changed the four different node
+        types to be separate tokens instead of using string matching at this level
+        for them.
+
+        * xml/XPathNodeSet.cpp:
+        (WebCore::XPath::NodeSet::sort): Removed const_cast since m_isSorted and
+        m_nodes are now both marked mutable. Also set m_isSorted after sorting; this
+        was an oversight that hurt performance before.
+        (WebCore::XPath::NodeSet::traversalSort): Ditto.
+        (WebCore::XPath::NodeSet::firstNode): Use nullptr.
+        (WebCore::XPath::NodeSet::anyNode): Ditto.
+
+        * xml/XPathNodeSet.h: Removed unneeded extra includes. Removed the
+        WTF_MAKE_FAST_ALLOCATED for NodeSet since we never allocate these on the heap.
+        Added a constructor that takes a single node. Deleted the swap function, since
+        we now move instead of swap. Deleted the append function that takes a raw Node*,
+        since calling the PassRefPtr<Node> overload does the same thing. Removed the
+        unused reverse function. Marked both m_isSorted and m_nodes mutable so the
+        sort function can be const.
+
+        * xml/XPathParser.cpp: Moved the Token struct in here instead of the header.
+        (WebCore::XPath::populateAxisNamesMap):Renamed to match our normal naming scheme,
+        and changed to use add instead of set, use WTF_ARRAY_LENGTH, and not use a typedef.
+        (WebCore::XPath::parseAxisName): Related style changes, including renaming to
+        better reflect the way this works with a boolean.
+        (WebCore::XPath::Parser::nextTokenInternal): Updated to call parseAxisName,
+        and to produce four separate tokens for the four node type functions.
+        (WebCore::XPath::Parser::nextToken): Renamed local variable.
+        (WebCore::XPath::Parser::Parser): Made this a real constructor that takes arguments
+        and initializes all the fields. Deleted the unneeded reset function.
+        (WebCore::XPath::Parser::lex): Changed to take an argument of an appropriate type
+        instead of casting from void*. Also changed the string code to leak a StringImpl,
+        which is now what the grammar code expects.
+        (WebCore::XPath::Parser::expandQualifiedName): Renamed from expandQName. Changed
+        to set m_sawNamespaceError instead of relying on code in the grammar to do it.
+        (WebCore::XPath::Parser::parseStatement): Removed most of the code in this function.
+        Changed to a much simpler model. Also made this a static member function so it
+        takes care of creating the parser itself and does not need to call reset. Also
+        changed return value to be a std::unique_ptr to make ownership more clear.
+
+        * xml/XPathParser.h: Added a declaration of YYSTYPE. Removed unneeded forward
+        declarations and moved Token into the cpp file. Deleted most public functions,
+        leaving only parseStatement, the entry point, and the three functions needed by
+        the grammar, lex, expandQualifiedName, and setParseResult.
+
+        * xml/XPathPath.cpp:
+        (WebCore::XPath::Filter::Filter): Move in the arguments instead of copying them.
+        (WebCore::XPath::Filter::evaluate): Updated for name and type changes.
+        (WebCore::XPath::LocationPath::LocationPath): Ditto.
+        (WebCore::XPath::LocationPath::evaluate): Ditto. Also use std::move instead of
+        Value::adopt and instead of swap.
+        (WebCore::XPath::LocationPath::appendStep): Changed to take ownership of a
+        unique_ptr.
+        (WebCore::XPath::LocationPath::prependStep): Ditto. Renamed from insertFirstStep.
+        (WebCore::XPath::Path::Path): Move in the arguments.
+
+        * xml/XPathPath.h: Removed unneeded includes. Changed arugument types to use
+        std::unique_ptr to pass ownership in. Added override to all virtual functions.
+        Changed data members to use std::unique_ptr.
+
+        * xml/XPathPredicate.cpp:
+        (WebCore::XPath::StringExpression::StringExpression): Use move.
+        (WebCore::XPath::Negative::Negative): Added.
+        (WebCore::XPath::Negative::evaluate): Updated for name changes.
+        (WebCore::XPath::NumericOp::NumericOp): Use move.
+        (WebCore::XPath::NumericOp::evaluate): Tweak formatting.
+        (WebCore::XPath::EqTestOp::EqTestOp): Use move.
+        (WebCore::XPath::EqTestOp::evaluate): Updated for name changes.
+        (WebCore::XPath::LogicalOp::LogicalOp): Use move.
+        (WebCore::XPath::LogicalOp::shortCircuitOn): Made shorter.
+        (WebCore::XPath::LogicalOp::evaluate): Updated for name changes.
+        (WebCore::XPath::Union::Union): Added.
+        (WebCore::XPath::Union::evaluate): Updated for name changes.
+        (WebCore::XPath::evaluatePredicate): Updated for name changes, to use
+        ASCIILiteral, and to be a free function that takes an expression.
+        (WebCore::XPath::predicateIsContextPositionSensitive): Added.
+        Replaces the Predicate::isContextPositionSensitive function.
+
+        * xml/XPathPredicate.h: Made all the classes FINAL and added a lot of OVERRIDE.
+        Added a constructor for Negative and Union. Got rid of the Predicate class and
+        instead provided two functions that operate on an Expression.
+
+        * xml/XPathStep.cpp:
+        (WebCore::XPath::Step::Step): Use move instea dof copying.
+        (WebCore::XPath::Step::~Step): Removed calls to deleteAllValues.
+        (WebCore::XPath::Step::optimize): Use move instead of swap and copy. Also
+        operate directly on the data members of the node test instead of using functions
+        that just return references to those data members.
+        (WebCore::XPath::optimizeStepPair): Use references instead of pointers, move
+        instead of swap, and early return instead of nested if statements.
+        (WebCore::XPath::Step::predicatesAreContextListInsensitive): Use references.
+        (WebCore::XPath::Step::evaluate): Use references instead of pointers and move
+        instead of swap.
+        (WebCore::XPath::nodeMatchesBasicTest): Use references instead of pointers and
+        more specific types when possible.
+        (WebCore::XPath::nodeMatches): Ditto.
+        (WebCore::XPath::Step::nodesInAxis): Use references instead of pointers. Added
+        braces to match style. Use words instead of letters for local variable names.
+
+        * xml/XPathStep.h: Make almost everything in NodeTest private since callers
+        just set these up and Step is what actually uses them. Changed the predicate
+        vectors to be vectors of Predicate instead of Predicate*, since a Predicate
+        is just a wrapper around a single std::unique_ptr<Expression>. Changed to use
+        move instead of copy when making a Step and to use references instead of pointers.
+
+        * xml/XPathValue.cpp: Use std::numeric_limits explicitly instead of using using.
+        Got rid of Value::adopt.
+        (WebCore::XPath::Value::toNodeSet): Use NeverDestroyed instead of DEFINE_STATE_LOCAL.
+        Updated for name changes.
+        (WebCore::XPath::Value::modifiableNodeSet): Ditto.
+        (WebCore::XPath::Value::toBoolean): Ditto.
+        (WebCore::XPath::Value::toNumber): Ditto.
+        (WebCore::XPath::Value::toString): Ditto. Use ASCIILiteral.
+
+        * xml/XPathValue.h: Moved ValueData class inside the Value class and renamed
+        it Value::Data. Removed fancy trick that avoids turning pointers into bool, and
+        just take the risk. Made many, but not all, of the Value constructors explicit
+        since we normally are explicit at call sites. Removed unneeded unsigned long
+        overload of the constructor. Changed the NodeSet version of the constructor to
+        use std::move and use that instead of AdoptTag.
+
+2013-10-09  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Build fix. Add back the missing call to EventRetargeter::adjustForTouchEvent.
+
+        * dom/EventDispatcher.cpp:
+        (WebCore::EventDispatcher::dispatch):
+
+2013-10-09  Ryosuke Niwa  <rniwa@webkit.org>
+
+        EventDispatchMediator is goner
+        https://bugs.webkit.org/show_bug.cgi?id=122581
+
+        Reviewed by Antti Koivisto.
+
+        Killed the death.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * WebCore.vcxproj/WebCore.vcxproj:
+        * WebCore.vcxproj/WebCore.vcxproj.filters:
+        * WebCore.xcodeproj/project.pbxproj:
+        * dom/DOMAllInOne.cpp:
+        * dom/Element.cpp:
+        (WebCore::Element::dispatchWheelEvent):
+        (WebCore::Element::dispatchKeyEvent):
+        (WebCore::Element::dispatchFocusEvent):
+        (WebCore::Element::dispatchBlurEvent):
+        * dom/EventDispatchMediator.cpp: Removed.
+        * dom/EventDispatchMediator.h: Removed.
+        * dom/EventDispatcher.cpp:
+        (WebCore::EventDispatcher::dispatchEvent):
+        (WebCore::EventDispatcher::dispatchScopedEvent):
+        * dom/EventDispatcher.h:
+        * dom/KeyboardEvent.h:
+        * dom/MouseEvent.h:
+        * dom/Node.cpp:
+        (WebCore::Node::dispatchScopedEvent):
+        (WebCore::Node::dispatchEvent):
+        (WebCore::Node::dispatchGestureEvent):
+        (WebCore::Node::dispatchTouchEvent):
+        (WebCore::Node::dispatchUIRequestEvent):
+        * dom/Node.h:
+        * dom/ScopedEventQueue.cpp:
+        (WebCore::ScopedEventQueue::~ScopedEventQueue):
+        (WebCore::ScopedEventQueue::enqueueEvent):
+        (WebCore::ScopedEventQueue::dispatchAllEvents):
+        (WebCore::ScopedEventQueue::dispatchEvent):
+        * dom/ScopedEventQueue.h:
+        * dom/TouchEvent.cpp:
+        * dom/TouchEvent.h:
+        * dom/UIEvent.h:
+        * dom/WheelEvent.h:
+
+2013-10-09  Andreas Kling  <akling@apple.com>
+
+        Kill some RenderObject::firstChildSlow/lastChildSlow usage.
+        <https://webkit.org/b/122582>
+
+        Reviewed by Antti Koivisto.
+
+        Use tighter typing in some random places to flush out unnecessary use
+        of virtual first/last child getters on RenderObject.
+
+        There are more of these opportunities, but I left them untouched to
+        avoid snowballing this patch.
+
+2013-10-09  Simon Fraser  <simon.fraser@apple.com>
+
+        Fix some bad paths in the Xcode project
+        https://bugs.webkit.org/show_bug.cgi?id=122583
+
+        Reviewed by Mark Rowe.
+
+        Fix paths for some storage quota-related files, and remove
+        reference to mediaControlsQuickTime.css which was removed in r156546.
+
+        * WebCore.xcodeproj/project.pbxproj:
+
+2013-10-09  Alexandru Chiculita  <achicu@adobe.com>
+
+        Web Inspector: [CSS Regions] Display the correct fragment boxes for content inside flow threads
+        https://bugs.webkit.org/show_bug.cgi?id=122291
+
+        Reviewed by Timothy Hatcher.
+
+        Tests: inspector/elements/highlight-regions-flow-horiz-bt.html
+               inspector/elements/highlight-regions-flow-transform-horiz-bt.html
+               inspector/elements/highlight-regions-flow-transform-vert-lr.html
+               inspector/elements/highlight-regions-flow-transform-vert-rl.html
+               inspector/elements/highlight-regions-flow-transform.html
+               inspector/elements/highlight-regions-flow-vert-lr.html
+               inspector/elements/highlight-regions-flow-vert-rl.html
+               inspector/elements/highlight-regions-flow.html
+
+        Nodes inside a RenderFlowThread can be split across multiple regions. This patch adds the required
+        code to compute "fragments" for each region. Each fragment will display its own label.
+
+        There are a couple of changes:
+        1. The node highlight object now has a "scroll" property to hold the main view's scroll offset.
+        2. There's a "fragment" array to get a list of quads for each renderer fragment. Renderers outside 
+        RenderFlowThreads will just have one fragment.
+        3. ElementInfo now has two more properties: "regionFlowInfo" (renamed from former flowInfo) and "contentFlowInfo".
+        If the renderer is a RenderRegion it will have a regionFlowInfo. If the renderer is inside a RenderFlowThread
+        then it will have a "contentFlowInfo".
+
+        * inspector/InspectorOverlay.cpp:
+        (WebCore::InspectorOverlay::getHighlight): It should now take a "region" parameter to customize the output for a specific
+        containing region.
+        (WebCore::buildObjectForHighlight):
+        (WebCore::buildObjectForCSSRegionContentClip): We need to know how to clip the fragments inside regions.
+        (WebCore::buildObjectForRendererFragments): Extracted code from buildObjectForHighlight and added
+        the new regions lookup code.
+        (WebCore::buildObjectForElementInfo): Extracted from buildObjectForHighlight.
+        (WebCore::InspectorOverlay::buildObjectForHighlightedNode):
+        (WebCore::InspectorOverlay::drawQuadHighlight):
+        * inspector/InspectorOverlayPage.css: There can be multiple labels on screen at once, so I've
+        created the #element-title-template element that we clone for each label. .element-title-container is now
+        holding all the .element-title elements, so that we can remove them all at once.
+        (.element-title-container):
+        (.element-title):
+        (#element-title-template):
+        (.tag-name):
+        (.node-id):
+        (.class-name):
+        * inspector/InspectorOverlayPage.html:
+        * inspector/InspectorOverlayPage.js:
+        (reset):
+        (_toggleOptionalValue):
+        (_createElementTitle): Creates an element populated with data read from elementInfo.
+        (_drawElementTitle): Added code to create more labels for multiple fragments.
+        (_drawRegionsHighlight):
+        (_drawFragmentHighlight):
+        (drawNodeHighlight): Consolidated the scroll property into a canvas.transform.
+
+2013-10-09  Simon Fraser  <simon.fraser@apple.com>
+
+        Layout assertion failure in WebCore::RenderView::paint
+        https://bugs.webkit.org/show_bug.cgi?id=121925
+
+        Reviewed by Tim Horton.
+
+        This fixes the assertion seen when running WK2 API tests.
+        
+        If RenderLayerCompositor::flushPendingLayerChanges() was called before
+        the root layer was attached, it would set m_shouldFlushOnReattach
+        to do the flush later, after attaching (bypassing the runloop observer
+        that updated layout if necessary).
+        
+        This could cause us to get to a CA commit without having updated
+        layout, hence the assertion.
+        
+        Fix by having attachRootLayer() schedule a layer flush, rather than doing
+        one right away.
+
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::RenderLayerCompositor::attachRootLayer):
+
+2013-10-09  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        Move float logical location/dimension methods to RenderBlockFlow
+        https://bugs.webkit.org/show_bug.cgi?id=122282
+
+        Reviewed by David Hyatt.
+
+        I recently moved the logical location and dimension methods from
+        RenderBlock to FloatingObject. This made it so that the methods needed
+        to take in the horizontal writing mode of the FloatingObject's
+        container in order to do their thing. When looking into how to fix
+        this, I came to understand why RenderBlock has methods to determine
+        the logical location and dimensions of its children, when the children
+        themselves have those methods: the methods on RenderBlock are for
+        determining the logical value in the writing mode of that RenderBlock,
+        and the method on the child is for determining the logical value in
+        the writing mode of the child.
+
+        Since the floating object list has moved from RenderBlock to
+        RenderBlockFlow, this change moves the logical dimension methods from
+        FloatingObject to RenderBlockFlow.
+
+        No new tests, no new behavior.
+
+        * rendering/FloatingObjects.cpp:
+        (WebCore::ComputeFloatOffsetAdapter::ComputeFloatOffsetAdapter):
+        (WebCore::FloatingObjects::FloatingObjects):
+        (WebCore::::updateOffsetIfNeeded):
+        (WebCore::::collectIfNeeded):
+        (WebCore::::getHeightRemaining):
+        * rendering/FloatingObjects.h:
+        * rendering/LineWidth.cpp:
+        (WebCore::LineWidth::shrinkAvailableWidthForNewFloatIfNeeded):
+        * rendering/RenderBlockFlow.cpp:
+        (WebCore::RenderBlockFlow::clearFloats):
+        (WebCore::RenderBlockFlow::repaintOverhangingFloats):
+        (WebCore::RenderBlockFlow::insertFloatingObject):
+        (WebCore::RenderBlockFlow::removeFloatingObject):
+        (WebCore::RenderBlockFlow::removeFloatingObjectsBelow):
+        (WebCore::RenderBlockFlow::computeLogicalLocationForFloat):
+        (WebCore::RenderBlockFlow::positionNewFloats):
+        (WebCore::RenderBlockFlow::nextFloatLogicalBottomBelow):
+        (WebCore::RenderBlockFlow::lowestFloatLogicalBottom):
+        (WebCore::RenderBlockFlow::addOverhangingFloats):
+        (WebCore::RenderBlockFlow::hasOverhangingFloat):
+        (WebCore::RenderBlockFlow::addIntrudingFloats):
+        * rendering/RenderBlockFlow.h:
+        (WebCore::RenderBlockFlow::logicalTopForFloat):
+        (WebCore::RenderBlockFlow::logicalBottomForFloat):
+        (WebCore::RenderBlockFlow::logicalLeftForFloat):
+        (WebCore::RenderBlockFlow::logicalRightForFloat):
+        (WebCore::RenderBlockFlow::logicalWidthForFloat):
+        (WebCore::RenderBlockFlow::logicalHeightForFloat):
+        (WebCore::RenderBlockFlow::logicalSizeForFloat):
+        (WebCore::RenderBlockFlow::pixelSnappedLogicalTopForFloat):
+        (WebCore::RenderBlockFlow::pixelSnappedLogicalBottomForFloat):
+        (WebCore::RenderBlockFlow::pixelSnappedLogicalLeftForFloat):
+        (WebCore::RenderBlockFlow::pixelSnappedLogicalRightForFloat):
+        (WebCore::RenderBlockFlow::setLogicalTopForFloat):
+        (WebCore::RenderBlockFlow::setLogicalLeftForFloat):
+        (WebCore::RenderBlockFlow::setLogicalHeightForFloat):
+        (WebCore::RenderBlockFlow::setLogicalWidthForFloat):
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::RenderBlockFlow::adjustLogicalLineTopAndLogicalHeightIfNeeded):
+        (WebCore::RenderBlockFlow::checkPaginationAndFloatsAtEndLine):
+        (WebCore::updateSegmentsForShapes):
+        (WebCore::LineBreaker::nextSegmentBreak):
+        (WebCore::RenderBlockFlow::positionNewFloatOnLine):
+        * rendering/shapes/ShapeOutsideInfo.cpp:
+        (WebCore::ShapeOutsideInfo::updateDeltasForContainingBlockLine):
+        * rendering/shapes/ShapeOutsideInfo.h:
+
+2013-10-09  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Remove MouseEventDispatchMediator
+        https://bugs.webkit.org/show_bug.cgi?id=122580
+
+        Reviewed by Antti Koivisto.
+
+        Removed. Will remove EventDispatchMediator next.
+
+        * dom/Element.cpp:
+        (WebCore::Element::dispatchMouseEvent):
+        * dom/MouseEvent.cpp:
+        * dom/MouseEvent.h:
+        * dom/Node.cpp:
+        (WebCore::Node::dispatchEvent):
+        (WebCore::Node::dispatchTouchEvent):
+
+2013-10-09  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Remove all subclasses of EventDispatchMediator except MouseEventDispatchMediator
+        https://bugs.webkit.org/show_bug.cgi?id=122579
+
+        Reviewed by Antti Koivisto.
+
+        Removed UIRequestEventDispatchMediator, GestureEventDispatchMediator, KeyboardEventDispatchMediator,
+        and WheelEventDispatchMediator. Moved the code in the respective mediateAndDispatchEvent functions
+        to their respective dispatch*Event functions in Node.cpp and Element.cpp.
+
+        * Modules/indieui/UIRequestEvent.cpp:
+        (WebCore::UIRequestEvent::eventInterface):
+        * Modules/indieui/UIRequestEvent.h:
+        * dom/Element.cpp:
+        (WebCore::deltaMode):
+        (WebCore::Element::dispatchWheelEvent):
+        (WebCore::Element::dispatchKeyEvent):
+        * dom/GestureEvent.cpp:
+        * dom/GestureEvent.h:
+        * dom/KeyboardEvent.cpp:
+        * dom/KeyboardEvent.h:
+        * dom/Node.cpp:
+        (WebCore::Node::dispatchGestureEvent):
+        (WebCore::Node::dispatchUIRequestEvent):
+        * dom/WheelEvent.cpp:
+        * dom/WheelEvent.h:
+
+2013-10-09  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] Lines that don't intersect shape-outside should ignore both left and right margins
+        https://bugs.webkit.org/show_bug.cgi?id=122570
+
+        Reviewed by Alexandru Chiculita.
+
+        Due to an oversight, the left margin on left floats and the right
+        margin on right floats was having an effect on lines that did not
+        intersect the shape (but did intersect the margin box of the float).
+        By the spec, lines that do not intersect the shape should act as if
+        the float isn't there, so those margins should have no effect on
+        those lines. This patch fixes this.
+
+        No new tests, it is covered by the existing tests now that they have
+        been fixed to have the proper behavior.
+
+        * rendering/shapes/ShapeOutsideInfo.cpp:
+        (WebCore::ShapeOutsideInfo::updateDeltasForContainingBlockLine):
+
+2013-10-09  Bem Jones-Bey  <bjonesbe@adobe.com>
+
+        [CSS Shapes] Clip shape-outside to the bottom of the margin box
+        https://bugs.webkit.org/show_bug.cgi?id=122562
+
+        Reviewed by Alexandru Chiculita.
+
+        The spec says that a shape-outside shape must be clipped to the
+        margin box. This implements clipping the bottom of the shape to the
+        bottom of the margin box.
+
+        Test: csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-000.html
+              csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-001.html
+              csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-002.html
+              csswg/contributors/adobe/submitted/shapes/shape-outside/shape-outside-floats-clipped-003.html
+
+        * rendering/RenderBlockFlow.cpp:
+        (WebCore::RenderBlockFlow::nextFloatLogicalBottomBelow):
+
+2013-10-09  Sergio Correia  <sergio.correia@openbossa.org>
+
+        [CoordinatedGraphics] ASSERTION FAILED: !m_flushingLayers (after r156291)
+        https://bugs.webkit.org/show_bug.cgi?id=122016
+
+        Reviewed by Noam Rosenthal.
+
+        To prevent calling scheduleLayerFlush() inside flushCompositingState(),
+        we now only call m_client->notifyFlushRequired() - which will trigger
+        scheduleLayerFlush() - if we are not already flushing layer changes.
+
+        No new tests, covered by existing ones.
+
+        * platform/graphics/texmap/coordinated/CompositingCoordinator.cpp:
+        (WebCore::CompositingCoordinator::notifyFlushRequired): Check if we
+        are already flushing layer changes before calling notifyFlushRequired.
+        (WebCore::CompositingCoordinator::sizeDidChange): Use notifyFlushRequired()
+        from CompositingCoordinator instead of calling the one from m_client
+        directly.
+        (WebCore::CompositingCoordinator::createGraphicsLayer): Ditto.
+        (WebCore::CompositingCoordinator::detachLayer): Ditto.
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsLayer.cpp:
+        (WebCore::CoordinatedGraphicsLayer::notifyFlushRequired): Added helper
+        to check whether we are flushing layer changes before calling client()'s
+        notifyFlushRequired(). It returns a boolean indicating whether it
+        called the client's method.
+        (WebCore::CoordinatedGraphicsLayer::didChangeLayerState): Use the
+        notifyFlushRequired() helper.
+        (WebCore::CoordinatedGraphicsLayer::didChangeAnimations): Ditto.
+        (WebCore::CoordinatedGraphicsLayer::didChangeChildren): Ditto.
+        (WebCore::CoordinatedGraphicsLayer::didChangeFilters): Ditto.
+        (WebCore::CoordinatedGraphicsLayer::didChangeImageBacking): Ditto.
+        (WebCore::CoordinatedGraphicsLayer::setContentsNeedsDisplay): Ditto.
+        (WebCore::CoordinatedGraphicsLayer::setContentsToCanvas): Ditto.
+        (WebCore::CoordinatedGraphicsLayer::flushCompositingState): Ditto.
+        (WebCore::CoordinatedGraphicsLayer::tiledBackingStoreHasPendingTileCreation):Ditto.
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsLayer.h:
+        Declaration of the notifyFlushRequired() helper.
+
+2013-10-09  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: VoiceOver double speaks all items in <li> nodes
+        https://bugs.webkit.org/show_bug.cgi?id=122564
+
+        Reviewed by Brent Fulgham.
+
+        Test: platform/mac/accessibility/native-list-item-should-not-expose-label.html
+
+        * accessibility/AccessibilityNodeObject.cpp:
+        (WebCore::AccessibilityNodeObject::visibleText):
+
+2013-10-09  Sergio Correia  <sergio.correia@openbossa.org>
+
+        CoordinatedGraphics: Fix integer rounding when computing pixel alignment
+        https://bugs.webkit.org/show_bug.cgi?id=122565
+
+        Reviewed by Noam Rosenthal.
+
+        Replace roundedIntRect call in computePixelAlignment() with enclosingIntRect,
+        so that very small rectangles (after content scaling) don't appear to be empty,
+        creating a crash later.
+
+        Test: transforms/3d/general/rotate-45-degrees-long-inner-text-in-dt.html
+
+        * platform/graphics/texmap/coordinated/CoordinatedGraphicsLayer.cpp:
+        (WebCore::CoordinatedGraphicsLayer::computePixelAlignment):
+
+2013-10-08  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Rename EventRetargeter::adjustForRelatedTarget to EventPath::setRelatedTarget
+        https://bugs.webkit.org/show_bug.cgi?id=122539
+
+        Reviewed by Darin Adler.
+
+        Renamed EventRetargeter::adjustForRelatedTarget to EventPath::setRelatedTarget and got rid of
+        EventDispatchMediators for focus events. We set the related target inside EventDispatcher's
+        dispatch via Event::relatedTarget, which is now virtual and overridden by mouse/focus events.
+
+        * dom/Element.cpp: The following functions no longer use FocusEventDispatchMediators.
+        (WebCore::Element::dispatchFocusInEvent):
+        (WebCore::Element::dispatchFocusOutEvent):
+        (WebCore::Element::dispatchFocusEvent):
+        (WebCore::Element::dispatchBlurEvent):
+
+        * dom/Event.h:
+        (WebCore::Event::relatedTarget): Added as a virtual function.
+
+        * dom/EventDispatcher.cpp:
+        (WebCore::EventDispatcher::dispatchEvent): Cache Event*.
+        (WebCore::EventDispatcher::dispatch): Call setRelatedTargetToPath at the beginning to update
+        related targets in the path.
+
+        * dom/EventDispatcher.h:
+
+        * dom/EventRetargeter.cpp:
+        (WebCore::EventPath::EventPath): Initialize m_origin, used in EventPath::setRelatedTarget.
+        (WebCore::EventRetargeter::adjustTouchList):
+        (WebCore::EventPath::setRelatedTarget): Renamed from EventRetargeter::adjustForRelatedTarget.
+        Delegated the nullity checks to callers by taking references instead of pointers.
+        (WebCore::EventRetargeter::calculateAdjustedNodes):
+
+        * dom/EventRetargeter.h: Removed AdjustedNodes typedef. It's just a Vector of RefPtr<Node>.
+
+        * dom/FocusEvent.cpp: Removed FocusEventDispatchMediators for focus events.
+        * dom/FocusEvent.h:
+
+        * dom/MouseEvent.cpp:
+        (WebCore::MouseEvent::toElement): Cache the related target now that relatedTarget() is virtual.
+        (WebCore::MouseEvent::fromElement): Ditto.
+        (WebCore::MouseEventDispatchMediator::mediateAndDispatchEvent): No longer sets the related
+        targets since that's done in EventDispatcher::dispatch now.
+
+        * dom/MouseEvent.h:
+
+        * dom/Node.cpp: Removed obnoxious Node::dispatchScopedEventDispatchMediator.
+        (WebCore::Node::dispatchScopedEvent):
+        * dom/Node.h:
+
+        * html/shadow/MediaControlElements.cpp:
+        (WebCore::MediaControlVolumeSliderContainerElement::defaultEventHandler): Cache the related
+        target in a local variable now that relatedTarget() is virtual.
+
 2013-10-09  Chris Fleizach  <cfleizach@apple.com>
 
         AX: VoiceOver does not speak aria-expanded state on iOS

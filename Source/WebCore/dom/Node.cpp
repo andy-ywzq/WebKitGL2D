@@ -51,8 +51,6 @@
 #include "ElementIterator.h"
 #include "ElementRareData.h"
 #include "Event.h"
-#include "EventContext.h"
-#include "EventDispatchMediator.h"
 #include "EventDispatcher.h"
 #include "EventException.h"
 #include "EventHandler.h"
@@ -106,7 +104,6 @@
 #include "UIEvent.h"
 #include "UIEventWithKeyState.h"
 #include "WheelEvent.h"
-#include "WindowEventContext.h"
 #include "XMLNames.h"
 #include "htmlediting.h"
 #include <wtf/HashSet.h>
@@ -2056,36 +2053,29 @@ void Node::notifyMutationObserversNodeWillDetach()
     }
 }
 
-void Node::handleLocalEvents(Event* event)
+void Node::handleLocalEvents(Event& event)
 {
     if (!hasEventTargetData())
         return;
 
-    if (isDisabledFormControl(this) && event->isMouseEvent())
+    if (isDisabledFormControl(this) && event.isMouseEvent())
         return;
 
-    fireEventListeners(event);
+    fireEventListeners(&event);
 }
 
 void Node::dispatchScopedEvent(PassRefPtr<Event> event)
 {
-    dispatchScopedEventDispatchMediator(EventDispatchMediator::create(event));
-}
-
-void Node::dispatchScopedEventDispatchMediator(PassRefPtr<EventDispatchMediator> eventDispatchMediator)
-{
-    EventDispatcher::dispatchScopedEvent(*this, eventDispatchMediator);
+    EventDispatcher::dispatchScopedEvent(*this, event);
 }
 
 bool Node::dispatchEvent(PassRefPtr<Event> event)
 {
-    if (event->isMouseEvent())
-        return EventDispatcher::dispatchEvent(this, MouseEventDispatchMediator::create(adoptRef(toMouseEvent(event.leakRef())), MouseEventDispatchMediator::SyntheticMouseEvent));
 #if ENABLE(TOUCH_EVENTS)
     if (event->isTouchEvent())
         return dispatchTouchEvent(adoptRef(toTouchEvent(event.leakRef())));
 #endif
-    return EventDispatcher::dispatchEvent(this, EventDispatchMediator::create(event));
+    return EventDispatcher::dispatchEvent(this, event);
 }
 
 void Node::dispatchSubtreeModifiedEvent()
@@ -2116,21 +2106,29 @@ bool Node::dispatchGestureEvent(const PlatformGestureEvent& event)
     RefPtr<GestureEvent> gestureEvent = GestureEvent::create(document().defaultView(), event);
     if (!gestureEvent.get())
         return false;
-    return EventDispatcher::dispatchEvent(this, GestureEventDispatchMediator::create(gestureEvent));
+
+    if (isDisabledFormControl(this))
+        return true;
+
+    EventDispatcher::dispatchEvent(this, gestureEvent);
+
+    ASSERT(!gestureEvent->defaultPrevented());
+    return gestureEvent->defaultHandled() || gestureEvent->defaultPrevented();
 }
 #endif
 
 #if ENABLE(TOUCH_EVENTS)
 bool Node::dispatchTouchEvent(PassRefPtr<TouchEvent> event)
 {
-    return EventDispatcher::dispatchEvent(this, TouchEventDispatchMediator::create(event));
+    return EventDispatcher::dispatchEvent(this, event);
 }
 #endif
 
 #if ENABLE(INDIE_UI)
 bool Node::dispatchUIRequestEvent(PassRefPtr<UIRequestEvent> event)
 {
-    return EventDispatcher::dispatchEvent(this, UIRequestEventDispatchMediator::create(event));
+    EventDispatcher::dispatchEvent(this, event);
+    return event->defaultHandled() || event->defaultPrevented();
 }
 #endif
     

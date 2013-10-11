@@ -56,8 +56,6 @@ class DOMSettableTokenList;
 class Document;
 class Element;
 class Event;
-class EventContext;
-class EventDispatchMediator;
 class EventListener;
 class FloatPoint;
 class Frame;
@@ -533,9 +531,8 @@ public:
     virtual bool dispatchEvent(PassRefPtr<Event>) OVERRIDE;
 
     void dispatchScopedEvent(PassRefPtr<Event>);
-    void dispatchScopedEventDispatchMediator(PassRefPtr<EventDispatchMediator>);
 
-    virtual void handleLocalEvents(Event*);
+    virtual void handleLocalEvents(Event&);
 
     void dispatchSubtreeModifiedEvent();
     bool dispatchDOMActivateEvent(int detail, PassRefPtr<Event> underlyingEvent);

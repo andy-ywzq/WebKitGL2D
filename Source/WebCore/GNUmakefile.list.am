@@ -2239,8 +2239,6 @@ webcore_sources += \
 	Source/WebCore/bindings/generic/RuntimeEnabledFeatures.h \
 	Source/WebCore/bindings/js/ArrayValue.cpp \
 	Source/WebCore/bindings/js/ArrayValue.h \
-	Source/WebCore/bindings/js/BindingState.cpp \
-	Source/WebCore/bindings/js/BindingState.h \
 	Source/WebCore/bindings/js/CachedScriptSourceProvider.h \
 	Source/WebCore/bindings/js/CallbackFunction.cpp \
 	Source/WebCore/bindings/js/CallbackFunction.h \
@@ -2525,6 +2523,8 @@ webcore_sources += \
 	Source/WebCore/css/CSSFunctionValue.h \
 	Source/WebCore/css/CSSGradientValue.cpp \
 	Source/WebCore/css/CSSGradientValue.h \
+	Source/WebCore/css/CSSGridTemplateValue.cpp \
+	Source/WebCore/css/CSSGridTemplateValue.h \
 	Source/WebCore/css/CSSGroupingRule.cpp \
 	Source/WebCore/css/CSSGroupingRule.h \
 	Source/WebCore/css/CSSHelper.h \
@@ -2821,8 +2821,6 @@ webcore_sources += \
 	Source/WebCore/dom/Event.h \
 	Source/WebCore/dom/EventContext.cpp \
 	Source/WebCore/dom/EventContext.h \
-	Source/WebCore/dom/EventDispatchMediator.cpp \
-	Source/WebCore/dom/EventDispatchMediator.h \
 	Source/WebCore/dom/EventDispatcher.cpp \
 	Source/WebCore/dom/EventDispatcher.h \
 	Source/WebCore/dom/EventException.cpp \
@@ -2833,8 +2831,6 @@ webcore_sources += \
 	Source/WebCore/dom/EventListenerMap.h \
 	Source/WebCore/dom/EventNames.cpp \
 	Source/WebCore/dom/EventNames.h \
-	Source/WebCore/dom/EventRetargeter.cpp \
-	Source/WebCore/dom/EventRetargeter.h \
 	Source/WebCore/dom/EventTarget.cpp \
 	Source/WebCore/dom/EventTarget.h \
 	Source/WebCore/dom/EventQueue.h \
@@ -3020,8 +3016,6 @@ webcore_sources += \
 	Source/WebCore/dom/WebKitTransitionEvent.h \
 	Source/WebCore/dom/WheelEvent.cpp \
 	Source/WebCore/dom/WheelEvent.h \
-	Source/WebCore/dom/WindowEventContext.cpp \
-	Source/WebCore/dom/WindowEventContext.h \
 	Source/WebCore/editing/AlternativeTextController.cpp \
 	Source/WebCore/editing/AlternativeTextController.h \
 	Source/WebCore/editing/AppendNodeCommand.cpp \
@@ -4533,6 +4527,7 @@ webcore_sources += \
 	Source/WebCore/rendering/style/DataRef.h \
 	Source/WebCore/rendering/style/FillLayer.cpp \
 	Source/WebCore/rendering/style/FillLayer.h \
+	Source/WebCore/rendering/style/GridCoordinate.h \
 	Source/WebCore/rendering/style/GridPosition.h \
 	Source/WebCore/rendering/style/KeyframeList.cpp \
 	Source/WebCore/rendering/style/KeyframeList.h \

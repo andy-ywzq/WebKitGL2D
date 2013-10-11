@@ -748,13 +748,6 @@ public:
     bool hasBlendMode() const { return false; }
 #endif
 
-    // Overloaded new operator. Derived classes must override operator new
-    // in order to allocate out of the RenderArena.
-    void* operator new(size_t, RenderArena&);
-
-    // Overridden to prevent the normal delete from being called.
-    void operator delete(void*, size_t);
-
 #if USE(ACCELERATED_COMPOSITING)
     bool isComposited() const { return m_backing != 0; }
     bool hasCompositedMask() const;
@@ -886,9 +879,6 @@ private:
     IntSize scrolledContentOffset() const { return m_scrollOffset; }
 
     IntSize clampScrollOffset(const IntSize&) const;
-
-    // The normal operator new is disallowed on all render objects.
-    void* operator new(size_t) throw();
 
     void setNextSibling(RenderLayer* next) { m_next = next; }
     void setPreviousSibling(RenderLayer* prev) { m_previous = prev; }
@@ -1029,6 +1019,7 @@ private:
     virtual bool isHandlingWheelEvent() const OVERRIDE;
     virtual bool shouldSuspendScrollAnimations() const OVERRIDE;
     virtual IntRect scrollableAreaBoundingBox() const OVERRIDE;
+    virtual bool updatesScrollLayerPositionOnMainThread() const OVERRIDE { return true; }
 
     // Rectangle encompassing the scroll corner and resizer rect.
     IntRect scrollCornerAndResizerRect() const;
@@ -1046,7 +1037,7 @@ private:
 
     void updateDescendantDependentFlags(HashSet<const RenderObject*>* outOfFlowDescendantContainingBlocks = 0);
 #if USE(ACCELERATED_COMPOSITING)
-    bool updateDescendantClippingContext(bool addClipping);
+    bool checkIfDescendantClippingContextNeedsUpdate(bool isClipping);
 #endif
 
     // This flag is computed by RenderLayerCompositor, which knows more about 3d hierarchies than we do.
@@ -1115,9 +1106,6 @@ private:
     friend class RenderLayerBacking;
     friend class RenderLayerCompositor;
     friend class RenderLayerModelObject;
-
-    // Only safe to call from RenderBoxModelObject::destroyLayer(RenderArena&)
-    void destroy(RenderArena&);
 
     LayoutUnit overflowTop() const;
     LayoutUnit overflowBottom() const;
