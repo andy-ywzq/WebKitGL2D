@@ -29,6 +29,7 @@
 
 #include "RTCPeerConnectionObserver.h"
 
+#include "MediaStreamAudioSource.h"
 #include "MediaStreamDescriptor.h"
 #include "NotImplemented.h"
 #include "RTCDataChannelHandlerWebRTC.h"
@@ -66,17 +67,13 @@ PassRefPtr<MediaStreamDescriptor> RTCPeerConnectionObserver::mediaStreamDescript
     webrtc::VideoTrackVector videoTracks = stream->GetVideoTracks();
     MediaStreamSourceVector audioSourceVector;
     MediaStreamSourceVector videoSourceVector;
-    for (const auto& audioTrack : audioTracks) {
-        WTF::String componentId(WTF::String::fromUTF8(audioTrack->id().c_str()));
-        RefPtr<MediaStreamSource> source = MediaStreamSource::create(componentId, MediaStreamSource::Audio, componentId);
-        audioSourceVector.append(source);
-    }
-    for (const auto& videoTrack : videoTracks) {
-        WTF::String componentId(WTF::String::fromUTF8(videoTrack->id().c_str()));
-        RefPtr<MediaStreamSource> source = MediaStreamSource::create(componentId, MediaStreamSource::Video, componentId);
-        videoSourceVector.append(source);
-    }
-    return MediaStreamDescriptor::create(audioSourceVector, videoSourceVector);
+    for (unsigned i = 0; i < audioTracks.size(); i++)
+        // FIXME: Use the same ID provided by webrtc lib to identify, or map, sources and tracks in WebKit.
+        audioSourceVector.append(MediaStreamAudioSource::create());
+
+    // FIXME: Implement a generic class that can be used to video too and use it for video tracks.
+
+    return MediaStreamDescriptor::create(audioSourceVector, videoSourceVector, MediaStreamDescriptor::IsNotEnded);
 }
 
 void RTCPeerConnectionObserver::OnAddStream(webrtc::MediaStreamInterface* stream)
@@ -87,6 +84,7 @@ void RTCPeerConnectionObserver::OnAddStream(webrtc::MediaStreamInterface* stream
 
 void RTCPeerConnectionObserver::OnRemoveStream(webrtc::MediaStreamInterface* stream)
 {
+    // FIXME: We must get the correct MediaStream which is identified or mapped by the webrtc provided id.
     RefPtr<MediaStreamDescriptor> descriptor = mediaStreamDescriptorFromMediaStreamInterface(stream);
     callOnMainThread(bind(&RTCPeerConnectionHandlerClient::didRemoveRemoteStream, m_client, descriptor.get()));
 }
