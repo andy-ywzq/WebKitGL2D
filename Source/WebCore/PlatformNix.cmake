@@ -197,6 +197,10 @@ else ()
         platform/graphics/surfaces/glx/GLXSurface.cpp
     )
     list(APPEND WebCore_LIBRARIES ${X11_X11_LIB} ${X11_Xcomposite_LIB} ${X11_Xrender_LIB})
+
+    if (ENABLE_MEDIA_STREAM)
+        list(APPEND WebCore_LIBRARIES ${X11_Xext_LIB})
+    endif ()
 endif ()
 
 if (ENABLE_BATTERY_STATUS)
