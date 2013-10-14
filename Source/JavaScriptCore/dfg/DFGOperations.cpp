@@ -220,14 +220,6 @@ JSCell* JIT_OPERATION operationCreateThis(ExecState* exec, JSObject* constructor
     return constructEmptyObject(exec, jsCast<JSFunction*>(constructor)->allocationProfile(exec, inlineCapacity)->structure());
 }
 
-JSCell* JIT_OPERATION operationNewObject(ExecState* exec, Structure* structure)
-{
-    VM* vm = &exec->vm();
-    NativeCallFrameTracer tracer(vm, exec);
-    
-    return constructEmptyObject(exec, structure);
-}
-
 EncodedJSValue JIT_OPERATION operationValueAdd(ExecState* exec, EncodedJSValue encodedOp1, EncodedJSValue encodedOp2)
 {
     VM* vm = &exec->vm();
@@ -688,26 +680,6 @@ char* JIT_OPERATION operationNewFloat64ArrayWithOneArgument(
     return newTypedArrayWithOneArgument<JSFloat64Array>(exec, structure, encodedValue);
 }
 
-JSCell* JIT_OPERATION operationCreateActivation(ExecState* exec, int32_t offset)
-{
-    VM& vm = exec->vm();
-    NativeCallFrameTracer tracer(&vm, exec);
-    JSActivation* activation = JSActivation::create(vm, exec, exec->registers() + offset, exec->codeBlock());
-    exec->setScope(activation);
-    return activation;
-}
-
-JSCell* JIT_OPERATION operationCreateArguments(ExecState* exec)
-{
-    VM& vm = exec->vm();
-    NativeCallFrameTracer tracer(&vm, exec);
-    // NB: This needs to be exceedingly careful with top call frame tracking, since it
-    // may be called from OSR exit, while the state of the call stack is bizarre.
-    Arguments* result = Arguments::create(vm, exec);
-    ASSERT(!vm.exception());
-    return result;
-}
-
 JSCell* JIT_OPERATION operationCreateInlinedArguments(
     ExecState* exec, InlineCallFrame* inlineCallFrame)
 {
@@ -788,26 +760,6 @@ JSCell* JIT_OPERATION operationNewFunctionNoCheck(ExecState* exec, JSCell* funct
     VM& vm = exec->vm();
     NativeCallFrameTracer tracer(&vm, exec);
     return JSFunction::create(vm, static_cast<FunctionExecutable*>(functionExecutable), exec->scope());
-}
-
-EncodedJSValue JIT_OPERATION operationNewFunction(ExecState* exec, JSCell* functionExecutable)
-{
-    ASSERT(functionExecutable->inherits(FunctionExecutable::info()));
-    VM& vm = exec->vm();
-    NativeCallFrameTracer tracer(&vm, exec);
-    return JSValue::encode(JSFunction::create(vm, static_cast<FunctionExecutable*>(functionExecutable), exec->scope()));
-}
-
-JSCell* JIT_OPERATION operationNewFunctionExpression(ExecState* exec, JSCell* functionExecutableAsCell)
-{
-    ASSERT(functionExecutableAsCell->inherits(FunctionExecutable::info()));
-
-    VM& vm = exec->vm();
-    NativeCallFrameTracer tracer(&vm, exec);
-
-    FunctionExecutable* functionExecutable =
-        static_cast<FunctionExecutable*>(functionExecutableAsCell);
-    return JSFunction::create(vm, functionExecutable, exec->scope());
 }
 
 size_t JIT_OPERATION operationIsObject(ExecState* exec, EncodedJSValue value)

@@ -149,7 +149,7 @@ class RenderObject : public CachedImageClient {
 public:
     // Anonymous objects should pass the document as their node, and they will then automatically be
     // marked as anonymous in the constructor.
-    explicit RenderObject(Node*);
+    explicit RenderObject(Node&);
     virtual ~RenderObject();
 
     RenderTheme* theme() const;
@@ -378,7 +378,7 @@ public:
 
     virtual bool isRenderScrollbarPart() const { return false; }
 
-    bool isRoot() const { return document().documentElement() == m_node; }
+    bool isRoot() const { return document().documentElement() == &m_node; }
     bool isBody() const;
     bool isHR() const;
     bool isLegend() const;
@@ -595,7 +595,7 @@ public:
     // Returns true if this renderer is rooted, and optionally returns the hosting view (the root of the hierarchy).
     bool isRooted(RenderView** = 0) const;
 
-    Node* node() const { return isAnonymous() ? 0 : m_node; }
+    Node* node() const { return isAnonymous() ? 0 : &m_node; }
     Node* nonPseudoNode() const { return isPseudoElement() ? 0 : node(); }
 
     // Returns the styled node that caused the generation of this renderer.
@@ -603,7 +603,7 @@ public:
     // pseudo elements for which their parent node is returned.
     Node* generatingNode() const { return isPseudoElement() ? generatingPseudoHostElement() : node(); }
 
-    Document& document() const { return m_node->document(); }
+    Document& document() const { return m_node.document(); }
     Frame& frame() const; // Defined in RenderView.h
 
     bool hasOutlineAnnotation() const;
@@ -669,8 +669,8 @@ public:
     virtual bool nodeAtPoint(const HitTestRequest&, HitTestResult&, const HitTestLocation& locationInContainer, const LayoutPoint& accumulatedOffset, HitTestAction);
 
     virtual VisiblePosition positionForPoint(const LayoutPoint&);
-    VisiblePosition createVisiblePosition(int offset, EAffinity);
-    VisiblePosition createVisiblePosition(const Position&);
+    VisiblePosition createVisiblePosition(int offset, EAffinity) const;
+    VisiblePosition createVisiblePosition(const Position&) const;
 
     // returns the containing block level element for this element.
     RenderBlock* containingBlock() const;
@@ -911,10 +911,7 @@ protected:
     void paintFocusRing(PaintInfo&, const LayoutPoint&, RenderStyle*);
     void paintOutline(PaintInfo&, const LayoutRect&);
     void addPDFURLRect(GraphicsContext*, const LayoutRect&);
-    Node& nodeForNonAnonymous() const { ASSERT(!isAnonymous()); return *m_node; }
-
-    
-    virtual LayoutRect viewRect() const;
+    Node& nodeForNonAnonymous() const { ASSERT(!isAnonymous()); return m_node; }
 
     void adjustRectForOutlineAndShadow(LayoutRect&) const;
 
@@ -926,8 +923,6 @@ protected:
 
     virtual void insertedIntoTree();
     virtual void willBeRemovedFromTree();
-
-    void setDocumentForAnonymous(Document& document) { ASSERT(isAnonymous()); m_node = &document; }
 
     void setNeedsPositionedMovementLayoutBit(bool b) { m_bitfields.setNeedsPositionedMovementLayout(b); }
     void setNormalChildNeedsLayoutBit(bool b) { m_bitfields.setNormalChildNeedsLayout(b); }
@@ -949,7 +944,7 @@ private:
     void checkBlockPositionedObjectsNeedLayout();
 #endif
 
-    Node* m_node;
+    Node& m_node;
 
     RenderElement* m_parent;
     RenderObject* m_previous;
@@ -976,7 +971,7 @@ private:
         };
 
     public:
-        RenderObjectBitfields(Node* node)
+        RenderObjectBitfields(const Node& node)
             : m_needsLayout(false)
             , m_needsPositionedMovementLayout(false)
             , m_normalChildNeedsLayout(false)
@@ -984,7 +979,7 @@ private:
             , m_needsSimplifiedNormalFlowLayout(false)
             , m_preferredLogicalWidthsDirty(false)
             , m_floating(false)
-            , m_isAnonymous(!node)
+            , m_isAnonymous(node.isDocumentNode())
             , m_isTextOrRenderView(false)
             , m_isBox(false)
             , m_isInline(true)
@@ -1172,20 +1167,6 @@ inline LayoutUnit adjustLayoutUnitForAbsoluteZoom(LayoutUnit value, RenderObject
     return adjustLayoutUnitForAbsoluteZoom(value, renderer->style());
 }
 #endif
-
-inline void adjustFloatQuadForAbsoluteZoom(FloatQuad& quad, RenderObject* renderer)
-{
-    float zoom = renderer->style()->effectiveZoom();
-    if (zoom != 1)
-        quad.scale(1 / zoom, 1 / zoom);
-}
-
-inline void adjustFloatRectForAbsoluteZoom(FloatRect& rect, RenderObject* renderer)
-{
-    float zoom = renderer->style()->effectiveZoom();
-    if (zoom != 1)
-        rect.scale(1 / zoom, 1 / zoom);
-}
 
 } // namespace WebCore
 

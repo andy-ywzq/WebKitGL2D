@@ -1118,7 +1118,7 @@ String listMarkerText(EListStyleType type, int value)
 }
 
 RenderListMarker::RenderListMarker(RenderListItem& listItem)
-    : RenderBox(nullptr, 0)
+    : RenderBox(listItem.document(), 0)
     , m_listItem(listItem)
 {
     // init RenderObject attributes
@@ -1130,14 +1130,6 @@ RenderListMarker::~RenderListMarker()
 {
     if (m_image)
         m_image->removeClient(this);
-}
-
-RenderListMarker* RenderListMarker::createAnonymous(RenderListItem& listItem)
-{
-    Document& document = listItem.document();
-    RenderListMarker* renderer = new (*document.renderArena()) RenderListMarker(listItem);
-    renderer->setDocumentForAnonymous(document);
-    return renderer;
 }
 
 void RenderListMarker::styleWillChange(StyleDifference diff, const RenderStyle* newStyle)
@@ -1356,8 +1348,8 @@ void RenderListMarker::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffse
         context->drawText(font, textRun, textOrigin);
     else {
         // Text is not arbitrary. We can judge whether it's RTL from the first character,
-        // and we only need to handle the direction RightToLeft for now.
-        bool textNeedsReversing = direction(m_text[0]) == RightToLeft;
+        // and we only need to handle the direction U_RIGHT_TO_LEFT for now.
+        bool textNeedsReversing = u_charDirection(m_text[0]) == U_RIGHT_TO_LEFT;
         StringBuilder reversedText;
         if (textNeedsReversing) {
             int length = m_text.length();

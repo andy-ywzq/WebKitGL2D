@@ -27,12 +27,16 @@
 #if ENABLE(JIT)
 #include "JITOperations.h"
 
+#include "Arguments.h"
+#include "ArrayConstructor.h"
 #include "CommonSlowPaths.h"
 #include "Error.h"
 #include "GetterSetter.h"
 #include "HostCallReturnValue.h"
 #include "JITOperationWrappers.h"
 #include "JSGlobalObjectFunctions.h"
+#include "JSPropertyNameIterator.h"
+#include "ObjectConstructor.h"
 #include "Operations.h"
 #include "Repatch.h"
 
@@ -743,6 +747,44 @@ size_t JIT_OPERATION operationHasProperty(ExecState* exec, JSObject* base, JSStr
 }
     
 
+EncodedJSValue JIT_OPERATION operationNewArrayWithProfile(ExecState* exec, ArrayAllocationProfile* profile, const JSValue* values, int size)
+{
+    VM* vm = &exec->vm();
+    NativeCallFrameTracer tracer(vm, exec);
+    return JSValue::encode(constructArrayNegativeIndexed(exec, profile, values, size));
+}
+
+EncodedJSValue JIT_OPERATION operationNewArrayBufferWithProfile(ExecState* exec, ArrayAllocationProfile* profile, const JSValue* values, int size)
+{
+    VM* vm = &exec->vm();
+    NativeCallFrameTracer tracer(vm, exec);
+    return JSValue::encode(constructArray(exec, profile, values, size));
+}
+
+EncodedJSValue JIT_OPERATION operationNewArrayWithSizeAndProfile(ExecState* exec, ArrayAllocationProfile* profile, EncodedJSValue size)
+{
+    VM* vm = &exec->vm();
+    NativeCallFrameTracer tracer(vm, exec);
+    JSValue sizeValue = JSValue::decode(size);
+    return JSValue::encode(constructArrayWithSizeQuirk(exec, profile, exec->lexicalGlobalObject(), sizeValue));
+}
+
+EncodedJSValue JIT_OPERATION operationNewFunction(ExecState* exec, JSCell* functionExecutable)
+{
+    ASSERT(functionExecutable->inherits(FunctionExecutable::info()));
+    VM& vm = exec->vm();
+    NativeCallFrameTracer tracer(&vm, exec);
+    return JSValue::encode(JSFunction::create(vm, static_cast<FunctionExecutable*>(functionExecutable), exec->scope()));
+}
+
+JSCell* JIT_OPERATION operationNewObject(ExecState* exec, Structure* structure)
+{
+    VM* vm = &exec->vm();
+    NativeCallFrameTracer tracer(vm, exec);
+    
+    return constructEmptyObject(exec, structure);
+}
+
 EncodedJSValue JIT_OPERATION operationNewRegexp(ExecState* exec, void* regexpPtr)
 {
     VM& vm = exec->vm();
@@ -754,6 +796,103 @@ EncodedJSValue JIT_OPERATION operationNewRegexp(ExecState* exec, void* regexpPtr
     }
 
     return JSValue::encode(RegExpObject::create(vm, exec->lexicalGlobalObject()->regExpStructure(), regexp));
+}
+
+EncodedJSValue JIT_OPERATION operationCheckHasInstance(ExecState* exec, EncodedJSValue encodedValue, EncodedJSValue encodedBaseVal)
+{
+    VM* vm = &exec->vm();
+    NativeCallFrameTracer tracer(vm, exec);
+
+    JSValue value = JSValue::decode(encodedValue);
+    JSValue baseVal = JSValue::decode(encodedBaseVal);
+
+    if (baseVal.isObject()) {
+        JSObject* baseObject = asObject(baseVal);
+        ASSERT(!baseObject->structure()->typeInfo().implementsDefaultHasInstance());
+        if (baseObject->structure()->typeInfo().implementsHasInstance()) {
+            bool result = baseObject->methodTable()->customHasInstance(baseObject, exec, value);
+            return JSValue::encode(jsBoolean(result));
+        }
+    }
+
+    vm->throwException(exec, createInvalidParameterError(exec, "instanceof", baseVal));
+    return JSValue::encode(JSValue());
+}
+
+JSCell* JIT_OPERATION operationCreateActivation(ExecState* exec, int32_t offset)
+{
+    VM& vm = exec->vm();
+    NativeCallFrameTracer tracer(&vm, exec);
+    JSActivation* activation = JSActivation::create(vm, exec, exec->registers() + offset, exec->codeBlock());
+    exec->setScope(activation);
+    return activation;
+}
+
+JSCell* JIT_OPERATION operationCreateArguments(ExecState* exec)
+{
+    VM& vm = exec->vm();
+    NativeCallFrameTracer tracer(&vm, exec);
+    // NB: This needs to be exceedingly careful with top call frame tracking, since it
+    // may be called from OSR exit, while the state of the call stack is bizarre.
+    Arguments* result = Arguments::create(vm, exec);
+    ASSERT(!vm.exception());
+    return result;
+}
+
+EncodedJSValue JIT_OPERATION operationDeleteById(ExecState* exec, EncodedJSValue encodedBase, const Identifier* identifier)
+{
+    VM& vm = exec->vm();
+    NativeCallFrameTracer tracer(&vm, exec);
+
+    JSObject* baseObj = JSValue::decode(encodedBase).toObject(exec);
+    bool couldDelete = baseObj->methodTable()->deleteProperty(baseObj, exec, *identifier);
+    JSValue result = jsBoolean(couldDelete);
+    if (!couldDelete && exec->codeBlock()->isStrictMode())
+        vm.throwException(exec, createTypeError(exec, "Unable to delete property."));
+    return JSValue::encode(result);
+}
+
+JSCell* JIT_OPERATION operationGetPNames(ExecState* exec, JSObject* obj)
+{
+    VM& vm = exec->vm();
+    NativeCallFrameTracer tracer(&vm, exec);
+
+    Structure* structure = obj->structure();
+    JSPropertyNameIterator* jsPropertyNameIterator = structure->enumerationCache();
+    if (!jsPropertyNameIterator || jsPropertyNameIterator->cachedPrototypeChain() != structure->prototypeChain(exec))
+        jsPropertyNameIterator = JSPropertyNameIterator::create(exec, obj);
+    return jsPropertyNameIterator;
+}
+
+EncodedJSValue JIT_OPERATION operationInstanceOf(ExecState* exec, EncodedJSValue encodedValue, EncodedJSValue encodedProto)
+{
+    VM& vm = exec->vm();
+    NativeCallFrameTracer tracer(&vm, exec);
+    JSValue value = JSValue::decode(encodedValue);
+    JSValue proto = JSValue::decode(encodedProto);
+    
+    ASSERT(!value.isObject() || !proto.isObject());
+
+    bool result = JSObject::defaultHasInstance(exec, value, proto);
+    return JSValue::encode(jsBoolean(result));
+}
+
+CallFrame* JIT_OPERATION operationLoadVarargs(ExecState* exec, EncodedJSValue encodedThis, EncodedJSValue encodedArguments, int32_t firstFreeRegister)
+{
+    VM& vm = exec->vm();
+    NativeCallFrameTracer tracer(&vm, exec);
+    JSStack* stack = &exec->interpreter()->stack();
+    JSValue thisValue = JSValue::decode(encodedThis);
+    JSValue arguments = JSValue::decode(encodedArguments);
+    CallFrame* newCallFrame = loadVarargs(exec, stack, thisValue, arguments, firstFreeRegister);
+    return newCallFrame;
+}
+
+EncodedJSValue JIT_OPERATION operationToObject(ExecState* exec, EncodedJSValue value)
+{
+    VM& vm = exec->vm();
+    NativeCallFrameTracer tracer(&vm, exec);
+    return JSValue::encode(JSValue::decode(value).toObject(exec));
 }
 
 JITHandlerEncoded JIT_OPERATION lookupExceptionHandler(ExecState* exec)

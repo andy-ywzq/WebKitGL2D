@@ -106,9 +106,9 @@ float SVGInlineTextBox::positionForOffset(int) const
     return 0;
 }
 
-FloatRect SVGInlineTextBox::selectionRectForTextFragment(const SVGTextFragment& fragment, int startPosition, int endPosition, RenderStyle* style)
+FloatRect SVGInlineTextBox::selectionRectForTextFragment(const SVGTextFragment& fragment, int startPosition, int endPosition, RenderStyle* style) const
 {
-    ASSERT(startPosition < endPosition);
+    ASSERT_WITH_SECURITY_IMPLICATION(startPosition < endPosition);
     ASSERT(style);
 
     FontCachePurgePreventer fontCachePurgePreventer;
@@ -132,7 +132,7 @@ FloatRect SVGInlineTextBox::selectionRectForTextFragment(const SVGTextFragment& 
     return selectionRect;
 }
 
-LayoutRect SVGInlineTextBox::localSelectionRect(int startPosition, int endPosition)
+LayoutRect SVGInlineTextBox::localSelectionRect(int startPosition, int endPosition) const
 {
     int boxStart = start();
     startPosition = max(startPosition - boxStart, 0);
@@ -454,7 +454,7 @@ bool SVGInlineTextBox::mapStartEndPositionsIntoFragmentCoordinates(const SVGText
         endPosition -= offset;
     }
 
-    ASSERT(startPosition < endPosition);
+    ASSERT_WITH_SECURITY_IMPLICATION(startPosition < endPosition);
     return true;
 }
 

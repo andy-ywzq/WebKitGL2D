@@ -99,7 +99,7 @@ void InlineTextBox::setLogicalOverflowRect(const LayoutRect& rect)
 
 int InlineTextBox::baselinePosition(FontBaseline baselineType) const
 {
-    if (!behavesLikeText() || !parent())
+    if (!parent())
         return 0;
     if (&parent()->renderer() == renderer().parent())
         return parent()->baselinePosition(baselineType);
@@ -108,24 +108,24 @@ int InlineTextBox::baselinePosition(FontBaseline baselineType) const
 
 LayoutUnit InlineTextBox::lineHeight() const
 {
-    if (!behavesLikeText() || !renderer().parent())
+    if (!renderer().parent())
         return 0;
     if (&parent()->renderer() == renderer().parent())
         return parent()->lineHeight();
     return toRenderBoxModelObject(renderer().parent())->lineHeight(isFirstLine(), isHorizontal() ? HorizontalLine : VerticalLine, PositionOnContainingLine);
 }
 
-LayoutUnit InlineTextBox::selectionTop()
+LayoutUnit InlineTextBox::selectionTop() const
 {
     return root().selectionTop();
 }
 
-LayoutUnit InlineTextBox::selectionBottom()
+LayoutUnit InlineTextBox::selectionBottom() const
 {
     return root().selectionBottom();
 }
 
-LayoutUnit InlineTextBox::selectionHeight()
+LayoutUnit InlineTextBox::selectionHeight() const
 {
     return root().selectionHeight();
 }
@@ -200,7 +200,7 @@ static const Font& fontToUse(const RenderStyle& style, const RenderText& rendere
     return style.font();
 }
 
-LayoutRect InlineTextBox::localSelectionRect(int startPos, int endPos)
+LayoutRect InlineTextBox::localSelectionRect(int startPos, int endPos) const
 {
     int sPos = max(startPos - m_start, 0);
     int ePos = min(endPos - m_start, (int)m_len);
@@ -243,7 +243,7 @@ LayoutRect InlineTextBox::localSelectionRect(int startPos, int endPos)
 
 void InlineTextBox::deleteLine(RenderArena& arena)
 {
-    renderer().removeTextBox(this);
+    renderer().removeTextBox(*this);
     destroy(arena);
 }
 
@@ -252,7 +252,7 @@ void InlineTextBox::extractLine()
     if (extracted())
         return;
 
-    renderer().extractTextBox(this);
+    renderer().extractTextBox(*this);
 }
 
 void InlineTextBox::attachLine()
@@ -260,7 +260,7 @@ void InlineTextBox::attachLine()
     if (!extracted())
         return;
     
-    renderer().attachTextBox(this);
+    renderer().attachTextBox(*this);
 }
 
 float InlineTextBox::placeEllipsisBox(bool flowIsLTR, float visibleLeftEdge, float visibleRightEdge, float ellipsisWidth, float &truncatedWidth, bool& foundBox)
@@ -610,7 +610,7 @@ void InlineTextBox::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset, 
 
     int sPos = 0;
     int ePos = 0;
-    if (paintSelectedTextOnly || paintSelectedTextSeparately)
+    if (haveSelection && (paintSelectedTextOnly || paintSelectedTextSeparately))
         selectionStartEnd(sPos, ePos);
 
     if (m_truncation != cNoTruncation) {

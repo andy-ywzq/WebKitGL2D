@@ -36,7 +36,6 @@
 #include "ClientRect.h"
 #include "ClientRectList.h"
 #include "ContainerNodeAlgorithms.h"
-#include "CustomElementRegistry.h"
 #include "DOMTokenList.h"
 #include "DatasetDOMStringMap.h"
 #include "Document.h"
@@ -191,7 +190,7 @@ Element::~Element()
 
 inline ElementRareData* Element::elementRareData() const
 {
-    ASSERT(hasRareData());
+    ASSERT_WITH_SECURITY_IMPLICATION(hasRareData());
     return static_cast<ElementRareData*>(rareData());
 }
 
@@ -420,7 +419,7 @@ inline void Element::synchronizeAttribute(const QualifiedName& name) const
     if (!elementData())
         return;
     if (UNLIKELY(name == styleAttr && elementData()->m_styleAttributeIsDirty)) {
-        ASSERT(isStyledElement());
+        ASSERT_WITH_SECURITY_IMPLICATION(isStyledElement());
         static_cast<const StyledElement*>(this)->synchronizeStyleAttributeInternal();
         return;
     }
@@ -439,14 +438,14 @@ inline void Element::synchronizeAttribute(const AtomicString& localName) const
     if (!elementData())
         return;
     if (elementData()->m_styleAttributeIsDirty && equalPossiblyIgnoringCase(localName, styleAttr.localName(), shouldIgnoreAttributeCase(this))) {
-        ASSERT(isStyledElement());
+        ASSERT_WITH_SECURITY_IMPLICATION(isStyledElement());
         static_cast<const StyledElement*>(this)->synchronizeStyleAttributeInternal();
         return;
     }
 #if ENABLE(SVG)
     if (elementData()->m_animatedSVGAttributesAreDirty) {
         // We're not passing a namespace argument on purpose. SVGNames::*Attr are defined w/o namespaces as well.
-        ASSERT(isSVGElement());
+        ASSERT_WITH_SECURITY_IMPLICATION(isSVGElement());
         toSVGElement(this)->synchronizeAnimatedSVGAttribute(QualifiedName(nullAtom, localName, nullAtom));
     }
 #endif
@@ -964,7 +963,7 @@ PassRefPtr<ClientRectList> Element::getClientRects()
 
     Vector<FloatQuad> quads;
     renderBoxModelObject->absoluteQuads(quads);
-    document().adjustFloatQuadsForScrollAndAbsoluteZoomAndFrameScale(quads, renderBoxModelObject);
+    document().adjustFloatQuadsForScrollAndAbsoluteZoomAndFrameScale(quads, *renderBoxModelObject->style());
     return ClientRectList::create(quads);
 }
 
@@ -995,7 +994,7 @@ PassRefPtr<ClientRect> Element::getBoundingClientRect()
     for (size_t i = 1; i < quads.size(); ++i)
         result.unite(quads[i].boundingBox());
 
-    document().adjustFloatRectForScrollAndAbsoluteZoomAndFrameScale(result, renderer());
+    document().adjustFloatRectForScrollAndAbsoluteZoomAndFrameScale(result, *renderer()->style());
     return ClientRect::create(result);
 }
     
@@ -1135,17 +1134,6 @@ void Element::attributeChanged(const QualifiedName& name, const AtomicString& ne
 
     if (AXObjectCache* cache = document().existingAXObjectCache())
         cache->handleAttributeChanged(name, this);
-}
-
-inline void Element::attributeChangedFromParserOrByCloning(const QualifiedName& name, const AtomicString& newValue, AttributeModificationReason reason)
-{
-#if ENABLE(CUSTOM_ELEMENTS)
-    if (name == isAttr) {
-        if (CustomElementRegistry* registry = document().registry())
-            registry->didGiveTypeExtension(this);
-    }
-#endif
-    attributeChanged(name, newValue, reason);
 }
 
 template <typename CharacterType>
@@ -1289,7 +1277,7 @@ void Element::parserSetAttributes(const Vector<Attribute>& attributeVector)
 
     // Use attributeVector instead of m_elementData because attributeChanged might modify m_elementData.
     for (unsigned i = 0; i < attributeVector.size(); ++i)
-        attributeChangedFromParserOrByCloning(attributeVector[i].name(), attributeVector[i].value(), ModifiedDirectly);
+        attributeChanged(attributeVector[i].name(), attributeVector[i].value(), ModifiedDirectly);
 }
 
 bool Element::hasAttributes() const
@@ -2549,9 +2537,7 @@ bool Element::webkitMatchesSelector(const String& selector, ExceptionCode& ec)
     }
 
     SelectorQuery* selectorQuery = document().selectorQueryCache().add(selector, document(), ec);
-    if (!selectorQuery)
-        return false;
-    return selectorQuery->matches(this);
+    return selectorQuery && selectorQuery->matches(*this);
 }
 
 bool Element::shouldAppearIndeterminate() const
@@ -3168,7 +3154,7 @@ void Element::cloneAttributesFromElement(const Element& other)
 
     for (unsigned i = 0; i < m_elementData->length(); ++i) {
         const Attribute& attribute = const_cast<const ElementData*>(m_elementData.get())->attributeAt(i);
-        attributeChangedFromParserOrByCloning(attribute.name(), attribute.value(), ModifiedByCloning);
+        attributeChanged(attribute.name(), attribute.value(), ModifiedByCloning);
     }
 }
 

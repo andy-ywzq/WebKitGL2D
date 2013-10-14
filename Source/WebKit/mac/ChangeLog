@@ -1,3 +1,85 @@
+2013-10-12  Darin Adler  <darin@apple.com>
+
+        Get rid of the toHTMLElement helper for casting FormAssociatedElement to HTMLElement
+        https://bugs.webkit.org/show_bug.cgi?id=122713
+
+        Reviewed by Sam Weinig.
+
+        * WebView/WebHTMLRepresentation.mm:
+        (-[WebHTMLRepresentation elementWithName:inForm:]): Use asHTMLElement.
+        (-[WebHTMLRepresentation controlsInForm:]): Ditto.
+
+2013-10-12  Adam Roben  <aroben@webkit.org>
+
+        WebViews inside OS X screen savers have large caches, but should not
+        https://bugs.webkit.org/show_bug.cgi?id=122604
+
+        We use WebCacheModelDocumentViewer by default for apps linked against
+        modern WebKit, and WebCacheModelDocumentBrowser for apps linked
+        against legacy WebKit. ScreenSaverEngine.app doesn't link against
+        WebKit at all, and thus falls into the legacy case by accident because
+        NSVersionOfLinkTimeLibrary("WebKit") returns -1.
+
+        But WebViews inside screen savers are almost certainly not being used
+        as browsers, so this large-ish cache specified by
+        WebCacheModelDocumentBrowser is wasteful. This is likely true for all
+        apps that don't directly link against WebKit, so now we use
+        WebCacheModelDocumentViewer by default for those apps.
+
+        Reviewed by Darin Adler.
+
+        * WebView/WebPreferences.mm:
+        (cacheModelForMainBundle): Use WebCacheModelDocumentViewer by default
+        for apps that don't link against WebKit directly. Also converted to
+        use @autoreleasepool {} and early returns while I was in here.
+
+2013-10-12  Alexey Proskuryakov  <ap@apple.com>
+
+        Add a feature define for SubtleCrypto
+        https://bugs.webkit.org/show_bug.cgi?id=122683
+
+        Reviewed by Anders Carlsson.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-10-12  Darin Adler  <darin@apple.com>
+
+        Use unique_ptr instead of delete in a few places
+        https://bugs.webkit.org/show_bug.cgi?id=122639
+
+        Reviewed by Anders Carlsson.
+
+        * History/WebHistory.mm:
+        (-[WebHistoryPrivate init]): Use make_unique.
+        (-[WebHistoryPrivate dealloc]): Don't delete.
+        (-[WebHistoryPrivate finalize]): Don't delete.
+        (-[WebHistoryPrivate data]): Use get.
+
+        * WebCoreSupport/WebFrameNetworkingContext.mm:
+        (privateSession): Use NeverDestroyed here instead of a raw pointer.
+        (WebFrameNetworkingContext::ensurePrivateBrowsingSession): Use the
+        new function instead of direct global variable access.
+        (WebFrameNetworkingContext::destroyPrivateBrowsingSession): Ditto.
+        (WebFrameNetworkingContext::storageSession): Ditto.
+
+        * WebView/WebFrame.mm:
+        (-[WebFramePrivate dealloc]): Don't delete.
+        (-[WebFramePrivate finalize]): Don't delete.
+        (-[WebFrame _attachScriptDebugger]): Use make_unique.
+        (-[WebFrame _detachScriptDebugger]): Don't delete.
+        * WebView/WebFrameInternal.h: Use unique_ptr.
+
+2013-10-11  Timothy Hatcher  <timothy@apple.com>
+
+        Remove preference support for picking the old Web Inspector.
+        https://bugs.webkit.org/show_bug.cgi?id=122655
+
+        Reviewed by Alexey Proskuryakov.
+
+        * WebCoreSupport/WebInspectorClient.mm:
+        (WebInspectorFrontendClient::localizedStringsURL):
+        (-[WebInspectorWindowController inspectorPagePath]):
+
 2013-10-10  Simon Fraser  <simon.fraser@apple.com>
 
         Always force layout before flushing compositing layers

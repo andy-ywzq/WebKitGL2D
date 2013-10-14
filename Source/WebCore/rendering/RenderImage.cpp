@@ -53,7 +53,7 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-RenderImage::RenderImage(Element* element)
+RenderImage::RenderImage(Element& element)
     : RenderReplaced(element, IntSize())
     , m_needsToSetSizeForAltText(false)
     , m_didIncrementVisuallyNonEmptyPixelCount(false)
@@ -62,17 +62,31 @@ RenderImage::RenderImage(Element* element)
     updateAltText();
 }
 
-RenderImage* RenderImage::createAnonymous(Document& document)
+RenderImage::RenderImage(Document& document)
+    : RenderReplaced(document, IntSize())
+    , m_needsToSetSizeForAltText(false)
+    , m_didIncrementVisuallyNonEmptyPixelCount(false)
+    , m_isGeneratedContent(false)
 {
-    RenderImage* image = new (*document.renderArena()) RenderImage(0);
-    image->setDocumentForAnonymous(document);
-    return image;
 }
 
 RenderImage::~RenderImage()
 {
     ASSERT(m_imageResource);
     m_imageResource->shutdown();
+}
+
+
+void RenderImage::setPseudoStyle(PassRefPtr<RenderStyle> pseudoStyle)
+{
+    ASSERT(pseudoStyle->styleType() == BEFORE || pseudoStyle->styleType() == AFTER);
+
+    // Images are special and must inherit the pseudoStyle so the width and height of
+    // the pseudo element doesn't change the size of the image. In all other cases we
+    // can just share the style.
+    RefPtr<RenderStyle> style = RenderStyle::create();
+    style->inheritFrom(pseudoStyle.get());
+    setStyle(style.release());
 }
 
 void RenderImage::setImageResource(PassOwnPtr<RenderImageResource> imageResource)

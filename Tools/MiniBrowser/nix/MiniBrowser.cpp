@@ -78,7 +78,6 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     nixViewClient.version = kNIXViewClientCurrentVersion;
     nixViewClient.clientInfo = this;
     nixViewClient.doneWithTouchEvent = MiniBrowser::doneWithTouchEvent;
-    nixViewClient.doneWithGestureEvent = MiniBrowser::doneWithGestureEvent;
     nixViewClient.didFindZoomableArea = MiniBrowser::didFindZoomableArea;
     nixViewClient.updateTextInputState = MiniBrowser::updateTextInputState;
     NIXViewSetNixViewClient(m_view, &nixViewClient);
@@ -482,21 +481,6 @@ void MiniBrowser::doneWithTouchEvent(WKViewRef, const NIXTouchEvent* event, bool
     }
 
     mb->m_gestureRecognizer.handleTouchEvent(*event);
-}
-
-void MiniBrowser::doneWithGestureEvent(WKViewRef, const NIXGestureEvent* event, bool wasEventHandled, const void* clientInfo)
-{
-    if (wasEventHandled)
-        return;
-
-    MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
-
-    if (event->type == kNIXInputEventTypeGestureSingleTap && mb->m_shouldFocusEditableArea) {
-        mb->m_shouldFocusEditableArea = false;
-        mb->adjustViewportToTextInputArea();
-    }
-
-    mb->m_postponeTextInputUpdates = true;
 }
 
 double MiniBrowser::scale()

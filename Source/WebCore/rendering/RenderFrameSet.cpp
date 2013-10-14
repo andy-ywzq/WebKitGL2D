@@ -45,7 +45,7 @@
 namespace WebCore {
 
 RenderFrameSet::RenderFrameSet(HTMLFrameSetElement& frameSet)
-    : RenderBox(&frameSet, 0)
+    : RenderBox(frameSet, 0)
     , m_isResizing(false)
     , m_isChildResizing(false)
 {
@@ -708,7 +708,7 @@ bool RenderFrameSet::userResize(MouseEvent* evt)
 void RenderFrameSet::setIsResizing(bool isResizing)
 {
     m_isResizing = isResizing;
-    for (RenderObject* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
+    for (auto ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
         if (ancestor->isFrameSet())
             toRenderFrameSet(ancestor)->m_isChildResizing = isResizing;
     }

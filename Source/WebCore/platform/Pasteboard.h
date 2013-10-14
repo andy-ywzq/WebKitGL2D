@@ -60,7 +60,6 @@ class DocumentFragment;
 class DragData;
 class Element;
 class Frame;
-class Node;
 class Range;
 class SharedBuffer;
 

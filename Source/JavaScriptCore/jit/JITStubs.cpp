@@ -436,13 +436,6 @@ DEFINE_STUB_FUNCTION(void, handle_watchdog_timer)
     }
 }
 
-DEFINE_STUB_FUNCTION(JSObject*, op_new_object)
-{
-    STUB_INIT_STACK_FRAME(stackFrame);
-
-    return constructEmptyObject(stackFrame.callFrame, stackFrame.args[0].structure());
-}
-
 DEFINE_STUB_FUNCTION(void, op_put_by_id_generic)
 {
     STUB_INIT_STACK_FRAME(stackFrame);
@@ -848,29 +841,6 @@ DEFINE_STUB_FUNCTION(EncodedJSValue, op_get_by_id_string_fail)
     return JSValue::encode(result);
 }
 
-DEFINE_STUB_FUNCTION(EncodedJSValue, op_check_has_instance)
-{
-    STUB_INIT_STACK_FRAME(stackFrame);
-
-    CallFrame* callFrame = stackFrame.callFrame;
-    JSValue value = stackFrame.args[0].jsValue();
-    JSValue baseVal = stackFrame.args[1].jsValue();
-
-    if (baseVal.isObject()) {
-        JSObject* baseObject = asObject(baseVal);
-        ASSERT(!baseObject->structure()->typeInfo().implementsDefaultHasInstance());
-        if (baseObject->structure()->typeInfo().implementsHasInstance()) {
-            bool result = baseObject->methodTable()->customHasInstance(baseObject, callFrame, value);
-            CHECK_FOR_EXCEPTION_AT_END();
-            return JSValue::encode(jsBoolean(result));
-        }
-    }
-
-    stackFrame.vm->throwException(callFrame, createInvalidParameterError(callFrame, "instanceof", baseVal));
-    VM_THROW_EXCEPTION_AT_END();
-    return JSValue::encode(JSValue());
-}
-
 #if ENABLE(DFG_JIT)
 DEFINE_STUB_FUNCTION(void, optimize)
 {
@@ -1107,63 +1077,6 @@ DEFINE_STUB_FUNCTION(void, optimize)
 }
 #endif // ENABLE(DFG_JIT)
 
-DEFINE_STUB_FUNCTION(EncodedJSValue, op_instanceof)
-{
-    STUB_INIT_STACK_FRAME(stackFrame);
-
-    CallFrame* callFrame = stackFrame.callFrame;
-    JSValue value = stackFrame.args[0].jsValue();
-    JSValue proto = stackFrame.args[1].jsValue();
-    
-    ASSERT(!value.isObject() || !proto.isObject());
-
-    bool result = JSObject::defaultHasInstance(callFrame, value, proto);
-    CHECK_FOR_EXCEPTION_AT_END();
-    return JSValue::encode(jsBoolean(result));
-}
-
-DEFINE_STUB_FUNCTION(EncodedJSValue, op_del_by_id)
-{
-    STUB_INIT_STACK_FRAME(stackFrame);
-
-    CallFrame* callFrame = stackFrame.callFrame;
-    
-    JSObject* baseObj = stackFrame.args[0].jsValue().toObject(callFrame);
-
-    bool couldDelete = baseObj->methodTable()->deleteProperty(baseObj, callFrame, stackFrame.args[1].identifier());
-    JSValue result = jsBoolean(couldDelete);
-    if (!couldDelete && callFrame->codeBlock()->isStrictMode())
-        stackFrame.vm->throwException(stackFrame.callFrame, createTypeError(stackFrame.callFrame, "Unable to delete property."));
-
-    CHECK_FOR_EXCEPTION_AT_END();
-    return JSValue::encode(result);
-}
-
-DEFINE_STUB_FUNCTION(JSObject*, op_new_func)
-{
-    STUB_INIT_STACK_FRAME(stackFrame);
-    
-    ASSERT(stackFrame.callFrame->codeBlock()->codeType() != FunctionCode || !stackFrame.callFrame->codeBlock()->needsFullScopeChain() || stackFrame.callFrame->uncheckedR(stackFrame.callFrame->codeBlock()->activationRegister().offset()).jsValue());
-    return JSFunction::create(stackFrame.callFrame->vm(), stackFrame.args[0].function(), stackFrame.callFrame->scope());
-}
-
-DEFINE_STUB_FUNCTION(JSObject*, op_push_activation)
-{
-    STUB_INIT_STACK_FRAME(stackFrame);
-
-    JSActivation* activation = JSActivation::create(stackFrame.callFrame->vm(), stackFrame.callFrame, stackFrame.callFrame->codeBlock());
-    stackFrame.callFrame->setScope(activation);
-    return activation;
-}
-
-DEFINE_STUB_FUNCTION(EncodedJSValue, op_create_arguments)
-{
-    STUB_INIT_STACK_FRAME(stackFrame);
-
-    Arguments* arguments = Arguments::create(*stackFrame.vm, stackFrame.callFrame);
-    return JSValue::encode(JSValue(arguments));
-}
-
 DEFINE_STUB_FUNCTION(void, op_tear_off_activation)
 {
     STUB_INIT_STACK_FRAME(stackFrame);
@@ -1200,27 +1113,6 @@ DEFINE_STUB_FUNCTION(void, op_profile_did_call)
 
     if (LegacyProfiler* profiler = stackFrame.vm->enabledProfiler())
         profiler->didExecute(stackFrame.callFrame, stackFrame.args[0].jsValue());
-}
-
-DEFINE_STUB_FUNCTION(JSObject*, op_new_array)
-{
-    STUB_INIT_STACK_FRAME(stackFrame);
-
-    return constructArrayNegativeIndexed(stackFrame.callFrame, stackFrame.args[2].arrayAllocationProfile(), reinterpret_cast<JSValue*>(&stackFrame.callFrame->registers()[stackFrame.args[0].int32()]), stackFrame.args[1].int32());
-}
-
-DEFINE_STUB_FUNCTION(JSObject*, op_new_array_with_size)
-{
-    STUB_INIT_STACK_FRAME(stackFrame);
-    
-    return constructArrayWithSizeQuirk(stackFrame.callFrame, stackFrame.args[1].arrayAllocationProfile(), stackFrame.callFrame->lexicalGlobalObject(), stackFrame.args[0].jsValue());
-}
-
-DEFINE_STUB_FUNCTION(JSObject*, op_new_array_buffer)
-{
-    STUB_INIT_STACK_FRAME(stackFrame);
-    
-    return constructArray(stackFrame.callFrame, stackFrame.args[2].arrayAllocationProfile(), stackFrame.callFrame->codeBlock()->constantBuffer(stackFrame.args[0].int32()), stackFrame.args[1].int32());
 }
 
 static JSValue getByVal(
@@ -1428,34 +1320,6 @@ DEFINE_STUB_FUNCTION(void, op_put_by_val_generic)
     CHECK_FOR_EXCEPTION_AT_END();
 }
 
-DEFINE_STUB_FUNCTION(void*, op_load_varargs)
-{
-    STUB_INIT_STACK_FRAME(stackFrame);
-
-    CallFrame* callFrame = stackFrame.callFrame;
-    JSStack* stack = stackFrame.stack;
-    JSValue thisValue = stackFrame.args[0].jsValue();
-    JSValue arguments = stackFrame.args[1].jsValue();
-    int firstFreeRegister = stackFrame.args[2].int32();
-
-    CallFrame* newCallFrame = loadVarargs(callFrame, stack, thisValue, arguments, firstFreeRegister);
-    if (!newCallFrame)
-        VM_THROW_EXCEPTION();
-    return newCallFrame;
-}
-
-DEFINE_STUB_FUNCTION(JSObject*, op_new_func_exp)
-{
-    STUB_INIT_STACK_FRAME(stackFrame);
-    CallFrame* callFrame = stackFrame.callFrame;
-
-    FunctionExecutable* function = stackFrame.args[0].function();
-    JSFunction* func = JSFunction::create(callFrame->vm(), function, callFrame->scope());
-    ASSERT(callFrame->codeBlock()->codeType() != FunctionCode || !callFrame->codeBlock()->needsFullScopeChain() || callFrame->uncheckedR(callFrame->codeBlock()->activationRegister().offset()).jsValue());
-
-    return func;
-}
-
 DEFINE_STUB_FUNCTION(void*, op_throw)
 {
     STUB_INIT_STACK_FRAME(stackFrame);
@@ -1463,19 +1327,6 @@ DEFINE_STUB_FUNCTION(void*, op_throw)
     ExceptionHandler handler = genericUnwind(stackFrame.vm, stackFrame.callFrame, stackFrame.args[0].jsValue());
     STUB_SET_RETURN_ADDRESS(handler.catchRoutine);
     return handler.callFrame;
-}
-
-DEFINE_STUB_FUNCTION(JSPropertyNameIterator*, op_get_pnames)
-{
-    STUB_INIT_STACK_FRAME(stackFrame);
-
-    CallFrame* callFrame = stackFrame.callFrame;
-    JSObject* o = stackFrame.args[0].jsObject();
-    Structure* structure = o->structure();
-    JSPropertyNameIterator* jsPropertyNameIterator = structure->enumerationCache();
-    if (!jsPropertyNameIterator || jsPropertyNameIterator->cachedPrototypeChain() != structure->prototypeChain(callFrame))
-        jsPropertyNameIterator = JSPropertyNameIterator::create(callFrame, o);
-    return jsPropertyNameIterator;
 }
 
 DEFINE_STUB_FUNCTION(void, op_push_with_scope)
@@ -1657,14 +1508,6 @@ ExceptionHandler JIT_STUB cti_vm_handle_exception(CallFrame* callFrame)
     return genericUnwind(vm, callFrame, vm->exception());
 }
 #endif
-
-DEFINE_STUB_FUNCTION(EncodedJSValue, to_object)
-{
-    STUB_INIT_STACK_FRAME(stackFrame);
-
-    CallFrame* callFrame = stackFrame.callFrame;
-    return JSValue::encode(stackFrame.args[0].jsValue().toObject(callFrame));
-}
 
 DEFINE_STUB_FUNCTION(EncodedJSValue, op_resolve_scope)
 {

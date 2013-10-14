@@ -155,10 +155,6 @@ struct PrintInfo;
 struct WebPageCreationParameters;
 struct WebPopupItem;
 
-#if ENABLE(GESTURE_EVENTS)
-class WebGestureEvent;
-#endif
-
 #if ENABLE(VIBRATION)
 class WebVibrationProxy;
 #endif
@@ -423,9 +419,6 @@ public:
     void handleMouseEvent(const NativeWebMouseEvent&);
     void handleWheelEvent(const NativeWebWheelEvent&);
     void handleKeyboardEvent(const NativeWebKeyboardEvent&);
-#if ENABLE(GESTURE_EVENTS)
-    void handleGestureEvent(const WebGestureEvent&);
-#endif
 #if ENABLE(TOUCH_EVENTS)
     void handleTouchEvent(const NativeWebTouchEvent&);
 #endif
@@ -1172,9 +1165,6 @@ private:
     WebCore::PolicyAction m_syncNavigationActionPolicyAction;
     uint64_t m_syncNavigationActionPolicyDownloadID;
 
-#if ENABLE(GESTURE_EVENTS)
-    Deque<WebGestureEvent> m_gestureEventQueue;
-#endif
     Deque<NativeWebKeyboardEvent> m_keyEventQueue;
     Deque<NativeWebWheelEvent> m_wheelEventQueue;
     Deque<OwnPtr<Vector<NativeWebWheelEvent>>> m_currentlyProcessedWheelEvents;

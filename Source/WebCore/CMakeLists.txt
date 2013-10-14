@@ -1137,7 +1137,6 @@ set(WebCore_SOURCES
     dom/ExceptionCodePlaceholder.cpp
     dom/FocusEvent.cpp
     dom/GenericEventQueue.cpp
-    dom/GestureEvent.cpp
     dom/IconURL.cpp
     dom/IdTargetObserver.cpp
     dom/IdTargetObserverRegistry.cpp
@@ -1441,7 +1440,6 @@ set(WebCore_SOURCES
     html/TypeAhead.cpp
     html/URLInputType.cpp
     html/ValidationMessage.cpp
-    html/ValidityState.cpp
     html/WeekInputType.cpp
 
     html/canvas/CanvasContextAttributes.cpp
@@ -2161,6 +2159,7 @@ set(WebCore_SOURCES
     rendering/RenderTextControlMultiLine.cpp
     rendering/RenderTextControlSingleLine.cpp
     rendering/RenderTextFragment.cpp
+    rendering/RenderTextLineBoxes.cpp
     rendering/RenderTextTrackCue.cpp
     rendering/RenderTheme.cpp
     rendering/RenderTreeAsText.cpp

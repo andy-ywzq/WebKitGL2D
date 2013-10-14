@@ -55,7 +55,7 @@ namespace WebCore {
 using namespace HTMLNames;
 
 RenderMenuList::RenderMenuList(HTMLSelectElement& element)
-    : RenderFlexibleBox(&element)
+    : RenderFlexibleBox(element)
     , m_buttonText(nullptr)
     , m_innerBlock(nullptr)
     , m_needsOptionsWidthUpdate(true)
@@ -118,7 +118,7 @@ void RenderMenuList::adjustInnerStyle()
         // Items in the popup will not respect the CSS text-align and direction properties,
         // so we must adjust our own style to match.
         innerStyle->setTextAlign(LEFT);
-        TextDirection direction = (m_buttonText && m_buttonText->text()->defaultWritingDirection() == WTF::Unicode::RightToLeft) ? RTL : LTR;
+        TextDirection direction = (m_buttonText && m_buttonText->text()->defaultWritingDirection() == U_RIGHT_TO_LEFT) ? RTL : LTR;
         innerStyle->setDirection(direction);
     } else if (m_optionStyle && document().page()->chrome().selectItemAlignmentFollowsMenuWritingDirection()) {
         if ((m_optionStyle->direction() != innerStyle->direction() || m_optionStyle->unicodeBidi() != innerStyle->unicodeBidi()))
@@ -241,7 +241,7 @@ void RenderMenuList::setText(const String& s)
     if (m_buttonText)
         m_buttonText->setText(textToUse.impl(), true);
     else {
-        m_buttonText = RenderText::createAnonymous(document(), textToUse);
+        m_buttonText = new (renderArena()) RenderText(document(), textToUse);
         addChild(m_buttonText);
     }
     adjustInnerStyle();

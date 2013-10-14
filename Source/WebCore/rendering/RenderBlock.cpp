@@ -145,10 +145,24 @@ private:
     bool m_hadVerticalLayoutOverflow;
 };
 
-// -------------------------------------------------------------------------------------------------------
-
-RenderBlock::RenderBlock(Element* element, unsigned baseTypeFlags)
+RenderBlock::RenderBlock(Element& element, unsigned baseTypeFlags)
     : RenderBox(element, baseTypeFlags | RenderBlockFlag)
+    , m_lineHeight(-1)
+    , m_hasMarginBeforeQuirk(false)
+    , m_hasMarginAfterQuirk(false)
+    , m_beingDestroyed(false)
+    , m_hasMarkupTruncation(false)
+    , m_hasBorderOrPaddingLogicalWidthChanged(false)
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+    , m_widthForTextAutosizing(-1)
+    , m_lineCountForTextAutosizing(NOT_SET)
+#endif
+{
+    setChildrenInline(true);
+}
+
+RenderBlock::RenderBlock(Document& document, unsigned baseTypeFlags)
+    : RenderBox(document, baseTypeFlags | RenderBlockFlag)
     , m_lineHeight(-1)
     , m_hasMarginBeforeQuirk(false)
     , m_hasMarginAfterQuirk(false)
@@ -191,13 +205,6 @@ RenderBlock::~RenderBlock()
         removeBlockFromDescendantAndContainerMaps(this, gPositionedDescendantsMap, gPositionedContainerMap);
 }
 
-RenderBlock* RenderBlock::createAnonymous(Document& document)
-{
-    RenderBlock* renderer = new (*document.renderArena()) RenderBlockFlow(0);
-    renderer->setDocumentForAnonymous(document);
-    return renderer;
-}
-
 void RenderBlock::willBeDestroyed()
 {
     // Mark as being destroyed to avoid trouble with merges in removeChild().
@@ -234,9 +241,9 @@ void RenderBlock::willBeDestroyed()
             // that will outlast this block. In the non-anonymous block case those
             // children will be destroyed by the time we return from this function.
             if (isAnonymousBlock()) {
-                for (InlineFlowBox* box = firstLineBox(); box; box = box->nextLineBox()) {
-                    while (InlineBox* childBox = box->firstChild())
-                        childBox->remove();
+                for (auto box = firstLineBox(); box; box = box->nextLineBox()) {
+                    while (auto childBox = box->firstChild())
+                        childBox->removeFromParent();
                 }
             }
         } else if (parent())
@@ -265,7 +272,7 @@ void RenderBlock::styleWillChange(StyleDifference diff, const RenderStyle* newSt
         else if (oldStyle->position() == StaticPosition) {
             // Remove our absolutely positioned descendants from their current containing block.
             // They will be inserted into our positioned objects list during layout.
-            RenderObject* cb = parent();
+            auto cb = parent();
             while (cb && (cb->style()->position() == StaticPosition || (cb->isInline() && !cb->isReplaced())) && !cb->isRenderView()) {
                 if (cb->style()->position() == RelativePosition && cb->isInline() && !cb->isReplaced()) {
                     cb = cb->containingBlock();
@@ -459,7 +466,7 @@ void RenderBlock::addChildToAnonymousColumnBlocks(RenderObject* newChild, Render
 RenderBlock* RenderBlock::containingColumnsBlock(bool allowAnonymousColumnBlock)
 {
     RenderBlock* firstChildIgnoringAnonymousWrappers = 0;
-    for (RenderObject* curr = this; curr; curr = curr->parent()) {
+    for (RenderElement* curr = this; curr; curr = curr->parent()) {
         if (!curr->isRenderBlock() || curr->isFloatingOrOutOfFlowPositioned() || curr->isTableCell() || curr->isRoot() || curr->isRenderView() || curr->hasOverflowClip()
             || curr->isInlineBlockOrInlineTable())
             return 0;
@@ -490,7 +497,7 @@ RenderBlock* RenderBlock::clone() const
         cloneBlock = createAnonymousBlock();
         cloneBlock->setChildrenInline(childrenInline());
     } else {
-        RenderObject* cloneRenderer = element()->createRenderer(renderArena(), *style());
+        auto cloneRenderer = element()->createRenderer(renderArena(), *style());
         cloneBlock = toRenderBlock(cloneRenderer);
         cloneBlock->setStyle(style());
 
@@ -702,7 +709,7 @@ RenderBlock* RenderBlock::columnsBlockForSpanningElement(RenderObject* newChild)
         if (columnsBlockAncestor) {
             // Make sure that none of the parent ancestors have a continuation.
             // If yes, we do not want split the block into continuations.
-            RenderObject* curr = this;
+            RenderElement* curr = this;
             while (curr && curr != columnsBlockAncestor) {
                 if (curr->isRenderBlock() && toRenderBlock(curr)->continuation()) {
                     columnsBlockAncestor = 0;
@@ -1177,7 +1184,7 @@ void RenderBlock::removeChild(RenderObject* oldChild)
         // If we are an empty anonymous block in the continuation chain,
         // we need to remove ourself and fix the continuation chain.
         if (!beingDestroyed() && isAnonymousBlockContinuation() && !oldChild->isListMarker()) {
-            RenderObject* containingBlockIgnoringAnonymous = containingBlock();
+            auto containingBlockIgnoringAnonymous = containingBlock();
             while (containingBlockIgnoringAnonymous && containingBlockIgnoringAnonymous->isAnonymousBlock())
                 containingBlockIgnoringAnonymous = containingBlockIgnoringAnonymous->containingBlock();
             for (RenderObject* curr = this; curr; curr = curr->previousInPreOrder(containingBlockIgnoringAnonymous)) {
@@ -1668,9 +1675,9 @@ RenderBoxModelObject* RenderBlock::createReplacementRunIn(RenderBoxModelObject* 
 
     RenderBoxModelObject* newRunIn = 0;
     if (!runIn->isRenderBlockFlow())
-        newRunIn = new (renderArena()) RenderBlockFlow(runIn->element());
+        newRunIn = new (renderArena()) RenderBlockFlow(*runIn->element());
     else
-        newRunIn = new (renderArena()) RenderInline(runIn->element());
+        newRunIn = new (renderArena()) RenderInline(*runIn->element());
 
     runIn->element()->setRenderer(newRunIn);
     newRunIn->setStyle(runIn->style());
@@ -1973,7 +1980,7 @@ void RenderBlock::markFixedPositionObjectForLayoutIfNeeded(RenderObject* child)
     if (!hasStaticBlockPosition && !hasStaticInlinePosition)
         return;
 
-    RenderObject* o = child->parent();
+    auto o = child->parent();
     while (o && !o->isRenderView() && o->style()->position() != AbsolutePosition)
         o = o->parent();
     if (o->style()->position() != AbsolutePosition)
@@ -2955,7 +2962,7 @@ RenderBlock* RenderBlock::blockBeforeWithinSelectionRoot(LayoutSize& offset) con
     if (isSelectionRoot())
         return 0;
 
-    const RenderObject* object = this;
+    const RenderElement* object = this;
     RenderObject* sibling;
     do {
         sibling = object->previousSibling();
@@ -3498,12 +3505,12 @@ Position RenderBlock::positionForBox(InlineBox *box, bool start) const
     return createLegacyEditingPosition(box->renderer().nonPseudoNode(), start ? textBox->start() : textBox->start() + textBox->len());
 }
 
-static inline bool isEditingBoundary(RenderObject* ancestor, RenderObject* child)
+static inline bool isEditingBoundary(RenderElement* ancestor, RenderObject* child)
 {
-    ASSERT(!ancestor || ancestor->nonPseudoNode());
+    ASSERT(!ancestor || ancestor->nonPseudoElement());
     ASSERT(child && child->nonPseudoNode());
     return !ancestor || !ancestor->parent() || (ancestor->hasLayer() && ancestor->parent()->isRenderView())
-        || ancestor->nonPseudoNode()->rendererIsEditable() == child->nonPseudoNode()->rendererIsEditable();
+        || ancestor->nonPseudoElement()->rendererIsEditable() == child->nonPseudoNode()->rendererIsEditable();
 }
 
 // FIXME: This function should go on RenderObject as an instance method. Then
@@ -3525,8 +3532,8 @@ static VisiblePosition positionForPointRespectingEditingBoundaries(RenderBlock* 
 
     // Otherwise, first make sure that the editability of the parent and child agree.
     // If they don't agree, then we return a visible position just before or after the child
-    RenderObject* ancestor = parent;
-    while (ancestor && !ancestor->nonPseudoNode())
+    RenderElement* ancestor = parent;
+    while (ancestor && !ancestor->nonPseudoElement())
         ancestor = ancestor->parent();
 
     // If we can't find an ancestor to check editability on, or editability is unchanged, we recur like normal
@@ -4952,12 +4959,7 @@ static RenderStyle* styleForFirstLetter(RenderObject* firstLetterBlock, RenderOb
 // "initial" (Pi). "final" (Pf) and "other" (Po) punctuation classes), that precedes or follows the first letter should be included"
 static inline bool isPunctuationForFirstLetter(UChar c)
 {
-    CharCategory charCategory = category(c);
-    return charCategory == Punctuation_Open
-        || charCategory == Punctuation_Close
-        || charCategory == Punctuation_InitialQuote
-        || charCategory == Punctuation_FinalQuote
-        || charCategory == Punctuation_Other;
+    return U_GET_GC_MASK(c) & (U_GC_PS_MASK | U_GC_PE_MASK | U_GC_PI_MASK | U_GC_PF_MASK | U_GC_PO_MASK);
 }
 
 static inline bool shouldSkipForFirstLetter(UChar c)
@@ -5002,9 +5004,9 @@ void RenderBlock::updateFirstLetterStyle(RenderObject* firstLetterBlock, RenderO
         // The first-letter renderer needs to be replaced. Create a new renderer of the right type.
         RenderBoxModelObject* newFirstLetter;
         if (pseudoStyle->display() == INLINE)
-            newFirstLetter = RenderInline::createAnonymous(document());
+            newFirstLetter = new (renderArena()) RenderInline(document());
         else
-            newFirstLetter = RenderBlock::createAnonymous(document());
+            newFirstLetter = new (renderArena()) RenderBlockFlow(document());
         newFirstLetter->setStyle(pseudoStyle);
 
         // Move the first letter into the new renderer.
@@ -5039,9 +5041,9 @@ void RenderBlock::createFirstLetterRenderer(RenderObject* firstLetterBlock, Rend
     RenderStyle* pseudoStyle = styleForFirstLetter(firstLetterBlock, firstLetterContainer);
     RenderBoxModelObject* firstLetter = 0;
     if (pseudoStyle->display() == INLINE)
-        firstLetter = RenderInline::createAnonymous(document());
+        firstLetter = new (renderArena()) RenderInline(document());
     else
-        firstLetter = RenderBlock::createAnonymous(document());
+        firstLetter = new (renderArena()) RenderBlockFlow(document());
     firstLetter->setStyle(pseudoStyle);
     firstLetterContainer->addChild(firstLetter, currentTextChild);
 
@@ -5077,9 +5079,9 @@ void RenderBlock::createFirstLetterRenderer(RenderObject* firstLetterBlock, Rend
         // This text fragment might be empty.
         RenderTextFragment* remainingText;
         if (currentTextChild->textNode())
-            remainingText = new (renderArena()) RenderTextFragment(currentTextChild->textNode(), oldText, length, oldText.length() - length);
+            remainingText = new (renderArena()) RenderTextFragment(*currentTextChild->textNode(), oldText, length, oldText.length() - length);
         else
-            remainingText = RenderTextFragment::createAnonymous(document(), oldText, length, oldText.length() - length);
+            remainingText = new (renderArena()) RenderTextFragment(document(), oldText, length, oldText.length() - length);
 
         if (remainingText->textNode())
             remainingText->textNode()->setRenderer(remainingText);
@@ -5092,9 +5094,9 @@ void RenderBlock::createFirstLetterRenderer(RenderObject* firstLetterBlock, Rend
         // construct text fragment for the first letter
         RenderTextFragment* letter;
         if (remainingText->textNode())
-            letter = new (renderArena()) RenderTextFragment(remainingText->textNode(), oldText, 0, length);
+            letter = new (renderArena()) RenderTextFragment(*remainingText->textNode(), oldText, 0, length);
         else
-            letter = RenderTextFragment::createAnonymous(document(), oldText, 0, length);
+            letter = new (renderArena()) RenderTextFragment(document(), oldText, 0, length);
 
         firstLetter->addChild(letter);
 
@@ -5957,10 +5959,10 @@ RenderBlock* RenderBlock::createAnonymousWithParentRendererAndDisplay(const Rend
     EDisplay newDisplay;
     RenderBlock* newBox = 0;
     if (display == FLEX || display == INLINE_FLEX) {
-        newBox = RenderFlexibleBox::createAnonymous(parent->document());
+        newBox = new (parent->renderArena()) RenderFlexibleBox(parent->document());
         newDisplay = FLEX;
     } else {
-        newBox = RenderBlock::createAnonymous(parent->document());
+        newBox = new (parent->renderArena()) RenderBlockFlow(parent->document());
         newDisplay = BLOCK;
     }
 
@@ -5974,7 +5976,7 @@ RenderBlock* RenderBlock::createAnonymousColumnsWithParentRenderer(const RenderO
     RefPtr<RenderStyle> newStyle = RenderStyle::createAnonymousStyleWithDisplay(parent->style(), BLOCK);
     newStyle->inheritColumnPropertiesFrom(parent->style());
 
-    RenderBlock* newBox = RenderBlock::createAnonymous(parent->document());
+    RenderBlock* newBox = new (parent->renderArena()) RenderBlockFlow(parent->document());
     newBox->setStyle(newStyle.release());
     return newBox;
 }
@@ -5984,7 +5986,7 @@ RenderBlock* RenderBlock::createAnonymousColumnSpanWithParentRenderer(const Rend
     RefPtr<RenderStyle> newStyle = RenderStyle::createAnonymousStyleWithDisplay(parent->style(), BLOCK);
     newStyle->setColumnSpan(ColumnSpanAll);
 
-    RenderBlock* newBox = RenderBlock::createAnonymous(parent->document());
+    RenderBlock* newBox = new (parent->renderArena()) RenderBlockFlow(parent->document());
     newBox->setStyle(newStyle.release());
     return newBox;
 }
@@ -6025,12 +6027,12 @@ inline static bool isVisibleRenderText(RenderObject* renderer)
 inline static bool resizeTextPermitted(RenderObject* render)
 {
     // We disallow resizing for text input fields and textarea to address <rdar://problem/5792987> and <rdar://problem/8021123>
-    RenderObject* renderer = render->parent();
+    auto renderer = render->parent();
     while (renderer) {
         // Get the first non-shadow HTMLElement and see if it's an input.
-        if (renderer->node() && renderer->node()->isHTMLElement() && !renderer->node()->isInShadowTree()) {
-            HTMLElement* element = toHTMLElement(renderer->node());
-            return !element->hasTagName(inputTag) && !element->hasTagName(textareaTag);
+        if (renderer->element() && renderer->element()->isHTMLElement() && !renderer->element()->isInShadowTree()) {
+            const HTMLElement& element = toHTMLElement(*renderer->element());
+            return !isHTMLInputElement(element) && !isHTMLTextAreaElement(element);
         }
         renderer = renderer->parent();
     }

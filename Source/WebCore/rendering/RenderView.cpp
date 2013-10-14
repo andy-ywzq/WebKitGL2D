@@ -57,7 +57,7 @@
 namespace WebCore {
 
 RenderView::RenderView(Document& document)
-    : RenderBlockFlow(0)
+    : RenderBlockFlow(document)
     , m_frameView(*document.view())
     , m_selectionStart(0)
     , m_selectionEnd(0)
@@ -76,7 +76,6 @@ RenderView::RenderView(Document& document)
 #endif
 {
     setIsRenderView();
-    setDocumentForAnonymous(document);
 
     // FIXME: We should find a way to enforce this at compile time.
     ASSERT(document.view());
@@ -162,7 +161,7 @@ void RenderView::checkLayoutState(const LayoutState& state)
 {
     ASSERT(layoutDeltaMatches(LayoutSize()));
     ASSERT(!m_layoutStateDisableCount);
-    ASSERT(m_layoutState == &state);
+    ASSERT(m_layoutState.get() == &state);
 }
 #endif
 
@@ -327,23 +326,22 @@ void RenderView::layout()
     if (!needsLayout())
         return;
 
-    LayoutState state;
-    bool isSeamlessAncestorInFlowThread = initializeLayoutState(state);
+    m_layoutState = std::make_unique<LayoutState>();
+    bool isSeamlessAncestorInFlowThread = initializeLayoutState(*m_layoutState);
 
     m_pageLogicalHeightChanged = false;
-    m_layoutState = &state;
 
     if (checkTwoPassLayoutForAutoHeightRegions())
-        layoutContentInAutoLogicalHeightRegions(state);
+        layoutContentInAutoLogicalHeightRegions(*m_layoutState);
     else
-        layoutContent(state);
+        layoutContent(*m_layoutState);
 
-    layoutContentToComputeOverflowInRegions(state);
+    layoutContentToComputeOverflowInRegions(*m_layoutState);
 
 #ifndef NDEBUG
-    checkLayoutState(state);
+    checkLayoutState(*m_layoutState);
 #endif
-    m_layoutState = 0;
+    m_layoutState = nullptr;
     clearNeedsLayout();
     
     if (isSeamlessAncestorInFlowThread)
@@ -1034,7 +1032,7 @@ void RenderView::pushLayoutState(RenderObject* root)
     ASSERT(m_layoutState == 0);
 
     pushLayoutStateForCurrentFlowThread(root);
-    m_layoutState = new (renderArena()) LayoutState(root);
+    m_layoutState = std::make_unique<LayoutState>(root);
 }
 
 bool RenderView::shouldDisableLayoutStateForSubtree(RenderObject* renderer) const

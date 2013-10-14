@@ -178,12 +178,12 @@ static void determineDirectionality(TextDirection& dir, InlineIterator iter)
         if (iter.atParagraphSeparator())
             return;
         if (UChar current = iter.current()) {
-            Direction charDirection = direction(current);
-            if (charDirection == LeftToRight) {
+            UCharDirection charDirection = u_charDirection(current);
+            if (charDirection == U_LEFT_TO_RIGHT) {
                 dir = LTR;
                 return;
             }
-            if (charDirection == RightToLeft || charDirection == RightToLeftArabic) {
+            if (charDirection == U_RIGHT_TO_LEFT || charDirection == U_RIGHT_TO_LEFT_ARABIC) {
                 dir = RTL;
                 return;
             }
@@ -1051,7 +1051,7 @@ inline BidiRun* RenderBlockFlow::handleTrailingSpaces(BidiRunList<BidiRun>& bidi
         while (BidiContext* parent = baseContext->parent())
             baseContext = parent;
 
-        BidiRun* newTrailingRun = new (renderArena()) BidiRun(firstSpace, trailingSpaceRun->m_stop, trailingSpaceRun->m_object, baseContext, OtherNeutral);
+        BidiRun* newTrailingRun = new (renderArena()) BidiRun(firstSpace, trailingSpaceRun->m_stop, trailingSpaceRun->m_object, baseContext, U_OTHER_NEUTRAL);
         trailingSpaceRun->m_stop = firstSpace;
         if (direction == LTR)
             bidiRuns.addRun(newTrailingRun);
@@ -1083,7 +1083,7 @@ void RenderBlockFlow::appendFloatingObjectToLastLine(FloatingObject* floatingObj
 // FIXME: This should be a BidiStatus constructor or create method.
 static inline BidiStatus statusWithDirection(TextDirection textDirection, bool isOverride)
 {
-    WTF::Unicode::Direction direction = textDirection == LTR ? LeftToRight : RightToLeft;
+    UCharDirection direction = textDirection == LTR ? U_LEFT_TO_RIGHT : U_RIGHT_TO_LEFT;
     RefPtr<BidiContext> context = BidiContext::create(textDirection == LTR ? 0 : 1, direction, isOverride, FromStyleOrDOM);
 
     // This copies BidiStatus and may churn the ref on BidiContext. I doubt it matters.
@@ -1229,7 +1229,7 @@ RootInlineBox* RenderBlockFlow::createLineBoxesFromBidiRuns(BidiRunList<BidiRun>
     // contains reversed text or not. If we wouldn't do that editing and thus
     // text selection in RTL boxes would not work as expected.
     if (isSVGRootInlineBox) {
-        ASSERT(isSVGText());
+        ASSERT_WITH_SECURITY_IMPLICATION(isSVGText());
         static_cast<SVGRootInlineBox*>(lineBox)->computePerCharacterLayoutInformation();
     }
 #endif
@@ -1341,28 +1341,6 @@ inline const InlineIterator& RenderBlockFlow::restartLayoutRunsAndFloatsInRange(
 }
 
 #if ENABLE(CSS_SHAPES)
-static inline float firstPositiveWidth(const WordMeasurements& wordMeasurements)
-{
-    for (size_t i = 0; i < wordMeasurements.size(); ++i) {
-        if (wordMeasurements[i].width > 0)
-            return wordMeasurements[i].width;
-    }
-    return 0;
-}
-
-static inline LayoutUnit adjustLogicalLineTop(ShapeInsideInfo* shapeInsideInfo, InlineIterator start, InlineIterator end, const WordMeasurements& wordMeasurements)
-{
-    if (!shapeInsideInfo || end != start)
-        return 0;
-
-    float minWidth = firstPositiveWidth(wordMeasurements);
-    ASSERT(minWidth || wordMeasurements.isEmpty());
-    if (minWidth > 0 && shapeInsideInfo->adjustLogicalLineTop(minWidth))
-        return shapeInsideInfo->logicalLineTop();
-
-    return shapeInsideInfo->shapeLogicalBottom();
-}
-
 static inline void pushShapeContentOverflowBelowTheContentBox(RenderBlockFlow* block, ShapeInsideInfo* shapeInsideInfo, LayoutUnit lineTop, LayoutUnit lineHeight)
 {
     ASSERT(shapeInsideInfo);
@@ -1474,6 +1452,28 @@ void RenderBlockFlow::updateShapeAndSegmentsForCurrentLineInFlowThread(ShapeInsi
 
     if (currentRegion->isLastRegion())
         pushShapeContentOverflowBelowTheContentBox(this, shapeInsideInfo, lineTop, lineHeight);
+}
+
+static inline float firstPositiveWidth(const WordMeasurements& wordMeasurements)
+{
+    for (size_t i = 0; i < wordMeasurements.size(); ++i) {
+        if (wordMeasurements[i].width > 0)
+            return wordMeasurements[i].width;
+    }
+    return 0;
+}
+
+static inline LayoutUnit adjustLogicalLineTop(ShapeInsideInfo* shapeInsideInfo, InlineIterator start, InlineIterator end, const WordMeasurements& wordMeasurements)
+{
+    if (!shapeInsideInfo || end != start)
+        return 0;
+
+    float minWidth = firstPositiveWidth(wordMeasurements);
+    ASSERT(minWidth || wordMeasurements.isEmpty());
+    if (minWidth > 0 && shapeInsideInfo->adjustLogicalLineTop(minWidth))
+        return shapeInsideInfo->logicalLineTop();
+
+    return shapeInsideInfo->shapeLogicalBottom();
 }
 
 bool RenderBlockFlow::adjustLogicalLineTopAndLogicalHeightIfNeeded(ShapeInsideInfo* shapeInsideInfo, LayoutUnit absoluteLogicalTop, LineLayoutState& layoutState, InlineBidiResolver& resolver, FloatingObject* lastFloatFromPreviousLine, InlineIterator& end, WordMeasurements& wordMeasurements)
@@ -2746,7 +2746,9 @@ InlineIterator LineBreaker::nextSegmentBreak(InlineBidiResolver& resolver, LineI
 
     EWhiteSpace currWS = blockStyle.whiteSpace();
     EWhiteSpace lastWS = currWS;
+    bool hadUncommittedWidthBeforeCurrent = false;
     while (current.m_obj) {
+        hadUncommittedWidthBeforeCurrent = !!width.uncommittedWidth();
         const RenderStyle& currentStyle = *current.m_obj->style();
         RenderObject* next = bidiNextSkippingEmptyInlines(m_block, current.m_obj);
         if (next && next->parent() && !next->parent()->isDescendantOf(current.m_obj->parent()))
@@ -3132,7 +3134,7 @@ InlineIterator LineBreaker::nextSegmentBreak(InlineBidiResolver& resolver, LineI
                         breakWords = false;
                     }
 
-                    if (midWordBreak && !U16_IS_TRAIL(c) && !(category(c) & (Mark_NonSpacing | Mark_Enclosing | Mark_SpacingCombining))) {
+                    if (midWordBreak && !U16_IS_TRAIL(c) && !(U_GET_GC_MASK(c) & U_GC_M_MASK)) {
                         // Remember this as a breakable position in case
                         // adding the end width forces a break.
                         lBreak.moveTo(current.m_obj, current.m_pos, current.m_nextBreakablePosition);
@@ -3311,7 +3313,7 @@ InlineIterator LineBreaker::nextSegmentBreak(InlineBidiResolver& resolver, LineI
             // make sure we consume at least one char/object.
             if (lBreak == resolver.position())
                 lBreak.increment();
-        } else if (!width.committedWidth() && (!current.m_obj || !current.m_obj->isBR()) && !current.m_pos) {
+        } else if (!current.m_pos && !width.committedWidth() && width.uncommittedWidth() && !hadUncommittedWidthBeforeCurrent) {
             // Do not push the current object to the next line, when this line has some content, but it is still considered empty.
             // Empty inline elements like <span></span> can produce such lines and now we just ignore these break opportunities
             // at the start of a line, if no width has been committed yet.

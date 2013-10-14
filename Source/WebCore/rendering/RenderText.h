@@ -1,7 +1,7 @@
 /*
  * (C) 1999 Lars Knoll (knoll@kde.org)
  * (C) 2000 Dirk Mueller (mueller@kde.org)
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Apple Inc. All rights reserved.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2013 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,21 +24,21 @@
 #define RenderText_h
 
 #include "RenderElement.h"
+#include "RenderTextLineBoxes.h"
+#include "Text.h"
 #include <wtf/Forward.h>
 
 namespace WebCore {
 
 class InlineTextBox;
-class Text;
 
 class RenderText : public RenderObject {
 public:
-    RenderText(Text*, const String&);
+    RenderText(Text&, const String&);
+    RenderText(Document&, const String&);
 #ifndef NDEBUG
     virtual ~RenderText();
 #endif
-
-    static RenderText* createAnonymous(Document&, const String&);
 
     virtual const char* renderName() const OVERRIDE;
 
@@ -51,24 +51,23 @@ public:
 
     virtual String originalText() const;
 
-    void extractTextBox(InlineTextBox*);
-    void attachTextBox(InlineTextBox*);
-    void removeTextBox(InlineTextBox*);
+    void extractTextBox(InlineTextBox& box) { m_lineBoxes.extract(box); }
+    void attachTextBox(InlineTextBox& box) { m_lineBoxes.attach(box); }
+    void removeTextBox(InlineTextBox& box) { m_lineBoxes.remove(box); }
 
     StringImpl* text() const { return m_text.impl(); }
     String textWithoutConvertingBackslashToYenSymbol() const;
 
-    InlineTextBox* createInlineTextBox();
+    InlineTextBox* createInlineTextBox() { return m_lineBoxes.createAndAppendLineBox(*this); }
     void dirtyLineBoxes(bool fullLayout);
 
     virtual void absoluteRects(Vector<IntRect>&, const LayoutPoint& accumulatedOffset) const OVERRIDE FINAL;
-    void absoluteRectsForRange(Vector<IntRect>&, unsigned startOffset = 0, unsigned endOffset = UINT_MAX, bool useSelectionHeight = false, bool* wasFixed = 0);
+    Vector<IntRect> absoluteRectsForRange(unsigned startOffset = 0, unsigned endOffset = UINT_MAX, bool useSelectionHeight = false, bool* wasFixed = nullptr) const;
 
     virtual void absoluteQuads(Vector<FloatQuad>&, bool* wasFixed) const OVERRIDE FINAL;
-    void absoluteQuadsForRange(Vector<FloatQuad>&, unsigned startOffset = 0, unsigned endOffset = UINT_MAX, bool useSelectionHeight = false, bool* wasFixed = 0);
+    Vector<FloatQuad> absoluteQuadsForRange(unsigned startOffset = 0, unsigned endOffset = UINT_MAX, bool useSelectionHeight = false, bool* wasFixed = nullptr) const;
 
-    enum ClippingOption { NoClipping, ClipToEllipsis };
-    void absoluteQuads(Vector<FloatQuad>&, bool* wasFixed = 0, ClippingOption = NoClipping) const;
+    Vector<FloatQuad> absoluteQuadsClippedToEllipsis() const;
 
     virtual VisiblePosition positionForPoint(const LayoutPoint&) OVERRIDE;
 
@@ -116,12 +115,12 @@ public:
 
     virtual LayoutRect clippedOverflowRectForRepaint(const RenderLayerModelObject* repaintContainer) const OVERRIDE FINAL;
 
-    InlineTextBox* firstTextBox() const { return m_firstTextBox; }
-    InlineTextBox* lastTextBox() const { return m_lastTextBox; }
+    InlineTextBox* firstTextBox() const { return m_lineBoxes.first(); }
+    InlineTextBox* lastTextBox() const { return m_lineBoxes.last(); }
 
     virtual int caretMinOffset() const OVERRIDE;
     virtual int caretMaxOffset() const OVERRIDE;
-    unsigned renderedTextLength() const;
+    bool hasRenderedText() const;
 
     virtual int previousOffset(int current) const OVERRIDE FINAL;
     virtual int previousOffsetForBackwardDeletion(int current) const OVERRIDE FINAL;
@@ -132,9 +131,7 @@ public:
     bool isSecure() const { return style()->textSecurity() != TSNONE; }
     void momentarilyRevealLastTypedCharacter(unsigned lastTypedCharacterOffset);
 
-    InlineTextBox* findNextInlineTextBox(int offset, int& pos) const;
-
-    void checkConsistency() const;
+    InlineTextBox* findNextInlineTextBox(int offset, int& pos) const { return m_lineBoxes.findNext(offset, pos); }
 
     bool isAllCollapsibleWhitespace() const;
 
@@ -144,6 +141,8 @@ public:
     void removeAndDestroyTextBoxes();
 
     virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle);
+
+    virtual InlineTextBox* createTextBox(); // Subclassed by RenderSVGInlineText.
 
 #if ENABLE(IOS_TEXT_AUTOSIZING)
     float candidateComputedTextSize() const { return m_candidateComputedTextSize; }
@@ -156,8 +155,6 @@ protected:
 
     virtual void setTextInternal(const String&);
     virtual UChar previousCharacter() const;
-    
-    virtual InlineTextBox* createTextBox(); // Subclassed by SVG.
 
 private:
     virtual bool canHaveChildren() const OVERRIDE FINAL { return false; }
@@ -173,7 +170,6 @@ private:
 
     virtual bool nodeAtPoint(const HitTestRequest&, HitTestResult&, const HitTestLocation&, const LayoutPoint&, HitTestAction) OVERRIDE FINAL { ASSERT_NOT_REACHED(); return false; }
 
-    void deleteTextBoxes();
     bool containsOnlyWhitespace(unsigned from, unsigned len) const;
     float widthFromCache(const Font&, int start, int len, float xPos, HashSet<const SimpleFontData*>* fallbackFonts, GlyphOverflow*) const;
     bool isAllASCII() const { return m_isAllASCII; }
@@ -210,8 +206,7 @@ private:
 
     String m_text;
 
-    InlineTextBox* m_firstTextBox;
-    InlineTextBox* m_lastTextBox;
+    RenderTextLineBoxes m_lineBoxes;
 };
 
 inline RenderText& toRenderText(RenderObject& object)
@@ -252,13 +247,12 @@ inline RenderStyle* RenderText::firstLineStyle() const
     return parent()->firstLineStyle();
 }
 
-#ifdef NDEBUG
-inline void RenderText::checkConsistency() const
-{
-}
-#endif
-
 void applyTextTransform(const RenderStyle*, String&, UChar);
+
+inline RenderText* Text::renderer() const
+{
+    return toRenderText(Node::renderer());
+}
 
 } // namespace WebCore
 

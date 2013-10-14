@@ -131,12 +131,12 @@ bool HTMLTableCellElement::isURLAttribute(const Attribute& attribute) const
 
 String HTMLTableCellElement::abbr() const
 {
-    return getAttribute(abbrAttr);
+    return fastGetAttribute(abbrAttr);
 }
 
 String HTMLTableCellElement::axis() const
 {
-    return getAttribute(axisAttr);
+    return fastGetAttribute(axisAttr);
 }
 
 void HTMLTableCellElement::setColSpan(int n)
@@ -146,7 +146,7 @@ void HTMLTableCellElement::setColSpan(int n)
 
 String HTMLTableCellElement::headers() const
 {
-    return getAttribute(headersAttr);
+    return fastGetAttribute(headersAttr);
 }
 
 void HTMLTableCellElement::setRowSpan(int n)
@@ -156,7 +156,7 @@ void HTMLTableCellElement::setRowSpan(int n)
 
 String HTMLTableCellElement::scope() const
 {
-    return getAttribute(scopeAttr);
+    return fastGetAttribute(scopeAttr);
 }
 
 void HTMLTableCellElement::addSubresourceAttributeURLs(ListHashSet<URL>& urls) const
@@ -179,21 +179,5 @@ HTMLTableCellElement* HTMLTableCellElement::cellAbove() const
 
     return toHTMLTableCellElement(cellAboveRenderer->element());
 }
-
-#ifndef NDEBUG
-
-HTMLTableCellElement* toHTMLTableCellElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->hasTagName(HTMLNames::tdTag) || node->hasTagName(HTMLNames::thTag));
-    return static_cast<HTMLTableCellElement*>(node);
-}
-
-const HTMLTableCellElement* toHTMLTableCellElement(const Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->hasTagName(HTMLNames::tdTag) || node->hasTagName(HTMLNames::thTag));
-    return static_cast<const HTMLTableCellElement*>(node);
-}
-
-#endif
 
 } // namespace WebCore
