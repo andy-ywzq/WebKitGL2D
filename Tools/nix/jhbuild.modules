@@ -13,6 +13,7 @@
       <dep package="glib"/>
       <dep package="glib-networking"/>
       <dep package="libsoup"/>
+      <dep package="libwebrtc"/>
     </dependencies>
   </metamodule>
 
@@ -30,6 +31,8 @@
       href="http://www.freedesktop.org"/>
   <repository type="tarball" name="savannah.org"
       href="http://download.savannah.gnu.org"/>
+  <repository type="git" name="git.github.com"
+      href="https://github.com"/>
 
   <autotools id="cairo" autogen-sh="configure">
     <dependencies>
@@ -110,6 +113,10 @@
            checkoutdir="harfbuzz-0.9.14"
            repo="freedesktop.org"
            hash="sha256:d07c0ffdbbbfdfbb6c65e73fe9c76466e87dbf04b094cbd0abf5fd7d571a4004"/>
+   </autotools>
+
+ <autotools id="libwebrtc">
+   <branch repo="git.github.com" module="qrwteyrutiyoup/libwebrtc-meta.git" checkoutdir="libwebrtc"/>
  </autotools>
 
 </moduleset>
