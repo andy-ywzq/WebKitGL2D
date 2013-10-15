@@ -44,6 +44,7 @@ struct SameSizeAsMarginInfo {
 };
 
 COMPILE_ASSERT(sizeof(RenderBlockFlow::MarginValues) == sizeof(LayoutUnit[4]), MarginValues_should_stay_small);
+COMPILE_ASSERT(sizeof(RenderBlockFlow::MarginInfo) == sizeof(SameSizeAsMarginInfo), MarginInfo_should_stay_small);
 
 // Our MarginInfo state used when laying out block children.
 RenderBlockFlow::MarginInfo::MarginInfo(RenderBlockFlow* block, LayoutUnit beforeBorderPadding, LayoutUnit afterBorderPadding)
@@ -78,10 +79,14 @@ RenderBlockFlow::MarginInfo::MarginInfo(RenderBlockFlow* block, LayoutUnit befor
     m_negativeMargin = (m_canCollapseMarginBeforeWithChildren && !block->mustDiscardMarginBefore()) ? block->maxNegativeMarginBefore() : LayoutUnit();
 }
 
-RenderBlockFlow::RenderBlockFlow(Element* element)
+RenderBlockFlow::RenderBlockFlow(Element& element)
     : RenderBlock(element, RenderBlockFlowFlag)
 {
-    COMPILE_ASSERT(sizeof(RenderBlockFlow::MarginInfo) == sizeof(SameSizeAsMarginInfo), MarginInfo_should_stay_small);
+}
+
+RenderBlockFlow::RenderBlockFlow(Document& document)
+    : RenderBlock(document, RenderBlockFlowFlag)
+{
 }
 
 RenderBlockFlow::~RenderBlockFlow()
@@ -1509,7 +1514,7 @@ void RenderBlockFlow::styleDidChange(StyleDifference diff, const RenderStyle* ol
         const FloatingObjectSet& floatingObjectSet = m_floatingObjects->set();
         auto end = floatingObjectSet.end();
 
-        for (RenderObject* curr = parent(); curr && !curr->isRenderView(); curr = curr->parent()) {
+        for (auto curr = parent(); curr && !curr->isRenderView(); curr = curr->parent()) {
             if (curr->isRenderBlockFlow()) {
                 RenderBlockFlow* currBlock = toRenderBlockFlow(curr);
 
@@ -1804,13 +1809,16 @@ LayoutPoint RenderBlockFlow::computeLogicalLocationForFloat(const FloatingObject
     ShapeInsideInfo* shapeInsideInfo = this->layoutShapeInsideInfo();
     // FIXME: Implement behavior for right floats.
     if (shapeInsideInfo) {
-        LayoutSize floatLogicalSize = LayoutSize(childBox->logicalWidth(), childBox->logicalHeight());
+        LayoutSize floatLogicalSize = logicalSizeForFloat(floatingObject);
+        // floatingObject's logicalSize doesn't contain the actual height at this point, so we need to calculate it
+        floatLogicalSize.setHeight(logicalHeightForChild(childBox) + marginBeforeForChild(childBox) + marginAfterForChild(childBox));
+
         // FIXME: If the float doesn't fit in the shape we should push it under the content box
         logicalTopOffset = shapeInsideInfo->computeFirstFitPositionForFloat(floatLogicalSize);
         if (logicalHeight() > logicalTopOffset)
             logicalTopOffset = logicalHeight();
 
-        SegmentList segments = shapeInsideInfo->computeSegmentsForLine(logicalTopOffset, childBox->logicalHeight());
+        SegmentList segments = shapeInsideInfo->computeSegmentsForLine(logicalTopOffset, floatLogicalSize.height());
         // FIXME Bug 102949: Add support for shapes with multiple segments.
         if (segments.size() == 1) {
             // The segment offsets are relative to the content box.

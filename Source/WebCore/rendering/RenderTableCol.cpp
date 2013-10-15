@@ -36,7 +36,7 @@ namespace WebCore {
 using namespace HTMLNames;
 
 RenderTableCol::RenderTableCol(Element& element)
-    : RenderBox(&element, 0)
+    : RenderBox(element, 0)
     , m_span(1)
 {
     // init RenderObject attributes
@@ -122,7 +122,7 @@ void RenderTableCol::clearPreferredLogicalWidthsDirtyBits()
 
 RenderTable* RenderTableCol::table() const
 {
-    RenderObject* table = parent();
+    auto table = parent();
     if (table && !table->isTable())
         table = table->parent();
     return table && table->isTable() ? toRenderTable(table) : 0;

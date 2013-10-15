@@ -94,8 +94,7 @@ void WebViewNix::sendKeyEvent(const NIXKeyEvent& event)
 
 void WebViewNix::sendGestureEvent(const NIXGestureEvent& event)
 {
-    WebGestureEvent ev = WebEventFactory::createWebGestureEvent(event);
-    page()->handleGestureEvent(ev);
+    //FIXME removed after https://bugs.webkit.org/show_bug.cgi?id=122650
 }
 
 void WebViewNix::findZoomableAreaForPoint(const WKPoint& point, int horizontalRadius, int verticalRadius)
@@ -203,14 +202,6 @@ void WebViewNix::pageTransitionViewportReady()
 void WebViewNix::doneWithTouchEvent(const NativeWebTouchEvent& event, bool wasEventHandled)
 {
     m_viewClientNix.doneWithTouchEvent(this, *event.nativeEvent(), wasEventHandled);
-}
-#endif
-
-#if ENABLE(GESTURE_EVENTS)
-void WebViewNix::doneWithGestureEvent(const WebGestureEvent& event, bool wasEventHandled)
-{
-    NIXGestureEvent ev = WebEventFactory::createNativeWebGestureEvent(event);
-    m_viewClientNix.doneWithGestureEvent(this, ev, wasEventHandled);
 }
 #endif
 

@@ -4086,9 +4086,6 @@
     <ClCompile Include="..\html\ValidationMessage.cpp">
       <Filter>html</Filter>
     </ClCompile>
-    <ClCompile Include="..\html\ValidityState.cpp">
-      <Filter>html</Filter>
-    </ClCompile>
     <ClCompile Include="..\html\WeekInputType.cpp">
       <Filter>html</Filter>
     </ClCompile>
@@ -9562,6 +9559,9 @@
       <Filter>rendering\style</Filter>
     </ClInclude>
     <ClInclude Include="..\rendering\style\GridCoordinate.h">
+      <Filter>rendering\style</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rendering\style\GridLength.h">
       <Filter>rendering\style</Filter>
     </ClInclude>
     <ClInclude Include="..\rendering\style\GridPosition.h">

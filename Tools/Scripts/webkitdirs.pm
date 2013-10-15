@@ -376,7 +376,8 @@ sub argumentsForConfiguration()
     my @args = ();
     push(@args, '--debug') if $configuration eq "Debug";
     push(@args, '--release') if $configuration eq "Release";
-    push(@args, '--32-bit') if ($architecture ne "x86_64" and !hasArgument('--64-bit', \@ARGV));
+    push(@args, '--32-bit') if ($architecture ne "x86_64" and !isWin64());
+    push(@args, '--64-bit') if (isWin64());
     push(@args, '--gtk') if isGtk();
     push(@args, '--efl') if isEfl();
     push(@args, '--nix') if isNix();
@@ -888,7 +889,6 @@ sub hasArgument($$)
 {
     my ($argToCheck, $arrayRef) = @_;
     my @matchingIndices = findMatchingArguments($argToCheck, $arrayRef);
-    my $far = scalar @matchingIndices;
     return scalar @matchingIndices > 0;
 }
 

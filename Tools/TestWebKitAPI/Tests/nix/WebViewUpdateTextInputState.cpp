@@ -59,11 +59,6 @@ static void updateTextInputState(WKViewRef, const NIXTextInputState* state, cons
     WKRetain(stateReceived.submitLabel);
 }
 
-static void doneWithGestureEvent(WKViewRef, const NIXGestureEvent* event, bool, const void*)
-{
-    isDoneWithSingleTapEvent = event->type == kNIXInputEventTypeGestureSingleTap;
-}
-
 TEST(WebKitNix, WebViewUpdateTextInputState)
 {
     memset(&stateReceived, 0, sizeof(stateReceived));
@@ -74,7 +69,6 @@ TEST(WebKitNix, WebViewUpdateTextInputState)
     memset(&nixViewClient, 0, sizeof(NIXViewClient));
     nixViewClient.version = kNIXViewClientCurrentVersion;
     nixViewClient.updateTextInputState = updateTextInputState;
-    nixViewClient.doneWithGestureEvent = doneWithGestureEvent;
     NIXViewSetNixViewClient(view.get(), &nixViewClient);
 
     WKViewInitialize(view.get());

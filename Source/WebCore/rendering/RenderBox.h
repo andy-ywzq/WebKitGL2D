@@ -45,7 +45,6 @@ enum ShouldComputePreferred { ComputeActual, ComputePreferred };
 
 class RenderBox : public RenderBoxModelObject {
 public:
-    explicit RenderBox(Element*, unsigned baseTypeFlags);
     virtual ~RenderBox();
 
     // hasAutoZIndex only returns true if the element is positioned or a flex-item since
@@ -602,6 +601,9 @@ public:
 #endif
 
 protected:
+    RenderBox(Element&, unsigned baseTypeFlags);
+    RenderBox(Document&, unsigned baseTypeFlags);
+
     virtual void willBeDestroyed() OVERRIDE;
 
     virtual void styleWillChange(StyleDifference, const RenderStyle* newStyle) OVERRIDE;
@@ -643,7 +645,7 @@ protected:
  
 private:
 #if ENABLE(CSS_SHAPES)
-    void updateShapeOutsideInfoAfterStyleChange(const ShapeValue* shapeOutside, const ShapeValue* oldShapeOutside);
+    void updateShapeOutsideInfoAfterStyleChange(const RenderStyle&, const RenderStyle* oldStyle);
 #endif
 
     bool fixedElementLaysOutRelativeToFrame(const FrameView&) const;

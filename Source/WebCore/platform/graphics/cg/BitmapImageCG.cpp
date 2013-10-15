@@ -67,7 +67,6 @@ BitmapImage::BitmapImage(CGImageRef cgImage, ImageObserver* observer)
     : Image(observer)
     , m_currentFrame(0)
     , m_frames(0)
-    , m_frameTimer(0)
     , m_repetitionCount(cAnimationNone)
     , m_repetitionCountStatus(Unknown)
     , m_repetitionsComplete(0)
@@ -92,7 +91,7 @@ BitmapImage::BitmapImage(CGImageRef cgImage, ImageObserver* observer)
     m_sizeRespectingOrientation = IntSize(width, height);
 
     m_frames.grow(1);
-    m_frames[0].m_frame = cgImage;
+    m_frames[0].m_frame = CGImageRetain(cgImage);
     m_frames[0].m_hasAlpha = true;
     m_frames[0].m_haveMetadata = true;
 

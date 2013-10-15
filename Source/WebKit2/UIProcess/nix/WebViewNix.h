@@ -76,9 +76,6 @@ protected:
     virtual void didCommitLoadForFrame() OVERRIDE;
     virtual void notifyLoadIsBackForward() OVERRIDE;
     virtual void didStartedMainFrameLayout() OVERRIDE;
-#if ENABLE(GESTURE_EVENTS)
-    virtual void doneWithGestureEvent(const WebGestureEvent&, bool wasEventHandled) OVERRIDE;
-#endif
 #if ENABLE(TOUCH_EVENTS)
     virtual void doneWithTouchEvent(const NativeWebTouchEvent&, bool wasEventHandled) OVERRIDE;
 #endif

@@ -87,7 +87,7 @@ PassRefPtr<Text> Text::splitText(unsigned offset, ExceptionCode& ec)
         document().textNodeSplit(this);
 
     if (renderer())
-        toRenderText(renderer())->setTextWithOffset(dataImpl(), 0, oldStr.length());
+        renderer()->setTextWithOffset(dataImpl(), 0, oldStr.length());
 
     return newText.release();
 }
@@ -200,7 +200,7 @@ RenderText* Text::createTextRenderer(RenderArena& arena, RenderStyle& style)
     if (style.hasTextCombine())
         return new (arena) RenderCombineText(*this, dataImpl());
 
-    return new (arena) RenderText(this, dataImpl());
+    return new (arena) RenderText(*this, dataImpl());
 }
 
 bool Text::childTypeAllowed(NodeType) const

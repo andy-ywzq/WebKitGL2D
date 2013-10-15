@@ -72,27 +72,9 @@ inline static bool hasVerticalAppearance(HTMLInputElement* input)
     return sliderStyle->appearance() == SliderVerticalPart;
 }
 
-SliderThumbElement* sliderThumbElementOf(HTMLInputElement& inputElement)
-{
-    ShadowRoot* shadow = inputElement.userAgentShadowRoot();
-    ASSERT(shadow);
-    Node* thumb = shadow->firstChild()->firstChild()->firstChild();
-    ASSERT(thumb);
-    return toSliderThumbElement(thumb);
-}
-
-HTMLElement* sliderTrackElementOf(HTMLInputElement& inputElement)
-{
-    ShadowRoot* shadow = inputElement.userAgentShadowRoot();
-    ASSERT(shadow);
-    Node* track = shadow->firstChild()->firstChild();
-    ASSERT(track);
-    return toHTMLElement(track);
-}
-
 // --------------------------------
 
-RenderSliderThumb::RenderSliderThumb(SliderThumbElement* element)
+RenderSliderThumb::RenderSliderThumb(SliderThumbElement& element)
     : RenderBlockFlow(element)
 {
 }
@@ -124,8 +106,11 @@ bool RenderSliderThumb::isSliderThumb() const
 // http://webkit.org/b/62535
 class RenderSliderContainer : public RenderFlexibleBox {
 public:
-    RenderSliderContainer(SliderContainerElement* element)
-        : RenderFlexibleBox(element) { }
+    RenderSliderContainer(SliderContainerElement& element)
+        : RenderFlexibleBox(element)
+    {
+    }
+
 public:
     virtual void computeLogicalHeight(LayoutUnit logicalHeight, LayoutUnit logicalTop, LogicalExtentComputedValues&) const OVERRIDE;
 
@@ -222,7 +207,7 @@ void SliderThumbElement::setPositionFromValue()
 
 RenderElement* SliderThumbElement::createRenderer(RenderArena& arena, RenderStyle&)
 {
-    return new (arena) RenderSliderThumb(this);
+    return new (arena) RenderSliderThumb(*this);
 }
 
 bool SliderThumbElement::isDisabledFormControl() const
@@ -260,7 +245,7 @@ void SliderThumbElement::setPositionFromPoint(const LayoutPoint& absolutePoint)
     if (!input || !input->renderer() || !renderBox())
         return;
 
-    HTMLElement* trackElement = sliderTrackElementOf(*input);
+    HTMLElement* trackElement = input->sliderTrackElement();
     if (!trackElement->renderBox())
         return;
 
@@ -442,6 +427,11 @@ const AtomicString& SliderThumbElement::shadowPseudoId() const
     }
 }
 
+PassRefPtr<Element> SliderThumbElement::cloneElementWithoutAttributesAndChildren()
+{
+    return create(document());
+}
+
 // --------------------------------
 
 inline SliderContainerElement::SliderContainerElement(Document& document)
@@ -456,7 +446,7 @@ PassRefPtr<SliderContainerElement> SliderContainerElement::create(Document& docu
 
 RenderElement* SliderContainerElement::createRenderer(RenderArena& arena, RenderStyle&)
 {
-    return new (arena) RenderSliderContainer(this);
+    return new (arena) RenderSliderContainer(*this);
 }
 
 const AtomicString& SliderContainerElement::shadowPseudoId() const
