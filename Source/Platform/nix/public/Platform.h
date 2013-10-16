@@ -48,15 +48,8 @@ class MediaPlayerClient;
 class NIX_EXPORT Platform {
 public:
 
-    enum Capabilities {
-        None,
-        MediaElement = 1
-    };
-
     NIX_EXPORT static void initialize(Platform*);
     NIX_EXPORT static Platform* current();
-
-    virtual uint64_t capabilities() { return None; }
 
     // Audio --------------------------------------------------------------
     virtual float audioHardwareSampleRate() { return 0; }

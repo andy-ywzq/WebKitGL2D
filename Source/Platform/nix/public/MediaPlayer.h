@@ -42,6 +42,8 @@ public:
 
 class MediaPlayer {
 public:
+    // Derivated classes shouldn't do any job on constructor, MediaPlayers could be
+    // created for probing purposes with a null client.
     MediaPlayer(MediaPlayerClient* client)
         : m_playerClient(client)
     {
