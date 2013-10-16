@@ -45,8 +45,6 @@
 
 namespace WebCore {
 
-static const unsigned defaultButtonBackgroundColor = 0xffdddddd;
-
 static void setSizeIfAuto(RenderStyle* style, const IntSize& size)
 {
     if (style->width().isIntrinsicOrAuto())
@@ -188,10 +186,6 @@ bool RenderThemeNix::paintButton(RenderObject* o, const PaintInfo& i, const IntR
     Nix::ThemeEngine::ButtonExtraParams extraParams;
     extraParams.isDefault = isDefault(o);
     extraParams.hasBorder = true;
-    extraParams.backgroundColor = defaultButtonBackgroundColor;
-    if (o->hasBackground())
-        extraParams.backgroundColor = o->style()->visitedDependentColor(CSSPropertyBackgroundColor).rgb();
-
     themeEngine()->paintButton(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
     return false;
 }
