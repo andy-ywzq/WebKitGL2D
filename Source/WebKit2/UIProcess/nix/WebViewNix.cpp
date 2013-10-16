@@ -94,7 +94,21 @@ void WebViewNix::sendKeyEvent(const NIXKeyEvent& event)
 
 void WebViewNix::sendGestureEvent(const NIXGestureEvent& event)
 {
-    //FIXME removed after https://bugs.webkit.org/show_bug.cgi?id=122650
+    NIXMouseEvent nixEvent;
+    nixEvent.type = kNIXInputEventTypeMouseDown;
+    nixEvent.button = kWKEventMouseButtonLeftButton;
+    nixEvent.x = event.x;
+    nixEvent.y = event.y;
+    nixEvent.globalX = event.globalX;
+    nixEvent.globalY = event.globalY;
+    nixEvent.clickCount = 1;
+    nixEvent.modifiers = event.modifiers;
+    nixEvent.timestamp = event.timestamp;
+
+    page()->handleMouseEvent(NativeWebMouseEvent(nixEvent, &m_lastCursorPosition));
+
+    nixEvent.type = kNIXInputEventTypeMouseUp;
+    page()->handleMouseEvent(NativeWebMouseEvent(nixEvent, &m_lastCursorPosition));
 }
 
 void WebViewNix::findZoomableAreaForPoint(const WKPoint& point, int horizontalRadius, int verticalRadius)
