@@ -50,7 +50,7 @@ public:
     bool connected;
 
     // Device identifier (based on manufacturer, model, etc.).
-    UChar id[idLengthCap];
+    char id[idLengthCap];
 
     // Monotonically increasing value referring to when the data were last
     // updated.

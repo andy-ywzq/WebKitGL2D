@@ -47,7 +47,7 @@ void sampleGamepads(GamepadList* into)
             RefPtr<Gamepad> gamepad = into->item(i);
             if (!gamepad)
                 gamepad = Gamepad::create();
-            gamepad->id(nixGamepad.id);
+            gamepad->id(String::fromUTF8(nixGamepad.id));
             gamepad->index(i);
             gamepad->timestamp(nixGamepad.timestamp);
             gamepad->axes(nixGamepad.axesLength, nixGamepad.axes);
