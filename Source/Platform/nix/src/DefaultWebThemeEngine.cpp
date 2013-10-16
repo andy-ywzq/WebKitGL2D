@@ -49,7 +49,7 @@ const int MenuListArrowSize = 6;
 const int InnerSpinButtonBorder = 3;
 const int InnerSpinButtonArrowSize = 2;
 
-const Nix::RGBA32 TapHighLightColor = 0x66000000;
+const Nix::Color TapHighLightColor(0x66000000);
 
 namespace Nix {
 

@@ -27,71 +27,82 @@
 #define Nix_Color_h
 
 #include <algorithm>
+#include <cstddef>
 
 namespace Nix {
 
-typedef unsigned RGBA32; // RGBA quadruplet
 
-struct Color {
-    static const RGBA32 black = 0xFF000000;
-    static const RGBA32 white = 0xFFFFFFFF;
-    static const RGBA32 darkGray = 0xFF808080;
-    static const RGBA32 gray = 0xFFA0A0A0;
-    static const RGBA32 lightGray = 0xFFC0C0C0;
-    static const RGBA32 transparent = 0x00000000;
+class Color {
+public:
+    typedef u_int32_t ARGB32; // ARGB quadruplet
 
-    RGBA32 rgba;
+    static const ARGB32 black = 0xFF000000;
+    static const ARGB32 white = 0xFFFFFFFF;
+    static const ARGB32 red = 0xFFFF0000;
+    static const ARGB32 green = 0xFF00FF00;
+    static const ARGB32 blue = 0xFF0000FF;
+    static const ARGB32 darkGray = 0xFF808080;
+    static const ARGB32 gray = 0xFFA0A0A0;
+    static const ARGB32 lightGray = 0xFFC0C0C0;
+    static const ARGB32 transparent = 0x00000000;
 
-    Color()
-        : rgba(Color::black)
-    {
-    }
-
-    Color(RGBA32 rgba)
-        : rgba(rgba)
+    Color(ARGB32 rgba)
+        : m_argb(rgba)
     {
     }
 
     Color(int r, int g, int b, int a = 255)
-        : rgba(std::max(0, std::min(a, 255)) << 24 | std::max(0, std::min(r, 255)) << 16 | std::max(0, std::min(g, 255)) << 8 | std::max(0, std::min(b, 255)))
+        : m_argb(fixValue(a) << 24 | fixValue(r) << 16 | fixValue(g) << 8 | fixValue(b))
     {
     }
 
-    operator RGBA32() const
+    operator ARGB32() const
     {
-        return rgba;
+        return m_argb;
     }
 
     unsigned char r() const
     {
-        return (rgba & 0x00FF0000) >> 16;
+        return (m_argb & 0x00FF0000) >> 16;
     }
 
     unsigned char g() const
     {
-        return (rgba & 0x0000FF00) >> 8;
+        return (m_argb & 0x0000FF00) >> 8;
     }
 
     unsigned char b() const
     {
-        return (rgba & 0x000000FF);
+        return (m_argb & 0x000000FF);
     }
 
     unsigned char a() const
     {
-        return (rgba & 0xFF000000) >> 24;
+        return (m_argb & 0xFF000000) >> 24;
+    }
+
+    ARGB32 argb32() const
+    {
+        return m_argb;
+    }
+
+    bool operator==(const Color& other)
+    {
+        return m_argb == other.m_argb;
+    }
+
+    bool operator!=(const Color& other)
+    {
+        return m_argb != other.m_argb;
+    }
+
+private:
+    ARGB32 m_argb;
+    inline ARGB32 fixValue(int value)
+    {
+        return std::max(0, std::min(value, 255));
     }
 };
-
-inline bool operator==(const Color& a, const Color& b)
-{
-    return a.rgba == b.rgba;
-}
-
-inline bool operator!=(const Color& a, const Color& b)
-{
-    return !(a == b);
-}
 
 } // namespace Nix
 

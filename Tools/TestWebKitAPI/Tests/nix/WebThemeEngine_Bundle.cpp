@@ -53,28 +53,27 @@ static void fillRect(Canvas *canvas, const Rect& rect, const Color& color)
 }
 
 class TestThemeEngine : public ThemeEngine {
-    Color activeSelectionBackgroundColor() const { return Color(); }
-    Color activeSelectionForegroundColor() const { return Color(); }
-    Color inactiveSelectionBackgroundColor() const { return Color(); }
-    Color inactiveSelectionForegroundColor() const { return Color(); }
+    Color activeSelectionBackgroundColor() const { return Color::black; }
+    Color activeSelectionForegroundColor() const { return Color::black; }
+    Color inactiveSelectionBackgroundColor() const { return Color::black; }
+    Color inactiveSelectionForegroundColor() const { return Color::black; }
 
     // List box selection colors
-    Color activeListBoxSelectionBackgroundColor() const { return Color(); }
-    Color activeListBoxSelectionForegroundColor() const { return Color(); }
-    Color inactiveListBoxSelectionBackgroundColor() const { return Color(); }
-    Color inactiveListBoxSelectionForegroundColor() const { return Color(); }
+    Color activeListBoxSelectionBackgroundColor() const { return Color::black; }
+    Color activeListBoxSelectionForegroundColor() const { return Color::black; }
+    Color inactiveListBoxSelectionBackgroundColor() const { return Color::black; }
+    Color inactiveListBoxSelectionForegroundColor() const { return Color::black; }
 
-    Color activeTextSearchHighlightColor() const { return Color(); }
-    Color inactiveTextSearchHighlightColor() const { return Color(); }
+    Color activeTextSearchHighlightColor() const { return Color::black; }
+    Color inactiveTextSearchHighlightColor() const { return Color::black; }
 
-    Color focusRingColor() const { return Color(); }
+    Color focusRingColor() const { return Color::black; }
 
-    Color tapHighlightColor() const { return Color(); }
+    Color tapHighlightColor() const { return Color::black; }
 
     void paintButton(Canvas* canvas, State, const Rect& rect, const ButtonExtraParams&) const
     {
-        Color red = 0xFFFF0000;
-        fillRect(canvas, rect, red);
+        fillRect(canvas, rect, Color::red);
     }
 
     void paintTextField(Canvas*, State, const Rect&) const
