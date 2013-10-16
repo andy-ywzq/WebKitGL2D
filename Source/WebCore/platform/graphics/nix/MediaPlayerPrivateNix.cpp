@@ -35,7 +35,7 @@ namespace WebCore {
 
 void MediaPlayerPrivateNix::registerMediaEngine(MediaEngineRegistrar registrar)
 {
-    WTF::OwnPtr nixPlayer = adoptPtr(Nix::Platform::current()->createMediaPlayer(nullptr));
+    auto nixPlayer = adoptPtr(Nix::Platform::current()->createMediaPlayer(nullptr));
     if (nixPlayer)
         registrar(create, getSupportedTypes, supportsType, 0, 0, 0);
 }
