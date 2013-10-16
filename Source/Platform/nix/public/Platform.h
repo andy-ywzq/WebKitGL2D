@@ -51,7 +51,7 @@ public:
     NIX_EXPORT static void initialize(Platform*);
     NIX_EXPORT static Platform* current();
 
-    // Audio --------------------------------------------------------------
+    // Audio
     virtual float audioHardwareSampleRate() { return 0; }
     virtual size_t audioHardwareBufferSize() { return 0; }
     virtual unsigned audioHardwareOutputChannels() { return 0; }
@@ -61,7 +61,7 @@ public:
     virtual AudioDevice* createAudioDevice(size_t /*bufferSize*/, unsigned /*numberOfInputChannels*/, unsigned /*numberOfChannels*/, double /*sampleRate*/, AudioDevice::RenderCallback*) { return 0; }
 
 
-    // Gamepad -------------------------------------------------------------
+    // Gamepad
     virtual void sampleGamepads(Gamepads& into) { into.length = 0; }
 
 
@@ -69,7 +69,7 @@ public:
     virtual FFTFrame* createFFTFrame(unsigned /*fftsize*/) { return 0; }
     virtual FFTFrame* createFFTFrame(const FFTFrame* /*frame*/) { return 0; }
 
-    // Resources -----------------------------------------------------------
+    // Resources
     // Returns a blob of data corresponding to the named resource.
     virtual Data loadResource(const char* /*name*/) { return Data(); }
 

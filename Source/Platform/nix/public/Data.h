@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2009 Google Inc. All rights reserved.
+ * Copyright (C) 2013 Nokia Corporation and/or its subsidiary(-ies).
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -41,9 +42,6 @@ namespace WTF { template <typename T> class PassRefPtr; }
 namespace Nix {
 
 // A container for raw bytes. It is inexpensive to copy a Nix::Data object.
-//
-// WARNING: It is not safe to pass a Nix::Data across threads!!!
-//
 class Data {
 public:
     ~Data() { reset(); }

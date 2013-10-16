@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010 Google Inc. All rights reserved.
+ * Copyright (C) 2013 Nokia Corporation and/or its subsidiary(-ies).
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -41,24 +42,22 @@ namespace WebCore {
 class AudioFIFO;
 class AudioPullFIFO;
 
-// An AudioDestination using Chromium's audio system
-
 class AudioDestinationNix : public AudioDestination, public Nix::AudioDevice::RenderCallback, public AudioSourceProvider {
 public:
     AudioDestinationNix(AudioIOCallback&, const String& inputDeviceId, unsigned numberOfInputChannels, unsigned numberOfOutputChannels, float sampleRate);
     virtual ~AudioDestinationNix();
 
-    virtual void start();
-    virtual void stop();
-    bool isPlaying() { return m_isPlaying; }
+    virtual void start() OVERRIDE;
+    virtual void stop() OVERRIDE;
+    virtual bool isPlaying() OVERRIDE { return m_isPlaying; }
 
-    float sampleRate() const { return m_sampleRate; }
+    virtual float sampleRate() const OVERRIDE { return m_sampleRate; }
 
     // WebKit::WebAudioDevice::RenderCallback
-    virtual void render(const std::vector<float*>& sourceData, const std::vector<float*>& audioData, size_t numberOfFrames);
+    virtual void render(const std::vector<float*>& sourceData, const std::vector<float*>& audioData, size_t numberOfFrames) OVERRIDE;
 
     // WebCore::AudioSourceProvider
-    virtual void provideInput(AudioBus*, size_t framesToProcess);
+    virtual void provideInput(AudioBus*, size_t framesToProcess) OVERRIDE;
 
 private:
     AudioIOCallback& m_callback;

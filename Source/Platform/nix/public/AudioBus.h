@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010, Google Inc. All rights reserved.
+ * Copyright (C) 2013 Nokia Corporation and/or its subsidiary(-ies).
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,9 +39,6 @@ namespace Nix {
 class AudioBusPrivate;
 
 // A container for multi-channel linear PCM audio data.
-//
-// WARNING: It is not safe to pass a AudioBus across threads!!!
-//
 class AudioBus {
 public:
     AudioBus() : m_d(0) { }
