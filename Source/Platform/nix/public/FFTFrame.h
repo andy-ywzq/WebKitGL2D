@@ -33,19 +33,19 @@ class FFTFrame {
 public:
     virtual ~FFTFrame() { }
 
-    virtual void doFFT(const float*) { }
-    virtual void doInverseFFT(float*) { }
-    virtual void multiply(const FFTFrame&) { }
+    virtual void doFFT(const float*) = 0;
+    virtual void doInverseFFT(float*) = 0;
+    virtual void multiply(const FFTFrame&) = 0;
 
-    virtual unsigned frequencyDomainSampleCount() const { return 0; }
+    virtual unsigned frequencyDomainSampleCount() const = 0;
     // After multiplication and transform operations, the data is scaled
     // to take in account the scale used internally in WebKit, originally
     // from Mac's vecLib.
     // After multiplication: Planar data is scaled by 0.5.
     // After direct transform: Planar data is scaled by 2.0.
     // After inverse transform: Time domain data is scaled by 1.0/(2* FFT size).
-    virtual float* realData() const { return 0; }
-    virtual float* imagData() const { return 0; }
+    virtual float* realData() const = 0;
+    virtual float* imagData() const = 0;
 };
 
 } // namespace Nix

@@ -118,7 +118,7 @@ float* FFTFrame::realData() const
     if (!m_fftFrame)
         return 0;
 
-    return const_cast<float*>(m_fftFrame->realData());
+    return m_fftFrame->realData();
 }
 
 float* FFTFrame::imagData() const
@@ -126,7 +126,7 @@ float* FFTFrame::imagData() const
     if (!m_fftFrame)
         return 0;
 
-    return const_cast<float*>(m_fftFrame->imagData());
+    return m_fftFrame->imagData();
 }
 
 } // namespace WebCore
