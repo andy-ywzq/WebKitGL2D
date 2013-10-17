@@ -1595,10 +1595,24 @@ void WebPageProxy::terminateProcess()
 }
 
 #if !USE(CF)
-PassRefPtr<WebData> WebPageProxy::sessionStateData(WebPageProxySessionStateFilterCallback, void* /*context*/) const
+PassRefPtr<WebData> WebPageProxy::sessionStateData(WebPageProxySessionStateFilterCallback filter, void* context) const
 {
-    // FIXME: Return session state data for saving Page state.
-    return 0;
+    auto encoder = std::make_unique<CoreIPC::ArgumentEncoder>();
+    unsigned index = m_backForwardList->currentIndex();
+    const BackForwardListItemVector& entries = m_backForwardList->entries();
+    BackForwardListItemVector filtered;
+    WKPageRef pageRef = toAPI(const_cast<WebPageProxy*>(this));
+    for (unsigned i = 0; i < entries.size(); ++i) {
+        if (filter && !filter(pageRef, WKPageGetSessionHistoryURLValueType(), toURLRef(entries[i]->originalURL().impl()), context)) {
+            if (i < index)
+                --index;
+            continue;
+        }
+        filtered.append(entries[i]);
+    }
+    SessionState state(filtered, index);
+    state.encode(*encoder);
+    return WebData::create(encoder->buffer(), encoder->bufferSize());
 }
 
 void WebPageProxy::restoreFromSessionStateData(WebData* data)
