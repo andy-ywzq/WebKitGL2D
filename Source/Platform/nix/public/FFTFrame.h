@@ -31,7 +31,10 @@ class AudioBus;
 
 class FFTFrame {
 public:
+    FFTFrame() { }
     virtual ~FFTFrame() { }
+
+    virtual FFTFrame* copy() const = 0;
 
     virtual void doFFT(const float*) = 0;
     virtual void doInverseFFT(float*) = 0;
@@ -46,6 +49,9 @@ public:
     // After inverse transform: Time domain data is scaled by 1.0/(2* FFT size).
     virtual float* realData() const = 0;
     virtual float* imagData() const = 0;
+private:
+    FFTFrame(const FFTFrame&);
+    FFTFrame& operator=(const FFTFrame&);
 };
 
 } // namespace Nix

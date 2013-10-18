@@ -45,19 +45,15 @@ FFTFrame::FFTFrame(const FFTFrame& frame)
     : m_FFTSize(frame.m_FFTSize)
     , m_log2FFTSize(frame.m_log2FFTSize)
 {
-    m_fftFrame = adoptPtr(Nix::Platform::current()->createFFTFrame(frame.m_fftFrame.get()));
+    m_fftFrame = adoptPtr(frame.m_fftFrame->copy());
 }
 
 FFTFrame::~FFTFrame()
 {
-    m_fftFrame.release();
 }
 
 void FFTFrame::multiply(const FFTFrame& frame)
 {
-    if (!m_fftFrame)
-        return;
-
     m_fftFrame->multiply(*frame.m_fftFrame);
 
     // Scale accounts the peculiar scaling of vecLib on the Mac.
@@ -70,20 +66,13 @@ void FFTFrame::multiply(const FFTFrame& frame)
 // Provides time domain samples in argument "data". Frame will store the transformed data.
 void FFTFrame::doFFT(const float* data)
 {
-    if (!m_fftFrame)
-        return;
-
     m_fftFrame->doFFT(data);
-
     scalePlanarData(2.0f);
 }
 
 // Calculates inverse transform from the stored data, putting the results in argument 'data'.
 void FFTFrame::doInverseFFT(float* data)
 {
-    if (!m_fftFrame)
-        return;
-
     m_fftFrame->doInverseFFT(data);
 
     // Scale so that a forward then inverse FFT yields exactly the original data.
@@ -115,17 +104,11 @@ void FFTFrame::scalePlanarData(float scale)
 
 float* FFTFrame::realData() const
 {
-    if (!m_fftFrame)
-        return 0;
-
     return m_fftFrame->realData();
 }
 
 float* FFTFrame::imagData() const
 {
-    if (!m_fftFrame)
-        return 0;
-
     return m_fftFrame->imagData();
 }
 
