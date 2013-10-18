@@ -38,7 +38,6 @@ public:
 
     virtual void doFFT(const float*) = 0;
     virtual void doInverseFFT(float*) = 0;
-    virtual void multiply(const FFTFrame&) = 0;
 
     virtual unsigned frequencyDomainSampleCount() const = 0;
     // After multiplication and transform operations, the data is scaled

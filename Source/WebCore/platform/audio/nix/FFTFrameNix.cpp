@@ -34,6 +34,11 @@
 
 namespace WebCore {
 
+static inline void scalePlanarData(float* data, const unsigned size, const float scale)
+{
+    VectorMath::vsmul(data, 1, &scale, data, 1, size);
+}
+
 FFTFrame::FFTFrame(unsigned fftSize)
     : m_FFTSize(fftSize)
     , m_log2FFTSize(static_cast<unsigned>(log2(fftSize)))
@@ -54,20 +59,34 @@ FFTFrame::~FFTFrame()
 
 void FFTFrame::multiply(const FFTFrame& frame)
 {
-    m_fftFrame->multiply(*frame.m_fftFrame);
+    float* realP1 = realData();
+    float* imagP1 = imagData();
+    const float* realP2 = frame.realData();
+    const float* imagP2 = frame.imagData();
+
+    const size_t size = m_fftFrame->frequencyDomainSampleCount();
+    VectorMath::zvmul(realP1, imagP1, realP2, imagP2, realP1, imagP1, size);
 
     // Scale accounts the peculiar scaling of vecLib on the Mac.
     // This ensures the right scaling all the way back to inverse FFT.
     // FIXME: if we change the scaling on the Mac then this scale
     // factor will need to change too.
-    scalePlanarData(0.5f);
+    const float scale = 0.5;
+    scalePlanarData(realP1, size, scale);
+    scalePlanarData(imagP1, size, scale);
 }
 
 // Provides time domain samples in argument "data". Frame will store the transformed data.
 void FFTFrame::doFFT(const float* data)
 {
     m_fftFrame->doFFT(data);
-    scalePlanarData(2.0f);
+    // Scale the frequency domain data to match vecLib's scale factor
+    // on the Mac. FIXME: if we change the definition of FFTFrame to
+    // eliminate this scale factor then this code will need to change.
+    const float scale = 2;
+    const size_t size = m_fftFrame->frequencyDomainSampleCount();
+    scalePlanarData(realData(), size, scale);
+    scalePlanarData(imagData(), size, scale);
 }
 
 // Calculates inverse transform from the stored data, putting the results in argument 'data'.
@@ -87,19 +106,6 @@ void FFTFrame::initialize()
 
 void FFTFrame::cleanup()
 {
-}
-
-void FFTFrame::scalePlanarData(float scale)
-{
-    float* realP = m_fftFrame->realData();
-    float* imagP = m_fftFrame->imagData();
-
-    const unsigned framesToProcess = m_fftFrame->frequencyDomainSampleCount();
-
-    for (unsigned i = 0; i < framesToProcess; ++i) {
-        realP[i] *= scale;
-        imagP[i] *= scale;
-    }
 }
 
 float* FFTFrame::realData() const
