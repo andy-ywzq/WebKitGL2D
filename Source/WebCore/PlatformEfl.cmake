@@ -39,6 +39,8 @@ list(APPEND WebCore_SOURCES
 
     editing/efl/EditorEfl.cpp
 
+    html/shadow/MediaControlsApple.cpp
+
     loader/soup/CachedRawResourceSoup.cpp
     loader/soup/SubresourceLoaderSoup.cpp
 
@@ -148,6 +150,7 @@ list(APPEND WebCore_SOURCES
     platform/network/efl/NetworkStateNotifierEfl.cpp
 
     platform/network/soup/AuthenticationChallengeSoup.cpp
+    platform/network/soup/CertificateInfoSoup.cpp
     platform/network/soup/CookieJarSoup.cpp
     platform/network/soup/CookieStorageSoup.cpp
     platform/network/soup/CredentialStorageSoup.cpp

@@ -22,6 +22,7 @@ set(WebCore_INCLUDE_DIRECTORIES
     "${WEBCORE_DIR}/bindings/generic"
     "${WEBCORE_DIR}/bridge"
     "${WEBCORE_DIR}/bridge/c"
+    "${WEBCORE_DIR}/crypto"
     "${WEBCORE_DIR}/css"
     "${WEBCORE_DIR}/dom"
     "${WEBCORE_DIR}/dom/default"
@@ -281,6 +282,8 @@ set(WebCore_IDL_FILES
 
     Modules/websockets/CloseEvent.idl
     Modules/websockets/WebSocket.idl
+
+    crypto/SubtleCrypto.idl
 
     css/CSSCharsetRule.idl
     css/CSSFontFaceLoadEvent.idl
@@ -786,6 +789,7 @@ set(WebCore_SOURCES
     Modules/indexeddb/leveldb/IDBLevelDBCoding.cpp
     Modules/indexeddb/leveldb/IDBObjectStoreBackendLevelDB.cpp
     Modules/indexeddb/leveldb/IDBTransactionBackendLevelDB.cpp
+    Modules/indexeddb/leveldb/IDBTransactionBackendLevelDBOperations.cpp
     Modules/indexeddb/leveldb/IDBTransactionCoordinatorLevelDB.cpp
 
     Modules/mediasource/MediaSource.cpp
@@ -2129,6 +2133,7 @@ set(WebCore_SOURCES
     rendering/RenderMultiColumnBlock.cpp
     rendering/RenderMultiColumnFlowThread.cpp
     rendering/RenderMultiColumnSet.cpp
+    rendering/RenderNamedFlowFragment.cpp
     rendering/RenderNamedFlowThread.cpp
     rendering/RenderObject.cpp
     rendering/RenderProgress.cpp

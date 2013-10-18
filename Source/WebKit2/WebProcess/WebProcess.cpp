@@ -102,6 +102,10 @@
 #include "CustomProtocolManager.h"
 #endif
 
+#if ENABLE(DATABASE_PROCESS)
+#include "WebToDatabaseProcessConnection.h"
+#endif
+
 #if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
 #include "WebNotificationManager.h"
 #endif
@@ -1020,7 +1024,47 @@ WebResourceLoadScheduler& WebProcess::webResourceLoadScheduler()
 {
     return *m_webResourceLoadScheduler;
 }
+#endif // ENABLED(NETWORK_PROCESS)
+
+#if ENABLE(DATABASE_PROCESS)
+void WebProcess::webToDatabaseProcessConnectionClosed(WebToDatabaseProcessConnection* connection)
+{
+    ASSERT(m_webToDatabaseProcessConnection);
+    ASSERT(m_webToDatabaseProcessConnection == connection);
+
+    m_webToDatabaseProcessConnection = 0;
+}
+
+WebToDatabaseProcessConnection* WebProcess::webToDatabaseProcessConnection()
+{
+    if (!m_webToDatabaseProcessConnection)
+        ensureWebToDatabaseProcessConnection();
+
+    return m_webToDatabaseProcessConnection.get();
+}
+
+void WebProcess::ensureWebToDatabaseProcessConnection()
+{
+    if (m_webToDatabaseProcessConnection)
+        return;
+
+    CoreIPC::Attachment encodedConnectionIdentifier;
+
+    if (!parentProcessConnection()->sendSync(Messages::WebProcessProxy::GetDatabaseProcessConnection(),
+        Messages::WebProcessProxy::GetDatabaseProcessConnection::Reply(encodedConnectionIdentifier), 0))
+        return;
+
+#if PLATFORM(MAC)
+    CoreIPC::Connection::Identifier connectionIdentifier(encodedConnectionIdentifier.port());
+    if (CoreIPC::Connection::identifierIsNull(connectionIdentifier))
+        return;
+#else
+    ASSERT_NOT_REACHED();
 #endif
+    m_webToDatabaseProcessConnection = WebToDatabaseProcessConnection::create(connectionIdentifier);
+}
+
+#endif // ENABLED(DATABASE_PROCESS)
 
 void WebProcess::downloadRequest(uint64_t downloadID, uint64_t initiatingPageID, const ResourceRequest& request)
 {

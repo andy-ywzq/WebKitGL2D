@@ -1680,7 +1680,7 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(CSSPropert
     return ComputedStyleExtractor(m_node, m_allowVisitedStyle, m_pseudoElementSpecifier).propertyValue(propertyID, updateLayout);
 }
 
-PassRefPtr<MutableStylePropertySet> CSSComputedStyleDeclaration::copyProperties() const
+PassRef<MutableStylePropertySet> CSSComputedStyleDeclaration::copyProperties() const
 {
     return ComputedStyleExtractor(m_node, m_allowVisitedStyle, m_pseudoElementSpecifier).copyProperties();
 }
@@ -1992,6 +1992,8 @@ PassRefPtr<CSSValue> ComputedStyleExtractor::propertyValue(CSSPropertyID propert
             if (style->hasAutoColumnCount())
                 return cssValuePool().createIdentifierValue(CSSValueAuto);
             return cssValuePool().createValue(style->columnCount(), CSSPrimitiveValue::CSS_NUMBER);
+        case CSSPropertyWebkitColumnFill:
+            return cssValuePool().createValue(style->columnFill());
         case CSSPropertyWebkitColumnGap:
             if (style->hasNormalColumnGap())
                 return cssValuePool().createIdentifierValue(CSSValueNormal);
@@ -3143,7 +3145,7 @@ bool ComputedStyleExtractor::propertyMatches(CSSPropertyID propertyID, const CSS
     return computedValue && value && computedValue->equals(*value);
 }
 
-PassRefPtr<MutableStylePropertySet> ComputedStyleExtractor::copyProperties() const
+PassRef<MutableStylePropertySet> ComputedStyleExtractor::copyProperties() const
 {
     return copyPropertiesInSet(computedProperties, numComputedProperties);
 }
@@ -3196,7 +3198,7 @@ PassRefPtr<CSSValueList> ComputedStyleExtractor::getCSSPropertyValuesForGridShor
     return list.release();
 }
 
-PassRefPtr<MutableStylePropertySet> ComputedStyleExtractor::copyPropertiesInSet(const CSSPropertyID* set, unsigned length) const
+PassRef<MutableStylePropertySet> ComputedStyleExtractor::copyPropertiesInSet(const CSSPropertyID* set, unsigned length) const
 {
     Vector<CSSProperty, 256> list;
     list.reserveInitialCapacity(length);

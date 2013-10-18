@@ -253,7 +253,6 @@ VM::VM(VMType vmType, HeapType heapType)
 
 #if ENABLE(JIT)
     jitStubs = adoptPtr(new JITThunks());
-    performPlatformSpecificJITAssertions(this);
 #endif
 
 #if ENABLE(FTL_JIT)
@@ -425,8 +424,10 @@ static ThunkGenerator thunkGeneratorForIntrinsic(Intrinsic intrinsic)
         return logThunkGenerator;
     case IMulIntrinsic:
         return imulThunkGenerator;
-    case ArrayIteratorNextIntrinsic:
-        return arrayIteratorNextThunkGenerator;
+    case ArrayIteratorNextKeyIntrinsic:
+        return arrayIteratorNextKeyThunkGenerator;
+    case ArrayIteratorNextValueIntrinsic:
+        return arrayIteratorNextValueThunkGenerator;
     default:
         return 0;
     }

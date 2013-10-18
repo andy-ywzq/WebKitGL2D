@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009, 2012 Apple Inc. All rights reserved.
+ * Copyright (C) 2009, 2012, 2013 Apple Inc. All rights reserved.
  * Copyright (C) 2010 Patrick Gansterer <paroga@paroga.com>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,8 +30,8 @@
 #if USE(JSVALUE32_64)
 #include "JIT.h"
 
+#include "CCallHelpers.h"
 #include "JITInlines.h"
-#include "JITStubCall.h"
 #include "JSArray.h"
 #include "JSCell.h"
 #include "JSFunction.h"
@@ -171,8 +171,20 @@ JIT::CodeRef JIT::privateCompileCTINativeCall(VM* vm, NativeFunction func)
     storePtr(regT1, regT2);
     storePtr(callFrameRegister, &m_vm->topCallFrame);
 
-    move(TrustedImmPtr(FunctionPtr(ctiVMHandleException).value()), regT1);
-    jump(regT1);
+#if CPU(X86)
+    addPtr(TrustedImm32(-12), stackPointerRegister);
+    push(callFrameRegister);
+#else
+    move(callFrameRegister, firstArgumentRegister);
+#endif
+    move(TrustedImmPtr(FunctionPtr(operationVMHandleException).value()), regT3);
+    call(regT3);
+
+#if CPU(X86)
+    addPtr(TrustedImm32(16), stackPointerRegister);
+#endif
+
+    jumpToExceptionHandler();
 
     // All trampolines constructed! copy the code, link up calls, and set the pointers on the Machine object.
     LinkBuffer patchBuffer(*m_vm, this, GLOBAL_THUNK_ID);
@@ -389,9 +401,8 @@ void JIT::emit_op_tear_off_activation(Instruction* currentInstruction)
 {
     int activation = currentInstruction[1].u.operand;
     Jump activationNotCreated = branch32(Equal, tagFor(activation), TrustedImm32(JSValue::EmptyValueTag));
-    JITStubCall stubCall(this, cti_op_tear_off_activation);
-    stubCall.addArgument(activation);
-    stubCall.call();
+    emitLoadPayload(activation, regT0);
+    callOperation(operationTearOffActivation, regT0);
     activationNotCreated.link(this);
 }
 
@@ -401,10 +412,9 @@ void JIT::emit_op_tear_off_arguments(Instruction* currentInstruction)
     int activation = currentInstruction[2].u.operand;
 
     Jump argsNotCreated = branch32(Equal, tagFor(unmodifiedArgumentsRegister(arguments).offset()), TrustedImm32(JSValue::EmptyValueTag));
-    JITStubCall stubCall(this, cti_op_tear_off_arguments);
-    stubCall.addArgument(unmodifiedArgumentsRegister(arguments).offset());
-    stubCall.addArgument(activation);
-    stubCall.call();
+    emitLoadPayload(unmodifiedArgumentsRegister(VirtualRegister(arguments)).offset(), regT0);
+    emitLoadPayload(activation, regT1);
+    callOperation(operationTearOffArguments, regT0, regT1);
     argsNotCreated.link(this);
 }
 
@@ -814,16 +824,10 @@ void JIT::emit_op_neq_null(Instruction* currentInstruction)
 
 void JIT::emit_op_throw(Instruction* currentInstruction)
 {
-    unsigned exception = currentInstruction[1].u.operand;
-    JITStubCall stubCall(this, cti_op_throw);
-    stubCall.addArgument(exception);
-    stubCall.call();
-
-#ifndef NDEBUG
-    // cti_op_throw always changes it's return address,
-    // this point in the code should never be reached.
-    breakpoint();
-#endif
+    ASSERT(regT0 == returnValueRegister);
+    emitLoad(currentInstruction[1].u.operand, regT1, regT0);
+    callOperationNoExceptionCheck(operationThrow, regT1, regT0);
+    jumpToExceptionHandler();
 }
 
 void JIT::emit_op_get_pnames(Instruction* currentInstruction)
@@ -929,14 +933,13 @@ void JIT::emit_op_next_pname(Instruction* currentInstruction)
 
 void JIT::emit_op_push_with_scope(Instruction* currentInstruction)
 {
-    JITStubCall stubCall(this, cti_op_push_with_scope);
-    stubCall.addArgument(currentInstruction[1].u.operand);
-    stubCall.call();
+    emitLoad(currentInstruction[1].u.operand, regT1, regT0);
+    callOperation(operationPushWithScope, regT1, regT0);
 }
 
 void JIT::emit_op_pop_scope(Instruction*)
 {
-    JITStubCall(this, cti_op_pop_scope).call();
+    callOperation(operationPopScope);
 }
 
 void JIT::emit_op_to_number(Instruction* currentInstruction)
@@ -968,20 +971,17 @@ void JIT::emitSlow_op_to_number(Instruction* currentInstruction, Vector<SlowCase
 
 void JIT::emit_op_push_name_scope(Instruction* currentInstruction)
 {
-    JITStubCall stubCall(this, cti_op_push_name_scope);
-    stubCall.addArgument(TrustedImmPtr(&m_codeBlock->identifier(currentInstruction[1].u.operand)));
-    stubCall.addArgument(currentInstruction[2].u.operand);
-    stubCall.addArgument(TrustedImm32(currentInstruction[3].u.operand));
-    stubCall.call();
+    emitLoad(currentInstruction[2].u.operand, regT1, regT0);
+    callOperation(operationPushNameScope, &m_codeBlock->identifier(currentInstruction[1].u.operand), regT1, regT0, currentInstruction[3].u.operand);
 }
 
 void JIT::emit_op_catch(Instruction* currentInstruction)
 {
-    // cti_op_throw returns the callFrame for the handler.
+    // operationThrow returns the callFrame for the handler.
     move(regT0, callFrameRegister);
 
-    // Now store the exception returned by cti_op_throw.
-    loadPtr(Address(stackPointerRegister, OBJECT_OFFSETOF(struct JITStackFrame, vm)), regT3);
+    // Now store the exception returned by operationThrow.
+    move(TrustedImmPtr(m_vm), regT3);
     load32(Address(regT3, VM::exceptionOffset() + OBJECT_OFFSETOF(JSValue, u.asBits.payload)), regT0);
     load32(Address(regT3, VM::exceptionOffset() + OBJECT_OFFSETOF(JSValue, u.asBits.tag)), regT1);
     store32(TrustedImm32(JSValue().payload()), Address(regT3, VM::exceptionOffset() + OBJECT_OFFSETOF(JSValue, u.asBits.payload)));
@@ -994,7 +994,7 @@ void JIT::emit_op_catch(Instruction* currentInstruction)
 
 void JIT::emit_op_switch_imm(Instruction* currentInstruction)
 {
-    unsigned tableIndex = currentInstruction[1].u.operand;
+    size_t tableIndex = currentInstruction[1].u.operand;
     unsigned defaultOffset = currentInstruction[2].u.operand;
     unsigned scrutinee = currentInstruction[3].u.operand;
 
@@ -1003,16 +1003,14 @@ void JIT::emit_op_switch_imm(Instruction* currentInstruction)
     m_switches.append(SwitchRecord(jumpTable, m_bytecodeOffset, defaultOffset, SwitchRecord::Immediate));
     jumpTable->ctiOffsets.grow(jumpTable->branchOffsets.size());
 
-    JITStubCall stubCall(this, cti_op_switch_imm);
-    stubCall.addArgument(scrutinee);
-    stubCall.addArgument(TrustedImm32(tableIndex));
-    stubCall.call();
-    jump(regT0);
+    emitLoad(scrutinee, regT1, regT0);
+    callOperation(operationSwitchImmWithUnknownKeyType, regT1, regT0, tableIndex);
+    jump(returnValueRegister);
 }
 
 void JIT::emit_op_switch_char(Instruction* currentInstruction)
 {
-    unsigned tableIndex = currentInstruction[1].u.operand;
+    size_t tableIndex = currentInstruction[1].u.operand;
     unsigned defaultOffset = currentInstruction[2].u.operand;
     unsigned scrutinee = currentInstruction[3].u.operand;
 
@@ -1021,16 +1019,14 @@ void JIT::emit_op_switch_char(Instruction* currentInstruction)
     m_switches.append(SwitchRecord(jumpTable, m_bytecodeOffset, defaultOffset, SwitchRecord::Character));
     jumpTable->ctiOffsets.grow(jumpTable->branchOffsets.size());
 
-    JITStubCall stubCall(this, cti_op_switch_char);
-    stubCall.addArgument(scrutinee);
-    stubCall.addArgument(TrustedImm32(tableIndex));
-    stubCall.call();
-    jump(regT0);
+    emitLoad(scrutinee, regT1, regT0);
+    callOperation(operationSwitchCharWithUnknownKeyType, regT1, regT0, tableIndex);
+    jump(returnValueRegister);
 }
 
 void JIT::emit_op_switch_string(Instruction* currentInstruction)
 {
-    unsigned tableIndex = currentInstruction[1].u.operand;
+    size_t tableIndex = currentInstruction[1].u.operand;
     unsigned defaultOffset = currentInstruction[2].u.operand;
     unsigned scrutinee = currentInstruction[3].u.operand;
 
@@ -1038,21 +1034,15 @@ void JIT::emit_op_switch_string(Instruction* currentInstruction)
     StringJumpTable* jumpTable = &m_codeBlock->stringSwitchJumpTable(tableIndex);
     m_switches.append(SwitchRecord(jumpTable, m_bytecodeOffset, defaultOffset));
 
-    JITStubCall stubCall(this, cti_op_switch_string);
-    stubCall.addArgument(scrutinee);
-    stubCall.addArgument(TrustedImm32(tableIndex));
-    stubCall.call();
-    jump(regT0);
+    emitLoad(scrutinee, regT1, regT0);
+    callOperation(operationSwitchStringWithUnknownKeyType, regT1, regT0, tableIndex);
+    jump(returnValueRegister);
 }
 
 void JIT::emit_op_throw_static_error(Instruction* currentInstruction)
 {
-    unsigned message = currentInstruction[1].u.operand;
-
-    JITStubCall stubCall(this, cti_op_throw_static_error);
-    stubCall.addArgument(m_codeBlock->getConstant(message));
-    stubCall.addArgument(TrustedImm32(currentInstruction[2].u.operand));
-    stubCall.call();
+    emitLoad(m_codeBlock->getConstant(currentInstruction[1].u.operand), regT1, regT0);
+    callOperation(operationThrowStaticError, regT1, regT0, currentInstruction[2].u.operand);
 }
 
 void JIT::emit_op_debug(Instruction* currentInstruction)
@@ -1061,9 +1051,7 @@ void JIT::emit_op_debug(Instruction* currentInstruction)
     UNUSED_PARAM(currentInstruction);
     breakpoint();
 #else
-    JITStubCall stubCall(this, cti_op_debug);
-    stubCall.addArgument(Imm32(currentInstruction[1].u.operand));
-    stubCall.call();
+    callOperation(operationDebug, currentInstruction[1].u.operand);
 #endif
 }
 
@@ -1185,16 +1173,14 @@ void JIT::emitSlow_op_to_this(Instruction* currentInstruction, Vector<SlowCaseEn
 
 void JIT::emit_op_profile_will_call(Instruction* currentInstruction)
 {
-    JITStubCall stubCall(this, cti_op_profile_will_call);
-    stubCall.addArgument(currentInstruction[1].u.operand);
-    stubCall.call();
+    emitLoad(currentInstruction[1].u.operand, regT1, regT0);
+    callOperation(operationProfileWillCall, regT1, regT0);
 }
 
 void JIT::emit_op_profile_did_call(Instruction* currentInstruction)
 {
-    JITStubCall stubCall(this, cti_op_profile_did_call);
-    stubCall.addArgument(currentInstruction[1].u.operand);
-    stubCall.call();
+    emitLoad(currentInstruction[1].u.operand, regT1, regT0);
+    callOperation(operationProfileDidCall, regT1, regT0);
 }
 
 void JIT::emit_op_get_arguments_length(Instruction* currentInstruction)
@@ -1212,12 +1198,7 @@ void JIT::emitSlow_op_get_arguments_length(Instruction* currentInstruction, Vect
     linkSlowCase(iter);
     int dst = currentInstruction[1].u.operand;
     int base = currentInstruction[2].u.operand;
-    int ident = currentInstruction[3].u.operand;
-    
-    JITStubCall stubCall(this, cti_op_get_by_id_generic);
-    stubCall.addArgument(base);
-    stubCall.addArgument(TrustedImmPtr(&(m_codeBlock->identifier(ident))));
-    stubCall.call(dst);
+    callOperation(operationGetArgumentsLength, dst, base);
 }
 
 void JIT::emit_op_get_argument_by_val(Instruction* currentInstruction)
@@ -1256,10 +1237,9 @@ void JIT::emitSlow_op_get_argument_by_val(Instruction* currentInstruction, Vecto
     emitStoreCell(unmodifiedArgumentsRegister(VirtualRegister(arguments)).offset(), returnValueRegister);
     
     skipArgumentsCreation.link(this);
-    JITStubCall stubCall(this, cti_op_get_by_val_generic);
-    stubCall.addArgument(arguments);
-    stubCall.addArgument(property);
-    stubCall.callWithValueProfiling(dst);
+    emitLoad(arguments, regT1, regT0);
+    emitLoad(property, regT3, regT2);
+    callOperation(WithProfile, operationGetByValGeneric, dst, regT1, regT0, regT3, regT2);
 }
 
 } // namespace JSC

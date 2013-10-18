@@ -1,3 +1,1025 @@
+2013-10-18  Dan Bernstein  <mitz@apple.com>
+
+        [Cocoa] WKBrowsingController accessors crash instead of returning nil
+        https://bugs.webkit.org/show_bug.cgi?id=123036
+
+        Reviewed by Anders Carlsson.
+
+        * UIProcess/API/mac/WKBrowsingContextController.mm:
+        (autoreleased): Return nil if the object is NULL.
+
+2013-10-18  Anders Carlsson  <andersca@apple.com>
+
+        Remove some Windows specific code from WebKit2
+        https://bugs.webkit.org/show_bug.cgi?id=123034
+
+        Reviewed by Beth Dakin.
+
+        * Platform/PlatformProcessIdentifier.h:
+        * Shared/API/c/WKDeclarationSpecifiers.h:
+        * UIProcess/API/C/WKNativeEvent.h:
+        * UIProcess/API/C/WKPreferencesPrivate.h:
+        * config.h:
+
+2013-10-18  Dan Bernstein  <mitz@apple.com>
+
+        Removed the __MAC_OS_X_VERSION_MIN_REQUIRED condition from the definition of WK_API_ENABLED.
+
+        Rubber-stamped by Anders Carlsson.
+
+        * Shared/API/Cocoa/WKFoundation.h:
+
+2013-10-17  Tim Horton  <timothy_horton@apple.com>
+
+        Remote Layer Tree: Proxy layer contents to the UI process
+        http://bugs.webkit.org/show_bug.cgi?id=123003
+
+        Reviewed by Anders Carlsson.
+
+        Proxy layer contents to the UI process. Contents are painted into ShareableBitmaps
+        for now, and are fully repainted on any invalidation. Also, contents do not respect
+        any kind of scale or use of contentsRect/etc.
+
+        * Shared/mac/RemoteLayerTreeTransaction.h:
+        * Shared/mac/RemoteLayerTreeTransaction.mm:
+        (WebKit::RemoteLayerTreeTransaction::LayerProperties::encode):
+        (WebKit::RemoteLayerTreeTransaction::LayerProperties::decode):
+        (WebKit::dumpChangedLayers):
+        Store/encode/decode/dump the new RemoteLayerBackingStore.
+
+        * UIProcess/mac/RemoteLayerTreeHost.mm:
+        (WebKit::RemoteLayerTreeHost::commit):
+        Fix a mistake where contentsRect was getting reset when contentsScale changed.
+        Set the layer contents when the backing store changes.
+
+        * WebKit2.xcodeproj/project.pbxproj:
+        Add RemoteLayerBackingStore.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.cpp:
+        (PlatformCALayerRemote::recursiveBuildTransaction):
+        Paint while building our transaction, and mark the backing store as changed
+        if we did any painting.
+
+        (PlatformCALayerRemote::ensureBackingStore):
+        Keep the backing store's properties up-to-date with our layer.
+
+        (PlatformCALayerRemote::setNeedsDisplay):
+        Inform the backing store that it needs to paint.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.h:
+
+        * WebProcess/WebPage/mac/RemoteLayerBackingStore.h: Added.
+        * WebProcess/WebPage/mac/RemoteLayerBackingStore.mm: Added.
+        (RemoteLayerBackingStore::RemoteLayerBackingStore):
+        (RemoteLayerBackingStore::encode):
+        (RemoteLayerBackingStore::decode):
+        Encode/decode our ShareableBitmap (via its handle) and size.
+
+        (RemoteLayerBackingStore::setNeedsDisplay):
+        For now, repaint the world.
+
+        (RemoteLayerBackingStore::display):
+        Create a new bitmap if needed, and paint into it.
+
+2013-10-17  Dan Bernstein  <mitz@apple.com>
+
+        Fixed a typo in the definition of WK_API_ENABLED.
+
+        * Shared/API/Cocoa/WKFoundation.h: It’s 101000, not 10100.
+
+2013-10-17  Dan Bernstein  <mitz@apple.com>
+
+        Add and deploy WK_API_ENABLED guards
+        https://bugs.webkit.org/show_bug.cgi?id=123008
+
+        Reviewed by Darin Adler.
+
+        * Shared/API/Cocoa: Added.
+        * Shared/API/Cocoa/WKFoundation.h: Added. Defined WK_API_ENABLED based on whether the
+        Objective-C API should be enabled in the current configuration.
+        * Shared/mac/ObjCObjectGraphCoders.mm:
+        (WebKit::typeFromObject): Changed to use WK_API_ENABLED.
+        (WebKit::WebContextObjCObjectGraphEncoderImpl::encode): Ditto.
+        (WebKit::WebContextObjCObjectGraphDecoderImpl::decode): Ditto.
+        (WebKit::InjectedBundleObjCObjectGraphEncoderImpl::encode): Ditto.
+        (WebKit::InjectedBundleObjCObjectGraphDecoderImpl::decode): Ditto.
+        * UIProcess/API/mac/WKTypeRefWrapper.h: Ditto.
+        * UIProcess/API/mac/WKTypeRefWrapper.mm: Ditto.
+        * UIProcess/API/mac/WebKit2.h: Imported WKFoundation.h.
+        * WebKit2.xcodeproj/project.pbxproj: Added new Cocoa group in Shared/API. Added
+        WKFoundation.h as a public header.
+        * WebProcess/InjectedBundle/API/mac/WKDOMDocument.h:
+        * WebProcess/InjectedBundle/API/mac/WKDOMDocument.mm:
+        * WebProcess/InjectedBundle/API/mac/WKDOMElement.h:
+        * WebProcess/InjectedBundle/API/mac/WKDOMElement.mm:
+        * WebProcess/InjectedBundle/API/mac/WKDOMInternals.h:
+        * WebProcess/InjectedBundle/API/mac/WKDOMInternals.mm:
+        * WebProcess/InjectedBundle/API/mac/WKDOMNode.h:
+        * WebProcess/InjectedBundle/API/mac/WKDOMNode.mm:
+        * WebProcess/InjectedBundle/API/mac/WKDOMNodePrivate.h:
+        * WebProcess/InjectedBundle/API/mac/WKDOMRange.h:
+        * WebProcess/InjectedBundle/API/mac/WKDOMRange.mm:
+        * WebProcess/InjectedBundle/API/mac/WKDOMRangePrivate.h:
+        * WebProcess/InjectedBundle/API/mac/WKDOMText.h:
+        * WebProcess/InjectedBundle/API/mac/WKDOMText.mm:
+        * WebProcess/InjectedBundle/API/mac/WKDOMTextIterator.h:
+        * WebProcess/InjectedBundle/API/mac/WKDOMTextIterator.mm:
+        * WebProcess/InjectedBundle/API/mac/WKWebProcessPlugIn.h:
+        * WebProcess/InjectedBundle/API/mac/WKWebProcessPlugIn.mm:
+        * WebProcess/InjectedBundle/API/mac/WKWebProcessPlugInBrowserContextController.h:
+        * WebProcess/InjectedBundle/API/mac/WKWebProcessPlugInBrowserContextController.mm:
+        * WebProcess/InjectedBundle/API/mac/WKWebProcessPlugInBrowserContextControllerInternal.h:
+        * WebProcess/InjectedBundle/API/mac/WKWebProcessPlugInBrowserContextControllerPrivate.h:
+        * WebProcess/InjectedBundle/API/mac/WKWebProcessPlugInInternal.h:
+        * WebProcess/InjectedBundle/API/mac/WKWebProcessPlugInPrivate.h:
+        * WebProcess/InjectedBundle/mac/InjectedBundleMac.mm:
+        (WebKit::InjectedBundle::load):
+
+2013-10-17  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [WK2] Speculative buildfixes for GTK and EFL after r157582.
+
+        * CMakeLists.txt:
+        * GNUmakefile.am:
+
+2013-10-17  Martin Hock  <mhock@apple.com>
+
+        Refactor stored website data APIs
+        https://bugs.webkit.org/show_bug.cgi?id=122781
+
+        Reviewed by Brady Eidson.
+
+        Add WebOriginDataManager along with corresponding class
+        WebOriginDataManagerProxy and API WKOriginDataManager.
+
+        Currently, the new files are unused.
+
+        WKOriginDataManager should subsume the functionality of:
+        WKApplicationCacheManager, WKCookieManager, WKDatabaseManager,
+        WKKeyValueStorageManager, WKMediaCacheManager,
+        WKPluginSiteDataManager, and WKResourceCacheManager.
+
+        * CMakeLists.txt:
+        * DerivedSources.make:
+        * GNUmakefile.am:
+        * GNUmakefile.list.am:
+        * Shared/API/c/WKBase.h:
+        * Shared/APIObject.h:
+        * UIProcess/API/C/WKAPICast.h:
+        * UIProcess/API/C/WKContext.cpp:
+        (WKContextGetOriginDataManager):
+        * UIProcess/API/C/WKContext.h:
+        * UIProcess/API/C/WKOriginDataManager.cpp: Added.
+        (WKOriginDataManagerGetTypeID):
+        (WKOriginDataManagerGetOrigins):
+        (WKOriginDataManagerDeleteEntriesForOrigin):
+        (WKOriginDataManagerDeleteAllEntries):
+        (WKOriginDataManagerStartObservingChanges):
+        (WKOriginDataManagerStopObservingChanges):
+        (WKOriginDataManagerSetChangeClient):
+        * UIProcess/API/C/WKOriginDataManager.h: Added.
+        * UIProcess/WebOriginDataManagerProxy.cpp: Added.
+        (WebKit::WebOriginDataManagerProxy::supplementName):
+        (WebKit::WebOriginDataManagerProxy::create):
+        (WebKit::WebOriginDataManagerProxy::WebOriginDataManagerProxy):
+        (WebKit::WebOriginDataManagerProxy::~WebOriginDataManagerProxy):
+        (WebKit::WebOriginDataManagerProxy::contextDestroyed):
+        (WebKit::WebOriginDataManagerProxy::processDidClose):
+        (WebKit::WebOriginDataManagerProxy::shouldTerminate):
+        (WebKit::WebOriginDataManagerProxy::refWebContextSupplement):
+        (WebKit::WebOriginDataManagerProxy::derefWebContextSupplement):
+        (WebKit::WebOriginDataManagerProxy::getOrigins):
+        (WebKit::WebOriginDataManagerProxy::didGetOrigins):
+        (WebKit::WebOriginDataManagerProxy::deleteEntriesForOrigin):
+        (WebKit::WebOriginDataManagerProxy::deleteAllEntries):
+        (WebKit::WebOriginDataManagerProxy::startObservingChanges):
+        (WebKit::WebOriginDataManagerProxy::stopObservingChanges):
+        (WebKit::WebOriginDataManagerProxy::setChangeClient):
+        (WebKit::WebOriginDataManagerProxy::didChange):
+        * UIProcess/WebOriginDataManagerProxy.h: Added.
+        * UIProcess/WebOriginDataManagerProxy.messages.in: Added.
+        * UIProcess/WebOriginDataManagerProxyChangeClient.cpp: Added.
+        (WebKit::WebOriginDataManagerProxyChangeClient::didChange):
+        * UIProcess/WebOriginDataManagerProxyChangeClient.h: Added.
+        * WebKit2.xcodeproj/project.pbxproj:
+        * WebProcess/OriginData/WebOriginDataManager.cpp: Added.
+        (WebKit::WebOriginDataManager::supplementName):
+        (WebKit::WebOriginDataManager::WebOriginDataManager):
+        (WebKit::WebOriginDataManager::getOrigins):
+        (WebKit::WebOriginDataManager::deleteEntriesForOrigin):
+        (WebKit::WebOriginDataManager::deleteAllEntries):
+        (WebKit::WebOriginDataManager::startObservingChanges):
+        (WebKit::WebOriginDataManager::stopObservingChanges):
+        * WebProcess/OriginData/WebOriginDataManager.h: Added.
+        * WebProcess/OriginData/WebOriginDataManager.messages.in: Added.
+
+2013-10-17  Brady Eidson  <beidson@apple.com>
+
+        Blind attempt at gtk-wk2 build fix.
+
+        * GNUmakefile.am:
+
+2013-10-17  Brady Eidson  <beidson@apple.com>
+
+        Add scaffolding for IDBDatabaseBackends in Web and Database processes
+        https://bugs.webkit.org/show_bug.cgi?id=122971
+
+        Reviewed by Tim Horton.
+
+        This patch:
+        - Adds a WebProcessIDBDatabaseBackend
+        - Adds a DatabaseProcessIDBDatabaseBackend
+        - Establishes the basic messaging between them
+        - Actually creates those backends as the result of an indexedDB.open() call from javascript
+
+        * DerivedSources.make:
+        * WebKit2.xcodeproj/project.pbxproj:
+        * Platform/Logging.h:
+
+        Hook up messaging so (Web/Database)ProcessIDBDatabaseBackends can message each other:
+        * DatabaseProcess/DatabaseToWebProcessConnection.cpp:
+        (WebKit::DatabaseToWebProcessConnection::didReceiveMessage):
+        (WebKit::DatabaseToWebProcessConnection::establishIDBDatabaseBackend):
+        * DatabaseProcess/DatabaseToWebProcessConnection.h:
+        (WebKit::DatabaseToWebProcessConnection::connection):
+        * DatabaseProcess/DatabaseToWebProcessConnection.messages.in: Added.
+
+        DatabaseProcess side of an IDBDatabaseBackend:
+        * DatabaseProcess/IndexedDB/DatabaseProcessIDBDatabaseBackend.cpp:
+        (WebKit::DatabaseProcessIDBDatabaseBackend::DatabaseProcessIDBDatabaseBackend):
+        (WebKit::DatabaseProcessIDBDatabaseBackend::~DatabaseProcessIDBDatabaseBackend):
+        (WebKit::DatabaseProcessIDBDatabaseBackend::openConnection):
+        (WebKit::DatabaseProcessIDBDatabaseBackend::messageSenderConnection):
+        * DatabaseProcess/IndexedDB/DatabaseProcessIDBDatabaseBackend.h: Added.
+        (WebKit::DatabaseProcessIDBDatabaseBackend::create):
+        * DatabaseProcess/IndexedDB/DatabaseProcessIDBDatabaseBackend.messages.in: Added.
+
+        WebProcess side of an IDBDatabaseBackend:
+        * WebProcess/Databases/IndexedDB/WebProcessIDBDatabaseBackend.cpp: Added.
+        (WebKit::generateBackendIdentifier):
+        (WebKit::WebProcessIDBDatabaseBackend::WebProcessIDBDatabaseBackend):
+        (WebKit::WebProcessIDBDatabaseBackend::~WebProcessIDBDatabaseBackend):
+        (WebKit::WebProcessIDBDatabaseBackend::openConnection):
+        (WebKit::WebProcessIDBDatabaseBackend::createObjectStore):
+        (WebKit::WebProcessIDBDatabaseBackend::deleteObjectStore):
+        (WebKit::WebProcessIDBDatabaseBackend::createTransaction):
+        (WebKit::WebProcessIDBDatabaseBackend::close):
+        (WebKit::WebProcessIDBDatabaseBackend::commit):
+        (WebKit::WebProcessIDBDatabaseBackend::abort):
+        (WebKit::WebProcessIDBDatabaseBackend::createIndex):
+        (WebKit::WebProcessIDBDatabaseBackend::deleteIndex):
+        (WebKit::WebProcessIDBDatabaseBackend::get):
+        (WebKit::WebProcessIDBDatabaseBackend::put):
+        (WebKit::WebProcessIDBDatabaseBackend::setIndexKeys):
+        (WebKit::WebProcessIDBDatabaseBackend::setIndexesReady):
+        (WebKit::WebProcessIDBDatabaseBackend::openCursor):
+        (WebKit::WebProcessIDBDatabaseBackend::count):
+        (WebKit::WebProcessIDBDatabaseBackend::deleteRange):
+        (WebKit::WebProcessIDBDatabaseBackend::clear):
+        (WebKit::WebProcessIDBDatabaseBackend::messageSenderConnection):
+        (WebKit::WebProcessIDBDatabaseBackend::establishDatabaseProcessBackend):
+        * WebProcess/Databases/IndexedDB/WebProcessIDBDatabaseBackend.h: Added.
+        (WebKit::WebProcessIDBDatabaseBackend::create):
+
+        Basic shared utilities that multiple processes will need going forward:
+        * Shared/Databases/IndexedDB/IDBUtilities.cpp:
+        (WebKit::uniqueDatabaseIdentifier):
+        * Shared/Databases/IndexedDB/IDBUtilities.h:
+
+        * WebProcess/Databases/IndexedDB/WebIDBFactoryBackend.cpp:
+        (WebKit::sharedDatabaseBackendMap):
+        (WebKit::WebIDBFactoryBackend::open): Actually establish an IDBDatabaseBackend in the DatabaseProcess
+          when indexedDB.open() is called, even if it does nothing for now.
+
+        * WebProcess/Databases/WebToDatabaseProcessConnection.cpp:
+        * WebProcess/Databases/WebToDatabaseProcessConnection.h:
+
+2013-10-17  Attila Dusnoki  <h047679@stud.u-szeged.hu>
+
+        [WK2] REGRESSION(r156472): scrolling coordinator is always enabled incorrectly.
+        https://bugs.webkit.org/show_bug.cgi?id=122958
+
+        Reviewed by Tim Horton.
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::WebPage): Missing ENABLE(THREADED_SCROLLING) guard added.
+
+2013-10-17  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/15183901> WebKit2 XPC services load the wrong frameworks when running
+        from the staged frameworks location.
+
+        Build the XPC services with DYLD_VERSIONED_FRAMEWORK_PATH when USE_STAGING_INSTALL_PATH
+        is set to YES. This is necessary because there's no way to specify environment variables
+        to be used when an XPC service is launched.
+
+        Reviewed by Anders Carlsson.
+
+        * Configurations/BaseTarget.xcconfig: Set OTHER_LDFLAGS_VERSIONED_FRAMEWORK_PATH to contain the
+        DYLD_VERSIONED_FRAMEWORK_PATH value when USE_STAGING_INSTALL_PATH is YES.
+        * Configurations/BaseXPCService.xcconfig: Include OTHER_LDFLAGS_VERSIONED_FRAMEWORK_PATH in the
+        value of OTHER_LDFLAGS.
+        * Configurations/PluginService.32.xcconfig: Ditto.
+        * Configurations/PluginService.64.xcconfig: Ditto.
+
+2013-10-16  Tim Horton  <timothy_horton@apple.com>
+
+        Remote Layer Tree: Complete support for simple layer properties
+        https://bugs.webkit.org/show_bug.cgi?id=122933
+
+        Reviewed by Anders Carlsson.
+
+        Add remote layer tree support for maskLayer, contentsRect, contentsScale,
+        minificationFilter, magnificationFilter, speed, and timeOffset.
+
+        * Shared/mac/RemoteLayerTreeTransaction.h:
+        * Shared/mac/RemoteLayerTreeTransaction.mm:
+        (WebKit::RemoteLayerTreeTransaction::LayerProperties::encode):
+        (WebKit::RemoteLayerTreeTransaction::LayerProperties::decode):
+        (WebKit::dumpProperty):
+        (WebKit::dumpChangedLayers):
+        Add the new properties.
+
+        * UIProcess/mac/RemoteLayerTreeHost.mm:
+        (WebKit::toCAFilterType):
+        (WebKit::RemoteLayerTreeHost::commit):
+        Apply the new properties.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.cpp:
+        (PlatformCALayerRemote::setSublayers):
+        (PlatformCALayerRemote::appendSublayer):
+        (PlatformCALayerRemote::insertSublayer):
+        Ensure that passed-in sublayers are always also PlatformCALayerRemote instances.
+        These are ASSERT_WITH_SECURITY_IMPLICATION as we will later unconditionally static_cast
+        them to PlatformCALayerRemote.
+
+        (PlatformCALayerRemote::setMask):
+        (PlatformCALayerRemote::setContentsRect):
+        (PlatformCALayerRemote::setMinificationFilter):
+        (PlatformCALayerRemote::setMagnificationFilter):
+        (PlatformCALayerRemote::setSpeed):
+        (PlatformCALayerRemote::setTimeOffset):
+        (PlatformCALayerRemote::contentsScale):
+        (PlatformCALayerRemote::setContentsScale):
+        Remove setFrame, store the new properties.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.h:
+        Remove setFrame, add isRemote, fix pointer side on playerLayer.
+
+2013-10-16  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        Unreviewed build fix attempt on EFL port after r157520 and r157523
+
+        * Shared/CoordinatedGraphics/CoordinatedGraphicsArgumentCoders.cpp:
+        * Shared/CoordinatedGraphics/CoordinatedGraphicsArgumentCoders.h:
+        Removed ArgumentCoder<TransformationMatrix> which caused redefinition build error
+        in EFL port.
+
+2013-10-16  Anders Carlsson  <andersca@apple.com>
+
+        Remove Qt sandbox process code
+        https://bugs.webkit.org/show_bug.cgi?id=122920
+
+        Reviewed by Geoffrey Garen.
+
+        This code was only used by the Qt port, and the other Linux-based ports are using the seccomp based sandbox.
+
+        * Shared/linux/SandboxProcess/SandboxEnvironmentLinux.cpp: Removed.
+        * Shared/linux/SandboxProcess/SandboxEnvironmentLinux.h: Removed.
+
+2013-10-16  Jochen Eisinger  <jochen@chromium.org>
+
+        A page should exit fullscreen mode if it opens a new popup
+        https://bugs.webkit.org/show_bug.cgi?id=122865
+
+        Reviewed by Jer Noble.
+
+        If a fullscreen page opens a popup, the popup would be hidden and
+        therefore invisible to the user. To avoid this, exit fullscreen mode
+        before opening a new window.
+
+        * WebProcess/WebCoreSupport/WebChromeClient.cpp:
+        (WebKit::WebChromeClient::createWindow):
+
+2013-10-16  Brady Eidson  <beidson@apple.com>
+
+        Blind attempt to fix non-DATABASE_PROCESS builds.
+
+        * WebProcess/WebProcess.cpp:
+
+2013-10-16  Tim Horton  <timothy_horton@apple.com>
+
+        PlatformCALayer constructor should take layer type as an argument
+        https://bugs.webkit.org/show_bug.cgi?id=122915
+
+        Reviewed by Simon Fraser.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.cpp:
+        (PlatformCALayerRemote::PlatformCALayerRemote):
+        Use the new LayerType argument.
+
+2013-10-16  Tim Horton  <timothy_horton@apple.com>
+
+        Remote Layer Tree: Use a default instead of an environment variable
+        https://bugs.webkit.org/show_bug.cgi?id=122913
+
+        Reviewed by Anders Carlsson.
+
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView std::WebKit::]):
+        Use the default 'WebKit2UseRemoteLayerTreeDrawingArea' instead of
+        the environment variable 'WK_USE_REMOTE_LAYER_TREE_DRAWING_AREA'
+        to indicate that WKViews should make RemoteLayerTreeDrawingAreas.
+
+2013-10-15  Brady Eidson  <beidson@apple.com>
+
+        Flesh out the DatabaseProcess (and launch it!)
+        https://bugs.webkit.org/show_bug.cgi?id=122884
+
+        Reviewed by Tim Horton.
+
+        This patch adds actual process launching and basic messaging infrastructure for the DatabaseProcess.
+
+        It still does very little except exist.
+
+        Project file stuff:
+        * WebKit2.xcodeproj/project.pbxproj:
+        * DerivedSources.make:
+
+        WebContext owns the DatabaseProcess (much like the NetworkProcess):
+        * UIProcess/WebContext.cpp:
+        (WebKit::WebContext::ensureDatabaseProcess):
+        (WebKit::WebContext::getDatabaseProcessConnection):
+        * UIProcess/WebContext.h:
+
+        Add a basic DatabaseProcess that - for now - can only return a new Connection for a WebProcess:
+        * DatabaseProcess/DatabaseProcess.cpp:
+        (WebKit::DatabaseProcess::createDatabaseToWebProcessConnection):
+        * DatabaseProcess/DatabaseProcess.h:
+        * DatabaseProcess/DatabaseProcess.messages.in: Added.
+
+        Add an object to represent a single connection to a single WebProcess:
+        * DatabaseProcess/DatabaseToWebProcessConnection.cpp:
+        (WebKit::DatabaseToWebProcessConnection::create):
+        (WebKit::DatabaseToWebProcessConnection::DatabaseToWebProcessConnection):
+        (WebKit::DatabaseToWebProcessConnection::~DatabaseToWebProcessConnection):
+        (WebKit::DatabaseToWebProcessConnection::didReceiveMessage):
+        (WebKit::DatabaseToWebProcessConnection::didClose):
+        (WebKit::DatabaseToWebProcessConnection::didReceiveInvalidMessage):
+        * DatabaseProcess/DatabaseToWebProcessConnection.h:
+
+        Basic DatabaseProcessProxy with the ability to ask the DatabaseProcess for a connection to hand back to a WebProcess:
+        * UIProcess/Databases/DatabaseProcessProxy.cpp:
+        (WebKit::DatabaseProcessProxy::DatabaseProcessProxy):
+        (WebKit::DatabaseProcessProxy::getDatabaseProcessConnection):
+        (WebKit::DatabaseProcessProxy::didCreateDatabaseToWebProcessConnection):
+        (WebKit::DatabaseProcessProxy::didFinishLaunching):
+        * UIProcess/Databases/DatabaseProcessProxy.h:
+        * UIProcess/Databases/DatabaseProcessProxy.messages.in: Added.
+
+        Add an object to represent a WebProcess’s connection to a DatabaseProcess:
+        * WebProcess/Databases/WebToDatabaseProcessConnection.cpp:
+        (WebKit::WebToDatabaseProcessConnection::WebToDatabaseProcessConnection):
+        (WebKit::WebToDatabaseProcessConnection::~WebToDatabaseProcessConnection):
+        (WebKit::WebToDatabaseProcessConnection::didReceiveMessage):
+        (WebKit::WebToDatabaseProcessConnection::didClose):
+        (WebKit::WebToDatabaseProcessConnection::didReceiveInvalidMessage):
+        * WebProcess/Databases/WebToDatabaseProcessConnection.h:
+        (WebKit::WebToDatabaseProcessConnection::create):
+        (WebKit::WebToDatabaseProcessConnection::connection):
+
+        Give WebProcess(Proxy) an accessor for a Web -> Database process connection:
+        * WebProcess/WebProcess.cpp:
+        (WebKit::WebProcess::webToDatabaseProcessConnectionClosed):
+        (WebKit::WebProcess::webToDatabaseProcessConnection):
+        (WebKit::WebProcess::ensureWebToDatabaseProcessConnection):
+        * WebProcess/WebProcess.h:
+        * UIProcess/WebProcessProxy.cpp:
+        (WebKit::WebProcessProxy::getDatabaseProcessConnection):
+        * UIProcess/WebProcessProxy.h:
+        * UIProcess/WebProcessProxy.messages.in:
+
+        * WebProcess/Databases/IndexedDB/WebIDBFactoryBackend.cpp:
+        (WebKit::WebIDBFactoryBackend::open): Access the database process connection to test that it works.
+
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.cpp:
+        (WebKit::WebPlatformStrategies::createIDBFactoryBackend): Keep non-DATABASE_PROCESS builds working.
+
+2013-10-16  Tim Horton  <timothy_horton@apple.com>
+
+        RemoteLayerTree: Add support for more layer properties and transform layers
+        https://bugs.webkit.org/show_bug.cgi?id=122906
+
+        Reviewed by Anders Carlsson.
+
+        Add support for name, border width, border color, opacity, transform, sublayer transform,
+        hidden, geometry flipped, double sided, masks to bounds, and opaque layer properties.
+
+        Factor layer creation out from layer changes, so that we can create layers of the correct
+        type. Use this mechanism to create CATransformLayers when handed a LayerTypeTransformLayer.
+
+        * Shared/WebCoreArgumentCoders.cpp:
+        (CoreIPC::::encode):
+        (CoreIPC::::decode):
+        * Shared/WebCoreArgumentCoders.h:
+        Add coders for TransformationMatrix.
+
+        * Shared/mac/RemoteLayerTreeTransaction.h:
+        Add the new LayerChange values.
+
+        (WebKit::RemoteLayerTreeTransaction::LayerProperties::notePropertiesChanged):
+        LayerProperties::layerChanges should be a LayerChange.
+
+        (WebKit::RemoteLayerTreeTransaction::createdLayers):
+        Expose the list of newly created layers (for RemoteLayerTreeHost's consumption).
+
+        * Shared/mac/RemoteLayerTreeTransaction.mm:
+        (WebKit::RemoteLayerTreeTransaction::LayerCreationProperties::LayerCreationProperties):
+        (WebKit::RemoteLayerTreeTransaction::LayerCreationProperties::encode):
+        (WebKit::RemoteLayerTreeTransaction::LayerCreationProperties::decode):
+        Add (and support coding) a new LayerCreationProperties struct, which is currently
+        just a pair of LayerID and PlatformCALayer::LayerType. Additional properties may follow.
+
+        (WebKit::RemoteLayerTreeTransaction::LayerProperties::encode):
+        (WebKit::RemoteLayerTreeTransaction::LayerProperties::decode):
+        Encode and decode all of the new layer properties.
+        Encode changedProperties as an enum, not an unsigned.
+
+        (WebKit::RemoteLayerTreeTransaction::encode):
+        (WebKit::RemoteLayerTreeTransaction::decode):
+        Encode and decode the list of newly created layers.
+
+        (WebKit::RemoteLayerTreeTransaction::setCreatedLayers):
+        Setter for the list of newly created layers, which comes from the
+        RemoteLayerTreeContext at commit time.
+
+        (WebKit::dumpProperty):
+        Helper function to dump TransformationMatrix instances.
+
+        (WebKit::dumpChangedLayers):
+        Dump all of the new layer properties.
+
+        (WebKit::RemoteLayerTreeTransaction::dump):
+        Dump the list of newly created layers.
+
+        * UIProcess/mac/RemoteLayerTreeHost.h:
+        * UIProcess/mac/RemoteLayerTreeHost.mm:
+        (WebKit::cgColorFromColor):
+        Factor out the code to make a CGColor from a WebCore::Color, as we need it
+        for both border and background color.
+
+        (WebKit::RemoteLayerTreeHost::commit):
+        Create layers before applying changes, using the new list of newly created layers.
+        When applying changes, ensure that the layer we're interested in was already created.
+        Rename "sublayer" to "layer", and use dot notation everywhere.
+        Apply all the new layer properties to the layers.
+
+        (WebKit::RemoteLayerTreeHost::getLayer):
+        (WebKit::RemoteLayerTreeHost::createLayer):
+        Separate creating a new layer from retrieving it by ID.
+        Ensure that a layer doesn't already exist when creating it.
+        Support creating CATransformLayers.
+
+        * WebProcess/WebPage/mac/GraphicsLayerCARemote.h:
+        Disable accelerated animations, as we don't support proxying animations yet.
+        This makes GraphicsLayer fall back to software animations, which already work wonderfully remotely.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.cpp:
+        (PlatformCALayerRemote::PlatformCALayerRemote):
+        Inform the RemoteLayerTreeContext of the creation of every PlatformCALayerRemote.
+
+        (PlatformCALayerRemote::removeFromSuperlayer):
+        (PlatformCALayerRemote::replaceSublayer):
+        (PlatformCALayerRemote::adoptSublayers):
+        Assert when we hit a few critical unimplemented methods that would
+        leave the layer tree in a broken state.
+
+        (PlatformCALayerRemote::isOpaque):
+        (PlatformCALayerRemote::setOpaque):
+        (PlatformCALayerRemote::transform):
+        (PlatformCALayerRemote::setTransform):
+        (PlatformCALayerRemote::sublayerTransform):
+        (PlatformCALayerRemote::setSublayerTransform):
+        (PlatformCALayerRemote::setHidden):
+        (PlatformCALayerRemote::setGeometryFlipped):
+        (PlatformCALayerRemote::isDoubleSided):
+        (PlatformCALayerRemote::setDoubleSided):
+        (PlatformCALayerRemote::masksToBounds):
+        (PlatformCALayerRemote::setMasksToBounds):
+        (PlatformCALayerRemote::setBorderWidth):
+        (PlatformCALayerRemote::setBorderColor):
+        (PlatformCALayerRemote::opacity):
+        (PlatformCALayerRemote::setOpacity):
+        (PlatformCALayerRemote::setName):
+        Proxy all of these properties via RemoteLayerTreeTransaction.
+
+        * WebProcess/WebPage/mac/RemoteLayerTreeContext.h:
+        Add storage for the list of newly created layers.
+        Use LayerID for the list of destroyed layers.
+
+        * WebProcess/WebPage/mac/RemoteLayerTreeContext.mm:
+        (WebKit::RemoteLayerTreeContext::layerWasCreated):
+        Store the ID and type of the newly created layer to be pushed to the UI process later.
+
+        (WebKit::RemoteLayerTreeContext::flushLayers):
+        Push the created and destroyed layers to the transaction *after* flushing
+        GraphicsLayers, so that any changes to e.g. structural layers will not be missed.
+
+2013-10-16  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [WK2][Efl][CMake] Add support for ENABLE_NETWORK_PROCESS to the build system
+        https://bugs.webkit.org/show_bug.cgi?id=110139
+
+        Reviewed by Laszlo Gombos.
+
+        Original patch by Balazs Kelemen <kbalazs@webkit.org>
+
+        * CMakeLists.txt:
+        * PlatformEfl.cmake:
+
+2013-10-16  Robert Plociennik  <r.plociennik@samsung.com>
+
+        [EFL] Minibrowser can't load child window's location
+        https://bugs.webkit.org/show_bug.cgi?id=122485
+
+        Reviewed by Gyuyoung Kim.
+
+        EwkView::createNewPage(), which is only called during handling of
+        Messages::WebPageProxy::CreateNewPage message from WebProcess, no longer passes
+        the URL to window_create(). As a result, no Messages::WebPage::LoadURL message
+        is sent back, that would load the same URL twice and effectively cancel any
+        other scheduled navigation inside WebProcess.
+
+        Additionally, since the url parameter in MiniBrowser's implementation of
+        window_create() is only used internally and is prone to bugs as demonstrated
+        in r139303 (d7f10c8), it has been removed in favour of explicit calls to
+        ewk_view_url_set().
+
+        * UIProcess/API/efl/EwkView.cpp:
+        (EwkView::createNewPage): No longer passes the URL to window_create() impl.
+        * UIProcess/API/efl/ewk_view.h: window_create() no longer has the url parameter.
+        * UIProcess/API/efl/tests/test_ewk2_window_features.cpp: Test methods updated to
+            comply with the API change.
+        (EWK2WindowFeaturesTest::createDefaultWindow): Ditto.
+        (EWK2WindowFeaturesTest::createWindow): Ditto.
+
+2013-10-15  Jae Hyun Park  <jae.park@company100.net>
+
+        Unreviewed. Build fix after r157476.
+
+        * GNUmakefile.am:
+
+2013-10-15  Sergio Correia  <sergio.correia@openbossa.org>
+
+        [EFL][WK2] Make SeccompFilters build again after r156349 and r156353
+        https://bugs.webkit.org/show_bug.cgi?id=122872
+
+        Reviewed by Anders Carlsson.
+
+        * Shared/linux/SeccompFilters/SeccompBroker.cpp:
+        (WebKit::SeccompBrokerClient::dispatch): Fix usage of extinct 'create'
+        methods of ArgumentEncoder/ArgumentDecoder.
+        (WebKit::SeccompBroker::runLoop): Ditto.
+
+2013-10-15  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Removed argument coders for FloatPoint3D in CoodinatedGraphicsArgumentCoders.
+        https://bugs.webkit.org/show_bug.cgi?id=122875
+
+        Reviewed by Gyuyoung Kim.
+
+        Argument coders for FloatPoint3D is added in WebCoreArgumentCoders after r157478
+        and it caused redefinition build error in EFL port.
+
+        * Shared/CoordinatedGraphics/CoordinatedGraphicsArgumentCoders.cpp:
+        * Shared/CoordinatedGraphics/CoordinatedGraphicsArgumentCoders.h:
+
+2013-10-15  Dean Jackson  <dino@apple.com>
+
+        Add ENABLE_WEB_ANIMATIONS flag
+        https://bugs.webkit.org/show_bug.cgi?id=122871
+
+        Reviewed by Tim Horton.
+
+        Eventually might be http://dev.w3.org/fxtf/web-animations/
+        but this is just engine-internal work at the moment.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-10-15  Tim Horton  <timothy_horton@apple.com>
+
+        Add a PlatformCALayer subclass that proxies its property changes across the process boundary
+        https://bugs.webkit.org/show_bug.cgi?id=122773
+
+        Reviewed by Anders Carlsson.
+
+        PlatformCALayerRemote coordinates with RemoteLayerTreeDrawingArea and friends
+        to enable cross-process proxying of the hierarchy of compositing layers.
+
+        In the Web process, we have GraphicsLayerCARemote, which owns 1+ PlatformCALayerRemote(s).
+        Unlike PlatformCALayer{Mac, Win}, which own PlatformLayers (CALayer/CACFLayer),
+        PlatformCALayerRemote stores any changes to its properties in a struct, and keeps track of
+        which properties have changed since the last commit. Commits are scheduled and performed by
+        RemoteLayerTreeContext, on RemoteLayerTreeDrawingArea's behalf, and result in
+        RemoteLayerTreeTransaction encoding said property changes and throwing them across
+        to the UI process, where RemoteLayerTreeHost applies them to a tree of CALayers kept there.
+
+        This code can be enabled by running with the WK_USE_REMOTE_LAYER_TREE_DRAWING_AREA
+        environment variable set.
+
+        * Shared/WebCoreArgumentCoders.cpp:
+        (CoreIPC::decode):
+        (CoreIPC::encode):
+        * Shared/WebCoreArgumentCoders.h:
+        Add argument coders for FloatPoint3D.
+
+        * Shared/mac/RemoteLayerTreeTransaction.h:
+        (WebKit::RemoteLayerTreeTransaction::LayerProperties::notePropertiesChanged):
+        (WebKit::RemoteLayerTreeTransaction::changedLayers):
+        (WebKit::RemoteLayerTreeTransaction::destroyedLayers):
+        * Shared/mac/RemoteLayerTreeTransaction.mm:
+        (WebKit::RemoteLayerTreeTransaction::LayerProperties::encode):
+        (WebKit::RemoteLayerTreeTransaction::LayerProperties::decode):
+        (WebKit::RemoteLayerTreeTransaction::decode):
+        (WebKit::dumpChangedLayers):
+        Add support for background color and anchor point in the layer transaction.
+        Make layer position a 3D point because that's what it really is.
+
+        (WebKit::RemoteLayerTreeTransaction::layerPropertiesChanged):
+        The logic in layerPropertiesChanged is moved into PlatformCALayerRemote.
+
+        * UIProcess/WebPageProxy.h:
+        Include PlatformLayer.h; it seems annoying to successfully forward-declare
+        PlatformLayer because of the difference in definition between Objective-C and C++.
+        Drive-by un-indent some namespace contents and use OBJC_CLASS.
+
+        * UIProcess/mac/RemoteLayerTreeDrawingAreaProxy.h:
+        * UIProcess/mac/RemoteLayerTreeDrawingAreaProxy.mm:
+        (WebKit::RemoteLayerTreeDrawingAreaProxy::RemoteLayerTreeDrawingAreaProxy):
+        (WebKit::RemoteLayerTreeDrawingAreaProxy::sizeDidChange):
+        (WebKit::RemoteLayerTreeDrawingAreaProxy::didUpdateGeometry):
+        (WebKit::RemoteLayerTreeDrawingAreaProxy::sendUpdateGeometry):
+        Send geometry updates to the RemoteLayerTreeDrawingArea.
+
+        * UIProcess/mac/RemoteLayerTreeHost.h:
+        * UIProcess/mac/RemoteLayerTreeHost.mm:
+        (nullActionsDictionary):
+        (WebKit::RemoteLayerTreeHost::commit):
+        Apply layer property changes to the named sublayer.
+
+        (WebKit::RemoteLayerTreeHost::getOrCreateLayer):
+        Create CALayers instead of GraphicsLayers.
+        Ensure that they won't perform implicit animations.
+
+        * UIProcess/mac/WebPageProxyMac.mm:
+        (WebKit::WebPageProxy::setAcceleratedCompositingRootLayer):
+        This should take a PlatformLayer instead of a GraphicsLayer, since we don't have
+        GraphicsLayers in the UIProcess.
+
+        * WebKit2.xcodeproj/project.pbxproj:
+        Add GraphicsLayerCARemote and PlatformCALayerRemote, remove RemoteGraphicsLayer.
+
+        * WebProcess/WebPage/mac/RemoteGraphicsLayer.h: Removed.
+        * WebProcess/WebPage/mac/RemoteGraphicsLayer.mm: Removed.
+
+        * WebProcess/WebPage/mac/RemoteLayerTreeContext.h:
+        * WebProcess/WebPage/mac/RemoteLayerTreeContext.mm:
+        (WebKit::RemoteLayerTreeContext::RemoteLayerTreeContext):
+        (WebKit::RemoteLayerTreeContext::setRootLayer):
+        (WebKit::RemoteLayerTreeContext::layerWillBeDestroyed):
+        (WebKit::RemoteLayerTreeContext::createGraphicsLayer):
+        (WebKit::RemoteLayerTreeContext::flushLayers):
+        Build our transaction while flushing; it has no reason to exist outside of that scope.
+
+        * WebProcess/WebPage/mac/RemoteLayerTreeDrawingArea.h:
+        * WebProcess/WebPage/mac/RemoteLayerTreeDrawingArea.mm:
+        (WebKit::RemoteLayerTreeDrawingArea::RemoteLayerTreeDrawingArea):
+        (WebKit::RemoteLayerTreeDrawingArea::graphicsLayerFactory):
+        (WebKit::RemoteLayerTreeDrawingArea::setRootCompositingLayer):
+        (WebKit::RemoteLayerTreeDrawingArea::scheduleCompositingLayerFlush):
+        (WebKit::RemoteLayerTreeDrawingArea::updateGeometry):
+        Fix a capitalization typo.
+        Update the WebPage's (and thus WebCore's) size when updateGeometry() is called.
+
+        * WebProcess/WebPage/mac/GraphicsLayerCARemote.cpp: Added.
+        (WebKit::GraphicsLayerCARemote::~GraphicsLayerCARemote):
+        (WebKit::GraphicsLayerCARemote::filtersCanBeComposited):
+        (WebKit::GraphicsLayerCARemote::createPlatformCALayer):
+        Added. Delegate to PlatformCALayerRemote. Don't allow creation of a
+        GraphicsLayerCARemote given a PlatformLayer, because with UI process compositing,
+        there should be no PlatformLayer instances in the Web process.
+
+        * WebProcess/WebPage/mac/GraphicsLayerCARemote.h: Added.
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.cpp: Added.
+        (generateLayerID):
+        Generate a layer ID for identification across processes.
+
+        (PlatformCALayerRemote::~PlatformCALayerRemote):
+        Inform the RemoteLayerTreeContext that we've been destroyed, so it can convey
+        that information to the UI process and the corresponding CALayer can be destroyed.
+
+        (PlatformCALayerRemote::recursiveBuildTransaction):
+        Recursively accumulate changes in layer state on a RemoteLayerTreeTransaction.
+
+        The rest of this file is mostly an empty implementation of PlatformCALayer.
+        A few properties are implemented so far; see below.
+
+        (PlatformCALayerRemote::setSublayers):
+        (PlatformCALayerRemote::removeAllSublayers):
+        (PlatformCALayerRemote::appendSublayer):
+        (PlatformCALayerRemote::insertSublayer):
+        Update our list of sublayers, and note that our children have changed.
+        recursiveBuildTransaction() will walk our sublayers and record their IDs in the transaction.
+
+        (PlatformCALayerRemote::bounds):
+        (PlatformCALayerRemote::setBounds):
+        (PlatformCALayerRemote::position):
+        (PlatformCALayerRemote::setPosition):
+        (PlatformCALayerRemote::anchorPoint):
+        (PlatformCALayerRemote::setAnchorPoint):
+        (PlatformCALayerRemote::backgroundColor):
+        (PlatformCALayerRemote::setBackgroundColor):
+        Trivial implementations of basic layer properties, storing the new state in
+        our LayerProperties struct and noting that they changed in the current commit.
+        Properties with getters will return the last value that was set on the LayerProperties,
+        so we don't clear the whole struct at the end of the transaction, just the mask of changed properties.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.h: Added.
+
+2013-10-15  Brady Eidson  <beidson@apple.com>
+
+        Move WebProcess/IndexedDB to WebProcess/Databases/IndexedDB
+
+        Rubberstamped by Alexey Proskuryakov.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * WebKit2.xcodeproj/project.pbxproj:
+
+        * WebProcess/Databases/IndexedDB/WebIDBFactoryBackend.cpp: Renamed from Source/WebKit2/WebProcess/IndexedDB/WebIDBFactoryBackend.cpp.
+        * WebProcess/Databases/IndexedDB/WebIDBFactoryBackend.h: Renamed from Source/WebKit2/WebProcess/IndexedDB/WebIDBFactoryBackend.h.
+
+2013-10-15  Brady Eidson  <beidson@apple.com>
+
+        Add a skeleton Database process for future usage by Indexed Database.
+        https://bugs.webkit.org/show_bug.cgi?id=122849
+
+        Reviewed by Sam Weinig.
+
+        This mostly our typical "Add a new process type" boilerplate.
+
+        * Configurations/DatabaseProcess.xcconfig: Added.
+        * Configurations/DatabaseService.Development.xcconfig: Added.
+        * Configurations/DatabaseService.xcconfig: Added.
+        * WebKit2.xcodeproj/project.pbxproj:
+        * WebKit2Prefix.h:
+
+        * DatabaseProcess/DatabaseProcess.cpp: Added.
+        (WebKit::DatabaseProcess::shared):
+        (WebKit::DatabaseProcess::DatabaseProcess):
+        (WebKit::DatabaseProcess::~DatabaseProcess):
+        (WebKit::DatabaseProcess::initializeConnection):
+        (WebKit::DatabaseProcess::shouldTerminate):
+        (WebKit::DatabaseProcess::didReceiveMessage):
+        (WebKit::DatabaseProcess::didClose):
+        (WebKit::DatabaseProcess::didReceiveInvalidMessage):
+        (WebKit::DatabaseProcess::initializeProcess):
+        (WebKit::DatabaseProcess::initializeProcessName):
+        (WebKit::DatabaseProcess::initializeSandbox):
+        * DatabaseProcess/DatabaseProcess.h: Added.
+
+        * DatabaseProcess/EntryPoint/mac/LegacyProcess/DatabaseProcessMain.mm: Added.
+        (DatabaseProcessMain):
+        * DatabaseProcess/EntryPoint/mac/LegacyProcess/Info.plist: Added.
+        * DatabaseProcess/EntryPoint/mac/XPCService/DatabaseService.Development/Info.plist: Added.
+        * DatabaseProcess/EntryPoint/mac/XPCService/DatabaseService/Info.plist: Added.
+        * DatabaseProcess/EntryPoint/mac/XPCService/DatabaseServiceEntryPoint.mm: Added.
+        (DatabaseServiceInitializer):
+
+        * DatabaseProcess/mac/DatabaseProcessMac.mm: Added.
+        (WebKit::DatabaseProcess::initializeProcess):
+        (WebKit::DatabaseProcess::initializeProcessName):
+        (WebKit::DatabaseProcess::initializeSandbox):
+        * UIProcess/Databases/DatabaseProcessProxy.cpp: Added.
+        (WebKit::DatabaseProcessProxy::create):
+        (WebKit::DatabaseProcessProxy::DatabaseProcessProxy):
+        (WebKit::DatabaseProcessProxy::~DatabaseProcessProxy):
+        (WebKit::DatabaseProcessProxy::getLaunchOptions):
+        (WebKit::DatabaseProcessProxy::connectionWillOpen):
+        (WebKit::DatabaseProcessProxy::connectionWillClose):
+        (WebKit::DatabaseProcessProxy::didReceiveMessage):
+        (WebKit::DatabaseProcessProxy::didClose):
+        (WebKit::DatabaseProcessProxy::didReceiveInvalidMessage):
+        (WebKit::DatabaseProcessProxy::didFinishLaunching):
+        * UIProcess/Databases/DatabaseProcessProxy.h: Added.
+        * UIProcess/Databases/mac/DatabaseProcessProxyMac.mm: Added.
+        (WebKit::shouldUseXPC):
+        (WebKit::DatabaseProcessProxy::platformGetLaunchOptions):
+
+        * UIProcess/Launcher/ProcessLauncher.cpp:
+        (WebKit::ProcessLauncher::processTypeAsString):
+        (WebKit::ProcessLauncher::getProcessTypeFromString):
+        * UIProcess/Launcher/ProcessLauncher.h:
+        * UIProcess/Launcher/mac/ProcessLauncherMac.mm:
+        (WebKit::serviceName):
+        (WebKit::createProcess):
+
+2013-10-15  Csaba Osztrogonác  <ossy@webkit.org>
+
+        [Soup] Unreviewed buildfix after r157445 for ENABLE(NETWORK_PROCESS) builds.
+
+        * NetworkProcess/soup/NetworkProcessSoup.cpp:
+        (WebKit::NetworkProcess::allowSpecificHTTPSCertificateForHost):
+
+2013-10-15  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix the GTK+ build after r157445.
+
+        * UIProcess/API/gtk/WebKitLoaderClient.cpp:
+        (didFailProvisionalLoadWithErrorForFrame):
+
+2013-10-15  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Move PlatformCertificateInfo to WebCore and make the ResourceResponse primitives work in terms of that platform agnostic object
+        https://bugs.webkit.org/show_bug.cgi?id=118520
+
+        Reviewed by Anders Carlsson.
+
+        Added PlatformCertificateInfo getter and setter to ResourceErrorBase
+        and ResourceResponseBase so that getting and setting certificates
+        becomes cross platform.
+
+        Changed the existing platform specific certificate getters and setters
+        of ResourceError and ResourceResponse to use the
+        PlatformCertificateInfo member.
+
+        Original patch by Kwang Yul Seo  <skyul@company100.net>
+
+        The following things were fixed by Csaba Osztrogonác:
+        - trivial conflicts resolved in WebCore.exp.in, project.pbxproj, NetworkResourceLoader.cpp,
+          WebPageProxy.h, WebFrameLoaderClient.cpp and PlatformEfl.cmake.
+        - trivial fix in the new AsynchronousNetworkLoaderClient.cpp
+        - style fixed (NULL -> 0 and smaller indentation in WebCoreArgumentCodersSoup.cpp)
+        - obsolete change removed from NetworkResourceLoader.cpp
+        - unneeded typo removed from ResourceHandleSoup.cpp
+        - Fixed the if guard of including RetainPtr.h in PlatformCertificateInfo.h to make Windows build happy.
+        - add PlatformCertificateInfoCFNet.cpp with empty constructor and destructor to make Windows build happy.
+        - resolve conflict in Source/WebCore/WebCore.xcodeproj/project.pbxproj after r156488
+        - rename KURL to URL after r156550.
+        - remove obsolete Qt changes
+        - added back initializers for m_soupFlags
+        - included gio/gio.h instead of libsoup/soup.h in PlatformCertificateInfo.h
+        - removed unused class forward declarations and includes
+
+        * GNUmakefile.list.am:
+        * NetworkProcess/AsynchronousNetworkLoaderClient.cpp:
+        (WebKit::AsynchronousNetworkLoaderClient::didReceiveResponse):
+        * NetworkProcess/NetworkProcess.h:
+        * NetworkProcess/NetworkProcess.messages.in:
+        * NetworkProcess/NetworkResourceLoader.cpp:
+        * NetworkProcess/mac/NetworkProcessMac.mm:
+        * PlatformEfl.cmake:
+        * PlatformGTK.cmake:
+        * Shared/API/c/mac/WKCertificateInfoMac.mm:
+        (WKCertificateInfoCreateWithCertficateChain):
+        * Shared/Authentication/AuthenticationManager.h:
+        * Shared/Authentication/AuthenticationManager.messages.in:
+        * Shared/Authentication/mac/AuthenticationManager.mac.mm:
+        * Shared/UserMessageCoders.h:
+        (WebKit::UserMessageDecoder::baseDecode):
+        * Shared/WebCertificateInfo.h:
+        (WebKit::WebCertificateInfo::create):
+        (WebKit::WebCertificateInfo::platformCertificateInfo):
+        (WebKit::WebCertificateInfo::WebCertificateInfo):
+        * Shared/WebCoreArgumentCoders.cpp:
+        (CoreIPC::::decode):
+        (CoreIPC::::encode):
+        * Shared/WebCoreArgumentCoders.h:
+        * Shared/mac/WebCoreArgumentCodersMac.mm:
+        (CoreIPC::::encodePlatformData):
+        (CoreIPC::::decodePlatformData):
+        * Shared/soup/PlatformCertificateInfo.cpp: Removed.
+        * Shared/soup/WebCoreArgumentCodersSoup.cpp:
+        (CoreIPC::::encodePlatformData):
+        (CoreIPC::::decodePlatformData):
+        * Target.pri:
+        * UIProcess/API/gtk/WebKitWebView.cpp:
+        (webkit_web_view_get_tls_info):
+        * UIProcess/Authentication/AuthenticationChallengeProxy.cpp:
+        (WebKit::AuthenticationChallengeProxy::useCredential):
+        * UIProcess/WebFrameProxy.cpp:
+        (WebKit::WebFrameProxy::didCommitLoad):
+        * UIProcess/WebFrameProxy.h:
+        * UIProcess/WebPageProxy.h:
+        * UIProcess/WebPageProxy.messages.in:
+        * WebKit2.xcodeproj/project.pbxproj:
+        * WebProcess/Network/WebResourceLoader.cpp:
+        (WebKit::WebResourceLoader::didReceiveResponseWithCertificateInfo):
+        * WebProcess/Network/WebResourceLoader.h:
+        * WebProcess/Network/WebResourceLoader.messages.in:
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::dispatchDidCommitLoad):
+
 2013-10-14  Csaba Osztrogonác  <ossy@webkit.org>
 
         [WK2][Efl][Soup] Make NetworkProcessMainUnix handle proxy settings.

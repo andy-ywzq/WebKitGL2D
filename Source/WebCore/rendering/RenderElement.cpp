@@ -107,6 +107,10 @@ RenderElement::~RenderElement()
             if (auto shapeImage = shapeValue->image())
                 shapeImage->removeClient(this);
         }
+        if (auto shapeValue = m_style->shapeOutside()) {
+            if (auto shapeImage = shapeValue->image())
+                shapeImage->removeClient(this);
+        }
 #endif
     }
 }
@@ -114,14 +118,13 @@ RenderElement::~RenderElement()
 RenderElement* RenderElement::createFor(Element& element, RenderStyle& style)
 {
     Document& document = element.document();
-    RenderArena& arena = *document.renderArena();
 
     // Minimal support for content properties replacing an entire element.
     // Works only if we have exactly one piece of content and it's a URL.
     // Otherwise acts as if we didn't support this feature.
     const ContentData* contentData = style.contentData();
     if (contentData && !contentData->next() && contentData->isImage() && !element.isPseudoElement()) {
-        RenderImage* image = new (arena) RenderImage(element);
+        RenderImage* image = new RenderImage(element);
         // RenderImageResourceStyleImage requires a style being present on the image but we don't want to
         // trigger a style change now as the node is not fully attached. Moving this code to style change
         // doesn't make sense as it should be run once at renderer creation.
@@ -137,54 +140,52 @@ RenderElement* RenderElement::createFor(Element& element, RenderStyle& style)
 
     if (element.hasTagName(HTMLNames::rubyTag)) {
         if (style.display() == INLINE)
-            return new (arena) RenderRubyAsInline(element);
+            return new RenderRubyAsInline(element);
         if (style.display() == BLOCK)
-            return new (arena) RenderRubyAsBlock(element);
+            return new RenderRubyAsBlock(element);
     }
     // treat <rt> as ruby text ONLY if it still has its default treatment of block
     if (element.hasTagName(HTMLNames::rtTag) && style.display() == BLOCK)
-        return new (arena) RenderRubyText(element);
-    if (document.cssRegionsEnabled() && style.isDisplayRegionType() && !style.regionThread().isEmpty())
-        return new (arena) RenderRegion(element, nullptr);
+        return new RenderRubyText(element);
     switch (style.display()) {
     case NONE:
         return 0;
     case INLINE:
-        return new (arena) RenderInline(element);
+        return new RenderInline(element);
     case BLOCK:
     case INLINE_BLOCK:
     case RUN_IN:
     case COMPACT:
         if ((!style.hasAutoColumnCount() || !style.hasAutoColumnWidth()) && document.regionBasedColumnsEnabled())
-            return new (arena) RenderMultiColumnBlock(element);
-        return new (arena) RenderBlockFlow(element);
+            return new RenderMultiColumnBlock(element);
+        return new RenderBlockFlow(element);
     case LIST_ITEM:
-        return new (arena) RenderListItem(element);
+        return new RenderListItem(element);
     case TABLE:
     case INLINE_TABLE:
-        return new (arena) RenderTable(element);
+        return new RenderTable(element);
     case TABLE_ROW_GROUP:
     case TABLE_HEADER_GROUP:
     case TABLE_FOOTER_GROUP:
-        return new (arena) RenderTableSection(element);
+        return new RenderTableSection(element);
     case TABLE_ROW:
-        return new (arena) RenderTableRow(element);
+        return new RenderTableRow(element);
     case TABLE_COLUMN_GROUP:
     case TABLE_COLUMN:
-        return new (arena) RenderTableCol(element);
+        return new RenderTableCol(element);
     case TABLE_CELL:
-        return new (arena) RenderTableCell(element);
+        return new RenderTableCell(element);
     case TABLE_CAPTION:
-        return new (arena) RenderTableCaption(element);
+        return new RenderTableCaption(element);
     case BOX:
     case INLINE_BOX:
-        return new (arena) RenderDeprecatedFlexibleBox(element);
+        return new RenderDeprecatedFlexibleBox(element);
     case FLEX:
     case INLINE_FLEX:
-        return new (arena) RenderFlexibleBox(element);
+        return new RenderFlexibleBox(element);
     case GRID:
     case INLINE_GRID:
-        return new (arena) RenderGrid(element);
+        return new RenderGrid(element);
     }
     ASSERT_NOT_REACHED();
     return nullptr;
@@ -381,6 +382,7 @@ void RenderElement::setStyle(PassRefPtr<RenderStyle> style)
 
 #if ENABLE(CSS_SHAPES)
     updateShapeImage(oldStyle ? oldStyle->shapeInside() : 0, m_style ? m_style->shapeInside() : 0);
+    updateShapeImage(oldStyle ? oldStyle->shapeOutside() : 0, m_style ? m_style->shapeOutside() : 0);
 #endif
 
     // We need to ensure that view->maximalOutlineSize() is valid for any repaints that happen
@@ -482,7 +484,7 @@ void RenderElement::addChild(RenderObject* newChild, RenderObject* beforeChild)
 #endif
 }
 
-void RenderElement::removeChild(RenderObject* oldChild)
+void RenderElement::removeChild(RenderObject& oldChild)
 {
     removeChildInternal(oldChild, NotifyChildren);
 }
@@ -556,59 +558,59 @@ void RenderElement::insertChildInternal(RenderObject* newChild, RenderObject* be
         cache->childrenChanged(this);
 }
 
-void RenderElement::removeChildInternal(RenderObject* oldChild, NotifyChildrenType notifyChildren)
+void RenderElement::removeChildInternal(RenderObject& oldChild, NotifyChildrenType notifyChildren)
 {
     ASSERT(canHaveChildren() || canHaveGeneratedChildren());
-    ASSERT(oldChild->parent() == this);
+    ASSERT(oldChild.parent() == this);
 
-    if (oldChild->isFloatingOrOutOfFlowPositioned())
-        toRenderBox(oldChild)->removeFloatingOrPositionedChildFromBlockLists();
+    if (oldChild.isFloatingOrOutOfFlowPositioned())
+        toRenderBox(oldChild).removeFloatingOrPositionedChildFromBlockLists();
 
     // So that we'll get the appropriate dirty bit set (either that a normal flow child got yanked or
     // that a positioned child got yanked). We also repaint, so that the area exposed when the child
     // disappears gets repainted properly.
-    if (!documentBeingDestroyed() && notifyChildren == NotifyChildren && oldChild->everHadLayout()) {
-        oldChild->setNeedsLayoutAndPrefWidthsRecalc();
+    if (!documentBeingDestroyed() && notifyChildren == NotifyChildren && oldChild.everHadLayout()) {
+        oldChild.setNeedsLayoutAndPrefWidthsRecalc();
         // We only repaint |oldChild| if we have a RenderLayer as its visual overflow may not be tracked by its parent.
-        if (oldChild->isBody())
+        if (oldChild.isBody())
             view().repaintRootContents();
         else
-            oldChild->repaint();
+            oldChild.repaint();
     }
 
     // If we have a line box wrapper, delete it.
-    if (oldChild->isBox())
-        toRenderBox(oldChild)->deleteLineBoxWrapper();
-    else if (oldChild->isLineBreak())
-        toRenderLineBreak(oldChild)->deleteInlineBoxWrapper();
+    if (oldChild.isBox())
+        toRenderBox(oldChild).deleteLineBoxWrapper();
+    else if (oldChild.isLineBreak())
+        toRenderLineBreak(oldChild).deleteInlineBoxWrapper();
 
     // If oldChild is the start or end of the selection, then clear the selection to
     // avoid problems of invalid pointers.
     // FIXME: The FrameSelection should be responsible for this when it
     // is notified of DOM mutations.
-    if (!documentBeingDestroyed() && oldChild->isSelectionBorder())
+    if (!documentBeingDestroyed() && oldChild.isSelectionBorder())
         view().clearSelection();
 
     if (!documentBeingDestroyed() && notifyChildren == NotifyChildren)
-        oldChild->willBeRemovedFromTree();
+        oldChild.willBeRemovedFromTree();
 
     // WARNING: There should be no code running between willBeRemovedFromTree and the actual removal below.
     // This is needed to avoid race conditions where willBeRemovedFromTree would dirty the tree's structure
     // and the code running here would force an untimely rebuilding, leaving |oldChild| dangling.
 
-    if (oldChild->previousSibling())
-        oldChild->previousSibling()->setNextSibling(oldChild->nextSibling());
-    if (oldChild->nextSibling())
-        oldChild->nextSibling()->setPreviousSibling(oldChild->previousSibling());
+    if (oldChild.previousSibling())
+        oldChild.previousSibling()->setNextSibling(oldChild.nextSibling());
+    if (oldChild.nextSibling())
+        oldChild.nextSibling()->setPreviousSibling(oldChild.previousSibling());
 
-    if (m_firstChild == oldChild)
-        m_firstChild = oldChild->nextSibling();
-    if (m_lastChild == oldChild)
-        m_lastChild = oldChild->previousSibling();
+    if (m_firstChild == &oldChild)
+        m_firstChild = oldChild.nextSibling();
+    if (m_lastChild == &oldChild)
+        m_lastChild = oldChild.previousSibling();
 
-    oldChild->setPreviousSibling(0);
-    oldChild->setNextSibling(0);
-    oldChild->setParent(0);
+    oldChild.setPreviousSibling(nullptr);
+    oldChild.setNextSibling(nullptr);
+    oldChild.setParent(nullptr);
 
     // rendererRemovedFromTree walks the whole subtree. We can improve performance
     // by skipping this step when destroying the entire tree.

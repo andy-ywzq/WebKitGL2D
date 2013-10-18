@@ -62,7 +62,7 @@ void WKErrorGetTLSErrors(WKErrorRef error, unsigned* tlsErrors)
 {
     const WebCore::ResourceError& resourceError = WebKit::toImpl(error)->platformError();
 #if USE(SOUP)
-    *tlsErrors = soupTlsErrorsToNixErrors(resourceError.tlsErrors());
+    *tlsErrors = soupTlsErrorsToNixErrors(resourceError.certificateInfo().tlsErrors());
 #elif USE(CURL)
     if (resourceError.errorCode() == CURLE_SSL_CACERT)
         *tlsErrors = NIXTlsErrorUnkownCA | NIXTlsErrorCertificateGenericError;

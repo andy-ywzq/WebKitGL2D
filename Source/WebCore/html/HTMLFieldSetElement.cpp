@@ -83,14 +83,14 @@ const AtomicString& HTMLFieldSetElement::formControlType() const
     return fieldset;
 }
 
-RenderElement* HTMLFieldSetElement::createRenderer(RenderArena& arena, RenderStyle&)
+RenderElement* HTMLFieldSetElement::createRenderer(RenderStyle&)
 {
-    return new (arena) RenderFieldset(*this);
+    return new RenderFieldset(*this);
 }
 
-const HTMLLegendElement* HTMLFieldSetElement::legend() const
+HTMLLegendElement* HTMLFieldSetElement::legend() const
 {
-    return descendantsOfType<HTMLLegendElement>(this).first();
+    return const_cast<HTMLLegendElement*>(descendantsOfType<HTMLLegendElement>(this).first());
 }
 
 PassRefPtr<HTMLCollection> HTMLFieldSetElement::elements()

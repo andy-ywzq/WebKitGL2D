@@ -873,6 +873,9 @@
     <ClCompile Include="..\heap\CodeBlockSet.cpp">
       <Filter>heap</Filter>
     </ClCompile>
+    <ClCompile Include="..\heap\DeferGC.cpp">
+      <Filter>heap</Filter>
+    </ClCompile>
     <ClCompile Include="..\bytecode\DeferredCompilationCallback.cpp">
       <Filter>bytecode</Filter>
     </ClCompile>
@@ -1223,6 +1226,9 @@
     <ClInclude Include="..\heap\CopyWorkList.h">
       <Filter>heap</Filter>
     </ClInclude>
+    <ClInclude Include="..\heap\DeferGC.h">
+      <Filter>heap</Filter>
+    </ClInclude>
     <ClInclude Include="..\heap\GCAssertions.h">
       <Filter>heap</Filter>
     </ClInclude>
@@ -1419,9 +1425,6 @@
       <Filter>jit</Filter>
     </ClInclude>
     <ClInclude Include="..\jit\JITInlines.h">
-      <Filter>jit</Filter>
-    </ClInclude>
-    <ClInclude Include="..\jit\JITStubCall.h">
       <Filter>jit</Filter>
     </ClInclude>
     <ClInclude Include="..\jit\JITStubRoutine.h">

@@ -1,3 +1,1783 @@
+2013-10-18  Dean Jackson  <dino@apple.com>
+
+        Unable to upload <img src="foo.svg"> as WebGL texture
+        https://bugs.webkit.org/show_bug.cgi?id=123035
+
+        Reviewed by Tim Horton.
+
+        Test that creates an HTMLImageElement, sets its source
+        to an SVG file, and then uploads as a WebGLTexture. Based
+        on the existing WebGL conformance tests.
+
+        * fast/canvas/webgl/resources/red-green.svg: Added.
+        * fast/canvas/webgl/resources/tex-image-and-sub-image-2d-with-svg-image.js: Added.
+        * fast/canvas/webgl/tex-image-and-sub-image-2d-with-svg-image-expected.txt: Added.
+        * fast/canvas/webgl/tex-image-and-sub-image-2d-with-svg-image.html: Added.
+
+2013-10-18  Nadav Rotem  <nrotem@apple.com>
+
+        Fix a FlushLiveness problem.
+        https://bugs.webkit.org/show_bug.cgi?id=122984
+
+        Reviewed by Filip Pizlo.
+
+        * js/regress/script-tests/stepanov_container.js: Added.
+        * js/regress/stepanov_container-expected.txt: Added.
+        * js/regress/stepanov_container.html: Added.
+
+2013-10-18  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Unreviewed EFL gardening.
+
+        * platform/efl-wk2/TestExpectations: Remove passing testcase.
+        * platform/efl/TestExpectations: fast/backgrounds/background-opaque-images-over-color.html is failing.
+        * platform/efl/fast/dom/Range/getClientRects-expected.txt: Rebaseline after r152872.
+        * platform/efl/fast/lists/inlineBoxWrapperNullCheck-expected.txt: Rebaseline after r152793.
+        * platform/efl/fast/multicol/shrink-to-column-height-for-pagination-expected.png: Added.
+        * platform/efl/fast/multicol/shrink-to-column-height-for-pagination-expected.txt: Rebaseline after r152911.
+        * platform/efl/tables/mozilla/marvin/backgr_index-expected.png: Rebaseline after r152793.
+        * platform/efl/tables/mozilla/marvin/backgr_index-expected.txt: Rebaseline after r152793.
+
+2013-10-18  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Unreviewed EFL gardening. Rebaselining after r153852.
+
+        * platform/efl-wk2/loader/go-back-cached-main-resource-expected.txt:
+        * platform/efl/security/block-test-no-port-expected.txt:
+
+2013-10-18  Alexey Proskuryakov  <ap@apple.com>
+
+        Layout Test media/W3C/audio/networkState/networkState_during_loadstart.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=123010
+
+        * platform/mac/TestExpectations: Marked as such.
+
+2013-10-18  Alexey Proskuryakov  <ap@apple.com>
+
+        css3/filters/composited-during-animation-layertree.html sometimes produces empty results
+        https://bugs.webkit.org/show_bug.cgi?id=95622
+
+        * platform/mac/TestExpectations: Marking as flaky.
+
+2013-10-17  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        Unreviewed EFL gardening.
+
+        Unskip tests which are already passed.
+
+        * platform/efl-wk2/TestExpectations:
+        * platform/efl/TestExpectations:
+
+2013-10-17  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Unreviewed EFL gardening.
+
+        * platform/efl-wk2/plugins/npruntime/object-from-destroyed-plugin-expected.txt: Added.
+        * platform/efl-wk2/plugins/npruntime/object-from-destroyed-plugin-in-subframe-expected.txt: Added.
+        * platform/efl/fast/forms/control-restrict-line-height-expected.png: Rebaseline after r155408.
+        * platform/efl/fast/forms/control-restrict-line-height-expected.txt: Rebaseline after r155408.
+
+2013-10-17  Alexandru Chiculita  <achicu@adobe.com>
+
+        Web Inspector: [CSS Regions] Crash when highlighting a node of a flow with no regions
+        https://bugs.webkit.org/show_bug.cgi?id=122993
+
+        Reviewed by Joseph Pecoraro.
+
+        Added test to check that DOM.highlightNode is not crashing WebCore when the node is inside
+        a flow with no associated regions.
+
+        * inspector-protocol/dom/highlight-flow-with-no-region-expected.txt: Added.
+        * inspector-protocol/dom/highlight-flow-with-no-region.html: Added.
+
+2013-10-17  Nico Weber  <thakis@chromium.org>
+
+        Fix three bugs in the equals() implementations for css gradients.
+        https://bugs.webkit.org/show_bug.cgi?id=122987
+
+        Reviewed by Andreas Kling.
+
+        1. Linear gradients were considered equal if the first gradient has no x and y
+           position and the second has no x but does have y.
+        2. Same as 1, for radial gradients. (This doesn't happen in practice as
+           CSSParser::parseRadialGradient rejects such input, so no test for this case.)
+        3. Radial gradients without x and y position weren't considered equal even if
+           they were.
+
+        Merges https://codereview.chromium.org/26147006/
+
+        * cssom/cssvalue-comparison-expected.txt:
+        * cssom/cssvalue-comparison.html:
+
+2013-10-17  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed gardening of Apple Windows port.
+
+        * platform/win/TestExpectations:
+
+2013-10-17  Robert Hogan  <robert@webkit.org>
+
+        "border-collapse: collapse;" for table removes part of its border (was: Border disappears when close to some elements)
+        https://bugs.webkit.org/show_bug.cgi?id=8914
+
+        Reviewed by David Hyatt.
+
+        * fast/table/paint-section-borders-without-cells-expected.html: Added.
+        * fast/table/paint-section-borders-without-cells-rtl-expected.html: Added.
+        * fast/table/paint-section-borders-without-cells-rtl.html: Added.
+        * fast/table/paint-section-borders-without-cells-vertical-lr-expected.html: Added.
+        * fast/table/paint-section-borders-without-cells-vertical-lr-rtl-expected.html: Added.
+        * fast/table/paint-section-borders-without-cells-vertical-lr-rtl.html: Added.
+        * fast/table/paint-section-borders-without-cells-vertical-lr.html: Added.
+        * fast/table/paint-section-borders-without-cells-vertical-rl-expected.html: Added.
+        * fast/table/paint-section-borders-without-cells-vertical-rl.html: Added.
+        * fast/table/paint-section-borders-without-cells.html: Added.
+
+2013-10-17  Andres Gomez  <agomez@igalia.com>
+
+        certain http media tests doesn't receive the expected "Content-Length" header
+        https://bugs.webkit.org/show_bug.cgi?id=122965
+
+        Reviewed by Eric Carlson.
+
+        Fixed PHP syntax so "Content-Length" HTTP Header is included in
+        the response.
+
+        * http/tests/media/resources/serve-video.php:
+
+2013-10-17  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSS Regions] Anonymous nested regions
+        https://bugs.webkit.org/show_bug.cgi?id=119135
+
+        Reviewed by David Hyatt.
+
+        Add new tests for making a table-cell and a table-caption a region.
+        Change expected results for repaint tests of fixed elements since the parent of the region gets layer.
+
+        * fast/regions/element-in-named-flow-absolute-from-fixed-expected.txt:
+        * fast/regions/element-in-named-flow-fixed-from-absolute-expected.txt:
+        * fast/regions/element-inflow-fixed-from-outflow-static-expected.txt:
+        * fast/regions/element-outflow-static-from-inflow-fixed-expected.txt:
+        * fast/regions/table-caption-as-region-expected.html: Added.
+        * fast/regions/table-caption-as-region.html: Added.
+        * fast/regions/table-cell-as-region-expected.html: Added.
+        * fast/regions/table-cell-as-region.html: Added.
+
+2013-10-17  Krzysztof Czech  <k.czech@samsung.com>
+
+        [EFL] Properly expose tables in accessibility
+        https://bugs.webkit.org/show_bug.cgi?id=122894
+
+        Reviewed by Chris Fleizach.
+
+        Added new accessibility expectations after r153432.
+
+        * platform/efl-wk2/TestExpectations:
+        * platform/efl-wk2/accessibility/table-detection-expected.txt: Added.
+        * platform/efl-wk2/accessibility/table-one-cell-expected.txt: Added.
+        * platform/efl-wk2/accessibility/table-with-rules-expected.txt: Added.
+        * platform/efl/accessibility/table-detection-expected.txt: Added.
+        * platform/efl/accessibility/table-one-cell-expected.txt: Added.
+        * platform/efl/accessibility/table-with-rules-expected.txt: Added.
+
+2013-10-16  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Unreviewed EFL gardening. Rebaselining after r155607.
+
+        * platform/efl-wk2/compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants-expected.txt: Added.
+        * platform/efl-wk2/compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants2-expected.txt: Added.
+
+2013-10-16  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Unreviewed EFL gardening. Rebaselining after r156527.
+
+        * platform/efl/compositing/contents-opaque/hidden-with-visible-text-expected.txt:
+        * platform/efl/svg/text/append-text-node-to-tspan-expected.txt:
+
+2013-10-16  Oliver Hunt  <oliver@apple.com>
+
+        Implement spread
+        https://bugs.webkit.org/show_bug.cgi?id=122911
+
+        Reviewed by Michael Saboff.
+
+        Add testcases
+
+        * js/basic-spread-expected.txt: Added.
+        * js/basic-spread.html: Added.
+        * js/parser-syntax-check-expected.txt:
+        * js/script-tests/basic-spread.js: Added.
+        (f):
+        (o.f.o.f.o.f.o.f.h.eval.o.h.o.h.o.h.o.h.g):
+        * js/script-tests/parser-syntax-check.js:
+
+2013-10-16  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r157529.
+        http://trac.webkit.org/changeset/157529
+        https://bugs.webkit.org/show_bug.cgi?id=122919
+
+        Caused score test failures and some build failures. (Requested
+        by rfong on #webkit).
+
+        * js/basic-spread-expected.txt: Removed.
+        * js/basic-spread.html: Removed.
+        * js/parser-syntax-check-expected.txt:
+        * js/script-tests/basic-spread.js: Removed.
+        * js/script-tests/parser-syntax-check.js:
+
+2013-10-16  Jochen Eisinger  <jochen@chromium.org>
+
+        A page should exit fullscreen mode if it opens a new popup
+        https://bugs.webkit.org/show_bug.cgi?id=122865
+
+        Reviewed by Jer Noble.
+
+        * fullscreen/full-screen-exit-when-popup-expected.txt: Added.
+        * fullscreen/full-screen-exit-when-popup.html: Added.
+
+2013-10-16  Oliver Hunt  <oliver@apple.com>
+
+        Implement spread
+        https://bugs.webkit.org/show_bug.cgi?id=122911
+
+        Reviewed by Michael Saboff.
+
+        Add testcases
+
+        * js/basic-spread-expected.txt: Added.
+        * js/basic-spread.html: Added.
+        * js/parser-syntax-check-expected.txt:
+        * js/script-tests/basic-spread.js: Added.
+        (f):
+        (o.f.o.f.o.f.o.f.h.eval.o.h.o.h.o.h.o.h.g):
+        * js/script-tests/parser-syntax-check.js:
+
+2013-10-16  KyungTae Kim  <ktf.kim@samsung.com>
+
+        During editing, merge inline style with overriding other author styles
+        https://bugs.webkit.org/show_bug.cgi?id=122874
+
+        Reviewed by Ryosuke Niwa.
+
+        Add a test for merging inline styles of parents.
+
+        * editing/deleting/merge-div-with-inline-style.html: Added.
+        * editing/deleting/merge-div-with-inline-style-expected.txt: Added.
+
+2013-10-16  peavo@outlook.com  <peavo@outlook.com>
+
+        Emphasis marks has wrong color.
+        https://bugs.webkit.org/show_bug.cgi?id=122829
+
+        Reviewed by Antti Koivisto.
+
+        * fast/text/text-emphasis-expected.html: Added.
+        * fast/text/text-emphasis.html: Added.
+
+2013-10-16  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Unreviewed EFL gardening. Rebaselining after r155998.
+
+        * platform/efl-wk2/compositing/contents-scale/animating-expected.txt: Added.
+        * platform/efl-wk2/compositing/contents-scale/scaled-ancestor-expected.txt: Added.
+        * platform/efl-wk2/compositing/contents-scale/simple-scale-expected.txt: Added.
+        * platform/efl-wk2/compositing/contents-scale/z-translate-expected.txt: Added.
+
+2013-10-16  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        Unreviewed EFL gardening.
+
+        Skip the IndexedDB tests for now as the feature is going through substantial
+        changes that don't ensure constant proper functionality.
+
+        * platform/efl-wk1/TestExpectations:
+        * platform/efl-wk2/TestExpectations:
+        * platform/efl/TestExpectations:
+
+2013-10-16  Andreas Kling  <akling@apple.com>
+
+        Revert Windows-specific expectations shuffling from r157497.
+        This wasn't wrong either. Shame on me. :|
+
+2013-10-16  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Unreviewed EFL gardening. Rebaselining after r155957.
+
+        * platform/efl/css3/selectors3/html/css3-modsel-179a-expected.txt:
+        * platform/efl/css3/selectors3/xhtml/css3-modsel-179a-expected.txt:
+        * platform/efl/css3/selectors3/xml/css3-modsel-179a-expected.txt:
+        * platform/efl/fast/css/pseudo-first-line-border-width-expected.txt:
+        * platform/efl/fast/css/word-space-extra-expected.txt:
+        * platform/efl/fast/text/whitespace/pre-wrap-spaces-after-newline-expected.txt:
+
+2013-10-16  Andreas Kling  <akling@apple.com>
+
+        Revert Mac-specific expecations shuffling from r157498.
+        Everything was already in order.
+
+2013-10-16  Andreas Kling  <akling@apple.com>
+
+        Remove EFL-specific test expectations that were identical to generic expectations.
+        <https://webkit.org/b/121551>
+
+        Reviewed by Antti Koivisto.
+
+        * platform/efl-wk2/webaudio/javascriptaudionode-expected.txt: Removed.
+        * platform/efl/compositing/culling/filter-occlusion-blur-expected.txt: Removed.
+        * platform/efl/compositing/culling/filter-occlusion-blur-large-expected.txt: Removed.
+        * platform/efl/compositing/geometry/fixed-position-composited-page-scale-down-expected.txt: Removed.
+        * platform/efl/compositing/geometry/limit-layer-bounds-overflow-repaint-expected.txt: Removed.
+        * platform/efl/compositing/iframes/composited-iframe-scroll-expected.txt: Removed.
+        * platform/efl/compositing/iframes/iframe-content-flipping-expected.txt: Removed.
+        * platform/efl/compositing/iframes/repaint-after-losing-scrollbars-expected.txt: Removed.
+        * platform/efl/compositing/images/content-image-change-expected.txt: Removed.
+        * platform/efl/css1/units/rounding-expected.txt: Removed.
+        * platform/efl/css2.1/20110323/abspos-containing-block-initial-001-expected.txt: Removed.
+        * platform/efl/css2.1/20110323/abspos-containing-block-initial-007-expected.txt: Removed.
+        * platform/efl/css3/masking/clip-path-circle-expected.txt: Removed.
+        * platform/efl/css3/masking/clip-path-circle-filter-expected.txt: Removed.
+        * platform/efl/css3/masking/clip-path-circle-overflow-expected.txt: Removed.
+        * platform/efl/css3/masking/clip-path-circle-overflow-hidden-expected.txt: Removed.
+        * platform/efl/css3/masking/clip-path-circle-relative-overflow-expected.txt: Removed.
+        * platform/efl/css3/masking/clip-path-ellipse-expected.txt: Removed.
+        * platform/efl/css3/masking/clip-path-polygon-evenodd-expected.txt: Removed.
+        * platform/efl/css3/masking/clip-path-polygon-expected.txt: Removed.
+        * platform/efl/css3/masking/clip-path-polygon-nonzero-expected.txt: Removed.
+        * platform/efl/css3/masking/clip-path-rectangle-expected.txt: Removed.
+        * platform/efl/editing/deleting/transpose-empty-expected.txt: Removed.
+        * platform/efl/editing/selection/collapse-selection-in-bidi-expected.txt: Removed.
+        * platform/efl/editing/selection/drag-start-event-client-x-y-expected.txt: Removed.
+        * platform/efl/fast/backgrounds/bgCompositeCopy-expected.txt: Removed.
+        * platform/efl/fast/backgrounds/size/backgroundSize01-expected.txt: Removed.
+        * platform/efl/fast/backgrounds/size/backgroundSize02-expected.txt: Removed.
+        * platform/efl/fast/backgrounds/size/backgroundSize03-expected.txt: Removed.
+        * platform/efl/fast/backgrounds/size/backgroundSize04-expected.txt: Removed.
+        * platform/efl/fast/backgrounds/size/backgroundSize05-expected.txt: Removed.
+        * platform/efl/fast/backgrounds/size/backgroundSize06-expected.txt: Removed.
+        * platform/efl/fast/backgrounds/size/backgroundSize07-expected.txt: Removed.
+        * platform/efl/fast/backgrounds/size/backgroundSize08-expected.txt: Removed.
+        * platform/efl/fast/backgrounds/size/backgroundSize09-expected.txt: Removed.
+        * platform/efl/fast/backgrounds/size/backgroundSize10-expected.txt: Removed.
+        * platform/efl/fast/backgrounds/size/backgroundSize11-expected.txt: Removed.
+        * platform/efl/fast/backgrounds/size/backgroundSize12-expected.txt: Removed.
+        * platform/efl/fast/backgrounds/size/backgroundSize13-expected.txt: Removed.
+        * platform/efl/fast/backgrounds/size/backgroundSize14-expected.txt: Removed.
+        * platform/efl/fast/backgrounds/size/contain-and-cover-zoomed-expected.txt: Removed.
+        * platform/efl/fast/block/basic/fieldset-stretch-to-legend-expected.txt: Removed.
+        * platform/efl/fast/block/basic/quirk-percent-height-grandchild-expected.txt: Removed.
+        * platform/efl/fast/block/float/008-expected.txt: Removed.
+        * platform/efl/fast/block/float/009-expected.txt: Removed.
+        * platform/efl/fast/block/float/019-expected.txt: Removed.
+        * platform/efl/fast/block/float/034-expected.txt: Removed.
+        * platform/efl/fast/block/float/035-expected.txt: Removed.
+        * platform/efl/fast/block/float/4145535Crash-expected.txt: Removed.
+        * platform/efl/fast/block/float/br-with-clear-2-expected.txt: Removed.
+        * platform/efl/fast/block/float/float-forced-below-other-floats-expected.txt: Removed.
+        * platform/efl/fast/block/float/float-not-removed-from-next-sibling-expected.txt: Removed.
+        * platform/efl/fast/block/float/float-not-removed-from-next-sibling2-expected.txt: Removed.
+        * platform/efl/fast/block/float/float-on-zero-height-line-expected.txt: Removed.
+        * platform/efl/fast/block/float/float-overhangs-root-expected.txt: Removed.
+        * platform/efl/fast/block/float/narrow-after-wide-expected.txt: Removed.
+        * platform/efl/fast/block/float/negative-margin-clear-expected.txt: Removed.
+        * platform/efl/fast/block/float/nested-clearance-expected.txt: Removed.
+        * platform/efl/fast/block/float/nowrap-clear-min-width-expected.txt: Removed.
+        * platform/efl/fast/block/float/overhanging-after-height-decrease-offsets-expected.txt: Removed.
+        * platform/efl/fast/block/float/relative-painted-twice-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/003-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/004-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/005-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/006-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/007-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/008-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/009-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/010-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/011-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/012-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/013-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/014-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/015-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/017-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/018-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/019-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/020-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/021-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/022-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/023-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/024-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/026-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/027-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/029-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/030-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/032-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/033-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/034-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/035-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/036-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/037-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/038-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/039-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/040-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/041-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/042-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/043-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/044-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/045-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/046-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/048-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/049-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/050-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/062-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/complex-positioned-movement-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/move-with-auto-width-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/negative-rel-position-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/relative-overconstrained-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/replaced-inside-fixed-top-bottom-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/static-inline-position-dynamic-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/vertical-lr/003-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/vertical-lr/004-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/vertical-lr/005-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/vertical-lr/006-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/vertical-rl/003-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/vertical-rl/004-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/vertical-rl/005-expected.txt: Removed.
+        * platform/efl/fast/block/positioning/vertical-rl/006-expected.txt: Removed.
+        * platform/efl/fast/borders/fieldsetBorderRadius-expected.txt: Removed.
+        * platform/efl/fast/borders/outline-offset-min-assert-expected.txt: Removed.
+        * platform/efl/fast/borders/webkit-border-radius-expected.txt: Removed.
+        * platform/efl/fast/box-shadow/shadow-tiling-artifact-expected.txt: Removed.
+        * platform/efl/fast/box-shadow/single-pixel-shadow-expected.txt: Removed.
+        * platform/efl/fast/canvas/canvas-as-image-expected.txt: Removed.
+        * platform/efl/fast/canvas/canvas-bg-expected.txt: Removed.
+        * platform/efl/fast/canvas/canvas-render-layer-expected.txt: Removed.
+        * platform/efl/fast/css-generated-content/table-parts-before-and-after-expected.txt: Removed.
+        * platform/efl/fast/css/006-expected.txt: Removed.
+        * platform/efl/fast/css/absolute-child-with-percent-height-inside-relative-parent-expected.txt: Removed.
+        * platform/efl/fast/css/bogus-color-span-expected.txt: Removed.
+        * platform/efl/fast/css/bug4860-absolute-block-child-does-not-inherit-alignment-expected.txt: Removed.
+        * platform/efl/fast/css/content-dynamic-expected.txt: Removed.
+        * platform/efl/fast/css/contentDiv-expected.txt: Removed.
+        * platform/efl/fast/css/contentDivWithChildren-expected.txt: Removed.
+        * platform/efl/fast/css/contentImage-expected.txt: Removed.
+        * platform/efl/fast/css/empty-inline-003-quirksmode-expected.txt: Removed.
+        * platform/efl/fast/css/empty-inline-line-height-first-line-expected.txt: Removed.
+        * platform/efl/fast/css/empty-inline-line-height-first-line-quirksmode-expected.txt: Removed.
+        * platform/efl/fast/css/font-face-multiple-remote-sources-expected.txt: Removed.
+        * platform/efl/fast/css/font-face-remote-expected.txt: Removed.
+        * platform/efl/fast/css/getComputedStyle/getComputedStyle-margin-percentage-expected.txt: Removed.
+        * platform/efl/fast/css/last-child-style-sharing-expected.txt: Removed.
+        * platform/efl/fast/css/nested-rounded-corners-expected.txt: Removed.
+        * platform/efl/fast/css/outline-auto-empty-rects-expected.txt: Removed.
+        * platform/efl/fast/css/transition-color-unspecified-expected.txt: Removed.
+        * platform/efl/fast/dom/Element/getBoundingClientRect-expected.txt: Removed.
+        * platform/efl/fast/dom/HTMLStyleElement/insert-parser-generated-expected.txt: Removed.
+        * platform/efl/fast/dom/Range/getBoundingClientRect-expected.txt: Removed.
+        * platform/efl/fast/dom/Window/window-properties-performance-expected.txt: Removed.
+        * platform/efl/fast/dom/attr_dead_doc-expected.txt: Removed.
+        * platform/efl/fast/dom/css-cached-import-rule-expected.txt: Removed.
+        * platform/efl/fast/dom/css-insert-import-rule-expected.txt: Removed.
+        * platform/efl/fast/dom/delete-contents-expected.txt: Removed.
+        * platform/efl/fast/dom/horizontal-scrollbar-in-rtl-expected.txt: Removed.
+        * platform/efl/fast/dom/shadow/shadow-contents-event-expected.txt: Removed.
+        * platform/efl/fast/dom/vertical-scrollbar-in-rtl-expected.txt: Removed.
+        * platform/efl/fast/dynamic/001-expected.txt: Removed.
+        * platform/efl/fast/dynamic/005-expected.txt: Removed.
+        * platform/efl/fast/dynamic/anonymous-block-layer-lost-expected.txt: Removed.
+        * platform/efl/fast/dynamic/float-no-longer-overhanging-expected.txt: Removed.
+        * platform/efl/fast/dynamic/float-withdrawal-2-expected.txt: Removed.
+        * platform/efl/fast/dynamic/floating-to-positioned-2-expected.txt: Removed.
+        * platform/efl/fast/dynamic/floating-to-positioned-expected.txt: Removed.
+        * platform/efl/fast/dynamic/insertAdjacentElement-expected.txt: Removed.
+        * platform/efl/fast/dynamic/staticY-expected.txt: Removed.
+        * platform/efl/fast/dynamic/subtree-parent-static-y-expected.txt: Removed.
+        * platform/efl/fast/events/document-elementFromPoint-expected.txt: Removed.
+        * platform/efl/fast/events/overflow-viewport-renderer-deleted-expected.txt: Removed.
+        * platform/efl/fast/flexbox/flex-hang-expected.txt: Removed.
+        * platform/efl/fast/flexbox/overhanging-floats-removed-expected.txt: Removed.
+        * platform/efl/fast/forms/002-expected.txt: Removed.
+        * platform/efl/fast/forms/005-expected.txt: Removed.
+        * platform/efl/fast/forms/color/input-color-onchange-event-expected.txt: Removed.
+        * platform/efl/fast/forms/input-placeholder-paint-order-expected.txt: Removed.
+        * platform/efl/fast/forms/textarea/textarea-placeholder-paint-order-expected.txt: Removed.
+        * platform/efl/fast/frames/002-expected.txt: Removed.
+        * platform/efl/fast/frames/calculate-fixed-expected.txt: Removed.
+        * platform/efl/fast/frames/calculate-order-expected.txt: Removed.
+        * platform/efl/fast/frames/calculate-percentage-expected.txt: Removed.
+        * platform/efl/fast/frames/calculate-relative-expected.txt: Removed.
+        * platform/efl/fast/frames/calculate-round-expected.txt: Removed.
+        * platform/efl/fast/frames/content-opacity-1-expected.txt: Removed.
+        * platform/efl/fast/frames/content-opacity-2-expected.txt: Removed.
+        * platform/efl/fast/frames/empty-cols-attribute-expected.txt: Removed.
+        * platform/efl/fast/frames/empty-frame-src-expected.txt: Removed.
+        * platform/efl/fast/frames/frame-set-whitespace-attributes-expected.txt: Removed.
+        * platform/efl/fast/frames/iframe-scaling-with-scroll-expected.txt: Removed.
+        * platform/efl/fast/frames/iframe-text-contents-expected.txt: Removed.
+        * platform/efl/fast/frames/invalid-expected.txt: Removed.
+        * platform/efl/fast/frames/no-frame-borders-expected.txt: Removed.
+        * platform/efl/fast/frames/seamless/seamless-inherited-origin-expected.txt: Removed.
+        * platform/efl/fast/gradients/background-clipped-expected.txt: Removed.
+        * platform/efl/fast/images/gif-large-checkerboard-expected.txt: Removed.
+        * platform/efl/fast/images/gray-scale-png-with-color-profile-expected.txt: Removed.
+        * platform/efl/fast/images/png-suite/test-expected.txt: Removed.
+        * platform/efl/fast/images/repaint-subrect-grid-expected.txt: Removed.
+        * platform/efl/fast/images/zoomed-img-size-expected.txt: Removed.
+        * platform/efl/fast/inline-block/004-expected.txt: Removed.
+        * platform/efl/fast/inline-block/005-expected.txt: Removed.
+        * platform/efl/fast/invalid/015-expected.txt: Removed.
+        * platform/efl/fast/invalid/table-residual-style-crash-expected.txt: Removed.
+        * platform/efl/fast/layers/opacity-stacking-expected.txt: Removed.
+        * platform/efl/fast/layers/positioned-inside-root-with-margins-expected.txt: Removed.
+        * platform/efl/fast/layers/zindex-ridonkulous-expected.txt: Removed.
+        * platform/efl/fast/lists/list-marker-before-content-table-expected.txt: Removed.
+        * platform/efl/fast/multicol/break-properties-expected.txt: Removed.
+        * platform/efl/fast/multicol/pagination-h-horizontal-bt-expected.txt: Removed.
+        * platform/efl/fast/multicol/pagination-h-horizontal-tb-expected.txt: Removed.
+        * platform/efl/fast/multicol/pagination-h-vertical-lr-expected.txt: Removed.
+        * platform/efl/fast/multicol/pagination-h-vertical-rl-expected.txt: Removed.
+        * platform/efl/fast/multicol/pagination-v-horizontal-bt-expected.txt: Removed.
+        * platform/efl/fast/multicol/pagination-v-horizontal-tb-expected.txt: Removed.
+        * platform/efl/fast/multicol/pagination-v-vertical-lr-expected.txt: Removed.
+        * platform/efl/fast/multicol/pagination-v-vertical-rl-expected.txt: Removed.
+        * platform/efl/fast/multicol/span/generated-child-split-flow-crash-expected.txt: Removed.
+        * platform/efl/fast/multicol/vertical-lr/break-properties-expected.txt: Removed.
+        * platform/efl/fast/multicol/vertical-lr/rules-with-border-before-expected.txt: Removed.
+        * platform/efl/fast/multicol/vertical-rl/break-properties-expected.txt: Removed.
+        * platform/efl/fast/multicol/vertical-rl/rules-with-border-before-expected.txt: Removed.
+        * platform/efl/fast/overflow/overflow-update-transform-expected.txt: Removed.
+        * platform/efl/fast/overflow/position-relative-expected.txt: Removed.
+        * platform/efl/fast/overflow/trailing-float-linebox-expected.txt: Removed.
+        * platform/efl/fast/overflow/unreachable-content-test-expected.txt: Removed.
+        * platform/efl/fast/parser/innerhtml-with-prefixed-elements-expected.txt: Removed.
+        * platform/efl/fast/parser/style-script-head-test-expected.txt: Removed.
+        * platform/efl/fast/profiler/apply-expected.txt: Removed.
+        * platform/efl/fast/reflections/reflection-with-zoom-expected.txt: Removed.
+        * platform/efl/fast/reflections/table-cell-expected.txt: Removed.
+        * platform/efl/fast/repaint/background-generated-expected.txt: Removed.
+        * platform/efl/fast/repaint/content-into-overflow-expected.txt: Removed.
+        * platform/efl/fast/repaint/erase-overflow-expected.txt: Removed.
+        * platform/efl/fast/repaint/fixed-tranformed-expected.txt: Removed.
+        * platform/efl/fast/repaint/float-in-new-block-with-layout-delta-expected.txt: Removed.
+        * platform/efl/fast/repaint/float-new-in-block-expected.txt: Removed.
+        * platform/efl/fast/repaint/focus-ring-expected.txt: Removed.
+        * platform/efl/fast/repaint/iframe-scroll-repaint-expected.txt: Removed.
+        * platform/efl/fast/repaint/inline-block-resize-expected.txt: Removed.
+        * platform/efl/fast/repaint/intermediate-layout-position-clip-expected.txt: Removed.
+        * platform/efl/fast/repaint/intermediate-layout-position-expected.txt: Removed.
+        * platform/efl/fast/repaint/invisible-objects-expected.txt: Removed.
+        * platform/efl/fast/repaint/layer-hide-when-needs-layout-expected.txt: Removed.
+        * platform/efl/fast/repaint/layer-visibility-expected.txt: Removed.
+        * platform/efl/fast/repaint/layout-state-only-positioned-expected.txt: Removed.
+        * platform/efl/fast/repaint/overflow-flipped-writing-mode-block-in-regions-expected.txt: Removed.
+        * platform/efl/fast/repaint/overflow-into-content-expected.txt: Removed.
+        * platform/efl/fast/repaint/repaint-during-scroll-expected.txt: Removed.
+        * platform/efl/fast/repaint/table-col-background-expected.txt: Removed.
+        * platform/efl/fast/repaint/table-outer-border-expected.txt: Removed.
+        * platform/efl/fast/repaint/table-row-expected.txt: Removed.
+        * platform/efl/fast/repaint/table-section-overflow-expected.txt: Removed.
+        * platform/efl/fast/repaint/table-two-pass-layout-overpaint-expected.txt: Removed.
+        * platform/efl/fast/repaint/text-emphasis-v-expected.txt: Removed.
+        * platform/efl/fast/repaint/transform-disable-layoutstate-expected.txt: Removed.
+        * platform/efl/fast/repaint/transform-replaced-shadows-expected.txt: Removed.
+        * platform/efl/fast/repaint/transform-rotate-and-remove-expected.txt: Removed.
+        * platform/efl/fast/repaint/view-background-from-body-1-expected.txt: Removed.
+        * platform/efl/fast/repaint/view-background-from-body-2-expected.txt: Removed.
+        * platform/efl/fast/replaced/008-expected.txt: Removed.
+        * platform/efl/fast/replaced/percent-height-in-anonymous-block-expected.txt: Removed.
+        * platform/efl/fast/replaced/selection-rect-expected.txt: Removed.
+        * platform/efl/fast/ruby/position-after-expected.txt: Removed.
+        * platform/efl/fast/ruby/ruby-block-style-not-updated-expected.txt: Removed.
+        * platform/efl/fast/ruby/ruby-block-style-not-updated-with-before-after-content-expected.txt: Removed.
+        * platform/efl/fast/ruby/ruby-inline-style-not-updated-expected.txt: Removed.
+        * platform/efl/fast/ruby/ruby-inline-style-not-updated-with-before-after-content-expected.txt: Removed.
+        * platform/efl/fast/runin/runin-generated-before-content-expected.txt: Removed.
+        * platform/efl/fast/sub-pixel/inline-block-with-padding-expected.txt: Removed.
+        * platform/efl/fast/sub-pixel/selection/selection-gaps-at-fractional-offsets-expected.txt: Removed.
+        * platform/efl/fast/sub-pixel/selection/selection-rect-in-sub-pixel-table-expected.txt: Removed.
+        * platform/efl/fast/table/024-expected.txt: Removed.
+        * platform/efl/fast/table/031-expected.txt: Removed.
+        * platform/efl/fast/table/032-expected.txt: Removed.
+        * platform/efl/fast/table/auto-100-percent-width-expected.txt: Removed.
+        * platform/efl/fast/table/caption-relayout-expected.txt: Removed.
+        * platform/efl/fast/table/div-as-col-span-expected.txt: Removed.
+        * platform/efl/fast/table/fixed-granular-cols-expected.txt: Removed.
+        * platform/efl/fast/table/fixed-with-auto-with-colspan-expected.txt: Removed.
+        * platform/efl/fast/table/fixed-with-auto-with-colspan-vertical-expected.txt: Removed.
+        * platform/efl/fast/table/growCellForImageQuirk-expected.txt: Removed.
+        * platform/efl/fast/table/growCellForImageQuirk-vertical-expected.txt: Removed.
+        * platform/efl/fast/table/height-percent-test-vertical-expected.txt: Removed.
+        * platform/efl/fast/table/percent-widths-stretch-expected.txt: Removed.
+        * platform/efl/fast/table/percent-widths-stretch-vertical-expected.txt: Removed.
+        * platform/efl/fast/table/table-before-child-style-update-expected.txt: Removed.
+        * platform/efl/fast/table/table-cell-before-after-content-around-table-block-expected.txt: Removed.
+        * platform/efl/fast/table/table-cell-before-after-content-around-table-expected.txt: Removed.
+        * platform/efl/fast/table/table-cell-before-after-content-around-table-row-expected.txt: Removed.
+        * platform/efl/fast/table/table-row-before-after-content-around-block-expected.txt: Removed.
+        * platform/efl/fast/table/table-row-before-after-content-around-table-expected.txt: Removed.
+        * platform/efl/fast/table/table-row-before-child-style-update-expected.txt: Removed.
+        * platform/efl/fast/table/table-row-outline-paint-expected.txt: Removed.
+        * platform/efl/fast/table/table-row-style-not-updated-expected.txt: Removed.
+        * platform/efl/fast/table/table-row-style-not-updated-with-after-content-expected.txt: Removed.
+        * platform/efl/fast/table/table-row-style-not-updated-with-before-content-expected.txt: Removed.
+        * platform/efl/fast/table/table-style-not-updated-expected.txt: Removed.
+        * platform/efl/fast/table/vertical-align-baseline-readjust-expected.txt: Removed.
+        * platform/efl/fast/table/wide-colspan-expected.txt: Removed.
+        * platform/efl/fast/table/wide-column-expected.txt: Removed.
+        * platform/efl/fast/text/align-center-rtl-spill-expected.txt: Removed.
+        * platform/efl/fast/text/emphasis-avoid-ruby-expected.txt: Removed.
+        * platform/efl/fast/text/soft-hyphen-4-expected.txt: Removed.
+        * platform/efl/fast/text/stripNullFromText-expected.txt: Removed.
+        * platform/efl/fast/text/wbr-pre-expected.txt: Removed.
+        * platform/efl/fast/text/whitespace/019-expected.txt: Removed.
+        * platform/efl/fast/text/whitespace/023-expected.txt: Removed.
+        * platform/efl/fast/tokenizer/missing-style-end-tag-1-expected.txt: Removed.
+        * platform/efl/fast/tokenizer/missing-style-end-tag-2-expected.txt: Removed.
+        * platform/efl/fast/tokenizer/script-after-frameset-expected.txt: Removed.
+        * platform/efl/fast/transforms/matrix-01-expected.txt: Removed.
+        * platform/efl/fast/transforms/matrix-02-expected.txt: Removed.
+        * platform/efl/fast/transforms/rotated-transform-affects-scrolling-1-expected.txt: Removed.
+        * platform/efl/fast/transforms/rotated-transform-affects-scrolling-2-expected.txt: Removed.
+        * platform/efl/fast/writing-mode/body-direction-propagation-blocked-expected.txt: Removed.
+        * platform/efl/fast/writing-mode/body-direction-propagation-expected.txt: Removed.
+        * platform/efl/fast/writing-mode/body-writing-mode-propagation-blocked-expected.txt: Removed.
+        * platform/efl/fast/writing-mode/body-writing-mode-propagation-expected.txt: Removed.
+        * platform/efl/fast/writing-mode/floats-in-block-layout-expected.txt: Removed.
+        * platform/efl/fast/writing-mode/inline-direction-positioning-expected.txt: Removed.
+        * platform/efl/fast/writing-mode/margin-collapse-expected.txt: Removed.
+        * platform/efl/fast/writing-mode/root-lr-basic-expected.txt: Removed.
+        * platform/efl/fast/writing-mode/self-collapsing-block-expected.txt: Removed.
+        * platform/efl/fullscreen/full-screen-render-inline-expected.txt: Removed.
+        * platform/efl/fullscreen/parent-flow-inline-with-block-child-expected.txt: Removed.
+        * platform/efl/plugins/iframe-plugin-bgcolor-expected.txt: Removed.
+        * platform/efl/tables/mozilla/bugs/bug12910-2-expected.txt: Removed.
+        * platform/efl/tables/mozilla/bugs/bug131020-2-expected.txt: Removed.
+        * platform/efl/tables/mozilla/bugs/bug13169-expected.txt: Removed.
+        * platform/efl/tables/mozilla/bugs/bug137388-1-expected.txt: Removed.
+        * platform/efl/tables/mozilla/bugs/bug137388-2-expected.txt: Removed.
+        * platform/efl/tables/mozilla/bugs/bug137388-3-expected.txt: Removed.
+        * platform/efl/tables/mozilla/bugs/bug157890-expected.txt: Removed.
+        * platform/efl/tables/mozilla/bugs/bug1818-3-expected.txt: Removed.
+        * platform/efl/tables/mozilla/bugs/bug1818-6-expected.txt: Removed.
+        * platform/efl/tables/mozilla/bugs/bug222336-expected.txt: Removed.
+        * platform/efl/tables/mozilla/bugs/bug222467-expected.txt: Removed.
+        * platform/efl/tables/mozilla/bugs/bug269566-expected.txt: Removed.
+        * platform/efl/tables/mozilla/bugs/bug277062-expected.txt: Removed.
+        * platform/efl/tables/mozilla/bugs/bug28933-expected.txt: Removed.
+        * platform/efl/tables/mozilla/bugs/bug2954-expected.txt: Removed.
+        * platform/efl/tables/mozilla/bugs/bug8032-2-expected.txt: Removed.
+        * platform/efl/tables/mozilla/bugs/bug83786-expected.txt: Removed.
+        * platform/efl/tables/mozilla/core/col_widths_fix_autoFixPer-expected.txt: Removed.
+        * platform/efl/tables/mozilla_expected_failures/bugs/bug128876-expected.txt: Removed.
+        * platform/efl/transforms/3d/general/matrix-with-zoom-3d-expected.txt: Removed.
+        * platform/efl/transforms/3d/general/transform-origin-z-change-expected.txt: Removed.
+        * platform/efl/transitions/transition-end-event-rendering-expected.txt: Removed.
+
+2013-10-16  Andreas Kling  <akling@apple.com>
+
+        Remove Gtk-specific test expectations that were identical to generic expectations.
+        <https://webkit.org/b/121551>
+
+        Reviewed by Antti Koivisto.
+
+        * platform/gtk/css1/units/rounding-expected.txt: Removed.
+        * platform/gtk/css2.1/20110323/abspos-containing-block-initial-001-expected.txt: Removed.
+        * platform/gtk/css2.1/20110323/abspos-containing-block-initial-007-expected.txt: Removed.
+        * platform/gtk/css3/masking/clip-path-circle-expected.txt: Removed.
+        * platform/gtk/css3/masking/clip-path-circle-filter-expected.txt: Removed.
+        * platform/gtk/css3/masking/clip-path-circle-overflow-expected.txt: Removed.
+        * platform/gtk/css3/masking/clip-path-circle-overflow-hidden-expected.txt: Removed.
+        * platform/gtk/css3/masking/clip-path-circle-relative-overflow-expected.txt: Removed.
+        * platform/gtk/css3/masking/clip-path-ellipse-expected.txt: Removed.
+        * platform/gtk/css3/masking/clip-path-polygon-evenodd-expected.txt: Removed.
+        * platform/gtk/css3/masking/clip-path-polygon-expected.txt: Removed.
+        * platform/gtk/css3/masking/clip-path-polygon-nonzero-expected.txt: Removed.
+        * platform/gtk/css3/masking/clip-path-rectangle-expected.txt: Removed.
+        * platform/gtk/editing/deleting/transpose-empty-expected.txt: Removed.
+        * platform/gtk/editing/pasteboard/5761530-1-expected.txt: Removed.
+        * platform/gtk/editing/selection/collapse-selection-in-bidi-expected.txt: Removed.
+        * platform/gtk/editing/selection/doubleclick-crash-expected.txt: Removed.
+        * platform/gtk/editing/selection/select-missing-image-expected.txt: Removed.
+        * platform/gtk/fast/backgrounds/bgCompositeCopy-expected.txt: Removed.
+        * platform/gtk/fast/backgrounds/size/backgroundSize01-expected.txt: Removed.
+        * platform/gtk/fast/backgrounds/size/backgroundSize02-expected.txt: Removed.
+        * platform/gtk/fast/backgrounds/size/backgroundSize03-expected.txt: Removed.
+        * platform/gtk/fast/backgrounds/size/backgroundSize04-expected.txt: Removed.
+        * platform/gtk/fast/backgrounds/size/backgroundSize05-expected.txt: Removed.
+        * platform/gtk/fast/backgrounds/size/backgroundSize06-expected.txt: Removed.
+        * platform/gtk/fast/backgrounds/size/backgroundSize07-expected.txt: Removed.
+        * platform/gtk/fast/backgrounds/size/backgroundSize08-expected.txt: Removed.
+        * platform/gtk/fast/backgrounds/size/backgroundSize09-expected.txt: Removed.
+        * platform/gtk/fast/backgrounds/size/backgroundSize10-expected.txt: Removed.
+        * platform/gtk/fast/backgrounds/size/backgroundSize11-expected.txt: Removed.
+        * platform/gtk/fast/backgrounds/size/backgroundSize12-expected.txt: Removed.
+        * platform/gtk/fast/backgrounds/size/backgroundSize13-expected.txt: Removed.
+        * platform/gtk/fast/backgrounds/size/backgroundSize14-expected.txt: Removed.
+        * platform/gtk/fast/backgrounds/size/contain-and-cover-zoomed-expected.txt: Removed.
+        * platform/gtk/fast/block/basic/fieldset-stretch-to-legend-expected.txt: Removed.
+        * platform/gtk/fast/block/basic/quirk-percent-height-grandchild-expected.txt: Removed.
+        * platform/gtk/fast/block/float/008-expected.txt: Removed.
+        * platform/gtk/fast/block/float/009-expected.txt: Removed.
+        * platform/gtk/fast/block/float/019-expected.txt: Removed.
+        * platform/gtk/fast/block/float/034-expected.txt: Removed.
+        * platform/gtk/fast/block/float/035-expected.txt: Removed.
+        * platform/gtk/fast/block/float/4145535Crash-expected.txt: Removed.
+        * platform/gtk/fast/block/float/br-with-clear-2-expected.txt: Removed.
+        * platform/gtk/fast/block/float/float-forced-below-other-floats-expected.txt: Removed.
+        * platform/gtk/fast/block/float/float-on-zero-height-line-expected.txt: Removed.
+        * platform/gtk/fast/block/float/float-overhangs-root-expected.txt: Removed.
+        * platform/gtk/fast/block/float/narrow-after-wide-expected.txt: Removed.
+        * platform/gtk/fast/block/float/negative-margin-clear-expected.txt: Removed.
+        * platform/gtk/fast/block/float/nowrap-clear-min-width-expected.txt: Removed.
+        * platform/gtk/fast/block/float/overhanging-after-height-decrease-offsets-expected.txt: Removed.
+        * platform/gtk/fast/block/float/relative-painted-twice-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/003-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/004-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/005-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/006-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/007-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/008-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/009-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/010-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/011-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/012-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/013-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/014-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/015-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/017-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/018-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/019-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/020-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/021-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/022-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/023-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/024-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/026-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/027-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/029-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/030-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/032-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/033-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/034-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/035-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/036-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/037-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/038-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/039-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/040-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/041-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/042-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/043-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/044-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/045-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/046-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/048-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/049-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/050-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/062-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/complex-positioned-movement-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/move-with-auto-width-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/negative-rel-position-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/relative-overconstrained-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/replaced-inside-fixed-top-bottom-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/static-inline-position-dynamic-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/vertical-lr/003-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/vertical-lr/004-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/vertical-lr/005-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/vertical-lr/006-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/vertical-rl/003-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/vertical-rl/004-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/vertical-rl/005-expected.txt: Removed.
+        * platform/gtk/fast/block/positioning/vertical-rl/006-expected.txt: Removed.
+        * platform/gtk/fast/borders/fieldsetBorderRadius-expected.txt: Removed.
+        * platform/gtk/fast/borders/outline-offset-min-assert-expected.txt: Removed.
+        * platform/gtk/fast/borders/webkit-border-radius-expected.txt: Removed.
+        * platform/gtk/fast/box-shadow/shadow-tiling-artifact-expected.txt: Removed.
+        * platform/gtk/fast/box-shadow/single-pixel-shadow-expected.txt: Removed.
+        * platform/gtk/fast/canvas/canvas-as-image-expected.txt: Removed.
+        * platform/gtk/fast/canvas/canvas-bg-expected.txt: Removed.
+        * platform/gtk/fast/canvas/canvas-render-layer-expected.txt: Removed.
+        * platform/gtk/fast/css-generated-content/table-parts-before-and-after-expected.txt: Removed.
+        * platform/gtk/fast/css/006-expected.txt: Removed.
+        * platform/gtk/fast/css/absolute-child-with-percent-height-inside-relative-parent-expected.txt: Removed.
+        * platform/gtk/fast/css/bogus-color-span-expected.txt: Removed.
+        * platform/gtk/fast/css/bug4860-absolute-block-child-does-not-inherit-alignment-expected.txt: Removed.
+        * platform/gtk/fast/css/content-dynamic-expected.txt: Removed.
+        * platform/gtk/fast/css/contentDiv-expected.txt: Removed.
+        * platform/gtk/fast/css/contentDivWithChildren-expected.txt: Removed.
+        * platform/gtk/fast/css/contentImage-expected.txt: Removed.
+        * platform/gtk/fast/css/font-face-multiple-remote-sources-expected.txt: Removed.
+        * platform/gtk/fast/css/font-face-remote-expected.txt: Removed.
+        * platform/gtk/fast/css/getComputedStyle/getComputedStyle-margin-percentage-expected.txt: Removed.
+        * platform/gtk/fast/css/last-child-style-sharing-expected.txt: Removed.
+        * platform/gtk/fast/css/nested-rounded-corners-expected.txt: Removed.
+        * platform/gtk/fast/css/outline-auto-empty-rects-expected.txt: Removed.
+        * platform/gtk/fast/css/transition-color-unspecified-expected.txt: Removed.
+        * platform/gtk/fast/dom/HTMLStyleElement/insert-parser-generated-expected.txt: Removed.
+        * platform/gtk/fast/dom/attr_dead_doc-expected.txt: Removed.
+        * platform/gtk/fast/dom/css-cached-import-rule-expected.txt: Removed.
+        * platform/gtk/fast/dom/css-insert-import-rule-expected.txt: Removed.
+        * platform/gtk/fast/dom/delete-contents-expected.txt: Removed.
+        * platform/gtk/fast/dom/horizontal-scrollbar-in-rtl-expected.txt: Removed.
+        * platform/gtk/fast/dom/vertical-scrollbar-in-rtl-expected.txt: Removed.
+        * platform/gtk/fast/dynamic/001-expected.txt: Removed.
+        * platform/gtk/fast/dynamic/005-expected.txt: Removed.
+        * platform/gtk/fast/dynamic/anonymous-block-layer-lost-expected.txt: Removed.
+        * platform/gtk/fast/dynamic/float-no-longer-overhanging-expected.txt: Removed.
+        * platform/gtk/fast/dynamic/float-withdrawal-2-expected.txt: Removed.
+        * platform/gtk/fast/dynamic/floating-to-positioned-2-expected.txt: Removed.
+        * platform/gtk/fast/dynamic/floating-to-positioned-expected.txt: Removed.
+        * platform/gtk/fast/dynamic/insertAdjacentElement-expected.txt: Removed.
+        * platform/gtk/fast/dynamic/staticY-expected.txt: Removed.
+        * platform/gtk/fast/dynamic/subtree-parent-static-y-expected.txt: Removed.
+        * platform/gtk/fast/events/document-elementFromPoint-expected.txt: Removed.
+        * platform/gtk/fast/events/event-attribute-expected.txt: Removed.
+        * platform/gtk/fast/files/workers/worker-read-blob-async-expected.txt: Removed.
+        * platform/gtk/fast/files/workers/worker-read-blob-sync-expected.txt: Removed.
+        * platform/gtk/fast/flexbox/flex-hang-expected.txt: Removed.
+        * platform/gtk/fast/forms/002-expected.txt: Removed.
+        * platform/gtk/fast/forms/005-expected.txt: Removed.
+        * platform/gtk/fast/forms/input-placeholder-paint-order-expected.txt: Removed.
+        * platform/gtk/fast/forms/textarea/textarea-placeholder-paint-order-expected.txt: Removed.
+        * platform/gtk/fast/frames/002-expected.txt: Removed.
+        * platform/gtk/fast/frames/calculate-fixed-expected.txt: Removed.
+        * platform/gtk/fast/frames/calculate-order-expected.txt: Removed.
+        * platform/gtk/fast/frames/calculate-percentage-expected.txt: Removed.
+        * platform/gtk/fast/frames/calculate-relative-expected.txt: Removed.
+        * platform/gtk/fast/frames/calculate-round-expected.txt: Removed.
+        * platform/gtk/fast/frames/content-opacity-1-expected.txt: Removed.
+        * platform/gtk/fast/frames/content-opacity-2-expected.txt: Removed.
+        * platform/gtk/fast/frames/empty-cols-attribute-expected.txt: Removed.
+        * platform/gtk/fast/frames/empty-frame-src-expected.txt: Removed.
+        * platform/gtk/fast/frames/frame-set-whitespace-attributes-expected.txt: Removed.
+        * platform/gtk/fast/frames/iframe-scaling-with-scroll-expected.txt: Removed.
+        * platform/gtk/fast/frames/iframe-text-contents-expected.txt: Removed.
+        * platform/gtk/fast/frames/invalid-expected.txt: Removed.
+        * platform/gtk/fast/frames/no-frame-borders-expected.txt: Removed.
+        * platform/gtk/fast/gradients/background-clipped-expected.txt: Removed.
+        * platform/gtk/fast/images/gif-large-checkerboard-expected.txt: Removed.
+        * platform/gtk/fast/images/gray-scale-png-with-color-profile-expected.txt: Removed.
+        * platform/gtk/fast/images/png-suite/test-expected.txt: Removed.
+        * platform/gtk/fast/images/zoomed-img-size-expected.txt: Removed.
+        * platform/gtk/fast/inline-block/004-expected.txt: Removed.
+        * platform/gtk/fast/inline-block/005-expected.txt: Removed.
+        * platform/gtk/fast/invalid/015-expected.txt: Removed.
+        * platform/gtk/fast/invalid/table-residual-style-crash-expected.txt: Removed.
+        * platform/gtk/fast/layers/opacity-stacking-expected.txt: Removed.
+        * platform/gtk/fast/layers/positioned-inside-root-with-margins-expected.txt: Removed.
+        * platform/gtk/fast/layers/zindex-ridonkulous-expected.txt: Removed.
+        * platform/gtk/fast/multicol/break-properties-expected.txt: Removed.
+        * platform/gtk/fast/multicol/pagination-h-horizontal-bt-expected.txt: Removed.
+        * platform/gtk/fast/multicol/pagination-h-horizontal-tb-expected.txt: Removed.
+        * platform/gtk/fast/multicol/pagination-h-vertical-lr-expected.txt: Removed.
+        * platform/gtk/fast/multicol/pagination-h-vertical-rl-expected.txt: Removed.
+        * platform/gtk/fast/multicol/pagination-v-horizontal-bt-expected.txt: Removed.
+        * platform/gtk/fast/multicol/pagination-v-horizontal-tb-expected.txt: Removed.
+        * platform/gtk/fast/multicol/pagination-v-vertical-lr-expected.txt: Removed.
+        * platform/gtk/fast/multicol/pagination-v-vertical-rl-expected.txt: Removed.
+        * platform/gtk/fast/multicol/vertical-lr/break-properties-expected.txt: Removed.
+        * platform/gtk/fast/multicol/vertical-lr/rules-with-border-before-expected.txt: Removed.
+        * platform/gtk/fast/multicol/vertical-rl/break-properties-expected.txt: Removed.
+        * platform/gtk/fast/multicol/vertical-rl/rules-with-border-before-expected.txt: Removed.
+        * platform/gtk/fast/overflow/overflow-update-transform-expected.txt: Removed.
+        * platform/gtk/fast/overflow/position-relative-expected.txt: Removed.
+        * platform/gtk/fast/overflow/trailing-float-linebox-expected.txt: Removed.
+        * platform/gtk/fast/overflow/unreachable-content-test-expected.txt: Removed.
+        * platform/gtk/fast/parser/innerhtml-with-prefixed-elements-expected.txt: Removed.
+        * platform/gtk/fast/parser/style-script-head-test-expected.txt: Removed.
+        * platform/gtk/fast/reflections/reflection-with-zoom-expected.txt: Removed.
+        * platform/gtk/fast/reflections/table-cell-expected.txt: Removed.
+        * platform/gtk/fast/repaint/background-generated-expected.txt: Removed.
+        * platform/gtk/fast/repaint/content-into-overflow-expected.txt: Removed.
+        * platform/gtk/fast/repaint/erase-overflow-expected.txt: Removed.
+        * platform/gtk/fast/repaint/fixed-tranformed-expected.txt: Removed.
+        * platform/gtk/fast/repaint/float-in-new-block-with-layout-delta-expected.txt: Removed.
+        * platform/gtk/fast/repaint/float-new-in-block-expected.txt: Removed.
+        * platform/gtk/fast/repaint/focus-ring-expected.txt: Removed.
+        * platform/gtk/fast/repaint/inline-block-resize-expected.txt: Removed.
+        * platform/gtk/fast/repaint/intermediate-layout-position-clip-expected.txt: Removed.
+        * platform/gtk/fast/repaint/intermediate-layout-position-expected.txt: Removed.
+        * platform/gtk/fast/repaint/invisible-objects-expected.txt: Removed.
+        * platform/gtk/fast/repaint/layer-hide-when-needs-layout-expected.txt: Removed.
+        * platform/gtk/fast/repaint/layer-visibility-expected.txt: Removed.
+        * platform/gtk/fast/repaint/layout-state-only-positioned-expected.txt: Removed.
+        * platform/gtk/fast/repaint/overflow-flipped-writing-mode-block-in-regions-expected.txt: Removed.
+        * platform/gtk/fast/repaint/overflow-into-content-expected.txt: Removed.
+        * platform/gtk/fast/repaint/repaint-during-scroll-expected.txt: Removed.
+        * platform/gtk/fast/repaint/table-cell-collapsed-border-scroll-expected.txt: Removed.
+        * platform/gtk/fast/repaint/table-col-background-expected.txt: Removed.
+        * platform/gtk/fast/repaint/table-outer-border-expected.txt: Removed.
+        * platform/gtk/fast/repaint/table-row-expected.txt: Removed.
+        * platform/gtk/fast/repaint/table-section-overflow-expected.txt: Removed.
+        * platform/gtk/fast/repaint/table-two-pass-layout-overpaint-expected.txt: Removed.
+        * platform/gtk/fast/repaint/transform-disable-layoutstate-expected.txt: Removed.
+        * platform/gtk/fast/repaint/transform-replaced-shadows-expected.txt: Removed.
+        * platform/gtk/fast/repaint/transform-rotate-and-remove-expected.txt: Removed.
+        * platform/gtk/fast/repaint/view-background-from-body-1-expected.txt: Removed.
+        * platform/gtk/fast/repaint/view-background-from-body-2-expected.txt: Removed.
+        * platform/gtk/fast/replaced/008-expected.txt: Removed.
+        * platform/gtk/fast/replaced/percent-height-in-anonymous-block-expected.txt: Removed.
+        * platform/gtk/fast/replaced/selection-rect-expected.txt: Removed.
+        * platform/gtk/fast/sub-pixel/selection/selection-gaps-at-fractional-offsets-expected.txt: Removed.
+        * platform/gtk/fast/table/024-expected.txt: Removed.
+        * platform/gtk/fast/table/031-expected.txt: Removed.
+        * platform/gtk/fast/table/032-expected.txt: Removed.
+        * platform/gtk/fast/table/auto-100-percent-width-expected.txt: Removed.
+        * platform/gtk/fast/table/caption-relayout-expected.txt: Removed.
+        * platform/gtk/fast/table/div-as-col-span-expected.txt: Removed.
+        * platform/gtk/fast/table/fixed-granular-cols-expected.txt: Removed.
+        * platform/gtk/fast/table/fixed-with-auto-with-colspan-expected.txt: Removed.
+        * platform/gtk/fast/table/fixed-with-auto-with-colspan-vertical-expected.txt: Removed.
+        * platform/gtk/fast/table/growCellForImageQuirk-expected.txt: Removed.
+        * platform/gtk/fast/table/growCellForImageQuirk-vertical-expected.txt: Removed.
+        * platform/gtk/fast/table/height-percent-test-vertical-expected.txt: Removed.
+        * platform/gtk/fast/table/percent-widths-stretch-expected.txt: Removed.
+        * platform/gtk/fast/table/percent-widths-stretch-vertical-expected.txt: Removed.
+        * platform/gtk/fast/table/table-row-outline-paint-expected.txt: Removed.
+        * platform/gtk/fast/table/vertical-align-baseline-readjust-expected.txt: Removed.
+        * platform/gtk/fast/table/wide-colspan-expected.txt: Removed.
+        * platform/gtk/fast/table/wide-column-expected.txt: Removed.
+        * platform/gtk/fast/text/align-center-rtl-spill-expected.txt: Removed.
+        * platform/gtk/fast/text/stripNullFromText-expected.txt: Removed.
+        * platform/gtk/fast/text/wbr-pre-expected.txt: Removed.
+        * platform/gtk/fast/text/whitespace/019-expected.txt: Removed.
+        * platform/gtk/fast/text/whitespace/022-expected.txt: Removed.
+        * platform/gtk/fast/text/whitespace/023-expected.txt: Removed.
+        * platform/gtk/fast/tokenizer/missing-style-end-tag-1-expected.txt: Removed.
+        * platform/gtk/fast/tokenizer/missing-style-end-tag-2-expected.txt: Removed.
+        * platform/gtk/fast/tokenizer/script-after-frameset-expected.txt: Removed.
+        * platform/gtk/fast/transforms/matrix-01-expected.txt: Removed.
+        * platform/gtk/fast/transforms/matrix-02-expected.txt: Removed.
+        * platform/gtk/fast/transforms/rotated-transform-affects-scrolling-1-expected.txt: Removed.
+        * platform/gtk/fast/transforms/rotated-transform-affects-scrolling-2-expected.txt: Removed.
+        * platform/gtk/fast/writing-mode/body-direction-propagation-blocked-expected.txt: Removed.
+        * platform/gtk/fast/writing-mode/body-direction-propagation-expected.txt: Removed.
+        * platform/gtk/fast/writing-mode/body-writing-mode-propagation-blocked-expected.txt: Removed.
+        * platform/gtk/fast/writing-mode/body-writing-mode-propagation-expected.txt: Removed.
+        * platform/gtk/fast/writing-mode/floats-in-block-layout-expected.txt: Removed.
+        * platform/gtk/fast/writing-mode/inline-direction-positioning-expected.txt: Removed.
+        * platform/gtk/fast/writing-mode/margin-collapse-expected.txt: Removed.
+        * platform/gtk/fast/writing-mode/root-lr-basic-expected.txt: Removed.
+        * platform/gtk/fast/writing-mode/self-collapsing-block-expected.txt: Removed.
+        * platform/gtk/js/dom/global-constructors-attributes-dedicated-worker-expected.txt: Removed.
+        * platform/gtk/js/dom/global-constructors-attributes-shared-worker-expected.txt: Removed.
+        * platform/gtk/tables/mozilla/bugs/bug12910-2-expected.txt: Removed.
+        * platform/gtk/tables/mozilla/bugs/bug131020-2-expected.txt: Removed.
+        * platform/gtk/tables/mozilla/bugs/bug137388-1-expected.txt: Removed.
+        * platform/gtk/tables/mozilla/bugs/bug137388-2-expected.txt: Removed.
+        * platform/gtk/tables/mozilla/bugs/bug137388-3-expected.txt: Removed.
+        * platform/gtk/tables/mozilla/bugs/bug157890-expected.txt: Removed.
+        * platform/gtk/tables/mozilla/bugs/bug1818-3-expected.txt: Removed.
+        * platform/gtk/tables/mozilla/bugs/bug1818-6-expected.txt: Removed.
+        * platform/gtk/tables/mozilla/bugs/bug222336-expected.txt: Removed.
+        * platform/gtk/tables/mozilla/bugs/bug222467-expected.txt: Removed.
+        * platform/gtk/tables/mozilla/bugs/bug269566-expected.txt: Removed.
+        * platform/gtk/tables/mozilla/bugs/bug277062-expected.txt: Removed.
+        * platform/gtk/tables/mozilla/bugs/bug28933-expected.txt: Removed.
+        * platform/gtk/tables/mozilla/bugs/bug2954-expected.txt: Removed.
+        * platform/gtk/tables/mozilla/bugs/bug8032-2-expected.txt: Removed.
+        * platform/gtk/tables/mozilla/bugs/bug83786-expected.txt: Removed.
+        * platform/gtk/tables/mozilla/core/col_widths_fix_autoFixPer-expected.txt: Removed.
+        * platform/gtk/tables/mozilla_expected_failures/bugs/bug128876-expected.txt: Removed.
+        * platform/gtk/transitions/transition-end-event-rendering-expected.txt: Removed.
+
+2013-10-16  Andreas Kling  <akling@apple.com>
+
+        Remove port-specific SVG test expectations that were identical to generic expectations.
+        <https://webkit.org/b/121551>
+
+        Reviewed by Antti Koivisto.
+
+        * platform/efl/fast/repaint/repaint-svg-after-style-change-expected.txt: Removed.
+        * platform/efl/http/tests/misc/object-embedding-svg-delayed-size-negotiation-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/coords-dom-01-f-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/coords-dom-02-f-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/coords-dom-03-f-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/coords-dom-04-f-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/filters-felem-01-b-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/interact-pointer-03-t-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/linking-uri-01-b-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/painting-marker-07-f-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/pservers-grad-17-b-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/pservers-grad-20-b-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/pservers-pattern-04-f-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/styling-pres-02-f-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/text-tref-03-b-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/text-tspan-02-b-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/types-dom-01-b-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/types-dom-02-f-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/types-dom-03-b-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/types-dom-04-b-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/types-dom-07-f-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1/filters-turb-02-f-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1/struct-frag-01-t-expected.txt: Removed.
+        * platform/efl/svg/as-image/image-respects-pageScaleFactor-change-expected.txt: Removed.
+        * platform/efl/svg/as-image/svg-as-image-expected.txt: Removed.
+        * platform/efl/svg/as-image/svg-non-integer-scaled-image-expected.txt: Removed.
+        * platform/efl/svg/as-object/svg-embedded-in-html-in-iframe-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-in-clip-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-path-child-clipped-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-path-clipped-no-content-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-path-evenodd-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-path-evenodd-nonzero-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-path-nonzero-evenodd-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-path-nonzero-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-path-recursive-call-by-child-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-path-recursive-call-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-path-transform-1-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-path-use-as-child2-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-path-use-as-child3-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-path-use-as-child4-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-path-use-as-child5-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-path-with-container-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-path-with-different-unittypes-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-path-with-different-unittypes2-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clip-path-with-invisibile-child-expected.txt: Removed.
+        * platform/efl/svg/clip-path/clipper-placement-issue-expected.txt: Removed.
+        * platform/efl/svg/css/path-with-shadow-expected.txt: Removed.
+        * platform/efl/svg/css/shadow-and-opacity-expected.txt: Removed.
+        * platform/efl/svg/custom/pattern-scaling-expected.txt: Removed.
+        * platform/efl/svg/dom/css-transforms-expected.txt: Removed.
+        * platform/efl/svg/dynamic-updates/SVGFEColorMatrixElement-dom-values-attr-expected.txt: Removed.
+        * platform/efl/svg/dynamic-updates/SVGFEColorMatrixElement-svgdom-type-prop-expected.txt: Removed.
+        * platform/efl/svg/dynamic-updates/SVGFEColorMatrixElement-svgdom-values-prop-expected.txt: Removed.
+        * platform/efl/svg/dynamic-updates/SVGFECompositeElement-dom-k2-attr-expected.txt: Removed.
+        * platform/efl/svg/dynamic-updates/SVGFECompositeElement-dom-k3-attr-expected.txt: Removed.
+        * platform/efl/svg/dynamic-updates/SVGFECompositeElement-dom-k4-attr-expected.txt: Removed.
+        * platform/efl/svg/dynamic-updates/SVGFECompositeElement-svgdom-k1-prop-expected.txt: Removed.
+        * platform/efl/svg/dynamic-updates/SVGFECompositeElement-svgdom-k2-prop-expected.txt: Removed.
+        * platform/efl/svg/dynamic-updates/SVGFECompositeElement-svgdom-k3-prop-expected.txt: Removed.
+        * platform/efl/svg/dynamic-updates/SVGFECompositeElement-svgdom-operator-prop-expected.txt: Removed.
+        * platform/efl/svg/dynamic-updates/SVGFEConvolveMatrixElement-dom-bias-attr-expected.txt: Removed.
+        * platform/efl/svg/dynamic-updates/SVGFEConvolveMatrixElement-dom-edgeMode-attr-expected.txt: Removed.
+        * platform/efl/svg/dynamic-updates/SVGFEConvolveMatrixElement-dom-targetX-attr-expected.txt: Removed.
+        * platform/efl/svg/dynamic-updates/SVGFEConvolveMatrixElement-dom-targetY-attr-expected.txt: Removed.
+        * platform/efl/svg/dynamic-updates/SVGFEDiffuseLightingElement-dom-diffuseConstant-attr-expected.txt: Removed.
+        * platform/efl/svg/dynamic-updates/SVGFEDiffuseLightingElement-svgdom-surfaceScale-prop-expected.txt: Removed.
+        * platform/efl/svg/filters/big-sized-filter-2-expected.txt: Removed.
+        * platform/efl/svg/filters/big-sized-filter-expected.txt: Removed.
+        * platform/efl/svg/filters/feImage-change-target-id-expected.txt: Removed.
+        * platform/efl/svg/filters/feImage-filterUnits-objectBoundingBox-primitiveUnits-objectBoundingBox-expected.txt: Removed.
+        * platform/efl/svg/filters/feImage-filterUnits-userSpaceOnUse-primitiveUnits-objectBoundingBox-expected.txt: Removed.
+        * platform/efl/svg/filters/feImage-filterUnits-userSpaceOnUse-primitiveUnits-userSpaceOnUse-expected.txt: Removed.
+        * platform/efl/svg/filters/feImage-remove-target-expected.txt: Removed.
+        * platform/efl/svg/filters/feMerge-wrong-input-expected.txt: Removed.
+        * platform/efl/svg/filters/filter-empty-g-expected.txt: Removed.
+        * platform/efl/svg/foreignObject/disallowed-svg-nodes-as-direct-children-expected.txt: Removed.
+        * platform/efl/svg/foreignObject/fO-display-none-expected.txt: Removed.
+        * platform/efl/svg/foreignObject/fO-display-none-with-relative-pos-content-expected.txt: Removed.
+        * platform/efl/svg/foreignObject/fO-parent-display-none-expected.txt: Removed.
+        * platform/efl/svg/foreignObject/fO-parent-display-none-with-relative-pos-content-expected.txt: Removed.
+        * platform/efl/svg/foreignObject/fO-parent-of-parent-display-none-expected.txt: Removed.
+        * platform/efl/svg/foreignObject/fO-parent-of-parent-display-none-with-relative-pos-content-expected.txt: Removed.
+        * platform/efl/svg/hixie/cascade/001-broken-expected.txt: Removed.
+        * platform/efl/svg/hixie/data-types/001-expected.txt: Removed.
+        * platform/efl/svg/hixie/dynamic/003-expected.txt: Removed.
+        * platform/efl/svg/hixie/dynamic/004-expected.txt: Removed.
+        * platform/efl/svg/hixie/dynamic/005-expected.txt: Removed.
+        * platform/efl/svg/hixie/dynamic/006-expected.txt: Removed.
+        * platform/efl/svg/hixie/error/001-expected.txt: Removed.
+        * platform/efl/svg/hixie/error/006-expected.txt: Removed.
+        * platform/efl/svg/hixie/error/007-expected.txt: Removed.
+        * platform/efl/svg/hixie/error/008-expected.txt: Removed.
+        * platform/efl/svg/hixie/error/009-expected.txt: Removed.
+        * platform/efl/svg/hixie/error/014-expected.txt: Removed.
+        * platform/efl/svg/hixie/error/014-test-expected.txt: Removed.
+        * platform/efl/svg/hixie/error/015-expected.txt: Removed.
+        * platform/efl/svg/hixie/error/016-expected.txt: Removed.
+        * platform/efl/svg/hixie/mixed/004-expected.txt: Removed.
+        * platform/efl/svg/hixie/mixed/005-expected.txt: Removed.
+        * platform/efl/svg/hixie/painting/001-expected.txt: Removed.
+        * platform/efl/svg/hixie/processing-model/005-expected.txt: Removed.
+        * platform/efl/svg/hixie/rendering-model/001-expected.txt: Removed.
+        * platform/efl/svg/hixie/rendering-model/002-expected.txt: Removed.
+        * platform/efl/svg/hixie/rendering-model/003a-expected.txt: Removed.
+        * platform/efl/svg/hixie/text/001-expected.txt: Removed.
+        * platform/efl/svg/hixie/transform/001-expected.txt: Removed.
+        * platform/efl/svg/hixie/use/001-expected.txt: Removed.
+        * platform/efl/svg/hixie/use/002-expected.txt: Removed.
+        * platform/efl/svg/hixie/use/002-test-expected.txt: Removed.
+        * platform/efl/svg/hixie/viewbox/001-expected.txt: Removed.
+        * platform/efl/svg/hixie/viewbox/002-expected.txt: Removed.
+        * platform/efl/svg/hixie/viewbox/003-expected.txt: Removed.
+        * platform/efl/svg/hixie/viewbox/004-expected.txt: Removed.
+        * platform/efl/svg/overflow/overflow-on-foreignObject-expected.txt: Removed.
+        * platform/efl/svg/overflow/overflow-on-inner-svg-element-defaults-expected.txt: Removed.
+        * platform/efl/svg/overflow/overflow-on-inner-svg-element-expected.txt: Removed.
+        * platform/efl/svg/overflow/overflow-on-outermost-svg-element-defaults-expected.txt: Removed.
+        * platform/efl/svg/overflow/overflow-on-outermost-svg-element-ignore-attribute-1-expected.txt: Removed.
+        * platform/efl/svg/overflow/overflow-on-outermost-svg-element-ignore-attribute-2-expected.txt: Removed.
+        * platform/efl/svg/overflow/overflow-on-outermost-svg-element-ignore-attribute-3-expected.txt: Removed.
+        * platform/efl/svg/repaint/repainting-after-animation-element-removal-expected.txt: Removed.
+        * platform/efl/svg/text/text-hkern-expected.txt: Removed.
+        * platform/efl/svg/text/text-hkern-on-vertical-text-expected.txt: Removed.
+        * platform/efl/svg/text/text-vkern-expected.txt: Removed.
+        * platform/efl/svg/text/text-vkern-on-horizontal-text-expected.txt: Removed.
+        * platform/efl/svg/text/textPathBoundsBug-expected.txt: Removed.
+        * platform/efl/svg/zoom/page/absolute-sized-document-scrollbars-expected.txt: Removed.
+        * platform/efl/svg/zoom/page/zoom-background-image-tiled-expected.txt: Removed.
+        * platform/efl/svg/zoom/page/zoom-svg-as-background-with-relative-size-and-viewBox-expected.txt: Removed.
+        * platform/efl/svg/zoom/page/zoom-svg-as-image-expected.txt: Removed.
+        * platform/efl/svg/zoom/page/zoom-svg-as-object-expected.txt: Removed.
+        * platform/efl/svg/zoom/page/zoom-svg-as-relative-image-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/coords-dom-01-f-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/coords-dom-02-f-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/coords-dom-03-f-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/coords-dom-04-f-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/filters-felem-01-b-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/interact-pointer-03-t-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/linking-uri-01-b-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/painting-marker-07-f-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/pservers-grad-17-b-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/pservers-grad-20-b-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/pservers-pattern-04-f-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/styling-pres-02-f-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/text-tref-03-b-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/text-tspan-02-b-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/types-dom-01-b-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/types-dom-02-f-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/types-dom-03-b-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/types-dom-04-b-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1-SE/types-dom-07-f-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1/filters-turb-02-f-expected.txt: Removed.
+        * platform/gtk/svg/W3C-SVG-1.1/struct-frag-01-t-expected.txt: Removed.
+        * platform/gtk/svg/as-image/svg-as-image-expected.txt: Removed.
+        * platform/gtk/svg/as-image/svg-non-integer-scaled-image-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-in-clip-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-path-child-clipped-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-path-clipped-no-content-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-path-evenodd-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-path-evenodd-nonzero-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-path-nonzero-evenodd-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-path-nonzero-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-path-recursive-call-by-child-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-path-recursive-call-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-path-transform-1-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-path-use-as-child2-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-path-use-as-child3-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-path-use-as-child4-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-path-use-as-child5-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-path-with-container-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-path-with-different-unittypes-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-path-with-different-unittypes2-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clip-path-with-invisibile-child-expected.txt: Removed.
+        * platform/gtk/svg/clip-path/clipper-placement-issue-expected.txt: Removed.
+        * platform/gtk/svg/css/path-with-shadow-expected.txt: Removed.
+        * platform/gtk/svg/css/shadow-and-opacity-expected.txt: Removed.
+        * platform/gtk/svg/custom/SVGNumber-interface-expected.txt: Removed.
+        * platform/gtk/svg/custom/SVGPoint-interface-expected.txt: Removed.
+        * platform/gtk/svg/custom/SVGRect-interface-expected.txt: Removed.
+        * platform/gtk/svg/custom/attribute-namespace-check-expected.txt: Removed.
+        * platform/gtk/svg/custom/circular-marker-reference-3-expected.txt: Removed.
+        * platform/gtk/svg/custom/class-baseValue-expected.txt: Removed.
+        * platform/gtk/svg/custom/class-selector-expected.txt: Removed.
+        * platform/gtk/svg/custom/clip-path-with-css-transform-1-expected.txt: Removed.
+        * platform/gtk/svg/custom/clip-path-with-css-transform-2-expected.txt: Removed.
+        * platform/gtk/svg/custom/clip-path-with-transform-expected.txt: Removed.
+        * platform/gtk/svg/custom/conditional-processing-outside-switch-expected.txt: Removed.
+        * platform/gtk/svg/custom/convolution-crash-expected.txt: Removed.
+        * platform/gtk/svg/custom/create-metadata-element-expected.txt: Removed.
+        * platform/gtk/svg/custom/createImageElement-expected.txt: Removed.
+        * platform/gtk/svg/custom/createelement-expected.txt: Removed.
+        * platform/gtk/svg/custom/css-pixels-dpi-expected.txt: Removed.
+        * platform/gtk/svg/custom/dasharrayOrigin-expected.txt: Removed.
+        * platform/gtk/svg/custom/display-none-expected.txt: Removed.
+        * platform/gtk/svg/custom/dynamic-empty-path-expected.txt: Removed.
+        * platform/gtk/svg/custom/dynamic-viewBox-expected.txt: Removed.
+        * platform/gtk/svg/custom/empty-merge-expected.txt: Removed.
+        * platform/gtk/svg/custom/evt-onload-expected.txt: Removed.
+        * platform/gtk/svg/custom/fill-opacity-hsl-expected.txt: Removed.
+        * platform/gtk/svg/custom/fill-opacity-rgba-expected.txt: Removed.
+        * platform/gtk/svg/custom/fill-update-expected.txt: Removed.
+        * platform/gtk/svg/custom/fractional-rects-expected.txt: Removed.
+        * platform/gtk/svg/custom/glyph-selection-arabic-forms-expected.txt: Removed.
+        * platform/gtk/svg/custom/glyph-selection-non-bmp-expected.txt: Removed.
+        * platform/gtk/svg/custom/gradient-attr-update-expected.txt: Removed.
+        * platform/gtk/svg/custom/gradient-rotated-bbox-expected.txt: Removed.
+        * platform/gtk/svg/custom/gradient-userSpaceOnUse-with-percentage-expected.txt: Removed.
+        * platform/gtk/svg/custom/group-opacity-expected.txt: Removed.
+        * platform/gtk/svg/custom/hover-default-fill-expected.txt: Removed.
+        * platform/gtk/svg/custom/image-with-aspect-ratio-stretch-expected.txt: Removed.
+        * platform/gtk/svg/custom/inner-percent-expected.txt: Removed.
+        * platform/gtk/svg/custom/inner-svg-hit-test-expected.txt: Removed.
+        * platform/gtk/svg/custom/invalid-dasharray-expected.txt: Removed.
+        * platform/gtk/svg/custom/invalid-transforms-expected.txt: Removed.
+        * platform/gtk/svg/custom/js-update-container-expected.txt: Removed.
+        * platform/gtk/svg/custom/js-update-image-and-display-expected.txt: Removed.
+        * platform/gtk/svg/custom/js-update-image-and-display2-expected.txt: Removed.
+        * platform/gtk/svg/custom/js-update-image-and-display3-expected.txt: Removed.
+        * platform/gtk/svg/custom/large-bounding-box-percents-expected.txt: Removed.
+        * platform/gtk/svg/custom/marker-empty-path-expected.txt: Removed.
+        * platform/gtk/svg/custom/marker-referencePoint-expected.txt: Removed.
+        * platform/gtk/svg/custom/mask-changes-expected.txt: Removed.
+        * platform/gtk/svg/custom/mask-colorspace-expected.txt: Removed.
+        * platform/gtk/svg/custom/mask-excessive-malloc-expected.txt: Removed.
+        * platform/gtk/svg/custom/mask-inside-defs-expected.txt: Removed.
+        * platform/gtk/svg/custom/mask-on-multiple-objects-expected.txt: Removed.
+        * platform/gtk/svg/custom/mask-with-default-value-expected.txt: Removed.
+        * platform/gtk/svg/custom/non-scaling-stroke-markers-expected.txt: Removed.
+        * platform/gtk/svg/custom/outer-svg-unknown-feature-expected.txt: Removed.
+        * platform/gtk/svg/custom/painting-marker-07-f-inherit-expected.txt: Removed.
+        * platform/gtk/svg/custom/path-moveto-only-rendering-expected.txt: Removed.
+        * platform/gtk/svg/custom/path-update-expected.txt: Removed.
+        * platform/gtk/svg/custom/pattern-no-pixelation-expected.txt: Removed.
+        * platform/gtk/svg/custom/pattern-scaling-expected.txt: Removed.
+        * platform/gtk/svg/custom/pattern-y-offset-expected.txt: Removed.
+        * platform/gtk/svg/custom/percentage-rect2-expected.txt: Removed.
+        * platform/gtk/svg/custom/poly-identify-expected.txt: Removed.
+        * platform/gtk/svg/custom/polyline-hittest-expected.txt: Removed.
+        * platform/gtk/svg/custom/polyline-invalid-points-expected.txt: Removed.
+        * platform/gtk/svg/custom/polyline-setattribute-points-null-expected.txt: Removed.
+        * platform/gtk/svg/custom/root-container-opacity-clip-viewBox-expected.txt: Removed.
+        * platform/gtk/svg/custom/rootelement-expected.txt: Removed.
+        * platform/gtk/svg/custom/rounded-rects-expected.txt: Removed.
+        * platform/gtk/svg/custom/sheet-title-expected.txt: Removed.
+        * platform/gtk/svg/custom/small-rect-scale-expected.txt: Removed.
+        * platform/gtk/svg/custom/subpaths-moveto-only-rendering-expected.txt: Removed.
+        * platform/gtk/svg/custom/svg-fonts-with-no-element-reference-expected.txt: Removed.
+        * platform/gtk/svg/custom/svgpolyparser-extra-space-expected.txt: Removed.
+        * platform/gtk/svg/custom/text-gradient-no-content-expected.txt: Removed.
+        * platform/gtk/svg/custom/transform-ignore-after-invalid-expected.txt: Removed.
+        * platform/gtk/svg/custom/transform-invalid-expected.txt: Removed.
+        * platform/gtk/svg/custom/transform-removeAttributeNS-expected.txt: Removed.
+        * platform/gtk/svg/custom/transform-scale-parse-expected.txt: Removed.
+        * platform/gtk/svg/custom/transform-with-ending-space-expected.txt: Removed.
+        * platform/gtk/svg/custom/use-css-no-effect-on-shadow-tree-expected.txt: Removed.
+        * platform/gtk/svg/custom/use-disappears-after-style-update-expected.txt: Removed.
+        * platform/gtk/svg/custom/use-empty-reference-expected.txt: Removed.
+        * platform/gtk/svg/custom/use-extern-href-expected.txt: Removed.
+        * platform/gtk/svg/custom/use-invalid-pattern-expected.txt: Removed.
+        * platform/gtk/svg/custom/use-property-synchronization-crash-expected.txt: Removed.
+        * platform/gtk/svg/custom/use-recalcStyle-crash-expected.txt: Removed.
+        * platform/gtk/svg/custom/use-symbol-overflow-expected.txt: Removed.
+        * platform/gtk/svg/custom/viewBox-hit-expected.txt: Removed.
+        * platform/gtk/svg/custom/viewport-clip-expected.txt: Removed.
+        * platform/gtk/svg/custom/viewport-no-width-height-expected.txt: Removed.
+        * platform/gtk/svg/custom/viewport-update-expected.txt: Removed.
+        * platform/gtk/svg/custom/viewport-update2-expected.txt: Removed.
+        * platform/gtk/svg/custom/visibility-override-clip-expected.txt: Removed.
+        * platform/gtk/svg/custom/visibility-override-expected.txt: Removed.
+        * platform/gtk/svg/custom/visibility-override-filter-expected.txt: Removed.
+        * platform/gtk/svg/custom/visibility-override-mask-expected.txt: Removed.
+        * platform/gtk/svg/custom/width-full-percentage-expected.txt: Removed.
+        * platform/gtk/svg/custom/xhtml-no-svg-renderer-expected.txt: Removed.
+        * platform/gtk/svg/custom/xml-stylesheet-expected.txt: Removed.
+        * platform/gtk/svg/filters/big-sized-filter-2-expected.txt: Removed.
+        * platform/gtk/svg/filters/big-sized-filter-expected.txt: Removed.
+        * platform/gtk/svg/filters/feImage-change-target-id-expected.txt: Removed.
+        * platform/gtk/svg/filters/feImage-filterUnits-objectBoundingBox-primitiveUnits-objectBoundingBox-expected.txt: Removed.
+        * platform/gtk/svg/filters/feImage-filterUnits-userSpaceOnUse-primitiveUnits-objectBoundingBox-expected.txt: Removed.
+        * platform/gtk/svg/filters/feImage-filterUnits-userSpaceOnUse-primitiveUnits-userSpaceOnUse-expected.txt: Removed.
+        * platform/gtk/svg/filters/feImage-remove-target-expected.txt: Removed.
+        * platform/gtk/svg/filters/feMerge-wrong-input-expected.txt: Removed.
+        * platform/gtk/svg/filters/filter-empty-g-expected.txt: Removed.
+        * platform/gtk/svg/foreignObject/disallowed-svg-nodes-as-direct-children-expected.txt: Removed.
+        * platform/gtk/svg/foreignObject/fO-display-none-expected.txt: Removed.
+        * platform/gtk/svg/foreignObject/fO-display-none-with-relative-pos-content-expected.txt: Removed.
+        * platform/gtk/svg/foreignObject/fO-parent-display-none-expected.txt: Removed.
+        * platform/gtk/svg/foreignObject/fO-parent-display-none-with-relative-pos-content-expected.txt: Removed.
+        * platform/gtk/svg/foreignObject/fO-parent-of-parent-display-none-expected.txt: Removed.
+        * platform/gtk/svg/foreignObject/fO-parent-of-parent-display-none-with-relative-pos-content-expected.txt: Removed.
+        * platform/gtk/svg/hixie/cascade/001-broken-expected.txt: Removed.
+        * platform/gtk/svg/hixie/data-types/001-expected.txt: Removed.
+        * platform/gtk/svg/hixie/dynamic/003-expected.txt: Removed.
+        * platform/gtk/svg/hixie/dynamic/004-expected.txt: Removed.
+        * platform/gtk/svg/hixie/dynamic/005-expected.txt: Removed.
+        * platform/gtk/svg/hixie/dynamic/006-expected.txt: Removed.
+        * platform/gtk/svg/hixie/error/001-expected.txt: Removed.
+        * platform/gtk/svg/hixie/error/006-expected.txt: Removed.
+        * platform/gtk/svg/hixie/error/007-expected.txt: Removed.
+        * platform/gtk/svg/hixie/error/008-expected.txt: Removed.
+        * platform/gtk/svg/hixie/error/009-expected.txt: Removed.
+        * platform/gtk/svg/hixie/error/014-expected.txt: Removed.
+        * platform/gtk/svg/hixie/error/014-test-expected.txt: Removed.
+        * platform/gtk/svg/hixie/error/015-expected.txt: Removed.
+        * platform/gtk/svg/hixie/error/016-expected.txt: Removed.
+        * platform/gtk/svg/hixie/painting/001-expected.txt: Removed.
+        * platform/gtk/svg/hixie/processing-model/005-expected.txt: Removed.
+        * platform/gtk/svg/hixie/rendering-model/001-expected.txt: Removed.
+        * platform/gtk/svg/hixie/rendering-model/002-expected.txt: Removed.
+        * platform/gtk/svg/hixie/rendering-model/003a-expected.txt: Removed.
+        * platform/gtk/svg/hixie/text/001-expected.txt: Removed.
+        * platform/gtk/svg/hixie/transform/001-expected.txt: Removed.
+        * platform/gtk/svg/hixie/use/001-expected.txt: Removed.
+        * platform/gtk/svg/hixie/use/002-expected.txt: Removed.
+        * platform/gtk/svg/hixie/use/002-test-expected.txt: Removed.
+        * platform/gtk/svg/hixie/viewbox/001-expected.txt: Removed.
+        * platform/gtk/svg/hixie/viewbox/002-expected.txt: Removed.
+        * platform/gtk/svg/hixie/viewbox/003-expected.txt: Removed.
+        * platform/gtk/svg/hixie/viewbox/004-expected.txt: Removed.
+        * platform/gtk/svg/overflow/overflow-on-foreignObject-expected.txt: Removed.
+        * platform/gtk/svg/overflow/overflow-on-inner-svg-element-defaults-expected.txt: Removed.
+        * platform/gtk/svg/overflow/overflow-on-inner-svg-element-expected.txt: Removed.
+        * platform/gtk/svg/overflow/overflow-on-outermost-svg-element-defaults-expected.txt: Removed.
+        * platform/gtk/svg/overflow/overflow-on-outermost-svg-element-ignore-attribute-1-expected.txt: Removed.
+        * platform/gtk/svg/overflow/overflow-on-outermost-svg-element-ignore-attribute-2-expected.txt: Removed.
+        * platform/gtk/svg/overflow/overflow-on-outermost-svg-element-ignore-attribute-3-expected.txt: Removed.
+        * platform/gtk/svg/repaint/repainting-after-animation-element-removal-expected.txt: Removed.
+        * platform/gtk/svg/text/text-hkern-expected.txt: Removed.
+        * platform/gtk/svg/text/text-hkern-on-vertical-text-expected.txt: Removed.
+        * platform/gtk/svg/text/text-vkern-expected.txt: Removed.
+        * platform/gtk/svg/text/text-vkern-on-horizontal-text-expected.txt: Removed.
+        * platform/gtk/svg/text/textPathBoundsBug-expected.txt: Removed.
+        * platform/gtk/svg/zoom/page/absolute-sized-document-scrollbars-expected.txt: Removed.
+        * platform/gtk/svg/zoom/page/zoom-background-image-tiled-expected.txt: Removed.
+        * platform/gtk/svg/zoom/page/zoom-svg-as-background-with-relative-size-and-viewBox-expected.txt: Removed.
+        * platform/gtk/svg/zoom/page/zoom-svg-as-image-expected.txt: Removed.
+        * platform/gtk/svg/zoom/page/zoom-svg-as-object-expected.txt: Removed.
+        * platform/gtk/svg/zoom/page/zoom-svg-as-relative-image-expected.txt: Removed.
+
+2013-10-16  Andreas Kling  <akling@apple.com>
+
+        Remove Mac-specific test expectations that were identical to generic expectations.
+        <https://webkit.org/b/121551>
+
+        Reviewed by Antti Koivisto.
+
+        * platform/mac-lion/css3/filters/composited-during-animation-layertree-expected.txt: Removed.
+        * platform/mac-lion/fast/canvas/canvas-scale-shadowBlur-expected.txt: Removed.
+        * platform/mac-lion/fast/canvas/canvas-scale-strokePath-shadow-expected.txt: Removed.
+        * platform/mac-lion/fast/canvas/canvas-strokePath-gradient-shadow-expected.txt: Removed.
+        * platform/mac-lion/fast/canvas/canvas-strokeRect-gradient-shadow-expected.txt: Removed.
+        * platform/mac-lion/http/tests/multipart/multipart-replace-non-html-content-expected.txt: Removed.
+        * platform/mac-lion/http/tests/multipart/policy-ignore-crash-expected.txt: Removed.
+        * platform/mac-lion/platform/mac/fast/loader/file-url-mimetypes-2-expected.txt: Removed.
+        * platform/mac-lion/sputnik/Unicode/Unicode_320/S7.6_A2.2_T2-expected.txt: Removed.
+        * platform/mac-lion/sputnik/Unicode/Unicode_320/S7.6_A5.2_T8-expected.txt: Removed.
+        * platform/mac-wk2/fast/repaint/table-cell-collapsed-border-scroll-expected.txt: Removed.
+        * platform/mac-wk2/http/tests/security/cross-origin-local-storage-wk1-expected.txt: Removed.
+        * platform/mac/compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants-expected.txt: Removed.
+        * platform/mac/compositing/overflow/clipping-behaviour-change-is-not-propagated-to-descendants2-expected.txt: Removed.
+        * platform/mac/webarchive/loading/mainresource-null-mimetype-crash-expected.txt: Removed.
+
+2013-10-16  Andreas Kling  <akling@apple.com>
+
+        Remove Windows-specific test expectations that were identical to generic expectations.
+        <https://webkit.org/b/121551>
+
+        Reviewed by Antti Koivisto.
+
+        * platform/win-7sp0/plugins/npp-set-window-called-during-destruction-expected.txt: Removed.
+        * platform/win-future/svg/batik/text/textPosition2-expected.txt: Removed.
+        * platform/win/css3/filters/effect-reference-expected.txt: Removed.
+        * platform/win/css3/filters/effect-reference-hw-expected.txt: Removed.
+        * platform/win/editing/deleting/delete-br-009-expected.txt: Removed.
+        * platform/win/editing/input/scroll-to-edge-if-line-break-at-end-of-document-contenteditable-expected.txt: Removed.
+        * platform/win/editing/inserting/insert-3800346-fix-expected.txt: Removed.
+        * platform/win/editing/selection/anchor-focus2-expected.txt: Removed.
+        * platform/win/editing/selection/anchor-focus3-expected.txt: Removed.
+        * platform/win/editing/selection/collapse-selection-in-bidi-expected.txt: Removed.
+        * platform/win/editing/selection/drag-text-delay-expected.txt: Removed.
+        * platform/win/editing/selection/extend-selection-home-end-expected.txt: Removed.
+        * platform/win/fast/block/positioning/016-expected.txt: Removed.
+        * platform/win/fast/block/positioning/025-expected.txt: Removed.
+        * platform/win/fast/block/positioning/fixed-position-stacking-context-expected.txt: Removed.
+        * platform/win/fast/canvas/canvas-draw-canvas-on-canvas-shadow-expected.txt: Removed.
+        * platform/win/fast/canvas/canvas-fillRect-gradient-shadow-expected.txt: Removed.
+        * platform/win/fast/canvas/canvas-render-layer-expected.txt: Removed.
+        * platform/win/fast/canvas/canvas-strokeRect-alpha-shadow-expected.txt: Removed.
+        * platform/win/fast/css/zoom-body-scroll-expected.txt: Removed.
+        * platform/win/fast/dom/horizontal-scrollbar-in-rtl-expected.txt: Removed.
+        * platform/win/fast/dom/icon-url-property-expected.txt: Removed.
+        * platform/win/fast/dom/vertical-scrollbar-in-rtl-expected.txt: Removed.
+        * platform/win/fast/events/event-attribute-expected.txt: Removed.
+        * platform/win/fast/events/ondragenter-expected.txt: Removed.
+        * platform/win/fast/forms/cursor-at-editable-content-boundary-expected.txt: Removed.
+        * platform/win/fast/forms/implicit-submission-expected.txt: Removed.
+        * platform/win/fast/forms/range/slider-mouse-events-expected.txt: Removed.
+        * platform/win/fast/forms/select-popup-pagekeys-expected.txt: Removed.
+        * platform/win/fast/images/crossfade-client-not-removed-crash-expected.txt: Removed.
+        * platform/win/fast/media/w3c/test_media_queries-expected.txt: Removed.
+        * platform/win/fast/repaint/table-cell-collapsed-border-scroll-expected.txt: Removed.
+        * platform/win/http/tests/inspector/resource-har-conversion-expected.txt: Removed.
+        * platform/win/http/tests/misc/acid3-expected.txt: Removed.
+        * platform/win/media/media-can-play-ogg-expected.txt: Removed.
+        * platform/win/media/media-can-play-wav-audio-expected.txt: Removed.
+        * platform/win/media/video-colorspace-yuv420-expected.txt: Removed.
+        * platform/win/media/video-colorspace-yuv422-expected.txt: Removed.
+        * platform/win/media/video-size-intrinsic-scale-expected.txt: Removed.
+        * platform/win/plugins/netscape-dom-access-and-reload-expected.txt: Removed.
+        * platform/win/plugins/npp-set-window-called-during-destruction-expected.txt: Removed.
+        * platform/win/svg/custom/pattern-scaling-expected.txt: Removed.
+
+2013-10-15  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Unreviewed EFL gardening. Rebaselining after r155253.
+
+        * platform/efl/fast/forms/formmove3-expected.txt:
+        * platform/efl/fast/forms/input-align-image-expected.txt:
+        * platform/efl/fast/forms/preserveFormDuringResidualStyle-expected.txt:
+        * platform/efl/fast/invalid/003-expected.txt:
+        * platform/efl/tables/mozilla/bugs/bug647-expected.txt:
+
+2013-10-15  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Unreviewed EFL gardening. Rebaselining after r155324.
+
+        * platform/efl/fast/forms/placeholder-position-expected.png:
+        * platform/efl/fast/forms/placeholder-position-expected.txt:
+
+2013-10-15  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed, EFL gardening. Added new baselines for missing expected results.
+
+        * platform/efl/TestExpectations:
+        * platform/efl/editing/unsupported-content/table-delete-001-expected.txt: Added.
+        * platform/efl/editing/unsupported-content/table-delete-003-expected.png:
+        * platform/efl/editing/unsupported-content/table-delete-003-expected.txt: Added.
+
+2013-10-15  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed, EFL gardening.
+
+        * platform/efl/TestExpectations: svg/filters/filter-hidden-content.svg is passed after r142955.
+
+2013-10-15  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Unreviewed EFL gardening. Rebaselining after r155408.
+
+        * platform/efl/fast/forms/input-placeholder-visibility-1-expected.txt:
+        * platform/efl/fast/forms/input-placeholder-visibility-3-expected.txt:
+        * platform/efl/fast/forms/textarea-placeholder-pseudo-style-expected.txt:
+        * platform/efl/fast/forms/textarea-placeholder-visibility-1-expected.txt:
+        * platform/efl/fast/forms/textarea-placeholder-visibility-2-expected.txt:
+
+2013-10-15  Roger Fong  <roger_fong@apple.com>
+
+        [Windows] Unreviewed gardening of some forms tests.
+
+        * platform/win/fast/forms/search-styled-expected.txt: Added.
+        * platform/win/fast/forms/select-writing-direction-natural-expected.txt: Removed.
+
+2013-10-14  Ryosuke Niwa  <rniwa@webkit.org>
+
+        REGRESSION: Crash in XMLDocumentParser::startElementNs
+        https://bugs.webkit.org/show_bug.cgi?id=122817
+
+        Reviewed by Darin Adler.
+
+        Add a regression test from https://chromium.googlesource.com/chromium/blink/+/57afab5d21cccd89f032b9a3e62f3a61c6a0e9c2
+
+        * fast/parser/resources/remove-parent.xhtml: Added.
+        * fast/parser/xhtml-synchronous-detach-crash-expected.txt: Added.
+        * fast/parser/xhtml-synchronous-detach-crash.html: Added.
+
+2013-10-15  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r157460.
+        http://trac.webkit.org/changeset/157460
+        https://bugs.webkit.org/show_bug.cgi?id=122858
+
+        Mis-skip, test isn't actually failing. (Requested by rfong on
+        #webkit).
+
+        * platform/wk2/TestExpectations:
+
+2013-10-15  Roger Fong  <roger_fong@apple.com>
+
+        Unreviewed gardening. Skip unexpected flakey test: webaudio/oscillator-sawtooth.html.
+
+        * platform/wk2/TestExpectations:
+
+2013-10-15  Morten Stenshorne  <mstensho@opera.com>
+
+        Add support for the column-fill property
+        https://bugs.webkit.org/show_bug.cgi?id=117693
+
+        Reviewed by David Hyatt.
+
+        With column-fill support, a lot of multicol tests needed an update.
+        The old implementation behaved as if column-fill were 'auto', but the
+        initial value is 'balance', so now we need to be explicit about that.
+        For auto-height tests it doesn't really matter - such multicols are always
+        balanced anyway.
+
+        * compositing/geometry/composited-in-columns.html:
+        * fast/block/positioning/offsetLeft-offsetTop-multicolumn-expected.html:
+        * fast/block/positioning/offsetLeft-offsetTop-multicolumn.html:
+        * fast/borders/border-antialiasing.html:
+        * fast/dynamic/float-moved-downwards-for-pagination-expected.html:
+        * fast/dynamic/float-moved-downwards-for-pagination.html:
+        * fast/dynamic/layer-no-longer-paginated.html:
+        * fast/events/document-elementFromPoint.html:
+        * fast/line-grid/line-grid-inside-columns.html:
+        * fast/line-grid/line-grid-into-columns.html:
+        * fast/multicol/break-properties.html:
+        * fast/multicol/cell-shrinkback.html:
+        * fast/multicol/client-rects.html:
+        * fast/multicol/column-count-with-rules.html:
+        * fast/multicol/fixed-column-percent-logical-height-orthogonal-writing-mode.html:
+        * fast/multicol/flipped-blocks-hit-test.html:
+        * fast/multicol/float-paginate-complex.html:
+        * fast/multicol/float-paginate-empty-lines.html:
+        * fast/multicol/float-paginate.html:
+        * fast/multicol/float-truncation.html:
+        * fast/multicol/hit-test-above-or-below.html:
+        * fast/multicol/hit-test-end-of-column-with-line-height.html:
+        * fast/multicol/hit-test-end-of-column.html:
+        * fast/multicol/hit-test-float.html:
+        * fast/multicol/image-inside-nested-blocks-with-border.html:
+        * fast/multicol/layers-in-multicol.html:
+        * fast/multicol/layers-split-across-columns.html:
+        * fast/multicol/margin-collapse.html:
+        * fast/multicol/mixed-opacity-fixed-test.html:
+        * fast/multicol/mixed-opacity-test.html:
+        * fast/multicol/mixed-positioning-stacking-order.html:
+        * fast/multicol/nested-columns.html:
+        * fast/multicol/newmulticol/cell-shrinkback-expected.html:
+        * fast/multicol/newmulticol/cell-shrinkback.html:
+        * fast/multicol/newmulticol/column-rules-fixed-height-expected.html:
+        * fast/multicol/newmulticol/fixed-height-fill-auto-expected.html: Added.
+        * fast/multicol/newmulticol/fixed-height-fill-auto.html: Added.
+        * fast/multicol/newmulticol/fixed-height-fill-balance-expected.html: Added.
+        * fast/multicol/newmulticol/fixed-height-fill-balance.html: Added.
+        * fast/multicol/newmulticol/float-avoidance-expected.html:
+        * fast/multicol/newmulticol/float-avoidance.html:
+        * fast/multicol/newmulticol/float-multicol-expected.html:
+        * fast/multicol/newmulticol/float-multicol.html:
+        * fast/multicol/newmulticol/float-paginate-complex-expected.html:
+        * fast/multicol/newmulticol/float-paginate-complex.html:
+        * fast/multicol/newmulticol/float-paginate-empty-lines-expected.html:
+        * fast/multicol/newmulticol/float-paginate-empty-lines.html:
+        * fast/multicol/newmulticol/float-paginate-expected.html:
+        * fast/multicol/newmulticol/float-paginate.html:
+        * fast/multicol/newmulticol/layers-in-multicol-expected.html:
+        * fast/multicol/newmulticol/layers-in-multicol.html:
+        * fast/multicol/newmulticol/layers-split-across-columns-expected.html:
+        * fast/multicol/newmulticol/layers-split-across-columns.html:
+        * fast/multicol/newmulticol/positioned-split-expected.html:
+        * fast/multicol/newmulticol/positioned-split.html:
+        * fast/multicol/newmulticol/positioned-with-constrained-height-expected.html:
+        * fast/multicol/newmulticol/positioned-with-constrained-height.html:
+        * fast/multicol/null-lastFloat-in-removeFloatingObjectsBelow.html:
+        * fast/multicol/orphans-relayout.html:
+        * fast/multicol/overflow-across-columns-percent-height.html:
+        * fast/multicol/overflow-across-columns.html:
+        * fast/multicol/overflow-content-expected.html:
+        * fast/multicol/overflow-content.html:
+        * fast/multicol/overflow-unsplittable.html:
+        * fast/multicol/pageLogicalOffset-vertical-expected.html:
+        * fast/multicol/pageLogicalOffset-vertical.html:
+        * fast/multicol/paginate-block-replaced.html:
+        * fast/multicol/positioned-outside-of-columns.html:
+        * fast/multicol/positioned-split.html:
+        * fast/multicol/positive-leading.html:
+        * fast/multicol/progression-reverse-overflow-expected.html:
+        * fast/multicol/progression-reverse-overflow.html:
+        * fast/multicol/progression-reverse.html:
+        * fast/multicol/scrolling-overflow.html:
+        * fast/multicol/seamless-flowed-through-columns-expected.html:
+        * fast/multicol/seamless-flowed-through-columns.html:
+        * fast/multicol/table-margin-collapse.html:
+        * fast/multicol/table-row-height-increase-expected.html:
+        * fast/multicol/table-row-height-increase.html:
+        * fast/multicol/table-vertical-align.html:
+        * fast/multicol/transform-inside-opacity.html:
+        * fast/multicol/unsplittable-inline-block.html:
+        * fast/multicol/vertical-lr/break-properties.html:
+        * fast/multicol/vertical-lr/column-count-with-rules.html:
+        * fast/multicol/vertical-lr/float-multicol.html:
+        * fast/multicol/vertical-lr/float-paginate-complex.html:
+        * fast/multicol/vertical-lr/float-paginate.html:
+        * fast/multicol/vertical-lr/float-truncation.html:
+        * fast/multicol/vertical-lr/image-inside-nested-blocks-with-border.html:
+        * fast/multicol/vertical-lr/nested-columns.html:
+        * fast/multicol/vertical-lr/rules-with-border-before.html:
+        * fast/multicol/vertical-lr/unsplittable-inline-block.html:
+        * fast/multicol/vertical-rl/break-properties.html:
+        * fast/multicol/vertical-rl/column-count-with-rules.html:
+        * fast/multicol/vertical-rl/float-avoidance.html:
+        * fast/multicol/vertical-rl/float-multicol.html:
+        * fast/multicol/vertical-rl/float-paginate-complex.html:
+        * fast/multicol/vertical-rl/float-paginate.html:
+        * fast/multicol/vertical-rl/float-truncation.html:
+        * fast/multicol/vertical-rl/image-inside-nested-blocks-with-border.html:
+        * fast/multicol/vertical-rl/nested-columns.html:
+        * fast/multicol/vertical-rl/rule-style.html:
+        * fast/multicol/vertical-rl/rules-with-border-before.html:
+        * fast/multicol/vertical-rl/unsplittable-inline-block.html:
+        * fast/multicol/widows-and-orphans.html:
+        * fast/regions/region-style-in-columns.html:
+        * fast/repaint/multicol-repaint.html:
+        * fast/sub-pixel/column-clipping.html:
+
+2013-10-14  Santosh Mahto  <santosh.ma@samsung.com>
+
+        in safari ,the background-color of input[type="search"] can't work
+        https://bugs.webkit.org/show_bug.cgi?id=119967
+
+        Reviewed by Ryosuke Niwa.
+
+        Added testcase to verify the background color of search field when
+        search field is styled with css background property.
+
+        * fast/forms/search/search-field-background-color-expected.txt: Added.
+        * fast/forms/search/search-field-background-color.html: Added.
+        * platform/mac/fast/forms/search-styled-expected.txt: Rebaselined. 
+
+2013-10-14  Zoltan Horvath  <zoltan@webkit.org>
+
+        [CSS Shapes] Move shape-inside floats tests into their own subdirectory
+        https://bugs.webkit.org/show_bug.cgi?id=122761
+
+        Reviewed by Sam Weinig.
+
+        I'm going to add some new float tests soon. In order to keep our shapes tests organized,
+        I'm moving the shape-inside with floating content tests to their own subdirectory.
+
+        * fast/shapes/shape-inside/floats/shape-inside-floats-simple-expected.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-floats-simple-expected.html.
+        * fast/shapes/shape-inside/floats/shape-inside-floats-simple.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-floats-simple.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-lower-left-triangle-block-content-expected.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-lower-left-triangle-block-content-expected.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-lower-left-triangle-block-content.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-lower-left-triangle-block-content.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-lower-left-triangle-inline-content-expected.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-lower-left-triangle-inline-content-expected.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-lower-left-triangle-inline-content.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-lower-left-triangle-inline-content.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-lower-right-triangle-block-content-expected.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-lower-right-triangle-block-content-expected.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-lower-right-triangle-block-content.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-lower-right-triangle-block-content.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-lower-right-triangle-expected.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-lower-right-triangle-expected.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-lower-right-triangle-inline-content-expected.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-lower-right-triangle-inline-content-expected.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-lower-right-triangle-inline-content.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-lower-right-triangle-inline-content.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-lower-right-triangle.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-lower-right-triangle.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-upper-left-triangle-block-content-expected.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-upper-left-triangle-block-content-expected.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-upper-left-triangle-block-content.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-upper-left-triangle-block-content.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-upper-left-triangle-inline-content-expected.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-upper-left-triangle-inline-content-expected.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-upper-left-triangle-inline-content.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-upper-left-triangle-inline-content.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-upper-left-triangle-vertical-lr-inline-content-expected.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-upper-left-triangle-vertical-lr-inline-content-expected.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-upper-left-triangle-vertical-lr-inline-content.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-upper-left-triangle-vertical-lr-inline-content.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-upper-right-triangle-block-content-expected.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-upper-right-triangle-block-content-expected.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-upper-right-triangle-block-content.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-upper-right-triangle-block-content.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-upper-right-triangle-inline-content-expected.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-upper-right-triangle-inline-content-expected.html.
+        * fast/shapes/shape-inside/floats/shape-inside-left-float-in-upper-right-triangle-inline-content.html: Renamed from LayoutTests/fast/shapes/shape-inside/shape-inside-left-float-in-upper-right-triangle-inline-content.html.
+
+2013-10-14  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Unreviewed, EFL gardening. Below tests don't be failed anymore after enabling subpixel layout.
+
+        fast/spatial-navigation/snav-container-white-space.html
+        fast/spatial-navigation/snav-fully-aligned-horizontally.html
+        fast/spatial-navigation/snav-iframe-no-scrollable-content.html
+
+        * platform/efl/TestExpectations:
+
+2013-10-14  Roger Fong  <roger_fong@apple.com>
+
+        Windows select element doesn't draw RTL properly.
+        https://bugs.webkit.org/show_bug.cgi?id=122785.
+
+        Reviewed by Brent Fulgham.
+
+        * platform/win/fast/text/international/pop-up-button-text-alignment-and-direction-expected.txt: Removed.
+
+2013-10-14  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Crash in WebCore::BidiResolver<WebCore::InlineIterator, WebCore::BidiRun>::createBidiRunsForLine
+        https://bugs.webkit.org/show_bug.cgi?id=122776
+
+        Reviewed by Darin Adler.
+
+        * fast/text/whitespace/whitespace-and-margin-wrap-after-list-marker-crash-expected.txt: Added.
+        * fast/text/whitespace/whitespace-and-margin-wrap-after-list-marker-crash.html: Added.
+
+2013-10-14  Samuel White  <samuel_white@apple.com>
+
+        AX: fieldset should have GroupRole and legend should be description.
+        https://bugs.webkit.org/show_bug.cgi?id=122534
+
+        Reviewed by Chris Fleizach.
+
+        legend no longer treated as titleUIElement so removing tests that check this functionality.
+        Added test to check that legend is used as AXDescription of fieldset if present.
+
+        * accessibility/fieldset-element.html: Added.
+        * accessibility/hidden-legend-expected.txt: Removed.
+        * accessibility/hidden-legend.html: Removed.
+        * accessibility/legend.html: Removed.
+        * platform/efl/accessibility/legend-expected.txt: Removed.
+        * platform/gtk/accessibility/legend-expected.txt: Removed.
+        * platform/mac/accessibility/fieldset-element-expected.txt: Added.
+        * platform/mac/accessibility/legend-expected.txt: Removed.
+        * platform/mac/accessibility/role-subrole-roledescription-expected.txt:
+        * platform/mac/accessibility/role-subrole-roledescription.html:
+
+2013-10-14  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Assertion failure in Range::processContentsBetweenOffsets
+        https://bugs.webkit.org/show_bug.cgi?id=122777
+
+        Reviewed by Darin Adler.
+
+        * fast/dom/Range/range-delete-contents-mutation-event-crash-expected.txt: Added.
+        * fast/dom/Range/range-delete-contents-mutation-event-crash.html: Added.
+
+2013-10-14  Alexey Proskuryakov  <ap@apple.com>
+
+        Add an empty window.crypto.webkitSubtle
+        https://bugs.webkit.org/show_bug.cgi?id=122778
+
+        Reviewed by Mark Hahnenberg.
+
+        * TestExpectations: The feature isn't enabled anywhere yet, so skipping the new tests.
+
+        * security/crypto-subtle-gc-2-expected.txt: Added.
+        * security/crypto-subtle-gc-2.html: Added.
+        * security/crypto-subtle-gc-3-expected.txt: Added.
+        * security/crypto-subtle-gc-3.html: Added.
+        * security/crypto-subtle-gc-expected.txt: Added.
+        * security/crypto-subtle-gc.html: Added.
+
+2013-10-14  Alexandru Chiculita  <achicu@adobe.com>
+
+        The content of the DOM panel for iframes is not updated until the "onload" event
+        https://bugs.webkit.org/show_bug.cgi?id=122653
+
+        Reviewed by Darin Adler.
+
+        Added test to check that immediately after the scripting context is created, the
+        inspector already has access to the nodeId of the document of the iframe.
+
+        * http/tests/inspector-protocol/loading-iframe-document-node-expected.txt: Added.
+        * http/tests/inspector-protocol/loading-iframe-document-node.html: Added.
+        * http/tests/inspector-protocol/resources/slow-test-page.html: Added.
+
+2013-10-14  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix the paths so that the test passes.
+
+        * js/regress/put-by-id.html:
+
+2013-10-14  Alexey Proskuryakov  <ap@apple.com>
+
+        window.crypto doesn't preserve custom properties
+        https://bugs.webkit.org/show_bug.cgi?id=122770
+
+        Reviewed by Mark Hahnenberg.
+
+        * security/crypto-gc-expected.txt: Added.
+        * security/crypto-gc.html: Added.
+
+2013-10-14  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Shapes] Image valued shape-outside shapes should update the layout after the image has been loaded
+        https://bugs.webkit.org/show_bug.cgi?id=122340
+
+        Reviewed by Simon Fraser.
+
+        Verify that an image-valued shape-outside layout is updated after the image has been loaded.
+
+        * http/tests/css/css-image-valued-shape-expected.txt: Added.
+        * http/tests/css/css-image-valued-shape.html: Added.
+
+2013-10-14  Filip Pizlo  <fpizlo@apple.com>
+
+        Baseline JIT should use the DFG's PutById IC
+        https://bugs.webkit.org/show_bug.cgi?id=122704
+
+        Reviewed by Mark Hahnenberg.
+
+        * js/regress/put-by-id-expected.txt: Added.
+        * js/regress/put-by-id.html: Added.
+        * js/regress/script-tests/put-by-id.js: Added.
+        (foo):
+        (bar):
+
 2013-10-14  Mihnea Ovidenie  <mihnea@adobe.com>
 
         [CSSRegions] Move style-scoped* tests into fast/regions/style-scoped

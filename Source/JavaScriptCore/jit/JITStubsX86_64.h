@@ -45,12 +45,6 @@ namespace JSC {
 
 #if COMPILER(GCC)
 
-// These ASSERTs remind you that, if you change the layout of JITStackFrame, you
-// need to change the assembly trampolines below to match.
-COMPILE_ASSERT(offsetof(struct JITStackFrame, callFrame) == 0x58, JITStackFrame_callFrame_offset_matches_ctiTrampoline);
-COMPILE_ASSERT(offsetof(struct JITStackFrame, code) == 0x48, JITStackFrame_code_offset_matches_ctiTrampoline);
-COMPILE_ASSERT(offsetof(struct JITStackFrame, savedRBX) == 0x78, JITStackFrame_stub_argument_space_matches_ctiTrampoline);
-
 asm (
 ".text\n"
 ".globl " SYMBOL_STRING(ctiTrampoline) "\n"
@@ -87,25 +81,6 @@ SYMBOL_STRING(ctiTrampoline) ":" "\n"
 ".globl " SYMBOL_STRING(ctiTrampolineEnd) "\n"
 HIDE_SYMBOL(ctiTrampolineEnd) "\n"
 SYMBOL_STRING(ctiTrampolineEnd) ":" "\n"
-);
-
-asm (
-".globl " SYMBOL_STRING(ctiVMThrowTrampoline) "\n"
-HIDE_SYMBOL(ctiVMThrowTrampoline) "\n"
-SYMBOL_STRING(ctiVMThrowTrampoline) ":" "\n"
-    "movq %rsp, %rdi" "\n"
-    "call " LOCAL_REFERENCE(cti_vm_throw) "\n"
-    "int3" "\n"
-);
-
-asm (
-".globl " SYMBOL_STRING(ctiVMHandleException) "\n"
-HIDE_SYMBOL(ctiVMHandleException) "\n"
-SYMBOL_STRING(ctiVMHandleException) ":" "\n"
-    "movq %r13, %rdi" "\n"
-    "call " LOCAL_REFERENCE(cti_vm_handle_exception) "\n"
-    // When cti_vm_handle_exception returns, rax has callFrame and rdx has handler address
-    "jmp *%rdx" "\n"
 );
 
 asm (
@@ -171,7 +146,6 @@ SYMBOL_STRING(ctiMasmProbeTrampoline) ":" "\n"
     "movq %rcx, " STRINGIZE_VALUE_OF(PROBE_CPU_EAX_OFFSET) "(%rbp)" "\n"
     "movq 6 * " STRINGIZE_VALUE_OF(PTR_SIZE) "(%rax), %rcx" "\n"
     "movq %rcx, " STRINGIZE_VALUE_OF(PROBE_CPU_ESP_OFFSET) "(%rbp)" "\n"
-    "movq %rcx, " STRINGIZE_VALUE_OF(PROBE_JIT_STACK_FRAME_OFFSET) "(%rbp)" "\n"
 
     "movq %r8, " STRINGIZE_VALUE_OF(PROBE_CPU_R8_OFFSET) "(%rbp)" "\n"
     "movq %r9, " STRINGIZE_VALUE_OF(PROBE_CPU_R9_OFFSET) "(%rbp)" "\n"
@@ -290,15 +264,6 @@ SYMBOL_STRING(ctiMasmProbeTrampolineEnd) ":" "\n"
 #endif // USE(MASM_PROBE)
 
 #endif // COMPILER(GCC)
-
-#if COMPILER(MSVC)
-
-// These ASSERTs remind you that, if you change the layout of JITStackFrame, you
-// need to change the assembly trampolines in JITStubsMSVC64.asm to match.
-COMPILE_ASSERT(offsetof(struct JITStackFrame, code) % 16 == 0x0, JITStackFrame_maintains_16byte_stack_alignment);
-COMPILE_ASSERT(offsetof(struct JITStackFrame, savedRBX) == 0x58, JITStackFrame_stub_argument_space_matches_ctiTrampoline);
-
-#endif // COMPILER(MSVC)
 
 } // namespace JSC
 

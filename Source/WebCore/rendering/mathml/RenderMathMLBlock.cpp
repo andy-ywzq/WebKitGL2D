@@ -55,15 +55,15 @@ RenderMathMLBlock::RenderMathMLBlock(Document& document)
 {
 }
 
-bool RenderMathMLBlock::isChildAllowed(RenderObject* child, RenderStyle*) const
+bool RenderMathMLBlock::isChildAllowed(const RenderObject& child, const RenderStyle&) const
 {
-    return child->node() && child->node()->nodeType() == Node::ELEMENT_NODE;
+    return child.node() && isElement(*child.node());
 }
 
 RenderMathMLBlock* RenderMathMLBlock::createAnonymousMathMLBlock(EDisplay display)
 {
     RefPtr<RenderStyle> newStyle = RenderStyle::createAnonymousStyleWithDisplay(style(), display);
-    RenderMathMLBlock* newBlock = new (renderArena()) RenderMathMLBlock(document());
+    RenderMathMLBlock* newBlock = new RenderMathMLBlock(document());
     newBlock->setStyle(newStyle.release());
     return newBlock;
 }

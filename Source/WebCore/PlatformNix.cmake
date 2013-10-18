@@ -270,6 +270,7 @@ if (WTF_USE_CURL)
 
     list(APPEND WebCore_SOURCES
         platform/network/NetworkStorageSessionStub.cpp
+        platform/network/curl/CertificateInfoCurl.cpp
         platform/network/curl/CookieDatabaseBackingStore.cpp
         platform/network/curl/CookieJarCurl.cpp
         platform/network/curl/CookieManager.cpp
@@ -295,6 +296,7 @@ else ()
         loader/soup/CachedRawResourceSoup.cpp
         loader/soup/SubresourceLoaderSoup.cpp
         platform/network/soup/AuthenticationChallengeSoup.cpp
+        platform/network/soup/CertificateInfoSoup.cpp
         platform/network/soup/CookieJarSoup.cpp
         platform/network/soup/CookieStorageSoup.cpp
         platform/network/soup/CredentialStorageSoup.cpp

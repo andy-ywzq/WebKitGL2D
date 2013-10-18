@@ -33,7 +33,6 @@
 #include "CodeBlock.h"
 #include "Interpreter.h"
 #include "JITInlines.h"
-#include "JITStubCall.h"
 #include "JSArray.h"
 #include "JSFunction.h"
 #include "Operations.h"
@@ -273,9 +272,7 @@ void JIT::compileOpCall(OpcodeID opcodeID, Instruction* instruction, unsigned ca
     }
 
     DataLabelPtr addressOfLinkedFunctionCheck;
-    BEGIN_UNINTERRUPTED_SEQUENCE(sequenceOpCall);
     Jump slowCase = branchPtrWithPatch(NotEqual, regT0, addressOfLinkedFunctionCheck, TrustedImmPtr(0));
-    END_UNINTERRUPTED_SEQUENCE(sequenceOpCall);
 
     addSlowCase(slowCase);
     addSlowCase(branch32(NotEqual, regT1, TrustedImm32(JSValue::CellTag)));

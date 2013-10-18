@@ -354,10 +354,11 @@ EditingStyle::EditingStyle(const Position& position, PropertiesToInclude propert
 }
 
 EditingStyle::EditingStyle(const StylePropertySet* style)
-    : m_mutableStyle(style ? style->mutableCopy() : 0)
-    , m_shouldUseFixedDefaultFontSize(false)
+    : m_shouldUseFixedDefaultFontSize(false)
     , m_fontSizeDelta(NoFontDelta)
 {
+    if (style)
+        m_mutableStyle = style->mutableCopy();
     extractFontSizeDelta();
 }
 
@@ -1011,10 +1012,12 @@ void EditingStyle::mergeInlineAndImplicitStyleOfElement(StyledElement* element, 
 {
     RefPtr<EditingStyle> styleFromRules = EditingStyle::create();
     styleFromRules->mergeStyleFromRulesForSerialization(element);
+
+    if (element->inlineStyle())
+        styleFromRules->m_mutableStyle->mergeAndOverrideOnConflict(*element->inlineStyle());
+
     styleFromRules->m_mutableStyle = extractEditingProperties(styleFromRules->m_mutableStyle.get(), propertiesToInclude);
     mergeStyle(styleFromRules->m_mutableStyle.get(), mode);
-
-    mergeInlineStyleOfElement(element, mode, propertiesToInclude);
 
     const Vector<OwnPtr<HTMLElementEquivalent> >& elementEquivalents = htmlElementEquivalents();
     for (size_t i = 0; i < elementEquivalents.size(); ++i) {

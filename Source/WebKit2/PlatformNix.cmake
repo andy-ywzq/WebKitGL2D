@@ -188,7 +188,6 @@ if (WTF_USE_CURL)
     )
 else ()
     list(APPEND WebKit2_SOURCES
-        Shared/soup/PlatformCertificateInfo.cpp
         Shared/soup/WebCoreArgumentCodersSoup.cpp
 
         UIProcess/API/C/soup/WKContextSoup.cpp

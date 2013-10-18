@@ -73,15 +73,15 @@ void RenderButton::addChild(RenderObject* newChild, RenderObject* beforeChild)
     m_inner->addChild(newChild, beforeChild);
 }
 
-void RenderButton::removeChild(RenderObject* oldChild)
+void RenderButton::removeChild(RenderObject& oldChild)
 {
     // m_inner should be the only child, but checking for direct children who
     // are not m_inner prevents security problems when that assumption is
     // violated.
-    if (oldChild == m_inner || !m_inner || oldChild->parent() == this) {
-        ASSERT(oldChild == m_inner || !m_inner);
+    if (&oldChild == m_inner || !m_inner || oldChild.parent() == this) {
+        ASSERT(&oldChild == m_inner || !m_inner);
         RenderFlexibleBox::removeChild(oldChild);
-        m_inner = 0;
+        m_inner = nullptr;
     } else
         m_inner->removeChild(oldChild);
 }
@@ -155,7 +155,7 @@ void RenderButton::setText(const String& str)
         if (m_buttonText)
             m_buttonText->setText(str.impl());
         else {
-            m_buttonText = new (renderArena()) RenderTextFragment(document(), str);
+            m_buttonText = new RenderTextFragment(document(), str);
             addChild(m_buttonText);
         }
     }

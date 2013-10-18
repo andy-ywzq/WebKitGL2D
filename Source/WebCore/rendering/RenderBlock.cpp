@@ -497,7 +497,7 @@ RenderBlock* RenderBlock::clone() const
         cloneBlock = createAnonymousBlock();
         cloneBlock->setChildrenInline(childrenInline());
     } else {
-        auto cloneRenderer = element()->createRenderer(renderArena(), *style());
+        auto cloneRenderer = element()->createRenderer(*style());
         cloneBlock = toRenderBlock(cloneRenderer);
         cloneBlock->setStyle(style());
 
@@ -1045,9 +1045,9 @@ static bool canMergeAnonymousBlock(RenderBlock* anonymousBlock)
     return true;
 }
 
-static bool canMergeContiguousAnonymousBlocks(RenderObject* oldChild, RenderObject* previous, RenderObject* next)
+static bool canMergeContiguousAnonymousBlocks(RenderObject& oldChild, RenderObject* previous, RenderObject* next)
 {
-    if (oldChild->documentBeingDestroyed() || oldChild->isInline() || oldChild->virtualContinuation())
+    if (oldChild.documentBeingDestroyed() || oldChild.isInline() || oldChild.virtualContinuation())
         return false;
 
     if (previous) {
@@ -1085,7 +1085,7 @@ void RenderBlock::collapseAnonymousBoxChild(RenderBlock* parent, RenderBlock* ch
     RenderFlowThread* childFlowThread = child->flowThreadContainingBlock();
     CurrentRenderFlowThreadMaintainer flowThreadMaintainer(childFlowThread);
 
-    parent->removeChildInternal(child, child->hasLayer() ? NotifyChildren : DontNotifyChildren);
+    parent->removeChildInternal(*child, child->hasLayer() ? NotifyChildren : DontNotifyChildren);
     child->moveAllChildrenTo(parent, nextSibling, child->hasLayer());
     // Delete the now-empty block's lines and nuke it.
     child->deleteLineBoxTree();
@@ -1094,7 +1094,7 @@ void RenderBlock::collapseAnonymousBoxChild(RenderBlock* parent, RenderBlock* ch
     child->destroy();
 }
 
-void RenderBlock::removeChild(RenderObject* oldChild)
+void RenderBlock::removeChild(RenderObject& oldChild)
 {
     // No need to waste time in merging or removing empty anonymous blocks.
     // We can just bail out if our document is getting destroyed.
@@ -1109,8 +1109,8 @@ void RenderBlock::removeChild(RenderObject* oldChild)
     // If this child is a block, and if our previous and next siblings are
     // both anonymous blocks with inline content, then we can go ahead and
     // fold the inline content back together.
-    RenderObject* prev = oldChild->previousSibling();
-    RenderObject* next = oldChild->nextSibling();
+    RenderObject* prev = oldChild.previousSibling();
+    RenderObject* next = oldChild.nextSibling();
     bool canMergeAnonymousBlocks = canMergeContiguousAnonymousBlocks(oldChild, prev, next);
     if (canMergeAnonymousBlocks && prev && next) {
         prev->setNeedsLayoutAndPrefWidthsRecalc();
@@ -1130,7 +1130,7 @@ void RenderBlock::removeChild(RenderObject* oldChild)
             // Cache this value as it might get changed in setStyle() call.
             bool inlineChildrenBlockHasLayer = inlineChildrenBlock->hasLayer();
             inlineChildrenBlock->setStyle(newStyle);
-            removeChildInternal(inlineChildrenBlock, inlineChildrenBlockHasLayer ? NotifyChildren : DontNotifyChildren);
+            removeChildInternal(*inlineChildrenBlock, inlineChildrenBlockHasLayer ? NotifyChildren : DontNotifyChildren);
             
             // Now just put the inlineChildrenBlock inside the blockChildrenBlock.
             RenderObject* beforeChild = prev == inlineChildrenBlock ? blockChildrenBlock->firstChild() : nullptr;
@@ -1183,7 +1183,7 @@ void RenderBlock::removeChild(RenderObject* oldChild)
 
         // If we are an empty anonymous block in the continuation chain,
         // we need to remove ourself and fix the continuation chain.
-        if (!beingDestroyed() && isAnonymousBlockContinuation() && !oldChild->isListMarker()) {
+        if (!beingDestroyed() && isAnonymousBlockContinuation() && !oldChild.isListMarker()) {
             auto containingBlockIgnoringAnonymous = containingBlock();
             while (containingBlockIgnoringAnonymous && containingBlockIgnoringAnonymous->isAnonymousBlock())
                 containingBlockIgnoringAnonymous = containingBlockIgnoringAnonymous->containingBlock();
@@ -1372,7 +1372,7 @@ void RenderBlock::imageChanged(WrappedImagePtr image, const IntRect*)
 {
     RenderBox::imageChanged(image);
 
-    if (!parent())
+    if (!parent() || !everHadLayout())
         return;
 
     ShapeValue* shapeValue = style()->shapeInside();
@@ -1381,6 +1381,10 @@ void RenderBlock::imageChanged(WrappedImagePtr image, const IntRect*)
         shapeInsideInfo->dirtyShapeSize();
         markShapeInsideDescendantsForLayout();
     }
+
+    ShapeValue* shapeOutsideValue = style()->shapeOutside();
+    if (isFloating() && shapeOutsideValue && shapeOutsideValue->image() && shapeOutsideValue->image()->data() == image)
+        parent()->setNeedsLayoutAndPrefWidthsRecalc();
 }
 
 void RenderBlock::updateShapeInsideInfoAfterStyleChange(const ShapeValue* shapeInside, const ShapeValue* oldShapeInside)
@@ -1413,9 +1417,23 @@ void RenderBlock::markShapeInsideDescendantsForLayout()
         childBlock->markShapeInsideDescendantsForLayout();
     }
 }
-#endif
 
-#if ENABLE(CSS_SHAPES)
+ShapeInsideInfo* RenderBlock::layoutShapeInsideInfo() const
+{
+    ShapeInsideInfo* shapeInsideInfo = view().layoutState()->shapeInsideInfo();
+
+    if (!shapeInsideInfo && flowThreadContainingBlock() && allowsShapeInsideInfoSharing()) {
+        LayoutUnit lineHeight = this->lineHeight(false, isHorizontalWritingMode() ? HorizontalLine : VerticalLine, PositionOfInteriorLineBoxes);
+        // regionAtBlockOffset returns regions like an array first={0,N-1}, second={N,M-1}, ...
+        LayoutUnit offset = logicalHeight() + lineHeight - LayoutUnit(1);
+        RenderRegion* region = regionAtBlockOffset(offset);
+        if (region)
+            shapeInsideInfo = region->shapeInsideInfo();
+    }
+
+    return shapeInsideInfo;
+}
+
 static inline bool shapeInfoRequiresRelayout(const RenderBlock* block)
 {
     ShapeInsideInfo* info = block->shapeInsideInfo();
@@ -1456,7 +1474,14 @@ bool RenderBlock::updateShapesBeforeBlockLayout()
 void RenderBlock::computeShapeSize()
 {
     ShapeInsideInfo* shapeInsideInfo = this->shapeInsideInfo();
-    if (shapeInsideInfo) {
+    if (!shapeInsideInfo)
+        return;
+
+    if (isRenderNamedFlowFragment()) {
+        ShapeInsideInfo* parentShapeInsideInfo = toRenderBlock(parent())->shapeInsideInfo();
+        ASSERT(parentShapeInsideInfo);
+        shapeInsideInfo->setShapeSize(parentShapeInsideInfo->shapeSize().width(), parentShapeInsideInfo->shapeSize().height());
+    } else {
         bool percentageLogicalHeightResolvable = percentageLogicalHeightIsResolvableFromBlock(this, false);
         shapeInsideInfo->setShapeSize(logicalWidth(), percentageLogicalHeightResolvable ? logicalHeight() : LayoutUnit());
     }
@@ -1675,9 +1700,9 @@ RenderBoxModelObject* RenderBlock::createReplacementRunIn(RenderBoxModelObject* 
 
     RenderBoxModelObject* newRunIn = 0;
     if (!runIn->isRenderBlockFlow())
-        newRunIn = new (renderArena()) RenderBlockFlow(*runIn->element());
+        newRunIn = new RenderBlockFlow(*runIn->element());
     else
-        newRunIn = new (renderArena()) RenderInline(*runIn->element());
+        newRunIn = new RenderInline(*runIn->element());
 
     runIn->element()->setRenderer(newRunIn);
     newRunIn->setStyle(runIn->style());
@@ -5004,9 +5029,9 @@ void RenderBlock::updateFirstLetterStyle(RenderObject* firstLetterBlock, RenderO
         // The first-letter renderer needs to be replaced. Create a new renderer of the right type.
         RenderBoxModelObject* newFirstLetter;
         if (pseudoStyle->display() == INLINE)
-            newFirstLetter = new (renderArena()) RenderInline(document());
+            newFirstLetter = new RenderInline(document());
         else
-            newFirstLetter = new (renderArena()) RenderBlockFlow(document());
+            newFirstLetter = new RenderBlockFlow(document());
         newFirstLetter->setStyle(pseudoStyle);
 
         // Move the first letter into the new renderer.
@@ -5014,7 +5039,7 @@ void RenderBlock::updateFirstLetterStyle(RenderObject* firstLetterBlock, RenderO
         while (RenderObject* child = firstLetter->firstChild()) {
             if (child->isText())
                 toRenderText(child)->removeAndDestroyTextBoxes();
-            firstLetter->removeChild(child);
+            firstLetter->removeChild(*child);
             newFirstLetter->addChild(child, 0);
         }
 
@@ -5027,7 +5052,7 @@ void RenderBlock::updateFirstLetterStyle(RenderObject* firstLetterBlock, RenderO
         }
         // To prevent removal of single anonymous block in RenderBlock::removeChild and causing
         // |nextSibling| to go stale, we remove the old first letter using removeChildNode first.
-        firstLetterContainer->removeChildInternal(firstLetter, NotifyChildren);
+        firstLetterContainer->removeChildInternal(*firstLetter, NotifyChildren);
         firstLetter->destroy();
         firstLetter = newFirstLetter;
         firstLetterContainer->addChild(firstLetter, nextSibling);
@@ -5041,9 +5066,9 @@ void RenderBlock::createFirstLetterRenderer(RenderObject* firstLetterBlock, Rend
     RenderStyle* pseudoStyle = styleForFirstLetter(firstLetterBlock, firstLetterContainer);
     RenderBoxModelObject* firstLetter = 0;
     if (pseudoStyle->display() == INLINE)
-        firstLetter = new (renderArena()) RenderInline(document());
+        firstLetter = new RenderInline(document());
     else
-        firstLetter = new (renderArena()) RenderBlockFlow(document());
+        firstLetter = new RenderBlockFlow(document());
     firstLetter->setStyle(pseudoStyle);
     firstLetterContainer->addChild(firstLetter, currentTextChild);
 
@@ -5079,24 +5104,24 @@ void RenderBlock::createFirstLetterRenderer(RenderObject* firstLetterBlock, Rend
         // This text fragment might be empty.
         RenderTextFragment* remainingText;
         if (currentTextChild->textNode())
-            remainingText = new (renderArena()) RenderTextFragment(*currentTextChild->textNode(), oldText, length, oldText.length() - length);
+            remainingText = new RenderTextFragment(*currentTextChild->textNode(), oldText, length, oldText.length() - length);
         else
-            remainingText = new (renderArena()) RenderTextFragment(document(), oldText, length, oldText.length() - length);
+            remainingText = new RenderTextFragment(document(), oldText, length, oldText.length() - length);
 
         if (remainingText->textNode())
             remainingText->textNode()->setRenderer(remainingText);
 
         firstLetterContainer->addChild(remainingText, currentTextChild);
-        firstLetterContainer->removeChild(currentTextChild);
+        firstLetterContainer->removeChild(*currentTextChild);
         remainingText->setFirstLetter(firstLetter);
         firstLetter->setFirstLetterRemainingText(remainingText);
         
         // construct text fragment for the first letter
         RenderTextFragment* letter;
         if (remainingText->textNode())
-            letter = new (renderArena()) RenderTextFragment(*remainingText->textNode(), oldText, 0, length);
+            letter = new RenderTextFragment(*remainingText->textNode(), oldText, 0, length);
         else
-            letter = new (renderArena()) RenderTextFragment(document(), oldText, 0, length);
+            letter = new RenderTextFragment(document(), oldText, 0, length);
 
         firstLetter->addChild(letter);
 
@@ -5849,7 +5874,9 @@ const char* RenderBlock::renderName() const
 {
     if (isBody())
         return "RenderBody"; // FIXME: Temporary hack until we know that the regression tests pass.
-    
+
+    if (isRenderNamedFlowFragmentContainer())
+        return "RenderRegion";
     if (isFloating())
         return "RenderBlock (floating)";
     if (isOutOfFlowPositioned())
@@ -5959,10 +5986,10 @@ RenderBlock* RenderBlock::createAnonymousWithParentRendererAndDisplay(const Rend
     EDisplay newDisplay;
     RenderBlock* newBox = 0;
     if (display == FLEX || display == INLINE_FLEX) {
-        newBox = new (parent->renderArena()) RenderFlexibleBox(parent->document());
+        newBox = new RenderFlexibleBox(parent->document());
         newDisplay = FLEX;
     } else {
-        newBox = new (parent->renderArena()) RenderBlockFlow(parent->document());
+        newBox = new RenderBlockFlow(parent->document());
         newDisplay = BLOCK;
     }
 
@@ -5976,7 +6003,7 @@ RenderBlock* RenderBlock::createAnonymousColumnsWithParentRenderer(const RenderO
     RefPtr<RenderStyle> newStyle = RenderStyle::createAnonymousStyleWithDisplay(parent->style(), BLOCK);
     newStyle->inheritColumnPropertiesFrom(parent->style());
 
-    RenderBlock* newBox = new (parent->renderArena()) RenderBlockFlow(parent->document());
+    RenderBlock* newBox = new RenderBlockFlow(parent->document());
     newBox->setStyle(newStyle.release());
     return newBox;
 }
@@ -5986,7 +6013,7 @@ RenderBlock* RenderBlock::createAnonymousColumnSpanWithParentRenderer(const Rend
     RefPtr<RenderStyle> newStyle = RenderStyle::createAnonymousStyleWithDisplay(parent->style(), BLOCK);
     newStyle->setColumnSpan(ColumnSpanAll);
 
-    RenderBlock* newBox = new (parent->renderArena()) RenderBlockFlow(parent->document());
+    RenderBlock* newBox = new RenderBlockFlow(parent->document());
     newBox->setStyle(newStyle.release());
     return newBox;
 }

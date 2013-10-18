@@ -37,7 +37,6 @@ namespace TestWebKitAPI {
 static bool didFinishLoad = false;
 static bool didUpdateTextInputState = false;
 static NIXTextInputState stateReceived;
-static bool isDoneWithSingleTapEvent = false;
 static const WKRect invalidRectState = WKRectMake(0, 0, 0, 0);
 
 static bool WKRectIsEqual(const WKRect& a, const WKRect& b)
@@ -82,28 +81,29 @@ TEST(WebKitNix, WebViewUpdateTextInputState)
     const WKSize size = WKSizeMake(100, 100);
     WKViewSetSize(view.get(), size);
 
-    NIXGestureEvent tapEvent;
-    tapEvent.type = kNIXInputEventTypeGestureSingleTap;
-    tapEvent.timestamp = 0;
-    tapEvent.modifiers = static_cast<NIXInputEventModifiers>(0);
-    tapEvent.x = 55;
-    tapEvent.y = 55;
-    tapEvent.globalX = 55;
-    tapEvent.globalY = 55;
-    tapEvent.width = 20;
-    tapEvent.height = 20;
-    tapEvent.deltaX = 0.0;
-    tapEvent.deltaY = 0.0;
+    NIXMouseEvent nixEvent;
+    memset(&nixEvent, 0, sizeof(NIXMouseEvent));
+    nixEvent.type = kNIXInputEventTypeMouseDown;
+    nixEvent.button = kWKEventMouseButtonLeftButton;
+    nixEvent.x = 55;
+    nixEvent.y = 55;
+    nixEvent.globalX = 55;
+    nixEvent.globalY = 55;
+    nixEvent.clickCount = 1;
+    nixEvent.modifiers = static_cast<NIXInputEventModifiers>(0);;
+    nixEvent.timestamp = 0;
 
     // Simple test on content editable.
     WKRetainPtr<WKURLRef> editableContentUrl = adoptWK(Util::createURLForResource("../nix/single-tap-on-editable-content", "html"));
     WKPageLoadURL(WKViewGetPage(view.get()), editableContentUrl.get());
     Util::run(&didFinishLoad);
-    NIXViewSendGestureEvent(view.get(), &tapEvent);
-    Util::run(&isDoneWithSingleTapEvent);
+    NIXViewSendMouseEvent(view.get(), &nixEvent);
+    nixEvent.type = kNIXInputEventTypeMouseUp;
+    NIXViewSendMouseEvent(view.get(), &nixEvent);
+
+    Util::run(&didUpdateTextInputState);
 
     ASSERT_TRUE(didFinishLoad);
-    ASSERT_TRUE(isDoneWithSingleTapEvent);
     ASSERT_TRUE(didUpdateTextInputState);
     ASSERT_TRUE(stateReceived.isContentEditable);
 
@@ -118,16 +118,22 @@ TEST(WebKitNix, WebViewUpdateTextInputState)
 
     // Test on a form field.
     didFinishLoad = false;
-    isDoneWithSingleTapEvent = false;
     memset(&stateReceived, 0, sizeof(stateReceived));
 
     editableContentUrl = adoptWK(Util::createURLForResource("../nix/single-tap-on-form-field", "html"));
     WKPageLoadURL(WKViewGetPage(view.get()), editableContentUrl.get());
     Util::run(&didFinishLoad);
-    NIXViewSendGestureEvent(view.get(), &tapEvent);
-    Util::run(&isDoneWithSingleTapEvent);
+    nixEvent.type = kNIXInputEventTypeMouseDown;
+    NIXViewSendMouseEvent(view.get(), &nixEvent);
+    nixEvent.type = kNIXInputEventTypeMouseUp;
+    NIXViewSendMouseEvent(view.get(), &nixEvent);
+
+    didUpdateTextInputState = false;
+    Util::run(&didUpdateTextInputState);
+
     WKRelease(stateReceived.surroundingText);
     ASSERT_TRUE(didFinishLoad);
+    ASSERT_TRUE(didUpdateTextInputState);
     ASSERT_TRUE(WKStringIsEqualToUTF8CString(stateReceived.submitLabel, "submitLabelValue"));
     WKRelease(stateReceived.submitLabel);
     ASSERT_TRUE(stateReceived.inputMethodHints & NIXImhSensitiveData);

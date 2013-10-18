@@ -144,9 +144,9 @@ void RenderMenuList::addChild(RenderObject* newChild, RenderObject* beforeChild)
         cache->childrenChanged(this);
 }
 
-void RenderMenuList::removeChild(RenderObject* oldChild)
+void RenderMenuList::removeChild(RenderObject& oldChild)
 {
-    if (oldChild == m_innerBlock || !m_innerBlock) {
+    if (&oldChild == m_innerBlock || !m_innerBlock) {
         RenderFlexibleBox::removeChild(oldChild);
         m_innerBlock = 0;
     } else
@@ -241,7 +241,7 @@ void RenderMenuList::setText(const String& s)
     if (m_buttonText)
         m_buttonText->setText(textToUse.impl(), true);
     else {
-        m_buttonText = new (renderArena()) RenderText(document(), textToUse);
+        m_buttonText = new RenderText(document(), textToUse);
         addChild(m_buttonText);
     }
     adjustInnerStyle();

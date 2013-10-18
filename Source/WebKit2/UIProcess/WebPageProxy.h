@@ -91,33 +91,34 @@
 #include "WebUIPopupMenuClient.h"
 #endif
 
+#if PLATFORM(MAC)
+#include <WebCore/PlatformLayer.h>
+#endif
+
 namespace CoreIPC {
-    class ArgumentDecoder;
-    class Connection;
+class ArgumentDecoder;
+class Connection;
 }
 
 namespace WebCore {
-    class AuthenticationChallenge;
-    class Cursor;
-    class DragData;
-    class FloatRect;
-    class GraphicsLayer;
-    class IntSize;
-    class ProtectionSpace;
-    class SharedBuffer;
-    struct FileChooserSettings;
-    struct TextAlternativeWithRange;
-    struct TextCheckingResult;
-    struct ViewportAttributes;
-    struct WindowFeatures;
+class AuthenticationChallenge;
+class Cursor;
+class DragData;
+class FloatRect;
+class GraphicsLayer;
+class IntSize;
+class CertificateInfo;
+class ProtectionSpace;
+class SharedBuffer;
+struct FileChooserSettings;
+struct TextAlternativeWithRange;
+struct TextCheckingResult;
+struct ViewportAttributes;
+struct WindowFeatures;
 }
 
 #if USE(APPKIT)
-#ifdef __OBJC__
-@class WKView;
-#else
-class WKView;
-#endif
+OBJC_CLASS WKView;
 #endif
 
 #if PLATFORM(GTK)
@@ -130,7 +131,6 @@ class NativeWebKeyboardEvent;
 class NativeWebMouseEvent;
 class NativeWebWheelEvent;
 class PageClient;
-class PlatformCertificateInfo;
 class StringPairVector;
 class WebBackForwardList;
 class WebBackForwardListItem;
@@ -396,13 +396,13 @@ public:
     bool shouldDelayWindowOrderingForEvent(const WebMouseEvent&);
     bool acceptsFirstMouse(int eventNumber, const WebMouseEvent&);
 
-    void setAcceleratedCompositingRootLayer(const WebCore::GraphicsLayer*);
+    void setAcceleratedCompositingRootLayer(PlatformLayer* rootLayer);
 
 #if USE(APPKIT)
     WKView* wkView() const;
     void intrinsicContentSizeDidChange(const WebCore::IntSize& intrinsicContentSize);
 #endif
-#endif
+#endif // PLATFORM(MAC)
 #if PLATFORM(EFL)
     void handleInputMethodKeydown(bool& handled);
     void confirmComposition(const String&);
@@ -789,7 +789,7 @@ private:
     void didStartProvisionalLoadForFrame(uint64_t frameID, const String& url, const String& unreachableURL, CoreIPC::MessageDecoder&);
     void didReceiveServerRedirectForProvisionalLoadForFrame(uint64_t frameID, const String&, CoreIPC::MessageDecoder&);
     void didFailProvisionalLoadForFrame(uint64_t frameID, const WebCore::ResourceError&, CoreIPC::MessageDecoder&);
-    void didCommitLoadForFrame(uint64_t frameID, const String& mimeType, uint32_t frameLoadType, const PlatformCertificateInfo&, CoreIPC::MessageDecoder&);
+    void didCommitLoadForFrame(uint64_t frameID, const String& mimeType, uint32_t frameLoadType, const WebCore::CertificateInfo&, CoreIPC::MessageDecoder&);
     void didFinishDocumentLoadForFrame(uint64_t frameID, CoreIPC::MessageDecoder&);
     void didFinishLoadForFrame(uint64_t frameID, CoreIPC::MessageDecoder&);
     void didFailLoadForFrame(uint64_t frameID, const WebCore::ResourceError&, CoreIPC::MessageDecoder&);

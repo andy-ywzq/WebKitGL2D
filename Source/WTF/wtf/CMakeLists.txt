@@ -3,6 +3,7 @@ set(WTF_HEADERS
     AVLTree.h
     Assertions.h
     Atomics.h
+    Bag.h
     BitArray.h
     BitVector.h
     Bitmap.h
@@ -67,6 +68,7 @@ set(WTF_HEADERS
     ParallelJobsLibdispatch.h
     ParallelJobsOpenMP.h
     PassOwnPtr.h
+    PassRef.h
     PassRefPtr.h
     Platform.h
     PossiblyNull.h

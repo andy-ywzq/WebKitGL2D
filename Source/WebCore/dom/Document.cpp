@@ -656,11 +656,6 @@ void Document::dropChildren()
 #endif
 }
 
-Element* Document::getElementById(const AtomicString& id) const
-{
-    return TreeScope::getElementById(id);
-}
-
 Element* Document::getElementByAccessKey(const String& key)
 {
     if (key.isEmpty())
@@ -875,7 +870,8 @@ PassRefPtr<Text> Document::createEditingTextNode(const String& text)
 
 PassRefPtr<CSSStyleDeclaration> Document::createCSSStyleDeclaration()
 {
-    return MutableStylePropertySet::create()->ensureCSSStyleDeclaration();
+    Ref<MutableStylePropertySet> propertySet(MutableStylePropertySet::create());
+    return propertySet->ensureCSSStyleDeclaration();
 }
 
 PassRefPtr<Node> Document::importNode(Node* importedNode, bool deep, ExceptionCode& ec)
@@ -1936,7 +1932,7 @@ void Document::createRenderTree()
 
     m_renderArena = std::make_unique<RenderArena>();
     
-    setRenderView(new (*m_renderArena) RenderView(*this));
+    setRenderView(new RenderView(*this));
 #if USE(ACCELERATED_COMPOSITING)
     renderView()->setIsInWindow(true);
 #endif

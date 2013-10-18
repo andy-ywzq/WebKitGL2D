@@ -59,10 +59,8 @@ webkit.org/b/102651 [ Debug ] networkinformation/basic-operation.html [ Crash ]
 
 # WebGL test cases crashing in WebCore::GraphicsContext3D::readPixels().
 webkit.org/b/109417 webgl/conformance/textures/texture-attachment-formats.html [ Crash ]
-webkit.org/b/109417 webgl/conformance/misc/type-conversion-test.html [ Crash ]
 webkit.org/b/109941 webgl/conformance/textures/origin-clean-conformance.html [ Crash ]
 webkit.org/b/109945 webgl/conformance/glsl/misc/shader-uniform-packing-restrictions.html [ Crash ]
-webkit.org/b/109945 webgl/conformance/glsl/misc/shader-with-non-reserved-words.html [ Crash Failure ]
 webkit.org/b/109945 webgl/conformance/uniforms/gl-uniform-arrays.html [ Crash Failure ]
 webkit.org/b/109945 webgl/conformance/uniforms/uniform-default-values.html [ Crash ]
 
@@ -188,9 +186,6 @@ webkit.org/b/98348  accessibility/table-sections.html [ Missing ]
 
 accessibility/media-element.html [ Missing ]
 accessibility/negative-tabindex-does-not-expose-label.html [ Missing ]
-accessibility/table-detection.html [ Missing ]
-accessibility/table-one-cell.html [ Missing ]
-accessibility/table-with-rules.html [ Missing ]
 
 # EFL port doesn't support webarchives.
 webarchive [ Skip ]
@@ -308,7 +303,6 @@ webkit.org/b/110054 compositing/geometry/limit-layer-bounds-fixed.html [ Failure
 
 # Several new Khronos WebGL conformance tests are failing on WK2 EFL.
 webkit.org/b/109435 webgl/conformance/context/premultiplyalpha-test.html [ Failure Crash ]
-webkit.org/b/109435 webgl/conformance/extensions/oes-element-index-uint.html [ Failure Crash ]
 webkit.org/b/109435 webgl/conformance/extensions/oes-texture-float-with-video.html [ Failure Crash ]
 webkit.org/b/109435 webgl/conformance/extensions/oes-texture-float.html [ Failure Crash ]
 webkit.org/b/109435 webgl/conformance/textures/texture-size-cube-maps.html [ Failure Crash ]
@@ -321,9 +315,6 @@ webkit.org/b/109435 webgl/conformance/glsl/misc/shaders-with-varyings.html [ Fai
 webkit.org/b/109435 webgl/conformance/more/functions/readPixelsBadArgs.html [ Failure Crash ]
 webkit.org/b/109435 webgl/conformance/more/functions/texImage2DHTML.html [ Failure Crash ]
 webkit.org/b/109435 webgl/conformance/more/functions/texSubImage2DHTML.html [ Failure Crash ]
-webkit.org/b/109435 webgl/conformance/more/functions/uniformfArrayLen1.html [ Failure Crash ]
-webkit.org/b/109435 webgl/conformance/programs/gl-bind-attrib-location-long-names-test.html [ Failure Crash ]
-webkit.org/b/109435 webgl/conformance/programs/program-test.html [ Failure Crash ]
 webkit.org/b/109435 webgl/conformance/renderbuffers/framebuffer-object-attachment.html [ Failure Crash ]
 webkit.org/b/109435 webgl/conformance/rendering/multisample-corruption.html [ Failure Crash ]
 webkit.org/b/109435 webgl/conformance/rendering/point-size.html [ Failure Crash ]
@@ -381,9 +372,6 @@ compositing/tiling/huge-layer-add-remove-child.html [ Missing ]
 compositing/tiling/rotated-tiled-clamped.html [ Missing ]
 compositing/tiling/rotated-tiled-preserve3d-clamped.html [ Missing ]
 
-# Crashing IndexedDB tests
-webkit.org/b/107194 storage/indexeddb/pending-activity.html [ Crash ]
-
 # Failing after r142758.
 webkit.org/b/109948 fast/dom/Window/mozilla-focus-blur.html [ Failure ]
 
@@ -394,6 +382,3 @@ webkit.org/b/119789 fast/events/touch/touch-before-pressing-spin-button.html [ C
 webkit.org/b/119789 fast/events/touch/touch-coords-in-zoom-and-scroll.html [ Crash ]
 webkit.org/b/119789 fast/events/touch/touch-inside-iframe.html [ Crash ]
 webkit.org/b/119789 fast/events/touch/touch-slider-no-js-touch-listener.html [ Crash ]
-
-# Tests need new generated expected results
-webkit.org/b/121828 fast/repaint/japanese-rl-selection-repaint-in-regions.html [ Missing ]

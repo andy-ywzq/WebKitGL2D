@@ -28,6 +28,7 @@
 
 #include "ShareableBitmap.h"
 #include <WebCore/AuthenticationChallenge.h>
+#include <WebCore/CertificateInfo.h>
 #include <WebCore/Cookie.h>
 #include <WebCore/Credential.h>
 #include <WebCore/Cursor.h>
@@ -39,13 +40,13 @@
 #include <WebCore/GraphicsContext.h>
 #include <WebCore/GraphicsLayer.h>
 #include <WebCore/Image.h>
-#include <WebCore/URL.h>
 #include <WebCore/PluginData.h>
 #include <WebCore/ProtectionSpace.h>
 #include <WebCore/ResourceError.h>
 #include <WebCore/ResourceRequest.h>
 #include <WebCore/ResourceResponse.h>
 #include <WebCore/TextCheckerClient.h>
+#include <WebCore/URL.h>
 #include <WebCore/UserScript.h>
 #include <WebCore/UserStyleSheet.h>
 #include <WebCore/ViewportArguments.h>
@@ -69,6 +70,17 @@ bool ArgumentCoder<AffineTransform>::decode(ArgumentDecoder& decoder, AffineTran
 }
 
 
+void ArgumentCoder<TransformationMatrix>::encode(ArgumentEncoder& encoder, const TransformationMatrix& transformationMatrix)
+{
+    SimpleArgumentCoder<TransformationMatrix>::encode(encoder, transformationMatrix);
+}
+
+bool ArgumentCoder<TransformationMatrix>::decode(ArgumentDecoder& decoder, TransformationMatrix& transformationMatrix)
+{
+    return SimpleArgumentCoder<TransformationMatrix>::decode(decoder, transformationMatrix);
+}
+
+
 void ArgumentCoder<FloatPoint>::encode(ArgumentEncoder& encoder, const FloatPoint& floatPoint)
 {
     SimpleArgumentCoder<FloatPoint>::encode(encoder, floatPoint);
@@ -77,6 +89,17 @@ void ArgumentCoder<FloatPoint>::encode(ArgumentEncoder& encoder, const FloatPoin
 bool ArgumentCoder<FloatPoint>::decode(ArgumentDecoder& decoder, FloatPoint& floatPoint)
 {
     return SimpleArgumentCoder<FloatPoint>::decode(decoder, floatPoint);
+}
+
+
+void ArgumentCoder<FloatPoint3D>::encode(ArgumentEncoder& encoder, const FloatPoint3D& floatPoint)
+{
+    SimpleArgumentCoder<FloatPoint3D>::encode(encoder, floatPoint);
+}
+
+bool ArgumentCoder<FloatPoint3D>::decode(ArgumentDecoder& decoder, FloatPoint3D& floatPoint)
+{
+    return SimpleArgumentCoder<FloatPoint3D>::decode(decoder, floatPoint);
 }
 
 
@@ -544,6 +567,22 @@ bool ArgumentCoder<ResourceResponse>::decode(ArgumentDecoder& decoder, ResourceR
 
     resourceResponse = response;
 
+    return true;
+}
+
+void ArgumentCoder<CertificateInfo>::encode(ArgumentEncoder& encoder, const CertificateInfo& certificateInfo)
+{
+    encodePlatformData(encoder, certificateInfo);
+}
+
+bool ArgumentCoder<CertificateInfo>::decode(ArgumentDecoder& decoder, CertificateInfo& certificateInfo)
+{
+    CertificateInfo certificate;
+
+    if (!decodePlatformData(decoder, certificate))
+        return false;
+
+    certificateInfo = certificate;
     return true;
 }
 

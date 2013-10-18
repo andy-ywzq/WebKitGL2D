@@ -467,6 +467,7 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/heap/CopyWorkList.h \
 	Source/JavaScriptCore/heap/ConservativeRoots.cpp \
 	Source/JavaScriptCore/heap/ConservativeRoots.h \
+   Source/JavaScriptCore/heap/DeferGC.cpp \
 	Source/JavaScriptCore/heap/DeferGC.h \
 	Source/JavaScriptCore/heap/GCAssertions.h \
 	Source/JavaScriptCore/heap/GCIncomingRefCounted.h \
@@ -637,7 +638,6 @@ javascriptcore_sources += \
 	Source/JavaScriptCore/jit/JITOperations.h \
 	Source/JavaScriptCore/jit/JITPropertyAccess32_64.cpp \
 	Source/JavaScriptCore/jit/JITPropertyAccess.cpp \
-	Source/JavaScriptCore/jit/JITStubCall.h \
 	Source/JavaScriptCore/jit/JITStubRoutine.cpp \
 	Source/JavaScriptCore/jit/JITStubRoutine.h \
 	Source/JavaScriptCore/jit/JITStubs.cpp \

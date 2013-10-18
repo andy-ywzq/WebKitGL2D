@@ -319,7 +319,7 @@ void RenderInline::addChildIgnoringContinuation(RenderObject* newChild, RenderOb
         if (auto positionedAncestor = inFlowPositionedInlineAncestor(this))
             newStyle->setPosition(positionedAncestor->style()->position());
 
-        RenderBlock* newBox = new (renderArena()) RenderBlockFlow(document());
+        RenderBlock* newBox = new RenderBlockFlow(document());
         newBox->setStyle(newStyle.release());
         RenderBoxModelObject* oldContinuation = continuation();
         setContinuation(newBox);
@@ -335,7 +335,7 @@ void RenderInline::addChildIgnoringContinuation(RenderObject* newChild, RenderOb
 
 RenderInline* RenderInline::clone() const
 {
-    RenderInline* cloneInline = new (renderArena()) RenderInline(*element());
+    RenderInline* cloneInline = new RenderInline(*element());
     cloneInline->setStyle(style());
     cloneInline->setFlowThreadState(flowThreadState());
     return cloneInline;
@@ -366,7 +366,7 @@ void RenderInline::splitInlines(RenderBlock* fromBlock, RenderBlock* toBlock,
     while (o) {
         RenderObject* tmp = o;
         o = tmp->nextSibling();
-        removeChildInternal(tmp, NotifyChildren);
+        removeChildInternal(*tmp, NotifyChildren);
         cloneInline->addChildIgnoringContinuation(tmp, 0);
         tmp->setNeedsLayoutAndPrefWidthsRecalc();
     }
@@ -408,7 +408,7 @@ void RenderInline::splitInlines(RenderBlock* fromBlock, RenderBlock* toBlock,
             while (o) {
                 RenderObject* tmp = o;
                 o = tmp->nextSibling();
-                inlineCurr->removeChildInternal(tmp, NotifyChildren);
+                inlineCurr->removeChildInternal(*tmp, NotifyChildren);
                 cloneInline->addChildIgnoringContinuation(tmp, 0);
                 tmp->setNeedsLayoutAndPrefWidthsRecalc();
             }
@@ -429,7 +429,7 @@ void RenderInline::splitInlines(RenderBlock* fromBlock, RenderBlock* toBlock,
     while (o) {
         RenderObject* tmp = o;
         o = tmp->nextSibling();
-        fromBlock->removeChildInternal(tmp, NotifyChildren);
+        fromBlock->removeChildInternal(*tmp, NotifyChildren);
         toBlock->insertChildInternal(tmp, nullptr, NotifyChildren);
     }
 }
@@ -474,7 +474,7 @@ void RenderInline::splitFlow(RenderObject* beforeChild, RenderBlock* newBlockBox
         while (o) {
             RenderObject* no = o;
             o = no->nextSibling();
-            block->removeChildInternal(no, NotifyChildren);
+            block->removeChildInternal(*no, NotifyChildren);
             pre->insertChildInternal(no, nullptr, NotifyChildren);
             no->setNeedsLayoutAndPrefWidthsRecalc();
         }
@@ -1275,7 +1275,7 @@ void RenderInline::childBecameNonInline(RenderObject* child)
     RenderBoxModelObject* oldContinuation = continuation();
     setContinuation(newBox);
     RenderObject* beforeChild = child->nextSibling();
-    removeChildInternal(child, NotifyChildren);
+    removeChildInternal(*child, NotifyChildren);
     splitFlow(beforeChild, newBox, child, oldContinuation);
 }
 

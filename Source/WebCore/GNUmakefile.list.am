@@ -728,6 +728,8 @@ webcore_built_sources += \
 	DerivedSources/WebCore/JSTreeWalker.h \
 	DerivedSources/WebCore/JSUIEvent.cpp \
 	DerivedSources/WebCore/JSUIEvent.h \
+	DerivedSources/WebCore/JSDOMURLMediaStream.cpp \
+	DerivedSources/WebCore/JSDOMURLMediaStream.h \
 	DerivedSources/WebCore/JSValidityState.cpp \
 	DerivedSources/WebCore/JSValidityState.h \
 	DerivedSources/WebCore/JSVoidCallback.cpp \
@@ -1234,6 +1236,7 @@ dom_binding_idls += \
 	$(WebCore)/Modules/mediastream/RTCStatsReport.idl \
 	$(WebCore)/Modules/mediastream/RTCStatsResponse.idl \
 	$(WebCore)/Modules/mediastream/SourceInfo.idl \
+	$(WebCore)/Modules/mediastream/DOMURLMediaStream.idl \
 	$(WebCore)/Modules/mediastream/VideoStreamTrack.idl \
 	$(WebCore)/Modules/navigatorcontentutils/NavigatorContentUtils.idl \
 	$(WebCore)/Modules/notifications/DOMWindowNotifications.idl \
@@ -1295,6 +1298,7 @@ dom_binding_idls += \
 	$(WebCore)/Modules/webdatabase/WorkerGlobalScopeWebDatabase.idl \
 	$(WebCore)/Modules/websockets/CloseEvent.idl \
 	$(WebCore)/Modules/websockets/WebSocket.idl \
+	$(WebCore)/crypto/SubtleCrypto.idl \
 	$(WebCore)/css/CSSCharsetRule.idl \
 	$(WebCore)/css/CSSFontFaceLoadEvent.idl \
 	$(WebCore)/css/CSSFontFaceRule.idl \
@@ -1840,10 +1844,13 @@ webcore_modules_sources += \
 	Source/WebCore/Modules/indexeddb/IDBRequest.h \
 	Source/WebCore/Modules/indexeddb/leveldb/IDBTransactionBackendLevelDB.cpp \
 	Source/WebCore/Modules/indexeddb/leveldb/IDBTransactionBackendLevelDB.h \
+	Source/WebCore/Modules/indexeddb/leveldb/IDBTransactionBackendLevelDBOperations.cpp \
+	Source/WebCore/Modules/indexeddb/leveldb/IDBTransactionBackendLevelDBOperations.h \
 	Source/WebCore/Modules/indexeddb/leveldb/IDBTransactionCoordinatorLevelDB.cpp \
 	Source/WebCore/Modules/indexeddb/leveldb/IDBTransactionCoordinatorLevelDB.h \
 	Source/WebCore/Modules/indexeddb/IDBTransaction.cpp \
 	Source/WebCore/Modules/indexeddb/IDBTransaction.h \
+	Source/WebCore/Modules/indexeddb/IDBTransactionBackendInterface.h \
 	Source/WebCore/Modules/indexeddb/IDBVersionChangeEvent.cpp \
 	Source/WebCore/Modules/indexeddb/IDBVersionChangeEvent.h \
 	Source/WebCore/Modules/indexeddb/IndexedDB.h \
@@ -1937,6 +1944,8 @@ webcore_modules_sources += \
 	Source/WebCore/Modules/mediastream/RTCVoidRequestImpl.h \
 	Source/WebCore/Modules/mediastream/SourceInfo.cpp \
 	Source/WebCore/Modules/mediastream/SourceInfo.h \
+	Source/WebCore/Modules/mediastream/DOMURLMediaStream.cpp \
+	Source/WebCore/Modules/mediastream/DOMURLMediaStream.h \
 	Source/WebCore/Modules/mediastream/UserMediaClient.h \
 	Source/WebCore/Modules/mediastream/UserMediaController.h \
 	Source/WebCore/Modules/mediastream/UserMediaController.cpp \
@@ -2476,6 +2485,7 @@ webcore_sources += \
 	Source/WebCore/bridge/runtime_root.cpp \
 	Source/WebCore/bridge/runtime_root.h \
 	Source/WebCore/config.h \
+	Source/WebCore/crypto/SubtleCrypto.h \
 	Source/WebCore/css/BasicShapeFunctions.cpp \
 	Source/WebCore/css/BasicShapeFunctions.h \
 	Source/WebCore/css/Counter.h \
@@ -3689,6 +3699,7 @@ webcore_sources += \
 	Source/WebCore/html/TypeAhead.h \
 	Source/WebCore/html/URLInputType.cpp \
 	Source/WebCore/html/URLInputType.h \
+	Source/WebCore/html/URLRegistry.h \
 	Source/WebCore/html/ValidationMessage.cpp \
 	Source/WebCore/html/ValidationMessage.h \
 	Source/WebCore/html/ValidityState.h \
@@ -4389,6 +4400,8 @@ webcore_sources += \
 	Source/WebCore/rendering/RenderMultiColumnFlowThread.h \
 	Source/WebCore/rendering/RenderMultiColumnSet.cpp \
 	Source/WebCore/rendering/RenderMultiColumnSet.h \
+    Source/WebCore/rendering/RenderNamedFlowFragment.cpp \
+    Source/WebCore/rendering/RenderNamedFlowFragment.h \
 	Source/WebCore/rendering/RenderNamedFlowThread.cpp \
 	Source/WebCore/rendering/RenderNamedFlowThread.h \
 	Source/WebCore/rendering/RenderObject.cpp \
@@ -5409,6 +5422,7 @@ webcore_platform_sources += \
 	Source/WebCore/platform/network/BlobResourceHandle.cpp \
 	Source/WebCore/platform/network/BlobResourceHandle.h \
 	Source/WebCore/platform/network/BlobStorageData.h \
+	Source/WebCore/platform/network/CertificateInfo.h \
 	Source/WebCore/platform/network/CookieStorage.h \
 	Source/WebCore/platform/network/FormDataBuilder.cpp \
 	Source/WebCore/platform/network/FormDataBuilder.h \
@@ -5443,6 +5457,7 @@ webcore_platform_sources += \
 	Source/WebCore/platform/network/SocketStreamHandleClient.h \
 	Source/WebCore/platform/network/soup/AuthenticationChallenge.h \
 	Source/WebCore/platform/network/soup/AuthenticationChallengeSoup.cpp \
+	Source/WebCore/platform/network/soup/CertificateInfoSoup.cpp \
 	Source/WebCore/platform/network/soup/CookieJarSoup.cpp \
 	Source/WebCore/platform/network/soup/CookieJarSoup.h \
 	Source/WebCore/platform/network/soup/CookieStorageSoup.cpp \

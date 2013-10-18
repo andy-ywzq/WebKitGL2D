@@ -48,7 +48,12 @@
 #include <wtf/text/WTFString.h>
 
 #if PLATFORM(MAC)
+#include "PlatformCALayerMac.h"
 #include "WebCoreSystemInterface.h"
+#endif
+
+#if PLATFORM(WIN)
+#include "PlatformCALayerWin.h"
 #endif
 
 using namespace std;
@@ -275,10 +280,44 @@ static inline bool supportsAcceleratedFilterAnimations()
 
 std::unique_ptr<GraphicsLayer> GraphicsLayer::create(GraphicsLayerFactory* factory, GraphicsLayerClient* client)
 {
+    std::unique_ptr<GraphicsLayer> graphicsLayer;
     if (!factory)
-        return std::make_unique<GraphicsLayerCA>(client);
+        graphicsLayer = std::make_unique<GraphicsLayerCA>(client);
+    else
+        graphicsLayer = factory->createGraphicsLayer(client);
 
-    return factory->createGraphicsLayer(client);
+    graphicsLayer->initialize();
+
+    return std::move(graphicsLayer);
+}
+
+#if ENABLE(CSS_FILTERS)
+bool GraphicsLayerCA::filtersCanBeComposited(const FilterOperations& filters)
+{
+#if PLATFORM(MAC)
+    return PlatformCALayerMac::filtersCanBeComposited(filters);
+#elif PLATFORM(WIN)
+    return PlatformCALayerWin::filtersCanBeComposited(filters);
+#endif
+}
+#endif
+    
+PassRefPtr<PlatformCALayer> GraphicsLayerCA::createPlatformCALayer(PlatformCALayer::LayerType layerType, PlatformCALayerClient* owner)
+{
+#if PLATFORM(MAC)
+    return PlatformCALayerMac::create(layerType, owner);
+#elif PLATFORM(WIN)
+    return PlatformCALayerWin::create(layerType, owner);
+#endif
+}
+    
+PassRefPtr<PlatformCALayer> GraphicsLayerCA::createPlatformCALayer(PlatformLayer* platformLayer, PlatformCALayerClient* owner)
+{
+#if PLATFORM(MAC)
+    return PlatformCALayerMac::create(platformLayer, owner);
+#elif PLATFORM(WIN)
+    return PlatformCALayerWin::create(platformLayer, owner);
+#endif
 }
 
 GraphicsLayerCA::GraphicsLayerCA(GraphicsLayerClient* client)
@@ -290,13 +329,17 @@ GraphicsLayerCA::GraphicsLayerCA(GraphicsLayerClient* client)
     , m_uncommittedChanges(0)
     , m_isCommittingChanges(false)
 {
+}
+
+void GraphicsLayerCA::initialize()
+{
     PlatformCALayer::LayerType layerType = PlatformCALayer::LayerTypeWebLayer;
-    if (client && client->shouldUseTiledBacking(this)) {
+    if (m_client && m_client->shouldUseTiledBacking(this)) {
         layerType = PlatformCALayer::LayerTypePageTiledBackingLayer;
         m_isPageTiledBackingLayer = true;
     }
 
-    m_layer = PlatformCALayer::create(layerType, this);
+    m_layer = createPlatformCALayer(layerType, this);
     noteLayerPropertyChanged(ContentsScaleChanged);
 }
 
@@ -332,7 +375,12 @@ void GraphicsLayerCA::willBeDestroyed()
 
 void GraphicsLayerCA::setName(const String& name)
 {
-    String longName = String::format("CALayer(%p) GraphicsLayer(%p) ", m_layer->platformLayer(), this) + name;
+    String caLayerDescription;
+
+    if (!m_layer->isRemote())
+        caLayerDescription = String::format("CALayer(%p) ", m_layer->platformLayer());
+
+    String longName = caLayerDescription + String::format("GraphicsLayer(%p) ", this) + name;
     GraphicsLayer::setName(longName);
     noteLayerPropertyChanged(NameChanged);
 }
@@ -617,7 +665,7 @@ void GraphicsLayerCA::setOpacity(float opacity)
 #if ENABLE(CSS_FILTERS)
 bool GraphicsLayerCA::setFilters(const FilterOperations& filterOperations)
 {
-    bool canCompositeFilters = PlatformCALayer::filtersCanBeComposited(filterOperations);
+    bool canCompositeFilters = filtersCanBeComposited(filterOperations);
 
     if (m_filters == filterOperations)
         return canCompositeFilters;
@@ -781,7 +829,7 @@ void GraphicsLayerCA::setContentsToSolidColor(const Color& color)
 
     if (m_contentsSolidColor.isValid()) {
         m_contentsLayerPurpose = ContentsLayerForBackgroundColor;
-        m_contentsLayer = PlatformCALayer::create(PlatformCALayer::LayerTypeLayer, this);
+        m_contentsLayer = createPlatformCALayer(PlatformCALayer::LayerTypeLayer, this);
 #ifndef NDEBUG
         m_contentsLayer->setName("Background Color Layer");
 #endif
@@ -847,7 +895,7 @@ void GraphicsLayerCA::setContentsToMedia(PlatformLayer* mediaLayer)
     // the creator of the raw layer is using it for some other purpose.
     // For now we don't support such a case.
     PlatformCALayer* platformCALayer = PlatformCALayer::platformCALayer(mediaLayer);
-    m_contentsLayer = mediaLayer ? (platformCALayer ? platformCALayer : PlatformCALayer::create(mediaLayer, this)) : 0;
+    m_contentsLayer = mediaLayer ? (platformCALayer ? platformCALayer : createPlatformCALayer(mediaLayer, this)) : 0;
     m_contentsLayerPurpose = mediaLayer ? ContentsLayerForMedia : NoContentsLayer;
 
     noteSublayersChanged();
@@ -860,7 +908,7 @@ void GraphicsLayerCA::setContentsToCanvas(PlatformLayer* canvasLayer)
         return;
     
     // Create the PlatformCALayer to wrap the incoming layer
-    m_contentsLayer = canvasLayer ? PlatformCALayer::create(canvasLayer, this) : 0;
+    m_contentsLayer = canvasLayer ? createPlatformCALayer(canvasLayer, this) : 0;
     
     m_contentsLayerPurpose = canvasLayer ? ContentsLayerForCanvas : NoContentsLayer;
 
@@ -1098,7 +1146,7 @@ void GraphicsLayerCA::recursiveCommitChanges(const CommitState& commitState, con
         static Color washFillColor(255, 0, 0, 50);
         static Color washBorderColor(255, 0, 0, 100);
         
-        m_visibleTileWashLayer = PlatformCALayer::create(PlatformCALayer::LayerTypeLayer, this);
+        m_visibleTileWashLayer = createPlatformCALayer(PlatformCALayer::LayerTypeLayer, this);
         String name = String::format("Visible Tile Wash Layer %p", m_visibleTileWashLayer->platformLayer());
         m_visibleTileWashLayer->setName(name);
         m_visibleTileWashLayer->setAnchorPoint(FloatPoint3D(0, 0, 0));
@@ -1108,8 +1156,10 @@ void GraphicsLayerCA::recursiveCommitChanges(const CommitState& commitState, con
         noteSublayersChanged(DontScheduleFlush);
     }
 
-    if (m_visibleTileWashLayer)
-        m_visibleTileWashLayer->setFrame(m_visibleRect);
+    if (m_visibleTileWashLayer) {
+        m_visibleTileWashLayer->setPosition(m_visibleRect.location());
+        m_visibleTileWashLayer->setBounds(FloatRect(FloatPoint(), m_visibleRect.size()));
+    }
 #endif
 
     bool hadChanges = m_uncommittedChanges;
@@ -1606,7 +1656,7 @@ void GraphicsLayerCA::ensureStructuralLayer(StructuralLayerPurpose purpose)
             m_structuralLayer = 0;
         
         if (!m_structuralLayer) {
-            m_structuralLayer = PlatformCALayer::create(PlatformCALayer::LayerTypeTransformLayer, this);
+            m_structuralLayer = createPlatformCALayer(PlatformCALayer::LayerTypeTransformLayer, this);
             structuralLayerChanged = true;
         }
     } else {
@@ -1614,7 +1664,7 @@ void GraphicsLayerCA::ensureStructuralLayer(StructuralLayerPurpose purpose)
             m_structuralLayer = 0;
 
         if (!m_structuralLayer) {
-            m_structuralLayer = PlatformCALayer::create(PlatformCALayer::LayerTypeLayer, this);
+            m_structuralLayer = createPlatformCALayer(PlatformCALayer::LayerTypeLayer, this);
             structuralLayerChanged = true;
         }
     }
@@ -1778,7 +1828,7 @@ void GraphicsLayerCA::updateContentsImage()
 {
     if (m_pendingContentsImage) {
         if (!m_contentsLayer.get()) {
-            m_contentsLayer = PlatformCALayer::create(PlatformCALayer::LayerTypeLayer, this);
+            m_contentsLayer = createPlatformCALayer(PlatformCALayer::LayerTypeLayer, this);
 #ifndef NDEBUG
             m_contentsLayer->setName("Image Layer");
 #endif
@@ -1859,7 +1909,7 @@ void GraphicsLayerCA::updateContentsRects()
     bool gainedOrLostClippingLayer = false;
     if (!m_contentsClippingRect.contains(m_contentsRect)) {
         if (!m_contentsClippingLayer) {
-            m_contentsClippingLayer = PlatformCALayer::create(PlatformCALayer::LayerTypeLayer, this);
+            m_contentsClippingLayer = createPlatformCALayer(PlatformCALayer::LayerTypeLayer, this);
             m_contentsClippingLayer->setMasksToBounds(true);
             m_contentsClippingLayer->setAnchorPoint(FloatPoint());
 #ifndef NDEBUG
@@ -2276,18 +2326,10 @@ bool GraphicsLayerCA::createTransformAnimationsFromKeyframes(const KeyframeValue
     int listIndex = validateTransformOperations(valueList, hasBigRotation);
     const TransformOperations* operations = (listIndex >= 0) ? &static_cast<const TransformAnimationValue&>(valueList.at(listIndex)).value() : 0;
 
-    // We need to fall back to software animation if we don't have setValueFunction:, and
-    // we would need to animate each incoming transform function separately. This is the
-    // case if we have a rotation >= 180 or we have more than one transform function.
-    if ((hasBigRotation || (operations && operations->size() > 1)) && !PlatformCAAnimation::supportsValueFunction())
-        return false;
-
     bool validMatrices = true;
 
     // If function lists don't match we do a matrix animation, otherwise we do a component hardware animation.
-    // Also, we can't do component animation unless we have valueFunction, so we need to do matrix animation
-    // if that's not true as well.
-    bool isMatrixAnimation = listIndex < 0 || !PlatformCAAnimation::supportsValueFunction();
+    bool isMatrixAnimation = listIndex < 0;
     int numAnimations = isMatrixAnimation ? 1 : operations->size();
 
     bool reverseAnimationList = true;
@@ -2366,7 +2408,7 @@ bool GraphicsLayerCA::createFilterAnimationsFromKeyframes(const KeyframeValueLis
         
     const FilterOperations& operations = static_cast<const FilterAnimationValue&>(valueList.at(listIndex)).value();
     // Make sure the platform layer didn't fallback to using software filter compositing instead.
-    if (!PlatformCALayer::filtersCanBeComposited(operations))
+    if (!filtersCanBeComposited(operations))
         return false;
 
     int numAnimations = operations.size();
@@ -2898,7 +2940,7 @@ void GraphicsLayerCA::swapFromOrToTiledLayer(bool useTiledLayer)
     PlatformCALayer::LayerType layerType = useTiledLayer ? PlatformCALayer::LayerTypeTiledBackingLayer : PlatformCALayer::LayerTypeWebLayer;
 #endif
 
-    m_layer = PlatformCALayer::create(layerType, this);
+    m_layer = createPlatformCALayer(layerType, this);
 
     m_usingTiledBacking = useTiledLayer;
     

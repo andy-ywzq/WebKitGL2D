@@ -43,7 +43,7 @@ public:
     // This is null for anonymous renderers.
     Element* element() const { return toElement(RenderObject::node()); }
     Element* nonPseudoElement() const { return toElement(RenderObject::nonPseudoNode()); }
-    Element* generatingElement() const { return toElement(RenderObject::generatingNode()); }
+    Element* generatingElement() const;
 
     RenderObject* firstChild() const { return m_firstChild; }
     RenderObject* lastChild() const { return m_lastChild; }
@@ -56,10 +56,10 @@ public:
     bool isRenderReplaced() const;
     bool isRenderInline() const;
 
-    virtual bool isChildAllowed(RenderObject*, RenderStyle*) const { return true; }
+    virtual bool isChildAllowed(const RenderObject&, const RenderStyle&) const { return true; }
     virtual void addChild(RenderObject* newChild, RenderObject* beforeChild = 0);
     virtual void addChildIgnoringContinuation(RenderObject* newChild, RenderObject* beforeChild = 0) { return addChild(newChild, beforeChild); }
-    virtual void removeChild(RenderObject*);
+    virtual void removeChild(RenderObject&);
 
     // The following functions are used when the render tree hierarchy changes to make sure layers get
     // properly added and removed. Since containership can be implemented by any subclass, and since a hierarchy
@@ -71,7 +71,7 @@ public:
 
     enum NotifyChildrenType { NotifyChildren, DontNotifyChildren };
     void insertChildInternal(RenderObject*, RenderObject* beforeChild, NotifyChildrenType);
-    void removeChildInternal(RenderObject*, NotifyChildrenType);
+    void removeChildInternal(RenderObject&, NotifyChildrenType);
 
     virtual RenderElement* hoverAncestor() const;
 
@@ -256,6 +256,13 @@ inline const RenderElement* toRenderElement(const RenderObject* object)
 {
     ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isRenderElement());
     return static_cast<const RenderElement*>(object);
+}
+
+inline Element* RenderElement::generatingElement() const
+{
+    if (isRenderNamedFlowFragment() && parent())
+        return toRenderElement(parent())->generatingElement();
+    return toElement(RenderObject::generatingNode());
 }
 
 // This will catch anyone doing an unnecessary cast.

@@ -116,68 +116,6 @@ ALWAYS_INLINE bool JIT::atJumpTarget()
     return false;
 }
 
-#if defined(ASSEMBLER_HAS_CONSTANT_POOL) && ASSEMBLER_HAS_CONSTANT_POOL
-
-ALWAYS_INLINE void JIT::beginUninterruptedSequence(int insnSpace, int constSpace)
-{
-#if CPU(ARM_TRADITIONAL)
-#ifndef NDEBUG
-    // Ensure the label after the sequence can also fit
-    insnSpace += sizeof(ARMWord);
-    constSpace += sizeof(uint64_t);
-#endif
-
-    ensureSpace(insnSpace, constSpace);
-
-#elif CPU(SH4)
-#ifndef NDEBUG
-    insnSpace += sizeof(SH4Word);
-    constSpace += sizeof(uint64_t);
-#endif
-
-    m_assembler.ensureSpace(insnSpace + m_assembler.maxInstructionSize + 2, constSpace + 8);
-#endif
-
-#ifndef NDEBUG
-    m_uninterruptedInstructionSequenceBegin = label();
-    m_uninterruptedConstantSequenceBegin = sizeOfConstantPool();
-#endif
-}
-
-ALWAYS_INLINE void JIT::endUninterruptedSequence(int insnSpace, int constSpace, int dst)
-{
-#ifndef NDEBUG
-    /* There are several cases when the uninterrupted sequence is larger than
-     * maximum required offset for pathing the same sequence. Eg.: if in a
-     * uninterrupted sequence the last macroassembler's instruction is a stub
-     * call, it emits store instruction(s) which should not be included in the
-     * calculation of length of uninterrupted sequence. So, the insnSpace and
-     * constSpace should be upper limit instead of hard limit.
-     */
-
-#if CPU(SH4)
-    if ((dst > 15) || (dst < -16)) {
-        insnSpace += 8;
-        constSpace += 2;
-    }
-
-    if (((dst >= -16) && (dst < 0)) || ((dst > 7) && (dst <= 15)))
-        insnSpace += 8;
-#else
-    UNUSED_PARAM(dst);
-#endif
-
-    ASSERT(differenceBetween(m_uninterruptedInstructionSequenceBegin, label()) <= insnSpace);
-    ASSERT(sizeOfConstantPool() - m_uninterruptedConstantSequenceBegin <= constSpace);
-#else
-    UNUSED_PARAM(insnSpace);
-    UNUSED_PARAM(constSpace);
-    UNUSED_PARAM(dst);
-#endif
-}
-
-#endif // ASSEMBLER_HAS_CONSTANT_POOL
-
 ALWAYS_INLINE void JIT::updateTopCallFrame()
 {
     ASSERT(static_cast<int>(m_bytecodeOffset) >= 0);
@@ -189,19 +127,6 @@ ALWAYS_INLINE void JIT::updateTopCallFrame()
 #endif
     store32(TrustedImm32(locationBits), intTagFor(JSStack::ArgumentCount));
     storePtr(callFrameRegister, &m_vm->topCallFrame);
-}
-
-ALWAYS_INLINE void JIT::restoreArgumentReferenceForTrampoline()
-{
-#if CPU(X86)
-    // Within a trampoline the return address will be on the stack at this point.
-    addPtr(TrustedImm32(sizeof(void*)), stackPointerRegister, firstArgumentRegister);
-#elif CPU(ARM)
-    move(stackPointerRegister, firstArgumentRegister);
-#elif CPU(SH4)
-    move(stackPointerRegister, firstArgumentRegister);
-#endif
-    // In the trampoline on x86-64, the first argument register is not overwritten.
 }
 
 ALWAYS_INLINE MacroAssembler::Call JIT::appendCallWithExceptionCheck(const FunctionPtr& function)
@@ -223,6 +148,18 @@ ALWAYS_INLINE MacroAssembler::Call JIT::appendCallWithCallFrameRollbackOnExcepti
 ALWAYS_INLINE MacroAssembler::Call JIT::appendCallWithExceptionCheckSetJSValueResult(const FunctionPtr& function, int dst)
 {
     MacroAssembler::Call call = appendCallWithExceptionCheck(function);
+#if USE(JSVALUE64)
+    emitPutVirtualRegister(dst, returnValueRegister);
+#else
+    emitStore(dst, returnValue2Register, returnValueRegister);
+#endif
+    return call;
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::appendCallWithExceptionCheckSetJSValueResultWithProfile(const FunctionPtr& function, int dst)
+{
+    MacroAssembler::Call call = appendCallWithExceptionCheck(function);
+    emitValueProfilingSite(regT4);
 #if USE(JSVALUE64)
     emitPutVirtualRegister(dst, returnValueRegister);
 #else
@@ -255,24 +192,9 @@ ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(C_JITOperation_EZ operatio
     return appendCallWithExceptionCheck(operation);
 }
 
-
-#if USE(JSVALUE64)
-ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(F_JITOperation_EJJZ operation, GPRReg arg1, GPRReg arg2, int32_t arg3)
-{
-    setupArgumentsWithExecState(arg1, arg2, TrustedImm32(arg3));
-    return appendCallWithExceptionCheck(operation);
-}
-#endif
-
 ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(J_JITOperation_E operation, int dst)
 {
     setupArgumentsExecState();
-    return appendCallWithExceptionCheckSetJSValueResult(operation, dst);
-}
-
-ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(J_JITOperation_EAapJ operation, int dst, ArrayAllocationProfile* arg1, GPRReg arg2)
-{
-    setupArgumentsWithExecState(TrustedImmPtr(arg1), arg2);
     return appendCallWithExceptionCheckSetJSValueResult(operation, dst);
 }
 
@@ -294,28 +216,28 @@ ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(J_JITOperation_EC operatio
     return appendCallWithExceptionCheckSetJSValueResult(operation, dst);
 }
 
-ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(J_JITOperation_EJ operation, int dst, GPRReg arg1)
-{
-    setupArgumentsWithExecState(arg1);
-    return appendCallWithExceptionCheckSetJSValueResult(operation, dst);
-}
-
-ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(J_JITOperation_EJIdc operation, int dst, GPRReg arg1, const Identifier* arg2)
-{
-    setupArgumentsWithExecState(arg1, TrustedImmPtr(arg2));
-    return appendCallWithExceptionCheckSetJSValueResult(operation, dst);
-}
-
-ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(J_JITOperation_EJJ operation, int dst, GPRReg arg1, GPRReg arg2)
-{
-    setupArgumentsWithExecState(arg1, arg2);
-    return appendCallWithExceptionCheckSetJSValueResult(operation, dst);
-}
-
 ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(J_JITOperation_EP operation, int dst, void* pointer)
 {
     setupArgumentsWithExecState(TrustedImmPtr(pointer));
     return appendCallWithExceptionCheckSetJSValueResult(operation, dst);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(WithProfileTag, J_JITOperation_EPc operation, int dst, Instruction* bytecodePC)
+{
+    setupArgumentsWithExecState(TrustedImmPtr(bytecodePC));
+    return appendCallWithExceptionCheckSetJSValueResultWithProfile(operation, dst);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(J_JITOperation_EZ operation, int dst, int32_t arg)
+{
+    setupArgumentsWithExecState(TrustedImm32(arg));
+    return appendCallWithExceptionCheckSetJSValueResult(operation, dst);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(P_JITOperation_EZ operation, int32_t op)
+{
+    setupArgumentsWithExecState(TrustedImm32(op));
+    return appendCallWithExceptionCheck(operation);
 }
 
 ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(S_JITOperation_ECC operation, RegisterID regOp1, RegisterID regOp2)
@@ -324,21 +246,39 @@ ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(S_JITOperation_ECC operati
     return appendCallWithExceptionCheck(operation);
 }
 
-ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(S_JITOperation_EJ operation, RegisterID regOp)
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(S_JITOperation_EOJss operation, RegisterID regOp1, RegisterID regOp2)
+{
+    setupArgumentsWithExecState(regOp1, regOp2);
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_E operation)
+{
+    setupArgumentsExecState();
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_EC operation, RegisterID regOp)
 {
     setupArgumentsWithExecState(regOp);
     return appendCallWithExceptionCheck(operation);
 }
 
-ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(S_JITOperation_EJJ operation, RegisterID regOp1, RegisterID regOp2)
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_ECC operation, RegisterID regOp1, RegisterID regOp2)
 {
     setupArgumentsWithExecState(regOp1, regOp2);
     return appendCallWithExceptionCheck(operation);
 }
 
-ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(S_JITOperation_EOJss operation, RegisterID regOp1, RegisterID regOp2)
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_EPc operation, Instruction* bytecodePC)
 {
-    setupArgumentsWithExecState(regOp1, regOp2);
+    setupArgumentsWithExecState(TrustedImmPtr(bytecodePC));
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_EZ operation, int32_t op)
+{
+    setupArgumentsWithExecState(TrustedImm32(op));
     return appendCallWithExceptionCheck(operation);
 }
 
@@ -360,7 +300,118 @@ ALWAYS_INLINE MacroAssembler::Call JIT::callOperationWithCallFrameRollbackOnExce
     return appendCallWithCallFrameRollbackOnException(operation);
 }
 
-#if USE(JSVALUE32_64)
+
+#if USE(JSVALUE64)
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(F_JITOperation_EJJZ operation, GPRReg arg1, GPRReg arg2, int32_t arg3)
+{
+    setupArgumentsWithExecState(arg1, arg2, TrustedImm32(arg3));
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_EJJI operation, RegisterID regOp1, RegisterID regOp2, StringImpl* uid)
+{
+    setupArgumentsWithExecState(regOp1, regOp2, TrustedImmPtr(uid));
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_EJJJ operation, RegisterID regOp1, RegisterID regOp2, RegisterID regOp3)
+{
+    setupArgumentsWithExecState(regOp1, regOp2, regOp3);
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(JIT::WithProfileTag, J_JITOperation_EJI operation, int dst, GPRReg arg1, StringImpl* uid)
+{
+    setupArgumentsWithExecState(arg1, TrustedImmPtr(uid));
+    return appendCallWithExceptionCheckSetJSValueResultWithProfile(operation, dst);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(JIT::WithProfileTag, J_JITOperation_EJJ operation, int dst, GPRReg arg1, GPRReg arg2)
+{
+    setupArgumentsWithExecState(arg1, arg2);
+    return appendCallWithExceptionCheckSetJSValueResultWithProfile(operation, dst);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(J_JITOperation_EAapJ operation, int dst, ArrayAllocationProfile* arg1, GPRReg arg2)
+{
+    setupArgumentsWithExecState(TrustedImmPtr(arg1), arg2);
+    return appendCallWithExceptionCheckSetJSValueResult(operation, dst);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(J_JITOperation_EJ operation, int dst, GPRReg arg1)
+{
+    setupArgumentsWithExecState(arg1);
+    return appendCallWithExceptionCheckSetJSValueResult(operation, dst);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(J_JITOperation_EJIdc operation, int dst, GPRReg arg1, const Identifier* arg2)
+{
+    setupArgumentsWithExecState(arg1, TrustedImmPtr(arg2));
+    return appendCallWithExceptionCheckSetJSValueResult(operation, dst);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(J_JITOperation_EJJ operation, int dst, GPRReg arg1, GPRReg arg2)
+{
+    setupArgumentsWithExecState(arg1, arg2);
+    return appendCallWithExceptionCheckSetJSValueResult(operation, dst);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperationNoExceptionCheck(V_JITOperation_EJ operation, GPRReg arg1)
+{
+    setupArgumentsWithExecState(arg1);
+    updateTopCallFrame();
+    return appendCall(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(P_JITOperation_EJS operation, GPRReg arg1, size_t arg2)
+{
+    setupArgumentsWithExecState(arg1, TrustedImmPtr(arg2));
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(S_JITOperation_EJ operation, RegisterID regOp)
+{
+    setupArgumentsWithExecState(regOp);
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(S_JITOperation_EJJ operation, RegisterID regOp1, RegisterID regOp2)
+{
+    setupArgumentsWithExecState(regOp1, regOp2);
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_EIdJZ operation, const Identifier* identOp1, RegisterID regOp2, int32_t op3)
+{
+    setupArgumentsWithExecState(TrustedImmPtr(identOp1), regOp2, TrustedImm32(op3));
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_EJ operation, RegisterID regOp)
+{
+    setupArgumentsWithExecState(regOp);
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_EJIdJJ operation, RegisterID regOp1, const Identifier* identOp2, RegisterID regOp3, RegisterID regOp4)
+{
+    setupArgumentsWithExecState(regOp1, TrustedImmPtr(identOp2), regOp3, regOp4);
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_EJZ operation, RegisterID regOp1, int32_t op2)
+{
+    setupArgumentsWithExecState(regOp1, TrustedImm32(op2));
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_EJZJ operation, RegisterID regOp1, int32_t op2, RegisterID regOp3)
+{
+    setupArgumentsWithExecState(regOp1, TrustedImm32(op2), regOp3);
+    return appendCallWithExceptionCheck(operation);
+}
+
+#else // USE(JSVALUE32_64)
 
 // EncodedJSValue in JSVALUE32_64 is a 64-bit integer. When being compiled in ARM EABI, it must be aligned even-numbered register (r0, r2 or [sp]).
 // To avoid assemblies from using wrong registers, let's occupy r1 or r3 with a dummy argument when necessary.
@@ -371,22 +422,35 @@ ALWAYS_INLINE MacroAssembler::Call JIT::callOperationWithCallFrameRollbackOnExce
 #endif
 
 // JSVALUE32_64 is a 64-bit integer that cannot be put half in an argument register and half on stack when using SH4 architecture.
-// To avoid this, let's occupy the 4th argument register (r7) with a dummy argument when necessary.
+// To avoid this, let's occupy the 4th argument register (r7) with a dummy argument when necessary. This must only be done when there
+// is no other 32-bit value argument behind this 64-bit JSValue.
 #if CPU(SH4)
 #define SH4_32BIT_DUMMY_ARG      TrustedImm32(0),
 #else
 #define SH4_32BIT_DUMMY_ARG
 #endif
 
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperationNoExceptionCheck(V_JITOperation_EJ operation, GPRReg arg1Tag, GPRReg arg1Payload)
+{
+    setupArgumentsWithExecState(arg1Payload, arg1Tag);
+    updateTopCallFrame();
+    return appendCall(operation);
+}
+
 ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(F_JITOperation_EJJZ operation, GPRReg arg1Tag, GPRReg arg1Payload, GPRReg arg2Tag, GPRReg arg2Payload, int32_t arg3)
 {
-    setupArgumentsWithExecState(EABI_32BIT_DUMMY_ARG arg1Payload, arg1Tag, SH4_32BIT_DUMMY_ARG arg2Payload, arg2Tag, TrustedImm32(arg3));
+#if CPU(SH4)
+    // We have to put arg3 in the 4th argument register (r7) as 64-bit value arg2 will be put on stack for sh4 architecure.
+    setupArgumentsWithExecState(arg1Payload, arg1Tag, TrustedImm32(arg3), arg2Payload, arg2Tag, TrustedImm32(arg3));
+#else
+    setupArgumentsWithExecState(EABI_32BIT_DUMMY_ARG arg1Payload, arg1Tag, arg2Payload, arg2Tag, TrustedImm32(arg3));
+#endif
     return appendCallWithExceptionCheck(operation);
 }
 
 ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(J_JITOperation_EAapJ operation, int dst, ArrayAllocationProfile* arg1, GPRReg arg2Tag, GPRReg arg2Payload)
 {
-    setupArgumentsWithExecState(TrustedImmPtr(arg1), EABI_32BIT_DUMMY_ARG arg2Payload, arg2Tag);
+    setupArgumentsWithExecState(TrustedImmPtr(arg1), arg2Payload, arg2Tag);
     return appendCallWithExceptionCheckSetJSValueResult(operation, dst);
 }
 
@@ -394,6 +458,12 @@ ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(J_JITOperation_EJ operatio
 {
     setupArgumentsWithExecState(EABI_32BIT_DUMMY_ARG arg1Payload, arg1Tag);
     return appendCallWithExceptionCheckSetJSValueResult(operation, dst);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(JIT::WithProfileTag, J_JITOperation_EJI operation, int dst, GPRReg arg1Tag, GPRReg arg1Payload, StringImpl* uid)
+{
+    setupArgumentsWithExecState(EABI_32BIT_DUMMY_ARG arg1Payload, arg1Tag, TrustedImmPtr(uid));
+    return appendCallWithExceptionCheckSetJSValueResultWithProfile(operation, dst);
 }
 
 ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(J_JITOperation_EJIdc operation, int dst, GPRReg arg1Tag, GPRReg arg1Payload, const Identifier* arg2)
@@ -408,6 +478,18 @@ ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(J_JITOperation_EJJ operati
     return appendCallWithExceptionCheckSetJSValueResult(operation, dst);
 }
 
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(JIT::WithProfileTag, J_JITOperation_EJJ operation, int dst, GPRReg arg1Tag, GPRReg arg1Payload, GPRReg arg2Tag, GPRReg arg2Payload)
+{
+    setupArgumentsWithExecState(EABI_32BIT_DUMMY_ARG arg1Payload, arg1Tag, SH4_32BIT_DUMMY_ARG arg2Payload, arg2Tag);
+    return appendCallWithExceptionCheckSetJSValueResultWithProfile(operation, dst);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(P_JITOperation_EJS operation, GPRReg arg1Tag, GPRReg arg1Payload, size_t arg2)
+{
+    setupArgumentsWithExecState(EABI_32BIT_DUMMY_ARG arg1Payload, arg1Tag, TrustedImmPtr(arg2));
+    return appendCallWithExceptionCheck(operation);
+}
+
 ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(S_JITOperation_EJ operation, RegisterID argTag, RegisterID argPayload)
 {
     setupArgumentsWithExecState(EABI_32BIT_DUMMY_ARG argPayload, argTag);
@@ -417,6 +499,53 @@ ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(S_JITOperation_EJ operatio
 ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(S_JITOperation_EJJ operation, RegisterID arg1Tag, RegisterID arg1Payload, RegisterID arg2Tag, RegisterID arg2Payload)
 {
     setupArgumentsWithExecState(EABI_32BIT_DUMMY_ARG arg1Payload, arg1Tag, SH4_32BIT_DUMMY_ARG arg2Payload, arg2Tag);
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_ECICC operation, RegisterID regOp1, const Identifier* identOp2, RegisterID regOp3, RegisterID regOp4)
+{
+    setupArgumentsWithExecState(regOp1, TrustedImmPtr(identOp2), regOp3, regOp4);
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_EJ operation, RegisterID regOp1Tag, RegisterID regOp1Payload)
+{
+    setupArgumentsWithExecState(regOp1Payload, regOp1Tag);
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_EIdJZ operation, const Identifier* identOp1, RegisterID regOp2Tag, RegisterID regOp2Payload, int32_t op3)
+{
+    setupArgumentsWithExecState(TrustedImmPtr(identOp1), regOp2Payload, regOp2Tag, TrustedImm32(op3));
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_EJJI operation, RegisterID regOp1Tag, RegisterID regOp1Payload, RegisterID regOp2Tag, RegisterID regOp2Payload, StringImpl* uid)
+{
+#if CPU(SH4)
+    // We have to put uid in the 4th argument register (r7) as 64-bit value regOp2 will be put on stack for sh4 architecure.
+    setupArgumentsWithExecState(regOp1Payload, regOp1Tag, TrustedImmPtr(uid), regOp2Payload, regOp2Tag);
+#else
+    setupArgumentsWithExecState(EABI_32BIT_DUMMY_ARG regOp1Payload, regOp1Tag, regOp2Payload, regOp2Tag, TrustedImmPtr(uid));
+#endif
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_EJJJ operation, RegisterID regOp1Payload, RegisterID regOp1Tag, RegisterID regOp2Payload, RegisterID regOp2Tag, RegisterID regOp3Payload, RegisterID regOp3Tag)
+{
+    setupArgumentsWithExecState(EABI_32BIT_DUMMY_ARG regOp1Payload, regOp1Tag, SH4_32BIT_DUMMY_ARG regOp2Payload, regOp2Tag, regOp3Payload, regOp3Tag);
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_EJZ operation, RegisterID regOp1Tag, RegisterID regOp1Payload, int32_t op2)
+{
+    setupArgumentsWithExecState(EABI_32BIT_DUMMY_ARG regOp1Payload, regOp1Tag, TrustedImm32(op2));
+    return appendCallWithExceptionCheck(operation);
+}
+
+ALWAYS_INLINE MacroAssembler::Call JIT::callOperation(V_JITOperation_EJZJ operation, RegisterID regOp1Tag, RegisterID regOp1Payload, int32_t op2, RegisterID regOp3Tag, RegisterID regOp3Payload)
+{
+    setupArgumentsWithExecState(EABI_32BIT_DUMMY_ARG regOp1Payload, regOp1Tag, TrustedImm32(op2), regOp3Payload, regOp3Tag);
     return appendCallWithExceptionCheck(operation);
 }
 
@@ -949,14 +1078,6 @@ ALWAYS_INLINE bool JIT::getOperandConstantImmediateInt(int op1, int op2, int& op
 }
 
 #else // USE(JSVALUE32_64)
-
-/* Deprecated: Please use JITStubCall instead. */
-
-ALWAYS_INLINE void JIT::emitGetJITStubArg(int argumentNumber, RegisterID dst)
-{
-    int argumentStackOffset = (argumentNumber * (sizeof(JSValue) / sizeof(void*))) + JITSTACKFRAME_ARGS_INDEX;
-    peek64(dst, argumentStackOffset);
-}
 
 ALWAYS_INLINE void JIT::killLastResultRegister()
 {

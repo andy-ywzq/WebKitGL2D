@@ -7170,6 +7170,7 @@
     <ClCompile Include="..\platform\graphics\avfoundation\cf\InbandTextTrackPrivateAVCF.cpp" />
     <ClCompile Include="..\platform\graphics\avfoundation\cf\InbandTextTrackPrivateLegacyAVCF.cpp" />
     <ClCompile Include="..\platform\graphics\avfoundation\InbandTextTrackPrivateAVF.cpp" />
+    <ClCompile Include="..\platform\graphics\ca\PlatformCALayer.cpp" />
     <ClCompile Include="..\platform\graphics\GLContext.cpp" />
     <ClCompile Include="..\platform\graphics\cairo\GraphicsContext3DCairo.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -7968,6 +7969,12 @@
     <ClCompile Include="..\platform\network\SocketStreamHandleBase.cpp" />
     <ClCompile Include="..\platform\network\SynchronousLoaderClient.cpp" />
     <ClCompile Include="..\platform\network\cf\AuthenticationCF.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\platform\network\cf\CertificateInfoCFNet.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_WinCairo|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_WinCairo|Win32'">true</ExcludedFromBuild>
@@ -10017,6 +10024,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Production|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\rendering\RenderNamedFlowFragment.cpp" />
     <ClCompile Include="..\rendering\RenderNamedFlowThread.cpp" />
     <ClCompile Include="..\rendering\RenderObject.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -18655,6 +18663,7 @@
     <ClInclude Include="..\platform\graphics\avfoundation\cf\InbandTextTrackPrivateLegacyAVCF.h" />
     <ClInclude Include="..\platform\graphics\avfoundation\InbandTextTrackPrivateAVF.h" />
     <ClInclude Include="..\platform\graphics\ca\PlatformCAFilters.h" />
+    <ClInclude Include="..\platform\graphics\ca\win\PlatformCALayerWin.h" />
     <ClInclude Include="..\platform\graphics\GLContext.h" />
     <ClInclude Include="..\platform\graphics\GraphicsContext3DPrivate.h" />
     <ClInclude Include="..\platform\graphics\cg\SubimageCacheWithTimer.h">
@@ -19043,6 +19052,7 @@
     <ClInclude Include="..\platform\network\BlobRegistryImpl.h" />
     <ClInclude Include="..\platform\network\BlobResourceHandle.h" />
     <ClInclude Include="..\platform\network\BlobStorageData.h" />
+    <ClInclude Include="..\platform\network\CertificateInfo.h" />
     <ClInclude Include="..\platform\network\CookieStorage.h" />
     <ClInclude Include="..\platform\network\Credential.h" />
     <ClInclude Include="..\platform\network\CredentialStorage.h" />
@@ -19462,6 +19472,7 @@
     <ClInclude Include="..\rendering\RenderMultiColumnBlock.h" />
     <ClInclude Include="..\rendering\RenderMultiColumnFlowThread.h" />
     <ClInclude Include="..\rendering\RenderMultiColumnSet.h" />
+    <ClInclude Include="..\rendering\RenderNamedFlowFragment.h" />
     <ClInclude Include="..\rendering\RenderNamedFlowThread.h" />
     <ClInclude Include="..\rendering\RenderObject.h" />
     <ClInclude Include="..\rendering\RenderProgress.h" />

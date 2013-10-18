@@ -1,3 +1,214 @@
+2013-10-18  Rik Cabanier <cabanier@adobe.com>
+        Add Rik Cabanier to list of committers
+        https://bugs.webkit.org/show_bug.cgi?id=123031
+
+        reviewed by Dirk Schulze.
+
+        * Tools/Scripts/webkitpy/common/config/contributors.json: Added name.
+
+2013-10-18  Denis Nomiyama  <d.nomiyama@samsung.com>
+
+        [ATK] Fix invalid signal to set objects to an unknown state "layout-complete"
+        https://bugs.webkit.org/show_bug.cgi?id=122970
+
+        Reviewed by Mario Sanchez Prada.
+
+        Removed an invalid signal to set an object state to layout-complete
+        that does not exist. It was replaced by ATK:AtkDocument:load-complete.
+
+        * DumpRenderTree/atk/AccessibilityCallbacksAtk.cpp:
+        (axObjectEventListener): Replaced layout-complete with load-complete.
+        (connectAccessibilityCallbacks): Connect callback to new listener for
+        ATK:AtkDocument:load-complete.
+        (disconnectAccessibilityCallbacks): Disconnect callback to new listener
+        for ATK:AtkDocument:load-complete.
+        * WebKitTestRunner/InjectedBundle/atk/AccessibilityNotificationHandlerAtk.cpp:
+        (axObjectEventListener): Replaced layout-complete with load-complete.
+        (WTR::AccessibilityNotificationHandler::connectAccessibilityCallbacks):
+        Connect callback to new listener for ATK:AtkDocument:load-complete.
+        (WTR::AccessibilityNotificationHandler::disconnectAccessibilityCallbacks):
+        Disconnect callback to new listener for ATK:AtkDocument:load-complete.
+
+2013-10-18  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Generate API documentation for GObject DOM bindings
+        https://bugs.webkit.org/show_bug.cgi?id=121538
+
+        Reviewed by Gustavo Noronha Silva.
+
+        The .symbols file that is now generated for checking GObject DOM
+        bindings API compatibility while building can also be used to
+        generate the files needed to produce the gtk-doc
+        documentation. The new script generate-webkitdom-doc-files can
+        generate the docs.sgml and sections.txt files from the given list
+        of .symbols files.
+
+        * gtk/GNUmakefile.am: Add rules to generate webkitdomgtk-docs.sgml
+        and webkitdomgtk-sections.txt as well as rules to install the
+        generated WebKitDOMGTK documentation.
+        * gtk/generate-gtkdoc:
+        (webkitdom_docs_html_path): New helper function that returns the
+        path where the DOM API documentation has been generated.
+        (get_webkit2_options): Include DOM API docs to the list of xref
+        dependencies.
+        (get_webkit1_options): Ditto.
+        (get_webkitdom_options): Return the gtk-doc options to generate
+        the DOM API docs.
+        (get_webkitdom_options.derived_sources_path):
+        (get_webkitdom_options.src_path):
+        * gtk/generate-webkitdom-doc-files: Added.
+        (WebKitDOMDocGenerator):
+        (WebKitDOMDocGenerator.write_header):
+        (WebKitDOMDocGenerator.write_section):
+        (WebKitDOMDocGenerator.write_footer):
+        (WebKitDOMDocGeneratorDocs):
+        (WebKitDOMDocGeneratorDocs.write_header):
+        (write_section):
+        (write_footer):
+        (WebKitDOMDocGeneratorSections):
+        (WebKitDOMDocGeneratorSections.__init__):
+        (WebKitDOMDocGeneratorSections._dom_class):
+        (WebKitDOMDocGeneratorSections._dom_class_decamelize):
+        (WebKitDOMDocGeneratorSections._symbol_list):
+        (WebKitDOMDocGeneratorSections.write_section):
+
+2013-10-17  Alex Christensen  <achristensen@webkit.org>
+
+        Run JavaScriptCore tests again on Windows.
+        https://bugs.webkit.org/show_bug.cgi?id=122787
+
+        Reviewed by Tim Horton.
+
+        * Scripts/build-jsc:
+        (buildMyProject): Use JavaScriptCore.sln to build JavaScriptCore and WTF.
+        * Scripts/run-javascriptcore-tests: Don't run stress tests on WinCairo.
+        * Scripts/webkitdirs.pm:
+        (determineConfigurationForVisualStudio):
+        (determineConfigurationProductDir):
+        Build directory should end with bin64 and configuration should end with |x64 on Win64.
+        (isAppleWinWebKit):
+        (copyInspectorFrontendFiles):
+        (setPathForRunningWebKitApp):
+        Separated WinCairo directories and options from AppleWin.
+
+2013-10-17  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        Unreviewed. Add myself as a reviewer.
+
+        * Scripts/webkitpy/common/config/contributors.json:
+
+2013-10-17  Andreas Kling  <akling@apple.com>
+
+        Make it possible to assign a PassRef to a RefPtr.
+        <https://webkit.org/b/122943>
+
+        Added a small API test for RefPtr=(PassRef) so we know this code
+        will compile (and work.)
+
+        Reviewed by Antti Koivisto.
+
+2013-10-16  Filip Pizlo  <fpizlo@apple.com>
+
+        We need test coverage for just the Baseline JIT
+        https://bugs.webkit.org/show_bug.cgi?id=122929
+
+        Reviewed by Sam Weinig.
+        
+        Adds no-LLInt versions of all tests. For the Mozilla tests, also add a BaselineJIT-only
+        variant.
+
+        * Scripts/run-jsc-stress-tests:
+
+2013-10-16  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Support multiple repositories in submitting results to --results-server-host
+        https://bugs.webkit.org/show_bug.cgi?id=122935
+
+        Reviewed by Anders Carlsson.
+
+        Remoevd --got-revision and added the logic to extract revision information
+        from multiple repositories as done in run-perf-tests.
+
+        * Scripts/webkitpy/layout_tests/controllers/manager.py:
+        (Manager.upload_results):
+        * Scripts/webkitpy/layout_tests/run_webkit_tests.py:
+        (parse_args):
+
+2013-10-16  Darin Adler  <darin@apple.com>
+
+        Add PassRef and createRefCounted so we can improve creation of RefCounted objects
+        https://bugs.webkit.org/show_bug.cgi?id=122904
+
+        Reviewed by Anders Carlsson.
+
+        * TestWebKitAPI/Tests/WTF/Ref.cpp: Added some basic tests for adoptRef and PassRef.
+
+2013-10-16  Darin Adler  <darin@apple.com>
+
+        Need tests for RefPtr self-assignment and self-move-assignment.
+
+        * TestWebKitAPI/Tests/WTF/RefPtr.cpp: Added tests.
+
+2013-10-16  Robert Plociennik  <r.plociennik@samsung.com>
+
+        [EFL] Minibrowser can't load child window's location
+        https://bugs.webkit.org/show_bug.cgi?id=122485
+
+        Reviewed by Gyuyoung Kim.
+
+        * MiniBrowser/efl/main.c: Now calling window_create() without the url parameter
+            followed by an explicit call to ewk_view_url_set() where appropriate.
+        (on_key_down):
+        (on_window_create):
+        (window_create):
+        (elm_main):
+
+2013-10-15  Sergio Correia  <sergio.correia@openbossa.org>
+
+        [EFL][WK2] Make SeccompFilters build again after r156349 and r156353
+        https://bugs.webkit.org/show_bug.cgi?id=122872
+
+        Reviewed by Anders Carlsson.
+
+        * TestWebKitAPI/PlatformEfl.cmake: Mark SeccompFilters API test as
+        failing.
+
+2013-10-15  Dean Jackson  <dino@apple.com>
+
+        Add ENABLE_WEB_ANIMATIONS flag
+        https://bugs.webkit.org/show_bug.cgi?id=122871
+
+        Reviewed by Tim Horton.
+
+        Eventually might be http://dev.w3.org/fxtf/web-animations/
+        but this is just engine-internal work at the moment.
+
+        * Scripts/webkitperl/FeatureList.pm:
+
+2013-10-15  Darin Adler  <darin@apple.com>
+
+        Add some API tests for Vector, RefPtr, and Ref
+        https://bugs.webkit.org/show_bug.cgi?id=122840
+
+        Reviewed by Andreas Kling.
+
+        * TestWebKitAPI/CMakeLists.txt: Added new files.
+        * TestWebKitAPI/GNUmakefile.am: Ditto.
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPI.vcxproj: Ditto.
+        * TestWebKitAPI/TestWebKitAPI.vcxproj/TestWebKitAPI.vcxproj.filters: Ditto.
+        * TestWebKitAPI/TestWebKitAPI.xcodeproj/project.pbxproj: Ditto.
+
+        * TestWebKitAPI/Tests/WTF/Ref.cpp: Added.
+        * TestWebKitAPI/Tests/WTF/RefLogger.h: Added.
+        * TestWebKitAPI/Tests/WTF/RefPtr.cpp: Added.
+        * TestWebKitAPI/Tests/WTF/Vector.cpp: Added move-only insert tests.
+
+2013-10-14  Roger Fong  <roger_fong@apple.com>
+
+        Adding myself to CC list for some components.
+
+        * Scripts/webkitpy/common/config/watchlist:
+
 2013-10-13  Darin Adler  <darin@apple.com>
 
         Deprecate or remove deleteAllValues functions; there are only a few call sites left

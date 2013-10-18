@@ -692,33 +692,11 @@ JSCell* JIT_OPERATION operationCreateInlinedArguments(
     return result;
 }
 
-void JIT_OPERATION operationTearOffArguments(ExecState* exec, JSCell* argumentsCell, JSCell* activationCell)
-{
-    ASSERT(exec->codeBlock()->usesArguments());
-    if (activationCell) {
-        jsCast<Arguments*>(argumentsCell)->didTearOffActivation(exec, jsCast<JSActivation*>(activationCell));
-        return;
-    }
-    jsCast<Arguments*>(argumentsCell)->tearOff(exec);
-}
-
 void JIT_OPERATION operationTearOffInlinedArguments(
     ExecState* exec, JSCell* argumentsCell, JSCell* activationCell, InlineCallFrame* inlineCallFrame)
 {
     ASSERT_UNUSED(activationCell, !activationCell); // Currently, we don't inline functions with activations.
     jsCast<Arguments*>(argumentsCell)->tearOff(exec, inlineCallFrame);
-}
-
-EncodedJSValue JIT_OPERATION operationGetArgumentsLength(ExecState* exec, int32_t argumentsRegister)
-{
-    VM& vm = exec->vm();
-    NativeCallFrameTracer tracer(&vm, exec);
-    // Here we can assume that the argumernts were created. Because otherwise the JIT code would
-    // have not made this call.
-    Identifier ident(&vm, "length");
-    JSValue baseValue = exec->uncheckedR(argumentsRegister).jsValue();
-    PropertySlot slot(baseValue);
-    return JSValue::encode(baseValue.get(exec, ident, slot));
 }
 
 EncodedJSValue JIT_OPERATION operationGetArgumentByVal(ExecState* exec, int32_t argumentsRegister, int32_t index)

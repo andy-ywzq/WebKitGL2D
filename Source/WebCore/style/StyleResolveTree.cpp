@@ -59,7 +59,7 @@ namespace Style {
 
 enum DetachType { NormalDetach, ReattachDetach };
 
-static void attachRenderTree(Element&, PassRefPtr<RenderStyle> resolvedStyle);
+static void attachRenderTree(Element&, PassRefPtr<RenderStyle>);
 static void detachRenderTree(Element&, DetachType);
 
 Change determineChange(const RenderStyle* s1, const RenderStyle* s2, Settings* settings)
@@ -166,7 +166,7 @@ static bool elementInsideRegionNeedsRenderer(Element& element, const ContainerNo
 #if ENABLE(CSS_REGIONS)
     const RenderObject* parentRenderer = renderingParentNode ? renderingParentNode->renderer() : 0;
 
-    bool parentIsRegion = parentRenderer && !parentRenderer->canHaveChildren() && parentRenderer->isRenderRegion();
+    bool parentIsRegion = parentRenderer && !parentRenderer->canHaveChildren() && parentRenderer->isRenderNamedFlowFragmentContainer();
     bool parentIsNonRenderedInsideRegion = !parentRenderer && element.parentElement() && element.parentElement()->isInsideRegion();
     if (!parentIsRegion && !parentIsNonRenderedInsideRegion)
         return false;
@@ -180,6 +180,10 @@ static bool elementInsideRegionNeedsRenderer(Element& element, const ContainerNo
 
     if (element.shouldMoveToFlowThread(*style))
         return true;
+#else
+    UNUSED_PARAM(element);
+    UNUSED_PARAM(renderingParentNode);
+    UNUSED_PARAM(style);
 #endif
     return false;
 }
@@ -200,7 +204,6 @@ static void createRendererIfNeeded(Element& element, PassRefPtr<RenderStyle> res
 {
     ASSERT(!element.renderer());
 
-    Document& document = element.document();
     ContainerNode* renderingParentNode = NodeRenderingTraversal::parent(&element);
 
     RefPtr<RenderStyle> style = resolvedStyle;
@@ -232,10 +235,10 @@ static void createRendererIfNeeded(Element& element, PassRefPtr<RenderStyle> res
         nextRenderer = nextSiblingRenderer(element, renderingParentNode);
     }
 
-    RenderElement* newRenderer = element.createRenderer(*document.renderArena(), *style);
+    RenderElement* newRenderer = element.createRenderer(*style);
     if (!newRenderer)
         return;
-    if (!parentRenderer->isChildAllowed(newRenderer, style.get())) {
+    if (!parentRenderer->isChildAllowed(*newRenderer, *style)) {
         newRenderer->destroy();
         return;
     }
@@ -248,6 +251,7 @@ static void createRendererIfNeeded(Element& element, PassRefPtr<RenderStyle> res
     newRenderer->setAnimatableStyle(style.release()); // setAnimatableStyle() can depend on renderer() already being set.
 
 #if ENABLE(FULLSCREEN_API)
+    Document& document = element.document();
     if (document.webkitIsFullScreen() && document.webkitCurrentFullScreenElement() == &element) {
         newRenderer = RenderFullScreen::wrapRenderer(newRenderer, parentRenderer, document);
         if (!newRenderer)
@@ -366,15 +370,14 @@ static void createTextRendererIfNeeded(Text& textNode)
     if (!renderingParentNode->childShouldCreateRenderer(&textNode))
         return;
 
-    Document& document = textNode.document();
     RefPtr<RenderStyle> style = parentRenderer->style();
 
     if (!textRendererIsNeeded(textNode, *parentRenderer, *style))
         return;
-    RenderText* newRenderer = textNode.createTextRenderer(*document.renderArena(), *style);
+    RenderText* newRenderer = textNode.createTextRenderer(*style);
     if (!newRenderer)
         return;
-    if (!parentRenderer->isChildAllowed(newRenderer, style.get())) {
+    if (!parentRenderer->isChildAllowed(*newRenderer, *style)) {
         newRenderer->destroy();
         return;
     }

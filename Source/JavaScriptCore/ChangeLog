@@ -1,3 +1,1561 @@
+2013-10-18  Filip Pizlo  <fpizlo@apple.com>
+
+        Frequent RELEASE_ASSERT crashes in Structure::checkOffsetConsistency on WebGL swizzler tests
+        https://bugs.webkit.org/show_bug.cgi?id=121661
+
+        Reviewed by Mark Hahnenberg.
+        
+        This method shouldn't have been called from the concurrent JIT thread. That's hard to prevent
+        so I added a return-early check using isCompilationThread().
+        
+        Here's why this makes sense. Structure has two ways to tell you about the layout of the objects
+        it is describing: m_offset and the property table. Most structures only have m_offset and report
+        null for the property table. If the property table is there, it will tell you additional
+        information and that information subsumes m_offset - but the m_offset is still there. So, when
+        we have a property table, we have to keep it in sync with the m_offset. There is a bunch of
+        machinery to do this.
+        
+        Changing the property table only happens on the main thread.
+        
+        Because the machinery to change the property table is so complex, especially with respect to
+        keeping it in sync with m_offset, we have the checkOffsetConsistency method. It's meant to be
+        called at key points before and after changes to the property table or the offset.
+
+        Most clients of Structure who care about object layout, including the concurrent thread, will
+        want to know m_offset and not the property table. If they want the property table, they will
+        already be super careful. The concurrent thread has special methods for this, like
+        Structure::getConcurrently(), which uses fine-grained locking to ensure that it sees a coherent
+        view of the property table.
+        
+        Adding locking to checkOffsetConsistency() is probably a bad idea since that method may be
+        called when the relevant lock is already held. So, we'd have awkward recursive locking issues.
+        
+        But right now, the concurrent JIT thread may call a method, like Structure::outOfLineCapacity(),
+        which has a call to checkOffsetConsistency(). The call to checkOffsetConsistency() is there
+        because we have found that it helps quickly identify situations where the property table and
+        m_offset get out of sync - mainly because code that changes either of those things will usually
+        also want to know the outOfLineCapacity(). But Structure::outOfLineCapacity() doesn't *actually*
+        need the property table; it uses the m_offset. The concurrent JIT is correct to call
+        outOfLineCapacity(), and is right to do so without holding any locks (since in all cases where
+        it calls outOfLineCapacity() it has already proven that m_offset is immutable). But because
+        outOfLineCapacity() calls checkOffsetConsistency(), and checkOffsetConsistency() doesn't grab
+        locks, and that same structure is having its property table modified by the main thread, we end
+        up with these spurious assertion failures. FWIW, the structure isn't *actually* having *its*
+        property table modified - instead what happens is that some downstream structure steals the
+        property table and then starts adding things to it. The concurrent thread loads the property
+        table before it's stolen, and hence the badness.
+        
+        I suspect there are other code paths that lead to the concurrent JIT calling some Structure
+        method that it is fine and safe to call, but then that method calls checkOffsetConsistency(),
+        and then you have a possible crash.
+        
+        The most sensible solution to this appears to be to make sure that checkOffsetConsistency() is
+        aware of its uselessness to the concurrent JIT thread. This change makes it return early if
+        it's in the concurrent JIT.
+        
+        * runtime/StructureInlines.h:
+        (JSC::Structure::checkOffsetConsistency):
+
+2013-10-18  Daniel Bates  <dabates@apple.com>
+
+        Add SPI to disable the garbage collector timer
+        https://bugs.webkit.org/show_bug.cgi?id=122921
+
+        Add null check to Heap::setGarbageCollectionTimerEnabled() that I inadvertently
+        omitted.
+
+        * heap/Heap.cpp:
+        (JSC::Heap::setGarbageCollectionTimerEnabled):
+
+2013-10-18  Julien Brianceau  <jbriance@cisco.com>
+
+        Group 64-bit specific and 32-bit specific callOperation implementations.
+        https://bugs.webkit.org/show_bug.cgi?id=123024
+
+        Reviewed by Michael Saboff.
+
+        This is not a big deal, but could be less confusing when reading the code.
+
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation):
+        (JSC::JIT::callOperationWithCallFrameRollbackOnException):
+        (JSC::JIT::callOperationNoExceptionCheck):
+
+2013-10-18  Nadav Rotem  <nrotem@apple.com>
+
+        Fix a FlushLiveness problem.
+        https://bugs.webkit.org/show_bug.cgi?id=122984
+
+        Reviewed by Filip Pizlo.
+
+        * dfg/DFGFlushLivenessAnalysisPhase.cpp:
+        (JSC::DFG::FlushLivenessAnalysisPhase::process):
+
+2013-10-18  Michael Saboff  <msaboff@apple.com>
+
+        Change native function call stubs to use JIT operations instead of ctiVMHandleException
+        https://bugs.webkit.org/show_bug.cgi?id=122982
+
+        Reviewed by Geoffrey Garen.
+
+        Change ctiVMHandleException to operationVMHandleException.  Change all exception operations to
+        return the catch callFrame and entryPC via vm.callFrameForThrow and vm.targetMachinePCForThrow.
+        This removed calling convention headaches, fixing https://bugs.webkit.org/show_bug.cgi?id=122980
+        in the process.
+
+        * dfg/DFGJITCompiler.cpp:
+        (JSC::DFG::JITCompiler::compileExceptionHandlers):
+        * jit/CCallHelpers.h:
+        (JSC::CCallHelpers::jumpToExceptionHandler):
+        * jit/JIT.cpp:
+        (JSC::JIT::privateCompileExceptionHandlers):
+        * jit/JIT.h:
+        * jit/JITExceptions.cpp:
+        (JSC::genericUnwind):
+        * jit/JITExceptions.h:
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperationNoExceptionCheck):
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_throw):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::privateCompileCTINativeCall):
+        (JSC::JIT::emit_op_throw):
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        * jit/JITStubs.cpp:
+        * jit/JITStubs.h:
+        * jit/JITStubsARM.h:
+        * jit/JITStubsARM64.h:
+        * jit/JITStubsARMv7.h:
+        * jit/JITStubsMIPS.h:
+        * jit/JITStubsMSVC64.asm:
+        * jit/JITStubsSH4.h:
+        * jit/JITStubsX86.h:
+        * jit/JITStubsX86_64.h:
+        * jit/Repatch.cpp:
+        (JSC::tryBuildGetByIDList):
+        * jit/SlowPathCall.h:
+        (JSC::JITSlowPathCall::call):
+        * jit/ThunkGenerators.cpp:
+        (JSC::throwExceptionFromCallSlowPathGenerator):
+        (JSC::nativeForGenerator):
+        * runtime/VM.h:
+        (JSC::VM::callFrameForThrowOffset):
+        (JSC::VM::targetMachinePCForThrowOffset):
+
+2013-10-18  Julien Brianceau  <jbriance@cisco.com>
+
+        Fix J_JITOperation_EAapJ call for MIPS and ARM EABI.
+        https://bugs.webkit.org/show_bug.cgi?id=123023
+
+        Reviewed by Michael Saboff.
+
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation): EncodedJSValue parameter do not need alignment
+        using EABI_32BIT_DUMMY_ARG here.
+
+2013-10-17  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, another ARM64 build fix.
+        
+        Get rid of andPtr(TrustedImmPtr, blah), since it would take Effort to get it to work
+        on ARM64 and none of its uses are legit - they should all be using
+        andPtr(TrustedImm32, blah) anyway.
+
+        * assembler/MacroAssembler.h:
+        * assembler/MacroAssemblerARM64.h:
+        * dfg/DFGJITCompiler.cpp:
+        (JSC::DFG::JITCompiler::compileExceptionHandlers):
+        * jit/JIT.cpp:
+        (JSC::JIT::privateCompileExceptionHandlers):
+
+2013-10-17  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, speculative ARM64 build fix.
+        
+        move(ImmPtr, blah) is only available in MacroAssembler since that's where blinding is
+        implemented. So, you have to use TrustedImmPtr in the superclasses.
+
+        * assembler/MacroAssemblerARM64.h:
+        (JSC::MacroAssemblerARM64::store8):
+        (JSC::MacroAssemblerARM64::branchTest8):
+
+2013-10-17  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, speculative ARM build fix.
+        https://bugs.webkit.org/show_bug.cgi?id=122890
+        <rdar://problem/15258624>
+
+        * assembler/ARM64Assembler.h:
+        (JSC::ARM64Assembler::firstRegister):
+        (JSC::ARM64Assembler::lastRegister):
+        (JSC::ARM64Assembler::firstFPRegister):
+        (JSC::ARM64Assembler::lastFPRegister):
+        * assembler/MacroAssemblerARM64.h:
+        * assembler/MacroAssemblerARMv7.h:
+
+2013-10-17  Andreas Kling  <akling@apple.com>
+
+        Pass VM instead of JSGlobalObject to JSONObject constructor.
+        <https://webkit.org/b/122999>
+
+        JSONObject was only use the JSGlobalObject to grab at the VM.
+        Dodge a few loads by passing the VM directly instead.
+
+        Reviewed by Geoffrey Garen.
+
+        * runtime/JSONObject.cpp:
+        (JSC::JSONObject::JSONObject):
+        (JSC::JSONObject::finishCreation):
+        * runtime/JSONObject.h:
+        (JSC::JSONObject::create):
+
+2013-10-17  Geoffrey Garen  <ggaren@apple.com>
+
+        Removed the JITStackFrame struct
+        https://bugs.webkit.org/show_bug.cgi?id=123001
+
+        Reviewed by Anders Carlsson.
+
+        * jit/JITStubs.h: JITStackFrame and JITStubArg are unused now, since all
+        our helper functions obey the C function call ABI.
+
+2013-10-17  Geoffrey Garen  <ggaren@apple.com>
+
+        Removed an unused #define
+        https://bugs.webkit.org/show_bug.cgi?id=123000
+
+        Reviewed by Anders Carlsson.
+
+        * jit/JITStubs.h: Removed the concept of JITSTACKFRAME_ARGS_INDEX,
+        since it is unused now. This is a step toward using the C stack.
+
+2013-10-17  Geoffrey Garen  <ggaren@apple.com>
+
+        Eliminate uses of JITSTACKFRAME_ARGS_INDEX as scratch area for thunks
+        https://bugs.webkit.org/show_bug.cgi?id=122973
+
+        Reviewed by Michael Saboff.
+
+        * jit/ThunkGenerators.cpp:
+        (JSC::throwExceptionFromCallSlowPathGenerator): This was all dead code,
+        so I removed it.
+
+        The code acted as if it needed to pass an argument to
+        lookupExceptionHandler, and as if it passed that argument to itself
+        through JITStackFrame. However, lookupExceptionHandler does not take
+        an argument (other than the default ExecState argument), and the code
+        did not initialize the thing that it thought it passed to itself!
+
+2013-10-17  Alex Christensen  <achristensen@webkit.org>
+
+        Run JavaScriptCore tests again on Windows.
+        https://bugs.webkit.org/show_bug.cgi?id=122787
+
+        Reviewed by Tim Horton.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.sln: Added.
+        * jit/JITStubsMSVC64.asm: Removed reference to cti_vm_throw unused since r157581.
+
+2013-10-17  Geoffrey Garen  <ggaren@apple.com>
+
+        Removed restoreArgumentReference (another use of JITStackFrame)
+        https://bugs.webkit.org/show_bug.cgi?id=122997
+
+        Reviewed by Oliver Hunt.
+
+        * jit/JSInterfaceJIT.h: Removed an unused function. This is a step
+        toward using the C stack.
+
+2013-10-17  Oliver Hunt  <oliver@apple.com>
+
+        Remove JITStubCall.h
+        https://bugs.webkit.org/show_bug.cgi?id=122991
+
+        Reviewed by Geoff Garen.
+
+        Happily this is no longer used
+
+        * GNUmakefile.list.am:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * jit/JIT.cpp:
+        * jit/JITArithmetic.cpp:
+        * jit/JITArithmetic32_64.cpp:
+        * jit/JITCall.cpp:
+        * jit/JITCall32_64.cpp:
+        * jit/JITOpcodes.cpp:
+        * jit/JITOpcodes32_64.cpp:
+        * jit/JITPropertyAccess.cpp:
+        * jit/JITPropertyAccess32_64.cpp:
+        * jit/JITStubCall.h: Removed.
+
+2013-10-17  Geoffrey Garen  <ggaren@apple.com>
+
+        Removed a use of JITSTACKFRAME_ARGS_INDEX
+        https://bugs.webkit.org/show_bug.cgi?id=122989
+
+        Reviewed by Oliver Hunt.
+
+        * jit/JITStubCall.h: Removed an unused function. This is one step closer
+        to using the C stack.
+
+2013-10-17  Geoffrey Garen  <ggaren@apple.com>
+
+        Change emit_op_catch to use another method to materialize VM
+        https://bugs.webkit.org/show_bug.cgi?id=122977
+
+        Reviewed by Oliver Hunt.
+
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_catch):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_catch): Use a constant. It removes our dependency
+        on JITStackFrame. It is also faster and simpler.
+
+2013-10-17  Geoffrey Garen  <ggaren@apple.com>
+
+        Eliminate emitGetJITStubArg() - dead code
+        https://bugs.webkit.org/show_bug.cgi?id=122975
+
+        Reviewed by Anders Carlsson.
+
+        * jit/JIT.h:
+        * jit/JITInlines.h: Removed unused, deprecated function.
+
+2013-10-17  Mark Lam  <mark.lam@apple.com>
+
+        Eliminate all ASSERT references to OBJECT_OFFSETOF(struct JITStackFrame,...) in JITStubsXXX.h.
+        https://bugs.webkit.org/show_bug.cgi?id=122979.
+
+        Reviewed by Michael Saboff.
+
+        * jit/JITStubs.cpp:
+        * jit/JITStubs.h:
+        * jit/JITStubsARM.h:
+        * jit/JITStubsARM64.h:
+        * jit/JITStubsARMv7.h:
+        * jit/JITStubsMIPS.h:
+        * jit/JITStubsSH4.h:
+        * jit/JITStubsX86.h:
+        * jit/JITStubsX86_64.h:
+        * runtime/VM.cpp:
+        (JSC::VM::VM):
+
+2013-10-17  Michael Saboff  <msaboff@apple.com>
+
+        Remove saving callFrameRegister to JITStackFrame in JITCompiler::compileFunction()
+        https://bugs.webkit.org/show_bug.cgi?id=122974
+
+        Reviewed by Geoffrey Garen.
+
+        Eliminated unneeded storing to JITStackFrame.
+
+        * dfg/DFGJITCompiler.cpp:
+        (JSC::DFG::JITCompiler::compileFunction):
+
+2013-10-17  Michael Saboff  <msaboff@apple.com>
+
+        Transition cti_op_throw and cti_vm_throw to a JIT operation
+        https://bugs.webkit.org/show_bug.cgi?id=122931
+
+        Reviewed by Filip Pizlo.
+
+        Moved cti_op_throw to operationThrow.  Made the caller responsible for jumping to the
+        catch handler.  Eliminated cti_op_throw_static_error, cti_vm_throw, ctiVMThrowTrampoline()
+        and their callers as it is now dead code.  There is some work needed on the Microsoft X86
+        callOperation to handle the need to provide space for structure return value.
+
+        * jit/JIT.h:
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation):
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_throw):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_throw):
+        (JSC::JIT::emit_op_catch):
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        * jit/JITStubs.cpp:
+        * jit/JITStubs.h:
+        * jit/JITStubsARM.h:
+        * jit/JITStubsARM64.h:
+        * jit/JITStubsARMv7.h:
+        * jit/JITStubsMIPS.h:
+        * jit/JITStubsMSVC64.asm:
+        * jit/JITStubsSH4.h:
+        * jit/JITStubsX86.h:
+        * jit/JITStubsX86_64.h:
+        * jit/JSInterfaceJIT.h:
+
+2013-10-17  Mark Lam  <mark.lam@apple.com>
+
+        Remove JITStackFrame references in the C Loop LLINT.
+        https://bugs.webkit.org/show_bug.cgi?id=122950.
+
+        Reviewed by Michael Saboff.
+
+        * jit/JITStubs.h:
+        * llint/LowLevelInterpreter.cpp:
+        (JSC::CLoop::execute):
+        * offlineasm/cloop.rb:
+
+2013-10-17  Mark Lam  <mark.lam@apple.com>
+
+        Remove JITStackFrame references in JIT probes.
+        https://bugs.webkit.org/show_bug.cgi?id=122947.
+
+        Reviewed by Michael Saboff.
+
+        * assembler/MacroAssemblerARM.cpp:
+        (JSC::MacroAssemblerARM::ProbeContext::dump):
+        * assembler/MacroAssemblerARM.h:
+        * assembler/MacroAssemblerARMv7.cpp:
+        (JSC::MacroAssemblerARMv7::ProbeContext::dump):
+        * assembler/MacroAssemblerARMv7.h:
+        * assembler/MacroAssemblerX86Common.cpp:
+        (JSC::MacroAssemblerX86Common::ProbeContext::dump):
+        * assembler/MacroAssemblerX86Common.h:
+        * jit/JITStubsARM.h:
+        * jit/JITStubsARMv7.h:
+        * jit/JITStubsX86.h:
+        * jit/JITStubsX86Common.h:
+        * jit/JITStubsX86_64.h:
+
+2013-10-17  Julien Brianceau  <jbriance@cisco.com>
+
+        Fix build when NUMBER_OF_ARGUMENT_REGISTERS == 4.
+        https://bugs.webkit.org/show_bug.cgi?id=122949
+
+        Reviewed by Andreas Kling.
+
+        * jit/CCallHelpers.h:
+        (JSC::CCallHelpers::setupArgumentsWithExecState):
+
+2013-10-16  Mark Lam  <mark.lam@apple.com>
+
+        Transition remaining op_get* JITStubs to JIT operations.
+        https://bugs.webkit.org/show_bug.cgi?id=122925.
+
+        Reviewed by Geoffrey Garen.
+
+        Transitioning:
+            cti_op_get_by_id_generic
+            cti_op_get_by_val
+            cti_op_get_by_val_generic
+            cti_op_get_by_val_string
+
+        * dfg/DFGOperations.cpp:
+        * dfg/DFGOperations.h:
+        * jit/JIT.h:
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation):
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emitSlow_op_get_arguments_length):
+        (JSC::JIT::emitSlow_op_get_argument_by_val):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emitSlow_op_get_arguments_length):
+        (JSC::JIT::emitSlow_op_get_argument_by_val):
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        * jit/JITPropertyAccess.cpp:
+        (JSC::JIT::emitSlow_op_get_by_val):
+        (JSC::JIT::emitSlow_op_get_by_pname):
+        (JSC::JIT::privateCompileGetByVal):
+        * jit/JITPropertyAccess32_64.cpp:
+        (JSC::JIT::emitSlow_op_get_by_val):
+        (JSC::JIT::emitSlow_op_get_by_pname):
+        * jit/JITStubs.cpp:
+        * jit/JITStubs.h:
+        * runtime/Executable.cpp:
+        (JSC::setupLLInt): Added some UNUSED_PARAMs to fix the no LLINT build.
+        * runtime/Options.cpp:
+        (JSC::Options::initialize):
+
+2013-10-16  Filip Pizlo  <fpizlo@apple.com>
+
+        Introduce WTF::Bag and start using it for InlineCallFrameSet
+        https://bugs.webkit.org/show_bug.cgi?id=122941
+
+        Reviewed by Geoffrey Garen.
+        
+        Use Bag for InlineCallFrameSet. If this works out then I'll make other
+        SegmentedVectors into Bags as well.
+
+        * bytecode/InlineCallFrameSet.cpp:
+        (JSC::InlineCallFrameSet::add):
+        * bytecode/InlineCallFrameSet.h:
+        (JSC::InlineCallFrameSet::begin):
+        (JSC::InlineCallFrameSet::end):
+        * dfg/DFGArgumentsSimplificationPhase.cpp:
+        (JSC::DFG::ArgumentsSimplificationPhase::run):
+        * dfg/DFGJITCompiler.cpp:
+        (JSC::DFG::JITCompiler::link):
+        * dfg/DFGStackLayoutPhase.cpp:
+        (JSC::DFG::StackLayoutPhase::run):
+        * dfg/DFGVirtualRegisterAllocationPhase.cpp:
+        (JSC::DFG::VirtualRegisterAllocationPhase::run):
+
+2013-10-16  Filip Pizlo  <fpizlo@apple.com>
+
+        libllvmForJSC shouldn't call exit(1) on report_fatal_error()
+        https://bugs.webkit.org/show_bug.cgi?id=122905
+        <rdar://problem/15237856>
+
+        Reviewed by Michael Saboff.
+        
+        Expose the new LLVMInstallFatalErrorHandler() API through the soft linking magic and
+        then always call it to install something that calls CRASH().
+
+        * llvm/InitializeLLVM.cpp:
+        (JSC::llvmCrash):
+        (JSC::initializeLLVMOnce):
+        (JSC::initializeLLVM):
+        * llvm/LLVMAPIFunctions.h:
+
+2013-10-16  Filip Pizlo  <fpizlo@apple.com>
+
+        Prototype chain repatching in the polymorphic case fails to check if the receiver is a dictionary
+        https://bugs.webkit.org/show_bug.cgi?id=122938
+
+        Reviewed by Sam Weinig.
+        
+        This fixes jsc-layout-tests.yaml/js/script-tests/dictionary-prototype-caching.js.layout-no-llint.
+
+        * jit/Repatch.cpp:
+        (JSC::tryBuildGetByIDList):
+
+2013-10-16  Filip Pizlo  <fpizlo@apple.com>
+
+        JIT::appendCall() needs to killLastResultRegister() or equivalent since there's some really bad code that expects it
+        https://bugs.webkit.org/show_bug.cgi?id=122937
+
+        Reviewed by Geoffrey Garen.
+        
+        JITStubCall used to do it.
+        
+        This makes mozilla-tests.yaml/ecma/Statements/12.10-1.js.mozilla-baseline pass.
+
+        * jit/JIT.h:
+        (JSC::JIT::appendCall):
+
+2013-10-16  Michael Saboff  <msaboff@apple.com>
+
+        transition void cti_op_put_by_val* stubs to JIT operations
+        https://bugs.webkit.org/show_bug.cgi?id=122903
+
+        Reviewed by Geoffrey Garen.
+
+        Transitioned cti_op_put_by_val and cti_op_put_by_val_generic to operationPutByVal and
+        operationPutByValGeneric.
+
+        * jit/CCallHelpers.h:
+        (JSC::CCallHelpers::setupArgumentsWithExecState):
+        * jit/JIT.h:
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation):
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        * jit/JITPropertyAccess.cpp:
+        (JSC::JIT::emitSlow_op_put_by_val):
+        (JSC::JIT::privateCompilePutByVal):
+        * jit/JITPropertyAccess32_64.cpp:
+        (JSC::JIT::emitSlow_op_put_by_val):
+        * jit/JITStubs.cpp:
+        * jit/JITStubs.h:
+        * jit/JSInterfaceJIT.h:
+
+2013-10-16  Oliver Hunt  <oliver@apple.com>
+
+        Implement ES6 spread operator
+        https://bugs.webkit.org/show_bug.cgi?id=122911
+
+        Reviewed by Michael Saboff.
+
+        Implement the ES6 spread operator
+
+        This has a little bit of refactoring to move the enumeration logic out ForOfNode
+        and into BytecodeGenerator, and then adds the logic to make it nicely callback
+        driven.
+
+        The rest of the logic is just the addition of the SpreadExpressionNode, the parsing,
+        and actually handling the spread.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::emitNewArray):
+        (JSC::BytecodeGenerator::emitCall):
+        (JSC::BytecodeGenerator::emitEnumeration):
+        * bytecompiler/BytecodeGenerator.h:
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ArrayNode::emitBytecode):
+        (JSC::ForOfNode::emitBytecode):
+        (JSC::SpreadExpressionNode::emitBytecode):
+        * parser/ASTBuilder.h:
+        (JSC::ASTBuilder::createSpreadExpression):
+        * parser/Lexer.cpp:
+        (JSC::::lex):
+        * parser/NodeConstructors.h:
+        (JSC::SpreadExpressionNode::SpreadExpressionNode):
+        * parser/Nodes.h:
+        (JSC::ExpressionNode::isSpreadExpression):
+        (JSC::SpreadExpressionNode::expression):
+        * parser/Parser.cpp:
+        (JSC::::parseArrayLiteral):
+        (JSC::::parseArguments):
+        (JSC::::parseMemberExpression):
+        * parser/Parser.h:
+        (JSC::Parser::getTokenName):
+        (JSC::Parser::updateErrorMessageSpecialCase):
+        * parser/ParserTokens.h:
+        * parser/SyntaxChecker.h:
+        (JSC::SyntaxChecker::createSpreadExpression):
+
+2013-10-16  Filip Pizlo  <fpizlo@apple.com>
+
+        Add a useLLInt option to jsc
+        https://bugs.webkit.org/show_bug.cgi?id=122930
+
+        Reviewed by Geoffrey Garen.
+
+        * runtime/Executable.cpp:
+        (JSC::setupLLInt):
+        (JSC::setupJIT):
+        (JSC::ScriptExecutable::prepareForExecutionImpl):
+        * runtime/Options.h:
+
+2013-10-16  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        Build fix.
+
+        Forgot to svn add DeferGC.cpp
+
+        * heap/DeferGC.cpp: Added.
+
+2013-10-16  Filip Pizlo  <fpizlo@apple.com>
+
+        r157411 fails run-javascriptcore-tests when run with Baseline JIT
+        https://bugs.webkit.org/show_bug.cgi?id=122902
+
+        Reviewed by Mark Hahnenberg.
+        
+        It turns out that this was a long-standing bug in the DFG PutById repatching logic. It's
+        not legal to patch if the typeInfo tells you that you can't patch. The old JIT's patching
+        logic did this right, and the DFG's GetById patching logic did it right; but DFG PutById
+        didn't. Turns out that there's even a helpful method,
+        Structure::propertyAccessesAreCacheable(), that will even do all of the checks for you!
+
+        * jit/Repatch.cpp:
+        (JSC::tryCachePutByID):
+
+2013-10-16  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        llint_slow_path_put_by_id can deadlock on a ConcurrentJITLock
+        https://bugs.webkit.org/show_bug.cgi?id=122667
+
+        Reviewed by Geoffrey Garen.
+
+        The issue this patch is attempting to fix is that there are places in our codebase
+        where we acquire the ConcurrentJITLock for a particular CodeBlock, then we do some
+        operations that can initiate a garbage collection. Garbage collection then calls 
+        some methods of CodeBlock that also take the ConcurrentJITLock (because they don't
+        always necessarily run during garbage collection). This causes a deadlock.
+ 
+        To fix this issue, this patch adds a new RAII-style object (DisallowGC) that stores 
+        into a thread-local field that indicates that it is unsafe to perform any operation 
+        that could trigger garbage collection on the current thread. In debug builds, 
+        ConcurrentJITLocker contains one of these DisallowGC objects so that we can eagerly 
+        detect deadlocks.
+ 
+        This patch also adds a new type of ConcurrentJITLocker, GCSafeConcurrentJITLocker,
+        which uses the DeferGC mechanism to prevent collections from occurring while the 
+        lock is held.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * heap/DeferGC.h:
+        (JSC::DisallowGC::DisallowGC):
+        (JSC::DisallowGC::~DisallowGC):
+        (JSC::DisallowGC::isGCDisallowedOnCurrentThread):
+        (JSC::DisallowGC::initialize):
+        * jit/Repatch.cpp:
+        (JSC::repatchPutByID):
+        (JSC::buildPutByIdList):
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        * runtime/ConcurrentJITLock.h:
+        (JSC::ConcurrentJITLockerBase::ConcurrentJITLockerBase):
+        (JSC::ConcurrentJITLockerBase::~ConcurrentJITLockerBase):
+        (JSC::ConcurrentJITLockerBase::unlockEarly):
+        (JSC::GCSafeConcurrentJITLocker::GCSafeConcurrentJITLocker):
+        (JSC::GCSafeConcurrentJITLocker::~GCSafeConcurrentJITLocker):
+        (JSC::GCSafeConcurrentJITLocker::NoDefer::NoDefer):
+        (JSC::ConcurrentJITLocker::ConcurrentJITLocker):
+        * runtime/InitializeThreading.cpp:
+        (JSC::initializeThreadingOnce):
+        * runtime/JSCellInlines.h:
+        (JSC::allocateCell):
+        * runtime/JSSymbolTableObject.h:
+        (JSC::symbolTablePut):
+        * runtime/Structure.cpp: materializePropertyMapIfNecessary* now has a problem in that it
+        can start a garbage collection when the GCSafeConcurrentJITLocker goes out of scope, but 
+        before the caller has a chance to use the newly created PropertyTable. The garbage collection
+        clears the PropertyTable, and then the caller uses it assuming it's valid. To avoid this,
+        we must DeferGC until the caller is done getting the newly materialized PropertyTable from 
+        the Structure.
+        (JSC::Structure::materializePropertyMap):
+        (JSC::Structure::despecifyDictionaryFunction):
+        (JSC::Structure::changePrototypeTransition):
+        (JSC::Structure::despecifyFunctionTransition):
+        (JSC::Structure::attributeChangeTransition):
+        (JSC::Structure::toDictionaryTransition):
+        (JSC::Structure::preventExtensionsTransition):
+        (JSC::Structure::takePropertyTableOrCloneIfPinned):
+        (JSC::Structure::isSealed):
+        (JSC::Structure::isFrozen):
+        (JSC::Structure::addPropertyWithoutTransition):
+        (JSC::Structure::removePropertyWithoutTransition):
+        (JSC::Structure::get):
+        (JSC::Structure::despecifyFunction):
+        (JSC::Structure::despecifyAllFunctions):
+        (JSC::Structure::putSpecificValue):
+        (JSC::Structure::createPropertyMap):
+        (JSC::Structure::getPropertyNamesFromStructure):
+        * runtime/Structure.h:
+        (JSC::Structure::materializePropertyMapIfNecessary):
+        (JSC::Structure::materializePropertyMapIfNecessaryForPinning):
+        * runtime/StructureInlines.h:
+        (JSC::Structure::get):
+        * runtime/SymbolTable.h:
+        (JSC::SymbolTable::find):
+        (JSC::SymbolTable::end):
+
+2013-10-16  Daniel Bates  <dabates@apple.com>
+
+        Add SPI to disable the garbage collector timer
+        https://bugs.webkit.org/show_bug.cgi?id=122921
+
+        Reviewed by Geoffrey Garen.
+
+        Based on a patch by Mark Hahnenberg.
+
+        * API/JSBase.cpp:
+        (JSDisableGCTimer): Added; SPI function.
+        * API/JSBasePrivate.h:
+        * heap/BlockAllocator.cpp:
+        (JSC::createBlockFreeingThread): Added.
+        (JSC::BlockAllocator::BlockAllocator): Modified to use JSC::createBlockFreeingThread()
+        to conditionally create the "block freeing" thread depending on the value of
+        GCActivityCallback::s_shouldCreateGCTimer.
+        (JSC::BlockAllocator::~BlockAllocator):
+        * heap/BlockAllocator.h:
+        (JSC::BlockAllocator::deallocate):
+        * heap/Heap.cpp:
+        (JSC::Heap::didAbandon):
+        (JSC::Heap::collect):
+        (JSC::Heap::didAllocate):
+        * heap/HeapTimer.cpp:
+        (JSC::HeapTimer::timerDidFire):
+        * runtime/GCActivityCallback.cpp:
+        * runtime/GCActivityCallback.h:
+        (JSC::DefaultGCActivityCallback::create): Only instantiate a DefaultGCActivityCallback object
+        when GCActivityCallback::s_shouldCreateGCTimer is true so as to prevent allocating a HeapTimer
+        object (since DefaultGCActivityCallback ultimately extends HeapTimer).
+
+2013-10-16  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r157529.
+        http://trac.webkit.org/changeset/157529
+        https://bugs.webkit.org/show_bug.cgi?id=122919
+
+        Caused score test failures and some build failures. (Requested
+        by rfong on #webkit).
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::emitNewArray):
+        (JSC::BytecodeGenerator::emitCall):
+        (JSC::BytecodeGenerator::emitReadOnlyExceptionIfNeeded):
+        * bytecompiler/BytecodeGenerator.h:
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ArrayNode::emitBytecode):
+        (JSC::CallArguments::CallArguments):
+        (JSC::ForOfNode::emitBytecode):
+        (JSC::BindingNode::collectBoundIdentifiers):
+        * parser/ASTBuilder.h:
+        * parser/Lexer.cpp:
+        (JSC::::lex):
+        * parser/NodeConstructors.h:
+        (JSC::DotAccessorNode::DotAccessorNode):
+        * parser/Nodes.h:
+        * parser/Parser.cpp:
+        (JSC::::parseArrayLiteral):
+        (JSC::::parseArguments):
+        (JSC::::parseMemberExpression):
+        * parser/Parser.h:
+        (JSC::Parser::getTokenName):
+        (JSC::Parser::updateErrorMessageSpecialCase):
+        * parser/ParserTokens.h:
+        * parser/SyntaxChecker.h:
+
+2013-10-16  Julien Brianceau  <jbriance@cisco.com>
+
+        Remove useless architecture specific implementation in DFG.
+        https://bugs.webkit.org/show_bug.cgi?id=122917.
+
+        Reviewed by Michael Saboff.
+
+        With CPU(ARM) && CPU(ARM_HARDFP) architecture, the fallback implementation is fine
+        as FPRInfo::argumentFPR0 == FPRInfo::returnValueFPR in this case.
+
+        * dfg/DFGSpeculativeJIT.h:
+
+2013-10-16  Julien Brianceau  <jbriance@cisco.com>
+
+        Remove unused JIT::restoreArgumentReferenceForTrampoline function.
+        https://bugs.webkit.org/show_bug.cgi?id=122916.
+
+        Reviewed by Michael Saboff.
+
+        This architecture specific function is not used anymore, so get rid of it.
+
+        * jit/JIT.h:
+        * jit/JITInlines.h:
+
+2013-10-16  Oliver Hunt  <oliver@apple.com>
+
+        Implement ES6 spread operator
+        https://bugs.webkit.org/show_bug.cgi?id=122911
+
+        Reviewed by Michael Saboff.
+
+        Implement the ES6 spread operator
+
+        This has a little bit of refactoring to move the enumeration logic out ForOfNode
+        and into BytecodeGenerator, and then adds the logic to make it nicely callback
+        driven.
+
+        The rest of the logic is just the addition of the SpreadExpressionNode, the parsing,
+        and actually handling the spread.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::emitNewArray):
+        (JSC::BytecodeGenerator::emitCall):
+        (JSC::BytecodeGenerator::emitEnumeration):
+        * bytecompiler/BytecodeGenerator.h:
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ArrayNode::emitBytecode):
+        (JSC::ForOfNode::emitBytecode):
+        (JSC::SpreadExpressionNode::emitBytecode):
+        * parser/ASTBuilder.h:
+        (JSC::ASTBuilder::createSpreadExpression):
+        * parser/Lexer.cpp:
+        (JSC::::lex):
+        * parser/NodeConstructors.h:
+        (JSC::SpreadExpressionNode::SpreadExpressionNode):
+        * parser/Nodes.h:
+        (JSC::ExpressionNode::isSpreadExpression):
+        (JSC::SpreadExpressionNode::expression):
+        * parser/Parser.cpp:
+        (JSC::::parseArrayLiteral):
+        (JSC::::parseArguments):
+        (JSC::::parseMemberExpression):
+        * parser/Parser.h:
+        (JSC::Parser::getTokenName):
+        (JSC::Parser::updateErrorMessageSpecialCase):
+        * parser/ParserTokens.h:
+        * parser/SyntaxChecker.h:
+        (JSC::SyntaxChecker::createSpreadExpression):
+
+2013-10-16  Mark Lam  <mark.lam@apple.com>
+
+        Transition void cti_op_tear_off* methods to JIT operations for 32 bit.
+        https://bugs.webkit.org/show_bug.cgi?id=122899.
+
+        Reviewed by Michael Saboff.
+
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_tear_off_activation):
+        (JSC::JIT::emit_op_tear_off_arguments):
+        * jit/JITStubs.cpp:
+        * jit/JITStubs.h:
+
+2013-10-16  Julien Brianceau  <jbriance@cisco.com>
+
+        Remove more of the UNINTERRUPTED_SEQUENCE thing
+        https://bugs.webkit.org/show_bug.cgi?id=122885
+
+        Reviewed by Andreas Kling.
+
+        It was not completely removed by r157481, leading to build failure for sh4 architecture.
+
+        * jit/JIT.h:
+        * jit/JITInlines.h:
+
+2013-10-15  Filip Pizlo  <fpizlo@apple.com>
+
+        Get rid of the StructureStubInfo::patch union
+        https://bugs.webkit.org/show_bug.cgi?id=122877
+
+        Reviewed by Sam Weinig.
+        
+        Just simplifying code by getting rid of data structures that ain't used no more.
+        
+        Note that I replace the patch union with a patch struct. This means we say things like
+        stubInfo.patch.valueGPR instead of stubInfo.valueGPR. I think that this extra
+        encapsulation makes the code more readable: the patch struct contains just those things
+        that you need to know to perform patching.
+
+        * bytecode/StructureStubInfo.h:
+        * dfg/DFGJITCompiler.cpp:
+        (JSC::DFG::JITCompiler::link):
+        * jit/JIT.cpp:
+        (JSC::PropertyStubCompilationInfo::copyToStubInfo):
+        * jit/Repatch.cpp:
+        (JSC::repatchByIdSelfAccess):
+        (JSC::replaceWithJump):
+        (JSC::linkRestoreScratch):
+        (JSC::generateProtoChainAccessStub):
+        (JSC::tryCacheGetByID):
+        (JSC::getPolymorphicStructureList):
+        (JSC::patchJumpToGetByIdStub):
+        (JSC::tryBuildGetByIDList):
+        (JSC::emitPutReplaceStub):
+        (JSC::emitPutTransitionStub):
+        (JSC::tryCachePutByID):
+        (JSC::tryBuildPutByIdList):
+        (JSC::tryRepatchIn):
+        (JSC::resetGetByID):
+        (JSC::resetPutByID):
+        (JSC::resetIn):
+
+2013-10-15  Nadav Rotem  <nrotem@apple.com>
+
+        FTL: add support for Int52ToValue and fix putByVal of int52s.
+        https://bugs.webkit.org/show_bug.cgi?id=122873
+
+        Reviewed by Filip Pizlo.
+
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compileInt52ToValue):
+        (JSC::FTL::LowerDFGToLLVM::compilePutByVal):
+
+2013-10-15  Filip Pizlo  <fpizlo@apple.com>
+
+        Get rid of the UNINTERRUPTED_SEQUENCE thing
+        https://bugs.webkit.org/show_bug.cgi?id=122876
+
+        Reviewed by Mark Hahnenberg.
+        
+        It doesn't make sense anymore. We now use the DFG's IC logic, which never needed that.
+        
+        Moreover, we should resist the temptation to bring anything like this back. We don't
+        want to have inline caches that only work if the assembler lays out code in a specific
+        predetermined way.
+
+        * jit/JIT.h:
+        * jit/JITCall.cpp:
+        (JSC::JIT::compileOpCall):
+        * jit/JITCall32_64.cpp:
+        (JSC::JIT::compileOpCall):
+
+2013-10-15  Filip Pizlo  <fpizlo@apple.com>
+
+        Baseline JIT should use the DFG GetById IC
+        https://bugs.webkit.org/show_bug.cgi?id=122861
+
+        Reviewed by Oliver Hunt.
+        
+        This mostly just kills a ton of code.
+        
+        Note that this doesn't yet do all of the simplifications that can be done, but it does
+        kill dead code. I'll have another change to simplify StructureStubInfo's unions and such.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::resetStubInternal):
+        * jit/JIT.cpp:
+        (JSC::PropertyStubCompilationInfo::copyToStubInfo):
+        * jit/JIT.h:
+        (JSC::PropertyStubCompilationInfo::PropertyStubCompilationInfo):
+        * jit/JITInlines.h:
+        (JSC::JIT::appendCallWithExceptionCheckSetJSValueResultWithProfile):
+        (JSC::JIT::callOperation):
+        * jit/JITPropertyAccess.cpp:
+        (JSC::JIT::compileGetByIdHotPath):
+        (JSC::JIT::emitSlow_op_get_by_id):
+        (JSC::JIT::emitSlow_op_get_from_scope):
+        * jit/JITPropertyAccess32_64.cpp:
+        (JSC::JIT::compileGetByIdHotPath):
+        (JSC::JIT::emitSlow_op_get_by_id):
+        (JSC::JIT::emitSlow_op_get_from_scope):
+        * jit/JITStubs.cpp:
+        * jit/JITStubs.h:
+        * jit/Repatch.cpp:
+        (JSC::repatchGetByID):
+        (JSC::buildGetByIDList):
+        * jit/ThunkGenerators.cpp:
+        * jit/ThunkGenerators.h:
+
+2013-10-15  Dean Jackson  <dino@apple.com>
+
+        Add ENABLE_WEB_ANIMATIONS flag
+        https://bugs.webkit.org/show_bug.cgi?id=122871
+
+        Reviewed by Tim Horton.
+
+        Eventually might be http://dev.w3.org/fxtf/web-animations/
+        but this is just engine-internal work at the moment.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-10-15  Julien Brianceau  <jbriance@cisco.com>
+
+        [sh4] Some calls don't match sh4 ABI.
+        https://bugs.webkit.org/show_bug.cgi?id=122863
+
+        Reviewed by Michael Saboff.
+
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::callOperation):
+        * jit/CCallHelpers.h:
+        (JSC::CCallHelpers::setupArgumentsWithExecState):
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation):
+
+2013-10-15  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Upstream JavaScriptCore support for ARM64
+        https://bugs.webkit.org/show_bug.cgi?id=122762
+
+        Reviewed by Oliver Hunt and Filip Pizlo.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+        * Configurations/JavaScriptCore.xcconfig:
+        * Configurations/ToolExecutable.xcconfig:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * assembler/ARM64Assembler.h: Added.
+        * assembler/AbstractMacroAssembler.h:
+        (JSC::isARM64):
+        (JSC::AbstractMacroAssembler::Label::Label):
+        (JSC::AbstractMacroAssembler::Jump::Jump):
+        (JSC::AbstractMacroAssembler::Jump::link):
+        (JSC::AbstractMacroAssembler::Jump::linkTo):
+        (JSC::AbstractMacroAssembler::CachedTempRegister::CachedTempRegister):
+        (JSC::AbstractMacroAssembler::CachedTempRegister::registerIDInvalidate):
+        (JSC::AbstractMacroAssembler::CachedTempRegister::registerIDNoInvalidate):
+        (JSC::AbstractMacroAssembler::CachedTempRegister::value):
+        (JSC::AbstractMacroAssembler::CachedTempRegister::setValue):
+        (JSC::AbstractMacroAssembler::CachedTempRegister::invalidate):
+        (JSC::AbstractMacroAssembler::invalidateAllTempRegisters):
+        (JSC::AbstractMacroAssembler::isTempRegisterValid):
+        (JSC::AbstractMacroAssembler::clearTempRegisterValid):
+        (JSC::AbstractMacroAssembler::setTempRegisterValid):
+        * assembler/LinkBuffer.cpp:
+        (JSC::LinkBuffer::copyCompactAndLinkCode):
+        (JSC::LinkBuffer::linkCode):
+        * assembler/LinkBuffer.h:
+        * assembler/MacroAssembler.h:
+        (JSC::MacroAssembler::isPtrAlignedAddressOffset):
+        (JSC::MacroAssembler::pushToSave):
+        (JSC::MacroAssembler::popToRestore):
+        (JSC::MacroAssembler::patchableBranchTest32):
+        * assembler/MacroAssemblerARM64.h: Added.
+        * assembler/MacroAssemblerARMv7.h:
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGOSRExitCompiler32_64.cpp:
+        (JSC::DFG::OSRExitCompiler::compileExit):
+        * dfg/DFGOSRExitCompiler64.cpp:
+        (JSC::DFG::OSRExitCompiler::compileExit):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileArithDiv):
+        (JSC::DFG::SpeculativeJIT::compileArithMod):
+        * disassembler/ARM64/A64DOpcode.cpp: Added.
+        * disassembler/ARM64/A64DOpcode.h: Added.
+        * disassembler/ARM64Disassembler.cpp: Added.
+        * heap/MachineStackMarker.cpp:
+        (JSC::getPlatformThreadRegisters):
+        (JSC::otherThreadStackPointer):
+        * heap/Region.h:
+        * jit/AssemblyHelpers.h:
+        (JSC::AssemblyHelpers::debugCall):
+        * jit/CCallHelpers.h:
+        * jit/ExecutableAllocator.h:
+        * jit/FPRInfo.h:
+        (JSC::FPRInfo::toRegister):
+        (JSC::FPRInfo::toIndex):
+        (JSC::FPRInfo::debugName):
+        * jit/GPRInfo.h:
+        (JSC::GPRInfo::toRegister):
+        (JSC::GPRInfo::toIndex):
+        (JSC::GPRInfo::debugName):
+        * jit/JITInlines.h:
+        (JSC::JIT::restoreArgumentReferenceForTrampoline):
+        * jit/JITOperationWrappers.h:
+        * jit/JITOperations.cpp:
+        * jit/JITStubs.cpp:
+        (JSC::performPlatformSpecificJITAssertions):
+        (JSC::tryCachePutByID):
+        * jit/JITStubs.h:
+        (JSC::JITStackFrame::returnAddressSlot):
+        * jit/JITStubsARM64.h: Added.
+        * jit/JSInterfaceJIT.h:
+        * jit/Repatch.cpp:
+        (JSC::emitRestoreScratch):
+        (JSC::generateProtoChainAccessStub):
+        (JSC::tryCacheGetByID):
+        (JSC::emitPutReplaceStub):
+        (JSC::tryCachePutByID):
+        (JSC::tryRepatchIn):
+        * jit/ScratchRegisterAllocator.h:
+        (JSC::ScratchRegisterAllocator::preserveReusedRegistersByPushing):
+        (JSC::ScratchRegisterAllocator::restoreReusedRegistersByPopping):
+        * jit/ThunkGenerators.cpp:
+        (JSC::nativeForGenerator):
+        (JSC::floorThunkGenerator):
+        (JSC::ceilThunkGenerator):
+        * jsc.cpp:
+        (main):
+        * llint/LLIntOfflineAsmConfig.h:
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::handleHostCall):
+        * llint/LowLevelInterpreter.asm:
+        * llint/LowLevelInterpreter64.asm:
+        * offlineasm/arm.rb:
+        * offlineasm/arm64.rb: Added.
+        * offlineasm/backends.rb:
+        * offlineasm/instructions.rb:
+        * offlineasm/risc.rb:
+        * offlineasm/transform.rb:
+        * yarr/YarrJIT.cpp:
+        (JSC::Yarr::YarrGenerator::alignCallFrameSizeInBytes):
+        (JSC::Yarr::YarrGenerator::initCallFrame):
+        (JSC::Yarr::YarrGenerator::removeCallFrame):
+        (JSC::Yarr::YarrGenerator::generateEnter):
+        * yarr/YarrJIT.h:
+
+2013-10-15  Mark Lam  <mark.lam@apple.com>
+
+        Fix 3 operand sub operation in C loop LLINT.
+        https://bugs.webkit.org/show_bug.cgi?id=122866.
+
+        Reviewed by Geoffrey Garen.
+
+        * offlineasm/cloop.rb:
+
+2013-10-15  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        ObjCCallbackFunctionImpl shouldn't store a JSContext
+        https://bugs.webkit.org/show_bug.cgi?id=122531
+
+        Reviewed by Geoffrey Garen.
+
+        The m_context field in ObjCCallbackFunctionImpl is vestigial and is only incidentally correct 
+        in the common case. It's also no longer necessary in that we can look up the current JSContext 
+        by looking using the globalObject of the callee when the function callback is invoked.
+ 
+        Also added a new test that would cause us to crash previously. The test required making 
+        JSContextGetGlobalContext public API so that clients can obtain a JSContext from the JSContextRef
+        in C API callbacks.
+
+        * API/JSContextRef.h:
+        * API/JSContextRefPrivate.h:
+        * API/ObjCCallbackFunction.mm:
+        (JSC::ObjCCallbackFunctionImpl::ObjCCallbackFunctionImpl):
+        (JSC::objCCallbackFunctionCallAsFunction):
+        (objCCallbackFunctionForInvocation):
+        * API/WebKitAvailability.h:
+        * API/tests/CurrentThisInsideBlockGetterTest.h: Added.
+        * API/tests/CurrentThisInsideBlockGetterTest.mm: Added.
+        (CallAsConstructor):
+        (ConstructorFinalize):
+        (ConstructorClass):
+        (+[JSValue valueWithConstructorDescriptor:inContext:]):
+        (-[JSContext valueWithConstructorDescriptor:]):
+        (currentThisInsideBlockGetterTest):
+        * API/tests/testapi.mm:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * debugger/Debugger.cpp: Had to add some fully qualified names to avoid conflicts with Mac OS X headers.
+
+2013-10-15  Julien Brianceau  <jbriance@cisco.com>
+
+        Fix build after r157457 for architecture with 4 argument registers.
+        https://bugs.webkit.org/show_bug.cgi?id=122860
+
+        Reviewed by Michael Saboff.
+
+        * jit/CCallHelpers.h:
+        (JSC::CCallHelpers::setupStubArguments134):
+
+2013-10-14  Michael Saboff  <msaboff@apple.com>
+
+        transition void cti_op_* methods to JIT operations.
+        https://bugs.webkit.org/show_bug.cgi?id=122617
+
+        Reviewed by Geoffrey Garen.
+
+        Converted the follow stubs to JIT operations:
+            cti_handle_watchdog_timer
+            cti_op_debug
+            cti_op_pop_scope
+            cti_op_profile_did_call
+            cti_op_profile_will_call
+            cti_op_put_by_index
+            cti_op_put_getter_setter
+            cti_op_tear_off_activation
+            cti_op_tear_off_arguments
+            cti_op_throw_static_error
+            cti_optimize
+
+        * dfg/DFGOperations.cpp:
+        * dfg/DFGOperations.h:
+        * jit/CCallHelpers.h:
+        (JSC::CCallHelpers::setupArgumentsWithExecState):
+        (JSC::CCallHelpers::setupThreeStubArgsGPR):
+        (JSC::CCallHelpers::setupStubArguments):
+        (JSC::CCallHelpers::setupStubArguments134):
+        * jit/JIT.cpp:
+        (JSC::JIT::emitEnterOptimizationCheck):
+        * jit/JIT.h:
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation):
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_tear_off_activation):
+        (JSC::JIT::emit_op_tear_off_arguments):
+        (JSC::JIT::emit_op_push_with_scope):
+        (JSC::JIT::emit_op_pop_scope):
+        (JSC::JIT::emit_op_push_name_scope):
+        (JSC::JIT::emit_op_throw_static_error):
+        (JSC::JIT::emit_op_debug):
+        (JSC::JIT::emit_op_profile_will_call):
+        (JSC::JIT::emit_op_profile_did_call):
+        (JSC::JIT::emitSlow_op_loop_hint):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_push_with_scope):
+        (JSC::JIT::emit_op_pop_scope):
+        (JSC::JIT::emit_op_push_name_scope):
+        (JSC::JIT::emit_op_throw_static_error):
+        (JSC::JIT::emit_op_debug):
+        (JSC::JIT::emit_op_profile_will_call):
+        (JSC::JIT::emit_op_profile_did_call):
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        * jit/JITPropertyAccess.cpp:
+        (JSC::JIT::emit_op_put_by_index):
+        (JSC::JIT::emit_op_put_getter_setter):
+        * jit/JITPropertyAccess32_64.cpp:
+        (JSC::JIT::emit_op_put_by_index):
+        (JSC::JIT::emit_op_put_getter_setter):
+        * jit/JITStubs.cpp:
+        * jit/JITStubs.h:
+
+2013-10-15  Julien Brianceau  <jbriance@cisco.com>
+
+        [sh4] Introduce const pools in LLINT.
+        https://bugs.webkit.org/show_bug.cgi?id=122746
+
+        Reviewed by Michael Saboff.
+
+        In current implementation of LLINT for sh4, immediate values outside range -128..127 are
+        loaded this way:
+
+            mov.l .label, rx
+            bra out
+            nop
+            .balign 4
+            .label: .long immvalue
+            out:
+
+        This change introduces const pools for sh4 implementation to avoid lots of useless branches
+        and reduce code size. It also removes lines of dirty code, like jmpf and callf.
+
+        * offlineasm/instructions.rb: Remove jmpf and callf sh4 specific instructions.
+        * offlineasm/sh4.rb:
+
+2013-10-15  Mark Lam  <mark.lam@apple.com>
+
+        Fix broken C Loop LLINT build.
+        https://bugs.webkit.org/show_bug.cgi?id=122839.
+
+        Reviewed by Michael Saboff.
+
+        * dfg/DFGFlushedAt.cpp:
+        * jit/JITOperations.h:
+
+2013-10-14  Mark Lam  <mark.lam@apple.com>
+
+        Transition *switch* and *scope* JITStubs to JIT operations.
+        https://bugs.webkit.org/show_bug.cgi?id=122757.
+
+        Reviewed by Geoffrey Garen.
+
+        Transitioning:
+            cti_op_switch_char
+            cti_op_switch_imm
+            cti_op_switch_string
+            cti_op_resolve_scope
+            cti_op_get_from_scope
+            cti_op_put_to_scope
+
+        * jit/JIT.h:
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation):
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_switch_imm):
+        (JSC::JIT::emit_op_switch_char):
+        (JSC::JIT::emit_op_switch_string):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_switch_imm):
+        (JSC::JIT::emit_op_switch_char):
+        (JSC::JIT::emit_op_switch_string):
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        * jit/JITPropertyAccess.cpp:
+        (JSC::JIT::emitSlow_op_resolve_scope):
+        (JSC::JIT::emitSlow_op_get_from_scope):
+        (JSC::JIT::emitSlow_op_put_to_scope):
+        * jit/JITPropertyAccess32_64.cpp:
+        (JSC::JIT::emitSlow_op_resolve_scope):
+        (JSC::JIT::emitSlow_op_get_from_scope):
+        (JSC::JIT::emitSlow_op_put_to_scope):
+        * jit/JITStubs.cpp:
+        * jit/JITStubs.h:
+
+2013-10-14  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG PutById IC should use the ConcurrentJITLocker since it's now dealing with IC's that get read by the compiler thread
+        https://bugs.webkit.org/show_bug.cgi?id=122786
+
+        Reviewed by Mark Hahnenberg.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::resetStub): Resetting a stub should acquire the lock since this is observable from the thread; but we should only acquire the lock if we're resetting outside of GC.
+        * jit/Repatch.cpp:
+        (JSC::repatchPutByID): Doing the PutById patching should hold the lock.
+        (JSC::buildPutByIdList): Ditto.
+
+2013-10-14  Nadav Rotem  <nrotem@apple.com>
+
+        Add FTL support for LogicalNot(string)
+        https://bugs.webkit.org/show_bug.cgi?id=122765
+
+        Reviewed by Filip Pizlo.
+
+        This patch is tested by:
+        regress/script-tests/emscripten-cube2hash.js.ftl-eager
+
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileLogicalNot):
+
+2013-10-14  Julien Brianceau  <jbriance@cisco.com>
+
+        [sh4] Fixes after r157404 and r157411.
+        https://bugs.webkit.org/show_bug.cgi?id=122782
+
+        Reviewed by Michael Saboff.
+
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::callOperation): Add missing SH4_32BIT_DUMMY_ARG.
+        * jit/CCallHelpers.h:
+        (JSC::CCallHelpers::setupArgumentsWithExecState):
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation): Add missing SH4_32BIT_DUMMY_ARG.
+        * jit/JITPropertyAccess32_64.cpp:
+        (JSC::JIT::emit_op_put_by_id): Remove unwanted BEGIN_UNINTERRUPTED_SEQUENCE.
+
+2013-10-14  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r157413.
+        http://trac.webkit.org/changeset/157413
+        https://bugs.webkit.org/show_bug.cgi?id=122779
+
+        Appears to have caused frequent crashes (Requested by ap on
+        #webkit).
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * heap/DeferGC.cpp: Removed.
+        * heap/DeferGC.h:
+        * jit/JITStubs.cpp:
+        (JSC::tryCacheGetByID):
+        (JSC::DEFINE_STUB_FUNCTION):
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        * runtime/ConcurrentJITLock.h:
+        * runtime/InitializeThreading.cpp:
+        (JSC::initializeThreadingOnce):
+        * runtime/JSCellInlines.h:
+        (JSC::allocateCell):
+        * runtime/Structure.cpp:
+        (JSC::Structure::materializePropertyMap):
+        (JSC::Structure::putSpecificValue):
+        (JSC::Structure::createPropertyMap):
+        * runtime/Structure.h:
+
+2013-10-14  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        COLLECT_ON_EVERY_ALLOCATION causes assertion failures
+        https://bugs.webkit.org/show_bug.cgi?id=122652
+
+        Reviewed by Filip Pizlo.
+
+        COLLECT_ON_EVERY_ALLOCATION wasn't accounting for the new GC deferral mechanism,
+        so we would end up ASSERTing during garbage collection.
+
+        * heap/MarkedAllocator.cpp:
+        (JSC::MarkedAllocator::allocateSlowCase):
+
+2013-10-11  Oliver Hunt  <oliver@apple.com>
+
+        Separate out array iteration intrinsics
+        https://bugs.webkit.org/show_bug.cgi?id=122656
+
+        Reviewed by Michael Saboff.
+
+        Separate out the intrinsics for key and values iteration
+        of arrays.
+
+        This requires moving moving array iteration into the iterator
+        instance, rather than the prototype, but this is essentially
+        unobservable so we'll live with it for now.
+
+        * jit/ThunkGenerators.cpp:
+        (JSC::arrayIteratorNextThunkGenerator):
+        (JSC::arrayIteratorNextKeyThunkGenerator):
+        (JSC::arrayIteratorNextValueThunkGenerator):
+        * jit/ThunkGenerators.h:
+        * runtime/ArrayIteratorPrototype.cpp:
+        (JSC::ArrayIteratorPrototype::finishCreation):
+        * runtime/Intrinsic.h:
+        * runtime/JSArrayIterator.cpp:
+        (JSC::JSArrayIterator::finishCreation):
+        (JSC::createIteratorResult):
+        (JSC::arrayIteratorNext):
+        (JSC::arrayIteratorNextKey):
+        (JSC::arrayIteratorNextValue):
+        (JSC::arrayIteratorNextGeneric):
+        * runtime/VM.cpp:
+        (JSC::thunkGeneratorForIntrinsic):
+
+2013-10-11  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        llint_slow_path_put_by_id can deadlock on a ConcurrentJITLock
+        https://bugs.webkit.org/show_bug.cgi?id=122667
+
+        Reviewed by Filip Pizlo.
+
+        The issue this patch is attempting to fix is that there are places in our codebase
+        where we acquire the ConcurrentJITLock for a particular CodeBlock, then we do some
+        operations that can initiate a garbage collection. Garbage collection then calls 
+        some methods of CodeBlock that also take the ConcurrentJITLock (because they don't
+        always necessarily run during garbage collection). This causes a deadlock.
+
+        To fix this issue, this patch adds a new RAII-style object (DisallowGC) that stores 
+        into a thread-local field that indicates that it is unsafe to perform any operation 
+        that could trigger garbage collection on the current thread. In debug builds, 
+        ConcurrentJITLocker contains one of these DisallowGC objects so that we can eagerly 
+        detect deadlocks.
+
+        This patch also adds a new type of ConcurrentJITLocker, GCSafeConcurrentJITLocker,
+        which uses the DeferGC mechanism to prevent collections from occurring while the 
+        lock is held.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * heap/DeferGC.cpp: Added.
+        * heap/DeferGC.h:
+        (JSC::DisallowGC::DisallowGC):
+        (JSC::DisallowGC::~DisallowGC):
+        (JSC::DisallowGC::isGCDisallowedOnCurrentThread):
+        (JSC::DisallowGC::initialize):
+        * jit/JITStubs.cpp:
+        (JSC::tryCachePutByID):
+        (JSC::tryCacheGetByID):
+        (JSC::DEFINE_STUB_FUNCTION):
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::LLINT_SLOW_PATH_DECL):
+        * runtime/ConcurrentJITLock.h:
+        (JSC::ConcurrentJITLockerBase::ConcurrentJITLockerBase):
+        (JSC::ConcurrentJITLockerBase::~ConcurrentJITLockerBase):
+        (JSC::ConcurrentJITLockerBase::unlockEarly):
+        (JSC::GCSafeConcurrentJITLocker::GCSafeConcurrentJITLocker):
+        (JSC::ConcurrentJITLocker::ConcurrentJITLocker):
+        * runtime/InitializeThreading.cpp:
+        (JSC::initializeThreadingOnce):
+        * runtime/JSCellInlines.h:
+        (JSC::allocateCell):
+        * runtime/Structure.cpp:
+        (JSC::Structure::materializePropertyMap):
+        (JSC::Structure::putSpecificValue):
+        (JSC::Structure::createPropertyMap):
+        * runtime/Structure.h:
+
+2013-10-14  Filip Pizlo  <fpizlo@apple.com>
+
+        Baseline JIT should use the DFG's PutById IC
+        https://bugs.webkit.org/show_bug.cgi?id=122704
+
+        Reviewed by Mark Hahnenberg.
+        
+        Mostly no big deal, just removing the old Baseline JIT's put_by_id IC support and forcing
+        that JIT to use the DFG's (i.e. JITOperations) PutById IC.
+        
+        The only complicated part was that the PutById operations assumed that we first did a
+        cell speculation, which the baseline JIT obviously won't do. So I changed all of those
+        slow paths to deal with EncodedJSValue's.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::resetStubInternal):
+        * bytecode/PutByIdStatus.cpp:
+        (JSC::PutByIdStatus::computeFor):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::callOperation):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::cachedPutById):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::cachedPutById):
+        * jit/CCallHelpers.h:
+        (JSC::CCallHelpers::setupArgumentsWithExecState):
+        * jit/JIT.cpp:
+        (JSC::PropertyStubCompilationInfo::copyToStubInfo):
+        * jit/JIT.h:
+        (JSC::PropertyStubCompilationInfo::PropertyStubCompilationInfo):
+        (JSC::PropertyStubCompilationInfo::slowCaseInfo):
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperation):
+        * jit/JITOperationWrappers.h:
+        * jit/JITOperations.cpp:
+        * jit/JITOperations.h:
+        * jit/JITPropertyAccess.cpp:
+        (JSC::JIT::compileGetByIdHotPath):
+        (JSC::JIT::compileGetByIdSlowCase):
+        (JSC::JIT::emit_op_put_by_id):
+        (JSC::JIT::emitSlow_op_put_by_id):
+        * jit/JITPropertyAccess32_64.cpp:
+        (JSC::JIT::compileGetByIdSlowCase):
+        (JSC::JIT::emit_op_put_by_id):
+        (JSC::JIT::emitSlow_op_put_by_id):
+        * jit/JITStubs.cpp:
+        * jit/JITStubs.h:
+        * jit/Repatch.cpp:
+        (JSC::appropriateGenericPutByIdFunction):
+        (JSC::appropriateListBuildingPutByIdFunction):
+        (JSC::resetPutByID):
+
 2013-10-13  Filip Pizlo  <fpizlo@apple.com>
 
         FTL should have an inefficient but correct implementation of GetById

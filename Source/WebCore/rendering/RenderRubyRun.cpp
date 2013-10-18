@@ -107,9 +107,9 @@ void RenderRubyRun::updateFirstLetter()
 {
 }
 
-bool RenderRubyRun::isChildAllowed(RenderObject* child, RenderStyle*) const
+bool RenderRubyRun::isChildAllowed(const RenderObject& child, const RenderStyle&) const
 {
-    return child->isRubyText() || child->isInline();
+    return child.isInline() || child.isRubyText();
 }
 
 void RenderRubyRun::addChild(RenderObject* child, RenderObject* beforeChild)
@@ -136,7 +136,7 @@ void RenderRubyRun::addChild(RenderObject* child, RenderObject* beforeChild)
             // in order to avoid automatic removal of the ruby run in case there is no
             // other child besides the old ruby text.
             RenderBlock::addChild(child, beforeChild);
-            RenderBlock::removeChild(beforeChild);
+            RenderBlock::removeChild(*beforeChild);
             newRun->addChild(beforeChild);
         } else if (hasRubyBase()) {
             // Insertion before a ruby base object.
@@ -156,11 +156,11 @@ void RenderRubyRun::addChild(RenderObject* child, RenderObject* beforeChild)
     }
 }
 
-void RenderRubyRun::removeChild(RenderObject* child)
+void RenderRubyRun::removeChild(RenderObject& child)
 {
     // If the child is a ruby text, then merge the ruby base with the base of
     // the right sibling run, if possible.
-    if (!beingDestroyed() && !documentBeingDestroyed() && child->isRubyText()) {
+    if (!beingDestroyed() && !documentBeingDestroyed() && child.isRubyText()) {
         RenderRubyBase* base = rubyBase();
         RenderObject* rightNeighbour = nextSibling();
         if (base && rightNeighbour && rightNeighbour->isRubyRun()) {
@@ -184,14 +184,14 @@ void RenderRubyRun::removeChild(RenderObject* child)
         // Check if our base (if any) is now empty. If so, destroy it.
         RenderBlock* base = rubyBase();
         if (base && !base->firstChild()) {
-            RenderBlock::removeChild(base);
+            RenderBlock::removeChild(*base);
             base->deleteLineBoxTree();
             base->destroy();
         }
 
         // If any of the above leaves the run empty, destroy it as well.
         if (isEmpty()) {
-            parent()->removeChild(this);
+            parent()->removeChild(*this);
             deleteLineBoxTree();
             destroy();
         }
@@ -200,7 +200,7 @@ void RenderRubyRun::removeChild(RenderObject* child)
 
 RenderRubyBase* RenderRubyRun::createRubyBase() const
 {
-    RenderRubyBase* renderer = new (renderArena()) RenderRubyBase(document());
+    RenderRubyBase* renderer = new RenderRubyBase(document());
     RefPtr<RenderStyle> newStyle = RenderStyle::createAnonymousStyleWithDisplay(style(), BLOCK);
     newStyle->setTextAlign(CENTER); // FIXME: use WEBKIT_CENTER?
     renderer->setStyle(newStyle.release());
@@ -210,7 +210,7 @@ RenderRubyBase* RenderRubyRun::createRubyBase() const
 RenderRubyRun* RenderRubyRun::staticCreateRubyRun(const RenderObject* parentRuby)
 {
     ASSERT(parentRuby && parentRuby->isRuby());
-    RenderRubyRun* rr = new (parentRuby->renderArena()) RenderRubyRun(parentRuby->document());
+    RenderRubyRun* rr = new RenderRubyRun(parentRuby->document());
     RefPtr<RenderStyle> newStyle = RenderStyle::createAnonymousStyleWithDisplay(parentRuby->style(), INLINE_BLOCK);
     rr->setStyle(newStyle.release());
     return rr;

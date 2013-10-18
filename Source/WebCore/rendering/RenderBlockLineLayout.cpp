@@ -107,24 +107,6 @@ private:
     Vector<RenderBox*> m_positionedObjects;
 };
 
-#if ENABLE(CSS_SHAPES)
-ShapeInsideInfo* RenderBlock::layoutShapeInsideInfo() const
-{
-    ShapeInsideInfo* shapeInsideInfo = view().layoutState()->shapeInsideInfo();
-
-    if (!shapeInsideInfo && flowThreadContainingBlock() && allowsShapeInsideInfoSharing()) {
-        LayoutUnit lineHeight = this->lineHeight(false, isHorizontalWritingMode() ? HorizontalLine : VerticalLine, PositionOfInteriorLineBoxes);
-        // regionAtBlockOffset returns regions like an array first={0,N-1}, second={N,M-1}, ...
-        LayoutUnit offset = logicalHeight() + lineHeight - LayoutUnit(1);
-        RenderRegion* region = regionAtBlockOffset(offset);
-        if (region)
-            shapeInsideInfo = region->shapeInsideInfo();
-    }
-
-    return shapeInsideInfo;
-}
-#endif
-
 static inline LayoutUnit borderPaddingMarginStart(const RenderInline& child)
 {
     return child.marginStart() + child.paddingStart() + child.borderStart();
@@ -207,7 +189,7 @@ static void checkMidpoints(LineMidpointState& lineMidpointState, InlineIterator&
         if (currpoint == lBreak) {
             // We hit the line break before the start point.  Shave off the start point.
             lineMidpointState.numMidpoints--;
-            if (endpoint.m_obj->style()->collapseWhiteSpace())
+            if (endpoint.m_obj->style()->collapseWhiteSpace() && endpoint.m_obj->isText())
                 endpoint.m_pos--;
         }
     }

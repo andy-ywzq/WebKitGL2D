@@ -39,7 +39,6 @@ JSC::MacroAssemblerX86Common::SSE2CheckState JSC::MacroAssemblerX86Common::s_sse
 #include "Interpreter.h"
 #include "JITInlines.h"
 #include "JITOperations.h"
-#include "JITStubCall.h"
 #include "JSArray.h"
 #include "JSFunction.h"
 #include "LinkBuffer.h"
@@ -104,11 +103,13 @@ void JIT::emitEnterOptimizationCheck()
     if (!canBeOptimized())
         return;
 
-    Jump skipOptimize = branchAdd32(Signed, TrustedImm32(Options::executionCounterIncrementForEntry()), AbsoluteAddress(m_codeBlock->addressOfJITExecuteCounter()));
-    JITStubCall stubCall(this, cti_optimize);
-    stubCall.addArgument(TrustedImm32(m_bytecodeOffset));
+    JumpList skipOptimize;
+    
+    skipOptimize.append(branchAdd32(Signed, TrustedImm32(Options::executionCounterIncrementForEntry()), AbsoluteAddress(m_codeBlock->addressOfJITExecuteCounter())));
     ASSERT(!m_bytecodeOffset);
-    stubCall.call();
+    callOperation(operationOptimize, m_bytecodeOffset);
+    skipOptimize.append(branchTestPtr(Zero, returnValueRegister));
+    jump(returnValueRegister);
     skipOptimize.link(this);
 }
 #endif
@@ -489,36 +490,53 @@ ALWAYS_INLINE void PropertyStubCompilationInfo::copyToStubInfo(StructureStubInfo
     ASSERT(bytecodeIndex != std::numeric_limits<unsigned>::max());
     info.codeOrigin = CodeOrigin(bytecodeIndex);
     info.callReturnLocation = linkBuffer.locationOf(callReturnLocation);
-    info.hotPathBegin = linkBuffer.locationOf(hotPathBegin);
 
+    info.patch.deltaCheckImmToCall = MacroAssembler::differenceBetweenCodePtr(linkBuffer.locationOf(structureToCompare), info.callReturnLocation);
+    info.patch.deltaCallToStructCheck = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(structureCheck));
+    
+    info.patch.deltaCallToSlowCase = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(coldPathBegin));
+    info.patch.deltaCallToDone = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(done));
+    info.patch.deltaCallToStorageLoad = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(propertyStorageLoad));
+    
+    info.patch.baseGPR = GPRInfo::regT0;
+
+    RegisterSet usedRegisters;
+    usedRegisters.set(GPRInfo::regT0);
+
+#if USE(JSVALUE64) // JSVALUE cases
     switch (m_type) {
-    case GetById: {
-        CodeLocationLabel hotPathBeginLocation = linkBuffer.locationOf(hotPathBegin);
-        info.patch.baseline.u.get.structureToCompare = MacroAssembler::differenceBetweenCodePtr(hotPathBeginLocation, linkBuffer.locationOf(getStructureToCompare));
-        info.patch.baseline.u.get.structureCheck = MacroAssembler::differenceBetweenCodePtr(hotPathBeginLocation, linkBuffer.locationOf(getStructureCheck));
-        info.patch.baseline.u.get.propertyStorageLoad = MacroAssembler::differenceBetweenCodePtr(hotPathBeginLocation, linkBuffer.locationOf(propertyStorageLoad));
-#if USE(JSVALUE64)
-        info.patch.baseline.u.get.displacementLabel = MacroAssembler::differenceBetweenCodePtr(hotPathBeginLocation, linkBuffer.locationOf(getDisplacementLabel));
-#else
-        info.patch.baseline.u.get.displacementLabel1 = MacroAssembler::differenceBetweenCodePtr(hotPathBeginLocation, linkBuffer.locationOf(getDisplacementLabel1));
-        info.patch.baseline.u.get.displacementLabel2 = MacroAssembler::differenceBetweenCodePtr(hotPathBeginLocation, linkBuffer.locationOf(getDisplacementLabel2));
-#endif
-        info.patch.baseline.u.get.putResult = MacroAssembler::differenceBetweenCodePtr(hotPathBeginLocation, linkBuffer.locationOf(getPutResult));
-        info.patch.baseline.u.get.coldPathBegin = MacroAssembler::differenceBetweenCodePtr(linkBuffer.locationOf(getColdPathBegin), linkBuffer.locationOf(callReturnLocation));
+    case GetById:
+        info.patch.deltaCallToLoadOrStore = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(getDisplacementLabel));
+        info.patch.valueGPR = GPRInfo::regT0;
         break;
-    }
     case PutById:
-        CodeLocationLabel hotPathBeginLocation = linkBuffer.locationOf(hotPathBegin);
-        info.patch.baseline.u.put.structureToCompare = MacroAssembler::differenceBetweenCodePtr(hotPathBeginLocation, linkBuffer.locationOf(putStructureToCompare));
-        info.patch.baseline.u.put.propertyStorageLoad = MacroAssembler::differenceBetweenCodePtr(hotPathBeginLocation, linkBuffer.locationOf(propertyStorageLoad));
-#if USE(JSVALUE64)
-        info.patch.baseline.u.put.displacementLabel = MacroAssembler::differenceBetweenCodePtr(hotPathBeginLocation, linkBuffer.locationOf(putDisplacementLabel));
-#else
-        info.patch.baseline.u.put.displacementLabel1 = MacroAssembler::differenceBetweenCodePtr(hotPathBeginLocation, linkBuffer.locationOf(putDisplacementLabel1));
-        info.patch.baseline.u.put.displacementLabel2 = MacroAssembler::differenceBetweenCodePtr(hotPathBeginLocation, linkBuffer.locationOf(putDisplacementLabel2));
-#endif
+        info.patch.deltaCallToLoadOrStore = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(putDisplacementLabel));
+        info.patch.valueGPR = GPRInfo::regT1;
+        usedRegisters.set(GPRInfo::regT1);
         break;
     }
+#else // JSVALUE cases
+    switch (m_type) {
+    case GetById:
+        info.patch.deltaCallToTagLoadOrStore = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(getDisplacementLabel2));
+        info.patch.deltaCallToPayloadLoadOrStore = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(getDisplacementLabel1));
+        info.patch.valueGPR = GPRInfo::regT0;
+        info.patch.valueTagGPR = GPRInfo::regT1;
+        usedRegisters.set(GPRInfo::regT1);
+        break;
+    case PutById:
+        info.patch.deltaCallToTagLoadOrStore = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(putDisplacementLabel2));
+        info.patch.deltaCallToPayloadLoadOrStore = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(putDisplacementLabel1));
+        info.patch.valueGPR = GPRInfo::regT2;
+        info.patch.valueTagGPR = GPRInfo::regT3;
+        usedRegisters.set(GPRInfo::regT2);
+        usedRegisters.set(GPRInfo::regT3);
+        break;
+    }
+#endif // JSVALUE cases
+    
+    info.patch.usedRegisters = usedRegisters;
+    info.patch.registersFlushed = true;
 }
 
 CompilationResult JIT::privateCompile(JITCompilationEffort effort)
@@ -832,7 +850,7 @@ void JIT::privateCompileExceptionHandlers()
         // Remove hostCallFlag from caller
         m_exceptionChecksWithCallFrameRollback.link(this);
         emitGetFromCallFrameHeaderPtr(JSStack::CallerFrame, GPRInfo::argumentGPR0);
-        andPtr(TrustedImmPtr(reinterpret_cast<void *>(~CallFrame::hostCallFrameFlag())), GPRInfo::argumentGPR0);
+        andPtr(TrustedImm32(safeCast<int32_t>(~CallFrame::hostCallFrameFlag())), GPRInfo::argumentGPR0);
         doLookup = jump();
     }
 
@@ -850,9 +868,7 @@ void JIT::privateCompileExceptionHandlers()
     poke(GPRInfo::argumentGPR0);
 #endif
     m_calls.append(CallRecord(call(), (unsigned)-1, FunctionPtr(lookupExceptionHandler).value()));
-    // lookupExceptionHandler leaves the handler CallFrame* in the returnValueGPR,
-    // and the address of the handler in returnValueGPR2.
-    jump(GPRInfo::returnValueGPR2);
+    jumpToExceptionHandler();
 }
 
 
