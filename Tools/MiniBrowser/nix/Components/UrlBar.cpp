@@ -38,6 +38,8 @@ UrlBar::UrlBar(Display* display, Window parent, XContext context, BrowserControl
     , m_isFocused(false)
     , m_url(url)
     , m_copiedText(url)
+    , m_cursorPosition(0)
+    , m_textOffset(0)
     , m_loadProgress(0.0)
 {
     createXWindow(parent, context);
@@ -75,6 +77,7 @@ void UrlBar::handleEvent(const XEvent& event)
         break;
     case ButtonRelease:
         addFocus();
+        updateCursorPosition(event.xbutton.x);
         break;
     case SelectionRequest:
         respondClipboardRequest(event.xselectionrequest);
@@ -109,8 +112,6 @@ void UrlBar::addFocus()
     if (!m_isFocused) {
         m_isFocused = true;
         m_control->passFocusToUrlBar();
-
-        drawCursor();
     }
 }
 
@@ -141,32 +142,51 @@ void UrlBar::drawBackground()
 
 void UrlBar::drawText()
 {
+    updateTextOffset();
+
     cairo_set_source_rgb(m_cairo, 0.2, 0.2, 0.2);
-    cairo_text_extents(m_cairo, m_url.c_str(), &m_extents);
-
-    int offset = 8;
-
-    if (m_extents.x_advance + offset > m_size.size.width - offset)
-        offset = m_size.size.width - m_extents.x_advance - offset;
-
-    cairo_move_to(m_cairo, offset, 16);
+    cairo_move_to(m_cairo, m_textOffset, 16);
     cairo_show_text(m_cairo, m_url.c_str());
 }
 
 void UrlBar::drawCursor()
 {
-    if (m_isFocused) {
-        int padding = 8;
-        int x = m_extents.x_advance + padding;
+    if (!m_isFocused)
+        return;
 
-        if (m_extents.x_advance + padding > m_size.size.width - padding)
-            x = m_size.size.width - padding;
+    int cursorXCoord = textWidth(m_url.substr(0, m_cursorPosition).c_str()) + m_textOffset;
 
-        cairo_move_to(m_cairo, x, 4);
-        cairo_line_to(m_cairo, x, 18);
+    cairo_set_source_rgb(m_cairo, 0.2, 0.2, 0.2);
+    cairo_move_to(m_cairo, cursorXCoord, 4);
+    cairo_line_to(m_cairo, cursorXCoord, 18);
+    cairo_stroke(m_cairo);
+}
 
-        cairo_stroke(m_cairo);
+void UrlBar::updateTextOffset()
+{
+    int urlPixelWidth = textWidth(m_url.c_str());
+
+    // If the url text fits into the urlbar.
+    if (urlPixelWidth < m_size.size.width) {
+        m_textOffset = 0;
+        return;
     }
+
+    std::string subUrl = m_url.substr(0, m_cursorPosition);
+    int cursorPosition = textWidth(subUrl.c_str()) + m_textOffset;
+    int visibleTextWidth = urlPixelWidth + m_textOffset;
+    int remainingWidth = m_size.size.width - visibleTextWidth;
+    // On resize, if the width of the visible url text is less than the text area width.
+    if (remainingWidth > 0) {
+        m_textOffset += remainingWidth;
+        return;
+    }
+
+    // On cursor movement, if the cursor leave the urlbar.
+    if (cursorPosition < 0)
+        m_textOffset -= cursorPosition;
+    else if (cursorPosition > m_size.size.width)
+        m_textOffset -= cursorPosition - m_size.size.width;
 }
 
 void UrlBar::handleKeyReleaseEvent(const XKeyReleasedEvent& event)
@@ -178,7 +198,24 @@ void UrlBar::handleKeyReleaseEvent(const XKeyReleasedEvent& event)
 
     switch (specialKey) {
     case XK_BackSpace:
-        removeLastCharacter();
+        removeCharacter();
+        break;
+    case XK_Delete:
+        deleteCharacter();
+        break;
+    case XK_Home:
+        m_cursorPosition = 0;
+        break;
+    case XK_End:
+        m_cursorPosition = m_url.length();
+        break;
+    case XK_Left:
+        if (m_cursorPosition)
+            m_cursorPosition--;
+        break;
+    case XK_Right:
+        if (m_cursorPosition < m_url.length())
+            m_cursorPosition++;
         break;
     case XK_Return:
         loadPage();
@@ -196,7 +233,6 @@ void UrlBar::handleKeyReleaseEvent(const XKeyReleasedEvent& event)
             case 'C':
                 becomeClipboardOwner();
                 break;
-
             case 'V':
                 requestClipboardText();
                 break;
@@ -210,16 +246,32 @@ void UrlBar::handleKeyReleaseEvent(const XKeyReleasedEvent& event)
     drawUrlBar();
 }
 
-void UrlBar::removeLastCharacter()
+void UrlBar::deleteCharacter()
 {
-    if (m_url.size())
-        m_url.erase(m_url.size() - 1);
+    // If the url is empty or the cursor is after the last character.
+    if (!m_url.length() || m_cursorPosition >= m_url.length())
+        return;
+
+    m_url.erase(m_cursorPosition, 1);
+}
+
+void UrlBar::removeCharacter()
+{
+    // If the url is empty or the cursor is before the first character.
+    if (!m_url.length() || !m_cursorPosition)
+        return;
+
+    m_cursorPosition--;
+    m_url.erase(m_cursorPosition, 1);
 }
 
 void UrlBar::appendCharacter(const char c)
 {
-    if ((c >= 32) && (c <= 127))
-        m_url.append(sizeof(char), c);
+    if (c < 32 || c >= 127)
+        return;
+
+    m_url.insert(m_cursorPosition, 1, c);
+    m_cursorPosition++;
 }
 
 void UrlBar::loadPage()
@@ -230,6 +282,62 @@ void UrlBar::loadPage()
     }
 
     m_control->loadPage(m_url.c_str());
+}
+
+int UrlBar::textWidth(const char* text)
+{
+    cairo_text_extents_t extents;
+    cairo_text_extents(m_cairo, text, &extents);
+
+    return extents.x_advance;
+}
+
+int UrlBar::calculateCharacterPosition(int clickX, int min, int max)
+{
+    std::string subUrl = m_url.substr(0, max);
+    char pointedCharacter = m_url.at(min);
+
+    int subUrlPixelWidth = textWidth(subUrl.c_str());
+    int pointedCharacterPixelWidth = textWidth(&pointedCharacter);
+
+    // Defines the click position on the pointed character and determines
+    // that the cursor should be on the left or the right side.
+    int clickPositionOnCharacter = subUrlPixelWidth - clickX;
+    if (clickPositionOnCharacter > (pointedCharacterPixelWidth / 2))
+        return min;
+
+    return max;
+}
+
+// Binary search to determine the cursor position.
+int UrlBar::pointedCharacterIndex(int clickX, int min, int max)
+{
+    if (max - min == 1)
+        return calculateCharacterPosition(clickX, min, max);
+
+    int midpoint = (max + min) / 2;
+    std::string subUrl = m_url.substr(0, midpoint);
+    int subUrlPixelWidth = textWidth(subUrl.c_str());
+
+    if (subUrlPixelWidth > clickX)
+        return pointedCharacterIndex(clickX, min, midpoint);
+
+    return pointedCharacterIndex(clickX, midpoint, max);
+}
+
+void UrlBar::updateCursorPosition(int clickX)
+{
+    if (clickX < 0)
+        return;
+
+    bool clickedAfterTheUrl = (m_textOffset < 0) && (clickX > textWidth(m_url.c_str()));
+
+    if (clickedAfterTheUrl)
+        m_cursorPosition = m_url.length();
+    else
+        m_cursorPosition = pointedCharacterIndex(clickX - m_textOffset, 0, m_url.length());
+
+    drawUrlBar();
 }
 
 void UrlBar::requestClipboardText()

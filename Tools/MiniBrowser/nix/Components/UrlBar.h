@@ -48,15 +48,21 @@ public:
     bool focused();
 
     void setText(std::string);
-
     void setLoadProgress(double);
 
 private:
     virtual void createXWindow(Window parent, XContext);
 
-    void removeLastCharacter();
+    void deleteCharacter();
+    void removeCharacter();
     void appendCharacter(const char);
     void loadPage();
+
+    int textWidth(const char*);
+    int pointedCharacterIndex(int, int, int);
+    int calculateCharacterPosition(int, int, int);
+    void updateCursorPosition(int);
+    void updateTextOffset();
 
     void drawBackground();
     void drawCursor();
@@ -73,9 +79,12 @@ private:
     bool m_isFocused;
     Atom m_clipboardAtom;
 
+    // Shows, which character is pointed by the cursor.
+    int m_cursorPosition;
+    int m_textOffset;
+
     cairo_t* m_cairo;
     cairo_surface_t* m_surface;
-    cairo_text_extents_t m_extents;
 
     double m_loadProgress;
 };
