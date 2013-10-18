@@ -81,6 +81,26 @@ public:
     {
         m_player->setNetworkState((MediaPlayer::NetworkState)state);
     }
+
+    virtual bool seeking() const
+    {
+        return m_player->seeking();
+    }
+
+    virtual void seek(float time)
+    {
+        return m_player->seek(time);
+    }
+
+    virtual float maxTimeSeekable() const
+    {
+        return m_player->maxTimeSeekable();
+    }
+
+    virtual void setPlaybackRate(float rate)
+    {
+        m_player->setRate(rate);
+    }
 private:
     MediaPlayerPrivateNix* m_player;
 };
@@ -159,8 +179,22 @@ void MediaPlayerPrivateNix::setVisible(bool)
 
 bool MediaPlayerPrivateNix::seeking() const
 {
-    // TODO: Add this to Nix::MediaPlayer
-    return false;
+    return m_nixPlayer->seeking();
+}
+
+void MediaPlayerPrivateNix::seek(float time)
+{
+    return m_nixPlayer->seek(time);
+}
+
+float MediaPlayerPrivateNix::maxTimeSeekable() const
+{
+    return duration();
+}
+
+void MediaPlayerPrivateNix::setRate(float rate)
+{
+    m_nixPlayer->setPlaybackRate(rate);
 }
 
 bool MediaPlayerPrivateNix::paused() const

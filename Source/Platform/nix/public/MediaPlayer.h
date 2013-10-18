@@ -38,6 +38,10 @@ public:
     virtual void currentTimeChanged() const = 0;
     virtual void readyStateChanged(ReadyState) = 0;
     virtual void networkStateChanged(NetworkState) = 0;
+    virtual bool seeking() const = 0;
+    virtual void seek(float) = 0;
+    virtual float maxTimeSeekable() const = 0;
+    virtual void setPlaybackRate(float) = 0;
 };
 
 class MediaPlayer {
@@ -62,6 +66,10 @@ public:
     virtual void setVolume(float) = 0;
     virtual void setMuted(bool) = 0;
     virtual void load(const char* url) = 0;
+    virtual bool seeking() const = 0;
+    virtual float maxTimeSeekable() const = 0;
+    virtual void setPlaybackRate(float) = 0;
+
 protected:
     MediaPlayerClient* m_playerClient;
 };

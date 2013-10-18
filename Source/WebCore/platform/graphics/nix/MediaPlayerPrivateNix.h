@@ -53,7 +53,12 @@ public:
     virtual bool hasVideo() const;
     virtual bool hasAudio() const;
     virtual void setVisible(bool);
+
     virtual bool seeking() const;
+    virtual void seek(float);
+    virtual float maxTimeSeekable() const;
+
+    virtual void setRate(float);
 
     virtual MediaPlayer::NetworkState networkState() const;
     void setNetworkState(MediaPlayer::NetworkState);
