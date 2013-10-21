@@ -35,8 +35,8 @@ public:
     explicit RenderTextControlSingleLine(HTMLInputElement&);
     virtual ~RenderTextControlSingleLine();
     // FIXME: Move create*Style() to their classes.
-    virtual PassRefPtr<RenderStyle> createInnerTextStyle(const RenderStyle* startStyle) const OVERRIDE;
-    PassRefPtr<RenderStyle> createInnerBlockStyle(const RenderStyle* startStyle) const;
+    virtual PassRef<RenderStyle> createInnerTextStyle(const RenderStyle* startStyle) const OVERRIDE;
+    PassRef<RenderStyle> createInnerBlockStyle(const RenderStyle* startStyle) const;
 
     void capsLockStateMayHaveChanged();
 
@@ -109,7 +109,7 @@ void toRenderTextControlSingleLine(const RenderTextControlSingleLine*);
 
 // ----------------------------
 
-class RenderTextControlInnerBlock : public RenderBlockFlow {
+class RenderTextControlInnerBlock FINAL : public RenderBlockFlow {
 public:
     RenderTextControlInnerBlock(Element& element)
         : RenderBlockFlow(element)
@@ -118,7 +118,17 @@ public:
 
 private:
     virtual bool hasLineIfEmpty() const OVERRIDE { return true; }
+    virtual bool isTextControlInnerBlock() const OVERRIDE { return true; }
 };
+
+inline RenderTextControlInnerBlock* toRenderTextControlInnerBlock(RenderObject* object)
+{
+    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isTextControlInnerBlock());
+    return static_cast<RenderTextControlInnerBlock*>(object);
+}
+
+// This will catch anyone doing an unnecessary cast.
+void toRenderTextControlInnerBlock(const RenderTextControlInnerBlock*);
 
 }
 

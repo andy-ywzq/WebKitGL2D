@@ -1,3 +1,265 @@
+2013-10-21  Gergo Balogh  <geryxyz@inf.u-szeged.hu>
+
+        Remove qt from generate-forwarding-headers.pl
+        https://bugs.webkit.org/show_bug.cgi?id=123090
+
+        Reviewed by Andreas Kling.
+
+        * Scripts/generate-forwarding-headers.pl:
+
+2013-10-21  Zan Dobersek  <zdobersek@igalia.com>
+
+        [GTK] g-ir-scanner should use the configured C compiler
+        https://bugs.webkit.org/show_bug.cgi?id=123088
+
+        Reviewed by Carlos Garcia Campos.
+
+        * GNUmakefile.am: Pass the C compiler that was detected at configuration to the g-ir-scanner command
+        via the CC environment variable. This solves the issue of the scanner running the GCC compiler with
+        the Clang-specific CFLAGS.
+
+2013-10-20  Dan Bernstein  <mitz@apple.com>
+
+        [Cocoa] Loading progress API
+        https://bugs.webkit.org/show_bug.cgi?id=123069
+
+        Reviewed by Sam Weinig.
+
+        * UIProcess/API/mac/WKBrowsingContextController.h: Declared estimatedProgress property.
+        * UIProcess/API/mac/WKBrowsingContextController.mm:
+        (-[WKBrowsingContextController estimatedProgress]): Added.
+        (didStartProgress): Added. Calls new delegate method
+        -browsingContextControllerDidStartProgress:.
+        (didChangeProgress): Added. Calls new delegate method
+        -browsingContextController:estimatedProgressChangedTo:.
+        (didFinishProgress): Added. Calls new delegate method
+        -browsingContextControllerDidFinishProgress:.
+        (setUpPageLoaderClient): Hook up new client functions.
+        * UIProcess/API/mac/WKBrowsingContextLoadDelegate.h: Declared new delegate methods.
+
+2013-10-20  Thiago de Barros Lacerda  <thiago.lacerda@openbossa.org>
+
+        Removing "unused parameter" compiling warnings from WebKit2 and WebCore
+        https://bugs.webkit.org/show_bug.cgi?id=123075
+
+        Reviewed by Andreas Kling.
+
+        * NetworkProcess/NetworkProcessPlatformStrategies.cpp:
+        (WebKit::NetworkProcessPlatformStrategies::loadResourceSynchronously):
+        * UIProcess/API/C/WKContext.cpp:
+        (WKContextGetPluginSiteDataManager):
+        * UIProcess/API/C/WKPreferences.cpp:
+        (WKPreferencesSetInspectorUsesWebKitUserInterface):
+        (WKPreferencesGetInspectorUsesWebKitUserInterface):
+        * UIProcess/WebProcessProxy.cpp:
+        (WebKit::WebProcessProxy::getPlugins):
+        * WebProcess/InjectedBundle/API/c/WKBundlePage.cpp:
+        (WKBundlePageSetFullScreenClient):
+        (WKBundlePageWillEnterFullScreen):
+        (WKBundlePageDidEnterFullScreen):
+        (WKBundlePageWillExitFullScreen):
+        (WKBundlePageDidExitFullScreen):
+        * WebProcess/MediaCache/WebMediaCacheManager.cpp:
+        (WebKit::WebMediaCacheManager::clearCacheForHostname):
+        * WebProcess/OriginData/WebOriginDataManager.cpp:
+        (WebKit::WebOriginDataManager::getOrigins):
+        (WebKit::WebOriginDataManager::deleteEntriesForOrigin):
+        (WebKit::WebOriginDataManager::deleteAllEntries):
+        (WebKit::WebOriginDataManager::startObservingChanges):
+        (WebKit::WebOriginDataManager::stopObservingChanges):
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::createPlugin):
+        (WebKit::WebFrameLoaderClient::recreatePlugin):
+        * WebProcess/WebPage/EventDispatcher.cpp:
+        (WebKit::EventDispatcher::wheelEvent):
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::canPluginHandleResponse):
+
+2013-10-19  Jer Noble  <jer.noble@apple.com>
+
+        Unreviewed roll out of r157695; broke Mac builds.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-10-07  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] [Mac] Enable MediaSource on the Mac
+        https://bugs.webkit.org/show_bug.cgi?id=122484
+
+        Reviewed by Darin Adler.
+
+        Enable ENABLE_MEDIA_SOURCE.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-10-19  Dan Bernstein  <mitz@apple.com>
+
+        Fix the Mac 32-bit build by reverting r157676, r157678, and r157679.
+
+2013-10-19  Dan Bernstein  <mitz@apple.com>
+
+        Try to fix the Mac 32-bit build.
+
+        * UIProcess/mac/WKFullScreenWindowController.h:
+        * UIProcess/mac/WKFullScreenWindowController.mm:
+
+2013-10-19  Dan Bernstein  <mitz@apple.com>
+
+        Try to fix the Mac 32-bit build.
+
+        * UIProcess/API/mac/WKView.h:
+        * UIProcess/API/mac/WKView.mm:
+        * UIProcess/API/mac/WKViewInternal.h:
+        * UIProcess/API/mac/WKViewPrivate.h:
+
+2013-10-19  Dan Bernstein  <mitz@apple.com>
+
+        [Cocoa] Remove some indirection that was only necessary for supporting the legacy Objective-C runtime
+        https://bugs.webkit.org/show_bug.cgi?id=123065
+
+        Reviewed by Sam Weinig.
+
+        * UIProcess/API/mac/WKBrowsingContextController.h: Added WK_API_ENABLED guard. Removed _data
+        ivar and WKBrowsingContextControllerData class declaration.
+        * UIProcess/API/mac/WKBrowsingContextController.mm: Added WK_API_ENABLED guard. Removed
+        WKBrowsingContextControllerData class and moved _pageRef ivar directly into
+        WKBrowsingContextController, declaring it in the @implementation. Removed ivar and accessors
+        for the loadDelegate property, letting the compiler synthesize them.
+        (-[WKBrowsingContextController dealloc]): Removed indirection via _data.
+        (-[WKBrowsingContextController _pageRef]): Ditto.
+        (-[WKBrowsingContextController loadRequest:userData:]): Removed indirection via -_pageRef.
+        (-[WKBrowsingContextController loadFileURL:restrictToFilesWithin:userData:]): Ditto.
+        (-[WKBrowsingContextController loadHTMLString:baseURL:userData:]): Ditto.
+        (-[WKBrowsingContextController loadData:MIMEType:textEncodingName:baseURL:userData:]):
+        Ditto.
+        (-[WKBrowsingContextController stopLoading]): Ditto.
+        (-[WKBrowsingContextController reload]): Ditto.
+        (-[WKBrowsingContextController reloadFromOrigin]): Ditto.
+        (-[WKBrowsingContextController goForward]): Ditto.
+        (-[WKBrowsingContextController canGoForward]): Ditto.
+        (-[WKBrowsingContextController goBack]): Ditto.
+        (-[WKBrowsingContextController canGoBack]): Ditto.
+        (-[WKBrowsingContextController activeURL]): Ditto.
+        (-[WKBrowsingContextController provisionalURL]): Ditto.
+        (-[WKBrowsingContextController committedURL]): Ditto.
+        (-[WKBrowsingContextController title]): Ditto.
+        (-[WKBrowsingContextController textZoom]): Ditto.
+        (-[WKBrowsingContextController setTextZoom:]): Ditto.
+        (-[WKBrowsingContextController pageZoom]): Ditto.
+        (-[WKBrowsingContextController setPageZoom:]): Ditto.
+        (-[WKBrowsingContextController setPaginationMode:]): Ditto.
+        (-[WKBrowsingContextController paginationMode]): Ditto.
+        (-[WKBrowsingContextController setPaginationBehavesLikeColumns:]): Ditto.
+        (-[WKBrowsingContextController paginationBehavesLikeColumns]): Ditto.
+        (-[WKBrowsingContextController setPageLength:]): Ditto.
+        (-[WKBrowsingContextController pageLength]): Ditto.
+        (-[WKBrowsingContextController setGapBetweenPages:]): Ditto.
+        (-[WKBrowsingContextController gapBetweenPages]): Ditto.
+        (-[WKBrowsingContextController pageCount]): Ditto.
+        (-[WKBrowsingContextController _initWithPageRef:]): Removed indirection via _data.
+        * UIProcess/API/mac/WKBrowsingContextControllerInternal.h: Added WK_API_ENABLED guard.
+        * UIProcess/API/mac/WKBrowsingContextControllerPrivate.h: Ditto.
+
+        * UIProcess/API/mac/WKBrowsingContextGroup.h: Added WK_API_ENABLED guard. Removed _data ivar
+        and WKBrowsingContextGroupData class declaration.
+        * UIProcess/API/mac/WKBrowsingContextGroup.mm: Added WK_API_ENABLED guard. Removed
+        WKBrowsingContextGroupData class and moved _pageGroupRef ivar directly info
+        WKBrowsingContextGroup, declaring it in the @implementation.
+        (-[WKBrowsingContextGroup initWithIdentifier:]): Removed indirection via _data.
+        (-[WKBrowsingContextGroup _pageGroupRef]): Ditto.
+        * UIProcess/API/mac/WKBrowsingContextGroupPrivate.h: Added WK_API_ENABLED guard.
+
+        * UIProcess/API/mac/WKConnection.h: Added WK_API_ENABLED guard. Removed _data ivar and
+        WKConnectionData class declaration.
+        * UIProcess/API/mac/WKConnection.mm: Added WK_API_ENABLED guard. Removed WKConnectionData
+        class and moved _connectionRef ivar directly into WKConnection, declaring it in the
+        @implementation. Removed ivar and accessors for the delegate property, letting the compiler
+        synthesize them.
+        (-[WKConnection dealloc]): Removed indirection via _data.
+        (-[WKConnection sendMessageWithName:body:]): Ditto.
+        (-[WKConnection _initWithConnectionRef:]): Ditto.
+        * UIProcess/API/mac/WKConnectionInternal.h: Added WK_API_ENABLED guard.
+
+        * UIProcess/API/mac/WKProcessGroup.h: Added WK_API_ENABLED guard. Replaced forward
+        declaration of WKConnection with an import. Removed _data ivar and WKProcessGroupData class
+        declaration.
+        * UIProcess/API/mac/WKProcessGroup.mm: Added WK_API_ENABLED guard. Removed
+        WKProcessGroupData class and moved _contextRef ivar directly into WKProcessGroup, declaring
+        it in the @implementation. Removed ivar and accessors for the delegate property, letting the
+        compiler synthesize them.
+        (-[WKProcessGroup initWithInjectedBundleURL:]): Removed indirection via _data.
+        (-[WKProcessGroup dealloc]): Ditto.
+        (-[WKProcessGroup _contextRef]): Ditto.
+        * UIProcess/API/mac/WKProcessGroupPrivate.h: Added WK_API_ENABLED guard.
+
+2013-10-19  Andreas Kling  <akling@apple.com>
+
+        Attempt to get Lion building.
+
+        * UIProcess/mac/WebColorPickerMac.h:
+
+2013-10-18  Tim Horton  <timothy_horton@apple.com>
+
+        Remote Layer Tree: Double-buffering and minimization of repaints
+        https://bugs.webkit.org/show_bug.cgi?id=123043
+
+        Reviewed by Simon Fraser.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.cpp:
+        (PlatformCALayerRemote::ensureBackingStore):
+        Don't worry about isOpaque with RemoteLayerBackingStore; this is a
+        optimization that is causing trouble; we can re-add it later.
+
+        (PlatformCALayerRemote::setBounds):
+        Make sure that we will repaint if our bounds change.
+
+        * WebProcess/WebPage/mac/RemoteLayerBackingStore.h:
+        (WebKit::RemoteLayerBackingStore::bitmap):
+        Keep a front and back buffer; return the front buffer when being asked for the bitmap.
+        Keep a Region of repaint areas.
+
+        * WebProcess/WebPage/mac/RemoteLayerBackingStore.mm:
+        (RemoteLayerBackingStore::RemoteLayerBackingStore):
+        (RemoteLayerBackingStore::encode):
+        (RemoteLayerBackingStore::decode):
+        Serialize only the front buffer, since the UI process only needs that.
+
+        (RemoteLayerBackingStore::setNeedsDisplay):
+        Store repaint rects instead of always setting the whole layer to be dirty.
+
+        (RemoteLayerBackingStore::display):
+        Paint into the back buffer (copying valid parts over from the front buffer),
+        then swap it to the front buffer. Use drawLayerContents so we get repaint counters, etc.
+
+2013-10-18  Anders Carlsson  <andersca@apple.com>
+
+        Try to fix the Lion build.
+
+        * WebProcess/InjectedBundle/API/mac/WKWebProcessPlugIn.mm:
+
+2013-10-18  Anders Carlsson  <andersca@apple.com>
+
+        Remove spaces between template angle brackets
+        https://bugs.webkit.org/show_bug.cgi?id=123040
+
+        Reviewed by Andreas Kling.
+
+        * UIProcess/mac/WebColorPickerMac.h:
+        * WebProcess/InjectedBundle/API/mac/WKWebProcessPlugIn.mm:
+        * WebProcess/WebProcess.cpp:
+        (WebKit::WebProcess::setProcessSuppressionEnabled):
+
+2013-10-18  Brady Eidson  <beidson@apple.com>
+
+        Get rid of IDBFactoryBackendLevelDB and IDBTransactionBackendLevelDB in IDBDatabaseBackendLevelDB.
+        https://bugs.webkit.org/show_bug.cgi?id=123039
+
+        Reviewed by Anders Carlsson.
+
+        * WebProcess/Databases/IndexedDB/WebIDBFactoryBackend.cpp:
+        (WebKit::WebIDBFactoryBackend::removeIDBDatabaseBackend): Stub out this new interface method.
+        * WebProcess/Databases/IndexedDB/WebIDBFactoryBackend.h:
+
 2013-10-18  Dan Bernstein  <mitz@apple.com>
 
         [Cocoa] WKBrowsingController accessors crash instead of returning nil

@@ -53,17 +53,17 @@ RenderListItem::RenderListItem(Element& element)
 
 void RenderListItem::styleDidChange(StyleDifference diff, const RenderStyle* oldStyle)
 {
-    RenderBlock::styleDidChange(diff, oldStyle);
+    RenderBlockFlow::styleDidChange(diff, oldStyle);
 
     if (style()->listStyleType() != NoneListStyle
         || (style()->listStyleImage() && !style()->listStyleImage()->errorOccurred())) {
-        RefPtr<RenderStyle> newStyle = RenderStyle::create();
+        auto newStyle = RenderStyle::create();
         // The marker always inherits from the list item, regardless of where it might end
         // up (e.g., in some deeply nested line box). See CSS3 spec.
-        newStyle->inheritFrom(style()); 
+        newStyle.get().inheritFrom(style());
         if (!m_marker)
             m_marker = new RenderListMarker(*this);
-        m_marker->setStyle(newStyle.release());
+        m_marker->setStyle(std::move(newStyle));
     } else if (m_marker) {
         m_marker->destroy();
         m_marker = 0;

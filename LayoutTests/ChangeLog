@@ -1,3 +1,145 @@
+2013-10-21  Alexey Proskuryakov  <ap@apple.com>
+
+        Layout Test media/media-controller-time-clamp.html is flaky
+        https://bugs.webkit.org/show_bug.cgi?id=123099
+
+        * platform/mac/TestExpectations: Marking as such.
+
+2013-10-21  Mihai Maerean  <mmaerean@adobe.com>
+
+        [CSS Regions] Fix WHITESPACE issues in the CSS grammar.
+        https://bugs.webkit.org/show_bug.cgi?id=123082
+
+        Reviewed by Andreas Kling.
+
+        This is a port of Rune Lillesveen's patch from https://codereview.chromium.org/25607005
+
+        * css3/filters/custom-with-at-rule-syntax/parsing-at-rule-valid-expected.txt:
+        * css3/filters/custom-with-at-rule-syntax/script-tests/parsing-at-rule-valid.js:
+        * fast/css/calc-comments-allowed-expected.html: Added.
+        * fast/css/calc-comments-allowed.html: Added.
+        * fast/regions/webkit-region-syntax-space-expected.txt: Added.
+        * fast/regions/webkit-region-syntax-space.html: Added.
+
+2013-10-21  Santosh Mahto  <santosh.ma@samsung.com>
+
+        ASSERTION FAILED: !style->propertyIsImportant(propertyID) in WebCore::setTextDecorationProperty
+        https://bugs.webkit.org/show_bug.cgi?id=122097
+
+        Reviewed by Ryosuke Niwa.
+
+        Added Test cases to verify that crash does not happen in scenario when
+        remove format command is executed on selection containing the iframe
+        element and when textdecoration style is defined as !important and
+        need to pushDown to iframe.
+
+        * editing/execCommand/remove-format-textdecoration-in-iframe-expected.txt: Added.
+        * editing/execCommand/remove-format-textdecoration-in-iframe.html: Added.
+
+2013-10-20  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Unreviewed EFL gardening. Update EFL test expectations.
+
+        * platform/efl/TestExpectations: Skip authentication tests that are failing.
+
+2013-10-20  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Unreviewed EFL gardening. Update EFL test expectations.
+
+        * platform/efl/TestExpectations: Mark fast/workers/worker-call.html as failure.
+
+2013-10-19  Jer Noble  <jer.noble@apple.com>
+
+        Unreviewed roll out of r157695; broke Mac builds.
+
+        * platform/mac/js/dom/global-constructors-attributes-expected.txt: Removed.
+
+2013-10-07  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] [Mac] Enable MediaSource on the Mac
+        https://bugs.webkit.org/show_bug.cgi?id=122484
+
+        Reviewed by Darin Adler.
+
+        * platform/mac/js/dom/global-constructors-attributes-expected.txt: Added.
+
+2013-10-19  Alexey Proskuryakov  <ap@apple.com>
+
+        Enable webaudio/ tests on DRT/Mac
+        https://bugs.webkit.org/show_bug.cgi?id=86914
+
+        Reviewed by Darin Adler.
+
+        * TestExpectations: Moved webaudio/javascriptaudionode here, as garbage collection
+        issues with it are cross-platform.
+
+        * platform/mac-wk2/TestExpectations: Moved out everything, as there is nothing
+        WK2 specific about WebAudio.
+
+        * platform/mac/TestExpectations: WebAudio expectations here were just ignored. Replaced
+        with slightly updated expectations from WK2.
+
+2013-10-19  Santosh Mahto  <santosh.ma@samsung.com>
+
+        Adding test case for text-decoration property state change on applying different command
+        https://bugs.webkit.org/show_bug.cgi?id=123073
+
+        Reviewed by Ryosuke Niwa.
+
+        This test case verify text-decoration property state on element after
+        applying editing commands related to text-decoration.
+
+        * editing/style/text-decoration-state-change-expected.txt: Added.
+        * editing/style/text-decoration-state-change.html: Added.
+
+2013-10-19  Alexey Proskuryakov  <ap@apple.com>
+
+        WebAudio Mac expected results were misplaced - they apply equally to WK1 and WK2.
+        We didn't notice before because all these tests are disabled on WK1.
+
+        * platform/mac-wk2/webaudio: Removed.
+        * platform/mac/webaudio: Added.
+        * platform/mac/webaudio/audiobuffersource-playbackrate-expected.wav: Copied from LayoutTests/platform/mac-wk2/webaudio/audiobuffersource-playbackrate-expected.wav.
+        * platform/mac/webaudio/codec-tests: Copied from LayoutTests/platform/mac-wk2/webaudio/codec-tests.
+
+        * platform/mac-wk2/webaudio/audiobuffersource-loop-points-expected.wav: Removed.
+        This test is skipped, because it times out.
+
+2013-10-18  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Unreviewed EFL gardening.
+
+        Remove EFL-specific test expectations that were identical to generic expectations
+        and rebaseline test cases.
+
+        * platform/efl-wk2/compositing/overflow/content-gains-scrollbars-expected.txt: Removed.
+        * platform/efl-wk2/compositing/overflow/content-loses-scrollbars-expected.txt: Removed.
+        * platform/efl/compositing/backing/no-backing-for-clip-overhang-expected.txt: Removed.
+        * platform/efl/compositing/contents-opaque/hidden-with-visible-child-expected.txt: Removed.
+        * platform/efl/compositing/contents-opaque/overflow-hidden-child-layers-expected.txt: Removed.
+        * platform/efl/svg/W3C-SVG-1.1-SE/paths-dom-02-f-expected.txt: Rebaselined after r154896.
+        * platform/efl/svg/batik/paints/gradientLimit-expected.txt: Updating baselines after enabling the subpixel layout.
+
+2013-10-18  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Update EFL test expectations.
+
+        * platform/efl/TestExpectations:
+
+2013-10-18  Oliver Hunt  <oliver@apple.com>
+
+        Spread operator should be performing direct "puts" and not triggering setters
+        https://bugs.webkit.org/show_bug.cgi?id=123047
+
+        Reviewed by Geoffrey Garen.
+
+        Add a new testcase for the setter case.  run-javascriptcore-tests hits this with
+        the llint, baseline, and dfg.
+
+        * js/basic-spread-expected.txt:
+        * js/script-tests/basic-spread.js:
+        (Array):
+
 2013-10-18  Dean Jackson  <dino@apple.com>
 
         Unable to upload <img src="foo.svg"> as WebGL texture

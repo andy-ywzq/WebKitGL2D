@@ -42,6 +42,16 @@
 
 namespace JSC {
 
+// Beware: in this code, it is not safe to assume anything about the following registers
+// that would ordinarily have well-known values:
+// - tagTypeNumberRegister
+// - tagMaskRegister
+// - callFrameRegister **
+//
+// We currently only use the callFrameRegister for closure call patching, and we're not going to
+// give the FTL closure call patching support until we switch to the C stack - but when we do that,
+// callFrameRegister will disappear.
+
 static void repatchCall(CodeBlock* codeblock, CodeLocationCall call, FunctionPtr newCalleeFunction)
 {
     RepatchBuffer repatchBuffer(codeblock);
@@ -181,7 +191,7 @@ static void generateProtoChainAccessStub(ExecState* exec, StructureStubInfo& stu
     GPRReg resultTagGPR = static_cast<GPRReg>(stubInfo.patch.valueTagGPR);
 #endif
     GPRReg resultGPR = static_cast<GPRReg>(stubInfo.patch.valueGPR);
-    GPRReg scratchGPR = stubInfo.patch.usedRegisters.getFreeGPR();
+    GPRReg scratchGPR = TempRegisterSet(stubInfo.patch.usedRegisters).getFreeGPR();
     bool needToRestoreScratch = false;
     
     if (scratchGPR == InvalidGPRReg) {
@@ -255,7 +265,7 @@ static bool tryCacheGetByID(ExecState* exec, JSValue baseValue, const Identifier
         GPRReg resultTagGPR = static_cast<GPRReg>(stubInfo.patch.valueTagGPR);
 #endif
         GPRReg resultGPR = static_cast<GPRReg>(stubInfo.patch.valueGPR);
-        GPRReg scratchGPR = stubInfo.patch.usedRegisters.getFreeGPR();
+        GPRReg scratchGPR = TempRegisterSet(stubInfo.patch.usedRegisters).getFreeGPR();
         bool needToRestoreScratch = false;
         
         MacroAssembler stubJit;
@@ -281,10 +291,10 @@ static bool tryCacheGetByID(ExecState* exec, JSValue baseValue, const Identifier
         stubJit.load32(MacroAssembler::Address(scratchGPR, ArrayStorage::lengthOffset()), scratchGPR);
         failureCases.append(stubJit.branch32(MacroAssembler::LessThan, scratchGPR, MacroAssembler::TrustedImm32(0)));
 
-#if USE(JSVALUE64)
-        stubJit.or64(GPRInfo::tagTypeNumberRegister, scratchGPR, resultGPR);
-#elif USE(JSVALUE32_64)
         stubJit.move(scratchGPR, resultGPR);
+#if USE(JSVALUE64)
+        stubJit.or64(AssemblyHelpers::TrustedImm64(TagTypeNumber), resultGPR);
+#elif USE(JSVALUE32_64)
         stubJit.move(AssemblyHelpers::TrustedImm32(0xffffffff), resultTagGPR); // JSValue::Int32Tag
 #endif
 
@@ -455,7 +465,7 @@ static bool tryBuildGetByIDList(ExecState* exec, JSValue baseValue, const Identi
         GPRReg resultTagGPR = static_cast<GPRReg>(stubInfo.patch.valueTagGPR);
 #endif
         GPRReg resultGPR = static_cast<GPRReg>(stubInfo.patch.valueGPR);
-        GPRReg scratchGPR = stubInfo.patch.usedRegisters.getFreeGPR();
+        GPRReg scratchGPR = TempRegisterSet(stubInfo.patch.usedRegisters).getFreeGPR();
         
         CCallHelpers stubJit(vm, codeBlock);
         
@@ -610,7 +620,7 @@ void buildGetByIDList(ExecState* exec, JSValue baseValue, const Identifier& prop
         repatchCall(exec->codeBlock(), stubInfo.callReturnLocation, operationGetById);
 }
 
-static V_JITOperation_EJJI appropriateGenericPutByIdFunction(const PutPropertySlot &slot, PutKind putKind)
+static V_JITOperation_ESsiJJI appropriateGenericPutByIdFunction(const PutPropertySlot &slot, PutKind putKind)
 {
     if (slot.isStrictMode()) {
         if (putKind == Direct)
@@ -622,7 +632,7 @@ static V_JITOperation_EJJI appropriateGenericPutByIdFunction(const PutPropertySl
     return operationPutByIdNonStrict;
 }
 
-static V_JITOperation_EJJI appropriateListBuildingPutByIdFunction(const PutPropertySlot &slot, PutKind putKind)
+static V_JITOperation_ESsiJJI appropriateListBuildingPutByIdFunction(const PutPropertySlot &slot, PutKind putKind)
 {
     if (slot.isStrictMode()) {
         if (putKind == Direct)
@@ -651,7 +661,7 @@ static void emitPutReplaceStub(
     GPRReg valueTagGPR = static_cast<GPRReg>(stubInfo.patch.valueTagGPR);
 #endif
     GPRReg valueGPR = static_cast<GPRReg>(stubInfo.patch.valueGPR);
-    GPRReg scratchGPR = stubInfo.patch.usedRegisters.getFreeGPR();
+    GPRReg scratchGPR = TempRegisterSet(stubInfo.patch.usedRegisters).getFreeGPR();
     bool needToRestoreScratch = false;
 #if ENABLE(WRITE_BARRIER_PROFILING)
     GPRReg scratchGPR2;
@@ -1159,7 +1169,7 @@ static bool tryRepatchIn(
     {
         GPRReg baseGPR = static_cast<GPRReg>(stubInfo.patch.baseGPR);
         GPRReg resultGPR = static_cast<GPRReg>(stubInfo.patch.valueGPR);
-        GPRReg scratchGPR = stubInfo.patch.usedRegisters.getFreeGPR();
+        GPRReg scratchGPR = TempRegisterSet(stubInfo.patch.usedRegisters).getFreeGPR();
         
         CCallHelpers stubJit(vm);
         
@@ -1290,9 +1300,11 @@ void linkClosureCall(ExecState* exec, CallLinkInfo& callLinkInfo, CodeBlock* cal
     CCallHelpers::JumpList slowPath;
     
 #if USE(JSVALUE64)
-    slowPath.append(
-        stubJit.branchTest64(
-            CCallHelpers::NonZero, calleeGPR, GPRInfo::tagMaskRegister));
+    // We can safely clobber everything except the calleeGPR. We can't rely on tagMaskRegister
+    // being set. So we do this the hard way.
+    GPRReg scratch = AssemblyHelpers::selectScratchGPR(calleeGPR);
+    stubJit.move(MacroAssembler::TrustedImm64(TagMask), scratch);
+    slowPath.append(stubJit.branchTest64(CCallHelpers::NonZero, calleeGPR, scratch));
 #else
     // We would have already checked that the callee is a cell.
 #endif
@@ -1388,8 +1400,8 @@ void resetGetByID(RepatchBuffer& repatchBuffer, StructureStubInfo& stubInfo)
 
 void resetPutByID(RepatchBuffer& repatchBuffer, StructureStubInfo& stubInfo)
 {
-    V_JITOperation_EJJI unoptimizedFunction = bitwise_cast<V_JITOperation_EJJI>(MacroAssembler::readCallTarget(stubInfo.callReturnLocation).executableAddress());
-    V_JITOperation_EJJI optimizedFunction;
+    V_JITOperation_ESsiJJI unoptimizedFunction = bitwise_cast<V_JITOperation_ESsiJJI>(MacroAssembler::readCallTarget(stubInfo.callReturnLocation).executableAddress());
+    V_JITOperation_ESsiJJI optimizedFunction;
     if (unoptimizedFunction == operationPutByIdStrict || unoptimizedFunction == operationPutByIdStrictBuildList)
         optimizedFunction = operationPutByIdStrictOptimize;
     else if (unoptimizedFunction == operationPutByIdNonStrict || unoptimizedFunction == operationPutByIdNonStrictBuildList)

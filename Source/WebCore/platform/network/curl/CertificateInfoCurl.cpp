@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 University of Szeged.
+ * Copyright (C) 2013 Company 100 Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

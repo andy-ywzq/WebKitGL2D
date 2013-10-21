@@ -76,7 +76,8 @@ JIT::JIT(VM* vm, CodeBlock* codeBlock)
     , m_interpreter(vm->interpreter)
     , m_labels(codeBlock ? codeBlock->numberOfInstructions() : 0)
     , m_bytecodeOffset((unsigned)-1)
-    , m_propertyAccessInstructionIndex(UINT_MAX)
+    , m_getByIdIndex(UINT_MAX)
+    , m_putByIdIndex(UINT_MAX)
     , m_byValInstructionIndex(UINT_MAX)
     , m_callLinkInfoIndex(UINT_MAX)
 #if USE(JSVALUE32_64)
@@ -293,6 +294,7 @@ void JIT::privateCompileMainPass()
         case op_put_by_id_transition_normal_out_of_line:
         DEFINE_OP(op_put_by_id)
         DEFINE_OP(op_put_by_index)
+        case op_put_by_val_direct:
         DEFINE_OP(op_put_by_val)
         DEFINE_OP(op_put_getter_setter)
         case op_init_global_const_nop:
@@ -358,7 +360,8 @@ void JIT::privateCompileSlowCases()
 {
     Instruction* instructionsBegin = m_codeBlock->instructions().begin();
 
-    m_propertyAccessInstructionIndex = 0;
+    m_getByIdIndex = 0;
+    m_putByIdIndex = 0;
     m_byValInstructionIndex = 0;
     m_callLinkInfoIndex = 0;
     
@@ -446,6 +449,7 @@ void JIT::privateCompileSlowCases()
         case op_put_by_id_transition_direct_out_of_line:
         case op_put_by_id_transition_normal_out_of_line:
         DEFINE_SLOWCASE_OP(op_put_by_id)
+        case op_put_by_val_direct:
         DEFINE_SLOWCASE_OP(op_put_by_val)
         DEFINE_SLOWCASE_OP(op_rshift)
         DEFINE_SLOWCASE_OP(op_urshift)
@@ -473,7 +477,8 @@ void JIT::privateCompileSlowCases()
         emitJumpSlowToHot(jump(), 0);
     }
 
-    RELEASE_ASSERT(m_propertyAccessInstructionIndex == m_propertyAccessCompilationInfo.size());
+    RELEASE_ASSERT(m_getByIdIndex == m_getByIds.size());
+    RELEASE_ASSERT(m_putByIdIndex == m_putByIds.size());
     RELEASE_ASSERT(m_callLinkInfoIndex == m_callStructureStubCompilationInfo.size());
 #if ENABLE(VALUE_PROFILER)
     RELEASE_ASSERT(numberOfValueProfiles == m_codeBlock->numberOfValueProfiles());
@@ -483,60 +488,6 @@ void JIT::privateCompileSlowCases()
     // Reset this, in order to guard its use with ASSERTs.
     m_bytecodeOffset = (unsigned)-1;
 #endif
-}
-
-ALWAYS_INLINE void PropertyStubCompilationInfo::copyToStubInfo(StructureStubInfo& info, LinkBuffer &linkBuffer)
-{
-    ASSERT(bytecodeIndex != std::numeric_limits<unsigned>::max());
-    info.codeOrigin = CodeOrigin(bytecodeIndex);
-    info.callReturnLocation = linkBuffer.locationOf(callReturnLocation);
-
-    info.patch.deltaCheckImmToCall = MacroAssembler::differenceBetweenCodePtr(linkBuffer.locationOf(structureToCompare), info.callReturnLocation);
-    info.patch.deltaCallToStructCheck = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(structureCheck));
-    
-    info.patch.deltaCallToSlowCase = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(coldPathBegin));
-    info.patch.deltaCallToDone = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(done));
-    info.patch.deltaCallToStorageLoad = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(propertyStorageLoad));
-    
-    info.patch.baseGPR = GPRInfo::regT0;
-
-    RegisterSet usedRegisters;
-    usedRegisters.set(GPRInfo::regT0);
-
-#if USE(JSVALUE64) // JSVALUE cases
-    switch (m_type) {
-    case GetById:
-        info.patch.deltaCallToLoadOrStore = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(getDisplacementLabel));
-        info.patch.valueGPR = GPRInfo::regT0;
-        break;
-    case PutById:
-        info.patch.deltaCallToLoadOrStore = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(putDisplacementLabel));
-        info.patch.valueGPR = GPRInfo::regT1;
-        usedRegisters.set(GPRInfo::regT1);
-        break;
-    }
-#else // JSVALUE cases
-    switch (m_type) {
-    case GetById:
-        info.patch.deltaCallToTagLoadOrStore = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(getDisplacementLabel2));
-        info.patch.deltaCallToPayloadLoadOrStore = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(getDisplacementLabel1));
-        info.patch.valueGPR = GPRInfo::regT0;
-        info.patch.valueTagGPR = GPRInfo::regT1;
-        usedRegisters.set(GPRInfo::regT1);
-        break;
-    case PutById:
-        info.patch.deltaCallToTagLoadOrStore = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(putDisplacementLabel2));
-        info.patch.deltaCallToPayloadLoadOrStore = MacroAssembler::differenceBetweenCodePtr(info.callReturnLocation, linkBuffer.locationOf(putDisplacementLabel1));
-        info.patch.valueGPR = GPRInfo::regT2;
-        info.patch.valueTagGPR = GPRInfo::regT3;
-        usedRegisters.set(GPRInfo::regT2);
-        usedRegisters.set(GPRInfo::regT3);
-        break;
-    }
-#endif // JSVALUE cases
-    
-    info.patch.usedRegisters = usedRegisters;
-    info.patch.registersFlushed = true;
 }
 
 CompilationResult JIT::privateCompile(JITCompilationEffort effort)
@@ -731,9 +682,11 @@ CompilationResult JIT::privateCompile(JITCompilationEffort effort)
             patchBuffer.link(iter->from, FunctionPtr(iter->to));
     }
 
-    m_codeBlock->setNumberOfStructureStubInfos(m_propertyAccessCompilationInfo.size());
-    for (unsigned i = 0; i < m_propertyAccessCompilationInfo.size(); ++i)
-        m_propertyAccessCompilationInfo[i].copyToStubInfo(m_codeBlock->structureStubInfo(i), patchBuffer);
+    for (unsigned i = m_getByIds.size(); i--;)
+        m_getByIds[i].finalize(patchBuffer);
+    for (unsigned i = m_putByIds.size(); i--;)
+        m_putByIds[i].finalize(patchBuffer);
+
     m_codeBlock->setNumberOfByValInfos(m_byValCompilationInfo.size());
     for (unsigned i = 0; i < m_byValCompilationInfo.size(); ++i) {
         CodeLocationJump badTypeJump = CodeLocationJump(patchBuffer.locationOf(m_byValCompilationInfo[i].badTypeJump));

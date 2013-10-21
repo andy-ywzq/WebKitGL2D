@@ -26,6 +26,7 @@
 #ifndef IDBTransactionBackendInterface_h
 #define IDBTransactionBackendInterface_h
 
+#include "IDBBackingStoreInterface.h"
 #include "IDBDatabaseBackendInterface.h"
 #include "IndexedDB.h"
 #include <wtf/RefCounted.h>
@@ -37,6 +38,7 @@ namespace WebCore {
 
 class IDBCallbacks;
 class IDBDatabaseCallbacks;
+class IDBDatabaseError;
 class IDBKey;
 class IDBKeyRange;
 
@@ -47,7 +49,13 @@ struct IDBObjectStoreMetadata;
 class IDBTransactionBackendInterface : public RefCounted<IDBTransactionBackendInterface> {
 public:
     virtual ~IDBTransactionBackendInterface() { }
-    
+
+    virtual IndexedDB::TransactionMode mode() const = 0;
+
+    virtual void commit() = 0;
+    virtual void abort() = 0;
+    virtual void abort(PassRefPtr<IDBDatabaseError>) = 0;
+
     virtual void scheduleCreateObjectStoreOperation(const IDBObjectStoreMetadata&) = 0;
     virtual void scheduleDeleteObjectStoreOperation(const IDBObjectStoreMetadata&) = 0;
     virtual void scheduleVersionChangeOperation(int64_t transactionId, int64_t requestedVersion, PassRefPtr<IDBCallbacks>, PassRefPtr<IDBDatabaseCallbacks>, const IDBDatabaseMetadata&) = 0;
@@ -60,6 +68,19 @@ public:
     virtual void scheduleCountOperation(int64_t objectStoreId, int64_t indexId, PassRefPtr<IDBKeyRange>, PassRefPtr<IDBCallbacks>) = 0;
     virtual void scheduleDeleteRangeOperation(int64_t objectStoreId, PassRefPtr<IDBKeyRange>, PassRefPtr<IDBCallbacks>) = 0;
     virtual void scheduleClearOperation(int64_t objectStoreId, PassRefPtr<IDBCallbacks>) = 0;
+
+    virtual IDBBackingStoreInterface::Transaction* backingStoreTransaction() = 0;
+
+    int64_t id() const { return m_id; }
+
+protected:
+    IDBTransactionBackendInterface(int64_t id)
+        : m_id(id)
+    {
+    }
+
+private:
+    int64_t m_id;
 };
 
 } // namespace WebCore

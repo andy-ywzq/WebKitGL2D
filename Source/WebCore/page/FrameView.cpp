@@ -2479,7 +2479,7 @@ void FrameView::serviceScriptedAnimations(double monotonicAnimationStartTime)
         frame->animation().serviceAnimations();
     }
 
-    Vector<RefPtr<Document> > documents;
+    Vector<RefPtr<Document>> documents;
     for (Frame* frame = m_frame.get(); frame; frame = frame->tree().traverseNext())
         documents.append(frame->document());
 
@@ -3218,7 +3218,7 @@ void FrameView::updateScrollCorner()
     if (cornerStyle) {
         if (!m_scrollCorner)
             m_scrollCorner = new RenderScrollbarPart(renderer->document());
-        m_scrollCorner->setStyle(cornerStyle.release());
+        m_scrollCorner->setStyle(cornerStyle.releaseNonNull());
         invalidateScrollCorner(cornerRect);
     } else if (m_scrollCorner) {
         m_scrollCorner->destroy();

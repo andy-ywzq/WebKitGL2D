@@ -1132,17 +1132,12 @@ RenderListMarker::~RenderListMarker()
         m_image->removeClient(this);
 }
 
-void RenderListMarker::styleWillChange(StyleDifference diff, const RenderStyle* newStyle)
-{
-    if (style() && (newStyle->listStylePosition() != style()->listStylePosition() || newStyle->listStyleType() != style()->listStyleType()))
-        setNeedsLayoutAndPrefWidthsRecalc();
-    
-    RenderBox::styleWillChange(diff, newStyle);
-}
-
 void RenderListMarker::styleDidChange(StyleDifference diff, const RenderStyle* oldStyle)
 {
     RenderBox::styleDidChange(diff, oldStyle);
+
+    if (oldStyle && (style()->listStylePosition() != oldStyle->listStylePosition() || style()->listStyleType() != oldStyle->listStyleType()))
+        setNeedsLayoutAndPrefWidthsRecalc();
 
     if (m_image != style()->listStyleImage()) {
         if (m_image)
@@ -1171,8 +1166,8 @@ LayoutRect RenderListMarker::localSelectionRect()
     if (!box)
         return LayoutRect(LayoutPoint(), size());
     const RootInlineBox& rootBox = m_inlineBoxWrapper->root();
-    LayoutUnit newLogicalTop = rootBox.block().style()->isFlippedBlocksWritingMode() ? m_inlineBoxWrapper->logicalBottom() - rootBox.selectionBottom() : rootBox.selectionTop() - m_inlineBoxWrapper->logicalTop();
-    if (rootBox.block().style()->isHorizontalWritingMode())
+    LayoutUnit newLogicalTop = rootBox.blockFlow().style()->isFlippedBlocksWritingMode() ? m_inlineBoxWrapper->logicalBottom() - rootBox.selectionBottom() : rootBox.selectionTop() - m_inlineBoxWrapper->logicalTop();
+    if (rootBox.blockFlow().style()->isHorizontalWritingMode())
         return LayoutRect(0, newLogicalTop, width(), rootBox.selectionHeight());
     return LayoutRect(newLogicalTop, 0, rootBox.selectionHeight(), height());
 }

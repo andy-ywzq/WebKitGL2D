@@ -92,9 +92,9 @@ void RenderNamedFlowThread::updateWritingMode()
         return;
 
     // The first region defines the principal writing mode for the entire flow.
-    RefPtr<RenderStyle> newStyle = RenderStyle::clone(style());
-    newStyle->setWritingMode(firstRegion->style()->writingMode());
-    setStyle(newStyle.release());
+    auto newStyle = RenderStyle::clone(style());
+    newStyle.get().setWritingMode(firstRegion->style()->writingMode());
+    setStyle(std::move(newStyle));
 }
 
 RenderObject* RenderNamedFlowThread::nextRendererForNode(Node* node) const
@@ -578,7 +578,7 @@ static Node* nextNodeInsideContentElement(const Node* currNode, const Element* c
     return NodeTraversal::next(currNode, contentElement);
 }
 
-void RenderNamedFlowThread::getRanges(Vector<RefPtr<Range> >& rangeObjects, const RenderRegion* region) const
+void RenderNamedFlowThread::getRanges(Vector<RefPtr<Range>>& rangeObjects, const RenderRegion* region) const
 {
     LayoutUnit logicalTopForRegion;
     LayoutUnit logicalBottomForRegion;

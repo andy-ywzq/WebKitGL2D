@@ -552,7 +552,7 @@ static inline void addTypesFromClass(NSMutableDictionary *allTypes, Class objCCl
 
 - (NSArray *)subresources
 {
-    Vector<PassRefPtr<ArchiveResource> > coreSubresources;
+    Vector<PassRefPtr<ArchiveResource>> coreSubresources;
     toPrivate(_private)->loader->getSubresources(coreSubresources);
 
     NSMutableArray *subresources = [[NSMutableArray alloc] initWithCapacity:coreSubresources.size()];

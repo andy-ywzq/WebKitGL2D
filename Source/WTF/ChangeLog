@@ -1,3 +1,147 @@
+2013-10-21  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Make TYPE_CASTS_BASE more flexible
+        https://bugs.webkit.org/show_bug.cgi?id=122951
+
+        Reviewed by Andreas Kling.
+
+        TYPE_CASTS_BASE is being used by node|element type casts. However, it is difficult
+        to be used by other type casts. For instance, CSSValue, Accessibility and so on.
+        This patch modifies TYPE_CASTS_BASE which can support other type casts.
+
+        Besides TYPE_CASTS_BASE body is moved from node.h to Assertions.h.
+
+        * wtf/Assertions.h:
+
+2013-10-20  Filip Pizlo  <fpizlo@apple.com>
+
+        StructureStubInfo's usedRegisters set should be able to track all registers, not just the ones that our JIT's view as temporaries
+        https://bugs.webkit.org/show_bug.cgi?id=123076
+
+        Reviewed by Sam Weinig.
+        
+        Teach BitVector how to efficiently merge (i.e. bitvector |=).
+
+        * wtf/BitVector.cpp:
+        (WTF::BitVector::mergeSlow):
+        * wtf/BitVector.h:
+        (WTF::BitVector::merge):
+        (WTF::BitVector::cleanseInlineBits):
+
+2013-10-19  Jer Noble  <jer.noble@apple.com>
+
+        Unreviewed roll out of r157695; broke Mac builds.
+
+        * wtf/FeatureDefines.h:
+
+2013-10-07  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] [Mac] Enable MediaSource on the Mac
+        https://bugs.webkit.org/show_bug.cgi?id=122484
+
+        Reviewed by Darin Adler.
+
+        Enable ENABLE_MEDIA_SOURCE.
+
+        * wtf/FeatureDefines.h:
+
+2013-10-19  Andreas Kling  <akling@apple.com>
+
+        RefPtr::releaseNonNull() incorrectly increments the refcount.
+        <https://webkit.org/b/123063>
+
+        Make releaseNonNull() use adoptRef(T&), mirroring release().
+
+        Reviewed by Anders Carlsson.
+
+2013-10-18  Andreas Kling  <akling@apple.com>
+
+        Start passing RenderStyle around with PassRef.
+        <https://webkit.org/b/123051>
+
+        Added some new PassRef tricks to make this patch possible.
+
+        Reviewed by Darin Adler.
+
+        * wtf/PassRef.h:
+        (WTF::PassRef::get):
+
+            Added a get() helper to facilitate writing functions that
+            construct a new object and call some functions on it before
+            returning it.
+
+        (WTF::PassRef::dropRef):
+
+            This will deref() the referenced object and mark the PassRef
+            as "passed." This is used in code paths where the PassRef is
+            going to go out of scope with nobody to take it over.
+
+        (WTF::PassRef::leakRef):
+
+            Renamed takeReference() to leakRef() and made it public so
+            we don't have to awkwardly sink the PassRef into a Ref for
+            e.g static locals.
+
+        * wtf/RefPtr.h:
+        (WTF::RefPtr::releaseNonNull):
+
+            Added RefPtr::releaseNonNull() for a convenient way of creating
+            a PassRef<T> from a RefPtr<T>. This function may only be called
+            if the RefPtr is known to be non-null.
+
+2013-10-18  Filip Pizlo  <fpizlo@apple.com>
+
+        A CodeBlock's StructureStubInfos shouldn't be in a Vector that we search using code origins and machine code PCs
+        https://bugs.webkit.org/show_bug.cgi?id=122940
+
+        Reviewed by Oliver Hunt.
+
+        * GNUmakefile.list.am:
+        * WTF.vcxproj/WTF.vcxproj:
+        * WTF.xcodeproj/project.pbxproj:
+        * wtf/BagToHashMap.h: Added.
+        (WTF::toHashMap):
+        * wtf/CMakeLists.txt:
+
+2013-10-18  Anders Carlsson  <andersca@apple.com>
+
+        Remove spaces between template angle brackets
+        https://bugs.webkit.org/show_bug.cgi?id=123040
+
+        Reviewed by Andreas Kling.
+
+        * wtf/AVLTree.h:
+        * wtf/CheckedArithmetic.h:
+        * wtf/Compression.h:
+        * wtf/Functional.h:
+        (WTF::R):
+        * wtf/HashFunctions.h:
+        * wtf/HashIterators.h:
+        * wtf/HashSet.h:
+        (WTF::::contains):
+        * wtf/ListHashSet.h:
+        (WTF::::contains):
+        * wtf/RefCountedLeakCounter.cpp:
+        * wtf/RetainPtr.h:
+        * wtf/SentinelLinkedList.h:
+        (WTF::::remove):
+        * wtf/SizeLimits.cpp:
+        * wtf/StreamBuffer.h:
+        * wtf/Vector.h:
+        * wtf/VectorTraits.h:
+        * wtf/WeakPtr.h:
+        (WTF::WeakReference::create):
+        (WTF::WeakReference::createUnbound):
+        (WTF::WeakPtr::WeakPtr):
+        (WTF::WeakPtrFactory::WeakPtrFactory):
+        * wtf/text/AtomicString.cpp:
+        (WTF::AtomicString::add):
+        (WTF::findString):
+        * wtf/text/StringConcatenate.h:
+        * wtf/text/StringImpl.h:
+        * wtf/text/StringOperators.h:
+        (WTF::operator+):
+
 2013-10-18  Brendan Long  <b.long@cablelabs.com>
 
         [GStreamer][GTK] Add GRefPtr::outPtr()

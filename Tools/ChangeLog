@@ -1,3 +1,221 @@
+2013-10-21  peavo@outlook.com  <peavo@outlook.com>
+
+        [WinCairo] Build does not start.
+        https://bugs.webkit.org/show_bug.cgi?id=123059
+
+        Reviewed by Csaba Osztrogonác.
+
+        The function isAppleWinWebKit() does no longer return true for WinCairo, need to add isWinCairo() checks instead.
+
+        * Scripts/build-webkit:
+
+2013-10-21  Zan Dobersek  <zdobersek@igalia.com>
+
+        [Jhbuild] Bump the required Jhbuild revision
+        https://bugs.webkit.org/show_bug.cgi?id=123089
+
+        Reviewed by Carlos Garcia Campos.
+
+        * jhbuild/jhbuild-wrapper: Latest versions of the gnome-common tools produce failures when configuring Jhbuild
+        due to the configure.ac script using both IT_PROG_INTLTOOL and AM_GNU_GETTEXT macros. This is already fixed
+        in the Jhbuild source so a more recent revision of it should be used.
+
+2013-10-19  Alexey Proskuryakov  <ap@apple.com>
+
+        Mac build fix.
+
+        * DumpRenderTree/mac/DumpRenderTree.mm: Cast the length for %lu specifier.
+
+2013-10-19  Alexey Proskuryakov  <ap@apple.com>
+
+        Enable webaudio/ tests on DRT/Mac
+        https://bugs.webkit.org/show_bug.cgi?id=86914
+
+        Reviewed by Darin Adler.
+
+        * DumpRenderTree/ForwardingHeaders/runtime/ArrayBufferView.h: Copied from Source/WebCore/ForwardingHeaders/runtime/ArrayBufferView.h.
+        * DumpRenderTree/ForwardingHeaders/runtime/JSArrayBufferView.h: Copied from Source/WebCore/ForwardingHeaders/runtime/JSArrayBufferView.h.
+        * DumpRenderTree/ForwardingHeaders/runtime/TypedArrayInlines.h: Copied from Source/WebCore/ForwardingHeaders/runtime/TypedArrayInlines.h.
+        There is no way to efficiently get TypedArray buffer using API, so we need some internal headers.
+
+        * DumpRenderTree/TestRunner.cpp:
+        (setAudioResultCallback): 
+        (TestRunner::staticFunctions):
+        * DumpRenderTree/TestRunner.h:
+        (TestRunner::audioResult):
+        (TestRunner::setAudioResult):
+        The function has a different name and argument type now, updated accordingly.
+        Changed buffer from std::string to std::vector<char>, because it's more idiomatic.
+
+        * DumpRenderTree/mac/DumpRenderTree.mm:
+        (dumpAudio): Updated for the new name of audioResult accessor.
+        (dump): Print the result in the format webkitpy currently expects.
+
+        * WebKitTestRunner/TestInvocation.cpp:
+        (WTR::TestInvocation::dumpAudio): fwrite the whole block at once, splitting into
+        chunks made no sense.
+
+        * WebKitTestRunner/InjectedBundle/TestRunner.cpp:
+        (WTR::TestRunner::setAudioResult): Added a FIXME about getting off WKBundle SPI.
+
+        * DumpRenderTree/CMakeLists.txt: Added JavaScriptCore/parser to include search list,
+        so that "SourceProvider.h" can be found.
+
+2013-10-19  Ryosuke Niwa  <rniwa@webkit.org>
+
+        run-webkit-tests should submit time and modifiers to the new flakiness dashboard
+        https://bugs.webkit.org/show_bug.cgi?id=123070
+
+        Reviewed by Alexey Proskuryakov.
+
+        * Scripts/webkitpy/layout_tests/controllers/manager.py:
+        (Manager.run):
+        * Scripts/webkitpy/layout_tests/models/test_run_results.py:
+        (summarize_results): Added include_time_and_modifiers. Report test_run_time and modifiers
+        in the test expectations when this argument is set to true.
+
+2013-10-19  Alexey Proskuryakov  <ap@apple.com>
+
+        Mac DumpRenderTree builds without NDEBUG even in release mode
+        https://bugs.webkit.org/show_bug.cgi?id=123066
+
+        Reviewed by Dan Bernstein.
+
+        * DumpRenderTree/DumpRenderTree.xcodeproj/project.pbxproj:
+        * DumpRenderTree/mac/Configurations/Base.xcconfig:
+        Use the same pattern as WebCore and WebKitTestRunner.
+
+2013-10-19  Zan Dobersek  <zdobersek@igalia.com>
+
+        REGRESSION(r155373): Mac WK2 EWS bots is actually Mac WK1 debug
+        https://bugs.webkit.org/show_bug.cgi?id=123064
+
+        Reviewed by Ryosuke Niwa.
+
+        Revert r155373 as it is causing incorrect port/platform deduction for the Mac EWS systems.
+
+        * Scripts/webkitpy/common/config/ports.py: Added.
+        (DeprecatedPort):
+        (DeprecatedPort.name):
+        (DeprecatedPort.flag):
+        (DeprecatedPort.script_path):
+        (DeprecatedPort.script_shell_command):
+        (DeprecatedPort.port):
+        (DeprecatedPort.makeArgs):
+        (DeprecatedPort.update_webkit_command):
+        (DeprecatedPort.check_webkit_style_command):
+        (DeprecatedPort.prepare_changelog_command):
+        (DeprecatedPort.build_webkit_command):
+        (DeprecatedPort.run_javascriptcore_tests_command):
+        (DeprecatedPort.run_webkit_unit_tests_command):
+        (DeprecatedPort.run_webkit_tests_command):
+        (DeprecatedPort.run_python_unittests_command):
+        (DeprecatedPort.run_perl_unittests_command):
+        (DeprecatedPort.run_bindings_tests_command):
+        (MacPort):
+        (MacWK2Port):
+        (MacWK2Port.run_webkit_tests_command):
+        (WinPort):
+        (WinPort.run_bindings_tests_command):
+        (GtkPort):
+        (GtkPort.build_webkit_command):
+        (GtkPort.run_webkit_tests_command):
+        (GtkWK2Port):
+        (GtkWK2Port.build_webkit_command):
+        (GtkWK2Port.run_webkit_tests_command):
+        (QtPort):
+        (QtPort.build_webkit_command):
+        (QtPort.run_webkit_tests_command):
+        (QtWK2Port):
+        (QtWK2Port.build_webkit_command):
+        (QtWK2Port.run_webkit_tests_command):
+        (EflPort):
+        (EflPort.build_webkit_command):
+        (EflWK2Port):
+        (EflWK2Port.build_webkit_command):
+        * Scripts/webkitpy/common/config/ports_mock.py: Added.
+        (MockPort):
+        (MockPort.name):
+        (MockPort.check_webkit_style_command):
+        (MockPort.update_webkit_command):
+        (MockPort.build_webkit_command):
+        (MockPort.prepare_changelog_command):
+        (MockPort.run_python_unittests_command):
+        (MockPort.run_perl_unittests_command):
+        (MockPort.run_javascriptcore_tests_command):
+        (MockPort.run_webkit_unit_tests_command):
+        (MockPort.run_webkit_tests_command):
+        (MockPort.run_bindings_tests_command):
+        * Scripts/webkitpy/common/config/ports_unittest.py: Added.
+        (DeprecatedPortTest):
+        (DeprecatedPortTest.test_mac_port):
+        (DeprecatedPortTest.test_gtk_port):
+        (DeprecatedPortTest.test_gtk_wk2_port):
+        (DeprecatedPortTest.test_efl_port):
+        (DeprecatedPortTest.test_qt_port):
+        (DeprecatedPortTest.test_qt_wk2_port):
+        * Scripts/webkitpy/port/base.py:
+        (Port._port_flag_for_scripts):
+        (Port._wk2_port_name):
+        * Scripts/webkitpy/port/base_unittest.py:
+        (PortTest.test_build_path):
+        * Scripts/webkitpy/port/efl_unittest.py:
+        (EflPortTest.test_show_results_html_file):
+        * Scripts/webkitpy/port/gtk_unittest.py:
+        (GtkPortTest.test_get_crash_log):
+        * Scripts/webkitpy/port/mac_unittest.py:
+        (test_64bit):
+        * Scripts/webkitpy/port/test.py:
+        (TestPort.virtual_test_suites):
+        * Scripts/webkitpy/tool/bot/flakytestreporter.py:
+        (FlakyTestReporter.__init__):
+        * Scripts/webkitpy/tool/bot/irc_command.py:
+        (Rollout._update_working_copy):
+        * Scripts/webkitpy/tool/commands/download_unittest.py:
+        * Scripts/webkitpy/tool/commands/earlywarningsystem.py:
+        (AbstractEarlyWarningSystem.run_command):
+        * Scripts/webkitpy/tool/commands/queues.py:
+        (PatchProcessingQueue.begin_work_queue):
+        (CommitQueue.run_command):
+        * Scripts/webkitpy/tool/main.py:
+        (WebKitPatch.__init__):
+        (WebKitPatch.deprecated_port):
+        (WebKitPatch.handle_global_options):
+        * Scripts/webkitpy/tool/mocktool.py:
+        (MockTool.__init__):
+        (MockTool.deprecated_port):
+        * Scripts/webkitpy/tool/steps/build.py:
+        (Build.build):
+        * Scripts/webkitpy/tool/steps/checkstyle.py:
+        (CheckStyle.run):
+        * Scripts/webkitpy/tool/steps/commit.py:
+        (Commit._check_test_expectations):
+        * Scripts/webkitpy/tool/steps/preparechangelog.py:
+        (PrepareChangeLog.run):
+        * Scripts/webkitpy/tool/steps/preparechangelogforrevert.py:
+        (PrepareChangeLogForRevert.run):
+        * Scripts/webkitpy/tool/steps/runtests.py:
+        (RunTests.run):
+        * Scripts/webkitpy/tool/steps/runtests_unittest.py:
+        (RunTestsTest.test_webkit_run_unit_tests):
+        * Scripts/webkitpy/tool/steps/steps_unittest.py:
+        (StepsTest.test_runtests_args):
+        * Scripts/webkitpy/tool/steps/update.py:
+        (Update._update_command):
+        * Scripts/webkitpy/tool/steps/update_unittest.py:
+        (UpdateTest.test_update_command_non_interactive):
+        (UpdateTest.test_update_command_interactive):
+
+2013-10-19  Andreas Kling  <akling@apple.com>
+
+        RefPtr::releaseNonNull() incorrectly increments the refcount.
+        <https://webkit.org/b/123063>
+
+        Add an API test to verify that no extra refs are added when calling
+        RefPtr::releaseNonNull().
+
+        Reviewed by Anders Carlsson.
+
 2013-10-18  Rik Cabanier <cabanier@adobe.com>
         Add Rik Cabanier to list of committers
         https://bugs.webkit.org/show_bug.cgi?id=123031

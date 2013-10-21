@@ -475,7 +475,8 @@ void JIT::emitSlow_op_put_by_val(Instruction* currentInstruction, Vector<SlowCas
 
     emitGetVirtualRegister(property, regT1);
     emitGetVirtualRegister(value, regT2);
-    Call call = callOperation(operationPutByVal, regT0, regT1, regT2);
+    bool isDirect = m_interpreter->getOpcodeID(currentInstruction->u.opcode) == op_put_by_val_direct;
+    Call call = callOperation(isDirect ? operationDirectPutByVal : operationPutByVal, regT0, regT1, regT2);
 
     m_byValCompilationInfo[m_byValInstructionIndex].slowPathTarget = slowPath;
     m_byValCompilationInfo[m_byValInstructionIndex].returnAddress = call;
@@ -513,18 +514,7 @@ void JIT::emit_op_get_by_id(Instruction* currentInstruction)
     const Identifier* ident = &(m_codeBlock->identifier(currentInstruction[3].u.operand));
 
     emitGetVirtualRegister(baseVReg, regT0);
-    compileGetByIdHotPath(baseVReg, ident);
-    emitValueProfilingSite(regT4);
-    emitPutVirtualRegister(resultVReg);
-}
-
-void JIT::compileGetByIdHotPath(int baseVReg, const Identifier* ident)
-{
-    // As for put_by_id, get_by_id requires the offset of the Structure and the offset of the access to be patched.
-    // Additionally, for get_by_id we need patch the offset of the branch to the slow case (we patch this to jump
-    // to array-length / prototype access tranpolines, and finally we also the the property-map access offset as a label
-    // to jump back to if one of these trampolies finds a match.
-
+    
     emitJumpSlowCaseIfNotJSCell(regT0, baseVReg);
     
     if (*ident == m_vm->propertyNames->length && shouldEmitProfiling()) {
@@ -532,25 +522,15 @@ void JIT::compileGetByIdHotPath(int baseVReg, const Identifier* ident)
         emitArrayProfilingSiteForBytecodeIndex(regT1, regT2, m_bytecodeOffset);
     }
 
-    DataLabelPtr structureToCompare;
-    PatchableJump structureCheck = patchableBranchPtrWithPatch(
-        NotEqual, Address(regT0, JSCell::structureOffset()), structureToCompare,
-        TrustedImmPtr(reinterpret_cast<void*>(unusedPointer)));
-    
-    addSlowCase(structureCheck);
-    
-    ConvertibleLoadLabel propertyStorageLoad =
-        convertibleLoadPtr(Address(regT0, JSObject::butterflyOffset()), regT0);
-    
-    DataLabelCompact loadWithPatch = load64WithCompactAddressOffsetPatch(
-        Address(regT0, patchGetByIdDefaultOffset), regT0);
-    
-    Label done = label();
-    
-    m_propertyAccessCompilationInfo.append(
-        PropertyStubCompilationInfo(
-            PropertyStubGetById, m_bytecodeOffset, structureToCompare, structureCheck,
-            propertyStorageLoad, loadWithPatch, done));
+    JITGetByIdGenerator gen(
+        m_codeBlock, CodeOrigin(m_bytecodeOffset), RegisterSet::specialRegisters(),
+        JSValueRegs(regT0), JSValueRegs(regT0), true);
+    gen.generateFastPath(*this);
+    addSlowCase(gen.slowPathJump());
+    m_getByIds.append(gen);
+
+    emitValueProfilingSite(regT4);
+    emitPutVirtualRegister(resultVReg);
 }
 
 void JIT::emitSlow_op_get_by_id(Instruction* currentInstruction, Vector<SlowCaseEntry>::iterator& iter)
@@ -562,17 +542,20 @@ void JIT::emitSlow_op_get_by_id(Instruction* currentInstruction, Vector<SlowCase
     linkSlowCaseIfNotJSCell(iter, baseVReg);
     linkSlowCase(iter);
 
+    JITGetByIdGenerator& gen = m_getByIds[m_getByIdIndex++];
+    
     Label coldPathBegin = label();
     
-    Call call = callOperation(WithProfile, operationGetByIdOptimize, resultVReg, regT0, ident->impl());
+    Call call = callOperation(WithProfile, operationGetByIdOptimize, resultVReg, gen.stubInfo(), regT0, ident->impl());
 
-    m_propertyAccessCompilationInfo[m_propertyAccessInstructionIndex++].slowCaseInfo(coldPathBegin, call);
+    gen.reportSlowPathCall(coldPathBegin, call);
 }
 
 void JIT::emit_op_put_by_id(Instruction* currentInstruction)
 {
     int baseVReg = currentInstruction[1].u.operand;
     int valueVReg = currentInstruction[3].u.operand;
+    unsigned direct = currentInstruction[8].u.operand;
 
     // In order to be able to patch both the Structure, and the object offset, we store one pointer,
     // to just after the arguments have been loaded into registers 'hotPathBegin', and we generate code
@@ -582,58 +565,36 @@ void JIT::emit_op_put_by_id(Instruction* currentInstruction)
 
     // Jump to a slow case if either the base object is an immediate, or if the Structure does not match.
     emitJumpSlowCaseIfNotJSCell(regT0, baseVReg);
-
-    DataLabelPtr structureToCompare;
-    PatchableJump structureCheck = patchableBranchPtrWithPatch(
-        NotEqual, Address(regT0, JSCell::structureOffset()), structureToCompare,
-        TrustedImmPtr(reinterpret_cast<void*>(unusedPointer)));
-    
-    addSlowCase(structureCheck);
     
     emitWriteBarrier(regT0, regT1, regT2, regT3, ShouldFilterImmediates, WriteBarrierForPropertyAccess);
 
-    ConvertibleLoadLabel propertyStorageLoad =
-        convertibleLoadPtr(Address(regT0, JSObject::butterflyOffset()), regT2);
+    JITPutByIdGenerator gen(
+        m_codeBlock, CodeOrigin(m_bytecodeOffset), RegisterSet::specialRegisters(),
+        JSValueRegs(regT0), JSValueRegs(regT1), regT2, true, m_codeBlock->ecmaMode(),
+        direct ? Direct : NotDirect);
     
-    DataLabel32 storeWithPatch =
-        store64WithAddressOffsetPatch(regT1, Address(regT2, patchPutByIdDefaultOffset));
+    gen.generateFastPath(*this);
+    addSlowCase(gen.slowPathJump());
     
-    Label done = label();
-    
-    m_propertyAccessCompilationInfo.append(
-        PropertyStubCompilationInfo(
-            PropertyStubPutById, m_bytecodeOffset, structureToCompare, structureCheck,
-            propertyStorageLoad, storeWithPatch, done));
+    m_putByIds.append(gen);
 }
 
 void JIT::emitSlow_op_put_by_id(Instruction* currentInstruction, Vector<SlowCaseEntry>::iterator& iter)
 {
     int baseVReg = currentInstruction[1].u.operand;
     const Identifier* ident = &(m_codeBlock->identifier(currentInstruction[2].u.operand));
-    unsigned direct = currentInstruction[8].u.operand;
 
     linkSlowCaseIfNotJSCell(iter, baseVReg);
     linkSlowCase(iter);
 
     Label coldPathBegin(this);
     
-    V_JITOperation_EJJI optimizedCall;
-    if (m_codeBlock->isStrictMode()) {
-        if (direct)
-            optimizedCall = operationPutByIdDirectStrictOptimize;
-        else
-            optimizedCall = operationPutByIdStrictOptimize;
-    } else {
-        if (direct)
-            optimizedCall = operationPutByIdDirectNonStrictOptimize;
-        else
-            optimizedCall = operationPutByIdNonStrictOptimize;
-    }
-    
-    Call call = callOperation(optimizedCall, regT1, regT0, ident->impl());
+    JITPutByIdGenerator& gen = m_putByIds[m_putByIdIndex++];
 
-    // Track the location of the call; this will be used to recover patch information.
-    m_propertyAccessCompilationInfo[m_propertyAccessInstructionIndex++].slowCaseInfo(coldPathBegin, call);
+    Call call = callOperation(
+        gen.slowPathFunction(), gen.stubInfo(), regT1, regT0, ident->impl());
+
+    gen.reportSlowPathCall(coldPathBegin, call);
 }
 
 // Compile a store into an object's property storage.  May overwrite the
@@ -1030,13 +991,20 @@ void JIT::privateCompilePutByVal(ByValInfo* byValInfo, ReturnAddressPtr returnAd
     
     patchBuffer.link(done, byValInfo->badTypeJump.labelAtOffset(byValInfo->badTypeJumpToDone));
     
-    byValInfo->stubRoutine = FINALIZE_CODE_FOR_STUB(
-        patchBuffer,
-        ("Baseline put_by_val stub for %s, return point %p", toCString(*m_codeBlock).data(), returnAddress.value()));
-    
+    bool isDirect = m_interpreter->getOpcodeID(currentInstruction->u.opcode) == op_put_by_val_direct;
+    if (!isDirect) {
+        byValInfo->stubRoutine = FINALIZE_CODE_FOR_STUB(
+            patchBuffer,
+            ("Baseline put_by_val stub for %s, return point %p", toCString(*m_codeBlock).data(), returnAddress.value()));
+        
+    } else {
+        byValInfo->stubRoutine = FINALIZE_CODE_FOR_STUB(
+            patchBuffer,
+            ("Baseline put_by_val_direct stub for %s, return point %p", toCString(*m_codeBlock).data(), returnAddress.value()));
+    }
     RepatchBuffer repatchBuffer(m_codeBlock);
     repatchBuffer.relink(byValInfo->badTypeJump, CodeLocationLabel(byValInfo->stubRoutine->code().code()));
-    repatchBuffer.relinkCallerToFunction(returnAddress, FunctionPtr(operationPutByValGeneric));
+    repatchBuffer.relinkCallerToFunction(returnAddress, FunctionPtr(isDirect ? operationDirectPutByValGeneric : operationPutByValGeneric));
 }
 
 JIT::JumpList JIT::emitIntTypedArrayGetByVal(Instruction*, PatchableJump& badType, TypedArrayType type)

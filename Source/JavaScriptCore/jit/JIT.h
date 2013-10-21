@@ -42,12 +42,13 @@
 #include "CompactJITCodeMap.h"
 #include "Interpreter.h"
 #include "JITDisassembler.h"
+#include "JITInlineCacheGenerator.h"
 #include "JSInterfaceJIT.h"
 #include "LegacyProfiler.h"
 #include "Opcode.h"
 #include "ResultType.h"
+#include "SamplingTool.h"
 #include "UnusedPointer.h"
-#include <bytecode/SamplingTool.h>
 
 namespace JSC {
 
@@ -147,109 +148,6 @@ namespace JSC {
         }
     };
 
-    enum PropertyStubGetById_T { PropertyStubGetById };
-    enum PropertyStubPutById_T { PropertyStubPutById };
-
-    struct PropertyStubCompilationInfo {
-        enum Type { GetById, PutById } m_type;
-    
-        unsigned bytecodeIndex;
-        MacroAssembler::Call callReturnLocation;
-        MacroAssembler::Label hotPathBegin;
-        MacroAssembler::DataLabelPtr structureToCompare;
-        MacroAssembler::PatchableJump structureCheck;
-        MacroAssembler::ConvertibleLoadLabel propertyStorageLoad;
-#if USE(JSVALUE64)
-        MacroAssembler::DataLabelCompact getDisplacementLabel;
-#else
-        MacroAssembler::DataLabelCompact getDisplacementLabel1;
-        MacroAssembler::DataLabelCompact getDisplacementLabel2;
-#endif
-        MacroAssembler::Label done;
-        MacroAssembler::Label coldPathBegin;
-#if USE(JSVALUE64)
-        MacroAssembler::DataLabel32 putDisplacementLabel;
-#else
-        MacroAssembler::DataLabel32 putDisplacementLabel1;
-        MacroAssembler::DataLabel32 putDisplacementLabel2;
-#endif
-
-#if !ASSERT_DISABLED
-        PropertyStubCompilationInfo()
-            : bytecodeIndex(std::numeric_limits<unsigned>::max())
-        {
-        }
-#endif
-
-
-        PropertyStubCompilationInfo(
-            PropertyStubGetById_T, unsigned bytecodeIndex,
-            MacroAssembler::DataLabelPtr structureToCompare,
-            MacroAssembler::PatchableJump structureCheck,
-            MacroAssembler::ConvertibleLoadLabel propertyStorageLoad,
-#if USE(JSVALUE64)
-            MacroAssembler::DataLabelCompact displacementLabel,
-#else
-            MacroAssembler::DataLabelCompact displacementLabel1,
-            MacroAssembler::DataLabelCompact displacementLabel2,
-#endif
-            MacroAssembler::Label done)
-            : m_type(GetById)
-            , bytecodeIndex(bytecodeIndex)
-            , structureToCompare(structureToCompare)
-            , structureCheck(structureCheck)
-            , propertyStorageLoad(propertyStorageLoad)
-#if USE(JSVALUE64)
-            , getDisplacementLabel(displacementLabel)
-#else
-            , getDisplacementLabel1(displacementLabel1)
-            , getDisplacementLabel2(displacementLabel2)
-#endif
-            , done(done)
-        {
-        }
-
-        PropertyStubCompilationInfo(
-            PropertyStubPutById_T, unsigned bytecodeIndex,
-            MacroAssembler::DataLabelPtr structureToCompare,
-            MacroAssembler::PatchableJump structureCheck,
-            MacroAssembler::ConvertibleLoadLabel propertyStorageLoad,
-#if USE(JSVALUE64)
-            MacroAssembler::DataLabel32 displacementLabel,
-#else
-            MacroAssembler::DataLabel32 displacementLabel1,
-            MacroAssembler::DataLabel32 displacementLabel2,
-#endif
-            MacroAssembler::Label done)
-            : m_type(PutById)
-            , bytecodeIndex(bytecodeIndex)
-            , structureToCompare(structureToCompare)
-            , structureCheck(structureCheck)
-            , propertyStorageLoad(propertyStorageLoad)
-            , done(done)
-#if USE(JSVALUE64)
-            , putDisplacementLabel(displacementLabel)
-#else
-            , putDisplacementLabel1(displacementLabel1)
-            , putDisplacementLabel2(displacementLabel2)
-#endif
-        {
-        }
-
-        void slowCaseInfo(MacroAssembler::Label coldPathBegin, MacroAssembler::Call call)
-        {
-            callReturnLocation = call;
-            this->coldPathBegin = coldPathBegin;
-        }
-
-        void slowCaseInfo(MacroAssembler::Call call)
-        {
-            callReturnLocation = call;
-        }
-
-        void copyToStubInfo(StructureStubInfo& info, LinkBuffer &patchBuffer);
-    };
-
     struct ByValCompilationInfo {
         ByValCompilationInfo() { }
         
@@ -285,7 +183,6 @@ namespace JSC {
     class JIT : private JSInterfaceJIT {
         friend class JITSlowPathCall;
         friend class JITStubCall;
-        friend struct PropertyStubCompilationInfo;
 
         using MacroAssembler::Jump;
         using MacroAssembler::JumpList;
@@ -318,6 +215,13 @@ namespace JSC {
         }
 
         static void compilePutByVal(VM* vm, CodeBlock* codeBlock, ByValInfo* byValInfo, ReturnAddressPtr returnAddress, JITArrayMode arrayMode)
+        {
+            JIT jit(vm, codeBlock);
+            jit.m_bytecodeOffset = byValInfo->bytecodeIndex;
+            jit.privateCompilePutByVal(byValInfo, returnAddress, arrayMode);
+        }
+        
+        static void compileDirectPutByVal(VM* vm, CodeBlock* codeBlock, ByValInfo* byValInfo, ReturnAddressPtr returnAddress, JITArrayMode arrayMode)
         {
             JIT jit(vm, codeBlock);
             jit.m_bytecodeOffset = byValInfo->bytecodeIndex;
@@ -778,9 +682,9 @@ namespace JSC {
         MacroAssembler::Call callOperation(J_JITOperation_EC, int, JSCell*);
         MacroAssembler::Call callOperation(J_JITOperation_EJ, int, GPRReg);
 #if USE(JSVALUE64)
-        MacroAssembler::Call callOperation(WithProfileTag, J_JITOperation_EJI, int, GPRReg, StringImpl*);
+        MacroAssembler::Call callOperation(WithProfileTag, J_JITOperation_ESsiJI, int, StructureStubInfo*, GPRReg, StringImpl*);
 #else
-        MacroAssembler::Call callOperation(WithProfileTag, J_JITOperation_EJI, int, GPRReg, GPRReg, StringImpl*);
+        MacroAssembler::Call callOperation(WithProfileTag, J_JITOperation_ESsiJI, int, StructureStubInfo*, GPRReg, GPRReg, StringImpl*);
 #endif
         MacroAssembler::Call callOperation(J_JITOperation_EJIdc, int, GPRReg, const Identifier*);
         MacroAssembler::Call callOperation(J_JITOperation_EJJ, int, GPRReg, GPRReg);
@@ -811,9 +715,9 @@ namespace JSC {
 #endif
         MacroAssembler::Call callOperation(V_JITOperation_EJIdJJ, RegisterID, const Identifier*, RegisterID, RegisterID);
 #if USE(JSVALUE64)
-        MacroAssembler::Call callOperation(V_JITOperation_EJJI, RegisterID, RegisterID, StringImpl*);
+        MacroAssembler::Call callOperation(V_JITOperation_ESsiJJI, StructureStubInfo*, RegisterID, RegisterID, StringImpl*);
 #else
-        MacroAssembler::Call callOperation(V_JITOperation_EJJI, RegisterID, RegisterID, RegisterID, RegisterID, StringImpl*);
+        MacroAssembler::Call callOperation(V_JITOperation_ESsiJJI, StructureStubInfo*, RegisterID, RegisterID, RegisterID, RegisterID, StringImpl*);
 #endif
         MacroAssembler::Call callOperation(V_JITOperation_EJJJ, RegisterID, RegisterID, RegisterID);
         MacroAssembler::Call callOperation(V_JITOperation_EJZJ, RegisterID, int32_t, RegisterID);
@@ -893,7 +797,8 @@ namespace JSC {
 
         Vector<CallRecord> m_calls;
         Vector<Label> m_labels;
-        Vector<PropertyStubCompilationInfo> m_propertyAccessCompilationInfo;
+        Vector<JITGetByIdGenerator> m_getByIds;
+        Vector<JITPutByIdGenerator> m_putByIds;
         Vector<ByValCompilationInfo> m_byValCompilationInfo;
         Vector<StructureStubCompilationInfo> m_callStructureStubCompilationInfo;
         Vector<JumpTable> m_jmpTable;
@@ -905,7 +810,8 @@ namespace JSC {
         JumpList m_exceptionChecks;
         JumpList m_exceptionChecksWithCallFrameRollback;
 
-        unsigned m_propertyAccessInstructionIndex;
+        unsigned m_getByIdIndex;
+        unsigned m_putByIdIndex;
         unsigned m_byValInstructionIndex;
         unsigned m_callLinkInfoIndex;
 

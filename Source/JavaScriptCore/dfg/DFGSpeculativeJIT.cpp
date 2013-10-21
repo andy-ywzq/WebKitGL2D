@@ -281,6 +281,26 @@ void SpeculativeJIT::forwardTypeCheck(JSValueSource source, Edge edge, Speculate
     convertLastOSRExitToForward(valueRecovery);
 }
 
+RegisterSet SpeculativeJIT::usedRegisters()
+{
+    RegisterSet result;
+    
+    for (unsigned i = GPRInfo::numberOfRegisters; i--;) {
+        GPRReg gpr = GPRInfo::toRegister(i);
+        if (m_gprs.isInUse(gpr))
+            result.set(gpr);
+    }
+    for (unsigned i = FPRInfo::numberOfRegisters; i--;) {
+        FPRReg fpr = FPRInfo::toRegister(i);
+        if (m_fprs.isInUse(fpr))
+            result.set(fpr);
+    }
+    
+    result.merge(RegisterSet::specialRegisters());
+    
+    return result;
+}
+
 void SpeculativeJIT::addSlowPathGenerator(PassOwnPtr<SlowPathGenerator> slowPathGenerator)
 {
     m_slowPathGenerators.append(slowPathGenerator);
@@ -951,6 +971,8 @@ void SpeculativeJIT::compileIn(Node* node)
             jsDynamicCast<JSString*>(valueOfJSConstant(node->child1().node()));
         if (string && string->tryGetValueImpl()
             && string->tryGetValueImpl()->isIdentifier()) {
+            StructureStubInfo* stubInfo = m_jit.codeBlock()->addStubInfo();
+            
             GPRTemporary result(this);
             GPRReg resultGPR = result.gpr();
 
@@ -960,12 +982,16 @@ void SpeculativeJIT::compileIn(Node* node)
             
             OwnPtr<SlowPathGenerator> slowPath = slowPathCall(
                 jump.m_jump, this, operationInOptimize,
-                JSValueRegs::payloadOnly(resultGPR), baseGPR,
+                JSValueRegs::payloadOnly(resultGPR), stubInfo, baseGPR,
                 string->tryGetValueImpl());
-                
-            m_jit.addIn(InRecord(
-                node->codeOrigin, jump, slowPath.get(), safeCast<int8_t>(baseGPR),
-                safeCast<int8_t>(resultGPR), usedRegisters()));
+            
+            stubInfo->codeOrigin = node->codeOrigin;
+            stubInfo->patch.baseGPR = static_cast<int8_t>(baseGPR);
+            stubInfo->patch.valueGPR = static_cast<int8_t>(resultGPR);
+            stubInfo->patch.usedRegisters = usedRegisters();
+            stubInfo->patch.registersFlushed = false;
+            
+            m_jit.addIn(InRecord(jump, slowPath.get(), stubInfo));
             addSlowPathGenerator(slowPath.release());
                 
             base.use();
