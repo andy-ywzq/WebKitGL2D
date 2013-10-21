@@ -3,6 +3,8 @@ list(APPEND WebKit2_LINK_FLAGS
 )
 
 list(APPEND WebKit2_SOURCES
+    NetworkProcess/unix/NetworkProcessMainUnix.cpp
+
     Platform/gtk/ModuleGtk.cpp
     Platform/gtk/LoggingGtk.cpp
     Platform/gtk/WorkQueueGtk.cpp
@@ -76,6 +78,7 @@ list(APPEND WebKit2_SOURCES
 )
 
 list(APPEND WebKit2_INCLUDE_DIRECTORIES
+    NetworkProcess/unix
     Shared/nix
     Shared/API/c/nix
     WebProcess/nix
@@ -188,14 +191,23 @@ if (WTF_USE_CURL)
     )
 else ()
     list(APPEND WebKit2_SOURCES
+        NetworkProcess/soup/NetworkProcessSoup.cpp
+        NetworkProcess/soup/NetworkResourceLoadSchedulerSoup.cpp
+        NetworkProcess/soup/RemoteNetworkingContextSoup.cpp
+
+        # Uncomment it after https://bugs.webkit.org/show_bug.cgi?id=118343 is fixed and merged to Nix.
+        # Shared/soup/CacheModelHelper.cpp
         Shared/soup/WebCoreArgumentCodersSoup.cpp
 
         UIProcess/API/C/soup/WKContextSoup.cpp
         UIProcess/API/C/soup/WKSoupRequestManager.cpp
 
+        UIProcess/soup/WebContextSoup.cpp
         UIProcess/soup/WebCookieManagerProxySoup.cpp
         UIProcess/soup/WebSoupRequestManagerClient.cpp
         UIProcess/soup/WebSoupRequestManagerProxy.cpp
+
+        UIProcess/Network/soup/NetworkProcessProxySoup.cpp
 
         WebProcess/Cookies/soup/WebCookieManagerSoup.cpp
         WebProcess/Cookies/soup/WebKitSoupCookieJarSqlite.cpp
@@ -423,6 +435,7 @@ install(FILES ${WebKitNix_JavaScriptCore_HEADERS} DESTINATION include/${WebKit2_
 add_definitions(-DLIBEXECDIR=\"${CMAKE_INSTALL_PREFIX}/${EXEC_INSTALL_DIR}\"
     -DWEBPROCESSNAME=\"WebProcess\"
     -DPLUGINPROCESSNAME=\"PluginProcess\"
+    -DNETWORKPROCESSNAME=\"NetworkProcess\"
 )
 
 if (ENABLE_INSPECTOR)
@@ -445,4 +458,25 @@ if (ENABLE_INSPECTOR)
                        PATTERN "*.css"
                        PATTERN "*.gif"
                        PATTERN "*.png")
+endif ()
+
+if (ENABLE_NETWORK_PROCESS)
+    set(NetworkProcess_EXECUTABLE_NAME NetworkProcess)
+    list(APPEND NetworkProcess_INCLUDE_DIRECTORIES
+        "${WEBKIT2_DIR}/NetworkProcess"
+    )
+
+    include_directories(${NetworkProcess_INCLUDE_DIRECTORIES})
+
+    list(APPEND NetworkProcess_SOURCES
+        unix/NetworkMainUnix.cpp
+    )
+
+    set(NetworkProcess_LIBRARIES
+        WebKit2
+    )
+
+    add_executable(${NetworkProcess_EXECUTABLE_NAME} ${NetworkProcess_SOURCES})
+    target_link_libraries(${NetworkProcess_EXECUTABLE_NAME} ${NetworkProcess_LIBRARIES})
+    install(TARGETS ${NetworkProcess_EXECUTABLE_NAME} DESTINATION "${EXEC_INSTALL_DIR}")
 endif ()

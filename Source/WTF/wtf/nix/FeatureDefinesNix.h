@@ -202,6 +202,10 @@
 #define ENABLE_NETWORK_INFO 1
 #endif
 
+#if !defined(ENABLE_NETWORK_PROCESS)
+#define ENABLE_NETWORK_PROCESS 0
+#endif
+
 #if !defined(ENABLE_PAGE_VISIBILITY_API)
 #define ENABLE_PAGE_VISIBILITY_API 1
 #endif

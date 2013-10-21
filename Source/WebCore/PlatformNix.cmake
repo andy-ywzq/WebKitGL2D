@@ -312,6 +312,8 @@ else ()
         platform/network/soup/SocketStreamHandleSoup.cpp
         platform/network/soup/SoupURIUtils.cpp
         platform/network/soup/SynchronousLoaderClientSoup.cpp
+        # Uncomment it after https://bugs.webkit.org/show_bug.cgi?id=118598 is fixed and merged to Nix.
+        # platform/soup/SharedBufferSoup.cpp
     )
 
     list(APPEND WebCore_INCLUDE_DIRECTORIES
