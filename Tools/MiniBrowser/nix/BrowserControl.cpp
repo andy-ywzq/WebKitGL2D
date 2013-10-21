@@ -282,16 +282,15 @@ void BrowserControl::sendKeyboardEventToNix(const XEvent& event)
 
 void BrowserControl::handleKeyPressEvent(const XEvent& event)
 {
-    if (!m_urlBar->focused())
+    if (m_urlBar->focused())
+        m_urlBar->handleKeyPressEvent(reinterpret_cast<const XKeyPressedEvent&>(event));
+    else
         sendKeyboardEventToNix(event);
 }
 
 void BrowserControl::handleKeyReleaseEvent(const XEvent& event)
 {
-    if (m_urlBar->focused())
-        m_urlBar->handleKeyReleaseEvent(reinterpret_cast<const XKeyReleasedEvent&>(event));
-    else
-        sendKeyboardEventToNix(event);
+    sendKeyboardEventToNix(event);
 }
 
 void BrowserControl::updateClickCount(const XButtonPressedEvent& event)

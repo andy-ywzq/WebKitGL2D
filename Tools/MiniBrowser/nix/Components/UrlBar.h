@@ -41,7 +41,7 @@ public:
     ~UrlBar();
 
     virtual void handleEvent(const XEvent&);
-    void handleKeyReleaseEvent(const XKeyReleasedEvent&);
+    void handleKeyPressEvent(const XKeyReleasedEvent&);
 
     void addFocus();
     void releaseFocus();

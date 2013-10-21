@@ -84,6 +84,7 @@ void UrlBar::handleEvent(const XEvent& event)
         break;
     case SelectionNotify:
         pasteClipboardText(event);
+        drawUrlBar();
         break;
     }
 }
@@ -189,7 +190,7 @@ void UrlBar::updateTextOffset()
         m_textOffset -= cursorPosition - m_size.size.width;
 }
 
-void UrlBar::handleKeyReleaseEvent(const XKeyReleasedEvent& event)
+void UrlBar::handleKeyPressEvent(const XKeyPressedEvent& event)
 {
     char normalKey;
     KeySym specialKey;
