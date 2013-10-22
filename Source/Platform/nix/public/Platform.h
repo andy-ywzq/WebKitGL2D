@@ -33,7 +33,6 @@
 #define Nix_Platform_h
 
 #include "AudioDevice.h"
-#include "Data.h"
 #include "Gamepads.h"
 #include <stdint.h>
 
@@ -65,10 +64,6 @@ public:
 
     // FFTFrame
     virtual FFTFrame* createFFTFrame(unsigned /*fftsize*/) { return 0; }
-
-    // Resources
-    // Returns a blob of data corresponding to the named resource.
-    virtual Data loadResource(const char* /*name*/) { return Data(); }
 
     // Decodes the in-memory audio file data and returns the linear PCM audio data in the destinationBus.
     // A sample-rate conversion to sampleRate will occur if the file data is at a different sample-rate.

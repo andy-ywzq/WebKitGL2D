@@ -30,9 +30,11 @@
 #include "AudioBus.h"
 
 #include "AudioFileReader.h"
+#include <cstdio>
 #include <public/AudioBus.h>
 #include <public/Platform.h>
 #include <wtf/PassRefPtr.h>
+#include <wtf/Vector.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/StringConcatenate.h>
 
@@ -49,13 +51,19 @@ PassRefPtr<AudioBus> decodeAudioFileData(const char* data, size_t size, double s
 PassRefPtr<AudioBus> AudioBus::loadPlatformResource(const char* name, float sampleRate)
 {
     String absoluteFilename(makeString(DATA_DIR, "/webaudio/resources/", name, ".wav"));
-    const Nix::Data resource = Nix::Platform::current()->loadResource(absoluteFilename.utf8().data());
 
-    if (resource.isEmpty())
+    WTF::Vector<char> fileContents;
+    FILE* file = fopen(absoluteFilename.utf8().data(), "rb");
+    if (!file)
         return PassRefPtr<AudioBus>();
 
-    // FIXME: the sampleRate parameter is ignored. It should be removed from the API.
-    RefPtr<AudioBus> audioBus = decodeAudioFileData(resource.data(), resource.size(), sampleRate);
+    fseek(file, 0, SEEK_END);
+    fileContents.resize(ftell(file));
+    rewind(file);
+    fread(&fileContents[0], fileContents.size(), 1, file);
+    fclose(file);
+
+    RefPtr<AudioBus> audioBus = decodeAudioFileData(&fileContents[0], fileContents.size(), sampleRate);
 
     if (!audioBus.get())
         return PassRefPtr<AudioBus>();

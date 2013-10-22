@@ -11,7 +11,6 @@ set(Platform_HEADERS
     nix/public/Canvas.h
     nix/public/Color.h
     nix/public/Common.h
-    nix/public/Data.h
     nix/public/FFTFrame.h
     nix/public/Gamepad.h
     nix/public/Gamepads.h
