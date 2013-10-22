@@ -23,59 +23,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef libwebrtc_h
-#define libwebrtc_h
+#ifndef MediaStreamTrackWebRTCObserver_h
+#define MediaStreamTrackWebRTCObserver_h
 
 #if ENABLE(MEDIA_STREAM) && USE(WEBRTCLIB)
 
-// webrtc librarty already define OVERRIDE and LOG.
-// Here we are temporarily disabling it when including webrtc's headers
-#undef OVERRIDE
-#undef LOG
+#include "MediaStreamSource.h"
+#include "WebRTCUtils.h"
+#include "libwebrtc.h"
+#include <wtf/RefCounted.h>
 
-#ifndef _DEBUG
-#define _DEBUG 0
-#endif
+namespace WebCore {
 
-#ifndef POSIX
-#define POSIX 1
-#endif
+class MediaStreamTrackWebRTCObserver : public RefCounted<MediaStreamTrackWebRTCObserver>, public webrtc::ObserverInterface {
+public:
+    MediaStreamTrackWebRTCObserver(webrtc::MediaStreamTrackInterface* track, MediaStreamSource* source)
+        : m_track(track)
+        , m_source(source)
+    { }
 
-#ifndef LOGGING
-#define LOGGING 0
-#endif
+    virtual ~MediaStreamTrackWebRTCObserver() { }
 
-#include "talk/app/webrtc/datachannelinterface.h"
-#include "talk/app/webrtc/jsep.h"
-#include "talk/app/webrtc/mediaconstraintsinterface.h"
-#include "talk/app/webrtc/mediastreaminterface.h"
-#include "talk/app/webrtc/peerconnectionfactory.h"
-#include "talk/app/webrtc/peerconnectioninterface.h"
-#include "talk/base/scoped_ref_ptr.h"
+    void OnChanged()
+    {
+        // The only properties that can change in a track in webrtc library are those below.
+        m_source->setEnabled(m_track->enabled());
+        m_source->setReadyState(WebRTCUtils::toWebKitReadyState(m_track->state()));
+    };
 
-// Disabling webrtc's OVERRIDE and LOG macros
-#ifdef OVERRIDE
-#undef OVERRIDE
-#endif
+    webrtc::MediaStreamTrackInterface* webRTCTrack() { return m_track.get(); }
+    MediaStreamSource* source() { return m_source; }
 
-#ifdef LOG
-#undef LOG
-#endif
+private:
+    talk_base::scoped_refptr<webrtc::MediaStreamTrackInterface> m_track;
+    MediaStreamSource* m_source;
+};
 
-// Enabling them again just as WTF defines it
-#if COMPILER_SUPPORTS(CXX_OVERRIDE_CONTROL)
-#define OVERRIDE override
-#else
-#define OVERRIDE
-#endif
-
-#if LOG_DISABLED
-#define LOG(channel, ...) ((void)0)
-#else
-#define LOG(channel, ...) WTFLog(&JOIN_LOG_CHANNEL_WITH_PREFIX(LOG_CHANNEL_PREFIX, channel), __VA_ARGS__)
-#define JOIN_LOG_CHANNEL_WITH_PREFIX(prefix, channel) JOIN_LOG_CHANNEL_WITH_PREFIX_LEVEL_2(prefix, channel)
-#define JOIN_LOG_CHANNEL_WITH_PREFIX_LEVEL_2(prefix, channel) prefix ## channel
-#endif
+} // namespace WebCore
 
 #endif // ENABLE(MEDIA_STREAM) && USE(WEBRTCLIB)
-#endif // libwebrtc_h
+
+#endif // MediaStreamTrackWebRTCObserver_h

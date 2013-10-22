@@ -28,8 +28,11 @@
 
 #if ENABLE(MEDIA_STREAM) && USE(WEBRTCLIB)
 
+#include "MediaStreamWebRTCObserver.h"
 #include "libwebrtc.h"
 #include <wtf/PassRefPtr.h>
+#include <wtf/RefPtr.h>
+#include <wtf/Vector.h>
 
 namespace WebCore {
 
@@ -52,8 +55,11 @@ public:
     virtual void OnDataChannel(webrtc::DataChannelInterface*) OVERRIDE;
 
 private:
+    void processTrack(webrtc::MediaStreamTrackInterface*, MediaStreamTrackObserverVector&, MediaStreamSourceVector&);
     PassRefPtr<MediaStreamDescriptor> mediaStreamDescriptorFromMediaStreamInterface(webrtc::MediaStreamInterface*);
     RTCPeerConnectionHandlerClient* m_client;
+
+    Vector<RefPtr<MediaStreamWebRTCObserver>> m_streamObservers;
 };
 
 } // namespace WebCore

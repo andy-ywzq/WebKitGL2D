@@ -31,6 +31,8 @@
 
 #include "MediaStreamAudioSource.h"
 #include "MediaStreamDescriptor.h"
+#include "MediaStreamSource.h"
+#include "MediaStreamTrackWebRTCObserver.h"
 #include "NotImplemented.h"
 #include "RTCDataChannelHandlerWebRTC.h"
 #include "RTCIceCandidateDescriptor.h"
@@ -61,19 +63,40 @@ void RTCPeerConnectionObserver::OnStateChange(webrtc::PeerConnectionObserver::St
     notImplemented();
 }
 
+void RTCPeerConnectionObserver::processTrack(webrtc::MediaStreamTrackInterface* track, MediaStreamTrackObserverVector& trackObservers, MediaStreamSourceVector& sourceVector)
+{
+    RefPtr<MediaStreamSource> source;
+    if (track->kind() == "audio")
+        source = MediaStreamAudioSource::create();
+
+    // FIXME: Handle video.
+
+    RefPtr<MediaStreamTrackWebRTCObserver> trackObserver = adoptRef(new MediaStreamTrackWebRTCObserver(track, source.get()));
+    track->RegisterObserver(trackObserver.get());
+    sourceVector.append(source);
+    trackObservers.append(trackObserver);
+}
+
 PassRefPtr<MediaStreamDescriptor> RTCPeerConnectionObserver::mediaStreamDescriptorFromMediaStreamInterface(webrtc::MediaStreamInterface* stream)
 {
-    webrtc::AudioTrackVector audioTracks = stream->GetAudioTracks();
-    webrtc::VideoTrackVector videoTracks = stream->GetVideoTracks();
     MediaStreamSourceVector audioSourceVector;
     MediaStreamSourceVector videoSourceVector;
+    MediaStreamTrackObserverVector audioTrackObservers;
+    MediaStreamTrackObserverVector videoTrackObservers;
+    webrtc::AudioTrackVector audioTracks = stream->GetAudioTracks();
+    webrtc::VideoTrackVector videoTracks = stream->GetVideoTracks();
     for (unsigned i = 0; i < audioTracks.size(); i++)
-        // FIXME: Use the same ID provided by webrtc lib to identify, or map, sources and tracks in WebKit.
-        audioSourceVector.append(MediaStreamAudioSource::create());
+        processTrack(audioTracks.at(i), audioTrackObservers, audioSourceVector);
 
-    // FIXME: Implement a generic class that can be used to video too and use it for video tracks.
+    // FIXME: Handle video.
 
-    return MediaStreamDescriptor::create(audioSourceVector, videoSourceVector, MediaStreamDescriptor::IsNotEnded);
+    RefPtr<MediaStreamDescriptor> descriptor = MediaStreamDescriptor::create(audioSourceVector, videoSourceVector, MediaStreamDescriptor::IsNotEnded);
+
+    RefPtr<MediaStreamWebRTCObserver> streamObserver = adoptRef(new MediaStreamWebRTCObserver(stream, descriptor.get(), audioTrackObservers, videoTrackObservers));
+    stream->RegisterObserver(streamObserver.get());
+    m_streamObservers.append(streamObserver);
+
+    return descriptor.release();
 }
 
 void RTCPeerConnectionObserver::OnAddStream(webrtc::MediaStreamInterface* stream)
@@ -84,9 +107,21 @@ void RTCPeerConnectionObserver::OnAddStream(webrtc::MediaStreamInterface* stream
 
 void RTCPeerConnectionObserver::OnRemoveStream(webrtc::MediaStreamInterface* stream)
 {
-    // FIXME: We must get the correct MediaStream which is identified or mapped by the webrtc provided id.
-    RefPtr<MediaStreamDescriptor> descriptor = mediaStreamDescriptorFromMediaStreamInterface(stream);
-    callOnMainThread(bind(&RTCPeerConnectionHandlerClient::didRemoveRemoteStream, m_client, descriptor.get()));
+    MediaStreamDescriptor* descriptor = 0;
+    for (unsigned i = 0; i < m_streamObservers.size(); ++i) {
+        if (m_streamObservers[i]->webRTCStream() != stream)
+            continue;
+
+        descriptor = m_streamObservers[i]->descriptor();
+        m_streamObservers[i]->webRTCStream()->UnregisterObserver(m_streamObservers[i].get());
+        m_streamObservers.remove(i);
+        break;
+    }
+
+    if (!descriptor)
+        return;
+
+    callOnMainThread(bind(&RTCPeerConnectionHandlerClient::didRemoveRemoteStream, m_client, descriptor));
 }
 
 void RTCPeerConnectionObserver::OnRenegotiationNeeded()

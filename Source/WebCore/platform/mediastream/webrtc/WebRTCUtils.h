@@ -48,6 +48,7 @@ RTCPeerConnectionHandlerClient::SignalingState toWebKitSignalingState(webrtc::Pe
 RTCPeerConnectionHandlerClient::IceGatheringState toWebKitIceGatheringState(webrtc::PeerConnectionInterface::IceGatheringState);
 RTCPeerConnectionHandlerClient::IceConnectionState toWebKitIceConnectionState(webrtc::PeerConnectionInterface::IceConnectionState);
 webrtc::MediaStreamTrackInterface::TrackState toWebRTCTrackState(MediaStreamSource::ReadyState);
+MediaStreamSource::ReadyState toWebKitReadyState(webrtc::MediaStreamTrackInterface::TrackState);
 
 } // namespace WebRTCUtils
 

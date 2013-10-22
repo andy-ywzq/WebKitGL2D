@@ -140,6 +140,21 @@ webrtc::MediaStreamTrackInterface::TrackState toWebRTCTrackState(MediaStreamSour
     }
 }
 
+MediaStreamSource::ReadyState toWebKitReadyState(webrtc::MediaStreamTrackInterface::TrackState state)
+{
+    switch (state) {
+    case webrtc::MediaStreamTrackInterface::kInitializing:
+        return MediaStreamSource::New;
+    case webrtc::MediaStreamTrackInterface::kLive:
+        return MediaStreamSource::Live;
+    case webrtc::MediaStreamTrackInterface::kEnded:
+        return MediaStreamSource::Ended;
+    default:
+        ASSERT_NOT_REACHED();
+        return MediaStreamSource::Ended;
+    }
+}
+
 RTCDataChannelHandlerClient::ReadyState toWebKitDataChannelReadyState(webrtc::DataChannelInterface::DataState state)
 {
     switch (state) {
