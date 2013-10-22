@@ -335,6 +335,8 @@ void UrlBar::updateCursorPosition(int clickX)
 
     if (clickedAfterTheUrl)
         m_cursorPosition = m_url.length();
+    else if (m_url.empty())
+        m_cursorPosition = 0;
     else
         m_cursorPosition = pointedCharacterIndex(clickX - m_textOffset, 0, m_url.length());
 
