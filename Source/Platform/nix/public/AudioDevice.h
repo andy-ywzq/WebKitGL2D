@@ -39,7 +39,7 @@ class AudioDevice {
 public:
     class RenderCallback {
     public:
-        virtual void render(const std::vector<float*>& /*sourceData*/, const std::vector<float*>& /*destinationData*/, size_t /*numberOfFrames*/) { }
+        virtual void render(const std::vector<float*>& /*sourceData*/, const std::vector<float*>& /*destinationData*/, size_t /*numberOfFrames*/) = 0;
 
     protected:
         virtual ~RenderCallback() { }
