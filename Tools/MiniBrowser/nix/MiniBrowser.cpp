@@ -505,8 +505,6 @@ void MiniBrowser::handleSingleTap(double timestamp, const NIXTouchPoint& touchPo
     gestureEvent.globalY = touchPoint.globalY;
     gestureEvent.width = 20;
     gestureEvent.height = 20;
-    gestureEvent.deltaX = 0.0;
-    gestureEvent.deltaY = 0.0;
 
     m_postponeTextInputUpdates = false;
     NIXViewSendGestureEvent(m_view, &gestureEvent);
