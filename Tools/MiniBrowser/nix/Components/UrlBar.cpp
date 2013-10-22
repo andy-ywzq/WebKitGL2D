@@ -296,10 +296,10 @@ int UrlBar::textWidth(const char* text)
 int UrlBar::calculateCharacterPosition(int clickX, int min, int max)
 {
     std::string subUrl = m_url.substr(0, max);
-    char pointedCharacter = m_url.at(min);
+    std::string pointedCharacter = m_url.substr(min, 1);
 
     int subUrlPixelWidth = textWidth(subUrl.c_str());
-    int pointedCharacterPixelWidth = textWidth(&pointedCharacter);
+    int pointedCharacterPixelWidth = textWidth(pointedCharacter.c_str());
 
     // Defines the click position on the pointed character and determines
     // that the cursor should be on the left or the right side.
