@@ -1440,7 +1440,17 @@ void WebPageProxy::handleTouchEvent(const NativeWebTouchEvent& event)
         }
     }
 }
+
+#if PLATFORM(NIX)
+void WebPageProxy::handleSingleTap(double timestamp, const WebPlatformTouchPoint& point)
+{
+    if (!isValid() || m_isPageSuspended)
+        return;
+    m_process->send(Messages::WebPage::SingleTap(timestamp, point), m_pageID);
+}
+
 #endif
+#endif // ENABLE(TOUCH_EVENTS)
 
 void WebPageProxy::scrollBy(ScrollDirection direction, ScrollGranularity granularity)
 {

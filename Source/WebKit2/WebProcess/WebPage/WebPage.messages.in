@@ -297,6 +297,10 @@ messages -> WebPage LegacyReceiver {
     SetAcceleratedCompositingWindowId(int64_t id)
 #endif
 
+#if PLATFORM(NIX)
+    SingleTap(double timestamp, WebKit::WebPlatformTouchPoint point);
+#endif
+
     SetMainFrameInViewSourceMode(bool inViewSourceMode)
     
     SetScrollPinningBehavior(uint32_t pinning)

@@ -43,7 +43,7 @@ class WebKeyboardEvent;
 
 #if ENABLE(TOUCH_EVENTS)
 class WebTouchEvent;
-class WebTouchPoint;
+class WebPlatformTouchPoint;
 #endif
 
 WebCore::PlatformMouseEvent platform(const WebMouseEvent&);
@@ -52,7 +52,7 @@ WebCore::PlatformKeyboardEvent platform(const WebKeyboardEvent&);
 
 #if ENABLE(TOUCH_EVENTS)
 WebCore::PlatformTouchEvent platform(const WebTouchEvent&);
-WebCore::PlatformTouchPoint platform(const WebTouchPoint&);
+WebCore::PlatformTouchPoint platform(const WebPlatformTouchPoint&);
 #endif
 
 } // namespace WebKit

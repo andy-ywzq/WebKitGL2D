@@ -70,6 +70,7 @@ class Node;
 class OptionalCursor;
 class PlatformKeyboardEvent;
 class PlatformTouchEvent;
+class PlatformTouchPoint;
 class PlatformWheelEvent;
 class RenderElement;
 class RenderLayer;
@@ -175,6 +176,9 @@ public:
     void defaultWheelEventHandler(Node*, WheelEvent*);
     bool handlePasteGlobalSelection(const PlatformMouseEvent&);
 
+#if PLATFORM(NIX)
+    void handleSingleTap(double timestamp, const PlatformTouchPoint&);
+#endif
 #if ENABLE(TOUCH_ADJUSTMENT)
     bool bestClickableNodeForTouchPoint(const IntPoint& touchCenter, const IntSize& touchRadius, IntPoint& targetPoint, Node*& targetNode);
     bool bestContextMenuNodeForTouchPoint(const IntPoint& touchCenter, const IntSize& touchRadius, IntPoint& targetPoint, Node*& targetNode);

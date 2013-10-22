@@ -421,7 +421,14 @@ public:
     void handleKeyboardEvent(const NativeWebKeyboardEvent&);
 #if ENABLE(TOUCH_EVENTS)
     void handleTouchEvent(const NativeWebTouchEvent&);
+#if PLATFORM(NIX)
+    // Nix send singleTap messages instead of just fake mouse events to
+    // let WebCore adjust the point position (the TOUCH_ADJUSTMENT feature)
+    // to the best clickable node based on info provided by the touch point.
+    void handleSingleTap(double timestamp, const WebPlatformTouchPoint&);
 #endif
+#endif // ENABLE(TOUCH_EVENTS)
+
 
     void scrollBy(WebCore::ScrollDirection, WebCore::ScrollGranularity);
     void centerSelectionInVisibleArea();

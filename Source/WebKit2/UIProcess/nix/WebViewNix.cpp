@@ -94,21 +94,9 @@ void WebViewNix::sendKeyEvent(const NIXKeyEvent& event)
 
 void WebViewNix::sendGestureEvent(const NIXGestureEvent& event)
 {
-    NIXMouseEvent nixEvent;
-    nixEvent.type = kNIXInputEventTypeMouseDown;
-    nixEvent.button = kWKEventMouseButtonLeftButton;
-    nixEvent.x = event.x;
-    nixEvent.y = event.y;
-    nixEvent.globalX = event.globalX;
-    nixEvent.globalY = event.globalY;
-    nixEvent.clickCount = 1;
-    nixEvent.modifiers = event.modifiers;
-    nixEvent.timestamp = event.timestamp;
-
-    page()->handleMouseEvent(NativeWebMouseEvent(nixEvent, &m_lastCursorPosition));
-
-    nixEvent.type = kNIXInputEventTypeMouseUp;
-    page()->handleMouseEvent(NativeWebMouseEvent(nixEvent, &m_lastCursorPosition));
+    WebPlatformTouchPoint point(0, WebPlatformTouchPoint::TouchPressed, IntPoint(event.globalX, event.globalY),
+    IntPoint(event.x, event.y), IntSize(event.width, event.height));
+    page()->handleSingleTap(event.timestamp, point);
 }
 
 void WebViewNix::findZoomableAreaForPoint(const WKPoint& point, int horizontalRadius, int verticalRadius)

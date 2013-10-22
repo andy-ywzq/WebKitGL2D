@@ -276,6 +276,12 @@ WebCore::PlatformTouchEvent platform(const WebTouchEvent& webEvent)
 {
     return WebKit2PlatformTouchEvent(webEvent);
 }
+
+WebCore::PlatformTouchPoint platform(const WebPlatformTouchPoint& point)
+{
+    return WebKit2PlatformTouchPoint(point);
+}
+
 #endif
 
 } // namespace WebKit

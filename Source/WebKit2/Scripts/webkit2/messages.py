@@ -429,6 +429,7 @@ def headers_for_type(type):
         'WebKit::WebMouseEvent': ['"WebEvent.h"'],
         'WebKit::WebTouchEvent': ['"WebEvent.h"'],
         'WebKit::WebWheelEvent': ['"WebEvent.h"'],
+        'WebKit::WebPlatformTouchPoint': ['"WebEvent.h"'],
     }
 
     headers = []

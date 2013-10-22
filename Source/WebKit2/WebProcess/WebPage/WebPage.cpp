@@ -1873,7 +1873,14 @@ void WebPage::touchEventSyncForTesting(const WebTouchEvent& touchEvent, bool& ha
     CurrentEvent currentEvent(touchEvent);
     handled = handleTouchEvent(touchEvent, m_page.get());
 }
+
+#if PLATFORM(NIX)
+void WebPage::singleTap(double timestamp, const WebPlatformTouchPoint& point)
+{
+    m_page->mainFrame().eventHandler().handleSingleTap(timestamp, platform(point));
+}
 #endif
+#endif // ENABLE(TOUCH_EVENTS)
 
 bool WebPage::scroll(Page* page, ScrollDirection direction, ScrollGranularity granularity)
 {

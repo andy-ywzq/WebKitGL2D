@@ -692,7 +692,11 @@ private:
 #if ENABLE(TOUCH_EVENTS)
     void touchEvent(const WebTouchEvent&);
     void touchEventSyncForTesting(const WebTouchEvent&, bool& handled);
+#if PLATFORM(NIX)
+    void singleTap(double timestamp, const WebPlatformTouchPoint&);
 #endif
+#endif
+
 #if ENABLE(CONTEXT_MENUS)
     void contextMenuHidden() { m_isShowingContextMenu = false; }
 #endif

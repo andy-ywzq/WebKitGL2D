@@ -2565,6 +2565,36 @@ void EventHandler::defaultWheelEventHandler(Node* startNode, WheelEvent* wheelEv
         m_previousWheelScrolledElement = stopElement;
 }
 
+#if PLATFORM(NIX)
+void EventHandler::handleSingleTap(double timestamp, const PlatformTouchPoint& point)
+{
+    IntPoint targetPoint;
+#if ENABLE(TOUCH_ADJUSTMENT)
+    bool positionAdjusted = false;
+    if (m_frame.settings().touchAdjustmentEnabled()) {
+        Node* targetNode = 0;
+        positionAdjusted = bestClickableNodeForTouchPoint(point.pos(), IntSize(point.radiusX(), point.radiusY()), targetPoint, targetNode);
+    }
+    if (!positionAdjusted)
+        targetPoint = point.pos();
+#else
+    targetPoint = point.pos();
+#endif
+
+    PlatformMouseEvent fakeMouseMove(targetPoint, point.screenPos(), NoButton, PlatformEvent::MouseMoved, /* clickCount */ 0,
+    false /* shift */, false /* ctrl */, false /* alt */, false /* meta */, timestamp);
+    mouseMoved(fakeMouseMove);
+
+    PlatformMouseEvent fakeMouseDown(targetPoint, point.screenPos(), LeftButton, PlatformEvent::MousePressed, 1 /* tapCount */,
+    false /* shift */, false /* ctrl */, false /* alt */, false /* meta */, timestamp);
+    handleMousePressEvent(fakeMouseDown);
+
+    PlatformMouseEvent fakeMouseUp(targetPoint, point.screenPos(), LeftButton, PlatformEvent::MouseReleased, 1 /* tapCount */,
+    false /* shift */, false /* ctrl */, false /* alt */, false /* meta */, timestamp);
+    handleMouseReleaseEvent(fakeMouseUp);
+}
+#endif
+
 #if ENABLE(TOUCH_ADJUSTMENT)
 bool EventHandler::bestClickableNodeForTouchPoint(const IntPoint& touchCenter, const IntSize& touchRadius, IntPoint& targetPoint, Node*& targetNode)
 {
