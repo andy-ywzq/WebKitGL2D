@@ -83,7 +83,7 @@ public:
     {
         return new MockAudioOutputDevice(bufferSize, numberOfInputChannels, numberOfChannels, sampleRate, renderCallback);
     }
-    virtual bool loadAudioResource(Nix::AudioBus* destinationBus, const char* audioFileData, size_t dataSize, double sampleRate) OVERRIDE
+    virtual bool loadAudioResource(Nix::AudioBus* destinationBus, const void* audioFileData, size_t dataSize, double sampleRate) OVERRIDE
     {
         destinationBus->initialize(2, dataSize, sampleRate);
         memcpy(destinationBus->channelData(0), audioFileData, dataSize);
