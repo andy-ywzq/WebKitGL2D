@@ -52,15 +52,17 @@ PassRefPtr<AudioBus> AudioBus::loadPlatformResource(const char* name, float samp
 {
     String absoluteFilename(makeString(DATA_DIR, "/webaudio/resources/", name, ".wav"));
 
-    WTF::Vector<char> fileContents;
     FILE* file = fopen(absoluteFilename.utf8().data(), "rb");
     if (!file)
         return PassRefPtr<AudioBus>();
 
     fseek(file, 0, SEEK_END);
+    WTF::Vector<char> fileContents;
     fileContents.resize(ftell(file));
     rewind(file);
-    fread(&fileContents[0], fileContents.size(), 1, file);
+    size_t bytesRead = fread(&fileContents[0], fileContents.size(), 1, file);
+    if (bytesRead < fileContents.size())
+        fileContents.resize(bytesRead);
     fclose(file);
 
     RefPtr<AudioBus> audioBus = decodeAudioFileData(&fileContents[0], fileContents.size(), sampleRate);
