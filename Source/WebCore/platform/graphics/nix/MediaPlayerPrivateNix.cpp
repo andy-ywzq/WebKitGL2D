@@ -55,6 +55,23 @@ MediaPlayer::SupportsType MediaPlayerPrivateNix::supportsType(const String&, con
     return MediaPlayer::IsNotSupported;
 }
 
+MediaPlayer::MovieLoadType MediaPlayerPrivateNix::movieLoadType() const
+{
+    if (m_readyState == MediaPlayer::HaveNothing)
+        return MediaPlayer::Unknown;
+
+    if (isLiveStream())
+        return MediaPlayer::LiveStream;
+
+    return MediaPlayer::Download;
+}
+
+bool MediaPlayerPrivateNix::isLiveStream() const
+{
+    ASSERT(m_nixPlayer);
+    return m_nixPlayer->isLiveStream();
+}
+
 class NixMediaPlayerClient : public Nix::MediaPlayerClient {
 public:
     NixMediaPlayerClient(MediaPlayerPrivateNix* player)

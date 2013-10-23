@@ -69,6 +69,7 @@ public:
     virtual bool seeking() const = 0;
     virtual float maxTimeSeekable() const = 0;
     virtual void setPlaybackRate(float) = 0;
+    virtual bool isLiveStream() const = 0;
 
 protected:
     MediaPlayerClient* m_playerClient;

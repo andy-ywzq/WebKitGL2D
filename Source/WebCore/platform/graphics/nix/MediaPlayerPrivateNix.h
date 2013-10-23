@@ -64,6 +64,7 @@ public:
     void setNetworkState(MediaPlayer::NetworkState);
     virtual MediaPlayer::ReadyState readyState() const;
     void setReadyState(MediaPlayer::ReadyState);
+    virtual MediaPlayer::MovieLoadType movieLoadType() const;
 
     virtual PassRefPtr<WebCore::TimeRanges> buffered() const;
     virtual bool didLoadingProgress() const;
@@ -76,6 +77,7 @@ private:
     static PassOwnPtr<MediaPlayerPrivateInterface> create(MediaPlayer*);
     static void getSupportedTypes(HashSet<String>&);
     static MediaPlayer::SupportsType supportsType(const String& type, const String& codecs, const URL&);
+    bool isLiveStream() const;
 
     MediaPlayer* m_player;
     OwnPtr<Nix::MediaPlayer> m_nixPlayer;
