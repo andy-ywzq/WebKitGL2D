@@ -83,6 +83,7 @@ bool MediaControlsNix::initializeControls(Document& document)
 
     RefPtr<MediaControlCurrentTimeDisplayElement> currentTimeDisplay = MediaControlCurrentTimeDisplayElement::create(document);
     m_currentTimeDisplay = currentTimeDisplay.get();
+    m_currentTimeDisplay->hide();
     panel->appendChild(currentTimeDisplay.release(), exceptionCode, AttachLazily);
     if (exceptionCode)
         return false;
