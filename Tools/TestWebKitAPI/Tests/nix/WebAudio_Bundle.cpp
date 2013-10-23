@@ -27,7 +27,7 @@
 #include "InjectedBundleTest.h"
 #include "PlatformUtilities.h"
 #include <public/Platform.h>
-#include <public/AudioBus.h>
+#include <public/MultiChannelPCMData.h>
 #include <public/Rect.h>
 #include <public/Size.h>
 #include <WebKit2/WKRetainPtr.h>
@@ -83,12 +83,12 @@ public:
     {
         return new MockAudioOutputDevice(bufferSize, numberOfInputChannels, numberOfChannels, sampleRate, renderCallback);
     }
-    virtual bool loadAudioResource(Nix::AudioBus* destinationBus, const void* audioFileData, size_t dataSize, double sampleRate) OVERRIDE
+    virtual Nix::MultiChannelPCMData* decodeAudioResource(const void* audioFileData, size_t dataSize, double sampleRate) OVERRIDE
     {
-        destinationBus->initialize(2, dataSize, sampleRate);
-        memcpy(destinationBus->channelData(0), audioFileData, dataSize);
-        memcpy(destinationBus->channelData(1), audioFileData, dataSize);
-        return true;
+        Nix::MultiChannelPCMData* bus = new Nix::MultiChannelPCMData(2, dataSize, sampleRate);
+        memcpy(bus->channelData(0), audioFileData, dataSize);
+        memcpy(bus->channelData(1), audioFileData, dataSize);
+        return bus;
     }
 };
 

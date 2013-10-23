@@ -6,7 +6,6 @@ set(Platform_INCLUDES
 )
 
 set(Platform_HEADERS
-    nix/public/AudioBus.h
     nix/public/AudioDevice.h
     nix/public/Canvas.h
     nix/public/Color.h
@@ -15,6 +14,7 @@ set(Platform_HEADERS
     nix/public/Gamepad.h
     nix/public/Gamepads.h
     nix/public/MediaPlayer.h
+    nix/public/MultiChannelPCMData.h
     nix/public/Platform.h
     nix/public/Rect.h
     nix/public/Size.h

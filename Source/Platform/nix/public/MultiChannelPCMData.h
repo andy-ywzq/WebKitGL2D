@@ -22,35 +22,38 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef Nix_FFTFrame_h
-#define Nix_FFTFrame_h
+
+#ifndef Nix_MultiChannelPCMData_h
+#define Nix_MultiChannelPCMData_h
+
+#include "Common.h"
 
 namespace Nix {
 
-class FFTFrame {
+// A container for multi-channel linear PCM audio data.
+class NIX_EXPORT MultiChannelPCMData {
 public:
-    FFTFrame() { }
-    virtual ~FFTFrame() { }
+    MultiChannelPCMData(unsigned numberOfChannels, size_t length, double sampleRate);
+    ~MultiChannelPCMData();
 
-    virtual FFTFrame* copy() const = 0;
+    unsigned numberOfChannels() const;
+    size_t length() const;
+    double sampleRate() const;
 
-    virtual void doFFT(const float*) = 0;
-    virtual void doInverseFFT(float*) = 0;
+    // This can return null if Nix was compiled without WebAudio support.
+    float* channelData(unsigned channelIndex);
 
-    virtual unsigned frequencyDomainSampleCount() const = 0;
-    // After multiplication and transform operations, the data is scaled
-    // to take in account the scale used internally in WebKit, originally
-    // from Mac's vecLib.
-    // After multiplication: Planar data is scaled by 0.5.
-    // After direct transform: Planar data is scaled by 2.0.
-    // After inverse transform: Time domain data is scaled by 1.0/(2* FFT size).
-    virtual float* realData() const = 0;
-    virtual float* imagData() const = 0;
+#ifdef BUILDING_NIX__
+    void* getInternalData();
+#endif
+
 private:
-    FFTFrame(const FFTFrame&);
-    FFTFrame& operator=(const FFTFrame&);
+    MultiChannelPCMData(const MultiChannelPCMData&);
+    void operator=(const MultiChannelPCMData&);
+
+    void* m_data;
 };
 
 } // namespace Nix
 
-#endif // Nix_FFTFrame_h
+#endif // Nix_MultiChannelPCMData_h

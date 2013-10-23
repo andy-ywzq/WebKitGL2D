@@ -38,7 +38,7 @@
 
 namespace Nix {
 
-class AudioBus;
+class MultiChannelPCMData;
 class FFTFrame;
 class ThemeEngine;
 class MediaPlayer;
@@ -65,10 +65,8 @@ public:
     // FFTFrame
     virtual FFTFrame* createFFTFrame(unsigned /*fftsize*/) { return 0; }
 
-    // Decodes the in-memory audio file data and returns the linear PCM audio data in the destinationBus.
-    // A sample-rate conversion to sampleRate will occur if the file data is at a different sample-rate.
-    // Returns true on success.
-    virtual bool loadAudioResource(AudioBus* /*destinationBus*/, const void* /*audioFileData*/, size_t /*dataSize*/, double /*sampleRate*/) { return false; }
+    // Decodes the in-memory audio file data and returns the linear PCM audio data.
+    virtual MultiChannelPCMData* decodeAudioResource(const void* /*audioData*/, size_t /*dataSize*/, double /*sampleRate*/) { return 0; }
 
     // Theme engine
     virtual ThemeEngine* themeEngine();

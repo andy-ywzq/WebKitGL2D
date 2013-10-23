@@ -31,7 +31,7 @@
 
 #include "AudioFileReader.h"
 #include <cstdio>
-#include <public/AudioBus.h>
+#include <public/MultiChannelPCMData.h>
 #include <public/Platform.h>
 #include <wtf/PassRefPtr.h>
 #include <wtf/Vector.h>
@@ -42,10 +42,10 @@ namespace WebCore {
 
 PassRefPtr<AudioBus> decodeAudioFileData(const char* data, size_t size, double sampleRate)
 {
-    Nix::AudioBus nixAudioBus;
-    if (Nix::Platform::current()->loadAudioResource(&nixAudioBus, data, size, sampleRate))
-        return nixAudioBus.audioBus();
-    return PassRefPtr<AudioBus>();
+    OwnPtr<Nix::MultiChannelPCMData> pcmData = adoptPtr(Nix::Platform::current()->decodeAudioResource(data, size, sampleRate));
+    if (pcmData)
+        return adoptRef(static_cast<AudioBus*>(pcmData->getInternalData()));
+    return nullptr;
 }
 
 PassRefPtr<AudioBus> AudioBus::loadPlatformResource(const char* name, float sampleRate)
@@ -54,7 +54,7 @@ PassRefPtr<AudioBus> AudioBus::loadPlatformResource(const char* name, float samp
 
     FILE* file = fopen(absoluteFilename.utf8().data(), "rb");
     if (!file)
-        return PassRefPtr<AudioBus>();
+        return nullptr;
 
     fseek(file, 0, SEEK_END);
     WTF::Vector<char> fileContents;
@@ -68,7 +68,7 @@ PassRefPtr<AudioBus> AudioBus::loadPlatformResource(const char* name, float samp
     RefPtr<AudioBus> audioBus = decodeAudioFileData(&fileContents[0], fileContents.size(), sampleRate);
 
     if (!audioBus.get())
-        return PassRefPtr<AudioBus>();
+        return nullptr;
 
     // If the bus is already at the requested sample-rate then return as is.
     if (audioBus->sampleRate() == sampleRate)
@@ -79,10 +79,9 @@ PassRefPtr<AudioBus> AudioBus::loadPlatformResource(const char* name, float samp
 
 PassRefPtr<AudioBus> createBusFromInMemoryAudioFile(const void* data, size_t dataSize, bool mixToMono, float sampleRate)
 {
-    // FIXME: the sampleRate parameter is ignored. It should be removed from the API.
     RefPtr<AudioBus> audioBus = decodeAudioFileData(static_cast<const char*>(data), dataSize, sampleRate);
-    if (!audioBus.get())
-        return PassRefPtr<AudioBus>();
+    if (!audioBus)
+        return nullptr;
 
     // If the bus needs no conversion then return as is.
     if ((!mixToMono || audioBus->numberOfChannels() == 1) && audioBus->sampleRate() == sampleRate)
