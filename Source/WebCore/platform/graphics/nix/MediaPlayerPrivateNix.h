@@ -37,39 +37,39 @@ class MediaPlayerPrivateNix : public MediaPlayerPrivateInterface {
 public:
     static void registerMediaEngine(MediaEngineRegistrar);
 
-    virtual void load(const WTF::String&);
-    virtual void cancelLoad();
-    virtual void prepareToPlay();
-    virtual void play();
-    virtual void pause();
-    virtual bool paused() const;
+    virtual void load(const WTF::String&) OVERRIDE;
+    virtual void cancelLoad() OVERRIDE;
+    virtual void prepareToPlay() OVERRIDE;
+    virtual void play() OVERRIDE;
+    virtual void pause() OVERRIDE;
+    virtual bool paused() const OVERRIDE;
 
-    virtual float duration() const;
+    virtual float duration() const OVERRIDE;
     void durationChanged() const { m_player->durationChanged(); }
-    virtual float currentTime() const;
+    virtual float currentTime() const OVERRIDE;
     void currentTimeChanged() const { m_player->timeChanged(); }
 
-    virtual IntSize naturalSize() const;
-    virtual bool hasVideo() const;
-    virtual bool hasAudio() const;
-    virtual void setVisible(bool);
+    virtual IntSize naturalSize() const OVERRIDE;
+    virtual bool hasVideo() const OVERRIDE;
+    virtual bool hasAudio() const OVERRIDE;
+    virtual void setVisible(bool) OVERRIDE;
 
-    virtual bool seeking() const;
-    virtual void seek(float);
-    virtual float maxTimeSeekable() const;
+    virtual bool seeking() const OVERRIDE;
+    virtual void seek(float) OVERRIDE;
+    virtual float maxTimeSeekable() const OVERRIDE;
 
-    virtual void setRate(float);
+    virtual void setRate(float) OVERRIDE;
 
-    virtual MediaPlayer::NetworkState networkState() const;
+    virtual MediaPlayer::NetworkState networkState() const OVERRIDE;
     void setNetworkState(MediaPlayer::NetworkState);
-    virtual MediaPlayer::ReadyState readyState() const;
+    virtual MediaPlayer::ReadyState readyState() const OVERRIDE;
     void setReadyState(MediaPlayer::ReadyState);
-    virtual MediaPlayer::MovieLoadType movieLoadType() const;
+    virtual MediaPlayer::MovieLoadType movieLoadType() const OVERRIDE;
 
-    virtual PassRefPtr<WebCore::TimeRanges> buffered() const;
-    virtual bool didLoadingProgress() const;
-    virtual void setSize(const WebCore::IntSize&);
-    virtual void paint(WebCore::GraphicsContext*, const WebCore::IntRect&);
+    virtual PassRefPtr<WebCore::TimeRanges> buffered() const OVERRIDE;
+    virtual bool didLoadingProgress() const OVERRIDE;
+    virtual void setSize(const WebCore::IntSize&) OVERRIDE;
+    virtual void paint(WebCore::GraphicsContext*, const WebCore::IntRect&) OVERRIDE;
 
 private:
     MediaPlayerPrivateNix(MediaPlayer*);
