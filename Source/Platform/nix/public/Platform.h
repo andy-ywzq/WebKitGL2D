@@ -47,8 +47,8 @@ class MediaPlayerClient;
 class NIX_EXPORT Platform {
 public:
 
-    NIX_EXPORT static void initialize(Platform*);
-    NIX_EXPORT static Platform* current();
+    static void initialize(Platform*);
+    static Platform* current();
 
     // Audio
     virtual float audioHardwareSampleRate() { return 0; }
@@ -57,22 +57,22 @@ public:
 
     // Creates a device for audio I/O.
     // Pass in (numberOfInputChannels > 0) if live/local audio input is desired.
-    virtual AudioDevice* createAudioDevice(const char* /*inputDeviceId*/, size_t /*bufferSize*/, unsigned /*numberOfInputChannels*/, unsigned /*numberOfChannels*/, double /*sampleRate*/, AudioDevice::RenderCallback*) { return 0; }
+    virtual AudioDevice* createAudioDevice(const char* /*inputDeviceId*/, size_t /*bufferSize*/, unsigned /*numberOfInputChannels*/, unsigned /*numberOfOutputChannels*/, double /*sampleRate*/, AudioDevice::RenderCallback*) { return nullptr; }
 
     // Gamepad
     virtual void sampleGamepads(Gamepads& into) { into.length = 0; }
 
     // FFTFrame
-    virtual FFTFrame* createFFTFrame(unsigned /*fftsize*/) { return 0; }
+    virtual FFTFrame* createFFTFrame(unsigned /*fftsize*/) { return nullptr; }
 
     // Decodes the in-memory audio file data and returns the linear PCM audio data.
-    virtual MultiChannelPCMData* decodeAudioResource(const void* /*audioData*/, size_t /*dataSize*/, double /*sampleRate*/) { return 0; }
+    virtual MultiChannelPCMData* decodeAudioResource(const void* /*audioData*/, size_t /*dataSize*/, double /*sampleRate*/) { return nullptr; }
 
     // Theme engine
     virtual ThemeEngine* themeEngine();
 
     // Create a MediaPlayer, used to... play media :-)
-    virtual MediaPlayer* createMediaPlayer(MediaPlayerClient*) { return 0; }
+    virtual MediaPlayer* createMediaPlayer(MediaPlayerClient*) { return nullptr; }
 protected:
     virtual ~Platform() { }
 };
