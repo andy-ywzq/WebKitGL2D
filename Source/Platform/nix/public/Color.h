@@ -98,7 +98,7 @@ public:
 
 private:
     ARGB32 m_argb;
-    inline ARGB32 fixValue(int value)
+    static inline ARGB32 fixValue(int value)
     {
         return std::max(0, std::min(value, 255));
     }
