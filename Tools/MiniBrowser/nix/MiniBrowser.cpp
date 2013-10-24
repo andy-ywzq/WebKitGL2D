@@ -439,8 +439,10 @@ void MiniBrowser::didChangeContentsSize(WKViewRef, WKSize size, const void* clie
     MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
     mb->m_contentsSize = size;
 
-    if (mb->isMobileMode())
+    if (mb->isMobileMode()) {
+        NIXViewScaleToFitContents(mb->m_view);
         mb->adjustScrollPosition();
+    }
 }
 
 void MiniBrowser::didChangeViewportAttributes(WKViewRef, WKViewportAttributesRef attributes, const void* clientInfo)
