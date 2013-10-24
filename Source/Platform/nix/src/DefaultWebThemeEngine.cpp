@@ -34,13 +34,13 @@
 #include <cairo/cairo.h>
 #include <cmath>
 
-const double BGColor1 = 0xF6 / 256.0;
-const double BGColor2 = 0xDE / 256.0;
-const double BorderColor = 0xA4 / 256.0;
-const double BorderOnHoverColor = 0x7A / 256.0;
-const double CheckColor = 0x66 / 256.0;
-const double TextFieldDarkBorderColor = 0x9A / 256.0;
-const double TextFieldLightBorderColor = 0xEE / 256.0;
+const double BGColor1 = 0xF6 / 255.0;
+const double BGColor2 = 0xDE / 255.0;
+const double BorderColor = 0xA4 / 255.0;
+const double BorderOnHoverColor = 0x7A / 255.0;
+const double CheckColor = 0x66 / 255.0;
+const double TextFieldDarkBorderColor = 0x9A / 255.0;
+const double TextFieldLightBorderColor = 0xEE / 255.0;
 const double Pi = 3.1415926;
 
 const int MenuListBorder = 5;
