@@ -81,6 +81,7 @@ if (WTF_USE_GL2D)
     list(APPEND WebKit2_INCLUDE_DIRECTORIES
         "${WEBCORE_DIR}/platform/graphics/gl2d"
     )
+    list(APPEND WebKit2_LIBRARIES ${X11_X11_LIB} ${X11_Xcomposite_LIB} ${X11_Xrender_LIB})
 else()
     list(APPEND WebKit2_SOURCES
         Shared/API/c/cairo/WKImageCairo.cpp
@@ -115,6 +116,7 @@ list(APPEND WebKit2_INCLUDE_DIRECTORIES
     ${SQLITE_INCLUDE_DIRS}
     ${GLIB_INCLUDE_DIRS}
     ${WTF_DIR}
+    ${FREETYPE_INCLUDE_DIRS}
     ${HARFBUZZ_INCLUDE_DIRS}
     "${THIRDPARTY_DIR}/ANGLE/include/GLSLANG"
     "${THIRDPARTY_DIR}/ANGLE/include/KHR"

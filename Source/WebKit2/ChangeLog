@@ -1,3 +1,13 @@
+2013-10-24  Gabor Loki  <loki@webkit.org>
+
+        [gl2d] Add support for cross-compilation
+
+        Patch by Gabor Rapcsanyi <rgabor@inf.u-szeged.hu>
+
+        Reviewed by Gabor Loki.
+
+        * PlatformNix.cmake:
+
 2013-09-06  Gabor Loki  <loki@webkit.org>
 
         [gl2d] Initial commit of WebKitGL2D port.
