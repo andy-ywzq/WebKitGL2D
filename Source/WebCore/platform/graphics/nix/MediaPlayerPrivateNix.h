@@ -59,6 +59,7 @@ public:
     virtual float maxTimeSeekable() const OVERRIDE;
 
     virtual void setRate(float) OVERRIDE;
+    virtual void setVolume(float) OVERRIDE;
 
     virtual MediaPlayer::NetworkState networkState() const OVERRIDE;
     void setNetworkState(MediaPlayer::NetworkState);

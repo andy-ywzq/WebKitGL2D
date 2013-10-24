@@ -194,6 +194,11 @@ void MediaPlayerPrivateNix::setRate(float rate)
     m_nixPlayer->setPlaybackRate(rate);
 }
 
+void MediaPlayerPrivateNix::setVolume(float volume)
+{
+    m_nixPlayer->setVolume(volume);
+}
+
 bool MediaPlayerPrivateNix::paused() const
 {
     return m_paused;
