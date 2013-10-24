@@ -254,11 +254,6 @@ void DefaultWebThemeEngine::paintMenuList(Canvas* canvas, State state, const Rec
     cairo_restore(canvas);
 }
 
-Size DefaultWebThemeEngine::getProgressBarSize() const
-{
-    return Size(2000, 300);
-}
-
 void DefaultWebThemeEngine::paintProgressBar(Canvas* canvas, State state, const Rect& rect, const ProgressBarExtraParams& params) const
 {
     cairo_save(canvas);
