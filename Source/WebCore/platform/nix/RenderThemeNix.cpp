@@ -63,6 +63,11 @@ static Nix::Canvas* webCanvas(const PaintInfo& info)
     return info.context->platformContext()->cr();
 }
 
+static IntSize toIntSize(const Nix::Size& size)
+{
+    return IntSize(size.width, size.height);
+}
+
 PassRefPtr<RenderTheme> RenderTheme::themeForPage(Page*)
 {
     return RenderThemeNix::create();
@@ -217,7 +222,7 @@ void RenderThemeNix::setCheckboxSize(RenderStyle* style) const
     if (!style->width().isIntrinsicOrAuto() && !style->height().isAuto())
         return;
 
-    IntSize size = themeEngine()->getCheckboxSize();
+    IntSize size = toIntSize(themeEngine()->getCheckboxSize());
     setSizeIfAuto(style, size);
 }
 
@@ -237,7 +242,7 @@ void RenderThemeNix::setRadioSize(RenderStyle* style) const
     if (!style->width().isIntrinsicOrAuto() && !style->height().isAuto())
         return;
 
-    IntSize size = themeEngine()->getRadioSize();
+    IntSize size = toIntSize(themeEngine()->getRadioSize());
     setSizeIfAuto(style, size);
 }
 

@@ -42,7 +42,10 @@ struct Size {
     int width;
     int height;
 
-    bool isEmpty() const { return width <= 0 || height <= 0; }
+    bool isEmpty() const
+    {
+        return width <= 0 || height <= 0;
+    }
 
     Size()
         : width(0)
@@ -56,36 +59,16 @@ struct Size {
     {
     }
 
-#ifdef BUILDING_NIX__
-    Size(const WebCore::IntSize& s)
-        : width(s.width())
-        , height(s.height())
+    bool operator==(const Size& other) const
     {
+        return width == other.width && height == other.height;
     }
 
-    Size& operator=(const WebCore::IntSize& s)
+    bool operator!=(const Size& other) const
     {
-        width = s.width();
-        height = s.height();
-        return *this;
+        return !(*this == other);
     }
-
-    operator WebCore::IntSize() const
-    {
-        return WebCore::IntSize(width, height);
-    }
-#endif
 };
-
-inline bool operator==(const Size& a, const Size& b)
-{
-    return a.width == b.width && a.height == b.height;
-}
-
-inline bool operator!=(const Size& a, const Size& b)
-{
-    return !(a == b);
-}
 
 } // namespace Nix
 
