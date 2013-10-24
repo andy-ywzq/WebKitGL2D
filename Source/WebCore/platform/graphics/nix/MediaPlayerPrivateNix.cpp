@@ -99,11 +99,6 @@ public:
         m_player->setNetworkState((MediaPlayer::NetworkState)state);
     }
 
-    virtual bool seeking() const
-    {
-        return m_player->seeking();
-    }
-
     virtual void seek(float time)
     {
         return m_player->seek(time);

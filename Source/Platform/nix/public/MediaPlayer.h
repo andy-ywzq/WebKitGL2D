@@ -38,7 +38,6 @@ public:
     virtual void currentTimeChanged() const = 0;
     virtual void readyStateChanged(ReadyState) = 0;
     virtual void networkStateChanged(NetworkState) = 0;
-    virtual bool seeking() const = 0;
     virtual void seek(float) = 0;
     virtual float maxTimeSeekable() const = 0;
     virtual void setPlaybackRate(float) = 0;
