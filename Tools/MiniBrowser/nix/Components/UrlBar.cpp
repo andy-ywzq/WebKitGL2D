@@ -36,9 +36,11 @@
 UrlBar::UrlBar(Display* display, Window parent, XContext context, BrowserControl* control, WKRect size, std::string url)
     : VisualComponent(display, control, size)
     , m_isFocused(false)
+    , m_isMousePressed(false)
     , m_url(url)
     , m_copiedText(url)
     , m_cursorPosition(0)
+    , m_selectedCharacterCount(0)
     , m_textOffset(0)
     , m_loadProgress(0.0)
 {
@@ -64,7 +66,7 @@ void UrlBar::createXWindow(Window parent, XContext context)
 {
     m_window = XCreateSimpleWindow(m_display, parent, m_size.origin.x, m_size.origin.y, m_size.size.width, m_size.size.height, 1, createXColor("#C1C1C1"), WhitePixel(m_display, 0));
 
-    XSelectInput(m_display, m_window, ExposureMask | ButtonPressMask | ButtonReleaseMask);
+    XSelectInput(m_display, m_window, ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
     XSaveContext(m_display, m_window, context, (XPointer)this);
     XMapWindow(m_display, m_window);
 }
@@ -75,9 +77,13 @@ void UrlBar::handleEvent(const XEvent& event)
     case Expose:
         drawUrlBar();
         break;
-    case ButtonRelease:
+    case ButtonPress:
         addFocus();
-        updateCursorPosition(event.xbutton.x);
+        initSelection(event.xbutton.x);
+        break;
+    case ButtonRelease:
+        m_isMousePressed = false;
+        drawUrlBar();
         break;
     case SelectionRequest:
         respondClipboardRequest(event.xselectionrequest);
@@ -86,7 +92,27 @@ void UrlBar::handleEvent(const XEvent& event)
         pasteClipboardText(event);
         drawUrlBar();
         break;
+    case MotionNotify:
+        calculateSelectedCharacters(event.xmotion.x);
+        drawUrlBar();
+        break;
     }
+}
+
+void UrlBar::initSelection(int clickX)
+{
+    m_cursorPosition = updateCursorPosition(clickX);
+
+    m_selectedCharacterCount = 0;
+    m_isMousePressed = true;
+}
+
+void UrlBar::calculateSelectedCharacters(int mouseXPos)
+{
+    if (!m_isMousePressed)
+        return;
+
+    m_selectedCharacterCount = updateCursorPosition(mouseXPos) - m_cursorPosition;
 }
 
 void UrlBar::setText(std::string url)
@@ -120,6 +146,7 @@ void UrlBar::releaseFocus()
 {
     if (m_isFocused) {
         m_isFocused = false;
+        m_selectedCharacterCount = 0;
         drawUrlBar();
     }
 }
@@ -127,9 +154,23 @@ void UrlBar::releaseFocus()
 void UrlBar::drawUrlBar()
 {
     XClearWindow(m_display, m_window);
+    drawHighLight();
     drawBackground();
     drawText();
     drawCursor();
+}
+
+void UrlBar::drawHighLight()
+{
+    if (!m_selectedCharacterCount)
+        return;
+
+    int start = m_textOffset + textWidth(m_url.substr(0, m_cursorPosition).c_str());
+    int width = m_textOffset + textWidth(m_url.substr(0, m_cursorPosition + m_selectedCharacterCount).c_str()) - start;
+
+    cairo_set_source_rgba(m_cairo, 1.0, 0.5, 0.0, 0.5);
+    cairo_rectangle(m_cairo, start, 2, width, m_size.size.height - 4);
+    cairo_fill(m_cairo);
 }
 
 void UrlBar::drawBackground()
@@ -152,7 +193,7 @@ void UrlBar::drawText()
 
 void UrlBar::drawCursor()
 {
-    if (!m_isFocused)
+    if (!m_isFocused || m_selectedCharacterCount)
         return;
 
     int cursorXCoord = textWidth(m_url.substr(0, m_cursorPosition).c_str()) + m_textOffset;
@@ -205,18 +246,16 @@ void UrlBar::handleKeyPressEvent(const XKeyPressedEvent& event)
         deleteCharacter();
         break;
     case XK_Home:
-        m_cursorPosition = 0;
+        moveCursorHome(event.state);
         break;
     case XK_End:
-        m_cursorPosition = m_url.length();
+        moveCursorEnd(event.state);
         break;
     case XK_Left:
-        if (m_cursorPosition)
-            m_cursorPosition--;
+        moveCursorLeft(event.state);
         break;
     case XK_Right:
-        if (m_cursorPosition < m_url.length())
-            m_cursorPosition++;
+        moveCursorRight(event.state);
         break;
     case XK_Return:
         loadPage();
@@ -231,11 +270,19 @@ void UrlBar::handleKeyPressEvent(const XKeyPressedEvent& event)
         if (event.state & ControlMask) {
             // while the Control key is pressed, character codes start from 1 (A=1, B=2, ...).
             switch (normalKey + 'A' - 1) {
+            case 'A':
+                m_cursorPosition = 0;
+                m_selectedCharacterCount = m_url.length();
+                break;
             case 'C':
                 becomeClipboardOwner();
                 break;
             case 'V':
                 requestClipboardText();
+                break;
+            case 'X':
+                becomeClipboardOwner();
+                removeSelectedText();
                 break;
             }
         } else
@@ -247,10 +294,70 @@ void UrlBar::handleKeyPressEvent(const XKeyPressedEvent& event)
     drawUrlBar();
 }
 
+void UrlBar::moveCursorHome(unsigned state)
+{
+    // If shift is pressed at the same time, selection needs to go home.
+    if (state & ShiftMask)
+        m_selectedCharacterCount = -m_cursorPosition;
+    else {
+        m_cursorPosition = 0;
+        m_selectedCharacterCount = 0;
+    }
+}
+
+void UrlBar::moveCursorEnd(unsigned state)
+{
+    // If shift is pressed at the same time, selection needs to go end.
+    if (state & ShiftMask)
+        m_selectedCharacterCount = m_url.length() - m_cursorPosition;
+    else {
+        m_cursorPosition = m_url.length();
+        m_selectedCharacterCount = 0;
+    }
+}
+
+void UrlBar::moveCursorLeft(unsigned state)
+{
+    // If shift is pressed at the same time, selection needs to be moved.
+    if (state & ShiftMask) {
+        if (m_cursorPosition + m_selectedCharacterCount > 0)
+            m_selectedCharacterCount--;
+        return;
+    }
+
+    if (m_cursorPosition)
+        m_cursorPosition--;
+
+    m_selectedCharacterCount = 0;
+}
+
+void UrlBar::moveCursorRight(unsigned state)
+{
+    // If shift is pressed at the same time, selection needs to be moved.
+    if (state & ShiftMask) {
+        if (m_cursorPosition + m_selectedCharacterCount < m_url.length())
+            m_selectedCharacterCount++;
+        return;
+    }
+
+    if (m_cursorPosition < m_url.length())
+        m_cursorPosition++;
+
+    m_selectedCharacterCount = 0;
+}
+
 void UrlBar::deleteCharacter()
 {
-    // If the url is empty or the cursor is after the last character.
-    if (!m_url.length() || m_cursorPosition >= m_url.length())
+    if (m_url.empty())
+        return;
+
+    if (m_selectedCharacterCount) {
+        removeSelectedText();
+        return;
+    }
+
+    // If the cursor is after the last character.
+    if (m_cursorPosition >= m_url.length())
         return;
 
     m_url.erase(m_cursorPosition, 1);
@@ -258,18 +365,38 @@ void UrlBar::deleteCharacter()
 
 void UrlBar::removeCharacter()
 {
-    // If the url is empty or the cursor is before the first character.
-    if (!m_url.length() || !m_cursorPosition)
+    if (m_url.empty())
+        return;
+
+    if (m_selectedCharacterCount) {
+        removeSelectedText();
+        return;
+    }
+
+    // If the cursor is before the first character.
+    if (!m_cursorPosition)
         return;
 
     m_cursorPosition--;
     m_url.erase(m_cursorPosition, 1);
 }
 
+void UrlBar::removeSelectedText()
+{
+    if (m_selectedCharacterCount < 0)
+        m_cursorPosition += m_selectedCharacterCount;
+
+    m_url.erase(m_cursorPosition, abs(m_selectedCharacterCount));
+    m_selectedCharacterCount = 0;
+}
+
 void UrlBar::appendCharacter(const char c)
 {
     if (c < 32 || c >= 127)
         return;
+
+    if (m_selectedCharacterCount)
+        removeSelectedText();
 
     m_url.insert(m_cursorPosition, 1, c);
     m_cursorPosition++;
@@ -326,21 +453,19 @@ int UrlBar::pointedCharacterIndex(int clickX, int min, int max)
     return pointedCharacterIndex(clickX, midpoint, max);
 }
 
-void UrlBar::updateCursorPosition(int clickX)
+int UrlBar::updateCursorPosition(int clickX)
 {
+    if (m_url.empty())
+        return 0;
+
     if (clickX < 0)
-        return;
+        clickX = 0;
 
     bool clickedAfterTheUrl = (m_textOffset < 0) && (clickX > textWidth(m_url.c_str()));
-
     if (clickedAfterTheUrl)
-        m_cursorPosition = m_url.length();
-    else if (m_url.empty())
-        m_cursorPosition = 0;
-    else
-        m_cursorPosition = pointedCharacterIndex(clickX - m_textOffset, 0, m_url.length());
+        return m_url.length();
 
-    drawUrlBar();
+    return pointedCharacterIndex(clickX - m_textOffset, 0, m_url.length());
 }
 
 void UrlBar::requestClipboardText()
@@ -371,7 +496,14 @@ void UrlBar::pasteClipboardText(const XEvent &event)
 
 void UrlBar::becomeClipboardOwner()
 {
-    m_copiedText = m_url;
+    if (!m_selectedCharacterCount)
+        return;
+
+    int startPos = m_cursorPosition;
+    if (m_selectedCharacterCount < 0)
+        startPos = m_cursorPosition + m_selectedCharacterCount;
+
+    m_copiedText = m_url.substr(startPos, abs(m_selectedCharacterCount));
 
     XSetSelectionOwner(m_display, m_clipboardAtom, m_window, CurrentTime);
     if (XGetSelectionOwner(m_display, m_clipboardAtom) != m_window)

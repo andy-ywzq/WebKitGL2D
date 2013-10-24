@@ -55,19 +55,29 @@ private:
 
     void deleteCharacter();
     void removeCharacter();
+    void removeSelectedText();
     void appendCharacter(const char);
     void loadPage();
 
     int textWidth(const char*);
     int pointedCharacterIndex(int, int, int);
     int calculateCharacterPosition(int, int, int);
-    void updateCursorPosition(int);
+    int updateCursorPosition(int);
     void updateTextOffset();
 
+    void drawHighLight();
     void drawBackground();
     void drawCursor();
     void drawText();
     void drawUrlBar();
+
+    void calculateSelectedCharacters(int);
+    void initSelection(int);
+
+    void moveCursorHome(unsigned);
+    void moveCursorEnd(unsigned);
+    void moveCursorLeft(unsigned);
+    void moveCursorRight(unsigned);
 
     void becomeClipboardOwner();
     void respondClipboardRequest(const XSelectionRequestEvent&);
@@ -77,11 +87,15 @@ private:
     std::string m_url;
     std::string m_copiedText;
     bool m_isFocused;
+    bool m_isMousePressed;
     Atom m_clipboardAtom;
 
     // Shows, which character is pointed by the cursor.
     int m_cursorPosition;
     int m_textOffset;
+
+    // Its sign shows the direction of selection.
+    int m_selectedCharacterCount;
 
     cairo_t* m_cairo;
     cairo_surface_t* m_surface;
