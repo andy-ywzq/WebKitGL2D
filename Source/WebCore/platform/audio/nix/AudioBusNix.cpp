@@ -65,16 +65,7 @@ PassRefPtr<AudioBus> AudioBus::loadPlatformResource(const char* name, float samp
         fileContents.resize(bytesRead);
     fclose(file);
 
-    RefPtr<AudioBus> audioBus = decodeAudioFileData(&fileContents[0], fileContents.size(), sampleRate);
-
-    if (!audioBus.get())
-        return nullptr;
-
-    // If the bus is already at the requested sample-rate then return as is.
-    if (audioBus->sampleRate() == sampleRate)
-        return audioBus.release();
-
-    return AudioBus::createBySampleRateConverting(audioBus.get(), false, sampleRate);
+    return decodeAudioFileData(&fileContents[0], fileContents.size(), sampleRate);
 }
 
 PassRefPtr<AudioBus> createBusFromInMemoryAudioFile(const void* data, size_t dataSize, bool mixToMono, float sampleRate)
@@ -84,7 +75,7 @@ PassRefPtr<AudioBus> createBusFromInMemoryAudioFile(const void* data, size_t dat
         return nullptr;
 
     // If the bus needs no conversion then return as is.
-    if ((!mixToMono || audioBus->numberOfChannels() == 1) && audioBus->sampleRate() == sampleRate)
+    if (!mixToMono || audioBus->numberOfChannels() == 1)
         return audioBus.release();
 
     return AudioBus::createBySampleRateConverting(audioBus.get(), mixToMono, sampleRate);
