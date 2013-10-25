@@ -74,7 +74,6 @@ public:
     virtual void paintMediaMuteButton(Canvas*, MediaPlayerState, const Rect&) const OVERRIDE;
     virtual void paintMediaSeekBackButton(Canvas*, const Rect&) const OVERRIDE;
     virtual void paintMediaSeekForwardButton(Canvas*, const Rect&) const OVERRIDE;
-    virtual void paintMediaVolumeSliderContainer(Canvas*, State, const Rect&) const OVERRIDE;
     virtual void paintMediaRewindButton(Canvas*, const Rect&) const OVERRIDE;
 };
 

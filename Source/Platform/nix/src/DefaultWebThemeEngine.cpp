@@ -470,11 +470,6 @@ void DefaultWebThemeEngine::paintMediaSeekForwardButton(Canvas* canvas, const Re
     cairo_restore(canvas);
 }
 
-void DefaultWebThemeEngine::paintMediaVolumeSliderContainer(Canvas*, State, const Rect&) const
-{
-
-}
-
 void DefaultWebThemeEngine::paintMediaRewindButton(Canvas* canvas, const Rect& rect) const
 {
     cairo_save(canvas);

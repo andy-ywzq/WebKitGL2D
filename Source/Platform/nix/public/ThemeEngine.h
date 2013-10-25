@@ -146,12 +146,11 @@ public:
     virtual void paintSliderThumb(Canvas*, State, const Rect&) const = 0;
 
     // MediaPlayer (audio and video elements)
-    virtual void paintMediaPlayButton(Canvas*, MediaPlayerState, const Rect&) const { }
-    virtual void paintMediaMuteButton(Canvas*, MediaPlayerState, const Rect&) const { }
-    virtual void paintMediaSeekBackButton(Canvas*, const Rect&) const { }
-    virtual void paintMediaSeekForwardButton(Canvas*, const Rect&) const { }
-    virtual void paintMediaVolumeSliderContainer(Canvas*, State, const Rect&) const { }
-    virtual void paintMediaRewindButton(Canvas*, const Rect&) const { }
+    virtual void paintMediaPlayButton(Canvas*, MediaPlayerState, const Rect&) const = 0;
+    virtual void paintMediaMuteButton(Canvas*, MediaPlayerState, const Rect&) const = 0;
+    virtual void paintMediaSeekBackButton(Canvas*, const Rect&) const = 0;
+    virtual void paintMediaSeekForwardButton(Canvas*, const Rect&) const = 0;
+    virtual void paintMediaRewindButton(Canvas*, const Rect&) const = 0;
 };
 
 } // namespace Nix
