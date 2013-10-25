@@ -68,6 +68,11 @@ static IntSize toIntSize(const Nix::Size& size)
     return IntSize(size.width, size.height);
 }
 
+static Nix::Rect toNixRect(const IntRect& rect)
+{
+    return Nix::Rect(rect.x(), rect.y(), rect.width(), rect.height());
+}
+
 PassRefPtr<RenderTheme> RenderTheme::themeForPage(Page*)
 {
     return RenderThemeNix::create();
@@ -186,7 +191,7 @@ bool RenderThemeNix::paintButton(RenderObject* o, const PaintInfo& i, const IntR
     Nix::ThemeEngine::ButtonExtraParams extraParams;
     extraParams.isDefault = isDefault(o);
     extraParams.hasBorder = true;
-    themeEngine()->paintButton(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
+    themeEngine()->paintButton(webCanvas(i), getWebThemeState(this, o), toNixRect(rect), extraParams);
     return false;
 }
 
@@ -197,7 +202,7 @@ bool RenderThemeNix::paintTextField(RenderObject* o, const PaintInfo& i, const I
     if (o->style()->hasBorderRadius() || o->style()->hasBackgroundImage())
         return true;
 
-    themeEngine()->paintTextField(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect));
+    themeEngine()->paintTextField(webCanvas(i), getWebThemeState(this, o), toNixRect(rect));
     return false;
 }
 
@@ -212,7 +217,7 @@ bool RenderThemeNix::paintCheckbox(RenderObject* o, const PaintInfo& i, const In
     extraParams.checked = isChecked(o);
     extraParams.indeterminate = isIndeterminate(o);
 
-    themeEngine()->paintCheckbox(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
+    themeEngine()->paintCheckbox(webCanvas(i), getWebThemeState(this, o), toNixRect(rect), extraParams);
     return false;
 }
 
@@ -232,7 +237,7 @@ bool RenderThemeNix::paintRadio(RenderObject* o, const PaintInfo& i, const IntRe
     extraParams.checked = isChecked(o);
     extraParams.indeterminate = isIndeterminate(o);
 
-    themeEngine()->paintRadio(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
+    themeEngine()->paintRadio(webCanvas(i), getWebThemeState(this, o), toNixRect(rect), extraParams);
     return false;
 }
 
@@ -248,7 +253,7 @@ void RenderThemeNix::setRadioSize(RenderStyle* style) const
 
 bool RenderThemeNix::paintMenuList(RenderObject* o, const PaintInfo& i, const IntRect& rect)
 {
-    themeEngine()->paintMenuList(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect));
+    themeEngine()->paintMenuList(webCanvas(i), getWebThemeState(this, o), toNixRect(rect));
     return false;
 }
 
@@ -282,7 +287,7 @@ bool RenderThemeNix::paintProgressBar(RenderObject* o, const PaintInfo& i, const
     extraParams.position = renderProgress->position();
     extraParams.animationProgress = renderProgress->animationProgress();
     extraParams.animationStartTime = renderProgress->animationStartTime();
-    themeEngine()->paintProgressBar(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
+    themeEngine()->paintProgressBar(webCanvas(i), getWebThemeState(this, o), toNixRect(rect), extraParams);
 
     return false;
 }
@@ -300,7 +305,7 @@ double RenderThemeNix::animationDurationForProgressBar(RenderProgress*) const
 
 bool RenderThemeNix::paintSliderTrack(RenderObject* object, const PaintInfo& info, const IntRect& rect)
 {
-    themeEngine()->paintSliderTrack(webCanvas(info), getWebThemeState(this, object), rect);
+    themeEngine()->paintSliderTrack(webCanvas(info), getWebThemeState(this, object), toNixRect(rect));
 #if ENABLE(DATALIST_ELEMENT)
     paintSliderTicks(object, info, rect);
 #endif
@@ -314,7 +319,7 @@ void RenderThemeNix::adjustSliderTrackStyle(StyleResolver*, RenderStyle* style, 
 
 bool RenderThemeNix::paintSliderThumb(RenderObject* object, const PaintInfo& info, const IntRect& rect)
 {
-    themeEngine()->paintSliderThumb(webCanvas(info), getWebThemeState(this, object), rect);
+    themeEngine()->paintSliderThumb(webCanvas(info), getWebThemeState(this, object), toNixRect(rect));
 
     return false;
 }
@@ -384,7 +389,7 @@ bool RenderThemeNix::paintInnerSpinButton(RenderObject* o, const PaintInfo& i, c
     extraParams.spinUp = isSpinUpButtonPartPressed(o);
     extraParams.readOnly = isReadOnlyControl(o);
 
-    themeEngine()->paintInnerSpinButton(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
+    themeEngine()->paintInnerSpinButton(webCanvas(i), getWebThemeState(this, o), toNixRect(rect), extraParams);
     return false;
 }
 
@@ -428,7 +433,7 @@ bool RenderThemeNix::paintMeter(RenderObject* o, const PaintInfo& i, const IntRe
     extraParams.high = e->high();
     extraParams.optimum = e->optimum();
 
-    themeEngine()->paintMeter(webCanvas(i), getWebThemeState(this, o), rect, extraParams);
+    themeEngine()->paintMeter(webCanvas(i), getWebThemeState(this, o), toNixRect(rect), extraParams);
 
     return false;
 }
