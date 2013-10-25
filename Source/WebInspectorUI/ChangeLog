@@ -1,3 +1,115 @@
+2013-10-24  Mark Rowe  <mrowe@apple.com>
+
+        Remove references to OS X 10.7 from Xcode configuration settings.
+
+        Now that we're not building for OS X 10.7 they're no longer needed.
+
+        Reviewed by Anders Carlsson.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+        * Configurations/Version.xcconfig:
+
+2013-10-24  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/15312643> Prepare for the mysterious future.
+
+        Reviewed by David Kilzer.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+        * Configurations/Version.xcconfig:
+
+2013-10-24  Timothy Hatcher  <timothy@apple.com>
+
+        Allow editing CSS resources after they have been pretty printed.
+
+        https://bugs.webkit.org/show_bug.cgi?id=123297
+
+        Reviewed by Joseph Pecoraro.
+
+        * UserInterface/TextEditor.js:
+        (WebInspector.TextEditor): Remove the need for _readOnly.
+        (WebInspector.TextEditor.prototype.set readOnly): Set CodeMirror readOnly directly.
+        (WebInspector.TextEditor.prototype.set formatted): Don't call _updateCodeMirrorReadOnly.
+        (WebInspector.TextEditor.prototype._updateCodeMirrorReadOnly): Removed.
+        (WebInspector.TextEditor.prototype._contentChanged): Clear _formatted and _formatterSourceMap
+        on edit and notify the delegate and fire the FormattingDidChange event.
+
+2013-10-24  Timothy Hatcher  <timothy@apple.com>
+
+        Adjust the precision of byte strings in Web Inspector.
+
+        https://bugs.webkit.org/show_bug.cgi?id=123281
+
+        Reviewed by Joseph Pecoraro.
+
+        * UserInterface/Utilities.js:
+        (Number.bytesToString): More precision for MB and less precision for 10..1023 KB.
+
+2013-10-24  Alexandru Chiculita  <achicu@adobe.com>
+
+        Web Inspector: Add a way to test the Manager and model classes
+        https://bugs.webkit.org/show_bug.cgi?id=123223
+
+        Reviewed by Timothy Hatcher.
+
+        Moved some global functions out of Main.js, so that they can be used in the 
+        layout tests without including Main.js.
+
+        * UserInterface/Main.html: Referenced the new JS files.
+        * UserInterface/Main.js:
+        * UserInterface/MessageDispatcher.js: Added.
+        (WebInspector.dispatchNextQueuedMessageFromBackend):
+        (WebInspector.dispatchMessageFromBackend):
+        * UserInterface/URLUtilities.js: Added.
+        (removeURLFragment):
+        (relativePath):
+        (parseURL):
+        (absoluteURL):
+        (parseLocationQueryParameters):
+        (parseQueryString):
+        (WebInspector.displayNameForURL):
+        (WebInspector.displayNameForHost):
+        * UserInterface/Utilities.js:
+
+2013-10-21  Alexandru Chiculita  <achicu@adobe.com>
+
+        Web Inspector: [CSS Regions] Flows are not loading if you refresh the page several times
+        https://bugs.webkit.org/show_bug.cgi?id=123123
+
+        Reviewed by Joseph Pecoraro.
+
+        There was a typo in the code where an exception was thrown because "flowKey" was undefined.
+
+        * UserInterface/DOMTree.js:
+        (WebInspector.DOMTree.prototype._contentFlowListWasUpdated):
+
+2013-10-21  Oliver Hunt  <oliver@apple.com>
+
+        Restore accidentally removed files.
+
+        * UserInterface/GoToLineDialog.css: Added.
+        (.go-to-line-dialog):
+        (.go-to-line-dialog > div):
+        (.go-to-line-dialog > div > input):
+        (.go-to-line-dialog > div > input::-webkit-input-placeholder):
+        (.go-to-line-dialog > div > img):
+        (.go-to-line-dialog > div > img:active):
+        (.go-to-line-dialog.non-empty > div > img):
+        * UserInterface/GoToLineDialog.js: Added.
+        (WebInspector.GoToLineDialog):
+        (WebInspector.GoToLineDialog.prototype.present):
+        (WebInspector.GoToLineDialog.prototype.dismiss):
+        (WebInspector.GoToLineDialog.prototype.handleEvent):
+        (WebInspector.GoToLineDialog.prototype._handleInputEvent):
+        (WebInspector.GoToLineDialog.prototype._handleKeydownEvent):
+        (WebInspector.GoToLineDialog.prototype._handleBlurEvent):
+        (WebInspector.GoToLineDialog.prototype._handleMousedownEvent):
+        (WebInspector.GoToLineDialog.prototype._handleClickEvent):
+        (WebInspector.GoToLineDialog.prototype._clear):
+        * UserInterface/Images/CloseWhite.svg: Added.
+
 2013-10-18  Alexandru Chiculita  <achicu@adobe.com>
 
         Web Inspector: CSS Regions: Add the list of flows in the FrameTreeElement

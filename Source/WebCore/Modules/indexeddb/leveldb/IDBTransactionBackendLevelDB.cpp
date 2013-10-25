@@ -30,37 +30,37 @@
 
 #include "IDBBackingStoreLevelDB.h"
 #include "IDBCursorBackendLevelDB.h"
-#include "IDBDatabaseBackendLevelDB.h"
+#include "IDBDatabaseBackendImpl.h"
 #include "IDBDatabaseCallbacks.h"
 #include "IDBDatabaseException.h"
 #include "IDBKeyRange.h"
 #include "IDBTransactionBackendLevelDBOperations.h"
-#include "IDBTransactionCoordinatorLevelDB.h"
+#include "IDBTransactionCoordinator.h"
 #include "Logging.h"
 
 namespace WebCore {
 
-PassRefPtr<IDBTransactionBackendLevelDB> IDBTransactionBackendLevelDB::create(IDBBackingStoreLevelDB* backingStore, int64_t id, PassRefPtr<IDBDatabaseCallbacks> callbacks, const Vector<int64_t>& objectStoreIds, IndexedDB::TransactionMode mode, IDBDatabaseBackendLevelDB* database)
+PassRefPtr<IDBTransactionBackendLevelDB> IDBTransactionBackendLevelDB::create(IDBDatabaseBackendImpl* databaseBackend, int64_t id, PassRefPtr<IDBDatabaseCallbacks> callbacks, const Vector<int64_t>& objectStoreIds, IndexedDB::TransactionMode mode)
 {
     HashSet<int64_t> objectStoreHashSet;
     for (size_t i = 0; i < objectStoreIds.size(); ++i)
         objectStoreHashSet.add(objectStoreIds[i]);
 
-    return adoptRef(new IDBTransactionBackendLevelDB(backingStore, id, callbacks, objectStoreHashSet, mode, database));
+    return adoptRef(new IDBTransactionBackendLevelDB(databaseBackend, id, callbacks, objectStoreHashSet, mode));
 }
 
-IDBTransactionBackendLevelDB::IDBTransactionBackendLevelDB(IDBBackingStoreLevelDB* backingStore, int64_t id, PassRefPtr<IDBDatabaseCallbacks> callbacks, const HashSet<int64_t>& objectStoreIds, IndexedDB::TransactionMode mode, IDBDatabaseBackendLevelDB* database)
+IDBTransactionBackendLevelDB::IDBTransactionBackendLevelDB(IDBDatabaseBackendImpl* databaseBackend, int64_t id, PassRefPtr<IDBDatabaseCallbacks> callbacks, const HashSet<int64_t>& objectStoreIds, IndexedDB::TransactionMode mode)
     : IDBTransactionBackendInterface(id)
     , m_objectStoreIds(objectStoreIds)
     , m_mode(mode)
     , m_state(Unused)
     , m_commitPending(false)
     , m_callbacks(callbacks)
-    , m_database(database)
-    , m_transaction(database->backingStore().get())
+    , m_database(databaseBackend)
+    , m_transaction(databaseBackend->backingStore())
     , m_taskTimer(this, &IDBTransactionBackendLevelDB::taskTimerFired)
     , m_pendingPreemptiveEvents(0)
-    , m_backingStore(backingStore)
+    , m_backingStore(databaseBackend->backingStore())
 {
     // We pass a reference of this object before it can be adopted.
     relaxAdoptionRequirement();
@@ -282,7 +282,7 @@ void IDBTransactionBackendLevelDB::scheduleDeleteObjectStoreOperation(const IDBO
 
 void IDBTransactionBackendLevelDB::scheduleVersionChangeOperation(int64_t transactionId, int64_t requestedVersion, PassRefPtr<IDBCallbacks> callbacks, PassRefPtr<IDBDatabaseCallbacks> databaseCallbacks, const IDBDatabaseMetadata& metadata)
 {
-    scheduleTask(IDBDatabaseBackendLevelDB::VersionChangeOperation::create(this, transactionId, requestedVersion, callbacks, databaseCallbacks), IDBDatabaseBackendLevelDB::VersionChangeAbortOperation::create(this, String::number(metadata.version), metadata.version));
+    scheduleTask(IDBDatabaseBackendImpl::VersionChangeOperation::create(this, transactionId, requestedVersion, callbacks, databaseCallbacks), IDBDatabaseBackendImpl::VersionChangeAbortOperation::create(this, String::number(metadata.version), metadata.version));
 }
 
 void IDBTransactionBackendLevelDB::scheduleCreateIndexOperation(int64_t objectStoreId, const IDBIndexMetadata& indexMetadata)
@@ -300,7 +300,7 @@ void IDBTransactionBackendLevelDB::scheduleGetOperation(const IDBDatabaseMetadat
     scheduleTask(GetOperation::create(this, m_backingStore.get(), metadata, objectStoreId, indexId, keyRange, cursorType, callbacks));
 }
 
-void IDBTransactionBackendLevelDB::schedulePutOperation(const IDBObjectStoreMetadata& objectStoreMetadata, PassRefPtr<SharedBuffer> value, PassRefPtr<IDBKey> key, IDBDatabaseBackendInterface::PutMode putMode, PassRefPtr<IDBCallbacks> callbacks, const Vector<int64_t>& indexIds, const Vector<IDBDatabaseBackendInterface::IndexKeys>& indexKeys)
+void IDBTransactionBackendLevelDB::schedulePutOperation(const IDBObjectStoreMetadata& objectStoreMetadata, PassRefPtr<SharedBuffer> value, PassRefPtr<IDBKey> key, IDBDatabaseBackendInterface::PutMode putMode, PassRefPtr<IDBCallbacks> callbacks, const Vector<int64_t>& indexIds, const Vector<IndexKeys>& indexKeys)
 {
     scheduleTask(PutOperation::create(this, m_backingStore.get(), database()->id(), objectStoreMetadata, value, key, putMode, callbacks, indexIds, indexKeys));
 }

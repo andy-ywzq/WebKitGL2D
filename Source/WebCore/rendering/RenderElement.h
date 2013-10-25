@@ -55,6 +55,7 @@ public:
     bool isRenderBlockFlow() const;
     bool isRenderReplaced() const;
     bool isRenderInline() const;
+    bool isRenderNamedFlowFragmentContainer() const;
 
     virtual bool isChildAllowed(const RenderObject&, const RenderStyle&) const { return true; }
     virtual void addChild(RenderObject* newChild, RenderObject* beforeChild = 0);
@@ -102,7 +103,8 @@ public:
 
     // Updates only the local style ptr of the object. Does not update the state of the object,
     // and so only should be called when the style is known not to have changed (or from setStyle).
-    void setStyleInternal(PassRefPtr<RenderStyle> style) { m_style = style; }
+    void setStyleInternal(PassRef<RenderStyle> style) { m_style = std::move(style); }
+    void clearStyleInternal() { m_style = nullptr; }
 
 protected:
     enum BaseTypeFlags {
@@ -129,8 +131,8 @@ protected:
     void setLastChild(RenderObject* child) { m_lastChild = child; }
     void destroyLeftoverChildren();
 
-    virtual void styleWillChange(StyleDifference, const RenderStyle*);
-    virtual void styleDidChange(StyleDifference, const RenderStyle*);
+    virtual void styleWillChange(StyleDifference, const RenderStyle& newStyle);
+    virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle);
 
     virtual void insertedIntoTree() OVERRIDE;
     virtual void willBeRemovedFromTree() OVERRIDE;
@@ -234,40 +236,14 @@ inline bool RenderElement::isRenderInline() const
     return m_baseTypeFlags & RenderInlineFlag;
 }
 
-inline RenderElement& toRenderElement(RenderObject& object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(object.isRenderElement());
-    return static_cast<RenderElement&>(object);
-}
-
-inline const RenderElement& toRenderElement(const RenderObject& object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(object.isRenderElement());
-    return static_cast<const RenderElement&>(object);
-}
-
-inline RenderElement* toRenderElement(RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isRenderElement());
-    return static_cast<RenderElement*>(object);
-}
-
-inline const RenderElement* toRenderElement(const RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isRenderElement());
-    return static_cast<const RenderElement*>(object);
-}
+RENDER_OBJECT_TYPE_CASTS(RenderElement, isRenderElement())
 
 inline Element* RenderElement::generatingElement() const
 {
-    if (isRenderNamedFlowFragment() && parent())
-        return toRenderElement(parent())->generatingElement();
+    if (parent() && isRenderNamedFlowFragment())
+        return parent()->generatingElement();
     return toElement(RenderObject::generatingNode());
 }
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderElement(const RenderElement*);
-void toRenderElement(const RenderElement&);
 
 inline bool RenderObject::isRenderLayerModelObject() const
 {

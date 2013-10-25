@@ -458,6 +458,10 @@ private:
     
     virtual void mediaVolumeDidChange() OVERRIDE;
 
+#if ENABLE(PAGE_VISIBILITY_API)
+    virtual void visibilityStateChanged() OVERRIDE;
+#endif
+
     virtual void updateDisplayState() { }
     
     void setReadyState(MediaPlayer::ReadyState);
@@ -620,8 +624,8 @@ private:
     virtual bool isLiveStream() const OVERRIDE { return movieLoadType() == MediaPlayer::LiveStream; }
     bool isAutoplaying() const { return m_autoplaying; }
 
+    void updateSleepDisabling();
 #if PLATFORM(MAC)
-    void updateDisableSleep();
     bool shouldDisableSleep() const;
 #endif
 
@@ -730,6 +734,9 @@ private:
     bool m_completelyLoaded : 1;
     bool m_havePreparedToPlay : 1;
     bool m_parsingInProgress : 1;
+#if ENABLE(PAGE_VISIBILITY_API)
+    bool m_isDisplaySleepDisablingSuspended : 1;
+#endif
 
 #if ENABLE(VIDEO_TRACK)
     bool m_tracksAreReady : 1;

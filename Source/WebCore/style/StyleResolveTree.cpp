@@ -164,7 +164,8 @@ static bool shouldCreateRenderer(const Element& element, const ContainerNode* re
 static bool elementInsideRegionNeedsRenderer(Element& element, const ContainerNode* renderingParentNode, RefPtr<RenderStyle>& style)
 {
 #if ENABLE(CSS_REGIONS)
-    const RenderObject* parentRenderer = renderingParentNode ? renderingParentNode->renderer() : 0;
+    // The parent of a region should always be an element.
+    const RenderElement* parentRenderer = renderingParentNode ? renderingParentNode->renderer() : 0;
 
     bool parentIsRegion = parentRenderer && !parentRenderer->canHaveChildren() && parentRenderer->isRenderNamedFlowFragmentContainer();
     bool parentIsNonRenderedInsideRegion = !parentRenderer && element.parentElement() && element.parentElement()->isInsideRegion();
@@ -370,14 +371,14 @@ static void createTextRendererIfNeeded(Text& textNode)
     if (!renderingParentNode->childShouldCreateRenderer(&textNode))
         return;
 
-    RefPtr<RenderStyle> style = parentRenderer->style();
+    RenderStyle& style = *parentRenderer->style();
 
-    if (!textRendererIsNeeded(textNode, *parentRenderer, *style))
+    if (!textRendererIsNeeded(textNode, *parentRenderer, style))
         return;
-    RenderText* newRenderer = textNode.createTextRenderer(*style);
+    RenderText* newRenderer = textNode.createTextRenderer(style);
     if (!newRenderer)
         return;
-    if (!parentRenderer->isChildAllowed(*newRenderer, *style)) {
+    if (!parentRenderer->isChildAllowed(*newRenderer, style)) {
         newRenderer->destroy();
         return;
     }
@@ -605,11 +606,11 @@ static Change resolveLocal(Element& current, Change inheritedChange)
 
     if (RenderElement* renderer = current.renderer()) {
         if (localChange != NoChange || pseudoStyleCacheIsInvalid(renderer, newStyle.get()) || (inheritedChange == Force && renderer->requiresForcedStyleRecalcPropagation()) || current.styleChangeType() == SyntheticStyleChange)
-            renderer->setAnimatableStyle(*newStyle.get());
+            renderer->setAnimatableStyle(*newStyle);
         else if (current.needsStyleRecalc()) {
             // Although no change occurred, we use the new style so that the cousin style sharing code won't get
             // fooled into believing this style is the same.
-            renderer->setStyleInternal(newStyle.get());
+            renderer->setStyleInternal(*newStyle);
         }
     }
 

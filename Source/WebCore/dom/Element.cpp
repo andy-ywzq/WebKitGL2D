@@ -1477,11 +1477,11 @@ void Element::lazyAttach(ShouldSetAttached shouldSetAttached)
     markAncestorsWithChildNeedsStyleRecalc();
 }
 
-PassRefPtr<RenderStyle> Element::styleForRenderer()
+PassRef<RenderStyle> Element::styleForRenderer()
 {
     if (hasCustomStyleResolveCallbacks()) {
         if (RefPtr<RenderStyle> style = customStyleForRenderer())
-            return style.release();
+            return style.releaseNonNull();
     }
 
     return document().ensureStyleResolver().styleForElement(this);
@@ -2761,10 +2761,12 @@ const AtomicString& Element::webkitRegionOverset() const
 
 Vector<RefPtr<Range>> Element::webkitGetRegionFlowRanges() const
 {
-    document().updateLayoutIgnorePendingStylesheets();
-
     Vector<RefPtr<Range>> rangeObjects;
-    if (document().cssRegionsEnabled() && renderer() && renderer()->isRenderNamedFlowFragmentContainer()) {
+    if (!document().cssRegionsEnabled())
+        return rangeObjects;
+
+    document().updateLayoutIgnorePendingStylesheets();
+    if (renderer() && renderer()->isRenderNamedFlowFragmentContainer()) {
         RenderNamedFlowFragment* region = toRenderBlockFlow(renderer())->renderNamedFlowFragment();
         if (region->isValid())
             region->getRanges(rangeObjects);

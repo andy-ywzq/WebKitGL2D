@@ -28,7 +28,6 @@
 
 #include "ShareableBitmap.h"
 #include <WebCore/AuthenticationChallenge.h>
-#include <WebCore/CertificateInfo.h>
 #include <WebCore/Cookie.h>
 #include <WebCore/Credential.h>
 #include <WebCore/Cursor.h>
@@ -37,9 +36,12 @@
 #include <WebCore/DragSession.h>
 #include <WebCore/Editor.h>
 #include <WebCore/FileChooser.h>
+#include <WebCore/FilterOperation.h>
+#include <WebCore/FilterOperations.h>
 #include <WebCore/GraphicsContext.h>
 #include <WebCore/GraphicsLayer.h>
 #include <WebCore/Image.h>
+#include <WebCore/Length.h>
 #include <WebCore/PluginData.h>
 #include <WebCore/ProtectionSpace.h>
 #include <WebCore/ResourceError.h>
@@ -155,6 +157,17 @@ void ArgumentCoder<IntSize>::encode(ArgumentEncoder& encoder, const IntSize& int
 bool ArgumentCoder<IntSize>::decode(ArgumentDecoder& decoder, IntSize& intSize)
 {
     return SimpleArgumentCoder<IntSize>::decode(decoder, intSize);
+}
+
+
+void ArgumentCoder<Length>::encode(ArgumentEncoder& encoder, const Length& length)
+{
+    SimpleArgumentCoder<Length>::encode(encoder, length);
+}
+
+bool ArgumentCoder<Length>::decode(ArgumentDecoder& decoder, Length& length)
+{
+    return SimpleArgumentCoder<Length>::decode(decoder, length);
 }
 
 
@@ -567,22 +580,6 @@ bool ArgumentCoder<ResourceResponse>::decode(ArgumentDecoder& decoder, ResourceR
 
     resourceResponse = response;
 
-    return true;
-}
-
-void ArgumentCoder<CertificateInfo>::encode(ArgumentEncoder& encoder, const CertificateInfo& certificateInfo)
-{
-    encodePlatformData(encoder, certificateInfo);
-}
-
-bool ArgumentCoder<CertificateInfo>::decode(ArgumentDecoder& decoder, CertificateInfo& certificateInfo)
-{
-    CertificateInfo certificate;
-
-    if (!decodePlatformData(decoder, certificate))
-        return false;
-
-    certificateInfo = certificate;
     return true;
 }
 
@@ -1166,5 +1163,148 @@ bool ArgumentCoder<WebCore::UserScript>::decode(ArgumentDecoder& decoder, WebCor
     userScript = WebCore::UserScript(source, url, whitelist, blacklist, injectionTime, injectedFrames);
     return true;
 }
+
+#if ENABLE(CSS_FILTERS)
+static void encodeFilterOperation(ArgumentEncoder& encoder, const FilterOperation& filter)
+{
+    encoder.encodeEnum(filter.type());
+
+    switch (filter.type()) {
+    case FilterOperation::REFERENCE: {
+        const auto& referenceFilter = static_cast<const ReferenceFilterOperation&>(filter);
+        encoder << referenceFilter.url();
+        encoder << referenceFilter.fragment();
+        break;
+    }
+    case FilterOperation::GRAYSCALE:
+    case FilterOperation::SEPIA:
+    case FilterOperation::SATURATE:
+    case FilterOperation::HUE_ROTATE:
+        encoder << static_cast<const BasicColorMatrixFilterOperation&>(filter).amount();
+        break;
+    case FilterOperation::INVERT:
+    case FilterOperation::OPACITY:
+    case FilterOperation::BRIGHTNESS:
+    case FilterOperation::CONTRAST:
+        encoder << static_cast<const BasicComponentTransferFilterOperation&>(filter).amount();
+        break;
+    case FilterOperation::BLUR:
+        encoder << static_cast<const BlurFilterOperation&>(filter).stdDeviation();
+        break;
+    case FilterOperation::DROP_SHADOW: {
+        const auto& dropShadowFilter = static_cast<const DropShadowFilterOperation&>(filter);
+        encoder << dropShadowFilter.location();
+        encoder << dropShadowFilter.stdDeviation();
+        encoder << dropShadowFilter.color();
+        break;
+    }
+#if ENABLE(CSS_SHADERS)
+    case FilterOperation::CUSTOM:
+    case FilterOperation::VALIDATED_CUSTOM:
+        ASSERT_NOT_REACHED();
+        break;
+#endif
+    case FilterOperation::PASSTHROUGH:
+    case FilterOperation::NONE:
+        break;
+    };
+}
+
+static bool decodeFilterOperation(ArgumentDecoder& decoder, RefPtr<FilterOperation>& filter)
+{
+    FilterOperation::OperationType type;
+    if (!decoder.decodeEnum(type))
+        return false;
+
+    switch (type) {
+    case FilterOperation::REFERENCE: {
+        String url;
+        String fragment;
+        if (!decoder.decode(url))
+            return false;
+        if (!decoder.decode(fragment))
+            return false;
+        filter = ReferenceFilterOperation::create(url, fragment, type);
+        break;
+    }
+    case FilterOperation::GRAYSCALE:
+    case FilterOperation::SEPIA:
+    case FilterOperation::SATURATE:
+    case FilterOperation::HUE_ROTATE: {
+        double amount;
+        if (!decoder.decode(amount))
+            return false;
+        filter = BasicColorMatrixFilterOperation::create(amount, type);
+        break;
+    }
+    case FilterOperation::INVERT:
+    case FilterOperation::OPACITY:
+    case FilterOperation::BRIGHTNESS:
+    case FilterOperation::CONTRAST: {
+        double amount;
+        if (!decoder.decode(amount))
+            return false;
+        filter = BasicComponentTransferFilterOperation::create(amount, type);
+        break;
+    }
+    case FilterOperation::BLUR: {
+        Length stdDeviation;
+        if (!decoder.decode(stdDeviation))
+            return false;
+        filter = BlurFilterOperation::create(stdDeviation, type);
+        break;
+    }
+    case FilterOperation::DROP_SHADOW: {
+        IntPoint location;
+        int stdDeviation;
+        Color color;
+        if (!decoder.decode(location))
+            return false;
+        if (!decoder.decode(stdDeviation))
+            return false;
+        if (!decoder.decode(color))
+            return false;
+        filter = DropShadowFilterOperation::create(location, stdDeviation, color, type);
+        break;
+    }
+#if ENABLE(CSS_SHADERS)
+    case FilterOperation::CUSTOM:
+    case FilterOperation::VALIDATED_CUSTOM:
+        ASSERT_NOT_REACHED();
+        break;
+#endif
+    case FilterOperation::PASSTHROUGH:
+    case FilterOperation::NONE:
+        break;
+    };
+
+    return true;
+}
+
+
+void ArgumentCoder<FilterOperations>::encode(ArgumentEncoder& encoder, const FilterOperations& filters)
+{
+    encoder << static_cast<uint64_t>(filters.size());
+
+    for (const auto& filter : filters.operations())
+        encodeFilterOperation(encoder, *filter);
+}
+
+bool ArgumentCoder<FilterOperations>::decode(ArgumentDecoder& decoder, FilterOperations& filters)
+{
+    uint64_t filterCount;
+    if (!decoder.decode(filterCount))
+        return false;
+
+    for (uint64_t i = 0; i < filterCount; ++i) {
+        RefPtr<FilterOperation> filter;
+        if (!decodeFilterOperation(decoder, filter))
+            return false;
+        filters.operations().append(std::move(filter));
+    }
+
+    return true;
+}
+#endif // ENABLE(CSS_FILTERS)
 
 } // namespace CoreIPC

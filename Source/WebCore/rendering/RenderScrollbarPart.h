@@ -57,7 +57,6 @@ public:
     RenderBox* rendererOwningScrollbar() const;
 
 protected:
-    virtual void styleWillChange(StyleDifference diff, const RenderStyle* newStyle);
     virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle);
     virtual void imageChanged(WrappedImagePtr, const IntRect* = 0);
 
@@ -74,20 +73,7 @@ private:
     ScrollbarPart m_part;
 };
 
-inline RenderScrollbarPart* toRenderScrollbarPart(RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isRenderScrollbarPart());
-    return static_cast<RenderScrollbarPart*>(object);
-}
-
-inline const RenderScrollbarPart* toRenderScrollbarPart(const RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isRenderScrollbarPart());
-    return static_cast<const RenderScrollbarPart*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderScrollbarPart(const RenderScrollbarPart*);
+RENDER_OBJECT_TYPE_CASTS(RenderScrollbarPart, isRenderScrollbarPart())
 
 } // namespace WebCore
 

@@ -137,6 +137,8 @@ public:
 
     virtual void collectLayerFragments(LayerFragments&, const LayoutRect&, const LayoutRect&) { }
 
+    virtual void adjustRegionBoundsFromFlowThreadPortionRect(const IntPoint& layerOffset, IntRect& regionBounds); // layerOffset is needed for multi-column.
+
     void addLayoutOverflowForBox(const RenderBox*, const LayoutRect&);
     void addVisualOverflowForBox(const RenderBox*, const LayoutRect&);
     LayoutRect layoutOverflowRectForBox(const RenderBox*);
@@ -233,20 +235,7 @@ private:
     LayoutUnit m_computedAutoHeight;
 };
 
-inline RenderRegion* toRenderRegion(RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isRenderRegion());
-    return static_cast<RenderRegion*>(object);
-}
-
-inline const RenderRegion* toRenderRegion(const RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isRenderRegion());
-    return static_cast<const RenderRegion*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderRegion(const RenderRegion*);
+RENDER_OBJECT_TYPE_CASTS(RenderRegion, isRenderRegion())
 
 } // namespace WebCore
 

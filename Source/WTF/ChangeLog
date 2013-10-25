@@ -1,3 +1,242 @@
+2013-10-25  Jer Noble  <jer.noble@apple.com>
+
+        [WTF] Add a multiplication operator (and a few others) to MediaTime
+        https://bugs.webkit.org/show_bug.cgi?id=123137
+
+        Reviewed by Eric Carlson.
+
+        Add a multiplication operator and an inequality operator to the
+        MediaTime class for use by MSE.
+
+        * wtf/MediaTime.cpp:
+        (WTF::signum): Moved to top of file.
+        (WTF::MediaTime::operator*): Added.
+        (WTF::MediaTime::operator!=): Added.
+        * wtf/MediaTime.h:
+        (WTF::operator*): Added non-class version of operator*.
+
+2013-10-24  Jer Noble  <jer.noble@apple.com>
+
+        [Mac] Add helper methods to convert CMTime <--> MediaTime
+        https://bugs.webkit.org/show_bug.cgi?id=123285
+
+        Reviewed by Eric Carlson.
+
+        Add a #ifdef header_h protector.
+
+        * wtf/MediaTime.h:
+
+2013-10-24  Mark Rowe  <mrowe@apple.com>
+
+        Remove references to OS X 10.7 from Xcode configuration settings.
+
+        Now that we're not building for OS X 10.7 they're no longer needed.
+
+        Reviewed by Anders Carlsson.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+
+2013-10-24  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/15312643> Prepare for the mysterious future.
+
+        Reviewed by David Kilzer.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+
+2013-10-24  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r157931.
+        http://trac.webkit.org/changeset/157931
+        https://bugs.webkit.org/show_bug.cgi?id=123284
+
+        Seems to have caused a lot of assertions on debug bots
+        (Requested by ap on #webkit).
+
+        * wtf/text/StringStatics.cpp:
+        (WTF::StringImpl::empty):
+
+2013-10-24  Peter Molnar  <pmolnar.u-szeged@partner.samsung.com>
+
+        Remove PCRE workaround.
+        https://bugs.webkit.org/show_bug.cgi?id=123265
+
+        Reviewed by Darin Adler.
+
+        * wtf/text/StringStatics.cpp:
+        (WTF::StringImpl::empty):
+
+2013-10-24  Peter Molnar  <pmolnar.u-szeged@partner.samsung.com>
+
+        Remove Clang workaround.
+        https://bugs.webkit.org/show_bug.cgi?id=123262
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/CheckedArithmetic.h:
+        (WTF::Checked::Checked):
+
+2013-10-24  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL] Build break with latest EFL 1.8 libraries.
+        https://bugs.webkit.org/show_bug.cgi?id=123245
+
+        Reviewed by Gyuyoung Kim.
+
+        After fixed build break on EFL 1.8 at r138326, EFL libraries are changed
+        Eo typedef and splitted header files which contain version macro.
+
+        * wtf/OwnPtrCommon.h: Changed Eo typedef.
+        * wtf/efl/RefPtrEfl.h: Ditto.
+
+2013-10-24  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GObject bindings] Make EventTarget interface introspectable
+        https://bugs.webkit.org/show_bug.cgi?id=77835
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Add support for use GRefPtr with GClosure.
+
+        * wtf/gobject/GRefPtr.cpp:
+        (WTF::refGPtr):
+        (WTF::derefGPtr):
+        * wtf/gobject/GRefPtr.h:
+        * wtf/gobject/GTypedefs.h:
+
+2013-10-23  Anders Carlsson  <andersca@apple.com>
+
+        Remove USE(LOCKFREE_THREADSAFEREFCOUNTED)
+        https://bugs.webkit.org/show_bug.cgi?id=123228
+
+        Reviewed by Geoffrey Garen.
+
+        All ports support USE(LOCKFREE_THREADSAFEREFCOUNTED) now and taking a lock on every ref/deref seems bad.
+
+        * wtf/Atomics.h:
+        * wtf/ThreadSafeRefCounted.h:
+        (WTF::ThreadSafeRefCountedBase::ref):
+        (WTF::ThreadSafeRefCountedBase::refCount):
+        (WTF::ThreadSafeRefCountedBase::derefBase):
+
+2013-10-23  Anders Carlsson  <andersca@apple.com>
+
+        Remove HAVE_XPC
+        https://bugs.webkit.org/show_bug.cgi?id=123226
+
+        Reviewed by Dan Bernstein.
+
+        HAVE_XPC has been true on Mac since Lion, so remove it.
+
+        * wtf/Platform.h:
+
+2013-10-23  Andreas Kling  <akling@apple.com>
+
+        Make more StringImpl construction functions return PassRef.
+        <https://webkit.org/b/123203>
+
+        Knock out a couple more of the StringImpl construction helpers that
+        always return a non-null StringImpl.
+
+        Reviewed by Antti Koivisto.
+
+2013-10-22  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL should be able to do some simple inline caches using LLVM patchpoints
+        https://bugs.webkit.org/show_bug.cgi?id=123164
+
+        Reviewed by Mark Hahnenberg.
+        
+        This needed some better bitvector support, like merging (|=), excluding (&=~),
+        hashing, and bit counting.
+
+        * wtf/BitVector.cpp:
+        (WTF::BitVector::setSlow):
+        (WTF::BitVector::excludeSlow):
+        (WTF::BitVector::bitCountSlow):
+        (WTF::BitVector::equalsSlowCase):
+        (WTF::BitVector::hashSlowCase):
+        (WTF::BitVector::dump):
+        * wtf/BitVector.h:
+        (WTF::BitVector::merge):
+        (WTF::BitVector::exclude):
+        (WTF::BitVector::bitCount):
+        (WTF::BitVector::BitVector):
+        (WTF::BitVector::isEmptyValue):
+        (WTF::BitVector::isDeletedValue):
+        (WTF::BitVector::isEmptyOrDeletedValue):
+        (WTF::BitVector::operator==):
+        (WTF::BitVector::hash):
+        (WTF::BitVectorHash::hash):
+        (WTF::BitVectorHash::equal):
+        * wtf/HashTraits.h:
+        (WTF::CustomHashTraits::constructDeletedValue):
+        (WTF::CustomHashTraits::isDeletedValue):
+        (WTF::CustomHashTraits::emptyValue):
+        (WTF::CustomHashTraits::isEmptyValue):
+        * wtf/StdLibExtras.h:
+        (WTF::bitCount):
+
+2013-10-23  Allan Sandfeld Jensen  <allan.jensen@digia.com>
+
+        Clean-up in Atomics.h
+        https://bugs.webkit.org/show_bug.cgi?id=123207
+
+        Reviewed by Anders Carlsson.
+
+        Atomics.h has two confusing and bit-rotted ifdefs with comments.
+
+        The first about CPU(SPARC64) was rendered obsolete when we switched
+        from __exchange_and_add to __sync_add_and_fetch.
+
+        The second was caused by a wrong definition that apparently only
+        caused trouble on GCC.
+
+        * wtf/Atomics.h:
+
+2013-10-22  Andreas Kling  <akling@apple.com>
+
+        StringImpl::lower() should return a PassRef.
+        <https://webkit.org/b/123190>
+
+        Test the waters and hack enough of StringImpl to be able to return
+        a PassRef<StringImpl> from lower().
+
+        Also gave String a constructor that takes a PassRef<StringImpl>.
+
+        Reviewed by Antti Koivisto.
+
+2013-10-22  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r157835.
+        http://trac.webkit.org/changeset/157835
+        https://bugs.webkit.org/show_bug.cgi?id=123192
+
+        broke 32-bit builds (Requested by smfr on #webkit).
+
+        * wtf/MediaTime.cpp:
+        (WTF::signum):
+        * wtf/MediaTime.h:
+
+2013-10-22  Jer Noble  <jer.noble@apple.com>
+
+        [WTF] Add a multiplication operator (and a few others) to MediaTime
+        https://bugs.webkit.org/show_bug.cgi?id=123137
+
+        Reviewed by Eric Carlson.
+
+        Add a multiplication operator and an inequality operator to the
+        MediaTime class for use by MSE.
+
+        * wtf/MediaTime.cpp:
+        (WTF::signum): Moved to top of file.
+        (WTF::MediaTime::operator*): Added.
+        (WTF::MediaTime::operator!=): Added.
+        * wtf/MediaTime.h:
+        (WTF::operator*): Added non-class version of operator*.
+
 2013-10-21  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
 
         Make TYPE_CASTS_BASE more flexible

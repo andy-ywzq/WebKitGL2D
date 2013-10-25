@@ -52,9 +52,11 @@ public:
 
     virtual IndexedDB::TransactionMode mode() const = 0;
 
+    virtual void run() = 0;
     virtual void commit() = 0;
     virtual void abort() = 0;
     virtual void abort(PassRefPtr<IDBDatabaseError>) = 0;
+    virtual const HashSet<int64_t>& scope() const = 0;
 
     virtual void scheduleCreateObjectStoreOperation(const IDBObjectStoreMetadata&) = 0;
     virtual void scheduleDeleteObjectStoreOperation(const IDBObjectStoreMetadata&) = 0;
@@ -62,7 +64,7 @@ public:
     virtual void scheduleCreateIndexOperation(int64_t objectStoreId, const IDBIndexMetadata&) = 0;
     virtual void scheduleDeleteIndexOperation(int64_t objectStoreId, const IDBIndexMetadata&) = 0;
     virtual void scheduleGetOperation(const IDBDatabaseMetadata&, int64_t objectStoreId, int64_t indexId, PassRefPtr<IDBKeyRange>, IndexedDB::CursorType, PassRefPtr<IDBCallbacks>) = 0;
-    virtual void schedulePutOperation(const IDBObjectStoreMetadata&, PassRefPtr<SharedBuffer> value, PassRefPtr<IDBKey>, IDBDatabaseBackendInterface::PutMode, PassRefPtr<IDBCallbacks>, const Vector<int64_t>& indexIds, const Vector<IDBDatabaseBackendInterface::IndexKeys>&) = 0;
+    virtual void schedulePutOperation(const IDBObjectStoreMetadata&, PassRefPtr<SharedBuffer> value, PassRefPtr<IDBKey>, IDBDatabaseBackendInterface::PutMode, PassRefPtr<IDBCallbacks>, const Vector<int64_t>& indexIds, const Vector<IndexKeys>&) = 0;
     virtual void scheduleSetIndexesReadyOperation(size_t indexCount) = 0;
     virtual void scheduleOpenCursorOperation(int64_t objectStoreId, int64_t indexId, PassRefPtr<IDBKeyRange>, IndexedDB::CursorDirection, IndexedDB::CursorType, IDBDatabaseBackendInterface::TaskType, PassRefPtr<IDBCallbacks>) = 0;
     virtual void scheduleCountOperation(int64_t objectStoreId, int64_t indexId, PassRefPtr<IDBKeyRange>, PassRefPtr<IDBCallbacks>) = 0;

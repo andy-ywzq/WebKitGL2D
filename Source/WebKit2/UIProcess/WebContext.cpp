@@ -1089,14 +1089,19 @@ void WebContext::allowSpecificHTTPSCertificateForHost(const WebCertificateInfo* 
 {
 #if ENABLE(NETWORK_PROCESS)
     if (m_usesNetworkProcess && m_networkProcess) {
-        m_networkProcess->send(Messages::NetworkProcess::AllowSpecificHTTPSCertificateForHost(certificate->certificateInfo(), host), 0);
+        m_networkProcess->send(Messages::NetworkProcess::AllowSpecificHTTPSCertificateForHost(certificate->platformCertificateInfo(), host), 0);
         return;
     }
+#else
+#if USE(SOUP)
+    m_processes[0]->send(Messages::WebProcess::AllowSpecificHTTPSCertificateForHost(certificate->platformCertificateInfo(), host), 0);
+    return;
 #else
     UNUSED_PARAM(certificate);
     UNUSED_PARAM(host);
 #endif
-    // FIXME: It's unclear whether we want this SPI to be exposed and used for clients that don't use the NetworkProcess.
+#endif
+
     ASSERT_NOT_REACHED();
 }
 

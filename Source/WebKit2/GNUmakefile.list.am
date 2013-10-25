@@ -50,8 +50,8 @@ webkit2_h_api += \
 	$(WebKit2)/UIProcess/API/C/WKApplicationCacheManager.h \
 	$(WebKit2)/UIProcess/API/C/WKAuthenticationChallenge.h \
 	$(WebKit2)/UIProcess/API/C/WKAuthenticationDecisionListener.h \
-	$(WebKit2)/UIProcess/API/C/WKBackForwardList.h \
-	$(WebKit2)/UIProcess/API/C/WKBackForwardListItem.h \
+	$(WebKit2)/UIProcess/API/C/WKBackForwardListRef.h \
+	$(WebKit2)/UIProcess/API/C/WKBackForwardListItemRef.h \
 	$(WebKit2)/UIProcess/API/C/WKBatteryManager.h \
 	$(WebKit2)/UIProcess/API/C/WKBatteryStatus.h \
 	$(WebKit2)/UIProcess/API/C/WKColorPickerResultListener.h \
@@ -101,6 +101,7 @@ webkit2gtk_h_api += \
 	$(WebKit2)/UIProcess/API/gtk/WebKitAuthenticationRequest.h \
 	$(WebKit2)/UIProcess/API/gtk/WebKitBackForwardList.h \
 	$(WebKit2)/UIProcess/API/gtk/WebKitBackForwardListItem.h \
+	$(WebKit2)/UIProcess/API/gtk/WebKitCertificateInfo.h \
 	$(WebKit2)/UIProcess/API/gtk/WebKitContextMenu.h \
 	$(WebKit2)/UIProcess/API/gtk/WebKitContextMenuActions.h \
 	$(WebKit2)/UIProcess/API/gtk/WebKitContextMenuItem.h \
@@ -486,6 +487,8 @@ webkit2_sources += \
 	Source/WebKit2/Shared/SessionState.h \
 	Source/WebKit2/Shared/StatisticsData.cpp \
 	Source/WebKit2/Shared/StatisticsData.h \
+	Source/WebKit2/Shared/soup/PlatformCertificateInfo.cpp \
+	Source/WebKit2/Shared/soup/PlatformCertificateInfo.h \
 	Source/WebKit2/Shared/soup/SoupCookiePersistentStorageType.h \
 	Source/WebKit2/Shared/soup/WebCoreArgumentCodersSoup.cpp \
 	Source/WebKit2/Shared/TextCheckerState.h \
@@ -582,10 +585,10 @@ webkit2_sources += \
 	Source/WebKit2/UIProcess/API/C/WKAuthenticationChallenge.h \
 	Source/WebKit2/UIProcess/API/C/WKAuthenticationDecisionListener.cpp \
 	Source/WebKit2/UIProcess/API/C/WKAuthenticationDecisionListener.h \
-	Source/WebKit2/UIProcess/API/C/WKBackForwardList.cpp \
-	Source/WebKit2/UIProcess/API/C/WKBackForwardList.h \
-	Source/WebKit2/UIProcess/API/C/WKBackForwardListItem.cpp \
-	Source/WebKit2/UIProcess/API/C/WKBackForwardListItem.h \
+	Source/WebKit2/UIProcess/API/C/WKBackForwardListRef.cpp \
+	Source/WebKit2/UIProcess/API/C/WKBackForwardListRef.h \
+	Source/WebKit2/UIProcess/API/C/WKBackForwardListItemRef.cpp \
+	Source/WebKit2/UIProcess/API/C/WKBackForwardListItemRef.h \
 	Source/WebKit2/UIProcess/API/C/WKBatteryManager.cpp \
 	Source/WebKit2/UIProcess/API/C/WKBatteryManager.h \
 	Source/WebKit2/UIProcess/API/C/WKBatteryStatus.cpp \
@@ -680,6 +683,9 @@ webkit2_sources += \
 	Source/WebKit2/UIProcess/API/gtk/WebKitBackForwardListItem.h \
 	Source/WebKit2/UIProcess/API/gtk/WebKitBackForwardListItem.cpp \
 	Source/WebKit2/UIProcess/API/gtk/WebKitBackForwardListPrivate.h \
+	Source/WebKit2/UIProcess/API/gtk/WebKitCertificateInfo.cpp \
+	Source/WebKit2/UIProcess/API/gtk/WebKitCertificateInfo.h \
+	Source/WebKit2/UIProcess/API/gtk/WebKitCertificateInfoPrivate.h \
 	Source/WebKit2/UIProcess/API/gtk/WebKitContextMenu.cpp \
 	Source/WebKit2/UIProcess/API/gtk/WebKitContextMenu.h \
 	Source/WebKit2/UIProcess/API/gtk/WebKitContextMenuPrivate.h \
@@ -1364,6 +1370,8 @@ webkit2_plugin_process_sources += \
 	Source/WebKit2/Shared/gtk/ProcessExecutablePathGtk.cpp \
 	Source/WebKit2/Shared/gtk/WebEventFactory.cpp \
 	Source/WebKit2/Shared/cairo/ShareableBitmapCairo.cpp \
+	Source/WebKit2/Shared/soup/PlatformCertificateInfo.cpp \
+	Source/WebKit2/Shared/soup/PlatformCertificateInfo.h \
 	Source/WebKit2/Shared/soup/WebCoreArgumentCodersSoup.cpp \
 	Source/WebKit2/UIProcess/Launcher/ProcessLauncher.cpp \
 	Source/WebKit2/UIProcess/Launcher/ProcessLauncher.h \

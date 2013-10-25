@@ -1,3 +1,573 @@
+2013-10-24  Mark Rowe  <mrowe@apple.com>
+
+        Remove references to OS X 10.7 from Xcode configuration settings.
+
+        Now that we're not building for OS X 10.7 they're no longer needed.
+
+        Reviewed by Anders Carlsson.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+        * Configurations/FeatureDefines.xcconfig:
+        * Configurations/Version.xcconfig:
+
+2013-10-24  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/15312643> Prepare for the mysterious future.
+
+        Reviewed by David Kilzer.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+        * Configurations/FeatureDefines.xcconfig:
+        * Configurations/Version.xcconfig:
+
+2013-10-24  Mark Lam  <mark.lam@apple.com>
+
+        Better way to fix part of broken C Loop LLINT build.
+        https://bugs.webkit.org/show_bug.cgi?id=123271.
+
+        Reviewed by Geoffrey Garen.
+
+        Undoing offline asm hackery.
+
+        * llint/LowLevelInterpreter.cpp:
+        * llint/LowLevelInterpreter32_64.asm:
+        * llint/LowLevelInterpreter64.asm:
+        * offlineasm/cloop.rb:
+        * offlineasm/instructions.rb:
+
+2013-10-24  Mark Lam  <mark.lam@apple.com>
+
+        Fix broken C Loop LLINT build.
+        https://bugs.webkit.org/show_bug.cgi?id=123271.
+
+        Reviewed by Michael Saboff.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::printGetByIdCacheStatus): Added an UNUSED_PARAM().
+        (JSC::CodeBlock::dumpBytecode): Added #if ENABLE(JIT) to JIT only code.
+        * bytecode/GetByIdStatus.cpp:
+        (JSC::GetByIdStatus::computeFor): Added an UNUSED_PARAM().
+        * bytecode/PutByIdStatus.cpp:
+        (JSC::PutByIdStatus::computeFor): Added an UNUSED_PARAM().
+        * bytecode/StructureStubInfo.h:
+        - Added a stub StubInfoMap for non-JIT builds. StubInfoMap is still used
+          in function prototypes even when !ENABLE(JIT). Rather that adding #if's
+          in many places, we just provide a stub/placeholder implementation that
+          is unused but keeps the compiler happy.
+        * jit/JITOperations.h: Added #if ENABLE(JIT).
+        * llint/LowLevelInterpreter32_64.asm:
+        * llint/LowLevelInterpreter64.asm:
+        - The putByVal() macro reifies a slow path which is never taken in one case.
+          This translates into a label that is never used in the C Loop LLINT. The
+          C++ compiler doesn't like unused labels. So, we fix this by adding a
+          cloopUnusedLabel offline asm instruction that synthesizes the following:
+
+              if (false) goto unusedLabel;
+
+          This keeps the C++ compiler happy without changing code behavior.
+        * offlineasm/cloop.rb: Implementing cloopUnusedLabel.
+        * offlineasm/instructions.rb: Declaring cloopUnusedLabel.
+        * runtime/Executable.cpp:
+        (JSC::setupJIT): Added UNUSED_PARAM()s.
+        (JSC::ScriptExecutable::prepareForExecutionImpl):
+        - run-javascriptcore-tests have phases that forces the LLINT to be off
+          which in turn asserts that the JIT is enabled. With the C Loop LLINT,
+          this combination is illegal. So, we override the setup code here to
+          always use the LLINT if !ENABLE(JIT) regardless of what options are
+          passed in.
+
+2013-10-24  peavo@outlook.com  <peavo@outlook.com>
+
+        Uninitialized member causes crash when DFG JIT is not enabled.
+        https://bugs.webkit.org/show_bug.cgi?id=123270
+
+        Reviewed by Brent Fulgham.
+
+        The data member sizeOfLastScratchBuffer in the VM class is only initialized if DFG JIT is enabled, even though it's defined regardless.
+        This causes an early crash on Windows, which doesn't have DFG JIT enabled.
+
+        * runtime/VM.cpp:
+        (JSC::VM::VM): Initialize sizeOfLastScratchBuffer member regardless of whether DFG JIT is enabled.
+
+2013-10-24  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL] Build break with latest EFL 1.8 libraries.
+        https://bugs.webkit.org/show_bug.cgi?id=123245
+
+        Reviewed by Gyuyoung Kim.
+
+        After fixed build break on EFL 1.8 at r138326, EFL libraries are changed
+        Eo typedef and splitted header files which contain version macro.
+
+        * PlatformEfl.cmake: Added EO path to include directories.
+        * heap/HeapTimer.h: Changed Ecore_Timer typedef when EO exist.
+
+2013-10-23  Filip Pizlo  <fpizlo@apple.com>
+
+        Put all uses of LLVM intrinsics behind a single Option
+        https://bugs.webkit.org/show_bug.cgi?id=123219
+
+        Reviewed by Mark Hahnenberg.
+
+        * ftl/FTLExitThunkGenerator.cpp:
+        (JSC::FTL::ExitThunkGenerator::emitThunk):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::generateExitThunks):
+        (JSC::FTL::LowerDFGToLLVM::compileGetById):
+        (JSC::FTL::LowerDFGToLLVM::emitOSRExitCall):
+        (JSC::FTL::LowerDFGToLLVM::addExitArgumentForNode):
+        * ftl/FTLOSRExitCompiler.cpp:
+        (JSC::FTL::compileFTLOSRExit):
+        * runtime/Options.h:
+
+2013-10-23  Daniel Bates  <dabates@apple.com>
+
+        Fix JavaScriptCore build targets following <http://trac.webkit.org/changeset/157864>
+        (https://bugs.webkit.org/show_bug.cgi?id=123169)
+
+        Tell Xcode that the supported platforms for all JavaScriptCore targets are iOS and OS X.
+
+        * Configurations/Base.xcconfig:
+
+2013-10-23  Michael Saboff  <msaboff@apple.com>
+
+        LLInt arity check exception processing should start unwinding from caller
+        https://bugs.webkit.org/show_bug.cgi?id=123209
+
+        Reviewed by Oliver Hunt.
+
+        Use the caller frame returned from slow_path_call_arityCheck to process exceptions.
+
+        * llint/LowLevelInterpreter32_64.asm:
+        * llint/LowLevelInterpreter64.asm:
+
+2013-10-22  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL should be able to do some simple inline caches using LLVM patchpoints
+        https://bugs.webkit.org/show_bug.cgi?id=123164
+
+        Reviewed by Mark Hahnenberg.
+        
+        This implements GetById inline caches in the FTL using llvm.webkit.patchpoint.
+        
+        The idea is that we ask LLVM for a nop slide the size of a GetById inline
+        cache and then fill in the code after LLVM compilation is complete. For now, we
+        just use the system calling convention for the arguments and return. We also
+        still make some assumptions about registers that aren't correct. But, most of
+        the scaffolding is there and this will successfully patch an inline cache.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * assembler/AbstractMacroAssembler.h:
+        * assembler/LinkBuffer.cpp:
+        (JSC::LinkBuffer::finalizeCodeWithoutDisassembly):
+        (JSC::LinkBuffer::linkCode):
+        (JSC::LinkBuffer::allocate):
+        * assembler/LinkBuffer.h:
+        (JSC::LinkBuffer::LinkBuffer):
+        (JSC::LinkBuffer::link):
+        * ftl/FTLAbbreviations.h:
+        (JSC::FTL::constNull):
+        (JSC::FTL::buildCall):
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLCompile.cpp:
+        (JSC::FTL::fixFunctionBasedOnStackMaps):
+        * ftl/FTLInlineCacheDescriptor.h: Added.
+        (JSC::FTL::InlineCacheDescriptor::InlineCacheDescriptor):
+        (JSC::FTL::GetByIdDescriptor::GetByIdDescriptor):
+        (JSC::FTL::GetByIdDescriptor::stackmapID):
+        (JSC::FTL::GetByIdDescriptor::codeOrigin):
+        (JSC::FTL::GetByIdDescriptor::uid):
+        * ftl/FTLInlineCacheSize.cpp: Added.
+        (JSC::FTL::sizeOfGetById):
+        (JSC::FTL::sizeOfPutById):
+        * ftl/FTLInlineCacheSize.h: Added.
+        * ftl/FTLIntrinsicRepository.h:
+        * ftl/FTLJITFinalizer.cpp:
+        (JSC::FTL::JITFinalizer::finalizeFunction):
+        * ftl/FTLJITFinalizer.h:
+        * ftl/FTLLocation.cpp:
+        (JSC::FTL::Location::directGPR):
+        * ftl/FTLLocation.h:
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileGetById):
+        * ftl/FTLOutput.h:
+        (JSC::FTL::Output::call):
+        * ftl/FTLSlowPathCall.cpp: Added.
+        (JSC::FTL::callOperation):
+        * ftl/FTLSlowPathCall.h: Added.
+        (JSC::FTL::SlowPathCall::SlowPathCall):
+        (JSC::FTL::SlowPathCall::call):
+        (JSC::FTL::SlowPathCall::key):
+        * ftl/FTLSlowPathCallKey.cpp: Added.
+        (JSC::FTL::SlowPathCallKey::dump):
+        * ftl/FTLSlowPathCallKey.h: Added.
+        (JSC::FTL::SlowPathCallKey::SlowPathCallKey):
+        (JSC::FTL::SlowPathCallKey::usedRegisters):
+        (JSC::FTL::SlowPathCallKey::callTarget):
+        (JSC::FTL::SlowPathCallKey::offset):
+        (JSC::FTL::SlowPathCallKey::isEmptyValue):
+        (JSC::FTL::SlowPathCallKey::isDeletedValue):
+        (JSC::FTL::SlowPathCallKey::operator==):
+        (JSC::FTL::SlowPathCallKey::hash):
+        (JSC::FTL::SlowPathCallKeyHash::hash):
+        (JSC::FTL::SlowPathCallKeyHash::equal):
+        * ftl/FTLStackMaps.cpp:
+        (JSC::FTL::StackMaps::Location::directGPR):
+        * ftl/FTLStackMaps.h:
+        * ftl/FTLState.h:
+        * ftl/FTLThunks.cpp:
+        (JSC::FTL::slowPathCallThunkGenerator):
+        * ftl/FTLThunks.h:
+        (JSC::FTL::Thunks::getSlowPathCallThunk):
+        * jit/CCallHelpers.h:
+        (JSC::CCallHelpers::setupArguments):
+        * jit/GPRInfo.h:
+        * jit/JITInlineCacheGenerator.cpp:
+        (JSC::garbageStubInfo):
+        (JSC::JITInlineCacheGenerator::JITInlineCacheGenerator):
+        (JSC::JITByIdGenerator::finalize):
+        * jit/JITInlineCacheGenerator.h:
+        (JSC::JITByIdGenerator::slowPathBegin):
+        * jit/RegisterSet.cpp:
+        (JSC::RegisterSet::stackRegisters):
+        (JSC::RegisterSet::specialRegisters):
+        (JSC::RegisterSet::calleeSaveRegisters):
+        (JSC::RegisterSet::allGPRs):
+        (JSC::RegisterSet::allFPRs):
+        (JSC::RegisterSet::allRegisters):
+        (JSC::RegisterSet::dump):
+        * jit/RegisterSet.h:
+        (JSC::RegisterSet::exclude):
+        (JSC::RegisterSet::numberOfSetRegisters):
+        (JSC::RegisterSet::RegisterSet):
+        (JSC::RegisterSet::isEmptyValue):
+        (JSC::RegisterSet::isDeletedValue):
+        (JSC::RegisterSet::operator==):
+        (JSC::RegisterSet::hash):
+        (JSC::RegisterSetHash::hash):
+        (JSC::RegisterSetHash::equal):
+        * runtime/Options.h:
+
+2013-10-22  Filip Pizlo  <fpizlo@apple.com>
+
+        jitCompileAndSetHeuristics should DeferGCForAWhile
+        https://bugs.webkit.org/show_bug.cgi?id=123196
+
+        Reviewed by Mark Hahnenberg.
+        
+        This fixes random crashes in V8v7/raytrace. I only see those crashes on exactly one of
+        my machines. I don't think this is testable; we just need to steadily converge towards
+        getting our uses of DeferGC to be right and then be careful not to regress. We're not
+        there yet, obviously.
+        
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::jitCompileAndSetHeuristics):
+
+2013-10-23  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Upstream more JavaScriptCore build configuration changes
+        https://bugs.webkit.org/show_bug.cgi?id=123169
+
+        Reviewed by David Kilzer.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/Version.xcconfig:
+        * Configurations/iOS.xcconfig: Added.
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
+2013-10-23  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Export DefaultGCActivityCallback member functions
+        https://bugs.webkit.org/show_bug.cgi?id=123175
+
+        Reviewed by David Kilzer.
+
+        * runtime/GCActivityCallback.h:
+
+2013-10-23  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Upstream more ARMv7s bits
+        https://bugs.webkit.org/show_bug.cgi?id=123052
+
+        Reviewed by Joseph Pecoraro.
+
+        * Configurations/JavaScriptCore.xcconfig:
+
+2013-10-22  Andreas Kling  <akling@apple.com>
+
+        Minor VM* -> VM& cleanups in HashTable and Keywords.
+        <https://webkit.org/b/123183>
+
+        Turn some VM* variables that will never be null into VM&.
+
+        Reviewed by Geoffrey Garen.
+
+2013-10-22  Geoffrey Garen  <ggaren@apple.com>
+
+        REGRESSION: `if (false === (true && undefined)) console.log("wrong!");` logs "wrong!", shouldn't!
+        https://bugs.webkit.org/show_bug.cgi?id=123179
+
+        Reviewed by Mark Hahnenberg.
+
+        * parser/NodeConstructors.h:
+        (JSC::LogicalOpNode::LogicalOpNode):
+        * parser/ResultType.h:
+        (JSC::ResultType::forLogicalOp): Don't assume that && produces a boolean.
+        This is JavaScript (aka Sparta).
+
+2013-10-22  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r157819.
+        http://trac.webkit.org/changeset/157819
+        https://bugs.webkit.org/show_bug.cgi?id=123180
+
+        Broke 32-bit builds (Requested by smfr on #webkit).
+
+        * Configurations/JavaScriptCore.xcconfig:
+        * Configurations/ToolExecutable.xcconfig:
+
+2013-10-22  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Upstream more ARMv7s bits
+        https://bugs.webkit.org/show_bug.cgi?id=123052
+
+        Reviewed by Joseph Pecoraro.
+
+        * Configurations/JavaScriptCore.xcconfig:
+        * Configurations/ToolExecutable.xcconfig: Enable CLANG_ENABLE_OBJC_ARC for i386 as I'm
+        modifying a file in JavaScriptCore/Configurations.
+
+2013-10-22  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Upstream JSLock changes
+        https://bugs.webkit.org/show_bug.cgi?id=123107
+
+        Reviewed by Geoffrey Garen.
+
+        * runtime/JSLock.cpp:
+        (JSC::JSLock::unlock):
+        (JSC::JSLock::dropAllLocks): Modified to take a SpinLock, used only on iOS.
+        (JSC::JSLock::dropAllLocksUnconditionally): Modified to take a SpinLock, used only on iOS. Also
+        use pre-increment instead of post-increment when we're not using the return value of the instruction.
+        (JSC::JSLock::grabAllLocks): Modified to take a SpinLock, used only on iOS. Also change
+        places where we were using post-increment/post-decrement to use pre-increment/pre-decrement,
+        since we don't use the return value of such instructions.
+        (JSC::JSLock::DropAllLocks::DropAllLocks): Modified to support releasing all locks unconditionally.
+        Take a spin lock before releasing all locks on iOS. Also, use nullptr instead of 0.
+        (JSC::JSLock::DropAllLocks::~DropAllLocks): Take a spin lock before acquiring all locks on iOS.
+        * runtime/JSLock.h: Remove extraneous argument name "exec" from DropAllLocks as the data type of
+        the argument is sufficiently descriptive of its purpose.
+
+2013-10-22  Julien Brianceau  <jbriance@cisco.com>
+
+        [arm] Add missing setupArgumentsWithExecState() prototypes to fix build.
+        https://bugs.webkit.org/show_bug.cgi?id=123166
+
+        Reviewed by Michael Saboff.
+
+        * jit/CCallHelpers.h:
+        (JSC::CCallHelpers::setupArgumentsWithExecState):
+
+2013-10-22  Julien Brianceau  <jbriance@cisco.com>
+
+        [sh4][mips][arm] Fix crashes in JSC (32-bit only).
+        https://bugs.webkit.org/show_bug.cgi?id=123165
+
+        Reviewed by Michael Saboff.
+
+        * jit/JITInlines.h:
+        (JSC::JIT::callOperationNoExceptionCheck): Add missing EABI_32BIT_DUMMY_ARG.
+        (JSC::JIT::callOperation): The last TrustedImm32(arg3) is a bit overkill for SH4 :)
+        (JSC::JIT::callOperation): Add missing EABI_32BIT_DUMMY_ARG.
+        (JSC::JIT::callOperation): Fix tag and payload order for V_JITOperation_EJJJ prototype.
+
+2013-10-22  Julien Brianceau  <jbriance@cisco.com>
+
+        REGRESSION(r157690, r157699) Fix architectures using AssemblerBufferWithConstantPool.
+        https://bugs.webkit.org/show_bug.cgi?id=123092
+
+        Reviewed by Michael Saboff.
+
+        Impacted architectures are SH4 and ARM_TRADITIONAL.
+
+        * assembler/ARMAssembler.h:
+        (JSC::ARMAssembler::buffer):
+        * assembler/AssemblerBufferWithConstantPool.h:
+        (JSC::AssemblerBufferWithConstantPool::flushConstantPool):
+        * assembler/LinkBuffer.cpp:
+        (JSC::LinkBuffer::linkCode):
+        * assembler/SH4Assembler.h:
+        (JSC::SH4Assembler::buffer):
+
+2013-10-22  Julien Brianceau  <jbriance@cisco.com>
+
+        Remove unused stuff in JIT stubs.
+        https://bugs.webkit.org/show_bug.cgi?id=123155
+
+        Reviewed by Michael Saboff.
+
+        * jit/JITStubs.h:
+        * jit/JITStubsARM.h:
+        (JSC::ctiTrampoline):
+        * jit/JITStubsARM64.h:
+        * jit/JITStubsARMv7.h:
+        * jit/JITStubsMIPS.h:
+        * jit/JITStubsSH4.h:
+        * jit/JITStubsX86.h:
+        * jit/JITStubsX86_64.h:
+
+2013-10-22  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Upstream OS-version-specific install paths for JavaScriptCore.framework
+        https://bugs.webkit.org/show_bug.cgi?id=123115
+        <rdar://problem/13696872>
+
+        Reviewed by Andy Estes.
+
+        Based on a patch by Mark Hahnenberg.
+
+        Add support for running JavaScriptCore-based apps, built against the iOS 7 SDK, on older versions of iOS.
+
+        * API/JSBase.cpp:
+
+2013-10-22  Julien Brianceau  <jbriance@cisco.com>
+
+        [sh4] Add missing lastRegister(), firstFPRegister() and lastFPRegister(). 
+        https://bugs.webkit.org/show_bug.cgi?id=123157
+
+        Reviewed by Andreas Kling.
+
+        * assembler/SH4Assembler.h:
+        (JSC::SH4Assembler::lastRegister):
+        (JSC::SH4Assembler::firstFPRegister):
+        (JSC::SH4Assembler::lastFPRegister):
+
+2013-10-22  Brian Holt  <brian.holt@samsung.com>
+
+        Build break on ARMv7 after r157209
+        https://bugs.webkit.org/show_bug.cgi?id=122890
+
+        Reviewed by Csaba Osztrogonác.
+
+        Add framePointerRegister and first/last register helpers for ARM_TRADITIONAL.
+
+        * assembler/ARMAssembler.h:
+        * assembler/MacroAssemblerARM.h:
+        (JSC::MacroAssemblerARM::firstRegister):
+        (JSC::MacroAssemblerARM::lastRegister):
+        (JSC::MacroAssemblerARM::firstFPRegister):
+        (JSC::MacroAssemblerARM::lastFPRegister):
+
+2013-10-21  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Upstream JSGlobalObject::shouldInterruptScriptBeforeTimeout()
+        https://bugs.webkit.org/show_bug.cgi?id=123045
+
+        Reviewed by Joseph Pecoraro.
+
+        * jsc.cpp: Add function pointer for shouldInterruptScriptBeforeTimeout
+        to global method table.
+        * runtime/JSGlobalObject.cpp: Ditto.
+        * runtime/JSGlobalObject.h:
+        (JSC::JSGlobalObject::shouldInterruptScriptBeforeTimeout): Added.
+
+2013-10-21  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Upstream JSC Objective-C API compiler warning fixes
+        https://bugs.webkit.org/show_bug.cgi?id=123125
+
+        Reviewed by Mark Hahnenberg.
+
+        Based on a patch by Mark Hahnenberg.
+
+        * API/JSValue.mm:
+        (-[JSValue toPoint]): Cast to CGFloat to fix some compiler warnings about double narrowing to float.
+        (-[JSValue toSize]): Ditto.
+        * API/tests/testapi.mm: Changed a test that was failing due to overflow of 32-bit NSUInteger on armv7.
+
+2013-10-21  Daniel Bates  <dabates@apple.com>
+
+        [iOS] Mark classes JS{Context, ManagedValue, Value, VirtualMachine} as
+        available since iOS 7.0
+        https://bugs.webkit.org/show_bug.cgi?id=123122
+
+        Reviewed by Dan Bernstein.
+
+        * API/JSContext.h:
+        * API/JSManagedValue.h:
+        * API/JSValue.h:
+        * API/JSVirtualMachine.h:
+
+2013-10-20  Mark Lam  <mark.lam@apple.com>
+
+        Avoid JSC debugger overhead unless needed.
+        https://bugs.webkit.org/show_bug.cgi?id=123084.
+
+        Reviewed by Geoffrey Garen.
+
+        - If no breakpoints are set, we now avoid calling the debug hook callbacks.
+        - If no break on exception is set, we also avoid exception event debug callbacks.
+        - When we return from the ScriptDebugServer to the JSC::Debugger, we may no
+          longer call the debug hook callbacks if not needed. Hence, the m_currentCallFrame
+          pointer in the ScriptDebugServer may become stale. To avoid this issue, before
+          returning, the ScriptDebugServer will clear its m_currentCallFrame if
+          needsOpDebugCallbacks() is false.
+
+        * debugger/Debugger.cpp:
+        (JSC::Debugger::Debugger):
+        (JSC::Debugger::setNeedsExceptionCallbacks):
+        (JSC::Debugger::setShouldPause):
+        (JSC::Debugger::updateNumberOfBreakpoints):
+        (JSC::Debugger::updateNeedForOpDebugCallbacks):
+        * debugger/Debugger.h:
+        * interpreter/Interpreter.cpp:
+        (JSC::Interpreter::unwind):
+        (JSC::Interpreter::debug):
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_debug):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_debug):
+        * llint/LLIntOffsetsExtractor.cpp:
+        * llint/LowLevelInterpreter.asm:
+
+2013-10-21  Brent Fulgham  <bfulgham@apple.com>
+
+        [WIN] Unreviewed build correction.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj: Handle new JIT files as C++ implementation
+          sources, not header files.
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters: Ditto.
+
+2013-10-21  Oliver Hunt  <oliver@apple.com>
+
+        Support computed property names in object literals
+        https://bugs.webkit.org/show_bug.cgi?id=123112
+
+        Reviewed by Michael Saboff.
+
+        Add support for computed property names to the parser.
+
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::PropertyListNode::emitBytecode):
+        * parser/ASTBuilder.h:
+        (JSC::ASTBuilder::createProperty):
+        (JSC::ASTBuilder::getName):
+        * parser/NodeConstructors.h:
+        (JSC::PropertyNode::PropertyNode):
+        * parser/Nodes.h:
+        (JSC::PropertyNode::expressionName):
+        (JSC::PropertyNode::name):
+        * parser/Parser.cpp:
+        (JSC::::parseProperty):
+        (JSC::::parseStrictObjectLiteral):
+        * parser/SyntaxChecker.h:
+        (JSC::SyntaxChecker::Property::Property):
+        (JSC::SyntaxChecker::createProperty):
+        (JSC::SyntaxChecker::operatorStackPop):
+
 2013-10-21  Michael Saboff  <msaboff@apple.com>
 
         Add option so that JSC will crash if it can't allocate executable memory for the JITs

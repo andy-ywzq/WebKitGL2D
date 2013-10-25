@@ -72,6 +72,10 @@ struct WebProcessCreationParameters;
 #if ENABLE(NETWORK_PROCESS)
 class NetworkProcessConnection;
 class WebResourceLoadScheduler;
+#else
+#if USE(SOUP)
+class PlatformCertificateInfo;
+#endif
 #endif
 
 #if ENABLE(DATABASE_PROCESS)
@@ -168,6 +172,10 @@ public:
     void nonVisibleProcessCleanupTimerFired(WebCore::Timer<WebProcess>*);
 
     void updateActivePages();
+
+#if !ENABLE(NETWORK_PROCESS) && USE(SOUP)
+    void allowSpecificHTTPSCertificateForHost(const PlatformCertificateInfo&, const String& host);
+#endif
 
 private:
     WebProcess();

@@ -762,14 +762,6 @@ bool GraphicsLayerCA::addAnimation(const KeyframeValueList& valueList, const Int
     if (animationHasStepsTimingFunction(valueList, anim))
         return false;
 
-#if PLATFORM(WIN)
-    // CoreAnimation on Windows does not handle a reverse direction. Fall
-    // back to software animation in that case.
-    // https://bugs.webkit.org/show_bug.cgi?id=85121
-    if (!anim->directionIsForwards())
-        return false;
-#endif
-
     bool createdAnimations = false;
     if (valueList.property() == AnimatedPropertyWebkitTransform)
         createdAnimations = createTransformAnimationsFromKeyframes(valueList, anim, animationName, timeOffset, boxSize);
@@ -2255,7 +2247,7 @@ bool GraphicsLayerCA::createAnimationFromKeyframes(const KeyframeValueList& valu
 
 bool GraphicsLayerCA::appendToUncommittedAnimations(const KeyframeValueList& valueList, const TransformOperations* operations, const Animation* animation, const String& animationName, const IntSize& boxSize, int animationIndex, double timeOffset, bool isMatrixAnimation)
 {
-    TransformOperation::OperationType transformOp = isMatrixAnimation ? TransformOperation::MATRIX_3D : operations->operations().at(animationIndex)->getOperationType();
+    TransformOperation::OperationType transformOp = isMatrixAnimation ? TransformOperation::MATRIX_3D : operations->operations().at(animationIndex)->type();
     bool additive = animationIndex > 0;
     bool isKeyframe = valueList.size() > 2;
 
@@ -2367,7 +2359,7 @@ bool GraphicsLayerCA::appendToUncommittedAnimations(const KeyframeValueList& val
 {
     bool isKeyframe = valueList.size() > 2;
     
-    FilterOperation::OperationType filterOp = operation->getOperationType();
+    FilterOperation::OperationType filterOp = operation->type();
     int numAnimatedProperties = PlatformCAFilters::numAnimatedFilterProperties(filterOp);
     
     // Each filter might need to animate multiple properties, each with their own keyPath. The keyPath is always of the form:
@@ -2415,7 +2407,7 @@ bool GraphicsLayerCA::createFilterAnimationsFromKeyframes(const KeyframeValueLis
 
     // FIXME: We can't currently hardware animate shadows.
     for (int i = 0; i < numAnimations; ++i) {
-        if (operations.at(i)->getOperationType() == FilterOperation::DROP_SHADOW)
+        if (operations.at(i)->type() == FilterOperation::DROP_SHADOW)
             return false;
     }
 
@@ -2706,12 +2698,12 @@ bool GraphicsLayerCA::setFilterAnimationEndpoints(const KeyframeValueList& value
     ASSERT(fromOperation || toOperation);
 
     if (!fromOperation) {
-        defaultFromOperation = DefaultFilterOperation::create(toOperation->getOperationType());
+        defaultFromOperation = DefaultFilterOperation::create(toOperation->type());
         fromOperation = defaultFromOperation.get();
     }
 
     if (!toOperation) {
-        defaultToOperation = DefaultFilterOperation::create(fromOperation->getOperationType());
+        defaultToOperation = DefaultFilterOperation::create(fromOperation->type());
         toOperation = defaultToOperation.get();
     }
 

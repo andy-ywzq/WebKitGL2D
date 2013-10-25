@@ -43,7 +43,7 @@
 namespace WebCore {
 class RTCPeerConnectionHandlerClient;
 
-PassOwnPtr<RTCPeerConnectionHandler> RTCPeerConnectionHandler::create(RTCPeerConnectionHandlerClient* client)
+static PassOwnPtr<RTCPeerConnectionHandler> createHandler(RTCPeerConnectionHandlerClient* client)
 {
 #if USE(WEBRTCLIB)
     return adoptPtr(new RTCPeerConnectionHandlerWebRTC(client));
@@ -52,6 +52,8 @@ PassOwnPtr<RTCPeerConnectionHandler> RTCPeerConnectionHandler::create(RTCPeerCon
     return nullptr;
 #endif
 }
+
+CreatePeerConnectionHandler RTCPeerConnectionHandler::create = createHandler;
 
 } // namespace WebCore
 

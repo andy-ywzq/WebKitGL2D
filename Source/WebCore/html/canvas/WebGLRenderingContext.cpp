@@ -429,6 +429,9 @@ OwnPtr<WebGLRenderingContext> WebGLRenderingContext::create(HTMLCanvasElement* c
     if (frame->settings().multithreadedWebGLEnabled())
         attributes.multithreaded = true;
 
+    if (frame->settings().forceSoftwareWebGLRendering())
+        attributes.forceSoftwareRenderer = true;
+
     RefPtr<GraphicsContext3D> context(GraphicsContext3D::create(attributes, hostWindow));
 
     if (!context || !context->makeContextCurrent()) {
@@ -1790,14 +1793,14 @@ bool WebGLRenderingContext::validateIndexArrayConservative(GC3Denum type, unsign
         case GraphicsContext3D::UNSIGNED_BYTE: {
             const GC3Dubyte* p = static_cast<const GC3Dubyte*>(buffer->data());
             for (GC3Dsizeiptr i = 0; i < numElements; i++)
-                maxIndex = max(maxIndex, static_cast<int>(p[i]));
+                maxIndex = std::max(maxIndex, static_cast<int>(p[i]));
             break;
         }
         case GraphicsContext3D::UNSIGNED_SHORT: {
             numElements /= sizeof(GC3Dushort);
             const GC3Dushort* p = static_cast<const GC3Dushort*>(buffer->data());
             for (GC3Dsizeiptr i = 0; i < numElements; i++)
-                maxIndex = max(maxIndex, static_cast<int>(p[i]));
+                maxIndex = std::max(maxIndex, static_cast<int>(p[i]));
             break;
         }
         case GraphicsContext3D::UNSIGNED_INT: {
@@ -1806,7 +1809,7 @@ bool WebGLRenderingContext::validateIndexArrayConservative(GC3Denum type, unsign
             numElements /= sizeof(GC3Duint);
             const GC3Duint* p = static_cast<const GC3Duint*>(buffer->data());
             for (GC3Dsizeiptr i = 0; i < numElements; i++)
-                maxIndex = max(maxIndex, static_cast<int>(p[i]));
+                maxIndex = std::max(maxIndex, static_cast<int>(p[i]));
             break;
         }
         default:
@@ -5153,9 +5156,10 @@ bool WebGLRenderingContext::validateTexFuncParameters(const char* functionName,
         return false;
     }
 
+    GC3Dint maxTextureSizeForLevel = pow(2.0, m_maxTextureLevel - 1 - level);
     switch (target) {
     case GraphicsContext3D::TEXTURE_2D:
-        if (width > m_maxTextureSize || height > m_maxTextureSize) {
+        if (width > maxTextureSizeForLevel || height > maxTextureSizeForLevel) {
             synthesizeGLError(GraphicsContext3D::INVALID_VALUE, functionName, "width or height out of range");
             return false;
         }
@@ -5167,12 +5171,12 @@ bool WebGLRenderingContext::validateTexFuncParameters(const char* functionName,
     case GraphicsContext3D::TEXTURE_CUBE_MAP_POSITIVE_Z:
     case GraphicsContext3D::TEXTURE_CUBE_MAP_NEGATIVE_Z:
         if (functionType != TexSubImage2D && width != height) {
-          synthesizeGLError(GraphicsContext3D::INVALID_VALUE, functionName, "width != height for cube map");
-          return false;
+            synthesizeGLError(GraphicsContext3D::INVALID_VALUE, functionName, "width != height for cube map");
+            return false;
         }
         // No need to check height here. For texImage width == height.
         // For texSubImage that will be checked when checking yoffset + height is in range.
-        if (width > m_maxCubeMapTextureSize) {
+        if (width > maxTextureSizeForLevel) {
             synthesizeGLError(GraphicsContext3D::INVALID_VALUE, functionName, "width or height out of range for cube map");
             return false;
         }
@@ -5325,13 +5329,13 @@ bool WebGLRenderingContext::validateCompressedTexFuncData(const char* functionNa
     case Extensions3D::COMPRESSED_RGB_PVRTC_4BPPV1_IMG:
     case Extensions3D::COMPRESSED_RGBA_PVRTC_4BPPV1_IMG:
         {
-            bytesRequired = max(width, 8) * max(height, 8) / 2;
+            bytesRequired = std::max(width, 8) * std::max(height, 8) / 2;
         }
         break;
     case Extensions3D::COMPRESSED_RGB_PVRTC_2BPPV1_IMG:
     case Extensions3D::COMPRESSED_RGBA_PVRTC_2BPPV1_IMG:
         {
-            bytesRequired = max(width, 8) * max(height, 8) / 4;
+            bytesRequired = std::max(width, 8) * std::max(height, 8) / 4;
         }
         break;
     default:

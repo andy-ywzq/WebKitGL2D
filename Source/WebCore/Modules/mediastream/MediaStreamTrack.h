@@ -49,6 +49,11 @@ class MediaTrackConstraints;
 
 class MediaStreamTrack : public RefCounted<MediaStreamTrack>, public ScriptWrappable, public ActiveDOMObject, public EventTargetWithInlineData, public MediaStreamSource::Observer {
 public:
+    class Observer {
+    public:
+        virtual void trackDidEnd() = 0;
+    };
+
     virtual ~MediaStreamTrack();
 
     virtual const AtomicString& kind() const = 0;
@@ -63,6 +68,7 @@ public:
     bool remote() const;
 
     const AtomicString& readyState() const;
+    void setState(MediaStreamSource::ReadyState);
 
     static void getSources(ScriptExecutionContext*, PassRefPtr<MediaStreamTrackSourcesCallback>, ExceptionCode&);
 
@@ -84,6 +90,9 @@ public:
     void setSource(MediaStreamSource*);
 
     bool ended() const;
+
+    void addObserver(Observer*);
+    void removeObserver(Observer*);
 
     // EventTarget
     virtual EventTargetInterface eventTargetInterface() const OVERRIDE FINAL { return MediaStreamTrackEventTargetInterfaceType; }
@@ -123,6 +132,8 @@ private:
     MediaStreamSource::ReadyState m_readyState;
     mutable String m_id;
     Mutex m_mutex;
+
+    Vector<Observer*> m_observers;
 
     bool m_stopped;
     bool m_enabled;

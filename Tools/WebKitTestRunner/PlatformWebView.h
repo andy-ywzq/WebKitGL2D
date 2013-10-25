@@ -55,7 +55,7 @@ typedef int PlatformWindow;
 #elif PLATFORM(EFL)
 typedef struct _Ecore_Evas Ecore_Evas;
 #if USE(EO)
-typedef struct _Eo Evas_Object;
+typedef struct _Eo_Opaque Evas_Object;
 #else
 typedef struct _Evas_Object Evas_Object;
 #endif

@@ -187,8 +187,6 @@
 #include "WebVTTElement.h"
 #endif
 
-using namespace std;
-
 namespace WebCore {
 
 using namespace HTMLNames;
@@ -1268,7 +1266,7 @@ void StyleResolver::adjustRenderStyle(RenderStyle* style, RenderStyle* parentSty
         || style->hasBlendMode()
         || style->position() == StickyPosition
         || (style->position() == FixedPosition && e && e->document().page() && e->document().page()->settings().fixedPositionCreatesStackingContext())
-        || style->hasStyleRegion()
+        || style->hasFlowFrom()
         ))
         style->setZIndex(0);
 
@@ -3401,7 +3399,7 @@ void StyleResolver::loadPendingSVGDocuments()
     Vector<RefPtr<FilterOperation>>& filterOperations = state.style()->mutableFilter().operations();
     for (unsigned i = 0; i < filterOperations.size(); ++i) {
         RefPtr<FilterOperation> filterOperation = filterOperations.at(i);
-        if (filterOperation->getOperationType() == FilterOperation::REFERENCE) {
+        if (filterOperation->type() == FilterOperation::REFERENCE) {
             ReferenceFilterOperation* referenceFilter = static_cast<ReferenceFilterOperation*>(filterOperation.get());
 
             WebKitCSSSVGDocumentValue* value = state.pendingSVGDocuments().get(referenceFilter);
@@ -3464,7 +3462,7 @@ void StyleResolver::loadPendingShaders()
     Vector<RefPtr<FilterOperation>>& filterOperations = m_state.style()->mutableFilter().operations();
     for (unsigned i = 0; i < filterOperations.size(); ++i) {
         RefPtr<FilterOperation> filterOperation = filterOperations.at(i);
-        if (filterOperation->getOperationType() == FilterOperation::CUSTOM) {
+        if (filterOperation->type() == FilterOperation::CUSTOM) {
             CustomFilterOperation* customFilter = static_cast<CustomFilterOperation*>(filterOperation.get());
             ASSERT(customFilter->program());
             StyleCustomFilterProgram* program = static_cast<StyleCustomFilterProgram*>(customFilter->program());
@@ -4121,9 +4119,9 @@ int StyleResolver::viewportPercentageValue(CSSPrimitiveValue& unit, int percenta
     if (unit.isViewportPercentageWidth())
         return viewPortWidth;
     if (unit.isViewportPercentageMax())
-        return max(viewPortWidth, viewPortHeight);
+        return std::max(viewPortWidth, viewPortHeight);
     if (unit.isViewportPercentageMin())
-        return min(viewPortWidth, viewPortHeight);
+        return std::min(viewPortWidth, viewPortHeight);
 
     ASSERT_NOT_REACHED();
     return 0;

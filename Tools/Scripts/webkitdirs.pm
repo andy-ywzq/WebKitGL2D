@@ -362,7 +362,7 @@ sub jscPath($)
 {
     my ($productDir) = @_;
     my $jscName = "jsc";
-    $jscName .= "_debug"  if configurationForVisualStudio() eq "Debug_All";
+    $jscName .= "_debug"  if configuration() eq "Debug_All";
     $jscName .= ".exe" if (isWindows() || isCygwin());
     return "$productDir/$jscName" if -e "$productDir/$jscName";
     return "$productDir/JavaScriptCore.framework/Resources/$jscName";
@@ -462,7 +462,7 @@ sub determineConfigurationForVisualStudio
     return if defined $configurationForVisualStudio;
     determineConfiguration();
     # FIXME: We should detect when Debug_All or Production has been chosen.
-    $configurationForVisualStudio = $configuration . (isWin64() ? "|x64" : "");
+    $configurationForVisualStudio = $configuration . (isWin64() ? "|x64" : "|Win32");
 }
 
 sub usesPerConfigurationBuildDirectory
@@ -623,6 +623,7 @@ sub determinePassedConfiguration
             $passedConfiguration = "Debug";
             $passedConfiguration .= "_WinCairo" if (isWinCairo() && isCygwin());
             $passedConfiguration .= "|x64" if isWin64();
+            $passedConfiguration .= "|Win32" if isWindows() && !isWin64();
             return;
         }
         if ($opt =~ /^--release$/i) {
@@ -630,6 +631,7 @@ sub determinePassedConfiguration
             $passedConfiguration = "Release";
             $passedConfiguration .= "_WinCairo" if (isWinCairo() && isCygwin());
             $passedConfiguration .= "|x64" if isWin64();
+            $passedConfiguration .= "|Win32" if isWindows() && !isWin64();
             return;
         }
         if ($opt =~ /^--profil(e|ing)$/i) {
@@ -637,6 +639,7 @@ sub determinePassedConfiguration
             $passedConfiguration = "Profiling";
             $passedConfiguration .= "_WinCairo" if (isWinCairo() && isCygwin());
             $passedConfiguration .= "|x64" if isWin64();
+            $passedConfiguration .= "|Win32" if isWindows() && !isWin64();
             return;
         }
     }
@@ -771,7 +774,7 @@ sub safariPath
             my $path = "$configurationProductDir/Safari.exe";
             my $debugPath = "$configurationProductDir/Safari_debug.exe";
 
-            if (configurationForVisualStudio() eq "Debug_All" && -x $debugPath) {
+            if (configuration() eq "Debug_All" && -x $debugPath) {
                 $safariBundle = $debugPath;
             } elsif (-x $path) {
                 $safariBundle = $path;

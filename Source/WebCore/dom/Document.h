@@ -417,6 +417,7 @@ public:
     virtual URL baseURI() const OVERRIDE;
 
 #if ENABLE(PAGE_VISIBILITY_API)
+    void visibilityStateChanged();
     String visibilityState() const;
     bool hidden() const;
 #endif
@@ -526,7 +527,7 @@ public:
     void updateStyleIfNeeded();
     void updateLayout();
     void updateLayoutIgnorePendingStylesheets();
-    PassRefPtr<RenderStyle> styleForElementIgnoringPendingStylesheets(Element*);
+    PassRef<RenderStyle> styleForElementIgnoringPendingStylesheets(Element*);
 
     // Returns true if page box (margin boxes and page borders) is visible.
     bool isPageBoxVisible(int pageIndex);
@@ -965,6 +966,11 @@ public:
     void registerForCaptionPreferencesChangedCallbacks(Element*);
     void unregisterForCaptionPreferencesChangedCallbacks(Element*);
     void captionPreferencesChanged();
+#endif
+
+#if ENABLE(PAGE_VISIBILITY_API)
+    void registerForVisibilityStateChangedCallbacks(Element*);
+    void unregisterForVisibilityStateChangedCallbacks(Element*);
 #endif
 
     void setShouldCreateRenderers(bool);
@@ -1437,6 +1443,10 @@ private:
     HashSet<Element*> m_privateBrowsingStateChangedElements;
 #if ENABLE(VIDEO_TRACK)
     HashSet<Element*> m_captionPreferencesChangedElements;
+#endif
+
+#if ENABLE(PAGE_VISIBILITY_API)
+    HashSet<Element*> m_visibilityStateCallbackElements;
 #endif
 
     HashMap<StringImpl*, Element*, CaseFoldingHash> m_elementsByAccessKey;

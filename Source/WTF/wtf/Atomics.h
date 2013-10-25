@@ -75,7 +75,6 @@ extern "C" void _ReadWriteBarrier(void);
 namespace WTF {
 
 #if OS(WINDOWS)
-#define WTF_USE_LOCKFREE_THREADSAFEREFCOUNTED 1
 
 #if OS(WINCE)
 inline int atomicIncrement(int* addend) { return InterlockedIncrement(reinterpret_cast<long*>(addend)); }
@@ -95,14 +94,12 @@ inline int64_t atomicDecrement(int64_t volatile* addend) { return InterlockedDec
 #endif
 
 #elif OS(QNX)
-#define WTF_USE_LOCKFREE_THREADSAFEREFCOUNTED 1
 
 // Note, atomic_{add, sub}_value() return the previous value of addend's content.
 inline int atomicIncrement(int volatile* addend) { return static_cast<int>(atomic_add_value(reinterpret_cast<unsigned volatile*>(addend), 1)) + 1; }
 inline int atomicDecrement(int volatile* addend) { return static_cast<int>(atomic_sub_value(reinterpret_cast<unsigned volatile*>(addend), 1)) - 1; }
 
-#elif COMPILER(GCC) && !CPU(SPARC64) // sizeof(_Atomic_word) != sizeof(int) on sparc64 gcc
-#define WTF_USE_LOCKFREE_THREADSAFEREFCOUNTED 1
+#elif COMPILER(GCC)
 
 inline int atomicIncrement(int volatile* addend) { return __sync_add_and_fetch(addend, 1); }
 inline int atomicDecrement(int volatile* addend) { return __sync_sub_and_fetch(addend, 1); }
@@ -127,11 +124,7 @@ inline bool weakCompareAndSwap(void*volatile* location, void* expected, void* ne
     return InterlockedCompareExchangePointer(location, newValue, expected) == expected;
 }
 #else // OS(WINDOWS) --> not windows
-#if COMPILER(GCC) && !COMPILER(CLANG) // Work around a gcc bug 
 inline bool weakCompareAndSwap(volatile unsigned* location, unsigned expected, unsigned newValue) 
-#else
-inline bool weakCompareAndSwap(unsigned* location, unsigned expected, unsigned newValue)
-#endif
 {
 #if ENABLE(COMPARE_AND_SWAP)
 #if CPU(X86) || CPU(X86_64)
@@ -358,9 +351,7 @@ inline bool weakCompareAndSwap(uint8_t* location, uint8_t expected, uint8_t newV
 
 } // namespace WTF
 
-#if USE(LOCKFREE_THREADSAFEREFCOUNTED)
 using WTF::atomicDecrement;
 using WTF::atomicIncrement;
-#endif
 
 #endif // Atomics_h

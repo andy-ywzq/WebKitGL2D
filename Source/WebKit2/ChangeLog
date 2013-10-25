@@ -1,3 +1,880 @@
+2013-10-25  Anton Obzhirov  <a.obzhirov@samsung.com>
+
+        [GTK] [WebKit2] CanHandleRequest API test fails
+        https://bugs.webkit.org/show_bug.cgi?id=88453
+
+        Reviewed by Martin Robinson.
+
+        Make WebPage::platformCanHandleRequest return false by default 
+        for unknown schemes.
+
+        * WebProcess/WebPage/gtk/WebPageGtk.cpp:
+        (WebKit::WebPage::platformCanHandleRequest):
+
+2013-10-25  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL][WK2] Build break after r157967 and r157972
+        https://bugs.webkit.org/show_bug.cgi?id=123324
+
+        Reviewed by Tim Horton.
+
+        Since r157967 and r157972, visibilityDidChange was removed from DrawingAreaProxy.
+
+        * UIProcess/CoordinatedGraphics/CoordinatedDrawingAreaProxy.cpp:
+        (WebKit::CoordinatedDrawingAreaProxy::visibilityDidChange):
+        Removed common logic which r157967 moved to WebProcess.
+        * UIProcess/CoordinatedGraphics/CoordinatedDrawingAreaProxy.h:
+        Make visibilityDidChange to public method.
+        * UIProcess/CoordinatedGraphics/WebView.cpp:
+        (WebKit::WebView::setVisible):
+        (WebKit::WebView::isWindowVisible): Added.
+        * UIProcess/CoordinatedGraphics/WebView.h:
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::WebPage):
+        (WebKit::WebPage::setWindowIsVisible):
+        * WebProcess/WebPage/WebPage.h:
+        Moved m_windowIsVisible to use at all WK2 based port.
+        (WebKit::WebPage::windowIsVisible):
+        * WebProcess/WebPage/WebPage.messages.in:
+        Moved SetWindowIsVisible message to use at all WK2 based port.
+
+2013-10-24  Mark Rowe  <mrowe@apple.com>
+
+        Remove references to OS X 10.7 from Xcode configuration settings.
+
+        Now that we're not building for OS X 10.7 they're no longer needed.
+
+        Reviewed by Anders Carlsson.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/BaseXPCService.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+        * Configurations/FeatureDefines.xcconfig:
+        * Configurations/Version.xcconfig:
+        * Configurations/WebContentProcess.xcconfig:
+
+2013-10-24  Gavin Barraclough  <barraclough@apple.com>
+
+        Coalesce calls to viewStateDidChange
+        https://bugs.webkit.org/show_bug.cgi?id=123307
+
+        Reviewed by Tim Horton.
+
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView viewDidMoveToWindow]):
+        (-[WKView _windowDidOrderOffScreen:]):
+        (-[WKView _windowDidOrderOnScreen:]):
+            - coalesce calls to viewStateDidChange
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::viewStateDidChange):
+            - handle changes to view visibility & active state in correct order.
+
+2013-10-24  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/15312643> Prepare for the mysterious future.
+
+        Reviewed by David Kilzer.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/BaseXPCService.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+        * Configurations/FeatureDefines.xcconfig:
+        * Configurations/Version.xcconfig:
+        * Configurations/WebContentProcess.xcconfig:
+
+2013-10-24  Gavin Barraclough  <barraclough@apple.com>
+
+        Fold updateWindowIsVisible into viewStateDidChange
+        https://bugs.webkit.org/show_bug.cgi?id=123305
+
+        Reviewed by Simon Fraser.
+
+        * UIProcess/API/mac/PageClientImpl.h:
+        * UIProcess/API/mac/PageClientImpl.mm:
+        (WebKit::PageClientImpl::isWindowVisible):
+            - Added accessor to check if window is visible
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView viewDidMoveToWindow]):
+        (-[WKView _windowDidMiniaturize:]):
+        (-[WKView _windowDidDeminiaturize:]):
+        (-[WKView _windowDidOrderOffScreen:]):
+        (-[WKView _windowDidOrderOnScreen:]):
+            - _updateWindowVisibility -> viewStateDidChange
+        * UIProcess/PageClient.h:
+            - Added accessor to check if winow is visible
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::viewStateDidChange):
+            - handle WindowIsVisible
+        * UIProcess/WebPageProxy.h:
+            - added WindowIsVisible
+        * UIProcess/mac/WebPageProxyMac.mm:
+            - removed updateWindowIsVisible
+
+2013-10-24  Anders Carlsson  <andersca@apple.com>
+
+        Stop bringing in the std namespace
+        https://bugs.webkit.org/show_bug.cgi?id=123273
+
+        Reviewed by Andreas Kling.
+
+        * WebProcess/mac/WebProcessMac.mm:
+        (WebKit::WebProcess::platformSetCacheModel):
+
+2013-10-24  Gavin Barraclough  <barraclough@apple.com>
+
+        Simplify window occlusion detection code
+        https://bugs.webkit.org/show_bug.cgi?id=123300
+
+        Reviewed by Tim Horton.
+
+        Currently the WKView tries to maintain a copy of the window's occluded state,
+        but forced to NO when occlusion detection is disabled (and capable of handling
+        dectection being dynamically toggled). Simpler to just rely on the actual value
+        from the window, && the enabled setting. Cleaning this up revealed that we're
+        not sending a viewStateDidChange to the WebPageProxy when the occlusion state
+        changes, which we probably should be.
+
+        * UIProcess/API/mac/PageClientImpl.mm:
+        (WebKit::PageClientImpl::isViewVisible):
+            - check the real value of occlusion state from the window.
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView viewDidMoveToWindow]):
+            - don't update cached value.
+        (-[WKView _windowDidChangeOcclusionState:]):
+            - don't update cached value, but do send viewStateDidChange to the WebPageProxy.
+        (-[WKView initWithFrame:contextRef:pageGroupRef:relatedToPage:]):
+            - removed _isWindowOccluded.
+        (-[WKView windowOcclusionDetectionEnabled]):
+        (-[WKView setWindowOcclusionDetectionEnabled:]):
+            - Just toggle the flag - no cached state to update any more.
+        * UIProcess/API/mac/WKViewInternal.h:
+            - removed _isWindowOccluded.
+
+2013-10-24  Gavin Barraclough  <barraclough@apple.com>
+
+        SetIsVisible message should be sent to WebPage
+        https://bugs.webkit.org/show_bug.cgi?id=123296
+
+        Reviewed by Tim Horton.
+
+        * UIProcess/DrawingAreaProxy.h:
+            - remove visibilityDidChange - WebPageProxy now mesages WebPage.
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::viewStateDidChange):
+            - Send view visibility updates to the WebPage, not the drawing area.
+        * UIProcess/mac/TiledCoreAnimationDrawingAreaProxy.h:
+        * UIProcess/mac/TiledCoreAnimationDrawingAreaProxy.mm:
+            - remove visibilityDidChange - WebPageProxy now mesages WebPage.
+        * WebProcess/WebPage/DrawingArea.h:
+        (WebKit::DrawingArea::suspendPainting):
+        (WebKit::DrawingArea::resumePainting):
+        * WebProcess/WebPage/DrawingArea.messages.in:
+            - Instead of suspendPainting/resumePainting being private in the WebProcess but avaialble to the UIProcess,
+              make them private to the WebProcess but accessible from WebPage.
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::setViewIsVisible):
+        * WebProcess/WebPage/WebPage.h:
+        * WebProcess/WebPage/WebPage.messages.in:
+            - Added SetViewIsVisible message.
+        * WebProcess/WebPage/mac/TiledCoreAnimationDrawingArea.h:
+            - Instead of suspendPainting/resumePainting being private in the WebProcess but avaialble to the UIProcess,
+              make them private to the WebProcess but accessible from WebPage.
+        * WebProcess/WebPage/mac/TiledCoreAnimationDrawingArea.mm:
+        (WebKit::TiledCoreAnimationDrawingArea::suspendPainting):
+        (WebKit::TiledCoreAnimationDrawingArea::resumePainting):
+            - Moved animation suspend code out to WebPage.
+
+2013-10-24  Dan Bernstein  <mitz@apple.com>
+
+        Tried to fix the Mountain Lion build.
+
+        * Shared/API/Cocoa/WKFoundation.h:
+
+2013-10-24  Dan Bernstein  <mitz@apple.com>
+
+        [Cocoa] Add -[WKBrowsingContextController goToBackForwardItem:]
+        https://bugs.webkit.org/show_bug.cgi?id=123289
+
+        Reviewed by Sam Weinig.
+
+        * Shared/API/Cocoa/WKFoundation.h: Defined WK_API_CLASS.
+        * UIProcess/API/mac/WKBrowsingContextController.h: Declared -goToBackForwardListItem:.
+        * UIProcess/API/mac/WKBrowsingContextController.mm:
+        (-[WKBrowsingContextController goToBackForwardListItem:]): Added.
+        * UIProcess/Cocoa/WKBackForwardList.h: Deployed WK_API_CLASS to make the class exported.
+        * UIProcess/Cocoa/WKBackForwardListItem.h: Ditto.
+        * UIProcess/Cocoa/WKBackForwardListItem.mm:
+        (-[WKBackForwardListItem _item]): Added. Returns the underlying WebBackForwardListItem.
+        * UIProcess/Cocoa/WKBackForwardListItemInternal.h: Declared _item.
+
+2013-10-23  ChangSeok Oh  <changseok.oh@collabora.com>
+
+        Unreviewed build fix since r157823.
+        FilterOperation::getOperationType() is renamed FilterOperation::type().
+
+        * Shared/CoordinatedGraphics/CoordinatedGraphicsArgumentCoders.cpp:
+        (CoreIPC::::encode):
+        * WebProcess/WebPage/CoordinatedGraphics/CoordinatedLayerTreeHost.cpp:
+        (WebKit::CoordinatedLayerTreeHost::checkCustomFilterProgramProxies):
+
+2013-10-23  Tibor Meszaros  <tmeszaros@inf.u-szeged.hu>
+
+        Web Inspector: Make WebKitEFL port work with chromedevtools
+        https://bugs.webkit.org/show_bug.cgi?id=123017
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Added /json path and extended the returned JSON format
+        with the required extra informations
+
+        * UIProcess/InspectorServer/efl/WebInspectorServerEfl.cpp:
+        (WebKit::WebInspectorServer::platformResourceForPath):
+        (WebKit::WebInspectorServer::buildPageList):
+
+2013-10-23  Anders Carlsson  <andersca@apple.com>
+
+        Remove HAVE_XPC
+        https://bugs.webkit.org/show_bug.cgi?id=123226
+
+        Reviewed by Dan Bernstein.
+
+        HAVE_XPC has been true on Mac since Lion, so remove it.
+
+        * DatabaseProcess/EntryPoint/mac/XPCService/DatabaseServiceEntryPoint.mm:
+        (DatabaseServiceInitializer):
+        * NetworkProcess/EntryPoint/mac/XPCService/NetworkServiceEntryPoint.mm:
+        (NetworkServiceInitializer):
+        * Platform/CoreIPC/Connection.h:
+        (CoreIPC::Connection::Identifier::Identifier):
+        * Platform/CoreIPC/mac/ConnectionMac.cpp:
+        (CoreIPC::Connection::platformInvalidate):
+        (CoreIPC::Connection::platformInitialize):
+        * Platform/WorkQueue.h:
+        * PluginProcess/EntryPoint/mac/XPCService/PluginServiceEntryPoint.mm:
+        (PluginServiceInitializer):
+        * Shared/EntryPointUtilities/mac/XPCService/XPCServiceEntryPoint.h:
+        * Shared/EntryPointUtilities/mac/XPCService/XPCServiceEntryPoint.mm:
+        * UIProcess/Databases/mac/DatabaseProcessProxyMac.mm:
+        (WebKit::shouldUseXPC):
+        (WebKit::DatabaseProcessProxy::platformGetLaunchOptions):
+        * UIProcess/Launcher/ProcessLauncher.cpp:
+        (WebKit::ProcessLauncher::didFinishLaunchingProcess):
+        * UIProcess/Launcher/ProcessLauncher.h:
+        * UIProcess/Launcher/mac/ProcessLauncherMac.mm:
+        (WebKit::setUpTerminationNotificationHandler):
+        (WebKit::ProcessLauncher::launchProcess):
+        * UIProcess/Network/mac/NetworkProcessProxyMac.mm:
+        (WebKit::shouldUseXPC):
+        (WebKit::NetworkProcessProxy::platformGetLaunchOptions):
+        * UIProcess/Plugins/mac/PluginProcessProxyMac.mm:
+        (WebKit::shouldUseXPC):
+        (WebKit::PluginProcessProxy::platformGetLaunchOptions):
+        * UIProcess/mac/WebProcessProxyMac.mm:
+        (WebKit::shouldUseXPC):
+        (WebKit::WebProcessProxy::platformGetLaunchOptions):
+        * WebProcess/EntryPoint/mac/XPCService/WebContentServiceEntryPoint.mm:
+        (WebContentServiceInitializer):
+
+2013-10-23  Tim Horton  <timothy_horton@apple.com>
+
+        Remove the ifdef to exclude remote layer tree transaction logging
+        on Lion and before.
+
+        Rubber-stamped by Anders Carlsson.
+
+        * Shared/mac/RemoteLayerTreeTransaction.h:
+        * Shared/mac/RemoteLayerTreeTransaction.mm:
+        * UIProcess/mac/RemoteLayerTreeHost.mm:
+        (WebKit::RemoteLayerTreeHost::commit):
+
+2013-10-23  Brady Eidson  <beidson@apple.com>
+
+        Make IDBDatabaseBackendLevelDB.cpp be cross platform
+        https://bugs.webkit.org/show_bug.cgi?id=123027
+
+        Attentively reviewed by Dean Jackson.
+
+        * WebProcess/Databases/IndexedDB/WebIDBFactoryBackend.cpp:
+        (WebKit::WebIDBFactoryBackend::maybeCreateTransactionBackend):
+        * WebProcess/Databases/IndexedDB/WebIDBFactoryBackend.h:
+
+2013-10-23  Dan Bernstein  <mitz@apple.com>
+
+        Fixed a typo.
+
+        * UIProcess/API/mac/WKBrowsingContextController.mm:
+        (didChangeBackForwardList):
+        * UIProcess/API/mac/WKBrowsingContextLoadDelegate.h:
+
+2013-10-23  Anton Obzhirov  <a.obzhirov@samsung.com>
+
+        [GTK] Enable respect image orientation by default
+        https://bugs.webkit.org/show_bug.cgi?id=122120
+
+        Reviewed by Gustavo Noronha Silva.
+
+        Add enable respect image orientation by default in GTK port.
+
+        * UIProcess/API/gtk/WebKitSettings.cpp:
+        (webKitSettingsConstructed):
+
+2013-10-23  Brian Holt  <brian.holt@samsung.com>
+
+        [GTK] Add WebKit2 API for TLS errors
+        https://bugs.webkit.org/show_bug.cgi?id=120160
+
+        Reviewed by Mario Sanchez Prada.
+
+        Revert back to using PlatformCertificateInfo following the rollout
+        of https://bugs.webkit.org/show_bug.cgi?id=118520.
+
+        * Shared/soup/PlatformCertificateInfo.cpp:
+        (WebKit::PlatformCertificateInfo::PlatformCertificateInfo):
+        * Shared/soup/PlatformCertificateInfo.h:
+        * UIProcess/API/gtk/WebKitCertificateInfo.cpp:
+        (webkitCertificateInfoGetCertificateInfo):
+        * UIProcess/API/gtk/WebKitCertificateInfoPrivate.h:
+
+2013-10-23  Tim Horton  <timothy_horton@apple.com>
+
+        Remote Layer Tree: Implement superlayer, removeFromSuperlayer, replaceSublayer, and adoptSublayers
+        https://bugs.webkit.org/show_bug.cgi?id=123130
+
+        Reviewed by Anders Carlsson.
+
+        Implement the remaining layer-hierarchy-manipulation methods.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.cpp:
+        (PlatformCALayerRemote::PlatformCALayerRemote):
+        (PlatformCALayerRemote::~PlatformCALayerRemote):
+        Null out the superlayer back-pointer on our sublayers.
+
+        (PlatformCALayerRemote::recursiveBuildTransaction):
+        Ensure that our children all have us as their superlayer.
+
+        (PlatformCALayerRemote::superlayer):
+        Return the stored superlayer pointer.
+
+        (PlatformCALayerRemote::removeFromSuperlayer):
+        Call removeSublayer on our superlayer, if we have one.
+
+        (PlatformCALayerRemote::removeSublayer):
+        Remove the given layer if it's in our list of sublayers, clear its
+        reference to us, and note that we'll need to commit hierarchy changes.
+
+        (PlatformCALayerRemote::setSublayers):
+        removeAllSublayers() before setting the new list, to clear superlayer
+        back-pointers. Children will be protected by the PlatformCALayerList.
+        Update the new layers' superlayers.
+
+        (PlatformCALayerRemote::removeAllSublayers):
+        Remove each sublayer from its superlayer, then clear our list of children.
+
+        (PlatformCALayerRemote::appendSublayer):
+        (PlatformCALayerRemote::insertSublayer):
+        Protect the layer from deletion, so that we can remove it from its prior
+        superlayer before appending or inserting it.
+
+        (PlatformCALayerRemote::replaceSublayer):
+        Find the reference sublayer, if it exists, and replace it with the new one.
+
+        (PlatformCALayerRemote::adoptSublayers):
+        adoptSublayers is really just "set sublayers to this other layer's sublayers".
+        Since setSublayers already removes layers from the existing superlayer,
+        we can just go ahead and call it.
+
+        (PlatformCALayerRemote::addAnimationForKey):
+        (PlatformCALayerRemote::removeAnimationForKey):
+        (PlatformCALayerRemote::animationForKey):
+        Add some ASSERT_NOT_REACHEDs in animation code.
+        We ought not get here because we've disabled hardware animations
+        in GraphicsLayerCARemote.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.h:
+        Add m_superlayer and removeSublayer().
+
+2013-10-22  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        Unreviewed build fix attempt on Soup based port after r157842.
+
+        WebCore::CertificateInfo was reverted to WebKit::PlatformCertificateInfo.
+
+        * UIProcess/WebContext.cpp:
+        (WebKit::WebContext::allowSpecificHTTPSCertificateForHost):
+        * WebProcess/WebProcess.h:
+        * WebProcess/WebProcess.messages.in:
+        * WebProcess/soup/WebProcessSoup.cpp:
+        (WebKit::WebProcess::allowSpecificHTTPSCertificateForHost):
+
+2013-10-22  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        Unreviewed build fix attempt on EFL port after r157842.
+
+        * Shared/soup/PlatformCertificateInfo.h: Removed message of merge confliction.
+
+2013-10-22  Mark Rowe  <mrowe@apple.com>
+
+        Fix build failures after r157842.
+
+        * WebProcess/WebProcess.h: Don't try to #include a file that was deleted.
+        It won't work.
+
+2013-10-22  Brady Eidson  <beidson@apple.com>
+
+        Get rid of IDBObjectStoreBackendLevelDB
+        https://bugs.webkit.org/show_bug.cgi?id=123174
+
+        Reviewed by Tim Horton.
+
+        * WebProcess/Databases/IndexedDB/WebProcessIDBDatabaseBackend.h:
+
+2013-10-22  Dean Jackson  <dino@apple.com>
+
+        [WebGL] Implement a software rendering option on Mac
+        https://bugs.webkit.org/show_bug.cgi?id=123177
+
+        Reviewed by Tim Horton.
+
+        Implement a way to force software OpenGL rendering
+        for WebGL, via a Setting/Preference.
+
+        * Shared/WebPreferencesStore.h: New ForceSoftwareWebGLRendering entry.
+        * UIProcess/API/C/WKPreferences.cpp:
+        (WKPreferencesSetForceSoftwareWebGLRendering):
+        (WKPreferencesGetForceSoftwareWebGLRendering):
+        * UIProcess/API/C/WKPreferencesPrivate.h:
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::updatePreferences):
+        * mac/WebKit2.order:
+
+2013-10-22  Anders Carlsson  <andersca@apple.com>
+
+        Revert r157445 since it broke certificates on Mac.
+        <rdar://problem/15246926&15254017&15269117>
+
+        * GNUmakefile.list.am:
+        * NetworkProcess/AsynchronousNetworkLoaderClient.cpp:
+        (WebKit::AsynchronousNetworkLoaderClient::didReceiveResponse):
+        * NetworkProcess/NetworkProcess.h:
+        * NetworkProcess/NetworkProcess.messages.in:
+        * NetworkProcess/NetworkResourceLoader.cpp:
+        * NetworkProcess/mac/NetworkProcessMac.mm:
+        (WebKit::NetworkProcess::allowSpecificHTTPSCertificateForHost):
+        * PlatformEfl.cmake:
+        * PlatformGTK.cmake:
+        * Shared/API/c/mac/WKCertificateInfoMac.mm:
+        (WKCertificateInfoCreateWithCertficateChain):
+        (WKCertificateInfoGetCertificateChain):
+        * Shared/Authentication/AuthenticationManager.cpp:
+        (WebKit::AuthenticationManager::tryUsePlatformCertificateInfoForChallenge):
+        (WebKit::AuthenticationManager::useCredentialForChallenge):
+        * Shared/Authentication/AuthenticationManager.h:
+        * Shared/Authentication/AuthenticationManager.messages.in:
+        * Shared/Authentication/mac/AuthenticationManager.mac.mm:
+        (WebKit::AuthenticationManager::tryUsePlatformCertificateInfoForChallenge):
+        * Shared/UserMessageCoders.h:
+        (WebKit::UserMessageEncoder::baseEncode):
+        (WebKit::UserMessageDecoder::baseDecode):
+        * Shared/WebCertificateInfo.h:
+        (WebKit::WebCertificateInfo::create):
+        (WebKit::WebCertificateInfo::platformCertificateInfo):
+        (WebKit::WebCertificateInfo::WebCertificateInfo):
+        * Shared/WebCoreArgumentCoders.cpp:
+        * Shared/WebCoreArgumentCoders.h:
+        * Shared/mac/PlatformCertificateInfo.h: Renamed from Source/WebCore/platform/network/soup/CertificateInfoSoup.cpp.
+        (WebKit::PlatformCertificateInfo::certificateChain):
+        * Shared/mac/PlatformCertificateInfo.mm: Renamed from Source/WebCore/platform/network/mac/CertificateInfoMac.mm.
+        (WebKit::PlatformCertificateInfo::PlatformCertificateInfo):
+        (WebKit::PlatformCertificateInfo::encode):
+        (WebKit::PlatformCertificateInfo::decode):
+        (WebKit::PlatformCertificateInfo::dump):
+        * Shared/mac/WebCoreArgumentCodersMac.mm:
+        (CoreIPC::::encodePlatformData):
+        (CoreIPC::::decodePlatformData):
+        * Shared/soup/PlatformCertificateInfo.cpp: Added.
+        (WebKit::PlatformCertificateInfo::PlatformCertificateInfo):
+        (WebKit::PlatformCertificateInfo::~PlatformCertificateInfo):
+        (WebKit::PlatformCertificateInfo::encode):
+        (WebKit::PlatformCertificateInfo::decode):
+        * Shared/soup/PlatformCertificateInfo.h: Renamed from Source/WebCore/platform/network/CertificateInfo.h.
+        (WebKit::PlatformCertificateInfo::certificate):
+        (WebKit::PlatformCertificateInfo::tlsErrors):
+        * Shared/soup/WebCoreArgumentCodersSoup.cpp:
+        (CoreIPC::::encodePlatformData):
+        (CoreIPC::::decodePlatformData):
+        * UIProcess/API/gtk/WebKitWebView.cpp:
+        (webkit_web_view_get_tls_info):
+        * UIProcess/Authentication/AuthenticationChallengeProxy.cpp:
+        (WebKit::AuthenticationChallengeProxy::useCredential):
+        * UIProcess/WebContext.cpp:
+        (WebKit::WebContext::allowSpecificHTTPSCertificateForHost):
+        * UIProcess/WebFrameProxy.cpp:
+        (WebKit::WebFrameProxy::didCommitLoad):
+        * UIProcess/WebFrameProxy.h:
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::didCommitLoadForFrame):
+        * UIProcess/WebPageProxy.h:
+        * UIProcess/WebPageProxy.messages.in:
+        * WebKit2.xcodeproj/project.pbxproj:
+        * WebProcess/Network/WebResourceLoader.cpp:
+        (WebKit::WebResourceLoader::didReceiveResponseWithCertificateInfo):
+        * WebProcess/Network/WebResourceLoader.h:
+        * WebProcess/Network/WebResourceLoader.messages.in:
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::dispatchDidCommitLoad):
+
+2013-10-22  Tim Horton  <timothy_horton@apple.com>
+
+        Remote Layer Tree: Disable threaded scrolling for RemoteLayerTreeDrawingArea
+        https://bugs.webkit.org/show_bug.cgi?id=123187
+
+        Reviewed by Dean Jackson.
+
+        * WebProcess/WebPage/DrawingArea.h:
+        (WebKit::DrawingArea::supportsThreadedScrolling):
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::WebPage):
+        * WebProcess/WebPage/mac/TiledCoreAnimationDrawingArea.h:
+        Threaded scrolling doesn't work with remote layer trees yet.
+        Let the DrawingArea subclass tell WebPage if it supports threaded
+        scrolling, and make TiledCoreAnimationDrawingArea say that it does.
+
+2013-10-22  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        Unreviewed build fix on EFL port after r157823
+
+        * Shared/CoordinatedGraphics/CoordinatedGraphicsArgumentCoders.cpp:
+        (CoreIPC::::encode): renamed getOperationType() to type().
+
+2013-10-22  Tim Horton  <timothy_horton@apple.com>
+
+        {ClipPathOperation, FilterOperation}::getOperationType() should not include 'get'
+        https://bugs.webkit.org/show_bug.cgi?id=123172
+
+        Reviewed by Simon Fraser.
+
+        * Shared/WebCoreArgumentCoders.cpp:
+        (CoreIPC::encodeFilterOperation):
+        * Shared/mac/RemoteLayerTreeTransaction.mm:
+        (WebKit::RemoteLayerTreeTextStream::operator<<):
+        Adopt the new name.
+
+2013-10-22  Csaba Osztrogonác  <ossy@webkit.org>
+
+        URTBF after r157803 for !ENABLE(CSS_FILTERS) platforms.
+
+        * Shared/CoordinatedGraphics/CoordinatedGraphicsArgumentCoders.cpp:
+        * Shared/CoordinatedGraphics/CoordinatedGraphicsArgumentCoders.h:
+        * Shared/WebCoreArgumentCoders.cpp:
+
+2013-10-22  Tim Horton  <timothy_horton@apple.com>
+
+        Remote Layer Tree: Support hardware accelerated filters
+        https://bugs.webkit.org/show_bug.cgi?id=123139
+
+        Reviewed by Anders Carlsson.
+
+        * Shared/WebCoreArgumentCoders.cpp:
+        (CoreIPC::ArgumentCoder<Length>::encode):
+        (CoreIPC::ArgumentCoder<Length>::decode):
+        Add simple coders for Length.
+
+        (CoreIPC::encodeFilterOperation):
+        (CoreIPC::decodeFilterOperation):
+        Serialize and deserialize FilterOperations, except for CUSTOM and VALIDATED_CUSTOM.
+
+        (CoreIPC::ArgumentCoder<Length>::encode):
+        (CoreIPC::ArgumentCoder<Length>::decode):
+        Add coders for FilterOperations that delegate to {en,de}codeFilterOperation
+        for each operation in the list.
+
+        * Shared/WebCoreArgumentCoders.h:
+        Drive-by fix indentation.
+        Expose the Length and FilterOperations coders.
+
+        * Shared/mac/RemoteLayerTreeTransaction.h:
+        Add FiltersChanged and LayerProperties::filters.
+
+        * Shared/mac/RemoteLayerTreeTransaction.mm:
+        (WebKit::RemoteLayerTreeTransaction::LayerProperties::encode):
+        (WebKit::RemoteLayerTreeTransaction::LayerProperties::decode):
+        Encode and decode our FilterOperations.
+
+        (WebKit::dumpChangedLayers):
+        Dump information about the layers' filters.
+
+        * UIProcess/mac/RemoteLayerTreeHost.mm:
+        (WebKit::RemoteLayerTreeHost::commit):
+        Use PlatformCAFilters code to apply a FilterOperations object to our CALayer.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.cpp:
+        (PlatformCALayerRemote::setFilters):
+        Replace existing filters with our new set, and note that they've changed.
+
+        (PlatformCALayerRemote::copyFiltersFrom):
+        Not yet implemented. Not critical for this feature, either.
+
+        (PlatformCALayerRemote::filtersCanBeComposited):
+        For now, this is the same as the Mac version.
+
+2013-10-22  Brian Holt  <brian.holt@samsung.com>
+
+        [GTK] Add WebKit2 API for TLS errors
+        https://bugs.webkit.org/show_bug.cgi?id=120160
+
+        Reviewed by Carlos Garcia Campos.
+
+        Add a new signal load-failed-with-tls-errors that is emitted with
+        a WebKitCertificateInfo boxed type to allow users to deal with TLS
+        errors. A new API is exposed in WebKitWebContext to allow
+        exceptions for TLS errors on a given host.
+
+        * GNUmakefile.list.am:
+        * PlatformGTK.cmake:
+        * UIProcess/API/gtk/WebKitCertificateInfo.cpp: Added.
+        (webkitCertificateInfoGetCertificateInfo):
+        (webkit_certificate_info_copy):
+        (webkit_certificate_info_free):
+        (webkit_certificate_info_get_tls_certificate):
+        (webkit_certificate_info_get_tls_errors):
+        * UIProcess/API/gtk/WebKitCertificateInfo.h: Added.
+        * UIProcess/API/gtk/WebKitCertificateInfoPrivate.h: Added.
+        (_WebKitCertificateInfo::_WebKitCertificateInfo):
+        * UIProcess/API/gtk/WebKitWebContext.cpp:
+        (webkit_web_context_allow_tls_certificate_for_host): Support TLS
+        exceptions for a given host.
+        * UIProcess/API/gtk/WebKitWebContext.h:
+        * UIProcess/API/gtk/WebKitWebView.cpp:
+        (webkit_web_view_class_init): Added new signal.
+        (webkitWebViewLoadFailedWithTLSErrors): Emit new signal with
+        WebKitCertificateInfo and host.
+        * UIProcess/API/gtk/WebKitWebView.h:
+        * UIProcess/API/gtk/WebKitWebViewPrivate.h:
+        * UIProcess/API/gtk/docs/webkit2gtk-docs.sgml:
+        * UIProcess/API/gtk/docs/webkit2gtk-sections.txt:
+        * UIProcess/API/gtk/docs/webkit2gtk.types:
+        * UIProcess/API/gtk/tests/TestSSL.cpp:
+        (testLoadFailedWithTLSErrors):
+        (httpsServerCallback):
+        (beforeAll): Added new test.
+        * UIProcess/API/gtk/webkit2.h:
+        * UIProcess/API/gtk/webkit2marshal.list:
+        * UIProcess/WebContext.cpp:
+        (WebKit::WebContext::allowSpecificHTTPSCertificateForHost): Send
+        message to WebProcess to allow a certificate and host pair.
+        * WebProcess/WebProcess.h:
+        * WebProcess/WebProcess.messages.in: New message to tell
+        WebProcess to allow a specific TLS certificate for a given host.
+        * WebProcess/soup/WebProcessSoup.cpp:
+        (WebKit::WebProcess::allowSpecificHTTPSCertificateForHost): Allow
+        certificate and host pair.
+
+2013-10-22  Dan Bernstein  <mitz@apple.com>
+
+        Try to make the 32-bit Mac build happy.
+
+        * UIProcess/API/mac/WKBrowsingContextLoadDelegate.h:
+
+2013-10-21  Dan Bernstein  <mitz@apple.com>
+
+        Try to make the 32-bit Mac build happy.
+
+        * UIProcess/API/mac/WKBrowsingContextController.mm:
+        (setUpPageLoaderClient):
+
+2013-10-21  Dan Bernstein  <mitz@apple.com>
+
+        [Cocoa] Add load delegate method for didChangeBackForwardList
+        https://bugs.webkit.org/show_bug.cgi?id=123136
+
+        Reviewed by Anders Carlsson.
+
+        * UIProcess/API/mac/WKBrowsingContextController.mm:
+        (didChangeBackForwardList): Added. Calls new delegate method.
+        (setUpPageLoaderClient):  Hook up new client function.
+        * UIProcess/API/mac/WKBrowsingContextLoadDelegate.h: Declare new delegate method.
+
+2013-10-21  Mark Rowe  <mrowe@apple.com>
+
+        Add a version of WebKitSystemInterface for Mavericks.
+
+        Reviewed by Ryosuke Niwa.
+
+        * Configurations/DebugRelease.xcconfig:
+
+2013-10-21  Dan Bernstein  <mitz@apple.com>
+
+        Try to fix the Mac 32-bit build.
+
+        * UIProcess/API/mac/WKBrowsingContextController.h:
+        * UIProcess/API/mac/WKBrowsingContextController.mm:
+
+2013-10-21  Tim Horton  <timothy_horton@apple.com>
+
+        Give up on building RemoteLayerTreeTransaction::dump on Lion, it just won't work.
+
+        This definitely ought to fix the build.
+
+        * Shared/mac/RemoteLayerTreeTransaction.h:
+        * Shared/mac/RemoteLayerTreeTransaction.mm:
+        * UIProcess/mac/RemoteLayerTreeHost.mm:
+        (WebKit::RemoteLayerTreeHost::commit):
+
+2013-10-21  Tim Horton  <timothy_horton@apple.com>
+
+        Maybe a Lion build fix after r157731, part 2.
+
+        * Shared/mac/RemoteLayerTreeTransaction.mm:
+        (WebKit::RemoteLayerTreeTextStream::operator<<):
+
+2013-10-21  Dan Bernstein  <mitz@apple.com>
+
+        [Cocoa] Back/forward list UI process API
+        https://bugs.webkit.org/show_bug.cgi?id=123109
+
+        Reviewed by Darin Adler.
+
+        * CMakeLists.txt: Updated for renames.
+        * GNUmakefile.list.am: Ditto.
+
+        * Shared/Cocoa: Added.
+        * Shared/Cocoa/WKNSArray.h: Added. WKNSArray is an internal NSArray subclass backed by
+        a WebKit::ImmutableArray.
+        * Shared/Cocoa/WKNSArray.mm: Added.
+        (+[WKNSArray web_arrayWithImmutableArray:]): Added.
+        (-[WKNSArray web_initWithImmutableArray:]): Added.
+        (-[WKNSArray count]): Added.
+        (-[WKNSArray objectAtIndex:]): Added.
+        (-[WKNSArray copyWithZone:]): Added.
+
+        * Shared/Cocoa/WKNSObjectExtras.h: Added. Declares a category on NSObject that allows us to
+        vend WebKit API objects as Objective-C objects.
+        * Shared/Cocoa/WKNSObjectExtras.mm: Added.
+        (-[WKObject initWithAPIObject:]): WKObject is the generic Cocoa wrapper for API objects.
+        (-[WKObject isEqual:]): Check for equality of the underlying object.
+        (-[WKObject hash]): Return a pointer to the underlying object.
+        (-[WKObject description]): Added.
+        (+[NSObject _web_objectWithAPIObject:]): Added. Returns an appropriate Objective-C object
+        for the given API object. Currently returns a WKBackForwardListItem for a back/forward list
+        item and a generic WKObject for all other types.
+
+        * UIProcess/API/C/WKBackForwardList.cpp: Renamed.
+        * UIProcess/API/C/WKBackForwardList.h: Renamed.
+        * UIProcess/API/C/WKBackForwardListItem.cpp: Renamed.
+        * UIProcess/API/C/WKBackForwardListItem.h: Renamed.
+        * UIProcess/API/C/WKBackForwardListItemRef.cpp: Copied from Source/WebKit2/UIProcess/API/C/WKBackForwardListItem.cpp.
+        * UIProcess/API/C/WKBackForwardListItemRef.h: Copied from Source/WebKit2/UIProcess/API/C/WKBackForwardListItem.h.
+        * UIProcess/API/C/WKBackForwardListRef.cpp: Copied from Source/WebKit2/UIProcess/API/C/WKBackForwardList.cpp.
+        * UIProcess/API/C/WKBackForwardListRef.h: Copied from Source/WebKit2/UIProcess/API/C/WKBackForwardList.h.
+
+        * UIProcess/API/C/WebKit2_C.h: Updated for header renames.
+
+        * UIProcess/API/efl/ewk_back_forward_list.cpp: Updated for rename.
+        * UIProcess/API/efl/ewk_back_forward_list_item.cpp: Ditto.
+
+        * UIProcess/API/mac/WKBrowsingContextController.h: Declared backForwardList property.
+        * UIProcess/API/mac/WKBrowsingContextController.mm:
+        (-[WKBrowsingContextController backForwardList]): Added this accessor.
+
+        * UIProcess/Cocoa: Added.
+        * UIProcess/Cocoa/WKBackForwardList.h: Added.
+        * UIProcess/Cocoa/WKBackForwardList.mm: Added.
+        (toWKBackForwardListItem): Added this helper.
+        (-[WKBackForwardList currentItem]): Added.
+        (-[WKBackForwardList backItem]): Added.
+        (-[WKBackForwardList forwardItem]): Added.
+        (-[WKBackForwardList itemAtIndex:]): Added.
+        (-[WKBackForwardList backListCount]): Added.
+        (-[WKBackForwardList forwardListCount]): Added.
+        (-[WKBackForwardList backListWithLimit:]): Added.
+        (-[WKBackForwardList forwardListWithLimit:]): Added.
+        (-[WKBackForwardList _initWithList:]): Added.
+        * UIProcess/Cocoa/WKBackForwardListInternal.h: Added.
+
+        * UIProcess/Cocoa/WKBackForwardListItem.h: Added.
+        * UIProcess/Cocoa/WKBackForwardListItem.mm: Added.
+        (-[WKBackForwardListItem URL]): Added.
+        (-[WKBackForwardListItem title]): Added.
+        (-[WKBackForwardListItem originalURL]): Added.
+        (-[WKBackForwardListItem isEqual:]): Check for equality of the underlying object.
+        (-[WKBackForwardListItem hash]): Return a pointer to the underlying object
+        (-[WKBackForwardListItem _initWithItem:]): Added.
+        * UIProcess/Cocoa/WKBackForwardListItemInternal.h: Added.
+
+        * WebKit2.xcodeproj/project.pbxproj: Updated for renames and additions.
+
+2013-10-21  Tim Horton  <timothy_horton@apple.com>
+
+        Maybe a Lion build fix after r157731.
+
+        * Shared/mac/RemoteLayerTreeTransaction.mm:
+        (WebKit::RemoteLayerTreeTextStream::operator<<):
+
+2013-10-21  Tim Horton  <timothy_horton@apple.com>
+
+        Remote Layer Tree: Clean up transaction logging
+        https://bugs.webkit.org/show_bug.cgi?id=123116
+
+        Reviewed by Anders Carlsson.
+
+        * Shared/mac/RemoteLayerTreeTransaction.mm:
+        (WebKit::RemoteLayerTreeTextStream::RemoteLayerTreeTextStream):
+        (WebKit::RemoteLayerTreeTextStream::increaseIndent):
+        (WebKit::RemoteLayerTreeTextStream::decreaseIndent):
+        (WebKit::RemoteLayerTreeTextStream::writeIndent):
+        (WebKit::RemoteLayerTreeTextStream::operator<<):
+        Add some stream operator overrides for various types we need to dump.
+        Add a notion of current indent to our TextStream subclass to make it
+        easy to keep track of where we are.
+
+        (WebKit::dumpProperty):
+        Added, hand any arbitrary type to RemoteLayerTreeTransaction.
+
+        (WebKit::dumpChangedLayers):
+        (WebKit::RemoteLayerTreeTransaction::dump):
+        Make use of TextStream.
+
+2013-10-21  Brady Eidson  <beidson@apple.com>
+
+        Transition most use of IDBBackingStoreLevelDB to IDBBackingStoreInterface
+        https://bugs.webkit.org/show_bug.cgi?id=123105
+
+        Reviewed by Anders Carlsson.
+
+        Stub out a new pure virtual method:
+        * WebProcess/Databases/IndexedDB/WebIDBFactoryBackend.cpp:
+        (WebKit::WebIDBFactoryBackend::createTransactionBackend):
+        * WebProcess/Databases/IndexedDB/WebIDBFactoryBackend.h:
+
+2013-10-21  Tim Horton  <timothy_horton@apple.com>
+
+        Remote Layer Tree: Backing store should take contentsScale into account
+        https://bugs.webkit.org/show_bug.cgi?id=123106
+
+        Reviewed by Simon Fraser.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.cpp:
+        (PlatformCALayerRemote::ensureBackingStore):
+        (PlatformCALayerRemote::setNeedsDisplay):
+        (PlatformCALayerRemote::setContentsScale):
+        Inform the backing store of the contentsScale, and when it changes.
+
+        * WebProcess/WebPage/mac/RemoteLayerBackingStore.h:
+        (WebKit::RemoteLayerBackingStore::scale): Added.
+        (WebKit::RemoteLayerBackingStore::mapToContentCoordinates): Added.
+        * WebProcess/WebPage/mac/RemoteLayerBackingStore.mm:
+        (RemoteLayerBackingStore::RemoteLayerBackingStore):
+        (RemoteLayerBackingStore::encode):
+        (RemoteLayerBackingStore::decode):
+        (RemoteLayerBackingStore::mapToContentCoordinates):
+        Factor out flipping so we can use it for repaints in multiple places.
+
+        (RemoteLayerBackingStore::setNeedsDisplay):
+        (RemoteLayerBackingStore::display):
+        Create a buffer scaled up by contentsScale, take the scale into account
+        when copying clean bits from the front buffer, and apply the scale before
+        painting into the back buffer.
+
 2013-10-21  Gergo Balogh  <geryxyz@inf.u-szeged.hu>
 
         Remove qt from generate-forwarding-headers.pl
@@ -1185,102 +2062,6 @@
         * UIProcess/Launcher/mac/ProcessLauncherMac.mm:
         (WebKit::serviceName):
         (WebKit::createProcess):
-
-2013-10-15  Csaba Osztrogonác  <ossy@webkit.org>
-
-        [Soup] Unreviewed buildfix after r157445 for ENABLE(NETWORK_PROCESS) builds.
-
-        * NetworkProcess/soup/NetworkProcessSoup.cpp:
-        (WebKit::NetworkProcess::allowSpecificHTTPSCertificateForHost):
-
-2013-10-15  Carlos Garcia Campos  <cgarcia@igalia.com>
-
-        Unreviewed. Fix the GTK+ build after r157445.
-
-        * UIProcess/API/gtk/WebKitLoaderClient.cpp:
-        (didFailProvisionalLoadWithErrorForFrame):
-
-2013-10-15  Csaba Osztrogonác  <ossy@webkit.org>
-
-        Move PlatformCertificateInfo to WebCore and make the ResourceResponse primitives work in terms of that platform agnostic object
-        https://bugs.webkit.org/show_bug.cgi?id=118520
-
-        Reviewed by Anders Carlsson.
-
-        Added PlatformCertificateInfo getter and setter to ResourceErrorBase
-        and ResourceResponseBase so that getting and setting certificates
-        becomes cross platform.
-
-        Changed the existing platform specific certificate getters and setters
-        of ResourceError and ResourceResponse to use the
-        PlatformCertificateInfo member.
-
-        Original patch by Kwang Yul Seo  <skyul@company100.net>
-
-        The following things were fixed by Csaba Osztrogonác:
-        - trivial conflicts resolved in WebCore.exp.in, project.pbxproj, NetworkResourceLoader.cpp,
-          WebPageProxy.h, WebFrameLoaderClient.cpp and PlatformEfl.cmake.
-        - trivial fix in the new AsynchronousNetworkLoaderClient.cpp
-        - style fixed (NULL -> 0 and smaller indentation in WebCoreArgumentCodersSoup.cpp)
-        - obsolete change removed from NetworkResourceLoader.cpp
-        - unneeded typo removed from ResourceHandleSoup.cpp
-        - Fixed the if guard of including RetainPtr.h in PlatformCertificateInfo.h to make Windows build happy.
-        - add PlatformCertificateInfoCFNet.cpp with empty constructor and destructor to make Windows build happy.
-        - resolve conflict in Source/WebCore/WebCore.xcodeproj/project.pbxproj after r156488
-        - rename KURL to URL after r156550.
-        - remove obsolete Qt changes
-        - added back initializers for m_soupFlags
-        - included gio/gio.h instead of libsoup/soup.h in PlatformCertificateInfo.h
-        - removed unused class forward declarations and includes
-
-        * GNUmakefile.list.am:
-        * NetworkProcess/AsynchronousNetworkLoaderClient.cpp:
-        (WebKit::AsynchronousNetworkLoaderClient::didReceiveResponse):
-        * NetworkProcess/NetworkProcess.h:
-        * NetworkProcess/NetworkProcess.messages.in:
-        * NetworkProcess/NetworkResourceLoader.cpp:
-        * NetworkProcess/mac/NetworkProcessMac.mm:
-        * PlatformEfl.cmake:
-        * PlatformGTK.cmake:
-        * Shared/API/c/mac/WKCertificateInfoMac.mm:
-        (WKCertificateInfoCreateWithCertficateChain):
-        * Shared/Authentication/AuthenticationManager.h:
-        * Shared/Authentication/AuthenticationManager.messages.in:
-        * Shared/Authentication/mac/AuthenticationManager.mac.mm:
-        * Shared/UserMessageCoders.h:
-        (WebKit::UserMessageDecoder::baseDecode):
-        * Shared/WebCertificateInfo.h:
-        (WebKit::WebCertificateInfo::create):
-        (WebKit::WebCertificateInfo::platformCertificateInfo):
-        (WebKit::WebCertificateInfo::WebCertificateInfo):
-        * Shared/WebCoreArgumentCoders.cpp:
-        (CoreIPC::::decode):
-        (CoreIPC::::encode):
-        * Shared/WebCoreArgumentCoders.h:
-        * Shared/mac/WebCoreArgumentCodersMac.mm:
-        (CoreIPC::::encodePlatformData):
-        (CoreIPC::::decodePlatformData):
-        * Shared/soup/PlatformCertificateInfo.cpp: Removed.
-        * Shared/soup/WebCoreArgumentCodersSoup.cpp:
-        (CoreIPC::::encodePlatformData):
-        (CoreIPC::::decodePlatformData):
-        * Target.pri:
-        * UIProcess/API/gtk/WebKitWebView.cpp:
-        (webkit_web_view_get_tls_info):
-        * UIProcess/Authentication/AuthenticationChallengeProxy.cpp:
-        (WebKit::AuthenticationChallengeProxy::useCredential):
-        * UIProcess/WebFrameProxy.cpp:
-        (WebKit::WebFrameProxy::didCommitLoad):
-        * UIProcess/WebFrameProxy.h:
-        * UIProcess/WebPageProxy.h:
-        * UIProcess/WebPageProxy.messages.in:
-        * WebKit2.xcodeproj/project.pbxproj:
-        * WebProcess/Network/WebResourceLoader.cpp:
-        (WebKit::WebResourceLoader::didReceiveResponseWithCertificateInfo):
-        * WebProcess/Network/WebResourceLoader.h:
-        * WebProcess/Network/WebResourceLoader.messages.in:
-        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
-        (WebKit::WebFrameLoaderClient::dispatchDidCommitLoad):
 
 2013-10-14  Csaba Osztrogonác  <ossy@webkit.org>
 

@@ -35,7 +35,7 @@
 #include "RenderLayerCompositor.h"
 #endif
 
-using namespace WebCore;
+namespace WebCore {
 
 class RenderFullScreenPlaceholder FINAL : public RenderBlockFlow {
 public:
@@ -123,7 +123,7 @@ RenderFullScreen* RenderFullScreen::wrapRenderer(RenderObject* object, RenderEle
             ASSERT(containingBlock);
             // Since we are moving the |object| to a new parent |fullscreenRenderer|,
             // the line box tree underneath our |containingBlock| is not longer valid.
-            containingBlock->deleteLineBoxTree();
+            containingBlock->deleteLines();
 
             parent->addChild(fullscreenRenderer, object);
             object->removeFromParent();
@@ -183,6 +183,8 @@ void RenderFullScreen::createPlaceholder(PassRefPtr<RenderStyle> style, const La
         }
     } else
         m_placeholder->setStyle(*style);
+}
+
 }
 
 #endif

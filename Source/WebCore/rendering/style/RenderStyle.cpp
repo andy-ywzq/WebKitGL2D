@@ -552,6 +552,9 @@ bool RenderStyle::changeRequiresLayout(const RenderStyle* other, unsigned& chang
             || rareInheritedData->m_tabSize != other->rareInheritedData->m_tabSize
             || rareInheritedData->m_lineBoxContain != other->rareInheritedData->m_lineBoxContain
             || rareInheritedData->m_lineGrid != other->rareInheritedData->m_lineGrid
+#if ENABLE(CSS_IMAGE_ORIENTATION)
+            || rareInheritedData->m_imageOrientation != other->rareInheritedData->m_imageOrientation
+#endif
 #if ENABLE(CSS_IMAGE_RESOLUTION)
             || rareInheritedData->m_imageResolutionSource != other->rareInheritedData->m_imageResolutionSource
             || rareInheritedData->m_imageResolutionSnap != other->rareInheritedData->m_imageResolutionSnap
@@ -993,7 +996,7 @@ inline bool requireTransformOrigin(const Vector<RefPtr<TransformOperation>>& tra
 
     unsigned size = transformOperations.size();
     for (unsigned i = 0; i < size; ++i) {
-        TransformOperation::OperationType type = transformOperations[i]->getOperationType();
+        TransformOperation::OperationType type = transformOperations[i]->type();
         if (type != TransformOperation::TRANSLATE_X
             && type != TransformOperation::TRANSLATE_Y
             && type != TransformOperation::TRANSLATE 

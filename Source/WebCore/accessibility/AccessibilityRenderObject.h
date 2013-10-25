@@ -134,7 +134,6 @@ public:
 
     RenderView* topRenderer() const;
     RenderTextControl* textControl() const;
-    Document* topDocument() const;
     HTMLLabelElement* labelElementContainer() const;
     
     virtual URL url() const OVERRIDE;
@@ -331,20 +330,7 @@ private:
 #endif
 };
 
-inline AccessibilityRenderObject* toAccessibilityRenderObject(AccessibilityObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isAccessibilityRenderObject());
-    return static_cast<AccessibilityRenderObject*>(object);
-}
-
-inline const AccessibilityRenderObject* toAccessibilityRenderObject(const AccessibilityObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isAccessibilityRenderObject());
-    return static_cast<const AccessibilityRenderObject*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toAccessibilityRenderObject(const AccessibilityRenderObject*);
+ACCESSIBILITY_OBJECT_TYPE_CASTS(AccessibilityRenderObject, isAccessibilityRenderObject())
 
 } // namespace WebCore
 

@@ -333,11 +333,12 @@ public:
     void addPluginView(PluginView*);
     void removePluginView(PluginView*);
 
+    bool windowIsVisible() const { return m_windowIsVisible; }
+
 #if PLATFORM(MAC)
     LayerHostingMode layerHostingMode() const { return m_layerHostingMode; }
     void setLayerHostingMode(LayerHostingMode);
 
-    bool windowIsVisible() const { return m_windowIsVisible; }
     void updatePluginsActiveAndFocusedState();
     const WebCore::FloatRect& windowFrameInScreenCoordinates() const { return m_windowFrameInScreenCoordinates; }
     const WebCore::FloatRect& windowFrameInUnflippedScreenCoordinates() const { return m_windowFrameInUnflippedScreenCoordinates; }
@@ -678,6 +679,8 @@ private:
     void tryRestoreScrollPosition();
     void setActive(bool);
     void setFocused(bool);
+    void setViewIsVisible(bool);
+    void setWindowIsVisible(bool);
     void setInitialFocus(bool forward, bool isKeyboardEventValid, const WebKeyboardEvent&);
     void setWindowResizerSize(const WebCore::IntSize&);
     void setIsInWindow(bool isInWindow, bool wantsDidUpdateViewInWindowState = false);
@@ -745,7 +748,6 @@ private:
     void performDictionaryLookupAtLocation(const WebCore::FloatPoint&);
     void performDictionaryLookupForRange(WebCore::Frame*, WebCore::Range*, NSDictionary *options);
 
-    void setWindowIsVisible(bool windowIsVisible);
     void windowAndViewFramesChanged(const WebCore::FloatRect& windowFrameInScreenCoordinates, const WebCore::FloatRect& windowFrameInUnflippedScreenCoordinates, const WebCore::FloatRect& viewFrameInWindowCoordinates, const WebCore::FloatPoint& accessibilityViewCoordinates);
 
     RetainPtr<PDFDocument> pdfDocumentForPrintingFrame(WebCore::Frame*);
@@ -852,6 +854,9 @@ private:
 
     bool m_mainFrameIsScrollable;
 
+    // Whether the containing window is visible or not.
+    bool m_windowIsVisible;
+
 #if ENABLE(PRIMARY_SNAPSHOTTED_PLUGIN_HEURISTIC)
     bool m_readyToFindPrimarySnapshottedPlugin;
     bool m_didFindPrimarySnapshottedPlugin;
@@ -866,9 +871,6 @@ private:
     bool m_pdfPluginEnabled;
 
     bool m_hasCachedWindowFrame;
-
-    // Whether the containing window is visible or not.
-    bool m_windowIsVisible;
 
     // The frame of the containing window in screen coordinates.
     WebCore::FloatRect m_windowFrameInScreenCoordinates;

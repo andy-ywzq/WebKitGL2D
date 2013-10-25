@@ -1006,10 +1006,17 @@ void WebPageProxy::viewStateDidChange(ViewStateFlags flags)
     if (!isValid())
         return;
 
+    if (flags & WindowIsVisible)
+        process()->send(Messages::WebPage::SetWindowIsVisible(m_pageClient->isWindowVisible()), m_pageID);
+
     if (flags & ViewIsFocused)
         m_process->send(Messages::WebPage::SetFocused(m_pageClient->isViewFocused()), m_pageID);
 
-    if (flags & ViewWindowIsActive)
+    // We want to make sure to update the active state while hidden, so if the view is hidden then update the active state
+    // early (in case it becomes visible), and if the view was visible then update active state later (in case it hides).
+    bool viewWasVisible = m_isVisible;
+    
+    if (flags & ViewWindowIsActive && !viewWasVisible)
         m_process->send(Messages::WebPage::SetActive(m_pageClient->isViewWindowActive()), m_pageID);
 
     if (flags & ViewIsVisible) {
@@ -1017,7 +1024,7 @@ void WebPageProxy::viewStateDidChange(ViewStateFlags flags)
         if (isVisible != m_isVisible) {
             m_isVisible = isVisible;
             m_process->pageVisibilityChanged(this);
-            m_drawingArea->visibilityDidChange();
+            m_process->send(Messages::WebPage::SetViewIsVisible(isVisible), m_pageID);
 
             if (!m_isVisible) {
                 // If we've started the responsiveness timer as part of telling the web process to update the backing store
@@ -1032,6 +1039,9 @@ void WebPageProxy::viewStateDidChange(ViewStateFlags flags)
 #endif
         }
     }
+
+    if (flags & ViewWindowIsActive && viewWasVisible)
+        m_process->send(Messages::WebPage::SetActive(m_pageClient->isViewWindowActive()), m_pageID);
 
     if (flags & ViewIsInWindow)
         viewInWindowStateDidChange();
@@ -2250,7 +2260,7 @@ void WebPageProxy::clearLoadDependentCallbacks()
     }
 }
 
-void WebPageProxy::didCommitLoadForFrame(uint64_t frameID, const String& mimeType, uint32_t opaqueFrameLoadType, const CertificateInfo& certificateInfo, CoreIPC::MessageDecoder& decoder)
+void WebPageProxy::didCommitLoadForFrame(uint64_t frameID, const String& mimeType, uint32_t opaqueFrameLoadType, const PlatformCertificateInfo& certificateInfo, CoreIPC::MessageDecoder& decoder)
 {
     RefPtr<APIObject> userData;
     WebContextUserMessageDecoder messageDecoder(userData, m_process.get());

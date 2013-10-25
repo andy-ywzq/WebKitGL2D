@@ -633,7 +633,7 @@ void PlatformCALayerMac::setOpacity(float value)
 #if ENABLE(CSS_FILTERS)
 void PlatformCALayerMac::setFilters(const FilterOperations& filters)
 {
-    PlatformCAFilters::setFiltersOnLayer(this, filters);
+    PlatformCAFilters::setFiltersOnLayer(this->platformLayer(), filters);
 }
 
 void PlatformCALayerMac::copyFiltersFrom(const PlatformCALayer* sourceLayer)
@@ -651,7 +651,7 @@ bool PlatformCALayerMac::filtersCanBeComposited(const FilterOperations& filters)
     
     for (unsigned i = 0; i < filters.size(); ++i) {
         const FilterOperation* filterOperation = filters.at(i);
-        switch (filterOperation->getOperationType()) {
+        switch (filterOperation->type()) {
             case FilterOperation::REFERENCE:
 #if ENABLE(CSS_SHADERS)
             case FilterOperation::CUSTOM:

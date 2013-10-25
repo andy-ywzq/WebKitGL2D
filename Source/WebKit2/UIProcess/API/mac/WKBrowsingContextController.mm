@@ -29,8 +29,11 @@
 #import "WKBrowsingContextControllerInternal.h"
 
 #import "ObjCObjectGraph.h"
+#import "WKBackForwardListInternal.h"
+#import "WKBackForwardListItemInternal.h"
 #import "WKErrorCF.h"
 #import "WKFrame.h"
+#import "WKNSArray.h"
 #import "WKPagePrivate.h"
 #import "WKRetainPtr.h"
 #import "WKStringCF.h"
@@ -252,6 +255,21 @@ static void releaseNSData(unsigned char*, const void* data)
     return WKPageCanGoBack(self._pageRef);
 }
 
+#if WK_API_ENABLED
+- (void)goToBackForwardListItem:(WKBackForwardListItem *)item
+{
+    toImpl(self._pageRef)->goToBackForwardItem(&item._item);
+}
+
+- (WKBackForwardList *)backForwardList
+{
+    WebBackForwardList* list = toImpl(self._pageRef)->backForwardList();
+    if (!list)
+        return nil;
+
+    return [[[WKBackForwardList alloc] _initWithList:*list] autorelease];
+}
+#endif // WK_API_ENABLED
 
 #pragma mark Active Load Introspection
 
@@ -477,6 +495,21 @@ static void didFinishProgress(WKPageRef page, const void* clientInfo)
         [browsingContext.loadDelegate browsingContextControllerDidFinishProgress:browsingContext];
 }
 
+#if WK_API_ENABLED
+static void didChangeBackForwardList(WKPageRef page, WKBackForwardListItemRef addedItem, WKArrayRef removedItems, const void *clientInfo)
+{
+    WKBrowsingContextController *browsingContext = (WKBrowsingContextController *)clientInfo;
+    if (![browsingContext.loadDelegate respondsToSelector:@selector(browsingContextControllerDidChangeBackForwardList:addedItem:removedItems:)])
+        return;
+
+    WKBackForwardListItem *added = addedItem ? [[WKBackForwardListItem alloc] _initWithItem:*toImpl(addedItem)] : nil;
+    NSArray *removed = removedItems ? [[WKNSArray alloc] web_initWithImmutableArray:*toImpl(removedItems)] : nil;
+    [browsingContext.loadDelegate browsingContextControllerDidChangeBackForwardList:browsingContext addedItem:added removedItems:removed];
+    [added release];
+    [removed release];
+}
+#endif // WK_API_ENABLED
+
 static void setUpPageLoaderClient(WKBrowsingContextController *browsingContext, WKPageRef pageRef)
 {
     WKPageLoaderClient loaderClient;
@@ -494,6 +527,10 @@ static void setUpPageLoaderClient(WKBrowsingContextController *browsingContext, 
     loaderClient.didStartProgress = didStartProgress;
     loaderClient.didChangeProgress = didChangeProgress;
     loaderClient.didFinishProgress = didFinishProgress;
+
+#if WK_API_ENABLED
+    loaderClient.didChangeBackForwardList = didChangeBackForwardList;
+#endif
 
     WKPageSetPageLoaderClient(pageRef, &loaderClient);
 }

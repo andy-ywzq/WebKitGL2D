@@ -61,6 +61,7 @@ list(APPEND WebKit2_SOURCES
     Shared/linux/SeccompFilters/Syscall.cpp
     Shared/linux/SeccompFilters/SyscallPolicy.cpp
 
+    Shared/soup/PlatformCertificateInfo.cpp
     Shared/soup/WebCoreArgumentCodersSoup.cpp
 
     UIProcess/DefaultUndoController.cpp
@@ -86,6 +87,9 @@ list(APPEND WebKit2_SOURCES
     UIProcess/API/gtk/WebKitBackForwardListItem.cpp
     UIProcess/API/gtk/WebKitBackForwardListItem.h
     UIProcess/API/gtk/WebKitBackForwardListPrivate.h
+    UIProcess/API/gtk/WebKitCertificateInfo.cpp
+    UIProcess/API/gtk/WebKitCertificateInfo.h
+    UIProcess/API/gtk/WebKitCertificateInfoPrivate.h
     UIProcess/API/gtk/WebKitContextMenu.cpp
     UIProcess/API/gtk/WebKitContextMenu.h
     UIProcess/API/gtk/WebKitContextMenuActions.cpp
@@ -285,6 +289,7 @@ list(APPEND WebKit2_SOURCES
 set(WebKit2_INSTALLED_HEADERS
     ${WEBKIT2_DIR}/UIProcess/API/gtk/WebKitBackForwardList.h
     ${WEBKIT2_DIR}/UIProcess/API/gtk/WebKitBackForwardListItem.h
+    ${WEBKIT2_DIR}/UIProcess/API/gtk/WebKitCertificateInfo.h
     ${WEBKIT2_DIR}/UIProcess/API/gtk/WebKitContextMenu.h
     ${WEBKIT2_DIR}/UIProcess/API/gtk/WebKitContextMenuActions.h
     ${WEBKIT2_DIR}/UIProcess/API/gtk/WebKitContextMenuItem.h

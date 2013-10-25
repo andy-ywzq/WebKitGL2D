@@ -1,3 +1,99 @@
+2013-10-24  Mark Rowe  <mrowe@apple.com>
+
+        Remove references to OS X 10.7 from Xcode configuration settings.
+
+        Now that we're not building for OS X 10.7 they're no longer needed.
+
+        Reviewed by Anders Carlsson.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+        * Configurations/FeatureDefines.xcconfig:
+        * Configurations/Version.xcconfig:
+
+2013-10-24  Mark Rowe  <mrowe@apple.com>
+
+        <rdar://problem/15312643> Prepare for the mysterious future.
+
+        Reviewed by David Kilzer.
+
+        * Configurations/Base.xcconfig:
+        * Configurations/DebugRelease.xcconfig:
+        * Configurations/FeatureDefines.xcconfig:
+        * Configurations/Version.xcconfig:
+
+2013-10-24  Anders Carlsson  <andersca@apple.com>
+
+        Stop bringing in the std namespace
+        https://bugs.webkit.org/show_bug.cgi?id=123273
+
+        Reviewed by Andreas Kling.
+
+        * WebView/WebFrameView.mm:
+        (-[WebFrameView _verticalPageScrollDistance]):
+        (-[WebFrameView _horizontalPageScrollDistance]):
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _scaleFactorForPrintOperation:]):
+        * WebView/WebView.mm:
+        (+[WebView _setCacheModel:]):
+        (+[WebView _maxCacheModelInAnyInstance]):
+        (+[WebView _cacheModelChangedNotification:]):
+        (+[WebView _preferencesRemovedNotification:]):
+
+2013-10-22  Dean Jackson  <dino@apple.com>
+
+        [WebGL] Implement a software rendering option on Mac
+        https://bugs.webkit.org/show_bug.cgi?id=123177
+
+        Reviewed by Tim Horton.
+
+        Implement a way to force software OpenGL rendering
+        for WebGL, via a Setting/Preference.
+
+        * WebView/WebPreferenceKeysPrivate.h: New WebKitForceSoftwareWebGLRendering key.
+        * WebView/WebPreferences.mm:
+        (+[WebPreferences initialize]):
+        (-[WebPreferences forceSoftwareWebGLRendering]):
+        (-[WebPreferences setForceSoftwareWebGLRendering:]):
+        * WebView/WebPreferencesPrivate.h:
+        * WebView/WebView.mm:
+        (-[WebView _preferencesChanged:]):
+
+2013-10-21  Mark Rowe  <mrowe@apple.com>
+
+        Add a version of WebKitSystemInterface for Mavericks.
+
+        Reviewed by Ryosuke Niwa.
+
+        * Configurations/DebugRelease.xcconfig:
+
+2013-10-21  Daniel Bates  <dabates@apple.com>
+
+        Remove platform #ifdefs from WebDataSourcePrivate.h
+        https://bugs.webkit.org/show_bug.cgi?id=123120
+        <rdar://problem/15275533>
+
+        Reviewed by Anders Carlsson.
+
+        * WebView/WebDataSource.mm:
+        (-[WebDataSource _setAllowToBeMemoryMapped]): Define empty implementation when building without
+        disk image cache enabled.
+        (-[WebDataSource setDataSourceDelegate:]): Ditto.
+        (-[WebDataSource dataSourceDelegate]): Return nullptr when building without disk image cache
+        enabled on iOS.
+        * WebView/WebDataSourcePrivate.h: Removed platform #ifdefs added in
+        <http://trac.webkit.org/changeset/156918> (https://bugs.webkit.org/show_bug.cgi?id=121985)
+
+2013-10-20  Mark Lam  <mark.lam@apple.com>
+
+        Avoid JSC debugger overhead unless needed.
+        https://bugs.webkit.org/show_bug.cgi?id=123084.
+
+        Reviewed by Geoffrey Garen.
+
+        * WebView/WebScriptDebugger.mm:
+        (WebScriptDebugger::WebScriptDebugger):
+
 2013-10-19  Jer Noble  <jer.noble@apple.com>
 
         Unreviewed roll out of r157695; broke Mac builds.

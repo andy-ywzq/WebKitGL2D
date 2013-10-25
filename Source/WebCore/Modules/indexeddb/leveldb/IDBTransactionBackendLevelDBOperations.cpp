@@ -28,8 +28,8 @@
 
 #include "IDBCursorBackendLevelDB.h"
 #include "IDBDatabaseCallbacks.h"
+#include "IDBIndexWriter.h"
 #include "IDBKeyRange.h"
-#include "IDBObjectStoreBackendLevelDB.h"
 #include "Logging.h"
 #include <wtf/text/CString.h>
 
@@ -87,7 +87,7 @@ void GetOperation::perform()
     if (m_keyRange->isOnlyKey())
         key = m_keyRange->lower();
     else {
-        RefPtr<IDBBackingStoreLevelDB::Cursor> backingStoreCursor;
+        RefPtr<IDBBackingStoreInterface::Cursor> backingStoreCursor;
         if (m_indexId == IDBIndexMetadata::InvalidId) {
             ASSERT(m_cursorType != IndexedDB::CursorKeyOnly);
             // ObjectStore Retrieval Operation
@@ -180,7 +180,7 @@ void PutOperation::perform()
 
     RefPtr<IDBKey> key;
     if (m_putMode != IDBDatabaseBackendInterface::CursorUpdate && m_objectStore.autoIncrement && !m_key) {
-        RefPtr<IDBKey> autoIncKey = IDBObjectStoreBackendLevelDB::generateKey(m_backingStore, m_transaction, m_databaseId, m_objectStore.id);
+        RefPtr<IDBKey> autoIncKey = m_backingStore->generateKey(*m_transaction, m_databaseId, m_objectStore.id);
         keyWasGenerated = true;
         if (!autoIncKey->isValid()) {
             m_callbacks->onError(IDBDatabaseError::create(IDBDatabaseException::ConstraintError, "Maximum key generator value reached."));
@@ -193,24 +193,23 @@ void PutOperation::perform()
     ASSERT(key);
     ASSERT(key->isValid());
 
-    IDBBackingStoreLevelDB::RecordIdentifier recordIdentifier;
+    RefPtr<IDBRecordIdentifier> recordIdentifier;
     if (m_putMode == IDBDatabaseBackendInterface::AddOnly) {
-        bool found = false;
-        bool ok = m_backingStore->keyExistsInObjectStore(m_transaction->backingStoreTransaction(), m_databaseId, m_objectStore.id, *key, &recordIdentifier, found);
+        bool ok = m_backingStore->keyExistsInObjectStore(m_transaction->backingStoreTransaction(), m_databaseId, m_objectStore.id, *key, recordIdentifier);
         if (!ok) {
             m_callbacks->onError(IDBDatabaseError::create(IDBDatabaseException::UnknownError, "Internal error checking key existence."));
             return;
         }
-        if (found) {
+        if (recordIdentifier) {
             m_callbacks->onError(IDBDatabaseError::create(IDBDatabaseException::ConstraintError, "Key already exists in the object store."));
             return;
         }
     }
 
-    Vector<OwnPtr<IDBObjectStoreBackendLevelDB::IndexWriter>> indexWriters;
+    Vector<RefPtr<IDBIndexWriter>> indexWriters;
     String errorMessage;
     bool obeysConstraints = false;
-    bool backingStoreSuccess = IDBObjectStoreBackendLevelDB::makeIndexWriters(m_transaction, m_backingStore.get(), m_databaseId, m_objectStore, key, keyWasGenerated, m_indexIds, m_indexKeys, &indexWriters, &errorMessage, obeysConstraints);
+    bool backingStoreSuccess = m_backingStore->makeIndexWriters(*m_transaction, m_databaseId, m_objectStore, *key, keyWasGenerated, m_indexIds, m_indexKeys, indexWriters, &errorMessage, obeysConstraints);
     if (!backingStoreSuccess) {
         m_callbacks->onError(IDBDatabaseError::create(IDBDatabaseException::UnknownError, "Internal error: backing store error updating index keys."));
         return;
@@ -221,19 +220,19 @@ void PutOperation::perform()
     }
 
     // Before this point, don't do any mutation. After this point, rollback the transaction in case of error.
-    backingStoreSuccess = m_backingStore->putRecord(m_transaction->backingStoreTransaction(), m_databaseId, m_objectStore.id, *key, m_value, &recordIdentifier);
+    backingStoreSuccess = m_backingStore->putRecord(m_transaction->backingStoreTransaction(), m_databaseId, m_objectStore.id, *key, m_value, recordIdentifier.get());
     if (!backingStoreSuccess) {
         m_callbacks->onError(IDBDatabaseError::create(IDBDatabaseException::UnknownError, "Internal error: backing store error performing put/add."));
         return;
     }
 
     for (size_t i = 0; i < indexWriters.size(); ++i) {
-        IDBObjectStoreBackendLevelDB::IndexWriter* indexWriter = indexWriters[i].get();
-        indexWriter->writeIndexKeys(recordIdentifier, *m_backingStore, m_transaction->backingStoreTransaction(), m_databaseId, m_objectStore.id);
+        IDBIndexWriter* indexWriter = indexWriters[i].get();
+        indexWriter->writeIndexKeys(recordIdentifier.get(), *m_backingStore, m_transaction->backingStoreTransaction(), m_databaseId, m_objectStore.id);
     }
 
     if (m_objectStore.autoIncrement && m_putMode != IDBDatabaseBackendInterface::CursorUpdate && key->type() == IDBKey::NumberType) {
-        bool ok = IDBObjectStoreBackendLevelDB::updateKeyGenerator(m_backingStore, m_transaction, m_databaseId, m_objectStore.id, key.get(), !keyWasGenerated);
+        bool ok = m_backingStore->updateKeyGenerator(*m_transaction, m_databaseId, m_objectStore.id, *key, !keyWasGenerated);
         if (!ok) {
             m_callbacks->onError(IDBDatabaseError::create(IDBDatabaseException::UnknownError, "Internal error updating key generator."));
             return;
@@ -261,7 +260,7 @@ void OpenCursorOperation::perform()
     if (m_taskType == IDBDatabaseBackendInterface::PreemptiveTask)
         m_transaction->addPreemptiveEvent();
 
-    RefPtr<IDBBackingStoreLevelDB::Cursor> backingStoreCursor;
+    RefPtr<IDBBackingStoreInterface::Cursor> backingStoreCursor;
     if (m_indexId == IDBIndexMetadata::InvalidId) {
         ASSERT(m_cursorType != IndexedDB::CursorKeyOnly);
         backingStoreCursor = m_backingStore->openObjectStoreCursor(m_transaction->backingStoreTransaction(), m_databaseId, m_objectStoreId, m_keyRange.get(), m_direction);
@@ -287,7 +286,7 @@ void CountOperation::perform()
 {
     LOG(StorageAPI, "CountOperation");
     uint32_t count = 0;
-    RefPtr<IDBBackingStoreLevelDB::Cursor> backingStoreCursor;
+    RefPtr<IDBBackingStoreInterface::Cursor> backingStoreCursor;
 
     if (m_indexId == IDBIndexMetadata::InvalidId)
         backingStoreCursor = m_backingStore->openObjectStoreKeyCursor(m_transaction->backingStoreTransaction(), m_databaseId, m_objectStoreId, m_keyRange.get(), IndexedDB::CursorNext);
@@ -308,7 +307,7 @@ void CountOperation::perform()
 void DeleteRangeOperation::perform()
 {
     LOG(StorageAPI, "DeleteRangeOperation");
-    RefPtr<IDBBackingStoreLevelDB::Cursor> backingStoreCursor = m_backingStore->openObjectStoreCursor(m_transaction->backingStoreTransaction(), m_databaseId, m_objectStoreId, m_keyRange.get(), IndexedDB::CursorNext);
+    RefPtr<IDBBackingStoreInterface::Cursor> backingStoreCursor = m_backingStore->openObjectStoreCursor(m_transaction->backingStoreTransaction(), m_databaseId, m_objectStoreId, m_keyRange.get(), IndexedDB::CursorNext);
     if (backingStoreCursor) {
         do {
             if (!m_backingStore->deleteRecord(m_transaction->backingStoreTransaction(), m_databaseId, m_objectStoreId, backingStoreCursor->recordIdentifier())) {
@@ -341,10 +340,10 @@ void DeleteObjectStoreOperation::perform()
     }
 }
 
-void IDBDatabaseBackendLevelDB::VersionChangeOperation::perform()
+void IDBDatabaseBackendImpl::VersionChangeOperation::perform()
 {
     LOG(StorageAPI, "VersionChangeOperation");
-    IDBDatabaseBackendLevelDB* database = m_transaction->database();
+    IDBDatabaseBackendImpl* database = m_transaction->database();
     int64_t databaseId = database->id();
     uint64_t oldVersion = database->m_metadata.version;
 
@@ -374,7 +373,7 @@ void DeleteObjectStoreAbortOperation::perform()
     m_transaction->database()->addObjectStore(m_objectStoreMetadata, IDBObjectStoreMetadata::InvalidId);
 }
 
-void IDBDatabaseBackendLevelDB::VersionChangeAbortOperation::perform()
+void IDBDatabaseBackendImpl::VersionChangeAbortOperation::perform()
 {
     LOG(StorageAPI, "VersionChangeAbortOperation");
     m_transaction->database()->m_metadata.version = m_previousIntVersion;

@@ -80,7 +80,6 @@ private:
     virtual void paintReplaced(PaintInfo&, const LayoutPoint&) OVERRIDE;
 
     virtual void willBeDestroyed() OVERRIDE;
-    virtual void styleWillChange(StyleDifference, const RenderStyle* newStyle) OVERRIDE;
     virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle) OVERRIDE;
     virtual void addChild(RenderObject* child, RenderObject* beforeChild = 0) OVERRIDE;
     virtual void removeChild(RenderObject&) OVERRIDE;
@@ -123,20 +122,7 @@ private:
     bool m_hasSVGShadow : 1;
 };
 
-inline RenderSVGRoot* toRenderSVGRoot(RenderObject* object)
-{ 
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isSVGRoot());
-    return static_cast<RenderSVGRoot*>(object);
-}
-
-inline const RenderSVGRoot* toRenderSVGRoot(const RenderObject* object)
-{ 
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isSVGRoot());
-    return static_cast<const RenderSVGRoot*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderSVGRoot(const RenderSVGRoot*);
+RENDER_OBJECT_TYPE_CASTS(RenderSVGRoot, isSVGRoot())
 
 } // namespace WebCore
 
