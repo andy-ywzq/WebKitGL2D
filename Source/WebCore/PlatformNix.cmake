@@ -297,7 +297,6 @@ else ()
         loader/soup/CachedRawResourceSoup.cpp
         loader/soup/SubresourceLoaderSoup.cpp
         platform/network/soup/AuthenticationChallengeSoup.cpp
-        platform/network/soup/CertificateInfoSoup.cpp
         platform/network/soup/CookieJarSoup.cpp
         platform/network/soup/CookieStorageSoup.cpp
         platform/network/soup/CredentialStorageSoup.cpp
