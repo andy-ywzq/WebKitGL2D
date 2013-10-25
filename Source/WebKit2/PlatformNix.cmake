@@ -323,8 +323,8 @@ set(WebKitNix_WebKit2_HEADERS
     UIProcess/API/C/WKApplicationCacheManager.h
     UIProcess/API/C/WKAuthenticationChallenge.h
     UIProcess/API/C/WKAuthenticationDecisionListener.h
-    UIProcess/API/C/WKBackForwardList.h
-    UIProcess/API/C/WKBackForwardListItem.h
+    UIProcess/API/C/WKBackForwardListRef.h
+    UIProcess/API/C/WKBackForwardListItemRef.h
     UIProcess/API/C/WKBatteryManager.h
     UIProcess/API/C/WKBatteryStatus.h
     UIProcess/API/C/WKContext.h
