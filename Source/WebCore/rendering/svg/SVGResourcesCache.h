@@ -27,6 +27,7 @@
 
 namespace WebCore {
 
+class RenderElement;
 class RenderObject;
 class RenderStyle;
 class RenderSVGResourceContainer;
@@ -47,13 +48,13 @@ public:
     static void clientWillBeRemovedFromTree(RenderObject*);
 
     // Called from all SVG renderers destroy() methods - except for RenderSVGResourceContainer.
-    static void clientDestroyed(RenderObject*);
+    static void clientDestroyed(RenderElement&);
 
     // Called from all SVG renderers layout() methods.
-    static void clientLayoutChanged(RenderObject*);
+    static void clientLayoutChanged(RenderElement&);
 
     // Called from all SVG renderers styleDidChange() methods.
-    static void clientStyleChanged(RenderObject*, StyleDifference, const RenderStyle* newStyle);
+    static void clientStyleChanged(RenderElement&, StyleDifference, const RenderStyle& newStyle);
 
     // Called from RenderSVGResourceContainer::willBeDestroyed().
     static void resourceDestroyed(RenderSVGResourceContainer*);

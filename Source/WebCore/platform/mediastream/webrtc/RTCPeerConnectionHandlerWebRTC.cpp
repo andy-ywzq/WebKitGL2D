@@ -173,13 +173,13 @@ bool RTCPeerConnectionHandlerWebRTC::addStream(PassRefPtr<MediaStreamDescriptor>
     talk_base::scoped_refptr<webrtc::MediaStreamInterface> stream = m_pcFactory->CreateLocalMediaStream(streamDescriptor->id().utf8().data());
     MediaConstraintsWebRTC mediaConstraints(constraints);
 
-    unsigned numberOfSources = streamDescriptor->numberOfAudioStreams();
+    unsigned numberOfSources = streamDescriptor->numberOfAudioSources();
     for (unsigned i = 0; i < numberOfSources; i++)
-        addWebRTCStream(stream.get(), streamDescriptor->audioStreams(i));
+        addWebRTCStream(stream.get(), streamDescriptor->audioSources(i));
 
-    numberOfSources = streamDescriptor->numberOfVideoStreams();
+    numberOfSources = streamDescriptor->numberOfVideoSources();
     for (unsigned i = 0; i < numberOfSources; i++)
-        addWebRTCStream(stream.get(), streamDescriptor->videoStreams(i));
+        addWebRTCStream(stream.get(), streamDescriptor->videoSources(i));
 
     return m_webRTCPeerConnection->AddStream(stream.get(), &mediaConstraints);
 }

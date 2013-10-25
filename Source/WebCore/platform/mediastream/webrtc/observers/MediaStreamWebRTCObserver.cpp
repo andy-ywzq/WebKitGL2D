@@ -54,14 +54,14 @@ void MediaStreamWebRTCObserver::OnChanged()
     const webrtc::VideoTrackVector& videoTracks = m_stream->GetVideoTracks();
     // For each remote track that is added we create a new MediaStreamSource, so we
     // can compare the number of sources against the number of tracks safely
-    if (m_descriptor->numberOfAudioStreams() < audioTracks.size())
+    if (m_descriptor->numberOfAudioSources() < audioTracks.size())
         findAndAddTrack(audioTracks, m_audioTrackObservers);
-    else if (m_descriptor->numberOfAudioStreams() > audioTracks.size())
+    else if (m_descriptor->numberOfAudioSources() > audioTracks.size())
         findAndRemoveTrack(m_audioTrackObservers);
 
-    if (m_descriptor->numberOfVideoStreams() < videoTracks.size())
+    if (m_descriptor->numberOfVideoSources() < videoTracks.size())
         findAndAddTrack(videoTracks, m_videoTrackObservers);
-    else if (m_descriptor->numberOfVideoStreams() > videoTracks.size())
+    else if (m_descriptor->numberOfVideoSources() > videoTracks.size())
         findAndRemoveTrack(m_audioTrackObservers);
 }
 

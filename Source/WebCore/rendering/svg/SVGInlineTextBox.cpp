@@ -350,13 +350,13 @@ bool SVGInlineTextBox::acquirePaintingResource(GraphicsContext*& context, float 
     if (!m_paintingResource)
         return false;
 
-    if (!m_paintingResource->applyResource(&renderer, style, context, m_paintingResourceMode)) {
+    if (!m_paintingResource->applyResource(renderer, style, context, m_paintingResourceMode)) {
         if (fallbackColor.isValid()) {
             RenderSVGResourceSolidColor* fallbackResource = RenderSVGResource::sharedSolidPaintingResource();
             fallbackResource->setColor(fallbackColor);
 
             m_paintingResource = fallbackResource;
-            m_paintingResource->applyResource(&renderer, style, context, m_paintingResourceMode);
+            m_paintingResource->applyResource(renderer, style, context, m_paintingResourceMode);
         }
     }
 
@@ -370,9 +370,8 @@ void SVGInlineTextBox::releasePaintingResource(GraphicsContext*& context, const 
 {
     ASSERT(m_paintingResource);
 
-    RenderObject& parentRenderer = parent()->renderer();
-    m_paintingResource->postApplyResource(&parentRenderer, context, m_paintingResourceMode, path, /*RenderSVGShape*/ 0);
-    m_paintingResource = 0;
+    m_paintingResource->postApplyResource(parent()->renderer(), context, m_paintingResourceMode, path, /*RenderSVGShape*/ 0);
+    m_paintingResource = nullptr;
 }
 
 bool SVGInlineTextBox::prepareGraphicsContextForTextPainting(GraphicsContext*& context, float scalingFactor, TextRun& textRun, RenderStyle* style)
@@ -637,13 +636,13 @@ void SVGInlineTextBox::paintText(GraphicsContext* context, RenderStyle* style, R
 
     // Draw text using selection style from the start to the end position of the selection
     if (style != selectionStyle)
-        SVGResourcesCache::clientStyleChanged(&parent()->renderer(), StyleDifferenceRepaint, selectionStyle);
+        SVGResourcesCache::clientStyleChanged(parent()->renderer(), StyleDifferenceRepaint, *selectionStyle);
 
     TextRun selectionTextRun = constructTextRun(selectionStyle, fragment);
     paintTextWithShadows(context, selectionStyle, textRun, fragment, startPosition, endPosition);
 
     if (style != selectionStyle)
-        SVGResourcesCache::clientStyleChanged(&parent()->renderer(), StyleDifferenceRepaint, style);
+        SVGResourcesCache::clientStyleChanged(parent()->renderer(), StyleDifferenceRepaint, *style);
 
     // Eventually draw text using regular style from the end position of the selection to the end of the current chunk part
     if (endPosition < static_cast<int>(fragment.length) && !paintSelectedTextOnly)

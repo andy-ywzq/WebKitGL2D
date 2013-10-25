@@ -165,7 +165,7 @@ void RenderSVGShape::layout()
 
     // Invalidate all resources of this client if our layout changed.
     if (everHadLayout() && selfNeedsLayout())
-        SVGResourcesCache::clientLayoutChanged(this);
+        SVGResourcesCache::clientLayoutChanged(*this);
 
     // If our bounds changed, notify the parents.
     if (updateCachedBoundariesInParents)
@@ -219,13 +219,13 @@ void RenderSVGShape::fillShape(RenderStyle* style, GraphicsContext* context)
 {
     Color fallbackColor;
     if (RenderSVGResource* fillPaintingResource = RenderSVGResource::fillPaintingResource(*this, style, fallbackColor)) {
-        if (fillPaintingResource->applyResource(this, style, context, ApplyToFillMode))
-            fillPaintingResource->postApplyResource(this, context, ApplyToFillMode, 0, this);
+        if (fillPaintingResource->applyResource(*this, style, context, ApplyToFillMode))
+            fillPaintingResource->postApplyResource(*this, context, ApplyToFillMode, 0, this);
         else if (fallbackColor.isValid()) {
             RenderSVGResourceSolidColor* fallbackResource = RenderSVGResource::sharedSolidPaintingResource();
             fallbackResource->setColor(fallbackColor);
-            if (fallbackResource->applyResource(this, style, context, ApplyToFillMode))
-                fallbackResource->postApplyResource(this, context, ApplyToFillMode, 0, this);
+            if (fallbackResource->applyResource(*this, style, context, ApplyToFillMode))
+                fallbackResource->postApplyResource(*this, context, ApplyToFillMode, 0, this);
         }
     }
 }
@@ -234,13 +234,13 @@ void RenderSVGShape::strokeShape(RenderStyle* style, GraphicsContext* context)
 {
     Color fallbackColor;
     if (RenderSVGResource* strokePaintingResource = RenderSVGResource::strokePaintingResource(*this, style, fallbackColor)) {
-        if (strokePaintingResource->applyResource(this, style, context, ApplyToStrokeMode))
-            strokePaintingResource->postApplyResource(this, context, ApplyToStrokeMode, 0, this);
+        if (strokePaintingResource->applyResource(*this, style, context, ApplyToStrokeMode))
+            strokePaintingResource->postApplyResource(*this, context, ApplyToStrokeMode, 0, this);
         else if (fallbackColor.isValid()) {
             RenderSVGResourceSolidColor* fallbackResource = RenderSVGResource::sharedSolidPaintingResource();
             fallbackResource->setColor(fallbackColor);
-            if (fallbackResource->applyResource(this, style, context, ApplyToStrokeMode))
-                fallbackResource->postApplyResource(this, context, ApplyToStrokeMode, 0, this);
+            if (fallbackResource->applyResource(*this, style, context, ApplyToStrokeMode))
+                fallbackResource->postApplyResource(*this, context, ApplyToStrokeMode, 0, this);
         }
     }
 }

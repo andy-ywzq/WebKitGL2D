@@ -54,6 +54,11 @@ static inline bool isWhitespace(UChar character)
 
 bool canUseFor(const RenderBlockFlow& flow)
 {
+#if !PLATFORM(MAC)
+    // FIXME: Non-mac platforms are hitting ASSERT(run.charactersLength() >= run.length())
+    // https://bugs.webkit.org/show_bug.cgi?id=123338
+    return false;
+#endif
     if (!flow.firstChild())
         return false;
     // This currently covers <blockflow>#text</blockflow> case.
@@ -143,8 +148,8 @@ bool canUseFor(const RenderBlockFlow& flow)
         return false;
     if (style.font().codePath(TextRun(textRenderer.text())) != Font::Simple)
         return false;
-    if (!textRenderer.knownToHaveNoOverflowAndNoFallbackFonts())
-        return false;
+
+    auto primaryFontData = style.font().primaryFont();
 
     unsigned length = textRenderer.textLength();
     unsigned consecutiveSpaceCount = 0;
@@ -173,6 +178,8 @@ bool canUseFor(const RenderBlockFlow& flow)
                 || direction == U_LEFT_TO_RIGHT_EMBEDDING || direction == U_LEFT_TO_RIGHT_OVERRIDE)
                 return false;
         }
+        if (!primaryFontData->glyphForCharacter(character))
+            return false;
     }
     return true;
 }

@@ -101,16 +101,16 @@ SVGResources* SVGResourcesCache::cachedResourcesForRenderObject(const RenderObje
     return resourcesCacheFromRenderObject(renderer)->m_cache.get(renderer);
 }
 
-void SVGResourcesCache::clientLayoutChanged(RenderObject* object)
+void SVGResourcesCache::clientLayoutChanged(RenderElement& renderer)
 {
-    SVGResources* resources = SVGResourcesCache::cachedResourcesForRenderObject(object);
+    SVGResources* resources = SVGResourcesCache::cachedResourcesForRenderObject(&renderer);
     if (!resources)
         return;
 
-    // Invalidate the resources if either the RenderObject itself changed,
+    // Invalidate the resources if either the RenderElement itself changed,
     // or we have filter resources, which could depend on the layout of children.
-    if (object->selfNeedsLayout())
-        resources->removeClientFromCache(object);
+    if (renderer.selfNeedsLayout())
+        resources->removeClientFromCache(&renderer);
 }
 
 static inline bool rendererCanHaveResources(RenderObject* renderer)
@@ -119,29 +119,28 @@ static inline bool rendererCanHaveResources(RenderObject* renderer)
     return renderer->node() && renderer->node()->isSVGElement() && !renderer->isSVGInlineText();
 }
 
-void SVGResourcesCache::clientStyleChanged(RenderObject* renderer, StyleDifference diff, const RenderStyle* newStyle)
+void SVGResourcesCache::clientStyleChanged(RenderElement& renderer, StyleDifference diff, const RenderStyle& newStyle)
 {
-    ASSERT(renderer);
-    if (diff == StyleDifferenceEqual || !renderer->parent())
+    if (diff == StyleDifferenceEqual || !renderer.parent())
         return;
 
     // In this case the proper SVGFE*Element will decide whether the modified CSS properties require a relayout or repaint.
-    if (renderer->isSVGResourceFilterPrimitive() && (diff == StyleDifferenceRepaint || diff == StyleDifferenceRepaintIfTextOrBorderOrOutline))
+    if (renderer.isSVGResourceFilterPrimitive() && (diff == StyleDifferenceRepaint || diff == StyleDifferenceRepaintIfTextOrBorderOrOutline))
         return;
 
     // Dynamic changes of CSS properties like 'clip-path' may require us to recompute the associated resources for a renderer.
     // FIXME: Avoid passing in a useless StyleDifference, but instead compare oldStyle/newStyle to see which resources changed
     // to be able to selectively rebuild individual resources, instead of all of them.
-    if (rendererCanHaveResources(renderer)) {
-        SVGResourcesCache* cache = resourcesCacheFromRenderObject(renderer);
-        cache->removeResourcesFromRenderObject(renderer);
-        cache->addResourcesFromRenderObject(renderer, newStyle);
+    if (rendererCanHaveResources(&renderer)) {
+        SVGResourcesCache* cache = resourcesCacheFromRenderObject(&renderer);
+        cache->removeResourcesFromRenderObject(&renderer);
+        cache->addResourcesFromRenderObject(&renderer, &newStyle);
     }
 
-    RenderSVGResource::markForLayoutAndParentResourceInvalidation(renderer, false);
+    RenderSVGResource::markForLayoutAndParentResourceInvalidation(&renderer, false);
 
-    if (renderer->node() && !renderer->node()->isSVGElement())
-        renderer->node()->setNeedsStyleRecalc(SyntheticStyleChange);
+    if (renderer.element() && !renderer.element()->isSVGElement())
+        renderer.element()->setNeedsStyleRecalc(SyntheticStyleChange);
 }
 
 void SVGResourcesCache::clientWasAddedToTree(RenderObject* renderer, const RenderStyle* newStyle)
@@ -168,16 +167,14 @@ void SVGResourcesCache::clientWillBeRemovedFromTree(RenderObject* renderer)
     cache->removeResourcesFromRenderObject(renderer);
 }
 
-void SVGResourcesCache::clientDestroyed(RenderObject* renderer)
+void SVGResourcesCache::clientDestroyed(RenderElement& renderer)
 {
-    ASSERT(renderer);
-
-    SVGResources* resources = SVGResourcesCache::cachedResourcesForRenderObject(renderer);
+    SVGResources* resources = SVGResourcesCache::cachedResourcesForRenderObject(&renderer);
     if (resources)
-        resources->removeClientFromCache(renderer);
+        resources->removeClientFromCache(&renderer);
 
-    SVGResourcesCache* cache = resourcesCacheFromRenderObject(renderer);
-    cache->removeResourcesFromRenderObject(renderer);
+    SVGResourcesCache* cache = resourcesCacheFromRenderObject(&renderer);
+    cache->removeResourcesFromRenderObject(&renderer);
 }
 
 void SVGResourcesCache::resourceDestroyed(RenderSVGResourceContainer* resource)

@@ -1,3 +1,225 @@
+2013-10-25  Thiago de Barros Lacerda  <thiago.lacerda@openbossa.org>
+
+        Adding platform implementation of MediaStreamTrack
+        https://bugs.webkit.org/show_bug.cgi?id=123301
+
+        Reviewed by Eric Carlson.
+
+        No new tests needed.
+
+        * CMakeLists.txt:
+        * Modules/mediastream/AudioStreamTrack.cpp:
+        (WebCore::AudioStreamTrack::create): Create method now receives a MediaStreamTrackPrivate as parameter.
+
+        (WebCore::AudioStreamTrack::AudioStreamTrack):
+        * Modules/mediastream/AudioStreamTrack.h:
+        * Modules/mediastream/MediaStream.cpp:
+        (WebCore::MediaStream::MediaStream): Constructor now iterates through a set of MediaStreamTrackPrivate
+        instances to create each MediaStreamTrack of MediaStream.
+
+        (WebCore::MediaStream::addRemoteSource): Calling AudioStreamTrack and VideoStreamTrack with
+        MediaStreamTrackPrivate as parameter.
+
+        * Modules/mediastream/MediaStreamTrack.cpp:
+        (WebCore::MediaStreamTrack::MediaStreamTrack): Constructor now receives a MediaStreamTrackPrivate, instead of a
+        MediaStreamSource.
+
+        (WebCore::MediaStreamTrack::~MediaStreamTrack):
+        (WebCore::MediaStreamTrack::kind): Calling method from MediaStreamTrackPrivate.
+
+        (WebCore::MediaStreamTrack::setSource): Ditto.
+
+        (WebCore::MediaStreamTrack::id): Ditto.
+
+        (WebCore::MediaStreamTrack::label): Ditto.
+
+        (WebCore::MediaStreamTrack::enabled): Ditto.
+
+        (WebCore::MediaStreamTrack::setEnabled): Ditto.
+
+        (WebCore::MediaStreamTrack::muted): Ditto.
+
+        (WebCore::MediaStreamTrack::readonly): Ditto.
+
+        (WebCore::MediaStreamTrack::remote): Ditto.
+
+        (WebCore::MediaStreamTrack::readyState): Ditto.
+
+        (WebCore::MediaStreamTrack::states):
+        (WebCore::MediaStreamTrack::capabilities):
+        (WebCore::MediaStreamTrack::clone):
+        (WebCore::MediaStreamTrack::stopProducingData):
+        (WebCore::MediaStreamTrack::ended): Ditto.
+
+        (WebCore::MediaStreamTrack::sourceStateChanged): Ditto.
+
+        (WebCore::MediaStreamTrack::sourceMutedChanged): Ditto.
+
+        (WebCore::MediaStreamTrack::sourceEnabledChanged): Ditto.
+        (WebCore::MediaStreamTrack::configureTrackRendering):
+        (WebCore::MediaStreamTrack::stopped): Ditto.
+
+        (WebCore::MediaStreamTrack::trackDidEnd): Setting Ended ready state in MediaStreamTrackPrivate.
+
+        (WebCore::MediaStreamTrack::trackReadyStateChanged): Dispatches Live or Ended event.
+
+        (WebCore::MediaStreamTrack::trackMutedChanged): Dispatches Muted event.
+
+        * Modules/mediastream/MediaStreamTrack.h: Now inheriting from MediaStreamTrackPrivateClient.
+
+        (WebCore::MediaStreamTrack::source): Calling method from MediaStreamTrackPrivate.
+        (WebCore::MediaStreamTrack::privateTrack):
+        * Modules/mediastream/VideoStreamTrack.cpp:
+        (WebCore::VideoStreamTrack::create):
+        (WebCore::VideoStreamTrack::VideoStreamTrack): Create method now receives a MediaStreamTrackPrivate as parameter.
+        * Modules/mediastream/VideoStreamTrack.h:
+        * platform/mediastream/MediaStreamDescriptor.cpp:
+        (WebCore::MediaStreamDescriptor::MediaStreamDescriptor): Stores the private tracks in a Vector (property of
+        MediaStreamDescriptor class).
+
+        (WebCore::MediaStreamDescriptor::addTrack): Adds a private track to the tracks' Vector
+
+        (WebCore::MediaStreamDescriptor::removeTrack): Removes a private track from the tracks' Vector
+
+        * platform/mediastream/MediaStreamDescriptor.h:
+        (WebCore::MediaStreamDescriptor::numberOfAudioSources): Renamed from numberOfAudioStreams.
+
+        (WebCore::MediaStreamDescriptor::audioSources): Renamed from audioStreams.
+
+        (WebCore::MediaStreamDescriptor::numberOfVideoSources): Renamed from numberOfVideoStreams.
+
+        (WebCore::MediaStreamDescriptor::videoSources): Renamed from videoStreams.
+
+        (WebCore::MediaStreamDescriptor::numberOfAudioTracks): Returns the number of audio tracks this MediaStreamDescriptor
+        has.
+
+        (WebCore::MediaStreamDescriptor::audioTracks): Returns a audio track, given an index
+
+        (WebCore::MediaStreamDescriptor::numberOfVideoTracks): Returns the number of video tracks this MediaStreamDescriptor
+        has.
+        (WebCore::MediaStreamDescriptor::videoTracks): Returns a video track, given an index
+        * platform/mediastream/MediaStreamTrackPrivate.cpp: Added.
+        * platform/mediastream/MediaStreamTrackPrivate.h: Added.
+
+2013-10-25  Zoltan Horvath  <zoltan@webkit.org>
+
+        [CSS Regions][CSS Shapes] Update updateShapeAndSegmentsForCurrentLineInFlowThread to deal better with multiple regions
+        <https://webkit.org/b/123210>
+
+        Reviewed by David Hyatt.
+
+        I simplified the determination of the next region part of updateShapeAndSegmentsForCurrentLineInFlowThread's implementation
+        in order to make the code more straightforward. I also tried to avoid using regionAtBlockOffset(...) function where it's possible,
+        since it's not always that reliable, what I'll will report in a separate bug.
+
+        No new tests, covered by existing tests.
+
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::RenderBlockFlow::updateShapeAndSegmentsForCurrentLineInFlowThread):
+
+2013-10-25  Zoltan Horvath  <zoltan@webkit.org>
+
+        [CSS Regions][CSS Shapes] Update updateShapeAndSegmentsForCurrentLineInFlowThread to deal better with the first lines
+        <https://bugs.webkit.org/show_bug.cgi?id=123275>
+
+        Reviewed by David Hyatt.
+
+        We have a complex condition in updateShapeAndSegmentsForCurrentLineInFlowThread, which is
+        adjusting the first line to the shape's top. This patch adds two boolean to make that clear.
+
+        No new tests, no behavior change.
+
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::RenderBlockFlow::updateShapeAndSegmentsForCurrentLineInFlowThread):
+
+2013-10-25  Antti Koivisto  <antti@apple.com>
+
+        Faster way for simple line layout to check if text has fallback fonts
+        https://bugs.webkit.org/show_bug.cgi?id=123342
+
+        Reviewed by Andreas Kling.
+        
+        Don't use RenderText::knownToHaveNoOverflowAndNoFallbackFonts as it is slow.
+
+        Simple text code path test already guarantees there is no overflow. Test for fallback
+        fonts explicitly.
+
+        * platform/graphics/SimpleFontData.h:
+        
+            Make FINAL.
+
+        * rendering/RenderText.cpp:
+        * rendering/RenderText.h:
+        
+            Remove knownToHaveNoOverflowAndNoFallbackFonts() as it has no clients.
+
+        * rendering/SimpleLineLayout.cpp:
+        (WebCore::SimpleLineLayout::canUseFor):
+        
+            Check if all characters can be found from the primary font.
+
+2013-10-25  Andreas Kling  <akling@apple.com>
+
+        SVGResourcesCache::clientDestroyed() should take a RenderElement&.
+        <https://webkit.org/b/123339>
+
+        This function is always called with an object, and that object
+        is guaranteed to never be a text renderer.
+
+        Reviewed by Antti Koivisto.
+
+2013-10-25  Andreas Kling  <akling@apple.com>
+
+        SVGResourcesCache::clientLayoutChanged() should take a RenderElement&.
+        <https://webkit.org/b/123336>
+
+        This function is always called with an object, and that object
+        is guaranteed to never be a text renderer.
+
+        Reviewed by Antti Koivisto.
+
+2013-10-25  Andreas Kling  <akling@apple.com>
+
+        SVGResourcesCache::clientStyleChanged() should take a RenderElement&.
+        <https://webkit.org/b/123335>
+
+        This function is always called with an object, and that object
+        is guaranteed to never be a text renderer.
+
+        Reviewed by Antti Koivisto.
+
+2013-10-25  Andreas Kling  <akling@apple.com>
+
+        SVG: postApplyResource() should take a RenderElement&.
+        <https://webkit.org/b/123334>
+
+        This function is always called with an object, and that object
+        is guaranteed to never be a text renderer.
+
+        Reviewed by Antti Koivisto.
+
+2013-10-25  Antti Koivisto  <antti@apple.com>
+
+        REGRESSION(r157950): It made many tests assert on Windows, EFL, GTK
+        https://bugs.webkit.org/show_bug.cgi?id=123309
+
+        Reviewed by Andreas Kling.
+
+        Disable simple line layout on non-Mac plaforms for now.
+
+        * rendering/SimpleLineLayout.cpp:
+        (WebCore::SimpleLineLayout::canUseFor):
+
+2013-10-24  Andreas Kling  <akling@apple.com>
+
+        SVG: applyResource() should take a RenderElement&.
+        <https://webkit.org/b/123286>
+
+        This function is always called with an object, and that object
+        is guaranteed to never be a text renderer.
+
+        Reviewed by Antti Koivisto.
+
 2013-10-25  Andreas Kling  <akling@apple.com>
 
         RenderElement::styleWillChange() should pass newStyle as reference.
