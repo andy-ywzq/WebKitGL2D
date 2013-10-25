@@ -54,7 +54,7 @@ namespace Nix {
 
 Color DefaultWebThemeEngine::activeSelectionBackgroundColor() const
 {
-    return Color(0, 0, 255);
+    return Color::blue;
 }
 
 Color DefaultWebThemeEngine::activeSelectionForegroundColor() const
