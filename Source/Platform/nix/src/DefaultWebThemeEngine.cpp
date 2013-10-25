@@ -41,7 +41,6 @@ const double BorderOnHoverColor = 0x7A / 255.0;
 const double CheckColor = 0x66 / 255.0;
 const double TextFieldDarkBorderColor = 0x9A / 255.0;
 const double TextFieldLightBorderColor = 0xEE / 255.0;
-const double Pi = 3.1415926;
 
 const int MenuListBorder = 5;
 const int MenuListArrowSize = 6;
@@ -55,7 +54,7 @@ namespace Nix {
 
 Color DefaultWebThemeEngine::activeSelectionBackgroundColor() const
 {
-    return Color(0, 0, 255);
+    return Color::blue;
 }
 
 Color DefaultWebThemeEngine::activeSelectionForegroundColor() const
@@ -401,11 +400,11 @@ void DefaultWebThemeEngine::paintMediaMuteButton(Canvas* canvas, MediaPlayerStat
         cairo_set_line_width(canvas, 5);
         cairo_set_source_rgb(canvas, 1, 1, 1);
 
-        cairo_arc(canvas, rect.x + (rect.width * 0.3), rect.y + (rect.height * 0.5), rect.width * 0.34, 11*(Pi/6), Pi/6);
+        cairo_arc(canvas, rect.x + (rect.width * 0.3), rect.y + (rect.height * 0.5), rect.width * 0.34, 11 * (M_PI / 6), M_PI / 6);
         cairo_fill(canvas);
-        cairo_arc(canvas, rect.x + (rect.width * 0.3), rect.y + (rect.height * 0.5), rect.width * 0.45, 11*(Pi/6), Pi/6);
+        cairo_arc(canvas, rect.x + (rect.width * 0.3), rect.y + (rect.height * 0.5), rect.width * 0.45, 11 * (M_PI / 6), M_PI / 6);
         cairo_fill(canvas);
-        cairo_arc(canvas, rect.x + (rect.width * 0.3), rect.y + (rect.height * 0.5), rect.width * 0.57, 11*(Pi/6), Pi/6);
+        cairo_arc(canvas, rect.x + (rect.width * 0.3), rect.y + (rect.height * 0.5), rect.width * 0.57, 11 * (M_PI / 6), M_PI / 6);
         cairo_fill(canvas);
     }
 
@@ -468,11 +467,6 @@ void DefaultWebThemeEngine::paintMediaSeekForwardButton(Canvas* canvas, const Re
     cairo_fill(canvas);
 
     cairo_restore(canvas);
-}
-
-void DefaultWebThemeEngine::paintMediaVolumeSliderContainer(Canvas*, State, const Rect&) const
-{
-
 }
 
 void DefaultWebThemeEngine::paintMediaRewindButton(Canvas* canvas, const Rect& rect) const

@@ -98,21 +98,6 @@ public:
     {
         m_player->setNetworkState((MediaPlayer::NetworkState)state);
     }
-
-    virtual void seek(float time)
-    {
-        return m_player->seek(time);
-    }
-
-    virtual float maxTimeSeekable() const
-    {
-        return m_player->maxTimeSeekable();
-    }
-
-    virtual void setPlaybackRate(float rate)
-    {
-        m_player->setRate(rate);
-    }
 private:
     MediaPlayerPrivateNix* m_player;
 };

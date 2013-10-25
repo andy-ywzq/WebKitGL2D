@@ -31,7 +31,6 @@
 
 namespace Nix {
 
-
 class Color {
 public:
     typedef u_int32_t ARGB32; // ARGB quadruplet

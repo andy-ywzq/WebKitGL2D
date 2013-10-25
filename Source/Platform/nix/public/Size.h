@@ -32,10 +32,6 @@
 #ifndef Nix_Size_h
 #define Nix_Size_h
 
-#ifdef BUILDING_NIX__
-#include "IntSize.h"
-#endif
-
 namespace Nix {
 
 struct Size {

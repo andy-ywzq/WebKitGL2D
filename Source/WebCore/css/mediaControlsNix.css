@@ -149,8 +149,8 @@ audio::-webkit-media-controls-current-time-display, video::-webkit-media-control
 audio::-webkit-media-controls-time-remaining-display, video::-webkit-media-controls-time-remaining-display {
     -webkit-appearance: media-current-time-display;
     -webkit-user-select: none;
-    flex: none;
-    display: flex;
+    -webkit-flex: none;
+    display: -webkit-flex;
     border: none;
     cursor: default;
 
@@ -167,6 +167,7 @@ audio::-webkit-media-controls-time-remaining-display, video::-webkit-media-contr
 
     letter-spacing: normal;
     word-spacing: normal;
+    text-align: center
     text-transform: none;
     text-indent: 0;
     text-shadow: none;

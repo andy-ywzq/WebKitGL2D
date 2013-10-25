@@ -53,47 +53,47 @@ static void fillRect(Canvas *canvas, const Rect& rect, const Color& color)
 }
 
 class TestThemeEngine : public ThemeEngine {
-    Color activeSelectionBackgroundColor() const { return Color::black; }
-    Color activeSelectionForegroundColor() const { return Color::black; }
-    Color inactiveSelectionBackgroundColor() const { return Color::black; }
-    Color inactiveSelectionForegroundColor() const { return Color::black; }
+    Color activeSelectionBackgroundColor() const OVERRIDE { return Color::black; }
+    Color activeSelectionForegroundColor() const OVERRIDE { return Color::black; }
+    Color inactiveSelectionBackgroundColor() const OVERRIDE { return Color::black; }
+    Color inactiveSelectionForegroundColor() const OVERRIDE { return Color::black; }
 
     // List box selection colors
-    Color activeListBoxSelectionBackgroundColor() const { return Color::black; }
-    Color activeListBoxSelectionForegroundColor() const { return Color::black; }
-    Color inactiveListBoxSelectionBackgroundColor() const { return Color::black; }
-    Color inactiveListBoxSelectionForegroundColor() const { return Color::black; }
+    Color activeListBoxSelectionBackgroundColor() const OVERRIDE { return Color::black; }
+    Color activeListBoxSelectionForegroundColor() const OVERRIDE { return Color::black; }
+    Color inactiveListBoxSelectionBackgroundColor() const OVERRIDE { return Color::black; }
+    Color inactiveListBoxSelectionForegroundColor() const OVERRIDE { return Color::black; }
 
-    Color activeTextSearchHighlightColor() const { return Color::black; }
-    Color inactiveTextSearchHighlightColor() const { return Color::black; }
+    Color activeTextSearchHighlightColor() const OVERRIDE { return Color::black; }
+    Color inactiveTextSearchHighlightColor() const OVERRIDE { return Color::black; }
 
-    Color focusRingColor() const { return Color::black; }
+    Color focusRingColor() const OVERRIDE { return Color::black; }
 
-    Color tapHighlightColor() const { return Color::black; }
+    Color tapHighlightColor() const OVERRIDE { return Color::black; }
 
-    void paintButton(Canvas* canvas, State, const Rect& rect, const ButtonExtraParams&) const
+    void paintButton(Canvas* canvas, State, const Rect& rect, const ButtonExtraParams&) const OVERRIDE
     {
         fillRect(canvas, rect, Color::red);
     }
 
-    void paintTextField(Canvas*, State, const Rect&) const
+    void paintTextField(Canvas*, State, const Rect&) const OVERRIDE
     {
     }
 
-    Size getCheckboxSize() const
+    Size getCheckboxSize() const OVERRIDE
     {
         return Size();
     }
-    void paintCheckbox(Canvas*, State, const Rect&, const ButtonExtraParams&) const { }
-    Size getRadioSize() const
+    void paintCheckbox(Canvas*, State, const Rect&, const ButtonExtraParams&) const OVERRIDE { }
+    Size getRadioSize() const OVERRIDE
     {
         return Size();
     }
-    void paintRadio(Canvas*, State, const Rect&, const ButtonExtraParams&) const { }
-    void paintTextArea(Canvas*, State, const Rect&) const { }
-    void getMenuListPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const { }
-    void paintMenuList(Canvas*, State, const Rect&) const { }
-    void paintProgressBar(Canvas* canvas, State, const Rect& rect, const ProgressBarExtraParams& params) const
+    void paintRadio(Canvas*, State, const Rect&, const ButtonExtraParams&) const OVERRIDE { }
+    void paintTextArea(Canvas*, State, const Rect&) const OVERRIDE { }
+    void getMenuListPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const OVERRIDE { }
+    void paintMenuList(Canvas*, State, const Rect&) const OVERRIDE { }
+    void paintProgressBar(Canvas* canvas, State, const Rect& rect, const ProgressBarExtraParams& params) const OVERRIDE
     {
         Color red = 0xFFFF0000;
         fillRect(canvas, rect, red);
@@ -103,24 +103,30 @@ class TestThemeEngine : public ThemeEngine {
         progressRect.width *= params.position;
         fillRect(canvas, progressRect, green);
     }
-    double getAnimationRepeatIntervalForProgressBar() const
+    double getAnimationRepeatIntervalForProgressBar() const OVERRIDE
     {
         return 0;
     }
-    double getAnimationDurationForProgressBar() const
+    double getAnimationDurationForProgressBar() const OVERRIDE
     {
         return 0;
     }
-    void getInnerSpinButtonPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const { }
-    void paintInnerSpinButton(Canvas*, State, const Rect&, const InnerSpinButtonExtraParams&) const { }
-    void paintMeter(Canvas*, State, const Rect&, const MeterExtraParams&) const { }
-    void paintSliderTrack(Canvas*, State, const Rect&) const { }
-    void paintSliderThumb(Canvas*, State, const Rect&) const { }
+    void getInnerSpinButtonPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const OVERRIDE { }
+    void paintInnerSpinButton(Canvas*, State, const Rect&, const InnerSpinButtonExtraParams&) const OVERRIDE { }
+    void paintMeter(Canvas*, State, const Rect&, const MeterExtraParams&) const OVERRIDE { }
+    void paintSliderTrack(Canvas*, State, const Rect&) const OVERRIDE { }
+    void paintSliderThumb(Canvas*, State, const Rect&) const OVERRIDE { }
+    virtual void paintMediaPlayButton(Canvas*, MediaPlayerState, const Rect&) const OVERRIDE { }
+    virtual void paintMediaMuteButton(Canvas*, MediaPlayerState, const Rect&) const OVERRIDE { }
+    virtual void paintMediaSeekBackButton(Canvas*, const Rect&) const OVERRIDE { }
+    virtual void paintMediaSeekForwardButton(Canvas*, const Rect&) const OVERRIDE { }
+    virtual void paintMediaRewindButton(Canvas*, const Rect&) const OVERRIDE { }
+
 };
 
 class TestThemeEnginePlatform : public Platform {
 public:
-    ThemeEngine* themeEngine()
+    ThemeEngine* themeEngine() OVERRIDE
     {
         static TestThemeEngine testTheme;
         return &testTheme;
@@ -136,7 +142,7 @@ public:
         Platform::initialize(&platform);
     }
 
-    void didReceiveMessage(WKBundleRef bundle, WKStringRef messageName, WKTypeRef messageBody)
+    void didReceiveMessage(WKBundleRef bundle, WKStringRef messageName, WKTypeRef messageBody) OVERRIDE
     {
         if (!WKStringIsEqualToUTF8CString(messageName, "Crash"))
             return;
