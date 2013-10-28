@@ -49,7 +49,7 @@ void MediaPlayerPrivateNix::getSupportedTypes(HashSet<String>&)
 {
 }
 
-MediaPlayer::SupportsType MediaPlayerPrivateNix::supportsType(const String&, const String&, const URL&)
+MediaPlayer::SupportsType MediaPlayerPrivateNix::supportsType(const MediaEngineSupportParameters&)
 {
     // MediaPlayer calls load even if the engine says it doesn't support the format :-/
     return MediaPlayer::IsNotSupported;

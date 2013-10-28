@@ -449,26 +449,26 @@ String RenderThemeNix::extraMediaControlsStyleSheet()
 bool RenderThemeNix::paintMediaPlayButton(RenderObject* o, const PaintInfo& i, const IntRect& rect)
 {
     auto state = toHTMLMediaElement(o->node()->shadowHost())->canPlay() ? Nix::ThemeEngine::StatePaused : Nix::ThemeEngine::StatePlaying;
-    themeEngine()->paintMediaPlayButton(webCanvas(i), state, rect);
+    themeEngine()->paintMediaPlayButton(webCanvas(i), state, toNixRect(rect));
     return false;
 }
 
 bool RenderThemeNix::paintMediaMuteButton(RenderObject* o, const PaintInfo& i, const IntRect& rect)
 {
     auto state = toHTMLMediaElement(o->node()->shadowHost())->muted() ? Nix::ThemeEngine::StateMuted : Nix::ThemeEngine::StateNotMuted;
-    themeEngine()->paintMediaMuteButton(webCanvas(i), state, rect);
+    themeEngine()->paintMediaMuteButton(webCanvas(i), state, toNixRect(rect));
     return false;
 }
 
 bool RenderThemeNix::paintMediaSeekBackButton(RenderObject*, const PaintInfo& i, const IntRect& rect)
 {
-    themeEngine()->paintMediaSeekBackButton(webCanvas(i), rect);
+    themeEngine()->paintMediaSeekBackButton(webCanvas(i), toNixRect(rect));
     return false;
 }
 
 bool RenderThemeNix::paintMediaSeekForwardButton(RenderObject*, const PaintInfo& i, const IntRect& rect)
 {
-    themeEngine()->paintMediaSeekForwardButton(webCanvas(i), rect);
+    themeEngine()->paintMediaSeekForwardButton(webCanvas(i), toNixRect(rect));
     return false;
 }
 
@@ -489,7 +489,7 @@ bool RenderThemeNix::paintMediaVolumeSliderTrack(RenderObject*, const PaintInfo&
 
 bool RenderThemeNix::paintMediaRewindButton(RenderObject*, const PaintInfo& i, const IntRect& rect)
 {
-    themeEngine()->paintMediaRewindButton(webCanvas(i), rect);
+    themeEngine()->paintMediaRewindButton(webCanvas(i), toNixRect(rect));
     return false;
 }
 
