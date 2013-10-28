@@ -62,17 +62,6 @@ bool ArgumentCoder<ResourceResponse>::decodePlatformData(ArgumentDecoder& decode
     return true;
 }
 
-void ArgumentCoder<CertificateInfo>::encodePlatformData(ArgumentEncoder& encoder, const CertificateInfo& certificateInfo)
-{
-    notImplemented();
-}
-
-bool ArgumentCoder<CertificateInfo>::decodePlatformData(ArgumentDecoder& decoder, CertificateInfo& certificateInfo)
-{
-    notImplemented();
-    return true;
-}
-
 void ArgumentCoder<ResourceError>::encodePlatformData(ArgumentEncoder& encoder, const ResourceError& resourceError)
 {
     notImplemented();
