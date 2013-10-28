@@ -232,9 +232,6 @@ void WebViewNix::didStartedMainFrameLayout()
         m_loadIsBackForward = false;
         return;
     }
-
-    if (m_autoScaleToFitContents)
-        adjustScaleToFitContents();
 }
 
 void WebViewNix::adjustScaleToFitContents()
