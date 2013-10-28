@@ -71,6 +71,7 @@ public:
     static void webProcessRelaunched(WKViewRef, const void* clientInfo);
     static void pageDidRequestScroll(WKViewRef, WKPoint position, const void* clientInfo);
     static void didChangeContentsSize(WKViewRef, WKSize size, const void* clientInfo);
+    static void didRenderFrame(WKViewRef, WKSize contentsSize, WKRect coveredRect, const void* clientInfo);
     static void didChangeViewportAttributes(WKViewRef view, WKViewportAttributesRef attributes, const void* clientInfo);
     static void didFindZoomableArea(WKViewRef, WKPoint target, WKRect area, const void* clientInfo);
     static void doneWithTouchEvent(WKViewRef, const NIXTouchEvent* event, bool wasEventHandled, const void* clientInfo);

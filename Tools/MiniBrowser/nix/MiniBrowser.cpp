@@ -90,6 +90,7 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     viewClient.webProcessCrashed = MiniBrowser::webProcessCrashed;
     viewClient.webProcessDidRelaunch = MiniBrowser::webProcessRelaunched;
     viewClient.didChangeContentsSize = MiniBrowser::didChangeContentsSize;
+    viewClient.didRenderFrame = MiniBrowser::didRenderFrame;
     viewClient.didChangeContentsPosition = MiniBrowser::pageDidRequestScroll;
     viewClient.didChangeViewportAttributes = MiniBrowser::didChangeViewportAttributes;
     WKViewSetViewClient(m_view, &viewClient);
@@ -438,6 +439,15 @@ void MiniBrowser::didChangeContentsSize(WKViewRef, WKSize size, const void* clie
 {
     MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
     mb->m_contentsSize = size;
+
+    if (mb->isMobileMode())
+        mb->adjustScrollPosition();
+}
+
+void MiniBrowser::didRenderFrame(WKViewRef view, WKSize contentsSize, WKRect coveredRect, const void* clientInfo)
+{
+    MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
+    mb->m_contentsSize = contentsSize;
 
     if (mb->isMobileMode()) {
         NIXViewScaleToFitContents(mb->m_view);
