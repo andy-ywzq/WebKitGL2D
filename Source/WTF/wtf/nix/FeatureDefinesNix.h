@@ -30,6 +30,10 @@
 #define ENABLE_3D_RENDERING 1
 #endif
 
+#if !defined(ENABLE_8BIT_TEXTRUN)
+#define ENABLE_8BIT_TEXTRUN 1
+#endif
+
 #if !defined(ENABLE_ACCELERATED_2D_CANVAS)
 #define ENABLE_ACCELERATED_2D_CANVAS 0
 #endif
