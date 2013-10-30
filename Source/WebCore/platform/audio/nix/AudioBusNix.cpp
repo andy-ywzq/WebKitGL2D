@@ -51,7 +51,6 @@ PassRefPtr<AudioBus> decodeAudioFileData(const char* data, size_t size, double s
 
 PassRefPtr<AudioBus> AudioBus::loadPlatformResource(const char* name, float sampleRate)
 {
-
     // FIXME: This assumes the file system uses latin1 or UTF-8 encoding, but this comment also assumes
     // that non-ascii file names would appear here.
     const CString absoluteFilename(makeString(DATA_DIR, "/webaudio/resources/", name, ".wav").utf8());
