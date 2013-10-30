@@ -199,7 +199,7 @@ bool RenderThemeNix::paintTextField(RenderObject* o, const PaintInfo& i, const I
 {
     // WebThemeEngine does not handle border rounded corner and background image
     // so return true to draw CSS border and background.
-    if (o->style()->hasBorderRadius() || o->style()->hasBackgroundImage())
+    if (o->style().hasBorderRadius() || o->style().hasBackgroundImage())
         return true;
 
     themeEngine()->paintTextField(webCanvas(i), getWebThemeState(this, o), toNixRect(rect));

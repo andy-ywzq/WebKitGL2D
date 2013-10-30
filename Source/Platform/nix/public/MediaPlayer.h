@@ -26,6 +26,8 @@
 #ifndef Nix_MediaPlayer
 #define Nix_MediaPlayer
 
+#include <memory>
+
 namespace Nix {
 
 class MediaPlayerClient {
@@ -49,10 +51,7 @@ public:
     {
     }
 
-    virtual ~MediaPlayer()
-    {
-        delete m_playerClient;
-    }
+    virtual ~MediaPlayer() { }
 
     virtual void play() = 0;
     virtual void pause() = 0;
@@ -68,7 +67,7 @@ public:
     virtual bool isLiveStream() const = 0;
 
 protected:
-    MediaPlayerClient* m_playerClient;
+    std::unique_ptr<MediaPlayerClient> m_playerClient;
 };
 
 } // namespace Nix

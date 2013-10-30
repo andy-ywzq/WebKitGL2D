@@ -1,3 +1,2243 @@
+2013-10-30  Antti Koivisto  <antti@apple.com>
+
+        REGRESSION(r158214): It made zillion tests crash on GTK and EFL
+        https://bugs.webkit.org/show_bug.cgi?id=123505
+
+        * rendering/SimpleLineLayout.h: Add WTF_MAKE_FAST_ALLOCATED
+
+2013-10-29  Philippe Normand  <pnormand@igalia.com>
+
+        [GStreamer] Store video-sink in a bin
+        https://bugs.webkit.org/show_bug.cgi?id=122831
+
+        Reviewed by Gustavo Noronha Silva.
+
+        For the upcoming mediastream playback support the player will
+        handle a non-playbin-based pipeline that will require a slightly
+        different video rendering chain. This patch generalizes the
+        encapsulation of the video sink in a bin, just like the audio sink
+        case.
+
+        No new tests, no change in functionality.
+
+2013-10-29  Ryosuke Niwa  <rniwa@webkit.org>
+
+        REGRESSION(r154614): Opening and closing a picture on Facebook resets scroll position
+        https://bugs.webkit.org/show_bug.cgi?id=122882
+
+        Reviewed by Anders Carlsson.
+
+        scrollLeft and scrollTop have to continue to function in the strict mode for the Web compatiblity.
+        In particular, www.facebook.com and build.webkit.org depend on this behavior as of October 29th, 2013.
+
+        * html/HTMLBodyElement.cpp:
+        (WebCore::HTMLBodyElement::scrollLeft):
+        (WebCore::HTMLBodyElement::setScrollLeft):
+        (WebCore::HTMLBodyElement::scrollTop):
+        (WebCore::HTMLBodyElement::setScrollTop):
+
+2013-10-29  Brady Eidson  <beidson@apple.com>
+
+        IDBTransactionBackend should be cross platform
+        https://bugs.webkit.org/show_bug.cgi?id=123449
+
+        Reviewed by Beth Dakin.
+
+        - Rename IDBTransactionBackendLevelDB to IDBTransactionBackendImpl
+        - Rename IDBTransactionBackendLevelDBOperations to IDBTransactionBackendOperations
+        - Move their files from the leveldb subdirectory to the indexeddb directory
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * WebCore.xcodeproj/project.pbxproj:
+
+        * Modules/indexeddb/IDBTransactionBackendImpl.cpp: Renamed from Source/WebCore/Modules/indexeddb/leveldb/IDBTransactionBackendLevelDB.cpp.
+        * Modules/indexeddb/IDBTransactionBackendImpl.h: Renamed from Source/WebCore/Modules/indexeddb/leveldb/IDBTransactionBackendLevelDB.h.
+        * Modules/indexeddb/IDBTransactionBackendOperations.cpp: Renamed from Source/WebCore/Modules/indexeddb/leveldb/IDBTransactionBackendLevelDBOperations.cpp.
+        * Modules/indexeddb/IDBTransactionBackendOperations.h: Renamed from Source/WebCore/Modules/indexeddb/leveldb/IDBTransactionBackendLevelDBOperations.h.
+
+        * Modules/indexeddb/leveldb/IDBCursorBackendLevelDB.cpp:
+        * Modules/indexeddb/leveldb/IDBCursorBackendLevelDB.h:
+        * Modules/indexeddb/leveldb/IDBFactoryBackendLevelDB.cpp:
+        (WebCore::IDBFactoryBackendLevelDB::maybeCreateTransactionBackend):
+
+2013-10-29  Sam Weinig  <sam@webkit.org>
+
+        Modernize DatasetDOMStringMap and ClassList a bit
+        https://bugs.webkit.org/show_bug.cgi?id=123491
+
+        Reviewed by Andreas Kling.
+
+        * dom/DatasetDOMStringMap.cpp:
+        * dom/DatasetDOMStringMap.h:
+        * dom/Element.cpp:
+        * dom/ElementRareData.h:
+        * html/ClassList.cpp:
+        * html/ClassList.h:
+        Pass the owner Element by reference and store in a std::unique_ptr.
+
+2013-10-29  Brady Eidson  <beidson@apple.com>
+
+        Attempted build-fix after http://trac.webkit.org/changeset/158234
+
+        * Modules/indexeddb/leveldb/IDBBackingStoreLevelDB.cpp:
+        (WebCore::IDBBackingStoreLevelDB::createBackingStoreTransaction): Implement this!
+
+2013-10-29  Andreas Kling  <akling@apple.com>
+
+        ElementData construction helpers should return PassRef.
+        <https://webkit.org/b/123487>
+
+        Make functions that create new ElementData objects return appropriate
+        PassRef pointers instead of PassRefPtr.
+
+        Reviewed by Anders Carlsson.
+
+2013-10-29  Ryosuke Niwa  <rniwa@webkit.org>
+
+        GTK+ build fix attempt after r158220.
+
+        * GNUmakefile.list.am:
+
+2013-10-29  Brady Eidson  <beidson@apple.com>
+
+        Move IDBTransactionBackendLevelDB to generic IDBBackingStoreInterface
+        https://bugs.webkit.org/show_bug.cgi?id=123483
+
+        Reviewed by Andreas Kling.
+
+        * Modules/indexeddb/IDBCursorBackendInterface.h:
+        * Modules/indexeddb/IDBDatabaseBackendImpl.h:
+        * Modules/indexeddb/IDBDatabaseBackendInterface.h:
+        * Modules/indexeddb/IDBFactoryBackendInterface.h:
+        * Modules/indexeddb/IDBTransactionBackendInterface.h:
+
+        * Modules/indexeddb/leveldb/IDBCursorBackendLevelDB.cpp:
+        (WebCore::IDBCursorBackendLevelDB::IDBCursorBackendLevelDB):
+        * Modules/indexeddb/leveldb/IDBCursorBackendLevelDB.h:
+        (WebCore::IDBCursorBackendLevelDB::create):
+
+        * Modules/indexeddb/leveldb/IDBFactoryBackendLevelDB.cpp:
+        (WebCore::IDBFactoryBackendLevelDB::createCursorBackend):
+        * Modules/indexeddb/leveldb/IDBFactoryBackendLevelDB.h:
+
+        * Modules/indexeddb/leveldb/IDBTransactionBackendLevelDB.cpp:
+        (WebCore::IDBTransactionBackendLevelDB::registerOpenCursor):
+        (WebCore::IDBTransactionBackendLevelDB::unregisterOpenCursor):
+        (WebCore::IDBTransactionBackendLevelDB::closeOpenCursors):
+        (WebCore::IDBTransactionBackendLevelDB::createCursorBackend):
+        * Modules/indexeddb/leveldb/IDBTransactionBackendLevelDB.h:
+
+        * WebCore.xcodeproj/project.pbxproj: Export a required header.
+
+2013-10-29  Seokju Kwon  <seokju@webkit.org>
+
+        Remove mutable keyword from member variables of XMLHttpRequest
+        https://bugs.webkit.org/show_bug.cgi?id=123481
+
+        Reviewed by Andreas Kling.
+
+        No new tests, no change in functionality.
+
+        * xml/XMLHttpRequest.h: Remove mutable keyword as these are no longer used in const functions.
+
+2013-10-29  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Underline bounds cannot be queried before underline itself is drawn
+        https://bugs.webkit.org/show_bug.cgi?id=123310
+
+        Reviewed by Simon Fraser
+
+        GraphicsContext's drawLineForText function is used to draw underlines,
+        strikethroughs, and overlines. Before drawing the line, this function
+        modifies the bounds given to it in order to make underlines crisp. However,  
+        this means that it is impossible to know where an underline will be drawn
+        before drawing it. This patch pulls out this adjustment computation into 
+        InlineTextBox, then passes the result to drawLineForText.
+
+        Because there should be no observable difference, no tests need to be updated.
+
+        * platform/graphics/GraphicsContext.h: Changing the signature of drawLineForText
+        so it can accept bounds from our helper function
+        * platform/graphics/blackberry/PathBlackBerry.cpp:
+        (WebCore::GraphicsContext::drawLineForText): Update to work with new
+        signature of drawLineForText
+        * platform/graphics/cairo/GraphicsContextCairo.cpp:
+        (WebCore::GraphicsContext::drawLineForText): Ditto
+        * platform/graphics/cg/GraphicsContextCG.cpp:
+        (WebCore::GraphicsContext::drawLineForText): Ditto
+        * platform/graphics/wince/GraphicsContextWinCE.cpp:
+        (WebCore::GraphicsContext::drawLineForText): Ditto
+        * platform/win/WebCoreTextRenderer.cpp:
+        (WebCore::doDrawTextAtPoint): Update the last call site of drawLineForText
+        * rendering/InlineTextBox.cpp:
+        (WebCore::computeBoundsForUnderline): Pure function that computes the adjusted
+        bounds of the underline about to be drawn
+        (WebCore::drawLineForText): calls computeBoundsForUnderline and then
+        GraphicsContext::drawLineForText
+        (WebCore::InlineTextBox::paintDecoration): Use new drawLineForText function
+        (WebCore::InlineTextBox::paintCompositionUnderline): Ditto
+
+2013-10-29  Alexey Proskuryakov  <ap@apple.com>
+
+        Beef up CryptoKey
+        https://bugs.webkit.org/show_bug.cgi?id=123462
+
+        Fix a mismerge, remove duplicate CryptoKeyType declaration.
+
+        * crypto/CryptoKey.h:
+
+2013-10-29  Alexey Proskuryakov  <ap@apple.com>
+
+        Beef up CryptoKey
+        https://bugs.webkit.org/show_bug.cgi?id=123462
+
+        Reviewed by Sam Weinig.
+
+        * WebCore.xcodeproj/project.pbxproj: Added new files.
+
+        * crypto/CryptoAlgorithmIdentifier.h: Added an enum with all registered algorithms
+        (they don't have to be all implemented in any port).
+
+        * crypto/CryptoKey.cpp:
+        (WebCore::CryptoKey::CryptoKey): Initialize base class variables.
+        (WebCore::CryptoKey::type): Convert internal representation for bindings use.
+        (WebCore::CryptoKey::buildAlgorithmDescription): Ditto. This function is supposed
+        to be called by derived classes before adding other keyes.
+        (WebCore::CryptoKey::usages): Convert internal representation for bindings use.
+
+        * crypto/CryptoKey.h:
+        (WebCore::CryptoKey::extractable): Expose for bindings.
+        (WebCore::CryptoKey::allows): A faster way to check allowed key usage from C++ code.
+
+        * crypto/CryptoKey.idl: Added SkipVTableValidation, because validation doesn't work
+        with derived classes. Corrected "usages" attribute name.
+
+        * crypto/CryptoKeyFormat.h: Added. 
+        * crypto/CryptoKeyType.h: Added.
+        * crypto/CryptoKeyUsage.h: Added.
+        Added enums used by CryptoKey.
+
+2013-10-29  Hugo Parente Lima  <hugo.lima@openbossa.org>
+
+        Adding Nix files in Source/Platform to trunk
+        https://bugs.webkit.org/show_bug.cgi?id=118331
+
+        Reviewed by Benjamin Poulain.
+
+        Add Nix WebAudio implementation that just forward some calls to our API.
+        This patch is part of the upstream process, tests will be landed by other patches.
+
+        * platform/audio/nix/AudioBusNix.cpp: Added.
+        * platform/audio/nix/AudioDestinationNix.cpp: Added.
+        * platform/audio/nix/AudioDestinationNix.h: Added.
+        * platform/audio/nix/FFTFrameNix.cpp: Added.
+        * platform/nix/support/MultiChannelPCMData.cpp: Added.
+
+2013-10-29  Brady Eidson  <beidson@apple.com>
+
+        Move IDBTransactionBackendLevelDB to generic IDBBackingStoreInterface::Transaction.
+        https://bugs.webkit.org/show_bug.cgi?id=123475
+
+        Reviewed by Tim Horton.
+
+        Currently it's using IDBBackingStoreLevelDB::Transaction, which hinders the goal of:
+        https://bugs.webkit.org/show_bug.cgi?id=123449 - IDBTransactionBackend should be cross platform
+
+        * Modules/indexeddb/IDBBackingStoreInterface.h:
+
+        * Modules/indexeddb/IDBIndexWriter.cpp:
+        (WebCore::IDBIndexWriter::writeIndexKeys):
+        (WebCore::IDBIndexWriter::verifyIndexKeys):
+        (WebCore::IDBIndexWriter::addingKeyAllowed):
+        * Modules/indexeddb/IDBIndexWriter.h:
+
+        * Modules/indexeddb/IDBTransactionBackendInterface.h:
+
+        * Modules/indexeddb/leveldb/IDBBackingStoreLevelDB.cpp:
+        (WebCore::IDBBackingStoreLevelDB::updateIDBDatabaseIntVersion):
+        (WebCore::IDBBackingStoreLevelDB::updateIDBDatabaseMetaData):
+        (WebCore::IDBBackingStoreLevelDB::createObjectStore):
+        (WebCore::IDBBackingStoreLevelDB::deleteObjectStore):
+        (WebCore::IDBBackingStoreLevelDB::getRecord):
+        (WebCore::IDBBackingStoreLevelDB::putRecord):
+        (WebCore::IDBBackingStoreLevelDB::clearObjectStore):
+        (WebCore::IDBBackingStoreLevelDB::deleteRecord):
+        (WebCore::IDBBackingStoreLevelDB::getKeyGeneratorCurrentNumber):
+        (WebCore::IDBBackingStoreLevelDB::maybeUpdateKeyGeneratorCurrentNumber):
+        (WebCore::IDBBackingStoreLevelDB::keyExistsInObjectStore):
+        (WebCore::IDBBackingStoreLevelDB::createIndex):
+        (WebCore::IDBBackingStoreLevelDB::deleteIndex):
+        (WebCore::IDBBackingStoreLevelDB::putIndexDataForRecord):
+        (WebCore::IDBBackingStoreLevelDB::findKeyInIndex):
+        (WebCore::IDBBackingStoreLevelDB::getPrimaryKeyViaIndex):
+        (WebCore::IDBBackingStoreLevelDB::keyExistsInIndex):
+        (WebCore::IDBBackingStoreLevelDB::openObjectStoreCursor):
+        (WebCore::IDBBackingStoreLevelDB::openObjectStoreKeyCursor):
+        (WebCore::IDBBackingStoreLevelDB::openIndexKeyCursor):
+        (WebCore::IDBBackingStoreLevelDB::openIndexCursor):
+        * Modules/indexeddb/leveldb/IDBBackingStoreLevelDB.h:
+
+        * Modules/indexeddb/leveldb/IDBTransactionBackendLevelDB.cpp:
+        (WebCore::IDBTransactionBackendLevelDB::IDBTransactionBackendLevelDB):
+        (WebCore::IDBTransactionBackendLevelDB::abort):
+        (WebCore::IDBTransactionBackendLevelDB::commit):
+        (WebCore::IDBTransactionBackendLevelDB::taskTimerFired):
+        * Modules/indexeddb/leveldb/IDBTransactionBackendLevelDB.h:
+
+2013-10-29  Dean Jackson  <dino@apple.com>
+
+        Move InlineTextBox's text painting to it's own class
+        https://bugs.webkit.org/show_bug.cgi?id=123355
+
+        Reinstate the LGPL license. I incorrectly told Myles to
+        use another license on these new files.
+
+        * rendering/TextPainter.cpp:
+        * rendering/TextPainter.h:
+
+2013-10-29  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Move InlineTextBox's text painting to it's own class
+        https://bugs.webkit.org/show_bug.cgi?id=123355
+
+        Reviewed by Dean Jackson.
+
+        Implementing text-decoration-skip: ink requires drawing text
+        twice (once regularly, and once with a thick outline into a mask).
+        This patch pulls out the relevant text drawing code from
+        InlineTextBox into a new class, called TextPainter, which can be re-used
+        to draw text multiple times.
+
+        Because there should be no observable difference, no tests need to be updated.
+
+        * CMakeLists.txt: Adding new TextPainter class
+        * GNUmakefile.list.am: Adding new TextPainter class
+        * WebCore.vcxproj/WebCore.vcxproj: Adding new TextPainter class
+        * WebCore.vcxproj/WebCore.vcxproj.filters: Adding new TextPainter
+        class
+        * WebCore.xcodeproj/project.pbxproj: Adding new TextPainter class
+        * rendering/InlineTextBox.cpp:
+        (WebCore::InlineTextBox::paint): Moving text drawing code from
+        this function
+        * rendering/RenderingAllInOne.cpp: Adding new TextPainter class
+        * rendering/TextPainter.cpp: Added.
+        (WebCore::TextPainter::TextPainter):
+        (WebCore::drawTextOrEmphasisMarks):
+        (WebCore::paintTextWithShadows):
+        (WebCore::rotation):
+        (WebCore::TextPainter::paintText): New location for text drawing
+        code
+        (WebCore::TextPainter::paintTextInContext):
+        * rendering/TextPainter.h: Added.
+        (WebCore::SavedDrawingStateForMask::SavedDrawingStateForMask):
+        (WebCore::TextPainter::boxRect):
+
+2013-10-29  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] [Mac] Enable MediaSource on the Mac
+        https://bugs.webkit.org/show_bug.cgi?id=122484
+
+        Reviewed by Darin Adler.
+
+        Enable ENABLE_MEDIA_SOURCE.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-10-29  Tim Horton  <timothy_horton@apple.com>
+
+        Build fix after 158223; make TileController use float for scales.
+
+        This matches what we do in other places, and fixes the constant
+        issue with exporting symbols that include CGFloat.
+
+        * WebCore.exp.in:
+        * platform/graphics/ca/mac/TileController.h:
+        (WebCore::TileController::scale):
+        * platform/graphics/ca/mac/TileController.mm:
+        (WebCore::TileController::setScale):
+
+2013-10-29  Antti Koivisto  <antti@apple.com>
+
+        Try to keep MSVC happy.
+
+        * rendering/SimpleLineLayout.h:
+        (WebCore::SimpleLineLayout::Run::Run):
+
+2013-10-29  Tim Horton  <timothy_horton@apple.com>
+
+        More correct build fix after 158223.
+
+        Only fails in release because it's inline.
+
+        * WebCore.exp.in:
+
+2013-10-29  Antti Koivisto  <antti@apple.com>
+
+        Use left/right instead of left/width for simple text runs
+        https://bugs.webkit.org/show_bug.cgi?id=123465
+
+        Reviewed by Andreas Kling.
+
+        This simplifies the code a bit.
+
+        * rendering/SimpleLineLayout.cpp:
+        (WebCore::SimpleLineLayout::adjustRunOffsets):
+        (WebCore::SimpleLineLayout::create):
+        * rendering/SimpleLineLayout.h:
+        (WebCore::SimpleLineLayout::Run::Run):
+        * rendering/SimpleLineLayoutResolver.h:
+        (WebCore::SimpleLineLayout::RunResolver::Run::rect):
+
+2013-10-29  Tim Horton  <timothy_horton@apple.com>
+
+        Try fixing the Mac build (though I have no idea why
+        this wouldn't fail locally)...
+
+        * WebCore.exp.in:
+
+2013-10-29  Tim Horton  <timothy_horton@apple.com>
+
+        Remote Layer Tree: Support tiled drawing and use it for the main frame
+        https://bugs.webkit.org/show_bug.cgi?id=123422
+
+        Reviewed by Simon Fraser.
+
+        * WebCore.exp.in:
+        * WebCore.xcodeproj/project.pbxproj:
+
+2013-10-29  Eric Carlson  <eric.carlson@apple.com>
+
+        [Mac MediaStream] implement AVFoundation backed MediaStreamSource
+        https://bugs.webkit.org/show_bug.cgi?id=123316
+
+        Reviewed by Jer Noble
+
+        No new tests, existing tests updated.
+
+        * CMakeLists.txt: Add MediaStreamSourceStates.cpp.
+
+        * Modules/mediastream/MediaSourceStates.cpp:
+        (WebCore::MediaSourceStates::MediaSourceStates): m_SourceStates -> m_sourceStates.
+        (WebCore::MediaSourceStates::sourceType): Ditto.
+        (WebCore::MediaSourceStates::facingMode): Ditto.
+        * Modules/mediastream/MediaSourceStates.h: Ditto.
+        * Modules/mediastream/MediaSourceStates.idl: Mark some attributes as optional.
+
+        * Modules/mediastream/MediaStream.cpp:
+        (WebCore::MediaStream::addTrack):
+        (WebCore::MediaStream::removeTrack):
+        (WebCore::MediaStream::addRemoteSource):
+        (WebCore::MediaStream::removeRemoteSource):
+
+        * Modules/mediastream/MediaStreamCapabilities.cpp:
+        (WebCore::MediaStreamCapabilities::sourceType): MediaSourceStates -> MediaStreamSourceStates
+        (WebCore::MediaStreamCapabilities::facingMode): Ditto.
+
+        * Modules/mediastream/MediaStreamTrack.cpp:
+        (WebCore::MediaStreamTrack::MediaStreamTrack): Don't observe source changes directly, let the
+            private track do that. Change private track parameter to ref because it can't be NULL.
+        (WebCore::MediaStreamTrack::~MediaStreamTrack): Ditto.
+        (WebCore::MediaStreamTrack::setSource): Pass through to private track.
+        (WebCore::MediaStreamTrack::stopped): Ditto.
+        (WebCore::MediaStreamTrack::states): Ditto.
+        (WebCore::MediaStreamTrack::capabilities): Ditto.
+        (WebCore::MediaStreamTrack::applyConstraints): Ditto.
+        (WebCore::MediaStreamTrack::stopProducingData): Ditto.
+        (WebCore::MediaStreamTrack::trackReadyStateChanged): Renamed from sourceStateChanged. Don't
+            schedule an 'ended' event if called as a side effect of the stop() method having been
+            called as per spec.
+        (WebCore::MediaStreamTrack::trackMutedChanged): Renamed from sourceMutedChanged.
+        (WebCore::MediaStreamTrack::trackEnabledChanged): Renamed from sourceEnabledChanged.
+        (WebCore::MediaStreamTrack::stop): Pass through to private track.
+        * Modules/mediastream/MediaStreamTrack.h:
+        (WebCore::MediaStreamTrack::Observer::~Observer): Add virtual destructor.
+
+        * Modules/mediastream/UserMediaRequest.cpp:
+        (WebCore::UserMediaRequest::callSuccessHandler): Set track, not source, constraints.
+
+        * WebCore.xcodeproj/project.pbxproj: Add new files.
+
+        * bindings/js/JSMediaSourceStatesCustom.cpp:
+        (WebCore::JSMediaSourceStates::facingMode): Return jsUndefined when the facing mode
+            is Unknown.
+
+        * platform/mediastream/MediaStreamCenter.h: Remove unused class forward defines and
+            undefined method prototype.
+
+        * platform/mediastream/MediaStreamDescriptor.cpp:
+        (WebCore::MediaStreamDescriptor::addSource): ASSERT if source is kind None.
+        (WebCore::MediaStreamDescriptor::removeSource): Ditto.
+        (WebCore::MediaStreamDescriptor::MediaStreamDescriptor):
+
+        * platform/mediastream/MediaStreamSource.cpp:
+        (WebCore::MediaStreamSource::setReadyState): Call startProducingData when readyState changes
+            to Live, stopProducingData when it changes to Ended.
+        (WebCore::MediaStreamSource::removeObserver): Call stop() when there are no more observers.
+        (WebCore::MediaStreamSource::setEnabled): If passed false, do nothing unless all observers
+            are disabled. Call startProducingData/stopProducingData when becoming enabled/disabled.
+        (WebCore::MediaStreamSource::stop): Don't bother checking to see if other observers have
+            stopped, the spec says that track.stop() should permanently stop the track's source.
+        * platform/mediastream/MediaStreamSource.h:
+        (WebCore::MediaStreamSource::name): Make virtual so derived classes can override.
+        (WebCore::MediaStreamSource::setName): Ditto.
+        (WebCore::MediaStreamSource::readyState): Ditto.
+        (WebCore::MediaStreamSource::enabled): Ditto.
+        (WebCore::MediaStreamSource::muted): Ditto.
+        (WebCore::MediaStreamSource::setReadonly): Ditto.
+        (WebCore::MediaStreamSource::remote): Ditto.
+        (WebCore::MediaStreamSource::setRemote): Ditto.
+        (WebCore::MediaStreamSource::startProducingData): Added.
+        (WebCore::MediaStreamSource::stopProducingData): Added.
+
+        * platform/mediastream/MediaStreamSourceCapabilities.h: Move MediaStreamSourceStates to
+            its own file.
+
+        * platform/mediastream/MediaStreamSourceStates.cpp: Added.
+        (WebCore::MediaStreamSourceStates::facingMode): Moved here from MediaSourceStates so the 
+            strings are available to platform code.
+        (WebCore::MediaStreamSourceStates::sourceType): Ditto.
+        * platform/mediastream/MediaStreamSourceStates.h: Added, moved from MediaStreamSourceCapabilities.h.
+
+        * platform/mediastream/MediaStreamTrackPrivate.cpp:
+        (WebCore::MediaStreamTrackPrivate::create): Pass private track to constructor as PassRefPtr.
+        (WebCore::MediaStreamTrackPrivate::MediaStreamTrackPrivate): Initialize member variables.
+        (WebCore::MediaStreamTrackPrivate::~MediaStreamTrackPrivate): Unregister as source observer.
+        (WebCore::MediaStreamTrackPrivate::setSource): Unregister/register as source observer.
+        (WebCore::MediaStreamTrackPrivate::setEnabled): Enable/disable source, call client.
+        (WebCore::MediaStreamTrackPrivate::stop): New. Set readyState to Ended, optionally stop source.
+        (WebCore::MediaStreamTrackPrivate::setReadyState): Inline the logic from shouldFireTrackReadyStateChanged.
+        (WebCore::MediaStreamTrackPrivate::constraints): New, passthrough to the source.
+        (WebCore::MediaStreamTrackPrivate::states): Ditto.
+        (WebCore::MediaStreamTrackPrivate::type): Ditto.
+        (WebCore::MediaStreamTrackPrivate::capabilities): Ditto.
+        (WebCore::MediaStreamTrackPrivate::applyConstraints): Ditto.
+        (WebCore::MediaStreamTrackPrivate::sourceReadyStateChanged): React to source changes.
+        (WebCore::MediaStreamTrackPrivate::sourceMutedChanged): Ditto.
+        (WebCore::MediaStreamTrackPrivate::sourceEnabledChanged): Ditto.
+        (WebCore::MediaStreamTrackPrivate::observerIsEnabled): Respond to source query.
+        (WebCore::MediaStreamTrackPrivate::observerIsStopped): Ditto.
+        * platform/mediastream/MediaStreamTrackPrivate.h:
+
+        * platform/mediastream/mac/AVAudioCaptureSource.h: Added.
+        * platform/mediastream/mac/AVAudioCaptureSource.mm: Added.
+
+        * platform/mediastream/mac/AVCaptureDeviceManager.h: Added.
+        * platform/mediastream/mac/AVCaptureDeviceManager.mm: Added.
+
+        * platform/mediastream/mac/AVMediaCaptureSource.h: Added.
+        * platform/mediastream/mac/AVMediaCaptureSource.mm: Added.
+
+        * platform/mediastream/mac/AVVideoCaptureSource.h: Added.
+        * platform/mediastream/mac/AVVideoCaptureSource.mm: Added.
+
+        * platform/mediastream/mac/MediaStreamCenterMac.cpp:
+        (WebCore::MediaStreamCenterMac::validateRequestConstraints): Implement.
+        (WebCore::MediaStreamCenterMac::createMediaStream): Ditto.
+        (WebCore::MediaStreamCenterMac::getMediaStreamTrackSources): Ditto.
+
+        * platform/mock/MockMediaStreamCenter.cpp:
+        (WebCore::initializeMockSources): Update for MediaStreamSourceStates changes.
+        (WebCore::MockMediaStreamCenter::createMediaStream):
+
+2013-10-29  Zoltan Horvath  <zoltan@webkit.org>
+
+        [CSS Regions][CSS Shapes] Layout error when the shape has negative top coordinate and it's applied on the second region
+        <https://webkit.org/b/123346>
+
+        Reviewed by David Hyatt.
+
+        We have a layout error when there is a shape applied on the second region, and it has a negative 'top' coordinate.
+        Since shapeInsideInfo::shapeLogicalTop() can return negative numbers, we need to check for it, when we're positioning
+        the first line in the region.
+
+        Test: fast/regions/shape-inside/shape-inside-on-multiple-regions-with-negative-shape-top.html
+
+        * rendering/RenderBlockLineLayout.cpp:
+        (WebCore::RenderBlockFlow::updateShapeAndSegmentsForCurrentLineInFlowThread):
+
+2013-10-29  Brady Eidson  <beidson@apple.com>
+
+        Get IDBTransactionBackendLevelDBOperations *almost* ready to go cross platform.
+        https://bugs.webkit.org/show_bug.cgi?id=123451
+
+        Reviewed by NOBODY (My bad, non-reviewed, non-building code got in there)
+
+        * Modules/indexeddb/IDBDatabaseBackendImpl.cpp:
+        (WebCore::IDBDatabaseBackendImpl::processPendingCalls): Remove the auto line I was trying from review feedback.
+
+2013-10-29  Brady Eidson  <beidson@apple.com>
+
+        Get IDBTransactionBackendLevelDBOperations *almost* ready to go cross platform.
+        https://bugs.webkit.org/show_bug.cgi?id=123451
+
+        Reviewed by Andreas Kling.
+
+        This involves:
+        - Splitting out IDBTransactionBackendLevelDB::Operation into its own header
+        - Splitting out IDBDatabaseBackendImpl::PendingOpenCall into its own header
+        - Reworking the LevelDB Operations to handle the base class IDBTransactionBackendInterface
+        - Adding virtual methods in a few of the *Interface classes to support the above
+
+        * GNUmakefile.list.am:
+        * WebCore.xcodeproj/project.pbxproj:
+
+        * Modules/indexeddb/IDBCallbacks.h:
+
+        * Modules/indexeddb/IDBCursorBackendInterface.h:
+
+        * Modules/indexeddb/IDBDatabaseBackendImpl.cpp:
+        (WebCore::IDBDatabaseBackendImpl::setIndexKeys):
+        (WebCore::IDBDatabaseBackendImpl::processPendingCalls):
+        (WebCore::IDBDatabaseBackendImpl::openConnection):
+        (WebCore::IDBDatabaseBackendImpl::runIntVersionChangeTransaction):
+        * Modules/indexeddb/IDBDatabaseBackendImpl.h:
+        * Modules/indexeddb/IDBDatabaseBackendInterface.h:
+
+        * Modules/indexeddb/IDBOperation.h: Added.
+        (WebCore::IDBOperation::~IDBOperation):
+
+        * Modules/indexeddb/IDBPendingOpenCall.h: Added.
+        (WebCore::IDBPendingOpenCall::create):
+        (WebCore::IDBPendingOpenCall::callbacks):
+        (WebCore::IDBPendingOpenCall::databaseCallbacks):
+        (WebCore::IDBPendingOpenCall::version):
+        (WebCore::IDBPendingOpenCall::transactionId):
+        (WebCore::IDBPendingOpenCall::IDBPendingOpenCall):
+
+        * Modules/indexeddb/IDBRequest.h:
+
+        * Modules/indexeddb/IDBTransactionBackendInterface.h:
+
+        * Modules/indexeddb/leveldb/IDBCursorBackendLevelDB.cpp:
+        (WebCore::IDBCursorBackendLevelDB::CursorIterationOperation::create):
+        (WebCore::IDBCursorBackendLevelDB::CursorAdvanceOperation::create):
+        (WebCore::IDBCursorBackendLevelDB::CursorPrefetchIterationOperation::create):
+        (WebCore::IDBCursorBackendLevelDB::IDBCursorBackendLevelDB):
+        * Modules/indexeddb/leveldb/IDBCursorBackendLevelDB.h:
+
+        * Modules/indexeddb/leveldb/IDBTransactionBackendLevelDB.cpp:
+        (WebCore::IDBTransactionBackendLevelDB::scheduleTask):
+        (WebCore::IDBTransactionBackendLevelDB::abort):
+        (WebCore::IDBTransactionBackendLevelDB::taskTimerFired):
+        (WebCore::IDBTransactionBackendLevelDB::schedulePutOperation):
+        (WebCore::IDBTransactionBackendLevelDB::scheduleOpenCursorOperation):
+        (WebCore::IDBTransactionBackendLevelDB::scheduleCountOperation):
+        (WebCore::IDBTransactionBackendLevelDB::scheduleDeleteRangeOperation):
+        (WebCore::IDBTransactionBackendLevelDB::scheduleClearOperation):
+        (WebCore::IDBTransactionBackendLevelDB::createCursorBackend):
+        * Modules/indexeddb/leveldb/IDBTransactionBackendLevelDB.h:
+
+        * Modules/indexeddb/leveldb/IDBTransactionBackendLevelDBOperations.cpp:
+        (WebCore::CreateObjectStoreOperation::perform):
+        (WebCore::CreateIndexOperation::perform):
+        (WebCore::CreateIndexAbortOperation::perform):
+        (WebCore::DeleteIndexOperation::perform):
+        (WebCore::DeleteIndexAbortOperation::perform):
+        (WebCore::OpenCursorOperation::perform):
+        (WebCore::DeleteObjectStoreOperation::perform):
+        (WebCore::IDBDatabaseBackendImpl::VersionChangeOperation::perform):
+        (WebCore::CreateObjectStoreAbortOperation::perform):
+        (WebCore::DeleteObjectStoreAbortOperation::perform):
+        (WebCore::IDBDatabaseBackendImpl::VersionChangeAbortOperation::perform):
+        * Modules/indexeddb/leveldb/IDBTransactionBackendLevelDBOperations.h:
+        (WebCore::CreateObjectStoreOperation::create):
+        (WebCore::CreateObjectStoreOperation::CreateObjectStoreOperation):
+        (WebCore::DeleteObjectStoreOperation::create):
+        (WebCore::DeleteObjectStoreOperation::DeleteObjectStoreOperation):
+        (WebCore::IDBDatabaseBackendImpl::VersionChangeOperation::create):
+        (WebCore::IDBDatabaseBackendImpl::VersionChangeOperation::VersionChangeOperation):
+        (WebCore::CreateObjectStoreAbortOperation::create):
+        (WebCore::CreateObjectStoreAbortOperation::CreateObjectStoreAbortOperation):
+        (WebCore::DeleteObjectStoreAbortOperation::create):
+        (WebCore::DeleteObjectStoreAbortOperation::DeleteObjectStoreAbortOperation):
+        (WebCore::IDBDatabaseBackendImpl::VersionChangeAbortOperation::create):
+        (WebCore::IDBDatabaseBackendImpl::VersionChangeAbortOperation::VersionChangeAbortOperation):
+        (WebCore::CreateIndexOperation::create):
+        (WebCore::CreateIndexOperation::CreateIndexOperation):
+        (WebCore::CreateIndexAbortOperation::create):
+        (WebCore::CreateIndexAbortOperation::CreateIndexAbortOperation):
+        (WebCore::DeleteIndexOperation::create):
+        (WebCore::DeleteIndexOperation::DeleteIndexOperation):
+        (WebCore::DeleteIndexAbortOperation::create):
+        (WebCore::DeleteIndexAbortOperation::DeleteIndexAbortOperation):
+        (WebCore::GetOperation::create):
+        (WebCore::GetOperation::GetOperation):
+        (WebCore::PutOperation::create):
+        (WebCore::PutOperation::PutOperation):
+        (WebCore::SetIndexesReadyOperation::create):
+        (WebCore::SetIndexesReadyOperation::SetIndexesReadyOperation):
+        (WebCore::OpenCursorOperation::create):
+        (WebCore::OpenCursorOperation::OpenCursorOperation):
+        (WebCore::CountOperation::create):
+        (WebCore::CountOperation::CountOperation):
+        (WebCore::DeleteRangeOperation::create):
+        (WebCore::DeleteRangeOperation::DeleteRangeOperation):
+        (WebCore::ClearOperation::create):
+        (WebCore::ClearOperation::ClearOperation):
+
+2013-10-29  Antti Koivisto  <antti@apple.com>
+
+        Make SimpleLineLayout::Layout a variable size object
+        https://bugs.webkit.org/show_bug.cgi?id=123459
+
+        Reviewed by Andreas Kling.
+
+        Less memory, less indirection.
+
+        * rendering/SimpleLineLayout.cpp:
+        (WebCore::SimpleLineLayout::canUseFor):
+        (WebCore::SimpleLineLayout::create):
+        (WebCore::SimpleLineLayout::Layout::create):
+        (WebCore::SimpleLineLayout::Layout::Layout):
+        * rendering/SimpleLineLayout.h:
+        * rendering/SimpleLineLayoutFunctions.cpp:
+        (WebCore::SimpleLineLayout::hitTestFlow):
+        * rendering/SimpleLineLayoutFunctions.h:
+        (WebCore::SimpleLineLayout::computeFlowFirstLineBaseline):
+        (WebCore::SimpleLineLayout::computeFlowLastLineBaseline):
+        (WebCore::SimpleLineLayout::findTextCaretMinimumOffset):
+        (WebCore::SimpleLineLayout::findTextCaretMaximumOffset):
+        (WebCore::SimpleLineLayout::containsTextCaretOffset):
+        (WebCore::SimpleLineLayout::isTextRendered):
+        * rendering/SimpleLineLayoutResolver.h:
+        (WebCore::SimpleLineLayout::RunResolver::end):
+
+2013-10-29  Andreas Kling  <akling@apple.com>
+
+        RenderObject::outlineStyleForRepaint() should return a reference.
+        <https://webkit.org/b/123453>
+
+        Kill a FIXME and make outlineStyleForRepaint() return a RenderStyle&.
+
+        Reviewed by Antti Koivisto.
+
+2013-10-29  Andreas Kling  <akling@apple.com>
+
+        Move more of SVG resources cache to using RenderElement.
+        <https://webkit.org/b/123452>
+
+        Make some more RenderSVGResourcesCache methods take RenderElement&
+        instead of RenderObject*.
+
+        Also removed a double hash lookup in removeResourcesFromRenderer().
+
+        Reviewed by Antti Koivisto.
+
+2013-10-29  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Remove old Inspector.json version files and generators
+        https://bugs.webkit.org/show_bug.cgi?id=123426
+
+        Reviewed by Timothy Hatcher.
+
+        * CMakeLists.txt:
+        * DerivedSources.make:
+        * GNUmakefile.am:
+        * GNUmakefile.list.am:
+        * WebCore.xcodeproj/project.pbxproj:
+        * inspector/Inspector-0.1.json: Removed.
+        * inspector/Inspector-1.0.json: Removed.
+        * inspector/generate-inspector-protocol-version: Removed.
+
+2013-10-29  Philippe Normand  <pnormand@igalia.com>
+
+        [GTK] DOM bindings documentation errors
+        https://bugs.webkit.org/show_bug.cgi?id=123448
+
+        Reviewed by Carlos Garcia Campos.
+
+        * bindings/gobject/WebKitDOMCustom.h: Basic documentation for
+        return types.
+        * bindings/scripts/CodeGeneratorGObject.pm:
+        (GenerateFunction): Generate Returns documentation tag for
+        non-void return types and provide basic documentation.
+        * bindings/scripts/test/GObject/WebKitDOMTestActiveDOMObject.h:
+        Reset tests results.
+        * bindings/scripts/test/GObject/WebKitDOMTestCallback.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestEventConstructor.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestEventTarget.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestException.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestInterface.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestObj.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestSerializedScriptValueInterface.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestTypedefs.h:
+        * bindings/scripts/test/GObject/WebKitDOMattribute.h:
+
+2013-10-24  Brent Fulgham  <bfulgham@apple.com>
+
+        Invalid cast in WebCore::toRenderMathMLBlock
+        https://bugs.webkit.org/show_bug.cgi?id=121728
+        rdar://problem/15046151
+
+        Reviewed by Dean Jackson.
+
+        Tested by: mathml/arbitrary-markup.html
+
+        * dom/Element.h: Expose childShouldCreateRenderer for
+        MathML as well as SVG builds.
+        * dom/Node.h: 
+        (WebCore::Node::isMathMLElement): Added.
+        * mathml/MathMLElement.cpp:
+        (WebCore::MathMLElement::create): Create as MathML Element.
+        (WebCore::MathMLElement::childShouldCreateRenderer):
+        Only allow the child to emit a renderer if it is a
+        MathML element.
+        * mathml/MathMLElement.h:
+
+2013-10-29  Andreas Kling  <akling@apple.com>
+
+        SVG: applyStrokeStyleToContext should take a RenderElement&.
+        <https://webkit.org/b/123447>
+
+        ..and a RenderStyle& too, for that matter.
+
+        Reviewed by Anders Carlsson.
+
+        * rendering/svg/SVGRenderSupport.h:
+        * rendering/svg/SVGRenderSupport.cpp:
+        (WebCore::SVGRenderSupport::applyStrokeStyleToContext):
+
+            Have this take a RenderElement& and RenderStyle& instead of
+            raw pointers. Tweaked a silly-looking loop.
+
+        * rendering/svg/RenderSVGShape.h:
+        * rendering/svg/RenderSVGShape.cpp:
+
+            Moved BoundingRectStrokeStyleApplier helper class into the
+            cpp file since it wasn't being used anywhere else.
+
+        * rendering/svg/RenderSVGResourceGradient.cpp:
+        (WebCore::RenderSVGResourceGradient::applyResource):
+        * rendering/svg/RenderSVGResourcePattern.cpp:
+        (WebCore::RenderSVGResourcePattern::applyResource):
+        * rendering/svg/RenderSVGResourceSolidColor.cpp:
+        (WebCore::RenderSVGResourceSolidColor::applyResource):
+
+            Remove ampersands.
+
+2013-10-29  Antti Koivisto  <antti@apple.com>
+
+        Multiple runs per line on simple line path
+        https://bugs.webkit.org/show_bug.cgi?id=123446
+
+        Reviewed by Andreas Kling.
+
+        By allowing multiple runs per line we can support text flows with consecutive whitespaces in the middle.
+
+        * rendering/SimpleLineLayout.cpp:
+        (WebCore::SimpleLineLayout::canUseFor):
+        
+            Remove space test.
+            The improved test coverage found a few more cases that we need to disallow.
+
+        (WebCore::SimpleLineLayout::adjustRunOffsets):
+            
+            Round the run positions and widths so they match line boxes.
+            Adjust for text-align.
+
+        (WebCore::SimpleLineLayout::create):
+        
+            Split lines with consecutive spaces into runs.
+
+        * rendering/SimpleLineLayout.h:
+        (WebCore::SimpleLineLayout::Run::Run):
+        * rendering/SimpleLineLayoutFunctions.cpp:
+        (WebCore::SimpleLineLayout::hitTestFlow):
+        (WebCore::SimpleLineLayout::collectFlowOverflow):
+        (WebCore::SimpleLineLayout::computeTextBoundingBox):
+        * rendering/SimpleLineLayoutResolver.h:
+        (WebCore::SimpleLineLayout::RunResolver::Iterator::resolver):
+        (WebCore::SimpleLineLayout::RunResolver::Iterator::lineIndex):
+        (WebCore::SimpleLineLayout::RunResolver::Run::Run):
+        (WebCore::SimpleLineLayout::RunResolver::Run::rect):
+        (WebCore::SimpleLineLayout::RunResolver::Run::baseline):
+        (WebCore::SimpleLineLayout::RunResolver::Run::text):
+        (WebCore::SimpleLineLayout::RunResolver::Run::lineIndex):
+        (WebCore::SimpleLineLayout::RunResolver::Iterator::Iterator):
+        (WebCore::SimpleLineLayout::RunResolver::Iterator::operator++):
+        
+            Removed unnecessary operators.
+
+        (WebCore::SimpleLineLayout::RunResolver::Iterator::operator==):
+        (WebCore::SimpleLineLayout::RunResolver::Iterator::operator!=):
+        (WebCore::SimpleLineLayout::RunResolver::Iterator::operator*):
+        (WebCore::SimpleLineLayout::RunResolver::Iterator::simpleRun):
+        (WebCore::SimpleLineLayout::RunResolver::RunResolver):
+        (WebCore::SimpleLineLayout::RunResolver::begin):
+        (WebCore::SimpleLineLayout::RunResolver::end):
+        
+            Resolver -> RunResolver
+
+        (WebCore::SimpleLineLayout::LineResolver::Iterator::Iterator):
+        (WebCore::SimpleLineLayout::LineResolver::Iterator::operator++):
+        (WebCore::SimpleLineLayout::LineResolver::Iterator::operator==):
+        (WebCore::SimpleLineLayout::LineResolver::Iterator::operator!=):
+        (WebCore::SimpleLineLayout::LineResolver::Iterator::operator*):
+        (WebCore::SimpleLineLayout::LineResolver::LineResolver):
+        (WebCore::SimpleLineLayout::LineResolver::begin):
+        (WebCore::SimpleLineLayout::LineResolver::end):
+        
+            Add LineResolver around RunResolver. It resolves the line rectangles.
+
+        (WebCore::SimpleLineLayout::runResolver):
+        (WebCore::SimpleLineLayout::lineResolver):
+
+2013-10-29  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: elements with explicit tabindex should expose AXFocused as writable, since mouse clicks can focus it
+        https://bugs.webkit.org/show_bug.cgi?id=121335
+
+        Reviewed by Mario Sanchez Prada.
+
+        Re-order logic that determines if a <span> should appear as an accessible element. 
+        The change is that if an element canSetFocus() it should always be in the AX tree.
+
+        Test: accessibility/tabindex-elements-are-accessible.html
+
+        * accessibility/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::computeAccessibilityIsIgnored):
+        (WebCore::AccessibilityRenderObject::determineAccessibilityRole):
+
+2013-10-29  Philippe Normand  <pnormand@igalia.com>
+
+        [GTK] enable media-stream in build-webkit
+        https://bugs.webkit.org/show_bug.cgi?id=123144
+
+        Reviewed by Martin Robinson.
+
+        * GNUmakefile.list.am: Add new MediaStream files to the GTK port build.
+
+2013-10-28  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: Webkit does not expose AXRequired on input type=file
+        https://bugs.webkit.org/show_bug.cgi?id=123376
+
+        Reviewed by Mario Sanchez Prada.
+
+        File upload buttons should expose AXRequired, since they take an input state.
+
+        * accessibility/AccessibilityNodeObject.cpp:
+        (WebCore::AccessibilityNodeObject::supportsRequiredAttribute):
+        (WebCore::AccessibilityNodeObject::alternativeText):
+
+2013-10-29  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Re-enable simple line layout for EFL
+        https://bugs.webkit.org/show_bug.cgi?id=123402
+
+        Reviewed by Antti Koivisto.
+
+        * rendering/SimpleLineLayout.cpp:
+        (WebCore::SimpleLineLayout::canUseFor): 8-bit TextRun support is now enabled for EFL port, so the port
+        can use the simple line layout.
+
+2013-10-29  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed, follow-up to r158185. Export the required symbol.
+        This should fix the Mac debug build.
+
+        * WebCore.exp.in:
+
+2013-10-29  Santosh Mahto  <santosh.ma@samsung.com>
+
+        Text selected with double-click gets unselected after DOM modification
+        https://bugs.webkit.org/show_bug.cgi?id=114227
+
+        Reviewed by Ryosuke Niwa.
+
+        Before this patch when selection is done by double-click (start and base remain
+        same) and DOM is modified then selection gets vanished. This does not
+        happen when selection is done by dragging mouse. This happens because
+        on double-click base and extent remain the same and on DOM
+        modification we update the selection with base and extent, so we loose
+        the selection. Since in double-click case start/end contain the
+        correct selection, same should be used after dom modification to
+        update selection.
+
+        Test: editing/selection/double-click-selection-with-dom-mutation.html
+
+        * editing/FrameSelection.cpp:
+        (WebCore::FrameSelection::textWasReplaced): use start/end to update
+        selection in case double click selection. Added a check for base !=
+        extent, if base != extent use base/extent to update the selection
+        otherwise use start/end with directionality check.
+
+2013-10-29  Mihnea Ovidenie  <mihnea@adobe.com>
+
+        [CSSRegions] Display anonymous regions in DRT
+        https://bugs.webkit.org/show_bug.cgi?id=122963
+
+        Reviewed by Alexandru Chiculita.
+
+        After https://bugs.webkit.org/show_bug.cgi?id=119135, css regions are modelled using an anonymous
+        RenderNamedFlowFragment object inside the block having a valid -webkit-flow-from.
+        This patch changes the way elements | pseudo-elements with -webkit-flow-from are displayed
+        in test dumps.
+
+        Before:
+            RenderRegion {DIV} at (200,200) size 52x52 [border: (1px solid #000000)]
+        After:
+            RenderBlock (positioned) {DIV} at (200,200) size 52x52 [border: (1px solid #000000)]
+                RenderNamedFlowFragment at (1,1) size 50x50
+
+        Before:
+            Flow Threads
+                Thread with flow-name 'article'
+                Regions for flow 'article'
+                    RenderRegion {DIV} #region_1
+                    RenderRegion {DIV} #region_2
+        After:
+            Named flows
+                Named flow 'article'
+                Regions for named flow 'article'
+                    RenderNamedFlowFragment (anonymous child of {DIV::before} #region_1)
+                    RenderNamedFlowFragment (anonymous child of {DIV} #region_2)
+
+        Changed existing tests based on the new dumps.
+
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::renderName):
+        * rendering/RenderNamedFlowFragment.h: Add a comment explaining the purpose of the class.
+        * rendering/RenderRegion.h:
+        * rendering/RenderTreeAsText.cpp:
+        (WebCore::write):
+        (WebCore::writeRenderRegionList): Adjust function to display info for anonymous regions too.
+        (WebCore::writeRenderNamedFlowThreads): Separate dump of valid and invalid regions for a named flow.
+
+2013-10-29  Zan Dobersek  <zdobersek@igalia.com>
+
+        Move writeIndent, overloaded << operators from RenderTreeAsText to TextStream
+        https://bugs.webkit.org/show_bug.cgi?id=116012
+
+        Reviewed by Simon Fraser.
+
+        The writeIndent method and overloaded << operators for writing out vectors and points and rectangles
+        of various types are not specific to the render tree nor do they depend on any rendering-specific interface.
+
+        * page/scrolling/ScrollingStateNode.cpp:
+        * page/scrolling/ScrollingStateNode.h:
+        (ScrollingStateNode): Remove the writeIndent declaration, it's functionally the same as the TextStream method.
+        * platform/graphics/GraphicsLayer.cpp:
+        * platform/graphics/GraphicsLayer.h:
+        (GraphicsLayer): Ditto.
+        * platform/graphics/filters/DistantLightSource.cpp: Remove the RenderTreeAsText.h inclusion or replace it with
+        the inclusion of the TextStream.h header where required. The writeIndent method is now declared there.
+        * platform/graphics/filters/FEBlend.cpp: Ditto.
+        * platform/graphics/filters/FEColorMatrix.cpp: Ditto.
+        * platform/graphics/filters/FEComponentTransfer.cpp: Ditto.
+        * platform/graphics/filters/FEComposite.cpp: Ditto.
+        * platform/graphics/filters/FEConvolveMatrix.cpp: Ditto.
+        * platform/graphics/filters/FECustomFilter.cpp: Ditto.
+        * platform/graphics/filters/FEDiffuseLighting.cpp: Ditto.
+        * platform/graphics/filters/FEDisplacementMap.cpp: Ditto.
+        * platform/graphics/filters/FEDropShadow.cpp: Ditto.
+        * platform/graphics/filters/FEFlood.cpp: Ditto.
+        * platform/graphics/filters/FEGaussianBlur.cpp: Ditto.
+        * platform/graphics/filters/FEMerge.cpp: Ditto.
+        * platform/graphics/filters/FEMorphology.cpp: Ditto.
+        * platform/graphics/filters/FEOffset.cpp: Ditto.
+        * platform/graphics/filters/FESpecularLighting.cpp: Ditto.
+        * platform/graphics/filters/FETurbulence.cpp: Ditto.
+        * platform/graphics/filters/SourceAlpha.cpp: Ditto.
+        * platform/graphics/filters/SourceGraphic.cpp: Ditto.
+        * platform/text/TextStream.cpp: Move the writeIndent and operators' definitions here.
+        (WebCore::operator<<):
+        (WebCore):
+        (WebCore::writeIndent):
+        * platform/text/TextStream.h: Move the writeIndent and operators' declarations here.
+        (WebCore):
+        (TextStream):
+        (WebCore::TextStream::operator<<):
+        * rendering/RenderTreeAsText.cpp: Move the writeIndent and operators' definitions into TextStream.
+        (WebCore):
+        * rendering/RenderTreeAsText.h: Move the writeIndent and operators' declarations into TextStream.
+        (WebCore):
+
+2013-10-28  Zan Dobersek  <zdobersek@igalia.com>
+
+        Clean up ScopedEventQueue
+        https://bugs.webkit.org/show_bug.cgi?id=123408
+
+        Reviewed by Darin Adler.
+
+        Clean up the ScopedEventQueue implementation. ScopedEventQueue::instance() should return a reference to a
+        NeverDestroyed<ScopedEventQueue> object. The static ScopedEventQueue::s_instance pointer is removed.
+
+        The ScopedEventQueue destructor, the dispatchAllEvents method and the scope level incrementation/decrementation
+        methods are made private. NeverDestroyed<ScopedEventQueue> and EventQueueScope are made friends of the
+        ScopedEventQueue class so they can access the constructor and the incrementation/decrementation methods, respectively.
+
+        ScopedEventQueue method definitions are reordered to follow the order of their declarations in the header file.
+        ScopedEventQueue::dispatchAllEvents() now uses std::move to efficiently dispatch and clear all currently queued events.
+
+        * dom/EventDispatcher.cpp:
+        (WebCore::EventDispatcher::dispatchScopedEvent):
+        * dom/ScopedEventQueue.cpp:
+        (WebCore::ScopedEventQueue::instance):
+        (WebCore::ScopedEventQueue::dispatchAllEvents):
+        * dom/ScopedEventQueue.h:
+        (WebCore::EventQueueScope::EventQueueScope):
+        (WebCore::EventQueueScope::~EventQueueScope):
+
+2013-10-28  Andreas Kling  <akling@apple.com>
+
+        applyTextTransform() should take a const RenderStyle&.
+        <https://webkit.org/b/123434>
+
+        This function is always called with an existing RenderStyle object.
+
+        Reviewed by Anders Carlsson.
+
+2013-10-28  Andreas Kling  <akling@apple.com>
+
+        RenderSVGResource::applyResource() should take a const RenderStyle&.
+        <https://webkit.org/b/123433>
+
+        These functions are always called with an existing RenderStyle object
+        so let them take a const reference instead of a raw pointer.
+        Also sprinkled some missing OVERRIDEs.
+
+        Reviewed by Anders Carlsson.
+
+2013-10-28  Andreas Kling  <akling@apple.com>
+
+        Remove unused RenderTextControl::textBaseStyle().
+        <https://webkit.org/b/123432>
+
+        Reviewed by Anders Carlsson.
+
+2013-10-28  Zan Dobersek  <zdobersek@igalia.com>
+
+        HTML input type objects should be managed through std::unique_ptr
+        https://bugs.webkit.org/show_bug.cgi?id=123160
+
+        Reviewed by Darin Adler.
+
+        Make the constructors of the InputType subclasses public. This makes it possible to use std::make_unique on these classes
+        and makes the T::create() helpers redundant. New instances of these classes are now managed through std::unique_ptr.
+
+        InputType::create() now uses a NeverDestroyed InputTypeFactoryMap that maps type names to InputTypeFactoryFunctions and
+        gets populated when the method is first called and the map is still empty. Certain types are not added to the factory map
+        if they're disabled at runtime.
+
+        The factory is used to create the new InputType object if the requested type was found in the map, and TextInputType is used otherwise.
+
+        * html/ButtonInputType.cpp:
+        * html/ButtonInputType.h:
+        (WebCore::ButtonInputType::ButtonInputType):
+        * html/CheckboxInputType.cpp:
+        * html/CheckboxInputType.h:
+        (WebCore::CheckboxInputType::CheckboxInputType):
+        * html/ColorInputType.cpp:
+        * html/ColorInputType.h:
+        (WebCore::ColorInputType::ColorInputType):
+        * html/DateInputType.cpp:
+        * html/DateInputType.h:
+        * html/DateTimeInputType.cpp:
+        * html/DateTimeInputType.h:
+        (WebCore::DateTimeInputType::DateTimeInputType):
+        * html/DateTimeLocalInputType.cpp:
+        * html/DateTimeLocalInputType.h:
+        (WebCore::DateTimeLocalInputType::DateTimeLocalInputType):
+        * html/EmailInputType.cpp:
+        * html/EmailInputType.h:
+        (WebCore::EmailInputType::EmailInputType):
+        * html/FileInputType.cpp:
+        * html/FileInputType.h:
+        * html/HTMLInputElement.cpp:
+        (WebCore::HTMLInputElement::updateType):
+        * html/HTMLInputElement.h:
+        * html/HiddenInputType.cpp:
+        * html/HiddenInputType.h:
+        (WebCore::HiddenInputType::HiddenInputType):
+        * html/ImageInputType.cpp:
+        (WebCore::ImageInputType::ImageInputType):
+        * html/ImageInputType.h:
+        * html/InputType.cpp:
+        (WebCore::createInputType): A templated helper that constructs a new InputType subclass object through std::make_unique.
+        (WebCore::populateInputTypeFactoryMap): Populates the passed-in map with type-createInputType<T> pairs.
+        (WebCore::InputType::create): Get the InputTypeFactoryFunction for the specified type, or fall back to TextInputType.
+        (WebCore::InputType::createText):
+        * html/InputType.h:
+        * html/MonthInputType.cpp:
+        * html/MonthInputType.h:
+        (WebCore::MonthInputType::MonthInputType):
+        * html/NumberInputType.cpp:
+        * html/NumberInputType.h:
+        (WebCore::NumberInputType::NumberInputType):
+        * html/PasswordInputType.cpp:
+        * html/PasswordInputType.h:
+        (WebCore::PasswordInputType::PasswordInputType):
+        * html/RadioInputType.cpp:
+        * html/RadioInputType.h:
+        (WebCore::RadioInputType::RadioInputType):
+        * html/RangeInputType.cpp:
+        * html/RangeInputType.h:
+        * html/ResetInputType.cpp:
+        * html/ResetInputType.h:
+        (WebCore::ResetInputType::ResetInputType):
+        * html/SearchInputType.cpp:
+        (WebCore::SearchInputType::SearchInputType):
+        * html/SearchInputType.h:
+        * html/SubmitInputType.cpp:
+        * html/SubmitInputType.h:
+        (WebCore::SubmitInputType::SubmitInputType):
+        * html/TelephoneInputType.cpp:
+        * html/TelephoneInputType.h:
+        (WebCore::TelephoneInputType::TelephoneInputType):
+        * html/TextInputType.cpp:
+        * html/TextInputType.h:
+        (WebCore::TextInputType::TextInputType):
+        * html/TimeInputType.cpp:
+        * html/TimeInputType.h:
+        * html/URLInputType.cpp:
+        * html/URLInputType.h:
+        (WebCore::URLInputType::URLInputType):
+        * html/WeekInputType.cpp:
+        * html/WeekInputType.h:
+        (WebCore::WeekInputType::WeekInputType):
+
+2013-10-28  Brady Eidson  <beidson@apple.com>
+
+        Refactor IDB factory creation.
+        https://bugs.webkit.org/show_bug.cgi?id=123347
+
+        Reviewed by Andreas Kling.
+
+        - Rework how database directory location is passed around.
+        - Make (some) SecurityOrigin arguments be references instead of pointers.
+        - Add two SecurityOrigin arguments to opening databases for future use.
+
+        * Modules/indexeddb/IDBFactory.cpp:
+        (WebCore::IDBFactory::openInternal):
+
+        * Modules/indexeddb/IDBFactoryBackendInterface.cpp:
+        (WebCore::IDBFactoryBackendInterface::create):
+        * Modules/indexeddb/IDBFactoryBackendInterface.h:
+
+        * Modules/indexeddb/PageGroupIndexedDatabase.cpp:
+        (WebCore::PageGroupIndexedDatabase::PageGroupIndexedDatabase):
+        (WebCore::PageGroupIndexedDatabase::from):
+        (WebCore::PageGroupIndexedDatabase::factoryBackend):
+        * Modules/indexeddb/PageGroupIndexedDatabase.h:
+
+        * Modules/indexeddb/WorkerGlobalScopeIndexedDatabase.cpp:
+        (WebCore::WorkerGlobalScopeIndexedDatabase::WorkerGlobalScopeIndexedDatabase):
+        (WebCore::WorkerGlobalScopeIndexedDatabase::from):
+        (WebCore::WorkerGlobalScopeIndexedDatabase::indexedDB):
+        * Modules/indexeddb/WorkerGlobalScopeIndexedDatabase.h:
+
+        * Modules/indexeddb/leveldb/IDBBackingStoreLevelDB.cpp:
+        (WebCore::IDBBackingStoreLevelDB::open):
+        (WebCore::IDBBackingStoreLevelDB::openInMemory):
+        * Modules/indexeddb/leveldb/IDBBackingStoreLevelDB.h:
+
+        * Modules/indexeddb/leveldb/IDBFactoryBackendLevelDB.cpp:
+        (WebCore::computeFileIdentifier):
+        (WebCore::computeUniqueIdentifier):
+        (WebCore::IDBFactoryBackendLevelDB::IDBFactoryBackendLevelDB):
+        (WebCore::IDBFactoryBackendLevelDB::getDatabaseNames):
+        (WebCore::IDBFactoryBackendLevelDB::deleteDatabase):
+        (WebCore::IDBFactoryBackendLevelDB::openBackingStore):
+        (WebCore::IDBFactoryBackendLevelDB::open):
+        * Modules/indexeddb/leveldb/IDBFactoryBackendLevelDB.h:
+        (WebCore::IDBFactoryBackendLevelDB::create):
+
+        * WebCore.exp.in:
+
+        * platform/DatabaseStrategy.cpp:
+        (WebCore::DatabaseStrategy::createIDBFactoryBackend):
+        * platform/DatabaseStrategy.h:
+
+2013-10-28  Andreas Kling  <akling@apple.com>
+
+        RenderElement::style() should return a reference.
+        <https://webkit.org/b/123414>
+
+        Now that renderers always have style, go ahead and make style()
+        return a RenderStyle&.
+
+        There are countless opportunities for further cleanup enabled by
+        this change. I'm simply passing &style() in many cases where we
+        can really do something nicer instead.
+
+        Reviewed by Anders Carlsson.
+
+2013-10-28  Tim Horton  <timothy_horton@apple.com>
+
+        Make TileController create the appropriate PlatformCALayer subclasses
+        https://bugs.webkit.org/show_bug.cgi?id=123418
+
+        Reviewed by Simon Fraser.
+
+        Add PlatformCALayer::createCompatibleLayer, which is overridden in
+        each of the subclasses to create a PlatformCALayer instance of the same
+        subclass. This is used in TileController to make bare PlatformCALayers
+        of the correct type (Mac, Win, or Remote).
+
+        * platform/graphics/ca/PlatformCALayer.h:
+        * platform/graphics/ca/mac/PlatformCALayerMac.h:
+        * platform/graphics/ca/mac/PlatformCALayerMac.mm:
+        (PlatformCALayerMac::createCompatibleLayer):
+        * platform/graphics/ca/win/PlatformCALayerWin.cpp:
+        (PlatformCALayerWin::createCompatibleLayer):
+        * platform/graphics/ca/win/PlatformCALayerWin.h:
+        Add createCompatibleLayer and implement it in the subclasses.
+
+        * platform/graphics/ca/mac/TileController.mm:
+        (WebCore::TileController::TileController):
+        (WebCore::TileController::tiledScrollingIndicatorLayer):
+        (WebCore::TileController::createTileLayer):
+        Make use of createCompatibleLayer when creating PlatformCALayers.
+
+2013-10-28  Alexandru Chiculita  <achicu@adobe.com>
+
+        Web Inspector: CSS Regions: Add protocol API to expose content nodes addition/removal
+        https://bugs.webkit.org/show_bug.cgi?id=123424
+
+        Reviewed by Timothy Hatcher.
+
+        Test: inspector-protocol/model/content-flow-content-nodes.html
+
+        Adding two new inspector-protocol APIs to handle the cases when new elements are
+        added or removed from a named flow. These APIs will trigger even though there
+        is no region associated with the named flow.
+
+        * inspector/Inspector.json:
+        * inspector/InspectorCSSAgent.cpp:
+        (WebCore::InspectorCSSAgent::didRegisterNamedFlowContentElement):
+        (WebCore::InspectorCSSAgent::didUnregisterNamedFlowContentElement):
+        * inspector/InspectorCSSAgent.h:
+        * inspector/InspectorInstrumentation.cpp:
+        (WebCore::InspectorInstrumentation::didRegisterNamedFlowContentElementImpl):
+        (WebCore::InspectorInstrumentation::didUnregisterNamedFlowContentElementImpl):
+        * inspector/InspectorInstrumentation.h:
+        (WebCore::InspectorInstrumentation::didRegisterNamedFlowContentElement):
+        (WebCore::InspectorInstrumentation::didUnregisterNamedFlowContentElement):
+        * rendering/RenderNamedFlowThread.cpp:
+        (WebCore::RenderNamedFlowThread::registerNamedFlowContentElement):
+        (WebCore::RenderNamedFlowThread::unregisterNamedFlowContentElement):
+
+2013-10-28  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Remove unused inspector/inline-javascript-imports.py
+        https://bugs.webkit.org/show_bug.cgi?id=123425
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/inline-javascript-imports.py: Removed.
+
+2013-10-28  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Remove unused "externs" files and generators
+        https://bugs.webkit.org/show_bug.cgi?id=123427
+
+        Reviewed by Timothy Hatcher.
+
+        * inspector/InjectedScriptExterns.js: Removed.
+        * inspector/generate_protocol_externs.py: Removed.
+
+2013-10-28  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Upstream remaining PLATFORM(IOS) and ENABLE(REMOTE_INSPECTOR) pieces
+        https://bugs.webkit.org/show_bug.cgi?id=123411
+
+        Reviewed by Timothy Hatcher.
+
+        Include an InspectorClient hook for when node searching is enabled / disabled.
+
+        * inspector/InspectorClient.h:
+        (WebCore::InspectorClient::didSetSearchingForNode):
+        * inspector/InspectorDOMAgent.cpp:
+        (WebCore::InspectorDOMAgent::setSearchingForNode):
+        * inspector/InspectorOverlay.cpp:
+        (WebCore::InspectorOverlay::didSetSearchingForNode):
+        * inspector/InspectorOverlay.h:
+
+2013-10-28  Benjamin Poulain  <benjamin@webkit.org>
+
+        Rename applyPageScaleFactorInCompositor to delegatesPageScaling
+        https://bugs.webkit.org/show_bug.cgi?id=123417
+
+        Reviewed by Simon Fraser.
+
+        * page/Frame.cpp:
+        (WebCore::Frame::frameScaleFactor):
+        * page/FrameView.cpp:
+        (WebCore::FrameView::visibleContentScaleFactor):
+        * page/Page.cpp:
+        (WebCore::Page::setPageScaleFactor):
+        * page/Settings.in:
+        * platform/ScrollView.h:
+        * rendering/RenderLayerCompositor.cpp:
+        (WebCore::RenderLayerCompositor::addToOverlapMap):
+
+2013-10-28  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Parsing support for -webkit-text-decoration-skip: ink
+        https://bugs.webkit.org/show_bug.cgi?id=123358
+
+        Reviewed by Dean Jackson.
+
+        Adds initial parsing support for parsing -webkit-text-decoration-skip with
+        values of "none" and "ink". This work is behind the new
+        ENABLE(CSS3_TEXT_DECORATION) compile-time flag.
+
+        Test: fast/css3-text/css3-text-decoration/text-decoration-skip/text-decoration-skip-roundtrip.html
+
+        * Configurations/FeatureDefines.xcconfig: Adding ENABLE(CSS3_TEXT_DECORATION)
+        * css/CSSComputedStyleDeclaration.cpp: Mapping internal representation of text-decoration-skip
+        to a CSSValue
+        (WebCore::renderTextDecorationSkipFlagsToCSSValue):
+        (WebCore::ComputedStyleExtractor::propertyValue):
+        * css/CSSParser.cpp: Actually parsing tokens
+        (WebCore::CSSParser::parseValue):
+        (WebCore::CSSParser::parseTextDecorationSkip):
+        * css/CSSParser.h:
+        * css/CSSPropertyNames.in: adding -webkit-text-decoration-skip
+        * css/CSSValueKeywords.in: adding ink
+        * css/DeprecatedStyleBuilder.cpp: Mapping from CSSValue to internal representation
+        (WebCore::ApplyPropertyTextDecorationSkip::valueToDecorationSkip):
+        (WebCore::ApplyPropertyTextDecorationSkip::applyValue):
+        (WebCore::ApplyPropertyTextDecorationSkip::createHandler):
+        (WebCore::DeprecatedStyleBuilder::DeprecatedStyleBuilder):
+        * css/StyleResolver.cpp: decoration-skip uses DeprecatedStyleBuilder
+        (WebCore::StyleResolver::applyProperty):
+        * rendering/style/RenderStyle.h: Adding functions for modifying and accessing decoration-skip properties
+        * rendering/style/RenderStyleConstants.h: Definition of internal representation
+        * rendering/style/StyleRareInheritedData.cpp: Setting up constructors and comparators
+        (WebCore::StyleRareInheritedData::StyleRareInheritedData):
+        (WebCore::StyleRareInheritedData::operator==):
+        * rendering/style/StyleRareInheritedData.h: Holds actual value of internal representation
+
+2013-10-28  Anders Carlsson  <andersca@apple.com>
+
+        RunLoop::dispatch should take an std::function
+        https://bugs.webkit.org/show_bug.cgi?id=123407
+
+        Reviewed by Andreas Kling.
+
+        * WebCore.exp.in:
+        * platform/RunLoop.cpp:
+        (WebCore::RunLoop::performWork):
+        (WebCore::RunLoop::dispatch):
+        * platform/RunLoop.h:
+
+2013-10-28  Tim Horton  <timothy_horton@apple.com>
+
+        Make TileController manipulate PlatformCALayers instead of CALayers
+        https://bugs.webkit.org/show_bug.cgi?id=123279
+
+        Reviewed by Simon Fraser.
+
+        In the interest of making TileController more platform-independent
+        (so that it can be used with the remote layer tree, and maybe Windows),
+        move TileController onto our PlatformCALayer abstraction instead of
+        direct manipulation of CALayers.
+
+        Some fallout from this includes getting rid of special Mac-specific
+        TileController-specific CALayer subclasses, and reworking tile
+        painting to work in a more generic way.
+
+        This is a first step, and doesn't get us all the way to a platform independent
+        TileController, but more patches are forthcoming.
+
+        No new tests, just a (largeish) refactor.
+
+        * WebCore.exp.in:
+        The signature of some methods has changed.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        Remove WebTileLayer.*
+
+        * page/scrolling/mac/ScrollingTreeScrollingNodeMac.mm:
+        (WebCore::ScrollingTreeScrollingNodeMac::logExposedUnfilledArea):
+        Use the "isTile" key on the CALayer dictionary instead of the layer's
+        class to determine if it's a tile. TileController will set this on a tile
+        when it is created, for now.
+
+        * platform/graphics/TiledBacking.h:
+        tiledScrollingIndicatorLayer() should return a PlatformCALayer.
+
+        * platform/graphics/ca/GraphicsLayerCA.cpp:
+        (WebCore::GraphicsLayerCA::platformCALayerPaintContents):
+        * platform/graphics/ca/GraphicsLayerCA.h:
+        (WebCore::GraphicsLayerCA::platformCALayerIncrementRepaintCount):
+        * platform/graphics/ca/PlatformCALayerClient.h:
+        The PlatformCALayerClient paintContents and incrementRepaintCount callbacks
+        should include the platformCALayer that caused the callback.
+
+        * platform/graphics/ca/PlatformCALayer.h:
+        Add LayerTypeSimpleLayer, which is similar to LayerTypeWebLayer
+        except it just calls back its client to paint, instead of doing
+        complicated things with repaint rects. This is so that TileController
+        doesn't re-enter drawLayerContents when asking its GraphicsLayer
+        to paint for each PlatformCALayer (it will be entering drawLayerContents
+        for the first time for each layer). It also happens to be useful
+        for things like the tile controller overlay, which don't need
+        all that complication.
+
+        Add LayerTypeTiledBackingTileLayer, which is used simply to distinguish
+        TileController Tile layers from other LayerTypeSimpleLayers.
+
+        * platform/graphics/ca/mac/LayerPool.h:
+        * platform/graphics/ca/mac/LayerPool.mm:
+        (WebCore::LayerPool::addLayer):
+        (WebCore::LayerPool::takeLayerWithSize):
+        LayerPool should operate on PlatformCALayers now.
+
+        * platform/graphics/ca/mac/PlatformCALayerMac.h:
+        * platform/graphics/ca/mac/PlatformCALayerMac.mm:
+        (PlatformCALayerMac::PlatformCALayerMac):
+        Set the "isTile" key on the CALayer to true for TiledBackingTileLayers,
+        so that the scrolling performance logging can tell a tile apart from
+        any other layer, on the scrolling thread, without touching PlatformCALayers
+        or the TileController or any other main-thread data structures.
+
+        (PlatformCALayerMac::setEdgeAntialiasingMask): Added.
+        * platform/graphics/ca/mac/TileController.h:
+        Remove references to Objective-C classes; instead use PlatformCALayer everywhere.
+        TileController is now a PlatformCALayerClient, and the layers it owns are
+        all PlatformCALayers (and it is constructed with a PlatformCALayer, etc.).
+        Hand in the tile debug border color as a WebCore color, instead of a CGColorRef.
+        blankPixelCountForTiles() now operates on a list of PlatformLayers instead of
+        WebTileLayers specifically, since WebTileLayer is gone.
+        Make drawTileMapContents private because WebTileCacheMapLayer no longer exists.
+
+        (WebCore::TileController::platformCALayerDrawsContent):
+        All of the layers who have TileController as their client paint their contents.
+
+        (WebCore::TileController::platformCALayerContentsOpaque):
+        This will only be called for layers which paint via drawLayerContents,
+        so it's OK that we don't special-case the debugging overlay here.
+
+        (WebCore::TileController::owningGraphicsLayer):
+        Return the GraphicsLayer that owns the TileController's main
+        layer, via its conformance to PlatformCALayerClient. This is
+        a bit strange (because it's not strictly a GraphicsLayer, despite
+        always being so at the moment), but is done for clarity inside
+        TileController itself.
+
+        * platform/graphics/ca/mac/TileController.mm:
+        Remove CALayer (WebCALayerDetails), WebTiledScrollingIndicatorLayer,
+        and a bunch of includes that we don't need anymore.
+
+        (WebCore::TileController::create):
+        (WebCore::TileController::TileController):
+        TileController is passed a PlatformCALayer for the tile cache root layer,
+        instead of a WebTiledBackingLayer. It also creates a PlatformCALayer with
+        LayerTypeLayer instead of a bare CALayer for the container layer.
+        It's OK to remove the transaction because it was only used to stop
+        the implicit animation, which PlatformCALayer will do for us.
+
+        (WebCore::TileController::~TileController):
+        Clear the owner of the PlatformCALayers which the TileController previously owned,
+        so they don't try to call back a destroyed TileController.
+
+        (WebCore::TileController::tileCacheLayerBoundsChanged):
+        (WebCore::TileController::setNeedsDisplay):
+        Straightforward adjustments towards use of PlatformCALayer.
+
+        (WebCore::TileController::setTileNeedsDisplayInRect):
+        Adjustments towards use of PlatformCALayer; we need FloatRects so we can
+        pass pointers to PlatformCALayer::setNeedsDisplay.
+
+        (WebCore::TileController::platformCALayerPaintContents):
+        Replace drawLayer with platformCALayerPaintContents, which will be called
+        back from our various WebSimpleLayers. If the PlatformCALayer is our
+        tiled scrolling debug indicator, paint that. Otherwise, it's a tile.
+        Make use of drawLayerContents() to paint the tile contents.
+        Make use of drawRepaintIndicator() to paint the repaint indicator if needed.
+        Move scrolling performance logging code that used to be in WebTileLayer here.
+
+        (WebCore::TileController::platformCALayerDeviceScaleFactor):
+        (WebCore::TileController::platformCALayerShowDebugBorders):
+        (WebCore::TileController::platformCALayerShowRepaintCounter):
+        Forward these to the owning GraphicsLayerCA, because it will have the right answers.
+
+        (WebCore::TileController::setScale):
+        Adjustments towards use of PlatformCALayer; remove some code that Simon
+        caused to be unused in 156291 but did not remove.
+
+        (WebCore::TileController::setAcceleratesDrawing):
+        (WebCore::TileController::setTilesOpaque):
+        (WebCore::TileController::setVisibleRect):
+        (WebCore::TileController::revalidateTiles):
+        (WebCore::TileController::setTileDebugBorderWidth):
+        (WebCore::TileController::setTileDebugBorderColor):
+        (WebCore::TileController::bounds):
+        (WebCore::TileController::blankPixelCount):
+        (WebCore::TileController::blankPixelCountForTiles):
+        (WebCore::queueTileForRemoval):
+        (WebCore::TileController::setNeedsRevalidateTiles):
+        (WebCore::TileController::ensureTilesForRect):
+        (WebCore::TileController::retainedTileBackingStoreMemory):
+        Straightforward adjustments towards use of PlatformCALayer.
+
+        (WebCore::TileController::updateTileCoverageMap):
+        Adjustments towards use of PlatformCALayer; rename backgroundColor
+        to visibleRectIndicatorColor, since it's actually a border, not a background.
+
+        (WebCore::TileController::tiledScrollingIndicatorLayer):
+        Create a LayerTypeSimpleLayer PlatformCALayer for the tiled scrolling indicator.
+        It will be asked to paint straightforwardly, like a CALayer would.
+        Create a LayerTypeLayer PlatformCALayer for the visible rect indicator.
+        It doesn't need to paint anything, so it doesn't get an owner.
+
+        (WebCore::TileController::createTileLayer):
+        When creating a new tile layer, adopt it by setting its owner.
+        Otherwise, straightforward adjustments towards use of PlatformCALayer.
+
+        (WebCore::TileController::platformCALayerIncrementRepaintCount):
+        Manage repaint counts for tiles in TileController now.
+
+        (WebCore::TileController::drawTileMapContents):
+        Adjustments towards use of PlatformCALayer.
+
+        * platform/graphics/ca/mac/WebTileLayer.h: Removed.
+        * platform/graphics/ca/mac/WebTileLayer.mm: Removed.
+        We don't need WebTileLayer anymore, tiles are now just WebSimpleLayers
+        owned by TileController. Its behavior has been moved into TileController.
+
+        * platform/graphics/ca/mac/WebTiledBackingLayer.h:
+        * platform/graphics/ca/mac/WebTiledBackingLayer.mm:
+        (-[WebTiledBackingLayer createTileController:]):
+        Add createTileController: so that the WebTiledBackingLayer's owner can
+        hand the TileController the PlatformCALayer for the WebTiledBackingLayer
+        without propagating additional usage of PlatformCALayer::platformCALayer(),
+        which we need to remove in light of the remote layer tree work.
+
+        (-[WebTiledBackingLayer setBorderColor:]):
+
+        * platform/graphics/ca/win/PlatformCALayerWin.h:
+        Add an empty implementation of setEdgeAntialiasingMask.
+        We'll probably want to implement it before adopting TileController on Windows.
+
+        * platform/graphics/ca/win/PlatformCALayerWinInternal.cpp:
+        (PlatformCALayerWinInternal::displayCallback):
+        * platform/graphics/win/MediaPlayerPrivateQuickTimeVisualContext.cpp:
+        (WebCore::MediaPlayerPrivateQuickTimeVisualContext::LayerClient::platformCALayerPaintContents):
+        (WebCore::MediaPlayerPrivateQuickTimeVisualContext::LayerClient::platformCALayerIncrementRepaintCount):
+        * platform/graphics/avfoundation/cf/MediaPlayerPrivateAVFoundationCF.cpp:
+        (WebCore::LayerClient::platformCALayerPaintContents):
+        (WebCore::LayerClient::platformCALayerIncrementRepaintCount):
+        Adjust for new parameters on PlatformCALayerClient callbacks.
+
+        * platform/graphics/mac/WebLayer.h:
+        Add WebSimpleLayer, which inherits directly from CALayer, and make
+        our standard WebLayer (which is used for compositing layers in web content)
+        inherit from that.
+
+        * platform/graphics/mac/WebLayer.mm:
+        Move most of the behavior of WebLayer onto WebSimpleLayer, except for its
+        complex painting code. That stays as an override on WebLayer.
+
+        (WebCore::drawLayerContents):
+        Use the PlatformCALayer's PlatformLayer - if it exists - to extract
+        fine-grained repaint rects. If it doesn't, we'll just use the CGContext's
+        clip rect as our single repaint rect.
+        Rename platformLayer to platformCALayer for accuracy.
+        Remove special code for CATiledLayer since we ought not use it on Mac anymore.
+
+        (WebCore::drawRepaintIndicator):
+        Factor repaint indicator code out into its own function so that TileController
+        can use it. It can't be called from drawLayerContents for TileController, since
+        the PlatformCALayer that TileController passes in to drawLayerContents is actually
+        that of the tile cache's root layer, not the tile itself.
+        Also, add a custom background color parameter so TileController can override
+        the default green color with its own standard purple.
+
+        (-[WebLayer drawInContext:]):
+        (-[WebSimpleLayer drawInContext:]):
+        * platform/graphics/mac/WebTiledLayer.mm:
+        (-[WebTiledLayer drawInContext:]):
+        Removed a param from drawLayerContents because it's trivially acquirable
+        from the PlatformCALayer.
+
+2013-10-24  Sam Weinig  <sam@webkit.org>
+
+        Move RenderBlock functions only used by RenderBlockFlow to RenderBlockFlow
+        https://bugs.webkit.org/show_bug.cgi?id=123318
+
+        Reviewed by David Hyatt.
+
+        * rendering/LineLayoutState.h:
+        Move FloatWithRect from RenderBlock.
+
+        * rendering/RenderBlock.cpp:
+        * rendering/RenderBlock.h:
+        * rendering/RenderBlockFlow.cpp:
+        * rendering/RenderBlockFlow.h:
+        * rendering/RenderBlockLineLayout.cpp:
+        Move pagination and float functions.
+
+2013-10-28  Sergio Villar Senin  <svillar@igalia.com>
+
+        [CSS Grid Layout] Add support for order inside grid items
+        https://bugs.webkit.org/show_bug.cgi?id=123208
+
+        Reviewed by Antti Koivisto.
+
+        Based on Blink r153457 and r153536 by <jchaffraix@chromium.org>
+
+        Added support for sorting grid items by using -webkit-order
+        property. Used OrderIterator to implement it so it had to be moved
+        out of RenderFlexibleBox to be shared with RenderGrid.
+
+        Tests: fast/css-grid-layout/grid-item-order-auto-flow-resolution.html
+               fast/css-grid-layout/grid-item-order-paint-order.html
+
+        * CMakeLists.txt: Added new file.
+        * GNUmakefile.list.am: Ditto.
+        * WebCore.vcxproj/WebCore.vcxproj: Ditto.
+        * WebCore.xcodeproj/project.pbxproj: Ditto.
+        * rendering/OrderIterator.cpp: Added. Ripped out of RenderFlexibleBox.
+        (WebCore::OrderIterator::OrderIterator):
+        (WebCore::OrderIterator::setOrderValues): Use std::move semantics.
+        (WebCore::OrderIterator::first): Use an integer as iterator.
+        (WebCore::OrderIterator::next): Ditto.
+        (WebCore::OrderIterator::reset): Ditto.
+        * rendering/OrderIterator.h: Added.
+        (WebCore::OrderIterator::currentChild):
+        * rendering/RenderFlexibleBox.cpp:
+        (WebCore::RenderFlexibleBox::RenderFlexibleBox):
+        (WebCore::RenderFlexibleBox::layoutBlock):
+        * rendering/RenderFlexibleBox.h:
+        * rendering/RenderGrid.cpp:
+        (WebCore::RenderGrid::RenderGrid):
+        (WebCore::RenderGrid::placeItemsOnGrid):
+        (WebCore::RenderGrid::populateExplicitGridAndOrderIterator):
+        (WebCore::RenderGrid::paintChildren):
+        * rendering/RenderGrid.h:
+
+2013-10-28  Afonso R. Costa Jr.  <afonso.costa@samsung.com>
+
+        Methods on window.internals shouldn't pass a document.
+        https://bugs.webkit.org/show_bug.cgi?id=107301
+
+        Reviewed by Alexey Proskuryakov.
+
+        Each 'Internals' instance is associated with a 'Document'. So, it
+        is not necessary to pass a document as argument. Only nodesFromRect and
+        layerTreeAsText methods were kept because, in some Layout Tests, the
+        'Document' object is not the same used by Internals::contextDocument.
+
+        * testing/Internals.cpp: Removed 'document' parameter.
+        (WebCore::Internals::animationsAreSuspended):
+        (WebCore::Internals::suspendAnimations):
+        (WebCore::Internals::resumeAnimations):
+        (WebCore::Internals::inspectorHighlightRects):
+        (WebCore::Internals::inspectorHighlightObject):
+        (WebCore::Internals::setScrollViewPosition):
+        (WebCore::Internals::setPagination):
+        (WebCore::Internals::configurationForViewport):
+        (WebCore::Internals::paintControlTints):
+        (WebCore::Internals::setDelegatesScrolling):
+        (WebCore::Internals::touchPositionAdjustedToBestClickableNode):
+        (WebCore::Internals::touchNodeAdjustedToBestClickableNode):
+        (WebCore::Internals::touchPositionAdjustedToBestContextMenuNode):
+        (WebCore::Internals::touchNodeAdjustedToBestContextMenuNode):
+        (WebCore::Internals::bestZoomableAreaForTouchPoint):
+        (WebCore::Internals::lastSpellCheckRequestSequence):
+        (WebCore::Internals::lastSpellCheckProcessedSequence):
+        (WebCore::Internals::wheelEventHandlerCount):
+        (WebCore::Internals::touchEventHandlerCount):
+        (WebCore::Internals::setBatteryStatus):
+        (WebCore::Internals::setNetworkInformation):
+        (WebCore::Internals::setDeviceProximity):
+        (WebCore::Internals::hasSpellingMarker):
+        (WebCore::Internals::hasAutocorrectedMarker):
+        (WebCore::Internals::isOverwriteModeEnabled):
+        (WebCore::Internals::toggleOverwriteModeEnabled):
+        (WebCore::Internals::consoleMessageArgumentCounts):
+        (WebCore::Internals::hasGrammarMarker):
+        (WebCore::Internals::numberOfScrollableAreas):
+        (WebCore::Internals::isPageBoxVisible):
+        (WebCore::Internals::repaintRectsAsText):
+        (WebCore::Internals::scrollingStateTreeAsText):
+        (WebCore::Internals::mainThreadScrollingReasons):
+        (WebCore::Internals::nonFastScrollableRects):
+        (WebCore::Internals::garbageCollectDocumentResources):
+        (WebCore::Internals::insertAuthorCSS):
+        (WebCore::Internals::insertUserCSS):
+        (WebCore::Internals::shortcutIconURLs):
+        (WebCore::Internals::allIconURLs):
+        (WebCore::Internals::setHeaderHeight):
+        (WebCore::Internals::setFooterHeight):
+        (WebCore::Internals::webkitWillEnterFullScreenForElement):
+        (WebCore::Internals::webkitDidEnterFullScreenForElement):
+        (WebCore::Internals::webkitWillExitFullScreenForElement):
+        (WebCore::Internals::webkitDidExitFullScreenForElement):
+        (WebCore::Internals::startTrackingRepaints):
+        (WebCore::Internals::stopTrackingRepaints):
+        (WebCore::Internals::getCurrentCursorInfo):
+        * testing/Internals.h:
+        (WebCore::Internals::setPagination):
+        * testing/Internals.idl:
+
+2013-10-28  Xabier Rodriguez Calvar  <calvaris@igalia.com>
+
+        Remove HTMLMediaElement.startTime
+        https://bugs.webkit.org/show_bug.cgi?id=123264
+
+        Reviewed by Eric Carlson.
+
+        Patch based on one by: philipj@opera.com
+        Blink review URL: https://codereview.chromium.org/32583003
+
+        startTime has been removed from the HTMLMediaElement and its use
+        in the rest of components.
+
+        * Modules/mediacontrols/mediaControlsApple.js:
+        (Controller.prototype.handleRewindButtonClicked):
+        (Controller.prototype.handleTimelineMouseMove):
+        (Controller.prototype.updateDuration):
+        (Controller.prototype.updateTime): Removed used of startTime().
+        * bindings/gobject/WebKitDOMCustom.cpp:
+        (webkit_dom_html_media_element_get_start_time):
+        * bindings/gobject/WebKitDOMCustom.h:
+        * bindings/gobject/WebKitDOMCustom.symbols: Added phony function.
+        * html/HTMLMediaElement.cpp:
+        (WebCore::HTMLMediaElement::mediaPlayerTimeChanged):
+        (WebCore::HTMLMediaElement::isBlockedOnMediaController): Removed
+        use of startTime()
+        * html/HTMLMediaElement.h:
+        * html/HTMLMediaElement.idl: Removed startTime()
+        * rendering/RenderThemeWinCE.cpp:
+        (WebCore::RenderThemeWinCE::paintSliderThumb): Removed use of
+        startTime()
+
+2013-10-28  Andreas Kling  <akling@apple.com>
+
+        RenderElement::m_style should be a Ref.
+        <https://webkit.org/b/123401>
+
+        Made RenderElement::m_style a Ref. This codifies the fact that it
+        can never be null after construction.
+
+        Removed a couple of unnecessary null checks that were exposed as
+        compilation failures.
+
+        Reviewed by Antti Koivisto.
+
+2013-10-28  Bastien Nocera <hadess@hadess.net>
+
+        Name all the GLib timeout sources
+        https://bugs.webkit.org/show_bug.cgi?id=123229
+
+        Reviewed by Anders Carlsson.
+
+        Give a name to GLib timeout sources, this is helpful when
+        profiling WebKitGTK applications.
+
+        No new tests, no change in functionality.
+
+2013-10-28  Philippe Normand  <pnormand@igalia.com>
+
+        MediaStreamTrackPrivate's m_client uninitialized
+        https://bugs.webkit.org/show_bug.cgi?id=123403
+
+        Reviewed by Eric Carlson.
+
+        No new tests, no change in functionality.
+
+        * platform/mediastream/MediaStreamTrackPrivate.cpp:
+        (WebCore::MediaStreamTrackPrivate::MediaStreamTrackPrivate):
+        Initialize the m_client member variable.
+
+2013-10-28  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix make distcheck.
+
+        * GNUmakefile.am: Add crypto idl files to EXTRA_DIST and remove
+        css/fullscreenQuickTime.css that was removed.
+
+2013-10-28  Antti Koivisto  <antti@apple.com>
+
+        Prepare simple line layout to support multiple runs per line
+        https://bugs.webkit.org/show_bug.cgi?id=123400
+
+        Reviewed by Andreas Kling.
+
+        Bunch of renaming and some refactoring for future support for text runs.
+
+        SimpleLineLayout::Lines -> SimpleLineLayout::Layout and becomes a class instead of a typedef.
+        SimpleLineLayout::Resolver::Line -> SimpleLineLayout::Resolver::Run
+        SimpleLineLayout::createLines() -> SimpleLineLayout::create()
+        RenderBlockFlow::simpleLines() -> RenderBlockFlow::simpleLineLayout()
+        RenderText::simpleLines() -> RenderText::simpleLineLayout()
+        
+        Added resolver construction functions:
+        
+        SimpleLineLayout::runResolver()
+        SimpleLineLayout::lineResolver()
+
+2013-10-28  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [GTK] Expose title and alternative text for links in image maps
+        https://bugs.webkit.org/show_bug.cgi?id=84045
+
+        Reviewed by Chris Fleizach.
+
+        Change the way we decide when the title attribute should be
+        used for the accessible description, by not relying in the
+        titleTagShouldBeUsedInDescriptionField() helper function but
+        in whether we have found a visible text for it or not.
+
+        This actually mimics what the Mac port does and so makes possible
+        to share both the layout test and its expected results.
+
+        * accessibility/atk/WebKitAccessibleUtil.cpp:
+        (accessibilityDescription): Update the method to determine
+        whether the title attribute should be used for the description.
+
+2013-10-28  Bastien Nocera <hadess@hadess.net>
+
+        Replace 0 timeouts g_timeout_add() by g_idle_add()
+        https://bugs.webkit.org/show_bug.cgi?id=123260
+
+        Reviewed by Carlos Garcia Campos.
+
+        A zero timeout should be equivalent to using g_idle_add_full(G_PRIORITY_DEFAULT, ...)
+        without the nagging feeling that the wrong API was used.
+
+        No new tests, no change in functionality.
+
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamer.cpp: Use g_idle_add() instead
+        of 0-timer.
+        (WebCore::MediaPlayerPrivateGStreamer::videoChanged):
+        (WebCore::MediaPlayerPrivateGStreamer::audioChanged):
+        * platform/graphics/gstreamer/MediaPlayerPrivateGStreamerBase.cpp: Ditto.
+        (WebCore::MediaPlayerPrivateGStreamerBase::volumeChanged):
+        (WebCore::MediaPlayerPrivateGStreamerBase::muteChanged):
+        * platform/gtk/GtkDragAndDropHelper.cpp: Ditto.
+        (WebCore::GtkDragAndDropHelper::handleDragLeave):
+
+2013-10-28  Zan Dobersek  <zdobersek@igalia.com>
+
+        Re-enable simple line layout for GTK
+        https://bugs.webkit.org/show_bug.cgi?id=123388
+
+        Reviewed by Andreas Kling.
+
+        * rendering/SimpleLineLayout.cpp:
+        (WebCore::SimpleLineLayout::canUseFor): 8-bit TextRun support is now enabled for the GTK port, so the port
+        can use the simple line layout.
+
+2013-10-27  Andreas Kling  <akling@apple.com>
+
+        Fix 4 asserting SVG tests after r158097.
+
+        RenderElement::setStyle() is, quite surprisingly, a virtual function
+        with a single override in RenderSVGBlock.
+        To match the old behavior, we have to rewrite the display type from
+        any inline type to block instead.
+
+        * rendering/RenderElement.cpp:
+        (WebCore::RenderElement::initializeStyle):
+
+2013-10-27  Andreas Kling  <akling@apple.com>
+
+        Tone down overzealous assertion from r158097.
+
+        RenderElement::initializeStyle() really only cares that there are no
+        text renderers that we should be calling styleDidChange() on.
+
+        Tweak the code to only check that there are no text children.
+
+        * rendering/RenderElement.cpp:
+        (WebCore::RenderElement::initializeStyle):
+
+2013-10-27  Antti Koivisto  <antti@apple.com>
+
+        Enable center and right text alignment for simple lines
+        https://bugs.webkit.org/show_bug.cgi?id=123398
+
+        Reviewed by Andreas Kling.
+
+        Support text-align:center and text-align:right on simple line layout path.
+
+        * rendering/SimpleLineLayout.cpp:
+        (WebCore::SimpleLineLayout::canUseFor):
+        
+            text-align:justify is still not supported.
+
+        (WebCore::SimpleLineLayout::computeLineLeft):
+        (WebCore::SimpleLineLayout::createLines):
+        
+            Do a rounding dance that matches the line boxes.
+
+        * rendering/SimpleLineLayout.h:
+        
+            Add left position to lines.
+
+        * rendering/SimpleLineLayoutResolver.h:
+        (WebCore::SimpleLineLayout::Resolver::Line::rect):
+        
+            We now do rounding during layout.
+
+        (WebCore::SimpleLineLayout::Resolver::Line::baseline):
+
+2013-10-27  Andreas Kling  <akling@apple.com>
+
+        Renderers should receive their style at construction.
+        <https://webkit.org/b/123396>
+
+        Pass the RenderStyle to all non-text renderer constructors.
+        After construction, initializeStyle() must be called (as a stopgap
+        measure) until we are able to do style-derived initialization
+        without virtual function calls.
+
+        With this change, RenderElement::m_style is never null. Subsequent
+        patches will add enforcement for this and also make style() return
+        a RenderStyle&.
+
+        I'm adding three FIXME's in this patch:
+
+            - createRendererIfNeeded() calls AnimationController to set up
+              the initial style manually instead of asking RenderElement's
+              setAnimatedStyle() to do it. This can probably be done in a
+              nicer way, but it's not clear yet how.
+
+            - ImageContentData::createRenderer() does a bit of unnecessary
+              work. This should be easy to clean up but got too distracting
+              to be part of this patch.
+
+            - Document::createRenderTree() creates the RenderView with an
+              initial dummy RenderStyle. I've done this because resolving
+              the document style assumes we already have a RenderView.
+
+        For styleWillChange() implementations to detect that they are
+        reacting to the initial style, I've added a hasInitializedStyle()
+        function on RenderElement. This will return false until you've
+        called initializeStyle() on the renderer. This should go away
+        along with initializeStyle() eventually.
+
+        Reviewed by Antti Koivisto.
+
+2013-10-26  Tim Horton  <timothy_horton@apple.com>
+
+        [mac] Remove WebTiledLayer
+        https://bugs.webkit.org/show_bug.cgi?id=123395
+
+        Reviewed by Anders Carlsson.
+
+        Mac doesn't use CATiledLayer at all anymore. We have to keep
+        LayerTypeTiledLayer around for Windows, for now, but we can
+        get rid of WebTiledLayer and some related Mac-specific code.
+
+        No new tests, just removing dead code.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        Remove WebTiledLayer.*
+
+        * platform/graphics/ca/PlatformCALayer.h:
+        * platform/graphics/ca/mac/PlatformCALayerMac.h:
+        * platform/graphics/ca/mac/PlatformCALayerMac.mm:
+        (PlatformCALayerMac::PlatformCALayerMac):
+        Remove synchronouslyDisplayTilesInRect, which was only used for WebTiledLayer on Mac.
+        Remove WebTiledLayer instantiation and setup code.
+
+        * platform/graphics/mac/WebTiledLayer.h: Removed.
+        * platform/graphics/mac/WebTiledLayer.mm: Removed.
+
+2013-10-26  Andreas Kling  <akling@apple.com>
+
+        CTTE: RenderImageResourceStyleImage always has a StyleImage.
+        <https://webkit.org/b/123390>
+
+        Codify the fact that RenderImageResourceStyleImage always wraps an
+        existing StyleImage object.
+
+        Reviewed by Antti Koivisto.
+
+2013-10-26  Antti Koivisto  <antti@apple.com>
+
+        Revert some accidental changes.
+
+        * css/CSSFontFaceSource.cpp:
+        (WebCore::CSSFontFaceSource::getFontData):
+        * css/CSSFontSelector.cpp:
+        * css/CSSFontSelector.h:
+
+2013-10-26  Mark Lam  <mark.lam@apple.com>
+
+        Gardening: fixed broken build.
+        https://bugs.webkit.org/show_bug.cgi?id=123354.
+
+        * css/CSSFontSelector.h:
+
+2013-10-26  Antti Koivisto  <antti@apple.com>
+
+        fast/frames/seamless/seamless-nested-crash.html asserts on wk2 only
+        https://bugs.webkit.org/show_bug.cgi?id=123354
+
+        Reviewed by Andreas Kling.
+
+        * rendering/SimpleLineLayout.cpp:
+        (WebCore::SimpleLineLayout::canUseFor):
+        
+            Don't enable simple line layout if the primary font is loading. The code expects
+            to use the primary font metrics for all lines but those won't match the fallbacks
+            when font is not loaded.
+
+2013-10-26  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Deprecate public dispatch_event method in objects implementing EventTarget interface
+        https://bugs.webkit.org/show_bug.cgi?id=123261
+
+        Reviewed by Gustavo Noronha Silva.
+
+        The interface function should be used instead.
+
+        * bindings/scripts/CodeGeneratorGObject.pm:
+        (GetFunctionDeprecationInformation): Helper function to return the
+        version when the function was deprecated and the function
+        replacing the deprecated one.
+        (GenerateFunction): Check if the function is deprecated to mark it
+        as such in the header and API docs.
+        * bindings/scripts/gobject-generate-headers.pl: Replace the unused
+        WEBKIT_OBSOLETE_API macro with new macros to mark function as
+        deprecated, using the glib macros so that we don't need checks for
+        the platform.
+        * bindings/scripts/test/GObject/WebKitDOMTestActiveDOMObject.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestCallback.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestCustomNamedGetter.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestEventConstructor.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestEventTarget.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestException.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestInterface.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestObj.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestSerializedScriptValueInterface.h:
+        * bindings/scripts/test/GObject/WebKitDOMTestTypedefs.h:
+        * bindings/scripts/test/GObject/WebKitDOMattribute.h:
+
+2013-10-25  Mark Lam  <mark.lam@apple.com>
+
+        DatabaseManager's ProposedDatabases need to be thread-safe.
+        https://bugs.webkit.org/show_bug.cgi?id=123313.
+
+        Reviewed by Geoffrey Garen.
+
+        No new tests.
+
+        * Modules/webdatabase/DatabaseManager.cpp:
+        (WebCore::DatabaseManager::DatabaseManager):
+        (WebCore::DatabaseManager::existingDatabaseContextFor):
+        (WebCore::DatabaseManager::registerDatabaseContext):
+        (WebCore::DatabaseManager::unregisterDatabaseContext):
+        (WebCore::DatabaseManager::didConstructDatabaseContext):
+        (WebCore::DatabaseManager::didDestructDatabaseContext):
+        (WebCore::DatabaseManager::openDatabaseBackend):
+        (WebCore::DatabaseManager::addProposedDatabase):
+        (WebCore::DatabaseManager::removeProposedDatabase):
+        (WebCore::DatabaseManager::fullPathForDatabase):
+        (WebCore::DatabaseManager::detailsForNameAndOrigin):
+        * Modules/webdatabase/DatabaseManager.h:
+
+2013-10-25  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Upstream ENABLE(REMOTE_INSPECTOR) and enable on iOS and Mac
+        https://bugs.webkit.org/show_bug.cgi?id=123111
+
+        Reviewed by Timothy Hatcher.
+
+        * Configurations/FeatureDefines.xcconfig:
+        * WebCore.exp.in:
+
+2013-10-25  Hans Muller  <hmuller@adobe.com>
+
+        [CSS Shapes] CORS-enabled fetch for shape image values
+        https://bugs.webkit.org/show_bug.cgi?id=123114
+
+        Reviewed by Andreas Kling.
+
+        Access to shape images is now controlled by CORS CSS shape per
+        http://dev.w3.org/csswg/css-shapes/#shape-outside-property.
+        Previously shape images had to be same-origin.
+
+        Shape image URL access is defined by the same logic that defines
+        canvas tainting: same-origin and data URLs are allowed and images
+        with a "Access-Control-Allow-Origin:" header that's either "*" or
+        that matches the document's origin.
+
+        A PotentiallyCrossOriginEnabled RequestOriginPolicy was added to
+        ResourceLoaderOptions, to indicate that a "potentially CORS-enabled fetch"
+        was to be undertaken. The CSSImageValue::cachedImage() method handles this
+        option by effectively setting the "Origin:" request header (see
+        updateRequestForAccessControl() in CrossOriginAccessControl.cpp).
+        StyleResolver::loadPendingShapeImage() uses the new ResourceLoaderOption.
+
+        The static ShapeInsideInfo and ShapeOutsideInfo isEnabledFor() method
+        now performs the CORS check for image valued shapes. The private
+        isOriginClean() method from CanvasRenderingContext2D has been moved to
+        the CachedImage class so that it can be shared by the Canvas and Shape
+        implementations. It checks the response headers per the CORS spec.
+
+        Test: http/tests/security/shape-image-cors.html
+
+        * css/CSSImageValue.cpp:
+        (WebCore::CSSImageValue::cachedImage): Handle the new ResourceLoaderOption.
+        * css/StyleResolver.cpp:
+        (WebCore::StyleResolver::loadPendingShapeImage): Set the new ResourceLoaderOption.
+        * html/canvas/CanvasRenderingContext2D.cpp:
+        (WebCore::CanvasRenderingContext2D::createPattern): Use the CachedImage::isOriginClean().
+        * loader/ResourceLoaderOptions.h: Added PotentiallyCrossOriginEnabled to RequestOriginPolicy.
+        * loader/cache/CachedImage.cpp:
+        (WebCore::CachedImage::isOriginClean): Migrated from CanvasRenderingContext2D.
+        * loader/cache/CachedImage.h:
+        * rendering/shapes/ShapeInfo.cpp:
+        (WebCore::::checkImageOrigin): Do the CORS check and log an error message if neccessary.
+        * rendering/shapes/ShapeInfo.h:
+        * rendering/shapes/ShapeInsideInfo.cpp:
+        (WebCore::ShapeInsideInfo::isEnabledFor): Call checkImageOrigin() for images.
+        * rendering/shapes/ShapeOutsideInfo.cpp:
+        (WebCore::ShapeOutsideInfo::isEnabledFor): Ditto.
+
+2013-10-25  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] Fix runtime errors caused by mediasource IDL attributes.
+        https://bugs.webkit.org/show_bug.cgi?id=123352
+
+        Reviewed by Eric Carlson.
+
+        Due to http://webkit.org/b/123178, MediaSource classes must add a GenerateIsReachable
+        (and also a JSGenerateToJSObject) attribute to avoid runtime asserts and crashes.
+
+        * Modules/mediasource/MediaSource.idl:
+        * Modules/mediasource/SourceBuffer.idl:
+        * Modules/mediasource/SourceBufferList.idl:
+        * Modules/mediasource/WebKitMediaSource.idl:
+        * Modules/mediasource/WebKitSourceBufferList.idl:
+
+2013-10-25  Jacky Jiang  <zhajiang@blackberry.com>
+
+        [BlackBerry] Browser crashed at PlatformGraphicsContext::addDrawLineForText() when trying to upload a video to youtube
+        https://bugs.webkit.org/show_bug.cgi?id=123349
+
+        Reviewed by George Staikos.
+        Internally reviewed by George Staikos, Konrad Piascik, Eli Fidler and Arvid Nilsson.
+
+        Browser crashed when dereferencing null PlatformGraphicsContext*.
+        In FrameView::paintControlTints(), we intentionally constructed GraphicsContext
+        with null PlatformGraphicsContext* and disabled painting by doing
+        context.setUpdatingControlTints(true). So we should not go further in
+        GraphicsContext::drawLineForText() if painting is disabled.
+        Check paintingDisabled() for the other functions in PathBlackBerry.cpp
+        as well; otherwise, it is likely we will crash at those places.
+
+        * platform/graphics/blackberry/PathBlackBerry.cpp:
+        (WebCore::GraphicsContext::fillPath):
+        (WebCore::GraphicsContext::strokePath):
+        (WebCore::GraphicsContext::drawLine):
+        (WebCore::GraphicsContext::drawLineForDocumentMarker):
+        (WebCore::GraphicsContext::drawLineForText):
+        (WebCore::GraphicsContext::clip):
+        (WebCore::GraphicsContext::clipPath):
+        (WebCore::GraphicsContext::canvasClip):
+        (WebCore::GraphicsContext::clipOut):
+
 2013-10-25  Thiago de Barros Lacerda  <thiago.lacerda@openbossa.org>
 
         Adding platform implementation of MediaStreamTrack

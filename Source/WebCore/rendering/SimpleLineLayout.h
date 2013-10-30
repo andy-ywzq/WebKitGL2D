@@ -29,6 +29,11 @@
 #include <wtf/Vector.h>
 #include <wtf/text/WTFString.h>
 
+#if COMPILER(MSVC)
+#pragma warning(push)
+#pragma warning(disable: 4200) // Disable "zero-sized array in struct/union" warning
+#endif
+
 namespace WebCore {
 
 class RenderBlockFlow;
@@ -37,17 +42,44 @@ namespace SimpleLineLayout {
 
 bool canUseFor(const RenderBlockFlow&);
 
-struct Line {
+struct Run {
+    Run() { }
+    Run(unsigned textOffset, float left)
+        : textOffset(textOffset)
+        , textLength(0)
+        , isEndOfLine(false)
+        , left(left)
+        , right(left)
+    { }
+
     unsigned textOffset;
-    unsigned textLength;
-    float width;
+    unsigned textLength : 31;
+    unsigned isEndOfLine : 1;
+    float left;
+    float right;
 };
 
-typedef Vector<Line> Lines;
+struct Layout {
+    WTF_MAKE_FAST_ALLOCATED;
+public:
+    typedef Vector<Run, 10> RunVector;
+    static std::unique_ptr<Layout> create(const RunVector&, unsigned lineCount);
 
-std::unique_ptr<Lines> createLines(RenderBlockFlow&);
+    unsigned runCount;
+    unsigned lineCount;
+    Run runs[0];
+
+private:
+    Layout(const RunVector&, unsigned lineCount);
+};
+
+std::unique_ptr<Layout> create(RenderBlockFlow&);
 
 }
 }
+
+#if COMPILER(MSVC)
+#pragma warning(pop)
+#endif
 
 #endif

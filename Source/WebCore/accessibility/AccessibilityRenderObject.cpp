@@ -917,7 +917,7 @@ ESpeak AccessibilityRenderObject::speakProperty() const
     if (!m_renderer)
         return AccessibilityObject::speakProperty();
     
-    return m_renderer->style()->speak();
+    return m_renderer->style().speak();
 }
     
 void AccessibilityRenderObject::addRadioButtonGroupMembers(AccessibilityChildrenVector& linkedUIElements) const
@@ -1100,7 +1100,7 @@ AccessibilityObjectInclusion AccessibilityRenderObject::defaultObjectInclusion()
     if (!m_renderer)
         return IgnoreObject;
 
-    if (m_renderer->style()->visibility() != VISIBLE) {
+    if (m_renderer->style().visibility() != VISIBLE) {
         // aria-hidden is meant to override visibility as the determinant in AX hierarchy inclusion.
         if (equalIgnoringCase(getAttribute(aria_hiddenAttr), "false"))
             return DefaultBehavior;
@@ -1219,15 +1219,6 @@ bool AccessibilityRenderObject::computeAccessibilityIsIgnored() const
         return false;
 #endif
     
-    // <span> tags are inline tags and not meant to convey information if they have no other aria
-    // information on them. If we don't ignore them, they may emit signals expected to come from
-    // their parent. In addition, because included spans are GroupRole objects, and GroupRole
-    // objects are often containers with meaningful information, the inclusion of a span can have
-    // the side effect of causing the immediate parent accessible to be ignored. This is especially
-    // problematic for platforms which have distinct roles for textual block elements.
-    if (node && node->hasTagName(spanTag))
-        return true;
-    
     if (m_renderer->isRenderBlockFlow() && m_renderer->childrenInline() && !canSetFocusAttribute())
         return !toRenderBlockFlow(m_renderer)->hasLines() && !mouseButtonListener();
     
@@ -1305,6 +1296,15 @@ bool AccessibilityRenderObject::computeAccessibilityIsIgnored() const
     if (!getAttribute(MathMLNames::alttextAttr).isEmpty())
         return false;
 #endif
+
+    // <span> tags are inline tags and not meant to convey information if they have no other aria
+    // information on them. If we don't ignore them, they may emit signals expected to come from
+    // their parent. In addition, because included spans are GroupRole objects, and GroupRole
+    // objects are often containers with meaningful information, the inclusion of a span can have
+    // the side effect of causing the immediate parent accessible to be ignored. This is especially
+    // problematic for platforms which have distinct roles for textual block elements.
+    if (node && node->hasTagName(spanTag))
+        return true;
 
     // Other non-ignored host language elements
     if (node && node->hasTagName(dfnTag))
@@ -1468,13 +1468,13 @@ URL AccessibilityRenderObject::url() const
 bool AccessibilityRenderObject::isUnvisited() const
 {
     // FIXME: Is it a privacy violation to expose unvisited information to accessibility APIs?
-    return m_renderer->style()->isLink() && m_renderer->style()->insideLink() == InsideUnvisitedLink;
+    return m_renderer->style().isLink() && m_renderer->style().insideLink() == InsideUnvisitedLink;
 }
 
 bool AccessibilityRenderObject::isVisited() const
 {
     // FIXME: Is it a privacy violation to expose visited information to accessibility APIs?
-    return m_renderer->style()->isLink() && m_renderer->style()->insideLink() == InsideVisitedLink;
+    return m_renderer->style().isLink() && m_renderer->style().insideLink() == InsideVisitedLink;
 }
 
 void AccessibilityRenderObject::setElementAttributeValue(const QualifiedName& attributeName, bool value)
@@ -2542,8 +2542,8 @@ AccessibilityRole AccessibilityRenderObject::determineAccessibilityRole()
     if (m_renderer->isRenderBlockFlow())
         return GroupRole;
     
-    // If the element does not have role, but it has ARIA attributes, accessibility should fallback to exposing it as a group.
-    if (supportsARIAAttributes())
+    // If the element does not have role, but it has ARIA attributes, or accepts tab focus, accessibility should fallback to exposing it as a group.
+    if (supportsARIAAttributes() || canSetFocusAttribute())
         return GroupRole;
     
     return UnknownRole;
@@ -3185,7 +3185,7 @@ bool AccessibilityRenderObject::hasBoldFont() const
     if (!m_renderer)
         return false;
     
-    return m_renderer->style()->fontDescription().weight() >= FontWeightBold;
+    return m_renderer->style().fontDescription().weight() >= FontWeightBold;
 }
 
 bool AccessibilityRenderObject::hasItalicFont() const
@@ -3193,7 +3193,7 @@ bool AccessibilityRenderObject::hasItalicFont() const
     if (!m_renderer)
         return false;
     
-    return m_renderer->style()->fontDescription().italic() == FontItalicOn;
+    return m_renderer->style().fontDescription().italic() == FontItalicOn;
 }
 
 bool AccessibilityRenderObject::hasPlainText() const
@@ -3201,11 +3201,11 @@ bool AccessibilityRenderObject::hasPlainText() const
     if (!m_renderer)
         return false;
     
-    RenderStyle* style = m_renderer->style();
+    const RenderStyle& style = m_renderer->style();
     
-    return style->fontDescription().weight() == FontWeightNormal
-        && style->fontDescription().italic() == FontItalicOff
-        && style->textDecorationsInEffect() == TextDecorationNone;
+    return style.fontDescription().weight() == FontWeightNormal
+        && style.fontDescription().italic() == FontItalicOff
+        && style.textDecorationsInEffect() == TextDecorationNone;
 }
 
 bool AccessibilityRenderObject::hasSameFont(RenderObject* renderer) const
@@ -3213,7 +3213,7 @@ bool AccessibilityRenderObject::hasSameFont(RenderObject* renderer) const
     if (!m_renderer || !renderer)
         return false;
     
-    return m_renderer->style()->fontDescription().families() == renderer->style()->fontDescription().families();
+    return m_renderer->style().fontDescription().families() == renderer->style().fontDescription().families();
 }
 
 bool AccessibilityRenderObject::hasSameFontColor(RenderObject* renderer) const
@@ -3221,7 +3221,7 @@ bool AccessibilityRenderObject::hasSameFontColor(RenderObject* renderer) const
     if (!m_renderer || !renderer)
         return false;
     
-    return m_renderer->style()->visitedDependentColor(CSSPropertyColor) == renderer->style()->visitedDependentColor(CSSPropertyColor);
+    return m_renderer->style().visitedDependentColor(CSSPropertyColor) == renderer->style().visitedDependentColor(CSSPropertyColor);
 }
 
 bool AccessibilityRenderObject::hasSameStyle(RenderObject* renderer) const
@@ -3237,7 +3237,7 @@ bool AccessibilityRenderObject::hasUnderline() const
     if (!m_renderer)
         return false;
     
-    return m_renderer->style()->textDecorationsInEffect() & TextDecorationUnderline;
+    return m_renderer->style().textDecorationsInEffect() & TextDecorationUnderline;
 }
 
 String AccessibilityRenderObject::nameForMSAA() const

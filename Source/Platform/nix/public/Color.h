@@ -51,7 +51,7 @@ public:
     }
 
     Color(int r, int g, int b, int a = 255)
-        : m_argb(fixValue(a) << 24 | fixValue(r) << 16 | fixValue(g) << 8 | fixValue(b))
+        : m_argb(boundValue(a) << 24 | boundValue(r) << 16 | boundValue(g) << 8 | boundValue(b))
     {
     }
 
@@ -97,7 +97,7 @@ public:
 
 private:
     ARGB32 m_argb;
-    static inline ARGB32 fixValue(int value)
+    static inline ARGB32 boundValue(int value)
     {
         return std::max(0, std::min(value, 255));
     }

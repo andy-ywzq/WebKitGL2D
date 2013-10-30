@@ -689,7 +689,7 @@ webkit.org/b/83274 fast/repaint/transform-rotate-and-remove.html [ Pass ]
 
 webkit.org/b/83906 ietestcenter/css3/grid/grid-column-001.htm [ ImageOnlyFailure ]
 webkit.org/b/83909 ietestcenter/css3/grid/grid-column-003.htm [ ImageOnlyFailure ]
-webkit.org/b/83912 ietestcenter/css3/grid/grid-items-002.htm [ ImageOnlyFailure ]
+webkit.org/b/83912 ietestcenter/css3/grid/grid-items-002.htm [ ImageOnlyFailure ] 
 webkit.org/b/83913 ietestcenter/css3/grid/grid-items-003.htm [ ImageOnlyFailure ]
 
 # EFL's EventSender does not implement continuousMouseScrollBy yet
@@ -1368,8 +1368,6 @@ webkit.org/b/105093 compositing/webgl/webgl-nonpremultiplied-blend.html [ Skip ]
 # WebProcess timeouts
 webkit.org/b/102464 [ Debug ] fast/images/webgl-teximage2d.html [ Pass Timeout ]
 
-# shader errors, fails to render.
-webkit.org/b/105031 fast/canvas/webgl/drawingbuffer-test.html [ Failure ]
 
 # Fail color checks, may also need platform results.
 webkit.org/b/105030 fast/canvas/webgl/framebuffer-object-attachment.html [ Failure ]
@@ -1413,7 +1411,6 @@ webkit.org/b/114151 accessibility/svg-group-element-with-title.html [ Failure ]
 webkit.org/b/115659 accessibility/meter-element.html [ Missing ]
 
 webkit.org/b/121684 accessibility/aria-describedby-on-input.html [ Failure ]
-webkit.org/b/84045 accessibility/image-map1.html [ Failure ]
 webkit.org/b/121593 accessibility/radio-button-title-label.html [ Failure ]
 
 # Newly added test at r139111 is failing.
@@ -1569,3 +1566,18 @@ webkit.org/b/106405 http/tests/misc/authentication-redirect-4/authentication-sen
 webkit.org/b/106405 http/tests/security/401-logout/401-logout.php [ Failure ]
 webkit.org/b/106405 http/tests/xmlhttprequest/failed-auth.html [ Failure ]
 webkit.org/b/106405 http/tests/xmlhttprequest/remember-bad-password.html [ Failure ]
+
+webkit.org/b/122963 fast/regions/auto-size/autoheight-regions-mark.html [ Missing ]
+webkit.org/b/122963 fast/regions/flows-dependency-dynamic-remove.html [ Missing ]
+webkit.org/b/122963 fast/regions/flows-dependency-same-flow.html [ Missing ]
+webkit.org/b/122963 fast/regions/multiple-directionality-changes-in-variable-width-regions.html [ Missing ]
+webkit.org/b/122963 fast/regions/region-dynamic-after-before.html [ Missing ]
+webkit.org/b/122963 fast/regions/region-generated-content-before-after.html [ Missing ]
+webkit.org/b/122963 fast/regions/text-region-split-small-pagination.html [ Missing ]
+webkit.org/b/122963 fast/regions/top-overflow-out-of-second-region.html [ Missing ]
+
+webkit.org/b/122963 fast/repaint/japanese-rl-selection-repaint-in-regions.html [ Missing ]
+webkit.org/b/122963 fast/repaint/line-flow-with-floats-in-regions.html [ Missing ]
+webkit.org/b/122963 fast/repaint/overflow-flipped-writing-mode-block-in-regions.html [ Missing ]
+webkit.org/b/122963 fast/repaint/region-painting-invalidation.html [ Missing ]
+webkit.org/b/122963 fast/repaint/region-painting-via-layout.html [ Missing ]

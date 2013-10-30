@@ -161,7 +161,6 @@ public:
     virtual double currentTime() const OVERRIDE;
     virtual void setCurrentTime(double, ExceptionCode&) OVERRIDE;
     double initialTime() const;
-    double startTime() const;
     virtual double duration() const OVERRIDE;
     virtual bool paused() const OVERRIDE;
     virtual double defaultPlaybackRate() const OVERRIDE;
@@ -439,7 +438,7 @@ private:
     virtual bool supportsFocus() const OVERRIDE;
     virtual bool isMouseFocusable() const OVERRIDE;
     virtual bool rendererIsNeeded(const RenderStyle&) OVERRIDE;
-    virtual RenderElement* createRenderer(RenderStyle&) OVERRIDE;
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
     virtual bool childShouldCreateRenderer(const Node*) const OVERRIDE;
     virtual InsertionNotificationRequest insertedInto(ContainerNode&) OVERRIDE;
     virtual void removedFrom(ContainerNode&) OVERRIDE;

@@ -46,7 +46,6 @@ const unsigned renderBufferSize = 128;
 // Size of the FIFO
 const size_t fifoSize = 8192;
 
-// Factory method: Chromium-implementation
 PassOwnPtr<AudioDestination> AudioDestination::create(AudioIOCallback& callback, const String& inputDeviceId, unsigned numberOfInputChannels, unsigned numberOfOutputChannels, float sampleRate)
 {
     return adoptPtr(new AudioDestinationNix(callback, inputDeviceId, numberOfInputChannels, numberOfOutputChannels, sampleRate));
@@ -113,6 +112,16 @@ void AudioDestinationNix::stop()
     }
 }
 
+bool AudioDestinationNix::isPlaying()
+{
+    return m_isPlaying;
+}
+
+float AudioDestinationNix::sampleRate() const
+{
+    return m_sampleRate;
+}
+
 float AudioDestination::hardwareSampleRate()
 {
     return Nix::Platform::current()->audioHardwareSampleRate();
@@ -141,11 +150,10 @@ void AudioDestinationNix::render(const std::vector<float*>& sourceData, const st
     }
 
     // Buffer optional live input.
-    if (sourceData.size() >= 2) {
-        // FIXME: handle multi-channel input and don't hard-code to stereo.
-        RefPtr<AudioBus> wrapperBus = AudioBus::create(2, numberOfFrames, false);
-        wrapperBus->setChannelMemory(0, sourceData[0], numberOfFrames);
-        wrapperBus->setChannelMemory(1, sourceData[1], numberOfFrames);
+    if (sourceData.size()) {
+        RefPtr<AudioBus> wrapperBus = AudioBus::create(sourceData.size(), numberOfFrames, false);
+        for (unsigned i = 0; i < sourceData.size(); ++i)
+            wrapperBus->setChannelMemory(i, sourceData[i], numberOfFrames);
         m_inputFifo->push(wrapperBus.get());
     }
 

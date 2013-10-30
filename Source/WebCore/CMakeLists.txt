@@ -782,6 +782,8 @@ set(WebCore_SOURCES
     Modules/indexeddb/IDBPendingTransactionMonitor.cpp
     Modules/indexeddb/IDBRequest.cpp
     Modules/indexeddb/IDBTransaction.cpp
+    Modules/indexeddb/IDBTransactionBackendImpl.cpp
+    Modules/indexeddb/IDBTransactionBackendOperations.cpp
     Modules/indexeddb/IDBTransactionCoordinator.cpp
     Modules/indexeddb/IDBVersionChangeEvent.cpp
     Modules/indexeddb/PageGroupIndexedDatabase.cpp
@@ -790,8 +792,6 @@ set(WebCore_SOURCES
     Modules/indexeddb/leveldb/IDBCursorBackendLevelDB.cpp
     Modules/indexeddb/leveldb/IDBFactoryBackendLevelDB.cpp
     Modules/indexeddb/leveldb/IDBLevelDBCoding.cpp
-    Modules/indexeddb/leveldb/IDBTransactionBackendLevelDB.cpp
-    Modules/indexeddb/leveldb/IDBTransactionBackendLevelDBOperations.cpp
 
     Modules/mediasource/MediaSource.cpp
     Modules/mediasource/MediaSourceRegistry.cpp
@@ -1991,6 +1991,7 @@ set(WebCore_SOURCES
     platform/mediastream/MediaStreamDescriptor.cpp
     platform/mediastream/MediaStreamTrackPrivate.cpp
     platform/mediastream/MediaStreamSource.cpp
+    platform/mediastream/MediaStreamSourceStates.cpp
     platform/mediastream/RTCIceCandidateDescriptor.cpp
     platform/mediastream/RTCPeerConnectionHandler.cpp
     platform/mediastream/RTCSessionDescriptionDescriptor.cpp
@@ -2088,6 +2089,7 @@ set(WebCore_SOURCES
     rendering/LayoutRepainter.cpp
     rendering/LayoutState.cpp
     rendering/LineWidth.cpp
+    rendering/OrderIterator.cpp
     rendering/PointerEventsHitRules.cpp
     rendering/RenderArena.cpp
     rendering/RenderBlock.cpp
@@ -2181,6 +2183,7 @@ set(WebCore_SOURCES
     rendering/SimpleLineLayoutFunctions.cpp
     rendering/TextAutosizer.cpp
     rendering/TextPaintStyle.cpp
+    rendering/TextPainter.cpp
     rendering/break_lines.cpp
 
     rendering/mathml/RenderMathMLBlock.cpp
@@ -2980,14 +2983,6 @@ add_custom_command(
     VERBATIM)
 
 # All Web Inspector generated files are created with this one call to CodeGeneratorInspector.pm
-add_custom_command(
-    OUTPUT ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorProtocolVersion.h
-    MAIN_DEPENDENCY inspector/Inspector.json
-    DEPENDS ${WEBCORE_DIR}/inspector/generate-inspector-protocol-version ${WEBCORE_DIR}/inspector/Inspector.json
-    COMMAND ${PYTHON_EXECUTABLE} ${WEBCORE_DIR}/inspector/generate-inspector-protocol-version -o ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorProtocolVersion.h ${WEBCORE_DIR}/inspector/Inspector.json
-    VERBATIM)
-list(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorProtocolVersion.h)
-
 add_custom_command(
     OUTPUT ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorBackendDispatcher.cpp ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorBackendDispatcher.h ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorFrontend.cpp ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorFrontend.h ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorTypeBuilder.cpp ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorTypeBuilder.h
     MAIN_DEPENDENCY inspector/Inspector.json

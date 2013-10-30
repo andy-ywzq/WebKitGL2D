@@ -1,3 +1,63 @@
+2013-10-28  Alexandru Chiculita  <achicu@adobe.com>
+
+        Web Inspector: CSS Regions: Add protocol API to expose content nodes addition/removal
+        https://bugs.webkit.org/show_bug.cgi?id=123424
+
+        Reviewed by Timothy Hatcher.
+
+        Exposed the new CSS Agent events to the ContentFlow class that will now maintain
+        a list of nodes in the "contentNodes" property.
+
+        * UserInterface/CSSObserver.js:
+        (WebInspector.CSSObserver.prototype.regionOversetChanged):
+        (WebInspector.CSSObserver.prototype.registeredNamedFlowContentElement):
+        (WebInspector.CSSObserver.prototype.unregisteredNamedFlowContentElement):
+        * UserInterface/ContentFlow.js:
+        (WebInspector.ContentFlow):
+        (WebInspector.ContentFlow.prototype.set overset):
+        (WebInspector.ContentFlow.prototype.get contentNodes):
+        (WebInspector.ContentFlow.prototype.insertContentNodeBefore):
+        (WebInspector.ContentFlow.prototype.appendContentNode):
+        (WebInspector.ContentFlow.prototype.removeContentNode):
+        * UserInterface/DOMTreeManager.js:
+        (WebInspector.DOMTreeManager.prototype._createContentFlowFromPayload):
+        (WebInspector.DOMTreeManager.prototype._updateContentFlowFromPayload):
+        (WebInspector.DOMTreeManager.prototype.regionOversetChanged):
+        (WebInspector.DOMTreeManager.prototype.registeredNamedFlowContentElement):
+        (WebInspector.DOMTreeManager.prototype.unregisteredNamedFlowContentElement):
+        * UserInterface/InspectorBackendCommands.js:
+
+2013-10-25  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: PrettyPrinting tool should have save button
+        https://bugs.webkit.org/show_bug.cgi?id=123371
+
+        Reviewed by Timothy Hatcher.
+
+        Add buttons to save as a URL to share or to save/clear to
+        localStorage for easier reloads testing local changes.
+
+        * Tools/PrettyPrinting/index.html:
+
+2013-10-25  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Web Inspector: Command+Click on url(…) should go to image not source line
+        https://bugs.webkit.org/show_bug.cgi?id=123362
+
+        Reviewed by Timothy Hatcher.
+
+        CodeMirror changed "url" from being type "variable-2" to "string-2".
+
+        * UserInterface/CodeMirrorAdditions.js:
+
+2013-10-25  Jessie Berlin  <jberlin@apple.com>
+
+        Ran update-localizable-strings after changes made in r157947.
+
+        Rubber-stamped by Timothy Hatcher.
+
+        * Localizations/en.lproj/localizedStrings.js:
+
 2013-10-24  Mark Rowe  <mrowe@apple.com>
 
         Remove references to OS X 10.7 from Xcode configuration settings.

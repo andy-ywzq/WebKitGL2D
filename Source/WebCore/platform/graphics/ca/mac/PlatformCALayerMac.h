@@ -133,11 +133,13 @@ public:
     virtual float contentsScale() const OVERRIDE;
     virtual void setContentsScale(float) OVERRIDE;
 
+    virtual void setEdgeAntialiasingMask(unsigned) OVERRIDE;
+
     virtual TiledBacking* tiledBacking() OVERRIDE;
 
-    virtual void synchronouslyDisplayTilesInRect(const FloatRect&) OVERRIDE;
-
     virtual PassRefPtr<PlatformCALayer> clone(PlatformCALayerClient* owner) const OVERRIDE;
+
+    virtual PassRefPtr<PlatformCALayer> createCompatibleLayer(PlatformCALayer::LayerType, PlatformCALayerClient*) const OVERRIDE;
 
 private:
     PlatformCALayerMac(LayerType, PlatformLayer*, PlatformCALayerClient* owner);

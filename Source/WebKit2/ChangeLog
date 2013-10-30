@@ -1,3 +1,587 @@
+2013-10-30  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] webkit_web_context_allow_tls_certificate_for_host doc is missing Since tag
+        https://bugs.webkit.org/show_bug.cgi?id=123499
+
+        Reviewed by Philippe Normand.
+
+        * UIProcess/API/gtk/WebKitWebContext.cpp: Add Since: 2.4.
+
+2013-10-29  Alexey Proskuryakov  <ap@apple.com>
+
+        Result of focus-option-control-on-page.html depends on system preferences
+        https://bugs.webkit.org/show_bug.cgi?id=123304
+
+        Reviewed by Simon Fraser.
+
+        * UIProcess/mac/WKFullKeyboardAccessWatcher.mm:
+        (-[WKFullKeyboardAccessWatcher retrieveKeyboardUIModeFromPreferences:]):
+        Read the preference from its correct domain. This doesn't affect behavior in practice
+        and isn't part of the fix, but it's a good opportunity to correct this code.
+
+2013-10-29  Brady Eidson  <beidson@apple.com>
+
+        Move IDBTransactionBackendLevelDB to generic IDBBackingStoreInterface
+        https://bugs.webkit.org/show_bug.cgi?id=123483
+
+        Reviewed by Andreas Kling.
+
+        * WebProcess/Databases/IndexedDB/WebIDBFactoryBackend.cpp:
+        (WebKit::WebIDBFactoryBackend::createCursorBackend): Stubbed out.
+        * WebProcess/Databases/IndexedDB/WebIDBFactoryBackend.h:
+
+        * WebProcess/Databases/IndexedDB/WebProcessIDBDatabaseBackend.cpp:
+        (WebKit::WebProcessIDBDatabaseBackend::factoryBackend): Stubbed out.
+        * WebProcess/Databases/IndexedDB/WebProcessIDBDatabaseBackend.h:
+
+2013-10-29  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] [Mac] Enable MediaSource on the Mac
+        https://bugs.webkit.org/show_bug.cgi?id=122484
+
+        Reviewed by Darin Adler.
+
+        Enable ENABLE_MEDIA_SOURCE.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-10-29  Tim Horton  <timothy_horton@apple.com>
+
+        More correct build fix after 158223.
+
+        Only fails in release because it's inline.
+        Include the relevant header to get the function.
+
+        * WebProcess/WebPage/mac/RemoteLayerTreeDrawingArea.mm:
+
+2013-10-29  Tim Horton  <timothy_horton@apple.com>
+
+        Remote Layer Tree: Support tiled drawing and use it for the main frame
+        https://bugs.webkit.org/show_bug.cgi?id=123422
+
+        Reviewed by Simon Fraser.
+
+        Add a PlatformCALayerRemote subclass that behaves similarly to
+        WebTiledBackingLayer, forwarding relevant things (setNeedsDisplay, etc.)
+        to the TileController which it owns.
+
+        Teach the remote layer tree code enough to proxy these layers across,
+        and paint them in a manner similar to WebSimpleLayer (just calling
+        straight back to the TileController to paint).
+
+        * Shared/mac/RemoteLayerTreeTransaction.h:
+        * Shared/mac/RemoteLayerTreeTransaction.mm:
+        (WebKit::RemoteLayerTreeTransaction::LayerProperties::encode):
+        (WebKit::RemoteLayerTreeTransaction::LayerProperties::decode):
+        (WebKit::dumpChangedLayers):
+        * UIProcess/mac/RemoteLayerTreeHost.mm:
+        (WebKit::RemoteLayerTreeHost::commit):
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.cpp:
+        (PlatformCALayerRemote::setEdgeAntialiasingMask):
+        Add support for adjusting/encoding/decoding/dumping/applying edgeAntialiasingMask.
+
+        (WebKit::RemoteLayerTreeTransaction::dump):
+        Drive-by fix dumping of created layers to have one layer per line.
+
+        * UIProcess/mac/RemoteLayerTreeHost.mm:
+        (WebKit::RemoteLayerTreeHost::createLayer):
+        Create CALayers for Simple, TiledBacking, PageTiledBacking, and TiledBackingTile layers.
+
+        * WebKit2.xcodeproj/project.pbxproj:
+        Add PlatformCALayerRemoteTiledBacking.{h, cpp}.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.cpp:
+        (PlatformCALayerRemote::create):
+        Create a PlatformCALayerRemoteTiledBacking for TiledBacking and PageTiledBacking layers.
+
+        (PlatformCALayerRemote::removeAllSublayers):
+        Fix removeAllSublayers to make a copy of the PlatformCALayerList before
+        mutating it, to avoid crashes when iterating a mutated list.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.h:
+        Definalize PlatformCALayerRemote so we can have PlatformCALayerRemoteTiledBacking.
+        Note that we will use a tiled backing layer in some cases.
+        Make the constructor protected, not private, so our subclass can use it.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemoteTiledBacking.cpp: Added.
+        (PlatformCALayerRemoteTiledBacking::PlatformCALayerRemoteTiledBacking):
+        (PlatformCALayerRemoteTiledBacking::~PlatformCALayerRemoteTiledBacking):
+        (PlatformCALayerRemoteTiledBacking::setNeedsDisplay):
+        (PlatformCALayerRemoteTiledBacking::customSublayers):
+        (PlatformCALayerRemoteTiledBacking::setBounds):
+        (PlatformCALayerRemoteTiledBacking::isOpaque):
+        (PlatformCALayerRemoteTiledBacking::setOpaque):
+        (PlatformCALayerRemoteTiledBacking::acceleratesDrawing):
+        (PlatformCALayerRemoteTiledBacking::setAcceleratesDrawing):
+        (PlatformCALayerRemoteTiledBacking::setContentsScale):
+        (PlatformCALayerRemoteTiledBacking::setBorderWidth):
+        (PlatformCALayerRemoteTiledBacking::setBorderColor):
+        * WebProcess/WebPage/mac/PlatformCALayerRemoteTiledBacking.h: Added.
+        Add a subclass of PlatformCALayerRemote which forwards operations
+        to TileController, very similar to what WebTiledBackingLayer does.
+        It also owns the TileController, and overrides customSublayers() and
+        tiledBacking() to return the right thing.
+
+        * WebProcess/WebPage/mac/RemoteLayerBackingStore.mm:
+        (RemoteLayerBackingStore::display):
+        Teach RemoteLayerBackingStore about how to paint different kinds of layers.
+        Simple layers and Tile layers will call paintContents directly,
+        WebLayers will do what WebLayer does and use drawLayerContents.
+        Other kinds of layers won't paint at all right now.
+        I would like to centralize this behavior (and get rid of our CALayer
+        subclasses entirely, moving all that behavior to be shared between Mac,
+        Windows, and the remote layer tree), but that is a patch for another day.
+
+        * WebProcess/WebPage/mac/RemoteLayerTreeDrawingArea.h:
+        * WebProcess/WebPage/mac/RemoteLayerTreeDrawingArea.mm:
+        (WebKit::RemoteLayerTreeDrawingArea::RemoteLayerTreeDrawingArea):
+        (WebKit::RemoteLayerTreeDrawingArea::shouldUseTiledBackingForFrameView):
+        Force accelerated compositing on always when using the remote layer tree.
+        Use a TiledBacking for the main frame.
+
+        * WebProcess/WebPage/mac/TiledCoreAnimationDrawingArea.h:
+        Drive-by OVERRIDE.
+
+2013-10-29  Brady Eidson  <beidson@apple.com>
+
+        Get IDBTransactionBackendLevelDBOperations *almost* ready to go cross platform.
+        https://bugs.webkit.org/show_bug.cgi?id=123451
+
+        Reviewed by Andreas Kling.
+
+        Stub out more pure virtual methods.
+
+        * WebProcess/Databases/IndexedDB/WebProcessIDBDatabaseBackend.cpp:
+        (WebKit::WebProcessIDBDatabaseBackend::backingStore):
+        (WebKit::WebProcessIDBDatabaseBackend::id):
+        (WebKit::WebProcessIDBDatabaseBackend::addObjectStore):
+        (WebKit::WebProcessIDBDatabaseBackend::removeObjectStore):
+        (WebKit::WebProcessIDBDatabaseBackend::addIndex):
+        (WebKit::WebProcessIDBDatabaseBackend::removeIndex):
+        (WebKit::WebProcessIDBDatabaseBackend::metadata):
+        (WebKit::WebProcessIDBDatabaseBackend::setCurrentVersion):
+        (WebKit::WebProcessIDBDatabaseBackend::hasPendingSecondHalfOpen):
+        (WebKit::WebProcessIDBDatabaseBackend::setPendingSecondHalfOpen):
+        * WebProcess/Databases/IndexedDB/WebProcessIDBDatabaseBackend.h:
+
+2013-10-29  Gavin Barraclough  <barraclough@apple.com>
+
+        SessionState.h should not include WebBackForwardList.h
+        https://bugs.webkit.org/show_bug.cgi?id=123454
+
+        Reviewed by Geoff Garen.
+
+        WebBackForwardList is a UIProcess type, SessionState is in shared code.
+        Also, WebBackForwardListItemVector should be in WebBackForwardListItem.h, not WebBackForwardList.h
+        (the vector type is used in the WebProcess, the item header is shared but the list type is in the UIProcess).
+
+        * Shared/SessionState.cpp:
+            - fixed includes
+        * Shared/SessionState.h:
+            - WebBackForwardList.h -> WebBackForwardListItem.h
+        * Shared/WebBackForwardListItem.h:
+            - Moved WebBackForwardListVector from WebBackForwardList.h
+        * Shared/WebPageCreationParameters.h:
+            - fixed includes
+        * UIProcess/WebBackForwardList.h:
+            - Moved WebBackForwardListVector to WebBackForwardListItem.h
+        * WebProcess/WebPage/DrawingArea.cpp:
+            - fixed includes
+        * WebProcess/WebPage/WebPage.cpp:
+            - fixed includes
+
+2013-10-29  Zan Dobersek  <zdobersek@igalia.com>
+
+        Unreviewed Mac debug build fix after r158183.
+        Remove the duplicated << overloaded operator from RemoteLayerTreeTextStream for printing out
+        a given FloatSize object. The RemoteLayerTreeTextStream inherits from TextStream, which already
+        provides that overloaded operator. Format of the output is a bit different so hopefully nothing
+        breaks further.
+
+        * Shared/mac/RemoteLayerTreeTransaction.mm:
+        (WebKit::RemoteLayerTreeTextStream::operator<<):
+
+2013-10-28  Brady Eidson  <beidson@apple.com>
+
+        Refactor IDB factory creation.
+        https://bugs.webkit.org/show_bug.cgi?id=123347
+
+        Reviewed by Andreas Kling.
+
+        - Rework how database directory location is passed around.
+        - Make (some) SecurityOrigin arguments be references instead of pointers.
+        - Add two SecurityOrigin arguments to opening databases for future use.
+
+        * Shared/Databases/IndexedDB/IDBUtilities.cpp:
+        (WebKit::uniqueDatabaseIdentifier):
+        * Shared/Databases/IndexedDB/IDBUtilities.h:
+
+        * WebProcess/Databases/IndexedDB/WebIDBFactoryBackend.cpp:
+        (WebKit::WebIDBFactoryBackend::WebIDBFactoryBackend):
+        (WebKit::WebIDBFactoryBackend::open):
+        * WebProcess/Databases/IndexedDB/WebIDBFactoryBackend.h:
+        (WebKit::WebIDBFactoryBackend::create):
+
+        * WebProcess/Databases/IndexedDB/WebProcessIDBDatabaseBackend.cpp:
+        (WebKit::WebProcessIDBDatabaseBackend::WebProcessIDBDatabaseBackend):
+        * WebProcess/Databases/IndexedDB/WebProcessIDBDatabaseBackend.h:
+
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.cpp:
+        (WebKit::WebPlatformStrategies::createIDBFactoryBackend):
+        * WebProcess/WebCoreSupport/WebPlatformStrategies.h:
+
+2013-10-28  Tim Horton  <timothy_horton@apple.com>
+
+        Make TileController create the appropriate PlatformCALayer subclasses
+        https://bugs.webkit.org/show_bug.cgi?id=123418
+
+        Reviewed by Simon Fraser.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.cpp:
+        (PlatformCALayerRemote::createCompatibleLayer):
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.h:
+        Add createCompatibleLayer and implement it in the subclasses.
+
+2013-10-28  Benjamin Poulain  <benjamin@webkit.org>
+
+        Rename applyPageScaleFactorInCompositor to delegatesPageScaling
+        https://bugs.webkit.org/show_bug.cgi?id=123417
+
+        Reviewed by Simon Fraser.
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::setUseFixedLayout):
+
+2013-10-28  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Parsing support for -webkit-text-decoration-skip: ink
+        https://bugs.webkit.org/show_bug.cgi?id=123358
+
+        Reviewed by Dean Jackson.
+
+        Adding ENABLE(CSS3_TEXT_DECORATION)
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-10-28  Tim Horton  <timothy_horton@apple.com>
+
+        Make TileController manipulate PlatformCALayers instead of CALayers
+        https://bugs.webkit.org/show_bug.cgi?id=123279
+
+        Reviewed by Simon Fraser.
+
+        * Shared/mac/RemoteLayerTreeTransaction.mm:
+        (WebKit::RemoteLayerTreeTransaction::dump):
+        Support the new LayerTypes.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.cpp:
+        (PlatformCALayerRemote::setEdgeAntialiasingMask):
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.h:
+        Add an empty implementation of setEdgeAntialiasingMask.
+
+        * WebProcess/WebPage/mac/RemoteLayerBackingStore.mm:
+        (RemoteLayerBackingStore::display):
+        Removed a parameter from drawLayerContents.
+
+        * WebProcess/WebPage/mac/TiledCoreAnimationDrawingArea.mm:
+        (WebKit::TiledCoreAnimationDrawingArea::updateDebugInfoLayer):
+        TiledCoreAnimationDrawingArea still operates in terms of CALayers, so
+        grab the PlatformLayer out from TileController's indicator.
+
+2013-10-28  Bastien Nocera <hadess@hadess.net>
+
+        Name all the GLib timeout sources
+        https://bugs.webkit.org/show_bug.cgi?id=123229
+
+        Reviewed by Anders Carlsson.
+
+        Give a name to GLib timeout sources, this is helpful when
+        profiling WebKitGTK applications.
+
+2013-10-28  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix make distcheck.
+
+        * GNUmakefile.am: Add messages.in files in
+        UIProcess/Network/CustomProtocols/ to EXTRA_DIST.
+        * GNUmakefile.list.am: Remove
+        WebProcess/Databases/IndexedDB/WebIDBFactoryBackend.cpp from
+        compilation because it depends on code generated only when
+        database process is enabled.
+
+2013-10-28  Alberto Garcia  <berto@igalia.com>
+
+        [WK2] [GTK] Allow running the web process with an arbitrary prefix command
+        https://bugs.webkit.org/show_bug.cgi?id=123201
+
+        Reviewed by Carlos Garcia Campos.
+
+        Launch the web process using WEB_PROCESS_CMD_PREFIX as a
+        prefix. Useful for debugging the web process with gdb, valgrind,
+        etc.
+
+        * UIProcess/Launcher/ProcessLauncher.h:
+        * UIProcess/Launcher/gtk/ProcessLauncherGtk.cpp:
+        (WebKit::ProcessLauncher::launchProcess):
+        * UIProcess/gtk/WebProcessProxyGtk.cpp:
+        (WebKit::WebProcessProxy::platformGetLaunchOptions):
+
+2013-10-27  Brady Eidson  <beidson@apple.com>
+
+        WebIconDatabase can miss private browsing state changes.
+        <rdar://problem/15322318> and https://bugs.webkit.org/show_bug.cgi?id=123375
+
+        Reviewed by Alexey Proskuryakov.
+
+        * UIProcess/WebContext.cpp:
+        (WebKit::WebContext::willStartUsingPrivateBrowsing): Call setAnyPageGroupMightHavePrivateBrowsingEnabled(true) on each context.
+        (WebKit::WebContext::willStopUsingPrivateBrowsing): Call setAnyPageGroupMightHavePrivateBrowsingEnabled(false) on each context.
+        (WebKit::WebContext::setPrivateBrowsingEnabled): In addition to notifying other processes about private browsing
+          sessions, notify the context’s WebIconDatabase about the change in value.
+        * UIProcess/WebContext.h:
+
+        * UIProcess/WebIconDatabase.cpp:
+        (WebKit::WebIconDatabase::setDatabasePath): Prime the IconDatabase with an initial private browsing value.
+        (WebKit::WebIconDatabase::setAnyPageGroupMightHavePrivateBrowsingEnabled):
+        * UIProcess/WebIconDatabase.h:
+
+2013-10-26  Tim Horton  <timothy_horton@apple.com>
+
+        [mac] Remove WebTiledLayer
+        https://bugs.webkit.org/show_bug.cgi?id=123395
+
+        Reviewed by Anders Carlsson.
+
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.cpp:
+        * WebProcess/WebPage/mac/PlatformCALayerRemote.h:
+        Remove synchronouslyDisplayTilesInRect.
+
+2013-10-26  Dan Bernstein  <mitz@apple.com>
+
+        [Cocoa] -[WKBackForwardList forwardItem] returns the back item
+        https://bugs.webkit.org/show_bug.cgi?id=123391
+
+        Reviewed by Mark Rowe.
+
+        * UIProcess/Cocoa/WKBackForwardList.mm:
+        (-[WKBackForwardList forwardItem]): Changed back to forward.
+
+2013-10-26  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r158075.
+        http://trac.webkit.org/changeset/158075
+        https://bugs.webkit.org/show_bug.cgi?id=123389
+
+        Broke WebKit2.PrivateBrowsingPushStateNoHistoryCallback API
+        test (Requested by ap on #webkit).
+
+        * UIProcess/WebContext.cpp:
+        (WebKit::WebContext::willStartUsingPrivateBrowsing):
+        (WebKit::WebContext::willStopUsingPrivateBrowsing):
+        * UIProcess/WebContext.h:
+        * UIProcess/WebIconDatabase.cpp:
+        * UIProcess/WebIconDatabase.h:
+
+2013-10-26  Jae Hyun Park  <jae.park@company100.net>
+
+        Remove Coordinated Graphics bits from DrawingAreaProxyImpl
+        https://bugs.webkit.org/show_bug.cgi?id=123382
+
+        Reviewed by Anders Carlsson.
+
+        As of r156861, Coordinated Graphics does not use DrawingAreaProxyImpl.
+        So, Coordinated Graphics bits should be removed from DrawingAreaProxyImpl.
+
+        * UIProcess/DrawingAreaProxyImpl.h:
+
+2013-10-26  Dan Bernstein  <mitz@apple.com>
+
+        [Cocoa] clang static analyzer warns about object being autoreleased too many times in +[WKNSArray web_arrayWithImmutableArray:]
+        https://bugs.webkit.org/show_bug.cgi?id=123384
+
+        Reviewed by Mark Rowe.
+
+        * Shared/Cocoa/WKNSArray.h: Annotated -web_initWithImmutableArray: as an init method.
+
+2013-10-25  Csaba Osztrogonác  <ossy@webkit.org>
+
+        Fix the ENABLE(CSS_FILTERS) && USE(COORDINATED_GRAPHICS) build after r157803
+        https://bugs.webkit.org/show_bug.cgi?id=123330
+
+        Reviewed by Darin Adler.
+
+        * Shared/WebCoreArgumentCoders.cpp:
+        * Shared/WebCoreArgumentCoders.h:
+
+2013-10-25  Brady Eidson  <beidson@apple.com>
+
+        WebIconDatabase can miss private browsing state changes.
+        <rdar://problem/15322318> and https://bugs.webkit.org/show_bug.cgi?id=123375
+
+        Reviewed by Beth Dakin.
+
+        * UIProcess/WebContext.cpp:
+        (WebKit::WebContext::willStartUsingPrivateBrowsing): Call setPrivateBrowsingEnabled(true) on each context.
+        (WebKit::WebContext::willStopUsingPrivateBrowsing): Call setPrivateBrowsingEnabled(false) on each context.
+        (WebKit::WebContext::setPrivateBrowsingEnabled): In addition to notifying other processes, notify WebIconDatabase.
+        * UIProcess/WebContext.h:
+
+        * UIProcess/WebIconDatabase.cpp:
+        (WebKit::WebIconDatabase::setPrivateBrowsingEnabled):
+        * UIProcess/WebIconDatabase.h:
+
+2013-10-25  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Upstream ENABLE(REMOTE_INSPECTOR) and enable on iOS and Mac
+        https://bugs.webkit.org/show_bug.cgi?id=123111
+
+        Reviewed by Timothy Hatcher.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-10-25  Gavin Barraclough  <barraclough@apple.com>
+
+        Merge viewInWindowStateDidChange into viewStateDidChange
+        https://bugs.webkit.org/show_bug.cgi?id=123351
+
+        Reviewed by Tim Horton.
+
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView endDeferringViewInWindowChanges]):
+        (-[WKView endDeferringViewInWindowChangesSync]):
+            - viewInWindowStateDidChange -> viewStateDidChange
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::viewStateDidChange):
+            - removed viewInWindowStateDidChange, renamed parameter to viewStateDidChange
+        * UIProcess/WebPageProxy.h:
+            - removed viewInWindowStateDidChange, named parameter to viewStateDidChange
+
+2013-10-25  Csaba Osztrogonác  <ossy@webkit.org>
+
+        One more URTBF for GTK after r158028.
+
+        * UIProcess/API/gtk/WebKitWebViewBase.cpp:
+        (webkitWebViewBaseMap):
+        (webkitWebViewBaseUnmap):
+
+2013-10-25  Csaba Osztrogonác  <ossy@webkit.org>
+
+        URTBF for non-Mac platforms after r158028.
+
+        * GNUmakefile.list.am:
+        * UIProcess/API/gtk/WebKitWebViewBase.cpp:
+        (toplevelWindowFocusInEvent):
+        (toplevelWindowFocusOutEvent):
+        (toplevelWindowVisibilityEvent):
+        (webkitWebViewBaseSetToplevelOnScreenWindow):
+        (webkitWebViewBaseSetFocus):
+        * UIProcess/CoordinatedGraphics/WebView.cpp:
+        (WebKit::WebView::setActive):
+        (WebKit::WebView::setFocused):
+        (WebKit::WebView::setVisible):
+
+2013-10-25  Gavin Barraclough  <barraclough@apple.com>
+
+        Move ViewStateFlags out of WebPageProxy
+        https://bugs.webkit.org/show_bug.cgi?id=123323
+
+        Reviewed by Sam Weinig.
+
+        WebPageProxy contains an enum and typedef that provide a bitfield
+        of flags describing the visibility of the view containing the page.
+        We're going to want to use this bitfield in a message to the
+        WebProcess, so moving out from the UIProcess to shared code.
+        Creating struct 'ViewState' to scope the enum and typedef.
+        Renamed ViewStateFlags to ViewState::Flags, and removed redundant
+        'View' from enum entries.
+
+        * Shared/ViewState.h: Added.
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView becomeFirstResponder]):
+        (-[WKView resignFirstResponder]):
+        (-[WKView viewDidMoveToWindow]):
+        (-[WKView _windowDidBecomeKey:]):
+        (-[WKView _windowDidResignKey:]):
+        (-[WKView _windowDidMiniaturize:]):
+        (-[WKView _windowDidDeminiaturize:]):
+        (-[WKView _windowDidOrderOffScreen:]):
+        (-[WKView _windowDidOrderOnScreen:]):
+        (-[WKView _windowDidChangeOcclusionState:]):
+        (-[WKView viewDidHide]):
+        (-[WKView viewDidUnhide]):
+        (-[WKView _activeSpaceDidChange:]):
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::viewStateDidChange):
+        * UIProcess/WebPageProxy.h:
+        * WebKit2.xcodeproj/project.pbxproj:
+
+2013-10-25  Gavin Barraclough  <barraclough@apple.com>
+
+        Move ViewStateFlags out of WebPageProxy
+        https://bugs.webkit.org/show_bug.cgi?id=123323
+
+        Unreviewed
+
+        Rolling out 158026 - landed extra chnages!
+
+        * Shared/ViewState.h: Removed.
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView becomeFirstResponder]):
+        (-[WKView resignFirstResponder]):
+        (-[WKView viewDidMoveToWindow]):
+        (-[WKView _windowDidBecomeKey:]):
+        (-[WKView _windowDidResignKey:]):
+        (-[WKView _windowDidMiniaturize:]):
+        (-[WKView _windowDidDeminiaturize:]):
+        (-[WKView _windowDidOrderOffScreen:]):
+        (-[WKView _windowDidOrderOnScreen:]):
+        (-[WKView _windowDidChangeOcclusionState:]):
+        (-[WKView viewDidHide]):
+        (-[WKView viewDidUnhide]):
+        (-[WKView _activeSpaceDidChange:]):
+        (-[WKView endDeferringViewInWindowChanges]):
+        (-[WKView endDeferringViewInWindowChangesSync]):
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::viewInWindowStateDidChange):
+        (WebKit::WebPageProxy::viewStateDidChange):
+        * UIProcess/WebPageProxy.h:
+        * WebKit2.xcodeproj/project.pbxproj:
+
+2013-10-24  Gavin Barraclough  <barraclough@apple.com>
+
+        Move ViewStateFlags out of WebPageProxy
+        https://bugs.webkit.org/show_bug.cgi?id=123323
+
+        Reviewed by Sam Weinig.
+
+        WebPageProxy contains an enum and typedef that provide a bitfield
+        of flags describing the visibility of the view containing the page.
+        We're going to want to use this bitfield in a message to the
+        WebProcess, so moving out from the UIProcess to shared code.
+        Creating struct 'ViewState' to scope the enum and typedef.
+        Renamed ViewStateFlags to ViewState::Flags, and removed redundant
+        'View' from enum entries.
+
+        * Shared/ViewState.h: Added.
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView becomeFirstResponder]):
+        (-[WKView resignFirstResponder]):
+        (-[WKView viewDidMoveToWindow]):
+        (-[WKView _windowDidBecomeKey:]):
+        (-[WKView _windowDidResignKey:]):
+        (-[WKView _windowDidMiniaturize:]):
+        (-[WKView _windowDidDeminiaturize:]):
+        (-[WKView _windowDidOrderOffScreen:]):
+        (-[WKView _windowDidOrderOnScreen:]):
+        (-[WKView _windowDidChangeOcclusionState:]):
+        (-[WKView viewDidHide]):
+        (-[WKView viewDidUnhide]):
+        (-[WKView _activeSpaceDidChange:]):
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::viewStateDidChange):
+        * UIProcess/WebPageProxy.h:
+        * WebKit2.xcodeproj/project.pbxproj:
+
 2013-10-25  Sergio Villar Senin  <svillar@igalia.com>
 
         [GTK][WK2] Build break after r157967 and r157972

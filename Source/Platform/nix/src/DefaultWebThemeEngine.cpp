@@ -273,8 +273,6 @@ void DefaultWebThemeEngine::paintProgressBar(Canvas* canvas, State state, const 
     cairo_restore(canvas);
 }
 
-// These values have been copied from RenderThemeChromiumSkia.cpp
-static const int progressActivityBlocks = 5;
 static const int progressAnimationFrames = 10;
 static const double progressAnimationInterval = 0.125;
 
@@ -285,7 +283,7 @@ double DefaultWebThemeEngine::getAnimationRepeatIntervalForProgressBar() const
 
 double DefaultWebThemeEngine::getAnimationDurationForProgressBar() const
 {
-    return progressAnimationInterval * progressAnimationFrames * 2; // "2" for back and forth;
+    return progressAnimationInterval * progressAnimationFrames * 2; // "2" for back and forth.
 }
 
 void DefaultWebThemeEngine::getInnerSpinButtonPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const
@@ -332,11 +330,11 @@ void DefaultWebThemeEngine::paintMeter(Canvas* canvas, State state, const Rect& 
 {
     cairo_save(canvas);
 
-    // Background
+    // Background.
     setupBorder(canvas, state);
     cairo_rectangle(canvas, rect.x, rect.y, rect.width, rect.height);
     cairo_fill(canvas);
-    // Meter
+    // Meter.
     cairo_rectangle(canvas, rect.x, rect.y, rect.width * params.valueRatio(), rect.height);
     gradientFill(canvas, rect.y, rect.height);
 

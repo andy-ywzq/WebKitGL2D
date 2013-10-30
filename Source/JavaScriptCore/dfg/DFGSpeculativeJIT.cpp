@@ -205,17 +205,16 @@ JumpReplacementWatchpoint* SpeculativeJIT::speculationWatchpoint(ExitKind kind, 
     if (!m_compileOkay)
         return 0;
     ASSERT(m_isCheckingArgumentTypes || m_canExit);
-    m_jit.appendExitInfo(JITCompiler::JumpList());
-    OSRExit& exit = m_jit.jitCode()->osrExit[
-        m_jit.jitCode()->appendOSRExit(OSRExit(
-            kind, jsValueSource,
-            m_jit.graph().methodOfGettingAValueProfileFor(node),
-            this, m_stream->size()))];
-    exit.m_watchpointIndex = m_jit.jitCode()->appendWatchpoint(
+    OSRExitCompilationInfo& info = m_jit.appendExitInfo(JITCompiler::JumpList());
+    m_jit.jitCode()->appendOSRExit(OSRExit(
+        kind, jsValueSource,
+        m_jit.graph().methodOfGettingAValueProfileFor(node),
+        this, m_stream->size()));
+    info.m_watchpointIndex = m_jit.jitCode()->appendWatchpoint(
         JumpReplacementWatchpoint(m_jit.watchpointLabel()));
     if (m_speculationDirection == ForwardSpeculation)
         convertLastOSRExitToForward();
-    return &m_jit.jitCode()->watchpoints[exit.m_watchpointIndex];
+    return &m_jit.jitCode()->watchpoints[info.m_watchpointIndex];
 }
 
 JumpReplacementWatchpoint* SpeculativeJIT::speculationWatchpoint(ExitKind kind)
@@ -1555,37 +1554,6 @@ void SpeculativeJIT::compileMovHintAndCheck(Node* node)
     compileMovHint(node);
     speculate(node, node->child1());
     noResult(node);
-}
-
-void SpeculativeJIT::compileInlineStart(Node* node)
-{
-    InlineCallFrame* inlineCallFrame = node->codeOrigin.inlineCallFrame;
-    InlineStartData* data = node->inlineStartData();
-    int argumentCountIncludingThis = inlineCallFrame->arguments.size();
-    for (int i = 0; i < argumentCountIncludingThis; ++i) {
-        ArgumentPosition& position = m_jit.graph().m_argumentPositions[
-            data->argumentPositionStart + i];
-        VariableAccessData* variable = position.someVariable();
-        ValueSource source;
-        if (!variable)
-            source = ValueSource(SourceIsDead);
-        else {
-            source = ValueSource::forFlushFormat(
-                variable->machineLocal(),
-                m_jit.graph().m_argumentPositions[data->argumentPositionStart + i].flushFormat());
-        }
-        inlineCallFrame->arguments[i] = source.valueRecovery();
-    }
-    
-    RELEASE_ASSERT(inlineCallFrame->isClosureCall == !!data->calleeVariable);
-    
-    if (inlineCallFrame->isClosureCall) {
-        ValueSource source = ValueSource::forFlushFormat(
-            data->calleeVariable->machineLocal(),
-            data->calleeVariable->flushFormat());
-        inlineCallFrame->calleeRecovery = source.valueRecovery();
-    } else
-        RELEASE_ASSERT(inlineCallFrame->calleeRecovery.isConstant());
 }
 
 void SpeculativeJIT::bail()

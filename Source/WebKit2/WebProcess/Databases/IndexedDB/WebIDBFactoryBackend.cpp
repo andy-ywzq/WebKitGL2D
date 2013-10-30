@@ -33,6 +33,7 @@
 #include "WebProcessIDBDatabaseBackend.h"
 #include "WebToDatabaseProcessConnection.h"
 #include <WebCore/IDBCallbacks.h>
+#include <WebCore/IDBCursorBackendInterface.h>
 #include <WebCore/IDBDatabaseCallbacks.h>
 #include <WebCore/IDBTransactionBackendInterface.h>
 #include <WebCore/NotImplemented.h>
@@ -54,7 +55,7 @@ static IDBDatabaseBackendMap& sharedDatabaseBackendMap()
     return databaseBackendMap;
 }
 
-WebIDBFactoryBackend::WebIDBFactoryBackend()
+WebIDBFactoryBackend::WebIDBFactoryBackend(const String&)
 {
 }
 
@@ -69,19 +70,18 @@ void WebIDBFactoryBackend::getDatabaseNames(PassRefPtr<IDBCallbacks>, PassRefPtr
     notImplemented();
 }
 
-void WebIDBFactoryBackend::open(const String& databaseName, int64_t version, int64_t transactionId, PassRefPtr<IDBCallbacks> callbacks, PassRefPtr<IDBDatabaseCallbacks> databaseCallbacks, PassRefPtr<SecurityOrigin> prpSecurityOrigin, ScriptExecutionContext*, const String&)
+void WebIDBFactoryBackend::open(const String& databaseName, int64_t version, int64_t transactionId, PassRefPtr<IDBCallbacks> callbacks, PassRefPtr<IDBDatabaseCallbacks> databaseCallbacks, const SecurityOrigin& securityOrigin, const SecurityOrigin&)
 {
     ASSERT(isMainThread());
     LOG(StorageAPI, "WebIDBFactoryBackend::open");
 
-    RefPtr<SecurityOrigin> securityOrigin = prpSecurityOrigin;
-    String databaseIdentifier = uniqueDatabaseIdentifier(databaseName, securityOrigin.get());
+    String databaseIdentifier = uniqueDatabaseIdentifier(databaseName, securityOrigin);
     
     RefPtr<WebProcessIDBDatabaseBackend> webProcessDatabaseBackend;
     IDBDatabaseBackendMap::iterator it = sharedDatabaseBackendMap().find(databaseIdentifier);
 
     if (it == sharedDatabaseBackendMap().end()) {
-        webProcessDatabaseBackend = WebProcessIDBDatabaseBackend::create(databaseName, securityOrigin.get());
+        webProcessDatabaseBackend = WebProcessIDBDatabaseBackend::create(*this, databaseName);
         webProcessDatabaseBackend->establishDatabaseProcessBackend();
         sharedDatabaseBackendMap().set(databaseIdentifier, webProcessDatabaseBackend.get());
     } else
@@ -101,6 +101,12 @@ void WebIDBFactoryBackend::removeIDBDatabaseBackend(const String&)
 }
 
 PassRefPtr<IDBTransactionBackendInterface> WebIDBFactoryBackend::maybeCreateTransactionBackend(IDBDatabaseBackendInterface*, int64_t transactionId, PassRefPtr<IDBDatabaseCallbacks>, const Vector<int64_t>&, IndexedDB::TransactionMode)
+{
+    notImplemented();
+    return 0;
+}
+
+PassRefPtr<IDBCursorBackendInterface> WebIDBFactoryBackend::createCursorBackend(IDBTransactionBackendInterface&, IDBBackingStoreInterface::Cursor&, IndexedDB::CursorType, IDBDatabaseBackendInterface::TaskType, int64_t)
 {
     notImplemented();
     return 0;

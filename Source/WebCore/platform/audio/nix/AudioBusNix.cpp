@@ -33,6 +33,7 @@
 #include <cstdio>
 #include <public/MultiChannelPCMData.h>
 #include <public/Platform.h>
+#include <sys/stat.h>
 #include <wtf/PassRefPtr.h>
 #include <wtf/Vector.h>
 #include <wtf/text/CString.h>
@@ -50,20 +51,24 @@ PassRefPtr<AudioBus> decodeAudioFileData(const char* data, size_t size, double s
 
 PassRefPtr<AudioBus> AudioBus::loadPlatformResource(const char* name, float sampleRate)
 {
-    String absoluteFilename(makeString(DATA_DIR, "/webaudio/resources/", name, ".wav"));
 
-    FILE* file = fopen(absoluteFilename.utf8().data(), "rb");
+    // FIXME: This assumes the file system uses latin1 or UTF-8 encoding, but this comment also assumes
+    // that non-ascii file names would appear here.
+    const CString absoluteFilename(makeString(DATA_DIR, "/webaudio/resources/", name, ".wav").utf8());
+    struct stat statData;
+    if (::stat(absoluteFilename.data(), &statData) == -1)
+        return nullptr;
+
+    FILE* file = fopen(absoluteFilename.data(), "rb");
     if (!file)
         return nullptr;
 
-    fseek(file, 0, SEEK_END);
     WTF::Vector<char> fileContents;
-    fileContents.resize(ftell(file));
-    rewind(file);
+    fileContents.resize(statData.st_size);
     size_t bytesRead = fread(&fileContents[0], fileContents.size(), 1, file);
+    fclose(file);
     if (bytesRead < fileContents.size())
         fileContents.resize(bytesRead);
-    fclose(file);
 
     return decodeAudioFileData(&fileContents[0], fileContents.size(), sampleRate);
 }

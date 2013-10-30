@@ -137,13 +137,6 @@ abstract class ResultsJSONWriter {
     abstract protected function pass_for_failure_type(&$results);
 }
 
-class FailingResultsJSONWriter extends ResultsJSONWriter {
-    public function __construct($fp) { parent::__construct($fp); }
-    protected function pass_for_failure_type(&$results) {
-        return $results[0]['actual'] == 'PASS';
-    }
-}
-
 class FlakyResultsJSONWriter extends ResultsJSONWriter {
     public function __construct($fp) { parent::__construct($fp); }
     protected function pass_for_failure_type(&$results) {
@@ -175,6 +168,13 @@ class WrongExpectationsResultsJSONWriter extends ResultsJSONWriter {
     }
 }
 
+class FailingResultsJSONWriter extends WrongExpectationsResultsJSONWriter {
+    public function __construct($fp) { parent::__construct($fp); }
+    protected function pass_for_failure_type(&$results) {
+        return $results[0]['actual'] == 'PASS' || parent::pass_for_failure_type($results);
+    }
+}
+
 class ResultsJSONGenerator {
     private $db;
     private $builder_id;
@@ -197,12 +197,12 @@ class ResultsJSONGenerator {
         $number_of_days = self::MAXIMUM_NUMBER_OF_DAYS;
         $all_results = $this->db->query(
         "SELECT results.*, builds.* FROM results
-            JOIN (SELECT builds.*, array_agg((build_revisions.repository, build_revisions.value, build_revisions.time)) AS revisions
+            JOIN (SELECT builds.*, array_agg((build_revisions.repository, build_revisions.value, build_revisions.time)) AS revisions,
+                    max(build_revisions.time) AS latest_revision_time
                     FROM builds, build_revisions
                     WHERE build_revisions.build = builds.id AND builds.builder = $1 AND builds.start_time > now() - interval '$number_of_days days'
-                    GROUP BY builds.id
-                    ORDER BY max(build_revisions.time) DESC) as builds ON results.build = builds.id
-            ORDER BY results.test", array($this->builder_id));
+                    GROUP BY builds.id) as builds ON results.build = builds.id
+            ORDER BY results.test, latest_revision_time DESC", array($this->builder_id));
         if (!$all_results)
             return FALSE;
 

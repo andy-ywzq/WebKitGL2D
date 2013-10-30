@@ -1,3 +1,100 @@
+2013-10-29  Andreas Kling  <akling@apple.com>
+
+        StringImpl::isolatedCopy() should return PassRef.
+        <https://webkit.org/b/123484>
+
+        Make isolatedCopy() return a PassRef<StringImpl>.
+
+        Reviewed by Anders Carlsson.
+
+2013-10-29  Jer Noble  <jer.noble@apple.com>
+
+        [MSE] [Mac] Enable MediaSource on the Mac
+        https://bugs.webkit.org/show_bug.cgi?id=122484
+
+        Reviewed by Darin Adler.
+
+        Enable ENABLE_MEDIA_SOURCE.
+
+        * wtf/FeatureDefines.h:
+        * wtf/Platform.h: Force a clean build.
+
+2013-10-29  Andreas Kling  <akling@apple.com>
+
+        StringImpl::adopt() should return PassRef.
+        <https://webkit.org/b/123456>
+
+        Make the StringImpl::adopt() functions return a PassRef<StringImpl>.
+
+        Reviewed by Anders Carlsson.
+
+2013-10-29  Jinwoo Song  <jinwoo7.song@samsung.com>
+
+        Re-enable simple line layout for EFL
+        https://bugs.webkit.org/show_bug.cgi?id=123402
+
+        Reviewed by Antti Koivisto.
+
+        * wtf/FeatureDefines.h: Enable 8-bit TextRun support for EFL port.
+
+2013-10-28  Anders Carlsson  <andersca@apple.com>
+
+        RunLoop::dispatch should take an std::function
+        https://bugs.webkit.org/show_bug.cgi?id=123407
+
+        Reviewed by Andreas Kling.
+
+        * wtf/FunctionDispatcher.h:
+
+2013-10-28  Andreas Kling  <akling@apple.com>
+
+        RenderElement::m_style should be a Ref.
+        <https://webkit.org/b/123401>
+
+        Added a Ref::replace() so we can Indiana Jones the new style in
+        RenderElement::setStyle() while keeping a handle on the old style
+        for a while longer.
+
+        Reviewed by Antti Koivisto.
+
+2013-10-28  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix make distcheck.
+
+        * GNUmakefile.list.am: Remove unexistent file from compilation.
+
+2013-10-28  Bastien Nocera <hadess@hadess.net>
+
+        Replace 0 timeouts g_timeout_add() by g_idle_add()
+        https://bugs.webkit.org/show_bug.cgi?id=123260
+
+        Reviewed by Carlos Garcia Campos.
+
+        A zero timeout should be equivalent to using g_idle_add_full(G_PRIORITY_DEFAULT, ...)
+        without the nagging feeling that the wrong API was used.
+
+        * wtf/gtk/MainThreadGtk.cpp: Use g_idle_add() instead
+        of 0-timer.
+        (WTF::scheduleDispatchFunctionsOnMainThread):
+
+2013-10-28  Zan Dobersek  <zdobersek@igalia.com>
+
+        Re-enable simple line layout for GTK
+        https://bugs.webkit.org/show_bug.cgi?id=123388
+
+        Reviewed by Andreas Kling.
+
+        * wtf/FeatureDefines.h: Enable the 8-bit TextRun support for the GTK port.
+
+2013-10-25  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Upstream ENABLE(REMOTE_INSPECTOR) and enable on iOS and Mac
+        https://bugs.webkit.org/show_bug.cgi?id=123111
+
+        Reviewed by Timothy Hatcher.
+
+        * wtf/FeatureDefines.h:
+
 2013-10-25  Jer Noble  <jer.noble@apple.com>
 
         [WTF] Add a multiplication operator (and a few others) to MediaTime

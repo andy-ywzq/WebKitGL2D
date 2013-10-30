@@ -31,7 +31,7 @@ class FlexBoxIterator;
 
 class RenderDeprecatedFlexibleBox FINAL : public RenderBlock {
 public:
-    explicit RenderDeprecatedFlexibleBox(Element&);
+    RenderDeprecatedFlexibleBox(Element&, PassRef<RenderStyle>);
     virtual ~RenderDeprecatedFlexibleBox();
 
     Element& element() const { return toElement(nodeForNonAnonymous()); }
@@ -57,9 +57,9 @@ private:
 
     LayoutUnit allowedChildFlex(RenderBox* child, bool expanding, unsigned group);
 
-    bool hasMultipleLines() const { return style()->boxLines() == MULTIPLE; }
-    bool isVertical() const { return style()->boxOrient() == VERTICAL; }
-    bool isHorizontal() const { return style()->boxOrient() == HORIZONTAL; }
+    bool hasMultipleLines() const { return style().boxLines() == MULTIPLE; }
+    bool isVertical() const { return style().boxOrient() == VERTICAL; }
+    bool isHorizontal() const { return style().boxOrient() == HORIZONTAL; }
 
     void applyLineClamp(FlexBoxIterator&, bool relayoutChildren);
     void clearLineClamp();

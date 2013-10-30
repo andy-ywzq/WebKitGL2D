@@ -45,14 +45,14 @@
 namespace WebCore {
 namespace SimpleLineLayout {
 
-void paintFlow(const RenderBlockFlow& flow, const Lines& lines, PaintInfo& paintInfo, const LayoutPoint& paintOffset)
+void paintFlow(const RenderBlockFlow& flow, const Layout& layout, PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 {
     if (paintInfo.phase != PaintPhaseForeground)
         return;
     RenderText& textRenderer = toRenderText(*flow.firstChild());
     ASSERT(!textRenderer.firstTextBox());
 
-    RenderStyle& style = *flow.style();
+    RenderStyle& style = flow.style();
     const Font& font = style.font();
 
     GraphicsContext& context = *paintInfo.context;
@@ -62,31 +62,30 @@ void paintFlow(const RenderBlockFlow& flow, const Lines& lines, PaintInfo& paint
 
     updateGraphicsContext(context, textPaintStyle);
 
-    Resolver resolver(lines, flow);
+    auto resolver = runResolver(flow, layout);
     for (auto it = resolver.begin(), end = resolver.end(); it != end; ++it) {
-        auto line = *it;
-        context.drawText(font, TextRun(line.text()), line.baseline() + paintOffset);
+        auto run = *it;
+        context.drawText(font, TextRun(run.text()), run.baseline() + paintOffset);
     }
 }
 
-bool hitTestFlow(const RenderBlockFlow& flow, const Lines& lines, const HitTestRequest& request, HitTestResult& result, const HitTestLocation& locationInContainer, const LayoutPoint& accumulatedOffset, HitTestAction hitTestAction)
+bool hitTestFlow(const RenderBlockFlow& flow, const Layout& layout, const HitTestRequest& request, HitTestResult& result, const HitTestLocation& locationInContainer, const LayoutPoint& accumulatedOffset, HitTestAction hitTestAction)
 {
     if (hitTestAction != HitTestForeground)
         return false;
 
-    if (lines.isEmpty())
+    if (!layout.runCount)
         return false;
 
-    RenderStyle& style = *flow.style();
+    RenderStyle& style = flow.style();
     if (style.visibility() != VISIBLE || style.pointerEvents() == PE_NONE)
         return false;
 
     RenderText& textRenderer = toRenderText(*flow.firstChild());
 
-    Resolver resolver(lines, flow);
+    auto resolver = lineResolver(flow, layout);
     for (auto it = resolver.begin(), end = resolver.end(); it != end; ++it) {
-        auto line = *it;
-        auto lineRect = line.rect();
+        auto lineRect = *it;
         lineRect.moveBy(accumulatedOffset);
         if (!locationInContainer.intersects(lineRect))
             continue;
@@ -98,39 +97,40 @@ bool hitTestFlow(const RenderBlockFlow& flow, const Lines& lines, const HitTestR
     return false;
 }
 
-void collectFlowOverflow(RenderBlockFlow& flow, const Lines& lines)
+void collectFlowOverflow(RenderBlockFlow& flow, const Layout& layout)
 {
-    Resolver resolver(lines, flow);
+    auto resolver = lineResolver(flow, layout);
     for (auto it = resolver.begin(), end = resolver.end(); it != end; ++it) {
-        auto line = *it;
-        auto rect = line.rect();
+        auto rect = *it;
         flow.addLayoutOverflow(rect);
         flow.addVisualOverflow(rect);
     }
 }
 
-IntRect computeTextBoundingBox(const RenderText& textRenderer, const Lines& lines)
+IntRect computeTextBoundingBox(const RenderText& textRenderer, const Layout& layout)
 {
-    Resolver resolver(lines, toRenderBlockFlow(*textRenderer.parent()));
+    auto resolver = lineResolver(toRenderBlockFlow(*textRenderer.parent()), layout);
     auto it = resolver.begin();
     auto end = resolver.end();
     if (it == end)
         return IntRect();
-    auto firstLineRect = (*it).rect();
+    auto firstLineRect = *it;
     float left = firstLineRect.x();
     float right = firstLineRect.maxX();
+    float bottom = firstLineRect.maxY();
     for (++it; it != end; ++it) {
-        auto line = *it;
-        auto rect = line.rect();
+        auto rect = *it;
         if (rect.x() < left)
             left = rect.x();
         if (rect.maxX() > right)
             right = rect.maxX();
+        if (rect.maxY() > bottom)
+            bottom = rect.maxY();
     }
     float x = firstLineRect.x();
     float y = firstLineRect.y();
     float width = right - left;
-    float height = (*resolver.last()).rect().maxY() - y;
+    float height = bottom - y;
     return enclosingIntRect(FloatRect(x, y, width, height));
 }
 

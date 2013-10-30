@@ -64,10 +64,12 @@ public:
     enum LayerType {
         LayerTypeLayer,
         LayerTypeWebLayer,
+        LayerTypeSimpleLayer,
         LayerTypeTransformLayer,
         LayerTypeWebTiledLayer,
         LayerTypeTiledBackingLayer,
         LayerTypePageTiledBackingLayer,
+        LayerTypeTiledBackingTileLayer,
         LayerTypeRootLayer,
         LayerTypeAVPlayerLayer,
         LayerTypeCustom
@@ -183,6 +185,8 @@ public:
     virtual float contentsScale() const = 0;
     virtual void setContentsScale(float) = 0;
 
+    virtual void setEdgeAntialiasingMask(unsigned) = 0;
+
     virtual TiledBacking* tiledBacking() = 0;
 
 #if PLATFORM(WIN)
@@ -194,9 +198,7 @@ public:
 #endif // NDEBUG
 #endif // PLATFORM(WIN)
 
-#if PLATFORM(MAC)
-    virtual void synchronouslyDisplayTilesInRect(const FloatRect&) = 0;
-#endif
+    virtual PassRefPtr<PlatformCALayer> createCompatibleLayer(LayerType, PlatformCALayerClient*) const = 0;
 
 protected:
     PlatformCALayer(LayerType layerType, PlatformCALayerClient* owner)

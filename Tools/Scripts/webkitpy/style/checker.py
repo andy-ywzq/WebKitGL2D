@@ -173,8 +173,8 @@ _PATH_RULES_SPECIFIER = [
       "/ForwardingHeaders/",
       # Nix platform API classes uses common names under Nix namespace
       # so the include guards should also include the namespace to avoid
-      # name clash with other files, e.g. Canvas_h, etc.
-      "Source/Platform/nix"],
+      # name clashes.
+       "Source/Platform/nix"],
      ["-build/header_guard"]),
     ([# assembler has lots of opcodes that use underscores, so
       # we don't check for underscores in that directory.

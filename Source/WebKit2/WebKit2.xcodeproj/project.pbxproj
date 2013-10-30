@@ -315,6 +315,8 @@
 		2D47B56C1810714E003A3AEE /* RemoteLayerBackingStore.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2D47B56A1810714E003A3AEE /* RemoteLayerBackingStore.mm */; };
 		2D47B56D1810714E003A3AEE /* RemoteLayerBackingStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 2D47B56B1810714E003A3AEE /* RemoteLayerBackingStore.h */; };
 		2D870D1016234FFE000A3F20 /* PDFPlugin.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2D870D0E1622B7F9000A3F20 /* PDFPlugin.mm */; };
+		2D8949F0182044F600E898AA /* PlatformCALayerRemoteTiledBacking.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D8949EE182044F600E898AA /* PlatformCALayerRemoteTiledBacking.cpp */; };
+		2D8949F1182044F600E898AA /* PlatformCALayerRemoteTiledBacking.h in Headers */ = {isa = PBXBuildFile; fileRef = 2D8949EF182044F600E898AA /* PlatformCALayerRemoteTiledBacking.h */; };
 		2DA049B3180CCCD300AAFA9E /* PlatformCALayerRemote.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DA049B1180CCCD300AAFA9E /* PlatformCALayerRemote.cpp */; };
 		2DA049B4180CCCD300AAFA9E /* PlatformCALayerRemote.h in Headers */ = {isa = PBXBuildFile; fileRef = 2DA049B2180CCCD300AAFA9E /* PlatformCALayerRemote.h */; };
 		2DA049B7180CCD0A00AAFA9E /* GraphicsLayerCARemote.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DA049B5180CCD0A00AAFA9E /* GraphicsLayerCARemote.cpp */; };
@@ -656,6 +658,7 @@
 		7CF47FFE17276AE3008ACB91 /* WKBundlePageBannerMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7CF47FFC17276AE3008ACB91 /* WKBundlePageBannerMac.mm */; };
 		7CF47FFF17276AE3008ACB91 /* WKBundlePageBannerMac.h in Headers */ = {isa = PBXBuildFile; fileRef = 7CF47FFD17276AE3008ACB91 /* WKBundlePageBannerMac.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		84477853176FCC0800CDC7BB /* InjectedBundleHitTestResultMediaType.h in Headers */ = {isa = PBXBuildFile; fileRef = 84477851176FCAC100CDC7BB /* InjectedBundleHitTestResultMediaType.h */; };
+		865E0485181A094A001F72F2 /* ViewState.h in Headers */ = {isa = PBXBuildFile; fileRef = 865E0484181A090D001F72F2 /* ViewState.h */; };
 		8CFECE941490F140002AAA32 /* EditorState.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8CFECE931490F140002AAA32 /* EditorState.cpp */; };
 		8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
 		909854EC12BC4E17000AD080 /* WebMemorySampler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 905620E812BC248B000799B6 /* WebMemorySampler.cpp */; };
@@ -1780,6 +1783,8 @@
 		2D47B56B1810714E003A3AEE /* RemoteLayerBackingStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RemoteLayerBackingStore.h; sourceTree = "<group>"; };
 		2D870D0D1622B7F9000A3F20 /* PDFPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PDFPlugin.h; path = PDF/PDFPlugin.h; sourceTree = "<group>"; };
 		2D870D0E1622B7F9000A3F20 /* PDFPlugin.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PDFPlugin.mm; path = PDF/PDFPlugin.mm; sourceTree = "<group>"; };
+		2D8949EE182044F600E898AA /* PlatformCALayerRemoteTiledBacking.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlatformCALayerRemoteTiledBacking.cpp; sourceTree = "<group>"; };
+		2D8949EF182044F600E898AA /* PlatformCALayerRemoteTiledBacking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlatformCALayerRemoteTiledBacking.h; sourceTree = "<group>"; };
 		2DA049B1180CCCD300AAFA9E /* PlatformCALayerRemote.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlatformCALayerRemote.cpp; sourceTree = "<group>"; };
 		2DA049B2180CCCD300AAFA9E /* PlatformCALayerRemote.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlatformCALayerRemote.h; sourceTree = "<group>"; };
 		2DA049B5180CCD0A00AAFA9E /* GraphicsLayerCARemote.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GraphicsLayerCARemote.cpp; sourceTree = "<group>"; };
@@ -2157,6 +2162,7 @@
 		7CF47FFC17276AE3008ACB91 /* WKBundlePageBannerMac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = WKBundlePageBannerMac.mm; sourceTree = "<group>"; };
 		7CF47FFD17276AE3008ACB91 /* WKBundlePageBannerMac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WKBundlePageBannerMac.h; sourceTree = "<group>"; };
 		84477851176FCAC100CDC7BB /* InjectedBundleHitTestResultMediaType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InjectedBundleHitTestResultMediaType.h; sourceTree = "<group>"; };
+		865E0484181A090D001F72F2 /* ViewState.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewState.h; sourceTree = "<group>"; };
 		8CFECE931490F140002AAA32 /* EditorState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EditorState.cpp; sourceTree = "<group>"; };
 		8DC2EF5A0486A6940098B216 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8DC2EF5B0486A6940098B216 /* WebKit2.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = WebKit2.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -3330,6 +3336,7 @@
 				1A64245D12DE29A100CAAE2C /* UpdateInfo.cpp */,
 				1A64245C12DE29A100CAAE2C /* UpdateInfo.h */,
 				BCB0B0DF12305AB100B1341E /* UserMessageCoders.h */,
+				865E0484181A090D001F72F2 /* ViewState.h */,
 				1A0F29C9120B37160053D1B9 /* VisitedLinkTable.cpp */,
 				1A0F29CA120B37160053D1B9 /* VisitedLinkTable.h */,
 				BC329D9916ACCE9900316DE2 /* WebArchive.cpp */,
@@ -4880,6 +4887,8 @@
 				2DA049B6180CCD0A00AAFA9E /* GraphicsLayerCARemote.h */,
 				2DA049B1180CCCD300AAFA9E /* PlatformCALayerRemote.cpp */,
 				2DA049B2180CCCD300AAFA9E /* PlatformCALayerRemote.h */,
+				2D8949EE182044F600E898AA /* PlatformCALayerRemoteTiledBacking.cpp */,
+				2D8949EF182044F600E898AA /* PlatformCALayerRemoteTiledBacking.h */,
 				2D47B56A1810714E003A3AEE /* RemoteLayerBackingStore.mm */,
 				2D47B56B1810714E003A3AEE /* RemoteLayerBackingStore.h */,
 				1AB16AE8164B3A8800290D62 /* RemoteLayerTreeContext.h */,
@@ -5396,6 +5405,7 @@
 				CDC3830C17212282008A2FC3 /* CookieStorageShimLibrary.h in Headers */,
 				B878B615133428DC006888E9 /* CorrectionPanel.h in Headers */,
 				2989A414167D184B004F96D2 /* CustomProtocolManager.h in Headers */,
+				865E0485181A094A001F72F2 /* ViewState.h in Headers */,
 				2984F589164BA095004BC0C6 /* CustomProtocolManagerMessages.h in Headers */,
 				29AD3093164B4C5D0072DEA9 /* CustomProtocolManagerProxy.h in Headers */,
 				2984F57D164B915F004BC0C6 /* CustomProtocolManagerProxyMessages.h in Headers */,
@@ -5411,6 +5421,7 @@
 				1AB7D61A1288B9D900CFD08C /* DownloadProxyMessages.h in Headers */,
 				C517388112DF8F4F00EE3F47 /* DragControllerAction.h in Headers */,
 				BC8452A81162C80900CAB9B5 /* DrawingArea.h in Headers */,
+				2D8949F1182044F600E898AA /* PlatformCALayerRemoteTiledBacking.h in Headers */,
 				0FB659231208B4DB0044816C /* DrawingAreaInfo.h in Headers */,
 				1A64229A12DD029200CAAE2C /* DrawingAreaMessages.h in Headers */,
 				BC2652171182608100243E12 /* DrawingAreaProxy.h in Headers */,
@@ -7147,6 +7158,7 @@
 				B62E7310143047A60069EC35 /* WKHitTestResult.cpp in Sources */,
 				5110AE0C133C16CB0072717A /* WKIconDatabase.cpp in Sources */,
 				5123CF1B133D260A0056F800 /* WKIconDatabaseCG.cpp in Sources */,
+				2D8949F0182044F600E898AA /* PlatformCALayerRemoteTiledBacking.cpp in Sources */,
 				51032F1D180F791700961BB7 /* DatabaseToWebProcessConnectionMessageReceiver.cpp in Sources */,
 				BCCF6AC212C91F34008F9C35 /* WKImage.cpp in Sources */,
 				BCCF6AC912C91F59008F9C35 /* WKImageCG.cpp in Sources */,

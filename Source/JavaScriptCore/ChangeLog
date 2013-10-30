@@ -1,3 +1,321 @@
+2013-10-29  Michael Saboff  <msaboff@apple.com>
+
+        Change local variable register allocation to start at offset -1
+        https://bugs.webkit.org/show_bug.cgi?id=123182
+
+        Reviewed by Geoffrey Garen.
+
+        Adjusted the virtual register mapping down by one slot.  Reduced
+        the CallFrame header slots offsets by one.  They now start at 0.
+        Changed arity fixup to no longer skip passed register slot 0 as this
+        is now part of the CallFrame header.
+
+        * bytecode/VirtualRegister.h:
+        (JSC::operandIsLocal):
+        (JSC::operandIsArgument):
+        (JSC::VirtualRegister::localToOperand):
+        (JSC::VirtualRegister::operandToLocal):
+          Adjusted functions for shift in mapping from local to register offset.
+
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::findArgumentPositionForLocal):
+        (JSC::DFG::ByteCodeParser::addCall):
+        (JSC::DFG::ByteCodeParser::handleInlining):
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        * dfg/DFGVariableEventStream.cpp:
+        (JSC::DFG::VariableEventStream::reconstruct):
+        * dfg/DFGVirtualRegisterAllocationPhase.cpp:
+        (JSC::DFG::VirtualRegisterAllocationPhase::run):
+        * interpreter/CallFrame.h:
+        (JSC::ExecState::frameExtent):
+        (JSC::ExecState::offsetFor):
+        * interpreter/Interpreter.cpp:
+        (JSC::loadVarargs):
+        (JSC::Interpreter::dumpRegisters):
+        (JSC::Interpreter::executeCall):
+        * llint/LLIntData.cpp:
+        (JSC::LLInt::Data::performAssertions):
+        * llint/LowLevelInterpreter.asm:
+          Adjusted math to accomodate for shift in call frame slots.
+
+        * dfg/DFGJITCompiler.cpp:
+        (JSC::DFG::JITCompiler::compileFunction):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::calleeFrameOffset):
+        * interpreter/CallFrame.cpp:
+        (JSC::CallFrame::frameExtentInternal):
+        * interpreter/JSStackInlines.h:
+        (JSC::JSStack::pushFrame):
+        * jit/JIT.cpp:
+        (JSC::JIT::privateCompile):
+        * jit/JITOperations.cpp:
+        * llint/LLIntSlowPaths.cpp:
+        (JSC::LLInt::llint_slow_path_stack_check):
+        * runtime/CommonSlowPaths.h:
+        (JSC::CommonSlowPaths::arityCheckFor):
+          Fixed offset calculation to use VirtualRegister and related calculation instead of
+          doing seperate calculations.
+
+        * interpreter/JSStack.h:
+          Adjusted CallFrame slots down by one.  Did some miscellaneous fixing of dumpRegisters()
+          in the process of testing the fixes.
+
+        * jit/ThunkGenerators.cpp:
+        (JSC::arityFixup):
+          Changed arity fixup to no longer skip passed register slot 0 as this
+          is now part of the CallFrame header.
+
+        * llint/LowLevelInterpreter32_64.asm:
+        * llint/LowLevelInterpreter64.asm:
+          Changed arity fixup to no longer skip passed register slot 0 as this
+          is now part of the CallFrame header.  Updated op_enter processing for
+          the change in local registers.
+
+        * runtime/JSGlobalObject.h:
+          Removed the now unneeded extra slot in the global callframe
+
+2013-10-29  Julien Brianceau  <jbriance@cisco.com>
+
+        [arm] Fix lots of crashes because of 4th argument register trampling.
+        https://bugs.webkit.org/show_bug.cgi?id=123421
+
+        Reviewed by Michael Saboff.
+
+        r3 register is the 4th argument register for ARM and also a scratch
+        register in the baseline JIT for this architecture. We can use r6
+        instead, as this used to be the timeoutCheckRegister and it is no
+        longer used since r148119.
+
+        * assembler/ARMAssembler.h: Temp register is now r6 instead of r3 for ARM.
+        * assembler/MacroAssemblerARMv7.h: Temp register is now r6 instead of r3 for ARMv7.
+        * jit/GPRInfo.h: Add r3 properly in GPRInfo for ARM.
+        (JSC::GPRInfo::toRegister):
+        (JSC::GPRInfo::toIndex):
+        * jit/JITStubsARM.h:
+        (JSC::ctiTrampoline): Remove obsolete timeoutCheckRegister init.
+        * jit/JITStubsARMv7.h:
+        (JSC::ctiTrampoline): Remove obsolete timeoutCheckRegister init.
+        * jit/JSInterfaceJIT.h: Remove useless stuff.
+        * yarr/YarrJIT.cpp: Use r3 and not the new scratch register r6.
+        (JSC::Yarr::YarrGenerator::generateEnter): r8 register doesn't need to be saved.
+        (JSC::Yarr::YarrGenerator::generateReturn):
+
+2013-10-29  Julien Brianceau  <jbriance@cisco.com>
+
+        Fix CPU(ARM_TRADITIONAL) build after r157690.
+        https://bugs.webkit.org/show_bug.cgi?id=123247
+
+        Reviewed by Michael Saboff.
+
+        Since r157690, the executableCopy function has been removed from AssemblerBuffer.h
+        and the copy of executable code occurs in the linkCode function (in LinkBuffer.cpp).
+        As the constant pool for jumps is updated in the executableCopy function of ARM_TRADITIONAL,
+        this part of code still needs to be called and absolute jumps must be corrected to anticipate
+        the copy of the executable code through memcpy.
+
+        * assembler/ARMAssembler.cpp:
+        (JSC::ARMAssembler::prepareExecutableCopy): Rename executableCopy to prepareExecutableCopy
+        and correct absolute jump values using the delta between the source and destination buffers.
+        * assembler/ARMAssembler.h:
+        * assembler/LinkBuffer.cpp:
+        (JSC::LinkBuffer::linkCode): Call prepareExecutableCopy just before the memcpy.
+
+2013-10-28  Filip Pizlo  <fpizlo@apple.com>
+
+        OSRExit::m_watchpointIndex should be in OSRExitCompilationInfo
+        https://bugs.webkit.org/show_bug.cgi?id=123423
+
+        Reviewed by Mark Hahnenberg.
+        
+        Also enable ExitKind to tell you if it's a watchpoint.
+
+        * bytecode/ExitKind.cpp:
+        (JSC::exitKindToString):
+        * bytecode/ExitKind.h:
+        (JSC::isWatchpoint):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::setLocal):
+        (JSC::DFG::ByteCodeParser::setArgument):
+        (JSC::DFG::ByteCodeParser::handleCall):
+        (JSC::DFG::ByteCodeParser::handleGetById):
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        * dfg/DFGJITCompiler.cpp:
+        (JSC::DFG::JITCompiler::linkOSRExits):
+        (JSC::DFG::JITCompiler::link):
+        * dfg/DFGJITCompiler.h:
+        (JSC::DFG::JITCompiler::appendExitInfo):
+        * dfg/DFGOSRExit.cpp:
+        (JSC::DFG::OSRExit::OSRExit):
+        * dfg/DFGOSRExit.h:
+        * dfg/DFGOSRExitCompilationInfo.h:
+        (JSC::DFG::OSRExitCompilationInfo::OSRExitCompilationInfo):
+        * dfg/DFGOSRExitCompiler.cpp:
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::speculationWatchpoint):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2013-10-28  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Parsing support for -webkit-text-decoration-skip: ink
+        https://bugs.webkit.org/show_bug.cgi?id=123358
+
+        Reviewed by Dean Jackson.
+
+        Adding ENABLE(CSS3_TEXT_DECORATION)
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-10-24  Filip Pizlo  <fpizlo@apple.com>
+
+        Get rid of InlineStart so that I don't have to implement it in FTL
+        https://bugs.webkit.org/show_bug.cgi?id=123302
+
+        Reviewed by Geoffrey Garen.
+        
+        InlineStart was a special instruction that we would insert at the top of inlined code,
+        so that the backend could capture the OSR state of arguments to an inlined call. It used
+        to be that only the backend had this information, so this instruction was sort of an ugly
+        callback from the backend for filling in some data structures.
+        
+        But in the time since when that code was written (two years ago?), we rationalized how
+        variables work. It's now the case that variables that the runtime must know about are
+        treated specially in IR (they are "flushed") and we know how we will represent them even
+        before we get to the backend. The last place that makes changes to their representation
+        is the StackLayoutPhase.
+        
+        So, this patch gets rid of InlineStart, but keeps around the special meta-data that the
+        instruction had. Instead of handling the bookkeeping in the backend, we handle it in
+        StackLayoutPhase. This means that the DFG and FTL can share code for handling this
+        bookkeeping. This also means that now the FTL can compile code blocks that had inlining.
+        
+        Of course, giving the FTL the ability to handle code blocks that had inlining means that
+        we're going to have new bugs. Sure enough, the FTL's linker didn't handle inline call
+        frames. This patch also fixes that.
+
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::::executeEffects):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::handleInlining):
+        (JSC::DFG::ByteCodeParser::InlineStackEntry::InlineStackEntry):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGGraph.h:
+        * dfg/DFGNode.h:
+        * dfg/DFGNodeType.h:
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT.cpp:
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGStackLayoutPhase.cpp:
+        (JSC::DFG::StackLayoutPhase::run):
+        * ftl/FTLLink.cpp:
+        (JSC::FTL::link):
+
+2013-10-24  Filip Pizlo  <fpizlo@apple.com>
+
+        The GetById->GetByOffset AI-based optimization should actually do things
+        https://bugs.webkit.org/show_bug.cgi?id=123299
+
+        Reviewed by Oliver Hunt.
+        
+        20% speed-up on Octane/gbemu.
+
+        * bytecode/GetByIdStatus.cpp:
+        (JSC::GetByIdStatus::computeFor): Actually finish filling in the Status by setting the state. Previously it would remain set to NoInformation, meaning that this whole method was a no-op.
+
+2013-10-28  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Unreviewed. Fix make distcheck.
+
+        * GNUmakefile.list.am: Add missing files to compilation.
+
+2013-10-25  Oliver Hunt  <oliver@apple.com>
+
+        Refactor parser rollback logic
+        https://bugs.webkit.org/show_bug.cgi?id=123372
+
+        Reviewed by Brady Eidson.
+
+        Add a sane abstraction for rollbacks in the parser.
+
+        * parser/Parser.cpp:
+        (JSC::::parseSourceElements):
+        (JSC::::parseObjectLiteral):
+        * parser/Parser.h:
+        (JSC::Parser::createSavePoint):
+        (JSC::Parser::restoreSavePoint):
+
+2013-10-25  peavo@outlook.com  <peavo@outlook.com>
+
+        [Win] Javascript crash with DFG JIT enabled.
+        https://bugs.webkit.org/show_bug.cgi?id=121001
+
+        Reviewed by Geoffrey Garen.
+
+        On windows, using register GPRInfo::regT0 as parameter to e.g. JIT::storeDouble(..., GPRInfo::regT0)),
+        results in a call to JIT::storeDouble(FPRegisterID src, const void* address),
+        where the address parameter gets the value of GPRInfo::regT0, which is 0 (eax on Windows).
+        This causes the register to be written to address 0, hence the crash.
+  
+        * assembler/MacroAssemblerX86.h:
+        (JSC::MacroAssemblerX86::storeDouble): Assert if we try to generate code which writes to a null pointer.
+        * dfg/DFGOSRExitCompiler32_64.cpp:
+        (JSC::DFG::OSRExitCompiler::compileExit): Use address in regT0 as parameter.
+        * dfg/DFGThunks.cpp:
+        (JSC::DFG::osrExitGenerationThunkGenerator): Ditto.
+
+2013-10-25  Oliver Hunt  <oliver@apple.com>
+
+        Fix a number of problems with destructuring of arguments
+        https://bugs.webkit.org/show_bug.cgi?id=123357
+
+        Reviewed by Filip Pizlo.
+
+        This renames the destructuring node's emitBytecode to bindValue
+        in order to remove the existing confusion over what was happening.
+
+        We then fix an incorrect fall through in the destructuring arguments
+        logic, and fix the then exposed bug where we placed the index rather
+        than value into the bound property.
+
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::BytecodeGenerator):
+        * bytecompiler/NodesCodegen.cpp:
+        (JSC::ForInNode::emitBytecode):
+        (JSC::ForOfNode::emitBytecode):
+        (JSC::DeconstructingAssignmentNode::emitBytecode):
+        (JSC::ArrayPatternNode::bindValue):
+        (JSC::ArrayPatternNode::emitDirectBinding):
+        (JSC::ObjectPatternNode::bindValue):
+        (JSC::BindingNode::bindValue):
+        * parser/Nodes.h:
+
+2013-10-25  Joseph Pecoraro  <pecoraro@apple.com>
+
+        Upstream ENABLE(REMOTE_INSPECTOR) and enable on iOS and Mac
+        https://bugs.webkit.org/show_bug.cgi?id=123111
+
+        Reviewed by Timothy Hatcher.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2013-10-25  Oliver Hunt  <oliver@apple.com>
+
+        Fix MSVC again
+
+        * parser/Parser.cpp:
+
 2013-10-25  Oliver Hunt  <oliver@apple.com>
 
         Fix MSVC

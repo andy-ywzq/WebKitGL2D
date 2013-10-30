@@ -45,13 +45,13 @@ public:
 
 class RenderSVGResourcePattern FINAL : public RenderSVGResourceContainer {
 public:
-    explicit RenderSVGResourcePattern(SVGPatternElement&);
+    RenderSVGResourcePattern(SVGPatternElement&, PassRef<RenderStyle>);
     SVGPatternElement& patternElement() const;
 
     virtual void removeAllClientsFromCache(bool markForInvalidation = true);
     virtual void removeClientFromCache(RenderObject*, bool markForInvalidation = true);
 
-    virtual bool applyResource(RenderElement&, RenderStyle*, GraphicsContext*&, unsigned short resourceMode) OVERRIDE;
+    virtual bool applyResource(RenderElement&, const RenderStyle&, GraphicsContext*&, unsigned short resourceMode) OVERRIDE;
     virtual void postApplyResource(RenderElement&, GraphicsContext*&, unsigned short resourceMode, const Path*, const RenderSVGShape*) OVERRIDE;
     virtual FloatRect resourceBoundingBox(const RenderObject&) OVERRIDE { return FloatRect(); }
 

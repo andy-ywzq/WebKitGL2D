@@ -32,8 +32,8 @@
 
 namespace WebCore {
     
-RenderSVGInline::RenderSVGInline(SVGGraphicsElement& element)
-    : RenderInline(element)
+RenderSVGInline::RenderSVGInline(SVGGraphicsElement& element, PassRef<RenderStyle> style)
+    : RenderInline(element, std::move(style))
 {
     setAlwaysCreateLineBoxes();
 }
@@ -111,13 +111,13 @@ void RenderSVGInline::styleDidChange(StyleDifference diff, const RenderStyle* ol
     if (diff == StyleDifferenceLayout)
         setNeedsBoundariesUpdate();
     RenderInline::styleDidChange(diff, oldStyle);
-    SVGResourcesCache::clientStyleChanged(*this, diff, *style());
+    SVGResourcesCache::clientStyleChanged(*this, diff, style());
 }
 
 void RenderSVGInline::addChild(RenderObject* child, RenderObject* beforeChild)
 {
     RenderInline::addChild(child, beforeChild);
-    SVGResourcesCache::clientWasAddedToTree(child, child->style());
+    SVGResourcesCache::clientWasAddedToTree(*child);
 
     if (RenderSVGText* textRenderer = RenderSVGText::locateRenderSVGTextAncestor(this))
         textRenderer->subtreeChildWasAdded(child);
@@ -125,7 +125,7 @@ void RenderSVGInline::addChild(RenderObject* child, RenderObject* beforeChild)
 
 void RenderSVGInline::removeChild(RenderObject& child)
 {
-    SVGResourcesCache::clientWillBeRemovedFromTree(&child);
+    SVGResourcesCache::clientWillBeRemovedFromTree(child);
 
     RenderSVGText* textRenderer = RenderSVGText::locateRenderSVGTextAncestor(this);
     if (!textRenderer) {

@@ -322,6 +322,7 @@ webkit2_sources += \
 	Source/WebKit2/Shared/FontInfo.h \
 	Source/WebKit2/Shared/HTTPCookieAcceptPolicy.h \
 	Source/WebKit2/Shared/ResourceCachesToClear.h \
+	Source/WebKit2/Shared/ViewState.h \
 	Source/WebKit2/Shared/WebMemorySampler.h \
 	Source/WebKit2/Shared/APIClient.h \
 	Source/WebKit2/Shared/APIClientTraits.cpp \
@@ -1043,7 +1044,6 @@ webkit2_sources += \
 	Source/WebKit2/WebProcess/Cookies/soup/WebCookieManagerSoup.cpp \
 	Source/WebKit2/WebProcess/Cookies/soup/WebKitSoupCookieJarSqlite.cpp \
 	Source/WebKit2/WebProcess/Cookies/soup/WebKitSoupCookieJarSqlite.h \
-	Source/WebKit2/WebProcess/Databases/IndexedDB/WebIDBFactoryBackend.cpp \
 	Source/WebKit2/WebProcess/Databases/IndexedDB/WebIDBFactoryBackend.h \
 	Source/WebKit2/WebProcess/FullScreen/WebFullScreenManager.cpp \
 	Source/WebKit2/WebProcess/FullScreen/WebFullScreenManager.h \

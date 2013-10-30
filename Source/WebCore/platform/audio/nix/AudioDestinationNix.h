@@ -49,9 +49,8 @@ public:
 
     virtual void start() OVERRIDE;
     virtual void stop() OVERRIDE;
-    virtual bool isPlaying() OVERRIDE { return m_isPlaying; }
-
-    virtual float sampleRate() const OVERRIDE { return m_sampleRate; }
+    virtual bool isPlaying() OVERRIDE;
+    virtual float sampleRate() const OVERRIDE;
 
     // WebKit::WebAudioDevice::RenderCallback
     virtual void render(const std::vector<float*>& sourceData, const std::vector<float*>& audioData, size_t numberOfFrames) OVERRIDE;

@@ -39,8 +39,8 @@
 
 namespace WebCore {
 
-RenderSVGContainer::RenderSVGContainer(SVGElement& element)
-    : RenderSVGModelObject(element)
+RenderSVGContainer::RenderSVGContainer(SVGElement& element, PassRef<RenderStyle> style)
+    : RenderSVGModelObject(element, std::move(style))
     , m_objectBoundingBoxValid(false)
     , m_needsBoundariesUpdate(true)
 {
@@ -92,12 +92,12 @@ void RenderSVGContainer::layout()
 void RenderSVGContainer::addChild(RenderObject* child, RenderObject* beforeChild)
 {
     RenderSVGModelObject::addChild(child, beforeChild);
-    SVGResourcesCache::clientWasAddedToTree(child, child->style());
+    SVGResourcesCache::clientWasAddedToTree(*child);
 }
 
 void RenderSVGContainer::removeChild(RenderObject& child)
 {
-    SVGResourcesCache::clientWillBeRemovedFromTree(&child);
+    SVGResourcesCache::clientWillBeRemovedFromTree(child);
     RenderSVGModelObject::removeChild(child);
 }
 
@@ -152,7 +152,7 @@ void RenderSVGContainer::paint(PaintInfo& paintInfo, const LayoutPoint&)
     // outline rect into parent coords before drawing.
     // FIXME: This means our focus ring won't share our rotation like it should.
     // We should instead disable our clip during PaintPhaseOutline
-    if ((paintInfo.phase == PaintPhaseOutline || paintInfo.phase == PaintPhaseSelfOutline) && style()->outlineWidth() && style()->visibility() == VISIBLE) {
+    if ((paintInfo.phase == PaintPhaseOutline || paintInfo.phase == PaintPhaseSelfOutline) && style().outlineWidth() && style().visibility() == VISIBLE) {
         IntRect paintRectInParent = enclosingIntRect(localToParentTransform().mapRect(repaintRect));
         paintOutline(paintInfo, paintRectInParent);
     }

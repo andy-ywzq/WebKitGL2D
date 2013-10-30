@@ -28,7 +28,6 @@ webcore_built_sources += \
 	DerivedSources/WebCore/InspectorOverlayPage.h \
 	DerivedSources/WebCore/InspectorTypeBuilder.cpp \
 	DerivedSources/WebCore/InspectorTypeBuilder.h \
-	DerivedSources/WebCore/InspectorProtocolVersion.h \
 	DerivedSources/WebCore/JSAbstractWorker.cpp \
 	DerivedSources/WebCore/JSAbstractWorker.h \
 	DerivedSources/WebCore/JSAllAudioCapabilities.cpp \
@@ -1840,18 +1839,20 @@ webcore_modules_sources += \
 	Source/WebCore/Modules/indexeddb/IDBObjectStore.h \
 	Source/WebCore/Modules/indexeddb/IDBOpenDBRequest.cpp \
 	Source/WebCore/Modules/indexeddb/IDBOpenDBRequest.h \
+	Source/WebCore/Modules/indexeddb/IDBOperation.h \
+	Source/WebCore/Modules/indexeddb/IDBPendingOpenCall.h \
 	Source/WebCore/Modules/indexeddb/IDBPendingTransactionMonitor.cpp \
 	Source/WebCore/Modules/indexeddb/IDBPendingTransactionMonitor.h \
 	Source/WebCore/Modules/indexeddb/IDBRecordIdentifier.h \
 	Source/WebCore/Modules/indexeddb/IDBRequest.cpp \
 	Source/WebCore/Modules/indexeddb/IDBRequest.h \
-	Source/WebCore/Modules/indexeddb/leveldb/IDBTransactionBackendLevelDB.cpp \
-	Source/WebCore/Modules/indexeddb/leveldb/IDBTransactionBackendLevelDB.h \
-	Source/WebCore/Modules/indexeddb/leveldb/IDBTransactionBackendLevelDBOperations.cpp \
-	Source/WebCore/Modules/indexeddb/leveldb/IDBTransactionBackendLevelDBOperations.h \
 	Source/WebCore/Modules/indexeddb/IDBTransaction.cpp \
 	Source/WebCore/Modules/indexeddb/IDBTransaction.h \
+	Source/WebCore/Modules/indexeddb/IDBTransactionBackendImpl.cpp \
+	Source/WebCore/Modules/indexeddb/IDBTransactionBackendImpl.h \
 	Source/WebCore/Modules/indexeddb/IDBTransactionBackendInterface.h \
+	Source/WebCore/Modules/indexeddb/IDBTransactionBackendOperations.cpp \
+	Source/WebCore/Modules/indexeddb/IDBTransactionBackendOperations.h \
 	Source/WebCore/Modules/indexeddb/IDBTransactionCoordinator.cpp \
 	Source/WebCore/Modules/indexeddb/IDBTransactionCoordinator.h \
 	Source/WebCore/Modules/indexeddb/IDBVersionChangeEvent.cpp \
@@ -4298,6 +4299,8 @@ webcore_sources += \
 	Source/WebCore/rendering/LineWidth.h \
 	Source/WebCore/rendering/LineWidth.cpp \
 	Source/WebCore/rendering/OverlapTestRequestClient.h \
+	Source/WebCore/rendering/OrderIterator.cpp \
+	Source/WebCore/rendering/OrderIterator.h \
 	Source/WebCore/rendering/Pagination.h \
 	Source/WebCore/rendering/PaintInfo.h \
 	Source/WebCore/rendering/PaintPhase.h \
@@ -4491,6 +4494,8 @@ webcore_sources += \
 	Source/WebCore/rendering/TextAutosizer.cpp \
 	Source/WebCore/rendering/TextAutosizer.h \
 	Source/WebCore/rendering/TextPaintStyle.cpp \
+	Source/WebCore/rendering/TextPainter.cpp \
+	Source/WebCore/rendering/TextPainter.h \
 	Source/WebCore/rendering/TextPaintStyle.h \
 	Source/WebCore/rendering/VerticalPositionCache.h \
 	Source/WebCore/rendering/mathml/RenderMathMLBlock.cpp \
@@ -5391,8 +5396,11 @@ webcore_platform_sources += \
 	Source/WebCore/platform/mediastream/MediaStreamDescriptor.cpp \
 	Source/WebCore/platform/mediastream/MediaStreamDescriptor.h \
 	Source/WebCore/platform/mediastream/MediaStreamSource.cpp \
+	Source/WebCore/platform/mediastream/MediaStreamSourceStates.cpp \
 	Source/WebCore/platform/mediastream/MediaStreamSource.h \
 	Source/WebCore/platform/mediastream/MediaStreamSourceCapabilities.h \
+	Source/WebCore/platform/mediastream/MediaStreamTrackPrivate.cpp \
+	Source/WebCore/platform/mediastream/MediaStreamTrackPrivate.h \
 	Source/WebCore/platform/mediastream/MediaStreamTrackSourcesRequestClient.h \
 	Source/WebCore/platform/mediastream/RTCConfiguration.h \
 	Source/WebCore/platform/mediastream/RTCDTMFSenderHandler.h \
@@ -5419,6 +5427,12 @@ webcore_platform_sources += \
 	Source/WebCore/platform/mock/GeolocationClientMock.h \
 	Source/WebCore/platform/mock/MockMediaStreamCenter.cpp \
 	Source/WebCore/platform/mock/MockMediaStreamCenter.h \
+	Source/WebCore/platform/mock/RTCDataChannelHandlerMock.cpp \
+	Source/WebCore/platform/mock/RTCDataChannelHandlerMock.h \
+	Source/WebCore/platform/mock/RTCNotifiersMock.cpp \
+	Source/WebCore/platform/mock/RTCNotifiersMock.h \
+	Source/WebCore/platform/mock/RTCPeerConnectionHandlerMock.cpp \
+	Source/WebCore/platform/mock/RTCPeerConnectionHandlerMock.h \
 	Source/WebCore/platform/mock/ScrollbarThemeMock.cpp \
 	Source/WebCore/platform/mock/ScrollbarThemeMock.h \
 	Source/WebCore/platform/network/BlobData.cpp \

@@ -29,6 +29,7 @@
 #include "IDBBackingStoreInterface.h"
 #include "IDBDatabaseBackendInterface.h"
 #include "IndexedDB.h"
+#include <wtf/HashSet.h>
 #include <wtf/RefCounted.h>
 #include <wtf/Vector.h>
 
@@ -41,6 +42,7 @@ class IDBDatabaseCallbacks;
 class IDBDatabaseError;
 class IDBKey;
 class IDBKeyRange;
+class IDBOperation;
 
 struct IDBDatabaseMetadata;
 struct IDBIndexMetadata;
@@ -58,6 +60,12 @@ public:
     virtual void abort(PassRefPtr<IDBDatabaseError>) = 0;
     virtual const HashSet<int64_t>& scope() const = 0;
 
+    virtual void scheduleTask(PassOwnPtr<IDBOperation>, PassOwnPtr<IDBOperation> abortTask = nullptr) = 0;
+    virtual void scheduleTask(IDBDatabaseBackendInterface::TaskType, PassOwnPtr<IDBOperation>, PassOwnPtr<IDBOperation> abortTask = nullptr) = 0;
+
+    virtual void registerOpenCursor(IDBCursorBackendInterface*) = 0;
+    virtual void unregisterOpenCursor(IDBCursorBackendInterface*) = 0;
+
     virtual void scheduleCreateObjectStoreOperation(const IDBObjectStoreMetadata&) = 0;
     virtual void scheduleDeleteObjectStoreOperation(const IDBObjectStoreMetadata&) = 0;
     virtual void scheduleVersionChangeOperation(int64_t transactionId, int64_t requestedVersion, PassRefPtr<IDBCallbacks>, PassRefPtr<IDBDatabaseCallbacks>, const IDBDatabaseMetadata&) = 0;
@@ -71,7 +79,13 @@ public:
     virtual void scheduleDeleteRangeOperation(int64_t objectStoreId, PassRefPtr<IDBKeyRange>, PassRefPtr<IDBCallbacks>) = 0;
     virtual void scheduleClearOperation(int64_t objectStoreId, PassRefPtr<IDBCallbacks>) = 0;
 
-    virtual IDBBackingStoreInterface::Transaction* backingStoreTransaction() = 0;
+    virtual void addPreemptiveEvent() = 0;
+    virtual void didCompletePreemptiveEvent() = 0;
+
+    virtual IDBBackingStoreInterface::Transaction& backingStoreTransaction() = 0;
+    virtual IDBDatabaseBackendInterface& database() const = 0;
+
+    virtual PassRefPtr<IDBCursorBackendInterface> createCursorBackend(IDBBackingStoreInterface::Cursor&, IndexedDB::CursorType, IDBDatabaseBackendInterface::TaskType, int64_t objectStoreId) = 0;
 
     int64_t id() const { return m_id; }
 

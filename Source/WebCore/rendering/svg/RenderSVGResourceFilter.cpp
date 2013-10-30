@@ -59,8 +59,8 @@ namespace WebCore {
 
 RenderSVGResourceType RenderSVGResourceFilter::s_resourceType = FilterResourceType;
 
-RenderSVGResourceFilter::RenderSVGResourceFilter(SVGFilterElement& element)
-    : RenderSVGResourceContainer(element)
+RenderSVGResourceFilter::RenderSVGResourceFilter(SVGFilterElement& element, PassRef<RenderStyle> style)
+    : RenderSVGResourceContainer(element, std::move(style))
 {
 }
 
@@ -105,7 +105,7 @@ std::unique_ptr<SVGFilterBuilder> RenderSVGResourceFilter::buildPrimitives(SVGFi
         builder->appendEffectToEffectReferences(effect, element->renderer());
         element->setStandardAttributes(effect.get());
         effect->setEffectBoundaries(SVGLengthContext::resolveRectangle<SVGFilterPrimitiveStandardAttributes>(&*element, filterElement().primitiveUnits(), targetBoundingBox));
-        effect->setOperatingColorSpace(element->renderer()->style()->svgStyle()->colorInterpolationFilters() == CI_LINEARRGB ? ColorSpaceLinearRGB : ColorSpaceDeviceRGB);
+        effect->setOperatingColorSpace(element->renderer()->style().svgStyle()->colorInterpolationFilters() == CI_LINEARRGB ? ColorSpaceLinearRGB : ColorSpaceDeviceRGB);
         builder->add(element->result(), effect.release());
     }
     return builder;
@@ -126,7 +126,7 @@ bool RenderSVGResourceFilter::fitsInMaximumImageSize(const FloatSize& size, Floa
     return matchesFilterSize;
 }
 
-bool RenderSVGResourceFilter::applyResource(RenderElement& renderer, RenderStyle*, GraphicsContext*& context, unsigned short resourceMode)
+bool RenderSVGResourceFilter::applyResource(RenderElement& renderer, const RenderStyle&, GraphicsContext*& context, unsigned short resourceMode)
 {
     ASSERT(context);
     ASSERT_UNUSED(resourceMode, resourceMode == ApplyToDefaultMode);
@@ -300,7 +300,7 @@ void RenderSVGResourceFilter::postApplyResource(RenderElement& renderer, Graphic
             context->concatCTM(filterData->shearFreeAbsoluteTransform.inverse());
 
             context->scale(FloatSize(1 / filterData->filter->filterResolution().width(), 1 / filterData->filter->filterResolution().height()));
-            context->drawImageBuffer(resultImage, renderer.style()->colorSpace(), lastEffect->absolutePaintRect());
+            context->drawImageBuffer(resultImage, renderer.style().colorSpace(), lastEffect->absolutePaintRect());
             context->scale(filterData->filter->filterResolution());
 
             context->concatCTM(filterData->shearFreeAbsoluteTransform);

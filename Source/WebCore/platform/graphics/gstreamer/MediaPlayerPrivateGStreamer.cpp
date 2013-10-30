@@ -450,6 +450,7 @@ bool MediaPlayerPrivateGStreamer::changePipelineState(GstState newState)
     // See also https://bugs.webkit.org/show_bug.cgi?id=117354
     if (newState == GST_STATE_READY && !m_readyTimerHandler) {
         m_readyTimerHandler = g_timeout_add_seconds(gReadyStateTimerInterval, reinterpret_cast<GSourceFunc>(mediaPlayerPrivateReadyStateTimeoutCallback), this);
+        g_source_set_name_by_id(m_readyTimerHandler, "[WebKit] mediaPlayerPrivateReadyStateTimeoutCallback");
     } else if (newState != GST_STATE_READY && m_readyTimerHandler) {
         g_source_remove(m_readyTimerHandler);
         m_readyTimerHandler = 0;
@@ -627,7 +628,7 @@ void MediaPlayerPrivateGStreamer::videoChanged()
 {
     if (m_videoTimerHandler)
         g_source_remove(m_videoTimerHandler);
-    m_videoTimerHandler = g_timeout_add(0, reinterpret_cast<GSourceFunc>(mediaPlayerPrivateVideoChangeTimeoutCallback), this);
+    m_videoTimerHandler = g_idle_add_full(G_PRIORITY_DEFAULT, reinterpret_cast<GSourceFunc>(mediaPlayerPrivateVideoChangeTimeoutCallback), this, 0);
 }
 
 void MediaPlayerPrivateGStreamer::notifyPlayerOfVideo()
@@ -649,7 +650,7 @@ void MediaPlayerPrivateGStreamer::audioChanged()
 {
     if (m_audioTimerHandler)
         g_source_remove(m_audioTimerHandler);
-    m_audioTimerHandler = g_timeout_add(0, reinterpret_cast<GSourceFunc>(mediaPlayerPrivateAudioChangeTimeoutCallback), this);
+    m_audioTimerHandler = g_idle_add_full(G_PRIORITY_DEFAULT, reinterpret_cast<GSourceFunc>(mediaPlayerPrivateAudioChangeTimeoutCallback), this, 0);
 }
 
 void MediaPlayerPrivateGStreamer::notifyPlayerOfAudio()
@@ -1825,9 +1826,9 @@ void MediaPlayerPrivateGStreamer::createGSTPlayBin()
     }
 #endif
 
-    GstElement* videoElement = createVideoSink(m_playBin.get());
+    createVideoSink(m_playBin.get());
 
-    g_object_set(m_playBin.get(), "video-sink", videoElement, NULL);
+    g_object_set(m_playBin.get(), "video-sink", m_videoSinkBin.get(), nullptr);
 
     GRefPtr<GstPad> videoSinkPad = adoptGRef(gst_element_get_static_pad(m_webkitVideoSink.get(), "sink"));
     if (videoSinkPad)

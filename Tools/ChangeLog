@@ -1,3 +1,390 @@
+2013-10-30  Tamas Gergely  <gertom@inf.u-szeged.hu>
+
+        Removed Windows platform configurations from WebKitTestRunner.
+        https://bugs.webkit.org/show_bug.cgi?id=123152
+
+        Reviewed by Csaba Osztrogonác.
+
+        Removed Windows specific parts from the source files, Windows specific
+        subdirectory (win) and Visual Studio property files from the WebKitTestRunner,
+        as the platform is no longer supported by this tool.
+
+        * WebKitTestRunner/Configurations/InjectedBundleCFLite.vsprops: Removed.
+        * WebKitTestRunner/Configurations/InjectedBundleCommon.vsprops: Removed.
+        * WebKitTestRunner/Configurations/InjectedBundleCoreFoundation.vsprops: Removed.
+        * WebKitTestRunner/Configurations/WebKitTestRunnerCFLite.vsprops: Removed.
+        * WebKitTestRunner/Configurations/WebKitTestRunnerCommon.vsprops: Removed.
+        * WebKitTestRunner/Configurations/WebKitTestRunnerCoreFoundation.vsprops: Removed.
+        * WebKitTestRunner/Configurations/WebKitTestRunnerCoreGraphics.vsprops: Removed.
+        * WebKitTestRunner/InjectedBundle/AccessibilityController.cpp:
+        (WTR::AccessibilityController::rootElement):
+        (WTR::AccessibilityController::focusedElement):
+        * WebKitTestRunner/InjectedBundle/AccessibilityController.h:
+        * WebKitTestRunner/InjectedBundle/AccessibilityUIElement.h:
+        * WebKitTestRunner/InjectedBundle/InjectedBundleMain.cpp:
+        * WebKitTestRunner/InjectedBundle/TestRunner.h:
+        * WebKitTestRunner/PlatformWebView.h:
+        * WebKitTestRunner/TestController.cpp:
+        (WTR::TestController::initialize):
+        * WebKitTestRunner/TestInvocation.cpp:
+        (WTR::createWKURL):
+        * WebKitTestRunner/cg/TestInvocationCG.cpp:
+        * WebKitTestRunner/config.h:
+        * WebKitTestRunner/win/InjectedBundle.vcproj: Removed.
+        * WebKitTestRunner/win/InjectedBundleDebug.vsprops: Removed.
+        * WebKitTestRunner/win/InjectedBundleDebugAll.vsprops: Removed.
+        * WebKitTestRunner/win/InjectedBundleDebugCairoCFLite.vsprops: Removed.
+        * WebKitTestRunner/win/InjectedBundleGenerated.vcproj: Removed.
+        * WebKitTestRunner/win/InjectedBundleGeneratedCommon.vsprops: Removed.
+        * WebKitTestRunner/win/InjectedBundlePostBuild.cmd: Removed.
+        * WebKitTestRunner/win/InjectedBundlePreBuild.cmd: Removed.
+        * WebKitTestRunner/win/InjectedBundleProduction.vsprops: Removed.
+        * WebKitTestRunner/win/InjectedBundleRelease.vsprops: Removed.
+        * WebKitTestRunner/win/InjectedBundleReleaseCairoCFLite.vsprops: Removed.
+        * WebKitTestRunner/win/PlatformWebViewWin.cpp: Removed.
+        * WebKitTestRunner/win/TestControllerWin.cpp: Removed.
+        * WebKitTestRunner/win/TestInvocationWin.cpp: Removed.
+        * WebKitTestRunner/win/WebKitTestRunner.vcproj: Removed.
+        * WebKitTestRunner/win/WebKitTestRunnerDebug.vsprops: Removed.
+        * WebKitTestRunner/win/WebKitTestRunnerDebugAll.vsprops: Removed.
+        * WebKitTestRunner/win/WebKitTestRunnerDebugCairoCFLite.vsprops: Removed.
+        * WebKitTestRunner/win/WebKitTestRunnerLauncher.vcproj: Removed.
+        * WebKitTestRunner/win/WebKitTestRunnerLauncherCommon.vsprops: Removed.
+        * WebKitTestRunner/win/WebKitTestRunnerLauncherDebug.vsprops: Removed.
+        * WebKitTestRunner/win/WebKitTestRunnerLauncherDebugAll.vsprops: Removed.
+        * WebKitTestRunner/win/WebKitTestRunnerLauncherDebugCairoCFLite.vsprops: Removed.
+        * WebKitTestRunner/win/WebKitTestRunnerLauncherProduction.vsprops: Removed.
+        * WebKitTestRunner/win/WebKitTestRunnerLauncherRelease.vsprops: Removed.
+        * WebKitTestRunner/win/WebKitTestRunnerLauncherReleaseCairoCFLite.vsprops: Removed.
+        * WebKitTestRunner/win/WebKitTestRunnerPostBuild.cmd: Removed.
+        * WebKitTestRunner/win/WebKitTestRunnerPreBuild.cmd: Removed.
+        * WebKitTestRunner/win/WebKitTestRunnerProduction.vsprops: Removed.
+        * WebKitTestRunner/win/WebKitTestRunnerRelease.vsprops: Removed.
+        * WebKitTestRunner/win/WebKitTestRunnerReleaseCairoCFLite.vsprops: Removed.
+        * WebKitTestRunner/win/build-generated-files.sh: Removed.
+        * WebKitTestRunner/win/main.cpp: Removed.
+
+2013-10-29  Alexey Proskuryakov  <ap@apple.com>
+
+        Result of focus-option-control-on-page.html depends on system preferences
+        https://bugs.webkit.org/show_bug.cgi?id=123304
+
+        Reviewed by Simon Fraser.
+
+        * DumpRenderTree/mac/DumpRenderTree.mm: (setDefaultsToConsistentValuesForTesting):
+        Override a preference that WebKit reads to decide what Tab does, so that current
+        user default doesn't affect tests.
+
+        * WebKitTestRunner/mac/main.mm: (setDefaultsToConsistentValuesForTesting):
+        Ditto.
+
+2013-10-29  Filip Pizlo  <fpizlo@apple.com>
+
+        It should be possible to specify extra tests to run-javascriptcore-tests
+        https://bugs.webkit.org/show_bug.cgi?id=123495
+
+        Reviewed by Oliver Hunt.
+        
+        This adds two ways to specify additional tests: the option --extra-tests=<blah>, and
+        the environment variable EXTRA_JSC_TESTS.
+        
+        Those two values (the command-line option and the environment variable) are passed
+        as extra arguments to run-jsc-stress-tests.
+        
+        To make this extra super useful, run-jsc-stress-tests now allows yaml configuration
+        files to be recursive: if a "- collection:" line is found, the string is handled
+        just as if it was a command-line argument. This allows you to use --extra-tests=file
+        where file contains a bunch of "- collection:" lines, and this is equivalent to each
+        of those lines being a command-line argument.
+
+        * Scripts/run-javascriptcore-tests:
+        * Scripts/run-jsc-stress-tests:
+
+2013-10-29  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Add Mavericks builders to the old flakiness dashboard.
+
+        * TestResultServer/static-dashboards/builders.jsonp:
+        * TestResultServer/static-dashboards/flakiness_dashboard.js:
+
+2013-10-29  Seokju Kwon  <seokju@webkit.org>
+
+        Fix memory leak in Tools/DumpRenderTree/TestNetscapePlugIn/main.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=123478
+
+        Reviewed by Anders Carlsson.
+
+        * DumpRenderTree/TestNetscapePlugIn/main.cpp:
+        (NPP_Destroy): Add a missing free() for 'obj->evaluateScriptOnMouseDownOrKeyDown'.
+
+2013-10-29  Lucas Forschler  <lforschler@apple.com>
+
+        Move the SEO bots from testers to archivers.
+        
+        Unreviewed.
+        
+        * BuildSlaveSupport/build.webkit.org-config/config.json:
+
+2013-10-29  Hugo Parente Lima  <hugo.lima@openbossa.org>
+
+        Adding Nix files in Source/Platform to trunk
+        https://bugs.webkit.org/show_bug.cgi?id=118331
+
+        Reviewed by Benjamin Poulain.
+
+        Add a special rule for Nix API files located at Source/Platform/nix.
+
+        * Scripts/webkitpy/style/checker.py:
+
+ 2013-10-29  Nadav Rotem  <nrotem@apple.com>
+ 
+         Add myself as a comitter.
+         https://bugs.webkit.org/show_bug.cgi?id=123455
+ 
+         Reviewed by Anders Carlsson.
+ 
+         * Scripts/webkitpy/common/config/contributors.json:
+ 
+2013-10-29  Lucas Forschler  <lforschler@apple.com>
+
+        Teach the WebKit2 testers to abort early by setting the shouldAbortEarly property to True.
+        https://bugs.webkit.org/show_bug.cgi?id=123450
+
+        Reviewed by Alexey Proskuryakov.
+
+        * BuildSlaveSupport/build.webkit.org-config/master.cfg:
+        (RunWebKit2Tests.start):
+
+2013-10-29  Alexey Proskuryakov  <ap@apple.com>
+
+        [Mac] Rationalize user defaults override code
+        https://bugs.webkit.org/show_bug.cgi?id=123436
+
+        Reviewed by Dan Bernstein.
+
+        * DumpRenderTree/mac/DumpRenderTree.mm:
+        (resetWebPreferencesToConsistentValues): Renamed from resetDefaultsToConsistentValues,
+        because this function only resets WebPreferences now.
+        (setDefaultsToConsistentValuesForTesting): Moved code for setting the defaults
+        here, because tests never change them, and they only need to be set once, not
+        before each test. Removed long obsolete workaround for HIToolbox preferences.
+        Don't call resetWebPreferencesToConsistentValues, because it will be called before
+        the first test anyway.
+        (main): Don't set AppleMagnifiedMode here, moved that to setDefaultsToConsistentValuesForTesting.
+        (resetWebViewToConsistentStateBeforeTesting): Moved TestRunner::setSerializeHTTPLoads
+        and setlocale calls out of resetWebPreferencesToConsistentValues().
+        Added AppleAquaAntiAliasingChanged notification that we had in WK2, because it's
+        also needed in WK1.
+
+        * WebKitTestRunner/InjectedBundle/mac/InjectedBundleMac.mm:
+        (WTR::InjectedBundle::platformInitialize): Use literal syntax for defaults
+        dictionary.
+
+        * WebKitTestRunner/mac/main.mm:
+        (setDefaultsToConsistentValuesForTesting): Factored out of main(), and changed to
+        use NSArgumentDomain for everything.
+
+2013-10-29  Philippe Normand  <pnormand@igalia.com>
+
+        [GTK] enable media-stream in build-webkit
+        https://bugs.webkit.org/show_bug.cgi?id=123144
+
+        Reviewed by Martin Robinson.
+
+        * Scripts/webkitperl/FeatureList.pm: Enable media-stream build
+        for the GTK+ port.
+
+2013-10-29  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        EFL 32 bit buildbot doesn't work on dashboard
+        https://bugs.webkit.org/show_bug.cgi?id=123435
+
+        Reviewed by Csaba Osztrogonác.
+
+        32 bit buildbot doesn't work on dashboard because name is different from buildbot list.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/WebKitBuildbot.js:
+        (WebKitBuildbot):
+
+2013-10-28  Simon Fraser  <simon.fraser@apple.com>
+
+        Floating left the header broke other pages, and this CSS has no way to customize
+        per-page.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/default.css:
+
+2013-10-28  Simon Fraser  <simon.fraser@apple.com>
+
+        Remove underlines on the bot names in the header.
+        
+        * BuildSlaveSupport/build.webkit.org-config/public_html/default.css:
+        (td.LastBuild a):
+
+2013-10-28  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
+
+        Add EFL release bots to the buildbot dashboard
+        https://bugs.webkit.org/show_bug.cgi?id=123430
+
+        Reviewed by Darin Adler.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Images/EFL.png: Added.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/WebKitBuildbot.js:
+        (WebKitBuildbot): add 64 bits release wk2 and wk1 testers and 32 bits release builder.
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Styles/Main.css:
+        (table.queue-grid tr.platform.linux-efl img.logo): use the EFL logo in its dashboard line.
+
+2013-10-28  Simon Fraser  <simon.fraser@apple.com>
+
+        More waterfall tweaking.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/default.css:
+        (body > .header):
+        (td.LastBuild):
+        (td.LastBuild a):
+        (td.LastBuild,td.Activity a,td.Change a,td.Builder a):
+
+2013-10-28  Simon Fraser  <simon.fraser@apple.com>
+
+        More waterfall tweaking.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/default.css:
+        (body.interface):
+        (body > hr):
+        (div.content h1):
+        (body > .header):
+        (td.Activity a,td.Change a,td.Builder a):
+        (td.Builder):
+
+2013-10-28  Simon Fraser  <simon.fraser@apple.com>
+
+        Apply changes to default.css, revert buildbot.css which seems to be unused.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/buildbot.css:
+        (body):
+        (body, td):
+        (a:link,a:visited,a:active):
+        (td.Time):
+        (td.Activity):
+        (.exception, td.offline):
+        * BuildSlaveSupport/build.webkit.org-config/public_html/default.css:
+        (body.interface):
+        (.auth):
+        (td.LastBuild):
+        (td.Time):
+        (td.Activity):
+        (.offline,td.offline,.retry):
+
+2013-10-28  Simon Fraser  <simon.fraser@apple.com>
+
+        Prettify the waterfall page, and make it a little more space-efficient.
+        
+        * BuildSlaveSupport/build.webkit.org-config/public_html/buildbot.css:
+        (body, td):
+        (body.interface):
+        (.auth):
+        (.header):
+        (div.content h1):
+        (a):
+        (a:link,a:active):
+        (a:link,a:visited,a:active):
+        (td.LastBuild):
+        (td.Time):
+        (td.Activity):
+        (.exception, td.offline, .retry):
+
+2013-10-28  Simon Fraser  <simon.fraser@apple.com>
+
+        Fix Lion readableName (spotted by Dan Bernstein).
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/Buildbot.js:
+
+2013-10-28  Simon Fraser  <simon.fraser@apple.com>
+
+        Add tooltips to the platform icons in Dashboard
+        https://bugs.webkit.org/show_bug.cgi?id=123429
+
+        Reviewed by Alexey Proskuryakov.
+        
+        Add a human readable name to Buildbot.Platform entries, and use it to
+        show a tooltip on the ring image.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/Buildbot.js:
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/Main.js:
+        (documentReady):
+
+2013-10-28  Simon Fraser  <simon.fraser@apple.com>
+
+        Allow explicit sort order for Dashboard platforms
+        https://bugs.webkit.org/show_bug.cgi?id=123419
+
+        Reviewed by Tim Hatcher.
+        
+        Assign a specific sort order to Dashboard platforms, rather than
+        just using object property order.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/Buildbot.js:
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/BuildbotQueue.js:
+        (BuildbotQueue):
+        * BuildSlaveSupport/build.webkit.org-config/public_html/dashboard/Scripts/Main.js:
+        (documentReady):
+
+2013-10-28  Simon Fraser  <simon.fraser@apple.com>
+
+        Tidy up main http://build.webkit.org page
+        https://bugs.webkit.org/show_bug.cgi?id=123413
+
+        Reviewed by Alexey Proskuryakov.
+        
+        Break the list of links into sections. Add some font style.
+
+        * BuildSlaveSupport/build.webkit.org-config/templates/root.html:
+
+2013-10-28  Myles C. Maxfield  <mmaxfield@apple.com>
+
+        Parsing support for -webkit-text-decoration-skip: ink
+        https://bugs.webkit.org/show_bug.cgi?id=123358
+
+        Reviewed by Dean Jackson.
+
+        Adding ENABLE(CSS3_TEXT_DECORATION)
+
+        * Scripts/webkitperl/FeatureList.pm:
+
+2013-10-28  Lucas Forschler  <lforschler@apple.com>
+
+        Add additional Apple Mavericks test bots.
+        
+        Unreviewed.
+        
+        * BuildSlaveSupport/build.webkit.org-config/config.json:
+
+2013-10-28  Bastien Nocera <hadess@hadess.net>
+
+        Name all the GLib timeout sources
+        https://bugs.webkit.org/show_bug.cgi?id=123229
+
+        Reviewed by Anders Carlsson.
+
+        Give a name to GLib timeout sources, this is helpful when
+        profiling WebKitGTK applications.
+
+2013-10-28  Bastien Nocera <hadess@hadess.net>
+
+        Replace 0 timeouts g_timeout_add() by g_idle_add()
+        https://bugs.webkit.org/show_bug.cgi?id=123260
+
+        Reviewed by Carlos Garcia Campos.
+
+        A zero timeout should be equivalent to using g_idle_add_full(G_PRIORITY_DEFAULT, ...)
+        without the nagging feeling that the wrong API was used.
+
+        * DumpRenderTree/gtk/DumpRenderTree.cpp: Use g_idle_add() instead
+        of 0-timer.
+        (topLoadingFrameLoadFinished):
+        * DumpRenderTree/gtk/EventSender.cpp: Ditto.
+        (scheduleAsynchronousClickCallback):
+        (scheduleAsynchronousKeyDownCallback):
+
 2013-10-25  Anton Obzhirov  <a.obzhirov@samsung.com>
 
         [GTK] [WebKit2] CanHandleRequest API test fails

@@ -29,8 +29,10 @@
 
 #include "DatabaseProcessIDBDatabaseBackendMessages.h"
 #include "DatabaseToWebProcessConnectionMessages.h"
+#include "WebIDBFactoryBackend.h"
 #include "WebProcess.h"
 #include "WebToDatabaseProcessConnection.h"
+#include <WebCore/IDBMetadata.h>
 #include <WebCore/SecurityOrigin.h>
 
 #if ENABLE(INDEXED_DATABASE)
@@ -46,10 +48,10 @@ static uint64_t generateBackendIdentifier()
     return identifier++;
 }
 
-WebProcessIDBDatabaseBackend::WebProcessIDBDatabaseBackend(const String& name, WebCore::SecurityOrigin* origin)
+WebProcessIDBDatabaseBackend::WebProcessIDBDatabaseBackend(WebIDBFactoryBackend& factory, const String& name)
     : m_databaseName(name)
-    , m_securityOrigin(origin)
     , m_backendIdentifier(generateBackendIdentifier())
+    , m_factory(&factory)
 {
 }
 
@@ -157,6 +159,66 @@ CoreIPC::Connection* WebProcessIDBDatabaseBackend::messageSenderConnection()
 void WebProcessIDBDatabaseBackend::establishDatabaseProcessBackend()
 {
     send(Messages::DatabaseToWebProcessConnection::EstablishIDBDatabaseBackend(m_backendIdentifier));
+}
+
+IDBBackingStoreInterface* WebProcessIDBDatabaseBackend::backingStore() const
+{
+    ASSERT_NOT_REACHED();
+    return 0;
+}
+
+int64_t WebProcessIDBDatabaseBackend::id() const
+{
+    ASSERT_NOT_REACHED();
+    return 0;
+}
+
+void WebProcessIDBDatabaseBackend::addObjectStore(const IDBObjectStoreMetadata&, int64_t newMaxObjectStoreId)
+{
+    ASSERT_NOT_REACHED();
+}
+
+void WebProcessIDBDatabaseBackend::removeObjectStore(int64_t objectStoreId)
+{
+    ASSERT_NOT_REACHED();
+}
+
+void WebProcessIDBDatabaseBackend::addIndex(int64_t objectStoreId, const IDBIndexMetadata&, int64_t newMaxIndexId)
+{
+    ASSERT_NOT_REACHED();
+}
+
+void WebProcessIDBDatabaseBackend::removeIndex(int64_t objectStoreId, int64_t indexId)
+{
+    ASSERT_NOT_REACHED();
+}
+
+const IDBDatabaseMetadata& WebProcessIDBDatabaseBackend::metadata() const
+{
+    ASSERT_NOT_REACHED();
+    return *((IDBDatabaseMetadata*)0);
+}
+
+void WebProcessIDBDatabaseBackend::setCurrentVersion(uint64_t)
+{
+    ASSERT_NOT_REACHED();
+}
+
+bool WebProcessIDBDatabaseBackend::hasPendingSecondHalfOpen()
+{
+    ASSERT_NOT_REACHED();
+    return false;
+}
+
+void WebProcessIDBDatabaseBackend::setPendingSecondHalfOpen(PassOwnPtr<IDBPendingOpenCall>)
+{
+    ASSERT_NOT_REACHED();
+}
+
+IDBFactoryBackendInterface& WebProcessIDBDatabaseBackend::factoryBackend()
+{
+    ASSERT_NOT_REACHED();
+    return *((IDBFactoryBackendInterface*)0);
 }
 
 } // namespace WebKit

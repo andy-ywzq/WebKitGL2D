@@ -707,7 +707,6 @@ public:
     
     void compileMovHint(Node*);
     void compileMovHintAndCheck(Node*);
-    void compileInlineStart(Node*);
 
     void nonSpeculativeUInt32ToNumber(Node*);
 
@@ -738,7 +737,7 @@ public:
     
     ptrdiff_t calleeFrameOffset(int numArgs)
     {
-        return -(m_jit.graph().m_nextMachineLocal + JSStack::CallFrameHeaderSize + numArgs) * sizeof(Register);
+        return virtualRegisterForLocal(m_jit.graph().m_nextMachineLocal + JSStack::CallFrameHeaderSize + numArgs).offset() * sizeof(Register);
     }
     
     // Access to our fixed callee CallFrame.

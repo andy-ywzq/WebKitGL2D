@@ -161,20 +161,20 @@ PassRefPtr<StringImpl> StringImpl::createFromLiteral(const char* characters)
     return createFromLiteral(characters, strlen(characters));
 }
 
-PassRefPtr<StringImpl> StringImpl::createWithoutCopying(const UChar* characters, unsigned length)
+PassRef<StringImpl> StringImpl::createWithoutCopying(const UChar* characters, unsigned length)
 {
     if (!length)
-        return empty();
+        return *empty();
 
-    return adoptRef(new StringImpl(characters, length, ConstructWithoutCopying));
+    return adoptRef(*new StringImpl(characters, length, ConstructWithoutCopying));
 }
 
-PassRefPtr<StringImpl> StringImpl::createWithoutCopying(const LChar* characters, unsigned length)
+PassRef<StringImpl> StringImpl::createWithoutCopying(const LChar* characters, unsigned length)
 {
     if (!length)
-        return empty();
+        return *empty();
 
-    return adoptRef(new StringImpl(characters, length, ConstructWithoutCopying));
+    return adoptRef(*new StringImpl(characters, length, ConstructWithoutCopying));
 }
 
 template <typename CharType>
@@ -1989,20 +1989,20 @@ UCharDirection StringImpl::defaultWritingDirection(bool* hasStrongDirectionality
     return U_LEFT_TO_RIGHT;
 }
 
-PassRefPtr<StringImpl> StringImpl::adopt(StringBuffer<LChar>& buffer)
-{
-unsigned length = buffer.length();
-if (!length)
-    return empty();
-return adoptRef(new StringImpl(buffer.release(), length));
-}
-
-PassRefPtr<StringImpl> StringImpl::adopt(StringBuffer<UChar>& buffer)
+PassRef<StringImpl> StringImpl::adopt(StringBuffer<LChar>& buffer)
 {
     unsigned length = buffer.length();
     if (!length)
-        return empty();
-    return adoptRef(new StringImpl(buffer.release(), length));
+        return *empty();
+    return adoptRef(*new StringImpl(buffer.release(), length));
+}
+
+PassRef<StringImpl> StringImpl::adopt(StringBuffer<UChar>& buffer)
+{
+    unsigned length = buffer.length();
+    if (!length)
+        return *empty();
+    return adoptRef(*new StringImpl(buffer.release(), length));
 }
 
 size_t StringImpl::sizeInBytes() const

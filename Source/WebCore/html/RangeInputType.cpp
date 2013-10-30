@@ -49,7 +49,6 @@
 #include "StepRange.h"
 #include <limits>
 #include <wtf/MathExtras.h>
-#include <wtf/PassOwnPtr.h>
 
 #if ENABLE(TOUCH_EVENTS)
 #include "Touch.h"
@@ -75,11 +74,6 @@ static const int rangeStepScaleFactor = 1;
 static Decimal ensureMaximum(const Decimal& proposedValue, const Decimal& minimum, const Decimal& fallbackValue)
 {
     return proposedValue >= minimum ? proposedValue : std::max(minimum, fallbackValue);
-}
-
-OwnPtr<InputType> RangeInputType::create(HTMLInputElement& element)
-{
-    return adoptPtr(new RangeInputType(element));
 }
 
 RangeInputType::RangeInputType(HTMLInputElement& element)
@@ -210,7 +204,7 @@ void RangeInputType::handleKeydownEvent(KeyboardEvent* event)
 
     bool isVertical = false;
     if (element().renderer()) {
-        ControlPart part = element().renderer()->style()->appearance();
+        ControlPart part = element().renderer()->style().appearance();
         isVertical = part == SliderVerticalPart || part == MediaVolumeSliderPart;
     }
 
@@ -285,9 +279,9 @@ HTMLElement* RangeInputType::sliderThumbElement() const
     return &typedSliderThumbElement();
 }
 
-RenderElement* RangeInputType::createRenderer(RenderStyle&) const
+RenderElement* RangeInputType::createRenderer(PassRef<RenderStyle> style) const
 {
-    return new RenderSlider(element());
+    return new RenderSlider(element(), std::move(style));
 }
 
 Decimal RangeInputType::parseToNumber(const String& src, const Decimal& defaultValue) const

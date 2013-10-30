@@ -143,6 +143,9 @@ void RemoteLayerTreeTransaction::LayerProperties::encode(CoreIPC::ArgumentEncode
 
     if (changedProperties & FiltersChanged)
         encoder << filters;
+
+    if (changedProperties & EdgeAntialiasingMaskChanged)
+        encoder << edgeAntialiasingMask;
 }
 
 bool RemoteLayerTreeTransaction::LayerProperties::decode(CoreIPC::ArgumentDecoder& decoder, LayerProperties& result)
@@ -280,6 +283,11 @@ bool RemoteLayerTreeTransaction::LayerProperties::decode(CoreIPC::ArgumentDecode
             return false;
     }
 
+    if (result.changedProperties & EdgeAntialiasingMaskChanged) {
+        if (!decoder.decode(result.edgeAntialiasingMask))
+            return false;
+    }
+
     return true;
 }
 
@@ -360,7 +368,6 @@ public:
     RemoteLayerTreeTextStream& operator<<(PlatformCALayer::FilterType);
     RemoteLayerTreeTextStream& operator<<(FloatPoint3D);
     RemoteLayerTreeTextStream& operator<<(Color);
-    RemoteLayerTreeTextStream& operator<<(FloatSize);
     RemoteLayerTreeTextStream& operator<<(FloatRect);
     RemoteLayerTreeTextStream& operator<<(const Vector<RemoteLayerTreeTransaction::LayerID>& layers);
     RemoteLayerTreeTextStream& operator<<(const FilterOperations&);
@@ -483,13 +490,6 @@ RemoteLayerTreeTextStream& RemoteLayerTreeTextStream::operator<<(Color color)
 {
     RemoteLayerTreeTextStream& ts = *this;
     ts << color.serialized();
-    return ts;
-}
-
-RemoteLayerTreeTextStream& RemoteLayerTreeTextStream::operator<<(FloatSize size)
-{
-    RemoteLayerTreeTextStream& ts = *this;
-    ts << size.width() << " " << size.height();
     return ts;
 }
 
@@ -627,6 +627,9 @@ static void dumpChangedLayers(RemoteLayerTreeTextStream& ts, const HashMap<Remot
         if (layerProperties.changedProperties & RemoteLayerTreeTransaction::FiltersChanged)
             dumpProperty<FilterOperations>(ts, "filters", layerProperties.filters);
 
+        if (layerProperties.changedProperties & RemoteLayerTreeTransaction::EdgeAntialiasingMaskChanged)
+            dumpProperty<unsigned>(ts, "edgeAntialiasingMask", layerProperties.edgeAntialiasingMask);
+
         ts << ")";
 
         ts.decreaseIndent();
@@ -647,14 +650,16 @@ void RemoteLayerTreeTransaction::dump() const
     if (!m_createdLayers.isEmpty()) {
         ts << "\n";
         ts.writeIndent();
-        ts << "(created-layers\n";
+        ts << "(created-layers";
         ts.increaseIndent();
         for (const auto& createdLayer : m_createdLayers) {
+            ts << "\n";
             ts.writeIndent();
             ts << "(";
             switch (createdLayer.type) {
             case PlatformCALayer::LayerTypeLayer:
             case PlatformCALayer::LayerTypeWebLayer:
+            case PlatformCALayer::LayerTypeSimpleLayer:
                 ts << "layer";
                 break;
             case PlatformCALayer::LayerTypeTransformLayer:
@@ -668,6 +673,9 @@ void RemoteLayerTreeTransaction::dump() const
                 break;
             case PlatformCALayer::LayerTypePageTiledBackingLayer:
                 ts << "page-tiled-backing-layer";
+                break;
+            case PlatformCALayer::LayerTypeTiledBackingTileLayer:
+                ts << "tiled-backing-tile";
                 break;
             case PlatformCALayer::LayerTypeRootLayer:
                 ts << "root-layer";

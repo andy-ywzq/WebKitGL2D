@@ -461,7 +461,7 @@ void HTMLElement::setInnerText(const String& text, ExceptionCode& ec)
     // FIXME: Can the renderer be out of date here? Do we need to call updateStyleIfNeeded?
     // For example, for the contents of textarea elements that are display:none?
     auto r = renderer();
-    if (r && r->style()->preserveNewline()) {
+    if (r && r->style().preserveNewline()) {
         if (!text.contains('\r')) {
             replaceChildrenWithText(*this, text, ec);
             return;
@@ -781,11 +781,11 @@ bool HTMLElement::rendererIsNeeded(const RenderStyle& style)
     return StyledElement::rendererIsNeeded(style);
 }
 
-RenderElement* HTMLElement::createRenderer(RenderStyle& style)
+RenderElement* HTMLElement::createRenderer(PassRef<RenderStyle> style)
 {
     if (hasLocalName(wbrTag))
-        return new RenderLineBreak(*this);
-    return RenderElement::createFor(*this, style);
+        return new RenderLineBreak(*this, std::move(style));
+    return RenderElement::createFor(*this, std::move(style));
 }
 
 HTMLFormElement* HTMLElement::virtualForm() const
@@ -906,7 +906,7 @@ void HTMLElement::adjustDirectionalityIfNeededAfterChildAttributeChanged(Element
     Node* strongDirectionalityTextNode;
     TextDirection textDirection = directionality(&strongDirectionalityTextNode);
     setHasDirAutoFlagRecursively(child, false);
-    if (!renderer() || !renderer()->style() || renderer()->style()->direction() == textDirection)
+    if (!renderer() || renderer()->style().direction() == textDirection)
         return;
     auto lineage = elementLineage(this);
     for (auto elementToAdjust = lineage.begin(), end = lineage.end(); elementToAdjust != end; ++elementToAdjust) {
@@ -922,7 +922,7 @@ void HTMLElement::calculateAndAdjustDirectionality()
     Node* strongDirectionalityTextNode;
     TextDirection textDirection = directionality(&strongDirectionalityTextNode);
     setHasDirAutoFlagRecursively(this, true, strongDirectionalityTextNode);
-    if (renderer() && renderer()->style() && renderer()->style()->direction() != textDirection)
+    if (renderer() && renderer()->style().direction() != textDirection)
         setNeedsStyleRecalc();
 }
 

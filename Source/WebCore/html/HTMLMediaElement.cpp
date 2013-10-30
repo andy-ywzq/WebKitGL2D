@@ -570,11 +570,11 @@ bool HTMLMediaElement::rendererIsNeeded(const RenderStyle& style)
 #endif
 }
 
-RenderElement* HTMLMediaElement::createRenderer(RenderStyle&)
+RenderElement* HTMLMediaElement::createRenderer(PassRef<RenderStyle> style)
 {
 #if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
     // Setup the renderer if we already have a proxy widget.
-    RenderEmbeddedObject* mediaRenderer = new RenderEmbeddedObject(*this);
+    RenderEmbeddedObject* mediaRenderer = new RenderEmbeddedObject(*this, std::move(style));
     if (m_proxyWidget) {
         mediaRenderer->setWidget(m_proxyWidget);
 
@@ -583,7 +583,7 @@ RenderElement* HTMLMediaElement::createRenderer(RenderStyle&)
     }
     return mediaRenderer;
 #else
-    return new RenderMedia(*this);
+    return new RenderMedia(*this, std::move(style));
 #endif
 }
 
@@ -2351,13 +2351,6 @@ void HTMLMediaElement::setCurrentTime(double time, ExceptionCode& ec)
     seek(time, ec);
 }
 
-double HTMLMediaElement::startTime() const
-{
-    if (!m_player)
-        return 0;
-    return m_player->startTime();
-}
-
 double HTMLMediaElement::initialTime() const
 {
     if (m_fragmentStartTime != MediaPlayer::invalidTime())
@@ -3509,7 +3502,7 @@ URL HTMLMediaElement::selectNextSourceChild(ContentType* contentType, String* ke
             goto check_again;
         
         if (source->fastHasAttribute(mediaAttr)) {
-            MediaQueryEvaluator screenEval("screen", document().frame(), renderer() ? renderer()->style() : 0);
+            MediaQueryEvaluator screenEval("screen", document().frame(), renderer() ? &renderer()->style() : nullptr);
             RefPtr<MediaQuerySet> media = MediaQuerySet::createAllowingDescriptionSyntax(source->media());
 #if !LOG_DISABLED
             if (shouldLog)
@@ -3679,7 +3672,7 @@ void HTMLMediaElement::mediaPlayerTimeChanged(MediaPlayer*)
         if (loop() && !m_mediaController) {
             m_sentEndEvent = false;
             //  then seek to the earliest possible position of the media resource and abort these steps.
-            seek(startTime(), IGNORE_EXCEPTION);
+            seek(0, IGNORE_EXCEPTION);
         } else {
             // If the media element does not have a current media controller, and the media element
             // has still ended playback, and the direction of playback is still forwards, and paused
@@ -4996,7 +4989,7 @@ bool HTMLMediaElement::isBlockedOnMediaController() const
     // position relative to the MediaController's timeline or after the end of the media resource 
     // relative to the MediaController's timeline.
     double mediaControllerPosition = m_mediaController->currentTime();
-    if (mediaControllerPosition < startTime() || mediaControllerPosition > startTime() + duration())
+    if (mediaControllerPosition < 0 || mediaControllerPosition > duration())
         return true;
 
     return false;

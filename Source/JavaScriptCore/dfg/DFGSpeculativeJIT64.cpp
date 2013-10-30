@@ -2269,11 +2269,6 @@ void SpeculativeJIT::compile(Node* node)
         break;
     }
         
-    case InlineStart: {
-        compileInlineStart(node);
-        break;
-    }
-
     case MovHint:
     case ZombieHint: {
         RELEASE_ASSERT_NOT_REACHED();
@@ -4202,7 +4197,7 @@ void SpeculativeJIT::compile(Node* node)
         m_jit.addWeakReference(node->structure());
         m_jit.addLazily(
             speculationWatchpoint(
-                node->child1()->op() == WeakJSConstant ? BadWeakConstantCache : BadCache),
+                node->child1()->op() == WeakJSConstant ? BadWeakConstantCacheWatchpoint : BadCacheWatchpoint),
             node->structure()->transitionWatchpointSet());
 
 #if !ASSERT_DISABLED

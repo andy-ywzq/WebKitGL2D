@@ -38,8 +38,8 @@
 
 namespace WebCore {
 
-RenderSVGResourceFilterPrimitive::RenderSVGResourceFilterPrimitive(SVGFilterPrimitiveStandardAttributes& filterPrimitiveElement)
-    : RenderSVGHiddenContainer(filterPrimitiveElement)
+RenderSVGResourceFilterPrimitive::RenderSVGResourceFilterPrimitive(SVGFilterPrimitiveStandardAttributes& filterPrimitiveElement, PassRef<RenderStyle> style)
+    : RenderSVGHiddenContainer(filterPrimitiveElement, std::move(style))
 {
 }
 
@@ -60,7 +60,7 @@ void RenderSVGResourceFilterPrimitive::styleDidChange(StyleDifference diff, cons
     if (diff == StyleDifferenceEqual || !oldStyle)
         return;
 
-    const SVGRenderStyle* newStyle = this->style()->svgStyle();
+    const SVGRenderStyle* newStyle = style().svgStyle();
     if (filterPrimitiveElement().hasTagName(SVGNames::feFloodTag)) {
         if (newStyle->floodColor() != oldStyle->svgStyle()->floodColor())
             toRenderSVGResourceFilter(filter)->primitiveAttributeChanged(this, SVGNames::flood_colorAttr);
