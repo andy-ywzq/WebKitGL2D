@@ -687,9 +687,9 @@ void SpeculativeJIT::emitCall(Node* node)
     
     int numArgs = numPassedArgs + dummyThisArgument;
     
-    m_jit.store32(MacroAssembler::TrustedImm32(numArgs), callFramePayloadSlot(numArgs, JSStack::ArgumentCount));
-    m_jit.store64(GPRInfo::callFrameRegister, callFrameSlot(numArgs, JSStack::CallerFrame));
-    m_jit.store64(calleeGPR, callFrameSlot(numArgs, JSStack::Callee));
+    m_jit.store32(MacroAssembler::TrustedImm32(numArgs), calleeFramePayloadSlot(numArgs, JSStack::ArgumentCount));
+    m_jit.store64(GPRInfo::callFrameRegister, calleeFrameCallerFrame(numArgs));
+    m_jit.store64(calleeGPR, calleeFrameSlot(numArgs, JSStack::Callee));
     
     for (int i = 0; i < numPassedArgs; i++) {
         Edge argEdge = m_jit.graph().m_varArgChildren[node->firstChild() + 1 + i];
@@ -697,7 +697,7 @@ void SpeculativeJIT::emitCall(Node* node)
         GPRReg argGPR = arg.gpr();
         use(argEdge);
         
-        m_jit.store64(argGPR, argumentSlot(numArgs, i + dummyThisArgument));
+        m_jit.store64(argGPR, calleeArgumentSlot(numArgs, i + dummyThisArgument));
     }
 
     flushRegisters();
@@ -3436,9 +3436,9 @@ void SpeculativeJIT::compile(Node* node)
         m_jit.move(op1.gpr(), GPRInfo::returnValueGPR);
 
         // Grab the return address.
-        m_jit.emitGetFromCallFrameHeaderPtr(JSStack::ReturnPC, GPRInfo::regT1);
+        m_jit.emitGetReturnPCFromCallFrameHeaderPtr(GPRInfo::regT1);
         // Restore our caller's "r".
-        m_jit.emitGetFromCallFrameHeaderPtr(JSStack::CallerFrame, GPRInfo::callFrameRegister);
+        m_jit.emitGetCallerFrameFromCallFrameHeaderPtr(GPRInfo::callFrameRegister);
         // Return.
         m_jit.restoreReturnAddressBeforeReturn(GPRInfo::regT1);
         m_jit.ret();

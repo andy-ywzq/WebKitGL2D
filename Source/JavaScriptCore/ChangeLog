@@ -1,3 +1,382 @@
+2013-10-30  Mark Lam  <mark.lam@apple.com>
+
+        Adjust CallFrameHeader's ReturnPC and CallFrame locations to match the native ABI .
+        https://bugs.webkit.org/show_bug.cgi?id=123444.
+
+        Reviewed by Geoffrey Garen.
+
+        - Introduced an explicit CallerFrameAndPC struct.
+        - A CallFrame is expected to start with a CallerFrameAndPC struct. 
+        - The Register class no longer supports CallFrame* and Instruction*.
+
+          These hides the differences between JSVALUE32_64 and JSVALUE64 in
+          terms of managing the callerFrame() and returnPC() values.
+
+        - Convert all uses of JSStack::CallerFrame and JSStack::ReturnPC to
+          go through CallFrame to access the appropriate values and offsets.
+          CallFrame, in turn, will access the callerFrame and returnPC via
+          the CallerFrameAndPC struct.
+
+        - InlineCallFrame will provide offsets for its callerFrame and
+          returnPC. It will make use of CallFrame::callerFrameOffset() and
+          CallerFrame::returnPCOffset() to compute these.
+
+        * bytecode/CodeOrigin.h:
+        (JSC::InlineCallFrame::callerFrameOffset):
+        (JSC::InlineCallFrame::returnPCOffset):
+        * dfg/DFGJITCompiler.cpp:
+        (JSC::DFG::JITCompiler::compileEntry):
+        (JSC::DFG::JITCompiler::compileExceptionHandlers):
+        * dfg/DFGOSRExitCompilerCommon.cpp:
+        (JSC::DFG::reifyInlinedCallFrames):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::calleeFrameSlot):
+        (JSC::DFG::SpeculativeJIT::calleeArgumentSlot):
+        (JSC::DFG::SpeculativeJIT::calleeFrameTagSlot):
+        (JSC::DFG::SpeculativeJIT::calleeFramePayloadSlot):
+        (JSC::DFG::SpeculativeJIT::calleeArgumentTagSlot):
+        (JSC::DFG::SpeculativeJIT::calleeArgumentPayloadSlot):
+        - Prefixed all the above with callee since they apply to the callee frame.
+        (JSC::DFG::SpeculativeJIT::calleeFrameCallerFrame):
+        - Added to set the callerFrame pointer in the callee frame.
+
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        (JSC::DFG::SpeculativeJIT::compile):
+        * ftl/FTLLink.cpp:
+        (JSC::FTL::compileEntry):
+        (JSC::FTL::link):
+        * interpreter/CallFrame.h:
+        (JSC::ExecState::callerFrame):
+        (JSC::ExecState::callerFrameOffset):
+        (JSC::ExecState::returnPC):
+        (JSC::ExecState::hasReturnPC):
+        (JSC::ExecState::clearReturnPC):
+        (JSC::ExecState::returnPCOffset):
+        (JSC::ExecState::setCallerFrame):
+        (JSC::ExecState::setReturnPC):
+        (JSC::ExecState::callerFrameAndPC):
+        * interpreter/JSStack.h:
+        * interpreter/Register.h:
+        * jit/AssemblyHelpers.h:
+        (JSC::AssemblyHelpers::emitPutToCallFrameHeader):
+        - Convert to using storePtr() here and simplify the code.
+        (JSC::AssemblyHelpers::emitGetCallerFrameFromCallFrameHeaderPtr):
+        (JSC::AssemblyHelpers::emitPutCallerFrameToCallFrameHeader):
+        (JSC::AssemblyHelpers::emitGetReturnPCFromCallFrameHeaderPtr):
+        (JSC::AssemblyHelpers::emitPutReturnPCToCallFrameHeader):
+        - Helpers to emit gets/puts of the callerFrame and returnPC.
+        (JSC::AssemblyHelpers::addressForByteOffset):
+        * jit/JIT.cpp:
+        (JSC::JIT::JIT):
+        (JSC::JIT::privateCompile):
+        (JSC::JIT::privateCompileExceptionHandlers):
+        * jit/JITCall.cpp:
+        (JSC::JIT::compileCallEval):
+        (JSC::JIT::compileOpCall):
+        * jit/JITCall32_64.cpp:
+        (JSC::JIT::emit_op_ret):
+        (JSC::JIT::emit_op_ret_object_or_this):
+        (JSC::JIT::compileCallEval):
+        (JSC::JIT::compileOpCall):
+        * jit/JITInlines.h:
+        (JSC::JIT::unmap):
+        * jit/JITOpcodes.cpp:
+        (JSC::JIT::emit_op_end):
+        (JSC::JIT::emit_op_ret):
+        (JSC::JIT::emit_op_ret_object_or_this):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::privateCompileCTINativeCall):
+        (JSC::JIT::emit_op_end):
+        * jit/JITOperations.cpp:
+        * jit/SpecializedThunkJIT.h:
+        (JSC::SpecializedThunkJIT::returnJSValue):
+        (JSC::SpecializedThunkJIT::returnDouble):
+        (JSC::SpecializedThunkJIT::returnInt32):
+        (JSC::SpecializedThunkJIT::returnJSCell):
+        * jit/ThunkGenerators.cpp:
+        (JSC::throwExceptionFromCallSlowPathGenerator):
+        (JSC::slowPathFor):
+        (JSC::nativeForGenerator):
+
+        * llint/LLIntData.cpp:
+        (JSC::LLInt::Data::performAssertions):
+        * llint/LowLevelInterpreter.asm:
+        - Updated offsets and asserts to match the new CallFrame layout.
+
+2013-10-30  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix Mac.
+
+        * assembler/AbstractMacroAssembler.h:
+        (JSC::AbstractMacroAssembler::RegisterAllocationOffset::checkOffsets):
+        (JSC::AbstractMacroAssembler::checkRegisterAllocationAgainstBranchRange):
+
+2013-10-30  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix Windows.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::jettison):
+
+2013-10-30  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed, fix Windows.
+
+        * bytecode/CodeBlock.h:
+        (JSC::CodeBlock::addFrequentExitSite):
+
+2013-10-29  Filip Pizlo  <fpizlo@apple.com>
+
+        Add InvalidationPoints to the DFG and use them for all watchpoints
+        https://bugs.webkit.org/show_bug.cgi?id=123472
+
+        Reviewed by Mark Hahnenberg.
+        
+        This makes a fundamental change to how watchpoints work in the DFG.
+        
+        Previously, a watchpoint was an instruction whose execution semantics were something
+        like:
+        
+            if (watchpoint->invalidated)
+                exit
+        
+        We would implement this without any branch by using jump replacement.
+        
+        This is a very good optimization. But it's a bit awkward once you get a lot of
+        watchpoints: semantically we will have lots of these branches in the code, which the
+        compiler needs to reason about even though they don't actually result in any emitted
+        code.
+        
+        Separately, we also had a mechanism for jettisoning a CodeBlock. This mechanism would
+        be invoked if a CodeBlock exited a lot. It would ensure that a CodeBlock wouldn't be
+        called into again, but it would do nothing for CodeBlocks that were already on the
+        stack.
+        
+        This change flips jettisoning and watchpoint invalidation on their heads. Now, the jump
+        replacement has nothing to do with watchpoints; instead it's something that happens if
+        you ever jettison a CodeBlock. Jump replacement is now an all-or-nothing operation over
+        all of the potential call-return safe-exit-points in a CodeBlock. We call these
+        "InvalidationPoint"s. A watchpoint instruction is now "lowered" by having the DFG
+        collect all of the watchpoint sets that the CodeBlock cares about, and then registering
+        a CodeBlockJettisoningWatchpoint with all of them. That is, if the watchpoint fires, it
+        jettisons the CodeBlock, which in turn ensures that the CodeBlock can't be called into
+        (because the entrypoint now points to baseline code) and can't be returned into
+        (because returning exits to baseline before the next bytecode instruction).
+        
+        This will allow for a sensible lowering of watchpoints to LLVM IR. It will also allow
+        for jettison() to be used effectively for things like breakpointing and single-stepping
+        in the debugger.
+        
+        Well, basically, this mechanism just takes us into the HotSpot-style world where anyone
+        can, at any time and for any reason, request that an optimized CodeBlock is rendered
+        immediately invalid. You can use this for many cool things, I'm sure.
+
+        * CMakeLists.txt:
+        * GNUmakefile.list.am:
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * assembler/AbstractMacroAssembler.h:
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::jettison):
+        * bytecode/CodeBlock.h:
+        * bytecode/CodeBlockJettisoningWatchpoint.cpp: Added.
+        (JSC::CodeBlockJettisoningWatchpoint::fireInternal):
+        * bytecode/CodeBlockJettisoningWatchpoint.h: Added.
+        (JSC::CodeBlockJettisoningWatchpoint::CodeBlockJettisoningWatchpoint):
+        * bytecode/ExitKind.cpp:
+        (JSC::exitKindToString):
+        * bytecode/ExitKind.h:
+        * bytecode/ProfiledCodeBlockJettisoningWatchpoint.cpp: Added.
+        (JSC::ProfiledCodeBlockJettisoningWatchpoint::fireInternal):
+        * bytecode/ProfiledCodeBlockJettisoningWatchpoint.h: Added.
+        (JSC::ProfiledCodeBlockJettisoningWatchpoint::ProfiledCodeBlockJettisoningWatchpoint):
+        * dfg/DFGAbstractHeap.h:
+        * dfg/DFGAbstractInterpreterInlines.h:
+        (JSC::DFG::::executeEffects):
+        * dfg/DFGClobberize.cpp:
+        (JSC::DFG::writesOverlap):
+        * dfg/DFGClobberize.h:
+        (JSC::DFG::clobberize):
+        (JSC::DFG::AbstractHeapOverlaps::AbstractHeapOverlaps):
+        (JSC::DFG::AbstractHeapOverlaps::operator()):
+        (JSC::DFG::AbstractHeapOverlaps::result):
+        * dfg/DFGCommonData.cpp:
+        (JSC::DFG::CommonData::invalidate):
+        * dfg/DFGCommonData.h:
+        (JSC::DFG::CommonData::CommonData):
+        * dfg/DFGDesiredWatchpoints.cpp:
+        (JSC::DFG::DesiredWatchpoints::addLazily):
+        (JSC::DFG::DesiredWatchpoints::reallyAdd):
+        * dfg/DFGDesiredWatchpoints.h:
+        (JSC::DFG::WatchpointForGenericWatchpointSet::WatchpointForGenericWatchpointSet):
+        (JSC::DFG::GenericDesiredWatchpoints::addLazily):
+        (JSC::DFG::GenericDesiredWatchpoints::reallyAdd):
+        (JSC::DFG::GenericDesiredWatchpoints::areStillValid):
+        * dfg/DFGFixupPhase.cpp:
+        (JSC::DFG::FixupPhase::fixupNode):
+        * dfg/DFGInvalidationPointInjectionPhase.cpp: Added.
+        (JSC::DFG::InvalidationPointInjectionPhase::InvalidationPointInjectionPhase):
+        (JSC::DFG::InvalidationPointInjectionPhase::run):
+        (JSC::DFG::InvalidationPointInjectionPhase::handle):
+        (JSC::DFG::InvalidationPointInjectionPhase::insertInvalidationCheck):
+        (JSC::DFG::performInvalidationPointInjection):
+        * dfg/DFGInvalidationPointInjectionPhase.h: Added.
+        * dfg/DFGJITCode.h:
+        * dfg/DFGJITCompiler.cpp:
+        (JSC::DFG::JITCompiler::linkOSRExits):
+        (JSC::DFG::JITCompiler::link):
+        * dfg/DFGJITCompiler.h:
+        * dfg/DFGJumpReplacement.cpp: Added.
+        (JSC::DFG::JumpReplacement::fire):
+        * dfg/DFGJumpReplacement.h: Added.
+        (JSC::DFG::JumpReplacement::JumpReplacement):
+        * dfg/DFGNodeType.h:
+        * dfg/DFGOSRExitCompilationInfo.h:
+        * dfg/DFGOperations.cpp:
+        * dfg/DFGPlan.cpp:
+        (JSC::DFG::Plan::compileInThreadImpl):
+        (JSC::DFG::Plan::reallyAdd):
+        * dfg/DFGPredictionPropagationPhase.cpp:
+        (JSC::DFG::PredictionPropagationPhase::propagate):
+        * dfg/DFGSafeToExecute.h:
+        (JSC::DFG::safeToExecute):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::emitInvalidationPoint):
+        (JSC::DFG::SpeculativeJIT::compilePeepHoleObjectEquality):
+        (JSC::DFG::SpeculativeJIT::compileGetByValOnString):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::masqueradesAsUndefinedWatchpointIsStillValid):
+        (JSC::DFG::SpeculativeJIT::speculateStringObjectForStructure):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeNonPeepholeCompareNull):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativePeepholeBranchNull):
+        (JSC::DFG::SpeculativeJIT::compileObjectEquality):
+        (JSC::DFG::SpeculativeJIT::compileObjectToObjectOrOtherEquality):
+        (JSC::DFG::SpeculativeJIT::compilePeepHoleObjectToObjectOrOtherEquality):
+        (JSC::DFG::SpeculativeJIT::compileObjectOrOtherLogicalNot):
+        (JSC::DFG::SpeculativeJIT::emitObjectOrOtherBranch):
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::nonSpeculativeNonPeepholeCompareNull):
+        (JSC::DFG::SpeculativeJIT::nonSpeculativePeepholeBranchNull):
+        (JSC::DFG::SpeculativeJIT::compileObjectEquality):
+        (JSC::DFG::SpeculativeJIT::compileObjectToObjectOrOtherEquality):
+        (JSC::DFG::SpeculativeJIT::compilePeepHoleObjectToObjectOrOtherEquality):
+        (JSC::DFG::SpeculativeJIT::compileObjectOrOtherLogicalNot):
+        (JSC::DFG::SpeculativeJIT::emitObjectOrOtherBranch):
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGWatchpointCollectionPhase.cpp: Added.
+        (JSC::DFG::WatchpointCollectionPhase::WatchpointCollectionPhase):
+        (JSC::DFG::WatchpointCollectionPhase::run):
+        (JSC::DFG::WatchpointCollectionPhase::handle):
+        (JSC::DFG::WatchpointCollectionPhase::handleEdge):
+        (JSC::DFG::WatchpointCollectionPhase::handleMasqueradesAsUndefined):
+        (JSC::DFG::WatchpointCollectionPhase::handleStringGetByVal):
+        (JSC::DFG::WatchpointCollectionPhase::addLazily):
+        (JSC::DFG::WatchpointCollectionPhase::globalObject):
+        (JSC::DFG::performWatchpointCollection):
+        * dfg/DFGWatchpointCollectionPhase.h: Added.
+        * ftl/FTLCapabilities.cpp:
+        (JSC::FTL::canCompile):
+        * ftl/FTLLowerDFGToLLVM.cpp:
+        (JSC::FTL::LowerDFGToLLVM::compileNode):
+        (JSC::FTL::LowerDFGToLLVM::compileStructureTransitionWatchpoint):
+        (JSC::FTL::LowerDFGToLLVM::compileGetByVal):
+        (JSC::FTL::LowerDFGToLLVM::compileGlobalVarWatchpoint):
+        (JSC::FTL::LowerDFGToLLVM::compileCompareEqConstant):
+        (JSC::FTL::LowerDFGToLLVM::compileCompareStrictEq):
+        (JSC::FTL::LowerDFGToLLVM::compileCompareStrictEqConstant):
+        (JSC::FTL::LowerDFGToLLVM::compileInvalidationPoint):
+        (JSC::FTL::LowerDFGToLLVM::equalNullOrUndefined):
+        (JSC::FTL::LowerDFGToLLVM::speculateNonNullObject):
+        * jit/JITOperations.cpp:
+        * jit/JumpReplacementWatchpoint.cpp: Removed.
+        * jit/JumpReplacementWatchpoint.h: Removed.
+
+2013-10-25  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        JSExport doesn't support constructors
+        https://bugs.webkit.org/show_bug.cgi?id=123380
+
+        Reviewed by Geoffrey Garen.
+
+        Support for constructor-style callbacks for the Objective-C API to JSC is currently limited to 
+        Objective-C blocks. Any clients who try to call the constructor of a JSExport-ed Objective-C class 
+        are met with a type error stating that it cannot be called as a constructor.
+
+        It would be nice to expand JSExport's functionality to support this idiom. It is a natural 
+        extension to JSExport and would increase the expressiveness and simplicity in both Objective-C and 
+        JavaScript client code.
+
+        The way we'll do this is to expand the capabilities of ObjCCallbackFunction and associated classes. 
+        Instead of constructing a normal C API object for the constructor, we'll instead allocate a full-blown 
+        ObjCCallbackFunction object which can already properly handle being invoked as a constructor.
+
+        * API/JSWrapperMap.mm:
+        (copyMethodsToObject):
+        (allocateConstructorForCustomClass):
+        (-[JSObjCClassInfo allocateConstructorAndPrototypeWithSuperClassInfo:]):
+        (tryUnwrapObjcObject):
+        * API/ObjCCallbackFunction.h:
+        (JSC::ObjCCallbackFunction::impl):
+        * API/ObjCCallbackFunction.mm:
+        (JSC::ObjCCallbackFunctionImpl::ObjCCallbackFunctionImpl):
+        (JSC::ObjCCallbackFunctionImpl::wrappedConstructor):
+        (JSC::ObjCCallbackFunctionImpl::isConstructible):
+        (JSC::ObjCCallbackFunction::getConstructData):
+        (JSC::ObjCCallbackFunctionImpl::name):
+        (JSC::ObjCCallbackFunctionImpl::call):
+        (objCCallbackFunctionForInvocation):
+        (objCCallbackFunctionForInit):
+        (tryUnwrapConstructor):
+        * API/tests/testapi.mm:
+        (-[TextXYZ initWithString:]):
+        (-[ClassA initWithA:]):
+        (-[ClassB initWithA:b:]):
+        (-[ClassC initWithA:]):
+        (-[ClassC initWithA:b:]):
+
+2013-10-30  peavo@outlook.com  <peavo@outlook.com>
+
+        [Win] Compile errors when enabling DFG JIT.
+        https://bugs.webkit.org/show_bug.cgi?id=120998
+
+        Reviewed by Brent Fulgham.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj: Added files.
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj.filters: Ditto.
+        * dfg/DFGAllocator.h: Removed scope.
+        * dfg/DFGWorklist.cpp: Use new ThreadingOnce class instead of pthread_once.
+        (JSC::DFG::globalWorklist):
+        * heap/DeferGC.h: Link fix, member needs to be public.
+        * jit/JITOperationWrappers.h: Added required assembler macros.
+
+2013-10-30  Iago Toral Quiroga  <itoral@igalia.com>
+
+        Add result caching for Math.cos
+        https://bugs.webkit.org/show_bug.cgi?id=123255
+
+        Reviewed by Brent Fulgham.
+
+        * runtime/MathObject.cpp:
+        (JSC::mathProtoFuncCos):
+        * runtime/VM.h:
+
+2013-10-30  Alex Christensen  <achristensen@webkit.org>
+
+        Disabled JIT on Win64.
+        https://bugs.webkit.org/show_bug.cgi?id=122472
+
+        Reviewed by Geoffrey Garen.
+
+        * JavaScriptCore.vcxproj/JavaScriptCore.vcxproj:
+        Disabled building JITStubsMSVC64.
+
+>>>>>>> c8151c4... Adjust CallFrameHeader's ReturnPC and CallFrame locations to match the native ABI .
 2013-10-29  Michael Saboff  <msaboff@apple.com>
 
         Change local variable register allocation to start at offset -1
