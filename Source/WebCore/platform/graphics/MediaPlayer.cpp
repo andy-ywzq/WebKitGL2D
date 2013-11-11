@@ -45,11 +45,7 @@
 #endif
 
 #if ENABLE(MEDIA_SOURCE)
-#include "MediaSource.h"
-#endif
-
-#if PLATFORM(QT)
-#include <QtGlobal>
+#include "HTMLMediaSource.h"
 #endif
 
 #if USE(GSTREAMER)
@@ -62,7 +58,7 @@
 #if USE(AVFOUNDATION)
 #include "MediaPlayerPrivateAVFoundationObjC.h"
 #endif
-#elif OS(WINCE) && !PLATFORM(QT)
+#elif OS(WINCE)
 #include "MediaPlayerPrivateWinCE.h"
 #define PlatformMediaEngineClassName MediaPlayerPrivate
 #elif PLATFORM(WIN)
@@ -71,14 +67,12 @@
 #if USE(AVFOUNDATION)
 #include "MediaPlayerPrivateAVFoundationCF.h"
 #endif
-#elif PLATFORM(QT)
-#if USE(QT_MULTIMEDIA) && !USE(GSTREAMER)
-#include "MediaPlayerPrivateQt.h"
-#define PlatformMediaEngineClassName MediaPlayerPrivateQt
-#endif
 #elif PLATFORM(BLACKBERRY)
 #include "MediaPlayerPrivateBlackBerry.h"
 #define PlatformMediaEngineClassName MediaPlayerPrivate
+#elif PLATFORM(NIX)
+#include "MediaPlayerPrivateNix.h"
+#define PlatformMediaEngineClassName MediaPlayerPrivateNix
 #endif
 
 namespace WebCore {
@@ -93,7 +87,7 @@ public:
 
     virtual void load(const String&) { }
 #if ENABLE(MEDIA_SOURCE)
-    virtual void load(const String&, PassRefPtr<MediaSource>) { }
+    virtual void load(const String&, PassRefPtr<HTMLMediaSource>) { }
 #endif
     virtual void cancelLoad() { }
 
@@ -195,7 +189,7 @@ public:
 
 static void addMediaEngine(CreateMediaEnginePlayer, MediaEngineSupportedTypes, MediaEngineSupportsType, MediaEngineGetSitesInMediaCache, MediaEngineClearMediaCache, MediaEngineClearMediaCacheForSite);
 
-static MediaPlayerFactory* bestMediaEngineForTypeAndCodecs(const String& type, const String& codecs, const String& keySystem, const KURL&, MediaPlayerFactory* current = 0);
+static MediaPlayerFactory* bestMediaEngineForSupportParameters(const MediaEngineSupportParameters&, MediaPlayerFactory* current = 0);
 static MediaPlayerFactory* nextMediaEngine(MediaPlayerFactory* current);
 
 enum RequeryEngineOptions { DoNotResetEngines, ResetEngines };
@@ -264,9 +258,9 @@ static const AtomicString& codecs()
     return codecs;
 }
 
-static MediaPlayerFactory* bestMediaEngineForTypeAndCodecs(const String& type, const String& codecs, const String& keySystem, const KURL& url, MediaPlayerFactory* current)
+static MediaPlayerFactory* bestMediaEngineForSupportParameters(const MediaEngineSupportParameters& parameters, MediaPlayerFactory* current)
 {
-    if (type.isEmpty())
+    if (parameters.type.isEmpty())
         return 0;
 
     Vector<MediaPlayerFactory*>& engines = installedMediaEngines();
@@ -276,8 +270,8 @@ static MediaPlayerFactory* bestMediaEngineForTypeAndCodecs(const String& type, c
     // 4.8.10.3 MIME types - In the absence of a specification to the contrary, the MIME type "application/octet-stream" 
     // when used with parameters, e.g. "application/octet-stream;codecs=theora", is a type that the user agent knows 
     // it cannot render.
-    if (type == applicationOctetStream()) {
-        if (!codecs.isEmpty())
+    if (parameters.type == applicationOctetStream()) {
+        if (!parameters.codecs.isEmpty())
             return 0;
     }
 
@@ -290,13 +284,7 @@ static MediaPlayerFactory* bestMediaEngineForTypeAndCodecs(const String& type, c
                 current = 0;
             continue;
         }
-#if ENABLE(ENCRYPTED_MEDIA) || ENABLE(ENCRYPTED_MEDIA_V2)
-        MediaPlayer::SupportsType engineSupport = engines[ndx]->supportsTypeAndCodecs(type, codecs, keySystem, url);
-#else
-        UNUSED_PARAM(keySystem);
-        ASSERT(keySystem.isEmpty());
-        MediaPlayer::SupportsType engineSupport = engines[ndx]->supportsTypeAndCodecs(type, codecs, url);
-#endif
+        MediaPlayer::SupportsType engineSupport = engines[ndx]->supportsTypeAndCodecs(parameters);
         if (engineSupport > supported) {
             supported = engineSupport;
             engine = engines[ndx];
@@ -359,7 +347,7 @@ MediaPlayer::~MediaPlayer()
     m_mediaPlayerClient = 0;
 }
 
-bool MediaPlayer::load(const KURL& url, const ContentType& contentType, const String& keySystem)
+bool MediaPlayer::load(const URL& url, const ContentType& contentType, const String& keySystem)
 {
     m_contentMIMEType = contentType.type().lower();
     m_contentTypeCodecs = contentType.parameter(codecs());
@@ -394,7 +382,7 @@ bool MediaPlayer::load(const KURL& url, const ContentType& contentType, const St
 }
 
 #if ENABLE(MEDIA_SOURCE)
-bool MediaPlayer::load(const KURL& url, PassRefPtr<MediaSource> mediaSource)
+bool MediaPlayer::load(const URL& url, PassRefPtr<HTMLMediaSource> mediaSource)
 {
     m_mediaSource = mediaSource;
     m_contentMIMEType = "";
@@ -407,12 +395,28 @@ bool MediaPlayer::load(const KURL& url, PassRefPtr<MediaSource> mediaSource)
 }
 #endif
 
+MediaPlayerFactory* MediaPlayer::nextBestMediaEngine(MediaPlayerFactory* current) const
+{
+    MediaEngineSupportParameters parameters;
+    parameters.type = m_contentMIMEType;
+    parameters.codecs = m_contentTypeCodecs;
+    parameters.url = m_url;
+#if ENABLE(ENCRYPTED_MEDIA)
+    parameters.keySystem = m_keySystem;
+#endif
+#if ENABLE(MEDIA_SOURCE)
+    parameters.isMediaSource = !!m_mediaSource;
+#endif
+
+    return bestMediaEngineForSupportParameters(parameters, current);
+}
+
 void MediaPlayer::loadWithNextMediaEngine(MediaPlayerFactory* current)
 {
     MediaPlayerFactory* engine = 0;
 
     if (!m_contentMIMEType.isEmpty())
-        engine = bestMediaEngineForTypeAndCodecs(m_contentMIMEType, m_contentTypeCodecs, m_keySystem, m_url, current);
+        engine = nextBestMediaEngine(current);
 
     // If no MIME type is specified or the type was inferred from the file extension, just use the next engine.
     if (!engine && (m_contentMIMEType.isEmpty() || m_contentMIMETypeWasInferredFromExtension))
@@ -560,6 +564,11 @@ bool MediaPlayer::supportsSave() const
 bool MediaPlayer::supportsScanning() const
 {
     return m_private->supportsScanning();
+}
+
+bool MediaPlayer::requiresImmediateCompositing() const
+{
+    return m_private->requiresImmediateCompositing();
 }
 
 IntSize MediaPlayer::naturalSize()
@@ -735,20 +744,29 @@ bool MediaPlayer::copyVideoTextureToPlatformTexture(GraphicsContext3D* context, 
     return m_private->copyVideoTextureToPlatformTexture(context, texture, level, type, internalFormat, premultiplyAlpha, flipY);
 }
 
-MediaPlayer::SupportsType MediaPlayer::supportsType(const ContentType& contentType, const String& keySystem, const KURL& url, const MediaPlayerSupportsTypeClient* client)
+MediaPlayer::SupportsType MediaPlayer::supportsType(const ContentType& contentType, const String& keySystem, const URL& url, const MediaPlayerSupportsTypeClient* client)
 {
-    String type = contentType.type().lower();
+    MediaEngineSupportParameters parameters;
+    parameters.type = contentType.type().lower();
     // The codecs string is not lower-cased because MP4 values are case sensitive
     // per http://tools.ietf.org/html/rfc4281#page-7.
-    String typeCodecs = contentType.parameter(codecs());
-    String system = keySystem.lower();
+    parameters.codecs = contentType.parameter(codecs());
+    parameters.url = url;
+#if ENABLE(ENCRYPTED_MEDIA)
+    parameters.keySystem = keySystem.lower();
+#else
+    UNUSED_PARAM(keySystem);
+#endif
+#if ENABLE(MEDIA_SOURCE)
+    parameters.isMediaSource = false;
+#endif
 
     // 4.8.10.3 MIME types - The canPlayType(type) method must return the empty string if type is a type that the 
     // user agent knows it cannot render or is the type "application/octet-stream"
-    if (type == applicationOctetStream())
+    if (parameters.type == applicationOctetStream())
         return IsNotSupported;
 
-    MediaPlayerFactory* engine = bestMediaEngineForTypeAndCodecs(type, typeCodecs, system, url);
+    MediaPlayerFactory* engine = bestMediaEngineForSupportParameters(parameters);
     if (!engine)
         return IsNotSupported;
 
@@ -769,12 +787,7 @@ MediaPlayer::SupportsType MediaPlayer::supportsType(const ContentType& contentTy
     UNUSED_PARAM(client);
 #endif
 
-#if ENABLE(ENCRYPTED_MEDIA) || ENABLE(ENCRYPTED_MEDIA_V2)
-    return engine->supportsTypeAndCodecs(type, typeCodecs, system, url);
-#else
-    ASSERT(system.isEmpty());
-    return engine->supportsTypeAndCodecs(type, typeCodecs, url);
-#endif
+    return engine->supportsTypeAndCodecs(parameters);
 }
 
 void MediaPlayer::getSupportedTypes(HashSet<String>& types)
@@ -841,6 +854,16 @@ bool MediaPlayer::supportsAcceleratedRendering() const
     return m_private->supportsAcceleratedRendering();
 }
 #endif // USE(ACCELERATED_COMPOSITING)
+
+bool MediaPlayer::shouldMaintainAspectRatio() const
+{
+    return m_private->shouldMaintainAspectRatio();
+}
+
+void MediaPlayer::setShouldMaintainAspectRatio(bool maintainAspectRatio)
+{
+    m_private->setShouldMaintainAspectRatio(maintainAspectRatio);
+}
 
 bool MediaPlayer::hasSingleSecurityOrigin() const
 {
@@ -940,7 +963,7 @@ void MediaPlayer::networkStateChanged()
     if (m_private->networkState() >= FormatError
         && m_private->readyState() < HaveMetadata
         && installedMediaEngines().size() > 1) {
-        if (m_contentMIMEType.isEmpty() || bestMediaEngineForTypeAndCodecs(m_contentMIMEType, m_contentTypeCodecs, m_keySystem, m_url, m_currentMediaEngine)) {
+        if (m_contentMIMEType.isEmpty() || nextBestMediaEngine(m_currentMediaEngine)) {
             m_reloadTimer.startOneShot(0);
             return;
         }
@@ -1037,7 +1060,7 @@ void MediaPlayer::keyError(const String& keySystem, const String& sessionId, Med
         m_mediaPlayerClient->mediaPlayerKeyError(this, keySystem, sessionId, errorCode, systemCode);
 }
 
-void MediaPlayer::keyMessage(const String& keySystem, const String& sessionId, const unsigned char* message, unsigned messageLength, const KURL& defaultURL)
+void MediaPlayer::keyMessage(const String& keySystem, const String& sessionId, const unsigned char* message, unsigned messageLength, const URL& defaultURL)
 {
     if (m_mediaPlayerClient)
         m_mediaPlayerClient->mediaPlayerKeyMessage(this, keySystem, sessionId, message, messageLength, defaultURL);

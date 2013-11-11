@@ -29,6 +29,7 @@
 #include "CodeBlock.h"
 #include "CodeBlockWithJITType.h"
 #include "DFGClobberSet.h"
+#include "DFGJITCode.h"
 #include "DFGVariableAccessDataDump.h"
 #include "FunctionExecutableDump.h"
 #include "OperandsInlines.h"
@@ -53,13 +54,20 @@ Graph::Graph(VM& vm, Plan& plan, LongLivedState& longLivedState)
     , m_codeBlock(m_plan.codeBlock.get())
     , m_profiledBlock(m_codeBlock->alternative())
     , m_allocator(longLivedState.m_allocator)
+    , m_mustHandleAbstractValues(OperandsLike, plan.mustHandleValues)
+    , m_inlineCallFrames(adoptPtr(new InlineCallFrameSet()))
     , m_hasArguments(false)
+    , m_nextMachineLocal(0)
+    , m_machineCaptureStart(std::numeric_limits<int>::max())
     , m_fixpointState(BeforeFixpoint)
     , m_form(LoadStore)
     , m_unificationState(LocallyUnified)
     , m_refCountState(EverythingIsLive)
 {
     ASSERT(m_profiledBlock);
+    
+    for (unsigned i = m_mustHandleAbstractValues.size(); i--;)
+        m_mustHandleAbstractValues[i].setMostSpecific(*this, plan.mustHandleValues[i]);
 }
 
 Graph::~Graph()
@@ -182,6 +190,8 @@ void Graph::dump(PrintStream& out, const char* prefix, Node* node, DumpContext* 
 
     if (toCString(NodeFlagsDump(node->flags())) != "<empty>")
         out.print(comma, NodeFlagsDump(node->flags()));
+    if (node->prediction())
+        out.print(comma, SpeculationDump(node->prediction()));
     if (node->hasArrayMode())
         out.print(comma, node->arrayMode());
     if (node->hasVarNumber())
@@ -230,11 +240,35 @@ void Graph::dump(PrintStream& out, const char* prefix, Node* node, DumpContext* 
     ASSERT(node->hasVariableAccessData(*this) == node->hasLocal(*this));
     if (node->hasVariableAccessData(*this)) {
         VariableAccessData* variableAccessData = node->variableAccessData();
-        int operand = variableAccessData->operand();
-        if (operandIsArgument(operand))
-            out.print(comma, "arg", operandToArgument(operand), "(", VariableAccessDataDump(*this, variableAccessData), ")");
+        VirtualRegister operand = variableAccessData->local();
+        if (operand.isArgument())
+            out.print(comma, "arg", operand.toArgument(), "(", VariableAccessDataDump(*this, variableAccessData), ")");
         else
-            out.print(comma, "r", operand, "(", VariableAccessDataDump(*this, variableAccessData), ")");
+            out.print(comma, "loc", operand.toLocal(), "(", VariableAccessDataDump(*this, variableAccessData), ")");
+        
+        operand = variableAccessData->machineLocal();
+        if (operand.isValid()) {
+            if (operand.isArgument())
+                out.print(comma, "machine:arg", operand.toArgument());
+            else
+                out.print(comma, "machine:loc", operand.toLocal());
+        }
+    }
+    if (node->hasUnlinkedLocal()) {
+        VirtualRegister operand = node->unlinkedLocal();
+        if (operand.isArgument())
+            out.print(comma, "arg", operand.toArgument());
+        else
+            out.print(comma, "loc", operand.toLocal());
+    }
+    if (node->hasUnlinkedMachineLocal()) {
+        VirtualRegister operand = node->unlinkedMachineLocal();
+        if (operand.isValid()) {
+            if (operand.isArgument())
+                out.print(comma, "machine:arg", operand.toArgument());
+            else
+                out.print(comma, "machine:loc", operand.toLocal());
+        }
     }
     if (node->hasConstantBuffer()) {
         out.print(comma);
@@ -246,6 +280,8 @@ void Graph::dump(PrintStream& out, const char* prefix, Node* node, DumpContext* 
     }
     if (node->hasIndexingType())
         out.print(comma, IndexingTypeDump(node->indexingType()));
+    if (node->hasTypedArrayType())
+        out.print(comma, node->typedArrayType());
     if (node->hasPhi())
         out.print(comma, "^", node->phi()->index());
     if (node->hasExecutionCounter())
@@ -281,7 +317,7 @@ void Graph::dump(PrintStream& out, const char* prefix, Node* node, DumpContext* 
 
     if (!skipped) {
         if (node->hasVariableAccessData(*this))
-            out.print("  predicting ", SpeculationDump(node->variableAccessData()->prediction()), node->variableAccessData()->shouldUseDoubleFormat() ? ", forcing double" : "");
+            out.print("  predicting ", SpeculationDump(node->variableAccessData()->prediction()));
         else if (node->hasHeapPrediction())
             out.print("  predicting ", SpeculationDump(node->getHeapPrediction()));
     }
@@ -386,7 +422,7 @@ void Graph::dump(PrintStream& out, DumpContext* context)
             
         case SSA: {
             RELEASE_ASSERT(block->ssa);
-            out.print("  Flush format: ", block->ssa->flushFormatAtHead, "\n");
+            out.print("  Flush format: ", block->ssa->flushAtHead, "\n");
             out.print("  Availability: ", block->ssa->availabilityAtHead, "\n");
             out.print("  Live: ", nodeListDump(block->ssa->liveAtHead), "\n");
             out.print("  Values: ", nodeMapDump(block->ssa->valuesAtHead, context), "\n");
@@ -412,7 +448,7 @@ void Graph::dump(PrintStream& out, DumpContext* context)
             
         case SSA: {
             RELEASE_ASSERT(block->ssa);
-            out.print("  Flush format: ", block->ssa->flushFormatAtTail, "\n");
+            out.print("  Flush format: ", block->ssa->flushAtTail, "\n");
             out.print("  Availability: ", block->ssa->availabilityAtTail, "\n");
             out.print("  Live: ", nodeListDump(block->ssa->liveAtTail), "\n");
             out.print("  Values: ", nodeMapDump(block->ssa->valuesAtTail, context), "\n");
@@ -483,6 +519,29 @@ void Graph::resetReachability()
     }
     
     determineReachability();
+}
+
+void Graph::killBlockAndItsContents(BasicBlock* block)
+{
+    for (unsigned phiIndex = block->phis.size(); phiIndex--;)
+        m_allocator.free(block->phis[phiIndex]);
+    for (unsigned nodeIndex = block->size(); nodeIndex--;)
+        m_allocator.free(block->at(nodeIndex));
+    
+    killBlock(block);
+}
+
+void Graph::killUnreachableBlocks()
+{
+    for (BlockIndex blockIndex = 0; blockIndex < numBlocks(); ++blockIndex) {
+        BasicBlock* block = this->block(blockIndex);
+        if (!block)
+            continue;
+        if (block->isReachable)
+            continue;
+        
+        killBlockAndItsContents(block);
+    }
 }
 
 void Graph::resetExitStates()

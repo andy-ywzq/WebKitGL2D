@@ -87,7 +87,7 @@ void ScrollingStateNode::appendChild(PassOwnPtr<ScrollingStateNode> childNode)
     childNode->setParent(this);
 
     if (!m_children)
-        m_children = adoptPtr(new Vector<OwnPtr<ScrollingStateNode> >);
+        m_children = adoptPtr(new Vector<OwnPtr<ScrollingStateNode>>);
 
     m_children->append(childNode);
 }
@@ -102,7 +102,7 @@ void ScrollingStateNode::removeChild(ScrollingStateNode* node)
     // The index will be notFound if the node to remove is a deeper-than-1-level descendant or
     // if node is the root state node.
     if (index != notFound) {
-        m_scrollingStateTree->didRemoveNode(node->scrollingNodeID());
+        node->willBeRemovedFromStateTree();
         m_children->remove(index);
         return;
     }
@@ -112,10 +112,18 @@ void ScrollingStateNode::removeChild(ScrollingStateNode* node)
         m_children->at(i)->removeChild(node);
 }
 
-void ScrollingStateNode::writeIndent(TextStream& ts, int indent)
+void ScrollingStateNode::willBeRemovedFromStateTree()
 {
-    for (int i = 0; i != indent; ++i)
-        ts << "  ";
+    ASSERT(m_scrollingStateTree);
+
+    m_scrollingStateTree->didRemoveNode(scrollingNodeID());
+
+    if (!m_children)
+        return;
+
+    size_t size = m_children->size();
+    for (size_t i = 0; i < size; ++i)
+        m_children->at(i)->willBeRemovedFromStateTree();
 }
 
 void ScrollingStateNode::dump(TextStream& ts, int indent) const

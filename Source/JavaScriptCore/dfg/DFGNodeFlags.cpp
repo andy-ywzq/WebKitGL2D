@@ -29,16 +29,13 @@
 #if ENABLE(DFG_JIT)
 
 #include <wtf/CommaPrinter.h>
+#include <wtf/StringPrintStream.h>
 
 namespace JSC { namespace DFG {
 
-void dumpNodeFlags(PrintStream& out, NodeFlags flags)
+void dumpNodeFlags(PrintStream& actualOut, NodeFlags flags)
 {
-    if (!((flags & ~NodeRelevantToOSR) ^ NodeDoesNotExit)) {
-        out.print("<empty>");
-        return;
-    }
-
+    StringPrintStream out;
     CommaPrinter comma("|");
     
     if (flags & NodeResultMask) {
@@ -77,13 +74,13 @@ void dumpNodeFlags(PrintStream& out, NodeFlags flags)
         out.print(comma, "MightClobber");
     
     if (flags & NodeResultMask) {
-        if (!(flags & NodeUsedAsNumber) && !(flags & NodeNeedsNegZero))
+        if (!(flags & NodeBytecodeUsesAsNumber) && !(flags & NodeBytecodeNeedsNegZero))
             out.print(comma, "PureInt");
-        else if (!(flags & NodeUsedAsNumber))
+        else if (!(flags & NodeBytecodeUsesAsNumber))
             out.print(comma, "PureInt(w/ neg zero)");
-        else if (!(flags & NodeNeedsNegZero))
+        else if (!(flags & NodeBytecodeNeedsNegZero))
             out.print(comma, "PureNum");
-        if (flags & NodeUsedAsOther)
+        if (flags & NodeBytecodeUsesAsOther)
             out.print(comma, "UseAsOther");
     }
     
@@ -93,7 +90,7 @@ void dumpNodeFlags(PrintStream& out, NodeFlags flags)
     if (flags & NodeMayNegZero)
         out.print(comma, "MayNegZero");
     
-    if (flags & NodeUsedAsInt)
+    if (flags & NodeBytecodeUsesAsInt)
         out.print(comma, "UseAsInt");
     
     if (!(flags & NodeDoesNotExit))
@@ -101,6 +98,12 @@ void dumpNodeFlags(PrintStream& out, NodeFlags flags)
     
     if (flags & NodeExitsForward)
         out.print(comma, "NodeExitsForward");
+    
+    CString string = out.toCString();
+    if (!string.length())
+        actualOut.print("<empty>");
+    else
+        actualOut.print(string);
 }
 
 } } // namespace JSC::DFG

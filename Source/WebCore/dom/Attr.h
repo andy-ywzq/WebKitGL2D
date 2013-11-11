@@ -42,7 +42,7 @@ class MutableStylePropertySet;
 class Attr FINAL : public ContainerNode {
 public:
     static PassRefPtr<Attr> create(Element*, const QualifiedName&);
-    static PassRefPtr<Attr> create(Document*, const QualifiedName&, const AtomicString& value);
+    static PassRefPtr<Attr> create(Document&, const QualifiedName&, const AtomicString& value);
     virtual ~Attr();
 
     String name() const { return qualifiedName().toString(); }
@@ -64,9 +64,11 @@ public:
     void attachToElement(Element*);
     void detachFromElementWithValue(const AtomicString&);
 
+    virtual const AtomicString& namespaceURI() const OVERRIDE { return m_name.namespaceURI(); }
+
 private:
     Attr(Element*, const QualifiedName&);
-    Attr(Document*, const QualifiedName&, const AtomicString& value);
+    Attr(Document&, const QualifiedName&, const AtomicString& value);
 
     void createTextChild();
 
@@ -74,19 +76,18 @@ private:
     virtual NodeType nodeType() const OVERRIDE { return ATTRIBUTE_NODE; }
 
     virtual const AtomicString& localName() const OVERRIDE { return m_name.localName(); }
-    virtual const AtomicString& namespaceURI() const OVERRIDE { return m_name.namespaceURI(); }
     virtual const AtomicString& prefix() const OVERRIDE { return m_name.prefix(); }
 
-    virtual void setPrefix(const AtomicString&, ExceptionCode&);
+    virtual void setPrefix(const AtomicString&, ExceptionCode&) OVERRIDE;
 
     virtual String nodeValue() const OVERRIDE { return value(); }
-    virtual void setNodeValue(const String&, ExceptionCode&);
-    virtual PassRefPtr<Node> cloneNode(bool deep);
+    virtual void setNodeValue(const String&, ExceptionCode&) OVERRIDE;
+    virtual PassRefPtr<Node> cloneNode(bool deep) OVERRIDE;
 
-    virtual bool isAttributeNode() const { return true; }
-    virtual bool childTypeAllowed(NodeType) const;
+    virtual bool isAttributeNode() const OVERRIDE { return true; }
+    virtual bool childTypeAllowed(NodeType) const OVERRIDE;
 
-    virtual void childrenChanged(bool changedByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0);
+    virtual void childrenChanged(const ChildChange&) OVERRIDE;
 
     Attribute& elementAttribute();
 
@@ -100,6 +101,11 @@ private:
     unsigned m_ignoreChildrenChanged : 31;
     bool m_specified : 1;
 };
+
+inline bool isAttr(const Node& node) { return node.isAttributeNode(); }
+void isAttr(const Attr&); // Catch unnecessary runtime check of type known at compile time.
+
+NODE_TYPE_CASTS(Attr)
 
 } // namespace WebCore
 

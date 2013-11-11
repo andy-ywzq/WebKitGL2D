@@ -49,7 +49,7 @@ static bool isListOrIndentBlockquote(const Node* node)
     return node && (node->hasTagName(ulTag) || node->hasTagName(olTag) || node->hasTagName(blockquoteTag));
 }
 
-IndentOutdentCommand::IndentOutdentCommand(Document* document, EIndentType typeOfAction, int marginInPixels)
+IndentOutdentCommand::IndentOutdentCommand(Document& document, EIndentType typeOfAction, int marginInPixels)
     : ApplyBlockElementCommand(document, blockquoteTag, "margin: 0 0 0 40px; border: none; padding: 0px;")
     , m_typeOfAction(typeOfAction)
     , m_marginInPixels(marginInPixels)
@@ -75,7 +75,7 @@ bool IndentOutdentCommand::tryIndentingAsListItem(const Position& start, const P
     Element* previousList = ElementTraversal::previousSibling(selectedListItem);
     Element* nextList = ElementTraversal::nextSibling(selectedListItem);
 
-    RefPtr<Element> newList = document()->createElement(listNode->tagQName(), false);
+    RefPtr<Element> newList = document().createElement(listNode->tagQName(), false);
     insertNodeBefore(newList, selectedListItem);
 
     moveParagraphWithClones(start, end, newList.get(), selectedListItem);
@@ -162,7 +162,7 @@ void IndentOutdentCommand::outdentParagraph()
             }
         }
 
-        document()->updateLayoutIgnorePendingStylesheets();
+        document().updateLayoutIgnorePendingStylesheets();
         visibleStartOfParagraph = VisiblePosition(visibleStartOfParagraph.deepEquivalent());
         visibleEndOfParagraph = VisiblePosition(visibleEndOfParagraph.deepEquivalent());
         if (visibleStartOfParagraph.isNotNull() && !isStartOfParagraph(visibleStartOfParagraph))

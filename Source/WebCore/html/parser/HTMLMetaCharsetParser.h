@@ -39,7 +39,7 @@ class TextCodec;
 class HTMLMetaCharsetParser {
     WTF_MAKE_NONCOPYABLE(HTMLMetaCharsetParser); WTF_MAKE_FAST_ALLOCATED;
 public:
-    static PassOwnPtr<HTMLMetaCharsetParser> create() { return adoptPtr(new HTMLMetaCharsetParser()); }
+    static OwnPtr<HTMLMetaCharsetParser> create() { return adoptPtr(new HTMLMetaCharsetParser()); }
 
     ~HTMLMetaCharsetParser();
 
@@ -48,7 +48,7 @@ public:
 
     const TextEncoding& encoding() { return m_encoding; }
 
-    typedef Vector<pair<String, String> > AttributeList;
+    typedef Vector<pair<String, String>> AttributeList;
     // The returned encoding might not be valid.
     static TextEncoding encodingFromMetaAttributes(const AttributeList&
 );

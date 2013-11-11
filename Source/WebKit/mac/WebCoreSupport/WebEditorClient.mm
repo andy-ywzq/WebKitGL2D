@@ -91,9 +91,6 @@ static WebViewInsertAction kit(EditorInsertAction coreAction)
     return static_cast<WebViewInsertAction>(coreAction);
 }
 
-static const int InvalidCorrectionPanelTag = 0;
-
-
 @interface WebUndoStep : NSObject
 {
     RefPtr<UndoStep> m_step;   
@@ -249,7 +246,7 @@ bool WebEditorClient::isSelectTrailingWhitespaceEnabled()
 
 bool WebEditorClient::shouldApplyStyle(StylePropertySet* style, Range* range)
 {
-    RefPtr<MutableStylePropertySet> mutableStyle = style->isMutable() ? static_cast<MutableStylePropertySet*>(style) : style->mutableCopy();
+    Ref<MutableStylePropertySet> mutableStyle(style->isMutable() ? static_cast<MutableStylePropertySet&>(*style) : style->mutableCopy());
     return [[m_webView _editingDelegateForwarder] webView:m_webView
         shouldApplyStyle:kit(mutableStyle->ensureCSSStyleDeclaration()) toElementsInDOMRange:kit(range)];
 }
@@ -326,14 +323,9 @@ void WebEditorClient::willWriteSelectionToPasteboard(WebCore::Range*)
     // Not implemented WebKit, only WebKit2.
 }
 
-void WebEditorClient::getClientPasteboardDataForRange(WebCore::Range*, Vector<String>& pasteboardTypes, Vector<RefPtr<WebCore::SharedBuffer> >& pasteboardData)
+void WebEditorClient::getClientPasteboardDataForRange(WebCore::Range*, Vector<String>& pasteboardTypes, Vector<RefPtr<WebCore::SharedBuffer>>& pasteboardData)
 {
     // Not implemented WebKit, only WebKit2.
-}
-
-void WebEditorClient::didSetSelectionTypesForPasteboard()
-{
-    [[m_webView _editingDelegateForwarder] webView:m_webView didSetSelectionTypesForPasteboard:[NSPasteboard generalPasteboard]];
 }
 
 NSString *WebEditorClient::userVisibleString(NSURL *URL)
@@ -371,7 +363,7 @@ static NSArray *createExcludedElementsForAttributedStringConversion()
     return elements;
 }
 
-DocumentFragment* WebEditorClient::documentFragmentFromAttributedString(NSAttributedString *string, Vector<RefPtr<ArchiveResource> >& resources)
+DocumentFragment* WebEditorClient::documentFragmentFromAttributedString(NSAttributedString *string, Vector<RefPtr<ArchiveResource>>& resources)
 {
     static NSArray *excludedElements = createExcludedElementsForAttributedStringConversion();
     
@@ -610,7 +602,7 @@ void WebEditorClient::redo()
 
 void WebEditorClient::handleKeyboardEvent(KeyboardEvent* event)
 {
-    Frame* frame = event->target()->toNode()->document()->frame();
+    Frame* frame = event->target()->toNode()->document().frame();
     WebHTMLView *webHTMLView = [[kit(frame) frameView] documentView];
     if ([webHTMLView _interpretKeyEvent:event savingCommands:NO])
         event->setDefaultHandled();
@@ -618,7 +610,7 @@ void WebEditorClient::handleKeyboardEvent(KeyboardEvent* event)
 
 void WebEditorClient::handleInputMethodKeydown(KeyboardEvent* event)
 {
-    Frame* frame = event->target()->toNode()->document()->frame();
+    Frame* frame = event->target()->toNode()->document().frame();
     WebHTMLView *webHTMLView = [[kit(frame) frameView] documentView];
     if ([webHTMLView _interpretKeyEvent:event savingCommands:YES])
         event->setDefaultHandled();
@@ -633,7 +625,7 @@ void WebEditorClient::textFieldDidBeginEditing(Element* element)
 
     DOMHTMLInputElement* inputElement = kit(toHTMLInputElement(element));
     FormDelegateLog(inputElement);
-    CallFormDelegate(m_webView, @selector(textFieldDidBeginEditing:inFrame:), inputElement, kit(element->document()->frame()));
+    CallFormDelegate(m_webView, @selector(textFieldDidBeginEditing:inFrame:), inputElement, kit(element->document().frame()));
 }
 
 void WebEditorClient::textFieldDidEndEditing(Element* element)
@@ -643,7 +635,7 @@ void WebEditorClient::textFieldDidEndEditing(Element* element)
 
     DOMHTMLInputElement* inputElement = kit(toHTMLInputElement(element));
     FormDelegateLog(inputElement);
-    CallFormDelegate(m_webView, @selector(textFieldDidEndEditing:inFrame:), inputElement, kit(element->document()->frame()));
+    CallFormDelegate(m_webView, @selector(textFieldDidEndEditing:inFrame:), inputElement, kit(element->document().frame()));
 }
 
 void WebEditorClient::textDidChangeInTextField(Element* element)
@@ -656,7 +648,7 @@ void WebEditorClient::textDidChangeInTextField(Element* element)
 
     DOMHTMLInputElement* inputElement = kit(toHTMLInputElement(element));
     FormDelegateLog(inputElement);
-    CallFormDelegate(m_webView, @selector(textDidChangeInTextField:inFrame:), inputElement, kit(element->document()->frame()));
+    CallFormDelegate(m_webView, @selector(textDidChangeInTextField:inFrame:), inputElement, kit(element->document().frame()));
 }
 
 static SEL selectorForKeyEvent(KeyboardEvent* event)
@@ -690,7 +682,7 @@ bool WebEditorClient::doTextFieldCommandFromEvent(Element* element, KeyboardEven
     DOMHTMLInputElement* inputElement = kit(toHTMLInputElement(element));
     FormDelegateLog(inputElement);
     if (SEL commandSelector = selectorForKeyEvent(event))
-        return CallFormDelegateReturningBoolean(NO, m_webView, @selector(textField:doCommandBySelector:inFrame:), inputElement, commandSelector, kit(element->document()->frame()));
+        return CallFormDelegateReturningBoolean(NO, m_webView, @selector(textField:doCommandBySelector:inFrame:), inputElement, commandSelector, kit(element->document().frame()));
     return NO;
 }
 
@@ -702,7 +694,7 @@ void WebEditorClient::textWillBeDeletedInTextField(Element* element)
     DOMHTMLInputElement* inputElement = kit(toHTMLInputElement(element));
     FormDelegateLog(inputElement);
     // We're using the deleteBackward selector for all deletion operations since the autofill code treats all deletions the same way.
-    CallFormDelegateReturningBoolean(NO, m_webView, @selector(textField:doCommandBySelector:inFrame:), inputElement, @selector(deleteBackward:), kit(element->document()->frame()));
+    CallFormDelegateReturningBoolean(NO, m_webView, @selector(textField:doCommandBySelector:inFrame:), inputElement, @selector(deleteBackward:), kit(element->document().frame()));
 }
 
 void WebEditorClient::textDidChangeInTextArea(Element* element)
@@ -712,7 +704,7 @@ void WebEditorClient::textDidChangeInTextArea(Element* element)
 
     DOMHTMLTextAreaElement* textAreaElement = kit(toHTMLTextAreaElement(element));
     FormDelegateLog(textAreaElement);
-    CallFormDelegate(m_webView, @selector(textDidChangeInTextArea:inFrame:), textAreaElement, kit(element->document()->frame()));
+    CallFormDelegate(m_webView, @selector(textDidChangeInTextArea:inFrame:), textAreaElement, kit(element->document().frame()));
 }
 
 bool WebEditorClient::shouldEraseMarkersAfterChangeSelection(TextCheckingType type) const

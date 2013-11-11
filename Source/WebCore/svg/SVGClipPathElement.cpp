@@ -44,7 +44,7 @@ BEGIN_REGISTER_ANIMATED_PROPERTIES(SVGClipPathElement)
     REGISTER_PARENT_ANIMATED_PROPERTIES(SVGGraphicsElement)
 END_REGISTER_ANIMATED_PROPERTIES
 
-inline SVGClipPathElement::SVGClipPathElement(const QualifiedName& tagName, Document* document)
+inline SVGClipPathElement::SVGClipPathElement(const QualifiedName& tagName, Document& document)
     : SVGGraphicsElement(tagName, document)
     , m_clipPathUnits(SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE)
 {
@@ -52,7 +52,7 @@ inline SVGClipPathElement::SVGClipPathElement(const QualifiedName& tagName, Docu
     registerAnimatedPropertiesForSVGClipPathElement();
 }
 
-PassRefPtr<SVGClipPathElement> SVGClipPathElement::create(const QualifiedName& tagName, Document* document)
+PassRefPtr<SVGClipPathElement> SVGClipPathElement::create(const QualifiedName& tagName, Document& document)
 {
     return adoptRef(new SVGClipPathElement(tagName, document));
 }
@@ -100,23 +100,23 @@ void SVGClipPathElement::svgAttributeChanged(const QualifiedName& attrName)
     SVGElementInstance::InvalidationGuard invalidationGuard(this);
 
     if (RenderObject* object = renderer())
-        object->setNeedsLayout(true);
+        object->setNeedsLayout();
 }
 
-void SVGClipPathElement::childrenChanged(bool changedByParser, Node* beforeChange, Node* afterChange, int childCountDelta)
+void SVGClipPathElement::childrenChanged(const ChildChange& change)
 {
-    SVGGraphicsElement::childrenChanged(changedByParser, beforeChange, afterChange, childCountDelta);
+    SVGGraphicsElement::childrenChanged(change);
 
-    if (changedByParser)
+    if (change.source == ChildChangeSourceParser)
         return;
 
     if (RenderObject* object = renderer())
-        object->setNeedsLayout(true);
+        object->setNeedsLayout();
 }
 
-RenderObject* SVGClipPathElement::createRenderer(RenderArena* arena, RenderStyle*)
+RenderElement* SVGClipPathElement::createRenderer(PassRef<RenderStyle> style)
 {
-    return new (arena) RenderSVGResourceClipper(this);
+    return new RenderSVGResourceClipper(*this, std::move(style));
 }
 
 }

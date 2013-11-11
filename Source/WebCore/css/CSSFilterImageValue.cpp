@@ -34,7 +34,7 @@
 #include "CrossfadeGeneratedImage.h"
 #include "FilterEffectRenderer.h"
 #include "ImageBuffer.h"
-#include "RenderObject.h"
+#include "RenderElement.h"
 #include "StyleCachedImage.h"
 #include "StyleGeneratedImage.h"
 #include "StyleResolver.h"
@@ -48,7 +48,7 @@ CSSFilterImageValue::~CSSFilterImageValue()
         m_cachedImage->removeClient(&m_filterSubimageObserver);
 }
 
-String CSSFilterImageValue::customCssText() const
+String CSSFilterImageValue::customCSSText() const
 {
     StringBuilder result;
     result.appendLiteral("-webkit-filter(");
@@ -59,9 +59,9 @@ String CSSFilterImageValue::customCssText() const
     return result.toString();
 }
 
-IntSize CSSFilterImageValue::fixedSize(const RenderObject* renderer)
+IntSize CSSFilterImageValue::fixedSize(const RenderElement* renderer)
 {
-    CachedResourceLoader* cachedResourceLoader = renderer->document()->cachedResourceLoader();
+    CachedResourceLoader* cachedResourceLoader = renderer->document().cachedResourceLoader();
     CachedImage* cachedImage = cachedImageForCSSValue(m_imageValue.get(), cachedResourceLoader);
 
     if (!cachedImage)
@@ -75,7 +75,7 @@ bool CSSFilterImageValue::isPending() const
     return CSSImageGeneratorValue::subimageIsPending(m_imageValue.get());
 }
 
-bool CSSFilterImageValue::knownToBeOpaque(const RenderObject*) const
+bool CSSFilterImageValue::knownToBeOpaque(const RenderElement*) const
 {
     return false;
 }
@@ -96,12 +96,12 @@ void CSSFilterImageValue::loadSubimages(CachedResourceLoader* cachedResourceLoad
     m_filterSubimageObserver.setReady(true);
 }
 
-PassRefPtr<Image> CSSFilterImageValue::image(RenderObject* renderer, const IntSize& size)
+PassRefPtr<Image> CSSFilterImageValue::image(RenderElement* renderer, const IntSize& size)
 {
     if (size.isEmpty())
         return 0;
 
-    CachedResourceLoader* cachedResourceLoader = renderer->document()->cachedResourceLoader();
+    CachedResourceLoader* cachedResourceLoader = renderer->document().cachedResourceLoader();
     CachedImage* cachedImage = cachedImageForCSSValue(m_imageValue.get(), cachedResourceLoader);
 
     if (!cachedImage)
@@ -122,8 +122,7 @@ PassRefPtr<Image> CSSFilterImageValue::image(RenderObject* renderer, const IntSi
     filterRenderer->setSourceImage(texture.release());
     filterRenderer->setSourceImageRect(FloatRect(FloatPoint(), size));
     filterRenderer->setFilterRegion(FloatRect(FloatPoint(), size));
-    // FIXME: SVG Filter don't work at the moment.
-    if (!filterRenderer->build(0, m_filterOperations, true))
+    if (!filterRenderer->build(renderer, m_filterOperations, FilterFunction))
         return Image::nullImage();
     filterRenderer->apply();
 
@@ -134,11 +133,8 @@ PassRefPtr<Image> CSSFilterImageValue::image(RenderObject* renderer, const IntSi
 
 void CSSFilterImageValue::filterImageChanged(const IntRect&)
 {
-    HashCountedSet<RenderObject*>::const_iterator end = clients().end();
-    for (HashCountedSet<RenderObject*>::const_iterator curr = clients().begin(); curr != end; ++curr) {
-        RenderObject* client = const_cast<RenderObject*>(curr->key);
-        client->imageChanged(static_cast<WrappedImagePtr>(this));
-    }
+    for (auto it = clients().begin(), end = clients().end(); it != end; ++it)
+        it->key->imageChanged(static_cast<WrappedImagePtr>(this));
 }
 
 void CSSFilterImageValue::createFilterOperations(StyleResolver* resolver)
@@ -162,8 +158,12 @@ bool CSSFilterImageValue::hasFailedOrCanceledSubresources() const
 
 bool CSSFilterImageValue::equals(const CSSFilterImageValue& other) const
 {
-    return compareCSSValuePtr(m_imageValue, other.m_imageValue)
-        && compareCSSValuePtr(m_filterValue, other.m_filterValue);
+    return equalInputImages(other) && compareCSSValuePtr(m_filterValue, other.m_filterValue);
+}
+
+bool CSSFilterImageValue::equalInputImages(const CSSFilterImageValue& other) const
+{
+    return compareCSSValuePtr(m_imageValue, other.m_imageValue);
 }
 
 } // namespace WebCore

@@ -110,7 +110,8 @@ void JSActivation::getOwnNonIndexPropertyNames(JSObject* object, ExecState* exec
 {
     JSActivation* thisObject = jsCast<JSActivation*>(object);
 
-    if (mode == IncludeDontEnumProperties && !thisObject->isTornOff())
+    CallFrame* callFrame = CallFrame::create(reinterpret_cast<Register*>(thisObject->m_registers));
+    if (mode == IncludeDontEnumProperties && !thisObject->isTornOff() && (callFrame->codeBlock()->usesArguments() || callFrame->codeBlock()->usesEval()))
         propertyNames.add(exec->propertyNames().arguments);
 
     {
@@ -156,8 +157,9 @@ bool JSActivation::getOwnPropertySlot(JSObject* object, ExecState* exec, Propert
 
     if (propertyName == exec->propertyNames().arguments) {
         // Defend against the inspector asking for the arguments object after it has been optimized out.
-        if (!thisObject->isTornOff()) {
-            slot.setCustom(thisObject, DontEnum, thisObject->getArgumentsGetter());
+        CallFrame* callFrame = CallFrame::create(reinterpret_cast<Register*>(thisObject->m_registers));
+        if (!thisObject->isTornOff() && (callFrame->codeBlock()->usesArguments() || callFrame->codeBlock()->usesEval())) {
+            slot.setCustom(thisObject, DontEnum, argumentsGetter);
             return true;
         }
     }
@@ -193,22 +195,6 @@ void JSActivation::put(JSCell* cell, ExecState* exec, PropertyName propertyName,
     thisObject->putOwnDataProperty(exec->vm(), propertyName, value, slot);
 }
 
-// FIXME: Make this function honor ReadOnly (const) and DontEnum
-void JSActivation::putDirectVirtual(JSObject* object, ExecState* exec, PropertyName propertyName, JSValue value, unsigned attributes)
-{
-    JSActivation* thisObject = jsCast<JSActivation*>(object);
-    ASSERT(!Heap::heap(value) || Heap::heap(value) == Heap::heap(thisObject));
-
-    if (thisObject->symbolTablePutWithAttributes(exec->vm(), propertyName, value, attributes))
-        return;
-
-    // We don't call through to JSObject because __proto__ and getter/setter 
-    // properties are non-standard extensions that other implementations do not
-    // expose in the activation object.
-    ASSERT(!thisObject->hasGetterSetterProperties());
-    JSObject::putDirectVirtual(thisObject, exec, propertyName, value, attributes);
-}
-
 bool JSActivation::deleteProperty(JSCell* cell, ExecState* exec, PropertyName propertyName)
 {
     if (propertyName == exec->propertyNames().arguments)
@@ -227,29 +213,22 @@ JSValue JSActivation::toThis(JSCell*, ExecState* exec, ECMAMode ecmaMode)
 JSValue JSActivation::argumentsGetter(ExecState*, JSValue slotBase, PropertyName)
 {
     JSActivation* activation = jsCast<JSActivation*>(slotBase);
-    if (activation->isTornOff())
+    CallFrame* callFrame = CallFrame::create(reinterpret_cast<Register*>(activation->m_registers));
+    ASSERT(!activation->isTornOff() && (callFrame->codeBlock()->usesArguments() || callFrame->codeBlock()->usesEval()));
+    if (activation->isTornOff() || !(callFrame->codeBlock()->usesArguments() || callFrame->codeBlock()->usesEval()))
         return jsUndefined();
 
-    CallFrame* callFrame = CallFrame::create(reinterpret_cast<Register*>(activation->m_registers));
-    int argumentsRegister = callFrame->codeBlock()->argumentsRegister();
-    if (JSValue arguments = callFrame->uncheckedR(argumentsRegister).jsValue())
+    VirtualRegister argumentsRegister = callFrame->codeBlock()->argumentsRegister();
+    if (JSValue arguments = callFrame->uncheckedR(argumentsRegister.offset()).jsValue())
         return arguments;
-    int realArgumentsRegister = unmodifiedArgumentsRegister(argumentsRegister);
+    int realArgumentsRegister = unmodifiedArgumentsRegister(argumentsRegister).offset();
 
     JSValue arguments = JSValue(Arguments::create(callFrame->vm(), callFrame));
-    callFrame->uncheckedR(argumentsRegister) = arguments;
+    callFrame->uncheckedR(argumentsRegister.offset()) = arguments;
     callFrame->uncheckedR(realArgumentsRegister) = arguments;
     
     ASSERT(callFrame->uncheckedR(realArgumentsRegister).jsValue().inherits(Arguments::info()));
     return callFrame->uncheckedR(realArgumentsRegister).jsValue();
-}
-
-// These two functions serve the purpose of isolating the common case from a
-// PIC branch.
-
-PropertySlot::GetValueFunc JSActivation::getArgumentsGetter()
-{
-    return argumentsGetter;
 }
 
 } // namespace JSC

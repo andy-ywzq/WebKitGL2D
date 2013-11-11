@@ -35,6 +35,7 @@
 #include "Frame.h"
 #include "FrameNetworkingContext.h"
 #include "HTMLFormElement.h"
+#include <wtf/NeverDestroyed.h>
 
 #if ENABLE(INPUT_TYPE_COLOR)
 #include "ColorChooser.h"
@@ -44,24 +45,27 @@ namespace WebCore {
 
 void fillWithEmptyClients(Page::PageClients& pageClients)
 {
-    static ChromeClient* dummyChromeClient = adoptPtr(new EmptyChromeClient).leakPtr();
-    pageClients.chromeClient = dummyChromeClient;
+    static NeverDestroyed<EmptyChromeClient> dummyChromeClient;
+    pageClients.chromeClient = &dummyChromeClient.get();
 
 #if ENABLE(CONTEXT_MENUS)
-    static ContextMenuClient* dummyContextMenuClient = adoptPtr(new EmptyContextMenuClient).leakPtr();
-    pageClients.contextMenuClient = dummyContextMenuClient;
+    static NeverDestroyed<EmptyContextMenuClient> dummyContextMenuClient;
+    pageClients.contextMenuClient = &dummyContextMenuClient.get();
 #endif
 
 #if ENABLE(DRAG_SUPPORT)
-    static DragClient* dummyDragClient = adoptPtr(new EmptyDragClient).leakPtr();
-    pageClients.dragClient = dummyDragClient;
+    static NeverDestroyed<EmptyDragClient> dummyDragClient;
+    pageClients.dragClient = &dummyDragClient.get();
 #endif
 
-    static EditorClient* dummyEditorClient = adoptPtr(new EmptyEditorClient).leakPtr();
-    pageClients.editorClient = dummyEditorClient;
+    static NeverDestroyed<EmptyEditorClient> dummyEditorClient;
+    pageClients.editorClient = &dummyEditorClient.get();
 
-    static InspectorClient* dummyInspectorClient = adoptPtr(new EmptyInspectorClient).leakPtr();
-    pageClients.inspectorClient = dummyInspectorClient;
+    static NeverDestroyed<EmptyInspectorClient> dummyInspectorClient;
+    pageClients.inspectorClient = &dummyInspectorClient.get();
+
+    static NeverDestroyed<EmptyFrameLoaderClient> dummyFrameLoaderClient;
+    pageClients.loaderClientForMainFrame = &dummyFrameLoaderClient.get();
 }
 
 class EmptyPopupMenu : public PopupMenu {
@@ -111,11 +115,11 @@ void EmptyChromeClient::runOpenPanel(Frame*, PassRefPtr<FileChooser>)
 {
 }
 
-void EmptyFrameLoaderClient::dispatchDecidePolicyForNewWindowAction(FramePolicyFunction, const NavigationAction&, const ResourceRequest&, PassRefPtr<FormState>, const String&)
+void EmptyFrameLoaderClient::dispatchDecidePolicyForNewWindowAction(const NavigationAction&, const ResourceRequest&, PassRefPtr<FormState>, const String&, FramePolicyFunction)
 {
 }
 
-void EmptyFrameLoaderClient::dispatchDecidePolicyForNavigationAction(FramePolicyFunction, const NavigationAction&, const ResourceRequest&, PassRefPtr<FormState>)
+void EmptyFrameLoaderClient::dispatchDecidePolicyForNavigationAction(const NavigationAction&, const ResourceRequest&, PassRefPtr<FormState>, FramePolicyFunction)
 {
 }
 
@@ -123,7 +127,7 @@ void EmptyFrameLoaderClient::dispatchWillSendSubmitEvent(PassRefPtr<FormState>)
 {
 }
 
-void EmptyFrameLoaderClient::dispatchWillSubmitForm(FramePolicyFunction, PassRefPtr<FormState>)
+void EmptyFrameLoaderClient::dispatchWillSubmitForm(PassRefPtr<FormState>, FramePolicyFunction)
 {
 }
 
@@ -132,12 +136,12 @@ PassRefPtr<DocumentLoader> EmptyFrameLoaderClient::createDocumentLoader(const Re
     return DocumentLoader::create(request, substituteData);
 }
 
-PassRefPtr<Frame> EmptyFrameLoaderClient::createFrame(const KURL&, const String&, HTMLFrameOwnerElement*, const String&, bool, int, int)
+PassRefPtr<Frame> EmptyFrameLoaderClient::createFrame(const URL&, const String&, HTMLFrameOwnerElement*, const String&, bool, int, int)
 {
     return 0;
 }
 
-PassRefPtr<Widget> EmptyFrameLoaderClient::createPlugin(const IntSize&, HTMLPlugInElement*, const KURL&, const Vector<String>&, const Vector<String>&, const String&, bool)
+PassRefPtr<Widget> EmptyFrameLoaderClient::createPlugin(const IntSize&, HTMLPlugInElement*, const URL&, const Vector<String>&, const Vector<String>&, const String&, bool)
 {
     return 0;
 }
@@ -146,13 +150,13 @@ void EmptyFrameLoaderClient::recreatePlugin(Widget*)
 {
 }
 
-PassRefPtr<Widget> EmptyFrameLoaderClient::createJavaAppletWidget(const IntSize&, HTMLAppletElement*, const KURL&, const Vector<String>&, const Vector<String>&)
+PassRefPtr<Widget> EmptyFrameLoaderClient::createJavaAppletWidget(const IntSize&, HTMLAppletElement*, const URL&, const Vector<String>&, const Vector<String>&)
 {
     return 0;
 }
 
 #if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
-PassRefPtr<Widget> EmptyFrameLoaderClient::createMediaPlayerProxyPlugin(const IntSize&, HTMLMediaElement*, const KURL&, const Vector<String>&, const Vector<String>&, const String&)
+PassRefPtr<Widget> EmptyFrameLoaderClient::createMediaPlayerProxyPlugin(const IntSize&, HTMLMediaElement*, const URL&, const Vector<String>&, const Vector<String>&, const String&)
 {
     return 0;
 }

@@ -38,7 +38,7 @@ class HTMLOptionElement;
 
 class HTMLSelectElement : public HTMLFormControlElementWithState, public TypeAheadDataSource {
 public:
-    static PassRefPtr<HTMLSelectElement> create(const QualifiedName&, Document*, HTMLFormElement*);
+    static PassRefPtr<HTMLSelectElement> create(const QualifiedName&, Document&, HTMLFormElement*);
 
     int selectedIndex() const;
     void setSelectedIndex(int);
@@ -57,7 +57,10 @@ public:
     bool usesMenuList() const;
 
     void add(HTMLElement*, HTMLElement* beforeElement, ExceptionCode&);
-    void remove(int index);
+
+    using Node::remove;
+    // Should be remove(int) but it conflicts with Node::remove(ExceptionCode&).
+    void removeByIndex(int);
     void remove(HTMLOptionElement*);
 
     String value() const;
@@ -74,7 +77,7 @@ public:
 
     const Vector<HTMLElement*>& listItems() const;
 
-    virtual void accessKeyAction(bool sendMouseEvents);
+    virtual void accessKeyAction(bool sendMouseEvents) OVERRIDE;
     void accessKeySetSelectedIndex(int);
 
     void setMultiple(bool);
@@ -106,10 +109,10 @@ public:
     void optionSelectionStateChanged(HTMLOptionElement*, bool optionIsSelected);
 
 protected:
-    HTMLSelectElement(const QualifiedName&, Document*, HTMLFormElement*);
+    HTMLSelectElement(const QualifiedName&, Document&, HTMLFormElement*);
 
 private:
-    virtual const AtomicString& formControlType() const;
+    virtual const AtomicString& formControlType() const OVERRIDE;
     
     virtual bool isKeyboardFocusable(KeyboardEvent*) const OVERRIDE;
     virtual bool isMouseFocusable() const OVERRIDE;
@@ -117,9 +120,9 @@ private:
     virtual void dispatchFocusEvent(PassRefPtr<Element> oldFocusedElement, FocusDirection) OVERRIDE FINAL;
     virtual void dispatchBlurEvent(PassRefPtr<Element> newFocusedElement) OVERRIDE FINAL;
     
-    virtual bool canStartSelection() const { return false; }
+    virtual bool canStartSelection() const OVERRIDE { return false; }
 
-    virtual bool isEnumeratable() const { return true; }
+    virtual bool isEnumeratable() const OVERRIDE { return true; }
     virtual bool supportLabels() const OVERRIDE { return true; }
 
     virtual FormControlState saveFormControlState() const OVERRIDE;
@@ -129,25 +132,27 @@ private:
     virtual bool isPresentationAttribute(const QualifiedName&) const OVERRIDE;
 
     virtual bool childShouldCreateRenderer(const Node*) const OVERRIDE;
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle *);
-    virtual bool appendFormData(FormDataList&, bool);
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
+    virtual bool appendFormData(FormDataList&, bool) OVERRIDE;
 
-    virtual void reset();
+    virtual void reset() OVERRIDE;
 
-    virtual void defaultEventHandler(Event*);
+    virtual void defaultEventHandler(Event*) OVERRIDE;
 
     void dispatchChangeEventForMenuList();
-    
+
+    virtual void didRecalcStyle(Style::Change) OVERRIDE FINAL;
+
     void recalcListItems(bool updateSelectedStates = true) const;
 
     void deselectItems(HTMLOptionElement* excludeElement = 0);
     void typeAheadFind(KeyboardEvent*);
     void saveLastSelection();
 
-    virtual InsertionNotificationRequest insertedInto(ContainerNode*) OVERRIDE;
+    virtual InsertionNotificationRequest insertedInto(ContainerNode&) OVERRIDE;
 
-    virtual bool isOptionalFormControl() const { return !isRequiredFormControl(); }
-    virtual bool isRequiredFormControl() const;
+    virtual bool isOptionalFormControl() const OVERRIDE { return !isRequiredFormControl(); }
+    virtual bool isRequiredFormControl() const OVERRIDE;
 
     bool hasPlaceholderLabelOption() const;
 
@@ -179,7 +184,7 @@ private:
     int lastSelectableListIndex() const;
     int nextSelectableListIndexPageAway(int startIndex, SkipDirection) const;
 
-    virtual void childrenChanged(bool changedByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0);
+    virtual void childrenChanged(const ChildChange&) OVERRIDE;
     virtual bool areAuthorShadowsAllowed() const OVERRIDE { return false; }
 
     // TypeAheadDataSource functions.
@@ -202,11 +207,7 @@ private:
     mutable bool m_shouldRecalcListItems;
 };
 
-inline HTMLSelectElement* toHTMLSelectElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->hasTagName(HTMLNames::selectTag));
-    return static_cast<HTMLSelectElement*>(node);
-}
+NODE_TYPE_CASTS(HTMLSelectElement)
 
 } // namespace
 

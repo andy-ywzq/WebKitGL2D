@@ -20,31 +20,34 @@
 #include "config.h"
 #include "JSEventListener.h"
 
+#include "BeforeUnloadEvent.h"
 #include "Event.h"
 #include "Frame.h"
 #include "InspectorCounters.h"
 #include "JSEvent.h"
 #include "JSEventTarget.h"
 #include "JSMainThreadExecState.h"
+#include "JSMainThreadExecStateInstrumentation.h"
 #include "ScriptController.h"
 #include "WorkerGlobalScope.h"
 #include <runtime/ExceptionHelpers.h>
 #include <runtime/JSLock.h>
+#include <wtf/Ref.h>
 #include <wtf/RefCountedLeakCounter.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
-JSEventListener::JSEventListener(JSObject* function, JSObject* wrapper, bool isAttribute, DOMWrapperWorld* isolatedWorld)
+JSEventListener::JSEventListener(JSObject* function, JSObject* wrapper, bool isAttribute, DOMWrapperWorld& isolatedWorld)
     : EventListener(JSEventListenerType)
     , m_wrapper(wrapper)
     , m_isAttribute(isAttribute)
-    , m_isolatedWorld(isolatedWorld)
+    , m_isolatedWorld(&isolatedWorld)
 {
     if (wrapper) {
         JSC::Heap::writeBarrier(wrapper, function);
-        m_jsFunction = JSC::PassWeak<JSC::JSObject>(function);
+        m_jsFunction = JSC::Weak<JSC::JSObject>(function);
     } else
         ASSERT(!function);
 #if ENABLE(INSPECTOR)
@@ -85,16 +88,16 @@ void JSEventListener::handleEvent(ScriptExecutionContext* scriptExecutionContext
     if (!jsFunction)
         return;
 
-    JSDOMGlobalObject* globalObject = toJSDOMGlobalObject(scriptExecutionContext, m_isolatedWorld.get());
+    JSDOMGlobalObject* globalObject = toJSDOMGlobalObject(scriptExecutionContext, *m_isolatedWorld);
     if (!globalObject)
         return;
 
     if (scriptExecutionContext->isDocument()) {
         JSDOMWindow* window = jsCast<JSDOMWindow*>(globalObject);
-        if (!window->impl()->isCurrentlyDisplayedInFrame())
+        if (!window->impl().isCurrentlyDisplayedInFrame())
             return;
         // FIXME: Is this check needed for other contexts?
-        ScriptController& script = window->impl()->frame()->script();
+        ScriptController& script = window->impl().frame()->script();
         if (!script.canExecuteScripts(AboutToExecuteScript) || script.isPaused())
             return;
     }
@@ -111,7 +114,7 @@ void JSEventListener::handleEvent(ScriptExecutionContext* scriptExecutionContext
     }
 
     if (callType != CallTypeNone) {
-        RefPtr<JSEventListener> protect(this);
+        Ref<JSEventListener> protect(*this);
 
         MarkedArgumentBuffer args;
         args.append(toJS(exec, globalObject, event));
@@ -145,8 +148,8 @@ void JSEventListener::handleEvent(ScriptExecutionContext* scriptExecutionContext
             event->target()->uncaughtExceptionInEventHandler();
             reportCurrentException(exec);
         } else {
-            if (!retval.isUndefinedOrNull() && event->storesResultAsString())
-                event->storeResult(retval.toString(exec)->value(exec));
+            if (!retval.isUndefinedOrNull() && event->isBeforeUnloadEvent())
+                toBeforeUnloadEvent(event)->setReturnValue(retval.toString(exec)->value(exec));
             if (m_isAttribute) {
                 if (retval.isFalse())
                     event->preventDefault();

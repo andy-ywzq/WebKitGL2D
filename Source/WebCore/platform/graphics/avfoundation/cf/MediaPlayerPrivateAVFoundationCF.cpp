@@ -41,9 +41,9 @@
 #else
 #include "InbandTextTrackPrivateLegacyAVCF.h"
 #endif
-#include "KURL.h"
+#include "URL.h"
 #include "Logging.h"
-#include "PlatformCALayer.h"
+#include "PlatformCALayerWin.h"
 #include "SoftLinking.h"
 #include "TimeRanges.h"
 
@@ -66,7 +66,11 @@
 #include "CoreMediaSoftLinking.h"
 
 // We don't bother softlinking against libdispatch since it's already been loaded by AAS.
+#ifdef DEBUG_ALL
+#pragma comment(lib, "libdispatch_debug.lib")
+#else
 #pragma comment(lib, "libdispatch.lib")
+#endif
 
 using namespace std;
 
@@ -104,6 +108,7 @@ public:
     void beginLoadingMetadata();
     
     void seekToTime(float);
+    void updateVideoLayerGravity();
 
     void setCurrentTrack(InbandTextTrackPrivateAVF*);
     InbandTextTrackPrivateAVF* currentTrack() const { return m_currentTrack; }
@@ -180,15 +185,14 @@ private:
 
     virtual void platformCALayerAnimationStarted(CFTimeInterval beginTime) { }
     virtual GraphicsLayer::CompositingCoordinatesOrientation platformCALayerContentsOrientation() const { return GraphicsLayer::CompositingCoordinatesBottomUp; }
-    virtual void platformCALayerPaintContents(GraphicsContext&, const IntRect& inClip) { }
+    virtual void platformCALayerPaintContents(PlatformCALayer*, GraphicsContext&, const IntRect& inClip) { }
     virtual bool platformCALayerShowDebugBorders() const { return false; }
     virtual bool platformCALayerShowRepaintCounter(PlatformCALayer*) const { return false; }
-    virtual int platformCALayerIncrementRepaintCount() { return 0; }
+    virtual int platformCALayerIncrementRepaintCount(PlatformCALayer*) { return 0; }
 
     virtual bool platformCALayerContentsOpaque() const { return false; }
     virtual bool platformCALayerDrawsContent() const { return false; }
     virtual void platformCALayerLayerDidDisplay(PlatformLayer*) { }
-    virtual void platformCALayerDidCreateTiles(const Vector<FloatRect>&) { }
     virtual float platformCALayerDeviceScaleFactor() { return 1; }
 
     AVFWrapper* m_parent;
@@ -330,6 +334,14 @@ void MediaPlayerPrivateAVFoundationCF::cancelLoad()
 
     setIgnoreLoadStateChanges(false);
     setDelayCallbacks(false);
+}
+
+void MediaPlayerPrivateAVFoundationCF::updateVideoLayerGravity()
+{
+    ASSERT(supportsAcceleratedRendering());
+
+    if (m_avfWrapper)
+        m_avfWrapper->updateVideoLayerGravity();
 }
 
 bool MediaPlayerPrivateAVFoundationCF::hasLayerRenderer() const
@@ -816,12 +828,12 @@ void MediaPlayerPrivateAVFoundationCF::getSupportedTypes(HashSet<String>& suppor
     supportedTypes = mimeTypeCache();
 } 
 
-MediaPlayer::SupportsType MediaPlayerPrivateAVFoundationCF::supportsType(const String& type, const String& codecs, const KURL&)
+MediaPlayer::SupportsType MediaPlayerPrivateAVFoundationCF::supportsType(const MediaEngineSupportParameters& parameters)
 {
     // Only return "IsSupported" if there is no codecs parameter for now as there is no way to ask if it supports an
     // extended MIME type until rdar://8721715 is fixed.
-    if (mimeTypeCache().contains(type))
-        return codecs.isEmpty() ? MediaPlayer::MayBeSupported : MediaPlayer::IsSupported;
+    if (mimeTypeCache().contains(parameters.type))
+        return parameters.codecs.isEmpty() ? MediaPlayer::MayBeSupported : MediaPlayer::IsSupported;
 
     return MediaPlayer::IsNotSupported;
 }
@@ -848,6 +860,8 @@ void MediaPlayerPrivateAVFoundationCF::tracksChanged()
 
     if (!avAsset(m_avfWrapper))
         return;
+
+    setDelayCharacteristicsChangedNotification(true);
 
     bool haveCCTrack = false;
     bool hasCaptions = false;
@@ -922,8 +936,10 @@ void MediaPlayerPrivateAVFoundationCF::tracksChanged()
 
     sizeChanged();
 
-    if (!primaryAudioTrackLanguage.isNull() && primaryAudioTrackLanguage != languageOfPrimaryAudioTrack())
-        player()->characteristicChanged();
+    if (primaryAudioTrackLanguage != languageOfPrimaryAudioTrack())
+        characteristicsChanged();
+
+    setDelayCharacteristicsChangedNotification(false);
 }
 
 void MediaPlayerPrivateAVFoundationCF::sizeChanged()
@@ -954,6 +970,17 @@ void MediaPlayerPrivateAVFoundationCF::sizeChanged()
     if (movieSize.height > naturalSize.height)
         naturalSize.height = movieSize.height;
     setNaturalSize(IntSize(naturalSize));
+}
+
+bool MediaPlayerPrivateAVFoundationCF::requiresImmediateCompositing() const
+{
+    // The AVFoundationCF player needs to have the root compositor available at construction time
+    // so it can attach to the rendering device. Otherwise it falls back to CPU-only mode.
+    //
+    // It would be nice if AVCFPlayer had some way to switch to hardware-accelerated mode
+    // when asked, then we could follow AVFoundation's model and switch to compositing
+    // mode when beginning to play media.
+    return true;
 }
 
 #if !HAVE(AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT)
@@ -1105,6 +1132,12 @@ String MediaPlayerPrivateAVFoundationCF::languageOfPrimaryAudioTrack() const
     AVCFAssetTrackRef track = (AVCFAssetTrackRef)CFArrayGetValueAtIndex(tracks.get(), 0);
     RetainPtr<CFStringRef> language = adoptCF(AVCFAssetTrackCopyExtendedLanguageTag(track));
 
+    // If the language code is stored as a QuickTime 5-bit packed code there aren't enough bits for a full
+    // RFC 4646 language tag so extendedLanguageTag returns null. In this case languageCode will return the
+    // ISO 639-2/T language code so check it.
+    if (!language)
+        language = adoptCF(AVCFAssetTrackCopyLanguageCode(track));
+
     // Some legacy tracks have "und" as a language, treat that the same as no language at all.
     if (language && CFStringCompare(language.get(), CFSTR("und"), kCFCompareCaseInsensitive) != kCFCompareEqualTo) {
         m_languageOfPrimaryAudioTrack = language.get();
@@ -1128,6 +1161,7 @@ AVFWrapper::AVFWrapper(MediaPlayerPrivateAVFoundationCF* owner)
     , m_objectID(s_nextAVFWrapperObjectID++)
     , m_currentTrack(0)
 {
+    ASSERT(isMainThread());
     LOG(Media, "AVFWrapper::AVFWrapper(%p)", this);
 
     m_notificationQueue = dispatch_queue_create("MediaPlayerPrivateAVFoundationCF.notificationQueue", 0);
@@ -1136,6 +1170,7 @@ AVFWrapper::AVFWrapper(MediaPlayerPrivateAVFoundationCF* owner)
 
 AVFWrapper::~AVFWrapper()
 {
+    ASSERT(isMainThread());
     LOG(Media, "AVFWrapper::~AVFWrapper(%p %d)", this, m_objectID);
 
     destroyVideoLayer();
@@ -1214,6 +1249,15 @@ void AVFWrapper::scheduleDisconnectAndDelete()
     dispatch_async_f(dispatchQueue(), this, disconnectAndDeleteAVFWrapper);
 }
 
+static void destroyAVFWrapper(void* context)
+{
+    AVFWrapper* avfWrapper = static_cast<AVFWrapper*>(context);
+    if (!avfWrapper)
+        return;
+
+    delete avfWrapper;
+}
+
 void AVFWrapper::disconnectAndDeleteAVFWrapper(void* context)
 {
     AVFWrapper* avfWrapper = static_cast<AVFWrapper*>(context);
@@ -1246,14 +1290,15 @@ void AVFWrapper::disconnectAndDeleteAVFWrapper(void* context)
     AVCFPlayerItemRemoveOutput(avfWrapper->avPlayerItem(), avfWrapper->legibleOutput());
 #endif
 
-    delete avfWrapper;
+    // We must release the AVCFPlayer and other items on the same thread that created them.
+    dispatch_async_f(dispatch_get_main_queue(), context, destroyAVFWrapper);
 }
 
 void AVFWrapper::createAssetForURL(const String& url)
 {
     ASSERT(!avAsset());
 
-    RetainPtr<CFURLRef> urlRef = KURL(ParsedURLString, url).createCFURL();
+    RetainPtr<CFURLRef> urlRef = URL(ParsedURLString, url).createCFURL();
 
     AVCFURLAssetRef assetRef = AVCFURLAssetCreateWithURLAndOptions(kCFAllocatorDefault, urlRef.get(), 0, m_notificationQueue);
     m_avAsset = adoptCF(assetRef);
@@ -1547,7 +1592,7 @@ PlatformLayer* AVFWrapper::platformLayer()
     if (!m_layerClient)
         return 0;
 
-    m_videoLayerWrapper = PlatformCALayer::create(PlatformCALayer::LayerTypeLayer, m_layerClient.get());
+    m_videoLayerWrapper = PlatformCALayerWin::create(PlatformCALayer::LayerTypeLayer, m_layerClient.get());
     if (!m_videoLayerWrapper)
         return 0;
 
@@ -1556,6 +1601,7 @@ PlatformLayer* AVFWrapper::platformLayer()
     CACFLayerInsertSublayer(m_videoLayerWrapper->platformLayer(), m_caVideoLayer.get(), 0);
     m_videoLayerWrapper->setAnchorPoint(FloatPoint3D());
     m_videoLayerWrapper->setNeedsLayout();
+    updateVideoLayerGravity();
 
     return m_videoLayerWrapper->platformLayer();
 }
@@ -1622,14 +1668,14 @@ RetainPtr<CGImageRef> AVFWrapper::createImageForTimeInRect(float time, const Int
         return 0;
 
 #if !LOG_DISABLED
-    double start = WTF::currentTime();
+    double start = monotonicallyIncreasingTime();
 #endif
 
     AVCFAssetImageGeneratorSetMaximumSize(m_imageGenerator.get(), CGSize(rect.size()));
-    CGImageRef image = AVCFAssetImageGeneratorCopyCGImageAtTime(m_imageGenerator.get(), CMTimeMakeWithSeconds(time, 600), 0, 0);
-
+    CGImageRef rawimage = AVCFAssetImageGeneratorCopyCGImageAtTime(m_imageGenerator.get(), CMTimeMakeWithSeconds(time, 600), 0, 0);
+    CGImageRef image = CGImageCreateCopyWithColorSpace(rawimage,  CGColorSpaceCreateDeviceRGB());
 #if !LOG_DISABLED
-    double duration = WTF::currentTime() - start;
+    double duration = monotonicallyIncreasingTime() - start;
     LOG(Media, "AVFWrapper::createImageForTimeInRect(%p) - creating image took %.4f", this, narrowPrecisionToFloat(duration));
 #endif
 
@@ -1648,6 +1694,12 @@ AVCFMediaSelectionGroupRef AVFWrapper::safeMediaSelectionGroupForLegibleMedia() 
     return AVCFAssetGetSelectionGroupForMediaCharacteristic(avAsset(), AVCFMediaCharacteristicLegible);
 }
 #endif
+
+void AVFWrapper::updateVideoLayerGravity()
+{
+    // We should call AVCFPlayerLayerSetVideoGravity() here, but it is not yet implemented.
+    // FIXME: <rdar://problem/14884340>
+}
 
 void LayerClient::platformCALayerLayoutSublayersOfLayer(PlatformCALayer* wrapperLayer)
 {

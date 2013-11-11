@@ -41,7 +41,7 @@ namespace WebCore {
 
 class CachedImage;
 class FilterSubimageObserverProxy;
-class RenderObject;
+class RenderElement;
 class Document;
 class StyleResolver;
 
@@ -55,14 +55,14 @@ public:
 
     ~CSSFilterImageValue();
 
-    String customCssText() const;
+    String customCSSText() const;
 
-    PassRefPtr<Image> image(RenderObject*, const IntSize&);
+    PassRefPtr<Image> image(RenderElement*, const IntSize&);
     bool isFixedSize() const { return true; }
-    IntSize fixedSize(const RenderObject*);
+    IntSize fixedSize(const RenderElement*);
 
     bool isPending() const;
-    bool knownToBeOpaque(const RenderObject*) const;
+    bool knownToBeOpaque(const RenderElement*) const;
 
     void loadSubimages(CachedResourceLoader*);
 
@@ -70,7 +70,16 @@ public:
 
     bool equals(const CSSFilterImageValue&) const;
 
+    bool equalInputImages(const CSSFilterImageValue&) const;
+
     void createFilterOperations(StyleResolver*);
+
+    const FilterOperations& filterOperations() const { return m_filterOperations; }
+    void setFilterOperations(const FilterOperations& filterOperations)
+    {
+        m_filterOperations = filterOperations;
+    }
+    CachedImage* cachedImage() const { return m_cachedImage.get(); }
 
 private:
     CSSFilterImageValue(PassRefPtr<CSSValue> imageValue, PassRefPtr<CSSValue> filterValue)
@@ -109,6 +118,8 @@ private:
 
     FilterSubimageObserverProxy m_filterSubimageObserver;
 };
+
+CSS_VALUE_TYPE_CASTS(CSSFilterImageValue, isFilterImageValue())
 
 } // namespace WebCore
 

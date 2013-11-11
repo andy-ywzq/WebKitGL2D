@@ -33,6 +33,7 @@
 
 #include "NamedFlowCollection.h"
 #include "RenderFlowThread.h"
+#include "RenderLayer.h"
 #include "RenderNamedFlowThread.h"
 #include "StyleInheritedData.h"
 #include "WebKitNamedFlow.h"
@@ -69,13 +70,13 @@ RenderNamedFlowThread& FlowThreadController::ensureRenderFlowThreadWithName(cons
         }
     }
 
-    NamedFlowCollection* namedFlows = m_view->document()->namedFlows();
+    NamedFlowCollection* namedFlows = m_view->document().namedFlows();
 
     // Sanity check for the absence of a named flow in the "CREATED" state with the same name.
     ASSERT(!namedFlows->flowByName(name));
 
-    RenderNamedFlowThread* flowRenderer = RenderNamedFlowThread::createAnonymous(m_view->document(), namedFlows->ensureFlowWithName(name));
-    flowRenderer->setStyle(RenderFlowThread::createFlowThreadStyle(m_view->style()));
+    auto flowRenderer = new RenderNamedFlowThread(m_view->document(), RenderFlowThread::createFlowThreadStyle(&m_view->style()), namedFlows->ensureFlowWithName(name));
+    flowRenderer->initializeStyle();
     m_renderNamedFlowThreadList->add(flowRenderer);
 
     // Keep the flow renderer as a child of RenderView.
@@ -88,10 +89,10 @@ RenderNamedFlowThread& FlowThreadController::ensureRenderFlowThreadWithName(cons
 
 void FlowThreadController::styleDidChange()
 {
-    RenderStyle* viewStyle = m_view->style();
+    RenderStyle& viewStyle = m_view->style();
     for (RenderNamedFlowThreadList::iterator iter = m_renderNamedFlowThreadList->begin(); iter != m_renderNamedFlowThreadList->end(); ++iter) {
         RenderNamedFlowThread* flowRenderer = *iter;
-        flowRenderer->setStyle(RenderFlowThread::createFlowThreadStyle(viewStyle));
+        flowRenderer->setStyle(RenderFlowThread::createFlowThreadStyle(&viewStyle));
     }
 }
 
@@ -105,25 +106,22 @@ void FlowThreadController::layoutRenderNamedFlowThreads()
     }
 }
 
-void FlowThreadController::registerNamedFlowContentNode(Node* contentNode, RenderNamedFlowThread* namedFlow)
+void FlowThreadController::registerNamedFlowContentElement(Element& contentElement, RenderNamedFlowThread& namedFlow)
 {
-    ASSERT(contentNode && contentNode->isElementNode());
-    ASSERT(namedFlow);
-    ASSERT(!m_mapNamedFlowContentNodes.contains(contentNode));
-    ASSERT(!namedFlow->hasContentNode(contentNode));
-    m_mapNamedFlowContentNodes.add(contentNode, namedFlow);
-    namedFlow->registerNamedFlowContentNode(contentNode);
+    ASSERT(!m_mapNamedFlowContentElement.contains(&contentElement));
+    ASSERT(!namedFlow.hasContentElement(contentElement));
+    m_mapNamedFlowContentElement.add(&contentElement, &namedFlow);
+    namedFlow.registerNamedFlowContentElement(contentElement);
 }
 
-void FlowThreadController::unregisterNamedFlowContentNode(Node* contentNode)
+void FlowThreadController::unregisterNamedFlowContentElement(Element& contentElement)
 {
-    ASSERT(contentNode && contentNode->isElementNode());
-    HashMap<const Node*, RenderNamedFlowThread*>::iterator it = m_mapNamedFlowContentNodes.find(contentNode);
-    ASSERT(it != m_mapNamedFlowContentNodes.end());
+    auto it = m_mapNamedFlowContentElement.find(&contentElement);
+    ASSERT(it != m_mapNamedFlowContentElement.end());
     ASSERT(it->value);
-    ASSERT(it->value->hasContentNode(contentNode));
-    it->value->unregisterNamedFlowContentNode(contentNode);
-    m_mapNamedFlowContentNodes.remove(contentNode);
+    ASSERT(it->value->hasContentElement(contentElement));
+    it->value->unregisterNamedFlowContentElement(contentElement);
+    m_mapNamedFlowContentElement.remove(&contentElement);
 }
 
 void FlowThreadController::updateFlowThreadsChainIfNecessary()
@@ -272,14 +270,40 @@ void FlowThreadController::updateRenderFlowThreadLayersIfNeeded()
     // Walk the flow chain in reverse order because RenderRegions might become RenderLayers for the following flow threads.
     for (RenderNamedFlowThreadList::reverse_iterator iter = m_renderNamedFlowThreadList->rbegin(); iter != m_renderNamedFlowThreadList->rend(); ++iter) {
         RenderNamedFlowThread* flowRenderer = *iter;
-        flowRenderer->updateLayerToRegionMappingsIfNeeded();
+        flowRenderer->updateAllLayerToRegionMappingsIfNeeded();
     }
 }
 #endif
 
-bool FlowThreadController::isContentNodeRegisteredWithAnyNamedFlow(const Node* contentNode) const
+bool FlowThreadController::isContentElementRegisteredWithAnyNamedFlow(const Element& contentElement) const
 {
-    return m_mapNamedFlowContentNodes.contains(contentNode);
+    return m_mapNamedFlowContentElement.contains(&contentElement);
+}
+
+// Collect the fixed positioned layers that have the named flows as containing block
+// These layers are painted and hit-tested starting from RenderView not from regions.
+void FlowThreadController::collectFixedPositionedLayers(Vector<RenderLayer*>& fixedPosLayers) const
+{
+    for (RenderNamedFlowThreadList::const_iterator iter = m_renderNamedFlowThreadList->begin(); iter != m_renderNamedFlowThreadList->end(); ++iter) {
+        RenderNamedFlowThread* flowRenderer = *iter;
+
+        // If the named flow does not have any regions attached, a fixed element should not be
+        // displayed even if the fixed element is positioned/sized by the viewport.
+        if (!flowRenderer->hasRegions())
+            continue;
+
+        // Iterate over the fixed positioned elements in the flow thread
+        TrackedRendererListHashSet* positionedDescendants = flowRenderer->positionedObjects();
+        if (positionedDescendants) {
+            TrackedRendererListHashSet::iterator end = positionedDescendants->end();
+            for (TrackedRendererListHashSet::iterator it = positionedDescendants->begin(); it != end; ++it) {
+                RenderBox* box = *it;
+                if (!box->fixedPositionedWithNamedFlowContainingBlock())
+                    continue;
+                fixedPosLayers.append(box->layer());
+            }
+        }
+    }
 }
 
 #ifndef NDEBUG

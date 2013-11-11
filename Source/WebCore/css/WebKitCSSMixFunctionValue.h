@@ -44,7 +44,7 @@ public:
         return adoptRef(new WebKitCSSMixFunctionValue());
     }
 
-    String customCssText() const;
+    String customCSSText() const;
 
     PassRefPtr<WebKitCSSMixFunctionValue> cloneForCSSOM() const;
 
@@ -54,7 +54,9 @@ private:
     WebKitCSSMixFunctionValue();
     WebKitCSSMixFunctionValue(const WebKitCSSMixFunctionValue& cloneFrom);
 };
-    
+
+CSS_VALUE_TYPE_CASTS(WebKitCSSMixFunctionValue, isWebKitCSSMixFunctionValue())
+
 } // namespace WebCore
 
 #endif // ENABLE(CSS_SHADERS)

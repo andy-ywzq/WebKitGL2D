@@ -44,21 +44,21 @@ namespace WebCore {
 using namespace HTMLNames;
 
 // FIXME: Share more code with MediaDocumentParser.
-class PluginDocumentParser : public RawDataDocumentParser {
+class PluginDocumentParser FINAL : public RawDataDocumentParser {
 public:
-    static PassRefPtr<PluginDocumentParser> create(PluginDocument* document)
+    static PassRefPtr<PluginDocumentParser> create(PluginDocument& document)
     {
         return adoptRef(new PluginDocumentParser(document));
     }
 
 private:
-    PluginDocumentParser(Document* document)
+    PluginDocumentParser(Document& document)
         : RawDataDocumentParser(document)
         , m_embedElement(0)
     {
     }
 
-    virtual void appendBytes(DocumentWriter*, const char*, size_t);
+    virtual void appendBytes(DocumentWriter&, const char*, size_t);
 
     void createDocumentStructure();
 
@@ -93,14 +93,14 @@ void PluginDocumentParser::createDocumentStructure()
     DocumentLoader* loader = document()->loader();
     ASSERT(loader);
     if (loader)
-        m_embedElement->setAttribute(typeAttr, loader->writer()->mimeType());
+        m_embedElement->setAttribute(typeAttr, loader->writer().mimeType());
 
     toPluginDocument(document())->setPluginElement(m_embedElement);
 
     body->appendChild(embedElement, IGNORE_EXCEPTION);
 }
 
-void PluginDocumentParser::appendBytes(DocumentWriter*, const char*, size_t)
+void PluginDocumentParser::appendBytes(DocumentWriter&, const char*, size_t)
 {
     if (m_embedElement)
         return;
@@ -120,9 +120,9 @@ void PluginDocumentParser::appendBytes(DocumentWriter*, const char*, size_t)
     // can synchronously redirect data to the plugin.
     frame->view()->flushAnyPendingPostLayoutTasks();
 
-    if (RenderPart* renderer = m_embedElement->renderPart()) {
+    if (RenderWidget* renderer = m_embedElement->renderWidget()) {
         if (Widget* widget = renderer->widget()) {
-            frame->loader().client()->redirectDataToPlugin(widget);
+            frame->loader().client().redirectDataToPlugin(widget);
             // In a plugin document, the main resource is the plugin. If we have a null widget, that means
             // the loading of the plugin was cancelled, which gives us a null mainResourceLoader(), so we
             // need to have this call in a null check of the widget or of mainResourceLoader().
@@ -131,7 +131,7 @@ void PluginDocumentParser::appendBytes(DocumentWriter*, const char*, size_t)
     }
 }
 
-PluginDocument::PluginDocument(Frame* frame, const KURL& url)
+PluginDocument::PluginDocument(Frame* frame, const URL& url)
     : HTMLDocument(frame, url, PluginDocumentClass)
     , m_shouldLoadPluginManually(true)
 {
@@ -141,7 +141,7 @@ PluginDocument::PluginDocument(Frame* frame, const KURL& url)
 
 PassRefPtr<DocumentParser> PluginDocument::createParser()
 {
-    return PluginDocumentParser::create(this);
+    return PluginDocumentParser::create(*this);
 }
 
 Widget* PluginDocument::pluginWidget()
@@ -158,12 +158,11 @@ void PluginDocument::setPluginElement(PassRefPtr<HTMLPlugInElement> element)
     m_pluginElement = element;
 }
 
-void PluginDocument::detach()
+void PluginDocument::detachFromPluginElement()
 {
     // Release the plugin Element so that we don't have a circular reference.
     m_pluginElement = 0;
-    frame()->loader().client()->redirectDataToPlugin(0);
-    Document::detach();
+    frame()->loader().client().redirectDataToPlugin(0);
 }
 
 void PluginDocument::cancelManualPluginLoad()

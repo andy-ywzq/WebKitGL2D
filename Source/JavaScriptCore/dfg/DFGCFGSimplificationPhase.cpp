@@ -270,16 +270,7 @@ public:
                 
                 m_graph.invalidateCFG();
                 m_graph.resetReachability();
-
-                for (BlockIndex blockIndex = 0; blockIndex < m_graph.numBlocks(); ++blockIndex) {
-                    BasicBlock* block = m_graph.block(blockIndex);
-                    if (!block)
-                        continue;
-                    if (block->isReachable)
-                        continue;
-                    
-                    killUnreachable(block);
-                }
+                m_graph.killUnreachableBlocks();
             }
             
             if (Options::validateGraphAtEachPhase())
@@ -320,20 +311,7 @@ private:
         }
     }
 
-    void killUnreachable(BasicBlock* block)
-    {
-        ASSERT(block);
-        ASSERT(!block->isReachable);
-        
-        for (unsigned phiIndex = block->phis.size(); phiIndex--;)
-            m_graph.m_allocator.free(block->phis[phiIndex]);
-        for (unsigned nodeIndex = block->size(); nodeIndex--;)
-            m_graph.m_allocator.free(block->at(nodeIndex));
-        
-        m_graph.killBlock(block);
-    }
-    
-    void keepOperandAlive(BasicBlock* block, BasicBlock* jettisonedBlock, CodeOrigin codeOrigin, int operand)
+    void keepOperandAlive(BasicBlock* block, BasicBlock* jettisonedBlock, CodeOrigin codeOrigin, VirtualRegister operand)
     {
         Node* livenessNode = jettisonedBlock->variablesAtHead.operand(operand);
         if (!livenessNode)
@@ -348,9 +326,9 @@ private:
     void jettisonBlock(BasicBlock* block, BasicBlock* jettisonedBlock, CodeOrigin boundaryCodeOrigin)
     {
         for (size_t i = 0; i < jettisonedBlock->variablesAtHead.numberOfArguments(); ++i)
-            keepOperandAlive(block, jettisonedBlock, boundaryCodeOrigin, argumentToOperand(i));
+            keepOperandAlive(block, jettisonedBlock, boundaryCodeOrigin, virtualRegisterForArgument(i));
         for (size_t i = 0; i < jettisonedBlock->variablesAtHead.numberOfLocals(); ++i)
-            keepOperandAlive(block, jettisonedBlock, boundaryCodeOrigin, i);
+            keepOperandAlive(block, jettisonedBlock, boundaryCodeOrigin, virtualRegisterForLocal(i));
         
         fixJettisonedPredecessors(block, jettisonedBlock);
     }
@@ -402,9 +380,9 @@ private:
             // different path than secondBlock.
             
             for (size_t i = 0; i < jettisonedBlock->variablesAtHead.numberOfArguments(); ++i)
-                keepOperandAlive(firstBlock, jettisonedBlock, boundaryCodeOrigin, argumentToOperand(i));
+                keepOperandAlive(firstBlock, jettisonedBlock, boundaryCodeOrigin, virtualRegisterForArgument(i));
             for (size_t i = 0; i < jettisonedBlock->variablesAtHead.numberOfLocals(); ++i)
-                keepOperandAlive(firstBlock, jettisonedBlock, boundaryCodeOrigin, i);
+                keepOperandAlive(firstBlock, jettisonedBlock, boundaryCodeOrigin, virtualRegisterForLocal(i));
         }
         
         for (size_t i = 0; i < secondBlock->phis.size(); ++i)

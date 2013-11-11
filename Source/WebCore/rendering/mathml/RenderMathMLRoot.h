@@ -35,7 +35,7 @@ namespace WebCore {
 // Render base^(1/index), or sqrt(base) via the derived class RenderMathMLSquareRoot, using radical notation.
 class RenderMathMLRoot : public RenderMathMLBlock {
 public:
-    RenderMathMLRoot(Element*);
+    RenderMathMLRoot(Element&, PassRef<RenderStyle>);
 
     virtual LayoutUnit paddingTop() const OVERRIDE;
     virtual LayoutUnit paddingBottom() const OVERRIDE;
@@ -57,10 +57,8 @@ private:
     virtual bool isRenderMathMLRoot() const { return true; }
     virtual const char* renderName() const { return "RenderMathMLRoot"; }
     
-    virtual void computePreferredLogicalWidths() OVERRIDE;
-    
     // This may return 0 for a non-MathML index (which won't occur in valid MathML).
-    RenderBoxModelObject* index() const;
+    RenderBox* index() const;
 
     int m_intrinsicPaddingBefore;
     int m_intrinsicPaddingAfter;

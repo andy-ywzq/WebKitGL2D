@@ -98,7 +98,10 @@ using namespace JSC::LLInt;
     #define OFFLINE_ASM_GLUE_LABEL(label)  case label: label:
 #endif
 
-#define OFFLINE_ASM_LOCAL_LABEL(label)   label:
+#define OFFLINE_ASM_LOCAL_LABEL(label) \
+    label: \
+        if (false) \
+            goto label;
 
 
 //============================================================================
@@ -314,16 +317,7 @@ JSValue CLoop::execute(CallFrame* callFrame, OpcodeID bootstrapOpcodeId,
     t0.i = 0;
     t1.i = 0;
 
-    // Instantiate the pseudo JIT stack frame used by the LLINT C Loop backend:
-    JITStackFrame jitStackFrame;
-
-    // The llint expects the native stack pointer, sp, to be pointing to the
-    // jitStackFrame (which is the simulation of the native stack frame):
-    JITStackFrame* const sp = &jitStackFrame;
-    sp->vm = &callFrame->vm();
-
-    // Set up an alias for the vm ptr in the JITStackFrame:
-    VM* &vm = sp->vm;
+    VM* vm = &callFrame->vm();
 
     CodeBlock* codeBlock = callFrame->codeBlock();
     Instruction* vPC;
@@ -436,7 +430,7 @@ JSValue CLoop::execute(CallFrame* callFrame, OpcodeID bootstrapOpcodeId,
 
         OFFLINE_ASM_GLUE_LABEL(ctiOpThrowNotCaught)
         {
-            return vm->exception;
+            return vm->exception();
         }
 
 #if !ENABLE(COMPUTED_GOTO_OPCODES)
@@ -533,6 +527,7 @@ JSValue CLoop::execute(CallFrame* callFrame, OpcodeID bootstrapOpcodeId,
 
 #if CPU(ARM_THUMB2)
 #define OFFLINE_ASM_GLOBAL_LABEL(label)          \
+    ".text\n"                                    \
     ".globl " SYMBOL_STRING(label) "\n"          \
     HIDE_SYMBOL(label) "\n"                      \
     ".thumb\n"                                   \
@@ -540,6 +535,7 @@ JSValue CLoop::execute(CallFrame* callFrame, OpcodeID bootstrapOpcodeId,
     SYMBOL_STRING(label) ":\n"
 #else
 #define OFFLINE_ASM_GLOBAL_LABEL(label)         \
+    ".text\n"                                   \
     ".globl " SYMBOL_STRING(label) "\n"         \
     HIDE_SYMBOL(label) "\n"                     \
     SYMBOL_STRING(label) ":\n"

@@ -21,7 +21,7 @@
 #ifndef RenderFileUploadControl_h
 #define RenderFileUploadControl_h
 
-#include "RenderBlock.h"
+#include "RenderBlockFlow.h"
 
 namespace WebCore {
 
@@ -31,50 +31,41 @@ class HTMLInputElement;
 // sufficient space to draw a file icon and filename. The RenderButton has a shadow node
 // associated with it to receive click/hover events.
 
-class RenderFileUploadControl FINAL : public RenderBlock {
+class RenderFileUploadControl FINAL : public RenderBlockFlow {
 public:
-    RenderFileUploadControl(HTMLInputElement*);
+    RenderFileUploadControl(HTMLInputElement&, PassRef<RenderStyle>);
     virtual ~RenderFileUploadControl();
-
-    virtual bool isFileUploadControl() const { return true; }
 
     String buttonValue();
     String fileTextValue() const;
+
+    HTMLInputElement& inputElement() const;
     
 private:
-    virtual const char* renderName() const { return "RenderFileUploadControl"; }
+    void element() const WTF_DELETED_FUNCTION;
+
+    virtual bool isFileUploadControl() const OVERRIDE { return true; }
+
+    virtual const char* renderName() const OVERRIDE { return "RenderFileUploadControl"; }
 
     virtual bool canBeReplacedWithInlineRunIn() const OVERRIDE;
-    virtual void updateFromElement();
+    virtual void updateFromElement() OVERRIDE;
     virtual void computeIntrinsicLogicalWidths(LayoutUnit& minLogicalWidth, LayoutUnit& maxLogicalWidth) const OVERRIDE;
-    virtual void computePreferredLogicalWidths();
-    virtual void paintObject(PaintInfo&, const LayoutPoint&);
+    virtual void computePreferredLogicalWidths() OVERRIDE;
+    virtual void paintObject(PaintInfo&, const LayoutPoint&) OVERRIDE;
 
-    virtual bool requiresForcedStyleRecalcPropagation() const { return true; }
+    virtual bool requiresForcedStyleRecalcPropagation() const OVERRIDE { return true; }
 
     int maxFilenameWidth() const;
     
-    virtual VisiblePosition positionForPoint(const LayoutPoint&);
+    virtual VisiblePosition positionForPoint(const LayoutPoint&) OVERRIDE;
 
     HTMLInputElement* uploadButton() const;
 
     bool m_canReceiveDroppedFiles;
 };
 
-inline RenderFileUploadControl* toRenderFileUploadControl(RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isFileUploadControl());
-    return static_cast<RenderFileUploadControl*>(object);
-}
-
-inline const RenderFileUploadControl* toRenderFileUploadControl(const RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isFileUploadControl());
-    return static_cast<const RenderFileUploadControl*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderFileUploadControl(const RenderFileUploadControl*);
+RENDER_OBJECT_TYPE_CASTS(RenderFileUploadControl, isFileUploadControl())
 
 } // namespace WebCore
 

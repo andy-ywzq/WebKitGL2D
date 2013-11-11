@@ -27,7 +27,9 @@
 #define JSInterfaceJIT_h
 
 #include "BytecodeConventions.h"
+#include "CCallHelpers.h"
 #include "JITCode.h"
+#include "JITOperations.h"
 #include "JITStubs.h"
 #include "JSCJSValue.h"
 #include "JSStack.h"
@@ -38,8 +40,13 @@
 #if ENABLE(JIT)
 
 namespace JSC {
-    class JSInterfaceJIT : public MacroAssembler {
+    class JSInterfaceJIT : public CCallHelpers {
     public:
+        JSInterfaceJIT(VM* vm, CodeBlock* codeBlock = 0)
+            : CCallHelpers(vm, codeBlock)
+        {
+        }
+        
         // NOTES:
         //
         // regT0 has two special meanings.  The return value from a stub
@@ -55,6 +62,7 @@ namespace JSC {
         // however the code will still function correctly.
 #if CPU(X86_64)
         static const RegisterID returnValueRegister = X86Registers::eax;
+        static const RegisterID returnValue2Register = X86Registers::edx;
         static const RegisterID cachedResultRegister = X86Registers::eax;
 #if !OS(WINDOWS)
         static const RegisterID firstArgumentRegister = X86Registers::edi;
@@ -83,6 +91,7 @@ namespace JSC {
         static const RegisterID nonArgGPR1 = X86Registers::eax; // regT0
 #elif CPU(X86)
         static const RegisterID returnValueRegister = X86Registers::eax;
+        static const RegisterID returnValue2Register = X86Registers::edx;
         static const RegisterID cachedResultRegister = X86Registers::eax;
         // On x86 we always use fastcall conventions = but on
         // OS X if might make more sense to just use regparm.
@@ -103,18 +112,17 @@ namespace JSC {
         static const FPRegisterID fpRegT3 = X86Registers::xmm3;
 #elif CPU(ARM)
         static const RegisterID returnValueRegister = ARMRegisters::r0;
+        static const RegisterID returnValue2Register = ARMRegisters::r1;
         static const RegisterID cachedResultRegister = ARMRegisters::r0;
         static const RegisterID firstArgumentRegister = ARMRegisters::r0;
         static const RegisterID secondArgumentRegister = ARMRegisters::r1;
-
-#if ENABLE(VALUE_PROFILER)
-#endif
 
         static const RegisterID regT0 = ARMRegisters::r0;
         static const RegisterID regT1 = ARMRegisters::r1;
         static const RegisterID regT2 = ARMRegisters::r2;
         static const RegisterID regT3 = ARMRegisters::r4;
         static const RegisterID regT4 = ARMRegisters::r7;
+        static const RegisterID regT5 = ARMRegisters::r8;
 
         // Update ctiTrampoline in JITStubs.cpp if these values are changed!
         static const RegisterID callFrameRegister = ARMRegisters::r5;
@@ -123,8 +131,36 @@ namespace JSC {
         static const FPRegisterID fpRegT1 = ARMRegisters::d1;
         static const FPRegisterID fpRegT2 = ARMRegisters::d2;
         static const FPRegisterID fpRegT3 = ARMRegisters::d3;
+#elif CPU(ARM64)
+        static const RegisterID returnValueRegister = ARM64Registers::x0;
+        static const RegisterID cachedResultRegister = ARM64Registers::x0;
+        static const RegisterID firstArgumentRegister = ARM64Registers::x0;
+        static const RegisterID secondArgumentRegister = ARM64Registers::x1;
+
+#if ENABLE(VALUE_PROFILER)
+        static const RegisterID bucketCounterRegister = ARM64Registers::x7;
+#endif
+
+        static const RegisterID regT0 = ARM64Registers::x0;
+        static const RegisterID regT1 = ARM64Registers::x1;
+        static const RegisterID regT2 = ARM64Registers::x2;
+        static const RegisterID regT3 = ARM64Registers::x23;
+        static const RegisterID regT4 = ARM64Registers::x24;
+        
+        static const RegisterID callFrameRegister = ARM64Registers::x25;
+        static const RegisterID timeoutCheckRegister = ARM64Registers::x26;
+        static const RegisterID tagTypeNumberRegister = ARM64Registers::x27;
+        static const RegisterID tagMaskRegister = ARM64Registers::x28;
+        
+        static const FPRegisterID fpRegT0 = ARM64Registers::q0;
+        static const FPRegisterID fpRegT1 = ARM64Registers::q1;
+        static const FPRegisterID fpRegT2 = ARM64Registers::q2;
+        static const FPRegisterID fpRegT3 = ARM64Registers::q3;
+
+        static const RegisterID nonArgGPR1 = ARM64Registers::x9;
 #elif CPU(MIPS)
         static const RegisterID returnValueRegister = MIPSRegisters::v0;
+        static const RegisterID returnValue2Register = MIPSRegisters::v1;
         static const RegisterID cachedResultRegister = MIPSRegisters::v0;
         static const RegisterID firstArgumentRegister = MIPSRegisters::a0;
         static const RegisterID secondArgumentRegister = MIPSRegisters::a1;
@@ -141,6 +177,7 @@ namespace JSC {
         static const RegisterID regT3 = MIPSRegisters::s2;
         
         static const RegisterID regT4 = MIPSRegisters::s3;
+        static const RegisterID regT5 = MIPSRegisters::s4;
 
         static const RegisterID callFrameRegister = MIPSRegisters::s0;
         
@@ -163,6 +200,7 @@ namespace JSC {
         static const RegisterID secondArgumentRegister = regT5;
 
         static const RegisterID returnValueRegister = SH4Registers::r0;
+        static const RegisterID returnValue2Register = SH4Registers::r1;
         static const RegisterID cachedResultRegister = SH4Registers::r0;
 
         static const FPRegisterID fpRegT0 = SH4Registers::dr0;
@@ -180,7 +218,7 @@ namespace JSC {
         static const unsigned Int32Tag = 0xffffffff;
         COMPILE_ASSERT(Int32Tag == JSValue::Int32Tag, Int32Tag_out_of_sync);
 #else
-        static const unsigned Int32Tag = TagTypeNumber >> 32;
+        static const unsigned Int32Tag = static_cast<unsigned>(TagTypeNumber >> 32);
 #endif
         inline Jump emitLoadJSCell(unsigned virtualRegisterIndex, RegisterID payload);
         inline Jump emitLoadInt32(unsigned virtualRegisterIndex, RegisterID dst);
@@ -205,11 +243,6 @@ namespace JSC {
         void emitPutToCallFrameHeader(RegisterID from, JSStack::CallFrameHeaderEntry);
         void emitPutImmediateToCallFrameHeader(void* value, JSStack::CallFrameHeaderEntry);
         void emitPutCellToCallFrameHeader(RegisterID from, JSStack::CallFrameHeaderEntry);
-
-        void preserveReturnAddressAfterCall(RegisterID);
-        void restoreReturnAddressBeforeReturn(RegisterID);
-        void restoreReturnAddressBeforeReturn(Address);
-        void restoreArgumentReference();
 
         inline Address payloadFor(int index, RegisterID base = callFrameRegister);
         inline Address intPayloadFor(int index, RegisterID base = callFrameRegister);
@@ -394,81 +427,6 @@ namespace JSC {
     {
         ASSERT(virtualRegisterIndex < FirstConstantRegisterIndex);
         return Address(base, (static_cast<unsigned>(virtualRegisterIndex) * sizeof(Register)));
-    }
-
-#if CPU(ARM)
-
-    ALWAYS_INLINE void JSInterfaceJIT::preserveReturnAddressAfterCall(RegisterID reg)
-    {
-        move(linkRegister, reg);
-    }
-    
-    ALWAYS_INLINE void JSInterfaceJIT::restoreReturnAddressBeforeReturn(RegisterID reg)
-    {
-        move(reg, linkRegister);
-    }
-    
-    ALWAYS_INLINE void JSInterfaceJIT::restoreReturnAddressBeforeReturn(Address address)
-    {
-        loadPtr(address, linkRegister);
-    }
-#elif CPU(SH4)
-
-    ALWAYS_INLINE void JSInterfaceJIT::preserveReturnAddressAfterCall(RegisterID reg)
-    {
-        m_assembler.stspr(reg);
-    }
-    
-    ALWAYS_INLINE void JSInterfaceJIT::restoreReturnAddressBeforeReturn(RegisterID reg)
-    {
-        m_assembler.ldspr(reg);
-    }
-    
-    ALWAYS_INLINE void JSInterfaceJIT::restoreReturnAddressBeforeReturn(Address address)
-    {
-        loadPtrLinkReg(address);
-    }
-    
-#elif CPU(MIPS)
-
-    ALWAYS_INLINE void JSInterfaceJIT::preserveReturnAddressAfterCall(RegisterID reg)
-    {
-        move(returnAddressRegister, reg);
-    }
-    
-    ALWAYS_INLINE void JSInterfaceJIT::restoreReturnAddressBeforeReturn(RegisterID reg)
-    {
-        move(reg, returnAddressRegister);
-    }
-    
-    ALWAYS_INLINE void JSInterfaceJIT::restoreReturnAddressBeforeReturn(Address address)
-    {
-        loadPtr(address, returnAddressRegister);
-    }
-    
-#else // CPU(X86) || CPU(X86_64)
-
-    ALWAYS_INLINE void JSInterfaceJIT::preserveReturnAddressAfterCall(RegisterID reg)
-    {
-        pop(reg);
-    }
-    
-    ALWAYS_INLINE void JSInterfaceJIT::restoreReturnAddressBeforeReturn(RegisterID reg)
-    {
-        push(reg);
-    }
-    
-    ALWAYS_INLINE void JSInterfaceJIT::restoreReturnAddressBeforeReturn(Address address)
-    {
-        push(address);
-    }
-    
-#endif
-
-    ALWAYS_INLINE void JSInterfaceJIT::restoreArgumentReference()
-    {
-        move(stackPointerRegister, firstArgumentRegister);
-        poke(callFrameRegister, OBJECT_OFFSETOF(struct JITStackFrame, callFrame) / sizeof(void*));
     }
 
 } // namespace JSC

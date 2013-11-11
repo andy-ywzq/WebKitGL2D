@@ -94,7 +94,7 @@ public:
     {
         m_block = block;
         
-        LLVMPositionBuilderAtEnd(m_builder, block);
+        llvm->PositionBuilderAtEnd(m_builder, block);
     }
     LBasicBlock newBlock(const char* name = "")
     {
@@ -108,7 +108,9 @@ public:
     LValue constInt8(int8_t value) { return constInt(int8, value); }
     LValue constInt32(int32_t value) { return constInt(int32, value); }
     template<typename T>
-    LValue constIntPtr(T value) { return constInt(intPtr, bitwise_cast<intptr_t>(value)); }
+    LValue constIntPtr(T* value) { return constInt(intPtr, bitwise_cast<intptr_t>(value)); }
+    template<typename T>
+    LValue constIntPtr(T value) { return constInt(intPtr, static_cast<intptr_t>(value)); }
     LValue constInt64(int64_t value) { return constInt(int64, value); }
     LValue constDouble(double value) { return constReal(doubleType, value); }
     
@@ -164,20 +166,36 @@ public:
     {
         return call(mulWithOverflow32Intrinsic(), left, right);
     }
+    LValue addWithOverflow64(LValue left, LValue right)
+    {
+        return call(addWithOverflow64Intrinsic(), left, right);
+    }
+    LValue subWithOverflow64(LValue left, LValue right)
+    {
+        return call(subWithOverflow64Intrinsic(), left, right);
+    }
+    LValue mulWithOverflow64(LValue left, LValue right)
+    {
+        return call(mulWithOverflow64Intrinsic(), left, right);
+    }
     LValue doubleAbs(LValue value)
     {
         return call(doubleAbsIntrinsic(), value);
     }
     
+    LValue signExt(LValue value, LType type) { return buildSExt(m_builder, value, type); }
     LValue zeroExt(LValue value, LType type) { return buildZExt(m_builder, value, type); }
     LValue fpToInt(LValue value, LType type) { return buildFPToSI(m_builder, value, type); }
+    LValue fpToUInt(LValue value, LType type) { return buildFPToUI(m_builder, value, type); }
     LValue fpToInt32(LValue value) { return fpToInt(value, int32); }
+    LValue fpToUInt32(LValue value) { return fpToUInt(value, int32); }
     LValue intToFP(LValue value, LType type) { return buildSIToFP(m_builder, value, type); }
     LValue intToDouble(LValue value) { return intToFP(value, doubleType); }
     LValue unsignedToFP(LValue value, LType type) { return buildUIToFP(m_builder, value, type); }
     LValue unsignedToDouble(LValue value) { return unsignedToFP(value, doubleType); }
     LValue intCast(LValue value, LType type) { return buildIntCast(m_builder, value, type); }
     LValue castToInt32(LValue value) { return intCast(value, int32); }
+    LValue fpCast(LValue value, LType type) { return buildFPCast(m_builder, value, type); }
     LValue intToPtr(LValue value, LType type) { return buildIntToPtr(m_builder, value, type); }
     LValue bitCast(LValue value, LType type) { return buildBitCast(m_builder, value, type); }
     
@@ -201,10 +219,14 @@ public:
     LValue load32(TypedPointer pointer) { return load(pointer, ref32); }
     LValue load64(TypedPointer pointer) { return load(pointer, ref64); }
     LValue loadPtr(TypedPointer pointer) { return load(pointer, refPtr); }
+    LValue loadFloat(TypedPointer pointer) { return load(pointer, refFloat); }
     LValue loadDouble(TypedPointer pointer) { return load(pointer, refDouble); }
+    void store8(LValue value, TypedPointer pointer) { store(value, pointer, ref8); }
+    void store16(LValue value, TypedPointer pointer) { store(value, pointer, ref16); }
     void store32(LValue value, TypedPointer pointer) { store(value, pointer, ref32); }
     void store64(LValue value, TypedPointer pointer) { store(value, pointer, ref64); }
     void storePtr(LValue value, TypedPointer pointer) { store(value, pointer, refPtr); }
+    void storeFloat(LValue value, TypedPointer pointer) { store(value, pointer, refFloat); }
     void storeDouble(LValue value, TypedPointer pointer) { store(value, pointer, refDouble); }
 
     LValue addPtr(LValue value, ptrdiff_t immediate = 0)
@@ -326,6 +348,8 @@ public:
     LValue call(LValue function, LValue arg1, LValue arg2) { return buildCall(m_builder, function, arg1, arg2); }
     LValue call(LValue function, LValue arg1, LValue arg2, LValue arg3) { return buildCall(m_builder, function, arg1, arg2, arg3); }
     LValue call(LValue function, LValue arg1, LValue arg2, LValue arg3, LValue arg4) { return buildCall(m_builder, function, arg1, arg2, arg3, arg4); }
+    LValue call(LValue function, LValue arg1, LValue arg2, LValue arg3, LValue arg4, LValue arg5) { return buildCall(m_builder, function, arg1, arg2, arg3, arg4, arg5); }
+    LValue call(LValue function, LValue arg1, LValue arg2, LValue arg3, LValue arg4, LValue arg5, LValue arg6) { return buildCall(m_builder, function, arg1, arg2, arg3, arg4, arg5, arg6); }
     
     template<typename FunctionType>
     LValue operation(FunctionType function)
@@ -351,9 +375,14 @@ public:
     {
         call(trapIntrinsic());
     }
-    void crash()
+    
+    void crashNonTerminal()
     {
         call(intToPtr(constIntPtr(abort), pointerType(functionType(voidType))));
+    }
+    void crash()
+    {
+        crashNonTerminal();
         unreachable();
     }
     

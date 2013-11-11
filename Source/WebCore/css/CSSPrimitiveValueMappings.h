@@ -182,6 +182,32 @@ template<> inline CSSPrimitiveValue::operator CSSReflectionDirection() const
     return ReflectionBelow;
 }
 
+template<> inline CSSPrimitiveValue::CSSPrimitiveValue(ColumnFill columnFill)
+    : CSSValue(PrimitiveClass)
+{
+    m_primitiveUnitType = CSS_VALUE_ID;
+    switch (columnFill) {
+    case ColumnFillAuto:
+        m_value.valueID = CSSValueAuto;
+        break;
+    case ColumnFillBalance:
+        m_value.valueID = CSSValueBalance;
+        break;
+    }
+}
+
+template<> inline CSSPrimitiveValue::operator ColumnFill() const
+{
+    if (m_primitiveUnitType == CSS_VALUE_ID) {
+        if (m_value.valueID == CSSValueBalance)
+            return ColumnFillBalance;
+        if (m_value.valueID == CSSValueAuto)
+            return ColumnFillAuto;
+    }
+    ASSERT_NOT_REACHED();
+    return ColumnFillBalance;
+}
+
 template<> inline CSSPrimitiveValue::CSSPrimitiveValue(ColumnSpan columnSpan)
     : CSSValue(PrimitiveClass)
 {
@@ -3567,6 +3593,50 @@ template<> inline CSSPrimitiveValue::operator FontDescription::Kerning() const
 
     ASSERT_NOT_REACHED();
     return FontDescription::AutoKerning;
+}
+
+template<> inline CSSPrimitiveValue::CSSPrimitiveValue(ObjectFit fit)
+    : CSSValue(PrimitiveClass)
+{
+    m_primitiveUnitType = CSS_VALUE_ID;
+    switch (fit) {
+    case ObjectFitFill:
+        m_value.valueID = CSSValueFill;
+        break;
+    case ObjectFitContain:
+        m_value.valueID = CSSValueContain;
+        break;
+    case ObjectFitCover:
+        m_value.valueID = CSSValueCover;
+        break;
+    case ObjectFitNone:
+        m_value.valueID = CSSValueNone;
+        break;
+    case ObjectFitScaleDown:
+        m_value.valueID = CSSValueScaleDown;
+        break;
+    }
+}
+
+template<> inline CSSPrimitiveValue::operator ObjectFit() const
+{
+    ASSERT(isValueID());
+
+    switch (m_value.valueID) {
+    case CSSValueFill:
+        return ObjectFitFill;
+    case CSSValueContain:
+        return ObjectFitContain;
+    case CSSValueCover:
+        return ObjectFitCover;
+    case CSSValueNone:
+        return ObjectFitNone;
+    case CSSValueScaleDown:
+        return ObjectFitScaleDown;
+    default:
+        ASSERT_NOT_REACHED();
+        return ObjectFitFill;
+    }
 }
 
 template<> inline CSSPrimitiveValue::CSSPrimitiveValue(FontSmoothingMode smoothing)

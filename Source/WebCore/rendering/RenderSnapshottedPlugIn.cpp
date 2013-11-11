@@ -46,8 +46,8 @@
 
 namespace WebCore {
 
-RenderSnapshottedPlugIn::RenderSnapshottedPlugIn(HTMLPlugInImageElement* element)
-    : RenderEmbeddedObject(element)
+RenderSnapshottedPlugIn::RenderSnapshottedPlugIn(HTMLPlugInImageElement& element, PassRef<RenderStyle> style)
+    : RenderEmbeddedObject(element, std::move(style))
     , m_snapshotResource(RenderImageResource::create())
     , m_isPotentialMouseActivation(false)
 {
@@ -60,9 +60,9 @@ RenderSnapshottedPlugIn::~RenderSnapshottedPlugIn()
     m_snapshotResource->shutdown();
 }
 
-HTMLPlugInImageElement* RenderSnapshottedPlugIn::plugInImageElement() const
+HTMLPlugInImageElement& RenderSnapshottedPlugIn::plugInImageElement() const
 {
-    return toHTMLPlugInImageElement(node());
+    return toHTMLPlugInImageElement(RenderEmbeddedObject::frameOwnerElement());
 }
 
 void RenderSnapshottedPlugIn::layout()
@@ -76,8 +76,7 @@ void RenderSnapshottedPlugIn::layout()
     if (newSize == oldSize)
         return;
 
-    if (document()->view())
-        document()->view()->addWidgetToUpdate(this);
+    view().frameView().addEmbeddedObjectToUpdate(*this);
 }
 
 void RenderSnapshottedPlugIn::updateSnapshot(PassRefPtr<Image> image)
@@ -92,7 +91,7 @@ void RenderSnapshottedPlugIn::updateSnapshot(PassRefPtr<Image> image)
 
 void RenderSnapshottedPlugIn::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 {
-    if (paintInfo.phase == PaintPhaseForeground && plugInImageElement()->displayState() < HTMLPlugInElement::Restarting) {
+    if (paintInfo.phase == PaintPhaseForeground && plugInImageElement().displayState() < HTMLPlugInElement::Restarting) {
         paintSnapshot(paintInfo, paintOffset);
     }
 
@@ -125,8 +124,8 @@ void RenderSnapshottedPlugIn::paintSnapshot(PaintInfo& paintInfo, const LayoutPo
 
     GraphicsContext* context = paintInfo.context;
 #if PLATFORM(MAC)
-    if (style()->highlight() != nullAtom && !context->paintingDisabled())
-        paintCustomHighlight(toPoint(paintOffset - location()), style()->highlight(), true);
+    if (style().highlight() != nullAtom && !context->paintingDisabled())
+        paintCustomHighlight(toPoint(paintOffset - location()), style().highlight(), true);
 #endif
 
     LayoutSize contentSize(cWidth, cHeight);
@@ -140,16 +139,16 @@ void RenderSnapshottedPlugIn::paintSnapshot(PaintInfo& paintInfo, const LayoutPo
 
     bool useLowQualityScaling = shouldPaintAtLowQuality(context, image, image, alignedRect.size());
 
-    ImageOrientationDescription orientationDescription;
+    ImageOrientationDescription orientationDescription(shouldRespectImageOrientation());
 #if ENABLE(CSS_IMAGE_ORIENTATION)
-    orientationDescription.setImageOrientationEnum(style()->imageOrientation());
+    orientationDescription.setImageOrientationEnum(style().imageOrientation());
 #endif
-    context->drawImage(image, style()->colorSpace(), alignedRect, CompositeSourceOver, orientationDescription, useLowQualityScaling);
+    context->drawImage(image, style().colorSpace(), alignedRect, CompositeSourceOver, orientationDescription, useLowQualityScaling);
 }
 
 CursorDirective RenderSnapshottedPlugIn::getCursor(const LayoutPoint& point, Cursor& overrideCursor) const
 {
-    if (plugInImageElement()->displayState() < HTMLPlugInElement::Restarting) {
+    if (plugInImageElement().displayState() < HTMLPlugInElement::Restarting) {
         overrideCursor = handCursor();
         return SetCursor;
     }
@@ -179,8 +178,8 @@ void RenderSnapshottedPlugIn::handleEvent(Event* event)
 
     if (event->type() == eventNames().clickEvent || (m_isPotentialMouseActivation && event->type() == eventNames().mouseupEvent)) {
         m_isPotentialMouseActivation = false;
-        bool clickWasOnOverlay = plugInImageElement()->partOfSnapshotOverlay(event->target()->toNode());
-        plugInImageElement()->userDidClickSnapshot(mouseEvent, !clickWasOnOverlay);
+        bool clickWasOnOverlay = plugInImageElement().partOfSnapshotOverlay(event->target()->toNode());
+        plugInImageElement().userDidClickSnapshot(mouseEvent, !clickWasOnOverlay);
         event->setDefaultHandled();
     } else if (event->type() == eventNames().mousedownEvent) {
         m_isPotentialMouseActivation = true;

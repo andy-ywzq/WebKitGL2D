@@ -40,28 +40,22 @@ namespace WebCore {
 JSValue JSJavaScriptCallFrame::evaluate(ExecState* exec)
 {
     JSValue exception;
-    JSValue result = impl()->evaluate(exec->argument(0).toString(exec)->value(exec), exception);
+    JSValue result = impl().evaluate(exec->argument(0).toString(exec)->value(exec), exception);
 
     if (exception)
-        throwError(exec, exception);
+        exec->vm().throwException(exec, exception);
 
     return result;
 }
 
-JSValue JSJavaScriptCallFrame::restart(ExecState*)
-{
-    // FIXME(40300): implement this.
-    return JSValue(JSValue::JSFalse);
-}
-
 JSValue JSJavaScriptCallFrame::thisObject(ExecState*) const
 {
-    return impl()->thisObject() ? JSValue(impl()->thisObject()) : jsNull();
+    return impl().thisValue();
 }
 
 JSValue JSJavaScriptCallFrame::type(ExecState* exec) const
 {
-    switch (impl()->type()) {
+    switch (impl().type()) {
         case DebuggerCallFrame::FunctionType:
             return jsString(exec, ASCIILiteral("function"));
         case DebuggerCallFrame::ProgramType:
@@ -74,10 +68,10 @@ JSValue JSJavaScriptCallFrame::type(ExecState* exec) const
 
 JSValue JSJavaScriptCallFrame::scopeChain(ExecState* exec) const
 {
-    if (!impl()->scopeChain())
+    if (!impl().scopeChain())
         return jsNull();
 
-    JSScope* scopeChain = impl()->scopeChain();
+    JSScope* scopeChain = impl().scopeChain();
     ScopeChainIterator iter = scopeChain->begin();
     ScopeChainIterator end = scopeChain->end();
 
@@ -95,14 +89,14 @@ JSValue JSJavaScriptCallFrame::scopeChain(ExecState* exec) const
 
 JSValue JSJavaScriptCallFrame::scopeType(ExecState* exec)
 {
-    if (!impl()->scopeChain())
+    if (!impl().scopeChain())
         return jsUndefined();
 
     if (!exec->argument(0).isInt32())
         return jsUndefined();
     int index = exec->argument(0).asInt32();
 
-    JSScope* scopeChain = impl()->scopeChain();
+    JSScope* scopeChain = impl().scopeChain();
     ScopeChainIterator end = scopeChain->end();
 
     bool foundLocalScope = false;
@@ -127,13 +121,6 @@ JSValue JSJavaScriptCallFrame::scopeType(ExecState* exec)
 
         --index;
     }
-    return jsUndefined();
-}
-
-JSValue JSJavaScriptCallFrame::setVariableValue(JSC::ExecState* exec)
-{
-    // FIXME: implement this. https://bugs.webkit.org/show_bug.cgi?id=107830
-    throwError(exec, createTypeError(exec, "Variable value mutation is not supported"));
     return jsUndefined();
 }
 

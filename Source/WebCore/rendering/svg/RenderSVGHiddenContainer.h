@@ -25,21 +25,20 @@
 
 namespace WebCore {
     
-class SVGStyledElement;
+class SVGElement;
 
 // This class is for containers which are never drawn, but do need to support style
 // <defs>, <linearGradient>, <radialGradient> are all good examples
 class RenderSVGHiddenContainer : public RenderSVGContainer {
 public:
-    explicit RenderSVGHiddenContainer(SVGStyledElement*);
-
-    virtual const char* renderName() const OVERRIDE { return "RenderSVGHiddenContainer"; }
+    RenderSVGHiddenContainer(SVGElement&, PassRef<RenderStyle>);
 
 protected:
     virtual void layout() OVERRIDE;
 
 private:
     virtual bool isSVGHiddenContainer() const OVERRIDE FINAL { return true; }
+    virtual const char* renderName() const OVERRIDE { return "RenderSVGHiddenContainer"; }
 
     virtual void paint(PaintInfo&, const LayoutPoint&) OVERRIDE FINAL;
     

@@ -30,8 +30,8 @@
 
 #include "CachedImage.h"
 #include "Image.h"
+#include "RenderElement.h"
 #include "RenderImageResourceStyleImage.h"
-#include "RenderObject.h"
 
 namespace WebCore {
 
@@ -44,7 +44,7 @@ RenderImageResource::~RenderImageResource()
 {
 }
 
-void RenderImageResource::initialize(RenderObject* renderer)
+void RenderImageResource::initialize(RenderElement* renderer)
 {
     ASSERT(!m_renderer);
     ASSERT(renderer);
@@ -103,7 +103,7 @@ void RenderImageResource::setContainerSizeForRenderer(const IntSize& imageContai
 {
     ASSERT(m_renderer);
     if (m_cachedImage)
-        m_cachedImage->setContainerSizeForRenderer(m_renderer, imageContainerSize, m_renderer->style()->effectiveZoom());
+        m_cachedImage->setContainerSizeForRenderer(m_renderer, imageContainerSize, m_renderer->style().effectiveZoom());
 }
 
 Image* RenderImageResource::nullImage()
@@ -129,6 +129,11 @@ bool RenderImageResource::imageHasRelativeHeight() const
 LayoutSize RenderImageResource::imageSize(float multiplier) const
 {
     return m_cachedImage ? m_cachedImage->imageSizeForRenderer(m_renderer, multiplier) : LayoutSize();
+}
+
+LayoutSize RenderImageResource::intrinsicSize(float multiplier) const
+{
+    return m_cachedImage ? m_cachedImage->imageSizeForRenderer(m_renderer, multiplier, CachedImage::IntrinsicSize) : LayoutSize();
 }
 
 } // namespace WebCore

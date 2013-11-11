@@ -29,7 +29,6 @@
 #define WTF_PLATFORM_NIX 1
 #define ENABLE_GLOBAL_FASTMALLOC_NEW 0
 
-// Some bits can't be changed at all
 #define WTF_USE_3D_GRAPHICS 1
 #define WTF_USE_ACCELERATED_COMPOSITING 1
 #define WTF_USE_COORDINATED_GRAPHICS 1
@@ -37,7 +36,6 @@
 #define WTF_USE_FREETYPE 1
 #define WTF_USE_GLIB 1
 #define WTF_USE_ICU_UNICODE 1
-#define WTF_USE_IOSURFACE_CANVAS_BACKING_STORE 1
 #define WTF_USE_LEVELDB 1
 #define WTF_USE_PTHREADS 1
 #define WTF_USE_TEXTURE_MAPPER 1
@@ -46,7 +44,6 @@
 #define WTF_USE_UNIX_DOMAIN_SOCKETS 1
 
 #if !defined(WTF_USE_GL2D) || !WTF_USE_GL2D
-#define WTF_USE_CAIRO 1
 #define WTF_USE_HARFBUZZ 1
 #define WTF_USE_HARFBUZZ_NG 1
 #else
@@ -63,7 +60,6 @@
 #define WTF_USE_EGL 1
 #endif
 
-// Soup vs libCurl
 #if !defined(WTF_USE_CURL) || !WTF_USE_CURL
 #define WTF_USE_SOUP 1
 #endif

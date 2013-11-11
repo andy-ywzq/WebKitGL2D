@@ -21,7 +21,8 @@
 [
     CustomToJSObject,
     JSGenerateToNativeObject,
-    JSInlineGetOwnPropertySlot
+    JSInlineGetOwnPropertySlot,
+    OperationsNotDeletable
 ] interface Document : Node {
 
     // DOM Level 1 Core
@@ -274,6 +275,7 @@
     [NotEnumerable] attribute EventListener onscroll;
     [NotEnumerable] attribute EventListener onselect;
     [NotEnumerable] attribute EventListener onsubmit;
+    [NotEnumerable] attribute EventListener onwheel;
 
     // [NotEnumerable] attribute EventListener oncanplay;
     // [NotEnumerable] attribute EventListener oncanplaythrough;
@@ -332,13 +334,6 @@
                                                      [Default=Undefined] optional float webkitRotationAngle,
                                                      [Default=Undefined] optional float webkitForce);
     [ReturnNewObject, Custom, RaisesException] TouchList createTouchList();
-#endif
-
-#if defined(ENABLE_CUSTOM_ELEMENTS) && ENABLE_CUSTOM_ELEMENTS
-    [Conditional=CUSTOM_ELEMENTS, ImplementedAs=registerElement, CallWith=ScriptState, RaisesException] CustomElementConstructor webkitRegister(DOMString name, optional Dictionary options);
-    [ReturnNewObject, RaisesException] Element createElement(DOMString localName, [TreatNullAs=NullString] DOMString typeExtension);
-    [ReturnNewObject, RaisesException] Element createElementNS([TreatNullAs=NullString] DOMString namespaceURI, DOMString qualifiedName,
-                            [TreatNullAs=NullString] DOMString typeExtension);
 #endif
 
 #if defined(LANGUAGE_CPP) && LANGUAGE_CPP

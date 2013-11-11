@@ -32,65 +32,51 @@ namespace JSC { namespace FTL {
 
 using namespace DFG;
 
-void CArgumentGetter::loadNextAndBox(ValueFormat format, GPRReg destination, GPRReg scratch)
+void CArgumentGetter::loadNextAndBox(
+    ValueFormat format, GPRReg destination, GPRReg scratch1, GPRReg scratch2)
 {
-    if (scratch == InvalidGPRReg) {
+    if (scratch1 == InvalidGPRReg) {
+        ASSERT(scratch2 == InvalidGPRReg);
         if (destination == GPRInfo::nonArgGPR0)
-            scratch = GPRInfo::nonArgGPR1;
+            scratch1 = GPRInfo::nonArgGPR1;
         else
-            scratch = GPRInfo::nonArgGPR0;
+            scratch1 = GPRInfo::nonArgGPR0;
+    }
+    if (scratch2 == InvalidGPRReg) {
+        if (destination != GPRInfo::nonArgGPR0 && scratch1 != GPRInfo::nonArgGPR0)
+            scratch2 = GPRInfo::nonArgGPR0;
+        else if (destination != GPRInfo::nonArgGPR1 && scratch1 != GPRInfo::nonArgGPR1)
+            scratch2 = GPRInfo::nonArgGPR1;
+        else
+            scratch2 = GPRInfo::nonArgGPR2;
     }
     
     switch (format) {
-    case ValueFormatInt32: {
+    case ValueFormatInt32:
+    case ValueFormatUInt32:
         loadNext32(destination);
-        m_jit.or64(GPRInfo::tagTypeNumberRegister, destination);
         break;
-    }
-            
-    case ValueFormatUInt32: {
-        loadNext32(destination);
-        MacroAssembler::Jump isInt = m_jit.branch32(
-            MacroAssembler::GreaterThanOrEqual,
-            destination, MacroAssembler::TrustedImm32(0));
-            
-        m_jit.moveDoubleTo64(FPRInfo::fpRegT0, scratch);
-        m_jit.convertInt32ToDouble(destination, FPRInfo::fpRegT0);
-        m_jit.boxDouble(FPRInfo::fpRegT0, destination);
-        m_jit.move64ToDouble(scratch, FPRInfo::fpRegT0);
-            
-        MacroAssembler::Jump done = m_jit.jump();
-            
-        isInt.link(&m_jit);
-        m_jit.or64(GPRInfo::tagTypeNumberRegister, destination);
-            
-        done.link(&m_jit);
-        break;
-    }
-            
-    case ValueFormatBoolean: {
-        loadNext8(destination);
-        m_jit.or32(MacroAssembler::TrustedImm32(ValueFalse), destination);
-        break;
-    }
-            
-    case ValueFormatJSValue: {
+        
+    case ValueFormatInt52:
+    case ValueFormatStrictInt52:
+    case ValueFormatJSValue:
         loadNext64(destination);
         break;
-    }
             
-    case ValueFormatDouble: {
-        m_jit.moveDoubleTo64(FPRInfo::fpRegT0, scratch);
-        loadNextDouble(FPRInfo::fpRegT0);
-        m_jit.boxDouble(FPRInfo::fpRegT0, destination);
-        m_jit.move64ToDouble(scratch, FPRInfo::fpRegT0);
+    case ValueFormatBoolean:
+        loadNext8(destination);
         break;
-    }
+            
+    case ValueFormatDouble:
+        loadNextDoubleIntoGPR(destination);
+        break;
             
     default:
         RELEASE_ASSERT_NOT_REACHED();
         break;
     }
+    
+    reboxAccordingToFormat(format, m_jit, destination, scratch1, scratch2);
 }
 
 } } // namespace JSC::FTL

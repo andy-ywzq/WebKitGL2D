@@ -58,7 +58,7 @@
 #import <WebCore/NodeTraversal.h>
 #import <WebCore/Range.h>
 #import <WebCore/RegularExpression.h>
-#import <WebCore/RenderObject.h>
+#import <WebCore/RenderElement.h>
 #import <WebCore/TextResourceDecoder.h>
 #import <WebKit/DOMHTMLInputElement.h>
 #import <wtf/Assertions.h>
@@ -188,7 +188,7 @@ static NSMutableArray *newArrayByConcatenatingArrays(NSArray *first, NSArray *se
     // If the document is a stand-alone media document, now is the right time to cancel the WebKit load
     Frame* coreFrame = core(webFrame);
     if (coreFrame->document()->isMediaDocument())
-        coreFrame->loader().documentLoader()->cancelMainResourceLoad(coreFrame->loader().client()->pluginWillHandleLoadError(coreFrame->loader().documentLoader()->response()));
+        coreFrame->loader().documentLoader()->cancelMainResourceLoad(coreFrame->loader().client().pluginWillHandleLoadError(coreFrame->loader().documentLoader()->response()));
 
     if (_private->pluginView) {
         if (!_private->hasSentResponseToPlugin) {
@@ -237,9 +237,7 @@ static NSMutableArray *newArrayByConcatenatingArrays(NSArray *first, NSArray *se
 {
     if ([self _isDisplayingWebArchive]) {            
         SharedBuffer *parsedArchiveData = [_private->dataSource _documentLoader]->parsedArchiveData();
-        NSData *nsData = parsedArchiveData ? parsedArchiveData->createNSData() : nil;
-        NSString *result = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
-        [nsData release];
+        NSString *result = [[NSString alloc] initWithData:parsedArchiveData ? parsedArchiveData->createNSData().get() : nil encoding:NSUTF8StringEncoding];
         return [result autorelease];
     }
 
@@ -293,9 +291,9 @@ static HTMLFormElement* formElementFromDOMElement(DOMElement *element)
     const Vector<FormAssociatedElement*>& elements = formElement->associatedElements();
     AtomicString targetName = name;
     for (unsigned i = 0; i < elements.size(); i++) {
-        FormAssociatedElement* elt = elements[i];
-        if (elt->name() == targetName)
-            return kit(toHTMLElement(elt));
+        FormAssociatedElement& element = *elements[i];
+        if (element.name() == targetName)
+            return kit(&element.asHTMLElement());
     }
     return nil;
 }
@@ -341,11 +339,11 @@ static HTMLInputElement* inputElementFromDOMElement(DOMElement* element)
     const Vector<FormAssociatedElement*>& elements = formElement->associatedElements();
     for (unsigned i = 0; i < elements.size(); i++) {
         if (elements[i]->isEnumeratable()) { // Skip option elements, other duds
-            DOMElement* de = kit(toHTMLElement(elements[i]));
+            DOMElement *element = kit(&elements[i]->asHTMLElement());
             if (!results)
-                results = [NSMutableArray arrayWithObject:de];
+                results = [NSMutableArray arrayWithObject:element];
             else
-                [results addObject:de];
+                [results addObject:element];
         }
     }
     return results;
@@ -460,7 +458,7 @@ static NSString* searchForLabelsBeforeElement(Frame* frame, NSArray* labels, Ele
                 return result;
             }
             searchedCellAbove = true;
-        } else if (n->isTextNode() && n->renderer() && n->renderer()->style()->visibility() == VISIBLE) {
+        } else if (n->isTextNode() && n->renderer() && n->renderer()->style().visibility() == VISIBLE) {
             // For each text chunk, run the regexp
             String nodeString = n->nodeValue();
             // add 100 for slop, to make it more likely that we'll search whole nodes

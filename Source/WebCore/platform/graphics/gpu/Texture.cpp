@@ -38,16 +38,15 @@
 #include "FloatRect.h"
 #include "GraphicsContext3D.h"
 #include "IntRect.h"
-
 #include <algorithm>
-#include <wtf/OwnArrayPtr.h>
+#include <wtf/StdLibExtras.h>
 
 using namespace std;
 
 namespace WebCore {
 
 
-Texture::Texture(GraphicsContext3D* context, PassOwnPtr<Vector<unsigned int> > tileTextureIds, Format format, int width, int height, int maxTextureSize)
+Texture::Texture(GraphicsContext3D* context, PassOwnPtr<Vector<unsigned int>> tileTextureIds, Format format, int width, int height, int maxTextureSize)
     : m_context(context)
     , m_format(format)
     , m_tiles(IntSize(maxTextureSize, maxTextureSize), IntSize(width, height), true)
@@ -98,7 +97,7 @@ PassRefPtr<Texture> Texture::create(GraphicsContext3D* context, Format format, i
         numTiles = 0;
     }
 
-    OwnPtr<Vector<unsigned int> > textureIds = adoptPtr(new Vector<unsigned int>(numTiles));
+    OwnPtr<Vector<unsigned int>> textureIds = adoptPtr(new Vector<unsigned int>(numTiles));
     textureIds->fill(0, numTiles);
 
     for (int i = 0; i < numTiles; i++) {
@@ -174,7 +173,7 @@ void Texture::updateSubRect(void* pixels, const IntRect& updateRect)
     int tempBuffSize = // Temporary buffer size is the smaller of the max texture size or the updateRectSanitized
         min(m_tiles.maxTextureSize().width(), m_tiles.borderTexels() + updateRectSanitized.width()) *
         min(m_tiles.maxTextureSize().height(), m_tiles.borderTexels() + updateRectSanitized.height());
-    OwnArrayPtr<uint32_t> tempBuff = adoptArrayPtr(new uint32_t[tempBuffSize]);
+    auto tempBuff = std::make_unique<uint32_t[]>(tempBuffSize);
 
     for (int tile = 0; tile < m_tiles.numTilesX() * m_tiles.numTilesY(); tile++) {
         int xIndex = tile % m_tiles.numTilesX();

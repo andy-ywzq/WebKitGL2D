@@ -61,30 +61,32 @@ namespace WebCore {
     class FrameDestructionObserver;
     class FrameSelection;
     class FrameView;
+    class HTMLFrameOwnerElement;
     class HTMLTableCellElement;
     class IntRect;
+    class MainFrame;
     class Node;
     class Range;
     class RegularExpression;
-    class RenderPart;
     class RenderView;
+    class RenderWidget;
     class ScriptController;
     class Settings;
     class TiledBackingStore;
-    class TreeScope;
     class VisiblePosition;
+    class Widget;
 
 #if !USE(TILED_BACKING_STORE)
     class TiledBackingStoreClient { };
 #endif
-
 
     enum {
         LayerTreeFlagsIncludeDebugInfo = 1 << 0,
         LayerTreeFlagsIncludeVisibleRects = 1 << 1,
         LayerTreeFlagsIncludeTileCaches = 1 << 2,
         LayerTreeFlagsIncludeRepaintRects = 1 << 3,
-        LayerTreeFlagsIncludePaintingPhases = 1 << 4
+        LayerTreeFlagsIncludePaintingPhases = 1 << 4,
+        LayerTreeFlagsIncludeContentLayers = 1 << 5
     };
     typedef unsigned LayerTreeFlags;
 
@@ -99,7 +101,7 @@ namespace WebCore {
             bool useFixedLayout = false, ScrollbarMode = ScrollbarAuto, bool horizontalLock = false,
             ScrollbarMode = ScrollbarAuto, bool verticalLock = false);
 
-        ~Frame();
+        virtual ~Frame();
 
         void addDestructionObserver(FrameDestructionObserver*);
         void removeDestructionObserver(FrameDestructionObserver*);
@@ -107,6 +109,9 @@ namespace WebCore {
         void willDetachPage();
         void detachFromPage();
         void disconnectOwnerElement();
+
+        MainFrame& mainFrame() const;
+        bool isMainFrame() const;
 
         Page* page() const;
         HTMLFrameOwnerElement* ownerElement() const;
@@ -117,22 +122,16 @@ namespace WebCore {
         Editor& editor() const;
         EventHandler& eventHandler() const;
         FrameLoader& loader() const;
-        NavigationScheduler* navigationScheduler() const;
+        NavigationScheduler& navigationScheduler() const;
         FrameSelection& selection() const;
-        FrameTree* tree() const;
-        AnimationController* animation() const;
+        FrameTree& tree() const;
+        AnimationController& animation() const;
         ScriptController& script();
         
         RenderView* contentRenderer() const; // Root of the render tree for the document contained in this frame.
-        RenderPart* ownerRenderer() const; // Renderer for the element that contains this frame.
-
-#if ENABLE(PAGE_VISIBILITY_API)
-        void dispatchVisibilityStateChangeEvent();
-#endif
+        RenderWidget* ownerRenderer() const; // Renderer for the element that contains this frame.
 
     // ======== All public functions below this point are candidates to move out of Frame into another class. ========
-
-        bool inScope(TreeScope*) const;
 
         void injectUserScripts(UserScriptInjectionTime);
         
@@ -176,8 +175,6 @@ namespace WebCore {
         void clearTimers();
         static void clearTimers(FrameView*, Document*);
 
-        String documentTypeString() const;
-
         String displayStringModifiedByEncoding(const String&) const;
 
         DragImageRef nodeImage(Node*);
@@ -191,24 +188,28 @@ namespace WebCore {
         String searchForLabelsBeforeElement(const Vector<String>& labels, Element*, size_t* resultDistance, bool* resultIsInCellAbove);
         String matchLabelsAgainstElement(const Vector<String>& labels, Element*);
 
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+        void setTextAutosizingWidth(float);
+        float textAutosizingWidth() const;
+#endif
+
         void suspendActiveDOMObjectsAndAnimations();
         void resumeActiveDOMObjectsAndAnimations();
         bool activeDOMObjectsAndAnimationsSuspended() const { return m_activeDOMObjectsAndAnimationsSuspendedCount > 0; }
 
-        // Should only be called on the main frame of a page.
-        void notifyChromeClientWheelEventHandlerCountChanged() const;
-
-        bool isURLAllowed(const KURL&) const;
+        bool isURLAllowed(const URL&) const;
 
     // ========
 
-    private:
-        Frame(Page*, HTMLFrameOwnerElement*, FrameLoaderClient*);
+    protected:
+        Frame(Page&, HTMLFrameOwnerElement*, FrameLoaderClient&);
 
-        void injectUserScriptsForWorld(DOMWrapperWorld*, const UserScriptVector&, UserScriptInjectionTime);
+    private:
+        void injectUserScriptsForWorld(DOMWrapperWorld&, const UserScriptVector&, UserScriptInjectionTime);
 
         HashSet<FrameDestructionObserver*> m_destructionObservers;
 
+        MainFrame& m_mainFrame;
         Page* m_page;
         const RefPtr<Settings> m_settings;
         mutable FrameTree m_treeNode;
@@ -219,11 +220,15 @@ namespace WebCore {
         RefPtr<FrameView> m_view;
         RefPtr<Document> m_doc;
 
-        OwnPtr<ScriptController> m_script;
+        const std::unique_ptr<ScriptController> m_script;
         const OwnPtr<Editor> m_editor;
-        OwnPtr<FrameSelection> m_selection;
+        const OwnPtr<FrameSelection> m_selection;
         const OwnPtr<EventHandler> m_eventHandler;
-        OwnPtr<AnimationController> m_animationController;
+        const std::unique_ptr<AnimationController> m_animationController;
+
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+        float m_textAutosizingWidth;
+#endif
 
         float m_pageZoomFactor;
         float m_textZoomFactor;
@@ -243,12 +248,12 @@ namespace WebCore {
 
     private:
         // TiledBackingStoreClient interface
-        virtual void tiledBackingStorePaintBegin();
-        virtual void tiledBackingStorePaint(GraphicsContext*, const IntRect&);
-        virtual void tiledBackingStorePaintEnd(const Vector<IntRect>& paintedArea);
-        virtual IntRect tiledBackingStoreContentsRect();
-        virtual IntRect tiledBackingStoreVisibleRect();
-        virtual Color tiledBackingStoreBackgroundColor() const;
+        virtual void tiledBackingStorePaintBegin() OVERRIDE FINAL;
+        virtual void tiledBackingStorePaint(GraphicsContext*, const IntRect&) OVERRIDE FINAL;
+        virtual void tiledBackingStorePaintEnd(const Vector<IntRect>& paintedArea) OVERRIDE FINAL;
+        virtual IntRect tiledBackingStoreContentsRect() OVERRIDE FINAL;
+        virtual IntRect tiledBackingStoreVisibleRect() OVERRIDE FINAL;
+        virtual Color tiledBackingStoreBackgroundColor() const OVERRIDE FINAL;
 
         OwnPtr<TiledBackingStore> m_tiledBackingStore;
 #endif
@@ -266,9 +271,9 @@ namespace WebCore {
         return m_loader;
     }
 
-    inline NavigationScheduler* Frame::navigationScheduler() const
+    inline NavigationScheduler& Frame::navigationScheduler() const
     {
-        return &m_navigationScheduler;
+        return m_navigationScheduler;
     }
 
     inline FrameView* Frame::view() const
@@ -296,9 +301,9 @@ namespace WebCore {
         return *m_editor;
     }
 
-    inline AnimationController* Frame::animation() const
+    inline AnimationController& Frame::animation() const
     {
-        return m_animationController.get();
+        return *m_animationController;
     }
 
     inline HTMLFrameOwnerElement* Frame::ownerElement() const
@@ -316,9 +321,9 @@ namespace WebCore {
         m_inViewSourceMode = mode;
     }
 
-    inline FrameTree* Frame::tree() const
+    inline FrameTree& Frame::tree() const
     {
-        return &m_treeNode;
+        return m_treeNode;
     }
 
     inline Page* Frame::page() const
@@ -334,6 +339,11 @@ namespace WebCore {
     inline EventHandler& Frame::eventHandler() const
     {
         return *m_eventHandler;
+    }
+
+    inline MainFrame& Frame::mainFrame() const
+    {
+        return m_mainFrame;
     }
 
 } // namespace WebCore

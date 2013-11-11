@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+<title>WebAudioTest</title>
+</head>
+<body>
+    <script>
+    var arraySize = 1024;
+    var fakeAudioData = new Float32Array(arraySize);
+    for (var i = 0; i < arraySize; ++i)
+        fakeAudioData[i] = i;
+    var audioContext = new webkitAudioContext();
+    audioContext.decodeAudioData(fakeAudioData.buffer, function(buffer) {
+        var source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+        source.noteOn(0);
+    });
+    </script>
+</body>
+</html>

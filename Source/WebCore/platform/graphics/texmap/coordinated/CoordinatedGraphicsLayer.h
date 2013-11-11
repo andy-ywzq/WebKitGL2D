@@ -149,7 +149,6 @@ public:
 
     void setNeedsVisibleRectAdjustment();
     void purgeBackingStores();
-    bool hasPendingVisibleChanges();
 
     static void setShouldSupportContentsTiling(bool);
     CoordinatedGraphicsLayer* findFirstDescendantWithContentsRecursively();
@@ -197,6 +196,8 @@ private:
     void createBackingStore();
     void releaseImageBackingIfNeeded();
 
+    bool notifyFlushRequired();
+
     // CoordinatedImageBacking::Host
     virtual bool imageBackingVisible() OVERRIDE;
     bool shouldHaveBackingStore() const;
@@ -237,8 +238,8 @@ private:
 #endif
 
     CoordinatedGraphicsLayerClient* m_coordinator;
-    OwnPtr<TiledBackingStore> m_mainBackingStore;
-    OwnPtr<TiledBackingStore> m_previousBackingStore;
+    std::unique_ptr<TiledBackingStore> m_mainBackingStore;
+    std::unique_ptr<TiledBackingStore> m_previousBackingStore;
 
     RefPtr<Image> m_compositedImage;
     NativeImagePtr m_compositedNativeImagePtr;

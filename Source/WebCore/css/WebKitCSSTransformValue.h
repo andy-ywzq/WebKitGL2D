@@ -65,7 +65,7 @@ public:
         return adoptRef(new WebKitCSSTransformValue(type));
     }
 
-    String customCssText() const;
+    String customCSSText() const;
     bool equals(const WebKitCSSTransformValue& other) const { return m_type == other.m_type && CSSValueList::equals(other); }
 #if ENABLE(CSS_VARIABLES)
     String customSerializeResolvingVariables(const HashMap<AtomicString, String>&) const;
@@ -81,6 +81,18 @@ private:
 
     TransformOperationType m_type;
 };
+
+inline WebKitCSSTransformValue* toWebKitCSSTransformValue(CSSValue* value)
+{
+    ASSERT_WITH_SECURITY_IMPLICATION(!value || value->isWebKitCSSTransformValue());
+    return static_cast<WebKitCSSTransformValue*>(value);
+}
+
+inline const WebKitCSSTransformValue* toWebKitCSSTransformValue(const CSSValue* value)
+{
+    ASSERT_WITH_SECURITY_IMPLICATION(!value || value->isWebKitCSSTransformValue());
+    return static_cast<const WebKitCSSTransformValue*>(value);
+}
 
 }
 

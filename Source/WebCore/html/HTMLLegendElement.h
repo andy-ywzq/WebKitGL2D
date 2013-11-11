@@ -32,18 +32,20 @@ class HTMLFormControlElement;
 
 class HTMLLegendElement FINAL : public HTMLElement {
 public:
-    static PassRefPtr<HTMLLegendElement> create(const QualifiedName&, Document*);
+    static PassRefPtr<HTMLLegendElement> create(const QualifiedName&, Document&);
 
 private:
-    HTMLLegendElement(const QualifiedName&, Document*);
+    HTMLLegendElement(const QualifiedName&, Document&);
 
     // Control in the legend's fieldset that gets focus and access key.
     HTMLFormControlElement* associatedControl();
 
-    virtual void accessKeyAction(bool sendMouseEvents);
+    virtual void accessKeyAction(bool sendMouseEvents) OVERRIDE;
     virtual void focus(bool restorePreviousSelection, FocusDirection) OVERRIDE;
     virtual HTMLFormElement* virtualForm() const OVERRIDE;
 };
+
+NODE_TYPE_CASTS(HTMLLegendElement)
 
 } //namespace
 

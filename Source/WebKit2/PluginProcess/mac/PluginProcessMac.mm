@@ -27,7 +27,7 @@
 #import "config.h"
 #import "PluginProcess.h"
 
-#if ENABLE(PLUGIN_PROCESS)
+#if ENABLE(NETSCAPE_PLUGIN_API)
 
 #import "ArgumentCoders.h"
 #import "NetscapePlugin.h"
@@ -189,11 +189,11 @@ static void carbonWindowHidden(WindowRef window)
 static bool openCFURLRef(CFURLRef url, int32_t& status, CFURLRef* launchedURL)
 {
     String launchedURLString;
-    if (!PluginProcess::shared().openURL(KURL(url).string(), status, launchedURLString))
+    if (!PluginProcess::shared().openURL(URL(url).string(), status, launchedURLString))
         return false;
 
     if (!launchedURLString.isNull() && launchedURL)
-        *launchedURL = KURL(ParsedURLString, launchedURLString).createCFURL().leakRef();
+        *launchedURL = URL(ParsedURLString, launchedURLString).createCFURL().leakRef();
     return true;
 }
 
@@ -293,13 +293,23 @@ static NSRunningApplication *replacedNSWorkspace_launchApplicationAtURL_options_
         }
     }
 
-    if (PluginProcess::shared().launchApplicationAtURL(KURL(url).string(), arguments)) {
+    if (PluginProcess::shared().launchApplicationAtURL(URL(url).string(), arguments)) {
         if (error)
             *error = nil;
         return nil;
     }
 
     return NSWorkspace_launchApplicationAtURL_options_configuration_error(self, _cmd, url, options, configuration, error);
+}
+
+static BOOL (*NSWorkspace_openFile)(NSWorkspace *, SEL, NSString *);
+
+static BOOL replacedNSWorkspace_openFile(NSWorkspace *self, SEL _cmd, NSString *fullPath)
+{
+    if (PluginProcess::shared().openFile(fullPath))
+        return true;
+
+    return NSWorkspace_openFile(self, _cmd, fullPath);
 }
 
 static void initializeCocoaOverrides()
@@ -311,6 +321,10 @@ static void initializeCocoaOverrides()
     // Override -[NSWorkspace launchApplicationAtURL:options:configuration:error:]
     Method launchApplicationAtURLOptionsConfigurationErrorMethod = class_getInstanceMethod(objc_getClass("NSWorkspace"), @selector(launchApplicationAtURL:options:configuration:error:));
     NSWorkspace_launchApplicationAtURL_options_configuration_error = reinterpret_cast<NSRunningApplication *(*)(NSWorkspace *, SEL, NSURL *, NSWorkspaceLaunchOptions, NSDictionary *, NSError **)>(method_setImplementation(launchApplicationAtURLOptionsConfigurationErrorMethod, reinterpret_cast<IMP>(replacedNSWorkspace_launchApplicationAtURL_options_configuration_error)));
+
+    // Override -[NSWorkspace openFile:]
+    Method openFileMethod = class_getInstanceMethod(objc_getClass("NSWorkspace"), @selector(openFile:));
+    NSWorkspace_openFile = reinterpret_cast<BOOL (*)(NSWorkspace *, SEL, NSString *)>(method_setImplementation(openFileMethod, reinterpret_cast<IMP>(replacedNSWorkspace_openFile)));
 
     // Override -[NSApplication runModalForWindow:]
     Method runModalForWindowMethod = class_getInstanceMethod(objc_getClass("NSApplication"), @selector(runModalForWindow:));
@@ -366,6 +380,15 @@ bool PluginProcess::openURL(const String& urlString, int32_t& status, String& la
 {
     bool result;
     if (!parentProcessConnection()->sendSync(Messages::PluginProcessProxy::OpenURL(urlString), Messages::PluginProcessProxy::OpenURL::Reply(result, status, launchedURLString), 0))
+        return false;
+
+    return result;
+}
+
+bool PluginProcess::openFile(const String& fullPath)
+{
+    bool result;
+    if (!parentProcessConnection()->sendSync(Messages::PluginProcessProxy::OpenFile(fullPath), Messages::PluginProcessProxy::OpenFile::Reply(result), 0))
         return false;
 
     return result;
@@ -470,6 +493,12 @@ void PluginProcess::initializeSandbox(const ChildProcessInitializationParameters
     ChildProcess::initializeSandbox(parameters, sandboxParameters);
 }
 
+
+void PluginProcess::stopRunLoop()
+{
+    ChildProcess::stopNSAppRunLoop();
+}
+
 } // namespace WebKit
 
-#endif // ENABLE(PLUGIN_PROCESS)
+#endif // ENABLE(NETSCAPE_PLUGIN_API)

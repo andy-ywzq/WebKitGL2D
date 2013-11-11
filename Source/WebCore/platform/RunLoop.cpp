@@ -31,12 +31,6 @@
 
 namespace WebCore {
 
-#if !PLATFORM(MAC)
-void RunLoop::setUseApplicationRunLoopOnMainRunLoop()
-{
-}
-#endif
-
 static RunLoop* s_mainRunLoop;
 
 // Helper class for ThreadSpecificData.
@@ -72,6 +66,12 @@ RunLoop* RunLoop::main()
     return s_mainRunLoop;
 }
 
+bool RunLoop::isMain()
+{
+    ASSERT(s_mainRunLoop);
+    return s_mainRunLoop == RunLoop::current();
+}
+
 void RunLoop::performWork()
 {
     // It is important to handle the functions in the queue one at a time because while inside one of these
@@ -88,7 +88,7 @@ void RunLoop::performWork()
     // By only handling up to the number of functions that were in the queue when performWork() is called
     // we guarantee to occasionally return from the run loop so other event sources will be allowed to spin.
 
-    Function<void()> function;
+    std::function<void()> function;
     size_t functionsToHandle = 0;
 
     {
@@ -120,10 +120,10 @@ void RunLoop::performWork()
     }
 }
 
-void RunLoop::dispatch(const Function<void()>& function)
+void RunLoop::dispatch(std::function<void ()> function)
 {
     MutexLocker locker(m_functionQueueLock);
-    m_functionQueue.append(function);
+    m_functionQueue.append(std::move(function));
 
     wakeUp();
 }

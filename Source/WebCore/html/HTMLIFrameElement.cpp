@@ -37,14 +37,14 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-inline HTMLIFrameElement::HTMLIFrameElement(const QualifiedName& tagName, Document* document)
+inline HTMLIFrameElement::HTMLIFrameElement(const QualifiedName& tagName, Document& document)
     : HTMLFrameElementBase(tagName, document)
 {
     ASSERT(hasTagName(iframeTag));
     setHasCustomStyleResolveCallbacks();
 }
 
-PassRefPtr<HTMLIFrameElement> HTMLIFrameElement::create(const QualifiedName& tagName, Document* document)
+PassRefPtr<HTMLIFrameElement> HTMLIFrameElement::create(const QualifiedName& tagName, Document& document)
 {
     return adoptRef(new HTMLIFrameElement(tagName, document));
 }
@@ -81,7 +81,7 @@ void HTMLIFrameElement::parseAttribute(const QualifiedName& name, const AtomicSt
         String invalidTokens;
         setSandboxFlags(value.isNull() ? SandboxNone : SecurityContext::parseSandboxPolicy(value, invalidTokens));
         if (!invalidTokens.isNull())
-            document()->addConsoleMessage(OtherMessageSource, ErrorMessageLevel, "Error while parsing the 'sandbox' attribute: " + invalidTokens);
+            document().addConsoleMessage(OtherMessageSource, ErrorMessageLevel, "Error while parsing the 'sandbox' attribute: " + invalidTokens);
     } else if (name == seamlessAttr) {
         // If we're adding or removing the seamless attribute, we need to force the content document to recalculate its StyleResolver.
         if (contentDocument())
@@ -95,9 +95,9 @@ bool HTMLIFrameElement::rendererIsNeeded(const RenderStyle& style)
     return isURLAllowed() && style.display() != NONE;
 }
 
-RenderObject* HTMLIFrameElement::createRenderer(RenderArena* arena, RenderStyle*)
+RenderElement* HTMLIFrameElement::createRenderer(PassRef<RenderStyle> style)
 {
-    return new (arena) RenderIFrame(this);
+    return new RenderIFrame(*this, std::move(style));
 }
 
 bool HTMLIFrameElement::shouldDisplaySeamlessly() const

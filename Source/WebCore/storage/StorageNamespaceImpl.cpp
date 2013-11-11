@@ -57,10 +57,10 @@ PassRefPtr<StorageNamespace> StorageNamespaceImpl::localStorageNamespace(PageGro
     // at this point we're stuck with it.
     Page* page = *pageGroup->pages().begin();
     const String& path = page->settings().localStorageDatabasePath();
-    unsigned quota = pageGroup->groupSettings()->localStorageQuotaBytes();
+    unsigned quota = pageGroup->groupSettings().localStorageQuotaBytes();
     const String lookupPath = path.isNull() ? emptyString() : path;
 
-    LocalStorageNamespaceMap::AddResult result = localStorageNamespaceMap().add(lookupPath, 0);
+    LocalStorageNamespaceMap::AddResult result = localStorageNamespaceMap().add(lookupPath, nullptr);
     if (!result.isNewEntry)
         return result.iterator->value;
 

@@ -29,45 +29,51 @@
 #include "ArgumentCoders.h"
 
 namespace WebCore {
-    class AffineTransform;
-    class AuthenticationChallenge;
-    class Color;
-    class Credential;
-    class Cursor;
-    class DatabaseDetails;
-    class FloatPoint;
-    class FloatRect;
-    class FloatSize;
-    class HTTPHeaderMap;
-    class IntPoint;
-    class IntRect;
-    class IntSize;
-    class KeyframeValueList;
-    class KURL;
-    class Notification;
-    class ProtectionSpace;
-    class ResourceError;
-    class ResourceRequest;
-    class ResourceResponse;
-    class TextCheckingRequestData;
-    class UserStyleSheet;
-    class UserScript;
-    struct CompositionUnderline;
-    struct Cookie;
-    struct DictationAlternative;
-    struct DragSession;
-    struct FileChooserSettings;
-    struct GrammarDetail;
-    struct MimeClassInfo;
-    struct PluginInfo;
-    struct TextCheckingResult;
-    struct ViewportAttributes;
-    struct WindowFeatures;
+class AffineTransform;
+class AuthenticationChallenge;
+class Color;
+class Credential;
+class Cursor;
+class DatabaseDetails;
+class FilterOperations;
+class FloatPoint;
+class FloatPoint3D;
+class FloatRect;
+class FloatSize;
+class HTTPHeaderMap;
+class IntPoint;
+class IntRect;
+class IntSize;
+class KeyframeValueList;
+class URL;
+class Notification;
+class ProtectionSpace;
+class ResourceError;
+class ResourceRequest;
+class ResourceResponse;
+class TextCheckingRequestData;
+class TransformationMatrix;
+class UserStyleSheet;
+class UserScript;
+struct CompositionUnderline;
+struct Cookie;
+struct DictationAlternative;
+struct DragSession;
+struct FileChooserSettings;
+struct Length;
+struct GrammarDetail;
+struct MimeClassInfo;
+struct PasteboardImage;
+struct PasteboardWebContent;
+struct PluginInfo;
+struct TextCheckingResult;
+struct ViewportAttributes;
+struct WindowFeatures;
 }
 
 #if PLATFORM(MAC)
 namespace WebCore {
-    struct KeypressCommand;
+struct KeypressCommand;
 }
 #endif
 
@@ -78,9 +84,19 @@ template<> struct ArgumentCoder<WebCore::AffineTransform> {
     static bool decode(ArgumentDecoder&, WebCore::AffineTransform&);
 };
 
+template<> struct ArgumentCoder<WebCore::TransformationMatrix> {
+    static void encode(ArgumentEncoder&, const WebCore::TransformationMatrix&);
+    static bool decode(ArgumentDecoder&, WebCore::TransformationMatrix&);
+};
+
 template<> struct ArgumentCoder<WebCore::FloatPoint> {
     static void encode(ArgumentEncoder&, const WebCore::FloatPoint&);
     static bool decode(ArgumentDecoder&, WebCore::FloatPoint&);
+};
+
+template<> struct ArgumentCoder<WebCore::FloatPoint3D> {
+    static void encode(ArgumentEncoder&, const WebCore::FloatPoint3D&);
+    static bool decode(ArgumentDecoder&, WebCore::FloatPoint3D&);
 };
 
 template<> struct ArgumentCoder<WebCore::FloatRect> {
@@ -106,6 +122,11 @@ template<> struct ArgumentCoder<WebCore::IntRect> {
 template<> struct ArgumentCoder<WebCore::IntSize> {
     static void encode(ArgumentEncoder&, const WebCore::IntSize&);
     static bool decode(ArgumentDecoder&, WebCore::IntSize&);
+};
+
+template<> struct ArgumentCoder<WebCore::Length> {
+    static void encode(ArgumentEncoder&, const WebCore::Length&);
+    static bool decode(ArgumentDecoder&, WebCore::Length&);
 };
 
 template<> struct ArgumentCoder<WebCore::ViewportAttributes> {
@@ -198,6 +219,18 @@ template<> struct ArgumentCoder<WebCore::KeypressCommand> {
 };
 #endif
 
+#if PLATFORM(IOS)
+template<> struct ArgumentCoder<WebCore::PasteboardWebContent> {
+    static void encode(ArgumentEncoder&, const WebCore::PasteboardWebContent&);
+    static bool decode(ArgumentDecoder&, WebCore::PasteboardWebContent&);
+};
+
+template<> struct ArgumentCoder<WebCore::PasteboardImage> {
+    static void encode(ArgumentEncoder&, const WebCore::PasteboardImage&);
+    static bool decode(ArgumentDecoder&, WebCore::PasteboardImage&);
+};
+#endif
+
 template<> struct ArgumentCoder<WebCore::CompositionUnderline> {
     static void encode(ArgumentEncoder&, const WebCore::CompositionUnderline&);
     static bool decode(ArgumentDecoder&, WebCore::CompositionUnderline&);
@@ -243,9 +276,9 @@ template<> struct ArgumentCoder<WebCore::DragSession> {
     static bool decode(ArgumentDecoder&, WebCore::DragSession&);
 };
 
-template<> struct ArgumentCoder<WebCore::KURL> {
-    static void encode(ArgumentEncoder&, const WebCore::KURL&);
-    static bool decode(ArgumentDecoder&, WebCore::KURL&);
+template<> struct ArgumentCoder<WebCore::URL> {
+    static void encode(ArgumentEncoder&, const WebCore::URL&);
+    static bool decode(ArgumentDecoder&, WebCore::URL&);
 };
 
 template<> struct ArgumentCoder<WebCore::UserStyleSheet> {
@@ -257,6 +290,13 @@ template<> struct ArgumentCoder<WebCore::UserScript> {
     static void encode(ArgumentEncoder&, const WebCore::UserScript&);
     static bool decode(ArgumentDecoder&, WebCore::UserScript&);
 };
+
+#if ENABLE(CSS_FILTERS) && !USE(COORDINATED_GRAPHICS)
+template<> struct ArgumentCoder<WebCore::FilterOperations> {
+    static void encode(ArgumentEncoder&, const WebCore::FilterOperations&);
+    static bool decode(ArgumentDecoder&, WebCore::FilterOperations&);
+};
+#endif
 
 } // namespace CoreIPC
 

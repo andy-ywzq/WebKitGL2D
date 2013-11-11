@@ -36,13 +36,14 @@
 
 namespace WebCore {
 
-class FormDataList; 
+class FormDataList;
+class TextControlInnerTextElement;
 
 // The class represents types of which UI contain text fields.
 // It supports not only the types for BaseTextInputType but also type=number.
 class TextFieldInputType : public InputType, protected SpinButtonElement::SpinButtonOwner {
 protected:
-    TextFieldInputType(HTMLInputElement*);
+    explicit TextFieldInputType(HTMLInputElement&);
     virtual ~TextFieldInputType();
     virtual bool canSetSuggestedValue() OVERRIDE;
     virtual void handleKeydownEvent(KeyboardEvent*) OVERRIDE;
@@ -50,14 +51,13 @@ protected:
 
     virtual HTMLElement* containerElement() const OVERRIDE;
     virtual HTMLElement* innerBlockElement() const OVERRIDE;
-    virtual HTMLElement* innerTextElement() const OVERRIDE;
+    virtual TextControlInnerTextElement* innerTextElement() const OVERRIDE;
     virtual HTMLElement* innerSpinButtonElement() const OVERRIDE;
 #if ENABLE(INPUT_SPEECH)
     virtual HTMLElement* speechButtonElement() const OVERRIDE;
 #endif
 
 protected:
-    virtual void attach() OVERRIDE;
     virtual bool needsContainer() const;
     virtual bool shouldHaveSpinButton() const;
     virtual void createShadowSubtree() OVERRIDE;
@@ -85,7 +85,7 @@ private:
     virtual void handleBeforeTextInsertedEvent(BeforeTextInsertedEvent*) OVERRIDE;
     virtual void forwardEvent(Event*) OVERRIDE;
     virtual bool shouldSubmitImplicitly(Event*) OVERRIDE;
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*) const OVERRIDE;
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) const OVERRIDE;
     virtual bool shouldUseInputMethod() const OVERRIDE;
     virtual String sanitizeValue(const String&) const OVERRIDE;
     virtual bool shouldRespectListAttribute() OVERRIDE;
@@ -103,7 +103,7 @@ private:
 
     RefPtr<HTMLElement> m_container;
     RefPtr<HTMLElement> m_innerBlock;
-    RefPtr<HTMLElement> m_innerText;
+    RefPtr<TextControlInnerTextElement> m_innerText;
     RefPtr<HTMLElement> m_placeholder;
     RefPtr<SpinButtonElement> m_innerSpinButton;
 #if ENABLE(INPUT_SPEECH)

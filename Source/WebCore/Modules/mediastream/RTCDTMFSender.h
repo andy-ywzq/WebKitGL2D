@@ -31,6 +31,7 @@
 #include "ActiveDOMObject.h"
 #include "EventTarget.h"
 #include "RTCDTMFSenderHandlerClient.h"
+#include "ScriptWrappable.h"
 #include "Timer.h"
 #include <wtf/RefCounted.h>
 
@@ -40,7 +41,7 @@ class MediaStreamTrack;
 class RTCPeerConnectionHandler;
 class RTCDTMFSenderHandler;
 
-class RTCDTMFSender : public RefCounted<RTCDTMFSender>, public EventTarget, public RTCDTMFSenderHandlerClient, public ActiveDOMObject {
+class RTCDTMFSender FINAL : public RefCounted<RTCDTMFSender>, public ScriptWrappable, public EventTargetWithInlineData, public RTCDTMFSenderHandlerClient, public ActiveDOMObject {
 public:
     static PassRefPtr<RTCDTMFSender> create(ScriptExecutionContext*, RTCPeerConnectionHandler*, PassRefPtr<MediaStreamTrack>, ExceptionCode&);
     ~RTCDTMFSender();
@@ -58,8 +59,8 @@ public:
     DEFINE_ATTRIBUTE_EVENT_LISTENER(tonechange);
 
     // EventTarget
-    virtual const AtomicString& interfaceName() const OVERRIDE;
-    virtual ScriptExecutionContext* scriptExecutionContext() const OVERRIDE;
+    virtual EventTargetInterface eventTargetInterface() const OVERRIDE { return RTCDTMFSenderEventTargetInterfaceType; }
+    virtual ScriptExecutionContext* scriptExecutionContext() const OVERRIDE { return ActiveDOMObject::scriptExecutionContext(); }
 
     // ActiveDOMObject
     virtual void stop() OVERRIDE;
@@ -74,11 +75,8 @@ private:
     void scheduledEventTimerFired(Timer<RTCDTMFSender>*);
 
     // EventTarget
-    virtual EventTargetData* eventTargetData() OVERRIDE;
-    virtual EventTargetData& ensureEventTargetData() OVERRIDE;
     virtual void refEventTarget() OVERRIDE { ref(); }
     virtual void derefEventTarget() OVERRIDE { deref(); }
-    EventTargetData m_eventTargetData;
 
     // RTCDTMFSenderHandlerClient
     virtual void didPlayTone(const String&) OVERRIDE;
@@ -92,7 +90,7 @@ private:
     bool m_stopped;
 
     Timer<RTCDTMFSender> m_scheduledEventTimer;
-    Vector<RefPtr<Event> > m_scheduledEvents;
+    Vector<RefPtr<Event>> m_scheduledEvents;
 };
 
 } // namespace WebCore

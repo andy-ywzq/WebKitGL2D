@@ -33,8 +33,8 @@ namespace WebCore {
     
 using namespace SVGNames;
 
-RenderSVGGradientStop::RenderSVGGradientStop(SVGStopElement* element)
-    : RenderObject(element)
+RenderSVGGradientStop::RenderSVGGradientStop(SVGStopElement& element, PassRef<RenderStyle> style)
+    : RenderElement(element, std::move(style), 0)
 {
 }
 
@@ -44,7 +44,7 @@ RenderSVGGradientStop::~RenderSVGGradientStop()
 
 void RenderSVGGradientStop::styleDidChange(StyleDifference diff, const RenderStyle* oldStyle)
 {
-    RenderObject::styleDidChange(diff, oldStyle);
+    RenderElement::styleDidChange(diff, oldStyle);
     if (diff == StyleDifferenceEqual)
         return;
 
@@ -66,12 +66,12 @@ void RenderSVGGradientStop::styleDidChange(StyleDifference diff, const RenderSty
 void RenderSVGGradientStop::layout()
 {
     StackStats::LayoutCheckPoint layoutCheckPoint;
-    setNeedsLayout(false);
+    clearNeedsLayout();
 }
 
 SVGGradientElement* RenderSVGGradientStop::gradientElement() const
 {
-    ContainerNode* parentNode = node()->parentNode();
+    ContainerNode* parentNode = element()->parentNode();
     if (parentNode->hasTagName(linearGradientTag) || parentNode->hasTagName(radialGradientTag))
         return toSVGGradientElement(parentNode);
     return 0;

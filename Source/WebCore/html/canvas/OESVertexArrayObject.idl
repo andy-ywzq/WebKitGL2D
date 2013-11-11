@@ -26,8 +26,9 @@
 [
     NoInterfaceObject,
     Conditional=WEBGL, 
-    GenerateIsReachable=ImplContext,
-    DoNotCheckConstants
+    GenerateIsReachable=ImplWebGLRenderingContext,
+    DoNotCheckConstants,
+    OperationsNotDeletable
 ] interface OESVertexArrayObject {
     const unsigned int VERTEX_ARRAY_BINDING_OES = 0x85B5;
     

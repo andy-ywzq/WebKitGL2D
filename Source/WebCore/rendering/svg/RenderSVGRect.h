@@ -36,10 +36,14 @@ namespace WebCore {
 
 class RenderSVGRect FINAL : public RenderSVGShape {
 public:
-    explicit RenderSVGRect(SVGRectElement*);
+    RenderSVGRect(SVGRectElement&, PassRef<RenderStyle>);
     virtual ~RenderSVGRect();
 
+    SVGRectElement& rectElement() const;
+
 private:
+    void graphicsElement() const WTF_DELETED_FUNCTION;
+
     virtual const char* renderName() const { return "RenderSVGRect"; }
 
     virtual void updateShapeFromElement();

@@ -40,8 +40,8 @@ static bool shouldUseFontSmoothing = true;
 static bool isOneLeftToRightRun(const TextRun& run)
 {
     for (int i = 0; i < run.length(); i++) {
-        WTF::Unicode::Direction direction = WTF::Unicode::direction(run[i]);
-        if (direction == WTF::Unicode::RightToLeft || direction > WTF::Unicode::OtherNeutral)
+        UCharDirection direction = u_charDirection(run[i]);
+        if (direction == U_RIGHT_TO_LEFT || direction > U_OTHER_NEUTRAL)
             return false;
     }
     return true;
@@ -76,7 +76,8 @@ static void doDrawTextAtPoint(GraphicsContext& context, const String& text, cons
         underlinePoint.move(beforeWidth, 1);
 
         context.setStrokeColor(color, ColorSpaceDeviceRGB);
-        context.drawLineForText(underlinePoint, underlinedWidth, false);
+        FloatRect bounds(underlinePoint, FloatSize(underlinedWidth, context.strokeThickness()));
+        context.drawLineForText(bounds, false);
     }
 }
 

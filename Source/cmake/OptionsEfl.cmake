@@ -196,10 +196,6 @@ if (ENABLE_WEBGL OR WTF_USE_TILED_BACKING_STORE)
     find_package(OpenGL REQUIRED)
     CHECK_INCLUDE_FILES("GL/glx.h" OPENGLX_FOUND)
 
-    if (OPENGLX_FOUND)
-        add_definitions(-DHAVE_GLX)
-    endif ()
-
     option(ENABLE_EGL "Enable EGL Support")
 
     if (ENABLE_EGL)
@@ -234,6 +230,7 @@ endif ()
 
 if (ENABLE_INSPECTOR)
     set(WEB_INSPECTOR_DIR "${DATA_INSTALL_DIR}/inspector")
+    set(WEBINSPECTORUI_DIR "${CMAKE_SOURCE_DIR}/Source/WebInspectorUI")
     add_definitions(-DWEB_INSPECTOR_DIR=\"${CMAKE_BINARY_DIR}/${WEB_INSPECTOR_DIR}\")
     add_definitions(-DWEB_INSPECTOR_INSTALL_DIR=\"${CMAKE_INSTALL_PREFIX}/${WEB_INSPECTOR_DIR}\")
 endif ()

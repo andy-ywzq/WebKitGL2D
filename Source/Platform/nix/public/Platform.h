@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 Google Inc. All rights reserved.
+ * Copyright (C) 2013 Nokia Corporation and/or its subsidiary(-ies).
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -32,56 +33,50 @@
 #define Nix_Platform_h
 
 #include "AudioDevice.h"
-#include "Data.h"
 #include "Gamepads.h"
+#include <stdint.h>
 
 namespace Nix {
 
-class AudioBus;
+class MultiChannelPCMData;
 class FFTFrame;
 class ThemeEngine;
+class MediaPlayer;
+class MediaPlayerClient;
 
-class WEBKIT_EXPORT Platform {
+class NIX_EXPORT Platform {
 public:
 
-    WEBKIT_EXPORT static void initialize(Platform*);
-    WEBKIT_EXPORT static void shutdown();
-    WEBKIT_EXPORT static Platform* current();
+    static void initialize(Platform*);
+    static Platform* current();
 
-    // Audio --------------------------------------------------------------
+    // Audio
     virtual float audioHardwareSampleRate() { return 0; }
     virtual size_t audioHardwareBufferSize() { return 0; }
     virtual unsigned audioHardwareOutputChannels() { return 0; }
 
     // Creates a device for audio I/O.
     // Pass in (numberOfInputChannels > 0) if live/local audio input is desired.
-    virtual AudioDevice* createAudioDevice(size_t /*bufferSize*/, unsigned /*numberOfInputChannels*/, unsigned /*numberOfChannels*/, double /*sampleRate*/, AudioDevice::RenderCallback*) { return 0; }
+    virtual AudioDevice* createAudioDevice(const char* /*inputDeviceId*/, size_t /*bufferSize*/, unsigned /*numberOfInputChannels*/, unsigned /*numberOfOutputChannels*/, double /*sampleRate*/, AudioDevice::RenderCallback*) { return nullptr; }
 
-
-    // Gamepad -------------------------------------------------------------
+    // Gamepad
     virtual void sampleGamepads(Gamepads& into) { into.length = 0; }
 
-
     // FFTFrame
-    virtual FFTFrame* createFFTFrame(unsigned /*fftsize*/) { return 0; }
-    virtual FFTFrame* createFFTFrame(const FFTFrame* /*frame*/) { return 0; }
+    virtual FFTFrame* createFFTFrame(unsigned /*fftsize*/) { return nullptr; }
 
-    // Resources -----------------------------------------------------------
-    // Returns a blob of data corresponding to the named resource.
-    virtual Data loadResource(const char* /*name*/) { return Data(); }
-
-    // Decodes the in-memory audio file data and returns the linear PCM audio data in the destinationBus.
-    // A sample-rate conversion to sampleRate will occur if the file data is at a different sample-rate.
-    // Returns true on success.
-    virtual bool loadAudioResource(AudioBus* /*destinationBus*/, const char* /*audioFileData*/, size_t /*dataSize*/, double /*sampleRate*/) { return false; }
+    // Decodes the in-memory audio file data and returns the linear PCM audio data.
+    virtual MultiChannelPCMData* decodeAudioResource(const void* /*audioData*/, size_t /*dataSize*/, double /*sampleRate*/) { return nullptr; }
 
     // Theme engine
     virtual ThemeEngine* themeEngine();
 
+    // Create a MediaPlayer, used to... play media :-)
+    virtual MediaPlayer* createMediaPlayer(MediaPlayerClient*) { return nullptr; }
 protected:
     virtual ~Platform() { }
 };
 
 } // namespace Nix
 
-#endif
+#endif // Nix_Platform_h

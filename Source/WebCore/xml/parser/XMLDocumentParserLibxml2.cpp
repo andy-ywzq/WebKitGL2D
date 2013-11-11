@@ -61,10 +61,11 @@
 #include "XMLDocumentParserScope.h"
 #include <libxml/parser.h>
 #include <libxml/parserInternals.h>
-#include <wtf/text/CString.h>
+#include <wtf/Ref.h>
 #include <wtf/StringExtras.h>
 #include <wtf/Threading.h>
 #include <wtf/Vector.h>
+#include <wtf/text/CString.h>
 #include <wtf/unicode/UTF8.h>
 
 #if ENABLE(XSLT)
@@ -90,7 +91,7 @@ static inline bool hasNoStyleInformation(Document* document)
     if (!document->frame()->page()->settings().developerExtrasEnabled())
         return false;
 
-    if (document->frame()->tree()->parent())
+    if (document->frame()->tree().parent())
         return false; // This document is not in a top frame
 
     return true;
@@ -353,7 +354,7 @@ private:
         OrdinalNumber columnNumber;
     };
 
-    Deque<OwnPtr<PendingCallback> > m_callbacks;
+    Deque<OwnPtr<PendingCallback>> m_callbacks;
 };
 // --------------------------------
 
@@ -409,7 +410,7 @@ static void switchToUTF16(xmlParserCtxtPtr ctxt)
     xmlSwitchEncoding(ctxt, BOMHighByte == 0xFF ? XML_CHAR_ENCODING_UTF16LE : XML_CHAR_ENCODING_UTF16BE);
 }
 
-static bool shouldAllowExternalLoad(const KURL& url)
+static bool shouldAllowExternalLoad(const URL& url)
 {
     String urlString = url.string();
 
@@ -450,7 +451,7 @@ static void* openFunc(const char* uri)
     ASSERT(XMLDocumentParserScope::currentCachedResourceLoader);
     ASSERT(currentThread() == libxmlLoaderThread);
 
-    KURL url(KURL(), uri);
+    URL url(URL(), uri);
 
     if (!shouldAllowExternalLoad(url))
         return &globalDescriptor;
@@ -575,14 +576,14 @@ bool XMLDocumentParser::supportsXMLVersion(const String& version)
     return version == "1.0";
 }
 
-XMLDocumentParser::XMLDocumentParser(Document* document, FrameView* frameView)
+XMLDocumentParser::XMLDocumentParser(Document& document, FrameView* frameView)
     : ScriptableDocumentParser(document)
     , m_view(frameView)
     , m_context(0)
     , m_pendingCallbacks(PendingCallbacks::create())
     , m_depthTriggeringEntityExpansion(-1)
     , m_isParsingEntityDeclaration(false)
-    , m_currentNode(document)
+    , m_currentNode(&document)
     , m_sawError(false)
     , m_sawCSS(false)
     , m_sawXSLTransform(false)
@@ -591,21 +592,20 @@ XMLDocumentParser::XMLDocumentParser(Document* document, FrameView* frameView)
     , m_parserPaused(false)
     , m_requestingScript(false)
     , m_finishCalled(false)
-    , m_xmlErrors(document)
     , m_pendingScript(0)
     , m_scriptStartPosition(TextPosition::belowRangePosition())
     , m_parsingFragment(false)
 {
 }
 
-XMLDocumentParser::XMLDocumentParser(DocumentFragment* fragment, Element* parentElement, ParserContentPolicy parserContentPolicy)
-    : ScriptableDocumentParser(fragment->document(), parserContentPolicy)
+XMLDocumentParser::XMLDocumentParser(DocumentFragment& fragment, Element* parentElement, ParserContentPolicy parserContentPolicy)
+    : ScriptableDocumentParser(fragment.document(), parserContentPolicy)
     , m_view(0)
     , m_context(0)
     , m_pendingCallbacks(PendingCallbacks::create())
     , m_depthTriggeringEntityExpansion(-1)
     , m_isParsingEntityDeclaration(false)
-    , m_currentNode(fragment)
+    , m_currentNode(&fragment)
     , m_sawError(false)
     , m_sawCSS(false)
     , m_sawXSLTransform(false)
@@ -614,12 +614,11 @@ XMLDocumentParser::XMLDocumentParser(DocumentFragment* fragment, Element* parent
     , m_parserPaused(false)
     , m_requestingScript(false)
     , m_finishCalled(false)
-    , m_xmlErrors(fragment->document())
     , m_pendingScript(0)
     , m_scriptStartPosition(TextPosition::belowRangePosition())
     , m_parsingFragment(true)
 {
-    fragment->ref();
+    fragment.ref();
 
     // Add namespaces based on the parent node
     Vector<Element*> elemStack;
@@ -684,7 +683,7 @@ void XMLDocumentParser::doWrite(const String& parseString)
     if (parseString.length()) {
         // JavaScript may cause the parser to detach during xmlParseChunk
         // keep this alive until this function is done.
-        RefPtr<XMLDocumentParser> protect(this);
+        Ref<XMLDocumentParser> protect(*this);
 
         switchToUTF16(context->context());
         XMLDocumentParserScope scope(document()->cachedResourceLoader());
@@ -821,7 +820,7 @@ void XMLDocumentParser::startElementNs(const xmlChar* xmlLocalName, const xmlCha
     m_sawFirstElement = true;
 
     QualifiedName qName(prefix, localName, uri);
-    RefPtr<Element> newElement = m_currentNode->document()->createElement(qName, true);
+    RefPtr<Element> newElement = m_currentNode->document().createElement(qName, true);
     if (!newElement) {
         stopParsing();
         return;
@@ -850,6 +849,8 @@ void XMLDocumentParser::startElementNs(const xmlChar* xmlLocalName, const xmlCha
         m_scriptStartPosition = textPosition();
 
     m_currentNode->parserAppendChild(newElement.get());
+    if (!m_currentNode) // Synchronous DOM events may have removed the current node.
+        return;
 
     const ContainerNode* currentNode = m_currentNode;
 #if ENABLE(TEMPLATE_ELEMENT)
@@ -862,7 +863,7 @@ void XMLDocumentParser::startElementNs(const xmlChar* xmlLocalName, const xmlCha
 #endif
 
     if (m_view && currentNode->attached() && !newElement->attached())
-        Style::attachRenderTree(newElement.get());
+        Style::attachRenderTree(*newElement);
 
     if (newElement->hasTagName(HTMLNames::htmlTag))
         static_cast<HTMLHtmlElement*>(newElement.get())->insertedByParser();
@@ -883,7 +884,7 @@ void XMLDocumentParser::endElementNs()
 
     // JavaScript can detach the parser.  Make sure this is not released
     // before the end of this method.
-    RefPtr<XMLDocumentParser> protect(this);
+    Ref<XMLDocumentParser> protect(*this);
 
     exitText();
 
@@ -1002,7 +1003,7 @@ void XMLDocumentParser::processingInstruction(const xmlChar* target, const xmlCh
 
     // ### handle exceptions
     ExceptionCode ec = 0;
-    RefPtr<ProcessingInstruction> pi = m_currentNode->document()->createProcessingInstruction(
+    RefPtr<ProcessingInstruction> pi = m_currentNode->document().createProcessingInstruction(
         toString(target), toString(data), ec);
     if (ec)
         return;
@@ -1037,7 +1038,7 @@ void XMLDocumentParser::cdataBlock(const xmlChar* s, int len)
     RefPtr<CDATASection> newNode = CDATASection::create(m_currentNode->document(), toString(s, len));
     m_currentNode->parserAppendChild(newNode.get());
     if (m_view && !newNode->attached())
-        newNode->attachText();
+        Style::attachTextRenderer(*newNode);
 }
 
 void XMLDocumentParser::comment(const xmlChar* s)
@@ -1096,7 +1097,7 @@ void XMLDocumentParser::internalSubset(const xmlChar* name, const xmlChar* exter
     }
 
     if (document())
-        document()->parserAppendChild(DocumentType::create(document(), toString(name), toString(externalID), toString(systemID)));
+        document()->parserAppendChild(DocumentType::create(*document(), toString(name), toString(externalID), toString(systemID)));
 }
 
 static inline XMLDocumentParser* getParser(void* closure)

@@ -40,13 +40,13 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-HTMLFontElement::HTMLFontElement(const QualifiedName& tagName, Document* document)
+HTMLFontElement::HTMLFontElement(const QualifiedName& tagName, Document& document)
     : HTMLElement(tagName, document)
 {
     ASSERT(hasTagName(fontTag));
 }
 
-PassRefPtr<HTMLFontElement> HTMLFontElement::create(const QualifiedName& tagName, Document* document)
+PassRefPtr<HTMLFontElement> HTMLFontElement::create(const QualifiedName& tagName, Document& document)
 {
     return adoptRef(new HTMLFontElement(tagName, document));
 }
@@ -71,7 +71,7 @@ static bool parseFontSize(const CharacterType* characters, unsigned length, int&
     // Step 4
     if (position == end)
         return false;
-    ASSERT(position < end);
+    ASSERT_WITH_SECURITY_IMPLICATION(position < end);
 
     // Step 5
     enum {

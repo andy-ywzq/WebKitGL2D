@@ -31,14 +31,15 @@
 #include "RenderMedia.h"
 
 namespace WebCore {
-    
-class HTMLMediaElement;
+
 class HTMLVideoElement;
 
 class RenderVideo FINAL : public RenderMedia {
 public:
-    RenderVideo(HTMLVideoElement*);
+    RenderVideo(HTMLVideoElement&, PassRef<RenderStyle>);
     virtual ~RenderVideo();
+
+    HTMLVideoElement& videoElement() const;
 
     IntRect videoBox() const;
 
@@ -49,11 +50,14 @@ public:
     void acceleratedRenderingStateChanged();
 #endif
 
+    bool requiresImmediateCompositing() const;
+
     virtual bool shouldDisplayVideo() const;
 
 private:
+    void mediaElement() const WTF_DELETED_FUNCTION;
+
     virtual void updateFromElement();
-    inline HTMLVideoElement* videoElement() const;
 
     virtual void intrinsicSizeChanged();
     LayoutSize calculateIntrinsicSize();
@@ -88,14 +92,19 @@ private:
     LayoutSize m_cachedImageSize;
 };
 
-inline RenderVideo* toRenderVideo(RenderObject* object)
+inline RenderVideo& toRenderVideo(RenderObject& object)
 {
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isVideo());
-    return static_cast<RenderVideo*>(object);
+    ASSERT_WITH_SECURITY_IMPLICATION(object.isVideo());
+    return static_cast<RenderVideo&>(object);
 }
 
-// This will catch anyone doing an unnecessary cast.
-void toRenderVideo(const RenderVideo*);
+inline const RenderVideo& toRenderVideo(const RenderObject& object)
+{
+    ASSERT_WITH_SECURITY_IMPLICATION(object.isVideo());
+    return static_cast<const RenderVideo&>(object);
+}
+
+void toRenderVideo(const RenderVideo&);
 
 } // namespace WebCore
 

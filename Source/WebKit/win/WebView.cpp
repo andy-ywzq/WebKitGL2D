@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Apple, Inc.  All rights reserved.
+ * Copyright (C) 2006-2013 Apple, Inc.  All rights reserved.
  * Copyright (C) 2009, 2010, 2011 Appcelerator, Inc. All rights reserved.
  * Copyright (C) 2011 Brent Fulgham. All rights reserved.
  *
@@ -28,11 +28,12 @@
 #include "config.h"
 #include "WebView.h"
 
-#include "CFDictionaryPropertyBag.h"
+#include "COMVariantSetter.h"
 #include "DOMCoreClasses.h"
 #include "FullscreenVideoController.h"
 #include "MarshallingHelpers.h"
 #include "SoftLinking.h"
+#include "SubframeLoader.h"
 #include "TextIterator.h"
 #include "WebBackForwardList.h"
 #include "WebChromeClient.h"
@@ -45,6 +46,7 @@
 #include "WebEditorClient.h"
 #include "WebElementPropertyBag.h"
 #include "WebFrame.h"
+#include "WebFrameLoaderClient.h"
 #include "WebFrameNetworkingContext.h"
 #include "WebGeolocationClient.h"
 #include "WebGeolocationPosition.h"
@@ -69,7 +71,7 @@
 #include <WebCore/AXObjectCache.h>
 #include <WebCore/ApplicationCacheStorage.h>
 #include <WebCore/BString.h>
-#include <WebCore/BackForwardListImpl.h>
+#include <WebCore/BackForwardList.h>
 #include <WebCore/BitmapInfo.h>
 #include <WebCore/Chrome.h>
 #include <WebCore/ContextMenu.h>
@@ -87,7 +89,6 @@
 #include <WebCore/FileSystem.h>
 #include <WebCore/FloatQuad.h>
 #include <WebCore/FocusController.h>
-#include <WebCore/Frame.h>
 #include <WebCore/FrameLoader.h>
 #include <WebCore/FrameSelection.h>
 #include <WebCore/FrameTree.h>
@@ -109,7 +110,9 @@
 #include <WebCore/KeyboardEvent.h>
 #include <WebCore/Logging.h>
 #include <WebCore/MIMETypeRegistry.h>
+#include <WebCore/MainFrame.h>
 #include <WebCore/MemoryCache.h>
+#include <WebCore/NotImplemented.h>
 #include <WebCore/Page.h>
 #include <WebCore/PageCache.h>
 #include <WebCore/PageGroup.h>
@@ -159,7 +162,7 @@
 #include <WebKitSystemInterface/WebKitSystemInterface.h> 
 #endif
 
-#if USE(ACCELERATED_COMPOSITING)
+#if USE(ACCELERATED_COMPOSITING) && USE(CA)
 #include <WebCore/CACFLayerTreeHost.h>
 #include <WebCore/PlatformCALayer.h>
 #endif
@@ -177,6 +180,7 @@
 #include <wtf/HashSet.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/StringConcatenate.h>
+#include <wtf/win/GDIObject.h>
 
 // Soft link functions for gestures and panning feedback
 SOFT_LINK_LIBRARY(USER32);
@@ -220,9 +224,9 @@ static inline String toString(BSTR bstr)
     return String(bstr, SysStringLen(bstr));
 }
 
-static inline KURL toKURL(BSTR bstr)
+static inline URL toURL(BSTR bstr)
 {
-    return KURL(KURL(), toString(bstr));
+    return URL(URL(), toString(bstr));
 }
 
 class PreferencesChangedOrRemovedObserver : public IWebNotificationObserver {
@@ -392,6 +396,7 @@ WebView::WebView()
     , m_nextDisplayIsSynchronous(false)
     , m_lastSetCursor(0)
     , m_usesLayeredWindow(false)
+    , m_needsDisplay(false)
 {
     JSC::initializeThreading();
     WTF::initializeMainThread();
@@ -427,7 +432,9 @@ WebView::~WebView()
     ASSERT(!m_viewWindow);
 
 #if USE(ACCELERATED_COMPOSITING)
+#if USE(CA)
     ASSERT(!m_layerTreeHost);
+#endif
     ASSERT(!m_backingLayer);
 #endif
 
@@ -704,10 +711,8 @@ HRESULT STDMETHODCALLTYPE WebView::close()
 
     removeFromAllWebViewsSet();
 
-    if (m_page) {
-        if (Frame* frame = m_page->mainFrame())
-            frame->loader().detachFromParent();
-    }
+    if (m_page)
+        m_page->mainFrame().loader().detachFromParent();
 
     if (m_mouseOutTracker) {
         m_mouseOutTracker->dwFlags = TME_CANCEL;
@@ -792,6 +797,7 @@ void WebView::repaint(const WebCore::IntRect& windowRect, bool contentChanged, b
         else
             ::UpdateWindow(m_viewWindow);
     }
+    m_needsDisplay = true;
 }
 
 void WebView::deleteBackingStore()
@@ -821,7 +827,7 @@ bool WebView::ensureBackingStore()
         BitmapInfo bitmapInfo = BitmapInfo::createBottomUp(IntSize(m_backingStoreSize));
 
         void* pixels = NULL;
-        m_backingStoreBitmap = RefCountedHBITMAP::create(::CreateDIBSection(0, &bitmapInfo, DIB_RGB_COLORS, &pixels, 0, 0));
+        m_backingStoreBitmap = SharedGDIObject<HBITMAP>::create(adoptGDIObject(::CreateDIBSection(0, &bitmapInfo, DIB_RGB_COLORS, &pixels, 0, 0)));
         return true;
     }
 
@@ -830,6 +836,8 @@ bool WebView::ensureBackingStore()
 
 void WebView::addToDirtyRegion(const IntRect& dirtyRect)
 {
+    m_needsDisplay = true;
+
     // FIXME: We want an assert here saying that the dirtyRect is inside the clienRect,
     // but it was being hit during our layout tests, and is being investigated in
     // http://webkit.org/b/29350.
@@ -841,13 +849,15 @@ void WebView::addToDirtyRegion(const IntRect& dirtyRect)
     }
 #endif
 
-    HRGN newRegion = ::CreateRectRgn(dirtyRect.x(), dirtyRect.y(),
-                                     dirtyRect.maxX(), dirtyRect.maxY());
-    addToDirtyRegion(newRegion);
+    auto newRegion = adoptGDIObject(::CreateRectRgn(dirtyRect.x(), dirtyRect.y(),
+        dirtyRect.maxX(), dirtyRect.maxY()));
+    addToDirtyRegion(std::move(newRegion));
 }
 
-void WebView::addToDirtyRegion(HRGN newRegion)
+void WebView::addToDirtyRegion(GDIObject<HRGN> newRegion)
 {
+    m_needsDisplay = true;
+
 #if USE(ACCELERATED_COMPOSITING)
     ASSERT(!isAcceleratedCompositing());
 #endif
@@ -855,12 +865,11 @@ void WebView::addToDirtyRegion(HRGN newRegion)
     LOCAL_GDI_COUNTER(0, __FUNCTION__);
 
     if (m_backingStoreDirtyRegion) {
-        HRGN combinedRegion = ::CreateRectRgn(0,0,0,0);
-        ::CombineRgn(combinedRegion, m_backingStoreDirtyRegion->handle(), newRegion, RGN_OR);
-        ::DeleteObject(newRegion);
-        m_backingStoreDirtyRegion = RefCountedHRGN::create(combinedRegion);
+        auto combinedRegion = adoptGDIObject(::CreateRectRgn(0, 0, 0, 0));
+        ::CombineRgn(combinedRegion.get(), m_backingStoreDirtyRegion->get(), newRegion.get(), RGN_OR);
+        m_backingStoreDirtyRegion = SharedGDIObject<HRGN>::create(std::move(combinedRegion));
     } else
-        m_backingStoreDirtyRegion = RefCountedHRGN::create(newRegion);
+        m_backingStoreDirtyRegion = SharedGDIObject<HRGN>::create(std::move(newRegion));
 
     if (m_uiDelegatePrivate)
         m_uiDelegatePrivate->webViewDidInvalidate(this);
@@ -868,6 +877,8 @@ void WebView::addToDirtyRegion(HRGN newRegion)
 
 void WebView::scrollBackingStore(FrameView* frameView, int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect)
 {
+    m_needsDisplay = true;
+
 #if USE(ACCELERATED_COMPOSITING)
     if (isAcceleratedCompositing()) {
         // FIXME: We should be doing something smarter here, like moving tiles around and painting
@@ -888,45 +899,46 @@ void WebView::scrollBackingStore(FrameView* frameView, int dx, int dy, const Int
     }
 
     // Make a region to hold the invalidated scroll area.
-    HRGN updateRegion = ::CreateRectRgn(0, 0, 0, 0);
+    auto updateRegion = adoptGDIObject(::CreateRectRgn(0, 0, 0, 0));
 
     // Collect our device context info and select the bitmap to scroll.
     HWndDC windowDC(m_viewWindow);
-    HDC bitmapDC = ::CreateCompatibleDC(windowDC);
-    HGDIOBJ oldBitmap = ::SelectObject(bitmapDC, m_backingStoreBitmap->handle());
+    auto bitmapDC = adoptGDIObject(::CreateCompatibleDC(windowDC));
+    HGDIOBJ oldBitmap = ::SelectObject(bitmapDC.get(), m_backingStoreBitmap->get());
     
     // Scroll the bitmap.
     RECT scrollRectWin(scrollViewRect);
     RECT clipRectWin(clipRect);
-    ::ScrollDC(bitmapDC, dx, dy, &scrollRectWin, &clipRectWin, updateRegion, 0);
+    ::ScrollDC(bitmapDC.get(), dx, dy, &scrollRectWin, &clipRectWin, updateRegion.get(), 0);
     RECT regionBox;
-    ::GetRgnBox(updateRegion, &regionBox);
+    ::GetRgnBox(updateRegion.get(), &regionBox);
 
     // Flush.
     GdiFlush();
 
     // Add the dirty region to the backing store's dirty region.
-    addToDirtyRegion(updateRegion);
+    addToDirtyRegion(std::move(updateRegion));
 
     if (m_uiDelegatePrivate)
         m_uiDelegatePrivate->webViewScrolled(this);
 
     // Update the backing store.
-    updateBackingStore(frameView, bitmapDC, false);
+    updateBackingStore(frameView, bitmapDC.get(), false);
 
     // Clean up.
-    ::SelectObject(bitmapDC, oldBitmap);
-    ::DeleteDC(bitmapDC);
+    ::SelectObject(bitmapDC.get(), oldBitmap);
 }
 
 void WebView::sizeChanged(const IntSize& newSize)
 {
+    m_needsDisplay = true;
+
     deleteBackingStore();
 
     if (Frame* coreFrame = core(topLevelFrame()))
         coreFrame->view()->resize(newSize);
 
-#if USE(ACCELERATED_COMPOSITING)
+#if USE(ACCELERATED_COMPOSITING) && USE(CA)
     if (m_layerTreeHost)
         m_layerTreeHost->resize();
     if (m_backingLayer) {
@@ -986,12 +998,15 @@ void WebView::updateBackingStore(FrameView* frameView, HDC dc, bool backingStore
 
     LOCAL_GDI_COUNTER(0, __FUNCTION__);
 
+    GDIObject<HDC> bitmapDCObject;
+
     HDC bitmapDC = dc;
     HGDIOBJ oldBitmap = 0;
     if (!dc) {
         HWndDC windowDC(m_viewWindow);
-        bitmapDC = ::CreateCompatibleDC(windowDC);
-        oldBitmap = ::SelectObject(bitmapDC, m_backingStoreBitmap->handle());
+        bitmapDCObject = adoptGDIObject(::CreateCompatibleDC(windowDC));
+        bitmapDC = bitmapDCObject.get();
+        oldBitmap = ::SelectObject(bitmapDC, m_backingStoreBitmap->get());
     }
 
     if (m_backingStoreBitmap && (m_backingStoreDirtyRegion || backingStoreCompletelyDirty)) {
@@ -1003,8 +1018,8 @@ void WebView::updateBackingStore(FrameView* frameView, HDC dc, bool backingStore
         Vector<IntRect> paintRects;
         if (!backingStoreCompletelyDirty && m_backingStoreDirtyRegion) {
             RECT regionBox;
-            ::GetRgnBox(m_backingStoreDirtyRegion->handle(), &regionBox);
-            getUpdateRects(m_backingStoreDirtyRegion->handle(), regionBox, paintRects);
+            ::GetRgnBox(m_backingStoreDirtyRegion->get(), &regionBox);
+            getUpdateRects(m_backingStoreDirtyRegion->get(), regionBox, paintRects);
         } else {
             RECT clientRect;
             ::GetClientRect(m_viewWindow, &clientRect);
@@ -1020,12 +1035,12 @@ void WebView::updateBackingStore(FrameView* frameView, HDC dc, bool backingStore
         m_backingStoreDirtyRegion.clear();
     }
 
-    if (!dc) {
+    if (!dc)
         ::SelectObject(bitmapDC, oldBitmap);
-        ::DeleteDC(bitmapDC);
-    }
 
     GdiFlush();
+
+    m_needsDisplay = true;
 }
 
 void WebView::performLayeredWindowUpdate()
@@ -1035,11 +1050,11 @@ void WebView::performLayeredWindowUpdate()
         return;
 
     HWndDC hdcScreen(m_viewWindow);
-    OwnPtr<HDC> hdcMem = adoptPtr(::CreateCompatibleDC(hdcScreen));
-    HBITMAP hbmOld = static_cast<HBITMAP>(::SelectObject(hdcMem.get(), m_backingStoreBitmap->handle()));
+    auto hdcMem = adoptGDIObject(::CreateCompatibleDC(hdcScreen));
+    HBITMAP hbmOld = static_cast<HBITMAP>(::SelectObject(hdcMem.get(), m_backingStoreBitmap->get()));
 
     BITMAP bmpInfo;
-    ::GetObject(m_backingStoreBitmap->handle(), sizeof(bmpInfo), &bmpInfo);
+    ::GetObject(m_backingStoreBitmap->get(), sizeof(bmpInfo), &bmpInfo);
     SIZE windowSize = { bmpInfo.bmWidth, bmpInfo.bmHeight };
 
     BLENDFUNCTION blendFunction;
@@ -1052,13 +1067,15 @@ void WebView::performLayeredWindowUpdate()
     ::UpdateLayeredWindow(m_viewWindow, hdcScreen, 0, &windowSize, hdcMem.get(), &layerPos, 0, &blendFunction, ULW_ALPHA);
 
     ::SelectObject(hdcMem.get(), hbmOld);
+
+    m_needsDisplay = false;
 }
 
 void WebView::paint(HDC dc, LPARAM options)
 {
     LOCAL_GDI_COUNTER(0, __FUNCTION__);
 
-#if USE(ACCELERATED_COMPOSITING)
+#if USE(ACCELERATED_COMPOSITING) && USE(CA)
     if (isAcceleratedCompositing() && !usesLayeredWindow()) {
         m_layerTreeHost->flushPendingLayerChangesNow();
         // Flushing might have taken us out of compositing mode.
@@ -1078,12 +1095,12 @@ void WebView::paint(HDC dc, LPARAM options)
 
     RECT rcPaint;
     HDC hdc;
-    OwnPtr<HRGN> region;
+    GDIObject<HRGN> region;
     int regionType = NULLREGION;
     PAINTSTRUCT ps;
     WindowsToPaint windowsToPaint;
     if (!dc) {
-        region = adoptPtr(CreateRectRgn(0,0,0,0));
+        region = adoptGDIObject(::CreateRectRgn(0, 0, 0, 0));
         regionType = GetUpdateRgn(m_viewWindow, region.get(), false);
         hdc = BeginPaint(m_viewWindow, &ps);
         rcPaint = ps.rcPaint;
@@ -1109,11 +1126,11 @@ void WebView::paint(HDC dc, LPARAM options)
 
     m_paintCount++;
 
-    HDC bitmapDC = ::CreateCompatibleDC(hdc);
-    HGDIOBJ oldBitmap = ::SelectObject(bitmapDC, m_backingStoreBitmap->handle());
+    auto bitmapDC = adoptGDIObject(::CreateCompatibleDC(hdc));
+    HGDIOBJ oldBitmap = ::SelectObject(bitmapDC.get(), m_backingStoreBitmap->get());
 
     // Update our backing store if needed.
-    updateBackingStore(frameView, bitmapDC, backingStoreCompletelyDirty, windowsToPaint);
+    updateBackingStore(frameView, bitmapDC.get(), backingStoreCompletelyDirty, windowsToPaint);
 
     // Now we blit the updated backing store
     IntRect windowDirtyRect = rcPaint;
@@ -1126,10 +1143,9 @@ void WebView::paint(HDC dc, LPARAM options)
         blitRects.append(windowDirtyRect);
 
     for (unsigned i = 0; i < blitRects.size(); ++i)
-        paintIntoWindow(bitmapDC, hdc, blitRects[i]);
+        paintIntoWindow(bitmapDC.get(), hdc, blitRects[i]);
 
-    ::SelectObject(bitmapDC, oldBitmap);
-    ::DeleteDC(bitmapDC);
+    ::SelectObject(bitmapDC.get(), oldBitmap);
 
     if (!dc)
         EndPaint(m_viewWindow, &ps);
@@ -1159,7 +1175,7 @@ void WebView::paintIntoBackingStore(FrameView* frameView, HDC bitmapDC, const In
 #if FLASH_BACKING_STORE_REDRAW
     {
         HWndDC dc(m_viewWindow);
-        OwnPtr<HBRUSH> yellowBrush(CreateSolidBrush(RGB(255, 255, 0)));
+        auto yellowBrush = adoptGDIObject(::CreateSolidBrush(RGB(255, 255, 0)));
         FillRect(dc, &rect, yellowBrush.get());
         GdiFlush();
         Sleep(50);
@@ -1196,7 +1212,7 @@ void WebView::paintIntoWindow(HDC bitmapDC, HDC windowDC, const IntRect& dirtyRe
 
     LOCAL_GDI_COUNTER(0, __FUNCTION__);
 #if FLASH_WINDOW_REDRAW
-    OwnPtr<HBRUSH> greenBrush = CreateSolidBrush(RGB(0, 255, 0));
+    auto greenBrush = adoptGDIObject(::CreateSolidBrush(RGB(0, 255, 0)));
     RECT rect = dirtyRect;
     FillRect(windowDC, &rect, greenBrush.get());
     GdiFlush();
@@ -1207,6 +1223,8 @@ void WebView::paintIntoWindow(HDC bitmapDC, HDC windowDC, const IntRect& dirtyRe
     // in the destination DC.
     BitBlt(windowDC, dirtyRect.x(), dirtyRect.y(), dirtyRect.width(), dirtyRect.height(), bitmapDC,
            dirtyRect.x(), dirtyRect.y(), SRCCOPY);
+
+    m_needsDisplay = false;
 }
 
 void WebView::frameRect(RECT* rect)
@@ -1335,8 +1353,8 @@ bool WebView::handleContextMenuEvent(WPARAM wParam, LPARAM lParam)
         // not run.
         m_page->contextMenuController().clearContextMenu();
 
-        Frame* focusedFrame = m_page->focusController().focusedOrMainFrame();
-        return focusedFrame->eventHandler().sendContextMenuEventForKey();
+        Frame& focusedFrame = m_page->focusController().focusedOrMainFrame();
+        return focusedFrame.eventHandler().sendContextMenuEventForKey();
 
     } else {
         if (!::ScreenToClient(m_viewWindow, &coords))
@@ -1347,9 +1365,9 @@ bool WebView::handleContextMenuEvent(WPARAM wParam, LPARAM lParam)
 
     m_page->contextMenuController().clearContextMenu();
 
-    IntPoint documentPoint(m_page->mainFrame()->view()->windowToContents(coords));
-    HitTestResult result = m_page->mainFrame()->eventHandler().hitTestResultAtPoint(documentPoint);
-    Frame* targetFrame = result.innerNonSharedNode() ? result.innerNonSharedNode()->document()->frame() : m_page->focusController().focusedOrMainFrame();
+    IntPoint documentPoint(m_page->mainFrame().view()->windowToContents(coords));
+    HitTestResult result = m_page->mainFrame().eventHandler().hitTestResultAtPoint(documentPoint);
+    Frame* targetFrame = result.innerNonSharedNode() ? result.innerNonSharedNode()->document().frame() : &m_page->focusController().focusedOrMainFrame();
 
     targetFrame->view()->setCursor(pointerCursor());
     PlatformMouseEvent mouseEvent(m_viewWindow, WM_RBUTTONUP, wParam, lParam);
@@ -1477,7 +1495,7 @@ bool WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
     static LONG globalPrevMouseDownTime;
 
     if (message == WM_CANCELMODE) {
-        m_page->mainFrame()->eventHandler().lostMouseCapture();
+        m_page->mainFrame().eventHandler().lostMouseCapture();
         return true;
     }
 
@@ -1516,29 +1534,29 @@ bool WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
         globalPrevPoint = mouseEvent.position();
         
         mouseEvent.setClickCount(globalClickCount);
-        handled = m_page->mainFrame()->eventHandler().handleMousePressEvent(mouseEvent);
+        handled = m_page->mainFrame().eventHandler().handleMousePressEvent(mouseEvent);
     } else if (message == WM_LBUTTONDBLCLK || message == WM_MBUTTONDBLCLK || message == WM_RBUTTONDBLCLK) {
         globalClickCount++;
         mouseEvent.setClickCount(globalClickCount);
-        handled = m_page->mainFrame()->eventHandler().handleMousePressEvent(mouseEvent);
+        handled = m_page->mainFrame().eventHandler().handleMousePressEvent(mouseEvent);
     } else if (message == WM_LBUTTONUP || message == WM_MBUTTONUP || message == WM_RBUTTONUP) {
         // Record the global position and the button of the up.
         globalPrevButton = mouseEvent.button();
         globalPrevPoint = mouseEvent.position();
         mouseEvent.setClickCount(globalClickCount);
-        m_page->mainFrame()->eventHandler().handleMouseReleaseEvent(mouseEvent);
+        m_page->mainFrame().eventHandler().handleMouseReleaseEvent(mouseEvent);
         ::ReleaseCapture();
     } else if (message == WM_MOUSELEAVE && m_mouseOutTracker) {
         // Once WM_MOUSELEAVE is fired windows clears this tracker
         // so there is no need to disable it ourselves.
         m_mouseOutTracker.clear();
-        m_page->mainFrame()->eventHandler().mouseMoved(mouseEvent);
+        m_page->mainFrame().eventHandler().mouseMoved(mouseEvent);
         handled = true;
     } else if (message == WM_MOUSEMOVE) {
         if (!insideThreshold)
             globalClickCount = 0;
         mouseEvent.setClickCount(globalClickCount);
-        handled = m_page->mainFrame()->eventHandler().mouseMoved(mouseEvent);
+        handled = m_page->mainFrame().eventHandler().mouseMoved(mouseEvent);
         if (!m_mouseOutTracker) {
             m_mouseOutTracker = adoptPtr(new TRACKMOUSEEVENT);
             m_mouseOutTracker->cbSize = sizeof(TRACKMOUSEEVENT);
@@ -1568,7 +1586,7 @@ bool WebView::gestureNotify(WPARAM wParam, LPARAM lParam)
     bool hitScrollbar = false;
     POINT gestureBeginPoint = {gn->ptsLocation.x, gn->ptsLocation.y};
     HitTestRequest request(HitTestRequest::ReadOnly | HitTestRequest::DisallowShadowContent);
-    for (Frame* childFrame = m_page->mainFrame(); childFrame; childFrame = EventHandler::subframeForTargetNode(m_gestureTargetNode.get())) {
+    for (Frame* childFrame = &m_page->mainFrame(); childFrame; childFrame = EventHandler::subframeForTargetNode(m_gestureTargetNode.get())) {
         FrameView* frameView = childFrame->view();
         if (!frameView)
             break;
@@ -1591,7 +1609,8 @@ bool WebView::gestureNotify(WPARAM wParam, LPARAM lParam)
         // The hit testing above won't detect if we've hit the main frame's vertical scrollbar. Check that manually now.
         RECT webViewRect;
         GetWindowRect(m_viewWindow, &webViewRect);
-        hitScrollbar = view->verticalScrollbar() && (gestureBeginPoint.x > (webViewRect.right - view->verticalScrollbar()->theme()->scrollbarThickness()));  
+        hitScrollbar = (view->verticalScrollbar() && (gestureBeginPoint.x > (webViewRect.right - view->verticalScrollbar()->theme()->scrollbarThickness()))) 
+            || (view->horizontalScrollbar() && (gestureBeginPoint.y > (webViewRect.bottom - view->horizontalScrollbar()->theme()->scrollbarThickness())));  
     }
 
     bool canBeScrolled = false;
@@ -1602,25 +1621,33 @@ bool WebView::gestureNotify(WPARAM wParam, LPARAM lParam)
                 break;
             }
         }
+    } else {
+        // We've hit the main document but not any of the document's content
+        if (core(m_mainFrame)->view()->isScrollable())
+            canBeScrolled = true;
     }
 
     // We always allow two-fingered panning with inertia and a gutter (which limits movement to one
     // direction in most cases).
     DWORD dwPanWant = GC_PAN | GC_PAN_WITH_INERTIA | GC_PAN_WITH_GUTTER;
-    // We never allow single-fingered horizontal panning. That gesture is reserved for creating text
-    // selections. This matches IE.
-    DWORD dwPanBlock = GC_PAN_WITH_SINGLE_FINGER_HORIZONTALLY;
+    DWORD dwPanBlock = 0;
 
     if (hitScrollbar || !canBeScrolled) {
         // The part of the page under the gesture can't be scrolled, or the gesture is on a scrollbar.
-        // Disallow single-fingered vertical panning in this case, too, so we'll fall back to the default
+        // Disallow single-fingered panning in this case so we'll fall back to the default
         // behavior (which allows the scrollbar thumb to be dragged, text selections to be made, etc.).
-        dwPanBlock |= GC_PAN_WITH_SINGLE_FINGER_VERTICALLY;
+        dwPanBlock = GC_PAN_WITH_SINGLE_FINGER_VERTICALLY | GC_PAN_WITH_SINGLE_FINGER_HORIZONTALLY;
     } else {
         // The part of the page the gesture is under can be scrolled, and we're not under a scrollbar.
         // Allow single-fingered vertical panning in this case, so the user will be able to pan the page
         // with one or two fingers.
         dwPanWant |= GC_PAN_WITH_SINGLE_FINGER_VERTICALLY;
+
+        // Disable single-fingered horizontal panning only if the target node is text.
+        if (m_gestureTargetNode && m_gestureTargetNode->isTextNode())
+            dwPanBlock = GC_PAN_WITH_SINGLE_FINGER_HORIZONTALLY;
+        else
+            dwPanWant |= GC_PAN_WITH_SINGLE_FINGER_HORIZONTALLY;
     }
 
     GESTURECONFIG gc = { GID_PAN, dwPanWant, dwPanBlock };
@@ -1651,6 +1678,10 @@ bool WebView::gesture(WPARAM wParam, LPARAM lParam)
         m_gestureTargetNode = 0;
         break;
     case GID_PAN: {
+        if (gi.dwFlags & GF_BEGIN) {
+            m_lastPanX = gi.ptsLocation.x;
+            m_lastPanY = gi.ptsLocation.y;
+        }
         // Where are the fingers currently?
         long currentX = gi.ptsLocation.x;
         long currentY = gi.ptsLocation.y;
@@ -1670,43 +1701,50 @@ bool WebView::gesture(WPARAM wParam, LPARAM lParam)
             return false;
         }
 
-        if (!m_gestureTargetNode || !m_gestureTargetNode->renderer())
-            return false;
+        ScrollableArea* scrolledArea = 0;
 
-        // We negate here since panning up moves the content up, but moves the scrollbar down.
-        m_gestureTargetNode->renderer()->enclosingLayer()->scrollByRecursively(IntSize(-deltaX, -deltaY));
-           
+        if (!m_gestureTargetNode || !m_gestureTargetNode->renderer()) {
+            // We might directly hit the document without hitting any nodes
+            coreFrame->view()->scrollBy(IntSize(-deltaX, -deltaY));
+            scrolledArea = coreFrame->view();
+        } else
+            m_gestureTargetNode->renderer()->enclosingLayer()->enclosingScrollableLayer()->scrollByRecursively(IntSize(-deltaX, -deltaY), WebCore::RenderLayer::ScrollOffsetClamped, &scrolledArea);
+
         if (!(UpdatePanningFeedbackPtr() && BeginPanningFeedbackPtr() && EndPanningFeedbackPtr())) {
             CloseGestureInfoHandlePtr()(gestureHandle);
             return true;
         }
 
+        // Handle overpanning
         if (gi.dwFlags & GF_BEGIN) {
             BeginPanningFeedbackPtr()(m_viewWindow);
             m_yOverpan = 0;
+            m_xOverpan = 0;
         } else if (gi.dwFlags & GF_END) {
             EndPanningFeedbackPtr()(m_viewWindow, true);
             m_yOverpan = 0;
+            m_xOverpan = 0;
         }
 
-        ScrollView* view = coreFrame->view();
-        if (!view) {
-            CloseGestureInfoHandlePtr()(gestureHandle);
-            return true;
-        }
-        Scrollbar* vertScrollbar = view->verticalScrollbar();
-        if (!vertScrollbar) {
+        if (!scrolledArea) {
             CloseGestureInfoHandlePtr()(gestureHandle);
             return true;
         }
 
-        // FIXME: Support Horizontal Window Bounce. <https://webkit.org/b/28500>.
-        // FIXME: If the user starts panning down after a window bounce has started, the window doesn't bounce back 
-        // until they release their finger. <https://webkit.org/b/28501>.
-        if (vertScrollbar->currentPos() == 0)
-            UpdatePanningFeedbackPtr()(m_viewWindow, 0, m_yOverpan, gi.dwFlags & GF_INERTIA);
-        else if (vertScrollbar->currentPos() >= vertScrollbar->maximum())
-            UpdatePanningFeedbackPtr()(m_viewWindow, 0, m_yOverpan, gi.dwFlags & GF_INERTIA);
+        Scrollbar* vertScrollbar = scrolledArea->verticalScrollbar();
+
+        int ypan = 0;
+        int xpan = 0;
+
+        if (vertScrollbar && (!vertScrollbar->currentPos() || vertScrollbar->currentPos() >= vertScrollbar->maximum()))
+            ypan = m_yOverpan;
+
+        Scrollbar* horiScrollbar = scrolledArea->horizontalScrollbar();
+
+        if (horiScrollbar && (!horiScrollbar->currentPos() || horiScrollbar->currentPos() >= horiScrollbar->maximum()))
+            xpan = m_xOverpan;
+
+        UpdatePanningFeedbackPtr()(m_viewWindow, xpan, ypan, gi.dwFlags & GF_INERTIA);
 
         CloseGestureInfoHandlePtr()(gestureHandle);
         return true;
@@ -1787,8 +1825,8 @@ bool WebView::verticalScroll(WPARAM wParam, LPARAM /*lParam*/)
         break;
     }
     
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
-    return frame->eventHandler().scrollRecursively(direction, granularity);
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
+    return frame.eventHandler().scrollRecursively(direction, granularity);
 }
 
 bool WebView::horizontalScroll(WPARAM wParam, LPARAM /*lParam*/)
@@ -1816,21 +1854,21 @@ bool WebView::horizontalScroll(WPARAM wParam, LPARAM /*lParam*/)
         return false;
     }
 
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
-    return frame->eventHandler().scrollRecursively(direction, granularity);
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
+    return frame.eventHandler().scrollRecursively(direction, granularity);
 }
 
 
 bool WebView::execCommand(WPARAM wParam, LPARAM /*lParam*/)
 {
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
     switch (LOWORD(wParam)) {
         case SelectAll:
-            return frame->editor().command("SelectAll").execute();
+            return frame.editor().command("SelectAll").execute();
         case Undo:
-            return frame->editor().command("Undo").execute();
+            return frame.editor().command("Undo").execute();
         case Redo:
-            return frame->editor().command("Redo").execute();
+            return frame.editor().command("Redo").execute();
     }
     return false;
 }
@@ -1839,10 +1877,10 @@ bool WebView::keyUp(WPARAM virtualKeyCode, LPARAM keyData, bool systemKeyDown)
 {
     PlatformKeyboardEvent keyEvent(m_viewWindow, virtualKeyCode, keyData, PlatformEvent::KeyUp, systemKeyDown);
 
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
     m_currentCharacterCode = 0;
 
-    return frame->eventHandler().keyEvent(keyEvent);
+    return frame.eventHandler().keyEvent(keyEvent);
 }
 
 static const unsigned CtrlKey = 1 << 0;
@@ -1970,7 +2008,7 @@ bool WebView::handleEditingKeyboardEvent(KeyboardEvent* evt)
 {
     Node* node = evt->target()->toNode();
     ASSERT(node);
-    Frame* frame = node->document()->frame();
+    Frame* frame = node->document().frame();
     ASSERT(frame);
 
     const PlatformKeyboardEvent* keyEvent = evt->keyEvent();
@@ -2005,10 +2043,10 @@ bool WebView::keyDown(WPARAM virtualKeyCode, LPARAM keyData, bool systemKeyDown)
         return false;
     }
 #endif
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
 
     PlatformKeyboardEvent keyEvent(m_viewWindow, virtualKeyCode, keyData, PlatformEvent::RawKeyDown, systemKeyDown);
-    bool handled = frame->eventHandler().keyEvent(keyEvent);
+    bool handled = frame.eventHandler().keyEvent(keyEvent);
 
     // These events cannot be canceled, and we have no default handling for them.
     // FIXME: match IE list more closely, see <http://msdn2.microsoft.com/en-us/library/ms536938.aspx>.
@@ -2072,18 +2110,18 @@ bool WebView::keyDown(WPARAM virtualKeyCode, LPARAM keyData, bool systemKeyDown)
             return false;
     }
 
-    return frame->eventHandler().scrollRecursively(direction, granularity);
+    return frame.eventHandler().scrollRecursively(direction, granularity);
 }
 
 bool WebView::keyPress(WPARAM charCode, LPARAM keyData, bool systemKeyDown)
 {
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
 
     PlatformKeyboardEvent keyEvent(m_viewWindow, charCode, keyData, PlatformEvent::Char, systemKeyDown);
     // IE does not dispatch keypress event for WM_SYSCHAR.
     if (systemKeyDown)
-        return frame->eventHandler().handleAccessKey(keyEvent);
-    return frame->eventHandler().keyEvent(keyEvent);
+        return frame.eventHandler().handleAccessKey(keyEvent);
+    return frame.eventHandler().keyEvent(keyEvent);
 }
 
 void WebView::setIsBeingDestroyed()
@@ -2102,7 +2140,7 @@ void WebView::setShouldInvertColors(bool shouldInvertColors)
 
     m_shouldInvertColors = shouldInvertColors;
 
-#if USE(ACCELERATED_COMPOSITING)
+#if USE(ACCELERATED_COMPOSITING) && USE(CA)
     if (m_layerTreeHost)
         m_layerTreeHost->setShouldInvertColors(shouldInvertColors);
 #endif
@@ -2288,14 +2326,14 @@ LRESULT CALLBACK WebView::WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam,
                 uiDelegatePrivate->webViewLostFocus(webView, (OLE_HANDLE)(ULONG64)newFocusWnd);
 
             FocusController& focusController = webView->page()->focusController();
-            Frame* frame = focusController.focusedOrMainFrame();
-            webView->resetIME(frame);
+            Frame& frame = focusController.focusedOrMainFrame();
+            webView->resetIME(&frame);
             // Send blur events unless we're losing focus to a child of ours.
             if (!IsChild(hWnd, newFocusWnd))
                 focusController.setFocused(false);
 
             // If we are pan-scrolling when we lose focus, stop the pan scrolling.
-            frame->eventHandler().stopAutoscrollTimer();
+            frame.eventHandler().stopAutoscrollTimer();
 
             break;
         }
@@ -2427,6 +2465,9 @@ LRESULT CALLBACK WebView::WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam,
             break;
     }
 
+    if (webView->needsDisplay() && message != WM_PAINT)
+        ::UpdateWindow(hWnd);
+
     if (!handled)
         lResult = DefWindowProc(hWnd, message, wParam, lParam);
     
@@ -2456,7 +2497,7 @@ static String webKitVersionString()
     return buildNumberStringPtr;
 }
 
-const String& WebView::userAgentForKURL(const KURL&)
+const String& WebView::userAgentForKURL(const URL&)
 {
     if (m_userAgentOverridden)
         return m_userAgentCustom;
@@ -2531,39 +2572,51 @@ ULONG STDMETHODCALLTYPE WebView::Release(void)
 
 // IWebView --------------------------------------------------------------------
 
-HRESULT STDMETHODCALLTYPE WebView::canShowMIMEType( 
-    /* [in] */ BSTR mimeType,
-    /* [retval][out] */ BOOL* canShow)
+HRESULT WebView::canShowMIMEType(/* [in] */ BSTR mimeType, /* [retval][out] */ BOOL* canShow)
 {
-    String mimeTypeStr = toString(mimeType);
-
     if (!canShow)
         return E_POINTER;
 
-    Frame* coreFrame = core(m_mainFrame);
-    bool allowPlugins = coreFrame && coreFrame->loader().subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin);
-
-    *canShow = MIMETypeRegistry::isSupportedImageMIMEType(mimeTypeStr)
-        || MIMETypeRegistry::isSupportedNonImageMIMEType(mimeTypeStr);
-
-    if (!*canShow && m_page && m_page->pluginData()) {
-        *canShow = (m_page->pluginData()->supportsMimeType(mimeTypeStr, PluginData::AllPlugins) && allowPlugins)
-            || m_page->pluginData()->supportsMimeType(mimeTypeStr, PluginData::OnlyApplicationPlugins);
-    }
-
-    if (!*canShow)
-        *canShow = shouldUseEmbeddedView(mimeTypeStr);
+    *canShow = canShowMIMEType(toString(mimeType));
 
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE WebView::canShowMIMETypeAsHTML( 
-    /* [in] */ BSTR /*mimeType*/,
-    /* [retval][out] */ BOOL* canShow)
+bool WebView::canShowMIMEType(const String& mimeType)
+{
+    Frame* coreFrame = core(m_mainFrame);
+    bool allowPlugins = coreFrame && coreFrame->loader().subframeLoader().allowPlugins(NotAboutToInstantiatePlugin);
+
+    bool canShow = MIMETypeRegistry::isSupportedImageMIMEType(mimeType)
+        || MIMETypeRegistry::isSupportedNonImageMIMEType(mimeType)
+        || MIMETypeRegistry::isSupportedMediaMIMEType(mimeType);
+
+    if (!canShow && m_page) {
+        canShow = (m_page->pluginData().supportsMimeType(mimeType, PluginData::AllPlugins) && allowPlugins)
+            || m_page->pluginData().supportsMimeType(mimeType, PluginData::OnlyApplicationPlugins);
+    }
+
+    if (!canShow)
+        canShow = shouldUseEmbeddedView(mimeType);
+
+    return canShow;
+}
+
+HRESULT WebView::canShowMIMETypeAsHTML(/* [in] */ BSTR mimeType, /* [retval][out] */ BOOL* canShow)
+{
+    if (!canShow)
+        return E_POINTER;
+
+    *canShow = canShowMIMETypeAsHTML(toString(mimeType));
+
+    return S_OK;
+}
+
+bool WebView::canShowMIMETypeAsHTML(const String& /*mimeType*/)
 {
     // FIXME
-    *canShow = TRUE;
-    return S_OK;
+    notImplemented();
+    return true;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::MIMETypesShownAsHTML( 
@@ -2718,6 +2771,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
 #if ENABLE(INSPECTOR)
     pageClients.inspectorClient = m_inspectorClient;
 #endif // ENABLE(INSPECTOR)
+    pageClients.loaderClientForMainFrame = new WebFrameLoaderClient;
 
     m_page = new Page(pageClients);
     provideGeolocationTo(m_page, new WebGeolocationClient(this));
@@ -2736,12 +2790,13 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     }
 
     WebFrame* webFrame = WebFrame::createInstance();
-    RefPtr<Frame> coreFrame = webFrame->init(this, m_page, 0);
+    webFrame->initWithWebView(this, m_page);
+    static_cast<WebFrameLoaderClient&>(m_page->mainFrame().loader().client()).setWebFrame(webFrame);
     m_mainFrame = webFrame;
     webFrame->Release(); // The WebFrame is owned by the Frame, so release our reference to it.
 
-    coreFrame->tree()->setName(toString(frameName));
-    coreFrame->init();
+    m_page->mainFrame().tree().setName(toString(frameName));
+    m_page->mainFrame().init();
     setGroupName(groupName);
 
     addToAllWebViewsSet();
@@ -2811,7 +2866,8 @@ void WebView::setToolTip(const String& toolTip)
         info.cbSize = sizeof(info);
         info.uFlags = TTF_IDISHWND;
         info.uId = reinterpret_cast<UINT_PTR>(m_viewWindow);
-        info.lpszText = const_cast<UChar*>(m_toolTip.charactersWithNullTermination().data());
+        Vector<UChar> toolTipCharacters = m_toolTip.charactersWithNullTermination(); // Retain buffer long enough to make the SendMessage call
+        info.lpszText = const_cast<UChar*>(toolTipCharacters.data());
         ::SendMessage(m_toolTipHwnd, TTM_UPDATETIPTEXT, 0, reinterpret_cast<LPARAM>(&info));
     }
 
@@ -2827,26 +2883,19 @@ HRESULT WebView::notifyDidAddIcon(IWebNotification* notification)
     if (!propertyBag)
         return E_FAIL;
 
-    COMPtr<CFDictionaryPropertyBag> dictionaryPropertyBag;
-    hr = propertyBag->QueryInterface(&dictionaryPropertyBag);
+    COMVariant iconUserInfoURL;
+    hr = propertyBag->Read(WebIconDatabase::iconDatabaseNotificationUserInfoURLKey(), &iconUserInfoURL, 0);
     if (FAILED(hr))
         return hr;
 
-    CFDictionaryRef dictionary = dictionaryPropertyBag->dictionary();
-    if (!dictionary)
-        return E_FAIL;
-
-    CFTypeRef value = CFDictionaryGetValue(dictionary, WebIconDatabase::iconDatabaseNotificationUserInfoURLKey());
-    if (!value)
-        return E_FAIL;
-    if (CFGetTypeID(value) != CFStringGetTypeID())
+    if (iconUserInfoURL.variantType() != VT_BSTR)
         return E_FAIL;
 
     String mainFrameURL;
     if (m_mainFrame)
         mainFrameURL = m_mainFrame->url().string();
 
-    if (!mainFrameURL.isEmpty() && mainFrameURL == String((CFStringRef)value))
+    if (!mainFrameURL.isEmpty() && mainFrameURL == toString(V_BSTR(&iconUserInfoURL)))
         dispatchDidReceiveIconFromWebFrame(m_mainFrame);
 
     return hr;
@@ -2879,7 +2928,7 @@ void WebView::dispatchDidReceiveIconFromWebFrame(WebFrame* frame)
         if (icon && icon->width()) {
             HWndDC dc(0);
             hBitmap = CreateDIBSection(dc, &bmInfo, DIB_RGB_COLORS, 0, 0, 0);
-            icon->getHBITMAPOfSize(hBitmap, &static_cast<SIZE>(sz));
+            icon->getHBITMAPOfSize(hBitmap, &sz);
         }
 
         HRESULT hr = m_frameLoadDelegate->didReceiveIcon(this, (OLE_HANDLE)hBitmap, frame);
@@ -3034,7 +3083,7 @@ HRESULT STDMETHODCALLTYPE WebView::backForwardList(
     if (!m_useBackForwardList)
         return E_FAIL;
  
-    *list = WebBackForwardList::createInstance(static_cast<WebCore::BackForwardListImpl*>(m_page->backForwardList()));
+    *list = WebBackForwardList::createInstance(static_cast<WebCore::BackForwardList*>(m_page->backForwardClient()));
 
     return S_OK;
 }
@@ -3441,8 +3490,8 @@ HRESULT STDMETHODCALLTYPE WebView::hostWindow(
 static Frame *incrementFrame(Frame *curr, bool forward, bool wrapFlag)
 {
     return forward
-        ? curr->tree()->traverseNextWithWrap(wrapFlag)
-        : curr->tree()->traversePreviousWithWrap(wrapFlag);
+        ? curr->tree().traverseNextWithWrap(wrapFlag)
+        : curr->tree().traversePreviousWithWrap(wrapFlag);
 }
 
 HRESULT STDMETHODCALLTYPE WebView::searchFor( 
@@ -3455,13 +3504,14 @@ HRESULT STDMETHODCALLTYPE WebView::searchFor(
     if (!found)
         return E_INVALIDARG;
     
-    if (!m_page || !m_page->mainFrame())
+    if (!m_page)
         return E_UNEXPECTED;
 
     if (!str || !SysStringLen(str))
         return E_INVALIDARG;
 
-    *found = m_page->findString(toString(str), caseFlag ? TextCaseSensitive : TextCaseInsensitive, forward ? FindDirectionForward : FindDirectionBackward, wrapFlag);
+    FindOptions options = (caseFlag ? 0 : CaseInsensitive) | (forward ? 0 : Backwards) | (wrapFlag ? WrapAround : 0);
+    *found = m_page->findString(toString(str), options);
     return S_OK;
 }
 
@@ -3484,23 +3534,23 @@ HRESULT STDMETHODCALLTYPE WebView::updateFocusedAndActiveState()
     updateActiveState();
 
     bool active = m_page->focusController().isActive();
-    Frame* mainFrame = m_page->mainFrame();
-    Frame* focusedFrame = m_page->focusController().focusedOrMainFrame();
-    mainFrame->selection().setFocused(active && mainFrame == focusedFrame);
+    Frame& mainFrame = m_page->mainFrame();
+    Frame& focusedFrame = m_page->focusController().focusedOrMainFrame();
+    mainFrame.selection().setFocused(active && &mainFrame == &focusedFrame);
 
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::executeCoreCommandByName(BSTR name, BSTR value)
 {
-    m_page->focusController().focusedOrMainFrame()->editor().command(toString(name)).execute(toString(value));
+    m_page->focusController().focusedOrMainFrame().editor().command(toString(name)).execute(toString(value));
 
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::clearMainFrameName()
 {
-    m_page->mainFrame()->tree()->clearName();
+    m_page->mainFrame().tree().clearName();
 
     return S_OK;
 }
@@ -3511,7 +3561,7 @@ HRESULT STDMETHODCALLTYPE WebView::markAllMatchesForText(
     if (!matches)
         return E_INVALIDARG;
 
-    if (!m_page || !m_page->mainFrame())
+    if (!m_page)
         return E_UNEXPECTED;
 
     if (!str || !SysStringLen(str))
@@ -3523,7 +3573,7 @@ HRESULT STDMETHODCALLTYPE WebView::markAllMatchesForText(
 
 HRESULT STDMETHODCALLTYPE WebView::unmarkAllTextMatches()
 {
-    if (!m_page || !m_page->mainFrame())
+    if (!m_page)
         return E_UNEXPECTED;
 
     m_page->unmarkAllTextMatches();
@@ -3534,7 +3584,7 @@ HRESULT STDMETHODCALLTYPE WebView::rectsForTextMatches(
     IEnumTextMatches** pmatches)
 {
     Vector<IntRect> allRects;
-    WebCore::Frame* frame = m_page->mainFrame();
+    WebCore::Frame* frame = &m_page->mainFrame();
     do {
         if (Document* document = frame->document()) {
             IntRect visibleRect = frame->view()->visibleContentRect();
@@ -3559,29 +3609,25 @@ HRESULT STDMETHODCALLTYPE WebView::generateSelectionImage(BOOL forceWhiteText, O
 {
     *hBitmap = 0;
 
-    WebCore::Frame* frame = m_page->focusController().focusedOrMainFrame();
+    WebCore::Frame& frame = m_page->focusController().focusedOrMainFrame();
 
-    if (frame) {
-        OwnPtr<HBITMAP> bitmap = imageFromSelection(frame, forceWhiteText ? TRUE : FALSE);
-        *hBitmap = static_cast<OLE_HANDLE>(reinterpret_cast<ULONG64>(bitmap.leakPtr()));
-    }
+    auto bitmap = imageFromSelection(&frame, forceWhiteText ? TRUE : FALSE);
+    *hBitmap = static_cast<OLE_HANDLE>(reinterpret_cast<ULONG64>(bitmap.leak()));
 
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::selectionRect(RECT* rc)
 {
-    WebCore::Frame* frame = m_page->focusController().focusedOrMainFrame();
+    WebCore::Frame& frame = m_page->focusController().focusedOrMainFrame();
 
-    if (frame) {
-        IntRect ir = enclosingIntRect(frame->selection().bounds());
-        ir = frame->view()->convertToContainingWindow(ir);
-        ir.move(-frame->view()->scrollOffset().width(), -frame->view()->scrollOffset().height());
-        rc->left = ir.x();
-        rc->top = ir.y();
-        rc->bottom = rc->top + ir.height();
-        rc->right = rc->left + ir.width();
-    }
+    IntRect ir = enclosingIntRect(frame.selection().bounds());
+    ir = frame.view()->convertToContainingWindow(ir);
+    ir.move(-frame.view()->scrollOffset().width(), -frame.view()->scrollOffset().height());
+    rc->left = ir.x();
+    rc->top = ir.y();
+    rc->bottom = rc->top + ir.height();
+    rc->right = rc->left + ir.width();
 
     return S_OK;
 }
@@ -3716,7 +3762,7 @@ HRESULT STDMETHODCALLTYPE WebView::selectedText(
 
     *text = 0;
 
-    Frame* focusedFrame = m_page ? m_page->focusController().focusedOrMainFrame() : 0;
+    Frame* focusedFrame = m_page ? &m_page->focusController().focusedOrMainFrame() : 0;
     if (!focusedFrame)
         return E_FAIL;
 
@@ -3870,7 +3916,7 @@ HRESULT STDMETHODCALLTYPE WebView::canGoBack(
         /* [in] */ IUnknown* /*sender*/,
         /* [retval][out] */ BOOL* result)
 {
-    *result = !!(m_page->backForwardList()->backItem() && !m_page->defersLoading());
+    *result = !!(m_page->backForwardClient()->backItem() && !m_page->defersLoading());
     return S_OK;
 }
     
@@ -3885,7 +3931,7 @@ HRESULT STDMETHODCALLTYPE WebView::canGoForward(
         /* [in] */ IUnknown* /*sender*/,
         /* [retval][out] */ BOOL* result)
 {
-    *result = !!(m_page->backForwardList()->forwardItem() && !m_page->defersLoading());
+    *result = !!(m_page->backForwardClient()->forwardItem() && !m_page->defersLoading());
     return S_OK;
 }
     
@@ -4298,14 +4344,14 @@ HRESULT STDMETHODCALLTYPE WebView::styleDeclarationWithText(
 HRESULT STDMETHODCALLTYPE WebView::hasSelectedRange( 
         /* [retval][out] */ BOOL* hasSelectedRange)
 {
-    *hasSelectedRange = m_page->mainFrame()->selection().isRange();
+    *hasSelectedRange = m_page->mainFrame().selection().isRange();
     return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::cutEnabled( 
         /* [retval][out] */ BOOL* enabled)
 {
-    Editor& editor = m_page->focusController().focusedOrMainFrame()->editor();
+    Editor& editor = m_page->focusController().focusedOrMainFrame().editor();
     *enabled = editor.canCut() || editor.canDHTMLCut();
     return S_OK;
 }
@@ -4313,7 +4359,7 @@ HRESULT STDMETHODCALLTYPE WebView::cutEnabled(
 HRESULT STDMETHODCALLTYPE WebView::copyEnabled( 
         /* [retval][out] */ BOOL* enabled)
 {
-    Editor& editor = m_page->focusController().focusedOrMainFrame()->editor();
+    Editor& editor = m_page->focusController().focusedOrMainFrame().editor();
     *enabled = editor.canCopy() || editor.canDHTMLCopy();
     return S_OK;
 }
@@ -4321,7 +4367,7 @@ HRESULT STDMETHODCALLTYPE WebView::copyEnabled(
 HRESULT STDMETHODCALLTYPE WebView::pasteEnabled( 
         /* [retval][out] */ BOOL* enabled)
 {
-    Editor& editor = m_page->focusController().focusedOrMainFrame()->editor();
+    Editor& editor = m_page->focusController().focusedOrMainFrame().editor();
     *enabled = editor.canPaste() || editor.canDHTMLPaste();
     return S_OK;
 }
@@ -4329,14 +4375,14 @@ HRESULT STDMETHODCALLTYPE WebView::pasteEnabled(
 HRESULT STDMETHODCALLTYPE WebView::deleteEnabled( 
         /* [retval][out] */ BOOL* enabled)
 {
-    *enabled = m_page->focusController().focusedOrMainFrame()->editor().canDelete();
+    *enabled = m_page->focusController().focusedOrMainFrame().editor().canDelete();
     return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::editingEnabled( 
         /* [retval][out] */ BOOL* enabled)
 {
-    *enabled = m_page->focusController().focusedOrMainFrame()->editor().canEdit();
+    *enabled = m_page->focusController().focusedOrMainFrame().editor().canEdit();
     return S_OK;
 }
 
@@ -4387,9 +4433,9 @@ HRESULT STDMETHODCALLTYPE WebView::replaceSelectionWithNode(
 HRESULT STDMETHODCALLTYPE WebView::replaceSelectionWithText( 
         /* [in] */ BSTR text)
 {
-    Position start = m_page->mainFrame()->selection().selection().start();
-    m_page->focusController().focusedOrMainFrame()->editor().insertText(toString(text), 0);
-    m_page->mainFrame()->selection().setBase(start);
+    Position start = m_page->mainFrame().selection().selection().start();
+    m_page->focusController().focusedOrMainFrame().editor().insertText(toString(text), 0);
+    m_page->mainFrame().selection().setBase(start);
     return S_OK;
 }
     
@@ -4409,14 +4455,14 @@ HRESULT STDMETHODCALLTYPE WebView::replaceSelectionWithArchive(
     
 HRESULT STDMETHODCALLTYPE WebView::deleteSelection( void)
 {
-    Editor& editor = m_page->focusController().focusedOrMainFrame()->editor();
+    Editor& editor = m_page->focusController().focusedOrMainFrame().editor();
     editor.deleteSelectionWithSmartDelete(editor.canSmartCopyOrDelete());
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::clearSelection( void)
 {
-    m_page->focusController().focusedOrMainFrame()->selection().clear();
+    m_page->focusController().focusedOrMainFrame().selection().clear();
     return S_OK;
 }
     
@@ -4432,28 +4478,28 @@ HRESULT STDMETHODCALLTYPE WebView::applyStyle(
 HRESULT STDMETHODCALLTYPE WebView::copy( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    m_page->focusController().focusedOrMainFrame()->editor().command("Copy").execute();
+    m_page->focusController().focusedOrMainFrame().editor().command("Copy").execute();
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::cut( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    m_page->focusController().focusedOrMainFrame()->editor().command("Cut").execute();
+    m_page->focusController().focusedOrMainFrame().editor().command("Cut").execute();
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::paste( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    m_page->focusController().focusedOrMainFrame()->editor().command("Paste").execute();
+    m_page->focusController().focusedOrMainFrame().editor().command("Paste").execute();
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::copyURL( 
         /* [in] */ BSTR url)
 {
-    m_page->focusController().focusedOrMainFrame()->editor().copyURL(MarshallingHelpers::BSTRToKURL(url), "");
+    m_page->focusController().focusedOrMainFrame().editor().copyURL(MarshallingHelpers::BSTRToKURL(url), "");
     return S_OK;
 }
 
@@ -4475,7 +4521,7 @@ HRESULT STDMETHODCALLTYPE WebView::pasteFont(
 HRESULT STDMETHODCALLTYPE WebView::delete_( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    m_page->focusController().focusedOrMainFrame()->editor().command("Delete").execute();
+    m_page->focusController().focusedOrMainFrame().editor().command("Delete").execute();
     return S_OK;
 }
     
@@ -4741,12 +4787,12 @@ HRESULT WebView::notifyPreferencesChanged(IWebNotification* notification)
     hr = preferences->isCSSRegionsEnabled(&enabled);
     if (FAILED(hr))
         return hr;
-    RuntimeEnabledFeatures::setCSSRegionsEnabled(!!enabled);
+    RuntimeEnabledFeatures::sharedFeatures().setCSSRegionsEnabled(!!enabled);
 
     hr = preferences->areSeamlessIFramesEnabled(&enabled);
     if (FAILED(hr))
         return hr;
-    RuntimeEnabledFeatures::setSeamlessIFramesEnabled(!!enabled);
+    RuntimeEnabledFeatures::sharedFeatures().setSeamlessIFramesEnabled(!!enabled);
 
     hr = preferences->privateBrowsingEnabled(&enabled);
     if (FAILED(hr))
@@ -4809,7 +4855,7 @@ HRESULT WebView::notifyPreferencesChanged(IWebNotification* notification)
         settings.setUserStyleSheetLocation(url.get());
         str.clear();
     } else
-        settings.setUserStyleSheetLocation(KURL());
+        settings.setUserStyleSheetLocation(URL());
 
     hr = preferences->shouldPrintBackgrounds(&enabled);
     if (FAILED(hr))
@@ -5135,7 +5181,7 @@ HRESULT STDMETHODCALLTYPE WebView::scrollOffset(
 {
     if (!offset)
         return E_POINTER;
-    IntSize offsetIntSize = m_page->mainFrame()->view()->scrollOffset();
+    IntSize offsetIntSize = m_page->mainFrame().view()->scrollOffset();
     offset->x = offsetIntSize.width();
     offset->y = offsetIntSize.height();
     return S_OK;
@@ -5146,7 +5192,7 @@ HRESULT STDMETHODCALLTYPE WebView::scrollBy(
 {
     if (!offset)
         return E_POINTER;
-    m_page->mainFrame()->view()->scrollBy(IntSize(offset->x, offset->y));
+    m_page->mainFrame().view()->scrollBy(IntSize(offset->x, offset->y));
     return S_OK;
 }
 
@@ -5155,7 +5201,7 @@ HRESULT STDMETHODCALLTYPE WebView::visibleContentRect(
 {
     if (!rect)
         return E_POINTER;
-    FloatRect visibleContent = m_page->mainFrame()->view()->visibleContentRect();
+    FloatRect visibleContent = m_page->mainFrame().view()->visibleContentRect();
     rect->left = (LONG) visibleContent.x();
     rect->top = (LONG) visibleContent.y();
     rect->right = (LONG) visibleContent.maxX();
@@ -5209,7 +5255,7 @@ HRESULT STDMETHODCALLTYPE WebView::DragEnter(
     ::ScreenToClient(m_viewWindow, (LPPOINT)&localpt);
     DragData data(pDataObject, IntPoint(localpt.x, localpt.y), 
         IntPoint(pt.x, pt.y), keyStateToDragOperation(grfKeyState));
-    *pdwEffect = dragOperationToDragCursor(m_page->dragController().dragEntered(&data).operation);
+    *pdwEffect = dragOperationToDragCursor(m_page->dragController().dragEntered(data).operation);
 
     m_lastDropEffect = *pdwEffect;
     m_dragData = pDataObject;
@@ -5228,7 +5274,7 @@ HRESULT STDMETHODCALLTYPE WebView::DragOver(
         ::ScreenToClient(m_viewWindow, (LPPOINT)&localpt);
         DragData data(m_dragData.get(), IntPoint(localpt.x, localpt.y), 
             IntPoint(pt.x, pt.y), keyStateToDragOperation(grfKeyState));
-        *pdwEffect = dragOperationToDragCursor(m_page->dragController().dragUpdated(&data).operation);
+        *pdwEffect = dragOperationToDragCursor(m_page->dragController().dragUpdated(data).operation);
     } else
         *pdwEffect = DROPEFFECT_NONE;
 
@@ -5244,7 +5290,7 @@ HRESULT STDMETHODCALLTYPE WebView::DragLeave()
     if (m_dragData) {
         DragData data(m_dragData.get(), IntPoint(), IntPoint(), 
             DragOperationNone);
-        m_page->dragController().dragExited(&data);
+        m_page->dragController().dragExited(data);
         m_dragData = 0;
     }
     return S_OK;
@@ -5262,7 +5308,7 @@ HRESULT STDMETHODCALLTYPE WebView::Drop(
     ::ScreenToClient(m_viewWindow, (LPPOINT)&localpt);
     DragData data(pDataObject, IntPoint(localpt.x, localpt.y), 
         IntPoint(pt.x, pt.y), keyStateToDragOperation(grfKeyState));
-    m_page->dragController().performDrag(&data);
+    m_page->dragController().performDrag(data);
     return S_OK;
 }
 
@@ -5311,8 +5357,8 @@ HRESULT STDMETHODCALLTYPE WebView::setInitialFocus(
     /* [in] */ BOOL forward)
 {
     if (m_page) {
-        Frame* frame = m_page->focusController().focusedOrMainFrame();
-        frame->document()->setFocusedElement(0);
+        Frame& frame = m_page->focusController().focusedOrMainFrame();
+        frame.document()->setFocusedElement(0);
         m_page->focusController().setInitialFocus(forward ? FocusDirectionForward : FocusDirectionBackward, 0);
     }
     return S_OK;
@@ -5364,30 +5410,30 @@ HRESULT STDMETHODCALLTYPE WebView::loadBackForwardListFromOtherView(
     // It turns out the right combination of behavior is done with the back/forward load
     // type.  (See behavior matrix at the top of WebFramePrivate.)  So we copy all the items
     // in the back forward list, and go to the current one.
-    BackForwardList* backForwardList = m_page->backForwardList();
-    ASSERT(!backForwardList->currentItem()); // destination list should be empty
+    BackForwardClient* backForwardClient = m_page->backForwardClient();
+    ASSERT(!backForwardClient->currentItem()); // destination list should be empty
 
     COMPtr<WebView> otherWebView;
     if (FAILED(otherView->QueryInterface(&otherWebView)))
         return E_FAIL;
-    BackForwardList* otherBackForwardList = otherWebView->m_page->backForwardList();
-    if (!otherBackForwardList->currentItem())
+    BackForwardClient* otherBackForwardClient = otherWebView->m_page->backForwardClient();
+    if (!otherBackForwardClient->currentItem())
         return S_OK; // empty back forward list, bail
     
     HistoryItem* newItemToGoTo = 0;
 
-    int lastItemIndex = otherBackForwardList->forwardListCount();
-    for (int i = -otherBackForwardList->backListCount(); i <= lastItemIndex; ++i) {
+    int lastItemIndex = otherBackForwardClient->forwardListCount();
+    for (int i = -otherBackForwardClient->backListCount(); i <= lastItemIndex; ++i) {
         if (!i) {
             // If this item is showing , save away its current scroll and form state,
             // since that might have changed since loading and it is normally not saved
             // until we leave that page.
-            otherWebView->m_page->mainFrame()->loader().history()->saveDocumentAndScrollState();
+            otherWebView->m_page->mainFrame().loader().history().saveDocumentAndScrollState();
         }
-        RefPtr<HistoryItem> newItem = otherBackForwardList->itemAtIndex(i)->copy();
+        RefPtr<HistoryItem> newItem = otherBackForwardClient->itemAtIndex(i)->copy();
         if (!i) 
             newItemToGoTo = newItem.get();
-        backForwardList->addItem(newItem.release());
+        backForwardClient->addItem(newItem.release());
     }
     
     ASSERT(newItemToGoTo);
@@ -5397,8 +5443,8 @@ HRESULT STDMETHODCALLTYPE WebView::loadBackForwardListFromOtherView(
 
 HRESULT STDMETHODCALLTYPE WebView::clearUndoRedoOperations()
 {
-    if (Frame* frame = m_page->focusController().focusedOrMainFrame())
-        frame->editor().clearUndoRedoOperations();
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
+    frame.editor().clearUndoRedoOperations();
     return S_OK;
 }
 
@@ -5410,9 +5456,7 @@ HRESULT STDMETHODCALLTYPE WebView::shouldClose(
         return E_POINTER;
     }
 
-    *result = TRUE;
-    if (Frame* frame = m_page->mainFrame())
-        *result = frame->loader().shouldClose();
+    *result = m_page->mainFrame().loader().shouldClose();
     return S_OK;
 }
 
@@ -5435,7 +5479,7 @@ HRESULT WebView::setProhibitsMainFrameScrolling(BOOL b)
     if (!m_page)
         return E_FAIL;
 
-    m_page->mainFrame()->view()->setProhibitsScrolling(b);
+    m_page->mainFrame().view()->setProhibitsScrolling(b);
     return S_OK;
 }
 
@@ -5541,13 +5585,9 @@ void WebView::resetIME(Frame* targetFrame)
 
 void WebView::updateSelectionForIME()
 {
-    Frame* targetFrame = m_page->focusController().focusedOrMainFrame();
-    
-    if (!targetFrame)
-        return;
-
-    if (!targetFrame->editor().cancelCompositionIfSelectionIsInvalid())
-        resetIME(targetFrame);
+    Frame& targetFrame = m_page->focusController().focusedOrMainFrame();
+    if (!targetFrame.editor().cancelCompositionIfSelectionIsInvalid())
+        resetIME(&targetFrame);
 }
 
 void WebView::setInputMethodState(bool enabled)
@@ -5564,12 +5604,10 @@ bool WebView::onIMEStartComposition()
 {
     LOG(TextInput, "onIMEStartComposition");
     m_inIMEComposition++;
-    Frame* targetFrame = m_page->focusController().focusedOrMainFrame();
-    if (!targetFrame)
-        return true;
+    Frame& targetFrame = m_page->focusController().focusedOrMainFrame();
 
     HIMC hInputContext = getIMMContext();
-    prepareCandidateWindow(targetFrame, hInputContext);
+    prepareCandidateWindow(&targetFrame, hInputContext);
     releaseIMMContext(hInputContext);
     return true;
 }
@@ -5701,18 +5739,18 @@ bool WebView::onIMEComposition(LPARAM lparam)
     if (!hInputContext)
         return true;
 
-    Frame* targetFrame = m_page->focusController().focusedOrMainFrame();
-    if (!targetFrame || !targetFrame->editor().canEdit())
+    Frame& targetFrame = m_page->focusController().focusedOrMainFrame();
+    if (!targetFrame.editor().canEdit())
         return true;
 
-    prepareCandidateWindow(targetFrame, hInputContext);
+    prepareCandidateWindow(&targetFrame, hInputContext);
 
     if (lparam & GCS_RESULTSTR || !lparam) {
         String compositionString;
         if (!getCompositionString(hInputContext, GCS_RESULTSTR, compositionString) && lparam)
             return true;
         
-        targetFrame->editor().confirmComposition(compositionString);
+        targetFrame.editor().confirmComposition(compositionString);
     } else {
         String compositionString;
         if (!getCompositionString(hInputContext, GCS_COMPSTR, compositionString))
@@ -5733,7 +5771,7 @@ bool WebView::onIMEComposition(LPARAM lparam)
 
         int cursorPosition = LOWORD(IMMDict::dict().getCompositionString(hInputContext, GCS_CURSORPOS, 0, 0));
 
-        targetFrame->editor().setComposition(compositionString, underlines, cursorPosition, 0);
+        targetFrame.editor().setComposition(compositionString, underlines, cursorPosition, 0);
     }
 
     return true;
@@ -5744,9 +5782,9 @@ bool WebView::onIMEEndComposition()
     LOG(TextInput, "onIMEEndComposition");
     // If the composition hasn't been confirmed yet, it needs to be cancelled.
     // This happens after deleting the last character from inline input hole.
-    Frame* targetFrame = m_page->focusController().focusedOrMainFrame();
-    if (targetFrame && targetFrame->editor().hasComposition())
-        targetFrame->editor().confirmComposition(String());
+    Frame& targetFrame = m_page->focusController().focusedOrMainFrame();
+    if (targetFrame.editor().hasComposition())
+        targetFrame.editor().confirmComposition(String());
 
     if (m_inIMEComposition)
         m_inIMEComposition--;
@@ -5810,16 +5848,16 @@ LRESULT WebView::onIMERequestReconvertString(Frame* targetFrame, RECONVERTSTRING
 LRESULT WebView::onIMERequest(WPARAM request, LPARAM data)
 {
     LOG(TextInput, "onIMERequest %s", imeRequestName(request).latin1().data());
-    Frame* targetFrame = m_page->focusController().focusedOrMainFrame();
-    if (!targetFrame || !targetFrame->editor().canEdit())
+    Frame& targetFrame = m_page->focusController().focusedOrMainFrame();
+    if (!targetFrame.editor().canEdit())
         return 0;
 
     switch (request) {
         case IMR_RECONVERTSTRING:
-            return onIMERequestReconvertString(targetFrame, (RECONVERTSTRING*)data);
+            return onIMERequestReconvertString(&targetFrame, (RECONVERTSTRING*)data);
 
         case IMR_QUERYCHARPOSITION:
-            return onIMERequestCharPosition(targetFrame, (IMECHARPOSITION*)data);
+            return onIMERequestCharPosition(&targetFrame, (IMECHARPOSITION*)data);
     }
     return 0;
 }
@@ -5976,7 +6014,7 @@ HRESULT STDMETHODCALLTYPE WebView::backingStore(
         return E_POINTER;
     if (!m_backingStoreBitmap)
         return E_FAIL;
-    *hBitmap = reinterpret_cast<OLE_HANDLE>(m_backingStoreBitmap->handle());
+    *hBitmap = reinterpret_cast<OLE_HANDLE>(m_backingStoreBitmap->get());
     return S_OK;
 }
 
@@ -6254,10 +6292,10 @@ HRESULT WebView::setCanStartPlugins(BOOL canStartPlugins)
 
 void WebView::enterFullscreenForNode(Node* node)
 {
-    if (!node->hasTagName(HTMLNames::videoTag) || !node->isElementNode())
+#if ENABLE(VIDEO)
+    if (!isHTMLVideoElement(node) || !node->isElementNode())
         return;
 
-#if ENABLE(VIDEO)
     if (!toElement(node)->isMediaElement())
         return;
     HTMLMediaElement* videoElement = toHTMLMediaElement(node);
@@ -6322,7 +6360,7 @@ HRESULT WebView::addUserScriptToGroup(BSTR groupName, IWebScriptWorld* iWorld, B
     if (!pageGroup)
         return E_FAIL;
 
-    pageGroup->addUserScriptToWorld(world->world(), toString(source), toKURL(url),
+    pageGroup->addUserScriptToWorld(world->world(), toString(source), toURL(url),
                                     toStringVector(whitelistCount, whitelist), toStringVector(blacklistCount, blacklist),
                                     injectionTime == WebInjectAtDocumentStart ? InjectAtDocumentStart : InjectAtDocumentEnd,
                                     InjectInAllFrames);
@@ -6347,7 +6385,7 @@ HRESULT WebView::addUserStyleSheetToGroup(BSTR groupName, IWebScriptWorld* iWorl
     if (!pageGroup)
         return E_FAIL;
 
-    pageGroup->addUserStyleSheetToWorld(world->world(), toString(source), toKURL(url),
+    pageGroup->addUserStyleSheetToWorld(world->world(), toString(source), toURL(url),
                                         toStringVector(whitelistCount, whitelist), toStringVector(blacklistCount, blacklist),
                                         InjectInAllFrames);
 
@@ -6369,7 +6407,7 @@ HRESULT WebView::removeUserScriptFromGroup(BSTR groupName, IWebScriptWorld* iWor
     if (!pageGroup)
         return E_FAIL;
 
-    pageGroup->removeUserScriptFromWorld(world->world(), toKURL(url));
+    pageGroup->removeUserScriptFromWorld(world->world(), toURL(url));
 
     return S_OK;
 }
@@ -6389,7 +6427,7 @@ HRESULT WebView::removeUserStyleSheetFromGroup(BSTR groupName, IWebScriptWorld* 
     if (!pageGroup)
         return E_FAIL;
 
-    pageGroup->removeUserStyleSheetFromWorld(world->world(), toKURL(url));
+    pageGroup->removeUserStyleSheetFromWorld(world->world(), toURL(url));
 
     return S_OK;
 }
@@ -6511,7 +6549,7 @@ HRESULT WebView::addVisitedLinks(BSTR* visitedURLs, unsigned visitedURLCount)
     return S_OK;
 }
 
-void WebView::downloadURL(const KURL& url)
+void WebView::downloadURL(const URL& url)
 {
     // It's the delegate's job to ref the WebDownload to keep it alive - otherwise it will be
     // destroyed when this function returns.
@@ -6530,13 +6568,16 @@ void WebView::setRootChildLayer(GraphicsLayer* layer)
 
 void WebView::flushPendingGraphicsLayerChangesSoon()
 {
+#if USE(CA)
     if (!m_layerTreeHost)
         return;
     m_layerTreeHost->flushPendingGraphicsLayerChangesSoon();
+#endif
 }
 
 void WebView::setAcceleratedCompositing(bool accelerated)
 {
+#if USE(CA)
     if (m_isAcceleratedCompositing == accelerated || !CACFLayerTreeHost::acceleratedCompositingAvailable())
         return;
 
@@ -6577,6 +6618,7 @@ void WebView::setAcceleratedCompositing(bool accelerated)
         m_backingLayer = nullptr;
         m_isAcceleratedCompositing = false;
     }
+#endif
 }
 #endif
 
@@ -6901,25 +6943,25 @@ void WebView::fullScreenClientSetParentWindow(HWND hostWindow)
 void WebView::fullScreenClientWillEnterFullScreen()
 {
     ASSERT(m_fullScreenElement);
-    m_fullScreenElement->document()->webkitWillEnterFullScreenForElement(m_fullScreenElement.get());
+    m_fullScreenElement->document().webkitWillEnterFullScreenForElement(m_fullScreenElement.get());
 }
 
 void WebView::fullScreenClientDidEnterFullScreen()
 {
     ASSERT(m_fullScreenElement);
-    m_fullScreenElement->document()->webkitDidEnterFullScreenForElement(m_fullScreenElement.get());
+    m_fullScreenElement->document().webkitDidEnterFullScreenForElement(m_fullScreenElement.get());
 }
 
 void WebView::fullScreenClientWillExitFullScreen()
 {
     ASSERT(m_fullScreenElement);
-    m_fullScreenElement->document()->webkitWillExitFullScreenForElement(m_fullScreenElement.get());
+    m_fullScreenElement->document().webkitWillExitFullScreenForElement(m_fullScreenElement.get());
 }
 
 void WebView::fullScreenClientDidExitFullScreen()
 {
     ASSERT(m_fullScreenElement);
-    m_fullScreenElement->document()->webkitDidExitFullScreenForElement(m_fullScreenElement.get());
+    m_fullScreenElement->document().webkitDidExitFullScreenForElement(m_fullScreenElement.get());
     m_fullScreenElement = nullptr;
 }
 
@@ -6957,15 +6999,15 @@ HRESULT STDMETHODCALLTYPE WebView::setCompositionForTesting(
     if (!m_page)
         return E_FAIL;
 
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
-    if (!frame || !frame->editor().canEdit())
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
+    if (!frame.editor().canEdit())
         return E_FAIL;
 
     String compositionStr = toString(composition);
 
     Vector<CompositionUnderline> underlines;
     underlines.append(CompositionUnderline(0, compositionStr.length(), Color(Color::black), false));
-    frame->editor().setComposition(compositionStr, underlines, from, from + length);
+    frame.editor().setComposition(compositionStr, underlines, from, from + length);
 
     return S_OK;
 }
@@ -6975,12 +7017,8 @@ HRESULT STDMETHODCALLTYPE WebView::hasCompositionForTesting(/* [out, retval] */ 
     if (!m_page)
         return E_FAIL;
 
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
-     if (!frame)
-        return E_FAIL;
-
-    *result = frame && frame->editor().hasComposition();
-
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
+    *result = frame.editor().hasComposition();
     return S_OK;
 }
 
@@ -6989,16 +7027,16 @@ HRESULT STDMETHODCALLTYPE WebView::confirmCompositionForTesting(/* [in] */ BSTR 
     if (!m_page)
         return E_FAIL;
 
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
-    if (!frame || !frame->editor().canEdit())
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
+    if (!frame.editor().canEdit())
         return E_FAIL;
 
     String compositionStr = toString(composition);
 
     if (compositionStr.isNull())
-        frame->editor().confirmComposition();
+        frame.editor().confirmComposition();
 
-    frame->editor().confirmComposition(compositionStr);
+    frame.editor().confirmComposition(compositionStr);
 
     return S_OK;
 }
@@ -7008,11 +7046,11 @@ HRESULT STDMETHODCALLTYPE WebView::compositionRangeForTesting(/* [out] */ UINT* 
     if (!m_page)
         return E_FAIL;
 
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
-    if (!frame || !frame->editor().canEdit())
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
+    if (!frame.editor().canEdit())
         return E_FAIL;
 
-    RefPtr<Range> range = frame->editor().compositionRange();
+    RefPtr<Range> range = frame.editor().compositionRange();
 
     if (!range)
         return E_FAIL;
@@ -7032,10 +7070,6 @@ HRESULT STDMETHODCALLTYPE WebView::firstRectForCharacterRangeForTesting(
     if (!m_page)
         return E_FAIL;
 
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
-    if (!frame)
-        return E_FAIL;
-
     IntRect resultIntRect;
     resultIntRect.setLocation(IntPoint(0, 0));
     resultIntRect.setSize(IntSize(0, 0));
@@ -7045,7 +7079,8 @@ HRESULT STDMETHODCALLTYPE WebView::firstRectForCharacterRangeForTesting(
     if (length > INT_MAX || location + length > INT_MAX)
         length = INT_MAX - location;
         
-    RefPtr<Range> range = TextIterator::rangeFromLocationAndLength(frame->selection().rootEditableElementOrDocumentElement(), location, length);
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
+    RefPtr<Range> range = TextIterator::rangeFromLocationAndLength(frame.selection().rootEditableElementOrDocumentElement(), location, length);
 
     if (!range)
         return E_FAIL;
@@ -7053,8 +7088,8 @@ HRESULT STDMETHODCALLTYPE WebView::firstRectForCharacterRangeForTesting(
     ASSERT(range->startContainer());
     ASSERT(range->endContainer());
      
-    IntRect rect = frame->editor().firstRectForRange(range.get());
-    resultIntRect = frame->view()->contentsToWindow(rect);
+    IntRect rect = frame.editor().firstRectForRange(range.get());
+    resultIntRect = frame.view()->contentsToWindow(rect);
 
     resultRect->left = resultIntRect.x();
     resultRect->top = resultIntRect.y();
@@ -7069,15 +7104,13 @@ HRESULT STDMETHODCALLTYPE WebView::selectedRangeForTesting(/* [out] */ UINT* loc
     if (!m_page)
         return E_FAIL;
 
-    Frame* frame = m_page->focusController().focusedOrMainFrame();
-    if (!frame)
-        return E_FAIL;
+    Frame& frame = m_page->focusController().focusedOrMainFrame();
 
-    RefPtr<Range> range = frame->editor().selectedRange();
+    RefPtr<Range> range = frame.editor().selectedRange();
 
     size_t locationSize;
     size_t lengthSize;
-    if (range && TextIterator::getLocationAndLengthFromRange(frame->selection().rootEditableElementOrDocumentElement(), range.get(), locationSize, lengthSize)) {
+    if (range && TextIterator::getLocationAndLengthFromRange(frame.selection().rootEditableElementOrDocumentElement(), range.get(), locationSize, lengthSize)) {
         *location = static_cast<UINT>(locationSize);
         *length = static_cast<UINT>(lengthSize);
     }

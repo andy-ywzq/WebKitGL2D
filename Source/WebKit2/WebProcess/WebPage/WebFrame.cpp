@@ -102,31 +102,36 @@ static uint64_t generateListenerID()
     return uniqueListenerID++;
 }
 
-PassRefPtr<WebFrame> WebFrame::createMainFrame(WebPage* page)
+PassRefPtr<WebFrame> WebFrame::createWithCoreMainFrame(WebPage* page, WebCore::Frame* coreFrame)
 {
-    RefPtr<WebFrame> frame = create();
-
+    RefPtr<WebFrame> frame = create(std::unique_ptr<WebFrameLoaderClient>(static_cast<WebFrameLoaderClient*>(&coreFrame->loader().client())));
     page->send(Messages::WebPageProxy::DidCreateMainFrame(frame->frameID()));
 
-    frame->init(page, String(), 0);
-
+    frame->m_coreFrame = coreFrame;
+    frame->m_coreFrame->tree().setName(String());
+    frame->m_coreFrame->init();
     return frame.release();
 }
 
 PassRefPtr<WebFrame> WebFrame::createSubframe(WebPage* page, const String& frameName, HTMLFrameOwnerElement* ownerElement)
 {
-    RefPtr<WebFrame> frame = create();
-
+    RefPtr<WebFrame> frame = create(std::make_unique<WebFrameLoaderClient>());
     page->send(Messages::WebPageProxy::DidCreateSubframe(frame->frameID()));
 
-    frame->init(page, frameName, ownerElement);
-
+    RefPtr<Frame> coreFrame = Frame::create(page->corePage(), ownerElement, frame->m_frameLoaderClient.get());
+    frame->m_coreFrame = coreFrame.get();
+    frame->m_coreFrame->tree().setName(frameName);
+    if (ownerElement) {
+        ASSERT(ownerElement->document().frame());
+        ownerElement->document().frame()->tree().appendChild(coreFrame.release());
+    }
+    frame->m_coreFrame->init();
     return frame.release();
 }
 
-PassRefPtr<WebFrame> WebFrame::create()
+PassRefPtr<WebFrame> WebFrame::create(std::unique_ptr<WebFrameLoaderClient> frameLoaderClient)
 {
-    RefPtr<WebFrame> frame = adoptRef(new WebFrame);
+    RefPtr<WebFrame> frame = adoptRef(new WebFrame(std::move(frameLoaderClient)));
 
     // Add explict ref() that will be balanced in WebFrameLoaderClient::frameLoaderDestroyed().
     frame->ref();
@@ -134,15 +139,16 @@ PassRefPtr<WebFrame> WebFrame::create()
     return frame.release();
 }
 
-WebFrame::WebFrame()
+WebFrame::WebFrame(std::unique_ptr<WebFrameLoaderClient> frameLoaderClient)
     : m_coreFrame(0)
     , m_policyListenerID(0)
     , m_policyFunction(0)
     , m_policyDownloadID(0)
-    , m_frameLoaderClient(this)
+    , m_frameLoaderClient(std::move(frameLoaderClient))
     , m_loadListener(0)
     , m_frameID(generateFrameID())
 {
+    m_frameLoaderClient->setWebFrame(this);
     WebProcess::shared().addWebFrame(m_frameID, this);
 
 #ifndef NDEBUG
@@ -157,21 +163,6 @@ WebFrame::~WebFrame()
 #ifndef NDEBUG
     webFrameCounter.decrement();
 #endif
-}
-
-void WebFrame::init(WebPage* page, const String& frameName, HTMLFrameOwnerElement* ownerElement)
-{
-    RefPtr<Frame> frame = Frame::create(page->corePage(), ownerElement, &m_frameLoaderClient);
-    m_coreFrame = frame.get();
-
-    frame->tree()->setName(frameName);
-
-    if (ownerElement) {
-        ASSERT(ownerElement->document()->frame());
-        ownerElement->document()->frame()->tree()->appendChild(frame);
-    }
-
-    frame->init();
 }
 
 WebPage* WebFrame::page() const
@@ -225,13 +216,12 @@ void WebFrame::didReceivePolicyDecision(uint64_t listenerID, PolicyAction action
 
     ASSERT(m_policyFunction);
 
-    FramePolicyFunction function = m_policyFunction;
+    FramePolicyFunction function = std::move(m_policyFunction);
 
     invalidatePolicyListener();
 
     m_policyDownloadID = downloadID;
-
-    (m_coreFrame->loader().policyChecker()->*function)(action);
+    function(action);
 }
 
 void WebFrame::startDownload(const WebCore::ResourceRequest& request)
@@ -311,7 +301,7 @@ String WebFrame::contentsAsString() const
 
     if (isFrameSet()) {
         StringBuilder builder;
-        for (Frame* child = m_coreFrame->tree()->firstChild(); child; child = child->tree()->nextSibling()) {
+        for (Frame* child = m_coreFrame->tree().firstChild(); child; child = child->tree().nextSibling()) {
             if (!builder.isEmpty())
                 builder.append(' ');
 
@@ -387,7 +377,7 @@ String WebFrame::name() const
     if (!m_coreFrame)
         return String();
 
-    return m_coreFrame->tree()->uniqueName();
+    return m_coreFrame->tree().uniqueName();
 }
 
 String WebFrame::url() const
@@ -415,10 +405,10 @@ String WebFrame::innerText() const
 
 WebFrame* WebFrame::parentFrame() const
 {
-    if (!m_coreFrame || !m_coreFrame->ownerElement() || !m_coreFrame->ownerElement()->document())
+    if (!m_coreFrame || !m_coreFrame->ownerElement())
         return 0;
 
-    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(m_coreFrame->ownerElement()->document()->frame()->loader().client());
+    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(m_coreFrame->ownerElement()->document().frame()->loader().client());
     return webFrameLoaderClient ? webFrameLoaderClient->webFrame() : 0;
 }
 
@@ -427,14 +417,14 @@ PassRefPtr<ImmutableArray> WebFrame::childFrames()
     if (!m_coreFrame)
         return ImmutableArray::create();
 
-    size_t size = m_coreFrame->tree()->childCount();
+    size_t size = m_coreFrame->tree().childCount();
     if (!size)
         return ImmutableArray::create();
 
     Vector<RefPtr<APIObject>> vector;
     vector.reserveInitialCapacity(size);
 
-    for (Frame* child = m_coreFrame->tree()->firstChild(); child; child = child->tree()->nextSibling()) {
+    for (Frame* child = m_coreFrame->tree().firstChild(); child; child = child->tree().nextSibling()) {
         WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(child->loader().client());
         WebFrame* webFrame = webFrameLoaderClient ? webFrameLoaderClient->webFrame() : 0;
         ASSERT(webFrame);
@@ -460,7 +450,7 @@ unsigned WebFrame::pendingUnloadCount() const
     return m_coreFrame->document()->domWindow()->pendingUnloadEventListeners();
 }
 
-bool WebFrame::allowsFollowingLink(const WebCore::KURL& url) const
+bool WebFrame::allowsFollowingLink(const WebCore::URL& url) const
 {
     if (!m_coreFrame)
         return true;
@@ -617,7 +607,7 @@ bool WebFrame::containsAnyFormControls() const
     for (Node* node = document->documentElement(); node; node = NodeTraversal::next(node)) {
         if (!node->isElementNode())
             continue;
-        if (isHTMLInputElement(node) || toElement(node)->hasTagName(HTMLNames::selectTag) || isHTMLTextAreaElement(node))
+        if (isHTMLInputElement(node) || isHTMLSelectElement(node) || isHTMLTextAreaElement(node))
             return true;
     }
     return false;
@@ -638,7 +628,7 @@ WebFrame* WebFrame::frameForContext(JSContextRef context)
     if (strcmp(globalObjectObj->classInfo()->className, "JSDOMWindowShell") != 0)
         return 0;
 
-    Frame* coreFrame = static_cast<JSDOMWindowShell*>(globalObjectObj)->window()->impl()->frame();
+    Frame* coreFrame = static_cast<JSDOMWindowShell*>(globalObjectObj)->window()->impl().frame();
 
     WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(coreFrame->loader().client());
     return webFrameLoaderClient ? webFrameLoaderClient->webFrame() : 0;
@@ -673,7 +663,7 @@ String WebFrame::counterValue(JSObjectRef element)
     if (!toJS(element)->inherits(JSElement::info()))
         return String();
 
-    return counterValueForElement(static_cast<JSElement*>(toJS(element))->impl());
+    return counterValueForElement(&static_cast<JSElement*>(toJS(element))->impl());
 }
 
 String WebFrame::provisionalURL() const
@@ -688,7 +678,7 @@ String WebFrame::provisionalURL() const
     return provisionalDocumentLoader->url().string();
 }
 
-String WebFrame::suggestedFilenameForResourceWithURL(const KURL& url) const
+String WebFrame::suggestedFilenameForResourceWithURL(const URL& url) const
 {
     if (!m_coreFrame)
         return String();
@@ -709,7 +699,7 @@ String WebFrame::suggestedFilenameForResourceWithURL(const KURL& url) const
     return page()->cachedSuggestedFilenameForURL(url);
 }
 
-String WebFrame::mimeTypeForResourceWithURL(const KURL& url) const
+String WebFrame::mimeTypeForResourceWithURL(const URL& url) const
 {
     if (!m_coreFrame)
         return String();

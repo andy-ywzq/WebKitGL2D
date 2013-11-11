@@ -122,6 +122,10 @@ PlatformWebView::PlatformWebView(WKContextRef context, WKPageGroupRef pageGroup,
 
     WKViewInitialize(m_view);
     WKViewSetSize(m_view, size);
+
+    WKRetainPtr<WKStringRef> useFixedLayoutKey(AdoptWK, WKStringCreateWithUTF8CString("UseFixedLayout"));
+    m_usingFixedLayout = options ? WKBooleanGetValue(static_cast<WKBooleanRef>(WKDictionaryGetItemForKey(options, useFixedLayoutKey.get()))) : false;
+    WKPageSetUseFixedLayout(WKViewGetPage(m_view), m_usingFixedLayout);
 }
 
 PlatformWebView::~PlatformWebView()
@@ -220,6 +224,13 @@ WKRetainPtr<WKImageRef> PlatformWebView::windowSnapshotImage()
 
 void PlatformWebView::didInitializeClients()
 {
+}
+
+bool PlatformWebView::viewSupportsOptions(WKDictionaryRef options) const
+{
+    WKRetainPtr<WKStringRef> useFixedLayoutKey(AdoptWK, WKStringCreateWithUTF8CString("UseFixedLayout"));
+
+    return m_usingFixedLayout == (options ? WKBooleanGetValue(static_cast<WKBooleanRef>(WKDictionaryGetItemForKey(options, useFixedLayoutKey.get()))) : false);
 }
 
 } // namespace WTR

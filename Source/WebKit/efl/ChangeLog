@@ -1,3 +1,254 @@
+2013-10-16  Jochen Eisinger  <jochen@chromium.org>
+
+        A page should exit fullscreen mode if it opens a new popup
+        https://bugs.webkit.org/show_bug.cgi?id=122865
+
+        Reviewed by Jer Noble.
+
+        If a fullscreen page opens a popup, the popup would be hidden and
+        therefore invisible to the user. To avoid this, exit fullscreen mode
+        before opening a new window.
+
+        * WebCoreSupport/ChromeClientEfl.cpp:
+        (WebCore::ChromeClientEfl::createWindow):
+
+2013-10-07  Sam Weinig  <sam@webkit.org>
+
+        Consolidate findString functions
+        https://bugs.webkit.org/show_bug.cgi?id=122480
+
+        Reviewed by Darin Adler.
+
+        * ewk/ewk_frame.cpp:
+        (ewk_frame_text_search):
+        * ewk/ewk_view.cpp:
+        (ewk_view_text_search):
+
+2013-10-07  Sam Weinig  <sam@webkit.org>
+
+        CTTE: Use references in and around DragController
+        https://bugs.webkit.org/show_bug.cgi?id=122427
+
+        Reviewed by Andreas Kling.
+
+        * WebCoreSupport/DragClientEfl.cpp:
+        (WebCore::DragClientEfl::willPerformDragDestinationAction):
+        (WebCore::DragClientEfl::willPerformDragSourceAction):
+        (WebCore::DragClientEfl::actionMaskForDrag):
+        (WebCore::DragClientEfl::startDrag):
+        * WebCoreSupport/DragClientEfl.h:
+
+2013-10-04  Anders Carlsson  <andersca@apple.com>
+
+        FramePolicyFunction should be an std::function
+        https://bugs.webkit.org/show_bug.cgi?id=122362
+
+        Reviewed by Darin Adler.
+
+        * WebCoreSupport/FrameLoaderClientEfl.cpp:
+        (WebCore::FrameLoaderClientEfl::callPolicyFunction):
+        (WebCore::FrameLoaderClientEfl::dispatchWillSubmitForm):
+        (WebCore::FrameLoaderClientEfl::dispatchDecidePolicyForResponse):
+        (WebCore::FrameLoaderClientEfl::dispatchDecidePolicyForNewWindowAction):
+        (WebCore::FrameLoaderClientEfl::dispatchDecidePolicyForNavigationAction):
+        * WebCoreSupport/FrameLoaderClientEfl.h:
+
+2013-10-03  Sam Weinig  <sam@webkit.org>
+
+        Remove shouldRubberBandInDirection from the WKBundlePageUIClient
+        https://bugs.webkit.org/show_bug.cgi?id=122309
+
+        Reviewed by Andreas Kling.
+
+        * WebCoreSupport/ChromeClientEfl.h:
+
+2013-10-01  Sam Weinig  <sam@webkit.org>
+
+        CTTE: DOMWrapperWorlds should be passed around by reference
+        https://bugs.webkit.org/show_bug.cgi?id=122206
+
+        Reviewed by Andreas Kling.
+
+        * WebCoreSupport/DumpRenderTreeSupportEfl.cpp:
+        (DumpRenderTreeSupportEfl::evaluateScriptInIsolatedWorld):
+        * WebCoreSupport/FrameLoaderClientEfl.cpp:
+        (WebCore::FrameLoaderClientEfl::dispatchDidClearWindowObjectInWorld):
+        * WebCoreSupport/FrameLoaderClientEfl.h:
+
+2013-09-30  Sam Weinig  <sam@webkit.org>
+
+        Fix the build.
+
+        * ewk/ewk_settings.cpp:
+
+2013-09-30  Sam Weinig  <sam@webkit.org>
+
+        Remove support for DOMFileSystem
+        https://bugs.webkit.org/show_bug.cgi?id=122137
+
+        Reviewed by Anders Carlsson.
+
+        * ewk/ewk_settings.cpp:
+        (ewk_settings_file_system_path_set):
+
+2013-09-28  Darin Adler  <darin@apple.com>
+
+        Add Frame::mainFrame and Frame::isMainFrame
+        https://bugs.webkit.org/show_bug.cgi?id=122064
+
+        Reviewed by Andreas Kling.
+
+        * WebCoreSupport/FrameLoaderClientEfl.cpp:
+        (WebCore::FrameLoaderClientEfl::dispatchWillSendRequest):
+        (WebCore::FrameLoaderClientEfl::assignIdentifierToInitialRequest):
+        (WebCore::FrameLoaderClientEfl::updateGlobalHistory):
+        Call isMainFrame.
+
+2013-09-26  Darin Adler  <darin@apple.com>
+
+        rename KURL to URL
+        https://bugs.webkit.org/show_bug.cgi?id=16214
+
+        Reviewed by Andreas Kling.
+
+        * many files: Renamed, using script.
+
+2013-09-27  Darin Adler  <darin@apple.com>
+
+        Add empty MainFrame class
+        https://bugs.webkit.org/show_bug.cgi?id=121770
+
+        Reviewed by Andreas Kling.
+
+        * WebCoreSupport/AcceleratedCompositingContextEfl.cpp:
+        * WebCoreSupport/InspectorClientEfl.cpp:
+        * ewk/ewk_view.cpp:
+        Include MainFrame.h instead of Frame.h as needed.
+
+2013-09-25  Brent Fulgham  <bfulgham@apple.com>
+
+        Refactor RuntimeEnabledFeatures as a Singleton.
+        https://bugs.webkit.org/show_bug.cgi?id=121883.
+
+        Reviewed by Jer Noble.
+
+        * WebCoreSupport/DumpRenderTreeSupportEfl.cpp:
+        (DumpRenderTreeSupportEfl::setCSSRegionsEnabled): Use singleton.
+        (DumpRenderTreeSupportEfl::setSeamlessIFramesEnabled): Ditto.
+        * ewk/ewk_settings.cpp:
+        (ewk_settings_shadow_dom_enable_get): Ditto.
+        (ewk_settings_shadow_dom_enable_set):
+        * ewk/ewk_view.cpp:
+        (_ewk_view_priv_new): Ditto.
+
+2013-09-20  Mario Sanchez Prada  <mario.prada@samsung.com>
+
+        [ATK] Do not expose aria-help in ATK based platforms
+        https://bugs.webkit.org/show_bug.cgi?id=121675
+
+        Reviewed by Chris Fleizach.
+
+        Removed accessibilityHelpText() helper method from
+        DumpRenderSupportEfl's API, since it's not longer needed.
+
+        * WebCoreSupport/DumpRenderTreeSupportEfl.cpp: Removed method.
+        * WebCoreSupport/DumpRenderTreeSupportEfl.h: Ditto.
+
+2013-09-16  Enrica Casucci  <enrica@apple.com>
+
+        Remove unused function didSetSelectionTypesForPasteboard from EditorClient.
+        https://bugs.webkit.org/show_bug.cgi?id=121464
+
+        Reviewed by Darin Adler.
+
+        * WebCoreSupport/EditorClientEfl.cpp:
+        * WebCoreSupport/EditorClientEfl.h:
+
+2013-09-12  Mikhail Pozdnyakov  <mikhail.pozdnyakov@intel.com>
+
+        Remove home-brewed nullptr
+        https://bugs.webkit.org/show_bug.cgi?id=119624
+
+        Reviewed by Anders Carlsson.
+
+        The standard C++11 nullptr and std::nullptr_t type should be used now.
+
+        * tests/UnitTestUtils/EWKTestView.cpp:
+
+2013-09-10  Marcelo Morais  <m.morais@samsung.com>
+
+        [EFL] WebInspector: Move to new webinspector
+        https://bugs.webkit.org/show_bug.cgi?id=119559
+
+        Reviewed by Gyuyoung Kim.
+
+        Loading the new Web Inspector page instead of the old inspector.
+        Co-author: Andre Loureiro <andre.vl@samsung.com>
+
+        * WebCoreSupport/InspectorClientEfl.cpp:
+        (WebCore::InspectorClientEfl::openInspectorFrontend):
+
+2013-09-05  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [CMAKE] Add c++0x into CXX_FLAGS as a default
+        https://bugs.webkit.org/show_bug.cgi?id=120812
+
+        Unreviewed build fix for EFL ports.
+
+        * tests/UnitTestUtils/EWKTestConfig.h: Add space between strings.
+
+2013-08-28  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL] Let Page create the main Frame
+        https://bugs.webkit.org/show_bug.cgi?id=120360
+
+        Reviewed by Darin Adler.
+
+        Page always creates the main Frame by itself after r154616.
+        This patch follows the changes for WebKit/Efl like other ports.
+
+        * WebCoreSupport/FrameLoaderClientEfl.cpp:
+        (WebCore::FrameLoaderClientEfl::createFrame):
+        Moved the logic of ewk_view_frame_create.
+        * ewk/ewk_frame.cpp:
+        (ewk_frame_init):
+        (ewk_frame_child_add):
+        Moved construction logic of Frame and FrameLoderClientEfl from ewk_view.
+        (EWKPrivate::setCoreFrame):
+        * ewk/ewk_frame_private.h:
+        * ewk/ewk_view.cpp: Removed _ewk_view_core_frame_new.
+        (_ewk_view_priv_new):
+        (_ewk_view_smart_add):
+        (ewk_view_frame_rect_changed):
+        * ewk/ewk_view_private.h:
+
+2013-08-24  Darin Adler  <darin@apple.com>
+
+        Frame::tree should return a reference instead of a pointer
+        https://bugs.webkit.org/show_bug.cgi?id=120259
+
+        Reviewed by Andreas Kling.
+
+        * WebCoreSupport/DumpRenderTreeSupportEfl.cpp:
+        (DumpRenderTreeSupportEfl::clearFrameName):
+        (DumpRenderTreeSupportEfl::frameChildren):
+        (DumpRenderTreeSupportEfl::frameParent):
+        * ewk/ewk_frame.cpp:
+        (_ewk_frame_children_iterator_next):
+        (ewk_frame_child_find):
+        (ewk_frame_name_get):
+        (ewk_frame_child_add):
+        * ewk/ewk_view.cpp:
+        (ewk_view_frame_create):
+        Use tree(). instead of tree()->.
+
+2013-08-22  Andreas Kling  <akling@apple.com>
+
+        EFL build juice.
+
+        * WebCoreSupport/ChromeClientEfl.cpp:
+        (kit):
+
 2013-08-20  Pratik Solanki  <psolanki@apple.com>
 
         <https://webkit.org/b/120029> Document::markers() should return a reference

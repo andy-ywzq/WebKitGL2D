@@ -61,6 +61,7 @@
 
 #include <wtf/CurrentTime.h>
 #include <wtf/HashSet.h>
+#include <wtf/Ref.h>
 #include <wtf/Vector.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/StringConcatenate.h>
@@ -212,7 +213,7 @@ inline void SelectorProfile::commitSelectorTime()
 
 PassRefPtr<TypeBuilder::CSS::SelectorProfile> SelectorProfile::toInspectorObject() const
 {
-    RefPtr<TypeBuilder::Array<TypeBuilder::CSS::SelectorProfileEntry> > selectorProfileData = TypeBuilder::Array<TypeBuilder::CSS::SelectorProfileEntry>::create();
+    RefPtr<TypeBuilder::Array<TypeBuilder::CSS::SelectorProfileEntry>> selectorProfileData = TypeBuilder::Array<TypeBuilder::CSS::SelectorProfileEntry>::create();
     for (RuleMatchingStatsMap::const_iterator it = m_ruleMatchingStats.begin(); it != m_ruleMatchingStats.end(); ++it) {
         RefPtr<TypeBuilder::CSS::SelectorProfileEntry> entry = TypeBuilder::CSS::SelectorProfileEntry::create()
             .setSelector(it->value.selector)
@@ -272,7 +273,7 @@ void UpdateRegionLayoutTask::reset()
 void UpdateRegionLayoutTask::onTimer(Timer<UpdateRegionLayoutTask>*)
 {
     // The timer is stopped on m_cssAgent destruction, so this method will never be called after m_cssAgent has been destroyed.
-    Vector<std::pair<WebKitNamedFlow*, int> > namedFlows;
+    Vector<std::pair<WebKitNamedFlow*, int>> namedFlows;
 
     for (HashMap<WebKitNamedFlow*, int>::iterator it = m_namedFlows.begin(), end = m_namedFlows.end(); it != end; ++it)
         namedFlows.append(std::make_pair(it->key, it->value));
@@ -747,7 +748,7 @@ void InspectorCSSAgent::regionLayoutUpdated(WebKitNamedFlow* namedFlow, int docu
         return;
 
     ErrorString errorString;
-    RefPtr<WebKitNamedFlow> protector(namedFlow);
+    Ref<WebKitNamedFlow> protect(*namedFlow);
 
     m_frontend->regionLayoutUpdated(buildObjectForNamedFlow(&errorString, namedFlow, documentNodeId));
 }
@@ -769,9 +770,32 @@ void InspectorCSSAgent::regionOversetChanged(WebKitNamedFlow* namedFlow, int doc
         return;
     
     ErrorString errorString;
-    RefPtr<WebKitNamedFlow> protector(namedFlow);
+    Ref<WebKitNamedFlow> protect(*namedFlow);
     
     m_frontend->regionOversetChanged(buildObjectForNamedFlow(&errorString, namedFlow, documentNodeId));
+}
+
+void InspectorCSSAgent::didRegisterNamedFlowContentElement(Document* document, WebKitNamedFlow* namedFlow, Node* contentElement, Node* nextContentElement)
+{
+    int documentNodeId = documentNodeWithRequestedFlowsId(document);
+    if (!documentNodeId)
+        return;
+
+    ErrorString errorString;
+    int contentElementNodeId = m_domAgent->pushNodeToFrontend(&errorString, documentNodeId, contentElement);
+    int nextContentElementNodeId = nextContentElement ? m_domAgent->pushNodeToFrontend(&errorString, documentNodeId, nextContentElement) : 0;
+    m_frontend->registeredNamedFlowContentElement(documentNodeId, namedFlow->name().string(), contentElementNodeId, nextContentElementNodeId);
+}
+
+void InspectorCSSAgent::didUnregisterNamedFlowContentElement(Document* document, WebKitNamedFlow* namedFlow, Node* contentElement)
+{
+    int documentNodeId = documentNodeWithRequestedFlowsId(document);
+    if (!documentNodeId)
+        return;
+
+    ErrorString errorString;
+    int contentElementNodeId = m_domAgent->pushNodeToFrontend(&errorString, documentNodeId, contentElement);
+    m_frontend->unregisteredNamedFlowContentElement(documentNodeId, namedFlow->name().string(), contentElementNodeId);
 }
 
 bool InspectorCSSAgent::forcePseudoState(Element* element, CSSSelector::PseudoType pseudoType)
@@ -802,22 +826,22 @@ bool InspectorCSSAgent::forcePseudoState(Element* element, CSSSelector::PseudoTy
     }
 }
 
-void InspectorCSSAgent::getMatchedStylesForNode(ErrorString* errorString, int nodeId, const bool* includePseudo, const bool* includeInherited, RefPtr<TypeBuilder::Array<TypeBuilder::CSS::RuleMatch> >& matchedCSSRules, RefPtr<TypeBuilder::Array<TypeBuilder::CSS::PseudoIdMatches> >& pseudoIdMatches, RefPtr<TypeBuilder::Array<TypeBuilder::CSS::InheritedStyleEntry> >& inheritedEntries)
+void InspectorCSSAgent::getMatchedStylesForNode(ErrorString* errorString, int nodeId, const bool* includePseudo, const bool* includeInherited, RefPtr<TypeBuilder::Array<TypeBuilder::CSS::RuleMatch>>& matchedCSSRules, RefPtr<TypeBuilder::Array<TypeBuilder::CSS::PseudoIdMatches>>& pseudoIdMatches, RefPtr<TypeBuilder::Array<TypeBuilder::CSS::InheritedStyleEntry>>& inheritedEntries)
 {
     Element* element = elementForId(errorString, nodeId);
     if (!element)
         return;
 
     // Matched rules.
-    StyleResolver& styleResolver = element->document()->ensureStyleResolver();
-    Vector<RefPtr<StyleRuleBase> > matchedRules = styleResolver.styleRulesForElement(element, StyleResolver::AllCSSRules);
+    StyleResolver& styleResolver = element->document().ensureStyleResolver();
+    Vector<RefPtr<StyleRuleBase>> matchedRules = styleResolver.styleRulesForElement(element, StyleResolver::AllCSSRules);
     matchedCSSRules = buildArrayForMatchedRuleList(matchedRules, styleResolver, element);
 
     // Pseudo elements.
     if (!includePseudo || *includePseudo) {
-        RefPtr<TypeBuilder::Array<TypeBuilder::CSS::PseudoIdMatches> > pseudoElements = TypeBuilder::Array<TypeBuilder::CSS::PseudoIdMatches>::create();
+        RefPtr<TypeBuilder::Array<TypeBuilder::CSS::PseudoIdMatches>> pseudoElements = TypeBuilder::Array<TypeBuilder::CSS::PseudoIdMatches>::create();
         for (PseudoId pseudoId = FIRST_PUBLIC_PSEUDOID; pseudoId < AFTER_LAST_INTERNAL_PSEUDOID; pseudoId = static_cast<PseudoId>(pseudoId + 1)) {
-            Vector<RefPtr<StyleRuleBase> > matchedRules = styleResolver.pseudoStyleRulesForElement(element, pseudoId, StyleResolver::AllCSSRules);
+            Vector<RefPtr<StyleRuleBase>> matchedRules = styleResolver.pseudoStyleRulesForElement(element, pseudoId, StyleResolver::AllCSSRules);
             if (!matchedRules.isEmpty()) {
                 RefPtr<TypeBuilder::CSS::PseudoIdMatches> matches = TypeBuilder::CSS::PseudoIdMatches::create()
                     .setPseudoId(static_cast<int>(pseudoId))
@@ -831,11 +855,11 @@ void InspectorCSSAgent::getMatchedStylesForNode(ErrorString* errorString, int no
 
     // Inherited styles.
     if (!includeInherited || *includeInherited) {
-        RefPtr<TypeBuilder::Array<TypeBuilder::CSS::InheritedStyleEntry> > entries = TypeBuilder::Array<TypeBuilder::CSS::InheritedStyleEntry>::create();
+        RefPtr<TypeBuilder::Array<TypeBuilder::CSS::InheritedStyleEntry>> entries = TypeBuilder::Array<TypeBuilder::CSS::InheritedStyleEntry>::create();
         Element* parentElement = element->parentElement();
         while (parentElement) {
-            StyleResolver& parentStyleResolver = parentElement->document()->ensureStyleResolver();
-            Vector<RefPtr<StyleRuleBase> > parentMatchedRules = parentStyleResolver.styleRulesForElement(parentElement, StyleResolver::AllCSSRules);
+            StyleResolver& parentStyleResolver = parentElement->document().ensureStyleResolver();
+            Vector<RefPtr<StyleRuleBase>> parentMatchedRules = parentStyleResolver.styleRulesForElement(parentElement, StyleResolver::AllCSSRules);
             RefPtr<TypeBuilder::CSS::InheritedStyleEntry> entry = TypeBuilder::CSS::InheritedStyleEntry::create()
                 .setMatchedCSSRules(buildArrayForMatchedRuleList(parentMatchedRules, styleResolver, parentElement));
             if (parentElement->style() && parentElement->style()->length()) {
@@ -867,7 +891,7 @@ void InspectorCSSAgent::getInlineStylesForNode(ErrorString* errorString, int nod
     attributesStyle = attributes ? attributes.release() : 0;
 }
 
-void InspectorCSSAgent::getComputedStyleForNode(ErrorString* errorString, int nodeId, RefPtr<TypeBuilder::Array<TypeBuilder::CSS::CSSComputedStyleProperty> >& style)
+void InspectorCSSAgent::getComputedStyleForNode(ErrorString* errorString, int nodeId, RefPtr<TypeBuilder::Array<TypeBuilder::CSS::CSSComputedStyleProperty>>& style)
 {
     Element* element = elementForId(errorString, nodeId);
     if (!element)
@@ -878,7 +902,7 @@ void InspectorCSSAgent::getComputedStyleForNode(ErrorString* errorString, int no
     style = inspectorStyle->buildArrayForComputedStyle();
 }
 
-void InspectorCSSAgent::getAllStyleSheets(ErrorString*, RefPtr<TypeBuilder::Array<TypeBuilder::CSS::CSSStyleSheetHeader> >& styleInfos)
+void InspectorCSSAgent::getAllStyleSheets(ErrorString*, RefPtr<TypeBuilder::Array<TypeBuilder::CSS::CSSStyleSheetHeader>>& styleInfos)
 {
     styleInfos = TypeBuilder::Array<TypeBuilder::CSS::CSSStyleSheetHeader>::create();
     Vector<Document*> documents = m_domAgent->documents();
@@ -992,7 +1016,7 @@ void InspectorCSSAgent::addRule(ErrorString* errorString, const int contextNodeI
     if (!node)
         return;
 
-    InspectorStyleSheet* inspectorStyleSheet = viaInspectorStyleSheet(node->document(), true);
+    InspectorStyleSheet* inspectorStyleSheet = viaInspectorStyleSheet(&node->document(), true);
     if (!inspectorStyleSheet) {
         *errorString = "No target stylesheet found";
         return;
@@ -1012,9 +1036,9 @@ void InspectorCSSAgent::addRule(ErrorString* errorString, const int contextNodeI
     result = inspectorStyleSheet->buildObjectForRule(rule);
 }
 
-void InspectorCSSAgent::getSupportedCSSProperties(ErrorString*, RefPtr<TypeBuilder::Array<TypeBuilder::CSS::CSSPropertyInfo> >& cssProperties)
+void InspectorCSSAgent::getSupportedCSSProperties(ErrorString*, RefPtr<TypeBuilder::Array<TypeBuilder::CSS::CSSPropertyInfo>>& cssProperties)
 {
-    RefPtr<TypeBuilder::Array<TypeBuilder::CSS::CSSPropertyInfo> > properties = TypeBuilder::Array<TypeBuilder::CSS::CSSPropertyInfo>::create();
+    RefPtr<TypeBuilder::Array<TypeBuilder::CSS::CSSPropertyInfo>> properties = TypeBuilder::Array<TypeBuilder::CSS::CSSPropertyInfo>::create();
     for (int i = firstCSSProperty; i <= lastCSSProperty; ++i) {
         CSSPropertyID id = convertToCSSPropertyID(i);
         RefPtr<TypeBuilder::CSS::CSSPropertyInfo> property = TypeBuilder::CSS::CSSPropertyInfo::create()
@@ -1025,7 +1049,7 @@ void InspectorCSSAgent::getSupportedCSSProperties(ErrorString*, RefPtr<TypeBuild
             properties->addItem(property.release());
             continue;
         }
-        RefPtr<TypeBuilder::Array<String> > longhands = TypeBuilder::Array<String>::create();
+        RefPtr<TypeBuilder::Array<String>> longhands = TypeBuilder::Array<String>::create();
         for (unsigned j = 0; j < shorthand.length(); ++j) {
             CSSPropertyID longhandID = shorthand.properties()[j];
             longhands->addItem(getPropertyNameString(longhandID));
@@ -1053,10 +1077,10 @@ void InspectorCSSAgent::forcePseudoState(ErrorString* errorString, int nodeId, c
         m_nodeIdToForcedPseudoState.set(nodeId, forcedPseudoState);
     else
         m_nodeIdToForcedPseudoState.remove(nodeId);
-    element->document()->styleResolverChanged(RecalcStyleImmediately);
+    element->document().styleResolverChanged(RecalcStyleImmediately);
 }
 
-void InspectorCSSAgent::getNamedFlowCollection(ErrorString* errorString, int documentNodeId, RefPtr<TypeBuilder::Array<TypeBuilder::CSS::NamedFlow> >& result)
+void InspectorCSSAgent::getNamedFlowCollection(ErrorString* errorString, int documentNodeId, RefPtr<TypeBuilder::Array<TypeBuilder::CSS::NamedFlow>>& result)
 {
     Document* document = m_domAgent->assertDocument(errorString, documentNodeId);
     if (!document)
@@ -1064,10 +1088,10 @@ void InspectorCSSAgent::getNamedFlowCollection(ErrorString* errorString, int doc
 
     m_namedFlowCollectionsRequested.add(documentNodeId);
 
-    Vector<RefPtr<WebKitNamedFlow> > namedFlowsVector = document->namedFlows()->namedFlows();
-    RefPtr<TypeBuilder::Array<TypeBuilder::CSS::NamedFlow> > namedFlows = TypeBuilder::Array<TypeBuilder::CSS::NamedFlow>::create();
+    Vector<RefPtr<WebKitNamedFlow>> namedFlowsVector = document->namedFlows()->namedFlows();
+    RefPtr<TypeBuilder::Array<TypeBuilder::CSS::NamedFlow>> namedFlows = TypeBuilder::Array<TypeBuilder::CSS::NamedFlow>::create();
 
-    for (Vector<RefPtr<WebKitNamedFlow> >::iterator it = namedFlowsVector.begin(); it != namedFlowsVector.end(); ++it)
+    for (Vector<RefPtr<WebKitNamedFlow>>::iterator it = namedFlowsVector.begin(); it != namedFlowsVector.end(); ++it)
         namedFlows->addItem(buildObjectForNamedFlow(errorString, it->get(), documentNodeId));
 
     result = namedFlows.release();
@@ -1096,7 +1120,7 @@ PassRefPtr<TypeBuilder::CSS::SelectorProfile> InspectorCSSAgent::stopSelectorPro
     return result.release();
 }
 
-void InspectorCSSAgent::willMatchRule(StyleRule* rule, InspectorCSSOMWrappers& inspectorCSSOMWrappers, DocumentStyleSheetCollection* styleSheetCollection)
+void InspectorCSSAgent::willMatchRule(StyleRule* rule, InspectorCSSOMWrappers& inspectorCSSOMWrappers, DocumentStyleSheetCollection& styleSheetCollection)
 {
 //    printf("InspectorCSSAgent::willMatchRule %s\n", rule->selectorList().selectorsText().utf8().data());
     if (m_currentSelectorProfile)
@@ -1112,7 +1136,7 @@ void InspectorCSSAgent::didMatchRule(bool matched)
 void InspectorCSSAgent::willProcessRule(StyleRule* rule, StyleResolver& styleResolver)
 {
     if (m_currentSelectorProfile)
-        m_currentSelectorProfile->startSelector(styleResolver.inspectorCSSOMWrappers().getWrapperForRuleInSheets(rule, styleResolver.document()->styleSheetCollection()));
+        m_currentSelectorProfile->startSelector(styleResolver.inspectorCSSOMWrappers().getWrapperForRuleInSheets(rule, styleResolver.document().styleSheetCollection()));
 }
 
 void InspectorCSSAgent::didProcessRule()
@@ -1146,7 +1170,7 @@ Element* InspectorCSSAgent::elementForId(ErrorString* errorString, int nodeId)
         *errorString = "No node with given id found";
         return 0;
     }
-    if (node->nodeType() != Node::ELEMENT_NODE) {
+    if (!node->isElementNode()) {
         *errorString = "Not an element node";
         return 0;
     }
@@ -1228,7 +1252,7 @@ InspectorStyleSheet* InspectorCSSAgent::viaInspectorStyleSheet(Document* documen
         cssStyleSheet = toHTMLStyleElement(styleElement.get())->sheet();
 #if ENABLE(SVG)
     else if (styleElement->isSVGElement())
-        cssStyleSheet = static_cast<SVGStyleElement*>(styleElement.get())->sheet();
+        cssStyleSheet = toSVGStyleElement(styleElement.get())->sheet();
 #endif
 
     if (!cssStyleSheet)
@@ -1256,7 +1280,7 @@ TypeBuilder::CSS::StyleSheetOrigin::Enum InspectorCSSAgent::detectOrigin(CSSStyl
 {
     TypeBuilder::CSS::StyleSheetOrigin::Enum origin = TypeBuilder::CSS::StyleSheetOrigin::Regular;
     if (pageStyleSheet && !pageStyleSheet->ownerNode() && pageStyleSheet->href().isEmpty())
-        origin = TypeBuilder::CSS::StyleSheetOrigin::User_agent;
+        origin = TypeBuilder::CSS::StyleSheetOrigin::UserAgent;
     else if (pageStyleSheet && pageStyleSheet->ownerNode() && pageStyleSheet->ownerNode()->nodeName() == "#document")
         origin = TypeBuilder::CSS::StyleSheetOrigin::User;
     else {
@@ -1274,7 +1298,7 @@ PassRefPtr<TypeBuilder::CSS::CSSRule> InspectorCSSAgent::buildObjectForRule(Styl
 
     // StyleRules returned by StyleResolver::styleRulesForElement lack parent pointers since that infomation is not cheaply available.
     // Since the inspector wants to walk the parent chain, we construct the full wrappers here.
-    CSSStyleRule* cssomWrapper = styleResolver.inspectorCSSOMWrappers().getWrapperForRuleInSheets(styleRule, styleResolver.document()->styleSheetCollection());
+    CSSStyleRule* cssomWrapper = styleResolver.inspectorCSSOMWrappers().getWrapperForRuleInSheets(styleRule, styleResolver.document().styleSheetCollection());
     if (!cssomWrapper)
         return 0;
     InspectorStyleSheet* inspectorStyleSheet = bindStyleSheet(cssomWrapper->parentStyleSheet());
@@ -1291,9 +1315,9 @@ PassRefPtr<TypeBuilder::CSS::CSSRule> InspectorCSSAgent::buildObjectForRule(CSSS
     return inspectorStyleSheet ? inspectorStyleSheet->buildObjectForRule(rule) : 0;
 }
 
-PassRefPtr<TypeBuilder::Array<TypeBuilder::CSS::CSSRule> > InspectorCSSAgent::buildArrayForRuleList(CSSRuleList* ruleList)
+PassRefPtr<TypeBuilder::Array<TypeBuilder::CSS::CSSRule>> InspectorCSSAgent::buildArrayForRuleList(CSSRuleList* ruleList)
 {
-    RefPtr<TypeBuilder::Array<TypeBuilder::CSS::CSSRule> > result = TypeBuilder::Array<TypeBuilder::CSS::CSSRule>::create();
+    RefPtr<TypeBuilder::Array<TypeBuilder::CSS::CSSRule>> result = TypeBuilder::Array<TypeBuilder::CSS::CSSRule>::create();
     if (!ruleList)
         return result.release();
 
@@ -1307,9 +1331,9 @@ PassRefPtr<TypeBuilder::Array<TypeBuilder::CSS::CSSRule> > InspectorCSSAgent::bu
     return result.release();
 }
 
-PassRefPtr<TypeBuilder::Array<TypeBuilder::CSS::RuleMatch> > InspectorCSSAgent::buildArrayForMatchedRuleList(const Vector<RefPtr<StyleRuleBase> >& matchedRules, StyleResolver& styleResolver, Element* element)
+PassRefPtr<TypeBuilder::Array<TypeBuilder::CSS::RuleMatch>> InspectorCSSAgent::buildArrayForMatchedRuleList(const Vector<RefPtr<StyleRuleBase>>& matchedRules, StyleResolver& styleResolver, Element* element)
 {
-    RefPtr<TypeBuilder::Array<TypeBuilder::CSS::RuleMatch> > result = TypeBuilder::Array<TypeBuilder::CSS::RuleMatch>::create();
+    RefPtr<TypeBuilder::Array<TypeBuilder::CSS::RuleMatch>> result = TypeBuilder::Array<TypeBuilder::CSS::RuleMatch>::create();
 
     for (unsigned i = 0; i < matchedRules.size(); ++i) {
         if (!matchedRules[i]->isStyleRule())
@@ -1318,7 +1342,7 @@ PassRefPtr<TypeBuilder::Array<TypeBuilder::CSS::RuleMatch> > InspectorCSSAgent::
         RefPtr<TypeBuilder::CSS::CSSRule> ruleObject = buildObjectForRule(matchedStyleRule, styleResolver);
         if (!ruleObject)
             continue;
-        RefPtr<TypeBuilder::Array<int> > matchingSelectors = TypeBuilder::Array<int>::create();
+        RefPtr<TypeBuilder::Array<int>> matchingSelectors = TypeBuilder::Array<int>::create();
         const CSSSelectorList& selectorList = matchedStyleRule->selectorList();
         long index = 0;
         for (const CSSSelector* selector = selectorList.first(); selector; selector = CSSSelectorList::next(selector)) {
@@ -1346,16 +1370,16 @@ PassRefPtr<TypeBuilder::CSS::CSSStyle> InspectorCSSAgent::buildObjectForAttribut
     if (!attributeStyle)
         return 0;
 
-    ASSERT(attributeStyle->isMutable());
+    ASSERT_WITH_SECURITY_IMPLICATION(attributeStyle->isMutable());
     MutableStylePropertySet* mutableAttributeStyle = static_cast<MutableStylePropertySet*>(attributeStyle);
 
     RefPtr<InspectorStyle> inspectorStyle = InspectorStyle::create(InspectorCSSId(), mutableAttributeStyle->ensureCSSStyleDeclaration(), 0);
     return inspectorStyle->buildObjectForStyle();
 }
 
-PassRefPtr<TypeBuilder::Array<TypeBuilder::CSS::Region> > InspectorCSSAgent::buildArrayForRegions(ErrorString* errorString, PassRefPtr<NodeList> regionList, int documentNodeId)
+PassRefPtr<TypeBuilder::Array<TypeBuilder::CSS::Region>> InspectorCSSAgent::buildArrayForRegions(ErrorString* errorString, PassRefPtr<NodeList> regionList, int documentNodeId)
 {
-    RefPtr<TypeBuilder::Array<TypeBuilder::CSS::Region> > regions = TypeBuilder::Array<TypeBuilder::CSS::Region>::create();
+    RefPtr<TypeBuilder::Array<TypeBuilder::CSS::Region>> regions = TypeBuilder::Array<TypeBuilder::CSS::Region>::create();
 
     for (unsigned i = 0; i < regionList->length(); ++i) {
         TypeBuilder::CSS::Region::RegionOverset::Enum regionOverset;
@@ -1391,7 +1415,7 @@ PassRefPtr<TypeBuilder::Array<TypeBuilder::CSS::Region> > InspectorCSSAgent::bui
 PassRefPtr<TypeBuilder::CSS::NamedFlow> InspectorCSSAgent::buildObjectForNamedFlow(ErrorString* errorString, WebKitNamedFlow* webkitNamedFlow, int documentNodeId)
 {
     RefPtr<NodeList> contentList = webkitNamedFlow->getContent();
-    RefPtr<TypeBuilder::Array<int> > content = TypeBuilder::Array<int>::create();
+    RefPtr<TypeBuilder::Array<int>> content = TypeBuilder::Array<int>::create();
 
     for (unsigned i = 0; i < contentList->length(); ++i) {
         // documentNodeId was previously asserted
@@ -1453,9 +1477,8 @@ void InspectorCSSAgent::resetPseudoStates()
 {
     HashSet<Document*> documentsToChange;
     for (NodeIdToForcedPseudoState::iterator it = m_nodeIdToForcedPseudoState.begin(), end = m_nodeIdToForcedPseudoState.end(); it != end; ++it) {
-        Element* element = toElement(m_domAgent->nodeForId(it->key));
-        if (element && element->document())
-            documentsToChange.add(element->document());
+        if (Element* element = toElement(m_domAgent->nodeForId(it->key)))
+            documentsToChange.add(&element->document());
     }
 
     m_nodeIdToForcedPseudoState.clear();

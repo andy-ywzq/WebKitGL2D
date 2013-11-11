@@ -41,7 +41,7 @@ public:
         return adoptRef(new CSSAspectRatioValue(numeratorValue, denominatorValue));
     }
 
-    String customCssText() const;
+    String customCSSText() const;
 
     float numeratorValue() const { return m_numeratorValue; }
     float denominatorValue() const { return m_denominatorValue; }
@@ -59,6 +59,8 @@ private:
     float m_numeratorValue;
     float m_denominatorValue;
 };
+
+CSS_VALUE_TYPE_CASTS(CSSAspectRatioValue, isAspectRatioValue())
 
 }
 

@@ -93,6 +93,7 @@
       "Alex Christensen" : {
          "emails" : [
             "achristensen@apple.com",
+            "achristensen@webkit.org",
             "alex.christensen@flexsim.com"
          ],
          "expertise" : "Win64",
@@ -900,6 +901,16 @@
             "grzegorz"
          ]
       },
+      "Gwang Yoon Hwang" : {
+         "emails" : [
+            "ryumiel@company100.net",
+            "ryumiel@company100.com"
+         ],
+         "expertise" : "Accelerated Compositing",
+         "nicks" : [
+            "ryumiel"
+         ]
+      },
       "Hans Muller" : {
          "emails" : [
             "giles_joplin@yahoo.com",
@@ -1019,6 +1030,14 @@
          "expertise" : "The EFLWebKit port",
          "nicks" : [
             "jaehun"
+         ]
+      },
+      "Jae Hyun Park" : {
+         "emails" : [
+            "jae.park@company100.net"
+         ],
+         "nicks" : [
+            "jaepark"
          ]
       },
       "Jakob Petsovits" : {
@@ -1549,6 +1568,16 @@
             "maheshk"
          ]
       },
+      "Manuel Rego Casasnovas" : {
+         "emails" : [
+            "rego@igalia.com"
+         ],
+         "expertise" : "WebKitGTK+ port, WebKit2",
+         "nicks" : [
+            "rego",
+            "mrego"
+         ]
+      },
       "Marcelo Lira" : {
          "emails" : [
             "marcelo.lira@openbossa.org",
@@ -1561,16 +1590,6 @@
       "Marcus Voltis Bulach" : {
          "emails" : [
             "bulach@chromium.org"
-         ]
-      },
-      "Mario Sanchez Prada" : {
-         "emails" : [
-            "mario@webkit.org",
-            "mario.prada@samsung.com"
-         ],
-         "expertise" : "WebKitGTK+, a11y, Epiphany/WebKit Contributor",
-         "nicks" : [
-            "msanchez"
          ]
       },
       "Mark Lam" : {
@@ -1678,6 +1697,14 @@
             "mpruett"
          ]
       },
+      "Micha\u0142 Paku\u0142a vel Rutka" : {
+         "emails" : [
+            "m.pakula@samsung.com"
+         ],
+         "nicks" : [
+            "mpakula"
+         ]
+      },
       "Michelangelo De Simone" : {
          "emails" : [
             "michelangelo@webkit.org"
@@ -1685,14 +1712,6 @@
          "expertise" : "HTML Forms, ValidityState",
          "nicks" : [
             "michelangelo"
-         ]
-      },
-      "Mihnea Ovidenie" : {
-         "emails" : [
-            "mihnea@adobe.com"
-         ],
-         "nicks" : [
-            "mihnea"
          ]
       },
       "Mike Belshe" : {
@@ -1851,6 +1870,15 @@
             "beverloo"
          ]
       },
+      "Peter Gal" : {
+         "emails" : [
+            "galpeter@inf.u-szeged.hu"
+         ],
+         "expertise": "Python, CURL HTTP backend",
+         "nicks" : [
+            "elecro"
+         ]
+      },
       "Peter Kasting" : {
          "emails" : [
             "pkasting@google.com",
@@ -1922,6 +1950,15 @@
             "qi"
          ]
       },
+      "Radu Stavila" : {
+         "emails" : [
+            "stavila@adobe.com"
+         ],
+         "nicks" : [
+            "radustavila",
+            "stavila"
+         ]
+      },
       "Rafael Antognolli" : {
          "emails" : [
             "antognolli@profusion.mobi"
@@ -1980,6 +2017,14 @@
          ],
          "nicks" : [
             "reni"
+         ]
+      },
+      "Rik Cabanier" : {
+         "emails" : [
+            "cabanier@adobe.com"
+         ],
+         "nicks" : [
+            "cabanier"
          ]
       },
       "Robert Hogan" : {
@@ -2271,6 +2316,15 @@
          "expertise" : "HTML5 <Track>",
          "nicks" : [
             "vcarbune"
+         ]
+      },
+      "Victor Jaquez" : {
+         "emails" : [
+            "vjaquez@igalia.com"
+         ],
+         "nicks" : [
+            "vjaquez",
+            "ceyusa"
          ]
       },
       "Victor Wang" : {
@@ -2689,6 +2743,14 @@
             "forms-bugs@chromium.org"
          ]
       },
+      "Gabor Abraham" : {
+         "emails" : [
+            "abrhm@inf.u-szeged.hu"
+         ],
+         "nicks" : [
+            "abrhm"
+         ]
+      },
       "Gabor Ballabas" : {
          "emails" : [
             "gaborb@inf.u-szeged.hu"
@@ -2713,15 +2775,6 @@
             "gregsimon"
          ]
       },
-      "Gwang Yoon Hwang" : {
-         "emails" : [
-            "ryumiel@company100.net",
-            "ryumiel@company100.com"
-         ],
-         "nicks" : [
-            "ryumiel"
-         ]
-      },
       "Hao Zheng" : {
          "emails" : [
             "zhenghao@chromium.org"
@@ -2741,14 +2794,6 @@
          ],
          "nicks" : [
             "hixie"
-         ]
-      },
-      "Jae Hyun Park" : {
-         "emails" : [
-            "jae.park@company100.net"
-         ],
-         "nicks" : [
-            "jaepark"
          ]
       },
       "James Craig" : {
@@ -2888,14 +2933,6 @@
             "TwistO"
          ]
       },
-      "Peter Gal" : {
-         "emails" : [
-            "galpeter@inf.u-szeged.hu"
-         ],
-         "nicks" : [
-            "elecro"
-         ]
-      },
       "Peter Linss" : {
          "emails" : [
             "peter.linss@hp.com"
@@ -2907,14 +2944,6 @@
       "Radar WebKit Bug Importer" : {
          "emails" : [
             "webkit-bug-importer@group.apple.com"
-         ]
-      },
-      "Radu Stavila" : {
-         "emails" : [
-            "stavila@adobe.com"
-         ],
-         "nicks" : [
-            "radustavila"
          ]
       },
       "Raul Hudea" : {
@@ -3362,6 +3391,7 @@
       "Christophe Dumez" : {
          "emails" : [
             "dchris@gmail.com",
+            "ch.dumez@samsung.com",
             "ch.dumez@sta.samsung.com",
             "ch.dumez@sisa.samsung.com",
             "christophe.dumez@intel.com"
@@ -3890,6 +3920,16 @@
             "othermaciej"
          ]
       },
+      "Mario Sanchez Prada" : {
+         "emails" : [
+            "mario@webkit.org",
+            "mario.prada@samsung.com"
+         ],
+         "expertise" : "WebKitGTK+, Accessibility, WebKit2, Epiphany/WebKit Contributor",
+         "nicks" : [
+            "msanchez"
+         ]
+      },
       "Mark Hahnenberg" : {
          "emails" : [
             "mhahnenberg@apple.com"
@@ -3935,6 +3975,23 @@
          "expertise" : "The Chromium Port, Layout tests, History",
          "nicks" : [
             "mihaip"
+         ]
+      },
+      "Mihnea Ovidenie" : {
+         "emails" : [
+            "mihnea@adobe.com"
+         ],
+         "expertise" : "CSS Regions, CSS Exclusions",
+         "nicks" : [
+            "mihnea"
+         ]
+      },
+      "Nadav Rotem" : {
+         "emails" : [
+            "nrotem@apple.com"
+         ],
+         "nicks" : [
+            "nadav"
          ]
       },
       "Nate Chapin" : {

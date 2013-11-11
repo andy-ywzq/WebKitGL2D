@@ -27,20 +27,13 @@
 #define Color_h
 
 #include "AnimationUtilities.h"
-#include <wtf/FastAllocBase.h>
+#include <wtf/FastMalloc.h>
 #include <wtf/Forward.h>
 #include <wtf/unicode/Unicode.h>
 
 #if USE(CG)
 #include "ColorSpace.h"
 typedef struct CGColor* CGColorRef;
-#endif
-
-#if PLATFORM(QT)
-#include <qglobal.h>
-QT_BEGIN_NAMESPACE
-class QColor;
-QT_END_NAMESPACE
 #endif
 
 #if PLATFORM(GTK)
@@ -128,11 +121,6 @@ public:
     // This is an implementation of Porter-Duff's "source-over" equation
     Color blend(const Color&) const;
     Color blendWithWhite() const;
-
-#if PLATFORM(QT)
-    Color(const QColor&);
-    operator QColor() const;
-#endif
 
 #if PLATFORM(GTK)
     Color(const GdkColor&);

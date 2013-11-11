@@ -264,7 +264,7 @@ WebInspector.TimelinesContentView.prototype = {
 
         // Restore scroll positon now that we are back in the document.
         if (this._currentDataGrid._savedIsScrolledToLastRow)
-            this._currentDataGrid.scrollToLastRow()
+            this._currentDataGrid.scrollToLastRow();
         else if (this._currentDataGrid._savedScrollTop)
             this._currentDataGrid.scrollContainer.scrollTop = this._currentDataGrid._savedScrollTop;
 
@@ -333,6 +333,17 @@ WebInspector.TimelinesContentView.prototype = {
     {
         if (this._currentDataGrid)
             this._currentDataGrid.hidden();
+    },
+
+    saveToCookie: function(cookie)
+    {
+        cookie.type = WebInspector.ContentViewCookieType.Timelines;
+        cookie.timeline = this._currentRecordTypeSetting.value;
+    },
+
+    restoreFromCookie: function(cookie)
+    {
+        this.showTimelineForRecordType(cookie.timeline);
     },
 
     timelineOverviewRecordsWithType: function(type)
@@ -447,7 +458,7 @@ WebInspector.TimelinesContentView.prototype = {
         if (isScrolledToLastRow)
             this._currentDataGrid.scrollToLastRow();
     },
-    
+
     _updateCalculatorBoundsForPendingRecordsAndEventMarkers: function()
     {
         var currentDataGrid = this._currentDataGrid;
@@ -685,7 +696,7 @@ WebInspector.TimelinesContentView.prototype = {
         });
 
         scopeBarItems.unshift(new WebInspector.ScopeBarItem(prefix + "type-all", WebInspector.UIString("All"), true));
-        
+
         return new WebInspector.ScopeBar(prefix + "scope-bar", scopeBarItems, scopeBarItems[0]);
     },
 
@@ -707,14 +718,14 @@ WebInspector.TimelinesContentView.prototype = {
         var nodes = records.map(function(record) {
             return this._createDataGridNodeForRecord(record);
         }, this);
-        
+
         dataGrid.removeChildren();
         nodes.sort(this._sortComparator.bind(this)).forEach(function(node) {
             dataGrid.appendChild(node);
         });
 
         delete this._pendingRefreshGridNodes[recordType];
-        
+
         this._updateOffscreenRows();
     },
 

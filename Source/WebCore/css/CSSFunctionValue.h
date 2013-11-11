@@ -45,7 +45,7 @@ public:
         return adoptRef(new CSSFunctionValue(name, args));
     }
 
-    String customCssText() const;
+    String customCSSText() const;
 
     bool equals(const CSSFunctionValue&) const;
 
@@ -56,6 +56,8 @@ private:
     String m_name;
     RefPtr<CSSValueList> m_args;
 };
+
+CSS_VALUE_TYPE_CASTS(CSSFunctionValue, isFunctionValue())
 
 }
 #endif

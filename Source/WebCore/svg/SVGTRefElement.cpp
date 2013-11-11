@@ -49,7 +49,7 @@ BEGIN_REGISTER_ANIMATED_PROPERTIES(SVGTRefElement)
     REGISTER_PARENT_ANIMATED_PROPERTIES(SVGTextPositioningElement)
 END_REGISTER_ANIMATED_PROPERTIES
 
-PassRefPtr<SVGTRefElement> SVGTRefElement::create(const QualifiedName& tagName, Document* document)
+PassRefPtr<SVGTRefElement> SVGTRefElement::create(const QualifiedName& tagName, Document& document)
 {
     RefPtr<SVGTRefElement> element = adoptRef(new SVGTRefElement(tagName, document));
     element->ensureUserAgentShadowRoot();
@@ -129,7 +129,7 @@ void SVGTRefTargetEventListener::handleEvent(ScriptExecutionContext*, Event* eve
         m_trefElement->detachTarget();
 }
 
-inline SVGTRefElement::SVGTRefElement(const QualifiedName& tagName, Document* document)
+inline SVGTRefElement::SVGTRefElement(const QualifiedName& tagName, Document& document)
     : SVGTextPositioningElement(tagName, document)
     , m_targetListener(SVGTRefTargetEventListener::create(this))
 {
@@ -177,7 +177,7 @@ void SVGTRefElement::detachTarget()
     String id;
     SVGURIReference::targetElementFromIRIString(href(), document(), &id);
     if (!id.isEmpty())
-        document()->accessSVGExtensions()->addPendingResource(id, this);
+        document().accessSVGExtensions()->addPendingResource(id, this);
 }
 
 bool SVGTRefElement::isSupportedAttribute(const QualifiedName& attrName)
@@ -220,9 +220,9 @@ void SVGTRefElement::svgAttributeChanged(const QualifiedName& attrName)
     ASSERT_NOT_REACHED();
 }
 
-RenderObject* SVGTRefElement::createRenderer(RenderArena* arena, RenderStyle*)
+RenderElement* SVGTRefElement::createRenderer(PassRef<RenderStyle> style)
 {
-    return new (arena) RenderSVGInline(this);
+    return new RenderSVGInline(*this, std::move(style));
 }
 
 bool SVGTRefElement::childShouldCreateRenderer(const Node* child) const
@@ -260,7 +260,7 @@ void SVGTRefElement::buildPendingResource()
         if (id.isEmpty())
             return;
 
-        document()->accessSVGExtensions()->addPendingResource(id, this);
+        document().accessSVGExtensions()->addPendingResource(id, this);
         ASSERT(hasPendingResources());
         return;
     }
@@ -275,18 +275,18 @@ void SVGTRefElement::buildPendingResource()
     updateReferencedText(target.get());
 }
 
-Node::InsertionNotificationRequest SVGTRefElement::insertedInto(ContainerNode* rootParent)
+Node::InsertionNotificationRequest SVGTRefElement::insertedInto(ContainerNode& rootParent)
 {
-    SVGStyledElement::insertedInto(rootParent);
-    if (rootParent->inDocument())
+    SVGElement::insertedInto(rootParent);
+    if (rootParent.inDocument())
         buildPendingResource();
     return InsertionDone;
 }
 
-void SVGTRefElement::removedFrom(ContainerNode* rootParent)
+void SVGTRefElement::removedFrom(ContainerNode& rootParent)
 {
-    SVGStyledElement::removedFrom(rootParent);
-    if (rootParent->inDocument())
+    SVGElement::removedFrom(rootParent);
+    if (rootParent.inDocument())
         m_targetListener->detach();
 }
 

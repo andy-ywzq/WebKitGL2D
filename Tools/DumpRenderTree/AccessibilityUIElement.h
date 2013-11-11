@@ -46,6 +46,7 @@ typedef struct objc_object* PlatformUIElement;
 
 typedef COMPtr<IAccessible> PlatformUIElement;
 #elif HAVE(ACCESSIBILITY) && (PLATFORM(GTK) || PLATFORM(EFL))
+#include "AccessibilityNotificationHandlerAtk.h"
 #include <atk/atk.h>
 typedef AtkObject* PlatformUIElement;
 #else
@@ -159,6 +160,7 @@ public:
     JSStringRef documentEncoding();
     JSStringRef documentURI();
     JSStringRef url();
+    JSStringRef classList() const;
 
     // CSS3-speech properties.
     JSStringRef speak();
@@ -221,6 +223,8 @@ public:
     AccessibilityTextMarkerRange textMarkerRangeForMarkers(AccessibilityTextMarker* startMarker, AccessibilityTextMarker* endMarker);
     AccessibilityTextMarker startTextMarkerForTextMarkerRange(AccessibilityTextMarkerRange*);
     AccessibilityTextMarker endTextMarkerForTextMarkerRange(AccessibilityTextMarkerRange*);
+    AccessibilityTextMarker endTextMarkerForBounds(int x, int y, int width, int height);
+    AccessibilityTextMarker startTextMarkerForBounds(int x, int y, int width, int height);
     AccessibilityTextMarker textMarkerForPoint(int x, int y);
     AccessibilityTextMarker previousTextMarker(AccessibilityTextMarker*);
     AccessibilityTextMarker nextTextMarker(AccessibilityTextMarker*);
@@ -272,6 +276,10 @@ private:
     // A retained, platform specific object used to help manage notifications for this object.
 #if PLATFORM(MAC)
     NotificationHandler m_notificationHandler;
+#endif
+
+#if PLATFORM(GTK) || PLATFORM(EFL)
+    RefPtr<AccessibilityNotificationHandler> m_notificationHandler;
 #endif
 };
 

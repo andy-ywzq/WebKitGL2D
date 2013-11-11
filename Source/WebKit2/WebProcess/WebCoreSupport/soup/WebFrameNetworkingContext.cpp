@@ -30,29 +30,33 @@
 #include "WebFrame.h"
 #include "WebPage.h"
 #include <WebCore/Settings.h>
+#include <wtf/NeverDestroyed.h>
 
 using namespace WebCore;
 
 namespace WebKit {
 
-static NetworkStorageSession* privateSession;
+static std::unique_ptr<NetworkStorageSession>& privateSession()
+{
+    static NeverDestroyed<std::unique_ptr<NetworkStorageSession>> session;
+    return session;
+}
 
 void WebFrameNetworkingContext::ensurePrivateBrowsingSession()
 {
     ASSERT(isMainThread());
 
-    if (privateSession)
+    if (privateSession())
         return;
 
-    privateSession = NetworkStorageSession::createPrivateBrowsingSession().leakPtr();
+    privateSession() = NetworkStorageSession::createPrivateBrowsingSession();
 }
 
 void WebFrameNetworkingContext::destroyPrivateBrowsingSession()
 {
     ASSERT(isMainThread());
 
-    delete privateSession;
-    privateSession = 0;
+    privateSession() = nullptr;
 }
 
 WebFrameNetworkingContext::WebFrameNetworkingContext(WebFrame* frame)
@@ -66,7 +70,7 @@ WebFrameNetworkingContext::WebFrameNetworkingContext(WebFrame* frame)
 NetworkStorageSession& WebFrameNetworkingContext::storageSession() const
 {
     if (frame() && frame()->settings().privateBrowsingEnabled())
-        return *privateSession;
+        return *privateSession();
 
     return NetworkStorageSession::defaultStorageSession();
 }
@@ -76,5 +80,12 @@ uint64_t WebFrameNetworkingContext::initiatingPageID() const
     return m_initiatingPageID;
 }
 
+WebFrameLoaderClient* WebFrameNetworkingContext::webFrameLoaderClient() const
+{
+    if (!frame())
+        return nullptr;
+
+    return toWebFrameLoaderClient(frame()->loader().client());
 }
 
+}

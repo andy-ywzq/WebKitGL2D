@@ -58,7 +58,7 @@ static IntRect screenRectOfContents(Element* element)
     if (element->renderer() && element->renderer()->hasLayer() && element->renderer()->enclosingLayer()->isComposited()) {
         FloatQuad contentsBox = static_cast<FloatRect>(element->renderer()->enclosingLayer()->backing()->contentsBox());
         contentsBox = element->renderer()->localToAbsoluteQuad(contentsBox);
-        return element->renderer()->view()->frameView()->contentsToScreen(contentsBox.enclosingBoundingBox());
+        return element->renderer()->view().frameView().contentsToScreen(contentsBox.enclosingBoundingBox());
     }
     return element->screenRect();
 }
@@ -290,7 +290,7 @@ static NSRect convertRectToScreen(NSWindow *window, NSRect rect)
 {
     if (!_element)
         return;
-    _element->document()->webkitCancelFullScreen();
+    _element->document().webkitCancelFullScreen();
 }
 
 - (void)exitFullScreen
@@ -435,7 +435,7 @@ static NSRect convertRectToScreen(NSWindow *window, NSRect rect)
 
 - (Document*)_document 
 {
-    return _element->document();
+    return &_element->document();
 }
 
 - (void)_swapView:(NSView*)view with:(NSView*)otherView
@@ -490,7 +490,10 @@ static NSRect windowFrameFromApparentFrames(NSRect screenFrame, NSRect initialFr
     
     // WKWindowSetClipRect takes window coordinates, so convert from screen coordinates here:
     NSRect finalBounds = _finalFrame;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     finalBounds.origin = [[self window] convertScreenToBase:finalBounds.origin];
+#pragma clang diagnostic pop
     WKWindowSetClipRect([self window], finalBounds);
     
     [[self window] makeKeyAndOrderFront:self];
@@ -559,7 +562,10 @@ static NSRect windowFrameFromApparentFrames(NSRect screenFrame, NSRect initialFr
     
     // WKWindowSetClipRect takes window coordinates, so convert from screen coordinates here:
     NSRect finalBounds = _finalFrame;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     finalBounds.origin = [[self window] convertScreenToBase:finalBounds.origin];
+#pragma clang diagnostic pop
     WKWindowSetClipRect([self window], finalBounds);
     
     [[self window] setAutodisplay:YES];

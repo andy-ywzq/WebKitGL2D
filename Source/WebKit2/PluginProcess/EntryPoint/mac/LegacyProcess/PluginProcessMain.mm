@@ -25,7 +25,7 @@
 
 #import "config.h"
 
-#if ENABLE(PLUGIN_PROCESS)
+#if ENABLE(NETSCAPE_PLUGIN_API)
 
 #import "ChildProcessEntryPoint.h"
 #import "EnvironmentUtilities.h"
@@ -58,8 +58,6 @@ public:
         EnvironmentUtilities::stripValuesEndingWithString("DYLD_INSERT_LIBRARIES", "/PluginProcessShim.dylib");
 
 #if USE(APPKIT)
-        RunLoop::setUseApplicationRunLoopOnMainRunLoop();
-
         // Initialize AppKit.
         [NSApplication sharedApplication];
 
@@ -94,6 +92,12 @@ public:
         return true;
     }
 
+    virtual void startRunLoop() OVERRIDE
+    {
+        ASSERT(NSApp);
+        [NSApp run];
+    }
+
     virtual void doPostRunWork()
     {
 #if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1080
@@ -120,4 +124,4 @@ int PluginProcessMain(int argc, char** argv)
     return ChildProcessMain<PluginProcess, PluginProcessMainDelegate>(argc, argv);
 }
 
-#endif // ENABLE(PLUGIN_PROCESS)
+#endif // ENABLE(NETSCAPE_PLUGIN_API)

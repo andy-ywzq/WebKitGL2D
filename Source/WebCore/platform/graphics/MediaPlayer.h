@@ -35,7 +35,7 @@
 #include "AudioTrackPrivate.h"
 #include "InbandTextTrackPrivate.h"
 #include "IntRect.h"
-#include "KURL.h"
+#include "URL.h"
 #include "LayoutRect.h"
 #include "Timer.h"
 #include "VideoTrackPrivate.h"
@@ -67,10 +67,10 @@ namespace WebCore {
 class AudioSourceProvider;
 class Document;
 class GStreamerGWorld;
-class MediaPlayerPrivateInterface;
 #if ENABLE(MEDIA_SOURCE)
-class MediaSource;
+class HTMLMediaSource;
 #endif
+class MediaPlayerPrivateInterface;
 class TextTrackRepresentation;
 
 // Structure that will hold every native
@@ -194,7 +194,7 @@ public:
     enum MediaKeyErrorCode { UnknownError = 1, ClientError, ServiceError, OutputError, HardwareChangeError, DomainError };
     virtual void mediaPlayerKeyAdded(MediaPlayer*, const String& /* keySystem */, const String& /* sessionId */) { }
     virtual void mediaPlayerKeyError(MediaPlayer*, const String& /* keySystem */, const String& /* sessionId */, MediaKeyErrorCode, unsigned short /* systemCode */) { }
-    virtual void mediaPlayerKeyMessage(MediaPlayer*, const String& /* keySystem */, const String& /* sessionId */, const unsigned char* /* message */, unsigned /* messageLength */, const KURL& /* defaultURL */) { }
+    virtual void mediaPlayerKeyMessage(MediaPlayer*, const String& /* keySystem */, const String& /* sessionId */, const unsigned char* /* message */, unsigned /* messageLength */, const URL& /* defaultURL */) { }
     virtual bool mediaPlayerKeyNeeded(MediaPlayer*, const String& /* keySystem */, const String& /* sessionId */, const unsigned char* /* initData */, unsigned /* initDataLength */) { return false; }
 #endif
 
@@ -214,6 +214,7 @@ public:
     virtual void mediaPlayerSetSize(const IntSize&) { }
     virtual void mediaPlayerPause() { }
     virtual void mediaPlayerPlay() { }
+    virtual bool mediaPlayerPlatformVolumeConfigurationRequired() const { return false; }
     virtual bool mediaPlayerIsPaused() const { return true; }
     virtual bool mediaPlayerIsLooping() const { return false; }
     virtual HostWindow* mediaPlayerHostWindow() { return 0; }
@@ -252,7 +253,7 @@ public:
 
     // Media engine support.
     enum SupportsType { IsNotSupported, IsSupported, MayBeSupported };
-    static MediaPlayer::SupportsType supportsType(const ContentType&, const String& keySystem, const KURL&, const MediaPlayerSupportsTypeClient*);
+    static MediaPlayer::SupportsType supportsType(const ContentType&, const String& keySystem, const URL&, const MediaPlayerSupportsTypeClient*);
     static void getSupportedTypes(HashSet<String>&);
     static bool isAvailable();
     static void getSitesInMediaCache(Vector<String>&);
@@ -262,6 +263,7 @@ public:
     bool supportsFullscreen() const;
     bool supportsSave() const;
     bool supportsScanning() const;
+    bool requiresImmediateCompositing() const;
     PlatformMedia platformMedia() const;
 #if USE(ACCELERATED_COMPOSITING)
     PlatformLayer* platformLayer() const;
@@ -278,9 +280,9 @@ public:
     IntSize size() const { return m_size; }
     void setSize(const IntSize& size);
 
-    bool load(const KURL&, const ContentType&, const String& keySystem);
+    bool load(const URL&, const ContentType&, const String& keySystem);
 #if ENABLE(MEDIA_SOURCE)
-    bool load(const KURL&, PassRefPtr<MediaSource>);
+    bool load(const URL&, PassRefPtr<HTMLMediaSource>);
 #endif
     void cancelLoad();
 
@@ -289,7 +291,7 @@ public:
 
     void prepareToPlay();
     void play();
-    void pause();    
+    void pause();
 
 #if ENABLE(ENCRYPTED_MEDIA)
     // Represents synchronous exceptions that can be thrown from the Encrypted Media methods.
@@ -316,7 +318,7 @@ public:
     double rate() const;
     void setRate(double);
 
-    bool preservesPitch() const;    
+    bool preservesPitch() const;
     void setPreservesPitch(bool);
 
     PassRefPtr<TimeRanges> buffered();
@@ -328,6 +330,7 @@ public:
 
     double volume() const;
     void setVolume(double);
+    bool platformVolumeConfigurationRequired() const { return m_mediaPlayerClient->mediaPlayerPlatformVolumeConfigurationRequired(); }
 
     bool muted() const;
     void setMuted(bool);
@@ -335,7 +338,7 @@ public:
     bool hasClosedCaptions() const;
     void setClosedCaptionsVisible(bool closedCaptionsVisible);
 
-    bool autoplay() const;    
+    bool autoplay() const;
     void setAutoplay(bool);
 
     void paint(GraphicsContext*, const IntRect&);
@@ -414,6 +417,9 @@ public:
     void acceleratedRenderingStateChanged();
 #endif
 
+    bool shouldMaintainAspectRatio() const;
+    void setShouldMaintainAspectRatio(bool);
+
 #if PLATFORM(WIN) && USE(AVFOUNDATION)
     GraphicsDeviceAdapter* graphicsDeviceAdapter() const;
 #endif
@@ -440,7 +446,7 @@ public:
 #if ENABLE(ENCRYPTED_MEDIA)
     void keyAdded(const String& keySystem, const String& sessionId);
     void keyError(const String& keySystem, const String& sessionId, MediaPlayerClient::MediaKeyErrorCode, unsigned short systemCode);
-    void keyMessage(const String& keySystem, const String& sessionId, const unsigned char* message, unsigned messageLength, const KURL& defaultURL);
+    void keyMessage(const String& keySystem, const String& sessionId, const unsigned char* message, unsigned messageLength, const URL& defaultURL);
     bool keyNeeded(const String& keySystem, const String& sessionId, const unsigned char* initData, unsigned initDataLength);
 #endif
 
@@ -484,6 +490,7 @@ public:
 
 private:
     MediaPlayer(MediaPlayerClient*);
+    MediaPlayerFactory* nextBestMediaEngine(MediaPlayerFactory*) const;
     void loadWithNextMediaEngine(MediaPlayerFactory*);
     void reloadTimerFired(Timer<MediaPlayer>*);
 
@@ -493,7 +500,7 @@ private:
     Timer<MediaPlayer> m_reloadTimer;
     OwnPtr<MediaPlayerPrivateInterface> m_private;
     MediaPlayerFactory* m_currentMediaEngine;
-    KURL m_url;
+    URL m_url;
     String m_contentMIMEType;
     String m_contentTypeCodecs;
     String m_keySystem;
@@ -513,17 +520,25 @@ private:
 #endif
 
 #if ENABLE(MEDIA_SOURCE)
-    RefPtr<MediaSource> m_mediaSource;
+    RefPtr<HTMLMediaSource> m_mediaSource;
+#endif
+};
+
+struct MediaEngineSupportParameters {
+    String type;
+    String codecs;
+    URL url;
+#if ENABLE(ENCRYPTED_MEDIA)
+    String keySystem;
+#endif
+#if ENABLE(MEDIA_SOURCE)
+    bool isMediaSource;
 #endif
 };
 
 typedef PassOwnPtr<MediaPlayerPrivateInterface> (*CreateMediaEnginePlayer)(MediaPlayer*);
 typedef void (*MediaEngineSupportedTypes)(HashSet<String>& types);
-#if ENABLE(ENCRYPTED_MEDIA) || ENABLE(ENCRYPTED_MEDIA_V2)
-typedef MediaPlayer::SupportsType (*MediaEngineSupportsType)(const String& type, const String& codecs, const String& keySystem, const KURL& url);
-#else
-typedef MediaPlayer::SupportsType (*MediaEngineSupportsType)(const String& type, const String& codecs, const KURL& url);
-#endif
+typedef MediaPlayer::SupportsType (*MediaEngineSupportsType)(const MediaEngineSupportParameters& parameters);
 typedef void (*MediaEngineGetSitesInMediaCache)(Vector<String>&);
 typedef void (*MediaEngineClearMediaCache)();
 typedef void (*MediaEngineClearMediaCacheForSite)(const String&);

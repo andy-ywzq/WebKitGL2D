@@ -35,10 +35,10 @@ TextureMapperLayer* toTextureMapperLayer(GraphicsLayer* layer)
     return layer ? toGraphicsLayerTextureMapper(layer)->layer() : 0;
 }
 
-PassOwnPtr<GraphicsLayer> GraphicsLayer::create(GraphicsLayerFactory* factory, GraphicsLayerClient* client)
+std::unique_ptr<GraphicsLayer> GraphicsLayer::create(GraphicsLayerFactory* factory, GraphicsLayerClient* client)
 {
     if (!factory)
-        return adoptPtr(new GraphicsLayerTextureMapper(client));
+        return std::make_unique<GraphicsLayerTextureMapper>(client);
 
     return factory->createGraphicsLayer(client);
 }
@@ -609,9 +609,6 @@ void GraphicsLayerTextureMapper::updateBackingStoreIfNeeded()
     if (dirtyRect.isEmpty())
         return;
 
-#if PLATFORM(QT) && !defined(QT_NO_DYNAMIC_CAST)
-    ASSERT(dynamic_cast<TextureMapperTiledBackingStore*>(m_backingStore.get()));
-#endif
     TextureMapperTiledBackingStore* backingStore = static_cast<TextureMapperTiledBackingStore*>(m_backingStore.get());
 
     backingStore->updateContents(textureMapper, this, m_size, dirtyRect, BitmapTexture::UpdateCanModifyOriginalImageData);
@@ -638,7 +635,7 @@ bool GraphicsLayerTextureMapper::addAnimation(const KeyframeValueList& valueList
     if (valueList.property() == AnimatedPropertyWebkitTransform)
         listsMatch = validateTransformOperations(valueList, hasBigRotation) >= 0;
 
-    const double currentTime = WTF::currentTime();
+    const double currentTime = monotonicallyIncreasingTime();
     m_animations.add(GraphicsLayerAnimation(keyframesName, valueList, boxSize, anim, currentTime - timeOffset, listsMatch));
     // m_animationStartTime is the time of the first real frame of animation, now or delayed by a negative offset.
     if (timeOffset > 0)
@@ -670,6 +667,10 @@ void GraphicsLayerTextureMapper::removeAnimation(const String& animationName)
 #if ENABLE(CSS_FILTERS)
 bool GraphicsLayerTextureMapper::setFilters(const FilterOperations& filters)
 {
+    TextureMapper* textureMapper = m_layer->textureMapper();
+    // TextureMapperImageBuffer does not support CSS filters.
+    if (!textureMapper || textureMapper->accelerationMode() == TextureMapper::SoftwareMode)
+        return false;
     notifyChange(FilterChange);
     return GraphicsLayer::setFilters(filters);
 }

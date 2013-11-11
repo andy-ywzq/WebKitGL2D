@@ -43,11 +43,11 @@ class ShadowRoot;
 class StyleRuleHost;
 struct RuleFeatureSet;
 
-#if ENABLE(STYLE_SCOPED) || ENABLE(SHADOW_DOM)
+#if ENABLE(SHADOW_DOM)
 
 class StyleScopeResolver {
 public:
-    typedef HashMap<const ContainerNode*, OwnPtr<RuleSet> > ScopedRuleSetMap;
+    typedef HashMap<const ContainerNode*, OwnPtr<RuleSet>> ScopedRuleSetMap;
 
     struct StackFrame {
         StackFrame() : m_scope(0), m_authorStyleBoundsIndex(0), m_ruleSet(0) { }
@@ -118,7 +118,7 @@ public:
     RuleSet* ensureRuleSetFor(const ContainerNode*) { return 0; }
 };
 
-#endif // ENABLE(STYLE_SCOPED)
+#endif // ENABLE(SHADOW_DOM)
 
 } // namespace WebCore
 

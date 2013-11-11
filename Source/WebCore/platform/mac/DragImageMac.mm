@@ -34,7 +34,7 @@
 #import "FontSelector.h"
 #import "GraphicsContext.h"
 #import "Image.h"
-#import "KURL.h"
+#import "URL.h"
 #import "ResourceResponse.h"
 #import "StringTruncator.h"
 #import "TextRun.h"
@@ -58,7 +58,10 @@ RetainPtr<NSImage> scaleDragImage(RetainPtr<NSImage> image, FloatSize scale)
     NSSize newSize = NSMakeSize((originalSize.width * scale.width()), (originalSize.height * scale.height()));
     newSize.width = roundf(newSize.width);
     newSize.height = roundf(newSize.height);
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     [image.get() setScalesWhenResized:YES];
+#pragma clang diagnostic pop
     [image.get() setSize:newSize];
     return image;
 }
@@ -84,7 +87,7 @@ RetainPtr<NSImage> createDragImageFromImage(Image* image, ImageOrientationDescri
     if (image->isBitmapImage()) {
         ImageOrientation orientation;
         BitmapImage* bitmapImage = static_cast<BitmapImage *>(image);
-        IntSize sizeRespectingOrientation = bitmapImage->sizeRespectingOrientation();
+        IntSize sizeRespectingOrientation = bitmapImage->sizeRespectingOrientation(description);
 
         if (description.respectImageOrientation() == RespectImageOrientation)
             orientation = bitmapImage->orientationForCurrentFrame();
@@ -267,7 +270,7 @@ static void drawDoubledAtPoint(NSString *string, NSPoint textPoint, NSColor *top
         drawAtPoint(string, textPoint, font, topColor);
 }
 
-DragImageRef createDragImageForLink(KURL& url, const String& title, FontRenderingMode)
+DragImageRef createDragImageForLink(URL& url, const String& title, FontRenderingMode)
 {
     NSString *label = nsStringNilIfEmpty(title);
     NSURL *cocoaURL = url;

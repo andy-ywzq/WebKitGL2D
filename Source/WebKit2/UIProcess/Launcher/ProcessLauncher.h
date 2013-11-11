@@ -47,14 +47,14 @@ public:
     
     enum ProcessType {
         WebProcess,
-#if ENABLE(PLUGIN_PROCESS)
+#if ENABLE(NETSCAPE_PLUGIN_API)
         PluginProcess,
 #endif
 #if ENABLE(NETWORK_PROCESS)
         NetworkProcess,
 #endif
-#if ENABLE(SHARED_WORKER_PROCESS)
-        SharedWorkerProcess
+#if ENABLE(DATABASE_PROCESS)
+        DatabaseProcess,
 #endif
     };
 
@@ -65,11 +65,9 @@ public:
         static const cpu_type_t MatchCurrentArchitecture = 0;
         cpu_type_t architecture;
         bool executableHeap;
-#if HAVE(XPC)
         bool useXPC;
 #endif
-#endif
-#if PLATFORM(EFL) || PLATFORM(NIX)
+#if PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(NIX)
 #ifndef NDEBUG
         String processCmdPrefix;
 #endif

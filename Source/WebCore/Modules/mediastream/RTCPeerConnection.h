@@ -41,6 +41,7 @@
 #include "RTCIceCandidate.h"
 #include "RTCPeerConnectionHandler.h"
 #include "RTCPeerConnectionHandlerClient.h"
+#include "ScriptWrappable.h"
 #include "Timer.h"
 #include <wtf/RefCounted.h>
 
@@ -57,7 +58,7 @@ class RTCSessionDescriptionCallback;
 class RTCStatsCallback;
 class VoidCallback;
 
-class RTCPeerConnection : public RefCounted<RTCPeerConnection>, public RTCPeerConnectionHandlerClient, public EventTarget, public ActiveDOMObject {
+class RTCPeerConnection FINAL : public RefCounted<RTCPeerConnection>, public ScriptWrappable, public RTCPeerConnectionHandlerClient, public EventTargetWithInlineData, public ActiveDOMObject {
 public:
     static PassRefPtr<RTCPeerConnection> create(ScriptExecutionContext*, const Dictionary& rtcConfiguration, const Dictionary& mediaConstraints, ExceptionCode&);
     ~RTCPeerConnection();
@@ -76,7 +77,7 @@ public:
 
     void updateIce(const Dictionary& rtcConfiguration, const Dictionary& mediaConstraints, ExceptionCode&);
 
-    void addIceCandidate(RTCIceCandidate*, ExceptionCode&);
+    void addIceCandidate(RTCIceCandidate*, PassRefPtr<VoidCallback>, PassRefPtr<RTCErrorCallback>, ExceptionCode&);
 
     String iceGatheringState() const;
 
@@ -119,8 +120,8 @@ public:
     virtual void didAddRemoteDataChannel(PassOwnPtr<RTCDataChannelHandler>) OVERRIDE;
 
     // EventTarget
-    virtual const AtomicString& interfaceName() const OVERRIDE;
-    virtual ScriptExecutionContext* scriptExecutionContext() const OVERRIDE;
+    virtual EventTargetInterface eventTargetInterface() const OVERRIDE { return RTCPeerConnectionEventTargetInterfaceType; }
+    virtual ScriptExecutionContext* scriptExecutionContext() const OVERRIDE { return ActiveDOMObject::scriptExecutionContext(); }
 
     // ActiveDOMObject
     virtual void stop() OVERRIDE;
@@ -137,11 +138,8 @@ private:
     bool hasLocalStreamWithTrackId(const String& trackId);
 
     // EventTarget implementation.
-    virtual EventTargetData* eventTargetData() OVERRIDE;
-    virtual EventTargetData& ensureEventTargetData() OVERRIDE;
     virtual void refEventTarget() OVERRIDE { ref(); }
     virtual void derefEventTarget() OVERRIDE { deref(); }
-    EventTargetData m_eventTargetData;
 
     void changeSignalingState(SignalingState);
     void changeIceGatheringState(IceGatheringState);
@@ -154,12 +152,12 @@ private:
     MediaStreamVector m_localStreams;
     MediaStreamVector m_remoteStreams;
 
-    Vector<RefPtr<RTCDataChannel> > m_dataChannels;
+    Vector<RefPtr<RTCDataChannel>> m_dataChannels;
 
     OwnPtr<RTCPeerConnectionHandler> m_peerHandler;
 
     Timer<RTCPeerConnection> m_scheduledEventTimer;
-    Vector<RefPtr<Event> > m_scheduledEvents;
+    Vector<RefPtr<Event>> m_scheduledEvents;
 
     bool m_stopped;
 };

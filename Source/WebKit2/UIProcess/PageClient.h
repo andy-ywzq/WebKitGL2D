@@ -58,9 +58,6 @@ class NativeWebKeyboardEvent;
 #if ENABLE(TOUCH_EVENTS)
 class NativeWebTouchEvent;
 #endif
-#if ENABLE(GESTURE_EVENTS)
-class WebGestureEvent;
-#endif
 class WebContextMenuProxy;
 class WebEditCommandProxy;
 class WebPopupMenuProxy;
@@ -77,7 +74,7 @@ public:
     virtual ~PageClient() { }
 
     // Create a new drawing area proxy for the given page.
-    virtual PassOwnPtr<DrawingAreaProxy> createDrawingAreaProxy() = 0;
+    virtual std::unique_ptr<DrawingAreaProxy> createDrawingAreaProxy() = 0;
 
     // Tell the view to invalidate the given rect. The rect is in view coordinates.
     virtual void setViewNeedsDisplay(const WebCore::IntRect&) = 0;
@@ -101,6 +98,9 @@ public:
 
     // Return whether the view is visible.
     virtual bool isViewVisible() = 0;
+
+    // Return whether the window is visible.
+    virtual bool isWindowVisible() = 0;
 
     // Return whether the view is in a window.
     virtual bool isViewInWindow() = 0;
@@ -130,26 +130,20 @@ public:
 #if USE(COORDINATED_GRAPHICS)
     virtual void didFindZoomableArea(const WebCore::IntPoint&, const WebCore::IntRect&) = 0;
 #endif
-#if PLATFORM(QT)
-    virtual void handleAuthenticationRequiredRequest(const String& hostname, const String& realm, const String& prefilledUsername, String& username, String& password) = 0;
-    virtual void handleCertificateVerificationRequest(const String& hostname, bool& ignoreErrors) = 0;
-    virtual void handleProxyAuthenticationRequiredRequest(const String& hostname, uint16_t port, const String& prefilledUsername, String& username, String& password) = 0;
-    virtual void handleWillSetInputMethodState() = 0;
-#endif // PLATFORM(QT).
 
-#if PLATFORM(QT) || PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(NIX)
+#if PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(NIX)
     virtual void updateTextInputState() = 0;
-#endif // PLATFORM(QT) || PLATFORM(EFL) || PLATOFRM(GTK) || PLATFORM(NIX)
+#endif // PLATFORM(EFL) || PLATOFRM(GTK)
 
-#if PLATFORM(QT) || PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(NIX)
+#if PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(NIX)
     virtual void handleDownloadRequest(DownloadProxy*) = 0;
-#endif // PLATFORM(QT) || PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(NIX)
+#endif // PLATFORM(EFL) || PLATFORM(GTK)
 
-#if PLATFORM(QT) || PLATFORM(EFL) || PLATFORM(NIX)
+#if PLATFORM(EFL) || PLATFORM(NIX)
     virtual void didChangeContentsSize(const WebCore::IntSize&) = 0;
 #endif
 
-#if PLATFORM(QT) || PLATFORM(GTK)
+#if PLATFORM(GTK)
     virtual void startDrag(const WebCore::DragData&, PassRefPtr<ShareableBitmap> dragImage) = 0;
 #endif
 
@@ -182,9 +176,6 @@ public:
     virtual WebCore::IntRect windowToScreen(const WebCore::IntRect&) = 0;
     
     virtual void doneWithKeyEvent(const NativeWebKeyboardEvent&, bool wasEventHandled) = 0;
-#if ENABLE(GESTURE_EVENTS)
-    virtual void doneWithGestureEvent(const WebGestureEvent&, bool wasEventHandled) = 0;
-#endif
 #if ENABLE(TOUCH_EVENTS)
     virtual void doneWithTouchEvent(const NativeWebTouchEvent&, bool wasEventHandled) = 0;
 #endif

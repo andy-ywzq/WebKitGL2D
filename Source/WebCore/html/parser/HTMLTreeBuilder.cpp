@@ -136,20 +136,6 @@ static bool isFormattingTag(const AtomicString& tagName)
     return tagName == aTag || isNonAnchorFormattingTag(tagName);
 }
 
-static HTMLFormElement* closestFormAncestor(Element* element)
-{
-    ASSERT(isMainThread());
-    while (element) {
-        if (isHTMLFormElement(element))
-            return toHTMLFormElement(element);
-        ContainerNode* parent = element->parentNode();
-        if (!parent || !parent->isElementNode())
-            return 0;
-        element = toElement(parent);
-    }
-    return 0;
-}
-
 class HTMLTreeBuilder::ExternalCharacterTokenBuffer {
     WTF_MAKE_NONCOPYABLE(ExternalCharacterTokenBuffer);
 public:
@@ -266,7 +252,7 @@ private:
 };
 
 
-HTMLTreeBuilder::HTMLTreeBuilder(HTMLDocumentParser* parser, HTMLDocument* document, ParserContentPolicy parserContentPolicy, bool, const HTMLParserOptions& options)
+HTMLTreeBuilder::HTMLTreeBuilder(HTMLDocumentParser& parser, HTMLDocument& document, ParserContentPolicy parserContentPolicy, bool, const HTMLParserOptions& options)
     : m_framesetOk(true)
 #ifndef NDEBUG
     , m_isAttached(true)
@@ -283,7 +269,7 @@ HTMLTreeBuilder::HTMLTreeBuilder(HTMLDocumentParser* parser, HTMLDocument* docum
 
 // FIXME: Member variables should be grouped into self-initializing structs to
 // minimize code duplication between these constructors.
-HTMLTreeBuilder::HTMLTreeBuilder(HTMLDocumentParser* parser, DocumentFragment* fragment, Element* contextElement, ParserContentPolicy parserContentPolicy, const HTMLParserOptions& options)
+HTMLTreeBuilder::HTMLTreeBuilder(HTMLDocumentParser& parser, DocumentFragment& fragment, Element* contextElement, ParserContentPolicy parserContentPolicy, const HTMLParserOptions& options)
     : m_framesetOk(true)
 #ifndef NDEBUG
     , m_isAttached(true)
@@ -305,7 +291,7 @@ HTMLTreeBuilder::HTMLTreeBuilder(HTMLDocumentParser* parser, DocumentFragment* f
         // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-end.html#fragment-case
         // For efficiency, we skip step 4.2 ("Let root be a new html element with no attributes")
         // and instead use the DocumentFragment as a root node.
-        m_tree.openElements()->pushRootNode(HTMLStackItem::create(fragment, HTMLStackItem::ItemForDocumentFragmentNode));
+        m_tree.openElements()->pushRootNode(HTMLStackItem::create(&fragment, HTMLStackItem::ItemForDocumentFragmentNode));
 
 #if ENABLE(TEMPLATE_ELEMENT)
         if (contextElement->hasTagName(templateTag))
@@ -313,7 +299,7 @@ HTMLTreeBuilder::HTMLTreeBuilder(HTMLDocumentParser* parser, DocumentFragment* f
 #endif
 
         resetInsertionModeAppropriately();
-        m_tree.setForm(closestFormAncestor(contextElement));
+        m_tree.setForm(!contextElement || isHTMLFormElement(contextElement) ? toHTMLFormElement(contextElement) : HTMLFormElement::findClosestFormAncestor(*contextElement));
     }
 }
 
@@ -339,11 +325,11 @@ HTMLTreeBuilder::FragmentParsingContext::FragmentParsingContext()
 {
 }
 
-HTMLTreeBuilder::FragmentParsingContext::FragmentParsingContext(DocumentFragment* fragment, Element* contextElement)
-    : m_fragment(fragment)
+HTMLTreeBuilder::FragmentParsingContext::FragmentParsingContext(DocumentFragment& fragment, Element* contextElement)
+    : m_fragment(&fragment)
     , m_contextElement(contextElement)
 {
-    ASSERT(!fragment->hasChildNodes());
+    ASSERT(!fragment.hasChildNodes());
 }
 
 HTMLTreeBuilder::FragmentParsingContext::~FragmentParsingContext()
@@ -369,14 +355,14 @@ void HTMLTreeBuilder::constructTree(AtomicHTMLToken* token)
     else
         processToken(token);
 
-    if (m_parser->tokenizer()) {
+    if (m_parser.tokenizer()) {
         bool inForeignContent = !m_tree.isEmpty()
             && !m_tree.currentStackItem()->isInHTMLNamespace()
             && !HTMLElementStack::isHTMLIntegrationPoint(m_tree.currentStackItem())
             && !HTMLElementStack::isMathMLTextIntegrationPoint(m_tree.currentStackItem());
 
-        m_parser->tokenizer()->setForceNullCharacterReplacement(m_insertionMode == TextMode || inForeignContent);
-        m_parser->tokenizer()->setShouldAllowCDATA(inForeignContent);
+        m_parser.tokenizer()->setForceNullCharacterReplacement(m_insertionMode == TextMode || inForeignContent);
+        m_parser.tokenizer()->setShouldAllowCDATA(inForeignContent);
     }
 
     m_tree.executeQueuedTasks();
@@ -541,7 +527,7 @@ void HTMLTreeBuilder::processCloseWhenNestedTag(AtomicHTMLToken* token)
 
 typedef HashMap<AtomicString, QualifiedName> PrefixedNameToQualifiedNameMap;
 
-static void mapLoweredLocalNameToName(PrefixedNameToQualifiedNameMap* map, QualifiedName** names, size_t length)
+static void mapLoweredLocalNameToName(PrefixedNameToQualifiedNameMap* map, const QualifiedName* const names[], size_t length)
 {
     for (size_t i = 0; i < length; ++i) {
         const QualifiedName& name = *names[i];
@@ -557,8 +543,7 @@ static void adjustSVGTagNameCase(AtomicHTMLToken* token)
     static PrefixedNameToQualifiedNameMap* caseMap = 0;
     if (!caseMap) {
         caseMap = new PrefixedNameToQualifiedNameMap;
-        QualifiedName** svgTags = SVGNames::getSVGTags();
-        mapLoweredLocalNameToName(caseMap, svgTags, SVGNames::SVGTagsCount);
+        mapLoweredLocalNameToName(caseMap, SVGNames::getSVGTags(), SVGNames::SVGTagsCount);
     }
 
     const QualifiedName& casedName = caseMap->get(token->name());
@@ -567,14 +552,13 @@ static void adjustSVGTagNameCase(AtomicHTMLToken* token)
     token->setName(casedName.localName());
 }
 
-template<QualifiedName** getAttrs(), unsigned length>
+template<const QualifiedName* const * getAttrs(), unsigned length>
 static void adjustAttributes(AtomicHTMLToken* token)
 {
     static PrefixedNameToQualifiedNameMap* caseMap = 0;
     if (!caseMap) {
         caseMap = new PrefixedNameToQualifiedNameMap;
-        QualifiedName** attrs = getAttrs();
-        mapLoweredLocalNameToName(caseMap, attrs, length);
+        mapLoweredLocalNameToName(caseMap, getAttrs(), length);
     }
 
     for (unsigned i = 0; i < token->attributes().size(); ++i) {
@@ -595,13 +579,13 @@ static void adjustMathMLAttributes(AtomicHTMLToken* token)
     adjustAttributes<MathMLNames::getMathMLAttrs, MathMLNames::MathMLAttrsCount>(token);
 }
 
-static void addNamesWithPrefix(PrefixedNameToQualifiedNameMap* map, const AtomicString& prefix, QualifiedName** names, size_t length)
+static void addNamesWithPrefix(PrefixedNameToQualifiedNameMap* map, const AtomicString& prefix, const QualifiedName* const names[], size_t length)
 {
     for (size_t i = 0; i < length; ++i) {
-        QualifiedName* name = names[i];
-        const AtomicString& localName = name->localName();
+        const QualifiedName& name = *names[i];
+        const AtomicString& localName = name.localName();
         AtomicString prefixColonLocalName = prefix + ':' + localName;
-        QualifiedName nameWithPrefix(prefix, localName, name->namespaceURI());
+        QualifiedName nameWithPrefix(prefix, localName, name.namespaceURI());
         map->add(prefixColonLocalName, nameWithPrefix);
     }
 }
@@ -612,11 +596,9 @@ static void adjustForeignAttributes(AtomicHTMLToken* token)
     if (!map) {
         map = new PrefixedNameToQualifiedNameMap;
 
-        QualifiedName** attrs = XLinkNames::getXLinkAttrs();
-        addNamesWithPrefix(map, xlinkAtom, attrs, XLinkNames::XLinkAttrsCount);
+        addNamesWithPrefix(map, xlinkAtom, XLinkNames::getXLinkAttrs(), XLinkNames::XLinkAttrsCount);
 
-        attrs = XMLNames::getXMLAttrs();
-        addNamesWithPrefix(map, xmlAtom, attrs, XMLNames::XMLAttrsCount);
+        addNamesWithPrefix(map, xmlAtom, XMLNames::getXMLAttrs(), XMLNames::XMLAttrsCount);
 
         map->add(WTF::xmlnsAtom, XMLNSNames::xmlnsAttr);
         map->add("xmlns:xlink", QualifiedName(xmlnsAtom, xlinkAtom, XMLNSNames::xmlnsNamespaceURI));
@@ -744,8 +726,8 @@ void HTMLTreeBuilder::processStartTagForInBody(AtomicHTMLToken* token)
     if (token->name() == plaintextTag) {
         processFakePEndTagIfPInButtonScope();
         m_tree.insertHTMLElement(token);
-        if (m_parser->tokenizer())
-            m_parser->tokenizer()->setState(HTMLTokenizer::PLAINTEXTState);
+        if (m_parser.tokenizer())
+            m_parser.tokenizer()->setState(HTMLTokenizer::PLAINTEXTState);
         return;
     }
     if (token->name() == buttonTag) {
@@ -855,8 +837,8 @@ void HTMLTreeBuilder::processStartTagForInBody(AtomicHTMLToken* token)
     if (token->name() == textareaTag) {
         m_tree.insertHTMLElement(token);
         m_shouldSkipLeadingNewline = true;
-        if (m_parser->tokenizer())
-            m_parser->tokenizer()->setState(HTMLTokenizer::RCDATAState);
+        if (m_parser.tokenizer())
+            m_parser.tokenizer()->setState(HTMLTokenizer::RCDATAState);
         m_originalInsertionMode = m_insertionMode;
         m_framesetOk = false;
         setInsertionMode(TextMode);
@@ -1599,7 +1581,7 @@ void HTMLTreeBuilder::callTheAdoptionAgency(AtomicHTMLToken* token)
                 bookmark.moveToAfter(nodeEntry);
             // 9.9
             if (ContainerNode* parent = lastNode->element()->parentNode())
-                parent->parserRemoveChild(lastNode->element());
+                parent->parserRemoveChild(*lastNode->element());
             node->element()->parserAppendChild(lastNode->element());
             if (lastNode->element()->parentElement()->attached() && !lastNode->element()->attached())
                 lastNode->element()->lazyAttach();
@@ -1608,7 +1590,7 @@ void HTMLTreeBuilder::callTheAdoptionAgency(AtomicHTMLToken* token)
         }
         // 10.
         if (ContainerNode* parent = lastNode->element()->parentNode())
-            parent->parserRemoveChild(lastNode->element());
+            parent->parserRemoveChild(*lastNode->element());
         if (commonAncestor->causesFosterParenting())
             m_tree.fosterParent(lastNode->element());
         else {
@@ -1639,7 +1621,7 @@ void HTMLTreeBuilder::callTheAdoptionAgency(AtomicHTMLToken* token)
         if (furthestBlockElement->attached() && !newItem->element()->attached()) {
             // Notice that newItem->element() might already be attached if, for example, one of the reparented
             // children is a style element, which attaches itself automatically.
-            Style::attachRenderTree(newItem->element());
+            Style::attachRenderTree(*newItem->element());
         }
         // 14.
         m_tree.activeFormattingElements()->swapTo(formattingElement, newItem, bookmark);
@@ -2186,13 +2168,13 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
             m_tree.openElements()->pop();
             setInsertionMode(m_originalInsertionMode);
 
-            if (m_parser->tokenizer()) {
+            if (m_parser.tokenizer()) {
                 // This token will not have been created by the tokenizer if a
                 // self-closing script tag was encountered and pre-HTML5 parser
                 // quirks are enabled. We must set the tokenizer's state to
                 // DataState explicitly if the tokenizer didn't have a chance to.
-                ASSERT(m_parser->tokenizer()->state() == HTMLTokenizer::DataState || m_options.usePreHTML5ParserQuirks || m_options.useThreading);
-                m_parser->tokenizer()->setState(HTMLTokenizer::DataState);
+                ASSERT(m_parser.tokenizer()->state() == HTMLTokenizer::DataState || m_options.usePreHTML5ParserQuirks || m_options.useThreading);
+                m_parser.tokenizer()->setState(HTMLTokenizer::DataState);
             }
             return;
         }
@@ -2738,8 +2720,8 @@ void HTMLTreeBuilder::processGenericRCDATAStartTag(AtomicHTMLToken* token)
 {
     ASSERT(token->type() == HTMLToken::StartTag);
     m_tree.insertHTMLElement(token);
-    if (m_parser->tokenizer())
-        m_parser->tokenizer()->setState(HTMLTokenizer::RCDATAState);
+    if (m_parser.tokenizer())
+        m_parser.tokenizer()->setState(HTMLTokenizer::RCDATAState);
     m_originalInsertionMode = m_insertionMode;
     setInsertionMode(TextMode);
 }
@@ -2748,8 +2730,8 @@ void HTMLTreeBuilder::processGenericRawTextStartTag(AtomicHTMLToken* token)
 {
     ASSERT(token->type() == HTMLToken::StartTag);
     m_tree.insertHTMLElement(token);
-    if (m_parser->tokenizer())
-        m_parser->tokenizer()->setState(HTMLTokenizer::RAWTEXTState);
+    if (m_parser.tokenizer())
+        m_parser.tokenizer()->setState(HTMLTokenizer::RAWTEXTState);
     m_originalInsertionMode = m_insertionMode;
     setInsertionMode(TextMode);
 }
@@ -2758,11 +2740,11 @@ void HTMLTreeBuilder::processScriptStartTag(AtomicHTMLToken* token)
 {
     ASSERT(token->type() == HTMLToken::StartTag);
     m_tree.insertScriptElement(token);
-    if (m_parser->tokenizer())
-        m_parser->tokenizer()->setState(HTMLTokenizer::ScriptDataState);
+    if (m_parser.tokenizer())
+        m_parser.tokenizer()->setState(HTMLTokenizer::ScriptDataState);
     m_originalInsertionMode = m_insertionMode;
 
-    TextPosition position = m_parser->textPosition();
+    TextPosition position = m_parser.textPosition();
 
     m_scriptToProcessStartPosition = position;
 

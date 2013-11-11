@@ -41,19 +41,17 @@ static EncodedJSValue JSC_HOST_CALL objectProtoFuncLookupSetter(ExecState*);
 static EncodedJSValue JSC_HOST_CALL objectProtoFuncPropertyIsEnumerable(ExecState*);
 static EncodedJSValue JSC_HOST_CALL objectProtoFuncToLocaleString(ExecState*);
 
-ASSERT_HAS_TRIVIAL_DESTRUCTOR(ObjectPrototype);
+STATIC_ASSERT_IS_TRIVIALLY_DESTRUCTIBLE(ObjectPrototype);
 
 const ClassInfo ObjectPrototype::s_info = { "Object", &JSNonFinalObject::s_info, 0, 0, CREATE_METHOD_TABLE(ObjectPrototype) };
 
-ObjectPrototype::ObjectPrototype(ExecState* exec, Structure* stucture)
-    : JSNonFinalObject(exec->vm(), stucture)
+ObjectPrototype::ObjectPrototype(VM& vm, Structure* stucture)
+    : JSNonFinalObject(vm, stucture)
 {
 }
 
-void ObjectPrototype::finishCreation(ExecState* exec, JSGlobalObject* globalObject)
+void ObjectPrototype::finishCreation(VM& vm, JSGlobalObject* globalObject)
 {
-    VM& vm = exec->vm();
-    
     Base::finishCreation(vm);
     ASSERT(inherits(info()));
     vm.prototypeMap.addPrototype(this);
@@ -70,10 +68,10 @@ void ObjectPrototype::finishCreation(ExecState* exec, JSGlobalObject* globalObje
     JSC_NATIVE_FUNCTION(vm.propertyNames->__lookupSetter__, objectProtoFuncLookupSetter, DontEnum, 1);
 }
 
-ObjectPrototype* ObjectPrototype::create(ExecState* exec, JSGlobalObject* globalObject, Structure* structure)
+ObjectPrototype* ObjectPrototype::create(VM& vm, JSGlobalObject* globalObject, Structure* structure)
 {
-    ObjectPrototype* prototype = new (NotNull, allocateCell<ObjectPrototype>(*exec->heap())) ObjectPrototype(exec, structure);
-    prototype->finishCreation(exec, globalObject);
+    ObjectPrototype* prototype = new (NotNull, allocateCell<ObjectPrototype>(vm.heap)) ObjectPrototype(vm, structure);
+    prototype->finishCreation(vm, globalObject);
     return prototype;
 }
 
@@ -180,8 +178,12 @@ EncodedJSValue JSC_HOST_CALL objectProtoFuncLookupSetter(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL objectProtoFuncPropertyIsEnumerable(ExecState* exec)
 {
-    JSValue thisValue = exec->hostThisValue().toThis(exec, StrictMode);
-    return JSValue::encode(jsBoolean(thisValue.toObject(exec)->propertyIsEnumerable(exec, Identifier(exec, exec->argument(0).toString(exec)->value(exec)))));
+    JSObject* thisObject = exec->hostThisValue().toThis(exec, StrictMode).toObject(exec);
+    Identifier propertyName(exec, exec->argument(0).toString(exec)->value(exec));
+
+    PropertyDescriptor descriptor;
+    bool enumerable = thisObject->getOwnPropertyDescriptor(exec, propertyName, descriptor) && descriptor.enumerable();
+    return JSValue::encode(jsBoolean(enumerable));
 }
 
 // 15.2.4.3 Object.prototype.toLocaleString()

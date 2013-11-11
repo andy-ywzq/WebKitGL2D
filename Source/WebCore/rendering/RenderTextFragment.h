@@ -33,13 +33,15 @@ namespace WebCore {
 // the original unaltered string from our corresponding DOM node.
 class RenderTextFragment FINAL : public RenderText {
 public:
-    RenderTextFragment(Node*, StringImpl*, int startOffset, int length);
-    RenderTextFragment(Node*, StringImpl*);
+    RenderTextFragment(Text&, const String&, int startOffset, int length);
+    RenderTextFragment(Document&, const String&, int startOffset, int length);
+    RenderTextFragment(Document&, const String&);
+
     virtual ~RenderTextFragment();
 
-    virtual bool isTextFragment() const { return true; }
+    virtual bool isTextFragment() const OVERRIDE { return true; }
 
-    virtual bool canBeSelectionLeaf() const OVERRIDE { return node() && node()->rendererIsEditable(); }
+    virtual bool canBeSelectionLeaf() const OVERRIDE;
 
     unsigned start() const { return m_start; }
     unsigned end() const { return m_end; }
@@ -47,25 +49,23 @@ public:
     RenderObject* firstLetter() const { return m_firstLetter; }
     void setFirstLetter(RenderObject* firstLetter) { m_firstLetter = firstLetter; }
 
-    StringImpl* contentString() const { return m_contentString.get(); }
-    virtual PassRefPtr<StringImpl> originalText() const;
+    StringImpl* contentString() const { return m_contentString.impl(); }
+    virtual String originalText() const OVERRIDE;
 
-    virtual void setText(PassRefPtr<StringImpl>, bool force = false) OVERRIDE;
+    virtual void setText(const String&, bool force = false) OVERRIDE;
 
     virtual void transformText() OVERRIDE;
 
-protected:
-    virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle);
-
 private:
-    virtual void willBeDestroyed();
+    virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle) OVERRIDE;
+    virtual void willBeDestroyed() OVERRIDE;
 
-    virtual UChar previousCharacter() const;
+    virtual UChar previousCharacter() const OVERRIDE;
     RenderBlock* blockForAccompanyingFirstLetter() const;
 
     unsigned m_start;
     unsigned m_end;
-    RefPtr<StringImpl> m_contentString;
+    String m_contentString;
     RenderObject* m_firstLetter;
 };
 

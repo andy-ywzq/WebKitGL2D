@@ -773,7 +773,7 @@ PassRefPtr<InspectorArray> InspectorArrayBase::asArray()
 void InspectorArrayBase::writeJSON(StringBuilder* output) const
 {
     output->append('[');
-    for (Vector<RefPtr<InspectorValue> >::const_iterator it = m_data.begin(); it != m_data.end(); ++it) {
+    for (Vector<RefPtr<InspectorValue>>::const_iterator it = m_data.begin(); it != m_data.end(); ++it) {
         if (it != m_data.begin())
             output->append(',');
         (*it)->writeJSON(output);
@@ -791,6 +791,46 @@ PassRefPtr<InspectorValue> InspectorArrayBase::get(size_t index)
 {
     ASSERT_WITH_SECURITY_IMPLICATION(index < m_data.size());
     return m_data[index];
+}
+
+PassRefPtr<InspectorObject> InspectorObject::create()
+{
+    return adoptRef(new InspectorObject);
+}
+
+PassRefPtr<InspectorArray> InspectorArray::create()
+{
+    return adoptRef(new InspectorArray);
+}
+
+PassRefPtr<InspectorValue> InspectorValue::null()
+{
+    return adoptRef(new InspectorValue);
+}
+
+PassRefPtr<InspectorString> InspectorString::create(const String& value)
+{
+    return adoptRef(new InspectorString(value));
+}
+
+PassRefPtr<InspectorString> InspectorString::create(const char* value)
+{
+    return adoptRef(new InspectorString(value));
+}
+
+PassRefPtr<InspectorBasicValue> InspectorBasicValue::create(bool value)
+{
+    return adoptRef(new InspectorBasicValue(value));
+}
+
+PassRefPtr<InspectorBasicValue> InspectorBasicValue::create(int value)
+{
+    return adoptRef(new InspectorBasicValue(value));
+}
+
+PassRefPtr<InspectorBasicValue> InspectorBasicValue::create(double value)
+{
+    return adoptRef(new InspectorBasicValue(value));
 }
 
 } // namespace WebCore

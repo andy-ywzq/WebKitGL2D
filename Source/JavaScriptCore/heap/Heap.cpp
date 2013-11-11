@@ -29,6 +29,7 @@
 #include "DFGWorklist.h"
 #include "GCActivityCallback.h"
 #include "GCIncomingRefCountedSetInlines.h"
+#include "HeapIterationScope.h"
 #include "HeapRootVisitor.h"
 #include "HeapStatistics.h"
 #include "IncrementalSweeper.h"
@@ -54,6 +55,8 @@ namespace {
 
 static const size_t largeHeapSize = 32 * MB; // About 1.5X the average webpage.
 static const size_t smallHeapSize = 1 * MB; // Matches the FastMalloc per-thread cache.
+
+#define ENABLE_GC_LOGGING 0
 
 #if ENABLE(GC_LOGGING)
 #if COMPILER(CLANG)
@@ -251,6 +254,8 @@ Heap::Heap(VM* vm, HeapType heapType)
     , m_bytesAllocatedLimit(m_minBytesPerCycle)
     , m_bytesAllocated(0)
     , m_bytesAbandoned(0)
+    , m_totalBytesVisited(0)
+    , m_totalBytesCopied(0)
     , m_operationInProgress(NoOperation)
     , m_blockAllocator()
     , m_objectSpace(this)
@@ -328,7 +333,8 @@ void Heap::reportAbandonedObjectGraph()
 
 void Heap::didAbandon(size_t bytes)
 {
-    m_activityCallback->didAllocate(m_bytesAllocated + m_bytesAbandoned);
+    if (m_activityCallback)
+        m_activityCallback->didAllocate(m_bytesAllocated + m_bytesAbandoned);
     m_bytesAbandoned += bytes;
 }
 
@@ -352,11 +358,6 @@ bool Heap::unprotect(JSValue k)
         return false;
 
     return m_protectedValues.remove(k.asCell());
-}
-
-void Heap::jettisonDFGCodeBlock(PassRefPtr<CodeBlock> codeBlock)
-{
-    m_dfgCodeBlocks.jettison(codeBlock);
 }
 
 void Heap::addReference(JSCell* cell, ArrayBuffer* buffer)
@@ -416,9 +417,14 @@ inline JSStack& Heap::stack()
     return m_vm->interpreter->stack();
 }
 
-void Heap::canonicalizeCellLivenessData()
+void Heap::willStartIterating()
 {
-    m_objectSpace.canonicalizeCellLivenessData();
+    m_objectSpace.willStartIterating();
+}
+
+void Heap::didFinishIterating()
+{
+    m_objectSpace.didFinishIterating();
 }
 
 void Heap::getConservativeRegisterRoots(HashSet<JSCell*>& roots)
@@ -457,11 +463,10 @@ void Heap::markRoots()
     }
 
     ConservativeRoots stackRoots(&m_objectSpace.blocks(), &m_storageSpace);
-    m_dfgCodeBlocks.clearMarks();
+    m_codeBlocks.clearMarks();
     {
         GCPHASE(GatherStackRoots);
-        stack().gatherConservativeRoots(
-            stackRoots, m_jitStubRoutines, m_dfgCodeBlocks);
+        stack().gatherConservativeRoots(stackRoots, m_jitStubRoutines, m_codeBlocks);
     }
 
 #if ENABLE(DFG_JIT)
@@ -473,7 +478,8 @@ void Heap::markRoots()
 #endif
 
     {
-        GCPHASE(clearMarks);
+        GCPHASE(ClearLivenessData);
+        m_objectSpace.clearNewlyAllocated();
         m_objectSpace.clearMarks();
     }
 
@@ -484,12 +490,6 @@ void Heap::markRoots()
 
     {
         ParallelModeEnabler enabler(visitor);
-
-        if (m_vm->codeBlocksBeingCompiled.size()) {
-            GCPHASE(VisitActiveCodeBlock);
-            for (size_t i = 0; i < m_vm->codeBlocksBeingCompiled.size(); i++)
-                m_vm->codeBlocksBeingCompiled[i]->visitAggregate(visitor);
-        }
 
         m_vm->smallStrings.visitStrongReferences(visitor);
 
@@ -534,10 +534,10 @@ void Heap::markRoots()
                 visitor.donateAndDrain();
             }
         }
-        if (m_vm->exception) {
+        if (m_vm->exception()) {
             GCPHASE(MarkingException);
             MARK_LOG_ROOT(visitor, "Exceptions");
-            heapRootVisitor.visit(&m_vm->exception);
+            heapRootVisitor.visit(m_vm->addressOfException());
             visitor.donateAndDrain();
         }
     
@@ -558,7 +558,7 @@ void Heap::markRoots()
         {
             GCPHASE(TraceCodeBlocksAndJITStubRoutines);
             MARK_LOG_ROOT(visitor, "Trace Code Blocks and JIT Stub Routines");
-            m_dfgCodeBlocks.traceMarkedCodeBlocks(visitor);
+            m_codeBlocks.traceMarked(visitor);
             m_jitStubRoutines.traceMarkedStubRoutines(visitor);
             visitor.donateAndDrain();
         }
@@ -600,6 +600,13 @@ void Heap::markRoots()
     visitCount += m_sharedData.childVisitCount();
 #endif
     MARK_LOG_MESSAGE2("\nNumber of live Objects after full GC %lu, took %.6f secs\n", visitCount, WTF::monotonicallyIncreasingTime() - gcStartTime);
+#endif
+
+    m_totalBytesVisited = visitor.bytesVisited();
+    m_totalBytesCopied = visitor.bytesCopied();
+#if ENABLE(PARALLEL_GC)
+    m_totalBytesVisited += m_sharedData.childBytesVisited();
+    m_totalBytesCopied += m_sharedData.childBytesCopied();
 #endif
 
     visitor.reset();
@@ -645,6 +652,16 @@ size_t Heap::capacity()
     return m_objectSpace.capacity() + m_storageSpace.capacity() + extraSize();
 }
 
+size_t Heap::sizeAfterCollect()
+{
+    // The result here may not agree with the normal Heap::size(). 
+    // This is due to the fact that we only count live copied bytes
+    // rather than all used (including dead) copied bytes, thus it's 
+    // always the case that m_totalBytesCopied <= m_storageSpace.size(). 
+    ASSERT(m_totalBytesCopied <= m_storageSpace.size());
+    return m_totalBytesVisited + m_totalBytesCopied + extraSize();
+}
+
 size_t Heap::protectedGlobalObjectCount()
 {
     return forEachProtectedCell<CountIfGlobalObject>();
@@ -652,7 +669,8 @@ size_t Heap::protectedGlobalObjectCount()
 
 size_t Heap::globalObjectCount()
 {
-    return m_objectSpace.forEachLiveCell<CountIfGlobalObject>();
+    HeapIterationScope iterationScope(*this);
+    return m_objectSpace.forEachLiveCell<CountIfGlobalObject>(iterationScope);
 }
 
 size_t Heap::protectedObjectCount()
@@ -667,7 +685,8 @@ PassOwnPtr<TypeCountSet> Heap::protectedObjectTypeCounts()
 
 PassOwnPtr<TypeCountSet> Heap::objectTypeCounts()
 {
-    return m_objectSpace.forEachLiveCell<RecordType>();
+    HeapIterationScope iterationScope(*this);
+    return m_objectSpace.forEachLiveCell<RecordType>(iterationScope);
 }
 
 void Heap::deleteAllCompiledCode()
@@ -683,8 +702,8 @@ void Heap::deleteAllCompiledCode()
         static_cast<FunctionExecutable*>(current)->clearCodeIfNotCompiling();
     }
 
-    m_dfgCodeBlocks.clearMarks();
-    m_dfgCodeBlocks.deleteUnmarkedJettisonedCodeBlocks();
+    m_codeBlocks.clearMarks();
+    m_codeBlocks.deleteUnmarkedAndUnreferenced();
 }
 
 void Heap::deleteUnmarkedCompiledCode()
@@ -701,7 +720,7 @@ void Heap::deleteUnmarkedCompiledCode()
         m_compiledCode.remove(current);
     }
 
-    m_dfgCodeBlocks.deleteUnmarkedJettisonedCodeBlocks();
+    m_codeBlocks.deleteUnmarkedAndUnreferenced();
     m_jitStubRoutines.deleteUnmarkedJettisonedStubRoutines();
 }
 
@@ -744,7 +763,8 @@ void Heap::collect(SweepToggle sweepToggle)
     m_operationInProgress = Collection;
     m_extraMemoryUsage = 0;
 
-    m_activityCallback->willCollect();
+    if (m_activityCallback)
+        m_activityCallback->willCollect();
 
     double lastGCStartTime = WTF::monotonicallyIncreasingTime();
     if (lastGCStartTime - m_lastCodeDiscardTime > minute) {
@@ -753,8 +773,8 @@ void Heap::collect(SweepToggle sweepToggle)
     }
 
     {
-        GCPHASE(Canonicalize);
-        m_objectSpace.canonicalizeCellLivenessData();
+        GCPHASE(StopAllocation);
+        m_objectSpace.stopAllocating();
     }
 
     markRoots();
@@ -809,7 +829,7 @@ void Heap::collect(SweepToggle sweepToggle)
         m_objectSpace.resetAllocators();
     }
     
-    size_t currentHeapSize = size();
+    size_t currentHeapSize = sizeAfterCollect();
     if (Options::gcMaxHeapSize() && currentHeapSize > Options::gcMaxHeapSize())
         HeapStatistics::exitWithFailure();
 
@@ -865,7 +885,8 @@ bool Heap::collectIfNecessaryOrDefer()
 
 void Heap::markDeadObjects()
 {
-    m_objectSpace.forEachDeadCell<MarkObject>();
+    HeapIterationScope iterationScope(*this);
+    m_objectSpace.forEachDeadCell<MarkObject>(iterationScope);
 }
 
 void Heap::setActivityCallback(PassOwnPtr<GCActivityCallback> activityCallback)
@@ -878,6 +899,11 @@ GCActivityCallback* Heap::activityCallback()
     return m_activityCallback.get();
 }
 
+void Heap::setIncrementalSweeper(PassOwnPtr<IncrementalSweeper> sweeper)
+{
+    m_sweeper = sweeper;
+}
+
 IncrementalSweeper* Heap::sweeper()
 {
     return m_sweeper.get();
@@ -885,12 +911,14 @@ IncrementalSweeper* Heap::sweeper()
 
 void Heap::setGarbageCollectionTimerEnabled(bool enable)
 {
-    activityCallback()->setEnabled(enable);
+    if (m_activityCallback)
+        m_activityCallback->setEnabled(enable);
 }
 
 void Heap::didAllocate(size_t bytes)
 {
-    m_activityCallback->didAllocate(m_bytesAllocated + m_bytesAbandoned);
+    if (m_activityCallback)
+        m_activityCallback->didAllocate(m_bytesAllocated + m_bytesAbandoned);
     m_bytesAllocated += bytes;
 }
 
@@ -944,7 +972,8 @@ void Heap::zombifyDeadObjects()
 {
     // Sweep now because destructors will crash once we're zombified.
     m_objectSpace.sweep();
-    m_objectSpace.forEachDeadCell<Zombify>();
+    HeapIterationScope iterationScope(*this);
+    m_objectSpace.forEachDeadCell<Zombify>(iterationScope);
 }
 
 void Heap::incrementDeferralDepth()

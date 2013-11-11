@@ -90,9 +90,9 @@ void Image::fillWithSolidColor(GraphicsContext* ctxt, const FloatRect& dstRect, 
     ctxt->setCompositeOperation(previousOperator);
 }
 
-void Image::draw(GraphicsContext* ctx, const FloatRect& dstRect, const FloatRect& srcRect, ColorSpace styleColorSpace, CompositeOperator op, BlendMode blendMode, ImageOrientationDescription)
+void Image::draw(GraphicsContext* ctx, const FloatRect& dstRect, const FloatRect& srcRect, ColorSpace styleColorSpace, CompositeOperator op, BlendMode blendMode, ImageOrientationDescription description)
 {
-    draw(ctx, dstRect, srcRect, styleColorSpace, op, blendMode);
+    draw(ctx, dstRect, srcRect, styleColorSpace, op, blendMode, description);
 }
 
 void Image::drawTiled(GraphicsContext* ctxt, const FloatRect& destRect, const FloatPoint& srcPoint, const FloatSize& scaledTileSize, ColorSpace styleColorSpace, CompositeOperator op, BlendMode blendMode)
@@ -114,25 +114,26 @@ void Image::drawTiled(GraphicsContext* ctxt, const FloatRect& destRect, const Fl
                     scaledTileSize.height() / intrinsicTileSize.height());
 
     FloatRect oneTileRect;
-    oneTileRect.setX(destRect.x() + fmodf(fmodf(-srcPoint.x(), scaledTileSize.width()) - scaledTileSize.width(), scaledTileSize.width()));
-    oneTileRect.setY(destRect.y() + fmodf(fmodf(-srcPoint.y(), scaledTileSize.height()) - scaledTileSize.height(), scaledTileSize.height()));
+    FloatSize actualTileSize(scaledTileSize.width() + spaceSize().width(), scaledTileSize.height() + spaceSize().height());
+    oneTileRect.setX(destRect.x() + fmodf(fmodf(-srcPoint.x(), actualTileSize.width()) - actualTileSize.width(), actualTileSize.width()));
+    oneTileRect.setY(destRect.y() + fmodf(fmodf(-srcPoint.y(), actualTileSize.height()) - actualTileSize.height(), actualTileSize.height()));
     oneTileRect.setSize(scaledTileSize);
     
     // Check and see if a single draw of the image can cover the entire area we are supposed to tile.    
-    if (oneTileRect.contains(destRect)) {
+    if (oneTileRect.contains(destRect) && !ctxt->drawLuminanceMask()) {
         FloatRect visibleSrcRect;
         visibleSrcRect.setX((destRect.x() - oneTileRect.x()) / scale.width());
         visibleSrcRect.setY((destRect.y() - oneTileRect.y()) / scale.height());
         visibleSrcRect.setWidth(destRect.width() / scale.width());
         visibleSrcRect.setHeight(destRect.height() / scale.height());
-        draw(ctxt, destRect, visibleSrcRect, styleColorSpace, op, blendMode);
+        draw(ctxt, destRect, visibleSrcRect, styleColorSpace, op, blendMode, ImageOrientationDescription());
         return;
     }
 
     AffineTransform patternTransform = AffineTransform().scaleNonUniform(scale.width(), scale.height());
-    FloatRect tileRect(FloatPoint(), intrinsicTileSize);    
+    FloatRect tileRect(FloatPoint(), intrinsicTileSize);
     drawPattern(ctxt, tileRect, patternTransform, oneTileRect.location(), styleColorSpace, op, destRect, blendMode);
-    
+
     startAnimation();
 }
 

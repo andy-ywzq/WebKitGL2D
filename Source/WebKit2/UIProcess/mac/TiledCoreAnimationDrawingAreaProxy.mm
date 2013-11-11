@@ -26,8 +26,6 @@
 #import "config.h"
 #import "TiledCoreAnimationDrawingAreaProxy.h"
 
-#if ENABLE(THREADED_SCROLLING)
-
 #import "ColorSpaceData.h"
 #import "DrawingAreaMessages.h"
 #import "DrawingAreaProxyMessages.h"
@@ -38,11 +36,6 @@
 using namespace WebCore;
 
 namespace WebKit {
-
-PassOwnPtr<TiledCoreAnimationDrawingAreaProxy> TiledCoreAnimationDrawingAreaProxy::create(WebPageProxy* webPageProxy)
-{
-    return adoptPtr(new TiledCoreAnimationDrawingAreaProxy(webPageProxy));
-}
 
 TiledCoreAnimationDrawingAreaProxy::TiledCoreAnimationDrawingAreaProxy(WebPageProxy* webPageProxy)
     : DrawingAreaProxy(DrawingAreaTypeTiledCoreAnimation, webPageProxy)
@@ -57,14 +50,6 @@ TiledCoreAnimationDrawingAreaProxy::~TiledCoreAnimationDrawingAreaProxy()
 void TiledCoreAnimationDrawingAreaProxy::deviceScaleFactorDidChange()
 {
     m_webPageProxy->process()->send(Messages::DrawingArea::SetDeviceScaleFactor(m_webPageProxy->deviceScaleFactor()), m_webPageProxy->pageID());
-}
-
-void TiledCoreAnimationDrawingAreaProxy::visibilityDidChange()
-{
-    if (!m_webPageProxy->isViewVisible())
-        m_webPageProxy->process()->send(Messages::DrawingArea::SuspendPainting(), m_webPageProxy->pageID());
-    else
-        m_webPageProxy->process()->send(Messages::DrawingArea::ResumePainting(), m_webPageProxy->pageID());
 }
 
 void TiledCoreAnimationDrawingAreaProxy::layerHostingModeDidChange()
@@ -162,5 +147,3 @@ void TiledCoreAnimationDrawingAreaProxy::sendUpdateGeometry()
 }
 
 } // namespace WebKit
-
-#endif // ENABLE(THREADED_SCROLLING)

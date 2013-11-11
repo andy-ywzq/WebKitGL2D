@@ -56,10 +56,6 @@ messages -> WebProcess LegacyReceiver {
     DestroyPrivateBrowsingSession()
 
     # Plug-ins.
-#if ENABLE(NETSCAPE_PLUGIN_API) && !ENABLE(PLUGIN_PROCESS)
-    GetSitesWithPluginData(Vector<WTF::String> pluginPaths, uint64_t callbackID)
-    ClearPluginSiteData(Vector<WTF::String> pluginPaths, Vector<WTF::String> sites, uint64_t flags, uint64_t maxAgeInSeconds, uint64_t callbackID)
-#endif
     DidAddPlugInAutoStartOriginHash(uint32_t hash, double expirationTime)
     ResetPlugInAutoStartOriginHashes(HashMap<uint32_t,double> hashes)
 
@@ -70,9 +66,6 @@ messages -> WebProcess LegacyReceiver {
     # two messages.
     DownloadRequest(uint64_t downloadID, uint64_t initiatingPageID, WebCore::ResourceRequest request)
     CancelDownload(uint64_t downloadID)
-#if PLATFORM(QT)
-    StartTransfer(uint64_t downloadID, WTF::String destination)
-#endif
 
     SetTextCheckerState(WebKit::TextCheckerState textCheckerState)
 
@@ -88,5 +81,9 @@ messages -> WebProcess LegacyReceiver {
 
 #if PLATFORM(MAC)
     SetProcessSuppressionEnabled(bool flag);
+#endif
+
+#if !ENABLE(NETWORK_PROCESS) && USE(SOUP)
+    AllowSpecificHTTPSCertificateForHost(WebKit::PlatformCertificateInfo certificate, WTF::String host)
 #endif
 }

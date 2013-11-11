@@ -87,14 +87,14 @@ public:
     }
 
     static Node* scriptValueAsNode(ScriptValue);
-    static ScriptValue nodeAsScriptValue(ScriptState*, Node*);
+    static ScriptValue nodeAsScriptValue(JSC::ExecState*, Node*);
 
     void disconnect();
 
     class InspectableObject {
         WTF_MAKE_FAST_ALLOCATED;
     public:
-        virtual ScriptValue get(ScriptState*);
+        virtual ScriptValue get(JSC::ExecState*);
         virtual ~InspectableObject() { }
     };
     void addInspectedObject(PassOwnPtr<InspectableObject>);
@@ -128,7 +128,7 @@ private:
 #if ENABLE(JAVASCRIPT_DEBUGGER)
     InspectorDebuggerAgent* m_debuggerAgent;
 #endif
-    Vector<OwnPtr<InspectableObject> > m_inspectedObjects;
+    Vector<OwnPtr<InspectableObject>> m_inspectedObjects;
     OwnPtr<InspectableObject> m_defaultInspectableObject;
 };
 

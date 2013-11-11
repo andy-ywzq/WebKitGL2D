@@ -23,24 +23,23 @@
 #ifndef RenderLayerModelObject_h
 #define RenderLayerModelObject_h
 
-#include "RenderObject.h"
+#include "RenderElement.h"
 
 namespace WebCore {
 
 class RenderLayer;
 
-class RenderLayerModelObject : public RenderObject {
+class RenderLayerModelObject : public RenderElement {
 public:
-    explicit RenderLayerModelObject(ContainerNode*);
     virtual ~RenderLayerModelObject();
 
     // Called by RenderObject::willBeDestroyed() and is the only way layers should ever be destroyed
     void destroyLayer();
 
     bool hasSelfPaintingLayer() const;
-    RenderLayer* layer() const { return m_layer; }
+    RenderLayer* layer() const { return m_layer.get(); }
 
-    virtual void styleWillChange(StyleDifference, const RenderStyle* newStyle) OVERRIDE;
+    virtual void styleWillChange(StyleDifference, const RenderStyle& newStyle) OVERRIDE;
     virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle) OVERRIDE;
     virtual void updateFromStyle() { }
 
@@ -50,19 +49,16 @@ public:
     // The query rect is given in local coordinate system.
     virtual bool backgroundIsKnownToBeOpaqueInRect(const LayoutRect&) const { return false; }
 
-    // This is null for anonymous renderers.
-    ContainerNode* node() const { return toContainerNode(RenderObject::node()); }
-
 protected:
-    void ensureLayer();
-    virtual bool updateLayerIfNeeded();
+    RenderLayerModelObject(Element&, PassRef<RenderStyle>, unsigned baseTypeFlags);
+    RenderLayerModelObject(Document&, PassRef<RenderStyle>, unsigned baseTypeFlags);
+
+    void createLayer();
 
     virtual void willBeDestroyed() OVERRIDE;
 
 private:
-    virtual bool isLayerModelObject() const OVERRIDE FINAL { return true; }
-
-    RenderLayer* m_layer;
+    std::unique_ptr<RenderLayer> m_layer;
 
     // Used to store state between styleWillChange and styleDidChange
     static bool s_wasFloating;
@@ -71,20 +67,7 @@ private:
     static bool s_layerWasSelfPainting;
 };
 
-inline RenderLayerModelObject* toRenderLayerModelObject(RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isLayerModelObject());
-    return static_cast<RenderLayerModelObject*>(object);
-}
-
-inline const RenderLayerModelObject* toRenderLayerModelObject(const RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isLayerModelObject());
-    return static_cast<const RenderLayerModelObject*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderLayerModelObject(const RenderLayerModelObject*);
+RENDER_OBJECT_TYPE_CASTS(RenderLayerModelObject, isRenderLayerModelObject())
 
 } // namespace WebCore
 

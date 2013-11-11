@@ -269,6 +269,7 @@
     <ClCompile Include="..\..\win\AccessibleBase.cpp" />
     <ClCompile Include="..\..\win\AccessibleDocument.cpp" />
     <ClCompile Include="..\..\win\AccessibleImage.cpp" />
+    <ClCompile Include="..\..\win\AccessibleTextImpl.cpp" />
     <ClCompile Include="..\..\win\CFDictionaryPropertyBag.cpp" />
     <ClCompile Include="..\..\win\DefaultDownloadDelegate.cpp" />
     <ClCompile Include="..\..\win\DefaultPolicyDelegate.cpp" />
@@ -383,7 +384,6 @@
     <ClCompile Include="..\..\win\WebResource.cpp" />
     <ClCompile Include="..\..\win\WebScriptObject.cpp" />
     <ClCompile Include="..\..\win\WebScriptWorld.cpp" />
-    <ClCompile Include="..\..\win\WebScrollBar.cpp" />
     <ClCompile Include="..\..\win\WebSecurityOrigin.cpp" />
     <ClCompile Include="..\..\win\WebSerializedJSValue.cpp" />
     <ClCompile Include="..\..\win\WebTextRenderer.cpp" />
@@ -416,6 +416,7 @@
     <ClInclude Include="..\..\win\AccessibleBase.h" />
     <ClInclude Include="..\..\win\AccessibleDocument.h" />
     <ClInclude Include="..\..\win\AccessibleImage.h" />
+    <ClInclude Include="..\..\win\AccessibleTextImpl.h" />
     <ClInclude Include="..\..\win\CFDictionaryPropertyBag.h" />
     <ClInclude Include="..\..\win\CodeAnalysisConfig.h" />
     <ClInclude Include="..\..\win\COMEnumVariant.h" />
@@ -488,7 +489,6 @@
     <ClInclude Include="..\..\win\WebResource.h" />
     <ClInclude Include="..\..\win\WebScriptObject.h" />
     <ClInclude Include="..\..\win\WebScriptWorld.h" />
-    <ClInclude Include="..\..\win\WebScrollBar.h" />
     <ClInclude Include="..\..\win\WebSecurityOrigin.h" />
     <ClInclude Include="..\..\win\WebSerializedJSValue.h" />
     <ClInclude Include="..\..\win\WebTextRenderer.h" />

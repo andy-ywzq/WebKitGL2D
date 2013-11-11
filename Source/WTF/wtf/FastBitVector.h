@@ -27,8 +27,6 @@
 #define FastBitVector_h
 
 #include <wtf/FastMalloc.h>
-#include <wtf/OwnArrayPtr.h>
-#include <wtf/PassOwnArrayPtr.h>
 #include <wtf/StdLibExtras.h>
 
 namespace WTF {
@@ -103,10 +101,8 @@ public:
         bool changed = false;
         ASSERT(m_numBits == other.m_numBits);
         for (unsigned i = arrayLength(); i--;) {
-            if (m_array[i] == other.m_array[i])
-                continue;
+            changed |= m_array[i] != other.m_array[i];
             m_array[i] = other.m_array[i];
-            changed = true;
         }
         return changed;
     }
@@ -172,7 +168,7 @@ public:
 private:
     size_t arrayLength() const { return (m_numBits + 31) >> 5; }
     
-    uint32_t* m_array; // No, this can't be an OwnArrayPtr.
+    uint32_t* m_array; // No, this can't be an std::unique_ptr<uint32_t[]>.
     size_t m_numBits;
 };
 

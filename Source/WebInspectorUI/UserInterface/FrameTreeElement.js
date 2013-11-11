@@ -40,6 +40,16 @@ WebInspector.FrameTreeElement = function(frame, representedObject)
     frame.addEventListener(WebInspector.Frame.Event.ChildFrameWasAdded, this._childFrameWasAdded, this);
     frame.addEventListener(WebInspector.Frame.Event.ChildFrameWasRemoved, this._childFrameWasRemoved, this);
 
+    frame.domTree.addEventListener(WebInspector.DOMTree.Event.ContentFlowWasAdded, this._childContentFlowWasAdded, this);
+    frame.domTree.addEventListener(WebInspector.DOMTree.Event.ContentFlowWasRemoved, this._childContentFlowWasRemoved, this);
+    frame.domTree.addEventListener(WebInspector.DOMTree.Event.RootDOMNodeInvalidated, this._rootDOMNodeInvalidated, this);
+
+    if (this._frame.isMainFrame()) {
+        this._downloadingPage = false;
+        WebInspector.notifications.addEventListener(WebInspector.Notification.PageArchiveStarted, this._pageArchiveStarted, this);
+        WebInspector.notifications.addEventListener(WebInspector.Notification.PageArchiveEnded, this._pageArchiveEnded, this);
+    }
+
     this._updateParentStatus();
     this.shouldRefreshChildren = true;
 };
@@ -102,6 +112,47 @@ WebInspector.FrameTreeElement.prototype = {
         WebInspector.GeneralTreeElement.prototype.onattach.call(this);
     },
 
+    // Called from ResourceTreeElement.
+
+    updateStatusForMainFrame: function()
+    {
+        function loadedImages()
+        {
+            if (!this._reloadButton || !this._downloadButton)
+                return;
+
+            var fragment = document.createDocumentFragment("div");
+            fragment.appendChild(this._downloadButton.element);
+            fragment.appendChild(this._reloadButton.element);
+            this.status = fragment;
+
+            delete this._loadingMainFrameButtons;
+        }
+
+        if (this._reloadButton && this._downloadButton) {
+            loadedImages.call(this);
+            return;
+        }
+
+        if (!this._loadingMainFrameButtons) {
+            this._loadingMainFrameButtons = true;
+
+            var tooltip = WebInspector.UIString("Reload page (%s)\nReload ignoring cache (%s)").format(WebInspector._reloadPageKeyboardShortcut.displayName, WebInspector._reloadPageIgnoringCacheKeyboardShortcut.displayName);
+            wrappedSVGDocument("Images/Reload.svg", null, tooltip, function(element) {
+                this._reloadButton = new WebInspector.TreeElementStatusButton(element);
+                this._reloadButton.addEventListener(WebInspector.TreeElementStatusButton.Event.Clicked, this._reloadPageClicked, this);
+                loadedImages.call(this);
+            }.bind(this));
+
+            wrappedSVGDocument("Images/DownloadArrow.svg", null, WebInspector.UIString("Download Web Archive"), function(element) {
+                this._downloadButton = new WebInspector.TreeElementStatusButton(element);
+                this._downloadButton.addEventListener(WebInspector.TreeElementStatusButton.Event.Clicked, this._downloadButtonClicked, this);
+                this._updateDownloadButton();
+                loadedImages.call(this);
+            }.bind(this));
+        }
+    },
+
     // Overrides from TreeElement (Private).
 
     onpopulate: function()
@@ -129,11 +180,16 @@ WebInspector.FrameTreeElement.prototype = {
             for (var j = 0; j < sourceMap.resources.length; ++j)
             this._addTreeElementForRepresentedObject(sourceMap.resources[j]);
         }
+
+        var flowMap = this._frame.domTree.flowMap;
+        for (var flowKey in flowMap)
+            this._addTreeElementForRepresentedObject(flowMap[flowKey]);
     },
 
     onexpand: function()
     {
         this._expandedSetting.value = true;
+        this._frame.domTree.requestContentFlowList();
     },
 
     oncollapse: function()
@@ -191,6 +247,9 @@ WebInspector.FrameTreeElement.prototype = {
         // shouldRefreshChildren will call onpopulate if expanded is true.
         this._updateExpandedSetting();
 
+        if (this._frame.isMainFrame())
+            this._updateDownloadButton();
+
         this.shouldRefreshChildren = true;
     },
 
@@ -212,6 +271,21 @@ WebInspector.FrameTreeElement.prototype = {
     _childFrameWasRemoved: function(event)
     {
         this._removeChildForRepresentedObject(event.data.childFrame);
+    },
+
+    _childContentFlowWasAdded: function(event)
+    {
+        this._addRepresentedObjectToNewChildQueue(event.data.flow);
+    },
+
+    _childContentFlowWasRemoved: function(event)
+    {
+        this._removeChildForRepresentedObject(event.data.flow);
+    },
+
+    _rootDOMNodeInvalidated: function() {
+        if (this.expanded)
+            this._frame.domTree.requestContentFlowList();
     },
 
     _addRepresentedObjectToNewChildQueue: function(representedObject)
@@ -248,8 +322,8 @@ WebInspector.FrameTreeElement.prototype = {
 
     _addChildForRepresentedObject: function(representedObject)
     {
-        console.assert(representedObject instanceof WebInspector.Resource || representedObject instanceof WebInspector.Frame);
-        if (!(representedObject instanceof WebInspector.Resource || representedObject instanceof WebInspector.Frame))
+        console.assert(representedObject instanceof WebInspector.Resource || representedObject instanceof WebInspector.Frame || representedObject instanceof WebInspector.ContentFlow);
+        if (!(representedObject instanceof WebInspector.Resource || representedObject instanceof WebInspector.Frame || representedObject instanceof WebInspector.ContentFlow))
             return;
 
         this._updateParentStatus();
@@ -272,8 +346,8 @@ WebInspector.FrameTreeElement.prototype = {
 
     _removeChildForRepresentedObject: function(representedObject)
     {
-        console.assert(representedObject instanceof WebInspector.Resource || representedObject instanceof WebInspector.Frame);
-        if (!(representedObject instanceof WebInspector.Resource || representedObject instanceof WebInspector.Frame))
+        console.assert(representedObject instanceof WebInspector.Resource || representedObject instanceof WebInspector.Frame || representedObject instanceof WebInspector.ContentFlow);
+        if (!(representedObject instanceof WebInspector.Resource || representedObject instanceof WebInspector.Frame || representedObject instanceof WebInspector.ContentFlow))
             return;
 
         this._removeRepresentedObjectFromNewChildQueue(representedObject);
@@ -305,6 +379,8 @@ WebInspector.FrameTreeElement.prototype = {
                 childTreeElement = new WebInspector.ResourceTreeElement(representedObject);
             else if (representedObject instanceof WebInspector.Frame)
                 childTreeElement = new WebInspector.FrameTreeElement(representedObject);
+            else if (representedObject instanceof WebInspector.ContentFlow)
+                childTreeElement = new WebInspector.ContentFlowTreeElement(representedObject);
         }
 
         this._addTreeElement(childTreeElement);
@@ -342,10 +418,31 @@ WebInspector.FrameTreeElement.prototype = {
         this.insertChild(folderTreeElement, insertionIndexForObjectInListSortedByFunction(folderTreeElement, this.children, this._compareTreeElementsByMainTitle));
     },
 
+    _compareResourceTreeElements: function(a, b)
+    {
+        if (a === b)
+            return 0;
+
+        var aIsResource = a instanceof WebInspector.ResourceTreeElement;
+        var bIsResource = b instanceof WebInspector.ResourceTreeElement;
+
+        if (aIsResource && bIsResource)
+            return WebInspector.ResourceTreeElement.compareResourceTreeElements(a, b);
+
+        if (!aIsResource && !bIsResource) {
+            // When both components are not resources then just compare the titles.
+            return a.mainTitle.localeCompare(b.mainTitle);
+        }
+        
+        // Non-resources should appear before the resources.
+        // FIXME: There should be a better way to group the elements by their type.
+        return aIsResource ? 1 : -1;
+    },
+
     _insertResourceTreeElement: function(parentTreeElement, childTreeElement)
     {
         console.assert(!childTreeElement.parent);
-        parentTreeElement.insertChild(childTreeElement, insertionIndexForObjectInListSortedByFunction(childTreeElement, parentTreeElement.children, WebInspector.ResourceTreeElement.compareResourceTreeElements));
+        parentTreeElement.insertChild(childTreeElement, insertionIndexForObjectInListSortedByFunction(childTreeElement, parentTreeElement.children, this._compareResourceTreeElements));
     },
 
     _removeTreeElement: function(childTreeElement, suppressOnDeselect, suppressSelectSibling)
@@ -395,6 +492,12 @@ WebInspector.FrameTreeElement.prototype = {
             return this._framesFolderTreeElement;
         }
 
+        if (representedObject instanceof WebInspector.ContentFlow) {
+            if (!this._flowsFolderTreeElement)
+                this._flowsFolderTreeElement = createFolderTreeElement.call(this, "flows", WebInspector.UIString("Flows"));
+            return this._flowsFolderTreeElement;
+        }
+
         if (representedObject instanceof WebInspector.Resource) {
             var folderName = this._folderNameForResourceType(representedObject.type);
             if (!folderName)
@@ -433,6 +536,9 @@ WebInspector.FrameTreeElement.prototype = {
         var numberOfSmallCategories = 0;
         var numberOfMediumCategories = 0;
         var foundLargeCategory = false;
+
+        // FIXME: Use this._frame.domTree.flowsCount to count the number of flows in a frame.
+        // https://bugs.webkit.org/show_bug.cgi?id=122926
 
         if (this._frame.childFrames.length >= WebInspector.FrameTreeElement.LargeChildCountThreshold)
             foundLargeCategory = true;
@@ -486,6 +592,48 @@ WebInspector.FrameTreeElement.prototype = {
         }
 
         return false;
+    },
+
+    _reloadPageClicked: function(event)
+    {
+        // Ignore cache when the shift key is pressed.
+        PageAgent.reload(event.data.shiftKey);
+    },
+
+    _downloadButtonClicked: function(event)
+    {
+        WebInspector.archiveMainFrame();
+    },
+
+    _updateDownloadButton: function()
+    {
+        console.assert(this._frame.isMainFrame());
+        if (!this._downloadButton)
+            return;
+
+        if (!PageAgent.archive) {
+            this._downloadButton.hidden = true;
+            return;
+        }
+
+        if (this._downloadingPage) {
+            this._downloadButton.enabled = false;
+            return;
+        }
+
+        this._downloadButton.enabled = WebInspector.canArchiveMainFrame();
+    },
+
+    _pageArchiveStarted: function(event)
+    {
+        this._downloadingPage = true;
+        this._updateDownloadButton();
+    },
+
+    _pageArchiveEnded: function(event)
+    {
+        this._downloadingPage = false;
+        this._updateDownloadButton();
     }
 };
 

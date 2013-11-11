@@ -36,11 +36,6 @@
 #include <wtf/RetainPtr.h>
 #endif
 
-#if PLATFORM(QT)
-#include <QPointer>
-#include <qglobal.h>
-#endif
-
 #if PLATFORM(MAC)
 OBJC_CLASS NSView;
 OBJC_CLASS NSWindow;
@@ -58,30 +53,20 @@ typedef struct _GtkContainer GtkContainer;
 typedef GtkWidget* PlatformWidget;
 #endif
 
-#if PLATFORM(QT)
-QT_BEGIN_NAMESPACE
-class QObject;
-QT_END_NAMESPACE
-typedef QObject* PlatformWidget;
-#endif
-
 #if PLATFORM(BLACKBERRY) || PLATFORM(NIX)
 typedef void* PlatformWidget;
 #endif
 
 #if PLATFORM(EFL)
 #if USE(EO)
-typedef struct _Eo Evas_Object;
+typedef struct _Eo_Opaque Evas_Object;
 #else
 typedef struct _Evas_Object Evas_Object;
 #endif
 typedef Evas_Object* PlatformWidget;
 #endif
 
-#if PLATFORM(QT)
-class QWebPageClient;
-typedef QWebPageClient* PlatformPageClient;
-#elif PLATFORM(BLACKBERRY)
+#if PLATFORM(BLACKBERRY)
 #include "PageClientBlackBerry.h"
 typedef PageClientBlackBerry* PlatformPageClient;
 #elif PLATFORM(EFL)
@@ -99,7 +84,6 @@ class Font;
 class GraphicsContext;
 class PlatformMouseEvent;
 class ScrollView;
-class WidgetPrivate;
 
 enum WidgetNotification { WillPaintFlattened, DidPaintFlattened };
 
@@ -194,9 +178,6 @@ public:
 
     virtual void frameRectsChanged() { }
 
-    // Notifies this widget that other widgets on the page have been repositioned.
-    virtual void widgetPositionsUpdated() {}
-
     // Notifies this widget that its clip rect changed.
     virtual void clipRectChanged() { }
 
@@ -213,11 +194,6 @@ public:
 #if PLATFORM(EFL)
     void setEvasObject(Evas_Object*);
     Evas_Object* evasObject() { return m_evasObject; }
-#endif
-
-#if PLATFORM(QT)
-    QObject* bindingObject() const;
-    void setBindingObject(QObject*);
 #endif
 
     // Virtual methods to convert points to/from the containing ScrollView
@@ -252,18 +228,9 @@ private:
 
     IntRect m_frame; // Not used when a native widget exists.
 
-#if PLATFORM(MAC)
-    WidgetPrivate* m_data;
-#endif
-
 #if PLATFORM(EFL)
     Evas_Object* m_evasObject;
 #endif
-
-#if PLATFORM(QT)
-    QPointer<QObject> m_bindingObject;
-#endif
-
 };
 
 #if !PLATFORM(MAC)

@@ -40,10 +40,10 @@ public:
     {
         return adoptRef(new PseudoElement(host, pseudoId));
     }
-    ~PseudoElement();
+    virtual ~PseudoElement();
 
     Element* hostElement() const { return m_hostElement; }
-    void clearHostElement() { m_hostElement = 0; }
+    void clearHostElement() { m_hostElement = nullptr; }
 
     virtual PassRefPtr<RenderStyle> customStyleForRenderer() OVERRIDE;
     virtual void didAttachRenderers() OVERRIDE;
@@ -52,7 +52,7 @@ public:
     // As per http://dev.w3.org/csswg/css3-regions/#flow-into, pseudo-elements such as ::first-line, ::first-letter, ::before or ::after
     // cannot be directly collected into a named flow.
 #if ENABLE(CSS_REGIONS)
-    virtual bool shouldMoveToFlowThread(RenderStyle*) const OVERRIDE { return false; }
+    virtual bool shouldMoveToFlowThread(const RenderStyle&) const OVERRIDE { return false; }
 #endif
 
     virtual bool canStartSelection() const OVERRIDE { return false; }
@@ -74,20 +74,12 @@ const QualifiedName& pseudoElementTagName();
 
 inline bool pseudoElementRendererIsNeeded(const RenderStyle* style)
 {
-    return style && style->display() != NONE && (style->contentData() || !style->regionThread().isEmpty());
+    return style && style->display() != NONE && (style->contentData() || style->hasFlowFrom());
 }
 
-inline PseudoElement* toPseudoElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->isPseudoElement());
-    return static_cast<PseudoElement*>(node);
-}
-
-inline const PseudoElement* toPseudoElement(const Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->isPseudoElement());
-    return static_cast<const PseudoElement*>(node);
-}
+void isPseudoElement(const PseudoElement&); // Catch unnecessary runtime check of type known at compile time.
+inline bool isPseudoElement(const Node& node) { return node.isPseudoElement(); }
+NODE_TYPE_CASTS(PseudoElement)
 
 } // namespace
 

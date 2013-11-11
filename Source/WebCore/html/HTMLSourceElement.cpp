@@ -34,13 +34,11 @@
 #include "HTMLNames.h"
 #include "Logging.h"
 
-using namespace std;
-
 namespace WebCore {
 
 using namespace HTMLNames;
 
-inline HTMLSourceElement::HTMLSourceElement(const QualifiedName& tagName, Document* document)
+inline HTMLSourceElement::HTMLSourceElement(const QualifiedName& tagName, Document& document)
     : HTMLElement(tagName, document)
     , m_errorEventTimer(this, &HTMLSourceElement::errorEventTimerFired)
 {
@@ -48,12 +46,12 @@ inline HTMLSourceElement::HTMLSourceElement(const QualifiedName& tagName, Docume
     ASSERT(hasTagName(sourceTag));
 }
 
-PassRefPtr<HTMLSourceElement> HTMLSourceElement::create(const QualifiedName& tagName, Document* document)
+PassRefPtr<HTMLSourceElement> HTMLSourceElement::create(const QualifiedName& tagName, Document& document)
 {
     return adoptRef(new HTMLSourceElement(tagName, document));
 }
 
-Node::InsertionNotificationRequest HTMLSourceElement::insertedInto(ContainerNode* insertionPoint)
+Node::InsertionNotificationRequest HTMLSourceElement::insertedInto(ContainerNode& insertionPoint)
 {
     HTMLElement::insertedInto(insertionPoint);
     Element* parent = parentElement();
@@ -62,11 +60,11 @@ Node::InsertionNotificationRequest HTMLSourceElement::insertedInto(ContainerNode
     return InsertionDone;
 }
 
-void HTMLSourceElement::removedFrom(ContainerNode* removalRoot)
+void HTMLSourceElement::removedFrom(ContainerNode& removalRoot)
 {
     Element* parent = parentElement();
-    if (!parent && removalRoot->isElementNode())
-        parent = toElement(removalRoot);
+    if (!parent && removalRoot.isElementNode())
+        parent = &toElement(removalRoot);
     if (parent && parent->isMediaElement())
         toHTMLMediaElement(parent)->sourceWasRemoved(this);
     HTMLElement::removedFrom(removalRoot);

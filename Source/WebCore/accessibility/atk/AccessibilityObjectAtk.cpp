@@ -86,13 +86,13 @@ AccessibilityObjectInclusion AccessibilityObject::accessibilityPlatformIncludesO
     if (role == ParagraphRole || role == DivRole) {
         // Don't call textUnderElement() here, because it's slow and it can
         // crash when called while we're in the middle of a subtree being deleted.
-        if (!renderer()->firstChild())
+        if (!renderer()->firstChildSlow())
             return DefaultBehavior;
 
         if (!parent->renderer() || parent->renderer()->isAnonymousBlock())
             return DefaultBehavior;
 
-        for (RenderObject* r = renderer()->firstChild(); r; r = r->nextSibling()) {
+        for (RenderObject* r = renderer()->firstChildSlow(); r; r = r->nextSibling()) {
             if (r->isAnonymousBlock())
                 return IncludeObject;
         }
@@ -156,10 +156,8 @@ unsigned AccessibilityObject::getLengthForTextRange() const
     // Gtk ATs need this for all text objects; not just text controls.
     Node* node = this->node();
     RenderObject* renderer = node ? node->renderer() : 0;
-    if (renderer && renderer->isText()) {
-        RenderText* renderText = toRenderText(renderer);
-        textLength = renderText ? renderText->textLength() : 0;
-    }
+    if (renderer && renderer->isText())
+        textLength = toRenderText(*renderer).textLength();
 
     // Get the text length from the elements under the
     // accessibility object if the value is still zero.

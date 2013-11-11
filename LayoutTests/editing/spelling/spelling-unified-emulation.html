@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="stylesheet" href="../../fast/js/resources/js-test-style.css">
-<script src="../../fast/js/resources/js-test-pre.js"></script>
+<script src="../../resources/js-test-pre.js"></script>
 <script src="../editing.js"></script>
 <style>
 .editing {
@@ -24,10 +23,6 @@ var container = document.getElementById('container');
 function removeChildren(node) {
     while (node.firstChild)
         node.removeChild(node.firstChild);
-}
-
-if (window.testRunner) {
-    testRunner.dumpAsText();
 }
 
 if (window.internals)
@@ -89,6 +84,6 @@ if (window.internals)
 
 var successfullyParsed = true;
 </script>
-<script src="../../fast/js/resources/js-test-post.js"></script>
+<script src="../../resources/js-test-post.js"></script>
 </body>
 </html>

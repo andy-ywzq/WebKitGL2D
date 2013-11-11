@@ -82,7 +82,7 @@ namespace WebCore {
 class AuthenticationChallenge;
 class Credential;
 class Frame;
-class KURL;
+class URL;
 class NetworkingContext;
 class ProtectionSpace;
 class ResourceError;
@@ -111,9 +111,9 @@ public:
 #if PLATFORM(MAC) || USE(CFNETWORK) || USE(CURL) || USE(SOUP)
     bool shouldUseCredentialStorage();
     void didReceiveAuthenticationChallenge(const AuthenticationChallenge&);
-    virtual void receivedCredential(const AuthenticationChallenge&, const Credential&);
-    virtual void receivedRequestToContinueWithoutCredential(const AuthenticationChallenge&);
-    virtual void receivedCancellation(const AuthenticationChallenge&);
+    virtual void receivedCredential(const AuthenticationChallenge&, const Credential&) OVERRIDE;
+    virtual void receivedRequestToContinueWithoutCredential(const AuthenticationChallenge&) OVERRIDE;
+    virtual void receivedCancellation(const AuthenticationChallenge&) OVERRIDE;
 #endif
 
 #if PLATFORM(MAC)
@@ -138,7 +138,7 @@ public:
     static void setClientCertificate(const String& host, CFDataRef);
 #endif
 
-#if PLATFORM(WIN) && USE(CURL)
+#if (PLATFORM(WIN) && USE(CURL)) || (PLATFORM(NIX) && USE(CURL))
     static void setHostAllowsAnyHTTPSCertificate(const String&);
 #endif
 #if PLATFORM(WIN) && USE(CURL) && USE(CF)
@@ -146,7 +146,7 @@ public:
 #endif
 
     bool shouldContentSniff() const;
-    static bool shouldContentSniffURL(const KURL&);
+    static bool shouldContentSniffURL(const URL&);
 
     static void forceContentSniffing();
 
@@ -158,7 +158,7 @@ public:
     static void CALLBACK internetStatusCallback(HINTERNET, DWORD_PTR, DWORD, LPVOID, DWORD);
 #endif
 
-#if PLATFORM(QT) || USE(CURL) || USE(SOUP) || PLATFORM(BLACKBERRY)
+#if USE(CURL) || USE(SOUP) || PLATFORM(BLACKBERRY)
     ResourceHandleInternal* getInternal() { return d.get(); }
 #endif
 
@@ -174,6 +174,9 @@ public:
     static void setHostAllowsAnyHTTPSCertificate(const String&);
     static void setClientCertificate(const String& host, GTlsCertificate*);
     static void setIgnoreSSLErrors(bool);
+#endif
+#if PLATFORM(NIX) && USE(CURL)
+    bool ignoreHTTPSCertificate();
 #endif
 
     // Used to work around the fact that you don't get any more NSURLConnection callbacks until you return from the one you're in.
@@ -255,8 +258,8 @@ private:
     bool start();
     static void platformLoadResourceSynchronously(NetworkingContext*, const ResourceRequest&, StoredCredentials, ResourceError&, ResourceResponse&, Vector<char>& data);
 
-    virtual void refAuthenticationClient() { ref(); }
-    virtual void derefAuthenticationClient() { deref(); }
+    virtual void refAuthenticationClient() OVERRIDE { ref(); }
+    virtual void derefAuthenticationClient() OVERRIDE { deref(); }
 
 #if PLATFORM(MAC) && !USE(CFNETWORK)
     void createNSURLConnection(id delegate, bool shouldUseCredentialStorage, bool shouldContentSniff);

@@ -36,7 +36,7 @@
 #include <wtf/RetainPtr.h>
 #include <wtf/Threading.h>
 
-#if PLATFORM(GTK) || PLATFORM(NIX)
+#if USE(GLIB)
 #include <wtf/gobject/GRefPtr.h>
 #endif
 
@@ -52,14 +52,12 @@ public:
     // can be called from any thread).
     static void initializeMainRunLoop();
 
-    // Must be called before entering main run loop. If called, application style run loop will be used, handling events.
-    static void setUseApplicationRunLoopOnMainRunLoop();
-
     static RunLoop* current();
     static RunLoop* main();
+    static bool isMain();
     ~RunLoop();
 
-    virtual void dispatch(const Function<void()>&) OVERRIDE;
+    virtual void dispatch(std::function<void ()>) OVERRIDE;
 
     static void run();
     void stop();
@@ -95,20 +93,16 @@ public:
 #elif PLATFORM(MAC)
         static void timerFired(CFRunLoopTimerRef, void*);
         RetainPtr<CFRunLoopTimerRef> m_timer;
-#elif PLATFORM(QT)
-        static void timerFired(RunLoop*, int ID);
-        int m_ID;
+#elif PLATFORM(EFL)
+        static bool timerFired(void* data);
+        Ecore_Timer* m_timer;
         bool m_isRepeating;
-#elif PLATFORM(GTK) || PLATFORM(NIX)
+#elif USE(GLIB)
         static gboolean timerFiredCallback(RunLoop::TimerBase*);
         gboolean isRepeating() const { return m_isRepeating; }
         void clearTimerSource();
         GRefPtr<GSource> m_timerSource;
         gboolean m_isRepeating;
-#elif PLATFORM(EFL)
-        static bool timerFired(void* data);
-        Ecore_Timer* m_timer;
-        bool m_isRepeating;
 #endif
     };
 
@@ -139,7 +133,7 @@ private:
     void performWork();
 
     Mutex m_functionQueueLock;
-    Deque<Function<void()> > m_functionQueue;
+    Deque<std::function<void ()>> m_functionQueue;
 
 #if PLATFORM(WIN)
     static bool registerRunLoopMessageWindowClass();
@@ -154,20 +148,6 @@ private:
     RetainPtr<CFRunLoopRef> m_runLoop;
     RetainPtr<CFRunLoopSourceRef> m_runLoopSource;
     int m_nestingLevel;
-#elif PLATFORM(QT)
-    typedef HashMap<int, TimerBase*> TimerMap;
-    TimerMap m_activeTimers;
-    class TimerObject;
-    TimerObject* m_timerObject;
-#elif PLATFORM(GTK) || PLATFORM(NIX)
-public:
-    static gboolean queueWork(RunLoop*);
-    GMainLoop* innermostLoop();
-    void pushNestedMainLoop(GMainLoop*);
-    void popNestedMainLoop();
-private:
-    GRefPtr<GMainContext> m_runLoopContext;
-    Vector<GRefPtr<GMainLoop> > m_runLoopMainLoops;
 #elif PLATFORM(EFL)
     bool m_initEfl;
 
@@ -178,6 +158,15 @@ private:
     bool m_wakeUpEventRequested;
 
     static void wakeUpEvent(void* data, void*, unsigned int);
+#elif USE(GLIB)
+public:
+    static gboolean queueWork(RunLoop*);
+    GMainLoop* innermostLoop();
+    void pushNestedMainLoop(GMainLoop*);
+    void popNestedMainLoop();
+private:
+    GRefPtr<GMainContext> m_runLoopContext;
+    Vector<GRefPtr<GMainLoop>> m_runLoopMainLoops;
 #endif
 };
 

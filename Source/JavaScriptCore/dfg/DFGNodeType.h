@@ -52,7 +52,6 @@ namespace JSC { namespace DFG {
     macro(ToThis, NodeResultJS) \
     macro(CreateThis, NodeResultJS) /* Note this is not MustGenerate since we're returning it anyway. */ \
     macro(GetCallee, NodeResultJS) \
-    macro(SetCallee, NodeMustGenerate) \
     \
     /* Nodes for local variable access. These nodes are linked together using Phi nodes. */\
     /* Any two nodes that are part of the same Phi graph will share the same */\
@@ -69,6 +68,21 @@ namespace JSC { namespace DFG {
     macro(Flush, NodeMustGenerate | NodeDoesNotExit) \
     macro(PhantomLocal, NodeMustGenerate | NodeDoesNotExit) \
     \
+    /* Hint that this is where bytecode thinks is a good place to OSR. Note that this */\
+    /* will exist even in inlined loops. This has no execution semantics but it must */\
+    /* survive all DCE. We treat this as being a can-exit because tier-up to FTL may */\
+    /* want all state. */\
+    macro(LoopHint, NodeMustGenerate) \
+    \
+    /* Special node for OSR entry into the FTL. Indicates that we're loading a local */\
+    /* variable from the scratch buffer. */\
+    macro(ExtractOSREntryLocal, NodeResultJS) \
+    \
+    /* Tier-up checks from the DFG to the FTL. */\
+    macro(CheckTierUpInLoop, NodeMustGenerate) \
+    macro(CheckTierUpAndOSREnter, NodeMustGenerate) \
+    macro(CheckTierUpAtReturn, NodeMustGenerate) \
+    \
     /* Get the value of a local variable, without linking into the VariableAccessData */\
     /* network. This is only valid for variable accesses whose predictions originated */\
     /* as something other than a local access, and thus had their own profiling. */\
@@ -76,11 +90,6 @@ namespace JSC { namespace DFG {
     \
     /* Marker for an argument being set at the prologue of a function. */\
     macro(SetArgument, 0 | NodeDoesNotExit) \
-    \
-    /* Hint that inlining begins here. No code is generated for this node. It's only */\
-    /* used for copying OSR data into inline frame data, to support reification of */\
-    /* call frames of inlined functions. */\
-    macro(InlineStart, NodeMustGenerate | NodeDoesNotExit) \
     \
     /* Nodes for bitwise operations. */\
     macro(BitAnd, NodeResultInt32 | NodeMustGenerate) \
@@ -99,6 +108,10 @@ namespace JSC { namespace DFG {
     macro(Int32ToDouble, NodeResultNumber) \
     /* Used to speculate that a double value is actually an integer. */\
     macro(DoubleAsInt32, NodeResultInt32 | NodeExitsForward) \
+    /* Used to separate representation and register allocation of Int52's represented */\
+    /* as values. */\
+    macro(Int52ToValue, NodeResultJS) \
+    macro(Int52ToDouble, NodeResultNumber) \
     \
     /* Nodes for arithmetic operations. */\
     macro(ArithAdd, NodeResultNumber | NodeMustGenerate) \
@@ -122,6 +135,7 @@ namespace JSC { namespace DFG {
     /* this must be the directly subsequent property put. Note that PutByVal */\
     /* opcodes use VarArgs beause they may have up to 4 children. */\
     macro(GetByVal, NodeResultJS | NodeMustGenerate | NodeMightClobber) \
+    macro(PutByValDirect, NodeMustGenerate | NodeHasVarArgs | NodeMightClobber) \
     macro(PutByVal, NodeMustGenerate | NodeHasVarArgs | NodeMightClobber) \
     macro(PutByValAlias, NodeMustGenerate | NodeHasVarArgs | NodeMightClobber) \
     macro(GetById, NodeResultJS | NodeMustGenerate | NodeClobbersWorld) \
@@ -157,7 +171,6 @@ namespace JSC { namespace DFG {
     macro(GetTypedArrayByteOffset, NodeResultInt32) \
     macro(GetScope, NodeResultJS) \
     macro(GetMyScope, NodeResultJS) \
-    macro(SetMyScope, NodeMustGenerate) \
     macro(SkipTopScope, NodeResultJS) \
     macro(SkipScope, NodeResultJS) \
     macro(GetClosureRegisters, NodeResultStorage) \
@@ -202,6 +215,7 @@ namespace JSC { namespace DFG {
     macro(NewArray, NodeResultJS | NodeHasVarArgs) \
     macro(NewArrayWithSize, NodeResultJS) \
     macro(NewArrayBuffer, NodeResultJS) \
+    macro(NewTypedArray, NodeResultJS | NodeClobbersWorld | NodeMustGenerate) \
     macro(NewRegexp, NodeResultJS) \
     \
     /* Nodes for misc operations. */\
@@ -289,22 +303,78 @@ inline NodeFlags defaultFlags(NodeType op)
     }
 }
 
-inline bool needsOSRBackwardRewiring(NodeType op)
-{
-    return op == UInt32ToNumber;
-}
-
-inline bool needsOSRForwardRewiring(NodeType op)
+inline bool permitsOSRBackwardRewiring(NodeType op)
 {
     switch (op) {
-    case Int32ToDouble:
-    case ValueToInt32:
+    case Identity:
+        RELEASE_ASSERT_NOT_REACHED();
+        return true;
     case UInt32ToNumber:
-    case DoubleAsInt32:
+    case Int52ToValue:
+    case Int52ToDouble:
+        // These are the only node where we do:
+        //
+        //     b: UInt32ToNumber(@a)
+        //     c: SetLocal(@b)
+        //
+        // and then also have some uses of @a without Phantom'ing @b.
         return true;
     default:
         return false;
     }
+}
+
+// Returns the priority with which we should select the given node for forward
+// rewiring. Higher is better. Zero means that the node is not useful for rewiring.
+// By convention, we use 100 to mean that the node is totally equivalent to its
+// input with no information loss.
+inline unsigned forwardRewiringSelectionScore(NodeType op)
+{
+    switch (op) {
+    case Identity:
+        // We shouldn't see these by the time we get to OSR even though it clearly
+        // is a perfect identity function.
+        RELEASE_ASSERT_NOT_REACHED();
+        return 100;
+        
+    case DoubleAsInt32:
+        // This speculates that the incoming double is convertible to an int32. So
+        // its result is totally equivalent.
+        return 100;
+        
+    case Int32ToDouble:
+        // This converts an int32 to a double, but that loses a bit of information.
+        // OTOH it's still an equivalent number.
+        return 75;
+        
+    case UInt32ToNumber:
+        // It's completely fine to use this for OSR exit, since the uint32 isn't
+        // actually representable in bytecode.
+        return 100;
+
+    case ValueToInt32:
+        // This loses information. Only use it if there are no better alternatives.
+        return 25;
+        
+    case Int52ToValue:
+        // Loses no information. It just boxes the value, which is what OSR wants
+        // to do anyway.
+        return 100;
+        
+    case Int52ToDouble:
+        // This is like Int32ToDouble; we can use it because it gives a semantically
+        // equivalent value but that value may be an int32 in a double, so we'd
+        // rather not if we can avoid it.
+        return 75;
+        
+    default:
+        return 0;
+    }
+}
+
+inline bool permitsOSRForwardRewiring(NodeType op)
+{
+    return forwardRewiringSelectionScore(op) > 0;
 }
 
 } } // namespace JSC::DFG

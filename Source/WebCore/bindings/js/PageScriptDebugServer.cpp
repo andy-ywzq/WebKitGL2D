@@ -34,10 +34,11 @@
 
 #include "PageScriptDebugServer.h"
 
+#include "Document.h"
 #include "EventLoop.h"
-#include "Frame.h"
 #include "FrameView.h"
 #include "JSDOMWindowCustom.h"
+#include "MainFrame.h"
 #include "Page.h"
 #include "PageGroup.h"
 #include "PluginView.h"
@@ -59,7 +60,7 @@ static Page* toPage(JSGlobalObject* globalObject)
     ASSERT_ARG(globalObject, globalObject);
 
     JSDOMWindow* window = asJSDOMWindow(globalObject);
-    Frame* frame = window->impl()->frame();
+    Frame* frame = window->impl().frame();
     return frame ? frame->page() : 0;
 }
 
@@ -189,7 +190,7 @@ void PageScriptDebugServer::setJavaScriptPaused(Page* page, bool paused)
 
     page->setDefersLoading(paused);
 
-    for (Frame* frame = page->mainFrame(); frame; frame = frame->tree()->traverseNext())
+    for (Frame* frame = &page->mainFrame(); frame; frame = frame->tree().traverseNext())
         setJavaScriptPaused(frame, paused);
 }
 
@@ -219,11 +220,7 @@ void PageScriptDebugServer::setJavaScriptPaused(FrameView* view, bool paused)
     if (!view)
         return;
 
-    const HashSet<RefPtr<Widget> >* children = view->children();
-    ASSERT(children);
-
-    HashSet<RefPtr<Widget> >::const_iterator end = children->end();
-    for (HashSet<RefPtr<Widget> >::const_iterator it = children->begin(); it != end; ++it) {
+    for (auto it = view->children().begin(), end = view->children().end(); it != end; ++it) {
         Widget* widget = (*it).get();
         if (!widget->isPluginView())
             continue;

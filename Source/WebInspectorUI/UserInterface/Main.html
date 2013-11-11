@@ -44,6 +44,7 @@
     <link rel="stylesheet" href="ContentBrowser.css">
     <link rel="stylesheet" href="NavigationSidebarPanel.css">
     <link rel="stylesheet" href="ResourceIcons.css">
+    <link rel="stylesheet" href="ContentFlowIcon.css">
     <link rel="stylesheet" href="FolderIcon.css">
     <link rel="stylesheet" href="ContentViewContainer.css">
     <link rel="stylesheet" href="ClusterContentView.css">
@@ -79,6 +80,7 @@
     <link rel="stylesheet" href="ApplicationCacheFrameContentView.css">
     <link rel="stylesheet" href="ApplicationCacheIcons.css">
     <link rel="stylesheet" href="ResourceTreeElement.css">
+    <link rel="stylesheet" href="TreeElementStatusButton.css">
     <link rel="stylesheet" href="InstrumentSidebarPanel.css">
     <link rel="stylesheet" href="InstrumentIcons.css">
     <link rel="stylesheet" href="TimelinesContentView.css">
@@ -93,6 +95,7 @@
     <link rel="stylesheet" href="LayerTreeSidebarPanel.css">
     <link rel="stylesheet" href="EventListenerSectionGroup.css">
     <link rel="stylesheet" href="Breakpoint.css">
+    <link rel="stylesheet" href="BreakpointActionView.css">
     <link rel="stylesheet" href="BreakpointIcons.css">
     <link rel="stylesheet" href="BreakpointTreeElement.css">
     <link rel="stylesheet" href="QuickConsole.css">
@@ -117,6 +120,7 @@
     <link rel="stylesheet" href="ConsolePrompt.css">
     <link rel="stylesheet" href="CSSColorPicker.css">
     <link rel="stylesheet" href="CodeMirrorDragToAlterNumberController.css">
+    <link rel="stylesheet" href="GoToLineDialog.css">
 
     <script src="External/CodeMirror/codemirror.js"></script>
     <script src="External/CodeMirror/comment.js"></script>
@@ -139,6 +143,8 @@
 
     <script src="Utilities.js"></script>
     <script src="WebInspector.js"></script>
+    <script src="URLUtilities.js"></script>
+    <script src="MessageDispatcher.js"></script>
     <script src="Object.js"></script>
     <script src="CodeMirrorDragToAlterNumberController.js"></script>
     <script src="CodeMirrorAdditions.js"></script>
@@ -183,6 +189,7 @@
     <script src="ResourceTimelineRecord.js"></script>
     <script src="FrameResourceManager.js"></script>
     <script src="IssueManager.js"></script>
+    <script src="RuntimeManager.js"></script>
     <script src="Frame.js"></script>
     <script src="SourceCode.js"></script>
     <script src="Resource.js"></script>
@@ -225,7 +232,9 @@
     <script src="DOMStorageTreeElement.js"></script>
     <script src="ApplicationCacheFrameTreeElement.js"></script>
     <script src="ApplicationCacheManifestTreeElement.js"></script>
+    <script src="TreeElementStatusButton.js"></script>
     <script src="IssueMessage.js"></script>
+    <script src="ContentFlowTreeElement.js"></script>
     <script src="FrameTreeElement.js"></script>
     <script src="CSSCompletions.js"></script>
     <script src="CSSKeywordCompletions.js"></script>
@@ -235,6 +244,7 @@
     <script src="TextEditor.js"></script>
     <script src="EventHandler.js"></script>
     <script src="SourceCodeTextEditor.js"></script>
+    <script src="BackForwardEntry.js"></script>
     <script src="ContentViewContainer.js"></script>
     <script src="ContentView.js"></script>
     <script src="ClusterContentView.js"></script>
@@ -258,6 +268,7 @@
     <script src="DOMTreeManager.js"></script>
     <script src="DOMNode.js"></script>
     <script src="DOMUtilities.js"></script>
+    <script src="ContentFlow.js"></script>
     <script src="DOMTree.js"></script>
     <script src="DOMTreeOutline.js"></script>
     <script src="DOMTreeUpdater.js"></script>
@@ -345,6 +356,8 @@
     <script src="CanvasProfileObject.js"></script>
     <script src="DebuggerSidebarPanel.js"></script>
     <script src="BreakpointTreeElement.js"></script>
+    <script src="BreakpointAction.js"></script>
+    <script src="BreakpointActionView.js"></script>
     <script src="Breakpoint.js"></script>
     <script src="DebuggerManager.js"></script>
     <script src="SourceMapManager.js"></script>
@@ -379,12 +392,14 @@
     <script src="FormatterSourceMap.js"></script>
     <script src="CodeMirrorCompletionController.js"></script>
     <script src="CodeMirrorTokenTrackingController.js"></script>
+    <script src="JavaScriptRuntimeCompletionProvider.js"></script>
     <script src="CompletionSuggestionsView.js"></script>
     <script src="ExecutionContext.js"></script>
     <script src="ExecutionContextList.js"></script>
     <script src="ConsolePrompt.js"></script>
     <script src="MIMETypeUtilities.js"></script>
     <script src="LoadLocalizedStrings.js"></script>
+    <script src="GoToLineDialog.js"></script>
     <script src="Main.js"></script>
 
     <script>

@@ -86,6 +86,8 @@
 
 #if USE(SOUP)
 #include "WebSoupRequestManagerProxy.h"
+#elif USE(CURL)
+#include "WebCurlRequestManagerProxy.h"
 #endif
 
 #ifndef NDEBUG
@@ -173,6 +175,8 @@ WebContext::WebContext(ProcessModel processModel, const String& injectedBundlePa
 #endif
 #if USE(SOUP)
     addSupplement<WebSoupRequestManagerProxy>();
+#elif USE(CURL)
+    addSupplement<WebCurlRequestManagerProxy>();
 #endif
 #if ENABLE(BATTERY_STATUS)
     addSupplement<WebBatteryManagerProxy>();
@@ -278,12 +282,6 @@ void WebContext::setProcessModel(ProcessModel processModel)
         CRASH();
     if (processModel != ProcessModelSharedSecondaryProcess && !m_messagesToInjectedBundlePostedToEmptyContext.isEmpty())
         CRASH();
-
-#if !ENABLE(PLUGIN_PROCESS)
-    // Plugin process is required for multiple web process mode.
-    if (processModel != ProcessModelSharedSecondaryProcess)
-        CRASH();
-#endif
 
     m_processModel = processModel;
 }
@@ -412,30 +410,56 @@ void WebContext::getNetworkProcessConnection(PassRefPtr<Messages::WebProcessProx
 }
 #endif
 
+#if ENABLE(DATABASE_PROCESS)
+void WebContext::ensureDatabaseProcess()
+{
+    if (m_databaseProcess)
+        return;
+
+    m_databaseProcess = DatabaseProcessProxy::create(this);
+}
+
+void WebContext::getDatabaseProcessConnection(PassRefPtr<Messages::WebProcessProxy::GetDatabaseProcessConnection::DelayedReply> reply)
+{
+    ASSERT(reply);
+
+    ensureDatabaseProcess();
+
+    m_databaseProcess->getDatabaseProcessConnection(reply);
+}
+#endif
 
 void WebContext::willStartUsingPrivateBrowsing()
 {
     const Vector<WebContext*>& contexts = allContexts();
-    for (size_t i = 0, count = contexts.size(); i < count; ++i) {
-#if ENABLE(NETWORK_PROCESS)
-        if (contexts[i]->usesNetworkProcess() && contexts[i]->networkProcess())
-            contexts[i]->networkProcess()->send(Messages::NetworkProcess::EnsurePrivateBrowsingSession(), 0);
-#endif
-        contexts[i]->sendToAllProcesses(Messages::WebProcess::EnsurePrivateBrowsingSession());
-    }
+    for (size_t i = 0, count = contexts.size(); i < count; ++i)
+        contexts[i]->setAnyPageGroupMightHavePrivateBrowsingEnabled(true);
 }
 
 void WebContext::willStopUsingPrivateBrowsing()
 {
     const Vector<WebContext*>& contexts = allContexts();
-    for (size_t i = 0, count = contexts.size(); i < count; ++i) {
-#if ENABLE(NETWORK_PROCESS)
-        if (contexts[i]->usesNetworkProcess() && contexts[i]->networkProcess())
-            contexts[i]->networkProcess()->send(Messages::NetworkProcess::DestroyPrivateBrowsingSession(), 0);
-#endif
+    for (size_t i = 0, count = contexts.size(); i < count; ++i)
+        contexts[i]->setAnyPageGroupMightHavePrivateBrowsingEnabled(false);
+}
 
-        contexts[i]->sendToAllProcesses(Messages::WebProcess::DestroyPrivateBrowsingSession());
+void WebContext::setAnyPageGroupMightHavePrivateBrowsingEnabled(bool privateBrowsingEnabled)
+{
+    m_iconDatabase->setPrivateBrowsingEnabled(privateBrowsingEnabled);
+
+#if ENABLE(NETWORK_PROCESS)
+    if (usesNetworkProcess() && networkProcess()) {
+        if (privateBrowsingEnabled)
+            networkProcess()->send(Messages::NetworkProcess::EnsurePrivateBrowsingSession(), 0);
+        else
+            networkProcess()->send(Messages::NetworkProcess::DestroyPrivateBrowsingSession(), 0);
     }
+#endif // ENABLED(NETWORK_PROCESS)
+
+    if (privateBrowsingEnabled)
+        sendToAllProcesses(Messages::WebProcess::EnsurePrivateBrowsingSession());
+    else
+        sendToAllProcesses(Messages::WebProcess::DestroyPrivateBrowsingSession());
 }
 
 void (*s_invalidMessageCallback)(WKStringRef messageName);
@@ -564,11 +588,11 @@ WebProcessProxy* WebContext::createNewWebProcess()
         for (size_t i = 0; i != m_messagesToInjectedBundlePostedToEmptyContext.size(); ++i) {
             pair<String, RefPtr<APIObject>>& message = m_messagesToInjectedBundlePostedToEmptyContext[i];
 
-            OwnPtr<CoreIPC::ArgumentEncoder> messageData = CoreIPC::ArgumentEncoder::create();
+            CoreIPC::ArgumentEncoder messageData;
 
-            messageData->encode(message.first);
-            messageData->encode(WebContextUserMessageEncoder(message.second.get()));
-            process->send(Messages::WebProcess::PostInjectedBundleMessage(CoreIPC::DataReference(messageData->buffer(), messageData->bufferSize())), 0);
+            messageData.encode(message.first);
+            messageData.encode(WebContextUserMessageEncoder(message.second.get()));
+            process->send(Messages::WebProcess::PostInjectedBundleMessage(CoreIPC::DataReference(messageData.buffer(), messageData.bufferSize())), 0);
         }
         m_messagesToInjectedBundlePostedToEmptyContext.clear();
     } else
@@ -608,17 +632,10 @@ bool WebContext::shouldTerminate(WebProcessProxy* process)
     if (!m_processTerminationEnabled)
         return false;
 
-    WebContextSupplementMap::const_iterator it = m_supplements.begin();
-    WebContextSupplementMap::const_iterator end = m_supplements.end();
-    for (; it != end; ++it) {
-        if (!it->value->shouldTerminate(process))
+    for (const auto& supplement : m_supplements.values()) {
+        if (!supplement->shouldTerminate(process))
             return false;
     }
-
-#if ENABLE(NETSCAPE_PLUGIN_API)
-    if (!m_pluginSiteDataManager->shouldTerminate(process))
-        return false;
-#endif
 
     return true;
 }
@@ -676,12 +693,6 @@ void WebContext::disconnectProcess(WebProcessProxy* process)
     WebContextSupplementMap::const_iterator end = m_supplements.end();
     for (; it != end; ++it)
         it->value->processDidClose(process);
-
-    // When out of process plug-ins are enabled, we don't want to invalidate the plug-in site data
-    // manager just because the web process crashes since it's not involved.
-#if ENABLE(NETSCAPE_PLUGIN_API) && !ENABLE(PLUGIN_PROCESS)
-    m_pluginSiteDataManager->invalidate();
-#endif
 
     // The vector may have the last reference to process proxy, which in turn may have the last reference to the context.
     // Since vector elements are destroyed in place, we would recurse into WebProcessProxy destructor
@@ -744,11 +755,6 @@ DownloadProxy* WebContext::download(WebPageProxy* initiatingPage, const Resource
     }
 #endif
 
-#if PLATFORM(QT)
-    ASSERT(initiatingPage); // Our design does not suppport downloads without a WebPage.
-    initiatingPage->handleDownloadRequest(downloadProxy);
-#endif
-
     m_processes[0]->send(Messages::WebProcess::DownloadRequest(downloadProxy->downloadID(), initiatingPageID, request), 0);
     return downloadProxy;
 }
@@ -763,13 +769,12 @@ void WebContext::postMessageToInjectedBundle(const String& messageName, APIObjec
 
     // FIXME: Return early if the message body contains any references to WKPageRefs/WKFrameRefs etc. since they're local to a process.
 
-    OwnPtr<CoreIPC::ArgumentEncoder> messageData = CoreIPC::ArgumentEncoder::create();
-    messageData->encode(messageName);
-    messageData->encode(WebContextUserMessageEncoder(messageBody));
+    CoreIPC::ArgumentEncoder messageData;
+    messageData.encode(messageName);
+    messageData.encode(WebContextUserMessageEncoder(messageBody));
 
-    for (size_t i = 0; i < m_processes.size(); ++i) {
-        m_processes[i]->send(Messages::WebProcess::PostInjectedBundleMessage(CoreIPC::DataReference(messageData->buffer(), messageData->bufferSize())), 0);
-    }
+    for (size_t i = 0; i < m_processes.size(); ++i)
+        m_processes[i]->send(Messages::WebProcess::PostInjectedBundleMessage(CoreIPC::DataReference(messageData.buffer(), messageData.bufferSize())), 0);
 }
 
 // InjectedBundle client
@@ -917,7 +922,7 @@ bool WebContext::dispatchMessage(CoreIPC::Connection* connection, CoreIPC::Messa
     return m_messageReceiverMap.dispatchMessage(connection, decoder);
 }
 
-bool WebContext::dispatchSyncMessage(CoreIPC::Connection* connection, CoreIPC::MessageDecoder& decoder, OwnPtr<CoreIPC::MessageEncoder>& replyEncoder)
+bool WebContext::dispatchSyncMessage(CoreIPC::Connection* connection, CoreIPC::MessageDecoder& decoder, std::unique_ptr<CoreIPC::MessageEncoder>& replyEncoder)
 {
     return m_messageReceiverMap.dispatchSyncMessage(connection, decoder, replyEncoder);
 }
@@ -946,7 +951,7 @@ void WebContext::didReceiveMessage(CoreIPC::Connection* connection, CoreIPC::Mes
     ASSERT_NOT_REACHED();
 }
 
-void WebContext::didReceiveSyncMessage(CoreIPC::Connection* connection, CoreIPC::MessageDecoder& decoder, OwnPtr<CoreIPC::MessageEncoder>& replyEncoder)
+void WebContext::didReceiveSyncMessage(CoreIPC::Connection* connection, CoreIPC::MessageDecoder& decoder, std::unique_ptr<CoreIPC::MessageEncoder>& replyEncoder)
 {
     if (decoder.messageReceiverName() == Messages::WebContext::messageReceiverName()) {
         didReceiveSyncWebContextMessage(connection, decoder, replyEncoder);
@@ -1096,10 +1101,15 @@ void WebContext::allowSpecificHTTPSCertificateForHost(const WebCertificateInfo* 
         return;
     }
 #else
+#if USE(SOUP)
+    m_processes[0]->send(Messages::WebProcess::AllowSpecificHTTPSCertificateForHost(certificate->platformCertificateInfo(), host), 0);
+    return;
+#else
     UNUSED_PARAM(certificate);
     UNUSED_PARAM(host);
 #endif
-    // FIXME: It's unclear whether we want this SPI to be exposed and used for clients that don't use the NetworkProcess.
+#endif
+
     ASSERT_NOT_REACHED();
 }
 

@@ -24,6 +24,7 @@
 #include "PropertyOffset.h"
 #include "Structure.h"
 #include "WriteBarrier.h"
+#include <wtf/CryptographicallyRandomNumber.h>
 #include <wtf/HashTable.h>
 #include <wtf/MathExtras.h>
 #include <wtf/PassOwnPtr.h>
@@ -250,7 +251,7 @@ private:
     unsigned* m_index;
     unsigned m_keyCount;
     unsigned m_deletedCount;
-    OwnPtr< Vector<PropertyOffset> > m_deletedOffsets;
+    OwnPtr< Vector<PropertyOffset>> m_deletedOffsets;
 
     static const unsigned MinimumTableSize = 8;
     static const unsigned EmptyEntryIndex = 0;

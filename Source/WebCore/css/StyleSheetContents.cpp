@@ -34,6 +34,7 @@
 #include "StyleRule.h"
 #include "StyleRuleImport.h"
 #include <wtf/Deque.h>
+#include <wtf/Ref.h>
 
 namespace WebCore {
 
@@ -144,7 +145,7 @@ void StyleSheetContents::parserAppendRule(PassRefPtr<StyleRuleBase> rule)
     // NOTE: The selector list has to fit into RuleData. <http://webkit.org/b/118369>
     // If we're adding a rule with a huge number of selectors, split it up into multiple rules
     if (rule->isStyleRule() && toStyleRule(rule.get())->selectorList().componentCount() > RuleData::maximumSelectorComponentCount) {
-        Vector<RefPtr<StyleRule> > rules = toStyleRule(rule.get())->splitIntoMultipleRulesWithMaximumSelectorComponentCount(RuleData::maximumSelectorComponentCount);
+        Vector<RefPtr<StyleRule>> rules = toStyleRule(rule.get())->splitIntoMultipleRulesWithMaximumSelectorComponentCount(RuleData::maximumSelectorComponentCount);
         m_childRules.appendVector(rules);
         return;
     }
@@ -341,12 +342,10 @@ void StyleSheetContents::checkLoaded()
     if (isLoading())
         return;
 
-    RefPtr<StyleSheetContents> protect(this);
-
     // Avoid |this| being deleted by scripts that run via
     // ScriptableDocumentParser::executeScriptsWaitingForStylesheets().
     // See <rdar://problem/6622300>.
-    RefPtr<StyleSheetContents> protector(this);
+    Ref<StyleSheetContents> protect(*this);
     StyleSheetContents* parentSheet = parentStyleSheet();
     if (parentSheet) {
         parentSheet->checkLoaded();
@@ -395,15 +394,15 @@ Node* StyleSheetContents::singleOwnerNode() const
 Document* StyleSheetContents::singleOwnerDocument() const
 {
     Node* ownerNode = singleOwnerNode();
-    return ownerNode ? ownerNode->document() : 0;
+    return ownerNode ? &ownerNode->document() : 0;
 }
 
-KURL StyleSheetContents::completeURL(const String& url) const
+URL StyleSheetContents::completeURL(const String& url) const
 {
     return CSSParser::completeURL(m_parserContext, url);
 }
 
-void StyleSheetContents::addSubresourceStyleURLs(ListHashSet<KURL>& urls)
+void StyleSheetContents::addSubresourceStyleURLs(ListHashSet<URL>& urls)
 {
     Deque<StyleSheetContents*> styleSheetQueue;
     styleSheetQueue.append(this);
@@ -428,7 +427,7 @@ void StyleSheetContents::addSubresourceStyleURLs(ListHashSet<KURL>& urls)
     }
 }
 
-static bool childRulesHaveFailedOrCanceledSubresources(const Vector<RefPtr<StyleRuleBase> >& rules)
+static bool childRulesHaveFailedOrCanceledSubresources(const Vector<RefPtr<StyleRuleBase>>& rules)
 {
     for (unsigned i = 0; i < rules.size(); ++i) {
         const StyleRuleBase* rule = rules[i].get();

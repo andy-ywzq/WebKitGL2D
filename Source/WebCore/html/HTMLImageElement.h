@@ -24,6 +24,7 @@
 #ifndef HTMLImageElement_h
 #define HTMLImageElement_h
 
+#include "FormNamedItem.h"
 #include "GraphicsTypes.h"
 #include "HTMLElement.h"
 #include "HTMLImageLoader.h"
@@ -32,12 +33,12 @@ namespace WebCore {
 
 class HTMLFormElement;
 
-class HTMLImageElement : public HTMLElement {
+class HTMLImageElement : public HTMLElement, public FormNamedItem {
     friend class HTMLFormElement;
 public:
-    static PassRefPtr<HTMLImageElement> create(Document*);
-    static PassRefPtr<HTMLImageElement> create(const QualifiedName&, Document*, HTMLFormElement*);
-    static PassRefPtr<HTMLImageElement> createForJSConstructor(Document*, const int* optionalWidth, const int* optionalHeight);
+    static PassRefPtr<HTMLImageElement> create(Document&);
+    static PassRefPtr<HTMLImageElement> create(const QualifiedName&, Document&, HTMLFormElement*);
+    static PassRefPtr<HTMLImageElement> createForJSConstructor(Document&, const int* optionalWidth, const int* optionalHeight);
 
     virtual ~HTMLImageElement();
 
@@ -58,11 +59,13 @@ public:
 
     void setLoadManually(bool loadManually) { m_imageLoader.setLoadManually(loadManually); }
 
+    bool matchesLowercasedUsemap(const AtomicStringImpl&) const;
+
     const AtomicString& alt() const;
 
     void setHeight(int);
 
-    KURL src() const;
+    URL src() const;
     void setSrc(const String&);
 
     void setWidth(int);
@@ -72,14 +75,18 @@ public:
 
     bool complete() const;
 
+#if PLATFORM(IOS)
+    virtual bool willRespondToMouseClickEvents() OVERRIDE;
+#endif
+
     bool hasPendingActivity() const { return m_imageLoader.hasPendingActivity(); }
 
-    virtual bool canContainRangeEndPoint() const { return false; }
+    virtual bool canContainRangeEndPoint() const OVERRIDE { return false; }
 
     virtual const AtomicString& imageSourceURL() const OVERRIDE;
 
 protected:
-    HTMLImageElement(const QualifiedName&, Document*, HTMLFormElement* = 0);
+    HTMLImageElement(const QualifiedName&, Document&, HTMLFormElement* = 0);
 
     virtual void didMoveToNewDocument(Document* oldDocument) OVERRIDE;
 
@@ -91,40 +98,32 @@ private:
     virtual void collectStyleForPresentationAttribute(const QualifiedName&, const AtomicString&, MutableStylePropertySet*) OVERRIDE;
 
     virtual void didAttachRenderers() OVERRIDE;
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
 
-    virtual bool canStartSelection() const;
+    virtual bool canStartSelection() const OVERRIDE;
 
     virtual bool isURLAttribute(const Attribute&) const OVERRIDE;
 
-    virtual bool draggable() const;
+    virtual bool draggable() const OVERRIDE;
 
-    virtual void addSubresourceAttributeURLs(ListHashSet<KURL>&) const;
+    virtual void addSubresourceAttributeURLs(ListHashSet<URL>&) const OVERRIDE;
 
-    virtual InsertionNotificationRequest insertedInto(ContainerNode*) OVERRIDE;
-    virtual void removedFrom(ContainerNode*) OVERRIDE;
+    virtual InsertionNotificationRequest insertedInto(ContainerNode&) OVERRIDE;
+    virtual void removedFrom(ContainerNode&) OVERRIDE;
+
+    virtual bool isFormAssociatedElement() const OVERRIDE FINAL { return false; }
+    virtual FormNamedItem* asFormNamedItem() OVERRIDE FINAL { return this; }
+    virtual HTMLImageElement& asHTMLElement() OVERRIDE FINAL { return *this; }
+    virtual const HTMLImageElement& asHTMLElement() const OVERRIDE FINAL { return *this; }
 
     HTMLImageLoader m_imageLoader;
     HTMLFormElement* m_form;
     CompositeOperator m_compositeOperator;
     AtomicString m_bestFitImageURL;
+    AtomicString m_lowercasedUsemap;
 };
 
-inline bool isHTMLImageElement(Node* node)
-{
-    return node->hasTagName(HTMLNames::imgTag);
-}
-
-inline bool isHTMLImageElement(Element* element)
-{
-    return element->hasTagName(HTMLNames::imgTag);
-}
-
-inline HTMLImageElement* toHTMLImageElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || isHTMLImageElement(node));
-    return static_cast<HTMLImageElement*>(node);
-}
+NODE_TYPE_CASTS(HTMLImageElement)
 
 } //namespace
 

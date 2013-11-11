@@ -296,14 +296,14 @@ WorkerMessagingProxy::~WorkerMessagingProxy()
            || (m_scriptExecutionContext->isWorkerGlobalScope() && currentThread() == static_cast<WorkerGlobalScope*>(m_scriptExecutionContext.get())->thread()->threadID()));
 }
 
-void WorkerMessagingProxy::startWorkerGlobalScope(const KURL& scriptURL, const String& userAgent, const String& sourceCode, WorkerThreadStartMode startMode)
+void WorkerMessagingProxy::startWorkerGlobalScope(const URL& scriptURL, const String& userAgent, const String& sourceCode, WorkerThreadStartMode startMode)
 {
     // FIXME: This need to be revisited when we support nested worker one day
-    ASSERT(m_scriptExecutionContext->isDocument());
+    ASSERT_WITH_SECURITY_IMPLICATION(m_scriptExecutionContext->isDocument());
     Document* document = static_cast<Document*>(m_scriptExecutionContext.get());
     GroupSettings* settings = 0;
     if (document->page())
-        settings = document->page()->group().groupSettings();
+        settings = &document->page()->group().groupSettings();
     RefPtr<DedicatedWorkerThread> thread = DedicatedWorkerThread::create(scriptURL, userAgent, settings, sourceCode, *this, *this, startMode, document->contentSecurityPolicy()->deprecatedHeader(), document->contentSecurityPolicy()->deprecatedHeaderType(), document->topOrigin());
     workerThreadCreated(thread);
     thread->start();

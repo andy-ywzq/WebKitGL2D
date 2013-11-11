@@ -41,9 +41,6 @@ using namespace WebCore;
 
 namespace WebKit {
 
-static const unsigned DefaultCapacity = 100;
-static const unsigned NoCurrentItemIndex = UINT_MAX;
-
 // FIXME <rdar://problem/8819268>: This leaks all HistoryItems that go into these maps.
 // We need to clear up the life time of these objects.
 
@@ -126,14 +123,12 @@ uint64_t WebBackForwardListProxy::idForItem(HistoryItem* item)
 
 void WebBackForwardListProxy::removeItem(uint64_t itemID)
 {
-    IDToHistoryItemMap::iterator it = idToHistoryItemMap().find(itemID);
-    if (it == idToHistoryItemMap().end())
+    RefPtr<HistoryItem> item = idToHistoryItemMap().take(itemID);
+    if (!item)
         return;
         
-    WebCore::pageCache()->remove(it->value.get());
-
-    historyItemToIDMap().remove(it->value);
-    idToHistoryItemMap().remove(it);
+    pageCache()->remove(item.get());
+    historyItemToIDMap().remove(item);
 }
 
 WebBackForwardListProxy::WebBackForwardListProxy(WebPage* page)

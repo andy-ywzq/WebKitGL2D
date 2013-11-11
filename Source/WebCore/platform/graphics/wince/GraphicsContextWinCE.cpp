@@ -950,15 +950,20 @@ void GraphicsContext::drawFocusRing(const Vector<IntRect>& rects, int width, int
     DrawFocusRect(dc, &rect);
 }
 
-void GraphicsContext::drawLineForText(const FloatPoint& origin, float width, bool printing)
+void GraphicsContext::drawLineForText(const FloatRect& bounds, bool)
 {
     if (paintingDisabled())
         return;
 
     StrokeStyle oldStyle = strokeStyle();
     setStrokeStyle(SolidStroke);
-    drawLine(roundedIntPoint(origin), roundedIntPoint(origin + FloatSize(width, 0)));
+    drawLine(roundedIntPoint(bounds.location()), roundedIntPoint(bounds.location() + FloatSize(bounds.width(), 0)));
     setStrokeStyle(oldStyle);
+}
+
+void GraphicsContext::updateDocumentMarkerResources()
+{
+    notImplemented();
 }
 
 void GraphicsContext::drawLineForDocumentMarker(const FloatPoint&, float width, DocumentMarkerLineStyle style)
@@ -981,7 +986,7 @@ void GraphicsContext::setPlatformStrokeThickness(float strokeThickness)
     notImplemented();
 }
 
-void GraphicsContext::setURLForRect(const KURL& link, const IntRect& destRect)
+void GraphicsContext::setURLForRect(const URL& link, const IntRect& destRect)
 {
     notImplemented();
 }

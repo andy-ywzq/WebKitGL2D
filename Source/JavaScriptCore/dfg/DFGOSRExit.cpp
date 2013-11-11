@@ -28,7 +28,7 @@
 
 #if ENABLE(DFG_JIT)
 
-#include "DFGAssemblyHelpers.h"
+#include "AssemblyHelpers.h"
 #include "DFGGraph.h"
 #include "DFGSpeculativeJIT.h"
 #include "JSCellInlines.h"
@@ -41,7 +41,6 @@ OSRExit::OSRExit(ExitKind kind, JSValueSource jsValueSource, MethodOfGettingAVal
     , m_valueProfile(valueProfile)
     , m_patchableCodeOffset(0)
     , m_recoveryIndex(recoveryIndex)
-    , m_watchpointIndex(std::numeric_limits<unsigned>::max())
     , m_streamIndex(streamIndex)
     , m_lastSetOperand(jit->m_lastSetOperand)
 {

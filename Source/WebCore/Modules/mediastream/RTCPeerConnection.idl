@@ -35,7 +35,8 @@
     ConstructorRaisesException,
     ConstructorCallWith=ScriptExecutionContext,
     EventTarget,
-    InterfaceName=webkitRTCPeerConnection
+    InterfaceName=webkitRTCPeerConnection,
+    OperationsNotDeletable
 ] interface RTCPeerConnection {
     [RaisesException] void createOffer(RTCSessionDescriptionCallback successCallback, [Default=Undefined] optional RTCErrorCallback failureCallback, optional Dictionary mediaConstraints);
 
@@ -51,7 +52,7 @@
 
     [RaisesException] void updateIce(optional Dictionary configuration, optional Dictionary mediaConstraints);
 
-    [RaisesException] void addIceCandidate(RTCIceCandidate candidate);
+    [RaisesException] void addIceCandidate(RTCIceCandidate candidate, VoidCallback successCallback, RTCErrorCallback failureCallback);
 
     readonly attribute DOMString iceGatheringState;
     readonly attribute DOMString iceConnectionState;

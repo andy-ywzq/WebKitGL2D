@@ -172,7 +172,7 @@ String WebInspectorProxy::inspectorPageURL() const
 {
     StringBuilder builder;
     builder.append(inspectorBaseURL());
-    builder.appendLiteral("/inspector.html");
+    builder.appendLiteral("/Main.html");
 
     return builder.toString();
 }
@@ -219,7 +219,7 @@ void WebInspectorProxy::platformSetToolbarHeight(unsigned)
     notImplemented();
 }
 
-void WebInspectorProxy::platformSave(const String&, const String&, bool)
+void WebInspectorProxy::platformSave(const String&, const String&, bool, bool)
 {
     notImplemented();
 }

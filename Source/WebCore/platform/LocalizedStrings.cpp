@@ -209,14 +209,6 @@ String contextMenuItemTagPaste()
     return WEB_UI_STRING("Paste", "Paste context menu item");
 }
 
-#if PLATFORM(QT)
-String contextMenuItemTagSelectAll()
-{
-    notImplemented();
-    return "Select All";
-}
-#endif
-
 String contextMenuItemTagNoGuessesFound()
 {
     return WEB_UI_STRING("No Guesses Found", "No Guesses Found context menu item");
@@ -604,7 +596,12 @@ String AXFileUploadButtonText()
 {
     return WEB_UI_STRING("file upload button", "accessibility role description for a file upload button");
 }
-    
+
+String AXSearchFieldCancelButtonText()
+{
+    return WEB_UI_STRING("cancel", "accessibility description for a search field cancel button");
+}
+
 String AXButtonActionVerb()
 {
     return WEB_UI_STRING("press", "Verb stating the action that will occur when a button is pressed, as used by accessibility");

@@ -74,7 +74,7 @@ inline void FormControlState::append(const String& value)
 class FormController {
     WTF_MAKE_FAST_ALLOCATED;
 public:
-    static PassOwnPtr<FormController> create()
+    static OwnPtr<FormController> create()
     {
         return adoptPtr(new FormController);
     }
@@ -96,10 +96,10 @@ public:
 
 private:
     typedef ListHashSet<RefPtr<HTMLFormControlElementWithState>, 64> FormElementListHashSet;
-    typedef HashMap<RefPtr<AtomicStringImpl>, OwnPtr<SavedFormState> > SavedFormStateMap;
+    typedef HashMap<RefPtr<AtomicStringImpl>, OwnPtr<SavedFormState>> SavedFormStateMap;
 
     FormController();
-    static PassOwnPtr<SavedFormStateMap> createSavedFormStateMap(const FormElementListHashSet&);
+    static OwnPtr<SavedFormStateMap> createSavedFormStateMap(const FormElementListHashSet&);
     FormControlState takeStateForFormElement(const HTMLFormControlElementWithState&);
     static void formStatesFromStateVector(const Vector<String>&, SavedFormStateMap&);
 

@@ -157,7 +157,7 @@ static inline String targetReferenceFromResource(SVGElement* element)
     return SVGURIReference::fragmentIdentifierFromIRIString(target, element->document());
 }
 
-static inline RenderSVGResourceContainer* paintingResourceFromSVGPaint(Document* document, const SVGPaint::SVGPaintType& paintType, const String& paintUri, AtomicString& id, bool& hasPendingResource)
+static inline RenderSVGResourceContainer* paintingResourceFromSVGPaint(Document& document, const SVGPaint::SVGPaintType& paintType, const String& paintUri, AtomicString& id, bool& hasPendingResource)
 {
     if (paintType != SVGPaint::SVG_PAINTTYPE_URI && paintType != SVGPaint::SVG_PAINTTYPE_URI_RGBCOLOR)
         return 0;
@@ -179,8 +179,7 @@ static inline RenderSVGResourceContainer* paintingResourceFromSVGPaint(Document*
 static inline void registerPendingResource(SVGDocumentExtensions* extensions, const AtomicString& id, SVGElement* element)
 {
     ASSERT(element);
-    ASSERT_WITH_SECURITY_IMPLICATION(element->isSVGStyledElement());
-    extensions->addPendingResource(id, toSVGStyledElement(element));
+    extensions->addPendingResource(id, element);
 }
 
 bool SVGResources::buildCachedResources(const RenderObject* object, const SVGRenderStyle* style)
@@ -196,10 +195,9 @@ bool SVGResources::buildCachedResources(const RenderObject* object, const SVGRen
     if (!element)
         return false;
 
-    Document* document = object->document();
-    ASSERT(document);
+    Document& document = object->document();
 
-    SVGDocumentExtensions* extensions = document->accessSVGExtensions();
+    SVGDocumentExtensions* extensions = document.accessSVGExtensions();
     ASSERT(extensions);
 
     const AtomicString& tagName = element->localName();
@@ -327,13 +325,12 @@ void SVGResources::removeClientFromCache(RenderObject* object, bool markForInval
     }
 }
 
-void SVGResources::resourceDestroyed(RenderSVGResourceContainer* resource)
+void SVGResources::resourceDestroyed(RenderSVGResourceContainer& resource)
 {
-    ASSERT(resource);
     if (!m_clipperFilterMaskerData && !m_markerData && !m_fillStrokeData && !m_linkedResource)
         return;
 
-    if (m_linkedResource == resource) {
+    if (m_linkedResource == &resource) {
         ASSERT(!m_clipperFilterMaskerData);
         ASSERT(!m_markerData);
         ASSERT(!m_fillStrokeData);
@@ -342,11 +339,11 @@ void SVGResources::resourceDestroyed(RenderSVGResourceContainer* resource)
         return;
     }
 
-    switch (resource->resourceType()) {
+    switch (resource.resourceType()) {
     case MaskerResourceType:
         if (!m_clipperFilterMaskerData)
             break;
-        if (m_clipperFilterMaskerData->masker == resource) {
+        if (m_clipperFilterMaskerData->masker == &resource) {
             m_clipperFilterMaskerData->masker->removeAllClientsFromCache();
             m_clipperFilterMaskerData->masker = 0;
         }
@@ -354,15 +351,15 @@ void SVGResources::resourceDestroyed(RenderSVGResourceContainer* resource)
     case MarkerResourceType:
         if (!m_markerData)
             break;
-        if (m_markerData->markerStart == resource) {
+        if (m_markerData->markerStart == &resource) {
             m_markerData->markerStart->removeAllClientsFromCache();
             m_markerData->markerStart = 0;
         }
-        if (m_markerData->markerMid == resource) {
+        if (m_markerData->markerMid == &resource) {
             m_markerData->markerMid->removeAllClientsFromCache();
             m_markerData->markerMid = 0;
         }
-        if (m_markerData->markerEnd == resource) {
+        if (m_markerData->markerEnd == &resource) {
             m_markerData->markerEnd->removeAllClientsFromCache();
             m_markerData->markerEnd = 0;
         }
@@ -372,11 +369,11 @@ void SVGResources::resourceDestroyed(RenderSVGResourceContainer* resource)
     case RadialGradientResourceType:
         if (!m_fillStrokeData)
             break;
-        if (m_fillStrokeData->fill == resource) {
+        if (m_fillStrokeData->fill == &resource) {
             m_fillStrokeData->fill->removeAllClientsFromCache();
             m_fillStrokeData->fill = 0;
         }
-        if (m_fillStrokeData->stroke == resource) {
+        if (m_fillStrokeData->stroke == &resource) {
             m_fillStrokeData->stroke->removeAllClientsFromCache();
             m_fillStrokeData->stroke = 0;
         }
@@ -385,7 +382,7 @@ void SVGResources::resourceDestroyed(RenderSVGResourceContainer* resource)
 #if ENABLE(FILTERS)
         if (!m_clipperFilterMaskerData)
             break;
-        if (m_clipperFilterMaskerData->filter == resource) {
+        if (m_clipperFilterMaskerData->filter == &resource) {
             m_clipperFilterMaskerData->filter->removeAllClientsFromCache();
             m_clipperFilterMaskerData->filter = 0;
         }
@@ -396,7 +393,7 @@ void SVGResources::resourceDestroyed(RenderSVGResourceContainer* resource)
     case ClipperResourceType:
         if (!m_clipperFilterMaskerData)
             break; 
-        if (m_clipperFilterMaskerData->clipper == resource) {
+        if (m_clipperFilterMaskerData->clipper == &resource) {
             m_clipperFilterMaskerData->clipper->removeAllClientsFromCache();
             m_clipperFilterMaskerData->clipper = 0;
         }
@@ -649,33 +646,33 @@ void SVGResources::dump(const RenderObject* object)
     fprintf(stderr, "\n | List of resources:\n");
     if (m_clipperFilterMaskerData) {
         if (RenderSVGResourceClipper* clipper = m_clipperFilterMaskerData->clipper)
-            fprintf(stderr, " |-> Clipper    : %p (node=%p)\n", clipper, clipper->node());
+            fprintf(stderr, " |-> Clipper    : %p (node=%p)\n", clipper, &clipper->clipPathElement());
 #if ENABLE(FILTERS)
         if (RenderSVGResourceFilter* filter = m_clipperFilterMaskerData->filter)
-            fprintf(stderr, " |-> Filter     : %p (node=%p)\n", filter, filter->node());
+            fprintf(stderr, " |-> Filter     : %p (node=%p)\n", filter, &filter->filterElement());
 #endif
         if (RenderSVGResourceMasker* masker = m_clipperFilterMaskerData->masker)
-            fprintf(stderr, " |-> Masker     : %p (node=%p)\n", masker, masker->node());
+            fprintf(stderr, " |-> Masker     : %p (node=%p)\n", masker, &masker->maskElement());
     }
 
     if (m_markerData) {
         if (RenderSVGResourceMarker* markerStart = m_markerData->markerStart)
-            fprintf(stderr, " |-> MarkerStart: %p (node=%p)\n", markerStart, markerStart->node());
+            fprintf(stderr, " |-> MarkerStart: %p (node=%p)\n", markerStart, &markerStart->markerElement());
         if (RenderSVGResourceMarker* markerMid = m_markerData->markerMid)
-            fprintf(stderr, " |-> MarkerMid  : %p (node=%p)\n", markerMid, markerMid->node());
+            fprintf(stderr, " |-> MarkerMid  : %p (node=%p)\n", markerMid, &markerMid->markerElement());
         if (RenderSVGResourceMarker* markerEnd = m_markerData->markerEnd)
-            fprintf(stderr, " |-> MarkerEnd  : %p (node=%p)\n", markerEnd, markerEnd->node());
+            fprintf(stderr, " |-> MarkerEnd  : %p (node=%p)\n", markerEnd, &markerEnd->markerElement());
     }
 
     if (m_fillStrokeData) {
         if (RenderSVGResourceContainer* fill = m_fillStrokeData->fill)
-            fprintf(stderr, " |-> Fill       : %p (node=%p)\n", fill, fill->node());
+            fprintf(stderr, " |-> Fill       : %p (node=%p)\n", fill, &fill->element());
         if (RenderSVGResourceContainer* stroke = m_fillStrokeData->stroke)
-            fprintf(stderr, " |-> Stroke     : %p (node=%p)\n", stroke, stroke->node());
+            fprintf(stderr, " |-> Stroke     : %p (node=%p)\n", stroke, &stroke->element());
     }
 
     if (m_linkedResource)
-        fprintf(stderr, " |-> xlink:href : %p (node=%p)\n", m_linkedResource, m_linkedResource->node());
+        fprintf(stderr, " |-> xlink:href : %p (node=%p)\n", m_linkedResource, &m_linkedResource->element());
 }
 #endif
 

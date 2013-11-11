@@ -126,9 +126,17 @@ PassOwnPtr<PurgeableBuffer> ResourceBuffer::releasePurgeableBuffer()
 }
 
 #if USE(CF)
-CFDataRef ResourceBuffer::createCFData()
+RetainPtr<CFDataRef> ResourceBuffer::createCFData()
 {
     return m_sharedBuffer->createCFData();
+}
+#endif
+
+#if ENABLE(DISK_IMAGE_CACHE)
+bool ResourceBuffer::isUsingDiskImageCache() const
+{
+    ASSERT(m_sharedBuffer);
+    return m_sharedBuffer && m_sharedBuffer->isAllowedToBeMemoryMapped();
 }
 #endif
 

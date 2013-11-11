@@ -31,14 +31,14 @@ class FlexBoxIterator;
 
 class RenderDeprecatedFlexibleBox FINAL : public RenderBlock {
 public:
-    RenderDeprecatedFlexibleBox(Element*);
+    RenderDeprecatedFlexibleBox(Element&, PassRef<RenderStyle>);
     virtual ~RenderDeprecatedFlexibleBox();
 
-    static RenderDeprecatedFlexibleBox* createAnonymous(Document*);
+    Element& element() const { return toElement(nodeForNonAnonymous()); }
 
     virtual const char* renderName() const;
 
-    virtual void styleWillChange(StyleDifference, const RenderStyle* newStyle) OVERRIDE;
+    virtual void styleWillChange(StyleDifference, const RenderStyle& newStyle) OVERRIDE;
 
     virtual void layoutBlock(bool relayoutChildren, LayoutUnit pageHeight = 0);
     void layoutHorizontalBox(bool relayoutChildren);
@@ -51,21 +51,20 @@ public:
 
     void placeChild(RenderBox* child, const LayoutPoint& location, LayoutSize* childLayoutDelta = 0);
 
-protected:
+private:
     virtual void computeIntrinsicLogicalWidths(LayoutUnit& minLogicalWidth, LayoutUnit& maxLogicalWidth) const OVERRIDE;
     virtual void computePreferredLogicalWidths() OVERRIDE;
 
     LayoutUnit allowedChildFlex(RenderBox* child, bool expanding, unsigned group);
 
-    bool hasMultipleLines() const { return style()->boxLines() == MULTIPLE; }
-    bool isVertical() const { return style()->boxOrient() == VERTICAL; }
-    bool isHorizontal() const { return style()->boxOrient() == HORIZONTAL; }
+    bool hasMultipleLines() const { return style().boxLines() == MULTIPLE; }
+    bool isVertical() const { return style().boxOrient() == VERTICAL; }
+    bool isHorizontal() const { return style().boxOrient() == HORIZONTAL; }
 
-    bool m_stretchingChildren;
-
-private:
     void applyLineClamp(FlexBoxIterator&, bool relayoutChildren);
     void clearLineClamp();
+
+    bool m_stretchingChildren;
 };
 
 } // namespace WebCore

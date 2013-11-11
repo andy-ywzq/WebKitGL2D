@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
 <head>
-<script src="../../fast/js/resources/js-test-pre.js"></script>
+<script src="../../resources/js-test-pre.js"></script>
 <script src="resources/js-test-selection-shared.js"></script>
 </head>
 <body>
@@ -59,8 +59,8 @@ for (var i = 0; i < destinations.length; ++i) {
         return function() {
             if (!window.internals)
                  return;
-            var sequence = internals.lastSpellCheckRequestSequence(document);
-            var processed = internals.lastSpellCheckProcessedSequence(document);
+            var sequence = internals.lastSpellCheckRequestSequence();
+            var processed = internals.lastSpellCheckProcessedSequence();
             copyAndPaste(source, destinations[i]);
             verify(sequence, processed);
         }
@@ -100,8 +100,8 @@ function verify(sequence, processed)
     var nretry = 10;
     var nsleep = 1;
     function trial() {
-        var newSequence = internals.lastSpellCheckRequestSequence(document);
-        var newProcessed = internals.lastSpellCheckProcessedSequence(document);
+        var newSequence = internals.lastSpellCheckRequestSequence();
+        var newProcessed = internals.lastSpellCheckProcessedSequence();
 
         var verified = newSequence >= sequence && newProcessed >= processed && newSequence == newProcessed;
         if (verified) {
@@ -128,6 +128,6 @@ verifyIfAny();
 var successfullyParsed = true;
 
 </script>
-<script src="../../fast/js/resources/js-test-post.js"></script>
+<script src="../../resources/js-test-post.js"></script>
 </body>
 </html>

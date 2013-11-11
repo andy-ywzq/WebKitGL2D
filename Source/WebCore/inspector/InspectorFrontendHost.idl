@@ -55,7 +55,7 @@
     void copyText(DOMString text);
     void openInNewTab(DOMString url);
     boolean canSave();
-    void save(DOMString url, DOMString content, boolean forceSaveAs);
+    void save(DOMString url, DOMString content, boolean base64Encoded, boolean forceSaveAs);
     void append(DOMString url, DOMString content);
     void close(DOMString url);
 
@@ -74,9 +74,10 @@
     void requestFileSystems();
     void addFileSystem();
     void removeFileSystem(DOMString fileSystemPath);
-    [Conditional=FILE_SYSTEM] DOMFileSystem isolatedFileSystem(DOMString fileSystemId, DOMString registeredName);
 
     boolean isUnderTest();
+
+    void beep();
 
     // Deprecated
     boolean canInspectWorkers();

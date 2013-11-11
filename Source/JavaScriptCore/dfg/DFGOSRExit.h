@@ -33,9 +33,9 @@
 #include "CodeOrigin.h"
 #include "DFGCommon.h"
 #include "DFGExitProfile.h"
-#include "DFGGPRInfo.h"
 #include "DFGOSRExitBase.h"
 #include "DFGValueRecoveryOverride.h"
+#include "GPRInfo.h"
 #include "MacroAssembler.h"
 #include "MethodOfGettingAValueProfile.h"
 #include "Operands.h"
@@ -96,7 +96,6 @@ struct OSRExit : public OSRExitBase {
     unsigned m_patchableCodeOffset;
     
     unsigned m_recoveryIndex;
-    unsigned m_watchpointIndex;
     
     void setPatchableCodeOffset(MacroAssembler::PatchableJump);
     MacroAssembler::Jump getPatchableCodeOffsetAsJump() const;
@@ -106,7 +105,7 @@ struct OSRExit : public OSRExitBase {
     void convertToForward(BasicBlock*, Node*, unsigned nodeIndex, const ValueRecovery&);
 
     unsigned m_streamIndex;
-    int m_lastSetOperand;
+    VirtualRegister m_lastSetOperand;
     
     RefPtr<ValueRecoveryOverride> m_valueRecoveryOverride;
 };

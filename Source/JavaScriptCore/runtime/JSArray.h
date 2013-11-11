@@ -38,6 +38,12 @@ class JSArray : public JSNonFinalObject {
 public:
     typedef JSNonFinalObject Base;
 
+    static size_t allocationSize(size_t inlineCapacity)
+    {
+        ASSERT_UNUSED(inlineCapacity, !inlineCapacity);
+        return sizeof(JSArray);
+    }
+        
 protected:
     explicit JSArray(VM& vm, Structure* structure, Butterfly* butterfly)
         : JSNonFinalObject(vm, structure, butterfly)
@@ -53,7 +59,7 @@ public:
     //   - call 'initializeIndex' for all properties in sequence, for 0 <= i < initialLength.
     static JSArray* tryCreateUninitialized(VM&, Structure*, unsigned initialLength);
 
-    JS_EXPORT_PRIVATE static bool defineOwnProperty(JSObject*, ExecState*, PropertyName, PropertyDescriptor&, bool throwException);
+    JS_EXPORT_PRIVATE static bool defineOwnProperty(JSObject*, ExecState*, PropertyName, const PropertyDescriptor&, bool throwException);
 
     static bool getOwnPropertySlot(JSObject*, ExecState*, PropertyName, PropertySlot&);
 
@@ -311,6 +317,21 @@ inline JSArray* constructArray(ExecState* exec, Structure* arrayStructure, const
 
     for (unsigned i = 0; i < length; ++i)
         array->initializeIndex(vm, i, values[i]);
+    return array;
+}
+
+inline JSArray* constructArrayNegativeIndexed(ExecState* exec, Structure* arrayStructure, const JSValue* values, unsigned length)
+{
+    VM& vm = exec->vm();
+    JSArray* array = JSArray::tryCreateUninitialized(vm, arrayStructure, length);
+
+    // FIXME: we should probably throw an out of memory error here, but
+    // when making this change we should check that all clients of this
+    // function will correctly handle an exception being thrown from here.
+    RELEASE_ASSERT(array);
+
+    for (int i = 0; i < static_cast<int>(length); ++i)
+        array->initializeIndex(vm, i, values[-i]);
     return array;
 }
 

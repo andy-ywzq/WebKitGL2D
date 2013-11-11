@@ -22,7 +22,7 @@
 #include "GStreamerVersioning.h"
 
 #if USE(GSTREAMER)
-#include <gst/gstelement.h>
+#include <gst/gst.h>
 
 namespace WTF {
 
@@ -182,6 +182,65 @@ template<> void derefGPtr<GstBuffer>(GstBuffer* ptr)
 {
     if (ptr)
         gst_buffer_unref(ptr);
+}
+
+#ifdef GST_API_VERSION_1
+template<> GRefPtr<GstSample> adoptGRef(GstSample* ptr)
+{
+    return GRefPtr<GstSample>(ptr, GRefPtrAdopt);
+}
+
+template<> GstSample* refGPtr<GstSample>(GstSample* ptr)
+{
+    if (ptr)
+        gst_sample_ref(ptr);
+
+    return ptr;
+}
+
+template<> void derefGPtr<GstSample>(GstSample* ptr)
+{
+    if (ptr)
+        gst_sample_unref(ptr);
+}
+#endif
+
+template<> GRefPtr<GstEvent> adoptGRef(GstEvent* ptr)
+{
+    return GRefPtr<GstEvent>(ptr, GRefPtrAdopt);
+}
+
+template<> GstEvent* refGPtr<GstEvent>(GstEvent* ptr)
+{
+    if (ptr)
+        gst_event_ref(ptr);
+
+    return ptr;
+}
+
+template<> void derefGPtr<GstEvent>(GstEvent* ptr)
+{
+    if (ptr)
+        gst_event_unref(ptr);
+}
+
+template<> GRefPtr<GstToc> adoptGRef(GstToc* ptr)
+{
+    return GRefPtr<GstToc>(ptr, GRefPtrAdopt);
+}
+
+template<> GstToc* refGPtr<GstToc>(GstToc* ptr)
+{
+    if (ptr)
+        gst_toc_ref(ptr);
+
+    return ptr;
+}
+
+template<> void derefGPtr<GstToc>(GstToc* ptr)
+{
+    if (ptr)
+        gst_toc_unref(ptr);
 }
 }
 #endif // USE(GSTREAMER)

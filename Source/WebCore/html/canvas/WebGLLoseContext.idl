@@ -26,7 +26,8 @@
 [
     NoInterfaceObject,
     Conditional=WEBGL,
-    GenerateIsReachable=ImplContext,
+    GenerateIsReachable=ImplWebGLRenderingContext,
+    OperationsNotDeletable
 ] interface WebGLLoseContext {
     [StrictTypeChecking] void loseContext();
     [StrictTypeChecking] void restoreContext();

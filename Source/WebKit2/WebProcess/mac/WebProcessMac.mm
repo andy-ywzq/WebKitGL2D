@@ -126,7 +126,7 @@ void WebProcess::platformSetCacheModel(CacheModel cacheModel)
 #endif
 
     [nsurlCache setMemoryCapacity:urlCacheMemoryCapacity];
-    [nsurlCache setDiskCapacity:max<unsigned long>(urlCacheDiskCapacity, [nsurlCache diskCapacity])]; // Don't shrink a big disk cache, since that would cause churn.
+    [nsurlCache setDiskCapacity:std::max<unsigned long>(urlCacheDiskCapacity, [nsurlCache diskCapacity])]; // Don't shrink a big disk cache, since that would cause churn.
 }
 
 void WebProcess::platformClearResourceCaches(ResourceCachesToClear cachesToClear)
@@ -208,6 +208,11 @@ void WebProcess::platformInitializeProcess(const ChildProcessInitializationParam
 #endif
 }
 
+void WebProcess::stopRunLoop()
+{
+    ChildProcess::stopNSAppRunLoop();
+}
+
 void WebProcess::platformTerminate()
 {
     if (m_clearResourceCachesDispatchGroup) {
@@ -240,7 +245,7 @@ void WebProcess::updateActivePages()
         if (!mainFrameOrigin->isUnique())
             mainFrameOriginString = mainFrameOrigin->toRawString();
         else
-            mainFrameOriginString = KURL(KURL(), mainFrame->url()).protocol() + ':'; // toRawString() is not supposed to work with unique origins, and would just return "://".
+            mainFrameOriginString = URL(URL(), mainFrame->url()).protocol() + ':'; // toRawString() is not supposed to work with unique origins, and would just return "://".
 
         NSURL *originAsNSURL = [NSURL URLWithString:mainFrameOriginString];
         // +[NSURL URLWithString:] returns nil when its argument is malformed. It's unclear how we can possibly have a malformed URL here,

@@ -34,7 +34,7 @@ class RenderFrame;
 enum FrameEdge { LeftFrameEdge, RightFrameEdge, TopFrameEdge, BottomFrameEdge };
 
 struct FrameEdgeInfo {
-    FrameEdgeInfo(bool preventResize = false, bool allowBorder = true)
+    explicit FrameEdgeInfo(bool preventResize = false, bool allowBorder = true)
         : m_preventResize(4)
         , m_allowBorder(4)
     {
@@ -55,14 +55,10 @@ private:
 
 class RenderFrameSet FINAL : public RenderBox {
 public:
-    RenderFrameSet(HTMLFrameSetElement*);
+    RenderFrameSet(HTMLFrameSetElement&, PassRef<RenderStyle>);
     virtual ~RenderFrameSet();
 
-    RenderObject* firstChild() const { ASSERT(children() == virtualChildren()); return children()->firstChild(); }
-    RenderObject* lastChild() const { ASSERT(children() == virtualChildren()); return children()->lastChild(); }
-
-    const RenderObjectChildList* children() const { return &m_children; }
-    RenderObjectChildList* children() { return &m_children; }
+    HTMLFrameSetElement& frameSetElement() const;
 
     FrameEdgeInfo edgeInfo() const;
 
@@ -77,6 +73,8 @@ public:
     void notifyFrameEdgeInfoChanged();
 
 private:
+    void element() const WTF_DELETED_FUNCTION;
+
     static const int noSplit = -1;
 
     class GridAxis {
@@ -93,18 +91,14 @@ private:
         int m_splitResizeOffset;
     };
 
-    virtual RenderObjectChildList* virtualChildren() { return children(); }
-    virtual const RenderObjectChildList* virtualChildren() const { return children(); }
+    virtual const char* renderName() const OVERRIDE { return "RenderFrameSet"; }
+    virtual bool isFrameSet() const OVERRIDE { return true; }
 
-    virtual const char* renderName() const { return "RenderFrameSet"; }
-    virtual bool isFrameSet() const { return true; }
-
-    virtual void layout();
-    virtual void paint(PaintInfo&, const LayoutPoint&);
-    virtual bool isChildAllowed(RenderObject*, RenderStyle*) const;
-    virtual CursorDirective getCursor(const LayoutPoint&, Cursor&) const;
-
-    inline HTMLFrameSetElement* frameSet() const;
+    virtual void layout() OVERRIDE;
+    virtual void paint(PaintInfo&, const LayoutPoint&) OVERRIDE;
+    virtual bool canHaveChildren() const OVERRIDE { return true; }
+    virtual bool isChildAllowed(const RenderObject&, const RenderStyle&) const OVERRIDE;
+    virtual CursorDirective getCursor(const LayoutPoint&, Cursor&) const OVERRIDE;
 
     bool flattenFrameSet() const;
 
@@ -125,8 +119,6 @@ private:
     void paintRowBorder(const PaintInfo&, const IntRect&);
     void paintColumnBorder(const PaintInfo&, const IntRect&);
 
-    RenderObjectChildList m_children;
-
     GridAxis m_rows;
     GridAxis m_cols;
 
@@ -134,15 +126,7 @@ private:
     bool m_isChildResizing;
 };
 
-
-inline RenderFrameSet* toRenderFrameSet(RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isFrameSet());
-    return static_cast<RenderFrameSet*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderFrameSet(const RenderFrameSet*);
+RENDER_OBJECT_TYPE_CASTS(RenderFrameSet, isFrameSet())
 
 } // namespace WebCore
 

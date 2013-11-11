@@ -24,6 +24,7 @@
 #if ENABLE(SVG)
 #include "SVGAnimatedLength.h"
 #include "SVGGradientElement.h"
+#include "SVGNames.h"
 
 namespace WebCore {
 
@@ -31,18 +32,18 @@ struct RadialGradientAttributes;
 
 class SVGRadialGradientElement FINAL : public SVGGradientElement {
 public:
-    static PassRefPtr<SVGRadialGradientElement> create(const QualifiedName&, Document*);
+    static PassRefPtr<SVGRadialGradientElement> create(const QualifiedName&, Document&);
 
     bool collectGradientAttributes(RadialGradientAttributes&);
 
 private:
-    SVGRadialGradientElement(const QualifiedName&, Document*);
+    SVGRadialGradientElement(const QualifiedName&, Document&);
 
     bool isSupportedAttribute(const QualifiedName&);
     virtual void parseAttribute(const QualifiedName&, const AtomicString&) OVERRIDE;
     virtual void svgAttributeChanged(const QualifiedName&);
 
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
 
     virtual bool selfHasRelativeLengths() const;
 
@@ -55,6 +56,8 @@ private:
         DECLARE_ANIMATED_LENGTH(Fr, fr)
     END_DECLARE_ANIMATED_PROPERTIES
 };
+
+NODE_TYPE_CASTS(SVGRadialGradientElement)
 
 } // namespace WebCore
 

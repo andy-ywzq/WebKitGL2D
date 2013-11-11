@@ -56,6 +56,10 @@ macro cCall2(function, arg1, arg2)
         move arg1, t5
         move arg2, t4
         call function
+    elsif ARM64
+        move arg1, t0
+        move arg2, t1
+        call function
     elsif C_LOOP
         cloopCallSlowPath function, arg1, arg2
     else
@@ -70,6 +74,12 @@ macro cCall4(function, arg1, arg2, arg3, arg4)
         move arg2, t4
         move arg3, t1
         move arg4, t2
+        call function
+    elsif ARM64
+        move arg1, t0
+        move arg2, t1
+        move arg3, t2
+        move arg4, t3
         call function
     elsif C_LOOP
         error
@@ -193,21 +203,21 @@ macro functionArityCheck(doneLabel, slow_path)
     prepareStateForCCall()
     cCall2(slow_path, cfr, PC)   # This slow_path has a simple protocol: t0 = 0 => no error, t0 != 0 => error
     btiz t0, .isArityFixupNeeded
-    loadp JITStackFrame::vm[sp], t1
-    loadp VM::callFrameForThrow[t1], t0
-    jmp VM::targetMachinePCForThrow[t1]
+    move t1, cfr   # t1 contains caller frame
+    jmp _llint_throw_from_slow_path_trampoline
+
 .isArityFixupNeeded:
     btiz t1, .continue
 
-    // Move frame down "t1" slots
+    // Move frame up "t1" slots
+    negq t1
     move cfr, t3
-    subp 8, t3
     loadi PayloadOffset + ArgumentCount[cfr], t2
     addi CallFrameHeaderSlots, t2
 .copyLoop:
     loadq [t3], t0
     storeq t0, [t3, t1, 8]
-    subp 8, t3
+    addp 8, t3
     bsubinz 1, t2, .copyLoop
 
     // Fill new slots with JSUndefined
@@ -215,8 +225,8 @@ macro functionArityCheck(doneLabel, slow_path)
     move ValueUndefined, t0
 .fillLoop:
     storeq t0, [t3, t1, 8]
-    subp 8, t3
-    bsubinz 1, t2, .fillLoop
+    addp 8, t3
+    baddinz 1, t2, .fillLoop
 
     lshiftp 3, t1
     addp t1, cfr
@@ -238,10 +248,12 @@ _llint_op_enter:
     loadi CodeBlock::m_numVars[t2], t2      // t2<size_t> = t2<CodeBlock>.m_numVars
     btiz t2, .opEnterDone
     move ValueUndefined, t0
+    negi t2
+    sxi2q t2, t2
 .opEnterLoop:
-    subi 1, t2
     storeq t0, [cfr, t2, 8]
-    btinz t2, .opEnterLoop
+    addq 1, t2
+    btqnz t2, .opEnterLoop
 .opEnterDone:
     dispatch(1)
 
@@ -292,10 +304,14 @@ _llint_op_get_callee:
     traceExecution()
     loadisFromInstruction(1, t0)
     loadp Callee[cfr], t1
-    valueProfile(t1, 2, t2)
+    loadpFromInstruction(2, t2)
+    bpneq t1, t2, .opGetCalleeSlow
     storep t1, [cfr, t0, 8]
     dispatch(3)
 
+.opGetCalleeSlow:
+    callSlowPath(_slow_path_get_callee)
+    dispatch(3)
 
 _llint_op_to_this:
     traceExecution()
@@ -304,7 +320,8 @@ _llint_op_to_this:
     btqnz t0, tagMask, .opToThisSlow
     loadp JSCell::m_structure[t0], t0
     bbneq Structure::m_typeInfo + TypeInfo::m_type[t0], FinalObjectType, .opToThisSlow
-    valueProfile(t0, 2, t1)
+    loadpFromInstruction(2, t2)
+    bpneq t0, t2, .opToThisSlow
     dispatch(3)
 
 .opToThisSlow:
@@ -616,26 +633,31 @@ _llint_op_sub:
 
 _llint_op_div:
     traceExecution()
-    binaryOpCustomStore(
-        macro (left, right, slow, index)
-            # Assume t3 is scratchable.
-            btiz left, slow
-            bineq left, -1, .notNeg2TwoThe31DivByNeg1
-            bieq right, -2147483648, .slow
-        .notNeg2TwoThe31DivByNeg1:
-            btinz right, .intOK
-            bilt left, 0, slow
-        .intOK:
-            move left, t3
-            move right, t0
-            cdqi
-            idivi t3
-            btinz t1, slow
-            orq tagTypeNumber, t0
-            storeq t0, [cfr, index, 8]
-        end,
-        macro (left, right) divd left, right end,
-        _slow_path_div)
+    if X86_64
+        binaryOpCustomStore(
+            macro (left, right, slow, index)
+                # Assume t3 is scratchable.
+                btiz left, slow
+                bineq left, -1, .notNeg2TwoThe31DivByNeg1
+                bieq right, -2147483648, .slow
+            .notNeg2TwoThe31DivByNeg1:
+                btinz right, .intOK
+                bilt left, 0, slow
+            .intOK:
+                move left, t3
+                move right, t0
+                cdqi
+                idivi t3
+                btinz t1, slow
+                orq tagTypeNumber, t0
+                storeq t0, [cfr, index, 8]
+            end,
+            macro (left, right) divd left, right end,
+            _slow_path_div)
+    else
+        callSlowPath(_slow_path_div)
+        dispatch(5)
+    end
 
 
 macro bitOp(operation, slowPath, advance)
@@ -1079,8 +1101,6 @@ _llint_op_get_argument_by_val:
     addi 1, t2
     loadi ArgumentCount + PayloadOffset[cfr], t1
     biaeq t2, t1, .opGetArgumentByValSlow
-    negi t2
-    sxi2q t2, t2
     loadisFromInstruction(1, t3)
     loadpFromInstruction(5, t1)
     loadq ThisArgumentOffset[cfr, t2, 8], t0
@@ -1143,7 +1163,7 @@ macro contiguousPutByVal(storeCallback)
     jmp .storeResult
 end
 
-_llint_op_put_by_val:
+macro putByVal(holeCheck, slowPath)
     traceExecution()
     loadisFromInstruction(1, t0)
     loadConstantOrVariableCell(t0, t1, .opPutByValSlow)
@@ -1191,7 +1211,7 @@ _llint_op_put_by_val:
 .opPutByValNotContiguous:
     bineq t2, ArrayStorageShape, .opPutByValSlow
     biaeq t3, -sizeof IndexingHeader + IndexingHeader::u.lengths.vectorLength[t0], .opPutByValOutOfBounds
-    btqz ArrayStorage::m_vector[t0, t3, 8], .opPutByValArrayStorageEmpty
+    holeCheck(ArrayStorage::m_vector[t0, t3, 8], .opPutByValArrayStorageEmpty)
 .opPutByValArrayStorageStoreResult:
     loadisFromInstruction(3, t2)
     loadConstantOrVariable(t2, t1)
@@ -1216,8 +1236,18 @@ _llint_op_put_by_val:
         storeb 1, ArrayProfile::m_outOfBounds[t0]
     end
 .opPutByValSlow:
-    callSlowPath(_llint_slow_path_put_by_val)
+    callSlowPath(slowPath)
     dispatch(5)
+end
+
+_llint_op_put_by_val:
+    putByVal(macro(slot, slowPath)
+        btqz slot, slowPath
+    end, _llint_slow_path_put_by_val)
+
+_llint_op_put_by_val_direct:
+    putByVal(macro(slot, slowPath)
+    end, _llint_slow_path_put_by_val_direct)
 
 
 _llint_op_jmp:
@@ -1422,6 +1452,7 @@ _llint_op_new_func:
 macro arrayProfileForCall()
     if VALUE_PROFILER
         loadisFromInstruction(4, t3)
+        negp t3
         loadq ThisArgumentOffset[cfr, t3, 8], t0
         btqnz t0, tagMask, .done
         loadp JSCell::m_structure[t0], t0
@@ -1439,6 +1470,7 @@ macro doCall(slowPath)
     bqneq t3, t2, .opCallSlow
     loadisFromInstruction(4, t3)
     lshifti 3, t3
+    negp t3
     addp cfr, t3
     loadp JSFunction::m_scope[t2], t0
     storeq t2, Callee[t3]
@@ -1467,7 +1499,7 @@ _llint_op_tear_off_activation:
 _llint_op_tear_off_arguments:
     traceExecution()
     loadisFromInstruction(1, t0)
-    subi 1, t0   # Get the unmodifiedArgumentsRegister
+    addq 1, t0   # Get the unmodifiedArgumentsRegister
     btqz [cfr, t0, 8], .opTearOffArgumentsNotCreated
     callSlowPath(_llint_slow_path_tear_off_arguments)
 .opTearOffArgumentsNotCreated:
@@ -1568,12 +1600,13 @@ _llint_op_catch:
     move t0, cfr
     loadp CodeBlock[cfr], PB
     loadp CodeBlock::m_instructions[PB], PB
-    loadp JITStackFrame::vm[sp], t3
+    loadp CodeBlock[cfr], t3
+    loadp CodeBlock::m_vm[t3], t3
     loadp VM::targetInterpreterPCForThrow[t3], PC
     subp PB, PC
     rshiftp 3, PC
-    loadq VM::exception[t3], t0
-    storeq 0, VM::exception[t3]
+    loadq VM::m_exception[t3], t0
+    storeq 0, VM::m_exception[t3]
     loadisFromInstruction(1, t2)
     storeq t0, [cfr, t2, 8]
     traceExecution()
@@ -1590,10 +1623,13 @@ _llint_op_end:
 
 
 _llint_throw_from_slow_path_trampoline:
+    callSlowPath(_llint_slow_path_handle_exception)
+
     # When throwing from the interpreter (i.e. throwing from LLIntSlowPaths), so
     # the throw target is not necessarily interpreted code, we come to here.
     # This essentially emulates the JIT's throwing protocol.
-    loadp JITStackFrame::vm[sp], t1
+    loadp CodeBlock[cfr], t1
+    loadp CodeBlock::m_vm[t1], t1
     loadp VM::topCallFrame[t1], cfr
     loadp VM::callFrameForThrow[t1], t0
     jmp VM::targetMachinePCForThrow[t1]
@@ -1601,16 +1637,15 @@ _llint_throw_from_slow_path_trampoline:
 
 _llint_throw_during_call_trampoline:
     preserveReturnAddressAfterCall(t2)
-    loadp JITStackFrame::vm[sp], t1
-    loadp VM::topCallFrame[t1], cfr
-    loadp VM::callFrameForThrow[t1], t0
-    jmp VM::targetMachinePCForThrow[t1]
+    jmp _llint_throw_from_slow_path_trampoline
 
 
 macro nativeCallTrampoline(executableOffsetToFunction)
     storep 0, CodeBlock[cfr]
     if X86_64
-        loadp JITStackFrame::vm + 8[sp], t0
+        loadp ScopeChain[cfr], t0
+        andp MarkedBlockMask, t0
+        loadp MarkedBlock::m_weakSet + WeakSet::m_vm[t0], t0
         storep cfr, VM::topCallFrame[t0]
         loadp CallerFrame[cfr], t0
         loadq ScopeChain[t0], t1
@@ -1624,14 +1659,36 @@ macro nativeCallTrampoline(executableOffsetToFunction)
         move t0, cfr # Restore cfr to avoid loading from stack
         call executableOffsetToFunction[t1]
         addp 16 - 8, sp
-        loadp JITStackFrame::vm + 8[sp], t3
-
+        loadp ScopeChain[cfr], t3
+        andp MarkedBlockMask, t3
+        loadp MarkedBlock::m_weakSet + WeakSet::m_vm[t3], t3
+    elsif ARM64
+        loadp ScopeChain[cfr], t0
+        andp MarkedBlockMask, t0
+        loadp MarkedBlock::m_weakSet + WeakSet::m_vm[t0], t0
+        storep cfr, VM::topCallFrame[t0]
+        loadp CallerFrame[cfr], t2
+        loadp ScopeChain[t2], t1
+        storep t1, ScopeChain[cfr]
+        preserveReturnAddressAfterCall(t3)
+        storep t3, ReturnPC[cfr]
+        move cfr, t0
+        loadp Callee[cfr], t1
+        loadp JSFunction::m_executable[t1], t1
+        move t2, cfr # Restore cfr to avoid loading from stack
+        call executableOffsetToFunction[t1]
+        restoreReturnAddressBeforeReturn(t3)
+        loadp ScopeChain[cfr], t3
+        andp MarkedBlockMask, t3
+        loadp MarkedBlock::m_weakSet + WeakSet::m_vm[t3], t3
     elsif C_LOOP
         loadp CallerFrame[cfr], t0
         loadp ScopeChain[t0], t1
         storep t1, ScopeChain[cfr]
 
-        loadp JITStackFrame::vm[sp], t3
+        loadp ScopeChain[cfr], t3
+        andp MarkedBlockMask, t3
+        loadp MarkedBlock::m_weakSet + WeakSet::m_vm[t3], t3
         storep cfr, VM::topCallFrame[t3]
 
         move t0, t2
@@ -1644,19 +1701,21 @@ macro nativeCallTrampoline(executableOffsetToFunction)
         cloopCallNative executableOffsetToFunction[t1]
 
         restoreReturnAddressBeforeReturn(t3)
-        loadp JITStackFrame::vm[sp], t3
+        loadp ScopeChain[cfr], t3
+        andp MarkedBlockMask, t3
+        loadp MarkedBlock::m_weakSet + WeakSet::m_vm[t3], t3
     else
         error
     end
 
-    btqnz VM::exception[t3], .exception
+    btqnz VM::m_exception[t3], .exception
     ret
 .exception:
-    preserveReturnAddressAfterCall(t1)
+    preserveReturnAddressAfterCall(t1) # This is really only needed on X86_64
     loadi ArgumentCount + TagOffset[cfr], PC
     loadp CodeBlock[cfr], PB
+    loadp CodeBlock::m_vm[PB], t0
     loadp CodeBlock::m_instructions[PB], PB
-    loadp JITStackFrame::vm[sp], t0
     storep cfr, VM::topCallFrame[t0]
     callSlowPath(_llint_throw_from_native_call)
     jmp _llint_throw_from_slow_path_trampoline

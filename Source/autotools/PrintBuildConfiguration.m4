@@ -1,3 +1,10 @@
+target_description=""
+AS_IF([test "$enable_x11_target" = "yes"], [AM_APPEND_TO_DESCRIPTION(target_description, "x11")], [])
+AS_IF([test "$enable_wayland_target" = "yes"], [AM_APPEND_TO_DESCRIPTION(target_description, "wayland")], [])
+AS_IF([test "$enable_win32_target" = "yes"], [AM_APPEND_TO_DESCRIPTION(target_description, "win32")], [])
+AS_IF([test "$enable_quartz_target" = "yes"], [AM_APPEND_TO_DESCRIPTION(target_description, "quartz")], [])
+AS_IF([test "$enable_directfb_target" = "yes"], [AM_APPEND_TO_DESCRIPTION(target_description, "directfb")], [])
+
 AC_OUTPUT
 
 echo "
@@ -22,6 +29,7 @@ Features:
  Geolocation support                                      : $enable_geolocation
  HTML5 video element support                              : $enable_video
  JIT compilation                                          : $enable_jit
+ FTL JIT compilation                                      : $enable_ftl_jit
  Opcode stats                                             : $enable_opcode_stats
  SVG fonts support                                        : $enable_svg_fonts
  SVG support                                              : $enable_svg
@@ -33,7 +41,7 @@ Features:
 
 GTK+ configuration:
  GTK+ version                                             : $with_gtk
- GDK target                                               : $with_target
+ GDK targets                                              : $target_description
  Introspection support                                    : $enable_introspection
  Generate documentation                                   : $enable_gtk_doc
 "

@@ -34,24 +34,18 @@ namespace WebCore {
 class GLContextFromCurrentEGL : public GLContext {
     WTF_MAKE_NONCOPYABLE(GLContextFromCurrentEGL);
 public:
-    // TODO: Add support for Offscreen buffers.
     static PassOwnPtr<GLContextFromCurrentEGL> createFromCurrentGLContext();
 
-    virtual bool makeContextCurrent();
+    virtual bool makeContextCurrent() OVERRIDE;
 
-    // These are not used by Nix.
-    virtual void swapBuffers() { }
-    virtual IntSize defaultFrameBufferSize() { return IntSize(); }
-    virtual cairo_device_t* cairoDevice() { return 0; }
+    virtual void swapBuffers() OVERRIDE { }
+    virtual IntSize defaultFrameBufferSize() OVERRIDE { return IntSize(); }
+    virtual cairo_device_t* cairoDevice() OVERRIDE { return 0; }
 
-    // TODO: This is not used in GLContext interface, it's used by
-    // GLContextGLX only as an implementation detail.
-    virtual bool canRenderToDefaultFramebuffer() { return false; }
+    virtual bool canRenderToDefaultFramebuffer() OVERRIDE { return false; }
 
-    // TODO: Used only as a key in HashMaps, see if we can change WebKit code to not
-    // rely on this anymore (at least in our platform).
-    virtual PlatformGraphicsContext3D platformContext() { return this; }
-    virtual void waitNative() { return; }
+    virtual PlatformGraphicsContext3D platformContext() OVERRIDE { return this; }
+    virtual void waitNative() OVERRIDE { }
 
 private:
     static bool initialize();

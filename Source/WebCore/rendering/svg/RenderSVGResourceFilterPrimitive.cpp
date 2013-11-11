@@ -33,10 +33,20 @@
 #include "RenderSVGResource.h"
 #include "SVGFEImage.h"
 #include "SVGFilter.h"
+#include "SVGFilterPrimitiveStandardAttributes.h"
 #include "SVGNames.h"
 
 namespace WebCore {
 
+RenderSVGResourceFilterPrimitive::RenderSVGResourceFilterPrimitive(SVGFilterPrimitiveStandardAttributes& filterPrimitiveElement, PassRef<RenderStyle> style)
+    : RenderSVGHiddenContainer(filterPrimitiveElement, std::move(style))
+{
+}
+
+SVGFilterPrimitiveStandardAttributes& RenderSVGResourceFilterPrimitive::filterPrimitiveElement() const
+{
+    return static_cast<SVGFilterPrimitiveStandardAttributes&>(RenderSVGHiddenContainer::element());
+}
 
 void RenderSVGResourceFilterPrimitive::styleDidChange(StyleDifference diff, const RenderStyle* oldStyle)
 {
@@ -50,15 +60,15 @@ void RenderSVGResourceFilterPrimitive::styleDidChange(StyleDifference diff, cons
     if (diff == StyleDifferenceEqual || !oldStyle)
         return;
 
-    const SVGRenderStyle* newStyle = this->style()->svgStyle();
-    if (node()->hasTagName(SVGNames::feFloodTag)) {
+    const SVGRenderStyle* newStyle = style().svgStyle();
+    if (filterPrimitiveElement().hasTagName(SVGNames::feFloodTag)) {
         if (newStyle->floodColor() != oldStyle->svgStyle()->floodColor())
-            toRenderSVGFilter(filter)->primitiveAttributeChanged(this, SVGNames::flood_colorAttr);
+            toRenderSVGResourceFilter(filter)->primitiveAttributeChanged(this, SVGNames::flood_colorAttr);
         if (newStyle->floodOpacity() != oldStyle->svgStyle()->floodOpacity())
-            toRenderSVGFilter(filter)->primitiveAttributeChanged(this, SVGNames::flood_opacityAttr);
-    } else if (node()->hasTagName(SVGNames::feDiffuseLightingTag) || node()->hasTagName(SVGNames::feSpecularLightingTag)) {
+            toRenderSVGResourceFilter(filter)->primitiveAttributeChanged(this, SVGNames::flood_opacityAttr);
+    } else if (filterPrimitiveElement().hasTagName(SVGNames::feDiffuseLightingTag) || filterPrimitiveElement().hasTagName(SVGNames::feSpecularLightingTag)) {
         if (newStyle->lightingColor() != oldStyle->svgStyle()->lightingColor())
-            toRenderSVGFilter(filter)->primitiveAttributeChanged(this, SVGNames::lighting_colorAttr);
+            toRenderSVGResourceFilter(filter)->primitiveAttributeChanged(this, SVGNames::lighting_colorAttr);
     }
 }
 

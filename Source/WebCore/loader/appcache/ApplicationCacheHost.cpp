@@ -67,7 +67,7 @@ void ApplicationCacheHost::selectCacheWithoutManifest()
     ApplicationCacheGroup::selectCacheWithoutManifestURL(m_documentLoader->frame());
 }
 
-void ApplicationCacheHost::selectCacheWithManifest(const KURL& manifestURL)
+void ApplicationCacheHost::selectCacheWithManifest(const URL& manifestURL)
 {
     ApplicationCacheGroup::selectCache(m_documentLoader->frame(), manifestURL);
 }
@@ -83,9 +83,12 @@ void ApplicationCacheHost::maybeLoadMainResource(ResourceRequest& request, Subst
         if (m_mainResourceApplicationCache) {
             // Get the resource from the application cache. By definition, cacheForMainRequest() returns a cache that contains the resource.
             ApplicationCacheResource* resource = m_mainResourceApplicationCache->resourceForRequest(request);
-            substituteData = SubstituteData(resource->data(), 
+            substituteData = SubstituteData(resource->data(),
                                             resource->response().mimeType(),
-                                            resource->response().textEncodingName(), KURL());
+                                            resource->response().textEncodingName(),
+                                            URL(),
+                                            URL(),
+                                            SubstituteData::ShouldRevealToSessionHistory);
         }
     }
 }
@@ -154,7 +157,7 @@ void ApplicationCacheHost::finishedLoadingMainResource()
         group->finishedLoadingMainResource(m_documentLoader);
 }
 
-bool ApplicationCacheHost::maybeLoadResource(ResourceLoader* loader, ResourceRequest& request, const KURL& originalURL)
+bool ApplicationCacheHost::maybeLoadResource(ResourceLoader* loader, ResourceRequest& request, const URL& originalURL)
 {
     if (!isApplicationCacheEnabled())
         return false;
@@ -207,7 +210,7 @@ bool ApplicationCacheHost::maybeLoadSynchronously(ResourceRequest& request, Reso
             response = resource->response();
             data.append(resource->data()->data(), resource->data()->size());
         } else {
-            error = documentLoader()->frameLoader()->client()->cannotShowURLError(request);
+            error = documentLoader()->frameLoader()->client().cannotShowURLError(request);
         }
         return true;
     }
@@ -300,7 +303,7 @@ ApplicationCacheHost::CacheInfo ApplicationCacheHost::applicationCacheInfo()
 {
     ApplicationCache* cache = applicationCache();
     if (!cache || !cache->isComplete())
-        return CacheInfo(KURL(), 0, 0, 0);
+        return CacheInfo(URL(), 0, 0, 0);
   
     // FIXME: Add "Creation Time" and "Update Time" to Application Caches.
     return CacheInfo(cache->manifestResource()->url(), 0, 0, cache->estimatedSizeInStorage());
@@ -375,7 +378,7 @@ bool ApplicationCacheHost::getApplicationCacheFallbackResource(const ResourceReq
     if (!ApplicationCache::requestIsHTTPOrHTTPSGet(request))
         return false;
 
-    KURL fallbackURL;
+    URL fallbackURL;
     if (cache->isURLInOnlineWhitelist(request.url()))
         return false;
     if (!cache->urlMatchesFallbackNamespace(request.url(), &fallbackURL))

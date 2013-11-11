@@ -29,10 +29,6 @@
 #ifndef NixKeyboardUtilities_h
 #define NixKeyboardUtilities_h
 
-namespace WTF {
-class String;
-}
-
 namespace WebCore {
 
 class KeyboardEvent;

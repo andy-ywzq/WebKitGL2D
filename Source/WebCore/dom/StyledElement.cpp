@@ -32,20 +32,18 @@
 #include "CSSValueKeywords.h"
 #include "CSSValuePool.h"
 #include "Color.h"
-#include "ClassList.h"
 #include "ContentSecurityPolicy.h"
 #include "DOMTokenList.h"
 #include "Document.h"
 #include "HTMLNames.h"
 #include "HTMLParserIdioms.h"
+#include "InspectorInstrumentation.h"
 #include "PropertySetCSSStyleDeclaration.h"
 #include "ScriptableDocumentParser.h"
 #include "StylePropertySet.h"
 #include "StyleResolver.h"
 #include <wtf/HashFunctions.h>
 #include <wtf/text/TextPosition.h>
-
-using namespace std;
 
 namespace WebCore {
 
@@ -151,10 +149,10 @@ MutableStylePropertySet& StyledElement::ensureMutableInlineStyle()
 {
     RefPtr<StylePropertySet>& inlineStyle = ensureUniqueElementData().m_inlineStyle;
     if (!inlineStyle)
-        inlineStyle = MutableStylePropertySet::create(strictToCSSParserMode(isHTMLElement() && !document()->inQuirksMode()));
+        inlineStyle = MutableStylePropertySet::create(strictToCSSParserMode(isHTMLElement() && !document().inQuirksMode()));
     else if (!inlineStyle->isMutable())
         inlineStyle = inlineStyle->mutableCopy();
-    ASSERT(inlineStyle->isMutable());
+    ASSERT_WITH_SECURITY_IMPLICATION(inlineStyle->isMutable());
     return static_cast<MutableStylePropertySet&>(*inlineStyle);
 }
 
@@ -196,27 +194,27 @@ inline void StyledElement::setInlineStyleFromString(const AtomicString& newStyle
         inlineStyle = CSSParser::parseInlineStyleDeclaration(newStyleString, this);
     else {
         ASSERT(inlineStyle->isMutable());
-        static_pointer_cast<MutableStylePropertySet>(inlineStyle)->parseDeclaration(newStyleString, document()->elementSheet()->contents());
+        static_pointer_cast<MutableStylePropertySet>(inlineStyle)->parseDeclaration(newStyleString, document().elementSheet().contents());
     }
 }
 
 void StyledElement::styleAttributeChanged(const AtomicString& newStyleString, AttributeModificationReason reason)
 {
     WTF::OrdinalNumber startLineNumber = WTF::OrdinalNumber::beforeFirst();
-    if (document() && document()->scriptableDocumentParser() && !document()->isInDocumentWrite())
-        startLineNumber = document()->scriptableDocumentParser()->lineNumber();
+    if (document().scriptableDocumentParser() && !document().isInDocumentWrite())
+        startLineNumber = document().scriptableDocumentParser()->lineNumber();
 
     if (newStyleString.isNull()) {
         if (PropertySetCSSStyleDeclaration* cssomWrapper = inlineStyleCSSOMWrapper())
             cssomWrapper->clearParentElement();
         ensureUniqueElementData().m_inlineStyle.clear();
-    } else if (reason == ModifiedByCloning || document()->contentSecurityPolicy()->allowInlineStyle(document()->url(), startLineNumber))
+    } else if (reason == ModifiedByCloning || document().contentSecurityPolicy()->allowInlineStyle(document().url(), startLineNumber))
         setInlineStyleFromString(newStyleString);
 
     elementData()->m_styleAttributeIsDirty = false;
 
     setNeedsStyleRecalc(InlineStyleChange);
-    InspectorInstrumentation::didInvalidateStyleAttr(document(), this);
+    InspectorInstrumentation::didInvalidateStyleAttr(&document(), this);
 }
 
 void StyledElement::inlineStyleChanged()
@@ -224,7 +222,7 @@ void StyledElement::inlineStyleChanged()
     setNeedsStyleRecalc(InlineStyleChange);
     ASSERT(elementData());
     elementData()->m_styleAttributeIsDirty = true;
-    InspectorInstrumentation::didInvalidateStyleAttr(document(), this);
+    InspectorInstrumentation::didInvalidateStyleAttr(&document(), this);
 }
     
 bool StyledElement::setInlineStyleProperty(CSSPropertyID propertyID, CSSValueID identifier, bool important)
@@ -250,7 +248,7 @@ bool StyledElement::setInlineStyleProperty(CSSPropertyID propertyID, double valu
 
 bool StyledElement::setInlineStyleProperty(CSSPropertyID propertyID, const String& value, bool important)
 {
-    bool changes = ensureMutableInlineStyle().setProperty(propertyID, value, important, document()->elementSheet()->contents());
+    bool changes = ensureMutableInlineStyle().setProperty(propertyID, value, important, document().elementSheet().contents());
     if (changes)
         inlineStyleChanged();
     return changes;
@@ -274,10 +272,10 @@ void StyledElement::removeAllInlineStyleProperties()
     inlineStyleChanged();
 }
 
-void StyledElement::addSubresourceAttributeURLs(ListHashSet<KURL>& urls) const
+void StyledElement::addSubresourceAttributeURLs(ListHashSet<URL>& urls) const
 {
     if (const StylePropertySet* inlineStyle = elementData() ? elementData()->inlineStyle() : 0)
-        inlineStyle->addSubresourceStyleURLs(urls, document()->elementSheet()->contents());
+        inlineStyle->addSubresourceStyleURLs(urls, document().elementSheet().contents());
 }
 
 static inline bool attributeNameSort(const pair<AtomicStringImpl*, AtomicString>& p1, const pair<AtomicStringImpl*, AtomicString>& p2)
@@ -304,7 +302,7 @@ void StyledElement::makePresentationAttributeCacheKey(PresentationAttributeCache
         // FIXME: Background URL may depend on the base URL and can't be shared. Disallow caching.
         if (attribute.name() == backgroundAttr)
             return;
-        result.attributesAndValues.append(make_pair(attribute.localName().impl(), attribute.value()));
+        result.attributesAndValues.append(std::make_pair(attribute.localName().impl(), attribute.value()));
     }
     if (result.attributesAndValues.isEmpty())
         return;
@@ -385,7 +383,7 @@ void StyledElement::addPropertyToPresentationAttributeStyle(MutableStyleProperty
     
 void StyledElement::addPropertyToPresentationAttributeStyle(MutableStylePropertySet* style, CSSPropertyID propertyID, const String& value)
 {
-    style->setProperty(propertyID, value, false, document()->elementSheet()->contents());
+    style->setProperty(propertyID, value, false, document().elementSheet().contents());
 }
 
 }

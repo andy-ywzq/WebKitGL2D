@@ -32,16 +32,15 @@
 
 namespace WebCore {
 
-static inline SVGDocumentExtensions* svgExtensionsFromNode(Node* node)
+static inline SVGDocumentExtensions& svgExtensionsFromElement(SVGElement& element)
 {
-    ASSERT(node);
-    ASSERT(node->document());
-    return node->document()->accessSVGExtensions();
+    // FIXME: accessSVGExtensions() should return a reference.
+    return *element.document().accessSVGExtensions();
 }
 
-RenderSVGResourceContainer::RenderSVGResourceContainer(SVGStyledElement* node)
-    : RenderSVGHiddenContainer(node)
-    , m_id(node->getIdAttribute())
+RenderSVGResourceContainer::RenderSVGResourceContainer(SVGElement& element, PassRef<RenderStyle> style)
+    : RenderSVGHiddenContainer(element, std::move(style))
+    , m_id(element.getIdAttribute())
     , m_registered(false)
     , m_isInvalidating(false)
 {
@@ -50,7 +49,7 @@ RenderSVGResourceContainer::RenderSVGResourceContainer(SVGStyledElement* node)
 RenderSVGResourceContainer::~RenderSVGResourceContainer()
 {
     if (m_registered)
-        svgExtensionsFromNode(node())->removeResource(m_id);
+        svgExtensionsFromElement(element()).removeResource(m_id);
 }
 
 void RenderSVGResourceContainer::layout()
@@ -65,7 +64,7 @@ void RenderSVGResourceContainer::layout()
 
 void RenderSVGResourceContainer::willBeDestroyed()
 {
-    SVGResourcesCache::resourceDestroyed(this);
+    SVGResourcesCache::resourceDestroyed(*this);
     RenderSVGHiddenContainer::willBeDestroyed();
 }
 
@@ -85,9 +84,8 @@ void RenderSVGResourceContainer::idChanged()
     removeAllClientsFromCache();
 
     // Remove old id, that is guaranteed to be present in cache.
-    SVGDocumentExtensions* extensions = svgExtensionsFromNode(node());
-    extensions->removeResource(m_id);
-    m_id = toElement(node())->getIdAttribute();
+    svgExtensionsFromElement(element()).removeResource(m_id);
+    m_id = element().getIdAttribute();
 
     registerResource();
 }
@@ -140,7 +138,7 @@ void RenderSVGResourceContainer::markClientForInvalidation(RenderObject* client,
         client->setNeedsBoundariesUpdate();
         break;
     case RepaintInvalidation:
-        if (client->view())
+        if (!client->documentBeingDestroyed())
             client->repaint();
         break;
     case ParentOnlyInvalidation:
@@ -175,27 +173,27 @@ void RenderSVGResourceContainer::removeClientRenderLayer(RenderLayer* client)
 
 void RenderSVGResourceContainer::registerResource()
 {
-    SVGDocumentExtensions* extensions = svgExtensionsFromNode(node());
-    if (!extensions->hasPendingResource(m_id)) {
-        extensions->addResource(m_id, this);
+    SVGDocumentExtensions& extensions = svgExtensionsFromElement(element());
+    if (!extensions.hasPendingResource(m_id)) {
+        extensions.addResource(m_id, this);
         return;
     }
 
-    OwnPtr<SVGDocumentExtensions::SVGPendingElements> clients(extensions->removePendingResource(m_id));
+    OwnPtr<SVGDocumentExtensions::SVGPendingElements> clients = extensions.removePendingResource(m_id);
 
     // Cache us with the new id.
-    extensions->addResource(m_id, this);
+    extensions.addResource(m_id, this);
 
     // Update cached resources of pending clients.
     const SVGDocumentExtensions::SVGPendingElements::const_iterator end = clients->end();
     for (SVGDocumentExtensions::SVGPendingElements::const_iterator it = clients->begin(); it != end; ++it) {
         ASSERT((*it)->hasPendingResources());
-        extensions->clearHasPendingResourcesIfPossible(*it);
-        RenderObject* renderer = (*it)->renderer();
+        extensions.clearHasPendingResourcesIfPossible(*it);
+        auto renderer = (*it)->renderer();
         if (!renderer)
             continue;
-        SVGResourcesCache::clientStyleChanged(renderer, StyleDifferenceLayout, renderer->style());
-        renderer->setNeedsLayout(true);
+        SVGResourcesCache::clientStyleChanged(*renderer, StyleDifferenceLayout, renderer->style());
+        renderer->setNeedsLayout();
     }
 }
 

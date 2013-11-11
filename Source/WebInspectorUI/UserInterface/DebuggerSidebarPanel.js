@@ -37,16 +37,17 @@ WebInspector.DebuggerSidebarPanel = function()
     WebInspector.debuggerManager.addEventListener(WebInspector.DebuggerManager.Event.ScriptsCleared, this._scriptsCleared, this);
     WebInspector.debuggerManager.addEventListener(WebInspector.DebuggerManager.Event.Paused, this._debuggerDidPause, this);
     WebInspector.debuggerManager.addEventListener(WebInspector.DebuggerManager.Event.Resumed, this._debuggerDidResume, this);
+    WebInspector.debuggerManager.addEventListener(WebInspector.DebuggerManager.Event.ActiveCallFrameDidChange, this._debuggerActiveCallFrameDidChange, this);
 
-    this._pauseOrResumeKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.Control | WebInspector.KeyboardShortcut.Modifier.Command, "Y", this._debuggerPauseResumeButtonClicked.bind(this));
+    this._pauseOrResumeKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.Control | WebInspector.KeyboardShortcut.Modifier.CommandOrControl, "Y", this._debuggerPauseResumeButtonClicked.bind(this));
     this._stepOverKeyboardShortcut = new WebInspector.KeyboardShortcut(null, WebInspector.KeyboardShortcut.Key.F6, this._debuggerStepOverButtonClicked.bind(this));
     this._stepIntoKeyboardShortcut = new WebInspector.KeyboardShortcut(null, WebInspector.KeyboardShortcut.Key.F7, this._debuggerStepIntoButtonClicked.bind(this));
     this._stepOutKeyboardShortcut = new WebInspector.KeyboardShortcut(null, WebInspector.KeyboardShortcut.Key.F8, this._debuggerStepOutButtonClicked.bind(this));
 
-    this._pauseOrResumeAlternateKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.Command, WebInspector.KeyboardShortcut.Key.Slash, this._debuggerPauseResumeButtonClicked.bind(this));
-    this._stepOverAlternateKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.Command, WebInspector.KeyboardShortcut.Key.SingleQuote, this._debuggerStepOverButtonClicked.bind(this));
-    this._stepIntoAlternateKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.Command, WebInspector.KeyboardShortcut.Key.Semicolon, this._debuggerStepIntoButtonClicked.bind(this));
-    this._stepOutAlternateKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.Shift | WebInspector.KeyboardShortcut.Modifier.Command, WebInspector.KeyboardShortcut.Key.Semicolon, this._debuggerStepOutButtonClicked.bind(this));
+    this._pauseOrResumeAlternateKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.CommandOrControl, WebInspector.KeyboardShortcut.Key.Slash, this._debuggerPauseResumeButtonClicked.bind(this));
+    this._stepOverAlternateKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.CommandOrControl, WebInspector.KeyboardShortcut.Key.SingleQuote, this._debuggerStepOverButtonClicked.bind(this));
+    this._stepIntoAlternateKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.CommandOrControl, WebInspector.KeyboardShortcut.Key.Semicolon, this._debuggerStepIntoButtonClicked.bind(this));
+    this._stepOutAlternateKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.Shift | WebInspector.KeyboardShortcut.Modifier.CommandOrControl, WebInspector.KeyboardShortcut.Key.Semicolon, this._debuggerStepOutButtonClicked.bind(this));
 
     this._navigationBar = new WebInspector.NavigationBar;
     this.element.appendChild(this._navigationBar.element);
@@ -156,8 +157,7 @@ WebInspector.DebuggerSidebarPanel.prototype = {
         this._debuggerPauseResumeButtonItem.enabled = true;
         this._debuggerPauseResumeButtonItem.toggled = true;
         this._debuggerStepOverButtonItem.enabled = true;
-        this._debuggerStepIntoButtonItem.enabled = true;
-        this._debuggerStepOutButtonItem.enabled = true;
+        this._debuggerStepIntoButtonItem.enabled = true;        
     },
 
     _debuggerDidResume: function(event)
@@ -332,6 +332,19 @@ WebInspector.DebuggerSidebarPanel.prototype = {
             treeElementToSelect.select(true, true);
     },
 
+    _debuggerActiveCallFrameDidChange: function()
+    {
+        var callFrames = WebInspector.debuggerManager.callFrames;
+        if (!callFrames)
+            return;
+
+        var indexOfActiveCallFrame = callFrames.indexOf(WebInspector.debuggerManager.activeCallFrame);
+        // It is useful to turn off the step out button when there is no call frame to go through
+        // since there might be call frames in the backend that were removed when processing the call
+        // frame payload.
+        this._debuggerStepOutButtonItem.enabled = indexOfActiveCallFrame < callFrames.length - 1;
+    },
+
     _breakpointsBeneathTreeElement: function(treeElement)
     {
         console.assert(treeElement instanceof WebInspector.ResourceTreeElement || treeElement instanceof WebInspector.ScriptTreeElement);
@@ -486,7 +499,7 @@ WebInspector.DebuggerSidebarPanel.prototype = {
         var aLocation = a.breakpoint.sourceCodeLocation;
         var bLocation = b.breakpoint.sourceCodeLocation;
 
-        var comparisonResult = aLocation.displayLineNumber - bLocation.displayLineNumber
+        var comparisonResult = aLocation.displayLineNumber - bLocation.displayLineNumber;
         if (comparisonResult !== 0)
             return comparisonResult;
 

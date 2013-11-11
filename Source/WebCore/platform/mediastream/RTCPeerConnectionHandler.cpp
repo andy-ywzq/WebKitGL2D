@@ -34,15 +34,26 @@
 
 #include "RTCPeerConnectionHandler.h"
 
+#if USE(WEBRTCLIB)
+#include "RTCPeerConnectionHandlerWebRTC.h"
+#endif
+
 #include <wtf/PassOwnPtr.h>
 
 namespace WebCore {
 class RTCPeerConnectionHandlerClient;
 
-PassOwnPtr<RTCPeerConnectionHandler> RTCPeerConnectionHandler::create(RTCPeerConnectionHandlerClient*)
+static PassOwnPtr<RTCPeerConnectionHandler> createHandler(RTCPeerConnectionHandlerClient* client)
 {
+#if USE(WEBRTCLIB)
+    return adoptPtr(new RTCPeerConnectionHandlerWebRTC(client));
+#else
+    UNUSED_PARAM(client);
     return nullptr;
+#endif
 }
+
+CreatePeerConnectionHandler RTCPeerConnectionHandler::create = createHandler;
 
 } // namespace WebCore
 

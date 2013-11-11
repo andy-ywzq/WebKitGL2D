@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010 Google Inc. All rights reserved.
+ * Copyright (C) 2013 Nokia Corporation and/or its subsidiary(-ies).
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -49,6 +50,13 @@ public:
         StatePressed
     };
 
+    enum MediaPlayerState {
+        StatePlaying,
+        StatePaused,
+        StateMuted,
+        StateNotMuted
+    };
+
     // Extra parameters for drawing the PartScrollbarHorizontalTrack and
     // PartScrollbarVerticalTrack.
     struct ScrollbarTrackExtraParams {
@@ -65,22 +73,6 @@ public:
         bool indeterminate; // Whether the button state is indeterminate.
         bool isDefault; // Whether the button is default button.
         bool hasBorder;
-        Color backgroundColor;
-    };
-
-    // Extra parameters for PartMenuList
-    struct MenuListExtraParams {
-        bool hasBorder;
-        bool hasBorderRadius;
-        int arrowX;
-        int arrowY;
-        Color backgroundColor;
-    };
-
-    // Extra parameters for PartSliderTrack and PartSliderThumb
-    struct SliderExtraParams {
-        bool vertical;
-        bool inDrag;
     };
 
     // Extra parameters for PartInnerSpinButton
@@ -152,8 +144,15 @@ public:
     virtual void paintMeter(Canvas*, State, const Rect&, const MeterExtraParams&) const = 0;
     virtual void paintSliderTrack(Canvas*, State, const Rect&) const = 0;
     virtual void paintSliderThumb(Canvas*, State, const Rect&) const = 0;
+
+    // MediaPlayer (audio and video elements)
+    virtual void paintMediaPlayButton(Canvas*, MediaPlayerState, const Rect&) const = 0;
+    virtual void paintMediaMuteButton(Canvas*, MediaPlayerState, const Rect&) const = 0;
+    virtual void paintMediaSeekBackButton(Canvas*, const Rect&) const = 0;
+    virtual void paintMediaSeekForwardButton(Canvas*, const Rect&) const = 0;
+    virtual void paintMediaRewindButton(Canvas*, const Rect&) const = 0;
 };
 
 } // namespace Nix
 
-#endif
+#endif // Nix_ThemeEngine_h

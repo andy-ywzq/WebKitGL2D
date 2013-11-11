@@ -28,17 +28,17 @@
 
 #if ENABLE(VIDEO)
 
-#include "KURL.h"
+#include "URL.h"
 #include <wtf/Vector.h>
 
 namespace WebCore {
 
-class KURL;
+class URL;
 
 class MediaFragmentURIParser FINAL {
 public:
     
-    MediaFragmentURIParser(const KURL&);
+    MediaFragmentURIParser(const URL&);
 
     double startTime();
     double endTime();
@@ -54,11 +54,11 @@ private:
     bool parseNPTFragment(const LChar*, unsigned length, double& startTime, double& endTime);
     bool parseNPTTime(const LChar*, unsigned length, unsigned& offset, double& time);
 
-    KURL m_url;
+    URL m_url;
     TimeFormat m_timeFormat;
     double m_startTime;
     double m_endTime;
-    Vector<std::pair<String, String> > m_fragments;
+    Vector<std::pair<String, String>> m_fragments;
 };
 
 } // namespace WebCore

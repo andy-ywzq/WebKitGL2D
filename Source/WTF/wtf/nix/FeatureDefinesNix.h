@@ -30,12 +30,20 @@
 #define ENABLE_3D_RENDERING 1
 #endif
 
+#if !defined(ENABLE_8BIT_TEXTRUN)
+#define ENABLE_8BIT_TEXTRUN 1
+#endif
+
 #if !defined(ENABLE_ACCELERATED_2D_CANVAS)
 #define ENABLE_ACCELERATED_2D_CANVAS 0
 #endif
 
 #if !defined(ENABLE_ACCELERATED_OVERFLOW_SCROLLING)
 #define ENABLE_ACCELERATED_OVERFLOW_SCROLLING 1
+#endif
+
+#if !defined(ENABLE_BATTERY_STATUS)
+#define ENABLE_BATTERY_STATUS 1
 #endif
 
 #if !defined(ENABLE_BLOB)
@@ -56,6 +64,10 @@
 
 #if !defined(ENABLE_CSS_BOX_DECORATION_BREAK)
 #define ENABLE_CSS_BOX_DECORATION_BREAK 1
+#endif
+
+#if !defined(ENABLE_CSS_DEVICE_ADAPTATION)
+#define ENABLE_CSS_DEVICE_ADAPTATION 1
 #endif
 
 #if !defined(ENABLE_CSS_EXCLUSIONS)
@@ -126,10 +138,6 @@
 #define ENABLE_GEOLOCATION 1
 #endif
 
-#if !defined(ENABLE_GESTURE_EVENTS)
-#define ENABLE_GESTURE_EVENTS 1
-#endif
-
 #if !defined(ENABLE_ICONDATABASE)
 #define ENABLE_ICONDATABASE 1
 #endif
@@ -148,6 +156,10 @@
 
 #if !defined(ENABLE_INSPECTOR_SERVER)
 #define ENABLE_INSPECTOR_SERVER 1
+#endif
+
+#if !defined(ENABLE_INPUT_SPEECH)
+#define ENABLE_INPUT_SPEECH 1
 #endif
 
 #if !defined(ENABLE_JAVASCRIPT_DEBUGGER)
@@ -174,6 +186,10 @@
 #define ENABLE_MATHML 1
 #endif
 
+#if !defined(ENABLE_MEDIA_STREAM)
+#define ENABLE_MEDIA_STREAM 0
+#endif
+
 #if !defined(ENABLE_METER_ELEMENT)
 #define ENABLE_METER_ELEMENT 1
 #endif
@@ -190,6 +206,10 @@
 #define ENABLE_NETWORK_INFO 1
 #endif
 
+#if !defined(ENABLE_NETWORK_PROCESS)
+#define ENABLE_NETWORK_PROCESS 0
+#endif
+
 #if !defined(ENABLE_PAGE_VISIBILITY_API)
 #define ENABLE_PAGE_VISIBILITY_API 1
 #endif
@@ -204,6 +224,10 @@
 
 #if !defined(ENABLE_PROGRESS_ELEMENT)
 #define ENABLE_PROGRESS_ELEMENT 1
+#endif
+
+#if !defined(ENABLE_PROMISES)
+#define ENABLE_PROMISES 1
 #endif
 
 #if !defined(ENABLE_REQUEST_ANIMATION_FRAME)
@@ -240,6 +264,10 @@
 
 #if !defined(ENABLE_UNDO_MANAGER)
 #define ENABLE_UNDO_MANAGER 0
+#endif
+
+#if !defined(ENABLE_VIBRATION)
+#define ENABLE_VIBRATION 1
 #endif
 
 #if !defined(ENABLE_VIDEO)

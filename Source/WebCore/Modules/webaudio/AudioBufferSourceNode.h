@@ -31,7 +31,7 @@
 #include "AudioScheduledSourceNode.h"
 #include "ExceptionCode.h"
 #include "PannerNode.h"
-#include <wtf/OwnArrayPtr.h>
+#include <memory>
 #include <wtf/PassRefPtr.h>
 #include <wtf/RefPtr.h>
 #include <wtf/Threading.h>
@@ -50,8 +50,8 @@ public:
     virtual ~AudioBufferSourceNode();
 
     // AudioNode
-    virtual void process(size_t framesToProcess);
-    virtual void reset();
+    virtual void process(size_t framesToProcess) OVERRIDE;
+    virtual void reset() OVERRIDE;
 
     // setBuffer() is called on the main thread.  This is the buffer we use for playback.
     // returns true on success.
@@ -94,7 +94,7 @@ public:
     void clearPannerNode();
 
     // If we are no longer playing, propogate silence ahead to downstream nodes.
-    virtual bool propagatesSilence() const;
+    virtual bool propagatesSilence() const OVERRIDE;
 
     // AudioScheduledSourceNode
     virtual void finish() OVERRIDE;
@@ -115,8 +115,8 @@ private:
     RefPtr<AudioBuffer> m_buffer;
 
     // Pointers for the buffer and destination.
-    OwnArrayPtr<const float*> m_sourceChannels;
-    OwnArrayPtr<float*> m_destinationChannels;
+    std::unique_ptr<const float*[]> m_sourceChannels;
+    std::unique_ptr<float*[]> m_destinationChannels;
 
     // Used for the "gain" and "playbackRate" attributes.
     RefPtr<AudioParam> m_gain;

@@ -208,7 +208,7 @@ void WebChromeClient::focusedElementChanged(Element* element)
     if (!inputElement->isText())
         return;
 
-    CallFormDelegate(m_webView, @selector(didFocusTextField:inFrame:), kit(inputElement), kit(inputElement->document()->frame()));
+    CallFormDelegate(m_webView, @selector(didFocusTextField:inFrame:), kit(inputElement), kit(inputElement->document().frame()));
 }
 
 void WebChromeClient::focusedFrameChanged(Frame*)
@@ -219,6 +219,11 @@ Page* WebChromeClient::createWindow(Frame* frame, const FrameLoadRequest&, const
 {
     id delegate = [m_webView UIDelegate];
     WebView *newWebView;
+
+#if ENABLE(FULLSCREEN_API)
+    if (frame->document() && frame->document()->webkitCurrentFullScreenElement())
+        frame->document()->webkitCancelFullScreen();
+#endif
     
     if ([delegate respondsToSelector:@selector(webView:createWebViewWithRequest:windowFeatures:)]) {
         NSNumber *x = features.xSet ? [[NSNumber alloc] initWithFloat:features.x] : nil;
@@ -693,7 +698,7 @@ FloatRect WebChromeClient::customHighlightRect(Node* node, const AtomicString& t
 {
     BEGIN_BLOCK_OBJC_EXCEPTIONS;
 
-    NSView *documentView = [[kit(node->document()->frame()) frameView] documentView];
+    NSView *documentView = [[kit(node->document().frame()) frameView] documentView];
     if (![documentView isKindOfClass:[WebHTMLView class]])
         return NSZeroRect;
 
@@ -711,7 +716,7 @@ void WebChromeClient::paintCustomHighlight(Node* node, const AtomicString& type,
 {
     BEGIN_BLOCK_OBJC_EXCEPTIONS;
 
-    NSView *documentView = [[kit(node->document()->frame()) frameView] documentView];
+    NSView *documentView = [[kit(node->document().frame()) frameView] documentView];
     if (![documentView isKindOfClass:[WebHTMLView class]])
         return;
 
@@ -900,7 +905,7 @@ void WebChromeClient::scheduleCompositingLayerFlush()
 
 bool WebChromeClient::supportsFullscreenForNode(const Node* node)
 {
-    return node->hasTagName(WebCore::HTMLNames::videoTag);
+    return isHTMLVideoElement(node);
 }
 
 void WebChromeClient::enterFullscreenForNode(Node* node)

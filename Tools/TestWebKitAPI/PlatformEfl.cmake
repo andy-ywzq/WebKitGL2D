@@ -52,7 +52,7 @@ list(APPEND TestWebKitAPIBase_SOURCES
 
 set(test_webcore_BINARIES
     LayoutUnit
-    KURL
+    URL
 )
 
 # In here we list the bundles that are used by our specific WK2 API Tests
@@ -95,6 +95,7 @@ set(test_webkit2_api_BINARIES
     ReloadPageAfterCrash
     ResizeWindowAfterCrash
     ResponsivenessTimerDoesntFireEarly
+    ShouldGoToBackForwardListItem
     TerminateTwice
     UserMessage
     WKConnection
@@ -109,15 +110,6 @@ set(test_webkit2_api_BINARIES
     efl/WKViewClientWebProcessCallbacks
 )
 
-# Seccomp filters is an internal API and its symbols
-# are not (and should not) be exposed by default. We
-# can only test it when building shared core.
-if (ENABLE_SECCOMP_FILTERS AND SHARED_CORE)
-    list(APPEND webkit2TestList
-        WebKit2/SeccompFilters
-    )
-endif ()
-
 set(test_webkit2_api_fail_BINARIES
     CanHandleRequest
     DOMWindowExtensionBasic
@@ -126,9 +118,17 @@ set(test_webkit2_api_fail_BINARIES
     ResizeReversePaginatedWebView
     RestoreSessionStateContainingFormData
     ScrollPinningBehaviors
-    ShouldGoToBackForwardListItem
     WKPageGetScaleFactorNotZero
 )
+
+# Seccomp filters is an internal API and its symbols
+# are not (and should not) be exposed by default. We
+# can only test it when building shared core.
+if (ENABLE_SECCOMP_FILTERS AND SHARED_CORE)
+    list(APPEND test_webkit2_api_fail_BINARIES
+        SeccompFilters
+    )
+endif ()
 
 # Tests disabled because of missing features on the test harness:
 #

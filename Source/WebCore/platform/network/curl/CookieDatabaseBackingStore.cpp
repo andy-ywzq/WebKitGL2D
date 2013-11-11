@@ -38,17 +38,13 @@
 
 namespace WebCore {
 
-CookieDatabaseBackingStore::CookieDatabaseBackingStore()
+CookieDatabaseBackingStore::CookieDatabaseBackingStore(const String& fileName, CookieNode* tree)
     : m_insertStatement(0)
     , m_updateStatement(0)
     , m_deleteStatement(0)
     , m_dbTimer(this, &CookieDatabaseBackingStore::dbTimerCallback)
 {
-    open("cookies.db");
-}
-
-void CookieDatabaseBackingStore::init(CookieNode* tree)
-{
+    open(fileName);
     getCookiesFromDatabase(tree);
     m_dbTimer.startRepeating(60);
 }

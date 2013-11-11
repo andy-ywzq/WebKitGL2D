@@ -43,7 +43,7 @@
 #include "FrameLoaderClientEfl.h"
 #include "HitTestResult.h"
 #include "IntRect.h"
-#include "KURL.h"
+#include "URL.h"
 #include "NavigationAction.h"
 #include "NotImplemented.h"
 #include "PopupMenuEfl.h"
@@ -86,8 +86,8 @@ static inline Evas_Object* kit(Frame* frame)
     if (!frame)
         return 0;
 
-    FrameLoaderClientEfl* client = static_cast<FrameLoaderClientEfl*>(frame->loader().client());
-    return client ? client->webFrame() : 0;
+    FrameLoaderClientEfl& client = static_cast<FrameLoaderClientEfl&>(frame->loader().client());
+    return client.webFrame();
 }
 
 namespace WebCore {
@@ -150,8 +150,13 @@ void ChromeClientEfl::unfocus()
     evas_object_focus_set(m_view, EINA_FALSE);
 }
 
-Page* ChromeClientEfl::createWindow(Frame*, const FrameLoadRequest&, const WindowFeatures& features, const NavigationAction&)
+Page* ChromeClientEfl::createWindow(Frame* frame, const FrameLoadRequest&, const WindowFeatures& features, const NavigationAction&)
 {
+#if ENABLE(FULLSCREEN_API)
+    if (frame->document() && frame->document()->webkitCurrentFullScreenElement())
+        frame->document()->webkitCancelFullScreen();
+#endif
+
     Evas_Object* newView = ewk_view_window_create(m_view, EINA_TRUE, &features);
     if (!newView)
         return 0;
@@ -363,7 +368,7 @@ void ChromeClientEfl::mouseDidMoveOverElement(const HitTestResult& hit, unsigned
     // FIXME, compare with old link, look at Qt impl.
     bool isLink = hit.isLiveLink();
     if (isLink) {
-        KURL url = hit.absoluteLinkURL();
+        URL url = hit.absoluteLinkURL();
         if (!url.isEmpty() && url != m_hoveredLinkURL) {
             const char* link[2];
             TextDirection dir;
@@ -376,7 +381,7 @@ void ChromeClientEfl::mouseDidMoveOverElement(const HitTestResult& hit, unsigned
         }
     } else if (!isLink && !m_hoveredLinkURL.isEmpty()) {
         ewk_view_mouse_link_hover_out(m_view);
-        m_hoveredLinkURL = KURL();
+        m_hoveredLinkURL = URL();
     }
 }
 
@@ -634,9 +639,9 @@ bool ChromeClientEfl::supportsFullScreenForElement(const WebCore::Element* eleme
 {
     UNUSED_PARAM(withKeyboard);
 
-    if (!element->document()->page())
+    if (!element->document().page())
         return false;
-    return element->document()->page()->settings().fullScreenEnabled();
+    return element->document().page()->settings().fullScreenEnabled();
 }
 
 void ChromeClientEfl::enterFullScreenForElement(WebCore::Element* element)
@@ -645,9 +650,9 @@ void ChromeClientEfl::enterFullScreenForElement(WebCore::Element* element)
     // exitFullScreenForElement().
     m_fullScreenElement = element;
 
-    element->document()->webkitWillEnterFullScreenForElement(element);
+    element->document().webkitWillEnterFullScreenForElement(element);
     ewk_view_fullscreen_enter(m_view);
-    element->document()->webkitDidEnterFullScreenForElement(element);
+    element->document().webkitDidEnterFullScreenForElement(element);
 }
 
 void ChromeClientEfl::exitFullScreenForElement(WebCore::Element*)
@@ -657,9 +662,9 @@ void ChromeClientEfl::exitFullScreenForElement(WebCore::Element*)
     // So we use the reference to the element we saved above.
     ASSERT(m_fullScreenElement);
 
-    m_fullScreenElement->document()->webkitWillExitFullScreenForElement(m_fullScreenElement.get());
+    m_fullScreenElement->document().webkitWillExitFullScreenForElement(m_fullScreenElement.get());
     ewk_view_fullscreen_exit(m_view);
-    m_fullScreenElement->document()->webkitDidExitFullScreenForElement(m_fullScreenElement.get());
+    m_fullScreenElement->document().webkitDidExitFullScreenForElement(m_fullScreenElement.get());
 
     m_fullScreenElement.clear();
 }

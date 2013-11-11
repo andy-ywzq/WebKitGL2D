@@ -23,6 +23,7 @@
 #include "CharacterData.h"
 
 #include "Document.h"
+#include "ElementTraversal.h"
 #include "EventNames.h"
 #include "ExceptionCode.h"
 #include "FrameSelection.h"
@@ -30,12 +31,12 @@
 #include "MutationEvent.h"
 #include "MutationObserverInterestGroup.h"
 #include "MutationRecord.h"
+#include "ProcessingInstruction.h"
 #include "RenderText.h"
 #include "StyleInheritedData.h"
 #include "Text.h"
 #include "TextBreakIterator.h"
-
-using namespace std;
+#include <wtf/Ref.h>
 
 namespace WebCore {
 
@@ -45,12 +46,12 @@ void CharacterData::setData(const String& data, ExceptionCode&)
     if (m_data == nonNullData)
         return;
 
-    RefPtr<CharacterData> protect = this;
+    Ref<CharacterData> protect(*this);
 
     unsigned oldLength = length();
 
     setDataAndUpdate(nonNullData, 0, oldLength, nonNullData.length());
-    document()->textRemoved(this, 0, oldLength);
+    document().textRemoved(this, 0, oldLength);
 }
 
 String CharacterData::substringData(unsigned offset, unsigned count, ExceptionCode& ec)
@@ -69,7 +70,7 @@ unsigned CharacterData::parserAppendData(const String& string, unsigned offset, 
     ASSERT(lengthLimit >= oldLength);
 
     unsigned characterLength = string.length() - offset;
-    unsigned characterLengthLimit = min(characterLength, lengthLimit - oldLength);
+    unsigned characterLengthLimit = std::min(characterLength, lengthLimit - oldLength);
 
     // Check that we are not on an unbreakable boundary.
     // Some text break iterator implementations work best if the passed buffer is as small as possible,
@@ -91,13 +92,20 @@ unsigned CharacterData::parserAppendData(const String& string, unsigned offset, 
 
     ASSERT(!renderer() || isTextNode());
     if (isTextNode())
-        toText(this)->updateTextRenderer(oldLength, 0);
+        Style::updateTextRendererAfterContentChange(*toText(this), oldLength, 0);
 
-    document()->incDOMTreeVersion();
+    document().incDOMTreeVersion();
     // We don't call dispatchModifiedEvent here because we don't want the
     // parser to dispatch DOM mutation events.
-    if (parentNode())
-        parentNode()->childrenChanged();
+    if (parentNode()) {
+        ContainerNode::ChildChange change = {
+            ContainerNode::TextChanged,
+            ElementTraversal::previousSibling(this),
+            ElementTraversal::nextSibling(this),
+            ContainerNode::ChildChangeSourceParser
+        };
+        parentNode()->childrenChanged(change);
+    }
 
     return characterLengthLimit;
 }
@@ -123,7 +131,7 @@ void CharacterData::insertData(unsigned offset, const String& data, ExceptionCod
 
     setDataAndUpdate(newStr, offset, 0, data.length());
 
-    document()->textInserted(this, offset, data.length());
+    document().textInserted(this, offset, data.length());
 }
 
 void CharacterData::deleteData(unsigned offset, unsigned count, ExceptionCode& ec)
@@ -143,7 +151,7 @@ void CharacterData::deleteData(unsigned offset, unsigned count, ExceptionCode& e
 
     setDataAndUpdate(newStr, offset, count, 0);
 
-    document()->textRemoved(this, offset, realCount);
+    document().textRemoved(this, offset, realCount);
 }
 
 void CharacterData::replaceData(unsigned offset, unsigned count, const String& data, ExceptionCode& ec)
@@ -165,8 +173,8 @@ void CharacterData::replaceData(unsigned offset, unsigned count, const String& d
     setDataAndUpdate(newStr, offset, count, data.length());
 
     // update the markers for spell checking and grammar checking
-    document()->textRemoved(this, offset, realCount);
-    document()->textInserted(this, offset, data.length());
+    document().textRemoved(this, offset, realCount);
+    document().textInserted(this, offset, data.length());
 }
 
 String CharacterData::nodeValue() const
@@ -191,28 +199,39 @@ void CharacterData::setDataAndUpdate(const String& newData, unsigned offsetOfRep
 
     ASSERT(!renderer() || isTextNode());
     if (isTextNode())
-        toText(this)->updateTextRenderer(offsetOfReplacedData, oldLength);
+        Style::updateTextRendererAfterContentChange(*toText(this), offsetOfReplacedData, oldLength);
 
-    if (document()->frame())
-        document()->frame()->selection().textWasReplaced(this, offsetOfReplacedData, oldLength, newLength);
+    if (nodeType() == PROCESSING_INSTRUCTION_NODE)
+        toProcessingInstruction(this)->checkStyleSheet();
 
-    document()->incDOMTreeVersion();
+    if (document().frame())
+        document().frame()->selection().textWasReplaced(this, offsetOfReplacedData, oldLength, newLength);
+
+    document().incDOMTreeVersion();
     dispatchModifiedEvent(oldData);
 }
 
 void CharacterData::dispatchModifiedEvent(const String& oldData)
 {
-    if (OwnPtr<MutationObserverInterestGroup> mutationRecipients = MutationObserverInterestGroup::createForCharacterDataMutation(this))
-        mutationRecipients->enqueueMutationRecord(MutationRecord::createCharacterData(this, oldData));
+    if (OwnPtr<MutationObserverInterestGroup> mutationRecipients = MutationObserverInterestGroup::createForCharacterDataMutation(*this))
+        mutationRecipients->enqueueMutationRecord(MutationRecord::createCharacterData(*this, oldData));
+
     if (!isInShadowTree()) {
-        if (parentNode())
-            parentNode()->childrenChanged();
-        if (document()->hasListenerType(Document::DOMCHARACTERDATAMODIFIED_LISTENER))
+        if (parentNode()) {
+            ContainerNode::ChildChange change = {
+                ContainerNode::TextChanged,
+                ElementTraversal::previousSibling(this),
+                ElementTraversal::nextSibling(this),
+                ContainerNode::ChildChangeSourceAPI
+            };
+            parentNode()->childrenChanged(change);
+        }
+        if (document().hasListenerType(Document::DOMCHARACTERDATAMODIFIED_LISTENER))
             dispatchScopedEvent(MutationEvent::create(eventNames().DOMCharacterDataModifiedEvent, true, 0, oldData, m_data));
         dispatchSubtreeModifiedEvent();
     }
 #if ENABLE(INSPECTOR)
-    InspectorInstrumentation::characterDataModified(document(), this);
+    InspectorInstrumentation::characterDataModified(&document(), this);
 #endif
 }
 

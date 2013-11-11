@@ -30,6 +30,7 @@
 #include "NativeImageGL2D.h"
 #include "GraphicsContext.h"
 #include "PlatformContextGL2D.h"
+#include "Timer.h"
 
 namespace WebCore {
 
@@ -37,7 +38,7 @@ BitmapImage::BitmapImage(NativeImageGL2D* nativeImage, ImageObserver* observer)
     : Image(observer)
     , m_currentFrame(0)
     , m_frames(0)
-    , m_frameTimer(0)
+    , m_frameTimer(nullptr)
     , m_repetitionCount(cAnimationNone)
     , m_repetitionCountStatus(Unknown)
     , m_repetitionsComplete(0)
@@ -86,7 +87,7 @@ void BitmapImage::checkForSolidColor()
     m_isSolidColor = true;
 }
 
-void BitmapImage::draw(GraphicsContext* context, const FloatRect& destRect, const FloatRect& srcRect, ColorSpace styleColorSpace, CompositeOperator op, BlendMode blendMode)
+void BitmapImage::draw(GraphicsContext* context, const FloatRect& destRect, const FloatRect& srcRect, ColorSpace styleColorSpace, CompositeOperator op, BlendMode blendMode, ImageOrientationDescription description)
 {
     startAnimation();
 

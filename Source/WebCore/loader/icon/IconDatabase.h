@@ -51,7 +51,7 @@ class IntSize;
 class IconDatabaseClient;
 class IconRecord;
 class IconSnapshot;
-class KURL;
+class URL;
 class PageURLRecord;
 class PageURLSnapshot;
 class SharedBuffer;
@@ -133,7 +133,7 @@ private:
     ThreadIdentifier m_syncThread;
     bool m_syncThreadRunning;
     
-    HashSet<RefPtr<DocumentLoader> > m_loadersPendingDecision;
+    HashSet<RefPtr<DocumentLoader>> m_loadersPendingDecision;
 
     RefPtr<IconRecord> m_defaultIconRecord;
 

@@ -60,8 +60,6 @@
 #include <wtf/RefPtr.h>
 #include <wtf/StdLibExtras.h>
 
-using namespace std;
-
 namespace WebCore {
 
 PassRefPtr<InjectedScriptHost> InjectedScriptHost::create()
@@ -120,10 +118,10 @@ void InjectedScriptHost::clearConsoleMessages()
 
 void InjectedScriptHost::copyText(const String& text)
 {
-    Pasteboard::generalPasteboard()->writePlainText(text, Pasteboard::CannotSmartReplace);
+    Pasteboard::createForCopyAndPaste()->writePlainText(text, Pasteboard::CannotSmartReplace);
 }
 
-ScriptValue InjectedScriptHost::InspectableObject::get(ScriptState*)
+ScriptValue InjectedScriptHost::InspectableObject::get(JSC::ExecState*)
 {
     return ScriptValue();
 };

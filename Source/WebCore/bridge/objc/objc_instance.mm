@@ -72,7 +72,8 @@ static NSMapTable *createInstanceWrapperCache()
 
 RuntimeObject* ObjcInstance::newRuntimeObject(ExecState* exec)
 {
-    return ObjCRuntimeObject::create(exec, exec->lexicalGlobalObject(), this);
+    // FIXME: deprecatedGetDOMStructure uses the prototype off of the wrong global object.
+    return ObjCRuntimeObject::create(exec->vm(), WebCore::deprecatedGetDOMStructure<ObjCRuntimeObject>(exec), this);
 }
 
 void ObjcInstance::setGlobalException(NSString* exception, JSGlobalObject* exceptionEnvironment)
@@ -224,7 +225,7 @@ JSValue ObjcInstance::getMethod(ExecState* exec, PropertyName propertyName)
 JSValue ObjcInstance::invokeMethod(ExecState* exec, RuntimeMethod* runtimeMethod)
 {
     if (!asObject(runtimeMethod)->inherits(ObjCRuntimeMethod::info()))
-        return throwError(exec, createTypeError(exec, "Attempt to invoke non-plug-in method on plug-in object."));
+        return exec->vm().throwException(exec, createTypeError(exec, "Attempt to invoke non-plug-in method on plug-in object."));
 
     ObjcMethod *method = static_cast<ObjcMethod*>(runtimeMethod->method());
     ASSERT(method);
@@ -260,13 +261,13 @@ JSValue ObjcInstance::invokeObjcMethod(ExecState* exec, ObjcMethod* method)
         NSMutableArray* objcArgs = [NSMutableArray array];
         int count = exec->argumentCount();
         for (int i = 0; i < count; i++) {
-            ObjcValue value = convertValueToObjcValue(exec, exec->argument(i), ObjcObjectType);
+            ObjcValue value = convertValueToObjcValue(exec, exec->uncheckedArgument(i), ObjcObjectType);
             [objcArgs addObject:value.objectValue];
         }
         [invocation setArgument:&objcArgs atIndex:3];
     } else {
         unsigned count = [signature numberOfArguments];
-        for (unsigned i = 2; i < count ; i++) {
+        for (unsigned i = 2; i < count; ++i) {
             const char* type = [signature getArgumentTypeAtIndex:i];
             ObjcValueType objcValueType = objcValueTypeForType(type);
 
@@ -275,7 +276,7 @@ JSValue ObjcInstance::invokeObjcMethod(ExecState* exec, ObjcMethod* method)
             // types.
             ASSERT(objcValueType != ObjcInvalidType && objcValueType != ObjcVoidType);
 
-            ObjcValue value = convertValueToObjcValue(exec, exec->argument(i-2), objcValueType);
+            ObjcValue value = convertValueToObjcValue(exec, exec->argument(i - 2), objcValueType);
 
             switch (objcValueType) {
                 case ObjcObjectType:
@@ -374,7 +375,7 @@ JSValue ObjcInstance::invokeDefaultMethod(ExecState* exec)
     NSMutableArray* objcArgs = [NSMutableArray array];
     unsigned count = exec->argumentCount();
     for (unsigned i = 0; i < count; i++) {
-        ObjcValue value = convertValueToObjcValue(exec, exec->argument(i), ObjcObjectType);
+        ObjcValue value = convertValueToObjcValue(exec, exec->uncheckedArgument(i), ObjcObjectType);
         [objcArgs addObject:value.objectValue];
     }
     [invocation setArgument:&objcArgs atIndex:2];

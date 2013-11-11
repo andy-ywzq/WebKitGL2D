@@ -26,7 +26,7 @@
 #include "config.h"
 #include "PluginProcessProxy.h"
 
-#if ENABLE(PLUGIN_PROCESS)
+#if ENABLE(NETSCAPE_PLUGIN_API)
 
 #include "PluginProcessConnectionManagerMessages.h"
 #include "PluginProcessCreationParameters.h"
@@ -190,8 +190,6 @@ void PluginProcessProxy::didFinishLaunching(ProcessLauncher*, CoreIPC::Connectio
     m_connection = CoreIPC::Connection::createServerConnection(connectionIdentifier, this, RunLoop::main());
 #if PLATFORM(MAC)
     m_connection->setShouldCloseConnectionOnMachExceptions();
-#elif PLATFORM(QT)
-    m_connection->setShouldCloseConnectionOnProcessTermination(processIdentifier());
 #endif
 
     m_connection->open();
@@ -266,4 +264,4 @@ void PluginProcessProxy::didClearSiteData(uint64_t callbackID)
 
 } // namespace WebKit
 
-#endif // ENABLE(PLUGIN_PROCESS)
+#endif // ENABLE(NETSCAPE_PLUGIN_API)

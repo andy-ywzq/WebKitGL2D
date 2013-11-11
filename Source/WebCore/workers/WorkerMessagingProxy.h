@@ -53,7 +53,7 @@ namespace WebCore {
 
         // Implementations of WorkerGlobalScopeProxy.
         // (Only use these methods in the worker object thread.)
-        virtual void startWorkerGlobalScope(const KURL& scriptURL, const String& userAgent, const String& sourceCode, WorkerThreadStartMode) OVERRIDE;
+        virtual void startWorkerGlobalScope(const URL& scriptURL, const String& userAgent, const String& sourceCode, WorkerThreadStartMode) OVERRIDE;
         virtual void terminateWorkerGlobalScope() OVERRIDE;
         virtual void postMessageToWorkerGlobalScope(PassRefPtr<SerializedScriptValue>, PassOwnPtr<MessagePortChannelArray>) OVERRIDE;
         virtual bool hasPendingActivity() const OVERRIDE;
@@ -115,7 +115,7 @@ namespace WebCore {
 
         bool m_askedToTerminate;
 
-        Vector<OwnPtr<ScriptExecutionContext::Task> > m_queuedEarlyTasks; // Tasks are queued here until there's a thread object created.
+        Vector<OwnPtr<ScriptExecutionContext::Task>> m_queuedEarlyTasks; // Tasks are queued here until there's a thread object created.
 #if ENABLE(INSPECTOR)
         WorkerGlobalScopeProxy::PageInspector* m_pageInspector;
 #endif

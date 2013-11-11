@@ -72,7 +72,7 @@ public:
         return m_length;
     }
     
-    virtual unsigned byteLength() const
+    virtual unsigned byteLength() const OVERRIDE
     {
         return length() * sizeof(typename Adaptor::Type);
     }
@@ -86,7 +86,7 @@ public:
     void set(unsigned index, double value) const
     {
         ASSERT_WITH_SECURITY_IMPLICATION(index < this->length());
-        data()[index] = Adaptor::toNative(value);
+        data()[index] = Adaptor::toNativeFromDouble(value);
     }
     
     bool checkInboundData(unsigned offset, unsigned pos) const
@@ -101,12 +101,12 @@ public:
     PassRefPtr<GenericTypedArrayView> subarray(int start) const;
     PassRefPtr<GenericTypedArrayView> subarray(int start, int end) const;
     
-    virtual TypedArrayType getType() const
+    virtual TypedArrayType getType() const OVERRIDE
     {
         return Adaptor::typeValue;
     }
 
-    virtual JSArrayBufferView* wrap(ExecState*, JSGlobalObject*);
+    virtual JSArrayBufferView* wrap(ExecState*, JSGlobalObject*) OVERRIDE;
 
 private:
     unsigned m_length;

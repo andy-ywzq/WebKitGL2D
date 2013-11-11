@@ -67,6 +67,11 @@ PassRefPtr<Image> ImageBuffer::copyImage(BackingStoreCopy copyBehavior, ScaleBeh
 {
 }
 
+BackingStoreCopy ImageBuffer::fastCopyImageMode()
+{
+    return CopyBackingStore;
+}
+
 void ImageBuffer::clip(GraphicsContext* context, const FloatRect& maskRect) const
 {
 }

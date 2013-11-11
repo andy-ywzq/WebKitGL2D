@@ -42,6 +42,7 @@ namespace WebCore {
     M(Archives) \
     M(BackForward) \
     M(Compositing) \
+    M(DiskImageCache) \
     M(Editing) \
     M(Events) \
     M(FTP) \
@@ -66,6 +67,7 @@ namespace WebCore {
     M(StorageAPI) \
     M(Threading) \
     M(WebAudio) \
+    M(WebGL) \
 
 #define DECLARE_LOG_CHANNEL(name) \
     extern WTFLogChannel JOIN_LOG_CHANNEL_WITH_PREFIX(LOG_CHANNEL_PREFIX, name);

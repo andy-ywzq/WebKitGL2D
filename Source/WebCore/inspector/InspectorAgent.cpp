@@ -36,7 +36,6 @@
 
 #include "Document.h"
 #include "DocumentLoader.h"
-#include "Frame.h"
 #include "GraphicsContext.h"
 #include "InjectedScriptHost.h"
 #include "InjectedScriptManager.h"
@@ -46,6 +45,7 @@
 #include "InspectorState.h"
 #include "InspectorValues.h"
 #include "InstrumentingAgents.h"
+#include "MainFrame.h"
 #include "Page.h"
 #include "ResourceRequest.h"
 #include "ScriptController.h"
@@ -77,9 +77,9 @@ InspectorAgent::~InspectorAgent()
     m_instrumentingAgents->setInspectorAgent(0);
 }
 
-void InspectorAgent::didClearWindowObjectInWorld(Frame* frame, DOMWrapperWorld* world)
+void InspectorAgent::didClearWindowObjectInWorld(Frame* frame, DOMWrapperWorld& world)
 {
-    if (world != mainThreadNormalWorld())
+    if (&world != &mainThreadNormalWorld())
         return;
 
     if (m_injectedScriptForOrigin.isEmpty())
@@ -89,7 +89,7 @@ void InspectorAgent::didClearWindowObjectInWorld(Frame* frame, DOMWrapperWorld* 
     String script = m_injectedScriptForOrigin.get(origin);
     if (script.isEmpty())
         return;
-    int injectedScriptId = m_injectedScriptManager->injectedScriptIdFor(mainWorldScriptState(frame));
+    int injectedScriptId = m_injectedScriptManager->injectedScriptIdFor(mainWorldExecState(frame));
     StringBuilder scriptSource;
     scriptSource.append(script);
     scriptSource.append("(");
@@ -124,7 +124,7 @@ void InspectorAgent::enable(ErrorString*)
     if (m_pendingInspectData.first)
         inspect(m_pendingInspectData.first, m_pendingInspectData.second);
 
-    for (Vector<pair<long, String> >::iterator it = m_pendingEvaluateTestCommands.begin(); m_frontend && it != m_pendingEvaluateTestCommands.end(); ++it)
+    for (Vector<pair<long, String>>::iterator it = m_pendingEvaluateTestCommands.begin(); m_frontend && it != m_pendingEvaluateTestCommands.end(); ++it)
         m_frontend->inspector()->evaluateForTestInFrontend(static_cast<int>((*it).first), (*it).second);
     m_pendingEvaluateTestCommands.clear();
 }
@@ -137,11 +137,6 @@ void InspectorAgent::disable(ErrorString*)
 void InspectorAgent::domContentLoadedEventFired()
 {
     m_injectedScriptManager->injectedScriptHost()->clearInspectedObjects();
-}
-
-bool InspectorAgent::isMainResourceLoader(DocumentLoader* loader, const KURL& requestUrl)
-{
-    return loader->frame() == m_inspectedPage->mainFrame() && requestUrl == loader->requestURL();
 }
 
 void InspectorAgent::evaluateForTestInFrontend(long callId, const String& script)
@@ -169,14 +164,14 @@ void InspectorAgent::inspect(PassRefPtr<TypeBuilder::Runtime::RemoteObject> obje
     m_pendingInspectData.second = hints;
 }
 
-KURL InspectorAgent::inspectedURL() const
+URL InspectorAgent::inspectedURL() const
 {
-    return m_inspectedPage->mainFrame()->document()->url();
+    return m_inspectedPage->mainFrame().document()->url();
 }
 
-KURL InspectorAgent::inspectedURLWithoutFragment() const
+URL InspectorAgent::inspectedURLWithoutFragment() const
 {
-    KURL url = inspectedURL();
+    URL url = inspectedURL();
     url.removeFragmentIdentifier();
     return url;
 }

@@ -33,15 +33,15 @@
 
 #include "CSSPrimitiveValueMappings.h"
 #include "CSSPropertyNames.h"
+#include "CSSShadowValue.h"
 #include "CSSValueList.h"
 #include "Document.h"
-#include "ShadowValue.h"
 #include "SVGColor.h"
+#include "SVGElement.h"
 #include "SVGNames.h"
 #include "SVGPaint.h"
 #include "SVGRenderStyle.h"
 #include "SVGRenderStyleDefs.h"
-#include "SVGStyledElement.h"
 #include "SVGURIReference.h"
 #include <stdlib.h>
 #include <wtf/MathExtras.h>
@@ -107,7 +107,7 @@ void StyleResolver::applySVGProperty(CSSPropertyID id, CSSValue* value)
     ASSERT(value);
     CSSPrimitiveValue* primitiveValue = 0;
     if (value->isPrimitiveValue())
-        primitiveValue = static_cast<CSSPrimitiveValue*>(value);
+        primitiveValue = toCSSPrimitiveValue(value);
 
     const State& state = m_state;
     SVGRenderStyle* svgstyle = state.style()->accessSVGStyle();
@@ -239,7 +239,7 @@ void StyleResolver::applySVGProperty(CSSPropertyID id, CSSValue* value)
                 return;
             }
             if (value->isSVGPaint()) {
-                SVGPaint* svgPaint = static_cast<SVGPaint*>(value);
+                SVGPaint* svgPaint = toSVGPaint(value);
                 svgstyle->setFillPaint(svgPaint->paintType(), colorFromSVGColorCSSValue(svgPaint, state.style()->color()), svgPaint->uri(), applyPropertyToRegularStyle(), applyPropertyToVisitedLinkStyle());
             }
             break;
@@ -256,7 +256,7 @@ void StyleResolver::applySVGProperty(CSSPropertyID id, CSSValue* value)
                 return;
             }
             if (value->isSVGPaint()) {
-                SVGPaint* svgPaint = static_cast<SVGPaint*>(value);
+                SVGPaint* svgPaint = toSVGPaint(value);
                 svgstyle->setStrokePaint(svgPaint->paintType(), colorFromSVGColorCSSValue(svgPaint, state.style()->color()), svgPaint->uri(), applyPropertyToRegularStyle(), applyPropertyToVisitedLinkStyle());
             }
             break;
@@ -276,7 +276,7 @@ void StyleResolver::applySVGProperty(CSSPropertyID id, CSSValue* value)
                 break;
             }
 
-            CSSValueList* dashes = static_cast<CSSValueList*>(value);
+            CSSValueList* dashes = toCSSValueList(value);
 
             Vector<SVGLength> array;
             size_t length = dashes->length();
@@ -285,7 +285,7 @@ void StyleResolver::applySVGProperty(CSSPropertyID id, CSSValue* value)
                 if (!currValue->isPrimitiveValue())
                     continue;
 
-                CSSPrimitiveValue* dash = static_cast<CSSPrimitiveValue*>(dashes->itemWithoutBoundsCheck(i));
+                CSSPrimitiveValue* dash = toCSSPrimitiveValue(dashes->itemWithoutBoundsCheck(i));
                 array.append(SVGLength::fromCSSPrimitiveValue(dash));
             }
 
@@ -478,14 +478,14 @@ void StyleResolver::applySVGProperty(CSSPropertyID id, CSSValue* value)
         {
             HANDLE_INHERIT_AND_INITIAL(stopColor, StopColor);
             if (value->isSVGColor())
-                svgstyle->setStopColor(colorFromSVGColorCSSValue(static_cast<SVGColor*>(value), state.style()->color()));
+                svgstyle->setStopColor(colorFromSVGColorCSSValue(toSVGColor(value), state.style()->color()));
             break;
         }
        case CSSPropertyLightingColor:
         {
             HANDLE_INHERIT_AND_INITIAL(lightingColor, LightingColor);
             if (value->isSVGColor())
-                svgstyle->setLightingColor(colorFromSVGColorCSSValue(static_cast<SVGColor*>(value), state.style()->color()));
+                svgstyle->setLightingColor(colorFromSVGColorCSSValue(toSVGColor(value), state.style()->color()));
             break;
         }
         case CSSPropertyFloodOpacity:
@@ -510,7 +510,7 @@ void StyleResolver::applySVGProperty(CSSPropertyID id, CSSValue* value)
         {
             HANDLE_INHERIT_AND_INITIAL(floodColor, FloodColor);
             if (value->isSVGColor())
-                svgstyle->setFloodColor(colorFromSVGColorCSSValue(static_cast<SVGColor*>(value), state.style()->color()));
+                svgstyle->setFloodColor(colorFromSVGColorCSSValue(toSVGColor(value), state.style()->color()));
             break;
         }
         case CSSPropertyGlyphOrientationHorizontal:
@@ -557,14 +557,14 @@ void StyleResolver::applySVGProperty(CSSPropertyID id, CSSValue* value)
             if (!value->isValueList())
                 return;
 
-            CSSValueList *list = static_cast<CSSValueList*>(value);
+            CSSValueList* list = toCSSValueList(value);
             if (!list->length())
                 return;
 
             CSSValue* firstValue = list->itemWithoutBoundsCheck(0);
             if (!firstValue->isShadowValue())
                 return;
-            ShadowValue* item = static_cast<ShadowValue*>(firstValue);
+            CSSShadowValue* item = toCSSShadowValue(firstValue);
             IntPoint location(item->x->computeLength<int>(state.style(), state.rootElementStyle()),
                 item->y->computeLength<int>(state.style(), state.rootElementStyle()));
             int blur = item->blur ? item->blur->computeLength<int>(state.style(), state.rootElementStyle()) : 0;

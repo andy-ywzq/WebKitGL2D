@@ -51,12 +51,6 @@
 #include <WebCore/UndoStep.h>
 #include <WebCore/UserTypingGestureIndicator.h>
 
-#if PLATFORM(QT)
-#include <QClipboard>
-#include <QGuiApplication>
-#include <WebCore/Pasteboard.h>
-#endif
-
 using namespace WebCore;
 using namespace HTMLNames;
 
@@ -161,7 +155,7 @@ bool WebEditorClient::shouldChangeSelectedRange(Range* fromRange, Range* toRange
     
 bool WebEditorClient::shouldApplyStyle(StylePropertySet* style, Range* range)
 {
-    RefPtr<MutableStylePropertySet> mutableStyle = style->isMutable() ? static_cast<MutableStylePropertySet*>(style) : style->mutableCopy();
+    Ref<MutableStylePropertySet> mutableStyle(style->isMutable() ? static_cast<MutableStylePropertySet&>(*style) : style->mutableCopy());
     bool result = m_page->injectedBundleEditorClient().shouldApplyStyle(m_page, mutableStyle->ensureCSSStyleDeclaration(), range);
     notImplemented();
     return result;
@@ -197,23 +191,10 @@ void WebEditorClient::respondToChangedSelection(Frame* frame)
 
     m_page->didChangeSelection();
 
-#if PLATFORM(GTK) || PLATFORM(QT)
+#if PLATFORM(GTK)
     updateGlobalSelection(frame);
 #endif
 }
-
-#if PLATFORM(QT)
-// FIXME: Use this function for other X11-based platforms that need to manually update the global selection.
-void WebEditorClient::updateGlobalSelection(Frame* frame)
-{
-    if (supportsGlobalSelection() && frame->selection().isRange()) {
-        bool oldSelectionMode = Pasteboard::generalPasteboard()->isSelectionMode();
-        Pasteboard::generalPasteboard()->setSelectionMode(true);
-        Pasteboard::generalPasteboard()->writeSelection(frame->selection().toNormalizedRange().get(), frame->editor().canSmartCopyOrDelete(), frame);
-        Pasteboard::generalPasteboard()->setSelectionMode(oldSelectionMode);
-    }
-}
-#endif
 
 void WebEditorClient::didEndEditing()
 {
@@ -235,11 +216,6 @@ void WebEditorClient::willWriteSelectionToPasteboard(Range* range)
 void WebEditorClient::getClientPasteboardDataForRange(Range* range, Vector<String>& pasteboardTypes, Vector<RefPtr<SharedBuffer>>& pasteboardData)
 {
     m_page->injectedBundleEditorClient().getPasteboardDataForRange(m_page, range, pasteboardTypes, pasteboardData);
-}
-
-void WebEditorClient::didSetSelectionTypesForPasteboard()
-{
-    notImplemented();
 }
 
 void WebEditorClient::registerUndoStep(PassRefPtr<UndoStep> step)
@@ -319,7 +295,7 @@ void WebEditorClient::textFieldDidBeginEditing(Element* element)
     if (!isHTMLInputElement(element))
         return;
 
-    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(element->document()->frame()->loader().client());
+    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(element->document().frame()->loader().client());
     WebFrame* webFrame = webFrameLoaderClient ? webFrameLoaderClient->webFrame() : 0;
     ASSERT(webFrame);
 
@@ -331,7 +307,7 @@ void WebEditorClient::textFieldDidEndEditing(Element* element)
     if (!isHTMLInputElement(element))
         return;
 
-    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(element->document()->frame()->loader().client());
+    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(element->document().frame()->loader().client());
     WebFrame* webFrame = webFrameLoaderClient ? webFrameLoaderClient->webFrame() : 0;
     ASSERT(webFrame);
 
@@ -346,7 +322,7 @@ void WebEditorClient::textDidChangeInTextField(Element* element)
     if (!UserTypingGestureIndicator::processingUserTypingGesture() || UserTypingGestureIndicator::focusedElementAtGestureStart() != element)
         return;
 
-    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(element->document()->frame()->loader().client());
+    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(element->document().frame()->loader().client());
     WebFrame* webFrame = webFrameLoaderClient ? webFrameLoaderClient->webFrame() : 0;
     ASSERT(webFrame);
 
@@ -358,7 +334,7 @@ void WebEditorClient::textDidChangeInTextArea(Element* element)
     if (!isHTMLTextAreaElement(element))
         return;
 
-    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(element->document()->frame()->loader().client());
+    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(element->document().frame()->loader().client());
     WebFrame* webFrame = webFrameLoaderClient ? webFrameLoaderClient->webFrame() : 0;
     ASSERT(webFrame);
 
@@ -396,7 +372,7 @@ bool WebEditorClient::doTextFieldCommandFromEvent(Element* element, KeyboardEven
     if (!getActionTypeForKeyEvent(event, actionType))
         return false;
 
-    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(element->document()->frame()->loader().client());
+    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(element->document().frame()->loader().client());
     WebFrame* webFrame = webFrameLoaderClient ? webFrameLoaderClient->webFrame() : 0;
     ASSERT(webFrame);
 
@@ -408,7 +384,7 @@ void WebEditorClient::textWillBeDeletedInTextField(Element* element)
     if (!isHTMLInputElement(element))
         return;
 
-    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(element->document()->frame()->loader().client());
+    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(element->document().frame()->loader().client());
     WebFrame* webFrame = webFrameLoaderClient ? webFrameLoaderClient->webFrame() : 0;
     ASSERT(webFrame);
 
@@ -511,11 +487,6 @@ void WebEditorClient::requestCheckingOfString(WTF::PassRefPtr<TextCheckingReques
 
 void WebEditorClient::willSetInputMethodState()
 {
-#if PLATFORM(QT)
-    m_page->send(Messages::WebPageProxy::WillSetInputMethodState());
-#else
-    notImplemented();
-#endif
 }
 
 void WebEditorClient::setInputMethodState(bool)
@@ -525,9 +496,7 @@ void WebEditorClient::setInputMethodState(bool)
 
 bool WebEditorClient::supportsGlobalSelection()
 {
-#if PLATFORM(QT) && !defined(QT_NO_CLIPBOARD)
-    return qApp->clipboard()->supportsSelection();
-#elif PLATFORM(GTK) && PLATFORM(X11)
+#if PLATFORM(GTK) && PLATFORM(X11)
     return true;
 #else
     // FIXME: Return true on other X11 platforms when they support global selection.

@@ -58,7 +58,7 @@ void TapHighlightController::highlight(Node* node)
     ASSERT(node);
 
     m_path = GestureTapHighlighter::pathForNodeHighlight(node);
-    m_color = node->renderer()->style()->tapHighlightColor();
+    m_color = node->renderer()->style().tapHighlightColor();
 
     if (!m_overlay) {
         RefPtr<PageOverlay> overlay = PageOverlay::create(this);
@@ -97,7 +97,7 @@ static Color highlightColor(Color baseColor, float fractionFadedIn)
     return Color(baseColor.red(), baseColor.green(), baseColor.blue(), int(baseColor.alpha() * fractionFadedIn));
 }
 
-void TapHighlightController::drawRect(PageOverlay* pageOverlay, GraphicsContext& context, const IntRect& /*dirtyRect*/)
+void TapHighlightController::drawRect(PageOverlay* /*pageOverlay*/, GraphicsContext& context, const IntRect& /*dirtyRect*/)
 {
     if (m_path.isEmpty())
         return;

@@ -59,7 +59,7 @@ $methodInCode
 
 ${responseCook}
     }
-    sendResponse(callId, result, commandNames[$commandNameIndex], protocolErrors, error);
+    sendResponse(callId, result.release(), commandNames[$commandNameIndex], protocolErrors.release(), error);
 }
 """)
 
@@ -268,7 +268,7 @@ PassRefPtr<InspectorBackendDispatcher> InspectorBackendDispatcher::create(Inspec
 
 void InspectorBackendDispatcherImpl::dispatch(const String& message)
 {
-    RefPtr<InspectorBackendDispatcher> protect = this;
+    Ref<InspectorBackendDispatcher> protect(*this);
     typedef void (InspectorBackendDispatcherImpl::*CallHandler)(long callId, InspectorObject* messageObject);
     typedef HashMap<String, CallHandler> DispatchMap;
     DEFINE_STATIC_LOCAL(DispatchMap, dispatchMap, );
@@ -377,7 +377,7 @@ void InspectorBackendDispatcherImpl::reportProtocolError(const long* const callI
     if (data)
         error->setArray("data", data);
     RefPtr<InspectorObject> message = InspectorObject::create();
-    message->setObject("error", error);
+    message->setObject("error", error.release());
     if (callId)
         message->setNumber("id", *callId);
     else

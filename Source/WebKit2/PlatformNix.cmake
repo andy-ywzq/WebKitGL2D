@@ -3,6 +3,8 @@ list(APPEND WebKit2_LINK_FLAGS
 )
 
 list(APPEND WebKit2_SOURCES
+    NetworkProcess/unix/NetworkProcessMainUnix.cpp
+
     Platform/gtk/ModuleGtk.cpp
     Platform/gtk/LoggingGtk.cpp
     Platform/gtk/WorkQueueGtk.cpp
@@ -95,6 +97,7 @@ else()
 endif()
 
 list(APPEND WebKit2_INCLUDE_DIRECTORIES
+    NetworkProcess/unix
     Shared/nix
     Shared/API/c/nix
     WebProcess/nix
@@ -146,6 +149,15 @@ if (ENABLE_INSPECTOR_SERVER)
     )
 endif ()
 
+if (ENABLE_MEDIA_STREAM)
+    list(APPEND WebKit2_INCLUDE_DIRECTORIES
+        "${WEBCORE_DIR}/Modules/mediastream"
+        "${WEBCORE_DIR}/platform/audio"
+        "${WEBCORE_DIR}/platform/mediastream"
+        "${WEBCORE_DIR}/platform/mediastream/nix"
+    )
+endif ()
+
 list(APPEND WebKit2_LIBRARIES
     WebCoreTestSupport
     ${CAIRO_LIBRARIES}
@@ -177,18 +189,27 @@ add_definitions(-DDEFAULT_THEME_PATH=\"${CMAKE_INSTALL_PREFIX}/${DATA_INSTALL_DI
 if (WTF_USE_CURL)
     list(APPEND WebKit2_SOURCES
         Shared/curl/WebCoreArgumentCodersCurl.cpp
+        WebProcess/curl/WebCurlRequestManager.cpp
         WebProcess/curl/WebProcessCurl.cpp
         WebProcess/Cookies/curl/WebCookieManagerCurl.cpp
-
+        UIProcess/API/C/curl/WKContextCurl.cpp
+        UIProcess/curl/WebCurlRequestManagerProxy.cpp
         Shared/Downloads/curl/DownloadCurl.cpp
 
         WebProcess/WebCoreSupport/curl/WebFrameNetworkingContext.cpp
+    )
+
+    list(APPEND WebKit2_MESSAGES_IN_FILES
+        WebProcess/curl/WebCurlRequestManager.messages.in
     )
 
     list(APPEND WebKit2_INCLUDE_DIRECTORIES
         "${WEBCORE_DIR}/platform/network/curl"
         "${WEBKIT2_DIR}/Shared/curl"
         "${WEBKIT2_DIR}/WebProcess/WebCoreSupport/curl"
+        WebProcess/curl
+        UIProcess/API/C/curl
+        UIProcess/curl
     )
 
     list(APPEND WebKit2_LIBRARIES
@@ -200,15 +221,24 @@ if (WTF_USE_CURL)
     )
 else ()
     list(APPEND WebKit2_SOURCES
+        NetworkProcess/soup/NetworkProcessSoup.cpp
+        NetworkProcess/soup/NetworkResourceLoadSchedulerSoup.cpp
+        NetworkProcess/soup/RemoteNetworkingContextSoup.cpp
+
+        # Uncomment it after https://bugs.webkit.org/show_bug.cgi?id=118343 is fixed and merged to Nix.
+        # Shared/soup/CacheModelHelper.cpp
         Shared/soup/PlatformCertificateInfo.cpp
         Shared/soup/WebCoreArgumentCodersSoup.cpp
 
         UIProcess/API/C/soup/WKContextSoup.cpp
         UIProcess/API/C/soup/WKSoupRequestManager.cpp
 
+        UIProcess/soup/WebContextSoup.cpp
         UIProcess/soup/WebCookieManagerProxySoup.cpp
         UIProcess/soup/WebSoupRequestManagerClient.cpp
         UIProcess/soup/WebSoupRequestManagerProxy.cpp
+
+        UIProcess/Network/soup/NetworkProcessProxySoup.cpp
 
         WebProcess/Cookies/soup/WebCookieManagerSoup.cpp
         WebProcess/Cookies/soup/WebKitSoupCookieJarSqlite.cpp
@@ -288,6 +318,7 @@ set(WebKitNix_WebKit2_HEADERS
     Shared/API/c/WKContextMenuItem.h
     Shared/API/c/WKContextMenuItemTypes.h
     Shared/API/c/WKData.h
+    Shared/API/c/WKDeclarationSpecifiers.h
     Shared/API/c/WKDictionary.h
     Shared/API/c/WKError.h
     Shared/API/c/WKEvent.h
@@ -313,15 +344,17 @@ set(WebKitNix_WebKit2_HEADERS
     Shared/API/c/WKURL.h
     Shared/API/c/WKURLRequest.h
     Shared/API/c/WKURLResponse.h
+    Shared/API/c/WKUserContentInjectedFrames.h
     Shared/API/c/WKUserContentURLPattern.h
+    Shared/API/c/WKUserScriptInjectionTime.h
 
     Shared/API/c/nix/WKBaseNix.h
 
     UIProcess/API/C/WKApplicationCacheManager.h
     UIProcess/API/C/WKAuthenticationChallenge.h
     UIProcess/API/C/WKAuthenticationDecisionListener.h
-    UIProcess/API/C/WKBackForwardList.h
-    UIProcess/API/C/WKBackForwardListItem.h
+    UIProcess/API/C/WKBackForwardListRef.h
+    UIProcess/API/C/WKBackForwardListItemRef.h
     UIProcess/API/C/WKBatteryManager.h
     UIProcess/API/C/WKBatteryStatus.h
     UIProcess/API/C/WKContext.h
@@ -433,18 +466,19 @@ install(FILES ${WebKitNix_JavaScriptCore_HEADERS} DESTINATION include/${WebKit2_
 add_definitions(-DLIBEXECDIR=\"${CMAKE_INSTALL_PREFIX}/${EXEC_INSTALL_DIR}\"
     -DWEBPROCESSNAME=\"WebProcess\"
     -DPLUGINPROCESSNAME=\"PluginProcess\"
+    -DNETWORKPROCESSNAME=\"NetworkProcess\"
 )
 
 if (ENABLE_INSPECTOR)
+    set(WEBINSPECTORUI_DIR "${CMAKE_SOURCE_DIR}/Source/WebInspectorUI")
     set(WK2_WEB_INSPECTOR_DIR ${CMAKE_BINARY_DIR}/WebKit2/nix/webinspector)
     set(WK2_WEB_INSPECTOR_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${WebKit2_OUTPUT_NAME}-${PROJECT_VERSION_MAJOR})
     add_definitions(-DWK2_WEB_INSPECTOR_DIR="${WK2_WEB_INSPECTOR_DIR}")
     add_definitions(-DWK2_WEB_INSPECTOR_INSTALL_DIR="${WK2_WEB_INSPECTOR_INSTALL_DIR}/webinspector")
     add_custom_target(
         wk2-web-inspector-resources ALL
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${WEBCORE_DIR}/inspector/front-end ${WK2_WEB_INSPECTOR_DIR}
-        COMMAND ${CMAKE_COMMAND} -E copy ${WEBCORE_DIR}/English.lproj/localizedStrings.js ${WK2_WEB_INSPECTOR_DIR}
-        COMMAND ${CMAKE_COMMAND} -E copy ${DERIVED_SOURCES_WEBCORE_DIR}/InspectorBackendCommands.js ${WK2_WEB_INSPECTOR_DIR}/InspectorBackendCommands.js
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${WEBINSPECTORUI_DIR}/UserInterface/ ${WK2_WEB_INSPECTOR_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy ${WEBINSPECTORUI_DIR}/Localizations/en.lproj/localizedStrings.js ${WK2_WEB_INSPECTOR_DIR}
         COMMAND ${CMAKE_COMMAND} -E copy ${WEBKIT2_DIR}/UIProcess/InspectorServer/front-end/inspectorPageIndex.html ${WK2_WEB_INSPECTOR_DIR}
         DEPENDS WebCore
     )
@@ -455,4 +489,25 @@ if (ENABLE_INSPECTOR)
                        PATTERN "*.css"
                        PATTERN "*.gif"
                        PATTERN "*.png")
+endif ()
+
+if (ENABLE_NETWORK_PROCESS)
+    set(NetworkProcess_EXECUTABLE_NAME NetworkProcess)
+    list(APPEND NetworkProcess_INCLUDE_DIRECTORIES
+        "${WEBKIT2_DIR}/NetworkProcess"
+    )
+
+    include_directories(${NetworkProcess_INCLUDE_DIRECTORIES})
+
+    list(APPEND NetworkProcess_SOURCES
+        unix/NetworkMainUnix.cpp
+    )
+
+    set(NetworkProcess_LIBRARIES
+        WebKit2
+    )
+
+    add_executable(${NetworkProcess_EXECUTABLE_NAME} ${NetworkProcess_SOURCES})
+    target_link_libraries(${NetworkProcess_EXECUTABLE_NAME} ${NetworkProcess_LIBRARIES})
+    install(TARGETS ${NetworkProcess_EXECUTABLE_NAME} DESTINATION "${EXEC_INSTALL_DIR}")
 endif ()

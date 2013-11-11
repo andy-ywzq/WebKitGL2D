@@ -42,7 +42,6 @@
 #include <WebCore/DocumentLoader.h>
 #include <WebCore/EventHandler.h>
 #include <WebCore/FocusController.h>
-#include <WebCore/Frame.h>
 #include <WebCore/FrameLoadRequest.h>
 #include <WebCore/FrameLoader.h>
 #include <WebCore/FrameLoaderClient.h>
@@ -52,6 +51,7 @@
 #include <WebCore/HTMLPlugInImageElement.h>
 #include <WebCore/HostWindow.h>
 #include <WebCore/MIMETypeRegistry.h>
+#include <WebCore/MainFrame.h>
 #include <WebCore/MouseEvent.h>
 #include <WebCore/NetscapePlugInStreamLoader.h>
 #include <WebCore/NetworkingContext.h>
@@ -153,7 +153,7 @@ void PluginView::Stream::start()
     ASSERT(m_pluginView->m_plugin);
     ASSERT(!m_loader);
 
-    Frame* frame = m_pluginView->m_pluginElement->document()->frame();
+    Frame* frame = m_pluginView->m_pluginElement->document().frame();
     ASSERT(frame);
 
     m_loader = resourceLoadScheduler()->schedulePluginStreamLoad(frame, this, m_request);
@@ -212,7 +212,7 @@ static uint32_t lastModifiedDate(const ResourceResponse& response)
 void PluginView::Stream::didReceiveResponse(NetscapePlugInStreamLoader*, const ResourceResponse& response)
 {
     // Compute the stream related data from the resource response.
-    const KURL& responseURL = response.url();
+    const URL& responseURL = response.url();
     const String& mimeType = response.mimeType();
     long long expectedContentLength = response.expectedContentLength();
     
@@ -233,7 +233,7 @@ void PluginView::Stream::didReceiveData(NetscapePlugInStreamLoader*, const char*
 void PluginView::Stream::didFail(NetscapePlugInStreamLoader*, const ResourceError& error) 
 {
     // Calling streamDidFail could cause us to be deleted, so we hold on to a reference here.
-    RefPtr<Stream> protect(this);
+    Ref<Stream> protect(*this);
 
     // We only want to call streamDidFail if the stream was not explicitly cancelled by the plug-in.
     if (!m_streamWasCancelled)
@@ -246,7 +246,7 @@ void PluginView::Stream::didFail(NetscapePlugInStreamLoader*, const ResourceErro
 void PluginView::Stream::didFinishLoading(NetscapePlugInStreamLoader*)
 {
     // Calling streamDidFinishLoading could cause us to be deleted, so we hold on to a reference here.
-    RefPtr<Stream> protectStream(this);
+    Ref<Stream> protect(*this);
 
 #if ENABLE(NETSCAPE_PLUGIN_API)
     // Protect the plug-in while we're calling into it.
@@ -260,7 +260,7 @@ void PluginView::Stream::didFinishLoading(NetscapePlugInStreamLoader*)
 
 static inline WebPage* webPage(HTMLPlugInElement* pluginElement)
 {
-    Frame* frame = pluginElement->document()->frame();
+    Frame* frame = pluginElement->document().frame();
     ASSERT(frame);
 
     WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(frame->loader().client());
@@ -307,7 +307,7 @@ PluginView::~PluginView()
     ASSERT(!m_isBeingDestroyed);
 
     if (m_isWaitingUntilMediaCanStart)
-        m_pluginElement->document()->removeMediaCanStartListener(this);
+        m_pluginElement->document().removeMediaCanStartListener(this);
 
     destroyPluginAndReset();
 
@@ -366,7 +366,7 @@ void PluginView::recreateAndInitialize(PassRefPtr<Plugin> plugin)
 
 Frame* PluginView::frame() const
 {
-    return m_pluginElement->document()->frame();
+    return m_pluginElement->document().frame();
 }
 
 void PluginView::manualLoadDidReceiveResponse(const ResourceResponse& response)
@@ -383,7 +383,7 @@ void PluginView::manualLoadDidReceiveResponse(const ResourceResponse& response)
     }
 
     // Compute the stream related data from the resource response.
-    const KURL& responseURL = response.url();
+    const URL& responseURL = response.url();
     const String& mimeType = response.mimeType();
     long long expectedContentLength = response.expectedContentLength();
     
@@ -558,7 +558,7 @@ void PluginView::initializePlugin()
         return;
     }
 
-    if (Frame* frame = m_pluginElement->document()->frame()) {
+    if (Frame* frame = m_pluginElement->document().frame()) {
         if (Page* page = frame->page()) {
             
             // We shouldn't initialize the plug-in right now, add a listener.
@@ -567,7 +567,7 @@ void PluginView::initializePlugin()
                     return;
                 
                 m_isWaitingUntilMediaCanStart = true;
-                m_pluginElement->document()->addMediaCanStartListener(this);
+                m_pluginElement->document().addMediaCanStartListener(this);
                 return;
             }
         }
@@ -583,7 +583,7 @@ void PluginView::didFailToInitializePlugin()
     m_plugin = 0;
 
     String frameURLString = frame()->loader().documentLoader()->responseURL().string();
-    String pageURLString = m_webPage->corePage()->mainFrame()->loader().documentLoader()->responseURL().string();
+    String pageURLString = m_webPage->corePage()->mainFrame().loader().documentLoader()->responseURL().string();
     m_webPage->send(Messages::WebPageProxy::DidFailToInitializePlugin(m_parameters.mimeType, frameURLString, pageURLString));
 }
 
@@ -597,7 +597,7 @@ void PluginView::didInitializePlugin()
 
     viewGeometryDidChange();
 
-    if (m_pluginElement->document()->focusedElement() == m_pluginElement)
+    if (m_pluginElement->document().focusedElement() == m_pluginElement)
         m_plugin->setFocus(true);
 
     redeliverManualStream();
@@ -627,7 +627,7 @@ void PluginView::didInitializePlugin()
 #endif
 
     if (wantsWheelEvents()) {
-        if (Frame* frame = m_pluginElement->document()->frame()) {
+        if (Frame* frame = m_pluginElement->document().frame()) {
             if (FrameView* frameView = frame->view())
                 frameView->setNeedsLayout();
         }
@@ -816,7 +816,7 @@ String PluginView::getSelectionString() const
     return m_plugin->getSelectionString();
 }
 
-PassOwnPtr<WebEvent> PluginView::createWebEvent(MouseEvent* event) const
+OwnPtr<WebEvent> PluginView::createWebEvent(MouseEvent* event) const
 {
     WebEvent::Type type = WebEvent::NoType;
     unsigned clickCount = 1;
@@ -883,14 +883,15 @@ void PluginView::handleEvent(Event* event)
         // FIXME: Clicking in a scroll bar should not change focus.
         if (currentEvent->type() == WebEvent::MouseDown) {
             focusPluginElement();
-            frame()->eventHandler().setCapturingMouseEventsNode(m_pluginElement.get());
+            frame()->eventHandler().setCapturingMouseEventsElement(m_pluginElement.get());
         } else if (currentEvent->type() == WebEvent::MouseUp)
-            frame()->eventHandler().setCapturingMouseEventsNode(0);
+            frame()->eventHandler().setCapturingMouseEventsElement(nullptr);
 
         didHandleEvent = m_plugin->handleMouseEvent(static_cast<const WebMouseEvent&>(*currentEvent));
         if (event->type() != eventNames().mousemoveEvent)
             pluginDidReceiveUserInteraction();
-    } else if (event->type() == eventNames().mousewheelEvent && currentEvent->type() == WebEvent::Wheel && m_plugin->wantsWheelEvents()) {
+    } else if ((event->type() == eventNames().wheelEvent || event->type() == eventNames().mousewheelEvent)
+        && currentEvent->type() == WebEvent::Wheel && m_plugin->wantsWheelEvents()) {
         didHandleEvent = m_plugin->handleWheelEvent(static_cast<const WebWheelEvent&>(*currentEvent));
         pluginDidReceiveUserInteraction();
     } else if (event->type() == eventNames().mouseoverEvent && currentEvent->type() == WebEvent::MouseMove)
@@ -1087,7 +1088,7 @@ void PluginView::pendingURLRequestsTimerFired()
 void PluginView::performURLRequest(URLRequest* request)
 {
     // This protector is needed to make sure the PluginView is not destroyed while it is still needed.
-    RefPtr<PluginView> protect(this);
+    Ref<PluginView> protect(*this);
 
     // First, check if this is a javascript: url.
     if (protocolIsJavaScript(request->request().url())) {
@@ -1110,11 +1111,11 @@ void PluginView::performFrameLoadURLRequest(URLRequest* request)
 {
     ASSERT(!request->target().isNull());
 
-    Frame* frame = m_pluginElement->document()->frame();
+    Frame* frame = m_pluginElement->document().frame();
     if (!frame)
         return;
 
-    if (!m_pluginElement->document()->securityOrigin()->canDisplay(request->request().url())) {
+    if (!m_pluginElement->document().securityOrigin()->canDisplay(request->request().url())) {
         // We can't load the request, send back a reply to the plug-in.
         m_plugin->frameDidFail(request->requestID(), false);
         return;
@@ -1158,7 +1159,7 @@ void PluginView::performJavaScriptURLRequest(URLRequest* request)
 {
     ASSERT(protocolIsJavaScript(request->request().url()));
 
-    RefPtr<Frame> frame = m_pluginElement->document()->frame();
+    RefPtr<Frame> frame = m_pluginElement->document().frame();
     if (!frame)
         return;
     
@@ -1166,7 +1167,7 @@ void PluginView::performJavaScriptURLRequest(URLRequest* request)
 
     if (!request->target().isNull()) {
         // For security reasons, only allow JS requests to be made on the frame that contains the plug-in.
-        if (frame->tree()->find(request->target()) != frame) {
+        if (frame->tree().find(request->target()) != frame) {
             // Let the plug-in know that its frame load failed.
             m_plugin->frameDidFail(request->requestID(), false);
             return;
@@ -1186,7 +1187,7 @@ void PluginView::performJavaScriptURLRequest(URLRequest* request)
     if (!request->target().isNull())
         return;
 
-    ScriptState* scriptState = frame->script().globalObject(pluginWorld())->globalExec();
+    ExecState* scriptState = frame->script().globalObject(pluginWorld())->globalExec();
     String resultString;
     result.getString(scriptState, resultString);
   
@@ -1303,19 +1304,19 @@ void PluginView::invalidate(const IntRect& dirtyRect)
 
 String PluginView::userAgent()
 {
-    Frame* frame = m_pluginElement->document()->frame();
+    Frame* frame = m_pluginElement->document().frame();
     if (!frame)
         return String();
     
-    return frame->loader().client()->userAgent(KURL());
+    return frame->loader().client().userAgent(URL());
 }
 
 void PluginView::loadURL(uint64_t requestID, const String& method, const String& urlString, const String& target, 
                          const HTTPHeaderMap& headerFields, const Vector<uint8_t>& httpBody, bool allowPopups)
 {
-    FrameLoadRequest frameLoadRequest(m_pluginElement->document()->securityOrigin());
+    FrameLoadRequest frameLoadRequest(m_pluginElement->document().securityOrigin());
     frameLoadRequest.resourceRequest().setHTTPMethod(method);
-    frameLoadRequest.resourceRequest().setURL(m_pluginElement->document()->completeURL(urlString));
+    frameLoadRequest.resourceRequest().setURL(m_pluginElement->document().completeURL(urlString));
     frameLoadRequest.resourceRequest().addHTTPHeaderFields(headerFields);
     frameLoadRequest.resourceRequest().setHTTPBody(FormData::create(httpBody.data(), httpBody.size()));
     frameLoadRequest.setFrameName(target);
@@ -1364,7 +1365,7 @@ NPObject* PluginView::windowScriptNPObject()
         return 0;
     }
 
-    return m_npRuntimeObjectMap.getOrCreateNPObject(*pluginWorld()->vm(), frame()->script().windowShell(pluginWorld())->window());
+    return m_npRuntimeObjectMap.getOrCreateNPObject(*pluginWorld().vm(), frame()->script().windowShell(pluginWorld())->window());
 }
 
 NPObject* PluginView::pluginElementNPObject()
@@ -1380,13 +1381,13 @@ NPObject* PluginView::pluginElementNPObject()
     JSObject* object = frame()->script().jsObjectForPluginElement(m_pluginElement.get());
     ASSERT(object);
 
-    return m_npRuntimeObjectMap.getOrCreateNPObject(*pluginWorld()->vm(), object);
+    return m_npRuntimeObjectMap.getOrCreateNPObject(*pluginWorld().vm(), object);
 }
 
 bool PluginView::evaluate(NPObject* npObject, const String& scriptString, NPVariant* result, bool allowPopups)
 {
     // FIXME: Is this check necessary?
-    if (!m_pluginElement->document()->frame())
+    if (!m_pluginElement->document().frame())
         return false;
 
     // Calling evaluate will run JavaScript that can potentially remove the plug-in element, so we need to
@@ -1432,7 +1433,6 @@ void PluginView::pluginProcessCrashed()
     if (!m_pluginElement->renderer())
         return;
 
-    // FIXME: The renderer could also be a RenderApplet, we should handle that.
     if (!m_pluginElement->renderer()->isEmbeddedObject())
         return;
 
@@ -1489,18 +1489,18 @@ String PluginView::proxiesForURL(const String& urlString)
 {
     const FrameLoader* frameLoader = frame() ? &frame()->loader() : 0;
     const NetworkingContext* context = frameLoader ? frameLoader->networkingContext() : 0;
-    Vector<ProxyServer> proxyServers = proxyServersForURL(KURL(KURL(), urlString), context);
+    Vector<ProxyServer> proxyServers = proxyServersForURL(URL(URL(), urlString), context);
     return toString(proxyServers);
 }
 
 String PluginView::cookiesForURL(const String& urlString)
 {
-    return cookies(m_pluginElement->document(), KURL(KURL(), urlString));
+    return cookies(&m_pluginElement->document(), URL(URL(), urlString));
 }
 
 void PluginView::setCookiesForURL(const String& urlString, const String& cookieString)
 {
-    setCookies(m_pluginElement->document(), KURL(KURL(), urlString), cookieString);
+    setCookies(&m_pluginElement->document(), URL(URL(), urlString), cookieString);
 }
 
 bool PluginView::getAuthenticationInfo(const ProtectionSpace& protectionSpace, String& username, String& password)
@@ -1720,7 +1720,7 @@ void PluginView::pluginDidReceiveUserInteraction()
     m_didReceiveUserInteraction = true;
 
     WebCore::HTMLPlugInImageElement* plugInImageElement = toHTMLPlugInImageElement(m_pluginElement.get());
-    String pageOrigin = plugInImageElement->document()->page()->mainFrame()->document()->baseURL().host();
+    String pageOrigin = plugInImageElement->document().page()->mainFrame().document()->baseURL().host();
     String pluginOrigin = plugInImageElement->loadedUrl().host();
     String mimeType = plugInImageElement->loadedMimeType();
 

@@ -35,7 +35,6 @@
 #include "Heap.h"
 #include "Intrinsic.h"
 #include "JITThunks.h"
-#include "JITThunks.h"
 #include "JSCJSValue.h"
 #include "JSLock.h"
 #include "LLIntData.h"
@@ -99,6 +98,11 @@ namespace JSC {
     class Worklist;
     }
 #endif // ENABLE(DFG_JIT)
+#if ENABLE(FTL_JIT)
+    namespace FTL {
+    class Thunks;
+    }
+#endif // ENABLE(FTL_JIT)
 
     struct HashTable;
     struct Instruction;
@@ -125,7 +129,6 @@ namespace JSC {
         double increment;
     };
 
-#if ENABLE(DFG_JIT)
     class ConservativeRoots;
 
 #if COMPILER(MSVC)
@@ -164,7 +167,6 @@ namespace JSC {
 #if COMPILER(MSVC)
 #pragma warning(pop)
 #endif
-#endif
 
     class VM : public ThreadSafeRefCounted<VM> {
     public:
@@ -184,7 +186,7 @@ namespace JSC {
 
         bool isSharedInstance() { return vmType == APIShared; }
         bool usingAPI() { return vmType != Default; }
-        static bool sharedInstanceExists();
+        JS_EXPORT_PRIVATE static bool sharedInstanceExists();
         JS_EXPORT_PRIVATE static VM& sharedInstance();
 
         JS_EXPORT_PRIVATE static PassRefPtr<VM> create(HeapType = SmallHeap);
@@ -193,6 +195,10 @@ namespace JSC {
         JS_EXPORT_PRIVATE ~VM();
 
         void makeUsableFromMultipleThreads() { heap.machineThreads().makeUsableFromMultipleThreads(); }
+        
+#if ENABLE(DFG_JIT)
+        DFG::Worklist* ensureWorklist();
+#endif // ENABLE(DFG_JIT)
 
     private:
         RefPtr<JSLock> m_apiLock;
@@ -218,24 +224,29 @@ namespace JSC {
         ExecState* topCallFrame;
         Watchdog watchdog;
 
-        const HashTable* arrayConstructorTable;
-        const HashTable* arrayPrototypeTable;
-        const HashTable* booleanPrototypeTable;
-        const HashTable* dataViewTable;
-        const HashTable* dateTable;
-        const HashTable* dateConstructorTable;
-        const HashTable* errorPrototypeTable;
-        const HashTable* globalObjectTable;
-        const HashTable* jsonTable;
-        const HashTable* numberConstructorTable;
-        const HashTable* numberPrototypeTable;
-        const HashTable* objectConstructorTable;
-        const HashTable* privateNamePrototypeTable;
-        const HashTable* regExpTable;
-        const HashTable* regExpConstructorTable;
-        const HashTable* regExpPrototypeTable;
-        const HashTable* stringConstructorTable;
-        
+        const OwnPtr<const HashTable> arrayConstructorTable;
+        const OwnPtr<const HashTable> arrayPrototypeTable;
+        const OwnPtr<const HashTable> booleanPrototypeTable;
+        const OwnPtr<const HashTable> dataViewTable;
+        const OwnPtr<const HashTable> dateTable;
+        const OwnPtr<const HashTable> dateConstructorTable;
+        const OwnPtr<const HashTable> errorPrototypeTable;
+        const OwnPtr<const HashTable> globalObjectTable;
+        const OwnPtr<const HashTable> jsonTable;
+        const OwnPtr<const HashTable> numberConstructorTable;
+        const OwnPtr<const HashTable> numberPrototypeTable;
+        const OwnPtr<const HashTable> objectConstructorTable;
+        const OwnPtr<const HashTable> privateNamePrototypeTable;
+        const OwnPtr<const HashTable> regExpTable;
+        const OwnPtr<const HashTable> regExpConstructorTable;
+        const OwnPtr<const HashTable> regExpPrototypeTable;
+        const OwnPtr<const HashTable> stringConstructorTable;
+#if ENABLE(PROMISES)
+        const OwnPtr<const HashTable> promisePrototypeTable;
+        const OwnPtr<const HashTable> promiseConstructorTable;
+        const OwnPtr<const HashTable> promiseResolverPrototypeTable;
+#endif
+
         Strong<Structure> structureStructure;
         Strong<Structure> structureRareDataStructure;
         Strong<Structure> debuggerActivationStructure;
@@ -261,6 +272,9 @@ namespace JSC {
         Strong<Structure> unlinkedEvalCodeBlockStructure;
         Strong<Structure> unlinkedFunctionCodeBlockStructure;
         Strong<Structure> propertyTableStructure;
+        Strong<Structure> mapDataStructure;
+        Strong<Structure> weakMapDataStructure;
+        Strong<JSCell> iterationTerminator;
 
         IdentifierTable* identifierTable;
         CommonIdentifiers* propertyNames;
@@ -269,17 +283,6 @@ namespace JSC {
         NumericStrings numericStrings;
         DateInstanceCache dateInstanceCache;
         WTF::SimpleStats machineCodeBytesPerBytecodeWordForBaselineJIT;
-        Vector<CodeBlock*> codeBlocksBeingCompiled;
-        void startedCompiling(CodeBlock* codeBlock)
-        {
-            codeBlocksBeingCompiled.append(codeBlock);
-        }
-
-        void finishedCompiling(CodeBlock* codeBlock)
-        {
-            ASSERT_UNUSED(codeBlock, codeBlock == codeBlocksBeingCompiled.last());
-            codeBlocksBeingCompiled.removeLast();
-        }
 
         void setInDefineOwnProperty(bool inDefineOwnProperty)
         {
@@ -316,7 +319,7 @@ namespace JSC {
         PrototypeMap prototypeMap;
 
         OwnPtr<ParserArena> parserArena;
-        typedef HashMap<RefPtr<SourceProvider>, RefPtr<SourceProviderCache> > SourceProviderCacheMap;
+        typedef HashMap<RefPtr<SourceProvider>, RefPtr<SourceProviderCache>> SourceProviderCacheMap;
         SourceProviderCacheMap sourceProviderCacheMap;
         OwnPtr<Keywords> keywords;
         Interpreter* interpreter;
@@ -328,12 +331,37 @@ namespace JSC {
         }
         NativeExecutable* getHostFunction(NativeFunction, Intrinsic);
 #endif
+#if ENABLE(FTL_JIT)
+        std::unique_ptr<FTL::Thunks> ftlThunks;
+#endif
         NativeExecutable* getHostFunction(NativeFunction, NativeFunction constructor);
 
-        JSValue exception;
-        JS_EXPORT_PRIVATE void clearExceptionStack();
-        RefCountedArray<StackFrame>& exceptionStack() { return m_exceptionStack; }
+        static ptrdiff_t exceptionOffset()
+        {
+            return OBJECT_OFFSETOF(VM, m_exception);
+        }
 
+        static ptrdiff_t callFrameForThrowOffset()
+        {
+            return OBJECT_OFFSETOF(VM, callFrameForThrow);
+        }
+
+        static ptrdiff_t targetMachinePCForThrowOffset()
+        {
+            return OBJECT_OFFSETOF(VM, targetMachinePCForThrow);
+        }
+
+        JS_EXPORT_PRIVATE void clearException();
+        JS_EXPORT_PRIVATE void clearExceptionStack();
+        void getExceptionInfo(JSValue& exception, RefCountedArray<StackFrame>& exceptionStack);
+        void setExceptionInfo(JSValue& exception, RefCountedArray<StackFrame>& exceptionStack);
+        JSValue exception() const { return m_exception; }
+        JSValue* addressOfException() { return &m_exception; }
+        const RefCountedArray<StackFrame>& exceptionStack() const { return m_exceptionStack; }
+
+        JS_EXPORT_PRIVATE JSValue throwException(ExecState*, JSValue);
+        JS_EXPORT_PRIVATE JSObject* throwException(ExecState*, JSObject*);
+        
         const ClassInfo* const jsArrayClassInfo;
         const ClassInfo* const jsFinalObjectClassInfo;
 
@@ -342,7 +370,6 @@ namespace JSC {
         ExecState* callFrameForThrow;
         void* targetMachinePCForThrow;
         Instruction* targetInterpreterPCForThrow;
-#if ENABLE(DFG_JIT)
         uint32_t osrExitIndex;
         void* osrExitJumpDestination;
         Vector<ScratchBuffer*> scratchBuffers;
@@ -369,7 +396,6 @@ namespace JSC {
         }
 
         void gatherConservativeRoots(ConservativeRoots&);
-#endif
 
         JSGlobalObject* dynamicGlobalObject;
 
@@ -387,7 +413,7 @@ namespace JSC {
         BumpPointerAllocator m_regExpAllocator;
 
 #if ENABLE(REGEXP_TRACING)
-        typedef ListHashSet<RefPtr<RegExp> > RTTraceList;
+        typedef ListHashSet<RefPtr<RegExp>> RTTraceList;
         RTTraceList* m_rtTraceList;
 #endif
 
@@ -435,6 +461,7 @@ namespace JSC {
 
     private:
         friend class LLIntOffsetsExtractor;
+        friend class ClearExceptionScope;
         
         VM(VMType, HeapType);
         static VM*& sharedInstanceInternal();
@@ -451,6 +478,7 @@ namespace JSC {
 #if ENABLE(GC_VALIDATION)
         const ClassInfo* m_initializingObjectClass;
 #endif
+        JSValue m_exception;
         bool m_inDefineOwnProperty;
         OwnPtr<CodeCache> m_codeCache;
         RefCountedArray<StackFrame> m_exceptionStack;

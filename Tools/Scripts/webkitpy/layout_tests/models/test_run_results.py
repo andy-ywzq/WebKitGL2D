@@ -118,7 +118,7 @@ def _interpret_test_failures(failures):
     return test_dict
 
 
-def summarize_results(port_obj, expectations, initial_results, retry_results, enabled_pixel_tests_in_retry):
+def summarize_results(port_obj, expectations, initial_results, retry_results, enabled_pixel_tests_in_retry, include_passes=False, include_time_and_modifiers=False):
     """Returns a dictionary containing a summary of the test runs, with the following fields:
         'version': a version indicator
         'fixable': The number of fixable tests (NOW - PASS)
@@ -174,7 +174,7 @@ def summarize_results(port_obj, expectations, initial_results, retry_results, en
         if result_type == test_expectations.PASS:
             num_passes += 1
             # FIXME: include passing tests that have stderr output.
-            if expected == 'PASS':
+            if expected == 'PASS' and not include_passes:
                 continue
         elif result_type == test_expectations.CRASH:
             if test_name in initial_results.unexpected_results_by_name:
@@ -201,6 +201,10 @@ def summarize_results(port_obj, expectations, initial_results, retry_results, en
 
         test_dict['expected'] = expected
         test_dict['actual'] = " ".join(actual)
+        if include_time_and_modifiers:
+            test_dict['time'] = round(1000 * result.test_run_time)
+            # FIXME: Fix get_modifiers to return modifiers in new format.
+            test_dict['modifiers'] = ' '.join(expectations.get_modifiers(test_name)).replace('BUGWK', 'webkit.org/b/')
 
         test_dict.update(_interpret_test_failures(result.failures))
 

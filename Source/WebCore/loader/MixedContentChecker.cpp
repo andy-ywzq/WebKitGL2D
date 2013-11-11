@@ -48,13 +48,13 @@ MixedContentChecker::MixedContentChecker(Frame* frame)
 {
 }
 
-FrameLoaderClient* MixedContentChecker::client() const
+FrameLoaderClient& MixedContentChecker::client() const
 {
     return m_frame->loader().client();
 }
 
 // static
-bool MixedContentChecker::isMixedContent(SecurityOrigin* securityOrigin, const KURL& url)
+bool MixedContentChecker::isMixedContent(SecurityOrigin* securityOrigin, const URL& url)
 {
     if (securityOrigin->protocol() != "https")
         return false; // We only care about HTTPS security origins.
@@ -63,35 +63,35 @@ bool MixedContentChecker::isMixedContent(SecurityOrigin* securityOrigin, const K
     return !SecurityOrigin::isSecure(url);
 }
 
-bool MixedContentChecker::canDisplayInsecureContent(SecurityOrigin* securityOrigin, const KURL& url) const
+bool MixedContentChecker::canDisplayInsecureContent(SecurityOrigin* securityOrigin, const URL& url) const
 {
     if (!isMixedContent(securityOrigin, url))
         return true;
 
-    bool allowed = client()->allowDisplayingInsecureContent(m_frame->settings().allowDisplayOfInsecureContent(), securityOrigin, url);
+    bool allowed = client().allowDisplayingInsecureContent(m_frame->settings().allowDisplayOfInsecureContent(), securityOrigin, url);
     logWarning(allowed, "displayed", url);
 
     if (allowed)
-        client()->didDisplayInsecureContent();
+        client().didDisplayInsecureContent();
 
     return allowed;
 }
 
-bool MixedContentChecker::canRunInsecureContent(SecurityOrigin* securityOrigin, const KURL& url) const
+bool MixedContentChecker::canRunInsecureContent(SecurityOrigin* securityOrigin, const URL& url) const
 {
     if (!isMixedContent(securityOrigin, url))
         return true;
 
-    bool allowed = client()->allowRunningInsecureContent(m_frame->settings().allowRunningOfInsecureContent(), securityOrigin, url);
+    bool allowed = client().allowRunningInsecureContent(m_frame->settings().allowRunningOfInsecureContent(), securityOrigin, url);
     logWarning(allowed, "ran", url);
 
     if (allowed)
-        client()->didRunInsecureContent(securityOrigin, url);
+        client().didRunInsecureContent(securityOrigin, url);
 
     return allowed;
 }
 
-void MixedContentChecker::logWarning(bool allowed, const String& action, const KURL& target) const
+void MixedContentChecker::logWarning(bool allowed, const String& action, const URL& target) const
 {
     String message = makeString((allowed ? "" : "[blocked] "), "The page at ", m_frame->document()->url().stringCenterEllipsizedToLength(), " ", action, " insecure content from ", target.stringCenterEllipsizedToLength(), ".\n");
     m_frame->document()->addConsoleMessage(SecurityMessageSource, WarningMessageLevel, message);

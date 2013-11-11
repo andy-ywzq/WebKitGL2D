@@ -108,7 +108,7 @@ bool CrossOriginPreflightResultCacheItem::parse(const ResourceResponse& response
     } else
         expiryDelta = defaultPreflightCacheTimeoutSeconds;
 
-    m_absoluteExpiryTime = currentTime() + expiryDelta;
+    m_absoluteExpiryTime = monotonicallyIncreasingTime() + expiryDelta;
     return true;
 }
 
@@ -136,7 +136,7 @@ bool CrossOriginPreflightResultCacheItem::allowsCrossOriginHeaders(const HTTPHea
 bool CrossOriginPreflightResultCacheItem::allowsRequest(StoredCredentials includeCredentials, const String& method, const HTTPHeaderMap& requestHeaders) const
 {
     String ignoredExplanation;
-    if (m_absoluteExpiryTime < currentTime())
+    if (m_absoluteExpiryTime < monotonicallyIncreasingTime())
         return false;
     if (includeCredentials == AllowStoredCredentials && m_credentials == DoNotAllowStoredCredentials)
         return false;
@@ -154,13 +154,13 @@ CrossOriginPreflightResultCache& CrossOriginPreflightResultCache::shared()
     return cache;
 }
 
-void CrossOriginPreflightResultCache::appendEntry(const String& origin, const KURL& url, PassOwnPtr<CrossOriginPreflightResultCacheItem> preflightResult)
+void CrossOriginPreflightResultCache::appendEntry(const String& origin, const URL& url, PassOwnPtr<CrossOriginPreflightResultCacheItem> preflightResult)
 {
     ASSERT(isMainThread());
     m_preflightHashMap.set(make_pair(origin, url), preflightResult);
 }
 
-bool CrossOriginPreflightResultCache::canSkipPreflight(const String& origin, const KURL& url, StoredCredentials includeCredentials, const String& method, const HTTPHeaderMap& requestHeaders)
+bool CrossOriginPreflightResultCache::canSkipPreflight(const String& origin, const URL& url, StoredCredentials includeCredentials, const String& method, const HTTPHeaderMap& requestHeaders)
 {
     ASSERT(isMainThread());
     CrossOriginPreflightResultHashMap::iterator cacheIt = m_preflightHashMap.find(make_pair(origin, url));

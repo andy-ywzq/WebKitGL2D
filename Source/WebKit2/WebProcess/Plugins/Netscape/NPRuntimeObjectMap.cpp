@@ -108,7 +108,7 @@ JSObject* NPRuntimeObjectMap::getOrCreateJSObject(JSGlobalObject* globalObject, 
         return jsNPObject;
 
     JSNPObject* jsNPObject = JSNPObject::create(globalObject, this, npObject);
-    weakAdd(m_jsNPObjects, npObject, JSC::PassWeak<JSNPObject>(jsNPObject, this, npObject));
+    weakAdd(m_jsNPObjects, npObject, JSC::Weak<JSNPObject>(jsNPObject, this, npObject));
     return jsNPObject;
 }
 
@@ -190,7 +190,7 @@ bool NPRuntimeObjectMap::evaluate(NPObject* npObject, const String& scriptString
 
     if (m_pluginView && !m_pluginView->isBeingDestroyed()) {
         if (Page* page = m_pluginView->frame()->page())
-            page->pageThrottler()->reportInterestingEvent();
+            page->pageThrottler().reportInterestingEvent();
     }
 
     ExecState* exec = globalObject->globalExec();
@@ -274,7 +274,7 @@ void NPRuntimeObjectMap::moveGlobalExceptionToExecState(ExecState* exec)
 
     {
         JSLockHolder lock(exec);
-        throwError(exec, createError(exec, globalExceptionString()));
+        exec->vm().throwException(exec, createError(exec, globalExceptionString()));
     }
     
     globalExceptionString() = String();

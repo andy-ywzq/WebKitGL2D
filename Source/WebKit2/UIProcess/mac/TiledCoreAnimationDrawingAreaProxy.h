@@ -26,25 +26,19 @@
 #ifndef TiledCoreAnimationDrawingAreaProxy_h
 #define TiledCoreAnimationDrawingAreaProxy_h
 
-#if ENABLE(THREADED_SCROLLING)
-
 #include "DrawingAreaProxy.h"
-#include <wtf/PassOwnPtr.h>
 
 namespace WebKit {
 
 class TiledCoreAnimationDrawingAreaProxy : public DrawingAreaProxy {
 public:
-    static PassOwnPtr<TiledCoreAnimationDrawingAreaProxy> create(WebPageProxy*);
+    explicit TiledCoreAnimationDrawingAreaProxy(WebPageProxy*);
     virtual ~TiledCoreAnimationDrawingAreaProxy();
 
 private:
-    explicit TiledCoreAnimationDrawingAreaProxy(WebPageProxy*);
-
     // DrawingAreaProxy
     virtual void deviceScaleFactorDidChange() OVERRIDE;
     virtual void layerHostingModeDidChange() OVERRIDE;
-    virtual void visibilityDidChange() OVERRIDE;
     virtual void sizeDidChange() OVERRIDE;
     virtual void waitForPossibleGeometryUpdate(double timeout = didUpdateBackingStoreStateTimeout) OVERRIDE;
     virtual void colorSpaceDidChange() OVERRIDE;
@@ -72,7 +66,5 @@ private:
 };
 
 } // namespace WebKit
-
-#endif // ENABLE(THREADED_SCROLLING)
 
 #endif // TiledCoreAnimationDrawingAreaProxy_h

@@ -37,12 +37,13 @@
 #include "RenderBox.h"
 #include "ScrollbarTheme.h"
 #include "WheelEvent.h"
+#include <wtf/Ref.h>
 
 namespace WebCore {
 
 using namespace HTMLNames;
 
-inline SpinButtonElement::SpinButtonElement(Document* document, SpinButtonOwner& spinButtonOwner)
+inline SpinButtonElement::SpinButtonElement(Document& document, SpinButtonOwner& spinButtonOwner)
     : HTMLDivElement(divTag, document)
     , m_spinButtonOwner(&spinButtonOwner)
     , m_capturing(false)
@@ -53,7 +54,7 @@ inline SpinButtonElement::SpinButtonElement(Document* document, SpinButtonOwner&
     setHasCustomStyleResolveCallbacks();
 }
 
-PassRefPtr<SpinButtonElement> SpinButtonElement::create(Document* document, SpinButtonOwner& spinButtonOwner)
+PassRefPtr<SpinButtonElement> SpinButtonElement::create(Document& document, SpinButtonOwner& spinButtonOwner)
 {
     return adoptRef(new SpinButtonElement(document, spinButtonOwner));
 }
@@ -97,7 +98,7 @@ void SpinButtonElement::defaultEventHandler(Event* event)
             // The following functions of HTMLInputElement may run JavaScript
             // code which detaches this shadow node. We need to take a reference
             // and check renderer() after such function calls.
-            RefPtr<Node> protector(this);
+            Ref<SpinButtonElement> protect(*this);
             if (m_spinButtonOwner)
                 m_spinButtonOwner->focusAndSelectSpinButtonOwner();
             if (renderer()) {
@@ -118,10 +119,10 @@ void SpinButtonElement::defaultEventHandler(Event* event)
     else if (event->type() == eventNames().mousemoveEvent) {
         if (box->pixelSnappedBorderBoxRect().contains(local)) {
             if (!m_capturing) {
-                if (Frame* frame = document()->frame()) {
-                    frame->eventHandler().setCapturingMouseEventsNode(this);
+                if (Frame* frame = document().frame()) {
+                    frame->eventHandler().setCapturingMouseEventsElement(this);
                     m_capturing = true;
-                    if (Page* page = document()->page())
+                    if (Page* page = document().page())
                         page->chrome().registerPopupOpeningObserver(this);
                 }
             }
@@ -150,7 +151,7 @@ void SpinButtonElement::forwardEvent(Event* event)
     if (!renderBox())
         return;
 
-    if (!event->hasInterface(eventNames().interfaceForWheelEvent))
+    if (event->eventInterface() != WheelEventInterfaceType)
         return;
 
     if (!m_spinButtonOwner)
@@ -194,10 +195,10 @@ void SpinButtonElement::releaseCapture()
 {
     stopRepeatingTimer();
     if (m_capturing) {
-        if (Frame* frame = document()->frame()) {
-            frame->eventHandler().setCapturingMouseEventsNode(0);
+        if (Frame* frame = document().frame()) {
+            frame->eventHandler().setCapturingMouseEventsElement(nullptr);
             m_capturing = false;
-            if (Page* page = document()->page())
+            if (Page* page = document().page())
                 page->chrome().unregisterPopupOpeningObserver(this);
         }
     }

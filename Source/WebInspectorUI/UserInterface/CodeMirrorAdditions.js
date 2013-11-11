@@ -187,7 +187,7 @@
         var style = this._token(stream, state);
 
         if (style) {
-            if (style === "variable-2" && stream.current() === "url") {
+            if (style === "string-2" && stream.current() === "url") {
                 // If the current text is "url" then we should expect the next string token to be a link.
                 state._expectLink = true;
             } else if (state._expectLink && style === "string") {
@@ -240,12 +240,12 @@
         return state;
     }
 
-    CodeMirror.extendMode("css-base", {token: extendedCSSToken, alternateName: "css"});
+    CodeMirror.extendMode("css", {token: extendedCSSToken});
     CodeMirror.extendMode("xml", {token: extendedXMLToken});
     CodeMirror.extendMode("javascript", {token: extendedToken});
 
     CodeMirror.defineMode("css-rule", CodeMirror.modes.css);
-    CodeMirror.extendMode("css-rule", {startState: extendedCSSRuleStartState});
+    CodeMirror.extendMode("css-rule", {token: extendedCSSToken, startState: extendedCSSRuleStartState, alternateName: "css"});
 
     CodeMirror.defineExtension("hasLineClass", function(line, where, className) {
         // This matches the arguments to addLineClass and removeLineClass.
@@ -271,6 +271,20 @@
         return paddedClass.indexOf(" " + className + " ", index) !== -1;
     });
 
+    CodeMirror.defineExtension("setUniqueBookmark", function(position, options) {
+        var marks = this.findMarksAt(position);
+        for (var i = 0; i < marks.length; ++i) {
+            if (marks[i].__uniqueBookmark) {
+                marks[i].clear();
+                break;
+            }
+        }
+
+        var uniqueBookmark = this.setBookmark(position, options);
+        uniqueBookmark.__uniqueBookmark = true;
+        return uniqueBookmark;
+    });
+
     CodeMirror.defineExtension("toggleLineClass", function(line, where, className) {
         if (this.hasLineClass(line, where, className)) {
             this.removeLineClass(line, where, className);
@@ -281,10 +295,16 @@
         return true;
     });
 
-    CodeMirror.defineExtension("alterNumberInRange", function(amount, startPosition, endPosition, affectsSelection) {
+    CodeMirror.defineExtension("alterNumberInRange", function(amount, startPosition, endPosition, updateSelection) {
         // We don't try if the range is multiline, pass to another key handler.
         if (startPosition.line !== endPosition.line)
             return false;
+
+        if (updateSelection) {
+            // Remember the cursor position/selection.
+            var selectionStart = this.getCursor("start");
+            var selectionEnd = this.getCursor("end");
+        }
 
         var line = this.getLine(startPosition.line);
 
@@ -338,10 +358,6 @@
             return false;
 
         var number = parseFloat(line.substring(start, end));
-        if (number < 1 && number >= -1 && amount === 1)
-            amount = 0.1;
-        else if (number <= 1 && number > -1 && amount === -1)
-            amount = -0.1;
 
         // Make the new number and constrain it to a precision of 6, this matches numbers the engine returns.
         // Use the Number constructor to forget the fixed precision, so 1.100000 will print as 1.1.
@@ -353,17 +369,20 @@
 
         this.replaceRange(alteredNumberString, from, to);
 
-        if (affectsSelection) {
-            var newTo = {line: startPosition.line, ch: from.ch + alteredNumberString.length};
+        if (updateSelection) {
+            var previousLength = to.ch - from.ch;
+            var newLength = alteredNumberString.length;
 
             // Fix up the selection so it follows the increase or decrease in the replacement length.
-            if (endPosition.ch >= to.ch)
-                endPosition = newTo;
+            if (previousLength != newLength) {
+                if (selectionStart.line === from.line && selectionStart.ch > from.ch)
+                    selectionStart.ch += newLength - previousLength;
 
-            if (startPosition.ch >= to.ch)
-                startPosition = newTo;
+                if (selectionEnd.line === from.line && selectionEnd.ch > from.ch)
+                    selectionEnd.ch += newLength - previousLength;
+            }
 
-            this.setSelection(startPosition, endPosition);
+            this.setSelection(selectionStart, selectionEnd);
         }
 
         return true;
@@ -371,10 +390,30 @@
 
     function alterNumber(amount, codeMirror)
     {
-        var startPosition = codeMirror.getCursor("anchor");
-        var endPosition = codeMirror.getCursor("head");
+        function findNumberToken(position)
+        {
+            // CodeMirror includes the unit in the number token, so searching for
+            // number tokens is the best way to get both the number and unit.
+            var token = codeMirror.getTokenAt(position);
+            if (token && token.type && /\bnumber\b/.test(token.type))
+                return token;
+            return null;
+        }
 
-        var foundNumber = codeMirror.alterNumberInRange(amount, startPosition, endPosition, true);
+        var position = codeMirror.getCursor("head");
+        var token = findNumberToken(position);
+
+        if (!token) {
+            // If the cursor is at the outside beginning of the token, the previous
+            // findNumberToken wont find it. So check the next column for a number too.
+            position.ch += 1;
+            token = findNumberToken(position);
+        }
+
+        if (!token)
+            return CodeMirror.Pass;
+
+        var foundNumber = codeMirror.alterNumberInRange(amount, {ch: token.start, line: position.line}, {ch: token.end, line: position.line}, true);
         if (!foundNumber)
             return CodeMirror.Pass;
     }
@@ -386,10 +425,12 @@
 
     CodeMirror.keyMap["default"] = {
         "Alt-Up": alterNumber.bind(null, 1),
+        "Ctrl-Alt-Up": alterNumber.bind(null, 0.1),
         "Shift-Alt-Up": alterNumber.bind(null, 10),
         "Alt-PageUp": alterNumber.bind(null, 10),
         "Shift-Alt-PageUp": alterNumber.bind(null, 100),
         "Alt-Down": alterNumber.bind(null, -1),
+        "Ctrl-Alt-Down": alterNumber.bind(null, -0.1),
         "Shift-Alt-Down": alterNumber.bind(null, -10),
         "Alt-PageDown": alterNumber.bind(null, -10),
         "Shift-Alt-PageDown": alterNumber.bind(null, -100),

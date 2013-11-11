@@ -54,13 +54,11 @@
 #include "DocumentType.h"
 #include "Element.h"
 #include "Event.h"
-#include "EventContext.h"
 #include "EventListener.h"
 #include "EventNames.h"
 #include "EventTarget.h"
 #include "File.h"
 #include "FileList.h"
-#include "Frame.h"
 #include "FrameTree.h"
 #include "HTMLElement.h"
 #include "HTMLFrameOwnerElement.h"
@@ -78,6 +76,8 @@
 #include "InspectorState.h"
 #include "InstrumentingAgents.h"
 #include "IntRect.h"
+#include "JSEventListener.h"
+#include "MainFrame.h"
 #include "MutationEvent.h"
 #include "Node.h"
 #include "NodeList.h"
@@ -86,7 +86,7 @@
 #include "Pasteboard.h"
 #include "RenderStyle.h"
 #include "RenderStyleConstants.h"
-#include "ScriptEventListener.h"
+#include "ScriptState.h"
 #include "Settings.h"
 #include "ShadowRoot.h"
 #include "StylePropertySet.h"
@@ -94,16 +94,14 @@
 #include "StyleSheetList.h"
 #include "Text.h"
 #include "XPathResult.h"
-
 #include "htmlediting.h"
 #include "markup.h"
-
-#include <wtf/text/CString.h>
-#include <wtf/text/WTFString.h>
 #include <wtf/HashSet.h>
 #include <wtf/ListHashSet.h>
 #include <wtf/OwnPtr.h>
 #include <wtf/Vector.h>
+#include <wtf/text/CString.h>
+#include <wtf/text/WTFString.h>
 
 namespace WebCore {
 
@@ -181,7 +179,7 @@ public:
 private:
     InspectorDOMAgent* m_domAgent;
     Timer<RevalidateStyleAttributeTask> m_timer;
-    HashSet<RefPtr<Element> > m_elements;
+    HashSet<RefPtr<Element>> m_elements;
 };
 
 RevalidateStyleAttributeTask::RevalidateStyleAttributeTask(InspectorDOMAgent* domAgent)
@@ -201,7 +199,7 @@ void RevalidateStyleAttributeTask::onTimer(Timer<RevalidateStyleAttributeTask>*)
 {
     // The timer is stopped on m_domAgent destruction, so this method will never be called after m_domAgent has been destroyed.
     Vector<Element*> elements;
-    for (HashSet<RefPtr<Element> >::iterator it = m_elements.begin(), end = m_elements.end(); it != end; ++it)
+    for (HashSet<RefPtr<Element>>::iterator it = m_elements.begin(), end = m_elements.end(); it != end; ++it)
         elements.append(it->get());
     m_domAgent->styleAttributeInvalidated(elements);
 
@@ -279,7 +277,7 @@ void InspectorDOMAgent::restore()
 Vector<Document*> InspectorDOMAgent::documents()
 {
     Vector<Document*> result;
-    for (Frame* frame = m_document->frame(); frame; frame = frame->tree()->traverseNext()) {
+    for (Frame* frame = m_document->frame(); frame; frame = frame->tree().traverseNext()) {
         Document* document = frame->document();
         if (!document)
             continue;
@@ -381,7 +379,7 @@ Node* InspectorDOMAgent::assertNode(ErrorString* errorString, int nodeId)
     Node* node = nodeForId(nodeId);
     if (!node) {
         *errorString = "Could not find node with given id";
-        return 0;
+        return nullptr;
     }
     return node;
 }
@@ -390,11 +388,10 @@ Document* InspectorDOMAgent::assertDocument(ErrorString* errorString, int nodeId
 {
     Node* node = assertNode(errorString, nodeId);
     if (!node)
-        return 0;
-
-    if (!(node->isDocumentNode())) {
+        return nullptr;
+    if (!node->isDocumentNode()) {
         *errorString = "Document is not available";
-        return 0;
+        return nullptr;
     }
     return toDocument(node);
 }
@@ -403,11 +400,10 @@ Element* InspectorDOMAgent::assertElement(ErrorString* errorString, int nodeId)
 {
     Node* node = assertNode(errorString, nodeId);
     if (!node)
-        return 0;
-
-    if (node->nodeType() != Node::ELEMENT_NODE) {
+        return nullptr;
+    if (!node->isElementNode()) {
         *errorString = "Node is not an Element";
-        return 0;
+        return nullptr;
     }
     return toElement(node);
 }
@@ -416,13 +412,11 @@ Node* InspectorDOMAgent::assertEditableNode(ErrorString* errorString, int nodeId
 {
     Node* node = assertNode(errorString, nodeId);
     if (!node)
-        return 0;
-
+        return nullptr;
     if (node->isInShadowTree()) {
         *errorString = "Can not edit nodes from shadow trees";
-        return 0;
+        return nullptr;
     }
-
     return node;
 }
 
@@ -430,11 +424,10 @@ Element* InspectorDOMAgent::assertEditableElement(ErrorString* errorString, int 
 {
     Element* element = assertElement(errorString, nodeId);
     if (!element)
-        return 0;
-
+        return nullptr;
     if (element->isInShadowTree()) {
         *errorString = "Can not edit elements from shadow trees";
-        return 0;
+        return nullptr;
     }
     return element;
 }
@@ -449,9 +442,9 @@ void InspectorDOMAgent::getDocument(ErrorString* errorString, RefPtr<TypeBuilder
     }
 
     // Reset backend state.
-    RefPtr<Document> doc = m_document;
+    RefPtr<Document> document = m_document;
     reset();
-    m_document = doc;
+    m_document = document;
 
     root = buildObjectForNode(m_document.get(), 2, &m_documentNodeToIdMap);
 }
@@ -479,7 +472,7 @@ void InspectorDOMAgent::pushChildNodesToFrontend(int nodeId, int depth)
         return;
     }
 
-    RefPtr<TypeBuilder::Array<TypeBuilder::DOM::Node> > children = buildArrayForContainerChildren(node, depth, nodeMap);
+    RefPtr<TypeBuilder::Array<TypeBuilder::DOM::Node>> children = buildArrayForContainerChildren(node, depth, nodeMap);
     m_frontend->setChildNodes(nodeId, children.release());
 }
 
@@ -498,7 +491,7 @@ int InspectorDOMAgent::pushNodeToFrontend(ErrorString* errorString, int document
     Document* document = assertDocument(errorString, documentNodeId);
     if (!document)
         return 0;
-    if (nodeToPush->document() != document) {
+    if (&nodeToPush->document() != document) {
         *errorString = "Node is not part of the document with given id";
         return 0;
     }
@@ -541,9 +534,13 @@ void InspectorDOMAgent::querySelector(ErrorString* errorString, int nodeId, cons
     Node* node = assertNode(errorString, nodeId);
     if (!node)
         return;
+    if (!node->isContainerNode()) {
+        assertElement(errorString, nodeId);
+        return;
+    }
 
     ExceptionCode ec = 0;
-    RefPtr<Element> element = node->querySelector(selectors, ec);
+    RefPtr<Element> element = toContainerNode(node)->querySelector(selectors, ec);
     if (ec) {
         *errorString = "DOM Error while querying";
         return;
@@ -553,14 +550,18 @@ void InspectorDOMAgent::querySelector(ErrorString* errorString, int nodeId, cons
         *elementId = pushNodePathToFrontend(element.get());
 }
 
-void InspectorDOMAgent::querySelectorAll(ErrorString* errorString, int nodeId, const String& selectors, RefPtr<TypeBuilder::Array<int> >& result)
+void InspectorDOMAgent::querySelectorAll(ErrorString* errorString, int nodeId, const String& selectors, RefPtr<TypeBuilder::Array<int>>& result)
 {
     Node* node = assertNode(errorString, nodeId);
     if (!node)
         return;
+    if (!node->isContainerNode()) {
+        assertElement(errorString, nodeId);
+        return;
+    }
 
     ExceptionCode ec = 0;
-    RefPtr<NodeList> nodes = node->querySelectorAll(selectors, ec);
+    RefPtr<NodeList> nodes = toContainerNode(node)->querySelectorAll(selectors, ec);
     if (ec) {
         *errorString = "DOM Error while querying";
         return;
@@ -597,7 +598,7 @@ int InspectorDOMAgent::pushNodePathToFrontend(Node* nodeToPush)
             OwnPtr<NodeToIdMap> newMap = adoptPtr(new NodeToIdMap);
             danglingMap = newMap.get();
             m_danglingNodeToIdMaps.append(newMap.release());
-            RefPtr<TypeBuilder::Array<TypeBuilder::DOM::Node> > children = TypeBuilder::Array<TypeBuilder::DOM::Node>::create();
+            RefPtr<TypeBuilder::Array<TypeBuilder::DOM::Node>> children = TypeBuilder::Array<TypeBuilder::DOM::Node>::create();
             children->addItem(buildObjectForNode(node, 0, danglingMap));
             m_frontend->setChildNodes(0, children);
             break;
@@ -737,7 +738,7 @@ void InspectorDOMAgent::setNodeName(ErrorString* errorString, int nodeId, const 
         return;
 
     ExceptionCode ec = 0;
-    RefPtr<Element> newElem = oldNode->document()->createElement(tagName, ec);
+    RefPtr<Element> newElem = oldNode->document().createElement(tagName, ec);
     if (ec)
         return;
 
@@ -769,7 +770,7 @@ void InspectorDOMAgent::getOuterHTML(ErrorString* errorString, int nodeId, WTF::
     if (!node)
         return;
 
-    *outerHTML = createMarkup(node);
+    *outerHTML = createMarkup(*node);
 }
 
 void InspectorDOMAgent::setOuterHTML(ErrorString* errorString, int nodeId, const String& outerHTML)
@@ -784,18 +785,18 @@ void InspectorDOMAgent::setOuterHTML(ErrorString* errorString, int nodeId, const
     if (!node)
         return;
 
-    Document* document = node->document();
-    if (!document || (!document->isHTMLDocument() && !document->isXHTMLDocument()
+    Document& document = node->document();
+    if (!document.isHTMLDocument() && !document.isXHTMLDocument()
 #if ENABLE(SVG)
-        && !document->isSVGDocument()
+        && !document.isSVGDocument()
 #endif
-    )) {
+    ) {
         *errorString = "Not an HTML/XML document";
         return;
     }
 
     Node* newNode = 0;
-    if (!m_domEditor->setOuterHTML(node, outerHTML, &newNode, errorString))
+    if (!m_domEditor->setOuterHTML(*node, outerHTML, &newNode, errorString))
         return;
 
     if (!newNode) {
@@ -824,7 +825,7 @@ void InspectorDOMAgent::setNodeValue(ErrorString* errorString, int nodeId, const
     m_domEditor->replaceWholeText(toText(node), value, errorString);
 }
 
-void InspectorDOMAgent::getEventListenersForNode(ErrorString* errorString, int nodeId, const String* objectGroup, RefPtr<TypeBuilder::Array<TypeBuilder::DOM::EventListener> >& listenersArray)
+void InspectorDOMAgent::getEventListenersForNode(ErrorString* errorString, int nodeId, const String* objectGroup, RefPtr<TypeBuilder::Array<TypeBuilder::DOM::EventListener>>& listenersArray)
 {
     listenersArray = TypeBuilder::Array<TypeBuilder::DOM::EventListener>::create();
     Node* node = assertNode(errorString, nodeId);
@@ -986,8 +987,8 @@ void InspectorDOMAgent::performSearch(ErrorString*, const String& whitespaceTrim
                 if (ec)
                     break;
 
-                if (node->nodeType() == Node::ATTRIBUTE_NODE)
-                    node = static_cast<Attr*>(node)->ownerElement();
+                if (node->isAttributeNode())
+                    node = toAttr(node)->ownerElement();
                 resultCollector.add(node);
             }
         }
@@ -1007,7 +1008,7 @@ void InspectorDOMAgent::performSearch(ErrorString*, const String& whitespaceTrim
     }
 
     *searchId = IdentifiersFactory::createIdentifier();
-    SearchResults::iterator resultsIt = m_searchResults.add(*searchId, Vector<RefPtr<Node> >()).iterator;
+    SearchResults::iterator resultsIt = m_searchResults.add(*searchId, Vector<RefPtr<Node>>()).iterator;
 
     for (ListHashSet<Node*>::iterator it = resultCollector.begin(); it != resultCollector.end(); ++it)
         resultsIt->value.append(*it);
@@ -1015,7 +1016,7 @@ void InspectorDOMAgent::performSearch(ErrorString*, const String& whitespaceTrim
     *resultCount = resultsIt->value.size();
 }
 
-void InspectorDOMAgent::getSearchResults(ErrorString* errorString, const String& searchId, int fromIndex, int toIndex, RefPtr<TypeBuilder::Array<int> >& nodeIds)
+void InspectorDOMAgent::getSearchResults(ErrorString* errorString, const String& searchId, int fromIndex, int toIndex, RefPtr<TypeBuilder::Array<int>>& nodeIds)
 {
     SearchResults::iterator it = m_searchResults.find(searchId);
     if (it == m_searchResults.end()) {
@@ -1086,14 +1087,11 @@ void InspectorDOMAgent::focusNode()
     RefPtr<Node> node = m_nodeToFocus.get();
     m_nodeToFocus = 0;
 
-    Document* document = node->document();
-    if (!document)
-        return;
-    Frame* frame = document->frame();
+    Frame* frame = node->document().frame();
     if (!frame)
         return;
 
-    InjectedScript injectedScript = m_injectedScriptManager->injectedScriptFor(mainWorldScriptState(frame));
+    InjectedScript injectedScript = m_injectedScriptManager->injectedScriptFor(mainWorldExecState(frame));
     if (injectedScript.hasNoValue())
         return;
 
@@ -1123,6 +1121,8 @@ void InspectorDOMAgent::setSearchingForNode(ErrorString* errorString, bool enabl
             return;
     } else
         hideHighlight(errorString);
+
+    m_overlay->didSetSearchingForNode(m_searchingForNode);
 }
 
 PassOwnPtr<HighlightConfig> InspectorDOMAgent::highlightConfigFromInspectorObject(ErrorString* errorString, InspectorObject* highlightInspectorObject)
@@ -1323,7 +1323,7 @@ void InspectorDOMAgent::resolveNode(ErrorString* errorString, int nodeId, const 
     result = object;
 }
 
-void InspectorDOMAgent::getAttributes(ErrorString* errorString, int nodeId, RefPtr<TypeBuilder::Array<String> >& result)
+void InspectorDOMAgent::getAttributes(ErrorString* errorString, int nodeId, RefPtr<TypeBuilder::Array<String>>& result)
 {
     Element* element = assertElement(errorString, nodeId);
     if (!element)
@@ -1394,7 +1394,7 @@ PassRefPtr<TypeBuilder::DOM::Node> InspectorDOMAgent::buildObjectForNode(Node* n
     if (node->isContainerNode()) {
         int nodeCount = innerChildNodeCount(node);
         value->setChildNodeCount(nodeCount);
-        RefPtr<TypeBuilder::Array<TypeBuilder::DOM::Node> > children = buildArrayForContainerChildren(node, depth, nodesMap);
+        RefPtr<TypeBuilder::Array<TypeBuilder::DOM::Node>> children = buildArrayForContainerChildren(node, depth, nodesMap);
         if (children->length() > 0)
             value->setChildren(children.release());
     }
@@ -1413,7 +1413,7 @@ PassRefPtr<TypeBuilder::DOM::Node> InspectorDOMAgent::buildObjectForNode(Node* n
         }
 
         if (ShadowRoot* root = element->shadowRoot()) {
-            RefPtr<TypeBuilder::Array<TypeBuilder::DOM::Node> > shadowRoots = TypeBuilder::Array<TypeBuilder::DOM::Node>::create();
+            RefPtr<TypeBuilder::Array<TypeBuilder::DOM::Node>> shadowRoots = TypeBuilder::Array<TypeBuilder::DOM::Node>::create();
             shadowRoots->addItem(buildObjectForNode(root, 0, nodesMap));
             value->setShadowRoots(shadowRoots);
         }
@@ -1429,21 +1429,21 @@ PassRefPtr<TypeBuilder::DOM::Node> InspectorDOMAgent::buildObjectForNode(Node* n
         value->setBaseURL(documentBaseURLString(document));
         value->setXmlVersion(document->xmlVersion());
     } else if (node->nodeType() == Node::DOCUMENT_TYPE_NODE) {
-        DocumentType* docType = static_cast<DocumentType*>(node);
+        DocumentType* docType = toDocumentType(node);
         value->setPublicId(docType->publicId());
         value->setSystemId(docType->systemId());
         value->setInternalSubset(docType->internalSubset());
     } else if (node->isAttributeNode()) {
-        Attr* attribute = static_cast<Attr*>(node);
+        Attr* attribute = toAttr(node);
         value->setName(attribute->name());
         value->setValue(attribute->value());
     }
     return value.release();
 }
 
-PassRefPtr<TypeBuilder::Array<String> > InspectorDOMAgent::buildArrayForElementAttributes(Element* element)
+PassRefPtr<TypeBuilder::Array<String>> InspectorDOMAgent::buildArrayForElementAttributes(Element* element)
 {
-    RefPtr<TypeBuilder::Array<String> > attributesValue = TypeBuilder::Array<String>::create();
+    RefPtr<TypeBuilder::Array<String>> attributesValue = TypeBuilder::Array<String>::create();
     // Go through all attributes and serialize them.
     if (!element->hasAttributes())
         return attributesValue.release();
@@ -1457,9 +1457,9 @@ PassRefPtr<TypeBuilder::Array<String> > InspectorDOMAgent::buildArrayForElementA
     return attributesValue.release();
 }
 
-PassRefPtr<TypeBuilder::Array<TypeBuilder::DOM::Node> > InspectorDOMAgent::buildArrayForContainerChildren(Node* container, int depth, NodeToIdMap* nodesMap)
+PassRefPtr<TypeBuilder::Array<TypeBuilder::DOM::Node>> InspectorDOMAgent::buildArrayForContainerChildren(Node* container, int depth, NodeToIdMap* nodesMap)
 {
-    RefPtr<TypeBuilder::Array<TypeBuilder::DOM::Node> > children = TypeBuilder::Array<TypeBuilder::DOM::Node>::create();
+    RefPtr<TypeBuilder::Array<TypeBuilder::DOM::Node>> children = TypeBuilder::Array<TypeBuilder::DOM::Node>::create();
     if (depth == 0) {
         // Special-case the only text child - pretend that container's children have been requested.
         Node* firstChild = container->firstChild();
@@ -1484,37 +1484,47 @@ PassRefPtr<TypeBuilder::Array<TypeBuilder::DOM::Node> > InspectorDOMAgent::build
 PassRefPtr<TypeBuilder::DOM::EventListener> InspectorDOMAgent::buildObjectForEventListener(const RegisteredEventListener& registeredEventListener, const AtomicString& eventType, Node* node, const String* objectGroupId)
 {
     RefPtr<EventListener> eventListener = registeredEventListener.listener;
-    Document* document = node->document();
-    RefPtr<TypeBuilder::DOM::EventListener> value = TypeBuilder::DOM::EventListener::create()
-        .setType(eventType)
-        .setUseCapture(registeredEventListener.useCapture)
-        .setIsAttribute(eventListener->isAttribute())
-        .setNodeId(pushNodePathToFrontend(node))
-        .setHandlerBody(eventListenerHandlerBody(document, eventListener.get()));
-    if (objectGroupId) {
-        ScriptValue functionValue = eventListenerHandler(document, eventListener.get());
-        if (!functionValue.hasNoValue()) {
-            Frame* frame = document->frame();
-            if (frame) {
-                ScriptState* scriptState = eventListenerHandlerScriptState(frame, eventListener.get());
-                if (scriptState) {
-                    InjectedScript injectedScript = m_injectedScriptManager->injectedScriptFor(scriptState);
-                    if (!injectedScript.hasNoValue()) {
-                        RefPtr<TypeBuilder::Runtime::RemoteObject> valueJson = injectedScript.wrapObject(functionValue, *objectGroupId);
-                        value->setHandler(valueJson);
+
+    JSC::ExecState* state = nullptr;
+    JSC::JSObject* handler = nullptr;
+    String body;
+    int lineNumber = 0;
+    String scriptId;
+    String sourceName;
+    if (auto scriptListener = JSEventListener::cast(eventListener.get())) {
+        JSC::JSLockHolder lock(scriptListener->isolatedWorld().vm());
+        state = execStateFromNode(scriptListener->isolatedWorld(), &node->document());
+        handler = scriptListener->jsFunction(&node->document());
+        if (handler) {
+            body = handler->toString(state)->value(state);
+            if (auto function = JSC::jsDynamicCast<JSC::JSFunction*>(handler)) {
+                if (!function->isHostFunction()) {
+                    if (auto executable = function->jsExecutable()) {
+                        lineNumber = executable->lineNo() - 1;
+                        scriptId = executable->sourceID() == JSC::SourceProvider::nullID ? emptyString() : String::number(executable->sourceID());
+                        sourceName = executable->sourceURL();
                     }
                 }
             }
         }
     }
-    String sourceName;
-    String scriptId;
-    int lineNumber;
-    if (eventListenerHandlerLocation(node->document(), eventListener.get(), sourceName, scriptId, lineNumber)) {
+
+    RefPtr<TypeBuilder::DOM::EventListener> value = TypeBuilder::DOM::EventListener::create()
+        .setType(eventType)
+        .setUseCapture(registeredEventListener.useCapture)
+        .setIsAttribute(eventListener->isAttribute())
+        .setNodeId(pushNodePathToFrontend(node))
+        .setHandlerBody(body);
+    if (objectGroupId && handler && state) {
+        InjectedScript injectedScript = m_injectedScriptManager->injectedScriptFor(state);
+        if (!injectedScript.hasNoValue())
+            value->setHandler(injectedScript.wrapObject(ScriptValue(state->vm(), handler), *objectGroupId));
+    }
+    if (!scriptId.isNull()) {
         RefPtr<TypeBuilder::Debugger::Location> location = TypeBuilder::Debugger::Location::create()
             .setScriptId(scriptId)
             .setLineNumber(lineNumber);
-        value->setLocation(location);
+        value->setLocation(location.release());
         if (!sourceName.isEmpty())
             value->setSourceName(sourceName);
     }
@@ -1579,7 +1589,7 @@ void InspectorDOMAgent::mainFrameDOMContentLoaded()
         m_frontend->documentUpdated();
 }
 
-void InspectorDOMAgent::loadEventFired(Document* document)
+void InspectorDOMAgent::didCommitLoad(Document* document)
 {
     Element* frameOwner = document->ownerElement();
     if (!frameOwner)
@@ -1689,7 +1699,7 @@ void InspectorDOMAgent::didRemoveDOMAttr(Element* element, const AtomicString& n
 
 void InspectorDOMAgent::styleAttributeInvalidated(const Vector<Element*>& elements)
 {
-    RefPtr<TypeBuilder::Array<int> > nodeIds = TypeBuilder::Array<int>::create();
+    RefPtr<TypeBuilder::Array<int>> nodeIds = TypeBuilder::Array<int>::create();
     for (unsigned i = 0, size = elements.size(); i < size; ++i) {
         Element* element = elements.at(i);
         int id = boundNodeId(element);
@@ -1750,11 +1760,11 @@ void InspectorDOMAgent::frameDocumentUpdated(Frame* frame)
 
     Page* page = frame->page();
     ASSERT(page);
-    if (frame != page->mainFrame())
+    if (frame != &page->mainFrame())
         return;
 
     // Only update the main frame document, nested frame document updates are not required
-    // (will be handled by loadEventFired()).
+    // (will be handled by didCommitLoad()).
     setDocument(document);
 }
 
@@ -1816,12 +1826,11 @@ void InspectorDOMAgent::pushNodeByBackendIdToFrontend(ErrorString* errorString, 
 
 PassRefPtr<TypeBuilder::Runtime::RemoteObject> InspectorDOMAgent::resolveNode(Node* node, const String& objectGroup)
 {
-    Document* document = node->document();
-    Frame* frame = document ? document->frame() : 0;
+    Frame* frame = node->document().frame();
     if (!frame)
         return 0;
 
-    InjectedScript injectedScript = m_injectedScriptManager->injectedScriptFor(mainWorldScriptState(frame));
+    InjectedScript injectedScript = m_injectedScriptManager->injectedScriptFor(mainWorldExecState(frame));
     if (injectedScript.hasNoValue())
         return 0;
 

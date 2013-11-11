@@ -32,20 +32,17 @@
 #if HAVE(MEDIA_ACCESSIBILITY_FRAMEWORK)
 #include "CoreText/CoreText.h"
 #endif
-#include "DOMWrapperWorld.h"
 #include "FloatConversion.h"
 #include "HTMLMediaElement.h"
-#include "KURL.h"
+#include "URL.h"
 #include "Language.h"
 #include "LocalizedStrings.h"
 #include "Logging.h"
 #include "MediaControlElements.h"
-#include "PageGroup.h"
 #include "SoftLinking.h"
 #include "TextTrackCue.h"
 #include "TextTrackList.h"
 #include "UserStyleSheetTypes.h"
-#include <wtf/NonCopyingSort.h>
 #include <wtf/RetainPtr.h>
 #include <wtf/text/StringBuilder.h>
 
@@ -54,7 +51,7 @@
 #endif
 
 #if HAVE(MEDIA_ACCESSIBILITY_FRAMEWORK)
-#include "MediaAccessibility/MediaAccessibility.h"
+#include <MediaAccessibility/MediaAccessibility.h>
 #endif
 
 #if HAVE(MEDIA_ACCESSIBILITY_FRAMEWORK)
@@ -65,7 +62,13 @@
 #define SOFT_LINK_AVF_POINTER(Lib, Name, Type) SOFT_LINK_POINTER_OPTIONAL(Lib, Name, Type)
 #define SOFT_LINK_AVF_FRAMEWORK_IMPORT(Lib, Fun, ReturnType, Arguments, Signature) SOFT_LINK(Lib, Fun, ReturnType, Arguments, Signature)
 #else
+
+#ifdef DEBUG_ALL
+#define SOFT_LINK_AVF_FRAMEWORK(Lib) SOFT_LINK_DEBUG_LIBRARY(Lib)
+#else
 #define SOFT_LINK_AVF_FRAMEWORK(Lib) SOFT_LINK_LIBRARY(Lib)
+#endif
+
 #define SOFT_LINK_AVF(Lib, Name, Type) SOFT_LINK_DLL_IMPORT(Lib, Name, Type)
 #define SOFT_LINK_AVF_POINTER(Lib, Name, Type) SOFT_LINK_VARIABLE_DLL_IMPORT_OPTIONAL(Lib, Name, Type)
 #define SOFT_LINK_AVF_FRAMEWORK_IMPORT(Lib, Fun, ReturnType, Arguments, Signature) SOFT_LINK_DLL_IMPORT(Lib, Fun, ReturnType, __cdecl, Arguments, Signature)
@@ -136,7 +139,7 @@ static void userCaptionPreferencesChangedNotificationCallback(CFNotificationCent
 }
 #endif
 
-CaptionUserPreferencesMediaAF::CaptionUserPreferencesMediaAF(PageGroup* group)
+CaptionUserPreferencesMediaAF::CaptionUserPreferencesMediaAF(PageGroup& group)
     : CaptionUserPreferences(group)
 #if HAVE(MEDIA_ACCESSIBILITY_FRAMEWORK)
     , m_listeningForPreferenceChanges(false)
@@ -758,11 +761,11 @@ static bool textTrackCompare(const RefPtr<TextTrack>& a, const RefPtr<TextTrack>
     return codePointCompare(trackDisplayName(a.get()), trackDisplayName(b.get())) < 0;
 }
 
-Vector<RefPtr<TextTrack> > CaptionUserPreferencesMediaAF::sortedTrackListForMenu(TextTrackList* trackList)
+Vector<RefPtr<TextTrack>> CaptionUserPreferencesMediaAF::sortedTrackListForMenu(TextTrackList* trackList)
 {
     ASSERT(trackList);
 
-    Vector<RefPtr<TextTrack> > tracksForMenu;
+    Vector<RefPtr<TextTrack>> tracksForMenu;
     HashSet<String> languagesIncluded;
     bool prefersAccessibilityTracks = userPrefersCaptions();
     bool filterTrackList = shouldFilterTrackMenu();
@@ -839,7 +842,7 @@ Vector<RefPtr<TextTrack> > CaptionUserPreferencesMediaAF::sortedTrackListForMenu
         }
     }
 
-    nonCopyingSort(tracksForMenu.begin(), tracksForMenu.end(), textTrackCompare);
+    std::sort(tracksForMenu.begin(), tracksForMenu.end(), textTrackCompare);
 
     tracksForMenu.insert(0, TextTrack::captionMenuOffItem());
     tracksForMenu.insert(1, TextTrack::captionMenuAutomaticItem());

@@ -23,18 +23,18 @@
 
 #if ENABLE(SVG)
 #include "SVGAnimatedNumber.h"
-#include "SVGStyledElement.h"
+#include "SVGElement.h"
 
 namespace WebCore {
 
-class SVGStopElement FINAL : public SVGStyledElement {
+class SVGStopElement FINAL : public SVGElement {
 public:
-    static PassRefPtr<SVGStopElement> create(const QualifiedName&, Document*);
+    static PassRefPtr<SVGStopElement> create(const QualifiedName&, Document&);
 
     Color stopColorIncludingOpacity() const;
 
 private:
-    SVGStopElement(const QualifiedName&, Document*);
+    SVGStopElement(const QualifiedName&, Document&);
 
     bool isSupportedAttribute(const QualifiedName&);
     virtual void parseAttribute(const QualifiedName&, const AtomicString&) OVERRIDE;
@@ -42,7 +42,7 @@ private:
 
     virtual bool isGradientStop() const OVERRIDE { return true; }
 
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
     virtual bool rendererIsNeeded(const RenderStyle&) OVERRIDE;
 
     BEGIN_DECLARE_ANIMATED_PROPERTIES(SVGStopElement)
@@ -50,11 +50,7 @@ private:
     END_DECLARE_ANIMATED_PROPERTIES
 };
 
-inline SVGStopElement* toSVGStopElement(SVGElement* element)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!element || element->isGradientStop());
-    return static_cast<SVGStopElement*>(element);
-}
+NODE_TYPE_CASTS(SVGStopElement)
 
 } // namespace WebCore
 

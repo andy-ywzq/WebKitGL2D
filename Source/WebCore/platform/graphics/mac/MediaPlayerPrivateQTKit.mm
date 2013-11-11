@@ -35,7 +35,7 @@
 #import "FrameView.h"
 #import "HostWindow.h"
 #import "GraphicsContext.h"
-#import "KURL.h"
+#import "URL.h"
 #import "Logging.h"
 #import "MIMETypeRegistry.h"
 #import "SecurityOrigin.h"
@@ -52,8 +52,8 @@
 #if DRAW_FRAME_RATE
 #import "Font.h"
 #import "Document.h"
-#import "RenderObject.h"
 #import "RenderStyle.h"
+#import "RenderView.h"
 #endif
 
 SOFT_LINK_FRAMEWORK(QTKit)
@@ -189,11 +189,7 @@ PassOwnPtr<MediaPlayerPrivateInterface> MediaPlayerPrivateQTKit::create(MediaPla
 void MediaPlayerPrivateQTKit::registerMediaEngine(MediaEngineRegistrar registrar)
 {
     if (isAvailable())
-#if ENABLE(ENCRYPTED_MEDIA) || ENABLE(ENCRYPTED_MEDIA_V2)
-        registrar(create, getSupportedTypes, extendedSupportsType, getSitesInMediaCache, clearMediaCache, clearMediaCacheForSite);
-#else
         registrar(create, getSupportedTypes, supportsType, getSitesInMediaCache, clearMediaCache, clearMediaCacheForSite);
-#endif
 }
 
 MediaPlayerPrivateQTKit::MediaPlayerPrivateQTKit(MediaPlayer* player)
@@ -265,7 +261,7 @@ NSMutableDictionary *MediaPlayerPrivateQTKit::commonMovieAttributes()
 
 void MediaPlayerPrivateQTKit::createQTMovie(const String& url)
 {
-    KURL kURL(ParsedURLString, url);
+    URL kURL(ParsedURLString, url);
     NSURL *cocoaURL = kURL;
     NSMutableDictionary *movieAttributes = commonMovieAttributes();    
     [movieAttributes setValue:cocoaURL forKey:QTMovieURLAttribute];
@@ -1352,10 +1348,10 @@ void MediaPlayerPrivateQTKit::paint(GraphicsContext* context, const IntRect& r)
 #if DRAW_FRAME_RATE
     // Draw the frame rate only after having played more than 10 frames.
     if (m_frameCountWhilePlaying > 10) {
-        Frame* frame = m_player->frameView() ? &m_player->frameView()->frame() : NULL;
-        Document* document = frame ? frame->document() : NULL;
-        RenderObject* renderer = document ? document->renderer() : NULL;
-        RenderStyle* styleToUse = renderer ? renderer->style() : NULL;
+        Frame* frame = m_player->frameView() ? &m_player->frameView()->frame() : nullptr;
+        Document* document = frame ? frame->document() : nullptr;
+        auto renderer = document ? document->renderView() : nullptr;
+        RenderStyle* styleToUse = renderer ? renderer->style() : nullptr;
         if (styleToUse) {
             double frameRate = (m_frameCountWhilePlaying - 1) / ( m_startedPlaying ? ([NSDate timeIntervalSinceReferenceDate] - m_timeStartedPlaying) :
                 (m_timeStoppedPlaying - m_timeStartedPlaying) );
@@ -1462,33 +1458,28 @@ void MediaPlayerPrivateQTKit::getSupportedTypes(HashSet<String>& supportedTypes)
     concatenateHashSets(supportedTypes, mimeCommonTypesCache());
 }
 
-MediaPlayer::SupportsType MediaPlayerPrivateQTKit::supportsType(const String& type, const String& codecs, const KURL&)
+MediaPlayer::SupportsType MediaPlayerPrivateQTKit::supportsType(const MediaEngineSupportParameters& parameters)
 {
+#if ENABLE(ENCRYPTED_MEDIA)
+    // QTKit does not support any encrytped media, so return IsNotSupported if the keySystem is non-NULL:
+    if (!parameters.keySystem.isNull() && !parameters.keySystem.isEmpty())
+        return MediaPlayer::IsNotSupported;
+#endif
+
     // Only return "IsSupported" if there is no codecs parameter for now as there is no way to ask QT if it supports an
     // extended MIME type yet.
 
     // Due to <rdar://problem/10777059>, avoid calling the mime types cache functions if at
     // all possible:
-    if (shouldRejectMIMEType(type))
+    if (shouldRejectMIMEType(parameters.type))
         return MediaPlayer::IsNotSupported;
 
     // We check the "modern" type cache first, as it doesn't require QTKitServer to start.
-    if (mimeModernTypesCache().contains(type) || mimeCommonTypesCache().contains(type))
-        return codecs.isEmpty() ? MediaPlayer::MayBeSupported : MediaPlayer::IsSupported;
+    if (mimeModernTypesCache().contains(parameters.type) || mimeCommonTypesCache().contains(parameters.type))
+        return parameters.codecs.isEmpty() ? MediaPlayer::MayBeSupported : MediaPlayer::IsSupported;
 
     return MediaPlayer::IsNotSupported;
 }
-
-#if ENABLE(ENCRYPTED_MEDIA) || ENABLE(ENCRYPTED_MEDIA_V2)
-MediaPlayer::SupportsType MediaPlayerPrivateQTKit::extendedSupportsType(const String& type, const String& codecs, const String& keySystem, const KURL& url)
-{
-    // QTKit does not support any encrytped media, so return IsNotSupported if the keySystem is non-NULL:
-    if (!keySystem.isNull() || !keySystem.isEmpty())
-        return MediaPlayer::IsNotSupported;
-
-    return supportsType(type, codecs, url);;
-}
-#endif
 
 bool MediaPlayerPrivateQTKit::isAvailable()
 {
@@ -1631,7 +1622,7 @@ bool MediaPlayerPrivateQTKit::hasSingleSecurityOrigin() const
     if (!m_qtMovie)
         return false;
 
-    RefPtr<SecurityOrigin> resolvedOrigin = SecurityOrigin::create(KURL(wkQTMovieResolvedURL(m_qtMovie.get())));
+    RefPtr<SecurityOrigin> resolvedOrigin = SecurityOrigin::create(URL(wkQTMovieResolvedURL(m_qtMovie.get())));
     RefPtr<SecurityOrigin> requestedOrigin = SecurityOrigin::createFromString(m_movieURL);
     return resolvedOrigin->isSameSchemeHostPort(requestedOrigin.get());
 }

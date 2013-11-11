@@ -38,6 +38,7 @@
 #import "WKAPICast.h"
 #import "WKStringCF.h"
 #import "WKViewInternal.h"
+#import "WKViewPrivate.h"
 #import "StringUtilities.h"
 #import "WebColorPickerMac.h"
 #import "WebContextMenuProxyMac.h"
@@ -47,13 +48,11 @@
 #import <WebCore/BitmapImage.h>
 #import <WebCore/Cursor.h>
 #import <WebCore/FloatRect.h>
-#import <WebCore/FoundationExtras.h>
 #import <WebCore/GraphicsContext.h>
 #import <WebCore/Image.h>
 #import <WebCore/KeyboardEvent.h>
 #import <WebCore/NotImplemented.h>
 #import <WebCore/SharedBuffer.h>
-#import <wtf/PassOwnPtr.h>
 #import <wtf/text/CString.h>
 #import <wtf/text/WTFString.h>
 #import <WebKitSystemInterface.h>
@@ -121,11 +120,6 @@ using namespace WebKit;
 
 namespace WebKit {
 
-PassOwnPtr<PageClientImpl> PageClientImpl::create(WKView* wkView)
-{
-    return adoptPtr(new PageClientImpl(wkView));
-}
-
 PageClientImpl::PageClientImpl(WKView* wkView)
     : m_wkView(wkView)
     , m_undoTarget(adoptNS([[WKEditorUndoTargetObjC alloc] init]))
@@ -139,7 +133,7 @@ PageClientImpl::~PageClientImpl()
 {
 }
 
-PassOwnPtr<DrawingAreaProxy> PageClientImpl::createDrawingAreaProxy()
+std::unique_ptr<DrawingAreaProxy> PageClientImpl::createDrawingAreaProxy()
 {
     return [m_wkView _createDrawingAreaProxy];
 }
@@ -208,10 +202,17 @@ bool PageClientImpl::isViewVisible()
     if ([m_wkView isHiddenOrHasHiddenAncestor])
         return false;
 
-    if ([m_wkView _isWindowOccluded])
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
+    if ([m_wkView windowOcclusionDetectionEnabled] && ([[m_wkView window] occlusionState] & NSWindowOcclusionStateVisible) != NSWindowOcclusionStateVisible)
         return false;
+#endif
 
     return true;
+}
+
+bool PageClientImpl::isWindowVisible()
+{
+    return [[m_wkView window] isVisible];
 }
 
 bool PageClientImpl::isViewInWindow()
@@ -359,7 +360,10 @@ FloatRect PageClientImpl::convertToUserSpace(const FloatRect& rect)
    
 IntPoint PageClientImpl::screenToWindow(const IntPoint& point)
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     NSPoint windowCoord = [[m_wkView window] convertScreenToBase:point];
+#pragma clang diagnostic pop
     return IntPoint([m_wkView convertPoint:windowCoord fromView:nil]);
 }
     
@@ -367,16 +371,12 @@ IntRect PageClientImpl::windowToScreen(const IntRect& rect)
 {
     NSRect tempRect = rect;
     tempRect = [m_wkView convertRect:tempRect toView:nil];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     tempRect.origin = [[m_wkView window] convertBaseToScreen:tempRect.origin];
+#pragma clang diagnostic pop
     return enclosingIntRect(tempRect);
 }
-
-#if ENABLE(GESTURE_EVENTS)
-void PageClientImpl::doneWithGestureEvent(const WebGestureEvent&, bool wasEventHandled)
-{
-    notImplemented();
-}
-#endif
 
 void PageClientImpl::doneWithKeyEvent(const NativeWebKeyboardEvent& event, bool eventWasHandled)
 {

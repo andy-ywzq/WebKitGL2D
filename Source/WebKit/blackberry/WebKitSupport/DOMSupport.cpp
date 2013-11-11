@@ -149,7 +149,7 @@ bool isElementTypePlugin(const Element* element)
     if (!element)
         return false;
 
-    if (element->hasTagName(HTMLNames::objectTag)
+    if (isHTMLObjectElement(element)
         || element->hasTagName(HTMLNames::embedTag)
         || element->hasTagName(HTMLNames::appletTag))
         return true;
@@ -459,9 +459,8 @@ IntPoint convertPointToFrame(const Frame* sourceFrame, const Frame* targetFrame,
         return point;
 
     ASSERT(sourceFrame->view() && targetFrame->view());
-    ASSERT(targetFrame->tree());
 
-    Frame* targetFrameParent = targetFrame->tree()->parent();
+    Frame* targetFrameParent = targetFrame->tree().parent();
     IntRect targetFrameRect = targetFrame->view()->frameRect();
     IntPoint targetPoint = point;
 
@@ -569,8 +568,8 @@ VisibleSelection visibleSelectionForFocusedBlock(Element* element)
 Frame* incrementFrame(Frame* curr, bool forward, bool wrapFlag)
 {
     return forward
-        ? curr->tree()->traverseNextWithWrap(wrapFlag)
-        : curr->tree()->traversePreviousWithWrap(wrapFlag);
+        ? curr->tree().traverseNextWithWrap(wrapFlag)
+        : curr->tree().traversePreviousWithWrap(wrapFlag);
 }
 
 PassRefPtr<Range> trimWhitespaceFromRange(PassRefPtr<Range> range)

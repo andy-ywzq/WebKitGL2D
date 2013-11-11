@@ -38,7 +38,7 @@
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
 #endif
-#include <wtf/FastAllocBase.h>
+#include <wtf/OwnPtr.h>
 
 // CAIRO_FORMAT_RGB24 used to render the video buffers is little/big endian dependant.
 #ifdef GST_API_VERSION_1
@@ -117,9 +117,9 @@ static void webkit_video_sink_init(WebKitVideoSink* sink)
 {
     sink->priv = G_TYPE_INSTANCE_GET_PRIVATE(sink, WEBKIT_TYPE_VIDEO_SINK, WebKitVideoSinkPrivate);
 #if GLIB_CHECK_VERSION(2, 31, 0)
-    sink->priv->dataCondition = WTF::fastNew<GCond>();
+    sink->priv->dataCondition = new GCond;
     g_cond_init(sink->priv->dataCondition);
-    sink->priv->bufferMutex = WTF::fastNew<GMutex>();
+    sink->priv->bufferMutex = new GMutex;
     g_mutex_init(sink->priv->bufferMutex);
 #else
     sink->priv->dataCondition = g_cond_new();
@@ -188,7 +188,12 @@ static GstFlowReturn webkitVideoSinkRender(GstBaseSink* baseSink, GstBuffer* buf
 
     GRefPtr<GstCaps> caps = GST_BUFFER_CAPS(buffer);
 #else
-    GRefPtr<GstCaps> caps = adoptGRef(gst_video_info_to_caps(&priv->info));
+    GRefPtr<GstCaps> caps;
+    // The video info structure is valid only if the sink handled an allocation query.
+    if (GST_VIDEO_INFO_FORMAT(&priv->info) != GST_VIDEO_FORMAT_UNKNOWN)
+        caps = adoptGRef(gst_video_info_to_caps(&priv->info));
+    else
+        caps = priv->currentCaps;
 #endif
 
     GstVideoFormat format;
@@ -265,6 +270,7 @@ static GstFlowReturn webkitVideoSinkRender(GstBaseSink* baseSink, GstBuffer* buf
     // See: https://bugzilla.gnome.org/show_bug.cgi?id=610830.
     priv->timeoutId = g_timeout_add_full(G_PRIORITY_DEFAULT, 0, webkitVideoSinkTimeoutCallback,
                                           gst_object_ref(sink), reinterpret_cast<GDestroyNotify>(gst_object_unref));
+    g_source_set_name_by_id(priv->timeoutId, "[WebKit] webkitVideoSinkTimeoutCallback");
 
     g_cond_wait(priv->dataCondition, priv->bufferMutex);
     g_mutex_unlock(priv->bufferMutex);
@@ -279,7 +285,7 @@ static void webkitVideoSinkDispose(GObject* object)
     if (priv->dataCondition) {
 #if GLIB_CHECK_VERSION(2, 31, 0)
         g_cond_clear(priv->dataCondition);
-        WTF::fastDelete(priv->dataCondition);
+        delete priv->dataCondition;
 #else
         g_cond_free(priv->dataCondition);
 #endif
@@ -289,7 +295,7 @@ static void webkitVideoSinkDispose(GObject* object)
     if (priv->bufferMutex) {
 #if GLIB_CHECK_VERSION(2, 31, 0)
         g_mutex_clear(priv->bufferMutex);
-        WTF::fastDelete(priv->bufferMutex);
+        delete priv->bufferMutex;
 #else
         g_mutex_free(priv->bufferMutex);
 #endif

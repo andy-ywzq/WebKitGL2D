@@ -28,7 +28,6 @@
 
 #include "NetworkLoaderClient.h"
 #include "ShareableResource.h"
-#include <wtf/PassOwnPtr.h>
 
 #if ENABLE(NETWORK_PROCESS)
 
@@ -36,16 +35,13 @@ namespace WebKit {
 
 class AsynchronousNetworkLoaderClient : public NetworkLoaderClient {
 public:
-    static PassOwnPtr<NetworkLoaderClient> create()
-    {
-        return adoptPtr(new AsynchronousNetworkLoaderClient());
-    }
-
-private:
     AsynchronousNetworkLoaderClient();
 
+private:
     virtual void willSendRequest(NetworkResourceLoader*, WebCore::ResourceRequest& newRequest, const WebCore::ResourceResponse& redirectResponse) OVERRIDE;
+#if USE(PROTECTION_SPACE_AUTH_CALLBACK)
     virtual void canAuthenticateAgainstProtectionSpace(NetworkResourceLoader*, const WebCore::ProtectionSpace&) OVERRIDE;
+#endif
     virtual void didReceiveResponse(NetworkResourceLoader*, const WebCore::ResourceResponse&) OVERRIDE;
     virtual void didReceiveBuffer(NetworkResourceLoader*, WebCore::SharedBuffer*, int encodedDataLength) OVERRIDE;
     virtual void didSendData(NetworkResourceLoader*, unsigned long long bytesSent, unsigned long long totalBytesToBeSent) OVERRIDE;

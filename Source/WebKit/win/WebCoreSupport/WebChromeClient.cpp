@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007, 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2006, 2007, 2008, 2013 Apple Inc. All rights reserved.
  * Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,6 +49,7 @@
 #include <WebCore/FrameView.h>
 #include <WebCore/FullScreenController.h>
 #include <WebCore/HTMLNames.h>
+#include <WebCore/HTMLVideoElement.h>
 #include <WebCore/Icon.h>
 #include <WebCore/LocalWindowsContext.h>
 #include <WebCore/LocalizedStrings.h>
@@ -193,14 +194,18 @@ static COMPtr<IPropertyBag> createWindowFeaturesPropertyBag(const WindowFeatures
     return COMPtr<IPropertyBag>(AdoptCOM, COMPropertyBag<COMVariant>::adopt(map));
 }
 
-Page* WebChromeClient::createWindow(Frame*, const FrameLoadRequest&, const WindowFeatures& features, const NavigationAction&)
+Page* WebChromeClient::createWindow(Frame* frame, const FrameLoadRequest&, const WindowFeatures& features, const NavigationAction& navigationAction)
 {
     COMPtr<IWebUIDelegate> delegate = uiDelegate();
     if (!delegate)
         return 0;
 
-    // Just create a blank request because createWindow() is only required to create window but not to load URL.
-    COMPtr<IWebMutableURLRequest> request(AdoptCOM, WebMutableURLRequest::createInstance());
+#if ENABLE(FULLSCREEN_API)
+    if (frame->document() && frame->document()->webkitCurrentFullScreenElement())
+        frame->document()->webkitCancelFullScreen();
+#endif
+
+    COMPtr<WebMutableURLRequest> request = adoptCOM(WebMutableURLRequest::createInstance(ResourceRequest(navigationAction.url())));
 
     COMPtr<IWebUIDelegatePrivate2> delegatePrivate(Query, delegate);
     if (delegatePrivate) {
@@ -670,11 +675,15 @@ void WebChromeClient::runOpenPanel(Frame*, PassRefPtr<FileChooser> prpFileChoose
     ofn.hwndOwner = viewWindow;
     String allFiles = allFilesText();
     allFiles.append(L"\0*.*\0\0", 6);
-    ofn.lpstrFilter = allFiles.charactersWithNullTermination().data();
+
+    Vector<UChar> filterCharacters = allFiles.charactersWithNullTermination(); // Retain buffer long enough to make the GetOpenFileName call
+    ofn.lpstrFilter = filterCharacters.data();
+
     ofn.lpstrFile = fileBuf.data();
     ofn.nMaxFile = fileBuf.size();
     String dialogTitle = uploadFileText();
-    ofn.lpstrTitle = dialogTitle.charactersWithNullTermination().data();
+    Vector<UChar> dialogTitleCharacters = dialogTitle.charactersWithNullTermination(); // Retain buffer long enough to make the GetOpenFileName call
+    ofn.lpstrTitle = dialogTitleCharacters.data();
     ofn.Flags = OFN_ENABLESIZING | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_EXPLORER;
     if (multiFile)
         ofn.Flags = ofn.Flags | OFN_ALLOWMULTISELECT;
@@ -772,7 +781,7 @@ COMPtr<IWebUIDelegate> WebChromeClient::uiDelegate()
 
 bool WebChromeClient::supportsFullscreenForNode(const Node* node)
 {
-    return node->hasTagName(HTMLNames::videoTag);
+    return isHTMLVideoElement(node);
 }
 
 void WebChromeClient::enterFullscreenForNode(Node* node)
@@ -789,12 +798,12 @@ void WebChromeClient::exitFullscreenForNode(Node*)
 
 bool WebChromeClient::selectItemWritingDirectionIsNatural()
 {
-    return true;
+    return false;
 }
 
 bool WebChromeClient::selectItemAlignmentFollowsMenuWritingDirection()
 {
-    return false;
+    return true;
 }
 
 bool WebChromeClient::hasOpenedPopup() const

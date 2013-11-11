@@ -30,7 +30,6 @@
 #include "GL2DDefs.h"
 #include "IntSize.h"
 #include <wtf/Assertions.h>
-#include <wtf/FastAllocBase.h>
 #include <wtf/PassOwnPtr.h>
 
 namespace WebCore {

@@ -36,13 +36,15 @@ public:
     static PassRefPtr<LightSource> findLightSource(const SVGElement*);
 
 protected:
-    SVGFELightElement(const QualifiedName&, Document*);
+    SVGFELightElement(const QualifiedName&, Document&);
+
+    virtual bool rendererIsNeeded(const RenderStyle&) OVERRIDE { return false; }
 
 private:
     bool isSupportedAttribute(const QualifiedName&);
     virtual void parseAttribute(const QualifiedName&, const AtomicString&) OVERRIDE;
     virtual void svgAttributeChanged(const QualifiedName&);
-    virtual void childrenChanged(bool changedByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0);
+    virtual void childrenChanged(const ChildChange&) OVERRIDE;
 
     BEGIN_DECLARE_ANIMATED_PROPERTIES(SVGFELightElement)
         DECLARE_ANIMATED_NUMBER(Azimuth, azimuth)

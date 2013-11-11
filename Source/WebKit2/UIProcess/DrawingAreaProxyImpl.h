@@ -31,7 +31,6 @@
 #include "LayerTreeContext.h"
 #include <WebCore/RunLoop.h>
 #include <wtf/OwnPtr.h>
-#include <wtf/PassOwnPtr.h>
 
 namespace WebCore {
 class Region;
@@ -39,11 +38,9 @@ class Region;
 
 namespace WebKit {
 
-class CoordinatedLayerTreeHostProxy;
-
 class DrawingAreaProxyImpl : public DrawingAreaProxy {
 public:
-    static PassOwnPtr<DrawingAreaProxyImpl> create(WebPageProxy*);
+    explicit DrawingAreaProxyImpl(WebPageProxy*);
     virtual ~DrawingAreaProxyImpl();
 
     void paint(BackingStore::PlatformGraphicsContext, const WebCore::IntRect&, WebCore::Region& unpaintedRegion);
@@ -55,14 +52,11 @@ public:
     bool hasReceivedFirstUpdate() const { return m_hasReceivedFirstUpdate; }
 
 private:
-    explicit DrawingAreaProxyImpl(WebPageProxy*);
-
     // DrawingAreaProxy
     virtual void sizeDidChange();
     virtual void deviceScaleFactorDidChange();
     virtual void layerHostingModeDidChange() OVERRIDE;
 
-    virtual void visibilityDidChange();
     virtual void setBackingStoreIsDiscardable(bool);
     virtual void waitForBackingStoreUpdateOnNextPaint();
 
@@ -84,9 +78,6 @@ private:
     void enterAcceleratedCompositingMode(const LayerTreeContext&);
     void exitAcceleratedCompositingMode();
     void updateAcceleratedCompositingMode(const LayerTreeContext&);
-#if USE(COORDINATED_GRAPHICS)
-    virtual void setVisibleContentsRect(const WebCore::FloatRect& visibleContentsRect, const WebCore::FloatPoint& trajectory) OVERRIDE;
-#endif
 #else
     bool isInAcceleratedCompositingMode() const { return false; }
 #endif
@@ -116,7 +107,7 @@ private:
     bool m_hasReceivedFirstUpdate;
 
     bool m_isBackingStoreDiscardable;
-    OwnPtr<BackingStore> m_backingStore;
+    std::unique_ptr<BackingStore> m_backingStore;
 
     WebCore::RunLoop::Timer<DrawingAreaProxyImpl> m_discardBackingStoreTimer;
 };

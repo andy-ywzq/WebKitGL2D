@@ -39,7 +39,7 @@ namespace WebCore {
 using namespace HTMLNames;
 
 Attr::Attr(Element* element, const QualifiedName& name)
-    : ContainerNode(element->document())
+    : ContainerNode(&element->document())
     , m_element(element)
     , m_name(name)
     , m_ignoreChildrenChanged(0)
@@ -47,8 +47,8 @@ Attr::Attr(Element* element, const QualifiedName& name)
 {
 }
 
-Attr::Attr(Document* document, const QualifiedName& name, const AtomicString& standaloneValue)
-    : ContainerNode(document)
+Attr::Attr(Document& document, const QualifiedName& name, const AtomicString& standaloneValue)
+    : ContainerNode(&document)
     , m_element(0)
     , m_name(name)
     , m_standaloneValue(standaloneValue)
@@ -64,7 +64,7 @@ PassRefPtr<Attr> Attr::create(Element* element, const QualifiedName& name)
     return attr.release();
 }
 
-PassRefPtr<Attr> Attr::create(Document* document, const QualifiedName& name, const AtomicString& value)
+PassRefPtr<Attr> Attr::create(Document& document, const QualifiedName& name, const AtomicString& value)
 {
     RefPtr<Attr> attr = adoptRef(new Attr(document, name, value));
     attr->createTextChild();
@@ -79,7 +79,7 @@ void Attr::createTextChild()
 {
     ASSERT(refCount());
     if (!value().isEmpty()) {
-        RefPtr<Text> textNode = document()->createTextNode(value().string());
+        RefPtr<Text> textNode = document().createTextNode(value().string());
 
         // This does everything appendChild() would do in this situation (assuming m_ignoreChildrenChanged was set),
         // but much more efficiently.
@@ -159,7 +159,7 @@ bool Attr::childTypeAllowed(NodeType type) const
     }
 }
 
-void Attr::childrenChanged(bool, Node*, Node*, int)
+void Attr::childrenChanged(const ChildChange&)
 {
     if (m_ignoreChildrenChanged > 0)
         return;
@@ -184,7 +184,7 @@ void Attr::childrenChanged(bool, Node*, Node*, int)
 
 bool Attr::isId() const
 {
-    return qualifiedName().matches(document()->idAttributeName());
+    return qualifiedName().matches(document().idAttributeName());
 }
 
 CSSStyleDeclaration* Attr::style()

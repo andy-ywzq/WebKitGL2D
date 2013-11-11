@@ -39,12 +39,6 @@
 typedef struct objc_object* id;
 #endif
 
-#if PLATFORM(QT)
-#include <QVariant>
-#include <QByteArray>
-#include <QDataStream>
-#endif
-
 #if PLATFORM(BLACKBERRY)
 #include "HistoryItemViewState.h"
 #endif
@@ -56,10 +50,10 @@ class Document;
 class FormData;
 class HistoryItem;
 class Image;
-class KURL;
+class URL;
 class ResourceRequest;
 
-typedef Vector<RefPtr<HistoryItem> > HistoryItemVector;
+typedef Vector<RefPtr<HistoryItem>> HistoryItemVector;
 
 extern void (*notifyHistoryItemChanged)(HistoryItem*);
 
@@ -81,7 +75,7 @@ public:
     {
         return adoptRef(new HistoryItem(urlString, title, alternateTitle, lastVisited));
     }
-    static PassRefPtr<HistoryItem> create(const KURL& url, const String& target, const String& parent, const String& title)
+    static PassRefPtr<HistoryItem> create(const URL& url, const String& target, const String& parent, const String& title)
     {
         return adoptRef(new HistoryItem(url, target, parent, title));
     }
@@ -109,8 +103,8 @@ public:
     const String& alternateTitle() const;
     
     const String& parent() const;
-    KURL url() const;
-    KURL originalURL() const;
+    URL url() const;
+    URL originalURL() const;
     const String& referrer() const;
     const String& target() const;
     bool isTargetItem() const;
@@ -135,7 +129,7 @@ public:
     void setDocumentState(const Vector<String>&);
     void clearDocumentState();
 
-    void setURL(const KURL&);
+    void setURL(const URL&);
     void setURLString(const String&);
     void setOriginalURLString(const String&);
     void setReferrer(const String&);
@@ -183,7 +177,7 @@ public:
 
     void addRedirectURL(const String&);
     Vector<String>* redirectURLs() const;
-    void setRedirectURLs(PassOwnPtr<Vector<String> >);
+    void setRedirectURLs(PassOwnPtr<Vector<String>>);
 
     bool isCurrentDocument(Document*) const;
     
@@ -195,14 +189,6 @@ public:
     // The properties will not be persisted; when the history item is removed, the properties will be lost.
     id getTransientProperty(const String&) const;
     void setTransientProperty(const String&, id);
-#endif
-
-#if PLATFORM(QT)
-    QVariant userData() const { return m_userData; }
-    void setUserData(const QVariant& userData) { m_userData = userData; }
-
-    static PassRefPtr<HistoryItem> restoreState(QDataStream& buffer, int version);
-    QDataStream& saveState(QDataStream& out, int version) const;
 #endif
 
 #if PLATFORM(BLACKBERRY)
@@ -222,7 +208,7 @@ private:
     HistoryItem();
     HistoryItem(const String& urlString, const String& title, double lastVisited);
     HistoryItem(const String& urlString, const String& title, const String& alternateTitle, double lastVisited);
-    HistoryItem(const KURL& url, const String& frameName, const String& parent, const String& title);
+    HistoryItem(const URL& url, const String& frameName, const String& parent, const String& title);
 
     explicit HistoryItem(const HistoryItem&);
 
@@ -263,7 +249,7 @@ private:
     Vector<int> m_dailyVisitCounts;
     Vector<int> m_weeklyVisitCounts;
 
-    OwnPtr<Vector<String> > m_redirectURLs;
+    OwnPtr<Vector<String>> m_redirectURLs;
 
     // If two HistoryItems have the same item sequence number, then they are
     // clones of one another.  Traversing history from one such HistoryItem to
@@ -286,15 +272,11 @@ private:
     // PageCache controls these fields.
     HistoryItem* m_next;
     HistoryItem* m_prev;
-    RefPtr<CachedPage> m_cachedPage;
+    OwnPtr<CachedPage> m_cachedPage;
     
 #if PLATFORM(MAC)
     RetainPtr<id> m_viewState;
-    OwnPtr<HashMap<String, RetainPtr<id> > > m_transientProperties;
-#endif
-
-#if PLATFORM(QT)
-    QVariant m_userData;
+    OwnPtr<HashMap<String, RetainPtr<id>>> m_transientProperties;
 #endif
 
 #if PLATFORM(BLACKBERRY)

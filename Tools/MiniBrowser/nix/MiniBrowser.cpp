@@ -4,12 +4,17 @@
 #include "GLUtilities.h"
 #include "TouchMocker.h"
 #include "WKArray.h"
+#include "WKAuthenticationChallenge.h"
+#include "WKAuthenticationDecisionListener.h"
 #include "WKContextNix.h"
+#include "WKCredential.h"
+#include "WKCredentialTypes.h"
 #include "WKErrorNix.h"
 #include "WKFrame.h"
 #include "WKPageNix.h"
 #include "WKPreferences.h"
 #include "WKPreferencesPrivate.h"
+#include "WKProtectionSpace.h"
 #include "WKString.h"
 
 #if WTF_USE_OPENGL_ES_2
@@ -25,6 +30,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unistd.h>
 
 #define NOCOLOR "\e[m"
 #define RED     "\e[38;05;9m"
@@ -77,7 +83,6 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     nixViewClient.version = kNIXViewClientCurrentVersion;
     nixViewClient.clientInfo = this;
     nixViewClient.doneWithTouchEvent = MiniBrowser::doneWithTouchEvent;
-    nixViewClient.doneWithGestureEvent = MiniBrowser::doneWithGestureEvent;
     nixViewClient.didFindZoomableArea = MiniBrowser::didFindZoomableArea;
     nixViewClient.updateTextInputState = MiniBrowser::updateTextInputState;
     NIXViewSetNixViewClient(m_view, &nixViewClient);
@@ -90,6 +95,7 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     viewClient.webProcessCrashed = MiniBrowser::webProcessCrashed;
     viewClient.webProcessDidRelaunch = MiniBrowser::webProcessRelaunched;
     viewClient.didChangeContentsSize = MiniBrowser::didChangeContentsSize;
+    viewClient.didRenderFrame = MiniBrowser::didRenderFrame;
     viewClient.didChangeContentsPosition = MiniBrowser::pageDidRequestScroll;
     viewClient.didChangeViewportAttributes = MiniBrowser::didChangeViewportAttributes;
     WKViewSetViewClient(m_view, &viewClient);
@@ -152,6 +158,7 @@ MiniBrowser::MiniBrowser(GMainLoop* mainLoop, const Options& options)
     loadClient.didStartProvisionalLoadForFrame = MiniBrowser::didStartProvisionalLoadForFrame;
     loadClient.didFinishDocumentLoadForFrame = MiniBrowser::didFinishDocumentLoadForFrame;
     loadClient.didFailProvisionalLoadWithErrorForFrame = MiniBrowser::didFailProvisionalLoadWithErrorForFrame;
+    loadClient.didReceiveAuthenticationChallengeInFrame = MiniBrowser::didReceiveAuthenticationChallengeInFrame;
 
     WKPageSetPageLoaderClient(pageRef(), &loadClient);
 
@@ -275,7 +282,15 @@ void MiniBrowser::handleMouseRelease(NIXMouseEvent* event)
 
 void MiniBrowser::handleMouseMove(NIXMouseEvent* event)
 {
-    if (m_touchMocker && m_touchMocker->handleMouseMove(*event, WKPointMake(event->x, event->y))) {
+    WKViewRef view = webViewAtX11Position(WKPointMake(event->x, event->y));
+    if (!view)
+        return;
+
+    WKPoint windowPos = WKPointMake(event->x, event->y);
+    WKPoint p = WKViewUserViewportToContents(m_view, WKPointMake(event->x, event->y));
+    event->x = p.x;
+    event->y = p.y;
+    if (m_touchMocker && m_touchMocker->handleMouseMove(*event, windowPos)) {
         scheduleUpdateDisplay();
         return;
     }
@@ -284,9 +299,6 @@ void MiniBrowser::handleMouseMove(NIXMouseEvent* event)
 
     // The mouse move event was allowed to be sent to the TouchMocker because it
     // may be tracking a button press that happened in a valid position.
-    WKViewRef view = webViewAtX11Position(WKPointMake(event->x, event->y));
-    if (!view)
-        return;
     NIXViewSendMouseEvent(view, event);
 }
 
@@ -437,13 +449,21 @@ void MiniBrowser::didChangeContentsSize(WKViewRef, WKSize size, const void* clie
         mb->adjustScrollPosition();
 }
 
-void MiniBrowser::didChangeViewportAttributes(WKViewRef view, WKViewportAttributesRef attributes, const void* clientInfo)
+void MiniBrowser::didRenderFrame(WKViewRef view, WKSize contentsSize, WKRect coveredRect, const void* clientInfo)
+{
+    MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
+    mb->m_contentsSize = contentsSize;
+
+    if (mb->isMobileMode()) {
+        NIXViewScaleToFitContents(mb->m_view);
+        mb->adjustScrollPosition();
+    }
+}
+
+void MiniBrowser::didChangeViewportAttributes(WKViewRef, WKViewportAttributesRef attributes, const void* clientInfo)
 {
     MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
 
-    WKSize viewportSize = NIXViewportAttributesGetSize(attributes);
-    mb->m_viewportWidth = viewportSize.width;
-    mb->m_viewportHeight = viewportSize.height;
     mb->m_viewportMinScale = NIXViewportAttributesGetMinimumScale(attributes);
     mb->m_viewportMaxScale = NIXViewportAttributesGetMaximumScale(attributes);
     mb->m_viewportInitScale = NIXViewportAttributesGetInitialScale(attributes);
@@ -485,21 +505,6 @@ void MiniBrowser::doneWithTouchEvent(WKViewRef, const NIXTouchEvent* event, bool
     mb->m_gestureRecognizer.handleTouchEvent(*event);
 }
 
-void MiniBrowser::doneWithGestureEvent(WKViewRef, const NIXGestureEvent* event, bool wasEventHandled, const void* clientInfo)
-{
-    if (wasEventHandled)
-        return;
-
-    MiniBrowser* mb = static_cast<MiniBrowser*>(const_cast<void*>(clientInfo));
-
-    if (event->type == kNIXInputEventTypeGestureSingleTap && mb->m_shouldFocusEditableArea) {
-        mb->m_shouldFocusEditableArea = false;
-        mb->adjustViewportToTextInputArea();
-    }
-
-    mb->m_postponeTextInputUpdates = true;
-}
-
 double MiniBrowser::scale()
 {
     return WKViewGetContentScaleFactor(m_view);
@@ -517,8 +522,6 @@ void MiniBrowser::handleSingleTap(double timestamp, const NIXTouchPoint& touchPo
     gestureEvent.globalY = touchPoint.globalY;
     gestureEvent.width = 20;
     gestureEvent.height = 20;
-    gestureEvent.deltaX = 0.0;
-    gestureEvent.deltaY = 0.0;
 
     m_postponeTextInputUpdates = false;
     NIXViewSendGestureEvent(m_view, &gestureEvent);
@@ -903,10 +906,11 @@ bool MiniBrowser::handleTLSError(WKErrorRef error)
     if (tlsErrors & NIXTlsErrorCertificateGenericError)
         errorDescription += "- Some error occurred validating the certificate.\n";
 
+    string yn;
     std::cout << errorDescription;
     std::cout << "Do you want to continue anyway? [Yn]\n";
-    char yn = std::cin.get();
-    if (yn == 'y' || yn == 'Y' || yn == '\n') {
+    getline(cin, yn);
+    if (yn == "y" || yn == "Y" || yn == "") {
         WKRetainPtr<WKURLRef> url = adoptWK(WKErrorCopyFailingURL(error));
         WKRetainPtr<WKStringRef> hostname = adoptWK(WKURLCopyHostName(url.get()));
         WKContextSetHostAllowsAnyHTTPSCertificate(m_context.get(), hostname.get());
@@ -925,6 +929,33 @@ void MiniBrowser::didFailProvisionalLoadWithErrorForFrame(WKPageRef page, WKFram
 
     WKRetainPtr<WKStringRef> wkErrorDescription = adoptWK(WKErrorCopyLocalizedDescription(error));
     WKPageLoadPlainTextString(page, wkErrorDescription.get());
+}
+
+void MiniBrowser::didReceiveAuthenticationChallengeInFrame(WKPageRef, WKFrameRef, WKAuthenticationChallengeRef authenticationChallenge, const void *)
+{
+    WKAuthenticationDecisionListenerRef authenticationListener = WKAuthenticationChallengeGetDecisionListener(authenticationChallenge);
+    WKProtectionSpaceRef protectionSpace = WKAuthenticationChallengeGetProtectionSpace(authenticationChallenge);
+    int previousFailureCount = WKAuthenticationChallengeGetPreviousFailureCount(authenticationChallenge);
+
+    cout << YELLOW "A username and password are being requested by " << createStdStringFromWKString(WKProtectionSpaceCopyHost(protectionSpace));
+    cout << ". The site says: \"" << createStdStringFromWKString(WKProtectionSpaceCopyRealm(protectionSpace)) << "\"" NOCOLOR << endl;
+    if (previousFailureCount)
+        cout << RED "Previous failures: " << previousFailureCount << NOCOLOR << endl;
+
+    std::string username;
+    cout << "Username: ";
+    getline(cin, username);
+
+    char *password = getpass("Password: ");
+
+    std::string yn;
+    cout << "Submit? [Yn]: ";
+    getline(cin, yn);
+    if (yn == "y" || yn == "Y" || yn == "") {
+        WKCredentialRef credential = WKCredentialCreate(WKStringCreateWithUTF8CString(username.c_str()), WKStringCreateWithUTF8CString(password), kWKCredentialPersistenceForSession);
+        WKAuthenticationDecisionListenerUseCredential(authenticationListener, credential);
+    } else
+        WKAuthenticationDecisionListenerCancel(authenticationListener);
 }
 
 std::string MiniBrowser::activeUrl()

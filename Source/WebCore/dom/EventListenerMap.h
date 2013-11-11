@@ -68,7 +68,7 @@ private:
 
     void assertNoActiveIterators();
 
-    Vector<std::pair<AtomicString, OwnPtr<EventListenerVector> >, 2> m_entries;
+    Vector<std::pair<AtomicString, OwnPtr<EventListenerVector>>, 2> m_entries;
 
 #ifndef NDEBUG
     int m_activeIteratorCount;
@@ -79,7 +79,7 @@ class EventListenerIterator {
     WTF_MAKE_NONCOPYABLE(EventListenerIterator);
 public:
     EventListenerIterator();
-    EventListenerIterator(EventTarget*);
+    explicit EventListenerIterator(EventTarget*);
 #ifndef NDEBUG
     ~EventListenerIterator();
 #endif

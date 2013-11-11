@@ -24,6 +24,7 @@
 
 #include "BindingSecurity.h"
 #include "CachedScript.h"
+#include "DOMConstructorWithDocument.h"
 #include "DOMObjectHashTableMap.h"
 #include "DOMStringList.h"
 #include "ExceptionCode.h"
@@ -45,10 +46,10 @@ using namespace JSC;
 
 namespace WebCore {
 
-ASSERT_HAS_TRIVIAL_DESTRUCTOR(DOMConstructorObject);
-ASSERT_HAS_TRIVIAL_DESTRUCTOR(DOMConstructorWithDocument);
+STATIC_ASSERT_IS_TRIVIALLY_DESTRUCTIBLE(DOMConstructorObject);
+STATIC_ASSERT_IS_TRIVIALLY_DESTRUCTIBLE(DOMConstructorWithDocument);
 
-const JSC::HashTable* getHashTableForGlobalData(VM& vm, const JSC::HashTable* staticTable)
+const JSC::HashTable& getHashTableForGlobalData(VM& vm, const JSC::HashTable& staticTable)
 {
     return DOMObjectHashTableMap::mapFor(vm).get(staticTable);
 }
@@ -74,19 +75,19 @@ JSValue jsStringOrUndefined(ExecState* exec, const String& s)
     return jsStringWithCache(exec, s);
 }
 
-JSValue jsString(ExecState* exec, const KURL& url)
+JSValue jsString(ExecState* exec, const URL& url)
 {
     return jsStringWithCache(exec, url.string());
 }
 
-JSValue jsStringOrNull(ExecState* exec, const KURL& url)
+JSValue jsStringOrNull(ExecState* exec, const URL& url)
 {
     if (url.isNull())
         return jsNull();
     return jsStringWithCache(exec, url.string());
 }
 
-JSValue jsStringOrUndefined(ExecState* exec, const KURL& url)
+JSValue jsStringOrUndefined(ExecState* exec, const URL& url)
 {
     if (url.isNull())
         return jsUndefined();
@@ -120,7 +121,7 @@ JSValue jsDateOrNull(ExecState* exec, double value)
 {
     if (!std::isfinite(value))
         return jsNull();
-    return DateInstance::create(exec, exec->lexicalGlobalObject()->dateStructure(), value);
+    return DateInstance::create(exec->vm(), exec->lexicalGlobalObject()->dateStructure(), value);
 }
 
 double valueToDate(ExecState* exec, JSValue value)
@@ -155,7 +156,7 @@ void reportException(ExecState* exec, JSValue exception, CachedScript* cachedScr
 
     JSDOMGlobalObject* globalObject = jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject());
     if (JSDOMWindow* window = jsDynamicCast<JSDOMWindow*>(globalObject)) {
-        if (!window->impl()->isCurrentlyDisplayedInFrame())
+        if (!window->impl().isCurrentlyDisplayedInFrame())
             return;
     }
 
@@ -172,6 +173,8 @@ void reportException(ExecState* exec, JSValue exception, CachedScript* cachedScr
         JSObject* exceptionObject = exception.toObject(exec);
         JSValue lineValue = exceptionObject->getDirect(exec->vm(), Identifier(exec, "line"));
         lineNumber = lineValue && lineValue.isNumber() ? int(lineValue.toNumber(exec)) : 0;
+        JSValue columnValue = exceptionObject->getDirect(exec->vm(), Identifier(exec, "column"));
+        columnNumber = columnValue && columnValue.isNumber() ? int(columnValue.toNumber(exec)) : 0;
         JSValue sourceURLValue = exceptionObject->getDirect(exec->vm(), Identifier(exec, "sourceURL"));
         exceptionSourceURL = sourceURLValue && sourceURLValue.isString() ? sourceURLValue.toString(exec)->value(exec) : ASCIILiteral("undefined");
     }
@@ -227,7 +230,7 @@ void setDOMException(ExecState* exec, ExceptionCode ec)
     }
 
     ASSERT(errorObject);
-    throwError(exec, errorObject);
+    exec->vm().throwException(exec, errorObject);
 }
 
 #undef TRY_TO_CREATE_EXCEPTION
@@ -252,13 +255,11 @@ bool shouldAllowAccessToFrame(ExecState* exec, Frame* frame, String& message)
     return false;
 }
 
-bool shouldAllowAccessToDOMWindow(ExecState* exec, DOMWindow* target, String& message)
+bool shouldAllowAccessToDOMWindow(ExecState* exec, DOMWindow& target, String& message)
 {
-    if (!target)
-        return false;
     if (BindingSecurity::shouldAllowAccessToDOMWindow(exec, target, DoNotReportSecurityError))
         return true;
-    message = target->crossDomainAccessErrorMessage(activeDOMWindow(exec));
+    message = target.crossDomainAccessErrorMessage(activeDOMWindow(exec));
     return false;
 }
 
@@ -271,7 +272,7 @@ void printErrorMessageForFrame(Frame* frame, const String& message)
 
 JSValue objectToStringFunctionGetter(ExecState* exec, JSValue, PropertyName propertyName)
 {
-    return JSFunction::create(exec, exec->lexicalGlobalObject(), 0, propertyName.publicName(), objectProtoFuncToString);
+    return JSFunction::create(exec->vm(), exec->lexicalGlobalObject(), 0, propertyName.publicName(), objectProtoFuncToString);
 }
 
 Structure* getCachedDOMStructure(JSDOMGlobalObject* globalObject, const ClassInfo* classInfo)
@@ -430,6 +431,16 @@ uint64_t toUInt64(ExecState* exec, JSValue value, IntegerConversionConfiguration
     unsigned long long n;
     doubleToInteger(x, n);
     return n;
+}
+
+DOMWindow& activeDOMWindow(ExecState* exec)
+{
+    return asJSDOMWindow(exec->lexicalGlobalObject())->impl();
+}
+
+DOMWindow& firstDOMWindow(ExecState* exec)
+{
+    return asJSDOMWindow(exec->dynamicGlobalObject())->impl();
 }
 
 } // namespace WebCore

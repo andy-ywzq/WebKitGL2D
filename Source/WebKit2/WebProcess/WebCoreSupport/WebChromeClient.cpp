@@ -55,7 +55,6 @@
 #include <WebCore/DocumentLoader.h>
 #include <WebCore/FileChooser.h>
 #include <WebCore/FileIconLoader.h>
-#include <WebCore/Frame.h>
 #include <WebCore/FrameLoadRequest.h>
 #include <WebCore/FrameLoader.h>
 #include <WebCore/FrameView.h>
@@ -64,6 +63,7 @@
 #include <WebCore/HTMLParserIdioms.h>
 #include <WebCore/HTMLPlugInImageElement.h>
 #include <WebCore/Icon.h>
+#include <WebCore/MainFrame.h>
 #include <WebCore/NotImplemented.h>
 #include <WebCore/Page.h>
 #include <WebCore/SecurityOrigin.h>
@@ -171,7 +171,7 @@ void WebChromeClient::focusedElementChanged(Element* element)
     if (!inputElement->isText())
         return;
 
-    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(element->document()->frame()->loader().client());
+    WebFrameLoaderClient* webFrameLoaderClient = toWebFrameLoaderClient(element->document().frame()->loader().client());
     WebFrame* webFrame = webFrameLoaderClient ? webFrameLoaderClient->webFrame() : 0;
     ASSERT(webFrame);
     m_page->injectedBundleFormClient().didFocusTextField(m_page, inputElement, webFrame);
@@ -185,10 +185,15 @@ void WebChromeClient::focusedFrameChanged(Frame* frame)
     WebProcess::shared().parentProcessConnection()->send(Messages::WebPageProxy::FocusedFrameChanged(webFrame ? webFrame->frameID() : 0), m_page->pageID());
 }
 
-Page* WebChromeClient::createWindow(Frame*, const FrameLoadRequest& request, const WindowFeatures& windowFeatures, const NavigationAction& navigationAction)
+Page* WebChromeClient::createWindow(Frame* frame, const FrameLoadRequest& request, const WindowFeatures& windowFeatures, const NavigationAction& navigationAction)
 {
     uint32_t modifiers = static_cast<uint32_t>(InjectedBundleNavigationAction::modifiersForNavigationAction(navigationAction));
     int32_t mouseButton = static_cast<int32_t>(InjectedBundleNavigationAction::mouseButtonForNavigationAction(navigationAction));
+
+#if ENABLE(FULLSCREEN_API)
+    if (frame->document() && frame->document()->webkitCurrentFullScreenElement())
+        frame->document()->webkitCancelFullScreen();
+#endif
 
     uint64_t newPageID = 0;
     WebPageCreationParameters parameters;
@@ -412,7 +417,7 @@ void WebChromeClient::invalidateRootView(const IntRect&, bool)
 
 void WebChromeClient::invalidateContentsAndRootView(const IntRect& rect, bool)
 {
-    if (Document* document = m_page->corePage()->mainFrame()->document()) {
+    if (Document* document = m_page->corePage()->mainFrame().document()) {
         if (document->printing())
             return;
     }
@@ -422,7 +427,7 @@ void WebChromeClient::invalidateContentsAndRootView(const IntRect& rect, bool)
 
 void WebChromeClient::invalidateContentsForSlowScroll(const IntRect& rect, bool)
 {
-    if (Document* document = m_page->corePage()->mainFrame()->document()) {
+    if (Document* document = m_page->corePage()->mainFrame().document()) {
         if (document->printing())
             return;
     }
@@ -474,7 +479,7 @@ void WebChromeClient::contentsSizeChanged(Frame* frame, const IntSize& size) con
         }
     }
 
-    if (frame->page()->mainFrame() != frame)
+    if (&frame->page()->mainFrame() != frame)
         return;
 
 #if USE(COORDINATED_GRAPHICS)
@@ -531,12 +536,12 @@ void WebChromeClient::unavailablePluginButtonClicked(Element* element, RenderEmb
 
     HTMLPlugInImageElement* pluginElement = static_cast<HTMLPlugInImageElement*>(element);
 
-    String frameURLString = pluginElement->document()->frame()->loader().documentLoader()->responseURL().string();
+    String frameURLString = pluginElement->document().frame()->loader().documentLoader()->responseURL().string();
     String pageURLString = m_page->mainFrame()->loader().documentLoader()->responseURL().string();
-    String pluginURLString = pluginElement->document()->completeURL(pluginElement->url()).string();
-    KURL pluginspageAttributeURL = element->document()->completeURL(stripLeadingAndTrailingHTMLSpaces(pluginElement->getAttribute(pluginspageAttr)));
+    String pluginURLString = pluginElement->document().completeURL(pluginElement->url()).string();
+    URL pluginspageAttributeURL = element->document().completeURL(stripLeadingAndTrailingHTMLSpaces(pluginElement->getAttribute(pluginspageAttr)));
     if (!pluginspageAttributeURL.protocolIsInHTTPFamily())
-        pluginspageAttributeURL = KURL();
+        pluginspageAttributeURL = URL();
     m_page->send(Messages::WebPageProxy::UnavailablePluginButtonClicked(pluginUnavailabilityReason, pluginElement->serviceType(), pluginURLString, pluginspageAttributeURL.string(), frameURLString, pageURLString));
 }
 
@@ -831,19 +836,6 @@ void WebChromeClient::recommendedScrollbarStyleDidChange(int32_t newStyle)
     m_page->send(Messages::WebPageProxy::RecommendedScrollbarStyleDidChange(newStyle));
 }
 
-bool WebChromeClient::shouldRubberBandInDirection(WebCore::ScrollDirection direction) const
-{
-    ASSERT(direction != WebCore::ScrollUp && direction != WebCore::ScrollDown);
-    
-    if (direction == WebCore::ScrollLeft)
-        return m_page->injectedBundleUIClient().shouldRubberBandInDirection(m_page, WKScrollDirectionLeft);
-    if (direction == WebCore::ScrollRight)
-        return m_page->injectedBundleUIClient().shouldRubberBandInDirection(m_page, WKScrollDirectionRight);
-
-    ASSERT_NOT_REACHED();
-    return true;
-}
-
 Color WebChromeClient::underlayColor() const
 {
     return m_page->underlayColor();
@@ -902,6 +894,11 @@ void WebChromeClient::didAddFooterLayer(GraphicsLayer* footerParent)
 {
     if (PageBanner* banner = m_page->footerPageBanner())
         banner->didAddParentLayer(footerParent);
+}
+
+bool WebChromeClient::shouldUseTiledBackingForFrameView(const FrameView* frameView) const
+{
+    return m_page->drawingArea()->shouldUseTiledBackingForFrameView(frameView);
 }
 
 void WebChromeClient::incrementActivePageCount()

@@ -5,8 +5,8 @@
           testRunner.dumpAsText();
 
         if (window.internals)
-            internals.setPagination(document, "LeftToRightPaginated", 0);
-            
+            internals.setPagination("LeftToRightPaginated", 0);
+
         function dumpLayers()
         {
             if (window.testRunner)
@@ -27,6 +27,9 @@
       width: 100px;
       margin: 10px;
       background-color: blue;
+    }
+    .box:hover {
+        background-color: orange;
     }
     .composited {
       -webkit-transform: translateZ(0);

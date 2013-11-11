@@ -190,7 +190,10 @@ void GestureRecognizer::waitForDoubleTap(const NIXTouchEvent& event)
     cancelDoubleTapTimerIfNeeded();
     switch (event.type) {
     case kNIXInputEventTypeTouchStart:
-        m_state = &GestureRecognizer::doubleTapPressed;
+        if (exceedsPanThreshold(event.touchPoints[0], m_firstTouchPoint))
+            reset();
+        else
+            m_state = &GestureRecognizer::doubleTapPressed;
         break;
     case kNIXInputEventTypeTouchMove:
     case kNIXInputEventTypeTouchEnd:

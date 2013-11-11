@@ -27,13 +27,12 @@
 #include "LayerPool.h"
 
 #include "Logging.h"
-#include "WebTileLayer.h"
 #include <wtf/CurrentTime.h>
 
 namespace WebCore {
-    
+
 static const double capacityDecayTime = 5;
-    
+
 LayerPool::LayerPool()
     : m_totalBytes(0)
     , m_maxBytesForPool(48 * 1024 * 1024)
@@ -66,20 +65,20 @@ LayerPool::LayerList& LayerPool::listOfLayersWithSize(const IntSize& size, Acces
     return it->value;
 }
 
-void LayerPool::addLayer(const RetainPtr<WebTileLayer>& layer)
+void LayerPool::addLayer(const RefPtr<PlatformCALayer>& layer)
 {
-    IntSize layerSize([layer.get() bounds].size);
+    IntSize layerSize(expandedIntSize(layer->bounds().size()));
     if (!canReuseLayerWithSize(layerSize))
         return;
 
     listOfLayersWithSize(layerSize).prepend(layer);
     m_totalBytes += backingStoreBytesForSize(layerSize);
     
-    m_lastAddTime = currentTime();
+    m_lastAddTime = monotonicallyIncreasingTime();
     schedulePrune();
 }
 
-RetainPtr<WebTileLayer> LayerPool::takeLayerWithSize(const IntSize& size)
+RefPtr<PlatformCALayer> LayerPool::takeLayerWithSize(const IntSize& size)
 {
     if (!canReuseLayerWithSize(size))
         return nil;
@@ -93,7 +92,7 @@ RetainPtr<WebTileLayer> LayerPool::takeLayerWithSize(const IntSize& size)
 unsigned LayerPool::decayedCapacity() const
 {
     // Decay to one quarter over capacityDecayTime
-    double timeSinceLastAdd = currentTime() - m_lastAddTime;
+    double timeSinceLastAdd = monotonicallyIncreasingTime() - m_lastAddTime;
     if (timeSinceLastAdd > capacityDecayTime)
         return m_maxBytesForPool / 4;
     float decayProgess = float(timeSinceLastAdd / capacityDecayTime);
@@ -125,7 +124,7 @@ void LayerPool::pruneTimerFired(Timer<LayerPool>*)
         // still have a backing store.
         oldestReuseList.remove(--oldestReuseList.end());
     }
-    if (currentTime() - m_lastAddTime <= capacityDecayTime)
+    if (monotonicallyIncreasingTime() - m_lastAddTime <= capacityDecayTime)
         schedulePrune();
 }
 

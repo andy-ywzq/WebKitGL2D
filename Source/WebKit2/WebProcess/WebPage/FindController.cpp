@@ -35,9 +35,9 @@
 #include <WebCore/DocumentMarkerController.h>
 #include <WebCore/FloatQuad.h>
 #include <WebCore/FocusController.h>
-#include <WebCore/Frame.h>
 #include <WebCore/FrameView.h>
 #include <WebCore/GraphicsContext.h>
+#include <WebCore/MainFrame.h>
 #include <WebCore/Page.h>
 #include <WebCore/PluginDocument.h>
 
@@ -98,7 +98,7 @@ void FindController::countStringMatches(const String& string, FindOptions option
 
 static Frame* frameWithSelection(Page* page)
 {
-    for (Frame* frame = page->mainFrame(); frame; frame = frame->tree()->traverseNext()) {
+    for (Frame* frame = &page->mainFrame(); frame; frame = frame->tree().traverseNext()) {
         if (frame->selection().isRange())
             return frame;
     }
@@ -215,7 +215,7 @@ bool FindController::getFindIndicatorBitmapAndRect(Frame* frame, ShareableBitmap
     if (!findIndicatorTextBackingStore)
         return false;
 
-    OwnPtr<GraphicsContext> graphicsContext = findIndicatorTextBackingStore->createGraphicsContext();
+    auto graphicsContext = findIndicatorTextBackingStore->createGraphicsContext();
     graphicsContext->scale(FloatSize(m_webPage->corePage()->deviceScaleFactor(), m_webPage->corePage()->deviceScaleFactor()));
 
     IntRect paintRect = selectionRect;
@@ -238,7 +238,7 @@ void FindController::getImageForFindMatch(uint32_t matchIndex)
 {
     if (matchIndex >= m_findMatches.size())
         return;
-    Frame* frame = m_findMatches[matchIndex]->startContainer()->document()->frame();
+    Frame* frame = m_findMatches[matchIndex]->startContainer()->document().frame();
     if (!frame)
         return;
 
@@ -261,7 +261,7 @@ void FindController::selectFindMatch(uint32_t matchIndex)
 {
     if (matchIndex >= m_findMatches.size())
         return;
-    Frame* frame = m_findMatches[matchIndex]->startContainer()->document()->frame();
+    Frame* frame = m_findMatches[matchIndex]->startContainer()->document().frame();
     if (!frame)
         return;
     frame->selection().setSelection(VisibleSelection(m_findMatches[matchIndex].get()));
@@ -328,11 +328,8 @@ void FindController::hideFindIndicator()
 
 void FindController::showFindIndicatorInSelection()
 {
-    Frame* selectedFrame = m_webPage->corePage()->focusController().focusedOrMainFrame();
-    if (!selectedFrame)
-        return;
-    
-    updateFindIndicator(selectedFrame, false);
+    Frame& selectedFrame = m_webPage->corePage()->focusController().focusedOrMainFrame();
+    updateFindIndicator(&selectedFrame, false);
 }
 
 void FindController::deviceScaleFactorDidChange()
@@ -350,7 +347,7 @@ Vector<IntRect> FindController::rectsForTextMatches()
 {
     Vector<IntRect> rects;
 
-    for (Frame* frame = m_webPage->corePage()->mainFrame(); frame; frame = frame->tree()->traverseNext()) {
+    for (Frame* frame = &m_webPage->corePage()->mainFrame(); frame; frame = frame->tree().traverseNext()) {
         Document* document = frame->document();
         if (!document)
             continue;
@@ -390,14 +387,13 @@ void FindController::didMoveToWebPage(PageOverlay*, WebPage*)
 static const float shadowOffsetX = 0.0;
 static const float shadowOffsetY = 1.0;
 static const float shadowBlurRadius = 2.0;
-static const float whiteFrameThickness = 1.0;
 
 static const float overlayBackgroundRed = 0.1;
 static const float overlayBackgroundGreen = 0.1;
 static const float overlayBackgroundBlue = 0.1;
 static const float overlayBackgroundAlpha = 0.25;
 
-void FindController::drawRect(PageOverlay* pageOverlay, GraphicsContext& graphicsContext, const IntRect& dirtyRect)
+void FindController::drawRect(PageOverlay* /*pageOverlay*/, GraphicsContext& graphicsContext, const IntRect& dirtyRect)
 {
     Color overlayBackgroundColor(overlayBackgroundRed, overlayBackgroundGreen, overlayBackgroundBlue, overlayBackgroundAlpha);
 

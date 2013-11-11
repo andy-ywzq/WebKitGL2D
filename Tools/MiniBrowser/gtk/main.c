@@ -247,6 +247,7 @@ int main(int argc, char *argv[])
 
     WebKitSettings *webkitSettings = webkit_settings_new();
     webkit_settings_set_enable_developer_extras(webkitSettings, TRUE);
+    webkit_settings_set_enable_webgl(webkitSettings, TRUE);
     if (!addSettingsGroupToContext(context, webkitSettings)) {
         g_object_unref(webkitSettings);
         webkitSettings = 0;
@@ -262,9 +263,6 @@ int main(int argc, char *argv[])
     }
     g_option_context_free (context);
 
-#ifdef WEBKIT_EXEC_PATH
-    g_setenv("WEBKIT_INSPECTOR_PATH", WEBKIT_EXEC_PATH "resources/inspector", FALSE);
-#endif /* WEBKIT_EXEC_PATH */
     g_setenv("WEBKIT_INJECTED_BUNDLE_PATH", WEBKIT_INJECTED_BUNDLE_PATH, FALSE);
 
     // Enable the favicon database, by specifying the default directory.

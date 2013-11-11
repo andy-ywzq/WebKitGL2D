@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2009 Google Inc. All rights reserved.
 # Copyright (C) 2009 Torch Mobile Inc.
-# Copyright (C) 2009 Apple Inc. All rights reserved.
+# Copyright (C) 2009, 2013 Apple Inc. All rights reserved.
 # Copyright (C) 2010 Chris Jerdonek (chris.jerdonek@gmail.com)
 #
 # Redistribution and use in source and binary forms, with or without
@@ -51,6 +51,7 @@ from checker import ProcessorBase
 from checker import StyleProcessor
 from checker import StyleProcessorConfiguration
 from checkers.changelog import ChangeLogChecker
+from checkers.cmake import CMakeChecker
 from checkers.cpp import CppChecker
 from checkers.jsonchecker import JSONChecker
 from checkers.python import PythonChecker
@@ -225,30 +226,6 @@ class GlobalVariablesTest(unittest.TestCase):
         assertNoCheck("Source/WebCore/css/CSSParser.cpp",
                       "readability/naming")
 
-        # Test if Qt exceptions are indeed working
-        assertCheck("Source/WebKit/qt/WidgetApi/qwebpage.cpp",
-                    "readability/braces")
-        assertCheck("Source/WebKit/qt/tests/qwebelement/tst_qwebelement.cpp",
-                    "readability/braces")
-        assertCheck("Source/WebKit/qt/declarative/platformplugin/WebPlugin.cpp",
-                    "readability/braces")
-        assertCheck("Source/WebKit/qt/examples/platformplugin/WebPlugin.cpp",
-                    "readability/braces")
-        assertNoCheck("Source/WebKit/qt/WidgetApi/qwebpage.cpp",
-                      "readability/naming")
-        assertNoCheck("Source/WebKit/qt/tests/qwebelement/tst_qwebelement.cpp",
-                      "readability/naming")
-        assertNoCheck("Source/WebKit/qt/declarative/platformplugin/WebPlugin.cpp",
-                      "readability/naming")
-        assertNoCheck("Source/WebKit/qt/examples/platformplugin/WebPlugin.cpp",
-                      "readability/naming")
-
-        assertNoCheck("Tools/MiniBrowser/qt/UrlLoader.cpp",
-                    "build/include")
-
-        assertNoCheck("Source/WebKit2/UIProcess/API/qt",
-                    "readability/parameter_name")
-
         assertNoCheck("Source/WebCore/ForwardingHeaders/debugger/Debugger.h",
                       "build/header_guard")
 
@@ -413,6 +390,10 @@ class CheckerDispatcherDispatchTest(unittest.TestCase):
         """Assert that the dispatched checker is a ChangeLogChecker."""
         self.assert_checker(file_path, ChangeLogChecker)
 
+    def assert_checker_cmake(self, file_path):
+        """Assert that the dispatched checker is a CMakeChecker."""
+        self.assert_checker(file_path, CMakeChecker)
+
     def assert_checker_cpp(self, file_path):
         """Assert that the dispatched checker is a CppChecker."""
         self.assert_checker(file_path, CppChecker)
@@ -451,6 +432,27 @@ class CheckerDispatcherDispatchTest(unittest.TestCase):
         self.assertEqual(checker.file_path, file_path)
         self.assertEqual(checker.handle_style_error,
                           self.mock_handle_style_error)
+
+    def test_cmake_paths(self):
+        """Test paths that should be checked as CMake."""
+        paths = [
+                 "CMakeLists.txt",
+                 "OptionsPort.cmake",
+                 "PlatformPort.cmake",
+                 ]
+
+        for path in paths:
+            self.assert_checker_cmake(path)
+
+        # Check checker attributes on a typical input.
+        file_base = "foo"
+        file_extension = "cmake"
+        file_path = file_base + "." + file_extension
+        self.assert_checker_cmake(file_path)
+        checker = self.dispatch(file_path)
+        self.assertEqual(checker._handle_style_error,
+                          self.mock_handle_style_error)
+
 
     def test_cpp_paths(self):
         """Test paths that should be checked as C++."""

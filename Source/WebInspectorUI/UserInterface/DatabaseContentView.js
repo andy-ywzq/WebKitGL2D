@@ -45,10 +45,12 @@ WebInspector.DatabaseContentView = function(representedObject)
 
 WebInspector.DatabaseContentView.Event = {
     SchemaUpdated: "SchemaUpdated"
-}
+};
 
 WebInspector.DatabaseContentView.prototype = {
     constructor: WebInspector.DatabaseContentView,
+
+    // Public
 
     shown: function()
     {
@@ -67,11 +69,13 @@ WebInspector.DatabaseContentView.prototype = {
         }
     },
 
-    _messagesClicked: function()
+    saveToCookie: function(cookie)
     {
-        this.prompt.focus();
+        cookie.type = WebInspector.ContentViewCookieType.Database;
+        cookie.host = this.representedObject.host;
+        cookie.name = this.representedObject.name;
     },
-    
+
     consolePromptCompletionsNeeded: function(prompt, defaultCompletions, base, prefix, suffix)
     {
         var results = [];
@@ -101,6 +105,13 @@ WebInspector.DatabaseContentView.prototype = {
     consolePromptTextCommitted: function(prompt, query)
     {
         this.database.executeSQL(query, this._queryFinished.bind(this, query), this._queryError.bind(this, query));
+    },
+
+    // Private
+
+    _messagesClicked: function()
+    {
+        this.prompt.focus();
     },
 
     _queryFinished: function(query, columnNames, values)
@@ -152,7 +163,7 @@ WebInspector.DatabaseContentView.prototype = {
     _appendErrorQueryResult: function(query, errorText)
     {
         var resultElement = this._appendQueryResult(query);
-        resultElement.classList.add("error")
+        resultElement.classList.add("error");
         resultElement.textContent = errorText;
 
         this._promptElement.scrollIntoView(false);

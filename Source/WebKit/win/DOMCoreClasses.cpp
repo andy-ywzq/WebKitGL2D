@@ -47,7 +47,7 @@
 #include <WebCore/HTMLSelectElement.h>
 #include <WebCore/HTMLTextAreaElement.h>
 #include <WebCore/NodeList.h>
-#include <WebCore/RenderObject.h>
+#include <WebCore/RenderElement.h>
 #include <WebCore/RenderTreeAsText.h>
 
 #include <initguid.h>
@@ -484,7 +484,7 @@ IDOMNode* DOMNode::createInstance(WebCore::Node* n)
         break;
         case WebCore::Node::DOCUMENT_NODE:
         {
-            IDOMDocument* newDocument = DOMDocument::createInstance(n->document());
+            IDOMDocument* newDocument = DOMDocument::createInstance(&n->document());
             if (newDocument) {
                 hr = newDocument->QueryInterface(IID_IDOMNode, (void**)&domNode);
                 newDocument->Release();
@@ -990,7 +990,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::boundingBox(
     if (!m_element)
         return E_FAIL;
 
-    WebCore::RenderObject *renderer = m_element->renderer();
+    WebCore::RenderElement *renderer = m_element->renderer();
     if (renderer) {
         IntRect boundsIntRect = renderer->absoluteBoundingBoxRect();
         rect->left = boundsIntRect.x();
@@ -1216,7 +1216,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::isFocused(
     if (!m_element)
         return E_FAIL;
 
-    if (m_element->document()->focusedElement() == m_element)
+    if (m_element->document().focusedElement() == m_element)
         *result = TRUE;
     else
         *result = FALSE;
@@ -1250,11 +1250,11 @@ HRESULT STDMETHODCALLTYPE DOMElement::font(WebFontDescription* webFontDescriptio
 
     ASSERT(m_element);
 
-    WebCore::RenderObject* renderer = m_element->renderer();
+    WebCore::RenderElement* renderer = m_element->renderer();
     if (!renderer)
         return E_FAIL;
 
-    FontDescription fontDescription = renderer->style()->font().fontDescription();
+    FontDescription fontDescription = renderer->style().font().fontDescription();
     AtomicString family = fontDescription.firstFamily();
     webFontDescription->family = family.characters();
     webFontDescription->familyLength = family.length();
@@ -1275,7 +1275,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::renderedImage(HBITMAP* image)
 
     ASSERT(m_element);
 
-    Frame* frame = m_element->document()->frame();
+    Frame* frame = m_element->document().frame();
     if (!frame)
         return E_FAIL;
 

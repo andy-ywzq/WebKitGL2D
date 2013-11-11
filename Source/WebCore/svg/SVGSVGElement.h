@@ -45,7 +45,7 @@ class SVGSVGElement FINAL : public SVGGraphicsElement,
                             public SVGFitToViewBox,
                             public SVGZoomAndPan {
 public:
-    static PassRefPtr<SVGSVGElement> create(const QualifiedName&, Document*);
+    static PassRefPtr<SVGSVGElement> create(const QualifiedName&, Document&);
 
     using SVGGraphicsElement::ref;
     using SVGGraphicsElement::deref;
@@ -106,8 +106,8 @@ public:
 
     PassRefPtr<NodeList> getIntersectionList(const FloatRect&, SVGElement* referenceElement) const;
     PassRefPtr<NodeList> getEnclosureList(const FloatRect&, SVGElement* referenceElement) const;
-    bool checkIntersection(SVGElement*, const FloatRect&) const;
-    bool checkEnclosure(SVGElement*, const FloatRect&) const;
+    bool checkIntersection(const SVGElement*, const FloatRect&) const;
+    bool checkEnclosure(const SVGElement*, const FloatRect&) const;
     void deselectAll();
 
     static float createSVGNumber();
@@ -123,7 +123,7 @@ public:
 
     void setupInitialView(const String& fragmentIdentifier, Element* anchorNode);
 
-    Element* getElementById(const AtomicString&) const;
+    Element* getElementById(const AtomicString&);
 
     bool widthAttributeEstablishesViewport() const;
     bool heightAttributeEstablishesViewport() const;
@@ -133,22 +133,19 @@ public:
 
     bool hasEmptyViewBox() const { return viewBoxIsValid() && viewBox().isEmpty(); }
 
-protected:
-    virtual void didMoveToNewDocument(Document* oldDocument) OVERRIDE;
-
 private:
-    SVGSVGElement(const QualifiedName&, Document*);
+    SVGSVGElement(const QualifiedName&, Document&);
     virtual ~SVGSVGElement();
 
-    virtual bool isSVGSVGElement() const OVERRIDE { return true; }
-    
+    virtual void didMoveToNewDocument(Document* oldDocument) OVERRIDE;
+
     virtual void parseAttribute(const QualifiedName&, const AtomicString&) OVERRIDE;
 
     virtual bool rendererIsNeeded(const RenderStyle&) OVERRIDE;
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
 
-    virtual InsertionNotificationRequest insertedInto(ContainerNode*) OVERRIDE;
-    virtual void removedFrom(ContainerNode*) OVERRIDE;
+    virtual InsertionNotificationRequest insertedInto(ContainerNode&) OVERRIDE;
+    virtual void removedFrom(ContainerNode&) OVERRIDE;
 
     virtual void svgAttributeChanged(const QualifiedName&);
 
@@ -185,19 +182,7 @@ private:
     RefPtr<SVGViewSpec> m_viewSpec;
 };
 
-inline SVGSVGElement* toSVGSVGElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->isSVGElement());
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || toSVGElement(node)->isSVGSVGElement());
-    return static_cast<SVGSVGElement*>(node);
-}
-
-inline const SVGSVGElement* toSVGSVGElement(const Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->isSVGElement());
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || toSVGElement(node)->isSVGSVGElement());
-    return static_cast<const SVGSVGElement*>(node);
-}
+NODE_TYPE_CASTS(SVGSVGElement)
 
 } // namespace WebCore
 

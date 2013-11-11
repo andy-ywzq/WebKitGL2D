@@ -48,8 +48,8 @@
 
 namespace WebCore {
 
-RenderSVGImage::RenderSVGImage(SVGImageElement* impl)
-    : RenderSVGModelObject(impl)
+RenderSVGImage::RenderSVGImage(SVGImageElement& element, PassRef<RenderStyle> style)
+    : RenderSVGModelObject(element, std::move(style))
     , m_needsBoundariesUpdate(true)
     , m_needsTransformUpdate(true)
     , m_imageResource(RenderImageResource::create())
@@ -62,13 +62,17 @@ RenderSVGImage::~RenderSVGImage()
     m_imageResource->shutdown();
 }
 
+SVGImageElement& RenderSVGImage::imageElement() const
+{
+    return toSVGImageElement(RenderSVGModelObject::element());
+}
+
 bool RenderSVGImage::updateImageViewport()
 {
-    SVGImageElement* image = toSVGImageElement(node());
     FloatRect oldBoundaries = m_objectBoundingBox;
 
-    SVGLengthContext lengthContext(image);
-    m_objectBoundingBox = FloatRect(image->x().value(lengthContext), image->y().value(lengthContext), image->width().value(lengthContext), image->height().value(lengthContext));
+    SVGLengthContext lengthContext(&imageElement());
+    m_objectBoundingBox = FloatRect(imageElement().x().value(lengthContext), imageElement().y().value(lengthContext), imageElement().width().value(lengthContext), imageElement().height().value(lengthContext));
 
     if (oldBoundaries == m_objectBoundingBox)
         return false;
@@ -88,13 +92,13 @@ void RenderSVGImage::layout()
 
     bool transformOrBoundariesUpdate = m_needsTransformUpdate || m_needsBoundariesUpdate;
     if (m_needsTransformUpdate) {
-        m_localTransform = toSVGImageElement(node())->animatedLocalTransform();
+        m_localTransform = imageElement().animatedLocalTransform();
         m_needsTransformUpdate = false;
     }
 
     if (m_needsBoundariesUpdate) {
         m_repaintBoundingBoxExcludingShadow = m_objectBoundingBox;
-        SVGRenderSupport::intersectRepaintRectWithResources(this, m_repaintBoundingBoxExcludingShadow);
+        SVGRenderSupport::intersectRepaintRectWithResources(*this, m_repaintBoundingBoxExcludingShadow);
 
         m_repaintBoundingBox = m_repaintBoundingBoxExcludingShadow;
         SVGRenderSupport::intersectRepaintRectWithShadows(this, m_repaintBoundingBox);
@@ -104,19 +108,19 @@ void RenderSVGImage::layout()
 
     // Invalidate all resources of this client if our layout changed.
     if (everHadLayout() && selfNeedsLayout())
-        SVGResourcesCache::clientLayoutChanged(this);
+        SVGResourcesCache::clientLayoutChanged(*this);
 
     // If our bounds changed, notify the parents.
     if (transformOrBoundariesUpdate)
         RenderSVGModelObject::setNeedsBoundariesUpdate();
 
     repainter.repaintAfterLayout();
-    setNeedsLayout(false);
+    clearNeedsLayout();
 }
 
 void RenderSVGImage::paint(PaintInfo& paintInfo, const LayoutPoint&)
 {
-    if (paintInfo.context->paintingDisabled() || style()->visibility() == HIDDEN || !m_imageResource->hasImage())
+    if (paintInfo.context->paintingDisabled() || style().visibility() == HIDDEN || !m_imageResource->hasImage())
         return;
 
     FloatRect boundingBox = repaintRectInLocalCoordinates();
@@ -124,16 +128,16 @@ void RenderSVGImage::paint(PaintInfo& paintInfo, const LayoutPoint&)
         return;
 
     PaintInfo childPaintInfo(paintInfo);
-    bool drawsOutline = style()->outlineWidth() && (childPaintInfo.phase == PaintPhaseOutline || childPaintInfo.phase == PaintPhaseSelfOutline);
+    bool drawsOutline = style().outlineWidth() && (childPaintInfo.phase == PaintPhaseOutline || childPaintInfo.phase == PaintPhaseSelfOutline);
     if (drawsOutline || childPaintInfo.phase == PaintPhaseForeground) {
         GraphicsContextStateSaver stateSaver(*childPaintInfo.context);
         childPaintInfo.applyTransform(m_localTransform);
 
         if (childPaintInfo.phase == PaintPhaseForeground) {
-            SVGRenderingContext renderingContext(this, childPaintInfo);
+            SVGRenderingContext renderingContext(*this, childPaintInfo);
 
             if (renderingContext.isRenderingPrepared()) {
-                if (style()->svgStyle()->bufferedRendering() == BR_STATIC  && renderingContext.bufferForeground(m_bufferedForeground))
+                if (style().svgStyle()->bufferedRendering() == BR_STATIC  && renderingContext.bufferForeground(m_bufferedForeground))
                     return;
 
                 paintForeground(childPaintInfo);
@@ -151,8 +155,7 @@ void RenderSVGImage::paintForeground(PaintInfo& paintInfo)
     FloatRect destRect = m_objectBoundingBox;
     FloatRect srcRect(0, 0, image->width(), image->height());
 
-    SVGImageElement* imageElement = toSVGImageElement(node());
-    imageElement->preserveAspectRatio().transformRect(destRect, srcRect);
+    imageElement().preserveAspectRatio().transformRect(destRect, srcRect);
 
     paintInfo.context->drawImage(image.get(), ColorSpaceDeviceRGB, destRect, srcRect);
 }
@@ -168,8 +171,8 @@ bool RenderSVGImage::nodeAtFloatPoint(const HitTestRequest& request, HitTestResu
     if (hitTestAction != HitTestForeground)
         return false;
 
-    PointerEventsHitRules hitRules(PointerEventsHitRules::SVG_IMAGE_HITTESTING, request, style()->pointerEvents());
-    bool isVisible = (style()->visibility() == VISIBLE);
+    PointerEventsHitRules hitRules(PointerEventsHitRules::SVG_IMAGE_HITTESTING, request, style().pointerEvents());
+    bool isVisible = (style().visibility() == VISIBLE);
     if (isVisible || !hitRules.requireVisible) {
         FloatPoint localPoint = localToParentTransform().inverse().mapPoint(pointInParent);
             

@@ -27,11 +27,12 @@
  */
 
 #include "config.h"
+#include "Page.h"
+
 #include "DocumentLoader.h"
-#include "Frame.h"
 #include "FrameLoader.h"
 #include "FrameTree.h"
-#include "Page.h"
+#include "MainFrame.h"
 
 namespace WebCore {
 
@@ -43,7 +44,7 @@ void Page::addSchedulePair(PassRefPtr<SchedulePair> prpPair)
         m_scheduledRunLoopPairs = adoptPtr(new SchedulePairHashSet);
     m_scheduledRunLoopPairs->add(pair);
 
-    for (Frame* frame = m_mainFrame.get(); frame; frame = frame->tree()->traverseNext()) {
+    for (Frame* frame = m_mainFrame.get(); frame; frame = frame->tree().traverseNext()) {
         if (DocumentLoader* documentLoader = frame->loader().documentLoader())
             documentLoader->schedule(pair.get());
         if (DocumentLoader* documentLoader = frame->loader().provisionalDocumentLoader())
@@ -62,7 +63,7 @@ void Page::removeSchedulePair(PassRefPtr<SchedulePair> prpPair)
     RefPtr<SchedulePair> pair = prpPair;
     m_scheduledRunLoopPairs->remove(pair);
 
-    for (Frame* frame = m_mainFrame.get(); frame; frame = frame->tree()->traverseNext()) {
+    for (Frame* frame = m_mainFrame.get(); frame; frame = frame->tree().traverseNext()) {
         if (DocumentLoader* documentLoader = frame->loader().documentLoader())
             documentLoader->unschedule(pair.get());
         if (DocumentLoader* documentLoader = frame->loader().provisionalDocumentLoader())

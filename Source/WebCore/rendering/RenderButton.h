@@ -27,6 +27,7 @@
 
 namespace WebCore {
 
+class HTMLFormControlElement;
 class RenderTextFragment;
 
 // RenderButtons are just like normal flexboxes except that they will generate an anonymous block child.
@@ -34,60 +35,51 @@ class RenderTextFragment;
 // to date as the button changes.
 class RenderButton FINAL : public RenderFlexibleBox {
 public:
-    explicit RenderButton(Element*);
+    RenderButton(HTMLFormControlElement&, PassRef<RenderStyle>);
     virtual ~RenderButton();
 
-    virtual const char* renderName() const { return "RenderButton"; }
-    virtual bool isRenderButton() const { return true; }
+    HTMLFormControlElement& formControlElement() const;
 
-    virtual bool canBeSelectionLeaf() const OVERRIDE { return node() && node()->rendererIsEditable(); }
+    virtual bool canBeSelectionLeaf() const OVERRIDE;
 
-    virtual void addChild(RenderObject* newChild, RenderObject *beforeChild = 0);
-    virtual void removeChild(RenderObject*);
-    virtual void removeLeftoverAnonymousBlock(RenderBlock*) { }
-    virtual bool createsAnonymousWrapper() const { return true; }
+    virtual void addChild(RenderObject* newChild, RenderObject *beforeChild = 0) OVERRIDE;
+    virtual void removeChild(RenderObject&) OVERRIDE;
+    virtual void removeLeftoverAnonymousBlock(RenderBlock*) OVERRIDE { }
+    virtual bool createsAnonymousWrapper() const OVERRIDE { return true; }
 
     void setupInnerStyle(RenderStyle*);
-    virtual void updateFromElement();
+    virtual void updateFromElement() OVERRIDE;
 
     virtual bool canHaveGeneratedChildren() const OVERRIDE;
-    virtual bool hasControlClip() const { return true; }
-    virtual LayoutRect controlClipRect(const LayoutPoint&) const;
+    virtual bool hasControlClip() const OVERRIDE { return true; }
+    virtual LayoutRect controlClipRect(const LayoutPoint&) const OVERRIDE;
 
     void setText(const String&);
     String text() const;
 
 private:
-    virtual void styleWillChange(StyleDifference, const RenderStyle* newStyle);
-    virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle);
+    void element() const WTF_DELETED_FUNCTION;
 
-    virtual bool hasLineIfEmpty() const { return node() && node()->toInputElement(); }
+    virtual const char* renderName() const OVERRIDE { return "RenderButton"; }
+    virtual bool isRenderButton() const OVERRIDE { return true; }
 
-    virtual bool requiresForcedStyleRecalcPropagation() const { return true; }
+    virtual void styleWillChange(StyleDifference, const RenderStyle& newStyle) OVERRIDE;
+    virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle) OVERRIDE;
+
+    virtual bool hasLineIfEmpty() const OVERRIDE;
+
+    virtual bool requiresForcedStyleRecalcPropagation() const OVERRIDE { return true; }
 
     void timerFired(Timer<RenderButton>*);
 
     RenderTextFragment* m_buttonText;
     RenderBlock* m_inner;
 
-    OwnPtr<Timer<RenderButton> > m_timer;
+    OwnPtr<Timer<RenderButton>> m_timer;
     bool m_default;
 };
 
-inline RenderButton* toRenderButton(RenderObject* object)
-{ 
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isRenderButton());
-    return static_cast<RenderButton*>(object);
-}
-
-inline const RenderButton* toRenderButton(const RenderObject* object)
-{ 
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isRenderButton());
-    return static_cast<const RenderButton*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderButton(const RenderButton*);
+RENDER_OBJECT_TYPE_CASTS(RenderButton, isRenderButton())
 
 } // namespace WebCore
 

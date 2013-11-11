@@ -32,6 +32,7 @@
 #include "config.h"
 #include "ScriptCachedFrameData.h"
 
+#include "Document.h"
 #include "Frame.h"
 #include "GCController.h"
 #include "Page.h"
@@ -44,11 +45,11 @@ using namespace JSC;
 
 namespace WebCore {
 
-ScriptCachedFrameData::ScriptCachedFrameData(Frame* frame)
+ScriptCachedFrameData::ScriptCachedFrameData(Frame& frame)
 {
     JSLockHolder lock(JSDOMWindowBase::commonVM());
 
-    ScriptController& scriptController = frame->script();
+    ScriptController& scriptController = frame.script();
     ScriptController::ShellMap& windowShells = scriptController.m_windowShells;
 
     ScriptController::ShellMap::iterator windowShellsEnd = windowShells.end();
@@ -65,28 +66,27 @@ ScriptCachedFrameData::~ScriptCachedFrameData()
     clear();
 }
 
-void ScriptCachedFrameData::restore(Frame* frame)
+void ScriptCachedFrameData::restore(Frame& frame)
 {
     JSLockHolder lock(JSDOMWindowBase::commonVM());
 
-    ScriptController& scriptController = frame->script();
+    ScriptController& scriptController = frame.script();
     ScriptController::ShellMap& windowShells = scriptController.m_windowShells;
 
-    ScriptController::ShellMap::iterator windowShellsEnd = windowShells.end();
-    for (ScriptController::ShellMap::iterator iter = windowShells.begin(); iter != windowShellsEnd; ++iter) {
-        DOMWrapperWorld* world = iter->key.get();
-        JSDOMWindowShell* windowShell = iter->value.get();
+    for (auto it = windowShells.begin(), end = windowShells.end(); it != end; ++it) {
+        DOMWrapperWorld* world = it->key.get();
+        JSDOMWindowShell* windowShell = it->value.get();
 
         if (JSDOMWindow* window = m_windows.get(world).get())
             windowShell->setWindow(window->vm(), window);
         else {
-            DOMWindow* domWindow = frame->document()->domWindow();
-            if (windowShell->window()->impl() == domWindow)
+            DOMWindow* domWindow = frame.document()->domWindow();
+            if (&windowShell->window()->impl() == domWindow)
                 continue;
 
             windowShell->setWindow(domWindow);
 
-            if (Page* page = frame->page()) {
+            if (Page* page = frame.page()) {
                 scriptController.attachDebugger(windowShell, page->debugger());
                 windowShell->window()->setProfileGroup(page->group().identifier());
             }

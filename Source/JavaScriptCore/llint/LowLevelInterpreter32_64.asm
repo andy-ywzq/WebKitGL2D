@@ -307,15 +307,15 @@ macro functionArityCheck(doneLabel, slow_path)
     biaeq t0, CodeBlock::m_numParameters[t1], doneLabel
     cCall2(slow_path, cfr, PC)   # This slow_path has a simple protocol: t0 = 0 => no error, t0 != 0 => error
     btiz t0, .isArityFixupNeeded
-    loadp JITStackFrame::vm[sp], t1
-    loadp VM::callFrameForThrow[t1], t0
-    jmp VM::targetMachinePCForThrow[t1]
+    move t1, cfr   # t1 contains caller frame
+    jmp _llint_throw_from_slow_path_trampoline
+
 .isArityFixupNeeded:
     btiz t1, .continue
 
-    // Move frame down "t1" slots
+    // Move frame up "t1" slots
+    negi t1
     move cfr, t3
-    subp 8, t3
     loadi PayloadOffset + ArgumentCount[cfr], t2
     addi CallFrameHeaderSlots, t2
 .copyLoop:
@@ -323,7 +323,7 @@ macro functionArityCheck(doneLabel, slow_path)
     storei t0, PayloadOffset[t3, t1, 8]
     loadi TagOffset[t3], t0
     storei t0, TagOffset[t3, t1, 8]
-    subp 8, t3
+    addp 8, t3
     bsubinz 1, t2, .copyLoop
 
     // Fill new slots with JSUndefined
@@ -333,8 +333,8 @@ macro functionArityCheck(doneLabel, slow_path)
     storei t0, PayloadOffset[t3, t1, 8]
     move UndefinedTag, t0
     storei t0, TagOffset[t3, t1, 8]
-    subp 8, t3
-    bsubinz 1, t2, .fillLoop
+    addp 8, t3
+    baddinz 1, t2, .fillLoop
 
     lshiftp 3, t1
     addp t1, cfr
@@ -355,10 +355,11 @@ _llint_op_enter:
     btiz t2, .opEnterDone
     move UndefinedTag, t0
     move 0, t1
+    negi t2
 .opEnterLoop:
-    subi 1, t2
     storei t0, TagOffset[cfr, t2, 8]
     storei t1, PayloadOffset[cfr, t2, 8]
+    addi 1, t2
     btinz t2, .opEnterLoop
 .opEnterDone:
     dispatch(1)
@@ -412,11 +413,15 @@ _llint_op_get_callee:
     traceExecution()
     loadi 4[PC], t0
     loadp PayloadOffset + Callee[cfr], t1
-    valueProfile(CellTag, t1, 8, t2)
+    loadpFromInstruction(2, t2)
+    bpneq t1, t2, .opGetCalleeSlow
     storei CellTag, TagOffset[cfr, t0, 8]
     storei t1, PayloadOffset[cfr, t0, 8]
     dispatch(3)
 
+.opGetCalleeSlow:
+    callSlowPath(_slow_path_get_callee)
+    dispatch(3)
 
 _llint_op_to_this:
     traceExecution()
@@ -425,7 +430,8 @@ _llint_op_to_this:
     loadi PayloadOffset[cfr, t0, 8], t0
     loadp JSCell::m_structure[t0], t0
     bbneq Structure::m_typeInfo + TypeInfo::m_type[t0], FinalObjectType, .opToThisSlow
-    valueProfile(CellTag, t0, 8, t1)
+    loadpFromInstruction(2, t2)
+    bpneq t0, t2, .opToThisSlow
     dispatch(3)
 
 .opToThisSlow:
@@ -1232,7 +1238,6 @@ _llint_op_get_argument_by_val:
     addi 1, t2
     loadi ArgumentCount + PayloadOffset[cfr], t1
     biaeq t2, t1, .opGetArgumentByValSlow
-    negi t2
     loadi 4[PC], t3
     loadi ThisArgumentOffset + TagOffset[cfr, t2, 8], t0
     loadi ThisArgumentOffset + PayloadOffset[cfr, t2, 8], t1
@@ -1295,7 +1300,7 @@ macro contiguousPutByVal(storeCallback)
     jmp .storeResult
 end
 
-_llint_op_put_by_val:
+macro putByVal(holeCheck, slowPath)
     traceExecution()
     loadi 4[PC], t0
     loadConstantOrVariablePayload(t0, CellTag, t1, .opPutByValSlow)
@@ -1346,7 +1351,7 @@ _llint_op_put_by_val:
 .opPutByValNotContiguous:
     bineq t2, ArrayStorageShape, .opPutByValSlow
     biaeq t3, -sizeof IndexingHeader + IndexingHeader::u.lengths.vectorLength[t0], .opPutByValOutOfBounds
-    bieq ArrayStorage::m_vector + TagOffset[t0, t3, 8], EmptyValueTag, .opPutByValArrayStorageEmpty
+    holeCheck(ArrayStorage::m_vector + TagOffset[t0, t3, 8], .opPutByValArrayStorageEmpty)
 .opPutByValArrayStorageStoreResult:
     loadi 12[PC], t2
     loadConstantOrVariable2Reg(t2, t1, t2)
@@ -1372,9 +1377,18 @@ _llint_op_put_by_val:
         storeb 1, ArrayProfile::m_outOfBounds[t0]
     end
 .opPutByValSlow:
-    callSlowPath(_llint_slow_path_put_by_val)
+    callSlowPath(slowPath)
     dispatch(5)
+end
 
+_llint_op_put_by_val:
+    putByVal(macro(addr, slowPath)
+        bieq addr, EmptyValueTag, slowPath
+    end, _llint_slow_path_put_by_val)
+
+_llint_op_put_by_val_direct:
+    putByVal(macro(addr, slowPath)
+    end, _llint_slow_path_put_by_val_direct)
 
 _llint_op_jmp:
     traceExecution()
@@ -1574,6 +1588,7 @@ _llint_op_new_func:
 macro arrayProfileForCall()
     if VALUE_PROFILER
         loadi 16[PC], t3
+        negi t3
         bineq ThisArgumentOffset + TagOffset[cfr, t3, 8], CellTag, .done
         loadi ThisArgumentOffset + PayloadOffset[cfr, t3, 8], t0
         loadp JSCell::m_structure[t0], t0
@@ -1591,6 +1606,7 @@ macro doCall(slowPath)
     bineq t3, t2, .opCallSlow
     loadi 16[PC], t3
     lshifti 3, t3
+    negi t3
     addp cfr, t3  # t3 contains the new value of cfr
     loadp JSFunction::m_scope[t2], t0
     storei t2, Callee + PayloadOffset[t3]
@@ -1621,7 +1637,7 @@ _llint_op_tear_off_activation:
 _llint_op_tear_off_arguments:
     traceExecution()
     loadi 4[PC], t0
-    subi 1, t0   # Get the unmodifiedArgumentsRegister
+    addi 1, t0   # Get the unmodifiedArgumentsRegister
     bieq TagOffset[cfr, t0, 8], EmptyValueTag, .opTearOffArgumentsNotCreated
     callSlowPath(_llint_slow_path_tear_off_arguments)
 .opTearOffArgumentsNotCreated:
@@ -1718,12 +1734,13 @@ _llint_op_catch:
     # code must have known that we were throwing to the interpreter, and have
     # set VM::targetInterpreterPCForThrow.
     move t0, cfr
-    loadp JITStackFrame::vm[sp], t3
+    loadp CodeBlock[cfr], t3
+    loadp CodeBlock::m_vm[t3], t3
     loadi VM::targetInterpreterPCForThrow[t3], PC
-    loadi VM::exception + PayloadOffset[t3], t0
-    loadi VM::exception + TagOffset[t3], t1
-    storei 0, VM::exception + PayloadOffset[t3]
-    storei EmptyValueTag, VM::exception + TagOffset[t3]       
+    loadi VM::m_exception + PayloadOffset[t3], t0
+    loadi VM::m_exception + TagOffset[t3], t1
+    storei 0, VM::m_exception + PayloadOffset[t3]
+    storei EmptyValueTag, VM::m_exception + TagOffset[t3]
     loadi 4[PC], t2
     storei t0, PayloadOffset[cfr, t2, 8]
     storei t1, TagOffset[cfr, t2, 8]
@@ -1776,10 +1793,13 @@ _llint_op_end:
 
 
 _llint_throw_from_slow_path_trampoline:
+    callSlowPath(_llint_slow_path_handle_exception)
+
     # When throwing from the interpreter (i.e. throwing from LLIntSlowPaths), so
     # the throw target is not necessarily interpreted code, we come to here.
     # This essentially emulates the JIT's throwing protocol.
-    loadp JITStackFrame::vm[sp], t1
+    loadp CodeBlock[cfr], t1
+    loadp CodeBlock::m_vm[t1], t1
     loadp VM::topCallFrame[t1], cfr
     loadp VM::callFrameForThrow[t1], t0
     jmp VM::targetMachinePCForThrow[t1]
@@ -1787,10 +1807,7 @@ _llint_throw_from_slow_path_trampoline:
 
 _llint_throw_during_call_trampoline:
     preserveReturnAddressAfterCall(t2)
-    loadp JITStackFrame::vm[sp], t1
-    loadp VM::topCallFrame[t1], cfr
-    loadp VM::callFrameForThrow[t1], t0
-    jmp VM::targetMachinePCForThrow[t1]
+    jmp _llint_throw_from_slow_path_trampoline
 
 
 macro nativeCallTrampoline(executableOffsetToFunction)
@@ -1800,7 +1817,9 @@ macro nativeCallTrampoline(executableOffsetToFunction)
     storei CellTag, ScopeChain + TagOffset[cfr]
     storei t1, ScopeChain + PayloadOffset[cfr]
     if X86
-        loadp JITStackFrame::vm + 4[sp], t3 # Additional offset for return address
+        loadp ScopeChain[cfr], t3
+        andp MarkedBlockMask, t3
+        loadp MarkedBlock::m_weakSet + WeakSet::m_vm[t3], t3
         storep cfr, VM::topCallFrame[t3]
         peek 0, t1
         storep t1, ReturnPC[cfr]
@@ -1811,9 +1830,13 @@ macro nativeCallTrampoline(executableOffsetToFunction)
         move t0, cfr
         call executableOffsetToFunction[t1]
         addp 16 - 4, sp
-        loadp JITStackFrame::vm + 4[sp], t3
+        loadp ScopeChain[cfr], t3
+        andp MarkedBlockMask, t3
+        loadp MarkedBlock::m_weakSet + WeakSet::m_vm[t3], t3
     elsif ARM or ARMv7 or ARMv7_TRADITIONAL
-        loadp JITStackFrame::vm[sp], t3
+        loadp ScopeChain[cfr], t3
+        andp MarkedBlockMask, t3
+        loadp MarkedBlock::m_weakSet + WeakSet::m_vm[t3], t3
         storep cfr, VM::topCallFrame[t3]
         move t0, t2
         preserveReturnAddressAfterCall(t3)
@@ -1824,9 +1847,13 @@ macro nativeCallTrampoline(executableOffsetToFunction)
         move t2, cfr
         call executableOffsetToFunction[t1]
         restoreReturnAddressBeforeReturn(t3)
-        loadp JITStackFrame::vm[sp], t3
+        loadp ScopeChain[cfr], t3
+        andp MarkedBlockMask, t3
+        loadp MarkedBlock::m_weakSet + WeakSet::m_vm[t3], t3
     elsif MIPS or SH4
-        loadp JITStackFrame::vm[sp], t3
+        loadp ScopeChain[cfr], t3
+        andp MarkedBlockMask, t3
+        loadp MarkedBlock::m_weakSet + WeakSet::m_vm[t3], t3
         storep cfr, VM::topCallFrame[t3]
         move t0, t2
         preserveReturnAddressAfterCall(t3)
@@ -1838,9 +1865,13 @@ macro nativeCallTrampoline(executableOffsetToFunction)
         move t0, a0
         call executableOffsetToFunction[t1]
         restoreReturnAddressBeforeReturn(t3)
-        loadp JITStackFrame::vm[sp], t3
+        loadp ScopeChain[cfr], t3
+        andp MarkedBlockMask, t3
+        loadp MarkedBlock::m_weakSet + WeakSet::m_vm[t3], t3
     elsif C_LOOP
-        loadp JITStackFrame::vm[sp], t3
+        loadp ScopeChain[cfr], t3
+        andp MarkedBlockMask, t3
+        loadp MarkedBlock::m_weakSet + WeakSet::m_vm[t3], t3
         storep cfr, VM::topCallFrame[t3]
         move t0, t2
         preserveReturnAddressAfterCall(t3)
@@ -1851,11 +1882,13 @@ macro nativeCallTrampoline(executableOffsetToFunction)
         move t2, cfr
         cloopCallNative executableOffsetToFunction[t1]
         restoreReturnAddressBeforeReturn(t3)
-        loadp JITStackFrame::vm[sp], t3
-    else  
+        loadp ScopeChain[cfr], t3
+        andp MarkedBlockMask, t3
+        loadp MarkedBlock::m_weakSet + WeakSet::m_vm[t3], t3
+    else
         error
     end
-    bineq VM::exception + TagOffset[t3], EmptyValueTag, .exception
+    bineq VM::m_exception + TagOffset[t3], EmptyValueTag, .exception
     ret
 .exception:
     preserveReturnAddressAfterCall(t1) # This is really only needed on X86

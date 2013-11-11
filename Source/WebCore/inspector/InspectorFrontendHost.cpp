@@ -37,22 +37,22 @@
 #include "ContextMenuItem.h"
 #include "ContextMenuController.h"
 #include "ContextMenuProvider.h"
-#include "DOMFileSystem.h"
 #include "DOMWrapperWorld.h"
 #include "Element.h"
-#include "Frame.h"
 #include "FrameLoader.h"
 #include "HitTestResult.h"
 #include "HTMLFrameOwnerElement.h"
 #include "InspectorAgent.h"
 #include "InspectorController.h"
 #include "InspectorFrontendClient.h"
+#include "MainFrame.h"
 #include "Page.h"
 #include "Pasteboard.h"
 #include "ResourceError.h"
 #include "ResourceRequest.h"
 #include "ResourceResponse.h"
 #include "ScriptFunctionCall.h"
+#include "Sound.h"
 #include "UserGestureIndicator.h"
 #include <wtf/StdLibExtras.h>
 
@@ -178,7 +178,7 @@ void InspectorFrontendHost::bringToFront()
 
 void InspectorFrontendHost::setZoomFactor(float zoom)
 {
-    m_frontendPage->mainFrame()->setPageAndTextZoomFactors(zoom, 1);
+    m_frontendPage->mainFrame().setPageAndTextZoomFactors(zoom, 1);
 }
 
 void InspectorFrontendHost::inspectedURLChanged(const String& newURL)
@@ -224,7 +224,7 @@ String InspectorFrontendHost::localizedStringsURL()
 
 void InspectorFrontendHost::copyText(const String& text)
 {
-    Pasteboard::generalPasteboard()->writePlainText(text, Pasteboard::CannotSmartReplace);
+    Pasteboard::createForCopyAndPaste()->writePlainText(text, Pasteboard::CannotSmartReplace);
 }
 
 void InspectorFrontendHost::openInNewTab(const String& url)
@@ -240,10 +240,10 @@ bool InspectorFrontendHost::canSave()
     return false;
 }
 
-void InspectorFrontendHost::save(const String& url, const String& content, bool forceSaveAs)
+void InspectorFrontendHost::save(const String& url, const String& content, bool base64Encoded, bool forceSaveAs)
 {
     if (m_client)
-        m_client->save(url, content, forceSaveAs);
+        m_client->save(url, content, base64Encoded, forceSaveAs);
 }
 
 void InspectorFrontendHost::append(const String& url, const String& content)
@@ -269,9 +269,9 @@ void InspectorFrontendHost::showContextMenu(Event* event, const Vector<ContextMe
         return;
 
     ASSERT(m_frontendPage);
-    ScriptState* frontendScriptState = scriptStateFromPage(debuggerWorld(), m_frontendPage);
+    JSC::ExecState* frontendExecState = execStateFromPage(debuggerWorld(), m_frontendPage);
     ScriptObject frontendApiObject;
-    if (!ScriptGlobalObject::get(frontendScriptState, "InspectorFrontendAPI", frontendApiObject)) {
+    if (!ScriptGlobalObject::get(frontendExecState, "InspectorFrontendAPI", frontendApiObject)) {
         ASSERT_NOT_REACHED();
         return;
     }
@@ -289,7 +289,7 @@ String InspectorFrontendHost::loadResourceSynchronously(const String& url)
     Vector<char> data;
     ResourceError error;
     ResourceResponse response;
-    m_frontendPage->mainFrame()->loader().loadResourceSynchronously(request, DoNotAllowStoredCredentials, DoNotAskClientForCrossOriginCredentials, error, response, data);
+    m_frontendPage->mainFrame().loader().loadResourceSynchronously(request, DoNotAllowStoredCredentials, DoNotAskClientForCrossOriginCredentials, error, response, data);
     return String::fromUTF8(data.data(), data.size());
 }
 
@@ -318,17 +318,14 @@ void InspectorFrontendHost::removeFileSystem(const String& fileSystemPath)
         m_client->removeFileSystem(fileSystemPath);
 }
 
-#if ENABLE(FILE_SYSTEM)
-PassRefPtr<DOMFileSystem> InspectorFrontendHost::isolatedFileSystem(const String& fileSystemName, const String& rootURL)
-{
-    ScriptExecutionContext* context = m_frontendPage->mainFrame()->document();
-    return DOMFileSystem::create(context, fileSystemName, FileSystemTypeIsolated, KURL(ParsedURLString, rootURL), AsyncFileSystem::create());
-}
-#endif
-
 bool InspectorFrontendHost::isUnderTest()
 {
     return m_client && m_client->isUnderTest();
+}
+
+void InspectorFrontendHost::beep()
+{
+    systemBeep();
 }
 
 bool InspectorFrontendHost::canSaveAs()

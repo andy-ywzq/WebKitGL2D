@@ -1,6 +1,6 @@
 <html>
 <head>
-<script src="../fast/js/resources/js-test-pre.js"></script>
+<script src="../resources/js-test-pre.js"></script>
 </head>
 <body>
 <script>
@@ -9,7 +9,7 @@ description('Tests that updates to the proximity causes new events to fire.');
 var firedEvent;
 function setProximity(value, min, max) {
     firedEvent = {value: value, min: min, max: max};
-    internals.setDeviceProximity(document, 'webkitdeviceproximity', firedEvent.value, firedEvent.min, firedEvent.max);
+    internals.setDeviceProximity('webkitdeviceproximity', firedEvent.value, firedEvent.min, firedEvent.max);
 }
 
 var deviceProximityEvent;
@@ -36,6 +36,6 @@ window.addEventListener('webkitdeviceproximity', firstListener);
 setProximity(2.2, 1.1, 3.3);
 window.jsTestIsAsync = true;
 </script>
-<script src="../fast/js/resources/js-test-post.js"></script>
+<script src="../resources/js-test-post.js"></script>
 </body>
 </html>

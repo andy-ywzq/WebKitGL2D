@@ -19,19 +19,19 @@
 #include "config.h"
 
 #include "CookieManager.h"
-#include "KURL.h"
 #include "PlatformCookieJar.h"
 #include "ResourceHandleManager.h"
+#include "URL.h"
 
 namespace WebCore {
 
-static inline bool thirdParty(const KURL& firstParty, const KURL& url)
+static inline bool thirdParty(const URL& firstParty, const URL& url)
 {
     // FIXME: Should we check the path equality here?
     return firstParty.host() != url.host();
 }
 
-void setCookiesFromDOM(const NetworkStorageSession&, const KURL& firstParty, const KURL& url, const String& value)
+void setCookiesFromDOM(const NetworkStorageSession&, const URL& firstParty, const URL& url, const String& value)
 {
     CookieManager& manager = CookieManager::getInstance();
     if (!manager.cookiesAllowed() || (!manager.thirdPartyCookiesAllowed() && thirdParty(firstParty, url)))
@@ -40,22 +40,22 @@ void setCookiesFromDOM(const NetworkStorageSession&, const KURL& firstParty, con
     manager.setCookie(url, value, NoHttpOnlyCookies);
 }
 
-String cookiesForDOM(const NetworkStorageSession& /*session*/, const KURL& /*firstParty*/, const KURL& url)
+String cookiesForDOM(const NetworkStorageSession& /*session*/, const URL& /*firstParty*/, const URL& url)
 {
     return CookieManager::getInstance().cookiesForSession(url, NoHttpOnlyCookies);
 }
 
-String cookieRequestHeaderFieldValue(const NetworkStorageSession& /*session*/, const KURL& /*firstParty*/, const KURL& url)
+String cookieRequestHeaderFieldValue(const NetworkStorageSession& /*session*/, const URL& /*firstParty*/, const URL& url)
 {
     return CookieManager::getInstance().cookiesForSession(url, WithHttpOnlyCookies);
 }
 
-bool cookiesEnabled(const NetworkStorageSession&, const KURL& /*firstParty*/, const KURL& /*url*/)
+bool cookiesEnabled(const NetworkStorageSession&, const URL& /*firstParty*/, const URL& /*url*/)
 {
     return CookieManager::getInstance().cookiesAllowed();
 }
 
-bool getRawCookies(const NetworkStorageSession&, const KURL& /*firstParty*/, const KURL& url, Vector<Cookie>& rawCookies)
+bool getRawCookies(const NetworkStorageSession&, const URL& /*firstParty*/, const URL& url, Vector<Cookie>& rawCookies)
 {
     Vector<RefPtr<ParsedCookie> > cookiesVector;
     CookieManager::getInstance().getRawCookies(url, cookiesVector, WithHttpOnlyCookies);
@@ -66,7 +66,7 @@ bool getRawCookies(const NetworkStorageSession&, const KURL& /*firstParty*/, con
     return true;
 }
 
-void deleteCookie(const NetworkStorageSession&, const KURL& url, const String& name)
+void deleteCookie(const NetworkStorageSession&, const URL& url, const String& name)
 {
     CookieManager::getInstance().removeCookieWithName(url, name);
 }

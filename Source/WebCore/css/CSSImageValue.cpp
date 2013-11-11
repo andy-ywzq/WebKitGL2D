@@ -28,6 +28,7 @@
 #include "CachedResourceLoader.h"
 #include "CachedResourceRequest.h"
 #include "CachedResourceRequestInitiators.h"
+#include "CrossOriginAccessControl.h"
 #include "Document.h"
 #include "Element.h"
 #include "MemoryCache.h"
@@ -75,6 +76,10 @@ StyleCachedImage* CSSImageValue::cachedImage(CachedResourceLoader* loader, const
             request.setInitiator(cachedResourceRequestInitiators().css);
         else
             request.setInitiator(m_initiatorName);
+
+        if (options.requestOriginPolicy == PotentiallyCrossOriginEnabled)
+            updateRequestForAccessControl(request.mutableResourceRequest(), loader->document()->securityOrigin(), options.allowCredentials);
+
         if (CachedResourceHandle<CachedImage> cachedImage = loader->requestImage(request))
             m_image = StyleCachedImage::create(cachedImage.get());
     }
@@ -102,7 +107,7 @@ bool CSSImageValue::equals(const CSSImageValue& other) const
     return m_url == other.m_url;
 }
 
-String CSSImageValue::customCssText() const
+String CSSImageValue::customCSSText() const
 {
     return "url(" + quoteCSSURLIfNeeded(m_url) + ')';
 }
@@ -115,7 +120,7 @@ PassRefPtr<CSSValue> CSSImageValue::cloneForCSSOM() const
     return uriValue.release();
 }
 
-bool CSSImageValue::knownToBeOpaque(const RenderObject* renderer) const
+bool CSSImageValue::knownToBeOpaque(const RenderElement* renderer) const
 {
     return m_image ? m_image->knownToBeOpaque(renderer) : false;
 }

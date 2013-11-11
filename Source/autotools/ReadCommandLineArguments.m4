@@ -20,6 +20,19 @@ AC_ARG_ENABLE(debug,
     [],[enable_debug="no"])
 AC_MSG_RESULT([$enable_debug])
 
+AC_MSG_CHECKING([whether to enable developer mode])
+AC_ARG_ENABLE(developer-mode,
+    AC_HELP_STRING([--enable-developer-mode], [development-oriented build (no symbols filter and builds testing harness) [default=no (yes for debug builds)]]),
+    [enable_developer_mode=$enableval],
+    [
+        if test "$enable_debug" = "yes"; then
+            enable_developer_mode="yes"
+        else
+            enable_developer_mode="no"
+        fi
+    ])
+AC_MSG_RESULT([$enable_developer_mode])
+
 AC_MSG_CHECKING([whether to enable optimized builds])
 AC_ARG_ENABLE(optimizations, 
     AC_HELP_STRING([--enable-optimizations], [turn on build-time optimizations [default=yes]]),
@@ -45,17 +58,32 @@ AC_ARG_WITH([gtk],
     [with_gtk=3.0])
 AC_MSG_RESULT([$with_gtk])
 
-AC_MSG_CHECKING([the target windowing system])
-AC_ARG_WITH(target,
-    AC_HELP_STRING([--with-target=@<:@x11/win32/quartz/directfb@:>@], [Select webkit target [default=x11]]),
-    [
-        case "$with_target" in
-            x11|win32|quartz|directfb) ;;
-            *) AC_MSG_ERROR([Invalid target: must be x11, quartz, win32, or directfb.]) ;;
-        esac
-    ],
-    [with_target="x11"])
-AC_MSG_RESULT([$with_target])
+default_build_targets="x11=yes wayland=auto win32=no quartz=no directfb=no"
+build_targets=""
+
+AC_ARG_ENABLE([x11-target], [AC_HELP_STRING([--enable-x11-target], [enable building for the X11 target [default=yes]])],
+    [build_targets="$build_targets x11=$enable_x11_target"], [])
+AC_ARG_ENABLE([wayland-target], [AC_HELP_STRING([--enable-wayland-target], [enable building for the Wayland target [default=auto]])],
+    [build_targets="$build_targets wayland=$enable_wayland_target"], [])
+AC_ARG_ENABLE([win32-target], [AC_HELP_STRING([--enable-win32-target], [enable building for the Win32 target [default=no]])],
+    [build_targets="$build_targets win32=$enable_win32_target"], [])
+AC_ARG_ENABLE([quartz-target], [AC_HELP_STRING([--enable-quartz-target], [enable building for the Quartz target [default=no]])],
+    [build_targets="$build_targets quartz=$enable_quartz_target"], [])
+AC_ARG_ENABLE([directfb-target], [AC_HELP_STRING([--enable-directfb-target], [enable building for the DirectFB target [default=no]])],
+    [build_targets="$build_targets directfb=$enable_directfb_target"], [])
+
+if test "$build_targets" = ""; then
+    build_targets="$default_build_targets"
+fi
+
+AM_WEBKIT_DETERMINE_BUILD_TARGET_STATUS([x11], [enable_x11_target], [build_targets])
+AM_WEBKIT_DETERMINE_BUILD_TARGET_STATUS([wayland], [enable_wayland_target], [build_targets])
+AM_WEBKIT_DETERMINE_BUILD_TARGET_STATUS([win32], [enable_win32_target], [build_targets])
+AM_WEBKIT_DETERMINE_BUILD_TARGET_STATUS([quartz], [enable_quartz_target], [build_targets])
+AM_WEBKIT_DETERMINE_BUILD_TARGET_STATUS([directfb], [enable_directfb_target], [build_targets])
+
+AC_MSG_CHECKING([whether to build for the Win32 target])
+AC_MSG_RESULT([$enable_wayland_target])
 
 AC_MSG_CHECKING([whether to enable spellcheck support])
 AC_ARG_ENABLE([spellcheck],
@@ -184,6 +212,10 @@ AC_MSG_RESULT([$enable_accelerated_compositing])
 AC_MSG_CHECKING([whether to enable JIT compilation])
 AC_ARG_ENABLE(jit, AS_HELP_STRING([--enable-jit], [Enable JIT compilation (default: auto)]), [], [enable_jit=auto])
 AC_MSG_RESULT([$enable_jit])
+
+AC_MSG_CHECKING([whether to enable FTL JIT])
+AC_ARG_ENABLE(ftl-jit, AS_HELP_STRING([--enable-ftl-jit], [Enable FTL JIT (experimental) (default: no)]), [], [enable_ftl_jit=no])
+AC_MSG_RESULT([$enable_ftl_jit])
 
 AC_MSG_CHECKING([whether to enable opcode stats])
 AC_ARG_ENABLE([opcode-stats], 

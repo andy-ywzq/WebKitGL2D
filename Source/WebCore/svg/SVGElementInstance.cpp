@@ -63,6 +63,7 @@ DEFINE_FORWARDING_ATTRIBUTE_EVENT_LISTENER(SVGElementInstance, correspondingElem
 DEFINE_FORWARDING_ATTRIBUTE_EVENT_LISTENER(SVGElementInstance, correspondingElement(), mouseover);
 DEFINE_FORWARDING_ATTRIBUTE_EVENT_LISTENER(SVGElementInstance, correspondingElement(), mouseup);
 DEFINE_FORWARDING_ATTRIBUTE_EVENT_LISTENER(SVGElementInstance, correspondingElement(), mousewheel);
+DEFINE_FORWARDING_ATTRIBUTE_EVENT_LISTENER(SVGElementInstance, correspondingElement(), wheel);
 DEFINE_FORWARDING_ATTRIBUTE_EVENT_LISTENER(SVGElementInstance, correspondingElement(), beforecut);
 DEFINE_FORWARDING_ATTRIBUTE_EVENT_LISTENER(SVGElementInstance, correspondingElement(), cut);
 DEFINE_FORWARDING_ATTRIBUTE_EVENT_LISTENER(SVGElementInstance, correspondingElement(), beforecopy);
@@ -156,7 +157,7 @@ void SVGElementInstance::detach()
     m_directUseElement = 0;
     m_correspondingUseElement = 0;
 
-    removeDetachedChildrenInContainer<SVGElementInstance, SVGElementInstance>(this);
+    removeDetachedChildrenInContainer<SVGElementInstance, SVGElementInstance>(*this);
 }
 
 PassRefPtr<SVGElementInstanceList> SVGElementInstance::childNodes()
@@ -166,7 +167,7 @@ PassRefPtr<SVGElementInstanceList> SVGElementInstance::childNodes()
 
 Document* SVGElementInstance::ownerDocument() const
 {
-    return m_element ? m_element->document() : 0;
+    return m_element ? &m_element->document() : 0;
 }
 
 void SVGElementInstance::setShadowTreeElement(SVGElement* element)
@@ -177,7 +178,7 @@ void SVGElementInstance::setShadowTreeElement(SVGElement* element)
 
 void SVGElementInstance::appendChild(PassRefPtr<SVGElementInstance> child)
 {
-    appendChildToContainer<SVGElementInstance, SVGElementInstance>(child.get(), this);
+    appendChildToContainer<SVGElementInstance, SVGElementInstance>(child.get(), *this);
 }
 
 void SVGElementInstance::invalidateAllInstancesOfElement(SVGElement* element)
@@ -185,7 +186,7 @@ void SVGElementInstance::invalidateAllInstancesOfElement(SVGElement* element)
     if (!element || !element->inDocument())
         return;
 
-    if (element->isSVGStyledElement() && toSVGStyledElement(element)->instanceUpdatesBlocked())
+    if (element->instanceUpdatesBlocked())
         return;
 
     const HashSet<SVGElementInstance*>& set = element->instancesForElement();
@@ -207,17 +208,17 @@ void SVGElementInstance::invalidateAllInstancesOfElement(SVGElement* element)
         }
     }
 
-    element->document()->updateStyleIfNeeded();
+    element->document().updateStyleIfNeeded();
 }
 
-const AtomicString& SVGElementInstance::interfaceName() const
+EventTargetInterface SVGElementInstance::eventTargetInterface() const
 {
-    return eventNames().interfaceForSVGElementInstance;
+    return SVGElementInstanceEventTargetInterfaceType;
 }
 
 ScriptExecutionContext* SVGElementInstance::scriptExecutionContext() const
 {
-    return m_element->document();
+    return &m_element->document();
 }
 
 bool SVGElementInstance::addEventListener(const AtomicString& eventType, PassRefPtr<EventListener> listener, bool useCapture)
@@ -259,7 +260,7 @@ EventTargetData& SVGElementInstance::ensureEventTargetData()
 }
 
 SVGElementInstance::InstanceUpdateBlocker::InstanceUpdateBlocker(SVGElement* targetElement)
-    : m_targetElement(targetElement->isSVGStyledElement() ? toSVGStyledElement(targetElement) : 0)
+    : m_targetElement(targetElement)
 {
     if (m_targetElement)
         m_targetElement->setInstanceUpdatesBlocked(true);

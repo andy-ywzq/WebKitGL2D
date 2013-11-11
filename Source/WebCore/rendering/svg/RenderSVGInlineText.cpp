@@ -42,17 +42,18 @@
 
 namespace WebCore {
 
-static PassRefPtr<StringImpl> applySVGWhitespaceRules(PassRefPtr<StringImpl> string, bool preserveWhiteSpace)
+static String applySVGWhitespaceRules(const String& string, bool preserveWhiteSpace)
 {
+    String newString = string;
     if (preserveWhiteSpace) {
         // Spec: When xml:space="preserve", the SVG user agent will do the following using a
         // copy of the original character data content. It will convert all newline and tab
         // characters into space characters. Then, it will draw all space characters, including
         // leading, trailing and multiple contiguous space characters.
-        RefPtr<StringImpl> newString = string->replace('\t', ' ');
-        newString = newString->replace('\n', ' ');
-        newString = newString->replace('\r', ' ');
-        return newString.release();
+        newString.replace('\t', ' ');
+        newString.replace('\n', ' ');
+        newString.replace('\r', ' ');
+        return newString;
     }
 
     // Spec: When xml:space="default", the SVG user agent will do the following using a
@@ -60,20 +61,20 @@ static PassRefPtr<StringImpl> applySVGWhitespaceRules(PassRefPtr<StringImpl> str
     // characters. Then it will convert all tab characters into space characters.
     // Then, it will strip off all leading and trailing space characters.
     // Then, all contiguous space characters will be consolidated.
-    RefPtr<StringImpl> newString = string->replace('\n', StringImpl::empty());
-    newString = newString->replace('\r', StringImpl::empty());
-    newString = newString->replace('\t', ' ');
-    return newString.release();
+    newString.replace('\n', emptyString());
+    newString.replace('\r', emptyString());
+    newString.replace('\t', ' ');
+    return newString;
 }
 
-RenderSVGInlineText::RenderSVGInlineText(Node* n, PassRefPtr<StringImpl> string)
-    : RenderText(n, applySVGWhitespaceRules(string, false))
+RenderSVGInlineText::RenderSVGInlineText(Text& textNode, const String& string)
+    : RenderText(textNode, applySVGWhitespaceRules(string, false))
     , m_scalingFactor(1)
     , m_layoutAttributes(this)
 {
 }
 
-void RenderSVGInlineText::setTextInternal(PassRefPtr<StringImpl> text)
+void RenderSVGInlineText::setTextInternal(const String& text)
 {
     RenderText::setTextInternal(text);
     if (RenderSVGText* textRenderer = RenderSVGText::locateRenderSVGTextAncestor(this))
@@ -85,7 +86,7 @@ void RenderSVGInlineText::styleDidChange(StyleDifference diff, const RenderStyle
     RenderText::styleDidChange(diff, oldStyle);
     updateScaledFont();
 
-    bool newPreserves = style() ? style()->whiteSpace() == PRE : false;
+    bool newPreserves = style().whiteSpace() == PRE;
     bool oldPreserves = oldStyle ? oldStyle->whiteSpace() == PRE : false;
     if (oldPreserves && !newPreserves) {
         setText(applySVGWhitespaceRules(originalText(), false), true);
@@ -107,7 +108,7 @@ void RenderSVGInlineText::styleDidChange(StyleDifference diff, const RenderStyle
 
 InlineTextBox* RenderSVGInlineText::createTextBox()
 {
-    InlineTextBox* box = new (renderArena()) SVGInlineTextBox(this);
+    InlineTextBox* box = new (renderArena()) SVGInlineTextBox(*this);
     box->setHasVirtualLogicalHeight();
     return box;
 }
@@ -218,7 +219,7 @@ VisiblePosition RenderSVGInlineText::positionForPoint(const LayoutPoint& point)
 
 void RenderSVGInlineText::updateScaledFont()
 {
-    computeNewScaledFontForStyle(this, style(), m_scalingFactor, m_scaledFont);
+    computeNewScaledFontForStyle(this, &style(), m_scalingFactor, m_scaledFont);
 }
 
 void RenderSVGInlineText::computeNewScaledFontForStyle(RenderObject* renderer, const RenderStyle* style, float& scalingFactor, Font& scaledFont)
@@ -226,9 +227,6 @@ void RenderSVGInlineText::computeNewScaledFontForStyle(RenderObject* renderer, c
     ASSERT(style);
     ASSERT(renderer);
 
-    Document* document = renderer->document();
-    ASSERT(document);
-    
     // Alter font-size to the right on-screen value to avoid scaling the glyphs themselves, except when GeometricPrecision is specified
     scalingFactor = SVGRenderingContext::calculateScreenFontSizeScalingFactor(renderer);
     if (scalingFactor == 1 || !scalingFactor || style->fontDescription().textRenderingMode() == GeometricPrecision) {
@@ -240,10 +238,10 @@ void RenderSVGInlineText::computeNewScaledFontForStyle(RenderObject* renderer, c
     FontDescription fontDescription(style->fontDescription());
 
     // FIXME: We need to better handle the case when we compute very small fonts below (below 1pt).
-    fontDescription.setComputedSize(Style::computedFontSizeFromSpecifiedSizeForSVGInlineText(fontDescription.computedSize(), fontDescription.isAbsoluteSize(), scalingFactor, document));
+    fontDescription.setComputedSize(Style::computedFontSizeFromSpecifiedSizeForSVGInlineText(fontDescription.computedSize(), fontDescription.isAbsoluteSize(), scalingFactor, renderer->document()));
 
     scaledFont = Font(fontDescription, 0, 0);
-    scaledFont.update(document->ensureStyleResolver().fontSelector());
+    scaledFont.update(renderer->document().ensureStyleResolver().fontSelector());
 }
 
 }

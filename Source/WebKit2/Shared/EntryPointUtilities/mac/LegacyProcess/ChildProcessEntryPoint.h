@@ -52,6 +52,7 @@ public:
     virtual bool getClientProcessName(String& clientProcessName);
     virtual bool getExtraInitializationData(HashMap<String, String>& extraInitializationData);
 
+    virtual void startRunLoop();
     virtual void doPostRunWork();
 
 protected:
@@ -86,16 +87,10 @@ int ChildProcessMain(int argc, char** argv)
         if (!delegate.getExtraInitializationData(parameters.extraInitializationData))
             return EXIT_FAILURE;
 
-        // FIXME: This should be moved to ChildProcessMac if it is still necessary.
-        String localization = commandLine["localization"];
-        RetainPtr<CFStringRef> cfLocalization = adoptCF(CFStringCreateWithCharacters(0, reinterpret_cast<const UniChar*>(localization.characters()), localization.length()));
-        if (cfLocalization)
-            WKSetDefaultLocalization(cfLocalization.get());
-
         ChildProcessType::shared().initialize(parameters);
     }
 
-    WebCore::RunLoop::run();
+    delegate.startRunLoop();
 
     @autoreleasepool {
         delegate.doPostRunWork();

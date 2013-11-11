@@ -41,7 +41,7 @@
 #include "HitTestResult.h"
 #include "Icon.h"
 #include "InputHandler.h"
-#include "KURL.h"
+#include "URL.h"
 #include "Node.h"
 #include "NotImplemented.h"
 #include "Page.h"
@@ -222,7 +222,7 @@ Page* ChromeClientBlackBerry::createWindow(Frame* frame, const FrameLoadRequest&
     // Bail out early when we aren't allowed to display the target origin, otherwise,
     // it would be harmful and the window would be useless. This is the same check
     // as the one in FrameLoader::loadFrameRequest().
-    const KURL& url = request.resourceRequest().url();
+    const URL& url = request.resourceRequest().url();
     if (!request.requester()->canDisplay(url)) {
         frame->loader().reportLocalLoadFailed(frame, url.string());
         return 0;
@@ -231,6 +231,11 @@ Page* ChromeClientBlackBerry::createWindow(Frame* frame, const FrameLoadRequest&
 #if !defined(PUBLIC_BUILD) || !PUBLIC_BUILD
     if (m_webPagePrivate->m_dumpRenderTree && !m_webPagePrivate->m_dumpRenderTree->allowsOpeningWindow())
         return 0;
+#endif
+
+#if ENABLE(FULLSCREEN_API)
+    if (Element* element = frame->document() ? frame->document()->webkitCurrentFullScreenElement() : 0)
+        frame->document()->webkitCancelFullScreen();
 #endif
 
     int x = features.xSet ? features.x : 0;
@@ -697,7 +702,7 @@ void ChromeClientBlackBerry::chooseIconForFiles(const Vector<String>&, FileChoos
 
 bool ChromeClientBlackBerry::supportsFullscreenForNode(const Node* node)
 {
-    return node->hasTagName(HTMLNames::videoTag);
+    return isHTMLVideoElement(node);
 }
 
 void ChromeClientBlackBerry::enterFullscreenForNode(Node* node)

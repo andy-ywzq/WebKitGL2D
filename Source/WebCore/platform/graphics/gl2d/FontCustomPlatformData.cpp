@@ -31,7 +31,7 @@
 
 namespace WebCore {
 
-FontCustomPlatformData* createFontCustomPlatformData(SharedBuffer* buffer)
+std::unique_ptr<FontCustomPlatformData> createFontCustomPlatformData(SharedBuffer* buffer)
 {
 
 }

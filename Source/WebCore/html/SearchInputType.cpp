@@ -38,23 +38,17 @@
 #include "RenderSearchField.h"
 #include "ShadowRoot.h"
 #include "TextControlInnerElements.h"
-#include <wtf/PassOwnPtr.h>
 
 namespace WebCore {
 
 using namespace HTMLNames;
 
-inline SearchInputType::SearchInputType(HTMLInputElement* element)
+SearchInputType::SearchInputType(HTMLInputElement& element)
     : BaseTextInputType(element)
     , m_resultsButton(0)
     , m_cancelButton(0)
     , m_searchEventTimer(this, &SearchInputType::searchEventTimerFired)
 {
-}
-
-PassOwnPtr<InputType> SearchInputType::create(HTMLInputElement* element)
-{
-    return adoptPtr(new SearchInputType(element));
 }
 
 void SearchInputType::attach()
@@ -65,13 +59,13 @@ void SearchInputType::attach()
 
 void SearchInputType::addSearchResult()
 {
-    if (RenderObject* renderer = element()->renderer())
+    if (RenderObject* renderer = element().renderer())
         toRenderSearchField(renderer)->addSearchResult();
 }
 
-RenderObject* SearchInputType::createRenderer(RenderArena* arena, RenderStyle*) const
+RenderElement* SearchInputType::createRenderer(PassRef<RenderStyle> style) const
 {
-    return new (arena) RenderSearchField(element());
+    return new RenderSearchField(element(), std::move(style));
 }
 
 const AtomicString& SearchInputType::formControlType() const
@@ -105,11 +99,11 @@ void SearchInputType::createShadowSubtree()
     ASSERT(container);
     ASSERT(textWrapper);
 
-    RefPtr<SearchFieldResultsButtonElement> resultsButton = SearchFieldResultsButtonElement::create(element()->document());
+    RefPtr<SearchFieldResultsButtonElement> resultsButton = SearchFieldResultsButtonElement::create(element().document());
     m_resultsButton = resultsButton.get();
     container->insertBefore(m_resultsButton, textWrapper, IGNORE_EXCEPTION);
 
-    RefPtr<SearchFieldCancelButtonElement> cancelButton = SearchFieldCancelButtonElement::create(element()->document());
+    RefPtr<SearchFieldCancelButtonElement> cancelButton = SearchFieldCancelButtonElement::create(element().document());
     m_cancelButton = cancelButton.get();
     container->insertBefore(m_cancelButton, textWrapper->nextSibling(), IGNORE_EXCEPTION);
 }
@@ -126,14 +120,14 @@ HTMLElement* SearchInputType::cancelButtonElement() const
 
 void SearchInputType::handleKeydownEvent(KeyboardEvent* event)
 {
-    if (element()->isDisabledOrReadOnly()) {
+    if (element().isDisabledOrReadOnly()) {
         TextFieldInputType::handleKeydownEvent(event);
         return;
     }
 
     const String& key = event->keyIdentifier();
     if (key == "U+001B") {
-        RefPtr<HTMLInputElement> input = element();
+        Ref<HTMLInputElement> input(this->element());
         input->setValueForUser("");
         input->onSearch();
         event->setDefaultHandled();
@@ -151,18 +145,18 @@ void SearchInputType::destroyShadowSubtree()
 
 void SearchInputType::startSearchEventTimer()
 {
-    ASSERT(element()->renderer());
-    unsigned length = element()->innerTextValue().length();
+    ASSERT(element().renderer());
+    unsigned length = element().innerTextValue().length();
 
     if (!length) {
         stopSearchEventTimer();
-        element()->onSearch();
+        element().onSearch();
         return;
     }
 
     // After typing the first key, we wait 0.5 seconds.
     // After the second key, 0.4 seconds, then 0.3, then 0.2 from then on.
-    m_searchEventTimer.startOneShot(max(0.2, 0.6 - 0.1 * length));
+    m_searchEventTimer.startOneShot(std::max(0.2, 0.6 - 0.1 * length));
 }
 
 void SearchInputType::stopSearchEventTimer()
@@ -172,18 +166,18 @@ void SearchInputType::stopSearchEventTimer()
 
 void SearchInputType::searchEventTimerFired(Timer<SearchInputType>*)
 {
-    element()->onSearch();
+    element().onSearch();
 }
 
 bool SearchInputType::searchEventsShouldBeDispatched() const
 {
-    return element()->hasAttribute(incrementalAttr);
+    return element().hasAttribute(incrementalAttr);
 }
 
 void SearchInputType::didSetValueByUserEdit(ValueChangeState state)
 {
     if (m_cancelButton)
-        toRenderSearchField(element()->renderer())->updateCancelButtonVisibility();
+        toRenderSearchField(element().renderer())->updateCancelButtonVisibility();
 
     // If the incremental attribute is set, then dispatch the search event
     if (searchEventsShouldBeDispatched())
@@ -194,7 +188,7 @@ void SearchInputType::didSetValueByUserEdit(ValueChangeState state)
 
 bool SearchInputType::sizeShouldIncludeDecoration(int, int& preferredSize) const
 {
-    preferredSize = element()->size();
+    preferredSize = element().size();
     return true;
 }
 

@@ -22,27 +22,26 @@
 #ifndef RenderTextControl_h
 #define RenderTextControl_h
 
-#include "RenderBlock.h"
+#include "RenderBlockFlow.h"
 #include "RenderFlexibleBox.h"
 
 namespace WebCore {
 
+class TextControlInnerTextElement;
 class HTMLTextFormControlElement;
 
-class RenderTextControl : public RenderBlock {
+class RenderTextControl : public RenderBlockFlow {
 public:
     virtual ~RenderTextControl();
 
-    HTMLTextFormControlElement* textFormControlElement() const;
-    virtual PassRefPtr<RenderStyle> createInnerTextStyle(const RenderStyle* startStyle) const = 0;
-
-    VisiblePosition visiblePositionForIndex(int index) const;
+    HTMLTextFormControlElement& textFormControlElement() const;
+    virtual PassRef<RenderStyle> createInnerTextStyle(const RenderStyle* startStyle) const = 0;
 
 protected:
-    RenderTextControl(Element*);
+    RenderTextControl(HTMLTextFormControlElement&, PassRef<RenderStyle>);
 
     // This convenience function should not be made public because innerTextElement may outlive the render tree.
-    HTMLElement* innerTextElement() const;
+    TextControlInnerTextElement* innerTextElement() const;
 
     int scrollbarThickness() const;
     void adjustInnerTextStyle(const RenderStyle* startStyle, RenderStyle* textBlockStyle) const;
@@ -60,43 +59,31 @@ protected:
     virtual float getAvgCharWidth(AtomicString family);
     virtual LayoutUnit preferredContentLogicalWidth(float charWidth) const = 0;
     virtual LayoutUnit computeControlLogicalHeight(LayoutUnit lineHeight, LayoutUnit nonContentHeight) const = 0;
-    virtual RenderStyle* textBaseStyle() const = 0;
 
-    virtual void updateFromElement();
+    virtual void updateFromElement() OVERRIDE;
     virtual void computeLogicalHeight(LayoutUnit logicalHeight, LayoutUnit logicalTop, LogicalExtentComputedValues&) const OVERRIDE;
-    virtual RenderObject* layoutSpecialExcludedChild(bool relayoutChildren);
+    virtual RenderObject* layoutSpecialExcludedChild(bool relayoutChildren) OVERRIDE;
 
 private:
+    void element() const WTF_DELETED_FUNCTION;
+
     virtual const char* renderName() const OVERRIDE { return "RenderTextControl"; }
     virtual bool isTextControl() const OVERRIDE FINAL { return true; }
     virtual void computeIntrinsicLogicalWidths(LayoutUnit& minLogicalWidth, LayoutUnit& maxLogicalWidth) const OVERRIDE;
     virtual void computePreferredLogicalWidths() OVERRIDE;
-    virtual void removeLeftoverAnonymousBlock(RenderBlock*) { }
+    virtual void removeLeftoverAnonymousBlock(RenderBlock*) OVERRIDE { }
     virtual bool avoidsFloats() const OVERRIDE { return true; }
     virtual bool canHaveGeneratedChildren() const OVERRIDE { return false; }
     virtual bool canBeReplacedWithInlineRunIn() const OVERRIDE;
     
     virtual void addFocusRingRects(Vector<IntRect>&, const LayoutPoint& additionalOffset, const RenderLayerModelObject* paintContainer = 0) OVERRIDE;
 
-    virtual bool canBeProgramaticallyScrolled() const { return true; }
+    virtual bool canBeProgramaticallyScrolled() const OVERRIDE { return true; }
 
-    virtual bool requiresForcedStyleRecalcPropagation() const { return true; }
+    virtual bool requiresForcedStyleRecalcPropagation() const OVERRIDE { return true; }
 };
 
-inline RenderTextControl* toRenderTextControl(RenderObject* object)
-{ 
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isTextControl());
-    return static_cast<RenderTextControl*>(object);
-}
-
-inline const RenderTextControl* toRenderTextControl(const RenderObject* object)
-{ 
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isTextControl());
-    return static_cast<const RenderTextControl*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderTextControl(const RenderTextControl*);
+RENDER_OBJECT_TYPE_CASTS(RenderTextControl, isTextControl())
 
 // Renderer for our inner container, for <search> and others.
 // We can't use RenderFlexibleBox directly, because flexboxes have a different
@@ -104,8 +91,8 @@ void toRenderTextControl(const RenderTextControl*);
 // anymore.
 class RenderTextControlInnerContainer FINAL : public RenderFlexibleBox {
 public:
-    explicit RenderTextControlInnerContainer(Element* element)
-        : RenderFlexibleBox(element)
+    explicit RenderTextControlInnerContainer(Element& element, PassRef<RenderStyle> style)
+        : RenderFlexibleBox(element, std::move(style))
     { }
     virtual ~RenderTextControlInnerContainer() { }
 
@@ -113,7 +100,7 @@ public:
     {
         return RenderBlock::baselinePosition(baseline, firstLine, direction, position);
     }
-    virtual int firstLineBoxBaseline() const OVERRIDE { return RenderBlock::firstLineBoxBaseline(); }
+    virtual int firstLineBaseline() const OVERRIDE { return RenderBlock::firstLineBaseline(); }
     virtual int inlineBlockBaseline(LineDirectionMode direction) const OVERRIDE { return RenderBlock::inlineBlockBaseline(direction); }
 
 };

@@ -25,7 +25,7 @@
 #include "config.h"
 #include "HTMLLegendElement.h"
 
-#include "ElementTraversal.h"
+#include "ElementIterator.h"
 #include "HTMLFieldSetElement.h"
 #include "HTMLFormControlElement.h"
 #include "HTMLNames.h"
@@ -35,13 +35,13 @@ namespace WebCore {
 using namespace HTMLNames;
 
 
-inline HTMLLegendElement::HTMLLegendElement(const QualifiedName& tagName, Document* document)
+inline HTMLLegendElement::HTMLLegendElement(const QualifiedName& tagName, Document& document)
     : HTMLElement(tagName, document)
 {
     ASSERT(hasTagName(legendTag));
 }
 
-PassRefPtr<HTMLLegendElement> HTMLLegendElement::create(const QualifiedName& tagName, Document* document)
+PassRefPtr<HTMLLegendElement> HTMLLegendElement::create(const QualifiedName& tagName, Document& document)
 {
     return adoptRef(new HTMLLegendElement(tagName, document));
 }
@@ -49,21 +49,13 @@ PassRefPtr<HTMLLegendElement> HTMLLegendElement::create(const QualifiedName& tag
 HTMLFormControlElement* HTMLLegendElement::associatedControl()
 {
     // Check if there's a fieldset belonging to this legend.
-    Element* fieldset = parentElement();
-    while (fieldset && !fieldset->hasTagName(fieldsetTag))
-        fieldset = fieldset->parentElement();
-    if (!fieldset)
-        return 0;
+    auto enclosingFieldset = ancestorsOfType<HTMLFieldSetElement>(*this).first();
+    if (!enclosingFieldset)
+        return nullptr;
 
     // Find first form element inside the fieldset that is not a legend element.
     // FIXME: Should we consider tabindex?
-    Element* element = fieldset;
-    while ((element = ElementTraversal::next(element, fieldset))) {
-        if (element->isFormControlElement())
-            return static_cast<HTMLFormControlElement*>(element);
-    }
-
-    return 0;
+    return descendantsOfType<HTMLFormControlElement>(*enclosingFieldset).first();
 }
 
 void HTMLLegendElement::focus(bool, FocusDirection direction)

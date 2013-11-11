@@ -52,14 +52,14 @@ BEGIN_REGISTER_ANIMATED_PROPERTIES(SVGFEImageElement)
     REGISTER_PARENT_ANIMATED_PROPERTIES(SVGFilterPrimitiveStandardAttributes)
 END_REGISTER_ANIMATED_PROPERTIES
 
-inline SVGFEImageElement::SVGFEImageElement(const QualifiedName& tagName, Document* document)
+inline SVGFEImageElement::SVGFEImageElement(const QualifiedName& tagName, Document& document)
     : SVGFilterPrimitiveStandardAttributes(tagName, document)
 {
     ASSERT(hasTagName(SVGNames::feImageTag));
     registerAnimatedPropertiesForSVGFEImageElement();
 }
 
-PassRefPtr<SVGFEImageElement> SVGFEImageElement::create(const QualifiedName& tagName, Document* document)
+PassRefPtr<SVGFEImageElement> SVGFEImageElement::create(const QualifiedName& tagName, Document& document)
 {
     return adoptRef(new SVGFEImageElement(tagName, document));
 }
@@ -76,15 +76,14 @@ void SVGFEImageElement::clearResourceReferences()
         m_cachedImage = 0;
     }
 
-    ASSERT(document());
-    document()->accessSVGExtensions()->removeAllTargetReferencesForElement(this);
+    document().accessSVGExtensions()->removeAllTargetReferencesForElement(this);
 }
 
 void SVGFEImageElement::requestImageResource()
 {
-    CachedResourceRequest request(ResourceRequest(document()->completeURL(href())));
+    CachedResourceRequest request(ResourceRequest(document().completeURL(href())));
     request.setInitiator(this);
-    m_cachedImage = document()->cachedResourceLoader()->requestImage(request);
+    m_cachedImage = document().cachedResourceLoader()->requestImage(request);
 
     if (m_cachedImage)
         m_cachedImage->addClient(this);
@@ -102,13 +101,13 @@ void SVGFEImageElement::buildPendingResource()
         if (id.isEmpty())
             requestImageResource();
         else {
-            document()->accessSVGExtensions()->addPendingResource(id, this);
+            document().accessSVGExtensions()->addPendingResource(id, this);
             ASSERT(hasPendingResources());
         }
     } else if (target->isSVGElement()) {
         // Register us with the target in the dependencies map. Any change of hrefElement
         // that leads to relayout/repainting now informs us, so we can react to it.
-        document()->accessSVGExtensions()->addElementReferencingTarget(this, toSVGElement(target));
+        document().accessSVGExtensions()->addElementReferencingTarget(this, toSVGElement(target));
     }
 
     invalidate();
@@ -175,17 +174,17 @@ void SVGFEImageElement::svgAttributeChanged(const QualifiedName& attrName)
     ASSERT_NOT_REACHED();
 }
 
-Node::InsertionNotificationRequest SVGFEImageElement::insertedInto(ContainerNode* rootParent)
+Node::InsertionNotificationRequest SVGFEImageElement::insertedInto(ContainerNode& rootParent)
 {
     SVGFilterPrimitiveStandardAttributes::insertedInto(rootParent);
     buildPendingResource();
     return InsertionDone;
 }
 
-void SVGFEImageElement::removedFrom(ContainerNode* rootParent)
+void SVGFEImageElement::removedFrom(ContainerNode& rootParent)
 {
     SVGFilterPrimitiveStandardAttributes::removedFrom(rootParent);
-    if (rootParent->inDocument())
+    if (rootParent.inDocument())
         clearResourceReferences();
 }
 
@@ -210,11 +209,11 @@ PassRefPtr<FilterEffect> SVGFEImageElement::build(SVGFilterBuilder*, Filter* fil
     return FEImage::createWithIRIReference(filter, document(), href(), preserveAspectRatio());
 }
 
-void SVGFEImageElement::addSubresourceAttributeURLs(ListHashSet<KURL>& urls) const
+void SVGFEImageElement::addSubresourceAttributeURLs(ListHashSet<URL>& urls) const
 {
     SVGFilterPrimitiveStandardAttributes::addSubresourceAttributeURLs(urls);
 
-    addSubresourceURL(urls, document()->completeURL(href()));
+    addSubresourceURL(urls, document().completeURL(href()));
 }
 
 }

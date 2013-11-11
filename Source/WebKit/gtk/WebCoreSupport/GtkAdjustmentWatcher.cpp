@@ -19,8 +19,8 @@
 #include "config.h"
 #include "GtkAdjustmentWatcher.h"
 
-#include "Frame.h"
 #include "FrameView.h"
+#include "MainFrame.h"
 #include "Page.h"
 #include "Scrollbar.h"
 #include "webkitwebviewprivate.h"
@@ -62,10 +62,10 @@ void GtkAdjustmentWatcher::updateAdjustmentsFromScrollbars()
         return;
     if (m_handlingGtkAdjustmentChange)
         return;
-    if (!core(m_webView) || !core(m_webView)->mainFrame())
+    if (!core(m_webView))
         return;
 
-    FrameView* frameView = core(m_webView)->mainFrame()->view();
+    FrameView* frameView = core(m_webView)->mainFrame().view();
     updateAdjustmentFromScrollbar(m_horizontalAdjustment.get(), frameView->horizontalScrollbar());
     updateAdjustmentFromScrollbar(m_verticalAdjustment.get(), frameView->verticalScrollbar());
     if (m_updateAdjustmentCallbackId) {
@@ -90,8 +90,8 @@ void GtkAdjustmentWatcher::updateAdjustmentsFromScrollbarsLater() const
     // The fact that this method was called means that we need to update the scrollbars, but at the
     // time of invocation they are not updated to reflect the scroll yet. We set a short timeout
     // here, which means that they will be updated as soon as WebKit returns to the main loop.
-    m_updateAdjustmentCallbackId = g_timeout_add(0, reinterpret_cast<GSourceFunc>(updateAdjustmentCallback),
-                                                 const_cast<void*>(static_cast<const void*>(this)));
+    m_updateAdjustmentCallbackId = g_idle_add_full(G_PRIORITY_DEFAULT, reinterpret_cast<GSourceFunc>(updateAdjustmentCallback),
+        const_cast<void*>(static_cast<const void*>(this)), 0);
 }
 
 static void adjustmentValueChangedCallback(GtkAdjustment* adjustment, GtkAdjustmentWatcher* watcher)
@@ -123,7 +123,7 @@ void GtkAdjustmentWatcher::setVerticalAdjustment(GtkAdjustment* newAdjustment)
 
 void GtkAdjustmentWatcher::adjustmentValueChanged(GtkAdjustment* adjustment)
 {
-    FrameView* frameView = core(m_webView)->mainFrame()->view();
+    FrameView* frameView = core(m_webView)->mainFrame().view();
     Scrollbar* scrollbar = (adjustment == m_horizontalAdjustment.get()) ? 
         frameView->horizontalScrollbar() : frameView->verticalScrollbar();
     if (!scrollbar)

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="../js/resources/js-test-pre.js"></script>
+<script src="../../resources/js-test-pre.js"></script>
 <style type="text/css">
 </style>
 </head>
@@ -31,7 +31,7 @@ if (window.testRunner) {
 function runTest(prepare, next) {
     prepare();
     setTimeout(function() {
-        debug('Cursor Info: ' + window.internals.getCurrentCursorInfo(document));
+        debug('Cursor Info: ' + window.internals.getCurrentCursorInfo());
         debug('');
         next();
     }, CURSOR_UPDATE_DELAY);
@@ -75,6 +75,6 @@ if (window.eventSender) {
 }
 
 </script>
-<script src="../../fast/js/resources/js-test-post.js"></script>
+<script src="../../resources/js-test-post.js"></script>
 </body>
 </html>

@@ -224,13 +224,13 @@ const double maximumImageDocumentZoomToFitScale = 2;
 const double zoomFactorEpsilon = 0.0001;
 
 // Helper function to parse a URL and fill in missing parts.
-static KURL parseUrl(const String& url)
+static URL parseUrl(const String& url)
 {
     String urlString(url);
-    KURL kurl = KURL(KURL(), urlString);
+    URL kurl = URL(URL(), urlString);
     if (kurl.protocol().isEmpty()) {
         urlString.insert("http://", 0);
-        kurl = KURL(KURL(), urlString);
+        kurl = URL(URL(), urlString);
     }
 
     return kurl;
@@ -640,14 +640,6 @@ void WebPagePrivate::init(const BlackBerry::Platform::String& pageGroupName)
     m_page->windowScreenDidChange((PlatformDisplayID)0);
 #endif
 
-#if ENABLE(FILE_SYSTEM)
-    static bool localFileSystemInitialized = false;
-    if (!localFileSystemInitialized) {
-        localFileSystemInitialized = true;
-        WebCore::LocalFileSystem::initializeLocalFileSystem("/");
-    }
-#endif
-
 #if USE(ACCELERATED_COMPOSITING)
     // The compositor will be needed for overlay rendering, so create it
     // unconditionally. It will allocate OpenGL objects lazily, so this incurs
@@ -659,7 +651,7 @@ void WebPagePrivate::init(const BlackBerry::Platform::String& pageGroupName)
 
 class DeferredTaskLoadManualScript: public DeferredTask<&WebPagePrivate::m_wouldLoadManualScript> {
 public:
-    explicit DeferredTaskLoadManualScript(WebPagePrivate* webPagePrivate, const KURL& url)
+    explicit DeferredTaskLoadManualScript(WebPagePrivate* webPagePrivate, const URL& url)
         : DeferredTaskType(webPagePrivate)
     {
         webPagePrivate->m_cachedManualScript = url;
@@ -683,7 +675,7 @@ void WebPagePrivate::load(const Platform::NetworkRequest& netReq, bool needRefer
     } else
         m_mainFrame->setInViewSourceMode(false);
 
-    KURL kurl = parseUrl(urlString);
+    URL kurl = parseUrl(urlString);
     if (protocolIs(kurl, "javascript")) {
         // Never run javascript while loading is deferred.
         if (m_page->defersLoading())
@@ -739,14 +731,14 @@ void WebPage::load(const Platform::NetworkRequest& request, bool needReferer)
 
 void WebPagePrivate::loadString(const BlackBerry::Platform::String& string, const BlackBerry::Platform::String& baseURL, const BlackBerry::Platform::String& contentType, const BlackBerry::Platform::String& failingURL)
 {
-    KURL kurl = parseUrl(baseURL);
+    URL kurl = parseUrl(baseURL);
     ResourceRequest request(kurl);
     WTF::RefPtr<SharedBuffer> buffer
         = SharedBuffer::create(string.c_str(), string.length());
     SubstituteData substituteData(buffer,
         extractMIMETypeFromMediaType(contentType),
         extractCharsetFromMediaType(contentType),
-        !failingURL.empty() ? parseUrl(failingURL) : KURL());
+        !failingURL.empty() ? parseUrl(failingURL) : URL());
     m_mainFrame->loader().load(FrameLoadRequest(m_mainFrame, request, substituteData));
 }
 
@@ -858,14 +850,14 @@ bool WebPage::executeJavaScriptInIsolatedWorld(const std::wstring& script, JavaS
         return false;
     }
     String str = String(data, lengthCopied);
-    ScriptSourceCode sourceCode(str, KURL());
+    ScriptSourceCode sourceCode(str, URL());
     return d->executeJavaScriptInIsolatedWorld(sourceCode, returnType, returnValue);
 }
 
 bool WebPage::executeJavaScriptInIsolatedWorld(const BlackBerry::Platform::String& scriptUTF8, JavaScriptDataType& returnType, BlackBerry::Platform::String& returnValue)
 {
     BLACKBERRY_ASSERT(scriptUTF8.isUtf8());
-    ScriptSourceCode sourceCode(scriptUTF8, KURL());
+    ScriptSourceCode sourceCode(scriptUTF8, URL());
     return d->executeJavaScriptInIsolatedWorld(sourceCode, returnType, returnValue);
 }
 
@@ -943,7 +935,7 @@ static void closeURLRecursively(Frame* frame)
 
     Vector<RefPtr<Frame>, 10> childFrames;
 
-    for (RefPtr<Frame> childFrame = frame->tree()->firstChild(); childFrame; childFrame = childFrame->tree()->nextSibling())
+    for (RefPtr<Frame> childFrame = frame->tree().firstChild(); childFrame; childFrame = childFrame->tree().nextSibling())
         childFrames.append(childFrame);
 
     unsigned size = childFrames.size();
@@ -974,7 +966,7 @@ static void enableCrossSiteXHRRecursively(Frame* frame)
     frame->document()->securityOrigin()->grantUniversalAccess();
 
     Vector<RefPtr<Frame>, 10> childFrames;
-    for (RefPtr<Frame> childFrame = frame->tree()->firstChild(); childFrame; childFrame = childFrame->tree()->nextSibling())
+    for (RefPtr<Frame> childFrame = frame->tree().firstChild(); childFrame; childFrame = childFrame->tree().nextSibling())
         childFrames.append(childFrame);
 
     unsigned size = childFrames.size();
@@ -998,7 +990,7 @@ void WebPagePrivate::addOriginAccessWhitelistEntry(const BlackBerry::Platform::S
     if (source->isUnique())
         return;
 
-    KURL destination(KURL(), destinationOrigin);
+    URL destination(URL(), destinationOrigin);
     SecurityPolicy::addOriginAccessWhitelistEntry(*source, destination.protocol(), destination.host(), allowDestinationSubdomains);
 }
 
@@ -1013,7 +1005,7 @@ void WebPagePrivate::removeOriginAccessWhitelistEntry(const BlackBerry::Platform
     if (source->isUnique())
         return;
 
-    KURL destination(KURL(), destinationOrigin);
+    URL destination(URL(), destinationOrigin);
     SecurityPolicy::removeOriginAccessWhitelistEntry(*source, destination.protocol(), destination.host(), allowDestinationSubdomains);
 }
 
@@ -1702,6 +1694,9 @@ double WebPagePrivate::zoomToFitScale() const
 
 bool WebPagePrivate::hasFloatLayoutSizeRoundingError() const
 {
+    if (!m_client->hasView())
+        return false;
+
     int contentsWidth = contentsSize().width();
     int contentsHeight = contentsSize().height();
     float devicePixelRatio = m_webSettings->devicePixelRatio();
@@ -2061,7 +2056,7 @@ bool WebPagePrivate::isActive() const
     return m_client->isActive();
 }
 
-void WebPagePrivate::authenticationChallenge(const KURL& url, const ProtectionSpace& protectionSpace, const Credential& inputCredential)
+void WebPagePrivate::authenticationChallenge(const URL& url, const ProtectionSpace& protectionSpace, const Credential& inputCredential)
 {
     AuthenticationChallengeManager* authmgr = AuthenticationChallengeManager::instance();
     BlackBerry::Platform::String username;
@@ -2153,7 +2148,7 @@ Platform::WebContext WebPagePrivate::webContext(TargetDetectionStrategy strategy
     Node* linkNode = node->enclosingLinkEventParentOrSelf();
     // Set link url only when the node is linked image, or text inside anchor. Prevent CCM popup when long press non-link element(eg. button) inside an anchor.
     if (linkNode && (node == linkNode || node->isTextNode() || nodeIsImage)) {
-        KURL href;
+        URL href;
         if (linkNode->isLink() && linkNode->hasAttributes()) {
             if (const Attribute* attribute = toElement(linkNode)->findAttributeByName(HTMLNames::hrefAttr))
                 href = linkNode->document()->completeURL(stripLeadingAndTrailingHTMLSpaces(attribute->value()));
@@ -2816,7 +2811,7 @@ IntRect WebPagePrivate::adjustRectOffsetForFrameOffset(const IntRect& rect, cons
 
         Node* ownerNode = static_cast<Node*>(frame->ownerElement());
         tnode = ownerNode;
-        if (ownerNode && (ownerNode->hasTagName(HTMLNames::iframeTag) || ownerNode->hasTagName(HTMLNames::frameTag))) {
+        if (ownerNode && (isHTMLIFrameElement(ownerNode) || isHTMLFrameNode(ownerNode))) {
             IntRect iFrameRect;
             do {
                 iFrameRect = rectForNode(ownerNode);
@@ -3134,12 +3129,12 @@ void WebPagePrivate::setVisible(bool visible)
     if (visible != m_visible) {
         if (visible) {
             if (m_mainFrame)
-                m_mainFrame->animation()->resumeAnimations();
+                m_mainFrame->animation().resumeAnimations();
             if (m_page->scriptedAnimationsSuspended())
                 m_page->resumeScriptedAnimations();
         } else {
             if (m_mainFrame)
-                m_mainFrame->animation()->suspendAnimations();
+                m_mainFrame->animation().suspendAnimations();
             if (!m_page->scriptedAnimationsSuspended())
                 m_page->suspendScriptedAnimations();
 
@@ -3390,6 +3385,11 @@ Platform::IntSize WebPagePrivate::recomputeVirtualViewportFromViewportArguments(
     if (m_viewportArguments == defaultViewportArguments)
         return IntSize();
 
+    // We want to respect viewport when width is not specified in the viewport meta tag in order to improve the
+    // user experience of some websites that use a reasonable initial-scale, but have some overly-wide contents.
+    if (m_viewportArguments.width == ViewportArguments::ValueAuto)
+        m_forceRespectViewportArguments = true;
+
     int desktopWidth = DEFAULT_MAX_LAYOUT_WIDTH;
     int deviceWidth = Platform::Graphics::Screen::primaryScreen()->width();
     int deviceHeight = Platform::Graphics::Screen::primaryScreen()->height();
@@ -3521,7 +3521,7 @@ void WebPagePrivate::setScreenOrientation(int orientation)
 #if ENABLE(ORIENTATION_EVENTS)
     if (m_mainFrame->orientation() == orientation)
         return;
-    for (RefPtr<Frame> frame = m_mainFrame; frame; frame = frame->tree()->traverseNext())
+    for (RefPtr<Frame> frame = m_mainFrame; frame; frame = frame->tree().traverseNext())
         frame->sendOrientationChangeEvent(orientation);
 #endif
 }
@@ -3558,6 +3558,11 @@ bool WebPagePrivate::setViewportSize(const IntSize& transformedActualVisibleSize
         setShouldResetTilesWhenShown(true);
 
     bool hasPendingOrientation = m_pendingOrientation != -1;
+
+#if USE(ACCELERATED_COMPOSITING)
+    if (hasPendingOrientation)
+        discardLayerVisibilities();
+#endif
 
     IntSize viewportSizeBefore = actualVisibleSize();
     FloatPoint centerOfVisibleContentsRect = this->centerOfVisibleContentsRect();
@@ -4848,9 +4853,6 @@ void WebPage::clearNeverRememberSites()
 
 void WebPage::clearWebFileSystem()
 {
-#if ENABLE(FILE_SYSTEM)
-    Platform::WebFileSystem::deleteAllFileSystems();
-#endif
 }
 
 void WebPage::clearCache()
@@ -4889,7 +4891,7 @@ void WebPage::initPopupWebView(BlackBerry::WebKit::WebPage* webPage)
     d->m_pagePopup->initialize(webPage);
 }
 
-String WebPagePrivate::findPatternStringForUrl(const KURL& url) const
+String WebPagePrivate::findPatternStringForUrl(const URL& url) const
 {
     if ((m_webSettings->shouldHandlePatternUrls() && protocolIs(url, "pattern"))
         || protocolIs(url, "tel")
@@ -5007,7 +5009,7 @@ void WebPage::notifyFullScreenVideoExited(bool done)
     Element* element = toElement(d->m_fullscreenNode.get());
     if (!element)
         return;
-    if (d->m_webSettings->fullScreenVideoCapable() && element->hasTagName(HTMLNames::videoTag))
+    if (d->m_webSettings->fullScreenVideoCapable() && isHTMLVideoElement(element))
         toHTMLMediaElement(element)->exitFullscreen();
 #if ENABLE(FULLSCREEN_API)
     else
@@ -5239,6 +5241,23 @@ void WebPagePrivate::scheduleRootLayerCommit()
 #endif
         m_rootLayerCommitTimer->startOneShot(0);
     }
+}
+
+void WebPagePrivate::discardLayerVisibilities()
+{
+    if (!isAcceleratedCompositingActive())
+        return;
+
+    if (m_frameLayers)
+        m_frameLayers->discardBackVisibility();
+
+    Platform::userInterfaceThreadMessageClient()->dispatchSyncMessage(
+        Platform::createMethodCallMessage(&WebPagePrivate::discardFrontVisibilityCompositingThread, this));
+}
+
+void WebPagePrivate::discardFrontVisibilityCompositingThread()
+{
+    m_compositor->discardFrontVisibility();
 }
 
 static bool needsLayoutRecursive(FrameView* view)
@@ -5639,7 +5658,7 @@ void WebPagePrivate::notifyFlushRequired(const GraphicsLayer*)
 void WebPagePrivate::enterFullscreenForNode(Node* node)
 {
 #if ENABLE(VIDEO)
-    if (!node || !node->hasTagName(HTMLNames::videoTag))
+    if (!node || !isHTMLVideoElement(node))
         return;
 
     MediaPlayer* player = toHTMLMediaElement(node)->player();
@@ -5672,7 +5691,7 @@ void WebPagePrivate::exitFullscreenForNode(Node* node)
         m_fullscreenNode = 0;
     }
 
-    if (!node || !node->hasTagName(HTMLNames::videoTag))
+    if (!node || !isHTMLVideoElement(node))
         return;
 
     MediaPlayer* player = toHTMLMediaElement(node)->player();
@@ -5694,7 +5713,7 @@ void WebPagePrivate::enterFullScreenForElement(Element* element)
 #if ENABLE(VIDEO)
     if (!element)
         return;
-    if (m_webSettings->fullScreenVideoCapable() && element->hasTagName(HTMLNames::videoTag)) {
+    if (m_webSettings->fullScreenVideoCapable() && isHTMLVideoElement(element)) {
         // The Browser chrome has its own fullscreen video widget it wants to
         // use, and this is a video element. The only reason that
         // webkitWillEnterFullScreenForElement() and
@@ -5739,7 +5758,7 @@ void WebPagePrivate::exitFullScreenForElement(Element* element)
 #if ENABLE(VIDEO)
     if (!element)
         return;
-    if (m_webSettings->fullScreenVideoCapable() && element->hasTagName(HTMLNames::videoTag)) {
+    if (m_webSettings->fullScreenVideoCapable() && isHTMLVideoElement(element)) {
         // The Browser chrome has its own fullscreen video widget.
         exitFullscreenForNode(element);
     } else {
@@ -5816,7 +5835,7 @@ void WebPagePrivate::didChangeSettings(WebSettings* webSettings)
 
     BlackBerry::Platform::String stylesheetURL = webSettings->userStyleSheetLocation();
     if (!stylesheetURL.empty())
-        coreSettings->setUserStyleSheetLocation(KURL(KURL(), stylesheetURL));
+        coreSettings->setUserStyleSheetLocation(URL(URL(), stylesheetURL));
 
     coreSettings->setFirstScheduledLayoutDelay(webSettings->firstScheduledLayoutDelay());
     coreSettings->setUseCache(webSettings->useWebKitCache());
@@ -5851,14 +5870,14 @@ void WebPagePrivate::didChangeSettings(WebSettings* webSettings)
     coreSettings->setLocalStorageEnabled(webSettings->isLocalStorageEnabled());
     coreSettings->setOfflineWebApplicationCacheEnabled(webSettings->isAppCacheEnabled());
 
-    m_page->group().groupSettings()->setLocalStorageQuotaBytes(webSettings->localStorageQuota());
+    m_page->group().groupSettings().setLocalStorageQuotaBytes(webSettings->localStorageQuota());
     coreSettings->setSessionStorageQuota(webSettings->sessionStorageQuota());
     coreSettings->setUsesPageCache(webSettings->maximumPagesInCache());
     coreSettings->setFrameFlatteningEnabled(webSettings->isFrameFlatteningEnabled());
 #endif
 
 #if ENABLE(INDEXED_DATABASE)
-    m_page->group().groupSettings()->setIndexedDBDatabasePath(webSettings->indexedDataBasePath());
+    m_page->group().groupSettings().setIndexedDBDatabasePath(webSettings->indexedDataBasePath());
 #endif
 
 

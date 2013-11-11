@@ -28,6 +28,7 @@
 namespace WebCore {
 
 class DocumentFragment;
+class FormNamedItem;
 class HTMLCollection;
 class HTMLFormElement;
 
@@ -39,7 +40,7 @@ enum TranslateAttributeMode {
 
 class HTMLElement : public StyledElement {
 public:
-    static PassRefPtr<HTMLElement> create(const QualifiedName& tagName, Document*);
+    static PassRefPtr<HTMLElement> create(const QualifiedName& tagName, Document&);
 
     PassRefPtr<HTMLCollection> children();
 
@@ -76,26 +77,26 @@ public:
 
     void click();
 
-    virtual void accessKeyAction(bool sendMouseEvents);
+    virtual void accessKeyAction(bool sendMouseEvents) OVERRIDE;
 
     bool ieForbidsInsertHTML() const;
 
-    virtual bool rendererIsNeeded(const RenderStyle&);
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
+    virtual bool rendererIsNeeded(const RenderStyle&) OVERRIDE;
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
 
     HTMLFormElement* form() const { return virtualForm(); }
-
-    HTMLFormElement* findFormAncestor() const;
 
     bool hasDirectionAuto() const;
     TextDirection directionalityIfhasDirAutoAttribute(bool& isAuto) const;
 
     virtual bool isHTMLUnknownElement() const { return false; }
+    virtual bool isTextControlInnerTextElement() const { return false; }
 
     virtual bool isLabelable() const { return false; }
+    virtual FormNamedItem* asFormNamedItem() { return 0; }
 
 protected:
-    HTMLElement(const QualifiedName& tagName, Document*, ConstructionType);
+    HTMLElement(const QualifiedName& tagName, Document&, ConstructionType);
 
     void addHTMLLengthToStyle(MutableStylePropertySet*, CSSPropertyID, const String& value);
     void addHTMLColorToStyle(MutableStylePropertySet*, CSSPropertyID, const String& color);
@@ -108,7 +109,7 @@ protected:
     virtual void collectStyleForPresentationAttribute(const QualifiedName&, const AtomicString&, MutableStylePropertySet*) OVERRIDE;
     unsigned parseBorderWidthAttribute(const AtomicString&) const;
 
-    virtual void childrenChanged(bool changedByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0);
+    virtual void childrenChanged(const ChildChange&) OVERRIDE;
     void calculateAndAdjustDirectionality();
 
     virtual bool isURLAttribute(const Attribute&) const OVERRIDE;
@@ -125,35 +126,29 @@ private:
 
     void dirAttributeChanged(const AtomicString&);
     void adjustDirectionalityIfNeededAfterChildAttributeChanged(Element* child);
-    void adjustDirectionalityIfNeededAfterChildrenChanged(Node* beforeChange, int childCountDelta);
+    void adjustDirectionalityIfNeededAfterChildrenChanged(Element* beforeChange, ChildChangeType);
     TextDirection directionality(Node** strongDirectionalityTextNode= 0) const;
 
     TranslateAttributeMode translateAttributeMode() const;
-
-    AtomicString eventNameForAttributeName(const QualifiedName& attrName) const;
 };
 
-inline HTMLElement* toHTMLElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->isHTMLElement());
-    return static_cast<HTMLElement*>(node);
-}
-
-inline const HTMLElement* toHTMLElement(const Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->isHTMLElement());
-    return static_cast<const HTMLElement*>(node);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toHTMLElement(const HTMLElement*);
-
-inline HTMLElement::HTMLElement(const QualifiedName& tagName, Document* document, ConstructionType type = CreateHTMLElement)
+inline HTMLElement::HTMLElement(const QualifiedName& tagName, Document& document, ConstructionType type = CreateHTMLElement)
     : StyledElement(tagName, document, type)
 {
     ASSERT(tagName.localName().impl());
 }
 
+template <typename Type> bool isElementOfType(const HTMLElement&);
+
+void isHTMLElement(const HTMLElement&); // Catch unnecessary runtime check of type known at compile time.
+inline bool isHTMLElement(const Node& node) { return node.isHTMLElement(); }
+template <> inline bool isElementOfType<const HTMLElement>(const HTMLElement&) { return true; }
+template <> inline bool isElementOfType<const HTMLElement>(const Element& element) { return element.isHTMLElement(); }
+
+NODE_TYPE_CASTS(HTMLElement)
+
 } // namespace WebCore
+
+#include "HTMLElementTypeHelpers.h"
 
 #endif // HTMLElement_h

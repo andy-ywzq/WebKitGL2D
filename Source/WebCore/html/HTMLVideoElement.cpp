@@ -47,16 +47,16 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-inline HTMLVideoElement::HTMLVideoElement(const QualifiedName& tagName, Document* document, bool createdByParser)
+inline HTMLVideoElement::HTMLVideoElement(const QualifiedName& tagName, Document& document, bool createdByParser)
     : HTMLMediaElement(tagName, document, createdByParser)
 {
     ASSERT(hasTagName(videoTag));
     setHasCustomStyleResolveCallbacks();
-    if (document->settings())
-        m_defaultPosterURL = document->settings()->defaultVideoPosterURL();
+    if (document.settings())
+        m_defaultPosterURL = document.settings()->defaultVideoPosterURL();
 }
 
-PassRefPtr<HTMLVideoElement> HTMLVideoElement::create(const QualifiedName& tagName, Document* document, bool createdByParser)
+PassRefPtr<HTMLVideoElement> HTMLVideoElement::create(const QualifiedName& tagName, Document& document, bool createdByParser)
 {
     RefPtr<HTMLVideoElement> videoElement(adoptRef(new HTMLVideoElement(tagName, document, createdByParser)));
     videoElement->suspendIfNeeded();
@@ -69,9 +69,9 @@ bool HTMLVideoElement::rendererIsNeeded(const RenderStyle& style)
 }
 
 #if !ENABLE(PLUGIN_PROXY_FOR_VIDEO)
-RenderObject* HTMLVideoElement::createRenderer(RenderArena* arena, RenderStyle*)
+RenderElement* HTMLVideoElement::createRenderer(PassRef<RenderStyle> style)
 {
-    return new (arena) RenderVideo(this);
+    return new RenderVideo(*this, std::move(style));
 }
 #endif
 
@@ -130,7 +130,7 @@ void HTMLVideoElement::parseAttribute(const QualifiedName& name, const AtomicStr
 
 bool HTMLVideoElement::supportsFullscreen() const
 {
-    Page* page = document() ? document()->page() : 0;
+    Page* page = document().page();
     if (!page) 
         return false;
 
@@ -194,7 +194,7 @@ const AtomicString& HTMLVideoElement::imageSourceURL() const
 void HTMLVideoElement::setDisplayMode(DisplayMode mode)
 {
     DisplayMode oldMode = displayMode();
-    KURL poster = posterImageURL();
+    URL poster = posterImageURL();
 
     if (!poster.isEmpty()) {
         // We have a poster path, but only show it until the user triggers display by playing or seeking and the
@@ -213,7 +213,7 @@ void HTMLVideoElement::setDisplayMode(DisplayMode mode)
     if (player() && player()->canLoadPoster()) {
         bool canLoad = true;
         if (!poster.isEmpty()) {
-            if (Frame* frame = document()->frame())
+            if (Frame* frame = document().frame())
                 canLoad = frame->loader().willLoadMediaElementURL(poster);
         }
         if (canLoad)
@@ -315,12 +315,12 @@ unsigned HTMLVideoElement::webkitDroppedFrameCount() const
 }
 #endif
 
-KURL HTMLVideoElement::posterImageURL() const
+URL HTMLVideoElement::posterImageURL() const
 {
     String url = stripLeadingAndTrailingHTMLSpaces(imageSourceURL());
     if (url.isEmpty())
-        return KURL();
-    return document()->completeURL(url);
+        return URL();
+    return document().completeURL(url);
 }
 
 }

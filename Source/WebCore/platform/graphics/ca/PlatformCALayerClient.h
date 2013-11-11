@@ -50,17 +50,19 @@ public:
 
     virtual void platformCALayerAnimationStarted(CFTimeInterval beginTime) = 0;
     virtual GraphicsLayer::CompositingCoordinatesOrientation platformCALayerContentsOrientation() const = 0;
-    virtual void platformCALayerPaintContents(GraphicsContext&, const IntRect& inClip) = 0;
+    virtual void platformCALayerPaintContents(PlatformCALayer*, GraphicsContext&, const IntRect& inClip) = 0;
     virtual bool platformCALayerShowDebugBorders() const = 0;
     virtual bool platformCALayerShowRepaintCounter(PlatformCALayer*) const = 0;
-    virtual int platformCALayerIncrementRepaintCount() = 0;
+    virtual int platformCALayerIncrementRepaintCount(PlatformCALayer*) = 0;
     
     virtual bool platformCALayerContentsOpaque() const = 0;
     virtual bool platformCALayerDrawsContent() const = 0;
     virtual void platformCALayerLayerDidDisplay(PlatformLayer*) = 0;
 
-    virtual void platformCALayerDidCreateTiles(const Vector<FloatRect>& dirtyRects) = 0;
+    virtual void platformCALayerSetNeedsToRevalidateTiles() { }
     virtual float platformCALayerDeviceScaleFactor() = 0;
+
+    virtual bool isCommittingChanges() const { return false; }
 
 protected:
     virtual ~PlatformCALayerClient() {}

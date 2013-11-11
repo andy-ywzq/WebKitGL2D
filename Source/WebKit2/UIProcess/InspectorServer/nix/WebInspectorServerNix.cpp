@@ -100,7 +100,7 @@ void WebInspectorServer::buildPageList(Vector<char>& data, String& contentType)
         builder.appendLiteral("\", \"url\": \"");
         builder.append(webPage->activeURL());
         builder.appendLiteral("\", \"inspectorUrl\": \"");
-        builder.appendLiteral("/inspector.html?page=");
+        builder.appendLiteral("/Main.html?page=");
         builder.appendNumber(it->key);
         builder.appendLiteral("\" }");
     }

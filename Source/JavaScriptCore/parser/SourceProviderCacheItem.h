@@ -41,8 +41,8 @@ struct SourceProviderCacheItemCreationParameters {
     bool needsFullActivation;
     bool usesEval;
     bool strictMode;
-    Vector<RefPtr<StringImpl> > usedVariables;
-    Vector<RefPtr<StringImpl> > writtenVariables;
+    Vector<RefPtr<StringImpl>> usedVariables;
+    Vector<RefPtr<StringImpl>> writtenVariables;
 };
 
 #if COMPILER(MSVC)
@@ -53,7 +53,7 @@ struct SourceProviderCacheItemCreationParameters {
 class SourceProviderCacheItem {
     WTF_MAKE_FAST_ALLOCATED;
 public:
-    static PassOwnPtr<SourceProviderCacheItem> create(const SourceProviderCacheItemCreationParameters&);
+    static std::unique_ptr<SourceProviderCacheItem> create(const SourceProviderCacheItemCreationParameters&);
     ~SourceProviderCacheItem();
 
     JSToken closeBraceToken() const 
@@ -98,12 +98,12 @@ inline SourceProviderCacheItem::~SourceProviderCacheItem()
         m_variables[i]->deref();
 }
 
-inline PassOwnPtr<SourceProviderCacheItem> SourceProviderCacheItem::create(const SourceProviderCacheItemCreationParameters& parameters)
+inline std::unique_ptr<SourceProviderCacheItem> SourceProviderCacheItem::create(const SourceProviderCacheItemCreationParameters& parameters)
 {
     size_t variableCount = parameters.writtenVariables.size() + parameters.usedVariables.size();
     size_t objectSize = sizeof(SourceProviderCacheItem) + sizeof(StringImpl*) * variableCount;
     void* slot = fastMalloc(objectSize);
-    return adoptPtr(new (slot) SourceProviderCacheItem(parameters));
+    return std::unique_ptr<SourceProviderCacheItem>(new (slot) SourceProviderCacheItem(parameters));
 }
 
 inline SourceProviderCacheItem::SourceProviderCacheItem(const SourceProviderCacheItemCreationParameters& parameters)

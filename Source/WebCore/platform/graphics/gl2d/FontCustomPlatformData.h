@@ -48,7 +48,7 @@ private:
     FT_Face m_freeTypeFace;
 };
 
-FontCustomPlatformData* createFontCustomPlatformData(SharedBuffer* buffer);
+std::unique_ptr<FontCustomPlatformData> createFontCustomPlatformData(SharedBuffer* buffer);
 
 }
 

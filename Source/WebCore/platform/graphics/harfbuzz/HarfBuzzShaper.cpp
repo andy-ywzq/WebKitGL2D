@@ -39,6 +39,7 @@
 #include <unicode/normlzr.h>
 #include <unicode/uchar.h>
 #include <wtf/MathExtras.h>
+#include <wtf/StdLibExtras.h>
 #include <wtf/Vector.h>
 #include <wtf/unicode/Unicode.h>
 
@@ -195,7 +196,7 @@ HarfBuzzShaper::HarfBuzzShaper(const Font* font, const TextRun& run)
     , m_fromIndex(0)
     , m_toIndex(m_run.length())
 {
-    m_normalizedBuffer = adoptArrayPtr(new UChar[m_run.length() + 1]);
+    m_normalizedBuffer = std::make_unique<UChar[]>(m_run.length() + 1);
     m_normalizedBufferLength = m_run.length();
     normalizeCharacters(m_run, m_normalizedBuffer.get(), m_normalizedBufferLength);
     setPadding(m_run.expansion());
@@ -277,7 +278,7 @@ void HarfBuzzShaper::setNormalizedBuffer(NormalizeMode normalizeMode)
         sourceText = normalizedString.getBuffer();
     }
 
-    m_normalizedBuffer = adoptArrayPtr(new UChar[m_normalizedBufferLength + 1]);
+    m_normalizedBuffer = std::make_unique<UChar[]>(m_normalizedBufferLength + 1);
     normalizeSpacesAndMirrorChars(sourceText, m_normalizedBuffer.get(), m_normalizedBufferLength, normalizeMode);
 }
 
@@ -493,8 +494,7 @@ bool HarfBuzzShaper::shapeHarfBuzzRuns(bool shouldSetDirection)
         hb_buffer_add_utf16(harfBuzzBuffer.get(), &preContext, 1, 1, 0);
 
         if (m_font->isSmallCaps() && u_islower(m_normalizedBuffer[currentRun->startIndex()])) {
-            String upperText = String(m_normalizedBuffer.get() + currentRun->startIndex(), currentRun->numCharacters());
-            upperText.makeUpper();
+            String upperText = String(m_normalizedBuffer.get() + currentRun->startIndex(), currentRun->numCharacters()).upper();
             currentFontData = m_font->glyphDataForCharacter(upperText[0], false, SmallCapsVariant).fontData;
             hb_buffer_add_utf16(harfBuzzBuffer.get(), reinterpret_cast<const uint16_t*>(upperText.characters()), currentRun->numCharacters(), 0, currentRun->numCharacters());
         } else

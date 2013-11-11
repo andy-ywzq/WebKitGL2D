@@ -38,6 +38,10 @@
 
 namespace WebKit {
 
+void WebPageProxy::platformInitialize()
+{
+}
+
 GtkWidget* WebPageProxy::viewWidget()
 {
     return static_cast<PageClientImpl*>(m_pageClient)->viewWidget();
@@ -71,6 +75,7 @@ void WebPageProxy::loadRecentSearches(const String&, Vector<String>&)
     notImplemented();
 }
 
+#if PLUGIN_ARCHITECTURE(X11)
 typedef HashMap<uint64_t, GtkWidget* > PluginWindowMap;
 static PluginWindowMap& pluginWindowMap()
 {
@@ -111,6 +116,7 @@ void WebPageProxy::windowedPluginGeometryDidChange(const WebCore::IntRect& frame
 
     webkitWebViewBaseChildMoveResize(WEBKIT_WEB_VIEW_BASE(viewWidget()), plugin, frameRect);
 }
+#endif // PLUGIN_ARCHITECTURE(X11)
 
 void WebPageProxy::setInputMethodState(bool enabled)
 {

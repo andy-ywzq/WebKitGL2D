@@ -1,4 +1,5 @@
 # Copyright (C) 2010 Google Inc. All rights reserved.
+# Copyright (C) 2013 Apple Inc. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -95,7 +96,7 @@ class Port(object):
     def __init__(self, host, port_name, options=None, **kwargs):
 
         # This value may be different from cls.port_name by having version modifiers
-        # and other fields appended to it (for example, 'qt-arm' or 'mac-wk2').
+        # and other fields appended to it (for example, 'mac-wk2' or 'win').
         self._name = port_name
 
         # These are default values that should be overridden in a subclasses.
@@ -923,7 +924,7 @@ class Port(object):
         """Return a newly created Driver subclass for starting/stopping the test driver."""
         return driver.DriverProxy(self, worker_number, self._driver_class(), pixel_tests=self.get_option('pixel_tests'), no_timeout=no_timeout)
 
-    def start_helper(self):
+    def start_helper(self, pixel_tests=False):
         """If a port needs to reconfigure graphics settings or do other
         things to ensure a known test configuration, it should override this
         method."""
@@ -1089,7 +1090,10 @@ class Port(object):
 
         # We use LayoutTest directory here because webkit_base isn't a part of WebKit repository in Chromium port
         # where turnk isn't checked out as a whole.
-        return [('WebKit', self.layout_tests_dir())]
+        repository_paths = [('WebKit', self.layout_tests_dir())]
+        if self.get_option('additional_repository_name') and self.get_option('additional_repository_path'):
+            repository_paths += [(self._options.additional_repository_name, self._options.additional_repository_path)]
+        return repository_paths
 
     _WDIFF_DEL = '##WDIFF_DEL##'
     _WDIFF_ADD = '##WDIFF_ADD##'
@@ -1222,7 +1226,7 @@ class Port(object):
             if self._is_redhat_based():
                 return 'fedora-httpd-' + self._apache_version() + '.conf'
             if self._is_debian_based():
-                return 'apache2-debian-httpd.conf'
+                return 'debian-httpd-' + self._apache_version() + '.conf'
             if self._is_arch_based():
                 return 'archlinux-httpd.conf'
         # All platforms use apache2 except for CYGWIN (and Mac OS X Tiger and prior, which we no longer support).
@@ -1410,7 +1414,6 @@ class Port(object):
     # to use for all port configurations (including architectures, graphics types, etc).
     def _port_flag_for_scripts(self):
         # This is overrriden by ports which need a flag passed to scripts to distinguish the use of that port.
-        # For example --qt on linux, since a user might have both Gtk and Qt libraries installed.
         return None
 
     # This is modeled after webkitdirs.pm argumentsForConfiguration() from old-run-webkit-tests
@@ -1533,7 +1536,6 @@ class Port(object):
 
     def _wk2_port_name(self):
         # By current convention, the WebKit2 name is always mac-wk2, win-wk2, not mac-leopard-wk2, etc,
-        # except for Qt because WebKit2 is only supported by Qt 5.0 (therefore: qt-5.0-wk2).
         return "%s-wk2" % self.port_name
 
 

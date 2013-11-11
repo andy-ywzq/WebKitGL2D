@@ -46,19 +46,6 @@ public:
     {
     }
 
-    typedef HashMap<const SVGElement*, SVGElementRareData*> SVGElementRareDataMap;
-
-    static SVGElementRareDataMap& rareDataMap()
-    {
-        DEFINE_STATIC_LOCAL(SVGElementRareDataMap, rareDataMap, ());
-        return rareDataMap;
-    }
-
-    static SVGElementRareData* rareDataFromMap(const SVGElement* element)
-    {
-        return rareDataMap().get(element);
-    }
-
     HashSet<SVGElementInstance*>& elementInstances() { return m_elementInstances; }
     const HashSet<SVGElementInstance*>& elementInstances() const { return m_elementInstances; }
 
@@ -90,11 +77,11 @@ public:
     RenderStyle* overrideComputedStyle(Element* element, RenderStyle* parentStyle)
     {
         ASSERT(element);
-        if (!element->document() || !m_useOverrideComputedStyle)
+        if (!m_useOverrideComputedStyle)
             return 0;
         if (!m_overrideComputedStyle || m_needsOverrideComputedStyleUpdate) {
             // The style computed here contains no CSS Animations/Transitions or SMIL induced rules - this is needed to compute the "base value" for the SMIL animation sandwhich model.
-            m_overrideComputedStyle = element->document()->ensureStyleResolver().styleForElement(element, parentStyle, DisallowStyleSharing, MatchAllRulesExcludingSMIL);
+            m_overrideComputedStyle = element->document().ensureStyleResolver().styleForElement(element, parentStyle, DisallowStyleSharing, MatchAllRulesExcludingSMIL);
             m_needsOverrideComputedStyleUpdate = false;
         }
         ASSERT(m_overrideComputedStyle);

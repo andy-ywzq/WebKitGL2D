@@ -23,6 +23,7 @@
 #include "CachedImage.h"
 #include "DataObjectGtk.h"
 #include "DocumentFragment.h"
+#include "DragData.h"
 #include "Editor.h"
 #include "Frame.h"
 #include "HTMLImageElement.h"
@@ -30,7 +31,7 @@
 #include "HTMLNames.h"
 #include "HTMLParserIdioms.h"
 #include "Image.h"
-#include "KURL.h"
+#include "URL.h"
 #include "PasteboardHelper.h"
 #include "RenderImage.h"
 #include "markup.h"
@@ -67,11 +68,17 @@ PassOwnPtr<Pasteboard> Pasteboard::createForCopyAndPaste()
     return create(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD));
 }
 
+PassOwnPtr<Pasteboard> Pasteboard::createForGlobalSelection()
+{
+    return create(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
+}
+
 PassOwnPtr<Pasteboard> Pasteboard::createPrivate()
 {
     return create(DataObjectGtk::create());
 }
 
+#if ENABLE(DRAG_SUPPORT)
 PassOwnPtr<Pasteboard> Pasteboard::createForDragAndDrop()
 {
     return create(DataObjectGtk::create());
@@ -81,23 +88,7 @@ PassOwnPtr<Pasteboard> Pasteboard::createForDragAndDrop(const DragData& dragData
 {
     return create(dragData.platformData());
 }
-
-static Pasteboard* selectionClipboard()
-{
-    static Pasteboard* pasteboard = Pasteboard::create(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD)).leakPtr();
-    return pasteboard;
-}
-
-static Pasteboard* primaryClipboard()
-{
-    static Pasteboard* pasteboard = Pasteboard::create(gtk_clipboard_get(GDK_SELECTION_PRIMARY)).leakPtr();
-    return pasteboard;
-}
-
-Pasteboard* Pasteboard::generalPasteboard()
-{
-    return PasteboardHelper::defaultPasteboardHelper()->usePrimarySelectionClipboard() ? primaryClipboard() : selectionClipboard();
-}
+#endif
 
 Pasteboard::Pasteboard(PassRefPtr<DataObjectGtk> dataObject)
     : m_dataObject(dataObject)
@@ -166,10 +157,10 @@ bool Pasteboard::writeString(const String& type, const String& data)
     return false;
 }
 
-void Pasteboard::writeSelection(Range* selectedRange, bool canSmartCopyOrDelete, Frame* frame, ShouldSerializeSelectedTextForClipboard shouldSerializeSelectedTextForClipboard)
+void Pasteboard::writeSelection(Range& selectedRange, bool canSmartCopyOrDelete, Frame& frame, ShouldSerializeSelectedTextForClipboard shouldSerializeSelectedTextForClipboard)
 {
     m_dataObject->clearAll();
-    m_dataObject->setText(shouldSerializeSelectedTextForClipboard == IncludeImageAltTextForClipboard ? frame->editor().selectedTextForClipboard() : frame->editor().selectedText());
+    m_dataObject->setText(shouldSerializeSelectedTextForClipboard == IncludeImageAltTextForClipboard ? frame.editor().selectedTextForClipboard() : frame.editor().selectedText());
     m_dataObject->setMarkup(createMarkup(selectedRange, 0, AnnotateForInterchange, false, ResolveNonLocalURLs));
 
     if (m_gtkClipboard)
@@ -185,42 +176,39 @@ void Pasteboard::writePlainText(const String& text, SmartReplaceOption smartRepl
         PasteboardHelper::defaultPasteboardHelper()->writeClipboardContents(m_gtkClipboard, (smartReplaceOption == CanSmartReplace) ? PasteboardHelper::IncludeSmartPaste : PasteboardHelper::DoNotIncludeSmartPaste);
 }
 
-void Pasteboard::writeURL(const KURL& url, const String& label, Frame* frame)
+void Pasteboard::write(const PasteboardURL& pasteboardURL)
 {
-    ASSERT(!url.isEmpty());
+    ASSERT(!pasteboardURL.url.isEmpty());
 
     m_dataObject->clearAll();
-    m_dataObject->setURL(url, label);
+    m_dataObject->setURL(pasteboardURL.url, pasteboardURL.title);
 
     if (m_gtkClipboard)
         PasteboardHelper::defaultPasteboardHelper()->writeClipboardContents(m_gtkClipboard);
 }
 
-static KURL getURLForImageNode(Node* node)
+static URL getURLForImageElement(Element& element)
 {
     // FIXME: Later this code should be shared with Chromium somehow. Chances are all platforms want it.
     AtomicString urlString;
-    if (isHTMLImageElement(node) || isHTMLInputElement(node))
-        urlString = toElement(node)->getAttribute(HTMLNames::srcAttr);
+    if (isHTMLImageElement(element) || isHTMLInputElement(element))
+        urlString = element.getAttribute(HTMLNames::srcAttr);
 #if ENABLE(SVG)
-    else if (node->hasTagName(SVGNames::imageTag))
-        urlString = toElement(node)->getAttribute(XLinkNames::hrefAttr);
+    else if (element.hasTagName(SVGNames::imageTag))
+        urlString = element.getAttribute(XLinkNames::hrefAttr);
 #endif
-    else if (node->hasTagName(HTMLNames::embedTag) || node->hasTagName(HTMLNames::objectTag)) {
-        Element* element = toElement(node);
-        urlString = element->imageSourceURL();
-    }
-    return urlString.isEmpty() ? KURL() : node->document()->completeURL(stripLeadingAndTrailingHTMLSpaces(urlString));
+    else if (element.hasTagName(HTMLNames::embedTag) || isHTMLObjectElement(element))
+        urlString = element.imageSourceURL();
+
+    return urlString.isEmpty() ? URL() : element.document().completeURL(stripLeadingAndTrailingHTMLSpaces(urlString));
 }
 
-void Pasteboard::writeImage(Node* node, const KURL&, const String& title)
+void Pasteboard::writeImage(Element& element, const URL&, const String& title)
 {
-    ASSERT(node);
-
-    if (!(node->renderer() && node->renderer()->isImage()))
+    if (!(element.renderer() && element.renderer()->isImage()))
         return;
 
-    RenderImage* renderer = toRenderImage(node->renderer());
+    RenderImage* renderer = toRenderImage(element.renderer());
     CachedImage* cachedImage = renderer->cachedImage();
     if (!cachedImage || cachedImage->errorOccurred())
         return;
@@ -229,11 +217,11 @@ void Pasteboard::writeImage(Node* node, const KURL&, const String& title)
 
     m_dataObject->clearAll();
 
-    KURL url = getURLForImageNode(node);
+    URL url = getURLForImageElement(element);
     if (!url.isEmpty()) {
         m_dataObject->setURL(url, title);
 
-        m_dataObject->setMarkup(createMarkup(toElement(node), IncludeNode, 0, ResolveAllURLs));
+        m_dataObject->setMarkup(createMarkup(element, IncludeNode, 0, ResolveAllURLs));
     }
 
     GRefPtr<GdkPixbuf> pixbuf = adoptGRef(image->getGdkPixbuf());
@@ -305,12 +293,13 @@ bool Pasteboard::canSmartReplace()
     return m_gtkClipboard && PasteboardHelper::defaultPasteboardHelper()->clipboardContentSupportsSmartReplace(m_gtkClipboard);
 }
 
+#if ENABLE(DRAG_SUPPORT)
 void Pasteboard::setDragImage(DragImageRef, const IntPoint& hotSpot)
 {
 }
+#endif
 
-PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame* frame, PassRefPtr<Range> context,
-                                                          bool allowPlainText, bool& chosePlainText)
+PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame& frame, Range& context, bool allowPlainText, bool& chosePlainText)
 {
     if (m_gtkClipboard)
         PasteboardHelper::defaultPasteboardHelper()->getClipboardContents(m_gtkClipboard);
@@ -318,9 +307,11 @@ PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame* frame, PassRefP
     chosePlainText = false;
 
     if (m_dataObject->hasMarkup()) {
-        RefPtr<DocumentFragment> fragment = createFragmentFromMarkup(frame->document(), m_dataObject->markup(), emptyString(), DisallowScriptingAndPluginContent);
-        if (fragment)
-            return fragment.release();
+        if (frame.document()) {
+            RefPtr<DocumentFragment> fragment = createFragmentFromMarkup(*frame.document(), m_dataObject->markup(), emptyString(), DisallowScriptingAndPluginContent);
+            if (fragment)
+                return fragment.release();
+        }
     }
 
     if (!allowPlainText)
@@ -328,7 +319,7 @@ PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame* frame, PassRefP
 
     if (m_dataObject->hasText()) {
         chosePlainText = true;
-        RefPtr<DocumentFragment> fragment = createFragmentFromText(context.get(), m_dataObject->text());
+        RefPtr<DocumentFragment> fragment = createFragmentFromText(context, m_dataObject->text());
         if (fragment)
             return fragment.release();
     }
@@ -336,21 +327,11 @@ PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame* frame, PassRefP
     return 0;
 }
 
-String Pasteboard::plainText(Frame* frame)
+void Pasteboard::read(PasteboardPlainText& text)
 {
     if (m_gtkClipboard)
         PasteboardHelper::defaultPasteboardHelper()->getClipboardContents(m_gtkClipboard);
-    return m_dataObject->text();
-}
-
-bool Pasteboard::isSelectionMode() const
-{
-    return PasteboardHelper::defaultPasteboardHelper()->usePrimarySelectionClipboard();
-}
-
-void Pasteboard::setSelectionMode(bool selectionMode)
-{
-    PasteboardHelper::defaultPasteboardHelper()->setUsePrimarySelectionClipboard(selectionMode);
+    text.text = m_dataObject->text();
 }
 
 bool Pasteboard::hasData()
@@ -361,28 +342,28 @@ bool Pasteboard::hasData()
     return m_dataObject->hasText() || m_dataObject->hasMarkup() || m_dataObject->hasURIList() || m_dataObject->hasImage();
 }
 
-ListHashSet<String> Pasteboard::types()
+Vector<String> Pasteboard::types()
 {
     if (m_gtkClipboard)
         PasteboardHelper::defaultPasteboardHelper()->getClipboardContents(m_gtkClipboard);
 
-    ListHashSet<String> types;
+    Vector<String> types;
     if (m_dataObject->hasText()) {
-        types.add(ASCIILiteral("text/plain"));
-        types.add(ASCIILiteral("Text"));
-        types.add(ASCIILiteral("text"));
+        types.append(ASCIILiteral("text/plain"));
+        types.append(ASCIILiteral("Text"));
+        types.append(ASCIILiteral("text"));
     }
 
     if (m_dataObject->hasMarkup())
-        types.add(ASCIILiteral("text/html"));
+        types.append(ASCIILiteral("text/html"));
 
     if (m_dataObject->hasURIList()) {
-        types.add(ASCIILiteral("text/uri-list"));
-        types.add(ASCIILiteral("URL"));
+        types.append(ASCIILiteral("text/uri-list"));
+        types.append(ASCIILiteral("URL"));
     }
 
     if (m_dataObject->hasFilenames())
-        types.add(ASCIILiteral("Files"));
+        types.append(ASCIILiteral("Files"));
 
     return types;
 }

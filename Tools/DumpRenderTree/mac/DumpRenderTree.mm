@@ -60,7 +60,6 @@
 #import <CoreFoundation/CoreFoundation.h>
 #import <JavaScriptCore/HeapStatistics.h>
 #import <JavaScriptCore/Options.h>
-#import <WebCore/FoundationExtras.h>
 #import <WebKit/DOMElement.h>
 #import <WebKit/DOMExtensions.h>
 #import <WebKit/DOMRange.h>
@@ -574,7 +573,6 @@ WebView *createWebViewAndOffscreenWindow()
     [[window contentView] addSubview:webView];
     [window orderBack:nil];
     [window setAutodisplay:NO];
-    [window _setWindowResolution:1 displayIfChanged:YES];
 
     [window startListeningForAcceleratedCompositingChanges];
     
@@ -599,60 +597,8 @@ static NSString *libraryPathForDumpRenderTree()
 }
 
 // Called before each test.
-static void resetDefaultsToConsistentValues()
+static void resetWebPreferencesToConsistentValues()
 {
-    static const int NoFontSmoothing = 0;
-    static const int BlueTintedAppearance = 1;
-
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setInteger:4 forKey:@"AppleAntiAliasingThreshold"]; // smallest font size to CG should perform antialiasing on
-    [defaults setInteger:NoFontSmoothing forKey:@"AppleFontSmoothing"];
-    [defaults setInteger:BlueTintedAppearance forKey:@"AppleAquaColorVariant"];
-    [defaults setObject:@"0.709800 0.835300 1.000000" forKey:@"AppleHighlightColor"];
-    [defaults setObject:@"0.500000 0.500000 0.500000" forKey:@"AppleOtherHighlightColor"];
-    [defaults setObject:[NSArray arrayWithObject:@"en"] forKey:@"AppleLanguages"];
-    [defaults setBool:YES forKey:WebKitEnableFullDocumentTeardownPreferenceKey];
-    [defaults setBool:YES forKey:WebKitFullScreenEnabledPreferenceKey];
-    [defaults setBool:YES forKey:@"UseWebKitWebInspector"];
-
-    [defaults setObject:[NSDictionary dictionaryWithObjectsAndKeys:
-        @"notational", @"notationl",
-        @"message", @"mesage",
-        @"would", @"wouldn",
-        @"welcome", @"wellcome",
-        @"hello\nworld", @"hellolfworld",
-        nil] forKey:@"NSTestCorrectionDictionary"];
-
-    // Scrollbars are drawn either using AppKit (which uses NSUserDefaults) or using HIToolbox (which uses CFPreferences / kCFPreferencesAnyApplication / kCFPreferencesCurrentUser / kCFPreferencesAnyHost)
-    [defaults setObject:@"DoubleMax" forKey:@"AppleScrollBarVariant"];
-    RetainPtr<CFTypeRef> initialValue = CFPreferencesCopyValue(CFSTR("AppleScrollBarVariant"), kCFPreferencesAnyApplication, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
-    CFPreferencesSetValue(CFSTR("AppleScrollBarVariant"), CFSTR("DoubleMax"), kCFPreferencesAnyApplication, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
-#ifndef __LP64__
-    // See <rdar://problem/6347388>.
-    ThemeScrollBarArrowStyle style;
-    GetThemeScrollBarArrowStyle(&style); // Force HIToolbox to read from CFPreferences
-#endif
-
-
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1080
-    [defaults setBool:NO forKey:@"NSScrollAnimationEnabled"];
-#else
-    [defaults setBool:NO forKey:@"AppleScrollAnimationEnabled"];
-#endif
-
-    [defaults setBool:NO forKey:@"NSOverlayScrollersEnabled"];
-    [defaults setObject:@"Always" forKey:@"AppleShowScrollBars"];
-
-    if (initialValue)
-        CFPreferencesSetValue(CFSTR("AppleScrollBarVariant"), initialValue.get(), kCFPreferencesAnyApplication, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
-
-    NSString *path = libraryPathForDumpRenderTree();
-    [defaults setObject:[path stringByAppendingPathComponent:@"Databases"] forKey:WebDatabaseDirectoryDefaultsKey];
-    [defaults setObject:[path stringByAppendingPathComponent:@"LocalStorage"] forKey:WebStorageDirectoryDefaultsKey];
-    [defaults setObject:[path stringByAppendingPathComponent:@"LocalCache"] forKey:WebKitLocalCacheDefaultsKey];
-
-    [defaults setBool:NO forKey:@"WebKitKerningAndLigaturesEnabledByDefault"];
-
     WebPreferences *preferences = [WebPreferences standardPreferences];
 
     [preferences setAllowUniversalAccessFromFileURLs:YES];
@@ -697,6 +643,11 @@ static void resetDefaultsToConsistentValues()
     } else
         [preferences setUserStyleSheetEnabled:NO];
 
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+    // Disable text autosizing by default.
+    [preferences _setMinimumZoomFontSize:0];
+#endif
+
     // The back/forward cache is causing problems due to layouts during transition from one page to another.
     // So, turn it off for now, but we might want to turn it back on some day.
     [preferences setUsesPageCache:NO];
@@ -720,10 +671,6 @@ static void resetDefaultsToConsistentValues()
     [preferences setScreenFontSubstitutionEnabled:YES];
 
     [WebPreferences _setCurrentNetworkLoaderSessionCookieAcceptPolicy:NSHTTPCookieAcceptPolicyOnlyFromMainDocumentDomain];
-    
-    TestRunner::setSerializeHTTPLoads(false);
-
-    setlocale(LC_ALL, "");
 }
 
 // Called once on DumpRenderTree startup.
@@ -732,13 +679,50 @@ static void setDefaultsToConsistentValuesForTesting()
     // FIXME: We'd like to start with a clean state for every test, but this function can't be used more than once yet.
     [WebPreferences _switchNetworkLoaderToNewTestingSession];
 
-    resetDefaultsToConsistentValues();
+    static const int NoFontSmoothing = 0;
+    static const int BlueTintedAppearance = 1;
 
-    NSString *path = libraryPathForDumpRenderTree();
+    NSString *libraryPath = libraryPathForDumpRenderTree();
+
+    NSDictionary *dict = @{
+        @"AppleKeyboardUIMode": @1,
+        @"AppleMagnifiedMode": @YES,
+        @"AppleAntiAliasingThreshold": @4,
+        @"AppleFontSmoothing": @(NoFontSmoothing),
+        @"AppleAquaColorVariant": @(BlueTintedAppearance),
+        @"AppleHighlightColor": @"0.709800 0.835300 1.000000",
+        @"AppleOtherHighlightColor":@"0.500000 0.500000 0.500000",
+        @"AppleLanguages": @[ @"en" ],
+        WebKitEnableFullDocumentTeardownPreferenceKey: @YES,
+        WebKitFullScreenEnabledPreferenceKey: @YES,
+        @"UseWebKitWebInspector": @YES,
+        @"NSTestCorrectionDictionary": @{
+            @"notationl": @"notational",
+            @"mesage": @"message",
+            @"wouldn": @"would",
+            @"wellcome": @"welcome",
+            @"hellolfworld": @"hello\nworld"
+        },
+        @"WebKitKerningAndLigaturesEnabledByDefault": @NO,
+        @"AppleScrollBarVariant": @"DoubleMax",
+        @"NSScrollAnimationEnabled": @NO,
+        @"NSOverlayScrollersEnabled": @NO,
+        @"AppleShowScrollBars": @"Always",
+        WebDatabaseDirectoryDefaultsKey: [libraryPath stringByAppendingPathComponent:@"Databases"],
+        WebStorageDirectoryDefaultsKey: [libraryPath stringByAppendingPathComponent:@"LocalStorage"],
+        WebKitLocalCacheDefaultsKey: [libraryPath stringByAppendingPathComponent:@"LocalCache"]
+    };
+
+    [[NSUserDefaults standardUserDefaults] setVolatileDomain:dict forName:NSArgumentDomain];
+
+    // Underlying frameworks have already read AppleAntiAliasingThreshold default before we changed it.
+    // A distributed notification is delivered to all applications, but it should be harmless, and it's the only way to update all underlying frameworks anyway.
+    [[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"AppleAquaAntiAliasingChanged" object:nil userInfo:nil deliverImmediately:YES];
+
     NSURLCache *sharedCache =
         [[NSURLCache alloc] initWithMemoryCapacity:1024 * 1024
                                       diskCapacity:0
-                                          diskPath:[path stringByAppendingPathComponent:@"URLCache"]];
+                                          diskPath:[libraryPath stringByAppendingPathComponent:@"URLCache"]];
     [NSURLCache setSharedURLCache:sharedCache];
     [sharedCache release];
 }
@@ -947,6 +931,7 @@ int main(int argc, const char *argv[])
 {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     [DumpRenderTreeApplication sharedApplication]; // Force AppKit to init itself
+
     dumpRenderTree(argc, argv);
     [WebCoreStatistics garbageCollectJavaScriptObjects];
     [WebCoreStatistics emptyCache]; // Otherwise SVGImages trigger false positives for Frame/Node counts
@@ -963,9 +948,9 @@ static NSInteger compareHistoryItems(id item1, id item2, void *context)
 
 static NSData *dumpAudio()
 {
-    const char *encodedAudioData = gTestRunner->encodedAudioData().c_str();
+    const vector<char>& dataVector = gTestRunner->audioResult();
     
-    NSData *data = [NSData dataWithBytes:encodedAudioData length:gTestRunner->encodedAudioData().length()];
+    NSData *data = [NSData dataWithBytes:dataVector.data() length:dataVector.size()];
     return data;
 }
 
@@ -1196,11 +1181,11 @@ void dump()
             resultMimeType = @"application/pdf";
         } else if (gTestRunner->dumpDOMAsWebArchive()) {
             WebArchive *webArchive = [[mainFrame DOMDocument] webArchive];
-            resultString = HardAutorelease(createXMLStringFromWebArchiveData((CFDataRef)[webArchive data]));
+            resultString = CFBridgingRelease(createXMLStringFromWebArchiveData((CFDataRef)[webArchive data]));
             resultMimeType = @"application/x-webarchive";
         } else if (gTestRunner->dumpSourceAsWebArchive()) {
             WebArchive *webArchive = [[mainFrame dataSource] webArchive];
-            resultString = HardAutorelease(createXMLStringFromWebArchiveData((CFDataRef)[webArchive data]));
+            resultString = CFBridgingRelease(createXMLStringFromWebArchiveData((CFDataRef)[webArchive data]));
             resultMimeType = @"application/x-webarchive";
         } else
             resultString = [mainFrame renderTreeAsExternalRepresentationForPrinting:gTestRunner->isPrinting()];
@@ -1210,16 +1195,16 @@ void dump()
 
         printf("Content-Type: %s\n", [resultMimeType UTF8String]);
 
-        if (gTestRunner->dumpAsAudio())
-            printf("Content-Transfer-Encoding: base64\n");
-
         WTF::FastMallocStatistics mallocStats = WTF::fastMallocStatistics();
         printf("DumpMalloc: %li\n", mallocStats.committedVMBytes);
+
+        if (gTestRunner->dumpAsAudio())
+            printf("Content-Length: %lu\n", static_cast<unsigned long>([resultData length]));
 
         if (resultData) {
             fwrite([resultData bytes], 1, [resultData length], stdout);
 
-            if (!gTestRunner->dumpAsText() && !gTestRunner->dumpDOMAsWebArchive() && !gTestRunner->dumpSourceAsWebArchive())
+            if (!gTestRunner->dumpAsText() && !gTestRunner->dumpDOMAsWebArchive() && !gTestRunner->dumpSourceAsWebArchive() && !gTestRunner->dumpAsAudio())
                 dumpFrameScrollPosition(mainFrame);
 
             if (gTestRunner->dumpBackForwardList())
@@ -1297,7 +1282,11 @@ static void resetWebViewToConsistentStateBeforeTesting()
     [[webView window] setAutodisplay:NO];
     [webView setTracksRepaints:NO];
     
-    resetDefaultsToConsistentValues();
+    resetWebPreferencesToConsistentValues();
+
+    TestRunner::setSerializeHTTPLoads(false);
+
+    setlocale(LC_ALL, "");
 
     if (gTestRunner) {
         WebCoreTestSupport::resetInternalsObject([mainFrame globalContext]);

@@ -28,16 +28,15 @@
 
 namespace WebCore {
 
-class NodeRenderingContext;
 class RenderText;
 
 class Text : public CharacterData {
 public:
     static const unsigned defaultLengthLimit = 1 << 16;
 
-    static PassRefPtr<Text> create(Document*, const String&);
-    static PassRefPtr<Text> createWithLengthLimit(Document*, const String&, unsigned positionInString, unsigned lengthLimit = defaultLengthLimit);
-    static PassRefPtr<Text> createEditingText(Document*, const String&);
+    static PassRefPtr<Text> create(Document&, const String&);
+    static PassRefPtr<Text> createWithLengthLimit(Document&, const String&, unsigned positionInString, unsigned lengthLimit = defaultLengthLimit);
+    static PassRefPtr<Text> createEditingText(Document&, const String&);
 
     virtual ~Text();
 
@@ -48,20 +47,14 @@ public:
     String wholeText() const;
     PassRefPtr<Text> replaceWholeText(const String&, ExceptionCode&);
     
-    void createTextRendererIfNeeded();
-    bool textRendererIsNeeded(const NodeRenderingContext&);
-    RenderText* createTextRenderer(RenderArena*, RenderStyle*);
-    void updateTextRenderer(unsigned offsetOfReplacedData, unsigned lengthOfReplacedData);
-
-    void attachText();
-    void detachText();
-
-    static void createTextRenderersForSiblingsAfterAttachIfNeeded(Node*);
+    RenderText* createTextRenderer(RenderStyle&);
     
     virtual bool canContainRangeEndPoint() const OVERRIDE FINAL { return true; }
 
+    RenderText* renderer() const;
+
 protected:
-    Text(Document* document, const String& data, ConstructionType type)
+    Text(Document& document, const String& data, ConstructionType type)
         : CharacterData(document, data, type)
     {
     }
@@ -75,21 +68,15 @@ private:
     virtual PassRefPtr<Text> virtualCreate(const String&);
 
 #ifndef NDEBUG
-    virtual void formatForDebugger(char* buffer, unsigned length) const;
+    virtual void formatForDebugger(char* buffer, unsigned length) const OVERRIDE;
 #endif
 };
 
-inline Text* toText(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->isTextNode());
-    return static_cast<Text*>(node);
-}
+inline bool isText(const Node& node) { return node.isTextNode(); }
+void isText(const Text&); // Catch unnecessary runtime check of type known at compile time.
+void isText(const ContainerNode&); // Catch unnecessary runtime check of type known at compile time.
 
-inline const Text* toText(const Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->isTextNode());
-    return static_cast<const Text*>(node);
-}
+NODE_TYPE_CASTS(Text)
 
 } // namespace WebCore
 

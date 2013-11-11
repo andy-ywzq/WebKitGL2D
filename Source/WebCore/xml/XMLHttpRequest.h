@@ -51,7 +51,7 @@ class SharedBuffer;
 class TextResourceDecoder;
 class ThreadableLoader;
 
-class XMLHttpRequest : public ScriptWrappable, public RefCounted<XMLHttpRequest>, public EventTarget, private ThreadableLoaderClient, public ActiveDOMObject {
+class XMLHttpRequest FINAL : public ScriptWrappable, public RefCounted<XMLHttpRequest>, public EventTargetWithInlineData, private ThreadableLoaderClient, public ActiveDOMObject {
     WTF_MAKE_FAST_ALLOCATED;
 public:
     static PassRefPtr<XMLHttpRequest> create(ScriptExecutionContext*);
@@ -68,29 +68,33 @@ public:
     
     enum ResponseTypeCode {
         ResponseTypeDefault,
-        ResponseTypeText, 
+        ResponseTypeText,
+        ResponseTypeJSON,
         ResponseTypeDocument,
+
+        // Binary format
         ResponseTypeBlob,
         ResponseTypeArrayBuffer
     };
+    static const ResponseTypeCode FirstBinaryResponseType = ResponseTypeBlob;
 
 #if ENABLE(XHR_TIMEOUT)
     virtual void didTimeout();
 #endif
 
-    virtual const AtomicString& interfaceName() const;
-    virtual ScriptExecutionContext* scriptExecutionContext() const;
+    virtual EventTargetInterface eventTargetInterface() const OVERRIDE { return XMLHttpRequestEventTargetInterfaceType; }
+    virtual ScriptExecutionContext* scriptExecutionContext() const OVERRIDE { return ActiveDOMObject::scriptExecutionContext(); }
 
-    const KURL& url() const { return m_url; }
+    const URL& url() const { return m_url; }
     String statusText(ExceptionCode&) const;
     int status(ExceptionCode&) const;
     State readyState() const;
     bool withCredentials() const { return m_includeCredentials; }
     void setWithCredentials(bool, ExceptionCode&);
-    void open(const String& method, const KURL&, ExceptionCode&);
-    void open(const String& method, const KURL&, bool async, ExceptionCode&);
-    void open(const String& method, const KURL&, bool async, const String& user, ExceptionCode&);
-    void open(const String& method, const KURL&, bool async, const String& user, const String& password, ExceptionCode&);
+    void open(const String& method, const URL&, ExceptionCode&);
+    void open(const String& method, const URL&, bool async, ExceptionCode&);
+    void open(const String& method, const URL&, bool async, const String& user, ExceptionCode&);
+    void open(const String& method, const URL&, bool async, const String& user, const String& password, ExceptionCode&);
     void send(ExceptionCode&);
     void send(Document*, ExceptionCode&);
     void send(const String&, ExceptionCode&);
@@ -101,17 +105,22 @@ public:
     void abort();
     void setRequestHeader(const AtomicString& name, const String& value, ExceptionCode&);
     void overrideMimeType(const String& override);
+    bool doneWithoutErrors() const { return !m_error && m_state == DONE; }
     String getAllResponseHeaders(ExceptionCode&) const;
     String getResponseHeader(const AtomicString& name, ExceptionCode&) const;
     String responseText(ExceptionCode&);
+    String responseTextIgnoringResponseType() const { return m_responseBuilder.toStringPreserveCapacity(); }
     Document* responseXML(ExceptionCode&);
     Document* optionalResponseXML() const { return m_responseDocument.get(); }
-    Blob* responseBlob(ExceptionCode&);
+    Blob* responseBlob();
     Blob* optionalResponseBlob() const { return m_responseBlob.get(); }
 #if ENABLE(XHR_TIMEOUT)
     unsigned long timeout() const { return m_timeoutMilliseconds; }
     void setTimeout(unsigned long timeout, ExceptionCode&);
 #endif
+
+    bool responseCacheIsValid() const { return m_responseCacheIsValid; }
+    void didCacheResponseJSON();
 
     void sendFromInspector(PassRefPtr<FormData>, ExceptionCode&);
 
@@ -123,9 +132,9 @@ public:
     void setResponseType(const String&, ExceptionCode&);
     String responseType();
     ResponseTypeCode responseTypeCode() const { return m_responseTypeCode; }
-    
+
     // response attribute has custom getter.
-    JSC::ArrayBuffer* responseArrayBuffer(ExceptionCode&);
+    JSC::ArrayBuffer* responseArrayBuffer();
     JSC::ArrayBuffer* optionalResponseArrayBuffer() const { return m_responseArrayBuffer.get(); }
 
     void setLastSendLineNumber(unsigned lineNumber) { m_lastSendLineNumber = lineNumber; }
@@ -149,7 +158,7 @@ public:
     using RefCounted<XMLHttpRequest>::deref;
 
 private:
-    XMLHttpRequest(ScriptExecutionContext*);
+    explicit XMLHttpRequest(ScriptExecutionContext*);
 
     // ActiveDOMObject
     virtual void contextDestroyed() OVERRIDE;
@@ -160,8 +169,6 @@ private:
 
     virtual void refEventTarget() OVERRIDE { ref(); }
     virtual void derefEventTarget() OVERRIDE { deref(); }
-    virtual EventTargetData* eventTargetData() OVERRIDE;
-    virtual EventTargetData& ensureEventTargetData() OVERRIDE;
 
     Document* document() const;
     SecurityOrigin* securityOrigin() const;
@@ -170,12 +177,12 @@ private:
     bool usesDashboardBackwardCompatibilityMode() const;
 #endif
 
-    virtual void didSendData(unsigned long long bytesSent, unsigned long long totalBytesToBeSent);
-    virtual void didReceiveResponse(unsigned long identifier, const ResourceResponse&);
-    virtual void didReceiveData(const char* data, int dataLength);
-    virtual void didFinishLoading(unsigned long identifier, double finishTime);
-    virtual void didFail(const ResourceError&);
-    virtual void didFailRedirectCheck();
+    virtual void didSendData(unsigned long long bytesSent, unsigned long long totalBytesToBeSent) OVERRIDE;
+    virtual void didReceiveResponse(unsigned long identifier, const ResourceResponse&) OVERRIDE;
+    virtual void didReceiveData(const char* data, int dataLength) OVERRIDE;
+    virtual void didFinishLoading(unsigned long identifier, double finishTime) OVERRIDE;
+    virtual void didFail(const ResourceError&) OVERRIDE;
+    virtual void didFailRedirectCheck() OVERRIDE;
 
     String responseMIMEType() const;
     bool responseIsXML() const;
@@ -200,9 +207,11 @@ private:
     void networkError();
     void abortError();
 
+    bool shouldDecodeResponse() const { return m_responseTypeCode < FirstBinaryResponseType; }
+
     OwnPtr<XMLHttpRequestUpload> m_upload;
 
-    KURL m_url;
+    URL m_url;
     String m_method;
     HTTPHeaderMap m_requestHeaders;
     RefPtr<FormData> m_requestEntityBody;
@@ -223,11 +232,11 @@ private:
     RefPtr<TextResourceDecoder> m_decoder;
 
     StringBuilder m_responseBuilder;
-    mutable bool m_createdDocument;
-    mutable RefPtr<Document> m_responseDocument;
+    bool m_createdDocument;
+    RefPtr<Document> m_responseDocument;
     
     RefPtr<SharedBuffer> m_binaryResponseBuilder;
-    mutable RefPtr<JSC::ArrayBuffer> m_responseArrayBuffer;
+    RefPtr<JSC::ArrayBuffer> m_responseArrayBuffer;
 
     bool m_error;
 
@@ -243,12 +252,11 @@ private:
     String m_lastSendURL;
     ExceptionCode m_exceptionCode;
 
-    EventTargetData m_eventTargetData;
-
     XMLHttpRequestProgressEventThrottle m_progressEventThrottle;
 
     // An enum corresponding to the allowed string values for the responseType attribute.
     ResponseTypeCode m_responseTypeCode;
+    bool m_responseCacheIsValid;
 };
 
 } // namespace WebCore

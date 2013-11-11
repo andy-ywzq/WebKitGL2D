@@ -30,10 +30,6 @@
 #include <WebCore/PlatformMouseEvent.h>
 #include <WebCore/PlatformWheelEvent.h>
 
-#if ENABLE(GESTURE_EVENTS)
-#include <WebCore/PlatformGestureEvent.h>
-#endif
-
 #if ENABLE(TOUCH_EVENTS)
 #include <WebCore/PlatformTouchEvent.h>
 #include <WebCore/PlatformTouchPoint.h>
@@ -45,26 +41,18 @@ class WebMouseEvent;
 class WebWheelEvent;
 class WebKeyboardEvent;
 
-#if ENABLE(GESTURE_EVENTS)
-class WebGestureEvent;
-#endif
-
 #if ENABLE(TOUCH_EVENTS)
 class WebTouchEvent;
-class WebTouchPoint;
+class WebPlatformTouchPoint;
 #endif
 
 WebCore::PlatformMouseEvent platform(const WebMouseEvent&);
 WebCore::PlatformWheelEvent platform(const WebWheelEvent&);
 WebCore::PlatformKeyboardEvent platform(const WebKeyboardEvent&);
 
-#if ENABLE(GESTURE_EVENTS)
-WebCore::PlatformGestureEvent platform(const WebGestureEvent&);
-#endif
-
 #if ENABLE(TOUCH_EVENTS)
 WebCore::PlatformTouchEvent platform(const WebTouchEvent&);
-WebCore::PlatformTouchPoint platform(const WebTouchPoint&);
+WebCore::PlatformTouchPoint platform(const WebPlatformTouchPoint&);
 #endif
 
 } // namespace WebKit

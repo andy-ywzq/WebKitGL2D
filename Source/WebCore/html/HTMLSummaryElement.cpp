@@ -23,13 +23,14 @@
 
 #if ENABLE(DETAILS_ELEMENT)
 #include "DetailsMarkerControl.h"
-#include "HTMLContentElement.h"
 #include "HTMLDetailsElement.h"
 #include "HTMLNames.h"
+#include "InsertionPoint.h"
 #include "KeyboardEvent.h"
 #include "MouseEvent.h"
+#include "NodeRenderingTraversal.h"
 #include "PlatformMouseEvent.h"
-#include "RenderBlock.h"
+#include "RenderBlockFlow.h"
 #include "ShadowRoot.h"
 
 namespace WebCore {
@@ -38,36 +39,36 @@ using namespace HTMLNames;
 
 class SummaryContentElement : public InsertionPoint {
 public:
-    static PassRefPtr<SummaryContentElement> create(Document*);
+    static PassRefPtr<SummaryContentElement> create(Document&);
 
 private:
-    SummaryContentElement(Document* document)
-        : InsertionPoint(HTMLNames::webkitShadowContentTag, document)
+    SummaryContentElement(Document& document)
+        : InsertionPoint(webkitShadowContentTag, document)
     {
     }
 };
 
-PassRefPtr<SummaryContentElement> SummaryContentElement::create(Document* document)
+PassRefPtr<SummaryContentElement> SummaryContentElement::create(Document& document)
 {
     return adoptRef(new SummaryContentElement(document));
 }
 
-PassRefPtr<HTMLSummaryElement> HTMLSummaryElement::create(const QualifiedName& tagName, Document* document)
+PassRefPtr<HTMLSummaryElement> HTMLSummaryElement::create(const QualifiedName& tagName, Document& document)
 {
     RefPtr<HTMLSummaryElement> summary = adoptRef(new HTMLSummaryElement(tagName, document));
     summary->ensureUserAgentShadowRoot();
     return summary.release();
 }
 
-HTMLSummaryElement::HTMLSummaryElement(const QualifiedName& tagName, Document* document)
+HTMLSummaryElement::HTMLSummaryElement(const QualifiedName& tagName, Document& document)
     : HTMLElement(tagName, document)
 {
     ASSERT(hasTagName(summaryTag));
 }
 
-RenderObject* HTMLSummaryElement::createRenderer(RenderArena* arena, RenderStyle*)
+RenderElement* HTMLSummaryElement::createRenderer(PassRef<RenderStyle> style)
 {
-    return new (arena) RenderBlock(this);
+    return new RenderBlockFlow(*this, std::move(style));
 }
 
 bool HTMLSummaryElement::childShouldCreateRenderer(const Node* child) const
@@ -86,7 +87,7 @@ void HTMLSummaryElement::didAddUserAgentShadowRoot(ShadowRoot* root)
 
 HTMLDetailsElement* HTMLSummaryElement::detailsElement() const
 {
-    Node* mayDetails = const_cast<HTMLSummaryElement*>(this)->parentNodeForRenderingAndStyle();
+    Node* mayDetails = NodeRenderingTraversal::parent(this);
     if (!mayDetails || !mayDetails->hasTagName(detailsTag))
         return 0;
     return static_cast<HTMLDetailsElement*>(mayDetails);

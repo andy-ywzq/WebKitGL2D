@@ -28,9 +28,12 @@
 
 #if ENABLE(INDEXED_DATABASE)
 
-#include "IDBBackingStore.h"
+#include "IDBBackingStoreInterface.h"
+#include "IDBDatabaseBackendImpl.h"
 #include "IDBDatabaseBackendInterface.h"
 #include "IDBDatabaseError.h"
+#include "IDBOperation.h"
+#include "IDBTransactionBackendInterface.h"
 #include "Timer.h"
 #include <wtf/Deque.h>
 #include <wtf/HashSet.h>
@@ -38,41 +41,50 @@
 
 namespace WebCore {
 
-class IDBDatabaseBackendImpl;
-class IDBCursorBackendImpl;
 class IDBDatabaseCallbacks;
 
-class IDBTransactionBackendImpl : public RefCounted<IDBTransactionBackendImpl> {
+class IDBTransactionBackendImpl FINAL : public IDBTransactionBackendInterface {
 public:
-    static PassRefPtr<IDBTransactionBackendImpl> create(int64_t transactionId, PassRefPtr<IDBDatabaseCallbacks>, const Vector<int64_t>&, IndexedDB::TransactionMode, IDBDatabaseBackendImpl*);
+    static PassRefPtr<IDBTransactionBackendImpl> create(IDBDatabaseBackendImpl*, int64_t transactionId, PassRefPtr<IDBDatabaseCallbacks>, const Vector<int64_t>& objectStoreIds, IndexedDB::TransactionMode);
     virtual ~IDBTransactionBackendImpl();
 
-    virtual void abort();
-    void commit();
+    virtual void commit() OVERRIDE FINAL;
+    virtual void abort() OVERRIDE FINAL;
+    virtual void abort(PassRefPtr<IDBDatabaseError>) OVERRIDE FINAL;
 
-    class Operation {
-    public:
-        virtual ~Operation() { }
-        virtual void perform(IDBTransactionBackendImpl*) = 0;
-    };
+    virtual void run() OVERRIDE;
+    virtual IndexedDB::TransactionMode mode() const OVERRIDE FINAL { return m_mode; }
+    const HashSet<int64_t>& scope() const OVERRIDE { return m_objectStoreIds; }
 
-    void abort(PassRefPtr<IDBDatabaseError>);
-    void run();
-    IndexedDB::TransactionMode mode() const { return m_mode; }
-    const HashSet<int64_t>& scope() const { return m_objectStoreIds; }
-    void scheduleTask(PassOwnPtr<Operation> task, PassOwnPtr<Operation> abortTask = nullptr) { scheduleTask(IDBDatabaseBackendInterface::NormalTask, task, abortTask); }
-    void scheduleTask(IDBDatabaseBackendInterface::TaskType, PassOwnPtr<Operation>, PassOwnPtr<Operation> abortTask = nullptr);
-    void registerOpenCursor(IDBCursorBackendImpl*);
-    void unregisterOpenCursor(IDBCursorBackendImpl*);
-    void addPreemptiveEvent() { m_pendingPreemptiveEvents++; }
-    void didCompletePreemptiveEvent() { m_pendingPreemptiveEvents--; ASSERT(m_pendingPreemptiveEvents >= 0); }
-    IDBBackingStore::Transaction* backingStoreTransaction() { return &m_transaction; }
-    int64_t id() const { return m_id; }
+    virtual void scheduleTask(PassOwnPtr<IDBOperation> task, PassOwnPtr<IDBOperation> abortTask = nullptr) { scheduleTask(IDBDatabaseBackendInterface::NormalTask, task, abortTask); }
+    virtual void scheduleTask(IDBDatabaseBackendInterface::TaskType, PassOwnPtr<IDBOperation>, PassOwnPtr<IDBOperation> abortTask = nullptr) OVERRIDE;
 
-    IDBDatabaseBackendImpl* database() const { return m_database.get(); }
+    virtual void registerOpenCursor(IDBCursorBackendInterface*) OVERRIDE;
+    virtual void unregisterOpenCursor(IDBCursorBackendInterface*) OVERRIDE;
+
+    virtual void addPreemptiveEvent() OVERRIDE { m_pendingPreemptiveEvents++; }
+    virtual void didCompletePreemptiveEvent() OVERRIDE { m_pendingPreemptiveEvents--; ASSERT(m_pendingPreemptiveEvents >= 0); }
+    virtual IDBBackingStoreInterface::Transaction& backingStoreTransaction() { return *m_backingStoreTransaction; }
+
+    virtual IDBDatabaseBackendInterface& database() const OVERRIDE { return *m_database; }
+
+    virtual void scheduleCreateObjectStoreOperation(const IDBObjectStoreMetadata&) OVERRIDE FINAL;
+    virtual void scheduleDeleteObjectStoreOperation(const IDBObjectStoreMetadata&) OVERRIDE FINAL;
+    virtual void scheduleVersionChangeOperation(int64_t transactionId, int64_t requestedVersion, PassRefPtr<IDBCallbacks>, PassRefPtr<IDBDatabaseCallbacks>, const IDBDatabaseMetadata&) OVERRIDE FINAL;
+    virtual void scheduleCreateIndexOperation(int64_t objectStoreId, const IDBIndexMetadata&) OVERRIDE FINAL;
+    virtual void scheduleDeleteIndexOperation(int64_t objectStoreId, const IDBIndexMetadata&) OVERRIDE FINAL;
+    virtual void scheduleGetOperation(const IDBDatabaseMetadata&, int64_t objectStoreId, int64_t indexId, PassRefPtr<IDBKeyRange>, IndexedDB::CursorType, PassRefPtr<IDBCallbacks>) OVERRIDE FINAL;
+    virtual void schedulePutOperation(const IDBObjectStoreMetadata&, PassRefPtr<SharedBuffer> value, PassRefPtr<IDBKey>, IDBDatabaseBackendInterface::PutMode, PassRefPtr<IDBCallbacks>, const Vector<int64_t>& indexIds, const Vector<IndexKeys>&) OVERRIDE FINAL;
+    virtual void scheduleSetIndexesReadyOperation(size_t indexCount) OVERRIDE FINAL;
+    virtual void scheduleOpenCursorOperation(int64_t objectStoreId, int64_t indexId, PassRefPtr<IDBKeyRange>, IndexedDB::CursorDirection, IndexedDB::CursorType, IDBDatabaseBackendInterface::TaskType, PassRefPtr<IDBCallbacks>) OVERRIDE FINAL;
+    virtual void scheduleCountOperation(int64_t objectStoreId, int64_t indexId, PassRefPtr<IDBKeyRange>, PassRefPtr<IDBCallbacks>) OVERRIDE FINAL;
+    virtual void scheduleDeleteRangeOperation(int64_t objectStoreId, PassRefPtr<IDBKeyRange>, PassRefPtr<IDBCallbacks>) OVERRIDE FINAL;
+    virtual void scheduleClearOperation(int64_t objectStoreId, PassRefPtr<IDBCallbacks>) OVERRIDE FINAL;
+
+    virtual PassRefPtr<IDBCursorBackendInterface> createCursorBackend(IDBBackingStoreInterface::Cursor&, IndexedDB::CursorType, IDBDatabaseBackendInterface::TaskType, int64_t objectStoreId) OVERRIDE;
 
 private:
-    IDBTransactionBackendImpl(int64_t id, PassRefPtr<IDBDatabaseCallbacks>, const HashSet<int64_t>& objectStoreIds, IndexedDB::TransactionMode, IDBDatabaseBackendImpl*);
+    IDBTransactionBackendImpl(IDBDatabaseBackendImpl*, int64_t id, PassRefPtr<IDBDatabaseCallbacks>, const HashSet<int64_t>& objectStoreIds, IndexedDB::TransactionMode);
 
     enum State {
         Unused, // Created, but no tasks yet.
@@ -89,7 +101,6 @@ private:
     void taskTimerFired(Timer<IDBTransactionBackendImpl>*);
     void closeOpenCursors();
 
-    const int64_t m_id;
     const HashSet<int64_t> m_objectStoreIds;
     const IndexedDB::TransactionMode m_mode;
 
@@ -98,18 +109,20 @@ private:
     RefPtr<IDBDatabaseCallbacks> m_callbacks;
     RefPtr<IDBDatabaseBackendImpl> m_database;
 
-    typedef Deque<OwnPtr<Operation> > TaskQueue;
+    typedef Deque<OwnPtr<IDBOperation>> TaskQueue;
     TaskQueue m_taskQueue;
     TaskQueue m_preemptiveTaskQueue;
     TaskQueue m_abortTaskQueue;
 
-    IDBBackingStore::Transaction m_transaction;
+    std::unique_ptr<IDBBackingStoreInterface::Transaction> m_backingStoreTransaction;
 
     // FIXME: delete the timer once we have threads instead.
     Timer<IDBTransactionBackendImpl> m_taskTimer;
     int m_pendingPreemptiveEvents;
 
-    HashSet<IDBCursorBackendImpl*> m_openCursors;
+    HashSet<IDBCursorBackendInterface*> m_openCursors;
+    
+    RefPtr<IDBBackingStoreInterface> m_backingStore;
 };
 
 } // namespace WebCore

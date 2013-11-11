@@ -1,4 +1,5 @@
 # Copyright (C) 2011 Google Inc. All rights reserved.
+# Copyright (C) 2013 Apple Inc. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -46,10 +47,17 @@ from webkitpy.common.memoized import memoized
 
 _exact_matches = {
     # These builders are on build.webkit.org.
-    "Apple MountainLion Release WK1 (Tests)": {"port_name": "mac-mountainlion", "is_debug": False, "rebaseline_override_dir": "mac"},
-    "Apple MountainLion Debug WK1 (Tests)": {"port_name": "mac-mountainlion", "is_debug": True, "rebaseline_override_dir": "mac"},
-    "Apple MountainLion Release WK2 (Tests)": {"port_name": "mac-mountainlion-wk2", "is_debug": False, "rebaseline_override_dir": "mac"},
-    "Apple MountainLion Debug WK2 (Tests)": {"port_name": "mac-mountainlion-wk2", "is_debug": True, "rebaseline_override_dir": "mac"},
+
+    "Apple Mavericks Release WK1 (Tests)": {"port_name": "mac-mavericks", "is_debug": False},
+    "Apple Mavericks Debug WK1 (Tests)": {"port_name": "mac-mavericks", "is_debug": True},
+    "Apple Mavericks Release WK2 (Tests)": {"port_name": "mac-mavericks-wk2", "is_debug": False},
+    "Apple Mavericks Debug WK2 (Tests)": {"port_name": "mac-mavericks-wk2", "is_debug": True},
+
+    "Apple MountainLion Release WK1 (Tests)": {"port_name": "mac-mountainlion", "is_debug": False},
+    "Apple MountainLion Debug WK1 (Tests)": {"port_name": "mac-mountainlion", "is_debug": True},
+    "Apple MountainLion Release WK2 (Tests)": {"port_name": "mac-mountainlion-wk2", "is_debug": False},
+    "Apple MountainLion Debug WK2 (Tests)": {"port_name": "mac-mountainlion-wk2", "is_debug": True},
+
     "Apple Lion Release WK1 (Tests)": {"port_name": "mac-lion", "is_debug": False},
     "Apple Lion Debug WK1 (Tests)": {"port_name": "mac-lion", "is_debug": True},
     "Apple Lion Release WK2 (Tests)": {"port_name": "mac-lion-wk2", "is_debug": False},
@@ -64,9 +72,6 @@ _exact_matches = {
     "GTK Linux 64-bit Release": {"port_name": "gtk", "is_debug": False},
     "GTK Linux 64-bit Release WK2 (Tests)": {"port_name": "gtk-wk2", "is_debug": False},
 
-    # FIXME: Remove rebaseline_override_dir once there are Qt bots for all the platform/qt-* directories.
-    "Qt Linux Release": {"port_name": "qt-linux", "is_debug": False, "rebaseline_override_dir": "qt"},
-
     "EFL Linux 64-bit Release": {"port_name": "efl", "is_debug": False},
     "EFL Linux 64-bit Release WK2": {"port_name": "efl-wk2", "is_debug": False},
     "EFL Linux 64-bit Debug WK2": {"port_name": "efl-wk2", "is_debug": True},
@@ -79,14 +84,10 @@ _fuzzy_matches = {
     r"Apple Lion": "mac-lion",
     r"Windows": "win",
     r"GTK": "gtk",
-    r"Qt": "qt",
 }
 
 
 _ports_without_builders = [
-    "qt-mac",
-    "qt-win",
-    "qt-wk2",
 ]
 
 

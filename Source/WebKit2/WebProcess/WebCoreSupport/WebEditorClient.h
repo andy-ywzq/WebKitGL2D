@@ -68,7 +68,6 @@ private:
     virtual void willWriteSelectionToPasteboard(WebCore::Range*) OVERRIDE;
     virtual void didWriteSelectionToPasteboard() OVERRIDE;
     virtual void getClientPasteboardDataForRange(WebCore::Range*, Vector<String>& pasteboardTypes, Vector<RefPtr<WebCore::SharedBuffer>>& pasteboardData) OVERRIDE;
-    virtual void didSetSelectionTypesForPasteboard() OVERRIDE;
     
     virtual void registerUndoStep(PassRefPtr<WebCore::UndoStep>) OVERRIDE;
     virtual void registerRedoStep(PassRefPtr<WebCore::UndoStep>) OVERRIDE;
@@ -128,8 +127,6 @@ private:
 #if PLATFORM(GTK)
     bool executePendingEditorCommands(WebCore::Frame*, Vector<WTF::String>, bool);
     void getEditorCommandsForKeyEvent(const WebCore::KeyboardEvent*, Vector<WTF::String>&);
-#endif
-#if PLATFORM(GTK) || PLATFORM(QT)
     void updateGlobalSelection(WebCore::Frame*);
 #endif
 

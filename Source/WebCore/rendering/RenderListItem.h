@@ -23,16 +23,17 @@
 #ifndef RenderListItem_h
 #define RenderListItem_h
 
-#include "RenderBlock.h"
+#include "RenderBlockFlow.h"
 
 namespace WebCore {
 
 class HTMLOListElement;
 class RenderListMarker;
 
-class RenderListItem FINAL : public RenderBlock {
+class RenderListItem FINAL : public RenderBlockFlow {
 public:
-    explicit RenderListItem(Element*);
+    RenderListItem(Element&, PassRef<RenderStyle>);
+    Element& element() const { return toElement(nodeForNonAnonymous()); }
 
     int value() const { if (!m_isValueUpToDate) updateValueNow(); return m_value; }
     void updateValue();
@@ -54,29 +55,30 @@ public:
     static unsigned itemCountForOrderedList(const HTMLOListElement*);
 
 private:
-    virtual const char* renderName() const { return "RenderListItem"; }
+    virtual const char* renderName() const OVERRIDE { return "RenderListItem"; }
 
-    virtual bool isListItem() const { return true; }
+    virtual bool isListItem() const OVERRIDE { return true; }
     
-    virtual void willBeDestroyed();
+    virtual void willBeDestroyed() OVERRIDE;
 
     virtual void insertedIntoTree() OVERRIDE;
     virtual void willBeRemovedFromTree() OVERRIDE;
 
-    virtual bool isEmpty() const;
-    virtual void paint(PaintInfo&, const LayoutPoint&);
+    virtual bool isEmpty() const OVERRIDE;
+    virtual void paint(PaintInfo&, const LayoutPoint&) OVERRIDE;
 
-    virtual void layout();
+    virtual void layout() OVERRIDE;
 
     void positionListMarker();
 
-    virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle);
+    virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle) OVERRIDE;
 
-    virtual bool requiresForcedStyleRecalcPropagation() const { return true; }
+    virtual bool requiresForcedStyleRecalcPropagation() const OVERRIDE { return true; }
 
-    virtual void addOverflowFromChildren();
+    virtual void addOverflowFromChildren() OVERRIDE;
+    virtual void computePreferredLogicalWidths() OVERRIDE;
 
-    void updateMarkerLocation();
+    void insertOrMoveMarkerRendererIfNeeded();
     inline int calcValue() const;
     void updateValueNow() const;
     void explicitValueChanged();
@@ -90,14 +92,7 @@ private:
     bool m_notInList : 1;
 };
 
-inline RenderListItem* toRenderListItem(RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isListItem());
-    return static_cast<RenderListItem*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderListItem(const RenderListItem*);
+RENDER_OBJECT_TYPE_CASTS(RenderListItem, isListItem())
 
 } // namespace WebCore
 

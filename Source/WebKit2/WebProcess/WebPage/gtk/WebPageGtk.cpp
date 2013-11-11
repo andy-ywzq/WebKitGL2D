@@ -77,7 +77,7 @@ void WebPage::platformPreferencesDidChange(const WebPreferencesStore&)
 
 static inline void scroll(Page* page, ScrollDirection direction, ScrollGranularity granularity)
 {
-    page->focusController().focusedOrMainFrame()->eventHandler().scrollRecursively(direction, granularity);
+    page->focusController().focusedOrMainFrame().eventHandler().scrollRecursively(direction, granularity);
 }
 
 bool WebPage::performDefaultBehaviorForKeyEvent(const WebKeyboardEvent& keyboardEvent)
@@ -126,13 +126,13 @@ bool WebPage::performDefaultBehaviorForKeyEvent(const WebKeyboardEvent& keyboard
     return true;
 }
 
-bool WebPage::platformHasLocalDataForURL(const KURL&)
+bool WebPage::platformHasLocalDataForURL(const URL&)
 {
     notImplemented();
     return false;
 }
 
-String WebPage::cachedResponseMIMETypeForURL(const KURL&)
+String WebPage::cachedResponseMIMETypeForURL(const URL&)
 {
     notImplemented();
     return String();
@@ -141,16 +141,16 @@ String WebPage::cachedResponseMIMETypeForURL(const KURL&)
 bool WebPage::platformCanHandleRequest(const ResourceRequest&)
 {
     notImplemented();
-    return true;
+    return false;
 }
 
-String WebPage::cachedSuggestedFilenameForURL(const KURL&)
+String WebPage::cachedSuggestedFilenameForURL(const URL&)
 {
     notImplemented();
     return String();
 }
 
-PassRefPtr<SharedBuffer> WebPage::cachedResponseDataForURL(const KURL&)
+PassRefPtr<SharedBuffer> WebPage::cachedResponseDataForURL(const URL&)
 {
     notImplemented();
     return 0;

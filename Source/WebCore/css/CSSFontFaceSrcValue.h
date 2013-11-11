@@ -63,9 +63,9 @@ public:
     void setSVGFontFaceElement(SVGFontFaceElement* element) { m_svgFontFaceElement = element; }
 #endif
 
-    String customCssText() const;
+    String customCSSText() const;
 
-    void addSubresourceStyleURLs(ListHashSet<KURL>&, const StyleSheetContents*) const;
+    void addSubresourceStyleURLs(ListHashSet<URL>&, const StyleSheetContents*) const;
 
     bool hasFailedOrCanceledSubresources() const;
 
@@ -94,6 +94,8 @@ private:
     SVGFontFaceElement* m_svgFontFaceElement;
 #endif
 };
+
+CSS_VALUE_TYPE_CASTS(CSSFontFaceSrcValue, isFontFaceSrcValue())
 
 }
 

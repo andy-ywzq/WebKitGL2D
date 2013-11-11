@@ -38,8 +38,6 @@
 
 #include <unistd.h>
 #include <wtf/CurrentTime.h>
-#include <wtf/OwnArrayPtr.h>
-#include <wtf/PassOwnArrayPtr.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/WTFString.h>
 #include <API/nix/NIXView.h>
@@ -140,6 +138,7 @@ static unsigned convertToNixModifiers(WKEventModifiers modifiersRef)
 NIXMouseEvent* EventSenderProxy::createMouseEvent(NIXInputEventType type, unsigned button, WKEventModifiers wkModifiers)
 {
     NIXMouseEvent* ev = new NIXMouseEvent;
+    memset(ev, 0, sizeof(NIXMouseEvent));
     ev->type = type;
     ev->modifiers = convertToNixModifiers(wkModifiers);
     ev->timestamp = convertToNixTimestamp(m_time);
@@ -192,6 +191,7 @@ void EventSenderProxy::leapForward(int milliseconds)
 NIXKeyEvent* EventSenderProxy::createKeyEvent(NIXInputEventType type, unsigned code, unsigned nixModifiers, bool shouldUseUpperCase, bool isKeypad)
 {
     NIXKeyEvent* ev = new NIXKeyEvent;
+    memset(ev, 0, sizeof(NIXKeyEvent));
     ev->type = type;
     ev->key = static_cast<NIXKeyEventKey>(code);
     ev->modifiers = nixModifiers;

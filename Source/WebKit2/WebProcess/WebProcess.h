@@ -43,12 +43,6 @@
 #include <wtf/text/AtomicString.h>
 #include <wtf/text/AtomicStringHash.h>
 
-#if PLATFORM(QT)
-QT_BEGIN_NAMESPACE
-class QNetworkAccessManager;
-QT_END_NAMESPACE
-#endif
-
 #if PLATFORM(MAC)
 #include <dispatch/dispatch.h>
 #endif
@@ -78,6 +72,14 @@ struct WebProcessCreationParameters;
 #if ENABLE(NETWORK_PROCESS)
 class NetworkProcessConnection;
 class WebResourceLoadScheduler;
+#else
+#if USE(SOUP)
+class PlatformCertificateInfo;
+#endif
+#endif
+
+#if ENABLE(DATABASE_PROCESS)
+class WebToDatabaseProcessConnection;
 #endif
 
 class WebProcess : public ChildProcess, private DownloadManager::Client {
@@ -139,13 +141,9 @@ public:
     const TextCheckerState& textCheckerState() const { return m_textCheckerState; }
     DownloadManager& downloadManager();
 
-#if PLATFORM(QT)
-    QNetworkAccessManager* networkAccessManager() { return m_networkAccessManager; }
-#endif
-
     void clearResourceCaches(ResourceCachesToClear = AllResourceCaches);
     
-#if ENABLE(PLUGIN_PROCESS)
+#if ENABLE(NETSCAPE_PLUGIN_API)
     PluginProcessConnectionManager& pluginProcessConnectionManager();
 #endif
 
@@ -156,6 +154,11 @@ public:
     void networkProcessConnectionClosed(NetworkProcessConnection*);
     bool usesNetworkProcess() const { return m_usesNetworkProcess; }
     WebResourceLoadScheduler& webResourceLoadScheduler();
+#endif
+
+#if ENABLE(DATABASE_PROCESS)
+    void webToDatabaseProcessConnectionClosed(WebToDatabaseProcessConnection*);
+    WebToDatabaseProcessConnection* webToDatabaseProcessConnection();
 #endif
 
     void setCacheModel(uint32_t);
@@ -169,6 +172,10 @@ public:
     void nonVisibleProcessCleanupTimerFired(WebCore::Timer<WebProcess>*);
 
     void updateActivePages();
+
+#if !ENABLE(NETWORK_PROCESS) && USE(SOUP)
+    void allowSpecificHTTPSCertificateForHost(const PlatformCertificateInfo&, const String& host);
+#endif
 
 private:
     WebProcess();
@@ -210,19 +217,11 @@ private:
 
     void setEnhancedAccessibility(bool);
     
-#if !ENABLE(PLUGIN_PROCESS)
-    void getSitesWithPluginData(const Vector<String>& pluginPaths, uint64_t callbackID);
-    void clearPluginSiteData(const Vector<String>& pluginPaths, const Vector<String>& sites, uint64_t flags, uint64_t maxAgeInSeconds, uint64_t callbackID);
-#endif
-
     void startMemorySampler(const SandboxExtension::Handle&, const String&, const double);
     void stopMemorySampler();
 
     void downloadRequest(uint64_t downloadID, uint64_t initiatingPageID, const WebCore::ResourceRequest&);
     void cancelDownload(uint64_t downloadID);
-#if PLATFORM(QT)
-    void startTransfer(uint64_t downloadID, const String& destination);
-#endif
 
     void setTextCheckerState(const TextCheckerState&);
     
@@ -246,12 +245,16 @@ private:
     virtual bool shouldTerminate() OVERRIDE;
     virtual void terminate() OVERRIDE;
 
+#if PLATFORM(MAC)
+    virtual void stopRunLoop() OVERRIDE;
+#endif
+
     void platformInitializeProcess(const ChildProcessInitializationParameters&);
 
     // CoreIPC::Connection::Client
     friend class WebConnectionToUIProcess;
     virtual void didReceiveMessage(CoreIPC::Connection*, CoreIPC::MessageDecoder&);
-    virtual void didReceiveSyncMessage(CoreIPC::Connection*, CoreIPC::MessageDecoder&, OwnPtr<CoreIPC::MessageEncoder>&);
+    virtual void didReceiveSyncMessage(CoreIPC::Connection*, CoreIPC::MessageDecoder&, std::unique_ptr<CoreIPC::MessageEncoder>&);
     virtual void didClose(CoreIPC::Connection*);
     virtual void didReceiveInvalidMessage(CoreIPC::Connection*, CoreIPC::StringReference messageReceiverName, CoreIPC::StringReference messageName) OVERRIDE;
 
@@ -289,10 +292,6 @@ private:
 
     bool m_fullKeyboardAccessEnabled;
 
-#if PLATFORM(QT)
-    QNetworkAccessManager* m_networkAccessManager;
-#endif
-
     HashMap<uint64_t, WebFrame*> m_frameMap;
 
     typedef HashMap<const char*, OwnPtr<WebProcessSupplement>, PtrHash<const char*>> WebProcessSupplementMap;
@@ -309,7 +308,12 @@ private:
     WebResourceLoadScheduler* m_webResourceLoadScheduler;
 #endif
 
-#if ENABLE(PLUGIN_PROCESS)
+#if ENABLE(DATABASE_PROCESS)
+    void ensureWebToDatabaseProcessConnection();
+    RefPtr<WebToDatabaseProcessConnection> m_webToDatabaseProcessConnection;
+#endif
+
+#if ENABLE(NETSCAPE_PLUGIN_API)
     RefPtr<PluginProcessConnectionManager> m_pluginProcessConnectionManager;
 #endif
 

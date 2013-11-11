@@ -27,9 +27,9 @@
 #include "ConservativeRoots.h"
 
 #include "CodeBlock.h"
+#include "CodeBlockSet.h"
 #include "CopiedSpace.h"
 #include "CopiedSpaceInlines.h"
-#include "DFGCodeBlocks.h"
 #include "JSCell.h"
 #include "JSObject.h"
 #include "Structure.h"
@@ -93,7 +93,12 @@ inline void ConservativeRoots::genericAddPointer(void* p, TinyBloomFilter filter
 template<typename MarkHook>
 void ConservativeRoots::genericAddSpan(void* begin, void* end, MarkHook& markHook)
 {
-    ASSERT(begin <= end);
+    if (begin > end) {
+        void* swapTemp = begin;
+        begin = end;
+        end = swapTemp;
+    }
+
     ASSERT((static_cast<char*>(end) - static_cast<char*>(begin)) < 0x1000000);
     ASSERT(isPointerAligned(begin));
     ASSERT(isPointerAligned(end));
@@ -140,10 +145,9 @@ private:
 };
 
 void ConservativeRoots::add(
-    void* begin, void* end, JITStubRoutineSet& jitStubRoutines, DFGCodeBlocks& dfgCodeBlocks)
+    void* begin, void* end, JITStubRoutineSet& jitStubRoutines, CodeBlockSet& codeBlocks)
 {
-    CompositeMarkHook<JITStubRoutineSet, DFGCodeBlocks> markHook(
-        jitStubRoutines, dfgCodeBlocks);
+    CompositeMarkHook<JITStubRoutineSet, CodeBlockSet> markHook(jitStubRoutines, codeBlocks);
     genericAddSpan(begin, end, markHook);
 }
 

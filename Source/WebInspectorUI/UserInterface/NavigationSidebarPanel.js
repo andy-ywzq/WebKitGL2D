@@ -171,17 +171,6 @@ WebInspector.NavigationSidebarPanel.prototype = {
         return this._contentTreeOutline.getCachedTreeElement(representedObject);
     },
 
-    cookieForContentView: function(contentView)
-    {
-        // Implemented by subclasses.
-        return null;
-    },
-
-    showContentViewForCookie: function(contentViewCookie)
-    {
-        // Implemented by subclasses.
-    },
-
     showContentViewForCurrentSelection: function()
     {
         // Reselect the selected tree element to cause the content view to be shown as well. <rdar://problem/10854727>
@@ -344,7 +333,7 @@ WebInspector.NavigationSidebarPanel.prototype = {
         var scrollTop = this._contentElement.scrollTop;
 
         var topCoverage = Math.min(scrollTop, edgeThreshold);
-        var bottomCoverage = Math.max(0, (offsetHeight + scrollTop) - (scrollHeight - edgeThreshold))
+        var bottomCoverage = Math.max(0, (offsetHeight + scrollTop) - (scrollHeight - edgeThreshold));
 
         if (this._topOverflowShadowElement)
             this._topOverflowShadowElement.style.opacity = (topCoverage / edgeThreshold).toFixed(1);

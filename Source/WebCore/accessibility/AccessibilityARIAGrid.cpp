@@ -36,8 +36,6 @@
 #include "AccessibilityTableRow.h"
 #include "RenderObject.h"
 
-using namespace std;
-
 namespace WebCore {
 
 AccessibilityARIAGrid::AccessibilityARIAGrid(RenderObject* renderer)
@@ -111,7 +109,7 @@ void AccessibilityARIAGrid::addChildren()
     if (!m_renderer)
         return;
     
-    AXObjectCache* axCache = m_renderer->document()->axObjectCache();
+    AXObjectCache* axCache = m_renderer->document().axObjectCache();
     
     // add only rows that are labeled as aria rows
     HashSet<AccessibilityObject*> appendedRows;

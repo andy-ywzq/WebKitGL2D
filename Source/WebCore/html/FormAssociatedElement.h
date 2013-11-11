@@ -24,6 +24,7 @@
 #ifndef FormAssociatedElement_h
 #define FormAssociatedElement_h
 
+#include "FormNamedItem.h"
 #include <wtf/text/WTFString.h>
 
 namespace WebCore {
@@ -35,11 +36,9 @@ class FormDataList;
 class HTMLElement;
 class HTMLFormElement;
 class Node;
-class ValidationMessage;
 class ValidityState;
-class VisibleSelection;
 
-class FormAssociatedElement {
+class FormAssociatedElement : public FormNamedItem {
 public:
     virtual ~FormAssociatedElement();
 
@@ -70,10 +69,10 @@ public:
     void formRemovedFromTree(const Node* formRoot);
 
     // ValidityState attribute implementations
+    bool badInput() const { return hasBadInput(); }
     bool customError() const;
 
-    // Override functions for patterMismatch, rangeOverflow, rangerUnderflow,
-    // stepMismatch, tooLong and valueMissing must call willValidate method.
+    // Implementations of patternMismatch, rangeOverflow, rangerUnderflow, stepMismatch, tooLong and valueMissing must call willValidate.
     virtual bool hasBadInput() const;
     virtual bool patternMismatch() const;
     virtual bool rangeOverflow() const;
@@ -91,8 +90,8 @@ public:
 protected:
     FormAssociatedElement();
 
-    void insertedInto(ContainerNode*);
-    void removedFrom(ContainerNode*);
+    void insertedInto(ContainerNode&);
+    void removedFrom(ContainerNode&);
     void didMoveToNewDocument(Document* oldDocument);
 
     void setForm(HTMLFormElement*);
@@ -112,14 +111,12 @@ private:
 
     void resetFormAttributeTargetObserver();
 
-    OwnPtr<FormAttributeTargetObserver> m_formAttributeTargetObserver;
+    virtual bool isFormAssociatedElement() const OVERRIDE FINAL { return true; }
+
+    std::unique_ptr<FormAttributeTargetObserver> m_formAttributeTargetObserver;
     HTMLFormElement* m_form;
-    OwnPtr<ValidityState> m_validityState;
     String m_customValidationMessage;
 };
-
-HTMLElement* toHTMLElement(FormAssociatedElement*);
-const HTMLElement* toHTMLElement(const FormAssociatedElement*);
 
 } // namespace
 

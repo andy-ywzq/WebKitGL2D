@@ -38,13 +38,13 @@ namespace WebCore {
 
 void JSOscillatorNode::setType(ExecState* exec, JSValue value)
 {
-    OscillatorNode* imp = static_cast<OscillatorNode*>(impl());
+    OscillatorNode& imp = impl();
 
 #if ENABLE(LEGACY_WEB_AUDIO)
     if (value.isNumber()) {
         uint32_t type = value.toUInt32(exec);
-        if (!imp->setType(type))
-            throwError(exec, createTypeError(exec, "Illegal OscillatorNode type"));
+        if (!imp.setType(type))
+            exec->vm().throwException(exec, createTypeError(exec, "Illegal OscillatorNode type"));
         return;
     }
 #endif
@@ -52,12 +52,12 @@ void JSOscillatorNode::setType(ExecState* exec, JSValue value)
     if (value.isString()) {
         String type = value.toString(exec)->value(exec);
         if (type == "sine" || type == "square" || type == "sawtooth" || type == "triangle") {
-            imp->setType(type);
+            imp.setType(type);
             return;
         }
     }
     
-    throwError(exec, createTypeError(exec, "Illegal OscillatorNode type"));
+    exec->vm().throwException(exec, createTypeError(exec, "Illegal OscillatorNode type"));
 }
 
 } // namespace WebCore

@@ -91,7 +91,7 @@ public:
     void setUri(const String&);
     void setPaint(unsigned short paintType, const String& uri, const String& rgbColor, const String& iccColor, ExceptionCode&);
 
-    String customCssText() const;
+    String customCSSText() const;
 
     PassRefPtr<SVGPaint> cloneForCSSOM() const;
 
@@ -114,6 +114,21 @@ private:
     SVGPaintType m_paintType;
     String m_uri;
 };
+
+// This will catch anyone doing an unnecessary cast.
+SVGPaint* toSVGPaint(const SVGColor*);
+
+inline SVGPaint* toSVGPaint(CSSValue* value)
+{
+    ASSERT_WITH_SECURITY_IMPLICATION(!value || value->isSVGPaint());
+    return static_cast<SVGPaint*>(value);
+}
+
+inline const SVGPaint* toSVGPaint(const CSSValue* value)
+{
+    ASSERT_WITH_SECURITY_IMPLICATION(!value || value->isSVGPaint());
+    return static_cast<const SVGPaint*>(value);
+}
 
 } // namespace WebCore
 

@@ -37,16 +37,11 @@
 #include <wtf/RetainPtr.h>
 #include <CoreFoundation/CFRunLoop.h>
 typedef RetainPtr<CFRunLoopTimerRef> PlatformTimerRef;
-#elif PLATFORM(WIN)
-typedef UINT_PTR PlatformTimerRef;
-#elif PLATFORM(QT)
-#include <QTimer>
-typedef QTimer PlatformTimerRef;
 #elif PLATFORM(GTK) || PLATFORM(NIX)
 typedef unsigned int PlatformTimerRef;
 #elif PLATFORM(EFL)
 #if USE(EO)
-typedef struct _Eo Ecore_Timer;
+typedef struct _Eo_Opaque Ecore_Timer;
 #else
 typedef struct _Ecore_Timer Ecore_Timer;
 #endif

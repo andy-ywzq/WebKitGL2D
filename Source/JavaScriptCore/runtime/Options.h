@@ -89,9 +89,12 @@ private:
 typedef OptionRange optionRange;
 
 #define JSC_OPTIONS(v) \
+    v(bool, useLLInt,  true) \
     v(bool, useJIT,    true) \
     v(bool, useDFGJIT, true) \
     v(bool, useRegExpJIT, true) \
+    \
+    v(bool, crashIfCantAllocateJITMemory, false) \
     \
     v(bool, forceDFGCodeBlockLiveness, false) \
     \
@@ -123,12 +126,15 @@ typedef OptionRange optionRange;
     v(bool, useLLVMSmallCodeModel, false) \
     v(bool, ftlTrapsOnOSRExit, false) \
     v(bool, ftlOSRExitOmitsMarshalling, false) \
+    v(bool, ftlUsesStackmaps, false) \
     v(bool, useLLVMOSRExitIntrinsic, false) \
     v(bool, dumpLLVMIR, false) \
-    v(bool, llvmAlwaysFails, false) \
+    v(bool, llvmAlwaysFailsBeforeCompile, false) \
+    v(bool, llvmAlwaysFailsBeforeLink, false) \
     v(unsigned, llvmBackendOptimizationLevel, 2) \
     v(unsigned, llvmOptimizationLevel, 2) \
     v(unsigned, llvmSizeLevel, 0) \
+    v(bool, ftlCrashes, false) /* fool-proof way of checking that you ended up in the FTL. ;-) */\
     \
     v(bool, enableConcurrentJIT, true) \
     v(unsigned, numberOfCompilerThreads, computeNumberOfWorkerThreads(2) - 1) \
@@ -156,9 +162,14 @@ typedef OptionRange optionRange;
     v(int32, thresholdForOptimizeAfterWarmUp, 1000) \
     v(int32, thresholdForOptimizeAfterLongWarmUp, 1000) \
     v(int32, thresholdForOptimizeSoon, 1000) \
-    \
     v(int32, executionCounterIncrementForLoop, 1) \
-    v(int32, executionCounterIncrementForReturn, 15) \
+    v(int32, executionCounterIncrementForEntry, 15) \
+    \
+    v(int32, thresholdForFTLOptimizeAfterWarmUp, 25000) \
+    v(int32, thresholdForFTLOptimizeSoon, 1000) \
+    v(int32, ftlTierUpCounterIncrementForLoop, 1) \
+    v(int32, ftlTierUpCounterIncrementForReturn, 15) \
+    v(unsigned, ftlOSREntryFailureCountForReoptimization, 15) \
     \
     v(int32, evalThresholdMultiplier, 10) \
     \
@@ -199,7 +210,7 @@ typedef OptionRange optionRange;
     v(bool, logGC, false) \
     v(unsigned, gcMaxHeapSize, 0) \
     v(bool, recordGCPauseTimes, false) \
-    v(bool, logHeapStatisticsAtExit, false) 
+    v(bool, logHeapStatisticsAtExit, false)
 
 class Options {
 public:

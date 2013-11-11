@@ -45,7 +45,7 @@
 #import "WebTypesInternal.h"
 #import <WebCore/HistoryItem.h>
 #import <WebCore/Image.h>
-#import <WebCore/KURL.h>
+#import <WebCore/URL.h>
 #import <WebCore/PageCache.h>
 #import <WebCore/RunLoop.h>
 #import <WebCore/ThreadCheck.h>
@@ -360,7 +360,7 @@ WebHistoryItem *kit(HistoryItem* item)
 
     if (NSArray *redirectURLs = [dict _webkit_arrayForKey:redirectURLsKey]) {
         NSUInteger size = [redirectURLs count];
-        OwnPtr<Vector<String> > redirectURLsVector = adoptPtr(new Vector<String>(size));
+        OwnPtr<Vector<String>> redirectURLsVector = adoptPtr(new Vector<String>(size));
         for (NSUInteger i = 0; i < size; ++i)
             (*redirectURLsVector)[i] = String([redirectURLs _webkit_stringAtIndex:i]);
         core(_private)->setRedirectURLs(redirectURLsVector.release());
@@ -535,7 +535,7 @@ WebHistoryItem *kit(HistoryItem* item)
 - (NSURL *)URL
 {
     ASSERT_MAIN_THREAD();
-    const KURL& url = core(_private)->url();
+    const URL& url = core(_private)->url();
     if (url.isEmpty())
         return nil;
     return url;

@@ -34,27 +34,22 @@ class HTMLCanvasElement;
 
 class RenderHTMLCanvas FINAL : public RenderReplaced {
 public:
-    explicit RenderHTMLCanvas(HTMLCanvasElement*);
+    RenderHTMLCanvas(HTMLCanvasElement&, PassRef<RenderStyle>);
 
-    virtual bool isCanvas() const { return true; }
-    virtual bool requiresLayer() const;
+    HTMLCanvasElement& canvasElement() const;
 
     void canvasSizeChanged();
-    
+
 private:
-    virtual const char* renderName() const { return "RenderHTMLCanvas"; }
-    virtual void paintReplaced(PaintInfo&, const LayoutPoint&);
-    virtual void intrinsicSizeChanged() { canvasSizeChanged(); }
+    void element() const WTF_DELETED_FUNCTION;
+    virtual bool requiresLayer() const OVERRIDE;
+    virtual bool isCanvas() const OVERRIDE { return true; }
+    virtual const char* renderName() const OVERRIDE { return "RenderHTMLCanvas"; }
+    virtual void paintReplaced(PaintInfo&, const LayoutPoint&) OVERRIDE;
+    virtual void intrinsicSizeChanged() OVERRIDE { canvasSizeChanged(); }
 };
 
-inline RenderHTMLCanvas* toRenderHTMLCanvas(RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isCanvas());
-    return static_cast<RenderHTMLCanvas*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderHTMLCanvas(const RenderHTMLCanvas*);
+RENDER_OBJECT_TYPE_CASTS(RenderHTMLCanvas, isCanvas())
 
 } // namespace WebCore
 

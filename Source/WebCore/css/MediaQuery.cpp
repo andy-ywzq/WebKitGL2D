@@ -30,7 +30,6 @@
 #include "MediaQuery.h"
 
 #include "MediaQueryExp.h"
-#include <wtf/NonCopyingSort.h>
 #include <wtf/text/StringBuilder.h>
 
 namespace WebCore {
@@ -73,24 +72,20 @@ String MediaQuery::serialize() const
     return result.toString();
 }
 
-static bool expressionCompare(const OwnPtr<MediaQueryExp>& a, const OwnPtr<MediaQueryExp>& b)
-{
-    return codePointCompare(a->serialize(), b->serialize()) < 0;
-}
-
-
-MediaQuery::MediaQuery(Restrictor r, const String& mediaType, PassOwnPtr<Vector<OwnPtr<MediaQueryExp> > > exprs)
+MediaQuery::MediaQuery(Restrictor r, const String& mediaType, PassOwnPtr<ExpressionVector> exprs)
     : m_restrictor(r)
     , m_mediaType(mediaType.lower())
     , m_expressions(exprs)
     , m_ignored(false)
 {
     if (!m_expressions) {
-        m_expressions = adoptPtr(new Vector<OwnPtr<MediaQueryExp> >);
+        m_expressions = adoptPtr(new ExpressionVector);
         return;
     }
 
-    nonCopyingSort(m_expressions->begin(), m_expressions->end(), expressionCompare);
+    std::sort(m_expressions->begin(), m_expressions->end(), [](const OwnPtr<MediaQueryExp>& a, const OwnPtr<MediaQueryExp>& b) {
+        return codePointCompare(a->serialize(), b->serialize()) < 0;
+    });
 
     // remove all duplicated expressions
     String key;
@@ -110,7 +105,7 @@ MediaQuery::MediaQuery(Restrictor r, const String& mediaType, PassOwnPtr<Vector<
 MediaQuery::MediaQuery(const MediaQuery& o)
     : m_restrictor(o.m_restrictor)
     , m_mediaType(o.m_mediaType)
-    , m_expressions(adoptPtr(new Vector<OwnPtr<MediaQueryExp> >(o.m_expressions->size())))
+    , m_expressions(adoptPtr(new ExpressionVector(o.m_expressions->size())))
     , m_ignored(o.m_ignored)
     , m_serializationCache(o.m_serializationCache)
 {

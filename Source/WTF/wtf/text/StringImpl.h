@@ -26,6 +26,7 @@
 #include <limits.h>
 #include <wtf/ASCIICType.h>
 #include <wtf/CompilationThread.h>
+#include <wtf/CryptographicallyRandomNumber.h>
 #include <wtf/Forward.h>
 #include <wtf/MathExtras.h>
 #include <wtf/StdLibExtras.h>
@@ -33,10 +34,6 @@
 #include <wtf/Vector.h>
 #include <wtf/text/ConversionMode.h>
 #include <wtf/unicode/Unicode.h>
-
-#if PLATFORM(QT)
-#include <QString>
-#endif
 
 #if USE(CF)
 typedef const struct __CFString * CFStringRef;
@@ -158,10 +155,6 @@ private:
         BufferInternal,
         BufferOwned,
         BufferSubstring,
-#if PLATFORM(QT)
-        BufferAdoptedQString
-#endif
-        // NOTE: Adding more ownership types needs to extend m_hashAndFlags as we're at capacity
     };
 
     // Used to construct static strings, which have an special refCount that can never hit zero.
@@ -232,10 +225,10 @@ private:
     }
 
     // Create a StringImpl adopting ownership of the provided buffer (BufferOwned)
-    StringImpl(const LChar* characters, unsigned length)
+    StringImpl(MallocPtr<LChar> characters, unsigned length)
         : m_refCount(s_refCountIncrement)
         , m_length(length)
-        , m_data8(characters)
+        , m_data8(characters.leakPtr())
         , m_buffer(0)
         , m_hashAndFlags(s_hashFlag8BitBuffer | BufferOwned)
     {
@@ -273,10 +266,10 @@ private:
     }
 
     // Create a StringImpl adopting ownership of the provided buffer (BufferOwned)
-    StringImpl(const UChar* characters, unsigned length)
+    StringImpl(MallocPtr<UChar> characters, unsigned length)
         : m_refCount(s_refCountIncrement)
         , m_length(length)
-        , m_data16(characters)
+        , m_data16(characters.leakPtr())
         , m_buffer(0)
         , m_hashAndFlags(BufferOwned)
     {
@@ -331,7 +324,7 @@ private:
         // keys means that we don't need them to match any other string (in fact,
         // that's exactly the oposite of what we want!), and teh normal hash would
         // lead to lots of conflicts.
-        unsigned hash = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(this));
+        unsigned hash = cryptographicallyRandomNumber() | 1;
         hash <<= s_flagCount;
         if (!hash)
             hash = 1 << s_flagCount;
@@ -340,44 +333,20 @@ private:
         STRING_STATS_ADD_16BIT_STRING(m_length);
     }
 
-#if PLATFORM(QT)
-    // Used to create new strings that adopt an existing QString's data
-    enum ConstructAdoptedQStringTag { ConstructAdoptedQString };
-    StringImpl(QStringData* qStringData, ConstructAdoptedQStringTag)
-        : m_refCount(s_refCountIncrement)
-        , m_length(qStringData->size)
-        , m_data16(0)
-        , m_qStringData(qStringData)
-        , m_hashAndFlags(BufferAdoptedQString)
-    {
-        ASSERT(m_length);
-
-        // We ref the string-data to ensure it will be valid for the lifetime of
-        // this string. We then deref it in the destructor, so that the string
-        // data can eventually be freed.
-        m_qStringData->ref.ref();
-
-        // Now that we have a ref we can safely reference the string data
-        m_data16 = reinterpret_cast_ptr<const UChar*>(qStringData->data());
-        ASSERT(m_data16);
-
-        STRING_STATS_ADD_16BIT_STRING(m_length);
-    }
-#endif
     ~StringImpl();
 
 public:
     WTF_EXPORT_STRING_API static void destroy(StringImpl*);
 
-    WTF_EXPORT_STRING_API static PassRefPtr<StringImpl> create(const UChar*, unsigned length);
-    WTF_EXPORT_STRING_API static PassRefPtr<StringImpl> create(const LChar*, unsigned length);
-    WTF_EXPORT_STRING_API static PassRefPtr<StringImpl> create8BitIfPossible(const UChar*, unsigned length);
+    WTF_EXPORT_STRING_API static PassRef<StringImpl> create(const UChar*, unsigned length);
+    WTF_EXPORT_STRING_API static PassRef<StringImpl> create(const LChar*, unsigned length);
+    WTF_EXPORT_STRING_API static PassRef<StringImpl> create8BitIfPossible(const UChar*, unsigned length);
     template<size_t inlineCapacity>
-    static PassRefPtr<StringImpl> create8BitIfPossible(const Vector<UChar, inlineCapacity>& vector)
+    static PassRef<StringImpl> create8BitIfPossible(const Vector<UChar, inlineCapacity>& vector)
     {
         return create8BitIfPossible(vector.data(), vector.size());
     }
-    WTF_EXPORT_STRING_API static PassRefPtr<StringImpl> create8BitIfPossible(const UChar*);
+    WTF_EXPORT_STRING_API static PassRef<StringImpl> create8BitIfPossible(const UChar*);
 
     ALWAYS_INLINE static PassRefPtr<StringImpl> create(const char* s, unsigned length) { return create(reinterpret_cast<const LChar*>(s), length); }
     WTF_EXPORT_STRING_API static PassRefPtr<StringImpl> create(const LChar*);
@@ -423,8 +392,8 @@ public:
     WTF_EXPORT_STRING_API static PassRefPtr<StringImpl> createFromLiteral(const char* characters, unsigned length);
     WTF_EXPORT_STRING_API static PassRefPtr<StringImpl> createFromLiteral(const char* characters);
 
-    WTF_EXPORT_STRING_API static PassRefPtr<StringImpl> createWithoutCopying(const UChar* characters, unsigned length);
-    WTF_EXPORT_STRING_API static PassRefPtr<StringImpl> createWithoutCopying(const LChar* characters, unsigned length);
+    WTF_EXPORT_STRING_API static PassRef<StringImpl> createWithoutCopying(const UChar* characters, unsigned length);
+    WTF_EXPORT_STRING_API static PassRef<StringImpl> createWithoutCopying(const LChar* characters, unsigned length);
 
     WTF_EXPORT_STRING_API static PassRefPtr<StringImpl> createUninitialized(unsigned length, LChar*& data);
     WTF_EXPORT_STRING_API static PassRefPtr<StringImpl> createUninitialized(unsigned length, UChar*& data);
@@ -466,23 +435,19 @@ public:
     static unsigned dataOffset() { return OBJECT_OFFSETOF(StringImpl, m_data8); }
 
     template<typename CharType, size_t inlineCapacity, typename OverflowHandler>
-    static PassRefPtr<StringImpl> adopt(Vector<CharType, inlineCapacity, OverflowHandler>& vector)
+    static PassRef<StringImpl> adopt(Vector<CharType, inlineCapacity, OverflowHandler>& vector)
     {
         if (size_t size = vector.size()) {
             ASSERT(vector.data());
             if (size > std::numeric_limits<unsigned>::max())
                 CRASH();
-            return adoptRef(new StringImpl(vector.releaseBuffer(), size));
+            return adoptRef(*new StringImpl(vector.releaseBuffer(), size));
         }
-        return empty();
+        return *empty();
     }
 
-    WTF_EXPORT_STRING_API static PassRefPtr<StringImpl> adopt(StringBuffer<UChar>&);
-    WTF_EXPORT_STRING_API static PassRefPtr<StringImpl> adopt(StringBuffer<LChar>&);
-
-#if PLATFORM(QT)
-    static PassRefPtr<StringImpl> adopt(QStringData*);
-#endif
+    WTF_EXPORT_STRING_API static PassRef<StringImpl> adopt(StringBuffer<UChar>&);
+    WTF_EXPORT_STRING_API static PassRef<StringImpl> adopt(StringBuffer<LChar>&);
 
     unsigned length() const { return m_length; }
     bool is8Bit() const { return m_hashAndFlags & s_hashFlag8BitBuffer; }
@@ -536,9 +501,11 @@ public:
     bool has16BitShadow() const { return m_hashAndFlags & s_hashFlagHas16BitShadow; }
     WTF_EXPORT_STRING_API void upconvertCharacters(unsigned, unsigned) const;
     bool isIdentifier() const { return m_hashAndFlags & s_hashFlagIsIdentifier; }
+    bool isIdentifierOrUnique() const { return isIdentifier() || isEmptyUnique(); }
     void setIsIdentifier(bool isIdentifier)
     {
         ASSERT(!isStatic());
+        ASSERT(!isEmptyUnique());
         if (isIdentifier)
             m_hashAndFlags |= s_hashFlagIsIdentifier;
         else
@@ -554,6 +521,7 @@ public:
     void setIsAtomic(bool isAtomic)
     {
         ASSERT(!isStatic());
+        ASSERT(!isEmptyUnique());
         if (isAtomic)
             m_hashAndFlags |= s_hashFlagIsAtomic;
         else
@@ -564,10 +532,6 @@ public:
     bool isSubString() const { return  bufferOwnership() == BufferSubstring; }
 #endif
 
-#if PLATFORM(QT)
-    QStringData* qStringData() { return bufferOwnership() == BufferAdoptedQString ? m_qStringData : 0; }
-#endif
-    
     static WTF_EXPORT_STRING_API CString utf8ForCharacters(const UChar* characters, unsigned length, ConversionMode = LenientConversion);
     WTF_EXPORT_STRING_API CString utf8ForRange(unsigned offset, unsigned length, ConversionMode = LenientConversion) const;
     WTF_EXPORT_STRING_API CString utf8(ConversionMode = LenientConversion) const;
@@ -690,7 +654,7 @@ public:
     // Some string features, like refcounting and the atomicity flag, are not
     // thread-safe. We achieve thread safety by isolation, giving each thread
     // its own copy of the string.
-    PassRefPtr<StringImpl> isolatedCopy() const;
+    PassRef<StringImpl> isolatedCopy() const;
 
     WTF_EXPORT_STRING_API PassRefPtr<StringImpl> substring(unsigned pos, unsigned len = UINT_MAX);
 
@@ -724,8 +688,10 @@ public:
     double toDouble(bool* ok = 0);
     float toFloat(bool* ok = 0);
 
-    WTF_EXPORT_STRING_API PassRefPtr<StringImpl> lower();
+    WTF_EXPORT_STRING_API PassRef<StringImpl> lower();
     WTF_EXPORT_STRING_API PassRefPtr<StringImpl> upper();
+    WTF_EXPORT_STRING_API PassRef<StringImpl> lower(const AtomicString& localeIdentifier);
+    WTF_EXPORT_STRING_API RefPtr<StringImpl> upper(const AtomicString& localeIdentifier);
 
     WTF_EXPORT_STRING_API PassRefPtr<StringImpl> fill(UChar);
     // FIXME: Do we need fill(char) or can we just do the right thing if UChar is ASCII?
@@ -779,7 +745,7 @@ public:
     WTF_EXPORT_STRING_API PassRefPtr<StringImpl> replace(StringImpl*, StringImpl*);
     WTF_EXPORT_STRING_API PassRefPtr<StringImpl> replace(unsigned index, unsigned len, StringImpl*);
 
-    WTF_EXPORT_STRING_API WTF::Unicode::Direction defaultWritingDirection(bool* hasStrongDirectionality = 0);
+    WTF_EXPORT_STRING_API UCharDirection defaultWritingDirection(bool* hasStrongDirectionality = nullptr);
 
 #if USE(CF)
     RetainPtr<CFStringRef> createCFString();
@@ -809,11 +775,11 @@ private:
     BufferOwnership bufferOwnership() const { return static_cast<BufferOwnership>(m_hashAndFlags & s_hashMaskBufferOwnership); }
     template <class UCharPredicate> PassRefPtr<StringImpl> stripMatchedCharacters(UCharPredicate);
     template <typename CharType, class UCharPredicate> PassRefPtr<StringImpl> simplifyMatchedCharactersToSpace(UCharPredicate);
-    template <typename CharType> static PassRefPtr<StringImpl> constructInternal(StringImpl*, unsigned);
-    template <typename CharType> static PassRefPtr<StringImpl> createUninitializedInternal(unsigned, CharType*&);
-    template <typename CharType> static PassRefPtr<StringImpl> createUninitializedInternalNonEmpty(unsigned, CharType*&);
+    template <typename CharType> static PassRef<StringImpl> constructInternal(StringImpl*, unsigned);
+    template <typename CharType> static PassRef<StringImpl> createUninitializedInternal(unsigned, CharType*&);
+    template <typename CharType> static PassRef<StringImpl> createUninitializedInternalNonEmpty(unsigned, CharType*&);
     template <typename CharType> static PassRefPtr<StringImpl> reallocateInternal(PassRefPtr<StringImpl>, unsigned, CharType*&);
-    template <typename CharType> static PassRefPtr<StringImpl> createInternal(const CharType*, unsigned);
+    template <typename CharType> static PassRef<StringImpl> createInternal(const CharType*, unsigned);
     WTF_EXPORT_STRING_API NEVER_INLINE const UChar* getData16SlowCase() const;
     WTF_EXPORT_PRIVATE NEVER_INLINE unsigned hashSlowCase() const;
 
@@ -872,9 +838,6 @@ private:
         void* m_buffer;
         StringImpl* m_substringBuffer;
         mutable UChar* m_copyData16;
-#if PLATFORM(QT)
-        QStringData* m_qStringData;
-#endif
     };
     mutable unsigned m_hashAndFlags;
 };
@@ -894,9 +857,9 @@ ValueCheck<StringImpl*> {
 #endif
 
 template <>
-ALWAYS_INLINE PassRefPtr<StringImpl> StringImpl::constructInternal<LChar>(StringImpl* impl, unsigned length) { return adoptRef(new (NotNull, impl) StringImpl(length, Force8BitConstructor)); }
+ALWAYS_INLINE PassRef<StringImpl> StringImpl::constructInternal<LChar>(StringImpl* impl, unsigned length) { return adoptRef(*new (NotNull, impl) StringImpl(length, Force8BitConstructor)); }
 template <>
-ALWAYS_INLINE PassRefPtr<StringImpl> StringImpl::constructInternal<UChar>(StringImpl* impl, unsigned length) { return adoptRef(new (NotNull, impl) StringImpl(length)); }
+ALWAYS_INLINE PassRef<StringImpl> StringImpl::constructInternal<UChar>(StringImpl* impl, unsigned length) { return adoptRef(*new (NotNull, impl) StringImpl(length)); }
 
 template <>
 ALWAYS_INLINE const LChar* StringImpl::getCharacters<LChar>() const { return characters8(); }
@@ -915,7 +878,7 @@ inline bool equal(const char* a, StringImpl* b) { return equal(b, reinterpret_ca
 WTF_EXPORT_STRING_API bool equalNonNull(const StringImpl* a, const StringImpl* b);
 
 // Do comparisons 8 or 4 bytes-at-a-time on architectures where it's safe.
-#if CPU(X86_64)
+#if CPU(X86_64) || CPU(ARM64)
 ALWAYS_INLINE bool equal(const LChar* a, const LChar* b, unsigned length)
 {
     unsigned dwordLength = length >> 3;
@@ -1144,7 +1107,7 @@ inline bool equalIgnoringCase(const char* a, const LChar* b, unsigned length) { 
 inline bool equalIgnoringCase(const UChar* a, const UChar* b, int length)
 {
     ASSERT(length >= 0);
-    return !Unicode::umemcasecmp(a, b, length);
+    return !u_memcasecmp(a, b, length, U_FOLD_CASE_DEFAULT);
 }
 WTF_EXPORT_STRING_API bool equalIgnoringCaseNonNull(const StringImpl*, const StringImpl*);
 
@@ -1354,7 +1317,7 @@ static inline bool isSpaceOrNewline(UChar c)
 {
     // Use isASCIISpace() for basic Latin-1.
     // This will include newlines, which aren't included in Unicode DirWS.
-    return c <= 0x7F ? WTF::isASCIISpace(c) : WTF::Unicode::direction(c) == WTF::Unicode::WhiteSpaceNeutral;
+    return c <= 0x7F ? isASCIISpace(c) : u_charDirection(c) == U_WHITE_SPACE_NEUTRAL;
 }
 
 template<typename CharacterType>
@@ -1369,7 +1332,7 @@ inline unsigned lengthOfNullTerminatedString(const CharacterType* string)
     return static_cast<unsigned>(length);
 }
 
-inline PassRefPtr<StringImpl> StringImpl::isolatedCopy() const
+inline PassRef<StringImpl> StringImpl::isolatedCopy() const
 {
     if (!requiresCopy()) {
         if (is8Bit())
@@ -1389,7 +1352,7 @@ template<typename T> struct DefaultHash;
 template<> struct DefaultHash<StringImpl*> {
     typedef StringHash Hash;
 };
-template<> struct DefaultHash<RefPtr<StringImpl> > {
+template<> struct DefaultHash<RefPtr<StringImpl>> {
     typedef StringHash Hash;
 };
 

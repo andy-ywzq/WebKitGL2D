@@ -98,7 +98,11 @@ def compressionChar
 end
 
 Dir.chdir($llvmPath + $llvmBuild + "lib") {
-    mysys("tar", "-c#{compressionChar}vf", $currentPath + $libraryPackage, *Dir.entries('.').select{|value| value =~ /\.a$/})
+    mysys("tar", "-c#{compressionChar}vf", $currentPath + $libraryPackage,
+          *Dir.entries('.').select {
+              | value |
+              value =~ /\.a$/ and value !~ /libgtest/
+          })
 }
 
 Dir.mktmpdir {
@@ -116,6 +120,10 @@ Dir.mktmpdir {
             next unless filename =~ /\.def$/ or filename =~ /\.h$/
             mysys("cp", configSrcPath + filename, configDstPath + filename)
         }
+    }
+    ["include/llvm/Support/DataTypes.h"].each {
+        | genFileName |
+        mysys("cp", $llvmPath + genFileName, directory + genFileName)
     }
     Dir.chdir(directory + "include") {
         mysys("tar", "-cyvf", $currentPath + $includePackage, ".")

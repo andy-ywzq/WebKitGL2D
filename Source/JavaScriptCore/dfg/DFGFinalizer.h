@@ -32,7 +32,7 @@
 
 #include "JITCode.h"
 #include "MacroAssemblerCodeRef.h"
-#include <wtf/FastAllocBase.h>
+#include <wtf/FastMalloc.h>
 #include <wtf/Noncopyable.h>
 #include <wtf/RefPtr.h>
 
@@ -46,8 +46,8 @@ public:
     Finalizer(Plan&);
     virtual ~Finalizer();
     
-    virtual bool finalize(RefPtr<JSC::JITCode>& entry) = 0;
-    virtual bool finalizeFunction(RefPtr<JSC::JITCode>& entry, MacroAssemblerCodePtr& withArityCheck) = 0;
+    virtual bool finalize() = 0;
+    virtual bool finalizeFunction() = 0;
 
 protected:
     Plan& m_plan;

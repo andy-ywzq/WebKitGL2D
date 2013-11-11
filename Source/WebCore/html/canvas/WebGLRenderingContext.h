@@ -34,9 +34,9 @@
 #include "Timer.h"
 #include "WebGLGetInfo.h"
 
+#include <memory>
 #include <runtime/Float32Array.h>
 #include <runtime/Int32Array.h>
-#include <wtf/OwnArrayPtr.h>
 #include <wtf/text/WTFString.h>
 
 namespace WebCore {
@@ -81,7 +81,7 @@ typedef int ExceptionCode;
 
 class WebGLRenderingContext : public CanvasRenderingContext, public ActiveDOMObject {
 public:
-    static PassOwnPtr<WebGLRenderingContext> create(HTMLCanvasElement*, WebGLContextAttributes*);
+    static OwnPtr<WebGLRenderingContext> create(HTMLCanvasElement*, WebGLContextAttributes*);
     virtual ~WebGLRenderingContext();
 
     virtual bool is3d() const { return true; }
@@ -161,7 +161,7 @@ public:
 
     PassRefPtr<WebGLActiveInfo> getActiveAttrib(WebGLProgram*, GC3Duint index, ExceptionCode&);
     PassRefPtr<WebGLActiveInfo> getActiveUniform(WebGLProgram*, GC3Duint index, ExceptionCode&);
-    bool getAttachedShaders(WebGLProgram*, Vector<RefPtr<WebGLShader> >&, ExceptionCode&);
+    bool getAttachedShaders(WebGLProgram*, Vector<RefPtr<WebGLShader>>&, ExceptionCode&);
     GC3Dint getAttribLocation(WebGLProgram*, const String& name);
     WebGLGetInfo getBufferParameter(GC3Denum target, GC3Denum pname, ExceptionCode&);
     PassRefPtr<WebGLContextAttributes> getContextAttributes();
@@ -384,6 +384,8 @@ private:
     // Adds a compressed texture format.
     void addCompressedTextureFormat(GC3Denum);
 
+    PassRefPtr<Image> drawImageIntoBuffer(Image*, int width, int height, int deviceScaleFactor);
+
 #if ENABLE(VIDEO)
     PassRefPtr<Image> videoFrameToImage(HTMLVideoElement*, BackingStoreCopy, ExceptionCode&);
 #endif
@@ -450,7 +452,8 @@ private:
     RefPtr<WebGLFramebuffer> m_framebufferBinding;
     RefPtr<WebGLRenderbuffer> m_renderbufferBinding;
     struct TextureUnitState {
-        RefPtr<WebGLTexture> m_textureBinding;
+        RefPtr<WebGLTexture> texture2DBinding;
+        RefPtr<WebGLTexture> textureCubeMapBinding;
     };
     Vector<TextureUnitState> m_textureUnits;
     unsigned long m_activeTextureUnit;
@@ -468,10 +471,10 @@ private:
         ImageBuffer* imageBuffer(const IntSize& size);
     private:
         void bubbleToFront(int idx);
-        OwnArrayPtr<OwnPtr<ImageBuffer> > m_buffers;
+        std::unique_ptr<OwnPtr<ImageBuffer>[]> m_buffers;
         int m_capacity;
     };
-    LRUImageBufferCache m_videoCache;
+    LRUImageBufferCache m_generatedImageCache;
 
     GC3Dint m_maxTextureSize;
     GC3Dint m_maxCubeMapTextureSize;

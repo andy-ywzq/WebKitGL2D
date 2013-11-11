@@ -107,9 +107,7 @@
 #endif
 
 // Harden the pointers stored in the TCMalloc linked lists
-#if COMPILER(GCC) && !PLATFORM(QT)
 #define ENABLE_TCMALLOC_HARDENING 1
-#endif
 
 // Use a background thread to periodically scavenge memory to release back to the system
 #if PLATFORM(IOS)
@@ -515,7 +513,10 @@ namespace WTF {
 #define MESSAGE LOG_ERROR
 #define CHECK_CONDITION ASSERT
 
+#if !OS(DARWIN)
 static const char kLLHardeningMask = 0;
+#endif
+
 template <unsigned> struct EntropySource;
 template <> struct EntropySource<4> {
     static uint32_t value()
@@ -556,8 +557,11 @@ static ALWAYS_INLINE uintptr_t internalEntropyValue()
 
 #define HARDENING_ENTROPY internalEntropyValue()
 #define ROTATE_VALUE(value, amount) (((value) >> (amount)) | ((value) << (sizeof(value) * 8 - (amount))))
+#if COMPILER(MSVC)
+#define XOR_MASK_PTR_WITH_KEY(ptr, key, entropy) (reinterpret_cast<decltype(ptr)>(reinterpret_cast<uintptr_t>(ptr)^(ROTATE_VALUE(reinterpret_cast<uintptr_t>(key), MaskKeyShift)^entropy)))
+#else
 #define XOR_MASK_PTR_WITH_KEY(ptr, key, entropy) (reinterpret_cast<__typeof__(ptr)>(reinterpret_cast<uintptr_t>(ptr)^(ROTATE_VALUE(reinterpret_cast<uintptr_t>(key), MaskKeyShift)^entropy)))
-
+#endif
 
 static ALWAYS_INLINE uint32_t freedObjectStartPoison()
 {
@@ -829,7 +833,8 @@ static inline int LgFloor(size_t n) {
 
 // Functions for using our simple hardened singly linked list
 static ALWAYS_INLINE HardenedSLL SLL_Next(HardenedSLL t, uintptr_t entropy) {
-    return HardenedSLL::create(XOR_MASK_PTR_WITH_KEY(*(reinterpret_cast<void**>(t.value())), t.value(), entropy));
+    void* tValueNext = *(reinterpret_cast<void**>(t.value()));
+    return HardenedSLL::create(XOR_MASK_PTR_WITH_KEY(tValueNext, t.value(), entropy));
 }
 
 static ALWAYS_INLINE void SLL_SetNext(HardenedSLL t, HardenedSLL n, uintptr_t entropy) {
@@ -875,15 +880,6 @@ static ALWAYS_INLINE void SLL_PushRange(HardenedSLL *head, HardenedSLL start, Ha
   if (!start) return;
   SLL_SetNext(end, *head, entropy);
   *head = start;
-}
-
-static ALWAYS_INLINE size_t SLL_Size(HardenedSLL head, uintptr_t entropy) {
-  int count = 0;
-  while (head) {
-    count++;
-    head = SLL_Next(head, entropy);
-  }
-  return count;
 }
 
 // Setup helper functions.
@@ -1662,7 +1658,7 @@ template <int BITS> class MapSelector {
 };
 
 #if defined(WTF_CHANGES)
-#if CPU(X86_64)
+#if CPU(X86_64) || CPU(ARM64)
 // On all known X86-64 platforms, the upper 16 bits are always unused and therefore 
 // can be excluded from the PageMap key.
 // See http://en.wikipedia.org/wiki/X86-64#Virtual_address_space_details
@@ -3803,7 +3799,7 @@ static void** DumpStackTraces() {
   SpinLockHolder h(&pageheap_lock);
   int used_slots = 0;
   for (Span* s = sampled_objects.next; s != &sampled_objects; s = s->next) {
-    ASSERT(used_slots < needed_slots);  // Need to leave room for terminator
+    ASSERT_WITH_SECURITY_IMPLICATION(used_slots < needed_slots); // Need to leave room for terminator
     StackTrace* stack = reinterpret_cast<StackTrace*>(s->objects);
     if (used_slots + 3 + stack->depth >= needed_slots) {
       // No more room
@@ -4005,12 +4001,14 @@ static Span* DoSampledAllocation(size_t size) {
 }
 #endif
 
+#if !ASSERT_DISABLED
 static inline bool CheckCachedSizeClass(void *ptr) {
   PageID p = reinterpret_cast<uintptr_t>(ptr) >> kPageShift;
   size_t cached_value = pageheap->GetSizeClassIfCached(p);
   return cached_value == 0 ||
       cached_value == pageheap->GetDescriptor(p)->sizeclass;
 }
+#endif
 
 static inline void* CheckedMallocResult(void *result)
 {
@@ -4165,7 +4163,7 @@ static void* do_memalign(size_t align, size_t size) {
   while ((((span->start+skip) << kPageShift) & (align - 1)) != 0) {
     skip++;
   }
-  ASSERT(skip < alloc);
+  ASSERT_WITH_SECURITY_IMPLICATION(skip < alloc);
   if (skip > 0) {
     Span* rest = pageheap->Split(span, skip);
     pageheap->Delete(span);
@@ -4189,11 +4187,11 @@ static void* do_memalign(size_t align, size_t size) {
 static inline void do_malloc_stats() {
   PrintStats(1);
 }
-#endif
 
 static inline int do_mallopt(int, int) {
   return 1;     // Indicates error
 }
+#endif
 
 #ifdef HAVE_STRUCT_MALLINFO  // mallinfo isn't defined on freebsd, for instance
 static inline struct mallinfo do_mallinfo() {

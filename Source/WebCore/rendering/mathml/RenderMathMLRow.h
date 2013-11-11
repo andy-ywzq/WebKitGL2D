@@ -34,16 +34,14 @@ namespace WebCore {
     
 class RenderMathMLRow : public RenderMathMLBlock {
 public:
-    RenderMathMLRow(Element*);
+    RenderMathMLRow(Element&, PassRef<RenderStyle>);
+    RenderMathMLRow(Document&, PassRef<RenderStyle>);
 
     static RenderMathMLRow* createAnonymousWithParentRenderer(const RenderObject*);
     
     virtual bool isRenderMathMLRow() const { return true; }
     
 protected:
-    // This also sets our stretchy embellished operator children to their correct sizes.
-    virtual void computePreferredLogicalWidths() OVERRIDE;
-    
     virtual void layout();
 
 private:

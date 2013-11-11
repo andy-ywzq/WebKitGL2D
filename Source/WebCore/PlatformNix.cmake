@@ -4,6 +4,7 @@ list(APPEND WebCore_INCLUDE_DIRECTORIES
     "${WEBCORE_DIR}/platform/graphics/glx"
     "${WEBCORE_DIR}/platform/graphics/harfbuzz/"
     "${WEBCORE_DIR}/platform/graphics/harfbuzz/ng"
+    "${WEBCORE_DIR}/platform/graphics/nix"
     "${WEBCORE_DIR}/platform/graphics/opengl"
     "${WEBCORE_DIR}/platform/graphics/surfaces"
     "${WEBCORE_DIR}/platform/graphics/texmap"
@@ -13,10 +14,12 @@ list(APPEND WebCore_INCLUDE_DIRECTORIES
 )
 
 list(APPEND WebCore_SOURCES
+    html/shadow/MediaControlsNix.cpp
     page/nix/EventHandlerNix.cpp
     platform/Cursor.cpp
     platform/ContextMenuNone.cpp
     platform/ContextMenuItemNone.cpp
+    platform/LocalizedStrings.cpp
     platform/nix/CursorNix.cpp
     platform/nix/DragDataNix.cpp
     platform/nix/DragImageNix.cpp
@@ -40,6 +43,8 @@ list(APPEND WebCore_SOURCES
     platform/nix/SharedTimerNix.cpp
     platform/nix/TemporaryLinkStubs.cpp
     platform/nix/WidgetNix.cpp
+
+    platform/graphics/nix/MediaPlayerPrivateNix.cpp
 
     platform/graphics/freetype/FontCacheFreeType.cpp
     platform/graphics/freetype/FontPlatformDataFreeType.cpp
@@ -69,7 +74,8 @@ list(APPEND WebCore_SOURCES
     platform/image-decoders/png/PNGImageDecoder.cpp
     platform/image-decoders/webp/WEBPImageDecoder.cpp
     platform/linux/GamepadDeviceLinux.cpp
-    platform/mediastream/gstreamer/MediaStreamCenterGStreamer.cpp
+
+    platform/mediastream/nix/MediaStreamCenterNix.cpp
     platform/PlatformStrategies.cpp
     platform/text/nix/TextBreakIteratorInternalICUNix.cpp
 
@@ -82,10 +88,11 @@ list(APPEND WebCore_SOURCES
     plugins/PluginViewNone.cpp
 
     editing/SmartReplaceICU.cpp
-    platform/text/LocaleNone.cpp
+    editing/nix/EditorNix.cpp
 
-    platform/nix/support/AudioBusNix.cpp
-    platform/nix/support/Data.cpp
+    platform/nix/support/MultiChannelPCMData.cpp
+
+    platform/text/LocaleNone.cpp
 
     css/WebKitCSSArrayFunctionValue.cpp
     css/WebKitCSSMixFunctionValue.cpp
@@ -176,6 +183,26 @@ else()
     )
 endif()
 
+if (ENABLE_MEDIA_STREAM)
+    list(APPEND WebCore_LIBRARIES ${WEBRTCLIB_LIBRARIES})
+    list(APPEND WebCore_INCLUDE_DIRECTORIES
+        "${WEBCORE_DIR}/platform/mediastream/webrtc"
+        ${WEBRTCLIB_INCLUDE_DIRS}
+    )
+    list(APPEND WebCore_SOURCES
+        platform/mediastream/webrtc/MediaConstraintsWebRTC.cpp
+        platform/mediastream/webrtc/RTCDataChannelHandlerWebRTC.cpp
+        platform/mediastream/webrtc/observers/CreateSessionDescriptionObserver.cpp
+        platform/mediastream/webrtc/observers/GetStatsObserver.cpp
+        platform/mediastream/webrtc/observers/MediaStreamWebRTCObserver.cpp
+        platform/mediastream/webrtc/observers/RTCDataChannelObserver.cpp
+        platform/mediastream/webrtc/observers/RTCPeerConnectionObserver.cpp
+        platform/mediastream/webrtc/observers/SetSessionDescriptionObserver.cpp
+        platform/mediastream/webrtc/RTCPeerConnectionHandlerWebRTC.cpp
+        platform/mediastream/webrtc/WebRTCUtils.cpp
+    )
+endif ()
+
 if (WTF_USE_OPENGL_ES_2)
     list(APPEND WebCore_SOURCES
         platform/graphics/opengl/Extensions3DOpenGLES.cpp
@@ -205,9 +232,9 @@ if (WTF_USE_EGL)
     )
     if (NOT WTF_USE_GL2D)
         list(APPEND WebCore_SOURCES
-            platform/graphics/cairo/GLContext.cpp
+            platform/graphics/GLContext.cpp
             platform/graphics/cairo/GraphicsContext3DCairo.cpp
-            platform/graphics/cairo/GraphicsContext3DPrivate.cpp
+            platform/graphics/GraphicsContext3DPrivate.cpp
             platform/graphics/egl/GLContextFromCurrentEGL.cpp
         )
     endif()
@@ -253,6 +280,10 @@ else ()
         platform/graphics/surfaces/glx/GLXSurface.cpp
     )
     list(APPEND WebCore_LIBRARIES ${X11_X11_LIB} ${X11_Xcomposite_LIB} ${X11_Xrender_LIB})
+
+    if (ENABLE_MEDIA_STREAM)
+        list(APPEND WebCore_LIBRARIES ${X11_Xext_LIB})
+    endif ()
 endif ()
 
 if (ENABLE_BATTERY_STATUS)
@@ -293,44 +324,24 @@ list(APPEND WebCore_INCLUDE_DIRECTORIES
     ${HARFBUZZ_INCLUDE_DIRS}
 )
 
-if (ENABLE_VIDEO)
-  LIST(APPEND WebCore_INCLUDE_DIRECTORIES
-    "${WEBCORE_DIR}/platform/graphics/gstreamer"
+add_definitions(-DDATA_DIR="${CMAKE_INSTALL_PREFIX}/${DATA_INSTALL_DIR}")
 
-        ${GSTREAMER_INCLUDE_DIRS}
-        ${GSTREAMER_BASE_INCLUDE_DIRS}
-        ${GSTREAMER_APP_INCLUDE_DIRS}
-        ${GSTREAMER_PBUTILS_INCLUDE_DIRS}
-    )
-    list(APPEND WebCore_SOURCES
-        platform/graphics/gstreamer/GRefPtrGStreamer.cpp
-        platform/graphics/gstreamer/GStreamerUtilities.cpp
-        platform/graphics/gstreamer/GStreamerVersioning.cpp
-    )
-    list(APPEND WebCore_LIBRARIES
-        ${GSTREAMER_LIBRARIES}
-        ${GSTREAMER_BASE_LIBRARIES}
-        ${GSTREAMER_APP_LIBRARIES}
-        ${GSTREAMER_PBUTILS_LIBRARIES}
-    )
-
+if (ENABLE_MEDIA_STREAM)
     list(APPEND WebCore_INCLUDE_DIRECTORIES
-        ${GSTREAMER_VIDEO_INCLUDE_DIRS}
+        Modules/mediastream
+        platform/audio
+        platform/mediastream
     )
     list(APPEND WebCore_SOURCES
-        platform/graphics/gstreamer/GStreamerGWorld.cpp
-        platform/graphics/gstreamer/ImageGStreamerCairo.cpp
-        platform/graphics/gstreamer/MediaPlayerPrivateGStreamer.cpp
-        platform/graphics/gstreamer/PlatformVideoWindowNix.cpp
-        platform/graphics/gstreamer/VideoSinkGStreamer.cpp
-        platform/graphics/gstreamer/WebKitWebSourceGStreamer.cpp
-    )
-    list(APPEND WebCore_LIBRARIES
-        ${GSTREAMER_VIDEO_LIBRARIES}
+        platform/mediastream/nix/UserMediaClientNix.cpp
+
+        platform/nix/support/MediaConstraintsNix.cpp
+        platform/nix/support/MediaStreamAudioSourceNix.cpp
+        platform/nix/support/MediaStreamCenterNix.cpp
+        platform/nix/support/MediaStreamNix.cpp
+        platform/nix/support/MediaStreamSourceNix.cpp
     )
 endif ()
-
-add_definitions(-DDATA_DIR="${CMAKE_INSTALL_PREFIX}/${DATA_INSTALL_DIR}")
 
 if (ENABLE_WEB_AUDIO)
   list(APPEND WebCore_INCLUDE_DIRECTORIES
@@ -362,11 +373,13 @@ if (WTF_USE_CURL)
         platform/network/curl/CredentialStorageCurl.cpp
         platform/network/curl/DNSCurl.cpp
         platform/network/curl/FormDataStreamCurl.cpp
+        platform/network/curl/MultipartHandle.cpp
         platform/network/curl/ParsedCookie.cpp
         platform/network/curl/ProxyServerCurl.cpp
         platform/network/curl/ResourceHandleCurl.cpp
         platform/network/curl/ResourceHandleManager.cpp
         platform/network/curl/SocketStreamHandleCurl.cpp
+        platform/network/curl/SynchronousLoaderClientCurl.cpp
     )
 
     list(APPEND WebCore_LIBRARIES
@@ -391,6 +404,9 @@ else ()
         platform/network/soup/ResourceResponseSoup.cpp
         platform/network/soup/SocketStreamHandleSoup.cpp
         platform/network/soup/SoupURIUtils.cpp
+        platform/network/soup/SynchronousLoaderClientSoup.cpp
+        # Uncomment it after https://bugs.webkit.org/show_bug.cgi?id=118598 is fixed and merged to Nix.
+        # platform/soup/SharedBufferSoup.cpp
     )
 
     list(APPEND WebCore_INCLUDE_DIRECTORIES

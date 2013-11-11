@@ -340,11 +340,6 @@ void LayerRenderer::compositeLayers(const TransformationMatrix& matrix, LayerCom
         compositeLayersRecursive(sublayers[i].get(), currentStencilValue, clipRect);
     }
 
-    // We need to make sure that all texture resource usage is finished before
-    // unlocking the texture resources, so force a glFinish() in that case.
-    if (m_layersLockingTextureResources.size())
-        glFinish();
-
     m_client->context()->swapBuffers();
 
     glDisable(GL_SCISSOR_TEST);
@@ -510,11 +505,7 @@ void LayerRenderer::addLayer(LayerCompositingThread* layer)
 
 bool LayerRenderer::removeLayer(LayerCompositingThread* layer)
 {
-    LayerSet::iterator iter = m_layers.find(layer);
-    if (iter == m_layers.end())
-        return false;
-    m_layers.remove(layer);
-    return true;
+    return m_layers.remove(layer);
 }
 
 void LayerRenderer::addLayerToReleaseTextureResourcesList(LayerCompositingThread* layer)
@@ -591,6 +582,15 @@ void LayerRenderer::drawDebugBorder(const Vector<FloatPoint>& transformedBounds,
 
     glLineWidth(borderWidth);
     glDrawArrays(GL_LINE_LOOP, 0, transformedBounds.size());
+}
+
+void LayerRenderer::discardFrontVisibility()
+{
+    if (m_hardwareCompositing) {
+        makeContextCurrent();
+        for (LayerSet::iterator iter = m_layers.begin(); iter != m_layers.end(); ++iter)
+            (*iter)->discardFrontVisibility();
+    }
 }
 
 // Draws a debug border around the layer's bounds.
@@ -890,6 +890,9 @@ void LayerRenderer::compositeLayersRecursive(LayerCompositingThread* layer, int 
     bool layerVisible = clipRect.intersects(rect);
 #endif
 
+    if (layer->isCanvasLayer())
+        layerVisible = layerVisible && layer->isLayerVisible();
+
     layer->setVisible(layerVisible);
 
     // Note that there are two types of layers:
@@ -914,11 +917,9 @@ void LayerRenderer::compositeLayersRecursive(LayerCompositingThread* layer, int 
 
         // Draw the surface onto another surface or screen.
         bool drawSurface = layerAlreadyOnSurface(layer);
-        // The texture format for the surface is RGBA.
-        LayerData::LayerProgram layerProgram = drawSurface ? LayerData::LayerProgramRGBA : layer->layerProgram();
 
         if (!drawSurface) {
-            const GLES2Program& program = useLayerProgram(layerProgram);
+            const GLES2Program& program = useProgram(LayerProgramRGBA);
             layer->drawTextures(program, m_scale, m_visibleRect, clipRect);
         } else {
             // Draw the reflection if it exists.
@@ -930,11 +931,11 @@ void LayerRenderer::compositeLayersRecursive(LayerCompositingThread* layer, int 
                 if (!mask && layer->replicaLayer())
                     mask = layer->replicaLayer()->maskLayer();
 
-                const GLES2Program& program = useLayerProgram(layerProgram, mask);
+                const GLES2Program& program = useProgram(mask ? LayerMaskProgramRGBA : LayerProgramRGBA);
                 layer->drawSurface(program, layer->layerRendererSurface()->replicaDrawTransform(), mask);
             }
 
-            const GLES2Program& program = useLayerProgram(layerProgram, layer->maskLayer());
+            const GLES2Program& program = useProgram(layer->maskLayer() ? LayerMaskProgramRGBA : LayerProgramRGBA);
             layer->drawSurface(program, layer->layerRendererSurface()->drawTransform(), layer->maskLayer());
         }
     }
@@ -1041,10 +1042,9 @@ bool LayerRenderer::makeContextCurrent()
 {
     bool ret = m_client->context()->makeCurrent();
     if (ret && m_isRobustnessSupported) {
-        if (m_glGetGraphicsResetStatusEXT() != GL_NO_ERROR) {
-            BlackBerry::Platform::logAlways(BlackBerry::Platform::LogLevelCritical, "Robust OpenGL context has been reset. Aborting.");
-            CRASH();
-        }
+        GLenum resetStatus = m_glGetGraphicsResetStatusEXT();
+        if (resetStatus != GL_NO_ERROR)
+            BlackBerry::Platform::logAlways(BlackBerry::Platform::LogLevelCritical, "Robust OpenGL context has been reset with status 0x%x. Continuing anyway.", resetStatus);
     }
     return ret;
 }
@@ -1071,15 +1071,6 @@ bool LayerRenderer::createProgram(ProgramIndex program)
         "  gl_FragColor = texture2D(s_texture, v_texCoord) * alpha; \n"
         "}                                                          \n";
 
-    const char* fragmentShaderStringBGRA =
-        "varying mediump vec2 v_texCoord;                                \n"
-        "uniform lowp sampler2D s_texture;                               \n"
-        "uniform lowp float alpha;                                       \n"
-        "void main()                                                     \n"
-        "{                                                               \n"
-        "  gl_FragColor = texture2D(s_texture, v_texCoord).bgra * alpha; \n"
-        "}                                                               \n";
-
     const char* fragmentShaderStringMaskRGBA =
         "varying mediump vec2 v_texCoord;                           \n"
         "uniform lowp sampler2D s_texture;                          \n"
@@ -1091,18 +1082,6 @@ bool LayerRenderer::createProgram(ProgramIndex program)
         "  lowp vec4 maskColor = texture2D(s_mask, v_texCoord);     \n"
         "  gl_FragColor = vec4(texColor.x, texColor.y, texColor.z, texColor.w) * alpha * maskColor.w;           \n"
         "}                                                          \n";
-
-    const char* fragmentShaderStringMaskBGRA =
-        "varying mediump vec2 v_texCoord;                                \n"
-        "uniform lowp sampler2D s_texture;                               \n"
-        "uniform lowp sampler2D s_mask;                                  \n"
-        "uniform lowp float alpha;                                       \n"
-        "void main()                                                     \n"
-        "{                                                               \n"
-        "  lowp vec4 texColor = texture2D(s_texture, v_texCoord).bgra;             \n"
-        "  lowp vec4 maskColor = texture2D(s_mask, v_texCoord).bgra;          \n"
-        "  gl_FragColor = vec4(texColor.x, texColor.y, texColor.z, texColor.w) * alpha * maskColor.w;         \n"
-        "}                                                               \n";
 
     // Shaders for drawing the debug borders around the layers.
     const char* colorVertexShaderString =
@@ -1124,9 +1103,7 @@ bool LayerRenderer::createProgram(ProgramIndex program)
 
     switch (program) {
     case LayerProgramRGBA:
-    case LayerProgramBGRA:
     case LayerMaskProgramRGBA:
-    case LayerMaskProgramBGRA:
         vertexShader = vertexShaderString;
         break;
     case ColorProgram:
@@ -1140,14 +1117,8 @@ bool LayerRenderer::createProgram(ProgramIndex program)
     case LayerProgramRGBA:
         fragmentShader = fragmentShaderStringRGBA;
         break;
-    case LayerProgramBGRA:
-        fragmentShader = fragmentShaderStringBGRA;
-        break;
     case LayerMaskProgramRGBA:
         fragmentShader = fragmentShaderStringMaskRGBA;
-        break;
-    case LayerMaskProgramBGRA:
-        fragmentShader = fragmentShaderStringMaskBGRA;
         break;
     case ColorProgram:
         fragmentShader = colorFragmentShaderString;
@@ -1183,15 +1154,13 @@ bool LayerRenderer::createProgram(ProgramIndex program)
     // Get locations of uniforms for the layer content shader program.
     m_programs[program].m_locations[GLES2Program::OpacityUniform] = glGetUniformLocation(programObject, "alpha");
     switch (program) {
-    case LayerProgramRGBA:
-    case LayerProgramBGRA: {
+    case LayerProgramRGBA: {
         GLint samplerLocation = glGetUniformLocation(programObject, "s_texture");
         glUseProgram(programObject);
         glUniform1i(samplerLocation, 0);
         break;
     }
-    case LayerMaskProgramRGBA:
-    case LayerMaskProgramBGRA: {
+    case LayerMaskProgramRGBA: {
         GLint maskSamplerLocation = glGetUniformLocation(programObject, "s_texture");
         GLint maskSamplerLocationMask = glGetUniformLocation(programObject, "s_mask");
         glUseProgram(programObject);
@@ -1224,14 +1193,6 @@ const GLES2Program& LayerRenderer::useProgram(ProgramIndex index)
         glEnableVertexAttribArray(program.texCoordLocation());
 
     return program;
-}
-
-const GLES2Program& LayerRenderer::useLayerProgram(LayerData::LayerProgram layerProgram, bool isMask /* = false */)
-{
-    int program = layerProgram;
-    if (isMask)
-        program += MaskPrograms;
-    return useProgram(static_cast<ProgramIndex>(program));
 }
 
 void LayerRenderingResults::addDirtyRect(const IntRect& rect)

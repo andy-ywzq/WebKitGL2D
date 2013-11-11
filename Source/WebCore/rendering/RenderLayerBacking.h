@@ -57,10 +57,10 @@ enum CompositingLayerType {
 class RenderLayerBacking : public GraphicsLayerClient {
     WTF_MAKE_NONCOPYABLE(RenderLayerBacking); WTF_MAKE_FAST_ALLOCATED;
 public:
-    explicit RenderLayerBacking(RenderLayer*);
+    explicit RenderLayerBacking(RenderLayer&);
     ~RenderLayerBacking();
 
-    RenderLayer* owningLayer() const { return m_owningLayer; }
+    RenderLayer& owningLayer() const { return m_owningLayer; }
 
     enum UpdateAfterLayoutFlag {
         CompositingChildrenOnly = 1 << 0,
@@ -95,7 +95,7 @@ public:
     GraphicsLayer* backgroundLayer() const { return m_backgroundLayer.get(); }
     bool backgroundLayerPaintsFixedRootBackground() const { return m_backgroundLayerPaintsFixedRootBackground; }
     
-    bool hasScrollingLayer() const { return m_scrollingLayer; }
+    bool hasScrollingLayer() const { return m_scrollingLayer != nullptr; }
     GraphicsLayer* scrollingLayer() const { return m_scrollingLayer.get(); }
     GraphicsLayer* scrollingContentsLayer() const { return m_scrollingContentsLayer.get(); }
 
@@ -170,6 +170,8 @@ public:
     virtual bool getCurrentTransform(const GraphicsLayer*, TransformationMatrix&) const OVERRIDE;
 
     virtual bool isTrackingRepaints() const OVERRIDE;
+    virtual bool shouldSkipLayerInDump(const GraphicsLayer*) const OVERRIDE;
+    virtual bool shouldDumpPropertyForLayer(const GraphicsLayer*, const char* propertyName) const OVERRIDE;
 
 #ifndef NDEBUG
     virtual void verifyNotPainting();
@@ -205,13 +207,14 @@ private:
     
     void willDestroyLayer(const GraphicsLayer*);
     
-    PassOwnPtr<GraphicsLayer> createGraphicsLayer(const String&);
+    std::unique_ptr<GraphicsLayer> createGraphicsLayer(const String&);
 
-    RenderLayerModelObject* renderer() const { return m_owningLayer->renderer(); }
-    RenderLayerCompositor* compositor() const { return m_owningLayer->compositor(); }
+    RenderLayerModelObject& renderer() const { return m_owningLayer.renderer(); }
+    RenderLayerCompositor& compositor() const { return m_owningLayer.compositor(); }
 
     void updateInternalHierarchy();
-    bool updateClippingLayers(bool needsAncestorClip, bool needsDescendantClip);
+    bool updateAncestorClippingLayer(bool needsAncestorClip);
+    bool updateDescendantClippingLayer(bool needsDescendantClip);
     bool updateOverflowControlsLayers(bool needsHorizontalScrollbarLayer, bool needsVerticalScrollbarLayer, bool needsScrollCornerLayer);
     bool updateForegroundLayer(bool needsForegroundLayer);
     bool updateBackgroundLayer(bool needsBackgroundLayer);
@@ -275,25 +278,28 @@ private:
 
     void paintIntoLayer(const GraphicsLayer*, GraphicsContext*, const IntRect& paintDirtyRect, PaintBehavior, GraphicsLayerPaintingPhase);
 
+    // Helper function for updateGraphicsLayerGeometry.
+    void adjustAncestorCompositingBoundsForFlowThread(IntRect& ancestorCompositingBounds, const RenderLayer* compositingAncestor) const;
+
     static CSSPropertyID graphicsLayerToCSSProperty(AnimatedPropertyID);
     static AnimatedPropertyID cssToGraphicsLayerProperty(CSSPropertyID);
 
-    RenderLayer* m_owningLayer;
+    RenderLayer& m_owningLayer;
 
-    OwnPtr<GraphicsLayer> m_ancestorClippingLayer; // Only used if we are clipped by an ancestor which is not a stacking context.
-    OwnPtr<GraphicsLayer> m_contentsContainmentLayer; // Only used if we have a background layer; takes the transform.
-    OwnPtr<GraphicsLayer> m_graphicsLayer;
-    OwnPtr<GraphicsLayer> m_foregroundLayer; // Only used in cases where we need to draw the foreground separately.
-    OwnPtr<GraphicsLayer> m_backgroundLayer; // Only used in cases where we need to draw the background separately.
-    OwnPtr<GraphicsLayer> m_childContainmentLayer; // Only used if we have clipping on a stacking context with compositing children, or if the layer has a tile cache.
-    OwnPtr<GraphicsLayer> m_maskLayer; // Only used if we have a mask.
+    std::unique_ptr<GraphicsLayer> m_ancestorClippingLayer; // Only used if we are clipped by an ancestor which is not a stacking context.
+    std::unique_ptr<GraphicsLayer> m_contentsContainmentLayer; // Only used if we have a background layer; takes the transform.
+    std::unique_ptr<GraphicsLayer> m_graphicsLayer;
+    std::unique_ptr<GraphicsLayer> m_foregroundLayer; // Only used in cases where we need to draw the foreground separately.
+    std::unique_ptr<GraphicsLayer> m_backgroundLayer; // Only used in cases where we need to draw the background separately.
+    std::unique_ptr<GraphicsLayer> m_childContainmentLayer; // Only used if we have clipping on a stacking context with compositing children, or if the layer has a tile cache.
+    std::unique_ptr<GraphicsLayer> m_maskLayer; // Only used if we have a mask.
 
-    OwnPtr<GraphicsLayer> m_layerForHorizontalScrollbar;
-    OwnPtr<GraphicsLayer> m_layerForVerticalScrollbar;
-    OwnPtr<GraphicsLayer> m_layerForScrollCorner;
+    std::unique_ptr<GraphicsLayer> m_layerForHorizontalScrollbar;
+    std::unique_ptr<GraphicsLayer> m_layerForVerticalScrollbar;
+    std::unique_ptr<GraphicsLayer> m_layerForScrollCorner;
 
-    OwnPtr<GraphicsLayer> m_scrollingLayer; // Only used if the layer is using composited scrolling.
-    OwnPtr<GraphicsLayer> m_scrollingContentsLayer; // Only used if the layer is using composited scrolling.
+    std::unique_ptr<GraphicsLayer> m_scrollingLayer; // Only used if the layer is using composited scrolling.
+    std::unique_ptr<GraphicsLayer> m_scrollingContentsLayer; // Only used if the layer is using composited scrolling.
 
     uint64_t m_scrollLayerID;
 
@@ -301,7 +307,6 @@ private:
     LayoutSize m_subpixelAccumulation; // The accumulated subpixel offset of the compositedBounds compared to absolute coordinates.
 
     bool m_artificiallyInflatedBounds; // bounds had to be made non-zero to make transform-origin work
-    bool m_boundsConstrainedByClipping;
     bool m_isMainFrameRenderViewLayer;
     bool m_usingTiledCacheLayer;
     bool m_requiresOwnBackingStore;

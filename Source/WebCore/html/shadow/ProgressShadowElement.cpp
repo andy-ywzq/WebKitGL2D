@@ -40,7 +40,7 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-ProgressShadowElement::ProgressShadowElement(Document* document)
+ProgressShadowElement::ProgressShadowElement(Document& document)
     : HTMLDivElement(HTMLNames::divTag, document)
 {
 }
@@ -53,17 +53,17 @@ HTMLProgressElement* ProgressShadowElement::progressElement() const
 bool ProgressShadowElement::rendererIsNeeded(const RenderStyle& style)
 {
     RenderObject* progressRenderer = progressElement()->renderer();
-    return progressRenderer && !progressRenderer->style()->hasAppearance() && HTMLDivElement::rendererIsNeeded(style);
+    return progressRenderer && !progressRenderer->style().hasAppearance() && HTMLDivElement::rendererIsNeeded(style);
 }
 
-ProgressInnerElement::ProgressInnerElement(Document* document)
+ProgressInnerElement::ProgressInnerElement(Document& document)
     : ProgressShadowElement(document)
 {
 }
 
-RenderObject* ProgressInnerElement::createRenderer(RenderArena* arena, RenderStyle*)
+RenderElement* ProgressInnerElement::createRenderer(PassRef<RenderStyle> style)
 {
-    return new (arena) RenderProgress(this);
+    return new RenderProgress(*this, std::move(style));
 }
 
 bool ProgressInnerElement::rendererIsNeeded(const RenderStyle& style)
@@ -72,15 +72,15 @@ bool ProgressInnerElement::rendererIsNeeded(const RenderStyle& style)
         return HTMLDivElement::rendererIsNeeded(style);
 
     RenderObject* progressRenderer = progressElement()->renderer();
-    return progressRenderer && !progressRenderer->style()->hasAppearance() && HTMLDivElement::rendererIsNeeded(style);    
+    return progressRenderer && !progressRenderer->style().hasAppearance() && HTMLDivElement::rendererIsNeeded(style);    
 }
 
-ProgressBarElement::ProgressBarElement(Document* document)
+ProgressBarElement::ProgressBarElement(Document& document)
     : ProgressShadowElement(document)
 {
 }
 
-ProgressValueElement::ProgressValueElement(Document* document)
+ProgressValueElement::ProgressValueElement(Document& document)
     : ProgressShadowElement(document)
 {
 }

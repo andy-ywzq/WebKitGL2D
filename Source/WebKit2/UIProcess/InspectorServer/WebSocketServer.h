@@ -33,16 +33,7 @@
 #include <wtf/OwnPtr.h>
 #include <wtf/text/WTFString.h>
 
-#if USE(SOUP)
-#include <gio/gio.h>
-#include <wtf/gobject/GRefPtr.h>
-#endif
-
-#if PLATFORM(QT)
-namespace WebKit {
-class QtTcpServerHandler;
-}
-#elif PLATFORM(GTK) || PLATFORM(NIX) //FIXME: should be USE(SOUP) instead
+#if USE(SOUP) || USE(CURL)
 #include <gio/gio.h>
 #include <wtf/gobject/GRefPtr.h>
 #endif
@@ -84,9 +75,7 @@ private:
     WebSocketServerClient* m_client;
     String m_bindAddress;
     unsigned short m_port;
-#if PLATFORM(QT)
-    OwnPtr<QtTcpServerHandler> m_tcpServerHandler;
-#elif USE(SOUP) || USE(CURL)
+#if USE(SOUP) || USE(CURL)
     GRefPtr<GSocketService> m_socketService;
 #endif
 

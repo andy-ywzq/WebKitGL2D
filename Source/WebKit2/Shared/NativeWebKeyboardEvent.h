@@ -33,8 +33,6 @@
 #if PLATFORM(MAC)
 #include <wtf/RetainPtr.h>
 OBJC_CLASS NSView;
-#elif PLATFORM(QT)
-#include <QKeyEvent>
 #elif PLATFORM(GTK)
 #include <GOwnPtrGtk.h>
 #include <WebCore/CompositionResults.h>
@@ -52,8 +50,6 @@ class NativeWebKeyboardEvent : public WebKeyboardEvent {
 public:
 #if USE(APPKIT)
     NativeWebKeyboardEvent(NSEvent *, NSView *);
-#elif PLATFORM(QT)
-    explicit NativeWebKeyboardEvent(QKeyEvent*);
 #elif PLATFORM(GTK)
     NativeWebKeyboardEvent(const NativeWebKeyboardEvent&);
     NativeWebKeyboardEvent(GdkEvent*, const WebCore::CompositionResults&, WebCore::GtkInputMethodFilter::EventFakedForComposition);
@@ -66,8 +62,6 @@ public:
 
 #if USE(APPKIT)
     NSEvent *nativeEvent() const { return m_nativeEvent.get(); }
-#elif PLATFORM(QT)
-    const QKeyEvent* nativeEvent() const { return &m_nativeEvent; }
 #elif PLATFORM(GTK)
     GdkEvent* nativeEvent() const { return m_nativeEvent.get(); }
     const WebCore::CompositionResults& compositionResults() const  { return m_compositionResults; }
@@ -82,8 +76,6 @@ public:
 private:
 #if USE(APPKIT)
     RetainPtr<NSEvent> m_nativeEvent;
-#elif PLATFORM(QT)
-    QKeyEvent m_nativeEvent;
 #elif PLATFORM(GTK)
     GOwnPtr<GdkEvent> m_nativeEvent;
     WebCore::CompositionResults m_compositionResults;

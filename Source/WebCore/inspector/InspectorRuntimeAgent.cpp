@@ -106,7 +106,7 @@ void InspectorRuntimeAgent::parse(ErrorString*, const String& expression, TypeBu
         *result = TypeBuilder::Runtime::SyntaxErrorType::Irrecoverable;
         break;
     case ParserError::SyntaxErrorUnterminatedLiteral:
-        *result = TypeBuilder::Runtime::SyntaxErrorType::Unterminated_literal;
+        *result = TypeBuilder::Runtime::SyntaxErrorType::UnterminatedLiteral;
         break;
     case ParserError::SyntaxErrorRecoverable:
         *result = TypeBuilder::Runtime::SyntaxErrorType::Recoverable;
@@ -171,7 +171,7 @@ void InspectorRuntimeAgent::callFunctionOn(ErrorString* errorString, const Strin
     }
 }
 
-void InspectorRuntimeAgent::getProperties(ErrorString* errorString, const String& objectId, const bool* const ownProperties, RefPtr<TypeBuilder::Array<TypeBuilder::Runtime::PropertyDescriptor> >& result, RefPtr<TypeBuilder::Array<TypeBuilder::Runtime::InternalPropertyDescriptor> >& internalProperties)
+void InspectorRuntimeAgent::getProperties(ErrorString* errorString, const String& objectId, const bool* const ownProperties, RefPtr<TypeBuilder::Array<TypeBuilder::Runtime::PropertyDescriptor>>& result, RefPtr<TypeBuilder::Array<TypeBuilder::Runtime::InternalPropertyDescriptor>>& internalProperties)
 {
     InjectedScript injectedScript = m_injectedScriptManager->injectedScriptForObjectId(objectId);
     if (injectedScript.hasNoValue()) {

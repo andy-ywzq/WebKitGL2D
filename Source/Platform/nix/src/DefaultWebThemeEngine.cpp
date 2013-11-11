@@ -34,13 +34,13 @@
 #include <cairo/cairo.h>
 #include <cmath>
 
-const double BGColor1 = 0xF6 / 256.0;
-const double BGColor2 = 0xDE / 256.0;
-const double BorderColor = 0xA4 / 256.0;
-const double BorderOnHoverColor = 0x7A / 256.0;
-const double CheckColor = 0x66 / 256.0;
-const double TextFieldDarkBorderColor = 0x9A / 256.0;
-const double TextFieldLightBorderColor = 0xEE / 256.0;
+const double BGColor1 = 0xF6 / 255.0;
+const double BGColor2 = 0xDE / 255.0;
+const double BorderColor = 0xA4 / 255.0;
+const double BorderOnHoverColor = 0x7A / 255.0;
+const double CheckColor = 0x66 / 255.0;
+const double TextFieldDarkBorderColor = 0x9A / 255.0;
+const double TextFieldLightBorderColor = 0xEE / 255.0;
 
 const int MenuListBorder = 5;
 const int MenuListArrowSize = 6;
@@ -48,13 +48,13 @@ const int MenuListArrowSize = 6;
 const int InnerSpinButtonBorder = 3;
 const int InnerSpinButtonArrowSize = 2;
 
-const Nix::RGBA32 TapHighLightColor = 0x66000000;
+const Nix::Color TapHighLightColor(0x66000000);
 
 namespace Nix {
 
 Color DefaultWebThemeEngine::activeSelectionBackgroundColor() const
 {
-    return Color(0, 0, 255);
+    return Color::blue;
 }
 
 Color DefaultWebThemeEngine::activeSelectionForegroundColor() const
@@ -267,11 +267,6 @@ void DefaultWebThemeEngine::paintMenuList(Canvas* canvas, State state, const Rec
 #endif
 }
 
-Size DefaultWebThemeEngine::getProgressBarSize() const
-{
-    return Size(2000, 300);
-}
-
 void DefaultWebThemeEngine::paintProgressBar(Canvas* canvas, State state, const Rect& rect, const ProgressBarExtraParams& params) const
 {
     cairo_save(canvas);
@@ -292,8 +287,6 @@ void DefaultWebThemeEngine::paintProgressBar(Canvas* canvas, State state, const 
     cairo_restore(canvas);
 }
 
-// These values have been copied from RenderThemeChromiumSkia.cpp
-static const int progressActivityBlocks = 5;
 static const int progressAnimationFrames = 10;
 static const double progressAnimationInterval = 0.125;
 
@@ -304,7 +297,7 @@ double DefaultWebThemeEngine::getAnimationRepeatIntervalForProgressBar() const
 
 double DefaultWebThemeEngine::getAnimationDurationForProgressBar() const
 {
-    return progressAnimationInterval * progressAnimationFrames * 2; // "2" for back and forth;
+    return progressAnimationInterval * progressAnimationFrames * 2; // "2" for back and forth.
 }
 
 void DefaultWebThemeEngine::getInnerSpinButtonPadding(int& paddingTop, int& paddingLeft, int& paddingBottom, int& paddingRight) const
@@ -351,11 +344,11 @@ void DefaultWebThemeEngine::paintMeter(Canvas* canvas, State state, const Rect& 
 {
     cairo_save(canvas);
 
-    // Background
+    // Background.
     setupBorder(canvas, state);
     cairo_rectangle(canvas, rect.x, rect.y, rect.width, rect.height);
     cairo_fill(canvas);
-    // Meter
+    // Meter.
     cairo_rectangle(canvas, rect.x, rect.y, rect.width * params.valueRatio(), rect.height);
     gradientFill(canvas, rect.y, rect.height);
 
@@ -379,6 +372,129 @@ void DefaultWebThemeEngine::paintSliderThumb(Canvas* canvas, State state, const 
     cairo_rectangle(canvas, rect.x, rect.y, rect.width, rect.height);
     cairo_stroke_preserve(canvas);
     gradientFill(canvas, rect.y, rect.height, state == StatePressed);
+    cairo_restore(canvas);
+}
+
+void DefaultWebThemeEngine::paintMediaPlayButton(Canvas* canvas, MediaPlayerState state, const Rect& rect) const
+{
+    cairo_save(canvas);
+    cairo_set_source_rgb(canvas, 1, 1, 1);
+    if (state == StatePaused) {
+        cairo_move_to(canvas, rect.x + (rect.width * 0.3), rect.y + (rect.height * 0.25));
+        cairo_line_to(canvas, rect.x + (rect.width * 0.75), rect.y + (rect.height * 0.5));
+        cairo_line_to(canvas, rect.x + (rect.width * 0.3), rect.y + (rect.height * 0.75));
+        cairo_close_path(canvas);
+        cairo_fill(canvas);
+    } else { // If state is StatePlaying.
+        cairo_rectangle(canvas, rect.x + (rect.width * 0.3), rect.y + (rect.height * 0.25), (rect.width * 0.15), (rect.height * 0.5));
+        cairo_fill(canvas);
+        cairo_rectangle(canvas, rect.x + (rect.width * 0.55), rect.y + (rect.height * 0.25), (rect.width * 0.15), (rect.height * 0.5));
+        cairo_fill(canvas);
+    }
+    cairo_restore(canvas);
+}
+
+void DefaultWebThemeEngine::paintMediaMuteButton(Canvas* canvas, MediaPlayerState state, const Rect& rect) const
+{
+    cairo_save(canvas);
+    if (state == StateMuted) {
+        cairo_set_line_width(canvas, 1);
+        cairo_set_source_rgb(canvas, 139, 0, 0);
+
+        cairo_move_to(canvas, rect.x + (rect.width * 0.59), rect.y + (rect.height * 0.67));
+        cairo_line_to(canvas, rect.x + (rect.width * 0.87), rect.y + (rect.height * 0.34));
+        cairo_stroke(canvas);
+
+        cairo_move_to(canvas, rect.x + (rect.width * 0.87), rect.y + (rect.height * 0.67));
+        cairo_line_to(canvas, rect.x + (rect.width * 0.59), rect.y + (rect.height * 0.34));
+        cairo_stroke(canvas);
+    } else { // If state is StateNotMuted
+        cairo_set_line_width(canvas, 5);
+        cairo_set_source_rgb(canvas, 1, 1, 1);
+
+        cairo_arc(canvas, rect.x + (rect.width * 0.3), rect.y + (rect.height * 0.5), rect.width * 0.34, 11 * (M_PI / 6), M_PI / 6);
+        cairo_fill(canvas);
+        cairo_arc(canvas, rect.x + (rect.width * 0.3), rect.y + (rect.height * 0.5), rect.width * 0.45, 11 * (M_PI / 6), M_PI / 6);
+        cairo_fill(canvas);
+        cairo_arc(canvas, rect.x + (rect.width * 0.3), rect.y + (rect.height * 0.5), rect.width * 0.57, 11 * (M_PI / 6), M_PI / 6);
+        cairo_fill(canvas);
+    }
+
+    // Speaker
+    cairo_move_to(canvas, rect.x + (rect.width * 0.52), rect.y + (rect.height * 0.18));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.29), rect.y + (rect.height * 0.38));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.08), rect.y + (rect.height * 0.38));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.08), rect.y + (rect.height * 0.62));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.29), rect.y + (rect.height * 0.62));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.52), rect.y + (rect.height * 0.82));
+    cairo_close_path(canvas);
+    cairo_fill(canvas);
+
+    cairo_restore(canvas);
+}
+
+void DefaultWebThemeEngine::paintMediaSeekBackButton(Canvas* canvas, const Rect& rect) const
+{
+    cairo_save(canvas);
+    cairo_set_source_rgb(canvas, 1, 1, 1);
+    cairo_move_to(canvas, rect.x + (rect.width * 0.90), rect.y + (rect.height * 0.70));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.58), rect.y + (rect.height * 0.51));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.58), rect.y + (rect.height * 0.70));
+
+    cairo_line_to(canvas, rect.x + (rect.width * 0.23), rect.y + (rect.height * 0.51));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.23), rect.y + (rect.height * 0.70));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.11), rect.y + (rect.height * 0.70));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.11), rect.y + (rect.height * 0.29));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.23), rect.y + (rect.height * 0.29));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.23), rect.y + (rect.height * 0.48));
+
+    cairo_line_to(canvas, rect.x + (rect.width * 0.58), rect.y + (rect.height * 0.29));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.58), rect.y + (rect.height * 0.48));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.90), rect.y + (rect.height * 0.29));
+    cairo_close_path(canvas);
+    cairo_fill(canvas);
+
+    cairo_restore(canvas);
+}
+
+void DefaultWebThemeEngine::paintMediaSeekForwardButton(Canvas* canvas, const Rect& rect) const
+{
+    cairo_save(canvas);
+    cairo_set_source_rgb(canvas, 1, 1, 1);
+    cairo_move_to(canvas, rect.x + (rect.width * 0.10), rect.y + (rect.height * 0.70));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.42), rect.y + (rect.height * 0.51));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.42), rect.y + (rect.height * 0.70));
+
+    cairo_line_to(canvas, rect.x + (rect.width * 0.77), rect.y + (rect.height * 0.51));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.77), rect.y + (rect.height * 0.70));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.89), rect.y + (rect.height * 0.70));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.89), rect.y + (rect.height * 0.29));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.77), rect.y + (rect.height * 0.29));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.77), rect.y + (rect.height * 0.48));
+
+    cairo_line_to(canvas, rect.x + (rect.width * 0.42), rect.y + (rect.height * 0.29));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.42), rect.y + (rect.height * 0.48));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.10), rect.y + (rect.height * 0.29));
+    cairo_close_path(canvas);
+    cairo_fill(canvas);
+
+    cairo_restore(canvas);
+}
+
+void DefaultWebThemeEngine::paintMediaRewindButton(Canvas* canvas, const Rect& rect) const
+{
+    cairo_save(canvas);
+    cairo_set_source_rgb(canvas, 1, 1, 1);
+    cairo_move_to(canvas, rect.x + (rect.width * 0.84), rect.y + (rect.height * 0.70));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.52), rect.y + (rect.height * 0.51));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.52), rect.y + (rect.height * 0.70));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.17), rect.y + (rect.height * 0.50));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.52), rect.y + (rect.height * 0.29));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.52), rect.y + (rect.height * 0.48));
+    cairo_line_to(canvas, rect.x + (rect.width * 0.84), rect.y + (rect.height * 0.29));
+    cairo_close_path(canvas);
+    cairo_fill(canvas);
+
     cairo_restore(canvas);
 }
 

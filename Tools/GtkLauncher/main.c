@@ -157,7 +157,8 @@ static gboolean webViewWindowStateEvent(GtkWidget *widget, GdkEventWindowState *
                                                     GTK_BUTTONS_CLOSE,
                                                     "%s is now full screen. Press ESC or f to exit.", uri);
         g_signal_connect_swapped(dialog, "response", G_CALLBACK(gtk_widget_destroy), dialog);
-        g_timeout_add(1500, (GSourceFunc) webViewFullscreenMessageWindowClose, dialog);
+        guint id = g_timeout_add(1500, (GSourceFunc) webViewFullscreenMessageWindowClose, dialog);
+        g_source_set_name_by_id(id, "[WebKit] webViewFullscreenMessageWindowClose");
         gtk_dialog_run(GTK_DIALOG(dialog));
     }
     return TRUE;
@@ -533,10 +534,6 @@ int main(int argc, char* argv[])
         soup_uri_free(proxyUri);
     }
 #endif
-
-#ifdef WEBKIT_EXEC_PATH
-    g_setenv("WEBKIT_INSPECTOR_PATH", WEBKIT_EXEC_PATH "resources/inspector", FALSE);
-#endif /* WEBKIT_EXEC_PATH */
 
     WebKitWebView *webView;
     GtkWidget *main_window = createWindow(&webView);

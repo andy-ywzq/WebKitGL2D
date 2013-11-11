@@ -28,17 +28,19 @@
 #include <wtf/text/WTFString.h>
 
 namespace WebCore {
+class FrameLoaderClientEfl;
 class HistoryItem;
 class HTMLPlugInElement;
-class KURL;
+class HTMLFrameOwnerElement;
+class URL;
 class Frame;
 class IntSize;
 class Widget;
 }
 
 Evas_Object* ewk_frame_add(Evas* canvas);
-bool ewk_frame_init(Evas_Object* ewkFrame, Evas_Object* view, WebCore::Frame* frame);
-bool ewk_frame_child_add(Evas_Object* ewkFrame, WTF::PassRefPtr<WebCore::Frame> child, const WTF::String& name, const WebCore::KURL& url, const WTF::String& referrer);
+bool ewk_frame_init(Evas_Object* ewkFrame, Evas_Object* view, PassOwnPtr<WebCore::FrameLoaderClientEfl> frameLoaderClient);
+Evas_Object* ewk_frame_child_add(Evas_Object* ewkFrame, const WTF::String& name, WebCore::HTMLFrameOwnerElement* ownerElement);
 void ewk_frame_view_set(Evas_Object* ewkFrame, Evas_Object* newParent);
 
 void ewk_frame_core_gone(Evas_Object* ewkFrame);
@@ -74,7 +76,7 @@ bool ewk_frame_uri_changed(Evas_Object* ewkFrame);
 void ewk_frame_force_layout(Evas_Object* ewkFrame);
 void ewk_frame_icon_changed(Evas_Object* ewkFrame);
 
-WTF::PassRefPtr<WebCore::Widget> ewk_frame_plugin_create(Evas_Object* ewkFrame, const WebCore::IntSize& pluginSize, WebCore::HTMLPlugInElement* element, const WebCore::KURL& url, const WTF::Vector<WTF::String>& paramNames, const WTF::Vector<WTF::String>& paramValues, const WTF::String& mimeType, bool loadManually);
+WTF::PassRefPtr<WebCore::Widget> ewk_frame_plugin_create(Evas_Object* ewkFrame, const WebCore::IntSize& pluginSize, WebCore::HTMLPlugInElement* element, const WebCore::URL& url, const WTF::Vector<WTF::String>& paramNames, const WTF::Vector<WTF::String>& paramValues, const WTF::String& mimeType, bool loadManually);
 
 void ewk_frame_editor_client_contents_changed(Evas_Object* ewkFrame);
 void ewk_frame_editor_client_selection_changed(Evas_Object* ewkFrame);
@@ -85,6 +87,7 @@ void ewk_frame_mixed_content_run_set(Evas_Object* ewkFrame, bool hasRun);
 void ewk_frame_xss_detected(Evas_Object* ewkFrame, const Ewk_Frame_Xss_Notification* xssInfo);
 
 namespace EWKPrivate {
+void setCoreFrame(Evas_Object* ewkFrame, WebCore::Frame* coreFrame);
 WebCore::Frame *coreFrame(const Evas_Object *ewkFrame);
 Evas_Object* kitFrame(const WebCore::Frame* coreFrame);
 } // namespace EWKPrivate

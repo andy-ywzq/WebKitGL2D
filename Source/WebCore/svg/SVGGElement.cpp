@@ -39,14 +39,14 @@ BEGIN_REGISTER_ANIMATED_PROPERTIES(SVGGElement)
     REGISTER_PARENT_ANIMATED_PROPERTIES(SVGGraphicsElement)
 END_REGISTER_ANIMATED_PROPERTIES
 
-SVGGElement::SVGGElement(const QualifiedName& tagName, Document* document, ConstructionType constructionType)
-    : SVGGraphicsElement(tagName, document, constructionType)
+SVGGElement::SVGGElement(const QualifiedName& tagName, Document& document)
+    : SVGGraphicsElement(tagName, document)
 {
     ASSERT(hasTagName(SVGNames::gTag));
     registerAnimatedPropertiesForSVGGElement();
 }
 
-PassRefPtr<SVGGElement> SVGGElement::create(const QualifiedName& tagName, Document* document)
+PassRefPtr<SVGGElement> SVGGElement::create(const QualifiedName& tagName, Document& document)
 {
     return adoptRef(new SVGGElement(tagName, document));
 }
@@ -89,21 +89,21 @@ void SVGGElement::svgAttributeChanged(const QualifiedName& attrName)
         RenderSVGResource::markForLayoutAndParentResourceInvalidation(renderer);
 }
 
-RenderObject* SVGGElement::createRenderer(RenderArena* arena, RenderStyle* style)
+RenderElement* SVGGElement::createRenderer(PassRef<RenderStyle> style)
 {
     // SVG 1.1 testsuite explicitely uses constructs like <g display="none"><linearGradient>
     // We still have to create renderers for the <g> & <linearGradient> element, though the
     // subtree may be hidden - we only want the resource renderers to exist so they can be
     // referenced from somewhere else.
-    if (style->display() == NONE)
-        return new (arena) RenderSVGHiddenContainer(this);
+    if (style.get().display() == NONE)
+        return new RenderSVGHiddenContainer(*this, std::move(style));
 
-    return new (arena) RenderSVGTransformableContainer(this);
+    return new RenderSVGTransformableContainer(*this, std::move(style));
 }
 
 bool SVGGElement::rendererIsNeeded(const RenderStyle&)
 {
-    // Unlike SVGStyledElement::rendererIsNeeded(), we still create renderers, even if
+    // Unlike SVGElement::rendererIsNeeded(), we still create renderers, even if
     // display is set to 'none' - which is special to SVG <g> container elements.
     return parentOrShadowHostElement() && parentOrShadowHostElement()->isSVGElement();
 }

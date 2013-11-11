@@ -41,7 +41,7 @@
 #include "HTMLVideoElement.h"
 #include "HitTestLocation.h"
 #include "PseudoElement.h"
-#include "RenderBlock.h"
+#include "RenderBlockFlow.h"
 #include "RenderImage.h"
 #include "RenderInline.h"
 #include "Scrollbar.h"
@@ -123,11 +123,11 @@ void HitTestResult::setToNonShadowAncestor()
 {
     Node* node = innerNode();
     if (node)
-        node = node->document()->ancestorInThisScope(node);
+        node = node->document().ancestorInThisScope(node);
     setInnerNode(node);
     node = innerNonSharedNode();
     if (node)
-        node = node->document()->ancestorInThisScope(node);
+        node = node->document().ancestorInThisScope(node);
     setInnerNonSharedNode(node);
 }
 
@@ -158,9 +158,9 @@ void HitTestResult::setScrollbar(Scrollbar* s)
 Frame* HitTestResult::innerNodeFrame() const
 {
     if (m_innerNonSharedNode)
-        return m_innerNonSharedNode->document()->frame();
+        return m_innerNonSharedNode->document().frame();
     if (m_innerNode)
-        return m_innerNode->document()->frame();
+        return m_innerNode->document().frame();
     return 0;
 }
 
@@ -169,11 +169,11 @@ Frame* HitTestResult::targetFrame() const
     if (!m_innerURLElement)
         return 0;
 
-    Frame* frame = m_innerURLElement->document()->frame();
+    Frame* frame = m_innerURLElement->document().frame();
     if (!frame)
         return 0;
 
-    return frame->tree()->find(m_innerURLElement->target());
+    return frame->tree().find(m_innerURLElement->target());
 }
 
 bool HitTestResult::isSelected() const
@@ -181,7 +181,7 @@ bool HitTestResult::isSelected() const
     if (!m_innerNonSharedNode)
         return false;
 
-    Frame* frame = m_innerNonSharedNode->document()->frame();
+    Frame* frame = m_innerNonSharedNode->document().frame();
     if (!frame)
         return false;
 
@@ -196,12 +196,12 @@ String HitTestResult::spellingToolTip(TextDirection& dir) const
     if (!m_innerNonSharedNode)
         return String();
     
-    DocumentMarker* marker = m_innerNonSharedNode->document()->markers().markerContainingPoint(m_hitTestLocation.point(), DocumentMarker::Grammar);
+    DocumentMarker* marker = m_innerNonSharedNode->document().markers().markerContainingPoint(m_hitTestLocation.point(), DocumentMarker::Grammar);
     if (!marker)
         return String();
 
-    if (RenderObject* renderer = m_innerNonSharedNode->renderer())
-        dir = renderer->style()->direction();
+    if (auto renderer = m_innerNonSharedNode->renderer())
+        dir = renderer->style().direction();
     return marker->description();
 }
 
@@ -212,7 +212,7 @@ String HitTestResult::replacedString() const
     if (!m_innerNonSharedNode)
         return String();
     
-    DocumentMarker* marker = m_innerNonSharedNode->document()->markers().markerContainingPoint(m_hitTestLocation.point(), DocumentMarker::Replacement);
+    DocumentMarker* marker = m_innerNonSharedNode->document().markers().markerContainingPoint(m_hitTestLocation.point(), DocumentMarker::Replacement);
     if (!marker)
         return String();
     
@@ -228,8 +228,8 @@ String HitTestResult::title(TextDirection& dir) const
         if (titleNode->isElementNode()) {
             String title = toElement(titleNode)->title();
             if (!title.isEmpty()) {
-                if (RenderObject* renderer = titleNode->renderer())
-                    dir = renderer->style()->direction();
+                if (auto renderer = titleNode->renderer())
+                    dir = renderer->style().direction();
                 return title;
             }
         }
@@ -243,13 +243,13 @@ String HitTestResult::innerTextIfTruncated(TextDirection& dir) const
         if (!truncatedNode->isElementNode())
             continue;
 
-        if (RenderObject* renderer = truncatedNode->renderer()) {
-            if (renderer->isRenderBlock()) {
-                RenderBlock* block = toRenderBlock(renderer);
-                if (block->style()->textOverflow()) {
+        if (auto renderer = toElement(truncatedNode)->renderer()) {
+            if (renderer->isRenderBlockFlow()) {
+                RenderBlockFlow* block = toRenderBlockFlow(renderer);
+                if (block->style().textOverflow()) {
                     for (RootInlineBox* line = block->firstRootBox(); line; line = line->nextRootBox()) {
                         if (line->hasEllipsisBox()) {
-                            dir = block->style()->direction();
+                            dir = block->style().direction();
                             return toElement(truncatedNode)->innerText();
                         }
                     }
@@ -267,7 +267,7 @@ String displayString(const String& string, const Node* node)
 {
     if (!node)
         return string;
-    return node->document()->displayStringModifiedByEncoding(string);
+    return node->document().displayStringModifiedByEncoding(string);
 }
 
 String HitTestResult::altDisplayString() const
@@ -293,7 +293,7 @@ Image* HitTestResult::image() const
     if (!m_innerNonSharedNode)
         return 0;
     
-    RenderObject* renderer = m_innerNonSharedNode->renderer();
+    auto renderer = m_innerNonSharedNode->renderer();
     if (renderer && renderer->isImage()) {
         RenderImage* image = static_cast<WebCore::RenderImage*>(renderer);
         if (image->cachedImage() && !image->cachedImage()->errorOccurred())
@@ -310,13 +310,13 @@ IntRect HitTestResult::imageRect() const
     return m_innerNonSharedNode->renderBox()->absoluteContentQuad().enclosingBoundingBox();
 }
 
-KURL HitTestResult::absoluteImageURL() const
+URL HitTestResult::absoluteImageURL() const
 {
-    if (!(m_innerNonSharedNode && m_innerNonSharedNode->document()))
-        return KURL();
+    if (!m_innerNonSharedNode)
+        return URL();
 
     if (!(m_innerNonSharedNode->renderer() && m_innerNonSharedNode->renderer()->isImage()))
-        return KURL();
+        return URL();
 
     AtomicString urlString;
     if (m_innerNonSharedNode->hasTagName(embedTag)
@@ -330,37 +330,37 @@ KURL HitTestResult::absoluteImageURL() const
         Element* element = toElement(m_innerNonSharedNode.get());
         urlString = element->imageSourceURL();
     } else
-        return KURL();
+        return URL();
 
-    return m_innerNonSharedNode->document()->completeURL(stripLeadingAndTrailingHTMLSpaces(urlString));
+    return m_innerNonSharedNode->document().completeURL(stripLeadingAndTrailingHTMLSpaces(urlString));
 }
 
-KURL HitTestResult::absolutePDFURL() const
+URL HitTestResult::absolutePDFURL() const
 {
-    if (!(m_innerNonSharedNode && m_innerNonSharedNode->document()))
-        return KURL();
+    if (!m_innerNonSharedNode)
+        return URL();
 
     if (!m_innerNonSharedNode->hasTagName(embedTag) && !m_innerNonSharedNode->hasTagName(objectTag))
-        return KURL();
+        return URL();
 
     HTMLPlugInImageElement* element = toHTMLPlugInImageElement(m_innerNonSharedNode.get());
-    KURL url = m_innerNonSharedNode->document()->completeURL(stripLeadingAndTrailingHTMLSpaces(element->url()));
+    URL url = m_innerNonSharedNode->document().completeURL(stripLeadingAndTrailingHTMLSpaces(element->url()));
     if (!url.isValid())
-        return KURL();
+        return URL();
 
     if (element->serviceType() == "application/pdf" || (element->serviceType().isEmpty() && url.path().lower().endsWith(".pdf")))
         return url;
-    return KURL();
+    return URL();
 }
 
-KURL HitTestResult::absoluteMediaURL() const
+URL HitTestResult::absoluteMediaURL() const
 {
 #if ENABLE(VIDEO)
     if (HTMLMediaElement* mediaElt = mediaElement())
         return mediaElt->currentSrc();
-    return KURL();
+    return URL();
 #else
-    return KURL();
+    return URL();
 #endif
 }
 
@@ -368,7 +368,7 @@ bool HitTestResult::mediaSupportsFullscreen() const
 {
 #if ENABLE(VIDEO)
     HTMLMediaElement* mediaElt(mediaElement());
-    return (mediaElt && mediaElt->hasTagName(HTMLNames::videoTag) && mediaElt->supportsFullscreen());
+    return (mediaElt && isHTMLVideoElement(mediaElt) && mediaElt->supportsFullscreen());
 #else
     return false;
 #endif
@@ -377,13 +377,13 @@ bool HitTestResult::mediaSupportsFullscreen() const
 #if ENABLE(VIDEO)
 HTMLMediaElement* HitTestResult::mediaElement() const
 {
-    if (!(m_innerNonSharedNode && m_innerNonSharedNode->document()))
+    if (!m_innerNonSharedNode)
         return 0;
 
     if (!(m_innerNonSharedNode->renderer() && m_innerNonSharedNode->renderer()->isMedia()))
         return 0;
 
-    if (m_innerNonSharedNode->hasTagName(HTMLNames::videoTag) || isHTMLAudioElement(m_innerNonSharedNode.get()))
+    if (isHTMLVideoElement(m_innerNonSharedNode.get()) || isHTMLAudioElement(m_innerNonSharedNode.get()))
         return toHTMLMediaElement(m_innerNonSharedNode.get());
     return 0;
 }
@@ -430,7 +430,7 @@ void HitTestResult::enterFullscreenForVideo() const
 {
 #if ENABLE(VIDEO)
     HTMLMediaElement* mediaElt(mediaElement());
-    if (mediaElt && mediaElt->hasTagName(HTMLNames::videoTag)) {
+    if (mediaElt && isHTMLVideoElement(mediaElt)) {
         HTMLVideoElement* videoElt = toHTMLVideoElement(mediaElt);
         if (!videoElt->isFullscreen() && mediaElt->supportsFullscreen()) {
             UserGestureIndicator indicator(DefinitelyProcessingUserGesture);
@@ -488,7 +488,7 @@ bool HitTestResult::mediaIsVideo() const
 {
 #if ENABLE(VIDEO)
     if (HTMLMediaElement* mediaElt = mediaElement())
-        return mediaElt->hasTagName(HTMLNames::videoTag);
+        return isHTMLVideoElement(mediaElt);
 #endif
     return false;
 }
@@ -510,10 +510,10 @@ void HitTestResult::toggleMediaMuteState() const
 #endif
 }
 
-KURL HitTestResult::absoluteLinkURL() const
+URL HitTestResult::absoluteLinkURL() const
 {
-    if (!(m_innerURLElement && m_innerURLElement->document()))
-        return KURL();
+    if (!m_innerURLElement)
+        return URL();
 
     AtomicString urlString;
     if (isHTMLAnchorElement(m_innerURLElement.get()) || isHTMLAreaElement(m_innerURLElement.get()) || m_innerURLElement->hasTagName(linkTag))
@@ -523,14 +523,14 @@ KURL HitTestResult::absoluteLinkURL() const
         urlString = m_innerURLElement->getAttribute(XLinkNames::hrefAttr);
 #endif
     else
-        return KURL();
+        return URL();
 
-    return m_innerURLElement->document()->completeURL(stripLeadingAndTrailingHTMLSpaces(urlString));
+    return m_innerURLElement->document().completeURL(stripLeadingAndTrailingHTMLSpaces(urlString));
 }
 
 bool HitTestResult::isLiveLink() const
 {
-    if (!(m_innerURLElement && m_innerURLElement->document()))
+    if (!m_innerURLElement)
         return false;
 
     if (isHTMLAnchorElement(m_innerURLElement.get()))
@@ -593,7 +593,7 @@ bool HitTestResult::addNodeToRectBasedTestResult(Node* node, const HitTestReques
         return true;
 
     if (request.disallowsShadowContent())
-        node = node->document()->ancestorInThisScope(node);
+        node = node->document().ancestorInThisScope(node);
 
     mutableRectBasedTestResult().add(node);
 
@@ -613,7 +613,7 @@ bool HitTestResult::addNodeToRectBasedTestResult(Node* node, const HitTestReques
         return true;
 
     if (request.disallowsShadowContent())
-        node = node->document()->ancestorInThisScope(node);
+        node = node->document().ancestorInThisScope(node);
 
     mutableRectBasedTestResult().add(node);
 
@@ -662,11 +662,11 @@ Vector<String> HitTestResult::dictationAlternatives() const
     if (!m_innerNonSharedNode)
         return Vector<String>();
 
-    DocumentMarker* marker = m_innerNonSharedNode->document()->markers().markerContainingPoint(pointInInnerNodeFrame(), DocumentMarker::DictationAlternatives);
+    DocumentMarker* marker = m_innerNonSharedNode->document().markers().markerContainingPoint(pointInInnerNodeFrame(), DocumentMarker::DictationAlternatives);
     if (!marker)
         return Vector<String>();
 
-    Frame* frame = innerNonSharedNode()->document()->frame();
+    Frame* frame = innerNonSharedNode()->document().frame();
     if (!frame)
         return Vector<String>();
 
@@ -690,12 +690,22 @@ Node* HitTestResult::targetNode() const
 
 Element* HitTestResult::innerElement() const
 {
-    for (Node* node = m_innerNode.get(); node; node = node->parentNode()) {
-        if (node->isElementNode())
-            return toElement(node);
-    }
+    Node* node = m_innerNode.get();
+    if (!node)
+        return 0;
+    if (node->isElementNode())
+        return toElement(node);
+    return node->parentElement();
+}
 
-    return 0;
+Element* HitTestResult::innerNonSharedElement() const
+{
+    Node* node = m_innerNonSharedNode.get();
+    if (!node)
+        return 0;
+    if (node->isElementNode())
+        return toElement(node);
+    return node->parentElement();
 }
 
 } // namespace WebCore

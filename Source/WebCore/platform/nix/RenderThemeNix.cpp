@@ -26,6 +26,7 @@
 #include "config.h"
 #include "RenderThemeNix.h"
 
+#include "HTMLMediaElement.h"
 #include "InputTypeNames.h"
 #include "PaintInfo.h"
 //#include "PlatformContextCairo.h"
@@ -33,6 +34,7 @@
 #include "public/Platform.h"
 #include "public/Rect.h"
 #include "public/ThemeEngine.h"
+#include "UserAgentStyleSheets.h"
 #if ENABLE(PROGRESS_ELEMENT)
 #include "RenderProgress.h"
 #endif
@@ -43,19 +45,12 @@
 
 namespace WebCore {
 
-static const unsigned defaultButtonBackgroundColor = 0xffdddddd;
-
 static void setSizeIfAuto(RenderStyle* style, const IntSize& size)
 {
     if (style->width().isIntrinsicOrAuto())
         style->setWidth(Length(size.width(), Fixed));
     if (style->height().isAuto())
         style->setHeight(Length(size.height(), Fixed));
-}
-
-Color toColor(const Nix::Color& color)
-{
-    return WebCore::Color(RGBA32(color));
 }
 
 static Nix::ThemeEngine* themeEngine()
@@ -68,6 +63,16 @@ static Nix::Canvas* webCanvas(const PaintInfo& info)
 #if 0
     return info.context->platformContext()->cr();
 #endif
+}
+
+static IntSize toIntSize(const Nix::Size& size)
+{
+    return IntSize(size.width, size.height);
+}
+
+static Nix::Rect toNixRect(const IntRect& rect)
+{
+    return Nix::Rect(rect.x(), rect.y(), rect.width(), rect.height());
 }
 
 PassRefPtr<RenderTheme> RenderTheme::themeForPage(Page*)
@@ -107,63 +112,63 @@ String RenderThemeNix::extraPlugInsStyleSheet()
 
 Color RenderThemeNix::platformActiveSelectionBackgroundColor() const
 {
-    return toColor(themeEngine()->activeSelectionBackgroundColor());
+    return themeEngine()->activeSelectionBackgroundColor().argb32();
 }
 
 Color RenderThemeNix::platformInactiveSelectionBackgroundColor() const
 {
-    return toColor(themeEngine()->inactiveSelectionBackgroundColor());
+    return themeEngine()->inactiveSelectionBackgroundColor().argb32();
 }
 
 Color RenderThemeNix::platformActiveSelectionForegroundColor() const
 {
-    return toColor(themeEngine()->activeSelectionForegroundColor());
+    return themeEngine()->activeSelectionForegroundColor().argb32();
 }
 
 Color RenderThemeNix::platformInactiveSelectionForegroundColor() const
 {
-    return toColor(themeEngine()->inactiveSelectionForegroundColor());
+    return themeEngine()->inactiveSelectionForegroundColor().argb32();
 }
 
 Color RenderThemeNix::platformActiveListBoxSelectionBackgroundColor() const
 {
-    return toColor(themeEngine()->activeListBoxSelectionBackgroundColor());
+    return themeEngine()->activeListBoxSelectionBackgroundColor().argb32();
 }
 
 Color RenderThemeNix::platformInactiveListBoxSelectionBackgroundColor() const
 {
-    return toColor(themeEngine()->inactiveListBoxSelectionBackgroundColor());
+    return themeEngine()->inactiveListBoxSelectionBackgroundColor().argb32();
 }
 
 Color RenderThemeNix::platformActiveListBoxSelectionForegroundColor() const
 {
-    return toColor(themeEngine()->activeListBoxSelectionForegroundColor());
+    return themeEngine()->activeListBoxSelectionForegroundColor().argb32();
 }
 
 Color RenderThemeNix::platformInactiveListBoxSelectionForegroundColor() const
 {
-    return toColor(themeEngine()->inactiveListBoxSelectionForegroundColor());
+    return themeEngine()->inactiveListBoxSelectionForegroundColor().argb32();
 }
 
 Color RenderThemeNix::platformActiveTextSearchHighlightColor() const
 {
-    return toColor(themeEngine()->activeTextSearchHighlightColor());
+    return themeEngine()->activeTextSearchHighlightColor().argb32();
 }
 
 Color RenderThemeNix::platformInactiveTextSearchHighlightColor() const
 {
-    return toColor(themeEngine()->inactiveTextSearchHighlightColor());
+    return themeEngine()->inactiveTextSearchHighlightColor().argb32();
 }
 
 Color RenderThemeNix::platformFocusRingColor() const
 {
-    return toColor(themeEngine()->focusRingColor());
+    return themeEngine()->focusRingColor().argb32();
 }
 
 #if ENABLE(TOUCH_EVENTS)
 Color RenderThemeNix::platformTapHighlightColor() const
 {
-    return toColor(themeEngine()->tapHighlightColor());
+    return themeEngine()->tapHighlightColor().argb32();
 }
 #endif
 
@@ -189,11 +194,7 @@ bool RenderThemeNix::paintButton(RenderObject* o, const PaintInfo& i, const IntR
     Nix::ThemeEngine::ButtonExtraParams extraParams;
     extraParams.isDefault = isDefault(o);
     extraParams.hasBorder = true;
-    extraParams.backgroundColor = defaultButtonBackgroundColor;
-    if (o->hasBackground())
-        extraParams.backgroundColor = o->style()->visitedDependentColor(CSSPropertyBackgroundColor).rgb();
-
-    themeEngine()->paintButton(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
+    themeEngine()->paintButton(webCanvas(i), getWebThemeState(this, o), toNixRect(rect), extraParams);
 #endif
     return false;
 }
@@ -203,10 +204,10 @@ bool RenderThemeNix::paintTextField(RenderObject* o, const PaintInfo& i, const I
 #if 0
     // WebThemeEngine does not handle border rounded corner and background image
     // so return true to draw CSS border and background.
-    if (o->style()->hasBorderRadius() || o->style()->hasBackgroundImage())
+    if (o->style().hasBorderRadius() || o->style().hasBackgroundImage())
         return true;
 
-    themeEngine()->paintTextField(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect));
+    themeEngine()->paintTextField(webCanvas(i), getWebThemeState(this, o), toNixRect(rect));
 #endif
     return false;
 }
@@ -223,7 +224,7 @@ bool RenderThemeNix::paintCheckbox(RenderObject* o, const PaintInfo& i, const In
     extraParams.checked = isChecked(o);
     extraParams.indeterminate = isIndeterminate(o);
 
-    themeEngine()->paintCheckbox(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
+    themeEngine()->paintCheckbox(webCanvas(i), getWebThemeState(this, o), toNixRect(rect), extraParams);
 #endif
     return false;
 }
@@ -234,7 +235,7 @@ void RenderThemeNix::setCheckboxSize(RenderStyle* style) const
     if (!style->width().isIntrinsicOrAuto() && !style->height().isAuto())
         return;
 
-    IntSize size = themeEngine()->getCheckboxSize();
+    IntSize size = toIntSize(themeEngine()->getCheckboxSize());
     setSizeIfAuto(style, size);
 }
 
@@ -245,7 +246,7 @@ bool RenderThemeNix::paintRadio(RenderObject* o, const PaintInfo& i, const IntRe
     extraParams.checked = isChecked(o);
     extraParams.indeterminate = isIndeterminate(o);
 
-    themeEngine()->paintRadio(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
+    themeEngine()->paintRadio(webCanvas(i), getWebThemeState(this, o), toNixRect(rect), extraParams);
 #endif
     return false;
 }
@@ -256,14 +257,14 @@ void RenderThemeNix::setRadioSize(RenderStyle* style) const
     if (!style->width().isIntrinsicOrAuto() && !style->height().isAuto())
         return;
 
-    IntSize size = themeEngine()->getRadioSize();
+    IntSize size = toIntSize(themeEngine()->getRadioSize());
     setSizeIfAuto(style, size);
 }
 
 bool RenderThemeNix::paintMenuList(RenderObject* o, const PaintInfo& i, const IntRect& rect)
 {
 #if 0
-    themeEngine()->paintMenuList(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect));
+    themeEngine()->paintMenuList(webCanvas(i), getWebThemeState(this, o), toNixRect(rect));
 #endif
     return false;
 }
@@ -298,7 +299,7 @@ bool RenderThemeNix::paintProgressBar(RenderObject* o, const PaintInfo& i, const
     extraParams.position = renderProgress->position();
     extraParams.animationProgress = renderProgress->animationProgress();
     extraParams.animationStartTime = renderProgress->animationStartTime();
-    themeEngine()->paintProgressBar(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
+    themeEngine()->paintProgressBar(webCanvas(i), getWebThemeState(this, o), toNixRect(rect), extraParams);
 
     return false;
 }
@@ -316,7 +317,7 @@ double RenderThemeNix::animationDurationForProgressBar(RenderProgress*) const
 
 bool RenderThemeNix::paintSliderTrack(RenderObject* object, const PaintInfo& info, const IntRect& rect)
 {
-    themeEngine()->paintSliderTrack(webCanvas(info), getWebThemeState(this, object), rect);
+    themeEngine()->paintSliderTrack(webCanvas(info), getWebThemeState(this, object), toNixRect(rect));
 #if ENABLE(DATALIST_ELEMENT)
     paintSliderTicks(object, info, rect);
 #endif
@@ -330,7 +331,7 @@ void RenderThemeNix::adjustSliderTrackStyle(StyleResolver*, RenderStyle* style, 
 
 bool RenderThemeNix::paintSliderThumb(RenderObject* object, const PaintInfo& info, const IntRect& rect)
 {
-    themeEngine()->paintSliderThumb(webCanvas(info), getWebThemeState(this, object), rect);
+    themeEngine()->paintSliderThumb(webCanvas(info), getWebThemeState(this, object), toNixRect(rect));
 
     return false;
 }
@@ -400,7 +401,7 @@ bool RenderThemeNix::paintInnerSpinButton(RenderObject* o, const PaintInfo& i, c
     extraParams.spinUp = isSpinUpButtonPartPressed(o);
     extraParams.readOnly = isReadOnlyControl(o);
 
-    themeEngine()->paintInnerSpinButton(webCanvas(i), getWebThemeState(this, o), Nix::Rect(rect), extraParams);
+    themeEngine()->paintInnerSpinButton(webCanvas(i), getWebThemeState(this, o), toNixRect(rect), extraParams);
     return false;
 }
 
@@ -444,10 +445,66 @@ bool RenderThemeNix::paintMeter(RenderObject* o, const PaintInfo& i, const IntRe
     extraParams.high = e->high();
     extraParams.optimum = e->optimum();
 
-    themeEngine()->paintMeter(webCanvas(i), getWebThemeState(this, o), rect, extraParams);
+    themeEngine()->paintMeter(webCanvas(i), getWebThemeState(this, o), toNixRect(rect), extraParams);
 
     return false;
 }
+#endif
+
+#if ENABLE(VIDEO)
+
+String RenderThemeNix::extraMediaControlsStyleSheet()
+{
+    return String(mediaControlsNixUserAgentStyleSheet, sizeof(mediaControlsNixUserAgentStyleSheet));
+}
+
+bool RenderThemeNix::paintMediaPlayButton(RenderObject* o, const PaintInfo& i, const IntRect& rect)
+{
+    auto state = toHTMLMediaElement(o->node()->shadowHost())->canPlay() ? Nix::ThemeEngine::StatePaused : Nix::ThemeEngine::StatePlaying;
+    themeEngine()->paintMediaPlayButton(webCanvas(i), state, toNixRect(rect));
+    return false;
+}
+
+bool RenderThemeNix::paintMediaMuteButton(RenderObject* o, const PaintInfo& i, const IntRect& rect)
+{
+    auto state = toHTMLMediaElement(o->node()->shadowHost())->muted() ? Nix::ThemeEngine::StateMuted : Nix::ThemeEngine::StateNotMuted;
+    themeEngine()->paintMediaMuteButton(webCanvas(i), state, toNixRect(rect));
+    return false;
+}
+
+bool RenderThemeNix::paintMediaSeekBackButton(RenderObject*, const PaintInfo& i, const IntRect& rect)
+{
+    themeEngine()->paintMediaSeekBackButton(webCanvas(i), toNixRect(rect));
+    return false;
+}
+
+bool RenderThemeNix::paintMediaSeekForwardButton(RenderObject*, const PaintInfo& i, const IntRect& rect)
+{
+    themeEngine()->paintMediaSeekForwardButton(webCanvas(i), toNixRect(rect));
+    return false;
+}
+
+bool RenderThemeNix::paintMediaSliderTrack(RenderObject*, const PaintInfo&, const IntRect&)
+{
+    return false;
+}
+
+bool RenderThemeNix::paintMediaVolumeSliderContainer(RenderObject*, const PaintInfo&, const IntRect&)
+{
+    return false;
+}
+
+bool RenderThemeNix::paintMediaVolumeSliderTrack(RenderObject*, const PaintInfo&, const IntRect&)
+{
+    return false;
+}
+
+bool RenderThemeNix::paintMediaRewindButton(RenderObject*, const PaintInfo& i, const IntRect& rect)
+{
+    themeEngine()->paintMediaRewindButton(webCanvas(i), toNixRect(rect));
+    return false;
+}
+
 #endif
 
 }

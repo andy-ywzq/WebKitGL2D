@@ -38,8 +38,7 @@
 #include <algorithm>
 #include <wtf/MainThread.h>
 #include <wtf/MathExtras.h>
-
-using namespace std;
+#include <wtf/StdLibExtras.h>
 
 namespace WebCore {
 
@@ -230,7 +229,7 @@ bool AudioBufferSourceNode::renderFromBuffer(AudioBus* bus, unsigned destination
         double loopStartFrame = m_loopStart * buffer()->sampleRate();
         double loopEndFrame = m_loopEnd * buffer()->sampleRate();
 
-        virtualEndFrame = min(loopEndFrame, virtualEndFrame);
+        virtualEndFrame = std::min(loopEndFrame, virtualEndFrame);
         virtualDeltaFrames = virtualEndFrame - loopStartFrame;
     }
 
@@ -260,8 +259,8 @@ bool AudioBufferSourceNode::renderFromBuffer(AudioBus* bus, unsigned destination
         endFrame = static_cast<unsigned>(virtualEndFrame);
         while (framesToProcess > 0) {
             int framesToEnd = endFrame - readIndex;
-            int framesThisTime = min(framesToProcess, framesToEnd);
-            framesThisTime = max(0, framesThisTime);
+            int framesThisTime = std::min(framesToProcess, framesToEnd);
+            framesThisTime = std::max(0, framesThisTime);
 
             for (unsigned i = 0; i < numberOfChannels; ++i) 
                 memcpy(destinationChannels[i] + writeIndex, sourceChannels[i] + readIndex, sizeof(float) * framesThisTime);
@@ -355,8 +354,8 @@ bool AudioBufferSourceNode::setBuffer(AudioBuffer* buffer)
 
         output(0)->setNumberOfChannels(numberOfChannels);
 
-        m_sourceChannels = adoptArrayPtr(new const float* [numberOfChannels]);
-        m_destinationChannels = adoptArrayPtr(new float* [numberOfChannels]);
+        m_sourceChannels = std::make_unique<const float*[]>(numberOfChannels);
+        m_destinationChannels = std::make_unique<float*[]>(numberOfChannels);
 
         for (unsigned i = 0; i < numberOfChannels; ++i) 
             m_sourceChannels[i] = buffer->getChannelData(i)->data();
@@ -397,8 +396,8 @@ void AudioBufferSourceNode::startGrain(double when, double grainOffset, double g
     // Do sanity checking of grain parameters versus buffer size.
     double bufferDuration = buffer()->duration();
 
-    grainOffset = max(0.0, grainOffset);
-    grainOffset = min(bufferDuration, grainOffset);
+    grainOffset = std::max(0.0, grainOffset);
+    grainOffset = std::min(bufferDuration, grainOffset);
     m_grainOffset = grainOffset;
 
     // Handle default/unspecified duration.
@@ -406,8 +405,8 @@ void AudioBufferSourceNode::startGrain(double when, double grainOffset, double g
     if (!grainDuration)
         grainDuration = maxDuration;
 
-    grainDuration = max(0.0, grainDuration);
-    grainDuration = min(maxDuration, grainDuration);
+    grainDuration = std::max(0.0, grainDuration);
+    grainDuration = std::min(maxDuration, grainDuration);
     m_grainDuration = grainDuration;
 
     m_isGrain = true;
@@ -446,10 +445,10 @@ double AudioBufferSourceNode::totalPitchRate()
     double totalRate = dopplerRate * sampleRateFactor * basePitchRate;
 
     // Sanity check the total rate.  It's very important that the resampler not get any bad rate values.
-    totalRate = max(0.0, totalRate);
+    totalRate = std::max(0.0, totalRate);
     if (!totalRate)
         totalRate = 1; // zero rate is considered illegal
-    totalRate = min(MaxRate, totalRate);
+    totalRate = std::min(MaxRate, totalRate);
     
     bool isTotalRateValid = !std::isnan(totalRate) && !std::isinf(totalRate);
     ASSERT(isTotalRateValid);

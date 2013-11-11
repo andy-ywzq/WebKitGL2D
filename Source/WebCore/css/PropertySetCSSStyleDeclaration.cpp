@@ -31,8 +31,6 @@
 #include "StylePropertySet.h"
 #include "StyledElement.h"
 
-using namespace std;
-
 namespace WebCore {
 
 namespace {
@@ -57,7 +55,7 @@ public:
 
         bool shouldReadOldValue = false;
 
-        m_mutationRecipients = MutationObserverInterestGroup::createForAttributesMutation(s_currentDecl->parentElement(), HTMLNames::styleAttr);
+        m_mutationRecipients = MutationObserverInterestGroup::createForAttributesMutation(*s_currentDecl->parentElement(), HTMLNames::styleAttr);
         if (m_mutationRecipients && m_mutationRecipients->isOldValueRequested())
             shouldReadOldValue = true;
 
@@ -67,7 +65,7 @@ public:
 
         if (m_mutationRecipients) {
             AtomicString requestedOldValue = m_mutationRecipients->isOldValueRequested() ? oldValue : nullAtom;
-            m_mutation = MutationRecord::createAttributes(s_currentDecl->parentElement(), HTMLNames::styleAttr, requestedOldValue);
+            m_mutation = MutationRecord::createAttributes(*s_currentDecl->parentElement(), HTMLNames::styleAttr, requestedOldValue);
         }
     }
 
@@ -89,8 +87,8 @@ public:
         PropertySetCSSStyleDeclaration* localCopyStyleDecl = s_currentDecl;
         s_currentDecl = 0;
         s_shouldNotifyInspector = false;
-        if (localCopyStyleDecl->parentElement() && localCopyStyleDecl->parentElement()->document())
-            InspectorInstrumentation::didInvalidateStyleAttr(localCopyStyleDecl->parentElement()->document(), localCopyStyleDecl->parentElement());
+        if (localCopyStyleDecl->parentElement())
+            InspectorInstrumentation::didInvalidateStyleAttr(&localCopyStyleDecl->parentElement()->document(), localCopyStyleDecl->parentElement());
     }
 
     void enqueueMutationRecord()
@@ -276,7 +274,7 @@ CSSValue* PropertySetCSSStyleDeclaration::cloneAndCacheForCSSOM(CSSValue* intern
     // The map is here to maintain the object identity of the CSSValues over multiple invocations.
     // FIXME: It is likely that the identity is not important for web compatibility and this code should be removed.
     if (!m_cssomCSSValueClones)
-        m_cssomCSSValueClones = adoptPtr(new HashMap<CSSValue*, RefPtr<CSSValue> >);
+        m_cssomCSSValueClones = adoptPtr(new HashMap<CSSValue*, RefPtr<CSSValue>>);
     
     RefPtr<CSSValue>& clonedValue = m_cssomCSSValueClones->add(internalValue, RefPtr<CSSValue>()).iterator->value;
     if (!clonedValue)
@@ -290,15 +288,15 @@ StyleSheetContents* PropertySetCSSStyleDeclaration::contextStyleSheet() const
     return cssStyleSheet ? cssStyleSheet->contents() : 0;
 }
 
-PassRefPtr<MutableStylePropertySet> PropertySetCSSStyleDeclaration::copyProperties() const
+PassRef<MutableStylePropertySet> PropertySetCSSStyleDeclaration::copyProperties() const
 {
     return m_propertySet->mutableCopy();
 }
     
-StyleRuleCSSStyleDeclaration::StyleRuleCSSStyleDeclaration(MutableStylePropertySet* propertySet, CSSRule* parentRule)
-    : PropertySetCSSStyleDeclaration(propertySet)
+StyleRuleCSSStyleDeclaration::StyleRuleCSSStyleDeclaration(MutableStylePropertySet& propertySet, CSSRule& parentRule)
+    : PropertySetCSSStyleDeclaration(&propertySet)
     , m_refCount(1)
-    , m_parentRule(parentRule) 
+    , m_parentRule(&parentRule)
 {
     m_propertySet->ref();
 }
@@ -341,11 +339,10 @@ CSSStyleSheet* StyleRuleCSSStyleDeclaration::parentStyleSheet() const
     return m_parentRule ? m_parentRule->parentStyleSheet() : 0;
 }
 
-void StyleRuleCSSStyleDeclaration::reattach(MutableStylePropertySet* propertySet)
+void StyleRuleCSSStyleDeclaration::reattach(MutableStylePropertySet& propertySet)
 {
-    ASSERT(propertySet);
     m_propertySet->deref();
-    m_propertySet = propertySet;
+    m_propertySet = &propertySet;
     m_propertySet->ref();
 }
 
@@ -366,7 +363,7 @@ void InlineCSSStyleDeclaration::didMutate(MutationType type)
 
 CSSStyleSheet* InlineCSSStyleDeclaration::parentStyleSheet() const
 {
-    return m_parentElement ? m_parentElement->document()->elementSheet() : 0;
+    return m_parentElement ? &m_parentElement->document().elementSheet() : 0;
 }
 
 } // namespace WebCore

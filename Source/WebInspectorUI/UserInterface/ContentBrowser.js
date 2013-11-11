@@ -38,16 +38,16 @@ WebInspector.ContentBrowser = function(element, delegate, disableBackForward)
     this._element.appendChild(this._contentViewContainer.element);
 
     this._findBanner = new WebInspector.FindBanner(this);
-    this._findKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.Command, "F", this._showFindBanner.bind(this));
+    this._findKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.CommandOrControl, "F", this._showFindBanner.bind(this));
     this._findBanner.addEventListener(WebInspector.FindBanner.Event.DidShow, this._findBannerDidShow, this);
     this._findBanner.addEventListener(WebInspector.FindBanner.Event.DidHide, this._findBannerDidHide, this);
 
-    this._saveKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.Command, "S", this._save.bind(this));
-    this._saveAsKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.Shift | WebInspector.KeyboardShortcut.Modifier.Command, "S", this._saveAs.bind(this));
+    this._saveKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.CommandOrControl, "S", this._save.bind(this));
+    this._saveAsKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.Shift | WebInspector.KeyboardShortcut.Modifier.CommandOrControl, "S", this._saveAs.bind(this));
 
     if (!disableBackForward) {
-        this._backKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.Command | WebInspector.KeyboardShortcut.Modifier.Control, WebInspector.KeyboardShortcut.Key.Left, this._backButtonClicked.bind(this));
-        this._forwardKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.Command | WebInspector.KeyboardShortcut.Modifier.Control, WebInspector.KeyboardShortcut.Key.Right, this._forwardButtonClicked.bind(this));
+        this._backKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.CommandOrControl | WebInspector.KeyboardShortcut.Modifier.Control, WebInspector.KeyboardShortcut.Key.Left, this._backButtonClicked.bind(this));
+        this._forwardKeyboardShortcut = new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.CommandOrControl | WebInspector.KeyboardShortcut.Modifier.Control, WebInspector.KeyboardShortcut.Key.Right, this._forwardButtonClicked.bind(this));
 
         this._backButtonNavigationItem = new WebInspector.ButtonNavigationItem("back", WebInspector.UIString("Back (%s)").format(this._backKeyboardShortcut.displayName), "Images/BackArrow.svg", 9, 9);
         this._backButtonNavigationItem.addEventListener(WebInspector.ButtonNavigationItem.Event.Clicked, this._backButtonClicked, this);
@@ -152,14 +152,15 @@ WebInspector.ContentBrowser.prototype = {
         this._contentViewContainer.updateLayout();
     },
 
-    showContentViewForRepresentedObject: function(representedObject)
+    showContentViewForRepresentedObject: function(representedObject, cookie)
     {
-        return this._contentViewContainer.showContentViewForRepresentedObject(representedObject);
+        var contentView = this.contentViewForRepresentedObject(representedObject);
+        return this._contentViewContainer.showContentView(contentView, cookie);
     },
 
-    showContentView: function(contentView)
+    showContentView: function(contentView, cookie)
     {
-        return this._contentViewContainer.showContentView(contentView);
+        return this._contentViewContainer.showContentView(contentView, cookie);
     },
 
     contentViewForRepresentedObject: function(representedObject, onlyExisting)
@@ -276,12 +277,17 @@ WebInspector.ContentBrowser.prototype = {
         if (!saveData)
             return;
 
+        if (typeof saveData.customSaveHandler === "function") {
+            saveData.customSaveHandler(forceSaveAs);
+            return;
+        }
+
         console.assert(saveData.url);
         console.assert(typeof saveData.content === "string");
         if (!saveData.url || typeof saveData.content !== "string")
             return;
 
-        InspectorFrontendHost.save(saveData.url, saveData.content, forceSaveAs || saveData.forceSaveAs);
+        InspectorFrontendHost.save(saveData.url, saveData.content, false, forceSaveAs || saveData.forceSaveAs);
     },
 
     _save: function(event)
@@ -406,7 +412,7 @@ WebInspector.ContentBrowser.prototype = {
 
         // Go through each of the items of the new content view and add a divider before them.
         currentContentView.navigationItems.forEach(function(navigationItem, index) {
-            // Add dividers before items unless it's the first item and not a button. 
+            // Add dividers before items unless it's the first item and not a button.
             if (index !== 0 || navigationItem instanceof WebInspector.ButtonNavigationItem) {
                 var divider = new WebInspector.DividerNavigationItem;
                 navigationBar.insertNavigationItem(divider, insertionIndex++);
@@ -428,7 +434,7 @@ WebInspector.ContentBrowser.prototype = {
             this._findBanner.numberOfResults = null;
             return;
         }
-        
+
         this._findBanner.targetElement = currentContentView.element;
         this._findBanner.numberOfResults = currentContentView.hasPerformedSearch ? currentContentView.numberOfSearchResults : null;
 

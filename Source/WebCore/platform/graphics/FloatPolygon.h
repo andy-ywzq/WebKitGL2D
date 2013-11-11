@@ -49,7 +49,7 @@ template <class> struct ValueToString;
 
 class FloatPolygon {
 public:
-    FloatPolygon(PassOwnPtr<Vector<FloatPoint> > vertices, WindRule fillRule);
+    FloatPolygon(PassOwnPtr<Vector<FloatPoint>> vertices, WindRule fillRule);
 
     const FloatPoint& vertexAt(unsigned index) const { return (*m_vertices)[index]; }
     unsigned numberOfVertices() const { return m_vertices->size(); }
@@ -68,7 +68,10 @@ private:
     typedef PODInterval<float, FloatPolygonEdge*> EdgeInterval;
     typedef PODIntervalTree<float, FloatPolygonEdge*> EdgeIntervalTree;
 
-    OwnPtr<Vector<FloatPoint> > m_vertices;
+    bool containsNonZero(const FloatPoint&) const;
+    bool containsEvenOdd(const FloatPoint&) const;
+
+    OwnPtr<Vector<FloatPoint>> m_vertices;
     WindRule m_fillRule;
     FloatRect m_boundingBox;
     bool m_empty;

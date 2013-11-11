@@ -34,6 +34,7 @@ class FloatRect;
 class ImageBuffer;
 class LayoutRect;
 class RenderBoxModelObject;
+class RenderElement;
 class RenderGeometryMap;
 class RenderLayerModelObject;
 class RenderObject;
@@ -53,7 +54,7 @@ public:
     static void intersectRepaintRectWithShadows(const RenderObject*, FloatRect&);
 
     // Calculates the repaintRect in combination with filter, clipper and masker in local coordinates.
-    static void intersectRepaintRectWithResources(const RenderObject*, FloatRect&);
+    static void intersectRepaintRectWithResources(const RenderElement&, FloatRect&);
 
     // Determines whether a container needs to be laid out because it's filtered and a child is being laid out.
     static bool filtersForceContainerLayout(RenderObject*);
@@ -61,7 +62,7 @@ public:
     // Determines whether the passed point lies in a clipping area
     static bool pointInClippingArea(RenderObject*, const FloatPoint&);
 
-    static void computeContainerBoundingBoxes(const RenderObject* container, FloatRect& objectBoundingBox, bool& objectBoundingBoxValid, FloatRect& strokeBoundingBox, FloatRect& repaintBoundingBox);
+    static void computeContainerBoundingBoxes(const RenderElement* container, FloatRect& objectBoundingBox, bool& objectBoundingBoxValid, FloatRect& strokeBoundingBox, FloatRect& repaintBoundingBox);
     static bool paintInfoIntersectsRepaintRect(const FloatRect& localRepaintRect, const AffineTransform& localTransform, const PaintInfo&);
 
     // Important functions used by nearly all SVG renderers centralizing coordinate transformations / repaint rect calculations
@@ -73,7 +74,7 @@ public:
     static bool checkForSVGRepaintDuringLayout(RenderObject*);
 
     // Shared between SVG renderers and resources.
-    static void applyStrokeStyleToContext(GraphicsContext*, const RenderStyle*, const RenderObject*);
+    static void applyStrokeStyleToContext(GraphicsContext*, const RenderStyle&, const RenderElement&);
 
     // Determines if any ancestor's transform has changed.
     static bool transformToRootChanged(RenderObject*);

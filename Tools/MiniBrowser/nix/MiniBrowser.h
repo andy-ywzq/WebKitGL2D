@@ -71,10 +71,10 @@ public:
     static void webProcessRelaunched(WKViewRef, const void* clientInfo);
     static void pageDidRequestScroll(WKViewRef, WKPoint position, const void* clientInfo);
     static void didChangeContentsSize(WKViewRef, WKSize size, const void* clientInfo);
+    static void didRenderFrame(WKViewRef, WKSize contentsSize, WKRect coveredRect, const void* clientInfo);
     static void didChangeViewportAttributes(WKViewRef view, WKViewportAttributesRef attributes, const void* clientInfo);
     static void didFindZoomableArea(WKViewRef, WKPoint target, WKRect area, const void* clientInfo);
     static void doneWithTouchEvent(WKViewRef, const NIXTouchEvent* event, bool wasEventHandled, const void* clientInfo);
-    static void doneWithGestureEvent(WKViewRef, const NIXGestureEvent* event, bool wasEventHandled, const void* clientInfo);
     static void updateTextInputState(WKViewRef, const NIXTextInputState* state, const void* clientInfo);
 
     // GestureRecognizerClient.
@@ -106,6 +106,7 @@ public:
     static void didStartProvisionalLoadForFrame(WKPageRef, WKFrameRef, WKTypeRef, const void*);
     static void didFinishDocumentLoadForFrame(WKPageRef, WKFrameRef, WKTypeRef, const void*);
     static void didFailProvisionalLoadWithErrorForFrame(WKPageRef, WKFrameRef, WKErrorRef, WKTypeRef, const void*);
+    static void didReceiveAuthenticationChallengeInFrame(WKPageRef, WKFrameRef, WKAuthenticationChallengeRef, const void*);
 
     virtual double scale();
 
@@ -151,8 +152,6 @@ private:
     double m_scaleBeforeFocus;
     WKPoint m_scrollPositionBeforeFocus;
 
-    float m_viewportWidth;
-    float m_viewportHeight;
     float m_viewportMinScale;
     float m_viewportMaxScale;
     float m_viewportInitScale;

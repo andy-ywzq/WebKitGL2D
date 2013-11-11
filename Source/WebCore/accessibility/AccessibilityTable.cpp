@@ -34,6 +34,7 @@
 #include "AccessibilityTableColumn.h"
 #include "AccessibilityTableHeaderContainer.h"
 #include "AccessibilityTableRow.h"
+#include "ElementIterator.h"
 #include "HTMLNames.h"
 #include "HTMLTableCaptionElement.h"
 #include "HTMLTableCellElement.h"
@@ -110,12 +111,11 @@ bool AccessibilityTable::isDataTable() const
     // between a "layout" table and a "data" table.
     
     RenderTable* table = toRenderTable(m_renderer);
-    Node* tableNode = table->node();
-    if (!tableNode || !isHTMLTableElement(tableNode))
+    if (!table->element() || !isHTMLTableElement(table->element()))
         return false;
 
     // if there is a caption element, summary, THEAD, or TFOOT section, it's most certainly a data table
-    HTMLTableElement* tableElement = toHTMLTableElement(tableNode);
+    HTMLTableElement* tableElement = toHTMLTableElement(table->element());
     if (!tableElement->summary().isEmpty() || tableElement->tHead() || tableElement->tFoot() || tableElement->caption())
         return true;
     
@@ -124,7 +124,8 @@ bool AccessibilityTable::isDataTable() const
         return true;    
 
     // if there's a colgroup or col element, it's probably a data table.
-    for (Node* child = tableElement->firstChild(); child; child = child->nextSibling()) {
+    auto tableChildren = elementChildren(*tableElement);
+    for (auto child = tableChildren.begin(), end = tableChildren.end(); child != end; ++child) {
         if (child->hasTagName(colTag) || child->hasTagName(colgroupTag))
             return true;
     }
@@ -148,10 +149,8 @@ bool AccessibilityTable::isDataTable() const
         return true;
     
     // Store the background color of the table to check against cell's background colors.
-    RenderStyle* tableStyle = table->style();
-    if (!tableStyle)
-        return false;
-    Color tableBGColor = tableStyle->visitedDependentColor(CSSPropertyBackgroundColor);
+    const RenderStyle& tableStyle = table->style();
+    Color tableBGColor = tableStyle.visitedDependentColor(CSSPropertyBackgroundColor);
     
     // check enough of the cells to find if the table matches our criteria
     // Criteria: 
@@ -177,8 +176,7 @@ bool AccessibilityTable::isDataTable() const
             RenderTableCell* cell = firstBody->primaryCellAt(row, col);
             if (!cell)
                 continue;
-            Node* cellNode = cell->node();
-            if (!cellNode)
+            if (!cell->element())
                 continue;
             
             if (cell->width() < 1 || cell->height() < 1)
@@ -186,7 +184,7 @@ bool AccessibilityTable::isDataTable() const
             
             validCellCount++;
             
-            HTMLTableCellElement* cellElement = static_cast<HTMLTableCellElement*>(cellNode);
+            HTMLTableCellElement* cellElement = static_cast<HTMLTableCellElement*>(cell->element());
             
             bool isTHCell = cellElement->hasTagName(thTag);
             // If the first row is comprised of all <th> tags, assume it is a data table.
@@ -202,12 +200,10 @@ bool AccessibilityTable::isDataTable() const
                 || !cellElement->axis().isEmpty() || !cellElement->scope().isEmpty())
                 return true;
             
-            RenderStyle* renderStyle = cell->style();
-            if (!renderStyle)
-                continue;
+            const RenderStyle& renderStyle = cell->style();
 
             // If the empty-cells style is set, we'll call it a data table.
-            if (renderStyle->emptyCells() == HIDE)
+            if (renderStyle.emptyCells() == HIDE)
                 return true;
 
             // If a cell has matching bordered sides, call it a (fully) bordered cell.
@@ -228,7 +224,7 @@ bool AccessibilityTable::isDataTable() const
             
             // If the cell has a different color from the table and there is cell spacing,
             // then it is probably a data table cell (spacing and colors take the place of borders).
-            Color cellColor = renderStyle->visitedDependentColor(CSSPropertyBackgroundColor);
+            Color cellColor = renderStyle.visitedDependentColor(CSSPropertyBackgroundColor);
             if (table->hBorderSpacing() > 0 && table->vBorderSpacing() > 0
                 && tableBGColor != cellColor && cellColor.alpha() != 1)
                 backgroundDifferenceCellCount++;
@@ -242,10 +238,8 @@ bool AccessibilityTable::isDataTable() const
                 RenderObject* renderRow = cell->parent();
                 if (!renderRow || !renderRow->isBoxModelObject() || !toRenderBoxModelObject(renderRow)->isTableRow())
                     continue;
-                RenderStyle* rowRenderStyle = renderRow->style();
-                if (!rowRenderStyle)
-                    continue;
-                Color rowColor = rowRenderStyle->visitedDependentColor(CSSPropertyBackgroundColor);
+                const RenderStyle& rowRenderStyle = renderRow->style();
+                Color rowColor = rowRenderStyle.visitedDependentColor(CSSPropertyBackgroundColor);
                 alternatingRowColors[alternatingRowColorCount] = rowColor;
                 alternatingRowColorCount++;
             }
@@ -308,8 +302,8 @@ bool AccessibilityTable::isTableExposableThroughAccessibility() const
         return false;
 
     // Gtk+ ATs expect all tables to be exposed as tables.
-#if PLATFORM(GTK)
-    Node* tableNode = toRenderTable(m_renderer)->node();
+#if PLATFORM(GTK) || PLATFORM(EFL)
+    Element* tableNode = toRenderTable(m_renderer)->element();
     return tableNode && isHTMLTableElement(tableNode);
 #endif
 
@@ -342,7 +336,7 @@ void AccessibilityTable::addChildren()
         return;
     
     RenderTable* table = toRenderTable(m_renderer);
-    AXObjectCache* axCache = m_renderer->document()->axObjectCache();
+    AXObjectCache* axCache = m_renderer->document().axObjectCache();
 
     // Go through all the available sections to pull out the rows and add them as children.
     table->recalcSectionsIfNeeded();
@@ -375,14 +369,14 @@ void AccessibilityTable::addChildren()
             m_rows.append(row);
             if (!row->accessibilityIsIgnored())
                 m_children.append(row);
-#if PLATFORM(GTK)
+#if PLATFORM(GTK) || PLATFORM(EFL)
             else
                 m_children.appendVector(row->children());
 #endif
             appendedRows.add(row);
         }
     
-        maxColumnCount = max(tableSection->numColumns(), maxColumnCount);
+        maxColumnCount = std::max(tableSection->numColumns(), maxColumnCount);
         tableSection = table->sectionBelow(tableSection, SkipEmptySections);
     }
     
@@ -551,7 +545,14 @@ bool AccessibilityTable::computeAccessibilityIsIgnored() const
         
     return false;
 }
-    
+
+void AccessibilityTable::titleElementText(Vector<AccessibilityText>& textOrder) const
+{
+    String title = this->title();
+    if (!title.isEmpty())
+        textOrder.append(AccessibilityText(title, LabelByElementText));
+}
+
 String AccessibilityTable::title() const
 {
     if (!isAccessibilityTable())

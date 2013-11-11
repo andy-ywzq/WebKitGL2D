@@ -36,16 +36,19 @@
 #include <WebCore/DragSession.h>
 #include <WebCore/Editor.h>
 #include <WebCore/FileChooser.h>
+#include <WebCore/FilterOperation.h>
+#include <WebCore/FilterOperations.h>
 #include <WebCore/GraphicsContext.h>
 #include <WebCore/GraphicsLayer.h>
 #include <WebCore/Image.h>
-#include <WebCore/KURL.h>
+#include <WebCore/Length.h>
 #include <WebCore/PluginData.h>
 #include <WebCore/ProtectionSpace.h>
 #include <WebCore/ResourceError.h>
 #include <WebCore/ResourceRequest.h>
 #include <WebCore/ResourceResponse.h>
 #include <WebCore/TextCheckerClient.h>
+#include <WebCore/URL.h>
 #include <WebCore/UserScript.h>
 #include <WebCore/UserStyleSheet.h>
 #include <WebCore/ViewportArguments.h>
@@ -69,6 +72,17 @@ bool ArgumentCoder<AffineTransform>::decode(ArgumentDecoder& decoder, AffineTran
 }
 
 
+void ArgumentCoder<TransformationMatrix>::encode(ArgumentEncoder& encoder, const TransformationMatrix& transformationMatrix)
+{
+    SimpleArgumentCoder<TransformationMatrix>::encode(encoder, transformationMatrix);
+}
+
+bool ArgumentCoder<TransformationMatrix>::decode(ArgumentDecoder& decoder, TransformationMatrix& transformationMatrix)
+{
+    return SimpleArgumentCoder<TransformationMatrix>::decode(decoder, transformationMatrix);
+}
+
+
 void ArgumentCoder<FloatPoint>::encode(ArgumentEncoder& encoder, const FloatPoint& floatPoint)
 {
     SimpleArgumentCoder<FloatPoint>::encode(encoder, floatPoint);
@@ -77,6 +91,17 @@ void ArgumentCoder<FloatPoint>::encode(ArgumentEncoder& encoder, const FloatPoin
 bool ArgumentCoder<FloatPoint>::decode(ArgumentDecoder& decoder, FloatPoint& floatPoint)
 {
     return SimpleArgumentCoder<FloatPoint>::decode(decoder, floatPoint);
+}
+
+
+void ArgumentCoder<FloatPoint3D>::encode(ArgumentEncoder& encoder, const FloatPoint3D& floatPoint)
+{
+    SimpleArgumentCoder<FloatPoint3D>::encode(encoder, floatPoint);
+}
+
+bool ArgumentCoder<FloatPoint3D>::decode(ArgumentDecoder& decoder, FloatPoint3D& floatPoint)
+{
+    return SimpleArgumentCoder<FloatPoint3D>::decode(decoder, floatPoint);
 }
 
 
@@ -132,6 +157,17 @@ void ArgumentCoder<IntSize>::encode(ArgumentEncoder& encoder, const IntSize& int
 bool ArgumentCoder<IntSize>::decode(ArgumentDecoder& decoder, IntSize& intSize)
 {
     return SimpleArgumentCoder<IntSize>::decode(decoder, intSize);
+}
+
+
+void ArgumentCoder<Length>::encode(ArgumentEncoder& encoder, const Length& length)
+{
+    SimpleArgumentCoder<Length>::encode(encoder, length);
+}
+
+bool ArgumentCoder<Length>::decode(ArgumentDecoder& decoder, Length& length)
+{
+    return SimpleArgumentCoder<Length>::decode(decoder, length);
 }
 
 
@@ -312,6 +348,7 @@ static bool decodeImage(ArgumentDecoder& decoder, RefPtr<Image>& image)
     return true;
 }
 
+#if !PLATFORM(IOS)
 void ArgumentCoder<Cursor>::encode(ArgumentEncoder& encoder, const Cursor& cursor)
 {
     encoder.encodeEnum(cursor.type());
@@ -371,6 +408,7 @@ bool ArgumentCoder<Cursor>::decode(ArgumentDecoder& decoder, Cursor& cursor)
     cursor = Cursor(image.get(), hotSpot);
     return true;
 }
+#endif
 
 void ArgumentCoder<ResourceRequest>::encode(ArgumentEncoder& encoder, const ResourceRequest& resourceRequest)
 {
@@ -405,7 +443,7 @@ bool ArgumentCoder<ResourceRequest>::decode(ArgumentDecoder& decoder, ResourceRe
         String url;
         if (!decoder.decode(url))
             return false;
-        request.setURL(KURL(KURL(), url));
+        request.setURL(URL(URL(), url));
 
         String httpMethod;
         if (!decoder.decode(httpMethod))
@@ -430,7 +468,7 @@ bool ArgumentCoder<ResourceRequest>::decode(ArgumentDecoder& decoder, ResourceRe
         String firstPartyForCookies;
         if (!decoder.decode(firstPartyForCookies))
             return false;
-        request.setFirstPartyForCookies(KURL(KURL(), firstPartyForCookies));
+        request.setFirstPartyForCookies(URL(URL(), firstPartyForCookies));
 
         resourceRequest = request;
     }
@@ -501,7 +539,7 @@ bool ArgumentCoder<ResourceResponse>::decode(ArgumentDecoder& decoder, ResourceR
         String url;
         if (!decoder.decode(url))
             return false;
-        response.setURL(KURL(KURL(), url));
+        response.setURL(URL(URL(), url));
 
         int32_t httpStatusCode;
         if (!decoder.decode(httpStatusCode))
@@ -784,6 +822,105 @@ bool ArgumentCoder<DatabaseDetails>::decode(ArgumentDecoder& decoder, DatabaseDe
     details = DatabaseDetails(name, displayName, expectedUsage, currentUsage);
     return true;
 }
+
+#endif
+
+#if PLATFORM(IOS)
+
+static void encodeSharedBuffer(ArgumentEncoder& encoder, SharedBuffer* buffer)
+{
+    SharedMemory::Handle handle;
+    encoder << (buffer ? static_cast<uint64_t>(buffer->size()): 0);
+    if (buffer) {
+        RefPtr<SharedMemory> sharedMemoryBuffer = SharedMemory::create(buffer->size());
+        memcpy(sharedMemoryBuffer->data(), buffer->data(), buffer->size());
+        sharedMemoryBuffer->createHandle(handle, SharedMemory::ReadOnly);
+        encoder << handle;
+    }
+}
+
+static bool decodeSharedBuffer(ArgumentDecoder& decoder, RefPtr<SharedBuffer>& buffer)
+{
+    uint64_t bufferSize = 0;
+    if (!decoder.decode(bufferSize))
+        return false;
+
+    if (bufferSize) {
+        SharedMemory::Handle handle;
+        if (!decoder.decode(handle))
+            return false;
+
+        RefPtr<SharedMemory> sharedMemoryBuffer = SharedMemory::create(handle, SharedMemory::ReadOnly);
+        buffer = SharedBuffer::create(static_cast<unsigned char*>(sharedMemoryBuffer->data()), bufferSize);
+    }
+
+    return true;
+}
+
+void ArgumentCoder<PasteboardWebContent>::encode(ArgumentEncoder& encoder, const WebCore::PasteboardWebContent& content)
+{
+    encoder << content.canSmartCopyOrDelete;
+    encoder << content.dataInStringFormat;
+
+    encodeSharedBuffer(encoder, content.dataInWebArchiveFormat.get());
+    encodeSharedBuffer(encoder, content.dataInRTFDFormat.get());
+    encodeSharedBuffer(encoder, content.dataInRTFFormat.get());
+
+    encoder << content.clientTypes;
+    encoder << static_cast<uint64_t>(content.clientData.size());
+    for (size_t i = 0; i < content.clientData.size(); i++)
+        encodeSharedBuffer(encoder, content.clientData[i].get());
+}
+
+bool ArgumentCoder<PasteboardWebContent>::decode(ArgumentDecoder& decoder, WebCore::PasteboardWebContent& content)
+{
+    if (!decoder.decode(content.canSmartCopyOrDelete))
+        return false;
+    if (!decoder.decode(content.dataInStringFormat))
+        return false;
+    if (!decodeSharedBuffer(decoder, content.dataInWebArchiveFormat))
+        return false;
+    if (!decodeSharedBuffer(decoder, content.dataInRTFDFormat))
+        return false;
+    if (!decodeSharedBuffer(decoder, content.dataInRTFFormat))
+        return false;
+    if (!decoder.decode(content.clientTypes))
+        return false;
+    uint64_t clientDataSize;
+    if (!decoder.decode(clientDataSize))
+        return false;
+    if (clientDataSize)
+        content.clientData.resize(clientDataSize);
+    for (size_t i = 0; i < clientDataSize; i++)
+        decodeSharedBuffer(decoder, content.clientData[i]);
+    return true;
+}
+
+void ArgumentCoder<PasteboardImage>::encode(ArgumentEncoder& encoder, const WebCore::PasteboardImage& pasteboardImage)
+{
+    encodeImage(encoder, pasteboardImage.image.get());
+    encoder << pasteboardImage.url.url;
+    encoder << pasteboardImage.url.title;
+    encoder << pasteboardImage.resourceMIMEType;
+    if (pasteboardImage.resourceData)
+        encodeSharedBuffer(encoder, pasteboardImage.resourceData.get());
+}
+
+bool ArgumentCoder<PasteboardImage>::decode(ArgumentDecoder& decoder, WebCore::PasteboardImage& pasteboardImage)
+{
+    if (!decodeImage(decoder, pasteboardImage.image))
+        return false;
+    if (!decoder.decode(pasteboardImage.url.url))
+        return false;
+    if (!decoder.decode(pasteboardImage.url.title))
+        return false;
+    if (!decoder.decode(pasteboardImage.resourceMIMEType))
+        return false;
+    if (!decodeSharedBuffer(decoder, pasteboardImage.resourceData))
+        return false;
+    return true;
+}
+
 #endif
 
 void ArgumentCoder<DictationAlternative>::encode(ArgumentEncoder& encoder, const DictationAlternative& dictationAlternative)
@@ -933,17 +1070,17 @@ bool ArgumentCoder<DragSession>::decode(ArgumentDecoder& decoder, DragSession& r
     return true;
 }
 
-void ArgumentCoder<KURL>::encode(ArgumentEncoder& encoder, const KURL& result)
+void ArgumentCoder<URL>::encode(ArgumentEncoder& encoder, const URL& result)
 {
     encoder << result.string();
 }
     
-bool ArgumentCoder<KURL>::decode(ArgumentDecoder& decoder, KURL& result)
+bool ArgumentCoder<URL>::decode(ArgumentDecoder& decoder, URL& result)
 {
     String urlAsString;
     if (!decoder.decode(urlAsString))
         return false;
-    result = KURL(WebCore::ParsedURLString, urlAsString);
+    result = URL(WebCore::ParsedURLString, urlAsString);
     return true;
 }
 
@@ -963,7 +1100,7 @@ bool ArgumentCoder<WebCore::UserStyleSheet>::decode(ArgumentDecoder& decoder, We
     if (!decoder.decode(source))
         return false;
 
-    KURL url;
+    URL url;
     if (!decoder.decode(url))
         return false;
 
@@ -1003,7 +1140,7 @@ bool ArgumentCoder<WebCore::UserScript>::decode(ArgumentDecoder& decoder, WebCor
     if (!decoder.decode(source))
         return false;
 
-    KURL url;
+    URL url;
     if (!decoder.decode(url))
         return false;
 
@@ -1026,5 +1163,148 @@ bool ArgumentCoder<WebCore::UserScript>::decode(ArgumentDecoder& decoder, WebCor
     userScript = WebCore::UserScript(source, url, whitelist, blacklist, injectionTime, injectedFrames);
     return true;
 }
+
+#if ENABLE(CSS_FILTERS) && !USE(COORDINATED_GRAPHICS)
+static void encodeFilterOperation(ArgumentEncoder& encoder, const FilterOperation& filter)
+{
+    encoder.encodeEnum(filter.type());
+
+    switch (filter.type()) {
+    case FilterOperation::REFERENCE: {
+        const auto& referenceFilter = static_cast<const ReferenceFilterOperation&>(filter);
+        encoder << referenceFilter.url();
+        encoder << referenceFilter.fragment();
+        break;
+    }
+    case FilterOperation::GRAYSCALE:
+    case FilterOperation::SEPIA:
+    case FilterOperation::SATURATE:
+    case FilterOperation::HUE_ROTATE:
+        encoder << static_cast<const BasicColorMatrixFilterOperation&>(filter).amount();
+        break;
+    case FilterOperation::INVERT:
+    case FilterOperation::OPACITY:
+    case FilterOperation::BRIGHTNESS:
+    case FilterOperation::CONTRAST:
+        encoder << static_cast<const BasicComponentTransferFilterOperation&>(filter).amount();
+        break;
+    case FilterOperation::BLUR:
+        encoder << static_cast<const BlurFilterOperation&>(filter).stdDeviation();
+        break;
+    case FilterOperation::DROP_SHADOW: {
+        const auto& dropShadowFilter = static_cast<const DropShadowFilterOperation&>(filter);
+        encoder << dropShadowFilter.location();
+        encoder << dropShadowFilter.stdDeviation();
+        encoder << dropShadowFilter.color();
+        break;
+    }
+#if ENABLE(CSS_SHADERS)
+    case FilterOperation::CUSTOM:
+    case FilterOperation::VALIDATED_CUSTOM:
+        ASSERT_NOT_REACHED();
+        break;
+#endif
+    case FilterOperation::PASSTHROUGH:
+    case FilterOperation::NONE:
+        break;
+    };
+}
+
+static bool decodeFilterOperation(ArgumentDecoder& decoder, RefPtr<FilterOperation>& filter)
+{
+    FilterOperation::OperationType type;
+    if (!decoder.decodeEnum(type))
+        return false;
+
+    switch (type) {
+    case FilterOperation::REFERENCE: {
+        String url;
+        String fragment;
+        if (!decoder.decode(url))
+            return false;
+        if (!decoder.decode(fragment))
+            return false;
+        filter = ReferenceFilterOperation::create(url, fragment, type);
+        break;
+    }
+    case FilterOperation::GRAYSCALE:
+    case FilterOperation::SEPIA:
+    case FilterOperation::SATURATE:
+    case FilterOperation::HUE_ROTATE: {
+        double amount;
+        if (!decoder.decode(amount))
+            return false;
+        filter = BasicColorMatrixFilterOperation::create(amount, type);
+        break;
+    }
+    case FilterOperation::INVERT:
+    case FilterOperation::OPACITY:
+    case FilterOperation::BRIGHTNESS:
+    case FilterOperation::CONTRAST: {
+        double amount;
+        if (!decoder.decode(amount))
+            return false;
+        filter = BasicComponentTransferFilterOperation::create(amount, type);
+        break;
+    }
+    case FilterOperation::BLUR: {
+        Length stdDeviation;
+        if (!decoder.decode(stdDeviation))
+            return false;
+        filter = BlurFilterOperation::create(stdDeviation, type);
+        break;
+    }
+    case FilterOperation::DROP_SHADOW: {
+        IntPoint location;
+        int stdDeviation;
+        Color color;
+        if (!decoder.decode(location))
+            return false;
+        if (!decoder.decode(stdDeviation))
+            return false;
+        if (!decoder.decode(color))
+            return false;
+        filter = DropShadowFilterOperation::create(location, stdDeviation, color, type);
+        break;
+    }
+#if ENABLE(CSS_SHADERS)
+    case FilterOperation::CUSTOM:
+    case FilterOperation::VALIDATED_CUSTOM:
+        ASSERT_NOT_REACHED();
+        break;
+#endif
+    case FilterOperation::PASSTHROUGH:
+    case FilterOperation::NONE:
+        break;
+    };
+
+    return true;
+}
+
+
+void ArgumentCoder<FilterOperations>::encode(ArgumentEncoder& encoder, const FilterOperations& filters)
+{
+    encoder << static_cast<uint64_t>(filters.size());
+
+    for (const auto& filter : filters.operations())
+        encodeFilterOperation(encoder, *filter);
+}
+
+bool ArgumentCoder<FilterOperations>::decode(ArgumentDecoder& decoder, FilterOperations& filters)
+{
+    uint64_t filterCount;
+    if (!decoder.decode(filterCount))
+        return false;
+
+    for (uint64_t i = 0; i < filterCount; ++i) {
+        RefPtr<FilterOperation> filter;
+        if (!decodeFilterOperation(decoder, filter))
+            return false;
+        filters.operations().append(std::move(filter));
+    }
+
+    return true;
+}
+#endif // ENABLE(CSS_FILTERS) && !USE(COORDINATED_GRAPHICS)
 
 } // namespace CoreIPC

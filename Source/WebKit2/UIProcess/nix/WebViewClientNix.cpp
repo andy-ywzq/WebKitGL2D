@@ -39,13 +39,6 @@ void WebViewClientNix::doneWithTouchEvent(WebView* view, const NIXTouchEvent& ev
     m_client.doneWithTouchEvent(toAPI(view), &event, wasEventHandled, m_client.clientInfo);
 }
 
-void WebViewClientNix::doneWithGestureEvent(WebView* view, const NIXGestureEvent& event, bool wasEventHandled)
-{
-    if (!m_client.doneWithGestureEvent)
-        return;
-    m_client.doneWithGestureEvent(toAPI(view), &event, wasEventHandled, m_client.clientInfo);
-}
-
 void WebViewClientNix::didFindZoomableArea(WebView* view, WKPoint target, WKRect area)
 {
     if (!m_client.didFindZoomableArea)

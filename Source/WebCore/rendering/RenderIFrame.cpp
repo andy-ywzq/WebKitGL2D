@@ -39,9 +39,14 @@ namespace WebCore {
 
 using namespace HTMLNames;
     
-RenderIFrame::RenderIFrame(Element* element)
-    : RenderFrameBase(element)
+RenderIFrame::RenderIFrame(HTMLIFrameElement& element, PassRef<RenderStyle> style)
+    : RenderFrameBase(element, std::move(style))
 {
+}
+
+HTMLIFrameElement& RenderIFrame::iframeElement() const
+{
+    return toHTMLIFrameElement(RenderFrameBase::frameOwnerElement());
 }
 
 bool RenderIFrame::shouldComputeSizeAsReplaced() const
@@ -81,12 +86,12 @@ LayoutUnit RenderIFrame::maxPreferredLogicalWidth() const
 
 bool RenderIFrame::isSeamless() const
 {
-    return node() && node()->hasTagName(iframeTag) && toHTMLIFrameElement(node())->shouldDisplaySeamlessly();
+    return iframeElement().shouldDisplaySeamlessly();
 }
 
 bool RenderIFrame::requiresLayer() const
 {
-    return RenderFrameBase::requiresLayer() || style()->resize() != RESIZE_NONE;
+    return RenderFrameBase::requiresLayer() || style().resize() != RESIZE_NONE;
 }
 
 RenderView* RenderIFrame::contentRootRenderer() const
@@ -99,11 +104,7 @@ RenderView* RenderIFrame::contentRootRenderer() const
 
 bool RenderIFrame::flattenFrame() const
 {
-    if (!node() || !node()->hasTagName(iframeTag))
-        return false;
-
-    HTMLIFrameElement* element = toHTMLIFrameElement(node());
-    Frame* frame = element->document()->frame();
+    Frame* frame = iframeElement().document().frame();
 
     if (isSeamless())
         return false; // Seamless iframes are already "flat", don't try to flatten them.
@@ -113,11 +114,11 @@ bool RenderIFrame::flattenFrame() const
     if (!enabled || !frame->page())
         return false;
 
-    if (style()->width().isFixed() && style()->height().isFixed()) {
+    if (style().width().isFixed() && style().height().isFixed()) {
         // Do not flatten iframes with scrolling="no".
-        if (element->scrollingMode() == ScrollbarAlwaysOff)
+        if (iframeElement().scrollingMode() == ScrollbarAlwaysOff)
             return false;
-        if (style()->width().value() <= 0 || style()->height().value() <= 0)
+        if (style().width().value() <= 0 || style().height().value() <= 0)
             return false;
     }
 
@@ -165,14 +166,14 @@ void RenderIFrame::layout()
         updateLogicalHeight();
 
         if (flattenFrame())
-            layoutWithFlattening(style()->width().isFixed(), style()->height().isFixed());
+            layoutWithFlattening(style().width().isFixed(), style().height().isFixed());
     }
 
-    m_overflow.clear();
+    clearOverflow();
     addVisualEffectOverflow();
     updateLayerTransform();
 
-    setNeedsLayout(false);
+    clearNeedsLayout();
 }
 
 }

@@ -84,9 +84,9 @@ private:
     HashSet<SVGFontFaceElement*> m_svgFontFaceElements;
 #endif
     HashMap<AtomicString, RenderSVGResourceContainer*> m_resources;
-    HashMap<AtomicString, OwnPtr<SVGPendingElements> > m_pendingResources; // Resources that are pending.
-    HashMap<AtomicString, OwnPtr<SVGPendingElements> > m_pendingResourcesForRemoval; // Resources that are pending and scheduled for removal.
-    HashMap<SVGElement*, OwnPtr<HashSet<SVGElement*> > > m_elementDependencies;
+    HashMap<AtomicString, OwnPtr<SVGPendingElements>> m_pendingResources; // Resources that are pending.
+    HashMap<AtomicString, OwnPtr<SVGPendingElements>> m_pendingResourcesForRemoval; // Resources that are pending and scheduled for removal.
+    HashMap<SVGElement*, OwnPtr<HashSet<SVGElement*>>> m_elementDependencies;
     OwnPtr<SVGResourcesCache> m_resourcesCache;
 
 public:
@@ -99,14 +99,14 @@ public:
     bool isElementPendingResource(Element*, const AtomicString& id) const;
     void clearHasPendingResourcesIfPossible(Element*);
     void removeElementFromPendingResources(Element*);
-    PassOwnPtr<SVGPendingElements> removePendingResource(const AtomicString& id);
+    OwnPtr<SVGPendingElements> removePendingResource(const AtomicString& id);
 
     // The following two functions are used for scheduling a pending resource to be removed.
     void markPendingResourcesForRemoval(const AtomicString&);
     Element* removeElementFromPendingResourcesForRemoval(const AtomicString&);
 
 private:
-    PassOwnPtr<SVGPendingElements> removePendingResourceForRemoval(const AtomicString&);
+    OwnPtr<SVGPendingElements> removePendingResourceForRemoval(const AtomicString&);
 };
 
 }

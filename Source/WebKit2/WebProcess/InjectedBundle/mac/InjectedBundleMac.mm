@@ -85,7 +85,7 @@ bool InjectedBundle::load(APIObject* initializationUserData)
         return true;
     }
     
-#if defined(__LP64__) && defined(__clang__)
+#if WK_API_ENABLED
     // Otherwise, look to see if the bundle has a principal class
     Class principalClass = [m_platformBundle principalClass];
     if (!principalClass) {
@@ -113,10 +113,10 @@ bool InjectedBundle::load(APIObject* initializationUserData)
             objCInitializationUserData = static_cast<ObjCObjectGraph*>(initializationUserData)->rootObject();
         [instance webProcessPlugIn:[WKWebProcessPlugInController _shared] initializeWithObject:objCInitializationUserData.get()];
     } else if ([instance respondsToSelector:@selector(webProcessPlugInInitialize:)]) {
-        CLANG_PRAGMA("clang diagnostic push")
-        CLANG_PRAGMA("clang diagnostic ignored \"-Wdeprecated-declarations\"")
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         [instance webProcessPlugInInitialize:[WKWebProcessPlugInController _shared]];
-        CLANG_PRAGMA("clang diagnostic pop")
+#pragma clang diagnostic pop
     }
 
     return true;

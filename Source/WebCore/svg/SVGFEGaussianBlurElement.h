@@ -23,19 +23,21 @@
 
 #if ENABLE(SVG) && ENABLE(FILTERS)
 #include "FEGaussianBlur.h"
+#include "SVGAnimatedEnumeration.h"
 #include "SVGAnimatedNumber.h"
+#include "SVGFEConvolveMatrixElement.h"
 #include "SVGFilterPrimitiveStandardAttributes.h"
 
 namespace WebCore {
 
 class SVGFEGaussianBlurElement FINAL : public SVGFilterPrimitiveStandardAttributes {
 public:
-    static PassRefPtr<SVGFEGaussianBlurElement> create(const QualifiedName&, Document*);
+    static PassRefPtr<SVGFEGaussianBlurElement> create(const QualifiedName&, Document&);
 
     void setStdDeviation(float stdDeviationX, float stdDeviationY);
 
 private:
-    SVGFEGaussianBlurElement(const QualifiedName&, Document*);
+    SVGFEGaussianBlurElement(const QualifiedName&, Document&);
 
     bool isSupportedAttribute(const QualifiedName&);
     virtual void parseAttribute(const QualifiedName&, const AtomicString&) OVERRIDE;
@@ -49,6 +51,7 @@ private:
         DECLARE_ANIMATED_STRING(In1, in1)
         DECLARE_ANIMATED_NUMBER(StdDeviationX, stdDeviationX)
         DECLARE_ANIMATED_NUMBER(StdDeviationY, stdDeviationY)
+        DECLARE_ANIMATED_ENUMERATION(EdgeMode, edgeMode, EdgeModeType)
     END_DECLARE_ANIMATED_PROPERTIES
 };
 

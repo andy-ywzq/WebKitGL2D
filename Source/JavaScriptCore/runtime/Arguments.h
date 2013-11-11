@@ -31,12 +31,12 @@
 #include "JSGlobalObject.h"
 #include "Interpreter.h"
 #include "ObjectConstructor.h"
+#include <wtf/StdLibExtras.h>
 
 namespace JSC {
 
 class Arguments : public JSDestructibleObject {
     friend class JIT;
-    friend class DFG::SpeculativeJIT;
 public:
     typedef JSDestructibleObject Base;
 
@@ -62,8 +62,6 @@ private:
     Arguments(CallFrame*);
     Arguments(CallFrame*, NoParametersType);
         
-    void tearOffForInlineCallFrame(VM& vm, Register*, InlineCallFrame*);
-
 public:
     DECLARE_INFO;
 
@@ -81,14 +79,19 @@ public:
     void copyToArguments(ExecState*, CallFrame*, uint32_t length);
     void tearOff(CallFrame*);
     void tearOff(CallFrame*, InlineCallFrame*);
-    bool isTornOff() const { return m_registerArray; }
+    bool isTornOff() const { return m_registerArray.get(); }
     void didTearOffActivation(ExecState*, JSActivation*);
 
     static Structure* createStructure(VM& vm, JSGlobalObject* globalObject, JSValue prototype) 
     { 
         return Structure::create(vm, globalObject, prototype, TypeInfo(ObjectType, StructureFlags), info()); 
     }
-        
+    
+    static ptrdiff_t offsetOfNumArguments() { return OBJECT_OFFSETOF(Arguments, m_numArguments); }
+    static ptrdiff_t offsetOfRegisters() { return OBJECT_OFFSETOF(Arguments, m_registers); }
+    static ptrdiff_t offsetOfSlowArgumentData() { return OBJECT_OFFSETOF(Arguments, m_slowArgumentData); }
+    static ptrdiff_t offsetOfOverrodeLength() { return OBJECT_OFFSETOF(Arguments, m_overrodeLength); }
+    
 protected:
     static const unsigned StructureFlags = OverridesGetOwnPropertySlot | InterceptsGetOwnPropertySlotByIndexEvenWhenLengthIsNotZero | OverridesVisitChildren | OverridesGetPropertyNames | JSObject::StructureFlags;
 
@@ -104,7 +107,7 @@ private:
     static void putByIndex(JSCell*, ExecState*, unsigned propertyName, JSValue, bool shouldThrow);
     static bool deleteProperty(JSCell*, ExecState*, PropertyName);
     static bool deletePropertyByIndex(JSCell*, ExecState*, unsigned propertyName);
-    static bool defineOwnProperty(JSObject*, ExecState*, PropertyName, PropertyDescriptor&, bool shouldThrow);
+    static bool defineOwnProperty(JSObject*, ExecState*, PropertyName, const PropertyDescriptor&, bool shouldThrow);
     void createStrictModeCallerIfNecessary(ExecState*);
     void createStrictModeCalleeIfNecessary(ExecState*);
 
@@ -131,9 +134,14 @@ private:
     bool m_isStrictMode;
 
     WriteBarrierBase<Unknown>* m_registers;
-    OwnArrayPtr<WriteBarrier<Unknown> > m_registerArray;
+    std::unique_ptr<WriteBarrier<Unknown>[]> m_registerArray;
 
-    OwnArrayPtr<SlowArgument> m_slowArguments;
+    struct SlowArgumentData {
+        std::unique_ptr<SlowArgument[]> slowArguments;
+        int bytecodeToMachineCaptureOffset; // Add this if you have a bytecode offset into captured registers and you want the machine offset instead. Subtract if you want to do the opposite.
+    };
+    
+    std::unique_ptr<SlowArgumentData> m_slowArgumentData;
 
     WriteBarrier<JSFunction> m_callee;
 };
@@ -158,12 +166,14 @@ inline Arguments::Arguments(CallFrame* callFrame, NoParametersType)
 
 inline void Arguments::allocateSlowArguments()
 {
-    if (m_slowArguments)
+    if (m_slowArgumentData)
         return;
-    m_slowArguments = adoptArrayPtr(new SlowArgument[m_numArguments]);
+    m_slowArgumentData = std::make_unique<SlowArgumentData>();
+    m_slowArgumentData->bytecodeToMachineCaptureOffset = 0;
+    m_slowArgumentData->slowArguments = std::make_unique<SlowArgument[]>(m_numArguments);
     for (size_t i = 0; i < m_numArguments; ++i) {
-        ASSERT(m_slowArguments[i].status == SlowArgument::Normal);
-        m_slowArguments[i].index = CallFrame::argumentOffset(i);
+        ASSERT(m_slowArgumentData->slowArguments[i].status == SlowArgument::Normal);
+        m_slowArgumentData->slowArguments[i].index = CallFrame::argumentOffset(i);
     }
 }
 
@@ -172,7 +182,7 @@ inline bool Arguments::tryDeleteArgument(size_t argument)
     if (!isArgument(argument))
         return false;
     allocateSlowArguments();
-    m_slowArguments[argument].status = SlowArgument::Deleted;
+    m_slowArgumentData->slowArguments[argument].status = SlowArgument::Deleted;
     return true;
 }
 
@@ -195,9 +205,9 @@ inline bool Arguments::isDeletedArgument(size_t argument)
 {
     if (argument >= m_numArguments)
         return false;
-    if (!m_slowArguments)
+    if (!m_slowArgumentData)
         return false;
-    if (m_slowArguments[argument].status != SlowArgument::Deleted)
+    if (m_slowArgumentData->slowArguments[argument].status != SlowArgument::Deleted)
         return false;
     return true;
 }
@@ -206,7 +216,7 @@ inline bool Arguments::isArgument(size_t argument)
 {
     if (argument >= m_numArguments)
         return false;
-    if (m_slowArguments && m_slowArguments[argument].status == SlowArgument::Deleted)
+    if (m_slowArgumentData && m_slowArgumentData->slowArguments[argument].status == SlowArgument::Deleted)
         return false;
     return true;
 }
@@ -214,14 +224,14 @@ inline bool Arguments::isArgument(size_t argument)
 inline WriteBarrierBase<Unknown>& Arguments::argument(size_t argument)
 {
     ASSERT(isArgument(argument));
-    if (!m_slowArguments)
+    if (!m_slowArgumentData)
         return m_registers[CallFrame::argumentOffset(argument)];
 
-    int index = m_slowArguments[argument].index;
-    if (!m_activation || m_slowArguments[argument].status != SlowArgument::Captured)
+    int index = m_slowArgumentData->slowArguments[argument].index;
+    if (!m_activation || m_slowArgumentData->slowArguments[argument].status != SlowArgument::Captured)
         return m_registers[index];
 
-    return m_activation->registerAt(index);
+    return m_activation->registerAt(index - m_slowArgumentData->bytecodeToMachineCaptureOffset);
 }
 
 inline void Arguments::finishCreation(CallFrame* callFrame)
@@ -238,13 +248,16 @@ inline void Arguments::finishCreation(CallFrame* callFrame)
     m_overrodeCaller = false;
     m_isStrictMode = callFrame->codeBlock()->isStrictMode();
 
-    SharedSymbolTable* symbolTable = callFrame->codeBlock()->symbolTable();
-    const SlowArgument* slowArguments = symbolTable->slowArguments();
-    if (slowArguments) {
+    CodeBlock* codeBlock = callFrame->codeBlock();
+    if (codeBlock->hasSlowArguments()) {
+        SharedSymbolTable* symbolTable = codeBlock->symbolTable();
+        const SlowArgument* slowArguments = codeBlock->machineSlowArguments();
         allocateSlowArguments();
         size_t count = std::min<unsigned>(m_numArguments, symbolTable->parameterCount());
         for (size_t i = 0; i < count; ++i)
-            m_slowArguments[i] = slowArguments[i];
+            m_slowArgumentData->slowArguments[i] = slowArguments[i];
+        m_slowArgumentData->bytecodeToMachineCaptureOffset =
+            codeBlock->framePointerOffsetToGetActivationRegisters();
     }
 
     // The bytecode generator omits op_tear_off_activation in cases of no
@@ -260,7 +273,12 @@ inline void Arguments::finishCreation(CallFrame* callFrame, InlineCallFrame* inl
 
     JSFunction* callee = inlineCallFrame->calleeForCallFrame(callFrame);
     m_numArguments = inlineCallFrame->arguments.size() - 1;
-    m_registers = reinterpret_cast<WriteBarrierBase<Unknown>*>(callFrame->registers()) + inlineCallFrame->stackOffset;
+    
+    if (m_numArguments) {
+        int offsetForArgumentOne = inlineCallFrame->arguments[1].virtualRegister().offset();
+        m_registers = reinterpret_cast<WriteBarrierBase<Unknown>*>(callFrame->registers()) + offsetForArgumentOne - virtualRegisterForArgument(1).offset();
+    } else
+        m_registers = 0;
     m_callee.set(callFrame->vm(), this, callee);
     m_overrodeLength = false;
     m_overrodeCallee = false;

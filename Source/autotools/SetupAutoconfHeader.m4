@@ -1,12 +1,7 @@
 # Configuration flags that are used throughout WebKitGTK+.
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE", [The gettext catalog name])
 
-if test "$enable_debug" = "yes"; then
-    AC_DEFINE([GDK_PIXBUF_DISABLE_DEPRECATED], [1], [ ])
-    AC_DEFINE([GDK_DISABLE_DEPRECATED], [1], [ ])
-    AC_DEFINE([GTK_DISABLE_DEPRECATED], [1], [ ])
-    AC_DEFINE([PANGO_DISABLE_DEPRECATED], [1], [ ])
-else
+if test "$enable_debug" = "no"; then
     AC_DEFINE([NDEBUG], [1], [Define to disable debugging])
 fi
 
@@ -36,13 +31,17 @@ if test "$os_win32" = "yes"; then
     AC_DEFINE([XP_WIN], [1], [ ])
     AC_DEFINE([UNICODE], [1], [ ])
     AC_DEFINE([_UNICODE], [1], [ ])
-else
+elif test "$enable_x11_target" = "yes" || test "$enable_wayland_target" != "yes"; then
     AC_DEFINE([XP_UNIX], [1], [ ])
 fi
 
-if test "$with_target" = "x11"; then
+if test "$enable_x11_target" = "yes"; then
     AC_DEFINE([MOZ_X11], [1], [ ])
     AC_DEFINE([WTF_PLATFORM_X11], [1], [Define if target is X11])
+fi
+
+if test "$enable_wayland_target" = "yes"; then
+    AC_DEFINE([WTF_PLATFORM_WAYLAND], [1], [Define if target is Wayland])
 fi
 
 if test "$enable_fast_malloc" = "no"; then
@@ -55,9 +54,6 @@ fi
 
 if test "$enable_video" = "yes" || test "$enable_web_audio" = "yes"; then
     AC_DEFINE([WTF_USE_GSTREAMER], [1], [ ])
-    if test "$enable_debug" = "yes"; then
-        AC_DEFINE([GST_DISABLE_DEPRECATED], [1], [ ])
-    fi
 fi
 
 if test "$enable_web_audio" = "yes"; then
@@ -98,4 +94,14 @@ if test "$enable_jit" = "yes"; then
     AC_DEFINE([ENABLE_JIT], [1], [ ])
 elif test "$enable_jit" = "no"; then
     AC_DEFINE([ENABLE_JIT], [0], [ ])
+fi
+
+if test "$enable_ftl_jit" = "yes"; then
+    AC_DEFINE([ENABLE_FTL_JIT], [1], [ ])
+elif test "$enable_ftl_jit" = "no"; then
+    AC_DEFINE([ENABLE_FTL_JIT], [0], [ ])
+fi
+
+if test "$have_llvm" = "yes"; then
+    AC_DEFINE([HAVE_LLVM], [1], [ ])
 fi

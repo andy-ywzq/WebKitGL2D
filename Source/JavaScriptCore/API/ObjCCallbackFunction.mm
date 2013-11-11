@@ -394,9 +394,8 @@ namespace JSC {
 
 class ObjCCallbackFunctionImpl {
 public:
-    ObjCCallbackFunctionImpl(JSContext *context, NSInvocation *invocation, CallbackType type, Class instanceClass, PassOwnPtr<CallbackArgument> arguments, PassOwnPtr<CallbackResult> result)
-        : m_context(context)
-        , m_type(type)
+    ObjCCallbackFunctionImpl(NSInvocation *invocation, CallbackType type, Class instanceClass, PassOwnPtr<CallbackArgument> arguments, PassOwnPtr<CallbackResult> result)
+        : m_type(type)
         , m_instanceClass([instanceClass retain])
         , m_invocation(invocation)
         , m_arguments(arguments)
@@ -407,23 +406,10 @@ public:
 
     ~ObjCCallbackFunctionImpl()
     {
-        if (m_type != CallbackInstanceMethod)
-            [[m_invocation.get() target] release];
         [m_instanceClass release];
     }
 
     JSValueRef call(JSContext *context, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
-
-    JSContext *context()
-    {
-        return m_context.get();
-    }
-
-    void setContext(JSContext *context)
-    {
-        ASSERT(!m_context.get());
-        m_context.set(context);
-    }
 
     id wrappedBlock()
     {
@@ -431,7 +417,6 @@ public:
     }
 
 private:
-    WeakContextRef m_context;
     CallbackType m_type;
     Class m_instanceClass;
     RetainPtr<NSInvocation> m_invocation;
@@ -449,11 +434,7 @@ static JSValueRef objCCallbackFunctionCallAsFunction(JSContextRef callerContext,
 
     ObjCCallbackFunction* callback = static_cast<ObjCCallbackFunction*>(toJS(function));
     ObjCCallbackFunctionImpl* impl = callback->impl();
-    JSContext *context = impl->context();
-    if (!context) {
-        context = [JSContext contextWithJSGlobalContextRef:toGlobalRef(toJS(callerContext)->lexicalGlobalObject()->globalExec())];
-        impl->setContext(context);
-    }
+    JSContext *context = [JSContext contextWithJSGlobalContextRef:toGlobalRef(callback->globalObject()->globalExec())];
 
     CallbackData callbackData;
     JSValueRef result;
@@ -467,19 +448,49 @@ static JSValueRef objCCallbackFunctionCallAsFunction(JSContextRef callerContext,
     return result;
 }
 
+static JSObjectRef objCCallbackFunctionCallAsConstructor(JSContextRef callerContext, JSObjectRef constructor, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    JSC::APIEntryShim entryShim(toJS(callerContext));
+
+    ObjCCallbackFunction* callback = static_cast<ObjCCallbackFunction*>(toJS(constructor));
+    ObjCCallbackFunctionImpl* impl = callback->impl();
+    JSContext *context = [JSContext contextWithJSGlobalContextRef:toGlobalRef(toJS(callerContext)->lexicalGlobalObject()->globalExec())];
+
+    CallbackData callbackData;
+    JSValueRef result;
+    @autoreleasepool {
+        [context beginCallbackWithData:&callbackData thisValue:nil argumentCount:argumentCount arguments:arguments];
+        result = impl->call(context, NULL, argumentCount, arguments, exception);
+        if (context.exception)
+            *exception = valueInternalValue(context.exception);
+        [context endCallbackWithData:&callbackData];
+    }
+
+    JSGlobalContextRef contextRef = [context JSGlobalContextRef];
+    if (*exception)
+        return 0;
+
+    if (!JSValueIsObject(contextRef, result)) {
+        *exception = toRef(JSC::createTypeError(toJS(contextRef), "Objective-C blocks called as constructors must return an object."));
+        return 0;
+    }
+    return (JSObjectRef)result;
+}
+
 const JSC::ClassInfo ObjCCallbackFunction::s_info = { "CallbackFunction", &Base::s_info, 0, 0, CREATE_METHOD_TABLE(ObjCCallbackFunction) };
 
-ObjCCallbackFunction::ObjCCallbackFunction(JSC::JSGlobalObject* globalObject, JSObjectCallAsFunctionCallback callback, PassOwnPtr<ObjCCallbackFunctionImpl> impl)
-    : Base(globalObject, globalObject->objcCallbackFunctionStructure())
-    , m_callback(callback)
+ObjCCallbackFunction::ObjCCallbackFunction(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSObjectCallAsFunctionCallback functionCallback, JSObjectCallAsConstructorCallback constructCallback, PassOwnPtr<ObjCCallbackFunctionImpl> impl)
+    : Base(vm, globalObject->objcCallbackFunctionStructure())
+    , m_functionCallback(functionCallback)
+    , m_constructCallback(constructCallback)
     , m_impl(impl)
 {
 }
 
-ObjCCallbackFunction* ObjCCallbackFunction::create(JSC::ExecState* exec, JSC::JSGlobalObject* globalObject, const String& name, PassOwnPtr<ObjCCallbackFunctionImpl> impl)
+ObjCCallbackFunction* ObjCCallbackFunction::create(JSC::VM& vm, JSC::JSGlobalObject* globalObject, const String& name, PassOwnPtr<ObjCCallbackFunctionImpl> impl)
 {
-    ObjCCallbackFunction* function = new (NotNull, allocateCell<ObjCCallbackFunction>(*exec->heap())) ObjCCallbackFunction(globalObject, objCCallbackFunctionCallAsFunction, impl);
-    function->finishCreation(exec->vm(), name);
+    ObjCCallbackFunction* function = new (NotNull, allocateCell<ObjCCallbackFunction>(vm.heap)) ObjCCallbackFunction(vm, globalObject, objCCallbackFunctionCallAsFunction, objCCallbackFunctionCallAsConstructor, impl);
+    function->finishCreation(vm, name);
     return function;
 }
 
@@ -492,6 +503,15 @@ CallType ObjCCallbackFunction::getCallData(JSCell*, CallData& callData)
 {
     callData.native.function = APICallbackFunction::call<ObjCCallbackFunction>;
     return CallTypeHost;
+}
+
+ConstructType ObjCCallbackFunction::getConstructData(JSCell* cell, ConstructData& constructData)
+{
+    ObjCCallbackFunction* callback = jsCast<ObjCCallbackFunction*>(cell);
+    if (!callback->impl()->wrappedBlock())
+        return Base::getConstructData(cell, constructData);
+    constructData.native.function = APICallbackFunction::construct<ObjCCallbackFunction>;
+    return ConstructTypeHost;
 }
 
 JSValueRef ObjCCallbackFunctionImpl::call(JSContext *context, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
@@ -589,9 +609,9 @@ static JSObjectRef objCCallbackFunctionForInvocation(JSContext *context, NSInvoc
 
     JSC::ExecState* exec = toJS([context JSGlobalContextRef]);
     JSC::APIEntryShim shim(exec);
-    OwnPtr<JSC::ObjCCallbackFunctionImpl> impl = adoptPtr(new JSC::ObjCCallbackFunctionImpl(context, invocation, type, instanceClass, arguments.release(), result.release()));
+    OwnPtr<JSC::ObjCCallbackFunctionImpl> impl = adoptPtr(new JSC::ObjCCallbackFunctionImpl(invocation, type, instanceClass, arguments.release(), result.release()));
     // FIXME: Maybe we could support having the selector as the name of the function to make it a bit more user-friendly from the JS side?
-    return toRef(JSC::ObjCCallbackFunction::create(exec, exec->lexicalGlobalObject(), "", impl.release()));
+    return toRef(JSC::ObjCCallbackFunction::create(exec->vm(), exec->lexicalGlobalObject(), "", impl.release()));
 }
 
 JSObjectRef objCCallbackFunctionForMethod(JSContext *context, Class cls, Protocol *protocol, BOOL isInstanceMethod, SEL sel, const char* types)
@@ -609,7 +629,10 @@ JSObjectRef objCCallbackFunctionForBlock(JSContext *context, id target)
         return 0;
     const char* signature = _Block_signature(target);
     NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:[NSMethodSignature signatureWithObjCTypes:signature]];
-    [invocation setTarget:[target copy]];
+    [invocation retainArguments];
+    id targetCopy = [target copy];
+    [invocation setTarget:targetCopy];
+    [targetCopy release];
     return objCCallbackFunctionForInvocation(context, invocation, CallbackBlock, nil, signature);
 }
 

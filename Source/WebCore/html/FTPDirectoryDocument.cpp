@@ -44,29 +44,27 @@
 #include <wtf/text/WTFString.h>
 #include <wtf/unicode/CharacterNames.h>
 
-using namespace std;
-
 namespace WebCore {
 
 using namespace HTMLNames;
     
-class FTPDirectoryDocumentParser : public HTMLDocumentParser {
+class FTPDirectoryDocumentParser FINAL : public HTMLDocumentParser {
 public:
-    static PassRefPtr<FTPDirectoryDocumentParser> create(HTMLDocument* document)
+    static PassRefPtr<FTPDirectoryDocumentParser> create(HTMLDocument& document)
     {
         return adoptRef(new FTPDirectoryDocumentParser(document));
     }
 
-    virtual void append(PassRefPtr<StringImpl>);
-    virtual void finish();
+    virtual void append(PassRefPtr<StringImpl>) OVERRIDE;
+    virtual void finish() OVERRIDE;
 
-    virtual bool isWaitingForScripts() const { return false; }
+    virtual bool isWaitingForScripts() const OVERRIDE { return false; }
 
     inline void checkBuffer(int len = 10)
     {
         if ((m_dest - m_buffer) > m_size - len) {
             // Enlarge buffer
-            int newSize = max(m_size * 2, m_size + len);
+            int newSize = std::max(m_size * 2, m_size + len);
             int oldOffset = m_dest - m_buffer;
             m_buffer = static_cast<UChar*>(fastRealloc(m_buffer, newSize * sizeof(UChar)));
             m_dest = m_buffer + oldOffset;
@@ -75,7 +73,7 @@ public:
     }
         
 private:
-    FTPDirectoryDocumentParser(HTMLDocument*);
+    FTPDirectoryDocumentParser(HTMLDocument&);
 
     // The parser will attempt to load the document template specified via the preference
     // Failing that, it will fall back and create the basic document which will have a minimal
@@ -99,7 +97,7 @@ private:
     ListState m_listState;
 };
 
-FTPDirectoryDocumentParser::FTPDirectoryDocumentParser(HTMLDocument* document)
+FTPDirectoryDocumentParser::FTPDirectoryDocumentParser(HTMLDocument& document)
     : HTMLDocumentParser(document, false)
     , m_skipLF(false)
     , m_size(254)
@@ -114,7 +112,7 @@ void FTPDirectoryDocumentParser::appendEntry(const String& filename, const Strin
     rowElement->setAttribute("class", "ftpDirectoryEntryRow", IGNORE_EXCEPTION);
 
     RefPtr<Element> element = document()->createElement(tdTag, false);
-    element->appendChild(Text::create(document(), String(&noBreakSpace, 1)), IGNORE_EXCEPTION);
+    element->appendChild(Text::create(*document(), String(&noBreakSpace, 1)), IGNORE_EXCEPTION);
     if (isDirectory)
         element->setAttribute("class", "ftpDirectoryIcon ftpDirectoryTypeDirectory", IGNORE_EXCEPTION);
     else
@@ -126,12 +124,12 @@ void FTPDirectoryDocumentParser::appendEntry(const String& filename, const Strin
     rowElement->appendChild(element, IGNORE_EXCEPTION);
 
     element = document()->createElement(tdTag, false);
-    element->appendChild(Text::create(document(), date), IGNORE_EXCEPTION);
+    element->appendChild(Text::create(*document(), date), IGNORE_EXCEPTION);
     element->setAttribute("class", "ftpDirectoryFileDate", IGNORE_EXCEPTION);
     rowElement->appendChild(element, IGNORE_EXCEPTION);
 
     element = document()->createElement(tdTag, false);
-    element->appendChild(Text::create(document(), size), IGNORE_EXCEPTION);
+    element->appendChild(Text::create(*document(), size), IGNORE_EXCEPTION);
     element->setAttribute("class", "ftpDirectoryFileSize", IGNORE_EXCEPTION);
     rowElement->appendChild(element, IGNORE_EXCEPTION);
 }
@@ -146,7 +144,7 @@ PassRefPtr<Element> FTPDirectoryDocumentParser::createTDForFilename(const String
 
     RefPtr<Element> anchorElement = document()->createElement(aTag, false);
     anchorElement->setAttribute("href", fullURL, IGNORE_EXCEPTION);
-    anchorElement->appendChild(Text::create(document(), filename), IGNORE_EXCEPTION);
+    anchorElement->appendChild(Text::create(*document(), filename), IGNORE_EXCEPTION);
 
     RefPtr<Element> tdElement = document()->createElement(tdTag, false);
     tdElement->appendChild(anchorElement, IGNORE_EXCEPTION);
@@ -425,7 +423,7 @@ void FTPDirectoryDocumentParser::finish()
     HTMLDocumentParser::finish();
 }
 
-FTPDirectoryDocument::FTPDirectoryDocument(Frame* frame, const KURL& url)
+FTPDirectoryDocument::FTPDirectoryDocument(Frame* frame, const URL& url)
     : HTMLDocument(frame, url)
 {
 #if !LOG_DISABLED
@@ -435,7 +433,7 @@ FTPDirectoryDocument::FTPDirectoryDocument(Frame* frame, const KURL& url)
 
 PassRefPtr<DocumentParser> FTPDirectoryDocument::createParser()
 {
-    return FTPDirectoryDocumentParser::create(this);
+    return FTPDirectoryDocumentParser::create(*this);
 }
 
 }

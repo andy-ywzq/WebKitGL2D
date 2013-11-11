@@ -66,7 +66,7 @@ public:
     unsigned findAttributeIndexByNameForAttributeNode(const Attr*, bool shouldIgnoreAttributeCase = false) const;
 
     bool hasID() const { return !m_idForStyleResolution.isNull(); }
-    bool hasClass() const { return !m_classNames.isNull(); }
+    bool hasClass() const { return !m_classNames.isEmpty(); }
     bool hasName() const { return m_hasNameAttribute; }
 
     bool isEquivalent(const ElementData* other) const;
@@ -75,7 +75,7 @@ public:
 
 protected:
     ElementData();
-    ElementData(unsigned arraySize);
+    explicit ElementData(unsigned arraySize);
     ElementData(const ElementData&, bool isUnique);
 
     unsigned m_isUnique : 1;
@@ -100,11 +100,13 @@ private:
     friend class SVGElement;
 #endif
 
+    void destroy();
+
     const Attribute* attributeBase() const;
     const Attribute* findAttributeByName(const AtomicString& name, bool shouldIgnoreAttributeCase) const;
     unsigned findAttributeIndexByNameSlowCase(const AtomicString& name, bool shouldIgnoreAttributeCase) const;
 
-    PassRefPtr<UniqueElementData> makeUniqueCopy() const;
+    PassRef<UniqueElementData> makeUniqueCopy() const;
 };
 
 #if COMPILER(MSVC)
@@ -114,7 +116,7 @@ private:
 
 class ShareableElementData : public ElementData {
 public:
-    static PassRefPtr<ShareableElementData> createWithAttributes(const Vector<Attribute>&);
+    static PassRef<ShareableElementData> createWithAttributes(const Vector<Attribute>&);
 
     explicit ShareableElementData(const Vector<Attribute>&);
     explicit ShareableElementData(const UniqueElementData&);
@@ -129,8 +131,8 @@ public:
 
 class UniqueElementData : public ElementData {
 public:
-    static PassRefPtr<UniqueElementData> create();
-    PassRefPtr<ShareableElementData> makeShareableCopy() const;
+    static PassRef<UniqueElementData> create();
+    PassRef<ShareableElementData> makeShareableCopy() const;
 
     // These functions do no error/duplicate checking.
     void addAttribute(const QualifiedName&, const AtomicString&);
@@ -146,6 +148,13 @@ public:
     mutable RefPtr<StylePropertySet> m_presentationAttributeStyle;
     Vector<Attribute, 4> m_attributeVector;
 };
+
+inline void ElementData::deref()
+{
+    if (!derefBase())
+        return;
+    destroy();
+}
 
 inline unsigned ElementData::length() const
 {
@@ -222,6 +231,21 @@ inline const Attribute& ElementData::attributeAt(unsigned index) const
 {
     RELEASE_ASSERT(index < length());
     return attributeBase()[index];
+}
+
+inline void UniqueElementData::addAttribute(const QualifiedName& attributeName, const AtomicString& value)
+{
+    m_attributeVector.append(Attribute(attributeName, value));
+}
+
+inline void UniqueElementData::removeAttribute(unsigned index)
+{
+    m_attributeVector.remove(index);
+}
+
+inline Attribute& UniqueElementData::attributeAt(unsigned index)
+{
+    return m_attributeVector.at(index);
 }
 
 }

@@ -37,9 +37,6 @@ enum WKFontSmoothingLevel {
     kWKFontSmoothingLevelLight = 1,
     kWKFontSmoothingLevelMedium = 2,
     kWKFontSmoothingLevelStrong = 3,
-#if defined(WIN32) || defined(_WIN32)
-    kWKFontSmoothingLevelWindows = 4,
-#endif
 };
 typedef enum WKFontSmoothingLevel WKFontSmoothingLevel;
 
@@ -55,7 +52,7 @@ typedef enum WKEditableLinkBehavior WKEditableLinkBehavior;
 // Creates a copy with no identifier.
 WK_EXPORT WKPreferencesRef WKPreferencesCreateCopy(WKPreferencesRef);
 
-// Defaults to kWKFontSmoothingLevelWindows on Windows, kWKFontSmoothingLevelMedium on other platforms.
+// Defaults to kWKFontSmoothingLevelMedium.
 WK_EXPORT void WKPreferencesSetFontSmoothingLevel(WKPreferencesRef, WKFontSmoothingLevel);
 WK_EXPORT WKFontSmoothingLevel WKPreferencesGetFontSmoothingLevel(WKPreferencesRef);
 
@@ -95,9 +92,17 @@ WK_EXPORT bool WKPreferencesGetTiledScrollingIndicatorVisible(WKPreferencesRef);
 WK_EXPORT void WKPreferencesSetCSSCustomFilterEnabled(WKPreferencesRef, bool flag);
 WK_EXPORT bool WKPreferencesGetCSSCustomFilterEnabled(WKPreferencesRef);
 
-// Defaults to false.
+// Defaults to true.
 WK_EXPORT void WKPreferencesSetWebGLEnabled(WKPreferencesRef, bool);
 WK_EXPORT bool WKPreferencesGetWebGLEnabled(WKPreferencesRef);
+
+// Defaults to false.
+WK_EXPORT void WKPreferencesSetMultithreadedWebGLEnabled(WKPreferencesRef, bool);
+WK_EXPORT bool WKPreferencesGetMultithreadedWebGLEnabled(WKPreferencesRef);
+
+// Defaults to false.
+WK_EXPORT void WKPreferencesSetForceSoftwareWebGLRendering(WKPreferencesRef, bool);
+WK_EXPORT bool WKPreferencesGetForceSoftwareWebGLRendering(WKPreferencesRef);
 
 // Defaults to false.
 WK_EXPORT void WKPreferencesSetAccelerated2DCanvasEnabled(WKPreferencesRef, bool);
@@ -187,7 +192,7 @@ WK_EXPORT bool WKPreferencesGetMockScrollbarsEnabled(WKPreferencesRef preference
 WK_EXPORT void WKPreferencesSetApplicationChromeModeEnabled(WKPreferencesRef preferencesRef, bool enabled);
 WK_EXPORT bool WKPreferencesGetApplicationChromeModeEnabled(WKPreferencesRef preferencesRef);
 
-// Defaults to false.
+// Deprecated. Always returns false.
 WK_EXPORT void WKPreferencesSetInspectorUsesWebKitUserInterface(WKPreferencesRef preferencesRef, bool enabled);
 WK_EXPORT bool WKPreferencesGetInspectorUsesWebKitUserInterface(WKPreferencesRef preferencesRef);
 
@@ -282,6 +287,10 @@ WK_EXPORT bool WKPreferencesGetAutostartOriginPlugInSnapshottingEnabled(WKPrefer
 // Defaults to true
 WK_EXPORT void WKPreferencesSetPrimaryPlugInSnapshotDetectionEnabled(WKPreferencesRef preferencesRef, bool enabled);
 WK_EXPORT bool WKPreferencesGetPrimaryPlugInSnapshotDetectionEnabled(WKPreferencesRef preferencesRef);
+
+// Defaults to true
+WK_EXPORT void WKPreferencesSetThreadedScrollingEnabled(WKPreferencesRef preferencesRef, bool enabled);
+WK_EXPORT bool WKPreferencesGetThreadedScrollingEnabled(WKPreferencesRef preferencesRef);
 
 // Defaults to 5 seconds.
 WK_EXPORT void WKPreferencesSetIncrementalRenderingSuppressionTimeout(WKPreferencesRef preferencesRef, double timeout);

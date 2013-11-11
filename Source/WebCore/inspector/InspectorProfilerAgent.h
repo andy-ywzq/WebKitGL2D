@@ -86,7 +86,7 @@ public:
     void enable(bool skipRecompile);
     bool enabled() { return m_enabled; }
     String getCurrentUserInitiatedProfileName(bool incrementProfileNumber = false);
-    virtual void getProfileHeaders(ErrorString*, RefPtr<TypeBuilder::Array<TypeBuilder::Profiler::ProfileHeader> >&);
+    virtual void getProfileHeaders(ErrorString*, RefPtr<TypeBuilder::Array<TypeBuilder::Profiler::ProfileHeader>>&);
     virtual void getCPUProfile(ErrorString*, int uid, RefPtr<TypeBuilder::Profiler::CPUProfile>&);
     virtual void getHeapSnapshot(ErrorString*, int uid);
     virtual void removeProfile(ErrorString*, const String& type, int uid);
@@ -101,17 +101,14 @@ public:
     virtual void getObjectByHeapObjectId(ErrorString*, const String& heapSnapshotObjectId, const String* objectGroup, RefPtr<TypeBuilder::Runtime::RemoteObject>& result);
     virtual void getHeapObjectId(ErrorString*, const String& objectId, String* heapSnapshotObjectId);
 
-    void willProcessTask();
-    void didProcessTask();
-
 protected:
     InspectorProfilerAgent(InstrumentingAgents*, InspectorConsoleAgent*, InspectorCompositeState*, InjectedScriptManager*);
     virtual void startProfiling(const String& title) = 0;
     virtual PassRefPtr<ScriptProfile> stopProfiling(const String& title) = 0;
 
 private:
-    typedef HashMap<unsigned int, RefPtr<ScriptProfile> > ProfilesMap;
-    typedef HashMap<unsigned int, RefPtr<ScriptHeapSnapshot> > HeapSnapshotsMap;
+    typedef HashMap<unsigned int, RefPtr<ScriptProfile>> ProfilesMap;
+    typedef HashMap<unsigned int, RefPtr<ScriptHeapSnapshot>> HeapSnapshotsMap;
 
     void resetFrontendProfiles();
     void restoreEnablement();
@@ -132,7 +129,6 @@ private:
 
     typedef HashMap<String, double> ProfileNameIdleTimeMap;
     ProfileNameIdleTimeMap* m_profileNameIdleTimeMap;
-    double m_previousTaskEndTime;
 };
 
 } // namespace WebCore

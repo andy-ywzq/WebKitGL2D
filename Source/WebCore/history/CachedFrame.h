@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009, 2010 Apple Inc. All rights reserved.
+ * Copyright (C) 2009, 2010, 2013 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,10 +27,9 @@
 #define CachedFrame_h
 
 #include "DOMWindow.h"
-#include "KURL.h"
+#include "URL.h"
 #include "ScriptCachedFrameData.h"
 #include <wtf/PassOwnPtr.h>
-#include <wtf/RefCounted.h>
 #include <wtf/RefPtr.h>
 
 namespace WebCore {
@@ -42,26 +41,24 @@ class DocumentLoader;
 class FrameView;
 class Node;
 
-typedef Vector<RefPtr<CachedFrame> > CachedFrameVector;
-
 class CachedFrameBase {
 public:
     void restore();
 
     Document* document() const { return m_document.get(); }
     FrameView* view() const { return m_view.get(); }
-    const KURL& url() const { return m_url; }
+    const URL& url() const { return m_url; }
     bool isMainFrame() { return m_isMainFrame; }
 
 protected:
-    CachedFrameBase(Frame*);
+    CachedFrameBase(Frame&);
     ~CachedFrameBase();
     
     RefPtr<Document> m_document;
     RefPtr<DocumentLoader> m_documentLoader;
     RefPtr<FrameView> m_view;
     RefPtr<Node> m_mousePressNode;
-    KURL m_url;
+    URL m_url;
     OwnPtr<ScriptCachedFrameData> m_cachedFrameScriptData;
     OwnPtr<CachedFramePlatformData> m_cachedFramePlatformData;
     bool m_isMainFrame;
@@ -69,12 +66,12 @@ protected:
     bool m_isComposited;
 #endif
     
-    CachedFrameVector m_childFrames;
+    Vector<OwnPtr<CachedFrame>> m_childFrames;
 };
 
-class CachedFrame : public RefCounted<CachedFrame>, private CachedFrameBase {
+class CachedFrame : private CachedFrameBase {
 public:
-    static PassRefPtr<CachedFrame> create(Frame* frame) { return adoptRef(new CachedFrame(frame)); }
+    static PassOwnPtr<CachedFrame> create(Frame& frame) { return adoptPtr(new CachedFrame(frame)); }
 
     void open();
     void clear();
@@ -92,7 +89,7 @@ public:
     int descendantFrameCount() const;
 
 private:
-    explicit CachedFrame(Frame*);
+    explicit CachedFrame(Frame&);
 };
 
 } // namespace WebCore
