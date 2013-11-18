@@ -27,6 +27,8 @@ WebInspector.ConsolePrompt = function(delegate, mimeType, element)
 {
     WebInspector.Object.call(this);
 
+    mimeType = parseMIMEType(mimeType).type;
+
     this._element = element || document.createElement("div");
     this._element.classList.add(WebInspector.ConsolePrompt.StyleClassName);
     this._element.classList.add(WebInspector.SyntaxHighlightedStyleClassName);
@@ -53,6 +55,7 @@ WebInspector.ConsolePrompt = function(delegate, mimeType, element)
     this._codeMirror.addKeyMap(keyMap);
 
     this._completionController = new WebInspector.CodeMirrorCompletionController(this._codeMirror, this);
+    this._completionController.addExtendedCompletionProvider("javascript", WebInspector.javaScriptRuntimeCompletionProvider);
 
     this._history = [{}];
     this._historyIndex = 0;

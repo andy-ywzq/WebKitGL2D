@@ -126,7 +126,11 @@ public:
     void waitForPolicyDelegate();
     size_t webHistoryItemCount();
     int windowCount();
-    
+
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+    void setTextAutosizingEnabled(bool);
+#endif
+
 #if PLATFORM(MAC) || PLATFORM(GTK) || PLATFORM(WIN) || PLATFORM(EFL)
     JSRetainPtr<JSStringRef> platformName() const;
 #endif
@@ -282,8 +286,8 @@ public:
     const std::string& testPathOrURL() const { return m_testPathOrURL; }
     const std::string& expectedPixelHash() const { return m_expectedPixelHash; }
 
-    const std::string& encodedAudioData() const { return m_encodedAudioData; }
-    void setEncodedAudioData(const std::string& encodedAudioData) { m_encodedAudioData = encodedAudioData; }
+    const std::vector<char>& audioResult() const { return m_audioResult; }
+    void setAudioResult(const std::vector<char>& audioData) { m_audioResult = audioData; }
 
     void addOriginAccessWhitelistEntry(JSStringRef sourceOrigin, JSStringRef destinationProtocol, JSStringRef destinationHost, bool allowDestinationSubdomains);
     void removeOriginAccessWhitelistEntry(JSStringRef sourceOrigin, JSStringRef destinationProtocol, JSStringRef destinationHost, bool allowDestinationSubdomains);
@@ -414,9 +418,8 @@ private:
     std::string m_titleTextDirection;
 
     std::set<std::string> m_willSendRequestClearHeaders;
-    
-    // base64 encoded WAV audio data is stored here.
-    std::string m_encodedAudioData;
+
+    std::vector<char> m_audioResult;
 
     std::map<std::string, std::string> m_URLsToRedirect;
     

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Apple Inc. All rights reserved.
+ * Copyright (C) 2010, 2013 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -39,7 +39,7 @@
 #include <WebCore/GraphicsContext.h>
 #include <WebCore/HWndDC.h>
 #include <WebCore/Page.h>
-#include <WebCore/PlatformCALayer.h>
+#include <WebCore/PlatformCALayerWin.h>
 #include <WebCore/TextRun.h>
 #include <WebKitSystemInterface/WebKitSystemInterface.h>
 #include <windowsx.h>
@@ -187,10 +187,10 @@ private:
 
     virtual void platformCALayerAnimationStarted(CFTimeInterval beginTime) { }
     virtual GraphicsLayer::CompositingCoordinatesOrientation platformCALayerContentsOrientation() const { return GraphicsLayer::CompositingCoordinatesBottomUp; }
-    virtual void platformCALayerPaintContents(GraphicsContext&, const IntRect& inClip) { }
+    virtual void platformCALayerPaintContents(PlatformCALayer*, GraphicsContext&, const IntRect& inClip) { }
     virtual bool platformCALayerShowDebugBorders() const { return false; }
     virtual bool platformCALayerShowRepaintCounter(PlatformCALayer*) const { return false; }
-    virtual int platformCALayerIncrementRepaintCount() { return 0; }
+    virtual int platformCALayerIncrementRepaintCount(PlatformCALayer*) { return 0; }
 
     virtual bool platformCALayerContentsOpaque() const { return false; }
     virtual bool platformCALayerDrawsContent() const { return false; }
@@ -229,7 +229,8 @@ void FullscreenVideoController::LayerClient::platformCALayerLayoutSublayersOfLay
     FloatPoint videoOrigin;
     videoOrigin.setX((layerBounds.width() - videoSize.width()) * 0.5);
     videoOrigin.setY((layerBounds.height() - videoSize.height()) * 0.5);
-    videoLayer->setFrame(FloatRect(videoOrigin, videoSize));
+    videoLayer->setPosition(videoOrigin);
+    videoLayer->setBounds(FloatRect(FloatPoint(), videoSize));
 }
 #endif 
 
@@ -248,7 +249,7 @@ FullscreenVideoController::FullscreenVideoController()
     , m_timer(this, &FullscreenVideoController::timerFired)
 #if USE(ACCELERATED_COMPOSITING)
     , m_layerClient(adoptPtr(new LayerClient(this)))
-    , m_rootChild(PlatformCALayer::create(PlatformCALayer::LayerTypeLayer, m_layerClient.get()))
+    , m_rootChild(PlatformCALayerWin::create(PlatformCALayer::LayerTypeLayer, m_layerClient.get()))
 #endif
     , m_fullscreenWindow(adoptPtr(new MediaPlayerPrivateFullscreenWindow(this)))
 {
@@ -278,7 +279,7 @@ void FullscreenVideoController::enterFullscreen()
     if (!m_mediaElement)
         return;
 
-    WebView* webView = kit(m_mediaElement->document()->page());
+    WebView* webView = kit(m_mediaElement->document().page());
     HWND parentHwnd = webView ? webView->viewWindow() : 0;
 
     m_fullscreenWindow->createWindow(parentHwnd);
@@ -443,7 +444,7 @@ void FullscreenVideoController::createHUDWindow()
     // will get cleaned up when m_bitmap is destroyed in the dtor
     void* pixels;
     BitmapInfo bitmapInfo = BitmapInfo::createBottomUp(IntSize(windowWidth, windowHeight));
-    m_bitmap = adoptPtr(::CreateDIBSection(0, &bitmapInfo, DIB_RGB_COLORS, &pixels, 0, 0));
+    m_bitmap = adoptGDIObject(::CreateDIBSection(0, &bitmapInfo, DIB_RGB_COLORS, &pixels, 0, 0));
 
     // Dirty the window so the HUD draws
     RECT clearRect = { m_hudPosition.x(), m_hudPosition.y(), m_hudPosition.x() + windowWidth, m_hudPosition.y() + windowHeight };
@@ -487,7 +488,7 @@ static String timeToString(float time)
 
 void FullscreenVideoController::draw()
 {
-    OwnPtr<HDC> bitmapDC = adoptPtr(CreateCompatibleDC(HWndDC(m_hudWindow)));
+    auto bitmapDC = adoptGDIObject(::CreateCompatibleDC(HWndDC(m_hudWindow)));
     HGDIOBJ oldBitmap = SelectObject(bitmapDC.get(), m_bitmap.get());
 
     GraphicsContext context(bitmapDC.get(), true);

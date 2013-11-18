@@ -25,30 +25,30 @@
 #include "SVGAnimatedBoolean.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGAnimatedRect.h"
+#include "SVGElement.h"
 #include "SVGExternalResourcesRequired.h"
 #include "SVGFitToViewBox.h"
 #include "SVGStringList.h"
-#include "SVGStyledElement.h"
 #include "SVGZoomAndPan.h"
 
 namespace WebCore {
 
-class SVGViewElement FINAL : public SVGStyledElement,
+class SVGViewElement FINAL : public SVGElement,
                              public SVGExternalResourcesRequired,
                              public SVGFitToViewBox,
                              public SVGZoomAndPan {
 public:
-    static PassRefPtr<SVGViewElement> create(const QualifiedName&, Document*);
+    static PassRefPtr<SVGViewElement> create(const QualifiedName&, Document&);
 
-    using SVGStyledElement::ref;
-    using SVGStyledElement::deref;
+    using SVGElement::ref;
+    using SVGElement::deref;
 
     SVGStringList& viewTarget() { return m_viewTarget; }
     SVGZoomAndPanType zoomAndPan() const { return m_zoomAndPan; }
     void setZoomAndPan(unsigned short zoomAndPan) { m_zoomAndPan = SVGZoomAndPan::parseFromNumber(zoomAndPan); }
 
 private:
-    SVGViewElement(const QualifiedName&, Document*);
+    SVGViewElement(const QualifiedName&, Document&);
 
     // FIXME: svgAttributeChanged missing.
     bool isSupportedAttribute(const QualifiedName&);
@@ -65,6 +65,8 @@ private:
     SVGZoomAndPanType m_zoomAndPan;
     SVGStringList m_viewTarget;
 };
+
+NODE_TYPE_CASTS(SVGViewElement)
 
 } // namespace WebCore
 

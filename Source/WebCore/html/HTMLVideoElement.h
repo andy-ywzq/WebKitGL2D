@@ -35,7 +35,7 @@ class HTMLImageLoader;
 
 class HTMLVideoElement FINAL : public HTMLMediaElement {
 public:
-    static PassRefPtr<HTMLVideoElement> create(const QualifiedName&, Document*, bool);
+    static PassRefPtr<HTMLVideoElement> create(const QualifiedName&, Document&, bool);
 
     unsigned width() const;
     unsigned height() const;
@@ -69,40 +69,36 @@ public:
 
     bool shouldDisplayPosterImage() const { return displayMode() == Poster || displayMode() == PosterWaitingForVideo; }
 
-    KURL posterImageURL() const;
+    URL posterImageURL() const;
 
 private:
-    HTMLVideoElement(const QualifiedName&, Document*, bool);
+    HTMLVideoElement(const QualifiedName&, Document&, bool);
 
-    virtual bool rendererIsNeeded(const RenderStyle&);
+    virtual bool rendererIsNeeded(const RenderStyle&) OVERRIDE;
 #if !ENABLE(PLUGIN_PROXY_FOR_VIDEO)
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
 #endif
     virtual void didAttachRenderers() OVERRIDE;
     virtual void parseAttribute(const QualifiedName&, const AtomicString&) OVERRIDE;
     virtual bool isPresentationAttribute(const QualifiedName&) const OVERRIDE;
     virtual void collectStyleForPresentationAttribute(const QualifiedName&, const AtomicString&, MutableStylePropertySet*) OVERRIDE;
-    virtual bool isVideo() const { return true; }
-    virtual bool hasVideo() const { return player() && player()->hasVideo(); }
-    virtual bool supportsFullscreen() const;
+    virtual bool isVideo() const OVERRIDE { return true; }
+    virtual bool hasVideo() const OVERRIDE { return player() && player()->hasVideo(); }
+    virtual bool supportsFullscreen() const OVERRIDE;
     virtual bool isURLAttribute(const Attribute&) const OVERRIDE;
     virtual const AtomicString& imageSourceURL() const OVERRIDE;
 
     virtual bool hasAvailableVideoFrame() const;
-    virtual void updateDisplayState();
+    virtual void updateDisplayState() OVERRIDE;
     virtual void didMoveToNewDocument(Document* oldDocument) OVERRIDE;
-    virtual void setDisplayMode(DisplayMode);
+    virtual void setDisplayMode(DisplayMode) OVERRIDE;
 
     OwnPtr<HTMLImageLoader> m_imageLoader;
 
     AtomicString m_defaultPosterURL;
 };
 
-inline HTMLVideoElement* toHTMLVideoElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->hasTagName(HTMLNames::videoTag));
-    return static_cast<HTMLVideoElement*>(node);
-}
+NODE_TYPE_CASTS(HTMLVideoElement)
 
 } //namespace
 

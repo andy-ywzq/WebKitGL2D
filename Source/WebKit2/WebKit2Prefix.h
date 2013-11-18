@@ -34,15 +34,15 @@
 
 #define ENABLE_WEB_PROCESS_SANDBOX 1
 
-#if ENABLE(NETSCAPE_PLUGIN_API)
-#define ENABLE_PLUGIN_PROCESS 1
-#endif
-
 #define ENABLE_NETWORK_PROCESS 1
+
+#define ENABLE_DATABASE_PROCESS 1
 
 #define ENABLE_MEMORY_SAMPLER 1
 
 #define ENABLE_CUSTOM_PROTOCOLS 1
+
+#define ENABLE_SHAREABLE_RESOURCE 1
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreGraphics/CoreGraphics.h>
@@ -54,7 +54,7 @@
 #endif
 #endif
 
-#if ENABLE(PLUGIN_PROCESS)
+#if ENABLE(NETSCAPE_PLUGIN_API)
 #define ENABLE_SHARED_WORKER_PROCESS 1
 #endif
 

@@ -169,11 +169,6 @@ void EditorClientEfl::getClientPasteboardDataForRange(WebCore::Range*, Vector<St
 {
 }
 
-void EditorClientEfl::didSetSelectionTypesForPasteboard()
-{
-    notImplemented();
-}
-
 void EditorClientEfl::registerUndoStep(WTF::PassRefPtr<UndoStep> step)
 {
     if (!m_isInRedo)
@@ -284,7 +279,7 @@ bool EditorClientEfl::handleEditingKeyboardEvent(KeyboardEvent* event)
 {
     Node* node = event->target()->toNode();
     ASSERT(node);
-    Frame* frame = node->document()->frame();
+    Frame* frame = node->document().frame();
     ASSERT(frame);
 
     const PlatformKeyboardEvent* keyEvent = event->keyEvent();

@@ -614,7 +614,7 @@ void GraphicsContext::drawFocusRing(const Vector<IntRect>& rects, int width, int
     cairo_restore(cr);
 }
 
-void GraphicsContext::drawLineForText(const FloatPoint& origin, float width, bool)
+void GraphicsContext::drawLineForText(const FloatRect& bounds, bool)
 {
     if (paintingDisabled())
         return;
@@ -623,17 +623,22 @@ void GraphicsContext::drawLineForText(const FloatPoint& origin, float width, boo
     cairo_save(cairoContext);
 
     // This bumping of <1 stroke thicknesses matches the one in drawLineOnCairoContext.
-    FloatPoint endPoint(origin + IntSize(width, 0));
-    FloatRect lineExtents(origin, FloatSize(width, strokeThickness()));
+    FloatPoint endPoint(bounds.location() + IntSize(bounds.width(), 0));
+    FloatRect lineExtents(bounds.location(), FloatSize(bounds.width(), strokeThickness()));
 
     ShadowBlur& shadow = platformContext()->shadowBlur();
     if (GraphicsContext* shadowContext = shadow.beginShadowLayer(this, lineExtents)) {
-        drawLineOnCairoContext(this, shadowContext->platformContext()->cr(), origin, endPoint);
+        drawLineOnCairoContext(this, shadowContext->platformContext()->cr(), bounds.location(), endPoint);
         shadow.endShadowLayer(this);
     }
 
-    drawLineOnCairoContext(this, cairoContext, origin, endPoint);
+    drawLineOnCairoContext(this, cairoContext, bounds.location(), endPoint);
     cairo_restore(cairoContext);
+}
+
+void GraphicsContext::updateDocumentMarkerResources()
+{
+    // Unnecessary, since our document markers don't use resources.
 }
 
 void GraphicsContext::drawLineForDocumentMarker(const FloatPoint& origin, float width, DocumentMarkerLineStyle style)
@@ -757,7 +762,7 @@ void GraphicsContext::setPlatformStrokeStyle(StrokeStyle strokeStyle)
     }
 }
 
-void GraphicsContext::setURLForRect(const KURL&, const IntRect&)
+void GraphicsContext::setURLForRect(const URL&, const IntRect&)
 {
     notImplemented();
 }
@@ -1040,7 +1045,7 @@ void GraphicsContext::fillRoundedRect(const IntRect& r, const IntSize& topLeft, 
     cairo_restore(cr);
 }
 
-void GraphicsContext::fillRectWithRoundedHole(const IntRect& rect, const RoundedRect& roundedHoleRect, const Color& color, ColorSpace colorSpace)
+void GraphicsContext::fillRectWithRoundedHole(const IntRect& rect, const RoundedRect& roundedHoleRect, const Color& color, ColorSpace)
 {
     if (paintingDisabled() || !color.isValid())
         return;

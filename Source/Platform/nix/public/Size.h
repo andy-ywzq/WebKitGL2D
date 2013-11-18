@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2009 Google Inc. All rights reserved.
+ * Copyright (C) 2013 Nokia Corporation and/or its subsidiary(-ies).
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -31,17 +32,16 @@
 #ifndef Nix_Size_h
 #define Nix_Size_h
 
-#ifdef BUILDING_NIX__
-#include "IntSize.h"
-#endif
-
 namespace Nix {
 
 struct Size {
     int width;
     int height;
 
-    bool isEmpty() const { return width <= 0 || height <= 0; }
+    bool isEmpty() const
+    {
+        return width <= 0 || height <= 0;
+    }
 
     Size()
         : width(0)
@@ -55,37 +55,17 @@ struct Size {
     {
     }
 
-#ifdef BUILDING_NIX__
-    Size(const WebCore::IntSize& s)
-        : width(s.width())
-        , height(s.height())
+    bool operator==(const Size& other) const
     {
+        return width == other.width && height == other.height;
     }
 
-    Size& operator=(const WebCore::IntSize& s)
+    bool operator!=(const Size& other) const
     {
-        width = s.width();
-        height = s.height();
-        return *this;
+        return !(*this == other);
     }
-
-    operator WebCore::IntSize() const
-    {
-        return WebCore::IntSize(width, height);
-    }
-#endif
 };
-
-inline bool operator==(const Size& a, const Size& b)
-{
-    return a.width == b.width && a.height == b.height;
-}
-
-inline bool operator!=(const Size& a, const Size& b)
-{
-    return !(a == b);
-}
 
 } // namespace Nix
 
-#endif
+#endif // Nix_Size_h

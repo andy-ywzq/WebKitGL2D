@@ -42,7 +42,7 @@ void EditorState::encode(CoreIPC::ArgumentEncoder& encoder) const
     encoder << isInPlugin;
     encoder << hasComposition;
 
-#if PLATFORM(QT) || PLATFORM(NIX)
+#if PLATFORM(NIX)
     encoder << cursorPosition;
     encoder << anchorPosition;
     encoder << editorRect;
@@ -50,14 +50,11 @@ void EditorState::encode(CoreIPC::ArgumentEncoder& encoder) const
     encoder << inputMethodHints;
     encoder << selectedText;
     encoder << surroundingText;
-#endif
-
-#if PLATFORM(QT) || PLATFORM(GTK) || PLATFORM(NIX)
-    encoder << cursorRect;
-#endif
-
-#if PLATFORM(NIX)
     encoder << submitLabel;
+#endif
+
+#if PLATFORM(GTK) || PLATFORM(NIX)
+    encoder << cursorRect;
 #endif
 }
 
@@ -87,7 +84,7 @@ bool EditorState::decode(CoreIPC::ArgumentDecoder& decoder, EditorState& result)
     if (!decoder.decode(result.hasComposition))
         return false;
 
-#if PLATFORM(QT) || PLATFORM(NIX)
+#if PLATFORM(NIX)
     if (!decoder.decode(result.cursorPosition))
         return false;
 
@@ -108,17 +105,16 @@ bool EditorState::decode(CoreIPC::ArgumentDecoder& decoder, EditorState& result)
 
     if (!decoder.decode(result.surroundingText))
         return false;
+
+    if (!decoder.decode(result.submitLabel))
+        return false;
 #endif
 
-#if PLATFORM(QT) || PLATFORM(GTK) || PLATFORM(NIX)
+#if PLATFORM(GTK) || PLATFORM(NIX)
     if (!decoder.decode(result.cursorRect))
         return false;
 #endif
 
-#if PLATFORM(NIX)
-    if (!decoder.decode(result.submitLabel))
-        return false;
-#endif
     return true;
 }
 

@@ -34,12 +34,76 @@
 #include <WebKit2/WKBundleFrame.h>
 #include <WebKit2/WKBundlePagePrivate.h>
 #include <WebKit2/WKBundlePrivate.h>
+#include <WebKit2/WKContextMenuItem.h>
 #include <WebKit2/WKMutableDictionary.h>
 #include <WebKit2/WKNumber.h>
+#include <wtf/StdLibExtras.h>
 
 namespace WTR {
 
 static const float ZoomMultiplierRatio = 1.2f;
+
+struct MenuItemPrivateData {
+    MenuItemPrivateData(WKBundlePageRef page, WKContextMenuItemRef item) :
+        m_page(page),
+        m_item(item) { }
+    WKBundlePageRef m_page;
+    WKRetainPtr<WKContextMenuItemRef> m_item;
+};
+
+
+static JSValueRef menuItemClickCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    MenuItemPrivateData* privateData = static_cast<MenuItemPrivateData*>(JSObjectGetPrivate(thisObject));
+    WKBundlePageClickMenuItem(privateData->m_page, privateData->m_item.get());
+    return JSValueMakeUndefined(context);
+}
+
+static JSValueRef getMenuItemTitleCallback(JSContextRef context, JSObjectRef object, JSStringRef propertyName, JSValueRef* exception)
+{
+    MenuItemPrivateData* privateData = static_cast<MenuItemPrivateData*>(JSObjectGetPrivate(object));
+    WKRetainPtr<WKStringRef> wkTitle(AdoptWK, WKContextMenuItemCopyTitle(privateData->m_item.get()));
+    return JSValueMakeString(context, toJS(wkTitle).get());
+}
+
+static JSStaticFunction staticMenuItemFunctions[] = {
+    { "click", menuItemClickCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
+    { 0, 0, 0 }
+};
+
+static JSStaticValue staticMenuItemValues[] = {
+    { "title", getMenuItemTitleCallback, 0, kJSPropertyAttributeReadOnly },
+    { 0, 0, 0, 0 }
+};
+
+static void staticMenuItemFinalize(JSObjectRef object)
+{
+    delete static_cast<MenuItemPrivateData*>(JSObjectGetPrivate(object));
+}
+
+static JSValueRef staticConvertMenuItemToType(JSContextRef context, JSObjectRef object, JSType type, JSValueRef* exception)
+{
+    if (kJSTypeString == type)
+        return getMenuItemTitleCallback(context, object, 0, 0);
+    return 0;
+}
+
+static JSClassRef getMenuItemClass()
+{
+    static JSClassRef menuItemClass = 0;
+
+    if (!menuItemClass) {
+        JSClassDefinition classDefinition = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        classDefinition.staticFunctions = staticMenuItemFunctions;
+        classDefinition.staticValues = staticMenuItemValues;
+        classDefinition.finalize = staticMenuItemFinalize;
+        classDefinition.convertToType = staticConvertMenuItemToType;
+
+        menuItemClass = JSClassCreate(&classDefinition);
+    }
+
+    return menuItemClass;
+}
 
 static WKEventModifiers parseModifier(JSStringRef modifier)
 {
@@ -105,14 +169,6 @@ PassRefPtr<EventSendingController> EventSendingController::create()
 }
 
 EventSendingController::EventSendingController()
-#ifdef USE_WEBPROCESS_EVENT_SIMULATION
-    : m_time(0)
-    , m_position()
-    , m_clickCount(0)
-    , m_clickTime(0)
-    , m_clickPosition()
-    , m_clickButton(kWKEventMouseButtonNoButton)
-#endif
 {
 }
 
@@ -156,15 +212,10 @@ void EventSendingController::mouseDown(int button, JSValueRef modifierArray)
     JSContextRef context = WKBundleFrameGetJavaScriptContext(frame);
     WKEventModifiers modifiers = parseModifierArray(context, modifierArray);
 
-#ifdef USE_WEBPROCESS_EVENT_SIMULATION
-    updateClickCount(button);
-    WKBundlePageSimulateMouseDown(page, button, m_position, m_clickCount, modifiers, m_time);
-#else
     WKRetainPtr<WKStringRef> EventSenderMessageName(AdoptWK, WKStringCreateWithUTF8CString("EventSender"));
     WKRetainPtr<WKMutableDictionaryRef> EventSenderMessageBody(AdoptWK, createMouseMessageBody(MouseDown, button, modifiers));
 
     WKBundlePostSynchronousMessage(InjectedBundle::shared().bundle(), EventSenderMessageName.get(), EventSenderMessageBody.get(), 0);
-#endif
 }
 
 void EventSendingController::mouseUp(int button, JSValueRef modifierArray)
@@ -174,24 +225,14 @@ void EventSendingController::mouseUp(int button, JSValueRef modifierArray)
     JSContextRef context = WKBundleFrameGetJavaScriptContext(frame);
     WKEventModifiers modifiers = parseModifierArray(context, modifierArray);
 
-#ifdef USE_WEBPROCESS_EVENT_SIMULATION
-    updateClickCount(button);
-    WKBundlePageSimulateMouseUp(page, button, m_position, m_clickCount, modifiers, m_time);
-#else
     WKRetainPtr<WKStringRef> EventSenderMessageName(AdoptWK, WKStringCreateWithUTF8CString("EventSender"));
     WKRetainPtr<WKMutableDictionaryRef> EventSenderMessageBody(AdoptWK, createMouseMessageBody(MouseUp, button, modifiers));
 
     WKBundlePostSynchronousMessage(InjectedBundle::shared().bundle(), EventSenderMessageName.get(), EventSenderMessageBody.get(), 0);
-#endif
 }
 
 void EventSendingController::mouseMoveTo(int x, int y)
 {
-#ifdef USE_WEBPROCESS_EVENT_SIMULATION
-    m_position.x = x;
-    m_position.y = y;
-    WKBundlePageSimulateMouseMotion(InjectedBundle::shared().page()->page(), m_position, m_time);
-#else
     WKRetainPtr<WKStringRef> EventSenderMessageName(AdoptWK, WKStringCreateWithUTF8CString("EventSender"));
     WKRetainPtr<WKMutableDictionaryRef> EventSenderMessageBody(AdoptWK, WKMutableDictionaryCreate());
 
@@ -208,14 +249,10 @@ void EventSendingController::mouseMoveTo(int x, int y)
     WKDictionaryAddItem(EventSenderMessageBody.get(), yKey.get(), yRef.get());
 
     WKBundlePostSynchronousMessage(InjectedBundle::shared().bundle(), EventSenderMessageName.get(), EventSenderMessageBody.get(), 0);
-#endif
 }
 
 void EventSendingController::leapForward(int milliseconds)
 {
-#ifdef USE_WEBPROCESS_EVENT_SIMULATION
-    m_time += milliseconds / 1000.0;
-#else
     WKRetainPtr<WKStringRef> EventSenderMessageName(AdoptWK, WKStringCreateWithUTF8CString("EventSender"));
     WKRetainPtr<WKMutableDictionaryRef> EventSenderMessageBody(AdoptWK, WKMutableDictionaryCreate());
 
@@ -228,7 +265,6 @@ void EventSendingController::leapForward(int milliseconds)
     WKDictionaryAddItem(EventSenderMessageBody.get(), timeKey.get(), timeRef.get());
 
     WKBundlePostSynchronousMessage(InjectedBundle::shared().bundle(), EventSenderMessageName.get(), EventSenderMessageBody.get(), 0);
-#endif
 }
 
 void EventSendingController::scheduleAsynchronousClick()
@@ -344,19 +380,15 @@ JSValueRef EventSendingController::contextClick()
     mouseDown(2, 0);
     mouseUp(2, 0);
 
-    WKRetainPtr<WKArrayRef> entriesNames = adoptWK(WKBundlePageCopyContextMenuItemTitles(page));
-    JSRetainPtr<JSStringRef> jsPropertyName(Adopt, JSStringCreateWithUTF8CString("title"));
-    size_t entriesSize = WKArrayGetSize(entriesNames.get());
-    OwnArrayPtr<JSValueRef> jsValuesArray = adoptArrayPtr(new JSValueRef[entriesSize]);
+    WKRetainPtr<WKArrayRef> menuEntries = adoptWK(WKBundlePageCopyContextMenuItems(page));
+    size_t entriesSize = WKArrayGetSize(menuEntries.get());
+    auto jsValuesArray = std::make_unique<JSValueRef[]>(entriesSize);
     for (size_t i = 0; i < entriesSize; ++i) {
-        ASSERT(WKGetTypeID(WKArrayGetItemAtIndex(entriesNames.get(), i)) == WKStringGetTypeID());
+        ASSERT(WKGetTypeID(WKArrayGetItemAtIndex(menuEntries.get(), i)) == WKContextMenuItemGetTypeID());
 
-        WKStringRef wkEntryName = static_cast<WKStringRef>(WKArrayGetItemAtIndex(entriesNames.get(), i));
-        JSObjectRef jsItemObject = JSObjectMake(context, /* JSClassRef */0, /* privData */0);
-        JSRetainPtr<JSStringRef> jsNameCopy(Adopt, WKStringCopyJSString(wkEntryName));
-        JSValueRef jsEntryName = JSValueMakeString(context, jsNameCopy.get());
-        JSObjectSetProperty(context, jsItemObject, jsPropertyName.get(), jsEntryName, kJSPropertyAttributeReadOnly, 0);
-        jsValuesArray[i] = jsItemObject;
+        WKContextMenuItemRef item = static_cast<WKContextMenuItemRef>(WKArrayGetItemAtIndex(menuEntries.get(), i));
+        MenuItemPrivateData* privateData = new MenuItemPrivateData(page, item);
+        jsValuesArray[i] = JSObjectMake(context, getMenuItemClass(), privateData);
     }
 
     return JSObjectMakeArray(context, entriesSize, jsValuesArray.get(), 0);
@@ -364,22 +396,6 @@ JSValueRef EventSendingController::contextClick()
     return JSValueMakeUndefined(context);
 #endif
 }
-
-#ifdef USE_WEBPROCESS_EVENT_SIMULATION
-void EventSendingController::updateClickCount(WKEventMouseButton button)
-{
-    if (m_time - m_clickTime < 1 && m_position == m_clickPosition && button == m_clickButton) {
-        ++m_clickCount;
-        m_clickTime = m_time;
-        return;
-    }
-
-    m_clickCount = 1;
-    m_clickTime = m_time;
-    m_clickPosition = m_position;
-    m_clickButton = button;
-}
-#endif
 
 void EventSendingController::textZoomIn()
 {

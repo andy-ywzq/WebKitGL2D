@@ -52,9 +52,9 @@ bool BaseButtonInputType::appendFormData(FormDataList&, bool) const
     return false;
 }
 
-RenderObject* BaseButtonInputType::createRenderer(RenderArena* arena, RenderStyle*) const
+RenderElement* BaseButtonInputType::createRenderer(PassRef<RenderStyle> style) const
 {
-    return new (arena) RenderButton(element());
+    return new RenderButton(element(), std::move(style));
 }
 
 bool BaseButtonInputType::storesValueSeparateFromAttribute()
@@ -64,7 +64,7 @@ bool BaseButtonInputType::storesValueSeparateFromAttribute()
 
 void BaseButtonInputType::setValue(const String& sanitizedValue, bool, TextFieldEventBehavior)
 {
-    element()->setAttribute(valueAttr, sanitizedValue);
+    element().setAttribute(valueAttr, sanitizedValue);
 }
 
 } // namespace WebCore

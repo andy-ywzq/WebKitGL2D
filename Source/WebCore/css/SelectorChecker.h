@@ -29,7 +29,7 @@
 #define SelectorChecker_h
 
 #include "CSSSelector.h"
-#include "InspectorInstrumentation.h"
+#include "Element.h"
 #include "SpaceSplitString.h"
 #include <wtf/HashSet.h>
 #include <wtf/Vector.h>
@@ -43,12 +43,13 @@ class RenderStyle;
 
 class SelectorChecker {
     WTF_MAKE_NONCOPYABLE(SelectorChecker);
-public:
     enum Match { SelectorMatches, SelectorFailsLocally, SelectorFailsAllSiblings, SelectorFailsCompletely };
+
+public:
     enum VisitedMatchType { VisitedMatchDisabled, VisitedMatchEnabled };
     enum Mode { ResolvingStyle = 0, CollectingRules, QueryingRules, SharingRules };
-    explicit SelectorChecker(Document*, Mode);
-    enum BehaviorAtBoundary { DoesNotCrossBoundary, CrossesBoundary, StaysWithinTreeScope };
+
+    SelectorChecker(Document&, Mode);
 
     struct SelectorCheckingContext {
         // Initial selector constructor
@@ -64,7 +65,6 @@ public:
             , isSubSelector(false)
             , hasScrollbarPseudo(false)
             , hasSelectionPseudo(false)
-            , behaviorAtBoundary(DoesNotCrossBoundary)
         { }
 
         const CSSSelector* selector;
@@ -78,15 +78,12 @@ public:
         bool isSubSelector;
         bool hasScrollbarPseudo;
         bool hasSelectionPseudo;
-        BehaviorAtBoundary behaviorAtBoundary;
     };
 
-    Match match(const SelectorCheckingContext&, PseudoId&) const;
-    bool checkOne(const SelectorCheckingContext&) const;
-
-    bool strictParsing() const { return m_strictParsing; }
-
-    Mode mode() const { return m_mode; }
+    bool match(const SelectorCheckingContext& context, PseudoId& pseudoId) const
+    {
+        return matchRecursively(context, pseudoId) == SelectorMatches;
+    }
 
     static bool tagMatches(const Element*, const QualifiedName&);
     static bool isCommonPseudoClassSelector(const CSSSelector*);
@@ -97,9 +94,10 @@ public:
     static unsigned determineLinkMatchType(const CSSSelector*);
 
 private:
-    bool checkScrollbarPseudoClass(const SelectorCheckingContext&, Document*, const CSSSelector*) const;
+    Match matchRecursively(const SelectorCheckingContext&, PseudoId&) const;
+    bool checkOne(const SelectorCheckingContext&) const;
 
-    static bool isFrameFocused(const Element*);
+    bool checkScrollbarPseudoClass(const SelectorCheckingContext&, Document*, const CSSSelector*) const;
 
     bool m_strictParsing;
     bool m_documentIsHTML;

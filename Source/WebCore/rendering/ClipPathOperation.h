@@ -51,11 +51,11 @@ public:
     virtual bool operator==(const ClipPathOperation&) const = 0;
     bool operator!=(const ClipPathOperation& o) const { return !(*this == o); }
 
-    virtual OperationType getOperationType() const { return m_type; }
-    virtual bool isSameType(const ClipPathOperation& o) const { return o.getOperationType() == m_type; }
+    virtual OperationType type() const { return m_type; }
+    virtual bool isSameType(const ClipPathOperation& o) const { return o.type() == m_type; }
 
 protected:
-    ClipPathOperation(OperationType type)
+    explicit ClipPathOperation(OperationType type)
         : m_type(type)
     {
     }
@@ -74,7 +74,7 @@ public:
     const String& fragment() const { return m_fragment; }
 
 private:
-    virtual bool operator==(const ClipPathOperation& o) const
+    virtual bool operator==(const ClipPathOperation& o) const OVERRIDE
     {
         if (!isSameType(o))
             return false;
@@ -112,7 +112,7 @@ public:
     }
 
 private:
-    virtual bool operator==(const ClipPathOperation& o) const
+    virtual bool operator==(const ClipPathOperation& o) const OVERRIDE
     {
         if (!isSameType(o))
             return false;
@@ -120,7 +120,7 @@ private:
         return m_shape == other->m_shape;
     }
 
-    ShapeClipPathOperation(PassRefPtr<BasicShape> shape)
+    explicit ShapeClipPathOperation(PassRefPtr<BasicShape> shape)
         : ClipPathOperation(SHAPE)
         , m_shape(shape)
     {

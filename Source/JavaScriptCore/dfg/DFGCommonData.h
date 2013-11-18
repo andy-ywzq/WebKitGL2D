@@ -30,8 +30,10 @@
 
 #if ENABLE(DFG_JIT)
 
+#include "InlineCallFrameSet.h"
 #include "JSCell.h"
 #include "ProfilerCompilation.h"
+#include "SymbolTable.h"
 #include <wtf/Noncopyable.h>
 
 namespace JSC {
@@ -67,25 +69,27 @@ class CommonData {
     WTF_MAKE_NONCOPYABLE(CommonData);
 public:
     CommonData()
-        : mayBeExecuting(false)
-        , isJettisoned(false)
-    {
-    }
+        : machineCaptureStart(std::numeric_limits<int>::max())
+    { }
     
     void notifyCompilingStructureTransition(Plan&, CodeBlock*, Node*);
+    unsigned addCodeOrigin(CodeOrigin codeOrigin);
     
     void shrinkToFit();
 
+    OwnPtr<InlineCallFrameSet> inlineCallFrames;
+    Vector<CodeOrigin, 0, UnsafeVectorOverflow> codeOrigins;
+    
     Vector<Identifier> dfgIdentifiers;
     Vector<WeakReferenceTransition> transitions;
-    Vector<WriteBarrier<JSCell> > weakReferences;
+    Vector<WriteBarrier<JSCell>> weakReferences;
     
     RefPtr<Profiler::Compilation> compilation;
-    bool mayBeExecuting;
-    bool isJettisoned;
     bool livenessHasBeenProved; // Initialized and used on every GC.
     bool allTransitionsHaveBeenMarked; // Initialized and used on every GC.
-    unsigned visitAggregateHasBeenCalled; // Unsigned to make it work seamlessly with the broadest set of CAS implementations.
+    
+    int machineCaptureStart;
+    std::unique_ptr<SlowArgument[]> slowArguments;
 };
 
 } } // namespace JSC::DFG

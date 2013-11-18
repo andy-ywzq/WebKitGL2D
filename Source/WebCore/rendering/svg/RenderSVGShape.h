@@ -30,8 +30,8 @@
 #include "AffineTransform.h"
 #include "FloatRect.h"
 #include "RenderSVGModelObject.h"
+#include "SVGGraphicsElement.h"
 #include "SVGMarkerData.h"
-#include "StrokeStyleApplier.h"
 #include <wtf/OwnPtr.h>
 #include <wtf/Vector.h>
 
@@ -44,31 +44,13 @@ class RenderSVGPath;
 class RenderSVGResource;
 class SVGGraphicsElement;
 
-class BoundingRectStrokeStyleApplier : public StrokeStyleApplier {
-public:
-    BoundingRectStrokeStyleApplier(const RenderObject* object, RenderStyle* style)
-        : m_object(object)
-        , m_style(style)
-    {
-        ASSERT(style);
-        ASSERT(object);
-    }
-
-    void strokeStyle(GraphicsContext* context)
-    {
-        SVGRenderSupport::applyStrokeStyleToContext(context, m_style, m_object);
-    }
-
-private:
-    const RenderObject* m_object;
-    RenderStyle* m_style;
-};
-
 class RenderSVGShape : public RenderSVGModelObject {
 public:
-    explicit RenderSVGShape(SVGGraphicsElement*);
-    RenderSVGShape(SVGGraphicsElement*, Path*, bool);
+    RenderSVGShape(SVGGraphicsElement&, PassRef<RenderStyle>);
+    RenderSVGShape(SVGGraphicsElement&, PassRef<RenderStyle>, Path*, bool);
     virtual ~RenderSVGShape();
+
+    SVGGraphicsElement& graphicsElement() const { return toSVGGraphicsElement(RenderSVGModelObject::element()); }
 
     void setNeedsShapeUpdate() { m_needsShapeUpdate = true; }
     virtual void setNeedsBoundariesUpdate() OVERRIDE FINAL { m_needsBoundariesUpdate = true; }
@@ -85,14 +67,16 @@ public:
     }
 
 protected:
+    void element() const WTF_DELETED_FUNCTION;
+
     virtual void updateShapeFromElement();
-    virtual bool isEmpty() const;
+    virtual bool isEmpty() const OVERRIDE;
     virtual bool shapeDependentStrokeContains(const FloatPoint&);
     virtual bool shapeDependentFillContains(const FloatPoint&, const WindRule) const;
     float strokeWidth() const;
     bool hasSmoothStroke() const;
 
-    bool hasNonScalingStroke() const { return style()->svgStyle()->vectorEffect() == VE_NON_SCALING_STROKE; }
+    bool hasNonScalingStroke() const { return style().svgStyle()->vectorEffect() == VE_NON_SCALING_STROKE; }
     AffineTransform nonScalingStrokeTransform() const;
     Path* nonScalingStrokePath(const Path*, const AffineTransform&) const;
 
@@ -110,7 +94,8 @@ private:
     virtual AffineTransform localTransform() const OVERRIDE FINAL { return m_localTransform; }
 
     virtual bool isSVGShape() const OVERRIDE FINAL { return true; }
-    virtual const char* renderName() const { return "RenderSVGShape"; }
+    virtual bool canHaveChildren() const OVERRIDE FINAL { return false; }
+    virtual const char* renderName() const OVERRIDE { return "RenderSVGShape"; }
 
     virtual void layout() OVERRIDE FINAL;
     virtual void paint(PaintInfo&, const LayoutPoint&) OVERRIDE FINAL;
@@ -147,20 +132,7 @@ private:
     bool m_needsTransformUpdate : 1;
 };
 
-inline RenderSVGShape* toRenderSVGShape(RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isSVGShape());
-    return static_cast<RenderSVGShape*>(object);
-}
-
-inline const RenderSVGShape* toRenderSVGShape(const RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isSVGShape());
-    return static_cast<const RenderSVGShape*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderSVGShape(const RenderSVGShape*);
+RENDER_OBJECT_TYPE_CASTS(RenderSVGShape, isSVGShape())
 
 }
 

@@ -43,10 +43,11 @@ class RenderText;
 class RenderMenuList FINAL : public RenderFlexibleBox, private PopupMenuClient {
 
 public:
-    RenderMenuList(Element*);
+    RenderMenuList(HTMLSelectElement&, PassRef<RenderStyle>);
     virtual ~RenderMenuList();
 
-public:
+    HTMLSelectElement& selectElement() const;
+
     bool popupIsVisible() const { return m_popupIsVisible; }
     void showPopup();
     void hidePopup();
@@ -58,29 +59,29 @@ public:
     String text() const;
 
 private:
-    HTMLSelectElement* selectElement() const;
+    void element() const WTF_DELETED_FUNCTION;
 
-    virtual bool isMenuList() const { return true; }
+    virtual bool isMenuList() const OVERRIDE { return true; }
 
-    virtual void addChild(RenderObject* newChild, RenderObject* beforeChild = 0);
-    virtual void removeChild(RenderObject*);
-    virtual bool createsAnonymousWrapper() const { return true; }
+    virtual void addChild(RenderObject* newChild, RenderObject* beforeChild = 0) OVERRIDE;
+    virtual void removeChild(RenderObject&) OVERRIDE;
+    virtual bool createsAnonymousWrapper() const OVERRIDE { return true; }
 
-    virtual void updateFromElement();
+    virtual void updateFromElement() OVERRIDE;
 
-    virtual LayoutRect controlClipRect(const LayoutPoint&) const;
-    virtual bool hasControlClip() const { return true; }
+    virtual LayoutRect controlClipRect(const LayoutPoint&) const OVERRIDE;
+    virtual bool hasControlClip() const OVERRIDE { return true; }
     virtual bool canHaveGeneratedChildren() const OVERRIDE { return false; }
     virtual bool canBeReplacedWithInlineRunIn() const OVERRIDE;
 
-    virtual const char* renderName() const { return "RenderMenuList"; }
+    virtual const char* renderName() const OVERRIDE { return "RenderMenuList"; }
 
     virtual void computeIntrinsicLogicalWidths(LayoutUnit& minLogicalWidth, LayoutUnit& maxLogicalWidth) const OVERRIDE;
     virtual void computePreferredLogicalWidths() OVERRIDE;
 
-    virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle);
+    virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle) OVERRIDE;
 
-    virtual bool requiresForcedStyleRecalcPropagation() const { return true; }
+    virtual bool requiresForcedStyleRecalcPropagation() const OVERRIDE { return true; }
 
     // PopupMenuClient methods
     virtual void valueChanged(unsigned listIndex, bool fireOnChange = true) OVERRIDE;
@@ -113,7 +114,7 @@ private:
     virtual HostWindow* hostWindow() const OVERRIDE;
     virtual PassRefPtr<Scrollbar> createScrollbar(ScrollableArea*, ScrollbarOrientation, ScrollbarControlSize) OVERRIDE;
 
-    virtual bool hasLineIfEmpty() const { return true; }
+    virtual bool hasLineIfEmpty() const OVERRIDE { return true; }
 
     // Flexbox defines baselines differently than regular blocks.
     // For backwards compatibility, menulists need to do the regular block behavior.
@@ -121,7 +122,7 @@ private:
     {
         return RenderBlock::baselinePosition(baseline, firstLine, direction, position);
     }
-    virtual int firstLineBoxBaseline() const OVERRIDE { return RenderBlock::firstLineBoxBaseline(); }
+    virtual int firstLineBaseline() const OVERRIDE { return RenderBlock::firstLineBaseline(); }
     virtual int inlineBlockBaseline(LineDirectionMode direction) const OVERRIDE { return RenderBlock::inlineBlockBaseline(direction); }
 
     void getItemBackgroundColor(unsigned listIndex, Color&, bool& itemHasCustomBackgroundColor) const;
@@ -148,14 +149,7 @@ private:
     bool m_popupIsVisible;
 };
 
-inline RenderMenuList* toRenderMenuList(RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isMenuList());
-    return static_cast<RenderMenuList*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderMenuList(const RenderMenuList*);
+RENDER_OBJECT_TYPE_CASTS(RenderMenuList, isMenuList())
 
 }
 

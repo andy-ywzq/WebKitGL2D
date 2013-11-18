@@ -54,7 +54,7 @@ SOFT_LINK(libxslt, xsltLoadStylesheetPI, xsltStylesheetPtr, (xmlDocPtr doc), (do
 
 namespace WebCore {
 
-XSLStyleSheet::XSLStyleSheet(XSLImportRule* parentRule, const String& originalURL, const KURL& finalURL)
+XSLStyleSheet::XSLStyleSheet(XSLImportRule* parentRule, const String& originalURL, const URL& finalURL)
     : m_ownerNode(0)
     , m_originalURL(originalURL)
     , m_finalURL(finalURL)
@@ -67,7 +67,7 @@ XSLStyleSheet::XSLStyleSheet(XSLImportRule* parentRule, const String& originalUR
 {
 }
 
-XSLStyleSheet::XSLStyleSheet(Node* parentNode, const String& originalURL, const KURL& finalURL,  bool embedded)
+XSLStyleSheet::XSLStyleSheet(Node* parentNode, const String& originalURL, const URL& finalURL,  bool embedded)
     : m_ownerNode(parentNode)
     , m_originalURL(originalURL)
     , m_finalURL(finalURL)
@@ -147,7 +147,7 @@ bool XSLStyleSheet::parseString(const String& string)
     PageConsole* console = 0;
     Frame* frame = ownerDocument()->frame();
     if (frame && frame->page())
-        console = frame->page()->console();
+        console = &frame->page()->console();
 
     XMLDocumentParserScope scope(cachedResourceLoader(), XSLTProcessor::genericErrorFunc, XSLTProcessor::parseErrorFunc, console);
 
@@ -267,7 +267,7 @@ Document* XSLStyleSheet::ownerDocument()
     for (XSLStyleSheet* styleSheet = this; styleSheet; styleSheet = styleSheet->parentStyleSheet()) {
         Node* node = styleSheet->ownerNode();
         if (node)
-            return node->document();
+            return &node->document();
     }
     return 0;
 }

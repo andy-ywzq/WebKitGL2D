@@ -27,7 +27,6 @@
 #define RemoteLayerTreeDrawingArea_h
 
 #include "DrawingArea.h"
-#include <wtf/PassOwnPtr.h>
 
 namespace WebKit {
 
@@ -35,22 +34,23 @@ class RemoteLayerTreeContext;
 
 class RemoteLayerTreeDrawingArea : public DrawingArea {
 public:
-    static PassOwnPtr<RemoteLayerTreeDrawingArea> create(WebPage*, const WebPageCreationParameters&);
+    RemoteLayerTreeDrawingArea(WebPage*, const WebPageCreationParameters&);
     virtual ~RemoteLayerTreeDrawingArea();
 
 private:
-    RemoteLayerTreeDrawingArea(WebPage*, const WebPageCreationParameters&);
-
     // DrawingArea
     virtual void setNeedsDisplay() OVERRIDE;
     virtual void setNeedsDisplayInRect(const WebCore::IntRect&) OVERRIDE;
     virtual void scroll(const WebCore::IntRect& scrollRect, const WebCore::IntSize& scrollDelta) OVERRIDE;
+    virtual void updateGeometry(const WebCore::IntSize& viewSize, const WebCore::IntSize& layerPosition) OVERRIDE;
 
     virtual WebCore::GraphicsLayerFactory* graphicsLayerFactory() OVERRIDE;
     virtual void setRootCompositingLayer(WebCore::GraphicsLayer*) OVERRIDE;
     virtual void scheduleCompositingLayerFlush() OVERRIDE;
 
-    OwnPtr<RemoteLayerTreeContext> m_RemoteLayerTreeContext;
+    virtual bool shouldUseTiledBackingForFrameView(const WebCore::FrameView*) OVERRIDE;
+
+    std::unique_ptr<RemoteLayerTreeContext> m_remoteLayerTreeContext;
 };
 
 } // namespace WebKit

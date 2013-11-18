@@ -24,7 +24,7 @@
 
 #include "HostWindow.h"
 #include "NotImplemented.h"
-#include <wtf/OwnArrayPtr.h>
+#include <wtf/StdLibExtras.h>
 
 #if PLATFORM(NIX) && USE(EGL)
 #include "GLContextFromCurrentEGL.h"
@@ -75,6 +75,10 @@ GraphicsContext3DPrivate::GraphicsContext3DPrivate(GraphicsContext3D* context, G
 
 GraphicsContext3DPrivate::~GraphicsContext3DPrivate()
 {
+#if USE(ACCELERATED_COMPOSITING) && USE(TEXTURE_MAPPER)
+    if (client())
+        client()->platformLayerWillBeDestroyed();
+#endif
 }
 
 bool GraphicsContext3DPrivate::makeContextCurrent()
@@ -107,7 +111,7 @@ void GraphicsContext3DPrivate::paintToTextureMapper(TextureMapper* textureMapper
         const int width = m_context->m_currentWidth;
         int totalBytes = width * height * 4;
 
-        OwnArrayPtr<unsigned char> pixels = adoptArrayPtr(new unsigned char[totalBytes]);
+        auto pixels = std::make_unique<unsigned char[]>(totalBytes);
         if (!pixels)
             return;
 

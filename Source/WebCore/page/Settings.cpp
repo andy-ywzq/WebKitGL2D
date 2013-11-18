@@ -34,12 +34,12 @@
 #include "Document.h"
 #include "Font.h"
 #include "FontGenericFamilies.h"
-#include "Frame.h"
 #include "FrameTree.h"
 #include "FrameView.h"
 #include "HTMLMediaElement.h"
 #include "HistoryItem.h"
 #include "InspectorInstrumentation.h"
+#include "MainFrame.h"
 #include "Page.h"
 #include "PageCache.h"
 #include "StorageMap.h"
@@ -52,7 +52,7 @@ namespace WebCore {
 
 static void setImageLoadingSettings(Page* page)
 {
-    for (Frame* frame = page->mainFrame(); frame; frame = frame->tree()->traverseNext()) {
+    for (Frame* frame = &page->mainFrame(); frame; frame = frame->tree().traverseNext()) {
         frame->document()->cachedResourceLoader()->setImagesEnabled(page->settings().areImagesEnabled());
         frame->document()->cachedResourceLoader()->setAutoLoadImages(page->settings().loadsImagesAutomatically());
     }
@@ -112,6 +112,18 @@ static EditingBehaviorType editingBehaviorTypeForPlatform()
     ;
 }
 
+#if PLATFORM(IOS)
+static const bool defaultFixedPositionCreatesStackingContext = true;
+static const bool defaultMediaPlaybackAllowsInline = false;
+static const bool defaultMediaPlaybackRequiresUserGesture = true;
+static const bool defaultShouldRespectImageOrientation = true;
+#else
+static const bool defaultFixedPositionCreatesStackingContext = false;
+static const bool defaultMediaPlaybackAllowsInline = true;
+static const bool defaultMediaPlaybackRequiresUserGesture = false;
+static const bool defaultShouldRespectImageOrientation = false;
+#endif
+
 static const double defaultIncrementalRenderingSuppressionTimeoutInSeconds = 5;
 #if USE(UNIFIED_TEXT_CHECKING)
 static const bool defaultUnifiedTextCheckerEnabled = true;
@@ -124,7 +136,7 @@ static const bool defaultSelectTrailingWhitespaceEnabled = false;
 Settings::Settings(Page* page)
     : m_page(0)
     , m_mediaTypeOverride("screen")
-    , m_fontGenericFamilies(FontGenericFamilies::create())
+    , m_fontGenericFamilies(std::make_unique<FontGenericFamilies>())
     , m_storageBlockingPolicy(SecurityOrigin::AllowAllStorage)
 #if ENABLE(TEXT_AUTOSIZING)
     , m_textAutosizingFontScaleFactor(1)
@@ -170,6 +182,7 @@ Settings::Settings(Page* page)
 #if ENABLE(PAGE_VISIBILITY_API)
     , m_hiddenPageCSSAnimationSuspensionEnabled(false)
 #endif
+    , m_fontFallbackPrefersPictographs(false)
 {
     // A Frame may not have been created yet, so we initialize the AtomicString
     // hash before trying to use it.
@@ -321,7 +334,7 @@ void Settings::setTextAutosizingFontScaleFactor(float fontScaleFactor)
     m_textAutosizingFontScaleFactor = fontScaleFactor;
 
     // FIXME: I wonder if this needs to traverse frames like in WebViewImpl::resize, or whether there is only one document per Settings instance?
-    for (Frame* frame = m_page->mainFrame(); frame; frame = frame->tree()->traverseNext())
+    for (Frame* frame = m_page->mainFrame(); frame; frame = frame->tree().traverseNext())
         frame->document()->textAutosizer()->recalculateMultipliers();
 
     m_page->setNeedsRecalcStyleInAllFrames();
@@ -336,9 +349,7 @@ void Settings::setMediaTypeOverride(const String& mediaTypeOverride)
 
     m_mediaTypeOverride = mediaTypeOverride;
 
-    Frame* mainFrame = m_page->mainFrame();
-    ASSERT(mainFrame);
-    FrameView* view = mainFrame->view();
+    FrameView* view = m_page->mainFrame().view();
     ASSERT(view);
 
     view->setMediaType(mediaTypeOverride);
@@ -406,7 +417,7 @@ void Settings::setPrivateBrowsingEnabled(bool privateBrowsingEnabled)
     m_page->privateBrowsingStateChanged();
 }
 
-void Settings::setUserStyleSheetLocation(const KURL& userStyleSheetLocation)
+void Settings::setUserStyleSheetLocation(const URL& userStyleSheetLocation)
 {
     if (m_userStyleSheetLocation == userStyleSheetLocation)
         return;
@@ -470,10 +481,10 @@ void Settings::setUsesPageCache(bool usesPageCache)
         
     m_usesPageCache = usesPageCache;
     if (!m_usesPageCache) {
-        int first = -m_page->backForward()->backCount();
-        int last = m_page->backForward()->forwardCount();
+        int first = -m_page->backForward().backCount();
+        int last = m_page->backForward().forwardCount();
         for (int i = first; i <= last; i++)
-            pageCache()->remove(m_page->backForward()->itemAtIndex(i));
+            pageCache()->remove(m_page->backForward().itemAtIndex(i));
     }
 }
 
@@ -542,8 +553,7 @@ void Settings::setTiledBackingStoreEnabled(bool enabled)
 {
     m_tiledBackingStoreEnabled = enabled;
 #if USE(TILED_BACKING_STORE)
-    if (m_page->mainFrame())
-        m_page->mainFrame()->setTiledBackingStoreEnabled(enabled);
+    m_page->mainFrame().setTiledBackingStoreEnabled(enabled);
 #endif
 }
 
@@ -573,8 +583,8 @@ void Settings::setScrollingPerformanceLoggingEnabled(bool enabled)
 {
     m_scrollingPerformanceLoggingEnabled = enabled;
 
-    if (m_page->mainFrame() && m_page->mainFrame()->view())
-        m_page->mainFrame()->view()->setScrollingPerformanceLoggingEnabled(enabled);
+    if (m_page->mainFrame().view())
+        m_page->mainFrame().view()->setScrollingPerformanceLoggingEnabled(enabled);
 }
     
 void Settings::setAggressiveTileRetentionEnabled(bool enabled)
@@ -631,6 +641,15 @@ void Settings::setHiddenPageCSSAnimationSuspensionEnabled(bool flag)
     m_page->hiddenPageCSSAnimationSuspensionStateChanged();
 }
 #endif
+
+void Settings::setFontFallbackPrefersPictographs(bool preferPictographs)
+{
+    if (m_fontFallbackPrefersPictographs == preferPictographs)
+        return;
+
+    m_fontFallbackPrefersPictographs = preferPictographs;
+    m_page->setNeedsRecalcStyleInAllFrames();
+}
 
 void Settings::setLowPowerVideoAudioBufferSizeEnabled(bool flag)
 {

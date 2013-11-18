@@ -63,6 +63,12 @@
     <ClCompile Include="..\Tests\WTF\MediaTime.cpp">
       <Filter>Tests\WTF</Filter>
     </ClCompile>
+    <ClCompile Include="..\Tests\WTF\Ref.cpp">
+      <Filter>Tests\WTF</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Tests\WTF\RefPtr.cpp">
+      <Filter>Tests\WTF</Filter>
+    </ClCompile>
     <ClCompile Include="..\Tests\WTF\SHA1.cpp">
       <Filter>Tests\WTF</Filter>
     </ClCompile>
@@ -76,12 +82,6 @@
       <Filter>Tests\WTF</Filter>
     </ClCompile>
     <ClCompile Include="..\Tests\WTF\Vector.cpp">
-      <Filter>Tests\WTF</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Tests\WTF\VectorBasic.cpp">
-      <Filter>Tests\WTF</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Tests\WTF\VectorReverse.cpp">
       <Filter>Tests\WTF</Filter>
     </ClCompile>
     <ClCompile Include="..\Tests\WTF\cf\RetainPtr.cpp">

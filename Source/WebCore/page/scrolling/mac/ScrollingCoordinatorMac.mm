@@ -30,9 +30,9 @@
 #import "ScrollingCoordinatorMac.h"
 
 #include "GraphicsLayer.h"
-#include "Frame.h"
 #include "FrameView.h"
 #include "IntRect.h"
+#include "MainFrame.h"
 #include "Page.h"
 #include "PlatformWheelEvent.h"
 #include "PluginViewBase.h"
@@ -48,7 +48,6 @@
 #include "ScrollingThread.h"
 #include "ScrollingTree.h"
 #include "TiledBacking.h"
-
 #include <wtf/Functional.h>
 #include <wtf/MainThread.h>
 #include <wtf/PassRefPtr.h>
@@ -93,26 +92,6 @@ bool ScrollingCoordinatorMac::isRubberBandInProgress() const
     return scrollingTree()->isRubberBandInProgress();
 }
 
-bool ScrollingCoordinatorMac::rubberBandsAtBottom() const
-{
-    return scrollingTree()->rubberBandsAtBottom();
-}
-
-void ScrollingCoordinatorMac::setRubberBandsAtBottom(bool rubberBandsAtBottom)
-{
-    scrollingTree()->setRubberBandsAtBottom(rubberBandsAtBottom);
-}
-
-bool ScrollingCoordinatorMac::rubberBandsAtTop() const
-{
-    return scrollingTree()->rubberBandsAtTop();
-}
-
-void ScrollingCoordinatorMac::setRubberBandsAtTop(bool rubberBandsAtTop)
-{
-    scrollingTree()->setRubberBandsAtTop(rubberBandsAtTop);
-}
-    
 void ScrollingCoordinatorMac::setScrollPinningBehavior(ScrollPinningBehavior pinning)
 {
     scrollingTree()->setScrollPinningBehavior(pinning);
@@ -139,7 +118,7 @@ void ScrollingCoordinatorMac::frameViewLayoutUpdated(FrameView* frameView)
     // Compute the region of the page that we can't do fast scrolling for. This currently includes
     // all scrollable areas, such as subframes, overflow divs and list boxes. We need to do this even if the
     // frame view whose layout was updated is not the main frame.
-    Region nonFastScrollableRegion = computeNonFastScrollableRegion(m_page->mainFrame(), IntPoint());
+    Region nonFastScrollableRegion = computeNonFastScrollableRegion(&m_page->mainFrame(), IntPoint());
 
     // In the future, we may want to have the ability to set non-fast scrolling regions for more than
     // just the root node. But right now, this concept only applies to the root.
@@ -152,11 +131,17 @@ void ScrollingCoordinatorMac::frameViewLayoutUpdated(FrameView* frameView)
     if (!node)
         return;
 
+    Scrollbar* verticalScrollbar = frameView->verticalScrollbar();
+    Scrollbar* horizontalScrollbar = frameView->horizontalScrollbar();
+    if ((verticalScrollbar && verticalScrollbar->supportsUpdateOnSecondaryThread())
+        || (horizontalScrollbar && horizontalScrollbar->supportsUpdateOnSecondaryThread()))
+        setScrollbarPaintersFromScrollbarsForNode(verticalScrollbar, horizontalScrollbar, node);
+
     ScrollParameters scrollParameters;
     scrollParameters.horizontalScrollElasticity = frameView->horizontalScrollElasticity();
     scrollParameters.verticalScrollElasticity = frameView->verticalScrollElasticity();
-    scrollParameters.hasEnabledHorizontalScrollbar = frameView->horizontalScrollbar() && frameView->horizontalScrollbar()->enabled();
-    scrollParameters.hasEnabledVerticalScrollbar = frameView->verticalScrollbar() && frameView->verticalScrollbar()->enabled();
+    scrollParameters.hasEnabledHorizontalScrollbar = horizontalScrollbar && horizontalScrollbar->enabled();
+    scrollParameters.hasEnabledVerticalScrollbar = verticalScrollbar && verticalScrollbar->enabled();
     scrollParameters.horizontalScrollbarMode = frameView->horizontalScrollbarMode();
     scrollParameters.verticalScrollbarMode = frameView->verticalScrollbarMode();
 
@@ -199,15 +184,18 @@ void ScrollingCoordinatorMac::frameViewRootLayerDidChange(FrameView* frameView)
     setFooterLayerForNode(footerLayerForFrameView(frameView), node);
 }
 
-void ScrollingCoordinatorMac::scrollableAreaScrollbarLayerDidChange(ScrollableArea* scrollableArea, ScrollbarOrientation)
+void ScrollingCoordinatorMac::scrollableAreaScrollbarLayerDidChange(ScrollableArea* scrollableArea, ScrollbarOrientation orientation)
 {
     ASSERT(isMainThread());
     ASSERT(m_page);
 
-    if (scrollableArea != static_cast<ScrollableArea*>(m_page->mainFrame()->view()))
+    if (scrollableArea != static_cast<ScrollableArea*>(m_page->mainFrame().view()))
         return;
 
-    // FIXME: Implement.
+    if (orientation == VerticalScrollbar)
+        scrollableArea->verticalScrollbarLayerDidChange();
+    else
+        scrollableArea->horizontalScrollbarLayerDidChange();
 }
 
 bool ScrollingCoordinatorMac::requestScrollPositionUpdate(FrameView* frameView, const IntPoint& scrollPosition)
@@ -299,6 +287,12 @@ void ScrollingCoordinatorMac::setFooterLayerForNode(GraphicsLayer* footerLayer, 
     scheduleTreeStateCommit();
 }
 
+void ScrollingCoordinatorMac::setScrollbarPaintersFromScrollbarsForNode(Scrollbar* verticalScrollbar, Scrollbar* horizontalScrollbar, ScrollingStateScrollingNode* node)
+{
+    node->setScrollbarPaintersFromScrollbars(verticalScrollbar, horizontalScrollbar);
+    scheduleTreeStateCommit();
+}
+
 void ScrollingCoordinatorMac::setNonFastScrollableRegionForNode(const Region& region, ScrollingStateScrollingNode* node)
 {
     node->setNonFastScrollableRegion(region);
@@ -351,7 +345,7 @@ void ScrollingCoordinatorMac::updateMainFrameScrollLayerPosition()
     if (!m_page)
         return;
 
-    FrameView* frameView = m_page->mainFrame()->view();
+    FrameView* frameView = m_page->mainFrame().view();
     if (!frameView)
         return;
 
@@ -364,7 +358,7 @@ void ScrollingCoordinatorMac::syncChildPositions(const LayoutRect& viewportRect)
     if (!m_scrollingStateTree->rootStateNode())
         return;
 
-    Vector<OwnPtr<ScrollingStateNode> >* children = m_scrollingStateTree->rootStateNode()->children();
+    Vector<OwnPtr<ScrollingStateNode>>* children = m_scrollingStateTree->rootStateNode()->children();
     if (!children)
         return;
 
@@ -436,7 +430,7 @@ void ScrollingCoordinatorMac::commitTreeState()
     OwnPtr<ScrollingStateTree> treeState = m_scrollingStateTree->commit();
     ScrollingThread::dispatch(bind(&ScrollingTree::commitNewTreeState, m_scrollingTree.get(), treeState.release()));
 
-    FrameView* frameView = m_page->mainFrame()->view();
+    FrameView* frameView = m_page->mainFrame().view();
     if (!frameView)
         return;
     

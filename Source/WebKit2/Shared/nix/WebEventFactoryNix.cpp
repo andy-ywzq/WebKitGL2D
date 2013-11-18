@@ -59,43 +59,10 @@ static WebEvent::Type convertToWebEventType(NIXInputEventType type)
         return WebEvent::TouchEnd;
     case kNIXInputEventTypeTouchCancel:
         return WebEvent::TouchCancel;
-    case kNIXInputEventTypeGestureSingleTap:
-        return WebEvent::GestureSingleTap;
     default:
         notImplemented();
     }
     return WebEvent::MouseMove;
-}
-
-static NIXInputEventType convertFromWebEventType(WebEvent::Type type)
-{
-    switch (type) {
-    case WebEvent::MouseDown:
-        return kNIXInputEventTypeMouseDown;
-    case WebEvent::MouseUp:
-        return kNIXInputEventTypeMouseUp;
-    case WebEvent::MouseMove:
-        return kNIXInputEventTypeMouseMove;
-    case WebEvent::Wheel:
-        return kNIXInputEventTypeWheel;
-    case WebEvent::KeyDown:
-        return kNIXInputEventTypeKeyDown;
-    case WebEvent::KeyUp:
-        return kNIXInputEventTypeKeyUp;
-    case WebEvent::TouchStart:
-        return kNIXInputEventTypeTouchStart;
-    case WebEvent::TouchMove:
-        return kNIXInputEventTypeTouchMove;
-    case WebEvent::TouchEnd:
-        return kNIXInputEventTypeTouchEnd;
-    case WebEvent::TouchCancel:
-        return kNIXInputEventTypeTouchCancel;
-    case WebEvent::GestureSingleTap:
-        return kNIXInputEventTypeGestureSingleTap;
-    default:
-        notImplemented();
-    }
-    return kNIXInputEventTypeMouseMove;
 }
 
 static WebEvent::Modifiers convertToWebEventModifiers(NIXInputEventModifiers modifiers)
@@ -112,22 +79,6 @@ static WebEvent::Modifiers convertToWebEventModifiers(NIXInputEventModifiers mod
     if (modifiers & kNIXInputEventModifiersCapsLockKey)
         webModifiers |= WebEvent::CapsLockKey;
     return static_cast<WebEvent::Modifiers>(webModifiers);
-}
-
-static NIXInputEventModifiers convertFromWebEventModifiers(WebEvent::Modifiers webModifiers)
-{
-    NIXInputEventModifiers modifiers = 0;
-    if (webModifiers & WebEvent::ShiftKey)
-        modifiers |= kNIXInputEventModifiersShiftKey;
-    if (webModifiers & WebEvent::ControlKey)
-        modifiers |= kNIXInputEventModifiersControlKey;
-    if (webModifiers & WebEvent::AltKey)
-        modifiers |= kNIXInputEventModifiersAltKey;
-    if (webModifiers & WebEvent::MetaKey)
-        modifiers |= kNIXInputEventModifiersMetaKey;
-    if (webModifiers & WebEvent::CapsLockKey)
-        modifiers |= kNIXInputEventModifiersCapsLockKey;
-    return static_cast<NIXInputEventModifiers>(modifiers);
 }
 
 static WebPlatformTouchPoint::TouchPointState convertToWebTouchState(NIXTouchPointState state)
@@ -636,36 +587,6 @@ WebKeyboardEvent WebEventFactory::createWebKeyboardEvent(const NIXKeyEvent& even
     double timestamp = event.timestamp;
 
     return WebKeyboardEvent(type, text, unmodifiedText, keyIdentifier, windowsVirtualKeyCode, nativeVirtualKeyCode, macCharCode, isAutoRepeat, isKeypad, isSystemKey, modifiers, timestamp);
-}
-
-WebGestureEvent WebEventFactory::createWebGestureEvent(const NIXGestureEvent& event)
-{
-    WebEvent::Type type = convertToWebEventType(event.type);
-    IntPoint position = IntPoint(event.x, event.y);
-    IntPoint globalPosition = IntPoint(event.globalX, event.globalY);
-    WebEvent::Modifiers modifiers = convertToWebEventModifiers(event.modifiers);
-    double timestamp = event.timestamp;
-    IntSize area = IntSize(event.width, event.height);
-    FloatPoint delta = FloatPoint(event.deltaX, event.deltaY);
-
-    return WebGestureEvent(type, position, globalPosition, modifiers, timestamp, area, delta);
-}
-
-NIXGestureEvent WebEventFactory::createNativeWebGestureEvent(const WebGestureEvent& webEvent)
-{
-    NIXGestureEvent event;
-    event.type = convertFromWebEventType(webEvent.type());
-    event.x = webEvent.position().x();
-    event.y = webEvent.position().y();
-    event.globalX = webEvent.globalPosition().x();
-    event.globalY = webEvent.globalPosition().y();
-    event.modifiers = convertFromWebEventModifiers(webEvent.modifiers());
-    event.timestamp = webEvent.timestamp();
-    event.width = webEvent.area().width();
-    event.height = webEvent.area().height();
-    event.deltaX = webEvent.delta().x();
-    event.deltaY = webEvent.delta().y();
-    return event;
 }
 
 #if ENABLE(TOUCH_EVENTS)

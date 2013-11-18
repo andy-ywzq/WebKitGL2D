@@ -59,7 +59,7 @@ BEGIN_REGISTER_ANIMATED_PROPERTIES(SVGPolyElement)
     REGISTER_PARENT_ANIMATED_PROPERTIES(SVGGraphicsElement)
 END_REGISTER_ANIMATED_PROPERTIES
 
-SVGPolyElement::SVGPolyElement(const QualifiedName& tagName, Document* document)
+SVGPolyElement::SVGPolyElement(const QualifiedName& tagName, Document& document)
     : SVGGraphicsElement(tagName, document)
 {
     registerAnimatedPropertiesForSVGPolyElement();    
@@ -86,7 +86,7 @@ void SVGPolyElement::parseAttribute(const QualifiedName& name, const AtomicStrin
     if (name == SVGNames::pointsAttr) {
         SVGPointList newList;
         if (!pointsListFromSVGData(newList, value))
-            document()->accessSVGExtensions()->reportError("Problem parsing points=\"" + value + "\"");
+            document().accessSVGExtensions()->reportError("Problem parsing points=\"" + value + "\"");
 
         if (SVGAnimatedProperty* wrapper = SVGAnimatedProperty::lookupWrapper<SVGPolyElement, SVGAnimatedPointList>(this, pointsPropertyInfo()))
             static_cast<SVGAnimatedPointList*>(wrapper)->detachListWrappers(newList.size());
@@ -157,6 +157,11 @@ SVGListPropertyTearOff<SVGPointList>* SVGPolyElement::animatedPoints()
 {
     m_points.shouldSynchronize = true;
     return static_cast<SVGListPropertyTearOff<SVGPointList>*>(static_pointer_cast<SVGAnimatedPointList>(lookupOrCreatePointsWrapper(this))->animVal());
+}
+
+bool isSVGPolyElement(const Node& node)
+{
+    return node.hasTagName(SVGNames::polygonTag) || node.hasTagName(SVGNames::polylineTag);
 }
 
 }

@@ -96,56 +96,6 @@ void InjectedScript::evaluateOnCallFrame(ErrorString* errorString, const ScriptV
     makeEvalCall(errorString, function, result, wasThrown);
 }
 
-void InjectedScript::restartFrame(ErrorString* errorString, const ScriptValue& callFrames, const String& callFrameId, RefPtr<InspectorObject>* result)
-{
-    ScriptFunctionCall function(injectedScriptObject(), "restartFrame");
-    function.appendArgument(callFrames);
-    function.appendArgument(callFrameId);
-    RefPtr<InspectorValue> resultValue;
-    makeCall(function, &resultValue);
-    if (resultValue) {
-        if (resultValue->type() == InspectorValue::TypeString) {
-            resultValue->asString(errorString);
-            return;
-        }
-        if (resultValue->type() == InspectorValue::TypeObject) {
-            *result = resultValue->asObject();
-            return;
-        }
-    }
-    *errorString = "Internal error";
-}
-
-void InjectedScript::setVariableValue(ErrorString* errorString, const ScriptValue& callFrames, const String* callFrameIdOpt, const String* functionObjectIdOpt, int scopeNumber, const String& variableName, const String& newValueStr)
-{
-    ScriptFunctionCall function(injectedScriptObject(), "setVariableValue");
-    if (callFrameIdOpt) {
-        function.appendArgument(callFrames);
-        function.appendArgument(*callFrameIdOpt);
-    } else {
-        function.appendArgument(false);
-        function.appendArgument(false);
-    }
-    if (functionObjectIdOpt)
-        function.appendArgument(*functionObjectIdOpt);
-    else
-        function.appendArgument(false);
-    function.appendArgument(scopeNumber);
-    function.appendArgument(variableName);
-    function.appendArgument(newValueStr);
-    RefPtr<InspectorValue> resultValue;
-    makeCall(function, &resultValue);
-    if (!resultValue) {
-        *errorString = "Internal error";
-        return;
-    }
-    if (resultValue->type() == InspectorValue::TypeString) {
-        resultValue->asString(errorString);
-        return;
-    }
-    // Normal return.
-}
-
 void InjectedScript::getFunctionDetails(ErrorString* errorString, const String& functionId, RefPtr<FunctionDetails>* result)
 {
     ScriptFunctionCall function(injectedScriptObject(), "getFunctionDetails");
@@ -160,7 +110,7 @@ void InjectedScript::getFunctionDetails(ErrorString* errorString, const String& 
     *result = FunctionDetails::runtimeCast(resultValue);
 }
 
-void InjectedScript::getProperties(ErrorString* errorString, const String& objectId, bool ownProperties, RefPtr<Array<PropertyDescriptor> >* properties)
+void InjectedScript::getProperties(ErrorString* errorString, const String& objectId, bool ownProperties, RefPtr<Array<PropertyDescriptor>>* properties)
 {
     ScriptFunctionCall function(injectedScriptObject(), "getProperties");
     function.appendArgument(objectId);
@@ -175,7 +125,7 @@ void InjectedScript::getProperties(ErrorString* errorString, const String& objec
     *properties = Array<PropertyDescriptor>::runtimeCast(result);
 }
 
-void InjectedScript::getInternalProperties(ErrorString* errorString, const String& objectId, RefPtr<Array<InternalPropertyDescriptor> >* properties)
+void InjectedScript::getInternalProperties(ErrorString* errorString, const String& objectId, RefPtr<Array<InternalPropertyDescriptor>>* properties)
 {
     ScriptFunctionCall function(injectedScriptObject(), "getInternalProperties");
     function.appendArgument(objectId);
@@ -186,7 +136,7 @@ void InjectedScript::getInternalProperties(ErrorString* errorString, const Strin
         *errorString = "Internal error";
         return;
     }
-    RefPtr<Array<InternalPropertyDescriptor> > array = Array<InternalPropertyDescriptor>::runtimeCast(result);
+    RefPtr<Array<InternalPropertyDescriptor>> array = Array<InternalPropertyDescriptor>::runtimeCast(result);
     if (array->length() > 0)
         *properties = array;
 }
@@ -215,7 +165,7 @@ void InjectedScript::releaseObject(const String& objectId)
 }
 
 #if ENABLE(JAVASCRIPT_DEBUGGER)
-PassRefPtr<Array<CallFrame> > InjectedScript::wrapCallFrames(const ScriptValue& callFrames)
+PassRefPtr<Array<CallFrame>> InjectedScript::wrapCallFrames(const ScriptValue& callFrames)
 {
     ASSERT(!hasNoValue());
     ScriptFunctionCall function(injectedScriptObject(), "wrapCallFrames");

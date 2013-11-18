@@ -33,13 +33,16 @@ namespace WebCore {
 
 using namespace WTF;
 
+void destroy(const CSSParserValue& value)
+{
+    if (value.unit == CSSParserValue::Function)
+        delete value.function;
+}
+
 CSSParserValueList::~CSSParserValueList()
 {
-    size_t numValues = m_values.size();
-    for (size_t i = 0; i < numValues; i++) {
-        if (m_values[i].unit == CSSParserValue::Function)
-            delete m_values[i].function;
-    }
+    for (size_t i = 0, size = m_values.size(); i < size; i++)
+        destroy(m_values[i]);
 }
 
 void CSSParserValueList::addValue(const CSSParserValue& v)
@@ -117,6 +120,7 @@ PassRefPtr<CSSValue> CSSParserValue::createCSSValue()
     case CSSPrimitiveValue::CSS_TURN:
     case CSSPrimitiveValue::CSS_REMS:
     case CSSPrimitiveValue::CSS_CHS:
+    case CSSPrimitiveValue::CSS_FR:
         return CSSPrimitiveValue::create(fValue, primitiveUnit);
     case CSSPrimitiveValue::CSS_UNKNOWN:
     case CSSPrimitiveValue::CSS_DIMENSION:
@@ -149,7 +153,7 @@ PassRefPtr<CSSValue> CSSParserValue::createCSSValue()
 }
 
 CSSParserSelector::CSSParserSelector()
-    : m_selector(adoptPtr(fastNew<CSSSelector>()))
+    : m_selector(adoptPtr(new CSSSelector))
 {
 }
 
@@ -173,11 +177,11 @@ CSSParserSelector::~CSSParserSelector()
     }
 }
 
-void CSSParserSelector::adoptSelectorVector(Vector<OwnPtr<CSSParserSelector> >& selectorVector)
+void CSSParserSelector::adoptSelectorVector(Vector<OwnPtr<CSSParserSelector>>& selectorVector)
 {
-    CSSSelectorList* selectorList = fastNew<CSSSelectorList>();
+    OwnPtr<CSSSelectorList> selectorList = adoptPtr(new CSSSelectorList);
     selectorList->adoptSelectorVector(selectorVector);
-    m_selector->setSelectorList(adoptPtr(selectorList));
+    m_selector->setSelectorList(selectorList.release());
 }
 
 bool CSSParserSelector::isSimple() const

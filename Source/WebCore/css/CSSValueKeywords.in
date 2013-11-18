@@ -470,6 +470,9 @@ underline
 #if defined(ENABLE_CSS3_TEXT) && ENABLE_CSS3_TEXT
 wavy
 #endif
+#if defined(ENABLE_CSS3_TEXT_DECORATION) && ENABLE_CSS3_TEXT_DECORATION
+ink
+#endif
 -webkit-nowrap
 
 // CSS3 Values
@@ -1009,6 +1012,13 @@ saturation
 color
 luminosity
 
+// object-fit
+// fill
+// contain
+// cover
+// none
+scale-down
+
 #if defined(ENABLE_CSS_IMAGE_RESOLUTION) && ENABLE_CSS_IMAGE_RESOLUTION
 from-image
 snap
@@ -1033,3 +1043,5 @@ span
 -webkit-hanging
 #endif
 
+// -webkit-column-fill
+balance

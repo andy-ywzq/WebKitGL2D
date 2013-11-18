@@ -89,17 +89,6 @@ WebInspector.ResourceTreeElement.prototype = {
         return {text: this._resource.url};
     },
 
-    get reloadButton()
-    {
-        if (!this._reloadButton) {
-            this._reloadButton = document.createElement("img");
-            this._reloadButton.className = "reload-button";
-            this._reloadButton.title = WebInspector.UIString("Reload page (%s)\nReload ignoring cache (%s)").format(WebInspector._reloadPageKeyboardShortcut.displayName, WebInspector._reloadPageIgnoringCacheKeyboardShortcut.displayName);
-            this._reloadButton.addEventListener("click", this._reloadPageClicked.bind(this));
-        }
-        return this._reloadButton;
-    },
-
     ondblclick: function()
     {
         InspectorFrontendHost.openInNewTab(this._resource.url);
@@ -176,7 +165,10 @@ WebInspector.ResourceTreeElement.prototype = {
         if (this._resource.finished || this._resource.failed) {
             // Remove the spinner and replace with a reload button in case it's the main frame's main resource.
             var frame = this._resource.parentFrame;
-            this.status = this._resource.isMainResource() && frame && frame.isMainFrame() ? this.reloadButton : null;
+            if (this._resource.isMainResource() && frame && frame.isMainFrame() && this instanceof WebInspector.FrameTreeElement)
+                this.updateStatusForMainFrame();
+            else
+                this.status = null;
         } else {
             var spinner = new WebInspector.IndeterminateProgressSpinner;
             this.status = spinner.element;
@@ -186,14 +178,6 @@ WebInspector.ResourceTreeElement.prototype = {
     _updateToolTip: function()
     {
         this.tooltip = this._resource.url;
-    },
-
-    _reloadPageClicked: function(event)
-    {
-        event.stopPropagation();
-
-        // Ignore cache when the shift key is pressed.
-        PageAgent.reload(event.shiftKey);
     },
 
     _urlDidChange: function(event)

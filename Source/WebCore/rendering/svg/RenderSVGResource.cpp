@@ -32,26 +32,26 @@
 #include "RenderSVGResourceFilter.h"
 #include "RenderSVGResourceMasker.h"
 #include "RenderSVGResourceSolidColor.h"
+#include "RenderView.h"
 #include "SVGResources.h"
 #include "SVGResourcesCache.h"
 #include "SVGURIReference.h"
 
 namespace WebCore {
 
-static inline bool inheritColorFromParentStyleIfNeeded(RenderObject* object, bool applyToFill, Color& color)
+static inline bool inheritColorFromParentStyleIfNeeded(RenderElement& object, bool applyToFill, Color& color)
 {
     if (color.isValid())
         return true;
-    if (!object->parent() || !object->parent()->style())
+    if (!object.parent())
         return false;
-    const SVGRenderStyle* parentSVGStyle = object->parent()->style()->svgStyle();
+    const SVGRenderStyle* parentSVGStyle = object.parent()->style().svgStyle();
     color = applyToFill ? parentSVGStyle->fillPaintColor() : parentSVGStyle->strokePaintColor();
     return true;
 }
 
-static inline RenderSVGResource* requestPaintingResource(RenderSVGResourceMode mode, RenderObject* object, const RenderStyle* style, Color& fallbackColor)
+static inline RenderSVGResource* requestPaintingResource(RenderSVGResourceMode mode, RenderElement& object, const RenderStyle* style, Color& fallbackColor)
 {
-    ASSERT(object);
     ASSERT(style);
 
     // If we have no style at all, ignore it.
@@ -59,9 +59,7 @@ static inline RenderSVGResource* requestPaintingResource(RenderSVGResourceMode m
     if (!svgStyle)
         return 0;
 
-    bool isRenderingMask = false;
-    if (object->frame() && object->frame()->view())
-        isRenderingMask = object->frame()->view()->paintBehavior() & PaintBehaviorRenderingSVGMask;
+    bool isRenderingMask = object.view().frameView().paintBehavior() & PaintBehaviorRenderingSVGMask;
 
     // If we have no fill/stroke, return 0.
     if (mode == ApplyToFillMode) {
@@ -120,7 +118,7 @@ static inline RenderSVGResource* requestPaintingResource(RenderSVGResourceMode m
     }
 
     // If no resources are associated with the given renderer, return the color resource.
-    SVGResources* resources = SVGResourcesCache::cachedResourcesForRenderObject(object);
+    SVGResources* resources = SVGResourcesCache::cachedResourcesForRenderObject(&object);
     if (!resources) {
         if (paintType == SVGPaint::SVG_PAINTTYPE_URI_NONE || !inheritColorFromParentStyleIfNeeded(object, applyToFill, color))
             return 0;
@@ -145,12 +143,12 @@ static inline RenderSVGResource* requestPaintingResource(RenderSVGResourceMode m
     return uriResource;
 }
 
-RenderSVGResource* RenderSVGResource::fillPaintingResource(RenderObject* object, const RenderStyle* style, Color& fallbackColor)
+RenderSVGResource* RenderSVGResource::fillPaintingResource(RenderElement& object, const RenderStyle* style, Color& fallbackColor)
 {
     return requestPaintingResource(ApplyToFillMode, object, style, fallbackColor);
 }
 
-RenderSVGResource* RenderSVGResource::strokePaintingResource(RenderObject* object, const RenderStyle* style, Color& fallbackColor)
+RenderSVGResource* RenderSVGResource::strokePaintingResource(RenderElement& object, const RenderStyle* style, Color& fallbackColor)
 {
     return requestPaintingResource(ApplyToStrokeMode, object, style, fallbackColor);
 }
@@ -180,7 +178,7 @@ static inline void removeFromCacheAndInvalidateDependencies(RenderObject* object
 
     if (!object->node() || !object->node()->isSVGElement())
         return;
-    HashSet<SVGElement*>* dependencies = object->document()->accessSVGExtensions()->setOfElementsReferencingTarget(toSVGElement(object->node()));
+    HashSet<SVGElement*>* dependencies = object->document().accessSVGExtensions()->setOfElementsReferencingTarget(toSVGElement(object->node()));
     if (!dependencies)
         return;
     HashSet<SVGElement*>::iterator end = dependencies->end();
@@ -193,11 +191,10 @@ static inline void removeFromCacheAndInvalidateDependencies(RenderObject* object
 void RenderSVGResource::markForLayoutAndParentResourceInvalidation(RenderObject* object, bool needsLayout)
 {
     ASSERT(object);
-    ASSERT(object->document());
     ASSERT(object->node());
 
-    if (needsLayout)
-        object->setNeedsLayout(true);
+    if (needsLayout && !object->documentBeingDestroyed())
+        object->setNeedsLayout();
 
     removeFromCacheAndInvalidateDependencies(object, needsLayout);
 

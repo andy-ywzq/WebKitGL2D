@@ -25,7 +25,7 @@
 #define Event_h
 
 #include "DOMTimeStamp.h"
-#include "EventNames.h"
+#include "EventInterfaces.h"
 #include "ScriptWrappable.h"
 #include <wtf/HashMap.h>
 #include <wtf/ListHashSet.h>
@@ -36,7 +36,6 @@ namespace WebCore {
 
 class Clipboard;
 class EventTarget;
-class EventDispatcher;
 class HTMLIFrameElement;
 
 struct EventInit {
@@ -45,6 +44,14 @@ struct EventInit {
 
     bool bubbles;
     bool cancelable;
+};
+
+enum EventInterface {
+
+#define DOM_EVENT_INTERFACE_DECLARE(name) name##InterfaceType,
+DOM_EVENT_INTERFACES_FOR_EACH(DOM_EVENT_INTERFACE_DECLARE)
+#undef DOM_EVENT_INTERFACE_DECLARE
+
 };
 
 class Event : public ScriptWrappable, public RefCounted<Event> {
@@ -115,13 +122,12 @@ public:
     // IE Extensions
     EventTarget* srcElement() const { return target(); } // MSIE extension - "the object that fired the event"
 
-    bool returnValue() const { return !defaultPrevented(); }
-    void setReturnValue(bool returnValue) { setDefaultPrevented(!returnValue); }
+    bool legacyReturnValue() const { return !defaultPrevented(); }
+    void setLegacyReturnValue(bool returnValue) { setDefaultPrevented(!returnValue); }
 
     Clipboard* clipboardData() const { return isClipboardEvent() ? clipboard() : 0; }
 
-    virtual const AtomicString& interfaceName() const;
-    bool hasInterface(const AtomicString&) const;
+    virtual EventInterface eventInterface() const;
 
     // These events are general classes of events.
     virtual bool isUIEvent() const;
@@ -136,6 +142,8 @@ public:
     // These events lack a DOM interface.
     virtual bool isClipboardEvent() const;
     virtual bool isBeforeTextInsertedEvent() const;
+
+    virtual bool isBeforeUnloadEvent() const;
 
     bool propagationStopped() const { return m_propagationStopped || m_immediatePropagationStopped; }
     bool immediatePropagationStopped() const { return m_immediatePropagationStopped; }
@@ -157,14 +165,13 @@ public:
     Event* underlyingEvent() const { return m_underlyingEvent.get(); }
     void setUnderlyingEvent(PassRefPtr<Event>);
 
-    virtual bool storesResultAsString() const;
-    virtual void storeResult(const String&);
-
     virtual Clipboard* clipboard() const { return 0; }
 
     bool isBeingDispatched() const { return eventPhase(); }
 
     virtual PassRefPtr<Event> cloneFor(HTMLIFrameElement*) const;
+
+    virtual EventTarget* relatedTarget() const { return nullptr; }
 
 protected:
     Event();

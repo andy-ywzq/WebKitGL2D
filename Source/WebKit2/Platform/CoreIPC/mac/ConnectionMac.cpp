@@ -33,10 +33,7 @@
 #include <WebCore/RunLoop.h>
 #include <mach/mach_error.h>
 #include <mach/vm_map.h>
-
-#if HAVE(XPC)
 #include <xpc/xpc.h>
-#endif
 
 using namespace WebCore;
 
@@ -77,12 +74,10 @@ void Connection::platformInvalidate()
         m_exceptionPort = MACH_PORT_NULL;
     }
 
-#if HAVE(XPC)
     if (m_xpcConnection) {
         xpc_release(m_xpcConnection);
         m_xpcConnection = 0;
     }
-#endif
 }
 
 void Connection::platformInitialize(Identifier identifier)
@@ -101,13 +96,11 @@ void Connection::platformInitialize(Identifier identifier)
     m_receivePortDataAvailableSource = nullptr;
     m_exceptionPortDataAvailableSource = nullptr;
 
-#if HAVE(XPC)
     m_xpcConnection = identifier.xpcConnection;
     // FIXME: Instead of explicitly retaining the connection here, Identifier::xpcConnection
     // should just be a smart pointer.
     if (m_xpcConnection)
         xpc_retain(m_xpcConnection);
-#endif
 }
 
 static dispatch_source_t createDataAvailableSource(mach_port_t receivePort, WorkQueue* workQueue, const Function<void()>& function)
@@ -141,10 +134,10 @@ bool Connection::open()
         m_isConnected = true;
         
         // Send the initialize message, which contains a send right for the server to use.
-        OwnPtr<MessageEncoder> encoder = MessageEncoder::create("IPC", "InitializeConnection", 0);
+        auto encoder = std::make_unique<MessageEncoder>("IPC", "InitializeConnection", 0);
         encoder->encode(MachPort(m_receivePort, MACH_MSG_TYPE_MAKE_SEND));
 
-        sendMessage(encoder.release());
+        sendMessage(std::move(encoder));
 
         initializeDeadNameSource();
     }
@@ -159,10 +152,10 @@ bool Connection::open()
     if (m_exceptionPort) {
         m_exceptionPortDataAvailableSource = createDataAvailableSource(m_exceptionPort, m_connectionQueue.get(), bind(&Connection::exceptionSourceEventHandler, this));
 
-        OwnPtr<MessageEncoder> encoder = MessageEncoder::create("IPC", "SetExceptionPort", 0);
+        auto encoder = std::make_unique<MessageEncoder>("IPC", "SetExceptionPort", 0);
         encoder->encode(MachPort(m_exceptionPort, MACH_MSG_TYPE_MAKE_SEND));
 
-        sendMessage(encoder.release());
+        sendMessage(std::move(encoder));
     }
 
     ref();
@@ -198,7 +191,7 @@ bool Connection::platformCanSendOutgoingMessages() const
     return true;
 }
 
-bool Connection::sendOutgoingMessage(PassOwnPtr<MessageEncoder> encoder)
+bool Connection::sendOutgoingMessage(std::unique_ptr<MessageEncoder> encoder)
 {
     Vector<Attachment> attachments = encoder->releaseAttachments();
     
@@ -299,14 +292,14 @@ void Connection::initializeDeadNameSource()
     });
 }
 
-static PassOwnPtr<MessageDecoder> createMessageDecoder(mach_msg_header_t* header)
+static std::unique_ptr<MessageDecoder> createMessageDecoder(mach_msg_header_t* header)
 {
     if (!(header->msgh_bits & MACH_MSGH_BITS_COMPLEX)) {
         // We have a simple message.
         uint8_t* body = reinterpret_cast<uint8_t*>(header + 1);
         size_t bodySize = header->msgh_size - sizeof(mach_msg_header_t);
 
-        return MessageDecoder::create(DataReference(body, bodySize));
+        return std::make_unique<MessageDecoder>(DataReference(body, bodySize), Vector<Attachment>());
     }
 
     bool messageBodyIsOOL = header->msgh_id & MessageBodyIsOutOfLine;
@@ -351,22 +344,17 @@ static PassOwnPtr<MessageDecoder> createMessageDecoder(mach_msg_header_t* header
         uint8_t* messageBody = static_cast<uint8_t*>(messageBodyAttachment.address());
         size_t messageBodySize = messageBodyAttachment.size();
 
-        OwnPtr<MessageDecoder> decoder;
-
-        if (attachments.isEmpty())
-            decoder = MessageDecoder::create(DataReference(messageBody, messageBodySize));
-        else
-            decoder = MessageDecoder::create(DataReference(messageBody, messageBodySize), attachments);
+        auto decoder = std::make_unique<MessageDecoder>(DataReference(messageBody, messageBodySize), std::move(attachments));
 
         vm_deallocate(mach_task_self(), reinterpret_cast<vm_address_t>(messageBodyAttachment.address()), messageBodyAttachment.size());
 
-        return decoder.release();
+        return decoder;
     }
 
     uint8_t* messageBody = descriptorData;
     size_t messageBodySize = header->msgh_size - (descriptorData - reinterpret_cast<uint8_t*>(header));
 
-    return MessageDecoder::create(DataReference(messageBody, messageBodySize), attachments);
+    return std::make_unique<MessageDecoder>(DataReference(messageBody, messageBodySize), attachments);
 }
 
 // The receive buffer size should always include the maximum trailer size.
@@ -407,11 +395,11 @@ void Connection::receiveSourceEventHandler()
     if (!header)
         return;
 
-    OwnPtr<MessageDecoder> decoder = createMessageDecoder(header);
+    std::unique_ptr<MessageDecoder> decoder = createMessageDecoder(header);
     ASSERT(decoder);
 
 #if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
-    decoder->setImportanceAssertion(ImportanceAssertion::create(header));
+    decoder->setImportanceAssertion(std::make_unique<ImportanceAssertion>(header));
 #endif
 
     if (decoder->messageReceiverName() == "IPC" && decoder->messageName() == "InitializeConnection") {
@@ -454,7 +442,7 @@ void Connection::receiveSourceEventHandler()
         return;
     }
 
-    processIncomingMessage(decoder.release());
+    processIncomingMessage(std::move(decoder));
 }    
 
 void Connection::exceptionSourceEventHandler()

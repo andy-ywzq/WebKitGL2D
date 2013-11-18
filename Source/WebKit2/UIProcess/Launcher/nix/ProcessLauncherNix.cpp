@@ -38,7 +38,7 @@
 #include <errno.h>
 #include <glib.h>
 #include <locale.h>
-#include <wtf/OwnArrayPtr.h>
+#include <wtf/StdLibExtras.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/WTFString.h>
 #include <wtf/gobject/GOwnPtr.h>
@@ -65,7 +65,7 @@ static void childSetupFunction(gpointer userData)
     close(socket);
 }
 
-static Vector<OwnArrayPtr<char>> createArgsArray(const String& prefix, const String& executablePath, const String& socket, const String& pluginPath)
+static Vector<std::unique_ptr<char[]>> createArgsArray(const String& prefix, const String& executablePath, const String& socket, const String& pluginPath)
 {
     ASSERT(!executablePath.isEmpty());
     ASSERT(!socket.isEmpty());
@@ -78,12 +78,12 @@ static Vector<OwnArrayPtr<char>> createArgsArray(const String& prefix, const Str
     if (!pluginPath.isEmpty())
         splitArgs.append(pluginPath);
 
-    Vector<OwnArrayPtr<char>> args(splitArgs.size() + 1); // Extra room for null.
+    Vector<std::unique_ptr<char[]>> args(splitArgs.size() + 1); // Extra room for null.
 
     size_t numArgs = splitArgs.size();
     for (size_t i = 0; i < numArgs; ++i) {
         CString param = splitArgs[i].utf8();
-        args[i] = adoptArrayPtr(new char[param.length() + 1]); // Room for the terminating null coming from the CString.
+        args[i] = std::make_unique<char[]>(param.length() + 1); // Room for the terminating null coming from the CString.
         strncpy(args[i].get(), param.data(), param.length() + 1); // +1 here so that strncpy copies the ending null.
     }
 
@@ -105,11 +105,24 @@ void ProcessLauncher::launchProcess()
     }
 
     String processCmdPrefix, executablePath, pluginPath;
-    if (m_launchOptions.processType == WebProcess)
+    switch (m_launchOptions.processType) {
+    case WebProcess:
         executablePath = executablePathOfWebProcess();
-    else {
+        break;
+#if ENABLE(PLUGIN_PROCESS)
+    case PluginProcess:
         executablePath = executablePathOfPluginProcess();
         pluginPath = m_launchOptions.extraInitializationData.get("plugin-path");
+        break;
+#endif
+#if ENABLE(NETWORK_PROCESS)
+    case NetworkProcess:
+        executablePath = executablePathOfNetworkProcess();
+        break;
+#endif
+    default:
+        ASSERT_NOT_REACHED();
+        return;
     }
 
 #ifndef NDEBUG
@@ -117,7 +130,7 @@ void ProcessLauncher::launchProcess()
         processCmdPrefix = m_launchOptions.processCmdPrefix;
 #endif
 
-    Vector<OwnArrayPtr<char>> args = createArgsArray(processCmdPrefix, executablePath, String::number(sockets[0]), pluginPath);
+    auto args = createArgsArray(processCmdPrefix, executablePath, String::number(sockets[0]), pluginPath);
 
     GOwnPtr<GError> error;
     int spawnFlags = G_SPAWN_LEAVE_DESCRIPTORS_OPEN | G_SPAWN_SEARCH_PATH;

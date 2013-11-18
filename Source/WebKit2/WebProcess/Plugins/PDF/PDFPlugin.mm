@@ -776,11 +776,6 @@ IntPoint PDFPlugin::maximumScrollPosition() const
     return maximumOffset;
 }
 
-bool PDFPlugin::scrollbarsCanBeActive() const
-{
-    return !pluginView()->frame()->document()->inPageCache();
-}
-
 void PDFPlugin::scrollbarStyleChanged(int, bool forceUpdate)
 {
     if (!forceUpdate)
@@ -917,7 +912,7 @@ void PDFPlugin::pdfDocumentDidLoad()
         createPasswordEntryForm();
 }
 
-void PDFPlugin::streamDidReceiveResponse(uint64_t streamID, const KURL&, uint32_t, uint32_t, const String& mimeType, const String&, const String& suggestedFilename)
+void PDFPlugin::streamDidReceiveResponse(uint64_t streamID, const URL&, uint32_t, uint32_t, const String& mimeType, const String&, const String& suggestedFilename)
 {
     ASSERT_UNUSED(streamID, streamID == pdfDocumentRequestID);
 
@@ -952,7 +947,7 @@ void PDFPlugin::streamDidFail(uint64_t streamID, bool wasCancelled)
     m_data.clear();
 }
 
-void PDFPlugin::manualStreamDidReceiveResponse(const KURL& responseURL, uint32_t streamLength,  uint32_t lastModifiedTime, const String& mimeType, const String& headers, const String& suggestedFilename)
+void PDFPlugin::manualStreamDidReceiveResponse(const URL& responseURL, uint32_t streamLength,  uint32_t lastModifiedTime, const String& mimeType, const String& headers, const String& suggestedFilename)
 {
     m_suggestedFilename = suggestedFilename;
 
@@ -1137,7 +1132,7 @@ PassRefPtr<ShareableBitmap> PDFPlugin::snapshot()
     backingStoreSize.scale(contentsScaleFactor);
 
     RefPtr<ShareableBitmap> bitmap = ShareableBitmap::createShareable(backingStoreSize, ShareableBitmap::SupportsAlpha);
-    OwnPtr<GraphicsContext> context = bitmap->createGraphicsContext();
+    auto context = bitmap->createGraphicsContext();
 
     context->scale(FloatSize(contentsScaleFactor, -contentsScaleFactor));
     context->translate(0, -size().height());
@@ -1641,7 +1636,9 @@ void PDFPlugin::writeItemsToPasteboard(NSArray *items, NSArray *types)
     for (NSString *type in types)
         pasteboardTypes.append(type);
 
-    WebProcess::shared().parentProcessConnection()->send(Messages::WebContext::SetPasteboardTypes(NSGeneralPboard, pasteboardTypes), 0);
+    uint64_t newChangeCount;
+    WebProcess::shared().parentProcessConnection()->sendSync(Messages::WebContext::SetPasteboardTypes(NSGeneralPboard, pasteboardTypes),
+        Messages::WebContext::SetPasteboardTypes::Reply(newChangeCount), 0);
 
     for (NSUInteger i = 0, count = items.count; i < count; ++i) {
         NSString *type = [types objectAtIndex:i];
@@ -1655,7 +1652,8 @@ void PDFPlugin::writeItemsToPasteboard(NSArray *items, NSArray *types)
 
         if ([type isEqualToString:NSStringPboardType] || [type isEqualToString:NSPasteboardTypeString]) {
             RetainPtr<NSString> plainTextString = adoptNS([[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
-            WebProcess::shared().parentProcessConnection()->send(Messages::WebContext::SetPasteboardStringForType(NSGeneralPboard, type, plainTextString.get()), 0);
+            WebProcess::shared().parentProcessConnection()->sendSync(Messages::WebContext::SetPasteboardStringForType(NSGeneralPboard, type, plainTextString.get()),
+                Messages::WebContext::SetPasteboardStringForType::Reply(newChangeCount), 0);
         } else {
             RefPtr<SharedBuffer> buffer = SharedBuffer::wrapNSData(data);
 
@@ -1666,7 +1664,8 @@ void PDFPlugin::writeItemsToPasteboard(NSArray *items, NSArray *types)
             RefPtr<SharedMemory> sharedMemory = SharedMemory::create(buffer->size());
             memcpy(sharedMemory->data(), buffer->data(), buffer->size());
             sharedMemory->createHandle(handle, SharedMemory::ReadOnly);
-            WebProcess::shared().parentProcessConnection()->send(Messages::WebContext::SetPasteboardBufferForType(NSGeneralPboard, type, handle, buffer->size()), 0);
+            WebProcess::shared().parentProcessConnection()->sendSync(Messages::WebContext::SetPasteboardBufferForType(NSGeneralPboard, type, handle, buffer->size()),
+                Messages::WebContext::SetPasteboardBufferForType::Reply(newChangeCount), 0);
         }
     }
 }

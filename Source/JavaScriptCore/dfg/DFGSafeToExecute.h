@@ -53,6 +53,7 @@ public:
         case BooleanUse:
         case CellUse:
         case ObjectUse:
+        case FinalObjectUse:
         case ObjectOrOtherUse:
         case StringIdentUse:
         case StringUse:
@@ -60,6 +61,7 @@ public:
         case StringOrStringObjectUse:
         case NotCellUse:
         case OtherUse:
+        case MachineIntUse:
             return;
             
         case KnownInt32Use:
@@ -68,7 +70,7 @@ public:
             return;
             
         case KnownNumberUse:
-            if (m_state.forNode(edge).m_type & ~SpecNumber)
+            if (m_state.forNode(edge).m_type & ~SpecFullNumber)
                 m_result = false;
             return;
             
@@ -114,7 +116,6 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case ToThis:
     case CreateThis:
     case GetCallee:
-    case SetCallee:
     case GetLocal:
     case SetLocal:
     case MovHintAndCheck:
@@ -128,7 +129,6 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case PhantomLocal:
     case GetLocalUnlinked:
     case SetArgument:
-    case InlineStart:
     case BitAnd:
     case BitOr:
     case BitXor:
@@ -163,7 +163,6 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case ArrayifyToStructure:
     case GetScope:
     case GetMyScope:
-    case SetMyScope:
     case SkipTopScope:
     case SkipScope:
     case GetClosureRegisters:
@@ -231,7 +230,15 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
     case ForceOSRExit:
     case CheckWatchdogTimer:
     case StringFromCharCode:
+    case NewTypedArray:
     case Unreachable:
+    case ExtractOSREntryLocal:
+    case CheckTierUpInLoop:
+    case CheckTierUpAtReturn:
+    case CheckTierUpAndOSREnter:
+    case LoopHint:
+    case Int52ToDouble:
+    case Int52ToValue:
         return true;
         
     case GetByVal:
@@ -245,7 +252,8 @@ bool safeToExecute(AbstractStateType& state, Graph& graph, Node* node)
         
     case GetTypedArrayByteOffset:
         return !(state.forNode(node->child1()).m_type & ~(SpecTypedArrayView));
-        
+            
+    case PutByValDirect:
     case PutByVal:
     case PutByValAlias:
         return node->arrayMode().modeForPut().alreadyChecked(

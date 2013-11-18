@@ -29,7 +29,8 @@
 
 #include "ContentData.h"
 #include "InspectorInstrumentation.h"
-#include "RenderObject.h"
+#include "RenderElement.h"
+#include "RenderImage.h"
 #include "RenderQuote.h"
 
 namespace WebCore {
@@ -67,7 +68,7 @@ PseudoElement::~PseudoElement()
 {
     ASSERT(!m_hostElement);
 #if USE(ACCELERATED_COMPOSITING)
-    InspectorInstrumentation::pseudoElementDestroyed(document()->page(), this);
+    InspectorInstrumentation::pseudoElementDestroyed(document().page(), this);
 #endif
 }
 
@@ -78,16 +79,16 @@ PassRefPtr<RenderStyle> PseudoElement::customStyleForRenderer()
 
 void PseudoElement::didAttachRenderers()
 {
-    RenderObject* renderer = this->renderer();
-    if (!renderer || !renderer->style()->regionThread().isEmpty())
+    RenderElement* renderer = this->renderer();
+    if (!renderer || renderer->style().hasFlowFrom())
         return;
 
-    RenderStyle* style = renderer->style();
-    ASSERT(style->contentData());
+    RenderStyle& style = renderer->style();
+    ASSERT(style.contentData());
 
-    for (const ContentData* content = style->contentData(); content; content = content->next()) {
+    for (const ContentData* content = style.contentData(); content; content = content->next()) {
         RenderObject* child = content->createRenderer(document(), style);
-        if (renderer->isChildAllowed(child, style)) {
+        if (renderer->isChildAllowed(*child, style)) {
             renderer->addChild(child);
             if (child->isQuote())
                 toRenderQuote(child)->attachQuote();
@@ -111,14 +112,9 @@ void PseudoElement::didRecalcStyle(Style::Change)
     RenderObject* renderer = this->renderer();
     for (RenderObject* child = renderer->nextInPreOrder(renderer); child; child = child->nextInPreOrder(renderer)) {
         // We only manage the style for the generated content which must be images or text.
-        if (!child->isText() && !child->isImage())
+        if (!child->isImage())
             continue;
-
-        // The style for the RenderTextFragment for first letter is managed by an enclosing block, not by us.
-        if (child->style()->styleType() == FIRST_LETTER)
-            continue;
-
-        child->setPseudoStyle(renderer->style());
+        toRenderImage(child)->setPseudoStyle(&renderer->style());
     }
 }
 

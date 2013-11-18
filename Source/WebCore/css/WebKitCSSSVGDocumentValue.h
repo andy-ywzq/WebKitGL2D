@@ -41,7 +41,7 @@ public:
     CachedSVGDocument* cachedSVGDocument() const { return m_document.get(); }
     CachedSVGDocument* load(CachedResourceLoader*);
 
-    String customCssText() const;
+    String customCSSText() const;
     const String& url() const { return m_url; }
     bool loadRequested() const { return m_loadRequested; }
     bool equals(const WebKitCSSSVGDocumentValue&) const;
@@ -53,6 +53,8 @@ private:
     CachedResourceHandle<CachedSVGDocument> m_document;
     bool m_loadRequested;
 };
+
+CSS_VALUE_TYPE_CASTS(WebKitCSSSVGDocumentValue, isWebKitCSSSVGDocumentValue())
 
 } // namespace WebCore
 

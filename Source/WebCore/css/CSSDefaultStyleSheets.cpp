@@ -80,9 +80,9 @@ static const MediaQueryEvaluator& printEval()
 
 static StyleSheetContents* parseUASheet(const String& str)
 {
-    StyleSheetContents* sheet = StyleSheetContents::create().leakRef(); // leak the sheet on purpose
-    sheet->parseString(str);
-    return sheet;
+    StyleSheetContents& sheet = StyleSheetContents::create().leakRef(); // leak the sheet on purpose
+    sheet.parseString(str);
+    return &sheet;
 }
 
 static StyleSheetContents* parseUASheet(const char* characters, unsigned size)
@@ -148,8 +148,9 @@ void CSSDefaultStyleSheets::loadSimpleDefaultStyle()
 RuleSet* CSSDefaultStyleSheets::viewSourceStyle()
 {
     if (!defaultViewSourceStyle) {
+        static StyleSheetContents* viewSourceStyleSheet = parseUASheet(sourceUserAgentStyleSheet, sizeof(sourceUserAgentStyleSheet));
         defaultViewSourceStyle = RuleSet::create().leakPtr();
-        defaultViewSourceStyle->addRulesFromSheet(parseUASheet(sourceUserAgentStyleSheet, sizeof(sourceUserAgentStyleSheet)), screenEval());
+        defaultViewSourceStyle->addRulesFromSheet(viewSourceStyleSheet, screenEval());
     }
     return defaultViewSourceStyle;
 }
@@ -184,7 +185,9 @@ void CSSDefaultStyleSheets::ensureDefaultStyleSheetsForElement(Element* element,
 
 #if ENABLE(VIDEO)
     if (!mediaControlsStyleSheet && (element->hasTagName(videoTag) || isHTMLAudioElement(element))) {
-        String mediaRules = String(mediaControlsUserAgentStyleSheet, sizeof(mediaControlsUserAgentStyleSheet)) + RenderTheme::themeForPage(element->document()->page())->extraMediaControlsStyleSheet();
+        String mediaRules = RenderTheme::themeForPage(element->document().page())->mediaControlsStyleSheet();
+        if (mediaRules.isEmpty())
+            mediaRules = String(mediaControlsUserAgentStyleSheet, sizeof(mediaControlsUserAgentStyleSheet)) + RenderTheme::themeForPage(element->document().page())->extraMediaControlsStyleSheet();
         mediaControlsStyleSheet = parseUASheet(mediaRules);
         defaultStyle->addRulesFromSheet(mediaControlsStyleSheet, screenEval());
         defaultPrintStyle->addRulesFromSheet(mediaControlsStyleSheet, printEval());
@@ -193,7 +196,7 @@ void CSSDefaultStyleSheets::ensureDefaultStyleSheetsForElement(Element* element,
 #endif
 
 #if ENABLE(FULLSCREEN_API)
-    if (!fullscreenStyleSheet && element->document()->webkitIsFullScreen()) {
+    if (!fullscreenStyleSheet && element->document().webkitIsFullScreen()) {
         String fullscreenRules = String(fullscreenUserAgentStyleSheet, sizeof(fullscreenUserAgentStyleSheet)) + RenderTheme::defaultTheme()->extraFullScreenStyleSheet();
         fullscreenStyleSheet = parseUASheet(fullscreenRules);
         defaultStyle->addRulesFromSheet(fullscreenStyleSheet, screenEval());
@@ -203,7 +206,7 @@ void CSSDefaultStyleSheets::ensureDefaultStyleSheetsForElement(Element* element,
 #endif
 
     if (!plugInsStyleSheet && (element->hasTagName(objectTag) || element->hasTagName(embedTag))) {
-        String plugInsRules = RenderTheme::themeForPage(element->document()->page())->extraPlugInsStyleSheet() + element->document()->page()->chrome().client().plugInExtraStyleSheet();
+        String plugInsRules = RenderTheme::themeForPage(element->document().page())->extraPlugInsStyleSheet() + element->document().page()->chrome().client().plugInExtraStyleSheet();
         if (plugInsRules.isEmpty())
             plugInsRules = String(plugInsUserAgentStyleSheet, sizeof(plugInsUserAgentStyleSheet));
         plugInsStyleSheet = parseUASheet(plugInsRules);

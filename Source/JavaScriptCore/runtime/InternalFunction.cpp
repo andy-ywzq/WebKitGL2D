@@ -30,12 +30,12 @@
 
 namespace JSC {
 
-ASSERT_HAS_TRIVIAL_DESTRUCTOR(InternalFunction);
+STATIC_ASSERT_IS_TRIVIALLY_DESTRUCTIBLE(InternalFunction);
 
 const ClassInfo InternalFunction::s_info = { "Function", &Base::s_info, 0, 0, CREATE_METHOD_TABLE(InternalFunction) };
 
-InternalFunction::InternalFunction(JSGlobalObject* globalObject, Structure* structure)
-    : JSDestructibleObject(globalObject->vm(), structure)
+InternalFunction::InternalFunction(VM& vm, Structure* structure)
+    : JSDestructibleObject(vm, structure)
 {
 }
 

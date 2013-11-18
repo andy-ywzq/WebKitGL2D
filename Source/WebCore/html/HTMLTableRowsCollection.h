@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2008, 2013 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,15 +36,15 @@ namespace WebCore {
 class HTMLTableElement;
 class HTMLTableRowElement;
 
-class HTMLTableRowsCollection : public HTMLCollection {
+class HTMLTableRowsCollection FINAL : public HTMLCollection {
 public:
-    static PassRefPtr<HTMLTableRowsCollection> create(Node*, CollectionType);
+    static PassRefPtr<HTMLTableRowsCollection> create(Node&, CollectionType);
 
     static HTMLTableRowElement* rowAfter(HTMLTableElement*, HTMLTableRowElement*);
     static HTMLTableRowElement* lastRow(HTMLTableElement*);
 
 private:
-    HTMLTableRowsCollection(Node*);
+    explicit HTMLTableRowsCollection(HTMLTableElement&);
 
     virtual Element* virtualItemAfter(unsigned& offsetInArray, Element*) const OVERRIDE;
 };

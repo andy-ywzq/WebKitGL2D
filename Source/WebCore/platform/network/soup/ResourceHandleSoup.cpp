@@ -200,13 +200,12 @@ public:
 private:
     static String computeCertificateHash(GTlsCertificate* certificate)
     {
-        GByteArray* data = 0;
-        g_object_get(G_OBJECT(certificate), "certificate", &data, NULL);
-        if (!data)
+        GRefPtr<GByteArray> certificateData;
+        g_object_get(G_OBJECT(certificate), "certificate", &certificateData.outPtr(), NULL);
+        if (!certificateData)
             return String();
 
         static const size_t sha1HashSize = 20;
-        GRefPtr<GByteArray> certificateData = adoptGRef(data);
         SHA1 sha1;
         sha1.addBytes(certificateData->data, certificateData->len);
 
@@ -352,9 +351,7 @@ static void gotHeadersCallback(SoupMessage* message, gpointer data)
 
     // The original response will be needed later to feed to willSendRequest in
     // doRedirect() in case we are redirected. For this reason, we store it here.
-    ResourceResponse response;
-    response.updateFromSoupMessage(message);
-    d->m_response = response;
+    d->m_response.updateFromSoupMessage(message);
 }
 
 static void applyAuthenticationToRequest(ResourceHandle* handle, ResourceRequest& request, bool redirect)
@@ -387,12 +384,13 @@ static void applyAuthenticationToRequest(ResourceHandle* handle, ResourceRequest
     // We always put the credentials into the URL. In the CFNetwork-port HTTP family credentials are applied in
     // the didReceiveAuthenticationChallenge callback, but libsoup requires us to use this method to override
     // any previously remembered credentials. It has its own per-session credential storage.
-    KURL urlWithCredentials(request.url());
+    URL urlWithCredentials(request.url());
     urlWithCredentials.setUser(user);
     urlWithCredentials.setPass(password);
     request.setURL(urlWithCredentials);
 }
 
+#if ENABLE(WEB_TIMING)
 // Called each time the message is going to be sent again except the first time.
 // This happens when libsoup handles HTTP authentication.
 static void restartedCallback(SoupMessage*, gpointer data)
@@ -401,13 +399,12 @@ static void restartedCallback(SoupMessage*, gpointer data)
     if (!handle || handle->cancelledOrClientless())
         return;
 
-#if ENABLE(WEB_TIMING)
     ResourceHandleInternal* d = handle->getInternal();
     ResourceResponse& redirectResponse = d->m_response;
     redirectResponse.setResourceLoadTiming(ResourceLoadTiming::create());
     redirectResponse.resourceLoadTiming()->requestTime = monotonicallyIncreasingTime();
-#endif
 }
+#endif
 
 static bool shouldRedirect(ResourceHandle* handle)
 {
@@ -424,7 +421,7 @@ static bool shouldRedirect(ResourceHandle* handle)
     return true;
 }
 
-static bool shouldRedirectAsGET(SoupMessage* message, KURL& newURL, bool crossOrigin)
+static bool shouldRedirectAsGET(SoupMessage* message, URL& newURL, bool crossOrigin)
 {
     if (message->method == SOUP_METHOD_GET || message->method == SOUP_METHOD_HEAD)
         return false;
@@ -462,7 +459,7 @@ static void doRedirect(ResourceHandle* handle)
     ResourceRequest newRequest = handle->firstRequest();
     SoupMessage* message = d->m_soupMessage.get();
     const char* location = soup_message_headers_get_one(message->response_headers, "Location");
-    KURL newURL = KURL(soupURIToKURL(soup_message_get_uri(message)), location);
+    URL newURL = URL(soupURIToKURL(soup_message_get_uri(message)), location);
     bool crossOrigin = !protocolHostAndPortAreEqual(handle->firstRequest().url(), newURL);
     newRequest.setURL(newURL);
     newRequest.setFirstPartyForCookies(newURL);
@@ -781,7 +778,7 @@ static void addEncodedBlobItemToSoupMessageBody(SoupMessage* message, const Blob
 
 static void addEncodedBlobToSoupMessageBody(SoupMessage* message, const FormDataElement& element, unsigned long& totalBodySize)
 {
-    RefPtr<BlobStorageData> blobData = static_cast<BlobRegistryImpl&>(blobRegistry()).getBlobDataFromURL(KURL(ParsedURLString, element.m_url));
+    RefPtr<BlobStorageData> blobData = static_cast<BlobRegistryImpl&>(blobRegistry()).getBlobDataFromURL(URL(ParsedURLString, element.m_url));
     if (!blobData)
         return;
 
@@ -970,7 +967,6 @@ static bool createSoupMessageForHandleAndRequest(ResourceHandle* handle, const R
         soup_message_headers_set_content_length(soupMessage->request_headers, 0);
 
     g_signal_connect(d->m_soupMessage.get(), "got-headers", G_CALLBACK(gotHeadersCallback), handle);
-    g_signal_connect(d->m_soupMessage.get(), "restarted", G_CALLBACK(restartedCallback), handle);
     g_signal_connect(d->m_soupMessage.get(), "wrote-body-data", G_CALLBACK(wroteBodyDataCallback), handle);
 
     soup_message_set_flags(d->m_soupMessage.get(), static_cast<SoupMessageFlags>(soup_message_get_flags(d->m_soupMessage.get()) | SOUP_MESSAGE_NO_REDIRECT));
@@ -978,6 +974,7 @@ static bool createSoupMessageForHandleAndRequest(ResourceHandle* handle, const R
 #if ENABLE(WEB_TIMING)
     d->m_response.setResourceLoadTiming(ResourceLoadTiming::create());
     g_signal_connect(d->m_soupMessage.get(), "network-event", G_CALLBACK(networkEventCallback), handle);
+    g_signal_connect(d->m_soupMessage.get(), "restarted", G_CALLBACK(restartedCallback), handle);
     g_signal_connect(d->m_soupMessage.get(), "wrote-body", G_CALLBACK(wroteBodyCallback), handle);
 #endif
 

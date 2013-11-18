@@ -36,13 +36,10 @@
 #include <fcntl.h>
 #include <wtf/Assertions.h>
 #include <wtf/Functional.h>
-#include <wtf/OwnArrayPtr.h>
+#include <wtf/StdLibExtras.h>
 #include <wtf/UniStdExtras.h>
 
-#if PLATFORM(QT)
-#include <QPointer>
-#include <QSocketNotifier>
-#elif PLATFORM(GTK) || PLATFORM(NIX)
+#if PLATFORM(GTK) || PLATFORM(NIX)
 #include <glib.h>
 #endif
 
@@ -126,10 +123,6 @@ void Connection::platformInitialize(Identifier identifier)
     m_readBufferSize = 0;
     m_fileDescriptors.resize(attachmentMaxAmount);
     m_fileDescriptorsSize = 0;
-
-#if PLATFORM(QT)
-    m_socketNotifier = 0;
-#endif
 }
 
 void Connection::platformInvalidate()
@@ -143,42 +136,13 @@ void Connection::platformInvalidate()
     if (!m_isConnected)
         return;
 
-#if PLATFORM(GTK) || PLATFORM(NIX)
-    m_connectionQueue->unregisterSocketEventHandler(m_socketDescriptor);
-#endif
-
-#if PLATFORM(QT)
-    delete m_socketNotifier;
-    m_socketNotifier = 0;
-#endif
-
-#if PLATFORM(EFL)
+#if PLATFORM(GTK) || PLATFORM(EFL) || PLATFORM(NIX)
     m_connectionQueue->unregisterSocketEventHandler(m_socketDescriptor);
 #endif
 
     m_socketDescriptor = -1;
     m_isConnected = false;
 }
-
-#if PLATFORM(QT)
-class SocketNotifierResourceGuard {
-public:
-    SocketNotifierResourceGuard(QSocketNotifier* socketNotifier)
-        : m_socketNotifier(socketNotifier)
-    {
-        m_socketNotifier.data()->setEnabled(false);
-    }
-
-    ~SocketNotifierResourceGuard()
-    {
-        if (m_socketNotifier)
-            m_socketNotifier.data()->setEnabled(true);
-    }
-
-private:
-    QPointer<QSocketNotifier> const m_socketNotifier;
-};
-#endif
 
 template<class T, class iterator>
 class AttachmentResourceGuard {
@@ -213,10 +177,10 @@ bool Connection::processMessage()
 
     size_t attachmentFileDescriptorCount = 0;
     size_t attachmentCount = messageInfo.attachmentCount();
-    OwnArrayPtr<AttachmentInfo> attachmentInfo;
+    std::unique_ptr<AttachmentInfo[]> attachmentInfo;
 
     if (attachmentCount) {
-        attachmentInfo = adoptArrayPtr(new AttachmentInfo[attachmentCount]);
+        attachmentInfo = std::make_unique<AttachmentInfo[]>(attachmentCount);
         memcpy(attachmentInfo.get(), messageData, sizeof(AttachmentInfo) * attachmentCount);
         messageData += sizeof(AttachmentInfo) * attachmentCount;
 
@@ -287,13 +251,9 @@ bool Connection::processMessage()
     if (messageInfo.isMessageBodyIsOutOfLine())
         messageBody = reinterpret_cast<uint8_t*>(oolMessageBody->data());
 
-    OwnPtr<MessageDecoder> decoder;
-    if (attachments.isEmpty())
-        decoder = MessageDecoder::create(DataReference(messageBody, messageInfo.bodySize()));
-    else
-        decoder = MessageDecoder::create(DataReference(messageBody, messageInfo.bodySize()), attachments);
+    auto decoder = std::make_unique<MessageDecoder>(DataReference(messageBody, messageInfo.bodySize()), std::move(attachments));
 
-    processIncomingMessage(decoder.release());
+    processIncomingMessage(std::move(decoder));
 
     if (m_readBufferSize > messageLength) {
         memmove(m_readBuffer.data(), m_readBuffer.data() + messageLength, m_readBufferSize - messageLength);
@@ -323,7 +283,7 @@ static ssize_t readBytesFromSocket(int socketDescriptor, uint8_t* buffer, int co
     memset(&iov, 0, sizeof(iov));
 
     message.msg_controllen = CMSG_SPACE(sizeof(int) * attachmentMaxAmount);
-    OwnArrayPtr<char> attachmentDescriptorBuffer = adoptArrayPtr(new char[message.msg_controllen]);
+    auto attachmentDescriptorBuffer = std::make_unique<char[]>(message.msg_controllen);
     memset(attachmentDescriptorBuffer.get(), 0, message.msg_controllen);
     message.msg_control = attachmentDescriptorBuffer.get();
 
@@ -375,10 +335,6 @@ static ssize_t readBytesFromSocket(int socketDescriptor, uint8_t* buffer, int co
 
 void Connection::readyReadHandler()
 {
-#if PLATFORM(QT)
-    SocketNotifierResourceGuard socketNotifierEnabler(m_socketNotifier);
-#endif
-
     while (true) {
         size_t fileDescriptorsCount = 0;
         size_t bytesToRead = m_readBuffer.size() - m_readBufferSize;
@@ -412,10 +368,6 @@ void Connection::readyReadHandler()
 
 bool Connection::open()
 {
-#if PLATFORM(QT)
-    ASSERT(!m_socketNotifier);
-#endif
-
     int flags = fcntl(m_socketDescriptor, F_GETFL, 0);
     while (fcntl(m_socketDescriptor, F_SETFL, flags | O_NONBLOCK) == -1) {
         if (errno != EINTR) {
@@ -425,9 +377,7 @@ bool Connection::open()
     }
 
     m_isConnected = true;
-#if PLATFORM(QT)
-    m_socketNotifier = m_connectionQueue->registerSocketEventHandler(m_socketDescriptor, QSocketNotifier::Read, WTF::bind(&Connection::readyReadHandler, this));
-#elif PLATFORM(GTK) || PLATFORM(NIX)
+#if PLATFORM(GTK) || PLATFORM(NIX)
     m_connectionQueue->registerSocketEventHandler(m_socketDescriptor, G_IO_IN, WTF::bind(&Connection::readyReadHandler, this), WTF::bind(&Connection::connectionDidClose, this));
 #elif PLATFORM(EFL)
     m_connectionQueue->registerSocketEventHandler(m_socketDescriptor, WTF::bind(&Connection::readyReadHandler, this));
@@ -445,12 +395,8 @@ bool Connection::platformCanSendOutgoingMessages() const
     return m_isConnected;
 }
 
-bool Connection::sendOutgoingMessage(PassOwnPtr<MessageEncoder> encoder)
+bool Connection::sendOutgoingMessage(std::unique_ptr<MessageEncoder> encoder)
 {
-#if PLATFORM(QT)
-    ASSERT(m_socketNotifier);
-#endif
-
     COMPILE_ASSERT(sizeof(MessageInfo) + attachmentMaxAmount * sizeof(size_t) <= messageMaxSize, AttachmentsFitToMessageInline);
 
     Vector<Attachment> attachments = encoder->releaseAttachments();
@@ -491,7 +437,7 @@ bool Connection::sendOutgoingMessage(PassOwnPtr<MessageEncoder> encoder)
     iov[0].iov_base = reinterpret_cast<void*>(&messageInfo);
     iov[0].iov_len = sizeof(messageInfo);
 
-    OwnArrayPtr<AttachmentInfo> attachmentInfo = adoptArrayPtr(new AttachmentInfo[attachments.size()]);
+    auto attachmentInfo = std::make_unique<AttachmentInfo[]>(attachments.size());
 
     size_t attachmentFDBufferLength = 0;
     if (!attachments.isEmpty()) {
@@ -500,7 +446,7 @@ bool Connection::sendOutgoingMessage(PassOwnPtr<MessageEncoder> encoder)
                 attachmentFDBufferLength++;
         }
     }
-    OwnArrayPtr<char> attachmentFDBuffer = adoptArrayPtr(new char[CMSG_SPACE(sizeof(int) * attachmentFDBufferLength)]);
+    auto attachmentFDBuffer = std::make_unique<char[]>(CMSG_SPACE(sizeof(int) * attachmentFDBufferLength));
 
     if (!attachments.isEmpty()) {
         int* fdPtr = 0;
@@ -559,12 +505,5 @@ bool Connection::sendOutgoingMessage(PassOwnPtr<MessageEncoder> encoder)
     }
     return true;
 }
-
-#if PLATFORM(QT)
-void Connection::setShouldCloseConnectionOnProcessTermination(WebKit::PlatformProcessIdentifier process)
-{
-    m_connectionQueue->dispatchOnTermination(process, WTF::bind(&Connection::connectionDidClose, this));
-}
-#endif
 
 } // namespace CoreIPC

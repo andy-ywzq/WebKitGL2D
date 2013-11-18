@@ -24,8 +24,6 @@ fast/frames/seamless/seamless-window-location-href.html [ Skip ]
 fast/hidpi/image-set-without-specified-width.html [ Skip ]
 fast/hidpi/resize-corner-hidpi.html [ Skip ]
 fast/xmlhttprequest/xmlhttprequest-recursive-sync-event.html [ Skip ]
-inspector-protocol/debugger-terminate-dedicated-worker-while-paused.html [ Skip ]
-inspector-protocol/media-query-listener-exception.html [ Skip ]
 storage/indexeddb/keypath-fetch-key.html [ Skip ]
 
 # sometimes crash
@@ -127,40 +125,9 @@ css2.1/t1604-c542-letter-sp-00-b-a.html
 css3/compositing/blend-mode-property-parsing.html
 css3/compositing/blend-mode-property.html
 css3/compositing/should-have-compositing-layer.html
-css3/device-adapt/opera/cascading-001.xhtml
-css3/device-adapt/opera/cascading-002.xhtml
-css3/device-adapt/opera/cascading-003.xhtml
-css3/device-adapt/opera/cascading-004.xhtml
-css3/device-adapt/opera/constrain-001.xhtml
-css3/device-adapt/opera/constrain-004.xhtml
-css3/device-adapt/opera/constrain-005.xhtml
-css3/device-adapt/opera/constrain-006.xhtml
-css3/device-adapt/opera/constrain-007.xhtml
-css3/device-adapt/opera/constrain-008.xhtml
-css3/device-adapt/opera/constrain-009.xhtml
-css3/device-adapt/opera/constrain-010.xhtml
-css3/device-adapt/opera/constrain-011.xhtml
-css3/device-adapt/opera/constrain-013.xhtml
-css3/device-adapt/opera/constrain-014.xhtml
-css3/device-adapt/opera/constrain-015.xhtml
-css3/device-adapt/opera/constrain-016.xhtml
-css3/device-adapt/opera/constrain-017.xhtml
-css3/device-adapt/opera/constrain-018.xhtml
-css3/device-adapt/opera/constrain-019.xhtml
-css3/device-adapt/opera/constrain-020.xhtml
-css3/device-adapt/opera/constrain-021.xhtml
-css3/device-adapt/opera/constrain-022.xhtml
-css3/device-adapt/opera/constrain-023.xhtml
-css3/device-adapt/opera/constrain-024.xhtml
-css3/device-adapt/opera/cssom-001.xhtml
-css3/device-adapt/opera/orientation-001.xhtml
-css3/device-adapt/opera/syntax-001.xhtml
-css3/device-adapt/opera/syntax-002.xhtml
-css3/device-adapt/opera/syntax-003.xhtml
-css3/device-adapt/viewport-at-rule-parsing.html
-css3/device-adapt/viewport-properties-validation.html
-css3/device-adapt/viewport-width-check-window-innerwidth-correct.html
-css3/device-adapt/viewport-width-not-affecting-next-page.html
+css3/device-adapt/opera/constrain-021.xhtml [ Failure ]
+css3/device-adapt/opera/constrain-022.xhtml [ Failure ]
+css3/device-adapt/opera/orientation-001.xhtml [ Skip ]
 css3/filters/filtered-compositing-descendant.html
 css3/filters/null-effect-check.html
 css3/filters/should-not-have-compositing-layer.html [ Failure ]
@@ -237,65 +204,14 @@ css2.1/20110323/replaced-elements-001.htm
 css3/compositing/background-blend-mode-property-parsing.html
 css3/compositing/background-blend-mode-property.html
 
-editing/deleting/delete-3775172-fix.html [ Skip ]
-editing/deleting/delete-3928305-fix.html [ Skip ]
 editing/deleting/delete-and-undo.html [ Skip ]
-editing/deleting/delete-block-contents-003.html [ Skip ]
-editing/deleting/delete-by-word-002.html [ Skip ]
-editing/deleting/delete-contiguous-ws-001.html [ Skip ]
-editing/deleting/delete-ligature-003.html [ Skip ]
-editing/deleting/delete-tab-002.html [ Skip ]
-editing/deleting/delete-to-select-table.html [ Skip ]
-editing/deleting/delete-trailing-ws-002.html [ Skip ]
-editing/deleting/delete-ws-fixup-001.html [ Skip ]
-editing/deleting/delete-ws-fixup-002.html [ Skip ]
-editing/deleting/paragraph-in-preserveNewline.html [ Skip ]
 editing/deleting/paste-with-transparent-background-color.html [ Skip ]
 editing/deleting/regional-indicators.html [ Skip ]
-editing/deleting/whitespace-pre-1.html [ Skip ]
-editing/execCommand/5569741.html [ Skip ]
-editing/execCommand/delete-selection-has-style.html [ Skip ]
-editing/execCommand/findString-diacriticals.html [ Skip ]
-editing/execCommand/format-block-multiple-paragraphs-in-pre.html [ Skip ]
-editing/execCommand/insert-list-and-stitch.html [ Skip ]
 editing/execCommand/switch-list-type-with-orphaned-li.html [ Skip ]
-editing/input/caret-at-the-edge-of-input.html [ Skip ]
-editing/input/emacs-ctrl-o.html [ Skip ]
-editing/input/page-up-down-scrolls.html [ Skip ]
 editing/input/paste-text-ending-with-interchange-newline.html [ Skip ]
 editing/input/reveal-contenteditable-on-paste-vertically.html [ Skip ]
-editing/input/scroll-to-edge-if-line-break-at-end-of-document-contenteditable.html	[ Skip ]
-editing/inserting/5418891.html [ Skip ]
-editing/inserting/editing-empty-divs.html [ Skip ]
-editing/inserting/insert-br-004.html [ Skip ]
-editing/inserting/insert-br-005.html [ Skip ]
-editing/inserting/insert-br-007.html [ Skip ]
-editing/inserting/insert-div-012.html [ Skip ]
-editing/inserting/insert-div-013.html [ Skip ]
-editing/inserting/insert-div-014.html [ Skip ]
-editing/inserting/insert-div-015.html [ Skip ]
-editing/inserting/insert-div-016.html [ Skip ]
-editing/inserting/insert-div-017.html [ Skip ]
-editing/inserting/insert-div-018.html [ Skip ]
-editing/inserting/insert-div-019.html [ Skip ]
-editing/inserting/insert-div-020.html [ Skip ]
-editing/inserting/insert-div-022.html [ Skip ]
-editing/inserting/insert-div-025.html [ Skip ]
-editing/inserting/insert-div-027.html [ Skip ]
-editing/inserting/insert-paragraph-02.html [ Skip ]
-editing/inserting/insert-paragraph-03.html [ Skip ]
+editing/input/scroll-to-edge-if-line-break-at-end-of-document-contenteditable.html [ Skip ]
 editing/inserting/insert-paste-bidi-control.html [ Skip ]
-editing/inserting/insert-tab-002.html [ Skip ]
-editing/inserting/insert-tab-003.html [ Skip ]
-editing/inserting/insert-text-with-newlines.html [ Skip ]
-editing/inserting/paragraph-separator-01.html [ Skip ]
-editing/inserting/paragraph-separator-02.html [ Skip ]
-editing/inserting/paragraph-separator-03.html [ Skip ]
-editing/inserting/return-key-with-selection-001.html [ Skip ]
-editing/inserting/return-key-with-selection-002.html [ Skip ]
-editing/inserting/return-key-with-selection-003.html [ Skip ]
-editing/inserting/typing-002.html [ Skip ]
-editing/inserting/typing-around-br-001.html [ Skip ]
 editing/pasteboard/19644-1.html [ Skip ]
 editing/pasteboard/19644-2.html [ Skip ]
 editing/pasteboard/4242293-1.html [ Skip ]
@@ -321,7 +237,6 @@ editing/pasteboard/copy-paste-float.html [ Skip ]
 editing/pasteboard/copy-paste-pre-line-content.html [ Skip ]
 editing/pasteboard/copy-paste-ruby-text-with-block.html [ Skip ]
 editing/pasteboard/copy-resolves-urls.html [ Skip ]
-editing/pasteboard/copy-standalone-image-crash.html [ Skip ]
 editing/pasteboard/copy-text-with-backgroundcolor.html [ Skip ]
 editing/pasteboard/copy-two-pasteboard-types-both-work.html [ Skip ]
 editing/pasteboard/crash-accessing-clipboardData-types.html [ Skip ]
@@ -337,7 +252,6 @@ editing/pasteboard/do-not-copy-unnecessary-styles.html [ Skip ]
 editing/pasteboard/drag-and-drop-image-contenteditable.html [ Skip ]
 editing/pasteboard/drag-and-drop-inputimage-contenteditable.html [ Skip ]
 editing/pasteboard/drag-and-drop-objectimage-contenteditable.html [ Skip ]
-editing/pasteboard/drag-drop-dead-frame.html [ Skip ]
 editing/pasteboard/drag-drop-input-textarea.html [ Skip ]
 editing/pasteboard/drag-drop-list.html [ Skip ]
 editing/pasteboard/drag-drop-url-text.html [ Skip ]
@@ -350,10 +264,6 @@ editing/pasteboard/emacs-ctrl-k-with-move.html [ Skip ]
 editing/pasteboard/files-during-page-drags.html [ Skip ]
 editing/pasteboard/get-data-text-plain-drop.html [ Skip ]
 editing/pasteboard/get-data-text-plain-paste.html [ Skip ]
-editing/pasteboard/merge-after-delete-1.html [ Skip ]
-editing/pasteboard/merge-after-delete-2.html [ Skip ]
-editing/pasteboard/merge-after-delete.html [ Skip ]
-editing/pasteboard/merge-end-blockquote.html [ Skip ]
 editing/pasteboard/onpaste-text-html.html [ Skip ]
 editing/pasteboard/onpaste-text-html-types.html [ Skip ]
 editing/pasteboard/page-zoom.html [ Skip ]
@@ -415,103 +325,47 @@ editing/pasteboard/smart-paste-006.html [ Skip ]
 editing/pasteboard/smart-paste-in-text-control.html [ Skip ]
 editing/pasteboard/style-from-rules.html [ Skip ]
 editing/pasteboard/testcase-9507.html [ Skip ]
-editing/selection/13804.html [ Skip ]
-editing/selection/14971.html [ Skip ]
-editing/selection/4818145.html [ Skip ]
 editing/selection/4895428-1.html [ Skip ]
 editing/selection/4895428-4.html [ Skip ]
-editing/selection/5195166-2.html [ Skip ]
-editing/selection/5232159.html [ Skip ]
-editing/selection/5234383-1.html [ Skip ]
-editing/selection/5234383-2.html [ Skip ]
-editing/selection/5333725.html [ Skip ]
-editing/selection/5354455-1.html [ Skip ]
 editing/selection/anchor-focus2.html [ Skip ]
 editing/selection/anchor-focus3.html [ Skip ]
 editing/selection/caret-alignment-for-vertical-text.html [ Skip ]
 editing/selection/collapse-selection-in-bidi.html [ Skip ]
-editing/selection/directionality-after-undo-replace.html [ Skip ]
-editing/selection/doubleclick-beside-cr-span.html [ Skip ]
-editing/selection/doubleclick-whitespace-crash.html [ Skip ]
-editing/selection/doubleclick-whitespace.html [ Skip ]
-editing/selection/doubleclick-whitespace-img-crash.html [ Skip ]
-editing/selection/drag-in-iframe.html [ Skip ]
 editing/selection/drag-select-rapidly.html [ Skip ]
 editing/selection/drag-start-event-client-x-y.html [ Skip ]
 editing/selection/drag-text-delay.html [ Skip ]
-editing/selection/drag-to-contenteditable-iframe.html [ Skip ]
 editing/selection/extend-after-mouse-selection.html [ Skip ]
 editing/selection/fake-drag.html [ Skip ]
-editing/selection/inline-closest-leaf-child.html [ Skip ]
 editing/selection/last-empty-inline.html [ Skip ]
-editing/selection/mixed-editability-10.html [ Skip ]
-editing/selection/mixed-editability-9.html [ Skip ]
-editing/selection/move-backwords-by-word-001.html [ Skip ]
-editing/selection/move-by-character-001.html [ Skip ]
-editing/selection/move-by-character-003.html [ Skip ]
-editing/selection/move-by-character-005.html [ Skip ]
-editing/selection/move-by-character-6.html [ Skip ]
-editing/selection/move-by-line-001.html [ Skip ]
-editing/selection/move-past-trailing-space.html [ Skip ]
-editing/selection/programmatic-selection-on-mac-is-directionless.html [ Skip ]
 editing/selection/rtl-move-selection-right-left.html [ Skip ]
-editing/selection/select-all-001.html [ Skip ]
 editing/selection/select-bidi-run.html [ Skip ]
 editing/selection/select-line-break-with-opposite-directionality.html [ Skip ]
 editing/selection/select-out-of-editable.html [ Skip ]
 editing/selection/select-out-of-floated-contenteditable.html [ Skip ]
 editing/selection/select-out-of-floated-input.html [ Skip ]
 editing/selection/select-out-of-floated-textarea.html [ Skip ]
-editing/selection/select-text-overflow-ellipsis.html [ Skip ]
 editing/selection/shift-click.html [ Skip ]
-editing/selection/unrendered-001.html [ Skip ]
-editing/selection/unrendered-002.html [ Skip ]
-editing/selection/user-drag-element-and-user-select-none.html [ Skip ]
 editing/selection/user-select-all-selection.html [ Skip ]
 editing/selection/user-select-all-with-shift.html [ Skip ]
-editing/selection/vertical-rl-ltr-extend-line-backward-wrap.html [ Skip ]
-editing/selection/vertical-rl-rtl-extend-line-backward-p.html [ Skip ]
-editing/selection/word-granularity.html [ Skip ]
-editing/selection/wrapped-line-caret-1.html [ Skip ]
 editing/spelling/grammar-edit-word.html [ Skip ]
 editing/spelling/markers.html [ Skip ]
 editing/spelling/spellcheck-paste-continuous-disabled.html [ Skip ]
 editing/spelling/spellcheck-paste-disabled.html [ Skip ]
 editing/spelling/spellcheck-paste.html [ Skip ]
-editing/spelling/spelling.html [ Skip ]
 editing/spelling/spelling-changed-text.html [ Skip ]
 editing/spelling/spelling-insert-html.html [ Skip ]
 editing/spelling/spelling-unified-emulation.html [ Skip ]
 editing/style/apply-through-end-of-document.html [ Skip ]
-editing/style/block-styles-007.html [ Skip ]
-editing/style/create-block-for-style-002.html [ Skip ]
-editing/style/create-block-for-style-003.html [ Skip ]
-editing/style/create-block-for-style-004.html [ Skip ]
-editing/style/create-block-for-style-008.html [ Skip ]
-editing/style/create-block-for-style-009.html [ Skip ]
-editing/style/create-block-for-style-011.html [ Skip ]
-editing/style/create-block-for-style-012.html [ Skip ]
-editing/style/create-block-for-style-013.html [ Skip ]
-editing/style/stylewithcss-without-selection.html [ Skip ]
 editing/undo/5378473.html [ Skip ]
-editing/undo/redo-split-text-node.html [ Skip ]
-editing/undo/redo-split-text-with-removal.html [ Skip ]
-editing/undo/redo-style.html [ Skip ]
 editing/undo/redo-typing-001.html [ Skip ]
-editing/undo/remove-css-property-and-remove-style.html [ Skip ]
-editing/undo/replace-by-span-then-remove.html [ Skip ]
-editing/undo/undo-after-setting-value.html [ Skip ]
 editing/undo/undo-combined-delete-boundary.html [ Skip ]
 editing/undo/undo-combined-delete.html [ Skip ]
 editing/undo/undo-delete-boundary.html [ Skip ]
 editing/undo/undo-delete.html [ Skip ]
-editing/undo/undo-deleteWord.html [ Skip ]
 editing/undo/undo-forward-delete-boundary.html [ Skip ]
 editing/undo/undo-forward-delete.html [ Skip ]
-editing/undo/undo-indent.html [ Skip ]
 editing/undo/undo-misspellings.html [ Skip ]
 editing/undo/undo-smart-delete-reversed-selection.html [ Skip ]
-editing/undo/undo-smart-delete-word.html [ Skip ]
 editing/undo/undo-typing-001.html [ Skip ]
 
 # Missing ContextMenu InjectedBundleClient for WTR #
@@ -653,20 +507,6 @@ fast/dom/URL-attribute-reflection.html [ Failure ]
 fast/dom/vertical-scrollbar-in-rtl.html [ Failure ]
 
 fast/dom/Element/getBoundingClientRect.html [ Skip ]
-
-fast/dom/HTMLDialogElement/dialog-enabled.html [ Skip ]
-fast/dom/HTMLDialogElement/dialog-open.html [ Skip ]
-fast/dom/HTMLDialogElement/dialog-show-modal.html [ Skip ]
-fast/dom/HTMLDialogElement/non-anchored-dialog-positioning.html [ Skip ]
-fast/dom/HTMLDialogElement/removed-element-is-removed-from-top-layer.html [ Skip ]
-fast/dom/HTMLDialogElement/top-layer-containing-block.html [ Skip ]
-fast/dom/HTMLDialogElement/top-layer-display-none.html [ Skip ]
-fast/dom/HTMLDialogElement/top-layer-nesting.html [ Skip ]
-fast/dom/HTMLDialogElement/top-layer-position-relative.html [ Skip ]
-fast/dom/HTMLDialogElement/top-layer-position-static.html [ Skip ]
-fast/dom/HTMLDialogElement/top-layer-stacking-correct-order-remove-readd.html [ Skip ]
-fast/dom/HTMLDialogElement/top-layer-stacking-dynamic.html [ Skip ]
-fast/dom/HTMLDialogElement/top-layer-stacking.html [ Skip ]
 
 fast/dom/HTMLInputElement/input-slider-update.html [ Skip ]
 
@@ -1089,8 +929,6 @@ fast/innerHTML/006.html [ Skip ]
 fast/invalid/014.html [ Skip ]
 fast/invalid/residual-style.html [ Skip ]
 
-fast/js/custom-constructors.html [ Failure ]
-fast/js/instanceof-XMLHttpRequest.html [ Failure ]
 fast/layers/add-layer-with-nested-stacking.html [ Skip ]
 fast/layers/layer-content-visibility-change.html [ Skip ]
 fast/layers/remove-layer-with-nested-stacking.html [ Skip ]
@@ -1161,17 +999,15 @@ fast/regions/percentage-margins-mixed-ltr-dominant-regions.html [ Skip ]
 fast/regions/percentage-margins-mixed-rtl-dominant-regions.html [ Skip ]
 fast/regions/percentage-margins-rtl-variable-width-regions.html [ Skip ]
 fast/regions/percentage-margins-variable-width-regions.html [ Skip ]
-fast/regions/selecting-text-through-different-region-flows.html [ Skip ]
-fast/regions/style-scoped-in-flow-override-container-style.html [ Skip ]
-fast/regions/style-scoped-in-flow-override-region-styling-multiple-regions.html [ Skip ]
-fast/regions/style-scoped-in-flow-override-region-styling.html [ Skip ]
+fast/regions/selection/selecting-text-through-different-region-flows.html [ Skip ]
 fast/regions/full-screen-video-from-region.html [ Skip ]
+fast/regions/style-scoped [ Skip ]
 # flakey tests
-fast/regions/autoheight-singleregion-breakbeforealways-minheight.html [ Skip ]
-fast/regions/autosize-region-window-resize.html [ Skip ]
+fast/regions/auto-size/autoheight-singleregion-breakbeforealways-minheight.html [ Skip ]
+fast/regions/auto-size/autosize-region-window-resize.html [ Skip ]
 fast/regions/overflow-in-uniform-regions.html [ Skip ]
-fast/regions/region-style-image-background-color.html [ Skip ]
-fast/regions/region-style-inline-background-color.html [ Skip ]
+fast/regions/region-styling/region-style-image-background-color.html [ Skip ]
+fast/regions/region-styling/region-style-inline-background-color.html [ Skip ]
 
 # flakey tests
 fast/repaint/absolute-position-moved.html [ Skip ]
@@ -1498,7 +1334,6 @@ http/tests/cache/subresource-failover-to-network.html [ Skip ]
 http/tests/cache/xhr-vary-header.html [ Skip ]
 http/tests/cookies/double-quoted-value-with-semi-colon.html [ Skip ]
 http/tests/cookies/third-party-cookie-relaxing.html [ Skip ]
-http/tests/filesystem [ Skip ]
 http/tests/fullscreen/fullscreenelement-different-origin.html [ Skip ]
 http/tests/fullscreen/fullscreenelement-same-origin.html [ Skip ]
 http/tests/history/back-with-fragment-change.php [ Skip ]
@@ -1528,7 +1363,6 @@ http/tests/navigation/redirect-to-random-url-versus-memory-cache.html [ Skip ]
 http/tests/notifications [ Skip ]
 http/tests/plugins [ Skip ]
 http/tests/pointer-lock [ Skip ]
-http/tests/security/contentSecurityPolicy/filesystem-urls-match-self.html [ Skip ]
 http/tests/security/contentSecurityPolicy/media-src-allowed.html [ Skip ]
 http/tests/security/contentSecurityPolicy/media-src-blocked.html [ Skip ]
 http/tests/security/contentSecurityPolicy/object-src-none-allowed.html [ Skip ]
@@ -1542,14 +1376,12 @@ http/tests/security/cross-origin-plugin-private-browsing-toggled.html [ Skip ]
 http/tests/security/cross-origin-plugin.html [ Skip ]
 http/tests/security/drag-drop-same-unique-origin.html [ Skip ]
 http/tests/security/drag-over-remote-content-iframe.html [ Skip ]
-http/tests/security/filesystem-iframe-from-remote.html [ Skip ]
 http/tests/security/inactive-document-with-empty-security-origin.html [ Skip ]
 http/tests/security/isolatedWorld/cross-origin-xhr.html [ Skip ]
 http/tests/security/local-user-CSS-from-remote.html [ Skip ]
 http/tests/security/local-video-poster-from-remote.html [ Skip ]
 http/tests/security/local-video-source-from-remote.html [ Skip ]
 http/tests/security/local-video-src-from-remote.html [ Skip ]
-http/tests/security/mixedContent/filesystem-url-in-iframe.html [ Skip ]
 http/tests/security/mixedContent/insecure-audio-video-in-main-frame.html [ Skip ]
 http/tests/security/mixedContent/redirect-https-to-http-iframe-in-main-frame.html [ Skip ]
 http/tests/security/redirect-BLOCKED-to-localURL.html [ Skip ]
@@ -1599,9 +1431,6 @@ http/tests/navigation/ping-cross-origin-from-https.html [ Skip ]
 
 http/tests/w3c/webperf/approved/navigation-timing/html/test_timing_xserver_redirect.html [ Skip ]
 http/tests/w3c/webperf/submission [ Skip ]
-http/tests/websocket/tests/hybi/send-file-blob-fail.html [ Skip ]
-http/tests/websocket/tests/hybi/send-file-blob.html [ Skip ]
-http/tests/workers/terminate-during-sync-operation.html	 [ Skip ]
 http/tests/xmlhttprequest/cache-override.html [ Skip ]
 http/tests/xmlhttprequest/cross-origin-cookie-storage.html [ Skip ]
 http/tests/xmlhttprequest/cross-origin-no-authorization.html [ Skip ]
@@ -2904,8 +2733,6 @@ css3/line-break/line-break-normal-half-kana.html [ ImageOnlyFailure ]
 css3/line-break/line-break-normal-hyphens.html [ ImageOnlyFailure ]
 css3/line-break/line-break-normal-sound-marks.html [ ImageOnlyFailure ]
 css3/line-break/line-break-strict-sound-marks.html [ ImageOnlyFailure ]
-fast/sub-pixel/clip-rect-box-consistent-rounding.html [ ImageOnlyFailure ]
-
 
 # Regressions after merge (005e102 c1ff4a8)
 fast/events/keydown-1.html [ Failure Pass ]
@@ -2914,7 +2741,6 @@ canvas/philip/tests/2d.gradient.interpolate.multiple.html [ Crash Pass ]
 compositing/absolute-inside-out-of-view-fixed.html [ Crash Pass ]
 compositing/animation/animated-composited-inside-hidden.html [ Crash Pass ]
 compositing/color-matching/image-color-matching.html [ Crash Missing ]
-compositing/overflow/overflow-compositing-descendant.html [ Crash Missing ]
 fast/dom/remove-body-during-body-replacement2.html [ Crash Pass ]
 fast/masking/parsing-clip-path-shape.html [ Crash Pass ]
 canvas/philip/tests/2d.canvas.reference.html [ Timeout Pass ]
@@ -2977,7 +2803,6 @@ fast/events/no-scroll-on-input-text-selection.html [ Failure ]
 fast/forms/select-initial-position.html [ Failure ]
 fast/forms/select-writing-direction-natural.html [ Failure ]
 fast/forms/stuff-on-my-optgroup.html [ Failure ]
-fast/js/dom-static-property-for-in-iteration.html [ Failure ]
 fast/replaced/replaced-breaking-mixture.html [ Failure ]
 fast/replaced/three-selects-break.html [ Failure ]
 fast/replaced/width100percent-menulist.html [ Failure ]
@@ -3023,7 +2848,6 @@ fast/parser/document-write-onload-ordering.html [ Crash Pass ]
 fast/parser/double-write-from-closed-iframe.html [ Crash Pass ]
 
 # Some tests are failing since way before merge (e51e713 155bfb6), but now we're painting the bot green again.
-inspector-protocol/debugger-pause-dedicated-worker.html [ Failure Pass ]
 fast/events/only-valid-drop-targets-receive-file-drop.html [ Failure ]
 fast/events/touch/gesture/right-click-gestures-set-cursor-at-correct-position.html [ Skip ]
 http/tests/xmlhttprequest/access-control-preflight-credential-async.html [ Failure ]
@@ -3094,13 +2918,24 @@ compositing/repaint/page-scale-repaint.html [ Pass ImageOnlyFailure ]
 # Gray overlay plus Layers 1 or 2 pixel shorter.
 compositing/iframes/iframe-content-flipping.html [ Failure ]
 
-# Video related: most requires "canPlayType" method.
-compositing/geometry/clipped-video-controller.html [ Failure ]
-compositing/self-painting-layers2.html [ Failure ]
-compositing/video-page-visibility.html [ Failure ]
-compositing/video/video-poster.html [ Failure ]
-compositing/video/video-with-invalid-source.html [ Failure ]
-compositing/visibility/visibility-simple-video-layer.html [ Failure ]
+# CONSOLE MESSAGE: line 27: TypeError: undefined is not a function (evaluating 'element.canPlayType(codecs[i][0])')
+# FAIL: Timed out waiting for notifyDone to be called
+# Skip them, because running timeouting tests for 7 minutes is useless.
+compositing/geometry/clipped-video-controller.html  [ Skip ]
+compositing/geometry/video-opacity-overlay.html [ Skip ]
+compositing/geometry/video-fixed-scrolling.html [ Skip ]
+compositing/layers-inside-overflow-scroll.html [ Skip ]
+compositing/overflow/overflow-compositing-descendant.html [ Skip ]
+compositing/overflow/scroll-ancestor-update.html [ Skip ]
+compositing/reflections/load-video-in-reflection.html [ Skip ]
+compositing/self-painting-layers.html [ Skip ]
+compositing/self-painting-layers2.html  [ Skip ]
+compositing/video-page-visibility.html  [ Skip ]
+compositing/video/video-background-color.html [ Skip ]
+compositing/video/video-object-fit.html [ Skip ]
+compositing/video/video-poster.html [ Skip ]
+compositing/video/video-with-invalid-source.html [ Skip ]
+compositing/visibility/visibility-simple-video-layer.html [ Skip ]
 
 # Text rendered blurry.
 compositing/text-on-scaled-layer.html [ ImageOnlyFailure ]
@@ -3172,9 +3007,6 @@ compositing/images/direct-pdf-image.html [ Pass ImageOnlyFailure ]
 # Requires eventSender.scheduleAsynchronousKeyDown()
 fast/dom/MutationObserver/end-of-task-delivery.html [ Failure ]
 
-# Requires MUTATION_OBSERVERS and FILE_SYSTEM
-fast/dom/MutationObserver/filesystem-callback-delivery.html [ Failure ]
-
 # CSS Sticky tests. Sticky doesn't seem to work.
 fast/css/sticky/inflow-sticky.html [ ImageOnlyFailure ]
 fast/css/sticky/inline-sticky-abspos-child.html [ ImageOnlyFailure ]
@@ -3207,10 +3039,8 @@ compositing/z-order/negative-z-index.html [ Pass ImageOnlyFailure ]
 # Tests missing expected results when running without --pixel-tests.
 css3/filters/effect-reference-composite-hw.html [ Missing ]
 css3/filters/effect-reference-composite.html [ Missing ]
-fast/js/constructor-length.html [ Missing ]
 fast/events/touch/gesture/long-press-on-draggable-element-triggers-drag.html [ Missing ]
 fast/events/touch/gesture/context-menu-on-long-tap.html [ Missing ]
-compositing/video/video-background-color.html [ Missing ]
 compositing/plugins/composited-plugin.html [ Missing ]
 compositing/images/direct-image-background-color.html [ Missing ]
 compositing/direct-image-compositing.html [ Missing ]
@@ -3231,7 +3061,6 @@ compositing/masks/direct-image-mask.html [ Missing ]
 compositing/visibility/visibility-composited.html [ Missing ]
 compositing/visibility/visibility-composited-transforms.html [ Missing ]
 compositing/overflow/theme-affects-visual-overflow.html [ Missing ]
-compositing/overflow/scroll-ancestor-update.html [ Missing ]
 compositing/overflow/fixed-position-ancestor-clip.html [ Missing ]
 compositing/overflow/remove-overflow-crash2.html [ Missing ]
 compositing/overflow/parent-overflow.html [ Missing ]
@@ -3251,17 +3080,14 @@ compositing/repaint/layer-repaint-rects.html [ Missing ]
 compositing/repaint/opacity-between-absolute2.html [ Missing ]
 compositing/repaint/become-overlay-composited-layer.html [ Missing ]
 compositing/layer-creation/fixed-position-scroll.html [ Missing ]
-compositing/layers-inside-overflow-scroll.html [ Missing ]
 compositing/geometry/abs-position-inside-opacity.html [ Missing ]
 compositing/geometry/root-layer-update.html [ Missing ]
 compositing/geometry/vertical-scroll-composited.html [ Missing ]
 compositing/geometry/transfrom-origin-on-zero-size-layer.html [ Missing ]
 compositing/geometry/fixed-in-composited.html [ Missing ]
 compositing/geometry/fixed-position.html [ Missing ]
-compositing/geometry/video-fixed-scrolling.html [ Missing ]
 compositing/geometry/clipping-foreground.html [ Missing ]
 compositing/geometry/partial-layout-update.html [ Missing ]
-compositing/geometry/video-opacity-overlay.html [ Missing ]
 compositing/geometry/horizontal-scroll-composited.html [ Missing ]
 compositing/geometry/layer-due-to-layer-children-deep.html [ Missing ]
 compositing/geometry/outline-change.html [ Missing ]
@@ -3288,9 +3114,7 @@ compositing/reflections/transform-inside-reflection.html [ Missing ]
 compositing/reflections/nested-reflection-anchor-point.html [ Missing ]
 compositing/reflections/reflection-on-composited.html [ Missing ]
 compositing/reflections/nested-reflection-opacity.html [ Missing ]
-compositing/reflections/load-video-in-reflection.html [ Missing ]
 compositing/reflections/animation-inside-reflection.html [ Missing ]
-compositing/self-painting-layers.html [ Missing ]
 
 # Missing PNG and failing text (Graphics layer not being rendered).
 compositing/layer-creation/spanOverlapsCanvas.html [ Missing Failure ]
@@ -3348,7 +3172,6 @@ compositing/geometry/fixed-position-iframe-composited-page-scale-down.html [ Mis
 
 accessibility [ Skip ]
 batterystatus [ Skip ]
-fast/filesystem [ Skip ]
 fast/mediastream [ Skip ]
 fast/notifications [ Skip ]
 fullscreen [ Skip ]
@@ -3393,8 +3216,6 @@ http/tests/appcache/load-from-appcache-defer-resume-crash.html [ Failure ]
 
 # WebAudio: missing because we would need to decode data for running these
 webaudio [ Skip ]
-inspector-protocol/nmi-webaudio.html [ Skip ]
-inspector-protocol/nmi-webaudio-leak-test.html [ Skip ]
 
 css3/filters/composited-during-transition-layertree.html [ Missing ]
 css3/filters/effect-reference-ordering-hw.html [ Missing ]
@@ -3734,19 +3555,9 @@ css3/compositing/background-blend-mode-different-image-formats.html [ Missing ]
 css3/compositing/background-blend-mode-image-color.html [ Missing ]
 css3/compositing/background-blend-mode-image-image.html [ Missing ]
 css3/compositing/background-blend-mode-single-layer-no-blending.html [ Missing ]
-fast/hidpi/image-srcset-change-dynamically-from-js.html [ Missing ]
-fast/hidpi/image-srcset-data-src.html [ Missing ]
-fast/hidpi/image-srcset-data-srcset.html [ Missing ]
-fast/hidpi/image-srcset-invalid-inputs-correct-src.html [ Missing ]
-fast/hidpi/image-srcset-invalid-inputs-except-one.html [ Missing ]
 fast/hidpi/image-srcset-invalid-inputs.html [ Missing ]
 fast/hidpi/image-srcset-nomodifier.html [ Missing ]
 fast/hidpi/image-srcset-only-src-attribute.html [ Missing ]
-fast/hidpi/image-srcset-remove-dynamically-from-js.html [ Missing ]
-fast/hidpi/image-srcset-same-alternative-for-both-attributes.html [ Missing ]
-fast/hidpi/image-srcset-simple.html [ Missing ]
-fast/hidpi/image-srcset-src-selection.html [ Missing ]
-fast/hidpi/image-srcset-viewport-modifiers.html [ Missing ]
 fast/multicol/pagination/BottomToTop-bt.html [ Missing ]
 fast/multicol/pagination/BottomToTop-lr.html [ Missing ]
 fast/multicol/pagination/BottomToTop-rl.html [ Missing ]
@@ -3805,8 +3616,6 @@ pointer-lock [ Skip ]
 fast/events/mouse-click-events.html [ Failure ]
 fast/events/touch/touch-input-element-change-documents.html [ Failure ]
 
-# Flakey and failing tests after merge from 2013-01-03
-http/tests/security/sandboxed-iframe-form-top.html [ Failure Timeout ]
 # 0 range(s) selected.
 fast/events/drag-selects-image.html [ Failure ]
 # 'undefined' is not an object (evaluating 'template.content.appendChild').
@@ -3864,10 +3673,6 @@ fast/css/first-letter-removed-added.html
 fast/css/getComputedStyle/computed-style-without-renderer.html
 fast/css/getComputedStyle/computed-style.html
 fast/css/tab-size.html
-fast/dom/HTMLDialogElement/closed-dialog-does-not-block-mouse-events.html
-fast/dom/HTMLDialogElement/modal-dialog-blocks-mouse-events.html
-fast/dom/HTMLDialogElement/non-modal-dialog-does-not-block-mouse-events.html
-fast/dom/shadow/touch-event-retargeting.html
 fast/regions/seamless-iframe-flowed-into-regions.html
 http/tests/misc/delete-frame-during-readystatechange-with-gc-after-video-removal.html
 
@@ -3877,7 +3682,6 @@ editing/pasteboard/copy-paste-content-starting-and-ending-canvas.html
 editing/pasteboard/drag-list-item.html
 storage/storagequota-query-usage.html
 storage/storagequota-request-quota.html
-fast/dom/shadow/insertion-point-resetStyleInheritance-with-pseudo-element-crash.html
 
 # Flakey and failing tests after merge 1545593 eb8adb3
 editing/pasteboard/smart-drag-drop.html [ Failure Pass ]
@@ -3894,7 +3698,6 @@ fast/events/touch/gesture/gesture-tap-hover-clear.html
 css3/filters/filter-property-parsing-invalid.html [ Failure ]
 editing/pasteboard/can-read-in-copy-and-cut-events.html [ Failure ]
 editing/pasteboard/can-read-in-dragstart-event.html [ Failure ]
-fast/dom/shadow/insertion-parent-shadow.html [ Failure ]
 fast/workers/shared-worker-storagequota-query-usage.html [ Failure ]
 fast/workers/worker-storagequota-query-usage.html [ Failure ]
 
@@ -3907,14 +3710,12 @@ svg/animations/animate-text-nested-transforms.html [ Failure ]
 compositing/patterns/direct-pattern-compositing-contain.html [ Crash Failure ]
 fast/parser/document-write-basic.html [ Crash ]
 storage/indexeddb/keypath-intrinsic-properties.html [ Crash ]
-storage/indexeddb/mozilla/remove-objectstore.html [ Crash ]
 fast/forms/validation-message-appearance.html [ Missing ]
 
 # Failing or flakey tests after merge ceff3a0 09daeb9
 fast/css/text-overflow-ellipsis-full-truncate-rtl.html
 fast/forms/datalist/input-appearance-range-with-datalist-rtl.html
 fast/forms/range/input-appearance-range-rtl.html
-fast/js/global-constructors-attributes.html
 fast/text/complex-initial-advance.html
 userscripts/user-script-audio-document.html
 userscripts/user-script-plugin-document.html
@@ -3952,11 +3753,11 @@ editing/spelling/spelling-exactly-selected-multiple-words.html
 editing/spelling/spelling-exactly-selected-word.html
 editing/spelling/spelling-hasspellingmarker.html
 editing/spelling/spelling-linebreak.html
-editing/spelling/spelling-multiword-selection.html
 editing/spelling/spelling-should-select-multiple-words.html
-editing/spelling/spelling-subword-selection.html
 editing/spelling/spelling-with-punctuation-selection.html
 editing/spelling/spelling-with-whitespace-selection.html
+editing/spelling/context-menu-suggestions-multiword-selection.html
+editing/spelling/context-menu-suggestions-subword-selection.html
 animations/cross-fade-list-style-image.html
 scrollingcoordinator/non-fast-scrollable-region-scaled-iframe.html
 scrollingcoordinator/non-fast-scrollable-region-transformed-iframe.html
@@ -3985,20 +3786,6 @@ editing/deleting/delete-block-merge-contents-019.html
 editing/deleting/delete-block-merge-contents-020.html
 
 # Failing tests after merge ca70d6a b693522
-# fast/dom/shadow tests began to fail at r151237
-fast/dom/shadow/distributed-pseudo-element-for-shadow-element.html
-fast/dom/shadow/distributed-pseudo-element-match-all.html
-fast/dom/shadow/distributed-pseudo-element-match-descendant.html
-fast/dom/shadow/distributed-pseudo-element-nested.html
-fast/dom/shadow/distributed-pseudo-element-no-match.html
-fast/dom/shadow/distributed-pseudo-element-reprojection.html
-fast/dom/shadow/distributed-pseudo-element-scoped.html
-fast/dom/shadow/distributed-pseudo-element-specifiers-in-left-side.html
-fast/dom/shadow/distributed-pseudo-element-support-selector.html
-fast/dom/shadow/distributed-pseudo-element-used-in-selector-list.html
-fast/dom/shadow/distributed-pseudo-element-with-any.html
-fast/dom/shadow/distributed-pseudo-element.html
-fast/dom/shadow/no-style-sharing-with-distributed-nodes.html
 compositing/overflow/overflow-clip-with-accelerated-scrolling-ancestor.html
 fast/frames/flattening/scrolling-in-object.html
 svg/hittest/svg-ellipse-non-scale-stroke.xhtml
@@ -4059,3 +3846,19 @@ compositing/background-color/background-color-change-to-text.html [ Crash Pass ]
 
 # Make WTR use its own temporary directory for application cache
 webkit.org/b/117143 http/tests/appcache [ Skip ]
+
+# Failing tests after merge 4a2eb17 ac11ea2
+# The crashes or failures were caused by a refactoring at indexeddb into r156590
+# https://bugs.webkit.org/show_bug.cgi?id=121996
+# IndexedDB code is going through refactoring/refreshing, so the tests are quite unstable at this point.
+storage/indexeddb [ Skip ]
+http/tests/security/cross-origin-indexeddb-allowed.html [ Skip ]
+http/tests/security/cross-origin-indexeddb.html [ Skip ]
+http/tests/security/cross-origin-worker-indexeddb-allowed.html [ Skip ]
+http/tests/security/cross-origin-worker-indexeddb.html [ Skip ]
+http/tests/security/no-indexeddb-from-sandbox.html [ Skip ]
+
+# Uncomment when Enabling media stream
+# fast/mediastream [ Skip ]
+# fast/mediastream/enabled.html [ Pass ]
+# fast/mediastream/no-interface-object.html [ Pass ]

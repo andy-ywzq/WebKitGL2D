@@ -64,7 +64,7 @@ namespace WebCore {
     
 using namespace HTMLNames;
 
-SubframeLoader::SubframeLoader(Frame* frame)
+SubframeLoader::SubframeLoader(Frame& frame)
     : m_containsPlugins(false)
     , m_frame(frame)
 {
@@ -78,8 +78,8 @@ void SubframeLoader::clear()
 bool SubframeLoader::requestFrame(HTMLFrameOwnerElement* ownerElement, const String& urlString, const AtomicString& frameName, bool lockHistory, bool lockBackForwardList)
 {
     // Support for <frame src="javascript:string">
-    KURL scriptURL;
-    KURL url;
+    URL scriptURL;
+    URL url;
     if (protocolIsJavaScript(urlString)) {
         scriptURL = completeURL(urlString); // completeURL() encodes the URL.
         url = blankURL();
@@ -98,7 +98,7 @@ bool SubframeLoader::requestFrame(HTMLFrameOwnerElement* ownerElement, const Str
     
 bool SubframeLoader::resourceWillUsePlugin(const String& url, const String& mimeType, bool shouldPreferPlugInsForImages)
 {
-    KURL completedURL;
+    URL completedURL;
     if (!url.isEmpty())
         completedURL = completeURL(url);
 
@@ -106,12 +106,12 @@ bool SubframeLoader::resourceWillUsePlugin(const String& url, const String& mime
     return shouldUsePlugin(completedURL, mimeType, shouldPreferPlugInsForImages, false, useFallback);
 }
 
-bool SubframeLoader::pluginIsLoadable(HTMLPlugInImageElement* pluginElement, const KURL& url, const String& mimeType)
+bool SubframeLoader::pluginIsLoadable(HTMLPlugInImageElement* pluginElement, const URL& url, const String& mimeType)
 {
     if (MIMETypeRegistry::isJavaAppletMIMEType(mimeType)) {
-        if (!m_frame->settings().isJavaEnabled())
+        if (!m_frame.settings().isJavaEnabled())
             return false;
-        if (document() && document()->securityOrigin()->isLocal() && !m_frame->settings().isJavaEnabledForLocalFiles())
+        if (document() && document()->securityOrigin()->isLocal() && !m_frame.settings().isJavaEnabledForLocalFiles())
             return false;
     }
 
@@ -120,7 +120,7 @@ bool SubframeLoader::pluginIsLoadable(HTMLPlugInImageElement* pluginElement, con
             return false;
 
         if (!document()->securityOrigin()->canDisplay(url)) {
-            FrameLoader::reportLocalLoadFailed(m_frame, url.string());
+            FrameLoader::reportLocalLoadFailed(&m_frame, url.string());
             return false;
         }
 
@@ -134,14 +134,14 @@ bool SubframeLoader::pluginIsLoadable(HTMLPlugInImageElement* pluginElement, con
             return false;
         }
 
-        if (!m_frame->loader().mixedContentChecker()->canRunInsecureContent(document()->securityOrigin(), url))
+        if (!m_frame.loader().mixedContentChecker().canRunInsecureContent(document()->securityOrigin(), url))
             return false;
     }
 
     return true;
 }
 
-bool SubframeLoader::requestPlugin(HTMLPlugInImageElement* ownerElement, const KURL& url, const String& mimeType, const Vector<String>& paramNames, const Vector<String>& paramValues, bool useFallback)
+bool SubframeLoader::requestPlugin(HTMLPlugInImageElement* ownerElement, const URL& url, const String& mimeType, const Vector<String>& paramNames, const Vector<String>& paramValues, bool useFallback)
 {
     // Application plug-ins are plug-ins implemented by the user agent, for example Qt plug-ins,
     // as opposed to third-party code such as Flash. The user agent decides whether or not they are
@@ -167,12 +167,10 @@ static String findPluginMIMETypeFromURL(Page* page, const String& url)
 
     String extension = url.substring(dotIndex + 1);
 
-    PluginData* pluginData = page->pluginData();
-    if (!pluginData)
-        return String();
+    const PluginData& pluginData = page->pluginData();
 
-    for (size_t i = 0; i < pluginData->mimes().size(); ++i) {
-        const MimeClassInfo& mimeClassInfo = pluginData->mimes()[i];
+    for (size_t i = 0; i < pluginData.mimes().size(); ++i) {
+        const MimeClassInfo& mimeClassInfo = pluginData.mimes()[i];
         for (size_t j = 0; j < mimeClassInfo.extensions.size(); ++j) {
             if (equalIgnoringCase(extension, mimeClassInfo.extensions[j]))
                 return mimeClassInfo.type;
@@ -195,8 +193,7 @@ static void logPluginRequest(Page* page, const String& mimeType, const String& u
             return;
     }
 
-    PluginData* pluginData = page->pluginData();
-    String pluginFile = pluginData ? pluginData->pluginFileForMimeType(newMIMEType) : String();
+    String pluginFile = page->pluginData().pluginFileForMimeType(newMIMEType);
     String description = !pluginFile ? newMIMEType : pluginFile;
 
     ChromeClient& chromeClient = page->chrome().client();
@@ -222,7 +219,7 @@ bool SubframeLoader::requestObject(HTMLPlugInImageElement* ownerElement, const S
     if (!renderer)
         return false;
 
-    KURL completedURL;
+    URL completedURL;
     if (!url.isEmpty())
         completedURL = completeURL(url);
 
@@ -234,31 +231,31 @@ bool SubframeLoader::requestObject(HTMLPlugInImageElement* ownerElement, const S
     }
 
     // If the plug-in element already contains a subframe, loadOrRedirectSubframe will re-use it. Otherwise,
-    // it will create a new frame and set it as the RenderPart's widget, causing what was previously 
+    // it will create a new frame and set it as the RenderWidget's Widget, causing what was previously 
     // in the widget to be torn down.
     return loadOrRedirectSubframe(ownerElement, completedURL, frameName, true, true);
 }
 
 #if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
-PassRefPtr<Widget> SubframeLoader::loadMediaPlayerProxyPlugin(Node* node, const KURL& url,
+PassRefPtr<Widget> SubframeLoader::loadMediaPlayerProxyPlugin(Node* node, const URL& url,
     const Vector<String>& paramNames, const Vector<String>& paramValues)
 {
     ASSERT(node->hasTagName(videoTag) || isHTMLAudioElement(node));
 
-    KURL completedURL;
+    URL completedURL;
     if (!url.isEmpty())
         completedURL = completeURL(url);
 
-    if (!m_frame->document()->securityOrigin()->canDisplay(completedURL)) {
+    if (!m_frame.document()->securityOrigin()->canDisplay(completedURL)) {
         FrameLoader::reportLocalLoadFailed(m_frame, completedURL.string());
         return 0;
     }
 
-    if (!m_frame->document()->contentSecurityPolicy()->allowMediaFromSource(completedURL))
+    if (!m_frame.document()->contentSecurityPolicy()->allowMediaFromSource(completedURL))
         return 0;
 
     HTMLMediaElement* mediaElement = toHTMLMediaElement(node);
-    RenderPart* renderer = toRenderPart(node->renderer());
+    RenderWidget* renderer = toRenderWidget(node->renderer());
     IntSize size;
 
     if (renderer)
@@ -266,10 +263,10 @@ PassRefPtr<Widget> SubframeLoader::loadMediaPlayerProxyPlugin(Node* node, const 
     else if (mediaElement->isVideo())
         size = RenderVideo::defaultSize();
 
-    if (!m_frame->loader().mixedContentChecker()->canRunInsecureContent(m_frame->document()->securityOrigin(), completedURL))
+    if (!m_frame.loader().mixedContentChecker().canRunInsecureContent(m_frame.document()->securityOrigin(), completedURL))
         return 0;
 
-    RefPtr<Widget> widget = m_frame->loader().client()->createMediaPlayerProxyPlugin(size, mediaElement, completedURL,
+    RefPtr<Widget> widget = m_frame.loader().client().createMediaPlayerProxyPlugin(size, mediaElement, completedURL,
                                          paramNames, paramValues, "application/x-media-element-proxy-plugin");
 
     if (widget && renderer) {
@@ -295,25 +292,25 @@ PassRefPtr<Widget> SubframeLoader::createJavaAppletWidget(const IntSize& size, H
     }
 
     if (!codeBaseURLString.isEmpty()) {
-        KURL codeBaseURL = completeURL(codeBaseURLString);
-        if (!element->document()->securityOrigin()->canDisplay(codeBaseURL)) {
-            FrameLoader::reportLocalLoadFailed(m_frame, codeBaseURL.string());
+        URL codeBaseURL = completeURL(codeBaseURLString);
+        if (!element->document().securityOrigin()->canDisplay(codeBaseURL)) {
+            FrameLoader::reportLocalLoadFailed(&m_frame, codeBaseURL.string());
             return 0;
         }
 
         const char javaAppletMimeType[] = "application/x-java-applet";
-        if (!element->document()->contentSecurityPolicy()->allowObjectFromSource(codeBaseURL)
-            || !element->document()->contentSecurityPolicy()->allowPluginType(javaAppletMimeType, javaAppletMimeType, codeBaseURL))
+        if (!element->document().contentSecurityPolicy()->allowObjectFromSource(codeBaseURL)
+            || !element->document().contentSecurityPolicy()->allowPluginType(javaAppletMimeType, javaAppletMimeType, codeBaseURL))
             return 0;
     }
 
     if (baseURLString.isEmpty())
-        baseURLString = m_frame->document()->baseURL().string();
-    KURL baseURL = completeURL(baseURLString);
+        baseURLString = m_frame.document()->baseURL().string();
+    URL baseURL = completeURL(baseURLString);
 
     RefPtr<Widget> widget;
     if (allowPlugins(AboutToInstantiatePlugin))
-        widget = m_frame->loader().client()->createJavaAppletWidget(size, element, baseURL, paramNames, paramValues);
+        widget = m_frame.loader().client().createJavaAppletWidget(size, element, baseURL, paramNames, paramValues);
 
     logPluginRequest(document()->page(), element->serviceType(), String(), widget);
 
@@ -329,21 +326,21 @@ PassRefPtr<Widget> SubframeLoader::createJavaAppletWidget(const IntSize& size, H
     return widget;
 }
 
-Frame* SubframeLoader::loadOrRedirectSubframe(HTMLFrameOwnerElement* ownerElement, const KURL& url, const AtomicString& frameName, bool lockHistory, bool lockBackForwardList)
+Frame* SubframeLoader::loadOrRedirectSubframe(HTMLFrameOwnerElement* ownerElement, const URL& url, const AtomicString& frameName, bool lockHistory, bool lockBackForwardList)
 {
     Frame* frame = ownerElement->contentFrame();
     if (frame)
-        frame->navigationScheduler()->scheduleLocationChange(m_frame->document()->securityOrigin(), url.string(), m_frame->loader().outgoingReferrer(), lockHistory, lockBackForwardList);
+        frame->navigationScheduler().scheduleLocationChange(m_frame.document()->securityOrigin(), url.string(), m_frame.loader().outgoingReferrer(), lockHistory, lockBackForwardList);
     else
-        frame = loadSubframe(ownerElement, url, frameName, m_frame->loader().outgoingReferrer());
+        frame = loadSubframe(ownerElement, url, frameName, m_frame.loader().outgoingReferrer());
 
     ASSERT(ownerElement->contentFrame() == frame || !ownerElement->contentFrame());
     return ownerElement->contentFrame();
 }
 
-Frame* SubframeLoader::loadSubframe(HTMLFrameOwnerElement* ownerElement, const KURL& url, const String& name, const String& referrer)
+Frame* SubframeLoader::loadSubframe(HTMLFrameOwnerElement* ownerElement, const URL& url, const String& name, const String& referrer)
 {
-    RefPtr<Frame> protect(m_frame);
+    Ref<Frame> protect(m_frame);
 
     bool allowsScrolling = true;
     int marginWidth = -1;
@@ -355,16 +352,16 @@ Frame* SubframeLoader::loadSubframe(HTMLFrameOwnerElement* ownerElement, const K
         marginHeight = frameElementBase->marginHeight();
     }
 
-    if (!ownerElement->document()->securityOrigin()->canDisplay(url)) {
-        FrameLoader::reportLocalLoadFailed(m_frame, url.string());
+    if (!ownerElement->document().securityOrigin()->canDisplay(url)) {
+        FrameLoader::reportLocalLoadFailed(&m_frame, url.string());
         return 0;
     }
 
-    String referrerToUse = SecurityPolicy::generateReferrerHeader(ownerElement->document()->referrerPolicy(), url, referrer);
-    RefPtr<Frame> frame = m_frame->loader().client()->createFrame(url, name, ownerElement, referrerToUse, allowsScrolling, marginWidth, marginHeight);
+    String referrerToUse = SecurityPolicy::generateReferrerHeader(ownerElement->document().referrerPolicy(), url, referrer);
+    RefPtr<Frame> frame = m_frame.loader().client().createFrame(url, name, ownerElement, referrerToUse, allowsScrolling, marginWidth, marginHeight);
 
     if (!frame)  {
-        m_frame->loader().checkCallImplicitClose();
+        m_frame.loader().checkCallImplicitClose();
         return 0;
     }
     
@@ -381,7 +378,7 @@ Frame* SubframeLoader::loadSubframe(HTMLFrameOwnerElement* ownerElement, const K
     if (renderer && renderer->isWidget() && view)
         toRenderWidget(renderer)->setWidget(view);
     
-    m_frame->loader().checkCallImplicitClose();
+    m_frame.loader().checkCallImplicitClose();
     
     // Some loads are performed synchronously (e.g., about:blank and loads
     // cancelled by returning a null ResourceRequest from requestFromDelegate).
@@ -398,31 +395,27 @@ Frame* SubframeLoader::loadSubframe(HTMLFrameOwnerElement* ownerElement, const K
     return frame.get();
 }
 
-bool SubframeLoader::allowPlugins(ReasonForCallingAllowPlugins reason)
+bool SubframeLoader::allowPlugins(ReasonForCallingAllowPlugins)
 {
-    bool allowed = m_frame->loader().client()->allowPlugins(m_frame->settings().arePluginsEnabled());
-    if (!allowed && reason == AboutToInstantiatePlugin)
-        m_frame->loader().client()->didNotAllowPlugins();
-    return allowed;
+    return m_frame.loader().client().allowPlugins(m_frame.settings().arePluginsEnabled());
 }
 
-bool SubframeLoader::shouldUsePlugin(const KURL& url, const String& mimeType, bool shouldPreferPlugInsForImages, bool hasFallback, bool& useFallback)
+bool SubframeLoader::shouldUsePlugin(const URL& url, const String& mimeType, bool shouldPreferPlugInsForImages, bool hasFallback, bool& useFallback)
 {
-    if (m_frame->loader().client()->shouldAlwaysUsePluginDocument(mimeType)) {
+    if (m_frame.loader().client().shouldAlwaysUsePluginDocument(mimeType)) {
         useFallback = false;
         return true;
     }
 
     // Allow other plug-ins to win over QuickTime because if the user has installed a plug-in that
     // can handle TIFF (which QuickTime can also handle) they probably intended to override QT.
-    if (m_frame->page() && (mimeType == "image/tiff" || mimeType == "image/tif" || mimeType == "image/x-tiff")) {
-        const PluginData* pluginData = m_frame->page()->pluginData();
-        String pluginName = pluginData ? pluginData->pluginNameForMimeType(mimeType) : String();
+    if (m_frame.page() && (mimeType == "image/tiff" || mimeType == "image/tif" || mimeType == "image/x-tiff")) {
+        String pluginName = m_frame.page()->pluginData().pluginNameForMimeType(mimeType);
         if (!pluginName.isEmpty() && !pluginName.contains("QuickTime", false)) 
             return true;
     }
         
-    ObjectContentType objectType = m_frame->loader().client()->objectContentType(url, mimeType, shouldPreferPlugInsForImages);
+    ObjectContentType objectType = m_frame.loader().client().objectContentType(url, mimeType, shouldPreferPlugInsForImages);
     // If an object's content can't be handled and it has no fallback, let
     // it be handled as a plugin to show the broken plugin icon.
     useFallback = objectType == ObjectContentNone && hasFallback;
@@ -431,10 +424,10 @@ bool SubframeLoader::shouldUsePlugin(const KURL& url, const String& mimeType, bo
 
 Document* SubframeLoader::document() const
 {
-    return m_frame->document();
+    return m_frame.document();
 }
 
-bool SubframeLoader::loadPlugin(HTMLPlugInImageElement* pluginElement, const KURL& url, const String& mimeType,
+bool SubframeLoader::loadPlugin(HTMLPlugInImageElement* pluginElement, const URL& url, const String& mimeType,
     const Vector<String>& paramNames, const Vector<String>& paramValues, bool useFallback)
 {
     RenderEmbeddedObject* renderer = pluginElement->renderEmbeddedObject();
@@ -447,7 +440,7 @@ bool SubframeLoader::loadPlugin(HTMLPlugInImageElement* pluginElement, const KUR
 
     IntSize contentSize = roundedIntSize(LayoutSize(renderer->contentWidth(), renderer->contentHeight()));
     bool loadManually = document()->isPluginDocument() && !m_containsPlugins && toPluginDocument(document())->shouldLoadPluginManually();
-    RefPtr<Widget> widget = m_frame->loader().client()->createPlugin(contentSize,
+    RefPtr<Widget> widget = m_frame.loader().client().createPlugin(contentSize,
         pluginElement, url, paramNames, paramValues, mimeType, loadManually);
 
     if (!widget) {
@@ -466,10 +459,10 @@ bool SubframeLoader::loadPlugin(HTMLPlugInImageElement* pluginElement, const KUR
     return true;
 }
 
-KURL SubframeLoader::completeURL(const String& url) const
+URL SubframeLoader::completeURL(const String& url) const
 {
-    ASSERT(m_frame->document());
-    return m_frame->document()->completeURL(url);
+    ASSERT(m_frame.document());
+    return m_frame.document()->completeURL(url);
 }
 
 } // namespace WebCore

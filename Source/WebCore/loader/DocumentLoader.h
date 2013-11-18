@@ -74,7 +74,7 @@ namespace WebCore {
     class SharedBuffer;
     class SubstituteResource;
 
-    typedef HashSet<RefPtr<ResourceLoader> > ResourceLoaderSet;
+    typedef HashSet<RefPtr<ResourceLoader>> ResourceLoaderSet;
     typedef Vector<ResourceResponse> ResponseVector;
 
     class DocumentLoader : public RefCounted<DocumentLoader>, private CachedRawResourceClient {
@@ -96,7 +96,7 @@ namespace WebCore {
         ResourceLoader* mainResourceLoader() const;
         PassRefPtr<ResourceBuffer> mainResourceData() const;
         
-        DocumentWriter* writer() const { return &m_writer; }
+        DocumentWriter& writer() const { return m_writer; }
 
         const ResourceRequest& originalRequest() const;
         const ResourceRequest& originalRequestCopy() const;
@@ -104,20 +104,20 @@ namespace WebCore {
         const ResourceRequest& request() const;
         ResourceRequest& request();
 
-        CachedResourceLoader* cachedResourceLoader() const { return m_cachedResourceLoader.get(); }
+        CachedResourceLoader& cachedResourceLoader() { return m_cachedResourceLoader.get(); }
 
         const SubstituteData& substituteData() const { return m_substituteData; }
 
         // FIXME: This is the same as requestURL(). We should remove one of them.
-        const KURL& url() const;
-        const KURL& unreachableURL() const;
+        const URL& url() const;
+        const URL& unreachableURL() const;
 
-        const KURL& originalURL() const;
-        const KURL& requestURL() const;
-        const KURL& responseURL() const;
+        const URL& originalURL() const;
+        const URL& requestURL() const;
+        const URL& responseURL() const;
         const String& responseMIMEType() const;
 
-        void replaceRequestURLForSameDocumentNavigation(const KURL&);
+        void replaceRequestURLForSameDocumentNavigation(const URL&);
         bool isStopping() const { return m_isStopping; }
         void stopLoading();
         void setCommitted(bool committed) { m_committed = committed; }
@@ -142,21 +142,21 @@ namespace WebCore {
         void setArchive(PassRefPtr<Archive>);
         void addAllArchiveResources(Archive*);
         void addArchiveResource(PassRefPtr<ArchiveResource>);
-        PassRefPtr<Archive> popArchiveForSubframe(const String& frameName, const KURL&);
+        PassRefPtr<Archive> popArchiveForSubframe(const String& frameName, const URL&);
         SharedBuffer* parsedArchiveData() const;
 
         bool scheduleArchiveLoad(ResourceLoader*, const ResourceRequest&);
 #endif // ENABLE(WEB_ARCHIVE) || ENABLE(MHTML)
 
         // Return the ArchiveResource for the URL only when loading an Archive
-        ArchiveResource* archiveResourceForURL(const KURL&) const;
+        ArchiveResource* archiveResourceForURL(const URL&) const;
 
         PassRefPtr<ArchiveResource> mainResource() const;
 
         // Return an ArchiveResource for the URL, either creating from live data or
         // pulling from the ArchiveResourceCollection
-        PassRefPtr<ArchiveResource> subresource(const KURL&) const;
-        void getSubresources(Vector<PassRefPtr<ArchiveResource> >&) const;
+        PassRefPtr<ArchiveResource> subresource(const URL&) const;
+        void getSubresources(Vector<PassRefPtr<ArchiveResource>>&) const;
 
 
 #ifndef NDEBUG
@@ -176,7 +176,7 @@ namespace WebCore {
         void stopRecordingResponses();
         const StringWithDirection& title() const { return m_pageTitle; }
 
-        KURL urlForHistory() const;
+        URL urlForHistory() const;
         bool urlForHistoryReflectsFailure() const;
 
         // These accessors accommodate WebCore's somewhat fickle custom of creating history
@@ -257,7 +257,7 @@ namespace WebCore {
     private:
 
         // The URL of the document resulting from this DocumentLoader.
-        KURL documentURL() const;
+        URL documentURL() const;
         Document* document() const;
 
         void setRequest(const ResourceRequest&);
@@ -312,7 +312,7 @@ namespace WebCore {
         void clearMainResource();
 
         Frame* m_frame;
-        RefPtr<CachedResourceLoader> m_cachedResourceLoader;
+        Ref<CachedResourceLoader> m_cachedResourceLoader;
 
         CachedResourceHandle<CachedRawResource> m_mainResource;
         ResourceLoaderSet m_subresourceLoaders;
@@ -371,7 +371,7 @@ namespace WebCore {
         ResponseVector m_responses;
         bool m_stopRecordingResponses;
         
-        typedef HashMap<RefPtr<ResourceLoader>, RefPtr<SubstituteResource> > SubstituteResourceMap;
+        typedef HashMap<RefPtr<ResourceLoader>, RefPtr<SubstituteResource>> SubstituteResourceMap;
         SubstituteResourceMap m_pendingSubstituteResources;
         Timer<DocumentLoader> m_substituteResourceDeliveryTimer;
 

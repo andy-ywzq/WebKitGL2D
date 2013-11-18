@@ -48,7 +48,7 @@ private:
     // Engine support
     static PassOwnPtr<MediaPlayerPrivateInterface> create(MediaPlayer*);
     static void getSupportedTypes(HashSet<String>& types);
-    static MediaPlayer::SupportsType supportsType(const String& type, const String& codecs, const KURL&);
+    static MediaPlayer::SupportsType supportsType(const MediaEngineSupportParameters&);
     static bool isAvailable();
 
     virtual void cancelLoad();
@@ -85,6 +85,7 @@ private:
     virtual float platformMaxTimeLoaded() const;
     virtual void beginLoadingMetadata();
     virtual void sizeChanged();
+    virtual bool requiresImmediateCompositing() const OVERRIDE;
 
     virtual bool hasAvailableVideoFrame() const;
 
@@ -96,6 +97,8 @@ private:
 
     virtual bool hasContextRenderer() const;
     virtual bool hasLayerRenderer() const;
+
+    virtual void updateVideoLayerGravity() OVERRIDE;
 
     virtual void contentsNeedsDisplay();
 

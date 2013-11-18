@@ -34,7 +34,7 @@ class BidiContext;
 class InlineBox;
 
 struct BidiRun : BidiCharacterRun {
-    BidiRun(int start, int stop, RenderObject* object, BidiContext* context, WTF::Unicode::Direction dir)
+    BidiRun(int start, int stop, RenderObject* object, BidiContext* context, UCharDirection dir)
         : BidiCharacterRun(start, stop, context, dir)
         , m_object(object)
         , m_box(0)
@@ -50,7 +50,7 @@ struct BidiRun : BidiCharacterRun {
     void destroy();
 
     // Overloaded new operator.
-    void* operator new(size_t, RenderArena*);
+    void* operator new(size_t, RenderArena&);
 
     // Overridden to prevent the normal delete from being called.
     void operator delete(void*, size_t);

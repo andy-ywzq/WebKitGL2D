@@ -28,29 +28,25 @@ namespace WebCore {
 
 class RenderSVGTextPath FINAL : public RenderSVGInline {
 public:
-    RenderSVGTextPath(Element*);
+    RenderSVGTextPath(SVGTextPathElement&, PassRef<RenderStyle>);
+
+    SVGTextPathElement& textPathElement() const;
 
     Path layoutPath() const;
     float startOffset() const;
     bool exactAlignment() const;
     bool stretchMethod() const;
 
-    virtual bool isSVGTextPath() const { return true; }
-
 private:
-    virtual const char* renderName() const { return "RenderSVGTextPath"; }
+    void graphicsElement() const WTF_DELETED_FUNCTION;
+
+    virtual bool isSVGTextPath() const OVERRIDE { return true; }
+    virtual const char* renderName() const OVERRIDE { return "RenderSVGTextPath"; }
 
     Path m_layoutPath;
 };
 
-inline RenderSVGTextPath* toRenderSVGTextPath(RenderObject* object)
-{ 
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isSVGTextPath());
-    return static_cast<RenderSVGTextPath*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderSVGTextPath(const RenderSVGTextPath*);
+RENDER_OBJECT_TYPE_CASTS(RenderSVGTextPath, isSVGTextPath())
 
 }
 

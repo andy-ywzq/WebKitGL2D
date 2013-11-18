@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2009 Google Inc. All rights reserved.
  * Copyright (C) 2013 Seokju Kwon (seokju.kwon@gmail.com)
+ * Copyright (C) 2013 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,13 +31,29 @@
  */
 
 if (!window.InspectorFrontendHost) {
-
     WebInspector.InspectorFrontendHostStub = function()
     {
         this._attachedWindowHeight = 0;
     }
 
     WebInspector.InspectorFrontendHostStub.prototype = {
+        // Public
+
+        initializeWebSocket: function(url)
+        {
+            var socket = new WebSocket(url);
+            socket.addEventListener("open", socketReady.bind(this));
+
+            function socketReady()
+            {
+                this._socket = socket;
+
+                this._socket.addEventListener("message", function(message) { InspectorBackend.dispatch(message.data); });
+                this._socket.addEventListener("error", function(error) { console.error(error); });
+
+                this._sendPendingMessagesToBackendIfNeeded();
+            }
+        },
 
         bringToFront: function()
         {
@@ -95,14 +112,22 @@ if (!window.InspectorFrontendHost) {
             window.open(url, "_blank");
         },
 
-        save: function(url, content, forceSaveAs)
+        save: function(url, content, base64Encoded, forceSaveAs)
         {
         },
 
         sendMessageToBackend: function(message)
         {
-            if (WebInspector.socket)
-                WebInspector.socket.send(message);
+            if (!this._socket) {
+                if (!this._pendingMessages)
+                    this._pendingMessages = [];
+                this._pendingMessages.push(message);
+                return;
+            }
+
+            this._sendPendingMessagesToBackendIfNeeded();
+
+            this._socket.send(message);
         },
 
         loadResourceSynchronously: function(url)
@@ -114,10 +139,32 @@ if (!window.InspectorFrontendHost) {
             if (xhr.status === 200)
                 return xhr.responseText;
             return null;
+        },
+
+        platform: function()
+        {
+            return (navigator.platform.match(/mac|win|linux/i) || ["other"])[0].toLowerCase();
+        },
+
+        beep: function()
+        {
+        },
+
+        // Private
+
+        _sendPendingMessagesToBackendIfNeeded: function()
+        {
+            if (!this._pendingMessages)
+                return;
+
+            for (var i = 0; i < this._pendingMessages.length; ++i)
+                this._socket.send(this._pendingMessages[i]);
+
+            delete this._pendingMessages;
         }
     }
 
     InspectorFrontendHost = new WebInspector.InspectorFrontendHostStub();
+
     WebInspector.dontLocalizeUserInterface = true;
 }
-

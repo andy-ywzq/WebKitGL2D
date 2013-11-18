@@ -1,3 +1,245 @@
+2013-10-21  Mark Rowe  <mrowe@apple.com>
+
+        Add a version of WebKitSystemInterface for Mavericks.
+
+        Reviewed by Ryosuke Niwa.
+
+        * libWebKitSystemInterfaceMavericks.a: Added.
+
+2013-10-17  Anthony Johnson  <anthony.johnson@flexsim.com>
+
+        Crash fix for Windows XP.
+        https://bugs.webkit.org/show_bug.cgi?id=122790
+
+        Reviewed by Geoffrey Garen.
+
+        * win/tools/vsprops/common.props:
+        Replaced stack and heap sizes of zero with blank stack and heap sizes.
+
+2013-10-16  Filip Pizlo  <fpizlo@apple.com>
+
+        libllvmForJSC shouldn't call exit(1) on report_fatal_error()
+        https://bugs.webkit.org/show_bug.cgi?id=122905
+        <rdar://problem/15237856>
+
+        Reviewed by Michael Saboff.
+
+        * LLVMIncludesMountainLion.tar.bz2:
+        * LLVMLibrariesMountainLion.tar.bz2:
+
+2013-10-10  Filip Pizlo  <fpizlo@apple.com>
+
+        Update the binary drops to the latest version of LLVM, built without -fvisibility=hidden
+        now that we have soft linking. Also include DataTypes.h in the drop.
+
+        Rubber stamped by Michael Saboff.
+
+        * LLVMIncludesMountainLion.tar.bz2:
+        * LLVMLibrariesMountainLion.tar.bz2:
+
+2013-10-01  Filip Pizlo  <fpizlo@apple.com>
+
+        FTL should use the new version of LLVM MCJIT memory manager APIs that take a SectionName
+        https://bugs.webkit.org/show_bug.cgi?id=122193
+
+        Reviewed by Geoffrey Garen.
+
+        * LLVMIncludesMountainLion.tar.bz2:
+        * LLVMLibrariesMountainLion.tar.bz2:
+
+2013-10-01  Brent Fulgham  <bfulgham@apple.com>
+
+        [Win] Implement the media controls in JavaScript.
+        https://bugs.webkit.org/show_bug.cgi?id=122166
+
+        Reviewed by Jer Noble.
+
+        * win/tools/vsprops/FeatureDefines.props: Activate the
+        ENABLE_MEDIA_CONTROLS_SCRIPT flag.
+
+2013-09-24  Bear Travis  <betravis@adobe.com>
+
+        Disable CSS_SHAPES on Windows
+        https://bugs.webkit.org/show_bug.cgi?id=121879
+
+        Reviewed by Brent Fulgham.
+
+        Enabling CSS_SHAPES on Windows is currently causing crashes in DRT.
+        Turn the feature off until it can be appropriately fixed.
+
+        * win/tools/vsprops/FeatureDefines.props: Disable on Win port
+        * win/tools/vsprops/FeatureDefinesCairo.props: Disable on WinCairo port
+
+2013-09-23  Patrick Gansterer  <paroga@webkit.org>
+
+        use NOMINMAX instead of #define min min
+        https://bugs.webkit.org/show_bug.cgi?id=73563
+
+        Reviewed by Brent Fulgham.
+
+        Use NOMINMAX instead of #define min/max as a cleaner
+        way of ensuring that Windows system header files don't
+        define min/max as macro in the first place.
+
+        * win/tools/vsprops/common.props:
+
+2013-09-20  Mark Rowe  <mrowe@apple.com>
+
+        Fix link errors for external users when building WebKit with Xcode 5.
+
+        Reviewed by Oliver Hunt.
+
+        * libWebKitSystemInterfaceLion.a:
+        * libWebKitSystemInterfaceMountainLion.a:
+
+2013-09-19  Bear Travis  <betravis@adobe.com>
+
+        CSS_SHAPES not supported on AppleWin port
+        https://bugs.webkit.org/show_bug.cgi?id=118810
+
+        Reviewed by Brent Fulgham.
+
+        * win/tools/vsprops/FeatureDefines.props: Add the CSS_SHAPES compile flag on Windows.
+
+2013-09-19  Dan Bernstein  <mitz@apple.com>
+
+        Removed WebCoreSQLite3. It has been unused for years.
+
+        Rubber-stamped by Mark Rowe.
+
+        * WebCoreSQLite3: Removed.
+        * WebCoreSQLite3/sqlite3.h: Removed.
+        * WebCoreSQLite3/sqlite3ext.h: Removed.
+        * libWebCoreSQLite3.a: Removed.
+
+2013-09-18  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build fix: Expose PlatformArchitecture macro to build system.
+
+        * win/tools/vsprops/common.props:
+
+2013-09-13  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Enable Page Visibility API
+        https://bugs.webkit.org/show_bug.cgi?id=121340
+
+        Reviewed by Anders Carlsson.
+
+        * win/tools/vsprops/FeatureDefines.props: Activate feature.
+        * win/tools/vsprops/FeatureDefinesCairo.props: Ditto.
+
+2013-09-12  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Update WKSI library for Open Source builders.
+
+        * win/lib32/WebKitSystemInterface.lib: Recompile with latest WebKit to use newer
+        WTF.dll symbol exports.
+
+2013-08-29  Filip Pizlo  <fpizlo@apple.com>
+
+        Just linking LLVM into JSC causes all plugin tests to fail
+        https://bugs.webkit.org/show_bug.cgi?id=113915
+
+        Reviewed by Oliver Hunt.
+        
+        Updated the binary drops to r189627 of llvm.org, and used the new configure-llvm that does CPPFLAGS=-fvisibility=hidden.
+
+        * LLVMIncludesMountainLion.tar.bz2:
+        * LLVMLibrariesMountainLion.tar.bz2:
+
+2013-08-29  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build fix after r154847.
+
+        * win/tools/vsprops/FeatureDefines.props: Add missing definition for ENABLE_PROMISES
+        * win/tools/vsprops/FeatureDefinesCairo.props: Ditto
+
+2013-08-26  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Updates to WKSI to get external builders working.
+
+        * win/include/WebKitSystemInterface/WebKitSystemInterface.h:
+        * win/lib32/WebKitSystemInterface.lib:
+
+2013-08-24  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Another attempt to fix the Windows bots. Need to retain older
+        QuickTime player features for external builders.
+
+        * win/include/WebKitSystemInterface/WebKitSystemInterface.h:
+        * win/lib32/WebKitSystemInterface.lib:
+
+2013-08-23  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Forgot to check in the header as well!
+
+        * win/include/WebKitSystemInterface/WebKitSystemInterface.h:
+
+2013-08-23  Brent Fulgham  <bfulgham@apple.com>
+
+        [Windows] Unreviewed build correction.
+
+        * win/lib32/WebKitSystemInterface.lib: Update with new API for r132545.
+
+2013-08-23  Beth Dakin  <bdakin@apple.com>
+
+        REGRESSION (r132545): Some PDFs generated by WebKit are blank when viewed in 
+        Adobe Reader
+        https://bugs.webkit.org/show_bug.cgi?id=120240
+        -and corresponding-
+        <rdar://problem/14634453>
+
+        Reviewed by Anders Carlsson.
+
+        * WebKitSystemInterface.h:
+        * libWebKitSystemInterfaceLion.a:
+        * libWebKitSystemInterfaceMountainLion.a:
+
+2013-08-23  Alex Christensen  <achristensen@apple.com>
+
+        Re-separating Win32 and Win64 builds.
+        https://bugs.webkit.org/show_bug.cgi?id=120178
+
+        Reviewed by Brent Fulgham.
+
+        * win/tools/vsprops/common.props:
+        Export PlatformArchitecture to be used by make and cmd scripts.
+        Use PlatformArchitecture to determine correct build directory
+        (lib32/bin32/obj32 or lib64/bin64/obj64).
+
+2013-08-22  Filip Pizlo  <fpizlo@apple.com>
+
+        Update LLVM binary drops and scripts to the latest version from SVN
+        https://bugs.webkit.org/show_bug.cgi?id=120184
+
+        Reviewed by Mark Hahnenberg.
+
+        Updated binary drops to r189066.
+
+        * LLVMIncludesMountainLion.tar.bz2:
+        * LLVMLibrariesMountainLion.tar.bz2:
+
+2013-08-21  Commit Queue  <commit-queue@webkit.org>
+
+        Unreviewed, rolling out r154416.
+        http://trac.webkit.org/changeset/154416
+        https://bugs.webkit.org/show_bug.cgi?id=120147
+
+        Broke Windows builds (Requested by rniwa on #webkit).
+
+        * win/tools/vsprops/common.props:
+
+2013-08-21  Alex Christensen  <achristensen@apple.com>
+
+        <https://webkit.org/b/120137> Separating Win32 and Win64 builds.
+
+        Reviewed by Brent Fulgham.
+
+        * win/tools/vsprops/common.props:
+        Export PlatformArchitecture to be used by make and cmd scripts.
+        Use PlatformArchitecture to determine correct build directory
+        (lib32/bin32/obj32 or lib64/bin64/obj64).
+
 2013-08-21  Brent Fulgham  <bfulgham@apple.com>
 
         <https://webkit.org/b/120113> [Windows] Enable CSS_IMAGE_SET

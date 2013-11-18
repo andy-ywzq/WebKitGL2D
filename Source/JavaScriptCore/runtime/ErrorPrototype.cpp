@@ -31,7 +31,7 @@
 
 namespace JSC {
 
-ASSERT_HAS_TRIVIAL_DESTRUCTOR(ErrorPrototype);
+STATIC_ASSERT_IS_TRIVIALLY_DESTRUCTIBLE(ErrorPrototype);
 
 static EncodedJSValue JSC_HOST_CALL errorProtoFuncToString(ExecState*);
 
@@ -49,16 +49,16 @@ const ClassInfo ErrorPrototype::s_info = { "Error", &ErrorInstance::s_info, 0, E
 @end
 */
 
-ErrorPrototype::ErrorPrototype(ExecState* exec, Structure* structure)
-    : ErrorInstance(exec->vm(), structure)
+ErrorPrototype::ErrorPrototype(VM& vm, Structure* structure)
+    : ErrorInstance(vm, structure)
 {
 }
 
-void ErrorPrototype::finishCreation(ExecState* exec, JSGlobalObject*)
+void ErrorPrototype::finishCreation(VM& vm, JSGlobalObject*)
 {
-    Base::finishCreation(exec->vm(), "");
+    Base::finishCreation(vm, "");
     ASSERT(inherits(info()));
-    putDirect(exec->vm(), exec->propertyNames().name, jsNontrivialString(exec, String(ASCIILiteral("Error"))), DontEnum);
+    putDirect(vm, vm.propertyNames->name, jsNontrivialString(&vm, String(ASCIILiteral("Error"))), DontEnum);
 }
 
 bool ErrorPrototype::getOwnPropertySlot(JSObject* object, ExecState* exec, PropertyName propertyName, PropertySlot &slot)

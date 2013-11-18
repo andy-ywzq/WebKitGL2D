@@ -21,6 +21,7 @@
 [
     JSGenerateToNativeObject,
     JSInlineGetOwnPropertySlot,
+    OperationsNotDeletable
 ] interface Element : Node {
 
     // DOM Level 1 Core
@@ -189,6 +190,7 @@
     [NotEnumerable] attribute EventListener onscroll;
     [NotEnumerable] attribute EventListener onselect;
     [NotEnumerable] attribute EventListener onsubmit;
+    [NotEnumerable] attribute EventListener onwheel;
 
     // [NotEnumerable] attribute EventListener oncanplay;
     // [NotEnumerable] attribute EventListener oncanplaythrough;

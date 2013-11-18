@@ -38,8 +38,8 @@ using namespace std;
 
 namespace WebCore {
 
-RenderRubyBase::RenderRubyBase()
-    : RenderBlock(0)
+RenderRubyBase::RenderRubyBase(Document& document, PassRef<RenderStyle> style)
+    : RenderBlockFlow(document, std::move(style))
 {
     setInline(false);
 }
@@ -48,16 +48,9 @@ RenderRubyBase::~RenderRubyBase()
 {
 }
 
-RenderRubyBase* RenderRubyBase::createAnonymous(Document* document)
+bool RenderRubyBase::isChildAllowed(const RenderObject& child, const RenderStyle&) const
 {
-    RenderRubyBase* renderer = new (document->renderArena()) RenderRubyBase();
-    renderer->setDocumentForAnonymous(document);
-    return renderer;
-}
-
-bool RenderRubyBase::isChildAllowed(RenderObject* child, RenderStyle*) const
-{
-    return child->isInline();
+    return child.isInline();
 }
 
 void RenderRubyBase::moveChildren(RenderRubyBase* toBase, RenderObject* beforeChild)
@@ -98,7 +91,7 @@ void RenderRubyBase::moveInlineChildren(RenderRubyBase* toBase, RenderObject* be
             toBlock = toRenderBlock(lastChild);
         else {
             toBlock = toBase->createAnonymousBlock();
-            toBase->children()->appendChildNode(toBase, toBlock);
+            toBase->insertChildInternal(toBlock, nullptr, NotifyChildren);
         }
     }
     // Move our inline children into the target block we determined above.
@@ -123,8 +116,8 @@ void RenderRubyBase::moveBlockChildren(RenderRubyBase* toBase, RenderObject* bef
             && lastChildThere && lastChildThere->isAnonymousBlock() && lastChildThere->childrenInline()) {            
         RenderBlock* anonBlockHere = toRenderBlock(firstChildHere);
         RenderBlock* anonBlockThere = toRenderBlock(lastChildThere);
-        anonBlockHere->moveAllChildrenTo(anonBlockThere, anonBlockThere->children());
-        anonBlockHere->deleteLineBoxTree();
+        anonBlockHere->moveAllChildrenTo(anonBlockThere, true);
+        anonBlockHere->deleteLines();
         anonBlockHere->destroy();
     }
     // Move all remaining children normally.
@@ -136,7 +129,7 @@ RenderRubyRun* RenderRubyBase::rubyRun() const
     ASSERT(parent());
     ASSERT(parent()->isRubyRun());
 
-    return toRenderRubyRun(parent());
+    return &toRenderRubyRun(*parent());
 }
 
 ETextAlign RenderRubyBase::textAlignmentForLine(bool /* endsWithSoftBreak */) const

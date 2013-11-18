@@ -50,6 +50,7 @@
 #include "ScriptController.h"
 #include "UserGestureIndicator.h"
 #include <wtf/CurrentTime.h>
+#include <wtf/Ref.h>
 
 namespace WebCore {
 
@@ -108,7 +109,7 @@ protected:
     virtual void fire(Frame* frame)
     {
         UserGestureIndicator gestureIndicator(wasUserGesture() ? DefinitelyProcessingUserGesture : DefinitelyNotProcessingUserGesture);
-        frame->loader().changeLocation(m_securityOrigin.get(), KURL(ParsedURLString, m_url), m_referrer, lockHistory(), lockBackForwardList(), false);
+        frame->loader().changeLocation(m_securityOrigin.get(), URL(ParsedURLString, m_url), m_referrer, lockHistory(), lockBackForwardList(), false);
     }
 
     virtual void didStartTimer(Frame* frame, Timer<NavigationScheduler>* timer)
@@ -118,7 +119,7 @@ protected:
         m_haveToldClient = true;
 
         UserGestureIndicator gestureIndicator(wasUserGesture() ? DefinitelyProcessingUserGesture : DefinitelyNotProcessingUserGesture);
-        frame->loader().clientRedirected(KURL(ParsedURLString, m_url), delay(), currentTime() + timer->nextFireInterval(), lockBackForwardList());
+        frame->loader().clientRedirected(URL(ParsedURLString, m_url), delay(), currentTime() + timer->nextFireInterval(), lockBackForwardList());
     }
 
     virtual void didStopTimer(Frame* frame, bool newLoadInProgress)
@@ -159,8 +160,8 @@ public:
     virtual void fire(Frame* frame)
     {
         UserGestureIndicator gestureIndicator(wasUserGesture() ? DefinitelyProcessingUserGesture : DefinitelyNotProcessingUserGesture);
-        bool refresh = equalIgnoringFragmentIdentifier(frame->document()->url(), KURL(ParsedURLString, url()));
-        frame->loader().changeLocation(securityOrigin(), KURL(ParsedURLString, url()), referrer(), lockHistory(), lockBackForwardList(), refresh);
+        bool refresh = equalIgnoringFragmentIdentifier(frame->document()->url(), URL(ParsedURLString, url()));
+        frame->loader().changeLocation(securityOrigin(), URL(ParsedURLString, url()), referrer(), lockHistory(), lockBackForwardList(), refresh);
     }
 };
 
@@ -180,7 +181,7 @@ public:
     virtual void fire(Frame* frame)
     {
         UserGestureIndicator gestureIndicator(wasUserGesture() ? DefinitelyProcessingUserGesture : DefinitelyNotProcessingUserGesture);
-        frame->loader().changeLocation(securityOrigin(), KURL(ParsedURLString, url()), referrer(), lockHistory(), lockBackForwardList(), true);
+        frame->loader().changeLocation(securityOrigin(), URL(ParsedURLString, url()), referrer(), lockHistory(), lockBackForwardList(), true);
     }
 };
 
@@ -204,7 +205,7 @@ public:
         }
         // go(i!=0) from a frame navigates into the history of the frame only,
         // in both IE and NS (but not in Mozilla). We can't easily do that.
-        frame->page()->backForward()->goBackOrForward(m_historySteps);
+        frame->page()->backForward().goBackOrForward(m_historySteps);
     }
 
 private:
@@ -328,7 +329,7 @@ bool NavigationScheduler::mustLockBackForwardList(Frame* targetFrame)
     // Navigation of a subframe during loading of an ancestor frame does not create a new back/forward item.
     // The definition of "during load" is any time before all handlers for the load event have been run.
     // See https://bugs.webkit.org/show_bug.cgi?id=14957 for the original motivation for this.
-    for (Frame* ancestor = targetFrame->tree()->parent(); ancestor; ancestor = ancestor->tree()->parent()) {
+    for (Frame* ancestor = targetFrame->tree().parent(); ancestor; ancestor = ancestor->tree().parent()) {
         Document* document = ancestor->document();
         if (!ancestor->loader().isComplete() || (document && document->processingLoadEvent()))
             return true;
@@ -349,7 +350,7 @@ void NavigationScheduler::scheduleLocationChange(SecurityOrigin* securityOrigin,
 
     // If the URL we're going to navigate to is the same as the current one, except for the
     // fragment part, we don't need to schedule the location change.
-    KURL parsedURL(ParsedURLString, url);
+    URL parsedURL(ParsedURLString, url);
     if (parsedURL.hasFragmentIdentifier() && equalIgnoringFragmentIdentifier(m_frame->document()->url(), parsedURL)) {
         loader.changeLocation(securityOrigin, m_frame->document()->completeURL(url), referrer, lockHistory, lockBackForwardList);
         return;
@@ -378,7 +379,7 @@ void NavigationScheduler::scheduleFormSubmission(PassRefPtr<FormSubmission> subm
     // See https://bugs.webkit.org/show_bug.cgi?id=32383 for the original motivation for this.
     bool lockBackForwardList = mustLockBackForwardList(m_frame)
         || (submission->state()->formSubmissionTrigger() == SubmittedByJavaScript
-            && m_frame->tree()->parent() && !ScriptController::processingUserGesture());
+            && m_frame->tree().parent() && !ScriptController::processingUserGesture());
 
     schedule(adoptPtr(new ScheduledFormSubmission(submission, lockBackForwardList, duringLoad)));
 }
@@ -387,7 +388,7 @@ void NavigationScheduler::scheduleRefresh()
 {
     if (!shouldScheduleNavigation())
         return;
-    const KURL& url = m_frame->document()->url();
+    const URL& url = m_frame->document()->url();
     if (url.isEmpty())
         return;
 
@@ -401,8 +402,8 @@ void NavigationScheduler::scheduleHistoryNavigation(int steps)
 
     // Invalid history navigations (such as history.forward() during a new load) have the side effect of cancelling any scheduled
     // redirects. We also avoid the possibility of cancelling the current load by avoiding the scheduled redirection altogether.
-    BackForwardController* backForward = m_frame->page()->backForward();
-    if (steps > backForward->forwardCount() || -steps > backForward->backCount()) {
+    BackForwardController& backForward = m_frame->page()->backForward();
+    if (steps > backForward.forwardCount() || -steps > backForward.backCount()) {
         cancel();
         return;
     }
@@ -420,7 +421,7 @@ void NavigationScheduler::timerFired(Timer<NavigationScheduler>*)
         return;
     }
 
-    RefPtr<Frame> protect(m_frame);
+    Ref<Frame> protect(*m_frame);
 
     OwnPtr<ScheduledNavigation> redirect(m_redirect.release());
     redirect->fire(m_frame);
@@ -431,7 +432,7 @@ void NavigationScheduler::schedule(PassOwnPtr<ScheduledNavigation> redirect)
 {
     ASSERT(m_frame->page());
 
-    RefPtr<Frame> protect(m_frame);
+    Ref<Frame> protect(*m_frame);
 
     // If a redirect was scheduled during a load, then stop the current load.
     // Otherwise when the current load transitions from a provisional to a 
@@ -465,9 +466,10 @@ void NavigationScheduler::startTimer()
     if (!m_redirect->shouldStartTimer(m_frame))
         return;
 
-    m_timer.startOneShot(m_redirect->delay());
-    m_redirect->didStartTimer(m_frame, &m_timer);
-    InspectorInstrumentation::frameScheduledNavigation(m_frame, m_redirect->delay());
+    double delay = m_redirect->delay();
+    m_timer.startOneShot(delay);
+    InspectorInstrumentation::frameScheduledNavigation(m_frame, delay);
+    m_redirect->didStartTimer(m_frame, &m_timer); // m_redirect may be null on return (e.g. the client canceled the load)
 }
 
 void NavigationScheduler::cancel(bool newLoadInProgress)

@@ -32,6 +32,7 @@
 
 #include "DFGNodeFlags.h"
 #include "DFGUseKind.h"
+#include "DataFormat.h"
 #include "DumpContext.h"
 #include <wtf/PrintStream.h>
 
@@ -40,6 +41,7 @@ namespace JSC { namespace DFG {
 enum FlushFormat {
     DeadFlush,
     FlushedInt32,
+    FlushedInt52,
     FlushedDouble,
     FlushedCell,
     FlushedBoolean,
@@ -55,6 +57,8 @@ inline NodeFlags resultFor(FlushFormat format)
         return NodeResultJS;
     case FlushedInt32:
         return NodeResultInt32;
+    case FlushedInt52:
+        return NodeResultInt52;
     case FlushedDouble:
         return NodeResultNumber;
     case FlushedBoolean:
@@ -74,6 +78,8 @@ inline UseKind useKindFor(FlushFormat format)
         return CellUse;
     case FlushedInt32:
         return Int32Use;
+    case FlushedInt52:
+        return MachineIntUse;
     case FlushedDouble:
         return NumberUse;
     case FlushedBoolean:
@@ -81,6 +87,28 @@ inline UseKind useKindFor(FlushFormat format)
     }
     RELEASE_ASSERT_NOT_REACHED();
     return UntypedUse;
+}
+
+inline DataFormat dataFormatFor(FlushFormat format)
+{
+    switch (format) {
+    case DeadFlush:
+        return DataFormatDead;
+    case FlushedJSValue:
+        return DataFormatJS;
+    case FlushedDouble:
+        return DataFormatDouble;
+    case FlushedInt32:
+        return DataFormatInt32;
+    case FlushedInt52:
+        return DataFormatInt52;
+    case FlushedCell:
+        return DataFormatCell;
+    case FlushedBoolean:
+        return DataFormatBoolean;
+    }
+    RELEASE_ASSERT_NOT_REACHED();
+    return DataFormatDead;
 }
 
 } } // namespace JSC::DFG

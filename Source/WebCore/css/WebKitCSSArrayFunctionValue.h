@@ -44,7 +44,7 @@ public:
         return adoptRef(new WebKitCSSArrayFunctionValue());
     }
 
-    String customCssText() const;
+    String customCSSText() const;
 
     PassRefPtr<WebKitCSSArrayFunctionValue> cloneForCSSOM() const;
 
@@ -54,6 +54,8 @@ private:
     WebKitCSSArrayFunctionValue();
     WebKitCSSArrayFunctionValue(const WebKitCSSArrayFunctionValue& cloneFrom);
 };
+
+CSS_VALUE_TYPE_CASTS(WebKitCSSArrayFunctionValue, isWebKitCSSArrayFunctionValue())
 
 } // namespace WebCore
 

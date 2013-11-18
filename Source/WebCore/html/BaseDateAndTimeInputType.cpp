@@ -45,7 +45,6 @@
 namespace WebCore {
 
 using namespace HTMLNames;
-using namespace std;
 
 static const int msecPerMinute = 60 * 1000;
 static const int msecPerSecond = 1000;
@@ -57,18 +56,18 @@ double BaseDateAndTimeInputType::valueAsDate() const
 
 void BaseDateAndTimeInputType::setValueAsDate(double value, ExceptionCode&) const
 {
-    element()->setValue(serializeWithMilliseconds(value));
+    element().setValue(serializeWithMilliseconds(value));
 }
 
 double BaseDateAndTimeInputType::valueAsDouble() const
 {
-    const Decimal value = parseToNumber(element()->value(), Decimal::nan());
+    const Decimal value = parseToNumber(element().value(), Decimal::nan());
     return value.isFinite() ? value.toDouble() : DateComponents::invalidMilliseconds();
 }
 
 void BaseDateAndTimeInputType::setValueAsDecimal(const Decimal& newValue, TextFieldEventBehavior eventBehavior, ExceptionCode&) const
 {
-    element()->setValue(serialize(newValue), eventBehavior);
+    element().setValue(serialize(newValue), eventBehavior);
 }
 
 bool BaseDateAndTimeInputType::typeMismatchFor(const String& value) const
@@ -78,7 +77,7 @@ bool BaseDateAndTimeInputType::typeMismatchFor(const String& value) const
 
 bool BaseDateAndTimeInputType::typeMismatch() const
 {
-    return typeMismatchFor(element()->value());
+    return typeMismatchFor(element().value());
 }
 
 Decimal BaseDateAndTimeInputType::defaultValueForStepUp() const
@@ -126,7 +125,7 @@ String BaseDateAndTimeInputType::serialize(const Decimal& value) const
 String BaseDateAndTimeInputType::serializeWithComponents(const DateComponents& date) const
 {
     Decimal step;
-    if (!element()->getAllowedValueStep(&step))
+    if (!element().getAllowedValueStep(&step))
         return date.toString();
     if (step.remainder(msecPerMinute).isZero())
         return date.toString(DateComponents::None);
@@ -146,13 +145,13 @@ String BaseDateAndTimeInputType::localizeValue(const String& proposedValue) cons
     if (!parseToDateComponents(proposedValue, &date))
         return proposedValue;
 
-    String localized = element()->locale().formatDateTime(date);
+    String localized = element().locale().formatDateTime(date);
     return localized.isEmpty() ? proposedValue : localized;
 }
 
 String BaseDateAndTimeInputType::visibleValue() const
 {
-    return localizeValue(element()->value());
+    return localizeValue(element().value());
 }
 
 String BaseDateAndTimeInputType::sanitizeValue(const String& proposedValue) const
@@ -172,7 +171,7 @@ bool BaseDateAndTimeInputType::shouldRespectListAttribute()
 
 bool BaseDateAndTimeInputType::valueMissing(const String& value) const
 {
-    return element()->isRequired() && value.isEmpty();
+    return element().isRequired() && value.isEmpty();
 }
 
 } // namespace WebCore

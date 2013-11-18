@@ -46,7 +46,7 @@ static Node* enclosingListChild(Node* node, Node* listNode)
     return listChild;
 }
 
-PassRefPtr<HTMLElement> InsertListCommand::insertList(Document* document, Type type)
+PassRefPtr<HTMLElement> InsertListCommand::insertList(Document& document, Type type)
 {
     RefPtr<InsertListCommand> insertCommand = create(document, type);
     insertCommand->apply();
@@ -102,8 +102,9 @@ bool InsertListCommand::selectionHasListOfType(const VisibleSelection& selection
     return true;
 }
 
-InsertListCommand::InsertListCommand(Document* document, Type type) 
-    : CompositeEditCommand(document), m_type(type)
+InsertListCommand::InsertListCommand(Document& document, Type type)
+    : CompositeEditCommand(document)
+    , m_type(type)
 {
 }
 
@@ -381,7 +382,7 @@ PassRefPtr<HTMLElement> InsertListCommand::listifyParagraph(const VisiblePositio
         // Layout is necessary since start's node's inline renderers may have been destroyed by the insertion
         // The end of the content may have changed after the insertion and layout so update it as well.
         if (insertionPos == start.deepEquivalent()) {
-            listElement->document()->updateLayoutIgnorePendingStylesheets();
+            listElement->document().updateLayoutIgnorePendingStylesheets();
             start = startOfParagraph(originalStart, CanSkipOverEditingBoundary);
             end = endOfParagraph(start, CanSkipOverEditingBoundary);
         }

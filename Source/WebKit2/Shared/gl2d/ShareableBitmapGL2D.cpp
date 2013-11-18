@@ -38,10 +38,10 @@ using namespace WebCore;
 
 namespace WebKit {
 
-PassOwnPtr<GraphicsContext> ShareableBitmap::createGraphicsContext()
+std::unique_ptr<GraphicsContext> ShareableBitmap::createGraphicsContext()
 {
     RefPtr<PlatformGraphicsContext> context = PlatformGraphicsContext::create(m_sharedImage.get());
-    return adoptPtr(new GraphicsContext(PlatformContextGL2D::release(context)));
+    return std::make_unique<GraphicsContext>(PlatformContextGL2D::release(context));
 }
 
 void ShareableBitmap::paint(GraphicsContext& context, const IntPoint& dstPoint, const IntRect& srcRect)

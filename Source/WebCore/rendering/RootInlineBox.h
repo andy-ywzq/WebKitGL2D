@@ -29,6 +29,7 @@ namespace WebCore {
 class EllipsisBox;
 class HitTestResult;
 class LogicalSelectionOffsetCaches;
+class RenderBlockFlow;
 class RenderRegion;
 
 struct BidiStatus;
@@ -36,13 +37,14 @@ struct GapRects;
 
 class RootInlineBox : public InlineFlowBox {
 public:
-    explicit RootInlineBox(RenderBlock*);
+    explicit RootInlineBox(RenderBlockFlow&);
 
-    virtual void destroy(RenderArena*) OVERRIDE FINAL;
+    virtual void destroy(RenderArena&) OVERRIDE FINAL;
 
     virtual bool isRootInlineBox() const OVERRIDE FINAL { return true; }
+    RenderBlockFlow& blockFlow() const;
 
-    void detachEllipsisBox(RenderArena*);
+    void detachEllipsisBox(RenderArena&);
 
     RootInlineBox* nextRootBox() const { return static_cast<RootInlineBox*>(m_nextLineBox); }
     RootInlineBox* prevRootBox() const { return static_cast<RootInlineBox*>(m_prevLineBox); }
@@ -69,10 +71,10 @@ public:
 
     LayoutUnit selectionTop() const;
     LayoutUnit selectionBottom() const;
-    LayoutUnit selectionHeight() const { return max<LayoutUnit>(0, selectionBottom() - selectionTop()); }
+    LayoutUnit selectionHeight() const { return std::max<LayoutUnit>(0, selectionBottom() - selectionTop()); }
 
     LayoutUnit selectionTopAdjustedForPrecedingBlock() const;
-    LayoutUnit selectionHeightAdjustedForPrecedingBlock() const { return max<LayoutUnit>(0, selectionBottom() - selectionTopAdjustedForPrecedingBlock()); }
+    LayoutUnit selectionHeightAdjustedForPrecedingBlock() const { return std::max<LayoutUnit>(0, selectionBottom() - selectionTopAdjustedForPrecedingBlock()); }
 
     int blockDirectionPointInLine() const;
 
@@ -85,7 +87,7 @@ public:
         m_lineBottomWithLeading = bottomWithLeading;
     }
 
-    virtual RenderLineBoxList* rendererLineBoxes() const OVERRIDE FINAL;
+    virtual RenderLineBoxList& rendererLineBoxes() const OVERRIDE FINAL;
 
     RenderObject* lineBreakObj() const { return m_lineBreakObj; }
     BidiStatus lineBreakBidiStatus() const;
@@ -122,7 +124,7 @@ public:
     void paintCustomHighlight(PaintInfo&, const LayoutPoint&, const AtomicString& highlightType);
 #endif
 
-    virtual void paint(PaintInfo&, const LayoutPoint&, LayoutUnit lineTop, LayoutUnit lineBottom);
+    virtual void paint(PaintInfo&, const LayoutPoint&, LayoutUnit lineTop, LayoutUnit lineBottom) OVERRIDE;
     virtual bool nodeAtPoint(const HitTestRequest&, HitTestResult&, const HitTestLocation& locationInContainer, const LayoutPoint& accumulatedOffset, LayoutUnit lineTop, LayoutUnit lineBottom) OVERRIDE FINAL;
 
     using InlineBox::hasSelectedChildren;
@@ -132,21 +134,21 @@ public:
     InlineBox* firstSelectedBox();
     InlineBox* lastSelectedBox();
 
-    GapRects lineSelectionGap(RenderBlock* rootBlock, const LayoutPoint& rootBlockPhysicalPosition, const LayoutSize& offsetFromRootBlock,
+    GapRects lineSelectionGap(RenderBlock& rootBlock, const LayoutPoint& rootBlockPhysicalPosition, const LayoutSize& offsetFromRootBlock,
         LayoutUnit selTop, LayoutUnit selHeight, const LogicalSelectionOffsetCaches&, const PaintInfo*);
 
-    RenderBlock* block() const;
+    IntRect computeCaretRect(float logicalLeftPosition, unsigned caretWidth, LayoutUnit* extraWidthToEndOfLine) const;
 
     InlineBox* closestLeafChildForPoint(const IntPoint&, bool onlyEditableLeaves);
     InlineBox* closestLeafChildForLogicalLeftPosition(int, bool onlyEditableLeaves = false);
 
-    void appendFloat(RenderBox* floatingBox)
+    void appendFloat(RenderBox& floatingBox)
     {
         ASSERT(!isDirty());
         if (m_floats)
-            m_floats->append(floatingBox);
+            m_floats->append(&floatingBox);
         else
-            m_floats= adoptPtr(new Vector<RenderBox*>(1, floatingBox));
+            m_floats = adoptPtr(new Vector<RenderBox*>(1, &floatingBox));
     }
 
     Vector<RenderBox*>* floatsPtr() { ASSERT(!isDirty()); return m_floats.get(); }
@@ -197,7 +199,7 @@ public:
     Node* getLogicalEndBoxWithNode(InlineBox*&) const;
 
 #ifndef NDEBUG
-    virtual const char* boxName() const;
+    virtual const char* boxName() const OVERRIDE;
 #endif
 private:
     LayoutUnit lineSnapAdjustment(LayoutUnit delta = 0) const;
@@ -251,7 +253,7 @@ private:
 
     // Floats hanging off the line are pushed into this vector during layout. It is only
     // good for as long as the line has not been marked dirty.
-    OwnPtr<Vector<RenderBox*> > m_floats;
+    OwnPtr<Vector<RenderBox*>> m_floats;
 };
 
 } // namespace WebCore

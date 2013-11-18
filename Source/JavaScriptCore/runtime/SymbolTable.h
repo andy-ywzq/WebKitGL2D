@@ -32,6 +32,7 @@
 #include "ConcurrentJITLock.h"
 #include "JSObject.h"
 #include "Watchpoint.h"
+#include <memory>
 #include <wtf/HashTraits.h>
 #include <wtf/text/StringImpl.h>
 
@@ -342,13 +343,18 @@ struct SymbolTableIndexHashTraits : HashTraits<SymbolTableEntry> {
 
 class SymbolTable {
 public:
-    typedef HashMap<RefPtr<StringImpl>, SymbolTableEntry, IdentifierRepHash, HashTraits<RefPtr<StringImpl> >, SymbolTableIndexHashTraits> Map;
+    typedef HashMap<RefPtr<StringImpl>, SymbolTableEntry, IdentifierRepHash, HashTraits<RefPtr<StringImpl>>, SymbolTableIndexHashTraits> Map;
 
     JS_EXPORT_PRIVATE SymbolTable();
     JS_EXPORT_PRIVATE ~SymbolTable();
     
     // You must hold the lock until after you're done with the iterator.
     Map::iterator find(const ConcurrentJITLocker&, StringImpl* key)
+    {
+        return m_map.find(key);
+    }
+    
+    Map::iterator find(const GCSafeConcurrentJITLocker&, StringImpl* key)
     {
         return m_map.find(key);
     }
@@ -381,6 +387,11 @@ public:
     }
     
     Map::iterator end(const ConcurrentJITLocker&)
+    {
+        return m_map.end();
+    }
+    
+    Map::iterator end(const GCSafeConcurrentJITLocker&)
     {
         return m_map.end();
     }
@@ -464,7 +475,7 @@ public:
     int captureEnd() { return m_captureEnd; }
     void setCaptureEnd(int captureEnd) { m_captureEnd = captureEnd; }
 
-    int captureCount() { return m_captureEnd - m_captureStart; }
+    int captureCount() { return -(m_captureEnd - m_captureStart); }
 
     int parameterCount() { return m_parameterCountIncludingThis - 1; }
     int parameterCountIncludingThis() { return m_parameterCountIncludingThis; }
@@ -472,7 +483,7 @@ public:
 
     // 0 if we don't capture any arguments; parameterCount() in length if we do.
     const SlowArgument* slowArguments() { return m_slowArguments.get(); }
-    void setSlowArguments(PassOwnArrayPtr<SlowArgument> slowArguments) { m_slowArguments = slowArguments; }
+    void setSlowArguments(std::unique_ptr<SlowArgument[]> slowArguments) { m_slowArguments = std::move(slowArguments); }
 
     DECLARE_EXPORT_INFO;
 
@@ -492,7 +503,7 @@ private:
     int m_captureStart;
     int m_captureEnd;
 
-    OwnArrayPtr<SlowArgument> m_slowArguments;
+    std::unique_ptr<SlowArgument[]> m_slowArguments;
 };
 
 } // namespace JSC

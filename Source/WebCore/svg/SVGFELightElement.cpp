@@ -25,6 +25,7 @@
 #include "SVGFELightElement.h"
 
 #include "Attribute.h"
+#include "ElementIterator.h"
 #include "RenderObject.h"
 #include "RenderSVGResource.h"
 #include "SVGElementInstance.h"
@@ -61,7 +62,7 @@ BEGIN_REGISTER_ANIMATED_PROPERTIES(SVGFELightElement)
     REGISTER_LOCAL_ANIMATED_PROPERTY(limitingConeAngle)
 END_REGISTER_ANIMATED_PROPERTIES
 
-SVGFELightElement::SVGFELightElement(const QualifiedName& tagName, Document* document)
+SVGFELightElement::SVGFELightElement(const QualifiedName& tagName, Document& document)
     : SVGElement(tagName, document)
     , m_specularExponent(1)
 {
@@ -70,12 +71,10 @@ SVGFELightElement::SVGFELightElement(const QualifiedName& tagName, Document* doc
 
 SVGFELightElement* SVGFELightElement::findLightElement(const SVGElement* svgElement)
 {
-    for (Node* node = svgElement->firstChild(); node; node = node->nextSibling()) {
-        if (node->hasTagName(SVGNames::feDistantLightTag)
-            || node->hasTagName(SVGNames::fePointLightTag)
-            || node->hasTagName(SVGNames::feSpotLightTag)) {
-            return static_cast<SVGFELightElement*>(node);
-        }
+    auto children = childrenOfType<SVGElement>(*svgElement);
+    for (auto child = children.begin(), end = children.end(); child != end; ++child) {
+        if (isSVGFEDistantLightElement(*child) || isSVGFEPointLightElement(*child) || isSVGFESpotLightElement(*child))
+            return static_cast<SVGFELightElement*>(const_cast<SVGElement*>(&*child));
     }
     return 0;
 }
@@ -207,17 +206,18 @@ void SVGFELightElement::svgAttributeChanged(const QualifiedName& attrName)
     ASSERT_NOT_REACHED();
 }
 
-void SVGFELightElement::childrenChanged(bool changedByParser, Node* beforeChange, Node* afterChange, int childCountDelta)
+void SVGFELightElement::childrenChanged(const ChildChange& change)
 {
-    SVGElement::childrenChanged(changedByParser, beforeChange, afterChange, childCountDelta);
+    SVGElement::childrenChanged(change);
 
-    if (!changedByParser) {
-        if (ContainerNode* parent = parentNode()) {
-            RenderObject* renderer = parent->renderer();
-            if (renderer && renderer->isSVGResourceFilterPrimitive())
-                RenderSVGResource::markForLayoutAndParentResourceInvalidation(renderer);
-        }
-    }
+    if (change.source == ChildChangeSourceParser)
+        return;
+    ContainerNode* parent = parentNode();
+    if (!parent)
+        return;
+    RenderObject* renderer = parent->renderer();
+    if (renderer && renderer->isSVGResourceFilterPrimitive())
+        RenderSVGResource::markForLayoutAndParentResourceInvalidation(renderer);
 }
 
 }

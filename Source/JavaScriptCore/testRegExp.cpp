@@ -46,11 +46,6 @@
 #include <windows.h>
 #endif
 
-#if PLATFORM(QT)
-#include <QCoreApplication>
-#include <QDateTime>
-#endif
-
 const int MaxLineLength = 100 * 1024;
 
 using namespace JSC;
@@ -139,8 +134,6 @@ protected:
     }
 };
 
-COMPILE_ASSERT(!IsInteger<GlobalObject>::value, WTF_IsInteger_GlobalObject_false);
-
 const ClassInfo GlobalObject::s_info = { "global", &JSGlobalObject::s_info, 0, ExecState::globalObjectTable, CREATE_METHOD_TABLE(GlobalObject) };
 
 GlobalObject::GlobalObject(VM& vm, Structure* structure, const Vector<String>& arguments)
@@ -184,10 +177,6 @@ int main(int argc, char** argv)
 #endif
 
     timeBeginPeriod(1);
-#endif
-
-#if PLATFORM(QT)
-    QCoreApplication app(argc, argv);
 #endif
 
     // Initialize JSC before getting VM.

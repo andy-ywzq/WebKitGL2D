@@ -115,7 +115,7 @@ JSValue JSNPObject::callMethod(ExecState* exec, NPIdentifier methodName)
 
     // Convert all arguments to NPVariants.
     for (size_t i = 0; i < argumentCount; ++i)
-        m_objectMap->convertJSValueToNPVariant(exec, exec->argument(i), arguments[i]);
+        m_objectMap->convertJSValueToNPVariant(exec, exec->uncheckedArgument(i), arguments[i]);
 
     // Calling NPClass::invoke will call into plug-in code, and there's no telling what the plug-in can do.
     // (including destroying the plug-in). Because of this, we make sure to keep the plug-in alive until 
@@ -137,7 +137,7 @@ JSValue JSNPObject::callMethod(ExecState* exec, NPIdentifier methodName)
         releaseNPVariantValue(&arguments[i]);
 
     if (!returnValue)
-        throwError(exec, createError(exec, "Error calling method on NPObject."));
+        exec->vm().throwException(exec, createError(exec, "Error calling method on NPObject."));
 
     JSValue propertyValue = m_objectMap->convertNPVariantToJSValue(exec, globalObject(), result);
     releaseNPVariantValue(&result);
@@ -155,7 +155,7 @@ JSC::JSValue JSNPObject::callObject(JSC::ExecState* exec)
     
     // Convert all arguments to NPVariants.
     for (size_t i = 0; i < argumentCount; ++i)
-        m_objectMap->convertJSValueToNPVariant(exec, exec->argument(i), arguments[i]);
+        m_objectMap->convertJSValueToNPVariant(exec, exec->uncheckedArgument(i), arguments[i]);
 
     // Calling NPClass::invokeDefault will call into plug-in code, and there's no telling what the plug-in can do.
     // (including destroying the plug-in). Because of this, we make sure to keep the plug-in alive until 
@@ -177,7 +177,7 @@ JSC::JSValue JSNPObject::callObject(JSC::ExecState* exec)
         releaseNPVariantValue(&arguments[i]);
 
     if (!returnValue)
-        throwError(exec, createError(exec, "Error calling method on NPObject."));
+        exec->vm().throwException(exec, createError(exec, "Error calling method on NPObject."));
 
     JSValue propertyValue = m_objectMap->convertNPVariantToJSValue(exec, globalObject(), result);
     releaseNPVariantValue(&result);
@@ -195,7 +195,7 @@ JSValue JSNPObject::callConstructor(ExecState* exec)
 
     // Convert all arguments to NPVariants.
     for (size_t i = 0; i < argumentCount; ++i)
-        m_objectMap->convertJSValueToNPVariant(exec, exec->argument(i), arguments[i]);
+        m_objectMap->convertJSValueToNPVariant(exec, exec->uncheckedArgument(i), arguments[i]);
 
     // Calling NPClass::construct will call into plug-in code, and there's no telling what the plug-in can do.
     // (including destroying the plug-in). Because of this, we make sure to keep the plug-in alive until 
@@ -213,7 +213,7 @@ JSValue JSNPObject::callConstructor(ExecState* exec)
     }
 
     if (!returnValue)
-        throwError(exec, createError(exec, "Error calling method on NPObject."));
+        exec->vm().throwException(exec, createError(exec, "Error calling method on NPObject."));
     
     JSValue value = m_objectMap->convertNPVariantToJSValue(exec, globalObject(), result);
     releaseNPVariantValue(&result);
@@ -467,7 +467,7 @@ JSValue JSNPObject::methodGetter(ExecState* exec, JSValue slotBase, PropertyName
 
 JSObject* JSNPObject::throwInvalidAccessError(ExecState* exec)
 {
-    return throwError(exec, createReferenceError(exec, "Trying to access object from destroyed plug-in."));
+    return exec->vm().throwException(exec, createReferenceError(exec, "Trying to access object from destroyed plug-in."));
 }
 
 } // namespace WebKit

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010 Google Inc. All rights reserved.
+ * Copyright (C) 2013 Nokia Corporation and/or its subsidiary(-ies).
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,17 +30,16 @@
 #ifndef Nix_AudioDevice_h
 #define Nix_AudioDevice_h
 
-#include "Vector.h"
+#include <cstddef>
+#include <vector>
 
 namespace Nix {
-
-// Abstract interface to the Chromium audio system.
 
 class AudioDevice {
 public:
     class RenderCallback {
     public:
-        virtual void render(const Vector<float*>& /*sourceData*/, const Vector<float*>& /*destinationData*/, size_t /*numberOfFrames*/) { }
+        virtual void render(const std::vector<float*>& /*sourceData*/, const std::vector<float*>& /*destinationData*/, size_t /*numberOfFrames*/) = 0;
 
     protected:
         virtual ~RenderCallback() { }
@@ -54,4 +54,4 @@ public:
 
 } // namespace Nix
 
-#endif // WebAudioDevice_h
+#endif // Nix_AudioDevice_h

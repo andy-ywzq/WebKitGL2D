@@ -49,7 +49,7 @@ public:
         AuthorShadowRoot
     };
 
-    static PassRefPtr<ShadowRoot> create(Document* document, ShadowRootType type)
+    static PassRefPtr<ShadowRoot> create(Document& document, ShadowRootType type)
     {
         return adoptRef(new ShadowRoot(document, type));
     }
@@ -58,7 +58,7 @@ public:
 
     virtual bool applyAuthorStyles() const OVERRIDE { return m_applyAuthorStyles; }
     void setApplyAuthorStyles(bool);
-    virtual bool resetStyleInheritance() const OVERRIDE { return m_resetStyleInheritance; }
+    bool resetStyleInheritance() const { return m_resetStyleInheritance; }
     void setResetStyleInheritance(bool);
 
     Element* hostElement() const { return m_hostElement; }
@@ -69,9 +69,6 @@ public:
 
     Element* activeElement() const;
 
-    virtual void registerScopedHTMLStyleChild() OVERRIDE;
-    virtual void unregisterScopedHTMLStyleChild() OVERRIDE;
-
     ShadowRootType type() const { return static_cast<ShadowRootType>(m_type); }
 
     PassRefPtr<Node> cloneNode(bool, ExceptionCode&);
@@ -79,14 +76,14 @@ public:
     ContentDistributor& distributor() { return m_distributor; }
     void invalidateDistribution() { m_distributor.invalidateDistribution(hostElement()); }
 
-    void removeAllEventListeners();
+    virtual void removeAllEventListeners() OVERRIDE;
 
 private:
-    ShadowRoot(Document*, ShadowRootType);
+    ShadowRoot(Document&, ShadowRootType);
 
-    virtual void dispose() OVERRIDE;
+    virtual void dropChildren() OVERRIDE;
     virtual bool childTypeAllowed(NodeType) const OVERRIDE;
-    virtual void childrenChanged(bool changedByParser, Node* beforeChange, Node* afterChange, int childCountDelta) OVERRIDE;
+    virtual void childrenChanged(const ChildChange&) OVERRIDE;
 
     // ShadowRoots should never be cloned.
     virtual PassRefPtr<Node> cloneNode(bool) OVERRIDE { return 0; }
@@ -94,7 +91,6 @@ private:
     // FIXME: This shouldn't happen. https://bugs.webkit.org/show_bug.cgi?id=88834
     bool isOrphan() const { return !hostElement(); }
 
-    unsigned m_numberOfStyles : 28;
     unsigned m_applyAuthorStyles : 1;
     unsigned m_resetStyleInheritance : 1;
     unsigned m_type : 1;
@@ -106,7 +102,7 @@ private:
 
 inline Element* ShadowRoot::activeElement() const
 {
-    return treeScope()->focusedElement();
+    return treeScope().focusedElement();
 }
 
 inline const ShadowRoot* toShadowRoot(const Node* node)

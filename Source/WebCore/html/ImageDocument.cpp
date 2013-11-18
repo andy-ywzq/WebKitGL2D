@@ -30,7 +30,6 @@
 #include "EventListener.h"
 #include "EventNames.h"
 #include "ExceptionCodePlaceholder.h"
-#include "Frame.h"
 #include "FrameLoader.h"
 #include "FrameLoaderClient.h"
 #include "FrameView.h"
@@ -38,14 +37,14 @@
 #include "HTMLImageElement.h"
 #include "HTMLNames.h"
 #include "LocalizedStrings.h"
+#include "MainFrame.h"
 #include "MouseEvent.h"
 #include "NotImplemented.h"
 #include "Page.h"
 #include "RawDataDocumentParser.h"
+#include "RenderElement.h"
 #include "ResourceBuffer.h"
 #include "Settings.h"
-
-using std::min;
 
 namespace WebCore {
 
@@ -75,9 +74,9 @@ private:
     ImageDocument* m_doc;
 };
     
-class ImageDocumentParser : public RawDataDocumentParser {
+class ImageDocumentParser FINAL : public RawDataDocumentParser {
 public:
-    static PassRefPtr<ImageDocumentParser> create(ImageDocument* document)
+    static PassRefPtr<ImageDocumentParser> create(ImageDocument& document)
     {
         return adoptRef(new ImageDocumentParser(document));
     }
@@ -88,23 +87,23 @@ public:
     }
     
 private:
-    ImageDocumentParser(ImageDocument* document)
+    ImageDocumentParser(ImageDocument& document)
         : RawDataDocumentParser(document)
     {
     }
 
-    virtual void appendBytes(DocumentWriter*, const char*, size_t);
+    virtual void appendBytes(DocumentWriter&, const char*, size_t);
     virtual void finish();
 };
 
 class ImageDocumentElement FINAL : public HTMLImageElement {
 public:
-    static PassRefPtr<ImageDocumentElement> create(ImageDocument*);
+    static PassRefPtr<ImageDocumentElement> create(ImageDocument&);
 
 private:
-    ImageDocumentElement(ImageDocument* document)
+    ImageDocumentElement(ImageDocument& document)
         : HTMLImageElement(imgTag, document)
-        , m_imageDocument(document)
+        , m_imageDocument(&document)
     {
     }
 
@@ -114,7 +113,7 @@ private:
     ImageDocument* m_imageDocument;
 };
 
-inline PassRefPtr<ImageDocumentElement> ImageDocumentElement::create(ImageDocument* document)
+inline PassRefPtr<ImageDocumentElement> ImageDocumentElement::create(ImageDocument& document)
 {
     return adoptRef(new ImageDocumentElement(document));
 }
@@ -127,10 +126,10 @@ static float pageZoomFactor(const Document* document)
     return frame ? frame->pageZoomFactor() : 1;
 }
 
-void ImageDocumentParser::appendBytes(DocumentWriter*, const char*, size_t)
+void ImageDocumentParser::appendBytes(DocumentWriter&, const char*, size_t)
 {
     Frame* frame = document()->frame();
-    if (!frame->loader().client()->allowImage(frame->settings().areImagesEnabled(), document()->url()))
+    if (!frame->loader().client().allowImage(frame->settings().areImagesEnabled(), document()->url()))
         return;
 
     CachedImage* cachedImage = document()->cachedImage();
@@ -176,7 +175,7 @@ void ImageDocumentParser::finish()
     
 // --------
 
-ImageDocument::ImageDocument(Frame* frame, const KURL& url)
+ImageDocument::ImageDocument(Frame* frame, const URL& url)
     : HTMLDocument(frame, url, ImageDocumentClass)
     , m_imageElement(0)
     , m_imageSizeIsKnown(false)
@@ -189,7 +188,7 @@ ImageDocument::ImageDocument(Frame* frame, const KURL& url)
     
 PassRefPtr<DocumentParser> ImageDocument::createParser()
 {
-    return ImageDocumentParser::create(this);
+    return ImageDocumentParser::create(*this);
 }
 
 void ImageDocument::createDocumentStructure()
@@ -206,7 +205,7 @@ void ImageDocument::createDocumentStructure()
     
     rootElement->appendChild(body, IGNORE_EXCEPTION);
     
-    RefPtr<ImageDocumentElement> imageElement = ImageDocumentElement::create(this);
+    RefPtr<ImageDocumentElement> imageElement = ImageDocumentElement::create(*this);
     
     imageElement->setAttribute(styleAttr, "-webkit-user-select: none");        
     imageElement->setLoadManually(true);
@@ -240,7 +239,7 @@ float ImageDocument::scale() const
     float widthScale = (float)windowSize.width() / imageSize.width();
     float heightScale = (float)windowSize.height() / imageSize.height();
 
-    return min(widthScale, heightScale);
+    return std::min(widthScale, heightScale);
 }
 
 void ImageDocument::resizeImageToFit()
@@ -373,7 +372,7 @@ CachedImage* ImageDocument::cachedImage()
 
 bool ImageDocument::shouldShrinkToFit() const
 {
-    return frame()->page()->settings().shrinksStandaloneImagesToFit() && frame()->page()->mainFrame() == frame();
+    return frame()->settings().shrinksStandaloneImagesToFit() && frame()->isMainFrame();
 }
 
 void ImageEventListener::handleEvent(ScriptExecutionContext*, Event* event)

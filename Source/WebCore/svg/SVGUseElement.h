@@ -42,7 +42,7 @@ class SVGUseElement FINAL : public SVGGraphicsElement,
                             public SVGURIReference,
                             public CachedSVGDocumentClient {
 public:
-    static PassRefPtr<SVGUseElement> create(const QualifiedName&, Document*, bool wasInsertedByParser);
+    static PassRefPtr<SVGUseElement> create(const QualifiedName&, Document&, bool wasInsertedByParser);
     virtual ~SVGUseElement();
 
     SVGElementInstance* instanceRoot();
@@ -51,16 +51,16 @@ public:
     void invalidateShadowTree();
     void invalidateDependentShadowTrees();
 
-    RenderObject* rendererClipChild() const;
+    RenderElement* rendererClipChild() const;
 
 private:
-    SVGUseElement(const QualifiedName&, Document*, bool wasInsertedByParser);
+    SVGUseElement(const QualifiedName&, Document&, bool wasInsertedByParser);
 
     virtual bool isValid() const { return SVGTests::isValid(); }
     virtual bool supportsFocus() const OVERRIDE { return true; }
 
-    virtual InsertionNotificationRequest insertedInto(ContainerNode*) OVERRIDE;
-    virtual void removedFrom(ContainerNode*) OVERRIDE;
+    virtual InsertionNotificationRequest insertedInto(ContainerNode&) OVERRIDE;
+    virtual void removedFrom(ContainerNode&) OVERRIDE;
     virtual void buildPendingResource();
 
     bool isSupportedAttribute(const QualifiedName&);
@@ -69,7 +69,7 @@ private:
 
     virtual bool willRecalcStyle(Style::Change);
 
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
     virtual void toClipPath(Path&);
 
     void clearResourceReferences();
@@ -128,11 +128,7 @@ private:
     Timer<SVGElement> m_svgLoadEventTimer;
 };
 
-inline SVGUseElement* toSVGUseElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->hasTagName(SVGNames::useTag));
-    return static_cast<SVGUseElement*>(node);
-}
+NODE_TYPE_CASTS(SVGUseElement)
 
 }
 

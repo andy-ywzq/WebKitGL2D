@@ -83,7 +83,7 @@ public:
     ScrollingStateNode* parent() const { return m_parent; }
     void setParent(ScrollingStateNode* parent) { m_parent = parent; }
 
-    Vector<OwnPtr<ScrollingStateNode> >* children() const { return m_children.get(); }
+    Vector<OwnPtr<ScrollingStateNode>>* children() const { return m_children.get(); }
 
     void appendChild(PassOwnPtr<ScrollingStateNode>);
     void removeChild(ScrollingStateNode*);
@@ -92,7 +92,6 @@ public:
 
 protected:
     ScrollingStateNode(const ScrollingStateNode&);
-    static void writeIndent(TextStream&, int indent);
 
     ScrollingStateTree* m_scrollingStateTree;
 
@@ -101,12 +100,13 @@ private:
 
     virtual void dumpProperties(TextStream&, int indent) const = 0;
     ChangedProperties changedProperties() const { return m_changedProperties; }
+    void willBeRemovedFromStateTree();
 
     ScrollingNodeID m_nodeID;
     ChangedProperties m_changedProperties;
 
     ScrollingStateNode* m_parent;
-    OwnPtr<Vector<OwnPtr<ScrollingStateNode> > > m_children;
+    OwnPtr<Vector<OwnPtr<ScrollingStateNode>>> m_children;
 
 #if PLATFORM(MAC)
     RetainPtr<PlatformLayer> m_platformScrollLayer;

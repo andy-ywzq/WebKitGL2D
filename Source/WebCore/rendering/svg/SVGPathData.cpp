@@ -37,8 +37,8 @@ namespace WebCore {
 
 static void updatePathFromCircleElement(SVGElement* element, Path& path)
 {
-    ASSERT(element->hasTagName(SVGNames::circleTag));
-    SVGCircleElement* circle = static_cast<SVGCircleElement*>(element);
+    ASSERT(isSVGCircleElement(element));
+    SVGCircleElement* circle = toSVGCircleElement(element);
 
     SVGLengthContext lengthContext(element);
     float r = circle->r().value(lengthContext);
@@ -48,7 +48,7 @@ static void updatePathFromCircleElement(SVGElement* element, Path& path)
 
 static void updatePathFromEllipseElement(SVGElement* element, Path& path)
 {
-    ASSERT(element->hasTagName(SVGNames::ellipseTag));
+    ASSERT_WITH_SECURITY_IMPLICATION(element->hasTagName(SVGNames::ellipseTag));
     SVGEllipseElement* ellipse = static_cast<SVGEllipseElement*>(element);
 
     SVGLengthContext lengthContext(element);
@@ -63,7 +63,7 @@ static void updatePathFromEllipseElement(SVGElement* element, Path& path)
 
 static void updatePathFromLineElement(SVGElement* element, Path& path)
 {
-    ASSERT(element->hasTagName(SVGNames::lineTag));
+    ASSERT_WITH_SECURITY_IMPLICATION(element->hasTagName(SVGNames::lineTag));
     SVGLineElement* line = static_cast<SVGLineElement*>(element);
 
     SVGLengthContext lengthContext(element);
@@ -78,7 +78,7 @@ static void updatePathFromPathElement(SVGElement* element, Path& path)
 
 static void updatePathFromPolygonElement(SVGElement* element, Path& path)
 {
-    ASSERT(element->hasTagName(SVGNames::polygonTag));
+    ASSERT_WITH_SECURITY_IMPLICATION(element->hasTagName(SVGNames::polygonTag));
     SVGPolygonElement* polygon = static_cast<SVGPolygonElement*>(element);
 
     SVGPointList& points = polygon->pointList();
@@ -96,7 +96,7 @@ static void updatePathFromPolygonElement(SVGElement* element, Path& path)
 
 static void updatePathFromPolylineElement(SVGElement* element, Path& path)
 {
-    ASSERT(element->hasTagName(SVGNames::polylineTag));
+    ASSERT_WITH_SECURITY_IMPLICATION(element->hasTagName(SVGNames::polylineTag));
     SVGPolylineElement* polyline = static_cast<SVGPolylineElement*>(element);
 
     SVGPointList& points = polyline->pointList();
@@ -151,13 +151,13 @@ void updatePathFromGraphicsElement(SVGElement* element, Path& path)
     static HashMap<AtomicStringImpl*, PathUpdateFunction>* map = 0;
     if (!map) {
         map = new HashMap<AtomicStringImpl*, PathUpdateFunction>;
-        map->set(SVGNames::circleTag.localName().impl(), updatePathFromCircleElement);
-        map->set(SVGNames::ellipseTag.localName().impl(), updatePathFromEllipseElement);
-        map->set(SVGNames::lineTag.localName().impl(), updatePathFromLineElement);
-        map->set(SVGNames::pathTag.localName().impl(), updatePathFromPathElement);
-        map->set(SVGNames::polygonTag.localName().impl(), updatePathFromPolygonElement);
-        map->set(SVGNames::polylineTag.localName().impl(), updatePathFromPolylineElement);
-        map->set(SVGNames::rectTag.localName().impl(), updatePathFromRectElement);
+        map->set(SVGNames::circleTag.localName().impl(), &updatePathFromCircleElement);
+        map->set(SVGNames::ellipseTag.localName().impl(), &updatePathFromEllipseElement);
+        map->set(SVGNames::lineTag.localName().impl(), &updatePathFromLineElement);
+        map->set(SVGNames::pathTag.localName().impl(), &updatePathFromPathElement);
+        map->set(SVGNames::polygonTag.localName().impl(), &updatePathFromPolygonElement);
+        map->set(SVGNames::polylineTag.localName().impl(), &updatePathFromPolylineElement);
+        map->set(SVGNames::rectTag.localName().impl(), &updatePathFromRectElement);
     }
 
     if (PathUpdateFunction pathUpdateFunction = map->get(element->localName().impl()))

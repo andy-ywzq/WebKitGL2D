@@ -101,127 +101,104 @@ class StubRemoteCommand(object):
         self.logs = {'stdio': StubStdio(stdio)}
 
 
-class RunQtAPITestsTest(unittest.TestCase):
-    def assertResults(self, expected_result, expected_text, stdio):
-        rc = 0
+class RunJavaScriptCoreTestsTest(unittest.TestCase):
+    def assertResults(self, expected_result, expected_text, rc, stdio):
         cmd = StubRemoteCommand(rc, stdio)
-        step = RunQtAPITests()
+        step = RunJavaScriptCoreTests()
         step.commandComplete(cmd)
         actual_results = step.evaluateCommand(cmd)
-        actual_text = str(step.getText2(cmd, actual_results)[0])
+        actual_text = step.getText2(cmd, actual_results)
 
         self.assertEqual(expected_result, actual_results)
         self.assertEqual(actual_text, expected_text)
 
-    def test_timeout(self):
-        self.assertResults(FAILURE, "API tests", """INFO:Exec:Running... WebKitBuild/Release/Source/WebKit2/UIProcess/API/qt/tests/qquickwebview/tst_qquickwebview
-INFO:Exec:Running... WebKitBuild/Release/Source/WebKit2/UIProcess/API/qt/tests/qmltests/tst_qmltests
-Qml debugging is enabled. Only use this in a safe environment!
-INFO:Exec:Finished WebKitBuild/Release/Source/WebKit2/UIProcess/API/qt/tests/qquickwebview/tst_qquickwebview
-ERROR:Exec:Timeout, process 'WebKitBuild/Release/Source/WebKit2/UIProcess/API/qt/tests/qmltests/tst_qmltests' (2336) was terminated
-INFO:Exec:Finished WebKitBuild/Release/Source/WebKit2/UIProcess/API/qt/tests/qmltests/tst_qmltests
-********* Start testing of tst_QQuickWebView *********
-Config: Using QTest library 5.0.0, Qt 5.0.0
-PASS   : tst_QQuickWebView::initTestCase()
-QWARN  : tst_QQuickWebView::accessPage() QQuickCanvas: platform does not support threaded rendering!
-.
-.
-.
+    def test_no_regressions_old_output(self):
+        self.assertResults(SUCCESS, ["jscore-test"], 0, """Results for Mozilla tests:
+    0 regressions found.
+    0 tests fixed.
+    OK.""")
 
-**********************************************************************
-**        TOTALS: 16 passed, 0 failed, 0 skipped, 0 crashed         **
-**********************************************************************""")
+    def test_mozilla_failure_old_output(self):
+        self.assertResults(FAILURE, ["jscore-test", '1 failing Mozilla test '], 1, """Results for Mozilla tests:
+    1 regression found.
+    0 tests fixed.""")
 
-    def test_success(self):
-        self.assertResults(SUCCESS, "API tests", """INFO:Exec:Running... WebKitBuild/Release/Source/WebKit2/UIProcess/API/qt/tests/qquickwebview/tst_qquickwebview
-INFO:Exec:Running... WebKitBuild/Release/Source/WebKit2/UIProcess/API/qt/tests/qmltests/tst_qmltests
-Qml debugging is enabled. Only use this in a safe environment!
-INFO:Exec:Finished WebKitBuild/Release/Source/WebKit2/UIProcess/API/qt/tests/qquickwebview/tst_qquickwebview
-********* Start testing of tst_QQuickWebView *********
-Config: Using QTest library 5.0.0, Qt 5.0.0
-PASS   : tst_QQuickWebView::initTestCase()
-QWARN  : tst_QQuickWebView::accessPage() QQuickCanvas: platform does not support threaded rendering!
-.
-.
-.
+    def test_mozilla_failure_new_output(self):
+        self.assertResults(FAILURE, ["jscore-test", '1 failing Mozilla test '], 1, """Results for Mozilla tests:
+    1 regression found.
+    0 tests fixed.
 
-**********************************************************************
-**        TOTALS: 16 passed, 0 failed, 0 skipped, 0 crashed         **
-**********************************************************************""")
+Results for LayoutTests/js tests:
+    0 failures found.
+    0 crashes found.
+    OK.""")
 
-    def test_failure(self):
-        self.assertResults(WARNINGS, "16 passed, 1 failed, 0 skipped, 0 crashed", """********* Start testing of tst_QDeclarativeWebView *********
-PASS   : tst_QDeclarativeWebView::pressGrabTime()
-PASS   : tst_QDeclarativeWebView::renderingEnabled()
-PASS   : tst_QDeclarativeWebView::setHtml()
-PASS   : tst_QDeclarativeWebView::settings()
-FAIL!  : tst_QDeclarativeWebView::backgroundColor() Compared values are not the same
-   Loc: [/ramdisk/qt-linux-release/build/Source/WebKit/qt/tests/qdeclarativewebview/tst_qdeclarativewebview.cpp(532)]
-PASS   : tst_QDeclarativeWebView::cleanupTestCase()
-.
-.
-.
+    def test_layout_failure_new_output(self):
+        self.assertResults(FAILURE, ["jscore-test", '469 failing js tests '], 1,  """Results for Mozilla tests:
+    0 regressions found.
+    0 tests fixed.
+    OK.
 
-**********************************************************************
-**        TOTALS: 16 passed, 1 failed, 0 skipped, 0 crashed         **
-**********************************************************************""")
+Results for LayoutTests/js tests:
+    469 failures found.
+    0 crashes found.
 
-    def test_timeout_and_failure(self):
-        self.assertResults(FAILURE, "Failure: timeout occured during testing", """INFO:Exec:Finished WebKitBuild/Release/Source/WebKit/qt/tests/benchmarks/painting/tst_painting
-ERROR:Exec:Timeout, process 'WebKitBuild/Release/Source/WebKit/qt/tests/qwebpage/tst_qwebpage' (13000) was terminated
-INFO:Exec:Finished WebKitBuild/Release/Source/WebKit/qt/tests/qwebpage/tst_qwebpage
-********* Start testing of tst_Loading *********
-Config: Using QTest library 4.8.0, Qt 4.8.0
-PASS   : tst_Loading::initTestCase()
-QDEBUG : tst_Loading::load(amazon) loaded the Generic plugin
-RESULT : tst_Loading::load():"amazon":
-     1,843 msecs per iteration (total: 1,843, iterations: 1)
-RESULT : tst_Loading::load():"kde":
-     139 msecs per iteration (total: 139, iterations: 1)
-RESULT : tst_Loading::load():"apple":
-     740 msecs per iteration (total: 740, iterations: 1)
-PASS   : tst_Loading::load()
-PASS   : tst_Loading::cleanupTestCase()
-Totals: 3 passed, 0 failed, 0 skipped
-********* Finished testing of tst_Loading *********
-.
-.
-.
-PASS   : tst_QDeclarativeWebView::renderingEnabled()
-PASS   : tst_QDeclarativeWebView::setHtml()
-PASS   : tst_QDeclarativeWebView::settings()
-FAIL!  : tst_QDeclarativeWebView::backgroundColor() Compared values are not the same
-   Loc: [/ramdisk/qt-linux-release/build/Source/WebKit/qt/tests/qdeclarativewebview/tst_qdeclarativewebview.cpp(532)]
-PASS   : tst_QDeclarativeWebView::cleanupTestCase()
-Totals: 16 passed, 3 failed, 1 skipped
-.
-.
-.
-**********************************************************************
-**        TOTALS: 73 passed, 3 failed, 1 skipped, 0 crashed         **
-**********************************************************************""")
+Results for JSC stress tests:
+    0 failures found.
+    OK.""")
 
-    def test_crash(self):
-        self.assertResults(FAILURE, "API tests", """********* Start testing of tst_QQuickWebView *********
-Config: Using QTest library 5.0.0, Qt 5.0.0
-PASS   : tst_QQuickWebView::initTestCase()
-PASS   : tst_QQuickWebView::accessPage()
+    def test_layout_crash_new_output(self):
+        self.assertResults(FAILURE, ["jscore-test", '1 crashing js test '], 1,  """Results for Mozilla tests:
+    0 regressions found.
+    0 tests fixed.
+    OK.
 
-CRASHED: WebKitBuild/Release/Source/WebKit2/UIProcess/API/qt/tests/qquickwebview/tst_qquickwebview
+Results for LayoutTests/js tests:
+    0 failures found.
+    1 crashes found.
 
-CRASHED: WebKitBuild/Release/Source/WebKit2/UIProcess/API/qt/tests/qquickwebview/tst_hello
+Results for JSC stress tests:
+    0 failures found.
+    OK.""")
 
-********* Start testing of tst_publicapi *********
-Config: Using QTest library 5.0.0, Qt 5.0.0
-PASS   : tst_publicapi::initTestCase()
-PASS   : tst_publicapi::publicAPI()
-PASS   : tst_publicapi::cleanupTestCase()
-Totals: 3 passed, 0 failed, 0 skipped
-********* Finished testing of tst_publicapi *********
-**********************************************************************
-**        TOTALS: 92 passed, 0 failed, 0 skipped, 2 crashed         **
-**********************************************************************""")
+    def test_mozilla_and_layout_failure_new_output(self):
+        self.assertResults(FAILURE, ["jscore-test", '1 failing Mozilla test ', '469 failing js tests '], 1,  """Results for Mozilla tests:
+    1 regression found.
+    0 tests fixed.
 
+Results for LayoutTests/js tests:
+    469 failures found.
+    0 crashes found.
+
+Results for JSC stress tests:
+    0 failures found.
+    OK.""")
+
+    def test_jsc_stress_failure_new_output(self):
+        self.assertResults(FAILURE, ["jscore-test", '1 failing JSC stress test '], 1,  """Results for Mozilla tests:
+    0 regression found.
+    0 tests fixed.
+
+Results for LayoutTests/js tests:
+    0 failures found.
+    0 crashes found.
+
+Results for JSC stress tests:
+    1 failures found.
+    OK.""")
+
+    def test_js_crashes_and_jsc_stress_failures_new_output(self):
+        self.assertResults(FAILURE, ["jscore-test", '25 crashing js tests ', '284 failing JSC stress tests '], 1,  """Results for Mozilla tests:
+    0 regression found.
+    0 tests fixed.
+
+Results for LayoutTests/js tests:
+    0 failures found.
+    25 crashes found.
+
+Results for JSC stress tests:
+    284 failures found.
+    OK.""")
 
 
 class RunUnitTestsTest(unittest.TestCase):

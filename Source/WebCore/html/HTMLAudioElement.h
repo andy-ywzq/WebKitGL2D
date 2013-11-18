@@ -36,28 +36,14 @@ class Document;
 
 class HTMLAudioElement FINAL : public HTMLMediaElement {
 public:
-    static PassRefPtr<HTMLAudioElement> create(const QualifiedName&, Document*, bool);
-    static PassRefPtr<HTMLAudioElement> createForJSConstructor(Document*, const String& src);
+    static PassRefPtr<HTMLAudioElement> create(const QualifiedName&, Document&, bool);
+    static PassRefPtr<HTMLAudioElement> createForJSConstructor(Document&, const String& src);
 
 private:
-    HTMLAudioElement(const QualifiedName&, Document*, bool);
+    HTMLAudioElement(const QualifiedName&, Document&, bool);
 };
 
-inline bool isHTMLAudioElement(Node* node)
-{
-    return node->hasTagName(HTMLNames::audioTag);
-}
-
-inline bool isHTMLAudioElement(Element* element)
-{
-    return element->hasTagName(HTMLNames::audioTag);
-}
-
-inline HTMLAudioElement* toHTMLAudioElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || isHTMLAudioElement(node));
-    return static_cast<HTMLAudioElement*>(node);
-}
+NODE_TYPE_CASTS(HTMLAudioElement)
 
 } //namespace
 

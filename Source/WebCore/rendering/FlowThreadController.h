@@ -37,6 +37,7 @@
 namespace WebCore {
 
 class RenderFlowThread;
+class RenderLayer;
 class RenderNamedFlowThread;
 
 typedef ListHashSet<RenderNamedFlowThread*> RenderNamedFlowThreadList;
@@ -55,7 +56,7 @@ public:
     {
         m_isRenderNamedFlowThreadOrderDirty = dirty;
         if (dirty)
-            m_view->setNeedsLayout(true);
+            m_view->setNeedsLayout();
     }
 
     RenderNamedFlowThread& ensureRenderFlowThreadWithName(const AtomicString&);
@@ -64,9 +65,9 @@ public:
     void layoutRenderNamedFlowThreads();
     void styleDidChange();
 
-    void registerNamedFlowContentNode(Node*, RenderNamedFlowThread*);
-    void unregisterNamedFlowContentNode(Node*);
-    bool isContentNodeRegisteredWithAnyNamedFlow(const Node*) const;
+    void registerNamedFlowContentElement(Element&, RenderNamedFlowThread&);
+    void unregisterNamedFlowContentElement(Element&);
+    bool isContentElementRegisteredWithAnyNamedFlow(const Element&) const;
 
     bool hasFlowThreadsWithAutoLogicalHeightRegions() const { return m_flowThreadsWithAutoLogicalHeightRegions; }
     void incrementFlowThreadsWithAutoLogicalHeightRegions() { ++m_flowThreadsWithAutoLogicalHeightRegions; }
@@ -79,6 +80,10 @@ public:
     void updateFlowThreadsIntoMeasureContentPhase();
     void updateFlowThreadsIntoFinalPhase();
 
+    // Collect the fixed positioned layers that have the named flows as containing block
+    // These layers are painted and hit-tested by RenderView
+    void collectFixedPositionedLayers(Vector<RenderLayer*>& fixedPosLayers) const;
+
 #if USE(ACCELERATED_COMPOSITING)
     void updateRenderFlowThreadLayersIfNeeded();
 #endif
@@ -88,7 +93,7 @@ public:
 #endif
 
 protected:
-    FlowThreadController(RenderView*);
+    explicit FlowThreadController(RenderView*);
     void updateFlowThreadsChainIfNecessary();
     void resetFlowThreadsWithAutoHeightRegions();
 
@@ -98,8 +103,7 @@ private:
     bool m_isRenderNamedFlowThreadOrderDirty;
     unsigned m_flowThreadsWithAutoLogicalHeightRegions;
     OwnPtr<RenderNamedFlowThreadList> m_renderNamedFlowThreadList;
-    // maps a content node to its render flow thread.
-    HashMap<const Node*, RenderNamedFlowThread*> m_mapNamedFlowContentNodes;
+    HashMap<const Element*, RenderNamedFlowThread*> m_mapNamedFlowContentElement;
 };
 
 }

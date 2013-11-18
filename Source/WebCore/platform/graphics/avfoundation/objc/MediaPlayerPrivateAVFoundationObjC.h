@@ -59,15 +59,17 @@ namespace WebCore {
 
 class WebCoreAVFResourceLoader;
 class InbandTextTrackPrivateAVFObjC;
+class AudioTrackPrivateAVFObjC;
+class VideoTrackPrivateAVFObjC;
 
 class MediaPlayerPrivateAVFoundationObjC : public MediaPlayerPrivateAVFoundation {
 public:
-    ~MediaPlayerPrivateAVFoundationObjC();
+    virtual ~MediaPlayerPrivateAVFoundationObjC();
 
     static void registerMediaEngine(MediaEngineRegistrar);
 
     void setAsset(id);
-    virtual void tracksChanged();
+    virtual void tracksChanged() OVERRIDE;
 
 #if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP)
     RetainPtr<AVPlayerItem> playerItem() const { return m_avPlayerItem; }
@@ -95,10 +97,7 @@ private:
     // engine support
     static PassOwnPtr<MediaPlayerPrivateInterface> create(MediaPlayer*);
     static void getSupportedTypes(HashSet<String>& types);
-    static MediaPlayer::SupportsType supportsType(const String& type, const String& codecs, const KURL&);
-#if ENABLE(ENCRYPTED_MEDIA) || ENABLE(ENCRYPTED_MEDIA_V2)
-    static MediaPlayer::SupportsType extendedSupportsType(const String& type, const String& codecs, const String& keySystem, const KURL&);
-#endif
+    static MediaPlayer::SupportsType supportsType(const MediaEngineSupportParameters&);
 
     static bool isAvailable();
 
@@ -148,17 +147,20 @@ private:
     virtual bool hasContextRenderer() const;
     virtual bool hasLayerRenderer() const;
 
+    virtual void updateVideoLayerGravity() OVERRIDE;
+
     virtual bool hasSingleSecurityOrigin() const;
     
-#if __MAC_OS_X_VERSION_MIN_REQUIRED < 1080
     void createImageGenerator();
     void destroyImageGenerator();
     RetainPtr<CGImageRef> createImageForTimeInRect(float, const IntRect&);
     void paintWithImageGenerator(GraphicsContext*, const IntRect&);
-#else
+
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1080
     void createVideoOutput();
     void destroyVideoOutput();
     RetainPtr<CVPixelBufferRef> createPixelBuffer();
+    bool videoOutputHasAvailableFrame();
     void paintWithVideoOutput(GraphicsContext*, const IntRect&);
 #endif
 
@@ -182,6 +184,11 @@ private:
     void processLegacyClosedCaptionsTracks();
 #endif
 
+#if ENABLE(VIDEO_TRACK)
+    void updateAudioTracks();
+    void updateVideoTracks();
+#endif
+
     RetainPtr<AVURLAsset> m_avAsset;
     RetainPtr<AVPlayer> m_avPlayer;
     RetainPtr<AVPlayerItem> m_avPlayerItem;
@@ -192,9 +199,8 @@ private:
     bool m_videoFrameHasDrawn;
     bool m_haveCheckedPlayability;
 
-#if __MAC_OS_X_VERSION_MIN_REQUIRED < 1080
     RetainPtr<AVAssetImageGenerator> m_imageGenerator;
-#else
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1080
     RetainPtr<AVPlayerItemVideoOutput> m_videoOutput;
     RetainPtr<CVPixelBufferRef> m_lastImage;
 #endif
@@ -203,16 +209,21 @@ private:
     RetainPtr<VTPixelTransferSessionRef> m_pixelTransferSession;
 
     friend class WebCoreAVFResourceLoader;
-    HashMap<RetainPtr<AVAssetResourceLoadingRequest>, RefPtr<WebCoreAVFResourceLoader> > m_resourceLoaderMap;
+    HashMap<RetainPtr<AVAssetResourceLoadingRequest>, RefPtr<WebCoreAVFResourceLoader>> m_resourceLoaderMap;
     RetainPtr<WebCoreAVFLoaderDelegate> m_loaderDelegate;
-    HashMap<String, RetainPtr<AVAssetResourceLoadingRequest> > m_keyURIToRequestMap;
-    HashMap<String, RetainPtr<AVAssetResourceLoadingRequest> > m_sessionIDToRequestMap;
+    HashMap<String, RetainPtr<AVAssetResourceLoadingRequest>> m_keyURIToRequestMap;
+    HashMap<String, RetainPtr<AVAssetResourceLoadingRequest>> m_sessionIDToRequestMap;
 #endif
 
 #if HAVE(AVFOUNDATION_MEDIA_SELECTION_GROUP) && HAVE(AVFOUNDATION_LEGIBLE_OUTPUT_SUPPORT)
     RetainPtr<AVPlayerItemLegibleOutput> m_legibleOutput;
 #endif
-    
+
+#if ENABLE(VIDEO_TRACK)
+    Vector<RefPtr<AudioTrackPrivateAVFObjC>> m_audioTracks;
+    Vector<RefPtr<VideoTrackPrivateAVFObjC>> m_videoTracks;
+#endif
+
     InbandTextTrackPrivateAVF* m_currentTrack;
 };
 

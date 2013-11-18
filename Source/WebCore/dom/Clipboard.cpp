@@ -150,10 +150,10 @@ bool Clipboard::setData(const String& type, const String& data)
     return m_pasteboard->writeString(type, data);
 }
 
-ListHashSet<String> Clipboard::types() const
+Vector<String> Clipboard::types() const
 {
     if (!canReadTypes())
-        return ListHashSet<String>();
+        return Vector<String>();
 
     return m_pasteboard->types();
 }
@@ -205,11 +205,6 @@ void Clipboard::setDragImage(Element*, int, int)
 
 #else
 
-bool Clipboard::hasData()
-{
-    return m_pasteboard->hasData();
-}
-
 PassRefPtr<Clipboard> Clipboard::createForDragAndDrop()
 {
     return adoptRef(new Clipboard(ClipboardWritable, Pasteboard::createForDragAndDrop(), DragAndDrop));
@@ -218,11 +213,6 @@ PassRefPtr<Clipboard> Clipboard::createForDragAndDrop()
 PassRefPtr<Clipboard> Clipboard::createForDragAndDrop(ClipboardAccessPolicy policy, const DragData& dragData)
 {
     return adoptRef(new Clipboard(policy, Pasteboard::createForDragAndDrop(dragData), DragAndDrop, dragData.containsFiles()));
-}
-
-bool Clipboard::hasData()
-{
-    return m_pasteboard->hasData();
 }
 
 bool Clipboard::canSetDragImage() const
@@ -286,7 +276,7 @@ DragImageRef Clipboard::createDragImage(IntPoint& location) const
         return createDragImageFromImage(m_dragImage->image(), ImageOrientationDescription());
 
     if (m_dragImageElement) {
-        if (Frame* frame = m_dragImageElement->document()->frame())
+        if (Frame* frame = m_dragImageElement->document().frame())
             return frame->nodeImage(m_dragImageElement.get());
     }
 

@@ -229,8 +229,11 @@ function endTest()
 {
     consoleWrite("END OF TEST");
     testEnded = true;
-    if (window.testRunner)
-        testRunner.notifyDone();
+    if (window.testRunner) {
+        // FIXME (121170): We shouldn't need the zero-delay timer. But text track layout
+        // happens asynchronously, so we need it to run first to have stable test results.
+        setTimeout("testRunner.notifyDone()", 0);
+    }
 }
 
 function endTestLater()
@@ -356,4 +359,13 @@ function waitForEventsAndCall(eventList, func)
         requiredEvents[i] = eventList[i][1];
         eventList[i][0].addEventListener(requiredEvents[i], _eventCallback, true);
     }
+}
+
+function setCaptionDisplayMode(mode)
+{
+    if (window.internals)
+        internals.setCaptionDisplayMode(mode);
+    else
+        consoleWrite("<br><b>** This test only works in DRT! **<" + "/b><br>");
+
 }

@@ -25,10 +25,10 @@
 
 #import "config.h"
 
-#if defined(__LP64__) && defined(__clang__)
-
 #import "WKDOMRange.h"
 #import "WKDOMRangePrivate.h"
+
+#if WK_API_ENABLED
 
 #import "InjectedBundleRangeHandle.h"
 #import "WKBundleAPICast.h"
@@ -51,7 +51,7 @@
 
 - (id)initWithDocument:(WKDOMDocument *)document
 {
-    RefPtr<WebCore::Range> range = WebCore::Range::create(WebKit::toWebCoreDocument(document));
+    RefPtr<WebCore::Range> range = WebCore::Range::create(*WebKit::toWebCoreDocument(document));
     self = [self _initWithImpl:range.get()];
     if (!self)
         return nil;
@@ -142,7 +142,7 @@
 
 - (NSArray *)textRects
 {
-    _impl->ownerDocument()->updateLayoutIgnorePendingStylesheets();
+    _impl->ownerDocument().updateLayoutIgnorePendingStylesheets();
     Vector<WebCore::IntRect> rects;
     _impl->textRects(rects);
     return WebKit::toNSArray(rects);
@@ -160,4 +160,4 @@
 
 @end
 
-#endif // defined(__LP64__) && defined(__clang__)
+#endif // WK_API_ENABLED

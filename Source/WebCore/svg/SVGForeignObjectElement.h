@@ -25,6 +25,7 @@
 #include "SVGAnimatedLength.h"
 #include "SVGExternalResourcesRequired.h"
 #include "SVGGraphicsElement.h"
+#include "SVGNames.h"
 #include "SVGURIReference.h"
 
 namespace WebCore {
@@ -32,10 +33,10 @@ namespace WebCore {
 class SVGForeignObjectElement FINAL : public SVGGraphicsElement,
                                       public SVGExternalResourcesRequired {
 public:
-    static PassRefPtr<SVGForeignObjectElement> create(const QualifiedName&, Document*);
+    static PassRefPtr<SVGForeignObjectElement> create(const QualifiedName&, Document&);
 
 private:
-    SVGForeignObjectElement(const QualifiedName&, Document*);
+    SVGForeignObjectElement(const QualifiedName&, Document&);
 
     virtual bool isValid() const { return SVGTests::isValid(); }
     bool isSupportedAttribute(const QualifiedName&);
@@ -44,7 +45,7 @@ private:
 
     virtual bool rendererIsNeeded(const RenderStyle&) OVERRIDE;
     virtual bool childShouldCreateRenderer(const Node*) const;
-    virtual RenderObject* createRenderer(RenderArena* arena, RenderStyle* style);
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
 
     virtual bool selfHasRelativeLengths() const;
 
@@ -57,6 +58,8 @@ private:
         DECLARE_ANIMATED_BOOLEAN(ExternalResourcesRequired, externalResourcesRequired)
     END_DECLARE_ANIMATED_PROPERTIES
 };
+
+NODE_TYPE_CASTS(SVGForeignObjectElement)
 
 } // namespace WebCore
 

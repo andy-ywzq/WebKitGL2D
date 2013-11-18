@@ -75,6 +75,10 @@ String WebPageProxy::standardUserAgent(const String& applicationName)
     return userAgent.toString();
 }
 
+void WebPageProxy::platformInitialize()
+{
+}
+
 void WebPageProxy::getEditorCommandsForKeyEvent(Vector<WTF::String>&)
 {
     notImplemented();

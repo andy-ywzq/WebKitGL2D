@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Touch Adjustment : Too aggresive adjustments for large elements - bug 91262</title>
-    <script src="../fast/js/resources/js-test-pre.js"></script>
+    <script src="../resources/js-test-pre.js"></script>
     <script src="resources/touchadjustment.js"></script>
     <style>
         #targetDiv {
@@ -60,9 +60,9 @@
             width: 2 * radius,
             height: 2 * radius
         };
-        adjustedNode = internals.touchNodeAdjustedToBestClickableNode(touchBounds.x, touchBounds.y, touchBounds.width, touchBounds.height, document);
+        adjustedNode = internals.touchNodeAdjustedToBestClickableNode(touchBounds.x, touchBounds.y, touchBounds.width, touchBounds.height);
         shouldBe('adjustedNode.id', 'element.id');
-        adjustedPoint = internals.touchPositionAdjustedToBestClickableNode(touchBounds.x, touchBounds.y, touchBounds.width, touchBounds.height, document);
+        adjustedPoint = internals.touchPositionAdjustedToBestClickableNode(touchBounds.x, touchBounds.y, touchBounds.width, touchBounds.height);
 
         shouldBeTrue('adjustedPoint.x >= targetBounds.left');
         shouldBeTrue('adjustedPoint.x <= targetBounds.left + targetBounds.width');
@@ -83,6 +83,6 @@
     }
     runTests();
 </script>
-<script src="../fast/js/resources/js-test-post.js"></script>
+<script src="../resources/js-test-post.js"></script>
 </body>
 </html>

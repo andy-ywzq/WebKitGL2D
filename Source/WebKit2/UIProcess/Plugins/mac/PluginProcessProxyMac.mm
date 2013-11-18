@@ -26,7 +26,7 @@
 #import "config.h"
 #import "PluginProcessProxy.h"
 
-#if ENABLE(PLUGIN_PROCESS)
+#if ENABLE(NETSCAPE_PLUGIN_API)
 
 #import "DynamicLinkerEnvironmentExtractor.h"
 #import "EnvironmentVariables.h"
@@ -34,7 +34,7 @@
 #import "PluginProcessMessages.h"
 #import "WebKitSystemInterface.h"
 #import <WebCore/FileSystem.h>
-#import <WebCore/KURL.h>
+#import <WebCore/URL.h>
 #import <WebCore/RuntimeApplicationChecks.h>
 #import <crt_externs.h>
 #import <mach-o/dyld.h>
@@ -123,7 +123,6 @@ bool PluginProcessProxy::createPropertyListFile(const PluginModuleInfo& plugin)
     return true;
 }
 
-#if HAVE(XPC)
 static bool shouldUseXPC()
 {
     if (id value = [[NSUserDefaults standardUserDefaults] objectForKey:@"WebKit2UseXPCServiceForWebProcess"])
@@ -139,7 +138,6 @@ static bool shouldUseXPC()
     return false;
 #endif
 }
-#endif
 
 void PluginProcessProxy::platformGetLaunchOptions(ProcessLauncher::LaunchOptions& launchOptions, const PluginProcessAttributes& pluginProcessAttributes)
 {
@@ -151,9 +149,7 @@ void PluginProcessProxy::platformGetLaunchOptions(ProcessLauncher::LaunchOptions
     if (pluginProcessAttributes.sandboxPolicy == PluginProcessSandboxPolicyUnsandboxed)
         launchOptions.extraInitializationData.add("disable-sandbox", "1");
 
-#if HAVE(XPC)
     launchOptions.useXPC = shouldUseXPC();
-#endif
 }
 
 void PluginProcessProxy::platformInitializePluginProcess(PluginProcessCreationParameters& parameters)
@@ -306,7 +302,7 @@ void PluginProcessProxy::beginModal()
 
     // The call to -[NSApp runModalForWindow:] below will run a nested run loop, and if the plug-in process
     // crashes the PluginProcessProxy object can be destroyed. Protect against this here.
-    RefPtr<PluginProcessProxy> protect(this);
+    Ref<PluginProcessProxy> protect(*this);
 
     [NSApp runModalForWindow:m_placeholderWindow.get()];
     
@@ -462,16 +458,35 @@ void PluginProcessProxy::openURL(const String& urlString, bool& result, int32_t&
 
     result = true;
     CFURLRef launchedURL;
-    status = LSOpenCFURLRef(KURL(ParsedURLString, urlString).createCFURL().get(), &launchedURL);
+    status = LSOpenCFURLRef(URL(ParsedURLString, urlString).createCFURL().get(), &launchedURL);
 
     if (launchedURL) {
-        launchedURLString = KURL(launchedURL).string();
+        launchedURLString = URL(launchedURL).string();
         CFRelease(launchedURL);
     }
+}
 
-    result = false;
+static bool shouldOpenFile(const PluginProcessAttributes& pluginProcessAttributes, const String& fullPath)
+{
+    if (pluginProcessAttributes.moduleInfo.bundleIdentifier == "com.macromedia.Flash Player.plugin") {
+        if (fullPath == "/Library/PreferencePanes/Flash Player.prefPane")
+            return true;
+    }
+
+    return false;
+}
+
+void PluginProcessProxy::openFile(const String& fullPath, bool& result)
+{
+    if (!shouldOpenFile(m_pluginProcessAttributes, fullPath)) {
+        result = false;
+        return;
+    }
+
+    result = true;
+    [[NSWorkspace sharedWorkspace] openFile:fullPath];
 }
 
 } // namespace WebKit
 
-#endif // ENABLE(PLUGIN_PROCESS)
+#endif // ENABLE(NETSCAPE_PLUGIN_API)

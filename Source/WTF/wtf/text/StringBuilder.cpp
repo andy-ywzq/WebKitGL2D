@@ -29,6 +29,7 @@
 
 #include "IntegerToStringConversion.h"
 #include "WTFString.h"
+#include <wtf/dtoa.h>
 
 namespace WTF {
 
@@ -328,6 +329,24 @@ void StringBuilder::appendNumber(unsigned long long number)
     numberToStringUnsigned<StringBuilder>(number, this);
 }
 
+void StringBuilder::appendNumber(double number, unsigned precision, TrailingZerosTruncatingPolicy trailingZerosTruncatingPolicy)
+{
+    NumberToStringBuffer buffer;
+    append(numberToFixedPrecisionString(number, precision, buffer, trailingZerosTruncatingPolicy == TruncateTrailingZeros));
+}
+
+void StringBuilder::appendECMAScriptNumber(double number)
+{
+    NumberToStringBuffer buffer;
+    append(numberToString(number, buffer));
+}
+
+void StringBuilder::appendFixedWidthNumber(double number, unsigned decimalPlaces)
+{
+    NumberToStringBuffer buffer;
+    append(numberToFixedWidthString(number, decimalPlaces, buffer));
+}
+
 bool StringBuilder::canShrink() const
 {
     // Only shrink the buffer if it's less than 80% full. Need to tune this heuristic!
@@ -341,8 +360,7 @@ void StringBuilder::shrinkToFit()
             reallocateBuffer<LChar>(m_length);
         else
             reallocateBuffer<UChar>(m_length);
-        m_string = m_buffer;
-        m_buffer = 0;
+        m_string = m_buffer.release();
     }
 }
 

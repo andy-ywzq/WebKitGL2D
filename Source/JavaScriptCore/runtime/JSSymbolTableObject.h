@@ -41,8 +41,6 @@ public:
     
     SharedSymbolTable* symbolTable() const { return m_symbolTable.get(); }
     
-    static NO_RETURN_DUE_TO_CRASH void putDirectVirtual(JSObject*, ExecState*, PropertyName, JSValue, unsigned attributes);
-    
     JS_EXPORT_PRIVATE static bool deleteProperty(JSCell*, ExecState*, PropertyName);
     JS_EXPORT_PRIVATE static void getOwnNonIndexPropertyNames(JSObject*, ExecState*, PropertyNameArray&, EnumerationMode);
     
@@ -127,7 +125,7 @@ inline bool symbolTablePut(
     WriteBarrierBase<Unknown>* reg;
     {
         SymbolTable& symbolTable = *object->symbolTable();
-        ConcurrentJITLocker locker(symbolTable.m_lock);
+        GCSafeConcurrentJITLocker locker(symbolTable.m_lock, exec->vm().heap);
         SymbolTable::Map::iterator iter = symbolTable.find(locker, propertyName.publicName());
         if (iter == symbolTable.end(locker))
             return false;

@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="stylesheet" href="../../fast/js/resources/js-test-style.css">
-<script src="../../fast/js/resources/js-test-pre.js"></script>
+<script src="../../resources/js-test-pre.js"></script>
 <script src="../editing.js"></script>
 <style>
 .editing {
@@ -20,10 +19,7 @@
 <script>
 description("Test for Unified Spell Checker & Async Spell Checker.");
 
-if (window.testRunner) {
-    testRunner.dumpAsText();
-    testRunner.waitUntilDone();
-}
+jsTestIsAsync = true;
 
 if (window.internals) {
     internals.settings.setAsynchronousSpellCheckingEnabled(true);
@@ -57,8 +53,7 @@ function doTestIfAny() {
 
     // No more tests.
     removeChildren(container);
-    if (window.testRunner)
-        testRunner.notifyDone();
+    finishJSTest();
 }
 
 function createEditableElement(id) {
@@ -127,6 +122,6 @@ doTestIfAny();
 
 var successfullyParsed = true;
 </script>
-<script src="../../fast/js/resources/js-test-post.js"></script>
+<script src="../../resources/js-test-post.js"></script>
 </body>
 </html>

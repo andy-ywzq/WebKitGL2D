@@ -23,6 +23,7 @@
 #if ENABLE(SVG)
 #include "SVGSwitchElement.h"
 
+#include "ElementIterator.h"
 #include "RenderSVGTransformableContainer.h"
 #include "SVGNames.h"
 
@@ -36,14 +37,14 @@ BEGIN_REGISTER_ANIMATED_PROPERTIES(SVGSwitchElement)
     REGISTER_PARENT_ANIMATED_PROPERTIES(SVGGraphicsElement)
 END_REGISTER_ANIMATED_PROPERTIES
 
-inline SVGSwitchElement::SVGSwitchElement(const QualifiedName& tagName, Document* document)
+inline SVGSwitchElement::SVGSwitchElement(const QualifiedName& tagName, Document& document)
     : SVGGraphicsElement(tagName, document)
 {
     ASSERT(hasTagName(SVGNames::switchTag));
     registerAnimatedPropertiesForSVGSwitchElement();
 }
 
-PassRefPtr<SVGSwitchElement> SVGSwitchElement::create(const QualifiedName& tagName, Document* document)
+PassRefPtr<SVGSwitchElement> SVGSwitchElement::create(const QualifiedName& tagName, Document& document)
 {
     return adoptRef(new SVGSwitchElement(tagName, document));
 }
@@ -52,23 +53,19 @@ bool SVGSwitchElement::childShouldCreateRenderer(const Node* child) const
 {
     // FIXME: This function does not do what the comment below implies it does.
     // It will create a renderer for any valid SVG element children, not just the first one.
-    for (Node* node = firstChild(); node; node = node->nextSibling()) {
-        if (!node->isSVGElement())
+    auto svgChildren = childrenOfType<SVGElement>(*this);
+    for (auto element = svgChildren.begin(), end = svgChildren.end(); element != end; ++element) {
+        if (!element->isValid())
             continue;
-
-        SVGElement* element = toSVGElement(node);
-        if (!element || !element->isValid())
-            continue;
-
-        return node == child; // Only allow this child if it's the first valid child
+        return &*element == child; // Only allow this child if it's the first valid child
     }
 
     return false;
 }
 
-RenderObject* SVGSwitchElement::createRenderer(RenderArena* arena, RenderStyle*)
+RenderElement* SVGSwitchElement::createRenderer(PassRef<RenderStyle> style)
 {
-    return new (arena) RenderSVGTransformableContainer(this);
+    return new RenderSVGTransformableContainer(*this, std::move(style));
 }
 
 }

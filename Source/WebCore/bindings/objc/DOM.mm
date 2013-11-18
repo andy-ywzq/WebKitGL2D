@@ -180,6 +180,9 @@ static NSArray *kit(const Vector<IntRect>& rects)
 
 @implementation DOMNode (WebCoreInternal)
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wobjc-protocol-method-implementation"
+
 - (NSString *)description
 {
     if (!_internal)
@@ -193,9 +196,11 @@ static NSArray *kit(const Vector<IntRect>& rects)
     return [NSString stringWithFormat:@"<%@ [%@]: %p>", [[self class] description], [self nodeName], _internal];
 }
 
+#pragma clang diagnostic pop
+
 - (JSC::Bindings::RootObject*)_rootObject
 {
-    WebCore::Frame* frame = core(self)->document()->frame();
+    WebCore::Frame* frame = core(self)->document().frame();
     if (!frame)
         return 0;
     return frame->script().bindingRootObject();
@@ -261,7 +266,7 @@ id <DOMEventTarget> kit(WebCore::EventTarget* eventTarget)
 - (NSRect)boundingBox
 {
     // FIXME: Could we move this function to WebCore::Node and autogenerate?
-    core(self)->document()->updateLayoutIgnorePendingStylesheets();
+    core(self)->document().updateLayoutIgnorePendingStylesheets();
     WebCore::RenderObject* renderer = core(self)->renderer();
     if (!renderer)
         return NSZeroRect;
@@ -281,7 +286,7 @@ id <DOMEventTarget> kit(WebCore::EventTarget* eventTarget)
 {
     // FIXME: Could we move this function to WebCore::Node and autogenerate?
     WebCore::Node* node = core(self);
-    WebCore::Frame* frame = node->document()->frame();
+    WebCore::Frame* frame = node->document().frame();
     if (!frame)
         return nil;
     return frame->nodeImage(node).get();
@@ -289,7 +294,7 @@ id <DOMEventTarget> kit(WebCore::EventTarget* eventTarget)
 
 - (NSArray *)textRects
 {
-    core(self)->document()->updateLayoutIgnorePendingStylesheets();
+    core(self)->document().updateLayoutIgnorePendingStylesheets();
     if (!core(self)->renderer())
         return nil;
     Vector<WebCore::IntRect> rects;
@@ -308,8 +313,8 @@ id <DOMEventTarget> kit(WebCore::EventTarget* eventTarget)
     if (!object->inherits(JSNode::info()))
         return nil;
 
-    WebCore::Node* node = jsCast<JSNode*>(object)->impl();
-    return kit(node);
+    WebCore::Node& node = jsCast<JSNode*>(object)->impl();
+    return kit(&node);
 }
 
 @end
@@ -319,14 +324,14 @@ id <DOMEventTarget> kit(WebCore::EventTarget* eventTarget)
 - (NSRect)boundingBox
 {
     // FIXME: The call to updateLayoutIgnorePendingStylesheets should be moved into WebCore::Range.
-    core(self)->ownerDocument()->updateLayoutIgnorePendingStylesheets();
+    core(self)->ownerDocument().updateLayoutIgnorePendingStylesheets();
     return core(self)->boundingBox();
 }
 
 - (NSImage *)renderedImageForcingBlackText:(BOOL)forceBlackText
 {
     WebCore::Range* range = core(self);
-    WebCore::Frame* frame = range->ownerDocument()->frame();
+    WebCore::Frame* frame = range->ownerDocument().frame();
     if (!frame)
         return nil;
 
@@ -337,7 +342,7 @@ id <DOMEventTarget> kit(WebCore::EventTarget* eventTarget)
 {
     // FIXME: The call to updateLayoutIgnorePendingStylesheets should be moved into WebCore::Range.
     Vector<WebCore::IntRect> rects;
-    core(self)->ownerDocument()->updateLayoutIgnorePendingStylesheets();
+    core(self)->ownerDocument().updateLayoutIgnorePendingStylesheets();
     core(self)->textRects(rects);
     return kit(rects);
 }
@@ -361,10 +366,10 @@ id <DOMEventTarget> kit(WebCore::EventTarget* eventTarget)
     WebCore::RenderObject* renderer = core(self)->renderer();
     if (!renderer || !renderer->isImage())
         return nil;
-    WebCore::CachedImage* cachedImage = static_cast<WebCore::RenderImage*>(renderer)->cachedImage();
+    WebCore::CachedImage* cachedImage = toRenderImage(renderer)->cachedImage();
     if (!cachedImage || cachedImage->errorOccurred())
         return nil;
-    return cachedImage->imageForRenderer(renderer)->getNSImage();
+    return cachedImage->imageForRenderer(toRenderImage(renderer))->getNSImage();
 }
 
 @end
@@ -374,16 +379,16 @@ id <DOMEventTarget> kit(WebCore::EventTarget* eventTarget)
 - (NSFont *)_font
 {
     // FIXME: Could we move this function to WebCore::Element and autogenerate?
-    WebCore::RenderObject* renderer = core(self)->renderer();
+    auto renderer = core(self)->renderer();
     if (!renderer)
         return nil;
-    return renderer->style()->font().primaryFont()->getNSFont();
+    return renderer->style().font().primaryFont()->getNSFont();
 }
 
 - (NSData *)_imageTIFFRepresentation
 {
     // FIXME: Could we move this function to WebCore::Element and autogenerate?
-    WebCore::RenderObject* renderer = core(self)->renderer();
+    auto renderer = core(self)->renderer();
     if (!renderer || !renderer->isImage())
         return nil;
     WebCore::CachedImage* cachedImage = static_cast<WebCore::RenderImage*>(renderer)->cachedImage();
@@ -398,14 +403,14 @@ id <DOMEventTarget> kit(WebCore::EventTarget* eventTarget)
     ASSERT(name);
     WebCore::Element* element = core(self);
     ASSERT(element);
-    return element->document()->completeURL(stripLeadingAndTrailingHTMLSpaces(element->getAttribute(name)));
+    return element->document().completeURL(stripLeadingAndTrailingHTMLSpaces(element->getAttribute(name)));
 }
 
 - (BOOL)isFocused
 {
     // FIXME: Could we move this function to WebCore::Element and autogenerate?
     WebCore::Element* element = core(self);
-    return element->document()->focusedElement() == element;
+    return element->document().focusedElement() == element;
 }
 
 @end

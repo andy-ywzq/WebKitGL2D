@@ -44,14 +44,20 @@ const char* exitKindToString(ExitKind kind)
         return "BadExecutable";
     case BadCache:
         return "BadCache";
+    case BadCacheWatchpoint:
+        return "BadCacheWatchpoint";
     case BadWeakConstantCache:
         return "BadWeakConstantCache";
+    case BadWeakConstantCacheWatchpoint:
+        return "BadWeakConstantCacheWatchpoint";
     case BadIndexingType:
         return "BadIndexingType";
     case Overflow:
         return "Overflow";
     case NegativeZero:
         return "NegativeZero";
+    case Int52Overflow:
+        return "Int52Overflow";
     case StoreToHole:
         return "StoreToHole";
     case LoadFromHole:

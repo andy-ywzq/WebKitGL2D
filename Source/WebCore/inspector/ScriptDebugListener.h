@@ -54,6 +54,7 @@ public:
 
         String url;
         String source;
+        String sourceURL;
         String sourceMappingURL;
         int startLine;
         int startColumn;
@@ -66,7 +67,7 @@ public:
 
     virtual void didParseSource(const String& scriptId, const Script&) = 0;
     virtual void failedToParseSource(const String& url, const String& data, int firstLine, int errorLine, const String& errorMessage) = 0;
-    virtual void didPause(ScriptState*, const ScriptValue& callFrames, const ScriptValue& exception) = 0;
+    virtual void didPause(JSC::ExecState*, const ScriptValue& callFrames, const ScriptValue& exception) = 0;
     virtual void didContinue() = 0;
 };
 

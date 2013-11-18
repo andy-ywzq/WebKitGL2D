@@ -44,7 +44,7 @@ class Frame;
 class HTMLFrameOwnerElement;
 class IntPoint;
 class IntRect;
-class KURL;
+class URL;
 }
 
 namespace WebKit {
@@ -57,7 +57,7 @@ class WebPage;
 
 class WebFrame : public TypedAPIObject<APIObject::TypeBundleFrame> {
 public:
-    static PassRefPtr<WebFrame> createMainFrame(WebPage*);
+    static PassRefPtr<WebFrame> createWithCoreMainFrame(WebPage*, WebCore::Frame*);
     static PassRefPtr<WebFrame> createSubframe(WebPage*, const String& frameName, WebCore::HTMLFrameOwnerElement*);
     ~WebFrame();
 
@@ -116,11 +116,11 @@ public:
     
     unsigned pendingUnloadCount() const;
     
-    bool allowsFollowingLink(const WebCore::KURL&) const;
+    bool allowsFollowingLink(const WebCore::URL&) const;
 
     String provisionalURL() const;
-    String suggestedFilenameForResourceWithURL(const WebCore::KURL&) const;
-    String mimeTypeForResourceWithURL(const WebCore::KURL&) const;
+    String suggestedFilenameForResourceWithURL(const WebCore::URL&) const;
+    String mimeTypeForResourceWithURL(const WebCore::URL&) const;
 
     void setTextDirection(const String&);
 
@@ -141,10 +141,8 @@ public:
 #endif
 
 private:
-    static PassRefPtr<WebFrame> create();
-    WebFrame();
-
-    void init(WebPage*, const String& frameName, WebCore::HTMLFrameOwnerElement*);
+    static PassRefPtr<WebFrame> create(std::unique_ptr<WebFrameLoaderClient>);
+    WebFrame(std::unique_ptr<WebFrameLoaderClient>);
 
     WebCore::Frame* m_coreFrame;
 
@@ -152,7 +150,7 @@ private:
     WebCore::FramePolicyFunction m_policyFunction;
     uint64_t m_policyDownloadID;
 
-    WebFrameLoaderClient m_frameLoaderClient;
+    std::unique_ptr<WebFrameLoaderClient> m_frameLoaderClient;
     LoadListener* m_loadListener;
     
     uint64_t m_frameID;

@@ -159,10 +159,14 @@ void GraphicsContext::canvasClip(const Path& path, WindRule windRule)
     clip(path, windRule);
 }
 
+
+void GraphicsContext::drawFocusRing(const Vector<IntRect>&, int width, int offset, const Color&)
+{
+}
+
 void GraphicsContext::drawFocusRing(const Path& path, int /* width */, int offset, const Color& color)
 {
     // FIXME: Use 'offset' for something? http://webkit.org/b/49909
-
 }
 
 /**
@@ -170,14 +174,13 @@ void GraphicsContext::drawFocusRing(const Path& path, int /* width */, int offse
  * RenderTheme handles drawing focus on widgets which 
  * need it. It is still handled here for links.
  */
-void GraphicsContext::drawFocusRing(const Vector<IntRect>& rects, int width, int offset, const Color& color)
+void GraphicsContext::drawLineForText(const FloatRect& bounds, bool printing)
 {
 }
 
-void GraphicsContext::drawLineForText(const FloatPoint& origin, float width, bool)
+void GraphicsContext::updateDocumentMarkerResources()
 {
 }
-
 
 /*
  *   NOTE: This code is completely based upon the one from
@@ -324,7 +327,7 @@ void GraphicsContext::set3DTransform(const TransformationMatrix& transform)
 }
 #endif
 
-void GraphicsContext::setURLForRect(const KURL&, const IntRect&)
+void GraphicsContext::setURLForRect(const URL&, const IntRect&)
 {
 }
 

@@ -21,15 +21,15 @@
 #define SVGGlyphRefElement_h
 
 #if ENABLE(SVG) && ENABLE(SVG_FONTS)
-#include "SVGStyledElement.h"
+#include "SVGElement.h"
 #include "SVGURIReference.h"
 
 namespace WebCore {
 
-class SVGGlyphRefElement FINAL : public SVGStyledElement,
+class SVGGlyphRefElement FINAL : public SVGElement,
                                  public SVGURIReference {
 public:
-    static PassRefPtr<SVGGlyphRefElement> create(const QualifiedName&, Document*);
+    static PassRefPtr<SVGGlyphRefElement> create(const QualifiedName&, Document&);
 
     bool hasValidGlyphElement(String& glyphName) const;
     virtual void parseAttribute(const QualifiedName&, const AtomicString&) OVERRIDE;
@@ -47,7 +47,7 @@ public:
     void setDy(float, ExceptionCode&);
 
 private:
-    SVGGlyphRefElement(const QualifiedName&, Document*);
+    SVGGlyphRefElement(const QualifiedName&, Document&);
 
     virtual bool rendererIsNeeded(const RenderStyle&) { return false; }
 
@@ -60,6 +60,8 @@ private:
     float m_dx;
     float m_dy;
 };
+
+NODE_TYPE_CASTS(SVGGlyphRefElement)
 
 }
 

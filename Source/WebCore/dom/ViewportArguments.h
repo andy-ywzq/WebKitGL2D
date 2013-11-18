@@ -75,7 +75,7 @@ struct ViewportArguments {
         ValueLandscape = -5
     };
 
-    ViewportArguments(Type type = Implicit)
+    explicit ViewportArguments(Type type = Implicit)
         : type(type)
         , width(ValueAuto)
         , minWidth(ValueAuto)
@@ -128,7 +128,7 @@ struct ViewportArguments {
         return !(*this == other);
     }
 
-#if PLATFORM(BLACKBERRY) || PLATFORM(GTK) || PLATFORM(QT)
+#if PLATFORM(BLACKBERRY) || PLATFORM(GTK)
     // FIXME: We're going to keep this constant around until all embedders
     // refactor their code to no longer need it.
     static const float deprecatedTargetDPI;

@@ -26,13 +26,13 @@
 
 #include "FloatRect.h"
 #include "FontCache.h"
-#include "FontTranscoder.h"
 #include "IntPoint.h"
 #include "GlyphBuffer.h"
 #include "TextRun.h"
 #include "WidthIterator.h"
 #include <wtf/MainThread.h>
 #include <wtf/MathExtras.h>
+#include <wtf/text/AtomicStringHash.h>
 #include <wtf/text/StringBuilder.h>
 
 using namespace WTF;
@@ -61,6 +61,36 @@ const uint8_t Font::s_roundingHackCharacterTable[256] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
+static bool useBackslashAsYenSignForFamily(const AtomicString& family)
+{
+    if (family.isEmpty())
+        return false;
+    static HashSet<AtomicString>* set;
+    if (!set) {
+        set = new HashSet<AtomicString>;
+        set->add("MS PGothic");
+        UChar unicodeNameMSPGothic[] = {0xFF2D, 0xFF33, 0x0020, 0xFF30, 0x30B4, 0x30B7, 0x30C3, 0x30AF};
+        set->add(AtomicString(unicodeNameMSPGothic, WTF_ARRAY_LENGTH(unicodeNameMSPGothic)));
+
+        set->add("MS PMincho");
+        UChar unicodeNameMSPMincho[] = {0xFF2D, 0xFF33, 0x0020, 0xFF30, 0x660E, 0x671D};
+        set->add(AtomicString(unicodeNameMSPMincho, WTF_ARRAY_LENGTH(unicodeNameMSPMincho)));
+
+        set->add("MS Gothic");
+        UChar unicodeNameMSGothic[] = {0xFF2D, 0xFF33, 0x0020, 0x30B4, 0x30B7, 0x30C3, 0x30AF};
+        set->add(AtomicString(unicodeNameMSGothic, WTF_ARRAY_LENGTH(unicodeNameMSGothic)));
+
+        set->add("MS Mincho");
+        UChar unicodeNameMSMincho[] = {0xFF2D, 0xFF33, 0x0020, 0x660E, 0x671D};
+        set->add(AtomicString(unicodeNameMSMincho, WTF_ARRAY_LENGTH(unicodeNameMSMincho)));
+
+        set->add("Meiryo");
+        UChar unicodeNameMeiryo[] = {0x30E1, 0x30A4, 0x30EA, 0x30AA};
+        set->add(AtomicString(unicodeNameMeiryo, WTF_ARRAY_LENGTH(unicodeNameMeiryo)));
+    }
+    return set->contains(family);
+}
+
 Font::CodePath Font::s_codePath = Auto;
 
 TypesettingFeatures Font::s_defaultTypesettingFeatures = 0;
@@ -72,7 +102,7 @@ TypesettingFeatures Font::s_defaultTypesettingFeatures = 0;
 Font::Font()
     : m_letterSpacing(0)
     , m_wordSpacing(0)
-    , m_needsTranscoding(false)
+    , m_useBackslashAsYenSymbol(false)
     , m_typesettingFeatures(0)
 {
 }
@@ -81,7 +111,7 @@ Font::Font(const FontDescription& fd, short letterSpacing, short wordSpacing)
     : m_fontDescription(fd)
     , m_letterSpacing(letterSpacing)
     , m_wordSpacing(wordSpacing)
-    , m_needsTranscoding(fontTranscoder().needsTranscoding(fd))
+    , m_useBackslashAsYenSymbol(useBackslashAsYenSignForFamily(fd.firstFamily()))
     , m_typesettingFeatures(computeTypesettingFeatures())
 {
 }
@@ -90,11 +120,11 @@ Font::Font(const FontPlatformData& fontData, bool isPrinterFont, FontSmoothingMo
     : m_glyphs(FontGlyphs::createForPlatformFont(fontData))
     , m_letterSpacing(0)
     , m_wordSpacing(0)
+    , m_useBackslashAsYenSymbol(false)
     , m_typesettingFeatures(computeTypesettingFeatures())
 {
     m_fontDescription.setUsePrinterFont(isPrinterFont);
     m_fontDescription.setFontSmoothing(fontSmoothingMode);
-    m_needsTranscoding = fontTranscoder().needsTranscoding(fontDescription());
 }
 
 Font::Font(const Font& other)
@@ -102,7 +132,7 @@ Font::Font(const Font& other)
     , m_glyphs(other.m_glyphs)
     , m_letterSpacing(other.m_letterSpacing)
     , m_wordSpacing(other.m_wordSpacing)
-    , m_needsTranscoding(other.m_needsTranscoding)
+    , m_useBackslashAsYenSymbol(other.m_useBackslashAsYenSymbol)
     , m_typesettingFeatures(computeTypesettingFeatures())
 {
 }
@@ -113,7 +143,7 @@ Font& Font::operator=(const Font& other)
     m_glyphs = other.m_glyphs;
     m_letterSpacing = other.m_letterSpacing;
     m_wordSpacing = other.m_wordSpacing;
-    m_needsTranscoding = other.m_needsTranscoding;
+    m_useBackslashAsYenSymbol = other.m_useBackslashAsYenSymbol;
     m_typesettingFeatures = other.m_typesettingFeatures;
     return *this;
 }
@@ -153,8 +183,9 @@ struct FontGlyphsCacheKey {
 struct FontGlyphsCacheEntry {
     WTF_MAKE_FAST_ALLOCATED;
 public:
+    FontGlyphsCacheEntry(FontGlyphsCacheKey&& k, PassRef<FontGlyphs> g) : key(k), glyphs(std::move(g)) { }
     FontGlyphsCacheKey key;
-    RefPtr<FontGlyphs> glyphs;
+    Ref<FontGlyphs> glyphs;
 };
 
 typedef HashMap<unsigned, OwnPtr<FontGlyphsCacheEntry>, AlreadyHashed> FontGlyphsCache;
@@ -163,10 +194,14 @@ static bool operator==(const FontGlyphsCacheKey& a, const FontGlyphsCacheKey& b)
 {
     if (a.fontDescriptionCacheKey != b.fontDescriptionCacheKey)
         return false;
-    if (a.families != b.families)
-        return false;
     if (a.fontSelectorId != b.fontSelectorId || a.fontSelectorVersion != b.fontSelectorVersion || a.fontSelectorFlags != b.fontSelectorFlags)
         return false;
+    if (a.families.size() != b.families.size())
+        return false;
+    for (unsigned i = 0; i < a.families.size(); ++i) {
+        if (!equalIgnoringCase(a.families[i].impl(), b.families[i].impl()))
+            return false;
+    }
     return true;
 }
 
@@ -190,7 +225,7 @@ static void makeFontGlyphsCacheKey(FontGlyphsCacheKey& key, const FontDescriptio
 {
     key.fontDescriptionCacheKey = FontDescriptionFontDataCacheKey(description);
     for (unsigned i = 0; i < description.familyCount(); ++i)
-        key.families.append(description.familyAt(i).lower());
+        key.families.append(description.familyAt(i));
     key.fontSelectorId = fontSelector ? fontSelector->uniqueId() : 0;
     key.fontSelectorVersion = fontSelector ? fontSelector->version() : 0;
     key.fontSelectorFlags = fontSelector && fontSelector->resolvesFamilyFor(description) ? makeFontSelectorFlags(description) : 0;
@@ -198,14 +233,17 @@ static void makeFontGlyphsCacheKey(FontGlyphsCacheKey& key, const FontDescriptio
 
 static unsigned computeFontGlyphsCacheHash(const FontGlyphsCacheKey& key)
 {
-    unsigned hashCodes[5] = {
-        StringHasher::hashMemory(key.families.data(), key.families.size() * sizeof(key.families[0])),
-        key.fontDescriptionCacheKey.computeHash(),
-        key.fontSelectorId,
-        key.fontSelectorVersion,
-        key.fontSelectorFlags
-    };
-    return StringHasher::hashMemory<sizeof(hashCodes)>(hashCodes);
+    Vector<unsigned, 7> hashCodes;
+    hashCodes.reserveInitialCapacity(4 + key.families.size());
+
+    hashCodes.uncheckedAppend(key.fontDescriptionCacheKey.computeHash());
+    hashCodes.uncheckedAppend(key.fontSelectorId);
+    hashCodes.uncheckedAppend(key.fontSelectorVersion);
+    hashCodes.uncheckedAppend(key.fontSelectorFlags);
+    for (unsigned i = 0; i < key.families.size(); ++i)
+        hashCodes.uncheckedAppend(key.families[i].impl() ? CaseFoldingHash::hash(key.families[i]) : 0);
+
+    return StringHasher::hashMemory(hashCodes.data(), hashCodes.size() * sizeof(unsigned));
 }
 
 void pruneUnreferencedEntriesFromFontGlyphsCache()
@@ -213,14 +251,14 @@ void pruneUnreferencedEntriesFromFontGlyphsCache()
     Vector<unsigned, 50> toRemove;
     FontGlyphsCache::iterator end = fontGlyphsCache().end();
     for (FontGlyphsCache::iterator it = fontGlyphsCache().begin(); it != end; ++it) {
-        if (it->value->glyphs->hasOneRef())
+        if (it->value->glyphs.get().hasOneRef())
             toRemove.append(it->key);
     }
     for (unsigned i = 0; i < toRemove.size(); ++i)
         fontGlyphsCache().remove(toRemove[i]);
 }
 
-static PassRefPtr<FontGlyphs> retrieveOrAddCachedFontGlyphs(const FontDescription& fontDescription, PassRefPtr<FontSelector> fontSelector)
+static PassRef<FontGlyphs> retrieveOrAddCachedFontGlyphs(const FontDescription& fontDescription, PassRefPtr<FontSelector> fontSelector)
 {
     FontGlyphsCacheKey key;
     makeFontGlyphsCacheKey(key, fontDescription, fontSelector.get());
@@ -228,13 +266,11 @@ static PassRefPtr<FontGlyphs> retrieveOrAddCachedFontGlyphs(const FontDescriptio
     unsigned hash = computeFontGlyphsCacheHash(key);
     FontGlyphsCache::AddResult addResult = fontGlyphsCache().add(hash, PassOwnPtr<FontGlyphsCacheEntry>());
     if (!addResult.isNewEntry && addResult.iterator->value->key == key)
-        return addResult.iterator->value->glyphs;
+        return addResult.iterator->value->glyphs.get();
 
     OwnPtr<FontGlyphsCacheEntry>& newEntry = addResult.iterator->value;
-    newEntry = adoptPtr(new FontGlyphsCacheEntry);
-    newEntry->glyphs = FontGlyphs::create(fontSelector);
-    newEntry->key = key;
-    RefPtr<FontGlyphs> glyphs = newEntry->glyphs;
+    newEntry = adoptPtr(new FontGlyphsCacheEntry(std::move(key), FontGlyphs::create(fontSelector)));
+    PassRef<FontGlyphs> glyphs = newEntry->glyphs.get();
 
     static const unsigned unreferencedPruneInterval = 50;
     static const int maximumEntries = 400;
@@ -251,6 +287,7 @@ static PassRefPtr<FontGlyphs> retrieveOrAddCachedFontGlyphs(const FontDescriptio
 void Font::update(PassRefPtr<FontSelector> fontSelector) const
 {
     m_glyphs = retrieveOrAddCachedFontGlyphs(m_fontDescription, fontSelector.get());
+    m_useBackslashAsYenSymbol = useBackslashAsYenSignForFamily(firstFamily());
     m_typesettingFeatures = computeTypesettingFeatures();
 }
 
@@ -795,7 +832,7 @@ bool Font::isCJKIdeographOrSymbol(UChar32 c)
     if (c >= 0x1F170 && c <= 0x1F189)
         return true;
 
-    if (c >= 0x1F200 && c <= 0x1F6F)
+    if (c >= 0x1F200 && c <= 0x1F6C5)
         return true;
 
     return isCJKIdeograph(c);
@@ -876,8 +913,7 @@ unsigned Font::expansionOpportunityCount(const UChar* characters, size_t length,
 
 bool Font::canReceiveTextEmphasis(UChar32 c)
 {
-    CharCategory category = Unicode::category(c);
-    if (category & (Separator_Space | Separator_Line | Separator_Paragraph | Other_NotAssigned | Other_Control | Other_Format))
+    if (U_GET_GC_MASK(c) & (U_GC_Z_MASK | U_GC_CN_MASK | U_GC_CC_MASK | U_GC_CF_MASK))
         return false;
 
     // Additional word-separator characters listed in CSS Text Level 3 Editor's Draft 3 November 2010.

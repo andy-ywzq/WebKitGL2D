@@ -189,16 +189,9 @@ bool lineBreakExistsAtVisiblePosition(const VisiblePosition&);
 int comparePositions(const VisiblePosition&, const VisiblePosition&);
 
 int indexForVisiblePosition(const VisiblePosition&, RefPtr<ContainerNode>& scope);
+int indexForVisiblePosition(Node*, const VisiblePosition&, bool forSelectionPreservation);
 VisiblePosition visiblePositionForIndex(int index, ContainerNode* scope);
-
-// -------------------------------------------------------------------------
-// Range
-// -------------------------------------------------------------------------
-
-// Functions returning Range
-
-PassRefPtr<Range> createRange(PassRefPtr<Document>, const VisiblePosition& start, const VisiblePosition& end, ExceptionCode&);
-PassRefPtr<Range> extendRangeToWrappingNodes(PassRefPtr<Range> rangeToExtend, const Range* maximumRange, const Node* rootNode);
+VisiblePosition visiblePositionForIndexUsingCharacterIterator(Node*, int index); // FIXME: Why do we need this version?
 
 // -------------------------------------------------------------------------
 // HTMLElement
@@ -206,13 +199,13 @@ PassRefPtr<Range> extendRangeToWrappingNodes(PassRefPtr<Range> rangeToExtend, co
     
 // Functions returning HTMLElement
     
-PassRefPtr<HTMLElement> createDefaultParagraphElement(Document*);
-PassRefPtr<HTMLElement> createBreakElement(Document*);
-PassRefPtr<HTMLElement> createOrderedListElement(Document*);
-PassRefPtr<HTMLElement> createUnorderedListElement(Document*);
-PassRefPtr<HTMLElement> createListItemElement(Document*);
-PassRefPtr<HTMLElement> createHTMLElement(Document*, const QualifiedName&);
-PassRefPtr<HTMLElement> createHTMLElement(Document*, const AtomicString&);
+PassRefPtr<HTMLElement> createDefaultParagraphElement(Document&);
+PassRefPtr<HTMLElement> createBreakElement(Document&);
+PassRefPtr<HTMLElement> createOrderedListElement(Document&);
+PassRefPtr<HTMLElement> createUnorderedListElement(Document&);
+PassRefPtr<HTMLElement> createListItemElement(Document&);
+PassRefPtr<HTMLElement> createHTMLElement(Document&, const QualifiedName&);
+PassRefPtr<HTMLElement> createHTMLElement(Document&, const AtomicString&);
 
 HTMLElement* enclosingList(Node*);
 HTMLElement* outermostEnclosingList(Node*, Node* rootList = 0);
@@ -224,10 +217,10 @@ Node* enclosingListChild(Node*);
     
 // Functions returning Element
     
-PassRefPtr<Element> createTabSpanElement(Document*);
-PassRefPtr<Element> createTabSpanElement(Document*, PassRefPtr<Node> tabTextNode);
-PassRefPtr<Element> createTabSpanElement(Document*, const String& tabText);
-PassRefPtr<Element> createBlockPlaceholderElement(Document*);
+PassRefPtr<Element> createTabSpanElement(Document&);
+PassRefPtr<Element> createTabSpanElement(Document&, PassRefPtr<Node> tabTextNode);
+PassRefPtr<Element> createTabSpanElement(Document&, const String& tabText);
+PassRefPtr<Element> createBlockPlaceholderElement(Document&);
 
 Element* editableRootForPosition(const Position&, EditableType = ContentIsEditable);
 Element* unsplittableElementForPosition(const Position&);

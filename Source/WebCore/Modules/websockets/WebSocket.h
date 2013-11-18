@@ -37,7 +37,7 @@
 #include "EventListener.h"
 #include "EventNames.h"
 #include "EventTarget.h"
-#include "KURL.h"
+#include "URL.h"
 #include "WebSocketChannel.h"
 #include "WebSocketChannelClient.h"
 #include <wtf/Forward.h>
@@ -50,7 +50,7 @@ namespace WebCore {
 class Blob;
 class ThreadableWebSocketChannel;
 
-class WebSocket : public RefCounted<WebSocket>, public EventTarget, public ActiveDOMObject, public WebSocketChannelClient {
+class WebSocket FINAL : public RefCounted<WebSocket>, public EventTargetWithInlineData, public ActiveDOMObject, public WebSocketChannelClient {
 public:
     static void setIsAvailable(bool);
     static bool isAvailable();
@@ -81,7 +81,7 @@ public:
     void close(ExceptionCode& ec) { close(WebSocketChannel::CloseEventCodeNotSpecified, String(), ec); }
     void close(int code, ExceptionCode& ec) { close(code, String(), ec); }
 
-    const KURL& url() const;
+    const URL& url() const;
     State readyState() const;
     unsigned long bufferedAmount() const;
 
@@ -97,7 +97,7 @@ public:
     DEFINE_ATTRIBUTE_EVENT_LISTENER(close);
 
     // EventTarget functions.
-    virtual const AtomicString& interfaceName() const OVERRIDE;
+    virtual EventTargetInterface eventTargetInterface() const OVERRIDE;
     virtual ScriptExecutionContext* scriptExecutionContext() const OVERRIDE;
 
     using RefCounted<WebSocket>::ref;
@@ -106,7 +106,7 @@ public:
     // WebSocketChannelClient functions.
     virtual void didConnect() OVERRIDE;
     virtual void didReceiveMessage(const String& message) OVERRIDE;
-    virtual void didReceiveBinaryData(PassOwnPtr<Vector<char> >) OVERRIDE;
+    virtual void didReceiveBinaryData(PassOwnPtr<Vector<char>>) OVERRIDE;
     virtual void didReceiveMessageError() OVERRIDE;
     virtual void didUpdateBufferedAmount(unsigned long bufferedAmount) OVERRIDE;
     virtual void didStartClosingHandshake() OVERRIDE;
@@ -124,8 +124,6 @@ private:
 
     virtual void refEventTarget() OVERRIDE { ref(); }
     virtual void derefEventTarget() OVERRIDE { deref(); }
-    virtual EventTargetData* eventTargetData() OVERRIDE;
-    virtual EventTargetData& ensureEventTargetData() OVERRIDE;
 
     size_t getFramingOverhead(size_t payloadSize);
 
@@ -137,8 +135,7 @@ private:
     RefPtr<ThreadableWebSocketChannel> m_channel;
 
     State m_state;
-    KURL m_url;
-    EventTargetData m_eventTargetData;
+    URL m_url;
     unsigned long m_bufferedAmount;
     unsigned long m_bufferedAmountAfterClose;
     BinaryType m_binaryType;

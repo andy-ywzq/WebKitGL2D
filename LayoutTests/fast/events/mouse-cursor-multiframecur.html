@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="../js/resources/js-test-pre.js"></script>
-<script src="../js/resources/image-preload-helper.js"></script>
+<script src="../../resources/js-test-pre.js"></script>
+<script src="../../resources/image-preload-helper.js"></script>
 <style type="text/css">
 </style>
 </head>
@@ -35,7 +35,7 @@ function runTests() {
             // Note that we could return structured data which we then validate, but that's a lot more
             // work and is redundant with relying on the expected output anyway.  Better to just dump
             // it and inspect that it matches the description.
-            debug('Cursor Info: ' + window.internals.getCurrentCursorInfo(document));
+            debug('Cursor Info: ' + window.internals.getCurrentCursorInfo());
             debug('');
         }
         // This text is redundant with the test output - hide it
@@ -62,6 +62,6 @@ if (window.testRunner) {
 preloadImagesFromStyle(testContainer, 1, runTests);
 
 </script>
-<script src="../../fast/js/resources/js-test-post.js"></script>
+<script src="../../resources/js-test-post.js"></script>
 </body>
 </html>

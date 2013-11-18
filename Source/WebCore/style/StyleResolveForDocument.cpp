@@ -47,98 +47,93 @@ namespace WebCore {
 
 namespace Style {
 
-PassRefPtr<RenderStyle> resolveForDocument(const Document* document)
+PassRef<RenderStyle> resolveForDocument(const Document& document)
 {
-    Frame* frame = document->frame();
+    ASSERT(document.hasLivingRenderTree());
+
+    RenderView& renderView = *document.renderView();
 
     // HTML5 states that seamless iframes should replace default CSS values
     // with values inherited from the containing iframe element. However,
     // some values (such as the case of designMode = "on") still need to
     // be set by this "document style".
-    RefPtr<RenderStyle> documentStyle = RenderStyle::create();
-    bool seamlessWithParent = document->shouldDisplaySeamlesslyWithParent();
+    auto documentStyle = RenderStyle::create();
+    bool seamlessWithParent = document.shouldDisplaySeamlesslyWithParent();
     if (seamlessWithParent) {
-        RenderStyle* iframeStyle = document->seamlessParentIFrame()->renderStyle();
+        RenderStyle* iframeStyle = document.seamlessParentIFrame()->renderStyle();
         if (iframeStyle)
-            documentStyle->inheritFrom(iframeStyle);
+            documentStyle.get().inheritFrom(iframeStyle);
     }
 
     // FIXME: It's not clear which values below we want to override in the seamless case!
-    documentStyle->setDisplay(BLOCK);
+    documentStyle.get().setDisplay(BLOCK);
     if (!seamlessWithParent) {
-        documentStyle->setRTLOrdering(document->visuallyOrdered() ? VisualOrder : LogicalOrder);
-        documentStyle->setZoom(frame && !document->printing() ? frame->pageZoomFactor() : 1);
-        documentStyle->setPageScaleTransform(frame ? frame->frameScaleFactor() : 1);
-        documentStyle->setLocale(document->contentLanguage());
+        documentStyle.get().setRTLOrdering(document.visuallyOrdered() ? VisualOrder : LogicalOrder);
+        documentStyle.get().setZoom(!document.printing() ? renderView.frame().pageZoomFactor() : 1);
+        documentStyle.get().setPageScaleTransform(renderView.frame().frameScaleFactor());
+        documentStyle.get().setLocale(document.contentLanguage());
     }
     // This overrides any -webkit-user-modify inherited from the parent iframe.
-    documentStyle->setUserModify(document->inDesignMode() ? READ_WRITE : READ_ONLY);
+    documentStyle.get().setUserModify(document.inDesignMode() ? READ_WRITE : READ_ONLY);
 
-    Element* docElement = document->documentElement();
+    Element* docElement = document.documentElement();
     RenderObject* docElementRenderer = docElement ? docElement->renderer() : 0;
     if (docElementRenderer) {
         // Use the direction and writing-mode of the body to set the
         // viewport's direction and writing-mode unless the property is set on the document element.
         // If there is no body, then use the document element.
-        RenderObject* bodyRenderer = document->body() ? document->body()->renderer() : 0;
-        if (bodyRenderer && !document->writingModeSetOnDocumentElement())
-            documentStyle->setWritingMode(bodyRenderer->style()->writingMode());
+        RenderObject* bodyRenderer = document.body() ? document.body()->renderer() : 0;
+        if (bodyRenderer && !document.writingModeSetOnDocumentElement())
+            documentStyle.get().setWritingMode(bodyRenderer->style().writingMode());
         else
-            documentStyle->setWritingMode(docElementRenderer->style()->writingMode());
-        if (bodyRenderer && !document->directionSetOnDocumentElement())
-            documentStyle->setDirection(bodyRenderer->style()->direction());
+            documentStyle.get().setWritingMode(docElementRenderer->style().writingMode());
+        if (bodyRenderer && !document.directionSetOnDocumentElement())
+            documentStyle.get().setDirection(bodyRenderer->style().direction());
         else
-            documentStyle->setDirection(docElementRenderer->style()->direction());
+            documentStyle.get().setDirection(docElementRenderer->style().direction());
     }
 
-    if (frame) {
-        if (FrameView* frameView = frame->view()) {
-            const Pagination& pagination = frameView->pagination();
-            if (pagination.mode != Pagination::Unpaginated) {
-                documentStyle->setColumnStylesFromPaginationMode(pagination.mode);
-                documentStyle->setColumnGap(pagination.gap);
-                if (RenderView* view = document->renderView()) {
-                    if (view->hasColumns())
-                        view->updateColumnInfoFromStyle(documentStyle.get());
-                }
-            }
-        }
+    const Pagination& pagination = renderView.frameView().pagination();
+    if (pagination.mode != Pagination::Unpaginated) {
+        documentStyle.get().setColumnStylesFromPaginationMode(pagination.mode);
+        documentStyle.get().setColumnGap(pagination.gap);
+        if (renderView.hasColumns())
+            renderView.updateColumnInfoFromStyle(&documentStyle.get());
     }
 
     // Seamless iframes want to inherit their font from their parent iframe, so early return before setting the font.
     if (seamlessWithParent)
-        return documentStyle.release();
+        return documentStyle;
+
+    const Settings& settings = renderView.frame().settings();
 
     FontDescription fontDescription;
-    fontDescription.setScript(localeToScriptCodeForFontSelection(documentStyle->locale()));
-    if (Settings* settings = document->settings()) {
-        fontDescription.setUsePrinterFont(document->printing() || !settings->screenFontSubstitutionEnabled());
-        fontDescription.setRenderingMode(settings->fontRenderingMode());
-        const AtomicString& standardFont = settings->standardFontFamily(fontDescription.script());
-        if (!standardFont.isEmpty()) {
-            fontDescription.setGenericFamily(FontDescription::StandardFamily);
-            fontDescription.setOneFamily(standardFont);
-        }
-        fontDescription.setKeywordSize(CSSValueMedium - CSSValueXxSmall + 1);
-        int size = fontSizeForKeyword(CSSValueMedium, false, document);
-        fontDescription.setSpecifiedSize(size);
-        bool useSVGZoomRules = document->isSVGDocument();
-        fontDescription.setComputedSize(computedFontSizeFromSpecifiedSize(size, fontDescription.isAbsoluteSize(), useSVGZoomRules, documentStyle.get(), document));
-    } else
-        fontDescription.setUsePrinterFont(document->printing());
+    fontDescription.setScript(localeToScriptCodeForFontSelection(documentStyle.get().locale()));
+    fontDescription.setUsePrinterFont(document.printing() || !settings.screenFontSubstitutionEnabled());
+    fontDescription.setRenderingMode(settings.fontRenderingMode());
+    const AtomicString& standardFont = settings.standardFontFamily(fontDescription.script());
+    if (!standardFont.isEmpty()) {
+        fontDescription.setGenericFamily(FontDescription::StandardFamily);
+        fontDescription.setOneFamily(standardFont);
+    }
+    fontDescription.setKeywordSize(CSSValueMedium - CSSValueXxSmall + 1);
+    int size = fontSizeForKeyword(CSSValueMedium, false, document);
+    fontDescription.setSpecifiedSize(size);
+    bool useSVGZoomRules = document.isSVGDocument();
+    fontDescription.setComputedSize(computedFontSizeFromSpecifiedSize(size, fontDescription.isAbsoluteSize(), useSVGZoomRules, &documentStyle.get(), document));
 
     FontOrientation fontOrientation;
     NonCJKGlyphOrientation glyphOrientation;
-    documentStyle->getFontAndGlyphOrientation(fontOrientation, glyphOrientation);
+    documentStyle.get().getFontAndGlyphOrientation(fontOrientation, glyphOrientation);
     fontDescription.setOrientation(fontOrientation);
     fontDescription.setNonCJKGlyphOrientation(glyphOrientation);
 
-    documentStyle->setFontDescription(fontDescription);
+    documentStyle.get().setFontDescription(fontDescription);
 
-    CSSFontSelector* fontSelector = document->styleResolverIfExists() ? document->styleResolverIfExists()->fontSelector() : 0;
-    documentStyle->font().update(fontSelector);
+    CSSFontSelector* fontSelector = document.styleResolverIfExists() ? document.styleResolverIfExists()->fontSelector() : 0;
+    documentStyle.get().font().update(fontSelector);
 
-    return documentStyle.release();
+    return documentStyle;
 }
 
 }

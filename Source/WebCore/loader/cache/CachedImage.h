@@ -38,7 +38,10 @@ class CachedImageClient;
 class CachedResourceLoader;
 class FloatSize;
 class MemoryCache;
+class RenderElement;
 class RenderObject;
+class SecurityOrigin;
+
 struct Length;
 
 class CachedImage FINAL : public CachedResource, public ImageObserver {
@@ -52,7 +55,7 @@ public:
     Image* image(); // Returns the nullImage() if the image is not available yet.
     Image* imageForRenderer(const RenderObject*); // Returns the nullImage() if the image is not available yet.
     bool hasImage() const { return m_image.get(); }
-    bool currentFrameKnownToBeOpaque(const RenderObject*); // Side effect: ensures decoded image is in cache, therefore should only be called when about to draw the image.
+    bool currentFrameKnownToBeOpaque(const RenderElement*); // Side effect: ensures decoded image is in cache, therefore should only be called when about to draw the image.
 
     std::pair<Image*, float> brokenImage(float deviceScaleFactor) const; // Returns an image and the image's resolution scale factor.
     bool willPaintBrokenImage() const; 
@@ -67,11 +70,22 @@ public:
     virtual void addDataBuffer(ResourceBuffer*) OVERRIDE;
     virtual void finishLoading(ResourceBuffer*) OVERRIDE;
 
+    enum SizeType {
+        UsedSize,
+        IntrinsicSize
+    };
     // This method takes a zoom multiplier that can be used to increase the natural size of the image by the zoom.
-    LayoutSize imageSizeForRenderer(const RenderObject*, float multiplier); // returns the size of the complete image.
+    LayoutSize imageSizeForRenderer(const RenderObject*, float multiplier, SizeType = UsedSize); // returns the size of the complete image.
     void computeIntrinsicDimensions(Length& intrinsicWidth, Length& intrinsicHeight, FloatSize& intrinsicRatio);
 
     static void resumeAnimatingImagesForLoader(CachedResourceLoader*);
+
+#if ENABLE(DISK_IMAGE_CACHE)
+    virtual bool canUseDiskImageCache() const OVERRIDE;
+    virtual void useDiskImageCache() OVERRIDE;
+#endif
+
+    bool isOriginClean(SecurityOrigin*);
 
 private:
     virtual void load(CachedResourceLoader*, const ResourceLoaderOptions&) OVERRIDE;

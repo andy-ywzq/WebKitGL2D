@@ -36,8 +36,6 @@
 #include "RenderTableCell.h"
 #include "RenderTableSection.h"
 
-using namespace std;
-
 namespace WebCore {
     
 using namespace HTMLNames;
@@ -136,11 +134,10 @@ AccessibilityObject* AccessibilityTableColumn::headerObjectForSection(RenderTabl
         if ((testCell->col() + (testCell->colSpan()-1)) < m_columnIndex)
             break;
         
-        Node* node = testCell->node();
-        if (!node)
+        if (!testCell->element())
             continue;
         
-        if (thTagRequired && !node->hasTagName(thTag))
+        if (thTagRequired && !testCell->element()->hasTagName(thTag))
             continue;
         
         cell = testCell;
@@ -157,7 +154,7 @@ bool AccessibilityTableColumn::computeAccessibilityIsIgnored() const
     if (!m_parent)
         return true;
     
-#if PLATFORM(IOS) || PLATFORM(GTK)
+#if PLATFORM(IOS) || PLATFORM(GTK) || PLATFORM(EFL)
     return true;
 #endif
     

@@ -24,8 +24,9 @@
  */
 
 [
-    Conditional=SVG
-] interface SVGPatternElement : SVGStyledElement {
+    Conditional=SVG,
+    OperationsNotDeletable
+] interface SVGPatternElement : SVGElement {
     readonly attribute SVGAnimatedEnumeration   patternUnits;
     readonly attribute SVGAnimatedEnumeration   patternContentUnits;
     readonly attribute SVGAnimatedTransformList patternTransform;

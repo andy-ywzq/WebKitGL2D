@@ -22,15 +22,15 @@
 #define RenderProgress_h
 
 #if ENABLE(PROGRESS_ELEMENT)
-#include "RenderBlock.h"
+#include "RenderBlockFlow.h"
 
 namespace WebCore {
 
 class HTMLProgressElement;
 
-class RenderProgress FINAL : public RenderBlock {
+class RenderProgress FINAL : public RenderBlockFlow {
 public:
-    explicit RenderProgress(HTMLElement*);
+    RenderProgress(HTMLElement&, PassRef<RenderStyle>);
     virtual ~RenderProgress();
 
     double position() const { return m_position; }
@@ -38,15 +38,16 @@ public:
     double animationStartTime() const { return m_animationStartTime; }
 
     bool isDeterminate() const;
-    virtual void updateFromElement();
+    virtual void updateFromElement() OVERRIDE;
 
     HTMLProgressElement* progressElement() const;
 
 private:
-    virtual const char* renderName() const { return "RenderProgress"; }
-    virtual bool isProgress() const { return true; }
-    virtual bool requiresForcedStyleRecalcPropagation() const { return true; }
+    virtual const char* renderName() const OVERRIDE { return "RenderProgress"; }
+    virtual bool isProgress() const OVERRIDE { return true; }
+    virtual bool requiresForcedStyleRecalcPropagation() const OVERRIDE { return true; }
     virtual bool canBeReplacedWithInlineRunIn() const OVERRIDE;
+    virtual void computeLogicalHeight(LayoutUnit logicalHeight, LayoutUnit logicalTop, LogicalExtentComputedValues&) const OVERRIDE;
 
     void animationTimerFired(Timer<RenderProgress>*);
     void updateAnimationState();
@@ -59,14 +60,7 @@ private:
     Timer<RenderProgress> m_animationTimer;
 };
 
-inline RenderProgress* toRenderProgress(RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isProgress());
-    return static_cast<RenderProgress*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderProgress(const RenderProgress*);
+RENDER_OBJECT_TYPE_CASTS(RenderProgress, isProgress())
 
 } // namespace WebCore
 

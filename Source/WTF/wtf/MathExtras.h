@@ -144,7 +144,7 @@ inline long lround(double num) { return static_cast<long>(round(num)); }
 inline long lroundf(float num) { return static_cast<long>(roundf(num)); }
 inline double trunc(double num) { return num > 0 ? floor(num) : ceil(num); }
 
-#if defined(_MSC_VER) && (_MSC_VER <= 1600)
+#if _MSC_VER < 1800
 
 inline double remainder(double numerator, double denominator)
 {
@@ -294,6 +294,11 @@ template<> inline long long int clampTo(double, long long int, long long int); /
 inline int clampToInteger(double value)
 {
     return clampTo<int>(value);
+}
+
+inline unsigned clampToUnsigned(double value)
+{
+    return clampTo<unsigned>(value);
 }
 
 inline float clampToFloat(double value)

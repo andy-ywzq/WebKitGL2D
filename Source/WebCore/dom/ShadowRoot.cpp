@@ -52,16 +52,14 @@ enum ShadowRootUsageOriginType {
     ShadowRootUsageOriginMax
 };
 
-ShadowRoot::ShadowRoot(Document* document, ShadowRootType type)
+ShadowRoot::ShadowRoot(Document& document, ShadowRootType type)
     : DocumentFragment(0, CreateShadowRoot)
-    , TreeScope(this, document)
-    , m_numberOfStyles(0)
+    , TreeScope(this, &document)
     , m_applyAuthorStyles(false)
     , m_resetStyleInheritance(false)
     , m_type(type)
     , m_hostElement(0)
 {
-    ASSERT(document);
 }
 
 ShadowRoot::~ShadowRoot()
@@ -83,7 +81,7 @@ ShadowRoot::~ShadowRoot()
         clearRareData();
 }
 
-void ShadowRoot::dispose()
+void ShadowRoot::dropChildren()
 {
     removeDetachedChildren();
 }
@@ -96,7 +94,7 @@ PassRefPtr<Node> ShadowRoot::cloneNode(bool, ExceptionCode& ec)
 
 String ShadowRoot::innerHTML() const
 {
-    return createMarkup(this, ChildrenOnly);
+    return createMarkup(*this, ChildrenOnly);
 }
 
 void ShadowRoot::setInnerHTML(const String& markup, ExceptionCode& ec)
@@ -107,7 +105,7 @@ void ShadowRoot::setInnerHTML(const String& markup, ExceptionCode& ec)
     }
 
     if (RefPtr<DocumentFragment> fragment = createFragmentForInnerOuterHTML(markup, hostElement(), AllowScriptingContent, ec))
-        replaceChildrenWithFragment(this, fragment.release(), ec);
+        replaceChildrenWithFragment(*this, fragment.release(), ec);
 }
 
 bool ShadowRoot::childTypeAllowed(NodeType type) const
@@ -144,30 +142,17 @@ void ShadowRoot::setResetStyleInheritance(bool value)
     if (value != m_resetStyleInheritance) {
         m_resetStyleInheritance = value;
         if (attached() && hostElement())
-            Style::resolveTree(hostElement(), Style::Force);
+            Style::resolveTree(*hostElement(), Style::Force);
     }
 }
 
-void ShadowRoot::childrenChanged(bool changedByParser, Node* beforeChange, Node* afterChange, int childCountDelta)
+void ShadowRoot::childrenChanged(const ChildChange& change)
 {
     if (isOrphan())
         return;
 
-    ContainerNode::childrenChanged(changedByParser, beforeChange, afterChange, childCountDelta);
+    ContainerNode::childrenChanged(change);
     invalidateDistribution();
-}
-
-void ShadowRoot::registerScopedHTMLStyleChild()
-{
-    ++m_numberOfStyles;
-    setHasScopedHTMLStyleChild(true);
-}
-
-void ShadowRoot::unregisterScopedHTMLStyleChild()
-{
-    ASSERT(hasScopedHTMLStyleChild() && m_numberOfStyles > 0);
-    --m_numberOfStyles;
-    setHasScopedHTMLStyleChild(m_numberOfStyles > 0);
 }
 
 void ShadowRoot::removeAllEventListeners()

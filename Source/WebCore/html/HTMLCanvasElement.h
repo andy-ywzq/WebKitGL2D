@@ -33,9 +33,7 @@
 #include "IntSize.h"
 #include <wtf/Forward.h>
 
-#if PLATFORM(QT)
-#define DefaultInterpolationQuality InterpolationMedium
-#elif USE(CG)
+#if USE(CG)
 #define DefaultInterpolationQuality InterpolationLow
 #else
 #define DefaultInterpolationQuality InterpolationDefault
@@ -64,8 +62,8 @@ public:
 
 class HTMLCanvasElement FINAL : public HTMLElement {
 public:
-    static PassRefPtr<HTMLCanvasElement> create(Document*);
-    static PassRefPtr<HTMLCanvasElement> create(const QualifiedName&, Document*);
+    static PassRefPtr<HTMLCanvasElement> create(Document&);
+    static PassRefPtr<HTMLCanvasElement> create(const QualifiedName&, Document&);
     virtual ~HTMLCanvasElement();
 
     void addObserver(CanvasObserver*);
@@ -92,7 +90,7 @@ public:
     }
 
     CanvasRenderingContext* getContext(const String&, CanvasContextAttributes* attributes = 0);
-    bool supportsContext(const String&, CanvasContextAttributes* = 0);
+    bool probablySupportsContext(const String&, CanvasContextAttributes* = 0);
     static bool is2dType(const String&);
 #if ENABLE(WEBGL)
     static bool is3dType(const String&);
@@ -143,10 +141,10 @@ public:
     float deviceScaleFactor() const { return m_deviceScaleFactor; }
 
 private:
-    HTMLCanvasElement(const QualifiedName&, Document*);
+    HTMLCanvasElement(const QualifiedName&, Document&);
 
     virtual void parseAttribute(const QualifiedName&, const AtomicString&) OVERRIDE;
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
     virtual void willAttachRenderers() OVERRIDE;
     virtual bool areAuthorShadowsAllowed() const OVERRIDE;
 
@@ -188,19 +186,7 @@ private:
     mutable RefPtr<Image> m_copiedImage; // FIXME: This is temporary for platforms that have to copy the image buffer to render (and for CSSCanvasValue).
 };
 
-inline bool isHTMLCanvasElement(const Node* node)
-{
-    return node->hasTagName(HTMLNames::canvasTag);
-}
-
-inline const HTMLCanvasElement* toHTMLCanvasElement(const Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || isHTMLCanvasElement(node));
-    return static_cast<const HTMLCanvasElement*>(node);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toHTMLCanvasElement(const HTMLCanvasElement*);
+NODE_TYPE_CASTS(HTMLCanvasElement)
 
 } //namespace
 

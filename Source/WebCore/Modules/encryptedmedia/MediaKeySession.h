@@ -31,6 +31,7 @@
 #include "ContextDestructionObserver.h"
 #include "EventTarget.h"
 #include "ExceptionCode.h"
+#include "GenericEventQueue.h"
 #include "Timer.h"
 #include <runtime/Uint8Array.h>
 #include <wtf/Deque.h>
@@ -40,12 +41,11 @@
 
 namespace WebCore {
 
-class GenericEventQueue;
 class MediaKeyError;
 class MediaKeys;
 class CDMSession;
 
-class MediaKeySession : public RefCounted<MediaKeySession>, public EventTarget, public ContextDestructionObserver {
+class MediaKeySession FINAL : public RefCounted<MediaKeySession>, public EventTargetWithInlineData, public ContextDestructionObserver {
 public:
     static PassRefPtr<MediaKeySession> create(ScriptExecutionContext*, MediaKeys*, const String& keySystem);
     ~MediaKeySession();
@@ -72,8 +72,8 @@ public:
     DEFINE_ATTRIBUTE_EVENT_LISTENER(webkitkeyerror);
     DEFINE_ATTRIBUTE_EVENT_LISTENER(webkitkeymessage);
 
-    virtual const AtomicString& interfaceName() const OVERRIDE;
-    virtual ScriptExecutionContext* scriptExecutionContext() const OVERRIDE;
+    virtual EventTargetInterface eventTargetInterface() const OVERRIDE { return MediaKeySessionEventTargetInterfaceType; }
+    virtual ScriptExecutionContext* scriptExecutionContext() const OVERRIDE { return ContextDestructionObserver::scriptExecutionContext(); }
 
 protected:
     MediaKeySession(ScriptExecutionContext*, MediaKeys*, const String& keySystem);
@@ -84,7 +84,7 @@ protected:
     String m_keySystem;
     String m_sessionId;
     RefPtr<MediaKeyError> m_error;
-    OwnPtr<GenericEventQueue> m_asyncEventQueue;
+    GenericEventQueue m_asyncEventQueue;
     OwnPtr<CDMSession> m_session;
 
     struct PendingKeyRequest {
@@ -95,17 +95,12 @@ protected:
     Deque<PendingKeyRequest> m_pendingKeyRequests;
     Timer<MediaKeySession> m_keyRequestTimer;
 
-    Deque<RefPtr<Uint8Array> > m_pendingKeys;
+    Deque<RefPtr<Uint8Array>> m_pendingKeys;
     Timer<MediaKeySession> m_addKeyTimer;
 
 private:
     virtual void refEventTarget() OVERRIDE { ref(); }
     virtual void derefEventTarget() OVERRIDE { deref(); }
-
-    virtual EventTargetData* eventTargetData() OVERRIDE { return &m_eventTargetData; }
-    virtual EventTargetData& ensureEventTargetData() OVERRIDE { return m_eventTargetData; }
-
-    EventTargetData m_eventTargetData;
 };
 
 }

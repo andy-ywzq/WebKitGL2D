@@ -32,7 +32,6 @@
 
 #include "FloatPolygon.h"
 #include "Shape.h"
-#include "ShapeInterval.h"
 
 namespace WebCore {
 
@@ -83,7 +82,7 @@ private:
 class PolygonShape : public Shape {
     WTF_MAKE_NONCOPYABLE(PolygonShape);
 public:
-    PolygonShape(PassOwnPtr<Vector<FloatPoint> > vertices, WindRule fillRule)
+    PolygonShape(PassOwnPtr<Vector<FloatPoint>> vertices, WindRule fillRule)
         : Shape()
         , m_polygon(vertices, fillRule)
         , m_marginBounds(nullptr)

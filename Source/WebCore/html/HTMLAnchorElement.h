@@ -55,12 +55,12 @@ enum {
 
 class HTMLAnchorElement : public HTMLElement {
 public:
-    static PassRefPtr<HTMLAnchorElement> create(Document*);
-    static PassRefPtr<HTMLAnchorElement> create(const QualifiedName&, Document*);
+    static PassRefPtr<HTMLAnchorElement> create(Document&);
+    static PassRefPtr<HTMLAnchorElement> create(const QualifiedName&, Document&);
 
     virtual ~HTMLAnchorElement();
 
-    KURL href() const;
+    URL href() const;
     void setHref(const AtomicString&);
 
     const AtomicString& name() const;
@@ -103,7 +103,7 @@ public:
     void invalidateCachedVisitedLinkHash() { m_cachedVisitedLinkHash = 0; }
 
 protected:
-    HTMLAnchorElement(const QualifiedName&, Document*);
+    HTMLAnchorElement(const QualifiedName&, Document&);
 
     virtual void parseAttribute(const QualifiedName&, const AtomicString&) OVERRIDE;
 
@@ -111,16 +111,16 @@ private:
     virtual bool supportsFocus() const OVERRIDE;
     virtual bool isMouseFocusable() const OVERRIDE;
     virtual bool isKeyboardFocusable(KeyboardEvent*) const OVERRIDE;
-    virtual void defaultEventHandler(Event*);
+    virtual void defaultEventHandler(Event*) OVERRIDE;
     virtual void setActive(bool active = true, bool pause = false) OVERRIDE FINAL;
-    virtual void accessKeyAction(bool sendMouseEvents);
+    virtual void accessKeyAction(bool sendMouseEvents) OVERRIDE;
     virtual bool isURLAttribute(const Attribute&) const OVERRIDE;
-    virtual bool canStartSelection() const;
-    virtual String target() const;
+    virtual bool canStartSelection() const OVERRIDE;
+    virtual String target() const OVERRIDE;
     virtual short tabIndex() const OVERRIDE FINAL;
-    virtual bool draggable() const;
+    virtual bool draggable() const OVERRIDE;
 
-    void sendPings(const KURL& destinationURL);
+    void sendPings(const URL& destinationURL);
 
     void handleClick(Event*);
 
@@ -145,24 +145,8 @@ private:
 inline LinkHash HTMLAnchorElement::visitedLinkHash() const
 {
     if (!m_cachedVisitedLinkHash)
-        m_cachedVisitedLinkHash = WebCore::visitedLinkHash(document()->baseURL(), fastGetAttribute(HTMLNames::hrefAttr));
+        m_cachedVisitedLinkHash = WebCore::visitedLinkHash(document().baseURL(), fastGetAttribute(HTMLNames::hrefAttr));
     return m_cachedVisitedLinkHash; 
-}
-
-inline bool isHTMLAnchorElement(Node* node)
-{
-    return node->hasTagName(HTMLNames::aTag);
-}
-
-inline bool isHTMLAnchorElement(Element* element)
-{
-    return element->hasTagName(HTMLNames::aTag);
-}
-
-inline HTMLAnchorElement* toHTMLAnchorElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || isHTMLAnchorElement(node));
-    return static_cast<HTMLAnchorElement*>(node);
 }
 
 // Functions shared with the other anchor elements (i.e., SVG).
@@ -170,6 +154,8 @@ inline HTMLAnchorElement* toHTMLAnchorElement(Node* node)
 bool isEnterKeyKeydownEvent(Event*);
 bool isLinkClick(Event*);
 bool shouldProhibitLinks(Element*);
+
+NODE_TYPE_CASTS(HTMLAnchorElement)
 
 } // namespace WebCore
 

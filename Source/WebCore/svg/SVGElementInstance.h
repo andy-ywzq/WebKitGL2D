@@ -29,13 +29,13 @@ namespace WebCore {
 
 namespace Private {
 template<class GenericNode, class GenericNodeContainer>
-void addChildNodesToDeletionQueue(GenericNode*& head, GenericNode*& tail, GenericNodeContainer* container);
+void addChildNodesToDeletionQueue(GenericNode*& head, GenericNode*& tail, GenericNodeContainer& container);
 };
 
 class Document;
 class SVGElement;
 class SVGElementInstanceList;
-class SVGStyledElement;
+class SVGElement;
 class SVGUseElement;
 
 // SVGElementInstance mimics Node, but without providing all its functionality
@@ -47,12 +47,12 @@ public:
 
     void setParentNode(SVGElementInstance* instance) { m_parentInstance = instance; }
 
-    virtual const AtomicString& interfaceName() const;
-    virtual ScriptExecutionContext* scriptExecutionContext() const;
+    virtual EventTargetInterface eventTargetInterface() const OVERRIDE;
+    virtual ScriptExecutionContext* scriptExecutionContext() const OVERRIDE;
 
-    virtual bool addEventListener(const AtomicString& eventType, PassRefPtr<EventListener>, bool useCapture);
-    virtual bool removeEventListener(const AtomicString& eventType, EventListener*, bool useCapture);
-    virtual void removeAllEventListeners();
+    virtual bool addEventListener(const AtomicString& eventType, PassRefPtr<EventListener>, bool useCapture) OVERRIDE;
+    virtual bool removeEventListener(const AtomicString& eventType, EventListener*, bool useCapture) OVERRIDE;
+    virtual void removeAllEventListeners() OVERRIDE;
 
     using EventTarget::dispatchEvent;
     virtual bool dispatchEvent(PassRefPtr<Event>) OVERRIDE;
@@ -91,7 +91,7 @@ public:
         ~InstanceUpdateBlocker();
 
     private:
-        SVGStyledElement* m_targetElement;
+        SVGElement* m_targetElement;
     };
     
     static void invalidateAllInstancesOfElement(SVGElement*);
@@ -121,6 +121,7 @@ public:
     DECLARE_FORWARDING_ATTRIBUTE_EVENT_LISTENER(correspondingElement(), mouseover);
     DECLARE_FORWARDING_ATTRIBUTE_EVENT_LISTENER(correspondingElement(), mouseup);
     DECLARE_FORWARDING_ATTRIBUTE_EVENT_LISTENER(correspondingElement(), mousewheel);
+    DECLARE_FORWARDING_ATTRIBUTE_EVENT_LISTENER(correspondingElement(), wheel);
     DECLARE_FORWARDING_ATTRIBUTE_EVENT_LISTENER(correspondingElement(), beforecut);
     DECLARE_FORWARDING_ATTRIBUTE_EVENT_LISTENER(correspondingElement(), cut);
     DECLARE_FORWARDING_ATTRIBUTE_EVENT_LISTENER(correspondingElement(), beforecopy);
@@ -152,19 +153,19 @@ private:
     void removedLastRef();
     bool hasTreeSharedParent() const { return !!m_parentInstance; }
 
-    virtual Node* toNode();
+    virtual Node* toNode() OVERRIDE;
 
     void appendChild(PassRefPtr<SVGElementInstance> child);
     void setShadowTreeElement(SVGElement*);
 
     template<class GenericNode, class GenericNodeContainer>
-    friend void appendChildToContainer(GenericNode* child, GenericNodeContainer* container);
+    friend void appendChildToContainer(GenericNode* child, GenericNodeContainer& container);
 
     template<class GenericNode, class GenericNodeContainer>
-    friend void removeDetachedChildrenInContainer(GenericNodeContainer*);
+    friend void removeDetachedChildrenInContainer(GenericNodeContainer&);
 
     template<class GenericNode, class GenericNodeContainer>
-    friend void Private::addChildNodesToDeletionQueue(GenericNode*& head, GenericNode*& tail, GenericNodeContainer* container);
+    friend void Private::addChildNodesToDeletionQueue(GenericNode*& head, GenericNode*& tail, GenericNodeContainer& container);
 
     bool hasChildNodes() const { return m_firstChild; }
 

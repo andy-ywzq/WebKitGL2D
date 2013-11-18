@@ -74,8 +74,6 @@ case "$with_gtk" in
         WEBKITGTK_API_MINOR_VERSION=0
         WEBKITGTK_API_VERSION=1.0
         WEBKITGTK_PC_NAME=webkit
-        GAIL_PC_NAME=gail
-        GAIL_REQUIRED_VERSION=gail2_required_version
         ;;
     3.0) GTK_REQUIRED_VERSION=gtk3_required_version
         GTK_API_VERSION=3.0
@@ -83,8 +81,6 @@ case "$with_gtk" in
         WEBKITGTK_API_MINOR_VERSION=0
         WEBKITGTK_API_VERSION=3.0
         WEBKITGTK_PC_NAME=webkitgtk
-        GAIL_PC_NAME=gail-3.0
-        GAIL_REQUIRED_VERSION=gail3_required_version
         ;;
 esac
 AC_SUBST([WEBKITGTK_API_MAJOR_VERSION])
@@ -154,19 +150,30 @@ if test "$enable_spellcheck" = "yes"; then
     AC_SUBST(ENCHANT_LIBS)
 fi
 
-PKG_CHECK_MODULES(GAIL, $GAIL_PC_NAME >= $GAIL_REQUIRED_VERSION)
-AC_SUBST(GAIL_CFLAGS)
-AC_SUBST(GAIL_LIBS)
+PKG_CHECK_MODULES(CAIRO, cairo >= cairo_required_version)
+PKG_CHECK_MODULES(GTK, gtk+-$GTK_API_VERSION >= $GTK_REQUIRED_VERSION)
+GTK_ACTUAL_VERSION=`pkg-config --modversion gtk+-$GTK_API_VERSION`
 
-# Check for target-specific dependencies.
-if test "$with_target" = "directfb"; then
-    PKG_CHECK_MODULES(CAIRO, cairo-directfb >= cairo_required_version)
-    PKG_CHECK_MODULES(GTK, gtk+-directfb-2.0 >= $GTK_REQUIRED_VERSION)
-else
-    PKG_CHECK_MODULES(CAIRO, cairo >= cairo_required_version)
-    PKG_CHECK_MODULES(GTK, gtk+-$GTK_API_VERSION >= $GTK_REQUIRED_VERSION)
+if test "$enable_directfb_target" = "yes"; then
+    PKG_CHECK_MODULES(CAIRO_DIRECTFB, cairo-directfb >= cairo_required_version)
+    CAIRO_CFLAGS="$CAIRO_CFLAGS $CAIRO_DIRECTFB_CFLAGS"
+    CAIRO_LIBS="$CAIRO_LIBS $CAIRO_DIRECTFB_LIBS"
 
-    if test "$with_target" = "x11" && test "$os_win32" = "no"; then
+    PKG_CHECK_MODULES(GTK_DIRECTFB, gtk+-directfb-2.0 >= $GTK_REQUIRED_VERSION)
+    GTK_CFLAGS="$GTK_CFLAGS $GTK_DIRECTFB_CFLAGS"
+    GTK_LIBS="$GTK_LIBS $GTK_DIRECTFB_LIBS"
+fi
+
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
+AC_SUBST(CAIRO_CFLAGS)
+AC_SUBST(CAIRO_LIBS)
+
+if test "$enable_x11_target" = "yes"; then
+    # The GTK+ X11 target dependency should match the version of the master GTK+ dependency.
+    PKG_CHECK_MODULES(GTK_X11, gtk+-x11-$GTK_API_VERSION = $GTK_ACTUAL_VERSION)
+
+    if test "$os_win32" = "no"; then
         PKG_CHECK_MODULES([XT], [xt], [xt_has_pkg_config=yes], [xt_has_pkg_config=no])
 
         # Some old versions of Xt do not provide xt.pc, so try to link against Xt
@@ -180,12 +187,34 @@ else
 
         AC_SUBST([XT_CFLAGS])
         AC_SUBST([XT_LIBS])
-   fi
+    fi
+
+    # Check for XRender under Linux/Unix. Some linkers require explicit linkage (like GNU Gold),
+    # so we cannot rely on GTK+ pulling XRender.
+    if test "$enable_x11_target" = "yes"; then
+        PKG_CHECK_MODULES([XRENDER], [xrender])
+        AC_SUBST([XRENDER_CFLAGS])
+        AC_SUBST([XRENDER_LIBS])
+    fi
+elif test "enable_glx" != "no"; then
+    AC_MSG_WARN([X11 target support not enabled, disabling GLX support.])
+    enable_glx=no
 fi
-AC_SUBST(GTK_CFLAGS)
-AC_SUBST(GTK_LIBS)
-AC_SUBST(CAIRO_CFLAGS)
-AC_SUBST(CAIRO_LIBS)
+
+if test "$enable_wayland_target" != "no"; then
+     # The GTK+ Wayland target dependency should match the version of the master GTK+ dependency.
+    PKG_CHECK_MODULES([GTK_WAYLAND], [
+        gtk+-wayland-$GTK_API_VERSION = $GTK_ACTUAL_VERSION
+        gtk+-wayland-$GTK_API_VERSION >= gtk3_wayland_required_version
+    ], [enable_wayland_target=yes], [
+        if test "$enable_wayland_target" = "yes"; then
+            AC_MSG_ERROR([GTK+ Wayland dependency (gtk+-wayland-$GTK_API_VERSION >= gtk3_wayland_required_version) not found.])
+        else
+            AC_MSG_WARN([GTK+ Wayland dependency (gtk+-wayland-$GTK_API_VERSION >= gtk3_wayland_required_version) not found, disabling the Wayland target.])
+            enable_wayland_target=no
+        fi
+    ])
+fi
 
 AC_CHECK_HEADERS([GL/glx.h], [have_glx="yes"], [have_glx="no"])
 AC_MSG_CHECKING([whether to enable GLX support])
@@ -253,9 +282,9 @@ else
     AC_CHECK_HEADERS([GL/gl.h], [found_opengl="yes"], [])
 fi
 
-if test "$found_opengl" = "yes"; then
-    PKG_CHECK_MODULES([XCOMPOSITE], [xcomposite]);
-    PKG_CHECK_MODULES([XDAMAGE], [xdamage]);
+if test "$enable_x11_target" = "yes" && test "$found_opengl" = "yes"; then
+    PKG_CHECK_MODULES([XCOMPOSITE], [xcomposite])
+    PKG_CHECK_MODULES([XDAMAGE], [xdamage])
     AC_SUBST(XCOMPOSITE_CFLAGS)
     AC_SUBST(XCOMPOSITE_LIBS)
     AC_SUBST(XDAMAGE_CFLAGS)
@@ -271,6 +300,11 @@ if test "$enable_webgl" != "no"; then
         fi
         enable_webgl=no
     fi
+fi
+
+if test "$enable_x11_target" != "yes" && test "$enable_wayland_target" = "yes" && test "enable_accelerated_compositing" != "no"; then
+    AC_MSG_WARN([Accelerated compositing for Wayland is not yet implemented, disabling due to the Wayland-only target.])
+    enable_accelerated_compositing=no
 fi
 
 if test "$enable_accelerated_compositing" != "no"; then
@@ -345,7 +379,7 @@ if test "$enable_credential_storage" = "yes"; then
 fi
 
 # Check if FreeType/FontConfig are available.
-if test "$with_target" = "directfb"; then
+if test "$enable_directfb_target" = "yes"; then
     PKG_CHECK_MODULES([FREETYPE],
         [fontconfig >= fontconfig_required_version freetype2 >= freetype2_required_version harfbuzz >= harfbuzz_required_version])
 else
@@ -385,14 +419,6 @@ if test "$enable_geolocation" = "yes"; then
     PKG_CHECK_MODULES([GEOCLUE], [geoclue])
     AC_SUBST([GEOCLUE_CFLAGS])
     AC_SUBST([GEOCLUE_LIBS])
-fi
-
-# Check for XRender under Linux/Unix. Some linkers require explicit linkage (like GNU Gold),
-# so we cannot rely on GTK+ pulling XRender.
-if test "$with_target" = "x11"; then
-    PKG_CHECK_MODULES([XRENDER], [xrender])
-    AC_SUBST([XRENDER_CFLAGS])
-    AC_SUBST([XRENDER_LIBS])
 fi
 
 if test "$enable_video" = "yes" || test "$enable_web_audio" = "yes"; then
@@ -478,7 +504,7 @@ if test "$enable_webkit2" = "yes"; then
     fi
 
     # Make sure we have GTK+ 2.x to build the plugin process.
-    PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= gtk2_required_version gail >= gail2_required_version)
+    PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= gtk2_required_version)
     AC_SUBST(GTK2_CFLAGS)
     AC_SUBST(GTK2_LIBS)
 
@@ -499,6 +525,48 @@ if test "$enable_webkit2" = "yes"; then
    PKG_CHECK_MODULES([ATSPI2], [atspi-2 >= atspi2_required_version], [have_atspi2=yes], [have_atspi2=no])
    AC_SUBST([ATSPI2_CFLAGS])
    AC_SUBST([ATSPI2_LIBS])
+fi
+
+if test "$enable_jit" = "no"; then
+    AC_MSG_NOTICE([JIT compilation is disabled, also disabling FTL JIT support.])
+    enable_ftl_jit=no
+fi
+
+if test "$enable_ftl_jit" != no && test "$cxx_compiler" != "clang++"; then
+    if test "$enable_ftl_jit" = "yes"; then
+        AC_MSG_ERROR([Clang C++ compiler is required for FTL JIT support.])
+    else
+        AC_MSG_WARN([Clang C++ compiler is not used, disabling FTL JIT support.])
+        enable_ftl_jit=no
+    fi
+fi
+
+if test "$enable_ftl_jit" != "no"; then
+    AC_PATH_PROG(llvm_config, llvm-config, no)
+    if test "$llvm_config" = "no"; then
+        if test "$enable_ftl_jit" = "yes"; then
+            AC_MSG_ERROR([Cannot find llvm-config. LLVM >= 3.4 is needed for FTL JIT support.])
+        else
+            AC_MSG_WARN([Cannot find llvm-config. LLVM >= 3.4 is not present, disabling FTL JIT support.])
+            enable_ftl_jit=no
+        fi
+    else
+        LLVM_VERSION=`$llvm_config --version`
+        AX_COMPARE_VERSION([$LLVM_VERSION], [ge], [3.4], [have_llvm=yes], [have_llvm=no])
+        if test "$have_llvm" = "no"; then
+            if test "$enable_ftl_jit" = "yes"; then
+                AC_MSG_ERROR([LLVM >= 3.4 is needed for FTL JIT support.])
+            else
+                AC_MSG_WARN([LLVM >= 3.4 is not present, disabling FTL JIT support.])
+                enable_ftl_jit=no
+            fi
+        else
+            LLVM_CFLAGS=`$llvm_config --cppflags`
+            LLVM_LIBS="`$llvm_config --ldflags` `$llvm_config --libs`"
+            AC_SUBST([LLVM_CFLAGS])
+            AC_SUBST([LLVM_LIBS])
+        fi
+    fi
 fi
 
 m4_ifdef([GTK_DOC_CHECK], [

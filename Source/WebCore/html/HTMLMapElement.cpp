@@ -24,33 +24,30 @@
 
 #include "Attribute.h"
 #include "Document.h"
-#include "ElementTraversal.h"
+#include "ElementIterator.h"
 #include "HTMLAreaElement.h"
 #include "HTMLCollection.h"
 #include "HTMLImageElement.h"
 #include "HTMLNames.h"
 #include "HitTestResult.h"
 #include "IntSize.h"
-#include "RenderObject.h"
-
-using namespace std;
 
 namespace WebCore {
 
 using namespace HTMLNames;
 
-HTMLMapElement::HTMLMapElement(const QualifiedName& tagName, Document* document)
+HTMLMapElement::HTMLMapElement(const QualifiedName& tagName, Document& document)
     : HTMLElement(tagName, document)
 {
     ASSERT(hasTagName(mapTag));
 }
 
-PassRefPtr<HTMLMapElement> HTMLMapElement::create(Document* document)
+PassRefPtr<HTMLMapElement> HTMLMapElement::create(Document& document)
 {
     return adoptRef(new HTMLMapElement(mapTag, document));
 }
 
-PassRefPtr<HTMLMapElement> HTMLMapElement::create(const QualifiedName& tagName, Document* document)
+PassRefPtr<HTMLMapElement> HTMLMapElement::create(const QualifiedName& tagName, Document& document)
 {
     return adoptRef(new HTMLMapElement(tagName, document));
 }
@@ -62,16 +59,14 @@ HTMLMapElement::~HTMLMapElement()
 bool HTMLMapElement::mapMouseEvent(LayoutPoint location, const LayoutSize& size, HitTestResult& result)
 {
     HTMLAreaElement* defaultArea = 0;
-    Element* element = this;
-    while ((element = ElementTraversal::next(element, this))) {
-        if (isHTMLAreaElement(element)) {
-            HTMLAreaElement* areaElt = toHTMLAreaElement(element);
-            if (areaElt->isDefault()) {
-                if (!defaultArea)
-                    defaultArea = areaElt;
-            } else if (areaElt->mapMouseEvent(location, size, result))
-                return true;
-        }
+
+    auto areaDescendants = descendantsOfType<HTMLAreaElement>(*this);
+    for (auto area = areaDescendants.begin(), end = areaDescendants.end(); area != end; ++area) {
+        if (area->isDefault()) {
+            if (!defaultArea)
+                defaultArea = &*area;
+        } else if (area->mapMouseEvent(location, size, result))
+            return true;
     }
     
     if (defaultArea) {
@@ -83,20 +78,11 @@ bool HTMLMapElement::mapMouseEvent(LayoutPoint location, const LayoutSize& size,
 
 HTMLImageElement* HTMLMapElement::imageElement()
 {
-    RefPtr<HTMLCollection> images = document()->images();
-    for (unsigned i = 0; Node* curr = images->item(i); i++) {
-        if (!isHTMLImageElement(curr))
-            continue;
-        
-        // The HTMLImageElement's useMap() value includes the '#' symbol at the beginning,
-        // which has to be stripped off.
-        HTMLImageElement* imageElement = toHTMLImageElement(curr);
-        String useMapName = imageElement->getAttribute(usemapAttr).string().substring(1);
-        if (equalIgnoringCase(useMapName, m_name))
-            return imageElement;
-    }
-    
-    return 0;    
+    if (m_name.isEmpty())
+        return 0;
+    AtomicString lowercasedName = m_name.lower();
+    ASSERT(lowercasedName.impl());
+    return document().imageElementByLowercasedUsemap(*lowercasedName.impl());
 }
 
 void HTMLMapElement::parseAttribute(const QualifiedName& name, const AtomicString& value)
@@ -108,17 +94,17 @@ void HTMLMapElement::parseAttribute(const QualifiedName& name, const AtomicStrin
         if (isIdAttributeName(name)) {
             // Call base class so that hasID bit gets set.
             HTMLElement::parseAttribute(name, value);
-            if (document()->isHTMLDocument())
+            if (document().isHTMLDocument())
                 return;
         }
         if (inDocument())
-            treeScope()->removeImageMap(this);
+            treeScope().removeImageMap(*this);
         String mapName = value;
         if (mapName[0] == '#')
             mapName = mapName.substring(1);
-        m_name = document()->isHTMLDocument() ? mapName.lower() : mapName;
+        m_name = document().isHTMLDocument() ? mapName.lower() : mapName;
         if (inDocument())
-            treeScope()->addImageMap(this);
+            treeScope().addImageMap(*this);
 
         return;
     }
@@ -131,17 +117,17 @@ PassRefPtr<HTMLCollection> HTMLMapElement::areas()
     return ensureCachedHTMLCollection(MapAreas);
 }
 
-Node::InsertionNotificationRequest HTMLMapElement::insertedInto(ContainerNode* insertionPoint)
+Node::InsertionNotificationRequest HTMLMapElement::insertedInto(ContainerNode& insertionPoint)
 {
-    if (insertionPoint->inDocument())
-        treeScope()->addImageMap(this);
+    if (insertionPoint.inDocument())
+        treeScope().addImageMap(*this);
     return HTMLElement::insertedInto(insertionPoint);
 }
 
-void HTMLMapElement::removedFrom(ContainerNode* insertionPoint)
+void HTMLMapElement::removedFrom(ContainerNode& insertionPoint)
 {
-    if (insertionPoint->inDocument())
-        treeScope()->removeImageMap(this);
+    if (insertionPoint.inDocument())
+        treeScope().removeImageMap(*this);
     HTMLElement::removedFrom(insertionPoint);
 }
 

@@ -226,7 +226,7 @@ FontPlatformData* FontCache::getCachedFontPlatformData(const FontDescription& fo
 }
 
 #if ENABLE(OPENTYPE_VERTICAL)
-typedef HashMap<FontCache::FontFileKey, RefPtr<OpenTypeVerticalData>, WTF::IntHash<FontCache::FontFileKey>, WTF::UnsignedWithZeroKeyHashTraits<FontCache::FontFileKey> > FontVerticalDataCache;
+typedef HashMap<FontCache::FontFileKey, RefPtr<OpenTypeVerticalData>, WTF::IntHash<FontCache::FontFileKey>, WTF::UnsignedWithZeroKeyHashTraits<FontCache::FontFileKey>> FontVerticalDataCache;
 
 FontVerticalDataCache& fontVerticalDataCacheInstance()
 {
@@ -287,7 +287,7 @@ static FontDataCache* gFontDataCache = 0;
 
 const int cMaxInactiveFontData = 225;
 const int cTargetInactiveFontData = 200;
-static ListHashSet<RefPtr<SimpleFontData> >* gInactiveFontData = 0;
+static ListHashSet<RefPtr<SimpleFontData>>* gInactiveFontData = 0;
 
 PassRefPtr<SimpleFontData> FontCache::getCachedFontData(const FontDescription& fontDescription, const AtomicString& family, bool checkingAlternateName, ShouldRetain shouldRetain)
 {
@@ -310,7 +310,7 @@ PassRefPtr<SimpleFontData> FontCache::getCachedFontData(const FontPlatformData* 
 
     if (!gFontDataCache) {
         gFontDataCache = new FontDataCache;
-        gInactiveFontData = new ListHashSet<RefPtr<SimpleFontData> >;
+        gInactiveFontData = new ListHashSet<RefPtr<SimpleFontData>>;
     }
 
     FontDataCache::iterator result = gFontDataCache->find(*platformData);
@@ -377,8 +377,8 @@ void FontCache::purgeInactiveFontData(int count)
     isPurging = true;
 
     Vector<RefPtr<SimpleFontData>, 20> fontDataToDelete;
-    ListHashSet<RefPtr<SimpleFontData> >::iterator end = gInactiveFontData->end();
-    ListHashSet<RefPtr<SimpleFontData> >::iterator it = gInactiveFontData->begin();
+    ListHashSet<RefPtr<SimpleFontData>>::iterator end = gInactiveFontData->end();
+    ListHashSet<RefPtr<SimpleFontData>>::iterator it = gInactiveFontData->begin();
     for (int i = 0; i < count && it != end; ++it, ++i) {
         RefPtr<SimpleFontData>& fontData = *it.get();
         gFontDataCache->remove(fontData->platformData());
@@ -534,15 +534,12 @@ void FontCache::invalidate()
 
     gGeneration++;
 
-    Vector<RefPtr<FontSelector> > clients;
-    size_t numClients = gClients->size();
-    clients.reserveInitialCapacity(numClients);
-    HashSet<FontSelector*>::iterator end = gClients->end();
-    for (HashSet<FontSelector*>::iterator it = gClients->begin(); it != end; ++it)
-        clients.append(*it);
+    Vector<Ref<FontSelector>> clients;
+    clients.reserveInitialCapacity(gClients->size());
+    for (auto it = gClients->begin(), end = gClients->end(); it != end; ++it)
+        clients.uncheckedAppend(**it);
 
-    ASSERT(numClients == clients.size());
-    for (size_t i = 0; i < numClients; ++i)
+    for (unsigned i = 0; i < clients.size(); ++i)
         clients[i]->fontCacheInvalidated();
 
     purgeInactiveFontData();

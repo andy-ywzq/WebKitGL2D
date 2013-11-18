@@ -32,19 +32,18 @@
 #include "MathMLElement.h"
 
 #include "MathMLNames.h"
-#include "RenderObject.h"
 #include "RenderTableCell.h"
 
 namespace WebCore {
     
 using namespace MathMLNames;
     
-MathMLElement::MathMLElement(const QualifiedName& tagName, Document* document)
-    : StyledElement(tagName, document, CreateStyledElement)
+MathMLElement::MathMLElement(const QualifiedName& tagName, Document& document)
+    : StyledElement(tagName, document, CreateMathMLElement)
 {
 }
     
-PassRefPtr<MathMLElement> MathMLElement::create(const QualifiedName& tagName, Document* document)
+PassRefPtr<MathMLElement> MathMLElement::create(const QualifiedName& tagName, Document& document)
 {
     return adoptRef(new MathMLElement(tagName, document));
 }
@@ -112,6 +111,12 @@ void MathMLElement::collectStyleForPresentationAttribute(const QualifiedName& na
         StyledElement::collectStyleForPresentationAttribute(name, value
         , style);
     }
+}
+
+bool MathMLElement::childShouldCreateRenderer(const Node* child) const
+{
+    // Only create renderers for MathML elements or text. MathML prohibits non-MathML markup inside a <math> element.
+    return child->isTextNode() || child->isMathMLElement();
 }
 
 }

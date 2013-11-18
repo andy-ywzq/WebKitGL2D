@@ -37,7 +37,8 @@
     JSGenerateToNativeObject,
     ReplaceableConstructor,
     JSLegacyParent=JSDOMWindowBase,
-    InterfaceName=Window
+    InterfaceName=Window,
+    OperationsNotDeletable
 ] interface DOMWindow {
     // DOM Level 0
     [Replaceable] readonly attribute Screen screen;
@@ -259,6 +260,7 @@
     attribute EventListener onunload;
     attribute EventListener onvolumechange;
     attribute EventListener onwaiting;
+    attribute EventListener onwheel;
 
     // Not implemented yet.
     // attribute EventListener onafterprint;

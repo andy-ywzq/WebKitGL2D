@@ -33,9 +33,9 @@ class HTMLCollection;
 
 class HTMLFieldSetElement FINAL : public HTMLFormControlElement {
 public:
-    static PassRefPtr<HTMLFieldSetElement> create(const QualifiedName&, Document*, HTMLFormElement*);
-    HTMLLegendElement* legend() const;
+    static PassRefPtr<HTMLFieldSetElement> create(const QualifiedName&, Document&, HTMLFormElement*);
 
+    HTMLLegendElement* legend() const;
     PassRefPtr<HTMLCollection> elements();
 
     const Vector<FormAssociatedElement*>& associatedElements() const;
@@ -45,14 +45,14 @@ protected:
     virtual void disabledAttributeChanged() OVERRIDE;
 
 private:
-    HTMLFieldSetElement(const QualifiedName&, Document*, HTMLFormElement*);
+    HTMLFieldSetElement(const QualifiedName&, Document&, HTMLFormElement*);
 
-    virtual bool isEnumeratable() const { return true; }
+    virtual bool isEnumeratable() const OVERRIDE { return true; }
     virtual bool supportsFocus() const OVERRIDE;
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
-    virtual const AtomicString& formControlType() const;
-    virtual bool recalcWillValidate() const { return false; }
-    virtual void childrenChanged(bool changedByParser, Node* beforeChange, Node* afterChange, int childCountDelta) OVERRIDE;
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
+    virtual const AtomicString& formControlType() const OVERRIDE;
+    virtual bool recalcWillValidate() const OVERRIDE { return false; }
+    virtual void childrenChanged(const ChildChange&) OVERRIDE;
     virtual bool areAuthorShadowsAllowed() const OVERRIDE { return false; }
 
     static void invalidateDisabledStateUnder(Element*);
@@ -62,6 +62,8 @@ private:
     // When dom tree is modified, we have to refresh the m_associatedElements array.
     mutable uint64_t m_documentVersion;
 };
+
+NODE_TYPE_CASTS(HTMLFieldSetElement)
 
 } // namespace
 

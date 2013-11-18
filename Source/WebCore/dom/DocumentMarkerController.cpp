@@ -334,20 +334,6 @@ Vector<DocumentMarker*> DocumentMarkerController::markersFor(Node* node, Documen
     return result;
 }
 
-// FIXME: Should be removed after all relevant patches are landed
-Vector<DocumentMarker> DocumentMarkerController::markersForNode(Node* node)
-{
-    Vector<DocumentMarker> result;
-    MarkerList* list = m_markers.get(node);
-    if (!list)
-        return result;
-
-    for (size_t i = 0; i < list->size(); ++i)
-        result.append(list->at(i));
-
-    return result;
-}
-
 Vector<DocumentMarker*> DocumentMarkerController::markersInRange(Range* range, DocumentMarker::MarkerTypes markerTypes)
 {
     if (!possiblyHasMarkers(markerTypes))
@@ -426,7 +412,7 @@ void DocumentMarkerController::removeMarkers(DocumentMarker::MarkerTypes markerT
         return;
     ASSERT(!m_markers.isEmpty());
 
-    Vector<RefPtr<Node> > nodesWithMarkers;
+    Vector<RefPtr<Node>> nodesWithMarkers;
     copyKeysToVector(m_markers, nodesWithMarkers);
     unsigned size = nodesWithMarkers.size();
     for (unsigned i = 0; i < size; ++i) {
@@ -468,7 +454,7 @@ void DocumentMarkerController::removeMarkersFromList(MarkerMap::iterator iterato
     }
 
     if (needsRepainting) {
-        if (RenderObject* renderer = iterator->key->renderer())
+        if (auto renderer = iterator->key->renderer())
             renderer->repaint();
     }
 
@@ -507,7 +493,7 @@ void DocumentMarkerController::repaintMarkers(DocumentMarker::MarkerTypes marker
             continue;
 
         // cause the node to be redrawn
-        if (RenderObject* renderer = node->renderer())
+        if (auto renderer = node->renderer())
             renderer->repaint();
     }
 }

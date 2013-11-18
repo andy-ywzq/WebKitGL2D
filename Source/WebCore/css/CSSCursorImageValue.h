@@ -49,11 +49,11 @@ public:
         return IntPoint(-1, -1);
     }
 
-    String customCssText() const;
+    String customCSSText() const;
 
     bool updateIfSVGCursorIsUsed(Element*);
     StyleImage* cachedImage(CachedResourceLoader*);
-    StyleImage* cachedOrPendingImage(Document*);
+    StyleImage* cachedOrPendingImage(Document&);
 
 #if ENABLE(SVG)
     void removeReferencedElement(SVGElement*);
@@ -81,6 +81,8 @@ private:
     HashSet<SVGElement*> m_referencedElements;
 #endif
 };
+
+CSS_VALUE_TYPE_CASTS(CSSCursorImageValue, isCursorImageValue())
 
 } // namespace WebCore
 

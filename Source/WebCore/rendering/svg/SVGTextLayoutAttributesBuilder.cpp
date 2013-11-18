@@ -85,7 +85,7 @@ void SVGTextLayoutAttributesBuilder::rebuildMetricsForTextRenderer(RenderSVGInli
 
 static inline void processRenderSVGInlineText(RenderSVGInlineText* text, unsigned& atCharacter, const UChar*& lastCharacter)
 {
-    if (text->style()->whiteSpace() == PRE) {
+    if (text->style().whiteSpace() == PRE) {
         atCharacter += text->textLength();
         return;
     }
@@ -106,7 +106,7 @@ void SVGTextLayoutAttributesBuilder::collectTextPositioningElements(RenderObject
 {
     ASSERT(!start->isSVGText() || m_textPositions.isEmpty());
 
-    for (RenderObject* child = start->firstChild(); child; child = child->nextSibling()) { 
+    for (RenderObject* child = start->firstChildSlow(); child; child = child->nextSibling()) {
         if (child->isSVGInlineText()) {
             processRenderSVGInlineText(toRenderSVGInlineText(child), m_textLength, lastCharacter);
             continue;

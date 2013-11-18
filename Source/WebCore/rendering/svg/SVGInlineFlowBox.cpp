@@ -54,14 +54,11 @@ void SVGInlineFlowBox::paint(PaintInfo& paintInfo, const LayoutPoint&, LayoutUni
     ASSERT(paintInfo.phase == PaintPhaseForeground || paintInfo.phase == PaintPhaseSelection);
     ASSERT(!paintInfo.context->paintingDisabled());
 
-    RenderObject* boxRenderer = renderer();
-    ASSERT(boxRenderer);
-
-    SVGRenderingContext renderingContext(boxRenderer, paintInfo, SVGRenderingContext::SaveGraphicsContext);
+    SVGRenderingContext renderingContext(renderer(), paintInfo, SVGRenderingContext::SaveGraphicsContext);
     if (renderingContext.isRenderingPrepared()) {
         for (InlineBox* child = firstChild(); child; child = child->nextOnLine()) {
             if (child->isSVGInlineTextBox())
-                computeTextMatchMarkerRectForRenderer(toRenderSVGInlineText(toSVGInlineTextBox(child)->textRenderer()));
+                computeTextMatchMarkerRectForRenderer(&(toSVGInlineTextBox(child)->renderer()));
 
             child->paint(paintInfo, LayoutPoint(), 0, 0);
         }
@@ -83,16 +80,14 @@ void SVGInlineFlowBox::computeTextMatchMarkerRectForRenderer(RenderSVGInlineText
 {
     ASSERT(textRenderer);
 
-    Node* node = textRenderer->node();
-    if (!node || !node->inDocument())
+    Text& textNode = textRenderer->textNode();
+    if (!textNode.inDocument())
         return;
 
-    RenderStyle* style = textRenderer->style();
-    ASSERT(style);
+    RenderStyle& style = textRenderer->style();
 
     AffineTransform fragmentTransform;
-    Document* document = textRenderer->document();
-    Vector<DocumentMarker*> markers = document->markers().markersFor(textRenderer->node());
+    Vector<DocumentMarker*> markers = textRenderer->document().markers().markersFor(&textNode);
 
     Vector<DocumentMarker*>::iterator markerEnd = markers.end();
     for (Vector<DocumentMarker*>::iterator markerIt = markers.begin(); markerIt != markerEnd; ++markerIt) {
@@ -128,7 +123,7 @@ void SVGInlineFlowBox::computeTextMatchMarkerRectForRenderer(RenderSVGInlineText
                 if (!textBox->mapStartEndPositionsIntoFragmentCoordinates(fragment, fragmentStartPosition, fragmentEndPosition))
                     continue;
 
-                FloatRect fragmentRect = textBox->selectionRectForTextFragment(fragment, fragmentStartPosition, fragmentEndPosition, style);
+                FloatRect fragmentRect = textBox->selectionRectForTextFragment(fragment, fragmentStartPosition, fragmentEndPosition, &style);
                 fragment.buildFragmentTransform(fragmentTransform);
                 if (!fragmentTransform.isIdentity())
                     fragmentRect = fragmentTransform.mapRect(fragmentRect);

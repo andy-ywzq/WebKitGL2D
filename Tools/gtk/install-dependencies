@@ -41,7 +41,6 @@ function installDependenciesWithApt {
         autotools-dev \
         bison \
         flex \
-        gail-3.0 \
         gawk \
         gnome-common \
         gperf \
@@ -50,16 +49,15 @@ function installDependenciesWithApt {
         libatk1.0-dev \
         libenchant-dev \
         libfaad-dev \
-        libgail-3-dev \
-        libgail-dev \
         libgeoclue-dev \
         libgirepository1.0-dev \
         libgl1-mesa-dev \
         libgl1-mesa-glx \
         libgnutls-dev \
+        libgtk2.0-dev \
         libgudev-1.0-dev \
         libicu-dev \
-        libjpeg62-dev \
+        libjpeg8-dev \
         libmpg123-dev \
         libopus-dev \
         libpango1.0-dev \
@@ -72,10 +70,12 @@ function installDependenciesWithApt {
         libtool \
         libvorbis-dev \
         libwebp-dev \
+        libxcomposite-dev \
         libxslt1-dev \
         libxt-dev \
         libxtst-dev \
-        ruby
+        ruby \
+        xfonts-utils
 
     # These are dependencies necessary for running tests.
     apt-get install \
@@ -96,7 +96,7 @@ function installDependenciesWithApt {
         libgcrypt11-dev \
         libgpg-error-dev \
         libp11-kit-dev \
-        libtiff4-dev \
+        libtiff5-dev \
         libcroco3-dev \
         ragel \
         xutils-dev \
@@ -104,6 +104,7 @@ function installDependenciesWithApt {
         libxfont-dev \
         libpciaccess-dev \
         x11proto-bigreqs-dev \
+        x11proto-composite-dev \
         x11proto-gl-dev \
         x11proto-input-dev \
         x11proto-video-dev \
@@ -111,6 +112,7 @@ function installDependenciesWithApt {
         x11proto-resource-dev \
         x11proto-xcmisc-dev \
         x11proto-xf86dri-dev \
+        x11proto-randr-dev \
         libxkbfile-dev
 }
 

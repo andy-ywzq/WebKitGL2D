@@ -39,7 +39,6 @@
 namespace WebCore {
 
 class ContextMenuItem;
-class DOMFileSystem;
 class Event;
 class FrontendMenuProvider;
 class InspectorFrontendClient;
@@ -74,7 +73,7 @@ public:
     void copyText(const String& text);
     void openInNewTab(const String& url);
     bool canSave();
-    void save(const String& url, const String& content, bool forceSaveAs);
+    void save(const String& url, const String& content, bool base64Encoded, bool forceSaveAs);
     void append(const String& url, const String& content);
     void close(const String& url);
 
@@ -88,11 +87,10 @@ public:
     void requestFileSystems();
     void addFileSystem();
     void removeFileSystem(const String& fileSystemPath);
-#if ENABLE(FILE_SYSTEM)
-    PassRefPtr<DOMFileSystem> isolatedFileSystem(const String& fileSystemName, const String& rootURL);
-#endif
 
     bool isUnderTest();
+
+    void beep();
 
     bool canInspectWorkers();
     bool canSaveAs();

@@ -31,15 +31,9 @@
 #include "TextureMapperShaderProgram.h"
 #include "Timer.h"
 #include <wtf/HashMap.h>
-#include <wtf/OwnArrayPtr.h>
-#include <wtf/PassOwnArrayPtr.h>
 #include <wtf/PassRefPtr.h>
 #include <wtf/RefCounted.h>
 #include <wtf/TemporaryChange.h>
-
-#if PLATFORM(QT)
-#include "NativeImageQt.h"
-#endif
 
 #if USE(CAIRO)
 #include "CairoUtilities.h"
@@ -95,7 +89,7 @@ public:
 
         PassRefPtr<TextureMapperShaderProgram> getShaderProgram(TextureMapperShaderProgram::Options options)
         {
-            HashMap<TextureMapperShaderProgram::Options, RefPtr<TextureMapperShaderProgram> >::AddResult result = m_programs.add(options, 0);
+            HashMap<TextureMapperShaderProgram::Options, RefPtr<TextureMapperShaderProgram> >::AddResult result = m_programs.add(options, nullptr);
             if (result.isNewEntry)
                 result.iterator->value = TextureMapperShaderProgram::create(m_context, options);
 
@@ -289,13 +283,6 @@ void TextureMapperGL::beginPainting(PaintFlags flags)
     m_context3D->getIntegerv(GraphicsContext3D::CURRENT_PROGRAM, &data().previousProgram);
     data().previousScissorState = m_context3D->isEnabled(GraphicsContext3D::SCISSOR_TEST);
     data().previousDepthState = m_context3D->isEnabled(GraphicsContext3D::DEPTH_TEST);
-#if PLATFORM(QT)
-    if (m_context) {
-        QPainter* painter = m_context->platformContext();
-        painter->save();
-        painter->beginNativePainting();
-    }
-#endif
     m_context3D->disable(GraphicsContext3D::DEPTH_TEST);
     m_context3D->enable(GraphicsContext3D::SCISSOR_TEST);
     data().didModifyStencil = false;
@@ -327,14 +314,6 @@ void TextureMapperGL::endPainting()
         m_context3D->enable(GraphicsContext3D::DEPTH_TEST);
     else
         m_context3D->disable(GraphicsContext3D::DEPTH_TEST);
-
-#if PLATFORM(QT)
-    if (!m_context)
-        return;
-    QPainter* painter = m_context->platformContext();
-    painter->endNativePainting();
-    painter->restore();
-#endif
 }
 
 void TextureMapperGL::drawBorder(const Color& color, float width, const FloatRect& targetRect, const TransformationMatrix& modelViewMatrix)
@@ -357,33 +336,8 @@ void TextureMapperGL::drawBorder(const Color& color, float width, const FloatRec
 void TextureMapperGL::drawNumber(int number, const Color& color, const FloatPoint& targetPoint, const TransformationMatrix& modelViewMatrix)
 {
     int pointSize = 8;
-#if PLATFORM(QT)
-    QString counterString = QString::number(number);
 
-    QFont font(QString::fromLatin1("Monospace"), pointSize, QFont::Bold);
-    font.setStyleHint(QFont::TypeWriter);
-
-    QFontMetrics fontMetrics(font);
-    int width = fontMetrics.width(counterString) + 4;
-    int height = fontMetrics.height();
-
-    IntSize size(width, height);
-    IntRect sourceRect(IntPoint::zero(), size);
-    IntRect targetRect(roundedIntPoint(targetPoint), size);
-
-    QImage image(size, NativeImageQt::defaultFormatForAlphaEnabledImages());
-    QPainter painter(&image);
-    painter.fillRect(sourceRect, Color::createUnchecked(color.blue(), color.green(), color.red())); // Since we won't swap R+B when uploading a texture, paint with the swapped R+B color.
-    painter.setFont(font);
-    painter.setPen(Qt::white);
-    painter.drawText(2, height * 0.85, counterString);
-
-    RefPtr<BitmapTexture> texture = acquireTextureFromPool(size);
-    const uchar* bits = image.bits();
-    static_cast<BitmapTextureGL*>(texture.get())->updateContentsNoSwizzle(bits, sourceRect, IntPoint::zero(), image.bytesPerLine());
-    drawTexture(*texture, targetRect, modelViewMatrix, 1.0f, AllEdges);
-
-#elif USE(CAIRO)
+#if USE(CAIRO)
     CString counterString = String::number(number).ascii();
     // cairo_text_extents() requires a cairo_t, so dimensions need to be guesstimated.
     int width = counterString.length() * pointSize * 1.2;
@@ -521,7 +475,7 @@ static void prepareFilterProgram(TextureMapperShaderProgram* program, const Filt
     RefPtr<GraphicsContext3D> context = program->context();
     context->useProgram(program->programID());
 
-    switch (operation.getOperationType()) {
+    switch (operation.type()) {
     case FilterOperation::GRAYSCALE:
     case FilterOperation::SEPIA:
     case FilterOperation::SATURATE:
@@ -617,7 +571,7 @@ void TextureMapperGL::drawTexture(Platform3DObject texture, Flags flags, const I
     if (filter) {
         if (data().filterInfo->contentTexture)
             filterContentTextureID = toBitmapTextureGL(data().filterInfo->contentTexture.get())->id();
-        options |= optionsForFilterType(filter->getOperationType(), data().filterInfo->pass);
+        options |= optionsForFilterType(filter->type(), data().filterInfo->pass);
         if (filter->affectsOpacity())
             flags |= ShouldBlend;
     }
@@ -932,11 +886,7 @@ void BitmapTextureGL::updateContents(Image* image, const IntRect& targetRect, co
     int bytesPerLine;
     const char* imageData;
 
-#if PLATFORM(QT)
-    QImage qImage = frameImage->toImage();
-    imageData = reinterpret_cast<const char*>(qImage.constBits());
-    bytesPerLine = qImage.bytesPerLine();
-#elif USE(CAIRO)
+#if USE(CAIRO)
     cairo_surface_t* surface = frameImage.get();
     imageData = reinterpret_cast<const char*>(cairo_image_surface_get_data(surface));
     bytesPerLine = cairo_image_surface_get_stride(surface);
@@ -955,7 +905,7 @@ void TextureMapperGL::removeCachedCustomFilterProgram(CustomFilterProgram* progr
 bool TextureMapperGL::drawUsingCustomFilter(BitmapTexture& target, const BitmapTexture& source, const FilterOperation& filter)
 {
     RefPtr<CustomFilterRenderer> renderer;
-    switch (filter.getOperationType()) {
+    switch (filter.type()) {
     case FilterOperation::CUSTOM: {
         // WebKit2 pipeline is using the CustomFilterOperation, that's because of the "de-serialization" that
         // happens in CoordinatedGraphicsArgumentCoders.
@@ -963,7 +913,7 @@ bool TextureMapperGL::drawUsingCustomFilter(BitmapTexture& target, const BitmapT
         RefPtr<CustomFilterProgram> program = customFilter->program();
         renderer = CustomFilterRenderer::create(m_context3D, program->programType(), customFilter->parameters(), 
             customFilter->meshRows(), customFilter->meshColumns(), customFilter->meshType());
-        CustomFilterProgramMap::AddResult result = m_customFilterPrograms.add(program->programInfo(), 0);
+        CustomFilterProgramMap::AddResult result = m_customFilterPrograms.add(program->programInfo(), nullptr);
         if (result.isNewEntry)
             result.iterator->value = CustomFilterCompiledProgram::create(m_context3D, program->vertexShaderString(), program->fragmentShaderString(), program->programType());
         renderer->setCompiledProgram(result.iterator->value);
@@ -976,7 +926,7 @@ bool TextureMapperGL::drawUsingCustomFilter(BitmapTexture& target, const BitmapT
         renderer = CustomFilterRenderer::create(m_context3D, program->programInfo().programType(), customFilter->parameters(),
             customFilter->meshRows(), customFilter->meshColumns(), customFilter->meshType());
         RefPtr<CustomFilterCompiledProgram> compiledProgram;
-        CustomFilterProgramMap::AddResult result = m_customFilterPrograms.add(program->programInfo(), 0);
+        CustomFilterProgramMap::AddResult result = m_customFilterPrograms.add(program->programInfo(), nullptr);
         if (result.isNewEntry)
             result.iterator->value = CustomFilterCompiledProgram::create(m_context3D, program->validatedVertexShader(), program->validatedFragmentShader(), program->programInfo().programType());
         renderer->setCompiledProgram(result.iterator->value);
@@ -1009,7 +959,7 @@ bool TextureMapperGL::drawUsingCustomFilter(BitmapTexture& target, const BitmapT
 void TextureMapperGL::drawFiltered(const BitmapTexture& sampler, const BitmapTexture* contentTexture, const FilterOperation& filter, int pass)
 {
     // For standard filters, we always draw the whole texture without transformations.
-    TextureMapperShaderProgram::Options options = optionsForFilterType(filter.getOperationType(), pass);
+    TextureMapperShaderProgram::Options options = optionsForFilterType(filter.type(), pass);
     RefPtr<TextureMapperShaderProgram> program = data().sharedGLData().getShaderProgram(options);
     ASSERT(program);
 
@@ -1044,9 +994,9 @@ PassRefPtr<BitmapTexture> BitmapTextureGL::applyFilters(TextureMapper* textureMa
         RefPtr<FilterOperation> filter = filters.operations()[i];
         ASSERT(filter);
 
-        bool custom = isCustomFilter(filter->getOperationType());
+        bool custom = isCustomFilter(filter->type());
 
-        int numPasses = getPassesRequiredForFilter(filter->getOperationType());
+        int numPasses = getPassesRequiredForFilter(filter->type());
         for (int j = 0; j < numPasses; ++j) {
             bool last = (i == filters.size() - 1) && (j == numPasses - 1);
             if (custom || !last) {
@@ -1068,7 +1018,7 @@ PassRefPtr<BitmapTexture> BitmapTextureGL::applyFilters(TextureMapper* textureMa
             }
 
             texmapGL->drawFiltered(*resultSurface.get(), spareSurface.get(), *filter, j);
-            if (!j && filter->getOperationType() == FilterOperation::DROP_SHADOW) {
+            if (!j && filter->type() == FilterOperation::DROP_SHADOW) {
                 spareSurface = resultSurface;
                 resultSurface.clear();
             }

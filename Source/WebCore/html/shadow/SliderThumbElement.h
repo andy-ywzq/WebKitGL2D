@@ -34,71 +34,54 @@
 
 #include "HTMLDivElement.h"
 #include "HTMLNames.h"
-#include "RenderBlock.h"
+#include "RenderBlockFlow.h"
 #include <wtf/Forward.h>
 
 namespace WebCore {
 
-class HTMLElement;
 class HTMLInputElement;
-class Event;
 class FloatPoint;
 
 class SliderThumbElement FINAL : public HTMLDivElement {
 public:
-    static PassRefPtr<SliderThumbElement> create(Document*);
+    static PassRefPtr<SliderThumbElement> create(Document&);
 
     void setPositionFromValue();
-
     void dragFrom(const LayoutPoint&);
-    virtual void defaultEventHandler(Event*);
-    virtual bool willRespondToMouseMoveEvents() OVERRIDE;
-    virtual bool willRespondToMouseClickEvents() OVERRIDE;
-    virtual void willDetachRenderers() OVERRIDE;
-    virtual const AtomicString& shadowPseudoId() const;
     HTMLInputElement* hostInput() const;
     void setPositionFromPoint(const LayoutPoint&);
 
 private:
-    SliderThumbElement(Document*);
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
-    virtual PassRefPtr<Element> cloneElementWithoutAttributesAndChildren();
+    SliderThumbElement(Document&);
+
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
+    virtual PassRefPtr<Element> cloneElementWithoutAttributesAndChildren() OVERRIDE;
     virtual bool isDisabledFormControl() const OVERRIDE;
     virtual bool matchesReadOnlyPseudoClass() const OVERRIDE;
     virtual bool matchesReadWritePseudoClass() const OVERRIDE;
     virtual Element* focusDelegate() OVERRIDE;
+    virtual void defaultEventHandler(Event*) OVERRIDE;
+    virtual bool willRespondToMouseMoveEvents() OVERRIDE;
+    virtual bool willRespondToMouseClickEvents() OVERRIDE;
+    virtual void willDetachRenderers() OVERRIDE;
+    virtual const AtomicString& shadowPseudoId() const OVERRIDE;
+
     void startDragging();
     void stopDragging();
 
     bool m_inDragMode;
 };
 
-inline PassRefPtr<SliderThumbElement> SliderThumbElement::create(Document* document)
+inline PassRefPtr<SliderThumbElement> SliderThumbElement::create(Document& document)
 {
     return adoptRef(new SliderThumbElement(document));
 }
 
-inline PassRefPtr<Element> SliderThumbElement::cloneElementWithoutAttributesAndChildren()
-{
-    return create(document());
-}
-
-inline SliderThumbElement* toSliderThumbElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->isHTMLElement());
-    return static_cast<SliderThumbElement*>(node);
-}
-
-// This always return a valid pointer.
-// An assertion fails if the specified node is not a range input.
-SliderThumbElement* sliderThumbElementOf(Node*);
-HTMLElement* sliderTrackElementOf(Node*);
-
 // --------------------------------
 
-class RenderSliderThumb FINAL : public RenderBlock {
+class RenderSliderThumb FINAL : public RenderBlockFlow {
 public:
-    RenderSliderThumb(SliderThumbElement*);
+    RenderSliderThumb(SliderThumbElement&, PassRef<RenderStyle>);
     void updateAppearance(RenderStyle* parentStyle);
 
 private:
@@ -109,11 +92,11 @@ private:
 
 class SliderContainerElement FINAL : public HTMLDivElement {
 public:
-    static PassRefPtr<SliderContainerElement> create(Document*);
+    static PassRefPtr<SliderContainerElement> create(Document&);
 
 private:
-    SliderContainerElement(Document*);
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
+    SliderContainerElement(Document&);
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
     virtual const AtomicString& shadowPseudoId() const;
 };
 

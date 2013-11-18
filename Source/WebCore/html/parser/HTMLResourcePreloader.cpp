@@ -31,7 +31,7 @@
 
 #include "MediaList.h"
 #include "MediaQueryEvaluator.h"
-#include "RenderObject.h"
+#include "RenderView.h"
 
 namespace WebCore {
 
@@ -44,12 +44,12 @@ bool PreloadRequest::isSafeToSendToAnotherThread() const
         && m_baseURL.isSafeToSendToAnotherThread();
 }
 
-KURL PreloadRequest::completeURL(Document* document)
+URL PreloadRequest::completeURL(Document& document)
 {
-    return document->completeURL(m_resourceURL, m_baseURL.isEmpty() ? document->url() : m_baseURL);
+    return document.completeURL(m_resourceURL, m_baseURL.isEmpty() ? document.url() : m_baseURL);
 }
 
-CachedResourceRequest PreloadRequest::resourceRequest(Document* document)
+CachedResourceRequest PreloadRequest::resourceRequest(Document& document)
 {
     ASSERT(isMainThread());
     CachedResourceRequest request(ResourceRequest(completeURL(document)));
@@ -77,16 +77,15 @@ static bool mediaAttributeMatches(Frame* frame, RenderStyle* renderStyle, const 
     return mediaQueryEvaluator.eval(mediaQueries.get());
 }
 
-void HTMLResourcePreloader::preload(PassOwnPtr<PreloadRequest> preload)
+void HTMLResourcePreloader::preload(OwnPtr<PreloadRequest> preload)
 {
-    ASSERT(m_document->frame());
-    ASSERT(m_document->renderer());
-    ASSERT(m_document->renderer()->style());
-    if (!preload->media().isEmpty() && !mediaAttributeMatches(m_document->frame(), m_document->renderer()->style(), preload->media()))
+    ASSERT(m_document.frame());
+    ASSERT(m_document.renderView());
+    if (!preload->media().isEmpty() && !mediaAttributeMatches(m_document.frame(), &m_document.renderView()->style(), preload->media()))
         return;
 
     CachedResourceRequest request = preload->resourceRequest(m_document);
-    m_document->cachedResourceLoader()->preload(preload->resourceType(), request, preload->charset());
+    m_document.cachedResourceLoader()->preload(preload->resourceType(), request, preload->charset());
 }
 
 

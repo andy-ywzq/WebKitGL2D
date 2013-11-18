@@ -42,9 +42,16 @@ struct SameSizeAsStyleRareInheritedData : public RefCounted<SameSizeAsStyleRareI
     Length lengths[1];
     float secondFloat;
     unsigned m_bitfields[2];
+#if ENABLE(CSS3_TEXT_DECORATION) && ENABLE(CSS_IMAGE_ORIENTATION)
+    unsigned m_bitfieldsExtra;
+#endif
     short pagedMediaShorts[2];
     unsigned unsigneds[1];
     short hyphenationShorts[3];
+
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+    TextSizeAdjustment textSizeAdjust;
+#endif
 
 #if ENABLE(CSS_IMAGE_RESOLUTION)
     float imageResolutionFloats;
@@ -108,22 +115,31 @@ StyleRareInheritedData::StyleRareInheritedData()
     , m_textJustify(RenderStyle::initialTextJustify())
     , m_textUnderlinePosition(RenderStyle::initialTextUnderlinePosition())
 #endif // CSS3_TEXT
+#if ENABLE(CSS3_TEXT_DECORATION)
+    , m_textDecorationSkip(RenderStyle::initialTextDecorationSkip())
+#endif
     , m_rubyPosition(RenderStyle::initialRubyPosition())
+#if PLATFORM(IOS)
+    , touchCalloutEnabled(RenderStyle::initialTouchCalloutEnabled())
+#endif
     , hyphenationLimitBefore(-1)
     , hyphenationLimitAfter(-1)
     , hyphenationLimitLines(-1)
     , m_lineGrid(RenderStyle::initialLineGrid())
     , m_tabSize(RenderStyle::initialTabSize())
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+    , textSizeAdjust(RenderStyle::initialTextSizeAdjust())
+#endif
 #if ENABLE(CSS_IMAGE_RESOLUTION)
     , m_imageResolution(RenderStyle::initialImageResolution())
 #endif
 #if ENABLE(TOUCH_EVENTS)
     , tapHighlightColor(RenderStyle::initialTapHighlightColor())
-#endif    
-{
-#if ENABLE(CSS_VARIABLES)
-    m_variables.init();
 #endif
+#if ENABLE(CSS_VARIABLES)
+    , m_variables(StyleVariableData::create())
+#endif
+{
 }
 
 StyleRareInheritedData::StyleRareInheritedData(const StyleRareInheritedData& o)
@@ -183,7 +199,13 @@ StyleRareInheritedData::StyleRareInheritedData(const StyleRareInheritedData& o)
     , m_textJustify(o.m_textJustify)
     , m_textUnderlinePosition(o.m_textUnderlinePosition)
 #endif // CSS3_TEXT
+#if ENABLE(CSS3_TEXT_DECORATION)
+    , m_textDecorationSkip(o.m_textDecorationSkip)
+#endif
     , m_rubyPosition(o.m_rubyPosition)
+#if PLATFORM(IOS)
+    , touchCalloutEnabled(o.touchCalloutEnabled)
+#endif
     , hyphenationString(o.hyphenationString)
     , hyphenationLimitBefore(o.hyphenationLimitBefore)
     , hyphenationLimitAfter(o.hyphenationLimitAfter)
@@ -192,6 +214,9 @@ StyleRareInheritedData::StyleRareInheritedData(const StyleRareInheritedData& o)
     , textEmphasisCustomMark(o.textEmphasisCustomMark)
     , m_lineGrid(o.m_lineGrid)
     , m_tabSize(o.m_tabSize)
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+    , textSizeAdjust(o.textSizeAdjust)
+#endif
 #if ENABLE(CSS_IMAGE_RESOLUTION)
     , m_imageResolution(o.m_imageResolution)
 #endif
@@ -256,6 +281,9 @@ bool StyleRareInheritedData::operator==(const StyleRareInheritedData& o) const
 #if ENABLE(ACCELERATED_OVERFLOW_SCROLLING)
         && useTouchOverflowScrolling == o.useTouchOverflowScrolling
 #endif
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+        && textSizeAdjust == o.textSizeAdjust
+#endif
         && resize == o.resize
         && userSelect == o.userSelect
         && colorSpace == o.colorSpace
@@ -273,6 +301,9 @@ bool StyleRareInheritedData::operator==(const StyleRareInheritedData& o) const
         && m_textIndentType == o.m_textIndentType
 #endif
         && m_lineBoxContain == o.m_lineBoxContain
+#if PLATFORM(IOS)
+        && touchCalloutEnabled == o.touchCalloutEnabled
+#endif
         && hyphenationString == o.hyphenationString
         && locale == o.locale
         && textEmphasisCustomMark == o.textEmphasisCustomMark
@@ -293,6 +324,9 @@ bool StyleRareInheritedData::operator==(const StyleRareInheritedData& o) const
         && m_textJustify == o.m_textJustify
         && m_textUnderlinePosition == o.m_textUnderlinePosition
 #endif // CSS3_TEXT
+#if ENABLE(CSS3_TEXT_DECORATION)
+        && m_textDecorationSkip == o.m_textDecorationSkip
+#endif
         && m_rubyPosition == o.m_rubyPosition
         && m_lineSnap == o.m_lineSnap
 #if ENABLE(CSS_VARIABLES)

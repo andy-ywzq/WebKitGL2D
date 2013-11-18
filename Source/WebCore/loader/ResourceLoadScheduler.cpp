@@ -30,7 +30,7 @@
 #include "Frame.h"
 #include "FrameLoader.h"
 #include "InspectorInstrumentation.h"
-#include "KURL.h"
+#include "URL.h"
 #include "LoaderStrategy.h"
 #include "Logging.h"
 #include "NetscapePlugInStreamLoader.h"
@@ -48,7 +48,7 @@ static const unsigned maxRequestsInFlightForNonHTTPProtocols = 20;
 // Match the parallel connection count used by the networking layer.
 static unsigned maxRequestsInFlightPerHost;
 
-ResourceLoadScheduler::HostInformation* ResourceLoadScheduler::hostForURL(const KURL& url, CreateHostPolicy createHostPolicy)
+ResourceLoadScheduler::HostInformation* ResourceLoadScheduler::hostForURL(const URL& url, CreateHostPolicy createHostPolicy)
 {
     if (!url.protocolIsInHTTPFamily())
         return m_nonHTTPProtocolHost;
@@ -147,7 +147,7 @@ void ResourceLoadScheduler::scheduleLoad(ResourceLoader* resourceLoader, Resourc
 
 void ResourceLoadScheduler::notifyDidScheduleResourceRequest(ResourceLoader* loader)
 {
-    InspectorInstrumentation::didScheduleResourceRequest(loader->frameLoader() ? loader->frameLoader()->frame()->document() : 0, loader->url());
+    InspectorInstrumentation::didScheduleResourceRequest(loader->frameLoader() ? loader->frameLoader()->frame().document() : 0, loader->url());
 }
 
 void ResourceLoadScheduler::remove(ResourceLoader* resourceLoader)
@@ -160,7 +160,7 @@ void ResourceLoadScheduler::remove(ResourceLoader* resourceLoader)
     scheduleServePendingRequests();
 }
 
-void ResourceLoadScheduler::crossOriginRedirectReceived(ResourceLoader* resourceLoader, const KURL& redirectURL)
+void ResourceLoadScheduler::crossOriginRedirectReceived(ResourceLoader* resourceLoader, const URL& redirectURL)
 {
     HostInformation* oldHost = hostForURL(resourceLoader->url());
     ASSERT(oldHost);
@@ -212,7 +212,7 @@ void ResourceLoadScheduler::servePendingRequests(HostInformation* host, Resource
             // For named hosts - which are only http(s) hosts - we should always enforce the connection limit.
             // For non-named hosts - everything but http(s) - we should only enforce the limit if the document isn't done parsing 
             // and we don't know all stylesheets yet.
-            Document* document = resourceLoader->frameLoader() ? resourceLoader->frameLoader()->frame()->document() : 0;
+            Document* document = resourceLoader->frameLoader() ? resourceLoader->frameLoader()->frame().document() : 0;
             bool shouldLimitRequests = !host->name().isNull() || (document && (document->parsing() || !document->haveStylesheetsLoaded()));
             if (shouldLimitRequests && host->limitRequests(ResourceLoadPriority(priority)))
                 return;
@@ -278,10 +278,8 @@ void ResourceLoadScheduler::HostInformation::addLoadInProgress(ResourceLoader* r
     
 void ResourceLoadScheduler::HostInformation::remove(ResourceLoader* resourceLoader)
 {
-    if (m_requestsLoading.contains(resourceLoader)) {
-        m_requestsLoading.remove(resourceLoader);
+    if (m_requestsLoading.remove(resourceLoader))
         return;
-    }
     
     for (int priority = ResourceLoadPriorityHighest; priority >= ResourceLoadPriorityLowest; --priority) {  
         RequestQueue::iterator end = m_requestsPending[priority].end();

@@ -41,6 +41,7 @@ class Element;
 class InlineBox;
 class Node;
 class Range;
+class RenderElement;
 class RenderObject;
 class Text;
 
@@ -127,7 +128,7 @@ public:
     // will be treated as before ignoredNode (thus node() is really after the position, not containing it).
     Node* deprecatedNode() const { return m_anchorNode.get(); }
 
-    Document* document() const { return m_anchorNode ? m_anchorNode->document() : 0; }
+    Document* document() const { return m_anchorNode ? &m_anchorNode->document() : 0; }
     Element* rootEditableElement() const
     {
         Node* container = containerNode();
@@ -177,7 +178,6 @@ public:
     Position downstream(EditingBoundaryCrossingRule = CannotCrossEditingBoundary) const;
     
     bool isCandidate() const;
-    bool inRenderedText() const;
     bool isRenderedCharacter() const;
     bool rendersInDifferentPosition(const Position&) const;
 
@@ -186,7 +186,7 @@ public:
 
     TextDirection primaryDirection() const;
 
-    static bool hasRenderedNonAnonymousDescendantsWithHeight(RenderObject*);
+    static bool hasRenderedNonAnonymousDescendantsWithHeight(const RenderElement&);
     static bool nodeIsUserSelectNone(Node*);
 #if ENABLE(USERSELECT_ALL)
     static bool nodeIsUserSelectAll(const Node*);
@@ -207,9 +207,6 @@ public:
     
 private:
     int offsetForPositionAfterAnchor() const;
-
-    int renderedOffset() const;
-
     
     Position previousCharacterPosition(EAffinity) const;
     Position nextCharacterPosition(EAffinity) const;

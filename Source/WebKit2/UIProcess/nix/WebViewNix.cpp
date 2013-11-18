@@ -94,8 +94,9 @@ void WebViewNix::sendKeyEvent(const NIXKeyEvent& event)
 
 void WebViewNix::sendGestureEvent(const NIXGestureEvent& event)
 {
-    WebGestureEvent ev = WebEventFactory::createWebGestureEvent(event);
-    page()->handleGestureEvent(ev);
+    WebPlatformTouchPoint point(0, WebPlatformTouchPoint::TouchPressed, IntPoint(event.globalX, event.globalY),
+    IntPoint(event.x, event.y), IntSize(event.width, event.height));
+    page()->handleSingleTap(event.timestamp, point);
 }
 
 void WebViewNix::findZoomableAreaForPoint(const WKPoint& point, int horizontalRadius, int verticalRadius)
@@ -206,14 +207,6 @@ void WebViewNix::doneWithTouchEvent(const NativeWebTouchEvent& event, bool wasEv
 }
 #endif
 
-#if ENABLE(GESTURE_EVENTS)
-void WebViewNix::doneWithGestureEvent(const WebGestureEvent& event, bool wasEventHandled)
-{
-    NIXGestureEvent ev = WebEventFactory::createNativeWebGestureEvent(event);
-    m_viewClientNix.doneWithGestureEvent(this, ev, wasEventHandled);
-}
-#endif
-
 void WebViewNix::updateTextInputState()
 {
     m_viewClientNix.updateTextInputState(this, page()->editorState());
@@ -239,9 +232,6 @@ void WebViewNix::didStartedMainFrameLayout()
         m_loadIsBackForward = false;
         return;
     }
-
-    if (m_autoScaleToFitContents)
-        adjustScaleToFitContents();
 }
 
 void WebViewNix::adjustScaleToFitContents()

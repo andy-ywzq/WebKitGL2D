@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010 Google Inc. All rights reserved.
+ * Copyright (C) 2013 Nokia Corporation and/or its subsidiary(-ies).
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,6 +36,7 @@
 #include "AudioFIFO.h"
 #include "AudioPullFIFO.h"
 #include <public/Platform.h>
+#include <wtf/text/CString.h>
 
 namespace WebCore {
 
@@ -44,19 +46,19 @@ const unsigned renderBufferSize = 128;
 // Size of the FIFO
 const size_t fifoSize = 8192;
 
-// Factory method: Chromium-implementation
 PassOwnPtr<AudioDestination> AudioDestination::create(AudioIOCallback& callback, const String& inputDeviceId, unsigned numberOfInputChannels, unsigned numberOfOutputChannels, float sampleRate)
 {
     return adoptPtr(new AudioDestinationNix(callback, inputDeviceId, numberOfInputChannels, numberOfOutputChannels, sampleRate));
 }
 
-AudioDestinationNix::AudioDestinationNix(AudioIOCallback& callback, const String&, unsigned numberOfInputChannels, unsigned numberOfOutputChannels, float sampleRate)
+AudioDestinationNix::AudioDestinationNix(AudioIOCallback& callback, const String& inputDeviceId, unsigned numberOfInputChannels, unsigned numberOfOutputChannels, float sampleRate)
     : m_callback(callback)
     , m_numberOfOutputChannels(numberOfOutputChannels)
     , m_inputBus(AudioBus::create(numberOfInputChannels, renderBufferSize))
     , m_renderBus(AudioBus::create(numberOfOutputChannels, renderBufferSize, false))
     , m_sampleRate(sampleRate)
     , m_isPlaying(false)
+    , m_inputDeviceId(inputDeviceId)
 {
     // Use the optimal buffer size recommended by the audio backend.
     m_callbackBufferSize = Nix::Platform::current()->audioHardwareBufferSize();
@@ -66,7 +68,8 @@ AudioDestinationNix::AudioDestinationNix(AudioIOCallback& callback, const String
     if (m_callbackBufferSize + renderBufferSize > fifoSize)
         return;
 
-    m_audioDevice = adoptPtr(Nix::Platform::current()->createAudioDevice(m_callbackBufferSize, numberOfInputChannels, numberOfOutputChannels, sampleRate, this));
+    m_audioDevice = adoptPtr(Nix::Platform::current()->createAudioDevice(m_inputDeviceId.utf8().data(), m_callbackBufferSize, numberOfInputChannels, numberOfOutputChannels, sampleRate, this));
+
     ASSERT(m_audioDevice);
 
     // Create a FIFO to handle the possibility of the callback size
@@ -109,6 +112,16 @@ void AudioDestinationNix::stop()
     }
 }
 
+bool AudioDestinationNix::isPlaying()
+{
+    return m_isPlaying;
+}
+
+float AudioDestinationNix::sampleRate() const
+{
+    return m_sampleRate;
+}
+
 float AudioDestination::hardwareSampleRate()
 {
     return Nix::Platform::current()->audioHardwareSampleRate();
@@ -119,8 +132,11 @@ unsigned long AudioDestination::maxChannelCount()
     return Nix::Platform::current()->audioHardwareOutputChannels();
 }
 
-void AudioDestinationNix::render(const Nix::Vector<float*>& sourceData, const Nix::Vector<float*>& audioData, size_t numberOfFrames)
+void AudioDestinationNix::render(const std::vector<float*>& sourceData, const std::vector<float*>& audioData, size_t numberOfFrames)
 {
+    if (!m_isPlaying || !m_audioDevice)
+        return;
+
     bool isNumberOfChannelsGood = audioData.size() == m_numberOfOutputChannels;
     if (!isNumberOfChannelsGood) {
         ASSERT_NOT_REACHED();
@@ -134,11 +150,10 @@ void AudioDestinationNix::render(const Nix::Vector<float*>& sourceData, const Ni
     }
 
     // Buffer optional live input.
-    if (sourceData.size() >= 2) {
-        // FIXME: handle multi-channel input and don't hard-code to stereo.
-        RefPtr<AudioBus> wrapperBus = AudioBus::create(2, numberOfFrames, false);
-        wrapperBus->setChannelMemory(0, sourceData[0], numberOfFrames);
-        wrapperBus->setChannelMemory(1, sourceData[1], numberOfFrames);
+    if (sourceData.size()) {
+        RefPtr<AudioBus> wrapperBus = AudioBus::create(sourceData.size(), numberOfFrames, false);
+        for (unsigned i = 0; i < sourceData.size(); ++i)
+            wrapperBus->setChannelMemory(i, sourceData[i], numberOfFrames);
         m_inputFifo->push(wrapperBus.get());
     }
 

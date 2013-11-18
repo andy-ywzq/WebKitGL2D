@@ -33,8 +33,8 @@
 
 namespace WebCore {
 
-StyleKeyframe::StyleKeyframe(PassRefPtr<StylePropertySet> properties)
-    : m_properties(properties)
+StyleKeyframe::StyleKeyframe(PassRef<StylePropertySet> properties)
+    : m_properties(std::move(properties))
 {
 }
 
@@ -42,22 +42,22 @@ StyleKeyframe::~StyleKeyframe()
 {
 }
 
-MutableStylePropertySet* StyleKeyframe::mutableProperties()
+MutableStylePropertySet& StyleKeyframe::mutableProperties()
 {
     if (!m_properties->isMutable())
         m_properties = m_properties->mutableCopy();
-    return static_cast<MutableStylePropertySet*>(m_properties.get());
+    return static_cast<MutableStylePropertySet&>(m_properties.get());
 }
 
 /* static */
-void StyleKeyframe::parseKeyString(const String& s, Vector<float>& keys)
+void StyleKeyframe::parseKeyString(const String& s, Vector<double>& keys)
 {
     keys.clear();
     Vector<String> strings;
     s.split(',', strings);
 
     for (size_t i = 0; i < strings.size(); ++i) {
-        float key = -1;
+        double key = -1;
         String cur = strings[i].stripWhiteSpace();
         
         // For now the syntax MUST be 'xxx%' or 'from' or 'to', where xxx is a legal floating point number
@@ -66,7 +66,7 @@ void StyleKeyframe::parseKeyString(const String& s, Vector<float>& keys)
         else if (cur == "to")
             key = 1;
         else if (cur.endsWith('%')) {
-            float k = cur.substring(0, cur.length() - 1).toFloat();
+            double k = cur.substring(0, cur.length() - 1).toDouble();
             if (k >= 0 && k <= 100)
                 key = k/100;
         }
@@ -108,7 +108,7 @@ WebKitCSSKeyframeRule::~WebKitCSSKeyframeRule()
 CSSStyleDeclaration* WebKitCSSKeyframeRule::style()
 {
     if (!m_propertiesCSSOMWrapper)
-        m_propertiesCSSOMWrapper = StyleRuleCSSStyleDeclaration::create(m_keyframe->mutableProperties(), this);
+        m_propertiesCSSOMWrapper = StyleRuleCSSStyleDeclaration::create(m_keyframe->mutableProperties(), *this);
     return m_propertiesCSSOMWrapper.get();
 }
 

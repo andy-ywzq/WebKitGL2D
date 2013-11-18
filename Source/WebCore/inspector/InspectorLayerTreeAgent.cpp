@@ -118,7 +118,7 @@ void InspectorLayerTreeAgent::pseudoElementDestroyed(PseudoElement* pseudoElemen
     unbindPseudoElement(pseudoElement);
 }
 
-void InspectorLayerTreeAgent::layersForNode(ErrorString* errorString, int nodeId, RefPtr<TypeBuilder::Array<TypeBuilder::LayerTree::Layer> >& layers)
+void InspectorLayerTreeAgent::layersForNode(ErrorString* errorString, int nodeId, RefPtr<TypeBuilder::Array<TypeBuilder::LayerTree::Layer>>& layers)
 {
     layers = TypeBuilder::Array<TypeBuilder::LayerTree::Layer>::create();
 
@@ -137,18 +137,18 @@ void InspectorLayerTreeAgent::layersForNode(ErrorString* errorString, int nodeId
     gatherLayersUsingRenderObjectHierarchy(errorString, renderer, layers);
 }
 
-void InspectorLayerTreeAgent::gatherLayersUsingRenderObjectHierarchy(ErrorString* errorString, RenderObject* renderer, RefPtr<TypeBuilder::Array<TypeBuilder::LayerTree::Layer> >& layers)
+void InspectorLayerTreeAgent::gatherLayersUsingRenderObjectHierarchy(ErrorString* errorString, RenderObject* renderer, RefPtr<TypeBuilder::Array<TypeBuilder::LayerTree::Layer>>& layers)
 {
     if (renderer->hasLayer()) {
         gatherLayersUsingRenderLayerHierarchy(errorString, toRenderLayerModelObject(renderer)->layer(), layers);
         return;
     }
 
-    for (renderer = renderer->firstChild(); renderer; renderer = renderer->nextSibling())
+    for (renderer = renderer->firstChildSlow(); renderer; renderer = renderer->nextSibling())
         gatherLayersUsingRenderObjectHierarchy(errorString, renderer, layers);
 }
 
-void InspectorLayerTreeAgent::gatherLayersUsingRenderLayerHierarchy(ErrorString* errorString, RenderLayer* renderLayer, RefPtr<TypeBuilder::Array<TypeBuilder::LayerTree::Layer> >& layers)
+void InspectorLayerTreeAgent::gatherLayersUsingRenderLayerHierarchy(ErrorString* errorString, RenderLayer* renderLayer, RefPtr<TypeBuilder::Array<TypeBuilder::LayerTree::Layer>>& layers)
 {
     if (renderLayer->isComposited())
         layers->addItem(buildObjectForLayer(errorString, renderLayer));
@@ -159,7 +159,7 @@ void InspectorLayerTreeAgent::gatherLayersUsingRenderLayerHierarchy(ErrorString*
 
 PassRefPtr<TypeBuilder::LayerTree::Layer> InspectorLayerTreeAgent::buildObjectForLayer(ErrorString* errorString, RenderLayer* renderLayer)
 {
-    RenderObject* renderer = renderLayer->renderer();
+    RenderObject* renderer = &renderLayer->renderer();
     RenderLayerBacking* backing = renderLayer->backing();
     Node* node = renderer->node();
 
@@ -167,12 +167,14 @@ PassRefPtr<TypeBuilder::LayerTree::Layer> InspectorLayerTreeAgent::buildObjectFo
     bool isGenerated = (isReflection ? renderer->parent() : renderer)->isBeforeOrAfterContent();
     bool isAnonymous = renderer->isAnonymous();
 
-    if (isReflection && isGenerated)
-        node = renderer->parent()->generatingNode();
+    if (renderer->isRenderView())
+        node = &renderer->document();
+    else if (isReflection && isGenerated)
+        node = renderer->parent()->generatingElement();
     else if (isGenerated)
         node = renderer->generatingNode();
     else if (isReflection || isAnonymous)
-        node = renderer->parent()->node();
+        node = renderer->parent()->element();
 
     // Basic set of properties.
     RefPtr<TypeBuilder::LayerTree::Layer> layerObject = TypeBuilder::LayerTree::Layer::create()
@@ -200,14 +202,14 @@ PassRefPtr<TypeBuilder::LayerTree::Layer> InspectorLayerTreeAgent::buildObjectFo
             layerObject->setPseudoElement("after");
     }
 
-    if (isAnonymous) {
+    // FIXME: RenderView is now really anonymous but don't tell about it to the frontend before making sure it can handle it.
+    if (isAnonymous && !renderer->isRenderView()) {
         layerObject->setIsAnonymous(true);
-        if (RenderStyle* style = renderer->style()) {
-            if (style->styleType() == FIRST_LETTER)
-                layerObject->setPseudoElement("first-letter");
-            else if (style->styleType() == FIRST_LINE)
-                layerObject->setPseudoElement("first-line");
-        }
+        const RenderStyle& style = renderer->style();
+        if (style.styleType() == FIRST_LETTER)
+            layerObject->setPseudoElement("first-letter");
+        else if (style.styleType() == FIRST_LINE)
+            layerObject->setPseudoElement("first-line");
     }
 
     return layerObject;
@@ -222,7 +224,7 @@ int InspectorLayerTreeAgent::idForNode(ErrorString* errorString, Node* node)
     
     int nodeId = domAgent->boundNodeId(node);
     if (!nodeId)
-        nodeId = domAgent->pushNodeToFrontend(errorString, domAgent->boundNodeId(node->document()), node);
+        nodeId = domAgent->pushNodeToFrontend(errorString, domAgent->boundNodeId(&node->document()), node);
 
     return nodeId;
 }
@@ -245,7 +247,7 @@ void InspectorLayerTreeAgent::reasonsForCompositingLayer(ErrorString* errorStrin
         return;
     }
 
-    CompositingReasons reasonsBitmask = renderLayer->compositor()->reasonsForCompositing(renderLayer);
+    CompositingReasons reasonsBitmask = renderLayer->compositor().reasonsForCompositing(*renderLayer);
     compositingReasons = TypeBuilder::LayerTree::CompositingReasons::create();
 
     if (reasonsBitmask & CompositingReason3DTransform)

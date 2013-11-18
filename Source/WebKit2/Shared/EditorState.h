@@ -28,7 +28,6 @@
 
 #include "ArgumentCoders.h"
 #include <WebCore/IntRect.h>
-#include <wtf/NotFound.h>
 #include <wtf/text/WTFString.h>
 
 namespace WebKit {
@@ -43,7 +42,7 @@ struct EditorState {
         , isInPasswordField(false)
         , isInPlugin(false)
         , hasComposition(false)
-#if PLATFORM(QT) || PLATFORM(NIX)
+#if PLATFORM(NIX)
         , cursorPosition(0)
         , anchorPosition(0)
         , inputMethodHints(0)
@@ -60,7 +59,7 @@ struct EditorState {
     bool isInPasswordField;
     bool isInPlugin;
     bool hasComposition;
-#if PLATFORM(QT) || PLATFORM(NIX)
+#if PLATFORM(NIX)
     // The anchor, cursor represent either the selection or composition, depending
     // whether a composition exists or not.
     unsigned cursorPosition;
@@ -73,14 +72,10 @@ struct EditorState {
 
     WTF::String selectedText;
     WTF::String surroundingText;
-#endif
-
-#if PLATFORM(QT) || PLATFORM(GTK) || PLATFORM(NIX)
-    WebCore::IntRect cursorRect;
-#endif
-
-#if PLATFORM(NIX)
     WTF::String submitLabel;
+#endif
+#if PLATFORM(GTK) || PLATFORM(NIX)
+    WebCore::IntRect cursorRect;
 #endif
 
     void encode(CoreIPC::ArgumentEncoder&) const;

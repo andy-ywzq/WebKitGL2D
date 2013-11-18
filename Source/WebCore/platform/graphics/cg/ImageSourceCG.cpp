@@ -41,7 +41,7 @@ using namespace std;
 namespace WebCore {
 
 const CFStringRef kCGImageSourceShouldPreferRGB32 = CFSTR("kCGImageSourceShouldPreferRGB32");
-const CFStringRef kCGImageSourceSkipMetaData = CFSTR("kCGImageSourceSkipMetaData");
+const CFStringRef kCGImageSourceSkipMetadata = CFSTR("kCGImageSourceSkipMetadata");
 
 // kCGImagePropertyGIFUnclampedDelayTime is available in the ImageIO framework headers on some versions
 // of SnowLeopard. It's not possible to detect whether the constant is available so we define our own here
@@ -104,16 +104,16 @@ static CFDictionaryRef imageSourceOptions(ImageSource::ShouldSkipMetadata skipMe
         const unsigned numOptions = 3;
 
 #if PLATFORM(MAC) && !PLATFORM(IOS) && __MAC_OS_X_VERSION_MIN_REQUIRED <= 1070
-        // Lion and Snow Leopard only return Orientation when kCGImageSourceSkipMetaData is false,
-        // and incorrectly return cached metadata if an image is queried once with kCGImageSourceSkipMetaData true
-        // and then subsequently with kCGImageSourceSkipMetaData false.
+        // Lion and Snow Leopard only return Orientation when kCGImageSourceSkipMetadata is false,
+        // and incorrectly return cached metadata if an image is queried once with kCGImageSourceSkipMetadata true
+        // and then subsequently with kCGImageSourceSkipMetadata false.
         // <rdar://problem/11148192>
         UNUSED_PARAM(skipMetadata);
         const CFBooleanRef imageSourceSkipMetadata = kCFBooleanFalse;
 #else
         const CFBooleanRef imageSourceSkipMetadata = (skipMetadata == ImageSource::SkipMetadata) ? kCFBooleanTrue : kCFBooleanFalse;
 #endif
-        const void* keys[numOptions] = { kCGImageSourceShouldCache, kCGImageSourceShouldPreferRGB32, kCGImageSourceSkipMetaData };
+        const void* keys[numOptions] = { kCGImageSourceShouldCache, kCGImageSourceShouldPreferRGB32, kCGImageSourceSkipMetadata };
         const void* values[numOptions] = { kCFBooleanTrue, kCFBooleanTrue, imageSourceSkipMetadata };
         options = CFDictionaryCreate(NULL, keys, values, numOptions, 
             &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
@@ -133,8 +133,7 @@ void ImageSource::setData(SharedBuffer* data, bool allDataReceived)
         m_decoder = CGImageSourceCreateIncremental(0);
     // On Mac the NSData inside the SharedBuffer can be secretly appended to without the SharedBuffer's knowledge.  We use SharedBuffer's ability
     // to wrap itself inside CFData to get around this, ensuring that ImageIO is really looking at the SharedBuffer.
-    RetainPtr<CFDataRef> cfData = adoptCF(data->createCFData());
-    CGImageSourceUpdateData(m_decoder, cfData.get(), allDataReceived);
+    CGImageSourceUpdateData(m_decoder, data->createCFData().get(), allDataReceived);
 #else
     if (!m_decoder) {
         m_decoder = CGImageSourceCreateIncremental(0);
@@ -292,8 +291,10 @@ size_t ImageSource::frameCount() const
     return m_decoder ? CGImageSourceGetCount(m_decoder) : 0;
 }
 
-CGImageRef ImageSource::createFrameAtIndex(size_t index)
+CGImageRef ImageSource::createFrameAtIndex(size_t index, float* scale)
 {
+    UNUSED_PARAM(scale);
+
     if (!initialized())
         return 0;
 

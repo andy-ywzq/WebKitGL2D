@@ -41,7 +41,7 @@ void BitmapImage::invalidatePlatformData()
 
 static PassRefPtr<SharedBuffer> loadResourceSharedBufferFallback()
 {
-    return SharedBuffer::create(); // TODO: fallback image?
+    return SharedBuffer::create(); // FIXME: fallback image?
 }
 
 static PassRefPtr<SharedBuffer> loadResourceSharedBuffer(const char* name)

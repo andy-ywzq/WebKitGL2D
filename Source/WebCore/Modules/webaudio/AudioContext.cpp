@@ -63,6 +63,7 @@
 #if ENABLE(MEDIA_STREAM)
 #include "MediaStream.h"
 #include "MediaStreamAudioDestinationNode.h"
+#include "MediaStreamAudioSource.h"
 #include "MediaStreamAudioSourceNode.h"
 #endif
 
@@ -84,13 +85,13 @@
 #include <wtf/MainThread.h>
 #include <wtf/OwnPtr.h>
 #include <wtf/PassOwnPtr.h>
+#include <wtf/Ref.h>
 #include <wtf/RefCounted.h>
 #include <wtf/text/WTFString.h>
 
 // FIXME: check the proper way to reference an undefined thread ID
 const int UndefinedThreadIdentifier = 0xffffffff;
 
-const unsigned MaxNodesToDeletePerQuantum = 10;
 const unsigned MaxPeriodicWaveLength = 4096;
 
 namespace WebCore {
@@ -417,15 +418,17 @@ PassRefPtr<MediaStreamAudioSourceNode> AudioContext::createMediaStreamSource(Med
     AudioSourceProvider* provider = 0;
 
     MediaStreamTrackVector audioTracks = mediaStream->getAudioTracks();
-    if (mediaStream->isLocal() && audioTracks.size()) {
-        // Enable input for the specific local audio device specified in the MediaStreamSource.
-        RefPtr<MediaStreamTrack> localAudio = audioTracks[0];
-        MediaStreamSource* source = localAudio->component()->source();
+    // FIXME: get a provider for non-local MediaStreams (like from a remote peer).
+    for (size_t i = 0; i < audioTracks.size(); ++i) {
+        RefPtr<MediaStreamTrack> localAudio = audioTracks[i];
+        if (!localAudio->source()->isAudioStreamSource())
+            continue;
+
+        MediaStreamAudioSource* source = static_cast<MediaStreamAudioSource*>(localAudio->source());
+        ASSERT(!source->deviceId().isEmpty());
         destination()->enableInput(source->deviceId());
         provider = destination()->localAudioInputProvider();
-    } else {
-        // FIXME: get a provider for non-local MediaStreams (like from a remote peer).
-        provider = 0;
+        break;
     }
 
     RefPtr<MediaStreamAudioSourceNode> node = MediaStreamAudioSourceNode::create(this, mediaStream, provider);
@@ -733,7 +736,7 @@ void AudioContext::addDeferredFinishDeref(AudioNode* node)
 void AudioContext::handlePreRenderTasks()
 {
     ASSERT(isAudioThread());
- 
+
     // At the beginning of every render quantum, try to update the internal rendering graph state (from main thread changes).
     // It's OK if the tryLock() fails, we'll just take slightly longer to pick up the changes.
     bool mustReleaseLock;
@@ -752,8 +755,8 @@ void AudioContext::handlePreRenderTasks()
 void AudioContext::handlePostRenderTasks()
 {
     ASSERT(isAudioThread());
- 
-    // Must use a tryLock() here too.  Don't worry, the lock will very rarely be contended and this method is called frequently.
+
+    // Must use a tryLock() here too. Don't worry, the lock will very rarely be contended and this method is called frequently.
     // The worst that can happen is that there will be some nodes which will take slightly longer than usual to be deleted or removed
     // from the render graph (in which case they'll render silence).
     bool mustReleaseLock;
@@ -843,7 +846,7 @@ void AudioContext::deleteMarkedNodes()
     ASSERT(isMainThread());
 
     // Protect this object from being deleted before we release the mutex locked by AutoLocker.
-    RefPtr<AudioContext> protect(this);
+    Ref<AudioContext> protect(*this);
     {
         AutoLocker locker(this);
 
@@ -911,20 +914,16 @@ void AudioContext::addAutomaticPullNode(AudioNode* node)
 {
     ASSERT(isGraphOwner());
 
-    if (!m_automaticPullNodes.contains(node)) {
-        m_automaticPullNodes.add(node);
+    if (m_automaticPullNodes.add(node).isNewEntry)
         m_automaticPullNodesNeedUpdating = true;
-    }
 }
 
 void AudioContext::removeAutomaticPullNode(AudioNode* node)
 {
     ASSERT(isGraphOwner());
 
-    if (m_automaticPullNodes.contains(node)) {
-        m_automaticPullNodes.remove(node);
+    if (m_automaticPullNodes.remove(node))
         m_automaticPullNodesNeedUpdating = true;
-    }
 }
 
 void AudioContext::updateAutomaticPullNodes()
@@ -951,11 +950,6 @@ void AudioContext::processAutomaticPullNodes(size_t framesToProcess)
 
     for (unsigned i = 0; i < m_renderingAutomaticPullNodes.size(); ++i)
         m_renderingAutomaticPullNodes[i]->processIfNecessary(framesToProcess);
-}
-
-const AtomicString& AudioContext::interfaceName() const
-{
-    return eventNames().interfaceForAudioContext;
 }
 
 ScriptExecutionContext* AudioContext::scriptExecutionContext() const

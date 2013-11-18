@@ -40,20 +40,39 @@
 namespace WebCore {
 
 class MediaConstraints;
-class MediaStreamComponent;
+class MediaStreamSource;
 class RTCConfiguration;
 class RTCDTMFSenderHandler;
 class RTCDataChannelHandler;
 class RTCIceCandidateDescriptor;
+class RTCPeerConnectionHandler;
 class RTCPeerConnectionHandlerClient;
 class RTCSessionDescriptionDescriptor;
 class RTCSessionDescriptionRequest;
 class RTCStatsRequest;
 class RTCVoidRequest;
 
+struct RTCDataChannelInit {
+public:
+    RTCDataChannelInit()
+        : ordered(true)
+        , maxRetransmitTime(-1)
+        , maxRetransmits(-1)
+        , negotiated(false)
+        , id(-1) { }
+    bool ordered;
+    int maxRetransmitTime;
+    int maxRetransmits;
+    String protocol;
+    bool negotiated;
+    int id;
+};
+
+typedef PassOwnPtr<RTCPeerConnectionHandler> (*CreatePeerConnectionHandler)(RTCPeerConnectionHandlerClient*);
+
 class RTCPeerConnectionHandler {
 public:
-    static PassOwnPtr<RTCPeerConnectionHandler> create(RTCPeerConnectionHandlerClient*);
+    static CreatePeerConnectionHandler create;
     virtual ~RTCPeerConnectionHandler() { }
 
     virtual bool initialize(PassRefPtr<RTCConfiguration>, PassRefPtr<MediaConstraints>) = 0;
@@ -65,12 +84,12 @@ public:
     virtual PassRefPtr<RTCSessionDescriptionDescriptor> localDescription() = 0;
     virtual PassRefPtr<RTCSessionDescriptionDescriptor> remoteDescription() = 0;
     virtual bool updateIce(PassRefPtr<RTCConfiguration>, PassRefPtr<MediaConstraints>) = 0;
-    virtual bool addIceCandidate(PassRefPtr<RTCIceCandidateDescriptor>) = 0;
+    virtual bool addIceCandidate(PassRefPtr<RTCVoidRequest>, PassRefPtr<RTCIceCandidateDescriptor>) = 0;
     virtual bool addStream(PassRefPtr<MediaStreamDescriptor>, PassRefPtr<MediaConstraints>) = 0;
     virtual void removeStream(PassRefPtr<MediaStreamDescriptor>) = 0;
     virtual void getStats(PassRefPtr<RTCStatsRequest>) = 0;
-    virtual PassOwnPtr<RTCDataChannelHandler> createDataChannel(const String& label, bool reliable) = 0;
-    virtual PassOwnPtr<RTCDTMFSenderHandler> createDTMFSender(PassRefPtr<MediaStreamComponent>) = 0;
+    virtual PassOwnPtr<RTCDataChannelHandler> createDataChannel(const String& label, const RTCDataChannelInit&) = 0;
+    virtual PassOwnPtr<RTCDTMFSenderHandler> createDTMFSender(PassRefPtr<MediaStreamSource>) = 0;
     virtual void stop() = 0;
 
 protected:

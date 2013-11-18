@@ -22,7 +22,7 @@
 #define RenderSVGGradientStop_h
 
 #if ENABLE(SVG)
-#include "RenderObject.h"
+#include "RenderElement.h"
 
 namespace WebCore {
     
@@ -30,9 +30,9 @@ class SVGGradientElement;
 class SVGStopElement;
 
 // This class exists mostly so we can hear about gradient stop style changes
-class RenderSVGGradientStop FINAL : public RenderObject {
+class RenderSVGGradientStop FINAL : public RenderElement {
 public:
-    RenderSVGGradientStop(SVGStopElement*);
+    RenderSVGGradientStop(SVGStopElement&, PassRef<RenderStyle>);
     virtual ~RenderSVGGradientStop();
 
     virtual bool isSVGGradientStop() const { return true; }
@@ -47,19 +47,19 @@ public:
     virtual FloatRect objectBoundingBox() const { return FloatRect(); }
     virtual FloatRect strokeBoundingBox() const { return FloatRect(); }
     virtual FloatRect repaintRectInLocalCoordinates() const { return FloatRect(); }
+    virtual bool nodeAtFloatPoint(const HitTestRequest&, HitTestResult&, const FloatPoint&, HitTestAction) OVERRIDE { return false; }
 
 protected:
     virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle);
 
 private:
+    virtual bool canHaveChildren() const OVERRIDE { return false; }
+    virtual void paint(PaintInfo&, const LayoutPoint&) OVERRIDE FINAL { }
+
     SVGGradientElement* gradientElement() const;
 };
 
-inline const RenderSVGGradientStop* toRenderSVGGradientStop(const RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isSVGGradientStop());
-    return static_cast<const RenderSVGGradientStop*>(object);
-}
+RENDER_OBJECT_TYPE_CASTS(RenderSVGGradientStop, isSVGGradientStop())
 
 }
 

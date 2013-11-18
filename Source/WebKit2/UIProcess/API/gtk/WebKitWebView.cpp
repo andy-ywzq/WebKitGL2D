@@ -30,6 +30,7 @@
 #include "WebKitAuthenticationDialog.h"
 #include "WebKitAuthenticationRequestPrivate.h"
 #include "WebKitBackForwardListPrivate.h"
+#include "WebKitCertificateInfoPrivate.h"
 #include "WebKitContextMenuClient.h"
 #include "WebKitContextMenuItemPrivate.h"
 #include "WebKitContextMenuPrivate.h"
@@ -89,6 +90,7 @@ using namespace WebCore;
 enum {
     LOAD_CHANGED,
     LOAD_FAILED,
+    LOAD_FAILED_WITH_TLS_ERRORS,
 
     CREATE,
     READY_TO_SHOW,
@@ -190,6 +192,7 @@ struct _WebKitWebViewPrivate {
     unsigned long faviconChangedHandlerID;
 
     SnapshotResultsMap snapshotResultsMap;
+    GRefPtr<WebKitAuthenticationRequest> authenticationRequest;
 };
 
 static guint signals[LAST_SIGNAL] = { 0, };
@@ -379,6 +382,8 @@ static void webkitWebViewUpdateSettings(WebKitWebView* webView)
     page->setCanRunModal(webkit_settings_get_allow_modal_dialogs(settings));
     page->setCustomUserAgent(String::fromUTF8(webkit_settings_get_user_agent(settings)));
 
+    webkitWebViewBaseUpdatePreferences(WEBKIT_WEB_VIEW_BASE(webView));
+
     g_signal_connect(settings, "notify::allow-modal-dialogs", G_CALLBACK(allowModalDialogsChanged), webView);
     g_signal_connect(settings, "notify::zoom-text-only", G_CALLBACK(zoomTextOnlyChanged), webView);
     g_signal_connect(settings, "notify::user-agent", G_CALLBACK(userAgentChanged), webView);
@@ -435,7 +440,7 @@ static void webkitWebViewDisconnectFaviconDatabaseSignalHandlers(WebKitWebView* 
 static gboolean webkitWebViewAuthenticate(WebKitWebView* webView, WebKitAuthenticationRequest* request)
 {
     CredentialStorageMode credentialStorageMode = webkit_authentication_request_can_save_credentials(request) ? AllowPersistentStorage : DisallowPersistentStorage;
-    webkitWebViewBaseAddAuthenticationDialog(WEBKIT_WEB_VIEW_BASE(webView), webkitAuthenticationDialogNew(request, credentialStorageMode, webView));
+    webkitWebViewBaseAddAuthenticationDialog(WEBKIT_WEB_VIEW_BASE(webView), webkitAuthenticationDialogNew(request, credentialStorageMode));
 
     return TRUE;
 }
@@ -842,6 +847,39 @@ static void webkit_web_view_class_init(WebKitWebViewClass* webViewClass)
                      WEBKIT_TYPE_LOAD_EVENT,
                      G_TYPE_STRING,
                      G_TYPE_POINTER);
+
+    /**
+     * WebKitWebView::load-failed-with-tls-errors:
+     * @web_view: the #WebKitWebView on which the signal is emitted
+     * @info: a #WebKitCertificateInfo
+     * @host: the host on which the error occurred
+     *
+     * Emitted when a TLS error occurs during a load operation. The @info
+     * object contains information about the error such as the #GTlsCertificate
+     * and the #GTlsCertificateFlags. To allow an exception for this certificate
+     * and this host use webkit_web_context_allow_tls_certificate_for_host().
+     *
+     * To handle this signal asynchronously you should copy the #WebKitCertificateInfo
+     * with webkit_certificate_info_copy() and return %TRUE.
+     *
+     * If %FALSE is returned, #WebKitWebView::load-failed will be emitted. The load
+     * will finish regardless of the returned value.
+     *
+     * Returns: %TRUE to stop other handlers from being invoked for the event.
+     *   %FALSE to propagate the event further.
+     *
+     * Since: 2.4
+     */
+    signals[LOAD_FAILED_WITH_TLS_ERRORS] =
+        g_signal_new("load-failed-with-tls-errors",
+            G_TYPE_FROM_CLASS(webViewClass),
+            G_SIGNAL_RUN_LAST,
+            G_STRUCT_OFFSET(WebKitWebViewClass, load_failed_with_tls_errors),
+            g_signal_accumulator_true_handled, 0 /* accumulator data */,
+            webkit_marshal_BOOLEAN__BOXED_STRING,
+            G_TYPE_BOOLEAN, 2, /* number of parameters */
+            WEBKIT_TYPE_CERTIFICATE_INFO  | G_SIGNAL_TYPE_STATIC_SCOPE,
+            G_TYPE_STRING);
 
     /**
      * WebKitWebView::create:
@@ -1428,15 +1466,24 @@ static void webkitWebViewSetIsLoading(WebKitWebView* webView, bool isLoading)
     g_object_thaw_notify(G_OBJECT(webView));
 }
 
+static void webkitWebViewCancelAuthenticationRequest(WebKitWebView* webView)
+{
+    if (!webView->priv->authenticationRequest)
+        return;
+
+    webkit_authentication_request_cancel(webView->priv->authenticationRequest.get());
+    webView->priv->authenticationRequest.clear();
+}
+
 static void webkitWebViewEmitLoadChanged(WebKitWebView* webView, WebKitLoadEvent loadEvent)
 {
     if (loadEvent == WEBKIT_LOAD_STARTED) {
         webkitWebViewSetIsLoading(webView, true);
         webkitWebViewWatchForChangesInFavicon(webView);
-        webkitWebViewBaseCancelAuthenticationDialog(WEBKIT_WEB_VIEW_BASE(webView));
+        webkitWebViewCancelAuthenticationRequest(webView);
     } else if (loadEvent == WEBKIT_LOAD_FINISHED) {
         webkitWebViewSetIsLoading(webView, false);
-        webView->priv->waitingForMainResource = false;
+        webkitWebViewCancelAuthenticationRequest(webView);
         webkitWebViewDisconnectMainResourceResponseChangedSignalHandler(webView);
     } else
         webkitWebViewUpdateURI(webView);
@@ -1490,19 +1537,26 @@ void webkitWebViewLoadChanged(WebKitWebView* webView, WebKitLoadEvent loadEvent)
 void webkitWebViewLoadFailed(WebKitWebView* webView, WebKitLoadEvent loadEvent, const char* failingURI, GError *error)
 {
     webkitWebViewSetIsLoading(webView, false);
+    webkitWebViewCancelAuthenticationRequest(webView);
+
     gboolean returnValue;
     g_signal_emit(webView, signals[LOAD_FAILED], 0, loadEvent, failingURI, error, &returnValue);
     g_signal_emit(webView, signals[LOAD_CHANGED], 0, WEBKIT_LOAD_FINISHED);
 }
 
-void webkitWebViewLoadFailedWithTLSErrors(WebKitWebView* webView, const char* failingURI, GError *error, GTlsCertificateFlags tlsErrors, GTlsCertificate* certificate)
+void webkitWebViewLoadFailedWithTLSErrors(WebKitWebView* webView, const char* failingURI, GError* error, GTlsCertificateFlags tlsErrors, GTlsCertificate* certificate)
 {
     webkitWebViewSetIsLoading(webView, false);
+    webkitWebViewCancelAuthenticationRequest(webView);
 
     WebKitTLSErrorsPolicy tlsErrorsPolicy = webkit_web_context_get_tls_errors_policy(webView->priv->context);
     if (tlsErrorsPolicy == WEBKIT_TLS_ERRORS_POLICY_FAIL) {
-        webkitWebViewLoadFailed(webView, WEBKIT_LOAD_STARTED, failingURI, error);
-        return;
+        GOwnPtr<SoupURI> soupURI(soup_uri_new(failingURI));
+        WebKitCertificateInfo info(certificate, tlsErrors);
+        gboolean returnValue;
+        g_signal_emit(webView, signals[LOAD_FAILED_WITH_TLS_ERRORS], 0, &info, soupURI->host, &returnValue);
+        if (!returnValue)
+            g_signal_emit(webView, signals[LOAD_FAILED], 0, WEBKIT_LOAD_STARTED, failingURI, error, &returnValue);
     }
 
     g_signal_emit(webView, signals[LOAD_CHANGED], 0, WEBKIT_LOAD_FINISHED);
@@ -1784,9 +1838,9 @@ void webkitWebViewSubmitFormRequest(WebKitWebView* webView, WebKitFormSubmission
 void webkitWebViewHandleAuthenticationChallenge(WebKitWebView* webView, AuthenticationChallengeProxy* authenticationChallenge)
 {
     gboolean privateBrowsingEnabled = webkit_settings_get_enable_private_browsing(webkit_web_view_get_settings(webView));
-    GRefPtr<WebKitAuthenticationRequest> request = adoptGRef(webkitAuthenticationRequestCreate(authenticationChallenge, privateBrowsingEnabled));
+    webView->priv->authenticationRequest = adoptGRef(webkitAuthenticationRequestCreate(authenticationChallenge, privateBrowsingEnabled));
     gboolean returnValue;
-    g_signal_emit(webView, signals[AUTHENTICATE], 0, request.get(), &returnValue);
+    g_signal_emit(webView, signals[AUTHENTICATE], 0, webView->priv->authenticationRequest.get(), &returnValue);
 }
 
 void webkitWebViewInsecureContentDetected(WebKitWebView* webView, WebKitInsecureContentEvent type)

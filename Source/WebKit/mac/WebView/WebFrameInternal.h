@@ -78,7 +78,7 @@ WebView *getWebView(WebFrame *webFrame);
 @public
     WebCore::Frame* coreFrame;
     WebFrameView *webFrameView;
-    WebScriptDebugger* scriptDebugger;
+    std::unique_ptr<WebScriptDebugger> scriptDebugger;
     id internalLoadDelegate;
     BOOL shouldCreateRenderers;
     BOOL includedInWebKitStatistics;
@@ -133,8 +133,6 @@ WebView *getWebView(WebFrame *webFrame);
 
 - (DOMRange *)_convertNSRangeToDOMRange:(NSRange)range;
 - (NSRange)_convertDOMRangeToNSRange:(DOMRange *)range;
-
-- (NSString *)_markupStringFromRange:(DOMRange *)range nodes:(NSArray **)nodes;
 
 - (NSRect)_caretRectAtPosition:(const WebCore::Position&)pos affinity:(NSSelectionAffinity)affinity;
 - (NSRect)_firstRectForDOMRange:(DOMRange *)range;

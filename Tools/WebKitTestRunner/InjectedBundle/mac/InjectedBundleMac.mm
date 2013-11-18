@@ -39,21 +39,30 @@ namespace WTR {
 
 void InjectedBundle::platformInitialize(WKTypeRef)
 {
-    NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:
-        [NSNumber numberWithInteger:4],   @"AppleAntiAliasingThreshold",
-        [NSNumber numberWithInteger:0],   @"AppleFontSmoothing",
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1080
-        [NSNumber numberWithBool:NO],     @"NSScrollAnimationEnabled",
-#else
-        [NSNumber numberWithBool:NO],     @"AppleScrollAnimationEnabled",
-#endif
-        [NSNumber numberWithBool:NO],     @"NSOverlayScrollersEnabled",
-        @"Always",                        @"AppleShowScrollBars",
-        [NSArray arrayWithObject:@"en"],  @"AppleLanguages",
-        [NSDictionary dictionaryWithObjectsAndKeys:@"notational", @"notationl", nil], @"NSTestCorrectionDictionary",
-        nil];
+    static const int NoFontSmoothing = 0;
+    static const int BlueTintedAppearance = 1;
+
+    NSDictionary *dict = @{
+        @"AppleAntiAliasingThreshold": @4,
+        @"AppleFontSmoothing": @(NoFontSmoothing),
+        @"AppleAquaColorVariant": @(BlueTintedAppearance),
+        @"AppleHighlightColor": @"0.709800 0.835300 1.000000",
+        @"AppleOtherHighlightColor": @"0.500000 0.500000 0.500000",
+        @"NSScrollAnimationEnabled": @NO,
+        @"NSOverlayScrollersEnabled": @NO,
+        @"AppleShowScrollBars": @"Always",
+        @"AppleLanguages": @[ @"en" ],
+        // FIXME: Why does this dictionary not match the one in DumpRenderTree?
+        @"NSTestCorrectionDictionary": @{
+            @"notationl": @"notational"
+        }
+    };
 
     [[NSUserDefaults standardUserDefaults] setVolatileDomain:dict forName:NSArgumentDomain];
+
+    // Underlying frameworks have already read AppleAntiAliasingThreshold default before we changed it.
+    // A distributed notification is delivered to all applications, but it should be harmless, and it's the only way to update all underlying frameworks anyway.
+    [[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"AppleAquaAntiAliasingChanged" object:nil userInfo:nil deliverImmediately:YES];
 
     [NSURLRequest setAllowsAnyHTTPSCertificate:YES forHost:@"localhost"];
     [NSURLRequest setAllowsAnyHTTPSCertificate:YES forHost:@"127.0.0.1"];

@@ -23,7 +23,7 @@
 
 #if ENABLE(SVG)
 #include "SVGAnimatedTransformList.h"
-#include "SVGStyledElement.h"
+#include "SVGElement.h"
 #include "SVGTests.h"
 #include "SVGTransformable.h"
 
@@ -32,31 +32,31 @@ namespace WebCore {
 class AffineTransform;
 class Path;
 
-class SVGGraphicsElement : public SVGStyledElement, public SVGTransformable, public SVGTests {
+class SVGGraphicsElement : public SVGElement, public SVGTransformable, public SVGTests {
 public:
     virtual ~SVGGraphicsElement();
 
-    virtual AffineTransform getCTM(StyleUpdateStrategy = AllowStyleUpdate);
-    virtual AffineTransform getScreenCTM(StyleUpdateStrategy = AllowStyleUpdate);
-    virtual SVGElement* nearestViewportElement() const;
-    virtual SVGElement* farthestViewportElement() const;
+    virtual AffineTransform getCTM(StyleUpdateStrategy = AllowStyleUpdate) OVERRIDE;
+    virtual AffineTransform getScreenCTM(StyleUpdateStrategy = AllowStyleUpdate) OVERRIDE;
+    virtual SVGElement* nearestViewportElement() const OVERRIDE;
+    virtual SVGElement* farthestViewportElement() const OVERRIDE;
 
-    virtual AffineTransform localCoordinateSpaceTransform(SVGLocatable::CTMScope mode) const { return SVGTransformable::localCoordinateSpaceTransform(mode); }
-    virtual AffineTransform animatedLocalTransform() const;
-    virtual AffineTransform* supplementalTransform();
+    virtual AffineTransform localCoordinateSpaceTransform(SVGLocatable::CTMScope mode) const OVERRIDE { return SVGTransformable::localCoordinateSpaceTransform(mode); }
+    virtual AffineTransform animatedLocalTransform() const OVERRIDE;
+    virtual AffineTransform* supplementalTransform() OVERRIDE;
 
-    virtual FloatRect getBBox(StyleUpdateStrategy = AllowStyleUpdate);
+    virtual FloatRect getBBox(StyleUpdateStrategy = AllowStyleUpdate) OVERRIDE;
 
     // "base class" methods for all the elements which render as paths
     virtual void toClipPath(Path&);
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
 
 protected:
-    SVGGraphicsElement(const QualifiedName&, Document*, ConstructionType = CreateSVGElement);
+    SVGGraphicsElement(const QualifiedName&, Document&);
 
     bool isSupportedAttribute(const QualifiedName&);
     virtual void parseAttribute(const QualifiedName&, const AtomicString&) OVERRIDE;
-    virtual void svgAttributeChanged(const QualifiedName&);
+    virtual void svgAttributeChanged(const QualifiedName&) OVERRIDE;
 
     BEGIN_DECLARE_ANIMATED_PROPERTIES(SVGGraphicsElement)
         DECLARE_ANIMATED_TRANSFORM_LIST(Transform, transform)
@@ -66,20 +66,18 @@ private:
     virtual bool isSVGGraphicsElement() const OVERRIDE { return true; }
 
     // SVGTests
-    virtual void synchronizeRequiredFeatures() { SVGTests::synchronizeRequiredFeatures(this); }
-    virtual void synchronizeRequiredExtensions() { SVGTests::synchronizeRequiredExtensions(this); }
-    virtual void synchronizeSystemLanguage() { SVGTests::synchronizeSystemLanguage(this); }
+    virtual void synchronizeRequiredFeatures() OVERRIDE { SVGTests::synchronizeRequiredFeatures(this); }
+    virtual void synchronizeRequiredExtensions() OVERRIDE { SVGTests::synchronizeRequiredExtensions(this); }
+    virtual void synchronizeSystemLanguage() OVERRIDE { SVGTests::synchronizeSystemLanguage(this); }
 
     // Used by <animateMotion>
     OwnPtr<AffineTransform> m_supplementalTransform;
 };
 
-inline SVGGraphicsElement* toSVGGraphicsElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->isSVGElement());
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || toSVGElement(node)->isSVGGraphicsElement());
-    return static_cast<SVGGraphicsElement*>(node);
-}
+void isSVGGraphicsElement(const SVGGraphicsElement&); // Catch unnecessary runtime check of type known at compile time.
+inline bool isSVGGraphicsElement(const SVGElement& element) { return element.isSVGGraphicsElement(); }
+inline bool isSVGGraphicsElement(const Node& node) { return node.isSVGElement() && toSVGElement(node).isSVGGraphicsElement(); }
+NODE_TYPE_CASTS(SVGGraphicsElement)
 
 } // namespace WebCore
 

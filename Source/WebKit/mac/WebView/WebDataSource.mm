@@ -49,7 +49,7 @@
 #import "WebViewInternal.h"
 #import <WebCore/ApplicationCacheStorage.h>
 #import <WebCore/FrameLoader.h>
-#import <WebCore/KURL.h>
+#import <WebCore/URL.h>
 #import <WebCore/LegacyWebArchive.h>
 #import <WebCore/MIMETypeRegistry.h>
 #import <WebCore/ResourceBuffer.h>
@@ -96,6 +96,17 @@ static inline WebDataSourcePrivate* toPrivate(void* privateAttribute)
 {
     return reinterpret_cast<WebDataSourcePrivate*>(privateAttribute);
 }
+
+#if ENABLE(DISK_IMAGE_CACHE) && PLATFORM(IOS)
+static void BufferMemoryMapped(PassRefPtr<SharedBuffer> buffer, SharedBuffer::CompletionStatus mapStatus, SharedBuffer::MemoryMappedNotifyCallbackData data)
+{
+    NSObject<WebDataSourcePrivateDelegate> *delegate = [(WebDataSource *)data dataSourceDelegate];
+    if (mapStatus == SharedBuffer::Succeeded)
+        [delegate dataSourceMemoryMapped];
+    else
+        [delegate dataSourceMemoryMapFailed];
+}
+#endif
 
 @interface WebDataSource (WebFileInternal)
 @end
@@ -195,6 +206,54 @@ static inline void addTypesFromClass(NSMutableDictionary *allTypes, Class objCCl
         return;
 
     toPrivate(_private)->loader->setDeferMainResourceDataLoad(flag);
+}
+
+- (void)_setAllowToBeMemoryMapped
+{
+#if ENABLE(DISK_IMAGE_CACHE) && PLATFORM(IOS)
+    RefPtr<ResourceBuffer> mainResourceBuffer = toPrivate(_private)->loader->mainResourceData();
+    if (!mainResourceBuffer)
+        return;
+
+    RefPtr<SharedBuffer> mainResourceData = mainResourceBuffer->sharedBuffer();
+    if (!mainResourceData)
+        return;
+
+    if (mainResourceData->memoryMappedNotificationCallback() != BufferMemoryMapped) {
+        ASSERT(!mainResourceData->memoryMappedNotificationCallback() && !mainResourceData->memoryMappedNotificationCallbackData());
+        mainResourceData->setMemoryMappedNotificationCallback(BufferMemoryMapped, self);
+    }
+
+    switch (mainResourceData->allowToBeMemoryMapped()) {
+    case SharedBuffer::SuccessAlreadyMapped:
+        [[self dataSourceDelegate] dataSourceMemoryMapped];
+        return;
+    case SharedBuffer::PreviouslyQueuedForMapping:
+    case SharedBuffer::QueuedForMapping:
+        return;
+    case SharedBuffer::FailureCacheFull:
+        [[self dataSourceDelegate] dataSourceMemoryMapFailed];
+        return;
+    }
+    ASSERT_NOT_REACHED();
+#endif
+}
+
+- (void)setDataSourceDelegate:(NSObject<WebDataSourcePrivateDelegate> *)delegate
+{
+#if ENABLE(DISK_IMAGE_CACHE) && PLATFORM(IOS)
+    ASSERT(!toPrivate(_private)->_dataSourceDelegate);
+    toPrivate(_private)->_dataSourceDelegate = delegate;
+#endif
+}
+
+- (NSObject<WebDataSourcePrivateDelegate> *)dataSourceDelegate
+{
+#if ENABLE(DISK_IMAGE_CACHE) && PLATFORM(IOS)
+    return toPrivate(_private)->_dataSourceDelegate;
+#else
+    return nullptr;
+#endif
 }
 
 @end
@@ -312,7 +371,7 @@ static inline void addTypesFromClass(NSMutableDictionary *allTypes, Class objCCl
 // May return nil if not initialized with a URL.
 - (NSURL *)_URL
 {
-    const KURL& url = toPrivate(_private)->loader->url();
+    const URL& url = toPrivate(_private)->loader->url();
     if (url.isEmpty())
         return nil;
     return url;
@@ -383,6 +442,20 @@ static inline void addTypesFromClass(NSMutableDictionary *allTypes, Class objCCl
     if (toPrivate(_private) && toPrivate(_private)->includedInWebKitStatistics)
         --WebDataSourceCount;
 
+#if ENABLE(DISK_IMAGE_CACHE) && PLATFORM(IOS)
+    if (_private) {
+        RefPtr<ResourceBuffer> mainResourceBuffer = toPrivate(_private)->loader->mainResourceData();
+        if (mainResourceBuffer) {
+            RefPtr<SharedBuffer> mainResourceData = mainResourceBuffer->sharedBuffer();
+            if (mainResourceData && 
+                mainResourceData->memoryMappedNotificationCallbackData() == self &&
+                mainResourceData->memoryMappedNotificationCallback() == BufferMemoryMapped) {
+                mainResourceData->setMemoryMappedNotificationCallback(nullptr, nullptr);
+            }
+        }
+    }
+#endif
+
     delete toPrivate(_private);
 
     [super dealloc];
@@ -405,7 +478,7 @@ static inline void addTypesFromClass(NSMutableDictionary *allTypes, Class objCCl
     RefPtr<ResourceBuffer> mainResourceData = toPrivate(_private)->loader->mainResourceData();
     if (!mainResourceData)
         return nil;
-    return [mainResourceData->createNSData() autorelease];
+    return [mainResourceData->createNSData().leakRef() autorelease];
 }
 
 - (id <WebDocumentRepresentation>)representation
@@ -462,7 +535,7 @@ static inline void addTypesFromClass(NSMutableDictionary *allTypes, Class objCCl
 
 - (NSURL *)unreachableURL
 {
-    const KURL& unreachableURL = toPrivate(_private)->loader->unreachableURL();
+    const URL& unreachableURL = toPrivate(_private)->loader->unreachableURL();
     if (unreachableURL.isEmpty())
         return nil;
     return unreachableURL;
@@ -485,7 +558,7 @@ static inline void addTypesFromClass(NSMutableDictionary *allTypes, Class objCCl
 
 - (NSArray *)subresources
 {
-    Vector<PassRefPtr<ArchiveResource> > coreSubresources;
+    Vector<PassRefPtr<ArchiveResource>> coreSubresources;
     toPrivate(_private)->loader->getSubresources(coreSubresources);
 
     NSMutableArray *subresources = [[NSMutableArray alloc] initWithCapacity:coreSubresources.size()];

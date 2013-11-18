@@ -128,9 +128,15 @@ namespace WebCore {
         // with textures that are RGB or RGBA format, and UNSIGNED_BYTE type.
         bool copyToPlatformTexture(GraphicsContext3D&, Platform3DObject, GC3Denum, bool, bool);
 
+        FloatSize spaceSize() const { return m_space; }
+        void setSpaceSize(const FloatSize& space)
+        {
+            m_space = space;
+        }
+
     private:
 #if USE(CG)
-        PassNativeImagePtr copyNativeImage(BackingStoreCopy = CopyBackingStore) const;
+        RetainPtr<CGImageRef> copyNativeImage(BackingStoreCopy = CopyBackingStore) const;
         void flushContext() const;
         void flushContextIfNecessary() const;
 #endif
@@ -144,7 +150,7 @@ namespace WebCore {
         friend class GraphicsContext;
         friend class GeneratedImage;
         friend class CrossfadeGeneratedImage;
-        friend class GeneratorGeneratedImage;
+        friend class GradientImage;
 
     private:
         ImageBufferData m_data;
@@ -152,6 +158,7 @@ namespace WebCore {
         IntSize m_logicalSize;
         float m_resolutionScale;
         OwnPtr<GraphicsContext> m_context;
+        FloatSize m_space;
 
         // This constructor will place its success into the given out-variable
         // so that create() knows when it should return failure.

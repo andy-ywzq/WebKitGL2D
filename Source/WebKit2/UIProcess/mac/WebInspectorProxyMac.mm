@@ -48,6 +48,7 @@
 #import <WebCore/InspectorFrontendClientLocal.h>
 #import <WebCore/LocalizedStrings.h>
 #import <WebCore/SoftLinking.h>
+#import <wtf/text/Base64.h>
 #import <wtf/text/WTFString.h>
 
 SOFT_LINK_STAGED_FRAMEWORK(WebInspectorUI, PrivateFrameworks, A)
@@ -189,22 +190,6 @@ static const NSUInteger windowStyleMask = NSTitledWindowMask | NSClosableWindowM
 @end
 
 namespace WebKit {
-
-static bool inspectorReallyUsesWebKitUserInterface(WebPreferences* preferences)
-{
-    // This matches a similar check in WebInspectorMac.mm. Keep them in sync.
-
-    // Call the soft link framework function to dlopen it, then [NSBundle bundleWithIdentifier:] will work.
-    WebInspectorUILibrary();
-
-    if (![[NSBundle bundleWithIdentifier:@"com.apple.WebInspectorUI"] pathForResource:@"Main" ofType:@"html"])
-        return true;
-
-    if (![[NSBundle bundleWithIdentifier:@"com.apple.WebCore"] pathForResource:@"inspector" ofType:@"html" inDirectory:@"inspector"])
-        return false;
-
-    return preferences->inspectorUsesWebKitUserInterface();
-}
 
 static WKRect getWindowFrame(WKPageRef, const void* clientInfo)
 {
@@ -542,7 +527,7 @@ void WebInspectorProxy::platformInspectedURLChanged(const String& urlString)
     updateInspectorWindowTitle();
 }
 
-void WebInspectorProxy::platformSave(const String& suggestedURL, const String& content, bool forceSaveDialog)
+void WebInspectorProxy::platformSave(const String& suggestedURL, const String& content, bool base64Encoded, bool forceSaveDialog)
 {
     ASSERT(!suggestedURL.isEmpty());
     
@@ -563,9 +548,18 @@ void WebInspectorProxy::platformSave(const String& suggestedURL, const String& c
 
     auto saveToURL = ^(NSURL *actualURL) {
         ASSERT(actualURL);
-        
+
         m_suggestedToActualURLMap.set(suggestedURLCopy, actualURL);
-        [contentCopy writeToURL:actualURL atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+
+        if (base64Encoded) {
+            Vector<char> out;
+            if (!base64Decode(contentCopy, out, Base64FailOnInvalidCharacterOrExcessPadding))
+                return;
+            RetainPtr<NSData> dataContent = adoptNS([[NSData alloc] initWithBytes:out.data() length:out.size()]);
+            [dataContent writeToURL:actualURL atomically:YES];
+        } else
+            [contentCopy writeToURL:actualURL atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+
         m_page->process()->send(Messages::WebInspector::DidSave([actualURL absoluteString]), m_page->pageID());
     };
 
@@ -755,12 +749,10 @@ void WebInspectorProxy::platformSetToolbarHeight(unsigned height)
 
 String WebInspectorProxy::inspectorPageURL() const
 {
-    NSString *path;
-    if (inspectorReallyUsesWebKitUserInterface(page()->pageGroup()->preferences()))
-        path = [[NSBundle bundleWithIdentifier:@"com.apple.WebCore"] pathForResource:@"inspector" ofType:@"html" inDirectory:@"inspector"];
-    else
-        path = [[NSBundle bundleWithIdentifier:@"com.apple.WebInspectorUI"] pathForResource:@"Main" ofType:@"html"];
+    // Call the soft link framework function to dlopen it, then [NSBundle bundleWithIdentifier:] will work.
+    WebInspectorUILibrary();
 
+    NSString *path = [[NSBundle bundleWithIdentifier:@"com.apple.WebInspectorUI"] pathForResource:@"Main" ofType:@"html"];
     ASSERT([path length]);
 
     return [[NSURL fileURLWithPath:path] absoluteString];
@@ -768,12 +760,10 @@ String WebInspectorProxy::inspectorPageURL() const
 
 String WebInspectorProxy::inspectorBaseURL() const
 {
-    NSString *path;
-    if (inspectorReallyUsesWebKitUserInterface(page()->pageGroup()->preferences()))
-        path = [[NSBundle bundleWithIdentifier:@"com.apple.WebCore"] resourcePath];
-    else
-        path = [[NSBundle bundleWithIdentifier:@"com.apple.WebInspectorUI"] resourcePath];
+    // Call the soft link framework function to dlopen it, then [NSBundle bundleWithIdentifier:] will work.
+    WebInspectorUILibrary();
 
+    NSString *path = [[NSBundle bundleWithIdentifier:@"com.apple.WebInspectorUI"] resourcePath];
     ASSERT([path length]);
 
     return [[NSURL fileURLWithPath:path] absoluteString];

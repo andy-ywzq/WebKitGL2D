@@ -27,7 +27,7 @@
 #define PrintStream_h
 
 #include <stdarg.h>
-#include <wtf/FastAllocBase.h>
+#include <wtf/FastMalloc.h>
 #include <wtf/Noncopyable.h>
 #include <wtf/Platform.h>
 #include <wtf/RawPointer.h>
@@ -257,6 +257,8 @@ inline void printInternal(PrintStream& out, CString& value) { printInternal(out,
 inline void printInternal(PrintStream& out, String& value) { printInternal(out, static_cast<const String&>(value)); }
 inline void printInternal(PrintStream& out, StringImpl* value) { printInternal(out, static_cast<const StringImpl*>(value)); }
 WTF_EXPORT_PRIVATE void printInternal(PrintStream&, bool);
+WTF_EXPORT_PRIVATE void printInternal(PrintStream&, short);
+WTF_EXPORT_PRIVATE void printInternal(PrintStream&, unsigned short);
 WTF_EXPORT_PRIVATE void printInternal(PrintStream&, int);
 WTF_EXPORT_PRIVATE void printInternal(PrintStream&, unsigned);
 WTF_EXPORT_PRIVATE void printInternal(PrintStream&, long);
@@ -360,11 +362,36 @@ ValueInContext<T, U> inContext(const T& value, U* context)
     return ValueInContext<T, U>(value, context);
 }
 
+template<typename T, typename U>
+class ValueIgnoringContext {
+public:
+    ValueIgnoringContext(const U& value)
+        : m_value(&value)
+    {
+    }
+    
+    void dump(PrintStream& out) const
+    {
+        T context;
+        m_value->dumpInContext(out, &context);
+    }
+
+private:
+    const U* m_value;
+};
+
+template<typename T, typename U>
+ValueIgnoringContext<T, U> ignoringContext(const U& value)
+{
+    return ValueIgnoringContext<T, U>(value);
+}
+
 } // namespace WTF
 
 using WTF::CharacterDump;
 using WTF::PointerDump;
 using WTF::PrintStream;
+using WTF::ignoringContext;
 using WTF::inContext;
 using WTF::pointerDump;
 

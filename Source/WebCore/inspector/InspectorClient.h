@@ -59,11 +59,6 @@ public:
     virtual void clearBrowserCookies() { }
     virtual bool canMonitorMainThread() { return false; }
 
-    typedef void (*TraceEventCallback)(char phase, const unsigned char*, const char* name, unsigned long long id,
-        int numArgs, const char* const* argNames, const unsigned char* argTypes, const unsigned long long* argValues,
-        unsigned char flags);
-    virtual void setTraceEventCallback(TraceEventCallback) { }
-
     virtual bool canOverrideDeviceMetrics() { return false; }
 
     virtual void overrideDeviceMetrics(int /*width*/, int /*height*/, float /*fontScaleFactor*/, bool /*fitWindow*/)
@@ -88,6 +83,8 @@ public:
     virtual void setContinuousPaintingEnabled(bool) { }
 
     virtual bool supportsFrameInstrumentation() { return false; }
+
+    virtual void didSetSearchingForNode(bool) { }
 
     virtual void getAllocatedObjects(HashSet<const void*>&) { }
     virtual void dumpUncountedAllocatedObjects(const HashMap<const void*, size_t>&) { }

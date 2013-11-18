@@ -59,6 +59,12 @@ class Page;
 #if ENABLE(FULLSCREEN_API)
 @class WebFullScreenController;
 #endif
+#if ENABLE(MEDIA_STREAM)
+@protocol WebUserMediaClient;
+#endif
+#if ENABLE(REMOTE_INSPECTOR) && PLATFORM(IOS)
+@class WebIndicateLayer;
+#endif
 
 extern BOOL applicationIsTerminating;
 extern int pluginDatabaseClientCount;
@@ -172,7 +178,7 @@ private:
     // WebKit has both a global plug-in database and a separate, per WebView plug-in database. Dashboard uses the per WebView database.
     WebPluginDatabase *pluginDatabase;
     
-    HashMap<unsigned long, RetainPtr<id> > identifierMap;
+    HashMap<unsigned long, RetainPtr<id>> identifierMap;
 
     BOOL _keyboardUIModeAccessed;
     WebCore::KeyboardUIMode _keyboardUIMode;
@@ -201,12 +207,26 @@ private:
     WebFullScreenController *newFullscreenController;
 #endif
 
+#if ENABLE(REMOTE_INSPECTOR)
+    BOOL allowsRemoteInspection;
+    NSDictionary *remoteInspectorUserInfo;
+#if PLATFORM(IOS)
+    WebIndicateLayer *indicateLayer;
+    NSString *hostApplicationBundleId;
+    NSString *hostApplicationName;
+#endif
+#endif
+
 #if USE(GLIB)
     CFRunLoopObserverRef glibRunLoopObserver;
 #endif
     id<WebGeolocationProvider> _geolocationProvider;
     id<WebDeviceOrientationProvider> m_deviceOrientationProvider;
     id<WebNotificationProvider> _notificationProvider;
+
+#if ENABLE(MEDIA_STREAM)
+    id<WebUserMediaClient> m_userMediaClient;
+#endif
 
     RefPtr<WebCore::HistoryItem> _globalHistoryItem;
 

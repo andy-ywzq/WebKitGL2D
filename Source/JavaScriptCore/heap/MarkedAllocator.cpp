@@ -30,15 +30,21 @@ bool MarkedAllocator::isPagedOut(double deadline)
 inline void* MarkedAllocator::tryAllocateHelper(size_t bytes)
 {
     if (!m_freeList.head) {
+        if (m_currentBlock) {
+            ASSERT(m_currentBlock == m_blocksToSweep);
+            m_currentBlock->didConsumeFreeList();
+            m_blocksToSweep = m_currentBlock->next();
+        }
+
         for (MarkedBlock*& block = m_blocksToSweep; block; block = block->next()) {
             MarkedBlock::FreeList freeList = block->sweep(MarkedBlock::SweepToFreeList);
             if (!freeList.head) {
-                block->didConsumeFreeList();
+                block->didConsumeEmptyFreeList();
                 continue;
             }
 
             if (bytes > block->cellSize()) {
-                block->canonicalizeCellLivenessData(freeList);
+                block->stopAllocating(freeList);
                 continue;
             }
 
@@ -72,10 +78,12 @@ void* MarkedAllocator::allocateSlowCase(size_t bytes)
 {
     ASSERT(m_heap->vm()->currentThreadIsHoldingAPILock());
 #if COLLECT_ON_EVERY_ALLOCATION
-    m_heap->collectAllGarbage();
+    if (!m_heap->isDeferred())
+        m_heap->collectAllGarbage();
     ASSERT(m_heap->m_operationInProgress == NoOperation);
 #endif
     
+    ASSERT(!m_markedSpace->isIterating());
     ASSERT(!m_freeList.head);
     m_heap->didAllocate(m_freeList.bytes);
     

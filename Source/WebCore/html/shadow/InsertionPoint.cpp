@@ -41,7 +41,7 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-InsertionPoint::InsertionPoint(const QualifiedName& tagName, Document* document)
+InsertionPoint::InsertionPoint(const QualifiedName& tagName, Document& document)
     : HTMLElement(tagName, document, CreateInsertionPoint)
     , m_hasDistribution(false)
 {
@@ -60,11 +60,11 @@ void InsertionPoint::willAttachRenderers()
         if (current->attached())
             continue;
         if (current->isTextNode()) {
-            toText(current)->attachText();
+            Style::attachTextRenderer(*toText(current));
             continue;
         }
         if (current->isElementNode())
-            Style::attachRenderTree(toElement(current));
+            Style::attachRenderTree(*toElement(current));
     }
 }
 
@@ -75,11 +75,11 @@ void InsertionPoint::willDetachRenderers()
 
     for (Node* current = firstDistributed(); current; current = nextDistributedTo(current)) {
         if (current->isTextNode()) {
-            toText(current)->detachText();
+            Style::detachTextRenderer(*toText(current));
             continue;
         }
         if (current->isElementNode())
-            Style::detachRenderTree(toElement(current));
+            Style::detachRenderTree(*toElement(current));
     }
 }
 
@@ -107,14 +107,14 @@ bool InsertionPoint::rendererIsNeeded(const RenderStyle& style)
     return !isActive() && HTMLElement::rendererIsNeeded(style);
 }
 
-void InsertionPoint::childrenChanged(bool changedByParser, Node* beforeChange, Node* afterChange, int childCountDelta)
+void InsertionPoint::childrenChanged(const ChildChange& change)
 {
-    HTMLElement::childrenChanged(changedByParser, beforeChange, afterChange, childCountDelta);
+    HTMLElement::childrenChanged(change);
     if (ShadowRoot* root = containingShadowRoot())
         root->invalidateDistribution();
 }
 
-Node::InsertionNotificationRequest InsertionPoint::insertedInto(ContainerNode* insertionPoint)
+Node::InsertionNotificationRequest InsertionPoint::insertedInto(ContainerNode& insertionPoint)
 {
     HTMLElement::insertedInto(insertionPoint);
 
@@ -126,11 +126,11 @@ Node::InsertionNotificationRequest InsertionPoint::insertedInto(ContainerNode* i
     return InsertionDone;
 }
 
-void InsertionPoint::removedFrom(ContainerNode* insertionPoint)
+void InsertionPoint::removedFrom(ContainerNode& insertionPoint)
 {
     ShadowRoot* root = containingShadowRoot();
     if (!root)
-        root = insertionPoint->containingShadowRoot();
+        root = insertionPoint.containingShadowRoot();
 
     if (root && root->hostElement()) {
         root->invalidateDistribution();

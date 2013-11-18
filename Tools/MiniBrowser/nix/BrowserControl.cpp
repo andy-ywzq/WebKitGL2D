@@ -27,6 +27,7 @@
 
 #include "BrowserControl.h"
 #include "XlibEventUtils.h"
+#include <string.h>
 
 BrowserControl::BrowserControl(BrowserControlClient * client, int width, int height, std::string url)
     : m_client(client)
@@ -244,6 +245,7 @@ static KeySym chooseSymbolForXKeyEvent(const XKeyEvent* event, bool* useUpperCas
 static NIXKeyEvent convertXKeyEventToNixKeyEvent(const XKeyEvent* event, const KeySym& symbol, bool useUpperCase)
 {
     NIXKeyEvent nixEvent;
+    memset(&nixEvent, 0, sizeof(NIXKeyEvent));
     nixEvent.type = (event->type == KeyPress) ? kNIXInputEventTypeKeyDown : kNIXInputEventTypeKeyUp;
     nixEvent.modifiers = convertXEventModifiersToNativeModifiers(event->state);
     nixEvent.timestamp = convertXEventTimeToNixTimestamp(event->time);
@@ -283,16 +285,15 @@ void BrowserControl::sendKeyboardEventToNix(const XEvent& event)
 
 void BrowserControl::handleKeyPressEvent(const XEvent& event)
 {
-    if (!m_urlBar->focused())
+    if (m_urlBar->focused())
+        m_urlBar->handleKeyPressEvent(reinterpret_cast<const XKeyPressedEvent&>(event));
+    else
         sendKeyboardEventToNix(event);
 }
 
 void BrowserControl::handleKeyReleaseEvent(const XEvent& event)
 {
-    if (m_urlBar->focused())
-        m_urlBar->handleKeyReleaseEvent(reinterpret_cast<const XKeyReleasedEvent&>(event));
-    else
-        sendKeyboardEventToNix(event);
+    sendKeyboardEventToNix(event);
 }
 
 void BrowserControl::updateClickCount(const XButtonPressedEvent& event)

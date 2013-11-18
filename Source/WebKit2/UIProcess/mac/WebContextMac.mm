@@ -27,7 +27,6 @@
 #import "WebContext.h"
 
 #import "PluginProcessManager.h"
-#import "SharedWorkerProcessManager.h"
 #import "TextChecker.h"
 #import "WKBrowsingContextControllerInternal.h"
 #import "WKBrowsingContextControllerInternal.h"
@@ -39,6 +38,7 @@
 #import <WebCore/FileSystem.h>
 #import <WebCore/NotImplemented.h>
 #import <WebCore/PlatformPasteboard.h>
+#import <WebCore/SharedBuffer.h>
 #import <sys/param.h>
 
 #if ENABLE(NETWORK_PROCESS)
@@ -70,8 +70,10 @@ static NSString *WebKitApplicationDidChangeAccessibilityEnhancedUserInterfaceNot
 // FIXME: <rdar://problem/9138817> - After this "backwards compatibility" radar is removed, this code should be removed to only return an empty String.
 NSString *WebIconDatabaseDirectoryDefaultsKey = @"WebIconDatabaseDirectoryDefaultsKey";
 
+#if ENABLE(NETWORK_PROCESS)
 static NSString * const WebKit2HTTPProxyDefaultsKey = @"WebKit2HTTPProxy";
 static NSString * const WebKit2HTTPSProxyDefaultsKey = @"WebKit2HTTPSProxy";
+#endif
 
 namespace WebKit {
 
@@ -103,14 +105,11 @@ static void updateProcessSuppressionStateOfGlobalChildProcesses()
 {
     // The plan is to have all child processes become context specific.  This function
     // can be removed once that is complete.
-#if ENABLE(PLUGIN_PROCESS) || ENABLE(SHARED_WORKER_PROCESS)
+#if ENABLE(NETSCAPE_PLUGIN_API) || ENABLE(SHARED_WORKER_PROCESS)
     bool canEnable = WebContext::canEnableProcessSuppressionForGlobalChildProcesses();
 #endif
-#if ENABLE(PLUGIN_PROCESS)
+#if ENABLE(NETSCAPE_PLUGIN_API)
     PluginProcessManager::shared().setProcessSuppressionEnabled(canEnable);
-#endif
-#if ENABLE(SHARED_WORKER_PROCESS)
-    SharedWorkerProcessManager::shared().setProcessSuppressionEnabled(canEnable);
 #endif
 }
 
@@ -403,9 +402,9 @@ void WebContext::getPasteboardBufferForType(const String& pasteboardName, const 
     sharedMemoryBuffer->createHandle(handle, SharedMemory::ReadOnly);
 }
 
-void WebContext::pasteboardCopy(const String& fromPasteboard, const String& toPasteboard)
+void WebContext::pasteboardCopy(const String& fromPasteboard, const String& toPasteboard, uint64_t& newChangeCount)
 {
-    PlatformPasteboard(toPasteboard).copy(fromPasteboard);
+    newChangeCount = PlatformPasteboard(toPasteboard).copy(fromPasteboard);
 }
 
 void WebContext::getPasteboardChangeCount(const String& pasteboardName, uint64_t& changeCount)
@@ -428,36 +427,80 @@ void WebContext::getPasteboardURL(const String& pasteboardName, WTF::String& url
     urlString = PlatformPasteboard(pasteboardName).url().string();
 }
 
-void WebContext::addPasteboardTypes(const String& pasteboardName, const Vector<String>& pasteboardTypes)
+void WebContext::addPasteboardTypes(const String& pasteboardName, const Vector<String>& pasteboardTypes, uint64_t& newChangeCount)
 {
-    PlatformPasteboard(pasteboardName).addTypes(pasteboardTypes);
+    newChangeCount = PlatformPasteboard(pasteboardName).addTypes(pasteboardTypes);
 }
 
-void WebContext::setPasteboardTypes(const String& pasteboardName, const Vector<String>& pasteboardTypes)
+void WebContext::setPasteboardTypes(const String& pasteboardName, const Vector<String>& pasteboardTypes, uint64_t& newChangeCount)
 {
-    PlatformPasteboard(pasteboardName).setTypes(pasteboardTypes);
+    newChangeCount = PlatformPasteboard(pasteboardName).setTypes(pasteboardTypes);
 }
 
-void WebContext::setPasteboardPathnamesForType(const String& pasteboardName, const String& pasteboardType, const Vector<String>& pathnames)
+void WebContext::setPasteboardPathnamesForType(const String& pasteboardName, const String& pasteboardType, const Vector<String>& pathnames, uint64_t& newChangeCount)
 {
-    PlatformPasteboard(pasteboardName).setPathnamesForType(pathnames, pasteboardType);
+    newChangeCount = PlatformPasteboard(pasteboardName).setPathnamesForType(pathnames, pasteboardType);
 }
 
-void WebContext::setPasteboardStringForType(const String& pasteboardName, const String& pasteboardType, const String& string)
+void WebContext::setPasteboardStringForType(const String& pasteboardName, const String& pasteboardType, const String& string, uint64_t& newChangeCount)
 {
-    PlatformPasteboard(pasteboardName).setStringForType(string, pasteboardType);    
+    newChangeCount = PlatformPasteboard(pasteboardName).setStringForType(string, pasteboardType);
 }
 
-void WebContext::setPasteboardBufferForType(const String& pasteboardName, const String& pasteboardType, const SharedMemory::Handle& handle, uint64_t size)
+void WebContext::setPasteboardBufferForType(const String& pasteboardName, const String& pasteboardType, const SharedMemory::Handle& handle, uint64_t size, uint64_t& newChangeCount)
 {
     if (handle.isNull()) {
-        PlatformPasteboard(pasteboardName).setBufferForType(0, pasteboardType);
+        newChangeCount = PlatformPasteboard(pasteboardName).setBufferForType(0, pasteboardType);
         return;
     }
     RefPtr<SharedMemory> sharedMemoryBuffer = SharedMemory::create(handle, SharedMemory::ReadOnly);
     RefPtr<SharedBuffer> buffer = SharedBuffer::create(static_cast<unsigned char *>(sharedMemoryBuffer->data()), size);
-    PlatformPasteboard(pasteboardName).setBufferForType(buffer, pasteboardType);
+    newChangeCount = PlatformPasteboard(pasteboardName).setBufferForType(buffer, pasteboardType);
 }
+
+#if PLATFORM(IOS)
+void WebContext::writeWebContentToPasteboard(const WebCore::PasteboardWebContent& content)
+{
+    PlatformPasteboard().write(content);
+}
+
+void WebContext::writeImageToPasteboard(const WebCore::PasteboardImage& pasteboardImage)
+{
+    PlatformPasteboard().write(pasteboardImage);
+}
+
+void WebContext::writeStringToPasteboard(const String& pasteboardType, const String& text)
+{
+    PlatformPasteboard().write(pasteboardType, text);
+}
+
+void WebContext::readStringFromPasteboard(uint64_t index, const String& pasteboardType, WTF::String& value)
+{
+    value = PlatformPasteboard().readString(index, pasteboardType);
+}
+
+void WebContext::readURLFromPasteboard(uint64_t index, const String& pasteboardType, String& url)
+{
+    url = PlatformPasteboard().readURL(index, pasteboardType);
+}
+
+void WebContext::readBufferFromPasteboard(uint64_t index, const String& pasteboardType, SharedMemory::Handle& handle, uint64_t& size)
+{
+    RefPtr<SharedBuffer> buffer = PlatformPasteboard().readBuffer(index, pasteboardType);
+    if (!buffer)
+        return;
+    size = buffer->size();
+    RefPtr<SharedMemory> sharedMemoryBuffer = SharedMemory::create(size);
+    memcpy(sharedMemoryBuffer->data(), buffer->data(), size);
+    sharedMemoryBuffer->createHandle(handle, SharedMemory::ReadOnly);
+}
+
+void WebContext::getPasteboardItemsCount(uint64_t& itemsCount)
+{
+    itemsCount = PlatformPasteboard().count();
+}
+
+#endif
 
 void WebContext::setProcessSuppressionEnabled(bool enabled)
 {
@@ -587,7 +630,7 @@ static CFURLStorageSessionRef privateBrowsingSession()
 bool WebContext::isURLKnownHSTSHost(const String& urlString, bool privateBrowsingEnabled) const
 {
 #if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
-    RetainPtr<CFURLRef> url = KURL(KURL(), urlString).createCFURL();
+    RetainPtr<CFURLRef> url = URL(URL(), urlString).createCFURL();
 
     return _CFNetworkIsKnownHSTSHostWithSession(url.get(), privateBrowsingEnabled ? privateBrowsingSession() : nullptr);
 #else

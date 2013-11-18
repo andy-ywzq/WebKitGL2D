@@ -36,20 +36,8 @@ typedef EventSender<HTMLStyleElement> StyleEventSender;
 
 class HTMLStyleElement FINAL : public HTMLElement {
 public:
-    static PassRefPtr<HTMLStyleElement> create(const QualifiedName&, Document*, bool createdByParser);
+    static PassRefPtr<HTMLStyleElement> create(const QualifiedName&, Document&, bool createdByParser);
     virtual ~HTMLStyleElement();
-
-    bool scoped() const;
-    void setScoped(bool);
-    Element* scopingElement() const;
-    bool isRegisteredAsScoped() const
-    {
-        // Note: We cannot rely on the 'scoped' attribute still being present when this method is invoked.
-        // Therefore we cannot rely on scoped()!
-        if (m_scopedStyleRegistrationState == NotRegistered)
-            return false;
-        return true;
-    }
 
     CSSStyleSheet* sheet() const { return m_styleSheetOwner.sheet(); }
 
@@ -60,13 +48,13 @@ public:
     static void dispatchPendingLoadEvents();
 
 private:
-    HTMLStyleElement(const QualifiedName&, Document*, bool createdByParser);
+    HTMLStyleElement(const QualifiedName&, Document&, bool createdByParser);
 
     // overload from HTMLElement
     virtual void parseAttribute(const QualifiedName&, const AtomicString&) OVERRIDE;
-    virtual InsertionNotificationRequest insertedInto(ContainerNode*) OVERRIDE;
-    virtual void removedFrom(ContainerNode*) OVERRIDE;
-    virtual void childrenChanged(bool changedByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0);
+    virtual InsertionNotificationRequest insertedInto(ContainerNode&) OVERRIDE;
+    virtual void removedFrom(ContainerNode&) OVERRIDE;
+    virtual void childrenChanged(const ChildChange&) OVERRIDE;
 
     virtual void finishParsingChildren();
 
@@ -75,39 +63,14 @@ private:
     virtual void notifyLoadedSheetAndAllCriticalSubresources(bool errorOccurred);
     virtual void startLoadingDynamicSheet() { m_styleSheetOwner.startLoadingDynamicSheet(document()); }
 
-    virtual void addSubresourceAttributeURLs(ListHashSet<KURL>&) const;
-
-    void scopedAttributeChanged(bool);
-    void registerWithScopingNode(bool);
-    void unregisterWithScopingNode(ContainerNode*);
+    virtual void addSubresourceAttributeURLs(ListHashSet<URL>&) const;
 
     InlineStyleSheetOwner m_styleSheetOwner;
     bool m_firedLoad;
     bool m_loadedSheet;
-
-    enum ScopedStyleRegistrationState {
-        NotRegistered,
-        RegisteredAsScoped,
-        RegisteredInShadowRoot
-    };
-    ScopedStyleRegistrationState m_scopedStyleRegistrationState;
 };
 
-inline bool isHTMLStyleElement(Node* node)
-{
-    return node->hasTagName(HTMLNames::styleTag);
-}
-
-inline bool isHTMLStyleElement(Element* element)
-{
-    return element->hasTagName(HTMLNames::styleTag);
-}
-
-inline HTMLStyleElement* toHTMLStyleElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || isHTMLStyleElement(node));
-    return static_cast<HTMLStyleElement*>(node);
-}
+NODE_TYPE_CASTS(HTMLStyleElement)
 
 } //namespace
 

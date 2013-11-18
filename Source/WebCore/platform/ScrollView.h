@@ -46,7 +46,7 @@ class Scrollbar;
 
 class ScrollView : public Widget, public ScrollableArea {
 public:
-    ~ScrollView();
+    virtual ~ScrollView();
 
     // ScrollableArea functions.
     virtual int scrollSize(ScrollbarOrientation) const OVERRIDE;
@@ -68,7 +68,7 @@ public:
     virtual IntRect windowClipRect(bool clipToContents = true) const = 0;
 
     // Functions for child manipulation and inspection.
-    const HashSet<RefPtr<Widget> >* children() const { return &m_children; }
+    const HashSet<RefPtr<Widget>>& children() const { return m_children; }
     virtual void addChild(PassRefPtr<Widget>);
     virtual void removeChild(Widget*);
 
@@ -148,7 +148,7 @@ public:
     virtual int visibleHeight() const OVERRIDE { return visibleContentRect().height(); }
 
     // visibleContentRect().size() is computed from unscaledVisibleContentSize() divided by the value of visibleContentScaleFactor.
-    // visibleContentScaleFactor is usually 1, except when the setting applyPageScaleFactorInCompositor is true and the
+    // visibleContentScaleFactor is usually 1, except when the setting delegatesPageScaling is true and the
     // ScrollView is the main frame; in that case, visibleContentScaleFactor is equal to the page's pageScaleFactor.
     // Ports that don't use pageScaleFactor can treat unscaledVisibleContentSize and visibleContentRect().size() as equivalent.
     IntSize unscaledVisibleContentSize(VisibleContentRectIncludesScrollbars = ExcludeScrollbars) const;
@@ -240,13 +240,13 @@ public:
     void adjustScrollbarsAvoidingResizerCount(int overlapDelta);
     void windowResizerRectChanged();
 
-    virtual void setParent(ScrollView*); // Overridden to update the overlapping scrollbar count.
+    virtual void setParent(ScrollView*) OVERRIDE; // Overridden to update the overlapping scrollbar count.
 
     // Called when our frame rect changes (or the rect/scroll position of an ancestor changes).
-    virtual void frameRectsChanged();
+    virtual void frameRectsChanged() OVERRIDE;
     
     // Widget override to update our scrollbars and notify our contents of the resize.
-    virtual void setFrameRect(const IntRect&);
+    virtual void setFrameRect(const IntRect&) OVERRIDE;
 
     // Widget override to notify our contents of a cliprect change.
     virtual void clipRectChanged() OVERRIDE;
@@ -273,13 +273,13 @@ public:
     }
 
     // Widget override. Handles painting of the contents of the view as well as the scrollbars.
-    virtual void paint(GraphicsContext*, const IntRect&);
+    virtual void paint(GraphicsContext*, const IntRect&) OVERRIDE;
     void paintScrollbars(GraphicsContext*, const IntRect&);
 
     // Widget overrides to ensure that our children's visibility status is kept up to date when we get shown and hidden.
-    virtual void show();
-    virtual void hide();
-    virtual void setParentVisible(bool);
+    virtual void show() OVERRIDE;
+    virtual void hide() OVERRIDE;
+    virtual void setParentVisible(bool) OVERRIDE;
     
     // Pan scrolling.
     static const int noPanScrollRadius = 15;
@@ -289,7 +289,7 @@ public:
 
     virtual bool isPointInScrollbarCorner(const IntPoint&);
     virtual bool scrollbarCornerPresent() const;
-    virtual IntRect scrollCornerRect() const;
+    virtual IntRect scrollCornerRect() const OVERRIDE;
     virtual void paintScrollCorner(GraphicsContext*, const IntRect& cornerRect);
     virtual void paintScrollbar(GraphicsContext*, Scrollbar*, const IntRect&);
 
@@ -311,12 +311,14 @@ protected:
     virtual void paintOverhangAreas(GraphicsContext*, const IntRect& horizontalOverhangArea, const IntRect& verticalOverhangArea, const IntRect& dirtyRect);
 
     virtual void visibleContentsResized() = 0;
+    virtual void addedOrRemovedScrollbar() = 0;
     virtual void delegatesScrollingDidChange() { }
     virtual void fixedLayoutSizeChanged();
 
     // These functions are used to create/destroy scrollbars.
-    void setHasHorizontalScrollbar(bool);
-    void setHasVerticalScrollbar(bool);
+    // They return true if the scrollbar was added or removed.
+    bool setHasHorizontalScrollbar(bool, bool* contentSizeAffected = 0);
+    bool setHasVerticalScrollbar(bool, bool* contentSizeAffected = 0);
 
     virtual void updateScrollCorner();
     virtual void invalidateScrollCornerRect(const IntRect&) OVERRIDE;
@@ -346,7 +348,7 @@ private:
 
     bool m_prohibitsScrolling;
 
-    HashSet<RefPtr<Widget> > m_children;
+    HashSet<RefPtr<Widget>> m_children;
 
     // This bool is unused on Mac OS because we directly ask the platform widget
     // whether it is safe to blit on scroll.
@@ -381,8 +383,6 @@ private:
     virtual void repaintFixedElementsAfterScrolling() { }
     virtual void updateFixedElementsAfterScrolling() { }
 
-    void platformInit();
-    void platformDestroy();
     void platformAddChild(Widget*);
     void platformRemoveChild(Widget*);
     void platformSetScrollbarModes();

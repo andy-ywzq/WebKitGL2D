@@ -83,7 +83,7 @@ void WebResourceLoader::willSendRequest(const ResourceRequest& proposedRequest, 
 {
     LOG(Network, "(WebProcess) WebResourceLoader::willSendRequest to '%s'", proposedRequest.url().string().utf8().data());
 
-    RefPtr<WebResourceLoader> protector(this);
+    Ref<WebResourceLoader> protect(*this);
     
     ResourceRequest newRequest = proposedRequest;
     m_coreLoader->willSendRequest(newRequest, redirectResponse);
@@ -103,7 +103,7 @@ void WebResourceLoader::didReceiveResponseWithCertificateInfo(const ResourceResp
 {
     LOG(Network, "(WebProcess) WebResourceLoader::didReceiveResponseWithCertificateInfo for '%s'. Status %d.", m_coreLoader->url().string().utf8().data(), response.httpStatusCode());
 
-    RefPtr<WebResourceLoader> protector(this);
+    Ref<WebResourceLoader> protect(*this);
 
     ResourceResponse responseCopy(response);
     responseCopy.setCertificateChain(certificateInfo.certificateChain());
@@ -136,6 +136,7 @@ void WebResourceLoader::didFailResourceLoad(const ResourceError& error)
     m_coreLoader->didFail(error);
 }
 
+#if ENABLE(SHAREABLE_RESOURCE)
 void WebResourceLoader::didReceiveResource(const ShareableResource::Handle& handle, double finishTime)
 {
     LOG(Network, "(WebProcess) WebResourceLoader::didReceiveResource for '%s'", m_coreLoader->url().string().utf8().data());
@@ -147,7 +148,7 @@ void WebResourceLoader::didReceiveResource(const ShareableResource::Handle& hand
         return;
     }
 
-    RefPtr<WebResourceLoader> protector(this);
+    Ref<WebResourceLoader> protect(*this);
 
     // Only send data to the didReceiveData callback if it exists.
     if (buffer->size())
@@ -158,10 +159,12 @@ void WebResourceLoader::didReceiveResource(const ShareableResource::Handle& hand
 
     m_coreLoader->didFinishLoading(finishTime);
 }
+#endif
 
+#if USE(PROTECTION_SPACE_AUTH_CALLBACK)
 void WebResourceLoader::canAuthenticateAgainstProtectionSpace(const ProtectionSpace& protectionSpace)
 {
-    RefPtr<WebResourceLoader> protector(this);
+    Ref<WebResourceLoader> protect(*this);
 
     bool result = m_coreLoader->canAuthenticateAgainstProtectionSpace(protectionSpace);
 
@@ -170,6 +173,7 @@ void WebResourceLoader::canAuthenticateAgainstProtectionSpace(const ProtectionSp
 
     send(Messages::NetworkResourceLoader::ContinueCanAuthenticateAgainstProtectionSpace(result));
 }
+#endif
 
 } // namespace WebKit
 

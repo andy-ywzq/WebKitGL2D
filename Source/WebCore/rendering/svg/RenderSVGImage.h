@@ -38,8 +38,10 @@ class SVGImageElement;
 
 class RenderSVGImage FINAL : public RenderSVGModelObject {
 public:
-    RenderSVGImage(SVGImageElement*);
+    RenderSVGImage(SVGImageElement&, PassRef<RenderStyle>);
     virtual ~RenderSVGImage();
+
+    SVGImageElement& imageElement() const;
 
     bool updateImageViewport();
     virtual void setNeedsBoundariesUpdate() { m_needsBoundariesUpdate = true; }
@@ -53,8 +55,11 @@ public:
     void paintForeground(PaintInfo&);
 
 private:
+    void element() const WTF_DELETED_FUNCTION;
+
     virtual const char* renderName() const { return "RenderSVGImage"; }
     virtual bool isSVGImage() const OVERRIDE { return true; }
+    virtual bool canHaveChildren() const OVERRIDE { return false; }
 
     virtual const AffineTransform& localToParentTransform() const { return m_localTransform; }
 
@@ -88,20 +93,7 @@ private:
     OwnPtr<ImageBuffer> m_bufferedForeground;
 };
 
-inline RenderSVGImage* toRenderSVGImage(RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isSVGImage());
-    return static_cast<RenderSVGImage*>(object);
-}
-
-inline const RenderSVGImage* toRenderSVGImage(const RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isSVGImage());
-    return static_cast<const RenderSVGImage*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderSVGImage(const RenderSVGImage*);
+RENDER_OBJECT_TYPE_CASTS(RenderSVGImage, isSVGImage())
 
 } // namespace WebCore
 

@@ -116,7 +116,7 @@ void ResourceHandle::cancel()
     ResourceHandleManager::sharedInstance()->cancel(this);
 }
 
-#if PLATFORM(WIN) && USE(CF)
+#if (PLATFORM(WIN) && USE(CF)) || PLATFORM(NIX)
 static HashSet<String>& allowsAnyHTTPSCertificateHosts()
 {
     static HashSet<String> hosts;
@@ -127,6 +127,14 @@ static HashSet<String>& allowsAnyHTTPSCertificateHosts()
 void ResourceHandle::setHostAllowsAnyHTTPSCertificate(const String& host)
 {
     allowsAnyHTTPSCertificateHosts().add(host.lower());
+}
+#endif
+
+#if PLATFORM(NIX)
+bool ResourceHandle::ignoreHTTPSCertificate()
+{
+    URL url = firstRequest().url();
+    return allowsAnyHTTPSCertificateHosts().contains(url.host());
 }
 #endif
 
@@ -231,7 +239,7 @@ void ResourceHandle::receivedCredential(const AuthenticationChallenge& challenge
 
     if (shouldUseCredentialStorage()) {
         if (challenge.failureResponse().httpStatusCode() == 401) {
-            KURL urlToStore = challenge.failureResponse().url();
+            URL urlToStore = challenge.failureResponse().url();
             CredentialStorage::set(credential, challenge.protectionSpace(), urlToStore);
         }
     }

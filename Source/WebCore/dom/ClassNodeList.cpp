@@ -36,16 +36,16 @@
 
 namespace WebCore {
 
-ClassNodeList::ClassNodeList(PassRefPtr<Node> rootNode, const String& classNames)
+ClassNodeList::ClassNodeList(Node& rootNode, const String& classNames)
     : LiveNodeList(rootNode, ClassNodeListType, InvalidateOnClassAttrChange)
-    , m_classNames(classNames, document()->inQuirksMode())
+    , m_classNames(classNames, document().inQuirksMode())
     , m_originalClassNames(classNames)
 {
 }
 
 ClassNodeList::~ClassNodeList()
 {
-    ownerNode()->nodeLists()->removeCacheWithName(this, ClassNodeListType, m_originalClassNames);
+    ownerNode().nodeLists()->removeCacheWithName(this, ClassNodeListType, m_originalClassNames);
 } 
 
 bool ClassNodeList::nodeMatches(Element* testNode) const

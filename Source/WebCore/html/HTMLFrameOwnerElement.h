@@ -27,11 +27,8 @@ namespace WebCore {
 
 class DOMWindow;
 class Frame;
-class RenderPart;
-
-#if ENABLE(SVG)
+class RenderWidget;
 class SVGDocument;
-#endif
 
 class HTMLFrameOwnerElement : public HTMLElement {
 public:
@@ -46,10 +43,10 @@ public:
 
     void disconnectContentFrame();
 
-    // Most subclasses use RenderPart (either RenderEmbeddedObject or RenderIFrame)
+    // Most subclasses use RenderWidget (either RenderEmbeddedObject or RenderIFrame)
     // except for HTMLObjectElement and HTMLEmbedElement which may return any
-    // RenderObject when using fallback content.
-    RenderPart* renderPart() const;
+    // RenderElement when using fallback content.
+    RenderWidget* renderWidget() const;
 
 #if ENABLE(SVG)
     SVGDocument* getSVGDocument(ExceptionCode&) const;
@@ -60,7 +57,7 @@ public:
     SandboxFlags sandboxFlags() const { return m_sandboxFlags; }
 
 protected:
-    HTMLFrameOwnerElement(const QualifiedName& tagName, Document*);
+    HTMLFrameOwnerElement(const QualifiedName& tagName, Document&);
     void setSandboxFlags(SandboxFlags);
 
 private:
@@ -71,35 +68,33 @@ private:
     SandboxFlags m_sandboxFlags;
 };
 
-inline HTMLFrameOwnerElement* toFrameOwnerElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || node->isFrameOwnerElement());
-    return static_cast<HTMLFrameOwnerElement*>(node);
-}
+void isHTMLFrameOwnerElement(const HTMLFrameOwnerElement&); // Catch unnecessary runtime check of type known at compile time.
+inline bool isHTMLFrameOwnerElement(const Node& node) { return node.isFrameOwnerElement(); }
+NODE_TYPE_CASTS(HTMLFrameOwnerElement)
 
 class SubframeLoadingDisabler {
 public:
-    explicit SubframeLoadingDisabler(Node* root)
+    explicit SubframeLoadingDisabler(ContainerNode& root)
         : m_root(root)
     {
-        disabledSubtreeRoots().add(m_root);
+        disabledSubtreeRoots().add(&m_root);
     }
 
     ~SubframeLoadingDisabler()
     {
-        disabledSubtreeRoots().remove(m_root);
+        disabledSubtreeRoots().remove(&m_root);
     }
 
-    static bool canLoadFrame(HTMLFrameOwnerElement*);
+    static bool canLoadFrame(HTMLFrameOwnerElement&);
 
 private:
-    static HashSet<Node*>& disabledSubtreeRoots()
+    static HashSet<ContainerNode*>& disabledSubtreeRoots()
     {
-        DEFINE_STATIC_LOCAL(HashSet<Node*>, nodes, ());
+        DEFINE_STATIC_LOCAL(HashSet<ContainerNode*>, nodes, ());
         return nodes;
     }
 
-    Node* m_root;
+    ContainerNode& m_root;
 };
 
 } // namespace WebCore

@@ -31,7 +31,6 @@
 #include "TypedArrayType.h"
 #include "WriteBarrier.h"
 #include <wtf/Noncopyable.h>
-#include <wtf/TypeTraits.h>
 
 namespace JSC {
 
@@ -163,11 +162,10 @@ protected:
     static NO_RETURN_DUE_TO_CRASH void getPropertyNames(JSObject*, ExecState*, PropertyNameArray&, EnumerationMode);
     static String className(const JSObject*);
     JS_EXPORT_PRIVATE static bool customHasInstance(JSObject*, ExecState*, JSValue);
-    static NO_RETURN_DUE_TO_CRASH void putDirectVirtual(JSObject*, ExecState*, PropertyName, JSValue, unsigned attributes);
-    static bool defineOwnProperty(JSObject*, ExecState*, PropertyName, PropertyDescriptor&, bool shouldThrow);
+    static bool defineOwnProperty(JSObject*, ExecState*, PropertyName, const PropertyDescriptor&, bool shouldThrow);
     static bool getOwnPropertySlot(JSObject*, ExecState*, PropertyName, PropertySlot&);
     static bool getOwnPropertySlotByIndex(JSObject*, ExecState*, unsigned propertyName, PropertySlot&);
-    JS_EXPORT_PRIVATE static NO_RETURN_DUE_TO_CRASH void slowDownAndWasteMemory(JSArrayBufferView*);
+    JS_EXPORT_PRIVATE static ArrayBuffer* slowDownAndWasteMemory(JSArrayBufferView*);
     JS_EXPORT_PRIVATE static PassRefPtr<ArrayBufferView> getTypedArrayImpl(JSArrayBufferView*);
 
 private:
@@ -179,27 +177,27 @@ private:
 template<typename To, typename From>
 inline To jsCast(From* from)
 {
-    ASSERT(!from || from->JSCell::inherits(WTF::RemovePointer<To>::Type::info()));
+    ASSERT(!from || from->JSCell::inherits(std::remove_pointer<To>::type::info()));
     return static_cast<To>(from);
 }
     
 template<typename To>
 inline To jsCast(JSValue from)
 {
-    ASSERT(from.isCell() && from.asCell()->JSCell::inherits(WTF::RemovePointer<To>::Type::info()));
+    ASSERT(from.isCell() && from.asCell()->JSCell::inherits(std::remove_pointer<To>::type::info()));
     return static_cast<To>(from.asCell());
 }
 
 template<typename To, typename From>
 inline To jsDynamicCast(From* from)
 {
-    return from->inherits(WTF::RemovePointer<To>::Type::info()) ? static_cast<To>(from) : 0;
+    return from->inherits(std::remove_pointer<To>::type::info()) ? static_cast<To>(from) : 0;
 }
 
 template<typename To>
 inline To jsDynamicCast(JSValue from)
 {
-    return from.isCell() && from.asCell()->inherits(WTF::RemovePointer<To>::Type::info()) ? static_cast<To>(from.asCell()) : 0;
+    return from.isCell() && from.asCell()->inherits(std::remove_pointer<To>::type::info()) ? static_cast<To>(from.asCell()) : 0;
 }
 
 } // namespace JSC

@@ -1,9 +1,10 @@
 set(WTF_HEADERS
     ASCIICType.h
     AVLTree.h
-    Alignment.h
     Assertions.h
     Atomics.h
+    Bag.h
+    BagToHashMap.h
     BitArray.h
     BitVector.h
     Bitmap.h
@@ -12,10 +13,11 @@ set(WTF_HEADERS
     ByteOrder.h
     CompilationThread.h
     Compiler.h
+    Compression.h
     CryptographicallyRandomNumber.h
     CurrentTime.h
-    DateMath.h
     DataLog.h
+    DateMath.h
     DecimalNumber.h
     Decoder.h
     DeferrableRefCounted.h
@@ -24,7 +26,6 @@ set(WTF_HEADERS
     DoublyLinkedList.h
     DynamicAnnotations.h
     Encoder.h
-    FastAllocBase.h
     FastMalloc.h
     FeatureDefines.h
     FilePrintStream.h
@@ -47,51 +48,47 @@ set(WTF_HEADERS
     Locker.h
     MD5.h
     MainThread.h
+    MallocPtr.h
     MathExtras.h
     MediaTime.h
     MessageQueue.h
     MetaAllocator.h
     MetaAllocatorHandle.h
-    NonCopyingSort.h
-    ThreadRestrictionVerifier.h
     Noncopyable.h
-    NotFound.h
-    NullPtr.h
     NumberOfCores.h
-    RAMSize.h
     OSAllocator.h
     OSRandomSource.h
-    OwnArrayPtr.h
     OwnPtr.h
     OwnPtrCommon.h
     PageAllocation.h
     PageAllocationAligned.h
     PageBlock.h
     PageReservation.h
-    PassOwnArrayPtr.h
-    PassOwnPtr.h
-    PassRefPtr.h
-    PassTraits.h
     ParallelJobs.h
     ParallelJobsGeneric.h
     ParallelJobsLibdispatch.h
     ParallelJobsOpenMP.h
+    PassOwnPtr.h
+    PassRef.h
+    PassRefPtr.h
     Platform.h
     PossiblyNull.h
     PrintStream.h
     ProcessID.h
+    RAMSize.h
     RandomNumber.h
     RandomNumberSeed.h
     RawPointer.h
     RedBlackTree.h
+    Ref.h
     RefCounted.h
     RefCountedLeakCounter.h
     RefPtr.h
     RefPtrHashMap.h
     RetainPtr.h
+    SHA1.h
     SaturatedArithmetic.h
     SegmentedVector.h
-    SHA1.h
     StackBounds.h
     StaticConstructors.h
     StdLibExtras.h
@@ -103,11 +100,11 @@ set(WTF_HEADERS
     TCSpinLock.h
     TCSystemAlloc.h
     ThreadIdentifierDataPthreads.h
+    ThreadRestrictionVerifier.h
     ThreadSafeRefCounted.h
     ThreadSpecific.h
     Threading.h
     ThreadingPrimitives.h
-    TypeTraits.h
     VMTags.h
     ValueCheck.h
     Vector.h
@@ -151,10 +148,11 @@ set(WTF_SOURCES
     Atomics.cpp
     BitVector.cpp
     CompilationThread.cpp
+    Compression.cpp
     CryptographicallyRandomNumber.cpp
     CurrentTime.cpp
-    DateMath.cpp
     DataLog.cpp
+    DateMath.cpp
     DecimalNumber.cpp
     DynamicAnnotations.cpp
     FastMalloc.cpp
@@ -166,14 +164,13 @@ set(WTF_SOURCES
     MainThread.cpp
     MediaTime.cpp
     MetaAllocator.cpp
-    NullPtr.cpp
-    OSRandomSource.cpp
     NumberOfCores.cpp
-    RAMSize.cpp
+    OSRandomSource.cpp
     PageAllocationAligned.cpp
     PageBlock.cpp
     ParallelJobsGeneric.cpp
     PrintStream.cpp
+    RAMSize.cpp
     RandomNumber.cpp
     RefCountedLeakCounter.cpp
     SHA1.cpp
@@ -182,7 +179,6 @@ set(WTF_SOURCES
     StringPrintStream.cpp
     TCSystemAlloc.cpp
     Threading.cpp
-    TypeTraits.cpp
     WTFThreadData.cpp
     dtoa.cpp
 
@@ -243,6 +239,7 @@ elseif (WTF_USE_WCHAR_UNICODE)
     )
     list(APPEND WTF_SOURCES
         unicode/CollatorDefault.cpp
+
         unicode/wchar/UnicodeWchar.cpp
     )
 endif ()
@@ -252,8 +249,6 @@ if (WIN32)
         OSAllocatorWin.cpp
         ThreadSpecificWin.cpp
         ThreadingWin.cpp
-
-        win/OwnPtrWin.cpp
     )
 else ()
     list(APPEND WTF_HEADERS
@@ -270,9 +265,9 @@ WEBKIT_INCLUDE_CONFIG_FILES_IF_EXISTS()
 
 WEBKIT_WRAP_SOURCELIST(${WTF_SOURCES})
 include_directories(${WTF_INCLUDE_DIRECTORIES})
-add_definitions(-DBUILDING_WTF)
 add_library(WTF STATIC ${WTF_HEADERS} ${WTF_SOURCES})
 target_link_libraries(WTF ${WTF_LIBRARIES})
+set_target_properties(WTF PROPERTIES COMPILE_DEFINITIONS "BUILDING_WTF")
 set_target_properties(WTF PROPERTIES FOLDER "JavaScriptCore")
 
 if (WTF_OUTPUT_NAME)

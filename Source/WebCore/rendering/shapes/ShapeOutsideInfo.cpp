@@ -33,45 +33,66 @@
 
 #include "ShapeOutsideInfo.h"
 
+#include "FloatingObjects.h"
+#include "RenderBlockFlow.h"
 #include "RenderBox.h"
 
 namespace WebCore {
 bool ShapeOutsideInfo::isEnabledFor(const RenderBox* box)
 {
-    ShapeValue* shapeValue = box->style()->shapeOutside();
-    if (!box->isFloatingWithShapeOutside() || !shapeValue)
+    ShapeValue* shapeValue = box->style().shapeOutside();
+    if (!box->isFloating() || !shapeValue)
         return false;
 
     switch (shapeValue->type()) {
     case ShapeValue::Shape:
         return shapeValue->shape();
     case ShapeValue::Image:
-        return shapeValue->isImageValid();
+        return shapeValue->isImageValid() && checkShapeImageOrigin(box->document(), *(shapeValue->image()->cachedImage()));
     default:
         return false;
     }
 }
 
-bool ShapeOutsideInfo::computeSegmentsForContainingBlockLine(LayoutUnit lineTop, LayoutUnit floatTop, LayoutUnit lineHeight)
+void ShapeOutsideInfo::updateDeltasForContainingBlockLine(const RenderBlockFlow* containingBlock, const FloatingObject* floatingObject, LayoutUnit lineTop, LayoutUnit lineHeight)
 {
-    LayoutUnit lineTopInShapeCoordinates = lineTop - floatTop + logicalTopOffset();
-    return computeSegmentsForLine(lineTopInShapeCoordinates, lineHeight);
+    LayoutUnit shapeTop = containingBlock->logicalTopForFloat(floatingObject) + std::max(LayoutUnit(), containingBlock->marginBeforeForChild(*m_renderer));
+    LayoutUnit lineTopInShapeCoordinates = lineTop - shapeTop + logicalTopOffset();
+
+    if (shapeSizeDirty() || m_lineTop != lineTopInShapeCoordinates || m_lineHeight != lineHeight) {
+        m_lineTop = lineTopInShapeCoordinates;
+        m_shapeLineTop = lineTopInShapeCoordinates - logicalTopOffset();
+        m_lineHeight = lineHeight;
+
+        LayoutUnit floatMarginBoxWidth = containingBlock->logicalWidthForFloat(floatingObject);
+
+        if (lineOverlapsShapeBounds()) {
+            SegmentList segments = computeSegmentsForLine(lineTopInShapeCoordinates, lineHeight);
+            if (segments.size()) {
+                LayoutUnit rawLeftMarginBoxDelta = segments.first().logicalLeft + containingBlock->marginStartForChild(*m_renderer);
+                m_leftMarginBoxDelta = clampTo<LayoutUnit>(rawLeftMarginBoxDelta, LayoutUnit(), floatMarginBoxWidth);
+
+                LayoutUnit rawRightMarginBoxDelta = segments.last().logicalRight - containingBlock->logicalWidthForChild(*m_renderer) - containingBlock->marginEndForChild(*m_renderer);
+                m_rightMarginBoxDelta = clampTo<LayoutUnit>(rawRightMarginBoxDelta, -floatMarginBoxWidth, LayoutUnit());
+                return;
+            }
+        }
+
+        // Lines that do not overlap the shape should act as if the float
+        // wasn't there for layout purposes. So we set the deltas to remove the
+        // entire width of the float. 
+        // FIXME: The latest CSS Shapes spec says that in this case, the
+        // content should interact with previously stacked floats on the line
+        // as if this outermost float did not exist. Perhaps obviously, this
+        // solution cannot do that, and will be revisted with bug 122576.
+        m_leftMarginBoxDelta = floatMarginBoxWidth;
+        m_rightMarginBoxDelta = -floatMarginBoxWidth;
+    }
 }
 
-bool ShapeOutsideInfo::computeSegmentsForLine(LayoutUnit lineTop, LayoutUnit lineHeight)
+ShapeValue* ShapeOutsideInfo::shapeValue() const
 {
-    if (shapeSizeDirty() || m_lineTop != lineTop || m_lineHeight != lineHeight) {
-        if (ShapeInfo<RenderBox, &RenderStyle::shapeOutside, &Shape::getExcludedIntervals>::computeSegmentsForLine(lineTop, lineHeight)) {
-            m_leftSegmentMarginBoxDelta = m_segments[0].logicalLeft + m_renderer->marginStart();
-            m_rightSegmentMarginBoxDelta = m_segments[m_segments.size()-1].logicalRight - m_renderer->logicalWidth() - m_renderer->marginEnd();
-        } else {
-            m_leftSegmentMarginBoxDelta = m_renderer->logicalWidth() + m_renderer->marginStart();
-            m_rightSegmentMarginBoxDelta = -m_renderer->logicalWidth() - m_renderer->marginEnd();
-        }
-        m_lineTop = lineTop;
-    }
-
-    return m_segments.size();
+    return m_renderer->style().shapeOutside();
 }
 
 }

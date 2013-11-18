@@ -43,20 +43,15 @@
 #import <wtf/Threading.h>
 #import <wtf/text/CString.h>
 #import <wtf/text/WTFString.h>
-
-#if HAVE(XPC)
 #import <xpc/xpc.h>
-#endif
 
 using namespace WebCore;
 
 // FIXME: We should be doing this another way.
 extern "C" kern_return_t bootstrap_register2(mach_port_t, name_t, mach_port_t, uint64_t);
 
-#if HAVE(XPC)
 extern "C" void xpc_connection_set_instance(xpc_connection_t, uuid_t);
 extern "C" void xpc_dictionary_set_mach_send(xpc_object_t, const char*, mach_port_t);
-#endif
 
 namespace WebKit {
 
@@ -80,7 +75,6 @@ struct UUIDHolder : public RefCounted<UUIDHolder> {
 
 static void setUpTerminationNotificationHandler(pid_t pid)
 {
-#if HAVE(DISPATCH_H)
     dispatch_source_t processDiedSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_PROC, pid, DISPATCH_PROC_EXIT, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
     dispatch_source_set_event_handler(processDiedSource, ^{
         int status;
@@ -91,7 +85,6 @@ static void setUpTerminationNotificationHandler(pid_t pid)
         dispatch_release(processDiedSource);
     });
     dispatch_resume(processDiedSource);
-#endif
 }
 
 static void addDYLDEnvironmentAdditions(const ProcessLauncher::LaunchOptions& launchOptions, bool isWebKitDevelopmentBuild, EnvironmentVariables& environmentVariables)
@@ -109,14 +102,14 @@ static void addDYLDEnvironmentAdditions(const ProcessLauncher::LaunchOptions& la
         environmentVariables.appendValue("DYLD_FRAMEWORK_PATH", [frameworksPath fileSystemRepresentation], ':');
 
     NSString *processShimPathNSString = nil;
-#if ENABLE(PLUGIN_PROCESS)
+#if ENABLE(NETSCAPE_PLUGIN_API)
     if (launchOptions.processType == ProcessLauncher::PluginProcess) {
         NSString *processPath = [webKit2Bundle pathForAuxiliaryExecutable:@"PluginProcess.app"];
         NSString *processAppExecutablePath = [[NSBundle bundleWithPath:processPath] executablePath];
 
         processShimPathNSString = [[processAppExecutablePath stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"PluginProcessShim.dylib"];
     } else
-#endif // ENABLE(PLUGIN_PROCESS)
+#endif // ENABLE(NETSCAPE_PLUGIN_API)
     if (launchOptions.processType == ProcessLauncher::WebProcess) {
         NSString *processPath = [webKit2Bundle pathForAuxiliaryExecutable:@"WebProcess.app"];
         NSString *processAppExecutablePath = [[NSBundle bundleWithPath:processPath] executablePath];
@@ -141,8 +134,6 @@ static void addDYLDEnvironmentAdditions(const ProcessLauncher::LaunchOptions& la
 
 typedef void (ProcessLauncher::*DidFinishLaunchingProcessFunction)(PlatformProcessIdentifier, CoreIPC::Connection::Identifier);
 
-#if HAVE(XPC)
-
 static const char* serviceName(const ProcessLauncher::LaunchOptions& launchOptions, bool forDevelopment)
 {
     switch (launchOptions.processType) {
@@ -156,7 +147,13 @@ static const char* serviceName(const ProcessLauncher::LaunchOptions& launchOptio
             return "com.apple.WebKit.Networking.Development";
         return "com.apple.WebKit.Networking";
 #endif
-#if ENABLE(PLUGIN_PROCESS)
+#if ENABLE(NETWORK_PROCESS)
+    case ProcessLauncher::DatabaseProcess:
+        if (forDevelopment)
+            return "com.apple.WebKit.Databases.Development";
+        return "com.apple.WebKit.Databases";
+#endif
+#if ENABLE(NETSCAPE_PLUGIN_API)
     case ProcessLauncher::PluginProcess:
         if (forDevelopment)
             return "com.apple.WebKit.Plugin.Development";
@@ -167,11 +164,6 @@ static const char* serviceName(const ProcessLauncher::LaunchOptions& launchOptio
         if (launchOptions.architecture == CPU_TYPE_X86_64)
             return "com.apple.WebKit.Plugin.64";
 
-        ASSERT_NOT_REACHED();
-        return 0;
-#endif
-#if ENABLE(SHARED_WORKER_PROCESS)
-    case ProcessLauncher::SharedWorkerProcess:
         ASSERT_NOT_REACHED();
         return 0;
 #endif
@@ -323,8 +315,6 @@ static void createService(const ProcessLauncher::LaunchOptions& launchOptions, b
     connectToService(launchOptions, false, that, didFinishLaunchingProcessFunction, instanceUUID.get());
 }
 
-#endif
-
 static bool tryPreexistingProcess(const ProcessLauncher::LaunchOptions& launchOptions, ProcessLauncher* that, DidFinishLaunchingProcessFunction didFinishLaunchingProcessFunction)
 {
     EnvironmentVariables environmentVariables;
@@ -383,9 +373,6 @@ static void createProcess(const ProcessLauncher::LaunchOptions& launchOptions, b
     // Insert a send right so we can send to it.
     mach_port_insert_right(mach_task_self(), listeningPort, listeningPort, MACH_MSG_TYPE_MAKE_SEND);
 
-    RetainPtr<CFStringRef> cfLocalization = adoptCF(WKCopyCFLocalizationPreferredName(NULL));
-    CString localization = String(cfLocalization.get()).utf8();
-
     NSBundle *webKit2Bundle = [NSBundle bundleWithIdentifier:@"com.apple.WebKit2"];
 
     NSString *processPath = nil;
@@ -393,7 +380,7 @@ static void createProcess(const ProcessLauncher::LaunchOptions& launchOptions, b
     case ProcessLauncher::WebProcess:
         processPath = [webKit2Bundle pathForAuxiliaryExecutable:@"WebProcess.app"];
         break;
-#if ENABLE(PLUGIN_PROCESS)
+#if ENABLE(NETSCAPE_PLUGIN_API)
     case ProcessLauncher::PluginProcess:
         processPath = [webKit2Bundle pathForAuxiliaryExecutable:@"PluginProcess.app"];
         break;
@@ -403,9 +390,9 @@ static void createProcess(const ProcessLauncher::LaunchOptions& launchOptions, b
         processPath = [webKit2Bundle pathForAuxiliaryExecutable:@"NetworkProcess.app"];
         break;
 #endif
-#if ENABLE(SHARED_WORKER_PROCESS)
-    case ProcessLauncher::SharedWorkerProcess:
-        processPath = [webKit2Bundle pathForAuxiliaryExecutable:@"SharedWorkerProcess.app"];
+#if ENABLE(DATABASE_PROCESS)
+    case ProcessLauncher::DatabaseProcess:
+        processPath = [webKit2Bundle pathForAuxiliaryExecutable:@"DatabaseProcess.app"];
         break;
 #endif
     }
@@ -419,6 +406,12 @@ static void createProcess(const ProcessLauncher::LaunchOptions& launchOptions, b
     // Make a unique, per pid, per process launcher web process service name.
     CString serviceName = String::format("com.apple.WebKit.WebProcess-%d-%p", getpid(), that).utf8();
 
+    // Inherit UI process localization. It can be different from child process default localization:
+    // 1. When the application and system frameworks simply have different localized resources available, we should match the application.
+    // 1.1. An important case is WebKitTestRunner, where we should use English localizations for all system frameworks.
+    // 2. When AppleLanguages is passed as command line argument for UI process, or set in its preferences, we should respect it in child processes.
+    CString appleLanguagesArgument = String("('" + String(adoptCF(WKCopyCFLocalizationPreferredName(0)).get()) + "')").utf8();
+
     Vector<const char*> args;
     args.append([processAppExecutablePath fileSystemRepresentation]);
     args.append([frameworkExecutablePath fileSystemRepresentation]);
@@ -426,12 +419,12 @@ static void createProcess(const ProcessLauncher::LaunchOptions& launchOptions, b
     args.append(ProcessLauncher::processTypeAsString(launchOptions.processType));
     args.append("-servicename");
     args.append(serviceName.data());
-    args.append("-localization");
-    args.append(localization.data());
     args.append("-client-identifier");
     args.append(clientIdentifier.data());
     args.append("-ui-process-name");
     args.append([[[NSProcessInfo processInfo] processName] UTF8String]);
+    args.append("-AppleLanguages"); // This argument will be handled by Core Foundation.
+    args.append(appleLanguagesArgument.data());
 
     HashMap<String, String>::const_iterator it = launchOptions.extraInitializationData.begin();
     HashMap<String, String>::const_iterator end = launchOptions.extraInitializationData.end();
@@ -514,12 +507,10 @@ void ProcessLauncher::launchProcess()
 
     bool isWebKitDevelopmentBuild = ![[[[NSBundle bundleWithIdentifier:@"com.apple.WebKit2"] bundlePath] stringByDeletingLastPathComponent] hasPrefix:@"/System/"];
 
-#if HAVE(XPC)
     if (m_launchOptions.useXPC) {
         createService(m_launchOptions, isWebKitDevelopmentBuild, this, &ProcessLauncher::didFinishLaunchingProcess);
         return;
     }
-#endif
 
     createProcess(m_launchOptions, isWebKitDevelopmentBuild, this, &ProcessLauncher::didFinishLaunchingProcess);
 }

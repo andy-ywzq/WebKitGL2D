@@ -45,7 +45,7 @@
 #include "Icon.h"
 #include "InspectorController.h"
 #include "IntRect.h"
-#include "KURL.h"
+#include "MainFrame.h"
 #include "NavigationAction.h"
 #include "NotImplemented.h"
 #include "PopupMenuClient.h"
@@ -53,6 +53,7 @@
 #include "RefPtrCairo.h"
 #include "SearchPopupMenuGtk.h"
 #include "SecurityOrigin.h"
+#include "URL.h"
 #include "WebKitDOMHTMLElementPrivate.h"
 #include "WindowFeatures.h"
 #include "webkitfilechooserrequestprivate.h"
@@ -75,7 +76,7 @@
 #include <wtf/text/CString.h>
 #include <wtf/text/WTFString.h>
 
-#ifdef GDK_WINDOWING_X11
+#if PLATFORM(X11) && defined(GDK_WINDOWING_X11)
 #define Font XFont
 #define Cursor XCursor
 #define Region XRegion
@@ -95,7 +96,7 @@
 #include "HTMLMediaElement.h"
 #endif
 
-#ifdef GDK_WINDOWING_X11
+#if PLATFORM(X11) && defined(GDK_WINDOWING_X11)
 #include "WidgetBackingStoreGtkX11.h"
 #endif
 #include "WidgetBackingStoreCairo.h"
@@ -106,7 +107,7 @@ namespace WebKit {
 
 static PassOwnPtr<WidgetBackingStore> createBackingStore(GtkWidget* widget, const IntSize& size)
 {
-#ifdef GDK_WINDOWING_X11
+#if PLATFORM(X11) && defined(GDK_WINDOWING_X11)
     GdkDisplay* display = gdk_display_manager_get_default_display(gdk_display_manager_get());
     if (GDK_IS_X11_DISPLAY(display))
         return WebCore::WidgetBackingStoreGtkX11::create(widget, size);
@@ -202,6 +203,11 @@ void ChromeClient::unfocus()
 Page* ChromeClient::createWindow(Frame* frame, const FrameLoadRequest& frameLoadRequest, const WindowFeatures& coreFeatures, const NavigationAction&)
 {
     WebKitWebView* webView = 0;
+
+#if ENABLE(FULLSCREEN_API)
+    if (frame->document() && frame->document()->webkitCurrentFullScreenElement())
+        frame->document()->webkitCancelFullScreen();
+#endif
 
     g_signal_emit_by_name(m_webView, "create-web-view", kit(frame), &webView);
 
@@ -329,7 +335,7 @@ void ChromeClient::closeWindowSoon()
     // onload handler, it will need to call FrameLoaderClient::dispatchDidHandleOnloadEvents.
     // Instead of firing the close-web-view signal now, fire it after the caller finishes.
     // This seems to match the Mac/Windows port behavior.
-    m_closeSoonTimer = g_timeout_add(0, reinterpret_cast<GSourceFunc>(emitCloseWebViewSignalLater), m_webView);
+    m_closeSoonTimer = g_idle_add_full(G_PRIORITY_DEFAULT, reinterpret_cast<GSourceFunc>(emitCloseWebViewSignalLater), m_webView, 0);
 }
 
 bool ChromeClient::canTakeFocus(FocusDirection)
@@ -513,7 +519,7 @@ void ChromeClient::widgetSizeChanged(const IntSize& oldWidgetSize, IntSize newSi
     // WebCore timers by default have a lower priority which leads to more artifacts when opaque
     // resize is on, thus we use g_timeout_add here to force a higher timeout priority.
     if (!m_repaintSoonSourceId)
-        m_repaintSoonSourceId = g_timeout_add(0, reinterpret_cast<GSourceFunc>(repaintEverythingSoonTimeout), this);
+        m_repaintSoonSourceId = g_idle_add_full(G_PRIORITY_DEFAULT, reinterpret_cast<GSourceFunc>(repaintEverythingSoonTimeout), this, 0);
 }
 
 static void coalesceRectsIfPossible(const IntRect& clipRect, Vector<IntRect>& rects)
@@ -596,13 +602,13 @@ void ChromeClient::paint(WebCore::Timer<ChromeClient>*)
         return;
     }
 
-    Frame* frame = core(m_webView)->mainFrame();
-    if (!frame || !frame->contentRenderer() || !frame->view())
+    Frame& frame = core(m_webView)->mainFrame();
+    if (!frame.contentRenderer() || !frame.view())
         return;
 
-    frame->view()->updateLayoutAndStyleIfNeededRecursive();
+    frame.view()->updateLayoutAndStyleIfNeededRecursive();
     performAllPendingScrolls();
-    paintWebView(m_webView, frame, m_dirtyRegion);
+    paintWebView(m_webView, &frame, m_dirtyRegion);
 
     HashSet<GtkWidget*> children = m_webView->priv->children;
     HashSet<GtkWidget*>::const_iterator end = children.end();
@@ -623,9 +629,9 @@ void ChromeClient::paint(WebCore::Timer<ChromeClient>*)
     // We update the IM context window location here, because we want it to be
     // synced with cursor movement. For instance, a text field can move without
     // the selection changing.
-    Frame* focusedFrame = core(m_webView)->focusController().focusedOrMainFrame();
-    if (focusedFrame && focusedFrame->editor().canEdit())
-        m_webView->priv->imFilter.setCursorRect(frame->selection().absoluteCaretBounds());
+    Frame& focusedFrame = core(m_webView)->focusController().focusedOrMainFrame();
+    if (focusedFrame.editor().canEdit())
+        m_webView->priv->imFilter.setCursorRect(frame.selection().absoluteCaretBounds());
 }
 
 void ChromeClient::forcePaint()
@@ -752,7 +758,7 @@ void ChromeClient::contentsSizeChanged(Frame* frame, const IntSize& size) const
         gtk_widget_queue_resize_no_redraw(widget);
 
     // If this was a main frame size change, update the scrollbars.
-    if (frame != frame->page()->mainFrame())
+    if (frame != &frame->page()->mainFrame())
         return;
     m_adjustmentWatcher.updateAdjustmentsFromScrollbarsLater();
 }
@@ -798,7 +804,7 @@ void ChromeClient::mouseDidMoveOverElement(const HitTestResult& hit, unsigned mo
     // check if the element is a link...
     bool isLink = hit.isLiveLink();
     if (isLink) {
-        KURL url = hit.absoluteLinkURL();
+        URL url = hit.absoluteLinkURL();
         if (!url.isEmpty() && url != m_hoveredLinkURL) {
             TextDirection dir;
             CString titleString = hit.title(dir).utf8();
@@ -808,11 +814,11 @@ void ChromeClient::mouseDidMoveOverElement(const HitTestResult& hit, unsigned mo
         }
     } else if (!isLink && !m_hoveredLinkURL.isEmpty()) {
         g_signal_emit_by_name(m_webView, "hovering-over-link", 0, 0);
-        m_hoveredLinkURL = KURL();
+        m_hoveredLinkURL = URL();
     }
 
     if (Node* node = hit.innerNonSharedNode()) {
-        Frame* frame = node->document()->frame();
+        Frame* frame = node->document().frame();
         FrameView* view = frame ? frame->view() : 0;
         m_webView->priv->tooltipArea = view ? view->contentsToWindow(node->pixelSnappedBoundingBox()) : IntRect();
     } else
@@ -927,7 +933,7 @@ PassRefPtr<WebCore::SearchPopupMenu> ChromeClient::createSearchPopupMenu(WebCore
 #if ENABLE(VIDEO) && USE(NATIVE_FULLSCREEN_VIDEO)
 bool ChromeClient::supportsFullscreenForNode(const Node* node)
 {
-    return node->hasTagName(HTMLNames::videoTag);
+    return isHTMLVideoElement(node);
 }
 
 void ChromeClient::enterFullscreenForNode(Node* node)
@@ -981,7 +987,7 @@ static gboolean onFullscreenGtkKeyPressEvent(GtkWidget* widget, GdkEventKey* eve
 void ChromeClient::cancelFullScreen()
 {
     ASSERT(m_fullScreenElement);
-    m_fullScreenElement->document()->webkitCancelFullScreen();
+    m_fullScreenElement->document().webkitCancelFullScreen();
 }
 
 void ChromeClient::enterFullScreenForElement(WebCore::Element* element)
@@ -996,10 +1002,10 @@ void ChromeClient::enterFullScreenForElement(WebCore::Element* element)
     if (element && element->isMediaElement()) {
         HTMLMediaElement* mediaElement = toHTMLMediaElement(element);
         if (mediaElement->player() && mediaElement->player()->canEnterFullscreen()) {
-            element->document()->webkitWillEnterFullScreenForElement(element);
+            element->document().webkitWillEnterFullScreenForElement(element);
             mediaElement->player()->enterFullscreen();
             m_fullScreenElement = element;
-            element->document()->webkitDidEnterFullScreenForElement(element);
+            element->document().webkitDidEnterFullScreenForElement(element);
         }
         return;
     }
@@ -1013,10 +1019,10 @@ void ChromeClient::enterFullScreenForElement(WebCore::Element* element)
 
     m_fullScreenElement = element;
 
-    element->document()->webkitWillEnterFullScreenForElement(element);
+    element->document().webkitWillEnterFullScreenForElement(element);
     m_adjustmentWatcher.disableAllScrollbars();
     gtk_window_fullscreen(GTK_WINDOW(window));
-    element->document()->webkitDidEnterFullScreenForElement(element);
+    element->document().webkitDidEnterFullScreenForElement(element);
 }
 
 void ChromeClient::exitFullScreenForElement(WebCore::Element*)
@@ -1034,11 +1040,11 @@ void ChromeClient::exitFullScreenForElement(WebCore::Element*)
 
 #if ENABLE(VIDEO) && USE(NATIVE_FULLSCREEN_VIDEO)
     if (m_fullScreenElement && m_fullScreenElement->isMediaElement()) {
-        m_fullScreenElement->document()->webkitWillExitFullScreenForElement(m_fullScreenElement.get());
+        m_fullScreenElement->document().webkitWillExitFullScreenForElement(m_fullScreenElement.get());
         HTMLMediaElement* mediaElement = toHTMLMediaElement(m_fullScreenElement.get());
         if (mediaElement->player()) {
             mediaElement->player()->exitFullscreen();
-            m_fullScreenElement->document()->webkitDidExitFullScreenForElement(m_fullScreenElement.get());
+            m_fullScreenElement->document().webkitDidExitFullScreenForElement(m_fullScreenElement.get());
             m_fullScreenElement.clear();
         }
         return;
@@ -1049,10 +1055,10 @@ void ChromeClient::exitFullScreenForElement(WebCore::Element*)
     ASSERT(widgetIsOnscreenToplevelWindow(window));
     g_signal_handlers_disconnect_by_func(window, reinterpret_cast<void*>(onFullscreenGtkKeyPressEvent), this);
 
-    m_fullScreenElement->document()->webkitWillExitFullScreenForElement(m_fullScreenElement.get());
+    m_fullScreenElement->document().webkitWillExitFullScreenForElement(m_fullScreenElement.get());
     gtk_window_unfullscreen(GTK_WINDOW(window));
     m_adjustmentWatcher.enableAllScrollbars();
-    m_fullScreenElement->document()->webkitDidExitFullScreenForElement(m_fullScreenElement.get());
+    m_fullScreenElement->document().webkitDidExitFullScreenForElement(m_fullScreenElement.get());
     m_fullScreenElement.clear();
 }
 #endif

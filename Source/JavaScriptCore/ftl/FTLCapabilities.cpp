@@ -32,8 +32,11 @@ namespace JSC { namespace FTL {
 
 using namespace DFG;
 
-inline bool canCompile(Node* node)
+inline CapabilityLevel canCompile(Node* node)
 {
+    // NOTE: If we ever have phantom arguments, we can compile them but we cannot
+    // OSR enter.
+    
     switch (node->op()) {
     case JSConstant:
     case WeakJSConstant:
@@ -81,7 +84,38 @@ inline bool canCompile(Node* node)
     case ForceOSRExit:
     case Phi:
     case Upsilon:
+    case ExtractOSREntryLocal:
+    case LoopHint:
+    case Call:
+    case Construct:
+    case GlobalVarWatchpoint:
+    case GetMyScope:
+    case SkipScope:
+    case GetClosureRegisters:
+    case GetClosureVar:
+    case PutClosureVar:
+    case Int52ToValue:
         // These are OK.
+        break;
+    case GetById:
+        if (node->child1().useKind() == CellUse)
+            break;
+        return CannotCompile;
+    case GetIndexedPropertyStorage:
+        if (isTypedView(node->arrayMode().typedArrayType()))
+            break;
+        return CannotCompile;
+    case CheckArray:
+        switch (node->arrayMode().type()) {
+        case Array::Int32:
+        case Array::Double:
+        case Array::Contiguous:
+            break;
+        default:
+            if (isTypedView(node->arrayMode().typedArrayType()))
+                break;
+            return CannotCompile;
+        }
         break;
     case GetArrayLength:
         switch (node->arrayMode().type()) {
@@ -90,69 +124,80 @@ inline bool canCompile(Node* node)
         case Array::Contiguous:
             break;
         default:
-            return false;
+            if (isTypedView(node->arrayMode().typedArrayType()))
+                break;
+            return CannotCompile;
         }
         break;
     case GetByVal:
         switch (node->arrayMode().type()) {
         case Array::ForceExit:
-            return true;
+            return CanCompileAndOSREnter;
         case Array::Int32:
         case Array::Double:
         case Array::Contiguous:
             break;
         default:
-            return false;
+            if (isTypedView(node->arrayMode().typedArrayType()))
+                return CanCompileAndOSREnter;
+            return CannotCompile;
         }
         switch (node->arrayMode().speculation()) {
         case Array::SaneChain:
         case Array::InBounds:
             break;
         default:
-            return false;
+            return CannotCompile;
         }
         break;
     case PutByVal:
     case PutByValAlias:
         switch (node->arrayMode().type()) {
         case Array::ForceExit:
-            return true;
+            return CanCompileAndOSREnter;
         case Array::Int32:
         case Array::Double:
         case Array::Contiguous:
             break;
         default:
-            return false;
+            if (isTypedView(node->arrayMode().typedArrayType()))
+                return CanCompileAndOSREnter;
+            return CannotCompile;
         }
         break;
     case CompareEq:
     case CompareStrictEq:
         if (node->isBinaryUseKind(Int32Use))
             break;
+        if (node->isBinaryUseKind(MachineIntUse))
+            break;
         if (node->isBinaryUseKind(NumberUse))
             break;
         if (node->isBinaryUseKind(ObjectUse))
             break;
-        return false;
+        return CannotCompile;
     case CompareLess:
     case CompareLessEq:
     case CompareGreater:
     case CompareGreaterEq:
         if (node->isBinaryUseKind(Int32Use))
             break;
+        if (node->isBinaryUseKind(MachineIntUse))
+            break;
         if (node->isBinaryUseKind(NumberUse))
             break;
-        return false;
+        return CannotCompile;
     case Branch:
     case LogicalNot:
         switch (node->child1().useKind()) {
         case BooleanUse:
         case Int32Use:
         case NumberUse:
+        case StringUse:
         case ObjectOrOtherUse:
             break;
         default:
-            return false;
+            return CannotCompile;
         }
         break;
     case Switch:
@@ -161,18 +206,30 @@ inline bool canCompile(Node* node)
         case SwitchChar:
             break;
         default:
-            return false;
+            return CannotCompile;
         }
+        break;
+    case ValueToInt32:
+        if (node->child1().useKind() != BooleanUse)
+            return CannotCompile;
         break;
     default:
         // Don't know how to handle anything else.
-        return false;
+        return CannotCompile;
     }
-    return true;
+    return CanCompileAndOSREnter;
 }
 
-bool canCompile(Graph& graph)
+CapabilityLevel canCompile(Graph& graph)
 {
+    if (graph.m_codeBlock->codeType() != FunctionCode) {
+        if (verboseCompilationEnabled())
+            dataLog("FTL rejecting code block that doesn't belong to a function.\n");
+        return CannotCompile;
+    }
+    
+    CapabilityLevel result = CanCompileAndOSREnter;
+    
     for (BlockIndex blockIndex = graph.numBlocks(); blockIndex--;) {
         BasicBlock* block = graph.block(blockIndex);
         if (!block)
@@ -193,6 +250,7 @@ bool canCompile(Graph& graph)
                 case UntypedUse:
                 case Int32Use:
                 case KnownInt32Use:
+                case MachineIntUse:
                 case NumberUse:
                 case KnownNumberUse:
                 case RealNumberUse:
@@ -210,25 +268,36 @@ bool canCompile(Graph& graph)
                         dataLog("FTL rejecting node because of bad use kind: ", edge.useKind(), " in node:\n");
                         graph.dump(WTF::dataFile(), "    ", node);
                     }
-                    return false;
+                    return CannotCompile;
                 }
             }
             
-            if (!canCompile(node)) {
+            switch (canCompile(node)) {
+            case CannotCompile: 
                 if (verboseCompilationEnabled()) {
                     dataLog("FTL rejecting node:\n");
                     graph.dump(WTF::dataFile(), "    ", node);
                 }
-                return false;
+                return CannotCompile;
+                
+            case CanCompile:
+                if (result == CanCompileAndOSREnter && verboseCompilationEnabled()) {
+                    dataLog("FTL disabling OSR entry because of node:\n");
+                    graph.dump(WTF::dataFile(), "    ", node);
+                }
+                result = CanCompile;
+                break;
+                
+            case CanCompileAndOSREnter:
+                break;
             }
             
-            // We don't care if we can compile anything after a force-exit.
             if (node->op() == ForceOSRExit)
                 break;
         }
     }
     
-    return true;
+    return result;
 }
 
 } } // namespace JSC::FTL

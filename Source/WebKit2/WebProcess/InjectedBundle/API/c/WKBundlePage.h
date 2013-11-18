@@ -112,6 +112,7 @@ typedef void (*WKBundlePageDidLayoutCallback)(WKBundlePageRef page, WKLayoutMile
 typedef void (*WKBundlePageFeaturesUsedInPageCallback)(WKBundlePageRef page, WKArrayRef featureStrings, const void *clientInfo);
 typedef void (*WKBundlePageWillLoadURLRequestCallback)(WKBundlePageRef page, WKURLRequestRef request, WKTypeRef userData, const void *clientInfo);
 typedef void (*WKBundlePageWillLoadDataRequestCallback)(WKBundlePageRef page, WKURLRequestRef request, WKDataRef data, WKStringRef MIMEType, WKStringRef encodingName, WKURLRef unreachableURL, WKTypeRef userData, const void *clientInfo);
+typedef void (*WKBundlePageWillDestroyFrame)(WKBundlePageRef page, WKBundleFrameRef frame, const void *clientInfo);
 
 struct WKBundlePageLoaderClient {
     int                                                                     version;
@@ -164,10 +165,13 @@ struct WKBundlePageLoaderClient {
     // Version 6
     WKBundlePageWillLoadURLRequestCallback                                  willLoadURLRequest;
     WKBundlePageWillLoadDataRequestCallback                                 willLoadDataRequest;
+
+    // Version 7
+    WKBundlePageWillDestroyFrame                                            willDestroyFrame;
 };
 typedef struct WKBundlePageLoaderClient WKBundlePageLoaderClient;
 
-enum { kWKBundlePageLoaderClientCurrentVersion = 6 };
+enum { kWKBundlePageLoaderClientCurrentVersion = 7 };
 
 enum {
     WKBundlePagePolicyActionPassThrough,
@@ -249,7 +253,6 @@ typedef void (*WKBundlePageMouseDidMoveOverElementCallback)(WKBundlePageRef page
 typedef void (*WKBundlePageDidScrollCallback)(WKBundlePageRef page, const void *clientInfo);
 typedef void (*WKBundlePagePaintCustomOverhangAreaCallback)(WKBundlePageRef page, WKGraphicsContextRef graphicsContext, WKRect horizontalOverhang, WKRect verticalOverhang, WKRect dirtyRect, const void* clientInfo);
 typedef WKStringRef (*WKBundlePageGenerateFileForUploadCallback)(WKBundlePageRef page, WKStringRef originalFilePath, const void* clientInfo);
-typedef bool (*WKBundlePageShouldRubberBandInDirectionCallback)(WKBundlePageRef page, WKScrollDirection scrollDirection, const void* clientInfo);
 typedef WKBundlePageUIElementVisibility (*WKBundlePageStatusBarIsVisibleCallback)(WKBundlePageRef page, const void *clientInfo);
 typedef WKBundlePageUIElementVisibility (*WKBundlePageMenuBarIsVisibleCallback)(WKBundlePageRef page, const void *clientInfo);
 typedef WKBundlePageUIElementVisibility (*WKBundlePageToolbarsAreVisibleCallback)(WKBundlePageRef page, const void *clientInfo);
@@ -273,7 +276,7 @@ struct WKBundlePageUIClient {
     WKBundlePagePaintCustomOverhangAreaCallback                         paintCustomOverhangArea;
     WKBundlePageGenerateFileForUploadCallback                           shouldGenerateFileForUpload;
     WKBundlePageGenerateFileForUploadCallback                           generateFileForUpload;
-    WKBundlePageShouldRubberBandInDirectionCallback                     shouldRubberBandInDirection;
+    void*                                                               unused1;
     WKBundlePageStatusBarIsVisibleCallback                              statusBarIsVisible;
     WKBundlePageMenuBarIsVisibleCallback                                menuBarIsVisible;
     WKBundlePageToolbarsAreVisibleCallback                              toolbarsAreVisible;

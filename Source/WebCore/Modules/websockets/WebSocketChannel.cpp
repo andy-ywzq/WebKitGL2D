@@ -66,8 +66,6 @@
 #include <wtf/text/StringHash.h>
 #include <wtf/text/WTFString.h>
 
-using namespace std;
-
 namespace WebCore {
 
 const double TCPMaximumSegmentLifetime = 2 * 60.0;
@@ -99,7 +97,7 @@ WebSocketChannel::~WebSocketChannel()
 {
 }
 
-void WebSocketChannel::connect(const KURL& url, const String& protocol)
+void WebSocketChannel::connect(const URL& url, const String& protocol)
 {
     LOG(Network, "WebSocketChannel %p connect()", this);
     ASSERT(!m_handle);
@@ -205,7 +203,7 @@ void WebSocketChannel::fail(const String& reason)
 
     // Hybi-10 specification explicitly states we must not continue to handle incoming data
     // once the WebSocket connection is failed (section 7.1.7).
-    RefPtr<WebSocketChannel> protect(this); // The client can close the channel, potentially removing the last reference.
+    Ref<WebSocketChannel> protect(*this); // The client can close the channel, potentially removing the last reference.
     m_shouldDiscardReceivedData = true;
     if (!m_buffer.isEmpty())
         skipBuffer(m_buffer.size()); // Save memory.
@@ -248,7 +246,7 @@ void WebSocketChannel::willOpenSocketStream(SocketStreamHandle* handle)
     LOG(Network, "WebSocketChannel %p willOpenSocketStream()", this);
     ASSERT(handle);
     if (m_document->frame())
-        m_document->frame()->loader().client()->dispatchWillOpenSocketStream(handle);
+        m_document->frame()->loader().client().dispatchWillOpenSocketStream(handle);
 }
 
 void WebSocketChannel::didOpenSocketStream(SocketStreamHandle* handle)
@@ -292,7 +290,7 @@ void WebSocketChannel::didCloseSocketStream(SocketStreamHandle* handle)
 void WebSocketChannel::didReceiveSocketStreamData(SocketStreamHandle* handle, const char* data, int len)
 {
     LOG(Network, "WebSocketChannel %p didReceiveSocketStreamData() Received %d bytes", this, len);
-    RefPtr<WebSocketChannel> protect(this); // The client can close the channel, potentially removing the last reference.
+    Ref<WebSocketChannel> protect(*this); // The client can close the channel, potentially removing the last reference.
     ASSERT(handle == m_handle);
     if (!m_document) {
         return;
@@ -421,7 +419,7 @@ bool WebSocketChannel::processBuffer()
         return false;
     }
 
-    RefPtr<WebSocketChannel> protect(this); // The client can close the channel, potentially removing the last reference.
+    Ref<WebSocketChannel> protect(*this); // The client can close the channel, potentially removing the last reference.
 
     if (m_handshake->mode() == WebSocketHandshake::Incomplete) {
         int headerLength = m_handshake->readServerHandshake(m_buffer.data(), m_buffer.size());
@@ -460,7 +458,7 @@ void WebSocketChannel::resumeTimerFired(Timer<WebSocketChannel>* timer)
 {
     ASSERT_UNUSED(timer, timer == &m_resumeTimer);
 
-    RefPtr<WebSocketChannel> protect(this); // The client can close the channel, potentially removing the last reference.
+    Ref<WebSocketChannel> protect(*this); // The client can close the channel, potentially removing the last reference.
     while (!m_suspended && m_client && !m_buffer.isEmpty())
         if (!processBuffer())
             break;
@@ -577,7 +575,7 @@ bool WebSocketChannel::processFrame()
             // make sure that the member variables are in a consistent state before
             // the handler is invoked.
             // Vector<char>::swap() is used here to clear m_continuousFrameData.
-            OwnPtr<Vector<char> > continuousFrameData = adoptPtr(new Vector<char>);
+            OwnPtr<Vector<char>> continuousFrameData = adoptPtr(new Vector<char>);
             m_continuousFrameData.swap(*continuousFrameData);
             m_hasContinuousFrame = false;
             if (m_continuousFrameOpCode == WebSocketFrame::OpCodeText) {
@@ -618,7 +616,7 @@ bool WebSocketChannel::processFrame()
 
     case WebSocketFrame::OpCodeBinary:
         if (frame.final) {
-            OwnPtr<Vector<char> > binaryData = adoptPtr(new Vector<char>(frame.payloadLength));
+            OwnPtr<Vector<char>> binaryData = adoptPtr(new Vector<char>(frame.payloadLength));
             memcpy(binaryData->data(), frame.payload, frame.payloadLength);
             skipBuffer(frameEnd - m_buffer.data());
             m_client->didReceiveBinaryData(binaryData.release());

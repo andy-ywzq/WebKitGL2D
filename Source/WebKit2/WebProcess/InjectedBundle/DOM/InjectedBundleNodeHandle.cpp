@@ -74,7 +74,7 @@ PassRefPtr<InjectedBundleNodeHandle> InjectedBundleNodeHandle::getOrCreate(Node*
     if (!node)
         return 0;
 
-    DOMHandleCache::AddResult result = domHandleCache().add(node, 0);
+    DOMHandleCache::AddResult result = domHandleCache().add(node, nullptr);
     if (!result.isNewEntry)
         return PassRefPtr<InjectedBundleNodeHandle>(result.iterator->value);
 
@@ -105,7 +105,7 @@ Node* InjectedBundleNodeHandle::coreNode() const
 
 PassRefPtr<InjectedBundleNodeHandle> InjectedBundleNodeHandle::document()
 {
-    return getOrCreate(m_node->document());
+    return getOrCreate(&m_node->document());
 }
 
 // Additional DOM Operations
@@ -134,7 +134,7 @@ static PassRefPtr<WebImage> imageForRect(FrameView* frameView, const IntRect& re
     if (!snapshot->bitmap())
         return 0;
 
-    OwnPtr<GraphicsContext> graphicsContext = snapshot->bitmap()->createGraphicsContext();
+    auto graphicsContext = snapshot->bitmap()->createGraphicsContext();
     graphicsContext->clearRect(IntRect(IntPoint(), bitmapSize));
     graphicsContext->applyDeviceScaleFactor(scaleFactor);
     graphicsContext->translate(-rect.x(), -rect.y());
@@ -150,11 +150,7 @@ static PassRefPtr<WebImage> imageForRect(FrameView* frameView, const IntRect& re
 
 PassRefPtr<WebImage> InjectedBundleNodeHandle::renderedImage(SnapshotOptions options)
 {
-    Document* document = m_node->document();
-    if (!document)
-        return 0;
-
-    Frame* frame = document->frame();
+    Frame* frame = m_node->document().frame();
     if (!frame)
         return 0;
 
@@ -162,7 +158,7 @@ PassRefPtr<WebImage> InjectedBundleNodeHandle::renderedImage(SnapshotOptions opt
     if (!frameView)
         return 0;
 
-    document->updateLayout();
+    m_node->document().updateLayout();
 
     RenderObject* renderer = m_node->renderer();
     if (!renderer)

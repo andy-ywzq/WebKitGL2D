@@ -4,7 +4,7 @@
 <link rel="shortcut icon" type="image/x-icon" href="http://test.com/oldfavicon.ico"/>
 <link rel="shortcut icon" type="image/x-icon" href="http://test.com/foofavicon.ico"/>
 <link rel="shortcut icon" type="image/x-icon" href="http://test.com/barfavicon.ico"/>
-<script src="../js/resources/js-test-pre.js"></script>
+<script src="../../resources/js-test-pre.js"></script>
 <script>
 
 function setFavIcon(iconURL) {
@@ -48,7 +48,7 @@ function runTests() {
     var expectedURL0 = "http://test.com/barfavicon.ico";
     var expectedURL1 = "http://test.com/foofavicon.ico";
     var expectedURL2 = "http://test.com/newfavicon.ico";
-    var iconURLs = window.internals.shortcutIconURLs(document);
+    var iconURLs = window.internals.shortcutIconURLs();
     if (expectedURL0 == iconURLs[0] && expectedURL1 == iconURLs[1] && expectedURL2 == iconURLs[2]) 
         testPassed('URL list matches expected');
     else

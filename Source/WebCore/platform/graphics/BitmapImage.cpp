@@ -28,6 +28,7 @@
 #include "BitmapImage.h"
 
 #include "FloatRect.h"
+#include "ImageBuffer.h"
 #include "ImageObserver.h"
 #include "IntRect.h"
 #include "MIMETypeRegistry.h"
@@ -42,7 +43,6 @@ BitmapImage::BitmapImage(ImageObserver* observer)
     : Image(observer)
     , m_currentFrame(0)
     , m_frames(0)
-    , m_frameTimer(0)
     , m_repetitionCount(cAnimationNone)
     , m_repetitionCountStatus(Unknown)
     , m_repetitionsComplete(0)
@@ -58,6 +58,7 @@ BitmapImage::BitmapImage(ImageObserver* observer)
     , m_sizeAvailable(false)
     , m_hasUniformFrameSize(true)
     , m_haveFrameCount(false)
+    , m_cachedImage(0)
 {
 }
 
@@ -67,16 +68,10 @@ BitmapImage::~BitmapImage()
     stopAnimation();
 }
 
-bool BitmapImage::isBitmapImage() const
-{
-    return true;
-}
-
 bool BitmapImage::hasSingleSecurityOrigin() const
 {
     return true;
 }
-
 
 void BitmapImage::destroyDecodedData(bool destroyAll)
 {
@@ -102,6 +97,12 @@ void BitmapImage::destroyDecodedDataIfNecessary(bool destroyAll)
     // Animated images >5MB are considered large enough that we'll only hang on
     // to one frame at a time.
     static const unsigned cLargeAnimationCutoff = 5242880;
+
+    // If we have decoded frames but there is no encoded data, we shouldn't destroy
+    // the decoded image since we won't be able to reconstruct it later.
+    if (!data() && m_frames.size())
+        return;
+
     unsigned allFrameBytes = 0;
     for (size_t i = 0; i < m_frames.size(); ++i)
         allFrameBytes += m_frames[i].m_frameBytes;
@@ -179,13 +180,20 @@ void BitmapImage::didDecodeProperties() const
         imageObserver()->decodedSizeChanged(this, deltaBytes);
 }
 
-void BitmapImage::updateSize() const
+void BitmapImage::updateSize(ImageOrientationDescription description) const
 {
-    if (!m_sizeAvailable || m_haveSize)
+    if (!m_sizeAvailable || (m_haveSize
+#if ENABLE(CSS_IMAGE_ORIENTATION)
+        && description.imageOrientation() == static_cast<ImageOrientationEnum>(m_imageOrientation)
+        && description.respectImageOrientation() == static_cast<RespectImageOrientationEnum>(m_shouldRespectImageOrientation)
+#endif
+        ))
         return;
 
-    m_size = m_source.size();
-    m_sizeRespectingOrientation = m_source.size(ImageOrientationDescription(RespectImageOrientation));
+    m_size = m_source.size(description);
+    m_sizeRespectingOrientation = m_source.size(ImageOrientationDescription(RespectImageOrientation, description.imageOrientation()));
+    m_imageOrientation = static_cast<unsigned>(description.imageOrientation());
+    m_shouldRespectImageOrientation = static_cast<unsigned>(description.respectImageOrientation());
     m_haveSize = true;
     didDecodeProperties();
 }
@@ -196,9 +204,9 @@ IntSize BitmapImage::size() const
     return m_size;
 }
 
-IntSize BitmapImage::sizeRespectingOrientation() const
+IntSize BitmapImage::sizeRespectingOrientation(ImageOrientationDescription description) const
 {
-    updateSize();
+    updateSize(description);
     return m_sizeRespectingOrientation;
 }
 
@@ -427,7 +435,7 @@ void BitmapImage::startAnimation(bool catchUpIfNecessary)
 
     if (!catchUpIfNecessary || time < m_desiredFrameStartTime) {
         // Haven't yet reached time for next frame to start; delay until then.
-        m_frameTimer = new Timer<BitmapImage>(this, &BitmapImage::advanceAnimation);
+        m_frameTimer = std::make_unique<Timer<BitmapImage>>(this, &BitmapImage::advanceAnimation);
         m_frameTimer->startOneShot(std::max(m_desiredFrameStartTime - time, 0.));
     } else {
         // We've already reached or passed the time for the next frame to start.
@@ -477,8 +485,7 @@ void BitmapImage::stopAnimation()
 {
     // This timer is used to animate all occurrences of this image.  Don't invalidate
     // the timer unless all renderers have stopped drawing.
-    delete m_frameTimer;
-    m_frameTimer = 0;
+    m_frameTimer = nullptr;
 }
 
 void BitmapImage::resetAnimation()
@@ -498,6 +505,40 @@ unsigned BitmapImage::decodedSize() const
     return m_decodedSize;
 }
 
+void BitmapImage::drawPattern(GraphicsContext* ctxt, const FloatRect& tileRect, const AffineTransform& transform,
+    const FloatPoint& phase, ColorSpace styleColorSpace, CompositeOperator op, const FloatRect& destRect, BlendMode blendMode)
+{
+    if (tileRect.isEmpty())
+        return;
+
+    if (!ctxt->drawLuminanceMask()) {
+        Image::drawPattern(ctxt, tileRect, transform, phase, styleColorSpace, op, destRect, blendMode);
+        return;
+    }
+    if (!m_cachedImage) {
+        OwnPtr<ImageBuffer> buffer = ImageBuffer::create(expandedIntSize(tileRect.size()));
+        ASSERT(buffer.get());
+
+        ImageObserver* observer = imageObserver();
+        ASSERT(observer);
+
+        // Temporarily reset image observer, we don't want to receive any changeInRect() calls due to this relayout.
+        setImageObserver(0);
+
+        draw(buffer->context(), tileRect, tileRect, styleColorSpace, op, blendMode, ImageOrientationDescription());
+
+        setImageObserver(observer);
+        buffer->convertToLuminanceMask();
+
+        m_cachedImage = buffer->copyImage(DontCopyBackingStore, Unscaled);
+        m_cachedImage->setSpaceSize(spaceSize());
+
+        setImageObserver(observer);
+    }
+
+    ctxt->setDrawLuminanceMask(false);
+    m_cachedImage->drawPattern(ctxt, tileRect, transform, phase, styleColorSpace, op, destRect, blendMode);
+}
 
 
 void BitmapImage::advanceAnimation(Timer<BitmapImage>*)

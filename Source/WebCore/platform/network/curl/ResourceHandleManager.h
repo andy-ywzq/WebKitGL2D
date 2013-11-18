@@ -59,9 +59,6 @@ public:
 
     CURLSH* getCurlShareHandle() const;
 
-    void setCookieJarFileName(const char* cookieJarFileName);
-    const char* getCookieJarFileName() const;
-
     void dispatchSynchronousJob(ResourceHandle*);
 
     void setupPOST(ResourceHandle*, struct curl_slist**);
@@ -88,7 +85,6 @@ private:
     Timer<ResourceHandleManager> m_downloadTimer;
     CURLM* m_curlMultiHandle;
     CURLSH* m_curlShareHandle;
-    char* m_cookieJarFileName;
     char m_curlErrorBuffer[CURL_ERROR_SIZE];
     Vector<ResourceHandle*> m_resourceHandleList;
     const CString m_certificatePath;

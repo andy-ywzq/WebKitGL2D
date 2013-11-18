@@ -28,9 +28,9 @@
 
 #include "WebPage.h"
 #include "WebProcess.h"
-#include <WebCore/Frame.h>
 #include <WebCore/FrameView.h>
 #include <WebCore/GraphicsContext.h>
+#include <WebCore/MainFrame.h>
 #include <WebCore/Page.h>
 #include <WebCore/ScrollbarTheme.h>
 #include <wtf/CurrentTime.h>
@@ -64,7 +64,7 @@ PageOverlay::~PageOverlay()
 
 IntRect PageOverlay::bounds() const
 {
-    FrameView* frameView = m_webPage->corePage()->mainFrame()->view();
+    FrameView* frameView = m_webPage->corePage()->mainFrame().view();
 
     int width = frameView->width();
     int height = frameView->height();

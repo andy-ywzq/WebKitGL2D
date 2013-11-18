@@ -28,7 +28,6 @@
 #include "SVGExternalResourcesRequired.h"
 #include "SVGGraphicsElement.h"
 #include "SVGImageLoader.h"
-#include "SVGNames.h"
 #include "SVGURIReference.h"
 
 namespace WebCore {
@@ -37,10 +36,10 @@ class SVGImageElement FINAL : public SVGGraphicsElement,
                               public SVGExternalResourcesRequired,
                               public SVGURIReference {
 public:
-    static PassRefPtr<SVGImageElement> create(const QualifiedName&, Document*);
+    static PassRefPtr<SVGImageElement> create(const QualifiedName&, Document&);
 
 private:
-    SVGImageElement(const QualifiedName&, Document*);
+    SVGImageElement(const QualifiedName&, Document&);
     
     virtual bool isValid() const { return SVGTests::isValid(); }
     virtual bool supportsFocus() const OVERRIDE { return true; }
@@ -52,12 +51,12 @@ private:
     virtual void svgAttributeChanged(const QualifiedName&);
 
     virtual void didAttachRenderers() OVERRIDE;
-    virtual InsertionNotificationRequest insertedInto(ContainerNode*) OVERRIDE;
+    virtual InsertionNotificationRequest insertedInto(ContainerNode&) OVERRIDE;
 
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
 
     virtual const AtomicString& imageSourceURL() const OVERRIDE;
-    virtual void addSubresourceAttributeURLs(ListHashSet<KURL>&) const;
+    virtual void addSubresourceAttributeURLs(ListHashSet<URL>&) const;
 
     virtual bool haveLoadedRequiredResources();
 
@@ -77,16 +76,7 @@ private:
     SVGImageLoader m_imageLoader;
 };
 
-inline bool isSVGImageElement(const Node* node)
-{
-    return node->hasTagName(SVGNames::imageTag);
-}
-
-inline SVGImageElement* toSVGImageElement(Node* node)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!node || isSVGImageElement(node));
-    return static_cast<SVGImageElement*>(node);
-}
+NODE_TYPE_CASTS(SVGImageElement)
 
 } // namespace WebCore
 

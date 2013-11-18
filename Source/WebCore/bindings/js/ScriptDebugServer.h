@@ -50,7 +50,6 @@ class ExecState;
 }
 namespace WebCore {
 
-class JavaScriptCallFrame;
 class ScriptDebugListener;
 class ScriptObject;
 class ScriptValue;
@@ -98,9 +97,9 @@ public:
     bool isPaused() { return m_paused; }
     bool runningNestedMessageLoop() { return m_runningNestedMessageLoop; }
 
-    void compileScript(ScriptState*, const String& expression, const String& sourceURL, String* scriptId, String* exceptionMessage);
+    void compileScript(JSC::ExecState*, const String& expression, const String& sourceURL, String* scriptId, String* exceptionMessage);
     void clearCompiledScripts();
-    void runScript(ScriptState*, const String& scriptId, ScriptValue* result, bool* wasThrown, String* exceptionMessage);
+    void runScript(JSC::ExecState*, const String& scriptId, ScriptValue* result, bool* wasThrown, String* exceptionMessage);
 
     class Task {
         WTF_MAKE_FAST_ALLOCATED;
@@ -124,7 +123,9 @@ protected:
 
     virtual bool isContentScript(JSC::ExecState*);
 
-    bool hasBreakpoint(intptr_t sourceID, const TextPosition&) const;
+    bool hasBreakpoint(intptr_t sourceID, const TextPosition&, ScriptBreakpoint* hitBreakpoint) const;
+    bool evaluateBreakpointAction(const ScriptBreakpointAction&) const;
+    bool evaluateBreakpointActions(const ScriptBreakpoint&) const;
 
     void dispatchFunctionToListeners(JavaScriptExecutionCallback, JSC::JSGlobalObject*);
     void dispatchFunctionToListeners(const ListenerSet& listeners, JavaScriptExecutionCallback callback);
@@ -133,24 +134,31 @@ protected:
     void dispatchDidParseSource(const ListenerSet& listeners, JSC::SourceProvider*, bool isContentScript);
     void dispatchFailedToParseSource(const ListenerSet& listeners, JSC::SourceProvider*, int errorLine, const String& errorMessage);
 
-    void createCallFrame(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber, int columnNumber);
-    void updateCallFrameAndPauseIfNeeded(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber, int columnNumber);
-    void pauseIfNeeded(JSC::JSGlobalObject* dynamicGlobalObject);
+    // These update functions are only needed because our current breakpoints are
+    // key'ed off the source position instead of the bytecode PC. This ensures
+    // that we don't break on the same line more than once. Once we switch to a
+    // bytecode PC key'ed breakpoint, we will not need these anymore and should
+    // be able to remove them.
+    void updateCallFrame(JSC::CallFrame*);
+    void updateCallFrameAndPauseIfNeeded(JSC::CallFrame*);
+    void pauseIfNeeded(JSC::CallFrame*);
 
-    virtual void detach(JSC::JSGlobalObject*);
+    JSC::DebuggerCallFrame* currentDebuggerCallFrame() const;
 
-    virtual void sourceParsed(JSC::ExecState*, JSC::SourceProvider*, int errorLine, const String& errorMsg);
-    virtual void callEvent(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber, int columnNumber);
-    virtual void atStatement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int firstLine, int columnNumber);
-    virtual void returnEvent(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber, int columnNumber);
-    virtual void exception(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber, int columnNumber, bool hasHandler);
-    virtual void willExecuteProgram(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineno, int columnNumber);
-    virtual void didExecuteProgram(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineno, int columnNumber);
-    virtual void didReachBreakpoint(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineno, int columnNumber);
+    virtual void detach(JSC::JSGlobalObject*) OVERRIDE;
+
+    virtual void sourceParsed(JSC::ExecState*, JSC::SourceProvider*, int errorLine, const String& errorMsg) OVERRIDE;
+    virtual void callEvent(JSC::CallFrame*) OVERRIDE;
+    virtual void atStatement(JSC::CallFrame*) OVERRIDE;
+    virtual void returnEvent(JSC::CallFrame*) OVERRIDE;
+    virtual void exception(JSC::CallFrame*, JSC::JSValue exceptionValue, bool hasHandler) OVERRIDE;
+    virtual void willExecuteProgram(JSC::CallFrame*) OVERRIDE;
+    virtual void didExecuteProgram(JSC::CallFrame*) OVERRIDE;
+    virtual void didReachBreakpoint(JSC::CallFrame*) OVERRIDE;
 
     typedef Vector<ScriptBreakpoint> BreakpointsInLine;
-    typedef HashMap<long, BreakpointsInLine> LineToBreakpointMap;
-    typedef HashMap<intptr_t, LineToBreakpointMap> SourceIdToBreakpointsMap;
+    typedef HashMap<int, BreakpointsInLine, WTF::IntHash<int>, WTF::UnsignedWithZeroKeyHashTraits<int>> LineToBreakpointsMap;
+    typedef HashMap<intptr_t, LineToBreakpointsMap> SourceIdToBreakpointsMap;
 
     bool m_callingListeners;
     PauseOnExceptionsState m_pauseOnExceptionsState;
@@ -159,13 +167,16 @@ protected:
     bool m_runningNestedMessageLoop;
     bool m_doneProcessingDebuggerEvents;
     bool m_breakpointsActivated;
-    JavaScriptCallFrame* m_pauseOnCallFrame;
-    RefPtr<JavaScriptCallFrame> m_currentCallFrame;
+    JSC::CallFrame* m_pauseOnCallFrame;
+    JSC::CallFrame* m_currentCallFrame;
+    RefPtr<JSC::DebuggerCallFrame> m_currentDebuggerCallFrame;
     SourceIdToBreakpointsMap m_sourceIdToBreakpoints;
     Timer<ScriptDebugServer> m_recompileTimer;
 
     int m_lastExecutedLine;
     intptr_t m_lastExecutedSourceId;
+
+    friend class DebuggerCallFrameScope;
 };
 
 } // namespace WebCore

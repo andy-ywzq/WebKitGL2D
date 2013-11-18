@@ -27,6 +27,7 @@
 #include "NamedNodeMap.h"
 #include "NodeRareData.h"
 #include "PseudoElement.h"
+#include "RenderElement.h"
 #include "ShadowRoot.h"
 #include "StyleInheritedData.h"
 #include <wtf/OwnPtr.h>
@@ -35,13 +36,15 @@ namespace WebCore {
 
 class ElementRareData : public NodeRareData {
 public:
-    static PassOwnPtr<ElementRareData> create(RenderObject* renderer) { return adoptPtr(new ElementRareData(renderer)); }
+    static PassOwnPtr<ElementRareData> create(RenderElement* renderer) { return adoptPtr(new ElementRareData(renderer)); }
 
     ~ElementRareData();
 
-    void setPseudoElement(PseudoId, PassRefPtr<PseudoElement>);
-    PseudoElement* pseudoElement(PseudoId) const;
-    bool hasPseudoElements() const { return m_generatedBefore || m_generatedAfter; }
+    void setBeforePseudoElement(PassRefPtr<PseudoElement>);
+    void setAfterPseudoElement(PassRefPtr<PseudoElement>);
+
+    PseudoElement* beforePseudoElement() const { return m_beforePseudoElement.get(); }
+    PseudoElement* afterPseudoElement() const { return m_afterPseudoElement.get(); }
 
     void resetComputedStyle();
     void resetDynamicRestyleObservations();
@@ -69,11 +72,6 @@ public:
 #if ENABLE(FULLSCREEN_API)
     bool containsFullScreenElement() { return m_containsFullScreenElement; }
     void setContainsFullScreenElement(bool value) { m_containsFullScreenElement = value; }
-#endif
-
-#if ENABLE(DIALOG_ELEMENT)
-    bool isInTopLayer() const { return m_isInTopLayer; }
-    void setIsInTopLayer(bool value) { m_isInTopLayer = value; }
 #endif
 
     bool childrenAffectedByHover() const { return m_childrenAffectedByHover; }
@@ -104,10 +102,10 @@ public:
     void setAttributeMap(PassOwnPtr<NamedNodeMap> attributeMap) { m_attributeMap = attributeMap; }
 
     RenderStyle* computedStyle() const { return m_computedStyle.get(); }
-    void setComputedStyle(PassRefPtr<RenderStyle> computedStyle) { m_computedStyle = computedStyle; }
+    void setComputedStyle(PassRef<RenderStyle> computedStyle) { m_computedStyle = std::move(computedStyle); }
 
     ClassList* classList() const { return m_classList.get(); }
-    void setClassList(PassOwnPtr<ClassList> classList) { m_classList = classList; }
+    void setClassList(std::unique_ptr<ClassList> classList) { m_classList = std::move(classList); }
     void clearClassListValueForQuirksMode()
     {
         if (!m_classList)
@@ -116,7 +114,7 @@ public:
     }
 
     DatasetDOMStringMap* dataset() const { return m_dataset.get(); }
-    void setDataset(PassOwnPtr<DatasetDOMStringMap> dataset) { m_dataset = dataset; }
+    void setDataset(std::unique_ptr<DatasetDOMStringMap> dataset) { m_dataset = std::move(dataset); }
 
     LayoutSize minimumSizeForResizing() const { return m_minimumSizeForResizing; }
     void setMinimumSizeForResizing(LayoutSize size) { m_minimumSizeForResizing = size; }
@@ -138,9 +136,6 @@ private:
     unsigned m_isInCanvasSubtree : 1;
 #if ENABLE(FULLSCREEN_API)
     unsigned m_containsFullScreenElement : 1;
-#endif
-#if ENABLE(DIALOG_ELEMENT)
-    unsigned m_isInTopLayer : 1;
 #endif
 #if ENABLE(SVG)
     unsigned m_hasPendingResources : 1;
@@ -164,15 +159,15 @@ private:
     IntSize m_savedLayerScrollOffset;
     RefPtr<RenderStyle> m_computedStyle;
 
-    OwnPtr<DatasetDOMStringMap> m_dataset;
-    OwnPtr<ClassList> m_classList;
+    std::unique_ptr<DatasetDOMStringMap> m_dataset;
+    std::unique_ptr<ClassList> m_classList;
     RefPtr<ShadowRoot> m_shadowRoot;
     OwnPtr<NamedNodeMap> m_attributeMap;
 
-    RefPtr<PseudoElement> m_generatedBefore;
-    RefPtr<PseudoElement> m_generatedAfter;
+    RefPtr<PseudoElement> m_beforePseudoElement;
+    RefPtr<PseudoElement> m_afterPseudoElement;
 
-    ElementRareData(RenderObject*);
+    explicit ElementRareData(RenderElement*);
     void releasePseudoElement(PseudoElement*);
 };
 
@@ -181,7 +176,7 @@ inline IntSize defaultMinimumSizeForResizing()
     return IntSize(LayoutUnit::max(), LayoutUnit::max());
 }
 
-inline ElementRareData::ElementRareData(RenderObject* renderer)
+inline ElementRareData::ElementRareData(RenderElement* renderer)
     : NodeRareData(renderer)
     , m_tabIndex(0)
     , m_childIndex(0)
@@ -191,9 +186,6 @@ inline ElementRareData::ElementRareData(RenderObject* renderer)
     , m_isInCanvasSubtree(false)
 #if ENABLE(FULLSCREEN_API)
     , m_containsFullScreenElement(false)
-#endif
-#if ENABLE(DIALOG_ELEMENT)
-    , m_isInTopLayer(false)
 #endif
 #if ENABLE(SVG)
     , m_hasPendingResources(false)
@@ -215,54 +207,25 @@ inline ElementRareData::ElementRareData(RenderObject* renderer)
 inline ElementRareData::~ElementRareData()
 {
     ASSERT(!m_shadowRoot);
-    ASSERT(!m_generatedBefore);
-    ASSERT(!m_generatedAfter);
+    ASSERT(!m_beforePseudoElement);
+    ASSERT(!m_afterPseudoElement);
 }
 
-inline void ElementRareData::setPseudoElement(PseudoId pseudoId, PassRefPtr<PseudoElement> element)
+inline void ElementRareData::setBeforePseudoElement(PassRefPtr<PseudoElement> pseudoElement)
 {
-    switch (pseudoId) {
-    case BEFORE:
-        releasePseudoElement(m_generatedBefore.get());
-        m_generatedBefore = element;
-        break;
-    case AFTER:
-        releasePseudoElement(m_generatedAfter.get());
-        m_generatedAfter = element;
-        break;
-    default:
-        ASSERT_NOT_REACHED();
-    }
+    ASSERT(!m_beforePseudoElement || !pseudoElement);
+    m_beforePseudoElement = pseudoElement;
 }
 
-inline PseudoElement* ElementRareData::pseudoElement(PseudoId pseudoId) const
+inline void ElementRareData::setAfterPseudoElement(PassRefPtr<PseudoElement> pseudoElement)
 {
-    switch (pseudoId) {
-    case BEFORE:
-        return m_generatedBefore.get();
-    case AFTER:
-        return m_generatedAfter.get();
-    default:
-        return 0;
-    }
-}
-
-inline void ElementRareData::releasePseudoElement(PseudoElement* element)
-{
-    if (!element)
-        return;
-    if (element->attached())
-        Style::detachRenderTree(element);
-    element->clearHostElement();
-
-    ASSERT(!element->nextSibling());
-    ASSERT(!element->previousSibling());
-    ASSERT(!element->parentNode());
+    ASSERT(!m_afterPseudoElement || !pseudoElement);
+    m_afterPseudoElement = pseudoElement;
 }
 
 inline void ElementRareData::resetComputedStyle()
 {
-    setComputedStyle(0);
+    m_computedStyle = nullptr;
     setStyleAffectedByEmpty(false);
     setChildIndex(0);
 }

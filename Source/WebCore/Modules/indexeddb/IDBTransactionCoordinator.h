@@ -34,8 +34,7 @@
 
 namespace WebCore {
 
-class IDBTransactionBackendImpl;
-class IDBDatabaseBackendImpl;
+class IDBTransactionBackendInterface;
 
 // Transactions are executed in the order the were created.
 class IDBTransactionCoordinator {
@@ -44,25 +43,25 @@ public:
     virtual ~IDBTransactionCoordinator();
 
     // Called by transactions as they start and finish.
-    void didCreateTransaction(IDBTransactionBackendImpl*);
-    void didStartTransaction(IDBTransactionBackendImpl*);
-    void didFinishTransaction(IDBTransactionBackendImpl*);
+    void didCreateTransaction(IDBTransactionBackendInterface*);
+    void didStartTransaction(IDBTransactionBackendInterface*);
+    void didFinishTransaction(IDBTransactionBackendInterface*);
 
 #ifndef NDEBUG
-    bool isActive(IDBTransactionBackendImpl*);
+    bool isActive(IDBTransactionBackendInterface*);
 #endif
 
 private:
     IDBTransactionCoordinator();
 
     void processStartedTransactions();
-    bool canRunTransaction(IDBTransactionBackendImpl*);
+    bool canRunTransaction(IDBTransactionBackendInterface*);
 
     // This is just an efficient way to keep references to all transactions.
-    HashMap<IDBTransactionBackendImpl*, RefPtr<IDBTransactionBackendImpl> > m_transactions;
+    HashMap<IDBTransactionBackendInterface*, RefPtr<IDBTransactionBackendInterface> > m_transactions;
     // Transactions in different states are grouped below.
-    ListHashSet<IDBTransactionBackendImpl*> m_queuedTransactions;
-    HashSet<IDBTransactionBackendImpl*> m_startedTransactions;
+    ListHashSet<IDBTransactionBackendInterface*> m_queuedTransactions;
+    HashSet<IDBTransactionBackendInterface*> m_startedTransactions;
 };
 
 } // namespace WebCore

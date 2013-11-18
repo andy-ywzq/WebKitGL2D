@@ -24,8 +24,9 @@
  */
 
 [
-    Conditional=SVG
-] interface SVGGraphicsElement : SVGStyledElement {
+    Conditional=SVG,
+    OperationsNotDeletable
+] interface SVGGraphicsElement : SVGElement {
     readonly attribute SVGAnimatedTransformList transform;
 
     readonly attribute SVGElement nearestViewportElement;

@@ -154,15 +154,23 @@ void dumpSpeculation(PrintStream& out, SpeculatedType value)
     }
     
     if (value & SpecInt32)
-        myOut.print("Int");
+        myOut.print("Int32");
     else
         isTop = false;
     
+    if (value & SpecInt52)
+        myOut.print("Int52");
+        
     if ((value & SpecDouble) == SpecDouble)
         myOut.print("Double");
     else {
-        if (value & SpecDoubleReal)
-            myOut.print("Doublereal");
+        if (value & SpecInt52AsDouble)
+            myOut.print("Int52asdouble");
+        else
+            isTop = false;
+        
+        if (value & SpecNonIntAsDouble)
+            myOut.print("Nonintasdouble");
         else
             isTop = false;
         
@@ -233,9 +241,15 @@ static const char* speculationToAbbreviatedString(SpeculatedType prediction)
         return "<Cell>";
     if (isInt32Speculation(prediction))
         return "<Int32>";
+    if (isInt52AsDoubleSpeculation(prediction))
+        return "<Int52AsDouble>";
+    if (isInt52Speculation(prediction))
+        return "<Int52>";
+    if (isMachineIntSpeculation(prediction))
+        return "<MachineInt>";
     if (isDoubleSpeculation(prediction))
         return "<Double>";
-    if (isNumberSpeculation(prediction))
+    if (isFullNumberSpeculation(prediction))
         return "<Number>";
     if (isBooleanSpeculation(prediction))
         return "<Boolean>";
@@ -247,6 +261,35 @@ static const char* speculationToAbbreviatedString(SpeculatedType prediction)
 void dumpSpeculationAbbreviated(PrintStream& out, SpeculatedType value)
 {
     out.print(speculationToAbbreviatedString(value));
+}
+
+SpeculatedType speculationFromTypedArrayType(TypedArrayType type)
+{
+    switch (type) {
+    case TypeInt8:
+        return SpecInt8Array;
+    case TypeInt16:
+        return SpecInt16Array;
+    case TypeInt32:
+        return SpecInt32Array;
+    case TypeUint8:
+        return SpecUint8Array;
+    case TypeUint8Clamped:
+        return SpecUint8ClampedArray;
+    case TypeUint16:
+        return SpecUint16Array;
+    case TypeUint32:
+        return SpecUint32Array;
+    case TypeFloat32:
+        return SpecFloat32Array;
+    case TypeFloat64:
+        return SpecFloat64Array;
+    case NotTypedArray:
+    case TypeDataView:
+        break;
+    }
+    RELEASE_ASSERT_NOT_REACHED();
+    return SpecNone;
 }
 
 SpeculatedType speculationFromClassInfo(const ClassInfo* classInfo)
@@ -266,28 +309,8 @@ SpeculatedType speculationFromClassInfo(const ClassInfo* classInfo)
     if (classInfo->isSubClassOf(JSFunction::info()))
         return SpecFunction;
     
-    switch (classInfo->typedArrayStorageType) {
-    case TypeInt8:
-        return SpecInt8Array;
-    case TypeInt16:
-        return SpecInt16Array;
-    case TypeInt32:
-        return SpecInt32Array;
-    case TypeUint8:
-        return SpecUint8Array;
-    case TypeUint8Clamped:
-        return SpecUint8ClampedArray;
-    case TypeUint16:
-        return SpecUint16Array;
-    case TypeUint32:
-        return SpecUint32Array;
-    case TypeFloat32:
-        return SpecFloat32Array;
-    case TypeFloat64:
-        return SpecFloat64Array;
-    default:
-        break;
-    }
+    if (isTypedView(classInfo->typedArrayStorageType))
+        return speculationFromTypedArrayType(classInfo->typedArrayStorageType);
     
     if (classInfo->isSubClassOf(JSObject::info()))
         return SpecObjectOther;
@@ -322,9 +345,11 @@ SpeculatedType speculationFromValue(JSValue value)
         return SpecInt32;
     if (value.isDouble()) {
         double number = value.asNumber();
-        if (number == number)
-            return SpecDoubleReal;
-        return SpecDoubleNaN;
+        if (number != number)
+            return SpecDoubleNaN;
+        if (value.isMachineInt())
+            return SpecInt52AsDouble;
+        return SpecNonIntAsDouble;
     }
     if (value.isCell())
         return speculationFromCell(value.asCell());

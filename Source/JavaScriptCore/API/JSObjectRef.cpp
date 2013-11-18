@@ -105,7 +105,7 @@ JSObjectRef JSObjectMakeFunctionWithCallback(JSContextRef ctx, JSStringRef name,
     }
     ExecState* exec = toJS(ctx);
     APIEntryShim entryShim(exec);
-    return toRef(JSCallbackFunction::create(exec, exec->lexicalGlobalObject(), callAsFunction, name ? name->string() : ASCIILiteral("anonymous")));
+    return toRef(JSCallbackFunction::create(exec->vm(), exec->lexicalGlobalObject(), callAsFunction, name ? name->string() : ASCIILiteral("anonymous")));
 }
 
 JSObjectRef JSObjectMakeConstructor(JSContextRef ctx, JSClassRef jsClass, JSObjectCallAsConstructorCallback callAsConstructor)
@@ -327,9 +327,10 @@ void JSObjectSetProperty(JSContextRef ctx, JSObjectRef object, JSStringRef prope
     Identifier name(propertyName->identifier(&exec->vm()));
     JSValue jsValue = toJS(exec, value);
 
-    if (attributes && !jsObject->hasProperty(exec, name))
-        jsObject->methodTable()->putDirectVirtual(jsObject, exec, name, jsValue, attributes);
-    else {
+    if (attributes && !jsObject->hasProperty(exec, name)) {
+        PropertyDescriptor desc(jsValue, attributes);
+        jsObject->methodTable()->defineOwnProperty(jsObject, exec, name, desc, false);
+    } else {
         PutPropertySlot slot;
         jsObject->methodTable()->put(jsObject, exec, name, jsValue, slot);
     }
@@ -595,7 +596,7 @@ public:
     
     unsigned refCount;
     VM* vm;
-    Vector<JSRetainPtr<JSStringRef> > array;
+    Vector<JSRetainPtr<JSStringRef>> array;
 };
 
 JSPropertyNameArrayRef JSObjectCopyPropertyNames(JSContextRef ctx, JSObjectRef object)

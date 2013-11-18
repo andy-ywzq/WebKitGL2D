@@ -51,7 +51,6 @@ using namespace WebCore;
 
 static RetainPtr<NSWindow> createBackgroundFullscreenWindow(NSRect frame);
 
-static const CFTimeInterval defaultAnimationDuration = 0.5;
 static const NSTimeInterval DefaultWatchdogTimerInterval = 1;
 
 enum FullScreenState : NSInteger {
@@ -89,7 +88,7 @@ static NSRect convertRectToScreen(NSWindow *window, NSRect rect)
 
 #pragma mark -
 #pragma mark Initialization
-- (id)initWithWindow:(NSWindow *)window
+- (id)initWithWindow:(NSWindow *)window webView:(WKView *)webView
 {
     self = [super initWithWindow:window];
     if (!self)
@@ -97,18 +96,26 @@ static NSRect convertRectToScreen(NSWindow *window, NSRect rect)
     [window setDelegate:self];
     [window setCollectionBehavior:([window collectionBehavior] | NSWindowCollectionBehaviorFullScreenPrimary)];
     [self windowDidLoad];
+    _webView = webView;
     
     return self;
 }
 
 - (void)dealloc
 {
-    [self setWebView:nil];
     [[self window] setDelegate:nil];
     
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
     
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+
+    if (_repaintCallback) {
+        _repaintCallback->invalidate();
+        // invalidate() calls completeFinishExitFullScreenAnimationAfterRepaint, which
+        // clears _repaintCallback.
+        ASSERT(!_repaintCallback);
+    }
+
     [super dealloc];
 }
 
@@ -121,18 +128,6 @@ static NSRect convertRectToScreen(NSWindow *window, NSRect rect)
 
 #pragma mark -
 #pragma mark Accessors
-
-- (WKView*)webView
-{
-    return _webView;
-}
-
-- (void)setWebView:(WKView *)webView
-{
-    [webView retain];
-    [_webView release];
-    _webView = webView;
-}
 
 - (BOOL)isFullScreen
 {
@@ -410,11 +405,20 @@ static void completeFinishExitFullScreenAnimationAfterRepaint(WKErrorRef, void*)
     [self _manager]->setAnimatingFullScreen(false);
     [self _page]->scalePage(_savedScale, IntPoint());
     [self _manager]->restoreScrollPosition();
-    [self _page]->forceRepaint(VoidCallback::create(self, completeFinishExitFullScreenAnimationAfterRepaint));
+
+    if (_repaintCallback) {
+        _repaintCallback->invalidate();
+        // invalidate() calls completeFinishExitFullScreenAnimationAfterRepaint, which
+        // clears _repaintCallback.
+        ASSERT(!_repaintCallback);
+    }
+    _repaintCallback = VoidCallback::create(self, completeFinishExitFullScreenAnimationAfterRepaint);
+    [self _page]->forceRepaint(_repaintCallback);
 }
 
 - (void)completeFinishExitFullScreenAnimationAfterRepaint
 {
+    _repaintCallback = nullptr;
     [[_webView window] setAutodisplay:YES];
     [[_webView window] displayIfNeeded];
     NSEnableScreenUpdates();
@@ -442,6 +446,8 @@ static void completeFinishExitFullScreenAnimationAfterRepaint(WKErrorRef, void* 
     
     if (_fullScreenState == ExitingFullScreen)
         [self finishedExitFullScreenAnimation:YES];
+
+    _webView = nil;
 
     [super close];
 }
@@ -556,7 +562,10 @@ static NSRect windowFrameFromApparentFrames(NSRect screenFrame, NSRect initialFr
 
     // WKWindowSetClipRect takes window coordinates, so convert from screen coordinates here:
     NSRect finalBounds = _finalFrame;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     finalBounds.origin = [[self window] convertScreenToBase:finalBounds.origin];
+#pragma clang diagnostic pop
     WKWindowSetClipRect([self window], finalBounds);
 
     NSWindow* window = [self window];
@@ -637,7 +646,10 @@ static NSRect windowFrameFromApparentFrames(NSRect screenFrame, NSRect initialFr
 
     // WKWindowSetClipRect takes window coordinates, so convert from screen coordinates here:
     NSRect finalBounds = _finalFrame;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     finalBounds.origin = [[self window] convertScreenToBase:finalBounds.origin];
+#pragma clang diagnostic pop
     WKWindowSetClipRect([self window], finalBounds);
 
     [_webView _setSuppressVisibilityUpdates:NO];

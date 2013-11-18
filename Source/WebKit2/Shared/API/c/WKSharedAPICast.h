@@ -37,6 +37,8 @@
 #include "WKPageLoadTypes.h"
 #include "WKPageLoadTypesPrivate.h"
 #include "WKPageVisibilityTypes.h"
+#include "WKUserContentInjectedFrames.h"
+#include "WKUserScriptInjectionTime.h"
 #include "WebError.h"
 #include "WebEvent.h"
 #include "WebFindOptions.h"
@@ -55,7 +57,6 @@
 #include <WebCore/SecurityOrigin.h>
 #include <WebCore/UserContentTypes.h>
 #include <WebCore/UserScriptTypes.h>
-#include <wtf/TypeTraits.h>
 
 namespace WebKit {
 
@@ -142,8 +143,8 @@ inline typename APITypeInfo<T>::ImplType toImpl(T t)
     // An example of the conversions that take place:
     // const struct OpaqueWKArray* -> const struct OpaqueWKArray -> struct OpaqueWKArray -> struct OpaqueWKArray* -> ImmutableArray*
     
-    typedef typename WTF::RemovePointer<T>::Type PotentiallyConstValueType;
-    typedef typename WTF::RemoveConst<PotentiallyConstValueType>::Type NonConstValueType;
+    typedef typename std::remove_pointer<T>::type PotentiallyConstValueType;
+    typedef typename std::remove_const<PotentiallyConstValueType>::type NonConstValueType;
 
     return reinterpret_cast<typename APITypeInfo<T>::ImplType>(const_cast<NonConstValueType*>(t));
 }
@@ -338,7 +339,7 @@ inline WKContextMenuItemTag toAPI(WebCore::ContextMenuAction action)
         return kWKContextMenuItemTagDownloadImageToDisk;
     case WebCore::ContextMenuItemTagCopyImageToClipboard:
         return kWKContextMenuItemTagCopyImageToClipboard;
-#if PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(QT)
+#if PLATFORM(EFL) || PLATFORM(GTK)
     case WebCore::ContextMenuItemTagCopyImageUrlToClipboard:
         return kWKContextMenuItemTagCopyImageUrlToClipboard;
 #endif
@@ -358,7 +359,7 @@ inline WKContextMenuItemTag toAPI(WebCore::ContextMenuAction action)
         return kWKContextMenuItemTagCut;
     case WebCore::ContextMenuItemTagPaste:
         return kWKContextMenuItemTagPaste;
-#if PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(QT)
+#if PLATFORM(EFL) || PLATFORM(GTK)
     case WebCore::ContextMenuItemTagSelectAll:
         return kWKContextMenuItemTagSelectAll;
 #endif
@@ -533,7 +534,7 @@ inline WebCore::ContextMenuAction toImpl(WKContextMenuItemTag tag)
     case kWKContextMenuItemTagCopyImageToClipboard:
         return WebCore::ContextMenuItemTagCopyImageToClipboard;
     case kWKContextMenuItemTagOpenFrameInNewWindow:
-#if PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(QT)
+#if PLATFORM(EFL) || PLATFORM(GTK)
     case kWKContextMenuItemTagCopyImageUrlToClipboard:
         return WebCore::ContextMenuItemTagCopyImageUrlToClipboard;
 #endif
@@ -552,7 +553,7 @@ inline WebCore::ContextMenuAction toImpl(WKContextMenuItemTag tag)
         return WebCore::ContextMenuItemTagCut;
     case kWKContextMenuItemTagPaste:
         return WebCore::ContextMenuItemTagPaste;
-#if PLATFORM(EFL) || PLATFORM(GTK) || PLATFORM(QT)
+#if PLATFORM(EFL) || PLATFORM(GTK)
     case kWKContextMenuItemTagSelectAll:
         return WebCore::ContextMenuItemTagSelectAll;
 #endif

@@ -1093,9 +1093,9 @@ static void testWebViewPageVisibility(WebViewTest* test, gconstpointer)
     test->loadHtml("<html><title></title>"
         "<body><p>Test Web Page Visibility</p>"
         "<script>"
-        "document.addEventListener(\"webkitvisibilitychange\", onVisibilityChange, false);"
+        "document.addEventListener(\"visibilitychange\", onVisibilityChange, false);"
         "function onVisibilityChange() {"
-        "    document.title = document.webkitVisibilityState;"
+        "    document.title = document.visibilityState;"
         "}"
         "</script>"
         "</body></html>",
@@ -1105,13 +1105,13 @@ static void testWebViewPageVisibility(WebViewTest* test, gconstpointer)
     test->waitUntilLoadFinished();
 
     GOwnPtr<GError> error;
-    WebKitJavascriptResult* javascriptResult = test->runJavaScriptAndWaitUntilFinished("document.webkitVisibilityState;", &error.outPtr());
+    WebKitJavascriptResult* javascriptResult = test->runJavaScriptAndWaitUntilFinished("document.visibilityState;", &error.outPtr());
     g_assert(javascriptResult);
     g_assert(!error.get());
     GOwnPtr<char> valueString(WebViewTest::javascriptResultToCString(javascriptResult));
     g_assert_cmpstr(valueString.get(), ==, "hidden");
 
-    javascriptResult = test->runJavaScriptAndWaitUntilFinished("document.webkitHidden;", &error.outPtr());
+    javascriptResult = test->runJavaScriptAndWaitUntilFinished("document.hidden;", &error.outPtr());
     g_assert(javascriptResult);
     g_assert(!error.get());
     g_assert(WebViewTest::javascriptResultToBoolean(javascriptResult));
@@ -1120,13 +1120,13 @@ static void testWebViewPageVisibility(WebViewTest* test, gconstpointer)
     test->showInWindow();
     test->waitUntilTitleChanged();
 
-    javascriptResult = test->runJavaScriptAndWaitUntilFinished("document.webkitVisibilityState;", &error.outPtr());
+    javascriptResult = test->runJavaScriptAndWaitUntilFinished("document.visibilityState;", &error.outPtr());
     g_assert(javascriptResult);
     g_assert(!error.get());
     valueString.set(WebViewTest::javascriptResultToCString(javascriptResult));
     g_assert_cmpstr(valueString.get(), ==, "visible");
 
-    javascriptResult = test->runJavaScriptAndWaitUntilFinished("document.webkitHidden;", &error.outPtr());
+    javascriptResult = test->runJavaScriptAndWaitUntilFinished("document.hidden;", &error.outPtr());
     g_assert(javascriptResult);
     g_assert(!error.get());
     g_assert(!WebViewTest::javascriptResultToBoolean(javascriptResult));
@@ -1135,13 +1135,13 @@ static void testWebViewPageVisibility(WebViewTest* test, gconstpointer)
     gtk_widget_hide(GTK_WIDGET(test->m_webView));
     test->waitUntilTitleChanged();
 
-    javascriptResult = test->runJavaScriptAndWaitUntilFinished("document.webkitVisibilityState;", &error.outPtr());
+    javascriptResult = test->runJavaScriptAndWaitUntilFinished("document.visibilityState;", &error.outPtr());
     g_assert(javascriptResult);
     g_assert(!error.get());
     valueString.set(WebViewTest::javascriptResultToCString(javascriptResult));
     g_assert_cmpstr(valueString.get(), ==, "hidden");
 
-    javascriptResult = test->runJavaScriptAndWaitUntilFinished("document.webkitHidden;", &error.outPtr());
+    javascriptResult = test->runJavaScriptAndWaitUntilFinished("document.hidden;", &error.outPtr());
     g_assert(javascriptResult);
     g_assert(!error.get());
     g_assert(WebViewTest::javascriptResultToBoolean(javascriptResult));
@@ -1248,18 +1248,26 @@ public:
     }
 
     static int authenticationRetries;
+    static bool authenticationCancelledReceived;
 
     void loadURI(const char* uri)
     {
         // Reset the retry count of the fake server when a page is loaded.
         authenticationRetries = 0;
+        authenticationCancelledReceived = false;
         LoadTrackingTest::loadURI(uri);
     }
 
     static gboolean runAuthenticationCallback(WebKitWebView*, WebKitAuthenticationRequest* request, AuthenticationTest* test)
     {
+        g_signal_connect(request, "cancelled", G_CALLBACK(authenticationCancelledCallback), test);
         test->runAuthentication(request);
         return TRUE;
+    }
+
+    static void authenticationCancelledCallback(WebKitAuthenticationRequest*, AuthenticationTest*)
+    {
+        authenticationCancelledReceived = true;
     }
 
     void runAuthentication(WebKitAuthenticationRequest* request)
@@ -1280,6 +1288,7 @@ private:
 };
 
 int AuthenticationTest::authenticationRetries = 0;
+bool AuthenticationTest::authenticationCancelledReceived = false;
 
 static const char authTestUsername[] = "username";
 static const char authTestPassword[] = "password";
@@ -1316,6 +1325,23 @@ static void testWebViewAuthenticationCancel(AuthenticationTest* test, gconstpoin
     webkit_authentication_request_cancel(request);
     // Server doesn't ask for new credentials.
     test->waitUntilLoadFinished();
+
+    g_assert_cmpint(test->m_loadEvents.size(), ==, 3);
+    g_assert_cmpint(test->m_loadEvents[0], ==, LoadTrackingTest::ProvisionalLoadStarted);
+    g_assert_cmpint(test->m_loadEvents[1], ==, LoadTrackingTest::ProvisionalLoadFailed);
+    g_assert_cmpint(test->m_loadEvents[2], ==, LoadTrackingTest::LoadFinished);
+
+    g_assert_error(test->m_error.get(), WEBKIT_NETWORK_ERROR, WEBKIT_NETWORK_ERROR_CANCELLED);
+}
+
+static void testWebViewAuthenticationLoadCancelled(AuthenticationTest* test, gconstpointer)
+{
+    test->loadURI(kServer->getURIForPath("/auth-test.html").data());
+    test->waitForAuthenticationRequest();
+    webkit_web_view_stop_loading(test->m_webView);
+    // Expect empty page.
+    test->waitUntilLoadFinished();
+    g_assert(test->authenticationCancelledReceived);
 
     g_assert_cmpint(test->m_loadEvents.size(), ==, 3);
     g_assert_cmpint(test->m_loadEvents[0], ==, LoadTrackingTest::ProvisionalLoadStarted);
@@ -1474,6 +1500,7 @@ void beforeAll()
     WebViewTest::add("WebKitWebView", "page-visibility", testWebViewPageVisibility);
     AuthenticationTest::add("WebKitWebView", "authentication-request", testWebViewAuthenticationRequest);
     AuthenticationTest::add("WebKitWebView", "authentication-cancel", testWebViewAuthenticationCancel);
+    AuthenticationTest::add("WebKitWebView", "authentication-load-cancelled", testWebViewAuthenticationLoadCancelled);
     AuthenticationTest::add("WebKitWebView", "authentication-failure", testWebViewAuthenticationFailure);
     AuthenticationTest::add("WebKitWebView", "authentication-no-credential", testWebViewAuthenticationNoCredential);
     AuthenticationTest::add("WebKitWebView", "authentication-storage", testWebViewAuthenticationStorage);

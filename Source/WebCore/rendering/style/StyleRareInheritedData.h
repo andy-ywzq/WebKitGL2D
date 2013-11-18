@@ -36,6 +36,10 @@
 #include "StyleVariableData.h"
 #endif
 
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+#include "TextSizeAdjustment.h"
+#endif
+
 namespace WebCore {
 
 class CursorList;
@@ -48,8 +52,8 @@ class StyleImage;
 // actually uses one of these properties.
 class StyleRareInheritedData : public RefCounted<StyleRareInheritedData> {
 public:
-    static PassRefPtr<StyleRareInheritedData> create() { return adoptRef(new StyleRareInheritedData); }
-    PassRefPtr<StyleRareInheritedData> copy() const { return adoptRef(new StyleRareInheritedData(*this)); }
+    static PassRef<StyleRareInheritedData> create() { return adoptRef(*new StyleRareInheritedData); }
+    PassRef<StyleRareInheritedData> copy() const { return adoptRef(*new StyleRareInheritedData(*this)); }
     ~StyleRareInheritedData();
 
     bool operator==(const StyleRareInheritedData& o) const;
@@ -122,7 +126,14 @@ public:
     unsigned m_textJustify : 3; // TextJustify
     unsigned m_textUnderlinePosition : 3; // TextUnderlinePosition
 #endif // CSS3_TEXT
+#if ENABLE(CSS3_TEXT_DECORATION)
+    unsigned m_textDecorationSkip : 5; // TextDecorationSkip
+#endif
     unsigned m_rubyPosition : 1; // RubyPosition
+
+#if PLATFORM(IOS)
+    unsigned touchCalloutEnabled : 1;
+#endif
 
     AtomicString hyphenationString;
     short hyphenationLimitBefore;
@@ -136,6 +147,10 @@ public:
 
     AtomicString m_lineGrid;
     unsigned m_tabSize;
+
+#if ENABLE(IOS_TEXT_AUTOSIZING)
+    TextSizeAdjustment textSizeAdjust;
+#endif
 
 #if ENABLE(CSS_IMAGE_RESOLUTION)
     float m_imageResolution;

@@ -51,6 +51,7 @@
 #import "SynchronousLoaderClient.h"
 #import "WebCoreSystemInterface.h"
 #import "WebCoreURLResponse.h"
+#import <wtf/Ref.h>
 #import <wtf/SchedulePair.h>
 #import <wtf/text/Base64.h>
 #import <wtf/text/CString.h>
@@ -97,7 +98,7 @@ void ResourceHandle::createNSURLConnection(id delegate, bool shouldUseCredential
 {
     // Credentials for ftp can only be passed in URL, the connection:didReceiveAuthenticationChallenge: delegate call won't be made.
     if ((!d->m_user.isEmpty() || !d->m_pass.isEmpty()) && !firstRequest().url().protocolIsInHTTPFamily()) {
-        KURL urlWithCredentials(firstRequest().url());
+        URL urlWithCredentials(firstRequest().url());
         urlWithCredentials.setUser(d->m_user);
         urlWithCredentials.setPass(d->m_pass);
         firstRequest().setURL(urlWithCredentials);
@@ -361,7 +362,7 @@ void ResourceHandle::willSendRequest(ResourceRequest& request, const ResourceRes
     if (!request.url().protocolIs("https") && protocolIs(request.httpReferrer(), "https") && d->m_context->shouldClearReferrerOnHTTPSToHTTPRedirect())
         request.clearHTTPReferrer();
 
-    const KURL& url = request.url();
+    const URL& url = request.url();
     d->m_user = url.user();
     d->m_pass = url.pass();
     d->m_lastHTTPMethod = request.httpMethod();
@@ -389,7 +390,7 @@ void ResourceHandle::willSendRequest(ResourceRequest& request, const ResourceRes
     if (client()->usesAsyncCallbacks()) {
         client()->willSendRequestAsync(this, request, redirectResponse);
     } else {
-        RefPtr<ResourceHandle> protect(this);
+        Ref<ResourceHandle> protect(*this);
         client()->willSendRequest(this, request, redirectResponse);
 
         // Client call may not preserve the session, especially if the request is sent over IPC.
@@ -553,7 +554,7 @@ void ResourceHandle::receivedCredential(const AuthenticationChallenge& challenge
         // to ignore it for a particular request (short of removing it altogether).
         // <rdar://problem/6867598> gallery.me.com is temporarily whitelisted, so that QuickTime plug-in could see the credentials.
         Credential webCredential(credential, CredentialPersistenceNone);
-        KURL urlToStore;
+        URL urlToStore;
         if (challenge.failureResponse().httpStatusCode() == 401)
             urlToStore = challenge.failureResponse().url();
         CredentialStorage::set(webCredential, core([d->m_currentMacChallenge protectionSpace]), urlToStore);

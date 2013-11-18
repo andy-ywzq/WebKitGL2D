@@ -31,7 +31,7 @@
 #ifndef InstrumentingAgents_h
 #define InstrumentingAgents_h
 
-#include <wtf/FastAllocBase.h>
+#include <wtf/FastMalloc.h>
 #include <wtf/Noncopyable.h>
 #include <wtf/PassRefPtr.h>
 #include <wtf/RefCounted.h>
@@ -48,7 +48,6 @@ class InspectorDOMDebuggerAgent;
 class InspectorDOMStorageAgent;
 class InspectorDatabaseAgent;
 class InspectorDebuggerAgent;
-class InspectorFileSystemAgent;
 class InspectorHeapProfilerAgent;
 class InspectorLayerTreeAgent;
 class InspectorPageAgent;
@@ -108,11 +107,6 @@ public:
     void setInspectorDatabaseAgent(InspectorDatabaseAgent* agent) { m_inspectorDatabaseAgent = agent; }
 #endif
 
-#if ENABLE(FILE_SYSTEM)
-    InspectorFileSystemAgent* inspectorFileSystemAgent() const { return m_inspectorFileSystemAgent; }
-    void setInspectorFileSystemAgent(InspectorFileSystemAgent* agent) { m_inspectorFileSystemAgent = agent; }
-#endif
-
     InspectorApplicationCacheAgent* inspectorApplicationCacheAgent() const { return m_inspectorApplicationCacheAgent; }
     void setInspectorApplicationCacheAgent(InspectorApplicationCacheAgent* agent) { m_inspectorApplicationCacheAgent = agent; }
 
@@ -164,9 +158,6 @@ private:
     InspectorDOMStorageAgent* m_inspectorDOMStorageAgent;
 #if ENABLE(SQL_DATABASE)
     InspectorDatabaseAgent* m_inspectorDatabaseAgent;
-#endif
-#if ENABLE(FILE_SYSTEM)
-    InspectorFileSystemAgent* m_inspectorFileSystemAgent;
 #endif
     InspectorApplicationCacheAgent* m_inspectorApplicationCacheAgent;
 #if ENABLE(JAVASCRIPT_DEBUGGER)

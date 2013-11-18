@@ -29,7 +29,7 @@ namespace WebCore {
 
 class RenderQuote FINAL : public RenderText {
 public:
-    RenderQuote(Document*, QuoteType);
+    RenderQuote(Document&, QuoteType);
     virtual ~RenderQuote();
 
     void attachQuote();
@@ -40,7 +40,7 @@ private:
     virtual void willBeDestroyed() OVERRIDE;
     virtual const char* renderName() const OVERRIDE { return "RenderQuote"; }
     virtual bool isQuote() const OVERRIDE { return true; };
-    virtual PassRefPtr<StringImpl> originalText() const OVERRIDE;
+    virtual String originalText() const OVERRIDE;
     virtual void styleDidChange(StyleDifference, const RenderStyle*) OVERRIDE;
     virtual void willBeRemovedFromTree() OVERRIDE;
 
@@ -53,14 +53,7 @@ private:
     bool m_isAttached;
 };
 
-inline RenderQuote* toRenderQuote(RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isQuote());
-    return static_cast<RenderQuote*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderQuote(const RenderQuote*);
+RENDER_OBJECT_TYPE_CASTS(RenderQuote, isQuote())
 
 } // namespace WebCore
 

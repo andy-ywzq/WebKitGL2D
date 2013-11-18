@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Touch Adjustment : Shadow DOM Element Search Cancel Button - bug 91894</title>
-    <script src="../fast/js/resources/js-test-pre.js"></script>
+    <script src="../resources/js-test-pre.js"></script>
     <script src="resources/touchadjustment.js"></script>
     <style>
         input[type='search'] {
@@ -97,7 +97,7 @@
             width: 2 * radius,
             height: 2 * radius
         };
-        adjustedPoint = internals.touchPositionAdjustedToBestClickableNode(touchBounds.left, touchBounds.top, touchBounds.width, touchBounds.height, document);
+        adjustedPoint = internals.touchPositionAdjustedToBestClickableNode(touchBounds.left, touchBounds.top, touchBounds.width, touchBounds.height);
         targetContainsPoint = containsPoint(targetBounds, adjustedPoint);
         touchContainsPoint = containsPoint(touchBounds, adjustedPoint);
         shouldBeTrue('targetContainsPoint');
@@ -117,6 +117,6 @@
     }
     runTests();
 </script>
-<script src="../fast/js/resources/js-test-post.js"></script>
+<script src="../resources/js-test-post.js"></script>
 </body>
 </html>

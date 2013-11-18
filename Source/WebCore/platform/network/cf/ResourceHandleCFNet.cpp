@@ -47,6 +47,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <wtf/HashMap.h>
+#include <wtf/Ref.h>
 #include <wtf/Threading.h>
 #include <wtf/text/Base64.h>
 #include <wtf/text/CString.h>
@@ -84,9 +85,9 @@ static HashSet<String>& allowsAnyHTTPSCertificateHosts()
     return hosts;
 }
 
-static HashMap<String, RetainPtr<CFDataRef> >& clientCerts()
+static HashMap<String, RetainPtr<CFDataRef>>& clientCerts()
 {
-    typedef HashMap<String, RetainPtr<CFDataRef> > CertsMap;
+    typedef HashMap<String, RetainPtr<CFDataRef>> CertsMap;
     DEFINE_STATIC_LOCAL(CertsMap, certs, ());
     return certs;
 }
@@ -347,7 +348,7 @@ void ResourceHandle::createCFURLConnection(bool shouldUseCredentialStorage, bool
 {
     if ((!d->m_user.isEmpty() || !d->m_pass.isEmpty()) && !firstRequest().url().protocolIsInHTTPFamily()) {
         // Credentials for ftp can only be passed in URL, the didReceiveAuthenticationChallenge delegate call won't be made.
-        KURL urlWithCredentials(firstRequest().url());
+        URL urlWithCredentials(firstRequest().url());
         urlWithCredentials.setUser(d->m_user);
         urlWithCredentials.setPass(d->m_pass);
         firstRequest().setURL(urlWithCredentials);
@@ -389,7 +390,7 @@ void ResourceHandle::createCFURLConnection(bool shouldUseCredentialStorage, bool
         CFDictionaryAddValue(sslProps.get(), kCFStreamSSLValidatesCertificateChain, kCFBooleanFalse);
     }
 
-    HashMap<String, RetainPtr<CFDataRef> >::iterator clientCert = clientCerts().find(firstRequest().url().host().lower());
+    HashMap<String, RetainPtr<CFDataRef>>::iterator clientCert = clientCerts().find(firstRequest().url().host().lower());
     if (clientCert != clientCerts().end()) {
         if (!sslProps)
             sslProps = adoptCF(CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
@@ -478,7 +479,7 @@ void ResourceHandle::cancel()
 
 void ResourceHandle::willSendRequest(ResourceRequest& request, const ResourceResponse& redirectResponse)
 {
-    const KURL& url = request.url();
+    const URL& url = request.url();
     d->m_user = url.user();
     d->m_pass = url.pass();
     d->m_lastHTTPMethod = request.httpMethod();
@@ -502,7 +503,7 @@ void ResourceHandle::willSendRequest(ResourceRequest& request, const ResourceRes
         }
     }
 
-    RefPtr<ResourceHandle> protect(this);
+    Ref<ResourceHandle> protect(*this);
     client()->willSendRequest(this, request, redirectResponse);
 
     // Client call may not preserve the session, especially if the request is sent over IPC.
@@ -541,7 +542,7 @@ void ResourceHandle::didReceiveAuthenticationChallenge(const AuthenticationChall
     if (!d->m_user.isNull() && !d->m_pass.isNull()) {
         RetainPtr<CFURLCredentialRef> credential = adoptCF(CFURLCredentialCreate(kCFAllocatorDefault, d->m_user.createCFString().get(), d->m_pass.createCFString().get(), 0, kCFURLCredentialPersistenceNone));
         
-        KURL urlToStore;
+        URL urlToStore;
         if (challenge.failureResponse().httpStatusCode() == 401)
             urlToStore = challenge.failureResponse().url();
         CredentialStorage::set(core(credential.get()), challenge.protectionSpace(), urlToStore);
@@ -612,7 +613,7 @@ void ResourceHandle::receivedCredential(const AuthenticationChallenge& challenge
         Credential webCredential(credential.user(), credential.password(), CredentialPersistenceNone);
         RetainPtr<CFURLCredentialRef> cfCredential = adoptCF(createCF(webCredential));
         
-        KURL urlToStore;
+        URL urlToStore;
         if (challenge.failureResponse().httpStatusCode() == 401)
             urlToStore = challenge.failureResponse().url();      
         CredentialStorage::set(webCredential, challenge.protectionSpace(), urlToStore);

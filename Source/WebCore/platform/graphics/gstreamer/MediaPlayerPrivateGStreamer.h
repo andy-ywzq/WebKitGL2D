@@ -39,6 +39,8 @@ typedef struct _GstElement GstElement;
 
 namespace WebCore {
 
+class InbandTextTrackPrivateGStreamer;
+
 class MediaPlayerPrivateGStreamer : public MediaPlayerPrivateGStreamerBase {
 public:
     ~MediaPlayerPrivateGStreamer();
@@ -90,6 +92,14 @@ public:
     void notifyPlayerOfVideo();
     void notifyPlayerOfAudio();
 
+#if ENABLE(VIDEO_TRACK) && defined(GST_API_VERSION_1)
+    void textChanged();
+    void notifyPlayerOfText();
+
+    void newTextSample();
+    void notifyPlayerOfNewTextSample();
+#endif
+
     void sourceChanged();
     GstElement* audioSink() const;
 
@@ -97,13 +107,15 @@ public:
 
     void simulateAudioInterruption();
 
+    bool changePipelineState(GstState);
+
 private:
     MediaPlayerPrivateGStreamer(MediaPlayer*);
 
     static PassOwnPtr<MediaPlayerPrivateInterface> create(MediaPlayer*);
 
     static void getSupportedTypes(HashSet<String>&);
-    static MediaPlayer::SupportsType supportsType(const String& type, const String& codecs, const KURL&);
+    static MediaPlayer::SupportsType supportsType(const MediaEngineSupportParameters&);
 
     static bool isAvailable();
 
@@ -117,13 +129,16 @@ private:
     void asyncStateChangeDone();
 
     void createGSTPlayBin();
-    bool changePipelineState(GstState);
 
     bool loadNextLocation();
     void mediaLocationChanged(GstMessage*);
 
     void setDownloadBuffering();
     void processBufferingStats(GstMessage*);
+#if ENABLE(VIDEO_TRACK) && defined(GST_API_VERSION_1)
+    void processTableOfContents(GstMessage*);
+    void processTableOfContentsEntry(GstTocEntry*, GstTocEntry* parent);
+#endif
 
     virtual String engineDescription() const { return "GStreamer"; }
     virtual bool isLiveStream() const { return m_isStreaming; }
@@ -131,6 +146,10 @@ private:
 private:
     GRefPtr<GstElement> m_playBin;
     GRefPtr<GstElement> m_source;
+#if ENABLE(VIDEO_TRACK) && defined(GST_API_VERSION_1)
+    GRefPtr<GstElement> m_textAppSink;
+    GRefPtr<GstPad> m_textAppSinkPad;
+#endif
     float m_seekTime;
     bool m_changingRate;
     float m_endTime;
@@ -160,14 +179,20 @@ private:
     bool m_hasVideo;
     bool m_hasAudio;
     guint m_audioTimerHandler;
+    guint m_textTimerHandler;
     guint m_videoTimerHandler;
+    guint m_readyTimerHandler;
     GRefPtr<GstElement> m_webkitAudioSink;
     mutable long m_totalBytes;
-    KURL m_url;
+    URL m_url;
     bool m_preservesPitch;
     GstState m_requestedState;
     GRefPtr<GstElement> m_autoAudioSink;
     bool m_missingPlugins;
+#if ENABLE(VIDEO_TRACK) && defined(GST_API_VERSION_1)
+    Vector<RefPtr<InbandTextTrackPrivateGStreamer> > m_textTracks;
+    RefPtr<InbandTextTrackPrivate> m_chaptersTrack;
+#endif
 };
 }
 

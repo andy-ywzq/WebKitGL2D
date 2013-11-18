@@ -69,7 +69,7 @@ public:
     void setRGBColorICCColor(const String& rgbColor, const String& iccColor, ExceptionCode&);
     void setColor(unsigned short colorType, const String& rgbColor, const String& iccColor, ExceptionCode&);
 
-    String customCssText() const;
+    String customCSSText() const;
 
     ~SVGColor() { }
     
@@ -92,6 +92,21 @@ private:
     Color m_color;
     SVGColorType m_colorType;
 };
+
+// This will catch anyone doing an unnecessary cast.
+SVGColor* toSVGColor(const SVGColor*);
+
+inline SVGColor* toSVGColor(CSSValue* value)
+{
+    ASSERT_WITH_SECURITY_IMPLICATION(!value || value->isSVGColor());
+    return static_cast<SVGColor*>(value);
+}
+
+inline const SVGColor* toSVGColor(const CSSValue* value)
+{
+    ASSERT_WITH_SECURITY_IMPLICATION(!value || value->isSVGColor());
+    return static_cast<const SVGColor*>(value);
+}
 
 } // namespace WebCore
 

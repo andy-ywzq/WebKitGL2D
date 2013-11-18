@@ -8,6 +8,7 @@
  * Copyright (C) 2009 Appcelerator Inc.
  * Copyright (C) 2009 Brent Fulgham <bfulgham@webkit.org>
  * Copyright (C) 2013 Peter Gal <galpeter@inf.u-szeged.hu>, University of Szeged
+ * Copyright (C) 2013 Alex Christensen <achristensen@webkit.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,12 +41,19 @@
 #include "DataURL.h"
 #include "HTTPParsers.h"
 #include "MIMETypeRegistry.h"
+#include "MultipartHandle.h"
 #include "NotImplemented.h"
 #include "ResourceError.h"
 #include "ResourceHandle.h"
 #include "ResourceHandleInternal.h"
+
 #if OS(WINDOWS)
 #include "WebCoreBundleWin.h"
+#include <shlobj.h>
+#include <shlwapi.h>
+#else
+#include <sys/param.h>
+#define MAX_PATH MAXPATHLEN
 #endif
 
 #include <errno.h>
@@ -57,10 +65,6 @@
 #include <wtf/Vector.h>
 #include <wtf/text/CString.h>
 
-#if !OS(WINDOWS)
-#include <sys/param.h>
-#define MAX_PATH MAXPATHLEN
-#endif
 
 namespace WebCore {
 
@@ -159,16 +163,6 @@ CURLSH* ResourceHandleManager::getCurlShareHandle() const
     return m_curlShareHandle;
 }
 
-void ResourceHandleManager::setCookieJarFileName(const char* cookieJarFileName)
-{
-    m_cookieJarFileName = fastStrDup(cookieJarFileName);
-}
-
-const char* ResourceHandleManager::getCookieJarFileName() const
-{
-    return m_cookieJarFileName;
-}
-
 ResourceHandleManager* ResourceHandleManager::sharedInstance()
 {
     static ResourceHandleManager* sharedInstance = 0;
@@ -187,7 +181,7 @@ static void handleLocalReceiveResponse (CURL* handle, ResourceHandle* job, Resou
      const char* hdr;
      CURLcode err = curl_easy_getinfo(handle, CURLINFO_EFFECTIVE_URL, &hdr);
      ASSERT_UNUSED(err, CURLE_OK == err);
-     d->m_response.setURL(KURL(ParsedURLString, hdr));
+     d->m_response.setURL(URL(ParsedURLString, hdr));
      if (d->client())
          d->client()->didReceiveResponse(job, d->m_response);
      d->m_response.setResponseFired(true);
@@ -222,8 +216,11 @@ static size_t writeCallback(void* ptr, size_t size, size_t nmemb, void* data)
             return 0;
     }
 
-    if (d->client())
+    if (d->m_multipartHandle)
+        d->m_multipartHandle->contentReceived(static_cast<const char*>(ptr), totalSize);
+    else if (d->client())
         d->client()->didReceiveData(job, static_cast<char*>(ptr), totalSize, 0);
+
     return totalSize;
 }
 
@@ -284,15 +281,15 @@ static bool getProtectionSpace(CURL* h, const ResourceResponse& response, Protec
     if (err != CURLE_OK)
         return false;
 
-    const char* url = 0;
-    err = curl_easy_getinfo(h, CURLINFO_EFFECTIVE_URL, &url);
+    const char* effectiveUrl = 0;
+    err = curl_easy_getinfo(h, CURLINFO_EFFECTIVE_URL, &effectiveUrl);
     if (err != CURLE_OK)
         return false;
 
-    KURL kurl(ParsedURLString, url);
+    URL url(ParsedURLString, effectiveUrl);
 
-    String host = kurl.host();
-    String protocol = kurl.protocol();
+    String host = url.host();
+    String protocol = url.protocol();
 
     String realm;
 
@@ -332,8 +329,8 @@ static void handleSetCookie(ResourceHandle* job, const String& value)
     if (error != CURLE_OK)
         return;
 
-    KURL url(ParsedURLString, hdr);
-    const KURL firstPartyUrl = job->firstRequest().firstPartyForCookies();
+    URL url(ParsedURLString, hdr);
+    const URL firstPartyUrl = job->firstRequest().firstPartyForCookies();
 
     if ((manager.cookieAcceptPolicy() == OnlyFromMainDocumentDomain)
         && (firstPartyUrl.host() != url.host()))
@@ -391,18 +388,25 @@ static size_t headerCallback(char* ptr, size_t size, size_t nmemb, void* data)
 
         const char* hdr;
         curl_easy_getinfo(h, CURLINFO_EFFECTIVE_URL, &hdr);
-        d->m_response.setURL(KURL(ParsedURLString, hdr));
+        d->m_response.setURL(URL(ParsedURLString, hdr));
 
         d->m_response.setHTTPStatusCode(httpCode);
         d->m_response.setMimeType(extractMIMETypeFromMediaType(d->m_response.httpHeaderField("Content-Type")).lower());
         d->m_response.setTextEncodingName(extractCharsetFromMediaType(d->m_response.httpHeaderField("Content-Type")));
         d->m_response.setSuggestedFilename(filenameFromHTTPContentDisposition(d->m_response.httpHeaderField("Content-Disposition")));
 
+        if (d->m_response.isMultipart()) {
+            String boundary;
+            bool parsed = MultipartHandle::extractBoundary(d->m_response.httpHeaderField("Content-Type"), boundary);
+            if (parsed)
+                d->m_multipartHandle = MultipartHandle::create(job, boundary);
+        }
+
         // HTTP redirection
         if (isHttpRedirect(httpCode)) {
             String location = d->m_response.httpHeaderField("location");
             if (!location.isEmpty()) {
-                KURL newURL = KURL(job->firstRequest().url(), location);
+                URL newURL = URL(job->firstRequest().url(), location);
 
                 ResourceRequest redirectedRequest = job->firstRequest();
                 redirectedRequest.setURL(newURL);
@@ -570,6 +574,9 @@ void ResourceHandleManager::downloadTimerCallback(Timer<ResourceHandleManager>* 
                     continue;
                 }
             }
+
+            if (d->m_multipartHandle)
+                d->m_multipartHandle->contentEnded();
 
             if (d->client())
                 d->client()->didFinishLoading(job, 0);
@@ -777,7 +784,7 @@ bool ResourceHandleManager::startScheduledJobs()
 
 void ResourceHandleManager::dispatchSynchronousJob(ResourceHandle* job)
 {
-    KURL kurl = job->firstRequest().url();
+    URL kurl = job->firstRequest().url();
 
     if (kurl.protocolIsData()) {
         handleDataURL(job);
@@ -806,7 +813,7 @@ void ResourceHandleManager::dispatchSynchronousJob(ResourceHandle* job)
 
 void ResourceHandleManager::startJob(ResourceHandle* job)
 {
-    KURL kurl = job->firstRequest().url();
+    URL kurl = job->firstRequest().url();
 
     if (kurl.protocolIsData()) {
         handleDataURL(job);
@@ -866,20 +873,20 @@ void ResourceHandleManager::applyAuthenticationToRequest(ResourceHandle* handle,
 void ResourceHandleManager::initializeHandle(ResourceHandle* job)
 {
     static const int allowedProtocols = CURLPROTO_FILE | CURLPROTO_FTP | CURLPROTO_FTPS | CURLPROTO_HTTP | CURLPROTO_HTTPS;
-    KURL kurl = job->firstRequest().url();
+    URL url = job->firstRequest().url();
 
     // Remove any fragment part, otherwise curl will send it as part of the request.
-    kurl.removeFragmentIdentifier();
+    url.removeFragmentIdentifier();
 
     ResourceHandleInternal* d = job->getInternal();
-    String url = kurl.string();
+    String urlString = url.string();
 
-    if (kurl.isLocalFile()) {
+    if (url.isLocalFile()) {
         // Remove any query part sent to a local file.
-        if (!kurl.query().isEmpty()) {
+        if (!url.query().isEmpty()) {
             // By setting the query to a null string it'll be removed.
-            kurl.setQuery(String());
-            url = kurl.string();
+            url.setQuery(String());
+            urlString = url.string();
         }
         // Determine the MIME type based on the path.
         d->m_response.setMimeType(MIMETypeRegistry::getMIMETypeForPath(url));
@@ -911,9 +918,8 @@ void ResourceHandleManager::initializeHandle(ResourceHandle* job)
     curl_easy_setopt(d->m_handle, CURLOPT_DNS_CACHE_TIMEOUT, 60 * 5); // 5 minutes
     curl_easy_setopt(d->m_handle, CURLOPT_PROTOCOLS, allowedProtocols);
     curl_easy_setopt(d->m_handle, CURLOPT_REDIR_PROTOCOLS, allowedProtocols);
-    // FIXME: Enable SSL verification when we have a way of shipping certs
-    // and/or reporting SSL errors to the user.
-    if (ignoreSSLErrors)
+
+    if (ignoreSSLErrors || job->ignoreHTTPSCertificate())
         curl_easy_setopt(d->m_handle, CURLOPT_SSL_VERIFYPEER, false);
 
     if (!m_certificatePath.isNull())
@@ -926,7 +932,7 @@ void ResourceHandleManager::initializeHandle(ResourceHandle* job)
     ASSERT(!d->m_url);
 
     // url is in ASCII so latin1() will only convert it to char* without character translation.
-    d->m_url = fastStrDup(url.latin1().data());
+    d->m_url = fastStrDup(urlString.latin1().data());
     curl_easy_setopt(d->m_handle, CURLOPT_URL, d->m_url);
 
     struct curl_slist* headers = 0;
@@ -949,7 +955,7 @@ void ResourceHandleManager::initializeHandle(ResourceHandle* job)
         }
     }
 
-    String cookies = CookieManager::getInstance().cookiesForSession(KURL(ParsedURLString, d->m_url), WithHttpOnlyCookies);
+    String cookies = CookieManager::getInstance().cookiesForSession(URL(ParsedURLString, d->m_url), WithHttpOnlyCookies);
     if (!cookies.isEmpty()) {
         String header("Cookie: ");
         header.append(cookies);

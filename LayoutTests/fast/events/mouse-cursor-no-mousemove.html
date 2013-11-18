@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="../js/resources/js-test-pre.js"></script>
+<script src="../../resources/js-test-pre.js"></script>
 <style type="text/css">
 </style>
 </head>
@@ -33,14 +33,14 @@ if (window.eventSender) {
     var node = document.getElementById('target');
     debug('TEST CASE: ' + node.textContent);
     eventSender.mouseMoveTo(node.offsetLeft + 3, node.offsetTop + 3);
-    debug('Cursor Info: ' + window.internals.getCurrentCursorInfo(document));
+    debug('Cursor Info: ' + window.internals.getCurrentCursorInfo());
     node.addEventListener('mousemove', function() {
         testFailed('Mousemove event should not be fired when changing cursor');
         finishJSTest();
     });
     node.style.cursor = 'help';
     setTimeout(function() {
-        debug('Cursor Info: ' + window.internals.getCurrentCursorInfo(document));
+        debug('Cursor Info: ' + window.internals.getCurrentCursorInfo());
         debug('');
     }, CURSOR_UPDATE_DELAY);
 
@@ -52,6 +52,6 @@ if (window.eventSender) {
 }
 
 </script>
-<script src="../../fast/js/resources/js-test-post.js"></script>
+<script src="../../resources/js-test-post.js"></script>
 </body>
 </html>

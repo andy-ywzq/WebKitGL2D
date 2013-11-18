@@ -35,13 +35,8 @@ class RenderTableCell;
 
 class RenderTableCol FINAL : public RenderBox {
 public:
-    explicit RenderTableCol(Element*);
-
-    RenderObject* firstChild() const { ASSERT(children() == virtualChildren()); return children()->firstChild(); }
-    RenderObject* lastChild() const { ASSERT(children() == virtualChildren()); return children()->lastChild(); }
-
-    const RenderObjectChildList* children() const { return &m_children; }
-    RenderObjectChildList* children() { return &m_children; }
+    RenderTableCol(Element&, PassRef<RenderStyle>);
+    Element& element() const { return toElement(nodeForNonAnonymous()); }
 
     void clearPreferredLogicalWidthsDirtyBits();
 
@@ -49,8 +44,8 @@ public:
     void setSpan(unsigned span) { m_span = span; }
 
     bool isTableColumnGroupWithColumnChildren() { return firstChild(); }
-    bool isTableColumn() const { return style()->display() == TABLE_COLUMN; }
-    bool isTableColumnGroup() const { return style()->display() == TABLE_COLUMN_GROUP; }
+    bool isTableColumn() const { return style().display() == TABLE_COLUMN; }
+    bool isTableColumnGroup() const { return style().display() == TABLE_COLUMN_GROUP; }
 
     RenderTableCol* enclosingColumnGroup() const;
     RenderTableCol* enclosingColumnGroupIfAdjacentBefore() const
@@ -77,46 +72,30 @@ public:
     const BorderValue& borderAdjoiningCellAfter(const RenderTableCell*) const;
 
 private:
-    virtual RenderObjectChildList* virtualChildren() { return children(); }
-    virtual const RenderObjectChildList* virtualChildren() const { return children(); }
-
-    virtual const char* renderName() const { return "RenderTableCol"; }
+    virtual const char* renderName() const OVERRIDE { return "RenderTableCol"; }
     virtual bool isRenderTableCol() const OVERRIDE { return true; }
-    virtual void updateFromElement();
+    virtual void updateFromElement() OVERRIDE;
     virtual void computePreferredLogicalWidths() OVERRIDE { ASSERT_NOT_REACHED(); }
 
     virtual void insertedIntoTree() OVERRIDE;
     virtual void willBeRemovedFromTree() OVERRIDE;
 
-    virtual bool isChildAllowed(RenderObject*, RenderStyle*) const;
-    virtual bool canHaveChildren() const;
-    virtual bool requiresLayer() const { return false; }
+    virtual bool isChildAllowed(const RenderObject&, const RenderStyle&) const OVERRIDE;
+    virtual bool canHaveChildren() const OVERRIDE;
+    virtual bool requiresLayer() const OVERRIDE { return false; }
 
     virtual LayoutRect clippedOverflowRectForRepaint(const RenderLayerModelObject* repaintContainer) const OVERRIDE;
-    virtual void imageChanged(WrappedImagePtr, const IntRect* = 0);
+    virtual void imageChanged(WrappedImagePtr, const IntRect* = 0) OVERRIDE;
 
-    virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle);
+    virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle) OVERRIDE;
+    virtual void paint(PaintInfo&, const LayoutPoint&) OVERRIDE { }
 
     RenderTable* table() const;
 
-    RenderObjectChildList m_children;
     unsigned m_span;
 };
 
-inline RenderTableCol* toRenderTableCol(RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isRenderTableCol());
-    return static_cast<RenderTableCol*>(object);
-}
-
-inline const RenderTableCol* toRenderTableCol(const RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isRenderTableCol());
-    return static_cast<const RenderTableCol*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderTableCol(const RenderTableCol*);
+RENDER_OBJECT_TYPE_CASTS(RenderTableCol, isRenderTableCol())
 
 }
 

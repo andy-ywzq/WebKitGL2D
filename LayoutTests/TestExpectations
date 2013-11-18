@@ -16,6 +16,12 @@ webkit.org/b/116473 editing/selection/user-drag-element-and-user-select-none.htm
 # media/W3C/video/networkState/networkState_during_progress.html is flaky
 webkit.org/b/76280 media/W3C/video/networkState/networkState_during_progress.html [ Pass Failure ]
 
+# MathML pixel tests
+webkit.org/b/99618  mathml/presentation/roots.xhtml [ Failure ]
+webkit.org/b/99618  mathml/presentation/mo-stretch.html [ Failure ]
+webkit.org/b/57700  mathml/presentation/row.xhtml [ Failure ]
+webkit.org/b/57700  mathml/presentation/mo.xhtml [ Failure ]
+
 # These conformace tests are no longer in sync with the latest specification
 # and expect compareDocumentPosition() to return:
 # DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC | DOCUMENT_POSITION_DISCONNECTED
@@ -35,8 +41,37 @@ webkit.org/b/118301 fast/dom/timer-throttling-hidden-page.html [ Skip ]
 
 webkit.org/b/119094 fast/forms/color/input-color-onchange-event.html [ Crash Pass ]
 
-# This is an expected controlled crash. See webkit.org/b/119976 for a better solution.
-fast/css/giant-stylesheet-crash.html [ Slow Crash ]
-
 # This test will run slowly in debug mode, but is plenty fast in release.
-[ Debug ] fast/js/regress/emscripten-memops.html [ Skip ]
+[ Debug ] js/regress/emscripten-memops.html [ Skip ]
+
+# Skipping the tests for the old inspector UI
+inspector [ Skip ]
+http/tests/inspector [ Skip ]
+http/tests/inspector-enabled [ Skip ]
+
+webkit.org/b/112521 [ Release ] webaudio/javascriptaudionode.html [ Pass Failure ]
+webkit.org/b/112521 [ Debug ] webaudio/javascriptaudionode.html [ Pass Crash ]
+webkit.org/b/120148 [ Release ] webaudio/javascriptaudionode-upmix2-8channel-input.html [ Pass Failure ]
+webkit.org/b/120148 [ Debug ] webaudio/javascriptaudionode-upmix2-8channel-input.html [ Pass Crash ]
+webkit.org/b/120148 [ Release ] webaudio/javascriptaudionode-downmix8-2channel-input.html [ Pass Failure ]
+webkit.org/b/120148 [ Debug ] webaudio/javascriptaudionode-downmix8-2channel-input.html [ Pass Crash ]
+
+webaudio/javascriptaudionode-downmix8-2channel-input.html
+
+# The test frequently times out, and is just unsuccessful at detecting incorrect behavior when it passes.
+webkit.org/b/72698 media/audio-garbage-collect.html [ Skip ]
+
+webkit.org/b/53990 fast/forms/search-event-delay.html [ Pass Failure ]
+
+# No port in WebKit already support getMediaStream, so we are skipping those for now.
+fast/mediastream/MediaStream-construct-with-ended-tracks.html [ Skip ]
+fast/mediastream/MediaStream-clone.html [ Skip ]
+
+# The spec is not clear if the MediaStream ended event should be fired if stop is called on each MediaStream's track
+# Skipping it for now, then put it again when the spec decides it
+fast/mediastream/MediaStream-onended.html [ Skip ]
+
+# crypto.subtle is not yet enabled on any ports
+webkit.org/b/122679 security/crypto-subtle-gc.html [ Skip ]
+webkit.org/b/122679 security/crypto-subtle-gc-2.html [ Skip ]
+webkit.org/b/122679 security/crypto-subtle-gc-3.html [ Skip ]

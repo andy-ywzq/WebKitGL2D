@@ -127,6 +127,18 @@ void initializeMainThreadToProcessMainThread()
 {
     pthread_once(&initializeMainThreadKeyOnce, initializeMainThreadToProcessMainThreadOnce);
 }
+#else
+static pthread_once_t initializeWebThreadKeyOnce = PTHREAD_ONCE_INIT;
+
+static void initializeWebThreadOnce()
+{
+    initializeWebThreadPlatform();
+}
+
+void initializeWebThread()
+{
+    pthread_once(&initializeWebThreadKeyOnce, initializeWebThreadOnce);
+}
 #endif // !USE(WEB_THREAD)
 
 #endif
@@ -220,14 +232,18 @@ void cancelCallOnMainThread(MainThreadFunction* function, void* context)
 
 static void callFunctionObject(void* context)
 {
-    Function<void ()>* function = static_cast<Function<void ()>*>(context);
+    auto function = std::unique_ptr<std::function<void ()>>(static_cast<std::function<void ()>*>(context));
     (*function)();
-    delete function;
+}
+
+void callOnMainThread(std::function<void ()> function)
+{
+    callOnMainThread(callFunctionObject, std::make_unique<std::function<void ()>>(std::move(function)).release());
 }
 
 void callOnMainThread(const Function<void ()>& function)
 {
-    callOnMainThread(callFunctionObject, new Function<void ()>(function));
+    callOnMainThread(std::function<void ()>(function));
 }
 
 void setMainThreadCallbacksPaused(bool paused)

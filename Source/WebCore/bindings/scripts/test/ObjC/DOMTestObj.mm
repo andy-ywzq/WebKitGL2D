@@ -29,16 +29,11 @@
 
 #import "DOMTestObj.h"
 
-#import "DOMBlobInternal.h"
-#import "DOMCSSRuleInternal.h"
-#import "DOMCSSValueInternal.h"
 #import "DOMDictionaryInternal.h"
 #import "DOMDocumentInternal.h"
-#import "DOMEventInternal.h"
 #import "DOMNodeInternal.h"
 #import "DOMSVGDocumentInternal.h"
 #import "DOMSVGPointInternal.h"
-#import "DOMStyleSheetInternal.h"
 #import "DOMTestEnumTypeInternal.h"
 #import "DOMTestNodeInternal.h"
 #import "DOMTestObjInternal.h"
@@ -54,7 +49,6 @@
 #import "ExceptionHandlers.h"
 #import "HTMLNames.h"
 #import "JSMainThreadExecState.h"
-#import "KURL.h"
 #import "Node.h"
 #import "ObjCEventListener.h"
 #import "SVGDocument.h"
@@ -69,6 +63,7 @@
 #import "TestObjectCConstructor.h"
 #import "TestSubObjConstructor.h"
 #import "ThreadCheck.h"
+#import "URL.h"
 #import "WebCoreObjCExtras.h"
 #import "WebScriptObjectPrivate.h"
 #import "any.h"
@@ -267,7 +262,7 @@
 - (NSString *)reflectedStringAttr
 {
     WebCore::JSMainThreadNullState state;
-    return IMPL->fastGetAttribute(WebCore::HTMLNames::reflectedstringattrAttr);
+    return IMPL->getAttribute(WebCore::HTMLNames::reflectedstringattrAttr);
 }
 
 - (void)setReflectedStringAttr:(NSString *)newReflectedStringAttr
@@ -327,7 +322,7 @@
 - (NSString *)reflectedStringAttr
 {
     WebCore::JSMainThreadNullState state;
-    return IMPL->fastGetAttribute(WebCore::HTMLNames::customContentStringAttrAttr);
+    return IMPL->getAttribute(WebCore::HTMLNames::customContentStringAttrAttr);
 }
 
 - (void)setReflectedStringAttr:(NSString *)newReflectedStringAttr
@@ -804,6 +799,12 @@
     IMPL->setNullableStringValue(newNullableStringValue);
 }
 
+- (NSString *)attribute
+{
+    WebCore::JSMainThreadNullState state;
+    return IMPL->attribute();
+}
+
 - (void)voidMethod
 {
     WebCore::JSMainThreadNullState state;
@@ -1167,6 +1168,12 @@
 {
     WebCore::JSMainThreadNullState state;
     IMPL->variadicNodeMethod(core(head), core(tail));
+}
+
+- (void)any:(float)a b:(int)b
+{
+    WebCore::JSMainThreadNullState state;
+    IMPL->any(a, b);
 }
 
 @end

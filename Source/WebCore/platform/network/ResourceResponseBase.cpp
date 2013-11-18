@@ -37,7 +37,7 @@ using namespace std;
 
 namespace WebCore {
 
-static void parseCacheHeader(const String& header, Vector<pair<String, String> >& result);
+static void parseCacheHeader(const String& header, Vector<pair<String, String>>& result);
 
 inline const ResourceResponse& ResourceResponseBase::asResourceResponse() const
 {
@@ -67,7 +67,7 @@ ResourceResponseBase::ResourceResponseBase()
 {
 }
 
-ResourceResponseBase::ResourceResponseBase(const KURL& url, const String& mimeType, long long expectedLength, const String& textEncodingName, const String& filename)
+ResourceResponseBase::ResourceResponseBase(const URL& url, const String& mimeType, long long expectedLength, const String& textEncodingName, const String& filename)
     : m_url(url)
     , m_mimeType(mimeType)
     , m_expectedContentLength(expectedLength)
@@ -138,14 +138,14 @@ bool ResourceResponseBase::isHTTP() const
     return equalIgnoringCase(protocol, "http")  || equalIgnoringCase(protocol, "https");
 }
 
-const KURL& ResourceResponseBase::url() const
+const URL& ResourceResponseBase::url() const
 {
     lazyInit(CommonFieldsOnly);
 
     return m_url; 
 }
 
-void ResourceResponseBase::setURL(const KURL& url)
+void ResourceResponseBase::setURL(const URL& url)
 {
     lazyInit(CommonFieldsOnly);
     m_isNull = false;
@@ -358,7 +358,7 @@ void ResourceResponseBase::parseCacheControlDirectives() const
 
     String cacheControlValue = m_httpHeaderFields.get(cacheControlString);
     if (!cacheControlValue.isEmpty()) {
-        Vector<pair<String, String> > directives;
+        Vector<pair<String, String>> directives;
         parseCacheHeader(cacheControlValue, directives);
 
         size_t directivesSize = directives.size();
@@ -638,7 +638,7 @@ static inline String trimToNextSeparator(const String& str)
     return str.substring(0, str.find(isCacheHeaderSeparator));
 }
 
-static void parseCacheHeader(const String& header, Vector<pair<String, String> >& result)
+static void parseCacheHeader(const String& header, Vector<pair<String, String>>& result)
 {
     const String safeHeader = header.removeCharacters(isControlCharacter);
     unsigned max = safeHeader.length();

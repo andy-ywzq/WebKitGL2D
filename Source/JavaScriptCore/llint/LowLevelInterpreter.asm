@@ -31,16 +31,24 @@ if ARMv7s
 end
 
 # These declarations must match interpreter/JSStack.h.
-const CallFrameHeaderSize = 48
-const CallFrameHeaderSlots = 6
-const ArgumentCount = -48
-const CallerFrame = -40
-const Callee = -32
-const ScopeChain = -24
-const ReturnPC = -16
-const CodeBlock = -8
 
-const ThisArgumentOffset = -CallFrameHeaderSize - 8
+if JSVALUE64
+const PtrSize = 8
+const CallFrameHeaderSlots = 6
+else
+const PtrSize = 4
+const CallFrameHeaderSlots = 5
+end
+const SlotSize = 8
+
+const CallerFrame = 0
+const ReturnPC = CallerFrame + PtrSize
+const CodeBlock = ReturnPC + PtrSize
+const ScopeChain = CodeBlock + SlotSize
+const Callee = ScopeChain + SlotSize
+const ArgumentCount = Callee + SlotSize
+const ThisArgumentOffset = ArgumentCount + SlotSize
+const CallFrameHeaderSize = ThisArgumentOffset
 
 # Some value representation constants.
 if JSVALUE64
@@ -66,7 +74,7 @@ end
 # Some register conventions.
 if JSVALUE64
     # - Use a pair of registers to represent the PC: one register for the
-    #   base of the stack, and one register for the index.
+    #   base of the bytecodes, and one register for the index.
     # - The PC base (or PB for short) should be stored in the csr. It will
     #   get clobbered on calls to other JS code, but will get saved on calls
     #   to C functions.
@@ -157,6 +165,8 @@ const Dynamic = 6
 
 const ResolveModeMask = 0xffff
 
+const MarkedBlockMask = ~0xffff
+
 # Allocation constants
 if JSVALUE64
     const JSFinalObjectSizeClassIndex = 1
@@ -192,7 +202,7 @@ macro assert(assertion)
 end
 
 macro preserveReturnAddressAfterCall(destinationRegister)
-    if C_LOOP or ARM or ARMv7 or ARMv7_TRADITIONAL or MIPS
+    if C_LOOP or ARM or ARMv7 or ARMv7_TRADITIONAL or ARM64 or MIPS
         # In C_LOOP case, we're only preserving the bytecode vPC.
         move lr, destinationRegister
     elsif SH4
@@ -205,7 +215,7 @@ macro preserveReturnAddressAfterCall(destinationRegister)
 end
 
 macro restoreReturnAddressBeforeReturn(sourceRegister)
-    if C_LOOP or ARM or ARMv7 or ARMv7_TRADITIONAL or MIPS
+    if C_LOOP or ARM or ARMv7 or ARMv7_TRADITIONAL or ARM64 or MIPS
         # In C_LOOP case, we're only restoring the bytecode vPC.
         move sourceRegister, lr
     elsif SH4
@@ -350,32 +360,32 @@ macro functionInitialization(profileArgSkip)
         btpz t0, .argumentProfileDone
         loadp CodeBlock::m_argumentValueProfiles + VectorBufferOffset[t1], t3
         mulp sizeof ValueProfile, t0, t2 # Aaaaahhhh! Need strength reduction!
-        negp t0
         lshiftp 3, t0
         addp t2, t3
     .argumentProfileLoop:
         if JSVALUE64
-            loadq ThisArgumentOffset + 8 - profileArgSkip * 8[cfr, t0], t2
+            loadq ThisArgumentOffset - 8 + profileArgSkip * 8[cfr, t0], t2
             subp sizeof ValueProfile, t3
             storeq t2, profileArgSkip * sizeof ValueProfile + ValueProfile::m_buckets[t3]
         else
-            loadi ThisArgumentOffset + TagOffset + 8 - profileArgSkip * 8[cfr, t0], t2
+            loadi ThisArgumentOffset + TagOffset - 8 + profileArgSkip * 8[cfr, t0], t2
             subp sizeof ValueProfile, t3
             storei t2, profileArgSkip * sizeof ValueProfile + ValueProfile::m_buckets + TagOffset[t3]
-            loadi ThisArgumentOffset + PayloadOffset + 8 - profileArgSkip * 8[cfr, t0], t2
+            loadi ThisArgumentOffset + PayloadOffset - 8 + profileArgSkip * 8[cfr, t0], t2
             storei t2, profileArgSkip * sizeof ValueProfile + ValueProfile::m_buckets + PayloadOffset[t3]
         end
-        baddpnz 8, t0, .argumentProfileLoop
+        baddpnz -8, t0, .argumentProfileLoop
     .argumentProfileDone:
     end
         
     # Check stack height.
     loadi CodeBlock::m_numCalleeRegisters[t1], t0
+    addi 1, t0 # Account that local0 goes at slot -1
     loadp CodeBlock::m_vm[t1], t2
-    loadp VM::interpreter[t2], t2   # FIXME: Can get to the JSStack from the JITStackFrame
-    lshifti 3, t0
-    addp t0, cfr, t0
-    bpaeq Interpreter::m_stack + JSStack::m_end[t2], t0, .stackHeightOK
+    loadp VM::interpreter[t2], t2
+    lshiftp 3, t0
+    subp cfr, t0, t0
+    bpbeq Interpreter::m_stack + JSStack::m_end[t2], t0, .stackHeightOK
 
     # Stack height check failed - need to call a slow_path.
     callSlowPath(_llint_stack_check)
@@ -656,7 +666,8 @@ _llint_op_jngreatereq:
 
 _llint_op_loop_hint:
     traceExecution()
-    loadp JITStackFrame::vm[sp], t1
+    loadp CodeBlock[cfr], t1
+    loadp CodeBlock::m_vm[t1], t1
     loadb VM::watchdog+Watchdog::m_timerDidFire[t1], t0
     btbnz t0, .handleWatchdogTimer
 .afterWatchdogTimerCheck:
@@ -795,8 +806,16 @@ _llint_op_profile_did_call:
 
 _llint_op_debug:
     traceExecution()
+    loadp CodeBlock[cfr], t0
+    loadp CodeBlock::m_globalObject[t0], t0
+    loadp JSGlobalObject::m_debugger[t0], t0
+    btiz t0, .opDebugDone
+    loadb Debugger::m_needsOpDebugCallbacks[t0], t0
+    btbz t0, .opDebugDone
+
     callSlowPath(_llint_slow_path_debug)
-    dispatch(5)
+.opDebugDone:                    
+    dispatch(2)
 
 
 _llint_native_call_trampoline:

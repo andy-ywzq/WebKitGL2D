@@ -50,10 +50,7 @@ public:
     InspectorValue() : m_type(TypeNull) { }
     virtual ~InspectorValue() { }
 
-    static PassRefPtr<InspectorValue> null()
-    {
-        return adoptRef(new InspectorValue());
-    }
+    static PassRefPtr<InspectorValue> null();
 
     typedef enum {
         TypeNull = 0,
@@ -96,29 +93,18 @@ private:
 class InspectorBasicValue : public InspectorValue {
 public:
 
-    static PassRefPtr<InspectorBasicValue> create(bool value)
-    {
-        return adoptRef(new InspectorBasicValue(value));
-    }
+    static PassRefPtr<InspectorBasicValue> create(bool);
+    static PassRefPtr<InspectorBasicValue> create(int);
+    static PassRefPtr<InspectorBasicValue> create(double);
 
-    static PassRefPtr<InspectorBasicValue> create(int value)
-    {
-        return adoptRef(new InspectorBasicValue(value));
-    }
+    virtual bool asBoolean(bool* output) const OVERRIDE;
+    virtual bool asNumber(double* output) const OVERRIDE;
+    virtual bool asNumber(long* output) const OVERRIDE;
+    virtual bool asNumber(int* output) const OVERRIDE;
+    virtual bool asNumber(unsigned long* output) const OVERRIDE;
+    virtual bool asNumber(unsigned* output) const OVERRIDE;
 
-    static PassRefPtr<InspectorBasicValue> create(double value)
-    {
-        return adoptRef(new InspectorBasicValue(value));
-    }
-
-    virtual bool asBoolean(bool* output) const;
-    virtual bool asNumber(double* output) const;
-    virtual bool asNumber(long* output) const;
-    virtual bool asNumber(int* output) const;
-    virtual bool asNumber(unsigned long* output) const;
-    virtual bool asNumber(unsigned int* output) const;
-
-    virtual void writeJSON(StringBuilder* output) const;
+    virtual void writeJSON(StringBuilder* output) const OVERRIDE;
 
 private:
     explicit InspectorBasicValue(bool value) : InspectorValue(TypeBoolean), m_boolValue(value) { }
@@ -133,19 +119,12 @@ private:
 
 class InspectorString : public InspectorValue {
 public:
-    static PassRefPtr<InspectorString> create(const String& value)
-    {
-        return adoptRef(new InspectorString(value));
-    }
+    static PassRefPtr<InspectorString> create(const String&);
+    static PassRefPtr<InspectorString> create(const char*);
 
-    static PassRefPtr<InspectorString> create(const char* value)
-    {
-        return adoptRef(new InspectorString(value));
-    }
+    virtual bool asString(String* output) const OVERRIDE;
 
-    virtual bool asString(String* output) const;    
-
-    virtual void writeJSON(StringBuilder* output) const;
+    virtual void writeJSON(StringBuilder* output) const OVERRIDE;
 
 private:
     explicit InspectorString(const String& value) : InspectorValue(TypeString), m_stringValue(value) { }
@@ -156,19 +135,19 @@ private:
 
 class InspectorObjectBase : public InspectorValue {
 private:
-    typedef HashMap<String, RefPtr<InspectorValue> > Dictionary;
+    typedef HashMap<String, RefPtr<InspectorValue>> Dictionary;
 
 public:
     typedef Dictionary::iterator iterator;
     typedef Dictionary::const_iterator const_iterator;
 
-    virtual PassRefPtr<InspectorObject> asObject();
+    virtual PassRefPtr<InspectorObject> asObject() OVERRIDE;
     InspectorObject* openAccessors();
 
 protected:
-    ~InspectorObjectBase();
+    virtual ~InspectorObjectBase();
 
-    virtual bool asObject(RefPtr<InspectorObject>* output);
+    virtual bool asObject(RefPtr<InspectorObject>* output) OVERRIDE;
 
     void setBoolean(const String& name, bool);
     void setNumber(const String& name, double);
@@ -194,7 +173,7 @@ protected:
 
     void remove(const String& name);
 
-    virtual void writeJSON(StringBuilder* output) const;
+    virtual void writeJSON(StringBuilder* output) const OVERRIDE;
 
     iterator begin() { return m_data.begin(); }
     iterator end() { return m_data.end(); }
@@ -213,10 +192,7 @@ private:
 
 class InspectorObject : public InspectorObjectBase {
 public:
-    static PassRefPtr<InspectorObject> create()
-    {
-        return adoptRef(new InspectorObject());
-    }
+    static PassRefPtr<InspectorObject> create();
 
     using InspectorObjectBase::asObject;
 
@@ -246,17 +222,17 @@ public:
 
 class InspectorArrayBase : public InspectorValue {
 public:
-    typedef Vector<RefPtr<InspectorValue> >::iterator iterator;
-    typedef Vector<RefPtr<InspectorValue> >::const_iterator const_iterator;
+    typedef Vector<RefPtr<InspectorValue>>::iterator iterator;
+    typedef Vector<RefPtr<InspectorValue>>::const_iterator const_iterator;
 
-    virtual PassRefPtr<InspectorArray> asArray();
+    virtual PassRefPtr<InspectorArray> asArray() OVERRIDE;
 
     unsigned length() const { return m_data.size(); }
 
 protected:
-    ~InspectorArrayBase();
+    virtual ~InspectorArrayBase();
 
-    virtual bool asArray(RefPtr<InspectorArray>* output);
+    virtual bool asArray(RefPtr<InspectorArray>* output) OVERRIDE;
 
     void pushBoolean(bool);
     void pushInt(int);
@@ -268,7 +244,7 @@ protected:
 
     PassRefPtr<InspectorValue> get(size_t index);
 
-    virtual void writeJSON(StringBuilder* output) const;
+    virtual void writeJSON(StringBuilder* output) const OVERRIDE;
 
     iterator begin() { return m_data.begin(); }
     iterator end() { return m_data.end(); }
@@ -279,15 +255,12 @@ protected:
     InspectorArrayBase();
 
 private:
-    Vector<RefPtr<InspectorValue> > m_data;
+    Vector<RefPtr<InspectorValue>> m_data;
 };
 
 class InspectorArray : public InspectorArrayBase {
 public:
-    static PassRefPtr<InspectorArray> create()
-    {
-        return adoptRef(new InspectorArray());
-    }
+    static PassRefPtr<InspectorArray> create();
 
     using InspectorArrayBase::asArray;
 

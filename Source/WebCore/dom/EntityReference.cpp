@@ -25,13 +25,13 @@
 
 namespace WebCore {
 
-inline EntityReference::EntityReference(Document* document, const String& entityName)
-    : ContainerNode(document)
+inline EntityReference::EntityReference(Document& document, const String& entityName)
+    : ContainerNode(&document)
     , m_entityName(entityName)
 {
 }
 
-PassRefPtr<EntityReference> EntityReference::create(Document* document, const String& entityName)
+PassRefPtr<EntityReference> EntityReference::create(Document& document, const String& entityName)
 {
     return adoptRef(new EntityReference(document, entityName));
 }

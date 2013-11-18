@@ -24,12 +24,13 @@
 
 #include "ArrayBuffer.h"
 #include "BlockAllocator.h"
+#include "CodeBlockSet.h"
 #include "CopyVisitor.h"
-#include "DFGCodeBlocks.h"
 #include "GCIncomingRefCountedSet.h"
 #include "GCThreadSharedData.h"
 #include "HandleSet.h"
 #include "HandleStack.h"
+#include "HeapOperation.h"
 #include "JITStubRoutineSet.h"
 #include "MarkedAllocator.h"
 #include "MarkedBlock.h"
@@ -70,8 +71,6 @@ namespace JSC {
     typedef HashCountedSet<JSCell*> ProtectCountSet;
     typedef HashCountedSet<const char*> TypeCountSet;
 
-    enum OperationInProgress { NoOperation, Allocation, Collection };
-
     enum HeapType { SmallHeap, LargeHeap };
 
     class Heap {
@@ -111,6 +110,7 @@ namespace JSC {
         JS_EXPORT_PRIVATE void setGarbageCollectionTimerEnabled(bool);
 
         JS_EXPORT_PRIVATE IncrementalSweeper* sweeper();
+        JS_EXPORT_PRIVATE void setIncrementalSweeper(PassOwnPtr<IncrementalSweeper>);
 
         // true if collection is in progress
         inline bool isCollecting();
@@ -144,8 +144,6 @@ namespace JSC {
         JS_EXPORT_PRIVATE void protect(JSValue);
         JS_EXPORT_PRIVATE bool unprotect(JSValue); // True when the protect count drops to 0.
         
-        void jettisonDFGCodeBlock(PassRefPtr<CodeBlock>);
-
         size_t extraSize(); // extra memory usage outside of pages allocated by the heap
         JS_EXPORT_PRIVATE size_t size();
         JS_EXPORT_PRIVATE size_t capacity();
@@ -168,7 +166,8 @@ namespace JSC {
         HandleSet* handleSet() { return &m_handleSet; }
         HandleStack* handleStack() { return &m_handleStack; }
 
-        void canonicalizeCellLivenessData();
+        void willStartIterating();
+        void didFinishIterating();
         void getConservativeRegisterRoots(HashSet<JSCell*>& roots);
 
         double lastGCLength() { return m_lastGCLength; }
@@ -184,6 +183,8 @@ namespace JSC {
         const JITStubRoutineSet& jitStubRoutines() { return m_jitStubRoutines; }
         
         void addReference(JSCell*, ArrayBuffer*);
+        
+        bool isDeferred() const { return !!m_deferralDepth; }
 
     private:
         friend class CodeBlock;
@@ -216,7 +217,7 @@ namespace JSC {
         static const size_t maxExtraCost = 1024 * 1024;
         
         class FinalizerOwner : public WeakHandleOwner {
-            virtual void finalize(Handle<Unknown>, void* context);
+            virtual void finalize(Handle<Unknown>, void* context) OVERRIDE;
         };
 
         JS_EXPORT_PRIVATE bool isValidAllocation(size_t);
@@ -232,12 +233,14 @@ namespace JSC {
         void zombifyDeadObjects();
         void markDeadObjects();
 
+        size_t sizeAfterCollect();
+
         JSStack& stack();
         BlockAllocator& blockAllocator();
         
-        void incrementDeferralDepth();
+        JS_EXPORT_PRIVATE void incrementDeferralDepth();
         void decrementDeferralDepth();
-        void decrementDeferralDepthAndGCIfNeeded();
+        JS_EXPORT_PRIVATE void decrementDeferralDepthAndGCIfNeeded();
 
         const HeapType m_heapType;
         const size_t m_ramSize;
@@ -247,8 +250,11 @@ namespace JSC {
         size_t m_bytesAllocatedLimit;
         size_t m_bytesAllocated;
         size_t m_bytesAbandoned;
+
+        size_t m_totalBytesVisited;
+        size_t m_totalBytesCopied;
         
-        OperationInProgress m_operationInProgress;
+        HeapOperation m_operationInProgress;
         BlockAllocator m_blockAllocator;
         MarkedSpace m_objectSpace;
         CopiedSpace m_storageSpace;
@@ -261,7 +267,7 @@ namespace JSC {
 
         ProtectCountSet m_protectedValues;
         Vector<Vector<ValueStringPair, 0, UnsafeVectorOverflow>* > m_tempSortingVectors;
-        OwnPtr<HashSet<MarkedArgumentBuffer*> > m_markListSet;
+        OwnPtr<HashSet<MarkedArgumentBuffer*>> m_markListSet;
 
         MachineThreads m_machineThreads;
         
@@ -271,7 +277,7 @@ namespace JSC {
 
         HandleSet m_handleSet;
         HandleStack m_handleStack;
-        DFGCodeBlocks m_dfgCodeBlocks;
+        CodeBlockSet m_codeBlocks;
         JITStubRoutineSet m_jitStubRoutines;
         FinalizerOwner m_finalizerOwner;
         
@@ -305,6 +311,8 @@ namespace JSC {
 
     inline bool Heap::shouldCollect()
     {
+        if (isDeferred())
+            return false;
         if (Options::gcMaxHeapSize())
             return m_bytesAllocated > Options::gcMaxHeapSize() && m_isSafeToCollect && m_operationInProgress == NoOperation;
         return m_bytesAllocated > m_bytesAllocatedLimit && m_isSafeToCollect && m_operationInProgress == NoOperation;

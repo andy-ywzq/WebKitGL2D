@@ -63,7 +63,7 @@ public:
     virtual void collectStyleForPresentationAttribute(const QualifiedName&, const AtomicString&, MutableStylePropertySet*) { }
 
 protected:
-    StyledElement(const QualifiedName& name, Document* document, ConstructionType type)
+    StyledElement(const QualifiedName& name, Document& document, ConstructionType type)
         : Element(name, document, type)
     {
     }
@@ -76,7 +76,7 @@ protected:
     void addPropertyToPresentationAttributeStyle(MutableStylePropertySet*, CSSPropertyID, double value, CSSPrimitiveValue::UnitTypes);
     void addPropertyToPresentationAttributeStyle(MutableStylePropertySet*, CSSPropertyID, const String& value);
 
-    virtual void addSubresourceAttributeURLs(ListHashSet<KURL>&) const;
+    virtual void addSubresourceAttributeURLs(ListHashSet<URL>&) const OVERRIDE;
 
 private:
     void styleAttributeChanged(const AtomicString& newStyleString, AttributeModificationReason);
@@ -104,6 +104,10 @@ inline const StylePropertySet* StyledElement::presentationAttributeStyle()
         rebuildPresentationAttributeStyle();
     return elementData()->presentationAttributeStyle();
 }
+
+inline bool isStyledElement(const Node& node) { return node.isStyledElement(); }
+
+NODE_TYPE_CASTS(StyledElement)
 
 } //namespace
 

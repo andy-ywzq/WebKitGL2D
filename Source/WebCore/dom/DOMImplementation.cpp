@@ -27,7 +27,6 @@
 
 #include "ContentType.h"
 #include "CSSStyleSheet.h"
-#include "ContextFeatures.h"
 #include "DocumentType.h"
 #include "Element.h"
 #include "ExceptionCode.h"
@@ -50,6 +49,7 @@
 #include "SecurityOrigin.h"
 #include "Settings.h"
 #include "StyleSheetContents.h"
+#include "SubframeLoader.h"
 #include "TextDocument.h"
 #include "ThreadGlobalData.h"
 #include "XMLNames.h"
@@ -190,7 +190,7 @@ static bool isSupportedSVG11Feature(const String& feature, const String& version
 }
 #endif
 
-DOMImplementation::DOMImplementation(Document* document)
+DOMImplementation::DOMImplementation(Document& document)
     : m_document(document)
 {
 }
@@ -219,7 +219,7 @@ PassRefPtr<DocumentType> DOMImplementation::createDocumentType(const String& qua
     if (!Document::parseQualifiedName(qualifiedName, prefix, localName, ec))
         return 0;
 
-    return DocumentType::create(0, qualifiedName, publicId, systemId);
+    return DocumentType::create(m_document, qualifiedName, publicId, systemId);
 }
 
 DOMImplementation* DOMImplementation::getInterface(const String& /*feature*/)
@@ -233,32 +233,21 @@ PassRefPtr<Document> DOMImplementation::createDocument(const String& namespaceUR
     RefPtr<Document> doc;
 #if ENABLE(SVG)
     if (namespaceURI == SVGNames::svgNamespaceURI)
-        doc = SVGDocument::create(0, KURL());
+        doc = SVGDocument::create(0, URL());
     else
 #endif
     if (namespaceURI == HTMLNames::xhtmlNamespaceURI)
-        doc = Document::createXHTML(0, KURL());
+        doc = Document::createXHTML(0, URL());
     else
-        doc = Document::create(0, KURL());
+        doc = Document::create(0, URL());
 
-    doc->setSecurityOrigin(m_document->securityOrigin());
-    doc->setContextFeatures(m_document->contextFeatures());
+    doc->setSecurityOrigin(m_document.securityOrigin());
 
     RefPtr<Node> documentElement;
     if (!qualifiedName.isEmpty()) {
         documentElement = doc->createElementNS(namespaceURI, qualifiedName, ec);
         if (ec)
             return 0;
-    }
-
-    // WRONG_DOCUMENT_ERR: Raised if doctype has already been used with a different document or was
-    // created from a different implementation.
-    // Hixie's interpretation of the DOM Core spec suggests we should prefer
-    // other exceptions to WRONG_DOCUMENT_ERR (based on order mentioned in spec),
-    // but this matches the new DOM Core spec (http://www.w3.org/TR/domcore/).
-    if (doctype && doctype->document()) {
-        ec = WRONG_DOCUMENT_ERR;
-        return 0;
     }
 
     if (doctype)
@@ -273,9 +262,9 @@ PassRefPtr<CSSStyleSheet> DOMImplementation::createCSSStyleSheet(const String&, 
 {
     // FIXME: Title should be set.
     // FIXME: Media could have wrong syntax, in which case we should generate an exception.
-    RefPtr<CSSStyleSheet> sheet = CSSStyleSheet::create(StyleSheetContents::create());
-    sheet->setMediaQueries(MediaQuerySet::createAllowingDescriptionSyntax(media));
-    return sheet;
+    auto sheet = CSSStyleSheet::create(StyleSheetContents::create());
+    sheet.get().setMediaQueries(MediaQuerySet::createAllowingDescriptionSyntax(media));
+    return std::move(sheet);
 }
 
 static inline bool isValidXMLMIMETypeChar(UChar c)
@@ -321,17 +310,16 @@ bool DOMImplementation::isTextMIMEType(const String& mimeType)
 
 PassRefPtr<HTMLDocument> DOMImplementation::createHTMLDocument(const String& title)
 {
-    RefPtr<HTMLDocument> d = HTMLDocument::create(0, KURL());
+    RefPtr<HTMLDocument> d = HTMLDocument::create(0, URL());
     d->open();
     d->write("<!doctype html><html><body></body></html>");
     if (!title.isNull())
         d->setTitle(title);
-    d->setSecurityOrigin(m_document->securityOrigin());
-    d->setContextFeatures(m_document->contextFeatures());
+    d->setSecurityOrigin(m_document.securityOrigin());
     return d.release();
 }
 
-PassRefPtr<Document> DOMImplementation::createDocument(const String& type, Frame* frame, const KURL& url, bool inViewSourceMode)
+PassRefPtr<Document> DOMImplementation::createDocument(const String& type, Frame* frame, const URL& url, bool inViewSourceMode)
 {
     if (inViewSourceMode)
         return HTMLViewSourceDocument::create(frame, url, type);
@@ -351,10 +339,10 @@ PassRefPtr<Document> DOMImplementation::createDocument(const String& type, Frame
     PluginData* pluginData = 0;
     PluginData::AllowedPluginTypes allowedPluginTypes = PluginData::OnlyApplicationPlugins;
     if (frame && frame->page()) {
-        if (frame->loader().subframeLoader()->allowPlugins(NotAboutToInstantiatePlugin))
+        if (frame->loader().subframeLoader().allowPlugins(NotAboutToInstantiatePlugin))
             allowedPluginTypes = PluginData::AllPlugins;
 
-        pluginData = frame->page()->pluginData();
+        pluginData = &frame->page()->pluginData();
     }
 
     // PDF is one image type for which a plugin can override built-in support.
@@ -375,7 +363,7 @@ PassRefPtr<Document> DOMImplementation::createDocument(const String& type, Frame
     // Everything else except text/plain can be overridden by plugins. In particular, Adobe SVG Viewer should be used for SVG, if installed.
     // Disallowing plug-ins to use text/plain prevents plug-ins from hijacking a fundamental type that the browser is expected to handle,
     // and also serves as an optimization to prevent loading the plug-in database in the common case.
-    if (type != "text/plain" && ((pluginData && pluginData->supportsMimeType(type, allowedPluginTypes)) || (frame && frame->loader().client()->shouldAlwaysUsePluginDocument(type))))
+    if (type != "text/plain" && ((pluginData && pluginData->supportsMimeType(type, allowedPluginTypes)) || (frame && frame->loader().client().shouldAlwaysUsePluginDocument(type))))
         return PluginDocument::create(frame, url);
     if (isTextMIMEType(type))
         return TextDocument::create(frame, url);

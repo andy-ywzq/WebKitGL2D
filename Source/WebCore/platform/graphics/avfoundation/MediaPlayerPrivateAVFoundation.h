@@ -128,43 +128,49 @@ protected:
     virtual ~MediaPlayerPrivateAVFoundation();
 
     // MediaPlayerPrivatePrivateInterface overrides.
-    virtual void load(const String& url);
+    virtual void load(const String& url) OVERRIDE;
+#if ENABLE(MEDIA_SOURCE)
+    virtual void load(const String&, PassRefPtr<HTMLMediaSource>) { };
+#endif
     virtual void cancelLoad() = 0;
 
-    virtual void prepareToPlay();
+    virtual void prepareToPlay() OVERRIDE;
     virtual PlatformMedia platformMedia() const = 0;
 
-    virtual void play();
-    virtual void pause();
+    virtual void play() OVERRIDE;
+    virtual void pause() OVERRIDE;
 
-    virtual IntSize naturalSize() const;
-    virtual bool hasVideo() const { return m_cachedHasVideo; }
-    virtual bool hasAudio() const { return m_cachedHasAudio; }
-    virtual void setVisible(bool);
-    virtual float duration() const;
+    virtual IntSize naturalSize() const OVERRIDE;
+    virtual bool hasVideo() const OVERRIDE { return m_cachedHasVideo; }
+    virtual bool hasAudio() const OVERRIDE { return m_cachedHasAudio; }
+    virtual void setVisible(bool) OVERRIDE;
+    virtual float duration() const OVERRIDE;
     virtual float currentTime() const = 0;
-    virtual void seek(float);
-    virtual bool seeking() const;
-    virtual void setRate(float);
-    virtual bool paused() const;
+    virtual void seek(float) OVERRIDE;
+    virtual bool seeking() const OVERRIDE;
+    virtual void setRate(float) OVERRIDE;
+    virtual bool paused() const OVERRIDE;
     virtual void setVolume(float) = 0;
-    virtual bool hasClosedCaptions() const { return m_cachedHasCaptions; }
+    virtual bool hasClosedCaptions() const OVERRIDE { return m_cachedHasCaptions; }
     virtual void setClosedCaptionsVisible(bool) = 0;
-    virtual MediaPlayer::NetworkState networkState() const { return m_networkState; }
-    virtual MediaPlayer::ReadyState readyState() const { return m_readyState; }
-    virtual double maxTimeSeekableDouble() const;
-    virtual double minTimeSeekable() const;
-    virtual PassRefPtr<TimeRanges> buffered() const;
-    virtual bool didLoadingProgress() const;
-    virtual void setSize(const IntSize&);
+    virtual MediaPlayer::NetworkState networkState() const OVERRIDE { return m_networkState; }
+    virtual MediaPlayer::ReadyState readyState() const OVERRIDE { return m_readyState; }
+    virtual double maxTimeSeekableDouble() const OVERRIDE;
+    virtual double minTimeSeekable() const OVERRIDE;
+    virtual PassRefPtr<TimeRanges> buffered() const OVERRIDE;
+    virtual bool didLoadingProgress() const OVERRIDE;
+    virtual void setSize(const IntSize&) OVERRIDE;
     virtual void paint(GraphicsContext*, const IntRect&) = 0;
     virtual void paintCurrentFrameInContext(GraphicsContext*, const IntRect&) = 0;
-    virtual void setPreload(MediaPlayer::Preload);
+    virtual void setPreload(MediaPlayer::Preload) OVERRIDE;
 #if USE(ACCELERATED_COMPOSITING)
     virtual PlatformLayer* platformLayer() const { return 0; }
     virtual bool supportsAcceleratedRendering() const = 0;
-    virtual void acceleratedRenderingStateChanged();
+    virtual void acceleratedRenderingStateChanged() OVERRIDE;
 #endif
+    virtual bool shouldMaintainAspectRatio() const OVERRIDE { return m_shouldMaintainAspectRatio; }
+    virtual void setShouldMaintainAspectRatio(bool) OVERRIDE;
+
     virtual MediaPlayer::MovieLoadType movieLoadType() const;
     virtual void prepareForRendering();
     virtual float mediaTimeForTimeValue(float) const = 0;
@@ -228,12 +234,16 @@ protected:
     virtual bool hasContextRenderer() const = 0;
     virtual bool hasLayerRenderer() const = 0;
 
+    virtual void updateVideoLayerGravity() = 0;
+
 protected:
     void updateStates();
 
     void setHasVideo(bool);
     void setHasAudio(bool);
     void setHasClosedCaptions(bool);
+    void characteristicsChanged();
+    void setDelayCharacteristicsChangedNotification(bool);
     void setDelayCallbacks(bool) const;
     void setIgnoreLoadStateChanges(bool delay) { m_ignoreLoadStateChanges = delay; }
     void setNaturalSize(IntSize);
@@ -264,9 +274,9 @@ protected:
     virtual size_t extraMemoryCost() const OVERRIDE;
 
     virtual void trackModeChanged() OVERRIDE;
-    void processNewAndRemovedTextTracks(const Vector<RefPtr<InbandTextTrackPrivateAVF> >&);
+    void processNewAndRemovedTextTracks(const Vector<RefPtr<InbandTextTrackPrivateAVF>>&);
     void clearTextTracks();
-    Vector<RefPtr<InbandTextTrackPrivateAVF> > m_textTracks;
+    Vector<RefPtr<InbandTextTrackPrivateAVF>> m_textTracks;
     
 private:
     MediaPlayer* m_player;
@@ -292,6 +302,7 @@ private:
     double m_seekTo;
     float m_requestedRate;
     mutable int m_delayCallbacks;
+    int m_delayCharacteristicsChangedNotification;
     bool m_mainThreadCallPending;
     bool m_assetIsPlayable;
     bool m_visible;
@@ -304,6 +315,8 @@ private:
     bool m_haveReportedFirstVideoFrame;
     bool m_playWhenFramesAvailable;
     bool m_inbandTrackConfigurationPending;
+    bool m_characteristicsChanged;
+    bool m_shouldMaintainAspectRatio;
     size_t m_seekCount;
 };
 

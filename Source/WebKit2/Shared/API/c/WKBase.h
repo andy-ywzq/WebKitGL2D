@@ -27,6 +27,7 @@
 #ifndef WKBase_h
 #define WKBase_h
 
+#include <WebKit2/WKDeclarationSpecifiers.h>
 #include <stdint.h>
 
 #if defined(BUILDING_GTK__)
@@ -37,6 +38,10 @@
 #include <WebKit2/WKBaseSoup.h>
 #endif
 
+#if defined(WTF_USE_CURL) && WTF_USE_CURL
+#include <WebKit2/WKBaseCurl.h>
+#endif
+
 #if defined(BUILDING_EFL__)
 #include <WebKit2/WKBaseEfl.h>
 #endif
@@ -45,7 +50,7 @@
 #include <WebKit2/WKBaseNix.h>
 #endif
 
-#if defined(__APPLE__) && !defined(BUILDING_QT__)
+#if defined(__APPLE__)
 #include <WebKit2/WKBaseMac.h>
 #endif
 
@@ -85,18 +90,6 @@ typedef const struct OpaqueWKUserContentURLPattern* WKUserContentURLPatternRef;
 typedef const struct OpaqueWKWebArchive* WKWebArchiveRef;
 typedef const struct OpaqueWKWebArchiveResource* WKWebArchiveResourceRef;
 
-enum WKUserContentInjectedFrames {
-    kWKInjectInAllFrames,
-    kWKInjectInTopFrameOnly
-};
-typedef enum WKUserContentInjectedFrames WKUserContentInjectedFrames;
-
-enum WKUserScriptInjectionTime {
-    kWKInjectAtDocumentStart,
-    kWKInjectAtDocumentEnd
-};
-typedef enum WKUserScriptInjectionTime WKUserScriptInjectionTime;
-
 /* WebKit2 main API types */
 
 typedef const struct OpaqueWKApplicationCacheManager* WKApplicationCacheManagerRef;
@@ -134,6 +127,7 @@ typedef const struct OpaqueWKNotificationPermissionRequest* WKNotificationPermis
 typedef const struct OpaqueWKNotificationProvider* WKNotificationProviderRef;
 typedef const struct OpaqueWKOpenPanelParameters* WKOpenPanelParametersRef;
 typedef const struct OpaqueWKOpenPanelResultListener* WKOpenPanelResultListenerRef;
+typedef const struct OpaqueWKOriginDataManager* WKOriginDataManagerRef;
 typedef const struct OpaqueWKPage* WKPageRef;
 typedef const struct OpaqueWKPageGroup* WKPageGroupRef;
 typedef const struct OpaqueWKPluginSiteDataManager* WKPluginSiteDataManagerRef;
@@ -161,32 +155,5 @@ typedef const struct OpaqueWKBundlePageGroup* WKBundlePageGroupRef;
 typedef const struct OpaqueWKBundlePageOverlay* WKBundlePageOverlayRef;
 typedef const struct OpaqueWKBundleRangeHandle* WKBundleRangeHandleRef;
 typedef const struct OpaqueWKBundleScriptWorld* WKBundleScriptWorldRef;
-
-#undef WK_EXPORT
-#if defined(WK_NO_EXPORT)
-#define WK_EXPORT
-#elif defined(__GNUC__) && !defined(__CC_ARM) && !defined(__ARMCC__)
-#define WK_EXPORT __attribute__((visibility("default")))
-#elif defined(WIN32) || defined(_WIN32) || defined(_WIN32_WCE) || defined(__CC_ARM) || defined(__ARMCC__)
-#if BUILDING_WEBKIT
-#define WK_EXPORT __declspec(dllexport)
-#else
-#define WK_EXPORT __declspec(dllimport)
-#endif
-#else /* !defined(WK_NO_EXPORT) */
-#define WK_EXPORT
-#endif /* defined(WK_NO_EXPORT) */
-
-#if !defined(WK_INLINE)
-#if defined(__cplusplus)
-#define WK_INLINE static inline
-#elif defined(__GNUC__)
-#define WK_INLINE static __inline__
-#elif defined(__WIN32__)
-#define WK_INLINE static __inline
-#else
-#define WK_INLINE static    
-#endif
-#endif /* !defined(WK_INLINE) */
 
 #endif /* WKBase_h */

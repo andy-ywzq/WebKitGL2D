@@ -63,7 +63,7 @@ static PassOwnPtr<Shape> createShapeEllipse(const FloatPoint& center, const Floa
     return adoptPtr(new RectangleShape(FloatRect(center.x() - radii.width(), center.y() - radii.height(), radii.width()*2, radii.height()*2), radii));
 }
 
-static PassOwnPtr<Shape> createPolygonShape(PassOwnPtr<Vector<FloatPoint> > vertices, WindRule fillRule)
+static PassOwnPtr<Shape> createPolygonShape(PassOwnPtr<Vector<FloatPoint>> vertices, WindRule fillRule)
 {
     return adoptPtr(new PolygonShape(vertices, fillRule));
 }
@@ -136,7 +136,7 @@ PassOwnPtr<Shape> Shape::createShape(const BasicShape* basicShape, const LayoutS
         const BasicShapeCircle* circle = static_cast<const BasicShapeCircle*>(basicShape);
         float centerX = floatValueForLength(circle->centerX(), boxWidth);
         float centerY = floatValueForLength(circle->centerY(), boxHeight);
-        float radius = floatValueForLength(circle->radius(), std::min(boxHeight, boxWidth));
+        float radius = floatValueForLength(circle->radius(), sqrtf((boxWidth * boxWidth + boxHeight * boxHeight) / 2));
         FloatPoint logicalCenter = physicalPointToLogical(FloatPoint(centerX, centerY), logicalBoxSize.height(), writingMode);
 
         shape = createShapeCircle(logicalCenter, radius);
@@ -161,7 +161,7 @@ PassOwnPtr<Shape> Shape::createShape(const BasicShape* basicShape, const LayoutS
         const Vector<Length>& values = polygon->values();
         size_t valuesSize = values.size();
         ASSERT(!(valuesSize % 2));
-        OwnPtr<Vector<FloatPoint> > vertices = adoptPtr(new Vector<FloatPoint>(valuesSize / 2));
+        OwnPtr<Vector<FloatPoint>> vertices = adoptPtr(new Vector<FloatPoint>(valuesSize / 2));
         for (unsigned i = 0; i < valuesSize; i += 2) {
             FloatPoint vertex(
                 floatValueForLength(values.at(i), boxWidth),
@@ -207,10 +207,11 @@ PassOwnPtr<Shape> Shape::createShape(const StyleImage* styleImage, float thresho
 {
     ASSERT(styleImage && styleImage->isCachedImage() && styleImage->cachedImage() && styleImage->cachedImage()->image());
 
-    OwnPtr<RasterShapeIntervals> intervals = adoptPtr(new RasterShapeIntervals());
-
     Image* image = styleImage->cachedImage()->image();
     const IntSize& imageSize = image->size();
+
+    OwnPtr<RasterShapeIntervals> intervals = adoptPtr(new RasterShapeIntervals(imageSize.height()));
+
     OwnPtr<ImageBuffer> imageBuffer = ImageBuffer::create(imageSize);
     if (imageBuffer) {
         GraphicsContext* graphicsContext = imageBuffer->context();
@@ -230,7 +231,7 @@ PassOwnPtr<Shape> Shape::createShape(const StyleImage* styleImage, float thresho
                     if (startX == -1 && alphaAboveThreshold) {
                         startX = x;
                     } else if (startX != -1 && (!alphaAboveThreshold || x == imageSize.width() - 1)) {
-                        intervals->addInterval(y, startX, x);
+                        intervals->appendInterval(y, startX, x);
                         startX = -1;
                     }
                 }
@@ -238,7 +239,7 @@ PassOwnPtr<Shape> Shape::createShape(const StyleImage* styleImage, float thresho
         }
     }
 
-    OwnPtr<RasterShape> rasterShape = adoptPtr(new RasterShape(intervals.release()));
+    OwnPtr<RasterShape> rasterShape = adoptPtr(new RasterShape(intervals.release(), imageSize));
     rasterShape->m_writingMode = writingMode;
     rasterShape->m_margin = floatValueForLength(margin, 0);
     rasterShape->m_padding = floatValueForLength(padding, 0);

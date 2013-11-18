@@ -33,13 +33,11 @@
 #include "RenderImage.h"
 #include "RenderView.h"
 
-using namespace std;
-
 namespace WebCore {
 
 using namespace HTMLNames;
 
-inline HTMLAreaElement::HTMLAreaElement(const QualifiedName& tagName, Document* document)
+inline HTMLAreaElement::HTMLAreaElement(const QualifiedName& tagName, Document& document)
     : HTMLAnchorElement(tagName, document)
     , m_coordsLen(0)
     , m_lastSize(-1, -1)
@@ -48,7 +46,7 @@ inline HTMLAreaElement::HTMLAreaElement(const QualifiedName& tagName, Document* 
     ASSERT(hasTagName(areaTag));
 }
 
-PassRefPtr<HTMLAreaElement> HTMLAreaElement::create(const QualifiedName& tagName, Document* document)
+PassRefPtr<HTMLAreaElement> HTMLAreaElement::create(const QualifiedName& tagName, Document& document)
 {
     return adoptRef(new HTMLAreaElement(tagName, document));
 }
@@ -94,7 +92,7 @@ bool HTMLAreaElement::mapMouseEvent(LayoutPoint location, const LayoutSize& size
     return true;
 }
 
-Path HTMLAreaElement::computePath(RenderObject* obj) const
+Path HTMLAreaElement::computePath(RenderElement* obj) const
 {
     if (!obj)
         return Path();
@@ -108,7 +106,7 @@ Path HTMLAreaElement::computePath(RenderObject* obj) const
         size = obj->absoluteOutlineBounds().size();
     
     Path p = getRegion(size);
-    float zoomFactor = obj->style()->effectiveZoom();
+    float zoomFactor = obj->style().effectiveZoom();
     if (zoomFactor != 1.0f) {
         AffineTransform zoomTransform;
         zoomTransform.scale(zoomFactor);
@@ -119,7 +117,7 @@ Path HTMLAreaElement::computePath(RenderObject* obj) const
     return p;
 }
     
-LayoutRect HTMLAreaElement::computeRect(RenderObject* obj) const
+LayoutRect HTMLAreaElement::computeRect(RenderElement* obj) const
 {
     return enclosingLayoutRect(computePath(obj).fastBoundingRect());
 }
@@ -144,7 +142,7 @@ Path HTMLAreaElement::getRegion(const LayoutSize& size) const
     }
 
     Path path;
-    RenderView* renderView = document()->renderView();
+    RenderView* renderView = document().renderView();
     switch (shape) {
         case Poly:
             if (m_coordsLen >= 6) {
@@ -158,7 +156,7 @@ Path HTMLAreaElement::getRegion(const LayoutSize& size) const
         case Circle:
             if (m_coordsLen >= 3) {
                 Length radius = m_coords[2];
-                int r = min(minimumValueForLength(radius, width, renderView), minimumValueForLength(radius, height, renderView));
+                int r = std::min(minimumValueForLength(radius, width, renderView), minimumValueForLength(radius, height, renderView));
                 path.addEllipse(FloatRect(minimumValueForLength(m_coords[0], width, renderView) - r, minimumValueForLength(m_coords[1], height, renderView) - r, 2 * r, 2 * r));
             }
             break;
@@ -203,7 +201,7 @@ bool HTMLAreaElement::isMouseFocusable() const
 bool HTMLAreaElement::isFocusable() const
 {
     HTMLImageElement* image = imageElement();
-    if (!image || !image->renderer() || image->renderer()->style()->visibility() != VISIBLE)
+    if (!image || !image->renderer() || image->renderer()->style().visibility() != VISIBLE)
         return false;
 
     return supportsFocus() && Element::tabIndex() >= 0;
@@ -220,7 +218,7 @@ void HTMLAreaElement::setFocus(bool shouldBeFocused)
     if (!imageElement)
         return;
 
-    RenderObject* renderer = imageElement->renderer();
+    auto renderer = imageElement->renderer();
     if (!renderer || !renderer->isImage())
         return;
 

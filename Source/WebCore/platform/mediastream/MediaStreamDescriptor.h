@@ -34,112 +34,75 @@
 
 #if ENABLE(MEDIA_STREAM)
 
-#include "MediaStreamComponent.h"
+#include "MediaStreamSource.h"
+#include "MediaStreamTrack.h"
 #include <wtf/RefCounted.h>
 #include <wtf/Vector.h>
 
 namespace WebCore {
 
-class MediaStreamDescriptorClient {
+class MediaStreamTrackPrivate;
+
+class MediaStreamDescriptorClient : public MediaStreamTrack::Observer {
 public:
     virtual ~MediaStreamDescriptorClient() { }
 
-    virtual void streamEnded() = 0;
-    virtual void addRemoteTrack(MediaStreamComponent*) = 0;
-    virtual void removeRemoteTrack(MediaStreamComponent*) = 0;
+    virtual void streamDidEnd() = 0;
+    virtual void addRemoteSource(MediaStreamSource*) = 0;
+    virtual void removeRemoteSource(MediaStreamSource*) = 0;
 };
 
 class MediaStreamDescriptor : public RefCounted<MediaStreamDescriptor> {
 public:
-    class ExtraData : public RefCounted<ExtraData> {
-    public:
-        virtual ~ExtraData() { }
-    };
+    enum EndedAtCreationFlag { IsNotEnded, IsEnded };
 
-    static PassRefPtr<MediaStreamDescriptor> create(const String& id, const MediaStreamSourceVector& audioSources, const MediaStreamSourceVector& videoSources)
-    {
-        return adoptRef(new MediaStreamDescriptor(id, audioSources, videoSources));
-    }
+    static PassRefPtr<MediaStreamDescriptor> create(const MediaStreamSourceVector& audioSources, const MediaStreamSourceVector& videoSources, EndedAtCreationFlag);
 
-    static PassRefPtr<MediaStreamDescriptor> create(const String& id, const MediaStreamComponentVector& audioComponents, const MediaStreamComponentVector& videoComponents)
-    {
-        return adoptRef(new MediaStreamDescriptor(id, audioComponents, videoComponents));
-    }
+    virtual ~MediaStreamDescriptor() { }
 
     MediaStreamDescriptorClient* client() const { return m_client; }
     void setClient(MediaStreamDescriptorClient* client) { m_client = client; }
 
     String id() const { return m_id; }
 
-    unsigned numberOfAudioComponents() const { return m_audioComponents.size(); }
-    MediaStreamComponent* audioComponent(unsigned index) const { return m_audioComponents[index].get(); }
-    void addAudioComponent(PassRefPtr<MediaStreamComponent> component) { m_audioComponents.append(component); }
-    void removeAudioComponent(MediaStreamComponent* component)
-    {
-        size_t pos = m_audioComponents.find(component);
-        if (pos != notFound)
-            m_audioComponents.remove(pos);
-    }
+    unsigned numberOfAudioSources() const { return m_audioStreamSources.size(); }
+    MediaStreamSource* audioSources(unsigned index) const { return m_audioStreamSources[index].get(); }
 
-    unsigned numberOfVideoComponents() const { return m_videoComponents.size(); }
-    MediaStreamComponent* videoComponent(unsigned index) const { return m_videoComponents[index].get(); }
-    void addVideoComponent(PassRefPtr<MediaStreamComponent> component) { m_videoComponents.append(component); }
-    void removeVideoComponent(MediaStreamComponent* component)
-    {
-        size_t pos = m_videoComponents.find(component);
-        if (pos != notFound)
-            m_videoComponents.remove(pos);
-    }
+    unsigned numberOfVideoSources() const { return m_videoStreamSources.size(); }
+    MediaStreamSource* videoSources(unsigned index) const { return m_videoStreamSources[index].get(); }
+
+    unsigned numberOfAudioTracks() const { return m_audioTrackDescriptors.size(); }
+    MediaStreamTrackPrivate* audioTracks(unsigned index) const { return m_audioTrackDescriptors[index].get(); }
+
+    unsigned numberOfVideoTracks() const { return m_videoTrackDescriptors.size(); }
+    MediaStreamTrackPrivate* videoTracks(unsigned index) const { return m_videoTrackDescriptors[index].get(); }
+
+    void addSource(PassRefPtr<MediaStreamSource>);
+    void removeSource(PassRefPtr<MediaStreamSource>);
+
+    void addRemoteSource(MediaStreamSource*);
+    void removeRemoteSource(MediaStreamSource*);
 
     bool ended() const { return m_ended; }
-    void setEnded() { m_ended = true; }
+    void setEnded();
 
-    PassRefPtr<ExtraData> extraData() const { return m_extraData; }
-    void setExtraData(PassRefPtr<ExtraData> extraData) { m_extraData = extraData; }
+    void addTrack(PassRefPtr<MediaStreamTrackPrivate>);
+    void removeTrack(PassRefPtr<MediaStreamTrackPrivate>);
 
 private:
-    MediaStreamDescriptor(const String& id, const MediaStreamSourceVector& audioSources, const MediaStreamSourceVector& videoSources)
-        : m_client(0)
-        , m_id(id)
-        , m_ended(false)
-    {
-        ASSERT(m_id.length());
-        for (size_t i = 0; i < audioSources.size(); i++)
-            m_audioComponents.append(MediaStreamComponent::create(this, audioSources[i]));
-
-        for (size_t i = 0; i < videoSources.size(); i++)
-            m_videoComponents.append(MediaStreamComponent::create(this, videoSources[i]));
-
-        if (!audioSources.size() && !videoSources.size())
-            m_ended = true;
-    }
-
-    MediaStreamDescriptor(const String& id, const MediaStreamComponentVector& audioComponents, const MediaStreamComponentVector& videoComponents)
-        : m_client(0)
-        , m_id(id)
-        , m_ended(false)
-    {
-        ASSERT(m_id.length());
-        for (MediaStreamComponentVector::const_iterator iter = audioComponents.begin(); iter != audioComponents.end(); ++iter) {
-            (*iter)->setStream(this);
-            m_audioComponents.append((*iter));
-        }
-        for (MediaStreamComponentVector::const_iterator iter = videoComponents.begin(); iter != videoComponents.end(); ++iter) {
-            (*iter)->setStream(this);
-            m_videoComponents.append((*iter));
-        }
-    }
+    MediaStreamDescriptor(const String& id, const MediaStreamSourceVector& audioSources, const MediaStreamSourceVector& videoSources, bool ended);
 
     MediaStreamDescriptorClient* m_client;
     String m_id;
-    Vector<RefPtr<MediaStreamComponent> > m_audioComponents;
-    Vector<RefPtr<MediaStreamComponent> > m_videoComponents;
-    bool m_ended;
+    Vector<RefPtr<MediaStreamSource>> m_audioStreamSources;
+    Vector<RefPtr<MediaStreamSource>> m_videoStreamSources;
 
-    RefPtr<ExtraData> m_extraData;
+    Vector<RefPtr<MediaStreamTrackPrivate>> m_audioTrackDescriptors;
+    Vector<RefPtr<MediaStreamTrackPrivate>> m_videoTrackDescriptors;
+    bool m_ended;
 };
 
-typedef Vector<RefPtr<MediaStreamDescriptor> > MediaStreamDescriptorVector;
+typedef Vector<RefPtr<MediaStreamDescriptor>> MediaStreamDescriptorVector;
 
 } // namespace WebCore
 

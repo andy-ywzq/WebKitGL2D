@@ -33,22 +33,23 @@
 
 namespace WebCore {
 
+class RenderTextControlInnerBlock;
 class SpeechInput;
 
 class TextControlInnerContainer FINAL : public HTMLDivElement {
 public:
-    static PassRefPtr<TextControlInnerContainer> create(Document*);
+    static PassRefPtr<TextControlInnerContainer> create(Document&);
 protected:
-    TextControlInnerContainer(Document*);
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
+    TextControlInnerContainer(Document&);
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
 };
 
 class TextControlInnerElement FINAL : public HTMLDivElement {
 public:
-    static PassRefPtr<TextControlInnerElement> create(Document*);
+    static PassRefPtr<TextControlInnerElement> create(Document&);
 
 protected:
-    TextControlInnerElement(Document*);
+    TextControlInnerElement(Document&);
     virtual PassRefPtr<RenderStyle> customStyleForRenderer() OVERRIDE;
 
 private:
@@ -57,40 +58,48 @@ private:
 
 class TextControlInnerTextElement FINAL : public HTMLDivElement {
 public:
-    static PassRefPtr<TextControlInnerTextElement> create(Document*);
+    static PassRefPtr<TextControlInnerTextElement> create(Document&);
 
-    virtual void defaultEventHandler(Event*);
+    virtual void defaultEventHandler(Event*) OVERRIDE;
+
+    RenderTextControlInnerBlock* renderer() const;
 
 private:
-    TextControlInnerTextElement(Document*);
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
+    TextControlInnerTextElement(Document&);
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
     virtual PassRefPtr<RenderStyle> customStyleForRenderer() OVERRIDE;
     virtual bool isMouseFocusable() const OVERRIDE { return false; }
+    virtual bool isTextControlInnerTextElement() const OVERRIDE { return true; }
 };
+
+inline bool isTextControlInnerTextElement(const HTMLElement& element) { return element.isTextControlInnerTextElement(); }
+inline bool isTextControlInnerTextElement(const Node& node) { return node.isHTMLElement() && isTextControlInnerTextElement(toHTMLElement(node)); }
+NODE_TYPE_CASTS(TextControlInnerTextElement)
 
 class SearchFieldResultsButtonElement FINAL : public HTMLDivElement {
 public:
-    static PassRefPtr<SearchFieldResultsButtonElement> create(Document*);
+    static PassRefPtr<SearchFieldResultsButtonElement> create(Document&);
 
-    virtual void defaultEventHandler(Event*);
+    virtual void defaultEventHandler(Event*) OVERRIDE;
     virtual bool willRespondToMouseClickEvents() OVERRIDE;
 
 private:
-    SearchFieldResultsButtonElement(Document*);
-    virtual const AtomicString& shadowPseudoId() const;
+    SearchFieldResultsButtonElement(Document&);
+    virtual const AtomicString& shadowPseudoId() const OVERRIDE;
     virtual bool isMouseFocusable() const OVERRIDE { return false; }
 };
 
 class SearchFieldCancelButtonElement FINAL : public HTMLDivElement {
 public:
-    static PassRefPtr<SearchFieldCancelButtonElement> create(Document*);
+    static PassRefPtr<SearchFieldCancelButtonElement> create(Document&);
 
-    virtual void defaultEventHandler(Event*);
+    virtual void defaultEventHandler(Event*) OVERRIDE;
+    virtual bool isSearchFieldCancelButtonElement() const OVERRIDE { return true; }
     virtual bool willRespondToMouseClickEvents() OVERRIDE;
 
 private:
-    SearchFieldCancelButtonElement(Document*);
-    virtual const AtomicString& shadowPseudoId() const;
+    SearchFieldCancelButtonElement(Document&);
+    virtual const AtomicString& shadowPseudoId() const OVERRIDE;
     virtual void willDetachRenderers() OVERRIDE;
     virtual bool isMouseFocusable() const OVERRIDE { return false; }
 
@@ -109,7 +118,7 @@ public:
         Recognizing,
     };
 
-    static PassRefPtr<InputFieldSpeechButtonElement> create(Document*);
+    static PassRefPtr<InputFieldSpeechButtonElement> create(Document&);
     virtual ~InputFieldSpeechButtonElement();
 
     virtual void defaultEventHandler(Event*);
@@ -125,13 +134,13 @@ public:
     void setRecognitionResult(int, const SpeechInputResultArray&);
 
 private:
-    InputFieldSpeechButtonElement(Document*);
+    InputFieldSpeechButtonElement(Document&);
     SpeechInput* speechInput();
     void setState(SpeechInputState state);
     virtual const AtomicString& shadowPseudoId() const;
     virtual bool isMouseFocusable() const OVERRIDE { return false; }
     virtual void willAttachRenderers() OVERRIDE;
-    virtual void willDetachRenderera) OVERRIDE;
+    virtual void willDetachRenderers() OVERRIDE;
 
 
     bool m_capturing;

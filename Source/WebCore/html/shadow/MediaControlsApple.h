@@ -61,7 +61,7 @@ private:
 
 class MediaControlsApple : public MediaControls {
 public:
-    static PassRefPtr<MediaControlsApple> createControls(Document*);
+    static PassRefPtr<MediaControlsApple> createControls(Document&);
 
     // MediaControls implementation.
     virtual void setMediaController(MediaControllerInterface*) OVERRIDE;
@@ -92,13 +92,14 @@ public:
     void handleClickEvent(Event*);
 
 private:
-    MediaControlsApple(Document*);
+    MediaControlsApple(Document&);
 
     virtual void defaultEventHandler(Event*) OVERRIDE;
     PassRefPtr<MediaControlsAppleEventListener> eventListener();
 
     void showClosedCaptionTrackList();
     void hideClosedCaptionTrackList();
+    void setFullscreenSliderVolume();
 
     MediaControlRewindButtonElement* m_rewindButton;
     MediaControlReturnToRealtimeButtonElement* m_returnToRealTimeButton;

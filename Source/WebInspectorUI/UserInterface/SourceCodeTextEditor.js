@@ -66,6 +66,10 @@ WebInspector.SourceCodeTextEditor = function(sourceCode)
         this._sourceCode.addEventListener(WebInspector.SourceCode.Event.SourceMapAdded, this._sourceCodeSourceMapAdded, this);
 
     sourceCode.requestContent(this._contentAvailable.bind(this));
+
+    // FIXME: Cmd+L shorcut doesn't actually work.
+    new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.Command, "L", this.showGoToLineDialog.bind(this), this.element);
+    new WebInspector.KeyboardShortcut(WebInspector.KeyboardShortcut.Modifier.Control, "G", this.showGoToLineDialog.bind(this), this.element);
 };
 
 WebInspector.Object.addConstructorFunctions(WebInspector.SourceCodeTextEditor);
@@ -186,6 +190,33 @@ WebInspector.SourceCodeTextEditor.prototype = {
         return true;
     },
 
+    showGoToLineDialog: function()
+    {
+        if (!this._goToLineDialog) {
+            this._goToLineDialog = new WebInspector.GoToLineDialog;
+            this._goToLineDialog.delegate = this;
+        }
+
+        this._goToLineDialog.present(this.element);
+    },
+
+    isGoToLineDialogValueValid: function(goToLineDialog, lineNumber)
+    {
+        return !isNaN(lineNumber) && lineNumber > 0 && lineNumber <= this.lineCount;
+    },
+
+    goToLineDialogValueWasValidated: function(goToLineDialog, lineNumber)
+    {
+        var position = new WebInspector.SourceCodePosition(lineNumber - 1, 0);
+        var range = new WebInspector.TextRange(lineNumber - 1, 0, lineNumber, 0);
+        this.revealPosition(position, range, false, true);
+    },
+
+    goToLineDialogWasDismissed: function()
+    {
+        this.focus();
+    },
+
     // Private
 
     _unformattedLineInfoForEditorLineInfo: function(lineInfo)
@@ -219,7 +250,7 @@ WebInspector.SourceCodeTextEditor.prototype = {
     _addBreakpointWithEditorLineInfo: function(breakpoint, lineInfo)
     {
         if (!this._breakpointMap[lineInfo.lineNumber])
-            this._breakpointMap[lineInfo.lineNumber] = {}
+            this._breakpointMap[lineInfo.lineNumber] = {};
 
         this._breakpointMap[lineInfo.lineNumber][lineInfo.columnNumber] = breakpoint;
     },
@@ -676,6 +707,109 @@ WebInspector.SourceCodeTextEditor.prototype = {
         return lineNumber in this._invalidLineNumbers;
     },
 
+    textEditorGutterContextMenu: function(textEditor, lineNumber, columnNumber, editorBreakpoints, event)
+    {
+        if (!this._supportsDebugging)
+            return;
+
+        event.preventDefault();
+
+        var contextMenu = new WebInspector.ContextMenu(event);
+
+        // Paused. Add Continue to Here option only if we have a script identifier for the location.
+        if (WebInspector.debuggerManager.paused) {
+            var editorLineInfo = {lineNumber:lineNumber, columnNumber:columnNumber};
+            var unformattedLineInfo = this._unformattedLineInfoForEditorLineInfo(editorLineInfo);
+            var sourceCodeLocation = this._sourceCode.createSourceCodeLocation(unformattedLineInfo.lineNumber, unformattedLineInfo.columnNumber);
+
+            if (sourceCodeLocation.sourceCode instanceof WebInspector.Script)
+                var script = sourceCodeLocation.sourceCode;
+            else if (sourceCodeLocation.sourceCode instanceof WebInspector.Resource)
+                var script = sourceCodeLocation.sourceCode.scriptForLocation(sourceCodeLocation);
+
+            if (script) {
+                function continueToLocation()
+                {
+                    WebInspector.debuggerManager.continueToLocation(script.id, sourceCodeLocation.lineNumber, sourceCodeLocation.columnNumber);
+                }
+
+                contextMenu.appendItem(WebInspector.UIString("Continue to Here"), continueToLocation);
+                contextMenu.appendSeparator();
+            }
+        }
+
+        var breakpoints = [];
+        for (var i = 0; i < editorBreakpoints.length; ++i) {
+            var lineInfo = editorBreakpoints[i];
+            var breakpoint = this._breakpointForEditorLineInfo(lineInfo);
+            console.assert(breakpoint);
+            if (breakpoint)
+                breakpoints.push(breakpoint);
+        }
+
+        // No breakpoints.
+        if (!breakpoints.length) {
+            function addBreakpoint()
+            {
+                var data = this.textEditorBreakpointAdded(this, lineNumber, columnNumber);
+                this.setBreakpointInfoForLineAndColumn(data.lineNumber, data.columnNumber, data.breakpointInfo);
+            }
+
+            contextMenu.appendItem(WebInspector.UIString("Add Breakpoint"), addBreakpoint.bind(this));
+            contextMenu.show();
+            return;
+        }
+
+        // Single breakpoint.
+        if (breakpoints.length === 1) {
+            var breakpoint = breakpoints[0];
+            function revealInSidebar()
+            {
+                WebInspector.debuggerSidebarPanel.show();
+                var treeElement = WebInspector.debuggerSidebarPanel.treeElementForRepresentedObject(breakpoint);
+                if (treeElement)
+                    treeElement.revealAndSelect();
+            }
+
+            breakpoint.appendContextMenuItems(contextMenu, event.target);
+            contextMenu.appendSeparator();
+            contextMenu.appendItem(WebInspector.UIString("Reveal in Debugger Navigation Sidebar"), revealInSidebar);
+            contextMenu.show();
+            return;
+        }
+
+        // Multiple breakpoints.
+        var shouldDisable = false;
+        for (var i = 0; i < breakpoints.length; ++i) {
+            if (!breakpoints[i].disabled) {
+                shouldDisable = true;
+                break;
+            }
+        }
+
+        function removeBreakpoints()
+        {
+            for (var i = 0; i < breakpoints.length; ++i) {
+                var breakpoint = breakpoints[i];
+                if (WebInspector.debuggerManager.isBreakpointRemovable(breakpoint))
+                    WebInspector.debuggerManager.removeBreakpoint(breakpoint);
+            }
+        }
+
+        function toggleBreakpoints()
+        {
+            for (var i = 0; i < breakpoints.length; ++i)
+                breakpoints[i].disabled = shouldDisable;
+        }
+
+        if (shouldDisable)
+            contextMenu.appendItem(WebInspector.UIString("Disable Breakpoints"), toggleBreakpoints.bind(this));
+        else
+            contextMenu.appendItem(WebInspector.UIString("Enable Breakpoints"), toggleBreakpoints.bind(this));
+        contextMenu.appendItem(WebInspector.UIString("Delete Breakpoints"), removeBreakpoints.bind(this));
+        contextMenu.show();
+    },
+
     textEditorBreakpointAdded: function(textEditor, lineNumber, columnNumber)
     {
         if (!this._supportsDebugging)
@@ -797,32 +931,19 @@ WebInspector.SourceCodeTextEditor.prototype = {
         }
     },
 
-    _shouldTrackTokenHovering: function()
+    _updateTokenTrackingControllerEnabled: function()
     {
-        return this._jumpToSymbolTrackingModeEnabled || WebInspector.debuggerManager.activeCallFrame;
-    },
-
-    _startTrackingTokenHoveringIfNeeded: function()
-    {
-        if (this._shouldTrackTokenHovering() && !this.tokenTrackingController.tracking)
-            this.tokenTrackingController.startTracking();
-    },
-
-    _stopTrackingTokenHoveringIfNeeded: function()
-    {
-        if (!this._shouldTrackTokenHovering() && this.tokenTrackingController.tracking)
-            this.tokenTrackingController.stopTracking();
+        this.tokenTrackingController.enabled = this._jumpToSymbolTrackingModeEnabled || WebInspector.debuggerManager.activeCallFrame;
     },
 
     _debuggerDidPause: function(event)
     {
-        this._startTrackingTokenHoveringIfNeeded();
+        this._updateTokenTrackingControllerEnabled();
     },
 
     _debuggerDidResume: function(event)
     {
-        this._stopTrackingTokenHoveringIfNeeded();
-
+        this._updateTokenTrackingControllerEnabled();
         this._dismissPopover();
     },
 
@@ -846,12 +967,10 @@ WebInspector.SourceCodeTextEditor.prototype = {
         if (oldJumpToSymbolTrackingModeEnabled !== this._jumpToSymbolTrackingModeEnabled) {
             if (this._jumpToSymbolTrackingModeEnabled) {
                 this._enableJumpToSymbolTrackingModeSettings();
-                this._startTrackingTokenHoveringIfNeeded();
+                this.tokenTrackingController.highlightLastHoveredRange();
             } else {
-                this._stopTrackingTokenHoveringIfNeeded();
                 this._disableJumpToSymbolTrackingModeSettings();
-                if (!this.tokenTrackingController.tracking)
-                    this.tokenTrackingController.removeHighlightedRange();
+                this.tokenTrackingController.removeHighlightedRange();
             }
         }
     },
@@ -863,6 +982,9 @@ WebInspector.SourceCodeTextEditor.prototype = {
         this.tokenTrackingController.mouseOutReleaseDelayDuration = 0;
 
         this.tokenTrackingController.mode = WebInspector.CodeMirrorTokenTrackingController.Mode.NonSymbolTokens;
+        this._updateTokenTrackingControllerEnabled();
+
+        this._dismissPopover();
     },
 
     _disableJumpToSymbolTrackingModeSettings: function()
@@ -872,6 +994,7 @@ WebInspector.SourceCodeTextEditor.prototype = {
         this.tokenTrackingController.mouseOutReleaseDelayDuration = WebInspector.SourceCodeTextEditor.DurationToMouseOutOfHoveredTokenToRelease;
 
         this.tokenTrackingController.mode = WebInspector.CodeMirrorTokenTrackingController.Mode.JavaScriptExpression;
+        this._updateTokenTrackingControllerEnabled();
     },
 
     // CodeMirrorTokenTrackingController Delegate

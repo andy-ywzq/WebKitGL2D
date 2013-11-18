@@ -30,6 +30,7 @@
 #ifndef MainThread_h
 #define MainThread_h
 
+#include <functional>
 #include <stdint.h>
 
 namespace WTF {
@@ -44,9 +45,12 @@ WTF_EXPORT_PRIVATE void callOnMainThread(MainThreadFunction*, void* context);
 WTF_EXPORT_PRIVATE void callOnMainThreadAndWait(MainThreadFunction*, void* context);
 WTF_EXPORT_PRIVATE void cancelCallOnMainThread(MainThreadFunction*, void* context);
 
+WTF_EXPORT_PRIVATE void callOnMainThread(std::function<void ()>);
+
+// FIXME: This symbol is used by Safari and should be removed once Safari is no longer using it.
 template<typename> class Function;
 WTF_EXPORT_PRIVATE void callOnMainThread(const Function<void ()>&);
-    
+
 WTF_EXPORT_PRIVATE void setMainThreadCallbacksPaused(bool paused);
 
 WTF_EXPORT_PRIVATE bool isMainThread();
@@ -54,9 +58,11 @@ WTF_EXPORT_PRIVATE bool isMainThread();
 #if USE(WEB_THREAD)
 WTF_EXPORT_PRIVATE bool isWebThread();
 WTF_EXPORT_PRIVATE bool isUIThread();
+WTF_EXPORT_PRIVATE void initializeWebThread();
 WTF_EXPORT_PRIVATE void initializeApplicationUIThreadIdentifier();
 WTF_EXPORT_PRIVATE void initializeWebThreadIdentifier();
 WTF_EXPORT_PRIVATE bool canAccessThreadLocalDataForThread(ThreadIdentifier);
+void initializeWebThreadPlatform();
 #else
 inline bool isWebThread() { return isMainThread(); }
 inline bool isUIThread() { return isMainThread(); }
@@ -97,6 +103,7 @@ using WTF::setMainThreadCallbacksPaused;
 using WTF::isMainThread;
 using WTF::isMainThreadOrGCThread;
 #if USE(WEB_THREAD)
+using WTF::initializeWebThread;
 using WTF::initializeApplicationUIThreadIdentifier;
 using WTF::initializeWebThreadIdentifier;
 using WTF::canAccessThreadLocalDataForThread;

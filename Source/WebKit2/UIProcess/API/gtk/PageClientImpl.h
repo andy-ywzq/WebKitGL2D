@@ -28,6 +28,7 @@
 #ifndef PageClientImpl_h
 #define PageClientImpl_h
 
+#include "DefaultUndoController.h"
 #include "KeyBindingTranslator.h"
 #include "PageClient.h"
 #include "WebPageProxy.h"
@@ -53,7 +54,7 @@ public:
 private:
     explicit PageClientImpl(GtkWidget*);
 
-    virtual PassOwnPtr<DrawingAreaProxy> createDrawingAreaProxy();
+    virtual std::unique_ptr<DrawingAreaProxy> createDrawingAreaProxy();
     virtual void setViewNeedsDisplay(const WebCore::IntRect&);
     virtual void displayView();
     virtual bool canScrollView() { return false; }
@@ -91,6 +92,7 @@ private:
     virtual void getEditorCommandsForKeyEvent(const NativeWebKeyboardEvent&, const AtomicString&, Vector<WTF::String>&);
     virtual void updateTextInputState();
     virtual void startDrag(const WebCore::DragData&, PassRefPtr<ShareableBitmap> dragImage);
+    virtual bool isWindowVisible();
 
 #if USE(ACCELERATED_COMPOSITING)
     virtual void enterAcceleratedCompositingMode(const LayerTreeContext&);
@@ -102,6 +104,7 @@ private:
 
     // Members of PageClientImpl class
     GtkWidget* m_viewWidget;
+    DefaultUndoController m_undoController;
     WebCore::KeyBindingTranslator m_keyBindingTranslator;
 };
 

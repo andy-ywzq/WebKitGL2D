@@ -51,6 +51,7 @@
 #import <runtime/InitializeThreading.h>
 #import <wtf/Assertions.h>
 #import <wtf/MainThread.h>
+#import <wtf/ObjcRuntimeExtras.h>
 
 using namespace WebCore;
 using namespace WebKit;
@@ -164,7 +165,7 @@ extern "C" {
         _pluginLayer.get().bounds = realPluginLayer.get().bounds;
         _pluginLayer.get().geometryFlipped = YES;
 
-        _pluginLayer.get().backgroundColor = CGColorCreateGenericRGB(1, 0, 1, 1);
+        _pluginLayer.get().backgroundColor = adoptCF(CGColorCreateGenericRGB(1, 0, 1, 1)).get();
 
         realPluginLayer.get().autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;
         [_pluginLayer.get() addSublayer:realPluginLayer.get()];
@@ -432,7 +433,6 @@ extern "C" {
 - (void)pluginHostDied
 {
     if (_element->renderer() && _element->renderer()->isEmbeddedObject()) {
-        // FIXME: The renderer could also be a RenderApplet, we should handle that.
         RenderEmbeddedObject* renderer = toRenderEmbeddedObject(_element->renderer());
         renderer->setPluginUnavailabilityReason(RenderEmbeddedObject::PluginCrashed);
     }
@@ -444,12 +444,6 @@ extern "C" {
     self.wantsLayer = NO;
     
     [self invalidatePluginContentRect:[self bounds]];
-}
-
-- (void)visibleRectDidChange
-{
-    [super visibleRectDidChange];
-    WKSyncSurfaceToView(self);
 }
 
 - (void)drawRect:(NSRect)rect

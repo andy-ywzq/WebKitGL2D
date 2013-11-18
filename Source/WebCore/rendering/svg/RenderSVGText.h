@@ -35,10 +35,12 @@ class RenderSVGInlineText;
 
 class RenderSVGText FINAL : public RenderSVGBlock {
 public:
-    RenderSVGText(SVGTextElement*);
+    RenderSVGText(SVGTextElement&, PassRef<RenderStyle>);
     virtual ~RenderSVGText();
 
-    virtual bool isChildAllowed(RenderObject*, RenderStyle*) const;
+    SVGTextElement& textElement() const;
+
+    virtual bool isChildAllowed(const RenderObject&, const RenderStyle&) const;
 
     void setNeedsPositioningValuesUpdate() { m_needsPositioningValuesUpdate = true; }
     virtual void setNeedsTransformUpdate() { m_needsTransformUpdate = true; }
@@ -58,6 +60,8 @@ public:
     void subtreeTextDidChange(RenderSVGInlineText*);
 
 private:
+    void graphicsElement() const WTF_DELETED_FUNCTION;
+
     virtual const char* renderName() const { return "RenderSVGText"; }
     virtual bool isSVGText() const { return true; }
 
@@ -78,7 +82,7 @@ private:
     virtual void mapLocalToContainer(const RenderLayerModelObject* repaintContainer, TransformState&, MapCoordinatesFlags = ApplyContainerFlip, bool* wasFixed = 0) const OVERRIDE;
     virtual const RenderObject* pushMappingToContainer(const RenderLayerModelObject* ancestorToStopAt, RenderGeometryMap&) const OVERRIDE;
     virtual void addChild(RenderObject* child, RenderObject* beforeChild = 0);
-    virtual void removeChild(RenderObject*) OVERRIDE;
+    virtual void removeChild(RenderObject&) OVERRIDE;
     virtual void willBeDestroyed() OVERRIDE;
 
     virtual FloatRect objectBoundingBox() const { return frameRect(); }
@@ -102,20 +106,7 @@ private:
     Vector<SVGTextLayoutAttributes*> m_layoutAttributes;
 };
 
-inline RenderSVGText* toRenderSVGText(RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isSVGText());
-    return static_cast<RenderSVGText*>(object);
-}
-
-inline const RenderSVGText* toRenderSVGText(const RenderObject* object)
-{
-    ASSERT_WITH_SECURITY_IMPLICATION(!object || object->isSVGText());
-    return static_cast<const RenderSVGText*>(object);
-}
-
-// This will catch anyone doing an unnecessary cast.
-void toRenderSVGText(const RenderSVGText*);
+RENDER_OBJECT_TYPE_CASTS(RenderSVGText, isSVGText())
 
 }
 

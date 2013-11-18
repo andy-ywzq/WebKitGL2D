@@ -68,7 +68,7 @@ NetscapePluginHostManager::~NetscapePluginHostManager()
 
 NetscapePluginHostProxy* NetscapePluginHostManager::hostForPlugin(const WTF::String& pluginPath, cpu_type_t pluginArchitecture, const String& bundleIdentifier)
 {
-    PluginHostMap::AddResult result = m_pluginHosts.add(pluginPath, 0);
+    PluginHostMap::AddResult result = m_pluginHosts.add(pluginPath, nullptr);
     
     // The package was already in the map, just return it.
     if (!result.isNewEntry)
@@ -268,10 +268,10 @@ PassRefPtr<NetscapePluginInstanceProxy> NetscapePluginHostManager::instantiatePl
         _WKPHInstantiatePlugin(hostProxy->port(), requestID, (uint8_t*)[data bytes], [data length], instance->pluginID());
     }
 
-    std::auto_ptr<NetscapePluginInstanceProxy::InstantiatePluginReply> reply = instance->waitForReply<NetscapePluginInstanceProxy::InstantiatePluginReply>(requestID);
-    if (!reply.get() || reply->m_resultCode != KERN_SUCCESS) {
+    auto reply = instance->waitForReply<NetscapePluginInstanceProxy::InstantiatePluginReply>(requestID);
+    if (!reply || reply->m_resultCode != KERN_SUCCESS) {
         instance->cleanup();
-        return 0;
+        return nullptr;
     }
     
     instance->setRenderContextID(reply->m_renderContextID);

@@ -26,7 +26,7 @@
 #ifndef PluginProcess_h
 #define PluginProcess_h
 
-#if ENABLE(PLUGIN_PROCESS)
+#if ENABLE(NETSCAPE_PLUGIN_API)
 
 #include "ChildProcess.h"
 #include <wtf/Forward.h>
@@ -60,7 +60,7 @@ public:
     bool launchProcess(const String& launchPath, const Vector<String>& arguments);
     bool launchApplicationAtURL(const String& urlString, const Vector<String>& arguments);
     bool openURL(const String& urlString, int32_t& status, String& launchedURLString);
-
+    bool openFile(const String& urlString);
 #endif
 
 private:
@@ -73,6 +73,10 @@ private:
     virtual void initializeSandbox(const ChildProcessInitializationParameters&, SandboxInitializationParameters&) OVERRIDE;
     virtual bool shouldTerminate() OVERRIDE;
     void platformInitializeProcess(const ChildProcessInitializationParameters&);
+
+#if PLATFORM(MAC)
+    virtual void stopRunLoop() OVERRIDE;
+#endif
 
     // CoreIPC::Connection::Client
     virtual void didReceiveMessage(CoreIPC::Connection*, CoreIPC::MessageDecoder&) OVERRIDE;
@@ -117,6 +121,6 @@ private:
 
 } // namespace WebKit
 
-#endif // ENABLE(PLUGIN_PROCESS)
+#endif // ENABLE(NETSCAPE_PLUGIN_API)
 
 #endif // PluginProcess_h

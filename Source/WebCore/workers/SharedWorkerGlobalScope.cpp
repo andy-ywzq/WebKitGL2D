@@ -44,23 +44,24 @@
 
 namespace WebCore {
 
-PassRefPtr<MessageEvent> createConnectEvent(PassRefPtr<MessagePort> port)
+PassRefPtr<MessageEvent> createConnectEvent(PassRefPtr<MessagePort> prpPort)
 {
-    RefPtr<MessageEvent> event = MessageEvent::create(adoptPtr(new MessagePortArray(1, port)));
+    RefPtr<MessagePort> port = prpPort;
+    RefPtr<MessageEvent> event = MessageEvent::create(adoptPtr(new MessagePortArray(1, port)), ScriptValue(), String(), String(), port);
     event->initEvent(eventNames().connectEvent, false, false);
     return event.release();
 }
 
 // static
-PassRefPtr<SharedWorkerGlobalScope> SharedWorkerGlobalScope::create(const String& name, const KURL& url, const String& userAgent, PassOwnPtr<GroupSettings> settings, SharedWorkerThread* thread, const String& contentSecurityPolicy, ContentSecurityPolicy::HeaderType contentSecurityPolicyType)
+PassRefPtr<SharedWorkerGlobalScope> SharedWorkerGlobalScope::create(const String& name, const URL& url, const String& userAgent, std::unique_ptr<GroupSettings> settings, SharedWorkerThread* thread, const String& contentSecurityPolicy, ContentSecurityPolicy::HeaderType contentSecurityPolicyType)
 {
-    RefPtr<SharedWorkerGlobalScope> context = adoptRef(new SharedWorkerGlobalScope(name, url, userAgent, settings, thread));
+    RefPtr<SharedWorkerGlobalScope> context = adoptRef(new SharedWorkerGlobalScope(name, url, userAgent, std::move(settings), thread));
     context->applyContentSecurityPolicyFromString(contentSecurityPolicy, contentSecurityPolicyType);
     return context.release();
 }
 
-SharedWorkerGlobalScope::SharedWorkerGlobalScope(const String& name, const KURL& url, const String& userAgent, PassOwnPtr<GroupSettings> settings, SharedWorkerThread* thread)
-    : WorkerGlobalScope(url, userAgent, settings, thread, 0)
+SharedWorkerGlobalScope::SharedWorkerGlobalScope(const String& name, const URL& url, const String& userAgent, std::unique_ptr<GroupSettings> settings, SharedWorkerThread* thread)
+    : WorkerGlobalScope(url, userAgent, std::move(settings), thread, 0)
     , m_name(name)
 {
 }
@@ -69,9 +70,9 @@ SharedWorkerGlobalScope::~SharedWorkerGlobalScope()
 {
 }
 
-const AtomicString& SharedWorkerGlobalScope::interfaceName() const
+EventTargetInterface SharedWorkerGlobalScope::eventTargetInterface() const
 {
-    return eventNames().interfaceForSharedWorkerGlobalScope;
+    return SharedWorkerGlobalScopeEventTargetInterfaceType;
 }
 
 SharedWorkerThread* SharedWorkerGlobalScope::thread()

@@ -46,8 +46,9 @@ using namespace std;
 
 // Construct a string with UTF-16 data.
 String::String(const UChar* characters, unsigned length)
-    : m_impl(characters ? StringImpl::create(characters, length) : 0)
 {
+    if (characters)
+        m_impl = StringImpl::create(characters, length);
 }
 
 // Construct a string with UTF-16 data, from a null-terminated source.
@@ -61,13 +62,15 @@ String::String(const UChar* str)
 
 // Construct a string with latin1 data.
 String::String(const LChar* characters, unsigned length)
-    : m_impl(characters ? StringImpl::create(characters, length) : 0)
 {
+    if (characters)
+        m_impl = StringImpl::create(characters, length);
 }
 
 String::String(const char* characters, unsigned length)
-    : m_impl(characters ? StringImpl::create(reinterpret_cast<const LChar*>(characters), length) : 0)
 {
+    if (characters)
+        m_impl = StringImpl::create(reinterpret_cast<const LChar*>(characters), length);
 }
 
 // Construct a string with latin1 data, from a null-terminated source.
@@ -333,6 +336,20 @@ String String::upper() const
     return m_impl->upper();
 }
 
+String String::lower(const AtomicString& localeIdentifier) const
+{
+    if (!m_impl)
+        return String();
+    return m_impl->lower(localeIdentifier);
+}
+
+String String::upper(const AtomicString& localeIdentifier) const
+{
+    if (!m_impl)
+        return String();
+    return m_impl->upper(localeIdentifier);
+}
+
 String String::stripWhiteSpace() const
 {
     if (!m_impl)
@@ -411,21 +428,7 @@ Vector<UChar> String::charactersWithNullTermination() const
 
 String String::format(const char *format, ...)
 {
-#if PLATFORM(QT)
-    // Use QString::vsprintf to avoid the locale dependent formatting of vsnprintf.
-    // https://bugs.webkit.org/show_bug.cgi?id=18994
-    va_list args;
-    va_start(args, format);
-
-    QString buffer;
-    buffer.vsprintf(format, args);
-
-    va_end(args);
-
-    QByteArray ba = buffer.toUtf8();
-    return StringImpl::create(reinterpret_cast<const LChar*>(ba.constData()), ba.length());
-
-#elif OS(WINCE)
+#if OS(WINCE)
     va_list args;
     va_start(args, format);
 
@@ -849,7 +852,7 @@ String String::fromUTF8(const LChar* stringStart, size_t length)
         return String();
 
     unsigned utf16Length = bufferCurrent - bufferStart;
-    ASSERT(utf16Length < length);
+    ASSERT_WITH_SECURITY_IMPLICATION(utf16Length < length);
     return StringImpl::create(bufferStart, utf16Length);
 }
 

@@ -112,7 +112,7 @@ public:
     // Message handlers.
     void didReceiveNetworkResourceLoaderMessage(CoreIPC::Connection*, CoreIPC::MessageDecoder&);
 
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
+#if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
     static void tryGetShareableHandleFromCFURLCachedResponse(ShareableResource::Handle&, CFCachedURLResponseRef);
 #endif
 
@@ -122,9 +122,10 @@ public:
     void setHostRecord(HostRecord* hostRecord) { ASSERT(isMainThread()); m_hostRecord = hostRecord; }
     HostRecord* hostRecord() const { ASSERT(isMainThread()); return m_hostRecord.get(); }
 
-    template<typename U> bool sendAbortingOnFailure(const U& message, unsigned messageSendFlags = 0)
+    template<typename T>
+    bool sendAbortingOnFailure(T&& message, unsigned messageSendFlags = 0)
     {
-        bool result = messageSenderConnection()->send(message, messageSenderDestinationID(), messageSendFlags);
+        bool result = messageSenderConnection()->send(std::forward<T>(message), messageSenderDestinationID(), messageSendFlags);
         if (!result)
             abort();
         return result;
@@ -136,7 +137,7 @@ public:
 #endif
     void continueWillSendRequest(const WebCore::ResourceRequest& newRequest);
 
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
+#if PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
     static void tryGetShareableHandleFromSharedBuffer(ShareableResource::Handle&, WebCore::SharedBuffer*);
 #endif
 
@@ -165,7 +166,7 @@ private:
     uint64_t m_bytesReceived;
 
     bool m_handleConvertedToDownload;
-    OwnPtr<NetworkLoaderClient> m_networkLoaderClient;
+    std::unique_ptr<NetworkLoaderClient> m_networkLoaderClient;
 
     ResourceLoadIdentifier m_identifier;
     uint64_t m_webPageID;

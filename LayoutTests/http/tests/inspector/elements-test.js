@@ -602,11 +602,43 @@ InspectorTest.dumpStyle = function(style, currentIndent)
 function dumpInspectorHighlightRects()
 {
     var rectNames = ["margin", "border", "padding", "content"];
-    var rects = window.internals.inspectorHighlightRects(document);
+    var rects = window.internals.inspectorHighlightRects();
     for (var i = 0; i < rects.length; i++)
     {
         var rectName = (i < rectNames.length ? rectNames[i] : "untitled");
         var rect = rects.item(i);
         output(rectName + " rect is " + rect.width + " x " + rect.height + " at (" + rect.left + ", " + rect.top + ")");
     }
+}
+
+function dumpInspectorHighlightedRegions()
+{
+    var highlight = window.internals.inspectorHighlightObject();
+    if (!highlight.length) {
+        output("No highlighted node.");
+        return;
+    }
+    // Reformat the string using JSON.stringify.
+    var json = JSON.parse(highlight);
+    if (!json.elementInfo || !json.elementInfo.regionFlowInfo) {
+        output("No highlighted regions.");
+        return;
+    }
+    output(JSON.stringify(json.elementInfo.regionFlowInfo, null, 4));
+}
+
+function dumpInspectorHighlightedNode()
+{
+    var highlight = window.internals.inspectorHighlightObject();
+    if (!highlight.length) {
+        output("No highlighted node.");
+        return;
+    }
+    // Reformat the string using JSON.stringify.
+    var json = JSON.parse(highlight);
+    if (!json) {
+        output("No highlighted node.");
+        return;
+    }
+    output(JSON.stringify(json, null, 4));
 }

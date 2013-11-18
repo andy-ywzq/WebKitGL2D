@@ -24,6 +24,7 @@
     ConstructorTemplate=Event,
     JSNoStaticTables,
     ObjCPolymorphic,
+    OperationsNotDeletable
 ] interface Event {
 
     // DOM PhaseType
@@ -72,7 +73,7 @@
 
     // IE Extensions
     readonly attribute EventTarget      srcElement;
-             attribute boolean          returnValue;
+    [ImplementedAs=legacyReturnValue] attribute boolean returnValue;
              attribute boolean          cancelBubble;
 
 #if defined(LANGUAGE_JAVASCRIPT) && LANGUAGE_JAVASCRIPT

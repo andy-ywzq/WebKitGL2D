@@ -63,6 +63,8 @@ public:
     PlatformWebView* mainWebView() { return m_mainWebView.get(); }
     WKContextRef context() { return m_context.get(); }
 
+    EventSenderProxy* eventSenderProxy() { return m_eventSenderProxy.get(); }
+
     void ensureViewSupportsOptions(WKDictionaryRef options);
     
     // Runs the run loop until `done` is true or the timeout elapses.
@@ -215,14 +217,7 @@ private:
 
     bool m_shouldBlockAllPlugins;
 
-#if PLATFORM(MAC) || PLATFORM(QT) || PLATFORM(GTK) || PLATFORM(EFL) || PLATFORM(NIX)
     OwnPtr<EventSenderProxy> m_eventSenderProxy;
-#endif
-
-#if PLATFORM(QT)
-    class RunLoop;
-    RunLoop* m_runLoop;
-#endif
 
     WorkQueueManager m_workQueueManager;
 };

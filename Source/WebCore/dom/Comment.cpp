@@ -26,12 +26,12 @@
 
 namespace WebCore {
 
-inline Comment::Comment(Document* document, const String& text)
+inline Comment::Comment(Document& document, const String& text)
     : CharacterData(document, text, CreateOther)
 {
 }
 
-PassRefPtr<Comment> Comment::create(Document* document, const String& text)
+PassRefPtr<Comment> Comment::create(Document& document, const String& text)
 {
     return adoptRef(new Comment(document, text));
 }

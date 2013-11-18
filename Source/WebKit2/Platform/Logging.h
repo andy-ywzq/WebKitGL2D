@@ -46,6 +46,7 @@ namespace WebKit {
     M(NetworkScheduling) \
     M(Plugins) \
     M(SessionState) \
+    M(StorageAPI) \
     M(TextInput) \
     M(View) \
 
@@ -59,7 +60,7 @@ WEBKIT2_LOG_CHANNELS(DECLARE_LOG_CHANNEL)
 void initializeLogChannelsIfNecessary(void);
 String logLevelString();
 
-#if PLATFORM(GTK) || PLATFORM(QT) || PLATFORM(EFL) || PLATFORM(NIX)
+#if PLATFORM(GTK) || PLATFORM(EFL) || PLATFORM(NIX)
 WTFLogChannel* logChannelByName(const String&);
 #endif
 

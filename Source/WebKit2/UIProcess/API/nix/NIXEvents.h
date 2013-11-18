@@ -595,8 +595,6 @@ struct NIXGestureEvent {
     NIX_INPUT_EVENT_BASE
     int width;
     int height;
-    float deltaX;
-    float deltaY;
 };
 typedef struct NIXGestureEvent NIXGestureEvent;
 

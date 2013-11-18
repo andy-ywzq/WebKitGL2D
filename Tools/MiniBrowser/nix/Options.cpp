@@ -151,10 +151,14 @@ bool Options::parse(int argc, const char* argv[])
 {
     Device deviceList[] = {
         { 1024, 768, "" },
-        { 854, 480, "Mozilla/5.0 (MeeGo; NokiaN9) AppleWebKit/534.13 (KHTML, like Gecko) NokiaBrowser/8.5.0 Mobile Safari/534.13" },
+        // N9
+        { 480, 854, "Mozilla/5.0 (MeeGo; NokiaN9) AppleWebKit/534.13 (KHTML, like Gecko) NokiaBrowser/8.5.0 Mobile Safari/534.13" },
+        // iPad
         { 1024, 768, "Mozilla/5.0 (iPad; CPU OS 5_0 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9A334 Safari/7534.48.3" },
-        { 960, 640, "Mozilla/5.0 (iPhone; CPU iPhone OS 5_0 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9A334 Safari/7534.48.3" },
-        { 800, 480, "Mozilla/5.0 (Linux; U; Android 4.0.2; en-us; Galaxy Nexus Build/ICL53F) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30" }
+        // iPhone
+        { 640, 960, "Mozilla/5.0 (iPhone; CPU iPhone OS 5_0 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9A334 Safari/7534.48.3" },
+        // Android
+        { 480, 800, "Mozilla/5.0 (Linux; U; Android 4.0.2; en-us; Galaxy Nexus Build/ICL53F) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30" }
     };
 
     Device::Type device = Device::Default;
@@ -173,7 +177,7 @@ bool Options::parse(int argc, const char* argv[])
         Option("--n9", "Use n9 user agent.", &device, Device::N9),
         Option("--ipad", "Use iPad user agent.", &device, Device::IPad),
         Option("--iphone", "Use iPhone user agent.", &device, Device::IPhone),
-        Option("--android", "Use iPhone user agent.", &device, Device::Android)
+        Option("--android", "Use Android user agent.", &device, Device::Android)
     };
 
     std::list<const char*> args(&argv[1], &argv[argc]);

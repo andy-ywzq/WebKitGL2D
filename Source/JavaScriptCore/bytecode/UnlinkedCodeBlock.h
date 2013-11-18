@@ -38,7 +38,9 @@
 #include "RegExp.h"
 #include "SpecialPointer.h"
 #include "SymbolTable.h"
+#include "VirtualRegister.h"
 
+#include <wtf/Compression.h>
 #include <wtf/RefCountedArray.h>
 #include <wtf/Vector.h>
 
@@ -252,17 +254,17 @@ public:
     bool hasExpressionInfo() { return m_expressionInfo.size(); }
 
     // Special registers
-    void setThisRegister(int thisRegister) { m_thisRegister = thisRegister; }
-    void setActivationRegister(int activationRegister) { m_activationRegister = activationRegister; }
+    void setThisRegister(VirtualRegister thisRegister) { m_thisRegister = thisRegister; }
+    void setActivationRegister(VirtualRegister activationRegister) { m_activationRegister = activationRegister; }
 
-    void setArgumentsRegister(int argumentsRegister) { m_argumentsRegister = argumentsRegister; }
-    bool usesArguments() const { return m_argumentsRegister != -1; }
-    int argumentsRegister() const { return m_argumentsRegister; }
+    void setArgumentsRegister(VirtualRegister argumentsRegister) { m_argumentsRegister = argumentsRegister; }
+    bool usesArguments() const { return m_argumentsRegister.isValid(); }
+    VirtualRegister argumentsRegister() const { return m_argumentsRegister; }
 
 
-    bool usesGlobalObject() const { return m_globalObjectRegister != -1; }
-    void setGlobalObjectRegister(int globalObjectRegister) { m_globalObjectRegister = globalObjectRegister; }
-    int globalObjectRegister() const { return m_globalObjectRegister; }
+    bool usesGlobalObject() const { return m_globalObjectRegister.isValid(); }
+    void setGlobalObjectRegister(VirtualRegister globalObjectRegister) { m_globalObjectRegister = globalObjectRegister; }
+    VirtualRegister globalObjectRegister() const { return m_globalObjectRegister; }
 
     // Parameter information
     void setNumParameters(int newValue) { m_numParameters = newValue; }
@@ -300,7 +302,7 @@ public:
         return result;
     }
     unsigned addOrFindConstant(JSValue);
-    const Vector<WriteBarrier<Unknown> >& constantRegisters() { return m_constantRegisters; }
+    const Vector<WriteBarrier<Unknown>>& constantRegisters() { return m_constantRegisters; }
     const WriteBarrier<Unknown>& constantRegister(int index) const { return m_constantRegisters[index - FirstConstantRegisterIndex]; }
     ALWAYS_INLINE bool isConstantRegisterIndex(int index) const { return index >= FirstConstantRegisterIndex; }
     ALWAYS_INLINE JSValue getConstant(int index) const { return m_constantRegisters[index - FirstConstantRegisterIndex].get(); }
@@ -397,8 +399,8 @@ public:
 
     CodeType codeType() const { return m_codeType; }
 
-    int thisRegister() const { return m_thisRegister; }
-    int activationRegister() const { return m_activationRegister; }
+    VirtualRegister thisRegister() const { return m_thisRegister; }
+    VirtualRegister activationRegister() const { return m_activationRegister; }
 
 
     void addPropertyAccessInstruction(unsigned propertyAccessInstruction)
@@ -477,10 +479,10 @@ private:
     int m_numParameters;
     VM* m_vm;
 
-    int m_thisRegister;
-    int m_argumentsRegister;
-    int m_activationRegister;
-    int m_globalObjectRegister;
+    VirtualRegister m_thisRegister;
+    VirtualRegister m_argumentsRegister;
+    VirtualRegister m_activationRegister;
+    VirtualRegister m_globalObjectRegister;
 
     bool m_needsFullScopeChain : 1;
     bool m_usesEval : 1;
@@ -498,8 +500,8 @@ private:
 
     // Constant Pools
     Vector<Identifier> m_identifiers;
-    Vector<WriteBarrier<Unknown> > m_constantRegisters;
-    typedef Vector<WriteBarrier<UnlinkedFunctionExecutable> > FunctionExpressionVector;
+    Vector<WriteBarrier<Unknown>> m_constantRegisters;
+    typedef Vector<WriteBarrier<UnlinkedFunctionExecutable>> FunctionExpressionVector;
     FunctionExpressionVector m_functionDecls;
     FunctionExpressionVector m_functionExprs;
 
@@ -525,7 +527,7 @@ public:
         Vector<UnlinkedHandlerInfo> m_exceptionHandlers;
 
         // Rare Constants
-        Vector<WriteBarrier<RegExp> > m_regexps;
+        Vector<WriteBarrier<RegExp>> m_regexps;
 
         // Buffers used for large array literals
         Vector<ConstantBuffer> m_constantBuffers;
@@ -589,8 +591,8 @@ public:
         m_varDeclarations.append(std::make_pair(name, isConstant));
     }
 
-    typedef Vector<std::pair<Identifier, bool> > VariableDeclations;
-    typedef Vector<std::pair<Identifier, WriteBarrier<UnlinkedFunctionExecutable> > > FunctionDeclations;
+    typedef Vector<std::pair<Identifier, bool>> VariableDeclations;
+    typedef Vector<std::pair<Identifier, WriteBarrier<UnlinkedFunctionExecutable>> > FunctionDeclations;
 
     const VariableDeclations& variableDeclarations() const { return m_varDeclarations; }
     const FunctionDeclations& functionDeclarations() const { return m_functionDeclarations; }

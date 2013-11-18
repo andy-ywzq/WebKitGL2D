@@ -259,7 +259,7 @@ void CoordinatedGraphicsScene::injectCachedCustomFilterPrograms(const FilterOper
 {
     for (size_t i = 0; i < filters.size(); ++i) {
         FilterOperation* operation = filters.operations().at(i).get();
-        if (operation->getOperationType() != FilterOperation::CUSTOM)
+        if (operation->type() != FilterOperation::CUSTOM)
             continue;
 
         CoordinatedCustomFilterOperation* customOperation = static_cast<CoordinatedCustomFilterOperation*>(operation);
@@ -387,10 +387,10 @@ void CoordinatedGraphicsScene::createLayers(const Vector<CoordinatedLayerID>& id
 
 void CoordinatedGraphicsScene::createLayer(CoordinatedLayerID id)
 {
-    OwnPtr<TextureMapperLayer> newLayer = adoptPtr(new TextureMapperLayer);
+    std::unique_ptr<TextureMapperLayer> newLayer = std::make_unique<TextureMapperLayer>();
     newLayer->setID(id);
     newLayer->setScrollClient(this);
-    m_layers.add(id, newLayer.release());
+    m_layers.add(id, std::move(newLayer));
 }
 
 void CoordinatedGraphicsScene::deleteLayers(const Vector<CoordinatedLayerID>& layerIDs)
@@ -401,7 +401,7 @@ void CoordinatedGraphicsScene::deleteLayers(const Vector<CoordinatedLayerID>& la
 
 void CoordinatedGraphicsScene::deleteLayer(CoordinatedLayerID layerID)
 {
-    OwnPtr<TextureMapperLayer> layer = m_layers.take(layerID);
+    std::unique_ptr<TextureMapperLayer> layer = m_layers.take(layerID);
     ASSERT(layer);
 
     m_backingStores.remove(layer.get());
@@ -668,7 +668,7 @@ void CoordinatedGraphicsScene::ensureRootLayer()
     if (m_rootLayer)
         return;
 
-    m_rootLayer = adoptPtr(new TextureMapperLayer);
+    m_rootLayer = std::make_unique<TextureMapperLayer>();
     m_rootLayer->setMasksToBounds(false);
     m_rootLayer->setDrawsContent(false);
     m_rootLayer->setAnchorPoint(FloatPoint3D(0, 0, 0));
@@ -707,7 +707,7 @@ void CoordinatedGraphicsScene::purgeGLResources()
 #endif
     m_surfaces.clear();
 
-    m_rootLayer.clear();
+    m_rootLayer = nullptr;
     m_rootLayerID = InvalidCoordinatedLayerID;
     m_layers.clear();
     m_fixedLayers.clear();

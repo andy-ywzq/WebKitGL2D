@@ -38,7 +38,7 @@ enum PrintColorAdjust {
 // - StyleDifferenceEqual - The two styles are identical
 // - StyleDifferenceRecompositeLayer - The layer needs its position and transform updated, but no repaint
 // - StyleDifferenceRepaint - The object just needs to be repainted.
-// - StyleDifferenceRepaintIfText - The object needs to be repainted if it contains text.
+// - StyleDifferenceRepaintIfTextOrBorderOrOutline - The object needs to be repainted if it contains text or a border or outline.
 // - StyleDifferenceRepaintLayer - The layer and its descendant layers needs to be repainted.
 // - StyleDifferenceLayoutPositionedMovementOnly - Only the position of this positioned object has been updated
 // - StyleDifferenceSimplifiedLayout - Only overflow needs to be recomputed
@@ -50,7 +50,7 @@ enum StyleDifference {
     StyleDifferenceRecompositeLayer,
 #endif
     StyleDifferenceRepaint,
-    StyleDifferenceRepaintIfText,
+    StyleDifferenceRepaintIfTextOrBorderOrOutline,
     StyleDifferenceRepaintLayer,
     StyleDifferenceLayoutPositionedMovementOnly,
     StyleDifferenceSimplifiedLayout,
@@ -82,6 +82,8 @@ enum PseudoId {
     FIRST_INTERNAL_PSEUDOID = SCROLLBAR_THUMB,
     PUBLIC_PSEUDOID_MASK = ((1 << FIRST_INTERNAL_PSEUDOID) - 1) & ~((1 << FIRST_PUBLIC_PSEUDOID) - 1)
 };
+
+enum ColumnFill { ColumnFillBalance, ColumnFillAuto };
 
 enum ColumnSpan { ColumnSpanNone = 0, ColumnSpanAll };
 
@@ -207,6 +209,11 @@ enum EUserDrag {
 
 enum EUserSelect {
     SELECT_NONE, SELECT_TEXT, SELECT_ALL
+};
+
+// CSS3 Image Values
+enum ObjectFit {
+    ObjectFitFill, ObjectFitContain, ObjectFitCover, ObjectFitNone, ObjectFitScaleDown
 };
 
 // Word Break Values. Matches WinIE, rather than CSS3
@@ -373,6 +380,14 @@ enum TextJustify {
     TextJustifyAuto, TextJustifyNone, TextJustifyInterWord, TextJustifyInterIdeograph, TextJustifyInterCluster, TextJustifyDistribute, TextJustifyKashida
 };
 #endif // CSS3_TEXT
+
+#if ENABLE(CSS3_TEXT_DECORATION)
+enum TextDecorationSkipItems {
+    TextDecorationSkipNone = 0,
+    TextDecorationSkipInk = 1 << 0
+};
+typedef unsigned TextDecorationSkip;
+#endif
 
 enum EPageBreak {
     PBAUTO, PBALWAYS, PBAVOID

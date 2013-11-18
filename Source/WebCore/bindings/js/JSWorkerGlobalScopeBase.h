@@ -45,13 +45,23 @@ namespace WebCore {
 
         DECLARE_INFO;
 
-        WorkerGlobalScope* impl() const { return m_impl.get(); }
+        WorkerGlobalScope& impl() const { return *m_impl; }
         ScriptExecutionContext* scriptExecutionContext() const;
 
         static JSC::Structure* createStructure(JSC::VM& vm, JSC::JSGlobalObject* globalObject, JSC::JSValue prototype)
         {
             return JSC::Structure::create(vm, globalObject, prototype, JSC::TypeInfo(JSC::GlobalObjectType, StructureFlags), info());
         }
+
+        static const JSC::GlobalObjectMethodTable s_globalObjectMethodTable;
+
+        static bool allowsAccessFrom(const JSC::JSGlobalObject*, JSC::ExecState*);
+        static bool supportsProfiling(const JSC::JSGlobalObject*);
+        static bool supportsRichSourceInfo(const JSC::JSGlobalObject*);
+        static bool shouldInterruptScript(const JSC::JSGlobalObject*);
+        static bool shouldInterruptScriptBeforeTimeout(const JSC::JSGlobalObject*);
+        static bool javaScriptExperimentsEnabled(const JSC::JSGlobalObject*);
+        static void queueTaskToEventLoop(const JSC::JSGlobalObject*, JSC::GlobalObjectMethodTable::QueueTaskToEventLoopCallbackFunctionPtr, PassRefPtr<JSC::TaskContext>);
 
     protected:
         JSWorkerGlobalScopeBase(JSC::VM&, JSC::Structure*, PassRefPtr<WorkerGlobalScope>);

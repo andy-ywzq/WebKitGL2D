@@ -32,14 +32,14 @@
 #import "WebKitNSStringExtras.h"
 #import "WebLocalizableStrings.h"
 #import "WebNSDataExtras.h"
-#import "WebNSObjectExtras.h"
 #import "WebSystemInterface.h"
 #import <Foundation/NSURLRequest.h>
-#import <WebCore/KURL.h>
+#import <WebCore/URL.h>
 #import <WebCore/LoaderNSURLExtras.h>
 #import <WebCore/WebCoreNSURLExtras.h>
 #import <WebKitSystemInterface.h>
 #import <wtf/Assertions.h>
+#import <wtf/ObjcRuntimeExtras.h>
 #import <unicode/uchar.h>
 #import <unicode/uscript.h>
 
@@ -127,9 +127,9 @@ using namespace WTF;
         return self;
     }
     
-    // This applies NSURL's concept of canonicalization, but not KURL's concept. It would
+    // This applies NSURL's concept of canonicalization, but not URL's concept. It would
     // make sense to apply both, but when we tried that it caused a performance degradation
-    // (see 5315926). It might make sense to apply only the KURL concept and not the NSURL
+    // (see 5315926). It might make sense to apply only the URL concept and not the NSURL
     // concept, but it's too risky to make that change for WebKit 3.0.
     NSURLRequest *newRequest = [concreteClass canonicalRequestForRequest:request];
     NSURL *newURL = [newRequest URL]; 
@@ -214,8 +214,8 @@ using namespace WTF;
     }
     
     NSURL *result = changed
-        ? (NSURL *)WebCFAutorelease(CFURLCreateAbsoluteURLWithBytes(NULL, buffer, bytesFilled, kCFStringEncodingUTF8, nil, YES))
-        : (NSURL *)self;
+        ? CFBridgingRelease(CFURLCreateAbsoluteURLWithBytes(NULL, buffer, bytesFilled, kCFStringEncodingUTF8, nil, YES))
+        : self;
 
     if (buffer != static_buffer) {
         free(buffer);

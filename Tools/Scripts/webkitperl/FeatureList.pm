@@ -52,6 +52,7 @@ my (
     $cspNextSupport,
     $css3ConditionalRulesSupport,
     $css3TextSupport,
+    $css3TextDecorationSupport,
     $css3TextLineBreakSupport,
     $css4ImagesSupport,
     $cssBoxDecorationBreakSupport,
@@ -73,11 +74,9 @@ my (
     $datalistElementSupport,
     $detailsElementSupport,
     $deviceOrientationSupport,
-    $dialogElementSupport,
     $directoryUploadSupport,
     $dom4EventsConstructor,
     $downloadAttributeSupport,
-    $fileSystemSupport,
     $filtersSupport,
     $fontLoadEventsSupport,
     $ftpDirSupport,
@@ -120,6 +119,7 @@ my (
     $pageVisibilityAPISupport,
     $performanceTimelineSupport,
     $progressElementSupport,
+    $promiseSupport,
     $proximityEventsSupport,
     $quotaSupport,
     $resolutionMediaQuerySupport,
@@ -149,6 +149,7 @@ my (
     $videoSupport,
     $videoTrackSupport,
     $webglSupport,
+    $webAnimationSupport,
     $webAudioSupport,
     $webSocketsSupport,
     $webTimingSupport,
@@ -201,6 +202,9 @@ my @features = (
     { option => "css3-text", desc => "Toggle CSS3 Text support",
       define => "ENABLE_CSS3_TEXT", default => (isEfl() || isGtk()), value => \$css3TextSupport },
 
+    { option => "css3-text-decoration", desc => "Toggle CSS3 Text Decoration support",
+      define => "ENABLE_CSS3_TEXT_DECORATION", default => 1, value => \$css3TextDecorationSupport },
+
     { option => "css3-text-line-break", desc => "Toggle CSS3 Text Line Break support",
       define => "ENABLE_CSS3_TEXT_LINE_BREAK", default => 0, value => \$css3TextLineBreakSupport },
 
@@ -208,7 +212,7 @@ my @features = (
       define => "ENABLE_CSS_BOX_DECORATION_BREAK", default => 1, value => \$cssBoxDecorationBreakSupport },
 
     { option => "css-image-orientation", desc => "Toggle CSS image-orientation support",
-      define => "ENABLE_CSS_IMAGE_ORIENTATION", default => isGtk(), value => \$cssImageOrientationSupport },
+      define => "ENABLE_CSS_IMAGE_ORIENTATION", default => 0, value => \$cssImageOrientationSupport },
 
     { option => "css-image-resolution", desc => "Toggle CSS image-resolution support",
       define => "ENABLE_CSS_IMAGE_RESOLUTION", default => (isBlackBerry() || isGtk()), value => \$cssImageResolutionSupport },
@@ -249,9 +253,6 @@ my @features = (
     { option => "device-orientation", desc => "Toggle Device Orientation support",
       define => "ENABLE_DEVICE_ORIENTATION", default => isBlackBerry(), value => \$deviceOrientationSupport },
 
-    { option => "dialog-element", desc => "Toggle Dialog Element support",
-      define => "ENABLE_DIALOG_ELEMENT", default => 0, value => \$dialogElementSupport },
-
     { option => "directory-upload", desc => "Toggle Directory Upload support",
       define => "ENABLE_DIRECTORY_UPLOAD", default => 0, value => \$directoryUploadSupport },
 
@@ -260,9 +261,6 @@ my @features = (
 
     { option => "download-attribute", desc => "Toggle Download Attribute support",
       define => "ENABLE_DOWNLOAD_ATTRIBUTE", default => (isBlackBerry() || isEfl()), value => \$downloadAttributeSupport },
-
-    { option => "file-system", desc => "Toggle File System support",
-      define => "ENABLE_FILE_SYSTEM", default => isBlackBerry(), value => \$fileSystemSupport },
 
     { option => "filters", desc => "Toggle Filters support",
       define => "ENABLE_FILTERS", default => (isAppleWebKit() || isGtk() || isEfl() || isBlackBerry()), value => \$filtersSupport },
@@ -352,7 +350,7 @@ my @features = (
       define => "ENABLE_MEDIA_STATISTICS", default => 0, value => \$mediaStatisticsSupport },
 
     { option => "media-stream", desc => "Toggle Media Stream support",
-      define => "ENABLE_MEDIA_STREAM", default => isBlackBerry(), value => \$mediaStreamSupport },
+      define => "ENABLE_MEDIA_STREAM", default => (isBlackBerry() || isGtk()), value => \$mediaStreamSupport },
 
     { option => "meter-element", desc => "Toggle Meter Element support",
       define => "ENABLE_METER_ELEMENT", default => !isAppleWinWebKit(), value => \$meterElementSupport },
@@ -390,6 +388,9 @@ my @features = (
     { option => "progress-element", desc => "Toggle Progress Element support",
       define => "ENABLE_PROGRESS_ELEMENT", default => 1, value => \$progressElementSupport },
 
+    { option => "promises", desc => "Toggle Promise support",
+      define => "ENABLE_PROMISE", default => 1, value => \$promiseSupport },
+
     { option => "proximity-events", desc => "Toggle Proximity Events support",
       define => "ENABLE_PROXIMITY_EVENTS", default => 0, value => \$proximityEventsSupport },
 
@@ -419,9 +420,6 @@ my @features = (
 
     { option => "sql-database", desc => "Toggle SQL Database support",
       define => "ENABLE_SQL_DATABASE", default => 1, value => \$sqlDatabaseSupport },
-
-    { option => "style-scoped", desc => "Toggle Style Scoped support",
-      define => "ENABLE_STYLE_SCOPED", default => (isBlackBerry() || isGtk()), value => \$styleScopedSupport },
 
     { option => "suid-linux-sandbox", desc => "Toggle suid sandbox for linux",
       define => "ENABLE_SUID_SANDBOX_LINUX", default => 0, value => \$suidLinuxSandbox },
@@ -470,6 +468,9 @@ my @features = (
 
     { option => "webgl", desc => "Toggle WebGL support",
       define => "ENABLE_WEBGL", default => (isAppleMacWebKit() || isGtk() || isEfl()), value => \$webglSupport },
+
+    { option => "web-animations", desc => "Toggle Web Animation support",
+      define => "ENABLE_WEB_ANIMATION", default => 0, value => \$webAnimationSupport },
 
     { option => "web-audio", desc => "Toggle Web Audio support",
       define => "ENABLE_WEB_AUDIO", default => (isEfl() || isGtk()), value => \$webAudioSupport },

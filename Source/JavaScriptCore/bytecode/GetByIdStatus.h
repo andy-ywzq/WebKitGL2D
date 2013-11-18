@@ -29,7 +29,7 @@
 #include "IntendedStructureChain.h"
 #include "PropertyOffset.h"
 #include "StructureSet.h"
-#include <wtf/NotFound.h>
+#include "StructureStubInfo.h"
 
 namespace JSC {
 
@@ -60,7 +60,7 @@ public:
     
     GetByIdStatus(
         State state, bool wasSeenInJIT, const StructureSet& structureSet = StructureSet(),
-        PropertyOffset offset = invalidOffset, JSValue specificValue = JSValue(), PassRefPtr<IntendedStructureChain> chain = 0)
+        PropertyOffset offset = invalidOffset, JSValue specificValue = JSValue(), PassRefPtr<IntendedStructureChain> chain = nullptr)
         : m_state(state)
         , m_structureSet(structureSet)
         , m_chain(chain)
@@ -71,7 +71,7 @@ public:
         ASSERT((state == Simple) == (offset != invalidOffset));
     }
     
-    static GetByIdStatus computeFor(CodeBlock*, unsigned bytecodeIndex, StringImpl* uid);
+    static GetByIdStatus computeFor(CodeBlock*, StubInfoMap&, unsigned bytecodeIndex, StringImpl* uid);
     static GetByIdStatus computeFor(VM&, Structure*, StringImpl* uid);
     
     State state() const { return m_state; }

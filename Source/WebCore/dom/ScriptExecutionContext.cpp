@@ -38,6 +38,7 @@
 #include "WorkerGlobalScope.h"
 #include "WorkerThread.h"
 #include <wtf/MainThread.h>
+#include <wtf/Ref.h>
 
 // FIXME: This is a layering violation.
 #include "JSDOMWindow.h"
@@ -123,7 +124,7 @@ void ScriptExecutionContext::processMessagePortMessagesSoon()
 
 void ScriptExecutionContext::dispatchMessagePortEvents()
 {
-    RefPtr<ScriptExecutionContext> protect(this);
+    Ref<ScriptExecutionContext> protect(*this);
 
     // Make a frozen copy.
     Vector<MessagePort*> ports;
@@ -279,7 +280,7 @@ void ScriptExecutionContext::closeMessagePorts() {
 
 bool ScriptExecutionContext::sanitizeScriptError(String& errorMessage, int& lineNumber, int& columnNumber, String& sourceURL, CachedScript* cachedScript)
 {
-    KURL targetURL = completeURL(sourceURL);
+    URL targetURL = completeURL(sourceURL);
     if (securityOrigin()->canRequest(targetURL) || (cachedScript && cachedScript->passesAccessControlCheck(securityOrigin())))
         return false;
     errorMessage = "Script error.";
@@ -293,7 +294,7 @@ void ScriptExecutionContext::reportException(const String& errorMessage, int lin
 {
     if (m_inDispatchErrorEvent) {
         if (!m_pendingExceptions)
-            m_pendingExceptions = adoptPtr(new Vector<OwnPtr<PendingException> >());
+            m_pendingExceptions = adoptPtr(new Vector<OwnPtr<PendingException>>());
         m_pendingExceptions->append(adoptPtr(new PendingException(errorMessage, lineNumber, columnNumber, sourceURL, callStack)));
         return;
     }
@@ -312,7 +313,7 @@ void ScriptExecutionContext::reportException(const String& errorMessage, int lin
     m_pendingExceptions.clear();
 }
 
-void ScriptExecutionContext::addConsoleMessage(MessageSource source, MessageLevel level, const String& message, const String& sourceURL, unsigned lineNumber, unsigned columnNumber, ScriptState* state, unsigned long requestIdentifier)
+void ScriptExecutionContext::addConsoleMessage(MessageSource source, MessageLevel level, const String& message, const String& sourceURL, unsigned lineNumber, unsigned columnNumber, JSC::ExecState* state, unsigned long requestIdentifier)
 {
     addMessage(source, level, message, sourceURL, lineNumber, columnNumber, 0, state, requestIdentifier);
 }

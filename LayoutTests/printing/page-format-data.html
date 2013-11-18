@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head id="head_element">
-<script src="../fast/js/resources/js-test-pre.js"></script>
+<script src="../resources/js-test-pre.js"></script>
 <style>
 </style>
 </head>
@@ -39,23 +39,23 @@
         // Page box visibility tests.
 
         debug("Test default visibility");
-        shouldBe("internals.isPageBoxVisible(document, 0)", "true");
+        shouldBe("internals.isPageBoxVisible(0)", "true");
 
         debug("Test display: none. display property doesn't apply to @page");
         appendStyle("@page {display:none;}");
-        shouldBe("internals.isPageBoxVisible(document, 0)", "true");
+        shouldBe("internals.isPageBoxVisible(0)", "true");
 
         debug("Test display: inline. display property doesn't apply to @page");
         appendStyle("@page {display:inline;}");
-        shouldBe("internals.isPageBoxVisible(document, 0)", "true");
+        shouldBe("internals.isPageBoxVisible(0)", "true");
 
         debug("Test visibility: hidden");
         appendStyle("@page {visibility:hidden;}");
-        shouldBe("internals.isPageBoxVisible(document, 0)", "false");
+        shouldBe("internals.isPageBoxVisible(0)", "false");
 
         debug("Test visibility: visible");
         appendStyle("@page {visibility:visible;}");
-        shouldBe("internals.isPageBoxVisible(document, 0)", "true");
+        shouldBe("internals.isPageBoxVisible(0)", "true");
 
         debug("");
 
@@ -192,6 +192,6 @@
         testFailed("This test can be run only with window.testRunner");
     }
 </script>
-<script src="../fast/js/resources/js-test-post.js"></script>
+<script src="../resources/js-test-post.js"></script>
 </body>
 </html>

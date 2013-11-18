@@ -31,22 +31,21 @@ namespace WebCore {
 class SVGGElement FINAL : public SVGGraphicsElement,
                           public SVGExternalResourcesRequired {
 public:
-    static PassRefPtr<SVGGElement> create(const QualifiedName&, Document*);
-
-protected:
-    SVGGElement(const QualifiedName&, Document*, ConstructionType = CreateSVGElement);
-
-    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
+    static PassRefPtr<SVGGElement> create(const QualifiedName&, Document&);
 
 private:
-    virtual bool isValid() const { return SVGTests::isValid(); }
+    SVGGElement(const QualifiedName&, Document&);
+
+    virtual RenderElement* createRenderer(PassRef<RenderStyle>) OVERRIDE;
+
+    virtual bool isValid() const OVERRIDE { return SVGTests::isValid(); }
     virtual bool supportsFocus() const OVERRIDE { return true; }
 
     bool isSupportedAttribute(const QualifiedName&);
     virtual void parseAttribute(const QualifiedName&, const AtomicString&) OVERRIDE;
-    virtual void svgAttributeChanged(const QualifiedName&);
+    virtual void svgAttributeChanged(const QualifiedName&) OVERRIDE;
 
-    virtual bool rendererIsNeeded(const RenderStyle&);
+    virtual bool rendererIsNeeded(const RenderStyle&) OVERRIDE;
 
     BEGIN_DECLARE_ANIMATED_PROPERTIES(SVGGElement)
         DECLARE_ANIMATED_BOOLEAN(ExternalResourcesRequired, externalResourcesRequired)

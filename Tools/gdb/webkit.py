@@ -46,7 +46,7 @@ def guess_string_length(ptr):
     Returns a tuple of (length, an error message).
     """
     # Try to guess at the length.
-    for i in xrange(0, 2048):
+    for i in range(0, 2048):
         try:
             if int((ptr + i).dereference()) == 0:
                 return i, ''
@@ -66,7 +66,7 @@ def ustring_to_string(ptr, length=None):
         length, error_message = guess_string_length(ptr)
     else:
         length = int(length)
-    char_vals = [int((ptr + i).dereference()) for i in xrange(length)]
+    char_vals = [int((ptr + i).dereference()) for i in range(length)]
     string = struct.pack('H' * length, *char_vals).decode('utf-16', 'replace').encode('utf-8')
     return string + error_message
 
@@ -81,7 +81,7 @@ def lstring_to_string(ptr, length=None):
         length, error_message = guess_string_length(ptr)
     else:
         length = int(length)
-    string = ''.join([chr((ptr + i).dereference()) for i in xrange(length)])
+    string = ''.join([chr((ptr + i).dereference()) for i in range(length)])
     return string + error_message
 
 
@@ -118,7 +118,7 @@ class WTFCStringPrinter(StringPrinter):
         # The CString holds a buffer, which is a refptr to a WTF::CStringBuffer.
         data = self.val['m_buffer']['m_ptr']['m_data'].cast(gdb.lookup_type('char').pointer())
         length = self.val['m_buffer']['m_ptr']['m_length']
-        return ''.join([chr((data + i).dereference()) for i in xrange(length)])
+        return ''.join([chr((data + i).dereference()) for i in range(length)])
 
 
 class WTFStringImplPrinter(StringPrinter):
@@ -165,12 +165,6 @@ class JSCJSStringPrinter(StringPrinter):
             return ''
 
         return WTFStringImplPrinter(self.val['m_value']).to_string()
-
-
-class WebCoreKURLGooglePrivatePrinter(StringPrinter):
-    "Print a WebCore::KURLGooglePrivate"
-    def to_string(self):
-        return WTFCStringPrinter(self.val['m_utf8']).to_string()
 
 
 class WebCoreQualifiedNamePrinter(StringPrinter):
@@ -278,7 +272,6 @@ def add_pretty_printers():
         (re.compile("^WTF::CString$"), WTFCStringPrinter),
         (re.compile("^WTF::String$"), WTFStringPrinter),
         (re.compile("^WTF::StringImpl$"), WTFStringImplPrinter),
-        (re.compile("^WebCore::KURLGooglePrivate$"), WebCoreKURLGooglePrivatePrinter),
         (re.compile("^WebCore::QualifiedName$"), WebCoreQualifiedNamePrinter),
         (re.compile("^JSC::Identifier$"), JSCIdentifierPrinter),
         (re.compile("^JSC::JSString$"), JSCJSStringPrinter),
@@ -327,7 +320,7 @@ class PrintPathToRootCommand(gdb.Command):
         try:
             val = gdb.Frame.read_var(frame, arg)
         except:
-            print "No such variable, or invalid type"
+            print("No such variable, or invalid type")
             return
 
         target_type = str(val.type.target().strip_typedefs())
@@ -341,10 +334,10 @@ class PrintPathToRootCommand(gdb.Command):
             padding = ''
             while len(stack) > 0:
                 pair = stack.pop()
-                print padding, pair[1], pair[0]
+                print(padding, pair[1], pair[0])
                 padding = padding + '  '
         else:
-            print 'Sorry: I don\'t know how to deal with %s yet.' % target_type
+            print('Sorry: I don\'t know how to deal with %s yet.' % target_type)
 
 
 PrintPathToRootCommand()

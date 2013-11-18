@@ -33,6 +33,7 @@
 #include "DFGJITCode.h"
 #include "DFGOSRExitPreparation.h"
 #include "LinkBuffer.h"
+#include "OperandsInlines.h"
 #include "Operations.h"
 #include "RepatchBuffer.h"
 #include <wtf/StringPrintStream.h>
@@ -52,6 +53,10 @@ void compileOSRExit(ExecState* exec)
     
     VM* vm = &exec->vm();
     
+    // It's sort of preferable that we don't GC while in here. Anyways, doing so wouldn't
+    // really be profitable.
+    DeferGCForAWhile deferGC(vm->heap);
+
     uint32_t exitIndex = vm->osrExitIndex;
     OSRExit& exit = codeBlock->jitCode()->dfg()->osrExit[exitIndex];
     
@@ -90,8 +95,7 @@ void compileOSRExit(ExecState* exec)
             
             Profiler::OSRExit* profilerExit = compilation->addOSRExit(
                 exitIndex, Profiler::OriginStack(database, codeBlock, exit.m_codeOrigin),
-                exit.m_kind,
-                exit.m_watchpointIndex != std::numeric_limits<unsigned>::max());
+                exit.m_kind, isWatchpoint(exit.m_kind));
             jit.add64(CCallHelpers::TrustedImm32(1), CCallHelpers::AbsoluteAddress(profilerExit->counterAddress()));
         }
         
@@ -101,9 +105,10 @@ void compileOSRExit(ExecState* exec)
         exit.m_code = FINALIZE_CODE_IF(
             shouldShowDisassembly(),
             patchBuffer,
-            ("DFG OSR exit #%u (%s, %s) from %s",
+            ("DFG OSR exit #%u (%s, %s) from %s, with operands = %s",
                 exitIndex, toCString(exit.m_codeOrigin).data(),
-                exitKindToString(exit.m_kind), toCString(*codeBlock).data()));
+                exitKindToString(exit.m_kind), toCString(*codeBlock).data(),
+                toCString(ignoringContext<DumpContext>(operands)).data()));
     }
     
     {

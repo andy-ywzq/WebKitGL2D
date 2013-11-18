@@ -76,10 +76,13 @@ public:
     PassOwnPtr<PurgeableBuffer> releasePurgeableBuffer();
 
 #if PLATFORM(MAC)
-    NSData *createNSData();
+    SharedBuffer::NSDataRetainPtrWithoutImplicitConversionOperator createNSData();
 #endif
 #if USE(CF)
-    CFDataRef createCFData();
+    RetainPtr<CFDataRef> createCFData();
+#endif
+#if ENABLE(DISK_IMAGE_CACHE)
+    bool isUsingDiskImageCache() const;
 #endif
 
 protected:

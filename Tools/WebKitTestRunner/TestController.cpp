@@ -26,6 +26,7 @@
 #include "config.h"
 #include "TestController.h"
 
+#include "EventSenderProxy.h"
 #include "PlatformWebView.h"
 #include "StringFunctions.h"
 #include "TestInvocation.h"
@@ -52,10 +53,6 @@
 
 #if PLATFORM(MAC)
 #include <WebKit2/WKPagePrivateMac.h>
-#endif
-
-#if PLATFORM(MAC) || PLATFORM(QT) || PLATFORM(GTK) || PLATFORM(EFL) || PLATFORM(NIX)
-#include "EventSenderProxy.h"
 #endif
 
 #if !PLATFORM(MAC)
@@ -146,10 +143,16 @@ static bool runBeforeUnloadConfirmPanel(WKPageRef page, WKStringRef message, WKF
     return TestController::shared().beforeUnloadReturnValue();
 }
 
-static unsigned long long exceededDatabaseQuota(WKPageRef, WKFrameRef, WKSecurityOriginRef, WKStringRef, WKStringRef, unsigned long long, unsigned long long, unsigned long long, unsigned long long, const void*)
+static unsigned long long exceededDatabaseQuota(WKPageRef, WKFrameRef, WKSecurityOriginRef, WKStringRef, WKStringRef, unsigned long long, unsigned long long, unsigned long long, unsigned long long expectedUsage, const void*)
 {
     static const unsigned long long defaultQuota = 5 * 1024 * 1024;
-    return defaultQuota;
+    static const unsigned long long maxQuota = 10 * 1024 * 1024;
+    unsigned long long newQuota = defaultQuota;
+    if (defaultQuota < expectedUsage && expectedUsage <= maxQuota) {
+        newQuota = expectedUsage;
+        printf("UI DELEGATE DATABASE CALLBACK: increased quota to %llu\n", newQuota);
+    }
+    return newQuota;
 }
 
 
@@ -361,11 +364,7 @@ void TestController::initialize(int argc, const char* argv[])
 
         // WebCore::pathByAppendingComponent is not used here because of the namespace,
         // which leads us to this ugly #ifdef and file path concatenation.
-#if OS(WINDOWS)
-        const char separator = '\\';
-#else
         const char separator = '/';
-#endif
 
         WKContextSetApplicationCacheDirectory(m_context.get(), toWK(temporaryFolder + separator + "ApplicationCache").get());
         WKContextSetDatabaseDirectory(m_context.get(), toWK(temporaryFolder + separator + "Databases").get());
@@ -546,9 +545,7 @@ bool TestController::resetStateToConsistentValues()
     // FIXME: This function should also ensure that there is only one page open.
 
     // Reset the EventSender for each test.
-#if PLATFORM(MAC) || PLATFORM(QT) || PLATFORM(GTK) || PLATFORM(EFL) || PLATFORM(NIX)
     m_eventSenderProxy = adoptPtr(new EventSenderProxy(this));
-#endif
 
     // Reset preferences
     WKPreferencesRef preferences = WKPageGroupGetPreferences(m_pageGroup.get());
@@ -575,7 +572,6 @@ bool TestController::resetStateToConsistentValues()
     WKPreferencesSetInteractiveFormValidationEnabled(preferences, true);
     WKPreferencesSetMockScrollbarsEnabled(preferences, true);
 
-#if !PLATFORM(QT)
     static WKStringRef standardFontFamily = WKStringCreateWithUTF8CString("Times");
     static WKStringRef cursiveFontFamily = WKStringCreateWithUTF8CString("Apple Chancery");
     static WKStringRef fantasyFontFamily = WKStringCreateWithUTF8CString("Papyrus");
@@ -591,9 +587,7 @@ bool TestController::resetStateToConsistentValues()
     WKPreferencesSetPictographFontFamily(preferences, pictographFontFamily);
     WKPreferencesSetSansSerifFontFamily(preferences, sansSerifFontFamily);
     WKPreferencesSetSerifFontFamily(preferences, serifFontFamily);
-#endif
     WKPreferencesSetScreenFontSubstitutionEnabled(preferences, true);
-    WKPreferencesSetInspectorUsesWebKitUserInterface(preferences, true);
     WKPreferencesSetAsynchronousSpellCheckingEnabled(preferences, false);
 #if !PLATFORM(MAC)
     WKTextCheckerContinuousSpellCheckingEnabledStateChanged(true);
@@ -834,7 +828,6 @@ void TestController::didReceiveKeyDownMessageFromInjectedBundle(WKDictionaryRef 
 
 void TestController::didReceiveMessageFromInjectedBundle(WKStringRef messageName, WKTypeRef messageBody)
 {
-#if PLATFORM(MAC) || PLATFORM(QT) || PLATFORM(GTK) || PLATFORM(EFL)
     if (WKStringIsEqualToUTF8CString(messageName, "EventSender")) {
         ASSERT(WKGetTypeID(messageBody) == WKDictionaryGetTypeID());
         WKDictionaryRef messageBodyDictionary = static_cast<WKDictionaryRef>(messageBody);
@@ -867,7 +860,6 @@ void TestController::didReceiveMessageFromInjectedBundle(WKStringRef messageName
 
         ASSERT_NOT_REACHED();
     }
-#endif
 
     if (!m_currentInvocation)
         return;
@@ -877,7 +869,6 @@ void TestController::didReceiveMessageFromInjectedBundle(WKStringRef messageName
 
 WKRetainPtr<WKTypeRef> TestController::didReceiveSynchronousMessageFromInjectedBundle(WKStringRef messageName, WKTypeRef messageBody)
 {
-#if PLATFORM(MAC) || PLATFORM(QT) || PLATFORM(GTK) || PLATFORM(EFL) || PLATFORM(NIX)
     if (WKStringIsEqualToUTF8CString(messageName, "EventSender")) {
         ASSERT(WKGetTypeID(messageBody) == WKDictionaryGetTypeID());
         WKDictionaryRef messageBodyDictionary = static_cast<WKDictionaryRef>(messageBody);
@@ -1058,7 +1049,6 @@ WKRetainPtr<WKTypeRef> TestController::didReceiveSynchronousMessageFromInjectedB
 #endif
         ASSERT_NOT_REACHED();
     }
-#endif
     return m_currentInvocation->didReceiveSynchronousMessageFromInjectedBundle(messageName, messageBody);
 }
 

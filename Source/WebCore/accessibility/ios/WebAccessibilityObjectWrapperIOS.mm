@@ -276,6 +276,8 @@ static AccessibilityObjectWrapper* AccessibilityUnignoredAncestor(AccessibilityO
     case ListBoxOptionRole:
     case MenuButtonRole:
     case MenuItemRole:
+    case MenuItemCheckboxRole:
+    case MenuItemRadioRole:
     case PopUpButtonRole:
     case RadioButtonRole:
     case ScrollBarRole:
@@ -548,6 +550,8 @@ static AccessibilityObjectWrapper* AccessibilityUnignoredAncestor(AccessibilityO
             break;
         case MenuButtonRole:
         case MenuItemRole:
+        case MenuItemCheckboxRole:
+        case MenuItemRadioRole:
             traits |= [self _axMenuItemTrait];
             break;
         default:
@@ -975,7 +979,7 @@ static void appendStringToResult(NSMutableString *result, NSString *string)
     if (![self _prepareAccessibilityCall])
         return nil;
     
-    KURL url = m_object->url();
+    URL url = m_object->url();
     if (url.isNull())
         return nil;
     return (NSURL*)url;
@@ -1273,7 +1277,7 @@ static RenderObject* rendererForView(WAKView* view)
     if (!renderer)
         return nil;
     
-    AccessibilityObject* obj = renderer->document()->axObjectCache()->getOrCreate(renderer);
+    AccessibilityObject* obj = renderer->document().axObjectCache()->getOrCreate(renderer);
     if (obj)
         return obj->parentObjectUnignored()->wrapper();
     return nil;
@@ -1466,7 +1470,7 @@ static void AXAttributeStringSetHeadingLevel(NSMutableAttributedString* attrStri
     if (!renderer)
         return;
     
-    AccessibilityObject* parentObject = renderer->document()->axObjectCache()->getOrCreate(renderer->parent());
+    AccessibilityObject* parentObject = renderer->document().axObjectCache()->getOrCreate(renderer->parent());
     int parentHeadingLevel = parentObject->headingLevel();
     
     if (parentHeadingLevel)
@@ -2021,6 +2025,14 @@ static void AXAttributedStringAppendText(NSMutableAttributedString* attrString, 
         return nil;
     
     return m_object->ariaLiveRegionAtomic();
+}
+
+- (BOOL)accessibilityIsExpanded
+{
+    if (![self _prepareAccessibilityCall])
+        return NO;
+
+    return m_object->isExpanded();
 }
 
 - (NSString *)accessibilityInvalidStatus

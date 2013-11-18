@@ -43,7 +43,7 @@
 #include "InspectorState.h"
 #include "InspectorValues.h"
 #include "InstrumentingAgents.h"
-#include "KURL.h"
+#include "URL.h"
 #include "Page.h"
 #include "PageScriptDebugServer.h"
 #include "ScriptHeapSnapshot.h"
@@ -138,7 +138,6 @@ InspectorProfilerAgent::InspectorProfilerAgent(InstrumentingAgents* instrumentin
     , m_nextUserInitiatedProfileNumber(1)
     , m_nextUserInitiatedHeapSnapshotNumber(1)
     , m_profileNameIdleTimeMap(ScriptProfiler::currentProfileNameIdleTimeMap())
-    , m_previousTaskEndTime(0.0)
 {
     m_instrumentingAgents->setInspectorProfilerAgent(this);
 }
@@ -252,7 +251,7 @@ String InspectorProfilerAgent::getCurrentUserInitiatedProfileName(bool increment
     return makeString(UserInitiatedProfileName, '.', String::number(m_currentUserInitiatedProfileNumber));
 }
 
-void InspectorProfilerAgent::getProfileHeaders(ErrorString*, RefPtr<TypeBuilder::Array<TypeBuilder::Profiler::ProfileHeader> >& headers)
+void InspectorProfilerAgent::getProfileHeaders(ErrorString*, RefPtr<TypeBuilder::Array<TypeBuilder::Profiler::ProfileHeader>>& headers)
 {
     m_state->setBoolean(ProfilerAgentState::profileHeadersRequested, true);
     headers = TypeBuilder::Array<TypeBuilder::Profiler::ProfileHeader>::create();
@@ -311,13 +310,10 @@ void InspectorProfilerAgent::getHeapSnapshot(ErrorString* errorString, int rawUi
 void InspectorProfilerAgent::removeProfile(ErrorString*, const String& type, int rawUid)
 {
     unsigned uid = static_cast<unsigned>(rawUid);
-    if (type == CPUProfileType) {
-        if (m_profiles.contains(uid))
-            m_profiles.remove(uid);
-    } else if (type == HeapProfileType) {
-        if (m_snapshots.contains(uid))
-            m_snapshots.remove(uid);
-    }
+    if (type == CPUProfileType)
+        m_profiles.remove(uid);
+    else if (type == HeapProfileType)
+        m_snapshots.remove(uid);
 }
 
 void InspectorProfilerAgent::resetState()
@@ -482,27 +478,6 @@ void InspectorProfilerAgent::getHeapObjectId(ErrorString* errorString, const Str
     }
     unsigned id = ScriptProfiler::getHeapObjectId(value);
     *heapSnapshotObjectId = String::number(id);
-}
-
-void InspectorProfilerAgent::willProcessTask()
-{
-    if (!m_profileNameIdleTimeMap || !m_profileNameIdleTimeMap->size())
-        return;
-    if (!m_previousTaskEndTime)
-        return;
-
-    double idleTime = monotonicallyIncreasingTime() - m_previousTaskEndTime;
-    m_previousTaskEndTime = 0.0;
-    ProfileNameIdleTimeMap::iterator end = m_profileNameIdleTimeMap->end();
-    for (ProfileNameIdleTimeMap::iterator it = m_profileNameIdleTimeMap->begin(); it != end; ++it)
-        it->value += idleTime;
-}
-
-void InspectorProfilerAgent::didProcessTask()
-{
-    if (!m_profileNameIdleTimeMap || !m_profileNameIdleTimeMap->size())
-        return;
-    m_previousTaskEndTime = monotonicallyIncreasingTime();
 }
 
 } // namespace WebCore

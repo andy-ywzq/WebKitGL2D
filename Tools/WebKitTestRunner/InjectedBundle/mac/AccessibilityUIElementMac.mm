@@ -57,6 +57,15 @@
 #define NSAccessibilityPathAttribute @"AXPath"
 #endif
 
+// Text
+#ifndef NSAccessibilityEndTextMarkerForBoundsParameterizedAttribute
+#define NSAccessibilityEndTextMarkerForBoundsParameterizedAttribute @"AXEndTextMarkerForBounds"
+#endif
+
+#ifndef NSAccessibilityStartTextMarkerForBoundsParameterizedAttribute
+#define NSAccessibilityStartTextMarkerForBoundsParameterizedAttribute @"AXStartTextMarkerForBounds"
+#endif
+
 typedef void (*AXPostedNotificationCallback)(id element, NSString* notification, void* context);
 
 @interface NSObject (WebKitAccessibilityAdditions)
@@ -669,9 +678,9 @@ JSRetainPtr<JSStringRef> AccessibilityUIElement::valueDescription()
     BEGIN_AX_OBJC_EXCEPTIONS
     NSString* valueDescription = [m_element accessibilityAttributeValue:NSAccessibilityValueDescriptionAttribute];
     if ([valueDescription isKindOfClass:[NSString class]])
-         return [valueDescription createJSStringRef];
-
+        return concatenateAttributeAndValue(@"AXValueDescription", valueDescription);
     END_AX_OBJC_EXCEPTIONS
+    
     return 0;
 }
 
@@ -780,6 +789,27 @@ int AccessibilityUIElement::hierarchicalLevel() const
         return [value intValue];
     END_AX_OBJC_EXCEPTIONS
 
+    return 0;
+}
+    
+JSRetainPtr<JSStringRef> AccessibilityUIElement::classList() const
+{
+    BEGIN_AX_OBJC_EXCEPTIONS
+    id value = [m_element accessibilityAttributeValue:@"AXDOMClassList"];
+    if (![value isKindOfClass:[NSArray class]])
+        return 0;
+    
+    NSMutableString* classList = [NSMutableString string];
+    NSInteger length = [value count];
+    for (NSInteger k = 0; k < length; ++k) {
+        [classList appendString:[value objectAtIndex:k]];
+        if (k < length - 1)
+            [classList appendString:@", "];
+    }
+    
+    return [classList createJSStringRef];
+    END_AX_OBJC_EXCEPTIONS
+    
     return 0;
 }
 
@@ -1426,6 +1456,26 @@ PassRefPtr<AccessibilityTextMarker> AccessibilityUIElement::endTextMarkerForText
     END_AX_OBJC_EXCEPTIONS
     
     return 0;    
+}
+
+PassRefPtr<AccessibilityTextMarker> AccessibilityUIElement::endTextMarkerForBounds(int x, int y, int width, int height)
+{
+    BEGIN_AX_OBJC_EXCEPTIONS
+    id textMarker = [m_element accessibilityAttributeValue:NSAccessibilityEndTextMarkerForBoundsParameterizedAttribute forParameter:[NSValue valueWithRect:NSMakeRect(x, y, width, height)]];
+    return AccessibilityTextMarker::create(textMarker);
+    END_AX_OBJC_EXCEPTIONS
+    
+    return 0;
+}
+
+PassRefPtr<AccessibilityTextMarker> AccessibilityUIElement::startTextMarkerForBounds(int x, int y, int width, int height)
+{
+    BEGIN_AX_OBJC_EXCEPTIONS
+    id textMarker = [m_element accessibilityAttributeValue:NSAccessibilityStartTextMarkerForBoundsParameterizedAttribute forParameter:[NSValue valueWithRect:NSMakeRect(x, y, width, height)]];
+    return AccessibilityTextMarker::create(textMarker);
+    END_AX_OBJC_EXCEPTIONS
+    
+    return 0;
 }
 
 PassRefPtr<AccessibilityTextMarker> AccessibilityUIElement::textMarkerForPoint(int x, int y)

@@ -34,7 +34,7 @@
 
 namespace WebCore {
 
-inline SVGStyleElement::SVGStyleElement(const QualifiedName& tagName, Document* document, bool createdByParser)
+inline SVGStyleElement::SVGStyleElement(const QualifiedName& tagName, Document& document, bool createdByParser)
     : SVGElement(tagName, document)
     , m_styleSheetOwner(document, createdByParser)
     , m_svgLoadEventTimer(this, &SVGElement::svgLoadEventTimerFired)
@@ -44,10 +44,10 @@ inline SVGStyleElement::SVGStyleElement(const QualifiedName& tagName, Document* 
 
 SVGStyleElement::~SVGStyleElement()
 {
-    m_styleSheetOwner.clearDocumentData(document(), this);
+    m_styleSheetOwner.clearDocumentData(document(), *this);
 }
 
-PassRefPtr<SVGStyleElement> SVGStyleElement::create(const QualifiedName& tagName, Document* document, bool createdByParser)
+PassRefPtr<SVGStyleElement> SVGStyleElement::create(const QualifiedName& tagName, Document& document, bool createdByParser)
 {
     return adoptRef(new SVGStyleElement(tagName, document, createdByParser));
 }
@@ -136,29 +136,29 @@ void SVGStyleElement::parseAttribute(const QualifiedName& name, const AtomicStri
 
 void SVGStyleElement::finishParsingChildren()
 {
-    m_styleSheetOwner.finishParsingChildren(this);
+    m_styleSheetOwner.finishParsingChildren(*this);
     SVGElement::finishParsingChildren();
 }
 
-Node::InsertionNotificationRequest SVGStyleElement::insertedInto(ContainerNode* rootParent)
+Node::InsertionNotificationRequest SVGStyleElement::insertedInto(ContainerNode& rootParent)
 {
     SVGElement::insertedInto(rootParent);
-    if (rootParent->inDocument())
-        m_styleSheetOwner.insertedIntoDocument(document(), this);
+    if (rootParent.inDocument())
+        m_styleSheetOwner.insertedIntoDocument(document(), *this);
     return InsertionDone;
 }
 
-void SVGStyleElement::removedFrom(ContainerNode* rootParent)
+void SVGStyleElement::removedFrom(ContainerNode& rootParent)
 {
     SVGElement::removedFrom(rootParent);
-    if (rootParent->inDocument())
-        m_styleSheetOwner.removedFromDocument(document(), this);
+    if (rootParent.inDocument())
+        m_styleSheetOwner.removedFromDocument(document(), *this);
 }
 
-void SVGStyleElement::childrenChanged(bool changedByParser, Node* beforeChange, Node* afterChange, int childCountDelta)
+void SVGStyleElement::childrenChanged(const ChildChange& change)
 {
-    SVGElement::childrenChanged(changedByParser, beforeChange, afterChange, childCountDelta);
-    m_styleSheetOwner.childrenChanged(this);
+    SVGElement::childrenChanged(change);
+    m_styleSheetOwner.childrenChanged(*this);
 }
 
 }

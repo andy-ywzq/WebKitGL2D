@@ -37,7 +37,7 @@
 #include "HostCallReturnValue.h"
 #include "Interpreter.h"
 #include "JIT.h"
-#include "JITDriver.h"
+#include "JITExceptions.h"
 #include "JSActivation.h"
 #include "JSCJSValue.h"
 #include "JSGlobalObjectFunctions.h"
@@ -84,14 +84,14 @@ namespace JSC { namespace LLInt {
 #define LLINT_END_IMPL() LLINT_RETURN_TWO(pc, exec)
 
 #define LLINT_THROW(exceptionToThrow) do {                        \
-        vm.exception = (exceptionToThrow);                \
-        pc = returnToThrow(exec, pc);                             \
+        vm.throwException(exec, exceptionToThrow);                \
+        pc = returnToThrow(exec);                                 \
         LLINT_END_IMPL();                                         \
     } while (false)
 
 #define LLINT_CHECK_EXCEPTION() do {                    \
-        if (UNLIKELY(vm.exception)) {           \
-            pc = returnToThrow(exec, pc);               \
+        if (UNLIKELY(vm.exception())) {                 \
+            pc = returnToThrow(exec);                   \
             LLINT_END_IMPL();                           \
         }                                               \
     } while (false)
@@ -143,23 +143,20 @@ namespace JSC { namespace LLInt {
 
 #define LLINT_CALL_THROW(exec, pc, exceptionToThrow) do {               \
         ExecState* __ct_exec = (exec);                                  \
-        Instruction* __ct_pc = (pc);                                    \
-        vm.exception = (exceptionToThrow);                      \
-        LLINT_CALL_END_IMPL(__ct_exec, callToThrow(__ct_exec, __ct_pc)); \
+        vm.throwException(__ct_exec, exceptionToThrow);                 \
+        LLINT_CALL_END_IMPL(__ct_exec, callToThrow(__ct_exec));         \
     } while (false)
 
-#define LLINT_CALL_CHECK_EXCEPTION(exec, pc) do {                       \
+#define LLINT_CALL_CHECK_EXCEPTION(exec) do {                           \
         ExecState* __cce_exec = (exec);                                 \
-        Instruction* __cce_pc = (pc);                                   \
-        if (UNLIKELY(vm.exception))                              \
-            LLINT_CALL_END_IMPL(__cce_exec, callToThrow(__cce_exec, __cce_pc)); \
+        if (UNLIKELY(vm.exception()))                                   \
+            LLINT_CALL_END_IMPL(__cce_exec, callToThrow(__cce_exec));   \
     } while (false)
 
 #define LLINT_CALL_RETURN(exec, pc, callTarget) do {                    \
         ExecState* __cr_exec = (exec);                                  \
-        Instruction* __cr_pc = (pc);                                    \
         void* __cr_callTarget = (callTarget);                           \
-        LLINT_CALL_CHECK_EXCEPTION(__cr_exec->callerFrame(), __cr_pc);  \
+        LLINT_CALL_CHECK_EXCEPTION(__cr_exec->callerFrame());           \
         LLINT_CALL_END_IMPL(__cr_exec, __cr_callTarget);                \
     } while (false)
 
@@ -213,7 +210,7 @@ static void traceFunctionPrologue(ExecState* exec, const char* comment, CodeSpec
 {
     JSFunction* callee = jsCast<JSFunction*>(exec->callee());
     FunctionExecutable* executable = callee->jsExecutable();
-    CodeBlock* codeBlock = &executable->generatedBytecodeFor(kind);
+    CodeBlock* codeBlock = executable->codeBlockFor(kind);
     dataLogF("%p / %p: in %s of function %p, executable %p; numVars = %u, numParameters = %u, numCalleeRegisters = %u, caller = %p.\n",
             codeBlock, exec, comment, callee, executable,
             codeBlock->m_numVars, codeBlock->numParameters(), codeBlock->m_numCalleeRegisters,
@@ -246,12 +243,12 @@ LLINT_SLOW_PATH_DECL(trace_arityCheck_for_construct)
 
 LLINT_SLOW_PATH_DECL(trace)
 {
-    dataLogF("%p / %p: executing bc#%zu, %s, scope %p\n",
+    dataLogF("%p / %p: executing bc#%zu, %s, scope %p, pc = %p\n",
             exec->codeBlock(),
             exec,
             static_cast<intptr_t>(pc - exec->codeBlock()->instructions().begin()),
             opcodeNames[exec->vm().interpreter->getOpcodeID(pc[0].u.opcode)],
-            exec->scope());
+            exec->scope(), pc);
     if (exec->vm().interpreter->getOpcodeID(pc[0].u.opcode) == op_ret) {
         dataLogF("Will be returning to %p\n", exec->returnPC().value());
         dataLogF("The new cfr will be %p\n", exec->callerFrame());
@@ -280,6 +277,9 @@ inline bool shouldJIT(ExecState* exec)
 // Returns true if we should try to OSR.
 inline bool jitCompileAndSetHeuristics(CodeBlock* codeBlock, ExecState* exec)
 {
+    VM& vm = exec->vm();
+    DeferGCForAWhile deferGC(vm.heap); // My callers don't set top callframe, so we don't want to GC here at all.
+    
     codeBlock->updateAllValueProfilePredictions();
     
     if (!codeBlock->checkIfJITThresholdReached()) {
@@ -288,23 +288,32 @@ inline bool jitCompileAndSetHeuristics(CodeBlock* codeBlock, ExecState* exec)
         return false;
     }
     
-    CompilationResult result = codeBlock->jitCompile(exec);
-    switch (result) {
-    case CompilationNotNeeded:
+    switch (codeBlock->jitType()) {
+    case JITCode::BaselineJIT: {
         if (Options::verboseOSR())
             dataLogF("    Code was already compiled.\n");
         codeBlock->jitSoon();
         return true;
-    case CompilationFailed:
-        if (Options::verboseOSR())
-            dataLogF("    JIT compilation failed.\n");
-        codeBlock->dontJITAnytimeSoon();
-        return false;
-    case CompilationSuccessful:
-        if (Options::verboseOSR())
-            dataLogF("    JIT compilation successful.\n");
-        codeBlock->jitSoon();
-        return true;
+    }
+    case JITCode::InterpreterThunk: {
+        CompilationResult result = JIT::compile(&vm, codeBlock, JITCompilationCanFail);
+        switch (result) {
+        case CompilationFailed:
+            if (Options::verboseOSR())
+                dataLogF("    JIT compilation failed.\n");
+            codeBlock->dontJITAnytimeSoon();
+            return false;
+        case CompilationSuccessful:
+            if (Options::verboseOSR())
+                dataLogF("    JIT compilation successful.\n");
+            codeBlock->install();
+            codeBlock->jitSoon();
+            return true;
+        default:
+            RELEASE_ASSERT_NOT_REACHED();
+            return false;
+        }
+    }
     default:
         RELEASE_ASSERT_NOT_REACHED();
         return false;
@@ -340,22 +349,22 @@ LLINT_SLOW_PATH_DECL(entry_osr)
 
 LLINT_SLOW_PATH_DECL(entry_osr_function_for_call)
 {
-    return entryOSR(exec, pc, &jsCast<JSFunction*>(exec->callee())->jsExecutable()->generatedBytecodeFor(CodeForCall), "entry_osr_function_for_call", Prologue);
+    return entryOSR(exec, pc, jsCast<JSFunction*>(exec->callee())->jsExecutable()->codeBlockForCall(), "entry_osr_function_for_call", Prologue);
 }
 
 LLINT_SLOW_PATH_DECL(entry_osr_function_for_construct)
 {
-    return entryOSR(exec, pc, &jsCast<JSFunction*>(exec->callee())->jsExecutable()->generatedBytecodeFor(CodeForConstruct), "entry_osr_function_for_construct", Prologue);
+    return entryOSR(exec, pc, jsCast<JSFunction*>(exec->callee())->jsExecutable()->codeBlockForConstruct(), "entry_osr_function_for_construct", Prologue);
 }
 
 LLINT_SLOW_PATH_DECL(entry_osr_function_for_call_arityCheck)
 {
-    return entryOSR(exec, pc, &jsCast<JSFunction*>(exec->callee())->jsExecutable()->generatedBytecodeFor(CodeForCall), "entry_osr_function_for_call_arityCheck", ArityCheck);
+    return entryOSR(exec, pc, jsCast<JSFunction*>(exec->callee())->jsExecutable()->codeBlockForCall(), "entry_osr_function_for_call_arityCheck", ArityCheck);
 }
 
 LLINT_SLOW_PATH_DECL(entry_osr_function_for_construct_arityCheck)
 {
-    return entryOSR(exec, pc, &jsCast<JSFunction*>(exec->callee())->jsExecutable()->generatedBytecodeFor(CodeForConstruct), "entry_osr_function_for_construct_arityCheck", ArityCheck);
+    return entryOSR(exec, pc, jsCast<JSFunction*>(exec->callee())->jsExecutable()->codeBlockForConstruct(), "entry_osr_function_for_construct_arityCheck", ArityCheck);
 }
 
 LLINT_SLOW_PATH_DECL(loop_osr)
@@ -418,12 +427,10 @@ LLINT_SLOW_PATH_DECL(stack_check)
     dataLogF("Num vars = %u.\n", exec->codeBlock()->m_numVars);
     dataLogF("Current end is at %p.\n", exec->vm().interpreter->stack().end());
 #endif
-    ASSERT(&exec->registers()[exec->codeBlock()->m_numCalleeRegisters] > exec->vm().interpreter->stack().end());
-    if (UNLIKELY(!vm.interpreter->stack().grow(&exec->registers()[exec->codeBlock()->m_numCalleeRegisters]))) {
-        ReturnAddressPtr returnPC = exec->returnPC();
+    ASSERT(!exec->vm().interpreter->stack().containsAddress(&exec->registers()[virtualRegisterForLocal(exec->codeBlock()->m_numCalleeRegisters).offset()]));
+    if (UNLIKELY(!vm.interpreter->stack().grow(&exec->registers()[virtualRegisterForLocal(exec->codeBlock()->m_numCalleeRegisters).offset()]))) {
         exec = exec->callerFrame();
-        vm.exception = createStackOverflowError(exec);
-        CommonSlowPaths::interpreterThrowInCaller(exec, returnPC);
+        CommonSlowPaths::interpreterThrowInCaller(exec, createStackOverflowError(exec));
         pc = returnToThrowForThrownException(exec);
     }
     LLINT_END_IMPL();
@@ -449,7 +456,7 @@ LLINT_SLOW_PATH_DECL(slow_path_new_object)
 LLINT_SLOW_PATH_DECL(slow_path_new_array)
 {
     LLINT_BEGIN();
-    LLINT_RETURN(constructArray(exec, pc[4].u.arrayAllocationProfile, bitwise_cast<JSValue*>(&LLINT_OP(2)), pc[3].u.operand));
+    LLINT_RETURN(constructArrayNegativeIndexed(exec, pc[4].u.arrayAllocationProfile, bitwise_cast<JSValue*>(&LLINT_OP(2)), pc[3].u.operand));
 }
 
 LLINT_SLOW_PATH_DECL(slow_path_new_array_with_size)
@@ -470,7 +477,7 @@ LLINT_SLOW_PATH_DECL(slow_path_new_regexp)
     RegExp* regExp = exec->codeBlock()->regexp(pc[2].u.operand);
     if (!regExp->isValid())
         LLINT_THROW(createSyntaxError(exec, "Invalid flag supplied to RegExp constructor."));
-    LLINT_RETURN(RegExpObject::create(vm, exec->lexicalGlobalObject(), exec->lexicalGlobalObject()->regExpStructure(), regExp));
+    LLINT_RETURN(RegExpObject::create(vm, exec->lexicalGlobalObject()->regExpStructure(), regExp));
 }
 
 LLINT_SLOW_PATH_DECL(slow_path_check_has_instance)
@@ -589,7 +596,7 @@ LLINT_SLOW_PATH_DECL(slow_path_put_by_id)
             && baseCell == slot.base()) {
             
             if (slot.type() == PutPropertySlot::NewProperty) {
-                ConcurrentJITLocker locker(codeBlock->m_lock);
+                GCSafeConcurrentJITLocker locker(codeBlock->m_lock, vm.heap);
             
                 if (!structure->isDictionary() && structure->previousID()->outOfLineCapacity() == structure->outOfLineCapacity()) {
                     ASSERT(structure->previousID()->transitionWatchpointSetHasBeenInvalidated());
@@ -691,7 +698,7 @@ LLINT_SLOW_PATH_DECL(slow_path_get_argument_by_val)
         arguments = Arguments::create(vm, exec);
         LLINT_CHECK_EXCEPTION();
         LLINT_OP(2) = arguments;
-        exec->uncheckedR(unmodifiedArgumentsRegister(pc[2].u.operand)) = arguments;
+        exec->uncheckedR(unmodifiedArgumentsRegister(VirtualRegister(pc[2].u.operand)).offset()) = arguments;
     }
     
     LLINT_RETURN_PROFILED(op_get_argument_by_val, getByVal(exec, arguments, LLINT_OP_C(3).jsValue()));
@@ -738,6 +745,31 @@ LLINT_SLOW_PATH_DECL(slow_path_put_by_val)
     LLINT_END();
 }
 
+LLINT_SLOW_PATH_DECL(slow_path_put_by_val_direct)
+{
+    LLINT_BEGIN();
+    
+    JSValue baseValue = LLINT_OP_C(1).jsValue();
+    JSValue subscript = LLINT_OP_C(2).jsValue();
+    JSValue value = LLINT_OP_C(3).jsValue();
+    RELEASE_ASSERT(baseValue.isObject());
+    JSObject* baseObject = asObject(baseValue);
+    if (LIKELY(subscript.isUInt32())) {
+        uint32_t i = subscript.asUInt32();
+        baseObject->putDirectIndex(exec, i, value);
+    } else if (isName(subscript)) {
+        PutPropertySlot slot(exec->codeBlock()->isStrictMode());
+        baseObject->putDirect(exec->vm(), jsCast<NameInstance*>(subscript.asCell())->privateName(), value, slot);
+    } else {
+        Identifier property(exec, subscript.toString(exec)->value(exec));
+        if (!exec->vm().exception()) { // Don't put to an object if toString threw an exception.
+            PutPropertySlot slot(exec->codeBlock()->isStrictMode());
+            baseObject->putDirect(exec->vm(), property, value, slot);
+        }
+    }
+    LLINT_END();
+}
+
 LLINT_SLOW_PATH_DECL(slow_path_del_by_val)
 {
     LLINT_BEGIN();
@@ -781,7 +813,7 @@ LLINT_SLOW_PATH_DECL(slow_path_put_getter_setter)
     ASSERT(LLINT_OP(1).jsValue().isObject());
     JSObject* baseObj = asObject(LLINT_OP(1).jsValue());
     
-    GetterSetter* accessor = GetterSetter::create(exec);
+    GetterSetter* accessor = GetterSetter::create(vm);
     LLINT_CHECK_EXCEPTION();
     
     JSValue getter = LLINT_OP(3).jsValue();
@@ -911,11 +943,11 @@ LLINT_SLOW_PATH_DECL(slow_path_new_func)
     CodeBlock* codeBlock = exec->codeBlock();
     ASSERT(codeBlock->codeType() != FunctionCode
            || !codeBlock->needsFullScopeChain()
-           || exec->uncheckedR(codeBlock->activationRegister()).jsValue());
+           || exec->uncheckedR(codeBlock->activationRegister().offset()).jsValue());
 #if LLINT_SLOW_PATH_TRACING
     dataLogF("Creating function!\n");
 #endif
-    LLINT_RETURN(JSFunction::create(exec, codeBlock->functionDecl(pc[2].u.operand), exec->scope()));
+    LLINT_RETURN(JSFunction::create(vm, codeBlock->functionDecl(pc[2].u.operand), exec->scope()));
 }
 
 LLINT_SLOW_PATH_DECL(slow_path_new_func_exp)
@@ -923,13 +955,17 @@ LLINT_SLOW_PATH_DECL(slow_path_new_func_exp)
     LLINT_BEGIN();
     CodeBlock* codeBlock = exec->codeBlock();
     FunctionExecutable* function = codeBlock->functionExpr(pc[2].u.operand);
-    JSFunction* func = JSFunction::create(exec, function, exec->scope());
+    JSFunction* func = JSFunction::create(vm, function, exec->scope());
     
     LLINT_RETURN(func);
 }
 
 static SlowPathReturnType handleHostCall(ExecState* execCallee, Instruction* pc, JSValue callee, CodeSpecializationKind kind)
 {
+#if LLINT_SLOW_PATH_TRACING
+    dataLog("Performing host call.\n");
+#endif
+    
     ExecState* exec = execCallee->callerFrame();
     VM& vm = exec->vm();
 
@@ -1004,10 +1040,10 @@ inline SlowPathReturnType setUpCall(ExecState* execCallee, Instruction* pc, Code
         codePtr = executable->hostCodeEntryFor(kind);
     else {
         FunctionExecutable* functionExecutable = static_cast<FunctionExecutable*>(executable);
-        JSObject* error = functionExecutable->compileFor(execCallee, callee->scope(), kind);
+        JSObject* error = functionExecutable->prepareForExecution(execCallee, callee->scope(), kind);
         if (error)
             LLINT_CALL_THROW(execCallee->callerFrame(), pc, error);
-        codeBlock = &functionExecutable->generatedBytecodeFor(kind);
+        codeBlock = functionExecutable->codeBlockFor(kind);
         ASSERT(codeBlock);
         if (execCallee->argumentCountIncludingThis() < static_cast<size_t>(codeBlock->numParameters()))
             codePtr = functionExecutable->jsCodeWithArityCheckEntryFor(kind);
@@ -1044,7 +1080,7 @@ inline SlowPathReturnType genericCall(ExecState* exec, Instruction* pc, CodeSpec
     
     JSValue calleeAsValue = LLINT_OP_C(2).jsValue();
     
-    ExecState* execCallee = exec + pc[4].u.operand;
+    ExecState* execCallee = exec - pc[4].u.operand;
     
     execCallee->setArgumentCountIncludingThis(pc[3].u.operand);
     execCallee->uncheckedR(JSStack::Callee) = calleeAsValue;
@@ -1079,7 +1115,7 @@ LLINT_SLOW_PATH_DECL(slow_path_call_varargs)
     ExecState* execCallee = loadVarargs(
         exec, &vm.interpreter->stack(),
         LLINT_OP_C(3).jsValue(), LLINT_OP_C(4).jsValue(), pc[5].u.operand);
-    LLINT_CALL_CHECK_EXCEPTION(exec, pc);
+    LLINT_CALL_CHECK_EXCEPTION(exec);
     
     execCallee->uncheckedR(JSStack::Callee) = calleeAsValue;
     execCallee->setCallerFrame(exec);
@@ -1093,7 +1129,7 @@ LLINT_SLOW_PATH_DECL(slow_path_call_eval)
     LLINT_BEGIN_NO_SET_PC();
     JSValue calleeAsValue = LLINT_OP(2).jsValue();
     
-    ExecState* execCallee = exec + pc[4].u.operand;
+    ExecState* execCallee = exec - pc[4].u.operand;
     
     execCallee->setArgumentCountIncludingThis(pc[3].u.operand);
     execCallee->setCallerFrame(exec);
@@ -1122,7 +1158,7 @@ LLINT_SLOW_PATH_DECL(slow_path_tear_off_arguments)
 {
     LLINT_BEGIN();
     ASSERT(exec->codeBlock()->usesArguments());
-    Arguments* arguments = jsCast<Arguments*>(exec->uncheckedR(unmodifiedArgumentsRegister(pc[1].u.operand)).jsValue());
+    Arguments* arguments = jsCast<Arguments*>(exec->uncheckedR(unmodifiedArgumentsRegister(VirtualRegister(pc[1].u.operand)).offset()).jsValue());
     if (JSValue activationValue = LLINT_OP_C(2).jsValue())
         arguments->didTearOffActivation(exec, jsCast<JSActivation*>(activationValue));
     else
@@ -1133,7 +1169,7 @@ LLINT_SLOW_PATH_DECL(slow_path_tear_off_arguments)
 LLINT_SLOW_PATH_DECL(slow_path_strcat)
 {
     LLINT_BEGIN();
-    LLINT_RETURN(jsString(exec, &LLINT_OP(2), pc[3].u.operand));
+    LLINT_RETURN(jsStringFromRegisterArray(exec, &LLINT_OP(2), pc[3].u.operand));
 }
 
 LLINT_SLOW_PATH_DECL(slow_path_to_primitive)
@@ -1233,11 +1269,7 @@ LLINT_SLOW_PATH_DECL(slow_path_debug)
 {
     LLINT_BEGIN();
     int debugHookID = pc[1].u.operand;
-    int firstLine = pc[2].u.operand;
-    int lastLine = pc[3].u.operand;
-    int column = pc[4].u.operand;
-
-    vm.interpreter->debug(exec, static_cast<DebugHookID>(debugHookID), firstLine, lastLine, column);
+    vm.interpreter->debug(exec, static_cast<DebugHookID>(debugHookID));
     
     LLINT_END();
 }
@@ -1261,8 +1293,16 @@ LLINT_SLOW_PATH_DECL(slow_path_profile_did_call)
 LLINT_SLOW_PATH_DECL(throw_from_native_call)
 {
     LLINT_BEGIN();
-    ASSERT(vm.exception);
+    ASSERT(vm.exception());
     LLINT_END();
+}
+
+LLINT_SLOW_PATH_DECL(slow_path_handle_exception)
+{
+    LLINT_BEGIN_NO_SET_PC();
+    ASSERT(vm.exception());
+    genericUnwind(&vm, exec, vm.exception());
+    LLINT_END_IMPL();
 }
 
 LLINT_SLOW_PATH_DECL(slow_path_resolve_scope)
@@ -1282,7 +1322,7 @@ LLINT_SLOW_PATH_DECL(slow_path_get_from_scope)
     PropertySlot slot(scope);
     if (!scope->getPropertySlot(exec, ident, slot)) {
         if (modeAndType.mode() == ThrowIfNotFound)
-            LLINT_RETURN(throwError(exec, createUndefinedVariableError(exec, ident)));
+            LLINT_RETURN(exec->vm().throwException(exec, createUndefinedVariableError(exec, ident)));
         LLINT_RETURN(jsUndefined());
     }
 

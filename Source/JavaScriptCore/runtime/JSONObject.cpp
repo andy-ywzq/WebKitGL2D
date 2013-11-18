@@ -43,7 +43,7 @@
 
 namespace JSC {
 
-ASSERT_HAS_TRIVIAL_DESTRUCTOR(JSONObject);
+STATIC_ASSERT_IS_TRIVIALLY_DESTRUCTIBLE(JSONObject);
 
 static EncodedJSValue JSC_HOST_CALL JSONProtoFuncParse(ExecState*);
 static EncodedJSValue JSC_HOST_CALL JSONProtoFuncStringify(ExecState*);
@@ -54,14 +54,14 @@ static EncodedJSValue JSC_HOST_CALL JSONProtoFuncStringify(ExecState*);
 
 namespace JSC {
 
-JSONObject::JSONObject(JSGlobalObject* globalObject, Structure* structure)
-    : JSNonFinalObject(globalObject->vm(), structure)
+JSONObject::JSONObject(VM& vm, Structure* structure)
+    : JSNonFinalObject(vm, structure)
 {
 }
 
-void JSONObject::finishCreation(JSGlobalObject* globalObject)
+void JSONObject::finishCreation(VM& vm)
 {
-    Base::finishCreation(globalObject->vm());
+    Base::finishCreation(vm);
     ASSERT(inherits(info()));
 }
 
@@ -302,7 +302,15 @@ static void appendStringToStringBuilder(StringBuilder& builder, const CharType* 
         }
     }
 }
-    
+
+void escapeStringToBuilder(StringBuilder& builder, const String& message)
+{
+    if (message.is8Bit())
+        appendStringToStringBuilder(builder, message.characters8(), message.length());
+    else
+        appendStringToStringBuilder(builder, message.characters16(), message.length());
+}
+
 void Stringifier::appendQuotedString(StringBuilder& builder, const String& value)
 {
     int length = value.length();
@@ -411,7 +419,7 @@ Stringifier::StringifyResult Stringifier::appendStringifiedValue(StringBuilder& 
     // Handle cycle detection, and put the holder on the stack.
     for (unsigned i = 0; i < m_holderStack.size(); i++) {
         if (m_holderStack[i].object() == object) {
-            throwError(m_exec, createTypeError(m_exec, ASCIILiteral("JSON.stringify cannot serialize cyclic structures.")));
+            m_exec->vm().throwException(m_exec, createTypeError(m_exec, ASCIILiteral("JSON.stringify cannot serialize cyclic structures.")));
             return StringifyFailed;
         }
     }
@@ -646,7 +654,7 @@ NEVER_INLINE JSValue Walker::walk(JSValue unfiltered)
                 ASSERT(inValue.isObject());
                 ASSERT(isJSArray(asObject(inValue)) || asObject(inValue)->inherits(JSArray::info()));
                 if (objectStack.size() + arrayStack.size() > maximumFilterRecursion)
-                    return throwError(m_exec, createStackOverflowError(m_exec));
+                    return m_exec->vm().throwException(m_exec, createStackOverflowError(m_exec));
 
                 JSArray* array = asArray(inValue);
                 arrayStack.push(array);
@@ -697,7 +705,7 @@ NEVER_INLINE JSValue Walker::walk(JSValue unfiltered)
                 ASSERT(inValue.isObject());
                 ASSERT(!isJSArray(asObject(inValue)) && !asObject(inValue)->inherits(JSArray::info()));
                 if (objectStack.size() + arrayStack.size() > maximumFilterRecursion)
-                    return throwError(m_exec, createStackOverflowError(m_exec));
+                    return m_exec->vm().throwException(m_exec, createStackOverflowError(m_exec));
 
                 JSObject* object = asObject(inValue);
                 objectStack.push(object);
@@ -777,7 +785,7 @@ EncodedJSValue JSC_HOST_CALL JSONProtoFuncParse(ExecState* exec)
 {
     if (!exec->argumentCount())
         return throwVMError(exec, createError(exec, ASCIILiteral("JSON.parse requires at least one parameter")));
-    String source = exec->argument(0).toString(exec)->value(exec);
+    String source = exec->uncheckedArgument(0).toString(exec)->value(exec);
     if (exec->hadException())
         return JSValue::encode(jsNull());
 
@@ -798,7 +806,7 @@ EncodedJSValue JSC_HOST_CALL JSONProtoFuncParse(ExecState* exec)
     if (exec->argumentCount() < 2)
         return JSValue::encode(unfiltered);
     
-    JSValue function = exec->argument(1);
+    JSValue function = exec->uncheckedArgument(1);
     CallData callData;
     CallType callType = getCallData(function, callData);
     if (callType == CallTypeNone)
@@ -812,11 +820,24 @@ EncodedJSValue JSC_HOST_CALL JSONProtoFuncStringify(ExecState* exec)
     if (!exec->argumentCount())
         return throwVMError(exec, createError(exec, ASCIILiteral("No input to stringify")));
     LocalScope scope(exec->vm());
-    Local<Unknown> value(exec->vm(), exec->argument(0));
+    Local<Unknown> value(exec->vm(), exec->uncheckedArgument(0));
     Local<Unknown> replacer(exec->vm(), exec->argument(1));
     Local<Unknown> space(exec->vm(), exec->argument(2));
     JSValue result = Stringifier(exec, replacer, space).stringify(value).get();
     return JSValue::encode(result);
+}
+
+JSValue JSONParse(ExecState* exec, const String& json)
+{
+    LocalScope scope(exec->vm());
+
+    if (json.is8Bit()) {
+        LiteralParser<LChar> jsonParser(exec, json.characters8(), json.length(), StrictJSON);
+        return jsonParser.tryLiteralParse();
+    }
+
+    LiteralParser<UChar> jsonParser(exec, json.characters16(), json.length(), StrictJSON);
+    return jsonParser.tryLiteralParse();
 }
 
 String JSONStringify(ExecState* exec, JSValue value, unsigned indent)
